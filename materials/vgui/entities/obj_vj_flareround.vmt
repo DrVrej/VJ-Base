@@ -1,0 +1,7 @@
+"UnlitGeneric"
+{
+	"$basetexture" "vgui/entities/obj_vj_flareround"
+	"$nolod" 1
+	"$vertexalpha" 1
+	"$vertexcolor" 1
+}

@@ -1,0 +1,13 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models\world_models/w_glock"
+	"$bumpmap" "models\world_models/w_glock_nm"
+//      	"$normalmapalphaenvmapmask" "1"
+
+	"$phong" 1
+	"$phongexponent" 15
+	"$phongboost" 0.6
+	"$phongfresnelranges" "[0 0.5 1]"
+}
+
+
