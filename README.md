@@ -1,2 +1,2 @@
 # VJ-Base
-Coming Soon...
+Here you can report bugs or request changes to VJ Base.
