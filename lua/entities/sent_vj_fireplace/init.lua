@@ -60,8 +60,9 @@ function ENT:Use(activator, caller)
 		self.firesound1 = CreateSound(self,"ambient/fire/fire_small_loop1.wav") self.firesound1:SetSoundLevel(60)
 		self.firesound1:PlayEx(1,100)
 		//activator:SetHealth(activator:Health() +1000000)
-		activator:PrintMessage(HUD_PRINTTALK, "You turned the on the fireplace") else
-		activator:PrintMessage(HUD_PRINTTALK, "You turned the off the fireplace")
+		activator:PrintMessage(HUD_PRINTTALK, "You turned the fireplace on.") 
+	else
+		activator:PrintMessage(HUD_PRINTTALK, "You turned the fireplace off")
 		self.FirePlaceOn = false
 		self:StopParticles()
 		if self.firesound1 then self.firesound1:Stop() end
