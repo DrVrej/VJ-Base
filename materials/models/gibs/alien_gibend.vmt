@@ -1,0 +1,16 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models\gibs/alien_gibend"
+	"$halflambert" 1
+	"$surfaceprop" "flesh"
+	"$nocull" 1
+	"$alphatest" 1
+	"$bumpmap" "models\Gibs/gibend_normal"
+	"$model" "1"
+	"$normalmapalphaenvmapmask" "1"
+	"$envmap" "env_cubemap"
+	"$envmaptint" "[.8 1.0 .8]"
+	"$envmapcontrast" "1"
+	"$envmapsaturation" "0.5"
+
+}

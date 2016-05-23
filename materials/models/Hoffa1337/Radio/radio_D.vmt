@@ -1,0 +1,5 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models/Hoffa1337/Radio/radio_D"
+	 $alphatest 1 
+} 

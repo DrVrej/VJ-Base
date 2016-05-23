@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "models/props/FC3WDB"
+	"$model" 1
+	"$nocull" 1
+}
