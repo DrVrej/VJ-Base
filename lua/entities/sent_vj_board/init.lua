@@ -12,7 +12,7 @@ INFO: Used for defending a certain area from enemies, SNPCs will attack it when 
 --------------------------------------------------*/
 ENT.VJ_AddEntityToSNPCAttackList = true
 ENT.Model = {"models/props_debris/wood_board05a.mdl"}
-ENT.StartHealth = 10
+ENT.StartHealth = 9
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	if self:GetModel() == "models/error.mdl" then
