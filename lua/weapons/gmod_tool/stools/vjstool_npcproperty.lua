@@ -25,7 +25,7 @@ function TOOL.BuildCPanel(Panel)
 	//Panel:AddControl("Header", {Text = "NPC Tool", Description = "Left click to change the NPC's property"})
 	
 	local reset = vgui.Create("DButton")
-	reset:SetFont("CloseCaption")
+	reset:SetFont("DermaDefaultBold")
 	reset:SetText("Reset To Default")
 	reset:SetSize(150, 25)
 	reset:SetColor(Color(0,0,0,255))

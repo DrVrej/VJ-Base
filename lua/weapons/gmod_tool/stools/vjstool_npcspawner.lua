@@ -18,19 +18,20 @@ local DefaultConVars = {}
 for k,v in pairs(TOOL.ClientConVar) do
 	DefaultConVars["vjstool_npcspawner_"..k] = v
 end
-
+---------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
 	language.Add("tool.vjstool_npcspawner.name", "NPC Spawner")
 	language.Add("tool.vjstool_npcspawner.desc", "Creates an spawer")
 	language.Add("tool.vjstool_npcspawner.0", "Left-Click to create a spawer, Right-Click to spawn the NPCs once")
 	
 	//language.Add("vjbase.npctools.health", "Health")
-	
+---------------------------------------------------------------------------------------------------------------------------------------------
 	local function DoBuildCPanel_Spawner(Panel)
 		//PrintTable(DefaultConVars)
 		//Panel:AddControl("Header", {Text = "NPC Tool", Description = "Left click to change the NPC's property"})
 		
 		local reset = vgui.Create("DButton")
+		reset:SetFont("DermaDefaultBold")
 		reset:SetText("Reset To Default")
 		reset:SetSize(150,25)
 		reset:SetColor(Color(0,0,0,255))
@@ -119,7 +120,7 @@ if (CLIENT) then
 		Panel:AddControl("Checkbox", {Label = "Play NPC Spawning Sound?", Command = "vjstool_npcspawner_playsound"})
 		Panel:AddControl("Slider", {Label = "Next Spawn Time",min = 0,max = 1000,Command = "vjstool_npcspawner_nextspawntime"})
 	end
-
+---------------------------------------------------------------------------------------------------------------------------------------------
 	concommand.Add("vj_npcspawner_opennpcselect",function(pl,cmd,args)
 		local MenuFrame = vgui.Create('DFrame')
 		MenuFrame:SetSize(420, 440)
@@ -163,7 +164,7 @@ if (CLIENT) then
 		end
 		CheckList:SortByColumn(1,false)
 	end)
-
+---------------------------------------------------------------------------------------------------------------------------------------------
 	concommand.Add("vj_npcspawner_openwepselect",function(pl,cmd,args)
 		local MenuFrame = vgui.Create('DFrame')
 		MenuFrame:SetSize(420, 440)
@@ -204,7 +205,7 @@ if (CLIENT) then
 		end
 		CheckList:SortByColumn(1,false)
 	end)
-	
+---------------------------------------------------------------------------------------------------------------------------------------------
 	concommand.Add("vj_npcspawner_updatelist",function(pl,cmd,args)
 		local spawnent = string.lower(GetConVarString("vjstool_npcspawner_spawnent"))
 		local spawnentname = GetConVarString("vjstool_npcspawner_spawnentname")
@@ -217,7 +218,7 @@ if (CLIENT) then
 		GetPanel:ClearControls()
 		DoBuildCPanel_Spawner(GetPanel)
 	end)
-	
+---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcspawner_cl_create",function(len,pl)
 		svowner = net.ReadEntity()
 		svpos = net.ReadVector()
@@ -231,13 +232,14 @@ if (CLIENT) then
 		net.WriteString(svclicktype)
 		net.SendToServer()
 	end)
-	
+---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)
 		DoBuildCPanel_Spawner(Panel)
 	end
-else
+else -- If SERVER
 	util.AddNetworkString("vj_npcspawner_cl_create")
 	util.AddNetworkString("vj_npcspawner_sv_create")
+---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcspawner_sv_create",function(len,pl)
 		svowner = net.ReadEntity()
 		svpos = net.ReadVector()
@@ -274,7 +276,7 @@ else
 		end
 	end)
 end
-
+---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
 	if (CLIENT) then return true end
 	net.Start("vj_npcspawner_cl_create")
@@ -285,7 +287,7 @@ function TOOL:LeftClick(tr)
 	net.Send(self:GetOwner())
 	return true
 end
-
+---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:RightClick(tr)
 	if (CLIENT) then return true end
 	net.Start("vj_npcspawner_cl_create")
@@ -296,8 +298,7 @@ function TOOL:RightClick(tr)
 	net.Send(self:GetOwner())
 	return true
 end
-
+---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:Reload(tr)
 	if (CLIENT) then return true end
-
 end
