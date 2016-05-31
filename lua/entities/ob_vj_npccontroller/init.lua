@@ -309,19 +309,43 @@ function ENT:Think()
 			local npcspos = self.ControlledNPC:GetPos() +Vector(0,0,testcenter) // 35
 			local forwardtr = util.TraceLine({start = npcspos, endpos = npcspos +plysaimvec *500, filter = {self, self.ControlledNPC}})
 			//print(npcspos:Distance(forwardtr.HitPos))
-	local nig = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
-	nig:SetModel("models/hunter/blocks/cube025x025x025.mdl")
-	nig:SetPos(forwardtr.HitPos)
-	nig:SetAngles(self:GetAngles())
-	nig:SetColor(Color(255,0,0))
-	nig:Spawn()
-	nig:Activate()
-	timer.Simple(3,function() if IsValid(nig) then nig:Remove() end end)
+			local npcvel = self.ControlledNPC:GetGroundSpeedVelocity()
+			//if self.ControlledNPC:GetMovementActivity() > 0 then print(self.ControlledNPC:GetSequenceGroundSpeed(self.ControlledNPC:SelectWeightedSequence(self.ControlledNPC:GetMovementActivity()))) end
+			//self.ControlledNPC:GetSequenceGroundSpeed(self.ControlledNPC:SelectWeightedSequence(self.ControlledNPC:GetActivity()))
+			//Vector(math.abs(npcvel.x),math.abs(npcvel.y),math.abs(npcvel.z))
 			local CalculateWallToNPC = npcspos:Distance(forwardtr.HitPos) - 40
+			//local CalculateWallToNPC_X = npcspos:Distance(forwardtr.HitPos) - 400
+			//local CalculateWallToNPC_Y = npcspos:Distance(forwardtr.HitPos) - 400
+			//if math.abs(npcvel.x) > 51 then CalculateWallToNPC_X = math.abs(npcvel.x) end
+			//if math.abs(npcvel.y) > 51 then CalculateWallToNPC_Y = math.abs(npcvel.y) end
 			if npcspos:Distance(forwardtr.HitPos) >= 51 then
-			print("ywee")
-				self.ControlledNPC:SetLastPosition(Vector((self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC).x,(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC).y,forwardtr.HitPos.z)) // self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC
+				//print(CalculateWallToNPC)
+				local thepos = Vector((self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC).x,(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC).y,forwardtr.HitPos.z)
+				local downtr = util.TraceLine({start = thepos, endpos = thepos + self:GetUp()*-300, filter = {self, self.ControlledNPC}})
+				local CalculateDownDistance = thepos.z - downtr.HitPos.z
+				//print(CalculateDownDistance)
+				if CalculateDownDistance >= 300 then CalculateWallToNPC = CalculateWallToNPC - 300 end
+				thepos = Vector((self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC).x,(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC).y,forwardtr.HitPos.z)
+				-- Down Trace
+				/*local nig = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
+				nig:SetModel("models/hunter/blocks/cube025x025x025.mdl")
+				nig:SetPos(downtr.HitPos)
+				nig:SetAngles(self:GetAngles())
+				nig:SetColor(Color(0,255,0))
+				nig:Spawn()
+				nig:Activate()
+				timer.Simple(3,function() if IsValid(nig) then nig:Remove() end end)*/
+				self.ControlledNPC:SetLastPosition(thepos) // self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC
 				if (self.TheController:KeyDown(IN_SPEED)) then self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO_RUN) else self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO) end
+				-- Final Move Position
+				/*local nig = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
+				nig:SetModel("models/hunter/blocks/cube025x025x025.mdl")
+				nig:SetPos(thepos)
+				nig:SetAngles(self:GetAngles())
+				nig:SetColor(Color(255,0,0))
+				nig:Spawn()
+				nig:Activate()
+				timer.Simple(3,function() if IsValid(nig) then nig:Remove() end end)*/
 			end
 			//if self.ControlledNPC:GetPos():Distance(forwardtr.HitPos) >= 298 then
 				//self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*300)
