@@ -39,7 +39,7 @@ local function DoBuildCPanel_Mover(Panel)
 		end
 	end
 	Panel:AddPanel(reset)
-	
+	print("fok")
 	Panel:AddControl("Label", {Text = "It's recommanded to use this tool only for VJ Base SNPCs."})
 	local CheckList = vgui.Create("DListView")
 		CheckList:SetTooltip(false)
@@ -68,6 +68,9 @@ local function DoBuildCPanel_Mover(Panel)
 		CheckList.OnRowSelected = function(rowIndex,row) chat.AddText(Color(0,255,0),"Double click to ",Color(255,100,0),"unselect ",Color(0,255,0),"a NPC") end
 		function CheckList:DoDoubleClick(lineID,line)
 			chat.AddText(Color(0,255,0),"NPC",Color(255,100,0)," "..line:GetValue(1).." ",Color(0,255,0),"unselected!")
+			net.Start("vj_npcmover_removesingle")
+			net.WriteEntity(line:GetValue(3))
+			net.SendToServer()
 			CheckList:RemoveLine(lineID)
 			table.Empty(TblCurrentValues)
 			for kLine,vLine in pairs(CheckList:GetLines()) do
@@ -163,6 +166,7 @@ else -- If SERVER
 	util.AddNetworkString("vj_npcmover_sv_create")
 	util.AddNetworkString("vj_npcmover_cl_startmove")
 	util.AddNetworkString("vj_npcmover_sv_startmove")
+	util.AddNetworkString("vj_npcmover_removesingle")
 	util.AddNetworkString("vj_npcmover_removeall")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcmover_sv_create",function(len,pl)
@@ -203,6 +207,16 @@ else -- If SERVER
 			end
 		end
 		//self:MoveNPC(sventity,svvector,svwalktype)
+	end)
+	net.Receive("vj_npcmover_removesingle",function(len,pl)
+		brahent = net.ReadEntity()
+		//TOOL:RemoveNPC(brahent)
+		brahent.ControlledByVJTool = false
+		if brahent.IsVJBaseSNPC == true then
+			brahent.DisableWandering = false
+			brahent.DisableChasingEnemy = false
+			brahent:SelectSchedule()
+		end
 	end)
 	net.Receive("vj_npcmover_removeall",function(len,pl)
 		brahtbl = net.ReadTable()
