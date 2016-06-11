@@ -17,7 +17,7 @@ function ENT:BuildBonePositions(NumBones,NumPhysBones) end
 function ENT:SetRagdollBones(bIn) self.m_bRagdollSetup = bIn end
 function ENT:DoRagdollBone(PhysBoneNum,BoneNum) /*self:SetBonePosition(BoneNum,Pos,Angle)*/ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-net.Receive("vj_creature_onthememusic",function(len)
+/*net.Receive("vj_creature_onthememusic",function(len)
 	//BroadcastLua(print("Theme music net code is running!"))
 	local selfEntity = net.ReadEntity()
 	if !IsValid(selfEntity) then return end
@@ -49,4 +49,4 @@ hook.Add("Think","thememusic_client_runtrack",function()
 		end
 	end
  end)
-end)
+end)*/

@@ -193,6 +193,9 @@ VJ_MOVETYPE_AERIAL = 2
 VJ_MOVETYPE_AQUATIC = 3 
 VJ_MOVETYPE_STATIONARY = 4
 
+//VJ_MUSIC_PLAYING = false
+//VJ_MUSIC_CURRENTNPCS = {}
+
 //NPC_MetaTable.VJ_NPC_Class = {}
 
 //SetNetworkedBool
@@ -674,6 +677,54 @@ cvars.AddChangeCallback("vj_npc_drvrejfriendly",function(convar_name,oldValue,ne
 	 end
 	end
 end)
+
+-- Net Messages ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+if (CLIENT) then
+	net.Receive("vj_music_run",function(len)
+		VJ_CL_MUSIC_CURRENT = VJ_CL_MUSIC_CURRENT or {}
+		local ent = net.ReadEntity()
+		local sdtbl = net.ReadTable()
+		local sdvol = net.ReadFloat()
+		local sdspeed = net.ReadFloat()
+		local sdfadet = net.ReadFloat()
+		local entindex = ent:EntIndex()
+		sound.PlayFile("sound/"..VJ_PICKRANDOMTABLE(sdtbl),"noplay",function(soundchannel,errorID,errorName)
+			if IsValid(soundchannel) then
+				if table.Count(VJ_CL_MUSIC_CURRENT) <= 0 then soundchannel:Play() end
+				soundchannel:EnableLooping(true)
+				soundchannel:SetVolume(sdvol)
+				soundchannel:SetPlaybackRate(sdspeed)
+				table.insert(VJ_CL_MUSIC_CURRENT,{npc=ent,channel=soundchannel})
+			end
+		end)
+		timer.Create("vj_music_think",1,0,function()
+			//PrintTable(VJ_CL_MUSIC_CURRENT)
+			for k,v in pairs(VJ_CL_MUSIC_CURRENT) do
+				//PrintTable(v)
+				//if v.npc == entindex then
+				if !IsValid(v.npc) then
+					v.channel:Stop()
+					v.channel = nil
+					table.remove(VJ_CL_MUSIC_CURRENT,k)
+				end
+			end
+			if table.Count(VJ_CL_MUSIC_CURRENT) <= 0 then
+				timer.Remove("vj_music_think")
+				VJ_CL_MUSIC_CURRENT = {}
+			else
+				for k,v in pairs(VJ_CL_MUSIC_CURRENT) do
+					if IsValid(v.npc) && IsValid(v.channel) then
+						v.channel:Play() break
+					end
+				end
+			end
+		end)
+	end)
+end
+
+if (SERVER) then
+	util.AddNetworkString("vj_music_run")
+end
 
 /*if (CLIENT) then
 	require("sound_vj_track")

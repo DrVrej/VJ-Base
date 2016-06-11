@@ -69,16 +69,7 @@ ENT.DamageByPlayerDispositionLevel = 0 -- 0 = Run it every time | 1 = Run it onl
 ENT.DamageByPlayerNextTime1 = 2 -- How much time should it pass until it runs the code again? | First number in math.random
 ENT.DamageByPlayerNextTime2 = 2 -- How much time should it pass until it runs the code again? | Second number in math.random
 	-- ====== Flinching Code ====== --
-ENT.Flinches = 0 -- 0 = No Flinch | 1 = Flinches at any damage | 2 = Flinches only from certain damages
-ENT.FlinchCustomDMGs = {DMG_BLAST} -- The types of damages it will flinch from if self.Flinches is set to custom
-ENT.FlinchingChance = 16 -- chance of it flinching from 1 to x | 1 will make it always flinch
-ENT.NextFlinch = 0.6 -- How much time until it can attack, move and flinch again
-ENT.FlinchUseACT = false -- false = SCHED_ | true = ACT_
-ENT.FlinchingSchedules = {SCHED_FLINCH_PHYSICS} -- If self.FlinchUseACT is false the it uses this | Common: SCHED_BIG_FLINCH, SCHED_SMALL_FLINCH, SCHED_FLINCH_PHYSICS
-ENT.AnimTbl_Flinch = {ACT_BIG_FLINCH} -- Used to make the SNPC play an ACT_ when flinching instead of SCHED_ | self.FlinchUseACT needs to be true!
-ENT.HasHitGroupFlinching = false -- It will flinch when hit in certain hitgroups | It can also have certain animations to play in certain hitgroups
-ENT.DefaultFlinchingWhenNoHitGroup = true -- If it uses hitgroup flinching, should it do the regular flinch if it doesn't hit any of the specified hitgroups?
-ENT.FlinchHitGroupTable = {/* EXAMPLES: {HitGroup = {1}, IsSchedule = true, Animation = {SCHED_BIG_FLINCH}},{HitGroup = {4}, IsSchedule = false, Animation = {ACT_FLINCH_STOMACH}} */} -- "Animation" should be an "SCHED_" if IsSchedule is true, if not then "ACT_" | If it doesn't get hit in any of this hitgroups, it will use the regular schedule or activity (Depending on what self.FlinchUseACT is set on)
+
 	-- Relationships ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasAllies = true -- Put to false if you want it not to have any allies
 ENT.VJ_NPC_Class = {} -- NPCs with the same class will be friendly to each other | Combine: CLASS_COMBINE, Zombie: CLASS_ZOMBIE, Antlions = CLASS_ANTLION
@@ -398,6 +389,10 @@ ENT.NextSoundTime_Pain1 = 2
 ENT.NextSoundTime_Pain2 = 2
 ENT.NextSoundTime_DamageByPlayer1 = 2
 ENT.NextSoundTime_DamageByPlayer2 = 2.3
+	-- ====== Sound Volume ====== --
+-- Number between 0 and 1
+-- 0 = No sound, 1 = normal/loudest
+ENT.SoundTrackVolume = 1
 	-- ====== Sound Levels ====== --
 -- EmitSound is from 0 to 511 | CreateSound is from 0 to 180
 -- More Information: https://developer.valvesoftware.com/wiki/Soundscripts#SoundLevel_Flags
@@ -424,7 +419,7 @@ ENT.PainSoundLevel = 75
 ENT.ImpactSoundLevel = 60
 ENT.DamageByPlayerSoundLevel = 75
 ENT.DeathSoundLevel = 75
-ENT.SoundTrackLevel = 0.9
+//ENT.SoundTrackLevel = 0.9
 	-- ====== Sound Pitch ====== --
 -- Higher number = Higher pitch | Lower number = Lower pitch
 -- Highest number is 254
@@ -474,6 +469,10 @@ ENT.DamageByPlayerPitch1 = 80
 ENT.DamageByPlayerPitch2 = 100
 ENT.DeathSoundPitch1 = 80
 ENT.DeathSoundPitch2 = 100
+	-- ====== Sound Playback Rate ====== --
+-- How fast should a sound play?
+-- 1 = normal, 2 = twice the normal speed, 0.5 = half the normal speed
+ENT.SoundTrackPlaybackRate = 1
 	-- Independent Variables ---------------------------------------------------------------------------------------------------------------------------------------------
 -- These should be left as they are
 ENT.MeleeAttacking = false
@@ -517,6 +516,7 @@ ENT.IsAbleToLeapAttack = true
 ENT.RangeAttack_DisableChasingEnemy = false
 ENT.IsDoingFaceEnemy = false
 ENT.VJ_IsPlayingInterruptSequence = false
+ENT.AlreadyDoneFirstMeleeAttack = false
 ENT.FollowingPlayerName = NULL
 ENT.MyEnemy = NULL
 ENT.VJ_TheController = NULL
@@ -583,7 +583,7 @@ end*/
 function VJ_TABLERANDOM(vtblname) return vtblname[math.random(1,table.Count(vtblname))] end
 //function VJ_STOPSOUND(vsoundname) if vsoundname then vsoundname:Stop() end end
 
-util.AddNetworkString("vj_creature_onthememusic")
+//util.AddNetworkString("vj_creature_onthememusic")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize() /* -- Example: self:SetCollisionBounds(Vector(50, 50, 100), Vector(-50, -50, 0)) */ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -895,6 +895,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 	vTbl_AlwaysUseSequence = vACT_AdvancedFeatures.AlwaysUseSequence or false
 	vTbl_SequenceDuration = vACT_AdvancedFeatures.SequenceDuration -- Done automatically
 	vTbl_SequenceInterruptible = vACT_AdvancedFeatures.SequenceInterruptible or false -- Can it be Interrupted? (Mostly used for idle animations)
+	vTbl_AlwaysUseGesture = vACT_AdvancedFeatures.AlwaysUseGesture or false
 	vTbl_PlayBackRate = vACT_AdvancedFeatures.PlayBackRate or 0.5
 	//vACT_CustomCode = vACT_CustomCode or function() end
 	if istable(vACT_Name) then vACT_Name = VJ_PICKRANDOMTABLE(vACT_Name) end
@@ -927,9 +928,15 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 			vACT_Name = self:GetSequenceName(self:SelectWeightedSequence(vACT_Name))
 		end
 	end
+	if vTbl_AlwaysUseGesture == true then
+		IsGesture = true
+		if type(vACT_Name) == "number" then
+			vACT_Name = self:GetSequenceName(self:SelectWeightedSequence(vACT_Name))
+		end
+	end
 	//vsched:EngTask("TASK_RESET_ACTIVITY", 0)
 	if vACT_StopActivities == true then
-		self:StopAttacks()
+		self:StopAttacks(true)
 		self.vACT_StopAttacks = true
 		self.NextChaseTime = CurTime() + vACT_StopActivitiesTime
 		self.NextIdleTime = CurTime() + vACT_StopActivitiesTime
@@ -974,7 +981,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 			self:VJ_PlaySequence(vACT_Name,1,seqwait,vTbl_SequenceDuration,vTbl_SequenceInterruptible)
 		end
 		if IsGesture == false then
-			vsched:EngTask("TASK_STOP_MOVING", 0)
+			//vsched:EngTask("TASK_STOP_MOVING", 0)
 			vsched:EngTask("TASK_STOP_MOVING", 0)
 			self:StopMoving()
 			self:ClearSchedule()
@@ -1088,7 +1095,7 @@ ENT.MyLastPosOnFailedChaseEnemy = Vector(0,0,0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
 	if !IsValid(self:GetEnemy()) or self:GetEnemy() == nil then return end
-	if self.IsVJBaseSNPC_Tank == true or self.VJ_PlayingSequence == true or self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextChaseTime > CurTime()) then return end
+	if self.Flinching == true or self.IsVJBaseSNPC_Tank == true or self.VJ_PlayingSequence == true or self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextChaseTime > CurTime()) then return end
 	if self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) < self.MeleeAttackDistance && self:GetEnemy():Visible(self) && (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then return end
 	-- OverrideChasing = Chase no matter what
 	OverrideChasing = OverrideChasing or false
@@ -1658,6 +1665,7 @@ if self.HasMeleeAttack == true then
 	self.RangeAttacking = false
 	self.AlreadyDoneMeleeAttackFirstHit = false
 	self.IsAbleToMeleeAttack = false
+	self.AlreadyDoneFirstMeleeAttack = false
 	if self.VJ_IsBeingControlled == false && ispropattack == false then self:FaceCertainEntity(self:GetEnemy(),true) end
 	self:CustomOnMeleeAttack_BeforeStartTimer()
 	timer.Simple(self.WaitTime_BeforeMeleeAttackSound,function() if IsValid(self) then self:BeforeMeleeAttackSoundCode() end end)
@@ -2028,14 +2036,17 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 	end
 	self.MeleeAttacking = true
 	//if self.VJ_IsBeingControlled == false && self.MeleeAttackAnimationFaceEnemy == true then self:FaceCertainEntity(MyEnemy,true) end
-	timer.Create( "timer_melee_finished"..self.Entity:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Melee,self.NextAnyAttackTime_Melee_DoRand), 1, function()
-		self:StopAttacks()
-		//if self.VJ_IsBeingControlled == false then self:FaceCertainEntity(MyEnemy,true) end
-		self:DoChaseAnimation()
-	end)
-	timer.Create( "timer_range_finished_abletomelee"..self.Entity:EntIndex(), self:DecideAttackTimer(self.NextMeleeAttackTime,self.NextMeleeAttackTime_DoRand), 1, function()
-		self.IsAbleToMeleeAttack = true
-	end)
+	if self.AlreadyDoneFirstMeleeAttack == false then
+		timer.Create( "timer_melee_finished"..self.Entity:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Melee,self.NextAnyAttackTime_Melee_DoRand), 1, function()
+			self:StopAttacks()
+			//if self.VJ_IsBeingControlled == false then self:FaceCertainEntity(MyEnemy,true) end
+			self:DoChaseAnimation()
+		end)
+		timer.Create( "timer_range_finished_abletomelee"..self.Entity:EntIndex(), self:DecideAttackTimer(self.NextMeleeAttackTime,self.NextMeleeAttackTime_DoRand), 1, function()
+			self.IsAbleToMeleeAttack = true
+		end)
+	end
+	if self.AlreadyDoneFirstMeleeAttack == false then self.AlreadyDoneFirstMeleeAttack = true end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttackCode()
@@ -2136,7 +2147,7 @@ function ENT:LeapAttackVelocityCode()
 	self:SetLocalVelocity(jumpcode)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:StopAttacks()
+function ENT:StopAttacks(SetAbleAttackTrue)
 	if self:Health() <= 0 then return end
 	//self:TaskComplete()
 	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printstoppedattacks") == 1 then print(self:GetClass().." Stopped all Attacks!") end end
@@ -2144,7 +2155,13 @@ function ENT:StopAttacks()
 	self.RangeAttacking = false
 	self.LeapAttacking = false
 	self.AlreadyDoneMeleeAttackFirstHit = false
+	self.AlreadyDoneFirstMeleeAttack = false
 	self.AlreadyDoneLeapAttackFirstHit = false
+	if SetAbleAttackTrue == true then
+		self.IsAbleToMeleeAttack = true
+		self.IsAbleToRangeAttack = true
+		self.IsAbleToLeapAttack = true
+	end
 	self:DoChaseAnimation()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2834,46 +2851,76 @@ if self:Health() <= 0 && self.Dead == false then
 	self:PriorToKilled(dmginfo,hitgroup)
 	end
 end
+
+	-- ====== Flinching Code ====== --
+ENT.CanFlinch = 0 -- 0 = Don't flinch | 1 = Flinch at any damage | 2 = Flinch only from certain damages
+ENT.FlinchDamageTypes = {DMG_BLAST} -- If it uses damage-based flinching, which types of damages should it flinch from?
+ENT.FlinchChance = 1 -- Chance of it flinching from 1 to x | 1 will make it always flinch
+ENT.NextMoveAfterFlinchTime = "LetBaseDecide" -- How much time until it can move, attack, etc. | Use this for schedules or else the base will set the time 0.6 if it sees it's a schedule!
+ENT.NextFlinchTime = 1 -- How much time until it can flinch again?
+ENT.FlinchAnimation_UseSchedule = true -- false = SCHED_ | true = ACT_
+ENT.ScheduleTbl_Flinch = {SCHED_FLINCH_PHYSICS} -- If it uses schedule-based animation, implement the schedule types here | Common: SCHED_BIG_FLINCH, SCHED_SMALL_FLINCH, SCHED_FLINCH_PHYSICS
+ENT.AnimTbl_Flinch = {ACT_BIG_FLINCH} -- If it uses normal based animation, use this
+ENT.FlinchAnimationDecreaseLengthAmount = 0 -- This will decrease the time it can move, attack, etc. | Use it to fix animation pauses after it finished the flinch animation
+ENT.HasHitGroupFlinching = false -- It will flinch when hit in certain hitgroups | It can also have certain animations to play in certain hitgroups
+ENT.HitGroupFlinching_DefaultWhenNotHit = true -- If it uses hitgroup flinching, should it do the regular flinch if it doesn't hit any of the specified hitgroups?
+ENT.HitGroupFlinching_Values = {/* EXAMPLES: {HitGroup = {1}, IsSchedule = true, Animation = {SCHED_BIG_FLINCH}},{HitGroup = {4}, IsSchedule = false, Animation = {ACT_FLINCH_STOMACH}} */} -- if "IsSchedule" is set to true, "Animation" needs to be a schedule
+
+ENT.CurrentFlinchAnimation = 0
+ENT.CurrentFlinchAnimationDuration = 0
+ENT.NextFlinchT = 0
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoFlinch(dmginfo,hitgroup)
-	if self.Flinches == 0 then return end
-	if self.Flinching == true then return end
-	local function FlinchMotherFucka()
-		if self.HasHitGroupFlinching == true then
-			local HitGroupHit = false
-			for k,v in ipairs(self.FlinchHitGroupTable) do
-				if table.HasValue(v.HitGroup,hitgroup) then
-				//if v.HitGroup == hitgroup then
-					HitGroupHit = true
-					self.Flinching = true
-					self:StopAttacks()
-					if v.IsSchedule == true then self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(v.Animation)) else self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(v.Animation),false,0,false,0) end
-					timer.Simple(self.NextFlinch,function() if IsValid(self) then self.Flinching = false if self:GetEnemy() != nil then self:DoChaseAnimation() else self:DoIdleAnimation() end end end)
-					self:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup)
+	if self.CanFlinch == 0 or self.Flinching == true or (self.NextFlinchT > CurTime()) then return end
+	
+	local function RunFlinchCode(HitBoxBased,HitBoxInfo)
+		self.Flinching = true
+		self:StopAttacks(true)
+		if HitBoxBased == true then
+			self.CurrentFlinchAnimation = VJ_PICKRANDOMTABLE(HitBoxInfo.Animation)
+			self.CurrentFlinchAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentFlinchAnimation) -self.FlinchAnimationDecreaseLengthAmount
+			if self.NextMoveAfterFlinchTime != "LetBaseDecide" then self.CurrentFlinchAnimationDuration = self.NextMoveAfterFlinchTime end
+			if self.NextMoveAfterFlinchTime == "LetBaseDecide" && HitBoxInfo.IsSchedule == true then self.CurrentFlinchAnimationDuration = 0.6 end
+			if HitBoxInfo.IsSchedule == true then 
+				self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.CurrentFlinchAnimation)) 
+			else
+				self:VJ_ACT_PLAYACTIVITY(self.CurrentFlinchAnimation,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=self.CurrentFlinchAnimationDuration})
+			end
+		else
+			if self.FlinchAnimation_UseSchedule == true then self.CurrentFlinchAnimation = VJ_PICKRANDOMTABLE(self.ScheduleTbl_Flinch) else self.CurrentFlinchAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_Flinch) end
+			self.CurrentFlinchAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentFlinchAnimation) -self.FlinchAnimationDecreaseLengthAmount
+			if self.NextMoveAfterFlinchTime != "LetBaseDecide" then self.CurrentFlinchAnimationDuration = self.NextMoveAfterFlinchTime end
+			if self.NextMoveAfterFlinchTime == "LetBaseDecide" && self.FlinchAnimation_UseSchedule == true then self.CurrentFlinchAnimationDuration = 0.6 end
+			if self.FlinchAnimation_UseSchedule == true then
+				self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.CurrentFlinchAnimation))
+			else
+				self:VJ_ACT_PLAYACTIVITY(self.CurrentFlinchAnimation,false,0,false,0,{AlwaysUseSequence=false,SequenceDuration=self.CurrentFlinchAnimationDuration})
+			end
+		end
+		timer.Simple(self.CurrentFlinchAnimationDuration,function() if IsValid(self) then self.Flinching = false if self:GetEnemy() != nil then self:DoChaseAnimation() else self:DoIdleAnimation() end end end)
+		self:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup)
+		self.NextFlinchT = CurTime() + self.NextFlinchTime
+	end
+	
+	local randflinch = math.random(1,self.FlinchChance)
+	if randflinch == 1 then
+		if (self.CanFlinch == 2 && table.HasValue(self.FlinchDamageTypes,dmginfo:GetDamageType())) or (self.CanFlinch == 1) then
+			self:CustomOnFlinch_BeforeFlinch(dmginfo,hitgroup)
+			if self.HasHitGroupFlinching == true then
+				local HitGroupFound = false
+				for k,v in ipairs(self.HitGroupFlinching_Values) do
+					if table.HasValue(v.HitGroup,hitgroup) then
+					//if v.HitGroup == hitgroup then
+						HitGroupFound = true
+						RunFlinchCode(true,v)
 					end
 				end
-				if HitGroupHit == false && self.DefaultFlinchingWhenNoHitGroup == true then
-					self.Flinching = true
-					self:StopAttacks()
-					if self.FlinchUseACT == false then self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.FlinchingSchedules)) else self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.AnimTbl_Flinch),false,0,false,0) end
-					timer.Simple(self.NextFlinch,function() if IsValid(self) then self.Flinching = false if self:GetEnemy() != nil then self:DoChaseAnimation() else self:DoIdleAnimation() end end end)
-					self:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup)
+				if HitGroupFound == false && self.HitGroupFlinching_DefaultWhenNotHit == true then
+					RunFlinchCode(false)
 				end
 			else
-				self.Flinching = true
-				self:StopAttacks()
-				if self.FlinchUseACT == false then self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.FlinchingSchedules)) else self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.AnimTbl_Flinch),false,0,false,0) end
-				timer.Simple(self.NextFlinch,function() if IsValid(self) then self.Flinching = false if self:GetEnemy() != nil then self:DoChaseAnimation() else self:DoIdleAnimation() end end end)
-				self:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup)
+				RunFlinchCode(false)
 			end
-	end
-	local randflinchchance = math.random(1,self.FlinchingChance)
-	if randflinchchance == 1 then
-	self:CustomOnFlinch_BeforeFlinch(dmginfo,hitgroup)
-	if self.Flinches == 2 && table.HasValue(self.FlinchCustomDMGs,dmginfo:GetDamageType()) then
-		FlinchMotherFucka()
-	elseif self.Flinches == 1 then
-		FlinchMotherFucka()
 		end
 	end
 end
@@ -3501,11 +3548,11 @@ function ENT:StartSoundTrack()
 	if self.HasSounds == false then return end
 	if self.HasSoundTrack == false then return end
 	self.VJ_IsPlayingSoundTrack = true
-	self:SetNetworkedBool("VJ_IsPlayingSoundTrack",true)
-	net.Start("vj_creature_onthememusic")
+	net.Start("vj_music_run")
 	net.WriteEntity(self)
 	net.WriteTable(self.SoundTbl_SoundTrack)
-	net.WriteFloat(self.SoundTrackLevel)
+	net.WriteFloat(self.SoundTrackVolume)
+	net.WriteFloat(self.SoundTrackPlaybackRate)
 	net.WriteFloat(self.SoundTrackFadeOutTime)
 	net.Broadcast()
 end
@@ -3599,7 +3646,7 @@ function ENT:ConvarsOnInit()
 	if GetConVarNumber("vj_npc_slowplayer") == 1 then self.SlowPlayerOnMeleeAttack = false end
 	if GetConVarNumber("vj_npc_nowandering") == 1 then self.DisableWandering = true end
 	if GetConVarNumber("vj_npc_nochasingenemy") == 1 then self.DisableChasingEnemy = true end
-	if GetConVarNumber("vj_npc_noflinching") == 1 then self.Flinches = false end
+	if GetConVarNumber("vj_npc_noflinching") == 1 then self.CanFlinch = false end
 	if GetConVarNumber("vj_npc_nomelee") == 1 then self.HasMeleeAttack = false end
 	if GetConVarNumber("vj_npc_norange") == 1 then self.HasRangeAttack = false end
 	if GetConVarNumber("vj_npc_noleap") == 1 then self.HasLeapAttack = false end
