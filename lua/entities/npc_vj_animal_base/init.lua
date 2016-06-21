@@ -58,10 +58,8 @@ ENT.CallForBackUpOnDamageUseCertainAmountNumber = 3 -- How many people should it
 ENT.DisableCallForBackUpOnDamageAnimation = true -- Disables the animation when the CallForBackUpOnDamage function is called
 ENT.CallForBackUpOnDamageAnimation = {ACT_SIGNAL_HALT} -- Animation used if the SNPC does the CallForBackUpOnDamage function
 ENT.CallForBackUpOnDamageAnimationTime = 2 -- How much time until it can use activities
-ENT.CallForBackUpOnDamageUseSCHED = true -- Should it use a Schedule when CallForBackUpOnDamage function is called?
-ENT.CallForBackUpOnDamageUseSCHEDID = SCHED_RUN_FROM_ENEMY -- The schedule ID for CallForBackUpOnDamageUseSCHED
-ENT.NextBackUpOnDamageTime1 = 9 -- Next time it use the CallForBackUpOnDamage function | The first # in math.random
-ENT.NextBackUpOnDamageTime2 = 11 -- Next time it use the CallForBackUpOnDamage function | The second # in math.random
+ENT.NextCallForBackUpOnDamageTime1 = 9 -- Next time it use the CallForBackUpOnDamage function | The first # in math.random
+ENT.NextCallForBackUpOnDamageTime2 = 11 -- Next time it use the CallForBackUpOnDamage function | The second # in math.random
 ENT.HasDamageByPlayer = true -- Should the SNPC do something when it's hit by a player? Example: Play a sound or animation
 ENT.DamageByPlayerDispositionLevel = 0 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 ENT.DamageByPlayerNextTime1 = 2 -- How much time should it pass until it runs the code again? | First number in math.random
@@ -70,10 +68,12 @@ ENT.DamageByPlayerNextTime2 = 2 -- How much time should it pass until it runs th
 ENT.CanFlinch = 0 -- 0 = Don't flinch | 1 = Flinch at any damage | 2 = Flinch only from certain damages
 ENT.FlinchDamageTypes = {DMG_BLAST} -- If it uses damage-based flinching, which types of damages should it flinch from?
 ENT.FlinchChance = 16 -- Chance of it flinching from 1 to x | 1 will make it always flinch
-ENT.NextMoveAfterFlinchTime = 0.6 -- How much time until it can move, attack, etc. | Use this for schedules or else the base will set the time 0.6 if it sees it's a schedule!
+ENT.NextMoveAfterFlinchTime = "LetBaseDecide" -- How much time until it can move, attack, etc. | Use this for schedules or else the base will set the time 0.6 if it sees it's a schedule!
+ENT.NextFlinchTime = 5 -- How much time until it can flinch again?
 ENT.FlinchAnimation_UseSchedule = false -- false = SCHED_ | true = ACT_
 ENT.ScheduleTbl_Flinch = {SCHED_FLINCH_PHYSICS} -- If it uses schedule-based animation, implement the schedule types here | Common: SCHED_BIG_FLINCH, SCHED_SMALL_FLINCH, SCHED_FLINCH_PHYSICS
-ENT.AnimTbl_Flinch = {ACT_BIG_FLINCH} -- If it uses normal based animation, use this
+ENT.AnimTbl_Flinch = {ACT_FLINCH_PHYSICS} -- If it uses normal based animation, use this
+ENT.FlinchAnimationDecreaseLengthAmount = 0 -- This will decrease the time it can move, attack, etc. | Use it to fix animation pauses after it finished the flinch animation
 ENT.HasHitGroupFlinching = false -- It will flinch when hit in certain hitgroups | It can also have certain animations to play in certain hitgroups
 ENT.HitGroupFlinching_DefaultWhenNotHit = true -- If it uses hitgroup flinching, should it do the regular flinch if it doesn't hit any of the specified hitgroups?
 ENT.HitGroupFlinching_Values = {/* EXAMPLES: {HitGroup = {1}, IsSchedule = true, Animation = {SCHED_BIG_FLINCH}},{HitGroup = {4}, IsSchedule = false, Animation = {ACT_FLINCH_STOMACH}} */} -- if "IsSchedule" is set to true, "Animation" needs to be a schedule
@@ -292,6 +292,7 @@ ENT.CombineFriendly = false
 ENT.ShouldBeFlying = false
 ENT.IsDoingFaceEnemy = false
 ENT.VJ_IsPlayingInterruptSequence = false
+ENT.CanDoSelectScheduleAgain = true
 ENT.FollowingPlayerName = NULL
 ENT.MyEnemy = NULL
 ENT.VJ_TheController = NULL
@@ -307,7 +308,7 @@ ENT.PainSoundT = 0
 ENT.WorldShakeWalkT = 0
 ENT.NextRunAwayOnDamageT = 0
 ENT.NextIdleSoundT = 0
-ENT.NextBackUpOnDamageT = 0
+ENT.NextCallForBackUpOnDamageT = 0
 ENT.NextRunOnTouchT = 0
 ENT.NextOnTouchFearSoundT = 0
 ENT.NextCallForHelpAnimationT = 0
@@ -316,6 +317,10 @@ ENT.OnPlayerSightNextT = 0
 ENT.NextDamageByPlayerT = 0
 ENT.NextDamageByPlayerSoundT = 0
 ENT.CurrentAnim_IdleStand = 0
+ENT.CurrentFlinchAnimation = 0
+ENT.CurrentFlinchAnimationDuration = 0
+ENT.NextFlinchT = 0
+ENT.CurrentAnim_CallForBackUpOnDamage = 0
 ENT.SelectedDifficulty = 1
 	-- Tables ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HL2_Animals = {"npc_barnacle", "npc_crow", "npc_pigeon", "npc_seagull", "monster_cockroach"}
@@ -559,14 +564,14 @@ function ENT:OnTaskComplete()
 	self.bTaskComplete = true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_ACT_FOLLOWTARGET() 
+function ENT:VJ_TASK_GOTO_TARGET() 
 	local vsched = ai_vj_schedule.New("vj_act_followtarget")
 	vsched:EngTask("TASK_GET_PATH_TO_TARGET", 0)
 	vsched:EngTask("TASK_RUN_PATH", 0)
 	self:StartSchedule(vsched)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_ACT_GOTOPLAYER()
+function ENT:VJ_TASK_GOTO_PLAYER()
 	local vsched = ai_vj_schedule.New("vj_act_gotoplayer")
 	vsched:EngTask("TASK_GET_PATH_TO_PLAYER", 0)
 	vsched:EngTask("TASK_RUN_PATH", 0)
@@ -663,10 +668,12 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 			self:VJ_PlaySequence(vACT_Name,1,seqwait,vTbl_SequenceDuration,vTbl_SequenceInterruptible)
 		end
 		if IsGesture == false then
+			//vsched:EngTask("TASK_RESET_ACTIVITY", 0)
 			vsched:EngTask("TASK_STOP_MOVING", 0)
 			vsched:EngTask("TASK_STOP_MOVING", 0)
 			self:StopMoving()
 			self:ClearSchedule()
+			///self:ClearGoal()
 			if IsSequence == false then
 				self.VJ_PlayingSequence = false
 				vsched:EngTask("TASK_PLAY_SEQUENCE",vACT_Name)
@@ -682,7 +689,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 	//self:TaskComplete()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_ACT_WANDER()
+function ENT:VJ_TASK_WANDER()
 	local vsched = ai_vj_schedule.New("vj_act_idlewander")
 	//self:SetLastPosition(self:GetPos() + self:GetForward() * 300)
 	//vsched:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 0)
@@ -693,7 +700,7 @@ function ENT:VJ_ACT_WANDER()
 	self:StartSchedule(vsched)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_ACT_IDLESTAND(waittime)
+function ENT:VJ_TASK_IDLE_STAND(waittime)
 	//if self.LatestTaskName == "vj_act_idlestand" then return end
 	//local vsched = ai_vj_schedule.New("vj_act_idlestand")
 	//vsched:EngTask("TASK_WAIT", waittime)
@@ -735,18 +742,18 @@ function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 	-- 0 = Random | 1 = Wander | 2 = Idle Stand /\ OverrideWander = Wander no matter what
 	RestrictNumber = RestrictNumber or 0
 	OverrideWander = OverrideWander or false
-	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_ACT_IDLESTAND(math.Rand(6,12)) return end
-	if OverrideWander == false && self.DisableWandering == true && (RestrictNumber == 1 or RestrictNumber == 0) then self:VJ_ACT_IDLESTAND(math.Rand(2,4)) return end
+	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_TASK_IDLE_STAND(math.Rand(6,12)) return end
+	if OverrideWander == false && self.DisableWandering == true && (RestrictNumber == 1 or RestrictNumber == 0) then self:VJ_TASK_IDLE_STAND(math.Rand(2,4)) return end
 	if RestrictNumber == 0 then
 		if math.random(1,2) == 1 then
-			self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.IdleSchedule_Wander)) else self:VJ_ACT_IDLESTAND(math.Rand(2,4))
+			self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.IdleSchedule_Wander)) else self:VJ_TASK_IDLE_STAND(math.Rand(2,4))
 		end
 	end
 	if RestrictNumber == 1 then
 		self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.IdleSchedule_Wander))
 	end
 	if RestrictNumber == 2 then
-		self:VJ_ACT_IDLESTAND(math.Rand(2,4))
+		self:VJ_TASK_IDLE_STAND(math.Rand(2,4))
 	end
 	self.NextIdleTime = CurTime() + math.random(2,6)
 end
@@ -819,7 +826,7 @@ if GetConVarNumber("ai_ignoreplayers") == 1 then return end
 		//if self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_IDLE_STAND) end
 		timer.Simple(0.1,function()
 		if self:IsValid() then
-		self:VJ_ACT_FOLLOWTARGET() end end)
+		self:VJ_TASK_GOTO_TARGET() end end)
 		self:FollowPlayerSoundCode()
 		self.FollowingPlayer = true else
 		self:UnFollowPlayerSoundCode()
@@ -873,7 +880,7 @@ if self.FollowingPlayer == true then
 		//print(DistanceToPly)
 		if DistanceToPly > self.FollowPlayerCloseDistance then
 			self.DontStartShooting_FollowPlayer = true
-			self:VJ_ACT_FOLLOWTARGET()
+			self:VJ_TASK_GOTO_TARGET()
 		else
 			self:StopMoving()
 			self.DontStartShooting_FollowPlayer = false
@@ -1164,60 +1171,59 @@ end
 self:SetHealth(self:Health() -dmginfo:GetDamage())
 
 if self:Health() >= 0 then
-if self.CallForBackUpOnDamage == true then
-if CurTime() > self.NextBackUpOnDamageT then
-if self:GetEnemy() == nil && self.FollowingPlayer == false then
-if self:CheckAlliesAroundMe(self.CallForBackUpOnDamageDistance).ItFoundAllies == true then
-	self:BringAlliesToMe(self.CallForBackUpOnDamageDistance,self.CallForBackUpOnDamageUseCertainAmount,self.CallForBackUpOnDamageUseCertainAmountNumber)
-	self:ClearSchedule()
-	//self.TakingCover = true
-	self.Flinching = true
-	if self.DisableCallForBackUpOnDamageAnimation == false then
-	timer.Simple(0.1,function()
-		if IsValid(self) then self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.CallForBackUpOnDamageAnimation),true,self.CallForBackUpOnDamageAnimationTime,true) end end)
-	end
-	if self.CallForBackUpOnDamageUseSCHED == true && self.VJ_PlayingSequence == false then
-		self:VJ_SetSchedule(self.CallForBackUpOnDamageUseSCHEDID)
-	end
-	timer.Simple(1,function()
-		if self:IsValid() then
-		//self.TakingCover = false
-		self.Flinching = false
+	if self.CallForBackUpOnDamage == true then
+	if CurTime() > self.NextCallForBackUpOnDamageT then
+	if self:GetEnemy() == nil && self.FollowingPlayer == false && self.ThrowingGrenade == false then
+	if self:CheckAlliesAroundMe(self.CallForBackUpOnDamageDistance).ItFoundAllies == true then
+		self:BringAlliesToMe(self.CallForBackUpOnDamageDistance,self.CallForBackUpOnDamageUseCertainAmount,self.CallForBackUpOnDamageUseCertainAmountNumber)
+		self:ClearSchedule()
+		//self.TakingCover = true
+		self.NextFlinchT = CurTime() + 1
+		self.CurrentAnim_CallForBackUpOnDamage = VJ_PICKRANDOMTABLE(self.CallForBackUpOnDamageAnimation)
+		if VJ_AnimationExists(self,self.CurrentAnim_CallForBackUpOnDamage) == true && self.DisableCallForBackUpOnDamageAnimation == false then
+			self:VJ_ACT_PLAYACTIVITY(self.CurrentAnim_CallForBackUpOnDamage,true,self.CallForBackUpOnDamageAnimationTime,true)
+		else
+			self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
+			/*local vschedHide = ai_vj_schedule.New("vj_hide_callbackupondamage")
+			vschedHide:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
+			vschedHide:EngTask("TASK_RUN_PATH", 0)
+			vschedHide:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+			vschedHide.ResetOnFail = true
+			self:StartSchedule(vschedHide)*/
 		end
-	end)
-   end
-  end
- self.NextBackUpOnDamageT = CurTime() + math.random(self.NextBackUpOnDamageTime1,self.NextBackUpOnDamageTime2)
- end
-end
+	   end
+	  end
+	 self.NextCallForBackUpOnDamageT = CurTime() + math.random(self.NextCallForBackUpOnDamageTime1,self.NextCallForBackUpOnDamageTime2)
+	 end
+	end
 
 	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printondamage") == 1 then print(self:GetClass().." Got Damaged! | Amount = "..dmginfo:GetDamage()) end end
     self:CustomOnTakeDamage_AfterImmuneChecks(dmginfo,hitgroup)
 	self:DoFlinch(dmginfo,hitgroup)
 	self:PainSoundCode()
 	
-if self.BecomeEnemyToPlayer == true && DamageAttacker:IsPlayer() && GetConVarNumber("ai_disabled") == 0 && GetConVarNumber("ai_ignoreplayers") == 0 && (self:Disposition(DamageAttacker) == D_LI or self:Disposition(DamageAttacker) == D_NU) then
-	if self.AngerLevelTowardsPlayer <= self.BecomeEnemyToPlayerLevel then
-	self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1 end
-	if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
-	if self:Disposition(DamageAttacker) != D_HT then
-	self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo,hitgroup)
-	if self.FollowingPlayer == true then self:FollowPlayerReset() end
-	table.insert(self.VJ_AddCertainEntityAsEnemy,dmginfo:GetAttacker())
-	if GetConVarNumber("vj_npc_nosnpcchat") == 0 then
-	dmginfo:GetAttacker():PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.") end
-	self:BecomeEnemyToPlayerSoundCode() end
-	//self.NoLongerLikesThePlayer = true
-	self.Alerted = true
-	if self.BecomeEnemyToPlayerSetPlayerFriendlyFalse == true then
-	/*self.PlayerFriendly = false*/ end
+	if self.BecomeEnemyToPlayer == true && DamageAttacker:IsPlayer() && GetConVarNumber("ai_disabled") == 0 && GetConVarNumber("ai_ignoreplayers") == 0 && (self:Disposition(DamageAttacker) == D_LI or self:Disposition(DamageAttacker) == D_NU) then
+		if self.AngerLevelTowardsPlayer <= self.BecomeEnemyToPlayerLevel then
+		self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1 end
+		if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
+		if self:Disposition(DamageAttacker) != D_HT then
+		self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo,hitgroup)
+		if self.FollowingPlayer == true then self:FollowPlayerReset() end
+		table.insert(self.VJ_AddCertainEntityAsEnemy,dmginfo:GetAttacker())
+		if GetConVarNumber("vj_npc_nosnpcchat") == 0 then
+		dmginfo:GetAttacker():PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.") end
+		self:BecomeEnemyToPlayerSoundCode() end
+		//self.NoLongerLikesThePlayer = true
+		self.Alerted = true
+		if self.BecomeEnemyToPlayerSetPlayerFriendlyFalse == true then
+		/*self.PlayerFriendly = false*/ end
+		end
 	end
-end
 
-if self.TakingCover == false && self.VJ_IsBeingControlled == false && self.FollowingPlayer == false && self.VJ_PlayingSequence == false && self.RunAwayOnUnknownDamage == true && self.MovementType != VJ_MOVETYPE_STATIONARY then
-	if CurTime() > self.NextRunAwayOnDamageT then
-	self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY) end
-	self.NextRunAwayOnDamageT = CurTime() + self.NextRunAwayOnDamageTime
+	if self.TakingCover == false && self.VJ_IsBeingControlled == false && self.FollowingPlayer == false && self.VJ_PlayingSequence == false && self.RunAwayOnUnknownDamage == true && self.MovementType != VJ_MOVETYPE_STATIONARY then
+		if CurTime() > self.NextRunAwayOnDamageT then
+		self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY) end
+		self.NextRunAwayOnDamageT = CurTime() + self.NextRunAwayOnDamageTime
 	end
 end
 
@@ -1227,41 +1233,56 @@ if self:Health() <= 0 && self.Dead == false then
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoFlinch(dmginfo,hitgroup)
-	if self.CanFlinch == 0 then return end
-	if self.Flinching == true then return end
-	local function FlinchMotherFucka()
-		if self.HasHitGroupFlinching == true then
-			local HitGroupHit = false
-			for k,v in ipairs(self.HitGroupFlinching_Values) do
-				if table.HasValue(v.HitGroup,hitgroup) then
-				//if v.HitGroup == hitgroup then
-					HitGroupHit = true
-					self.Flinching = true
-					if v.IsSchedule == true then self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(v.Animation)) else self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(v.Animation),false,0,false,0) end
-					timer.Simple(self.NextMoveAfterFlinchTime,function() if IsValid(self) then self.Flinching = false if self:GetEnemy() != nil then else self:DoIdleAnimation() end end end)
-					self:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup)
+	if self.CanFlinch == 0 or self.Flinching == true or (self.NextFlinchT > CurTime()) then return end
+	
+	local function RunFlinchCode(HitBoxBased,HitBoxInfo)
+		self.Flinching = true
+		self:StopAttacks(true)
+		if HitBoxBased == true then
+			self.CurrentFlinchAnimation = VJ_PICKRANDOMTABLE(HitBoxInfo.Animation)
+			self.CurrentFlinchAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentFlinchAnimation) -self.FlinchAnimationDecreaseLengthAmount
+			if self.NextMoveAfterFlinchTime != "LetBaseDecide" then self.CurrentFlinchAnimationDuration = self.NextMoveAfterFlinchTime end
+			if self.NextMoveAfterFlinchTime == "LetBaseDecide" && HitBoxInfo.IsSchedule == true then self.CurrentFlinchAnimationDuration = 0.6 end
+			if HitBoxInfo.IsSchedule == true then 
+				self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.CurrentFlinchAnimation)) 
+			else
+				self:VJ_ACT_PLAYACTIVITY(self.CurrentFlinchAnimation,false,0,false,0,{SequenceDuration=self.CurrentFlinchAnimationDuration})
+			end
+		else
+			if self.FlinchAnimation_UseSchedule == true then self.CurrentFlinchAnimation = VJ_PICKRANDOMTABLE(self.ScheduleTbl_Flinch) else self.CurrentFlinchAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_Flinch) end
+			self.CurrentFlinchAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentFlinchAnimation) -self.FlinchAnimationDecreaseLengthAmount
+			if self.NextMoveAfterFlinchTime != "LetBaseDecide" then self.CurrentFlinchAnimationDuration = self.NextMoveAfterFlinchTime end
+			if self.NextMoveAfterFlinchTime == "LetBaseDecide" && self.FlinchAnimation_UseSchedule == true then self.CurrentFlinchAnimationDuration = 0.6 end
+			if self.FlinchAnimation_UseSchedule == true then
+				self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.CurrentFlinchAnimation))
+			else
+				self:VJ_ACT_PLAYACTIVITY(self.CurrentFlinchAnimation,false,0,false,0,{SequenceDuration=self.CurrentFlinchAnimationDuration})
+			end
+		end
+		timer.Simple(self.CurrentFlinchAnimationDuration,function() if IsValid(self) then self.Flinching = false if self:GetEnemy() != nil then self:DoChaseAnimation() else self:DoIdleAnimation() end end end)
+		self:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup)
+		self.NextFlinchT = CurTime() + self.NextFlinchTime
+	end
+	
+	local randflinch = math.random(1,self.FlinchChance)
+	if randflinch == 1 then
+		if (self.CanFlinch == 2 && table.HasValue(self.FlinchDamageTypes,dmginfo:GetDamageType())) or (self.CanFlinch == 1) then
+			self:CustomOnFlinch_BeforeFlinch(dmginfo,hitgroup)
+			if self.HasHitGroupFlinching == true then
+				local HitGroupFound = false
+				for k,v in ipairs(self.HitGroupFlinching_Values) do
+					if table.HasValue(v.HitGroup,hitgroup) then
+					//if v.HitGroup == hitgroup then
+						HitGroupFound = true
+						RunFlinchCode(true,v)
 					end
 				end
-				if HitGroupHit == false && self.HitGroupFlinching_DefaultWhenNotHit == true then
-					self.Flinching = true
-					if self.FlinchAnimation_UseSchedule == false then self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.ScheduleTbl_Flinch)) else self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.AnimTbl_Flinch),false,0,false,0) end
-					timer.Simple(self.NextMoveAfterFlinchTime,function() if IsValid(self) then self.Flinching = false if self:GetEnemy() != nil then else self:DoIdleAnimation() end end end)
-					self:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup)
+				if HitGroupFound == false && self.HitGroupFlinching_DefaultWhenNotHit == true then
+					RunFlinchCode(false)
 				end
 			else
-				self.Flinching = true
-				if self.FlinchAnimation_UseSchedule == false then self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.ScheduleTbl_Flinch)) else self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.AnimTbl_Flinch),false,0,false,0) end
-				timer.Simple(self.NextMoveAfterFlinchTime,function() if IsValid(self) then self.Flinching = false if self:GetEnemy() != nil then else self:DoIdleAnimation() end end end)
-				self:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup)
+				RunFlinchCode(false)
 			end
-	end
-	local randflinchchance = math.random(1,self.FlinchChance)
-	if randflinchchance == 1 then
-	self:CustomOnFlinch_BeforeFlinch(dmginfo,hitgroup)
-	if self.CanFlinch == 2 && table.HasValue(self.FlinchDamageTypes,dmginfo:GetDamageType()) then
-		FlinchMotherFucka()
-	elseif self.CanFlinch == 1 then
-		FlinchMotherFucka()
 		end
 	end
 end
