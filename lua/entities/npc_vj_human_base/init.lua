@@ -60,10 +60,8 @@ ENT.CallForBackUpOnDamageUseCertainAmountNumber = 3 -- How many people should it
 ENT.DisableCallForBackUpOnDamageAnimation = false -- Disables the animation when the CallForBackUpOnDamage function is called
 ENT.CallForBackUpOnDamageAnimation = {ACT_SIGNAL_HALT} -- Animation used if the SNPC does the CallForBackUpOnDamage function
 ENT.CallForBackUpOnDamageAnimationTime = 2 -- How much time until it can use activities
-ENT.CallForBackUpOnDamageUseSCHED = false -- Should it use a Schedule when CallForBackUpOnDamage function is called?
-ENT.CallForBackUpOnDamageUseSCHEDID = SCHED_RUN_FROM_ENEMY -- The schedule ID for CallForBackUpOnDamageUseSCHED
-ENT.NextBackUpOnDamageTime1 = 9 -- Next time it use the CallForBackUpOnDamage function | The first # in math.random
-ENT.NextBackUpOnDamageTime2 = 11 -- Next time it use the CallForBackUpOnDamage function | The second # in math.random
+ENT.NextCallForBackUpOnDamageTime1 = 9 -- Next time it use the CallForBackUpOnDamage function | The first # in math.random
+ENT.NextCallForBackUpOnDamageTime2 = 11 -- Next time it use the CallForBackUpOnDamage function | The second # in math.random
 ENT.MoveOrHideOnDamageByEnemy = true -- Should the SNPC move or hide when being damaged by an enemy?
 ENT.MoveOrHideOnDamageByEnemy_MoveSchedules = {SCHED_FORCED_GO_RUN} -- The schedule it plays when the SNPC was unable to find a hiding spot, and needs to move
 ENT.MoveOrHideOnDamageByEnemy_OnlyMove = false -- If set to true, it will only play the moving schedules and will not try to hide	
@@ -82,10 +80,12 @@ ENT.DamageByPlayerNextTime2 = 2 -- How much time should it pass until it runs th
 ENT.CanFlinch = 0 -- 0 = Don't flinch | 1 = Flinch at any damage | 2 = Flinch only from certain damages
 ENT.FlinchDamageTypes = {DMG_BLAST} -- If it uses damage-based flinching, which types of damages should it flinch from?
 ENT.FlinchChance = 16 -- Chance of it flinching from 1 to x | 1 will make it always flinch
-ENT.NextMoveAfterFlinchTime = 0.6 -- How much time until it can move, attack, etc. | Use this for schedules or else the base will set the time 0.6 if it sees it's a schedule!
+ENT.NextMoveAfterFlinchTime = "LetBaseDecide" -- How much time until it can move, attack, etc. | Use this for schedules or else the base will set the time 0.6 if it sees it's a schedule!
+ENT.NextFlinchTime = 5 -- How much time until it can flinch again?
 ENT.FlinchAnimation_UseSchedule = false -- false = SCHED_ | true = ACT_
 ENT.ScheduleTbl_Flinch = {SCHED_FLINCH_PHYSICS} -- If it uses schedule-based animation, implement the schedule types here | Common: SCHED_BIG_FLINCH, SCHED_SMALL_FLINCH, SCHED_FLINCH_PHYSICS
-ENT.AnimTbl_Flinch = {ACT_BIG_FLINCH} -- If it uses normal based animation, use this
+ENT.AnimTbl_Flinch = {ACT_FLINCH_PHYSICS} -- If it uses normal based animation, use this
+ENT.FlinchAnimationDecreaseLengthAmount = 0 -- This will decrease the time it can move, attack, etc. | Use it to fix animation pauses after it finished the flinch animation
 ENT.HasHitGroupFlinching = false -- It will flinch when hit in certain hitgroups | It can also have certain animations to play in certain hitgroups
 ENT.HitGroupFlinching_DefaultWhenNotHit = true -- If it uses hitgroup flinching, should it do the regular flinch if it doesn't hit any of the specified hitgroups?
 ENT.HitGroupFlinching_Values = {/* EXAMPLES: {HitGroup = {1}, IsSchedule = true, Animation = {SCHED_BIG_FLINCH}},{HitGroup = {4}, IsSchedule = false, Animation = {ACT_FLINCH_STOMACH}} */} -- if "IsSchedule" is set to true, "Animation" needs to be a schedule
@@ -202,15 +202,20 @@ ENT.WeaponAttackSchedule = {SCHED_RANGE_ATTACK1} -- Schedule played when the SNP
 ENT.CanCrouchOnWeaponAttack = true -- Should the SNPC crouching while shooting?
 ENT.CanCrouchOnWeaponAttackChance = 2 -- The greater the number is, the less chance it will have to crouch when shooting | 1 = crouch everytime
 ENT.AnimTbl_WeaponAttackCrouch = {ACT_RANGE_ATTACK1_LOW} -- Animation played when the SNPC does weapon attack while crouching | For VJ Weapons
+ENT.HasShootWhileMoving = true -- Can it shoot while moving?
+ENT.AnimTbl_ShootWhileMovingRun = {ACT_RUN_AIM} -- Animations it will play when shooting while running | NOTE: Weapon may translate the animation that they see fit!
+ENT.AnimTbl_ShootWhileMovingWalk = {ACT_WALK_AIM} -- Animations it will play when shooting while walking | NOTE: Weapon may translate the animation that they see fit!
 ENT.HasUnlimitedClip = true -- Set false to turn off unlimited ammo
 ENT.DisableWeapons = false -- If true, SNPC can't use weapons
 ENT.DisableCAP_USE_WEAPON = false -- Disables CAP_USE_WEAPON | Useful if you want to make a SNPC spawn with the same weapon all the time
 //ENT.DisableUSE_SHOT_REGULATOR = false -- Set to true to disable CAP_USE_SHOT_REGULATOR
 ENT.AllowReloading = true -- If false, the SNPC will no longer reload
 ENT.DisableWeaponReloadAnimation = false -- if true, it will disable the animation code when reloading
-ENT.AnimTbl_ReloadBehindCover = {ACT_RELOAD_LOW} -- Animations that it plays when the SNPC is able to reload behind a cover
-ENT.WeaponReloadSchedule_Regular = {SCHED_HIDE_AND_RELOAD} -- Schedule played when the SNPC reloads its weapon when it's NOT following something (Most likely player)
-ENT.AnimTbl_ReloadFollowing = {ACT_RELOAD} -- Animations that play when the SNPC is following something and needs to reload (Most likely a player)
+ENT.AnimTbl_WeaponReload = {ACT_RELOAD} -- Animations that play when the SNPC reloads
+ENT.AnimTbl_WeaponReloadBehindCover = {ACT_RELOAD_LOW} -- Animations that it plays when the SNPC reloads, but behind cover
+ENT.WeaponReloadAnimationFaceEnemy = true -- Should it face the enemy while playing the weapon reload animation?
+ENT.WeaponReloadAnimationDecreaseLengthAmount = 0 -- This will decrease the time until it starts moving or attack again. Use it to fix animation pauses until it chases the enemy.
+ENT.WeaponReloadAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 //ENT.NextReloadTime = 15 -- Time until it can reload again
 //ENT.ReloadChance = 5 -- The second number in the math.random
 ENT.MoveRandomlyWhenShooting = true -- Should it move randomly when shooting?
@@ -253,7 +258,7 @@ ENT.LastSeenEnemyTimeUntilReset = 15 -- Time until it resets its enemy if its cu
 ENT.IdleSchedule_Wander = {SCHED_IDLE_WANDER} -- Animation played when the SNPC is idle, when called to wander
 ENT.AnimTbl_IdleStand = {} -- Leave empty to use schedule | Only works when AI is enabled
 ENT.ChaseSchedule = {SCHED_CHASE_ENEMY} -- Animation played when the SNPC is trying to chase the enemy
-ENT.ConstantlyFaceEnemy = false -- Should it face the enemy constantly?
+ENT.ConstantlyFaceEnemy = true -- Should it face the enemy constantly?
 ENT.ConstantlyFaceEnemy_IfVisible = true -- Should it only face the enemy if it's visible?
 ENT.ConstantlyFaceEnemy_IfAttacking = false -- Should it face the enemy when attacking?
 ENT.ConstantlyFaceEnemy_Postures = "Both" -- "Both" = Moving or standing | "Moving" = Only when moving | "Standing" = Only when standing
@@ -537,6 +542,7 @@ ENT.IsDoingFaceEnemy = false
 ENT.VJ_IsPlayingInterruptSequence = false
 ENT.IsAbleToMeleeAttack = true
 ENT.AlreadyDoneFirstMeleeAttack = false
+ENT.CanDoSelectScheduleAgain = true
 ENT.FollowingPlayerName = NULL
 ENT.MyEnemy = NULL
 ENT.VJ_TheController = NULL
@@ -564,7 +570,7 @@ ENT.NextCallForHelpT = 0
 ENT.NextEntityCheckT = 0
 ENT.NextFindEnemyT = 0
 ENT.NextThrowGrenadeT = 0
-ENT.NextBackUpOnDamageT = 0
+ENT.NextCallForBackUpOnDamageT = 0
 ENT.NextOnGrenadeSightSoundT = 0
 ENT.NextMoveOrHideOnDamageByEnemyT = 0
 ENT.NextAlertSoundT = 0
@@ -593,6 +599,11 @@ ENT.NextGrenadeAttackSoundT = 0
 ENT.CurrentAnim_IdleStand = 0
 ENT.NextSuppressingSoundT = 0
 ENT.NextWeaponAttackT_Covered = 0
+ENT.CurrentFlinchAnimation = 0
+ENT.CurrentFlinchAnimationDuration = 0
+ENT.NextFlinchT = 0
+ENT.CurrentAnim_CallForBackUpOnDamage = 0
+ENT.CurrentAnim_CustomIdle = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.SelectedDifficulty = 1
 	-- Tables ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -673,6 +684,8 @@ function ENT:CustomOnWeaponAttack() end
 function ENT:CustomOnWaitForEnemyToComeOut() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnWeaponReload() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnWeaponReload_AfterRanToCover() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnGrenadeAttack_BeforeThrowTime() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1008,10 +1021,12 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 			self:VJ_PlaySequence(vACT_Name,1,seqwait,vTbl_SequenceDuration,vTbl_SequenceInterruptible)
 		end
 		if IsGesture == false then
+			//vsched:EngTask("TASK_RESET_ACTIVITY", 0)
 			vsched:EngTask("TASK_STOP_MOVING", 0)
 			vsched:EngTask("TASK_STOP_MOVING", 0)
 			self:StopMoving()
 			self:ClearSchedule()
+			///self:ClearGoal()
 			if IsSequence == false then
 				self.VJ_PlayingSequence = false
 				if vACT_FaceEnemy == true then
@@ -1029,33 +1044,73 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 	//self:TaskComplete()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_ACT_FOLLOWTARGET() 
-	local vsched = ai_vj_schedule.New("vj_act_followtarget")
-	vsched:EngTask("TASK_GET_PATH_TO_TARGET", 0)
-	vsched:EngTask("TASK_RUN_PATH", 0)
-	self:StartSchedule(vsched)
+function ENT:VJ_TASK_FACE_X(FaceType)
+	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
+	FaceType = FaceType or "TASK_FACE_TARGET"
+	local vschedFaceX = ai_vj_schedule.New("vj_face_x")
+	vschedFaceX:EngTask(FaceType, 0)
+	self:StartSchedule(vschedFaceX)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_ACT_GOTOPLAYER()
-	local vsched = ai_vj_schedule.New("vj_act_gotoplayer")
-	vsched:EngTask("TASK_GET_PATH_TO_PLAYER", 0)
-	vsched:EngTask("TASK_RUN_PATH", 0)
-	self:StartSchedule(vsched)
+function ENT:VJ_TASK_GOTO_LASTPOS(MoveType,CustomCode)
+	MoveType = MoveType or "TASK_RUN_PATH"
+	local vschedGoToLastPos = ai_vj_schedule.New("vj_goto_lastpos")
+	vschedGoToLastPos:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
+	vschedGoToLastPos:EngTask(MoveType, 0)
+	vschedGoToLastPos:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	//self.CanDoSelectScheduleAgain = false
+	//vschedGoToLastPos.RunCode_OnFinish = function()
+		//self.CanDoSelectScheduleAgain = true
+	//end
+	if (CustomCode) then CustomCode(vschedGoToLastPos) end
+	self:StartSchedule(vschedGoToLastPos)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_ACT_WANDER()
-	local vsched = ai_vj_schedule.New("vj_act_idlewander")
+function ENT:VJ_TASK_GOTO_TARGET(MoveType)
+	MoveType = MoveType or "TASK_RUN_PATH"
+	local vschedGoToTarget = ai_vj_schedule.New("vj_goto_target")
+	vschedGoToTarget:EngTask("TASK_GET_PATH_TO_TARGET", 0)
+	vschedGoToTarget:EngTask(MoveType, 0)
+	vschedGoToTarget:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	vschedGoToTarget:EngTask("TASK_FACE_TARGET", 1)
+	self:StartSchedule(vschedGoToTarget)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:VJ_TASK_GOTO_PLAYER(MoveType)
+	MoveType = MoveType or "TASK_RUN_PATH"
+	local vschedGoToPlayer = ai_vj_schedule.New("vj_goto_player")
+	vschedGoToPlayer:EngTask("TASK_GET_PATH_TO_PLAYER", 0)
+	vschedGoToPlayer:EngTask(MoveType, 0)
+	vschedGoToPlayer:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	self:StartSchedule(vschedGoToPlayer)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:VJ_TASK_IDLE_WANDER()
+	local vschedWander = ai_vj_schedule.New("vj_idle_wander")
 	//self:SetLastPosition(self:GetPos() + self:GetForward() * 300)
-	//vsched:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 0)
-	//vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-	vsched:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 200)
-	vsched:EngTask("TASK_WALK_PATH", 0)
-	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	self:StartSchedule(vsched)
+	//vschedWander:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 0)
+	//vschedWander:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
+	vschedWander:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 350)
+	vschedWander:EngTask("TASK_WALK_PATH", 0)
+	vschedWander:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	vschedWander.ResetOnFail = true
+	vschedWander.CanBeInterrupted = true
+	self:StartSchedule(vschedWander)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_ACT_IDLESTAND(waittime)
-	//if self.LatestTaskName == "vj_act_idlestand" then return end
+function ENT:VJ_TASK_CHASE_ENEMY()
+	local vschedChaseEnemy = ai_vj_schedule.New("vj_chase_enemy")
+	vschedChaseEnemy:EngTask("TASK_GET_PATH_TO_ENEMY")
+	vschedChaseEnemy:EngTask("TASK_RUN_PATH")
+	vschedChaseEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT")
+	vschedChaseEnemy:EngTask("TASK_FACE_ENEMY")
+	vschedChaseEnemy.CanShootWhenMoving = true
+	vschedChaseEnemy.CanBeInterrupted = true
+	self:StartSchedule(vschedChaseEnemy)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:VJ_TASK_IDLE_STAND(waittime)
+	if (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_idle_stand") or (self.CurrentAnim_CustomIdle != 0 && VJ_IsCurrentAnimation(self,self.CurrentAnim_CustomIdle) == true) then return end
 	//local vsched = ai_vj_schedule.New("vj_act_idlestand")
 	//vsched:EngTask("TASK_WAIT", waittime)
 	//self:StartSchedule(vsched)
@@ -1067,26 +1122,33 @@ function ENT:VJ_ACT_IDLESTAND(waittime)
 	//		self:VJ_ACT_PLAYACTIVITY(self.CurrentAnim_IdleStand,false,0,true,0,{AlwaysUseSequence=true,SequenceDuration=false,SequenceInterruptible=true})
 	//	end
 	//else
-		if self:IsCurrentSchedule(SCHED_IDLE_STAND) != true then
-			self:VJ_SetSchedule(SCHED_IDLE_STAND)
-		end
+		-- Before --------
+		//if self:IsCurrentSchedule(SCHED_IDLE_STAND) != true then
+		//	self:VJ_SetSchedule(SCHED_IDLE_STAND)
+		//end
+		-----------------
 	//end
+	local vschedIdleStand = ai_vj_schedule.New("vj_idle_stand")
+	//vschedIdleStand:EngTask("TASK_FACE_REASONABLE")
+	vschedIdleStand:EngTask("TASK_STOP_MOVING")
+	vschedIdleStand:EngTask("TASK_WAIT_INDEFINITE")
+	vschedIdleStand.CanBeInterrupted = true
+	self:StartSchedule(vschedIdleStand)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoCustomIdleAnimation()
-	local idletbl = self.AnimTbl_IdleStand
-	local idletblrand = VJ_PICKRANDOMTABLE(idletbl)
-	if idletblrand == false then return end
+	self.CurrentAnim_CustomIdle = VJ_PICKRANDOMTABLE(self.AnimTbl_IdleStand)
+	if self.CurrentAnim_CustomIdle == false then self.CurrentAnim_CustomIdle = 0 return end
 	if self:GetActivity() == ACT_IDLE then
-		if type(idletblrand) == "string" then
-			local checkanim = self:GetSequenceActivity(self:LookupSequence(idletblrand))
+		if type(self.CurrentAnim_CustomIdle) == "string" then
+			local checkanim = self:GetSequenceActivity(self:LookupSequence(self.CurrentAnim_CustomIdle))
 			if checkanim == nil or checkanim == -1 then
 				return false
 			else
-				idletblrand = checkanim
+				self.CurrentAnim_CustomIdle = checkanim
 			end
 		end
-		self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"), idletblrand)
+		self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"), self.CurrentAnim_CustomIdle)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1096,18 +1158,19 @@ function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 	-- 0 = Random | 1 = Wander | 2 = Idle Stand /\ OverrideWander = Wander no matter what
 	RestrictNumber = RestrictNumber or 0
 	OverrideWander = OverrideWander or false
-	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_ACT_IDLESTAND(math.Rand(6,12)) return end
-	if OverrideWander == false && self.DisableWandering == true && (RestrictNumber == 1 or RestrictNumber == 0) then self:VJ_ACT_IDLESTAND(math.Rand(6,12)) return end
+	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_TASK_IDLE_STAND(math.Rand(6,12)) return end
+	if OverrideWander == false && self.DisableWandering == true && (RestrictNumber == 1 or RestrictNumber == 0) then self:VJ_TASK_IDLE_STAND(math.Rand(6,12)) return end
 	if RestrictNumber == 0 then
 		if math.random(1,3) == 1 then
-			self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.IdleSchedule_Wander)) else self:VJ_ACT_IDLESTAND(math.Rand(6,12))
+			/*self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.IdleSchedule_Wander))*/ self:VJ_TASK_IDLE_WANDER() else self:VJ_TASK_IDLE_STAND(math.Rand(6,12))
 		end
 	end
 	if RestrictNumber == 1 then
-		self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.IdleSchedule_Wander))
+		//self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.IdleSchedule_Wander))
+		self:VJ_TASK_IDLE_WANDER()
 	end
 	if RestrictNumber == 2 then
-		self:VJ_ACT_IDLESTAND(math.Rand(6,12))
+		self:VJ_TASK_IDLE_STAND(math.Rand(6,12))
 	end
 	self.NextIdleTime = CurTime() + math.random(2,6)
 end
@@ -1118,12 +1181,17 @@ function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
 	if self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) < self.MeleeAttackDistance && self:GetEnemy():Visible(self) && (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then return end
 	-- OverrideChasing = Chase no matter what
 	OverrideChasing = OverrideChasing or false
-	ChaseSched = ChaseSched or VJ_PICKRANDOMTABLE(self.ChaseSchedule)
-	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_ACT_IDLESTAND(math.Rand(6,12)) return end
-	if self:HasCondition(31) && self:VJ_HasActiveWeapon() == true then ChaseSched = SCHED_ESTABLISH_LINE_OF_FIRE end
-	if OverrideChasing == false && self.DisableChasingEnemy == true then self:VJ_ACT_IDLESTAND(math.Rand(6,12)) return end
-	//if self.HasWalkingCapability == false then self:VJ_ACT_IDLESTAND(0.1) else
-	self:VJ_SetSchedule(ChaseSched)
+	//ChaseSched = ChaseSched or VJ_PICKRANDOMTABLE(self.ChaseSchedule)
+	local DoScheduleBasedChase = false
+	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_TASK_IDLE_STAND(math.Rand(6,12)) return end
+	if self:HasCondition(31) && self:VJ_HasActiveWeapon() == true then DoScheduleBasedChase = true end
+	if OverrideChasing == false && self.DisableChasingEnemy == true then self:VJ_TASK_IDLE_STAND(math.Rand(6,12)) return end
+	//if self.HasWalkingCapability == false then self:VJ_TASK_IDLE_STAND(0.1) else
+	if DoScheduleBasedChase == true then
+		self:VJ_SetSchedule(SCHED_ESTABLISH_LINE_OF_FIRE)
+	else
+		self:VJ_TASK_CHASE_ENEMY()
+	end
 	self.NextChaseTime = CurTime() + 0.1
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1170,7 +1238,8 @@ function ENT:Touch(entity)
 	if self:DoRelationshipCheck(entity) == true then
 		//self:FaceCertainEntity(entity)
 		self:SetTarget(entity)
-		self:VJ_SetSchedule(SCHED_TARGET_FACE)
+		self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+		//self:VJ_SetSchedule(SCHED_TARGET_FACE)
 		end
 	end
   end
@@ -1223,7 +1292,7 @@ if GetConVarNumber("ai_ignoreplayers") == 1 then return end
 		//if self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_IDLE_STAND) end
 		timer.Simple(0.1,function()
 		if self:IsValid() then
-		self:VJ_ACT_FOLLOWTARGET() end end)
+		self:VJ_TASK_GOTO_TARGET() end end)
 		self:FollowPlayerSoundCode()
 		self.FollowingPlayer = true else
 		self:UnFollowPlayerSoundCode()
@@ -1267,7 +1336,7 @@ function ENT:DoMedicCode_FindAllies()
 	self:StopMoving()
 	self:StopMoving()
 	self:SetTarget(v)
-	self:VJ_ACT_FOLLOWTARGET()
+	self:VJ_TASK_GOTO_TARGET()
 	return true
    end
   end
@@ -1320,7 +1389,7 @@ function ENT:DoMedicCode_HealAlly()
 				self:DoMedicCode_Reset()
 				end
 			end)
-			else self.NextIdleTime = CurTime() + 4 self.NextChaseTime = CurTime() + 4 self:SetTarget(self.Medic_CurrentEntToHeal) self:VJ_ACT_FOLLOWTARGET()
+			else self.NextIdleTime = CurTime() + 4 self.NextChaseTime = CurTime() + 4 self:SetTarget(self.Medic_CurrentEntToHeal) self:VJ_TASK_GOTO_TARGET()
 		 end
 		end
 	end
@@ -1330,7 +1399,7 @@ function ENT:DoConstantlyFaceEnemyCode()
 	if self.Dead == true then return false end
 	if self.ConstantlyFaceEnemy == true && self:GetEnemy():GetPos():Distance(self:GetPos()) < self.ConstantlyFaceEnemyDistance then
 		if self.ConstantlyFaceEnemy_IfVisible == true && !self:Visible(self:GetEnemy()) then return false end
-		if self.ConstantlyFaceEnemy_IfAttacking == false && (self.MeleeAttacking == true or self.LeapAttacking == true or self.RangeAttacking == true) then return false end
+		if self.ConstantlyFaceEnemy_IfAttacking == false && (self.MeleeAttacking == true or self.LeapAttacking == true or self.RangeAttacking == true or self.ThrowingGrenade == true) then return false end
 		if self.ConstantlyFaceEnemy_Postures != "Both" then
 			if self.ConstantlyFaceEnemy_Postures == "Moving" && !self:IsMoving() then return false end
 			if self.ConstantlyFaceEnemy_Postures == "Standing" && self:IsMoving() then return false end
@@ -1356,6 +1425,14 @@ function ENT:DoChangeWeapon(SetType)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
+	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
+	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
+	if self.CurrentSchedule != nil && self.CurrentSchedule.ResetOnFail == true && self:HasCondition(35) == true then
+		self:StopMoving()
+		//self:SelectSchedule()
+		self:ClearCondition(35)
+		print("Task Failed Condition Identified!")
+	end
 	//if CurTime() > self.TestT then
 	//self:VJ_ACT_PLAYACTIVITY(ACT_SIGNAL_ADVANCE,true,2,true,0.5)
 	//self.TestT = CurTime() + 200 end
@@ -1409,7 +1486,7 @@ if self.FollowingPlayer == true then
 		//print(DistanceToPly)
 		if DistanceToPly > self.FollowPlayerCloseDistance then
 			self.DontStartShooting_FollowPlayer = true
-			self:VJ_ACT_FOLLOWTARGET()
+			self:VJ_TASK_GOTO_TARGET()
 		else
 			self:StopMoving()
 			self.DontStartShooting_FollowPlayer = false
@@ -1483,9 +1560,8 @@ if self:GetEnemy() != nil then
 		//if CurTime() > self.NextReloadT then
 		//if math.random(1,self.ReloadChance) < 3 then
 		if self.Weapon_ShotsSinceLastReload >= self.Weapon_StartingAmmoAmount then
-		if self.HasUnlimitedClip == true then self:GetActiveWeapon():SetClip1(99999) end
-		self:CustomOnWeaponReload()
-		self.Weapon_ShotsSinceLastReload = 0
+			if self.HasUnlimitedClip == true then self:GetActiveWeapon():SetClip1(99999) end
+			self.Weapon_ShotsSinceLastReload = 0
 			local randreloadthing = math.random(1,2)
 			if self.Weapon_AlreadyReloadedWithNoAnim == true then randreloadthing = 1 self.Weapon_AlreadyReloadedWithNoAnim = false end
 			if randreloadthing == 1 then
@@ -1495,21 +1571,40 @@ if self:GetEnemy() != nil then
 				self.NextChaseTime = CurTime() + 2
 				//timer.Simple(2,function() if IsValid(self) then self.IsReloadingWeapon = false end end)
 				self:WeaponReloadSoundCode()
+				self:CustomOnWeaponReload()
 				if self.DisableWeaponReloadAnimation == false then
-					//self:VJ_SetSchedule(SCHED_RELOAD)
-					if self.FollowingPlayer == false then
-					self.CurrentAnim_WeaponReload = VJ_PICKRANDOMTABLE(self.AnimTbl_ReloadBehindCover)
-					if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == true && VJ_AnimationExists(self,self.CurrentAnim_WeaponReload) == true then
-						self:VJ_ACT_PLAYACTIVITY(self.CurrentAnim_WeaponReload,false,0,false) else
-						self:CapabilitiesRemove(CAP_MOVE_SHOOT)
-						timer.Simple(2,function() if IsValid(self) then
-							self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
-							end
-						end)
-						self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.WeaponReloadSchedule_Regular)) end
+					local function DoReloadAnimation(animtbl)
+						self.CurrentAnim_WeaponReload = VJ_PICKRANDOMTABLE(animtbl)
+						self.CurrentAnimDuration_WeaponReload = VJ_GetSequenceDuration(self,self.CurrentAnim_WeaponReload)-self.WeaponReloadAnimationDecreaseLengthAmount
+						self:VJ_ACT_PLAYACTIVITY(self.CurrentAnim_WeaponReload,true,self.CurrentAnimDuration_WeaponReload,self.WeaponReloadAnimationFaceEnemy,self.WeaponReloadAnimationDelay,{SequenceDuration=self.CurrentAnimDuration_WeaponReload})
+					end
+					if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == true then
+						self.CurrentAnim_WeaponReload = VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponReloadBehindCover)
+						if VJ_AnimationExists(self,self.CurrentAnim_WeaponReload) == true then
+							DoReloadAnimation(self.CurrentAnim_WeaponReload)
+						else
+							DoReloadAnimation(self.AnimTbl_WeaponReload)
+						end
 					else
-						self.CurrentAnim_WeaponReload = VJ_PICKRANDOMTABLE(self.AnimTbl_ReloadFollowing)
-						self:VJ_ACT_PLAYACTIVITY(self.CurrentAnim_WeaponReload,false,0,false)
+						if self.FollowingPlayer == true then
+							DoReloadAnimation(self.AnimTbl_WeaponReload)
+						else
+							self:CapabilitiesRemove(CAP_MOVE_SHOOT)
+							timer.Simple(2,function() if IsValid(self) then
+								self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
+								end
+							end)
+							local vschedWeaponReload = ai_vj_schedule.New("vj_weapon_reload")
+							vschedWeaponReload:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
+							vschedWeaponReload:EngTask("TASK_RUN_PATH", 0)
+							vschedWeaponReload:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+							vschedWeaponReload.RunCode_OnFinish = function()
+								DoReloadAnimation(self.AnimTbl_WeaponReload)
+								self:CustomOnWeaponReload_AfterRanToCover()
+							end
+							self:StartSchedule(vschedWeaponReload)
+							//self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.WeaponReloadSchedule_Regular)) end -- SCHED_HIDE_AND_RELOAD or SCHED_RELOAD
+						end
 					end
 				end
 			else
@@ -1636,6 +1731,19 @@ if self:GetEnemy() != nil then
 	self:WeaponAimPoseParameters()
 	if (self:Visible(self:GetEnemy()) == false or (!table.HasValue(self.AnimTbl_WeaponAttack,self:GetActivity()) && !table.HasValue(self.AnimTbl_WeaponAttackCrouch,self:GetActivity()))) then
 		self.DoingWeaponAttack = false
+	end
+	if self.HasShootWhileMoving == true then
+		if self:VJ_HasActiveWeapon() == true && self:IsMoving() && ((self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true) or (self:VJ_GetCurrentSchedule() == 35)) then
+			if (self.CurrentSchedule != nil && self.CurrentSchedule.IsMovingSchedule_Running == true) or self:VJ_GetCurrentSchedule() == 35 then
+				self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
+				self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_ShootWhileMovingRun))
+			elseif self.CurrentSchedule != nil && self.CurrentSchedule.IsMovingSchedule_Walking == true then
+				self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
+				self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_ShootWhileMovingWalk))
+			end
+		end
+	else
+		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
 	end
 	if self.VJ_IsBeingControlled == false then
 		if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true then self:FaceCertainEntity(self:GetEnemy(),true) end
@@ -1866,7 +1974,7 @@ function ENT:StopAttacks(SetAbleAttackTrue)
 end
 //ENT.Weapon_ChangeIdleAnimToShoot = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SelectSchedule()
+function ENT:SelectSchedule(iNPCState)
 if self.VJ_IsBeingControlled == true then return end
 self:CustomOnSchedule()
 if self.DisableSelectSchedule == true then return end
@@ -1891,22 +1999,22 @@ end*/
 		local SelfToEnemyDistance = self:EyePos():Distance(EnemyPos)
 		if SelfToEnemyDistance < self.DistanceToRunFromEnemy && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == false then
 			if self:VJ_HasActiveWeapon() == true && self.DontStartShooting_FollowPlayer == false && self.FollowingPlayer == false && self.ThrowingGrenade == false && self.VJ_PlayingSequence == false then
+				local function DoBackAwayCode()
+					self.TakingCover = true
+					//self:VJ_SetSchedule(SCHED_FORCED_GO_RUN)
+					self:VJ_TASK_GOTO_LASTPOS("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true end)
+					timer.Simple(2,function() if IsValid(self) then self.TakingCover = false end end)
+				end
 				local linchallorions = self:VJ_CheckAllFourSides(200)
 				if linchallorions.Backward == true then
 					self:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-200,-200))
-					self.TakingCover = true
-					self:VJ_SetSchedule(SCHED_FORCED_GO_RUN)
-					timer.Simple(2,function() if IsValid(self) then self.TakingCover = false end end)
+					DoBackAwayCode()
 				elseif linchallorions.Right == true then
 					self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(200,200))
-					self.TakingCover = true
-					self:VJ_SetSchedule(SCHED_FORCED_GO_RUN)
-					timer.Simple(2,function() if IsValid(self) then self.TakingCover = false end end)
+					DoBackAwayCode()
 				elseif linchallorions.Left == true then
 					self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-200,-200))
-					self.TakingCover = true
-					self:VJ_SetSchedule(SCHED_FORCED_GO_RUN)
-					timer.Simple(2,function() if IsValid(self) then self.TakingCover = false end end)
+					DoBackAwayCode()
 				end
 			end
 		end
@@ -1984,7 +2092,8 @@ end*/
 						if killallcpts.Backward == true or killallcpts.Right == true or killallcpts.Left == true then
 							self.NextWeaponAttackT = CurTime() + 3
 							self:StopMoving()
-							self:VJ_SetSchedule(VJ_PICKRANDOMTABLE({SCHED_FORCED_GO_RUN,SCHED_FORCED_GO}))
+							self:VJ_TASK_GOTO_LASTPOS(VJ_PICKRANDOMTABLE({"TASK_RUN_PATH","TASK_WALK_PATH"}),function(x) x.CanShootWhenMoving = true end)
+							//self:VJ_SetSchedule(VJ_PICKRANDOMTABLE({SCHED_FORCED_GO_RUN,SCHED_FORCED_GO}))
 							//self.Weapon_ChangeIdleAnimToShoot = true
 							//self:GetActiveWeapon().ActivityTranslateAI[ACT_IDLE] = ACT_RANGE_ATTACK_SMG1
 							timer.Simple(0.2, function() if IsValid(self) then
@@ -2669,119 +2778,124 @@ end
 self:SetHealth(self:Health() -dmginfo:GetDamage())
 
 if self:Health() >= 0 then
-
-if self.MoveOrHideOnDamageByEnemy == true && self:GetEnemy() != nil then
-if CurTime() > self.NextMoveOrHideOnDamageByEnemyT && self:EyePos():Distance(self:GetEnemy():EyePos()) < self.ShootDistance && self:GetEnemy() != nil && self.FollowingPlayer == false && self.ThrowingGrenade == false && self.TakingCover == false && !self:IsCurrentSchedule(SCHED_RELOAD) && self:Visible(self:GetEnemy()) && self.VJ_IsBeingControlled == false && self.MeleeAttacking == false && self:IsMoving() == false then
-	if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == true && self.MoveOrHideOnDamageByEnemy_OnlyMove == false then
-		local randtime = math.Rand(self.MoveOrHideOnDamageByEnemy_HideTime1,self.MoveOrHideOnDamageByEnemy_HideTime2)
-		self.TakingCover = true
-		self.NextChaseTime = CurTime() + randtime
-		self.NextWeaponAttackT_Covered = CurTime() + randtime
-		self:VJ_ACT_DOCROUCH(self.MoveOrHideOnDamageByEnemy_CustomActivites,{},false,5,false)
-		timer.Simple(math.Rand(self.MoveOrHideOnDamageByEnemy_NextHideTime1,self.MoveOrHideOnDamageByEnemy_NextHideTime2),function() if IsValid(self) then self.TakingCover = false end end)
-	else
-		local randpos = math.random(150,250)
-		local killallcpts = self:VJ_CheckAllFourSides(randpos)
-		local movepos_back = self:GetPos() + self:GetForward()*-randpos
-		local movepos_right = self:GetPos() + self:GetRight()*-randpos
-		local movepos_left = self:GetPos() + self:GetRight()*-randpos
-		if killallcpts.Backward == true && killallcpts.Right == true && killallcpts.Left == true then
-			self:SetLastPosition(VJ_PICKRANDOMTABLE({movepos_back,movepos_right,movepos_left}))
+	if self.MoveOrHideOnDamageByEnemy == true && self:GetEnemy() != nil then
+	if CurTime() > self.NextMoveOrHideOnDamageByEnemyT && self:EyePos():Distance(self:GetEnemy():EyePos()) < self.ShootDistance && self:GetEnemy() != nil && self.FollowingPlayer == false && self.ThrowingGrenade == false && self.TakingCover == false && !self:IsCurrentSchedule(SCHED_RELOAD) && self:Visible(self:GetEnemy()) && self.VJ_IsBeingControlled == false && self.MeleeAttacking == false && self:IsMoving() == false then
+		if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == true && self.MoveOrHideOnDamageByEnemy_OnlyMove == false then
+			local randtime = math.Rand(self.MoveOrHideOnDamageByEnemy_HideTime1,self.MoveOrHideOnDamageByEnemy_HideTime2)
+			self.TakingCover = true
+			self.NextChaseTime = CurTime() + randtime
+			self.NextWeaponAttackT_Covered = CurTime() + randtime
+			self:VJ_ACT_DOCROUCH(self.MoveOrHideOnDamageByEnemy_CustomActivites,{},false,5,false)
+			timer.Simple(math.Rand(self.MoveOrHideOnDamageByEnemy_NextHideTime1,self.MoveOrHideOnDamageByEnemy_NextHideTime2),function() if IsValid(self) then self.TakingCover = false end end)
 		else
-		if killallcpts.Backward == true then
-			self:SetLastPosition(movepos_back)
-		elseif killallcpts.Right == true then
-			self:SetLastPosition(movepos_right)
-		elseif killallcpts.Left == true then
-			self:SetLastPosition(movepos_left)
-		 end
-		end
+			local randpos = math.random(150,250)
+			local killallcpts = self:VJ_CheckAllFourSides(randpos)
+			local movepos_back = self:GetPos() + self:GetForward()*-randpos
+			local movepos_right = self:GetPos() + self:GetRight()*-randpos
+			local movepos_left = self:GetPos() + self:GetRight()*-randpos
+			if killallcpts.Backward == true && killallcpts.Right == true && killallcpts.Left == true then
+				self:SetLastPosition(VJ_PICKRANDOMTABLE({movepos_back,movepos_right,movepos_left}))
+			else
+			if killallcpts.Backward == true then
+				self:SetLastPosition(movepos_back)
+			elseif killallcpts.Right == true then
+				self:SetLastPosition(movepos_right)
+			elseif killallcpts.Left == true then
+				self:SetLastPosition(movepos_left)
+			 end
+			end
 
-		if killallcpts.Backward == true or killallcpts.Right == true or killallcpts.Left == true then
-			self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.MoveOrHideOnDamageByEnemy_MoveSchedules))
-			timer.Simple(0.2, function() if IsValid(self) then
-				timer.Simple(self:GetPathTimeToGoal() -0.2, function() if IsValid(self) then
-					self:SelectSchedule()
+			if killallcpts.Backward == true or killallcpts.Right == true or killallcpts.Left == true then
+				self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.MoveOrHideOnDamageByEnemy_MoveSchedules))
+				timer.Simple(0.2, function() if IsValid(self) then
+					timer.Simple(self:GetPathTimeToGoal() -0.2, function() if IsValid(self) then
+						self:SelectSchedule()
+					 end
+					end)
 				 end
 				end)
-			 end
-			end)
+			end
 		end
+		self.NextMoveOrHideOnDamageByEnemyT = CurTime() + math.random(self.NextMoveOrHideOnDamageByEnemy1,self.NextMoveOrHideOnDamageByEnemy2)
+	 end
 	end
-	self.NextMoveOrHideOnDamageByEnemyT = CurTime() + math.random(self.NextMoveOrHideOnDamageByEnemy1,self.NextMoveOrHideOnDamageByEnemy2)
- end
-end
 
-if self.CallForBackUpOnDamage == true then
-if CurTime() > self.NextBackUpOnDamageT then
-if self:GetEnemy() == nil && self.FollowingPlayer == false && self.ThrowingGrenade == false then
-if self:CheckAlliesAroundMe(self.CallForBackUpOnDamageDistance).ItFoundAllies == true then
-	self:BringAlliesToMe(self.CallForBackUpOnDamageDistance,self.CallForBackUpOnDamageUseCertainAmount,self.CallForBackUpOnDamageUseCertainAmountNumber)
-	self:ClearSchedule()
-	//self.TakingCover = true
-	self.Flinching = true
-	if self.DisableCallForBackUpOnDamageAnimation == false then
-	timer.Simple(0.1,function()
-		if IsValid(self) then self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.CallForBackUpOnDamageAnimation),true,self.CallForBackUpOnDamageAnimationTime,true) end end)
-	end
-	if self.CallForBackUpOnDamageUseSCHED == true && self.VJ_PlayingSequence == false then
-		self:VJ_SetSchedule(self.CallForBackUpOnDamageUseSCHEDID)
-	end
-	timer.Simple(1,function()
-		if self:IsValid() then
-		//self.TakingCover = false
-		self.Flinching = false
+	if self.CallForBackUpOnDamage == true then
+	if CurTime() > self.NextCallForBackUpOnDamageT then
+	if self:GetEnemy() == nil && self.FollowingPlayer == false && self.ThrowingGrenade == false then
+	if self:CheckAlliesAroundMe(self.CallForBackUpOnDamageDistance).ItFoundAllies == true then
+		self:BringAlliesToMe(self.CallForBackUpOnDamageDistance,self.CallForBackUpOnDamageUseCertainAmount,self.CallForBackUpOnDamageUseCertainAmountNumber)
+		self:ClearSchedule()
+		//self.TakingCover = true
+		self.NextFlinchT = CurTime() + 1
+		self.CurrentAnim_CallForBackUpOnDamage = VJ_PICKRANDOMTABLE(self.CallForBackUpOnDamageAnimation)
+		if VJ_AnimationExists(self,self.CurrentAnim_CallForBackUpOnDamage) == true && self.DisableCallForBackUpOnDamageAnimation == false then
+			self:VJ_ACT_PLAYACTIVITY(self.CurrentAnim_CallForBackUpOnDamage,true,self.CallForBackUpOnDamageAnimationTime,true)
+		else
+			self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
+			/*local vschedHide = ai_vj_schedule.New("vj_hide_callbackupondamage")
+			vschedHide:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
+			vschedHide:EngTask("TASK_RUN_PATH", 0)
+			vschedHide:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+			vschedHide.ResetOnFail = true
+			self:StartSchedule(vschedHide)*/
 		end
-	end)
-   end
-  end
- self.NextBackUpOnDamageT = CurTime() + math.random(self.NextBackUpOnDamageTime1,self.NextBackUpOnDamageTime2)
- end
-end
+	   end
+	  end
+	 self.NextCallForBackUpOnDamageT = CurTime() + math.random(self.NextCallForBackUpOnDamageTime1,self.NextCallForBackUpOnDamageTime2)
+	 end
+	end
 
 	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printondamage") == 1 then print(self:GetClass().." Got Damaged! | Amount = "..dmginfo:GetDamage()) end end
-    self:CustomOnTakeDamage_AfterImmuneChecks(dmginfo,hitgroup)
+	self:CustomOnTakeDamage_AfterImmuneChecks(dmginfo,hitgroup)
 	self:DoFlinch(dmginfo,hitgroup)
 	self:DamageByPlayerCode(dmginfo)
 	self:PainSoundCode()
 
-if self.BecomeEnemyToPlayer == true && DamageAttacker:IsPlayer() && GetConVarNumber("ai_disabled") == 0 && GetConVarNumber("ai_ignoreplayers") == 0 && (self:Disposition(DamageAttacker) == D_LI or self:Disposition(DamageAttacker) == D_NU) then
-	if self.AngerLevelTowardsPlayer <= self.BecomeEnemyToPlayerLevel then
-	self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1 end
-	if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
-	if self:Disposition(DamageAttacker) != D_HT then
-	self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo,hitgroup)
-	if self.FollowingPlayer == true then self:FollowPlayerReset() end
-	table.insert(self.VJ_AddCertainEntityAsEnemy,dmginfo:GetAttacker())
-	if GetConVarNumber("vj_npc_nosnpcchat") == 0 then
-	dmginfo:GetAttacker():PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.") end
-	self:BecomeEnemyToPlayerSoundCode() end
-	//self.NoLongerLikesThePlayer = true
-	self.Alerted = true
-	if self.BecomeEnemyToPlayerSetPlayerFriendlyFalse == true then
-	/*self.PlayerFriendly = false*/ end
-	end
-end
-
-if self.DisableTakeDamageFindEnemy == false && self.TakingCover == false && self.VJ_IsBeingControlled == false && GetConVarNumber("ai_disabled") == 0 then
-//if self.Alerted == false then
-if self:GetEnemy() == nil then
-local MyNearbyTargetssp = ents.FindInSphere(self:GetPos(),5000)
-if (!MyNearbyTargetssp) then return end
-	for k,v in pairs(MyNearbyTargetssp) do
-	   if self:DoRelationshipCheck(v) == true then
-   		self:VJ_DoSetEnemy(v,true)
-		self:DoChaseAnimation() else
-		//self:CallForHelpCode(self.CallForHelpDistance)
-		if CurTime() > self.NextRunAwayOnDamageT then
-		if self.FollowingPlayer == false && self.VJ_PlayingSequence == false && self.RunAwayOnUnknownDamage == true && self.MovementType != VJ_MOVETYPE_STATIONARY then
-		self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY) end
-		self.NextRunAwayOnDamageT = CurTime() + self.NextRunAwayOnDamageTime
+	if self.BecomeEnemyToPlayer == true && DamageAttacker:IsPlayer() && GetConVarNumber("ai_disabled") == 0 && GetConVarNumber("ai_ignoreplayers") == 0 && (self:Disposition(DamageAttacker) == D_LI or self:Disposition(DamageAttacker) == D_NU) then
+		if self.AngerLevelTowardsPlayer <= self.BecomeEnemyToPlayerLevel then
+		self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1 end
+		if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
+		if self:Disposition(DamageAttacker) != D_HT then
+		self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo,hitgroup)
+		if self.FollowingPlayer == true then self:FollowPlayerReset() end
+		table.insert(self.VJ_AddCertainEntityAsEnemy,dmginfo:GetAttacker())
+		if GetConVarNumber("vj_npc_nosnpcchat") == 0 then
+		dmginfo:GetAttacker():PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.") end
+		self:BecomeEnemyToPlayerSoundCode() end
+		//self.NoLongerLikesThePlayer = true
+		self.Alerted = true
+		if self.BecomeEnemyToPlayerSetPlayerFriendlyFalse == true then
+		/*self.PlayerFriendly = false*/ end
 		end
 	end
-   end
-  end
- end
+
+	if self.DisableTakeDamageFindEnemy == false && self.TakingCover == false && self.VJ_IsBeingControlled == false && GetConVarNumber("ai_disabled") == 0 then
+	//if self.Alerted == false then
+	if self:GetEnemy() == nil then
+	local MyNearbyTargetssp = ents.FindInSphere(self:GetPos(),5000)
+	if (!MyNearbyTargetssp) then return end
+		for k,v in pairs(MyNearbyTargetssp) do
+		   if self:DoRelationshipCheck(v) == true then
+				self:VJ_DoSetEnemy(v,true)
+				self:DoChaseAnimation() else
+				//self:CallForHelpCode(self.CallForHelpDistance)
+				if CurTime() > self.NextRunAwayOnDamageT then
+					if self.FollowingPlayer == false && self.RunAwayOnUnknownDamage == true && self.MovementType != VJ_MOVETYPE_STATIONARY then
+						self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
+						/*local vschedHide = ai_vj_schedule.New("vj_hide_unknowndamage")
+						vschedHide:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
+						vschedHide:EngTask("TASK_RUN_PATH", 0)
+						vschedHide:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+						vschedHide.ResetOnFail = true
+						self:StartSchedule(vschedHide)*/
+					end
+					self.NextRunAwayOnDamageT = CurTime() + self.NextRunAwayOnDamageTime
+				end
+			end
+		end
+	 end
+	end
 end
 
 if self:Health() <= 0 && self.Dead == false then
@@ -2790,44 +2904,56 @@ if self:Health() <= 0 && self.Dead == false then
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoFlinch(dmginfo,hitgroup)
-	if self.CanFlinch == 0 then return end
-	if self.Flinching == true then return end
-	local function FlinchMotherFucka()
-		if self.HasHitGroupFlinching == true then
-			local HitGroupHit = false
-			for k,v in ipairs(self.HitGroupFlinching_Values) do
-				if table.HasValue(v.HitGroup,hitgroup) then
-				//if v.HitGroup == hitgroup then
-					HitGroupHit = true
-					self.Flinching = true
-					self:StopAttacks()
-					if v.IsSchedule == true then self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(v.Animation)) else self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(v.Animation),false,0,false,0) end
-					timer.Simple(self.NextMoveAfterFlinchTime,function() if IsValid(self) then self.Flinching = false if self:GetEnemy() != nil then self:DoChaseAnimation() else self:DoIdleAnimation() end end end)
-					self:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup)
+	if self.CanFlinch == 0 or self.Flinching == true or (self.NextFlinchT > CurTime()) then return end
+	
+	local function RunFlinchCode(HitBoxBased,HitBoxInfo)
+		self.Flinching = true
+		self:StopAttacks(true)
+		if HitBoxBased == true then
+			self.CurrentFlinchAnimation = VJ_PICKRANDOMTABLE(HitBoxInfo.Animation)
+			self.CurrentFlinchAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentFlinchAnimation) -self.FlinchAnimationDecreaseLengthAmount
+			if self.NextMoveAfterFlinchTime != "LetBaseDecide" then self.CurrentFlinchAnimationDuration = self.NextMoveAfterFlinchTime end
+			if self.NextMoveAfterFlinchTime == "LetBaseDecide" && HitBoxInfo.IsSchedule == true then self.CurrentFlinchAnimationDuration = 0.6 end
+			if HitBoxInfo.IsSchedule == true then 
+				self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.CurrentFlinchAnimation)) 
+			else
+				self:VJ_ACT_PLAYACTIVITY(self.CurrentFlinchAnimation,false,0,false,0,{SequenceDuration=self.CurrentFlinchAnimationDuration})
+			end
+		else
+			if self.FlinchAnimation_UseSchedule == true then self.CurrentFlinchAnimation = VJ_PICKRANDOMTABLE(self.ScheduleTbl_Flinch) else self.CurrentFlinchAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_Flinch) end
+			self.CurrentFlinchAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentFlinchAnimation) -self.FlinchAnimationDecreaseLengthAmount
+			if self.NextMoveAfterFlinchTime != "LetBaseDecide" then self.CurrentFlinchAnimationDuration = self.NextMoveAfterFlinchTime end
+			if self.NextMoveAfterFlinchTime == "LetBaseDecide" && self.FlinchAnimation_UseSchedule == true then self.CurrentFlinchAnimationDuration = 0.6 end
+			if self.FlinchAnimation_UseSchedule == true then
+				self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.CurrentFlinchAnimation))
+			else
+				self:VJ_ACT_PLAYACTIVITY(self.CurrentFlinchAnimation,false,0,false,0,{SequenceDuration=self.CurrentFlinchAnimationDuration})
+			end
+		end
+		timer.Simple(self.CurrentFlinchAnimationDuration,function() if IsValid(self) then self.Flinching = false if self:GetEnemy() != nil then self:DoChaseAnimation() else self:DoIdleAnimation() end end end)
+		self:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup)
+		self.NextFlinchT = CurTime() + self.NextFlinchTime
+	end
+	
+	local randflinch = math.random(1,self.FlinchChance)
+	if randflinch == 1 then
+		if (self.CanFlinch == 2 && table.HasValue(self.FlinchDamageTypes,dmginfo:GetDamageType())) or (self.CanFlinch == 1) then
+			self:CustomOnFlinch_BeforeFlinch(dmginfo,hitgroup)
+			if self.HasHitGroupFlinching == true then
+				local HitGroupFound = false
+				for k,v in ipairs(self.HitGroupFlinching_Values) do
+					if table.HasValue(v.HitGroup,hitgroup) then
+					//if v.HitGroup == hitgroup then
+						HitGroupFound = true
+						RunFlinchCode(true,v)
 					end
 				end
-				if HitGroupHit == false && self.HitGroupFlinching_DefaultWhenNotHit == true then
-					self.Flinching = true
-					self:StopAttacks()
-					if self.FlinchAnimation_UseSchedule == false then self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.ScheduleTbl_Flinch)) else self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.AnimTbl_Flinch),false,0,false,0) end
-					timer.Simple(self.NextMoveAfterFlinchTime,function() if IsValid(self) then self.Flinching = false if self:GetEnemy() != nil then self:DoChaseAnimation() else self:DoIdleAnimation() end end end)
-					self:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup)
+				if HitGroupFound == false && self.HitGroupFlinching_DefaultWhenNotHit == true then
+					RunFlinchCode(false)
 				end
 			else
-				self.Flinching = true
-				self:StopAttacks()
-				if self.FlinchAnimation_UseSchedule == false then self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.ScheduleTbl_Flinch)) else self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.AnimTbl_Flinch),false,0,false,0) end
-				timer.Simple(self.NextMoveAfterFlinchTime,function() if IsValid(self) then self.Flinching = false if self:GetEnemy() != nil then self:DoChaseAnimation() else self:DoIdleAnimation() end end end)
-				self:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup)
+				RunFlinchCode(false)
 			end
-	end
-	local randflinchchance = math.random(1,self.FlinchChance)
-	if randflinchchance == 1 then
-	self:CustomOnFlinch_BeforeFlinch(dmginfo,hitgroup)
-	if self.CanFlinch == 2 && table.HasValue(self.FlinchDamageTypes,dmginfo:GetDamageType()) then
-		FlinchMotherFucka()
-	elseif self.CanFlinch == 1 then
-		FlinchMotherFucka()
 		end
 	end
 end
