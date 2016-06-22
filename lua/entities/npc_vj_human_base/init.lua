@@ -543,6 +543,7 @@ ENT.VJ_IsPlayingInterruptSequence = false
 ENT.IsAbleToMeleeAttack = true
 ENT.AlreadyDoneFirstMeleeAttack = false
 ENT.CanDoSelectScheduleAgain = true
+ENT.AllowToDo_WaitForEnemyToComeOut = true
 ENT.FollowingPlayerName = NULL
 ENT.MyEnemy = NULL
 ENT.VJ_TheController = NULL
@@ -1733,7 +1734,7 @@ if self:GetEnemy() != nil then
 		self.DoingWeaponAttack = false
 	end
 	if self.HasShootWhileMoving == true then
-		if self:VJ_HasActiveWeapon() == true && self:IsMoving() && ((self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true) or (self:VJ_GetCurrentSchedule() == 35)) then
+		if self:Visible(self:GetEnemy()) && self:VJ_HasActiveWeapon() == true && self:IsMoving() && ((self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true) or (self:VJ_GetCurrentSchedule() == 35)) then
 			if (self.CurrentSchedule != nil && self.CurrentSchedule.IsMovingSchedule_Running == true) or self:VJ_GetCurrentSchedule() == 35 then
 				self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
 				self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_ShootWhileMovingRun))
@@ -2025,14 +2026,18 @@ end*/
    if self:VJ_HasActiveWeapon() == true && self.MeleeAttacking == false && self.DontStartShooting_FollowPlayer == false && self.ThrowingGrenade == false && self.VJ_PlayingSequence == false && self.vACT_StopAttacks == false && self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) > self.MeleeAttackDistance then
 	if SelfToEnemyDistance > self.ShootDistance or CurTime() < self.NextWeaponAttackT then
 		self:DoChaseAnimation()
+		self.AllowToDo_WaitForEnemyToComeOut = false
 	elseif SelfToEnemyDistance < self.ShootDistance && SelfToEnemyDistance > self.ShootDistanceClose then -- If shoot distance is bigger than the enemy position and if the enemy position is bigger than the shoot distance close
-		if (self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()) +self:GetUp()*30,self:GetEnemy():EyePos() /*+self:GetUp()*30*/,true) == true) /*or (!self:Visible(self:GetEnemy()))*/ then -- Chase enemy if hiding
+		if (self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()) +self:GetUp()*30,self:GetEnemy():EyePos() /*+self:GetUp()*30*/,true,1) == true) /*or (!self:Visible(self:GetEnemy()))*/ then -- Chase enemy if hiding
 		//if self:VJ_IsCurrentSchedule(self.WeaponAttackSchedule) != true then
+		//print("Do Chase")
 		if self.DisableChasingEnemy == false then
-			self.DoingWeaponAttack = false
-			self:DoChaseAnimation()
+				self.DoingWeaponAttack = false
+				self:DoChaseAnimation()
 			end
 		else
+		self.AllowToDo_WaitForEnemyToComeOut = true
+		//print("Do Shootttttttttttttttttttttttttttttttttt")
 		// CurTime() > self.NextWeaponAttackT_Covered 
 		//if self:Visible(self:GetEnemy()) /*&& (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle)))*/ then
 			if (self:GetActiveWeapon().IsVJBaseWeapon) then -- VJ Base weapons
@@ -2128,7 +2133,7 @@ end*/
 				end
 			-- Wait for enemy to come out
 			if !self:Visible(self:GetEnemy()) then // self.WaitForEnemyToComeOutDistance
-			if self.Weapon_TimeSinceLastShot <= 5 && self.WaitingForEnemyToComeOut == false && SelfToEnemyDistance < self.ShootDistance && SelfToEnemyDistance > self.WaitForEnemyToComeOutDistance && self:VJ_IsCurrentSchedule(self.WeaponAttackSchedule) != true then
+			if self.AllowToDo_WaitForEnemyToComeOut == true && self.Weapon_TimeSinceLastShot <= 5 && self.WaitingForEnemyToComeOut == false && SelfToEnemyDistance < self.ShootDistance && SelfToEnemyDistance > self.WaitForEnemyToComeOutDistance && self:VJ_IsCurrentSchedule(self.WeaponAttackSchedule) != true then
 			if self.WaitForEnemyToComeOut == true then
 				self.DoingWeaponAttack = false
 				self.NextChaseTime = CurTime() + math.Rand(self.WaitForEnemyToComeOutTime1,self.WaitForEnemyToComeOutTime2)

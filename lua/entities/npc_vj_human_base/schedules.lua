@@ -34,7 +34,7 @@ function ENT:StartSchedule(schedule)
 		schedule.IsMovingSchedule_Running  = false
 		schedule.IsMovingSchedule_Walking  = false
 	end
-	//PrintTable(schedule)
+	//if schedule.Name != "vj_chase_enemy" then PrintTable(schedule) end
 	self.CurrentSchedule 	= schedule
 	self.CurrentTaskID 		= 1
 	self.GetNumberOfTasks = tonumber(schedule:NumTasks()) -- Or else nil

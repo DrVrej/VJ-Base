@@ -318,25 +318,27 @@ end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function NPC_MetaTable:VJ_GetNearestPointToEntityDistance(argent,OnlySelfGetPos)
 	if !IsValid(argent) then return end
-	SelfOnlyGetPos = SelfOnlyGetPos or false -- Should it only do self:GetPos() for the local entity?
+	OnlySelfGetPos = OnlySelfGetPos or false -- Should it only do self:GetPos() for the local entity?
 	local Pos_Enemy = argent:NearestPoint(self:GetPos() +argent:OBBCenter())
 	local Pos_Self = self:NearestPoint(argent:GetPos() +self:OBBCenter())
-	if SelfOnlyGetPos == true then Pos_Self = self:GetPos() end
+	if OnlySelfGetPos == true then Pos_Self = self:GetPos() end
 	Pos_Enemy.z, Pos_Self.z = argent:GetPos().z, self:GetPos().z
 	//local Pos_Distance = Pos_Enemy:Distance(Pos_Self)
 	return Pos_Enemy:Distance(Pos_Self)
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld)
+function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,nih)
 	if self:GetEnemy() == nil then return end
 	StartPos = StartPos or self:NearestPoint(self:GetPos() +self:OBBCenter())
 	EndPos = EndPos or self:GetEnemy():EyePos()
 	AcceptWorld = AcceptWorld or false
+	local istrue = false
 	tr = util.TraceLine({
 		start = StartPos,
 		endpos = EndPos,
 		filter = self
 	})
+	//print("--------------------------------------------")
 	//print(tr.Entity)
 	//PrintTable(tr)
 	
@@ -351,8 +353,16 @@ function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld)
 	timer.Simple(3,function() if IsValid(nig) then nig:Remove() end end)
 	end*/
 	
+	for k,v in ipairs(ents.FindInSphere(tr.HitPos,5)) do
+		//print(v)
+		if v == self:GetEnemy() then
+			istrue = true
+		end
+	end
+	
 	if tr.HitWorld == true && self:GetPos():Distance(tr.HitPos) < 200 then return true end
-	if tr.Entity == NULL or tr.Entity:IsNPC() or tr.Entity:IsPlayer() or tr.Entity == self:GetEnemy() or (AcceptWorld == false && tr.HitWorld == true) then
+	if istrue == true then return false end
+	if /*tr.Entity == NULL or tr.Entity:IsNPC() or tr.Entity:IsPlayer() or*/ tr.Entity == self:GetEnemy() or (AcceptWorld == false && tr.HitWorld == true) then
 	return false else return true end
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
