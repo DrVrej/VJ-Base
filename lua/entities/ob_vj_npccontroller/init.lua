@@ -235,7 +235,7 @@ function ENT:Think()
 		if self.PlayingAnimation == true then return end
 		if self.TheController:KeyDown(IN_RELOAD) then
 			if self.ControlledNPC.IsVJBaseSNPC_Human == true && self.ControlledNPC.DisableWeapons == false then
-				self.ControlledNPC.IsReloadingWeapon = true
+				self.ControlledNPC.HasDoneReloadAnimation = false
 				self.PlayingAnimation = true
 				//self.ControlledNPC:VJ_SetSchedule(SCHED_RELOAD)
 				self.ControlledNPC:VJ_ACT_PLAYACTIVITY(ACT_RELOAD,false,0,false)

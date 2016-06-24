@@ -217,8 +217,10 @@ if (CLIENT) then return end
 if !self:IsValid() && !IsValid(self.Owner) && !self.Owner:IsValid() && !self.Owner:IsNPC() then return end
 if self:IsValid() && IsValid(self.Owner) && self.Owner:IsValid() && self.Owner:IsNPC() && self.Owner:GetActivity() == nil then return end
 
-if self.Owner.IsReloadingWeapon == true && self.AlreadyPlayedNPCReloadSound == false && (VJ_IsCurrentAnimation(self.Owner,self.CurrentAnim_WeaponReload) or VJ_IsCurrentAnimation(self.Owner,self.CurrentAnim_ReloadBehindCover) or VJ_IsCurrentAnimation(self.Owner,self.NPC_ReloadAnimationTbl) or VJ_IsCurrentAnimation(self.Owner,self.NPC_ReloadAnimationTbl_Custom)) then
-	self.Owner.IsReloadingWeapon = false
+if self.Owner.HasDoneReloadAnimation == false && self.AlreadyPlayedNPCReloadSound == false && (VJ_IsCurrentAnimation(self.Owner,self.CurrentAnim_WeaponReload) or VJ_IsCurrentAnimation(self.Owner,self.CurrentAnim_ReloadBehindCover) or VJ_IsCurrentAnimation(self.Owner,self.NPC_ReloadAnimationTbl) or VJ_IsCurrentAnimation(self.Owner,self.NPC_ReloadAnimationTbl_Custom)) then
+	self.Owner.NextThrowGrenadeT = self.Owner.NextThrowGrenadeT + 2
+	self.Owner.HasDoneReloadAnimation = true
+	//self.Owner.IsReloadingWeapon = false
 	self:CustomOnNPC_Reload()
 	self.AlreadyPlayedNPCReloadSound = true
 	if self.NPC_HasReloadSound == true then VJ_EmitSound(self.Owner,self.NPC_ReloadSound,self.NPC_ReloadSoundLevel) end
@@ -274,6 +276,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPCAbleToShoot()
 	if self:IsValid() && IsValid(self.Owner) && self.Owner:IsValid() && self.Owner:IsNPC() then
+		if (self.Owner.IsVJBaseSNPC_Human) && self.Owner:CanDoWeaponAttack() == false then return false end
 		if self.Owner:GetActivity() != nil && (table.HasValue(self.NPC_AnimationTbl_General,self.Owner:GetActivity()) or table.HasValue(self.NPC_AnimationTbl_Rifle,self.Owner:GetActivity()) or table.HasValue(self.NPC_AnimationTbl_Pistol,self.Owner:GetActivity()) or table.HasValue(self.NPC_AnimationTbl_Shotgun,self.Owner:GetActivity()) or VJ_IsCurrentAnimation(self.Owner,self.NPC_AnimationTbl_Custom)) then
 			if self.Owner:VJ_GetEnemy(true) != nil then
 			return true
