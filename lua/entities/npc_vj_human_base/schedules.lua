@@ -16,6 +16,12 @@ function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 	if self.VJ_PlayingSequence == false && self.VJ_IsPlayingInterruptSequence == false && self.ShouldBeFlying == false /*&& self:GetSequence() != self.AerialCurrentAnim && self.MovementType != VJ_MOVETYPE_AERIAL*/ then self:MaintainActivity() end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:DoRunCode_OnFinish(schedule)
+	if schedule == nil then return end
+	if schedule.AlreadyRanCode_OnFinish == true then return end
+	if schedule.RunCode_OnFinish != nil then schedule.AlreadyRanCode_OnFinish = true schedule.RunCode_OnFinish() end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule(iNPCState)
 	if self.VJ_PlayingSequence == true /*or self.VJ_IsPlayingInterruptSequence == true*/ then return end
 	//if self.MovementType == VJ_MOVETYPE_AERIAL then return end
@@ -34,7 +40,9 @@ function ENT:StartSchedule(schedule)
 		schedule.IsMovingSchedule_Running  = false
 		schedule.IsMovingSchedule_Walking  = false
 	end
+	schedule.AlreadyRanCode_OnFinish = false
 	//if schedule.Name != "vj_chase_enemy" then PrintTable(schedule) end
+	self:DoRunCode_OnFinish(self.CurrentSchedule)
 	self.CurrentSchedule 	= schedule
 	self.CurrentTaskID 		= 1
 	self.GetNumberOfTasks = tonumber(schedule:NumTasks()) -- Or else nil
@@ -46,7 +54,9 @@ end
 	if (self:TaskFinished()) then self:NextTask(schedule) end
 end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:ScheduleFinished()
+function ENT:ScheduleFinished(schedule)
+	schedule = schedule or self.CurrentSchedule
+	self:DoRunCode_OnFinish(schedule)
 	self.CurrentSchedule 	= nil
 	self.CurrentTask 		= nil
 	self.CurrentTaskID 		= nil
@@ -74,7 +84,6 @@ function ENT:NextTask(schedule)
 	self.CurrentTaskID = self.CurrentTaskID +1
 	//if self.CurrentTaskID != nil then
 	if (self.CurrentTaskID > self.GetNumberOfTasks) then
-		if schedule.RunCode_OnFinish != nil then schedule.RunCode_OnFinish() end
 		self:ScheduleFinished(schedule)
 		return
 	end //end
