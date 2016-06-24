@@ -3055,7 +3055,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 	end
 
 	-- Blood decal on the ground
-	if self.Bleeds == true then
+	if self.Bleeds == true && self.HasBloodDecal == true then
 		self:SetLocalPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the NPC is too close to the ground
 		local tr = util.TraceLine({
 		start = self:GetPos(),
@@ -3154,43 +3154,38 @@ function ENT:DeathCorpse(dmginfo,hitgroup)
 	self.Corpse.FadeCorpseType = self.FadeCorpseType
 	self.Corpse.IsVJBaseCorpse = true
 	
-	local GetCorpse = self.Corpse
-	local GetBloodDecal = self.BloodDecal
-	local GetCustomBloodParticles = self.BloodPoolParticle
-	if self.Bleeds == true && GetConVarNumber("vj_npc_nobloodpool") == 0 then
-	if self.HasBloodPool == true then
-	timer.Simple(2.2,function()
-		if GetCorpse:IsValid() then
-		local tr = util.TraceLine({
-			start = GetCorpse:GetPos() +GetCorpse:OBBCenter(),
-			endpos = GetCorpse:GetPos() +GetCorpse:OBBCenter() - Vector(0,0,30),
-			filter = GetCorpse, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
-			mask = CONTENTS_SOLID
-		})
-		-- (X,Y,Z),(front,up,side)
-		//print(tr.Fraction)
-		//print(tr.HitNormal)
-		if (tr.HitWorld) then
-		if tr.HitNormal == Vector(0.0,0.0,1.0) then
-		//if (tr.Fraction <= 0.405) then
-		if table.Count(GetCustomBloodParticles) <= 0 then // GetBloodDecal == "YellowBlood"
-		local blooddecalistbl = true
-		if istable(GetBloodDecal) then blooddecalistbl = true else blooddecalistbl = false end
-			if (blooddecalistbl == true && table.HasValue(GetBloodDecal,"YellowBlood")) or (blooddecalistbl == false && GetBloodDecal == "YellowBlood") then
-				ParticleEffect("vj_bleedout_yellow",tr.HitPos,Angle(0,0,0),nil) else
-			if (blooddecalistbl == true && table.HasValue(GetBloodDecal,"Blood")) or (blooddecalistbl == false && GetBloodDecal == "Blood") then
-				ParticleEffect("vj_bleedout_red",tr.HitPos,Angle(0,0,0),nil)
+	if self.Bleeds == true && self.HasBloodPool == true && GetConVarNumber("vj_npc_nobloodpool") == 0 then
+		local GetCorpse = self.Corpse
+		local GetBloodDecal = self.BloodDecal
+		local GetCustomBloodParticles = self.BloodPoolParticle
+		timer.Simple(2.2,function()
+			if GetCorpse:IsValid() then
+				local tr = util.TraceLine({
+					start = GetCorpse:GetPos() +GetCorpse:OBBCenter(),
+					endpos = GetCorpse:GetPos() +GetCorpse:OBBCenter() - Vector(0,0,30),
+					filter = GetCorpse, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
+					mask = CONTENTS_SOLID
+				})
+				-- (X,Y,Z),(front,up,side)
+				//print(tr.Fraction)
+				//print(tr.HitNormal)
+				if (tr.HitWorld) && tr.HitNormal == Vector(0.0,0.0,1.0) then
+					//if (tr.Fraction <= 0.405) then
+					if table.Count(GetCustomBloodParticles) <= 0 then // GetBloodDecal == "YellowBlood"
+						local blooddecalistbl = true
+						if istable(GetBloodDecal) then blooddecalistbl = true else blooddecalistbl = false end
+						if (blooddecalistbl == true && table.HasValue(GetBloodDecal,"YellowBlood")) or (blooddecalistbl == false && GetBloodDecal == "YellowBlood") then
+							ParticleEffect("vj_bleedout_yellow",tr.HitPos,Angle(0,0,0),nil)
+						elseif (blooddecalistbl == true && table.HasValue(GetBloodDecal,"Blood")) or (blooddecalistbl == false && GetBloodDecal == "Blood") then
+							ParticleEffect("vj_bleedout_red",tr.HitPos,Angle(0,0,0),nil)
+						end
+					else
+						ParticleEffect(VJ_PICKRANDOMTABLE(GetCustomBloodParticles),tr.HitPos,Angle(0,0,0),nil) 
+					end
 				end
 			end
-		else
-			ParticleEffect(VJ_PICKRANDOMTABLE(GetCustomBloodParticles),tr.HitPos,Angle(0,0,0),nil) 
-		 end
-		end
-	   end
-	  end
-	 end)
+		end)
 	end
-   end
 	
 	-- MISC Stuff --
 	if GetConVarNumber("ai_serverragdolls") == 0 then self.Corpse:SetCollisionGroup(1) hook.Call("VJ_CreateSNPCCorpse",nil,self.Corpse,self) else undo.ReplaceEntity(self,self.Corpse) end
@@ -3223,7 +3218,7 @@ function ENT:DeathCorpse(dmginfo,hitgroup)
 	end
 	if self.FadeCorpse == true then self.Corpse:Fire(self.FadeCorpseType, "", self.FadeCorpseTime) end
 	if GetConVarNumber("vj_npc_corpsefade") == 1 then self.Corpse:Fire(self.FadeCorpseType, "", GetConVarNumber("vj_npc_corpsefadetime")) end
-	self:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
+	self:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,self.Corpse)
  end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
