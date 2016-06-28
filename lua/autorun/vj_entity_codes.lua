@@ -343,7 +343,7 @@ function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,nih)
 	//print(tr.Entity)
 	//PrintTable(tr)
 	
-	if nih == 1 then
+	/*if nih == 1 then
 	local nig = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
 	nig:SetModel("models/hunter/blocks/cube025x025x025.mdl")
 	nig:SetPos(tr.HitPos)
@@ -352,7 +352,7 @@ function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,nih)
 	nig:Spawn()
 	nig:Activate()
 	timer.Simple(3,function() if IsValid(nig) then nig:Remove() end end)
-	end
+	end*/
 	
 	for k,v in ipairs(ents.FindInSphere(tr.HitPos,5)) do
 		//print(v)

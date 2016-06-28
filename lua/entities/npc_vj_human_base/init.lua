@@ -3760,10 +3760,10 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RemoveAttackTimers()
 	for _,v in ipairs(self.AttackTimers) do
-		timer.Destroy(v..self.Entity:EntIndex())
+		timer.Remove(v..self.Entity:EntIndex())
 	end
 	for _,v in ipairs(self.AttackTimersCustom) do
-		timer.Destroy(v..self.Entity:EntIndex())
+		timer.Remove(v..self.Entity:EntIndex())
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

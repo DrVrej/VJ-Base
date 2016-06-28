@@ -2055,7 +2055,7 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 		end
 			if self.MeleeAttackSetEnemyOnFire == true then v:Ignite(self.MeleeAttackSetEnemyOnFireTime,0) end
 			if self.HasMeleeAttackKnockBack == true && v.MovementType != VJ_MOVETYPE_STATIONARY then
-				if v.VJ_IsHugeMonster == false or v.IsVJBaseSNPC_Tank == true then
+				if v.VJ_IsHugeMonster != true or v.IsVJBaseSNPC_Tank == true then
 					v:SetVelocity(self:GetForward()*math.random(self.MeleeAttackKnockBack_Forward1,self.MeleeAttackKnockBack_Forward2) +self:GetUp()*math.random(self.MeleeAttackKnockBack_Up1,self.MeleeAttackKnockBack_Up2) +self:GetRight()*math.random(self.MeleeAttackKnockBack_Right1,self.MeleeAttackKnockBack_Right2))
 				end
 			end
@@ -2083,7 +2083,7 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 			self:CustomOnMeleeAttack_SlowPlayer(v)
 			if self.HasSounds == true then if self.HasSlowPlayerSound == true then
 			self.slowplys = CreateSound(v,self.SlowPly) self.slowplys:Play() self.slowplys:SetSoundLevel(100)
-			if !v:Alive() then if self.slowplys then self.slowplys:FadeOut(self.SlowPlySoundFadeTime) end end end end
+			if !v:Alive() && self.slowplys then self.slowplys:FadeOut(self.SlowPlySoundFadeTime) end end end
 			//timer.Simple(self.SlowPlayerOnMeleeAttackTime,function() v:SetWalkSpeed(255) v:SetRunSpeed(500)
 			local slowplayersd_name = self.slowplys
 			local slowplayersd_fade = self.SlowPlySoundFadeTime
@@ -3645,10 +3645,10 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RemoveAttackTimers()
 	for _,v in ipairs(self.AttackTimers) do
-		timer.Destroy(v..self.Entity:EntIndex())
+		timer.Remove(v..self.Entity:EntIndex())
 	end
 	for _,v in ipairs(self.AttackTimersCustom) do
-		timer.Destroy(v..self.Entity:EntIndex())
+		timer.Remove(v..self.Entity:EntIndex())
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
