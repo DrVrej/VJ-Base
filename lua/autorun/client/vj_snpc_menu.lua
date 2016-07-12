@@ -42,6 +42,7 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 	vj_npc_creatureopendoor = "1",
 	vj_npc_vjfriendly = "0",
 	vj_npc_globalcorpselimit = "32",
+	vj_npc_seedistance = "0",
 	vj_npc_processtime = "1",
 	}
 	Panel:AddControl("ComboBox", vj_options_reset)
