@@ -289,7 +289,7 @@ local function VJ_MAINMENU_MISC(Panel)
 	donate:SetSize(150, 30)
 	donate:SetColor(Color(76,153,255,255))
 	donate.DoClick = function(donate)
-		gui.OpenURL("https://www.patreon.com/drvrej?ty=h")
+		gui.OpenURL("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=VTLG9CHSAEUT6")
 	end
 	Panel:AddPanel(donate)
 	
