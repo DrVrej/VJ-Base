@@ -20,7 +20,6 @@ ENT.MeleeAttackDamageDistance = 80 -- How far does the damage go?
 ENT.TimeUntilMeleeAttackDamage = 0.4 -- This counted in seconds | This calculates the time until it hits something
 ENT.NextAnyAttackTime_Melee = 0.6 -- How much time until it can use a attack again? | Counted in Seconds
 ENT.MeleeAttackDamage = 30
-ENT.MeleeAttackDamageType = DMG_SLASH -- Type of Damage
 ENT.HasExtraMeleeAttackSounds = true -- Set to true to use the extra melee attack sounds
 	-- ====== Sound File Paths ====== --
 -- Leave blank if you don't want any sounds to play
