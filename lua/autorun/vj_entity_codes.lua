@@ -406,6 +406,7 @@ function NPC_MetaTable:VJ_DoSetEnemy(argent,ShouldStopActs,DoSmallWhenActiveEnem
 	if argent:Health() <= 0 then return end
 	if argent:IsPlayer() && (!argent:Alive() or GetConVarNumber("ai_ignoreplayers") == 1) then return end
 	DoSmallWhenActiveEnemy = DoSmallWhenActiveEnemy or false
+	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == argent then self:DoMedicCode_Reset() end
 	if DoSmallWhenActiveEnemy == true && self:GetEnemy() != nil then
 		self:AddEntityRelationship(argent,D_HT,99)
 		//self:SetEnemy(argent)
