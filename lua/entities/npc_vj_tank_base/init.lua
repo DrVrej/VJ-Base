@@ -411,7 +411,7 @@ function ENT:TANK_RUNOVER_SOUND()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnTakeDamage_BeforeGetDamage(dmginfo,hitgroup)
+function ENT:CustomOnTakeDamage_BeforeDamage(dmginfo,hitgroup)
 	local panis = dmginfo:GetDamageType()
 	if (panis == DMG_SLASH or panis == DMG_GENERIC or panis == DMG_CLUB) then
 	if dmginfo:GetDamage() >= 30 && dmginfo:GetAttacker().VJ_IsHugeMonster != true then
