@@ -1911,9 +1911,9 @@ function ENT:MeleeAttackCode()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ThrowGrenadeCode(CustomEnt,NoOwner)
-if self.Dead == true then return end
-if self:GetEnemy() != nil && !self:Visible(self:GetEnemy()) then return end
-if self.Flinching == true /*or self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == true*/ then return end
+	if self.Dead == true then return end
+	if self:GetEnemy() != nil && !self:Visible(self:GetEnemy()) then return end
+	if self.Flinching == true /*or self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == true*/ then return end
 	NoOwner = NoOwner or false
 	local getIsCustom = false
 	local gerModel = self.GrenadeAttackModel
@@ -1948,41 +1948,41 @@ if self.Flinching == true /*or self:VJ_ForwardIsHidingZone(self:NearestPoint(sel
 		self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,self.GrenadeAttackAnimationStopAttacks,self.GrenadeAttackAnimationStopAttacksTime,false,self.GrenadeAttackAnimationDelay)
 	end
 	timer.Simple(self.TimeUntilGrenadeIsReleased,function()
-	if getIsCustom == true && !IsValid(CustomEnt) then return end
-	if IsValid(CustomEnt) then CustomEnt.VJHumanTossingAway = false CustomEnt:Remove() end
-	if self:IsValid() then
-	if self.Dead == false /*&& self:GetEnemy() != nil*/ then
-	local gerShootPos = self:GetPos() + self:GetForward()*200
-	if self:GetEnemy() == nil then
-		local iamarmo = self:VJ_CheckAllFourSides()
-		if iamarmo.Forward then gerShootPos = self:GetPos() + self:GetForward()*200 self:FaceCertainPosition(gerShootPos)
-			elseif iamarmo.Right then gerShootPos = self:GetPos() + self:GetRight()*200 self:FaceCertainPosition(gerShootPos)
-			elseif iamarmo.Left then gerShootPos = self:GetPos() + self:GetRight()*-200 self:FaceCertainPosition(gerShootPos) 
-			elseif iamarmo.Backward then gerShootPos = self:GetPos() + self:GetForward()*-200 self:FaceCertainPosition(gerShootPos) 
+		if getIsCustom == true && !IsValid(CustomEnt) then return end
+		if IsValid(CustomEnt) then CustomEnt.VJHumanTossingAway = false CustomEnt:Remove() end
+		if self:IsValid() then
+		if self.Dead == false /*&& self:GetEnemy() != nil*/ then
+		local gerShootPos = self:GetPos() + self:GetForward()*200
+		if self:GetEnemy() == nil then
+			local iamarmo = self:VJ_CheckAllFourSides()
+			if iamarmo.Forward then gerShootPos = self:GetPos() + self:GetForward()*200 self:FaceCertainPosition(gerShootPos)
+				elseif iamarmo.Right then gerShootPos = self:GetPos() + self:GetRight()*200 self:FaceCertainPosition(gerShootPos)
+				elseif iamarmo.Left then gerShootPos = self:GetPos() + self:GetRight()*-200 self:FaceCertainPosition(gerShootPos) 
+				elseif iamarmo.Backward then gerShootPos = self:GetPos() + self:GetForward()*-200 self:FaceCertainPosition(gerShootPos) 
+			end
 		end
-	end
-	if self:GetEnemy() != nil then gerShootPos = self:GetEnemy():GetPos() end
-	local grenent = ents.Create(gerClass)
-	local shoot_vector = gerShootPos -self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos
-	if NoOwner == false then grenent:SetOwner(self) end
-	grenent:SetPos(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos)
-	grenent:SetAngles(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Ang)
-	grenent:SetModel(Model(gerModel))
-	if gerClass == "obj_vj_grenade" then grenent.FussTime = gerFussTime end
-	grenent:Spawn()
-	grenent:Activate()
-	if gerClass == "npc_grenade_frag" then grenent:Input("SetTimer",self:GetOwner(),self:GetOwner(),gerFussTime) end
-	local phys = grenent:GetPhysicsObject()
-	if (phys:IsValid()) then
-		phys:Wake()
-		phys:SetVelocity(shoot_vector +self:GetUp()*math.random(self.GrenadeAttackVelUp1,self.GrenadeAttackVelUp2) +self:GetForward()*math.Rand(self.GrenadeAttackVelForward1,self.GrenadeAttackVelForward2) +self:GetRight()*math.Rand(self.GrenadeAttackVelRight1,self.GrenadeAttackVelRight2))
-		//phys:SetVelocity((self:GetEnemy():GetPos() - self:LocalToWorld(Vector(0,0,20))) + self:GetUp()*300 + self:GetForward()*5)
-	end
-	self:CustomOnGrenadeAttack_OnThrow(grenent)
-   end
-  end
-  self.ThrowingGrenade = false
- end)
+		if self:GetEnemy() != nil then gerShootPos = self:GetEnemy():GetPos() end
+		local grenent = ents.Create(gerClass)
+		local shoot_vector = gerShootPos -self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos
+		if NoOwner == false then grenent:SetOwner(self) end
+		grenent:SetPos(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos)
+		grenent:SetAngles(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Ang)
+		grenent:SetModel(Model(gerModel))
+		if gerClass == "obj_vj_grenade" then grenent.FussTime = gerFussTime end
+		grenent:Spawn()
+		grenent:Activate()
+		if gerClass == "npc_grenade_frag" then grenent:Input("SetTimer",self:GetOwner(),self:GetOwner(),gerFussTime) end
+		local phys = grenent:GetPhysicsObject()
+		if (phys:IsValid()) then
+			phys:Wake()
+			phys:SetVelocity(shoot_vector +self:GetUp()*math.random(self.GrenadeAttackVelUp1,self.GrenadeAttackVelUp2) +self:GetForward()*math.Rand(self.GrenadeAttackVelForward1,self.GrenadeAttackVelForward2) +self:GetRight()*math.Rand(self.GrenadeAttackVelRight1,self.GrenadeAttackVelRight2))
+			//phys:SetVelocity((self:GetEnemy():GetPos() - self:LocalToWorld(Vector(0,0,20))) + self:GetUp()*300 + self:GetForward()*5)
+		end
+		self:CustomOnGrenadeAttack_OnThrow(grenent)
+	   end
+	  end
+	  self.ThrowingGrenade = false
+	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAttacks(SetAbleAttackTrue)
