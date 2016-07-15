@@ -2459,9 +2459,10 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoAlert()
-if self:GetEnemy() == nil then return end
-if self.Alerted == true then return end
+	if self:GetEnemy() == nil then return end
+	if self.Alerted == true then return end
 	self.Alerted = true
+	self.LastSeenEnemyTime = 0
 	self:CustomOnAlert()
 	if CurTime() > self.NextAlertSoundT then
 		if self.PlayAlertSoundOnlyOnce == true then
@@ -2472,7 +2473,7 @@ if self.Alerted == true then return end
 		else
 			self:AlertSoundCode()
 		end
-	self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert1,self.NextSoundTime_Alert2)
+		self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert1,self.NextSoundTime_Alert2)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2525,108 +2526,108 @@ function ENT:DoHardEntityCheck()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoEntityRelationshipCheck()
-if GetConVarNumber("ai_disabled") == 1 or self.Dead == true then return end
-local curposenem = self.CurrentPossibleEnemies
-if curposenem == nil then return end
-//if CurTime() > self.NextHardEntityCheckT then
-	//self.CurrentPossibleEnemies = self:DoHardEntityCheck()
-//self.NextHardEntityCheckT = CurTime() + math.random(self.NextHardEntityCheck1,self.NextHardEntityCheck2) end
-//print(self:GetName().."'s Enemies:")
-//PrintTable(self.CurrentPossibleEnemies)
+	if GetConVarNumber("ai_disabled") == 1 or self.Dead == true then return end
+	local curposenem = self.CurrentPossibleEnemies
+	if curposenem == nil then return end
+	//if CurTime() > self.NextHardEntityCheckT then
+		//self.CurrentPossibleEnemies = self:DoHardEntityCheck()
+	//self.NextHardEntityCheckT = CurTime() + math.random(self.NextHardEntityCheck1,self.NextHardEntityCheck2) end
+	//print(self:GetName().."'s Enemies:")
+	//PrintTable(self.CurrentPossibleEnemies)
 
-/*if table.Count(self.CurrentPossibleEnemies) == 0 && CurTime() > self.NextHardEntityCheckT then
-	self.CurrentPossibleEnemies = self:DoHardEntityCheck()
-self.NextHardEntityCheckT = CurTime() + math.random(50,70) end*/
+	/*if table.Count(self.CurrentPossibleEnemies) == 0 && CurTime() > self.NextHardEntityCheckT then
+		self.CurrentPossibleEnemies = self:DoHardEntityCheck()
+	self.NextHardEntityCheckT = CurTime() + math.random(50,70) end*/
 
-for k, v in ipairs(curposenem) do
-	if !IsValid(v) then table.remove(curposenem,k) continue end
-	//if !IsValid(v) then table.remove(self.CurrentPossibleEnemies,tonumber(v)) continue end
-	if !IsValid(v) then continue end
-	//if v:Health() <= 0 then table.remove(self.CurrentPossibleEnemies,k) continue end
-	local entisfri = false
-	local vPos = v:GetPos()
-	local vClass = v:GetClass()
-	local MyPos = self:GetPos()
-	local vDistanceToMy = vPos:Distance(MyPos)
-	local MyVisibleTov = self:Visible(v)
-	if vDistanceToMy > self.SightDistance then continue end
-	if self.HasOnPlayerSight == true && v:IsPlayer() then self:OnPlayerSightCode(v) end
-	if self.PlayerFriendly == true && v:IsPlayer() && !table.HasValue(self.VJ_AddCertainEntityAsEnemy,v) then entisfri = true continue end
-	local sightdistancenum = self.SightDistance
-	local radiusoverride = 0
-	if (!self.IsVJBaseSNPC_Tank) && v:IsPlayer() && self:GetEnemy() == nil then
-		if v:KeyDown(IN_DUCK) && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightdistancenum = 5000 else sightdistancenum = 2000 end end
-		if vDistanceToMy < 350 && ((!v:KeyDown(IN_DUCK) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP && ((!v:KeyDown(IN_WALK) && (v:KeyDown(IN_FORWARD) or v:KeyDown(IN_BACK) or v:KeyDown(IN_MOVELEFT) or v:KeyDown(IN_MOVERIGHT))) or (v:KeyDown(IN_SPEED) or v:KeyDown(IN_JUMP)))) or (self:VJ_DoPlayerFlashLightCheck(v,20) == true)) then self:SetTarget(v) self:VJ_SetSchedule(SCHED_TARGET_FACE) end
-	end
-	if (vClass != self:GetClass() && v:IsNPC() /*&& MyVisibleTov*/ && (!v.IsVJBaseSNPC_Animal)) && self:Disposition(v) != D_LI then
-	if MyVisibleTov && self.DisableMakingSelfEnemyToNPCs == false then v:AddEntityRelationship(self,D_HT,99) end
-	if self.HasAllies == true then
-		for _,friclass in ipairs(self.VJ_NPC_Class) do
-			if friclass == "CLASS_COMBINE" then entisfri = self:CombineFriendlyCode(v) end
-			if friclass == "CLASS_ZOMBIE" then entisfri = self:ZombieFriendlyCode(v) end
-			if friclass == "CLASS_ANTLION" then entisfri = self:AntlionFriendlyCode(v) end
-			if v:IsNPC() == true && (v.VJ_NPC_Class) && table.HasValue(v.VJ_NPC_Class,friclass) then
-				//print("SHOULD WORK:"..v:GetClass())
-				entisfri = true
-				v:AddEntityRelationship(self,D_LI,99)
-				self:AddEntityRelationship(v,D_LI,99)
+	for k, v in ipairs(curposenem) do
+		if !IsValid(v) then table.remove(curposenem,k) continue end
+		//if !IsValid(v) then table.remove(self.CurrentPossibleEnemies,tonumber(v)) continue end
+		if !IsValid(v) then continue end
+		//if v:Health() <= 0 then table.remove(self.CurrentPossibleEnemies,k) continue end
+		local entisfri = false
+		local vPos = v:GetPos()
+		local vClass = v:GetClass()
+		local MyPos = self:GetPos()
+		local vDistanceToMy = vPos:Distance(MyPos)
+		local MyVisibleTov = self:Visible(v)
+		if vDistanceToMy > self.SightDistance then continue end
+		if self.HasOnPlayerSight == true && v:IsPlayer() then self:OnPlayerSightCode(v) end
+		if self.PlayerFriendly == true && v:IsPlayer() && !table.HasValue(self.VJ_AddCertainEntityAsEnemy,v) then entisfri = true continue end
+		local sightdistancenum = self.SightDistance
+		local radiusoverride = 0
+		if (!self.IsVJBaseSNPC_Tank) && v:IsPlayer() && self:GetEnemy() == nil then
+			if v:KeyDown(IN_DUCK) && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightdistancenum = 5000 else sightdistancenum = 2000 end end
+			if vDistanceToMy < 350 && ((!v:KeyDown(IN_DUCK) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP && ((!v:KeyDown(IN_WALK) && (v:KeyDown(IN_FORWARD) or v:KeyDown(IN_BACK) or v:KeyDown(IN_MOVELEFT) or v:KeyDown(IN_MOVERIGHT))) or (v:KeyDown(IN_SPEED) or v:KeyDown(IN_JUMP)))) or (self:VJ_DoPlayerFlashLightCheck(v,20) == true)) then self:SetTarget(v) self:VJ_SetSchedule(SCHED_TARGET_FACE) end
+		end
+		if (vClass != self:GetClass() && v:IsNPC() /*&& MyVisibleTov*/ && (!v.IsVJBaseSNPC_Animal)) && self:Disposition(v) != D_LI then
+			if MyVisibleTov && self.DisableMakingSelfEnemyToNPCs == false then v:AddEntityRelationship(self,D_HT,99) end
+			if self.HasAllies == true then
+				for _,friclass in ipairs(self.VJ_NPC_Class) do
+					if friclass == "CLASS_COMBINE" then entisfri = self:CombineFriendlyCode(v) end
+					if friclass == "CLASS_ZOMBIE" then entisfri = self:ZombieFriendlyCode(v) end
+					if friclass == "CLASS_ANTLION" then entisfri = self:AntlionFriendlyCode(v) end
+					if v:IsNPC() == true && (v.VJ_NPC_Class) && table.HasValue(v.VJ_NPC_Class,friclass) then
+						//print("SHOULD WORK:"..v:GetClass())
+						entisfri = true
+						v:AddEntityRelationship(self,D_LI,99)
+						self:AddEntityRelationship(v,D_LI,99)
+					end
+				end
+			
+				for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
+					//for k,v in ipairs(ents.FindByClass(fritbl)) do
+					if string.find(vClass, fritbl) then
+						entisfri = true
+						v:AddEntityRelationship(self,D_LI,99)
+						self:AddEntityRelationship(v,D_LI,99)
+					end
+				end
+				if table.HasValue(self.VJ_FriendlyNPCsSingle,vClass) then
+					entisfri = true
+					v:AddEntityRelationship(self,D_LI,99)
+					self:AddEntityRelationship(v,D_LI,99)
+				end
+				if self.CombineFriendly == true then self:CombineFriendlyCode(v) end
+				if self.ZombieFriendly == true then self:ZombieFriendlyCode(v) end
+				if self.AntlionFriendly == true then self:AntlionFriendlyCode(v) end
+				if self.PlayerFriendly == true then
+					self:PlayerAllies(v)
+					if self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true then
+						v:AddEntityRelationship(self,D_LI,99)
+						self:AddEntityRelationship(v,D_LI,99)
+					end
+				end
+				if v.IsVJBaseSNPC == true then self:VJFriendlyCode(v) end
 			end
 		end
-	
-		for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
-			//for k,v in ipairs(ents.FindByClass(fritbl)) do
-			if string.find(vClass, fritbl) then
-				entisfri = true
-				v:AddEntityRelationship(self,D_LI,99)
-				self:AddEntityRelationship(v,D_LI,99)
+		if self.DisableFindEnemy == false then
+			if self.UseSphereForFindEnemy == false && radiusoverride == 0 then
+				if MyVisibleTov && (self:GetForward():Dot((vPos -MyPos):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (vDistanceToMy < sightdistancenum) then
+					if self:DoRelationshipCheck(v) == true then
+					//if (v.VJ_NoTarget && v.VJ_NoTarget != true) then continue end
+						self:AddEntityRelationship(v,D_HT,99)
+						self:VJ_DoSetEnemy(v,true,true)
+						//if self:GetEnemy() == nil then
+							//self:VJ_DoSetEnemy(v,true)
+						//end
+					end
+				end
+			end
+			if self.UseSphereForFindEnemy == true or radiusoverride == 1 then
+				if MyVisibleTov && (vDistanceToMy < sightdistancenum) then
+					if self:DoRelationshipCheck(v) == true then
+						self:AddEntityRelationship(v,D_HT,99)
+						self:VJ_DoSetEnemy(v,true,true)
+						//if self:GetEnemy() == nil then
+							//self:VJ_DoSetEnemy(v,true)
+						//end
+					end
+				end
 			end
 		end
-		if table.HasValue(self.VJ_FriendlyNPCsSingle,vClass) then
-			entisfri = true
-			v:AddEntityRelationship(self,D_LI,99)
-			self:AddEntityRelationship(v,D_LI,99)
-		end
-		if self.CombineFriendly == true then self:CombineFriendlyCode(v) end
-		if self.ZombieFriendly == true then self:ZombieFriendlyCode(v) end
-		if self.AntlionFriendly == true then self:AntlionFriendlyCode(v) end
-		if self.PlayerFriendly == true then
-			self:PlayerAllies(v)
-			if self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true then
-				v:AddEntityRelationship(self,D_LI,99)
-				self:AddEntityRelationship(v,D_LI,99)
-			end
-		end
-		if v.IsVJBaseSNPC == true then self:VJFriendlyCode(v) end
-		end
+	//return true
 	end
-	if self.DisableFindEnemy == false then
-	if self.UseSphereForFindEnemy == false && radiusoverride == 0 then
-	if MyVisibleTov && (self:GetForward():Dot((vPos -MyPos):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (vDistanceToMy < sightdistancenum) then
-	if self:DoRelationshipCheck(v) == true then
-	//if (v.VJ_NoTarget && v.VJ_NoTarget != true) then continue end
-		self:AddEntityRelationship(v,D_HT,99)
-		self:VJ_DoSetEnemy(v,true,true)
-		//if self:GetEnemy() == nil then
-			//self:VJ_DoSetEnemy(v,true)
-			//end
-		end
-	 end
-	end
-	if self.UseSphereForFindEnemy == true or radiusoverride == 1 then
-	if MyVisibleTov && (vDistanceToMy < sightdistancenum) then
-	if self:DoRelationshipCheck(v) == true then
-		self:AddEntityRelationship(v,D_HT,99)
-		self:VJ_DoSetEnemy(v,true,true)
-		//if self:GetEnemy() == nil then
-			//self:VJ_DoSetEnemy(v,true)
-			//end
-		end
-	end
-   end
-  end
-  //return true
- end
-//return false
+	//return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*function ENT:Distance(entity)
@@ -2724,52 +2725,52 @@ end
 end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CallForHelpCode(SeeDistance)
-if self.ThrowingGrenade == true then return end
-if self.CallForHelp == false then return end
+	if self.CallForHelp == false or self.ThrowingGrenade == true then return false end
 	local getselfclass = ents.FindInSphere(self:GetPos(),SeeDistance)
 	local LocalTargetTable = {}
-	if (!getselfclass) then return end
+	if (!getselfclass) then return false end
 	for _,x in pairs(getselfclass) do
-	if x:IsNPC() && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && x.IsVJBaseSNPC == true && x.IsVJBaseSNPC_Animal != false && x.FollowingPlayer == false && x.VJ_IsBeingControlled == false && (!x.IsVJBaseSNPC_Tank) && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4) then
-	if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
-	//if x:DoRelationshipCheck(self:GetEnemy()) == true then
-	table.insert(LocalTargetTable,x)
-	if x:GetEnemy() == nil && x:Disposition(self:GetEnemy()) != D_LI /*&& !self:IsCurrentSchedule(SCHED_FORCED_GO_RUN) == true && !self:IsCurrentSchedule(SCHED_FORCED_GO) == true*/ then
-	self:CustomOnCallForHelp()
-	self:CallForHelpSoundCode()
-	//timer.Simple(1,function() if IsValid(self) && IsValid(x) then x:OnReceiveOrderSoundCode() end end)
-	x:OnReceiveOrderSoundCode()
-	if self.HasCallForHelpAnimation == true && CurTime() > self.NextCallForHelpAnimationT then
-		self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.AnimTbl_CallForHelp),self.CallForHelpStopAnimations,self.CallForHelpStopAnimationsTime,self.CallForHelpAnimationFaceEnemy,self.CallForHelpAnimationDelay,{PlayBackRate=self.CallForHelpAnimationPlayBackRate})
-	self.NextCallForHelpAnimationT = CurTime() + self.NextCallForHelpAnimationTime end
-	if self:GetPos():Distance(x:GetPos()) < SeeDistance then
-	//PrintTable(LocalTargetTable)
-	if (CurTime() > x.NextChaseTime) then
-		if IsValid(self:GetEnemy()) && self:GetEnemy() != nil then
-			if self:GetEnemy():IsPlayer() && x.PlayerFriendly == true then
-				table.insert(x.VJ_AddCertainEntityAsEnemy,self:GetEnemy())
+		if x:IsNPC() && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && x.IsVJBaseSNPC == true && x.IsVJBaseSNPC_Animal != false && x.FollowingPlayer == false && x.VJ_IsBeingControlled == false && (!x.IsVJBaseSNPC_Tank) && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4) then
+			if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
+				//if x:DoRelationshipCheck(self:GetEnemy()) == true then
+				table.insert(LocalTargetTable,x)
+				if x:GetEnemy() == nil && x:Disposition(self:GetEnemy()) != D_LI /*&& !self:IsCurrentSchedule(SCHED_FORCED_GO_RUN) == true && !self:IsCurrentSchedule(SCHED_FORCED_GO) == true*/ then
+					self:CustomOnCallForHelp()
+					self:CallForHelpSoundCode()
+					//timer.Simple(1,function() if IsValid(self) && IsValid(x) then x:OnReceiveOrderSoundCode() end end)
+					x:OnReceiveOrderSoundCode()
+					if self.HasCallForHelpAnimation == true && CurTime() > self.NextCallForHelpAnimationT then
+						self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.AnimTbl_CallForHelp),self.CallForHelpStopAnimations,self.CallForHelpStopAnimationsTime,self.CallForHelpAnimationFaceEnemy,self.CallForHelpAnimationDelay,{PlayBackRate=self.CallForHelpAnimationPlayBackRate})
+						self.NextCallForHelpAnimationT = CurTime() + self.NextCallForHelpAnimationTime 
+					end
+					if self:GetPos():Distance(x:GetPos()) < SeeDistance then
+						//PrintTable(LocalTargetTable)
+						if (CurTime() > x.NextChaseTime) then
+							if IsValid(self:GetEnemy()) && self:GetEnemy() != nil then
+								if self:GetEnemy():IsPlayer() && x.PlayerFriendly == true then
+									table.insert(x.VJ_AddCertainEntityAsEnemy,self:GetEnemy())
+								end
+								x:VJ_DoSetEnemy(self:GetEnemy(),true)
+								x:SetTarget(self:GetEnemy())
+								if x:Visible(self:GetEnemy()) then
+									x:VJ_SetSchedule(SCHED_TARGET_FACE)
+								else
+									x:DoChaseAnimation()
+								end 
+							else
+								local randpos = math.random(1,4)
+								if randpos == 1 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(20,50))
+								elseif randpos == 2 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-20,-50))
+								elseif randpos == 3 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(20,50))
+								elseif randpos == 4 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-20,-50)) end
+								x:VJ_SetSchedule(SCHED_FORCED_GO_RUN)
+							end
+						end
+					end
+				end
 			end
-			x:VJ_DoSetEnemy(self:GetEnemy(),true)
-			x:SetTarget(self:GetEnemy())
-			if x:Visible(self:GetEnemy()) then
-			x:VJ_SetSchedule(SCHED_TARGET_FACE) else
-			x:DoChaseAnimation() end 
-		else
-			local randompostogo = math.random(1,4)
-				if randompostogo == 1 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(20,50)) else
-				if randompostogo == 2 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-20,-50)) end
-				if randompostogo == 3 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(20,50)) end
-				if randompostogo == 4 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-20,-50)) end
-			end
-			x:VJ_SetSchedule(SCHED_FORCED_GO_RUN)
-			end
-		//end
-	  end
-	 end
+		end
 	end
-   end
-  end
- end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CheckAlliesAroundMe(SeeDistance)
@@ -2778,16 +2779,18 @@ function ENT:CheckAlliesAroundMe(SeeDistance)
 	local getselfclass = ents.FindInSphere(self:GetPos(),SeeDistance)
 	if (!getselfclass) then return end
 	for _,x in pairs(getselfclass) do
-	if (x:IsNPC() or x:GetClass() == self:GetClass()) && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4) && x.IsVJBaseSNPC_Animal != false then
-	if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
-	table.insert(FoundEntitiesTbl,x)
-	//print(x:GetClass())
+		if (x:IsNPC() or x:GetClass() == self:GetClass()) && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4) && x.IsVJBaseSNPC_Animal != false then
+			if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
+				table.insert(FoundEntitiesTbl,x)
+				//print(x:GetClass())
+			end
+		end
 	end
-  end
- end
- if table.Count(FoundEntitiesTbl) > 0 then
- return {ItFoundAllies = true, FoundAllies = FoundEntitiesTbl} else
- return {ItFoundAllies = false, FoundAllies = nil} end
+	if table.Count(FoundEntitiesTbl) > 0 then
+		return {ItFoundAllies = true, FoundAllies = FoundEntitiesTbl} 
+	else
+		return {ItFoundAllies = false, FoundAllies = nil}
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:BringAlliesToMe(SeeDistance,CertainAmount,CertainAmountNumber,EnemyVisibleOnly)
