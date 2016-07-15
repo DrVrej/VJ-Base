@@ -1055,16 +1055,18 @@ function ENT:CheckAlliesAroundMe(SeeDistance)
 	local getselfclass = ents.FindInSphere(self:GetPos(),SeeDistance)
 	if (!getselfclass) then return end
 	for _,x in pairs(getselfclass) do
-	if (x:IsNPC() or x:GetClass() == self:GetClass()) && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4) && x.IsVJBaseSNPC_Animal != false then
-	if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
-	table.insert(FoundEntitiesTbl,x)
-	//print(x:GetClass())
+		if (x:IsNPC() or x:GetClass() == self:GetClass()) && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4) && x.IsVJBaseSNPC_Animal != false then
+			if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
+				table.insert(FoundEntitiesTbl,x)
+				//print(x:GetClass())
+			end
+		end
 	end
-  end
- end
- if table.Count(FoundEntitiesTbl) > 0 then
- return {ItFoundAllies = true, FoundAllies = FoundEntitiesTbl} else
- return {ItFoundAllies = false, FoundAllies = nil} end
+	if table.Count(FoundEntitiesTbl) > 0 then
+		return {ItFoundAllies = true, FoundAllies = FoundEntitiesTbl} 
+	else
+		return {ItFoundAllies = false, FoundAllies = nil}
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:BringAlliesToMe(SeeDistance,CertainAmount,CertainAmountNumber,EnemyVisibleOnly)
