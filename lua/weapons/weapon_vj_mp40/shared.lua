@@ -33,9 +33,9 @@ SWEP.Primary.Tracer				= 1
 SWEP.Primary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
 SWEP.Primary.Automatic			= true -- Is it automatic?
 SWEP.Primary.Ammo				= "SMG1" -- Ammo type
-SWEP.Primary.Sound				= "vj_mp40/mp40_single.wav"
+SWEP.Primary.Sound				= {"vj_mp40/mp40_single.wav"}
 SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
-SWEP.Primary.DistantSound		= "vj_mp40/mp40_single_dist.wav" -- The distant sound
+SWEP.Primary.DistantSound		= {"vj_mp40/mp40_single_dist.wav"}
 	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.DelayOnDeploy 				= 1.4 -- Time until it can shoot again after deploying the weapon
 SWEP.HasDeploySound				= false -- Does the weapon have a deploy sound?

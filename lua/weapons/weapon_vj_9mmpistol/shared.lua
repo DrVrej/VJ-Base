@@ -37,9 +37,9 @@ SWEP.Primary.Tracer				= 1
 SWEP.Primary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
 SWEP.Primary.Automatic			= true -- Is it automatic?
 SWEP.Primary.Ammo				= "Pistol" -- Ammo type
-SWEP.Primary.Sound				= "Weapon_Pistol.Single"
+SWEP.Primary.Sound				= {"Weapon_Pistol.Single"}
 SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
-SWEP.Primary.DistantSound		= "Weapon_Pistol.NPC_Single"
+SWEP.Primary.DistantSound		= {"Weapon_Pistol.NPC_Single"}
 SWEP.Primary.AllowFireInWater	= true -- If true, you will be able to use primary fire in water
 	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.DelayOnDeploy 				= 0.4 -- Time until it can shoot again after deploying the weapon

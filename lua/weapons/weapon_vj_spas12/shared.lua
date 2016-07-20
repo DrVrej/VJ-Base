@@ -36,9 +36,9 @@ SWEP.Primary.Tracer				= 1
 SWEP.Primary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
 SWEP.Primary.Automatic			= false -- Is it automatic?
 SWEP.Primary.Ammo				= "Buckshot" -- Ammo type
-SWEP.Primary.Sound				= "Weapon_Shotgun.Single"
+SWEP.Primary.Sound				= {"Weapon_Shotgun.Single"}
 SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
-SWEP.Primary.DistantSound		= "Weapon_Shotgun.NPC_Single"
+SWEP.Primary.DistantSound		= {"Weapon_Shotgun.NPC_Single"}
 SWEP.Primary.DistantSoundVolume	= 0.55 -- Distant sound volume
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound				= true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
@@ -54,7 +54,7 @@ SWEP.NextIdle_PrimaryAttack		= 0.8 -- How much time until it plays the idle anim
 -- Custom
 SWEP.FirstTimeShotShotgun = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
-/*function SWEP:CustomOnNPC_ServerThinkAlways()
+/*function SWEP:CustomOnNPC_ServerThink()
 	print("debeck")
 	if self.Owner:GetActivity() != ACT_RANGE_ATTACK1 then
 	print("Fuck")
