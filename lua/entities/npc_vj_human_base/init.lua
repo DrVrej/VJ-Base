@@ -1330,8 +1330,9 @@ function ENT:DoMedicCode_FindAllies()
 	if self.IsMedicSNPC == false or self.Medic_IsHealingAlly == true or CurTime() < self.Medic_NextHealT then return false end
 	local findnigas = ents.FindInSphere(self:GetPos(),self.Medic_CheckDistance)
 	for k,v in ipairs(findnigas) do
-		if (v.IsVJBaseSNPC == true && self:GetEnemy() == nil && v:GetEnemy() == nil or v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0) && v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic == false then
-			if (!v.IsVJBaseSNPC_Tank) && self:DoRelationshipCheck(v) == false && v:Health() <= v:GetMaxHealth() * 0.75 then
+		if !v:IsNPC() && !v:IsPlayer() then continue end
+		if v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic == false && (!v.IsVJBaseSNPC_Tank) && v:Health() <= v:GetMaxHealth() * 0.75 && ((v.IsVJBaseSNPC == true && self:GetEnemy() == nil && v:GetEnemy() == nil) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0)) then
+			if self:DoRelationshipCheck(v) == false then
 				self.Medic_NextHealT = CurTime() + math.Rand(self.Medic_NextHealTime1,self.Medic_NextHealTime2)
 				self.NextIdleTime = CurTime() + 5
 				self.NextChaseTime = CurTime() + 5
@@ -2364,7 +2365,6 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 	if self.NextResetEnemyT > CurTime() or self:VJ_IsCurrentSchedule(SCHED_ESTABLISH_LINE_OF_FIRE) == true then return end
-	print("hee")
 	local NoResetAlliesSeeEnemy = NoResetAlliesSeeEnemy or false
 	if NoResetAlliesSeeEnemy == true then
 		local cptisgay = self:CheckAlliesAroundMe(1000)

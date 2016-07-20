@@ -34,9 +34,9 @@ SWEP.Primary.TracerType			= "AR2Tracer" -- Tracer type (Examples: AR2, laster, 9
 SWEP.Primary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
 SWEP.Primary.Automatic			= true -- Is it automatic?
 SWEP.Primary.Ammo				= "AR2" -- Ammo type
-SWEP.Primary.Sound				= "Weapon_AR2.NPC_Single"
+SWEP.Primary.Sound				= {"Weapon_AR2.NPC_Single"}
 SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
-SWEP.Primary.DistantSound		= "Weapon_AR2.NPC_Single"
+SWEP.Primary.DistantSound		= {"Weapon_AR2.NPC_Single"}
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound				= false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
 SWEP.ReloadSound				= "weapons/ar2/ar2_reload.wav"

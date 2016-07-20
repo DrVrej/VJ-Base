@@ -32,9 +32,9 @@ SWEP.Primary.Tracer				= 1
 SWEP.Primary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
 SWEP.Primary.Automatic			= true -- Is it automatic?
 SWEP.Primary.Ammo				= "SMG1" -- Ammo type
-SWEP.Primary.Sound				= "Weapon_SMG1.Single"
+SWEP.Primary.Sound				= {"Weapon_SMG1.Single"}
 SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
-SWEP.Primary.DistantSound		= "Weapon_SMG1.NPC_Single"
+SWEP.Primary.DistantSound		= {"Weapon_SMG1.NPC_Single"}
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound				= false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
 SWEP.ReloadSound				= "weapons/smg1/smg1_reload.wav"

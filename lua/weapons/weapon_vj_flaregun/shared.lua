@@ -38,9 +38,9 @@ SWEP.Primary.Tracer				= 1
 SWEP.Primary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
 SWEP.Primary.Automatic			= false -- Is it automatic?
 SWEP.Primary.Ammo				= "357" -- Ammo type
-SWEP.Primary.Sound				= "vj_weapons/flare/fire.wav"
+SWEP.Primary.Sound				= {"vj_weapons/flare/fire.wav"}
 SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
-SWEP.Primary.DistantSound		= "vj_weapons/flare/fire_dist.wav"
+SWEP.Primary.DistantSound		= {"vj_weapons/flare/fire_dist.wav"}
 //SWEP.Primary.DistantSoundVolume	= 0.25 -- Distant sound volume
 SWEP.Primary.DisableBulletCode	= true -- The bullet won't spawn, this can be used when creating a projectile-based weapon
 	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------

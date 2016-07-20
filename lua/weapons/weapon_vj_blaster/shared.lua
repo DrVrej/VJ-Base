@@ -35,7 +35,7 @@ SWEP.Primary.Tracer				= 1
 SWEP.Primary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
 SWEP.Primary.Automatic			= true -- Is it automatic?
 SWEP.Primary.Ammo				= "SMG1" -- Ammo type
-SWEP.Primary.Sound				= "vj_blaster/starwars_fire.wav" -- npc/roller/mine/rmine_explode_shock1.wav
+SWEP.Primary.Sound				= {"vj_blaster/starwars_fire.wav"} -- npc/roller/mine/rmine_explode_shock1.wav
 SWEP.Primary.HasDistantSound	= false -- Does it have a distant sound when the gun is shot?
 SWEP.Primary.DisableBulletCode	= true -- The bullet won't spawn, this can be used when creating a projectile-based weapon
 	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------

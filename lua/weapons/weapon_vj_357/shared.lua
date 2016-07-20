@@ -39,9 +39,9 @@ SWEP.Primary.Tracer				= 1
 SWEP.Primary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
 SWEP.Primary.Automatic			= false -- Is it automatic?
 SWEP.Primary.Ammo				= "357" -- Ammo type
-SWEP.Primary.Sound				= "weapons/357/357_fire2.wav"
+SWEP.Primary.Sound				= {"weapons/357/357_fire2.wav"}
 SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
-SWEP.Primary.DistantSound		= "weapons/357/357_fire2.wav"
+SWEP.Primary.DistantSound		= {"weapons/357/357_fire2.wav"}
 SWEP.Primary.DistantSoundVolume	= 0.7 -- Distant sound volume
 	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.DelayOnDeploy 				= 0.6 -- Time until it can shoot again after deploying the weapon

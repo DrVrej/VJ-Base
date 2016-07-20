@@ -54,6 +54,32 @@ SWEP.ViewModelFOV				= 55 -- Player FOV for the view model
 SWEP.BobScale					= 1.5 -- Bob effect when moving
 SWEP.Spawnable					= false
 SWEP.AdminSpawnable				= false
+	-- World Model ---------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.WorldModel_Invisible = false -- Should the world model be invisible?
+SWEP.WorldModel_UseCustomPosition = false -- Should gun use custom position? This can be used to fix guns that are in the crotch
+SWEP.WorldModel_CustomPositionAngle = Vector(-8,1,180)
+SWEP.WorldModel_CustomPositionOrigin = Vector(-1,6,1.4)
+	-- General Settings ---------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.DryFireSound				= {} -- The sound that it plays when the weapon is out of ammo
+SWEP.DryFireSoundLevel 			= 50 -- Dry fire sound level
+SWEP.DryFireSoundPitch1 		= 90 -- Dry fire sound pitch 1
+SWEP.DryFireSoundPitch2 		= 100 -- Dry fire sound pitch 2
+	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.DelayOnDeploy 				= 1 -- Time until it can shoot again after deploying the weapon
+SWEP.AnimTbl_Deploy				= {ACT_VM_DRAW}
+SWEP.HasDeploySound				= true -- Does the weapon have a deploy sound?
+SWEP.DeploySound				= {} -- Sound played when the weapon is deployed
+	-- Idle Settings ---------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.HasIdleAnimation			= false -- Does it have a idle animation?
+SWEP.AnimTbl_Idle				= {ACT_VM_IDLE}
+SWEP.NextIdle_Deploy			= 0.5 -- How much time until it plays the idle animation after the weapon gets deployed
+SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle animation after attacking(Primary)
+	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.HasReloadSound				= false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
+SWEP.ReloadSound				= {}
+SWEP.AnimTbl_Reload				= {ACT_VM_RELOAD}
+SWEP.Reload_TimeUntilAmmoIsSet	= 1 -- Time until ammo is set to the weapon
+SWEP.Reload_TimeUntilFinished	= 2 -- How much time until the player can play idle animation, shoot, etc.
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Damage				= 5 -- Damage
 SWEP.Primary.PlayerDamage		= 2 -- Put 1 to make it the same as above
@@ -70,10 +96,10 @@ SWEP.Primary.TracerType			= "Tracer" -- Tracer type (Examples: AR2, laster, 9mm)
 SWEP.Primary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
 SWEP.Primary.Automatic			= true -- Is it automatic?
 SWEP.Primary.Ammo				= "SMG1" -- Ammo type
-SWEP.Primary.Sound				= "vj_ak47/ak47_single.wav"
+SWEP.Primary.Sound				= {"vj_ak47/ak47_single.wav"}
 SWEP.AnimTbl_PrimaryFire		= {ACT_VM_PRIMARYATTACK}
 SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
-SWEP.Primary.DistantSound		= "vj_ak47/ak47_single_dist.wav" -- The distant sound
+SWEP.Primary.DistantSound		= {"vj_ak47/ak47_single_dist.wav"}
 SWEP.Primary.DistantSoundLevel	= 140 -- Distant sound level
 SWEP.Primary.DistantSoundPitch1	= 90 -- Distant sound pitch 1
 SWEP.Primary.DistantSoundPitch2	= 110 -- Distant sound pitch 2
@@ -94,30 +120,9 @@ SWEP.Secondary.Tracer			= 1
 SWEP.Secondary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
 SWEP.Secondary.Automatic		= false -- Is it automatic?
 SWEP.Secondary.Ammo				= "none" -- Ammo type
-SWEP.Secondary.Sound			= "vj_ak47/ak47_single.wav"
+SWEP.Secondary.Sound			= {"vj_ak47/ak47_single.wav"}
 SWEP.AnimTbl_SecondaryFire		= {ACT_VM_SECONDARYATTACK}
-SWEP.Secondary.DistantSound		= "vj_ak47/ak47_single_dist.wav" -- The distant sound
-	-- General Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.DryFireSound				= {} -- The sound that it plays when the weapon is out of ammo
-SWEP.DryFireSoundLevel 			= 50 -- Dry fire sound level
-SWEP.DryFireSoundPitch1 		= 90 -- Dry fire sound pitch 1
-SWEP.DryFireSoundPitch2 		= 100 -- Dry fire sound pitch 2
-	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.DelayOnDeploy 				= 1 -- Time until it can shoot again after deploying the weapon
-SWEP.AnimTbl_Deploy				= {ACT_VM_DRAW}
-SWEP.HasDeploySound				= true -- Does the weapon have a deploy sound?
-SWEP.DeploySound				= {} -- Sound played when the weapon is deployed
-	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.HasReloadSound				= false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
-SWEP.ReloadSound				= {}
-SWEP.AnimTbl_Reload				= {ACT_VM_RELOAD}
-SWEP.Reload_TimeUntilAmmoIsSet	= 1 -- Time until ammo is set to the weapon
-SWEP.Reload_TimeUntilFinished	= 2 -- How much time until the player can play idle animation, shoot, etc.
-	-- Idle Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.HasIdleAnimation			= false -- Does it have a idle animation?
-SWEP.AnimTbl_Idle				= {ACT_VM_IDLE}
-SWEP.NextIdle_Deploy			= 0.5 -- How much time until it plays the idle animation after the weapon gets deployed
-SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle animation after attacking(Primary)
+SWEP.Secondary.DistantSound		= {"vj_ak47/ak47_single_dist.wav"}
 	-- Independent Variables ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Deleted					= false
 SWEP.Reloading 					= false
@@ -125,36 +130,23 @@ SWEP.InitHasIdleAnimation		= false
 SWEP.AlreadyPlayedNPCReloadSound = false
 SWEP.NPC_NextPrimaryFireT		= 0
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:SetDefaultValues(curtype)
-	curtype = curtype or "ar2"
-	
-	if curtype == "pistol" then
-		if VJ_PICKRANDOMTABLE(self.DeploySound) == false then self.DeploySound = {"weapons/draw_pistol.wav"} end
-		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_pistol.wav"} end
-		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_pistol.wav"} end
-	elseif curtype == "revolver" then
-		if VJ_PICKRANDOMTABLE(self.DeploySound) == false then self.DeploySound = {"weapons/draw_pistol.wav"} end
-		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_revolver.wav"} end
-		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_revolver.wav"} end
-	elseif curtype == "shotgun" or curtype == "crossbow" then
-		if VJ_PICKRANDOMTABLE(self.DeploySound) == false then self.DeploySound = {"weapons/draw_rifle.wav"} end
-		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
-		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_shotgun.wav"} end
-	elseif curtype == "rpg" then
-		if VJ_PICKRANDOMTABLE(self.DeploySound) == false then self.DeploySound = {"weapons/draw_rifle.wav"} end
-		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
-		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_rpg.wav"} end
-	elseif curtype == "smg" or curtype == "ar2" then
-		if VJ_PICKRANDOMTABLE(self.DeploySound) == false then self.DeploySound = {"weapons/draw_rifle.wav"} end
-		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
-		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_rifle.wav"} end
-	else
-		print("niga")
-		self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"}
-		self.NPC_ReloadSound = {"vj_weapons/reload_rifle.wav"}
-		self.DeploySound = {"weapons/draw_rifle.wav"}
-	end
-end
+function SWEP:CustomOnInitialize() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnThink() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnPrimaryAttack_BeforeShoot() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnPrimaryAttack_AfterShoot() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnDeploy() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnIdle() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnReload() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnNPC_ServerThink() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnNPC_Reload() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Initialize()
 	self:SetHoldType(self.HoldType)
@@ -182,82 +174,98 @@ function SWEP:Initialize()
 	self:SetDefaultValues(self.HoldType)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnInitialize() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttack_BeforeShoot() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttack_AfterShoot() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnDeploy() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnIdle() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnReload() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnNPC_ServerThinkAlways() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnNPC_Reload() end
+function SWEP:SetDefaultValues(curtype)
+	curtype = curtype or "ar2"
+	if curtype == "pistol" then
+		if VJ_PICKRANDOMTABLE(self.DeploySound) == false then self.DeploySound = {"weapons/draw_pistol.wav"} end
+		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_pistol.wav"} end
+		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_pistol.wav"} end
+	elseif curtype == "revolver" then
+		if VJ_PICKRANDOMTABLE(self.DeploySound) == false then self.DeploySound = {"weapons/draw_pistol.wav"} end
+		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_revolver.wav"} end
+		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_revolver.wav"} end
+	elseif curtype == "shotgun" or curtype == "crossbow" then
+		if VJ_PICKRANDOMTABLE(self.DeploySound) == false then self.DeploySound = {"weapons/draw_rifle.wav"} end
+		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
+		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_shotgun.wav"} end
+	elseif curtype == "rpg" then
+		if VJ_PICKRANDOMTABLE(self.DeploySound) == false then self.DeploySound = {"weapons/draw_rifle.wav"} end
+		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
+		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_rpg.wav"} end
+	elseif curtype == "smg" or curtype == "ar2" then
+		if VJ_PICKRANDOMTABLE(self.DeploySound) == false then self.DeploySound = {"weapons/draw_rifle.wav"} end
+		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
+		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_rifle.wav"} end
+	else
+		self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"}
+		self.NPC_ReloadSound = {"vj_weapons/reload_rifle.wav"}
+		self.DeploySound = {"weapons/draw_rifle.wav"}
+	end
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_ServerThinkAlways()
 	if (CLIENT) then return end
 	if !self:IsValid() or !self.Owner:IsValid() then return end
-	self:CustomOnNPC_ServerThinkAlways()
 	hook.Remove("AlwaysThink", self)
 	hook.Add("AlwaysThink",self,self.NPC_ServerThinkAlways)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_ServerThink()
-if (CLIENT) then return end
-if !self:IsValid() or !self.Owner:IsValid() then return end
+	if (CLIENT) then return end
+	if !self:IsValid() or !self.Owner:IsValid() then return end
 	self:NPC_ServerNextFire()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_ServerNextFire()
-if (CLIENT) then return end
-if !self:IsValid() && !IsValid(self.Owner) && !self.Owner:IsValid() && !self.Owner:IsNPC() then return end
-if self:IsValid() && IsValid(self.Owner) && self.Owner:IsValid() && self.Owner:IsNPC() && self.Owner:GetActivity() == nil then return end
+	if (CLIENT) then return end
+	if !self:IsValid() && !IsValid(self.Owner) && !self.Owner:IsValid() && !self.Owner:IsNPC() then return end
+	if self:IsValid() && IsValid(self.Owner) && self.Owner:IsValid() && self.Owner:IsNPC() && self.Owner:GetActivity() == nil then return end
 
-if self.Owner.HasDoneReloadAnimation == false && self.AlreadyPlayedNPCReloadSound == false && (VJ_IsCurrentAnimation(self.Owner,self.CurrentAnim_WeaponReload) or VJ_IsCurrentAnimation(self.Owner,self.CurrentAnim_ReloadBehindCover) or VJ_IsCurrentAnimation(self.Owner,self.NPC_ReloadAnimationTbl) or VJ_IsCurrentAnimation(self.Owner,self.NPC_ReloadAnimationTbl_Custom)) then
-	self.Owner.NextThrowGrenadeT = self.Owner.NextThrowGrenadeT + 2
-	self.Owner.HasDoneReloadAnimation = true
-	//self.Owner.IsReloadingWeapon = false
-	self:CustomOnNPC_Reload()
-	self.AlreadyPlayedNPCReloadSound = true
-	if self.NPC_HasReloadSound == true then VJ_EmitSound(self.Owner,self.NPC_ReloadSound,self.NPC_ReloadSoundLevel) end
-	timer.Simple(3,function() if IsValid(self) then self.AlreadyPlayedNPCReloadSound = false end end)
-end
+	self:RunWorldModelThink()
+	self:CustomOnThink()
+	self:CustomOnNPC_ServerThink()
 
-local function FireCode()
-	self:NPCShoot_Primary(ShootPos,ShootDir)
-	//timer.Simple(0.1,function() if self:IsValid() && IsValid(self.Owner) && self.Owner:IsValid() && self.Owner:IsNPC() then self:NPCShoot_Primary(ShootPos,ShootDir) end end)
-	//timer.Simple(0.2,function() if self:IsValid() && IsValid(self.Owner) && self.Owner:IsValid() && self.Owner:IsNPC() then self:NPCShoot_Primary(ShootPos,ShootDir) end end)
-	hook.Remove("Think", self)
-	//print(self.NPC_NextPrimaryFire)
-	timer.Simple(0.15, function() hook.Add("Think",self,self.NPC_ServerNextFire) end)
-	//self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
-	/*if self:IsValid() && self.Owner:IsValid() && self.Owner.IsVJBaseSNPC == true && self.Owner.Weapon_ChangeIdleAnimToShoot == true then
-		if self.Owner:GetEnemy() != nil then
-			print("CHANGED HOlDTYPE")
-			local htype = self:GetHoldType()
-			self.ActivityTranslateAI[ACT_IDLE] = ACT_RANGE_ATTACK_PISTOL
-			if htype == "ar2" then
-				self.ActivityTranslateAI[ACT_IDLE] = ACT_RANGE_ATTACK_AR2
+	if self.Owner.HasDoneReloadAnimation == false && self.AlreadyPlayedNPCReloadSound == false && (VJ_IsCurrentAnimation(self.Owner,self.CurrentAnim_WeaponReload) or VJ_IsCurrentAnimation(self.Owner,self.CurrentAnim_ReloadBehindCover) or VJ_IsCurrentAnimation(self.Owner,self.NPC_ReloadAnimationTbl) or VJ_IsCurrentAnimation(self.Owner,self.NPC_ReloadAnimationTbl_Custom)) then
+		self.Owner.NextThrowGrenadeT = self.Owner.NextThrowGrenadeT + 2
+		self.Owner.HasDoneReloadAnimation = true
+		//self.Owner.IsReloadingWeapon = false
+		self:CustomOnNPC_Reload()
+		self.AlreadyPlayedNPCReloadSound = true
+		if self.NPC_HasReloadSound == true then VJ_EmitSound(self.Owner,self.NPC_ReloadSound,self.NPC_ReloadSoundLevel) end
+		timer.Simple(3,function() if IsValid(self) then self.AlreadyPlayedNPCReloadSound = false end end)
+	end
+
+	local function FireCode()
+		self:NPCShoot_Primary(ShootPos,ShootDir)
+		//timer.Simple(0.1,function() if self:IsValid() && IsValid(self.Owner) && self.Owner:IsValid() && self.Owner:IsNPC() then self:NPCShoot_Primary(ShootPos,ShootDir) end end)
+		//timer.Simple(0.2,function() if self:IsValid() && IsValid(self.Owner) && self.Owner:IsValid() && self.Owner:IsNPC() then self:NPCShoot_Primary(ShootPos,ShootDir) end end)
+		hook.Remove("Think", self)
+		//print(self.NPC_NextPrimaryFire)
+		timer.Simple(0.15, function() hook.Add("Think",self,self.NPC_ServerNextFire) end)
+		//self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
+		/*if self:IsValid() && self.Owner:IsValid() && self.Owner.IsVJBaseSNPC == true && self.Owner.Weapon_ChangeIdleAnimToShoot == true then
+			if self.Owner:GetEnemy() != nil then
+				print("CHANGED HOlDTYPE")
+				local htype = self:GetHoldType()
+				self.ActivityTranslateAI[ACT_IDLE] = ACT_RANGE_ATTACK_PISTOL
+				if htype == "ar2" then
+					self.ActivityTranslateAI[ACT_IDLE] = ACT_RANGE_ATTACK_AR2
+				end
+				if htype == "smg" then
+					self.ActivityTranslateAI[ACT_IDLE] = ACT_RANGE_ATTACK_SMG1
+				end
+				if htype == "crossbow" or htype == "shotgun" then
+					self.ActivityTranslateAI[ACT_IDLE] = ACT_RANGE_ATTACK_SHOTGUN
+				end
+				if htype == "rpg" then
+					self.ActivityTranslateAI[ACT_IDLE] = ACT_CROUCHIDLE
+				end
 			end
-			if htype == "smg" then
-				self.ActivityTranslateAI[ACT_IDLE] = ACT_RANGE_ATTACK_SMG1
-			end
-			if htype == "crossbow" or htype == "shotgun" then
-				self.ActivityTranslateAI[ACT_IDLE] = ACT_RANGE_ATTACK_SHOTGUN
-			end
-			if htype == "rpg" then
-				self.ActivityTranslateAI[ACT_IDLE] = ACT_CROUCHIDLE
-			end
-		end
-	else
-		print("CHANGED TO NORMAL HOLDTYPE")
-		self:SetupWeaponHoldTypeForAI(self:GetHoldType())
-	end*/
-end
+		else
+			print("CHANGED TO NORMAL HOLDTYPE")
+			self:SetupWeaponHoldTypeForAI(self:GetHoldType())
+		end*/
+	end
 	//self.Owner:Weapon_TranslateActivity(self.Owner:GetActivity())
 	//print(self:TranslateActivity(self.Owner:GetActivity()))
 	//print(self.Owner:GetActivity())
@@ -328,9 +336,9 @@ function SWEP:PrimaryAttack(ShootPos,ShootDir)
 	if (!self:CanPrimaryAttack()) then return end
 	self:CustomOnPrimaryAttack_BeforeShoot()
 	if (SERVER) then
-		sound.Play(Sound(self.Primary.Sound),self:GetPos(),80,math.random(90,100))
+		sound.Play(VJ_PICKRANDOMTABLE(self.Primary.Sound),self:GetPos(),80,math.random(90,100))
 		if self.Primary.HasDistantSound == true then
-		sound.Play(Sound(self.Primary.DistantSound),self:GetPos(),self.Primary.DistantSoundLevel,math.random(self.Primary.DistantSoundPitch1,self.Primary.DistantSoundPitch2),self.Primary.DistantSoundVolume)
+		sound.Play(VJ_PICKRANDOMTABLE(self.Primary.DistantSound),self:GetPos(),self.Primary.DistantSoundLevel,math.random(self.Primary.DistantSoundPitch1,self.Primary.DistantSoundPitch2),self.Primary.DistantSoundVolume)
 		end
 	end
 	//self.Weapon:EmitSound(Sound(self.Primary.Sound),80,self.Primary.SoundPitch)
@@ -460,6 +468,8 @@ end*/
 end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Think()
+	self:RunWorldModelThink()
+	self:CustomOnThink()
 	//if CurTime() > self.NextIdleT then
 	//self.Weapon:SendWeaponAnim(ACT_VM_IDLE)
 	//self.NextIdleT = CurTime() + self.NextIdleTime
@@ -528,9 +538,46 @@ function SWEP:OnRemove()
 	self.Deleted = true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
-
-function SWEP:DrawWorldModel()
-	self:DrawModel()
+function SWEP:GetWeaponCustomPosition()
+	pos, ang = self.Owner:GetBonePosition(self.Owner:LookupBone("ValveBiped.Bip01_R_Hand"))
+	ang:RotateAroundAxis(ang:Right(), self.WorldModel_CustomPositionAngle.x)
+	ang:RotateAroundAxis(ang:Up(), self.WorldModel_CustomPositionAngle.y)
+	ang:RotateAroundAxis(ang:Forward(), self.WorldModel_CustomPositionAngle.z)
+	pos = pos + self.WorldModel_CustomPositionOrigin.x * ang:Right()
+	pos = pos + self.WorldModel_CustomPositionOrigin.y * ang:Forward()
+	pos = pos + self.WorldModel_CustomPositionOrigin.z * ang:Up()
+	return {pos=pos,ang=ang}
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:RunWorldModelThink()
+	if self.WorldModel_UseCustomPosition == true then
+		weppos = self:GetWeaponCustomPosition()
+		self:SetPos(weppos.pos)
+		self:SetAngles(weppos.ang)
 	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+if (CLIENT) then
+function SWEP:DrawWorldModel()
+	if !IsValid(self) then return end
+	if self.WorldModel_Invisible == true then return end
+	self:DrawModel()
+	if self.WorldModel_UseCustomPosition == true then
+		if IsValid(self.Owner) then
+			if self.Owner:IsPlayer() && self.Owner:InVehicle() then return end
+			weppos = self:GetWeaponCustomPosition()
+			self:SetRenderOrigin(weppos.pos)
+			self:SetRenderAngles(weppos.ang)
+			//self:FrameAdvance(FrameTime())
+			//self:SetupBones()
+			self:DrawModel()
+		else
+			self:SetRenderOrigin(nil)
+			self:SetRenderAngles(nil)
+			self:DrawModel()
+		end
+	else
+		self:DrawModel()
+	end
+end
 end
