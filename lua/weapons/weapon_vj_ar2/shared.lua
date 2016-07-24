@@ -21,17 +21,11 @@ SWEP.Spawnable					= true
 SWEP.AdminSpawnable				= false
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Damage				= 12 -- Damage
-SWEP.Primary.PlayerDamage		= 1 -- Put 1 to make it the same as above
-SWEP.Primary.UseNegativePlayerDamage = false -- Should it use a negative number for the player damage?
 SWEP.Primary.Force				= 10 -- Force applied on the object the bullet hits
 SWEP.Primary.NumberOfShots		= 1 -- How many shots per attack?
 SWEP.Primary.ClipSize			= 30 -- Max amount of bullets per clip
-SWEP.Primary.DefaultClip		= 300 -- How much ammo do you get when you first pick up the weapon?
-SWEP.Primary.Cone				= 7 -- How accurate is the bullet? (Players)
 SWEP.Primary.Delay				= 0.1 -- Time until it can shoot again
-SWEP.Primary.Tracer				= 1
 SWEP.Primary.TracerType			= "AR2Tracer" -- Tracer type (Examples: AR2, laster, 9mm)
-SWEP.Primary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
 SWEP.Primary.Automatic			= true -- Is it automatic?
 SWEP.Primary.Ammo				= "AR2" -- Ammo type
 SWEP.Primary.Sound				= {"Weapon_AR2.NPC_Single"}

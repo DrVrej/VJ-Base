@@ -225,7 +225,7 @@ ENT.WaitForEnemyToComeOut = true -- Should it wait for the enemy to come out fro
 ENT.AnimTbl_CustomWaitForEnemyToComeOut = {} -- Leave empty to use the default animations from the base | The base will play the firing animations
 ENT.WaitForEnemyToComeOutTime1 = 5 -- How much time should it wait until it starts chasing the enemy? | First number in math.random
 ENT.WaitForEnemyToComeOutTime2 = 7 -- How much time should it wait until it starts chasing the enemy? | Second number in math.random
-ENT.WaitForEnemyToComeOutDistance = 10 -- If it's this close to the enemy, it won't do it
+ENT.WaitForEnemyToComeOutDistance = 500 -- If it's this close to the enemy, it won't do it
 	-- Grenade Attack ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasGrenadeAttack = false -- Should the SNPC have a grenade attack?
 ENT.NextThrowGrenadeTime1 = 10 -- Time until it runs the throw grenade code again | The first # in math.random
@@ -876,7 +876,7 @@ function ENT:SetInitializeCapabilities()
 		//if self.DisableUSE_SHOT_REGULATOR == false then self:CapabilitiesAdd(bit.bor(CAP_USE_SHOT_REGULATOR)) end
 	//if self.VJ_IsStationary == false then self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT)) end
 	//self:CapabilitiesAdd(bit.bor(CAP_AIM_GUN))
- end
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChangeMovementType(SetType)
@@ -885,8 +885,8 @@ function ENT:DoChangeMovementType(SetType)
 	if self.MovementType == VJ_MOVETYPE_GROUND then
 		self:SetMoveType(MOVETYPE_STEP)
 		self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND))
-		if VJ_AnimationExists(self,ACT_JUMP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_JUMP)) end
-		if VJ_AnimationExists(self,ACT_CLIMB_UP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
+		//if VJ_AnimationExists(self,ACT_JUMP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_JUMP)) end
+		//if VJ_AnimationExists(self,ACT_CLIMB_UP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
 		if self.DisableWeapons == false then self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT)) end
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
 		//self:CapabilitiesRemove(CAP_SKIP_NAV_GROUND_CHECK)
@@ -1113,16 +1113,28 @@ function ENT:VJ_TASK_IDLE_WANDER()
 	self:StartSchedule(vschedWander)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_TASK_CHASE_ENEMY()
+function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
+	UseLOSChase = UseLOSChase or false
 	if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
-	local vschedChaseEnemy = ai_vj_schedule.New("vj_chase_enemy")
-	vschedChaseEnemy:EngTask("TASK_GET_PATH_TO_ENEMY", 0)
-	vschedChaseEnemy:EngTask("TASK_RUN_PATH", 0)
-	vschedChaseEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	vschedChaseEnemy:EngTask("TASK_FACE_ENEMY", 0)
-	vschedChaseEnemy.CanShootWhenMoving = true
-	vschedChaseEnemy.CanBeInterrupted = true
-	self:StartSchedule(vschedChaseEnemy)
+	if UseLOSChase == true then
+		local vschedChaseEnemy = ai_vj_schedule.New("vj_chase_enemy")
+		vschedChaseEnemy:EngTask("TASK_GET_PATH_TO_ENEMY_LOS", 0)
+		vschedChaseEnemy:EngTask("TASK_RUN_PATH", 0)
+		vschedChaseEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+		vschedChaseEnemy:EngTask("TASK_FACE_ENEMY", 0)
+		vschedChaseEnemy.CanShootWhenMoving = true
+		vschedChaseEnemy.CanBeInterrupted = true
+		self:StartSchedule(vschedChaseEnemy)
+	else
+		local vschedChaseEnemy = ai_vj_schedule.New("vj_chase_enemy")
+		vschedChaseEnemy:EngTask("TASK_GET_PATH_TO_ENEMY", 0)
+		vschedChaseEnemy:EngTask("TASK_RUN_PATH", 0)
+		vschedChaseEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+		vschedChaseEnemy:EngTask("TASK_FACE_ENEMY", 0)
+		vschedChaseEnemy.CanShootWhenMoving = true
+		vschedChaseEnemy.CanBeInterrupted = true
+		self:StartSchedule(vschedChaseEnemy)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_IDLE_STAND(waittime)
@@ -1200,14 +1212,16 @@ function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
 	//ChaseSched = ChaseSched or VJ_PICKRANDOMTABLE(self.ChaseSchedule)
 	local DoScheduleBasedChase = false
 	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_TASK_IDLE_STAND(math.Rand(6,12)) return end
-	if self:HasCondition(31) && self:VJ_HasActiveWeapon() == true then DoScheduleBasedChase = true end
+	//if self:HasCondition(31) && self:VJ_HasActiveWeapon() == true then DoScheduleBasedChase = true end
 	if OverrideChasing == false && self.DisableChasingEnemy == true then self:VJ_TASK_IDLE_STAND(math.Rand(6,12)) return end
 	//if self.HasWalkingCapability == false then self:VJ_TASK_IDLE_STAND(0.1) else
-	if DoScheduleBasedChase == true then
-		self:VJ_SetSchedule(SCHED_ESTABLISH_LINE_OF_FIRE)
+	/*if DoScheduleBasedChase == true then
+		//self:VJ_SetSchedule(SCHED_ESTABLISH_LINE_OF_FIRE)
+		self:VJ_TASK_CHASE_ENEMY(true)
 	else
-		self:VJ_TASK_CHASE_ENEMY()
-	end
+		self:VJ_TASK_CHASE_ENEMY(false)
+	end*/
+	if self:VJ_HasActiveWeapon() == true then self:VJ_TASK_CHASE_ENEMY(true) else self:VJ_TASK_CHASE_ENEMY(false) end
 	self.NextChaseTime = CurTime() + 0.1
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1447,6 +1461,11 @@ end
 function ENT:Think()
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
 	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
+	if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" && !self:IsMoving() then
+		self:ScheduleFinished(self.CurrentSchedule)
+		//self:SetCondition(35)
+		//self:StopMoving()
+	end
 	if self.CurrentSchedule != nil && self.CurrentSchedule.ResetOnFail == true && self:HasCondition(35) == true then
 		self:StopMoving()
 		//self:SelectSchedule()
@@ -2220,7 +2239,6 @@ end*/
    end
 	if self:GetEnemy() != nil && self:GetEnemy():GetPos():Distance(self:GetPos()) > self.SightDistance then
 		self:ResetEnemy(false)
-		print("AAAAAAAAAAAAAAAAAAAAAAA")
 	end
  end
 end
@@ -2778,9 +2796,9 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 	if dmginfo:GetDamage() <= 0 then return false end
 	
 	local DamageInflictor = dmginfo:GetInflictor()
-	local DamageInflictorClass = DamageInflictor:GetClass()
+	if IsValid(DamageInflictor) then local DamageInflictorClass = DamageInflictor:GetClass() end
 	local DamageAttacker = dmginfo:GetAttacker()
-	local DamageAttackerClass = DamageAttacker:GetClass()
+	if IsValid(DamageAttacker) then local DamageAttackerClass = DamageAttacker:GetClass() end
 	local DamageType = dmginfo:GetDamageType()
 	local hitgroup = self.VJ_ScaleHitGroupDamage
 	self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo,hitgroup)

@@ -21,25 +21,14 @@ SWEP.Spawnable					= true
 SWEP.AdminSpawnable				= false
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Damage				= 5 -- Damage
-SWEP.Primary.PlayerDamage		= 1 -- Put 1 to make it the same as above
-SWEP.Primary.UseNegativePlayerDamage = false -- Should it use a negative number for the player damage?
 SWEP.Primary.NumberOfShots		= 1 -- How many shots per attack?
 SWEP.Primary.ClipSize			= 45 -- Max amount of bullets per clip
-SWEP.Primary.DefaultClip		= 90 -- How much ammo do you get when you first pick up the weapon?
-SWEP.Primary.Cone				= 7 -- How accurate is the bullet? (Players)
-SWEP.Primary.Delay				= 0.09-- Time until it can shoot again
-SWEP.Primary.Tracer				= 1
-SWEP.Primary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
+SWEP.Primary.Delay				= 0.09 -- Time until it can shoot again
 SWEP.Primary.Automatic			= true -- Is it automatic?
 SWEP.Primary.Ammo				= "SMG1" -- Ammo type
 SWEP.Primary.Sound				= {"Weapon_SMG1.Single"}
 SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
 SWEP.Primary.DistantSound		= {"Weapon_SMG1.NPC_Single"}
-	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.HasReloadSound				= false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
-SWEP.ReloadSound				= "weapons/smg1/smg1_reload.wav"
-SWEP.Reload_TimeUntilAmmoIsSet	= 1 -- Time until ammo is set to the weapon
-SWEP.Reload_TimeUntilFinished	= 1.5 -- How much time until the player can play idle animation, shoot, etc.
 	-- Idle Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasIdleAnimation			= true -- Does it have a idle animation?
 SWEP.AnimTbl_Idle				= {ACT_VM_IDLE}

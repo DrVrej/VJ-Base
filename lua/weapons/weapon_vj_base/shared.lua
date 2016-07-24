@@ -45,7 +45,7 @@ SWEP.NPC_HasReloadSound			= true -- Should it play a sound when the base detects
 SWEP.NPC_ReloadSound			= {} -- Sounds it plays when the base detects the SNPC playing a reload animation
 SWEP.NPC_ReloadSoundLevel		= 60 -- How far does the sound go?
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.AnimPrefix					= "python"
+SWEP.MadeForNPCsOnly 			= false -- Is tihs weapon meant to be for NPCs only?
 SWEP.ViewModel					= "models/weapons/v_rif_ak47.mdl"
 SWEP.WorldModel					= "models/weapons/w_rif_ak47.mdl"
 SWEP.HoldType 					= "ar2"
@@ -54,11 +54,12 @@ SWEP.ViewModelFOV				= 55 -- Player FOV for the view model
 SWEP.BobScale					= 1.5 -- Bob effect when moving
 SWEP.Spawnable					= false
 SWEP.AdminSpawnable				= false
+SWEP.AnimPrefix					= "python"
 	-- World Model ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.WorldModel_Invisible = false -- Should the world model be invisible?
-SWEP.WorldModel_UseCustomPosition = false -- Should gun use custom position? This can be used to fix guns that are in the crotch
+SWEP.WorldModel_UseCustomPosition = false -- Should the gun use custom position? This can be used to fix guns that are in the crotch
 SWEP.WorldModel_CustomPositionAngle = Vector(-8,1,180)
 SWEP.WorldModel_CustomPositionOrigin = Vector(-1,6,1.4)
+SWEP.WorldModel_Invisible = false -- Should the world model be invisible?
 	-- General Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.DryFireSound				= {} -- The sound that it plays when the weapon is out of ammo
 SWEP.DryFireSoundLevel 			= 50 -- Dry fire sound level
@@ -81,13 +82,14 @@ SWEP.AnimTbl_Reload				= {ACT_VM_RELOAD}
 SWEP.Reload_TimeUntilAmmoIsSet	= 1 -- Time until ammo is set to the weapon
 SWEP.Reload_TimeUntilFinished	= 2 -- How much time until the player can play idle animation, shoot, etc.
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.Primary.DisableBulletCode	= false -- The bullet won't spawn, this can be used when creating a projectile-based weapon
+SWEP.Primary.AllowFireInWater	= false -- If true, you will be able to use primary fire in water
 SWEP.Primary.Damage				= 5 -- Damage
-SWEP.Primary.PlayerDamage		= 2 -- Put 1 to make it the same as above
-SWEP.Primary.UseNegativePlayerDamage = false -- Should it use a negative number for the player damage?
+SWEP.Primary.PlayerDamage		= "Same" -- Only applies for players | "Same" = Same as self.Primary.Damage, "Double" = Double the self.Primary.Damage OR put a number to be different from self.Primary.Damage
 SWEP.Primary.Force				= 5 -- Force applied on the object the bullet hits
 SWEP.Primary.NumberOfShots		= 1 -- How many shots per attack?
 SWEP.Primary.ClipSize			= 30 -- Max amount of bullets per clip
-SWEP.Primary.DefaultClip		= 300 -- How much ammo do you get when you first pick up the weapon?
+SWEP.Primary.PickUpAmmoAmount 	= "Default" -- How much ammo should the player get the gun is picked up? | "Default" = 3 Clips
 SWEP.Primary.Recoil				= 0.3 -- How much recoil does the player get?
 SWEP.Primary.Cone				= 7 -- How accurate is the bullet? (Players)
 SWEP.Primary.Delay				= 0.1 -- Time until it can shoot again
@@ -104,11 +106,9 @@ SWEP.Primary.DistantSoundLevel	= 140 -- Distant sound level
 SWEP.Primary.DistantSoundPitch1	= 90 -- Distant sound pitch 1
 SWEP.Primary.DistantSoundPitch2	= 110 -- Distant sound pitch 2
 SWEP.Primary.DistantSoundVolume	= 1 -- Distant sound volume
-SWEP.Primary.DisableBulletCode	= false -- The bullet won't spawn, this can be used when creating a projectile-based weapon
-SWEP.Primary.AllowFireInWater	= false -- If true, you will be able to use primary fire in water
 	-- Secondary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Secondary.Damage			= 5 -- Damage
-SWEP.Secondary.PlayerDamage		= 2 -- Put 1 to make it the same as above
+SWEP.Secondary.PlayerDamage		= 2 -- Only applies for players | "Same" = Same as self.Primary.Damage, "Double" = Double the self.Primary.Damage OR put a number to be different from self.Primary.Damage
 SWEP.Secondary.Force			= 5 -- Force applied on the object the bullet hits
 SWEP.Secondary.NumberOfShots	= 1 -- How many shots per attack?
 SWEP.Secondary.ClipSize			= -1 -- Max amount of bullets per clip
@@ -129,6 +129,7 @@ SWEP.Reloading 					= false
 SWEP.InitHasIdleAnimation		= false
 SWEP.AlreadyPlayedNPCReloadSound = false
 SWEP.NPC_NextPrimaryFireT		= 0
+SWEP.Primary.DefaultClip 		= 0
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -370,9 +371,13 @@ function SWEP:PrimaryAttack(ShootPos,ShootDir)
 		bullet.TracerName = self.Primary.TracerType
 		bullet.Force = self.Primary.Force
 		if self.Owner:IsPlayer() then
-			if self.Primary.UseNegativePlayerDamage == true then
-			bullet.Damage = self.Primary.Damage -self.Primary.PlayerDamage else
-			bullet.Damage = self.Primary.Damage *self.Primary.PlayerDamage end
+			if self.Primary.PlayerDamage == "Same" then
+				bullet.Damage = self.Primary.Damage
+			elseif self.Primary.PlayerDamage == "Double" then
+				bullet.Damage = self.Primary.Damage *2
+			elseif isnumber(self.Primary.PlayerDamage) then
+				bullet.Damage = self.Primary.PlayerDamage
+			end
 		else
 			bullet.Damage = self.Primary.Damage
 		end
@@ -524,8 +529,31 @@ function SWEP:Holster(wep)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Equip()
+	self:SetClip1(self.Primary.ClipSize)
 	if self.Owner:IsPlayer() then
-		self.Owner:GiveAmmo(self.Primary.ClipSize, self.Primary.Ammo)
+		if self.Primary.PickUpAmmoAmount == "Default" then
+			self.Owner:GiveAmmo(self.Primary.ClipSize*2,self.Primary.Ammo)
+		elseif isnumber(self.Primary.PickUpAmmoAmount) then
+			self.Owner:GiveAmmo(self.Primary.PickUpAmmoAmount,self.Primary.Ammo)
+		end
+		//self.Owner:RemoveAmmo(self.Primary.DefaultClip,self.Primary.Ammo)
+		if self.MadeForNPCsOnly == true then
+			self.Owner:PrintMessage(HUD_PRINTTALK,self.PrintName.." removed! It's made for NPCs only!")
+			self:Remove()
+		end
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:EquipAmmo(ply)
+	if ply:IsPlayer() then
+		ply:GiveAmmo(self.Primary.ClipSize,self.Primary.Ammo)
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:AcceptInput(key,activator,called,data)
+	print("egegeeeeeeeee")
+	if activator:IsPlayer() && key == "Use" then
+		print("gegege")
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -561,15 +589,15 @@ if (CLIENT) then
 function SWEP:DrawWorldModel()
 	if !IsValid(self) then return end
 	if self.WorldModel_Invisible == true then return end
-	self:DrawModel()
+	//self:DrawModel()
 	if self.WorldModel_UseCustomPosition == true then
 		if IsValid(self.Owner) then
 			if self.Owner:IsPlayer() && self.Owner:InVehicle() then return end
 			weppos = self:GetWeaponCustomPosition()
 			self:SetRenderOrigin(weppos.pos)
 			self:SetRenderAngles(weppos.ang)
-			//self:FrameAdvance(FrameTime())
-			//self:SetupBones()
+			self:FrameAdvance(FrameTime())
+			self:SetupBones()
 			self:DrawModel()
 		else
 			self:SetRenderOrigin(nil)

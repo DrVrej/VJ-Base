@@ -38,7 +38,7 @@ SWEP.Primary.Automatic 			= false
 SWEP.Primary.Ammo 				= "none"
 SWEP.Secondary.ClipSize 		= -1
 SWEP.Secondary.DefaultClip 		= -1
-SWEP.Secondary.Automatic 		= true
+SWEP.Secondary.Automatic 		= false
 SWEP.Secondary.Ammo 			= "none"
 	-- Independent Variables ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Deleted					= false
