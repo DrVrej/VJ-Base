@@ -1115,16 +1115,28 @@ function ENT:VJ_TASK_IDLE_WANDER()
 	self:StartSchedule(vschedWander)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_TASK_CHASE_ENEMY()
+function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
+	UseLOSChase = UseLOSChase or false
 	if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
-	local vschedChaseEnemy = ai_vj_schedule.New("vj_chase_enemy")
-	vschedChaseEnemy:EngTask("TASK_GET_PATH_TO_ENEMY", 0)
-	vschedChaseEnemy:EngTask("TASK_RUN_PATH", 0)
-	vschedChaseEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	vschedChaseEnemy:EngTask("TASK_FACE_ENEMY", 0)
-	vschedChaseEnemy.CanShootWhenMoving = true
-	vschedChaseEnemy.CanBeInterrupted = true
-	self:StartSchedule(vschedChaseEnemy)
+	if UseLOSChase == true then
+		local vschedChaseEnemy = ai_vj_schedule.New("vj_chase_enemy")
+		vschedChaseEnemy:EngTask("TASK_GET_PATH_TO_ENEMY_LOS", 0)
+		vschedChaseEnemy:EngTask("TASK_RUN_PATH", 0)
+		vschedChaseEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+		vschedChaseEnemy:EngTask("TASK_FACE_ENEMY", 0)
+		vschedChaseEnemy.CanShootWhenMoving = true
+		vschedChaseEnemy.CanBeInterrupted = true
+		self:StartSchedule(vschedChaseEnemy)
+	else
+		local vschedChaseEnemy = ai_vj_schedule.New("vj_chase_enemy")
+		vschedChaseEnemy:EngTask("TASK_GET_PATH_TO_ENEMY", 0)
+		vschedChaseEnemy:EngTask("TASK_RUN_PATH", 0)
+		vschedChaseEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+		vschedChaseEnemy:EngTask("TASK_FACE_ENEMY", 0)
+		vschedChaseEnemy.CanShootWhenMoving = true
+		vschedChaseEnemy.CanBeInterrupted = true
+		self:StartSchedule(vschedChaseEnemy)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_IDLE_STAND(waittime)
@@ -2841,9 +2853,9 @@ function ENT:OnTakeDamage(dmginfo,data)
 	if dmginfo:GetDamage() <= 0 then return false end
 	
 	local DamageInflictor = dmginfo:GetInflictor()
-	local DamageInflictorClass = DamageInflictor:GetClass()
+	if IsValid(DamageInflictor) then local DamageInflictorClass = DamageInflictor:GetClass() end
 	local DamageAttacker = dmginfo:GetAttacker()
-	local DamageAttackerClass = DamageAttacker:GetClass()
+	if IsValid(DamageAttacker) then local DamageAttackerClass = DamageAttacker:GetClass() end
 	local DamageType = dmginfo:GetDamageType()
 	local hitgroup = self.VJ_ScaleHitGroupDamage
 	self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo,hitgroup)

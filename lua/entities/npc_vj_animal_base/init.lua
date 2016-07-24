@@ -1116,9 +1116,9 @@ function ENT:OnTakeDamage(dmginfo,hitgroup)
 	if dmginfo:GetDamage() <= 0 then return false end
 	
 	local DamageInflictor = dmginfo:GetInflictor()
-	local DamageInflictorClass = DamageInflictor:GetClass()
+	if IsValid(DamageInflictor) then local DamageInflictorClass = DamageInflictor:GetClass() end
 	local DamageAttacker = dmginfo:GetAttacker()
-	local DamageAttackerClass = DamageAttacker:GetClass()
+	if IsValid(DamageAttacker) then local DamageAttackerClass = DamageAttacker:GetClass() end
 	local DamageType = dmginfo:GetDamageType()
 	local hitgroup = self.VJ_ScaleHitGroupDamage
 	self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo,hitgroup)

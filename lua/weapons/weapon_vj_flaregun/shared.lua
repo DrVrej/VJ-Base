@@ -25,17 +25,11 @@ SWEP.Spawnable					= true
 SWEP.AdminSpawnable				= false
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Damage				= 20 -- Damage
-SWEP.Primary.PlayerDamage		= 2 -- Put 1 to make it the same as above
-SWEP.Primary.UseNegativePlayerDamage = false -- Should it use a negative number for the player damage?
 SWEP.Primary.Force				= 1 -- Force applied on the object the bullet hits
 SWEP.Primary.NumberOfShots		= 1 -- How many shots per attack?
 SWEP.Primary.ClipSize			= 6 -- Max amount of bullets per clip
-SWEP.Primary.DefaultClip		= 24 -- How much ammo do you get when you first pick up the weapon?
 SWEP.Primary.Recoil				= 2 -- How much recoil does the player get?
-SWEP.Primary.Cone				= 7 -- How accurate is the bullet? (Players)
 SWEP.Primary.Delay				= 0.9 -- Time until it can shoot again
-SWEP.Primary.Tracer				= 1
-SWEP.Primary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
 SWEP.Primary.Automatic			= false -- Is it automatic?
 SWEP.Primary.Ammo				= "357" -- Ammo type
 SWEP.Primary.Sound				= {"vj_weapons/flare/fire.wav"}

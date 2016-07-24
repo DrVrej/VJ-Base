@@ -27,6 +27,15 @@ VJ.AddWeapon("RPG","weapon_vj_rpg",false,vCat)
 //VJ.AddWeapon("Physcannon","weapon_physgun",true,vCat)
 //VJ.AddWeapon("Tool Gun","gmod_tool",true,vCat)
 //VJ.AddWeapon("Camera","gmod_camera",true,vCat)
+
+-- Hooks ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+local function VJ_PLAYER_CANPICKUPWEAPON(ply,wep)
+	if wep.IsVJBaseWeapon == true then
+		if (ply:KeyPressed(IN_USE)) && (ply:GetEyeTrace().Entity == wep) then 
+		return true else return false end
+	end
+end
+hook.Add("PlayerCanPickupWeapon","VJ_PLAYER_CANPICKUPWEAPON",VJ_PLAYER_CANPICKUPWEAPON)
 -- Weapon ConVars ---------------------------------------------------------------------------------------------------------------------------
 /*
 AddConvars["rrrrrrrrrrrrrrrrrrrrrr"] = 0 -- 
@@ -34,13 +43,11 @@ AddConvars["rrrrrrrrrrrrrrrrrrrrrr"] = 0 --
 RunConsoleCommand("command_name", "value")
 */
 local AddConvars = {}
----------------------------------------------------------------------------------------------------------------------------
 -- Setting Commands --
 AddConvars["vj_wep_nomuszzleflash"] = 0 -- Should weapons make a muzzle flash?
 AddConvars["vj_wep_nomuszzlesmoke"] = 0 -- Should weapons make a muzzle smoke?
 AddConvars["vj_wep_nomuzzleheatwave"] = 0 -- Should weapons make a muzzle heat wave?
 AddConvars["vj_wep_nobulletshells"] = 0 -- Should weapons drop bullet shells?
----------------------------------------------------------------------------------------------------------------------------
 for k, v in pairs(AddConvars) do
 	if !ConVarExists( k ) then CreateClientConVar( k, v, true, false ) end
 end
