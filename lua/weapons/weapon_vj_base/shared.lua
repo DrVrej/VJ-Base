@@ -87,7 +87,6 @@ SWEP.Primary.AllowFireInWater	= false -- If true, you will be able to use primar
 SWEP.Primary.Damage				= 5 -- Damage
 SWEP.Primary.PlayerDamage		= "Same" -- Only applies for players | "Same" = Same as self.Primary.Damage, "Double" = Double the self.Primary.Damage OR put a number to be different from self.Primary.Damage
 SWEP.Primary.Force				= 5 -- Force applied on the object the bullet hits
-SWEP.Primary.NumberOfShots		= 1 -- How many shots per attack?
 SWEP.Primary.ClipSize			= 30 -- Max amount of bullets per clip
 SWEP.Primary.PickUpAmmoAmount 	= "Default" -- How much ammo should the player get the gun is picked up? | "Default" = 3 Clips
 SWEP.Primary.Recoil				= 0.3 -- How much recoil does the player get?
@@ -98,10 +97,10 @@ SWEP.Primary.TracerType			= "Tracer" -- Tracer type (Examples: AR2, laster, 9mm)
 SWEP.Primary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
 SWEP.Primary.Automatic			= true -- Is it automatic?
 SWEP.Primary.Ammo				= "SMG1" -- Ammo type
-SWEP.Primary.Sound				= {"vj_ak47/ak47_single.wav"}
+SWEP.Primary.Sound				= {"vj_weapons/ak47/ak47_single.wav"}
 SWEP.AnimTbl_PrimaryFire		= {ACT_VM_PRIMARYATTACK}
 SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
-SWEP.Primary.DistantSound		= {"vj_ak47/ak47_single_dist.wav"}
+SWEP.Primary.DistantSound		= {"vj_weapons/ak47/ak47_single_dist.wav"}
 SWEP.Primary.DistantSoundLevel	= 140 -- Distant sound level
 SWEP.Primary.DistantSoundPitch1	= 90 -- Distant sound pitch 1
 SWEP.Primary.DistantSoundPitch2	= 110 -- Distant sound pitch 2
@@ -120,9 +119,9 @@ SWEP.Secondary.Tracer			= 1
 SWEP.Secondary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
 SWEP.Secondary.Automatic		= false -- Is it automatic?
 SWEP.Secondary.Ammo				= "none" -- Ammo type
-SWEP.Secondary.Sound			= {"vj_ak47/ak47_single.wav"}
+SWEP.Secondary.Sound			= {"vj_weapons/ak47/ak47_single.wav"}
 SWEP.AnimTbl_SecondaryFire		= {ACT_VM_SECONDARYATTACK}
-SWEP.Secondary.DistantSound		= {"vj_ak47/ak47_single_dist.wav"}
+SWEP.Secondary.DistantSound		= {"vj_weapons/ak47/ak47_single_dist.wav"}
 	-- Independent Variables ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Deleted					= false
 SWEP.Reloading 					= false
@@ -138,6 +137,10 @@ function SWEP:CustomOnThink() end
 function SWEP:CustomOnPrimaryAttack_BeforeShoot() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_AfterShoot() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnPrimaryAttack_BulletCallback(attacker,tr,dmginfo) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnFireAnimationEvent(pos,ang,event,options) return false end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnDeploy() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -286,6 +289,7 @@ end
 function SWEP:NPCAbleToShoot()
 	if self:IsValid() && IsValid(self.Owner) && self.Owner:IsValid() && self.Owner:IsNPC() then
 		if (self.Owner.IsVJBaseSNPC_Human) && self.Owner:CanDoWeaponAttack() == false then return false end
+		if (self.Owner.IsVJBaseSNPC_Human) && self.Owner:GetEnemy() != nil && self.Owner:IsAbleToShootWeapon(true,true) == false then return false end
 		if self.Owner:GetActivity() != nil && (table.HasValue(self.NPC_AnimationTbl_General,self.Owner:GetActivity()) or table.HasValue(self.NPC_AnimationTbl_Rifle,self.Owner:GetActivity()) or table.HasValue(self.NPC_AnimationTbl_Pistol,self.Owner:GetActivity()) or table.HasValue(self.NPC_AnimationTbl_Shotgun,self.Owner:GetActivity()) or VJ_IsCurrentAnimation(self.Owner,self.NPC_AnimationTbl_Custom)) then
 			if self.Owner:VJ_GetEnemy(true) != nil then
 			return true
@@ -329,6 +333,7 @@ end
 function SWEP:PrimaryAttack(ShootPos,ShootDir)
 	//if self.Owner:KeyDown(IN_RELOAD) then return end
 	//self.Owner:SetFOV( 45, 0.3 )
+	if not IsFirstTimePredicted() then return end
 	self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
 	if self.Reloading == true then return end
 	if self.Owner:IsNPC() && self.Owner.VJ_IsBeingControlled == false && self.Owner:GetEnemy() == nil then return end
@@ -344,52 +349,54 @@ function SWEP:PrimaryAttack(ShootPos,ShootDir)
 	end
 	//self.Weapon:EmitSound(Sound(self.Primary.Sound),80,self.Primary.SoundPitch)
 	if self.Primary.DisableBulletCode == false then
-	local bullet = {}
-		bullet.Num = self.Primary.NumberOfShots
-		bullet.Src = self.Owner:GetShootPos()
-		bullet.Dir = self.Owner:GetAimVector()
-			/*bullet.Callback = function(attacker, tr, dmginfo)
-			local laserhit = EffectData()
-			laserhit:SetOrigin(tr.HitPos)
-			laserhit:SetNormal(tr.HitNormal)
-			laserhit:SetScale(80)
-			util.Effect("VJ_Small_Explosion1", laserhit)
-			
-			bullet.Callback = function(attacker, tr, dmginfo)
-			local laserhit = EffectData()
-			laserhit:SetOrigin(tr.HitPos)
-			laserhit:SetNormal(tr.HitNormal)
-			laserhit:SetScale(25)
-			util.Effect("AR2Impact", laserhit)
-			end*/
-			//tr.HitPos:Ignite(8,0)
-			//return true end
-		if self.Owner:IsPlayer() then
-			bullet.Spread = Vector((self.Primary.Cone /60)/4,(self.Primary.Cone /60)/4,0)
-		end
-		bullet.Tracer = self.Primary.Tracer
-		bullet.TracerName = self.Primary.TracerType
-		bullet.Force = self.Primary.Force
-		if self.Owner:IsPlayer() then
-			if self.Primary.PlayerDamage == "Same" then
-				bullet.Damage = self.Primary.Damage
-			elseif self.Primary.PlayerDamage == "Double" then
-				bullet.Damage = self.Primary.Damage *2
-			elseif isnumber(self.Primary.PlayerDamage) then
-				bullet.Damage = self.Primary.PlayerDamage
+		local bullet = {}
+			bullet.Num = self.Primary.NumberOfShots
+			bullet.Src = self.Owner:GetShootPos()
+			bullet.Dir = self.Owner:GetAimVector()
+			bullet.Callback = function(attacker,tr,dmginfo)
+				self:CustomOnPrimaryAttack_BulletCallback(attacker,tr,dmginfo)
 			end
-		else
-			bullet.Damage = self.Primary.Damage
-		end
-		bullet.AmmoType = self.Primary.Ammo
-	self.Owner:FireBullets(bullet)
+				/*bullet.Callback = function(attacker, tr, dmginfo)
+				local laserhit = EffectData()
+				laserhit:SetOrigin(tr.HitPos)
+				laserhit:SetNormal(tr.HitNormal)
+				laserhit:SetScale(80)
+				util.Effect("VJ_Small_Explosion1", laserhit)
+				
+				bullet.Callback = function(attacker, tr, dmginfo)
+				local laserhit = EffectData()
+				laserhit:SetOrigin(tr.HitPos)
+				laserhit:SetNormal(tr.HitNormal)
+				laserhit:SetScale(25)
+				util.Effect("AR2Impact", laserhit)
+				end*/
+				//tr.HitPos:Ignite(8,0)
+				//return true end
+			if self.Owner:IsPlayer() then
+				bullet.Spread = Vector((self.Primary.Cone /60)/4,(self.Primary.Cone /60)/4,0)
+			end
+			bullet.Tracer = self.Primary.Tracer
+			bullet.TracerName = self.Primary.TracerType
+			bullet.Force = self.Primary.Force
+			if self.Owner:IsPlayer() then
+				if self.Primary.PlayerDamage == "Same" then
+					bullet.Damage = self.Primary.Damage
+				elseif self.Primary.PlayerDamage == "Double" then
+					bullet.Damage = self.Primary.Damage *2
+				elseif isnumber(self.Primary.PlayerDamage) then
+					bullet.Damage = self.Primary.PlayerDamage
+				end
+			else
+				bullet.Damage = self.Primary.Damage
+			end
+			bullet.AmmoType = self.Primary.Ammo
+			self.Owner:FireBullets(bullet)
 	else
-	if self.Owner:IsNPC() && self.Owner.IsVJBaseSNPC == true then
-		self.Owner.Weapon_ShotsSinceLastReload = self.Owner.Weapon_ShotsSinceLastReload + 1
+		if self.Owner:IsNPC() && self.Owner.IsVJBaseSNPC == true then
+			self.Owner.Weapon_ShotsSinceLastReload = self.Owner.Weapon_ShotsSinceLastReload + 1
 		end
 	end
-	if GetConVarNumber("vj_wep_nomuszzleflash") == 0 then
-	self.Owner:MuzzleFlash() end
+	if GetConVarNumber("vj_wep_nomuszzleflash") == 0 then self.Owner:MuzzleFlash() end
 	self:PrimaryAttackEffects()
 	if self.Owner:IsPlayer() then
 	self:ShootEffects("ToolTracer")
@@ -423,54 +430,47 @@ end
 	vjeffect:SetAttachment(1)
 	util.Effect("VJ_Weapon_RifleMuzzle1",vjeffect)
 	
-	if GetConVarNumber("vj_wep_nobulletshells") == 0 then
-	if !self.Owner:IsPlayer() then
-	local vjeffect = EffectData()
-	vjeffect:SetEntity(self.Weapon)
-	vjeffect:SetOrigin(self.Owner:GetShootPos())
-	vjeffect:SetNormal(self.Owner:GetAimVector())
-	vjeffect:SetAttachment(1)
-	util.Effect("VJ_Weapon_RifleShell1",vjeffect) end
+	if !self.Owner:IsPlayer() && GetConVarNumber("vj_wep_nobulletshells") == 0 then
+		local vjeffect = EffectData()
+		vjeffect:SetEntity(self.Weapon)
+		vjeffect:SetOrigin(self.Owner:GetShootPos())
+		vjeffect:SetNormal(self.Owner:GetAimVector())
+		vjeffect:SetAttachment(1)
+		util.Effect("VJ_Weapon_RifleShell1",vjeffect)
 	end
 
-	if (SERVER) then
-	if GetConVarNumber("vj_wep_nomuszzleflash") == 0 then
-	local FireLight1 = ents.Create("light_dynamic")
-	FireLight1:SetKeyValue("brightness", "2")
-	if self.Owner:IsPlayer() then
-	FireLight1:SetKeyValue("distance", "200") else FireLight1:SetKeyValue("distance", "150") end
-	FireLight1:SetLocalPos(self.Owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-40)
-	FireLight1:SetLocalAngles(self:GetAngles())
-	FireLight1:Fire("Color", "255 150 60")
-	FireLight1:SetParent(self)
-	FireLight1:Spawn()
-	FireLight1:Activate()
-	FireLight1:Fire("TurnOn", "", 0)
-	self:DeleteOnRemove(FireLight1)
-	timer.Simple(0.07,function() if self:IsValid() then FireLight1:Remove() end end)
+	if (SERVER) && GetConVarNumber("vj_wep_nomuszzleflash") == 0 && GetConVarNumber("vj_wep_nomuszzleflash_dynamiclight") == 0 then
+		local FireLight1 = ents.Create("light_dynamic")
+		FireLight1:SetKeyValue("brightness", "4")
+		FireLight1:SetKeyValue("distance", "120")
+		if self.Owner:IsPlayer() then FireLight1:SetLocalPos(self.Owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else FireLight1:SetLocalPos(self:GetAttachment(1).Pos) end
+		FireLight1:SetLocalAngles(self:GetAngles())
+		FireLight1:Fire("Color", "255 150 60")
+		FireLight1:SetParent(self)
+		FireLight1:Spawn()
+		FireLight1:Activate()
+		FireLight1:Fire("TurnOn","",0)
+		FireLight1:Fire("Kill","",0.07)
+		self:DeleteOnRemove(FireLight1)
 	end
- end
 end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
-/*function SWEP:FireAnimationEvent(pos,ang,event,options)
-	//local vjeffect = EffectData()
-	//vjeffect:SetEntity(self.Weapon)
-	//vjeffect:SetOrigin(self.Owner:GetShootPos())
-	//vjeffect:SetNormal(self.Owner:GetAimVector())
-	//vjeffect:SetAttachment(2)
-	//util.Effect("VJ_Weapon_RifleShell1",vjeffect)
+function SWEP:FireAnimationEvent(pos,ang,event,options)
+	local getcustom = self:CustomOnFireAnimationEvent(pos,ang,event,options)
+	if getcustom == true then return true end
 	
-	//print(event)
 	if GetConVarNumber("vj_wep_nomuszzleflash") == 1 then
-	if event == 5001 then 
-		return true end 
+		if event == 21 or event == 22 or event == 5001 or event == 5003 then 
+			return true
+		end 
 	end
 	
 	if GetConVarNumber("vj_wep_nobulletshells") == 1 then
-	if event == 20 then 
-		return true end 
+		if event == 20 or event == 6001 then 
+			return true
+		end 
 	end
-end*/
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Think()
 	self:RunWorldModelThink()
@@ -547,13 +547,6 @@ end
 function SWEP:EquipAmmo(ply)
 	if ply:IsPlayer() then
 		ply:GiveAmmo(self.Primary.ClipSize,self.Primary.Ammo)
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:AcceptInput(key,activator,called,data)
-	print("egegeeeeeeeee")
-	if activator:IsPlayer() && key == "Use" then
-		print("gegege")
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

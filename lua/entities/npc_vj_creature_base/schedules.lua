@@ -32,19 +32,24 @@ function ENT:StartSchedule(schedule)
 	self:ClearCondition(35)
 	if (!schedule.RunCode_OnFinish) then schedule.RunCode_OnFinish = nil end
 	if (!schedule.ResetOnFail) then schedule.ResetOnFail = false end
+	if (!schedule.StopScheduleIfNotMoving) then schedule.StopScheduleIfNotMoving = false end
 	if (!schedule.CanBeInterrupted) then schedule.CanBeInterrupted = false end
+	if (!schedule.CanShootWhenMoving) then schedule.CanShootWhenMoving = false end
 	for k,v in ipairs(schedule.Tasks) do
 		if v.TaskName == "TASK_RUN_PATH" or v.TaskName == "TASK_RUN_PATH_FLEE" or v.TaskName == "TASK_RUN_PATH_TIMED" or v.TaskName == "TASK_RUN_PATH_FOR_UNITS" or v.TaskName == "TASK_RUN_PATH_WITHIN_DIST" then schedule.IsMovingSchedule = true schedule.IsMovingSchedule_Running = true break end
 		if v.TaskName == "TASK_WALK_PATH" or v.TaskName == "TASK_WALK_PATH_TIMED" or v.TaskName == "TASK_WALK_PATH_WITHIN_DIST" or v.TaskName == "TASK_WALK_PATH_FOR_UNITS" then schedule.IsMovingSchedule = true schedule.IsMovingSchedule_Walking = true break end
-		schedule.IsMovingSchedule  = false
-		schedule.IsMovingSchedule_Running  = false
-		schedule.IsMovingSchedule_Walking  = false
+		schedule.IsMovingSchedule = false
+		schedule.IsMovingSchedule_Running = false
+		schedule.IsMovingSchedule_Walking = false
+	end
+	if schedule.CanShootWhenMoving == true && self.CurrentWeaponAnimation != nil then
+		self:SetArrivalActivity(self.CurrentWeaponAnimation)
 	end
 	schedule.AlreadyRanCode_OnFinish = false
 	//if schedule.Name != "vj_chase_enemy" then PrintTable(schedule) end
 	self:DoRunCode_OnFinish(self.CurrentSchedule)
-	self.CurrentSchedule 	= schedule
-	self.CurrentTaskID 		= 1
+	self.CurrentSchedule = schedule
+	self.CurrentTaskID = 1
 	self.GetNumberOfTasks = tonumber(schedule:NumTasks()) -- Or else nil
 	self:SetTask(schedule:GetTask(1))
 end

@@ -1038,8 +1038,9 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 			self:VJ_PlaySequence(vACT_Name,1,seqwait,vTbl_SequenceDuration,vTbl_SequenceInterruptible)
 		end
 		if IsGesture == false then
+			//self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0)
 			//vsched:EngTask("TASK_RESET_ACTIVITY", 0)
-			vsched:EngTask("TASK_STOP_MOVING", 0)
+			//vsched:EngTask("TASK_STOP_MOVING", 0)
 			vsched:EngTask("TASK_STOP_MOVING", 0)
 			self:StopMoving()
 			self:ClearSchedule()
@@ -1498,6 +1499,11 @@ function ENT:DoConstantlyFaceEnemyCode()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
+	if self.CurrentSchedule != nil && self.CurrentSchedule.StopScheduleIfNotMoving == true && (!self:IsMoving() or (self:GetBlockingEntity() != nil && self:GetBlockingEntity():IsNPC())) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
+		self:ScheduleFinished(self.CurrentSchedule)
+		//self:SetCondition(35)
+		//self:StopMoving()
+	end
 	if self.CurrentSchedule != nil && self.CurrentSchedule.ResetOnFail == true && self:HasCondition(35) == true then
 		self:StopMoving()
 		//self:SelectSchedule()

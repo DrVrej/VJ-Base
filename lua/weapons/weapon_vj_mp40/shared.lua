@@ -12,6 +12,7 @@ if (CLIENT) then
 SWEP.Slot						= 2 -- Which weapon slot you want your SWEP to be in? (1 2 3 4 5 6) 
 SWEP.SlotPos					= 4 -- Which part of that slot do you want the SWEP to be in? (1 2 3 4 5 6)
 SWEP.SwayScale 					= 1 -- Default is 1, The scale of the viewmodel sway
+SWEP.UseHands					= true
 end
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel					= "models/weapons/v_mp40.mdl"
@@ -21,17 +22,16 @@ SWEP.Spawnable					= true
 SWEP.AdminSpawnable				= false
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Damage				= 5 -- Damage
-SWEP.Secondary.PlayerDamage		= "Double" -- Only applies for players | "Same" = Same as self.Primary.Damage, "Double" = Double the self.Primary.Damage OR put a number to be different from self.Primary.Damage
+SWEP.Primary.PlayerDamage		= "Double" -- Only applies for players | "Same" = Same as self.Primary.Damage, "Double" = Double the self.Primary.Damage OR put a number to be different from self.Primary.Damage
 SWEP.Primary.Force				= 5 -- Force applied on the object the bullet hits
-SWEP.Primary.NumberOfShots		= 1 -- How many shots per attack?
 SWEP.Primary.ClipSize			= 32 -- Max amount of bullets per clip
 SWEP.Primary.Recoil				= 0.3 -- How much recoil does the player get?
 SWEP.Primary.Delay				= 0.1 -- Time until it can shoot again
 SWEP.Primary.Automatic			= true -- Is it automatic?
 SWEP.Primary.Ammo				= "SMG1" -- Ammo type
-SWEP.Primary.Sound				= {"vj_mp40/mp40_single.wav"}
+SWEP.Primary.Sound				= {"vj_weapons/mp_40/mp40_single.wav"}
 SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
-SWEP.Primary.DistantSound		= {"vj_mp40/mp40_single_dist.wav"}
+SWEP.Primary.DistantSound		= {"vj_weapons/mp_40/mp40_single_dist.wav"}
 	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.DelayOnDeploy 				= 1.4 -- Time until it can shoot again after deploying the weapon
 SWEP.HasDeploySound				= false -- Does the weapon have a deploy sound?
@@ -49,31 +49,27 @@ function SWEP:PrimaryAttackEffects()
 	vjeffectmuz:SetMagnitude(15)
 	util.Effect("VJ_Weapon_RifleMuzzle1",vjeffectmuz)
 	
-	if GetConVarNumber("vj_wep_nobulletshells") == 0 then
-	if !self.Owner:IsPlayer() then
-	local vjeffect = EffectData()
-	vjeffect:SetEntity(self.Weapon)
-	vjeffect:SetOrigin(self.Owner:GetShootPos())
-	vjeffect:SetNormal(self.Owner:GetAimVector())
-	vjeffect:SetAttachment(2)
-	util.Effect("VJ_Weapon_RifleShell1",vjeffect) end
+	if !self.Owner:IsPlayer() && GetConVarNumber("vj_wep_nobulletshells") == 0 then
+		local vjeffect = EffectData()
+		vjeffect:SetEntity(self.Weapon)
+		vjeffect:SetOrigin(self.Owner:GetShootPos())
+		vjeffect:SetNormal(self.Owner:GetAimVector())
+		vjeffect:SetAttachment(2)
+		util.Effect("VJ_Weapon_RifleShell1",vjeffect)
 	end
 
-	if (SERVER) then
-	if GetConVarNumber("vj_wep_nomuszzleflash") == 0 then
-	local FireLight1 = ents.Create("light_dynamic")
-	FireLight1:SetKeyValue("brightness", "2")
-	if self.Owner:IsPlayer() then
-	FireLight1:SetKeyValue("distance", "200") else FireLight1:SetKeyValue("distance", "150") end
-	FireLight1:SetLocalPos(self.Owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-40)
-	FireLight1:SetLocalAngles(self:GetAngles())
-	FireLight1:Fire("Color", "255 150 60")
-	FireLight1:SetParent(self)
-	FireLight1:Spawn()
-	FireLight1:Activate()
-	FireLight1:Fire("TurnOn", "", 0)
-	self:DeleteOnRemove(FireLight1)
-	timer.Simple(0.07,function() if self:IsValid() then FireLight1:Remove() end end)
+	if (SERVER) && GetConVarNumber("vj_wep_nomuszzleflash") == 0 && GetConVarNumber("vj_wep_nomuszzleflash_dynamiclight") == 0 then
+		local FireLight1 = ents.Create("light_dynamic")
+		FireLight1:SetKeyValue("brightness", "4")
+		FireLight1:SetKeyValue("distance", "120")
+		if self.Owner:IsPlayer() then FireLight1:SetLocalPos(self.Owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else FireLight1:SetLocalPos(self:GetAttachment(1).Pos) end
+		FireLight1:SetLocalAngles(self:GetAngles())
+		FireLight1:Fire("Color", "255 150 60")
+		FireLight1:SetParent(self)
+		FireLight1:Spawn()
+		FireLight1:Activate()
+		FireLight1:Fire("TurnOn","",0)
+		FireLight1:Fire("Kill","",0.07)
+		self:DeleteOnRemove(FireLight1)
 	end
- end
 end

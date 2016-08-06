@@ -22,9 +22,12 @@ local function VJ_WEAPON_CLIENTSETTINGS(Panel) -- Settings
 	vj_wep_nomuszzlesmoke = "0",
 	vj_wep_nomuzzleheatwave = "0",
 	vj_wep_nobulletshells = "0",
+	vj_wep_nomuszzleflash_dynamiclight = "0",
 	}
 	Panel:AddControl("ComboBox", vj_settings_reset)
 	Panel:AddControl("Checkbox", {Label = "Disable Muzzle Flash", Command = "vj_wep_nomuszzleflash"})
+	Panel:AddControl("Checkbox", {Label = "Disable Muzzle Flash Dynamic Light", Command = "vj_wep_nomuszzleflash_dynamiclight"})
+	Panel:ControlHelp("Disabling muzzle flash will also disable this")
 	Panel:AddControl("Checkbox", {Label = "Disable Muzzle Smoke", Command = "vj_wep_nomuszzlesmoke"})
 	Panel:AddControl("Checkbox", {Label = "Disable Muzzle Heat Wave", Command = "vj_wep_nomuzzleheatwave"})
 	Panel:AddControl("Checkbox", {Label = "Disable Bullet Shells", Command = "vj_wep_nobulletshells"})

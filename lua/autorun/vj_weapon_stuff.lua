@@ -30,12 +30,34 @@ VJ.AddWeapon("RPG","weapon_vj_rpg",false,vCat)
 
 -- Hooks ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_PLAYER_CANPICKUPWEAPON(ply,wep)
+	//print(wep:GetWeaponWorldModel())
+	if ply.VJ_CanBePickedUpWithOutUse == true && ply.VJ_CanBePickedUpWithOutUse_Class == wep:GetClass() then
+		if wep.IsVJBaseWeapon == true && !(ply:HasWeapon(wep:GetClass())) then
+			ply.VJ_CanBePickedUpWithOutUse = false 
+			ply.VJ_CanBePickedUpWithOutUse_Class = nil
+			return true
+		else
+			ply.VJ_CanBePickedUpWithOutUse = false 
+			ply.VJ_CanBePickedUpWithOutUse_Class = nil
+		end
+	end
 	if wep.IsVJBaseWeapon == true then
+		//if wep.VJ_CanBePickedUpWithOutUse == true then return true end
 		if (ply:KeyPressed(IN_USE)) && (ply:GetEyeTrace().Entity == wep) then 
 		return true else return false end
 	end
 end
 hook.Add("PlayerCanPickupWeapon","VJ_PLAYER_CANPICKUPWEAPON",VJ_PLAYER_CANPICKUPWEAPON)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+local function VJ_PLAYER_GIVESWEP(ply,class,swep)
+	//if swep.IsVJBaseWeapon == true then
+		ply.VJ_CanBePickedUpWithOutUse = true
+		ply.VJ_CanBePickedUpWithOutUse_Class = class
+		timer.Simple(0.1,function() if IsValid(ply) then ply.VJ_CanBePickedUpWithOutUse = false ply.VJ_CanBePickedUpWithOutUse_Class = nil end end)
+		//PrintTable(swep)
+	//end
+end
+hook.Add("PlayerGiveSWEP","VJ_PLAYER_GIVESWEP",VJ_PLAYER_GIVESWEP)
 -- Weapon ConVars ---------------------------------------------------------------------------------------------------------------------------
 /*
 AddConvars["rrrrrrrrrrrrrrrrrrrrrr"] = 0 -- 
@@ -45,6 +67,7 @@ RunConsoleCommand("command_name", "value")
 local AddConvars = {}
 -- Setting Commands --
 AddConvars["vj_wep_nomuszzleflash"] = 0 -- Should weapons make a muzzle flash?
+AddConvars["vj_wep_nomuszzleflash_dynamiclight"] = 0 -- Should weapons make a dynamic light when being fired?
 AddConvars["vj_wep_nomuszzlesmoke"] = 0 -- Should weapons make a muzzle smoke?
 AddConvars["vj_wep_nomuzzleheatwave"] = 0 -- Should weapons make a muzzle heat wave?
 AddConvars["vj_wep_nobulletshells"] = 0 -- Should weapons drop bullet shells?
