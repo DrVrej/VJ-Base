@@ -25,24 +25,23 @@ SWEP.Spawnable					= true
 SWEP.AdminSpawnable				= false
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Damage				= 25 -- Damage
-SWEP.Secondary.PlayerDamage		= 15 -- Only applies for players | "Same" = Same as self.Primary.Damage, "Double" = Double the self.Primary.Damage OR put a number to be different from self.Primary.Damage
+SWEP.Primary.PlayerDamage		= 15 -- Only applies for players | "Same" = Same as self.Primary.Damage, "Double" = Double the self.Primary.Damage OR put a number to be different from self.Primary.Damage
 SWEP.Primary.Force				= 5 -- Force applied on the object the bullet hits
-SWEP.Primary.NumberOfShots		= 1 -- How many shots per attack?
 SWEP.Primary.ClipSize			= 17 -- Max amount of bullets per clip
 SWEP.Primary.Recoil				= 0.3 -- How much recoil does the player get?
 SWEP.Primary.Cone				= 5 -- How accurate is the bullet? (Players)
 SWEP.Primary.Delay				= 0.25 -- Time until it can shoot again
 SWEP.Primary.Automatic			= true -- Is it automatic?
 SWEP.Primary.Ammo				= "Pistol" -- Ammo type
-SWEP.Primary.Sound				= {"vj_glock17/glock17_single.wav"}
+SWEP.Primary.Sound				= {"vj_weapons/glock_17/glock17_single.wav"}
 SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
-SWEP.Primary.DistantSound		= {"vj_glock17/glock17_single_dist.wav"}
+SWEP.Primary.DistantSound		= {"vj_weapons/glock_17/glock17_single_dist.wav"}
 	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.DelayOnDeploy 				= 0.4 -- Time until it can shoot again after deploying the weapon
 SWEP.AnimTbl_Deploy				= {ACT_VM_IDLE_TO_LOWERED}
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound				= true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
-SWEP.ReloadSound				= "vj_glock17/reload.wav"
+SWEP.ReloadSound				= "vj_weapons/glock_17/reload.wav"
 SWEP.Reload_TimeUntilAmmoIsSet	= 1.5 -- Time until ammo is set to the weapon
 SWEP.Reload_TimeUntilFinished	= 2 -- How much time until the player can play idle animation, shoot, etc.
 	-- Idle Settings ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -59,50 +58,33 @@ function SWEP:PrimaryAttackEffects()
 	vjeffectmuz:SetStart(self.Owner:GetShootPos())
 	vjeffectmuz:SetNormal(self.Owner:GetAimVector())
 	vjeffectmuz:SetAttachment(1)
-	vjeffectmuz:SetMagnitude(0)
 	util.Effect("VJ_Weapon_PistolMuzzle1",vjeffectmuz)
 	
-	if GetConVarNumber("vj_wep_nobulletshells") == 0 then
-	if !self.Owner:IsPlayer() then
-	local vjeffect = EffectData()
-	vjeffect:SetEntity(self.Weapon)
-	vjeffect:SetOrigin(self.Owner:GetShootPos())
-	vjeffect:SetNormal(self.Owner:GetAimVector())
-	vjeffect:SetAttachment(1)
-	util.Effect("VJ_Weapon_PistolShell1",vjeffect) end
+	if !self.Owner:IsPlayer() && GetConVarNumber("vj_wep_nobulletshells") == 0 then
+		local vjeffect = EffectData()
+		vjeffect:SetEntity(self.Weapon)
+		vjeffect:SetOrigin(self.Owner:GetShootPos())
+		vjeffect:SetNormal(self.Owner:GetAimVector())
+		vjeffect:SetAttachment(1)
+		util.Effect("VJ_Weapon_PistolShell1",vjeffect)
 	end
 	
-	if (SERVER) then
-	if GetConVarNumber("vj_wep_nomuszzleflash") == 0 then
-	local FireLight1 = ents.Create("light_dynamic")
-	FireLight1:SetKeyValue("brightness", "2")
-	if self.Owner:IsPlayer() then
-	FireLight1:SetKeyValue("distance", "200") else FireLight1:SetKeyValue("distance", "150") end
-	FireLight1:SetLocalPos(self.Owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-40)
-	FireLight1:SetLocalAngles(self:GetAngles())
-	FireLight1:Fire("Color", "255 150 60")
-	FireLight1:SetParent(self)
-	FireLight1:Spawn()
-	FireLight1:Activate()
-	FireLight1:Fire("TurnOn", "", 0)
-	self:DeleteOnRemove(FireLight1)
-	timer.Simple(0.07,function() if self:IsValid() then FireLight1:Remove() end end)
+	if (SERVER) && GetConVarNumber("vj_wep_nomuszzleflash") == 0 && GetConVarNumber("vj_wep_nomuszzleflash_dynamiclight") == 0 then
+		local FireLight1 = ents.Create("light_dynamic")
+		FireLight1:SetKeyValue("brightness", "4")
+		FireLight1:SetKeyValue("distance", "120")
+		if self.Owner:IsPlayer() then FireLight1:SetLocalPos(self.Owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else FireLight1:SetLocalPos(self:GetAttachment(1).Pos) end
+		FireLight1:SetLocalAngles(self:GetAngles())
+		FireLight1:Fire("Color", "255 150 60")
+		FireLight1:SetParent(self)
+		FireLight1:Spawn()
+		FireLight1:Activate()
+		FireLight1:Fire("TurnOn","",0)
+		FireLight1:Fire("Kill","",0.07)
+		self:DeleteOnRemove(FireLight1)
 	end
- end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:FireAnimationEvent(pos,ang,event,options)
-	/*local vjeffect = EffectData()
-	vjeffect:SetEntity(self.Weapon)
-	vjeffect:SetOrigin(self.Owner:GetShootPos())
-	vjeffect:SetNormal(self.Owner:GetAimVector())
-	vjeffect:SetAttachment(2)
-	util.Effect("VJ_Weapon_RifleShell1",vjeffect)*/
-	
-	//print(event)
-	if GetConVarNumber("vj_wep_nobulletshells") == 1 then
-	if event == 6001 then 
-		return true end 
-	end
-	if event == 32 then return true end
+function SWEP:CustomOnFireAnimationEvent(pos,ang,event,options)
+	if event == 32 then return true end 
 end

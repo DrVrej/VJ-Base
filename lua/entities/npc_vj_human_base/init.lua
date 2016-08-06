@@ -522,6 +522,7 @@ ENT.VJ_IsPlayingSoundTrack = false
 ENT.HasDone_PlayAlertSoundOnlyOnce = false
 ENT.PlayingAttackAnimation = false
 ENT.DoingWeaponAttack = false
+ENT.DoingWeaponAttack_Standing = false
 ENT.WaitingForEnemyToComeOut = false
 ENT.OnPlayerSight_AlreadySeen = false
 ENT.VJDEBUG_SNPC_ENABLED = false
@@ -1036,8 +1037,9 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 			self:VJ_PlaySequence(vACT_Name,1,seqwait,vTbl_SequenceDuration,vTbl_SequenceInterruptible)
 		end
 		if IsGesture == false then
+			//self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0)
 			//vsched:EngTask("TASK_RESET_ACTIVITY", 0)
-			vsched:EngTask("TASK_STOP_MOVING", 0)
+			//vsched:EngTask("TASK_STOP_MOVING", 0)
 			vsched:EngTask("TASK_STOP_MOVING", 0)
 			self:StopMoving()
 			self:ClearSchedule()
@@ -1123,6 +1125,7 @@ function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 		vschedChaseEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 		vschedChaseEnemy:EngTask("TASK_FACE_ENEMY", 0)
 		vschedChaseEnemy.CanShootWhenMoving = true
+		vschedChaseEnemy.StopScheduleIfNotMoving = true
 		vschedChaseEnemy.CanBeInterrupted = true
 		self:StartSchedule(vschedChaseEnemy)
 	else
@@ -1132,6 +1135,7 @@ function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 		vschedChaseEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 		vschedChaseEnemy:EngTask("TASK_FACE_ENEMY", 0)
 		vschedChaseEnemy.CanShootWhenMoving = true
+		//vschedChaseEnemy.StopScheduleIfNotMoving = true
 		vschedChaseEnemy.CanBeInterrupted = true
 		self:StartSchedule(vschedChaseEnemy)
 	end
@@ -1212,16 +1216,16 @@ function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
 	//ChaseSched = ChaseSched or VJ_PICKRANDOMTABLE(self.ChaseSchedule)
 	local DoScheduleBasedChase = false
 	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_TASK_IDLE_STAND(math.Rand(6,12)) return end
-	//if self:HasCondition(31) && self:VJ_HasActiveWeapon() == true then DoScheduleBasedChase = true end
+	if self:HasCondition(31) && self:VJ_HasActiveWeapon() == true then DoScheduleBasedChase = true end
 	if OverrideChasing == false && self.DisableChasingEnemy == true then self:VJ_TASK_IDLE_STAND(math.Rand(6,12)) return end
 	//if self.HasWalkingCapability == false then self:VJ_TASK_IDLE_STAND(0.1) else
-	/*if DoScheduleBasedChase == true then
+	if DoScheduleBasedChase == true then
 		//self:VJ_SetSchedule(SCHED_ESTABLISH_LINE_OF_FIRE)
 		self:VJ_TASK_CHASE_ENEMY(true)
 	else
 		self:VJ_TASK_CHASE_ENEMY(false)
-	end*/
-	if self:VJ_HasActiveWeapon() == true then self:VJ_TASK_CHASE_ENEMY(true) else self:VJ_TASK_CHASE_ENEMY(false) end
+	end
+	//if self:VJ_HasActiveWeapon() == true then self:VJ_TASK_CHASE_ENEMY(true) else self:VJ_TASK_CHASE_ENEMY(false) end
 	self.NextChaseTime = CurTime() + 0.1
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1461,7 +1465,7 @@ end
 function ENT:Think()
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
 	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
-	if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" && !self:IsMoving() then
+	if self.CurrentSchedule != nil && self.CurrentSchedule.StopScheduleIfNotMoving == true && (!self:IsMoving() or (self:GetBlockingEntity() != nil && self:GetBlockingEntity():IsNPC())) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
 		self:ScheduleFinished(self.CurrentSchedule)
 		//self:SetCondition(35)
 		//self:StopMoving()
@@ -1472,6 +1476,7 @@ function ENT:Think()
 		self:ClearCondition(35)
 		print("Task Failed Condition Identified!")
 	end
+	if self.DoingWeaponAttack == false then self.DoingWeaponAttack_Standing = false end
 	//if CurTime() > self.TestT then
 	//self:VJ_ACT_PLAYACTIVITY(ACT_SIGNAL_ADVANCE,true,2,true,0.5)
 	//self.TestT = CurTime() + 200 end
@@ -1601,6 +1606,7 @@ if self:GetEnemy() != nil then
 			if self.HasUnlimitedClip == true then self:GetActiveWeapon():SetClip1(99999) end
 			//self.Weapon_ShotsSinceLastReload = 0
 			self.DoingWeaponAttack = false
+			self.DoingWeaponAttack_Standing = false
 			self.WaitingForEnemyToComeOut = true
 			self.HasDoneReloadAnimation = false
 			self.IsReloadingWeapon = true
@@ -1635,6 +1641,7 @@ if self:GetEnemy() != nil then
 						vschedWeaponReload:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
 						vschedWeaponReload:EngTask("TASK_RUN_PATH", 0)
 						vschedWeaponReload:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+						vschedWeaponReload.StopScheduleIfNotMoving = true
 						vschedWeaponReload.RunCode_OnFinish = function()
 							DoReloadAnimation(self.AnimTbl_WeaponReload)
 							self:CustomOnWeaponReload_AfterRanToCover()
@@ -1682,39 +1689,6 @@ if CurTime() > self.NextEntityCheckT then
 		self:SelectSchedule()
 		end
 	end*/
-	
-	if self:GetEnemy() != nil && self.DoingWeaponAttack == true then -- Move if ally in line of fire
-		StartPos = self:NearestPoint(self:GetPos() +self:OBBCenter())
-		EndPos = self:GetEnemy():EyePos()
-		tr = util.TraceLine({
-			start = StartPos,
-			endpos = EndPos,
-			filter = self
-		})
-		if tr.Entity:IsNPC() && tr.HitPos:Distance(tr.StartPos) <= 3000 && (self:Disposition(tr.Entity) == D_LI or self:Disposition(tr.Entity) == D_NU) then
-			local checkdist = self:VJ_CheckAllFourSides(40)
-			if checkdist.Right == true && checkdist.Left == true then
-				local cptisrand = math.random(1,2)
-				if cptisrand == 1 then
-					self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(30,40))
-					self:VJ_SetSchedule(SCHED_FORCED_GO)
-				end
-				if cptisrand == 2 then
-					self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-40,-30))
-					self:VJ_SetSchedule(SCHED_FORCED_GO)
-				end
-			else
-			if checkdist.Right == true then
-				self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(30,40))
-				self:VJ_SetSchedule(SCHED_FORCED_GO)
-			end
-			if checkdist.Left == true then
-				self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-40,-30))
-				self:VJ_SetSchedule(SCHED_FORCED_GO)
-			end
-		 end
-		end
-	end
 self.NextEntityCheckT = CurTime() + self.NextEntityCheckTime end
 
 if self.ResetedEnemy == false && self.LastSeenEnemyTime > self.LastSeenEnemyTimeUntilReset && (!self.IsVJBaseSNPC_Tank) then
@@ -1758,6 +1732,7 @@ end
 	-- Attack Timers --
 if self:GetEnemy() == nil then
 	self.DoingWeaponAttack = false
+	self.DoingWeaponAttack_Standing = false
 	if CurTime() > self.NextWeaponAttackAimPoseParametersReset && self.DidWeaponAttackAimParameter == true && self.DoingWeaponAttack == false && self.VJ_IsBeingControlled == false then
 		self:ClearPoseParameters()
 		self.DidWeaponAttackAimParameter = false
@@ -1768,15 +1743,22 @@ if self:GetEnemy() != nil then
 	self:WeaponAimPoseParameters()
 	if (self:Visible(self:GetEnemy()) == false or (!table.HasValue(self.AnimTbl_WeaponAttack,self:GetActivity()) && !table.HasValue(self.AnimTbl_WeaponAttackCrouch,self:GetActivity()))) then
 		self.DoingWeaponAttack = false
+		self.DoingWeaponAttack_Standing = false
 	end
 	if self.HasShootWhileMoving == true then
 		if self:Visible(self:GetEnemy()) && self:IsAbleToShootWeapon(true,false) == true && self:IsMoving() && ((self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true) or (self:VJ_GetCurrentSchedule() == 35)) then
 			if (self.CurrentSchedule != nil && self.CurrentSchedule.IsMovingSchedule_Running == true) or self:VJ_GetCurrentSchedule() == 35 then
+				self.DoingWeaponAttack = true
+				self.DoingWeaponAttack_Standing = false
 				self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
 				self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_ShootWhileMovingRun))
+				self:SetArrivalActivity(self.CurrentWeaponAnimation)
 			elseif self.CurrentSchedule != nil && self.CurrentSchedule.IsMovingSchedule_Walking == true then
+				self.DoingWeaponAttack = true
+				self.DoingWeaponAttack_Standing = false
 				self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
 				self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_ShootWhileMovingWalk))
+				self:SetArrivalActivity(self.CurrentWeaponAnimation)
 			end
 		end
 	else
@@ -2044,13 +2026,13 @@ function ENT:IsAbleToShootWeapon(CheckDistance,CheckDistanceOnly,EnemyDistance)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule(iNPCState)
-if self.VJ_IsBeingControlled == true then return end
-self:CustomOnSchedule()
-if self.DisableSelectSchedule == true then return end
-/*if self:GetActiveWeapon():Clip1() == 1 then
-	self:GetActiveWeapon():SetClip1(10)
-	self:VJ_SetSchedule(SCHED_RELOAD)
-end*/
+	if self.VJ_IsBeingControlled == true then return end
+	self:CustomOnSchedule()
+	if self.DisableSelectSchedule == true then return end
+	/*if self:GetActiveWeapon():Clip1() == 1 then
+		self:GetActiveWeapon():SetClip1(10)
+		self:VJ_SetSchedule(SCHED_RELOAD)
+	end*/
 	-- Idle Postion --
 	if self:GetEnemy() == nil then
 		//if self.PlayerFriendly == true then self:PlayerAllies() end
@@ -2062,185 +2044,192 @@ end*/
 		self:IdleSoundCode()
 	else
 	-- Attack Postion --
-	if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.SightDistance) then
-		self:IdleSoundCode()
-		local EnemyPos = self:GetEnemy():EyePos()
-		local SelfToEnemyDistance = self:EyePos():Distance(EnemyPos)
-		if SelfToEnemyDistance < self.DistanceToRunFromEnemy && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == false then
+		if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.SightDistance) then
+				self:IdleSoundCode()
+				local EnemyPos = self:GetEnemy():EyePos()
+				local SelfToEnemyDistance = self:EyePos():Distance(EnemyPos)
+				if SelfToEnemyDistance < self.DistanceToRunFromEnemy && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == false then
+					if self:VJ_HasActiveWeapon() == true && self.DontStartShooting_FollowPlayer == false && self.FollowingPlayer == false && self.ThrowingGrenade == false && self.VJ_PlayingSequence == false then
+						local checkdist = self:VJ_CheckAllFourSides(200)
+						local randmove = {}
+						if checkdist.Backward == true then table.insert(randmove,"Backward") end
+						if checkdist.Right == true then table.insert(randmove,"Right") end
+						if checkdist.Left == true then table.insert(randmove,"Left") end
+						local pickmove = VJ_PICKRANDOMTABLE(randmove)
+						if pickmove == "Backward" then self:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-200,-200)) end
+						if pickmove == "Right" then self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(200,200)) end
+						if pickmove == "Left" then self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-200,-200)) end
+						if pickmove == "Backward" or pickmove == "Right" or pickmove == "Left" then
+							self.TakingCover = true
+							self:VJ_TASK_GOTO_LASTPOS("TASK_RUN_PATH",function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true end)
+							timer.Simple(2,function() if IsValid(self) then self.TakingCover = false end end)
+						end
+					end
+				end
+			/*if SelfToEnemyDistance < 300 && SelfToEnemyDistance > 151 then
 			if self:VJ_HasActiveWeapon() == true && self.DontStartShooting_FollowPlayer == false && self.FollowingPlayer == false && self.ThrowingGrenade == false && self.VJ_PlayingSequence == false then
-				local function DoBackAwayCode()
-					self.TakingCover = true
-					//self:VJ_SetSchedule(SCHED_FORCED_GO_RUN)
-					self:VJ_TASK_GOTO_LASTPOS("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true end)
-					timer.Simple(2,function() if IsValid(self) then self.TakingCover = false end end)
-				end
-				local linchallorions = self:VJ_CheckAllFourSides(200)
-				if linchallorions.Backward == true then
-					self:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-200,-200))
-					DoBackAwayCode()
-				elseif linchallorions.Right == true then
-					self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(200,200))
-					DoBackAwayCode()
-				elseif linchallorions.Left == true then
-					self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-200,-200))
-					DoBackAwayCode()
-				end
-			end
-		end
-		/*if SelfToEnemyDistance < 300 && SelfToEnemyDistance > 151 then
-		if self:VJ_HasActiveWeapon() == true && self.DontStartShooting_FollowPlayer == false && self.FollowingPlayer == false && self.ThrowingGrenade == false && self.VJ_PlayingSequence == false then
-		self:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-200,-200))
-		self:VJ_SetSchedule(SCHED_FORCED_GO) end end*/
-  // if self.IsReloadingWeapon == false && self:VJ_HasActiveWeapon() == true && self.MeleeAttacking == false && self.DontStartShooting_FollowPlayer == false && self.ThrowingGrenade == false && self.vACT_StopAttacks == false && self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) > self.MeleeAttackDistance then
-	if self:IsAbleToShootWeapon(false,false,SelfToEnemyDistance) == true then
-	if SelfToEnemyDistance > self.ShootDistance or CurTime() < self.NextWeaponAttackT then
-		self:DoChaseAnimation()
-		self.AllowToDo_WaitForEnemyToComeOut = false
-	//elseif SelfToEnemyDistance < self.ShootDistance && SelfToEnemyDistance > self.ShootDistanceClose then -- If shoot distance is bigger than the enemy position and if the enemy position is bigger than the shoot distance close
-	elseif self:IsAbleToShootWeapon(true,true,SelfToEnemyDistance) == true then
-		if (self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()) +self:GetUp()*30,self:GetEnemy():EyePos() /*+self:GetUp()*30*/,true,1) == true) /*or (!self:Visible(self:GetEnemy()))*/ then -- Chase enemy if hiding
-		//if self:VJ_IsCurrentSchedule(self.WeaponAttackSchedule) != true then
-		if self.DisableChasingEnemy == false then
-				self.DoingWeaponAttack = false
-				self:DoChaseAnimation()
-			end
-		else
-		self.AllowToDo_WaitForEnemyToComeOut = true
-		// CurTime() > self.NextWeaponAttackT_Covered 
-		//if self:Visible(self:GetEnemy()) /*&& (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle)))*/ then
-			if (self:GetActiveWeapon().IsVJBaseWeapon) then -- VJ Base weapons
-				self:FaceCertainEntity(self:GetEnemy(),true)
-				local dontattack = false
-				if CurTime() < self.NextWeaponAttackT_Covered && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == true then dontattack = true end
-				if dontattack == false && CurTime() > self.NextWeaponAttackT && self.DoingWeaponAttack == false && VJ_IsCurrentAnimation(self,self.AnimTbl_WeaponAttack) == false && VJ_IsCurrentAnimation(self,self.AnimTbl_WeaponAttackCrouch) == false then
-					self.WaitingForEnemyToComeOut = false
-					timer.Simple(0.3,function() if IsValid(self) then self.DoingWeaponAttack = true end end)
-					//self:StopMoving()
-					self:CustomOnWeaponAttack()
-					self.Weapon_TimeSinceLastShot = 0
-					if self.CanCrouchOnWeaponAttack == true then
-					local nigeranim = VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponAttackCrouch)
-					local crouchchance = math.random(1,self.CanCrouchOnWeaponAttackChance)
-						if crouchchance == 1 && VJ_AnimationExists(self,self:VJ_TranslateWeaponActivity(nigeranim)) == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == false && SelfToEnemyDistance > 500 then
-							local niganim = VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponAttackCrouch)
-							local actualanim = niganim
-							if type(niganim) != "string" then niganim = self:VJ_TranslateWeaponActivity(niganim) end
-							self.CurrentWeaponAnimation = actualanim
-							if VJ_IsCurrentAnimation(self,niganim) == false then self:VJ_ACT_PLAYACTIVITY(actualanim,false,0,true) end
-						else
-							local niganim = VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponAttack)
-							local actualanim = niganim
-							self.CurrentWeaponAnimation = actualanim
-							if type(niganim) != "string" then niganim = self:VJ_TranslateWeaponActivity(niganim) end
-							if VJ_IsCurrentAnimation(self,niganim) == false then self:VJ_ACT_PLAYACTIVITY(actualanim,false,0,true) end
+			self:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-200,-200))
+			self:VJ_SetSchedule(SCHED_FORCED_GO) end end*/
+			//if self.IsReloadingWeapon == false && self:VJ_HasActiveWeapon() == true && self.MeleeAttacking == false && self.DontStartShooting_FollowPlayer == false && self.ThrowingGrenade == false && self.vACT_StopAttacks == false && self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) > self.MeleeAttackDistance then
+			if self:IsAbleToShootWeapon(false,false,SelfToEnemyDistance) == true then
+				if SelfToEnemyDistance > self.ShootDistance or CurTime() < self.NextWeaponAttackT then
+					self:DoChaseAnimation()
+					self.AllowToDo_WaitForEnemyToComeOut = false
+				//elseif SelfToEnemyDistance < self.ShootDistance && SelfToEnemyDistance > self.ShootDistanceClose then -- If shoot distance is bigger than the enemy position and if the enemy position is bigger than the shoot distance close
+				elseif self:IsAbleToShootWeapon(true,true,SelfToEnemyDistance) == true then
+					if self:GetEnemy() != nil && self.DoingWeaponAttack_Standing == true then -- Move if ally in line of fire, then move
+						local hitent = false
+						tr = util.TraceLine({
+							start = self:NearestPoint(self:GetPos() +self:OBBCenter()),
+							endpos = self:GetEnemy():EyePos(),
+							filter = self
+						})
+						for k,v in ipairs(ents.FindInSphere(tr.HitPos,5)) do
+							if v:IsNPC() && (self:Disposition(v) == D_LI or self:Disposition(v) == D_NU) then
+								hitent = true
+							end
+						end
+						if hitent == true && tr.HitPos:Distance(tr.StartPos) <= 3000 then
+							local checkdist = self:VJ_CheckAllFourSides(40)
+							local randmove = {}
+							if checkdist.Right == true then table.insert(randmove,"Right") end
+							if checkdist.Left == true then table.insert(randmove,"Left") end
+							local pickmove = VJ_PICKRANDOMTABLE(randmove)
+							if pickmove == "Right" then self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(30,40)) end
+							if pickmove == "Left" then self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-40,-30)) end
+							if pickmove == "Right" or pickmove == "Left" then
+								self:StopMoving()
+								self.NextChaseTime = CurTime() + 1
+								self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true end)
+							end
+						end
+					end
+					if (self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()) +self:GetUp()*30,self:GetEnemy():EyePos() +self:GetUp()*30,true) == true) /*or (!self:Visible(self:GetEnemy()))*/ then -- Chase enemy if hiding
+						//if self:VJ_IsCurrentSchedule(self.WeaponAttackSchedule) != true then
+						if self.DisableChasingEnemy == false && self.IsReloadingWeapon == false then
+							self.DoingWeaponAttack = false
+							self.DoingWeaponAttack_Standing = false
+							self:DoChaseAnimation()
 						end
 					else
-						local niganim = VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponAttack)
-						local actualanim = niganim
-						self.CurrentWeaponAnimation = actualanim
-						if type(niganim) != "string" then niganim = self:VJ_TranslateWeaponActivity(niganim) end
-						if VJ_IsCurrentAnimation(self,niganim) == false then self:VJ_ACT_PLAYACTIVITY(actualanim,false,0,true) end
+						self.AllowToDo_WaitForEnemyToComeOut = true
+						// CurTime() > self.NextWeaponAttackT_Covered 
+						//if self:Visible(self:GetEnemy()) /*&& (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle)))*/ then
+						if (self:GetActiveWeapon().IsVJBaseWeapon) then -- VJ Base weapons
+							self:FaceCertainEntity(self:GetEnemy(),true)
+							local dontattack = false
+							if CurTime() < self.NextWeaponAttackT_Covered && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == true then dontattack = true end
+							if dontattack == false && CurTime() > self.NextWeaponAttackT /*&& self.DoingWeaponAttack == false*/ then
+								local currentattackanim_translate = VJ_IsCurrentAnimation(self,self:VJ_TranslateWeaponActivity(self.CurrentWeaponAnimation))
+								local currentattackanim_reg = VJ_IsCurrentAnimation(self,self.AnimTbl_WeaponAttack)
+								local currentattackanim_crouch = VJ_IsCurrentAnimation(self,self.AnimTbl_WeaponAttackCrouch)
+								if currentattackanim_translate == true or currentattackanim_reg == true or currentattackanim_crouch == true then self.DoingWeaponAttack = true self.DoingWeaponAttack_Standing = true end
+								if currentattackanim_translate == false && currentattackanim_reg == false && currentattackanim_crouch == false then
+									self.WaitingForEnemyToComeOut = false
+									timer.Simple(0.3,function() if IsValid(self) then self.DoingWeaponAttack = true self.DoingWeaponAttack_Standing = true end end)
+									//self:StopMoving()
+									self:CustomOnWeaponAttack()
+									self.Weapon_TimeSinceLastShot = 0
+									//self.NextMoveRandomlyWhenShootingT = CurTime() + 2
+									if self.CanCrouchOnWeaponAttack == true then
+										local nigeranim = VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponAttackCrouch)
+										local crouchchance = math.random(1,self.CanCrouchOnWeaponAttackChance)
+										if crouchchance == 1 && VJ_AnimationExists(self,self:VJ_TranslateWeaponActivity(nigeranim)) == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == false && SelfToEnemyDistance > 500 then
+											local niganim = VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponAttackCrouch)
+											local actualanim = niganim
+											if type(niganim) != "string" then niganim = self:VJ_TranslateWeaponActivity(niganim) end
+											self.CurrentWeaponAnimation = actualanim
+											if VJ_IsCurrentAnimation(self,niganim) == false then self:VJ_ACT_PLAYACTIVITY(actualanim,false,0,true) end
+										else
+											local niganim = VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponAttack)
+											local actualanim = niganim
+											self.CurrentWeaponAnimation = actualanim
+											if type(niganim) != "string" then niganim = self:VJ_TranslateWeaponActivity(niganim) end
+											if VJ_IsCurrentAnimation(self,niganim) == false then self:VJ_ACT_PLAYACTIVITY(actualanim,false,0,true) end
+										end
+									else
+										local niganim = VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponAttack)
+										local actualanim = niganim
+										self.CurrentWeaponAnimation = actualanim
+										if type(niganim) != "string" then niganim = self:VJ_TranslateWeaponActivity(niganim) end
+										if VJ_IsCurrentAnimation(self,niganim) == false then self:VJ_ACT_PLAYACTIVITY(actualanim,false,0,true) end
+									end
+								end
+							end
+							-- Move randomly when shooting
+							if self.MoveRandomlyWhenShooting == true && self.DoingWeaponAttack == true && self.DoingWeaponAttack_Standing == true && CurTime() > self.NextMoveRandomlyWhenShootingT && self.TimeSinceSeenEnemy > 2 && (SelfToEnemyDistance < (self.ShootDistance /1.25)) then
+								if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == false then
+									//self:SetMovementActivity(ACT_RUN_AIM)
+									local randpos = math.random(150,400)
+									local checkdist = self:VJ_CheckAllFourSides(randpos)
+									local randmove = {}
+									if checkdist.Backward == true then table.insert(randmove,"Backward") end
+									if checkdist.Right == true then table.insert(randmove,"Right") end
+									if checkdist.Left == true then table.insert(randmove,"Left") end
+									local pickmove = VJ_PICKRANDOMTABLE(randmove)
+									if pickmove == "Backward" then self:SetLastPosition(self:GetPos() + self:GetForward()*-randpos) end
+									if pickmove == "Right" then self:SetLastPosition(self:GetPos() + self:GetRight()*randpos) end
+									if pickmove == "Left" then self:SetLastPosition(self:GetPos() + self:GetRight()*-randpos) end
+									if pickmove == "Backward" or pickmove == "Right" or pickmove == "Left" then
+										self:StopMoving()
+										self:VJ_TASK_GOTO_LASTPOS(VJ_PICKRANDOMTABLE({"TASK_RUN_PATH","TASK_WALK_PATH"}),function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true end)
+									end
+									self.NextMoveRandomlyWhenShootingT = CurTime() + math.Rand(self.NextMoveRandomlyWhenShootingTime1,self.NextMoveRandomlyWhenShootingTime2)
+								end
+							end
+						else -- None VJ Base weapons
+							self:FaceCertainEntity(self:GetEnemy(),true)
+							self.WaitingForEnemyToComeOut = false
+							timer.Simple(0.3,function() if IsValid(self) then self.DoingWeaponAttack = true self.DoingWeaponAttack_Standing = true end end)
+							self:CustomOnWeaponAttack()
+							self.Weapon_TimeSinceLastShot = 0
+							self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.WeaponAttackSchedule))
+						end
+						//end
+						//else self.DoingWeaponAttack = false end
+					end	
+					-- Wait for enemy to come out
+					if !self:Visible(self:GetEnemy()) then // self.WaitForEnemyToComeOutDistance
+						if self.IsReloadingWeapon == false && self.AllowToDo_WaitForEnemyToComeOut == true && self.Weapon_TimeSinceLastShot <= 5 && self.WaitingForEnemyToComeOut == false && (SelfToEnemyDistance < (self.ShootDistance)) && SelfToEnemyDistance > self.WaitForEnemyToComeOutDistance && self:VJ_IsCurrentSchedule(self.WeaponAttackSchedule) != true then
+							if self.WaitForEnemyToComeOut == true then
+								self.DoingWeaponAttack_Standing = false
+								self.NextChaseTime = CurTime() + math.Rand(self.WaitForEnemyToComeOutTime1,self.WaitForEnemyToComeOutTime2)
+								self:CustomOnWaitForEnemyToComeOut()
+								local myanim = VJ_PICKRANDOMTABLE(self.AnimTbl_CustomWaitForEnemyToComeOut)
+								if myanim == true or !VJ_IsCurrentAnimation(self,self.CurrentWeaponAnimation) then //myanim = self.CurrentWeaponAnimation end
+								self:VJ_ACT_PLAYACTIVITY(myanim,false,2,true) end
+								//local niganim = self.CurrentWeaponAnimation
+								//local actualanim = niganim
+								//if type(niganim) != "string" then niganim = self:VJ_TranslateWeaponActivity(niganim) end
+								//if VJ_IsCurrentAnimation(self,niganim) == false then self:VJ_ACT_PLAYACTIVITY(actualanim,false,2,true) end
+								//self:VJ_ACT_DOCROUCH(self.AnimTbl_CustomWaitForEnemyToComeOut,{ACT_IDLE_ANGRY},false,2,true)
+							end
+							self.WaitingForEnemyToComeOut = true
 						end
 					end
 					
-					if self.MoveRandomlyWhenShooting == true && self.DoingWeaponAttack == true && CurTime() > self.NextMoveRandomlyWhenShootingT && self.TimeSinceSeenEnemy > 2 then
-						if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == false then
-						//self:SetMovementActivity(ACT_RUN_AIM)
-						local randpos = math.random(150,400)
-						local killallcpts = self:VJ_CheckAllFourSides(randpos)
-						local movepos_back = self:GetPos() + self:GetForward()*-randpos
-						local movepos_right = self:GetPos() + self:GetRight()*-randpos
-						local movepos_left = self:GetPos() + self:GetRight()*-randpos
-						if killallcpts.Backward == true && killallcpts.Right == true && killallcpts.Left == true then
-							self:SetLastPosition(VJ_PICKRANDOMTABLE({movepos_back,movepos_right,movepos_left}))
-						else
-						if killallcpts.Backward == true then
-							self:SetLastPosition(movepos_back)
-						elseif killallcpts.Right == true then
-							self:SetLastPosition(movepos_right)
-						elseif killallcpts.Left == true then
-							self:SetLastPosition(movepos_left)
-						 end
-						end
-						if killallcpts.Backward == true or killallcpts.Right == true or killallcpts.Left == true then
-							//self.NextWeaponAttackT = CurTime() + 3
-							self:StopMoving()
-							self:VJ_TASK_GOTO_LASTPOS(VJ_PICKRANDOMTABLE({"TASK_RUN_PATH","TASK_WALK_PATH"}),function(x) x.CanShootWhenMoving = true end)
-							//self:VJ_SetSchedule(VJ_PICKRANDOMTABLE({SCHED_FORCED_GO_RUN,SCHED_FORCED_GO}))
-							//self.Weapon_ChangeIdleAnimToShoot = true
-							//self:GetActiveWeapon().ActivityTranslateAI[ACT_IDLE] = ACT_RANGE_ATTACK_SMG1
-							timer.Simple(0.2, function() if IsValid(self) then
-								timer.Simple(self:GetPathTimeToGoal(), function() if IsValid(self) then
-									self:SelectSchedule()
-									//self.Weapon_ChangeIdleAnimToShoot = false
-									//self:GetActiveWeapon().ActivityTranslateAI[ACT_IDLE] = ACT_IDLE
-									end
-								end)
-							 end
-							end)
-						end
-						//self:VJ_ACT_PLAYACTIVITY(ACT_WALK,false,0,false)
-						/*local vsched = ai_vj_schedule.New("vj_act_nigatest")
-						vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-						vsched:EngTask("TASK_RUN_PATH", 0)
-						vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-						self:StartSchedule(vsched)*/
-						self.NextMoveRandomlyWhenShootingT = CurTime() + math.Rand(self.NextMoveRandomlyWhenShootingTime1,self.NextMoveRandomlyWhenShootingTime2)
-						end
-					end
-				else -- None VJ Base weapons
-					self:FaceCertainEntity(self:GetEnemy(),true)
-					self.WaitingForEnemyToComeOut = false
-					timer.Simple(0.3,function() if IsValid(self) then self.DoingWeaponAttack = true end end)
-					self:CustomOnWeaponAttack()
-					self.Weapon_TimeSinceLastShot = 0
-					self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.WeaponAttackSchedule))
-					end
-				// end
-				 //else self.DoingWeaponAttack = false end
+					/*if self:VJ_EyeTrace() == true then
+					if self.AllowReloading == true then
+					if CurTime() > self.NextReloadT then
+					if math.random(1,self.ReloadChance) < 3 then
+					if self.FollowingPlayer == false then
+					self:VJ_SetSchedule(SCHED_HIDE_AND_RELOAD) else
+					self:VJ_SetSchedule(SCHED_RELOAD) end end end
+					self.NextReloadT = CurTime() + self.NextReloadTime end end*/
+					
+					/*if self:Health() <= (self.StartHealth*0.25) then
+						self.TakingCover = true
+						self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
+					else
+						self.TakingCover = false 
+					end*/
 				end
-			-- Wait for enemy to come out
-			if !self:Visible(self:GetEnemy()) then // self.WaitForEnemyToComeOutDistance
-			if self.IsReloadingWeapon == false && self.AllowToDo_WaitForEnemyToComeOut == true && self.Weapon_TimeSinceLastShot <= 5 && self.WaitingForEnemyToComeOut == false && SelfToEnemyDistance < self.ShootDistance && SelfToEnemyDistance > self.WaitForEnemyToComeOutDistance && self:VJ_IsCurrentSchedule(self.WeaponAttackSchedule) != true then
-			if self.WaitForEnemyToComeOut == true then
-				self.DoingWeaponAttack = false
-				self.NextChaseTime = CurTime() + math.Rand(self.WaitForEnemyToComeOutTime1,self.WaitForEnemyToComeOutTime2)
-				self:CustomOnWaitForEnemyToComeOut()
-				local myanim = VJ_PICKRANDOMTABLE(self.AnimTbl_CustomWaitForEnemyToComeOut)
-				if myanim == false then myanim = self.CurrentWeaponAnimation end
-				self:VJ_ACT_PLAYACTIVITY(myanim,false,2,true)
-				//local niganim = self.CurrentWeaponAnimation
-				//local actualanim = niganim
-				//if type(niganim) != "string" then niganim = self:VJ_TranslateWeaponActivity(niganim) end
-				//if VJ_IsCurrentAnimation(self,niganim) == false then self:VJ_ACT_PLAYACTIVITY(actualanim,false,2,true) end
-				//self:VJ_ACT_DOCROUCH(self.AnimTbl_CustomWaitForEnemyToComeOut,{ACT_IDLE_ANGRY},false,2,true)
-			end
-			self.WaitingForEnemyToComeOut = true
 			end
 		end
-		
-		/*if self:VJ_EyeTrace() == true then
-		if self.AllowReloading == true then
-		if CurTime() > self.NextReloadT then
-		if math.random(1,self.ReloadChance) < 3 then
-		if self.FollowingPlayer == false then
-		self:VJ_SetSchedule(SCHED_HIDE_AND_RELOAD) else
-		self:VJ_SetSchedule(SCHED_RELOAD) end end end
-		self.NextReloadT = CurTime() + self.NextReloadTime end end*/
-		
-		/*if self:Health() <= (self.StartHealth*0.25) then
-			self.TakingCover = true
-			self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
-		else
-			self.TakingCover = false 
-		end*/
+		if self:GetEnemy() != nil && self:GetEnemy():GetPos():Distance(self:GetPos()) > self.SightDistance then
+			self:ResetEnemy(false)
 		end
 	end
-   end
-	if self:GetEnemy() != nil && self:GetEnemy():GetPos():Distance(self:GetPos()) > self.SightDistance then
-		self:ResetEnemy(false)
-	end
- end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_EyeTrace(GetUpNum)
@@ -3294,6 +3283,7 @@ function ENT:DropWeaponOnDeathCode(dmginfo,hitgroup)
 	if self:GetActiveWeapon("ai_weapon_rpg") then local weaponhas = "weapon_rpg"
 	if self:GetActiveWeapon("ai_weapon_357") then local weaponhas = "weapon_357"*/
 	
+	
 	gunang = Angle(0,0,0)
 	if self:GetActiveWeapon():GetClass() == "weapon_ar2" or self:GetActiveWeapon():GetClass() == "weapon_vj_ar2" or self:GetActiveWeapon():GetClass() == "weapon_vj_blaster" then gunang = Angle(0,180,0) end
 	if self:GetActiveWeapon():GetClass() == "weapon_pistol" or self:GetActiveWeapon():GetClass() == "weapon_vj_9mmpistol" or self:GetActiveWeapon():GetClass() == "weapon_vj_357" then gunang = Angle(0,180,0) end
@@ -3310,8 +3300,15 @@ function ENT:DropWeaponOnDeathCode(dmginfo,hitgroup)
 			nohandattach = false
 		end
 	end
+	if self:GetActiveWeapon().WorldModel_UseCustomPosition == true then nohandattach = true end
 	//local gunpos = self:GetAttachment(self:LookupAttachment("gun"))
+	
+	/*
+	theweapon:SetPos(self:GetActiveWeapon():GetPos())
+	theweapon:SetAngles(self:GetActiveWeapon():GetAngles())*/
+	
 	local theweapon = ents.Create(self:GetActiveWeapon():GetClass())
+	
 	if nohandattach == false then
 	theweapon:SetPos(self:GetAttachment(self:LookupAttachment(self.DropWeaponOnDeathAttachment)).Pos) else
 	theweapon:SetPos(self:GetActiveWeapon():GetPos()) end
@@ -3319,6 +3316,7 @@ function ENT:DropWeaponOnDeathCode(dmginfo,hitgroup)
 	if nohandattach == false then
 	theweapon:SetAngles(self:GetAttachment(self:LookupAttachment(self.DropWeaponOnDeathAttachment)).Ang +gunang) else
 	theweapon:SetAngles(self:GetActiveWeapon():GetAngles() +gunang) end
+	
 	theweapon:Spawn()
 	theweapon:Activate()
 	local phys = theweapon:GetPhysicsObject()

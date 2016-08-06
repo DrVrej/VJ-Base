@@ -328,12 +328,13 @@ function NPC_MetaTable:VJ_GetNearestPointToEntityDistance(argent,OnlySelfGetPos)
 	return Pos_Enemy:Distance(Pos_Self)
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,nih)
+function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,SpawnTestCube)
 	if self:GetEnemy() == nil then return end
 	StartPos = StartPos or self:NearestPoint(self:GetPos() +self:OBBCenter())
 	EndPos = EndPos or self:GetEnemy():EyePos()
 	AcceptWorld = AcceptWorld or false
-	local istrue = false
+	SpawnTestCube = SpawnTestCube or false
+	local hitent = false
 	tr = util.TraceLine({
 		start = StartPos,
 		endpos = EndPos,
@@ -342,27 +343,28 @@ function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,nih)
 	//print("--------------------------------------------")
 	//print(tr.Entity)
 	//PrintTable(tr)
-	
-	/*if nih == 1 then
-	local nig = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
-	nig:SetModel("models/hunter/blocks/cube025x025x025.mdl")
-	nig:SetPos(tr.HitPos)
-	nig:SetAngles(self:GetAngles())
-	nig:SetColor(Color(255,0,0))
-	nig:Spawn()
-	nig:Activate()
-	timer.Simple(3,function() if IsValid(nig) then nig:Remove() end end)
-	end*/
+	if SpawnTestCube == true then
+		local nig = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
+		nig:SetModel("models/hunter/blocks/cube025x025x025.mdl")
+		nig:SetPos(tr.HitPos)
+		nig:SetAngles(self:GetAngles())
+		nig:SetColor(Color(255,0,0))
+		nig:Spawn()
+		nig:Activate()
+		timer.Simple(3,function() if IsValid(nig) then nig:Remove() end end)
+	end
 	
 	for k,v in ipairs(ents.FindInSphere(tr.HitPos,5)) do
-		//print(v)
+		//if SpawnTestCube == true then print(v) end
 		if v == self:GetEnemy() or self:Disposition(v) == 1 or self:Disposition(v) == 2 then
-			istrue = true
+			hitent = true
+			//if SpawnTestCube == true then print("it hit") end
 		end
 	end
 	
+	if hitent == true then return false end
+	if EndPos:Distance(tr.HitPos) <= 10 then return false end
 	if tr.HitWorld == true && self:GetPos():Distance(tr.HitPos) < 200 then return true end
-	if istrue == true then return false end
 	if /*tr.Entity == NULL or tr.Entity:IsNPC() or tr.Entity:IsPlayer() or*/ tr.Entity == self:GetEnemy() or (AcceptWorld == false && tr.HitWorld == true) then
 	return false else return true end
 end

@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "models/vj_props/fireplace/fireplace_wood"
+	"$model" 1
+	"$nocull" 1
+}

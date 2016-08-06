@@ -9,11 +9,17 @@ function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 	//self:SetArrivalActivity(ACT_COWER)
 	//self:SetArrivalSpeed(1000)
 	if (self:IsRunningBehavior()) then return true end
-	if (self:DoingEngineSchedule()) then return true end -- SCHED_
+	if (self:DoingEngineSchedule()) then return true end -- Mostly used for schedules (SCHED_)
 	//if VJ_IsCurrentAnimation(self,ACT_IDLE) && self.VJ_PlayingSequence == false && self.VJ_IsPlayingInterruptSequence == false then print("is ACT_IDLE!") self:VJ_ACT_PLAYACTIVITY(ACT_COWER,false,0,true,0,{AlwaysUseSequence=true,SequenceDuration=false,SequenceInterruptible=true}) end
-	if (!self.CurrentSchedule) && self.VJ_PlayingSequence == false /*&& self.VJ_IsPlayingInterruptSequence == false*/ then self:SelectSchedule() end
+	if (!self.CurrentSchedule or (self.CurrentSchedule != nil && self.CurrentSchedule.CanBeInterrupted == true)) && (self.VJ_PlayingSequence == false && self.CanDoSelectScheduleAgain == true) /*&& self.VJ_IsPlayingInterruptSequence == false*/ then self:SelectSchedule() end
 	if (self.CurrentSchedule) then self:DoSchedule(self.CurrentSchedule) end
 	if self.VJ_PlayingSequence == false && self.VJ_IsPlayingInterruptSequence == false && self.ShouldBeFlying == false /*&& self:GetSequence() != self.AerialCurrentAnim && self.MovementType != VJ_MOVETYPE_AERIAL*/ then self:MaintainActivity() end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:DoRunCode_OnFinish(schedule)
+	if schedule == nil then return end
+	if schedule.AlreadyRanCode_OnFinish == true then return end
+	if schedule.RunCode_OnFinish != nil then schedule.AlreadyRanCode_OnFinish = true schedule.RunCode_OnFinish() end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule(iNPCState)
@@ -23,8 +29,27 @@ function ENT:SelectSchedule(iNPCState)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSchedule(schedule)
-	self.CurrentSchedule 	= schedule
-	self.CurrentTaskID 		= 1
+	self:ClearCondition(35)
+	if (!schedule.RunCode_OnFinish) then schedule.RunCode_OnFinish = nil end
+	if (!schedule.ResetOnFail) then schedule.ResetOnFail = false end
+	if (!schedule.StopScheduleIfNotMoving) then schedule.StopScheduleIfNotMoving = false end
+	if (!schedule.CanBeInterrupted) then schedule.CanBeInterrupted = false end
+	if (!schedule.CanShootWhenMoving) then schedule.CanShootWhenMoving = false end
+	for k,v in ipairs(schedule.Tasks) do
+		if v.TaskName == "TASK_RUN_PATH" or v.TaskName == "TASK_RUN_PATH_FLEE" or v.TaskName == "TASK_RUN_PATH_TIMED" or v.TaskName == "TASK_RUN_PATH_FOR_UNITS" or v.TaskName == "TASK_RUN_PATH_WITHIN_DIST" then schedule.IsMovingSchedule = true schedule.IsMovingSchedule_Running = true break end
+		if v.TaskName == "TASK_WALK_PATH" or v.TaskName == "TASK_WALK_PATH_TIMED" or v.TaskName == "TASK_WALK_PATH_WITHIN_DIST" or v.TaskName == "TASK_WALK_PATH_FOR_UNITS" then schedule.IsMovingSchedule = true schedule.IsMovingSchedule_Walking = true break end
+		schedule.IsMovingSchedule = false
+		schedule.IsMovingSchedule_Running = false
+		schedule.IsMovingSchedule_Walking = false
+	end
+	if schedule.CanShootWhenMoving == true && self.CurrentWeaponAnimation != nil then
+		self:SetArrivalActivity(self.CurrentWeaponAnimation)
+	end
+	schedule.AlreadyRanCode_OnFinish = false
+	//if schedule.Name != "vj_chase_enemy" then PrintTable(schedule) end
+	self:DoRunCode_OnFinish(self.CurrentSchedule)
+	self.CurrentSchedule = schedule
+	self.CurrentTaskID = 1
 	self.GetNumberOfTasks = tonumber(schedule:NumTasks()) -- Or else nil
 	self:SetTask(schedule:GetTask(1))
 end
@@ -34,7 +59,9 @@ end
 	if (self:TaskFinished()) then self:NextTask(schedule) end
 end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:ScheduleFinished()
+function ENT:ScheduleFinished(schedule)
+	schedule = schedule or self.CurrentSchedule
+	self:DoRunCode_OnFinish(schedule)
 	self.CurrentSchedule 	= nil
 	self.CurrentTask 		= nil
 	self.CurrentTaskID 		= nil

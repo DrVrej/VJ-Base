@@ -10,10 +10,10 @@ function EFFECT:Init(data)
 	local Emitter = ParticleEmitter(self.Pos)
 	if Emitter == nil then return end
 	
-	LocalPlayrMagnitude = 0
+	LocalPlayerMagnitude = 0
 	if IsValid(data:GetEntity()) && IsValid(data:GetEntity():GetOwner()) && data:GetEntity():GetOwner():IsPlayer() && data:GetEntity().Owner == LocalPlayer() then
-		LocalPlayrMagnitude = data:GetMagnitude() else
-		LocalPlayrMagnitude = 0
+		LocalPlayerMagnitude = data:GetMagnitude() else
+		LocalPlayerMagnitude = 0
 	end
 
 	//local effectdata = EffectData()
@@ -25,7 +25,7 @@ function EFFECT:Init(data)
 	-- Muzzle Flash
 	if GetConVarNumber("vj_wep_nomuszzleflash") == 0 && IsValid(data:GetEntity()) then
 	for i = 1,3 do //4
-		local EffectCode = Emitter:Add("effects/muzzleflash"..math.random(1,4),self.Pos + LocalPlayrMagnitude * data:GetNormal())
+		local EffectCode = Emitter:Add("effects/muzzleflash"..math.random(1,4),self.Pos + LocalPlayerMagnitude * data:GetNormal())
 		EffectCode:SetVelocity(data:GetNormal() + 1.1 * data:GetEntity():GetOwner():GetVelocity())
 		//EffectCode:SetAirResistance(200)
 		EffectCode:SetDieTime(math.Rand(0.05,0.05)) -- How much time until it dies
@@ -52,7 +52,7 @@ function EFFECT:Init(data)
 
 	-- Heat wave
 	if GetConVarNumber("vj_wep_nomuzzleheatwave") == 0 && IsValid(data:GetEntity()) then
-		local EffectCode = Emitter:Add("sprites/heatwave",self.Pos + LocalPlayrMagnitude * data:GetNormal())
+		local EffectCode = Emitter:Add("sprites/heatwave",self.Pos + LocalPlayerMagnitude * data:GetNormal())
 		EffectCode:SetVelocity(data:GetNormal() + 1.1 * data:GetEntity():GetOwner():GetVelocity())
 		EffectCode:SetDieTime(math.Rand(0.15,0.2)) -- How much time until it dies
 		//EffectCode:SetStartAlpha(math.Rand(90,100)) -- Transparency
@@ -75,7 +75,7 @@ function EFFECT:Init(data)
 		if data:GetEntity():GetOwner():IsNPC() then smokediet = 0.2,0.2 else smokediet = 0.4,0.4 end
 	end
 	for i = 1,smokeinum do //4
-		local EffectCode = Emitter:Add("particles/smokey",self.Pos + LocalPlayrMagnitude * data:GetNormal())
+		local EffectCode = Emitter:Add("particles/smokey",self.Pos + LocalPlayerMagnitude * data:GetNormal())
 		EffectCode:SetVelocity(data:GetNormal() + Vector(math.random(-30,30),math.random(-30,30),math.random(-30,30)))
 		EffectCode:SetDieTime(math.Rand(smokediet,smokediet)) -- How much time until it dies
 		EffectCode:SetStartAlpha(math.Rand(40,60)) -- Transparency
@@ -104,7 +104,7 @@ function EFFECT:Init(data)
 		EffectCode:SetColor(255,255,255) -- The color of the effect
 		//EffectCode:SetGravity(Vector(0,0,100)) -- The Gravity
 	end*/
-		//local EffectCode = Emitter:Add("effects/muzzleflash"..math.random(1,4),self.Pos + LocalPlayrMagnitude * data:GetNormal())
+		//local EffectCode = Emitter:Add("effects/muzzleflash"..math.random(1,4),self.Pos + LocalPlayerMagnitude * data:GetNormal())
 		//EffectCode:SetVelocity(data:GetNormal() + 1.1 * data:GetEntity():GetOwner():GetVelocity())
 
 	if GetConVarNumber("vj_wep_nomuszzleflash") == 0 && IsValid(data:GetEntity()) then
