@@ -216,4 +216,11 @@ AddEntity = function(eName,eClass,eAuthor,eAdmin,eOffSet,eDropToFloor,vCat)
 	list.Set( "VJBASE_SPAWNABLE_ENTITIES", eClass, Ent )
 	duplicator.Allow( eClass )
 end,
+	-- ConVar ----------------------------------------------------------------------------------------------------
+AddConVar = function(cName,cValue,cFlags)
+	if !ConVarExists(cName) then
+		local cFlags = cFlags or {FCVAR_NONE}
+		CreateConVar(cName,cValue,cFlags)
+	end
+end,
 }

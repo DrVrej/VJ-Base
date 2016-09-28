@@ -19,14 +19,11 @@ ENT.MovementType = VJ_MOVETYPE_PHYSICS -- How does the SNPC move?
 ENT.HasAllies = true -- Put to false if you want it not to have any allies
 ENT.Bleeds = false -- Does the SNPC bleed? (Blood decal, particle and etc.)
 ENT.HasMeleeAttack = false -- Should the SNPC have a melee attack?
-ENT.HasSquad = false -- Does it have a squad?
 ENT.DisableWeapons = true -- If true, SNPC can't use weapons
-ENT.DisableCapabilities = true -- If enabled, all of the CAPs will be disabled, allowing you to add your own
+ENT.DisableInitializeCapabilities = true -- If true, it will disable the initialize capabilities, this will allow you to add your own
 ENT.DisableSelectSchedule = true -- Disables Schedule code, Custom Schedule can still work
 //ENT.HasIdleSounds = false -- If set to false, it won't play the idle sounds
 ENT.HasPainSounds = false -- If set to false, it won't play the pain sounds
-ENT.FadeCorpseType = "kill" -- The type of "Fire" is used to fade the corpse, can be used to make prop_physics fade since FadeAndRemove doesn't work on them
-ENT.DeathEntityType = "prop_physics" -- Type entity the death ragdoll uses
 ENT.CorpseAlwaysCollide = true -- Should the corpse always collide?
 ENT.Immune_Dissolve = true -- Immune to Dissolving | Example: Combine Ball
 ENT.Immune_AcidPoisonRadiation = true -- Immune to Acid, Poison and Radiation
@@ -36,7 +33,6 @@ ENT.Immune_Physics = true -- Immune to Physics
 ENT.ImmuneDamagesTable = {DMG_BULLET,DMG_BUCKSHOT,DMG_PHYSGUN} -- You can set Specific types of damages for the SNPC to be immune to
 //ENT.DisableFindEnemy = true -- Disables FindEnemy code, friendly code still works though
 ENT.UseSphereForFindEnemy = true -- Should the SNPC use FindInSphere for find enemy?
-ENT.CanDetectGrenades = false -- Set to false to disable the SNPC from running away from grenades
 ENT.CallForHelp = false -- Does the SNPC call for help?
 ENT.WaitBeforeDeathTime = 2 -- Time until the SNPC spawns its corpse and gets removedz
 ENT.GetDamageFromIsHugeMonster = true -- Should it get damaged no matter what by SNPCs that are tagged as VJ_IsHugeMonster?
@@ -46,8 +42,6 @@ ENT.CallForBackUpOnDamage = false -- Should the SNPC call for help when damaged?
 ENT.MoveOrHideOnDamageByEnemy = false -- Should the SNPC move or hide when being damaged by an enemy?
 	-- ====== Sound File Paths ====== --
 -- Leave blank if you don't want any sounds to play
-//ENT.SoundTbl_Idle = {}
-//ENT.SoundTbl_Alert = {}
 ENT.SoundTbl_Breath = {"vj_mili_tank/tankidle1.wav"}
 ENT.SoundTbl_Death = {"vj_mili_tank/tank_death1.wav"}
 
@@ -57,12 +51,8 @@ ENT.CombatIdleSoundLevel = 70
 ENT.BreathSoundLevel = 70
 ENT.DeathSoundLevel = 100
 
-ENT.IdleSoundPitch1 = 100
-ENT.IdleSoundPitch2 = 100
-ENT.AlertSoundPitch1 = 100
-ENT.AlertSoundPitch2 = 100
-ENT.CombatIdleSoundPitch1 = 100
-ENT.CombatIdleSoundPitch2 = 100
+ENT.GeneralSoundPitch1 = 90
+ENT.GeneralSoundPitch2 = 100
 
 //ENT.NextSoundTime_Breath1 = 6.1 -- Time until it plays the sound again
 
@@ -77,6 +67,7 @@ ENT.Tank_UseGetRightForSpeed = false -- Should it use GetRight instead of GetFor
 ENT.Tank_SeeClose = 500 -- If the enemy is closer than this number, than move!
 ENT.Tank_SeeFar = 4000 -- If the enemy is higher than this number, than move!
 ENT.Tank_SeeLimit = 6000 -- How far can it see?
+ENT.Tank_DeathSoldierModels = {}
 
 //ENT.Tank_CollisionBound_Back = 90
 //ENT.Tank_CollisionBound_Front = 90
@@ -90,6 +81,7 @@ ENT.Tank_IsMoving = false
 ENT.Tank_Status = 0
 ENT.Tank_NextLowHealthSmokeT = 0
 ENT.Tank_NextRunOverSoundT = 0
+ENT.TankTbl_DontRunOver = {"npc_antlionguard","npc_turret_ceiling","monster_gargantua","monster_bigmomma","monster_nihilanth","npc_strider","npc_combine_camera","npc_helicopter","npc_combinegunship","npc_combinedropship","npc_rollermine"}
 
 util.AddNetworkString("vj_tank_base_spawneffects")
 util.AddNetworkString("vj_tank_base_moveeffects")
@@ -151,11 +143,6 @@ function ENT:StartMoveEffects()
 	net.Broadcast()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:GetDeathSoldierModel()
-	local mdlcode = "models/VJ_HGRUNT/hgrunt"..math.random(1,5)..".mdl"
-	return mdlcode
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:GetNearDeathSparkPositions()
 	local randpos = math.random(1,7)
 	if randpos == 1 then return self.Spark1:SetLocalPos(self:GetPos() +self:GetForward()*100 +self:GetUp()*60) else
@@ -187,7 +174,6 @@ if GetConVarNumber("ai_disabled") == 1 then return end
 		self:TANK_RUNOVER_DAMAGECODE(entity)
 	end
 end
-ENT.TankTbl_DontRunOver = {"npc_antlionguard","npc_turret_ceiling","monster_gargantua","monster_bigmomma","monster_nihilanth","npc_strider","npc_combine_camera","npc_helicopter","npc_combinegunship","npc_combinedropship","npc_rollermine"}
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:TANK_RUNOVER_DAMAGECODE(argent)
 // if self.HasMeleeAttack == false then return end
@@ -414,143 +400,108 @@ end
 function ENT:CustomOnTakeDamage_BeforeDamage(dmginfo,hitgroup)
 	local panis = dmginfo:GetDamageType()
 	if (panis == DMG_SLASH or panis == DMG_GENERIC or panis == DMG_CLUB) then
-	if dmginfo:GetDamage() >= 30 && dmginfo:GetAttacker().VJ_IsHugeMonster != true then
-	//dmginfo:ScaleDamage(0.5)
-		dmginfo:SetDamage(dmginfo:GetDamage() /2)
-	else 
-		dmginfo:SetDamage(0)
+		if dmginfo:GetDamage() >= 30 && dmginfo:GetAttacker().VJ_IsHugeMonster != true then
+		//dmginfo:ScaleDamage(0.5)
+			dmginfo:SetDamage(dmginfo:GetDamage() /2)
+		else 
+			dmginfo:SetDamage(0)
 		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPriorToKilled(dmginfo,hitgroup)
-	self.Gunner.Dead = true
-	timer.Simple(0,function()
-	if self:IsValid() then
-	self:EmitSound("vj_mili_tank/tank_death2.wav",100,100)
-	util.BlastDamage(self,self,self:GetPos(),200,40)
-	util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
-	ParticleEffect("vj_explosion2",self:GetPos(),Angle(0,0,0),nil)
+	if IsValid(self.Gunner) then 
+		self.Gunner.Dead = true
+		if self:IsOnFire() then self.Gunner:Ignite(math.Rand(8,10),0) end
 	end
-   end)
+	
+	timer.Simple(0,function()
+		if self:IsValid() then
+			self:EmitSound("vj_mili_tank/tank_death2.wav",100,100)
+			util.BlastDamage(self,self,self:GetPos(),200,40)
+			util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
+			if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2",self:GetPos(),Angle(0,0,0),nil) end
+		end
+	end)
 	
 	timer.Simple(0.5,function()
-	if self:IsValid() then
-	self:EmitSound("vj_mili_tank/tank_death2.wav",100,100)
-	util.BlastDamage(self,self,self:GetPos(),200,40)
-	util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
-	ParticleEffect("vj_explosion2",self:GetPos(),Angle(0,0,0),nil)
-	end
-   end)
+		if self:IsValid() then
+			self:EmitSound("vj_mili_tank/tank_death2.wav",100,100)
+			util.BlastDamage(self,self,self:GetPos(),200,40)
+			util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
+			if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2",self:GetPos(),Angle(0,0,0),nil) end
+		end
+	end)
 	
 	timer.Simple(1,function()
-	if self:IsValid() then
-	self:EmitSound("vj_mili_tank/tank_death2.wav",100,100)
-	util.BlastDamage(self,self,self:GetPos(),200,40)
-	util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
-	ParticleEffect("vj_explosion2",self:GetPos(),Angle(0,0,0),nil)
-	end
-   end)
+		if self:IsValid() then
+			self:EmitSound("vj_mili_tank/tank_death2.wav",100,100)
+			util.BlastDamage(self,self,self:GetPos(),200,40)
+			util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
+			if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2",self:GetPos(),Angle(0,0,0),nil) end
+		end
+	end)
 	
 	timer.Simple(1.5,function()
-	if self:IsValid() then
-	self:EmitSound("vj_mili_tank/tank_death2.wav",100,100)
-	self:EmitSound("vj_mili_tank/tank_death3.wav",100,100)
-	util.BlastDamage(self,self,self:GetPos(),200,40)
-	util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
-	ParticleEffect("vj_explosion2",self:GetPos(),Angle(0,0,0),nil)
-	end
-   end)
+		if self:IsValid() then
+			self:EmitSound("vj_mili_tank/tank_death2.wav",100,100)
+			self:EmitSound("vj_mili_tank/tank_death3.wav",100,100)
+			util.BlastDamage(self,self,self:GetPos(),200,40)
+			util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
+			if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2",self:GetPos(),Angle(0,0,0),nil) end
+		end
+	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
 	util.BlastDamage( self, self, self:GetPos(),400, 40)
 	util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
 	
--- Spawn the gunner
-	if self.Gunner:IsValid() then 
-	local corpse = ents.Create(self.DeathEntityType)
-	corpse:SetModel(self.Gunner:GetModel())
-	corpse:SetPos(self.Gunner:GetPos())
-	corpse:SetAngles(self.Gunner:GetAngles())
-	corpse:Spawn()
-	corpse:SetColor(self.Gunner:GetColor())
-	corpse:SetMaterial(self.Gunner:GetMaterial())
-	corpse:GetPhysicsObject():AddVelocity( Vector( math.Rand( -200, 200 ), math.Rand( -200, 200 ), 300 ) )
-	corpse.IsVJBaseCorpse = true
-	-- MISC Stuff --
-	if GetConVarNumber("ai_serverragdolls") == 0 then corpse:SetCollisionGroup( 1 ) else undo.ReplaceEntity(self.Gunner,corpse) end
-	if self.CorpseAlwaysCollide == true then corpse:SetCollisionGroup( 0 ) end
-	corpse:SetSkin( self.DeathSkin )
-	if self.DeathSkin == 0 then corpse:SetSkin( self.Gunner:GetSkin() ) end
-	if self.HasDeathBodyGroup == true then for i = 0,18 do corpse:SetBodygroup(i,self.Gunner:GetBodygroup(i)) end -- 18 = Bodygroup limit
-	if self.CustomBodyGroup == true then corpse:SetBodygroup( self.DeathBodyGroupA, self.DeathBodyGroupB ) end end -- Custom Bodygroup
-	cleanup.ReplaceEntity(self.Gunner,corpse) -- Delete on cleanup
-	if GetConVarNumber("vj_npc_undocorpse") == 1 then undo.ReplaceEntity(self.Gunner,corpse) end -- Undoable
-	if self.SetCorpseOnFire == true then corpse:Ignite( math.Rand( 8, 10 ), 0 ) end -- Set it on fire when it dies
-	if self.Gunner:IsOnFire() then  -- If was on fire then...
-		corpse:Ignite( math.Rand( 8, 10 ), 0 )
-		corpse:SetColor(Color(90,90,90))
-		//corpse:SetMaterial("models/props_foliage/tree_deciduous_01a_trunk")
+	-- Spawn the gunner
+	if IsValid(self.Gunner) then
+		local gunnercorpse = self.Gunner:CreateDeathCorpse(dmginfo,hitgroup)
+		if IsValid(gunnercorpse) then table.insert(GetCorpse.ExtraCorpsesToRemove,gunnercorpse) end
 	end
-	if self.FadeCorpse == true then corpse:Fire(self.FadeCorpseType, "", self.FadeCorpseTime) end
-	if GetConVarNumber("vj_npc_corpsefade") == 1 then corpse:Fire("kill", "", GetConVarNumber("vj_npc_corpsefadetime")) end
-  end
 
--- Spawn the Soldier
+	-- Spawn the Soldier
 	local panisrand = math.random(1,3)
 	if panisrand == 1 then
- 	local corpse = ents.Create("prop_ragdoll")
-	corpse:SetModel(Model(self:GetDeathSoldierModel()))
-	corpse:SetPos(self:GetPos() +self:GetUp()*90 +self:GetRight()*-30)
-	corpse:SetAngles(self:GetAngles())
-	corpse:Spawn()
-	corpse:SetColor(self:GetColor())
-	corpse:SetMaterial(self:GetMaterial())
-	corpse:GetPhysicsObject():AddVelocity( Vector( math.Rand( -600, 600 ), math.Rand( -600, 600 ), 500 ) )
-	corpse.IsVJBaseCorpse = true
-	if GetConVarNumber("ai_serverragdolls") == 0 then corpse:SetCollisionGroup(1) else corpse:SetCollisionGroup(0) end
-	corpse:Ignite( math.Rand( 8, 10 ), 0 )
-	corpse:SetColor(Color(90,90,90))
-	//corpse:SetMaterial("models/props_foliage/tree_deciduous_01a_trunk")
-	if self.FadeCorpse == true then corpse:Fire(self.FadeCorpseType, "", self.FadeCorpseTime) end
-	if GetConVarNumber("vj_npc_corpsefade") == 1 then corpse:Fire("kill", "", GetConVarNumber("vj_npc_corpsefadetime")) end
+		self:CreateExtraDeathCorpse("prop_ragdoll",VJ_PICKRANDOMTABLE(self.Tank_DeathSoldierModels),{Pos=self:GetPos()+self:GetUp()*90+self:GetRight()*-30,Vel=Vector(math.Rand(-600,600), math.Rand(-600,600),500)},function(extraent) extraent:Ignite(math.Rand(8,10),0) extraent:SetColor(Color(90,90,90)) end)
 	end
 	
 	self:SetPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the NPC is too close to the ground
 	local tr = util.TraceLine({
-	start = self:GetPos(),
-	endpos = self:GetPos() - Vector(0, 0, 500),
-	filter = self //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
+		start = self:GetPos(),
+		endpos = self:GetPos() - Vector(0, 0, 500),
+		filter = self
 	})
 	util.Decal("Scorch",tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
 	
-	if GetConVarNumber("vj_npc_nogibdeathparticles") == 0 then
-	//self.FireEffect = ents.Create( "env_fire_trail" )
-	//self.FireEffect:SetPos(self:GetPos()+self:GetUp()*70)
-	//self.FireEffect:Spawn()
-	//self.FireEffect:SetParent(GetCorpse)
-	//ParticleEffectAttach("smoke_large_01b",PATTACH_ABSORIGIN_FOLLOW,GetCorpse,0)
-	ParticleEffect("vj_explosion3",self:GetPos(),Angle(0,0,0),nil)
-	ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*-130,Angle(0,0,0),nil)
-	ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*130,Angle(0,0,0),nil)
-	ParticleEffectAttach("smoke_burning_engine_01",PATTACH_ABSORIGIN_FOLLOW,GetCorpse,0)
-	local effectdata = EffectData()
-	effectdata:SetOrigin(self:GetPos() + Vector(0,0,0)) -- the vector of were you want the effect to spawn
-	util.Effect( "VJ_Medium_Explosion1", effectdata )
-	util.Effect( "Explosion", effectdata )
-	local effectdata2 = EffectData()
-	effectdata2:SetOrigin(self:GetPos() + Vector(0,0,0)) -- the vector of were you want the effect to spawn
-	effectdata2:SetScale( 500 ) -- how big the particles are, can even be 0.1 or 0.6
-	util.Effect( "HelicopterMegaBomb", effectdata2 ) -- Add as many as you want
-	util.Effect( "ThumperDust", effectdata2 ) -- Add as many as you want
+	if self.HasGibDeathParticles == true then
+		//self.FireEffect = ents.Create( "env_fire_trail" )
+		//self.FireEffect:SetPos(self:GetPos()+self:GetUp()*70)
+		//self.FireEffect:Spawn()
+		//self.FireEffect:SetParent(GetCorpse)
+		//ParticleEffectAttach("smoke_large_01b",PATTACH_ABSORIGIN_FOLLOW,GetCorpse,0)
+		ParticleEffect("vj_explosion3",self:GetPos(),Angle(0,0,0),nil)
+		ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*-130,Angle(0,0,0),nil)
+		ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*130,Angle(0,0,0),nil)
+		ParticleEffectAttach("smoke_burning_engine_01",PATTACH_ABSORIGIN_FOLLOW,GetCorpse,0)
+		local explosioneffect = EffectData()
+		explosioneffect:SetOrigin(self:GetPos())
+		util.Effect("VJ_Medium_Explosion1",explosioneffect)
+		util.Effect("Explosion", explosioneffect)
+		local dusteffect = EffectData()
+		dusteffect:SetOrigin(self:GetPos())
+		dusteffect:SetScale(800)
+		util.Effect("ThumperDust",dusteffect)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove()
 	VJ_STOPSOUND(self.tank_movingsd)
-	if self.Gunner:IsValid() then
-	self.Gunner:Remove()
+	if IsValid(self.Gunner) then
+		self.Gunner:Remove()
 	end
 end
 /*-----------------------------------------------

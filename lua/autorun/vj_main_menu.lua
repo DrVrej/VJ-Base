@@ -31,7 +31,7 @@ local function CleanSNPCsCorpse(ply)
         for _, x in pairs(cleandatsnpc) do
 			if v:IsNPC() && v:IsValid() && v.IsVJBaseSNPC == true then
 			x.VJCorpseDeleted = true
-			//if x:IsValid() then x.Corpse = ents.Create(x.DeathEntityType)
+			//if x:IsValid() then x.Corpse = ents.Create(x.DeathCorpseEntityClass)
 			end
 		end*/
 	 end

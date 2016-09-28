@@ -21,13 +21,13 @@ ENT.CanTurnWhileStationary = false -- If set to true, the SNPC will be able to t
 ENT.HasAllies = true -- Put to false if you want it not to have any allies
 ENT.Bleeds = false -- Does the SNPC bleed? (Blood decal, particle and etc.)
 ENT.HasMeleeAttack = false -- Should the SNPC have a melee attack?
-ENT.HasSquad = false -- Does it have a squad?
 ENT.DisableWeapons = true -- If true, SNPC can't use weapons
-ENT.DisableCapabilities = true -- If enabled, all of the CAPs will be disabled, allowing you to add your own
+ENT.DisableInitializeCapabilities = true -- If true, it will disable the initialize capabilities, this will allow you to add your own
 ENT.DisableSelectSchedule = true -- Disables Schedule code, Custom Schedule can still work
 ENT.HasPainSounds = false -- If set to false, it won't play the pain sounds
 ENT.GodMode = true -- Immune to everything
-ENT.HasDeathRagdoll = false -- If set to false, it will not spawn the regular ragdoll of the SNPC
+//ENT.HasDeathRagdoll = false -- If set to false, it will not spawn the regular ragdoll of the SNPC
+ENT.CorpseAlwaysCollide = true -- Should the corpse always collide?
 ENT.Immune_Dissolve = true -- Immune to Dissolving | Example: Combine Ball
 ENT.Immune_AcidPoisonRadiation = true -- Immune to Acid, Poison and Radiation
 ENT.Immune_Bullet = true -- Immune to Bullets
@@ -36,7 +36,6 @@ ENT.Immune_Physics = true -- Immune to Physics
 ENT.ImmuneDamagesTable = {DMG_SLASH,DMG_GENERIC,DMG_CLUB,DMG_BULLET,DMG_BUCKSHOT,DMG_PHYSGUN} -- You can set Specific types of damages for the SNPC to be immune to
 //ENT.DisableFindEnemy = true -- Disables FindEnemy code, friendly code still works though
 ENT.UseSphereForFindEnemy = true -- Should the SNPC use FindInSphere for find enemy?
-ENT.CanDetectGrenades = false -- Set to false to disable the SNPC from running away from grenades
 ENT.CallForHelp = false -- Does the SNPC call for help?
 ENT.DisableWandering = true -- Disables wandering when the SNPC is idle
 ENT.BringFriendsOnDeath = false -- Should the SNPC's friends come to its position before it dies?
@@ -350,6 +349,11 @@ function ENT:RangeAttack_Shell()
    end
   end
  end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
+	GetCorpse:GetPhysicsObject():AddVelocity(Vector(math.Rand(-200,200), math.Rand(-200,200),math.Rand(200,400)))
+	GetCorpse:GetPhysicsObject():AddAngleVelocity(Vector(math.Rand(-100,100),math.Rand(-100,100),math.Rand(-100,100)))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove()
