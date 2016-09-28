@@ -12,7 +12,6 @@ if (CLIENT) then
 SWEP.Slot						= 2 -- Which weapon slot you want your SWEP to be in? (1 2 3 4 5 6) 
 SWEP.SlotPos					= 4 -- Which part of that slot do you want the SWEP to be in? (1 2 3 4 5 6)
 SWEP.SwayScale 					= 1 -- Default is 1, The scale of the viewmodel sway
-SWEP.UseHands					= true
 end
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel					= "models/weapons/v_mp40.mdl"

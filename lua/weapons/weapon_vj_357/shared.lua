@@ -17,7 +17,7 @@ end
 	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.NPC_EnableDontUseRegulate 	= false -- Used for VJ Base SNPCs, if enabled the SNPC will remove use regulate
 SWEP.NPC_NextPrimaryFire 		= 0.9 -- Next time it can use primary fire
-SWEP.NPC_CustomSpread	 		= 0.8 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
+SWEP.NPC_CustomSpread	 		= 0.5 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel					= "models/weapons/c_357.mdl"
 SWEP.WorldModel					= "models/weapons/w_357.mdl"
@@ -30,7 +30,7 @@ SWEP.Primary.PlayerDamage		= "Double" -- Only applies for players | "Same" = Sam
 SWEP.Primary.Force				= 1 -- Force applied on the object the bullet hits
 SWEP.Primary.ClipSize			= 6 -- Max amount of bullets per clip
 SWEP.Primary.Recoil				= 2 -- How much recoil does the player get?
-SWEP.Primary.Cone				= 2 -- How accurate is the bullet? (Players)
+SWEP.Primary.Cone				= 1 -- How accurate is the bullet? (Players)
 SWEP.Primary.Delay				= 0.9 -- Time until it can shoot again
 SWEP.Primary.Automatic			= false -- Is it automatic?
 SWEP.Primary.Ammo				= "357" -- Ammo type

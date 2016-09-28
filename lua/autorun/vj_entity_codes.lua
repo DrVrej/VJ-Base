@@ -153,6 +153,7 @@ function VJ_IsCurrentAnimation(argent,actname)
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function VJ_IsAlive(argent)
+	if argent.Dead == true then return false end
 	return argent:Health() > 0
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -206,36 +207,51 @@ function NPC_MetaTable:VJ_HasActiveWeapon()
 	return false
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function NPC_MetaTable:VJ_DecideSoundPitch(Pitch1,Pitch2)
+	//if pitch1 == nil then return end
+	local getpitch1 = self.GeneralSoundPitch1
+	local getpitch2 = self.GeneralSoundPitch2
+	local picknum = self.UseTheSameGeneralSoundPitch_PickedNumber
+	if self.UseTheSameGeneralSoundPitch == true && picknum != 0 then
+		getpitch1 = picknum
+		getpitch2 = picknum
+	end
+	if Pitch1 != "UseGeneralPitch" && isnumber(Pitch1) then getpitch1 = Pitch1 end
+	if Pitch2 != "UseGeneralPitch" && isnumber(Pitch2) then getpitch2 = Pitch2 end
+	return math.random(getpitch1,getpitch2)
+end
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function NPC_MetaTable:VJ_PlaySequence(SequenceID,PlayBackRate,Wait,WaitTime,Interruptible)
 	if not SequenceID then return end
 	if Interruptible == true then self.VJ_IsPlayingInterruptSequence = true self.VJ_PlayingSequence = false else self.VJ_PlayingSequence = true self.VJ_IsPlayingInterruptSequence = false end
 	self:ClearSchedule()
-	timer.Simple(0.2,function() if self:IsValid() then
-	//print(self:SequenceDuration(SequenceID))
-	if Interruptible == true then self.VJ_IsPlayingInterruptSequence = true self.VJ_PlayingSequence = false else self.VJ_PlayingSequence = true self.VJ_IsPlayingInterruptSequence = false end
-	//self.vACT_StopAttacks = true
-	self:ClearSchedule()
-	self:StopMoving()
-	if istable(SequenceID) then
-		if #SequenceID < 1 then return end
-		SequenceID = tostring(table.Random(SequenceID))
-	end
-	local animid = self:LookupSequence(SequenceID)
-	self:ResetSequence(animid)
-	self:ResetSequenceInfo()
-	self:SetCycle(0)
-	if PlayBackRate then self:SetPlaybackRate(PlayBackRate) end
-	if Wait == true then
-		timer.Simple(WaitTime,function() //self:SequenceDuration(animid)
+	timer.Simple(0.2,function() 
 		if IsValid(self) then
-		self.VJ_IsPlayingInterruptSequence = false
-		self.VJ_PlayingSequence = false
-		//self.vACT_StopAttacks = false
+			//print(self:SequenceDuration(SequenceID))
+			if Interruptible == true then self.VJ_IsPlayingInterruptSequence = true self.VJ_PlayingSequence = false else self.VJ_PlayingSequence = true self.VJ_IsPlayingInterruptSequence = false end
+			//self.vACT_StopAttacks = true
+			self:ClearSchedule()
+			self:StopMoving()
+			if istable(SequenceID) then
+				if #SequenceID < 1 then return end
+				SequenceID = tostring(table.Random(SequenceID))
+			end
+			local animid = self:LookupSequence(SequenceID)
+			self:ResetSequence(animid)
+			self:ResetSequenceInfo()
+			self:SetCycle(0)
+			if PlayBackRate then self:SetPlaybackRate(PlayBackRate) end
+			if Wait == true then
+				timer.Simple(WaitTime,function() //self:SequenceDuration(animid)
+					if IsValid(self) then
+						self.VJ_IsPlayingInterruptSequence = false
+						self.VJ_PlayingSequence = false
+						//self.vACT_StopAttacks = false
+					end
+				end)
+			end
 		end
-	 end)
-	end
-  end
- end)
+	end)
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function NPC_MetaTable:VJ_TranslateWeaponActivity(ActAnim)
@@ -530,6 +546,7 @@ local function VJ_NPC_FIREBULLET(Entity,data,Attacker)
 		if Entity.VJ_IsBeingControlled == false then
 			local fSpread = ((EnemyDistance/23)*Entity.WeaponSpread)
 			if GetCurrentWeapon.IsVJBaseWeapon == true && GetCurrentWeapon.NPC_AllowCustomSpread == true then fSpread = fSpread *GetCurrentWeapon.NPC_CustomSpread end
+			fSpread = math.Clamp(fSpread,1,65)
 			data.Spread = Vector(fSpread,fSpread,0)
 			/*if EnemyDistance < 400 then
 			//self:CapabilitiesRemove(CAP_AIM_GUN)
@@ -608,13 +625,13 @@ local function VJ_ENTITYCREATED(entity)
 	if (CLIENT) then return end
 	if !entity:IsNPC() then return end
 	timer.Simple(0.15,function()
-	if IsValid(entity) then
-	for k,v in ipairs(ents.GetAll()) do
-	if IsValid(v) && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
-		v.CurrentPossibleEnemies = v:DoHardEntityCheck()
+		if IsValid(entity) then
+			for k,v in pairs(ents.GetAll()) do
+				if IsValid(v) && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
+					v.CurrentPossibleEnemies = v:DoHardEntityCheck()
+				end
+			end
 		end
-	  end
-	 end
 	end)
 end
 hook.Add("OnEntityCreated","VJ_ENTITYCREATED",VJ_ENTITYCREATED)
@@ -653,16 +670,16 @@ hook.Add("VJ_CreateSNPCCorpse","VJ_NPC_CORPSELIMIT",VJ_NPC_CORPSELIMIT)
 
 -- Convar Call Backs ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 cvars.AddChangeCallback("ai_ignoreplayers",function(convar_name,oldValue,newValue)
-	for k, v in pairs(ents.GetAll()) do
-	for pk, pv in pairs(player.GetAll()) do
-	if v.IsVJBaseSNPC == true then
-		v:AddEntityRelationship(pv,4,10)
-		if (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
-			v.CurrentPossibleEnemies = v:DoHardEntityCheck()
+	for k,v in pairs(ents.GetAll()) do
+		for pk,pv in pairs(player.GetAll()) do
+			if v.IsVJBaseSNPC == true then
+				v:AddEntityRelationship(pv,4,10)
+				if (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
+					v.CurrentPossibleEnemies = v:DoHardEntityCheck()
+				end
+			end
 		end
 	end
-  end
- end
 end)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cvars.AddChangeCallback("vj_npc_drvrejfriendly",function(convar_name,oldValue,newValue)
@@ -671,24 +688,25 @@ cvars.AddChangeCallback("vj_npc_drvrejfriendly",function(convar_name,oldValue,ne
 		//print("They no longer detect DrVrej!")
 		for k,v in pairs(ents.GetAll()) do
 			if game.SinglePlayer() then
-			if v:IsPlayer() then
-			v:SetNoTarget(true)
-		end else
-			if (v:IsPlayer() && v:SteamID() == "STEAM_0:0:22688298") then
-			v:SetNoTarget(true)
-			v.VJ_NoTarget = true
+				if v:IsPlayer() then
+					v:SetNoTarget(true)
+				end 
+			else
+				if (v:IsPlayer() && v:SteamID() == "STEAM_0:0:22688298") then
+					v:SetNoTarget(true)
+					v.VJ_NoTarget = true
+				end
+			end
 		end
-	  end
-	 end
 	end
 	if newValue == "0" then
 		//print("They now detect DrVrej!")
 		for k,v in pairs(ents.GetAll()) do
-		if (v:IsPlayer() && v:SteamID() == "STEAM_0:0:22688298") then 
-		v:SetNoTarget(false)
-		v.VJ_NoTarget = false
+			if (v:IsPlayer() && v:SteamID() == "STEAM_0:0:22688298") then 
+				v:SetNoTarget(false)
+				v.VJ_NoTarget = false
+			end
 		end
-	 end
 	end
 end)
 
