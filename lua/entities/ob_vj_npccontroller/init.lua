@@ -16,11 +16,22 @@ ENT.PlayingRangeAttackHumanAnimation = false
 ENT.VJControllerEntityIsRemoved = false
 ENT.CurrentAttackAnimation = 0
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnInitialize() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnSetControlledNPC() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnThink() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnStopControlling() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnRemove() end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetModel("models/props_junk/watermelon01_chunk02c.mdl")
 	self:SetMoveType(MOVETYPE_NONE)
 	self:SetSolid(SOLID_NONE)
 	//self:StartControlling()
+	self:CustomOnInitialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartControlling()
@@ -119,17 +130,18 @@ function ENT:SetControlledNPC(GetEntity)
 	self.PlayingAttackAnimation = true
 	self.PlayingRangeAttackAnimation = true
 	timer.Simple(0.2,function()
-	if IsValid(self.ControlledNPC) then
-	self.PlayingAttackAnimation = false
-	self.PlayingRangeAttackAnimation = false
-	self.ControlledNPC.vACT_StopAttacks = false
-	end
- end)
+		if IsValid(self.ControlledNPC) then
+			self.PlayingAttackAnimation = false
+			self.PlayingRangeAttackAnimation = false
+			self.ControlledNPC.vACT_StopAttacks = false
+		end
+	end)
+	self:CustomOnSetControlledNPC()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-	if (!self.PropCamera:IsValid()) then self:FinishControlling() return end
-	if !IsValid(self.TheController) or self.TheController:KeyDown(IN_USE) or self.TheController:Health() <= 0 or (!self.TheController.IsControlingNPC) or !IsValid(self.ControlledNPC) or self.ControlledNPC:Health() <= 0 then self:FinishControlling() return end
+	if (!self.PropCamera:IsValid()) then self:StopControlling() return end
+	if !IsValid(self.TheController) or self.TheController:KeyDown(IN_USE) or self.TheController:Health() <= 0 or (!self.TheController.IsControlingNPC) or !IsValid(self.ControlledNPC) or self.ControlledNPC:Health() <= 0 then self:StopControlling() return end
 		if self.TheController.IsControlingNPC != true then return end
 		if (self.TheController.IsControlingNPC) && IsValid(self.ControlledNPC) then
 		if self.PlayingRangeAttackAnimation == false then //self.PlayingAnimation == false && self.PlayingAttackAnimation == false && self.PlayingRangeAttackAnimation == false /*&& !self.ControlledNPC:IsMoving()*/ then
@@ -140,8 +152,10 @@ function ENT:Think()
 		end
 		if #self.TheController:GetWeapons() > 0 then self.TheController:StripWeapons() end
 		//self.ControlledNPC:SetEnemy(self)
-		
 		if self.PlayingAttackAnimation == true then return end
+		
+		self:CustomOnThink()
+		
 		if self.ControlledNPC.IsVJBaseSNPC_Animal != true && self.ControlledNPC.IsVJBaseSNPC == true then
 		if self.TheController:KeyDown(IN_ATTACK) then
 			if self.VJNPC_HasMeleeAttack == true then
@@ -379,14 +393,15 @@ function ENT:Think()
 		end
 		if (self.TheController:KeyDown(IN_USE)) then
 			self.ControlledNPC:StopMoving()
-			self:FinishControlling()
+			self:StopControlling()
 		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:FinishControlling()
+function ENT:StopControlling()
 	//if !IsValid(self.TheController) then return self:Remove() end
-
+	self:CustomOnStopControlling()
+	
 	if IsValid(self.TheController) then
 		local playerpos = self.TheController:GetPos()
 		self.TheController:UnSpectate()
@@ -448,8 +463,9 @@ function ENT:FinishControlling()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
+	self:CustomOnRemove()
 	if self.VJControllerEntityIsRemoved == false then
-		self:FinishControlling()
+		self:StopControlling()
 	end
 end
 /*--------------------------------------------------
