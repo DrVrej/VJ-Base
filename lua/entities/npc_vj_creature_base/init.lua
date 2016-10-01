@@ -149,7 +149,6 @@ ENT.DeathNoticePosition = HUD_PRINTCENTER -- Were you want the message to show. 
 ENT.DeathNoticeWriting = "Example: Spider Queen Has Been Defeated!" -- Message that will appear
 ENT.UsesBoneAngle = true -- This can be used to stop the corpse glitching or flying on death
 ENT.UsesDamageForceOnDeath = true -- Disables the damage force on death | Useful for SNPCs with Death Animations
-ENT.IgnoreCBDeath = false -- Ignores the combine ball death | useful for SNPCs that have gibs on death, example: Boomer
 ENT.HasItemDropsOnDeath = true -- Should it drop items on death?
 ENT.ItemDropsOnDeathChance = 14 -- If set to 1, it will always drop it
 ENT.ItemDropsOnDeath_EntityList = {} -- List of items it will randomly pick from | Leave it empty to drop nothing or to make your own dropping code (Using CustomOn...)
@@ -3005,7 +3004,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 
 	if self:Health() <= 0 && self.Dead == false then
 		self:RemoveEFlags(EFL_NO_DISSOLVE)
-		if dmginfo:GetDamageType() == DMG_DISSOLVE then
+		if (dmginfo:GetDamageType() == DMG_DISSOLVE) or (IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() == "prop_combine_ball") then
 			local dissolve = DamageInfo()
 			dissolve:SetDamage(self:Health())
 			dissolve:SetAttacker(dmginfo:GetAttacker())
@@ -3143,8 +3142,9 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 	self:DeathSoundCode()
 	if self.HasDeathAnimation != true then DoKilled() return end
 	if self.HasDeathAnimation == true then
-		if GetConVarNumber("vj_npc_nodeathanimation") == 1 or GetConVarNumber("ai_disabled") == 1 or dmginfo:GetDamageType() == DMG_DISSOLVE then DoKilled() return end
-			if dmginfo:GetDamageType() != DMG_DISSOLVE then
+		print(dmginfo:GetDamageType())
+		if GetConVarNumber("vj_npc_nodeathanimation") == 1 or GetConVarNumber("ai_disabled") == 1 or ((dmginfo:GetDamageType() == DMG_DISSOLVE) or (IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() == "prop_combine_ball")) then DoKilled() return end
+			if (dmginfo:GetDamageType() != DMG_DISSOLVE) && (IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() != "prop_combine_ball") then
 			local randanim = math.random(1,self.DeathAnimationChance)
 			if randanim != 1 then DoKilled() return end
 			if randanim == 1 then

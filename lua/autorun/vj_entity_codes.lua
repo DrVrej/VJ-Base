@@ -45,6 +45,14 @@ VJ.AddEntity("Flare Round","obj_vj_flareround","DrVrej",false,0,true,vCat)
 //VJ.AddEntity("Teleport Point 2","obj_vj_teleportex2","DrVrej",true,0,true,vCat)
 
 -- Global Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function VJ_RoundToMultiple(number,multiple) -- Credits to Bizzclaw for pointing me to the right direction!
+	if math.Round(number/multiple) == number/multiple then
+		return number
+	else
+		return math.Round(number/multiple) * multiple
+	end
+end
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function VJ_FindInCone(Position,Direction,Distance,Degrees)
 	local EntitiesFound = ents.FindInSphere(Position,Distance)
 	local Ret = {}
