@@ -8,6 +8,9 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 /*-- Blood Types ---------------------
 	Red 		= Color(130,19,10)
 	Yellow 		= Color(255,221,35)
+	
+	local blcolor = Color(130,19,10)
+	bloodeffect:SetStart(Vector(blcolor.r,blcolor.g,blcolor.b))
 -------------------------------------- */
 function EFFECT:Init(data)
 	local origin = data:GetOrigin()

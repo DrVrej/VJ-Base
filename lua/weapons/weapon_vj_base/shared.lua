@@ -129,6 +129,7 @@ SWEP.InitHasIdleAnimation		= false
 SWEP.AlreadyPlayedNPCReloadSound = false
 SWEP.NPC_NextPrimaryFireT		= 0
 SWEP.Primary.DefaultClip 		= 0
+SWEP.NextNPCDrySoundT 			= 0
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -162,15 +163,14 @@ function SWEP:Initialize()
 		self:SetNPCFireRate(10)
 		
 		if self.Owner:IsNPC() then
-		self:SetWeaponHoldType(self.HoldType)
-		if self.Owner:GetClass() == "npc_citizen" then
-		self.Weapon.Owner:Fire("DisableWeaponPickup") end
-		self.Weapon.Owner:SetKeyValue("spawnflags","256") -- Long Visibility Shooting since HL2 NPCs are blind
-		if self.Owner:GetClass() != "npc_citizen" then
-		hook.Add("Think",self,self.NPC_ServerThink)
-		hook.Add("AlwaysThink",self,self.NPC_ServerThinkAlways)
+			self:SetWeaponHoldType(self.HoldType)
+			if self.Owner:GetClass() == "npc_citizen" then self.Weapon.Owner:Fire("DisableWeaponPickup") end
+			self.Weapon.Owner:SetKeyValue("spawnflags","256") -- Long Visibility Shooting since HL2 NPCs are blind
+			if self.Owner:GetClass() != "npc_citizen" then
+				hook.Add("Think",self,self.NPC_ServerThink)
+				hook.Add("AlwaysThink",self,self.NPC_ServerThinkAlways)
+			end
 		end
-	 end
 	end
 	if self.Owner:IsNPC() && self.Owner.IsVJBaseSNPC then
 		self.Owner.Weapon_StartingAmmoAmount = self.Primary.ClipSize
@@ -288,11 +288,27 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPCAbleToShoot()
 	if self:IsValid() && IsValid(self.Owner) && self.Owner:IsValid() && self.Owner:IsNPC() then
-		if (self.Owner.IsVJBaseSNPC_Human) && self.Owner:CanDoWeaponAttack() == false then return false end
-		if (self.Owner.IsVJBaseSNPC_Human) && self.Owner:GetEnemy() != nil && self.Owner:IsAbleToShootWeapon(true,true) == false then return false end
+		if (self.Owner.IsVJBaseSNPC_Human) then
+			local check, ammo = self.Owner:CanDoWeaponAttack()
+			if check == false && ammo != "NoAmmo" then return false end
+			if self.Owner:GetEnemy() != nil && self.Owner:IsAbleToShootWeapon(true,true) == false then return false end
+		end
 		if self.Owner:GetActivity() != nil && (table.HasValue(self.NPC_AnimationTbl_General,self.Owner:GetActivity()) or table.HasValue(self.NPC_AnimationTbl_Rifle,self.Owner:GetActivity()) or table.HasValue(self.NPC_AnimationTbl_Pistol,self.Owner:GetActivity()) or table.HasValue(self.NPC_AnimationTbl_Shotgun,self.Owner:GetActivity()) or VJ_IsCurrentAnimation(self.Owner,self.NPC_AnimationTbl_Custom)) then
-			if self.Owner:VJ_GetEnemy(true) != nil then
-			return true
+			if (self.Owner.IsVJBaseSNPC_Human) then
+				local check, ammo = self.Owner:CanDoWeaponAttack()
+				if ammo == "NoAmmo" && CurTime() > self.NextNPCDrySoundT then
+						self.Weapon:EmitSound(VJ_PICKRANDOMTABLE(self.DryFireSound),80,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2))
+						self.NextNPCDrySoundT = CurTime() + self.NPC_NextPrimaryFire
+					return false
+				else
+					if self.Owner:VJ_GetEnemy(true) != nil then
+						return true
+					end
+				end
+			else
+				if self.Owner:VJ_GetEnemy(true) != nil then
+					return true
+				end
 			end
 		end
 	end
@@ -313,10 +329,10 @@ function SWEP:NPCShoot_Primary(ShootPos,ShootDir)
 		//if self.Owner.IsVJBaseSNPC == true then self.Owner.Weapon_TimeSinceLastShot = 0 end
 	end
 	timer.Simple(self.NPC_TimeUntilFire,function()
-	if IsValid(self) && IsValid(self.Owner) && self:NPCAbleToShoot() == true && CurTime() > self.NPC_NextPrimaryFireT then
-		self:PrimaryAttack()
-		self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
-		if self.Owner.IsVJBaseSNPC == true then self.Owner.Weapon_TimeSinceLastShot = 0 end
+		if IsValid(self) && IsValid(self.Owner) && self:NPCAbleToShoot() == true && CurTime() > self.NPC_NextPrimaryFireT then
+			self:PrimaryAttack()
+			self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
+			if self.Owner.IsVJBaseSNPC == true then self.Owner.Weapon_TimeSinceLastShot = 0 end
 		end
 	end)
 	//end
@@ -344,7 +360,7 @@ function SWEP:PrimaryAttack(ShootPos,ShootDir)
 	if (SERVER) then
 		sound.Play(VJ_PICKRANDOMTABLE(self.Primary.Sound),self:GetPos(),80,math.random(90,100))
 		if self.Primary.HasDistantSound == true then
-		sound.Play(VJ_PICKRANDOMTABLE(self.Primary.DistantSound),self:GetPos(),self.Primary.DistantSoundLevel,math.random(self.Primary.DistantSoundPitch1,self.Primary.DistantSoundPitch2),self.Primary.DistantSoundVolume)
+			sound.Play(VJ_PICKRANDOMTABLE(self.Primary.DistantSound),self:GetPos(),self.Primary.DistantSoundLevel,math.random(self.Primary.DistantSoundPitch1,self.Primary.DistantSoundPitch2),self.Primary.DistantSoundVolume)
 		end
 	end
 	//self.Weapon:EmitSound(Sound(self.Primary.Sound),80,self.Primary.SoundPitch)

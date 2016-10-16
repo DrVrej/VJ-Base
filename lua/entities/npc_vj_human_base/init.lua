@@ -177,7 +177,7 @@ ENT.BringFriendsOnDeathUseCertainAmount = true -- Should the SNPC only call cert
 ENT.BringFriendsOnDeathUseCertainAmountNumber = 3 -- How many people should it call if certain amount is enabled?
 ENT.AllowedToGib = true -- Is it allowed to gib in general? This can be on death or when shot in a certain place
 ENT.HasGibOnDeath = true -- Is it allowed to gib on death?
-ENT.GibOnDeathDamagesTable = {} -- Damages that it gibs from | "UseDefault" = Uses default damage types | Empty = Gib from any damage
+ENT.GibOnDeathDamagesTable = {} -- Damages that it gibs from | "UseDefault" = Uses default damage types | "All" = Gib from any damage
 ENT.HasGibOnDeathSounds = true -- Does it have gib sounds? | Mostly used for the settings menu
 ENT.HasGibDeathParticles = true -- Does it spawn particles on death or when it gibs? | Mostly used for the settings menu
 	-- Melee Attack ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -546,7 +546,7 @@ ENT.AlreadyBeingHealedByMedic = false
 ENT.ZombieFriendly = false
 ENT.AntlionFriendly = false
 ENT.CombineFriendly = false
-ENT.ShouldBeFlying = false
+ENT.Aerial_ShouldBeFlying = false
 ENT.HasDoneReloadAnimation = true
 ENT.IsReloadingWeapon = false
 ENT.IsDoingFaceEnemy = false
@@ -556,7 +556,8 @@ ENT.AlreadyDoneFirstMeleeAttack = false
 ENT.CanDoSelectScheduleAgain = true
 ENT.AllowToDo_WaitForEnemyToComeOut = true
 ENT.DoingVJDeathDissolve = false
-ENT.HasBeenGibbed = false
+ENT.HasBeenGibbedOnDeath = false
+ENT.DeathAnimationCodeRan = false
 ENT.FollowingPlayerName = NULL
 ENT.MyEnemy = NULL
 ENT.VJ_TheController = NULL
@@ -723,6 +724,26 @@ function ENT:CustomOnDamageByPlayer(dmginfo,hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomWhenBecomingEnemyTowardsPlayer(dmginfo,hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:SetUpGibesOnDeath(dmginfo,hitgroup)
+	return false -- Return to true if it gibbed!
+	/*--------------------------------------
+		-- Extra Features --
+			Extra features allow you to have more control over the gibbing system.
+			--/// Types \\\--
+				AllowCorpse -- Should it allow corpse to spawn?
+				DeathAnim -- Should it allow death animation?
+			--/// Implementing it \\\--
+				1. Let's use type DeathAnim as an example. NOTE: You can have as many types as you want!
+				2. Put a comma next to return. 		===> return true,
+				3. Make a table after the comma. 	===> return true, {}
+				4. Put the type(s) that you want.	===> return true, {DeathAnim=true}
+				5. And you are done!
+				Example with multiple types:		===> return true, {DeathAnim=true,AllowCorpse=true}
+	--------------------------------------*/
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomGibOnDeathSounds(dmginfo,hitgroup) return false end -- returning true will make the default gibbing sounds not play
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPriorToKilled(dmginfo,hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomDeathAnimationCode(dmginfo,hitgroup) end
@@ -738,64 +759,6 @@ function ENT:CustomOnDeath_BeforeCorpseSpawned(dmginfo,hitgroup) end
 function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SetUpGibesOnDeath(dmginfo,hitgroup)
--- Add as many as you want --
-	/*
-	-- Default Damage types for the gib|you can add more
-	local explodegib = dmginfo:GetDamageType()
-	if explodegib == DMG_BLAST or explodegib == DMG_DIRECT or explodegib == DMG_DISSOLVE or explodegib == DMG_AIRBOAT or explodegib == DMG_SLOWBURN or explodegib == DMG_PHYSGUN or explodegib == DMG_PLASMA or explodegib == DMG_SHOCK or explodegib == DMG_SONIC or explodegib == DMG_VEHICLE or explodegib == DMG_CRUSH then
-	self.HasDeathRagdoll = false -- Disable ragdoll
-	self.HasDeathAnimation = false -- Disable death animation
-	
-	-- Most used gib sounds
-	if GetConVarNumber("vj_npc_sd_gibbing") == 0 then
-	self:EmitSound("vj_gib/default_gib_splat.wav",90,math.random(80,100))
-	self:EmitSound("vj_gib/gibbing1.wav",90,math.random(80,100))
-	self:EmitSound("vj_gib/gibbing2.wav",90,math.random(80,100))
-	self:EmitSound("vj_gib/gibbing3.wav",90,math.random(80,100))
-	end
-
-	-- Particles and Effects
-	if GetConVarNumber("vj_npc_nogibdeathparticles") == 0 then
-	local effectdata = EffectData()
-	effectdata:SetOrigin(self:GetPos() + Vector(0,0,10)) -- the vector of were you want the effect to spawn
-	effectdata:SetScale( 1 ) -- how big the particles are, can even be 0.1 or 0.6
-	util.Effect("StriderBlood",effectdata)
-	util.Effect("StriderBlood",effectdata)
-	ParticleEffect("antlion_gib_02_gas",self:GetPos(),Angle(0,0,0),nil)
-	ParticleEffect("antlion_gib_02_gas",self:GetPos(),Angle(0,0,0),nil)
-	ParticleEffect("antlion_gib_02_gas",self:GetPos(),Angle(0,0,0),nil)
-	ParticleEffect("antlion_spit",self:GetPos(),Angle(0,0,0),nil)
-	ParticleEffect("antlion_gib_02",self:GetPos(),Angle(0,0,0),nil)
-	end
-	
-	-- Entity Gib
-	local gib = ents.Create( "obj_vj_gib_alien" )
-	gib:SetModel( "models/gibs/xenians/mgib_01.mdl" ) -- The Entity
-	gib:SetPos( self:LocalToWorld(Vector(math.Rand(1,8),0,40))) -- The Postion the model spawns
-	gib:SetAngles( self:GetAngles() )
-	gib:Spawn()
-	gib:Activate()
-	gib:GetPhysicsObject():AddVelocity(Vector( math.Rand( -500, 500 ),math.Rand( -500, 500 ), 200 ))
-	cleanup.ReplaceEntity(gib)
-	
-	-- Each one needs a different name|Change "FadeAndRemove" to "kill" if it is prop_physics
-	local gib = ents.Create( "prop_ragdoll" ) -- prop_ragdoll or prop_physics
-	gib:SetModel( "models/rrrrrrrr/rrrrrrrr.mdl" ) -- The Model
-	gib:SetPos( self:LocalToWorld(Vector(1,0,60))) -- The Postion the model spawns
-	gib:SetAngles( self:GetAngles() )
-	gib:Spawn()
-	gib:SetSkin( self:GetSkin() )
-	gib:SetColor( self:GetColor() )
-	gib:SetMaterial( self:GetMaterial() )
-	if GetConVarNumber("vj_npc_gibcollidable") == 0 then gib:SetCollisionGroup( 1 ) end
-	gib:GetPhysicsObject():AddVelocity(Vector(500,500,100)) -- Make things fly
-	cleanup.ReplaceEntity(gib) -- Make it remove on map cleanup
-	if GetConVarNumber("vj_npc_fadegibs") == 1 then -- Make the ragdoll fade through menu
-	gib:Fire( "FadeAndRemove", "", GetConVarNumber("vj_npc_fadegibstime") ) end
-	*/
-end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetSpawnEffect(false)
@@ -1827,7 +1790,9 @@ end
 --------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CanDoWeaponAttack()
 	if self:VJ_HasActiveWeapon() == false then return false end
-	if AllowReloading == true && self.Weapon_ShotsSinceLastReload >= self.Weapon_StartingAmmoAmount then return false end
+	if self.AllowReloading == true && self.Weapon_ShotsSinceLastReload >= self.Weapon_StartingAmmoAmount then 
+		return false,"NoAmmo"
+	end
 	return true
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
@@ -2238,29 +2203,31 @@ function ENT:SelectSchedule(iNPCState)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_EyeTrace(GetUpNum)
-local GetUpNum = GetUpNum or 50
-if self:GetEnemy() != nil && self.Dead == false then
-local tr = util.TraceLine({
-	start = self:NearestPoint(self:GetEnemy():GetPos() +self:GetEnemy():OBBCenter() +self:GetUp()*GetUpNum),
-	endpos = self:GetEnemy():GetPos() +self:GetEnemy():OBBCenter(),
-	filter = self
-})
-	//if tr.Entity != NULL then print(tr.Entity) end
-	//print(tr.Entity)
-	//local nigoer = ents.Create("prop_dynamic")
-	//nigoer:SetModel("models/props_wasteland/dockplank01b.mdl")
-	//nigoer:SetPos(self:NearestPoint(self:GetEnemy():GetPos() +self:GetEnemy():OBBMaxs() +self:GetUp()*50))
-	//nigoer:Spawn()
-	//if tr.HitWorld == false && tr.Entity != NULL && tr.Entity:GetClass() != "prop_physics" then 
-	//print("true") return true else 
-	//print("false") return false end
-	//print("false") return false
-	if tr.HitWorld == true then return false end
-	if tr.Entity != NULL then
-	return tr else return false
-	end
- end
- return false
+	local GetUpNum = GetUpNum or 50
+	if self:GetEnemy() != nil && self.Dead == false then
+		local tr = util.TraceLine({
+			start = self:NearestPoint(self:GetEnemy():GetPos() +self:GetEnemy():OBBCenter() +self:GetUp()*GetUpNum),
+			endpos = self:GetEnemy():GetPos() +self:GetEnemy():OBBCenter(),
+			filter = self
+		})
+		//if tr.Entity != NULL then print(tr.Entity) end
+		//print(tr.Entity)
+		//local nigoer = ents.Create("prop_dynamic")
+		//nigoer:SetModel("models/props_wasteland/dockplank01b.mdl")
+		//nigoer:SetPos(self:NearestPoint(self:GetEnemy():GetPos() +self:GetEnemy():OBBMaxs() +self:GetUp()*50))
+		//nigoer:Spawn()
+		//if tr.HitWorld == false && tr.Entity != NULL && tr.Entity:GetClass() != "prop_physics" then 
+		//print("true") return true else 
+		//print("false") return false end
+		//print("false") return false
+		if tr.HitWorld == true then return false end
+		if tr.Entity != NULL then
+			return tr
+		else
+			return false
+		end
+	 end
+	 return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnPlayerSightCode(argent)
@@ -3112,6 +3079,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 			if randanim == 1 then
 				self:CustomDeathAnimationCode(dmginfo,hitgroup)
 				self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.AnimTbl_Death),true,self.DeathAnimationTime,false,0,{SequenceDuration=self.DeathAnimationTime})
+				self.DeathAnimationCodeRan = true
 				timer.Simple(self.DeathAnimationTime,DoKilled)
 			end
 		end
@@ -3119,20 +3087,21 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RunGibOnDeathCode(dmginfo,hitgroup)
-	if self.AllowedToGib == false or self.HasGibOnDeath == false then return end
+	if self.AllowedToGib == false or self.HasGibOnDeath == false or self.HasBeenGibbedOnDeath == true then return end
 	local DamageType = dmginfo:GetDamageType()
 	local dmgtbl = self.GibOnDeathDamagesTable
 	local dmgtblempty = false
 	local usedefault = false
 	local defualtdmgs = {DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SHOCK,DMG_SONIC}
 	if table.HasValue(self.GibOnDeathDamagesTable,"UseDefault") then usedefault = true end
-	if usedefault == false && table.Count(dmgtbl) <= 0 then dmgtblempty = true end
+	if usedefault == false && (table.Count(dmgtbl) <= 0 or table.HasValue(self.GibOnDeathDamagesTable,"All")) then dmgtblempty = true end
 	if (dmgtblempty == true) or (usedefault == true && table.HasValue(defualtdmgs,DamageType)) or (usedefault == false && table.HasValue(dmgtbl,DamageType)) then
-		local setupgib = self:SetUpGibesOnDeath(dmginfo,hitgroup)
+		local setupgib, setupgib_extra = self:SetUpGibesOnDeath(dmginfo,hitgroup)
+		if setupgib_extra == nil then setupgib_extra = {} end
 		if setupgib == true then
-			self.HasDeathRagdoll = false
-			self.HasDeathAnimation = false
-			self.HasBeenGibbed = true
+			if setupgib_extra.AllowCorpse != true then self.HasDeathRagdoll = false end
+			if setupgib_extra.DeathAnim != true then self.HasDeathAnimation = false end
+			self.HasBeenGibbedOnDeath = true
 			self:PlayGibOnDeathSounds(dmginfo,hitgroup)
 		end
 	end
@@ -3140,12 +3109,13 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlayGibOnDeathSounds(dmginfo,hitgroup)
 	if self.HasGibOnDeathSounds == false then return end
-	
-	-- The default sounds, these can be overridden by
-	self:EmitSound("vj_gib/default_gib_splat.wav",90,math.random(80,100))
-	self:EmitSound("vj_gib/gibbing1.wav",90,math.random(80,100))
-	self:EmitSound("vj_gib/gibbing2.wav",90,math.random(80,100))
-	self:EmitSound("vj_gib/gibbing3.wav",90,math.random(80,100))
+	local custom = self:CustomGibOnDeathSounds(dmginfo,hitgroup)
+	if custom == false then
+		VJ_EmitSound(self,"vj_gib/default_gib_splat.wav",90,math.random(80,100))
+		VJ_EmitSound(self,"vj_gib/gibbing1.wav",90,math.random(80,100))
+		VJ_EmitSound(self,"vj_gib/gibbing2.wav",90,math.random(80,100))
+		VJ_EmitSound(self,"vj_gib/gibbing3.wav",90,math.random(80,100))
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CreateGibEntity(Ent,Models,Tbl_Features,CustomCode)
