@@ -44,10 +44,12 @@ end
 
 function TOOL:LeftClick(tr)
 	if (CLIENT) then return true end
-	if IsValid(tr.Entity) && tr.Entity:IsNPC() then
+	if IsValid(tr.Entity) then
 		local trent = tr.Entity
 		trent:SetHealth(self:GetClientNumber("health"))
-		if self:GetClientNumber("godmode") == 1 then trent.GodMode = true else trent.GodMode = false end
+		if tr.Entity:IsNPC() then
+			if self:GetClientNumber("godmode") == 1 then trent.GodMode = true else trent.GodMode = false end
+		end
 		return true
 	end
 end
@@ -56,6 +58,6 @@ function TOOL:Reload(tr)
 	if (CLIENT) then return true end
 	if IsValid(tr.Entity) && tr.Entity:IsNPC() then
 		//tr.Entity:SetHealth(self:GetClientNumber("health"))
-		return true
+		return false
 	end
 end

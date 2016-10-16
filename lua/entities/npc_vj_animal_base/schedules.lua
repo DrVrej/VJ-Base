@@ -13,7 +13,7 @@ function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 	//if VJ_IsCurrentAnimation(self,ACT_IDLE) && self.VJ_PlayingSequence == false && self.VJ_IsPlayingInterruptSequence == false then print("is ACT_IDLE!") self:VJ_ACT_PLAYACTIVITY(ACT_COWER,false,0,true,0,{AlwaysUseSequence=true,SequenceDuration=false,SequenceInterruptible=true}) end
 	if (!self.CurrentSchedule or (self.CurrentSchedule != nil && self.CurrentSchedule.CanBeInterrupted == true)) && (self.VJ_PlayingSequence == false && self.CanDoSelectScheduleAgain == true) /*&& self.VJ_IsPlayingInterruptSequence == false*/ then self:SelectSchedule() end
 	if (self.CurrentSchedule) then self:DoSchedule(self.CurrentSchedule) end
-	if self.VJ_PlayingSequence == false && self.VJ_IsPlayingInterruptSequence == false && self.ShouldBeFlying == false /*&& self:GetSequence() != self.AerialCurrentAnim && self.MovementType != VJ_MOVETYPE_AERIAL*/ then self:MaintainActivity() end
+	if self.VJ_PlayingSequence == false && self.VJ_IsPlayingInterruptSequence == false && self.Aerial_ShouldBeFlying == false /*&& self:GetSequence() != self.CurrentAnim_AerialMovement && self.MovementType != VJ_MOVETYPE_AERIAL*/ then self:MaintainActivity() end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoRunCode_OnFinish(schedule)

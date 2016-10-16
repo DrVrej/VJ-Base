@@ -158,7 +158,7 @@ ENT.BringFriendsOnDeathUseCertainAmount = true -- Should the SNPC only call cert
 ENT.BringFriendsOnDeathUseCertainAmountNumber = 3 -- How many people should it call if certain amount is enabled?
 ENT.AllowedToGib = true -- Is it allowed to gib in general? This can be on death or when shot in a certain place
 ENT.HasGibOnDeath = true -- Is it allowed to gib on death?
-ENT.GibOnDeathDamagesTable = {} -- Damages that it gibs from | "UseDefault" = Uses default damage types | Empty = Gib from any damage
+ENT.GibOnDeathDamagesTable = {"All"} -- Damages that it gibs from | "UseDefault" = Uses default damage types | "All" = Gib from any damage
 ENT.HasGibOnDeathSounds = true -- Does it have gib sounds? | Mostly used for the settings menu
 ENT.HasGibDeathParticles = true -- Does it spawn particles on death or when it gibs? | Mostly used for the settings menu
 	-- Melee Attack ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -562,7 +562,8 @@ ENT.VJ_IsPlayingInterruptSequence = false
 ENT.AlreadyDoneFirstMeleeAttack = false
 ENT.CanDoSelectScheduleAgain = true
 ENT.DoingVJDeathDissolve = false
-ENT.HasBeenGibbed = false
+ENT.HasBeenGibbedOnDeath = false
+ENT.DeathAnimationCodeRan = false
 ENT.FollowingPlayerName = NULL
 ENT.MyEnemy = NULL
 ENT.VJ_TheController = NULL
@@ -744,6 +745,26 @@ function ENT:CustomOnDamageByPlayer(dmginfo,hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomWhenBecomingEnemyTowardsPlayer(dmginfo,hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:SetUpGibesOnDeath(dmginfo,hitgroup)
+	return false -- Return to true if it gibbed!
+	/*--------------------------------------
+		-- Extra Features --
+			Extra features allow you to have more control over the gibbing system.
+			--/// Types \\\--
+				AllowCorpse -- Should it allow corpse to spawn?
+				DeathAnim -- Should it allow death animation?
+			--/// Implementing it \\\--
+				1. Let's use type DeathAnim as an example. NOTE: You can have as many types as you want!
+				2. Put a comma next to return. 		===> return true,
+				3. Make a table after the comma. 	===> return true, {}
+				4. Put the type(s) that you want.	===> return true, {DeathAnim=true}
+				5. And you are done!
+				Example with multiple types:		===> return true, {DeathAnim=true,AllowCorpse=true}
+	--------------------------------------*/
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomGibOnDeathSounds(dmginfo,hitgroup) return false end -- returning true will make the default gibbing sounds not play
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPriorToKilled(dmginfo,hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomDeathAnimationCode(dmginfo,hitgroup) end
@@ -757,65 +778,6 @@ function ENT:CustomOnDeath_BeforeCorpseSpawned(dmginfo,hitgroup) end
 function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SetUpGibesOnDeath(dmginfo,hitgroup)
-	return false -- Return to true if it gibbed!
--- Add as many as you want --
-	/*
-	-- Default Damage types for the gib|you can add more
-	local explodegib = dmginfo:GetDamageType()
-	if explodegib == DMG_BLAST or explodegib == DMG_DIRECT or explodegib == DMG_DISSOLVE or explodegib == DMG_AIRBOAT or explodegib == DMG_SLOWBURN or explodegib == DMG_PHYSGUN or explodegib == DMG_PLASMA or explodegib == DMG_SHOCK or explodegib == DMG_SONIC or explodegib == DMG_VEHICLE or explodegib == DMG_CRUSH then
-	self.HasDeathRagdoll = false -- Disable ragdoll
-	self.HasDeathAnimation = false -- Disable death animation
-	
-	-- Most used gib sounds
-	if GetConVarNumber("vj_npc_sd_gibbing") == 0 then
-	self:EmitSound("vj_gib/default_gib_splat.wav",90,math.random(80,100))
-	self:EmitSound("vj_gib/gibbing1.wav",90,math.random(80,100))
-	self:EmitSound("vj_gib/gibbing2.wav",90,math.random(80,100))
-	self:EmitSound("vj_gib/gibbing3.wav",90,math.random(80,100))
-	end
-	
-	-- Particles and Effects
-	if GetConVarNumber("vj_npc_nogibdeathparticles") == 0 then
-	local effectdata = EffectData()
-	effectdata:SetOrigin(self:GetPos() + Vector(0,0,10)) -- the vector of were you want the effect to spawn
-	effectdata:SetScale( 1 ) -- how big the particles are, can even be 0.1 or 0.6
-	util.Effect("StriderBlood",effectdata)
-	util.Effect("StriderBlood",effectdata)
-	ParticleEffect("antlion_gib_02_gas",self:GetPos(),Angle(0,0,0),nil)
-	ParticleEffect("antlion_gib_02_gas",self:GetPos(),Angle(0,0,0),nil)
-	ParticleEffect("antlion_gib_02_gas",self:GetPos(),Angle(0,0,0),nil)
-	ParticleEffect("antlion_spit",self:GetPos(),Angle(0,0,0),nil)
-	ParticleEffect("antlion_gib_02",self:GetPos(),Angle(0,0,0),nil)
-	end
-	
-	-- Entity Gib
-	local gib = ents.Create( "obj_vj_gib_alien" )
-	gib:SetModel( "models/gibs/xenians/mgib_01.mdl" ) -- The Entity
-	gib:SetPos( self:LocalToWorld(Vector(math.Rand(1,8),0,40))) -- The Postion the model spawns
-	gib:SetAngles( self:GetAngles() )
-	gib:Spawn()
-	gib:Activate()
-	gib:GetPhysicsObject():AddVelocity(Vector( math.Rand( -500, 500 ),math.Rand( -500, 500 ), 200 ))
-	cleanup.ReplaceEntity(gib)
-	
-	-- Each one needs a different name|Change "FadeAndRemove" to "kill" if it is prop_physics
-	local gib = ents.Create( "prop_ragdoll" ) -- prop_ragdoll or prop_physics
-	gib:SetModel( "models/rrrrrrrr/rrrrrrrr.mdl" ) -- The Model
-	gib:SetPos( self:LocalToWorld(Vector(1,0,60))) -- The Postion the model spawns
-	gib:SetAngles( self:GetAngles() )
-	gib:Spawn()
-	gib:SetSkin( self:GetSkin() )
-	gib:SetColor( self:GetColor() )
-	gib:SetMaterial( self:GetMaterial() )
-	if GetConVarNumber("vj_npc_gibcollidable") == 0 then gib:SetCollisionGroup( 1 ) end
-	gib:GetPhysicsObject():AddVelocity(Vector( math.Rand( -500, 500 ),math.Rand( -500, 500 ), 200 )) -- Make things fly
-	cleanup.ReplaceEntity(gib) -- Make it remove on map cleanup
-	if GetConVarNumber("vj_npc_fadegibs") == 1 then -- Make the ragdoll fade through menu
-	gib:Fire( "FadeAndRemove", "", GetConVarNumber("vj_npc_fadegibstime") ) end
-	*/
-end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetSpawnEffect(false)
@@ -1238,91 +1200,121 @@ function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
 	end
 	self.NextChaseTime = CurTime() + 0.1
 end
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- !!!!!!! WIP - AERIAL BASE !!!!!!! --
 
 // MOVETYPE_FLY | MOVETYPE_FLYGRAVITY
-
-ENT.AerialFlyingSpeed_Calm = 20 -- The speed it should fly with, when it's wandering, moving slowly, etc. | Basically walking campared to ground SNPCs
-ENT.AerialFlyingSpeed_Alerted = 40 -- The speed it should fly with, when it's chasing an enemy, moving away quickly, etc. | Basically running campared to ground SNPCs
-ENT.AerialRunAnims = {ACT_RUN}
-ENT.AerialCurrentAnim = nil
-ENT.IsFlying = false
-ENT.ShouldBeFlying = false
-ENT.NextFlyAnim = 0
+ENT.Aerial_FlyingSpeed_Calm = 20 -- The speed it should fly with, when it's wandering, moving slowly, etc. | Basically walking campared to ground SNPCs
+ENT.Aerial_FlyingSpeed_Alerted = 40 -- The speed it should fly with, when it's chasing an enemy, moving away quickly, etc. | Basically running campared to ground SNPCs
+ENT.Aerial_AnimTbl_Alerted = {ACT_RUN} -- Animations it plays when it's moving while alerted
+ENT.CurrentAnim_AerialMovement = nil
+ENT.Aerial_NextFlyAnimation = 0
+ENT.Aerial_ShouldBeFlying = false
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AerialMove_ChaseEnemy(ShouldPlayAnim)
-	if self.Dead == true or (self.NextChaseTime > CurTime()) then return end
+	if self.Dead == true or (self.NextChaseTime > CurTime()) or self:GetEnemy() == nil then return end
 	ShouldPlayAnim = ShouldPlayAnim or false
 	self:FaceCertainEntity(self:GetEnemy(),true)
-	self.ShouldBeFlying = false
+	self.Aerial_ShouldBeFlying = false
 	
-	if ShouldPlayAnim == true && self:GetSequence() != self.AerialCurrentAnim /*&& self:GetActivity() == ACT_IDLE*/ && CurTime() > self.NextFlyAnim && (self.NextChaseTime < CurTime()) then
-	local idleanim = self.AerialRunAnims
+	if ShouldPlayAnim == true && self:GetSequence() != self.CurrentAnim_AerialMovement /*&& self:GetActivity() == ACT_IDLE*/ && CurTime() > self.Aerial_NextFlyAnimation && (self.NextChaseTime < CurTime()) then
+	local idleanim = self.Aerial_AnimTbl_Alerted
 	local ideanimrand = VJ_PICKRANDOMTABLE(idleanim)
 	if type(ideanimrand) == "number" then ideanimrand = self:GetSequenceName(self:SelectWeightedSequence(ideanimrand)) end
 	local ildeanimid = self:LookupSequence(ideanimrand)
-		//self.ShouldBeFlying = true
-		self.AerialCurrentAnim = ildeanimid
+		//self.Aerial_ShouldBeFlying = true
+		self.CurrentAnim_AerialMovement = ildeanimid
 		//self:AddGestureSequence(ildeanimid)
 		self:VJ_ACT_PLAYACTIVITY(ideanimrand,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false})
-		self.NextFlyAnim = CurTime() + 0.3
+		self.Aerial_NextFlyAnimation = CurTime() + 0.3
 	end
-				local getupvel = 30
-				local getenemyz = "None"
-				
-				local tr = {}
-				tr.start = self:GetPos()
-				tr.endpos = self:GetEnemy():GetPos()
-				tr.filter = self
-				tr.mins = self:OBBMins()
-				tr.maxs = self:OBBMaxs()
-				local tr = util.TraceHull(tr)
-
-				/*if self:GetEnemy():GetPos().z > self:GetPos().z then
-					print("UP")
-					getenemyz = "Up"
-					getupvel = 100
-				elseif self:GetEnemy():GetPos().z < self:GetPos().z then
-					print("DOWN")
-					getenemyz = "Down"
-					getupvel = -100
-				end*/
-				
-				/*if tr.HitWorld && tr.HitPos:Distance(self:GetPos()) < (self:OBBMaxs():Distance(self:OBBMins())) * 3 then
-					if self:GetEnemy():GetPos().z < tr.HitPos.z then
-					getupvel = 231
-					print("up")
-				elseif self:GetEnemy():GetPos().z > tr.HitPos.z then
-					getupvel = -231
-					print("down")
-					end
-				end*/
-
-
-				/*if tr.HitWorld && tr.HitPos:Distance(self:GetPos()) < (self:OBBMaxs():Distance(self:OBBMins())) * 3 then
-					getupvel = -21
-					print("-21")
-				elseif self:GetEnemy():GetPos().z > tr.HitPos.z then
-					getupvel = -231
-					print("-231")
-				end*/
-				
-		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,tr.HitPos,false,self:EntIndex(),0) //vortigaunt_beam
-		ParticleEffect("vj_impact1_centaurspit", tr.HitPos, Angle(0,0,0), self)
-		/*local nig = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
-		nig:SetModel("models/hunter/blocks/cube025x025x025.mdl")
-		nig:SetPos(tr.HitPos)
-		nig:SetAngles(self:GetAngles())
-		nig:SetColor(Color(255,0,0))
-		nig:Spawn()
-		nig:Activate()
-		timer.Simple(3,function() nig:Remove() end)*/
 	
-	myvel = self:GetVelocity()
-	enevel = self:GetEnemy():GetVelocity()
-	local jumpyaw
-	local jumpcode = ((self:GetEnemy():GetPos() + self:OBBCenter()) -(self:GetPos() + self:OBBCenter())):GetNormal() *400 +self:GetUp() *getupvel +self:GetForward() *-200
-	jumpyaw = jumpcode:Angle().y
-	self:SetLocalVelocity(jumpcode)
+	local vel_up = 30
+	local vel_for = -200
+	local vel_stop = false
+	local getenemyz = "None"
+	local startpos = self:VJ_GetNearestPointToEntity(self:GetEnemy()).MyPosition
+	local endpos = self:VJ_GetNearestPointToEntity(self:GetEnemy()).EnemyPosition
+	
+	local tr = {
+		start = startpos, //self:GetPos(),
+		endpos = endpos, //self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter(),
+		filter = self,
+		mins = self:OBBMins(),
+		maxs = self:OBBMaxs()
+	}
+	local tr = util.TraceHull(tr)
+	local selftohitpos = tr.HitPos
+	local selftohitpos_dist = startpos:Distance(selftohitpos)
+	//print(selftohitpos_dist)
+	if selftohitpos_dist <= 16 && tr.HitWorld == true then
+		print("Forward Blocked!")
+		vel_for = -400
+		//vel_stop = true
+	end
+	//else
+	local z_self = (self:GetPos()+self:OBBCenter()).z
+	local z_ene = (self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter()).z
+	local tr_up_startpos = self:GetPos()+self:OBBCenter()
+	local tr_up = util.TraceLine({start = tr_up_startpos,endpos = self:GetPos()+self:OBBCenter()+self:GetUp()*300,filter = self})
+	local tr_down_startpos = self:GetPos()+self:OBBCenter()
+	local tr_down = util.TraceLine({start = tr_up_startpos,endpos = self:GetPos()+self:OBBCenter()+self:GetUp()*-300,filter = self})
+	//print("UP - ",tr_up_startpos:Distance(tr_up.HitPos))
+	//print(math.abs(z_ene)," OKK ",z_ene)
+	//print(math.abs(z_self)," OKK ",z_self)
+	if z_ene >= z_self then
+		if math.abs(z_ene - z_self) >= 10 then
+			print("UP")
+			getenemyz = "Up"
+			//vel_up = 100
+		end
+	elseif z_ene <= z_self then
+		if math.abs(z_self - z_ene) >= 10 then
+			print("DOWN")
+			getenemyz = "Down"
+			//vel_up = -100
+		end
+	end
+	if getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
+		print("GO UP")
+		vel_up = 100
+	elseif getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
+		print("GO DOWN")
+		vel_up = -100
+	end
+	/*if tr_up_startpos:Distance(tr_up.HitPos) <= 100 && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
+		print("DOWN - ",tr_up_startpos:Distance(tr_up.HitPos))
+		vel_up = -100
+	end*/
+	
+	util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,tr.HitPos,false,self:EntIndex(),0) //vortigaunt_beam
+	ParticleEffect("vj_impact1_centaurspit", tr.HitPos, Angle(0,0,0), self)
+	/*local nig = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
+	nig:SetModel("models/hunter/blocks/cube025x025x025.mdl")
+	nig:SetPos(tr.HitPos)
+	nig:SetAngles(self:GetAngles())
+	nig:SetColor(Color(255,0,0))
+	nig:Spawn()
+	nig:Activate()
+	timer.Simple(3,function() nig:Remove() end)*/
+	
+	if vel_stop == false then
+		myvel = self:GetVelocity()
+		enevel = self:GetEnemy():GetVelocity()
+		local jumpyaw
+		local jumpcode = ((self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter())-(self:GetPos()+self:OBBCenter())):GetNormal()*400 +self:GetUp()*vel_up +self:GetForward()*vel_for
+		jumpyaw = jumpcode:Angle().y
+		self:SetLocalVelocity(jumpcode)
+	else
+		self:AerialMove_Stop()
+	end
 	//self.NextChaseTime = CurTime() + 0.1
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:AerialMove_Stop()
+	if self:GetVelocity():Length() > 0 then
+		self:SetLocalVelocity(Vector(0,0,0))
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
@@ -1941,7 +1933,7 @@ else
 	//self.RangeAttacking = false
 	end
 else
-	if self.MovementType == VJ_MOVETYPE_AERIAL && self:GetVelocity():Length() > 0 then self:SetLocalVelocity(Vector(0,0,0)) end
+	if self.MovementType == VJ_MOVETYPE_AERIAL then self:AerialMove_Stop() end
 	//self:StopAttacks()
 	//self:SelectSchedule()
  end
@@ -2020,9 +2012,9 @@ function ENT:PushOrAttackPropsCode(CustomValuesTbl)
 	CustomValuesTbl = CustomValuesTbl or {}
 	IsSingleValue = CustomValuesTbl.IsSingleValue or 0
 	CustomMeleeDistance = CustomValuesTbl.CustomMeleeDistance or self.MeleeAttackDistance *1.2
-
 	local isanentitytoattack = false
 	if self.PushProps == false && self.AttackProps == false then return end
+	
 	local valuestoattack
 	local dist = Vector(0,0,self:OBBMins().x):Distance(Vector(0,0,self:OBBMaxs().x)) // self:GetCollisionBounds()
 	local halfdist = dist /2
@@ -2032,29 +2024,29 @@ function ENT:PushOrAttackPropsCode(CustomValuesTbl)
 		valuestoattack = {IsSingleValue}
 	end
 	for k,v in pairs(valuestoattack) do
-	local phys = v:GetPhysicsObject()
-	if table.HasValue(self.EntitiesToDestroyClass,v:GetClass()) or v.VJ_AddEntityToSNPCAttackList == true then isanentitytoattack = true end
-	if v:GetClass() == "prop_physics" or isanentitytoattack == true then
-	//print(self:VJ_GetNearestPointToEntityDistance(v,1))
-	//print(self:DoPropVisibiltyCheckForPushAttackProps(v))
-	if self:VJ_GetNearestPointToEntityDistance(v) < (halfdist+CustomMeleeDistance) && self:DoPropVisibiltyCheckForPushAttackProps(v) /*&& self:Visible(v)*/ && (self:GetForward():Dot((v:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius / 1.5))) && phys:IsValid() && phys != nil && phys != NULL && v:GetCollisionGroup() != COLLISION_GROUP_DEBRIS && v:GetCollisionGroup() != COLLISION_GROUP_DEBRIS_TRIGGER && v:GetCollisionGroup() != COLLISION_GROUP_DISSOLVING && v:GetCollisionGroup() != COLLISION_GROUP_IN_VEHICLE then
-	if isanentitytoattack == true then return true end
-	//print("IT SHOULD WORK "..v:GetClass())
-	if phys:GetMass() > 4 && phys:GetSurfaceArea() > 800 then
-		local selfphys = self:GetPhysicsObject()
-		if self.PushProps == true && selfphys:IsValid() && selfphys != nil && selfphys != NULL && selfphys:GetSurfaceArea() >= phys:GetSurfaceArea() && !table.HasValue(self.EntitiesToDestroyClass,v:GetClass()) then
-			return true
+		local phys = v:GetPhysicsObject()
+		if table.HasValue(self.EntitiesToDestroyClass,v:GetClass()) or v.VJ_AddEntityToSNPCAttackList == true then isanentitytoattack = true end
+		if v:GetClass() == "prop_physics" or isanentitytoattack == true then
+			//print(self:VJ_GetNearestPointToEntityDistance(v,1))
+			//print(self:DoPropVisibiltyCheckForPushAttackProps(v))
+			if self:VJ_GetNearestPointToEntityDistance(v) < (halfdist+CustomMeleeDistance) && self:DoPropVisibiltyCheckForPushAttackProps(v) /*&& self:Visible(v)*/ && (self:GetForward():Dot((v:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius / 1.3))) && phys:IsValid() && phys != nil && phys != NULL && v:GetCollisionGroup() != COLLISION_GROUP_DEBRIS && v:GetCollisionGroup() != COLLISION_GROUP_DEBRIS_TRIGGER && v:GetCollisionGroup() != COLLISION_GROUP_DISSOLVING && v:GetCollisionGroup() != COLLISION_GROUP_IN_VEHICLE then
+				if isanentitytoattack == true then return true end
+				//print("IT SHOULD WORK "..v:GetClass())
+				if phys:GetMass() > 4 && phys:GetSurfaceArea() > 800 then
+					local selfphys = self:GetPhysicsObject()
+					if self.PushProps == true && selfphys:IsValid() && selfphys != nil && selfphys != NULL && selfphys:GetSurfaceArea() >= phys:GetSurfaceArea() && !table.HasValue(self.EntitiesToDestroyClass,v:GetClass()) then
+						return true
+					end
+				end
+				if self.AttackProps == true then
+					if v:Health() > 0 /*(table.HasValue(self.EntitiesToDestoryModel,v:GetModel()) or table.HasValue(self.EntitiesToDestroyClass,v:GetClass())) &&*/ then
+						return true
+					end
+				end
+			end
 		end
-		if self.AttackProps == true then
-		if v:Health() > 0 /*(table.HasValue(self.EntitiesToDestoryModel,v:GetModel()) or table.HasValue(self.EntitiesToDestroyClass,v:GetClass())) &&*/ then
-			return true
-		end
-	 end
 	end
-   end
-  end
- end
- return false
+	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
@@ -2090,30 +2082,30 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 		if v:GetClass() == "prop_physics" then
 			local phys = v:GetPhysicsObject()
 			if phys:IsValid() && phys != nil && phys != NULL then
-			//if table.HasValue(self.EntitiesToDestoryModel,v:GetModel()) or table.HasValue(self.EntitiesToDestroyClass,v:GetClass()) or table.HasValue(self.EntitiesToPushModel,v:GetModel()) then
-			if self:PushOrAttackPropsCode({IsSingleValue=v,CustomMeleeDistance=AttackDist}) then
-			HasHitGoodProp = true
-			phys:EnableMotion(true)
-			//phys:EnableGravity(true)
-			phys:Wake()
-			//constraint.RemoveAll(v)
-			//if util.IsValidPhysicsObject(v,1) then
-			constraint.RemoveConstraints(v,"Weld") //end
-			if self.PushProps == true then
-			local phys = v:GetPhysicsObject()
-			if MyEnemy != nil then
-			local niger = phys:GetMass() * 700
-			local nigerup = phys:GetMass() * 200
-			phys:ApplyForceCenter(MyEnemy:GetPos()+self:GetForward() *niger +self:GetUp()*nigerup)
-			//phys:ApplyForceCenter(MyEnemy:GetPos()+self:GetForward() *25000 +self:GetUp()*7000)
-			/*if v:GetModel() == "models/props_c17/oildrum001.mdl" then
-			phys:ApplyForceCenter(MyEnemy:GetPos()+self:GetForward() *25000 +self:GetUp()*7000) end
-			if v:GetModel() == "models/props_borealis/bluebarrel001.mdl" then
-			phys:ApplyForceCenter(MyEnemy:GetPos()+self:GetForward() *55000 +self:GetUp()*10000) end*/
+				//if table.HasValue(self.EntitiesToDestoryModel,v:GetModel()) or table.HasValue(self.EntitiesToDestroyClass,v:GetClass()) or table.HasValue(self.EntitiesToPushModel,v:GetModel()) then
+				if self:PushOrAttackPropsCode({IsSingleValue=v,CustomMeleeDistance=AttackDist}) then
+					HasHitGoodProp = true
+					phys:EnableMotion(true)
+					//phys:EnableGravity(true)
+					phys:Wake()
+					//constraint.RemoveAll(v)
+					//if util.IsValidPhysicsObject(v,1) then
+					constraint.RemoveConstraints(v,"Weld") //end
+					if self.PushProps == true then
+						local phys = v:GetPhysicsObject()
+						if MyEnemy != nil then
+							local niger = phys:GetMass() * 700
+							local nigerup = phys:GetMass() * 200
+							phys:ApplyForceCenter(MyEnemy:GetPos()+self:GetForward() *niger +self:GetUp()*nigerup)
+							//phys:ApplyForceCenter(MyEnemy:GetPos()+self:GetForward() *25000 +self:GetUp()*7000)
+							/*if v:GetModel() == "models/props_c17/oildrum001.mdl" then
+							phys:ApplyForceCenter(MyEnemy:GetPos()+self:GetForward() *25000 +self:GetUp()*7000) end
+							if v:GetModel() == "models/props_borealis/bluebarrel001.mdl" then
+							phys:ApplyForceCenter(MyEnemy:GetPos()+self:GetForward() *55000 +self:GetUp()*10000) end*/
+						end
+					end
+				end
 			end
-		   end
-		  end
-		 end
 		end
 		self:CustomOnMeleeAttack_AfterChecks(v)
 		if self.DisableDefaultMeleeAttackDamageCode == false then
@@ -2124,16 +2116,16 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 			if self.SelectedDifficulty == 3 then doactualdmg:SetDamage(self.MeleeAttackDamage*2.5) end  -- Hell On Earth
 			doactualdmg:SetInflictor(self)
 			doactualdmg:SetDamageType(self.MeleeAttackDamageType)
-			//doactualdmg:SetDamagePosition(attackthev)
+			//doactualdmg:SetDamagePosition(self:VJ_GetNearestPointToEntity(v).MyPosition)
 			doactualdmg:SetAttacker(self)
 			v:TakeDamageInfo(doactualdmg, self)
 		end
-			if self.MeleeAttackSetEnemyOnFire == true then v:Ignite(self.MeleeAttackSetEnemyOnFireTime,0) end
-			if self.HasMeleeAttackKnockBack == true && v.MovementType != VJ_MOVETYPE_STATIONARY then
-				if v.VJ_IsHugeMonster != true or v.IsVJBaseSNPC_Tank == true then
-					v:SetVelocity(self:GetForward()*math.random(self.MeleeAttackKnockBack_Forward1,self.MeleeAttackKnockBack_Forward2) +self:GetUp()*math.random(self.MeleeAttackKnockBack_Up1,self.MeleeAttackKnockBack_Up2) +self:GetRight()*math.random(self.MeleeAttackKnockBack_Right1,self.MeleeAttackKnockBack_Right2))
-				end
+		if self.MeleeAttackSetEnemyOnFire == true then v:Ignite(self.MeleeAttackSetEnemyOnFireTime,0) end
+		if self.HasMeleeAttackKnockBack == true && v.MovementType != VJ_MOVETYPE_STATIONARY then
+			if v.VJ_IsHugeMonster != true or v.IsVJBaseSNPC_Tank == true then
+				v:SetVelocity(self:GetForward()*math.random(self.MeleeAttackKnockBack_Forward1,self.MeleeAttackKnockBack_Forward2) +self:GetUp()*math.random(self.MeleeAttackKnockBack_Up1,self.MeleeAttackKnockBack_Up2) +self:GetRight()*math.random(self.MeleeAttackKnockBack_Right1,self.MeleeAttackKnockBack_Right2))
 			end
+		end
 		if (v:IsNPC() && (!VJ_IsHugeMonster)) or (v:IsPlayer()) then
 			if self.MeleeAttackBleedEnemy == true then
 			self:CustomOnMeleeAttack_BleedEnemy(v)
@@ -2449,6 +2441,7 @@ function ENT:VJ_ACT_RESETENEMY()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
+	print(self:GetClass())
 	if self.NextResetEnemyT > CurTime() or self:VJ_IsCurrentSchedule(SCHED_ESTABLISH_LINE_OF_FIRE) == true then return end
 	local NoResetAlliesSeeEnemy = NoResetAlliesSeeEnemy or false
 	if NoResetAlliesSeeEnemy == true then
@@ -3150,6 +3143,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 			if randanim == 1 then
 				self:CustomDeathAnimationCode(dmginfo,hitgroup)
 				self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.AnimTbl_Death),true,self.DeathAnimationTime,false,0,{SequenceDuration=self.DeathAnimationTime})
+				self.DeathAnimationCodeRan = true
 				timer.Simple(self.DeathAnimationTime,DoKilled)
 			end
 		end
@@ -3157,20 +3151,21 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RunGibOnDeathCode(dmginfo,hitgroup)
-	if self.AllowedToGib == false or self.HasGibOnDeath == false then return end
+	if self.AllowedToGib == false or self.HasGibOnDeath == false or self.HasBeenGibbedOnDeath == true then return end
 	local DamageType = dmginfo:GetDamageType()
 	local dmgtbl = self.GibOnDeathDamagesTable
 	local dmgtblempty = false
 	local usedefault = false
 	local defualtdmgs = {DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SHOCK,DMG_SONIC}
 	if table.HasValue(self.GibOnDeathDamagesTable,"UseDefault") then usedefault = true end
-	if usedefault == false && table.Count(dmgtbl) <= 0 then dmgtblempty = true end
+	if usedefault == false && (table.Count(dmgtbl) <= 0 or table.HasValue(self.GibOnDeathDamagesTable,"All")) then dmgtblempty = true end
 	if (dmgtblempty == true) or (usedefault == true && table.HasValue(defualtdmgs,DamageType)) or (usedefault == false && table.HasValue(dmgtbl,DamageType)) then
-		local setupgib = self:SetUpGibesOnDeath(dmginfo,hitgroup)
+		local setupgib, setupgib_extra = self:SetUpGibesOnDeath(dmginfo,hitgroup)
+		if setupgib_extra == nil then setupgib_extra = {} end
 		if setupgib == true then
-			self.HasDeathRagdoll = false
-			self.HasDeathAnimation = false
-			self.HasBeenGibbed = true
+			if setupgib_extra.AllowCorpse != true then self.HasDeathRagdoll = false end
+			if setupgib_extra.DeathAnim != true then self.HasDeathAnimation = false end
+			self.HasBeenGibbedOnDeath = true
 			self:PlayGibOnDeathSounds(dmginfo,hitgroup)
 		end
 	end
@@ -3178,12 +3173,13 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlayGibOnDeathSounds(dmginfo,hitgroup)
 	if self.HasGibOnDeathSounds == false then return end
-	
-	-- The default sounds, these can be overridden by
-	self:EmitSound("vj_gib/default_gib_splat.wav",90,math.random(80,100))
-	self:EmitSound("vj_gib/gibbing1.wav",90,math.random(80,100))
-	self:EmitSound("vj_gib/gibbing2.wav",90,math.random(80,100))
-	self:EmitSound("vj_gib/gibbing3.wav",90,math.random(80,100))
+	local custom = self:CustomGibOnDeathSounds(dmginfo,hitgroup)
+	if custom == false then
+		VJ_EmitSound(self,"vj_gib/default_gib_splat.wav",90,math.random(80,100))
+		VJ_EmitSound(self,"vj_gib/gibbing1.wav",90,math.random(80,100))
+		VJ_EmitSound(self,"vj_gib/gibbing2.wav",90,math.random(80,100))
+		VJ_EmitSound(self,"vj_gib/gibbing3.wav",90,math.random(80,100))
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CreateGibEntity(Ent,Models,Tbl_Features,CustomCode)

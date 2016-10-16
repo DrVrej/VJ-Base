@@ -70,16 +70,16 @@ function util.VJ_SphereDamage(vSelfEntity,vInflictor,vAttacker,vPosition,vDamage
  return entities
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function util.VJ_GetSNPCsWithActiveSoundTracks()
+function util.VJ_GetSNPCsWithActiveSoundTracks() -- !!!!! Deprecated Function !!!!! --
 	local TableEntities = {}
 	for k,v in ipairs(ents.GetAll()) do
 		if v:IsNPC() then
-		if v:GetNetworkedBool("VJ_IsPlayingSoundTrack") == true then
-		table.insert(TableEntities,v)
+			if v:GetNetworkedBool("VJ_IsPlayingSoundTrack") == true then
+				table.insert(TableEntities,v)
+			end
 		end
 	end
- end
- return TableEntities
+	return TableEntities
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function util.VJ_GetWeaponPos(GetClassEntity)
@@ -88,7 +88,7 @@ function util.VJ_GetWeaponPos(GetClassEntity)
 	local getmuzzle
 	local numattachments = getweapon:GetAttachments()
 	local numattachments = #getweapon:GetAttachments()
-
+	
 	if (getweapon:IsValid()) then
 	for i = 1,numattachments do
 	if getweapon:GetAttachments()[i].name == "muzzle" then
