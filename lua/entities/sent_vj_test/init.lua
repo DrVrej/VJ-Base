@@ -13,9 +13,10 @@ ENT.PainSoundT = 0
 ENT.MenuOpen = false
 
 util.AddNetworkString("vj_testentity_onmenuopen")
+util.AddNetworkString("vj_testentity_runtextsd")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
-	self:SetModel( "models/humans/group01/male_0"..math.random(1,9)..".mdl" )
+	self:SetModel("models/humans/group01/male_0"..math.random(1,9)..".mdl")
 	self:SetHullType(HULL_HUMAN)
 	self:SetHullSizeNormal()
 	self:SetNPCState(NPC_STATE_SCRIPT)
@@ -25,7 +26,8 @@ function ENT:Initialize()
 	self:DropToFloor()
 	self:SetMaxYawSpeed(25)
 	for k, v in pairs(player.GetAll()) do
-	self:SetTarget(v) end
+		self:SetTarget(v)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetInitializeCapabilities()
@@ -42,16 +44,17 @@ function ENT:SelectSchedule()
 	local MyNearbyTargets = ents.FindInSphere(self:GetPos(),150)
 	if (!MyNearbyTargets) then return end
 	for k,v in pairs(MyNearbyTargets) do
-	if v:IsPlayer() then
-	self:VJ_SetSchedule(SCHED_IDLE_STAND)
-	self:VJ_SetSchedule(SCHED_TARGET_FACE) end
+		if v:IsPlayer() then
+			self:VJ_SetSchedule(SCHED_IDLE_STAND)
+			self:VJ_SetSchedule(SCHED_TARGET_FACE)
+		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTakeDamage()
 	if CurTime() > self.PainSoundT then
-	self:EmitSound("vo/npc/male01/pain0"..math.random(1,9)..".wav")
-	self.PainSoundT = CurTime() + 1
+		self:EmitSound("vo/npc/male01/pain0"..math.random(1,9)..".wav")
+		self.PainSoundT = CurTime() + 1
 	end
 	//self:VJ_SetSchedule(SCHED_COWER)
 	self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
@@ -61,14 +64,25 @@ end
 function ENT:AcceptInput(key, activator, caller)
 	if key == "Use" && activator:IsPlayer() then
 		if activator:IsValid() && activator:Alive() then
-		self:SetTarget(activator)
-		self:EmitSound(Sound("vj_illuminati/Illuminati Confirmed.mp3"),0)
-		umsg.Start("vj_testentity_onmenuopen", activator)
-		umsg.End()
-		self:EmitSound("vo/npc/male01/hi0"..math.random(1,2)..".wav")
-		self:VJ_SetSchedule(SCHED_IDLE_STAND)
-		self:VJ_SetSchedule(SCHED_TARGET_FACE)
-		self.MenuOpen = true
+			self:SetTarget(activator)
+			self:EmitSound(Sound("vj_illuminati/Illuminati Confirmed.mp3"),0)
+			umsg.Start("vj_testentity_onmenuopen", activator)
+			umsg.End()
+			self:EmitSound("vo/npc/male01/hi0"..math.random(1,2)..".wav")
+			self:VJ_SetSchedule(SCHED_IDLE_STAND)
+			self:VJ_SetSchedule(SCHED_TARGET_FACE)
+			self.MenuOpen = true
 		end
 	end
 end
+---------------------------------------------------------------------------------------------------------------------------------------------
+net.Receive("vj_testentity_runtextsd",function(len,pl)
+	ply = net.ReadEntity()
+	msg = net.ReadString()
+	soundfile = net.ReadString()
+	PrintMessage(HUD_PRINTTALK,msg)
+	PrintMessage(HUD_PRINTCENTER,msg)
+	local sd = CreateSound(game.GetWorld(),soundfile)
+	sd:SetSoundLevel(0)
+	sd:Play()
+end)

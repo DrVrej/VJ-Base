@@ -38,26 +38,31 @@ AddCSLuaFile("includes/modules/sound_vj_track.lua")
 ----=================================----
 if SERVER then
 	util.AddNetworkString("VJWelcome")
+	util.AddNetworkString("VJSay")
 end
 
 function DoWelcomeDrVrej(ply, command, arguements)
-//if game.SinglePlayer() then return end
-print("ALLO")
-if (ply:SteamID() == "STEAM_0:0:22688298") then
-	for k,v in ipairs(player.GetAll()) do
+	//if game.SinglePlayer() then return end
+	print("ALLO")
+	if (ply:SteamID() == "STEAM_0:0:22688298") then
+		PrintMessage(HUD_PRINTTALK,"DrVrej Has Joined Game!")
+		PrintMessage(HUD_PRINTCENTER,"DrVrej Has Joined Game!")
+		local sd = CreateSound(game.GetWorld(),"vj_illuminati/Illuminati Confirmed.mp3")
+		sd:SetSoundLevel(0)
+		sd:Play()
+		/*for k,v in ipairs(player.GetAll()) do
 		v:ConCommand("say DrVrej has joined!")
 		v:EmitSound(Sound("vj_illuminati/Illuminati Confirmed.mp3"),0)
 		if (SERVER) then
 			game.ConsoleCommand("say The creator of VJ Base has joined!\n")
-		end
+		end*/
 		/*if (CLIENT) then
 			surface.PlaySound(Sound("vj_illuminati/Illuminati Confirmed.mp3"))
 		end*/
+		//end
 	end
 end
 hook.Add("PlayerInitialSpawn", "drvrejplayerInitialSpawn", DoWelcomeDrVrej)
-
-end
 
 function VJSpawn(ply)
 	timer.Simple(1, function()
@@ -67,6 +72,16 @@ function VJSpawn(ply)
 	end)
 end
 hook.Add("PlayerInitialSpawn", "VJBaseSpawn", VJSpawn)
+
+net.Receive("VJSay",function(len,pl)
+	ply = net.ReadEntity()
+	msg = net.ReadString()
+	soundfile = net.ReadString()
+	ply:Say(msg)
+	local sd = CreateSound(game.GetWorld(),soundfile)
+	sd:SetSoundLevel(0)
+	sd:Play()
+end)
 
 if (CLIENT) then print("VJ Base client files initialized!") else print("VJ Base server files initialized!") end
 -- Raps and Sounds -------------------------------------------------------------------------------------------------------------------------
