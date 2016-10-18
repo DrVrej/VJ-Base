@@ -66,8 +66,7 @@ function OpenTheMenuCode()
 	MenuButton_2:SetPos( 10, 130 ) -- y, x
 	MenuButton_2:SetSize( 100, 50 )
 	MenuButton_2.DoClick = function()
-		if LocalPlayer():IsAdmin() or LocalPlayer():IsSuperAdmin() then
-		RunConsoleCommand( "god" ) end
+		if LocalPlayer():IsAdmin() or LocalPlayer():IsSuperAdmin() then RunConsoleCommand("god") end
 	end
 	-- Add 110
 	local MenuButton_3 = vgui.Create( "DButton", MenuFrame )
@@ -75,8 +74,7 @@ function OpenTheMenuCode()
 	MenuButton_3:SetPos( 120, 130 ) -- y, x
 	MenuButton_3:SetSize( 100, 50 )
 	MenuButton_3.DoClick = function()
-		if LocalPlayer():IsAdmin() or LocalPlayer():IsSuperAdmin() then
-		RunConsoleCommand( "buddha" ) end
+		if LocalPlayer():IsAdmin() or LocalPlayer():IsSuperAdmin() then RunConsoleCommand("buddha") end
 	end
 	
 	local MenuButton_4 = vgui.Create( "DButton", MenuFrame )
@@ -84,8 +82,7 @@ function OpenTheMenuCode()
 	MenuButton_4:SetPos( 230, 130 ) -- y, x
 	MenuButton_4:SetSize( 100, 50 )
 	MenuButton_4.DoClick = function()
-		if LocalPlayer():IsAdmin() or LocalPlayer():IsSuperAdmin() then
-		RunConsoleCommand( "firstperson" ) end
+		if LocalPlayer():IsAdmin() or LocalPlayer():IsSuperAdmin() then RunConsoleCommand("firstperson") end
 	end
 	
 	local MenuButton_5 = vgui.Create( "DButton", MenuFrame )
@@ -93,31 +90,32 @@ function OpenTheMenuCode()
 	MenuButton_5:SetPos( 340, 130 ) -- y, x
 	MenuButton_5:SetSize( 100, 50 )
 	MenuButton_5.DoClick = function()
-		if LocalPlayer():IsAdmin() or LocalPlayer():IsSuperAdmin() then
-		RunConsoleCommand( "thirdperson" ) end
+		if LocalPlayer():IsAdmin() or LocalPlayer():IsSuperAdmin() then RunConsoleCommand("thirdperson") end
 	end
 	
 	if (LocalPlayer():SteamID() == "STEAM_0:0:22688298") then
-	local MenuButton_DrVrej1 = vgui.Create( "DButton", MenuFrame )
-	MenuButton_DrVrej1:SetText( "Illuminati" )
-	MenuButton_DrVrej1:SetPos( 10, 170 ) -- y, x
-	MenuButton_DrVrej1:SetSize( 50, 30 )
-	MenuButton_DrVrej1.DoClick = function()
-		for k,v in ipairs(player.GetAll()) do
-		v:EmitSound(Sound("vj_illuminati/Illuminati Confirmed.mp3"),0)
-		v:ConCommand("say DrVrej is in this server, be aware!\n")
+		local MenuButton_DrVrej1 = vgui.Create( "DButton", MenuFrame )
+		MenuButton_DrVrej1:SetText( "Illuminati" )
+		MenuButton_DrVrej1:SetPos( 10, 170 ) -- y, x
+		MenuButton_DrVrej1:SetSize( 50, 30 )
+		MenuButton_DrVrej1.DoClick = function()
+			net.Start("vj_testentity_runtextsd")
+			net.WriteEntity(LocalPlayer())
+			net.WriteString("DrVrej is in this server, be aware!")
+			net.WriteString("vj_illuminati/Illuminati Confirmed.mp3")
+			net.SendToServer()
+		end
+		local MenuButton_DrVrej2 = vgui.Create( "DButton", MenuFrame )
+		MenuButton_DrVrej2:SetText( "THIRSTY" )
+		MenuButton_DrVrej2:SetPos( 120, 170 ) -- y, x
+		MenuButton_DrVrej2:SetSize( 50, 30 )
+		MenuButton_DrVrej2.DoClick = function()
+			net.Start("vj_testentity_runtextsd")
+			net.WriteEntity(LocalPlayer())
+			net.WriteString("Are you thirsty?")
+			net.WriteString("vj_illuminati/areyouthristy.wav")
+			net.SendToServer()
 		end
 	end
-	local MenuButton_DrVrej2 = vgui.Create( "DButton", MenuFrame )
-	MenuButton_DrVrej2:SetText( "THIRSTY" )
-	MenuButton_DrVrej2:SetPos( 120, 170 ) -- y, x
-	MenuButton_DrVrej2:SetSize( 50, 30 )
-	MenuButton_DrVrej2.DoClick = function()
-		for k,v in ipairs(player.GetAll()) do
-		v:EmitSound(Sound("vj_illuminati/areyouthristy.wav"),0)
-		v:ConCommand("say Are you thirsty?\n")
-		end
-	end
- end
 end
 usermessage.Hook("vj_testentity_onmenuopen",OpenTheMenuCode)
