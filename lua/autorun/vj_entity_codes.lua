@@ -129,7 +129,7 @@ end
 function VJ_AnimationExists(argent,actname)
 	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
 	if type(actname) == "number" then
-		if (argent:SelectWeightedSequence(actname) == -1 && argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "Not Found!") then 
+		if (argent:SelectWeightedSequence(actname) == -1 or argent:SelectWeightedSequence(actname) == 0) && (argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "Not Found!" or argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "No model!") then 
 		return false end
 	end
 	if type(actname) == "string" then

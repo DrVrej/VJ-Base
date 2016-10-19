@@ -866,7 +866,7 @@ function ENT:DoChangeMovementType(SetType)
 		self:SetMoveType(MOVETYPE_STEP)
 		self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND))
 		if VJ_AnimationExists(self,ACT_JUMP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_JUMP)) end
-		if VJ_AnimationExists(self,ACT_CLIMB_UP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
+		if VJ_AnimationExists(self,ACT_CLIMB_UP) == true && VJ_AnimationExists(self,ACT_CLIMB_DISMOUNT) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
 		//self:CapabilitiesRemove(CAP_SKIP_NAV_GROUND_CHECK)
 		self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK))
@@ -2441,7 +2441,6 @@ function ENT:VJ_ACT_RESETENEMY()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
-	print(self:GetClass())
 	if self.NextResetEnemyT > CurTime() or self:VJ_IsCurrentSchedule(SCHED_ESTABLISH_LINE_OF_FIRE) == true then return end
 	local NoResetAlliesSeeEnemy = NoResetAlliesSeeEnemy or false
 	if NoResetAlliesSeeEnemy == true then
@@ -2576,7 +2575,10 @@ function ENT:DoEntityRelationshipCheck()
 		local vDistanceToMy = vPos:Distance(MyPos)
 		local MyVisibleTov = self:Visible(v)
 		if vDistanceToMy > self.SightDistance then continue end
-		if self.PlayerFriendly == true && v:IsPlayer() && !table.HasValue(self.VJ_AddCertainEntityAsEnemy,v) then entisfri = true continue end
+		local function DoPlayerSight()
+			if self.HasOnPlayerSight == true && v:IsPlayer() then self:OnPlayerSightCode(v) end
+		end
+		if self.PlayerFriendly == true && v:IsPlayer() && !table.HasValue(self.VJ_AddCertainEntityAsEnemy,v) then entisfri = true DoPlayerSight() continue end
 		local sightdistancenum = self.SightDistance
 		local radiusoverride = 0
 		if (!self.IsVJBaseSNPC_Tank) && v:IsPlayer() && self:GetEnemy() == nil then
@@ -2649,7 +2651,7 @@ function ENT:DoEntityRelationshipCheck()
 				end
 			end
 		end
-		if self.HasOnPlayerSight == true && v:IsPlayer() then self:OnPlayerSightCode(v) end
+		DoPlayerSight()
 	//return true
 	end
 	//return false
