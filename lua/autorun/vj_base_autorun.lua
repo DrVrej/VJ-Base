@@ -43,7 +43,6 @@ end
 
 function DoWelcomeDrVrej(ply, command, arguements)
 	//if game.SinglePlayer() then return end
-	print("ALLO")
 	if (ply:SteamID() == "STEAM_0:0:22688298") then
 		PrintMessage(HUD_PRINTTALK,"DrVrej Has Joined Game!")
 		PrintMessage(HUD_PRINTCENTER,"DrVrej Has Joined Game!")
