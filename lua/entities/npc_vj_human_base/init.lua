@@ -197,7 +197,7 @@ ENT.NextAnyAttackTime_Melee = 0.4 -- How much time until it can use a attack aga
 ENT.NextAnyAttackTime_Melee_DoRand = false -- False = Don't use random time | Number = Picks a random number between the regular timer and this timer
 	-- Weapon Attack ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.ShootDistance = 2000 -- How far it can shoot, Default: 2000
-ENT.ShootDistanceClose = 100 -- How close until it stops shooting, Default: 200
+ENT.ShootDistanceClose = 10 -- How close until it stops shooting
 ENT.WeaponSpread = 1 -- What's the spread of the weapon? | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
 ENT.AnimTbl_WeaponAttack = {ACT_RANGE_ATTACK1} -- Animation played when the SNPC does weapon attack | For VJ Weapons
 ENT.WeaponAttackSchedule = {SCHED_RANGE_ATTACK1} -- Schedule played when the SNPC does weapon attack | For None-VJ Weapons
@@ -856,7 +856,7 @@ function ENT:DoChangeMovementType(SetType)
 		self:SetMoveType(MOVETYPE_STEP)
 		self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND))
 		//if VJ_AnimationExists(self,ACT_JUMP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_JUMP)) end
-		//if VJ_AnimationExists(self,ACT_CLIMB_UP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
+		//if VJ_AnimationExists(self,ACT_CLIMB_UP) == true && VJ_AnimationExists(self,ACT_CLIMB_DISMOUNT) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
 		if self.DisableWeapons == false then self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT)) end
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
 		//self:CapabilitiesRemove(CAP_SKIP_NAV_GROUND_CHECK)
@@ -2477,7 +2477,10 @@ function ENT:DoEntityRelationshipCheck()
 		local vDistanceToMy = vPos:Distance(MyPos)
 		local MyVisibleTov = self:Visible(v)
 		if vDistanceToMy > self.SightDistance then continue end
-		if self.PlayerFriendly == true && v:IsPlayer() && !table.HasValue(self.VJ_AddCertainEntityAsEnemy,v) then entisfri = true continue end
+		local function DoPlayerSight()
+			if self.HasOnPlayerSight == true && v:IsPlayer() then self:OnPlayerSightCode(v) end
+		end
+		if self.PlayerFriendly == true && v:IsPlayer() && !table.HasValue(self.VJ_AddCertainEntityAsEnemy,v) then entisfri = true DoPlayerSight() continue end
 		local sightdistancenum = self.SightDistance
 		local radiusoverride = 0
 		if (!self.IsVJBaseSNPC_Tank) && v:IsPlayer() && self:GetEnemy() == nil then
@@ -2550,7 +2553,7 @@ function ENT:DoEntityRelationshipCheck()
 				end
 			end
 		end
-		if self.HasOnPlayerSight == true && v:IsPlayer() then self:OnPlayerSightCode(v) end
+		DoPlayerSight()
 	//return true
 	end
 	//return false
