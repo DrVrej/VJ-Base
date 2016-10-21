@@ -158,7 +158,7 @@ ENT.BringFriendsOnDeathUseCertainAmount = true -- Should the SNPC only call cert
 ENT.BringFriendsOnDeathUseCertainAmountNumber = 3 -- How many people should it call if certain amount is enabled?
 ENT.AllowedToGib = true -- Is it allowed to gib in general? This can be on death or when shot in a certain place
 ENT.HasGibOnDeath = true -- Is it allowed to gib on death?
-ENT.GibOnDeathDamagesTable = {"All"} -- Damages that it gibs from | "UseDefault" = Uses default damage types | "All" = Gib from any damage
+ENT.GibOnDeathDamagesTable = {"UseDefault"} -- Damages that it gibs from | "UseDefault" = Uses default damage types | "All" = Gib from any damage
 ENT.HasGibOnDeathSounds = true -- Does it have gib sounds? | Mostly used for the settings menu
 ENT.HasGibDeathParticles = true -- Does it spawn particles on death or when it gibs? | Mostly used for the settings menu
 	-- Melee Attack ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -763,7 +763,7 @@ function ENT:SetUpGibesOnDeath(dmginfo,hitgroup)
 	--------------------------------------*/
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomGibOnDeathSounds(dmginfo,hitgroup) return false end -- returning true will make the default gibbing sounds not play
+function ENT:CustomGibOnDeathSounds(dmginfo,hitgroup) return true end -- returning false will make the default gibbing sounds not play
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPriorToKilled(dmginfo,hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3103,8 +3103,8 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 	
 	local function DoKilled()
 		if IsValid(self) then
-			if self.WaitBeforeDeathTime == 0 then 
-				self:OnKilled(dmginfo,hitgroup) 
+			if self.WaitBeforeDeathTime == 0 then
+				self:OnKilled(dmginfo,hitgroup)
 			else
 				timer.Simple(self.WaitBeforeDeathTime,function() if IsValid(self) then self:OnKilled(dmginfo,hitgroup) end end)
 			end
@@ -3176,7 +3176,7 @@ end
 function ENT:PlayGibOnDeathSounds(dmginfo,hitgroup)
 	if self.HasGibOnDeathSounds == false then return end
 	local custom = self:CustomGibOnDeathSounds(dmginfo,hitgroup)
-	if custom == false then
+	if custom == true then
 		VJ_EmitSound(self,"vj_gib/default_gib_splat.wav",90,math.random(80,100))
 		VJ_EmitSound(self,"vj_gib/gibbing1.wav",90,math.random(80,100))
 		VJ_EmitSound(self,"vj_gib/gibbing2.wav",90,math.random(80,100))
@@ -3192,15 +3192,22 @@ function ENT:CreateGibEntity(Ent,Models,Tbl_Features,CustomCode)
 	if Models == "UseAlien_Big" then Models = {"models/gibs/xenians/mgib_01.mdl","models/gibs/xenians/mgib_02.mdl","models/gibs/xenians/mgib_03.mdl","models/gibs/xenians/mgib_04.mdl","models/gibs/xenians/mgib_05.mdl","models/gibs/xenians/mgib_06.mdl","models/gibs/xenians/mgib_07.mdl"} end
 	if Models == "UseHuman_Small" then Models = {"models/gibs/humans/sgib_01.mdl","models/gibs/humans/sgib_02.mdl","models/gibs/humans/sgib_03.mdl"} end
 	if Models == "UseHuman_Big" then Models = {"models/gibs/humans/mgib_01.mdl","models/gibs/humans/mgib_02.mdl","models/gibs/humans/mgib_03.mdl","models/gibs/humans/mgib_04.mdl","models/gibs/humans/mgib_05.mdl","models/gibs/humans/mgib_06.mdl","models/gibs/humans/mgib_07.mdl"} end
+	Models = VJ_PICKRANDOMTABLE(Models)
+	local vTbl_BloodType = "Red"
+	if table.HasValue({"models/gibs/xenians/sgib_01.mdl","models/gibs/xenians/sgib_02.mdl","models/gibs/xenians/sgib_03.mdl","models/gibs/xenians/mgib_01.mdl","models/gibs/xenians/mgib_02.mdl","models/gibs/xenians/mgib_03.mdl","models/gibs/xenians/mgib_04.mdl","models/gibs/xenians/mgib_05.mdl","models/gibs/xenians/mgib_06.mdl","models/gibs/xenians/mgib_07.mdl"},Models) then
+		vTbl_BloodType = "Yellow"
+	end
 	vTbl_Features = Tbl_Features or {}
 	vTbl_Position = vTbl_Features.Pos or self:GetPos() +self:OBBCenter()
 	vTbl_Angle = vTbl_Features.Ang or Angle(math.Rand(-180,180),math.Rand(-180,180),math.Rand(-180,180)) //self:GetAngles()
-	vTbl_Velocity = vTbl_Features.Vel or Vector(math.Rand(-200,200),math.Rand(-200,200),math.Rand(150,250))
-	vTbl_AngleVelocity = vTbl_Features.AngVel or Vector(math.Rand(-200,200),math.Rand(-200,200),math.Rand(-200,200))
+	vTbl_Velocity = vTbl_Features.Vel or Vector(math.Rand(-200,200),math.Rand(-200,200),math.Rand(150,250)) -- Used to set the velocity
+	vTbl_AngleVelocity = vTbl_Features.AngVel or Vector(math.Rand(-200,200),math.Rand(-200,200),math.Rand(-200,200)) -- Angle velocity, how fast it rotates as it's flying
+	vTbl_BloodType = vTbl_Features.BloodType or vTbl_BloodType -- Certain entities such as the VJ Gib entity, you can use this to set its gib type
 	local gib = ents.Create(Ent)
-	gib:SetModel(VJ_PICKRANDOMTABLE(Models))
+	gib:SetModel(Models)
 	gib:SetPos(vTbl_Position)
 	gib:SetAngles(vTbl_Angle)
+	if gib:GetClass() == "obj_vj_gib" then gib.BloodType = vTbl_BloodType end
 	gib:Spawn()
 	gib:Activate()
 	if GetConVarNumber("vj_npc_gibcollidable") == 0 then gib:SetCollisionGroup(1) end

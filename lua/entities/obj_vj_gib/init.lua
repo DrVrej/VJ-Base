@@ -3,18 +3,21 @@ AddCSLuaFile("shared.lua")
 AddCSLuaFile("cl_init.lua")
 include("shared.lua")
 /*--------------------------------------------------
-	=============== Alien Gib Base ===============
+	=============== Gib Base ===============
 	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-INFO: Used as a base for alien gibs
+INFO: Used as a base for gibs
 --------------------------------------------------*/
-ENT.IdleSound1 = Sound("rrrrrrrr/rrrrrrrr.wav")
-//ENT.TouchSound = Sound("physics/flesh/flesh_squishy_impact_hard"..math.random(1,4)..".wav")
-ENT.TouchSoundv = 60
-ENT.TouchSoundPitch = math.random(80,100)
-ENT.Decal = "YellowBlood"
-ENT.DecalChance = 3
+ENT.BloodType = "Red"
+ENT.Collide_Decal = "Blood"
+ENT.Collide_DecalChance = 3
+ENT.CollideSound = {"physics/flesh/flesh_squishy_impact_hard1.wav","physics/flesh/flesh_squishy_impact_hard2.wav","physics/flesh/flesh_squishy_impact_hard3.wav","physics/flesh/flesh_squishy_impact_hard4.wav"}
+ENT.CollideSoundLevel = 60
+ENT.CollideSoundPitch1 = 80
+ENT.CollideSoundPitch2 = 100
+ENT.Collide_Decal = "Blood"
+
 ENT.IsVJBaseCorpse = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
@@ -32,60 +35,66 @@ function ENT:Initialize()
 		//phys:EnableDrag(false)
 		//phys:SetBuoyancyRatio(0)
 	end
+	
+	-- Misc
+	self:SetUpInitializeBloodType()
+	if GetConVarNumber("vj_npc_fadegibs") == 1 then
+		timer.Simple(GetConVarNumber("vj_npc_fadegibstime"),function() if IsValid(self) then self:Remove() end end)
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:SetUpInitializeBloodType()
+	local bloodtype = self.BloodType
+	if bloodtype == "Red" then
+		self.Collide_Decal = "Blood"
+	elseif bloodtype == "Yellow" then
+		self.Collide_Decal = "YellowBlood"
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-if GetConVarNumber("vj_npc_fadegibs") == 1 then
-	if self:IsValid() then
-	timer.Simple(GetConVarNumber("vj_npc_fadegibstime"),function()
-	if self:IsValid() then
-	self:Remove()
-	end
-  end)
- end
-end
+	//print(self.BloodType)
+	/*if self:IsValid() then
+		self.idlesoundc = CreateSound(self, self.IdleSound1)
+		self.idlesoundc:Play()
 
-/*if self:IsValid() then
-	self.idlesoundc = CreateSound(self, self.IdleSound1)
-	self.idlesoundc:Play()
-
-	ParticleEffectAttach("antlion_spit", PATTACH_ABSORIGIN_FOLLOW, self, 0)
+		ParticleEffectAttach("antlion_spit", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 	end*/
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PhysicsCollide(data)
+function ENT:PhysicsCollide(data,phys)
 	-- Effects
-	if GetConVarNumber("vj_npc_sd_gibbing") == 0 then
-		self.touchsound = CreateSound(self, "physics/flesh/flesh_squishy_impact_hard"..math.random(1,4)..".wav")
-		self.touchsound:SetSoundLevel(self.TouchSoundv)
-		self.touchsound:PlayEx(1, self.TouchSoundPitch) 
+	local velocityspeed = phys:GetVelocity():Length()
+	local pickcollidesd = VJ_PICKRANDOMTABLE(self.CollideSound)
+	if GetConVarNumber("vj_npc_sd_gibbing") == 0 && pickcollidesd != false && velocityspeed > 20 then
+		self.collidesd = CreateSound(self,pickcollidesd)
+		self.collidesd:SetSoundLevel(self.CollideSoundLevel)
+		self.collidesd:PlayEx(1,math.random(self.CollideSoundPitch1,self.CollideSoundPitch2)) 
 	end
 	
 	if GetConVarNumber("vj_npc_nogibdecals") == 0 then
 		//local start = data.HitPos + data.HitNormal 
 		//local endpos = data.HitPos - data.HitNormal
-		if !data.Entity then
-		if math.random(1,self.DecalChance) == 1 then
+		if !data.Entity && math.random(1,self.Collide_DecalChance) == 1 then
 			self:SetLocalPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the entity is too close to the ground
 			local tr = util.TraceLine({
-			start = self:GetPos(),
-			endpos = self:GetPos() - Vector(0, 0, 30),
-			filter = self //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
+				start = self:GetPos(),
+				endpos = self:GetPos() - Vector(0, 0, 30),
+				filter = self //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
 			})
-			util.Decal(self.Decal,tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
-			//util.Decal(self.Decal,start,endpos)
-			end
+			util.Decal(self.Collide_Decal,tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
+			//util.Decal(self.Collide_Decal,start,endpos)
 		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTakeDamage(dmginfo)
-	self:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce() *0.1)
+	self:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce()*0.1)
 end
 /*--------------------------------------------------
-	=============== Alien Gib Base ===============
+	=============== Gib Base ===============
 	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-INFO: Used as a base for alien gibs
+INFO: Used as a base for gibs
 --------------------------------------------------*/

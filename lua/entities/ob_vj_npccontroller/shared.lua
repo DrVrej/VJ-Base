@@ -1,6 +1,6 @@
 ENT.Base 			= "base_gmodentity"
 ENT.Type 			= "anim"
-ENT.PrintName 		= "Controller Base"
+ENT.PrintName 		= "NPC Controller Base"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Purpose 		= "To make my (S)NPCs controllable."
