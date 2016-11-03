@@ -153,8 +153,7 @@ ENT.FollowPlayerChat = true -- Should the SNPCs say things like "They stopped fo
 ENT.FollowPlayerKey = "Use" -- The key that the player presses to make the SNPC follow them
 ENT.FollowPlayerCloseDistance = 150 -- If the SNPC is that close to the player then stand still until the player goes farther away
 ENT.NextFollowPlayerTime = 1 -- Time until it runs to the player again
-ENT.BringFriendsToMeSCHED1 = SCHED_RUN_FROM_ENEMY -- The Schedule that its friends play when BringAlliesToMe code is ran | First in math.random
-ENT.BringFriendsToMeSCHED2 = SCHED_RUN_FROM_ENEMY -- The Schedule that its friends play when BringAlliesToMe code is ran | Second in math.random
+ENT.BringAlliesToMeSchedules = {SCHED_RUN_FROM_ENEMY} -- The Schedule that its friends play when BringAlliesToMe code is ran
 	-- Sounds ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasSounds = true -- Put to false to disable ALL sounds
 ENT.HasImpactSounds = true -- If set to false, it won't play the impact sounds
@@ -340,13 +339,14 @@ ENT.NextCanGetCombineBallDamageT = 0
 ENT.UseTheSameGeneralSoundPitch_PickedNumber = 0
 ENT.SelectedDifficulty = 1
 	-- Tables ---------------------------------------------------------------------------------------------------------------------------------------------
-ENT.HL2_Animals = {"npc_barnacle", "npc_crow", "npc_pigeon", "npc_seagull", "monster_cockroach"}
-ENT.HL2_Resistance = {"npc_magnusson", "npc_vortigaunt", "npc_mossman", "npc_monk", "npc_kleiner", "npc_fisherman", "npc_eli", "npc_dog", "npc_barney", "npc_alyx", "npc_citizen"}
-ENT.HL2_Combine = {"npc_stalker", "npc_rollermine", "npc_turret_ground", "npc_turret_floor", "npc_turret_ceiling", "npc_strider", "npc_sniper", "npc_metropolice", "npc_hunter", "npc_breen", "npc_combine_camera", "npc_combine_s", "npc_combinedropship", "npc_combinegunship", "npc_cscanner", "npc_clawscanner", "npc_helicopter", "npc_manhack"}
-ENT.HL2_Zombies = {"npc_fastzombie_torso", "npc_zombine", "npc_zombie_torso", "npc_zombie", "npc_poisonzombie", "npc_headcrab_fast", "npc_headcrab_black", "npc_headcrab", "npc_fastzombie", "monster_zombie", "monster_headcrab", "monster_babycrab"}
-ENT.HL2_Antlions = {"npc_antlion", "npc_antlionguard", "npc_antlion_worker"}
+ENT.NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
+ENT.NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen}
+ENT.NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack}
+ENT.NPCTbl_Zombies = {npc_fastzombie_torso=true,npc_zombine=true,npc_zombie_torso=true,npc_zombie=true,npc_poisonzombie=true,npc_headcrab_fast=true,npc_headcrab_black=true,npc_headcrab=true,npc_fastzombie=true,monster_zombie=true,monster_headcrab=true,monster_babycrab}
+ENT.NPCTbl_Antlions = {npc_antlion=true,npc_antlionguard=true,npc_antlion_worker=true}
+ENT.NPCTbl_Xen = {monster_bullchicken=true,monster_alien_grunt=true,monster_alien_slave=true,monster_alien_controller=true,monster_houndeye=true,monster_gargantua=true,monster_nihilanth=true}
 
-function VJ_TABLERANDOM(vtblname) return vtblname[math.random(1,table.Count(vtblname))] end
+//function VJ_TABLERANDOM(vtblname) return vtblname[math.random(1,table.Count(vtblname))] end
 //function VJ_STOPSOUND(vsoundname) if vsoundname then vsoundname:Stop() end end
 
 //util.AddNetworkString("vj_animal_onthememusic")
@@ -787,8 +787,7 @@ function ENT:OnCondition(iCondition)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:FollowPlayerReset()
-	if self.FollowPlayerChat == true then
-	self.FollowingPlayerName:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.") end
+	if self.FollowPlayerChat == true then self.FollowingPlayerName:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.") end
 	self.FollowingPlayer = false
 	self.DontStartShooting_FollowPlayer = false
 	self.FollowingPlayerName = NULL
@@ -845,65 +844,60 @@ function ENT:Think()
 			self.NextBreathSoundT = CurTime() + math.Rand(self.NextSoundTime_Breath1,self.NextSoundTime_Breath2)
 		end
 	end
---=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
-if GetConVarNumber("ai_disabled") == 0 then
-	self:CustomOnThink_AIEnabled()
-	self:DoCustomIdleAnimation()
-	if self.VJDEBUG_SNPC_ENABLED == true then
-		if GetConVarNumber("vj_npc_printenemyclass") == 1 then
-		if self:GetEnemy() != nil then print(self:GetClass().."'s Enemy: "..self:GetEnemy():GetClass()) else print(self:GetClass().."'s Enemy: None") end end
-		if GetConVarNumber("vj_npc_printseenenemy") == 1 then
-		if self:GetEnemy() != nil then print(self:GetClass().." Has Seen an Enemy!") else print(self:GetClass().." Has NOT Seen an Enemy!") end end
-		if GetConVarNumber("vj_npc_printtakingcover") == 1 then
-		if self.TakingCover == true then print(self:GetClass().." Is Taking Cover") else print(self:GetClass().." Is Not Taking Cover") end end
-	end
-	
-	self:IdleSoundCode()
-	if self.DisableFootStepSoundTimer == false then self:FootStepSoundCode() end
-	self:WorldShakeOnMoveCode()
-	
-if self.FollowingPlayer == true then
-	//print(self:GetTarget())
-	//print(self.FollowingPlayerName)
-	if GetConVarNumber("ai_ignoreplayers") == 0 then
-	if !self.FollowingPlayerName:Alive() then self:FollowPlayerReset() end
-	if CurTime() > self.NextFollowPlayerT && IsValid(self.FollowingPlayerName) && self.FollowingPlayerName:Alive() && self.AlreadyBeingHealedByMedic == false then
-		local DistanceToPly = self:GetPos():Distance(self.FollowingPlayerName:GetPos())
-		self:SetTarget(self.FollowingPlayerName)
-		//print(DistanceToPly)
-		if DistanceToPly > self.FollowPlayerCloseDistance then
-			self.DontStartShooting_FollowPlayer = true
-			self:VJ_TASK_GOTO_TARGET()
-		else
-			self:StopMoving()
-			self.DontStartShooting_FollowPlayer = false
+	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
+	if GetConVarNumber("ai_disabled") == 0 then
+		self:CustomOnThink_AIEnabled()
+		self:DoCustomIdleAnimation()
+		if self.VJDEBUG_SNPC_ENABLED == true then
+			if self:GetEnemy() != nil && GetConVarNumber("vj_npc_printenemyclass") == 1 then print(self:GetClass().."'s Enemy: "..self:GetEnemy():GetClass()) else print(self:GetClass().."'s Enemy: None") end
+			if self:GetEnemy() != nil && GetConVarNumber("vj_npc_printseenenemy") == 1 then print(self:GetClass().." Has Seen an Enemy!") else print(self:GetClass().." Has NOT Seen an Enemy!") end
+			if self.TakingCover == true && GetConVarNumber("vj_npc_printtakingcover") == 1 then print(self:GetClass().." Is Taking Cover") else print(self:GetClass().." Is Not Taking Cover") end
 		end
-		self.NextFollowPlayerT = CurTime() + self.NextFollowPlayerTime
+		
+		self:IdleSoundCode()
+		if self.DisableFootStepSoundTimer == false then self:FootStepSoundCode() end
+		self:WorldShakeOnMoveCode()
+		
+		if self.FollowingPlayer == true then
+			//print(self:GetTarget())
+			//print(self.FollowingPlayerName)
+			if GetConVarNumber("ai_ignoreplayers") == 0 then
+				if !self.FollowingPlayerName:Alive() then self:FollowPlayerReset() end
+				if CurTime() > self.NextFollowPlayerT && IsValid(self.FollowingPlayerName) && self.FollowingPlayerName:Alive() && self.AlreadyBeingHealedByMedic == false then
+					local DistanceToPly = self:GetPos():Distance(self.FollowingPlayerName:GetPos())
+					self:SetTarget(self.FollowingPlayerName)
+					if DistanceToPly > self.FollowPlayerCloseDistance then
+						self.DontStartShooting_FollowPlayer = true
+						self:VJ_TASK_GOTO_TARGET()
+					else
+						self:StopMoving()
+						self.DontStartShooting_FollowPlayer = false
+					end
+					self.NextFollowPlayerT = CurTime() + self.NextFollowPlayerTime
+				end
+			else
+				self:FollowPlayerReset()
+			end
 		end
-	else
-		self:FollowPlayerReset()
+		
+		//if self.CombineFriendly == true then self:CombineFriendlyCode() end
+		//if self.ZombieFriendly == true then self:ZombieFriendlyCode() end
+		//if self.AntlionFriendly == true then self:AntlionFriendlyCode() end
+		//if self.PlayerFriendly == true then self:PlayerAllies() end
+		//if self.FriendlyToVJSNPCs == true or GetConVarNumber("vj_npc_vjfriendly") == 1 then self:VJFriendlyCode() end
+		if self.HasOnPlayerSight == true then self:OnPlayerSightCode() end
+		
+		/*local frianimals = self.NPCTbl_Animals
+		table.Add(frianimals)
+		for _,x in pairs( frianimals ) do
+			local hl_friendlys = ents.FindByClass( x )
+			for _,x in pairs( hl_friendlys ) do
+			x:AddEntityRelationship( self, 3, 10 )
+		  end
+		end*/
 	end
-end
-	
-	//if self.CombineFriendly == true then self:CombineFriendlyCode() end
-	//if self.ZombieFriendly == true then self:ZombieFriendlyCode() end
-	//if self.AntlionFriendly == true then self:AntlionFriendlyCode() end
-	//if self.PlayerFriendly == true then self:PlayerAllies() end
-	//if self.FriendlyToVJSNPCs == true or GetConVarNumber("vj_npc_vjfriendly") == 1 then self:VJFriendlyCode() end
-	if self.HasOnPlayerSight == true then self:OnPlayerSightCode() end
-	
-	/*local frianimals = self.HL2_Animals
-	table.Add(frianimals)
-	for _,x in pairs( frianimals ) do
-		local hl_friendlys = ents.FindByClass( x )
-		for _,x in pairs( hl_friendlys ) do
-		x:AddEntityRelationship( self, 3, 10 )
-	  end
-	end*/
-		//end
- end
- self:NextThink(CurTime() +0.1)
- return true
+	self:NextThink(CurTime() +0.1)
+	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule()
@@ -958,7 +952,8 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CombineFriendlyCode(argent)
 	if self.HasAllies == false then return end
-	if table.HasValue(self.HL2_Combine,argent:GetClass()) then
+	if self.NPCTbl_Combine[argent:GetClass()] then
+	//if table.HasValue(self.NPCTbl_Combine,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
@@ -968,7 +963,8 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ZombieFriendlyCode(argent)
 	if self.HasAllies == false then return end
-	if table.HasValue(self.HL2_Zombies,argent:GetClass()) then
+	if self.NPCTbl_Zombies[argent:GetClass()] then
+	//if table.HasValue(self.NPCTbl_Zombies,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
@@ -978,7 +974,19 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AntlionFriendlyCode(argent)
 	if self.HasAllies == false then return end
-	if table.HasValue(self.HL2_Antlions,argent:GetClass()) then
+	if self.NPCTbl_Antlions[argent:GetClass()] then
+	//if table.HasValue(self.NPCTbl_Antlions,argent:GetClass()) then
+		argent:AddEntityRelationship(self,D_LI,99)
+		self:AddEntityRelationship(argent,D_LI,99)
+		return true 
+	end
+	return false
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:XenFriendlyCode(argent)
+	if self.HasAllies == false then return end
+	if self.NPCTbl_Xen[argent:GetClass()] then
+	//if table.HasValue(self.NPCTbl_Xen,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
@@ -988,42 +996,14 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlayerAllies(argent)
 	if self.HasAllies == false then return end
-	if table.HasValue(self.HL2_Resistance,argent:GetClass()) then
+	if self.NPCTbl_Resistance[argent:GetClass()] then
+	//if table.HasValue(self.NPCTbl_Resistance,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
 	end
 	return false
 end
---------------------------------------------------------------------------------------------------------------------------------------------
-/*function ENT:GetRelationship(entity)
-	if self.HasAllies == false then return end
-	
-	local friendslist = {"", "", "", "", "", ""} -- List
-	for _,x in pairs( friendslist ) do
-	local hl_friendlys = ents.FindByClass( x )
-	for _,x in pairs( hl_friendlys ) do
-	if entity == x then
-	return D_LI
-	end
-  end
- end
- 
-	local groupone = ents.FindByClass("npc_vj_example_*") -- Group
-	table.Add(groupone)
-	for _, x in pairs(groupone) do
-	if entity == x then
-	return D_LI
-	end
- end
- 
-	local groupone = ents.FindByClass("npc_vj_example") -- Single
-	for _, x in pairs(groupone) do
-	if entity == x then
-	return D_LI
-	end
- end
-end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CheckAlliesAroundMe(SeeDistance)
 	SeeDistance = SeeDistance or 800
@@ -1050,39 +1030,29 @@ function ENT:BringAlliesToMe(SeeDistance,CertainAmount,CertainAmountNumber,Enemy
 	SeeDistance = SeeDistance or 800
 	EnemyVisibleOnly = EnemyVisibleOnly or false
 	CertainAmountNumber = CertainAmountNumber or 3
-	local getselfclass = ents.FindInSphere(self:GetPos(),SeeDistance)
+	local findents = ents.FindInSphere(self:GetPos(),SeeDistance)
 	local LocalTargetTable = {}
-	if (!getselfclass) then return end
-	for _,x in pairs(getselfclass) do
-	if VJ_IsAlive(x) == true && x:IsNPC() && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && x.IsVJBaseSNPC_Animal == true && x.FollowingPlayer == false && x.VJ_IsBeingControlled == false && (!x.IsVJBaseSNPC_Tank) then
-	if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
-	if EnemyVisibleOnly == true then if x:Visible(self) == false then continue end end
-	table.insert(LocalTargetTable,x)
-	if x:GetEnemy() == nil then
-	if self:GetPos():Distance(x:GetPos()) < SeeDistance then
-	//print(table.ToString(LocalTargetTable,"stupid table",true)) //end
-	local randompostogo = math.random(1,4)
-		if randompostogo == 1 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(20,50)) else
-		if randompostogo == 2 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-20,-50)) end
-		if randompostogo == 3 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(20,50)) end
-		if randompostogo == 4 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-20,-50)) end
+	if (!findents) then return false end
+	for _,x in pairs(findents) do
+		if VJ_IsAlive(x) == true && x:IsNPC() && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && x.IsVJBaseSNPC_Animal == true && x.FollowingPlayer == false && x.VJ_IsBeingControlled == false && (!x.IsVJBaseSNPC_Tank) then
+			if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
+				if EnemyVisibleOnly == true then if x:Visible(self) == false then continue end end
+				table.insert(LocalTargetTable,x)
+				if x:GetEnemy() == nil && self:GetPos():Distance(x:GetPos()) < SeeDistance then
+					//print(table.ToString(LocalTargetTable,"stupid table",true)) //end
+					local randpos = math.random(1,4)
+					if randpos == 1 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(20,50)) end
+					if randpos == 2 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-20,-50)) end
+					if randpos == 3 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(20,50)) end
+					if randpos == 4 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-20,-50)) end
+					x:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.BringAlliesToMeSchedules))
+					//return true -- It will only pick one if returning false or true
+				end
+				if CertainAmount == true && table.Count(LocalTargetTable) == CertainAmountNumber then return true end
+			end
+		end
 	end
-	if x.VJ_PlayingSequence == false then
-	local randommovesched = math.random(1,2)
-	if randommovesched == 1 then x:VJ_SetSchedule(self.BringFriendsToMeSCHED1) end
-	if randommovesched == 2 then x:VJ_SetSchedule(self.BringFriendsToMeSCHED2) end
-	//return true -- It will only pick one if returning false or true
-	 end
-	end
-   end
-   if CertainAmount == true then
-   if table.Count(LocalTargetTable) == CertainAmountNumber then 
-   return true end
-	end
-   end
-  end
- end
- //print(table.ToString(LocalTargetTable,"stupid table",true))
+	//print(table.ToString(LocalTargetTable,"stupid table",true))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTakeDamage(dmginfo,hitgroup)
@@ -1431,7 +1401,11 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 	self:CustomOnDeath_BeforeCorpseSpawned(dmginfo,hitgroup)
 	if self.HasDeathRagdoll == true then
 		local corpsetype = "prop_physics"
-		if util.IsValidRagdoll(self:GetModel()) == true then corpsetype = "prop_ragdoll" end
+		if util.IsValidRagdoll(self:GetModel()) == true then 
+			corpsetype = "prop_ragdoll"
+		elseif util.IsValidProp(self:GetModel()) == false && util.IsValidModel(self:GetModel()) == false then
+			corpsetype = "prop_ragdoll"
+		end
 		if self.DeathCorpseEntityClass != "UseDefaultBehavior" then corpsetype = self.DeathCorpseEntityClass end
 		//if self.VJCorpseDeleted == true then
 		self.Corpse = ents.Create(corpsetype) //end
@@ -1807,19 +1781,6 @@ function ENT:ImpactSoundCode(CustomTbl)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-/*function ENT:ThemeMusicCode()
-/*if GetConVarNumber("vj_npc_sd_nosounds") == 0 then
-if GetConVarNumber("vj_npc_sd_soundtrack") == 0 then
-	self.thememusicsd = CreateSound( player.GetByID( 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,71,72,73,74,75,76,77,78,79,80,81,82,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100 ), self.Theme )
-	self.thememusicsd:Play();
-	self.thememusicsd:Stop();
-	self.thememusicsd:SetSoundLevel( self.SoundTrackLevel )
-	if self.thememusicsd:IsPlaying() == false then self.thememusicsd:Play();
-   end
-  end
- end
-end*/
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSoundTrack()
 	if self.HasSounds == false then return end
 	if self.HasSoundTrack == false then return end
@@ -1922,6 +1883,50 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ConvarsOnThink() -- Obsolete! | Causes lag!
 end
+-- !!!!! OBSOLETE FUNCTIONS !!!!! --
+-- Recommanded not to use!
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+/*function ENT:ThemeMusicCode()
+if GetConVarNumber("vj_npc_sd_nosounds") == 0 then
+if GetConVarNumber("vj_npc_sd_soundtrack") == 0 then
+	self.thememusicsd = CreateSound( player.GetByID( 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,71,72,73,74,75,76,77,78,79,80,81,82,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100 ), self.Theme )
+	self.thememusicsd:Play();
+	self.thememusicsd:Stop();
+	self.thememusicsd:SetSoundLevel( self.SoundTrackLevel )
+	if self.thememusicsd:IsPlaying() == false then self.thememusicsd:Play();
+   end
+  end
+ end
+end*/
+---------------------------------------------------------------------------------------------------------------------------------------------
+/*function ENT:GetRelationship(entity)
+	if self.HasAllies == false then return end
+	
+	local friendslist = {"", "", "", "", "", ""} -- List
+	for _,x in pairs( friendslist ) do
+	local hl_friendlys = ents.FindByClass( x )
+	for _,x in pairs( hl_friendlys ) do
+	if entity == x then
+	return D_LI
+	end
+  end
+ end
+ 
+	local groupone = ents.FindByClass("npc_vj_example_*") -- Group
+	table.Add(groupone)
+	for _, x in pairs(groupone) do
+	if entity == x then
+	return D_LI
+	end
+ end
+ 
+	local groupone = ents.FindByClass("npc_vj_example") -- Single
+	for _, x in pairs(groupone) do
+	if entity == x then
+	return D_LI
+	end
+ end
+end*/
 /*--------------------------------------------------
 	=============== Animal SNPC Base ===============
 	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***

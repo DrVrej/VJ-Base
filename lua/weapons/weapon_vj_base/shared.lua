@@ -42,6 +42,11 @@ SWEP.NPC_AnimationTbl_Shotgun 	= {ACT_RANGE_ATTACK_SHOTGUN,ACT_RANGE_ATTACK_SHOT
 SWEP.NPC_ReloadAnimationTbl_Custom = {} -- Can be activity or sequence
 SWEP.NPC_ReloadAnimationTbl		= {ACT_RELOAD,ACT_RELOAD_START,ACT_RELOAD_FINISH,ACT_RELOAD_LOW,ACT_GESTURE_RELOAD,ACT_GESTURE_RELOAD_PISTOL,ACT_GESTURE_RELOAD_SMG1,ACT_GESTURE_RELOAD_SHOTGUN,ACT_SHOTGUN_RELOAD_START,ACT_SHOTGUN_RELOAD_FINISH,ACT_SMG2_RELOAD2,ACT_RELOAD_PISTOL,ACT_RELOAD_PISTOL_LOW,ACT_RELOAD_SMG1,ACT_RELOAD_SMG1_LOW,ACT_RELOAD_SHOTGUN,ACT_RELOAD_SHOTGUN_LOW,ACT_GESTURE_RELOAD,ACT_GESTURE_RELOAD_PISTOL,ACT_GESTURE_RELOAD_SMG1,ACT_GESTURE_RELOAD_SHOTGUN}
 SWEP.NPC_HasReloadSound			= true -- Should it play a sound when the base detects the SNPC playing a reload animation?
+SWEP.NPC_ExtraFireSound			= {} -- Plays an extra sound after it fires (Example: Bolt action sound)
+SWEP.NPC_ExtraFireSoundTime		= 0.4 -- How much time until it plays the sound (After Firing)?
+SWEP.NPC_ExtraFireSoundLevel	= 70 -- How far does the sound go?
+SWEP.NPC_ExtraFireSoundPitch1	= 90
+SWEP.NPC_ExtraFireSoundPitch2	= 100
 SWEP.NPC_ReloadSound			= {} -- Sounds it plays when the base detects the SNPC playing a reload animation
 SWEP.NPC_ReloadSoundLevel		= 60 -- How far does the sound go?
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -296,9 +301,12 @@ function SWEP:NPCAbleToShoot()
 		if self.Owner:GetActivity() != nil && (table.HasValue(self.NPC_AnimationTbl_General,self.Owner:GetActivity()) or table.HasValue(self.NPC_AnimationTbl_Rifle,self.Owner:GetActivity()) or table.HasValue(self.NPC_AnimationTbl_Pistol,self.Owner:GetActivity()) or table.HasValue(self.NPC_AnimationTbl_Shotgun,self.Owner:GetActivity()) or VJ_IsCurrentAnimation(self.Owner,self.NPC_AnimationTbl_Custom)) then
 			if (self.Owner.IsVJBaseSNPC_Human) then
 				local check, ammo = self.Owner:CanDoWeaponAttack()
-				if ammo == "NoAmmo" && CurTime() > self.NextNPCDrySoundT then
+				if ammo == "NoAmmo" then
+					if self.Owner.VJ_IsBeingControlled == true then self.Owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER,"Press R to reload!") end
+					if CurTime() > self.NextNPCDrySoundT then
 						self.Weapon:EmitSound(VJ_PICKRANDOMTABLE(self.DryFireSound),80,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2))
 						self.NextNPCDrySoundT = CurTime() + self.NPC_NextPrimaryFire
+					end
 					return false
 				else
 					if self.Owner:VJ_GetEnemy(true) != nil then
@@ -358,6 +366,13 @@ function SWEP:PrimaryAttack(ShootPos,ShootDir)
 	if (!self:CanPrimaryAttack()) then return end
 	self:CustomOnPrimaryAttack_BeforeShoot()
 	if (SERVER) then
+		if self.Owner:IsNPC() then
+			timer.Simple(self.NPC_ExtraFireSoundTime,function()
+				if IsValid(self) && IsValid(self.Owner) then
+					VJ_EmitSound(self.Owner,self.NPC_ExtraFireSound,self.NPC_ExtraFireSoundLevel,math.Rand(self.NPC_ExtraFireSoundPitch1,self.NPC_ExtraFireSoundPitch2))
+				end
+			end)
+		end
 		sound.Play(VJ_PICKRANDOMTABLE(self.Primary.Sound),self:GetPos(),80,math.random(90,100))
 		if self.Primary.HasDistantSound == true then
 			sound.Play(VJ_PICKRANDOMTABLE(self.Primary.DistantSound),self:GetPos(),self.Primary.DistantSoundLevel,math.random(self.Primary.DistantSoundPitch1,self.Primary.DistantSoundPitch2),self.Primary.DistantSoundVolume)
