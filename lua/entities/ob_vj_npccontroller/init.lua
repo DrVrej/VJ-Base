@@ -252,6 +252,7 @@ function ENT:Think()
 				self.ControlledNPC.HasDoneReloadAnimation = false
 				self.PlayingAnimation = true
 				//self.ControlledNPC:VJ_SetSchedule(SCHED_RELOAD)
+				self.ControlledNPC.Weapon_ShotsSinceLastReload = 0
 				self.ControlledNPC:VJ_ACT_PLAYACTIVITY(ACT_RELOAD,false,0,false)
 				timer.Simple(2,function() if IsValid(self.ControlledNPC) then self.PlayingAnimation = false end end)
 			end

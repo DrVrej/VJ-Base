@@ -34,6 +34,7 @@ function ENT:StartSchedule(schedule)
 	if (!schedule.ResetOnFail) then schedule.ResetOnFail = false end
 	if (!schedule.StopScheduleIfNotMoving) then schedule.StopScheduleIfNotMoving = false end
 	if (!schedule.CanBeInterrupted) then schedule.CanBeInterrupted = false end
+	if (!schedule.ConstantlyFaceEnemy) then schedule.ConstantlyFaceEnemy = false end
 	if (!schedule.CanShootWhenMoving) then schedule.CanShootWhenMoving = false end
 	for k,v in ipairs(schedule.Tasks) do
 		if v.TaskName == "TASK_RUN_PATH" or v.TaskName == "TASK_RUN_PATH_FLEE" or v.TaskName == "TASK_RUN_PATH_TIMED" or v.TaskName == "TASK_RUN_PATH_FOR_UNITS" or v.TaskName == "TASK_RUN_PATH_WITHIN_DIST" then schedule.IsMovingSchedule = true schedule.IsMovingSchedule_Running = true break end
