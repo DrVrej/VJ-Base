@@ -287,7 +287,7 @@ ENT.VJCorpseDeleted = false
 ENT.vACT_StopAttacks = false
 ENT.NoLongerLikesThePlayer = false
 ENT.FollowingPlayer = false
-ENT.DontStartShooting_FollowPlayer = false
+ENT.RunningAfter_FollowPlayer = false
 ENT.FollowingPlayer_WanderValue = false
 ENT.FollowingPlayer_ChaseValue = false
 ENT.VJ_IsBeingControlled = false
@@ -789,7 +789,7 @@ end
 function ENT:FollowPlayerReset()
 	if self.FollowPlayerChat == true then self.FollowingPlayerName:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.") end
 	self.FollowingPlayer = false
-	self.DontStartShooting_FollowPlayer = false
+	self.RunningAfter_FollowPlayer = false
 	self.FollowingPlayerName = NULL
 	self.DisableWandering = self.FollowingPlayer_WanderValue
 	self.DisableChasingEnemy = self.FollowingPlayer_ChaseValue
@@ -849,9 +849,9 @@ function ENT:Think()
 		self:CustomOnThink_AIEnabled()
 		self:DoCustomIdleAnimation()
 		if self.VJDEBUG_SNPC_ENABLED == true then
-			if self:GetEnemy() != nil && GetConVarNumber("vj_npc_printenemyclass") == 1 then print(self:GetClass().."'s Enemy: "..self:GetEnemy():GetClass()) else print(self:GetClass().."'s Enemy: None") end
-			if self:GetEnemy() != nil && GetConVarNumber("vj_npc_printseenenemy") == 1 then print(self:GetClass().." Has Seen an Enemy!") else print(self:GetClass().." Has NOT Seen an Enemy!") end
-			if self.TakingCover == true && GetConVarNumber("vj_npc_printtakingcover") == 1 then print(self:GetClass().." Is Taking Cover") else print(self:GetClass().." Is Not Taking Cover") end
+			if GetConVarNumber("vj_npc_printenemyclass") == 1 then if self:GetEnemy() != nil then print(self:GetClass().."'s Enemy: "..self:GetEnemy():GetClass()) else print(self:GetClass().."'s Enemy: None") end end
+			if GetConVarNumber("vj_npc_printseenenemy") == 1 then if self:GetEnemy() != nil then print(self:GetClass().." Has Seen an Enemy!") else print(self:GetClass().." Has NOT Seen an Enemy!") end end
+			if GetConVarNumber("vj_npc_printtakingcover") == 1 then if self.TakingCover == true then print(self:GetClass().." Is Taking Cover") else print(self:GetClass().." Is Not Taking Cover") end end
 		end
 		
 		self:IdleSoundCode()
@@ -867,11 +867,11 @@ function ENT:Think()
 					local DistanceToPly = self:GetPos():Distance(self.FollowingPlayerName:GetPos())
 					self:SetTarget(self.FollowingPlayerName)
 					if DistanceToPly > self.FollowPlayerCloseDistance then
-						self.DontStartShooting_FollowPlayer = true
+						self.RunningAfter_FollowPlayer = true
 						self:VJ_TASK_GOTO_TARGET()
 					else
 						self:StopMoving()
-						self.DontStartShooting_FollowPlayer = false
+						self.RunningAfter_FollowPlayer = false
 					end
 					self.NextFollowPlayerT = CurTime() + self.NextFollowPlayerTime
 				end
@@ -1309,15 +1309,16 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RunGibOnDeathCode(dmginfo,hitgroup)
+function ENT:RunGibOnDeathCode(dmginfo,hitgroup,Tbl_Features)
 	if self.AllowedToGib == false or self.HasGibOnDeath == false or self.HasBeenGibbedOnDeath == true then return end
+	vTbl_Features = Tbl_Features or {}
 	local DamageType = dmginfo:GetDamageType()
-	local dmgtbl = self.GibOnDeathDamagesTable
+	local dmgtbl = vTbl_Features.CustomDmgTbl or self.GibOnDeathDamagesTable
 	local dmgtblempty = false
 	local usedefault = false
 	local defualtdmgs = {DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SHOCK,DMG_SONIC}
-	if table.HasValue(self.GibOnDeathDamagesTable,"UseDefault") then usedefault = true end
-	if usedefault == false && (table.Count(dmgtbl) <= 0 or table.HasValue(self.GibOnDeathDamagesTable,"All")) then dmgtblempty = true end
+	if table.HasValue(dmgtbl,"UseDefault") then usedefault = true end
+	if usedefault == false && (table.Count(dmgtbl) <= 0 or table.HasValue(dmgtbl,"All")) then dmgtblempty = true end
 	if (dmgtblempty == true) or (usedefault == true && table.HasValue(defualtdmgs,DamageType)) or (usedefault == false && table.HasValue(dmgtbl,DamageType)) then
 		local setupgib, setupgib_extra = self:SetUpGibesOnDeath(dmginfo,hitgroup)
 		if setupgib_extra == nil then setupgib_extra = {} end

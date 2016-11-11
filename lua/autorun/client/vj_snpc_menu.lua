@@ -53,11 +53,11 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 	Panel:AddControl("Checkbox", {Label = "Zombie Friendly", Command = "vj_npc_zombiefriendly"})
 	Panel:AddControl("Checkbox", {Label = "Antlion Friendly", Command = "vj_npc_antlionfriendly"})
 	Panel:AddControl("Checkbox", {Label = "Combine Friendly", Command = "vj_npc_combinefriendly"})
-	Panel:AddControl("Checkbox", {Label = "VJ Friendly", Command = "vj_npc_vjfriendly"})
-	Panel:ControlHelp("All of my SNPCs will be friendly to each other")
+	Panel:AddControl("Checkbox", {Label = "VJ Base Friendly", Command = "vj_npc_vjfriendly"})
+	Panel:ControlHelp("All VJ SNPCs will be allied")
 	Panel:AddControl("Checkbox", {Label = "Undoable Corpses", Command = "vj_npc_undocorpse"})
 	Panel:ControlHelp("Corpses will be removed when pressed the undo key")
-	Panel:AddControl("Slider",{Label = "Corpse Limit, Default:32",min = 4,max = 300,Command = "vj_npc_globalcorpselimit"})
+	Panel:AddControl("Slider",{Label = "Corpse Limit, Def:32",min = 4,max = 300,Command = "vj_npc_globalcorpselimit"})
 	Panel:ControlHelp("Corpse Limit when 'Keep Corpses' is off")
 	Panel:AddControl("Checkbox", {Label = "Fade Corpses", Command = "vj_npc_corpsefade"})
 	Panel:AddControl("Slider",{Label = "Corpse Fade Time",min = 0,max = 600,Command = "vj_npc_corpsefadetime"})
@@ -86,7 +86,7 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 		textbox:SetConVar("vj_npc_seedistance")
 		textbox:SetMultiline(false)
 	Panel:AddPanel(textbox)
-	Panel:ControlHelp("Each SNPC has its own sight distance, but this will make them all the same, so use it cautiously!")
+	Panel:ControlHelp("Each SNPC has its own sight distance, this will make them all the same, so use it cautiously!")
 	local vj_difficulty = {Options = {}, CVars = {}, Label = "Select the Difficulty:", MenuButton = "0"}
 	vj_difficulty.Options["#vjbase.menudifficulty.easy"] = {
 	vj_npc_dif_easy = "1",vj_npc_dif_normal = "0",vj_npc_dif_hard = "0", vj_npc_dif_hellonearth = "0",}
@@ -100,10 +100,10 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 	Panel:AddControl("Slider",{Label = "Process Time",Type = "Float",min = 0.05,max = 3,Command = "vj_npc_processtime"})
 	Panel:ControlHelp("Default: 1 | Lower number means more lag!")
 	Panel:AddControl("Checkbox", {Label = "Item Drops On Death", Command = "vj_npc_itemdrops"})
-	Panel:AddControl("Checkbox", {Label = "Show HUD Display on SNPC killed", Command = "vj_npc_showhudonkilled"})
+	Panel:AddControl("Checkbox", {Label = "Show HUD Display on SNPC killed (Top Right)", Command = "vj_npc_showhudonkilled"})
 	Panel:AddControl("Checkbox", {Label = "Add points to the player's scoreboard when killed", Command = "vj_npc_addfrags"})
 	Panel:AddControl( "Label", {Text = "Creature Options:"})
-	Panel:AddControl("Checkbox", {Label = "Creatures Open Doors", Command = "vj_npc_creatureopendoor"})
+	Panel:AddControl("Checkbox", {Label = "Creatures Can Open Doors", Command = "vj_npc_creatureopendoor"})
 	Panel:AddControl( "Label", {Text = "Human Options:"})
 	/*local vj_accuracy = {Options = {}, CVars = {}, Label = "Gun Accuracy:", MenuButton = "0"}
 	vj_accuracy.Options["Poor"] = {
