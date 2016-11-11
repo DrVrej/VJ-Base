@@ -58,7 +58,7 @@ ENT.CallForBackUpOnDamageDistance = 800 -- How far away the SNPC's call for help
 ENT.CallForBackUpOnDamageUseCertainAmount = true -- Should the SNPC only call certain amount of people?
 ENT.CallForBackUpOnDamageUseCertainAmountNumber = 3 -- How many people should it call if certain amount is enabled?
 ENT.DisableCallForBackUpOnDamageAnimation = false -- Disables the animation when the CallForBackUpOnDamage function is called
-ENT.CallForBackUpOnDamageAnimation = {ACT_SIGNAL_HALT} -- Animation used if the SNPC does the CallForBackUpOnDamage function
+ENT.CallForBackUpOnDamageAnimation = {ACT_SIGNAL_GROUP} -- Animation used if the SNPC does the CallForBackUpOnDamage function
 ENT.CallForBackUpOnDamageAnimationTime = 2 -- How much time until it can use activities
 ENT.NextCallForBackUpOnDamageTime1 = 9 -- Next time it use the CallForBackUpOnDamage function | The first # in math.random
 ENT.NextCallForBackUpOnDamageTime2 = 11 -- Next time it use the CallForBackUpOnDamage function | The second # in math.random
@@ -1512,6 +1512,11 @@ function ENT:Think()
 		self:WorldShakeOnMoveCode()
 		if self:GetActiveWeapon() != NULL then self.Weapon_TimeSinceLastShot = self.Weapon_TimeSinceLastShot + 0.1 end
 
+		/*if self:GetActiveWeapon() == NULL then
+			self.AnimTbl_IdleStand = {"Idle_Unarmed"}
+			self:SetMovementActivity(self:GetSequenceActivity(self:LookupSequence("WalkUnarmed_all")))
+		end*/
+		
 		if self.FollowingPlayer == true then
 			//print(self:GetTarget())
 			//print(self.FollowingPlayerName)
