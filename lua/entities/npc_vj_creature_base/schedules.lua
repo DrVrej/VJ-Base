@@ -16,10 +16,16 @@ function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 	if self.VJ_PlayingSequence == false && self.VJ_IsPlayingInterruptSequence == false && self.Aerial_ShouldBeFlying == false /*&& self:GetSequence() != self.CurrentAnim_AerialMovement && self.MovementType != VJ_MOVETYPE_AERIAL*/ then self:MaintainActivity() end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:DoRunCode_OnFail(schedule)
+	if schedule == nil then return false end
+	if schedule.AlreadyRanCode_OnFail == true then return false end
+	if schedule.RunCode_OnFail != nil then schedule.AlreadyRanCode_OnFail = true schedule.RunCode_OnFail() return true end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoRunCode_OnFinish(schedule)
-	if schedule == nil then return end
-	if schedule.AlreadyRanCode_OnFinish == true then return end
-	if schedule.RunCode_OnFinish != nil then schedule.AlreadyRanCode_OnFinish = true schedule.RunCode_OnFinish() end
+	if schedule == nil then return false end
+	if schedule.AlreadyRanCode_OnFinish == true then return false end
+	if schedule.RunCode_OnFinish != nil then schedule.AlreadyRanCode_OnFinish = true schedule.RunCode_OnFinish() return true end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule(iNPCState)
@@ -30,6 +36,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSchedule(schedule)
 	self:ClearCondition(35)
+	if (!schedule.RunCode_OnFail) then schedule.RunCode_OnFail = nil end
 	if (!schedule.RunCode_OnFinish) then schedule.RunCode_OnFinish = nil end
 	if (!schedule.ResetOnFail) then schedule.ResetOnFail = false end
 	if (!schedule.StopScheduleIfNotMoving) then schedule.StopScheduleIfNotMoving = false end
@@ -46,6 +53,7 @@ function ENT:StartSchedule(schedule)
 	if schedule.CanShootWhenMoving == true && self.CurrentWeaponAnimation != nil then
 		self:SetArrivalActivity(self.CurrentWeaponAnimation)
 	end
+	schedule.AlreadyRanCode_OnFail = false
 	schedule.AlreadyRanCode_OnFinish = false
 	//if schedule.Name != "vj_chase_enemy" then PrintTable(schedule) end
 	self:DoRunCode_OnFinish(self.CurrentSchedule)

@@ -147,7 +147,8 @@ function ENT:Think()
 		if self.PlayingRangeAttackAnimation == false then //self.PlayingAnimation == false && self.PlayingAttackAnimation == false && self.PlayingRangeAttackAnimation == false /*&& !self.ControlledNPC:IsMoving()*/ then
 		if self.ControlledNPC:IsMoving() then
 			self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,4),0)) else
-			self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,360),0))
+			//self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,360),0))
+			self.ControlledNPC:SetAngles(Angle(0,self.TheController:GetAimVector():Angle().y,0))
 			end
 		end
 		if #self.TheController:GetWeapons() > 0 then self.TheController:StripWeapons() end

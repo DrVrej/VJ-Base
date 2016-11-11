@@ -49,6 +49,7 @@ function DoWelcomeDrVrej(ply, command, arguements)
 		local sd = CreateSound(game.GetWorld(),"vj_illuminati/Illuminati Confirmed.mp3")
 		sd:SetSoundLevel(0)
 		sd:Play()
+		timer.Simple(10,function() if sd then sd:Stop() end end)
 		/*for k,v in ipairs(player.GetAll()) do
 		v:ConCommand("say DrVrej has joined!")
 		v:EmitSound(Sound("vj_illuminati/Illuminati Confirmed.mp3"),0)

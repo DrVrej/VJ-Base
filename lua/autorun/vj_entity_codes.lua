@@ -450,12 +450,12 @@ function NPC_MetaTable:VJ_DoSetEnemy(argent,ShouldStopActs,DoSmallWhenActiveEnem
 		end
 		if self.Alerted == false then
 			self:DoAlert()
-			self.NextChaseTime = self.NextChaseTime + self.NextChaseTimeOnSetEnemy
+			/*self.NextChaseTime = self.NextChaseTime + self.NextChaseTimeOnSetEnemy
 			timer.Simple(self.NextChaseTimeOnSetEnemy,function()
 				if IsValid(self) then
 					self:DoChaseAnimation()
 				end
-			end)
+			end)*/
 		end
 	end
 end
@@ -568,23 +568,23 @@ local function VJ_NPC_FIREBULLET(Entity,data,Attacker)
 		if Entity.VJ_IsBeingControlled == false then
 			//data.Dir =		Entity:GetEnemy():GetPos()-(Entity:GetEnemy():OBBMaxs():Distance(Entity:GetEnemy():OBBMins())/2)
 			//if GetCurrentWeapon:GetClass() != "weapon_shotgun" or GetCurrentWeapon:GetClass() != "weapon_annabelle" then
-			if Entity:GetEnemy():IsNPC() then
+			//if Entity:GetEnemy():IsNPC() then
 			-- Very old System
 			//if Entity:GetEnemy():GetHullType() == HULL_TINY then
 				//data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():GetUp()*-50)-Entity:GetPos() else
 				//data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():GetUp()*-20)-Entity:GetPos()
 			//end
-			data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():OBBCenter()+Entity:GetEnemy():GetUp()*-45) -Entity:GetPos()+Entity:OBBCenter()+Entity:GetEnemy():GetUp()*-45
+			//data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():OBBCenter()+Entity:GetEnemy():GetUp()*-45) -Entity:GetPos()+Entity:OBBCenter()+Entity:GetEnemy():GetUp()*-45
+			data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():OBBCenter())-data.Src
 			-- Just a test
 			//data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():GetUp()*-50) -Entity:GetPos()
-			end
-			if Entity:GetEnemy():IsPlayer() then
+			//end
+			//if Entity:GetEnemy():IsPlayer() then
 			//if GetCurrentWeapon:GetClass() != "weapon_shotgun" then
-			data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():OBBCenter()+Entity:GetEnemy():GetUp()*-45) -Entity:GetPos() end
+			//data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():OBBCenter()+Entity:GetEnemy():GetUp()*-45) -Entity:GetPos() end
 		elseif Entity.VJ_IsBeingControlled == true && IsValid(Entity.VJ_TheController) then
 			data.Dir = Entity.VJ_TheController:GetAimVector()
 		end
-		
 		/*data.Callback = function(attacker, tr, dmginfo)
 			local laserhit = EffectData()
 			laserhit:SetOrigin(tr.HitPos)
