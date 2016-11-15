@@ -58,7 +58,7 @@ ENT.CallForBackUpOnDamageDistance = 800 -- How far away the SNPC's call for help
 ENT.CallForBackUpOnDamageUseCertainAmount = true -- Should the SNPC only call certain amount of people?
 ENT.CallForBackUpOnDamageUseCertainAmountNumber = 3 -- How many people should it call if certain amount is enabled?
 ENT.DisableCallForBackUpOnDamageAnimation = true -- Disables the animation when the CallForBackUpOnDamage function is called
-ENT.CallForBackUpOnDamageAnimation = {ACT_SIGNAL_HALT} -- Animation used if the SNPC does the CallForBackUpOnDamage function
+ENT.CallForBackUpOnDamageAnimation = {ACT_SIGNAL_GROUP} -- Animation used if the SNPC does the CallForBackUpOnDamage function
 ENT.CallForBackUpOnDamageAnimationTime = 2 -- How much time until it can use activities
 ENT.NextCallForBackUpOnDamageTime1 = 9 -- Next time it use the CallForBackUpOnDamage function | The first # in math.random
 ENT.NextCallForBackUpOnDamageTime2 = 11 -- Next time it use the CallForBackUpOnDamage function | The second # in math.random
@@ -86,22 +86,20 @@ ENT.VJ_FriendlyNPCsSingle = {}
 ENT.VJ_FriendlyNPCsGroup = {}
 ENT.PlayerFriendly = false -- Makes the SNPC friendly to the player and HL2 Resistance
 ENT.FriendsWithAllPlayerAllies = false -- Should this SNPC be friends with all other player allies that are running on VJ Base?
-ENT.NextEntityCheckTime = 0.05 -- Time until it runs the NPC check
-ENT.NextHardEntityCheck1 = 80 -- Next time it will do hard entity check | The first # in math.random
-ENT.NextHardEntityCheck2 = 100 -- Next time it will do hard entity check | The second # in math.random
-ENT.NextFindEnemyTime = 1 -- Time until it runs FindEnemy again
+ENT.MoveOutOfFriendlyPlayersWay = true -- Should the SNPC move out of the way when a friendly player comes close to it?
+ENT.NextMoveOutOfFriendlyPlayersWayTime = 1 -- How much time until it can moves out of the player's way?
+ENT.MoveOutOfFriendlyPlayersWaySchedules = {SCHED_MOVE_AWAY} -- Schedules it will play when the SNPC attempts to get out of the player's way
 ENT.BecomeEnemyToPlayer = false -- Should the friendly SNPC become enemy towards the player if it's damaged by a player?
 ENT.BecomeEnemyToPlayerLevel = 2 -- How many times does the player have to hit the SNPC for it to become enemy?
 ENT.BecomeEnemyToPlayerSetPlayerFriendlyFalse = true -- Should it set PlayerFriendly to false?
+	-- ====== On Player Sight Code ====== --
 ENT.HasOnPlayerSight = false -- Should do something when it sees the enemy? Example: Play a sound
 ENT.OnPlayerSightDistance = 200 -- How close should the player be until it runs the code?
 ENT.OnPlayerSightDispositionLevel = 0 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 ENT.OnPlayerSightOnlyOnce = true -- Should it only run the code once?
 ENT.OnPlayerSightNextTime1 = 15 -- How much time should it pass until it runs the code again? | First number in math.random
 ENT.OnPlayerSightNextTime2 = 20 -- How much time should it pass until it runs the code again? | Second number in math.random
-ENT.MoveOutOfFriendlyPlayersWay = true -- Should the SNPC move out of the way when a friendly player comes close to it?
-ENT.NextMoveOutOfFriendlyPlayersWayTime = 1 -- How much time until it can moves out of the player's way?
-ENT.MoveOutOfFriendlyPlayersWaySchedules = {SCHED_MOVE_AWAY} -- Schedules it will play when the SNPC attempts to get out of the player's way
+	-- ====== Call For Help Code ====== --
 ENT.CallForHelp = true -- Does the SNPC call for help?
 ENT.CallForHelpDistance = 2000 -- -- How far away the SNPC's call for help goes | Counted in World Units
 ENT.NextCallForHelpTime = 4 -- Time until it calls for help again
@@ -113,7 +111,6 @@ ENT.CallForHelpStopAnimations = true -- Should it stop attacks for a certain amo
 ENT.CallForHelpStopAnimationsTime = 1.5 -- How long should it stop attacks?
 ENT.CallForHelpAnimationFaceEnemy = true -- Should it face the enemy when playing the animation?
 ENT.NextCallForHelpAnimationTime = 30 -- How much time until it can play the animation again?
-ENT.DisableMakingSelfEnemyToNPCs = false -- Disables the "AddEntityRelationship" that runs in think
 	-- ====== Medic Code ====== --
 ENT.IsMedicSNPC = false -- Is this SNPC a medic? Does it heal other friendly friendly SNPCs, and players(If friendly)
 ENT.AnimTbl_Medic_GiveHealth = {ACT_SPECIAL_ATTACK1} -- Animations is plays when giving health to an ally
@@ -125,6 +122,11 @@ ENT.Medic_NextHealTime2 = 15 -- How much time until it can give health to an all
 ENT.Medic_SpawnPropOnHeal = true -- Should it spawn a prop, such as small health vial at a attachment when healing an ally?
 ENT.Medic_SpawnPropOnHealModel = "models/healthvial.mdl" -- The model that it spawns
 ENT.Medic_SpawnPropOnHealAttachment = "anim_attachment_LH" -- The attachment it spawns on
+	-- ====== Base Numbers, Use carefully! ====== --
+ENT.DisableMakingSelfEnemyToNPCs = false -- Disables the "AddEntityRelationship" that runs in think
+ENT.NextEntityCheckTime = 1 -- Time until it runs the NPC check
+ENT.NextHardEntityCheck1 = 80 -- Next time it will do hard entity check | The first # in math.random
+ENT.NextHardEntityCheck2 = 100 -- Next time it will do hard entity check | The second # in math.random
 	-- Death ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasDeathRagdoll = true -- If set to false, it will not spawn the regular ragdoll of the SNPC
 ENT.DeathCorpseEntityClass = "UseDefaultBehavior" -- The entity class it creates | "UseDefaultBehavior" = Let the base automatically detect the type
@@ -261,9 +263,9 @@ ENT.FindEnemy_CanSeeThroughWalls = false -- Should it be able to see through wal
 ENT.DisableTakeDamageFindEnemy = false -- Disable the SNPC finding the enemy when being damaged
 ENT.DisableTouchFindEnemy = false -- Disable the SNPC finding the enemy when being touched
 ENT.LastSeenEnemyTimeUntilReset = 15 -- Time until it resets its enemy if its current enemy is not visible
-ENT.IdleSchedule_Wander = {SCHED_IDLE_WANDER} -- Animation played when the SNPC is idle, when called to wander
 ENT.AnimTbl_IdleStand = {} -- Leave empty to use schedule | Only works when AI is enabled
-ENT.ChaseSchedule = {SCHED_CHASE_ENEMY} -- Animation played when the SNPC is trying to chase the enemy
+//ENT.IdleSchedule_Wander = {SCHED_IDLE_WANDER} -- Animation played when the SNPC is idle, when called to wander
+//ENT.ChaseSchedule = {SCHED_CHASE_ENEMY} -- Animation played when the SNPC is trying to chase the enemy
 ENT.ConstantlyFaceEnemy = false -- Should it face the enemy constantly?
 ENT.ConstantlyFaceEnemy_IfVisible = true -- Should it only face the enemy if it's visible?
 ENT.ConstantlyFaceEnemy_IfAttacking = false -- Should it face the enemy when attacking?
@@ -300,20 +302,19 @@ ENT.FollowPlayerCloseDistance = 150 -- If the SNPC is that close to the player t
 ENT.NextFollowPlayerTime = 1 -- Time until it runs to the player again
 ENT.BringAlliesToMeSchedules = {SCHED_FORCED_GO} -- The Schedule that its friends play when BringAlliesToMe code is ran
 	-- Sounds ---------------------------------------------------------------------------------------------------------------------------------------------
-ENT.HasSounds = true -- Put to false to disable ALL sounds
+ENT.HasSounds = true -- Put to false to disable ALL sound
+ENT.HasExtraMeleeAttackSounds = false -- Set to true to use the extra melee attack sounds
 ENT.HasImpactSounds = true -- If set to false, it won't play the impact sounds
 ENT.HasAlertSounds = true -- If set to false, it won't play the alert sounds
 ENT.HasMeleeAttackSounds = true -- If set to false, it won't play the melee attack sound
-ENT.WaitTime_BeforeMeleeAttackSound = 0 -- Time until it starts playing the sound
-ENT.HasExtraMeleeAttackSounds = false -- Set to true to use the extra melee attack sounds
 ENT.HasMeleeAttackMissSounds = true -- If set to false, it won't play the melee attack miss sound
 ENT.HasBeforeLeapAttackSound = true -- If set to false, it won't play any sounds before leap attack code is ran
 ENT.HasLeapAttackJumpSound = true -- If set to false, it won't play any sounds when it leaps at the enemy while leap attacking
 ENT.HasLeapAttackDamageSound = true -- If set to false, it won't play any sounds when it successfully hits the enemy while leap attacking
 ENT.HasLeapAttackDamageMissSound = true -- If set to false, it won't play any sounds when it misses the enemy while leap attacking
+ENT.HasBeforeRangeAttackSound = true -- If set to false, it won't play the before range attack sounds
 ENT.HasRangeAttackSound = true -- If set to false, it won't play the range attack sounds
 ENT.HasIdleSounds = true -- If set to false, it won't play the idle sounds
-ENT.PlayNothingWhenCombatIdleSoundTableEmpty = false -- if set to true, it will not play the regular idle sound table if the combat idle sound table is empty
 ENT.HasPainSounds = true -- If set to false, it won't play the pain sounds
 ENT.HasDeathSounds = true -- If set to false, it won't play the death sounds
 ENT.HasBecomeEnemyToPlayerSounds = true -- If set to false, it won't play the become enemy to player sounds
@@ -326,17 +327,20 @@ ENT.HasDamageByPlayerSounds = true -- If set to false, it won't play the stupid 
 ENT.HasCallForHelpSounds = true -- If set to false, it won't play any sounds when it calls for help
 ENT.HasOnReceiveOrderSounds = true -- If set to false, it won't play any sound when it receives an order from an ally
 ENT.HasFootStepSound = true -- Should the SNPC make a footstep sound when it's moving?
+ENT.HasBreathSound = true -- Should it make a breathing sound?
+ENT.HasSoundTrack = false -- Does the SNPC have a sound track?
+ENT.HasSlowPlayerSound = true -- Does it have a sound when it slows down the player?
+	-- ====== Sound Settings ====== --
+ENT.DisableFootStepSoundTimer = false -- If set to true, it will disable the time system for the footstep sound code, allowing you to use other ways like model events
 ENT.FootStepTimeRun = 0.5 -- Next foot step sound when it is running
 ENT.FootStepTimeWalk = 1 -- Next foot step sound when it is walking
-ENT.DisableFootStepSoundTimer = false -- If set to true, it will disable the time system for the footstep sound code, allowing you to use other ways like model events
-ENT.HasBreathSound = true -- Should it make a breathing sound?
-ENT.HasSlowPlayerSound = true -- Does it have a sound when it slows down the player?
 ENT.DisableFootStepOnRun = false -- It will not play the footstep sound when running
 ENT.DisableFootStepOnWalk = false -- It will not play the footstep sound when walking
-ENT.HasSoundTrack = false -- Does the SNPC have a sound track?
+ENT.IdleSounds_PlayOnAttacks = false -- It will be able to continue and play idle sounds when it performs an attack
+ENT.IdleSounds_NoRegularIdleOnAlerted = false -- if set to true, it will not play the regular idle sound table if the combat idle sound table is empty
+ENT.AlertSounds_OnlyOnce = false -- After it plays it once, it will never play it again
+ENT.BeforeMeleeAttackSounds_WaitTime = 0 -- Time until it starts playing the Before Melee Attack sounds
 ENT.SoundTrackFadeOutTime = 2  -- Put to 0 if you want it to stop instantly
-ENT.PlayAlertSoundOnlyOnce = false -- After it plays it once, it will never play it again
-ENT.ContinuePlayingIdleSoundsOnAttacks = false -- It won't stop the idle sounds when the it performs a attack
 	-- ====== Sound File Paths ====== --
 -- Leave blank if you don't want any sounds to play
 ENT.SoundTbl_FootStep = {}
@@ -356,6 +360,7 @@ ENT.SoundTbl_BeforeMeleeAttack = {}
 ENT.SoundTbl_MeleeAttack = {}
 ENT.SoundTbl_MeleeAttackExtra = {}
 ENT.SoundTbl_MeleeAttackMiss = {}
+ENT.SoundTbl_BeforeRangeAttack = {}
 ENT.SoundTbl_RangeAttack = {}
 ENT.SoundTbl_BeforeLeapAttack = {}
 ENT.SoundTbl_LeapAttackJump = {}
@@ -391,6 +396,7 @@ ENT.MeleeAttackSoundChance = 1
 ENT.ExtraMeleeSoundChance = 1
 ENT.MeleeAttackMissSoundChance = 1
 ENT.SlowPlySoundFadeTime = 1
+ENT.BeforeRangeAttackSoundChance = 1
 ENT.RangeAttackSoundChance = 1
 ENT.BeforeLeapAttackSoundChance = 1
 ENT.LeapAttackJumpSoundChance = 1
@@ -438,6 +444,7 @@ ENT.BeforeMeleeAttackSoundLevel = 75
 ENT.MeleeAttackSoundLevel = 75
 ENT.ExtraMeleeAttackSoundLevel = 75
 ENT.MeleeAttackMissSoundLevel = 75
+ENT.BeforeRangeAttackSoundLevel = 75
 ENT.RangeAttackSoundLevel = 75
 ENT.BeforeLeapAttackSoundLevel = 75
 ENT.LeapAttackJumpSoundLevel = 75
@@ -493,6 +500,8 @@ ENT.ExtraMeleeSoundPitch1 = 80
 ENT.ExtraMeleeSoundPitch2 = 100
 ENT.MeleeAttackMissSoundPitch1 = 80
 ENT.MeleeAttackMissSoundPitch2 = 100
+ENT.BeforeRangeAttackPitch1 = "UseGeneralPitch"
+ENT.BeforeRangeAttackPitch2 = "UseGeneralPitch"
 ENT.RangeAttackPitch1 = "UseGeneralPitch"
 ENT.RangeAttackPitch2 = "UseGeneralPitch"
 ENT.BeforeLeapAttackSoundPitch1 = "UseGeneralPitch"
@@ -564,6 +573,8 @@ ENT.DoingVJDeathDissolve = false
 ENT.HasBeenGibbedOnDeath = false
 ENT.DeathAnimationCodeRan = false
 ENT.AlreadyDone_RunSelectSchedule_FollowPlayer = false
+ENT.AlreadyDoneRangeAttackFirstProjectile = false
+ENT.AlreadyDoneFirstLeapAttack = false
 ENT.FollowingPlayerName = NULL
 ENT.MyEnemy = NULL
 ENT.VJ_TheController = NULL
@@ -1816,7 +1827,7 @@ function ENT:Think()
 			self.AlreadyDoneFirstMeleeAttack = false
 			if self.VJ_IsBeingControlled == false && ispropattack == false then self:FaceCertainEntity(self:GetEnemy(),true) end
 			self:CustomOnMeleeAttack_BeforeStartTimer()
-			timer.Simple(self.WaitTime_BeforeMeleeAttackSound,function() if IsValid(self) then self:BeforeMeleeAttackSoundCode() end end)
+			timer.Simple(self.BeforeMeleeAttackSounds_WaitTime,function() if IsValid(self) then self:BeforeMeleeAttackSoundCode() end end)
 			self.NextAlertSoundT = CurTime() + 0.4
 			if self.DisableMeleeAttackAnimation == false then
 				self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_MeleeAttack)
@@ -1853,7 +1864,9 @@ function ENT:Think()
 			self:StopMoving()
 			self.RangeAttacking = true
 			self.IsAbleToRangeAttack = false
+			self.AlreadyDoneRangeAttackFirstProjectile = false
 			self:CustomOnRangeAttack_BeforeStartTimer()
+			self:BeforeRangeAttackSoundCode()
 			if self.DisableRangeAttackAnimation == false then
 				self:ClearSchedule()
 				self:StopMoving()
@@ -1889,6 +1902,7 @@ function ENT:Think()
 			self:MultipleLeapAttacks()
 			self.LeapAttacking = true
 			self.AlreadyDoneLeapAttackFirstHit = false
+			self.AlreadyDoneFirstLeapAttack = false
 			self.IsAbleToLeapAttack = false
 			if self.LeapAttackAnimationFaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(),true) end
 			self:CustomOnLeapAttack_BeforeStartTimer()
@@ -2183,16 +2197,20 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 	self.MeleeAttacking = true
 	//if self.VJ_IsBeingControlled == false && self.MeleeAttackAnimationFaceEnemy == true then self:FaceCertainEntity(MyEnemy,true) end
 	if self.AlreadyDoneFirstMeleeAttack == false then
-		timer.Create( "timer_melee_finished"..self.Entity:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Melee,self.NextAnyAttackTime_Melee_DoRand), 1, function()
-			self:StopAttacks()
-			//if self.VJ_IsBeingControlled == false then self:FaceCertainEntity(MyEnemy,true) end
-			self:DoChaseAnimation()
-		end)
-		timer.Create( "timer_range_finished_abletomelee"..self.Entity:EntIndex(), self:DecideAttackTimer(self.NextMeleeAttackTime,self.NextMeleeAttackTime_DoRand), 1, function()
-			self.IsAbleToMeleeAttack = true
-		end)
+		self:MeleeAttackCode_DoFinishTimers()
 	end
-	if self.AlreadyDoneFirstMeleeAttack == false then self.AlreadyDoneFirstMeleeAttack = true end
+	self.AlreadyDoneFirstMeleeAttack = true
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:MeleeAttackCode_DoFinishTimers()
+	timer.Create( "timer_melee_finished"..self.Entity:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Melee,self.NextAnyAttackTime_Melee_DoRand), 1, function()
+		self:StopAttacks()
+		//if self.VJ_IsBeingControlled == false then self:FaceCertainEntity(MyEnemy,true) end
+		self:DoChaseAnimation()
+	end)
+	timer.Create( "timer_range_finished_abletomelee"..self.Entity:EntIndex(), self:DecideAttackTimer(self.NextMeleeAttackTime,self.NextMeleeAttackTime_DoRand), 1, function()
+		self.IsAbleToMeleeAttack = true
+	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttackCode()
@@ -2234,6 +2252,11 @@ function ENT:RangeAttackCode()
 			self:CustomRangeAttackCode_AfterProjectileSpawn(rangeprojectile)
 		end
 	end
+	self.AlreadyDoneRangeAttackFirstProjectile = true
+	self:RangeAttackCode_DoFinishTimers()
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:RangeAttackCode_DoFinishTimers()
 	timer.Create( "timer_range_finished"..self.Entity:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Range,self.NextAnyAttackTime_Range_DoRand), 1, function()
 		self:StopAttacks()
 		self:DoChaseAnimation()
@@ -2278,7 +2301,13 @@ function ENT:LeapDamageCode()
 		self:LeapAttackDamageSoundCode()
 		if self.StopLeapAttackAfterFirstHit == true then self.AlreadyDoneLeapAttackFirstHit = true /*self:SetLocalVelocity(Vector(0,0,0))*/ end
 	end
-	
+	if self.AlreadyDoneFirstLeapAttack == false then
+		self:LeapAttackCode_DoFinishTimers()
+	end
+	self.AlreadyDoneFirstLeapAttack = true
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:LeapAttackCode_DoFinishTimers()
 	timer.Create( "timer_leap_finished"..self.Entity:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Leap,self.NextAnyAttackTime_Leap_DoRand), 1, function()
 		self:StopAttacks()
 		self:DoChaseAnimation()
@@ -2303,21 +2332,26 @@ function ENT:LeapAttackVelocityCode()
 	self:SetLocalVelocity(jumpcode)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:StopAttacks(SetAbleAttackTrue)
+function ENT:StopAttacks(CheckTimers)
 	if self:Health() <= 0 then return end
 	//self:TaskComplete()
 	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printstoppedattacks") == 1 then print(self:GetClass().." Stopped all Attacks!") end end
+	if CheckTimers == true then
+		//self.IsAbleToMeleeAttack = true
+		//self.IsAbleToRangeAttack = true
+		//self.IsAbleToLeapAttack = true
+		if self.MeleeAttacking == true && self.AlreadyDoneFirstMeleeAttack == false then self:MeleeAttackCode_DoFinishTimers() end
+		if self.RangeAttacking == true && self.AlreadyDoneRangeAttackFirstProjectile == false then print("ALOOOOOOOOO") self:RangeAttackCode_DoFinishTimers() end
+		if self.LeapAttacking == true && self.AlreadyDoneFirstLeapAttack == false then self:LeapAttackCode_DoFinishTimers() end
+	end
 	self.MeleeAttacking = false
 	self.RangeAttacking = false
 	self.LeapAttacking = false
 	self.AlreadyDoneMeleeAttackFirstHit = false
 	self.AlreadyDoneFirstMeleeAttack = false
 	self.AlreadyDoneLeapAttackFirstHit = false
-	if SetAbleAttackTrue == true then
-		self.IsAbleToMeleeAttack = true
-		self.IsAbleToRangeAttack = true
-		self.IsAbleToLeapAttack = true
-	end
+	self.AlreadyDoneFirstLeapAttack = false
+	self.AlreadyDoneRangeAttackFirstProjectile = false
 	self:DoChaseAnimation()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2512,7 +2546,7 @@ function ENT:DoAlert()
 	self.LastSeenEnemyTime = 0
 	self:CustomOnAlert()
 	if CurTime() > self.NextAlertSoundT then
-		if self.PlayAlertSoundOnlyOnce == true then
+		if self.AlertSounds_OnlyOnce == true then
 			if self.HasDone_PlayAlertSoundOnlyOnce == false then
 				self:AlertSoundCode() 
 				self.HasDone_PlayAlertSoundOnlyOnce = true 
@@ -2821,7 +2855,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 		end
 	end
 
-	if (self:IsOnFire()) && self:WaterLevel() == 3 then self:Extinguish() end
+	if (self:IsOnFire()) && self:WaterLevel() == 2 then self:Extinguish() end
 
 	if table.HasValue(self.ImmuneDamagesTable,DamageType) then return end
 	if self.AllowIgnition == false && self:IsOnFire() then self:Extinguish() return false end
@@ -2955,7 +2989,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoFlinch(dmginfo,hitgroup)
-	if self.CanFlinch == 0 or self.Flinching == true or (self.NextFlinchT > CurTime()) then return end
+	if self.CanFlinch == 0 or self.Flinching == true or (self.NextFlinchT > CurTime()) or (dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
 	
 	local function RunFlinchCode(HitBoxBased,HitBoxInfo)
 		self.Flinching = true
@@ -3475,7 +3509,7 @@ function ENT:IdleSoundCode(CustomTbl)
 			local PlayCombatIdleSds = false
 			if self:GetEnemy() != nil then PlayCombatIdleSds = true else PlayCombatIdleSds = false end
 			if VJ_PICKRANDOMTABLE(self.SoundTbl_CombatIdle) == false then
-				if self.PlayNothingWhenCombatIdleSoundTableEmpty == false then
+				if self.IdleSounds_NoRegularIdleOnAlerted == false then
 					PlayCombatIdleSds = false
 				end
 			end
@@ -3555,15 +3589,19 @@ function ENT:DamageByPlayerSoundCode(CustomTbl)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:BeforeMeleeAttackSoundCode(CustomTbl)
+function ENT:BeforeMeleeAttackSoundCode(CustomTbl,Tbl_Features)
 	if self.HasSounds == false or self.HasMeleeAttackSounds == false then return end
+	vTbl_Features = Tbl_Features or {}
+	vTbl_UseEmitSound = vTbl_Features.UseEmitSound or false
 	local randomattacksound = math.random(1,self.BeforeMeleeAttackSoundChance)
 	local soundtbl = self.SoundTbl_BeforeMeleeAttack
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomattacksound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		if self.ContinuePlayingIdleSoundsOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
+		if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
 		self.NextIdleSoundT_RegularChange = CurTime() + 1
-		self.CurrentBeforeMeleeAttackSound = VJ_CreateSound(self,soundtbl,self.BeforeMeleeAttackSoundLevel,self:VJ_DecideSoundPitch(self.BeforeMeleeAttackSoundPitch1,self.BeforeMeleeAttackSoundPitch2))
+		local PickType = VJ_CreateSound
+		if vTbl_UseEmitSound == true then PickType = VJ_EmitSound end
+		self.CurrentBeforeMeleeAttackSound = PickType(self,soundtbl,self.BeforeMeleeAttackSoundLevel,self:VJ_DecideSoundPitch(self.BeforeMeleeAttackSoundPitch1,self.BeforeMeleeAttackSoundPitch2))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3573,7 +3611,7 @@ function ENT:MeleeAttackSoundCode(CustomTbl,CustomTblExtra)
 	local soundtbl = self.SoundTbl_MeleeAttack
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomattacksound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		if self.ContinuePlayingIdleSoundsOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
+		if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
 		self.NextIdleSoundT_RegularChange = CurTime() + 1
 		self.CurrentMeleeAttackSound = VJ_CreateSound(self,soundtbl,self.MeleeAttackSoundLevel,self:VJ_DecideSoundPitch(self.MeleeAttackSoundPitch1,self.MeleeAttackSoundPitch2))
    end
@@ -3583,7 +3621,7 @@ function ENT:MeleeAttackSoundCode(CustomTbl,CustomTblExtra)
 		local soundtbl = self.SoundTbl_MeleeAttackExtra
 		if CustomTblExtra != nil && #CustomTblExtra != 0 then soundtbl = CustomTblExtra end
 		if randextraattacks == 1 /*&& VJ_PICKRANDOMTABLE(soundtbl) != false*/ then
-			if self.ContinuePlayingIdleSoundsOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
+			if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
 			if VJ_PICKRANDOMTABLE(soundtbl) == false then
 				VJ_EmitSound(self,self.DefaultSoundTbl_MeleeAttackExtra,self.ExtraMeleeAttackSoundLevel,self:VJ_DecideSoundPitch(self.ExtraMeleeSoundPitch1,self.ExtraMeleeSoundPitch2))
 			else
@@ -3601,10 +3639,22 @@ function ENT:MeleeAttackMissSoundCode(CustomTbl)
 	local soundtbl = self.SoundTbl_MeleeAttackMiss
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randommisssound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		if self.ContinuePlayingIdleSoundsOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
+		if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
 		self.NextIdleSoundT_RegularChange = CurTime() + 1
 		//self.CurrentMeleeAttackMissSound = VJ_CreateSound(self,soundtbl,self.MeleeAttackMissSoundLevel,self:VJ_DecideSoundPitch(self.MeleeAttackMissSoundPitch1,self.MeleeAttackMissSoundPitch2))
 		VJ_EmitSound(self,soundtbl,self.MeleeAttackMissSoundLevel,self:VJ_DecideSoundPitch(self.MeleeAttackMissSoundPitch1,self.MeleeAttackMissSoundPitch2))
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:BeforeRangeAttackSoundCode(CustomTbl)
+	if self.HasSounds == false or self.HasBeforeRangeAttackSound == false then return end
+	local randomrangesound = math.random(1,self.BeforeRangeAttackSoundChance)
+	local soundtbl = self.SoundTbl_BeforeRangeAttack
+	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
+	if randomrangesound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+		if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
+		self.NextIdleSoundT_RegularChange = CurTime() + 1
+		self.CurrentBeforeRangeAttackSound = VJ_CreateSound(self,soundtbl,self.BeforeRangeAttackSoundLevel,self:VJ_DecideSoundPitch(self.BeforeRangeAttackPitch1,self.BeforeRangeAttackPitch2))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3614,7 +3664,7 @@ function ENT:RangeAttackSoundCode(CustomTbl)
 	local soundtbl = self.SoundTbl_RangeAttack
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomrangesound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		if self.ContinuePlayingIdleSoundsOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
+		if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
 		self.NextIdleSoundT_RegularChange = CurTime() + 1
 		self.CurrentRangeAttackSound = VJ_CreateSound(self,soundtbl,self.RangeAttackSoundLevel,self:VJ_DecideSoundPitch(self.RangeAttackPitch1,self.RangeAttackPitch2))
 	end
@@ -3626,7 +3676,7 @@ function ENT:BeforeLeapAttackSoundCode(CustomTbl)
 	local soundtbl = self.SoundTbl_BeforeLeapAttack
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomleapsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		if self.ContinuePlayingIdleSoundsOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
+		if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
 		self.NextIdleSoundT_RegularChange = CurTime() + 1
 		self.CurrentBeforeLeapAttackSound = VJ_CreateSound(self,soundtbl,self.BeforeLeapAttackSoundLevel,self:VJ_DecideSoundPitch(self.BeforeLeapAttackSoundPitch1,self.BeforeLeapAttackSoundPitch2))
 	end
@@ -3638,7 +3688,7 @@ function ENT:LeapAttackJumpSoundCode(CustomTbl)
 	local soundtbl = self.SoundTbl_LeapAttackJump
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomleapsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		if self.ContinuePlayingIdleSoundsOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
+		if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
 		self.NextIdleSoundT_RegularChange = CurTime() + 1
 		self.CurrentLeapAttackJumpSound = VJ_CreateSound(self,soundtbl,self.LeapAttackJumpSoundLevel,self:VJ_DecideSoundPitch(self.LeapAttackJumpSoundPitch1,self.LeapAttackJumpSoundPitch2))
 	end
@@ -3650,7 +3700,7 @@ function ENT:LeapAttackDamageSoundCode(CustomTbl)
 	local soundtbl = self.SoundTbl_LeapAttackDamage
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomleapsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		if self.ContinuePlayingIdleSoundsOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
+		if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
 		self.NextIdleSoundT_RegularChange = CurTime() + 1
 		self.CurrentLeapAttackDamageSound = VJ_CreateSound(self,soundtbl,self.LeapAttackDamageSoundLevel,self:VJ_DecideSoundPitch(self.LeapAttackDamageSoundPitch1,self.LeapAttackDamageSoundPitch2))
 	end
@@ -3662,7 +3712,7 @@ function ENT:LeapAttackDamageMissSoundCode(CustomTbl)
 	local soundtbl = self.SoundTbl_LeapAttackDamageMiss
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomleapsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		if self.ContinuePlayingIdleSoundsOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
+		if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
 		self.NextIdleSoundT_RegularChange = CurTime() + 1
 		VJ_EmitSound(self,soundtbl,self.LeapAttackDamageMissSoundLevel,self:VJ_DecideSoundPitch(self.LeapAttackDamageMissSoundPitch1,self.LeapAttackDamageMissSoundPitch2))
 	end
@@ -3778,6 +3828,7 @@ function ENT:StopAllCommonSounds()
 	VJ_STOPSOUND(self.CurrentMeleeAttackSound)
 	VJ_STOPSOUND(self.CurrentExtraMeleeAttackSound)
 	//VJ_STOPSOUND(self.CurrentMeleeAttackMissSound)
+	VJ_STOPSOUND(self.CurrentBeforeRangeAttackSound)
 	VJ_STOPSOUND(self.CurrentRangeAttackSound)
 	VJ_STOPSOUND(self.CurrentBeforeLeapAttackSound)
 	VJ_STOPSOUND(self.CurrentLeapAttackJumpSound)
@@ -3882,7 +3933,7 @@ function ENT:ConvarsOnInit()
 	if GetConVarNumber("vj_npc_sd_meleeattack") == 1 then self.HasMeleeAttackSounds = false self.HasExtraMeleeAttackSounds = false end
 	if GetConVarNumber("vj_npc_sd_meleeattackmiss") == 1 then self.HasMeleeAttackMissSounds = false end
 	if GetConVarNumber("vj_npc_sd_slowplayer") == 1 then self.HasSlowPlayerSound = false end
-	if GetConVarNumber("vj_npc_sd_rangeattack") == 1 then self.HasRangeAttackSound = false end
+	if GetConVarNumber("vj_npc_sd_rangeattack") == 1 then self.HasBeforeRangeAttackSound = false self.HasRangeAttackSound = false end
 	if GetConVarNumber("vj_npc_sd_leapattack") == 1 then self.HasBeforeLeapAttackSound = false self.HasLeapAttackJumpSound = false self.HasLeapAttackDamageSound = false self.HasLeapAttackDamageMissSound = false end
 	if GetConVarNumber("vj_npc_sd_pain") == 1 then self.HasPainSounds = false end
 	if GetConVarNumber("vj_npc_sd_death") == 1 then self.HasDeathSounds = false end

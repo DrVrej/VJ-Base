@@ -96,22 +96,20 @@ ENT.VJ_FriendlyNPCsSingle = {}
 ENT.VJ_FriendlyNPCsGroup = {}
 ENT.PlayerFriendly = false -- Makes the SNPC friendly to the player and HL2 Resistance
 ENT.FriendsWithAllPlayerAllies = false -- Should this SNPC be friends with all other player allies that are running on VJ Base?
-ENT.NextEntityCheckTime = 1 -- Time until it runs the NPC check
-ENT.NextHardEntityCheck1 = 80 -- Next time it will do hard entity check | The first # in math.random
-ENT.NextHardEntityCheck2 = 100 -- Next time it will do hard entity check | The second # in math.random
-ENT.NextFindEnemyTime = 1 -- Time until it runs FindEnemy again
+ENT.MoveOutOfFriendlyPlayersWay = true -- Should the SNPC move out of the way when a friendly player comes close to it?
+ENT.NextMoveOutOfFriendlyPlayersWayTime = 1 -- How much time until it can moves out of the player's way?
+ENT.MoveOutOfFriendlyPlayersWaySchedules = {SCHED_MOVE_AWAY} -- Schedules it will play when the SNPC attempts to get out of the player's way
 ENT.BecomeEnemyToPlayer = false -- Should the friendly SNPC become enemy towards the player if it's damaged by a player?
 ENT.BecomeEnemyToPlayerLevel = 2 -- How many times does the player have to hit the SNPC for it to become enemy?
 ENT.BecomeEnemyToPlayerSetPlayerFriendlyFalse = true -- Should it set PlayerFriendly to false?
+	-- ====== On Player Sight Code ====== --
 ENT.HasOnPlayerSight = false -- Should do something when it sees the enemy? Example: Play a sound
 ENT.OnPlayerSightDistance = 200 -- How close should the player be until it runs the code?
 ENT.OnPlayerSightDispositionLevel = 0 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 ENT.OnPlayerSightOnlyOnce = true -- Should it only run the code once?
 ENT.OnPlayerSightNextTime1 = 15 -- How much time should it pass until it runs the code again? | First number in math.random
 ENT.OnPlayerSightNextTime2 = 20 -- How much time should it pass until it runs the code again? | Second number in math.random
-ENT.MoveOutOfFriendlyPlayersWay = true -- Should the SNPC move out of the way when a friendly player comes close to it?
-ENT.NextMoveOutOfFriendlyPlayersWayTime = 1 -- How much time until it can moves out of the player's way?
-ENT.MoveOutOfFriendlyPlayersWaySchedules = {SCHED_MOVE_AWAY} -- Schedules it will play when the SNPC attempts to get out of the player's way
+	-- ====== Call For Help Code ====== --
 ENT.CallForHelp = true -- Does the SNPC call for help?
 ENT.CallForHelpDistance = 2000 -- -- How far away the SNPC's call for help goes | Counted in World Units
 ENT.NextCallForHelpTime = 4 -- Time until it calls for help again
@@ -123,7 +121,6 @@ ENT.CallForHelpStopAnimations = false -- Should it stop attacks for a certain am
 ENT.CallForHelpStopAnimationsTime = 1.5 -- How long should it stop attacks?
 ENT.CallForHelpAnimationFaceEnemy = true -- Should it face the enemy when playing the animation?
 ENT.NextCallForHelpAnimationTime = 30 -- How much time until it can play the animation again?
-ENT.DisableMakingSelfEnemyToNPCs = false -- Disables the "AddEntityRelationship" that runs in think
 	-- ====== Medic Code ====== --
 ENT.IsMedicSNPC = false -- Is this SNPC a medic? Does it heal other friendly friendly SNPCs, and players(If friendly)
 ENT.AnimTbl_Medic_GiveHealth = {ACT_SPECIAL_ATTACK1} -- Animations is plays when giving health to an ally
@@ -135,6 +132,11 @@ ENT.Medic_NextHealTime2 = 15 -- How much time until it can give health to an all
 ENT.Medic_SpawnPropOnHeal = true -- Should it spawn a prop, such as small health vial at a attachment when healing an ally?
 ENT.Medic_SpawnPropOnHealModel = "models/healthvial.mdl" -- The model that it spawns
 ENT.Medic_SpawnPropOnHealAttachment = "anim_attachment_LH" -- The attachment it spawns on
+	-- ====== Base Numbers, Use carefully! ====== --
+ENT.DisableMakingSelfEnemyToNPCs = false -- Disables the "AddEntityRelationship" that runs in think
+ENT.NextEntityCheckTime = 1 -- Time until it runs the NPC check
+ENT.NextHardEntityCheck1 = 80 -- Next time it will do hard entity check | The first # in math.random
+ENT.NextHardEntityCheck2 = 100 -- Next time it will do hard entity check | The second # in math.random
 	-- Death ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasDeathRagdoll = true -- If set to false, it will not spawn the regular ragdoll of the SNPC
 ENT.DeathCorpseEntityClass = "UseDefaultBehavior" -- The entity class it creates | "UseDefaultBehavior" = Let the base automatically detect the type
@@ -255,9 +257,9 @@ ENT.FindEnemy_CanSeeThroughWalls = false -- Should it be able to see through wal
 ENT.DisableTakeDamageFindEnemy = false -- Disable the SNPC finding the enemy when being damaged
 ENT.DisableTouchFindEnemy = false -- Disable the SNPC finding the enemy when being touched
 ENT.LastSeenEnemyTimeUntilReset = 15 -- Time until it resets its enemy if its current enemy is not visible
-ENT.IdleSchedule_Wander = {SCHED_IDLE_WANDER} -- Animation played when the SNPC is idle, when called to wander
 ENT.AnimTbl_IdleStand = {} -- Leave empty to use schedule | Only works when AI is enabled
-ENT.ChaseSchedule = {SCHED_CHASE_ENEMY} -- Animation played when the SNPC is trying to chase the enemy
+//ENT.IdleSchedule_Wander = {SCHED_IDLE_WANDER} -- Animation played when the SNPC is idle, when called to wander
+//ENT.ChaseSchedule = {SCHED_CHASE_ENEMY} -- Animation played when the SNPC is trying to chase the enemy
 ENT.ConstantlyFaceEnemy = true -- Should it face the enemy constantly?
 ENT.ConstantlyFaceEnemy_IfVisible = true -- Should it only face the enemy if it's visible?
 ENT.ConstantlyFaceEnemy_IfAttacking = false -- Should it face the enemy when attacking?
@@ -293,14 +295,12 @@ ENT.NextFollowPlayerTime = 1 -- Time until it runs to the player again
 ENT.BringAlliesToMeSchedules = {SCHED_FORCED_GO} -- The Schedule that its friends play when BringAlliesToMe code is ran
 	-- Sounds ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasSounds = true -- Put to false to disable ALL sounds
+ENT.HasExtraMeleeAttackSounds = false -- Set to true to use the extra melee attack sounds
 ENT.HasImpactSounds = true -- If set to false, it won't play the impact sounds
 ENT.HasAlertSounds = true -- If set to false, it won't play the alert sounds
 ENT.HasMeleeAttackSounds = true -- If set to false, it won't play the melee attack sound
-ENT.WaitTime_BeforeMeleeAttackSound = 0 -- Time until it starts playing the sound
-ENT.HasExtraMeleeAttackSounds = false -- Set to true to use the extra melee attack sounds
 ENT.HasMeleeAttackMissSounds = true -- If set to false, it won't play the melee attack miss sound
 ENT.HasIdleSounds = true -- If set to false, it won't play the idle sounds
-ENT.PlayNothingWhenCombatIdleSoundTableEmpty = false -- if set to true, it will not play the regular idle sound table if the combat idle sound table is empty
 ENT.HasPainSounds = true -- If set to false, it won't play the pain sounds
 ENT.HasDeathSounds = true -- If set to false, it won't play the death sounds
 ENT.HasGrenadeAttackSounds = true -- If set to false, it won't play any sound when doing grenade attack
@@ -317,15 +317,18 @@ ENT.HasDamageByPlayerSounds = true -- If set to false, it won't play the stupid 
 ENT.HasCallForHelpSounds = true -- If set to false, it won't play any sounds when it calls for help
 ENT.HasOnReceiveOrderSounds = true -- If set to false, it won't play any sound when it receives an order from an ally
 ENT.HasFootStepSound = true -- Should the SNPC make a footstep sound when it's moving?
+ENT.HasBreathSound = true -- Should it make a breathing sound?
+ENT.HasSoundTrack = false -- Does the SNPC have a sound track?
+	-- ====== Sound Settings ====== --
+ENT.DisableFootStepSoundTimer = false -- If set to true, it will disable the time system for the footstep sound code, allowing you to use other ways like model events
 ENT.FootStepTimeRun = 0.5 -- Next foot step sound when it is running
 ENT.FootStepTimeWalk = 1 -- Next foot step sound when it is walking
-ENT.DisableFootStepSoundTimer = false -- If set to true, it will disable the time system for the footstep sound code, allowing you to use other ways like model events
-ENT.HasBreathSound = true -- Should it make a breathing sound?
 ENT.DisableFootStepOnRun = false -- It will not play the footstep sound when running
 ENT.DisableFootStepOnWalk = false -- It will not play the footstep sound when walking
-ENT.HasSoundTrack = false -- Does the SNPC have a sound track?
+ENT.IdleSounds_NoRegularIdleOnAlerted = false -- if set to true, it will not play the regular idle sound table if the combat idle sound table is empty
+ENT.AlertSounds_OnlyOnce = false -- After it plays it once, it will never play it again
+ENT.BeforeMeleeAttackSounds_WaitTime = 0 -- Time until it starts playing the Before Melee Attack sounds
 ENT.SoundTrackFadeOutTime = 2  -- Put to 0 if you want it to stop instantly
-ENT.PlayAlertSoundOnlyOnce = false -- After it plays it once, it will never play it again
 	-- ====== Sound File Paths ====== --
 -- Leave blank if you don't want any sounds to play
 ENT.SoundTbl_FootStep = {}
@@ -1804,7 +1807,7 @@ function ENT:Think()
 			self.AlreadyDoneFirstMeleeAttack = false
 			if self.VJ_IsBeingControlled == false then self:FaceCertainEntity(self:GetEnemy(),true) end
 			self:CustomOnMeleeAttack_BeforeStartTimer()
-			timer.Simple(self.WaitTime_BeforeMeleeAttackSound,function() if IsValid(self) then self:BeforeMeleeAttackSoundCode() end end)
+			timer.Simple(self.BeforeMeleeAttackSounds_WaitTime,function() if IsValid(self) then self:BeforeMeleeAttackSoundCode() end end)
 			self.NextAlertSoundT = CurTime() + 0.4
 			if self.DisableMeleeAttackAnimation == false then
 				self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_MeleeAttack)
@@ -2440,7 +2443,7 @@ function ENT:DoAlert()
 	self.LastSeenEnemyTime = 0
 	self:CustomOnAlert()
 	if CurTime() > self.NextAlertSoundT then
-		if self.PlayAlertSoundOnlyOnce == true then
+		if self.AlertSounds_OnlyOnce == true then
 			if self.HasDone_PlayAlertSoundOnlyOnce == false then
 				self:AlertSoundCode() 
 				self.HasDone_PlayAlertSoundOnlyOnce = true 
@@ -2737,7 +2740,7 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 		end
 	end
 
-	if (self:IsOnFire()) && self:WaterLevel() == 3 then self:Extinguish() end
+	if (self:IsOnFire()) && self:WaterLevel() == 2 then self:Extinguish() end
 
 	if table.HasValue(self.ImmuneDamagesTable,DamageType) then return end
 	if self.AllowIgnition == false && self:IsOnFire() then self:Extinguish() return false end
@@ -2901,7 +2904,7 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoFlinch(dmginfo,hitgroup)
-	if self.CanFlinch == 0 or self.Flinching == true or (self.NextFlinchT > CurTime()) then return end
+	if self.CanFlinch == 0 or self.Flinching == true or (self.NextFlinchT > CurTime()) or (dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
 	
 	local function RunFlinchCode(HitBoxBased,HitBoxInfo)
 		self.Flinching = true
@@ -3495,7 +3498,7 @@ function ENT:IdleSoundCode(CustomTbl)
 			local PlayCombatIdleSds = false
 			if self:GetEnemy() != nil then PlayCombatIdleSds = true else PlayCombatIdleSds = false end
 			if VJ_PICKRANDOMTABLE(self.SoundTbl_CombatIdle) == false then
-				if self.PlayNothingWhenCombatIdleSoundTableEmpty == false then
+				if self.IdleSounds_NoRegularIdleOnAlerted == false then
 					PlayCombatIdleSds = false
 				end
 			end

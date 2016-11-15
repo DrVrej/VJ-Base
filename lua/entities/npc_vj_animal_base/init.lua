@@ -161,22 +161,23 @@ ENT.HasAlertSounds = true -- If set to false, it won't play the alert sounds
 ENT.HasIdleSounds = true -- If set to false, it won't play the idle sounds
 ENT.HasPainSounds = true -- If set to false, it won't play the pain sounds
 ENT.HasDeathSounds = true -- If set to false, it won't play the death sounds
-ENT.NextOnTouchFearSoundTime = 3 -- Next time it makes a fear sound when something touches it
 ENT.HasBecomeEnemyToPlayerSounds = true -- If set to false, it won't play the become enemy to player sounds
 ENT.HasFollowPlayerSounds_Follow = true -- If set to false, it won't play the follow player sounds
 ENT.HasFollowPlayerSounds_UnFollow = true -- If set to false, it won't play the unfollow player sounds
 ENT.HasOnPlayerSightSounds = true -- If set to false, it won't play the saw player sounds
 ENT.HasDamageByPlayerSounds = true -- If set to false, it won't play the stupid player sounds
 ENT.HasFootStepSound = true -- Should the SNPC make a footstep sound when it's moving?
+ENT.HasBreathSound = true -- Should it make a breathing sound?
+ENT.HasSoundTrack = false -- Does the SNPC have a sound track?
+	-- ====== Sound Settings ====== --
+ENT.NextOnTouchFearSoundTime = 3 -- Next time it makes a fear sound when something touches it
+ENT.DisableFootStepSoundTimer = false -- If set to true, it will disable the time system for the footstep sound code, allowing you to use other ways like model events
 ENT.FootStepTimeRun = 0.5 -- Next foot step sound when it is running
 ENT.FootStepTimeWalk = 1 -- Next foot step sound when it is walking
-ENT.DisableFootStepSoundTimer = false -- If set to true, it will disable the time system for the footstep sound code, allowing you to use other ways like model events
-ENT.HasBreathSound = true -- Should it make a breathing sound?
 ENT.DisableFootStepOnRun = false -- It will not play the footstep sound when running
 ENT.DisableFootStepOnWalk = false -- It will not play the footstep sound when walking
-ENT.HasSoundTrack = false -- Does the SNPC have a sound track?
+ENT.AlertSounds_OnlyOnce = false -- After it plays it once, it will never play it again
 ENT.SoundTrackFadeOutTime = 2  -- Put to 0 if you want it to stop instantly
-ENT.PlayAlertSoundOnlyOnce = false -- After it plays it once, it will never play it again
 	-- ====== Sound File Paths ====== --
 -- Leave blank if you don't want any sounds to play
 ENT.SoundTbl_FootStep = {}
@@ -764,7 +765,7 @@ function ENT:Touch(entity)
 	end
 	if GetConVarNumber("ai_disabled") == 0 then
 	if CurTime() > self.NextOnTouchFearSoundT then
-		if self.PlayAlertSoundOnlyOnce == true then
+		if self.AlertSounds_OnlyOnce == true then
 			if self.HasDone_PlayAlertSoundOnlyOnce == false then
 			self:AlertSoundCode() 
 			self.HasDone_PlayAlertSoundOnlyOnce = true end
@@ -1078,7 +1079,7 @@ function ENT:OnTakeDamage(dmginfo,hitgroup)
 		end
 	end
 
-	if (self:IsOnFire()) && self:WaterLevel() == 3 then self:Extinguish() end
+	if (self:IsOnFire()) && self:WaterLevel() == 2 then self:Extinguish() end
 
 	if table.HasValue(self.ImmuneDamagesTable,DamageType) then return end
 	if self.AllowIgnition == false && self:IsOnFire() then self:Extinguish() return false end
@@ -1177,7 +1178,7 @@ function ENT:OnTakeDamage(dmginfo,hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoFlinch(dmginfo,hitgroup)
-	if self.CanFlinch == 0 or self.Flinching == true or (self.NextFlinchT > CurTime()) then return end
+	if self.CanFlinch == 0 or self.Flinching == true or (self.NextFlinchT > CurTime()) or (dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
 	
 	local function RunFlinchCode(HitBoxBased,HitBoxInfo)
 		self.Flinching = true
