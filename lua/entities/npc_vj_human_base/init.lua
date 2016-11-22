@@ -1474,7 +1474,7 @@ function ENT:Think()
 		self:StopMoving()
 		//self:SelectSchedule()
 		self:ClearCondition(35)
-		print("Task Failed Condition Identified!")
+		print("VJ Base: Task Failed Condition Identified! "..self:GetName())
 	end
 	if self.DoingWeaponAttack == false then self.DoingWeaponAttack_Standing = false end
 	//if CurTime() > self.TestT then

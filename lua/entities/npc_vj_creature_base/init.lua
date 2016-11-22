@@ -1244,55 +1244,63 @@ end
 -- !!!!!!! WIP - AERIAL BASE !!!!!!! --
 
 // MOVETYPE_FLY | MOVETYPE_FLYGRAVITY
-ENT.Aerial_FlyingSpeed_Calm = 20 -- The speed it should fly with, when it's wandering, moving slowly, etc. | Basically walking campared to ground SNPCs
-ENT.Aerial_FlyingSpeed_Alerted = 40 -- The speed it should fly with, when it's chasing an enemy, moving away quickly, etc. | Basically running campared to ground SNPCs
-ENT.Aerial_AnimTbl_Alerted = {ACT_RUN} -- Animations it plays when it's moving while alerted
+ENT.Aerial_FlyingSpeed_Calm = 50 -- The speed it should fly with, when it's wandering, moving slowly, etc. | Basically walking campared to ground SNPCs
+ENT.Aerial_FlyingSpeed_Alerted = 200 -- The speed it should fly with, when it's chasing an enemy, moving away quickly, etc. | Basically running campared to ground SNPCs
+ENT.Aerial_AnimTbl_Alerted = {"mortar_forward"} -- Animations it plays when it's moving while alerted
+ENT.Aerial_EnableDebug = false -- Used for testing
+
 ENT.CurrentAnim_AerialMovement = nil
-ENT.Aerial_NextFlyAnimation = 0
+ENT.Aerial_NextMovementAnimation = 0
 ENT.Aerial_ShouldBeFlying = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AerialMove_ChaseEnemy(ShouldPlayAnim)
 	if self.Dead == true or (self.NextChaseTime > CurTime()) or self:GetEnemy() == nil then return end
 	ShouldPlayAnim = ShouldPlayAnim or false
+	local Debug = self.Aerial_EnableDebug
+	
 	self:FaceCertainEntity(self:GetEnemy(),true)
 	self.Aerial_ShouldBeFlying = false
-	
-	if ShouldPlayAnim == true && self:GetSequence() != self.CurrentAnim_AerialMovement /*&& self:GetActivity() == ACT_IDLE*/ && CurTime() > self.Aerial_NextFlyAnimation && (self.NextChaseTime < CurTime()) then
-	local idleanim = self.Aerial_AnimTbl_Alerted
-	local ideanimrand = VJ_PICKRANDOMTABLE(idleanim)
-	if type(ideanimrand) == "number" then ideanimrand = self:GetSequenceName(self:SelectWeightedSequence(ideanimrand)) end
-	local ildeanimid = self:LookupSequence(ideanimrand)
+
+	if ShouldPlayAnim == true && self:GetSequence() != self.CurrentAnim_AerialMovement /*&& self:GetActivity() == ACT_IDLE*/ && CurTime() > self.Aerial_NextMovementAnimation && (self.NextChaseTime < CurTime()) then
+		local pickedanim = VJ_PICKRANDOMTABLE(self.Aerial_AnimTbl_Alerted)
+		if type(pickedanim) == "number" then pickedanim = self:GetSequenceName(self:SelectWeightedSequence(pickedanim)) end
+		local idleanimid = VJ_GetSequenceName(self,pickedanim)
 		//self.Aerial_ShouldBeFlying = true
-		self.CurrentAnim_AerialMovement = ildeanimid
-		//self:AddGestureSequence(ildeanimid)
-		self:VJ_ACT_PLAYACTIVITY(ideanimrand,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false})
-		self.Aerial_NextFlyAnimation = CurTime() + 0.3
+		self.CurrentAnim_AerialMovement = idleanimid
+		//self:AddGestureSequence(idleanimid)
+		self:VJ_ACT_PLAYACTIVITY(pickedanim,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false})
+		self.Aerial_NextMovementAnimation = CurTime() + 0.3
 	end
 	
-	local vel_up = 30
-	local vel_for = -200
+	-- Main Calculations
+	local vel_up = 20 //self.Aerial_FlyingSpeed_Alerted
+	local vel_for = 1
 	local vel_stop = false
 	local getenemyz = "None"
-	local startpos = self:VJ_GetNearestPointToEntity(self:GetEnemy()).MyPosition
-	local endpos = self:VJ_GetNearestPointToEntity(self:GetEnemy()).EnemyPosition
-	
-	local tr = {
-		start = startpos, //self:GetPos(),
-		endpos = endpos, //self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter(),
+	local startpos = self:VJ_GetNearestPointToEntity(self:GetEnemy()).MyPosition // self:GetPos()
+	local endpos = self:VJ_GetNearestPointToEntity(self:GetEnemy()).EnemyPosition // self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter()
+	local tr = util.TraceHull({
+		start = startpos,
+		endpos = endpos,
 		filter = self,
 		mins = self:OBBMins(),
 		maxs = self:OBBMaxs()
-	}
-	local tr = util.TraceHull(tr)
+	})
 	local selftohitpos = tr.HitPos
 	local selftohitpos_dist = startpos:Distance(selftohitpos)
-	//print(selftohitpos_dist)
+	if Debug == true then util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,tr.HitPos,false,self:EntIndex(),0) end //vortigaunt_beam
 	if selftohitpos_dist <= 16 && tr.HitWorld == true then
-		print("Forward Blocked!")
-		vel_for = -400
+		if Debug == true then print("Aerial: Forward Blocked!") end
+		vel_for = 1
+		//vel_for = -200
 		//vel_stop = true
 	end
 	//else
+	
+	-- X Calculations
+		-- Coming soon!
+	
+	-- Z Calculations
 	local z_self = (self:GetPos()+self:OBBCenter()).z
 	local z_ene = (self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter()).z
 	local tr_up_startpos = self:GetPos()+self:OBBCenter()
@@ -1304,47 +1312,37 @@ function ENT:AerialMove_ChaseEnemy(ShouldPlayAnim)
 	//print(math.abs(z_self)," OKK ",z_self)
 	if z_ene >= z_self then
 		if math.abs(z_ene - z_self) >= 10 then
-			print("UP")
+			if Debug == true then print("Aerial: UP") end
 			getenemyz = "Up"
 			//vel_up = 100
 		end
 	elseif z_ene <= z_self then
 		if math.abs(z_self - z_ene) >= 10 then
-			print("DOWN")
+			if Debug == true then print("Aerial: DOWN") end
 			getenemyz = "Down"
 			//vel_up = -100
 		end
 	end
 	if getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
-		print("GO UP")
-		vel_up = 100
+		if Debug == true then print("Aerial: GOING UP") end
+		vel_up = self.Aerial_FlyingSpeed_Alerted //100
 	elseif getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
-		print("GO DOWN")
-		vel_up = -100
+		if Debug == true then print("Aerial: GOING DOWN") end
+		vel_up = -self.Aerial_FlyingSpeed_Alerted //-100
 	end
 	/*if tr_up_startpos:Distance(tr_up.HitPos) <= 100 && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
 		print("DOWN - ",tr_up_startpos:Distance(tr_up.HitPos))
 		vel_up = -100
 	end*/
 	
-	util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,tr.HitPos,false,self:EntIndex(),0) //vortigaunt_beam
-	ParticleEffect("vj_impact1_centaurspit", tr.HitPos, Angle(0,0,0), self)
-	/*local nig = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
-	nig:SetModel("models/hunter/blocks/cube025x025x025.mdl")
-	nig:SetPos(tr.HitPos)
-	nig:SetAngles(self:GetAngles())
-	nig:SetColor(Color(255,0,0))
-	nig:Spawn()
-	nig:Activate()
-	timer.Simple(3,function() nig:Remove() end)*/
-	
+	-- Set the velocity
 	if vel_stop == false then
-		myvel = self:GetVelocity()
-		enevel = self:GetEnemy():GetVelocity()
-		local jumpyaw
-		local jumpcode = ((self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter())-(self:GetPos()+self:OBBCenter())):GetNormal()*400 +self:GetUp()*vel_up +self:GetForward()*vel_for
-		jumpyaw = jumpcode:Angle().y
-		self:SetLocalVelocity(jumpcode)
+		local myvel = self:GetVelocity()
+		local enevel = self:GetEnemy():GetVelocity()
+		local vel_set = ((self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter())-(self:GetPos()+self:OBBCenter())):GetNormal()*self.Aerial_FlyingSpeed_Alerted +self:GetUp()*vel_up +self:GetForward()*vel_for
+		local vel_set_yaw = vel_set:Angle().y
+		self:SetLocalVelocity(vel_set)
+		if Debug == true then ParticleEffect("vj_impact1_centaurspit", self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter(), Angle(0,0,0), self) end
 	else
 		self:AerialMove_Stop()
 	end
@@ -1562,7 +1560,7 @@ function ENT:Think()
 		self:StopMoving()
 		//self:SelectSchedule()
 		self:ClearCondition(35)
-		print("Task Failed Condition Identified!")
+		print("VJ Base: Task Failed Condition Identified! "..self:GetName())
 	end
 	/*if CurTime() > self.TestT then
 		self:AddLayeredSequence(self:SelectWeightedSequence(ACT_IDLE),1)
@@ -1962,7 +1960,7 @@ function ENT:DoAddExtraAttackTimers(vName,vTime,vReps,vFunction)
 	vName = vName or "timer_unknown"
 	vTime = vTime or 0.5
 	vReps = vReps or 1
-	vFunction = vFunction or print("No Timer Function!")
+	vFunction = vFunction or print("VJ Base: No Attack Timer Function! "..self:GetName())
 	local function NigTest()
 		if vFunction == "MeleeAttack" then self:MeleeAttackCode() end
 		if vFunction == "RangeAttack" then self:RangeAttackCode() end

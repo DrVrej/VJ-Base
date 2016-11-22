@@ -315,7 +315,7 @@ function ENT:RangeAttack_Shell()
 		if self.Tank_UsesRightAngles == true then
 		flash:SetKeyValue("angles",tostring(self:GetRight():Angle())) else
 		flash:SetKeyValue("angles",tostring(self:GetForward():Angle())) end
-		flash:Fire( "Fire", 0, 0 )
+		flash:Fire("Fire",0,0)
 	local dust = EffectData()
 		dust:SetOrigin(self:GetParent():GetPos())
 		dust:SetScale(500)
@@ -337,7 +337,12 @@ function ENT:RangeAttack_Shell()
 		Projectile_Shell:SetOwner(self)
 	local phys = Projectile_Shell:GetPhysicsObject()
 		if phys:IsValid() then
-		phys:ApplyForceCenter((ShootPos * 750000))
+		//phys:ApplyForceCenter((ShootPos * 750000))
+		if self.Tank_FacingTarget == false then
+			phys:SetVelocity((self:GetForward()*self.Tank_NotFacingTargetShootPos)*750000)
+		else
+			phys:SetVelocity((self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter()-self:LocalToWorld(self.ShellSpawnPos)):GetNormal()*5000)
+		end
 	end
 		self.Tank_ShellReady = false
 		self.FiringShell = false
