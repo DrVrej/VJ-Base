@@ -118,14 +118,6 @@ function VJ_PICKRANDOMTABLE(tbl)
 	return false
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function VJ_GetSequenceDuration(argent,actname)
-	if VJ_AnimationExists(argent,actname) == false then return 0 end
-	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
-	if type(actname) == "number" then return argent:SequenceDuration(argent:SelectWeightedSequence(actname)) end
-	if type(actname) == "string" then if string.find(actname, "vjseq_") then actname = string.Replace(actname,"vjseq_","") end return argent:SequenceDuration(argent:LookupSequence(actname)) end
-	return 0
-end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function VJ_AnimationExists(argent,actname)
 	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
 	if type(actname) == "number" then
@@ -138,6 +130,22 @@ function VJ_AnimationExists(argent,actname)
 		return false end
 	end
 	return true
+end
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function VJ_GetSequenceDuration(argent,actname)
+	if VJ_AnimationExists(argent,actname) == false then return 0 end
+	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
+	if type(actname) == "number" then return argent:SequenceDuration(argent:SelectWeightedSequence(actname)) end
+	if type(actname) == "string" then if string.find(actname, "vjseq_") then actname = string.Replace(actname,"vjseq_","") end return argent:SequenceDuration(argent:LookupSequence(actname)) end
+	return 0
+end
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function VJ_GetSequenceName(argent,actname)
+	if VJ_AnimationExists(argent,actname) == false then return nil end
+	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
+	if type(actname) == "number" then return argent:GetSequenceName(argent:SelectWeightedSequence(actname)) end
+	if type(actname) == "string" then if string.find(actname, "vjseq_") then actname = string.Replace(actname,"vjseq_","") end return argent:GetSequenceName(argent:LookupSequence(actname)) end
+	return nil
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function VJ_IsCurrentAnimation(argent,actname)

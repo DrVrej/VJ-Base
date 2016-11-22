@@ -14,7 +14,7 @@ ENT.MovementType = VJ_MOVETYPE_AERIAL -- How does the SNPC move?
 ENT.BloodParticle = {"blood_impact_red_01"} -- Particle that the SNPC spawns when it's damaged
 ENT.BloodDecal = {"Blood"} -- Leave blank for none | Commonly used: Red = Blood, Yellow Blood = YellowBlood
 ENT.HasMeleeAttack = true -- Should the SNPC have a melee attack?
-ENT.AnimTbl_MeleeAttack = {ACT_MELEE_ATTACK1} -- Melee Attack Animations
+ENT.AnimTbl_MeleeAttack = {ACT_RANGE_ATTACK1} -- Melee Attack Animations
 ENT.MeleeAttackDistance = 60 -- How close does it have to be until it attacks?
 ENT.MeleeAttackDamageDistance = 80 -- How far does the damage go?
 ENT.TimeUntilMeleeAttackDamage = 0.4 -- This counted in seconds | This calculates the time until it hits something
