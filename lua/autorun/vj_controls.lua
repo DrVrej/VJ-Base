@@ -186,14 +186,14 @@ AddAddonProperty = function(addonname,addontype)
 	table.insert(InstalledVJBaseAddons,{Name = addonname, Type = addontype})
 end,
 	-- Regular NPC ----------------------------------------------------------------------------------------------------
-AddNPC = function(nName,nClass,vCat)
-	local NPC = { Name = nName, Class = nClass, Category = vCat }
+AddNPC = function(nName,nClass,vCat,nAdmin)
+	local NPC = { Name = nName, Class = nClass, Category = vCat, AdminOnly = nAdmin }
 	list.Set( "NPC", NPC.Class, NPC ) //NPC //VJBASE_SPAWNABLE_NPC
 	list.Set( "VJBASE_SPAWNABLE_NPC", NPC.Class, NPC )
 end,
 	-- Human NPC ----------------------------------------------------------------------------------------------------
-AddNPC_HUMAN = function(nhName,nhClass,nhWeapons,vCat)
-	local NPCH = { Name = nhName, Class = nhClass, Weapons = nhWeapons, Category = vCat }
+AddNPC_HUMAN = function(nhName,nhClass,nhWeapons,vCat,nhAdmin)
+	local NPCH = { Name = nhName, Class = nhClass, Weapons = nhWeapons, Category = vCat, AdminOnly = nhAdmin }
 	list.Set( "NPC", NPCH.Class, NPCH ) //NPC //VJBASE_SPAWNABLE_NPC
 	list.Set( "VJBASE_SPAWNABLE_NPC", NPCH.Class, NPCH )
 end,
@@ -211,7 +211,7 @@ AddWeapon = function(wName,wClass,wAdmin,vCat)
 end,
 	-- Entity ----------------------------------------------------------------------------------------------------
 AddEntity = function(eName,eClass,eAuthor,eAdmin,eOffSet,eDropToFloor,vCat)
-	local Ent = { PrintName = eName, ClassName = eClass, Category = vCat, NormalOffset = eOffSet, DropToFloor = eDropToFloor, Author = eAuthor, AdminOnly = eAdmin }
+	local Ent = { PrintName = eName, ClassName = eClass, Author = eAuthor, AdminOnly = eAdmin, NormalOffset = eOffSet, DropToFloor = eDropToFloor, Category = vCat, Spawnable = true }
 	list.Set( "SpawnableEntities", eClass, Ent ) //SpawnableEntities //VJBASE_SPAWNABLE_ENTITIES
 	list.Set( "VJBASE_SPAWNABLE_ENTITIES", eClass, Ent )
 	duplicator.Allow( eClass )

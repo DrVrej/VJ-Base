@@ -8,7 +8,7 @@ ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Purpose 		= "Used for defending a certain area from enemies, SNPCs will attack it when close."
 ENT.Instructions 	= "Don't change anything."
-ENT.Category		= "VJ Entites"
+ENT.Category		= "VJ Base"
 
-ENT.Spawnable = false
-ENT.AdminSpawnable = false
+ENT.Spawnable = true
+ENT.AdminOnly = false

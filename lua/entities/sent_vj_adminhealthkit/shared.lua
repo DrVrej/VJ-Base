@@ -8,10 +8,10 @@ ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Purpose 		= "Gives a lot of health when taken."
 ENT.Instructions 	= "Don't change anything."
-ENT.Category		= "VJ Entites"
+ENT.Category		= "VJ Base"
 
-ENT.Spawnable = false
-ENT.AdminSpawnable = false
+ENT.Spawnable = true
+ENT.AdminOnly = true
 ENT.AutomaticFrameAdvance = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetAutomaticFrameAdvance( bUsingAnim )

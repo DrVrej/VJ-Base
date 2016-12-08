@@ -15,6 +15,7 @@ hook.Add("PopulateVJBaseHome","AddVJBaseSpawnMenu_Home",function(pnlContent,tree
 	hometree.PropPanel = vgui.Create("ContentContainer", pnlContent)
 	hometree.PropPanel:SetVisible(false)
 	hometree.PropPanel:SetTriggerSpawnlistChange(false)
+	//hometree.PropPanel:MoveToFront()
 	
 	function hometree:DoClick()
 		pnlContent:SwitchPanel(self.PropPanel)
@@ -24,7 +25,7 @@ hook.Add("PopulateVJBaseHome","AddVJBaseSpawnMenu_Home",function(pnlContent,tree
 	Header1:SetPos(40, 40)
 	Header1:SetSize(200, 70)
 	Header1:SetTextColor(Color(255, 102, 0, 255))
-	Header1:SetText("Welcome to VJ Base!")
+	Header1:SetText("Welcome to VJ Basge!")
 	hometree.PropPanel:Add(Header1)
 	
 	local Text1 = vgui.Create("DLabel")
@@ -39,6 +40,7 @@ end)
 --[-------------------------------------------------------]--
 hook.Add("PopulateVJBaseNPC","AddVJBaseSpawnMenu_NPC",function(pnlContent,tree,node)
 	local npctree = tree:AddNode("SNPCs", "icon16/monkey.png")
+	npctree:MoveToFront()
 	npctree.PropPanel = vgui.Create("ContentContainer", pnlContent)
 	npctree.PropPanel:SetVisible(false)
 	npctree.PropPanel:SetTriggerSpawnlistChange(false)
@@ -79,6 +81,7 @@ hook.Add("PopulateVJBaseNPC","AddVJBaseSpawnMenu_NPC",function(pnlContent,tree,n
 		end
 	end
 	npctree:SetExpanded(true)
+	npctree:InternalDoClick()
 end)
 --[-------------------------------------------------------]--
 hook.Add("PopulateVJBaseWeapons","AddVJBaseSpawnMenu_Weapon",function(pnlContent,tree,node)
@@ -175,7 +178,7 @@ spawnmenu.AddCreationTab("VJ Base",function()
 	ctrl:CallPopulateHook("PopulateVJBaseWeapons")
 	ctrl:CallPopulateHook("PopulateVJBaseEntities")
 	return ctrl
- end, "icon16/plugin.png", 60 )
+ end,"icon16/plugin.png",60,"All VJ Base related stuff is located here!")
 end
 -------------------------------------------------------------------------------------------------------------------------
 local function VJSPAWN_NPCINTERNAL(Player,Position,Normal,Class,Equipment)

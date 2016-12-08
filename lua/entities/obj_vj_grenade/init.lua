@@ -15,9 +15,7 @@ ENT.RadiusDamageRadius = 250 -- How far the damage go? The farther away it's fro
 ENT.RadiusDamage = 80 -- How much damage should it deal? Remember this is a radius damage, therefore it will do less damage the farther away the entity is from its enemy
 ENT.RadiusDamageUseRealisticRadius = true -- Should the damage decrease the farther away the enemy is from the position that the projectile hit?
 ENT.RadiusDamageType = DMG_BLAST -- Damage type
-ENT.RadiusDamageUseForce = true -- Should it push props and ragdolls?
-ENT.RadiusDamageForceTowardsPhysics = 3000 -- How much force should it deal to props?
-ENT.RadiusDamageForceTowardsRagdolls = 3000 -- How much force should it deal to ragdolls?
+ENT.RadiusDamageForce = 90 -- Put the force amount it should apply | false = Don't apply any force
 ENT.DecalTbl_DeathDecals = {"Scorch"}
 ENT.SoundTbl_OnCollide = {"weapons/hegrenade/he_bounce-1.wav"}
 

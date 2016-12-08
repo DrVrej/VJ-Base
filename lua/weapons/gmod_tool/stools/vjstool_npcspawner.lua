@@ -13,6 +13,7 @@ TOOL.ClientConVar["spawnpos_right"] = 0
 TOOL.ClientConVar["spawnpos_up"] = 0
 TOOL.ClientConVar["weaponequip"] = "None"
 TOOL.ClientConVar["weaponequipname"] = "Unknown"
+TOOL.ClientConVar["nextspawntime"] = 0
 
 local DefaultConVars = {}
 for k,v in pairs(TOOL.ClientConVar) do
@@ -258,7 +259,9 @@ else -- If SERVER
 		end
 		//spawner.EntitiesToSpawn = {entitiestospawntbl}
 		if GetConVarString("vjstool_npcspawner_playsound") == "1" then
-		spawner.SoundTbl_SpawnEntity = {"garrysmod/save_load1.wav","garrysmod/save_load2.wav","garrysmod/save_load3.wav","garrysmod/save_load4.wav"} end
+			spawner.SoundTbl_SpawnEntity = {"garrysmod/save_load1.wav","garrysmod/save_load2.wav","garrysmod/save_load3.wav","garrysmod/save_load4.wav"}
+		end
+		spawner.TimedSpawn_Time = GetConVarNumber("vjstool_npcspawner_nextspawntime")
 		if svgettype == "RightClick" then spawner.SingleSpawner = true end
 		spawner:SetCreator(svowner)
 		spawner:Spawn()

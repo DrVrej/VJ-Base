@@ -30,16 +30,22 @@ ENT.VJ_IsHugeMonster = false -- Is this a huge monster?
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
 ENT.CanTurnWhileStationary = true -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
 	-- Blood & Damages ---------------------------------------------------------------------------------------------------------------------------------------------
-ENT.GodMode = false -- Immune to everything
-ENT.Bleeds = true -- Does the SNPC bleed? (Blood decal, particle and etc.)
+	-- ====== Blood-Related Variables ====== --
+ENT.Bleeds = true -- Does the SNPC bleed? (Blood decal, particle, etc.)
+ENT.BloodColor = "" -- The blood type, this will detemine what it should use (decal, particle, etc.)
+	-- Types: "Red" || "Yellow" || "Green" || "Orange" || "Blue" || "Purple" || "Black"
+-- Use the following variables to customize the blood the way you want it:
 ENT.HasBloodParticle = true -- Does it spawn a particle when damaged?
-ENT.HasBloodPool = true -- Does it have a blood pool?
 ENT.HasBloodDecal = true -- Does it spawn a decal when damaged?
-ENT.BloodParticle = {"blood_impact_red_01"} -- Particle that the SNPC spawns when it's damaged
-ENT.BloodPoolParticle = {} -- Leave empty for the base to decide which pool blood it should use
-ENT.BloodDecal = {"Blood"} -- Leave blank for none | Commonly used: Red = Blood, Yellow Blood = YellowBlood
-ENT.BloodDecalRate = 1000 -- The bigger the number, the more chance it has of spawning the decal | Remember to use 5 or 10 when using big decals (Ex: Antlion Splat)
-ENT.BloodDecalDistance = 300 -- How far the decal can spawn
+ENT.HasBloodPool = true -- Does it have a blood pool?
+ENT.CustomBlood_Particle = {} -- Particles to spawn when it's damaged
+ENT.CustomBlood_Decal = {} -- Decals to spawn when it's damaged
+ENT.CustomBlood_Pool = {} -- Blood pool types after it dies
+ENT.BloodPoolSize = "Normal" -- What's the size of the blood pool?
+	-- Current Sizes: "Normal" || "Small" || "Tiny"
+ENT.BloodDecalUseGMod = false -- Should use the current default decals defined by Garry's Mod? (This only applies for certain blood types only!)
+ENT.BloodDecalDistance = 300 -- How far the decal can spawn in world units
+	-- ====== Other Variables ====== --
 ENT.GetDamageFromIsHugeMonster = false -- Should it get damaged no matter what by SNPCs that are tagged as VJ_IsHugeMonster?
 ENT.AllowIgnition = true -- Can this SNPC be set on fire?
 ENT.Immune_Dissolve = false -- Immune to Dissolving | Example: Combine Ball
@@ -79,7 +85,8 @@ ENT.HitGroupFlinching_DefaultWhenNotHit = true -- If it uses hitgroup flinching,
 ENT.HitGroupFlinching_Values = {/* EXAMPLES: {HitGroup = {1}, IsSchedule = true, Animation = {SCHED_BIG_FLINCH}},{HitGroup = {4}, IsSchedule = false, Animation = {ACT_FLINCH_STOMACH}} */} -- if "IsSchedule" is set to true, "Animation" needs to be a schedule
 	-- Relationships ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasAllies = true -- Put to false if you want it not to have any allies
-ENT.VJ_NPC_Class = {} -- NPCs with the same class will be friendly to each other | Combine: CLASS_COMBINE, Zombie: CLASS_ZOMBIE, Antlions = CLASS_ANTLION
+ENT.VJ_NPC_Class = {} -- NPCs with the same class with be allied to each other
+	-- Common Classes: Combine = CLASS_COMBINE || Zombie = CLASS_ZOMBIE || Antlions = CLASS_ANTLION || Xen = CLASS_XEN
 ENT.PlayerFriendly = false -- Makes the SNPC friendly to the player and HL2 Resistance
 ENT.FriendlyToVJSNPCs = true -- Set to true if you want it to be friendly to all of VJ SNPCs
 ENT.BecomeEnemyToPlayer = false -- Should the friendly SNPC become enemy towards the player if it's damaged by a player?
@@ -341,9 +348,9 @@ ENT.UseTheSameGeneralSoundPitch_PickedNumber = 0
 ENT.SelectedDifficulty = 1
 	-- Tables ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
-ENT.NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen}
-ENT.NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack}
-ENT.NPCTbl_Zombies = {npc_fastzombie_torso=true,npc_zombine=true,npc_zombie_torso=true,npc_zombie=true,npc_poisonzombie=true,npc_headcrab_fast=true,npc_headcrab_black=true,npc_headcrab=true,npc_fastzombie=true,monster_zombie=true,monster_headcrab=true,monster_babycrab}
+ENT.NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true}
+ENT.NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack=true}
+ENT.NPCTbl_Zombies = {npc_fastzombie_torso=true,npc_zombine=true,npc_zombie_torso=true,npc_zombie=true,npc_poisonzombie=true,npc_headcrab_fast=true,npc_headcrab_black=true,npc_headcrab=true,npc_fastzombie=true,monster_zombie=true,monster_headcrab=true,monster_babycrab=true}
 ENT.NPCTbl_Antlions = {npc_antlion=true,npc_antlionguard=true,npc_antlion_worker=true}
 ENT.NPCTbl_Xen = {monster_bullchicken=true,monster_alien_grunt=true,monster_alien_slave=true,monster_alien_controller=true,monster_houndeye=true,monster_gargantua=true,monster_nihilanth=true}
 
@@ -450,7 +457,19 @@ function ENT:Initialize()
 	self:SetCustomCollisionCheck()
 	if self.HasSetSolid == true then self:SetSolid(SOLID_BBOX) end
 	//self:SetMoveType(self.MoveType)
+	self:ConvarsOnInit()
 	self:DoChangeMovementType()
+	self.CurrentChoosenBlood_Particle = {}
+	self.CurrentChoosenBlood_Decal = {}
+	self.CurrentChoosenBlood_Pool = {}
+	if self.BloodColor == "" then -- Backwards Compatibility!
+		if VJ_PICKRANDOMTABLE(self.BloodDecal) == "Blood" then
+			self.BloodColor = "Red"
+		elseif  VJ_PICKRANDOMTABLE(self.BloodDecal) == "YellowBlood" then
+			self.BloodColor = "Yellow"
+		end
+	end
+	self:DoChangeBloodColor(self.BloodColor)
 	if self.DisableInitializeCapabilities == false then self:SetInitializeCapabilities() end
 	self:SetCollisionGroup(COLLISION_GROUP_NPC)
 	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.1,3)
@@ -467,7 +486,6 @@ function ENT:Initialize()
 	if self.UseTheSameGeneralSoundPitch == true then self.UseTheSameGeneralSoundPitch_PickedNumber = math.random(self.GeneralSoundPitch1,self.GeneralSoundPitch2) end
 	self:CustomOnInitialize()
 	self:CustomInitialize() -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
-	self:ConvarsOnInit()
 	if math.random(1,self.SoundTrackChance) == 1 then self:StartSoundTrack() end
 	self:SetRenderMode(RENDERMODE_NORMAL)
 	//self:SetRenderMode(RENDERMODE_TRANSALPHA)
@@ -1232,18 +1250,77 @@ function ENT:DoFlinch(dmginfo,hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SpawnBloodDecal(dmginfo,hitgroup)
-	local DamageForce = dmginfo:GetDamageForce()
-	local DamagePos = dmginfo:GetDamagePosition()
-	local length = math.Clamp(DamageForce:Length() *10, 100, self.BloodDecalDistance)
-	local paintit = tobool(math.random(10, math.Round(length *0.125)) <= self.BloodDecalRate)
-	if !paintit then return end
-	local posEnd = DamagePos +DamageForce:GetNormal() *length
-	local tr = util.TraceLine({start = DamagePos, endpos = posEnd, filter = self})
-	//if !tr.HitWorld then return end
-	util.Decal(VJ_PICKRANDOMTABLE(self.BloodDecal),tr.HitPos +tr.HitNormal,tr.HitPos -tr.HitNormal)
-	if math.random(1,2) == 1 then util.Decal(VJ_PICKRANDOMTABLE(self.BloodDecal),tr.HitPos +tr.HitNormal +Vector(0,math.random(-100,100),0),tr.HitPos -tr.HitNormal) end
-	if math.random(1,2) == 1 then util.Decal(VJ_PICKRANDOMTABLE(self.BloodDecal),tr.HitPos +tr.HitNormal +Vector(math.random(-100,100),0,0),tr.HitPos -tr.HitNormal) end
+function ENT:DoChangeBloodColor(Type)
+	local Type = Type or "None"
+	if Type == "" then Type = "None" end
+
+	local usegmoddecals = false
+	if self.BloodDecalUseGMod == true then usegmoddecals = true end
+	
+	local changeparticle = true
+	local changedecal = true
+	local changepool = true
+	if VJ_PICKRANDOMTABLE(self.CustomBlood_Particle) != false then self.CurrentChoosenBlood_Particle = self.CustomBlood_Particle changeparticle = false end 
+	if VJ_PICKRANDOMTABLE(self.CustomBlood_Decal) != false then self.CurrentChoosenBlood_Decal = self.CustomBlood_Decal changedecal = false end 
+	if VJ_PICKRANDOMTABLE(self.CustomBlood_Pool) != false then self.CurrentChoosenBlood_Pool = self.CustomBlood_Pool changepool = false end 
+	
+	if Type == "Red" then
+		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"blood_impact_red_01"} end // vj_impact1_red
+		if changedecal == true then
+			if usegmoddecals == true then
+				self.CurrentChoosenBlood_Decal = {"Blood"}
+			else
+				self.CurrentChoosenBlood_Decal = {"VJ_Blood_Red"}
+			end
+		end
+		if changepool == true then
+			if self.BloodPoolSize == "Small" then
+				self.CurrentChoosenBlood_Pool = {"vj_bleedout_red_small"}
+			elseif self.BloodPoolSize == "Tiny" then
+				self.CurrentChoosenBlood_Pool = {"vj_bleedout_red_tiny"}
+			else
+				self.CurrentChoosenBlood_Pool = {"vj_bleedout_red"}
+			end
+		end
+	elseif Type == "Yellow" then
+		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"blood_impact_yellow_01"} end // vj_impact1_yellow
+		if changedecal == true then
+			if usegmoddecals == true then
+				self.CurrentChoosenBlood_Decal = {"YellowBlood"}
+			else
+				self.CurrentChoosenBlood_Decal = {"VJ_Blood_Yellow"}
+			end
+		end
+		if changepool == true then
+			if self.BloodPoolSize == "Small" then
+				self.CurrentChoosenBlood_Pool = {"vj_bleedout_yellow_small"}
+			elseif self.BloodPoolSize == "Tiny" then
+				self.CurrentChoosenBlood_Pool = {"vj_bleedout_yellow_tiny"}
+			else
+				self.CurrentChoosenBlood_Pool = {"vj_bleedout_yellow"}
+			end
+		end
+	elseif Type == "Green" then
+		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_green"} end
+		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Green"} end
+		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
+	elseif Type == "Orange" then
+		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_orange"} end
+		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Orange"} end
+		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
+	elseif Type == "Blue" then
+		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_blue"} end
+		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Blue"} end
+		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
+	elseif Type == "Purple" then
+		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_purple"} end
+		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Purple"} end
+		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
+	elseif Type == "Black" then
+		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_black"} end
+		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Black"} end
+		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodParticles(dmginfo,hitgroup)
@@ -1251,14 +1328,50 @@ function ENT:SpawnBloodParticles(dmginfo,hitgroup)
 	local DamagePos = dmginfo:GetDamagePosition()
 	if DamagePos == Vector(0,0,0) then DamagePos = self:GetPos() + self:OBBCenter() end
 	//if DamageType == DMG_ACID or DamageType == DMG_RADIATION or DamageType == DMG_POISON or DamageType == DMG_CRUSH or DamageType == DMG_SLASH or DamageType == DMG_GENERIC or self:IsOnFire() then DoUnPositionedParticle() return false end
-
-	local bloodeffect = ents.Create("info_particle_system")
-	bloodeffect:SetKeyValue("effect_name",VJ_PICKRANDOMTABLE(self.BloodParticle))
-	bloodeffect:SetPos(DamagePos) 
-	bloodeffect:Spawn()
-	bloodeffect:Activate() 
-	bloodeffect:Fire("Start","",0)
-	bloodeffect:Fire("Kill","",0.1)
+	local particlename = VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Particle)
+	if particlename == false then return end
+	local spawnparticle = ents.Create("info_particle_system")
+	spawnparticle:SetKeyValue("effect_name",particlename)
+	spawnparticle:SetPos(DamagePos)
+	spawnparticle:Spawn()
+	spawnparticle:Activate()
+	spawnparticle:Fire("Start","",0)
+	spawnparticle:Fire("Kill","",0.1)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:SpawnBloodDecal(dmginfo,hitgroup)
+	if VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal) == false then return end
+	local DamageForce = dmginfo:GetDamageForce()
+	local DamagePos = dmginfo:GetDamagePosition()
+	local length = math.Clamp(DamageForce:Length() *10, 100, self.BloodDecalDistance)
+	local EndPos = DamagePos +DamageForce:GetNormal() *length
+	local tr = util.TraceLine({start = DamagePos, endpos = EndPos, filter = self})
+	//if !tr.HitWorld then return end
+	util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal),tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
+	for i=1,2 do
+		if math.random(1,2) == 1 then util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal),tr.HitPos +tr.HitNormal +Vector(math.random(-70,70),math.random(-70,70),0),tr.HitPos -tr.HitNormal) end
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:SpawnBloodPool(dmginfo,hitgroup)
+	if !IsValid(self.Corpse) then return end
+	local GetCorpse = self.Corpse
+	local GetBloodPool = VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Pool)
+	if GetBloodPool == false then return end
+	timer.Simple(2.2,function()
+		if IsValid(GetCorpse) then
+			local tr = util.TraceLine({
+				start = GetCorpse:GetPos()+GetCorpse:OBBCenter(),
+				endpos = GetCorpse:GetPos()+GetCorpse:OBBCenter()-Vector(0,0,30),
+				filter = GetCorpse, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
+				mask = CONTENTS_SOLID
+			})
+			-- (X,Y,Z),(front,up,side)
+			if (tr.HitWorld) && (tr.HitNormal == Vector(0.0,0.0,1.0)) then // (tr.Fraction <= 0.405)
+				ParticleEffect(GetBloodPool,tr.HitPos,Angle(0,0,0),nil)
+			end
+		end
+	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PriorToKilled(dmginfo,hitgroup)
@@ -1278,13 +1391,16 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 
 	-- Blood decal on the ground
 	if self.Bleeds == true && self.HasBloodDecal == true then
-		self:SetLocalPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the NPC is too close to the ground
-		local tr = util.TraceLine({
-			start = self:GetPos(),
-			endpos = self:GetPos() - Vector(0, 0, 500),
-			filter = self //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
-		})
-		util.Decal(VJ_PICKRANDOMTABLE(self.BloodDecal),tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
+		local pickdecal = VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal)
+		if pickdecal != false then
+			self:SetLocalPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the NPC is too close to the ground
+			local tr = util.TraceLine({
+				start = self:GetPos(),
+				endpos = self:GetPos() - Vector(0, 0, 500),
+				filter = self //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
+			})
+			util.Decal(pickdecal,tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
+		end
 	end
 
 	self.Dead = true
@@ -1434,36 +1550,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		self.Corpse.ExtraCorpsesToRemove = {}
 		
 		if self.Bleeds == true && self.HasBloodPool == true && GetConVarNumber("vj_npc_nobloodpool") == 0 then
-			local GetCorpse = self.Corpse
-			local GetBloodDecal = self.BloodDecal
-			local GetCustomBloodParticles = self.BloodPoolParticle
-			timer.Simple(2.2,function()
-				if GetCorpse:IsValid() then
-					local tr = util.TraceLine({
-						start = GetCorpse:GetPos() +GetCorpse:OBBCenter(),
-						endpos = GetCorpse:GetPos() +GetCorpse:OBBCenter() - Vector(0,0,30),
-						filter = GetCorpse, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
-						mask = CONTENTS_SOLID
-					})
-					-- (X,Y,Z),(front,up,side)
-					//print(tr.Fraction)
-					//print(tr.HitNormal)
-					if (tr.HitWorld) && tr.HitNormal == Vector(0.0,0.0,1.0) then
-						//if (tr.Fraction <= 0.405) then
-						if table.Count(GetCustomBloodParticles) <= 0 then // GetBloodDecal == "YellowBlood"
-							local blooddecalistbl = true
-							if istable(GetBloodDecal) then blooddecalistbl = true else blooddecalistbl = false end
-							if (blooddecalistbl == true && table.HasValue(GetBloodDecal,"YellowBlood")) or (blooddecalistbl == false && GetBloodDecal == "YellowBlood") then
-								ParticleEffect("vj_bleedout_yellow",tr.HitPos,Angle(0,0,0),nil)
-							elseif (blooddecalistbl == true && table.HasValue(GetBloodDecal,"Blood")) or (blooddecalistbl == false && GetBloodDecal == "Blood") then
-								ParticleEffect("vj_bleedout_red",tr.HitPos,Angle(0,0,0),nil)
-							end
-						else
-							ParticleEffect(VJ_PICKRANDOMTABLE(GetCustomBloodParticles),tr.HitPos,Angle(0,0,0),nil) 
-						end
-					end
-				end
-			end)
+			self:SpawnBloodPool(dmginfo,hitgroup)
 		end
 		
 		-- Miscellaneous --
@@ -1870,6 +1957,7 @@ function ENT:ConvarsOnInit()
 	if GetConVarNumber("vj_npc_nosnpcchat") == 1 then self.FollowPlayerChat = false end
 	if GetConVarNumber("vj_npc_nogibdeathparticles") == 1 then self.HasGibDeathParticles = false end
 	if GetConVarNumber("vj_npc_nogib") == 1 then self.AllowedToGib = false self.HasGibOnDeath = false end
+	if GetConVarNumber("vj_npc_usegmoddecals") == 1 then self.BloodDecalUseGMod = true end
 	if GetConVarNumber("vj_npc_sd_gibbing") == 1 then self.HasGibOnDeathSounds = false end
 	if GetConVarNumber("vj_npc_sd_soundtrack") == 1 then self.HasSoundTrack = false end
 	if GetConVarNumber("vj_npc_sd_footstep") == 1 then self.HasFootStepSound = false end

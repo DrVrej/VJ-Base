@@ -32,15 +32,22 @@ ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
 ENT.CanTurnWhileStationary = true -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
 	-- Blood & Damages ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.GodMode = false -- Immune to everything
-ENT.Bleeds = true -- Does the SNPC bleed? (Blood decal, particle and etc.)
+	-- ====== Blood-Related Variables ====== --
+ENT.Bleeds = true -- Does the SNPC bleed? (Blood decal, particle, etc.)
+ENT.BloodColor = "" -- The blood type, this will detemine what it should use (decal, particle, etc.)
+	-- Types: "Red" || "Yellow" || "Green" || "Orange" || "Blue" || "Purple" || "Black"
+-- Use the following variables to customize the blood the way you want it:
 ENT.HasBloodParticle = true -- Does it spawn a particle when damaged?
-ENT.HasBloodPool = true -- Does it have a blood pool?
 ENT.HasBloodDecal = true -- Does it spawn a decal when damaged?
-ENT.BloodParticle = {"blood_impact_yellow_01"} -- Particle that the SNPC spawns when it's damaged
-ENT.BloodPoolParticle = {} -- Leave empty for the base to decide which pool blood it should use
-ENT.BloodDecal = {"YellowBlood"} -- Leave blank for none | Commonly used: Red = Blood, Yellow Blood = YellowBlood
-ENT.BloodDecalRate = 1000 -- The bigger the number, the more chance it has of spawning the decal | Remember to use 5 or 10 when using big decals (Ex: Antlion Splat)
-ENT.BloodDecalDistance = 300 -- How far the decal can spawn
+ENT.HasBloodPool = true -- Does it have a blood pool?
+ENT.CustomBlood_Particle = {} -- Particles to spawn when it's damaged
+ENT.CustomBlood_Decal = {} -- Decals to spawn when it's damaged
+ENT.CustomBlood_Pool = {} -- Blood pool types after it dies
+ENT.BloodPoolSize = "Normal" -- What's the size of the blood pool?
+	-- Current Sizes: "Normal" || "Small" || "Tiny"
+ENT.BloodDecalUseGMod = false -- Should use the current default decals defined by Garry's Mod? (This only applies for certain blood types only!)
+ENT.BloodDecalDistance = 300 -- How far the decal can spawn in world units
+	-- ====== Other Variables ====== --
 ENT.GetDamageFromIsHugeMonster = false -- Should it get damaged no matter what by SNPCs that are tagged as VJ_IsHugeMonster?
 ENT.AllowIgnition = true -- Can this SNPC be set on fire?
 ENT.Immune_Dissolve = false -- Immune to Dissolving | Example: Combine Ball
@@ -81,7 +88,8 @@ ENT.HitGroupFlinching_DefaultWhenNotHit = true -- If it uses hitgroup flinching,
 ENT.HitGroupFlinching_Values = {/* EXAMPLES: {HitGroup = {1}, IsSchedule = true, Animation = {SCHED_BIG_FLINCH}},{HitGroup = {4}, IsSchedule = false, Animation = {ACT_FLINCH_STOMACH}} */} -- if "IsSchedule" is set to true, "Animation" needs to be a schedule
 	-- Relationships ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasAllies = true -- Put to false if you want it not to have any allies
-ENT.VJ_NPC_Class = {} -- NPCs with the same class will be friendly to each other | Combine: CLASS_COMBINE, Zombie: CLASS_ZOMBIE, Antlions = CLASS_ANTLION
+ENT.VJ_NPC_Class = {} -- NPCs with the same class with be allied to each other
+	-- Common Classes: Combine = CLASS_COMBINE || Zombie = CLASS_ZOMBIE || Antlions = CLASS_ANTLION || Xen = CLASS_XEN
 ENT.VJ_FriendlyNPCsSingle = {}
 ENT.VJ_FriendlyNPCsGroup = {}
 ENT.PlayerFriendly = false -- Makes the SNPC friendly to the player and HL2 Resistance
@@ -219,11 +227,13 @@ ENT.AnimTbl_RangeAttack = {ACT_RANGE_ATTACK1} -- Range Attack Animations
 ENT.RangeAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 ENT.RangeAttackAnimationFaceEnemy = true -- Should it face the enemy while playing the range attack animation?
 ENT.RangeAttackAnimationDecreaseLengthAmount = 0.2 -- This will decrease the time until starts chasing again. Use it to fix animation pauses until it chases the enemy.
+ENT.RangeAttackAnimationStopMovement = true -- Should it stop moving when performing a range attack?
 ENT.RangeDistance = 2000 -- This is how far away it can shoot
 ENT.RangeToMeleeDistance = 800 -- How close does it have to be until it uses melee?
 ENT.RangeUseAttachmentForPos = false -- Should the projectile spawn on a attachment?
 ENT.RangeUseAttachmentForPosID = "muzzle" -- The attachment used on the range attack if RangeUseAttachmentForPos is set to true
 ENT.RangeUpPos = 20 -- Spawning Position for range attack | + = up, - = down
+	-- To use event-based attacks, set this to false:
 ENT.TimeUntilRangeAttackProjectileRelease = 1.5 -- How much time until the projectile code is ran?
 ENT.NextRangeAttackTime = 3 -- How much time until it can use a range attack?
 ENT.NextRangeAttackTime_DoRand = false -- False = Don't use random time | Number = Picks a random number between the regular timer and this timer
@@ -241,6 +251,7 @@ ENT.LeapAttackAnimationFaceEnemy = false -- Should it face the enemy while playi
 ENT.LeapAttackAnimationDecreaseLengthAmount = 0 -- This will decrease the time until starts chasing again. Use it to fix animation pauses until it chases the enemy.
 ENT.LeapDistance = 500 -- The distance of the leap, for example if it is set to 500, when the SNPC is 500 Unit away, it will jump
 ENT.LeapToMeleeDistance = 200 -- How close does it have to be until it uses melee?
+	-- To use event-based attacks, set this to false:
 ENT.TimeUntilLeapAttackDamage = 0.2 -- How much time until it runs the leap damage code?
 ENT.NextLeapAttackTime = 3 -- How much time until it can use a leap attack?
 ENT.NextLeapAttackTime_DoRand = false -- False = Don't use random time | Number = Picks a random number between the regular timer and this timer
@@ -627,7 +638,7 @@ ENT.UseTheSameGeneralSoundPitch_PickedNumber = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.SelectedDifficulty = 1
 	-- Tables ---------------------------------------------------------------------------------------------------------------------------------------------
-ENT.AttackTimers = {"timer_melee_finished","timer_melee_start","timer_range_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap"}
+ENT.AttackTimers = {"timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap"}
 ENT.AttackTimersCustom = {}
 ENT.EntitiesToDestoryModel = {"models/props_phx/construct/wood/wood_wire_angle360x2.mdl","models/props_phx/construct/wood/wood_wire_angle360x1.mdl","models/props_phx/construct/wood/wood_wire_angle180x2.mdl","models/props_phx/construct/wood/wood_wire_angle180x1.mdl","models/props_phx/construct/wood/wood_wire_angle90x2.mdl","models/props_phx/construct/wood/wood_wire_angle90x1.mdl","models/props_phx/construct/wood/wood_wire2x2b.mdl","models/props_phx/construct/wood/wood_wire2x2x2b.mdl","models/props_phx/construct/wood/wood_wire2x2.mdl","models/props_phx/construct/wood/wood_wire1x2x2b.mdl","models/props_phx/construct/wood/wood_wire1x2b.mdl","models/props_phx/construct/wood/wood_wire1x2.mdl","models/props_phx/construct/wood/wood_wire1x1x2b.mdl","models/props_phx/construct/wood/wood_wire1x1x2.mdl","models/props_phx/construct/wood/wood_wire1x1x1.mdl","models/props_phx/construct/wood/wood_wire1x1.mdl","models/props_phx/construct/wood/wood_dome360.mdl","models/props_phx/construct/wood/wood_dome180.mdl","models/props_phx/construct/wood/wood_dome90.mdl","models/props_phx/construct/wood/wood_curve90x2.mdl","models/props_phx/construct/wood/wood_curve90x1.mdl","models/props_phx/construct/wood/wood_curve360x2.mdl","models/props_phx/construct/wood/wood_curve360x1.mdl","models/props_phx/construct/wood/wood_curve180x2.mdl","models/props_phx/construct/wood/wood_curve180x1.mdl","models/props_phx/construct/wood/wood_angle360.mdl","models/props_phx/construct/wood/wood_angle180.mdl","models/props_phx/construct/wood/wood_angle90.mdl","models/props_phx/construct/wood/wood_panel4x4.mdl","models/props_phx/construct/wood/wood_panel2x4.mdl","models/props_phx/construct/wood/wood_panel2x2.mdl" ,"models/props_phx/construct/wood/wood_panel1x2.mdl","models/props_phx/construct/wood/wood_panel1x1.mdl","models/props_phx/construct/wood/wood_boardx4.mdl","models/props_phx/construct/wood/wood_boardx2.mdl" ,"models/props_phx/construct/wood/wood_boardx1.mdl","models/props_debris/wood_board07a.mdl","models/props_debris/wood_board06a.mdl","models/props_debris/wood_board05a.mdl","models/props_debris/wood_board04a.mdl","models/props_debris/wood_board03a.mdl","models/props_debris/wood_board01a.mdl","models/props_debris/wood_board02a.mdl","models/props_junk/wood_pallet001a.mdl","models/props_wasteland/barricade002a.mdl","models/props_wasteland/barricade001a.mdl","models/props_junk/wood_crate002a.mdl","models/props_junk/wood_crate001a.mdl","models/props_junk/wood_crate001a_damaged.mdl","models/props_junk/wood_crate001a_damagedmax.mdl","models/props_wasteland/dockplank01a.mdl","models/props_wasteland/dockplank01b.mdl","models/props_wasteland/wood_fence01a.mdl","models/props_wasteland/wood_fence02a.mdl","models/props_interiors/furniture_shelf01a.mdl","models/props_c17/shelfunit01a.mdl","models/props_c17/furnituredresser001a.mdl","models/props_wasteland/cafeteria_table001a.mdl","models/props_c17/furnituretable001a.mdl","models/props_c17/furnituretable002a.mdl","models/props_c17/furnituredrawer001a.mdl"}
 ENT.EntitiesToDestroyClass = {"func_breakable","func_physbox"} //"func_breakable_surf"
@@ -636,9 +647,9 @@ ENT.VJ_AddCertainEntityAsEnemy = {}
 ENT.VJ_AddCertainEntityAsFriendly = {}
 
 ENT.NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
-ENT.NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen}
-ENT.NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack}
-ENT.NPCTbl_Zombies = {npc_fastzombie_torso=true,npc_zombine=true,npc_zombie_torso=true,npc_zombie=true,npc_poisonzombie=true,npc_headcrab_fast=true,npc_headcrab_black=true,npc_headcrab=true,npc_fastzombie=true,monster_zombie=true,monster_headcrab=true,monster_babycrab}
+ENT.NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true}
+ENT.NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack=true}
+ENT.NPCTbl_Zombies = {npc_fastzombie_torso=true,npc_zombine=true,npc_zombie_torso=true,npc_zombie=true,npc_poisonzombie=true,npc_headcrab_fast=true,npc_headcrab_black=true,npc_headcrab=true,npc_fastzombie=true,monster_zombie=true,monster_headcrab=true,monster_babycrab=true}
 ENT.NPCTbl_Antlions = {npc_antlion=true,npc_antlionguard=true,npc_antlion_worker=true}
 ENT.NPCTbl_Xen = {monster_bullchicken=true,monster_alien_grunt=true,monster_alien_slave=true,monster_alien_controller=true,monster_houndeye=true,monster_gargantua=true,monster_nihilanth=true}
 
@@ -805,7 +816,19 @@ function ENT:Initialize()
 	if self.HullSizeNormal == true then self:SetHullSizeNormal() end
 	if self.HasSetSolid == true then self:SetSolid(SOLID_BBOX) end
 	//self:SetMoveType(self.MoveType)
+	self:ConvarsOnInit()
 	self:DoChangeMovementType()
+	self.CurrentChoosenBlood_Particle = {}
+	self.CurrentChoosenBlood_Decal = {}
+	self.CurrentChoosenBlood_Pool = {}
+	if self.BloodColor == "" then -- Backwards Compatibility!
+		if VJ_PICKRANDOMTABLE(self.BloodDecal) == "Blood" then
+			self.BloodColor = "Red"
+		elseif  VJ_PICKRANDOMTABLE(self.BloodDecal) == "YellowBlood" then
+			self.BloodColor = "Yellow"
+		end
+	end
+	self:DoChangeBloodColor(self.BloodColor)
 	if self.DisableInitializeCapabilities == false then self:SetInitializeCapabilities() end
 	self:SetCollisionGroup(COLLISION_GROUP_NPC)
 	self.VJ_ScaleHitGroupDamage = 0
@@ -825,7 +848,6 @@ function ENT:Initialize()
 	if self.UseTheSameGeneralSoundPitch == true then self.UseTheSameGeneralSoundPitch_PickedNumber = math.random(self.GeneralSoundPitch1,self.GeneralSoundPitch2) end
 	self:CustomOnInitialize()
 	self:CustomInitialize() -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
-	self:ConvarsOnInit()
 	if math.random(1,self.SoundTrackChance) == 1 then self:StartSoundTrack() end
 	self:SetRenderMode(RENDERMODE_NORMAL)
 	//self:SetRenderMode(RENDERMODE_TRANSALPHA)
@@ -1809,132 +1831,133 @@ function ENT:Think()
 			//self:SetMovementActivity(6.5)
 			//self:SetMovementActivity(ACT_WALK)
 			self:CustomAttack() -- Custom attack
+			
 			-- Melee Attack --------------------------------------------------------------------------------------------------------------------------------------------
-		if self.HasMeleeAttack == true then
-			//print(self:NearestPoint(self:GetEnemy():GetPos() +self:OBBCenter()):Distance(self:GetEnemy():NearestPoint(self:GetPos() +self:GetEnemy():OBBCenter())))
-			//PrintMessage(HUD_PRINTTALK,self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()))
-			// self:GetEnemy():GetPos():Distance(self:GetPos())
-			if self:CanDoCertainAttack("MeleeAttack") == true then
-			self:MultipleMeleeAttacks()
-			local getproppushorattack = self:PushOrAttackPropsCode()
-			local ispropattack = false
-			local isnormalattack = false
-			if getproppushorattack == true then ispropattack = true end
-			if (self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) < self.MeleeAttackDistance && self:GetEnemy():Visible(self)) then ispropattack = false isnormalattack = true end
-			if (isnormalattack == true or (ispropattack == true && self.MeleeAttack_NoProps == false)) && (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then
-			self.MeleeAttacking = true
-			self.RangeAttacking = false
-			self.AlreadyDoneMeleeAttackFirstHit = false
-			self.IsAbleToMeleeAttack = false
-			self.AlreadyDoneFirstMeleeAttack = false
-			if self.VJ_IsBeingControlled == false && ispropattack == false then self:FaceCertainEntity(self:GetEnemy(),true) end
-			self:CustomOnMeleeAttack_BeforeStartTimer()
-			timer.Simple(self.BeforeMeleeAttackSounds_WaitTime,function() if IsValid(self) then self:BeforeMeleeAttackSoundCode() end end)
-			self.NextAlertSoundT = CurTime() + 0.4
-			if self.DisableMeleeAttackAnimation == false then
-				self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_MeleeAttack)
-				self.CurrentAttackAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) -self.MeleeAttackAnimationDecreaseLengthAmount
-				self.PlayingAttackAnimation = true
-				timer.Simple(self.CurrentAttackAnimationDuration,function()
-					if IsValid(self) then
-						self.PlayingAttackAnimation = false
-						if self.TimeUntilMeleeAttackDamage == false then self:StopAttacks() end
+			if self.HasMeleeAttack == true then
+				//print(self:NearestPoint(self:GetEnemy():GetPos() +self:OBBCenter()):Distance(self:GetEnemy():NearestPoint(self:GetPos() +self:GetEnemy():OBBCenter())))
+				//PrintMessage(HUD_PRINTTALK,self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()))
+				// self:GetEnemy():GetPos():Distance(self:GetPos())
+				if self:CanDoCertainAttack("MeleeAttack") == true then
+					self:MultipleMeleeAttacks()
+					local getproppushorattack = self:PushOrAttackPropsCode()
+					local ispropattack = false
+					local isnormalattack = false
+					if getproppushorattack == true then ispropattack = true end
+					if (self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) < self.MeleeAttackDistance && self:GetEnemy():Visible(self)) then ispropattack = false isnormalattack = true end
+					if (isnormalattack == true or (ispropattack == true && self.MeleeAttack_NoProps == false)) && (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then
+						self.MeleeAttacking = true
+						self.RangeAttacking = false
+						self.AlreadyDoneMeleeAttackFirstHit = false
+						self.IsAbleToMeleeAttack = false
+						self.AlreadyDoneFirstMeleeAttack = false
+						if self.VJ_IsBeingControlled == false && ispropattack == false then self:FaceCertainEntity(self:GetEnemy(),true) end
+						self:CustomOnMeleeAttack_BeforeStartTimer()
+						timer.Simple(self.BeforeMeleeAttackSounds_WaitTime,function() if IsValid(self) then self:BeforeMeleeAttackSoundCode() end end)
+						self.NextAlertSoundT = CurTime() + 0.4
+						if self.DisableMeleeAttackAnimation == false then
+							self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_MeleeAttack)
+							self.CurrentAttackAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) -self.MeleeAttackAnimationDecreaseLengthAmount
+							self.PlayingAttackAnimation = true
+							timer.Simple(self.CurrentAttackAnimationDuration,function()
+								if IsValid(self) then
+									self.PlayingAttackAnimation = false
+									//if self.TimeUntilMeleeAttackDamage == false then self:StopAttacks() end
+								end
+							end)
+							self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.MeleeAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
+						end
+						if ispropattack == true then self.MeleeAttack_DoingPropAttack = true else self.MeleeAttack_DoingPropAttack = false end
+						if self.TimeUntilMeleeAttackDamage == false then
+							self:MeleeAttackCode_DoFinishTimers()
+						else
+							timer.Create( "timer_melee_start"..self.Entity:EntIndex(), self.TimeUntilMeleeAttackDamage, self.MeleeAttackReps, function() if ispropattack == true then self:MeleeAttackCode(true) else self:MeleeAttackCode() end end)
+							for tk, tv in ipairs(self.MeleeAttackExtraTimers) do
+								self:DoAddExtraAttackTimers("timer_melee_start_"..math.Round(CurTime())+math.random(1,99999999),tv,1,"MeleeAttack")
+							end
+						end
+						self:CustomOnMeleeAttack_AfterStartTimer()
 					end
-				end)
-				self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.MeleeAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
-			end
-			if ispropattack == true then self.MeleeAttack_DoingPropAttack = true else self.MeleeAttack_DoingPropAttack = false end
-			if self.TimeUntilMeleeAttackDamage == false then
-				timer.Create( "timer_range_finished_abletomelee"..self.Entity:EntIndex(), self:DecideAttackTimer(self.NextMeleeAttackTime,self.NextMeleeAttackTime_DoRand), 1, function()
-					self.IsAbleToMeleeAttack = true
-				end)
-			else
-				timer.Create( "timer_melee_start"..self.Entity:EntIndex(), self.TimeUntilMeleeAttackDamage, self.MeleeAttackReps, function() if ispropattack == true then self:MeleeAttackCode(true) else self:MeleeAttackCode() end end)
-				for tk, tv in ipairs(self.MeleeAttackExtraTimers) do
-					self:DoAddExtraAttackTimers("timer_melee_start_"..math.Round(CurTime())+math.random(1,99999999),tv,1,"MeleeAttack")
 				end
 			end
-			self:CustomOnMeleeAttack_AfterStartTimer()
-		  end
-		 end
-		end
 
 			-- Range Attack --------------------------------------------------------------------------------------------------------------------------------------------
-		if self.HasRangeAttack == true then
-			if self:CanDoCertainAttack("RangeAttack") == true then
-			self:MultipleRangeAttacks()
-			self:StopMoving()
-			self.RangeAttacking = true
-			self.IsAbleToRangeAttack = false
-			self.AlreadyDoneRangeAttackFirstProjectile = false
-			self:CustomOnRangeAttack_BeforeStartTimer()
-			self:BeforeRangeAttackSoundCode()
-			if self.DisableRangeAttackAnimation == false then
-				self:ClearSchedule()
-				self:StopMoving()
-				self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_RangeAttack)
-				self.CurrentAttackAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) -self.RangeAttackAnimationDecreaseLengthAmount
-				self.PlayingAttackAnimation = true
-				timer.Simple(self.CurrentAttackAnimationDuration,function()
-					if IsValid(self) then
-					self.PlayingAttackAnimation = false
-					//if self.RangeAttacking == true then self:VJ_SetSchedule(SCHED_CHASE_ENEMY) end
-					if self.TimeUntilRangeAttackProjectileRelease == false then self:StopAttacks() end
+			if self.HasRangeAttack == true then
+				if self:CanDoCertainAttack("RangeAttack") == true then
+					self:MultipleRangeAttacks()
+					if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangeDistance) && (self:GetEnemy():GetPos():Distance(self:GetPos()) > self.RangeToMeleeDistance) then
+						if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
+						self.RangeAttacking = true
+						self.IsAbleToRangeAttack = false
+						self.AlreadyDoneRangeAttackFirstProjectile = false
+						self:CustomOnRangeAttack_BeforeStartTimer()
+						self:BeforeRangeAttackSoundCode()
+						if self.DisableRangeAttackAnimation == false then
+							if self.RangeAttackAnimationStopMovement == true then
+								self:ClearSchedule()
+								self:StopMoving()
+							end
+							self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_RangeAttack)
+							self.CurrentAttackAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) -self.RangeAttackAnimationDecreaseLengthAmount
+							self.PlayingAttackAnimation = true
+							timer.Simple(self.CurrentAttackAnimationDuration,function()
+								if IsValid(self) then
+									self.PlayingAttackAnimation = false
+									//if self.RangeAttacking == true then self:VJ_SetSchedule(SCHED_CHASE_ENEMY) end
+									//if self.TimeUntilRangeAttackProjectileRelease == false then self:StopAttacks() end
+								end
+							end)
+							self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.RangeAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
+						end
+						if self.TimeUntilRangeAttackProjectileRelease == false then
+							self:RangeAttackCode_DoFinishTimers()
+						else
+							timer.Create( "timer_range_start"..self.Entity:EntIndex(), self.TimeUntilRangeAttackProjectileRelease, self.RangeAttackReps, function() self:RangeAttackCode() end)
+							for tk, tv in ipairs(self.RangeAttackExtraTimers) do
+								self:DoAddExtraAttackTimers("timer_range_start_"..math.Round(CurTime())+math.random(1,99999999),tv,1,"RangeAttack")
+							end
+						end
+						self:CustomOnRangeAttack_AfterStartTimer()
 					end
-				end)
-				self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.RangeAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
-			end
-			if self.TimeUntilRangeAttackProjectileRelease == false then
-				timer.Create( "timer_range_finished_abletorange"..self.Entity:EntIndex(), self:DecideAttackTimer(self.NextRangeAttackTime,self.NextRangeAttackTime_DoRand), 1, function()
-					self.IsAbleToRangeAttack = true
-				end)
-			else
-				timer.Create( "timer_range_start"..self.Entity:EntIndex(), self.TimeUntilRangeAttackProjectileRelease, self.RangeAttackReps, function() self:RangeAttackCode() end)
-				for tk, tv in ipairs(self.RangeAttackExtraTimers) do
-					self:DoAddExtraAttackTimers("timer_range_start_"..math.Round(CurTime())+math.random(1,99999999),tv,1,"RangeAttack")
 				end
 			end
-			self:CustomOnRangeAttack_AfterStartTimer()
-		 end
-		end
 
 			-- Leap Attack --------------------------------------------------------------------------------------------------------------------------------------------
-		if self.HasLeapAttack == true then
-			if self:CanDoCertainAttack("LeapAttack") == true then
-			self:MultipleLeapAttacks()
-			self.LeapAttacking = true
-			self.AlreadyDoneLeapAttackFirstHit = false
-			self.AlreadyDoneFirstLeapAttack = false
-			self.IsAbleToLeapAttack = false
-			if self.LeapAttackAnimationFaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(),true) end
-			self:CustomOnLeapAttack_BeforeStartTimer()
-			self:BeforeLeapAttackSoundCode()
-			timer.Create( "timer_leap_start_jump"..self.Entity:EntIndex(), self.TimeUntilLeapAttackVelocity, 1, function() self:LeapAttackVelocityCode() end)
-			if self.DisableLeapAttackAnimation == false then
-				self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_LeapAttack)
-				self.CurrentAttackAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) -self.LeapAttackAnimationDecreaseLengthAmount
-				self.PlayingAttackAnimation = true
-				timer.Simple(self.CurrentAttackAnimationDuration,function()
-					if IsValid(self) then
-					self.PlayingAttackAnimation = false
-					if self.TimeUntilLeapAttackDamage == false then self:StopAttacks() end
+			if self.HasLeapAttack == true then
+				if self:CanDoCertainAttack("LeapAttack") == true then
+					self:MultipleLeapAttacks()
+					if (self:IsOnGround() && self:GetPos():Distance(self:GetEnemy():GetPos()) < self.LeapDistance) && (self:GetPos():Distance(self:GetEnemy():GetPos()) > self.LeapToMeleeDistance) then
+						self.LeapAttacking = true
+						self.AlreadyDoneLeapAttackFirstHit = false
+						self.AlreadyDoneFirstLeapAttack = false
+						self.IsAbleToLeapAttack = false
+						if self.LeapAttackAnimationFaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(),true) end
+						self:CustomOnLeapAttack_BeforeStartTimer()
+						self:BeforeLeapAttackSoundCode()
+						timer.Create( "timer_leap_start_jump"..self.Entity:EntIndex(), self.TimeUntilLeapAttackVelocity, 1, function() self:LeapAttackVelocityCode() end)
+						if self.DisableLeapAttackAnimation == false then
+							self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_LeapAttack)
+							self.CurrentAttackAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) -self.LeapAttackAnimationDecreaseLengthAmount
+							self.PlayingAttackAnimation = true
+							timer.Simple(self.CurrentAttackAnimationDuration,function()
+								if IsValid(self) then
+									self.PlayingAttackAnimation = false
+									//if self.TimeUntilLeapAttackDamage == false then self:StopAttacks() end
+								end
+							end)
+							self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.LeapAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
+						end
+						if self.TimeUntilLeapAttackDamage == false then
+							self:LeapAttackCode_DoFinishTimers()
+						else
+							timer.Create( "timer_leap_start"..self.Entity:EntIndex(), self.TimeUntilLeapAttackDamage, self.LeapAttackReps, function() self:LeapDamageCode() end)
+							for tk, tv in ipairs(self.LeapAttackExtraTimers) do
+								self:DoAddExtraAttackTimers("timer_leap_start_"..math.Round(CurTime())+math.random(1,99999999),tv,1,"LeapAttack")
+							end
+						end
+						self:CustomOnLeapAttack_AfterStartTimer()
 					end
-				end)
-				self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.LeapAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
-			end
-			if self.TimeUntilLeapAttackDamage == false then
-				timer.Create( "timer_leap_finished_abletoleap"..self.Entity:EntIndex(), self:DecideAttackTimer(self.NextLeapAttackTime,self.NextLeapAttackTime_DoRand), 1, function()
-					self.IsAbleToLeapAttack = true
-				end)
-			else
-				timer.Create( "timer_leap_start"..self.Entity:EntIndex(), self.TimeUntilLeapAttackDamage, self.LeapAttackReps, function() self:LeapDamageCode() end)
-				for tk, tv in ipairs(self.LeapAttackExtraTimers) do
-					self:DoAddExtraAttackTimers("timer_leap_start_"..math.Round(CurTime())+math.random(1,99999999),tv,1,"LeapAttack")
 				end
-			 end
-			self:CustomOnLeapAttack_AfterStartTimer()
-		  end
-		 end
+			end
 		else
 			self.TimeSinceSeenEnemy = 0
 			self.TimeSinceLastSeenEnemy = self.TimeSinceLastSeenEnemy + 0.1
@@ -1979,20 +2002,20 @@ function ENT:CanDoCertainAttack(AttackName)
 	if AttackName == "MeleeAttack" then
 		if self.IsAbleToMeleeAttack == true && self.MeleeAttacking == false && self.LeapAttacking == false && self.RangeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
 		// if self.VJ_IsBeingControlled == true then if self.VJ_TheController:KeyDown(IN_ATTACK) then return true else return false end end
-		return true
+			return true
 		end
 	end
 
 	if AttackName == "RangeAttack" then
 		// (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle)))
-		if self.IsAbleToRangeAttack == true && (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangeDistance) && (self:GetEnemy():GetPos():Distance(self:GetPos()) > self.RangeToMeleeDistance) && self:GetEnemy():Visible(self) && self.RangeAttacking == false && self.MeleeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
-		return true
+		if self.IsAbleToRangeAttack == true && self:GetEnemy():Visible(self) && self.RangeAttacking == false && self.MeleeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
+			return true
 		end
 	end
 
 	if AttackName == "LeapAttack" then
-		if self.IsAbleToLeapAttack == true && self:IsOnGround() && self:GetPos():Distance(self:GetEnemy():GetPos()) < self.LeapDistance && (self:GetPos():Distance(self:GetEnemy():GetPos()) > self.LeapToMeleeDistance) && self:GetEnemy():Visible(self) && self.RangeAttacking == false && self.LeapAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
-		return true
+		if self.IsAbleToLeapAttack == true && self:GetEnemy():Visible(self) && self.RangeAttacking == false && self.LeapAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
+			return true
 		end
 	end
 	return false
@@ -2041,7 +2064,7 @@ function ENT:PushOrAttackPropsCode(CustomValuesTbl)
 	for k,v in pairs(valuestoattack) do
 		local phys = v:GetPhysicsObject()
 		if table.HasValue(self.EntitiesToDestroyClass,v:GetClass()) or v.VJ_AddEntityToSNPCAttackList == true then isanentitytoattack = true end
-		if v:GetClass() == "prop_physics" or v:GetClass() == "prop_physics_multiplayer" or v:GetClass() == "prop_physics_respawnable" or isanentitytoattack == true then
+		if VJ_IsProp(v) == true or isanentitytoattack == true then
 			//print(self:VJ_GetNearestPointToEntityDistance(v,1))
 			//print(self:DoPropVisibiltyCheckForPushAttackProps(v))
 			if self:VJ_GetNearestPointToEntityDistance(v) < (halfdist+CustomMeleeDistance) && self:DoPropVisibiltyCheckForPushAttackProps(v) /*&& self:Visible(v)*/ && (self:GetForward():Dot((v:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius / 1.3))) && phys:IsValid() && phys != nil && phys != NULL && v:GetCollisionGroup() != COLLISION_GROUP_DEBRIS && v:GetCollisionGroup() != COLLISION_GROUP_DEBRIS_TRIGGER && v:GetCollisionGroup() != COLLISION_GROUP_DISSOLVING && v:GetCollisionGroup() != COLLISION_GROUP_IN_VEHICLE then
@@ -2083,7 +2106,7 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 	local HasHitGoodProp = false
 	if attackthev != nil then
 		for _,v in pairs(attackthev) do
-			if (v != self && v:GetClass() != self:GetClass()) && (((v:IsNPC() or (v:IsPlayer() && v:Alive())) && (self:Disposition(v) == 1 or self:Disposition(v) == 2)) or v:GetClass() == "prop_physics" or v:GetClass() == "prop_physics_multiplayer" or v:GetClass() == "prop_physics_respawnable" or v:GetClass() == "func_breakable_surf" or table.HasValue(self.EntitiesToDestroyClass,v:GetClass()) or v.VJ_AddEntityToSNPCAttackList == true) then
+			if (v != self && v:GetClass() != self:GetClass()) && (((v:IsNPC() or (v:IsPlayer() && v:Alive())) && (self:Disposition(v) == 1 or self:Disposition(v) == 2)) or VJ_IsProp(v) == true or v:GetClass() == "func_breakable_surf" or table.HasValue(self.EntitiesToDestroyClass,v:GetClass()) or v.VJ_AddEntityToSNPCAttackList == true) then
 				if (self:GetForward():Dot((v:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackDamageAngleRadius))) then
 					//if IsPropAttack == true && self:GetPos():Distance(v:GetPos()) <= AttackDist /2 && v:GetClass() != "prop_physics" && v:GetClass() != "func_breakable_surf" && v:GetClass() != "func_breakable" then continue end
 					if IsPropAttack == true && (v:IsPlayer() or v:IsNPC()) then
@@ -2094,7 +2117,7 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 						//if (self:GetPos():Distance(v:GetPos()) <= self:VJ_GetNearestPointToEntityDistance(v) && self:VJ_GetNearestPointToEntityDistance(v) <= self.MeleeAttackDistance) == false then
 						if self:VJ_GetNearestPointToEntityDistance(v) > self.MeleeAttackDistance then continue end
 					end
-					if v:GetClass() == "prop_physics" or v:GetClass() == "prop_physics_multiplayer" or v:GetClass() == "prop_physics_respawnable" then
+					if VJ_IsProp(v) == true then
 						local phys = v:GetPhysicsObject()
 						if phys:IsValid() && phys != nil && phys != NULL then
 							//if table.HasValue(self.EntitiesToDestoryModel,v:GetModel()) or table.HasValue(self.EntitiesToDestroyClass,v:GetClass()) or table.HasValue(self.EntitiesToPushModel,v:GetModel()) then
@@ -2160,7 +2183,7 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 						end
 					end
 					VJ_DestroyCombineTurret(self,v)
-					if v:GetClass() == "prop_physics" or v:GetClass() == "prop_physics_multiplayer" or v:GetClass() == "prop_physics_respawnable" then
+					if VJ_IsProp(v) == true then
 						if HasHitGoodProp == true then
 							hitentity = true
 						end
@@ -2180,7 +2203,7 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 		self:MeleeAttackMissSoundCode()
 	end
 	//if self.VJ_IsBeingControlled == false && self.MeleeAttackAnimationFaceEnemy == true then self:FaceCertainEntity(MyEnemy,true) end
-	if self.AlreadyDoneFirstMeleeAttack == false then
+	if self.AlreadyDoneFirstMeleeAttack == false && self.TimeUntilMeleeAttackDamage != false then
 		self:MeleeAttackCode_DoFinishTimers()
 	end
 	self.AlreadyDoneFirstMeleeAttack = true
@@ -2234,7 +2257,7 @@ function ENT:MeleeAttackCode_DoFinishTimers()
 		//if self.VJ_IsBeingControlled == false then self:FaceCertainEntity(MyEnemy,true) end
 		self:DoChaseAnimation()
 	end)
-	timer.Create( "timer_range_finished_abletomelee"..self.Entity:EntIndex(), self:DecideAttackTimer(self.NextMeleeAttackTime,self.NextMeleeAttackTime_DoRand), 1, function()
+	timer.Create( "timer_melee_finished_abletomelee"..self.Entity:EntIndex(), self:DecideAttackTimer(self.NextMeleeAttackTime,self.NextMeleeAttackTime_DoRand), 1, function()
 		self.IsAbleToMeleeAttack = true
 	end)
 end
@@ -2244,9 +2267,9 @@ function ENT:RangeAttackCode()
 	if self.vACT_StopAttacks == true then return end
 	if self.Flinching == true then return end
 	if self.MeleeAttacking == true then return end
-	self:StopMoving()
+	if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
 	if self:GetEnemy() != nil then
-		self:StopMoving()
+		if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
 		self:RangeAttackSoundCode()
 		self.RangeAttacking = true
 		self:CustomRangeAttackCode()
@@ -2279,7 +2302,7 @@ function ENT:RangeAttackCode()
 		end
 	end
 	self.AlreadyDoneRangeAttackFirstProjectile = true
-	self:RangeAttackCode_DoFinishTimers()
+	if self.TimeUntilRangeAttackProjectileRelease != false then self:RangeAttackCode_DoFinishTimers() end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttackCode_DoFinishTimers()
@@ -2302,7 +2325,7 @@ function ENT:LeapDamageCode()
 	local attackthev = ents.FindInSphere(self:GetPos(),self.LeapAttackDamageDistance)
 	if attackthev != nil then
 		for _,v in pairs(attackthev) do
-			if (v:IsNPC() || (v:IsPlayer() && v:Alive())) && (self:Disposition(v) == 1 or self:Disposition(v) == 2) && (v != self) && (v:GetClass() != self:GetClass()) or (v:GetClass() == "prop_physics") or v:GetClass() == "prop_physics_multiplayer" or v:GetClass() == "prop_physics_respawnable" or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" then
+			if (v:IsNPC() || (v:IsPlayer() && v:Alive())) && (self:Disposition(v) == 1 or self:Disposition(v) == 2) && (v != self) && (v:GetClass() != self:GetClass()) or VJ_IsProp(v) == true or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" then
 				self:CustomOnLeapAttack_AfterChecks(v)
 				local leapdmg = DamageInfo()
 				if self.SelectedDifficulty == 0 then leapdmg:SetDamage(self.LeapAttackDamage/2) end -- Easy
@@ -2327,7 +2350,7 @@ function ENT:LeapDamageCode()
 		self:LeapAttackDamageSoundCode()
 		if self.StopLeapAttackAfterFirstHit == true then self.AlreadyDoneLeapAttackFirstHit = true /*self:SetLocalVelocity(Vector(0,0,0))*/ end
 	end
-	if self.AlreadyDoneFirstLeapAttack == false then
+	if self.AlreadyDoneFirstLeapAttack == false && self.TimeUntilLeapAttackDamage != false then
 		self:LeapAttackCode_DoFinishTimers()
 	end
 	self.AlreadyDoneFirstLeapAttack = true
@@ -2367,7 +2390,7 @@ function ENT:StopAttacks(CheckTimers)
 		//self.IsAbleToRangeAttack = true
 		//self.IsAbleToLeapAttack = true
 		if self.MeleeAttacking == true && self.AlreadyDoneFirstMeleeAttack == false then self:MeleeAttackCode_DoFinishTimers() end
-		if self.RangeAttacking == true && self.AlreadyDoneRangeAttackFirstProjectile == false then print("ALOOOOOOOOO") self:RangeAttackCode_DoFinishTimers() end
+		if self.RangeAttacking == true && self.AlreadyDoneRangeAttackFirstProjectile == false then self:RangeAttackCode_DoFinishTimers() end
 		if self.LeapAttacking == true && self.AlreadyDoneFirstLeapAttack == false then self:LeapAttackCode_DoFinishTimers() end
 	end
 	self.MeleeAttacking = false
@@ -3069,18 +3092,77 @@ function ENT:DoFlinch(dmginfo,hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SpawnBloodDecal(dmginfo,hitgroup)
-	local DamageForce = dmginfo:GetDamageForce()
-	local DamagePos = dmginfo:GetDamagePosition()
-	local length = math.Clamp(DamageForce:Length() *10, 100, self.BloodDecalDistance)
-	local paintit = tobool(math.random(10, math.Round(length *0.125)) <= self.BloodDecalRate)
-	if !paintit then return end
-	local posEnd = DamagePos +DamageForce:GetNormal() *length
-	local tr = util.TraceLine({start = DamagePos, endpos = posEnd, filter = self})
-	//if !tr.HitWorld then return end
-	util.Decal(VJ_PICKRANDOMTABLE(self.BloodDecal),tr.HitPos +tr.HitNormal,tr.HitPos -tr.HitNormal)
-	if math.random(1,2) == 1 then util.Decal(VJ_PICKRANDOMTABLE(self.BloodDecal),tr.HitPos +tr.HitNormal +Vector(0,math.random(-100,100),0),tr.HitPos -tr.HitNormal) end
-	if math.random(1,2) == 1 then util.Decal(VJ_PICKRANDOMTABLE(self.BloodDecal),tr.HitPos +tr.HitNormal +Vector(math.random(-100,100),0,0),tr.HitPos -tr.HitNormal) end
+function ENT:DoChangeBloodColor(Type)
+	local Type = Type or "None"
+	if Type == "" then Type = "None" end
+
+	local usegmoddecals = false
+	if self.BloodDecalUseGMod == true then usegmoddecals = true end
+	
+	local changeparticle = true
+	local changedecal = true
+	local changepool = true
+	if VJ_PICKRANDOMTABLE(self.CustomBlood_Particle) != false then self.CurrentChoosenBlood_Particle = self.CustomBlood_Particle changeparticle = false end 
+	if VJ_PICKRANDOMTABLE(self.CustomBlood_Decal) != false then self.CurrentChoosenBlood_Decal = self.CustomBlood_Decal changedecal = false end 
+	if VJ_PICKRANDOMTABLE(self.CustomBlood_Pool) != false then self.CurrentChoosenBlood_Pool = self.CustomBlood_Pool changepool = false end 
+	
+	if Type == "Red" then
+		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"blood_impact_red_01"} end // vj_impact1_red
+		if changedecal == true then
+			if usegmoddecals == true then
+				self.CurrentChoosenBlood_Decal = {"Blood"}
+			else
+				self.CurrentChoosenBlood_Decal = {"VJ_Blood_Red"}
+			end
+		end
+		if changepool == true then
+			if self.BloodPoolSize == "Small" then
+				self.CurrentChoosenBlood_Pool = {"vj_bleedout_red_small"}
+			elseif self.BloodPoolSize == "Tiny" then
+				self.CurrentChoosenBlood_Pool = {"vj_bleedout_red_tiny"}
+			else
+				self.CurrentChoosenBlood_Pool = {"vj_bleedout_red"}
+			end
+		end
+	elseif Type == "Yellow" then
+		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"blood_impact_yellow_01"} end // vj_impact1_yellow
+		if changedecal == true then
+			if usegmoddecals == true then
+				self.CurrentChoosenBlood_Decal = {"YellowBlood"}
+			else
+				self.CurrentChoosenBlood_Decal = {"VJ_Blood_Yellow"}
+			end
+		end
+		if changepool == true then
+			if self.BloodPoolSize == "Small" then
+				self.CurrentChoosenBlood_Pool = {"vj_bleedout_yellow_small"}
+			elseif self.BloodPoolSize == "Tiny" then
+				self.CurrentChoosenBlood_Pool = {"vj_bleedout_yellow_tiny"}
+			else
+				self.CurrentChoosenBlood_Pool = {"vj_bleedout_yellow"}
+			end
+		end
+	elseif Type == "Green" then
+		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_green"} end
+		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Green"} end
+		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
+	elseif Type == "Orange" then
+		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_orange"} end
+		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Orange"} end
+		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
+	elseif Type == "Blue" then
+		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_blue"} end
+		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Blue"} end
+		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
+	elseif Type == "Purple" then
+		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_purple"} end
+		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Purple"} end
+		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
+	elseif Type == "Black" then
+		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_black"} end
+		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Black"} end
+		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodParticles(dmginfo,hitgroup)
@@ -3088,14 +3170,50 @@ function ENT:SpawnBloodParticles(dmginfo,hitgroup)
 	local DamagePos = dmginfo:GetDamagePosition()
 	if DamagePos == Vector(0,0,0) then DamagePos = self:GetPos() + self:OBBCenter() end
 	//if DamageType == DMG_ACID or DamageType == DMG_RADIATION or DamageType == DMG_POISON or DamageType == DMG_CRUSH or DamageType == DMG_SLASH or DamageType == DMG_GENERIC or self:IsOnFire() then DoUnPositionedParticle() return false end
-
-	local bloodeffect = ents.Create("info_particle_system")
-	bloodeffect:SetKeyValue("effect_name",VJ_PICKRANDOMTABLE(self.BloodParticle))
-	bloodeffect:SetPos(DamagePos) 
-	bloodeffect:Spawn()
-	bloodeffect:Activate() 
-	bloodeffect:Fire("Start","",0)
-	bloodeffect:Fire("Kill","",0.1)
+	local particlename = VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Particle)
+	if particlename == false then return end
+	local spawnparticle = ents.Create("info_particle_system")
+	spawnparticle:SetKeyValue("effect_name",particlename)
+	spawnparticle:SetPos(DamagePos)
+	spawnparticle:Spawn()
+	spawnparticle:Activate()
+	spawnparticle:Fire("Start","",0)
+	spawnparticle:Fire("Kill","",0.1)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:SpawnBloodDecal(dmginfo,hitgroup)
+	if VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal) == false then return end
+	local DamageForce = dmginfo:GetDamageForce()
+	local DamagePos = dmginfo:GetDamagePosition()
+	local length = math.Clamp(DamageForce:Length() *10, 100, self.BloodDecalDistance)
+	local EndPos = DamagePos +DamageForce:GetNormal() *length
+	local tr = util.TraceLine({start = DamagePos, endpos = EndPos, filter = self})
+	//if !tr.HitWorld then return end
+	util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal),tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
+	for i=1,2 do
+		if math.random(1,2) == 1 then util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal),tr.HitPos +tr.HitNormal +Vector(math.random(-70,70),math.random(-70,70),0),tr.HitPos -tr.HitNormal) end
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:SpawnBloodPool(dmginfo,hitgroup)
+	if !IsValid(self.Corpse) then return end
+	local GetCorpse = self.Corpse
+	local GetBloodPool = VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Pool)
+	if GetBloodPool == false then return end
+	timer.Simple(2.2,function()
+		if IsValid(GetCorpse) then
+			local tr = util.TraceLine({
+				start = GetCorpse:GetPos()+GetCorpse:OBBCenter(),
+				endpos = GetCorpse:GetPos()+GetCorpse:OBBCenter()-Vector(0,0,30),
+				filter = GetCorpse, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
+				mask = CONTENTS_SOLID
+			})
+			-- (X,Y,Z),(front,up,side)
+			if (tr.HitWorld) && (tr.HitNormal == Vector(0.0,0.0,1.0)) then // (tr.Fraction <= 0.405)
+				ParticleEffect(GetBloodPool,tr.HitPos,Angle(0,0,0),nil)
+			end
+		end
+	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PriorToKilled(dmginfo,hitgroup)
@@ -3116,13 +3234,16 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 
 	-- Blood decal on the ground
 	if self.Bleeds == true && self.HasBloodDecal == true then
-		self:SetLocalPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the NPC is too close to the ground
-		local tr = util.TraceLine({
-			start = self:GetPos(),
-			endpos = self:GetPos() - Vector(0, 0, 500),
-			filter = self //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
-		})
-		util.Decal(VJ_PICKRANDOMTABLE(self.BloodDecal),tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
+		local pickdecal = VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal)
+		if pickdecal != false then
+			self:SetLocalPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the NPC is too close to the ground
+			local tr = util.TraceLine({
+				start = self:GetPos(),
+				endpos = self:GetPos() - Vector(0, 0, 500),
+				filter = self //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
+			})
+			util.Decal(pickdecal,tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
+		end
 	end
 
 	self.Dead = true
@@ -3278,36 +3399,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		self.Corpse.ExtraCorpsesToRemove = {}
 		
 		if self.Bleeds == true && self.HasBloodPool == true && GetConVarNumber("vj_npc_nobloodpool") == 0 then
-			local GetCorpse = self.Corpse
-			local GetBloodDecal = self.BloodDecal
-			local GetCustomBloodParticles = self.BloodPoolParticle
-			timer.Simple(2.2,function()
-				if GetCorpse:IsValid() then
-					local tr = util.TraceLine({
-						start = GetCorpse:GetPos() +GetCorpse:OBBCenter(),
-						endpos = GetCorpse:GetPos() +GetCorpse:OBBCenter() - Vector(0,0,30),
-						filter = GetCorpse, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
-						mask = CONTENTS_SOLID
-					})
-					-- (X,Y,Z),(front,up,side)
-					//print(tr.Fraction)
-					//print(tr.HitNormal)
-					if (tr.HitWorld) && tr.HitNormal == Vector(0.0,0.0,1.0) then
-						//if (tr.Fraction <= 0.405) then
-						if table.Count(GetCustomBloodParticles) <= 0 then // GetBloodDecal == "YellowBlood"
-							local blooddecalistbl = true
-							if istable(GetBloodDecal) then blooddecalistbl = true else blooddecalistbl = false end
-							if (blooddecalistbl == true && table.HasValue(GetBloodDecal,"YellowBlood")) or (blooddecalistbl == false && GetBloodDecal == "YellowBlood") then
-								ParticleEffect("vj_bleedout_yellow",tr.HitPos,Angle(0,0,0),nil)
-							elseif (blooddecalistbl == true && table.HasValue(GetBloodDecal,"Blood")) or (blooddecalistbl == false && GetBloodDecal == "Blood") then
-								ParticleEffect("vj_bleedout_red",tr.HitPos,Angle(0,0,0),nil)
-							end
-						else
-							ParticleEffect(VJ_PICKRANDOMTABLE(GetCustomBloodParticles),tr.HitPos,Angle(0,0,0),nil) 
-						end
-					end
-				end
-			end)
+			self:SpawnBloodPool(dmginfo,hitgroup)
 		end
 		
 		-- Miscellaneous --
@@ -3950,6 +4042,7 @@ function ENT:ConvarsOnInit()
 	if GetConVarNumber("vj_npc_nomedics") == 1 then self.IsMedicSNPC = false end
 	if GetConVarNumber("vj_npc_nogibdeathparticles") == 1 then self.HasGibDeathParticles = false end
 	if GetConVarNumber("vj_npc_nogib") == 1 then self.AllowedToGib = false self.HasGibOnDeath = false end
+	if GetConVarNumber("vj_npc_usegmoddecals") == 1 then self.BloodDecalUseGMod = true end
 	if GetConVarNumber("vj_npc_sd_gibbing") == 1 then self.HasGibOnDeathSounds = false end
 	if GetConVarNumber("vj_npc_sd_soundtrack") == 1 then self.HasSoundTrack = false end
 	if GetConVarNumber("vj_npc_sd_footstep") == 1 then self.HasFootStepSound = false end
