@@ -4,7 +4,10 @@ ENT.PrintName		= "Grenade"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Information		= "Projectiles for my addons"
-ENT.Category		= "Projectiles"
+ENT.Category		= "VJ Base"
+
+ENT.Spawnable = true
+ENT.AdminOnly = false
 
 if (CLIENT) then
 	local Name = "Grenade"

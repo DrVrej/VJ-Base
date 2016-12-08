@@ -11,8 +11,7 @@ ENT.StartHealth = 50
 ENT.HullType = HULL_TINY
 ENT.MovementType = VJ_MOVETYPE_AERIAL -- How does the SNPC move?
 ---------------------------------------------------------------------------------------------------------------------------------------------
-ENT.BloodParticle = {"blood_impact_red_01"} -- Particle that the SNPC spawns when it's damaged
-ENT.BloodDecal = {"Blood"} -- Leave blank for none | Commonly used: Red = Blood, Yellow Blood = YellowBlood
+ENT.BloodColor = "Red" -- The blood type, this will detemine what it should use (decal, particle, etc.)
 ENT.HasMeleeAttack = true -- Should the SNPC have a melee attack?
 ENT.AnimTbl_MeleeAttack = {ACT_RANGE_ATTACK1} -- Melee Attack Animations
 ENT.MeleeAttackDistance = 60 -- How close does it have to be until it attacks?

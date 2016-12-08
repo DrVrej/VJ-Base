@@ -57,8 +57,8 @@ SWEP.HoldType 					= "ar2"
 SWEP.ViewModelFlip				= false -- Flip the model? Usally used for CS:S models
 SWEP.ViewModelFOV				= 55 -- Player FOV for the view model
 SWEP.BobScale					= 1.5 -- Bob effect when moving
-SWEP.Spawnable					= false
-SWEP.AdminSpawnable				= false
+//SWEP.Spawnable				= false
+//SWEP.AdminOnly				= false
 SWEP.AnimPrefix					= "python"
 	-- World Model ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.WorldModel_UseCustomPosition = false -- Should the gun use custom position? This can be used to fix guns that are in the crotch

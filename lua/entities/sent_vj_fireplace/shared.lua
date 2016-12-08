@@ -8,10 +8,10 @@ ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Purpose 		= "Gives a warm feeling, specially in snowy maps."
 ENT.Instructions 	= "Don't change anything."
-ENT.Category		= "VJ Entites"
+ENT.Category		= "VJ Base"
 
-ENT.Spawnable = false
-ENT.AdminSpawnable = false
+ENT.Spawnable = true
+ENT.AdminOnly = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 net.Receive("vj_fireplace_turnon1", function()
 local ent = net.ReadEntity()

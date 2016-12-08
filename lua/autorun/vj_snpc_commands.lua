@@ -74,6 +74,7 @@ AddConvars["vj_npc_itemdrops"] = 1 -- item drops on death?
 AddConvars["vj_npc_seedistance"] = 0 -- How far can the SNPCs see? 0 = The distance that the SNPC uses
 AddConvars["vj_npc_globalcorpselimit"] = 32 -- What is the limit for SNPC corpses on the ground? (When Keep Corpses is off)
 AddConvars["vj_npc_processtime"] = 1 -- How much time it takes for an SNPC to process something
+AddConvars["vj_npc_usegmoddecals"] = 0 -- Should it use Garry's Mod's current blood decals?
 	-- Creature Options ----------------------------------------------------------------------------------------------------
 AddConvars["vj_npc_creatureopendoor"] = 1 -- Should Creatures open doors?
 	-- Human Options ----------------------------------------------------------------------------------------------------

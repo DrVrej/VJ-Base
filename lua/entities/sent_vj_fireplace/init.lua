@@ -76,6 +76,12 @@ function ENT:OnTakeDamage(dmginfo)
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Touch(entity)
+	if (IsValid(entity) && entity:GetPos():Distance(self:GetPos()) <= 38 && self.FirePlaceOn == true) && (entity:IsNPC() or entity:IsPlayer()) then
+		entity:Ignite(math.Rand(3,5))
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
 	self:StopParticles()
 	if self.firesound1 then self.firesound1:Stop() end

@@ -19,7 +19,7 @@ ENT.MovementType = VJ_MOVETYPE_STATIONARY -- How does the SNPC move?
 ENT.CanTurnWhileStationary = false -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
 ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasAllies = true -- Put to false if you want it not to have any allies
-ENT.Bleeds = false -- Does the SNPC bleed? (Blood decal, particle and etc.)
+ENT.Bleeds = false -- Does the SNPC bleed? (Blood decal, particle, etc.)
 ENT.HasMeleeAttack = false -- Should the SNPC have a melee attack?
 ENT.DisableWeapons = true -- If true, SNPC can't use weapons
 ENT.DisableInitializeCapabilities = true -- If true, it will disable the initialize capabilities, this will allow you to add your own

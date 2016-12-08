@@ -17,7 +17,7 @@ ENT.VJ_IsHugeMonster = true -- Is this a huge monster?
 ENT.MovementType = VJ_MOVETYPE_PHYSICS -- How does the SNPC move?
 ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasAllies = true -- Put to false if you want it not to have any allies
-ENT.Bleeds = false -- Does the SNPC bleed? (Blood decal, particle and etc.)
+ENT.Bleeds = false -- Does the SNPC bleed? (Blood decal, particle, etc.)
 ENT.HasMeleeAttack = false -- Should the SNPC have a melee attack?
 ENT.DisableWeapons = true -- If true, SNPC can't use weapons
 ENT.DisableInitializeCapabilities = true -- If true, it will disable the initialize capabilities, this will allow you to add your own

@@ -17,6 +17,8 @@ ENT.Model = {""} -- The models it should spawn with | Picks a random one from th
 ENT.EntitiesToSpawn = {
 	{EntityName = "NPC1",SpawnPosition = {vForward=0,vRight=0,vUp=0},Entities = {"npc_vj_name"}}, -- Extras: WeaponsList = {}
 }
+ENT.TimedSpawn_Time = 3 -- How much time until it spawns another SNPC?
+ENT.TimedSpawn_OnlyOne = true -- If it's true then it will only have one SNPC spawned at a time
 ENT.HasIdleSounds = true -- Does it have idle sounds?
 ENT.SoundTbl_Idle = {}
 ENT.IdleSoundChance = 1 -- How much chance to play the sound? 1 = always
@@ -33,8 +35,9 @@ ENT.SpawnEntitySoundPitch2 = 100
 	-- Independent Variables ---------------------------------------------------------------------------------------------------------------------------------------------
 -- These should be left as they are
 ENT.Dead = false
-ENT.NextIdleSoundT = 0
 ENT.AlreadyDoneVJBaseSpawnerDisabled = true
+ENT.NextIdleSoundT = 0
+ENT.NextTimedSpawnT = 0
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnEntitySpawn(EntityName,SpawnPosition,Entities,TheEntity) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -65,7 +68,7 @@ function ENT:SpawnAnEntity(keys,values,initspawn)
 	getthename:Activate()
 	if v.WeaponsList != nil && VJ_PICKRANDOMTABLE(v.WeaponsList) != false && VJ_PICKRANDOMTABLE(v.WeaponsList) != NULL && VJ_PICKRANDOMTABLE(v.WeaponsList) != "None" && VJ_PICKRANDOMTABLE(v.WeaponsList) != "none" then hasweps = true wepslist = v.WeaponsList end
 	if hasweps == true then getthename:Give(VJ_PICKRANDOMTABLE(v.WeaponsList)) end
-	table.insert(self.CurrentEntities,{EntityName=v.EntityName,SpawnPosition=v.SpawnPosition,Entities=v.Entities,TheEntity=getthename,WeaponsList=wepslist})
+	table.insert(self.CurrentEntities,{EntityName=v.EntityName,SpawnPosition=v.SpawnPosition,Entities=v.Entities,TheEntity=getthename,WeaponsList=wepslist,Dead=false/*NextTimedSpawnT=CurTime()+self.TimedSpawn_Time*/})
 	self:SpawnEntitySoundCode()
 	if self.VJBaseSpawnerDisabled == true && overridedisable == true then getthename:Remove() return end
 	self:CustomOnEntitySpawn(v.EntityName,v.SpawnPosition,v.Entitie,TheEntity)
@@ -90,6 +93,7 @@ function ENT:Think()
 	if self.Dead == true then VJ_STOPSOUND(self.CurrentIdleSound) return end
 	if self.VJBaseSpawnerDisabled == true then self.AlreadyDoneVJBaseSpawnerDisabled = false end
 	//PrintTable(self.CurrentEntities)
+	//print("-----------------------------------------------------------")
 	self:CustomOnThink_BeforeAliveChecks()
 	self:IdleSoundCode()
 	
@@ -100,9 +104,9 @@ function ENT:Think()
 	
 	if self.VJBaseSpawnerDisabled == false && self.SingleSpawner == false then
 	for k,v in ipairs(self.CurrentEntities) do
-		if !v.TheEntity:IsValid() then
-			table.remove(self.CurrentEntities,k)
-			self:SpawnAnEntity(k,v)
+		if !v.TheEntity:IsValid() && v.Dead == false /*&& v.NextTimedSpawnT < CurTime()*/ then
+			v.Dead = true
+			timer.Simple(self.TimedSpawn_Time,function() if IsValid(self) then table.remove(self.CurrentEntities,k) self:SpawnAnEntity(k,v,false) end end)
 			end
 		end
 	end
@@ -110,17 +114,18 @@ function ENT:Think()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IdleSoundCode()
-if self.HasIdleSounds == false then return end
-if CurTime() > self.NextIdleSoundT then
-	local randomidlesound = math.random(1,self.IdleSoundChance)
-	if randomidlesound == 1 /*&& self:VJ_IsPlayingSoundFromTable(self.SoundTbl_Idle) == false*/ then
-		self.CurrentIdleSound = VJ_CreateSound(self,self.SoundTbl_Idle,self.IdleSoundLevel,math.random(self.IdleSoundPitch1,self.IdleSoundPitch2)) end
+	if self.HasIdleSounds == false then return end
+	if CurTime() > self.NextIdleSoundT then
+		local randomidlesound = math.random(1,self.IdleSoundChance)
+		if randomidlesound == 1 /*&& self:VJ_IsPlayingSoundFromTable(self.SoundTbl_Idle) == false*/ then
+			self.CurrentIdleSound = VJ_CreateSound(self,self.SoundTbl_Idle,self.IdleSoundLevel,math.random(self.IdleSoundPitch1,self.IdleSoundPitch2))
+		end
 		self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle1,self.NextSoundTime_Idle2)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnEntitySoundCode()
-if self.HasIdleSounds == false then return end
+	if self.HasIdleSounds == false then return end
 	local randomidlesound = math.random(1,self.SpawnEntitySoundChance)
 	if randomidlesound == 1 /*&& self:VJ_IsPlayingSoundFromTable(self.SoundTbl_Idle) == false*/ then
 		self.CurrentSpawnEntitySound = VJ_CreateSound(self,self.SoundTbl_SpawnEntity,self.SpawnEntitySoundLevel,math.random(self.SpawnEntitySoundPitch1,self.SpawnEntitySoundPitch2))

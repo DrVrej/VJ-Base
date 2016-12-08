@@ -8,66 +8,72 @@ INFO: Used to load utils for VJ Base
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 
 -- Add Utils -------------------------------------------------------------------------------------------------------------------------
-function util.VJ_SphereDamage(vSelfEntity,vInflictor,vAttacker,vPosition,vDamageRadius,vDamage,vDamageType,vBlockCertainEntities,vUseRealisticRadius,vUseForce,vForceRagdoll,vForcePropPhysics)
-	local entities = {}
-	local damageamount = vDamage
-	for k, v in pairs(ents.FindInSphere(vPosition,vDamageRadius)) do -- Around it
-	local enemytoself = v:NearestPoint(vPosition) -- From the enemy position to the given position
-	if vUseRealisticRadius == true then
-		damageamount = math.Clamp(damageamount *((vDamageRadius -vPosition:Distance(enemytoself)) +150) /vDamageRadius,vDamage/2,damageamount) -- Decrease damage from the nearest point all the way to the enemy point
-	end
-	if vBlockCertainEntities == true then
-		if (v:IsNPC() && (v:Disposition(vSelfEntity) == 1 or v:Disposition(vSelfEntity) == 2) && v:Health() > 0 && (v != vSelfEntity) && (v:GetClass() != vSelfEntity:GetClass())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 && v:Alive() && v:Health() > 0) then
-		//if ((v:IsNPC() && v:Disposition(vSelfEntity) == 1 or v:Disposition(vSelfEntity) == 2) or (v:IsPlayer() && v:Alive())) && (v != vSelfEntity) && (v:GetClass() != vSelfEntity:GetClass()) then -- entity check
-		if (v:GetClass() == "npc_strider" or v:GetClass() == "npc_combinedropship" or v:GetClass() == "npc_combinegunship" or v:GetClass() == "npc_helicopter") then
-			v:TakeDamage(damageamount,vAttacker,vInflictor)
-		else
-			local doactualdmg = DamageInfo() -- DMG Code
-			doactualdmg:SetDamage(damageamount)
-			doactualdmg:SetAttacker(vAttacker)
-			doactualdmg:SetInflictor(vInflictor)
-			doactualdmg:SetDamageType(vDamageType)
-			doactualdmg:SetDamagePosition(enemytoself)
-			v:TakeDamageInfo(doactualdmg) -- Do the damage code
-			VJ_DestroyCombineTurret(vSelfEntity,v)
+function util.VJ_SphereDamage(vAttacker,vInflictor,vPosition,vDamageRadius,vDamage,vDamageType,vBlockCertainEntities,vUseRealisticRadius,Tbl_Features,CustomCode)
+	local vPosition = vPosition or vAttacker:GetPos()
+	local vDamageRadius = vDamageRadius or 150
+	local vDamage = vDamage or 15
+	local vDamageType = vDamageType or DMG_BLAST
+	local vTbl_Features = Tbl_Features or {}
+		local vTbl_Force = vTbl_Features.Force or false -- The general force | false = Don't use any force
+		local vTbl_UpForce = vTbl_Features.UpForce or false -- How much up force should it have? | false = Use vTbl_Force
+	------------------------
+	local Finaldmg = vDamage
+	local Foundents = {}
+	local Findents = ents.FindInSphere(vPosition,vDamageRadius)
+	if (!Findents) then return end
+	for k,v in pairs(Findents) do
+		if v:EntIndex() == vAttacker:EntIndex() or v:EntIndex() == vAttacker:EntIndex() then continue end
+		local vtoself = v:NearestPoint(vPosition) -- From the enemy position to the given position
+		if vUseRealisticRadius == true then
+			Finaldmg = math.Clamp(Finaldmg*((vDamageRadius-vPosition:Distance(vtoself))+150)/vDamageRadius, vDamage/2, Finaldmg) -- Decrease damage from the nearest point all the way to the enemy point then clamp it!
+		end
+		
+		local function DoDamageCode(v2)
+			table.insert(Foundents,v)
+			if (v2:GetClass() == "npc_strider" or v2:GetClass() == "npc_combinedropship" or v2:GetClass() == "npc_combinegunship" or v2:GetClass() == "npc_helicopter") then
+				v2:TakeDamage(Finaldmg,vAttacker,vInflictor)
+			else
+				local doactualdmg = DamageInfo()
+				doactualdmg:SetDamage(Finaldmg)
+				doactualdmg:SetAttacker(vAttacker)
+				doactualdmg:SetInflictor(vInflictor)
+				doactualdmg:SetDamageType(vDamageType)
+				doactualdmg:SetDamagePosition(vtoself)
+				v2:TakeDamageInfo(doactualdmg)
+				VJ_DestroyCombineTurret(vAttacker,v2)
 			end
 		end
-	else
-		if (v:GetClass() == "npc_strider" or v:GetClass() == "npc_combinedropship" or v:GetClass() == "npc_combinegunship" or v:GetClass() == "npc_helicopter") then
-			v:TakeDamage(damageamount,vAttacker,vInflictor)
+		
+		if vBlockCertainEntities == true then
+			if (v:IsNPC() && (v:Disposition(vAttacker) == 1 or v:Disposition(vAttacker) == 2) && v:Health() > 0 && (v != vAttacker) && (v:GetClass() != vAttacker:GetClass())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 && v:Alive() && v:Health() > 0) then
+				//if ((v:IsNPC() && v:Disposition(vAttacker) == 1 or v:Disposition(vAttacker) == 2) or (v:IsPlayer() && v:Alive())) && (v != vAttacker) && (v:GetClass() != vAttacker:GetClass()) then -- entity check
+				DoDamageCode(v)
+			elseif !v:IsNPC() && !v:IsPlayer() then
+				DoDamageCode(v)
+			end
 		else
-			local doactualdmg = DamageInfo() -- DMG Code
-			doactualdmg:SetDamage(damageamount)
-			doactualdmg:SetAttacker(vAttacker)
-			doactualdmg:SetInflictor(vInflictor)
-			doactualdmg:SetDamageType(vDamageType)
-			doactualdmg:SetDamagePosition(enemytoself)
-			v:TakeDamageInfo(doactualdmg) -- Do the damage code
-			VJ_DestroyCombineTurret(vSelfEntity,v)
+			DoDamageCode(v)
 		end
+		
+		if vTbl_Force != false then
+			local phys = v:GetPhysicsObject()
+			if phys:IsValid() && phys != nil && phys != NULL then
+				//v:SetVelocity(v:GetUp()*100000)
+				//if v:GetClass() == "prop_ragdoll" then 
+					//v:GetPhysicsObject():ApplyForceCenter(v:GetUp()*vForceRagdoll)
+				if VJ_IsProp(v) == true or v:GetClass() == "prop_ragdoll" then
+					//v:GetPhysicsObject():ApplyForceCenter(v:GetUp()*vForcePropPhysics)
+					local force = vTbl_Force
+					local upforce = vTbl_UpForce
+					if v:GetClass() == "prop_ragdoll" then force = force * 1.5 end
+					if upforce == false then upforce = force/9.4 end
+					phys:ApplyForceCenter(((v:GetPos()+v:OBBCenter()+v:GetUp()*upforce)-vPosition)*force) //+vAttacker:GetForward()*vForcePropPhysics
+				end
+			end
+		end
+		if (CustomCode) then CustomCode(v) end
 	end
-	
-	if v:GetClass() == "prop_physics" && (v != vSelfEntity) && (v:GetClass() != vSelfEntity:GetClass()) then
-		local doactualdmg = DamageInfo() -- DMG Code
-		doactualdmg:SetDamage(damageamount)
-		doactualdmg:SetAttacker(vAttacker)
-		doactualdmg:SetInflictor(vInflictor)
-		doactualdmg:SetDamageType(vDamageType)
-		doactualdmg:SetDamagePosition(enemytoself)
-		v:TakeDamageInfo(doactualdmg) -- Do the damage code
-	end
-
-	if vUseForce == true then -- Force
-	local phys = v:GetPhysicsObject()
-	if phys:IsValid() && phys != nil && phys != NULL then
-	//v:SetVelocity(v:GetUp()*100000)
-	if v:GetClass() == "prop_ragdoll" then v:GetPhysicsObject():ApplyForceCenter(v:GetUp()*vForceRagdoll) else
-	if v:GetClass() == "prop_physics" then v:GetPhysicsObject():ApplyForceCenter(v:GetUp()*vForcePropPhysics) end
-	end
-   end
-  end
- end
- return entities
+	return Foundents
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function util.VJ_GetSNPCsWithActiveSoundTracks() -- !!!!! Deprecated Function !!!!! --

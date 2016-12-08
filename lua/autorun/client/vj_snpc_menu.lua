@@ -44,6 +44,7 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 	vj_npc_globalcorpselimit = "32",
 	vj_npc_seedistance = "0",
 	vj_npc_processtime = "1",
+	vj_npc_usegmoddecals = "0",
 	}
 	Panel:AddControl("ComboBox", vj_options_reset)
 	//Panel:AddControl( "Label", { Text = "________________________________________\n"})
@@ -99,6 +100,8 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 	Panel:AddControl("ComboBox", vj_difficulty)
 	Panel:AddControl("Slider",{Label = "Process Time",Type = "Float",min = 0.05,max = 3,Command = "vj_npc_processtime"})
 	Panel:ControlHelp("Default: 1 | Lower number means more lag!")
+	Panel:AddControl("Checkbox", {Label = "Use Garry's Mod's Current Blood Decals", Command = "vj_npc_usegmoddecals"})
+	Panel:ControlHelp("Colors that aren't Yellow or Red will not change!")
 	Panel:AddControl("Checkbox", {Label = "Item Drops On Death", Command = "vj_npc_itemdrops"})
 	Panel:AddControl("Checkbox", {Label = "Show HUD Display on SNPC killed (Top Right)", Command = "vj_npc_showhudonkilled"})
 	Panel:AddControl("Checkbox", {Label = "Add points to the player's scoreboard when killed", Command = "vj_npc_addfrags"})

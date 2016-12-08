@@ -9,14 +9,18 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 include('autorun/vj_controls.lua')
 
 -- Add Decals -------------------------------------------------------------------------------------------------------------------------
-game.AddDecal("VJ_AcidSlime1",{"VJ_Base/decals/vj_acidslime1","VJ_Base/decals/vj_acidslime2","VJ_Base/decals/vj_acidslime3","VJ_Base/decals/vj_acidslime4"})
-//game.AddDecal("vj_acidslime2","VJ_Base/decals/vj_acidslime2")
-//game.AddDecal("vj_acidslime3","VJ_Base/decals/vj_acidslime3")
-//game.AddDecal("vj_acidslime4","VJ_Base/decals/vj_acidslime4")
-game.AddDecal("VJ_BlueBlood1","VJ_Base/decals/vj_blueblood1")
-game.AddDecal("VJ_GreenBlood1","VJ_Base/decals/vj_greenblood1")
-game.AddDecal("VJ_OrangeBlood1","VJ_Base/decals/vj_orangeblood1")
-game.AddDecal("VJ_PurpleBlood1","VJ_Base/decals/vj_purpleblood1")
+game.AddDecal("VJ_AcidSlime1",{"vj_base/decals/vj_acidslime1","vj_base/decals/vj_acidslime2","vj_base/decals/vj_acidslime3","vj_base/decals/vj_acidslime4"})
+//game.AddDecal("vj_acidslime2","vj_base/decals/vj_acidslime2")
+//game.AddDecal("vj_acidslime3","vj_base/decals/vj_acidslime3")
+//game.AddDecal("vj_acidslime4","vj_base/decals/vj_acidslime4")
+game.AddDecal("VJ_Blood_Red",{"vj_base/decals/blood/vj_redblood1","vj_base/decals/blood/vj_redblood2","vj_base/decals/blood/vj_redblood3","vj_base/decals/blood/vj_redblood4","vj_base/decals/blood/vj_redblood5","vj_base/decals/blood/vj_redblood6"})
+game.AddDecal("VJ_Blood_Yellow",{"vj_base/decals/blood/vj_yellowblood1","vj_base/decals/blood/vj_yellowblood2","vj_base/decals/blood/vj_yellowblood3","vj_base/decals/blood/vj_yellowblood4","vj_base/decals/blood/vj_yellowblood5","vj_base/decals/blood/vj_yellowblood6"})
+game.AddDecal("VJ_Blood_Green",{"vj_base/decals/blood/vj_greenblood1","vj_base/decals/blood/vj_greenblood2","vj_base/decals/blood/vj_greenblood3","vj_base/decals/blood/vj_greenblood4","vj_base/decals/blood/vj_greenblood5","vj_base/decals/blood/vj_greenblood6"})
+game.AddDecal("VJ_Blood_Orange",{"vj_base/decals/blood/vj_orangeblood1","vj_base/decals/blood/vj_orangeblood2","vj_base/decals/blood/vj_orangeblood3","vj_base/decals/blood/vj_orangeblood4","vj_base/decals/blood/vj_orangeblood5","vj_base/decals/blood/vj_orangeblood6"})
+game.AddDecal("VJ_Blood_Blue",{"vj_base/decals/blood/vj_blueblood1","vj_base/decals/blood/vj_blueblood2","vj_base/decals/blood/vj_blueblood3","vj_base/decals/blood/vj_blueblood4","vj_base/decals/blood/vj_blueblood5","vj_base/decals/blood/vj_blueblood6"})
+game.AddDecal("VJ_Blood_Purple",{"vj_base/decals/blood/vj_purpleblood1","vj_base/decals/blood/vj_purpleblood2","vj_base/decals/blood/vj_purpleblood3","vj_base/decals/blood/vj_purpleblood4","vj_base/decals/blood/vj_purpleblood5","vj_base/decals/blood/vj_purpleblood6"})
+game.AddDecal("VJ_Blood_Black",{"vj_base/decals/blood/vj_oilblood1","vj_base/decals/blood/vj_oilblood2","vj_base/decals/blood/vj_oilblood3","vj_base/decals/blood/vj_oilblood4","vj_base/decals/blood/vj_oilblood5","vj_base/decals/blood/vj_oilblood6"})
+//game.AddDecal("VJ_Blood_White",{"vj_base/decals/blood/vj_whiteblood1","vj_base/decals/blood/vj_whiteblood2","vj_base/decals/blood/vj_whiteblood3","vj_base/decals/blood/vj_whiteblood4","vj_base/decals/blood/vj_whiteblood5","vj_base/decals/blood/vj_whiteblood6"})
 
 -- Precache Models -------------------------------------------------------------------------------------------------------------------------
 	-- Alien Gibs --

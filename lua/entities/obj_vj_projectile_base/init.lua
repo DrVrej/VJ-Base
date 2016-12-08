@@ -33,9 +33,8 @@ ENT.RadiusDamageRadius = 250 -- How far the damage go? The farther away it's fro
 ENT.RadiusDamageUseRealisticRadius = true -- Should the damage decrease the farther away the enemy is from the position that the projectile hit?
 ENT.RadiusDamage = 30 -- How much damage should it deal? Remember this is a radius damage, therefore it will do less damage the farther away the entity is from its enemy
 ENT.RadiusDamageType = DMG_BLAST -- Damage type
-ENT.RadiusDamageUseForce = false -- Should it push props and ragdolls?
-ENT.RadiusDamageForceTowardsPhysics = 3000 -- How much force should it deal to props?
-ENT.RadiusDamageForceTowardsRagdolls = 3000 -- How much force should it deal to ragdolls?
+ENT.RadiusDamageForce = false -- Put the force amount it should apply | false = Don't apply any force
+ENT.RadiusDamageForce_Up = false -- How much up force should it have? | false = Let the base automatically decide the force using RadiusDamageForce value
 ENT.DoesDirectDamage = false -- Should it do a direct damage when it hits something?
 ENT.DirectDamage = 30 -- How much damage should it do when it hits something
 ENT.DirectDamageType = DMG_SLASH -- Damage type
@@ -69,6 +68,8 @@ ENT.NextIdleSoundT = 0
 ENT.NextCollideCodeWithoutRemovingT = 0
 ENT.ParentsEnemy = nil
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnInitializeBeforePhys() /* Example: self:PhysicsInitSphere(1, "metal_bouncy") */ end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomPhysicsObjectOnInitialize(phys)
 	phys:Wake()
 	phys:EnableGravity(false)
@@ -76,21 +77,21 @@ function ENT:CustomPhysicsObjectOnInitialize(phys)
 	phys:SetBuoyancyRatio(0)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnInitializeBeforePhys() /* Example: self:PhysicsInitSphere(1, "metal_bouncy") */ end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnTakeDamage(dmginfo) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnDoDamageCode(data,phys) end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPhysicsCollide(data,phys) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnCollideWithoutRemove(data,phys) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnDoDamage(data,phys,hitent) end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DeathEffects(data,phys) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnRemove() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	if self:GetModel() == "models/error.mdl" then
@@ -135,33 +136,34 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoDamageCode(data,phys)
 	local gethitpos = self:GetPos()
+	local hitent = NULL
 	if data != nil then
 		gethitpos = data.HitPos
 	end
 	
 	if self.DoesRadiusDamage == true then
 		local DoEntCheck = true
-		if self:GetOwner():IsPlayer() == true then 
-			DoEntCheck = false 
-		end
+		local AttackEnt = self:GetOwner()
+		if self:GetOwner():IsPlayer() == true then DoEntCheck = false end
 		if self.VJHumanTossingAway == true && IsValid(self:GetParent()) && self:GetParent():IsNPC() then gethitpos = self:GetParent():GetPos() end
-		if self:GetOwner() == NULL then util.VJ_SphereDamage(self,self,self,gethitpos,self.RadiusDamageRadius,self.RadiusDamage,self.RadiusDamageType,false,self.RadiusDamageUseRealisticRadius,self.RadiusDamageUseForce,self.RadiusDamageForceTowardsRagdolls,self.RadiusDamageForceTowardsPhysics) else
-		util.VJ_SphereDamage(self:GetOwner(),self:GetOwner(),self:GetOwner(),gethitpos,self.RadiusDamageRadius,self.RadiusDamage,self.RadiusDamageType,DoEntCheck,self.RadiusDamageUseRealisticRadius,self.RadiusDamageUseForce,self.RadiusDamageForceTowardsRagdolls,self.RadiusDamageForceTowardsPhysics)
-		end
+		if self:GetOwner() == NULL then AttackEnt = self DoEntCheck = false end
+		//util.VJ_SphereDamage(AttackEnt,AttackEnt,gethitpos,self.RadiusDamageRadius,self.RadiusDamage,self.RadiusDamageType,DoEntCheck,self.RadiusDamageUseRealisticRadius,self.RadiusDamageForce,self.RadiusDamageForceTowardsRagdolls,self.RadiusDamageForceTowardsPhysics)
+		hitent = util.VJ_SphereDamage(AttackEnt,AttackEnt,gethitpos,self.RadiusDamageRadius,self.RadiusDamage,self.RadiusDamageType,DoEntCheck,self.RadiusDamageUseRealisticRadius,{Force=self.RadiusDamageForce,UpForce=self.RadiusDamageForce_Up})
 	end
 	
 	if self.DoesDirectDamage == true then
-		//if data.HitEntity:IsNPC() or data.HitEntity:IsPlayer() then
+		hitent = data.HitEntity
+		//if hitent:IsNPC() or hitent:IsPlayer() then
 		if self:GetOwner() != NULL then
-		if (data.HitEntity:IsNPC() && (data.HitEntity:Disposition(self:GetOwner()) == 1 or data.HitEntity:Disposition(self:GetOwner()) == 2) && data.HitEntity:Health() > 0 && (data.HitEntity != self:GetOwner()) && (data.HitEntity:GetClass() != self:GetOwner():GetClass())) or (data.HitEntity:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 && data.HitEntity:Alive() && data.HitEntity:Health() > 0) then
-			local damagecode = DamageInfo()
-			damagecode:SetDamage(self.DirectDamage)
-			damagecode:SetDamageType(self.DirectDamageType)
-			damagecode:SetAttacker(self:GetOwner())
-			damagecode:SetAttacker(self:GetOwner())
-			damagecode:SetDamagePosition(data.HitPos)
-			data.HitEntity:TakeDamageInfo(damagecode, self)
-			VJ_DestroyCombineTurret(self:GetOwner(),data.HitEntity)
+			if (VJ_IsProp(hitent)) or (hitent:IsNPC() && (hitent:Disposition(self:GetOwner()) == 1 or hitent:Disposition(self:GetOwner()) == 2) && hitent:Health() > 0 && (hitent != self:GetOwner()) && (hitent:GetClass() != self:GetOwner():GetClass())) or (hitent:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 && hitent:Alive() && hitent:Health() > 0) then
+				local damagecode = DamageInfo()
+				damagecode:SetDamage(self.DirectDamage)
+				damagecode:SetDamageType(self.DirectDamageType)
+				damagecode:SetAttacker(self:GetOwner())
+				damagecode:SetAttacker(self:GetOwner())
+				damagecode:SetDamagePosition(data.HitPos)
+				hitent:TakeDamageInfo(damagecode, self)
+				VJ_DestroyCombineTurret(self:GetOwner(),hitent)
 			end
 		else
 			local damagecode = DamageInfo()
@@ -170,20 +172,11 @@ function ENT:DoDamageCode(data,phys)
 			damagecode:SetAttacker(self)
 			damagecode:SetInflictor(self)
 			damagecode:SetDamagePosition(data.HitPos)
-			data.HitEntity:TakeDamageInfo(damagecode, self)
-			VJ_DestroyCombineTurret(self,data.HitEntity)
-		end
-		if data.HitEntity:GetClass() == "prop_physics" && (data.HitEntity != self) && (data.HitEntity:GetClass() != self:GetClass()) then
-			local damagecode = DamageInfo()
-			damagecode:SetDamage(self.DirectDamage)
-			damagecode:SetDamageType(self.DirectDamageType)
-			damagecode:SetAttacker(self)
-			damagecode:SetInflictor(self)
-			damagecode:SetDamagePosition(data.HitPos)
-			data.HitEntity:TakeDamageInfo(damagecode, self)
+			hitent:TakeDamageInfo(damagecode, self)
+			VJ_DestroyCombineTurret(self,hitent)
 		end
 	end
-	self:CustomOnDoDamageCode(data,phys)
+	self:CustomOnDoDamage(data,phys,hitent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data,phys)
@@ -191,18 +184,18 @@ function ENT:PhysicsCollide(data,phys)
 	self:CustomOnPhysicsCollide(data,phys)
 	
 	if self.RemoveOnHit == true then
-	if self.Dead == false then
-		self.Dead = true
-		self:DoDamageCode(data,phys)
-		if self.PaintDecalOnDeath == true && VJ_PICKRANDOMTABLE(self.DecalTbl_DeathDecals) != false then
-			timer.Simple(0.07,function() if IsValid(self) then if self.AlreadyPaintedDeathDecal == false then self.AlreadyPaintedDeathDecal = true util.Decal(VJ_PICKRANDOMTABLE(self.DecalTbl_DeathDecals), data.HitPos +data.HitNormal, data.HitPos -data.HitNormal) end end
-		 end)
+		if self.Dead == false then
+			self.Dead = true
+			self:DoDamageCode(data,phys)
+			if self.PaintDecalOnDeath == true && VJ_PICKRANDOMTABLE(self.DecalTbl_DeathDecals) != false then
+				timer.Simple(0.07,function() if IsValid(self) then if self.AlreadyPaintedDeathDecal == false then self.AlreadyPaintedDeathDecal = true util.Decal(VJ_PICKRANDOMTABLE(self.DecalTbl_DeathDecals), data.HitPos +data.HitNormal, data.HitPos -data.HitNormal) end end
+			 end)
+			end
+			if self.ShakeWorldOnDeath == true then util.ScreenShake(data.HitPos, self.ShakeWorldOnDeathAmplitude, self.ShakeWorldOnDeathFrequency, self.ShakeWorldOnDeathtDuration, self.ShakeWorldOnDeathRadius) end
+			self:OnCollideSoundCode()
 		end
-		if self.ShakeWorldOnDeath == true then util.ScreenShake(data.HitPos, self.ShakeWorldOnDeathAmplitude, self.ShakeWorldOnDeathFrequency, self.ShakeWorldOnDeathtDuration, self.ShakeWorldOnDeathRadius) end
-		self:OnCollideSoundCode()
-		end
-	self:SetDeathVariablesTrue(data,phys,true)
-	timer.Simple(0.07,function() if IsValid(self) then self:Remove() end end)
+		self:SetDeathVariablesTrue(data,phys,true)
+		timer.Simple(0.07,function() if IsValid(self) then self:Remove() end end)
 	end
 	
 	if self.Dead == false && self.CollideCodeWithoutRemoving == true && CurTime() > self.NextCollideCodeWithoutRemovingT then
@@ -212,13 +205,14 @@ function ENT:PhysicsCollide(data,phys)
 			util.Decal(VJ_PICKRANDOMTABLE(self.DecalTbl_OnCollideDecals), data.HitPos +data.HitNormal, data.HitPos -data.HitNormal)
 		end
 		self:CustomOnCollideWithoutRemove(data,phys)
-	self.NextCollideCodeWithoutRemovingT = CurTime() + math.Rand(self.NextCollideCodeWithoutRemovingTime1,self.NextCollideCodeWithoutRemovingTime2)
+		self.NextCollideCodeWithoutRemovingT = CurTime() + math.Rand(self.NextCollideCodeWithoutRemovingTime1,self.NextCollideCodeWithoutRemovingTime2)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
 	self.Dead = true
 	VJ_STOPSOUND(self.CurrentIdleSound)
+	self:CustomOnRemove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetDeathVariablesTrue(data,phys,RunDeathEffects)
@@ -234,27 +228,29 @@ function ENT:SetDeathVariablesTrue(data,phys,RunDeathEffects)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartupSoundCode()
-if self.HasIdleSounds == false then return end
-if CurTime() > self.NextIdleSoundT then
-	local randomstartupsound = math.random(1,self.StartupSoundChance)
-	if randomstartupsound == 1 then
-		self.CurrentStartupSound = VJ_CreateSound(self,self.SoundTbl_Startup,self.StartupSoundLevel,math.random(self.StartupSoundPitch1,self.StartupSoundPitch2)) end
+	if self.HasIdleSounds == false then return end
+	if CurTime() > self.NextIdleSoundT then
+		local randomstartupsound = math.random(1,self.StartupSoundChance)
+		if randomstartupsound == 1 then
+			self.CurrentStartupSound = VJ_CreateSound(self,self.SoundTbl_Startup,self.StartupSoundLevel,math.random(self.StartupSoundPitch1,self.StartupSoundPitch2))
+		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IdleSoundCode()
-if self.HasIdleSounds == false then return end
-if CurTime() > self.NextIdleSoundT then
-	local randomidlesound = math.random(1,self.IdleSoundChance)
-	if randomidlesound == 1 /*&& self:VJ_IsPlayingSoundFromTable(self.SoundTbl_Idle) == false*/ then
-		self.CurrentIdleSound = VJ_CreateSound(self,self.SoundTbl_Idle,self.IdleSoundLevel,math.random(self.IdleSoundPitch1,self.IdleSoundPitch2)) end
+	if self.HasIdleSounds == false then return end
+	if CurTime() > self.NextIdleSoundT then
+		local randomidlesound = math.random(1,self.IdleSoundChance)
+		if randomidlesound == 1 /*&& self:VJ_IsPlayingSoundFromTable(self.SoundTbl_Idle) == false*/ then
+			self.CurrentIdleSound = VJ_CreateSound(self,self.SoundTbl_Idle,self.IdleSoundLevel,math.random(self.IdleSoundPitch1,self.IdleSoundPitch2))
+		end
 		self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle1,self.NextSoundTime_Idle2)
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnCollideSoundCode()
-if self.HasOnCollideSounds == false then return end
-local randomdeathsound = math.random(1,self.OnCollideSoundChance)
+	if self.HasOnCollideSounds == false then return end
+	local randomdeathsound = math.random(1,self.OnCollideSoundChance)
 	if randomdeathsound == 1 then
 		self.CurrentDeathSound = VJ_CreateSound(self,self.SoundTbl_OnCollide,self.OnCollideSoundLevel,math.random(self.OnCollideSoundPitch1,self.OnCollideSoundPitch2))
 	end
