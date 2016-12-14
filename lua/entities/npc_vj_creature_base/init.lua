@@ -986,7 +986,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 
 	if type(vACT_Name) != "string" && VJ_AnimationExists(self,vACT_Name) == false then
 		if self:GetActiveWeapon() != NULL then
-			if table.HasValue(table.GetKeys(self:GetActiveWeapon().ActivityTranslateAI),vACT_Name) != true then return end
+			if (self:GetActiveWeapon().IsVJBaseWeapon) && table.HasValue(table.GetKeys(self:GetActiveWeapon().ActivityTranslateAI),vACT_Name) != true then return end
 		else
 			return
 		end
@@ -1059,6 +1059,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 			//if self.Dead == true then vsched:EngTask("TASK_STOP_MOVING", 0) end
 			vsched:EngTask("TASK_STOP_MOVING", 0)
 			vsched:EngTask("TASK_STOP_MOVING", 0)
+			//self:FrameAdvance(0)
 			self:StopMoving()
 			self:ClearSchedule()
 			///self:ClearGoal()
@@ -1690,7 +1691,7 @@ function ENT:Think()
 			for k,v in ipairs(player.GetAll()) do
 				local nigersarenigs = 20
 				if self.FollowingPlayer == true then nigersarenigs = 10 end
-				if (self:VJ_GetNearestPointToEntityDistance(v)) < nigersarenigs && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
+				if self:DoRelationshipCheck(v) == false && (self:VJ_GetNearestPointToEntityDistance(v) < nigersarenigs) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
 					self.NextFollowPlayerT = CurTime() + 2
 					self.DoingMoveOutOfFriendlyPlayersWay = true
 					//self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-50,-50))
@@ -2482,7 +2483,6 @@ function ENT:CombineFriendlyCode(argent)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
 	end
-	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ZombieFriendlyCode(argent)
@@ -2493,7 +2493,6 @@ function ENT:ZombieFriendlyCode(argent)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
 	end
-	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AntlionFriendlyCode(argent)
@@ -2504,7 +2503,6 @@ function ENT:AntlionFriendlyCode(argent)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
 	end
-	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:XenFriendlyCode(argent)
@@ -2515,7 +2513,6 @@ function ENT:XenFriendlyCode(argent)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
 	end
-	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlayerAllies(argent)
@@ -2526,7 +2523,6 @@ function ENT:PlayerAllies(argent)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
 	end
-	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_ACT_RESETENEMY(RunToEnemyOnReset)
@@ -2615,7 +2611,7 @@ function ENT:DoRelationshipCheck(argent)
 		if argent:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 1 then return false end
 		if table.HasValue(self.VJ_AddCertainEntityAsFriendly,argent) then return false end
 		if table.HasValue(self.VJ_AddCertainEntityAsEnemy,argent) then return true end
-		if (argent:IsNPC() && !(argent.FriendlyToVJSNPCs) && argent:Disposition(self) == 1 && argent:Health() > 0) or (argent:IsPlayer() && self.PlayerFriendly == false && GetConVarNumber("ai_ignoreplayers") == 0 && argent:Alive()) then
+		if (argent:IsNPC() && !(argent.FriendlyToVJSNPCs) && argent:Disposition(self) == 1 && argent:Health() > 0) or (argent:IsPlayer() && self.PlayerFriendly == false && self:Disposition(argent) != D_LI && GetConVarNumber("ai_ignoreplayers") == 0 && argent:Alive()) then
 			//if argent.VJ_NoTarget == false then
 			//if (argent.VJ_NoTarget) then if argent.VJ_NoTarget == false then continue end end
 			return true
@@ -2685,7 +2681,7 @@ function ENT:DoEntityRelationshipCheck()
 		local function DoPlayerSight()
 			if self.HasOnPlayerSight == true && v:IsPlayer() then self:OnPlayerSightCode(v) end
 		end
-		if self.PlayerFriendly == true && v:IsPlayer() && !table.HasValue(self.VJ_AddCertainEntityAsEnemy,v) then entisfri = true DoPlayerSight() continue end
+		if (self.PlayerFriendly == true or self:Disposition(v) == D_LI) && v:IsPlayer() && !table.HasValue(self.VJ_AddCertainEntityAsEnemy,v) then entisfri = true DoPlayerSight() continue end
 		local sightdistancenum = self.SightDistance
 		local radiusoverride = 0
 		local seethroughwall = false
@@ -2693,49 +2689,51 @@ function ENT:DoEntityRelationshipCheck()
 			if v:KeyDown(IN_DUCK) && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightdistancenum = 5000 else sightdistancenum = 2000 end end
 			if vDistanceToMy < 350 && ((!v:KeyDown(IN_DUCK) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP && ((!v:KeyDown(IN_WALK) && (v:KeyDown(IN_FORWARD) or v:KeyDown(IN_BACK) or v:KeyDown(IN_MOVELEFT) or v:KeyDown(IN_MOVERIGHT))) or (v:KeyDown(IN_SPEED) or v:KeyDown(IN_JUMP)))) or (self:VJ_DoPlayerFlashLightCheck(v,20) == true)) then self:SetTarget(v) self:VJ_TASK_FACE_X("TASK_FACE_TARGET") end
 		end
-		if (vClass != self:GetClass() && v:IsNPC() /*&& MyVisibleTov*/ && (!v.IsVJBaseSNPC_Animal)) && self:Disposition(v) != D_LI then
-			if MyVisibleTov && self.DisableMakingSelfEnemyToNPCs == false then v:AddEntityRelationship(self,D_HT,99) end
+		if vClass != self:GetClass() && (v:IsNPC() or v:IsPlayer()) && (!v.IsVJBaseSNPC_Animal) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
 			if self.HasAllies == true then
 				for _,friclass in ipairs(self.VJ_NPC_Class) do
-					if friclass == "CLASS_COMBINE" then entisfri = self:CombineFriendlyCode(v) end
-					if friclass == "CLASS_ZOMBIE" then entisfri = self:ZombieFriendlyCode(v) end
-					if friclass == "CLASS_ANTLION" then entisfri = self:AntlionFriendlyCode(v) end
-					if friclass == "CLASS_XEN" then entisfri = self:XenFriendlyCode(v) end
-					if v:IsNPC() == true && (v.VJ_NPC_Class) && table.HasValue(v.VJ_NPC_Class,friclass) then
+					if friclass == "CLASS_COMBINE" then if self:CombineFriendlyCode(v) == true then entisfri = true end end
+					if friclass == "CLASS_ZOMBIE" then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
+					if friclass == "CLASS_ANTLION" then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
+					if friclass == "CLASS_XEN" then if self:XenFriendlyCode(v) == true then entisfri = true end end
+					if (v.VJ_NPC_Class) && table.HasValue(v.VJ_NPC_Class,friclass) then
 						//print("SHOULD WORK:"..v:GetClass())
 						entisfri = true
-						v:AddEntityRelationship(self,D_LI,99)
+						if v:IsNPC() then v:AddEntityRelationship(self,D_LI,99) end
 						self:AddEntityRelationship(v,D_LI,99)
 					end
 				end
-			
-				for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
-					//for k,v in ipairs(ents.FindByClass(fritbl)) do
-					if string.find(vClass, fritbl) then
+				if v:IsNPC() then
+					for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
+						//for k,v in ipairs(ents.FindByClass(fritbl)) do
+						if string.find(vClass, fritbl) then
+							entisfri = true
+							v:AddEntityRelationship(self,D_LI,99)
+							self:AddEntityRelationship(v,D_LI,99)
+						end
+					end
+					if table.HasValue(self.VJ_FriendlyNPCsSingle,vClass) then
 						entisfri = true
 						v:AddEntityRelationship(self,D_LI,99)
 						self:AddEntityRelationship(v,D_LI,99)
 					end
-				end
-				if table.HasValue(self.VJ_FriendlyNPCsSingle,vClass) then
-					entisfri = true
-					v:AddEntityRelationship(self,D_LI,99)
-					self:AddEntityRelationship(v,D_LI,99)
-				end
-				if self.CombineFriendly == true then self:CombineFriendlyCode(v) end
-				if self.ZombieFriendly == true then self:ZombieFriendlyCode(v) end
-				if self.AntlionFriendly == true then self:AntlionFriendlyCode(v) end
-				if self.PlayerFriendly == true then
-					self:PlayerAllies(v)
-					if self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true then
-						v:AddEntityRelationship(self,D_LI,99)
-						self:AddEntityRelationship(v,D_LI,99)
+					if self.CombineFriendly == true then if self:CombineFriendlyCode(v) == true then entisfri = true end end
+					if self.ZombieFriendly == true then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
+					if self.AntlionFriendly == true then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
+					if self.PlayerFriendly == true then
+						self:PlayerAllies(v)
+						if self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true then
+							entisfri = true
+							v:AddEntityRelationship(self,D_LI,99)
+							self:AddEntityRelationship(v,D_LI,99)
+						end
 					end
+					if v.IsVJBaseSNPC == true then if self:VJFriendlyCode(v) then entisfri = true end end
 				end
-				if v.IsVJBaseSNPC == true then self:VJFriendlyCode(v) end
 			end
+			if entisfri == false && v:IsNPC() && MyVisibleTov && self.DisableMakingSelfEnemyToNPCs == false then v:AddEntityRelationship(self,D_HT,99) end
 		end
-		if self.FindEnemy_CanSeeThroughWalls == true then seethroughwall = true print("gegeg") end
+		if self.FindEnemy_CanSeeThroughWalls == true then seethroughwall = true end
 		if self.DisableFindEnemy == false then
 			if self.FindEnemy_UseSphere == false && radiusoverride == 0 then
 				if (seethroughwall == true) or (MyVisibleTov && (self:GetForward():Dot((vPos -MyPos):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (vDistanceToMy < sightdistancenum)) then

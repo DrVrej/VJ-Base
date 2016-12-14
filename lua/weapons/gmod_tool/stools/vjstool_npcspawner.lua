@@ -48,8 +48,8 @@ if (CLIENT) then
 				end)
 			end
 		end
-		
 		Panel:AddPanel(reset)
+		
 		TblCurrentValues = TblCurrentValues or {}
 		TblCurrentLines = TblCurrentLines or {}
 		TblCurrentLinesUsable = TblCurrentLinesUsable or {}
