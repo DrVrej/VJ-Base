@@ -46,9 +46,9 @@ end
 function ENT:SetUpInitializeBloodType()
 	local bloodtype = self.BloodType
 	if bloodtype == "Red" then
-		self.Collide_Decal = "Blood"
+		self.Collide_Decal = "VJ_Blood_Red"
 	elseif bloodtype == "Yellow" then
-		self.Collide_Decal = "YellowBlood"
+		self.Collide_Decal = "VJ_Blood_Yellow"
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

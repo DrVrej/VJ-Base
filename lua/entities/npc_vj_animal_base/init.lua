@@ -620,7 +620,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 
 	if type(vACT_Name) != "string" && VJ_AnimationExists(self,vACT_Name) == false then
 		if self:GetActiveWeapon() != NULL then
-			if table.HasValue(table.GetKeys(self:GetActiveWeapon().ActivityTranslateAI),vACT_Name) != true then return end
+			if (self:GetActiveWeapon().IsVJBaseWeapon) && table.HasValue(table.GetKeys(self:GetActiveWeapon().ActivityTranslateAI),vACT_Name) != true then return end
 		else
 			return
 		end
@@ -977,7 +977,6 @@ function ENT:CombineFriendlyCode(argent)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
 	end
-	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ZombieFriendlyCode(argent)
@@ -988,7 +987,6 @@ function ENT:ZombieFriendlyCode(argent)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
 	end
-	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AntlionFriendlyCode(argent)
@@ -999,7 +997,6 @@ function ENT:AntlionFriendlyCode(argent)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
 	end
-	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:XenFriendlyCode(argent)
@@ -1010,7 +1007,6 @@ function ENT:XenFriendlyCode(argent)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
 	end
-	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlayerAllies(argent)
@@ -1021,7 +1017,6 @@ function ENT:PlayerAllies(argent)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
 	end
-	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CheckAlliesAroundMe(SeeDistance)
