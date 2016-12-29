@@ -68,12 +68,16 @@ if (CLIENT) then
 		local TextEntry = vgui.Create("DTextEntry")
 		//TextEntry:SetText("Press enter to add class...")
 		TextEntry.OnEnter = function()
-			table.insert(VJ_NPCRELATION_TblCurrentValues,string.upper(TextEntry:GetValue()))
-			timer.Simple(0.05,function()
-				GetPanel = controlpanel.Get("vjstool_npcrelationship")
-				GetPanel:ClearControls()
-				DoBuildCPanel_Relationship(GetPanel)
-			end)
+			if string.len(TextEntry:GetValue()) > 0 then
+				local enterv = string.upper(TextEntry:GetValue())
+				chat.AddText(Color(0,255,0),"Added",Color(255,100,0)," "..enterv.." ",Color(0,255,0),"to the class list!")
+				table.insert(VJ_NPCRELATION_TblCurrentValues,enterv)
+				timer.Simple(0.05,function()
+					GetPanel = controlpanel.Get("vjstool_npcrelationship")
+					GetPanel:ClearControls()
+					DoBuildCPanel_Relationship(GetPanel)
+				end)
+			end
 		end
 		Panel:AddItem(TextEntry)
 		Panel:ControlHelp("Press enter to add class")
@@ -89,11 +93,13 @@ if (CLIENT) then
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcrelationship_cl_select",function(len,pl)
 		ent = net.ReadEntity()
+		entname = net.ReadString()
 		hasclasstbl = net.ReadBool()
 		classtbl = net.ReadTable()
+		chat.AddText(Color(0,255,0),"Obtained",Color(255,100,0)," "..entname.."'s ",Color(0,255,0),"relationship class list!")
 		//print(ent)
 		//print(hasclasstbl)
-		PrintTable(classtbl)
+		//PrintTable(classtbl)
 		//print(#classtbl)
 		VJ_NPCRELATION_TblCurrentValues = classtbl
 		timer.Simple(0.05,function()
@@ -105,7 +111,10 @@ if (CLIENT) then
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcrelationship_cl_leftclick",function(len,pl)
 		ent = net.ReadEntity()
+		entname = net.ReadString()
 		clicktype = net.ReadString()
+		if clicktype == "ReloadClick" then entname = "Yourself" end
+		chat.AddText(Color(0,255,0),"Applied the relationship class table on",Color(255,100,0)," "..entname)
 		net.Start("vj_npcrelationship_sr_leftclick")
 		net.WriteEntity(ent)
 		net.WriteString(clicktype)
@@ -134,8 +143,11 @@ function TOOL:LeftClick(tr)
 	local ent = tr.Entity
 	if IsValid(ent) then
 		if ent:IsPlayer() or ent:IsNPC() then
+			local entname = ent:GetName()
+			if entname == "" then entname = ent:GetClass() end
 			net.Start("vj_npcrelationship_cl_leftclick")
 			net.WriteEntity(ent)
+			net.WriteString(entname)
 			net.WriteString("LeftClick")
 			net.Send(self:GetOwner())
 			return true
@@ -150,6 +162,8 @@ function TOOL:RightClick(tr)
 		if ent:IsPlayer() or ent:IsNPC() then
 			local hasclasstbl = false
 			local classtbl = {nil}
+			local entname = ent:GetName()
+			if entname == "" then entname = ent:GetClass() end
 			if (ent.VJ_NPC_Class) then
 				hasclasstbl = true
 				//classtbl = ent.VJ_NPC_Class
@@ -161,6 +175,7 @@ function TOOL:RightClick(tr)
 			//PrintTable(ent.VJ_NPC_Class)
 			net.Start("vj_npcrelationship_cl_select")
 			net.WriteEntity(ent)
+			net.WriteString(entname)
 			net.WriteBool(hasclasstbl)
 			net.WriteTable(classtbl)
 			net.Send(self:GetOwner())
@@ -180,6 +195,7 @@ function TOOL:Reload(tr)
 	if (CLIENT) then return true end
 	net.Start("vj_npcrelationship_cl_leftclick")
 	net.WriteEntity(self:GetOwner())
+	net.WriteString("Me")
 	net.WriteString("ReloadClick")
 	net.Send(self:GetOwner())
 	return true

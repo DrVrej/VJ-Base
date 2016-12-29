@@ -2,7 +2,7 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 AddCSLuaFile("shared.lua")
 include('shared.lua')
 /*-----------------------------------------------
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
@@ -112,7 +112,7 @@ function ENT:CustomOnInitialize()
 	self.Gunner:Spawn()
 	self.Gunner:SetPos(self:Tank_GunnerSpawnPosition())
 	self.Gunner:SetAngles(self:GetAngles())
-	self.Gunner:SetParent( self )
+	self.Gunner:SetParent(self)
 	//self:DropToFloor()
 	
 	/*local angrypapir = Vector(-100, -25, 50)
@@ -505,7 +505,7 @@ function ENT:CustomOnRemove()
 	end
 end
 /*-----------------------------------------------
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/

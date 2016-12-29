@@ -1,6 +1,6 @@
 /*--------------------------------------------------
 	=============== Information Menu ===============
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to load Information Menu for VJ Base
@@ -10,9 +10,9 @@ include('autorun/client/vj_installed_addons.lua')
 
 local function VJ_INFORMATION(Panel)
 	Panel:AddControl( "Label", {Text = "VJ Base Information:"})
-	Panel:ControlHelp("VJ Base is made by DrVrej. The main purpose of this base is for the sake of simplecity. It helps me update and make addons much easier and quicker.")
+	Panel:ControlHelp("VJ Base is made by DrVrej. The main purpose of this base is for the sake of simplicity. It provides many types of bases including a very advanced artificial intelligent NPC base")
 	
-	Panel:ControlHelp("================================")
+	Panel:ControlHelp("==============================")
 	
 	Panel:AddControl( "Label", {Text = "Local Player Information:"})
 	
@@ -38,20 +38,20 @@ local function VJ_INFORMATION(Panel)
 	if system.IsOSX() then Panel:ControlHelp("Operating System - OSX") end
 	if system.IsLinux() then Panel:ControlHelp("Operating System - Linux") end
 	-- Check Mounted Games
+	if IsMounted( "hl1" ) then -- Is Half Life 1 Source mounted? Or not?
+	Panel:ControlHelp("Half Life 1 Source - Mounted") else
+	Panel:ControlHelp("Half Life 1 Source - Not Mounted") end
 	if IsMounted( "episodic" ) then -- Is HL2 EP1 mounted? Or not?
 	Panel:ControlHelp("Half Life 2 Episode 1 - Mounted") else
 	Panel:ControlHelp("Half Life 2 Episode 1 - Not Mounted") end
 	if IsMounted( "ep2" ) then -- Is HL2 EP2 mounted? Or not?
 	Panel:ControlHelp("Half Life 2 Episode 2 - Mounted") else
 	Panel:ControlHelp("Half Life 2 Episode 2 - Not Mounted") end
-	if IsMounted( "hl1" ) then -- Is Half Life 1 Source mounted? Or not?
-	Panel:ControlHelp("Half Life 1 Source - Mounted") else
-	Panel:ControlHelp("Half Life 1 Source - Not Mounted") end
 	if IsMounted( "cstrike" ) then -- Is Counter Strike Source mounted? Or not?
 	Panel:ControlHelp("Counter Strike Source - Mounted") else
 	Panel:ControlHelp("Counter Strike Source - Not Mounted") end
 	
-	Panel:ControlHelp("================================")
+	Panel:ControlHelp("==============================")
 	
 	Panel:AddControl( "Label", {Text = "Command Information:"})
 	Panel:ControlHelp("--- All Commands Start with 'vj_' ---")
@@ -69,7 +69,7 @@ local function VJ_INFORMATION(Panel)
 	Panel:ControlHelp("")
 	Panel:ControlHelp("Crosshair - Second prefix starts with 'cross_*'")
 	
-	Panel:ControlHelp("================================")
+	Panel:ControlHelp("==============================")
 	
 	Panel:AddControl( "Label", {Text = "Credits:"})
 	Panel:ControlHelp("Orion - Helped with many SNPC codes.")
@@ -77,7 +77,7 @@ local function VJ_INFORMATION(Panel)
 	Panel:ControlHelp("EnlistedDiabetus - For the huge support!")
 	Panel:ControlHelp("Robert Twigs - Giving many good suggestions.")
 	
-	Panel:ControlHelp("================================")
+	Panel:ControlHelp("==============================")
 	
 	Panel:ControlHelp("Copyright (c) "..os.date("20%y").." by DrVrej, All rights reserved.")
 	Panel:ControlHelp("No parts of this base or any of its contents may be reproduced, copied, modified or adapted, without the prior written consent of the author, unless otherwise indicated for stand-alone materials.")

@@ -3,7 +3,7 @@ AddCSLuaFile("shared.lua")
 include('shared.lua')
 /*--------------------------------------------------
 	=============== NPC Controller Base ===============
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to control NPCs. Mainly for VJ Base SNPCs.
@@ -144,11 +144,15 @@ function ENT:Think()
 	if !IsValid(self.TheController) or self.TheController:KeyDown(IN_USE) or self.TheController:Health() <= 0 or (!self.TheController.IsControlingNPC) or !IsValid(self.ControlledNPC) or self.ControlledNPC:Health() <= 0 then self:StopControlling() return end
 		if self.TheController.IsControlingNPC != true then return end
 		if (self.TheController.IsControlingNPC) && IsValid(self.ControlledNPC) then
-		if self.PlayingRangeAttackAnimation == false then //self.PlayingAnimation == false && self.PlayingAttackAnimation == false && self.PlayingRangeAttackAnimation == false /*&& !self.ControlledNPC:IsMoving()*/ then
-		if self.ControlledNPC:IsMoving() then
-			self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,4),0)) else
-			//self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,360),0))
-			self.ControlledNPC:SetAngles(Angle(0,self.TheController:GetAimVector():Angle().y,0))
+		if self.ControlledNPC.MovementType == VJ_MOVETYPE_STATIONARY && self.ControlledNPC.CanTurnWhileStationary == false then
+			-- Do stuff
+		else
+			if self.PlayingRangeAttackAnimation == false then //self.PlayingAnimation == false && self.PlayingAttackAnimation == false && self.PlayingRangeAttackAnimation == false /*&& !self.ControlledNPC:IsMoving()*/ then
+			if self.ControlledNPC:IsMoving() then
+				self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,4),0)) else
+				//self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,360),0))
+				self.ControlledNPC:SetAngles(Angle(0,self.TheController:GetAimVector():Angle().y,0))
+				end
 			end
 		end
 		if #self.TheController:GetWeapons() > 0 then self.TheController:StripWeapons() end
@@ -316,86 +320,88 @@ function ENT:Think()
 		end
 		
 		-- Movement
-		if (self.TheController:KeyDown(IN_FORWARD)) then
-			self.PlayingAnimation = true
-			self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,100),0))
-			local plysaimvec = self.ControlledNPC:GetForward() *1 //TheController:GetAimVector()
-			plysaimvec.z = 0
-			local testcenter = self.ControlledNPC:OBBCenter():Distance(self.ControlledNPC:OBBMins()) + 20
-			local npcspos = self.ControlledNPC:GetPos() +Vector(0,0,testcenter) // 35
-			local forwardtr = util.TraceLine({start = npcspos, endpos = npcspos +plysaimvec *500, filter = {self, self.ControlledNPC}})
-			//print(npcspos:Distance(forwardtr.HitPos))
-			local npcvel = self.ControlledNPC:GetGroundSpeedVelocity()
-			//if self.ControlledNPC:GetMovementActivity() > 0 then print(self.ControlledNPC:GetSequenceGroundSpeed(self.ControlledNPC:SelectWeightedSequence(self.ControlledNPC:GetMovementActivity()))) end
-			//self.ControlledNPC:GetSequenceGroundSpeed(self.ControlledNPC:SelectWeightedSequence(self.ControlledNPC:GetActivity()))
-			//Vector(math.abs(npcvel.x),math.abs(npcvel.y),math.abs(npcvel.z))
-			local CalculateWallToNPC = npcspos:Distance(forwardtr.HitPos) - 40
-			//local CalculateWallToNPC_X = npcspos:Distance(forwardtr.HitPos) - 400
-			//local CalculateWallToNPC_Y = npcspos:Distance(forwardtr.HitPos) - 400
-			//if math.abs(npcvel.x) > 51 then CalculateWallToNPC_X = math.abs(npcvel.x) end
-			//if math.abs(npcvel.y) > 51 then CalculateWallToNPC_Y = math.abs(npcvel.y) end
-			if npcspos:Distance(forwardtr.HitPos) >= 51 then
-				//print(CalculateWallToNPC)
-				local thepos = Vector((self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC).x,(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC).y,forwardtr.HitPos.z)
-				local downtr = util.TraceLine({start = thepos, endpos = thepos + self:GetUp()*-300, filter = {self, self.ControlledNPC}})
-				local CalculateDownDistance = thepos.z - downtr.HitPos.z
-				//print(CalculateDownDistance)
-				if CalculateDownDistance >= 300 then CalculateWallToNPC = CalculateWallToNPC - 300 end
-				thepos = Vector((self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC).x,(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC).y,forwardtr.HitPos.z)
-				-- Down Trace
-				/*local nig = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
-				nig:SetModel("models/hunter/blocks/cube025x025x025.mdl")
-				nig:SetPos(downtr.HitPos)
-				nig:SetAngles(self:GetAngles())
-				nig:SetColor(Color(0,255,0))
-				nig:Spawn()
-				nig:Activate()
-				timer.Simple(3,function() if IsValid(nig) then nig:Remove() end end)*/
-				self.ControlledNPC:SetLastPosition(thepos) // self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC
+		if self.ControlledNPC.MovementType != VJ_MOVETYPE_STATIONARY then
+			if (self.TheController:KeyDown(IN_FORWARD)) then
+				self.PlayingAnimation = true
+				self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,100),0))
+				local plysaimvec = self.ControlledNPC:GetForward() *1 //TheController:GetAimVector()
+				plysaimvec.z = 0
+				local testcenter = self.ControlledNPC:OBBCenter():Distance(self.ControlledNPC:OBBMins()) + 20
+				local npcspos = self.ControlledNPC:GetPos() +Vector(0,0,testcenter) // 35
+				local forwardtr = util.TraceLine({start = npcspos, endpos = npcspos +plysaimvec *500, filter = {self, self.ControlledNPC}})
+				//print(npcspos:Distance(forwardtr.HitPos))
+				local npcvel = self.ControlledNPC:GetGroundSpeedVelocity()
+				//if self.ControlledNPC:GetMovementActivity() > 0 then print(self.ControlledNPC:GetSequenceGroundSpeed(self.ControlledNPC:SelectWeightedSequence(self.ControlledNPC:GetMovementActivity()))) end
+				//self.ControlledNPC:GetSequenceGroundSpeed(self.ControlledNPC:SelectWeightedSequence(self.ControlledNPC:GetActivity()))
+				//Vector(math.abs(npcvel.x),math.abs(npcvel.y),math.abs(npcvel.z))
+				local CalculateWallToNPC = npcspos:Distance(forwardtr.HitPos) - 40
+				//local CalculateWallToNPC_X = npcspos:Distance(forwardtr.HitPos) - 400
+				//local CalculateWallToNPC_Y = npcspos:Distance(forwardtr.HitPos) - 400
+				//if math.abs(npcvel.x) > 51 then CalculateWallToNPC_X = math.abs(npcvel.x) end
+				//if math.abs(npcvel.y) > 51 then CalculateWallToNPC_Y = math.abs(npcvel.y) end
+				if npcspos:Distance(forwardtr.HitPos) >= 51 then
+					//print(CalculateWallToNPC)
+					local thepos = Vector((self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC).x,(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC).y,forwardtr.HitPos.z)
+					local downtr = util.TraceLine({start = thepos, endpos = thepos + self:GetUp()*-300, filter = {self, self.ControlledNPC}})
+					local CalculateDownDistance = thepos.z - downtr.HitPos.z
+					//print(CalculateDownDistance)
+					if CalculateDownDistance >= 300 then CalculateWallToNPC = CalculateWallToNPC - 300 end
+					thepos = Vector((self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC).x,(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC).y,forwardtr.HitPos.z)
+					-- Down Trace
+					/*local nig = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
+					nig:SetModel("models/hunter/blocks/cube025x025x025.mdl")
+					nig:SetPos(downtr.HitPos)
+					nig:SetAngles(self:GetAngles())
+					nig:SetColor(Color(0,255,0))
+					nig:Spawn()
+					nig:Activate()
+					timer.Simple(3,function() if IsValid(nig) then nig:Remove() end end)*/
+					self.ControlledNPC:SetLastPosition(thepos) // self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC
+					if (self.TheController:KeyDown(IN_SPEED)) then self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO_RUN) else self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO) end
+					-- Final Move Position
+					/*local nig = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
+					nig:SetModel("models/hunter/blocks/cube025x025x025.mdl")
+					nig:SetPos(thepos)
+					nig:SetAngles(self:GetAngles())
+					nig:SetColor(Color(255,0,0))
+					nig:Spawn()
+					nig:Activate()
+					timer.Simple(3,function() if IsValid(nig) then nig:Remove() end end)*/
+				end
+				//if self.ControlledNPC:GetPos():Distance(forwardtr.HitPos) >= 298 then
+					//self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*300)
+				//elseif (self.ControlledNPC:GetPos():Distance(forwardtr.HitPos) <= 297 && self.ControlledNPC:GetPos():Distance(forwardtr.HitPos) >= 127) then
+					//self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*100)
+				//elseif (self.ControlledNPC:GetPos():Distance(forwardtr.HitPos) <= 126) then
+					//self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*40)
+				//end
+				//if (self.TheController:KeyDown(IN_SPEED)) then self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO_RUN) else self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO) end
+				timer.Simple(0.4,function() if IsValid(self.ControlledNPC) then self.PlayingAnimation = false end end)
+			elseif (self.TheController:KeyDown(IN_BACK)) then
+				self.PlayingAnimation = true
+				local PlayersVectorBack = self.TheController:GetAimVector()*-1 -- Since we are going backwards
+				PlayersVectorBack.z = 0 -- Make it zero, so you can set your desired number.
+				self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+(PlayersVectorBack*300))
 				if (self.TheController:KeyDown(IN_SPEED)) then self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO_RUN) else self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO) end
-				-- Final Move Position
-				/*local nig = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
-				nig:SetModel("models/hunter/blocks/cube025x025x025.mdl")
-				nig:SetPos(thepos)
-				nig:SetAngles(self:GetAngles())
-				nig:SetColor(Color(255,0,0))
-				nig:Spawn()
-				nig:Activate()
-				timer.Simple(3,function() if IsValid(nig) then nig:Remove() end end)*/
+				timer.Simple(0.3,function() if IsValid(self.ControlledNPC) then self.PlayingAnimation = false end end)
+			elseif (self.TheController:KeyDown(IN_MOVELEFT)) then
+				self.PlayingAnimation = true
+				//self.ControlledNPC:SetAngles(Angle(0,1,0))
+				self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+(self.TheController:GetRight()*-300))
+				self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO)
+				timer.Simple(0.3,function() if IsValid(self.ControlledNPC) then self.PlayingAnimation = false end end)
+			elseif (self.TheController:KeyDown(IN_MOVERIGHT)) then
+				self.PlayingAnimation = true
+				self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+(self.TheController:GetRight()*300))
+				self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO)
+				timer.Simple(0.3,function() if IsValid(self.ControlledNPC) then self.PlayingAnimation = false end end)
+			elseif (!self.TheController:KeyDown(IN_SPEED) && !self.TheController:KeyDown(IN_MOVERIGHT) && !self.TheController:KeyDown(IN_MOVELEFT) && !self.TheController:KeyDown(IN_BACK) && !self.TheController:KeyDown(IN_FORWARD)) then
+				self.ControlledNPC:StopMoving()
 			end
-			//if self.ControlledNPC:GetPos():Distance(forwardtr.HitPos) >= 298 then
-				//self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*300)
-			//elseif (self.ControlledNPC:GetPos():Distance(forwardtr.HitPos) <= 297 && self.ControlledNPC:GetPos():Distance(forwardtr.HitPos) >= 127) then
-				//self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*100)
-			//elseif (self.ControlledNPC:GetPos():Distance(forwardtr.HitPos) <= 126) then
-				//self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*40)
-			//end
-			//if (self.TheController:KeyDown(IN_SPEED)) then self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO_RUN) else self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO) end
-			timer.Simple(0.4,function() if IsValid(self.ControlledNPC) then self.PlayingAnimation = false end end)
-		elseif (self.TheController:KeyDown(IN_BACK)) then
-			self.PlayingAnimation = true
-			local PlayersVectorBack = self.TheController:GetAimVector()*-1 -- Since we are going backwards
-			PlayersVectorBack.z = 0 -- Make it zero, so you can set your desired number.
-			self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+(PlayersVectorBack*300))
-			if (self.TheController:KeyDown(IN_SPEED)) then self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO_RUN) else self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO) end
-			timer.Simple(0.3,function() if IsValid(self.ControlledNPC) then self.PlayingAnimation = false end end)
-		elseif (self.TheController:KeyDown(IN_MOVELEFT)) then
-			self.PlayingAnimation = true
-			//self.ControlledNPC:SetAngles(Angle(0,1,0))
-			self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+(self.TheController:GetRight()*-300))
-			self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO)
-			timer.Simple(0.3,function() if IsValid(self.ControlledNPC) then self.PlayingAnimation = false end end)
-		elseif (self.TheController:KeyDown(IN_MOVERIGHT)) then
-			self.PlayingAnimation = true
-			self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+(self.TheController:GetRight()*300))
-			self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO)
-			timer.Simple(0.3,function() if IsValid(self.ControlledNPC) then self.PlayingAnimation = false end end)
-		elseif (!self.TheController:KeyDown(IN_SPEED) && !self.TheController:KeyDown(IN_MOVERIGHT) && !self.TheController:KeyDown(IN_MOVELEFT) && !self.TheController:KeyDown(IN_BACK) && !self.TheController:KeyDown(IN_FORWARD)) then
-			self.ControlledNPC:StopMoving()
-		end
-		if (self.TheController:KeyDown(IN_USE)) then
-			self.ControlledNPC:StopMoving()
-			self:StopControlling()
+			if (self.TheController:KeyDown(IN_USE)) then
+				self.ControlledNPC:StopMoving()
+				self:StopControlling()
+			end
 		end
 	end
 end
@@ -472,7 +478,7 @@ function ENT:OnRemove()
 end
 /*--------------------------------------------------
 	=============== NPC Controler Base ===============
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to controll NPCs. Mainly for VJ Base SNPCs.

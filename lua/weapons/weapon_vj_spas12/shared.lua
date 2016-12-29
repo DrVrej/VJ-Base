@@ -16,6 +16,7 @@ end
 	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.NPC_EnableDontUseRegulate 	= true -- Used for VJ Base SNPCs, if enabled the SNPC will remove use regulate
 SWEP.NPC_NextPrimaryFire 		= 0.9 -- Next time it can use primary fire
+SWEP.NPC_ExtraFireSound			= {"vj_weapons/perform_shotgunpump.wav"} -- Plays an extra sound after it fires (Example: Bolt action sound)
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel					= "models/weapons/c_shotgun.mdl"
 SWEP.WorldModel					= "models/weapons/w_shotgun.mdl"
@@ -36,6 +37,9 @@ SWEP.Primary.Sound				= {"Weapon_Shotgun.Single"}
 SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
 SWEP.Primary.DistantSound		= {"Weapon_Shotgun.NPC_Single"}
 SWEP.Primary.DistantSoundVolume	= 0.55 -- Distant sound volume
+SWEP.PrimaryEffects_MuzzleAttachment = 1
+SWEP.PrimaryEffects_ShellAttachment = 2
+SWEP.PrimaryEffects_ShellType = "VJ_Weapon_ShotgunShell1"
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound				= true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
 SWEP.ReloadSound				= {"weapons/shotgun/shotgun_reload1.wav","weapons/shotgun/shotgun_reload2.wav","weapons/shotgun/shotgun_reload3.wav"}
@@ -73,38 +77,4 @@ function SWEP:CustomOnPrimaryAttack_AfterShoot()
 		end
 	end
  end)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:PrimaryAttackEffects()
-	local vjeffectmuz = EffectData()
-	vjeffectmuz:SetOrigin(self.Owner:GetShootPos())
-	vjeffectmuz:SetEntity(self.Weapon)
-	vjeffectmuz:SetStart(self.Owner:GetShootPos())
-	vjeffectmuz:SetNormal(self.Owner:GetAimVector())
-	vjeffectmuz:SetAttachment(1)
-	util.Effect("VJ_Weapon_RifleMuzzle1",vjeffectmuz)
-	
-	if !self.Owner:IsPlayer() && GetConVarNumber("vj_wep_nobulletshells") == 0 then
-		local vjeffect = EffectData()
-		vjeffect:SetEntity(self.Weapon)
-		vjeffect:SetOrigin(self.Owner:GetShootPos())
-		vjeffect:SetNormal(self.Owner:GetAimVector())
-		vjeffect:SetAttachment(1)
-		util.Effect("VJ_Weapon_ShotgunShell1",vjeffect)
-	end
-
-	if (SERVER) && GetConVarNumber("vj_wep_nomuszzleflash") == 0 && GetConVarNumber("vj_wep_nomuszzleflash_dynamiclight") == 0 then
-		local FireLight1 = ents.Create("light_dynamic")
-		FireLight1:SetKeyValue("brightness", "4")
-		FireLight1:SetKeyValue("distance", "120")
-		if self.Owner:IsPlayer() then FireLight1:SetLocalPos(self.Owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else FireLight1:SetLocalPos(self:GetAttachment(1).Pos) end
-		FireLight1:SetLocalAngles(self:GetAngles())
-		FireLight1:Fire("Color", "255 150 60")
-		FireLight1:SetParent(self)
-		FireLight1:Spawn()
-		FireLight1:Activate()
-		FireLight1:Fire("TurnOn","",0)
-		FireLight1:Fire("Kill","",0.07)
-		self:DeleteOnRemove(FireLight1)
-	end
 end

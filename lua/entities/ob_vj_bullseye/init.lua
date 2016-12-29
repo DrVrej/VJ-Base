@@ -3,7 +3,7 @@ AddCSLuaFile("shared.lua")
 include('shared.lua')
 /*--------------------------------------------------
 	=============== Bullseye Entity ===============
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to place a target in certain situations for VJ Base SNPCs.
@@ -30,7 +30,7 @@ function ENT:Think()
 end
 /*--------------------------------------------------
 	=============== Bullseye Entity ===============
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to place a target in certain situations for VJ Base SNPCs.

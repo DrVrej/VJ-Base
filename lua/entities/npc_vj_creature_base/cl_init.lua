@@ -2,7 +2,7 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 include('shared.lua')
 /*--------------------------------------------------
 	=============== Creature SNPC Base ===============
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to make creature SNPCs
@@ -11,11 +11,13 @@ require('sound_vj_track')
 
 ENT.RenderGroup = RENDERGROUP_BOTH
 function ENT:Initialize() end
-function ENT:Draw() self.Entity:DrawModel() end
+function ENT:Draw() self.Entity:DrawModel() self:CustomOnDraw() end
 function ENT:DrawTranslucent() self:Draw() end
 function ENT:BuildBonePositions(NumBones,NumPhysBones) end
 function ENT:SetRagdollBones(bIn) self.m_bRagdollSetup = bIn end
 function ENT:DoRagdollBone(PhysBoneNum,BoneNum) /*self:SetBonePosition(BoneNum,Pos,Angle)*/ end
+-- Custom functions ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnDraw() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*net.Receive("vj_creature_onthememusic",function(len)
 	//BroadcastLua(print("Theme music net code is running!"))

@@ -36,6 +36,8 @@ SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun
 SWEP.Primary.DistantSound		= {"vj_weapons/flare/fire_dist.wav"}
 //SWEP.Primary.DistantSoundVolume	= 0.25 -- Distant sound volume
 SWEP.Primary.DisableBulletCode	= true -- The bullet won't spawn, this can be used when creating a projectile-based weapon
+SWEP.PrimaryEffects_MuzzleAttachment = 1
+SWEP.PrimaryEffects_SpawnShells = false
 	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.DelayOnDeploy 				= 0.6 -- Time until it can shoot again after deploying the weapon
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -65,30 +67,5 @@ if (CLIENT) then return end
 		phy:ApplyForceCenter((self.Owner:GetAimVector() * 15000)) else //200000
 		phy:ApplyForceCenter(((self.Owner:GetEnemy():GetPos() - self.Owner:GetPos()) * 15000))
 		end
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:PrimaryAttackEffects()
-	local vjeffectmuz = EffectData()
-	vjeffectmuz:SetOrigin(self.Owner:GetShootPos())
-	vjeffectmuz:SetEntity(self.Weapon)
-	vjeffectmuz:SetStart(self.Owner:GetShootPos())
-	vjeffectmuz:SetNormal(self.Owner:GetAimVector())
-	vjeffectmuz:SetAttachment(1)
-	util.Effect("VJ_Weapon_RifleMuzzle1",vjeffectmuz)
-
-	if (SERVER) && GetConVarNumber("vj_wep_nomuszzleflash") == 0 && GetConVarNumber("vj_wep_nomuszzleflash_dynamiclight") == 0 then
-		local FireLight1 = ents.Create("light_dynamic")
-		FireLight1:SetKeyValue("brightness", "4")
-		FireLight1:SetKeyValue("distance", "120")
-		if self.Owner:IsPlayer() then FireLight1:SetLocalPos(self.Owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else FireLight1:SetLocalPos(self:GetAttachment(1).Pos) end
-		FireLight1:SetLocalAngles(self:GetAngles())
-		FireLight1:Fire("Color", "255 150 60")
-		FireLight1:SetParent(self)
-		FireLight1:Spawn()
-		FireLight1:Activate()
-		FireLight1:Fire("TurnOn","",0)
-		FireLight1:Fire("Kill","",0.07)
-		self:DeleteOnRemove(FireLight1)
 	end
 end

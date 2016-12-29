@@ -36,6 +36,9 @@ SWEP.Primary.Ammo				= "Pistol" -- Ammo type
 SWEP.Primary.Sound				= {"vj_weapons/glock_17/glock17_single.wav"}
 SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
 SWEP.Primary.DistantSound		= {"vj_weapons/glock_17/glock17_single_dist.wav"}
+SWEP.PrimaryEffects_MuzzleAttachment = 1
+SWEP.PrimaryEffects_ShellAttachment = 1
+SWEP.PrimaryEffects_ShellType = "VJ_Weapon_PistolShell1"
 	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.DelayOnDeploy 				= 0.4 -- Time until it can shoot again after deploying the weapon
 SWEP.AnimTbl_Deploy				= {ACT_VM_IDLE_TO_LOWERED}
@@ -49,41 +52,6 @@ SWEP.HasIdleAnimation			= true -- Does it have a idle animation?
 SWEP.AnimTbl_Idle				= {ACT_VM_IDLE}
 SWEP.NextIdle_Deploy			= 0.5 -- How much time until it plays the idle animation after the weapon gets deployed
 SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle animation after attacking(Primary)
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:PrimaryAttackEffects()
-	if self.Owner:GetClass() == "npc_vj_bmssec_assassin" then return end
-	local vjeffectmuz = EffectData()
-	vjeffectmuz:SetOrigin(self.Owner:GetShootPos())
-	vjeffectmuz:SetEntity(self.Weapon)
-	vjeffectmuz:SetStart(self.Owner:GetShootPos())
-	vjeffectmuz:SetNormal(self.Owner:GetAimVector())
-	vjeffectmuz:SetAttachment(1)
-	util.Effect("VJ_Weapon_PistolMuzzle1",vjeffectmuz)
-	
-	if !self.Owner:IsPlayer() && GetConVarNumber("vj_wep_nobulletshells") == 0 then
-		local vjeffect = EffectData()
-		vjeffect:SetEntity(self.Weapon)
-		vjeffect:SetOrigin(self.Owner:GetShootPos())
-		vjeffect:SetNormal(self.Owner:GetAimVector())
-		vjeffect:SetAttachment(1)
-		util.Effect("VJ_Weapon_PistolShell1",vjeffect)
-	end
-	
-	if (SERVER) && GetConVarNumber("vj_wep_nomuszzleflash") == 0 && GetConVarNumber("vj_wep_nomuszzleflash_dynamiclight") == 0 then
-		local FireLight1 = ents.Create("light_dynamic")
-		FireLight1:SetKeyValue("brightness", "4")
-		FireLight1:SetKeyValue("distance", "120")
-		if self.Owner:IsPlayer() then FireLight1:SetLocalPos(self.Owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else FireLight1:SetLocalPos(self:GetAttachment(1).Pos) end
-		FireLight1:SetLocalAngles(self:GetAngles())
-		FireLight1:Fire("Color", "255 150 60")
-		FireLight1:SetParent(self)
-		FireLight1:Spawn()
-		FireLight1:Activate()
-		FireLight1:Fire("TurnOn","",0)
-		FireLight1:Fire("Kill","",0.07)
-		self:DeleteOnRemove(FireLight1)
-	end
-end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnFireAnimationEvent(pos,ang,event,options)
 	if event == 32 then return true end 

@@ -110,6 +110,17 @@ SWEP.Primary.DistantSoundLevel	= 140 -- Distant sound level
 SWEP.Primary.DistantSoundPitch1	= 90 -- Distant sound pitch 1
 SWEP.Primary.DistantSoundPitch2	= 110 -- Distant sound pitch 2
 SWEP.Primary.DistantSoundVolume	= 1 -- Distant sound volume
+SWEP.PrimaryEffects_MuzzleFlash = true
+SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_full"}
+SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
+SWEP.PrimaryEffects_SpawnShells = true
+SWEP.PrimaryEffects_ShellAttachment = "shell"
+SWEP.PrimaryEffects_ShellType = "VJ_Weapon_RifleShell1"
+	-- VJ_Weapon_RifleShell1 | VJ_Weapon_PistolShell1 | VJ_Weapon_ShotgunShell1
+SWEP.PrimaryEffects_SpawnDynamicLight = true
+SWEP.PrimaryEffects_DynamicLightBrightness = 4
+SWEP.PrimaryEffects_DynamicLightDistance = 120
+SWEP.PrimaryEffects_DynamicLightColor = Color(255, 150, 60)
 	-- Secondary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Secondary.Damage			= 5 -- Damage
 SWEP.Secondary.PlayerDamage		= 2 -- Only applies for players | "Same" = Same as self.Primary.Damage, "Double" = Double the self.Primary.Damage OR put a number to be different from self.Primary.Damage
@@ -453,30 +464,56 @@ function SWEP:DoIdleAnimation()
 	self.Weapon:SendWeaponAnim(VJ_PICKRANDOMTABLE(self.AnimTbl_Idle))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-/*function SWEP:PrimaryAttackEffects()
-	local vjeffect = EffectData()
-	vjeffect:SetEntity(self.Weapon)
-	vjeffect:SetOrigin(self.Owner:GetShootPos())
-	vjeffect:SetNormal(self.Owner:GetAimVector())
-	vjeffect:SetAttachment(1)
-	util.Effect("VJ_Weapon_RifleMuzzle1",vjeffect)
+function SWEP:CustomOnPrimaryAttackEffects()
+	-- Not returning to true will make the base effects not to spawn
+	return true
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:PrimaryAttackEffects()
+	local customeffects = self:CustomOnPrimaryAttackEffects()
+	if customeffects != true then return end
+	/*local vjeffectmuz = EffectData()
+	vjeffectmuz:SetOrigin(self.Owner:GetShootPos())
+	vjeffectmuz:SetEntity(self.Weapon)
+	vjeffectmuz:SetStart(self.Owner:GetShootPos())
+	vjeffectmuz:SetNormal(self.Owner:GetAimVector())
+	vjeffectmuz:SetAttachment(1)
+	util.Effect("VJ_Weapon_RifleMuzzle1",vjeffectmuz)*/
 	
-	if !self.Owner:IsPlayer() && GetConVarNumber("vj_wep_nobulletshells") == 0 then
+	if self.PrimaryEffects_MuzzleFlash == true && GetConVarNumber("vj_wep_nomuszzleflash") == 0 then
+		local muzzleattach = self.PrimaryEffects_MuzzleAttachment
+		if isnumber(muzzleattach) == false then muzzleattach = self:LookupAttachment(muzzleattach) end
+		if self.Owner:IsPlayer() && self.Owner:GetViewModel() != nil then
+			local vjeffectmuz = EffectData()
+			vjeffectmuz:SetOrigin(self.Owner:GetShootPos())
+			vjeffectmuz:SetEntity(self.Weapon)
+			vjeffectmuz:SetStart(self.Owner:GetShootPos())
+			vjeffectmuz:SetNormal(self.Owner:GetAimVector())
+			vjeffectmuz:SetAttachment(muzzleattach)
+			util.Effect("VJ_Weapon_RifleMuzzle1",vjeffectmuz)
+		else
+			ParticleEffectAttach(VJ_PICKRANDOMTABLE(self.PrimaryEffects_MuzzleParticles),PATTACH_POINT_FOLLOW,self,muzzleattach)
+		end
+	end
+	
+	if self.PrimaryEffects_SpawnShells == true && !self.Owner:IsPlayer() && GetConVarNumber("vj_wep_nobulletshells") == 0 then
+		local shellattach = self.PrimaryEffects_ShellAttachment
+		if isnumber(shellattach) == false then shellattach = self:LookupAttachment(shellattach) end
 		local vjeffect = EffectData()
 		vjeffect:SetEntity(self.Weapon)
 		vjeffect:SetOrigin(self.Owner:GetShootPos())
 		vjeffect:SetNormal(self.Owner:GetAimVector())
-		vjeffect:SetAttachment(1)
-		util.Effect("VJ_Weapon_RifleShell1",vjeffect)
+		vjeffect:SetAttachment(shellattach)
+		util.Effect(self.PrimaryEffects_ShellType,vjeffect)
 	end
 
-	if (SERVER) && GetConVarNumber("vj_wep_nomuszzleflash") == 0 && GetConVarNumber("vj_wep_nomuszzleflash_dynamiclight") == 0 then
+	if (SERVER) && self.PrimaryEffects_SpawnDynamicLight == true && GetConVarNumber("vj_wep_nomuszzleflash") == 0 && GetConVarNumber("vj_wep_nomuszzleflash_dynamiclight") == 0 then
 		local FireLight1 = ents.Create("light_dynamic")
-		FireLight1:SetKeyValue("brightness", "4")
-		FireLight1:SetKeyValue("distance", "120")
+		FireLight1:SetKeyValue("brightness", self.PrimaryEffects_DynamicLightBrightness)
+		FireLight1:SetKeyValue("distance", self.PrimaryEffects_DynamicLightDistance)
 		if self.Owner:IsPlayer() then FireLight1:SetLocalPos(self.Owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else FireLight1:SetLocalPos(self:GetAttachment(1).Pos) end
 		FireLight1:SetLocalAngles(self:GetAngles())
-		FireLight1:Fire("Color", "255 150 60")
+		FireLight1:Fire("Color", self.PrimaryEffects_DynamicLightColor.r.." "..self.PrimaryEffects_DynamicLightColor.g.." "..self.PrimaryEffects_DynamicLightColor.b)
 		FireLight1:SetParent(self)
 		FireLight1:Spawn()
 		FireLight1:Activate()
@@ -484,7 +521,7 @@ end
 		FireLight1:Fire("Kill","",0.07)
 		self:DeleteOnRemove(FireLight1)
 	end
-end*/
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:FireAnimationEvent(pos,ang,event,options)
 	local getcustom = self:CustomOnFireAnimationEvent(pos,ang,event,options)

@@ -1,24 +1,23 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 /*--------------------------------------------------
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
 
-/*-- Blood Types ---------------------
+/*-- Information ---------------------
+	-- Common Blood Types --
 	Red 		= Color(130,19,10)
 	Yellow 		= Color(255,221,35)
 	
 	-- Code Implementation --
 	local blcolor = Color(130,19,10)
-	bloodeffect:SetStart(Vector(blcolor.r,blcolor.g,blcolor.b))
+	bloodeffect:SetColor(VJ_Color2Byte(Color(r,g,b)))
 -------------------------------------- */
 function EFFECT:Init(data)
 	local origin = data:GetOrigin()
-	local color = data:GetStart()
 	local scale = data:GetScale()
-	if color == Vector(0.12500095367432,0.12500095367432,0.12500095367432) then color = Color(130,19,10) end
-	if scale == 1 then scale = 120 end
+	local color = VJ_Color8Bit2Color(data:GetColor())
 	
 	self.Emitter = ParticleEmitter(origin)
 	for buzz = 0,6 do
@@ -46,7 +45,7 @@ end
 function EFFECT:Render()
 end
 /*--------------------------------------------------
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/

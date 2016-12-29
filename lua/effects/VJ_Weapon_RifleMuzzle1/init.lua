@@ -1,6 +1,6 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 /*--------------------------------------------------
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
@@ -129,6 +129,45 @@ function EFFECT:Init(data)
 	 end
 	end
   end
+  
+  /*
+    		local EffectCode = Emitter:Add("effects/muzzleflare_01",self.Pos + LocalPlayerMagnitude * data:GetNormal())
+		EffectCode:SetVelocity(data:GetNormal() + 1.1 * data:GetEntity():GetOwner():GetVelocity())
+		//EffectCode:SetAirResistance(200)
+		EffectCode:SetDieTime(math.Rand(0.05,0.05)) -- How much time until it dies
+		EffectCode:SetStartAlpha(math.Rand(200,255)) -- Transparency
+		EffectCode:SetStartSize(math.Rand(5,6)) -- Size of the effect
+		EffectCode:SetEndSize(math.Rand(16,20)) -- Size of the effect at the end (The effect slowly trasnsforms to this size)
+		EffectCode:SetRoll(math.Rand(480,540))
+		EffectCode:SetRollDelta(math.Rand(-1,1)) -- How fast it rolls
+		EffectCode:SetColor(245,164,53) -- The color of the effect
+		//EffectCode:SetGravity(Vector(0,0,100)) -- The Gravity
+		
+ 		local EffectCode = Emitter:Add("effects/muzzlestarlarge_01",self.Pos + LocalPlayerMagnitude * data:GetNormal())
+		EffectCode:SetVelocity(data:GetNormal() + 1.1 * data:GetEntity():GetOwner():GetVelocity())
+		//EffectCode:SetAirResistance(200)
+		EffectCode:SetDieTime(math.Rand(0.05,0.05)) -- How much time until it dies
+		EffectCode:SetStartAlpha(math.Rand(200,255)) -- Transparency
+		EffectCode:SetStartSize(math.Rand(5,6)) -- Size of the effect
+		EffectCode:SetEndSize(math.Rand(16,20)) -- Size of the effect at the end (The effect slowly trasnsforms to this size)
+		EffectCode:SetRoll(math.Rand(480,540))
+		EffectCode:SetRollDelta(math.Rand(-1,1)) -- How fast it rolls
+		EffectCode:SetColor(248,241,200) -- The color of the effect
+		//EffectCode:SetGravity(Vector(0,0,100)) -- The Gravity
+		
+		local EffectCode = Emitter:Add("particle/bm_whispysmoke_001",self.Pos + LocalPlayerMagnitude * data:GetNormal())
+		EffectCode:SetVelocity(data:GetNormal() + Vector(math.random(-30,30),math.random(-30,30),math.random(-30,30)))
+		EffectCode:SetDieTime(math.Rand(0.5,0.5)) -- How much time until it dies
+		EffectCode:SetStartAlpha(math.Rand(40,60)) -- Transparency
+		EffectCode:SetEndAlpha(0) -- Transparency
+		EffectCode:SetStartSize(math.Rand(2,3)) -- Size of the effect
+		EffectCode:SetEndSize(math.Rand(13,15)) -- Size of the effect at the end (The effect slowly trasnsforms to this size)
+		EffectCode:SetRoll(math.Rand(480,540))
+		EffectCode:SetRollDelta(math.Rand(-1,1)) -- How fast it rolls
+		EffectCode:SetColor(255,255,255) -- The color of the effect
+		//EffectCode:SetGravity(Vector(0,0,math.random(-30,-10))) -- The Gravity
+		EffectCode:SetAirResistance(300)
+  */
 	Emitter:Finish()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -139,7 +178,7 @@ end
 function EFFECT:Render()
 end
 /*--------------------------------------------------
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
