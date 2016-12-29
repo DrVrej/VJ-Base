@@ -5,7 +5,7 @@ AddCSLuaFile("shared.lua")
 include("shared.lua")
 /*--------------------------------------------------
 	=============== Board Entity ===============
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used for defending a certain area from enemies, SNPCs will attack it when close.
@@ -60,7 +60,7 @@ function ENT:OnRemove()
 end
 /*--------------------------------------------------
 	=============== Board Entity ===============
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used for defending a certain area from enemies, SNPCs will attack it when close.

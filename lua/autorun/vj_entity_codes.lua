@@ -1,6 +1,6 @@
 /*--------------------------------------------------
 	=============== Entity Stuff ===============
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to load Entity autorun codes for VJ Base
@@ -199,6 +199,14 @@ function VJ_DestroyCombineTurret(vSelf,argent)
 	end
 	return false
 end
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function VJ_Color2Byte(color)
+	return bit.lshift(math.floor(color.r*7/255),5)+bit.lshift(math.floor(color.g*7/255),2)+math.floor(color.b*3/255)
+end
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function VJ_Color8Bit2Color(bits)
+	return Color(bit.rshift(bits,5)*255/7,bit.band(bit.rshift(bits,2),0x07)*255/7,bit.band(bits,0x03)*255/3)
+end
 -- NPC/Entity/Player Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local Entity_MetaTable = FindMetaTable("Entity")
 local NPC_MetaTable = FindMetaTable("NPC")
@@ -329,6 +337,7 @@ end
 function NPC_MetaTable:FaceCertainEntity(argent,OnlyIfSeenEnemy,FaceEnemyTime)
 	if GetConVarNumber("ai_disabled") == 1 then return false end
 	if !IsValid(argent) then return false end
+	if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false then return end
 	FaceEnemyTime = FaceEnemyTime or 0
 	if OnlyIfSeenEnemy == true && self:GetEnemy() != nil then
 		local setangs = Angle(0,(argent:GetPos()-self:GetPos()):Angle().y,0)
@@ -451,6 +460,9 @@ function NPC_MetaTable:VJ_DoSetEnemy(argent,ShouldStopActs,DoSmallWhenActiveEnem
 		//self:SetEnemy(argent)
 		self.MyEnemy = argent
 		self:UpdateEnemyMemory(argent,argent:GetPos())
+		//if self.MovementType == VJ_MOVETYPE_STATIONARY or self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+			//self:SetEnemy(argent)
+		//end
 	else
 		self.NextResetEnemyT = CurTime() + 0.5 //2
 		self:AddEntityRelationship(argent,D_HT,99)
@@ -696,6 +708,7 @@ cvars.AddChangeCallback("ai_ignoreplayers",function(convar_name,oldValue,newValu
 			if v.IsVJBaseSNPC == true then
 				v:AddEntityRelationship(pv,4,10)
 				if (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
+					if v:GetEnemy() != nil && v:GetEnemy() == pv then v:ResetEnemy() end
 					v.CurrentPossibleEnemies = v:DoHardEntityCheck()
 				end
 			end
@@ -711,6 +724,7 @@ cvars.AddChangeCallback("vj_npc_drvrejfriendly",function(convar_name,oldValue,ne
 			if game.SinglePlayer() then
 				if v:IsPlayer() then
 					v:SetNoTarget(true)
+					v.VJ_NoTarget = true
 				end 
 			else
 				if (v:IsPlayer() && v:SteamID() == "STEAM_0:0:22688298") then
@@ -723,9 +737,16 @@ cvars.AddChangeCallback("vj_npc_drvrejfriendly",function(convar_name,oldValue,ne
 	if newValue == "0" then
 		//print("They now detect DrVrej!")
 		for k,v in pairs(ents.GetAll()) do
-			if (v:IsPlayer() && v:SteamID() == "STEAM_0:0:22688298") then 
-				v:SetNoTarget(false)
-				v.VJ_NoTarget = false
+			if game.SinglePlayer() then
+				if v:IsPlayer() then
+					v:SetNoTarget(true)
+					v.VJ_NoTarget = false
+				end 
+			else
+				if (v:IsPlayer() && v:SteamID() == "STEAM_0:0:22688298") then
+					v:SetNoTarget(false)
+					v.VJ_NoTarget = false
+				end
 			end
 		end
 	end

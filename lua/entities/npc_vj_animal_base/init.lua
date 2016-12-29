@@ -5,7 +5,7 @@ include('shared.lua')
 include('schedules.lua')
 /*--------------------------------------------------
 	=============== Animal SNPC Base ===============
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used as a base for animal SNPCs.
@@ -32,8 +32,8 @@ ENT.CanTurnWhileStationary = true -- If set to true, the SNPC will be able to tu
 	-- Blood & Damages ---------------------------------------------------------------------------------------------------------------------------------------------
 	-- ====== Blood-Related Variables ====== --
 ENT.Bleeds = true -- Does the SNPC bleed? (Blood decal, particle, etc.)
-ENT.BloodColor = "" -- The blood type, this will detemine what it should use (decal, particle, etc.)
-	-- Types: "Red" || "Yellow" || "Green" || "Orange" || "Blue" || "Purple" || "Black"
+ENT.BloodColor = "" -- The blood type, this will determine what it should use (decal, particle, etc.)
+	-- Types: "Red" || "Yellow" || "Green" || "Orange" || "Blue" || "Purple" || "Oil"
 -- Use the following variables to customize the blood the way you want it:
 ENT.HasBloodParticle = true -- Does it spawn a particle when damaged?
 ENT.HasBloodDecal = true -- Does it spawn a decal when damaged?
@@ -1191,7 +1191,7 @@ function ENT:OnTakeDamage(dmginfo,hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoFlinch(dmginfo,hitgroup)
-	if self.CanFlinch == 0 or self.Flinching == true or (self.NextFlinchT > CurTime()) or (dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
+	if self.CanFlinch == 0 or self.Flinching == true or (self.NextFlinchT > CurTime()) or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
 	
 	local function RunFlinchCode(HitBoxBased,HitBoxInfo)
 		self.Flinching = true
@@ -1311,7 +1311,7 @@ function ENT:DoChangeBloodColor(Type)
 		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_purple"} end
 		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Purple"} end
 		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
-	elseif Type == "Black" then
+	elseif Type == "Oil" then
 		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_black"} end
 		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Black"} end
 		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
@@ -1622,12 +1622,15 @@ function ENT:CreateExtraDeathCorpse(Ent,Models,Tbl_Features,CustomCode)
 	vTbl_Features = Tbl_Features or {}
 	vTbl_Position = vTbl_Features.Pos or self:GetPos()
 	vTbl_Angle = vTbl_Features.Ang or self:GetAngles()
+	vTbl_HasVelocity = vTbl_Features.HasVel
+		if vTbl_HasVelocity == nil then vTbl_HasVelocity = true end
 	vTbl_Velocity = vTbl_Features.Vel or dmgforce /37
 	vTbl_ShouldFade = vTbl_Features.ShouldFade or false -- Should it get removed after certain time?
 	vTbl_ShouldFadeTime = vTbl_Features.ShouldFadeTime or 0 -- How much time until the entity gets removed?
-	vTbl_RemoveOnCorpseDelete = vTbl_Features.RemoveOnCorpseDelete or true -- Should the entity get removed if the corpse is removed?
+	vTbl_RemoveOnCorpseDelete = vTbl_Features.RemoveOnCorpseDelete -- Should the entity get removed if the corpse is removed?
+		if vTbl_RemoveOnCorpseDelete == nil then vTbl_RemoveOnCorpseDelete = true end
 	local extraent = ents.Create(Ent)
-	extraent:SetModel(VJ_PICKRANDOMTABLE(Models))
+	if Models != "None" then extraent:SetModel(VJ_PICKRANDOMTABLE(Models)) end
 	extraent:SetPos(vTbl_Position)
 	extraent:SetAngles(vTbl_Angle)
 	extraent:Spawn()
@@ -1639,7 +1642,7 @@ function ENT:CreateExtraDeathCorpse(Ent,Models,Tbl_Features,CustomCode)
 		extraent:Ignite(math.Rand(8,10),0)
 		extraent:SetColor(Color(90,90,90))
 	end
-	extraent:GetPhysicsObject():AddVelocity(vTbl_Velocity)
+	if vTbl_HasVelocity == true then extraent:GetPhysicsObject():AddVelocity(vTbl_Velocity) end
 	if vTbl_ShouldFade == true then
 		if extraent:GetClass() == "prop_ragdoll" then 
 			extraent:Fire("FadeAndRemove","",vTbl_ShouldFadeTime) 
@@ -2014,7 +2017,7 @@ end*/
 end*/
 /*--------------------------------------------------
 	=============== Animal SNPC Base ===============
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to make animal SNPCs

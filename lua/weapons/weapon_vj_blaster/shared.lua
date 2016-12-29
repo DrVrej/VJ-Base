@@ -32,6 +32,9 @@ SWEP.Primary.Ammo				= "SMG1" -- Ammo type
 SWEP.Primary.Sound				= {"vj_weapons/blaster/starwars_fire.wav"} -- npc/roller/mine/rmine_explode_shock1.wav
 SWEP.Primary.HasDistantSound	= false -- Does it have a distant sound when the gun is shot?
 SWEP.Primary.DisableBulletCode	= true -- The bullet won't spawn, this can be used when creating a projectile-based weapon
+SWEP.PrimaryEffects_MuzzleFlash = false
+SWEP.PrimaryEffects_SpawnShells = false
+SWEP.PrimaryEffects_DynamicLightColor = Color(255, 0, 0)
 	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.DelayOnDeploy 				= 1 -- Time until it can shoot again after deploying the weapon
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -61,22 +64,5 @@ if (CLIENT) then return end
 		phy:ApplyForceCenter(self.Owner:GetAimVector() * 4000) else //200000
 		phy:ApplyForceCenter((self.Owner:GetEnemy():GetPos() - self.Owner:GetPos()) * 4000)
 		end
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:PrimaryAttackEffects()
-	if (SERVER) && GetConVarNumber("vj_wep_nomuszzleflash") == 0 && GetConVarNumber("vj_wep_nomuszzleflash_dynamiclight") == 0 then
-		local FireLight1 = ents.Create("light_dynamic")
-		FireLight1:SetKeyValue("brightness", "4")
-		FireLight1:SetKeyValue("distance", "120")
-		if self.Owner:IsPlayer() then FireLight1:SetLocalPos(self.Owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else FireLight1:SetLocalPos(self:GetAttachment(1).Pos) end
-		FireLight1:SetLocalAngles(self:GetAngles())
-		FireLight1:Fire("Color", "255 0 0")
-		FireLight1:SetParent(self)
-		FireLight1:Spawn()
-		FireLight1:Activate()
-		FireLight1:Fire("TurnOn","",0)
-		FireLight1:Fire("Kill","",0.07)
-		self:DeleteOnRemove(FireLight1)
 	end
 end

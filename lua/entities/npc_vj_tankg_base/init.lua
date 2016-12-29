@@ -1,7 +1,7 @@
 AddCSLuaFile("shared.lua")
 include('shared.lua')
 /*-----------------------------------------------
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
@@ -53,14 +53,17 @@ ENT.Tank_UsesRightAngles = false
 ENT.Tank_SeeClose = 350 -- If the enemy is closer than this number, than don't shoot!
 ENT.Tank_SeeFar = 5000 -- If the enemy is higher than this number, than don't shoot!
 ENT.Tank_SeeLimit = 6000 -- How far can it see?
-ENT.ShellSpawnPos = Vector(-170,0,65)
-ENT.ShellLightPos = Vector(-200,0,0)
-ENT.ShellMuzzlePos = Vector(0,-235,18)
-ENT.ShellParticlePos1 = Vector(-205,00,72)
-ENT.ShellParticlePos2 = Vector(-230,00,72)
-ENT.ShellShootUp = 40
-ENT.Tank_NotFacingTargetShootPos = -100
 
+-- Tank Shell Variables
+ENT.Tank_Shell_TimeUntilFire = 2 -- How much time until it fires the shell?
+ENT.Tank_Shell_SpawnPos = Vector(-170,0,65)
+ENT.Tank_Shell_EntityToSpawn = "obj_vj_tank_shell" -- The entity that is spawned when the shell is fired
+ENT.Tank_Shell_VelocitySpeed = 5000 -- How fast should the tank shell travel?
+ENT.Tank_Shell_DynamicLightPos = Vector(-200,0,0)
+ENT.Tank_Shell_MuzzleFlashPos = Vector(0,-235,18)
+ENT.Tank_Shell_ParticlePos = Vector(-205,00,72)
+
+-- Independent Variables
 ENT.Tank_FacingTarget = false -- Is it facing the enemy?
 ENT.Tank_ShellReady = false -- Is the shell ready?
 ENT.Tank_ProperHeightShoot = false -- Is the enemy position proper height for it to shoot?
@@ -73,10 +76,10 @@ util.AddNetworkString("vj_tankg_base_shooteffects")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomInitialize_CustomTank() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:TankBase_CustomOnShellFire(Shell) end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize()
 	self:CustomInitialize_CustomTank()
-	//self:CapabilitiesAdd(bit.bor(CAP_ANIMATEDFACE)) -- Breaks some SNPCs, avoid using it!
-
 	self.FiringShell = false
 	self.Tank_ShellReady = false
 end
@@ -159,12 +162,12 @@ function ENT:CustomOnThink_AIEnabled()
 		if GetConVarNumber("vj_npc_norange") == 0 then
 		self:RangeAttack_Base() end end
 	elseif Angle_Diffuse > self.Tank_AngleDiffuseGeneralNumber then
-		self:SetLocalAngles( self:GetLocalAngles() + Angle(0,2,0))
+		self:SetLocalAngles(self:GetLocalAngles() + Angle(0,2,0))
 		self.Tank_GunnerIsTurning = true
 		self.Tank_FacingTarget = false
 		self.FiringShell = false
 	elseif Angle_Diffuse < -self.Tank_AngleDiffuseGeneralNumber then
-		self:SetLocalAngles( self:GetLocalAngles() + Angle(0,-2,0))
+		self:SetLocalAngles(self:GetLocalAngles() + Angle(0,-2,0))
 		self.Tank_GunnerIsTurning = true
 		self.Tank_FacingTarget = false
 		self.FiringShell = false
@@ -204,156 +207,121 @@ function ENT:TANK_MOVINGSOUND()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttack_Base()
-if self.Tank_ProperHeightShoot == false then return end
-//if self.Tank_FacingTarget == true then
-//if (self:GetEnemy() != nil && self:GetEnemy() != NULL) then
-	//if self:GetEnemy():IsNPC() then
-		//self:GetEnemy():VJ_SetSchedule(SCHED_TAKE_COVER_FROM_ENEMY)
+	if self.Tank_ProperHeightShoot == false then return end
+	//if self.Tank_FacingTarget == true then
+	//if (self:GetEnemy() != nil && self:GetEnemy() != NULL) then
+		//if self:GetEnemy():IsNPC() then
+			//self:GetEnemy():VJ_SetSchedule(SCHED_TAKE_COVER_FROM_ENEMY)
+		//end
 	//end
-//end
 
-local function Timer_ShellAttack()
-	self:RangeAttack_Shell()
-	self.FiringShell = false
-end
+	local function Timer_ShellAttack()
+		self:RangeAttack_Shell()
+		self.FiringShell = false
+	end
 
-if self.Tank_ShellReady == false then
-	if self.HasSounds == true then
-	if GetConVarNumber("vj_npc_sd_rangeattack") == 0 then
-	self.shootsd1 = CreateSound(self, "vehicles/tank_readyfire1.wav") self.shootsd1:SetSoundLevel(90)
-	self.shootsd1:PlayEx(1,100) end end
-	self.Tank_ShellReady = true
-end
+	if self.Tank_ShellReady == false then
+		if self.HasSounds == true then
+		if GetConVarNumber("vj_npc_sd_rangeattack") == 0 then
+		self.shootsd1 = CreateSound(self, "vehicles/tank_readyfire1.wav") 
+		self.shootsd1:SetSoundLevel(90)
+		self.shootsd1:PlayEx(1,100) end end
+		self.Tank_ShellReady = true
+	end
 
-if self.Dead == false then
-	timer.Create( "timer_shell_attack"..self.Entity:EntIndex(), 2, 1, Timer_ShellAttack ) end
+	if self.Dead == false then timer.Create("timer_shell_attack"..self.Entity:EntIndex(),self.Tank_Shell_TimeUntilFire,1,Timer_ShellAttack) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttack_Shell()
-	if self.Dead == true then return end
-	if self.Dead == false then if GetConVarNumber("ai_disabled") == 0 then
-	if self.Tank_ProperHeightShoot == false then return end
-	if /*self.Tank_FacingTarget == true &&*/ IsValid(self:GetEnemy()) && self:GetEnemy() != NULL && self:GetEnemy() != nil then
-	if self:Visible(self:GetEnemy()) then
-	if self.HasSounds == true then
-	if GetConVarNumber("vj_npc_sd_rangeattack") == 0 then
-	self:EmitSound("vj_mili_tank/tank_fire"..math.random(1,4)..".wav",500,100) end end
-	//self:StartShootEffects()
-	self.Tank_FireLight1 = ents.Create("light_dynamic")
-	self.Tank_FireLight1:SetKeyValue("brightness", "4")
-	self.Tank_FireLight1:SetKeyValue("distance", "400")
-	self.Tank_FireLight1:SetPos(self:LocalToWorld(self.ShellLightPos))
-	self.Tank_FireLight1:SetLocalAngles(self:GetAngles())
-	self.Tank_FireLight1:Fire("Color", "255 150 60")
-	self.Tank_FireLight1:SetParent(self)
-	self.Tank_FireLight1:Spawn()
-	self.Tank_FireLight1:Activate()
-	self.Tank_FireLight1:Fire("TurnOn","",0)
-	self.Tank_FireLight1:Fire("Kill","",0.1)
-	self:DeleteOnRemove(self.Tank_FireLight1)
-	local panis1= "smoke_exhaust_01"
-	local panis2 = "Advisor_Pod_Steam_Continuous"
-	timer.Simple(0.1, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(0.2, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(0.3, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(0.4, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(0.5, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(0.6, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(0.7, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(0.8, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(0.9, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(1, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(1.1, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(1.2, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(1.3, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(1.4, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(1.5, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(1.6, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(1.7, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(1.8, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(1.9, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(2, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(2.1, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(2.2, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(2.3, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(2.4, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(2.5, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(2.6, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(2.7, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(2.8, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(2.9, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(3, function() if self.Dead == false then self:StartShootEffects() end end)
-	timer.Simple(0.1, function() if self.Dead == false then ParticleEffect(panis1,self:LocalToWorld(self.ShellParticlePos1),Angle(0,0,0),self) end end)
-	timer.Simple(0.2, function() if self.Dead == false then ParticleEffect(panis1,self:LocalToWorld(self.ShellParticlePos1),Angle(0,0,0),self) end end)
-	timer.Simple(0.3, function() if self.Dead == false then ParticleEffect(panis1,self:LocalToWorld(self.ShellParticlePos1),Angle(0,0,0),self) end end)
-	timer.Simple(0.4, function() if self.Dead == false then ParticleEffect(panis1,self:LocalToWorld(self.ShellParticlePos1),Angle(0,0,0),self) end end)
-	timer.Simple(0.5, function() if self.Dead == false then ParticleEffect(panis1,self:LocalToWorld(self.ShellParticlePos1),Angle(0,0,0),self) end end)
-	timer.Simple(0.6, function() if self.Dead == false then ParticleEffect(panis1,self:LocalToWorld(self.ShellParticlePos1),Angle(0,0,0),self) end end)
-	timer.Simple(0.7, function() if self.Dead == false then ParticleEffect(panis1,self:LocalToWorld(self.ShellParticlePos1),Angle(0,0,0),self) end end)
-	timer.Simple(0.8, function() if self.Dead == false then ParticleEffect(panis1,self:LocalToWorld(self.ShellParticlePos1),Angle(0,0,0),self) end end)
-	timer.Simple(0.9, function() if self.Dead == false then ParticleEffect(panis1,self:LocalToWorld(self.ShellParticlePos1),Angle(0,0,0),self) end end)
-	timer.Simple(1, function() if self.Dead == false then ParticleEffect(panis1,self:LocalToWorld(self.ShellParticlePos1),Angle(0,0,0),self) end end)
-	timer.Simple(0.1, function() if self.Dead == false then ParticleEffect(panis2,self:LocalToWorld(self.ShellParticlePos2),Angle(0,0,0),self) end end)
-	timer.Simple(0.2, function() if self.Dead == false then ParticleEffect(panis2,self:LocalToWorld(self.ShellParticlePos2),Angle(0,0,0),self) end end)
-	timer.Simple(0.3, function() if self.Dead == false then ParticleEffect(panis2,self:LocalToWorld(self.ShellParticlePos2),Angle(0,0,0),self) end end)
-	timer.Simple(0.4, function() if self.Dead == false then ParticleEffect(panis2,self:LocalToWorld(self.ShellParticlePos2),Angle(0,0,0),self) end end)
-	timer.Simple(0.5, function() if self.Dead == false then ParticleEffect(panis2,self:LocalToWorld(self.ShellParticlePos2),Angle(0,0,0),self) end end)
-	timer.Simple(0.6, function() if self.Dead == false then ParticleEffect(panis2,self:LocalToWorld(self.ShellParticlePos2),Angle(0,0,0),self) end end)
-	timer.Simple(0.7, function() if self.Dead == false then ParticleEffect(panis2,self:LocalToWorld(self.ShellParticlePos2),Angle(0,0,0),self) end end)
-	timer.Simple(0.8, function() if self.Dead == false then ParticleEffect(panis2,self:LocalToWorld(self.ShellParticlePos2),Angle(0,0,0),self) end end)
-	timer.Simple(0.9, function() if self.Dead == false then ParticleEffect(panis2,self:LocalToWorld(self.ShellParticlePos2),Angle(0,0,0),self) end end)
-	timer.Simple(1, function() if self.Dead == false then ParticleEffect(panis2,self:LocalToWorld(self.ShellParticlePos2),Angle(0,0,0),self) end end)
-	timer.Simple(0.2, function() if self.Dead == false then self:StopParticles() end end)
-	timer.Simple(0.4, function() if self.Dead == false then self:StopParticles() end end)
-	timer.Simple(0.6, function() if self.Dead == false then self:StopParticles() end end)
-	timer.Simple(0.8, function() if self.Dead == false then self:StopParticles() end end)
-	timer.Simple(1.01, function() if self.Dead == false then self:StopParticles() end end)
-	util.ScreenShake( self:GetPos(), 100, 200, 1, 2500 )
-	local flash = ents.Create("env_muzzleflash")
-		flash:SetPos(self:LocalToWorld(self.ShellMuzzlePos))
-		flash:SetKeyValue("scale","6")
-		if self.Tank_UsesRightAngles == true then
-		flash:SetKeyValue("angles",tostring(self:GetRight():Angle())) else
-		flash:SetKeyValue("angles",tostring(self:GetForward():Angle())) end
-		flash:Fire("Fire",0,0)
-	local dust = EffectData()
-		dust:SetOrigin(self:GetParent():GetPos())
-		dust:SetScale(500)
-		util.Effect( "ThumperDust", dust )
-	if self.Tank_FacingTarget == true then
-	ShootPos = (self:GetEnemy():GetPos()-self:GetPos() + self:GetUp()*-self.ShellShootUp) end
-	if self.Tank_FacingTarget == false then
-	if self.Tank_UsesRightAngles == true then
-	ShootPos = (self:GetRight()*self.Tank_NotFacingTargetShootPos) else
-	ShootPos = (self:GetForward()*self.Tank_NotFacingTargetShootPos) end end
-	if self:GetEnemy():GetClass() == "npc_vj_mili_tiger_red" or self:GetEnemy():GetClass() == "npc_vj_mili_tiger_redg" or self:GetEnemy():GetClass() == "npc_vj_milifri_tiger_red" or self:GetEnemy():GetClass() == "npc_vj_milifri_tiger_redg" then
-	ShootPos = (self:GetEnemy():GetPos()-self:GetPos() + self:GetUp()*-60) end
-		//ShootPos:Normalize()
-	local Projectile_Shell = ents.Create("obj_vj_tank_shell")
-		Projectile_Shell:SetPos(self:LocalToWorld(self.ShellSpawnPos))
-		Projectile_Shell:SetAngles(ShootPos:Angle())
-		Projectile_Shell:Spawn()
-		Projectile_Shell:Activate()
-		Projectile_Shell:SetOwner(self)
-	local phys = Projectile_Shell:GetPhysicsObject()
-		if phys:IsValid() then
-		//phys:ApplyForceCenter((ShootPos * 750000))
-		if self.Tank_FacingTarget == false then
-			phys:SetVelocity((self:GetForward()*self.Tank_NotFacingTargetShootPos)*750000)
+	if (self.Dead == true) or (self.Dead == false && GetConVarNumber("ai_disabled") == 1) or (self.Tank_ProperHeightShoot == false) then return end
+	if IsValid(self:GetEnemy()) && self:GetEnemy() != NULL && self:GetEnemy() != nil /* && self.Tank_FacingTarget == true*/ then
+		if self:Visible(self:GetEnemy()) then
+			if self.HasSounds == true && GetConVarNumber("vj_npc_sd_rangeattack") == 0 then
+				self:EmitSound("vj_mili_tank/tank_fire"..math.random(1,4)..".wav",500,100)
+			end
+			
+			//self:StartShootEffects()
+			self.Tank_FireLight1 = ents.Create("light_dynamic")
+			self.Tank_FireLight1:SetKeyValue("brightness", "4")
+			self.Tank_FireLight1:SetKeyValue("distance", "400")
+			self.Tank_FireLight1:SetPos(self:LocalToWorld(self.Tank_Shell_DynamicLightPos))
+			self.Tank_FireLight1:SetLocalAngles(self:GetAngles())
+			self.Tank_FireLight1:Fire("Color", "255 150 60")
+			self.Tank_FireLight1:SetParent(self)
+			self.Tank_FireLight1:Spawn()
+			self.Tank_FireLight1:Activate()
+			self.Tank_FireLight1:Fire("TurnOn","",0)
+			self.Tank_FireLight1:Fire("Kill","",0.1)
+			self:DeleteOnRemove(self.Tank_FireLight1)
+			
+			local counter_effect = 0
+			for i=1,40 do
+				counter_effect = counter_effect + 0.1
+				timer.Simple(counter_effect,function() if self.Dead == false then self:StartShootEffects() end end)
+			end
+			
+			local particle_smoke = ents.Create("info_particle_system")
+			particle_smoke:SetKeyValue("effect_name","smoke_exhaust_01a")
+			particle_smoke:SetPos(self:LocalToWorld(self.Tank_Shell_ParticlePos))
+			particle_smoke:SetAngles(Angle(self:GetAngles().x,-self:GetAngles().y,self:GetAngles().z))
+			particle_smoke:SetParent(self)
+			particle_smoke:Spawn()
+			particle_smoke:Activate()
+			particle_smoke:Fire("Start","",0)
+			particle_smoke:Fire("Kill","",4)
+			
+			local particle_whitesmoke = ents.Create("info_particle_system")
+			particle_whitesmoke:SetKeyValue("effect_name","Advisor_Pod_Steam_Continuous")
+			particle_whitesmoke:SetPos(self:LocalToWorld(self.Tank_Shell_ParticlePos))
+			particle_whitesmoke:SetAngles(Angle(self:GetAngles().x,-self:GetAngles().y,self:GetAngles().z))
+			particle_whitesmoke:SetParent(self)
+			particle_whitesmoke:Spawn()
+			particle_whitesmoke:Activate()
+			particle_whitesmoke:Fire("Start","",0)
+			particle_whitesmoke:Fire("Kill","",4)
+			util.ScreenShake(self:GetPos(),100,200,1,2500)
+			
+			local flash = ents.Create("env_muzzleflash")
+			flash:SetPos(self:LocalToWorld(self.Tank_Shell_MuzzleFlashPos))
+			flash:SetKeyValue("scale","6")
+			if self.Tank_UsesRightAngles == true then
+			flash:SetKeyValue("angles",tostring(self:GetRight():Angle())) else
+			flash:SetKeyValue("angles",tostring(self:GetForward():Angle())) end
+			flash:Fire("Fire",0,0)
+			
+			local dust = EffectData()
+			dust:SetOrigin(self:GetParent():GetPos())
+			dust:SetScale(500)
+			util.Effect("ThumperDust",dust)
+			
+			local ShootPos = (self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter()-self:LocalToWorld(self.Tank_Shell_SpawnPos)):GetNormal()*self.Tank_Shell_VelocitySpeed
+			if self.Tank_FacingTarget == false then
+				if self.Tank_UsesRightAngles == true then
+					ShootPos = self:GetRight()*ShootPos:Length()
+				else
+					ShootPos = self:GetForward()*-ShootPos:Length()
+				end
+			end
+			local Projectile_Shell = ents.Create(self.Tank_Shell_EntityToSpawn)
+			Projectile_Shell:SetPos(self:LocalToWorld(self.Tank_Shell_SpawnPos))
+			Projectile_Shell:SetAngles(ShootPos:Angle())
+			Projectile_Shell:Spawn()
+			Projectile_Shell:Activate()
+			Projectile_Shell:SetOwner(self)
+			local phys = Projectile_Shell:GetPhysicsObject()
+			if phys:IsValid() then
+				phys:SetVelocity(Vector(ShootPos.x,ShootPos.y,math.Clamp(ShootPos.z,self.Tank_Shell_SpawnPos.z+-735,self.Tank_Shell_SpawnPos.z+335)))
+			end
+			
+			self:TankBase_CustomOnShellFire(Projectile_Shell)
+			self.Tank_ShellReady = false
+			self.FiringShell = false
 		else
-			phys:SetVelocity((self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter()-self:LocalToWorld(self.ShellSpawnPos)):GetNormal()*5000)
+			self.Tank_ShellReady = false
+			self.FiringShell = false
+			self.Tank_FacingTarget = false
 		end
 	end
-		self.Tank_ShellReady = false
-		self.FiringShell = false
-		else
-		self.Tank_ShellReady = false
-		self.FiringShell = false
-		self.Tank_FacingTarget = false
-	end
-   end
-  end
- end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
@@ -367,7 +335,7 @@ function ENT:CustomOnRemove()
 	timer.Destroy("timer_shell_attack"..self.Entity:EntIndex())
 end
 /*-----------------------------------------------
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/

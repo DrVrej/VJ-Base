@@ -5,7 +5,7 @@ include('shared.lua')
 include('schedules.lua')
 /*--------------------------------------------------
 	=============== Creature SNPC Base ===============
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used as a base for creature SNPCs.
@@ -34,8 +34,8 @@ ENT.CanTurnWhileStationary = true -- If set to true, the SNPC will be able to tu
 ENT.GodMode = false -- Immune to everything
 	-- ====== Blood-Related Variables ====== --
 ENT.Bleeds = true -- Does the SNPC bleed? (Blood decal, particle, etc.)
-ENT.BloodColor = "" -- The blood type, this will detemine what it should use (decal, particle, etc.)
-	-- Types: "Red" || "Yellow" || "Green" || "Orange" || "Blue" || "Purple" || "Black"
+ENT.BloodColor = "" -- The blood type, this will determine what it should use (decal, particle, etc.)
+	-- Types: "Red" || "Yellow" || "Green" || "Orange" || "Blue" || "Purple" || "Oil"
 -- Use the following variables to customize the blood the way you want it:
 ENT.HasBloodParticle = true -- Does it spawn a particle when damaged?
 ENT.HasBloodDecal = true -- Does it spawn a decal when damaged?
@@ -219,7 +219,7 @@ ENT.MeleeAttackBleedEnemyTime = 1 -- How much time until the next rep?
 ENT.MeleeAttackBleedEnemyReps = 4 -- How many reps?
 ENT.DisableMeleeAttackAnimation = false -- if true, it will disable the animation code
 ENT.DisableDefaultMeleeAttackDamageCode = false -- Disables the default melee attack damage code
-ENT.DisableDefaultMeleeAttackCode = false -- When set to true, it will compeletly dsiable the melee attack code
+ENT.DisableDefaultMeleeAttackCode = false -- When set to true, it will completely disable the melee attack code
 	-- Range Attack ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasRangeAttack = false -- Should the SNPC have a range attack?
 ENT.RangeAttackEntityToSpawn = "grenade_spit" -- The entity that is spawned when range attacking
@@ -230,6 +230,7 @@ ENT.RangeAttackAnimationDecreaseLengthAmount = 0.2 -- This will decrease the tim
 ENT.RangeAttackAnimationStopMovement = true -- Should it stop moving when performing a range attack?
 ENT.RangeDistance = 2000 -- This is how far away it can shoot
 ENT.RangeToMeleeDistance = 800 -- How close does it have to be until it uses melee?
+ENT.RangeAttackAngleRadius = 100 -- What is the attack angle radius? | 100 = In front of the SNPC | 180 = All around the SNPC
 ENT.RangeUseAttachmentForPos = false -- Should the projectile spawn on a attachment?
 ENT.RangeUseAttachmentForPosID = "muzzle" -- The attachment used on the range attack if RangeUseAttachmentForPos is set to true
 ENT.RangeUpPos = 20 -- Spawning Position for range attack | + = up, - = down
@@ -283,6 +284,11 @@ ENT.ConstantlyFaceEnemy_IfVisible = true -- Should it only face the enemy if it'
 ENT.ConstantlyFaceEnemy_IfAttacking = false -- Should it face the enemy when attacking?
 ENT.ConstantlyFaceEnemy_Postures = "Both" -- "Both" = Moving or standing | "Moving" = Only when moving | "Standing" = Only when standing
 ENT.ConstantlyFaceEnemyDistance = 2500 -- How close does it have to be until it starts to face the enemy?
+ENT.HasPoseParameterLooking = true -- Does it look at its enemy using poseparameters?
+ENT.PoseParameterLooking_InvertPitch = false -- Inverts the pitch poseparameters (X)
+ENT.PoseParameterLooking_InvertYaw = false -- Inverts the yaw poseparameters (Y)
+ENT.PoseParameterLooking_InvertRoll = false -- Inverts the roll poseparameters (Z)
+ENT.PoseParameterLooking_TurningSpeed = 10 -- How fast does the parameter turn?
 ENT.NoChaseAfterCertainRange = false -- Should the SNPC not be able to chase when it's between number x and y?
 ENT.NoChaseAfterCertainRange_FarDistance = 2000 -- How far until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
 ENT.NoChaseAfterCertainRange_CloseDistance = 300 -- How near until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
@@ -714,6 +720,8 @@ function ENT:CustomAttack() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MultipleMeleeAttacks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomAttackCheck_MeleeAttack() return true end -- Not returning true will not let the range attack code run!
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_BeforeStartTimer() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_AfterStartTimer() end
@@ -730,6 +738,8 @@ function ENT:CustomOnMeleeAttack_Miss() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MultipleRangeAttacks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomAttackCheck_RangeAttack() return true end -- Not returning true will not let the range attack code run!
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRangeAttack_BeforeStartTimer() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRangeAttack_AfterStartTimer() end
@@ -743,6 +753,8 @@ function ENT:RangeAttackCode_OverrideProjectilePos(TheProjectile) return 0 end -
 function ENT:RangeAttackCode_GetShootPos(TheProjectile) return (self:GetEnemy():GetPos() - self:LocalToWorld(Vector(0,0,0)))*2 + self:GetUp()*1 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MultipleLeapAttacks() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomAttackCheck_LeapAttack() return true end -- Not returning true will not let the range attack code run!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnLeapAttackVelocityCode() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1082,6 +1094,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_FACE_X(FaceType,CustomCode)
 	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
+	if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false then return end
 	FaceType = FaceType or "TASK_FACE_TARGET"
 	local vschedFaceX = ai_vj_schedule.New("vj_face_x")
 	vschedFaceX:EngTask(FaceType, 0)
@@ -1520,11 +1533,14 @@ function ENT:DoMedicCode_HealAlly()
 				end
 				local lolcptlook = VJ_PICKRANDOMTABLE(self.AnimTbl_Medic_GiveHealth)
 				local animtime = VJ_GetSequenceDuration(self,lolcptlook)
+				local dontdoturn = false
 				self:FaceCertainEntity(self.Medic_CurrentEntToHeal,false)
 				self:VJ_ACT_PLAYACTIVITY(lolcptlook,true,animtime,false)
-				if !self.Medic_CurrentEntToHeal:IsPlayer() then
+				if self.Medic_CurrentEntToHeal.MovementType == VJ_MOVETYPE_STATIONARY && self.Medic_CurrentEntToHeal.CanTurnWhileStationary == true then dontdoturn = true end
+				if !self.Medic_CurrentEntToHeal:IsPlayer() && dontdoturn == false then
 					self.Medic_CurrentEntToHeal:SetTarget(self)
-					self.Medic_CurrentEntToHeal:VJ_SetSchedule(SCHED_TARGET_FACE)
+					self.Medic_CurrentEntToHeal:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+					//self.Medic_CurrentEntToHeal:VJ_SetSchedule(SCHED_TARGET_FACE)
 				end
 				timer.Simple(animtime,function()
 					if IsValid(self) then
@@ -1583,7 +1599,7 @@ function ENT:Think()
 		self:StopMoving()
 		//self:SelectSchedule()
 		self:ClearCondition(35)
-		print("VJ Base: Task Failed Condition Identified! "..self:GetName())
+		//print("VJ Base: Task Failed Condition Identified! "..self:GetName())
 	end
 	/*if CurTime() > self.TestT then
 		self:AddLayeredSequence(self:SelectWeightedSequence(ACT_IDLE),1)
@@ -1832,6 +1848,9 @@ function ENT:Think()
 			//self:SetMovementActivity(6.5)
 			//self:SetMovementActivity(ACT_WALK)
 			self:CustomAttack() -- Custom attack
+			if self.Dead == false then
+				self:PoseParameterLookingCode()
+			end
 			
 			-- Melee Attack --------------------------------------------------------------------------------------------------------------------------------------------
 			if self.HasMeleeAttack == true then
@@ -1845,7 +1864,7 @@ function ENT:Think()
 					local isnormalattack = false
 					if getproppushorattack == true then ispropattack = true end
 					if (self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) < self.MeleeAttackDistance && self:GetEnemy():Visible(self)) then ispropattack = false isnormalattack = true end
-					if (isnormalattack == true or (ispropattack == true && self.MeleeAttack_NoProps == false)) && (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then
+					if self:CustomAttackCheck_MeleeAttack() == true && (isnormalattack == true or (ispropattack == true && self.MeleeAttack_NoProps == false)) && (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then
 						self.MeleeAttacking = true
 						self.RangeAttacking = false
 						self.AlreadyDoneMeleeAttackFirstHit = false
@@ -1885,7 +1904,7 @@ function ENT:Think()
 			if self.HasRangeAttack == true then
 				if self:CanDoCertainAttack("RangeAttack") == true then
 					self:MultipleRangeAttacks()
-					if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangeDistance) && (self:GetEnemy():GetPos():Distance(self:GetPos()) > self.RangeToMeleeDistance) then
+					if self:CustomAttackCheck_RangeAttack() == true && (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangeDistance) && (self:GetEnemy():GetPos():Distance(self:GetPos()) > self.RangeToMeleeDistance) && (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.RangeAttackAngleRadius))) then
 						if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
 						self.RangeAttacking = true
 						self.IsAbleToRangeAttack = false
@@ -1926,7 +1945,7 @@ function ENT:Think()
 			if self.HasLeapAttack == true then
 				if self:CanDoCertainAttack("LeapAttack") == true then
 					self:MultipleLeapAttacks()
-					if (self:IsOnGround() && self:GetPos():Distance(self:GetEnemy():GetPos()) < self.LeapDistance) && (self:GetPos():Distance(self:GetEnemy():GetPos()) > self.LeapToMeleeDistance) then
+					if self:CustomAttackCheck_LeapAttack() == true && (self:IsOnGround() && self:GetPos():Distance(self:GetEnemy():GetPos()) < self.LeapDistance) && (self:GetPos():Distance(self:GetEnemy():GetPos()) > self.LeapToMeleeDistance) then
 						self.LeapAttacking = true
 						self.AlreadyDoneLeapAttackFirstHit = false
 						self.AlreadyDoneFirstLeapAttack = false
@@ -1960,6 +1979,10 @@ function ENT:Think()
 				end
 			end
 		else
+			if self.VJ_IsBeingControlled == false && self.Dead == false then
+				self:PoseParameterLookingCode(true)
+				//self:ClearPoseParameters()
+			end
 			self.TimeSinceSeenEnemy = 0
 			self.TimeSinceLastSeenEnemy = self.TimeSinceLastSeenEnemy + 0.1
 			if self.ResetedEnemy == false && (!self.IsVJBaseSNPC_Tank) then self.ResetedEnemy = true self:ResetEnemy() end
@@ -1978,6 +2001,37 @@ function ENT:Think()
 	end
 	self:NextThink(CurTime() +0.1)
 	return true
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:PoseParameterLookingCode(ResetPoses)
+	if self.HasPoseParameterLooking == false then return end
+	ResetPoses = ResetPoses or false
+	//if self.VJ_IsBeingControlled == false && self.DoingWeaponAttack == false then return end
+	//local lol = self:VJ_GetAllParameters(true)
+	local ent = NULL
+	if self.VJ_IsBeingControlled == true then ent = self.VJ_TheController else ent = self:GetEnemy() end
+	local p_enemy = 0 -- Yaw
+	local y_enemy = 0 -- Pitch
+	local r_enemy = 0 -- Roll
+	if IsValid(ent) && ResetPoses == false then
+		local self_pos = self:GetPos() + self:OBBCenter()
+		local enemy_pos = false //Vector(0,0,0)
+		if self.VJ_IsBeingControlled == true then enemy_pos = self.VJ_TheController:GetEyeTrace().HitPos else enemy_pos = ent:GetPos() + ent:OBBCenter() end
+		if enemy_pos == false then return end
+		local self_ang = self:GetAngles()
+		local enemy_ang = (enemy_pos - self_pos):Angle()
+		p_enemy = math.AngleDifference(enemy_ang.p,self_ang.p)
+		if self.PoseParameterLooking_InvertPitch == true then p_enemy = -p_enemy end
+		y_enemy = math.AngleDifference(enemy_ang.y,self_ang.y)
+		if self.PoseParameterLooking_InvertYaw == true then y_enemy = -y_enemy end
+		r_enemy = math.AngleDifference(enemy_ang.z,self_ang.z)
+		if self.PoseParameterLooking_InvertRoll == true then r_enemy = -r_enemy end
+	end
+	self:SetPoseParameter("aim_pitch",math.ApproachAngle(self:GetPoseParameter("aim_pitch"),p_enemy,self.PoseParameterLooking_TurningSpeed))
+	self:SetPoseParameter("aim_yaw",math.ApproachAngle(self:GetPoseParameter("aim_yaw"),y_enemy,self.PoseParameterLooking_TurningSpeed))
+	self:SetPoseParameter("aim_roll",math.ApproachAngle(self:GetPoseParameter("aim_pitch"),r_enemy,self.PoseParameterLooking_TurningSpeed))
+	self:SetPoseParameter("head_pitch",math.ApproachAngle(self:GetPoseParameter("aim_pitch"),p_enemy,self.PoseParameterLooking_TurningSpeed))
+	self:SetPoseParameter("head_yaw",math.ApproachAngle(self:GetPoseParameter("head_yaw"),y_enemy,self.PoseParameterLooking_TurningSpeed))
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoAddExtraAttackTimers(vName,vTime,vReps,vFunction)
@@ -2147,24 +2201,25 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 						end
 					end
 					self:CustomOnMeleeAttack_AfterChecks(v)
+					if self.HasMeleeAttackKnockBack == true && v.MovementType != VJ_MOVETYPE_STATIONARY then
+						if v.VJ_IsHugeMonster != true or v.IsVJBaseSNPC_Tank == true then
+							v:SetVelocity(self:GetForward()*math.random(self.MeleeAttackKnockBack_Forward1,self.MeleeAttackKnockBack_Forward2) +self:GetUp()*math.random(self.MeleeAttackKnockBack_Up1,self.MeleeAttackKnockBack_Up2) +self:GetRight()*math.random(self.MeleeAttackKnockBack_Right1,self.MeleeAttackKnockBack_Right2))
+						end
+					end
 					if self.DisableDefaultMeleeAttackDamageCode == false then
 						local doactualdmg = DamageInfo()
 						if self.SelectedDifficulty == 0 then doactualdmg:SetDamage(self.MeleeAttackDamage/2) end -- Easy
 						if self.SelectedDifficulty == 1 then doactualdmg:SetDamage(self.MeleeAttackDamage) end -- Normal
 						if self.SelectedDifficulty == 2 then doactualdmg:SetDamage(self.MeleeAttackDamage*1.5) end -- Hard
 						if self.SelectedDifficulty == 3 then doactualdmg:SetDamage(self.MeleeAttackDamage*2.5) end -- Hell On Earth
-						doactualdmg:SetInflictor(self)
 						doactualdmg:SetDamageType(self.MeleeAttackDamageType)
 						//doactualdmg:SetDamagePosition(self:VJ_GetNearestPointToEntity(v).MyPosition)
+						if v:IsNPC() or v:IsPlayer() then doactualdmg:SetDamageForce(self:GetForward()*((doactualdmg:GetDamage()+100)*70)) end
+						doactualdmg:SetInflictor(self)
 						doactualdmg:SetAttacker(self)
 						v:TakeDamageInfo(doactualdmg, self)
 					end
 					if self.MeleeAttackSetEnemyOnFire == true then v:Ignite(self.MeleeAttackSetEnemyOnFireTime,0) end
-					if self.HasMeleeAttackKnockBack == true && v.MovementType != VJ_MOVETYPE_STATIONARY then
-						if v.VJ_IsHugeMonster != true or v.IsVJBaseSNPC_Tank == true then
-							v:SetVelocity(self:GetForward()*math.random(self.MeleeAttackKnockBack_Forward1,self.MeleeAttackKnockBack_Forward2) +self:GetUp()*math.random(self.MeleeAttackKnockBack_Up1,self.MeleeAttackKnockBack_Up2) +self:GetRight()*math.random(self.MeleeAttackKnockBack_Right1,self.MeleeAttackKnockBack_Right2))
-						end
-					end
 					if (v:IsNPC() && (!VJ_IsHugeMonster)) or (v:IsPlayer()) then
 						if self.MeleeAttackBleedEnemy == true then
 							self:CustomOnMeleeAttack_BleedEnemy(v)
@@ -2336,6 +2391,7 @@ function ENT:LeapDamageCode()
 				leapdmg:SetInflictor(self)
 				leapdmg:SetDamageType(self.LeapAttackDamageType)
 				leapdmg:SetAttacker(self)
+				if v:IsNPC() or v:IsPlayer() then leapdmg:SetDamageForce(self:GetForward()*((leapdmg:GetDamage()+100)*70)) end
 				v:TakeDamageInfo(leapdmg, self)
 				if v:IsPlayer() then
 					v:ViewPunch(Angle(math.random(-1,1)*self.LeapAttackDamage,math.random(-1,1)*self.LeapAttackDamage,math.random(-1,1)*self.LeapAttackDamage))
@@ -2644,7 +2700,7 @@ function ENT:DoHardEntityCheck()
 			if v:IsNPC() && (v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && (!v.IsVJBaseSNPC_Animal)) && v:Health() > 0 then
 				GetEnts[#GetEnts + 1] = v
 			end
-		if v:IsPlayer() && GetConVarNumber( "ai_ignoreplayers" ) == 0 /*&& v:Alive()*/ then
+		if v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 /*&& v:Alive()*/ then
 			GetEnts[#GetEnts + 1] = v
 		end
 	end
@@ -2666,6 +2722,7 @@ function ENT:DoEntityRelationshipCheck()
 		self.CurrentPossibleEnemies = self:DoHardEntityCheck()
 	self.NextHardEntityCheckT = CurTime() + math.random(50,70) end*/
 
+	local distlist = {}
 	for k, v in ipairs(curposenem) do
 		if !IsValid(v) then table.remove(curposenem,k) continue end
 		//if !IsValid(v) then table.remove(self.CurrentPossibleEnemies,tonumber(v)) continue end
@@ -2676,18 +2733,13 @@ function ENT:DoEntityRelationshipCheck()
 		local vClass = v:GetClass()
 		local MyPos = self:GetPos()
 		local vDistanceToMy = vPos:Distance(MyPos)
-		local MyVisibleTov = self:Visible(v)
 		if vDistanceToMy > self.SightDistance then continue end
-		local function DoPlayerSight()
-			if self.HasOnPlayerSight == true && v:IsPlayer() then self:OnPlayerSightCode(v) end
-		end
-		if (self.PlayerFriendly == true or self:Disposition(v) == D_LI) && v:IsPlayer() && !table.HasValue(self.VJ_AddCertainEntityAsEnemy,v) then entisfri = true DoPlayerSight() continue end
+		local MyVisibleTov = self:Visible(v)
 		local sightdistancenum = self.SightDistance
 		local radiusoverride = 0
 		local seethroughwall = false
-		if (!self.IsVJBaseSNPC_Tank) && v:IsPlayer() && self:GetEnemy() == nil then
-			if v:KeyDown(IN_DUCK) && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightdistancenum = 5000 else sightdistancenum = 2000 end end
-			if vDistanceToMy < 350 && ((!v:KeyDown(IN_DUCK) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP && ((!v:KeyDown(IN_WALK) && (v:KeyDown(IN_FORWARD) or v:KeyDown(IN_BACK) or v:KeyDown(IN_MOVELEFT) or v:KeyDown(IN_MOVERIGHT))) or (v:KeyDown(IN_SPEED) or v:KeyDown(IN_JUMP)))) or (self:VJ_DoPlayerFlashLightCheck(v,20) == true)) then self:SetTarget(v) self:VJ_TASK_FACE_X("TASK_FACE_TARGET") end
+		local function DoPlayerSight()
+			if self.HasOnPlayerSight == true && v:IsPlayer() && v:Alive() then self:OnPlayerSightCode(v) end
 		end
 		if vClass != self:GetClass() && (v:IsNPC() or v:IsPlayer()) && (!v.IsVJBaseSNPC_Animal) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
 			if self.HasAllies == true then
@@ -2731,17 +2783,36 @@ function ENT:DoEntityRelationshipCheck()
 					if v.IsVJBaseSNPC == true then if self:VJFriendlyCode(v) then entisfri = true end end
 				end
 			end
+			if (self.PlayerFriendly == true or entisfri == true/* or self:Disposition(v) == D_LI*/) && v:IsPlayer() && !table.HasValue(self.VJ_AddCertainEntityAsEnemy,v) then entisfri = true DoPlayerSight() end// continue end
 			if entisfri == false && v:IsNPC() && MyVisibleTov && self.DisableMakingSelfEnemyToNPCs == false then v:AddEntityRelationship(self,D_HT,99) end
+			if (!self.IsVJBaseSNPC_Tank) && v:IsPlayer() && self:GetEnemy() == nil && entisfri == false then
+				self:AddEntityRelationship(v,D_NU,99)
+				if v:KeyDown(IN_DUCK) && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightdistancenum = 5000 else sightdistancenum = 2000 end end
+				if vDistanceToMy < 350 && ((!v:KeyDown(IN_DUCK) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP && ((!v:KeyDown(IN_WALK) && (v:KeyDown(IN_FORWARD) or v:KeyDown(IN_BACK) or v:KeyDown(IN_MOVELEFT) or v:KeyDown(IN_MOVERIGHT))) or (v:KeyDown(IN_SPEED) or v:KeyDown(IN_JUMP)))) or (self:VJ_DoPlayerFlashLightCheck(v,20) == true)) then self:SetTarget(v) self:VJ_TASK_FACE_X("TASK_FACE_TARGET") end
+			end
+		end
+		local distlist_closest = false
+		if entisfri == false then
+			local distlist_num = #distlist
+			if (distlist_num != 0 && vDistanceToMy < math.min(unpack(distlist))) or (distlist_num == 0) then
+				distlist_closest = true
+			end
+			table.insert(distlist,vDistanceToMy)
+		elseif entisfri == true then
+			distlist_closest = true
 		end
 		if self.FindEnemy_CanSeeThroughWalls == true then seethroughwall = true end
 		if self.DisableFindEnemy == false then
 			if self.FindEnemy_UseSphere == false && radiusoverride == 0 then
 				if (seethroughwall == true) or (MyVisibleTov && (self:GetForward():Dot((vPos -MyPos):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (vDistanceToMy < sightdistancenum)) then
-				
 					if self:DoRelationshipCheck(v) == true then
 					//if (v.VJ_NoTarget && v.VJ_NoTarget != true) then continue end
 						self:AddEntityRelationship(v,D_HT,99)
-						self:VJ_DoSetEnemy(v,true,true)
+						if distlist_closest == true then
+							self:VJ_DoSetEnemy(v,true,true)
+							self:SetEnemy(v)
+						end
+						//self:VJ_DoSetEnemy(v,true,true)
 						//if self:GetEnemy() == nil then
 							//self:VJ_DoSetEnemy(v,true)
 						//end
@@ -2752,7 +2823,11 @@ function ENT:DoEntityRelationshipCheck()
 				if (seethroughwall == true) or (MyVisibleTov && (vDistanceToMy < sightdistancenum)) then
 					if self:DoRelationshipCheck(v) == true then
 						self:AddEntityRelationship(v,D_HT,99)
-						self:VJ_DoSetEnemy(v,true,true)
+						if distlist_closest == true then
+							self:VJ_DoSetEnemy(v,true,true)
+							self:SetEnemy(v)
+						end
+						//self:VJ_DoSetEnemy(v,true,true)
 						//if self:GetEnemy() == nil then
 							//self:VJ_DoSetEnemy(v,true)
 						//end
@@ -3036,7 +3111,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoFlinch(dmginfo,hitgroup)
-	if self.CanFlinch == 0 or self.Flinching == true or (self.NextFlinchT > CurTime()) or (dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
+	if self.CanFlinch == 0 or self.Flinching == true or (self.NextFlinchT > CurTime()) or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
 	
 	local function RunFlinchCode(HitBoxBased,HitBoxInfo)
 		self.Flinching = true
@@ -3156,7 +3231,7 @@ function ENT:DoChangeBloodColor(Type)
 		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_purple"} end
 		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Purple"} end
 		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
-	elseif Type == "Black" then
+	elseif Type == "Oil" then
 		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_black"} end
 		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Black"} end
 		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
@@ -3399,6 +3474,25 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		if self.Bleeds == true && self.HasBloodPool == true && GetConVarNumber("vj_npc_nobloodpool") == 0 then
 			self:SpawnBloodPool(dmginfo,hitgroup)
 		end
+		/*if self.Bleeds == true && self.HasBloodDecal == true then
+			local GetCorpse = self.Corpse
+			local pickdecal = self.CurrentChoosenBlood_Decal
+			timer.Simple(7,function()
+				if IsValid(GetCorpse) then
+					local tr = util.TraceLine({
+						start = GetCorpse:GetPos()+GetCorpse:OBBCenter(),
+						endpos = GetCorpse:GetPos()+GetCorpse:OBBCenter()-Vector(0,0,100),
+						filter = GetCorpse, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
+						//mask = CONTENTS_SOLID
+					})
+					util.Decal(VJ_PICKRANDOMTABLE(pickdecal),tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
+					util.Decal(VJ_PICKRANDOMTABLE(pickdecal),tr.HitPos +tr.HitNormal +Vector(25,0,0),tr.HitPos-tr.HitNormal)
+					util.Decal(VJ_PICKRANDOMTABLE(pickdecal),tr.HitPos +tr.HitNormal +Vector(-25,0,0),tr.HitPos-tr.HitNormal)
+					util.Decal(VJ_PICKRANDOMTABLE(pickdecal),tr.HitPos +tr.HitNormal +Vector(0,25,0),tr.HitPos-tr.HitNormal)
+					util.Decal(VJ_PICKRANDOMTABLE(pickdecal),tr.HitPos +tr.HitNormal +Vector(0,-25,0),tr.HitPos-tr.HitNormal)
+				end
+			end)
+		end*/
 		
 		-- Miscellaneous --
 		if GetConVarNumber("ai_serverragdolls") == 0 then self.Corpse:SetCollisionGroup(1) hook.Call("VJ_CreateSNPCCorpse",nil,self.Corpse,self) else undo.ReplaceEntity(self,self.Corpse) end
@@ -3474,12 +3568,15 @@ function ENT:CreateExtraDeathCorpse(Ent,Models,Tbl_Features,CustomCode)
 	vTbl_Features = Tbl_Features or {}
 	vTbl_Position = vTbl_Features.Pos or self:GetPos()
 	vTbl_Angle = vTbl_Features.Ang or self:GetAngles()
+	vTbl_HasVelocity = vTbl_Features.HasVel
+		if vTbl_HasVelocity == nil then vTbl_HasVelocity = true end
 	vTbl_Velocity = vTbl_Features.Vel or dmgforce /37
 	vTbl_ShouldFade = vTbl_Features.ShouldFade or false -- Should it get removed after certain time?
 	vTbl_ShouldFadeTime = vTbl_Features.ShouldFadeTime or 0 -- How much time until the entity gets removed?
-	vTbl_RemoveOnCorpseDelete = vTbl_Features.RemoveOnCorpseDelete or true -- Should the entity get removed if the corpse is removed?
+	vTbl_RemoveOnCorpseDelete = vTbl_Features.RemoveOnCorpseDelete -- Should the entity get removed if the corpse is removed?
+		if vTbl_RemoveOnCorpseDelete == nil then vTbl_RemoveOnCorpseDelete = true end
 	local extraent = ents.Create(Ent)
-	extraent:SetModel(VJ_PICKRANDOMTABLE(Models))
+	if Models != "None" then extraent:SetModel(VJ_PICKRANDOMTABLE(Models)) end
 	extraent:SetPos(vTbl_Position)
 	extraent:SetAngles(vTbl_Angle)
 	extraent:Spawn()
@@ -3491,7 +3588,7 @@ function ENT:CreateExtraDeathCorpse(Ent,Models,Tbl_Features,CustomCode)
 		extraent:Ignite(math.Rand(8,10),0)
 		extraent:SetColor(Color(90,90,90))
 	end
-	extraent:GetPhysicsObject():AddVelocity(vTbl_Velocity)
+	if vTbl_HasVelocity == true then extraent:GetPhysicsObject():AddVelocity(vTbl_Velocity) end
 	if vTbl_ShouldFade == true then
 		if extraent:GetClass() == "prop_ragdoll" then 
 			extraent:Fire("FadeAndRemove","",vTbl_ShouldFadeTime) 
@@ -4164,7 +4261,7 @@ end*/
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*--------------------------------------------------
 	=============== Creature SNPC Base ===============
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to make creature SNPCs

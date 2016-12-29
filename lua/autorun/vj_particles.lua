@@ -1,6 +1,6 @@
 /*--------------------------------------------------
 	=============== Particles ===============
-	*** Copyright (c) 2012-2016 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to load Particles for VJ Base
@@ -28,6 +28,7 @@ game.AddParticles("particles/vj_impact1.pcf")
 game.AddParticles("particles/vj_explosions1.pcf")
 game.AddParticles("particles/vj_rpgtrails1.pcf")
 game.AddParticles("particles/vj_rpgtrails2.pcf")
+game.AddParticles("particles/vj_weaponfx_rifle.pcf")
 --------------------------------------------------------------------------
 	-- Add the particle name --
 local particlename = {
@@ -207,8 +208,6 @@ local particlename = {
 	"steam_large_01",
 	"steampuff",
 -- WEAPON_FX
-	"Weapon_Combine_Ion_Cannon",
-	"Weapon_Combine_Ion_Cannon_Explosion",
 	"Rocket_Smoke",
 	"explosion_turret_break",
 	"explosion_turret_fizzle",
@@ -221,19 +220,20 @@ local particlename = {
 	"explosion_turret_break_pre_flash",
 	"explosion_turret_break_pre_smoke",
 	"explosion_turret_break_pre_smoke Version #2",
-	"vexplosion_turret_break_pre_sparks",
+	"explosion_turret_break_pre_sparks",
 	"explosion_turret_break_sparks",
+	"Weapon_Combine_Ion_Cannon",
 	"Weapon_Combine_Ion_Cannon_a",
 	"Weapon_Combine_Ion_Cannon_b",
-	"Weapon_Combine_Ion_Cannon_Backup",
-	"Weapon_Combine_Ion_Cannon_Beam",
-	"Weapon_Combine_Ion_Cannon_Black",
 	"Weapon_Combine_Ion_Cannon_c",
 	"Weapon_Combine_Ion_Cannon_d",
 	"Weapon_Combine_Ion_Cannon_e",
-	"Weapon_Combine_Ion_Cannon_Exlposion_c",
+	"Weapon_Combine_Ion_Cannon_Backup",
+	"Weapon_Combine_Ion_Cannon_Beam",
+	"Weapon_Combine_Ion_Cannon_Black",
 	"Weapon_Combine_Ion_Cannon_Explosion",
 	"Weapon_Combine_Ion_Cannon_Explosion_b",
+	"Weapon_Combine_Ion_Cannon_Exlposion_c",
 	"Weapon_Combine_Ion_Cannon_Explosion_d",
 	"Weapon_Combine_Ion_Cannon_Explosion_e",
 	"Weapon_Combine_Ion_Cannon_Explosion_f",
@@ -245,7 +245,7 @@ local particlename = {
 	"Weapon_Combine_Ion_Cannon_f",
 	"Weapon_Combine_Ion_Cannon_g",
 	"Weapon_Combine_Ion_Cannon_h",
-	"Weapon_Combine_Ion_Cannon_h Version",
+	"Weapon_Combine_Ion_Cannon_h Version #2",
 	"Weapon_Combine_Ion_Cannon_i",
 	"Weapon_Combine_Ion_Cannon_Intake",
 	"Weapon_Combine_Ion_Cannon_Intake_b",
