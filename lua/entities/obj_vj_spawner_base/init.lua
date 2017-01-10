@@ -68,10 +68,11 @@ function ENT:SpawnAnEntity(keys,values,initspawn)
 	getthename:Activate()
 	if v.WeaponsList != nil && VJ_PICKRANDOMTABLE(v.WeaponsList) != false && VJ_PICKRANDOMTABLE(v.WeaponsList) != NULL && VJ_PICKRANDOMTABLE(v.WeaponsList) != "None" && VJ_PICKRANDOMTABLE(v.WeaponsList) != "none" then hasweps = true wepslist = v.WeaponsList end
 	if hasweps == true then getthename:Give(VJ_PICKRANDOMTABLE(v.WeaponsList)) end
-	table.insert(self.CurrentEntities,{EntityName=v.EntityName,SpawnPosition=v.SpawnPosition,Entities=v.Entities,TheEntity=getthename,WeaponsList=wepslist,Dead=false/*NextTimedSpawnT=CurTime()+self.TimedSpawn_Time*/})
+	if initspawn == false then table.remove(self.CurrentEntities,k) end
+	table.insert(self.CurrentEntities,k,{EntityName=v.EntityName,SpawnPosition=v.SpawnPosition,Entities=v.Entities,TheEntity=getthename,WeaponsList=wepslist,Dead=false/*NextTimedSpawnT=CurTime()+self.TimedSpawn_Time*/})
 	self:SpawnEntitySoundCode()
 	if self.VJBaseSpawnerDisabled == true && overridedisable == true then getthename:Remove() return end
-	self:CustomOnEntitySpawn(v.EntityName,v.SpawnPosition,v.Entitie,TheEntity)
+	self:CustomOnEntitySpawn(v.EntityName,v.SpawnPosition,v.Entities,TheEntity)
 	timer.Simple(0.1,function() if IsValid(self) then if self.SingleSpawner == true then self:DoSingleSpawnerRemove() end end end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -103,10 +104,10 @@ function ENT:Think()
 	end*/
 	
 	if self.VJBaseSpawnerDisabled == false && self.SingleSpawner == false then
-	for k,v in ipairs(self.CurrentEntities) do
-		if !v.TheEntity:IsValid() && v.Dead == false /*&& v.NextTimedSpawnT < CurTime()*/ then
-			v.Dead = true
-			timer.Simple(self.TimedSpawn_Time,function() if IsValid(self) then table.remove(self.CurrentEntities,k) self:SpawnAnEntity(k,v,false) end end)
+		for k,v in ipairs(self.CurrentEntities) do
+			if !IsValid(v.TheEntity) && v.Dead == false /*&& v.NextTimedSpawnT < CurTime()*/ then
+				v.Dead = true
+				timer.Simple(self.TimedSpawn_Time,function() if IsValid(self) then /*table.remove(self.CurrentEntities,k)*/ self:SpawnAnEntity(k,v,false) end end)
 			end
 		end
 	end

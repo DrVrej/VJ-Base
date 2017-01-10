@@ -16,13 +16,14 @@ function util.VJ_SphereDamage(vAttacker,vInflictor,vPosition,vDamageRadius,vDama
 	local vTbl_Features = Tbl_Features or {}
 		local vTbl_Force = vTbl_Features.Force or false -- The general force | false = Don't use any force
 		local vTbl_UpForce = vTbl_Features.UpForce or false -- How much up force should it have? | false = Use vTbl_Force
+		local vTbl_DamageAttacker = vTbl_Features.DamageAttacker or false -- Should it damage the attacker as well?
 	------------------------
 	local Finaldmg = vDamage
 	local Foundents = {}
 	local Findents = ents.FindInSphere(vPosition,vDamageRadius)
 	if (!Findents) then return end
 	for k,v in pairs(Findents) do
-		if v:EntIndex() == vAttacker:EntIndex() or v:EntIndex() == vAttacker:EntIndex() then continue end
+		if v:EntIndex() == vAttacker:EntIndex() && vTbl_DamageAttacker == false then continue end
 		local vtoself = v:NearestPoint(vPosition) -- From the enemy position to the given position
 		if vUseRealisticRadius == true then
 			Finaldmg = math.Clamp(Finaldmg*((vDamageRadius-vPosition:Distance(vtoself))+150)/vDamageRadius, vDamage/2, Finaldmg) -- Decrease damage from the nearest point all the way to the enemy point then clamp it!
@@ -94,28 +95,28 @@ function util.VJ_GetWeaponPos(GetClassEntity)
 	local getmuzzle
 	local numattachments = getweapon:GetAttachments()
 	local numattachments = #getweapon:GetAttachments()
-	
 	if (getweapon:IsValid()) then
-	for i = 1,numattachments do
-	if getweapon:GetAttachments()[i].name == "muzzle" then
-		getmuzzle = "muzzle" break
-	elseif getweapon:GetAttachments()[i].name == "muzzleA" then
-		getmuzzle = "muzzleA" break
-	elseif getweapon:GetAttachments()[i].name == "muzzle_flash" then
-		getmuzzle = "muzzle_flash" break
-	elseif getweapon:GetAttachments()[i].name == "muzzle_flash1" then
-		getmuzzle = "muzzle_flash1" break
-	elseif getweapon:GetAttachments()[i].name == "muzzle_flash2" then
-		getmuzzle = "muzzle_flash2" break
-	elseif getweapon:GetAttachments()[i].name == "ValveBiped.muzzle" then
-		getmuzzle = "ValveBiped.muzzle" break
-	else 
-		getmuzzle = false
+		for i = 1,numattachments do
+			if getweapon:GetAttachments()[i].name == "muzzle" then
+				getmuzzle = "muzzle" break
+			elseif getweapon:GetAttachments()[i].name == "muzzleA" then
+				getmuzzle = "muzzleA" break
+			elseif getweapon:GetAttachments()[i].name == "muzzle_flash" then
+				getmuzzle = "muzzle_flash" break
+			elseif getweapon:GetAttachments()[i].name == "muzzle_flash1" then
+				getmuzzle = "muzzle_flash1" break
+			elseif getweapon:GetAttachments()[i].name == "muzzle_flash2" then
+				getmuzzle = "muzzle_flash2" break
+			elseif getweapon:GetAttachments()[i].name == "ValveBiped.muzzle" then
+				getmuzzle = "ValveBiped.muzzle" break
+			else 
+				getmuzzle = false
+			end
 		end
-	end
 		if (getmuzzle == false) or getmuzzle == nil then
-		print("WARNING: "..GetClassEntity:GetName().."'s weapon doesn't have a proper attachment!")
-		return GetClassEntity:EyePos() end
+			print("WARNING: "..GetClassEntity:GetName().."'s weapon doesn't have a proper attachment!")
+			return GetClassEntity:EyePos()
+		end
 		//print("It has a proper attachment.")
 		return getweapon:GetAttachment(getweapon:LookupAttachment(getmuzzle)).Pos //+ GetClassEntity:GetUp()*-45
 	end

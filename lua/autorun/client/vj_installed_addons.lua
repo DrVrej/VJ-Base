@@ -46,38 +46,38 @@ function VJ_INSTALLATIONS(Panel)
 	CheckList:AddColumn("Type") -- Add colum
 	----========----=========----
 	// Alphabetical Order \\
--- A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z --
-if VJBASE_GETADDONS != nil then
-	for k,v in SortedPairsByMemberValue(VJBASE_GETADDONS,"Name") do
-		CheckList:AddLine(v.Name,v.Type)
-	end else
-	CheckList:AddLine("No Addons Found","")
-end
-/*
-if table.KeyFromValue(VJBASE_GETADDONS, "aliensw") then CheckList:AddLine( "Alien Swarm","SNPC" ) end
-if table.KeyFromValue(VJBASE_GETADDONS, "bms") then CheckList:AddLine( "Black Mesa","SNPC" ) end
-if table.KeyFromValue(VJBASE_GETADDONS, "cof") then CheckList:AddLine( "Cry Of Fear","SNPC" ) end
-if table.KeyFromValue(VJBASE_GETADDONS, "dm") then CheckList:AddLine( "Dark Messiah","SNPC" ) end
-if table.KeyFromValue(VJBASE_GETADDONS, "eye") then CheckList:AddLine( "E.Y.E Divine Cybermancy","SNPC" ) end
-if table.KeyFromValue(VJBASE_GETADDONS, "fo3") then CheckList:AddLine( "Fallout 3","SNPC" ) end
-if table.KeyFromValue(VJBASE_GETADDONS, "halo2") then CheckList:AddLine( "Halo 2","SNPC" ) end
-if table.KeyFromValue(VJBASE_GETADDONS, "hl2snpc") then CheckList:AddLine( "Half Life 2","SNPC" ) end
-if table.KeyFromValue(VJBASE_GETADDONS, "kf") then CheckList:AddLine( "Killing Floor","SNPC" ) end
-if table.KeyFromValue(VJBASE_GETADDONS, "miliger") then CheckList:AddLine( "Military - Nazi Germany","SNPC" ) end
-if table.KeyFromValue(VJBASE_GETADDONS, "milisurg") then CheckList:AddLine( "Military - Insurgents","SNPC" ) end
-if table.KeyFromValue(VJBASE_GETADDONS, "nmrih") then CheckList:AddLine( "No More Room In Hell","SNPC" ) end
-if table.KeyFromValue(VJBASE_GETADDONS, "miliru") then CheckList:AddLine( "Military - Soviet Union","SNPC" ) end
-if table.KeyFromValue(VJBASE_GETADDONS, "milius") then CheckList:AddLine( "Military - United States","SNPC" ) end
-if table.KeyFromValue(VJBASE_GETADDONS, "vjhud") then CheckList:AddLine( "VJ HUD","HUD" ) end
-if table.KeyFromValue(VJBASE_GETADDONS, "zss") then CheckList:AddLine( "Zombie","SNPC" ) end
-*/
-//Panel:SetName("Test") -- Renames the blue label
-CheckList.OnRowSelected = function()
-surface.PlaySound(Sound("vj_illuminati/Illuminati Confirmed.mp3"))
-chat.AddText(Color(255,255,0),"-=-=-=-=-=-=-=-=- ", Color(255,100,0),VJBASE_GETNAME, Color(255,255,0)," -=-=-=-=-=-=-=-=-=-=-=-")
-chat.AddText(Color(0,255,0),"Version: "..VJBASE_VERSION)
-chat.AddText(Color(0,255,0),"Total Addons: "..VJBASE_GETADDONAMOUNT) end
-Panel:AddItem(CheckList)
+	-- A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z --
+	if VJBASE_GETADDONS != nil then
+		for k,v in SortedPairsByMemberValue(VJBASE_GETADDONS,"Name") do
+			CheckList:AddLine(v.Name,v.Type)
+		end else
+		CheckList:AddLine("No Addons Found","")
+	end
+	/*
+	if table.KeyFromValue(VJBASE_GETADDONS, "aliensw") then CheckList:AddLine( "Alien Swarm","SNPC" ) end
+	if table.KeyFromValue(VJBASE_GETADDONS, "bms") then CheckList:AddLine( "Black Mesa","SNPC" ) end
+	if table.KeyFromValue(VJBASE_GETADDONS, "cof") then CheckList:AddLine( "Cry Of Fear","SNPC" ) end
+	if table.KeyFromValue(VJBASE_GETADDONS, "dm") then CheckList:AddLine( "Dark Messiah","SNPC" ) end
+	if table.KeyFromValue(VJBASE_GETADDONS, "eye") then CheckList:AddLine( "E.Y.E Divine Cybermancy","SNPC" ) end
+	if table.KeyFromValue(VJBASE_GETADDONS, "fo3") then CheckList:AddLine( "Fallout 3","SNPC" ) end
+	if table.KeyFromValue(VJBASE_GETADDONS, "halo2") then CheckList:AddLine( "Halo 2","SNPC" ) end
+	if table.KeyFromValue(VJBASE_GETADDONS, "hl2snpc") then CheckList:AddLine( "Half Life 2","SNPC" ) end
+	if table.KeyFromValue(VJBASE_GETADDONS, "kf") then CheckList:AddLine( "Killing Floor","SNPC" ) end
+	if table.KeyFromValue(VJBASE_GETADDONS, "miliger") then CheckList:AddLine( "Military - Nazi Germany","SNPC" ) end
+	if table.KeyFromValue(VJBASE_GETADDONS, "milisurg") then CheckList:AddLine( "Military - Insurgents","SNPC" ) end
+	if table.KeyFromValue(VJBASE_GETADDONS, "nmrih") then CheckList:AddLine( "No More Room In Hell","SNPC" ) end
+	if table.KeyFromValue(VJBASE_GETADDONS, "miliru") then CheckList:AddLine( "Military - Soviet Union","SNPC" ) end
+	if table.KeyFromValue(VJBASE_GETADDONS, "milius") then CheckList:AddLine( "Military - United States","SNPC" ) end
+	if table.KeyFromValue(VJBASE_GETADDONS, "vjhud") then CheckList:AddLine( "VJ HUD","HUD" ) end
+	if table.KeyFromValue(VJBASE_GETADDONS, "zss") then CheckList:AddLine( "Zombie","SNPC" ) end
+	*/
+	//Panel:SetName("Test") -- Renames the blue label
+	CheckList.OnRowSelected = function()
+	surface.PlaySound(Sound("vj_illuminati/Illuminati Confirmed.mp3"))
+	chat.AddText(Color(255,255,0),"-=-=-=-=-=-=-=-=- ", Color(255,100,0),VJBASE_GETNAME, Color(255,255,0)," -=-=-=-=-=-=-=-=-=-=-=-")
+	chat.AddText(Color(0,255,0),"Version: "..VJBASE_VERSION)
+	chat.AddText(Color(0,255,0),"Total Addons: "..VJBASE_GETADDONAMOUNT) end
+	Panel:AddItem(CheckList)
 	----========----=========----
 	local changelog = vgui.Create("DButton") -- Changelog for VJ Base
 	changelog:SetFont("TargetID")
@@ -98,12 +98,30 @@ Panel:AddItem(CheckList)
 		//LocalPlayer():ConCommand("say I LOVE DRVREJ!")
 		net.Start("VJSay")
 		net.WriteEntity(LocalPlayer())
-		net.WriteString("I am gay!")
+		net.WriteBool(false)
+		net.WriteString("I LOVE DRVREJ!")
 		net.WriteString("vj_illuminati/Illuminati Confirmed.mp3")
 		net.SendToServer()
 		//surface.PlaySound(Sound("vj_illuminati/Illuminati Confirmed.mp3"))
 	end
 	Panel:AddPanel(ilovedrvrej)
+	
+	if (LocalPlayer():SteamID() == "STEAM_0:0:22688298") then
+		local lennyface = vgui.Create("DButton") -- *insert lenny face*
+		lennyface:SetFont("TargetID")
+		lennyface:SetText("I AM HERE")
+		lennyface:SetSize(150, 25)
+		lennyface:SetColor(Color(76,153,255,255))
+		lennyface.DoClick = function(lennyface)
+			net.Start("VJSay")
+			net.WriteEntity(LocalPlayer())
+			net.WriteBool(true)
+			net.WriteString("The creator of VJ Base, DrVrej is in the server!")
+			net.WriteString("vj_illuminati/Illuminati Confirmed.mp3")
+			net.SendToServer()
+		end
+		Panel:AddPanel(lennyface)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_ADDTOMENU_INSTALLATIONS()
@@ -120,3 +138,20 @@ function VJWelcomeCode()
 end
 concommand.Add("vj_welcome", VJWelcomeCode)
 net.Receive("VJWelcome", VJWelcomeCode)
+---------------------------------------------------------------------------------------------------------------------------------------------
+concommand.Add("vj_iamhere", function(ply,cmd,args)
+	local plynull = false
+	local cansendmsg = false
+	local plyid = NULL
+	if ply == NULL then plynull = true end
+	if plynull == false && ply:SteamID() == "STEAM_0:0:22688298" then cansendmsg = true plyid = ply end
+	if IsValid(LocalPlayer()) && LocalPlayer():SteamID() == "STEAM_0:0:22688298" then cansendmsg = true plyid = LocalPlayer() end
+	if cansendmsg == true then
+		net.Start("VJSay")
+		net.WriteEntity(plyid)
+		net.WriteBool(true)
+		net.WriteString("The creator of VJ Base, DrVrej is in the server!")
+		net.WriteString("vj_illuminati/Illuminati Confirmed.mp3")
+		net.SendToServer()
+	end
+end)

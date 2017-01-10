@@ -13,7 +13,7 @@ TOOL.ClientConVar["spawnpos_right"] = 0
 TOOL.ClientConVar["spawnpos_up"] = 0
 TOOL.ClientConVar["weaponequip"] = "None"
 TOOL.ClientConVar["weaponequipname"] = "Unknown"
-TOOL.ClientConVar["nextspawntime"] = 0
+TOOL.ClientConVar["nextspawntime"] = 3
 
 local DefaultConVars = {}
 for k,v in pairs(TOOL.ClientConVar) do

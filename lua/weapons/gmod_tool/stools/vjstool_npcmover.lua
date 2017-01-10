@@ -39,7 +39,6 @@ local function DoBuildCPanel_Mover(Panel)
 		end
 	end
 	Panel:AddPanel(reset)
-	print("fok")
 	Panel:AddControl("Label", {Text = "It's recommanded to use this tool only for VJ Base SNPCs."})
 	local CheckList = vgui.Create("DListView")
 		CheckList:SetTooltip(false)
@@ -174,7 +173,7 @@ else -- If SERVER
 		svchangetype = net.ReadString()
 		if svchangetype == "AddNPC" then
 			//print("fully added")
-			sventity.ControlledByVJTool = true
+			sventity.VJ_IsBeingControlled_Tool = true
 			sventity:StopMoving()
 			if sventity.IsVJBaseSNPC == true then
 				sventity.DisableWandering = true
@@ -184,7 +183,7 @@ else -- If SERVER
 		elseif svchangetype == "RemoveNPC" then
 			//print("fully removed")
 			//self:RemoveNPC(v)
-			sventity.ControlledByVJTool = false
+			sventity.VJ_IsBeingControlled_Tool = false
 			if sventity.IsVJBaseSNPC == true then
 				sventity.DisableWandering = false
 				sventity.DisableChasingEnemy = false
@@ -200,9 +199,31 @@ else -- If SERVER
 				v:StopMoving()
 				v:SetLastPosition(svvector)
 				if svwalktype == "Run" then
-					v:SetSchedule(SCHED_FORCED_GO_RUN)
+					if v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Creature == true or v.IsVJBaseSNPC_Human == true) then
+						//v:VJ_TASK_GOTO_LASTPOS("TASK_RUN_PATH")
+						v:VJ_TASK_GOTO_LASTPOS("TASK_RUN_PATH",function(x) 
+							if v:GetEnemy() != nil && v:Visible(v:GetEnemy()) then
+								x:EngTask("TASK_FACE_ENEMY", 0) 
+								x.CanShootWhenMoving = true 
+								x.ConstantlyFaceEnemy = true
+							end
+						end)
+					else
+						v:SetSchedule(SCHED_FORCED_GO_RUN)
+					end
 				elseif svwalktype == "Walk" then
-					v:SetSchedule(SCHED_FORCED_GO)
+					if v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Creature == true or v.IsVJBaseSNPC_Human == true) then
+						//v:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
+						v:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) 
+							if v:GetEnemy() != nil && v:Visible(v:GetEnemy()) then
+								x:EngTask("TASK_FACE_ENEMY", 0) 
+								x.CanShootWhenMoving = true 
+								x.ConstantlyFaceEnemy = true
+							end
+						end)
+					else
+						v:SetSchedule(SCHED_FORCED_GO)
+					end
 				end
 			end
 		end
@@ -211,7 +232,7 @@ else -- If SERVER
 	net.Receive("vj_npcmover_removesingle",function(len,pl)
 		brahent = net.ReadEntity()
 		//TOOL:RemoveNPC(brahent)
-		brahent.ControlledByVJTool = false
+		brahent.VJ_IsBeingControlled_Tool = false
 		if brahent.IsVJBaseSNPC == true then
 			brahent.DisableWandering = false
 			brahent.DisableChasingEnemy = false
@@ -222,7 +243,7 @@ else -- If SERVER
 		brahtbl = net.ReadTable()
 		for k,v in ipairs(brahtbl) do
 			//TOOL:RemoveNPC(v)
-			v.ControlledByVJTool = false
+			v.VJ_IsBeingControlled_Tool = false
 			if v.IsVJBaseSNPC == true then
 				v.DisableWandering = false
 				v.DisableChasingEnemy = false
@@ -232,8 +253,8 @@ else -- If SERVER
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function TOOL:AddNPC(ent)
-	ent.ControlledByVJTool = true
+/*function TOOL:AddNPC(ent)
+	ent.VJ_IsBeingControlled_Tool = true
 	ent:StopMoving()
 	if ent.IsVJBaseSNPC == true then
 		ent.DisableWandering = true
@@ -242,7 +263,7 @@ function TOOL:AddNPC(ent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:RemoveNPC(ent)
-	ent.ControlledByVJTool = false
+	ent.VJ_IsBeingControlled_Tool = false
 	if ent.IsVJBaseSNPC == true then
 		ent.DisableWandering = false
 		ent.DisableChasingEnemy = false
@@ -254,11 +275,19 @@ function TOOL:MoveNPC(ent,pos,movetype)
 	ent:StopMoving()
 	ent:SetLastPosition(pos)
 	if movetype == "Run" then
-		ent:SetSchedule(SCHED_FORCED_GO_RUN)
+		if ent.IsVJBaseSNPC == true && (ent.IsVJBaseSNPC_Creature == true or ent.IsVJBaseSNPC_Human == true) then
+			ent:VJ_TASK_GOTO_LASTPOS("TASK_RUN_PATH")
+		else
+			ent:SetSchedule(SCHED_FORCED_GO_RUN)
+		end
 	elseif movetype == "Walk" then
-		ent:SetSchedule(SCHED_FORCED_GO)
+		if ent.IsVJBaseSNPC == true && (ent.IsVJBaseSNPC_Creature == true or ent.IsVJBaseSNPC_Human == true) then
+			ent:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
+		else
+			ent:SetSchedule(SCHED_FORCED_GO)
+		end
 	end
-end
+end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
 	if (CLIENT) then return true end

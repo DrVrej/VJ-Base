@@ -578,6 +578,7 @@ ENT.DoingVJDeathDissolve = false
 ENT.HasBeenGibbedOnDeath = false
 ENT.DeathAnimationCodeRan = false
 ENT.AlreadyDone_RunSelectSchedule_FollowPlayer = false
+ENT.VJ_IsBeingControlled_Tool = false
 ENT.FollowingPlayerName = NULL
 ENT.MyEnemy = NULL
 ENT.VJ_TheController = NULL
@@ -1684,7 +1685,7 @@ function ENT:Think()
 								DoReloadAnimation(self.AnimTbl_WeaponReload)
 							end
 						else
-							if self.FollowingPlayer == true then
+							if self.FollowingPlayer == true or self.VJ_IsBeingControlled_Tool == true then
 								DoReloadAnimation(self.AnimTbl_WeaponReload)
 							else
 								self:CapabilitiesRemove(CAP_MOVE_SHOOT)
@@ -2635,7 +2636,7 @@ function ENT:DoEntityRelationshipCheck()
 					if self.ZombieFriendly == true then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
 					if self.AntlionFriendly == true then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
 					if self.PlayerFriendly == true then
-						self:PlayerAllies(v)
+						if self:PlayerAllies(v) == true then entisfri = true end
 						if self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true then
 							entisfri = true
 							v:AddEntityRelationship(self,D_LI,99)
