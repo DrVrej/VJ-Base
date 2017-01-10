@@ -143,12 +143,13 @@ function ENT:DoDamageCode(data,phys)
 	
 	if self.DoesRadiusDamage == true then
 		local DoEntCheck = true
+		local DamageAttacker = true
 		local AttackEnt = self:GetOwner()
-		if self:GetOwner():IsPlayer() == true then DoEntCheck = false end
+		if self:GetOwner():IsPlayer() == true then DoEntCheck = false DamageAttacker = true end
 		if self.VJHumanTossingAway == true && IsValid(self:GetParent()) && self:GetParent():IsNPC() then gethitpos = self:GetParent():GetPos() end
 		if self:GetOwner() == NULL then AttackEnt = self DoEntCheck = false end
 		//util.VJ_SphereDamage(AttackEnt,AttackEnt,gethitpos,self.RadiusDamageRadius,self.RadiusDamage,self.RadiusDamageType,DoEntCheck,self.RadiusDamageUseRealisticRadius,self.RadiusDamageForce,self.RadiusDamageForceTowardsRagdolls,self.RadiusDamageForceTowardsPhysics)
-		hitent = util.VJ_SphereDamage(AttackEnt,AttackEnt,gethitpos,self.RadiusDamageRadius,self.RadiusDamage,self.RadiusDamageType,DoEntCheck,self.RadiusDamageUseRealisticRadius,{Force=self.RadiusDamageForce,UpForce=self.RadiusDamageForce_Up})
+		hitent = util.VJ_SphereDamage(AttackEnt,AttackEnt,gethitpos,self.RadiusDamageRadius,self.RadiusDamage,self.RadiusDamageType,DoEntCheck,self.RadiusDamageUseRealisticRadius,{Force=self.RadiusDamageForce,UpForce=self.RadiusDamageForce_Up,DamageAttacker=DamageAttacker})
 	end
 	
 	if self.DoesDirectDamage == true then

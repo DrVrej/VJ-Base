@@ -315,6 +315,7 @@ ENT.CanDoSelectScheduleAgain = true
 ENT.DoingVJDeathDissolve = false
 ENT.HasBeenGibbedOnDeath = false
 ENT.DeathAnimationCodeRan = false
+ENT.VJ_IsBeingControlled_Tool = false
 ENT.FollowingPlayerName = NULL
 ENT.MyEnemy = NULL
 ENT.VJ_TheController = NULL

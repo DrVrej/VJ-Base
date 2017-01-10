@@ -595,6 +595,7 @@ ENT.DeathAnimationCodeRan = false
 ENT.AlreadyDone_RunSelectSchedule_FollowPlayer = false
 ENT.AlreadyDoneRangeAttackFirstProjectile = false
 ENT.AlreadyDoneFirstLeapAttack = false
+ENT.VJ_IsBeingControlled_Tool = false
 ENT.FollowingPlayerName = NULL
 ENT.MyEnemy = NULL
 ENT.VJ_TheController = NULL
@@ -2773,7 +2774,7 @@ function ENT:DoEntityRelationshipCheck()
 					if self.ZombieFriendly == true then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
 					if self.AntlionFriendly == true then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
 					if self.PlayerFriendly == true then
-						self:PlayerAllies(v)
+						if self:PlayerAllies(v) == true then entisfri = true end
 						if self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true then
 							entisfri = true
 							v:AddEntityRelationship(self,D_LI,99)

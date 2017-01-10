@@ -7,7 +7,7 @@ INFO: Main Autorun file for VJ Base
 --------------------------------------------------*/
 //print("Loading VJ Base...")
 
-VJBASE_VERSION = "2.3.0"
+VJBASE_VERSION = "2.3.1"
 VJBASE_GETNAME = "VJ Base"
 
 -- Shared --
@@ -44,8 +44,8 @@ end
 function DoWelcomeDrVrej(ply, command, arguements)
 	//if game.SinglePlayer() then return end
 	if (ply:SteamID() == "STEAM_0:0:22688298") then
-		PrintMessage(HUD_PRINTTALK,"DrVrej Has Joined Game!")
-		PrintMessage(HUD_PRINTCENTER,"DrVrej Has Joined Game!")
+		PrintMessage(HUD_PRINTTALK,"DrVrej Has Joined The Game!")
+		PrintMessage(HUD_PRINTCENTER,"DrVrej Has Joined The Game!")
 		local sd = CreateSound(game.GetWorld(),"vj_illuminati/Illuminati Confirmed.mp3")
 		sd:SetSoundLevel(0)
 		sd:Play()
@@ -75,9 +75,14 @@ hook.Add("PlayerInitialSpawn", "VJBaseSpawn", VJSpawn)
 
 net.Receive("VJSay",function(len,pl)
 	ply = net.ReadEntity()
+	noply = net.ReadBool()
 	msg = net.ReadString()
 	soundfile = net.ReadString()
-	ply:Say(msg)
+	if noply == true then
+		PrintMessage(HUD_PRINTTALK,msg)
+	else
+		ply:Say(msg)
+	end
 	local sd = CreateSound(game.GetWorld(),soundfile)
 	sd:SetSoundLevel(0)
 	sd:Play()
