@@ -939,7 +939,7 @@ function ENT:OnPlayerSightCode()
 	local PlayerTargets = VJ_FindInCone(self:GetPos(),self:GetForward(),self.OnPlayerSightDistance,self.SightAngle)
 	if (!PlayerTargets) then return end
 	for k,argent in pairs(PlayerTargets) do
-		if (CurTime() > self.OnPlayerSightNextT) && (self:Visible(argent)) && (self:GetForward():Dot((argent:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) then
+		if argent:IsPlayer() && (CurTime() > self.OnPlayerSightNextT) && (self:Visible(argent)) && (self:GetForward():Dot((argent:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) then
 			if self.OnPlayerSightDispositionLevel == 1 && self:Disposition(argent) != D_LI && self:Disposition(argent) != D_NU then return end
 			if self.OnPlayerSightDispositionLevel == 2 && (self:Disposition(argent) == D_LI or self:Disposition(argent) == D_NU) then return end
 			self:CustomOnPlayerSight(argent)

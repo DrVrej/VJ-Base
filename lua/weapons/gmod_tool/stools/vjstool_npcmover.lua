@@ -39,7 +39,7 @@ local function DoBuildCPanel_Mover(Panel)
 		end
 	end
 	Panel:AddPanel(reset)
-	Panel:AddControl("Label", {Text = "It's recommanded to use this tool only for VJ Base SNPCs."})
+	Panel:AddControl("Label", {Text = "It's recommended to use this tool only for VJ Base SNPCs."})
 	local CheckList = vgui.Create("DListView")
 		CheckList:SetTooltip(false)
 		//CheckList:Center() -- No need since Size does it already

@@ -17,10 +17,18 @@ function util.VJ_SphereDamage(vAttacker,vInflictor,vPosition,vDamageRadius,vDama
 		local vTbl_Force = vTbl_Features.Force or false -- The general force | false = Don't use any force
 		local vTbl_UpForce = vTbl_Features.UpForce or false -- How much up force should it have? | false = Use vTbl_Force
 		local vTbl_DamageAttacker = vTbl_Features.DamageAttacker or false -- Should it damage the attacker as well?
+		local vTbl_UseCone = vTbl_Features.UseCone or false -- Should it detect entities using a cone?
+		local vTbl_DirectionPos = vTbl_Features.DirectionPos or vAttacker:GetForward() -- The position it starts the cone degree from
+		local vTbl_UseConeDegree = vTbl_Features.UseConeDegree or 90 -- The degrees it should use for the cone finding
 	------------------------
 	local Finaldmg = vDamage
 	local Foundents = {}
-	local Findents = ents.FindInSphere(vPosition,vDamageRadius)
+	local Findents = nil
+	if vTbl_UseCone == true then
+		Findents = VJ_FindInCone(vPosition,vTbl_DirectionPos,vDamageRadius,vTbl_UseConeDegree,{AllEntities=true})
+	else
+		Findents = ents.FindInSphere(vPosition,vDamageRadius)
+	end
 	if (!Findents) then return end
 	for k,v in pairs(Findents) do
 		if v:EntIndex() == vAttacker:EntIndex() && vTbl_DamageAttacker == false then continue end

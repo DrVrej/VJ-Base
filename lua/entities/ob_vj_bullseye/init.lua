@@ -8,25 +8,62 @@ include('shared.lua')
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to place a target in certain situations for VJ Base SNPCs.
 --------------------------------------------------*/
-ENT.VJBULLSEYE_TheAttacker = nil
-ENT.Alreadydoneit = false
+//ENT.VJBULLSEYE_TheAttacker = nil
+//ENT.Alreadydoneit = false
+ENT.SolidMovementType = "Dynamic"
+ENT.Activated = true
+ENT.UserStatusColors = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
-	self:SetModel("models/hunter/blocks/cube025x025x025.mdl")
-	self:SetMoveType(MOVETYPE_NONE)
-	self:SetSolid(SOLID_NONE)
-	//self:StartControlling()
-	self:SetColor(Color(255,0,0))
+	//self:SetModel("models/hunter/plates/plate.mdl")
+	//self:SetMoveType(MOVETYPE_NONE)
+	//self:SetSolid(SOLID_NONE)
+	if self.SolidMovementType == "Dynamic" then
+		self:PhysicsInit(SOLID_VPHYSICS)
+		self:SetMoveType(MOVETYPE_NONE)
+		self:SetSolid(SOLID_VPHYSICS)
+	elseif self.SolidMovementType == "Static" then
+		self:PhysicsInit(SOLID_NONE)
+		self:SetMoveType(MOVETYPE_NONE)
+		self:SetSolid(SOLID_NONE)
+	elseif self.SolidMovementType == "Physics" then
+		self:PhysicsInit(SOLID_VPHYSICS)
+		self:SetMoveType(MOVETYPE_VPHYSICS)
+		self:SetSolid(SOLID_VPHYSICS)
+	end
+	self:SetUseType(SIMPLE_USE)
+	self:SetHealth(999999) -- So SNPCs won't think it's dead
+	//self:SetColor(Color(255,0,0))
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:AcceptInput(key,activator,caller,data)
+	if !activator:IsPlayer() then return end
+	if self.Activated == false then
+		self.Activated = true
+		activator:PrintMessage(HUD_PRINTTALK, "Activated NPC Bullseye.")
+		self:EmitSound(Sound("buttons/button6.wav"),70,100)
+	elseif self.Activated == true then
+		self.Activated = false
+		activator:PrintMessage(HUD_PRINTTALK, "Deactivated NPC Bullseye.")
+		self:EmitSound(Sound("buttons/button5.wav"),70,100)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-	if IsValid(self.VJBULLSEYE_TheAttacker) && self.Alreadydoneit == false then
+	if self.Activated == false then
+		self.VJ_NoTarget = true
+		if self.UserStatusColors == true then self:SetColor(Color(255,0,0)) end
+	elseif self.Activated == true then
+		self.VJ_NoTarget = false
+		if self.UserStatusColors == true then self:SetColor(Color(0,255,0)) end
+	end
+	/*if IsValid(self.VJBULLSEYE_TheAttacker) && self.Alreadydoneit == false then
 		table.insert(self.VJBULLSEYE_TheAttacker.CurrentPossibleEnemies,self)
 		//print(self.VJBULLSEYE_TheAttacker)
 		//self.Alreadydoneit = true
 		self:AddEntityRelationship(self.VJBULLSEYE_TheAttacker,D_HT,99)
 		self.VJBULLSEYE_TheAttacker:VJ_DoSetEnemy(self)
-	end
+	end*/
 end
 /*--------------------------------------------------
 	=============== Bullseye Entity ===============

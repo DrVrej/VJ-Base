@@ -37,7 +37,7 @@ if (CLIENT) then
 			end
 		end
 		Panel:AddPanel(reset)
-		Panel:AddControl("Label", {Text = "It's recommanded to use this tool only for VJ Base SNPCs."})
+		Panel:AddControl("Label", {Text = "It's recommended to use this tool only for VJ Base SNPCs."})
 		Panel:ControlHelp("Left click to apply relationship classes on an entity.")
 		Panel:ControlHelp("Right click to obtain the current classes an entity has.")
 		Panel:ControlHelp("Press reload to apply the relationship class to yourself.")

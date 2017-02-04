@@ -22,8 +22,8 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
 	language.Add("tool.vjstool_npcspawner.name", "NPC Spawner")
-	language.Add("tool.vjstool_npcspawner.desc", "Creates an spawer")
-	language.Add("tool.vjstool_npcspawner.0", "Left-Click to create a spawer, Right-Click to spawn the NPCs once")
+	language.Add("tool.vjstool_npcspawner.desc", "Creates an spawner")
+	language.Add("tool.vjstool_npcspawner.0", "Left-Click to create a spawner, Right-Click to spawn the NPCs once")
 	
 	//language.Add("vjbase.npctools.health", "Health")
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -53,7 +53,7 @@ if (CLIENT) then
 		TblCurrentValues = TblCurrentValues or {}
 		TblCurrentLines = TblCurrentLines or {}
 		TblCurrentLinesUsable = TblCurrentLinesUsable or {}
-		Panel:AddControl("Label", {Text = "It's recommanded to use this tool only for VJ Base SNPCs."})
+		Panel:AddControl("Label", {Text = "It's recommended to use this tool only for VJ Base SNPCs."})
 		/*local textbox = vgui.Create("DTextEntry")
 			textbox:SetSize(10,20)
 			//textbox:SetPos(5,27)
@@ -62,9 +62,9 @@ if (CLIENT) then
 			textbox:SetMultiline(false)
 		Panel:AddPanel(textbox)*/
 		local selectnpc = vgui.Create("DTextEntry")
-		selectnpc:SetEditable(false)
-		selectnpc:SetText("Selected NPC: "..GetConVarString("vjstool_npcspawner_spawnentname").." ["..GetConVarString("vjstool_npcspawner_spawnent").."]")
-		selectnpc.OnGetFocus = function() LocalPlayer():ConCommand("vj_npcspawner_opennpcselect") end
+			selectnpc:SetEditable(false)
+			selectnpc:SetText("Selected NPC: "..GetConVarString("vjstool_npcspawner_spawnentname").." ["..GetConVarString("vjstool_npcspawner_spawnent").."]")
+			selectnpc.OnGetFocus = function() LocalPlayer():ConCommand("vj_npcspawner_opennpcselect") end
 		Panel:AddItem(selectnpc)
 		//Panel:AddControl("Button",{Label = "Select NPC",Command = "vj_npcspawner_opennpcselect"})
 		//Panel:AddControl("Label", {Text = "Selected NPC:"..GetConVarString("vjstool_npcspawner_spawnent")})
