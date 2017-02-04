@@ -45,6 +45,7 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 	vj_npc_seedistance = "0",
 	vj_npc_processtime = "1",
 	vj_npc_usegmoddecals = "0",
+	vj_npc_knowenemylocation = "0",
 	}
 	Panel:AddControl("ComboBox", vj_options_reset)
 	//Panel:AddControl( "Label", { Text = "________________________________________\n"})
@@ -56,10 +57,9 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 	Panel:AddControl("Checkbox", {Label = "Combine Friendly", Command = "vj_npc_combinefriendly"})
 	Panel:AddControl("Checkbox", {Label = "VJ Base Friendly", Command = "vj_npc_vjfriendly"})
 	Panel:ControlHelp("All VJ SNPCs will be allied")
-	Panel:AddControl("Checkbox", {Label = "Undoable Corpses", Command = "vj_npc_undocorpse"})
-	Panel:ControlHelp("Corpses will be removed when pressed the undo key")
 	Panel:AddControl("Slider",{Label = "Corpse Limit, Def:32",min = 4,max = 300,Command = "vj_npc_globalcorpselimit"})
 	Panel:ControlHelp("Corpse Limit when 'Keep Corpses' is off")
+	Panel:AddControl("Checkbox", {Label = "Undoable Corpses (Undo Key)", Command = "vj_npc_undocorpse"})
 	Panel:AddControl("Checkbox", {Label = "Fade Corpses", Command = "vj_npc_corpsefade"})
 	Panel:AddControl("Slider",{Label = "Corpse Fade Time",min = 0,max = 600,Command = "vj_npc_corpsefadetime"})
 	Panel:ControlHelp("Total: 600 seconds (10 Minutes)")
@@ -67,8 +67,8 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 	Panel:AddControl("Checkbox", {Label = "Fade Gibs", Command = "vj_npc_fadegibs"})
 	Panel:AddControl("Slider",{Label = "Gib Fade Time",min = 0,max = 600,Command = "vj_npc_fadegibstime"})
 	Panel:ControlHelp("Default: 30 | Total: 600 seconds (10 Minutes)")
-	Panel:AddControl("Checkbox", {Label = "GodMode", Command = "vj_npc_godmodesnpc"})
-	Panel:ControlHelp("They won't take any damage")
+	Panel:AddControl("Checkbox", {Label = "God Mode (They won't take any damage)", Command = "vj_npc_godmodesnpc"})
+	Panel:AddControl("Checkbox", {Label = "Always Know Enemy Location", Command = "vj_npc_knowenemylocation"})
 	//Panel:AddControl("Slider", {Label = "Health Changer",min = 0,max = 10000,Command = "vj_npc_allhealth"})
 	Panel:AddControl( "Label", {Text = "Health (0 = Original health):"})
 	local textbox = vgui.Create("DTextEntry")
@@ -99,9 +99,9 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 	vj_npc_dif_easy = "0",vj_npc_dif_normal = "0",vj_npc_dif_hard = "0", vj_npc_dif_hellonearth = "1",}
 	Panel:AddControl("ComboBox", vj_difficulty)
 	Panel:AddControl("Slider",{Label = "Process Time",Type = "Float",min = 0.05,max = 3,Command = "vj_npc_processtime"})
-	Panel:ControlHelp("Default: 1 | Lower number means more lag!")
+	Panel:ControlHelp("Default: 1 | Lower number causes more lag!")
 	Panel:AddControl("Checkbox", {Label = "Use Garry's Mod's Current Blood Decals", Command = "vj_npc_usegmoddecals"})
-	Panel:ControlHelp("Colors that aren't Yellow or Red will not change!")
+	Panel:ControlHelp("Colors that aren't Yellow or Red won't change!")
 	Panel:AddControl("Checkbox", {Label = "Item Drops On Death", Command = "vj_npc_itemdrops"})
 	Panel:AddControl("Checkbox", {Label = "Show HUD Display on SNPC killed (Top Right)", Command = "vj_npc_showhudonkilled"})
 	Panel:AddControl("Checkbox", {Label = "Add points to the player's scoreboard when killed", Command = "vj_npc_addfrags"})
@@ -208,9 +208,9 @@ local function VJ_SNPC_SETTINGS(Panel) -- Settings
 	Panel:AddControl("Checkbox", {Label = "Disable Reloading", Command = "vj_npc_noreload"})
 	Panel:AddControl("Checkbox", {Label = "Disable Throwing Grenades", Command = "vj_npc_nothrowgrenade"})
 	Panel:AddControl("Checkbox", {Label = "Disable Running from Grenades", Command = "vj_npc_noscarednade"})
-	Panel:AddControl("Checkbox", {Label = "Disable Use Regulator", Command = "vj_npc_nouseregulator"})
-	Panel:ControlHelp("Use this if a weapon you tried on the SNPC didn't work")
-	Panel:AddControl("Checkbox", {Label = "Disable Unlimited Ammo", Command = "vj_npc_noforeverammo"})
+	//Panel:AddControl("Checkbox", {Label = "Disable Use Regulator", Command = "vj_npc_nouseregulator"})
+	//Panel:ControlHelp("Use this if a weapon you tried on the SNPC didn't work")
+	//Panel:AddControl("Checkbox", {Label = "Disable Unlimited Ammo", Command = "vj_npc_noforeverammo"})
 	Panel:AddControl( "Label", {Text = "Animal Settings:"})
 	Panel:AddControl("Checkbox", {Label = "Disable Running on Touch", Command = "vj_npc_animal_runontouch"})
 	Panel:AddControl("Checkbox", {Label = "Disable Running on Hit", Command = "vj_npc_animal_runonhit"})

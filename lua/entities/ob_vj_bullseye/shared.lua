@@ -1,4 +1,4 @@
-ENT.Base 			= "base_gmodentity"
+ENT.Base 			= "base_entity"
 ENT.Type 			= "ai"
 ENT.PrintName 		= "Bullseye"
 ENT.Author 			= "DrVrej"

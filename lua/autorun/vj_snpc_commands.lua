@@ -75,6 +75,7 @@ AddConvars["vj_npc_seedistance"] = 0 -- How far can the SNPCs see? 0 = The dista
 AddConvars["vj_npc_globalcorpselimit"] = 32 -- What is the limit for SNPC corpses on the ground? (When Keep Corpses is off)
 AddConvars["vj_npc_processtime"] = 1 -- How much time it takes for an SNPC to process something
 AddConvars["vj_npc_usegmoddecals"] = 0 -- Should it use Garry's Mod's current blood decals?
+AddConvars["vj_npc_knowenemylocation"] = 0 -- Should they always know where their enemies are?
 	-- Creature Options ----------------------------------------------------------------------------------------------------
 AddConvars["vj_npc_creatureopendoor"] = 1 -- Should Creatures open doors?
 	-- Human Options ----------------------------------------------------------------------------------------------------

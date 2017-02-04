@@ -53,18 +53,18 @@ function VJ_RoundToMultiple(number,multiple) -- Credits to Bizzclaw for pointing
 	end
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function VJ_FindInCone(Position,Direction,Distance,Degrees)
+function VJ_FindInCone(Position,Direction,Distance,Degrees,Tbl_Features)
+	local vTbl_Features = Tbl_Features or {}
+		local vTbl_AllEntities = vTbl_Features.AllEntities or false -- Should it detect all types of entities? | False = NPCs and Players only!
 	local EntitiesFound = ents.FindInSphere(Position,Distance)
-	local Ret = {}
+	local Foundents = {}
 	local CosineDegrees = math.cos(math.rad(Degrees))
 	for _,v in pairs(EntitiesFound) do
-	if v:IsNPC() or v:IsPlayer() then
-		if (Direction:Dot((v:GetPos() -Position):GetNormalized()) > CosineDegrees) then
-			Ret[#Ret+1] = v
+	if ((vTbl_AllEntities == true) or (vTbl_AllEntities == false && (v:IsNPC() or v:IsPlayer()))) && (Direction:Dot((v:GetPos() -Position):GetNormalized()) > CosineDegrees) then
+			Foundents[#Foundents+1] = v
 		end
-	 end
 	end
-	return Ret
+	return Foundents
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function VJ_CreateSound(argent,sound,soundlevel,soundpitch,stoplatestsound,sounddsp)
@@ -119,6 +119,7 @@ function VJ_PICKRANDOMTABLE(tbl)
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function VJ_AnimationExists(argent,actname)
+	if actname == nil then return false end
 	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
 	if type(actname) == "number" then
 		if (argent:SelectWeightedSequence(actname) == -1 or argent:SelectWeightedSequence(actname) == 0) && (argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "Not Found!" or argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "No model!") then 
@@ -668,6 +669,15 @@ local function VJ_ENTITYCREATED(entity)
 	end)
 end
 hook.Add("OnEntityCreated","VJ_ENTITYCREATED",VJ_ENTITYCREATED)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+local function VJ_NPCPLY_DEATH(npc,attacker,inflictor)
+	if attacker.IsVJBaseSNPC == true && (attacker.IsVJBaseSNPC_Human == true or attacker.IsVJBaseSNPC_Creature == true) then
+		attacker:DoKilledEnemy(npc,attacker,inflictor)
+	end
+end
+local function VJ_PLY_DEATH(victim,inflictor,attacker) VJ_NPCPLY_DEATH(victim,attacker,inflictor) end -- Arguments are flipped between the hooks for some reason...
+hook.Add("OnNPCKilled","VJ_NPC_DEATH",VJ_NPCPLY_DEATH)
+hook.Add("PlayerDeath","VJ_PLY_DEATH",VJ_PLY_DEATH)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 local function VJ_NPC_TAKEDAMAGE(target,dmginfo)
 	if IsValid(target) && IsValid(dmginfo:GetAttacker()) then

@@ -37,7 +37,7 @@ function TOOL.BuildCPanel(Panel)
 	end
 	Panel:AddPanel(reset)
 	
-	Panel:AddControl("Label", {Text = "It's recommanded to use this tool only for VJ Base SNPCs."})
+	Panel:AddControl("Label", {Text = "It's recommended to use this tool only for VJ Base SNPCs."})
 	Panel:AddControl("Slider", {Label = "Health",min = 0,max = 10000,Command = "vjstool_npcproperty_health"})
 	Panel:AddControl("Checkbox", {Label = "God Mode (invincible)", Command = "vjstool_npcproperty_godmode"})
 end

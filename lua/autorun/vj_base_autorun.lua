@@ -7,7 +7,7 @@ INFO: Main Autorun file for VJ Base
 --------------------------------------------------*/
 //print("Loading VJ Base...")
 
-VJBASE_VERSION = "2.3.1"
+VJBASE_VERSION = "2.3.2"
 VJBASE_GETNAME = "VJ Base"
 
 -- Shared --

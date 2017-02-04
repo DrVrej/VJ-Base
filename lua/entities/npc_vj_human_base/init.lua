@@ -205,9 +205,10 @@ ENT.NextAnyAttackTime_Melee_DoRand = false -- False = Don't use random time | Nu
 ENT.Weapon_FiringDistanceFar = 2000 -- How far away it can shoot
 ENT.Weapon_FiringDistanceClose = 10 -- How close until it stops shooting
 ENT.WeaponSpread = 1 -- What's the spread of the weapon? | Closer to 0 = better accuracy, Farther than 1 = worse accuracy
-ENT.Weapon_UnlimitedAmmo = true -- Set false to turn off unlimited ammo
 ENT.DisableWeapons = false -- If set to true, it won't be able to use weapons
 ENT.Weapon_NoSpawnMenu = false -- If set to true, the NPC weapon setting in the spawnmenu will not be applied for this SNPC
+	-- V Don't use this variable! V
+ENT.Weapon_UnlimitedAmmo = true -- Set false to turn off unlimited ammo
 //ENT.DisableUSE_SHOT_REGULATOR = false -- Set to true to disable CAP_USE_SHOT_REGULATOR
 	-- ====== Animation Related Variables ====== --
 ENT.AnimTbl_WeaponAttack = {ACT_RANGE_ATTACK1} -- Animation played when the SNPC does weapon attack | For VJ Weapons
@@ -334,6 +335,7 @@ ENT.HasOnPlayerSightSounds = true -- If set to false, it won't play the saw play
 ENT.HasDamageByPlayerSounds = true -- If set to false, it won't play the stupid player sounds
 ENT.HasCallForHelpSounds = true -- If set to false, it won't play any sounds when it calls for help
 ENT.HasOnReceiveOrderSounds = true -- If set to false, it won't play any sound when it receives an order from an ally
+ENT.HasOnKilledEnemySound = true -- Should it play a sound when it kills an enemy?
 ENT.HasFootStepSound = true -- Should the SNPC make a footstep sound when it's moving?
 ENT.HasBreathSound = true -- Should it make a breathing sound?
 ENT.HasSoundTrack = false -- Does the SNPC have a sound track?
@@ -346,7 +348,10 @@ ENT.DisableFootStepOnWalk = false -- It will not play the footstep sound when wa
 ENT.IdleSounds_NoRegularIdleOnAlerted = false -- if set to true, it will not play the regular idle sound table if the combat idle sound table is empty
 ENT.AlertSounds_OnlyOnce = false -- After it plays it once, it will never play it again
 ENT.BeforeMeleeAttackSounds_WaitTime = 0 -- Time until it starts playing the Before Melee Attack sounds
-ENT.SoundTrackFadeOutTime = 2  -- Put to 0 if you want it to stop instantly
+ENT.OnlyDoKillEnemyWhenClear = true -- When there is no enemy in sight
+	-- ====== Fade Out Times ====== --
+-- Put to 0 if you want it to stop instantly
+ENT.SoundTrackFadeOutTime = 2
 	-- ====== Sound File Paths ====== --
 -- Leave blank if you don't want any sounds to play
 ENT.SoundTbl_FootStep = {}
@@ -370,6 +375,7 @@ ENT.SoundTbl_MeleeAttackExtra = {}
 ENT.SoundTbl_MeleeAttackMiss = {}
 ENT.SoundTbl_GrenadeAttack = {}
 ENT.SoundTbl_OnGrenadeSight = {}
+ENT.SoundTbl_OnKilledEnemy = {}
 ENT.SoundTbl_Pain = {}
 ENT.SoundTbl_Impact = {}
 ENT.SoundTbl_DamageByPlayer = {}
@@ -403,6 +409,7 @@ ENT.GrenadeAttackSoundChance = 1
 ENT.OnGrenadeSightSoundChance = 1
 ENT.SuppressingSoundChance = 2
 ENT.WeaponReloadSoundChance = 1
+ENT.OnKilledEnemySoundChance = 1
 ENT.PainSoundChance = 1
 ENT.ImpactSoundChance = 1
 ENT.DamageByPlayerSoundChance = 1
@@ -424,6 +431,8 @@ ENT.NextSoundTime_Suppressing2 = 15
 ENT.NextSoundTime_Alert2 = 3
 ENT.NextSoundTime_WeaponReload1 = 3
 ENT.NextSoundTime_WeaponReload2 = 5
+ENT.NextSoundTime_OnKilledEnemy1 = 3
+ENT.NextSoundTime_OnKilledEnemy2 = 5
 ENT.NextSoundTime_Pain1 = 2
 ENT.NextSoundTime_Pain2 = 2
 ENT.NextSoundTime_DamageByPlayer1 = 2
@@ -456,6 +465,7 @@ ENT.SuppressingSoundLevel = 80
 ENT.WeaponReloadSoundLevel = 80
 ENT.GrenadeAttackSoundLevel = 80
 ENT.OnGrenadeSightSoundLevel = 80
+ENT.OnKilledEnemySoundLevel = 80
 ENT.PainSoundLevel = 80
 ENT.ImpactSoundLevel = 60
 ENT.DamageByPlayerSoundLevel = 75
@@ -514,6 +524,8 @@ ENT.GrenadeAttackSoundPitch1 = "UseGeneralPitch"
 ENT.GrenadeAttackSoundPitch2 = "UseGeneralPitch"
 ENT.OnGrenadeSightSoundPitch1 = "UseGeneralPitch"
 ENT.OnGrenadeSightSoundPitch2 = "UseGeneralPitch"
+ENT.OnKilledEnemySoundPitch1 = "UseGeneralPitch"
+ENT.OnKilledEnemySoundPitch2 = "UseGeneralPitch"
 ENT.PainSoundPitch1 = "UseGeneralPitch"
 ENT.PainSoundPitch2 = "UseGeneralPitch"
 ENT.ImpactSoundPitch1 = 80
@@ -642,6 +654,7 @@ ENT.CurrentAnim_CallForBackUpOnDamage = 0
 ENT.CurrentAnim_CustomIdle = 0
 ENT.NextCanGetCombineBallDamageT = 0
 ENT.UseTheSameGeneralSoundPitch_PickedNumber = 0
+ENT.OnKilledEnemySoundT = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.SelectedDifficulty = 1
 	-- Tables ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -730,6 +743,8 @@ function ENT:CustomOnWeaponReload_AfterRanToCover() end
 function ENT:CustomOnGrenadeAttack_BeforeThrowTime() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnGrenadeAttack_OnThrow(GrenadeEntity) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnDoKilledEnemy(argent,attacker,inflictor) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo,hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1213,7 +1228,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 	if self.IsVJBaseSNPC_Tank == true then return end
-	if self.VJ_PlayingSequence == true or self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextIdleTime > CurTime()) then return end
+	if /*self.VJ_PlayingSequence == true or*/ self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextIdleTime > CurTime()) then return end
 	-- 0 = Random | 1 = Wander | 2 = Idle Stand /\ OverrideWander = Wander no matter what
 	RestrictNumber = RestrictNumber or 0
 	OverrideWander = OverrideWander or false
@@ -1236,7 +1251,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
 	if !IsValid(self:GetEnemy()) or self:GetEnemy() == nil then return end
-	if self.IsVJBaseSNPC_Tank == true or self.VJ_PlayingSequence == true or self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextChaseTime > CurTime()) then return end
+	if self.IsVJBaseSNPC_Tank == true or /*self.VJ_PlayingSequence == true or*/ self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextChaseTime > CurTime()) then return end
 	if self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) < self.MeleeAttackDistance && self:GetEnemy():Visible(self) && (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then return end
 	-- OverrideChasing = Chase no matter what
 	OverrideChasing = OverrideChasing or false
@@ -1283,7 +1298,7 @@ function ENT:VJ_ACT_DOCROUCH(CustomAnimTbl,CustomAnimTblForDefault,StopActs,Stop
 				self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE({VJ_PICKRANDOMTABLE(CustomAnimTblForDefault),VJ_PICKRANDOMTABLE({ACT_RANGE_AIM_LOW})}),StopActs,StopActsTime,FaceEnemy)
 				self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE({ACT_RANGE_AIM_LOW}),StopActs,StopActsTime,FaceEnemy) end
 			end
-		else -- Unknown, recommanded to use custom animations or disable WaitForEnemyToComeOut in situations like this
+		else -- Unknown, recommended to use custom animations or disable WaitForEnemyToComeOut in situations like this
 			self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE({ACT_IDLE_ANGRY}),StopActs,StopActsTime,FaceEnemy)
 		end
 	end
@@ -1580,11 +1595,11 @@ function ENT:Think()
 			end
 		end
 
-		if self.PlayerFriendly == true && self.MoveOutOfFriendlyPlayersWay == true && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && CurTime() > self.NextMoveOutOfFriendlyPlayersWayT && GetConVarNumber("ai_ignoreplayers") == 0 /*&& self:GetEnemy() == nil*/ then
+		if self.Dead == false && self.PlayerFriendly == true && self.MoveOutOfFriendlyPlayersWay == true && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && CurTime() > self.NextMoveOutOfFriendlyPlayersWayT && GetConVarNumber("ai_ignoreplayers") == 0 /*&& self:GetEnemy() == nil*/ then
 			for k,v in ipairs(player.GetAll()) do
-				local nigersarenigs = 20
-				if self.FollowingPlayer == true then nigersarenigs = 10 end
-				if self:DoRelationshipCheck(v) == false && (self:VJ_GetNearestPointToEntityDistance(v) < nigersarenigs) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
+				local moveawaydis = 20
+				if self.FollowingPlayer == true then moveawaydis = 10 end
+				if self:DoRelationshipCheck(v) == false && (self:VJ_GetNearestPointToEntityDistance(v) < moveawaydis) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
 					self.NextFollowPlayerT = CurTime() + 2
 					self.DoingMoveOutOfFriendlyPlayersWay = true
 					//self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-50,-50))
@@ -2647,7 +2662,7 @@ function ENT:DoEntityRelationshipCheck()
 				end
 			end
 			if (self.PlayerFriendly == true or entisfri == true/* or self:Disposition(v) == D_LI*/) && v:IsPlayer() && !table.HasValue(self.VJ_AddCertainEntityAsEnemy,v) then entisfri = true DoPlayerSight() end// continue end
-			if entisfri == false && v:IsNPC() && MyVisibleTov && self.DisableMakingSelfEnemyToNPCs == false then v:AddEntityRelationship(self,D_HT,99) end
+			if entisfri == false && v:IsNPC() /*&& MyVisibleTov*/ && self.DisableMakingSelfEnemyToNPCs == false then v:AddEntityRelationship(self,D_HT,99) end
 			if (!self.IsVJBaseSNPC_Tank) && v:IsPlayer() && self:GetEnemy() == nil && entisfri == false then
 				self:AddEntityRelationship(v,D_NU,99)
 				if v:KeyDown(IN_DUCK) && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightdistancenum = 5000 else sightdistancenum = 2000 end end
@@ -2805,6 +2820,18 @@ function ENT:BringAlliesToMe(SeeDistance,CertainAmount,CertainAmountNumber,Enemy
 	//print(table.ToString(LocalTargetTable,"stupid table",true))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:DoKilledEnemy(argent,attacker,inflictor)
+	if !IsValid(argent) then return end
+	timer.Simple(0.15,function()
+		if IsValid(self) then
+			if (self.OnlyDoKillEnemyWhenClear == false) or (self.OnlyDoKillEnemyWhenClear == true && self:GetEnemy() == nil) then
+				self:OnKilledEnemySoundCode()
+				self:CustomOnDoKilledEnemy(argent,attacker,inflictor)
+			end
+		end
+	end)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 	if self.DoingVJDeathDissolve == true then self.DoingVJDeathDissolve = false return true end
 	if self.Dead == true then return false end
@@ -2948,13 +2975,11 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 			end
 		end
 
-		if self.DisableTakeDamageFindEnemy == false && self.TakingCover == false && self.VJ_IsBeingControlled == false && GetConVarNumber("ai_disabled") == 0 then
-		//if self.Alerted == false then
-		if self:GetEnemy() == nil then
-		local MyNearbyTargetssp = ents.FindInSphere(self:GetPos(),5000)
-		if (!MyNearbyTargetssp) then return end
-			for k,v in pairs(MyNearbyTargetssp) do
-			   if self:DoRelationshipCheck(v) == true then
+		if self.DisableTakeDamageFindEnemy == false && self:GetEnemy() == nil && self.TakingCover == false && self.VJ_IsBeingControlled == false /*&& self.Alerted == false*/ && GetConVarNumber("ai_disabled") == 0 then
+			local Targets = ents.FindInSphere(self:GetPos(),self.SightDistance/2)
+			if (!Targets) then return end
+			for k,v in pairs(Targets) do
+				if self:Visible(v) && self:DoRelationshipCheck(v) == true then
 					self:VJ_DoSetEnemy(v,true)
 					self:DoChaseAnimation() else
 					//self:CallForHelpCode(self.CallForHelpDistance)
@@ -2973,7 +2998,6 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 					end
 				end
 			end
-		 end
 		end
 	end
 
@@ -3726,6 +3750,21 @@ function ENT:CallForHelpSoundCode(CustomTbl)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OnKilledEnemySoundCode(CustomTbl)
+	if self.HasSounds == false or self.HasOnKilledEnemySound == false then return end
+		if CurTime() > self.OnKilledEnemySoundT then
+		local randomalertsound = math.random(1,self.OnKilledEnemySoundChance)
+		local soundtbl = self.SoundTbl_OnKilledEnemy
+		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
+		if randomalertsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+			VJ_STOPSOUND(self.CurrentIdleSound)
+			self.NextIdleSoundT = self.NextIdleSoundT + 2
+			self.CurrentOnKilledEnemySound = VJ_CreateSound(self,soundtbl,self.OnKilledEnemySoundLevel,self:VJ_DecideSoundPitch(self.OnKilledEnemySoundPitch1,self.OnKilledEnemySoundPitch2))
+		end
+		self.OnKilledEnemySoundT = CurTime() + math.Rand(self.NextSoundTime_OnKilledEnemy1,self.NextSoundTime_OnKilledEnemy2)
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DamageByPlayerSoundCode(CustomTbl)
 	if self.HasSounds == false or self.HasDamageByPlayerSounds == false then return end
 	if CurTime() > self.NextDamageByPlayerSoundT then
@@ -3996,6 +4035,7 @@ function ENT:StopAllCommonSounds()
 	VJ_STOPSOUND(self.CurrentMedicAfterHealSound)
 	VJ_STOPSOUND(self.CurrentCallForHelpSound)
 	VJ_STOPSOUND(self.CurrentOnReceiveOrderSound)
+	VJ_STOPSOUND(self.CurrentOnKilledEnemySound)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RemoveAttackTimers()
@@ -4077,7 +4117,7 @@ function ENT:ConvarsOnInit()
 	if GetConVarNumber("vj_npc_nofollowplayer") == 1 then self.FollowPlayer = false end
 	if GetConVarNumber("vj_npc_nosnpcchat") == 1 then self.FollowPlayerChat = false end
 	if GetConVarNumber("vj_npc_noweapon") == 1 then self.DisableWeapons = true end
-	if GetConVarNumber("vj_npc_noforeverammo") == 1 then self.Weapon_UnlimitedAmmo = false end
+	//if GetConVarNumber("vj_npc_noforeverammo") == 1 then self.Weapon_UnlimitedAmmo = false end
 	if GetConVarNumber("vj_npc_nothrowgrenade") == 1 then self.HasGrenadeAttack = false end
 	//if GetConVarNumber("vj_npc_nouseregulator") == 1 then self.DisableUSE_SHOT_REGULATOR = true end
 	if GetConVarNumber("vj_npc_noscarednade") == 1 then self.CanDetectGrenades = false end
@@ -4086,6 +4126,7 @@ function ENT:ConvarsOnInit()
 	if GetConVarNumber("vj_npc_nogibdeathparticles") == 1 then self.HasGibDeathParticles = false end
 	if GetConVarNumber("vj_npc_nogib") == 1 then self.AllowedToGib = false self.HasGibOnDeath = false end
 	if GetConVarNumber("vj_npc_usegmoddecals") == 1 then self.BloodDecalUseGMod = true end
+	if GetConVarNumber("vj_npc_knowenemylocation") == 1 then self.FindEnemy_UseSphere = true self.FindEnemy_CanSeeThroughWalls = true end
 	if GetConVarNumber("vj_npc_sd_gibbing") == 1 then self.HasGibOnDeathSounds = false end
 	if GetConVarNumber("vj_npc_sd_soundtrack") == 1 then self.HasSoundTrack = false end
 	if GetConVarNumber("vj_npc_sd_footstep") == 1 then self.HasFootStepSound = false end
