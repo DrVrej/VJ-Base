@@ -1850,7 +1850,7 @@ function ENT:Think()
 
 		--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 			-- Attack Timers --
-			if self.MovementType == VJ_MOVETYPE_AERIAL then print("gtttttttttttt") self:SelectSchedule() end
+			if self.MovementType == VJ_MOVETYPE_AERIAL then self:SelectSchedule() end
 		if self:GetEnemy() != nil then
 			//if self.MovementType == VJ_MOVETYPE_AERIAL then self:SelectSchedule() end//self:AerialMove_ChaseEnemy(true) end
 			
