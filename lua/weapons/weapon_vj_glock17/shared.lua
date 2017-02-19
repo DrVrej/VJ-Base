@@ -11,7 +11,7 @@ SWEP.Category					= "VJ Base"
 if (CLIENT) then
 SWEP.Slot						= 1 -- Which weapon slot you want your SWEP to be in? (1 2 3 4 5 6) 
 SWEP.SlotPos					= 1 -- Which part of that slot do you want the SWEP to be in? (1 2 3 4 5 6)
-SWEP.SwayScale 					= 5 -- Default is 1, The scale of the viewmodel sway
+SWEP.SwayScale 					= 2 -- Default is 1, The scale of the viewmodel sway
 end
 	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.NPC_EnableDontUseRegulate 	= false -- Used for VJ Base SNPCs, if enabled the SNPC will remove use regulate
@@ -21,9 +21,11 @@ SWEP.NPC_CustomSpread	 		= 0.8 -- This is added on top of the custom spread that
 SWEP.ViewModel					= "models/vj_weapons/v_glock.mdl"
 SWEP.WorldModel					= "models/weapons/w_glock.mdl"
 SWEP.HoldType 					= "pistol"
+SWEP.ViewModelFOV				= 70 -- Player FOV for the view model
 SWEP.Spawnable					= true
 SWEP.AdminSpawnable				= false
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.Primary.AllowFireInWater	= true -- If true, you will be able to use primary fire in water
 SWEP.Primary.Damage				= 25 -- Damage
 SWEP.Primary.PlayerDamage		= 15 -- Only applies for players | "Same" = Same as self.Primary.Damage, "Double" = Double the self.Primary.Damage OR put a number to be different from self.Primary.Damage
 SWEP.Primary.Force				= 5 -- Force applied on the object the bullet hits
@@ -37,7 +39,7 @@ SWEP.Primary.Sound				= {"vj_weapons/glock_17/glock17_single.wav"}
 SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
 SWEP.Primary.DistantSound		= {"vj_weapons/glock_17/glock17_single_dist.wav"}
 SWEP.PrimaryEffects_MuzzleAttachment = 1
-SWEP.PrimaryEffects_ShellAttachment = 1
+SWEP.PrimaryEffects_ShellAttachment = "ejectbrass"
 SWEP.PrimaryEffects_ShellType = "VJ_Weapon_PistolShell1"
 	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.DelayOnDeploy 				= 0.4 -- Time until it can shoot again after deploying the weapon
@@ -54,5 +56,5 @@ SWEP.NextIdle_Deploy			= 0.5 -- How much time until it plays the idle animation 
 SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle animation after attacking(Primary)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnFireAnimationEvent(pos,ang,event,options)
-	if event == 32 then return true end 
+	//if event == 32 then return true end 
 end

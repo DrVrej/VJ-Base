@@ -247,7 +247,7 @@ ENT.NextThrowGrenadeTime1 = 10 -- Time until it runs the throw grenade code agai
 ENT.NextThrowGrenadeTime2 = 15 -- Time until it runs the throw grenade code again | The second # in math.random
 ENT.ThrowGrenadeChance = 4 -- Chance that it will throw the grenade | Set to 1 to throw all the time
 ENT.GrenadeAttackThrowDistance = 1000 -- How far it can throw grenades
-ENT.GrenadeAttackThrowDistanceClose = 500 -- How close until it stops throwing grenades
+ENT.GrenadeAttackThrowDistanceClose = 400 -- How close until it stops throwing grenades
 ENT.GrenadeAttackAttachment = "anim_attachment_LH" -- The attachment that the grenade will spawn at
 ENT.DisableGrenadeAttackAnimation = false -- if true, it will disable the animation code when doing grenade attack
 ENT.AnimTbl_GrenadeAttack = {"grenThrow"} -- Grenade Attack Animations
@@ -255,7 +255,7 @@ ENT.GrenadeAttackAnimationDelay = 0 -- It will wait certain amount of time befor
 ENT.GrenadeAttackAnimationStopAttacks = true -- Should it stop attacks for a certain amount of time?
 ENT.GrenadeAttackAnimationStopAttacksTime = 1 -- How long should it stop attacks?
 ENT.GrenadeAttackAnimationFaceEnemy = true -- Should it face the enemy while playing the grenade attack animation?
-ENT.TimeUntilGrenadeIsReleased = 0.8 -- Time until the grenade is released
+ENT.TimeUntilGrenadeIsReleased = 0.72 -- Time until the grenade is released
 ENT.GrenadeAttackFussTime = 3 -- Time until the grenade explodes
 ENT.GrenadeAttackEntity = "obj_vj_grenade" -- The entity that the SNPC throws | Half Life 2 Grenade: "npc_grenade_frag"
 ENT.GrenadeAttackModel = "models/vj_weapons/w_grenade.mdl" -- The model for the grenade entity
@@ -667,7 +667,7 @@ ENT.VJ_AddCertainEntityAsEnemy = {}
 ENT.VJ_AddCertainEntityAsFriendly = {}
 
 ENT.NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
-ENT.NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true}
+ENT.NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true,monster_scientist=true,monster_barney=true}
 ENT.NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack=true}
 ENT.NPCTbl_Zombies = {npc_fastzombie_torso=true,npc_zombine=true,npc_zombie_torso=true,npc_zombie=true,npc_poisonzombie=true,npc_headcrab_fast=true,npc_headcrab_black=true,npc_headcrab=true,npc_fastzombie=true,monster_zombie=true,monster_headcrab=true,monster_babycrab=true}
 ENT.NPCTbl_Antlions = {npc_antlion=true,npc_antlionguard=true,npc_antlion_worker=true}
@@ -1427,7 +1427,7 @@ function ENT:DoMedicCode_HealAlly()
 				self.AlreadyDoneMedicThinkCode = true
 				self:CustomOnMedic_BeforeHeal()
 				self:MedicSoundCode_BeforeHeal()
-				if self.Medic_SpawnPropOnHeal == true then
+				if self.Medic_SpawnPropOnHeal == true && self:LookupAttachment(self.Medic_SpawnPropOnHealAttachment) != 0 then
 					self.Medic_SpawnedProp = ents.Create("prop_physics")
 					self.Medic_SpawnedProp:SetModel(self.Medic_SpawnPropOnHealModel)
 					self.Medic_SpawnedProp:SetLocalPos(self:GetPos())
@@ -2039,6 +2039,7 @@ function ENT:ThrowGrenadeCode(CustomEnt,NoOwner)
 		local phys = grenent:GetPhysicsObject()
 		if (phys:IsValid()) then
 			phys:Wake()
+			phys:AddAngleVelocity(Vector(math.Rand(500,500),math.Rand(500,500),math.Rand(500,500)))
 			phys:SetVelocity(shoot_vector +self:GetUp()*math.random(self.GrenadeAttackVelUp1,self.GrenadeAttackVelUp2) +self:GetForward()*math.Rand(self.GrenadeAttackVelForward1,self.GrenadeAttackVelForward2) +self:GetRight()*math.Rand(self.GrenadeAttackVelRight1,self.GrenadeAttackVelRight2))
 			//phys:SetVelocity((self:GetEnemy():GetPos() - self:LocalToWorld(Vector(0,0,20))) + self:GetUp()*300 + self:GetForward()*5)
 		end
@@ -3252,7 +3253,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 	if self.HasDeathAnimation != true then DoKilled() return end
 	if self.HasDeathAnimation == true then
 		if GetConVarNumber("vj_npc_nodeathanimation") == 1 or GetConVarNumber("ai_disabled") == 1 or ((dmginfo:GetDamageType() == DMG_DISSOLVE) or (IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() == "prop_combine_ball")) then DoKilled() return end
-			if (dmginfo:GetDamageType() != DMG_DISSOLVE) && (IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() != "prop_combine_ball") then
+		if (dmginfo:GetDamageType() != DMG_DISSOLVE) && (IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() != "prop_combine_ball") then
 			local randanim = math.random(1,self.DeathAnimationChance)
 			if randanim != 1 then DoKilled() return end
 			if randanim == 1 then
@@ -3261,6 +3262,8 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 				self.DeathAnimationCodeRan = true
 				timer.Simple(self.DeathAnimationTime,DoKilled)
 			end
+		else
+			DoKilled()
 		end
 	end
 end

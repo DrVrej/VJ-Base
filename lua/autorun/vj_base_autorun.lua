@@ -5,9 +5,9 @@
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Main Autorun file for VJ Base
 --------------------------------------------------*/
-//print("Loading VJ Base...")
+if (CLIENT) then print("Loading VJ Base (Client)...") else print("Loading VJ Base (Server)...") end
 
-VJBASE_VERSION = "2.3.2"
+VJBASE_VERSION = "2.3.3"
 VJBASE_GETNAME = "VJ Base"
 
 -- Shared --
