@@ -183,7 +183,9 @@ function ENT:Think()
 					self.ControlledNPC:DoAddExtraAttackTimers("timer_melee_start_"..self.ControlledNPC:GetClass().."_"..math.random(1,999999),tv,1,"MeleeAttack")
 				end
 			end
-			timer.Simple(self.ControlledNPC.TimeUntilMeleeAttackDamage,function()
+			local dmgtime = self.ControlledNPC.TimeUntilMeleeAttackDamage
+			if self.ControlledNPC.TimeUntilMeleeAttackDamage == false then dmgtime = self.ControlledNPC.NextAnyAttackTime_Melee end
+			timer.Simple(dmgtime,function()
 			if IsValid(self.ControlledNPC) then
 			self.ControlledNPC:MeleeAttackCode()
 			timer.Simple(self.ControlledNPC.NextAnyAttackTime_Melee +0.4,function()
