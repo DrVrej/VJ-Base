@@ -1312,7 +1312,6 @@ function ENT:AerialMove_ChaseEnemy(ShouldPlayAnim)
 	self.Aerial_ShouldBeFlying = false
 
 	if ShouldPlayAnim == true && self:GetSequence() != self.CurrentAnim_AerialMovement /*&& self:GetActivity() == ACT_IDLE*/ && CurTime() > self.Aerial_NextMovementAnimation && (self.NextChaseTime < CurTime()) then
-		print("gegege")
 		local pickedanim = VJ_PICKRANDOMTABLE(self.Aerial_AnimTbl_Alerted)
 		if type(pickedanim) == "number" then pickedanim = self:GetSequenceName(self:SelectWeightedSequence(pickedanim)) end
 		local idleanimid = VJ_GetSequenceName(self,pickedanim)
