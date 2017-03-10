@@ -99,33 +99,37 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function util.VJ_GetWeaponPos(GetClassEntity)
 	if GetClassEntity:GetActiveWeapon() == NULL then return false end
-	local getweapon = GetClassEntity:GetActiveWeapon()
+	local wep = GetClassEntity:GetActiveWeapon()
 	local getmuzzle
-	local numattachments = getweapon:GetAttachments()
-	local numattachments = #getweapon:GetAttachments()
-	if (getweapon:IsValid()) then
+	local numattachments = wep:GetAttachments()
+	local numattachments = #wep:GetAttachments()
+	if (wep:IsValid()) then
 		for i = 1,numattachments do
-			if getweapon:GetAttachments()[i].name == "muzzle" then
+			if wep:GetAttachments()[i].name == "muzzle" then
 				getmuzzle = "muzzle" break
-			elseif getweapon:GetAttachments()[i].name == "muzzleA" then
+			elseif wep:GetAttachments()[i].name == "muzzleA" then
 				getmuzzle = "muzzleA" break
-			elseif getweapon:GetAttachments()[i].name == "muzzle_flash" then
+			elseif wep:GetAttachments()[i].name == "muzzle_flash" then
 				getmuzzle = "muzzle_flash" break
-			elseif getweapon:GetAttachments()[i].name == "muzzle_flash1" then
+			elseif wep:GetAttachments()[i].name == "muzzle_flash1" then
 				getmuzzle = "muzzle_flash1" break
-			elseif getweapon:GetAttachments()[i].name == "muzzle_flash2" then
+			elseif wep:GetAttachments()[i].name == "muzzle_flash2" then
 				getmuzzle = "muzzle_flash2" break
-			elseif getweapon:GetAttachments()[i].name == "ValveBiped.muzzle" then
+			elseif wep:GetAttachments()[i].name == "ValveBiped.muzzle" then
 				getmuzzle = "ValveBiped.muzzle" break
 			else 
 				getmuzzle = false
 			end
 		end
 		if (getmuzzle == false) or getmuzzle == nil then
-			print("WARNING: "..GetClassEntity:GetName().."'s weapon doesn't have a proper attachment!")
-			return GetClassEntity:EyePos()
+			if GetClassEntity:LookupBone("ValveBiped.Bip01_R_Hand") != nil then
+				return GetClassEntity:GetBonePosition(GetClassEntity:LookupBone("ValveBiped.Bip01_R_Hand"))
+			else
+				print("WARNING: "..GetClassEntity:GetName().."'s weapon doesn't have a proper attachment or bone!")
+				return GetClassEntity:EyePos()
+			end
 		end
 		//print("It has a proper attachment.")
-		return getweapon:GetAttachment(getweapon:LookupAttachment(getmuzzle)).Pos //+ GetClassEntity:GetUp()*-45
+		return wep:GetAttachment(wep:LookupAttachment(getmuzzle)).Pos //+ GetClassEntity:GetUp()*-45
 	end
 end
