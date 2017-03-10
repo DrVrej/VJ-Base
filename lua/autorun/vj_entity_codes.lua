@@ -271,7 +271,6 @@ function NPC_MetaTable:VJ_PlaySequence(SequenceID,PlayBackRate,Wait,WaitTime,Int
 			self:ResetSequenceInfo()
 			self:SetCycle(0)
 			if PlayBackRate then self:SetPlaybackRate(PlayBackRate) end
-			print(SequenceID)
 			if Wait == true then
 				timer.Simple(WaitTime,function() //self:SequenceDuration(animid)
 					if IsValid(self) then

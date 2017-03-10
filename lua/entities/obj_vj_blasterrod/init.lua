@@ -6,13 +6,16 @@ include("shared.lua")
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
 ENT.Model = {"models/weapons/w_missile_launch.mdl"} -- The models it should spawn with | Picks a random one from the table
-ENT.DoesRadiusDamage = true -- Should it do a blast damage when it hits something?
-ENT.RadiusDamageRadius = 29 -- How far the damage go? The farther away it's from its enemy, the less damage it will do | Counted in world units
+/*ENT.DoesRadiusDamage = true -- Should it do a blast damage when it hits something?
+ENT.RadiusDamageRadius = 10 -- How far the damage go? The farther away it's from its enemy, the less damage it will do | Counted in world units
 ENT.RadiusDamage = 10 -- How much damage should it deal? Remember this is a radius damage, therefore it will do less damage the farther away the entity is from its enemy
 ENT.RadiusDamageUseRealisticRadius = true -- Should the damage decrease the farther away the enemy is from the position that the projectile hit?
 ENT.RadiusDamageType = DMG_SHOCK -- Damage type
 ENT.RadiusDamageForce = 50 -- Put the force amount it should apply | false = Don't apply any force
-ENT.RadiusDamageForceTowardsPhysics = 1000 -- How much force should it deal to props?
+ENT.RadiusDamageForceTowardsPhysics = 1000 -- How much force should it deal to props?*/
+ENT.DoesDirectDamage = true -- Should it do a direct damage when it hits something?
+ENT.DirectDamage = 10 -- How much damage should it do when it hits something
+ENT.DirectDamageType = DMG_SHOCK -- Damage type
 ENT.DecalTbl_DeathDecals = {"fadingscorch"}
 ENT.SoundTbl_OnCollide = {"ambient/energy/spark4.wav"}
 ---------------------------------------------------------------------------------------------------------------------------------------------

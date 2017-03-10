@@ -101,6 +101,7 @@ ENT.OnPlayerSightNextTime2 = 20 -- How much time should it pass until it runs th
 	-- Death ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasDeathRagdoll = true -- If set to false, it will not spawn the regular ragdoll of the SNPC
 ENT.DeathCorpseEntityClass = "UseDefaultBehavior" -- The entity class it creates | "UseDefaultBehavior" = Let the base automatically detect the type
+ENT.DeathCorpseModel = {} -- The corpse model that it will spawn when it dies | Leave empty to use the NPC's model | Put as many models as desired, the base will pick a random one.
 ENT.CorpseAlwaysCollide = false -- Should the corpse always collide?
 ENT.HasDeathBodyGroup = true -- Set to true if you want to put a bodygroup when it dies
 ENT.CustomBodyGroup = false -- Set true if you want to set custom bodygroup
@@ -322,6 +323,7 @@ ENT.VJ_TheController = NULL
 ENT.VJ_TheControllerEntity = NULL
 ENT.LastPlayedVJSound = nil
 ENT.LatestTaskName = nil
+ENT.LatestDmgInfo = nil
 ENT.TestT = 0
 ENT.NextFollowPlayerT = 0
 ENT.AngerLevelTowardsPlayer = 0
@@ -348,6 +350,8 @@ ENT.NextCanGetCombineBallDamageT = 0
 ENT.UseTheSameGeneralSoundPitch_PickedNumber = 0
 ENT.SelectedDifficulty = 1
 	-- Tables ---------------------------------------------------------------------------------------------------------------------------------------------
+ENT.DefaultGibDamageTypes = {DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SHOCK,DMG_SONIC} 
+
 ENT.NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
 ENT.NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true,monster_scientist=true,monster_barney=true}
 ENT.NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack=true}
@@ -463,6 +467,7 @@ function ENT:Initialize()
 	self.CurrentChoosenBlood_Particle = {}
 	self.CurrentChoosenBlood_Decal = {}
 	self.CurrentChoosenBlood_Pool = {}
+	self.ExtraCorpsesToRemove_Transition = {}
 	if self.BloodColor == "" then -- Backwards Compatibility!
 		if VJ_PICKRANDOMTABLE(self.BloodDecal) == "Blood" then
 			self.BloodColor = "Red"
@@ -1117,6 +1122,7 @@ function ENT:OnTakeDamage(dmginfo,hitgroup)
 
 	self:CustomOnTakeDamage_BeforeDamage(dmginfo,hitgroup)
 	if dmginfo:GetDamage() <= 0 then return false end
+	self.LatestDmgInfo = dmginfo
 	self:SetHealth(self:Health() -dmginfo:GetDamage())
 	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printondamage") == 1 then print(self:GetClass().." Got Damaged! | Amount = "..dmginfo:GetDamage()) end end
 	self:CustomOnTakeDamage_AfterDamage(dmginfo,hitgroup)
@@ -1431,7 +1437,7 @@ function ENT:RunGibOnDeathCode(dmginfo,hitgroup,Tbl_Features)
 	local dmgtbl = vTbl_Features.CustomDmgTbl or self.GibOnDeathDamagesTable
 	local dmgtblempty = false
 	local usedefault = false
-	local defualtdmgs = {DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SHOCK,DMG_SONIC}
+	local defualtdmgs = self.DefaultGibDamageTypes
 	if table.HasValue(dmgtbl,"UseDefault") then usedefault = true end
 	if usedefault == false && (table.Count(dmgtbl) <= 0 or table.HasValue(dmgtbl,"All")) then dmgtblempty = true end
 	if (dmgtblempty == true) or (usedefault == true && table.HasValue(defualtdmgs,DamageType)) or (usedefault == false && table.HasValue(dmgtbl,DamageType)) then
@@ -1473,9 +1479,16 @@ function ENT:CreateGibEntity(Ent,Models,Tbl_Features,CustomCode)
 	vTbl_Features = Tbl_Features or {}
 	vTbl_Position = vTbl_Features.Pos or self:GetPos() +self:OBBCenter()
 	vTbl_Angle = vTbl_Features.Ang or Angle(math.Rand(-180,180),math.Rand(-180,180),math.Rand(-180,180)) //self:GetAngles()
-	vTbl_Velocity = vTbl_Features.Vel or Vector(math.Rand(-200,200),math.Rand(-200,200),math.Rand(150,250)) -- Used to set the velocity
+	-- VVV Used to set the velocity | "UseDamageForce" = To use the damage's force VVV
+	if vTbl_Features.Vel == "UseDamageForce" && self.LatestDmgInfo != nil then
+		vTbl_Velocity = self.LatestDmgInfo:GetDamageForce()/37
+	else
+		vTbl_Velocity = vTbl_Features.Vel or Vector(math.Rand(-200,200),math.Rand(-200,200),math.Rand(150,250))
+	end
 	vTbl_AngleVelocity = vTbl_Features.AngVel or Vector(math.Rand(-200,200),math.Rand(-200,200),math.Rand(-200,200)) -- Angle velocity, how fast it rotates as it's flying
 	vTbl_BloodType = vTbl_Features.BloodType or vTbl_BloodType -- Certain entities such as the VJ Gib entity, you can use this to set its gib type
+	vTbl_NoFade = vTbl_Features.NoFade or false -- Should it fade away and delete?
+	vTbl_RemoveOnCorpseDelete = vTbl_Features.RemoveOnCorpseDelete or false -- Should the entity get removed if the corpse is removed?
 	local gib = ents.Create(Ent)
 	gib:SetModel(Models)
 	gib:SetPos(vTbl_Position)
@@ -1483,13 +1496,18 @@ function ENT:CreateGibEntity(Ent,Models,Tbl_Features,CustomCode)
 	if gib:GetClass() == "obj_vj_gib" then gib.BloodType = vTbl_BloodType end
 	gib:Spawn()
 	gib:Activate()
+	gib.IsVJBase_Gib = true
+	gib.RemoveOnCorpseDelete = vTbl_RemoveOnCorpseDelete
 	if GetConVarNumber("vj_npc_gibcollidable") == 0 then gib:SetCollisionGroup(1) end
 	gib:GetPhysicsObject():AddVelocity(vTbl_Velocity)
 	gib:GetPhysicsObject():AddAngleVelocity(vTbl_AngleVelocity)
 	cleanup.ReplaceEntity(gib)
-	if GetConVarNumber("vj_npc_fadegibs") == 1 then
+	if GetConVarNumber("vj_npc_fadegibs") == 1 && vTbl_NoFade == false then
 		if gib:GetClass() == "prop_ragdoll" then gib:Fire("FadeAndRemove","",GetConVarNumber("vj_npc_fadegibstime")) end
 		if gib:GetClass() == "prop_physics" then gib:Fire("kill","",GetConVarNumber("vj_npc_fadegibstime")) end
+	end
+	if vTbl_RemoveOnCorpseDelete == true then//self.Corpse:DeleteOnRemove(extraent)
+		table.insert(self.ExtraCorpsesToRemove_Transition,gib)
 	end
 	if (CustomCode) then CustomCode(gib) end
 end
@@ -1525,7 +1543,10 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		if self.DeathCorpseEntityClass != "UseDefaultBehavior" then corpsetype = self.DeathCorpseEntityClass end
 		//if self.VJCorpseDeleted == true then
 		self.Corpse = ents.Create(corpsetype) //end
-		self.Corpse:SetModel(self:GetModel())
+		local corpsemodel = self:GetModel()
+		local corpsemodel_custom = VJ_PICKRANDOMTABLE(self.DeathCorpseModel)
+		if corpsemodel_custom != false then corpsemodel = corpsemodel_custom end
+		self.Corpse:SetModel(corpsemodel)
 		self.Corpse:SetPos(self:GetPos())
 		self.Corpse:SetAngles(self:GetAngles())
 		self.Corpse:Spawn()
@@ -1545,7 +1566,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		self.Corpse.FadeCorpseType = fadetype
 		self.Corpse.IsVJBaseCorpse = true
 		self.Corpse.DamageInfo = dmginfo
-		self.Corpse.ExtraCorpsesToRemove = {}
+		self.Corpse.ExtraCorpsesToRemove = self.ExtraCorpsesToRemove_Transition
 		
 		if self.Bleeds == true && self.HasBloodPool == true && GetConVarNumber("vj_npc_nobloodpool") == 0 then
 			self:SpawnBloodPool(dmginfo,hitgroup)
@@ -1612,6 +1633,12 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 			end
 		end,self.Corpse.ExtraCorpsesToRemove)
 		return self.Corpse
+	else
+		for k,v in ipairs(self.ExtraCorpsesToRemove_Transition) do
+			if v.IsVJBase_Gib == true && v.RemoveOnCorpseDelete == true then
+				v:Remove()
+			end
+		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

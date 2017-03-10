@@ -315,7 +315,8 @@ function SWEP:NPCAbleToShoot()
 				if ammo == "NoAmmo" then
 					if self.Owner.VJ_IsBeingControlled == true then self.Owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER,"Press R to reload!") end
 					if CurTime() > self.NextNPCDrySoundT then
-						self.Weapon:EmitSound(VJ_PICKRANDOMTABLE(self.DryFireSound),80,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2))
+						local sdtbl = VJ_PICKRANDOMTABLE(self.DryFireSound)
+						if sdtbl != false then self.Weapon:EmitSound(sdtbl,80,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) end
 						self.NextNPCDrySoundT = CurTime() + self.NPC_NextPrimaryFire
 					end
 					return false
