@@ -64,7 +64,6 @@ end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_AfterShoot()
 	//if self.Owner:IsNPC() && (self.Owner.IsVJBaseSNPC) && self.FirstTimeShotShotgun == true /*&& self.Owner:GetActivity() != ACT_RANGE_ATTACK1*/ then
-	//print("nigerian")
 	//self.FirstTimeShotShotgun = true
 	//self.Owner:VJ_ACT_PLAYACTIVITY(ACT_RANGE_ATTACK_SHOTGUN,false,0,true)
 	//end

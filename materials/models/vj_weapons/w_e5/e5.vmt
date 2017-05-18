@@ -1,0 +1,14 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models\vj_weapons\w_e5\e5"
+	"$bumpmap" "models\vj_weapons\w_e5\e5_n"
+	"$halflambert" "1"
+	"$translucent" 1
+	"$alphatest" 1
+	
+	"$phong" "1"
+	"$phongexponenttexture" "models\vj_weapons\w_e5\e5_s"
+	"$phongexponent" "0"
+	"$phongboost"	".2"
+	"$phongfresnelranges"	"[0.25 0.5 1]"
+}

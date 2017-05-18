@@ -35,7 +35,7 @@ ENT.GodMode = false -- Immune to everything
 	-- ====== Blood-Related Variables ====== --
 ENT.Bleeds = true -- Does the SNPC bleed? (Blood decal, particle, etc.)
 ENT.BloodColor = "" -- The blood type, this will determine what it should use (decal, particle, etc.)
-	-- Types: "Red" || "Yellow" || "Green" || "Orange" || "Blue" || "Purple" || "Oil"
+	-- Types: "Red" || "Yellow" || "Green" || "Orange" || "Blue" || "Purple" || "White" || "Oil"
 -- Use the following variables to customize the blood the way you want it:
 ENT.HasBloodParticle = true -- Does it spawn a particle when damaged?
 ENT.HasBloodDecal = true -- Does it spawn a decal when damaged?
@@ -89,7 +89,7 @@ ENT.HitGroupFlinching_Values = {/* EXAMPLES: {HitGroup = {1}, IsSchedule = true,
 	-- Relationships ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasAllies = true -- Put to false if you want it not to have any allies
 ENT.VJ_NPC_Class = {} -- NPCs with the same class with be allied to each other
-	-- Common Classes: Combine = CLASS_COMBINE || Zombie = CLASS_ZOMBIE || Antlions = CLASS_ANTLION || Xen = CLASS_XEN
+	-- Common Classes: Combine = CLASS_COMBINE || Zombie = CLASS_ZOMBIE || Antlions = CLASS_ANTLION || Xen = CLASS_XEN || Player Friendly = CLASS_PLAYER_ALLY
 ENT.VJ_FriendlyNPCsSingle = {}
 ENT.VJ_FriendlyNPCsGroup = {}
 ENT.PlayerFriendly = false -- Makes the SNPC friendly to the player and HL2 Resistance
@@ -273,7 +273,7 @@ ENT.LeapAttackDamageType = DMG_SLASH -- Type of Damage
 ENT.DisableLeapAttackAnimation = false -- if true, it will disable the animation code
 	-- Miscellaneous ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.FindEnemy_UseSphere = false -- Should the SNPC be able to see all around him? (360) | Objects and walls can still block its sight!
-ENT.FindEnemy_CanSeeThroughWalls = false -- Should it be able to see through walls and objects? | Can be useful if you want to make it 
+ENT.FindEnemy_CanSeeThroughWalls = false -- Should it be able to see through walls and objects? | Can be useful if you want to make it know where the enemy is at all times
 ENT.DisableTakeDamageFindEnemy = false -- Disable the SNPC finding the enemy when being damaged
 ENT.DisableTouchFindEnemy = false -- Disable the SNPC finding the enemy when being touched
 ENT.LastSeenEnemyTimeUntilReset = 15 -- Time until it resets its enemy if its current enemy is not visible
@@ -606,6 +606,8 @@ ENT.AlreadyDone_RunSelectSchedule_FollowPlayer = false
 ENT.AlreadyDoneRangeAttackFirstProjectile = false
 ENT.AlreadyDoneFirstLeapAttack = false
 ENT.VJ_IsBeingControlled_Tool = false
+ENT.LastHiddenZone_CanWander = true
+ENT.DoneLastHiddenZone_CanWander = false
 ENT.FollowingPlayerName = NULL
 ENT.MyEnemy = NULL
 ENT.VJ_TheController = NULL
@@ -654,6 +656,7 @@ ENT.CurrentAnim_CustomIdle = 0
 ENT.NextCanGetCombineBallDamageT = 0
 ENT.UseTheSameGeneralSoundPitch_PickedNumber = 0
 ENT.OnKilledEnemySoundT = 0
+ENT.LastHiddenZoneT = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.SelectedDifficulty = 1
 	-- Tables ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1067,9 +1070,13 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 		if IsGesture == true then
 			local gesttest = false
 			if IsSequence == false then gesttest = self:AddGesture(vACT_Name) end
-			if IsSequence == true then gesttest = self:AddGestureSequence(vACT_Name) end
+			if IsSequence == true then gesttest = self:AddGestureSequence(self:LookupSequence(vACT_Name)) end
 			if gesttest != false then
-				self:SetLayerPriority(gesttest,2)
+				//self:ClearSchedule()
+				//self:SetLayerBlendIn(1,0)
+				//self:SetLayerBlendOut(1,0)
+				self:SetLayerPriority(gesttest,1) // 2
+				//self:SetLayerWeight(gesttest,1)
 				self:SetLayerPlaybackRate(gesttest,vTbl_PlayBackRate)
 				//self:SetLayerDuration(gesttest,3)
 				//print(self:GetLayerDuration(gesttest))
@@ -1111,7 +1118,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_FACE_X(FaceType,CustomCode)
 	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
-	if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false then return end
+	if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false) or (self.IsVJBaseSNPC_Tank == true) then return end
 	FaceType = FaceType or "TASK_FACE_TARGET"
 	local vschedFaceX = ai_vj_schedule.New("vj_face_x")
 	vschedFaceX:EngTask(FaceType, 0)
@@ -1174,6 +1181,7 @@ function ENT:VJ_TASK_COVER_FROM_ENEMY(MoveType,CustomCode)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_IDLE_WANDER()
+	if self.MovementType == VJ_MOVETYPE_AERIAL then self:AerialMove_Wander() return end
 	local vschedWander = ai_vj_schedule.New("vj_idle_wander")
 	//self:SetLastPosition(self:GetPos() + self:GetForward() * 300)
 	//vschedWander:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 0)
@@ -1229,6 +1237,7 @@ function ENT:VJ_TASK_IDLE_STAND(waittime)
 		//end
 		-----------------
 	//end
+	if self.MovementType == VJ_MOVETYPE_AERIAL then self:AerialMove_Stop() return end
 	local vschedIdleStand = ai_vj_schedule.New("vj_idle_stand")
 	//vschedIdleStand:EngTask("TASK_FACE_REASONABLE")
 	vschedIdleStand:EngTask("TASK_STOP_MOVING")
@@ -1255,11 +1264,12 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 	if self.IsVJBaseSNPC_Tank == true then return end
-	if /*self.VJ_PlayingSequence == true or*/ self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextIdleTime > CurTime()) then return end
+	if /*self.VJ_PlayingSequence == true or*/ self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextIdleTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
 	-- 0 = Random | 1 = Wander | 2 = Idle Stand /\ OverrideWander = Wander no matter what
 	RestrictNumber = RestrictNumber or 0
 	OverrideWander = OverrideWander or false
 	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_TASK_IDLE_STAND(math.Rand(6,12)) return end
+	if self.LastHiddenZone_CanWander == false then self:VJ_TASK_IDLE_STAND(math.Rand(6,12)) return end
 	if OverrideWander == false && self.DisableWandering == true && (RestrictNumber == 1 or RestrictNumber == 0) then self:VJ_TASK_IDLE_STAND(math.Rand(6,12)) return end
 	if RestrictNumber == 0 then
 		if math.random(1,3) == 1 then
@@ -1297,8 +1307,9 @@ end
 -- !!!!!!! WIP - AERIAL BASE !!!!!!! --
 
 // MOVETYPE_FLY | MOVETYPE_FLYGRAVITY
-ENT.Aerial_FlyingSpeed_Calm = 50 -- The speed it should fly with, when it's wandering, moving slowly, etc. | Basically walking campared to ground SNPCs
+ENT.Aerial_FlyingSpeed_Calm = 80 -- The speed it should fly with, when it's wandering, moving slowly, etc. | Basically walking campared to ground SNPCs
 ENT.Aerial_FlyingSpeed_Alerted = 200 -- The speed it should fly with, when it's chasing an enemy, moving away quickly, etc. | Basically running campared to ground SNPCs
+ENT.Aerial_AnimTbl_Calm = {"mortar_forward"} -- Animations it plays when it's wandering around while idle
 ENT.Aerial_AnimTbl_Alerted = {"mortar_forward"} -- Animations it plays when it's moving while alerted
 ENT.Aerial_EnableDebug = false -- Used for testing
 
@@ -1306,6 +1317,24 @@ ENT.CurrentAnim_AerialMovement = nil
 ENT.Aerial_NextMovementAnimation = 0
 ENT.Aerial_CurrentMovementAnimation = 0
 ENT.Aerial_ShouldBeFlying = false
+
+ENT.Aerial_TargetPos = Vector(0,0,0)
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:AerialMove_Wander(ShouldPlayAnim)
+	print("Running Aerial Wander")
+
+	local tr_startpos = self:GetPos()+self:OBBCenter()
+	local tr = util.TraceLine({start = tr_startpos, endpos = tr_startpos+self:GetForward()*math.random(-300,300)+self:GetRight()*math.random(-300,300)+self:GetUp()*math.random(-300,300), filter = self})
+	self.Aerial_TargetPos = tr.HitPos
+	util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,tr.HitPos,false,self:EntIndex(),0)
+	self:SetAngles(Angle(0,(tr.HitPos-tr.StartPos):Angle().y,0))
+	
+	-- Set the velocity
+	local myvel = self:GetVelocity()
+	local vel_set = (tr.HitPos-self:GetPos()):GetNormal()*self.Aerial_FlyingSpeed_Calm
+	self:SetLocalVelocity(vel_set)
+	if Debug == true then ParticleEffect("vj_impact1_centaurspit", tr.HitPos, Angle(0,0,0), self) end
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AerialMove_ChaseEnemy(ShouldPlayAnim)
 	if self.Dead == true or (self.NextChaseTime > CurTime()) or self:GetEnemy() == nil then return end
@@ -1345,7 +1374,7 @@ function ENT:AerialMove_ChaseEnemy(ShouldPlayAnim)
 	local selftohitpos_dist = startpos:Distance(selftohitpos)
 	if Debug == true then util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,tr.HitPos,false,self:EntIndex(),0) end //vortigaunt_beam
 	if selftohitpos_dist <= 16 && tr.HitWorld == true then
-		if Debug == true then print("Aerial: Forward Blocked!") end
+		if Debug == true then print("Aerial: Forward Blocked! [CHASE]") end
 		vel_for = 1
 		//vel_for = -200
 		//vel_stop = true
@@ -1367,22 +1396,22 @@ function ENT:AerialMove_ChaseEnemy(ShouldPlayAnim)
 	//print(math.abs(z_self)," OKK ",z_self)
 	if z_ene >= z_self then
 		if math.abs(z_ene - z_self) >= 10 then
-			if Debug == true then print("Aerial: UP") end
+			if Debug == true then print("Aerial: UP [CHASE]") end
 			getenemyz = "Up"
 			//vel_up = 100
 		end
 	elseif z_ene <= z_self then
 		if math.abs(z_self - z_ene) >= 10 then
-			if Debug == true then print("Aerial: DOWN") end
+			if Debug == true then print("Aerial: DOWN [CHASE]") end
 			getenemyz = "Down"
 			//vel_up = -100
 		end
 	end
 	if getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
-		if Debug == true then print("Aerial: GOING UP") end
+		if Debug == true then print("Aerial: GOING UP [CHASE]") end
 		vel_up = self.Aerial_FlyingSpeed_Alerted //100
 	elseif getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
-		if Debug == true then print("Aerial: GOING DOWN") end
+		if Debug == true then print("Aerial: GOING DOWN [CHASE]") end
 		vel_up = -self.Aerial_FlyingSpeed_Alerted //-100
 	end
 	/*if tr_up_startpos:Distance(tr_up.HitPos) <= 100 && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
@@ -1495,8 +1524,8 @@ end
 function ENT:DoMedicCode_FindAllies()
 	-- for k,v in ipairs(player.GetAll()) do v.AlreadyBeingHealedByMedic = false end
 	if self.IsMedicSNPC == false or self.Medic_IsHealingAlly == true or CurTime() < self.Medic_NextHealT then return false end
-	local findnigas = ents.FindInSphere(self:GetPos(),self.Medic_CheckDistance)
-	for k,v in ipairs(findnigas) do
+	local findallies = ents.FindInSphere(self:GetPos(),self.Medic_CheckDistance)
+	for k,v in ipairs(findallies) do
 		if !v:IsNPC() && !v:IsPlayer() then continue end
 		if v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic == false && (!v.IsVJBaseSNPC_Tank) && v:Health() <= v:GetMaxHealth() * 0.75 && ((v.IsVJBaseSNPC == true && self:GetEnemy() == nil && v:GetEnemy() == nil) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0)) then
 			if self:DoRelationshipCheck(v) == false then
@@ -1601,8 +1630,14 @@ function ENT:DoConstantlyFaceEnemyCode()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
+	if self.Aerial_TargetPos.x == self:GetPos().x then
+		
+	end
+	//print(self:GetPos())
+	//print("-------------------------------")
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
 	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
+	
 	local CurSched = self.CurrentSchedule
 	if CurSched != nil && CurSched.StopScheduleIfNotMoving == true && (!self:IsMoving() or (self:GetBlockingEntity() != nil && self:GetBlockingEntity():IsNPC())) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
 		self:ScheduleFinished(CurSched)
@@ -1788,8 +1823,14 @@ function ENT:Think()
 			self.LatestEnemyClass = self:GetEnemy()
 			self.TimeSinceLastSeenEnemy = 0
 			self.TimeSinceSeenEnemy = self.TimeSinceSeenEnemy + 0.1
-			if self:GetEnemy():Visible(self) && (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.SightDistance) then
-				self.LastSeenEnemyTime = 0 else
+			if (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.SightDistance) then
+				seentr = util.TraceLine({start = self:NearestPoint(self:GetPos() +self:OBBCenter()),endpos = self:GetEnemy():EyePos(),filter = function(ent) if (ent:GetClass() == self:GetClass() or self:Disposition(ent) == D_LI) then return false end end})
+				if (self:GetEnemy():Visible(self) or (IsValid(seentr.Entity) && seentr.Entity:GetClass() == self:GetEnemy())) then
+					self.LastSeenEnemyTime = 0
+				else
+					self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1
+				end
+			else
 				self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1
 			end
 			
@@ -1853,7 +1894,7 @@ function ENT:Think()
 
 		--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 			-- Attack Timers --
-			if self.MovementType == VJ_MOVETYPE_AERIAL then self:SelectSchedule() end
+		if self.MovementType == VJ_MOVETYPE_AERIAL then self:SelectSchedule() end
 		if self:GetEnemy() != nil then
 			//if self.MovementType == VJ_MOVETYPE_AERIAL then self:SelectSchedule() end//self:AerialMove_ChaseEnemy(true) end
 			
@@ -2059,14 +2100,14 @@ function ENT:DoAddExtraAttackTimers(vName,vTime,vReps,vFunction)
 	vTime = vTime or 0.5
 	vReps = vReps or 1
 	vFunction = vFunction or print("VJ Base: No Attack Timer Function! "..self:GetName())
-	local function NigTest()
+	local function DoAttack()
 		if vFunction == "MeleeAttack" then self:MeleeAttackCode() end
 		if vFunction == "RangeAttack" then self:RangeAttackCode() end
 		if vFunction == "LeapAttack" then self:LeapDamageCode() end
 	end
 
 	table.insert(self.AttackTimers,vName)
-	timer.Create(vName..self.Entity:EntIndex(), vTime, vReps, function() NigTest() end)
+	timer.Create(vName..self.Entity:EntIndex(), vTime, vReps, function() DoAttack() end)
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CanDoCertainAttack(AttackName)
@@ -2107,14 +2148,14 @@ function ENT:DoPropVisibiltyCheckForPushAttackProps(CheckEnt)
 		filter = self
 	})
 	//print(tr.Entity)
-	/*local nig = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
-	nig:SetModel("models/hunter/blocks/cube025x025x025.mdl")
-	nig:SetPos(tr.HitPos)
-	nig:SetAngles(self:GetAngles())
-	nig:SetColor(Color(255,0,0))
-	nig:Spawn()
-	nig:Activate()
-	timer.Simple(2,function() nig:Remove() end)*/
+	/*local test = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
+	test:SetModel("models/hunter/blocks/cube025x025x025.mdl")
+	test:SetPos(tr.HitPos)
+	test:SetAngles(self:GetAngles())
+	test:SetColor(Color(255,0,0))
+	test:Spawn()
+	test:Activate()
+	timer.Simple(2,function() test:Remove() end)*/
 
 	if tr.Entity == NULL or tr.HitWorld == true or tr.HitSky == true then
 	return false else return true end
@@ -2207,9 +2248,9 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 								if self.PushProps == true then
 									local phys = v:GetPhysicsObject()
 									if MyEnemy != nil then
-										local niger = phys:GetMass() * 700
-										local nigerup = phys:GetMass() * 200
-										phys:ApplyForceCenter(MyEnemy:GetPos()+self:GetForward() *niger +self:GetUp()*nigerup)
+										local posfor = phys:GetMass() * 700
+										local posup = phys:GetMass() * 200
+										phys:ApplyForceCenter(MyEnemy:GetPos()+self:GetForward() *posfor +self:GetUp()*posup)
 										//phys:ApplyForceCenter(MyEnemy:GetPos()+self:GetForward() *25000 +self:GetUp()*7000)
 										/*if v:GetModel() == "models/props_c17/oildrum001.mdl" then
 										phys:ApplyForceCenter(MyEnemy:GetPos()+self:GetForward() *25000 +self:GetUp()*7000) end
@@ -2604,13 +2645,17 @@ end
 function ENT:VJ_ACT_RESETENEMY(RunToEnemyOnReset)
 	local RunToEnemyOnReset = RunToEnemyOnReset or false
 	local vsched = ai_vj_schedule.New("vj_act_resetenemy")
-	if self:GetEnemy() != nil then
-	vsched:EngTask("TASK_FORGET", self:GetEnemy()) end
+	if self:GetEnemy() != nil then vsched:EngTask("TASK_FORGET", self:GetEnemy()) end
 	vsched:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
-	if RunToEnemyOnReset == true then
+	if RunToEnemyOnReset == true && CurTime() > self.LastHiddenZoneT && self.LastHiddenZone_CanWander == true then
+		//ParticleEffect("explosion_turret_break", self.LatestEnemyPosition, Angle(0,0,0))
 		vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-		vsched:EngTask("TASK_RUN_PATH", 0)
+		vsched:EngTask("TASK_WALK_PATH", 0)
 		vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+		vsched.CanShootWhenMoving = true
+		vsched.ConstantlyFaceEnemy = true
+		vsched.CanBeInterrupted = true
+		//self.NextIdleTime = CurTime() + 10
 	end
 	self:StartSchedule(vsched)
 end
@@ -2764,6 +2809,7 @@ function ENT:DoEntityRelationshipCheck()
 		if vClass != self:GetClass() && (v:IsNPC() or v:IsPlayer()) && (!v.IsVJBaseSNPC_Animal) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
 			if self.HasAllies == true then
 				for _,friclass in ipairs(self.VJ_NPC_Class) do
+					if friclass == "CLASS_PLAYER_ALLY" && self.PlayerFriendly == false then self.PlayerFriendly = true end
 					if friclass == "CLASS_COMBINE" then if self:CombineFriendlyCode(v) == true then entisfri = true end end
 					if friclass == "CLASS_ZOMBIE" then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
 					if friclass == "CLASS_ANTLION" then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
@@ -3264,9 +3310,13 @@ function ENT:DoChangeBloodColor(Type)
 		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_purple"} end
 		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Purple"} end
 		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
+	elseif Type == "White" then
+		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_white"} end
+		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_White"} end
+		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
 	elseif Type == "Oil" then
 		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_black"} end
-		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Black"} end
+		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Oil"} end
 		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
 	end
 end

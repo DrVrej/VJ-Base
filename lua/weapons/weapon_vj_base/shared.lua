@@ -551,29 +551,22 @@ function SWEP:Think()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Reload()
-if not IsValid(self) then return end
-if not IsValid(self.Owner) then return end
-if !self.Owner:Alive() then return end
-if not self.Owner:IsPlayer() then return end
-if self.Owner:GetAmmoCount(self.Primary.Ammo) == 0 then return end
-if !self.Owner:KeyDown(IN_RELOAD) then return end
-if self.Reloading == true then return end
+if !IsValid(self) or !IsValid(self.Owner) or !self.Owner:Alive() or !self.Owner:IsPlayer() or self.Owner:GetAmmoCount(self.Primary.Ammo) == 0 or !self.Owner:KeyDown(IN_RELOAD) or self.Reloading == true then return end
 	local smallerthanthis = self.Primary.ClipSize - 1
 	if self:Clip1() <= smallerthanthis then
-	local setcorrectnum = self.Primary.ClipSize - self:Clip1()
-	local test = setcorrectnum + self:Clip1()
-	self.Reloading = true
-	self:CustomOnReload()
-	if self.HasReloadSound == true then
-	self.Weapon:EmitSound(VJ_PICKRANDOMTABLE(self.ReloadSound),50,math.random(90,100)) end
-	if self.Owner:IsPlayer() then
-	self.Weapon:SendWeaponAnim(VJ_PICKRANDOMTABLE(self.AnimTbl_Reload)) //self.Weapon:SendWeaponAnim(VJ_PICKRANDOMTABLE(self.AnimTbl_Reload))
-	self.Owner:SetAnimation(PLAYER_RELOAD)
-	timer.Simple(self.Reload_TimeUntilAmmoIsSet,function() if self:IsValid() then self.Owner:RemoveAmmo(setcorrectnum,self.Primary.Ammo) self.Weapon:SetClip1(test) end end)
-	timer.Simple(self.Reload_TimeUntilFinished,function() if self:IsValid() then self.Reloading = false self:DoIdleAnimation() end end)
+		local setcorrectnum = self.Primary.ClipSize - self:Clip1()
+		local test = setcorrectnum + self:Clip1()
+		self.Reloading = true
+		self:CustomOnReload()
+		if self.HasReloadSound == true then self.Weapon:EmitSound(VJ_PICKRANDOMTABLE(self.ReloadSound),50,math.random(90,100)) end
+		if self.Owner:IsPlayer() then
+			self.Weapon:SendWeaponAnim(VJ_PICKRANDOMTABLE(self.AnimTbl_Reload)) //self.Weapon:SendWeaponAnim(VJ_PICKRANDOMTABLE(self.AnimTbl_Reload))
+			self.Owner:SetAnimation(PLAYER_RELOAD)
+			timer.Simple(self.Reload_TimeUntilAmmoIsSet,function() if self:IsValid() then self.Owner:RemoveAmmo(setcorrectnum,self.Primary.Ammo) self.Weapon:SetClip1(test) end end)
+			timer.Simple(self.Reload_TimeUntilFinished,function() if self:IsValid() then self.Reloading = false self:DoIdleAnimation() end end)
+		end
+		return true
 	end
-  return true
- end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Deploy()

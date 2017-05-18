@@ -19,9 +19,8 @@ game.AddDecal("VJ_Blood_Green",{"vj_base/decals/blood/vj_greenblood1","vj_base/d
 game.AddDecal("VJ_Blood_Orange",{"vj_base/decals/blood/vj_orangeblood1","vj_base/decals/blood/vj_orangeblood2","vj_base/decals/blood/vj_orangeblood3","vj_base/decals/blood/vj_orangeblood4","vj_base/decals/blood/vj_orangeblood5","vj_base/decals/blood/vj_orangeblood6"})
 game.AddDecal("VJ_Blood_Blue",{"vj_base/decals/blood/vj_blueblood1","vj_base/decals/blood/vj_blueblood2","vj_base/decals/blood/vj_blueblood3","vj_base/decals/blood/vj_blueblood4","vj_base/decals/blood/vj_blueblood5","vj_base/decals/blood/vj_blueblood6"})
 game.AddDecal("VJ_Blood_Purple",{"vj_base/decals/blood/vj_purpleblood1","vj_base/decals/blood/vj_purpleblood2","vj_base/decals/blood/vj_purpleblood3","vj_base/decals/blood/vj_purpleblood4","vj_base/decals/blood/vj_purpleblood5","vj_base/decals/blood/vj_purpleblood6"})
-game.AddDecal("VJ_Blood_Black",{"vj_base/decals/blood/vj_oilblood1","vj_base/decals/blood/vj_oilblood2","vj_base/decals/blood/vj_oilblood3","vj_base/decals/blood/vj_oilblood4","vj_base/decals/blood/vj_oilblood5","vj_base/decals/blood/vj_oilblood6"})
-//game.AddDecal("VJ_Blood_White",{"vj_base/decals/blood/vj_whiteblood1","vj_base/decals/blood/vj_whiteblood2","vj_base/decals/blood/vj_whiteblood3","vj_base/decals/blood/vj_whiteblood4","vj_base/decals/blood/vj_whiteblood5","vj_base/decals/blood/vj_whiteblood6"})
-
+game.AddDecal("VJ_Blood_White",{"vj_base/decals/blood/vj_whiteblood1","vj_base/decals/blood/vj_whiteblood2","vj_base/decals/blood/vj_whiteblood3","vj_base/decals/blood/vj_whiteblood4","vj_base/decals/blood/vj_whiteblood5","vj_base/decals/blood/vj_whiteblood6"})
+game.AddDecal("VJ_Blood_Oil",{"vj_base/decals/blood/vj_oilblood1","vj_base/decals/blood/vj_oilblood2","vj_base/decals/blood/vj_oilblood3","vj_base/decals/blood/vj_oilblood4","vj_base/decals/blood/vj_oilblood5","vj_base/decals/blood/vj_oilblood6"})
 -- Precache Models -------------------------------------------------------------------------------------------------------------------------
 	-- Alien Gibs --
 util.PrecacheModel("models/gibs/xenians/mgib_01.mdl")

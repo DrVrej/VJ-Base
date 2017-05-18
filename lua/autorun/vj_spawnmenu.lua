@@ -49,8 +49,8 @@ hook.Add("PopulateVJBaseNPC","AddVJBaseSpawnMenu_NPC",function(pnlContent,tree,n
 		pnlContent:SwitchPanel(self.PropPanel)
 	end
 
-	local NPCList = list.Get("VJBASE_SPAWNABLE_NPC")
 	local NPCCategories = {}
+	local NPCList = list.Get("VJBASE_SPAWNABLE_NPC")
 	for k, v in pairs(NPCList) do
 		local Category = v.Category or "Uncategorized"
 		if Category == "VJ Base" then Category = "Default" end
@@ -94,8 +94,8 @@ hook.Add("PopulateVJBaseWeapons","AddVJBaseSpawnMenu_Weapon",function(pnlContent
 		pnlContent:SwitchPanel( self.PropPanel )
 	end
 
-	local WeaponList = list.Get("VJBASE_SPAWNABLE_WEAPON")
 	local WeaponCategories = {}
+	local WeaponList = list.Get("VJBASE_SPAWNABLE_WEAPON")
 	for k, v in pairs(WeaponList) do
 		if (!v.Spawnable && !v.AdminSpawnable) then continue end
 		v.Category = v.Category or "Uncategorized"
@@ -171,12 +171,57 @@ hook.Add("PopulateVJBaseEntities","AddVJBaseSpawnMenu_Entity",function(pnlConten
 	entitytree:SetExpanded(true)
 end)
 --[-------------------------------------------------------]--
+hook.Add("PopulateVJBaseTools","AddVJBaseSpawnMenu_Tool",function(pnlContent,tree,node)
+	local tooltree = tree:AddNode("Tools", "icon16/bullet_wrench.png")
+	tooltree.PropPanel = vgui.Create("ContentContainer", pnlContent)
+	tooltree.PropPanel:SetVisible(false)
+	tooltree.PropPanel:SetTriggerSpawnlistChange(false)
+
+	function tooltree:DoClick()
+		pnlContent:SwitchPanel(self.PropPanel)
+	end
+	
+	local ToolList = spawnmenu.GetTools()
+	if (ToolList) then
+		for nk, nv in pairs(ToolList) do
+			if nv.Name == "DrVrej" then
+				for nk2, nv2 in pairs(nv.Items) do
+					if nv2.Text == "#Tools" then
+						//local node = tooltree:AddNode("Default", "icon16/bullet_wrench.png")
+						local CatPropPanel = vgui.Create("ContentContainer", pnlContent)
+						CatPropPanel:SetVisible(false)
+						local Header = vgui.Create("ContentHeader", tooltree.PropPanel)
+						Header:SetText("Tools")
+						tooltree.PropPanel:Add(Header)
+						for nk3, nv3 in pairs(nv2) do
+							if !istable(nv3) then continue end
+								local t = { 
+									nicename	= nv3.Text,
+									spawnname	= nv3.ItemName,
+									//material	= "entities/" .. ent.ClassName .. ".png",
+									//admin		= ent.AdminOnly
+								}
+								spawnmenu.CreateContentIcon("tool", CatPropPanel, t)
+								spawnmenu.CreateContentIcon("tool", tooltree.PropPanel, t)
+							end
+						function tooltree:DoClick()	
+							pnlContent:SwitchPanel(CatPropPanel)
+						end
+					end
+				end
+			end
+		end
+	end
+	tooltree:SetExpanded(true)
+end)
+--[-------------------------------------------------------]--
 spawnmenu.AddCreationTab("VJ Base",function()
 	local ctrl = vgui.Create("SpawnmenuContentPanel")
 	//ctrl:CallPopulateHook("PopulateVJBaseHome")
 	ctrl:CallPopulateHook("PopulateVJBaseNPC")
 	ctrl:CallPopulateHook("PopulateVJBaseWeapons")
 	ctrl:CallPopulateHook("PopulateVJBaseEntities")
+	ctrl:CallPopulateHook("PopulateVJBaseTools")
 	return ctrl
  end,"icon16/plugin.png",60,"All VJ Base related stuff is located here!")
 end

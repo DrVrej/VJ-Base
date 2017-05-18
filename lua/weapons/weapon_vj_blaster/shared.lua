@@ -17,7 +17,7 @@ end
 SWEP.NPC_NextPrimaryFire 		= 0.3 -- Next time it can use primary fire
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel					= "models/weapons/c_irifle.mdl"
-SWEP.WorldModel					= "models/weapons/w_irifle.mdl"
+SWEP.WorldModel					= "models/vj_weapons/w_e5.mdl" // models/weapons/w_irifle.mdl
 SWEP.HoldType 					= "ar2"
 SWEP.Spawnable					= true
 SWEP.AdminSpawnable				= false
@@ -29,10 +29,10 @@ SWEP.Primary.Recoil				= 0.6 -- How much recoil does the player get?
 SWEP.Primary.Delay				= 0.3 -- Time until it can shoot again
 SWEP.Primary.Automatic			= true -- Is it automatic?
 SWEP.Primary.Ammo				= "SMG1" -- Ammo type
-SWEP.Primary.Sound				= {"vj_weapons/blaster/starwars_fire.wav"} -- npc/roller/mine/rmine_explode_shock1.wav
+SWEP.Primary.Sound				= {"vj_weapons/blaster/wpn_cis_blaster_fire.wav"} -- npc/roller/mine/rmine_explode_shock1.wav
 SWEP.Primary.HasDistantSound	= false -- Does it have a distant sound when the gun is shot?
 SWEP.Primary.DisableBulletCode	= true -- The bullet won't spawn, this can be used when creating a projectile-based weapon
-SWEP.PrimaryEffects_MuzzleFlash = false
+SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_SpawnShells = false
 SWEP.PrimaryEffects_DynamicLightColor = Color(255, 0, 0)
 	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
