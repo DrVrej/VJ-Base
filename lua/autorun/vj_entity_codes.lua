@@ -26,12 +26,12 @@ VJ.AddNPCWeapon("VJ_357","weapon_vj_357")
 VJ.AddNPCWeapon("VJ_FlareGun","weapon_vj_flaregun")
 VJ.AddNPCWeapon("VJ_RPG","weapon_vj_rpg")
 
--- Add S/NPCs ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- NPCs ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local vCat = "VJ Base"
 VJ.AddNPC("VJ Test NPC","sent_vj_test",vCat)
-VJ.AddNPC("VJ Test Aerial NPC","npc_vj_aerialtest",vCat)
+VJ.AddNPC("Mortar Synth","npc_vj_mortarsynth",vCat)
 
--- Add Entities ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Entities ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local vCat = "VJ Base"
 VJ.AddEntity("Admin Health Kit","sent_vj_adminhealthkit","DrVrej",true,0,true,vCat)
 //VJ.AddEntity("HL2 Grenade","npc_grenade_frag","DrVrej",false,50,true,vCat)
@@ -353,11 +353,24 @@ function NPC_MetaTable:FaceCertainEntity(argent,OnlyIfSeenEnemy,FaceEnemyTime)
 	return false
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function NPC_MetaTable:VJ_GetNearestPointToEntity(argent)
+function NPC_MetaTable:VJ_GetNearestPointToVector(pos,SameZ)
+	local SameZ = SameZ or false -- Should the Z of the pos be the same as the NPC's?
+	local NearestPositions = {MyPosition=Vector(0,0,0), PointPosition=Vector(0,0,0)}
+	local Pos_Point, Pos_Self = pos, self:NearestPoint(pos +self:OBBCenter())
+	Pos_Point.z, Pos_Self.z = pos.z, self:GetPos().z
+	if SameZ == true then Pos_Point.z = self:GetPos().z end
+	NearestPositions.MyPosition = Pos_Self
+	NearestPositions.PointPosition = Pos_Point
+	return NearestPositions
+end
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function NPC_MetaTable:VJ_GetNearestPointToEntity(argent,SameZ)
 	if !IsValid(argent) then return end
+	local SameZ = SameZ or false -- Should the Z of the pos be the same as the NPC's?
 	local NearestPositions = {MyPosition=Vector(0,0,0), EnemyPosition=Vector(0,0,0)}
 	local Pos_Enemy, Pos_Self = argent:NearestPoint(self:GetPos() +argent:OBBCenter()), self:NearestPoint(argent:GetPos() +self:OBBCenter())
 	Pos_Enemy.z, Pos_Self.z = argent:GetPos().z, self:GetPos().z
+	if SameZ == true then Pos_Enemy.z = self:GetPos().z end
 	NearestPositions.MyPosition = Pos_Self
 	NearestPositions.EnemyPosition = Pos_Enemy
 	//local Pos_Distance = Pos_Enemy:Distance(Pos_Self)
@@ -375,12 +388,14 @@ function NPC_MetaTable:VJ_GetNearestPointToEntityDistance(argent,OnlySelfGetPos)
 	return Pos_Enemy:Distance(Pos_Self)
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,SpawnTestCube)
+function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,Tbl_Features)
 	if self:GetEnemy() == nil then return end
 	StartPos = StartPos or self:NearestPoint(self:GetPos() +self:OBBCenter())
 	EndPos = EndPos or self:GetEnemy():EyePos()
 	AcceptWorld = AcceptWorld or false
-	SpawnTestCube = SpawnTestCube or false
+	local vTbl_Features = Tbl_Features or {}
+		local vTbl_SetLastHiddenTime = vTbl_Features.SetLastHiddenTime or false -- Should it set the last hidden time? (Mostly used for humans)
+		local vTbl_SpawnTestCube = vTbl_Features.SpawnTestCube or false -- Should it spawn a cube where the trace hit?
 	local hitent = false
 	tr = util.TraceLine({
 		start = StartPos,
@@ -390,30 +405,32 @@ function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,SpawnT
 	//print("--------------------------------------------")
 	//print(tr.Entity)
 	//PrintTable(tr)
-	if SpawnTestCube == true then
-		local nig = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
-		nig:SetModel("models/hunter/blocks/cube025x025x025.mdl")
-		nig:SetPos(tr.HitPos)
-		nig:SetAngles(self:GetAngles())
-		nig:SetColor(Color(255,0,0))
-		nig:Spawn()
-		nig:Activate()
-		timer.Simple(3,function() if IsValid(nig) then nig:Remove() end end)
+	if vTbl_SpawnTestCube == true then
+		print("allah")
+		-- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
+		local cube = ents.Create("prop_dynamic")
+		cube:SetModel("models/hunter/blocks/cube025x025x025.mdl")
+		cube:SetPos(tr.HitPos)
+		cube:SetAngles(self:GetAngles())
+		cube:SetColor(Color(255,0,0))
+		cube:Spawn()
+		cube:Activate()
+		timer.Simple(3,function() if IsValid(cube) then cube:Remove() end end)
 	end
 	
 	for k,v in ipairs(ents.FindInSphere(tr.HitPos,5)) do
-		//if SpawnTestCube == true then print(v) end
+		//if vTbl_SpawnTestCube == true then print(v) end
 		if v == self:GetEnemy() or self:Disposition(v) == 1 or self:Disposition(v) == 2 then
 			hitent = true
-			//if SpawnTestCube == true then print("it hit") end
+			//if vTbl_SpawnTestCube == true then print("it hit") end
 		end
 	end
 	
-	if hitent == true then return false end
-	if EndPos:Distance(tr.HitPos) <= 10 then return false end
-	if tr.HitWorld == true && self:GetPos():Distance(tr.HitPos) < 200 then return true end
+	if hitent == true then if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = 0 end return false, tr end
+	if EndPos:Distance(tr.HitPos) <= 10 then if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = 0 end return false end
+	if tr.HitWorld == true && self:GetPos():Distance(tr.HitPos) < 200 then if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = CurTime() + 20 end return true, tr end
 	if /*tr.Entity == NULL or tr.Entity:IsNPC() or tr.Entity:IsPlayer() or*/ tr.Entity == self:GetEnemy() or (AcceptWorld == false && tr.HitWorld == true) then
-	return false else return true end
+	if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = 0 end return false, tr else if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = CurTime() + 20 end return true, tr end
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function NPC_MetaTable:VJ_CheckAllFourSides(CheckDistance)
@@ -601,7 +618,12 @@ local function VJ_NPC_FIREBULLET(Entity,data,Attacker)
 				//data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():GetUp()*-20)-Entity:GetPos()
 			//end
 			//data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():OBBCenter()+Entity:GetEnemy():GetUp()*-45) -Entity:GetPos()+Entity:OBBCenter()+Entity:GetEnemy():GetUp()*-45
-			data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():OBBCenter())-data.Src
+			if Entity.WeaponUseEnemyEyePos == true then
+				data.Dir = (Entity:GetEnemy():EyePos()+Entity:GetEnemy():GetUp()*-5)-data.Src
+			else
+				data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():OBBCenter())-data.Src
+			end
+			Entity.WeaponUseEnemyEyePos = false
 			-- Just a test
 			//data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():GetUp()*-50) -Entity:GetPos()
 			//end

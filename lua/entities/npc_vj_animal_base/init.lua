@@ -30,10 +30,11 @@ ENT.VJ_IsHugeMonster = false -- Is this a huge monster?
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
 ENT.CanTurnWhileStationary = true -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
 	-- Blood & Damages ---------------------------------------------------------------------------------------------------------------------------------------------
+ENT.GodMode = false -- Immune to everything
 	-- ====== Blood-Related Variables ====== --
 ENT.Bleeds = true -- Does the SNPC bleed? (Blood decal, particle, etc.)
 ENT.BloodColor = "" -- The blood type, this will determine what it should use (decal, particle, etc.)
-	-- Types: "Red" || "Yellow" || "Green" || "Orange" || "Blue" || "Purple" || "Oil"
+	-- Types: "Red" || "Yellow" || "Green" || "Orange" || "Blue" || "Purple" || "White" || "Oil"
 -- Use the following variables to customize the blood the way you want it:
 ENT.HasBloodParticle = true -- Does it spawn a particle when damaged?
 ENT.HasBloodDecal = true -- Does it spawn a decal when damaged?
@@ -178,6 +179,7 @@ ENT.HasFootStepSound = true -- Should the SNPC make a footstep sound when it's m
 ENT.HasBreathSound = true -- Should it make a breathing sound?
 ENT.HasSoundTrack = false -- Does the SNPC have a sound track?
 	-- ====== Sound Settings ====== --
+ENT.PlayFearSoundOnTouch = true -- Should it play a sound when something touches it?
 ENT.NextOnTouchFearSoundTime = 3 -- Next time it makes a fear sound when something touches it
 ENT.DisableFootStepSoundTimer = false -- If set to true, it will disable the time system for the footstep sound code, allowing you to use other ways like model events
 ENT.FootStepTimeRun = 0.5 -- Next foot step sound when it is running
@@ -673,9 +675,13 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 		if IsGesture == true then
 			local gesttest = false
 			if IsSequence == false then gesttest = self:AddGesture(vACT_Name) end
-			if IsSequence == true then gesttest = self:AddGestureSequence(vACT_Name) end
+			if IsSequence == true then gesttest = self:AddGestureSequence(self:LookupSequence(vACT_Name)) end
 			if gesttest != false then
-				self:SetLayerPriority(gesttest,2)
+				//self:ClearSchedule()
+				//self:SetLayerBlendIn(1,0)
+				//self:SetLayerBlendOut(1,0)
+				self:SetLayerPriority(gesttest,1) // 2
+				//self:SetLayerWeight(gesttest,1)
 				self:SetLayerPlaybackRate(gesttest,vTbl_PlayBackRate)
 				//self:SetLayerDuration(gesttest,3)
 				//print(self:GetLayerDuration(gesttest))
@@ -781,22 +787,23 @@ end
 function ENT:Touch(entity)
 	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printontouch") == 1 then print(self:GetClass().." Has Touched "..entity:GetClass()) end end
 	self:CustomOnTouch(entity)
-	if self.RunOnTouch == true && GetConVarNumber("ai_disabled") == 0 && self.VJ_IsBeingControlled == false && self.VJ_PlayingSequence == false then
-	if CurTime() > self.NextRunOnTouchT then
-	if entity:IsNPC() or entity:IsPlayer() then
-	self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY) end
-	self.NextRunOnTouchT = CurTime() + self.NextRunOnTouchTime end
-	end
-	if GetConVarNumber("ai_disabled") == 0 then
-	if CurTime() > self.NextOnTouchFearSoundT then
-		if self.AlertSounds_OnlyOnce == true then
-			if self.HasDone_PlayAlertSoundOnlyOnce == false then
-			self:AlertSoundCode() 
-			self.HasDone_PlayAlertSoundOnlyOnce = true end
-		else
-			self:AlertSoundCode()
+	if GetConVarNumber("ai_disabled") == 0 && (!entity.IsVJBaseSNPC_Animal) then
+		if self.RunOnTouch == true && self.VJ_IsBeingControlled == false && self.VJ_PlayingSequence == false && CurTime() > self.NextRunOnTouchT then
+			if entity:IsNPC() or entity:IsPlayer() then
+				self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
+			end
+			self.NextRunOnTouchT = CurTime() + self.NextRunOnTouchTime
 		end
-	self.NextOnTouchFearSoundT = CurTime() + self.NextOnTouchFearSoundTime end
+		if self.PlayFearSoundOnTouch == true && CurTime() > self.NextOnTouchFearSoundT then
+			if self.AlertSounds_OnlyOnce == true then
+				if self.HasDone_PlayAlertSoundOnlyOnce == false then
+				self:AlertSoundCode() 
+				self.HasDone_PlayAlertSoundOnlyOnce = true end
+			else
+				self:AlertSoundCode()
+			end
+			self.NextOnTouchFearSoundT = CurTime() + self.NextOnTouchFearSoundTime
+		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1318,9 +1325,13 @@ function ENT:DoChangeBloodColor(Type)
 		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_purple"} end
 		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Purple"} end
 		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
+	elseif Type == "White" then
+		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_white"} end
+		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_White"} end
+		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
 	elseif Type == "Oil" then
 		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_black"} end
-		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Black"} end
+		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Oil"} end
 		if changepool == true then self.CurrentChoosenBlood_Pool = {} end
 	end
 end

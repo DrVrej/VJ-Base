@@ -65,22 +65,71 @@ if (CLIENT) then
 		for k,v in pairs(VJ_NPCRELATION_TblCurrentValues) do
 			CheckList:AddLine(v)
 		end
+		
+		local function InsertToTable(val)
+			if string.len(val) > 0 then
+				local val = string.upper(val)
+				if table.HasValue(VJ_NPCRELATION_TblCurrentValues,val) then
+					chat.AddText(Color(220,20,60),"ERROR! ",Color(255,100,0),val.." ",Color(220,20,60),"already exists in the table!")
+				else
+					chat.AddText(Color(0,255,0),"Added",Color(255,100,0)," "..val.." ",Color(0,255,0),"to the class list!")
+					table.insert(VJ_NPCRELATION_TblCurrentValues,val)
+					timer.Simple(0.05,function()
+						GetPanel = controlpanel.Get("vjstool_npcrelationship")
+						GetPanel:ClearControls()
+						DoBuildCPanel_Relationship(GetPanel)
+					end)
+				end
+			end
+		end
 		local TextEntry = vgui.Create("DTextEntry")
 		//TextEntry:SetText("Press enter to add class...")
 		TextEntry.OnEnter = function()
-			if string.len(TextEntry:GetValue()) > 0 then
-				local enterv = string.upper(TextEntry:GetValue())
-				chat.AddText(Color(0,255,0),"Added",Color(255,100,0)," "..enterv.." ",Color(0,255,0),"to the class list!")
-				table.insert(VJ_NPCRELATION_TblCurrentValues,enterv)
-				timer.Simple(0.05,function()
-					GetPanel = controlpanel.Get("vjstool_npcrelationship")
-					GetPanel:ClearControls()
-					DoBuildCPanel_Relationship(GetPanel)
-				end)
-			end
+			InsertToTable(TextEntry:GetValue())
 		end
 		Panel:AddItem(TextEntry)
-		Panel:ControlHelp("Press enter to add class")
+		Panel:ControlHelp("Press ENTER to add class")
+		
+		local button_combine = vgui.Create("DButton")
+		button_combine:SetFont("DermaDefaultBold")
+		button_combine:SetText("Insert Combine Class")
+		button_combine:SetSize(50,20)
+		button_combine:SetColor(Color(0,0,0,255))
+		button_combine.DoClick = function(button_combine)
+			InsertToTable("CLASS_COMBINE")
+		end
+		Panel:AddPanel(button_combine)
+		
+		local button_combine = vgui.Create("DButton")
+		button_combine:SetFont("DermaDefaultBold")
+		button_combine:SetText("Insert Resistance Class")
+		button_combine:SetSize(50,20)
+		button_combine:SetColor(Color(0,0,0,255))
+		button_combine.DoClick = function(button_combine)
+			InsertToTable("CLASS_PLAYER_ALLY")
+		end
+		Panel:AddPanel(button_combine)
+		
+		local button_combine = vgui.Create("DButton")
+		button_combine:SetFont("DermaDefaultBold")
+		button_combine:SetText("Insert Antlion Class")
+		button_combine:SetSize(50,20)
+		button_combine:SetColor(Color(0,0,0,255))
+		button_combine.DoClick = function(button_combine)
+			InsertToTable("CLASS_ANTLION")
+		end
+		Panel:AddPanel(button_combine)
+		
+		local button_combine = vgui.Create("DButton")
+		button_combine:SetFont("DermaDefaultBold")
+		button_combine:SetText("Insert Zombie Class")
+		button_combine:SetSize(50,20)
+		button_combine:SetColor(Color(0,0,0,255))
+		button_combine.DoClick = function(button_combine)
+			InsertToTable("CLASS_ZOMBIE")
+		end
+		Panel:AddPanel(button_combine)
+		
 		//Panel:AddControl("Label", {Text = "For PLAYER entities Only:"})
 		//Panel:AddControl("Checkbox", {Label = "Make NPCs interact with friendly player", Command = "vjstool_npcspawner_playerinteract"})
 		//Panel:ControlHelp("Make NPCs be able to interact with friendly player, such follow when pressed E or get out of their way")
