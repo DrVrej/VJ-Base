@@ -36,11 +36,11 @@ function ENT:StartSchedule(schedule)
 	if (!schedule.CanBeInterrupted) then schedule.CanBeInterrupted = false end
 	if (!schedule.CanShootWhenMoving) then schedule.CanShootWhenMoving = false end
 	for k,v in ipairs(schedule.Tasks) do
-		if v.TaskName == "TASK_RUN_PATH" or v.TaskName == "TASK_RUN_PATH_FLEE" or v.TaskName == "TASK_RUN_PATH_TIMED" or v.TaskName == "TASK_RUN_PATH_FOR_UNITS" or v.TaskName == "TASK_RUN_PATH_WITHIN_DIST" then schedule.IsMovingSchedule = true schedule.IsMovingSchedule_Running = true break end
-		if v.TaskName == "TASK_WALK_PATH" or v.TaskName == "TASK_WALK_PATH_TIMED" or v.TaskName == "TASK_WALK_PATH_WITHIN_DIST" or v.TaskName == "TASK_WALK_PATH_FOR_UNITS" then schedule.IsMovingSchedule = true schedule.IsMovingSchedule_Walking = true break end
-		schedule.IsMovingSchedule = false
-		schedule.IsMovingSchedule_Running = false
-		schedule.IsMovingSchedule_Walking = false
+		if v.TaskName == "TASK_RUN_PATH" or v.TaskName == "TASK_RUN_PATH_FLEE" or v.TaskName == "TASK_RUN_PATH_TIMED" or v.TaskName == "TASK_RUN_PATH_FOR_UNITS" or v.TaskName == "TASK_RUN_PATH_WITHIN_DIST" then schedule.IsMovingTask = true schedule.IsMovingTask_Run = true break end
+		if v.TaskName == "TASK_WALK_PATH" or v.TaskName == "TASK_WALK_PATH_TIMED" or v.TaskName == "TASK_WALK_PATH_WITHIN_DIST" or v.TaskName == "TASK_WALK_PATH_FOR_UNITS" then schedule.IsMovingTask = true schedule.IsMovingTask_Walk = true break end
+		schedule.IsMovingTask = false
+		schedule.IsMovingTask_Run = false
+		schedule.IsMovingTask_Walk = false
 	end
 	if schedule.CanShootWhenMoving == true && self.CurrentWeaponAnimation != nil && self:GetEnemy() != nil then
 		self:SetArrivalActivity(self.CurrentWeaponAnimation)

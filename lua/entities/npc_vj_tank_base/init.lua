@@ -179,6 +179,7 @@ function ENT:TANK_RUNOVER_DAMAGECODE(argent)
 // if self.HasMeleeAttack == false then return end
 if argent == NULL or argent == nil then return end
 if GetConVarNumber("vj_npc_nomelee") == 1 then return end
+if self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == argent then return end
 
 local function Tank_DoDamage()
 	if GetConVarNumber("vj_npc_dif_normal") == 1 then argent:TakeDamage(8,self,self) end -- Normal
@@ -324,9 +325,9 @@ function ENT:CustomOnThink_AIEnabled()
 	local Angle_Diffuse = self:AngleDiffuse(Angle_Enemy.y,Angle_Current.y+self.Tank_AngleDiffuseNumber)
 	local Heigh_Ratio = (self:GetEnemy():GetPos().z - self:GetPos().z ) / self:GetPos():Distance(Vector(self:GetEnemy():GetPos().x,self:GetEnemy():GetPos().y,self:GetPos().z))
 
-	local fucktraces = { start = self:GetPos(), endpos = self:GetPos() + self:GetUp()*-5, filter = self }
-	local tr = util.TraceEntity( fucktraces, self )
-	if ( tr.HitWorld ) then
+	//local fucktraces = { start = self:GetPos(), endpos = self:GetPos() + self:GetUp()*-5, filter = self }
+	//local tr = util.TraceEntity( fucktraces, self )
+	//if ( tr.HitWorld ) then
 	if Heigh_Ratio < 0.15 then -- If it is that high than move away from it
 		if phys:IsValid() then -- To help the gunner shoot
 		if self.Tank_UseGetRightForSpeed == true then
@@ -356,7 +357,7 @@ function ENT:CustomOnThink_AIEnabled()
 	 // end
 	 end
 	end
-   end
+  // end
   end
  end
 end
@@ -373,12 +374,20 @@ function ENT:CustomOnSchedule()
 	else
 		EnemyPos = self:GetEnemy():GetPos()
 		EnemyPosToSelf = self:GetPos():Distance(EnemyPos)
-		if EnemyPosToSelf > self.Tank_SeeLimit then -- If larger than this number than, move
-			self.Tank_Status = 0
-		elseif EnemyPosToSelf < self.Tank_SeeFar && EnemyPosToSelf > self.Tank_SeeClose then -- If between this two numbers, stay still
-			self.Tank_Status = 1
-		else
-			self.Tank_Status = 0
+		if self.VJ_IsBeingControlled == true then
+			if self.VJ_TheController:KeyDown(IN_FORWARD) then
+				self.Tank_Status = 0
+			else
+				self.Tank_Status = 1
+			end
+		elseif self.VJ_IsBeingControlled == false then
+			if EnemyPosToSelf > self.Tank_SeeLimit then -- If larger than this number than, move
+				self.Tank_Status = 0
+			elseif EnemyPosToSelf < self.Tank_SeeFar && EnemyPosToSelf > self.Tank_SeeClose then -- If between this two numbers, stay still
+				self.Tank_Status = 1
+			else
+				self.Tank_Status = 0
+			end
 		end
 	end
 end

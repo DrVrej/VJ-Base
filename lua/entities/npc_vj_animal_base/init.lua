@@ -323,6 +323,7 @@ ENT.FollowingPlayerName = NULL
 ENT.MyEnemy = NULL
 ENT.VJ_TheController = NULL
 ENT.VJ_TheControllerEntity = NULL
+ENT.VJ_TheControllerBullseye = NULL
 ENT.LastPlayedVJSound = nil
 ENT.LatestTaskName = nil
 ENT.LatestDmgInfo = nil

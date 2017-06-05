@@ -1,4 +1,3 @@
-AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("shared.lua")
 include('shared.lua')
 /*--------------------------------------------------
@@ -8,13 +7,11 @@ include('shared.lua')
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to control NPCs. Mainly for VJ Base SNPCs.
 --------------------------------------------------*/
-ENT.PlayingAnimation = false
-ENT.PlayingAttackAnimation = false
-ENT.PlayingRangeAttackAnimation = false
-ENT.PlayingGrenadeAttackAnimation = false
-ENT.PlayingRangeAttackHumanAnimation = false
 ENT.VJControllerEntityIsRemoved = false
+ENT.AbleToTurn = true
 ENT.CurrentAttackAnimation = 0
+
+util.AddNetworkString("vj_controller_hud")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -44,14 +41,15 @@ function ENT:StartControlling()
 	self.PropCamera:SetPos(self.ControlledNPC:GetPos() +Vector(0,0,self.ControlledNPC:OBBMaxs().z +20)) //self.ControlledNPC:EyePos()
 	self.PropCamera:SetModel("models/props_junk/watermelon01_chunk02c.mdl")
 	self.PropCamera:SetParent(self.ControlledNPC)
-	self.PropCamera:SetRenderMode(RENDERMODE_TRANSALPHA)
+	self.PropCamera:SetRenderMode(RENDERMODE_NONE)
 	self.PropCamera:Spawn()
 	self.PropCamera:SetColor(Color(0,0,0,0))
 	self.PropCamera:SetNoDraw(false)
 	self.PropCamera:DrawShadow(false)
-	//self:DeleteOnRemove(self.PropCamera)
+	self:DeleteOnRemove(self.PropCamera)
 
 	self.TheController:Spectate(OBS_MODE_CHASE)
+	//self.TheController:SetPos(self.PropCamera:GetPos())
 	self.TheController:SpectateEntity(self.PropCamera)
 	self.TheController:SetNoTarget(true)
 	self.TheController:DrawShadow(false)
@@ -70,14 +68,35 @@ function ENT:StartControlling()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetControlledNPC(GetEntity)
+	self.NPCBullseye = ents.Create("ob_vj_bullseye")
+	self.NPCBullseye:SetPos(GetEntity:GetPos() + GetEntity:GetForward()*100 + GetEntity:GetUp()*50)//Vector(GetEntity:OBBMaxs().x +20,0,GetEntity:OBBMaxs().z +20))
+	self.NPCBullseye:SetModel("models/hunter/blocks/cube025x025x025.mdl")
+	self.NPCBullseye:SetParent(GetEntity)
+	self.NPCBullseye:SetRenderMode(RENDERMODE_NONE)
+	self.NPCBullseye:Spawn()
+	self.NPCBullseye:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
+	self.NPCBullseye.EnemyToIndividual = true
+	self.NPCBullseye.EnemyToIndividualEnt = GetEntity
+	self.NPCBullseye:SetColor(Color(0,0,0,0))
+	self.NPCBullseye:SetNoDraw(false)
+	self.NPCBullseye:DrawShadow(false)
+	self:DeleteOnRemove(self.NPCBullseye)
+	
 	self.ControlledNPC = GetEntity
 	self.ControlledNPC.VJ_IsBeingControlled = true
 	self.ControlledNPC.VJ_TheController = self.TheController
 	self.ControlledNPC.VJ_TheControllerEntity = self
+	self.ControlledNPC.VJ_TheControllerBullseye = self.NPCBullseye
 	self.ControlledNPC:SetEnemy(NULL)
 	self.ControlledNPC.MyEnemy = NULL
 	self.ControlledNPC.Enemy = NULL
 	if self.ControlledNPC.IsVJBaseSNPC == true then
+		if self.ControlledNPC:GetEnemy() != nil then
+			self.ControlledNPC:AddEntityRelationship(self.ControlledNPC:GetEnemy(),D_NU,99)
+			self.ControlledNPC:GetEnemy():AddEntityRelationship(self.ControlledNPC,D_NU,99)
+			self.ControlledNPC:ResetEnemy(false)
+			self.ControlledNPC:SetEnemy(self.NPCBullseye)
+		end
 		self.VJNPC_DisableWandering = self.ControlledNPC.DisableWandering
 		self.VJNPC_DisableChasingEnemy = self.ControlledNPC.DisableChasingEnemy
 		//self.VJNPC_DisableFindEnemy = self.ControlledNPC.DisableFindEnemy
@@ -100,10 +119,11 @@ function ENT:SetControlledNPC(GetEntity)
 		//self.ControlledNPC.DisableFindEnemy = true
 		self.ControlledNPC.DisableTakeDamageFindEnemy = true
 		self.ControlledNPC.DisableTouchFindEnemy = true
-		self.ControlledNPC.HasMeleeAttack = false
-		self.ControlledNPC.HasRangeAttack = false
-		self.ControlledNPC.HasLeapAttack = false
-		self.ControlledNPC.HasGrenadeAttack = false
+		//self.ControlledNPC.HasMeleeAttack = false
+		//self.ControlledNPC.HasRangeAttack = false
+		//self.ControlledNPC.HasLeapAttack = false
+		//self.ControlledNPC.HasGrenadeAttack = false
+		self.ControlledNPC.NextThrowGrenadeT = 0
 		self.ControlledNPC.CallForHelp = false
 		self.ControlledNPC.CallForBackUpOnDamage = false
 		self.ControlledNPC.BringFriendsOnDeath = false
@@ -127,276 +147,117 @@ function ENT:SetControlledNPC(GetEntity)
 	self.ControlledNPC:StopMoving()
 	self.ControlledNPC:ClearSchedule()
 	//self.ControlledNPC:VJ_SetSchedule(SCHED_IDLE_STAND)
-	self.PlayingAttackAnimation = true
-	self.PlayingRangeAttackAnimation = true
 	timer.Simple(0.2,function()
 		if IsValid(self.ControlledNPC) then
-			self.PlayingAttackAnimation = false
-			self.PlayingRangeAttackAnimation = false
+			self.AbleToTurn = true
 			self.ControlledNPC.vACT_StopAttacks = false
+			self.ControlledNPC:SetEnemy(self.NPCBullseye)
 		end
 	end)
 	self:CustomOnSetControlledNPC()
 end
+ENT.TestLerp = 0
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	if (!self.PropCamera:IsValid()) then self:StopControlling() return end
-	if !IsValid(self.TheController) or self.TheController:KeyDown(IN_USE) or self.TheController:Health() <= 0 or (!self.TheController.IsControlingNPC) or !IsValid(self.ControlledNPC) or self.ControlledNPC:Health() <= 0 then self:StopControlling() return end
-		if self.TheController.IsControlingNPC != true then return end
-		if (self.TheController.IsControlingNPC) && IsValid(self.ControlledNPC) then
-		if self.ControlledNPC.MovementType == VJ_MOVETYPE_STATIONARY && self.ControlledNPC.CanTurnWhileStationary == false then
-			-- Do stuff
-		else
-			if self.PlayingRangeAttackAnimation == false then //self.PlayingAnimation == false && self.PlayingAttackAnimation == false && self.PlayingRangeAttackAnimation == false /*&& !self.ControlledNPC:IsMoving()*/ then
+	if !IsValid(self.TheController) or self.TheController:KeyDown(IN_USE) or self.TheController:Health() <= 0 or (!self.TheController.IsControlingNPC) or !IsValid(self.ControlledNPC) or (self.ControlledNPC:Health() <= 0) then self:StopControlling() return end
+	if self.TheController.IsControlingNPC != true then return end
+	if (self.TheController.IsControlingNPC) && IsValid(self.ControlledNPC) then
+		local AttackTypes = {MeleeAttack=false,RangeAttack=false,LeapAttack=false,WeaponAttack=false,GrenadeAttack=false,Ammo="---"}
+		if self.ControlledNPC.IsVJBaseSNPC == true then
+			if self.ControlledNPC.HasMeleeAttack == true then AttackTypes["MeleeAttack"] = true end
+			if self.ControlledNPC.HasRangeAttack == true then AttackTypes["RangeAttack"] = true end
+			if self.ControlledNPC.HasLeapAttack == true then AttackTypes["LeapAttack"] = true end
+			if IsValid(self.ControlledNPC:GetActiveWeapon()) then AttackTypes["WeaponAttack"] = true AttackTypes["Ammo"] = self.ControlledNPC.Weapon_StartingAmmoAmount - self.ControlledNPC.Weapon_ShotsSinceLastReload end
+			if self.ControlledNPC.HasGrenadeAttack == true then AttackTypes["GrenadeAttack"] = true end
+		end
+		net.Start("vj_controller_hud")
+		net.WriteBool(false)
+		net.WriteFloat(self.ControlledNPC:GetMaxHealth())
+		net.WriteFloat(self.ControlledNPC:Health())
+		net.WriteString(self.ControlledNPC:GetName())
+		net.WriteTable(AttackTypes)
+		net.Send(self.TheController)
+		if #self.TheController:GetWeapons() > 0 then self.TheController:StripWeapons() end
+		local tr_ply = util.TraceLine({start = self.TheController:EyePos(), endpos = self.TheController:EyePos() + (self.TheController:GetAimVector() * 32768), filter = {self.TheController,self.ControlledNPC}})
+		if IsValid(self.NPCBullseye) then
+			self.NPCBullseye:SetPos(tr_ply.HitPos)
+		end
+		if self.ControlledNPC.PlayingAttackAnimation == false && self.AbleToTurn == true && self.ControlledNPC.IsReloadingWeapon != true && CurTime() > self.ControlledNPC.NextChaseTime && self.ControlledNPC.IsVJBaseSNPC_Tank != true && ((self.ControlledNPC.MovementType != VJ_MOVETYPE_STATIONARY) or (self.ControlledNPC.MovementType == VJ_MOVETYPE_STATIONARY && self.ControlledNPC.CanTurnWhileStationary != true)) then
 			if self.ControlledNPC:IsMoving() then
-				self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,4),0)) else
-				//self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,360),0))
-				self.ControlledNPC:SetAngles(Angle(0,self.TheController:GetAimVector():Angle().y,0))
-				end
+				//self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,4),0))
+				//self.ControlledNPC:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
+			else
+				//self.ControlledNPC:SetAngles(Angle(0,self.TheController:GetAimVector():Angle().y,0))
+				self.ControlledNPC:SetLastPosition(tr_ply.HitPos) // self.TheController:GetEyeTrace().HitPos
+				self.ControlledNPC:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
+				//self.TestLerp = self.ControlledNPC:GetAngles().y
+				//self.ControlledNPC:SetAngles(Angle(0,Lerp(100*FrameTime(),self.TestLerp,self.TheController:GetAimVector():Angle().y),0))
 			end
 		end
-		if #self.TheController:GetWeapons() > 0 then self.TheController:StripWeapons() end
-		//self.ControlledNPC:SetEnemy(self)
-		if self.PlayingAttackAnimation == true then return end
 		
 		self:CustomOnThink()
-		
+		self.AbleToTurn = true
 		if self.ControlledNPC.IsVJBaseSNPC_Animal != true && self.ControlledNPC.IsVJBaseSNPC == true then
-		if self.TheController:KeyDown(IN_ATTACK) then
-			if self.VJNPC_HasMeleeAttack == true then
-			if self.ControlledNPC.IsVJBaseSNPC_Creature == true && self.ControlledNPC:GetEnemy() == nil then self.ControlledNPC:SetEnemy(self) end //timer.Simple(0.15, if IsValid(self) && IsValid(self.ControlledNPC) then self.ControlledNPC:SetEnemy(NULL) end end) end
-			if self.ControlledNPC.IsVJBaseSNPC_Creature == true && self.ControlledNPC:GetEnemy() != nil then self.ControlledNPC:MultipleMeleeAttacks() end
-			self.ControlledNPC:CustomOnMeleeAttack_BeforeStartTimer()
-			self.PlayingAnimation = true
-			self.PlayingAttackAnimation = true
-			self.ControlledNPC:StopMoving()
-			//self.ControlledNPC:ClearSchedule()
-			self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.ControlledNPC.AnimTbl_MeleeAttack)
-			self.ControlledNPC:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.ControlledNPC.AnimTbl_MeleeAttack),false,0,false,self.ControlledNPC.MeleeAttackAnimationDelay)
-			timer.Simple(VJ_GetSequenceDuration(self.ControlledNPC,self.CurrentAttackAnimation) -0.2,function()
-				if IsValid(self.ControlledNPC) then
-				self.ControlledNPC:VJ_SetSchedule(SCHED_IDLE_STAND)
-				end
-			end)
-			if self.ControlledNPC.IsVJBaseSNPC_Creature == true then
-				for tk, tv in ipairs(self.ControlledNPC.MeleeAttackExtraTimers) do
-					self.ControlledNPC:DoAddExtraAttackTimers("timer_melee_start_"..self.ControlledNPC:GetClass().."_"..math.random(1,999999),tv,1,"MeleeAttack")
+			if IsValid(self.ControlledNPC:GetActiveWeapon()) && self.ControlledNPC.IsVJBaseSNPC_Human == true then
+				if self.ControlledNPC:GetActiveWeapon().IsVJBaseWeapon == true && self.TheController:KeyDown(IN_ATTACK2) && self.ControlledNPC.IsReloadingWeapon != true /*&& (self.ControlledNPC.Weapon_StartingAmmoAmount - self.ControlledNPC.Weapon_ShotsSinceLastReload) > 0*/ then
+					self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,100),0))
+					self.AbleToTurn = false
+					if VJ_IsCurrentAnimation(self.ControlledNPC,self.ControlledNPC:VJ_TranslateWeaponActivity(self.ControlledNPC.CurrentWeaponAnimation)) == false && VJ_IsCurrentAnimation(self.ControlledNPC,self.ControlledNPC.AnimTbl_WeaponAttack) == false then
+						self.AbleToTurn = false
+						self.ControlledNPC.CurrentWeaponAnimation = VJ_PICKRANDOMTABLE(self.ControlledNPC.AnimTbl_WeaponAttack)
+						self.ControlledNPC:VJ_ACT_PLAYACTIVITY(self.ControlledNPC.CurrentWeaponAnimation,false,2,false)
+					end
 				end
 			end
-			local dmgtime = self.ControlledNPC.TimeUntilMeleeAttackDamage
-			if self.ControlledNPC.TimeUntilMeleeAttackDamage == false then dmgtime = self.ControlledNPC.NextAnyAttackTime_Melee end
-			timer.Simple(dmgtime,function()
-			if IsValid(self.ControlledNPC) then
-			self.ControlledNPC:MeleeAttackCode()
-			timer.Simple(self.ControlledNPC.NextAnyAttackTime_Melee +0.4,function()
-				if IsValid(self.ControlledNPC) then
-				self.PlayingAnimation = false
-				self.PlayingAttackAnimation = false
-				end
-			end)
-		  end
-		 end)
-		 self.ControlledNPC:CustomOnMeleeAttack_AfterStartTimer()
-		end
-		elseif self.TheController:KeyDown(IN_ATTACK2) then
-			if self.ControlledNPC.IsVJBaseSNPC_Creature == true then
-			if self.VJNPC_HasRangeAttack == true && self.PlayingRangeAttackAnimation == false then
-			if self.ControlledNPC:GetEnemy() == nil then self.TheController:PrintMessage(HUD_PRINTCENTER,"It can only do range attack if it sees an enemy!") else
-			self.ControlledNPC:CustomOnRangeAttack_BeforeStartTimer()
-			self.PlayingAnimation = true
-			self.PlayingAttackAnimation = true
-			self.PlayingRangeAttackAnimation = true
-			self.ControlledNPC:StopMoving()
-			//self.ControlledNPC:ClearSchedule()
-			self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.ControlledNPC.AnimTbl_RangeAttack)
-			self.ControlledNPC:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.ControlledNPC.AnimTbl_RangeAttack),false,0,false,self.ControlledNPC.RangeAttackAnimationDelay)
-			self.ControlledNPC:CustomOnRangeAttack_AfterStartTimer()
-			timer.Simple(VJ_GetSequenceDuration(self.ControlledNPC,self.CurrentAttackAnimation) -0.2,function()
-				if IsValid(self.ControlledNPC) then
-				self.PlayingAnimation = false
-				self.PlayingAttackAnimation = false
-				self.ControlledNPC:VJ_SetSchedule(SCHED_IDLE_STAND)
-				end
-			end)
-			timer.Create( "timer_range_start"..self.ControlledNPC.Entity:EntIndex(), self.ControlledNPC.TimeUntilRangeAttackProjectileRelease, self.ControlledNPC.RangeAttackReps, function()
-			//timer.Simple(self.ControlledNPC.TimeUntilRangeAttackProjectileRelease,function()
-			if IsValid(self.ControlledNPC) then
-			self.ControlledNPC:RangeAttackCode()
-			timer.Simple(self.ControlledNPC.NextAnyAttackTime_Range,function()
-				if IsValid(self.ControlledNPC) then
-				self.PlayingRangeAttackAnimation = false end end)
-				end
-			end)
-			self.ControlledNPC:CustomOnRangeAttack_AfterStartTimer()
-		 end
-		end
-		elseif self.ControlledNPC.DisableWeapons == false then
-			self.ControlledNPC:WeaponAimPoseParameters()
-			if self.PlayingRangeAttackHumanAnimation == false then
-			self.PlayingRangeAttackHumanAnimation = true
-			self.ControlledNPC:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.ControlledNPC.AnimTbl_WeaponAttack),false,2,false)
-			end
-		  end
-		 end
-		end
-		
-		if !self.TheController:KeyDown(IN_ATTACK2) then
-			if self.ControlledNPC.IsVJBaseSNPC_Human == true && self.ControlledNPC.DisableWeapons == false && !self.ControlledNPC:IsMoving() then
-			if self.PlayingRangeAttackHumanAnimation == true then
-				self.PlayingRangeAttackHumanAnimation = false
-				self.ControlledNPC:VJ_SetSchedule(SCHED_IDLE_STAND)
-			end
-			if self.PlayingRangeAttackAnimation == true then
-				self.PlayingRangeAttackAnimation = false
-				self.ControlledNPC:VJ_SetSchedule(SCHED_IDLE_STAND)
-			end
-		 end
-		end
-
-		if self.PlayingAnimation == true then return end
-		if self.TheController:KeyDown(IN_RELOAD) then
-			if self.ControlledNPC.IsVJBaseSNPC_Human == true && self.ControlledNPC.DisableWeapons == false then
-				self.ControlledNPC.HasDoneReloadAnimation = false
-				self.PlayingAnimation = true
-				//self.ControlledNPC:VJ_SetSchedule(SCHED_RELOAD)
-				self.ControlledNPC.Weapon_ShotsSinceLastReload = 0
-				self.ControlledNPC:VJ_ACT_PLAYACTIVITY(ACT_RELOAD,false,0,false)
-				timer.Simple(2,function() if IsValid(self.ControlledNPC) then self.PlayingAnimation = false end end)
-			end
-		elseif self.TheController:KeyDown(IN_JUMP) then
-			if self.ControlledNPC.IsVJBaseSNPC_Human == true then
-			if self.VJNPC_HasGrenadeAttack == true && self.PlayingGrenadeAttackAnimation == false then
-			if self.ControlledNPC:GetEnemy() == nil then self.TheController:PrintMessage(HUD_PRINTCENTER,"It only can throw grenade if it sees an enemy!") else
-			self.ControlledNPC:StopMoving()
-			self.PlayingAnimation = true
-			self.PlayingGrenadeAttackAnimation = true
-			self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.ControlledNPC.AnimTbl_GrenadeAttack)
-			self.ControlledNPC:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.ControlledNPC.AnimTbl_GrenadeAttack),false,0,false,self.ControlledNPC.GrenadeAttackAnimationDelay)
-			self.ControlledNPC:ThrowGrenadeCode()
-			timer.Simple(VJ_GetSequenceDuration(self.ControlledNPC,self.CurrentAttackAnimation) -0.2,function()
-				if IsValid(self.ControlledNPC) then
-				self.ControlledNPC:VJ_SetSchedule(SCHED_IDLE_STAND)
-				end
-			end)
-			timer.Simple(self.ControlledNPC.TimeUntilGrenadeIsReleased,function()
-			if IsValid(self.ControlledNPC) then
-			self.PlayingAnimation = false
-				timer.Simple(self.ControlledNPC.NextThrowGrenadeTime2,function()
-				if IsValid(self.ControlledNPC) then
-				self.PlayingGrenadeAttackAnimation = false
-				  end
-				 end)
-				end
-			   end)
-			  end
-			 end
-			end
-			if self.ControlledNPC.IsVJBaseSNPC_Creature == true then
-			if self.VJNPC_HasLeapAttack == true then
-			if self.ControlledNPC:GetEnemy() == nil then self.TheController:PrintMessage(HUD_PRINTCENTER,"It can only do leap attack if it sees an enemy!") else
-			self.ControlledNPC:StopMoving()
-			self.PlayingAnimation = true
-			self.PlayingAttackAnimation = true
-			self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.ControlledNPC.AnimTbl_LeapAttack)
-			self.ControlledNPC:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.ControlledNPC.AnimTbl_LeapAttack),false,0,false,self.ControlledNPC.LeapAttackAnimationDelay)
-			self.ControlledNPC:LeapAttackVelocityCode()
-			timer.Simple(VJ_GetSequenceDuration(self.ControlledNPC,self.CurrentAttackAnimation) -0.2,function()
-				if IsValid(self.ControlledNPC) then
-				self.ControlledNPC:VJ_SetSchedule(SCHED_IDLE_STAND)
-				end
-			end)
-			timer.Simple(self.ControlledNPC.TimeUntilLeapAttackDamage,function()
-			if IsValid(self.ControlledNPC) then
-			self.ControlledNPC:LeapDamageCode()
-			timer.Simple(self.ControlledNPC.NextAnyAttackTime_Leap,function()
-				if IsValid(self.ControlledNPC) then
-				self.PlayingAnimation = false
-				self.PlayingAttackAnimation = false
-				end
-			  end)
-			 end
-			end)
-		   end
-		  end
-		 end
 		end
 		
 		-- Movement
-		if self.ControlledNPC.MovementType != VJ_MOVETYPE_STATIONARY then
+		if self.ControlledNPC.MovementType != VJ_MOVETYPE_STATIONARY && self.ControlledNPC.PlayingAttackAnimation == false && CurTime() > self.ControlledNPC.NextChaseTime && self.ControlledNPC.IsVJBaseSNPC_Tank != true then
 			if (self.TheController:KeyDown(IN_FORWARD)) then
-				self.PlayingAnimation = true
-				self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,100),0))
-				local plysaimvec = self.ControlledNPC:GetForward() *1 //TheController:GetAimVector()
-				plysaimvec.z = 0
-				local testcenter = self.ControlledNPC:OBBCenter():Distance(self.ControlledNPC:OBBMins()) + 20
-				local npcspos = self.ControlledNPC:GetPos() +Vector(0,0,testcenter) // 35
-				local forwardtr = util.TraceLine({start = npcspos, endpos = npcspos +plysaimvec *500, filter = {self, self.ControlledNPC}})
-				//print(npcspos:Distance(forwardtr.HitPos))
-				local npcvel = self.ControlledNPC:GetGroundSpeedVelocity()
+				//self.PropCamera:SetPos(self.PropCamera:GetLocalPos() +self.PropCamera:GetUp()*1.5)
+				local DontMove = false
+				local PlyAimVec = self.TheController:GetAimVector()
+				PlyAimVec.z = 0
+				local CenterToPos = self.ControlledNPC:OBBCenter():Distance(self.ControlledNPC:OBBMins()) + 20
+				local NPCPos = self.ControlledNPC:GetPos() + self.ControlledNPC:GetUp()*CenterToPos
+				local forwardtr = util.TraceLine({start = NPCPos, endpos = NPCPos + PlyAimVec*300, filter = {self,self.TheController,self.ControlledNPC}})
+				//local npcvel = self.ControlledNPC:GetGroundSpeedVelocity()
 				//if self.ControlledNPC:GetMovementActivity() > 0 then print(self.ControlledNPC:GetSequenceGroundSpeed(self.ControlledNPC:SelectWeightedSequence(self.ControlledNPC:GetMovementActivity()))) end
 				//self.ControlledNPC:GetSequenceGroundSpeed(self.ControlledNPC:SelectWeightedSequence(self.ControlledNPC:GetActivity()))
 				//Vector(math.abs(npcvel.x),math.abs(npcvel.y),math.abs(npcvel.z))
-				local CalculateWallToNPC = npcspos:Distance(forwardtr.HitPos) - 40
-				//local CalculateWallToNPC_X = npcspos:Distance(forwardtr.HitPos) - 400
-				//local CalculateWallToNPC_Y = npcspos:Distance(forwardtr.HitPos) - 400
-				//if math.abs(npcvel.x) > 51 then CalculateWallToNPC_X = math.abs(npcvel.x) end
-				//if math.abs(npcvel.y) > 51 then CalculateWallToNPC_Y = math.abs(npcvel.y) end
-				if npcspos:Distance(forwardtr.HitPos) >= 51 then
-					//print(CalculateWallToNPC)
-					local thepos = Vector((self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC).x,(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC).y,forwardtr.HitPos.z)
-					local downtr = util.TraceLine({start = thepos, endpos = thepos + self:GetUp()*-300, filter = {self, self.ControlledNPC}})
-					local CalculateDownDistance = thepos.z - downtr.HitPos.z
-					//print(CalculateDownDistance)
-					if CalculateDownDistance >= 300 then CalculateWallToNPC = CalculateWallToNPC - 300 end
-					thepos = Vector((self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC).x,(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC).y,forwardtr.HitPos.z)
-					-- Down Trace
-					/*local nig = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
-					nig:SetModel("models/hunter/blocks/cube025x025x025.mdl")
-					nig:SetPos(downtr.HitPos)
-					nig:SetAngles(self:GetAngles())
-					nig:SetColor(Color(0,255,0))
-					nig:Spawn()
-					nig:Activate()
-					timer.Simple(3,function() if IsValid(nig) then nig:Remove() end end)*/
-					self.ControlledNPC:SetLastPosition(thepos) // self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*CalculateWallToNPC
-					if (self.TheController:KeyDown(IN_SPEED)) then self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO_RUN) else self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO) end
-					-- Final Move Position
-					/*local nig = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
-					nig:SetModel("models/hunter/blocks/cube025x025x025.mdl")
-					nig:SetPos(thepos)
-					nig:SetAngles(self:GetAngles())
-					nig:SetColor(Color(255,0,0))
-					nig:Spawn()
-					nig:Activate()
-					timer.Simple(3,function() if IsValid(nig) then nig:Remove() end end)*/
+				local CalculateWallToNPC = NPCPos:Distance(forwardtr.HitPos) - 40
+				//VJ_CreateTestObject(NPCPos,self:GetAngles(),Color(0,255,255)) -- NPC's calculated position
+				//VJ_CreateTestObject(forwardtr.HitPos,self:GetAngles(),Color(255,255,0)) -- forward trace position
+				if NPCPos:Distance(forwardtr.HitPos) >= 51 then
+					local FinalPos = Vector((self.ControlledNPC:GetPos()+self.TheController:GetAimVector()*CalculateWallToNPC).x,(self.ControlledNPC:GetPos()+self.TheController:GetAimVector()*CalculateWallToNPC).y,forwardtr.HitPos.z)
+					local downtr = util.TraceLine({start = FinalPos, endpos = FinalPos + self:GetUp()*-(200+CenterToPos), filter = {self,self.TheController,self.ControlledNPC}})
+					local CalculateDownDistance = (FinalPos.z-CenterToPos) - downtr.HitPos.z
+					if CalculateDownDistance >= 150 then
+						DontMove = true
+						CalculateWallToNPC = CalculateWallToNPC - CalculateDownDistance
+					end
+					FinalPos = Vector((self.ControlledNPC:GetPos()+self.TheController:GetAimVector()*CalculateWallToNPC).x,(self.ControlledNPC:GetPos()+self.TheController:GetAimVector()*CalculateWallToNPC).y,forwardtr.HitPos.z)
+					//VJ_CreateTestObject(downtr.HitPos,self:GetAngles(),Color(0,255,0)) -- Down trace position
+					//VJ_CreateTestObject(FinalPos,self:GetAngles(),Color(255,0,0)) -- Final move position
+					if DontMove == false then
+						self.ControlledNPC:SetLastPosition(FinalPos)
+						local movetype = "TASK_WALK_PATH"
+						if (self.TheController:KeyDown(IN_SPEED)) then movetype = "TASK_RUN_PATH" end
+						self.ControlledNPC:VJ_TASK_GOTO_LASTPOS(movetype,function(x) /*self.ControlledNPC:SetLastPosition(self.TheController:GetEyeTrace().HitPos)*/ x:EngTask("TASK_FACE_LASTPOSITION", 0) end)
+					end
 				end
-				//if self.ControlledNPC:GetPos():Distance(forwardtr.HitPos) >= 298 then
-					//self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*300)
-				//elseif (self.ControlledNPC:GetPos():Distance(forwardtr.HitPos) <= 297 && self.ControlledNPC:GetPos():Distance(forwardtr.HitPos) >= 127) then
-					//self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*100)
-				//elseif (self.ControlledNPC:GetPos():Distance(forwardtr.HitPos) <= 126) then
-					//self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+self.ControlledNPC:GetForward()*40)
-				//end
-				//if (self.TheController:KeyDown(IN_SPEED)) then self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO_RUN) else self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO) end
-				timer.Simple(0.4,function() if IsValid(self.ControlledNPC) then self.PlayingAnimation = false end end)
 			elseif (self.TheController:KeyDown(IN_BACK)) then
-				self.PlayingAnimation = true
-				local PlayersVectorBack = self.TheController:GetAimVector()*-1 -- Since we are going backwards
-				PlayersVectorBack.z = 0 -- Make it zero, so you can set your desired number.
+				local PlayersVectorBack = self.TheController:GetAimVector()*-1
+				PlayersVectorBack.z = 0
 				self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+(PlayersVectorBack*300))
-				if (self.TheController:KeyDown(IN_SPEED)) then self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO_RUN) else self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO) end
-				timer.Simple(0.3,function() if IsValid(self.ControlledNPC) then self.PlayingAnimation = false end end)
+				if (self.TheController:KeyDown(IN_SPEED)) then self.ControlledNPC:VJ_TASK_GOTO_LASTPOS("TASK_RUN_PATH") else self.ControlledNPC:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH") end
 			elseif (self.TheController:KeyDown(IN_MOVELEFT)) then
-				self.PlayingAnimation = true
-				//self.ControlledNPC:SetAngles(Angle(0,1,0))
 				self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+(self.TheController:GetRight()*-300))
-				self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO)
-				timer.Simple(0.3,function() if IsValid(self.ControlledNPC) then self.PlayingAnimation = false end end)
+				if (self.TheController:KeyDown(IN_SPEED)) then self.ControlledNPC:VJ_TASK_GOTO_LASTPOS("TASK_RUN_PATH") else self.ControlledNPC:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH") end
 			elseif (self.TheController:KeyDown(IN_MOVERIGHT)) then
-				self.PlayingAnimation = true
 				self.ControlledNPC:SetLastPosition(self.ControlledNPC:GetPos()+(self.TheController:GetRight()*300))
-				self.ControlledNPC:VJ_SetSchedule(SCHED_FORCED_GO)
-				timer.Simple(0.3,function() if IsValid(self.ControlledNPC) then self.PlayingAnimation = false end end)
+				if (self.TheController:KeyDown(IN_SPEED)) then self.ControlledNPC:VJ_TASK_GOTO_LASTPOS("TASK_RUN_PATH") else self.ControlledNPC:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH") end
 			elseif (!self.TheController:KeyDown(IN_SPEED) && !self.TheController:KeyDown(IN_MOVERIGHT) && !self.TheController:KeyDown(IN_MOVELEFT) && !self.TheController:KeyDown(IN_BACK) && !self.TheController:KeyDown(IN_FORWARD)) then
 				self.ControlledNPC:StopMoving()
 			end
@@ -477,6 +338,13 @@ function ENT:OnRemove()
 	if self.VJControllerEntityIsRemoved == false then
 		self:StopControlling()
 	end
+	net.Start("vj_controller_hud")
+	net.WriteBool(true)
+	net.WriteFloat(0)
+	net.WriteFloat(0)
+	net.WriteString(" ")
+	net.WriteTable({})
+	net.Broadcast()
 end
 /*--------------------------------------------------
 	=============== NPC Controler Base ===============

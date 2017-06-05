@@ -34,7 +34,7 @@ ENT.Immune_Bullet = true -- Immune to Bullets
 ENT.Immune_Freeze = true -- Immune to Freezing
 ENT.Immune_Physics = true -- Immune to Physics
 ENT.ImmuneDamagesTable = {DMG_SLASH,DMG_GENERIC,DMG_CLUB,DMG_BULLET,DMG_BUCKSHOT,DMG_PHYSGUN} -- You can set Specific types of damages for the SNPC to be immune to
-//ENT.DisableFindEnemy = true -- Disables FindEnemy code, friendly code still works though
+ENT.DisableFindEnemy = true -- Disables FindEnemy code, friendly code still works though
 ENT.FindEnemy_UseSphere = true -- Should the SNPC be able to see all around him? (360) | Objects and walls can still block its sight!
 ENT.CallForHelp = false -- Does the SNPC call for help?
 ENT.DisableWandering = true -- Disables wandering when the SNPC is idle
@@ -117,6 +117,7 @@ function ENT:AngleDiffuse(ang1, ang2)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink()
+	//if !self:GetParent() then self:Remove() end
 	if GetConVarNumber("vj_npc_noidleparticle") == 1 then return end
 	timer.Simple(0.1,function()
 	if self.Dead == false then
@@ -125,6 +126,8 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink_AIEnabled()
 	if self.Dead == true then return end
+	self:SetEnemy(self:GetParent():GetEnemy())
+	
 	//print(self:GetEnemy())
 	//if self.Tank_ShellReady == true then print("Tank_ShellReady = true") else print("Tank_ShellReady = false") end
 	//if self.Tank_FacingTarget == true then print("Tank_FacingTarget = true") else print("Tank_FacingTarget = false") end
@@ -188,12 +191,16 @@ function ENT:CustomOnSchedule()
 		self.Tank_ResetedEnemy = false
 		EnemyPos = self:GetEnemy():GetPos()
 		EnemyPosToSelf = self:GetPos():Distance(EnemyPos)
-		if EnemyPosToSelf > self.Tank_SeeLimit then -- If more than this, Don't fire!
-			self.Tank_Status = 1
-		elseif EnemyPosToSelf < self.Tank_SeeFar && EnemyPosToSelf > self.Tank_SeeClose then -- Between this two numbers than fire!
+		if self:GetParent().VJ_IsBeingControlled == true then
 			self.Tank_Status = 0
-		else
-			self.Tank_Status = 0
+		elseif self:GetParent().VJ_IsBeingControlled == false then
+			if EnemyPosToSelf > self.Tank_SeeLimit then -- If more than this, Don't fire!
+				self.Tank_Status = 1
+			elseif EnemyPosToSelf < self.Tank_SeeFar && EnemyPosToSelf > self.Tank_SeeClose then -- Between this two numbers than fire!
+				self.Tank_Status = 0
+			else
+				self.Tank_Status = 0
+			end
 		end
 	end
 end
@@ -208,6 +215,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttack_Base()
 	if self.Tank_ProperHeightShoot == false then return end
+	if self:GetParent().VJ_IsBeingControlled == true && !self:GetParent().VJ_TheController:KeyDown(IN_ATTACK2) then return end
 	//if self.Tank_FacingTarget == true then
 	//if (self:GetEnemy() != nil && self:GetEnemy() != NULL) then
 		//if self:GetEnemy():IsNPC() then

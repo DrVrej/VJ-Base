@@ -27,7 +27,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
 	if (CLIENT) then return true end
-	if !tr.Entity:IsNPC() then return end
+	if !IsValid(tr.Entity)then return false end
 	local Ply = self:GetOwner()
 	local Ent = tr.Entity
 	local Phys = Ent:GetPhysicsObject()
