@@ -369,7 +369,7 @@ end
 function SWEP:PrimaryAttack(ShootPos,ShootDir)
 	//if self.Owner:KeyDown(IN_RELOAD) then return end
 	//self.Owner:SetFOV( 45, 0.3 )
-	if not IsFirstTimePredicted() then return end
+	if !IsFirstTimePredicted() then return end
 	self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
 	if self.Reloading == true then return end
 	if self.Owner:IsNPC() && self.Owner.VJ_IsBeingControlled == false && self.Owner:GetEnemy() == nil then return end
@@ -641,26 +641,26 @@ function SWEP:RunWorldModelThink()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
-function SWEP:DrawWorldModel()
-	if !IsValid(self) then return end
-	if self.WorldModel_Invisible == true then return end
-	//self:DrawModel()
-	if self.WorldModel_UseCustomPosition == true then
-		if IsValid(self.Owner) then
-			if self.Owner:IsPlayer() && self.Owner:InVehicle() then return end
-			weppos = self:GetWeaponCustomPosition()
-			self:SetRenderOrigin(weppos.pos)
-			self:SetRenderAngles(weppos.ang)
-			self:FrameAdvance(FrameTime())
-			self:SetupBones()
-			self:DrawModel()
+	function SWEP:DrawWorldModel()
+		if !IsValid(self) then return end
+		if self.WorldModel_Invisible == true then return end
+		//self:DrawModel()
+		if self.WorldModel_UseCustomPosition == true then
+			if IsValid(self.Owner) then
+				if self.Owner:IsPlayer() && self.Owner:InVehicle() then return end
+				weppos = self:GetWeaponCustomPosition()
+				self:SetRenderOrigin(weppos.pos)
+				self:SetRenderAngles(weppos.ang)
+				self:FrameAdvance(FrameTime())
+				self:SetupBones()
+				self:DrawModel()
+			else
+				self:SetRenderOrigin(nil)
+				self:SetRenderAngles(nil)
+				self:DrawModel()
+			end
 		else
-			self:SetRenderOrigin(nil)
-			self:SetRenderAngles(nil)
 			self:DrawModel()
 		end
-	else
-		self:DrawModel()
 	end
-end
 end

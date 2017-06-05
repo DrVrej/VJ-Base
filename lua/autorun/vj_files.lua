@@ -56,11 +56,77 @@ util.PrecacheModel("models/spitball_large.mdl")
 util.PrecacheModel("models/spitball_medium.mdl")
 util.PrecacheModel("models/spitball_small.mdl")
 
--- Menu Language Code -------------------------------------------------------------------------------------------------------------------------
+-- Menu Language -------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
 	language.Add("vjbase.menugeneral.default", "Default")
 	language.Add("vjbase.menudifficulty.easy", "Easy | -50% Health and Damage")
 	language.Add("vjbase.menudifficulty.normal", "Normal | Original Health and Damage")
 	language.Add("vjbase.menudifficulty.hard", "Hard | +50% Health and Damage")
 	language.Add("vjbase.menudifficulty.hellonearth", "Hell On Earth | +150% Health and Damage")
+end
+
+-- Fonts -------------------------------------------------------------------------------------------------------------------------
+if (CLIENT) then
+	surface.CreateFont( "VJFont_Trebuchet24_Large",{
+		font = "Trebuchet24",
+		size = 34, -- Size
+		weight = 600, -- Boldness
+		blursize = 0, -- Blurness, should be 1 or 0
+		antialias = true, -- Is it smooth?
+		italic = false, -- Is it Italic?
+	})
+
+	surface.CreateFont( "VJFont_Trebuchet24_MediumLarge",{
+		font = "Trebuchet24",
+		size = 26, -- Size
+		weight = 600, -- Boldness
+		blursize = 0, -- Blurness, should be 1 or 0
+		antialias = true, -- Is it smooth?
+		italic = false, -- Is it Italic?
+	})
+
+	surface.CreateFont( "VJFont_Trebuchet24_Medium",{
+		font = "Trebuchet24",
+		size = 24, -- Size
+		weight = 600, -- Boldness
+		blursize = 0, -- Blurness, should be 1 or 0
+		antialias = true, -- Is it smooth?
+		italic = false, -- Is it Italic?
+	})
+
+	surface.CreateFont( "VJFont_Trebuchet24_SmallMedium",{
+		font = "Trebuchet24",
+		size = 17, -- Size
+		weight = 600, -- Boldness
+		blursize = 0, -- Blurness, should be 1 or 0
+		antialias = true, -- Is it smooth?
+		italic = false, -- Is it Italic?
+	})
+
+	surface.CreateFont( "VJFont_Trebuchet24_Small",{
+		font = "Trebuchet24",
+		size = 16, -- Size
+		weight = 600, -- Boldness
+		blursize = 0, -- Blurness, should be 1 or 0
+		antialias = true, -- Is it smooth?
+		italic = false, -- Is it Italic?
+	})
+
+	surface.CreateFont( "VJFont_Trebuchet24_Tiny",{
+		font = "Trebuchet24",
+		size = 11, -- Size
+		weight = 600, -- Boldness
+		blursize = 0, -- Blurness, should be 1 or 0
+		antialias = true, -- Is it smooth?
+		italic = false, -- Is it Italic?
+	})
+
+	surface.CreateFont( "VJFont_Trebuchet24_TinyItalic",{
+		font = "Trebuchet24",
+		size = 11, -- Size
+		weight = 600, -- Boldness
+		blursize = 0, -- Blurness, should be 1 or 0
+		antialias = true, -- Is it smooth?
+		italic = true, -- Is it Italic?
+	})
 end

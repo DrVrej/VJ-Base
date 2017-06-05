@@ -31,6 +31,7 @@ function util.VJ_SphereDamage(vAttacker,vInflictor,vPosition,vDamageRadius,vDama
 	end
 	if (!Findents) then return end
 	for k,v in pairs(Findents) do
+		if (vAttacker.VJ_IsBeingControlled == true && vAttacker.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
 		if v:EntIndex() == vAttacker:EntIndex() && vTbl_DamageAttacker == false then continue end
 		local vtoself = v:NearestPoint(vPosition) -- From the enemy position to the given position
 		if vUseRealisticRadius == true then
@@ -54,7 +55,7 @@ function util.VJ_SphereDamage(vAttacker,vInflictor,vPosition,vDamageRadius,vDama
 		end
 		
 		if vBlockCertainEntities == true then
-			if (v:IsNPC() && (v:Disposition(vAttacker) == 1 or v:Disposition(vAttacker) == 2) && v:Health() > 0 && (v != vAttacker) && (v:GetClass() != vAttacker:GetClass())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 && v:Alive() && v:Health() > 0) then
+			if (v:IsNPC() && (v:Disposition(vAttacker) != D_LI) && v:Health() > 0 && (v != vAttacker) && (v:GetClass() != vAttacker:GetClass())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 && v:Alive() && v:Health() > 0) then
 				//if ((v:IsNPC() && v:Disposition(vAttacker) == 1 or v:Disposition(vAttacker) == 2) or (v:IsPlayer() && v:Alive())) && (v != vAttacker) && (v:GetClass() != vAttacker:GetClass()) then -- entity check
 				DoDamageCode(v)
 			elseif !v:IsNPC() && !v:IsPlayer() then

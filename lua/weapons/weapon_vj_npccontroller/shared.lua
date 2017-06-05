@@ -54,12 +54,12 @@ function SWEP:PrimaryAttack()
 	tracedata.endpos = self.Owner:GetShootPos() +self.Owner:GetAimVector()*10000
 	tracedata.filter = self.Owner
 	local tr = util.TraceLine(tracedata) 
-	if tr.Entity && IsValid( tr.Entity ) && tr.Entity:Health() > 0 then
+	if tr.Entity && IsValid(tr.Entity) && tr.Entity:Health() > 0 then
 		if tr.Entity:IsPlayer() then
 			self.Owner:ChatPrint("That's a player dumbass.")
 			return
 		elseif tr.Entity:GetClass() == "prop_ragdoll" then
-			self.Owner:ChatPrint("That's a dead thing, dumbass.")
+			self.Owner:ChatPrint("That's a corpse you retard.")
 			return
 		elseif tr.Entity:GetClass() == "prop_physics" then
 			self.Owner:ChatPrint("Uninstall your game now.")
@@ -67,9 +67,10 @@ function SWEP:PrimaryAttack()
 		elseif !tr.Entity:IsNPC() then
 			self.Owner:ChatPrint("This isn't an NPC, therefore you can't control it.")
 			return
-		elseif tr.Entity.IsVJBaseSNPC_Tank == true then
-			self.Owner:ChatPrint("Tank are not controllable yet, sorry!")
-			return
+		//elseif tr.Entity.IsVJBaseSNPC_Tank == true then
+			//tr.Entity = tr.Entity.Gunner
+			//self.Owner:ChatPrint("Tank are not controllable yet, sorry!")
+			//return
 		elseif tr.Entity.VJ_IsBeingControlled == true then
 			self.Owner:ChatPrint("You can't control this NPC, it's already being controlled by someone else.")
 			return

@@ -7,7 +7,7 @@ INFO: Main Autorun file for VJ Base
 --------------------------------------------------*/
 if (CLIENT) then print("Loading VJ Base (Client)...") else print("Loading VJ Base (Server)...") end
 
-VJBASE_VERSION = "2.3.4"
+VJBASE_VERSION = "2.4.0"
 VJBASE_GETNAME = "VJ Base"
 
 -- Shared --
@@ -75,14 +75,9 @@ hook.Add("PlayerInitialSpawn", "VJBaseSpawn", VJSpawn)
 
 net.Receive("VJSay",function(len,pl)
 	ply = net.ReadEntity()
-	noply = net.ReadBool()
 	msg = net.ReadString()
 	soundfile = net.ReadString()
-	if noply == true then
-		PrintMessage(HUD_PRINTTALK,msg)
-	else
-		ply:Say(msg)
-	end
+	PrintMessage(HUD_PRINTTALK,msg)
 	local sd = CreateSound(game.GetWorld(),soundfile)
 	sd:SetSoundLevel(0)
 	sd:Play()
@@ -91,10 +86,10 @@ end)
 if (CLIENT) then print("VJ Base client files initialized!") else print("VJ Base server files initialized!") end
 -- Raps and Sounds -------------------------------------------------------------------------------------------------------------------------
 /*
-/_-_-_-_-_-_-_-_-_-_ Official Song of The True Coders -_-_-_-_-_-_-_-_-_-_-_-_\ 
-|------------------- By: DrVrej, Cpt. Hazama, and Orion ------------------------| 
-|-_-_-_-_-_-_-_-_-_-_- Remake of Hey There Delilah -_-_-_-_-_-_-_-_-_-_-_-_-_-| 
-\__________________________________________________________________________/ 
+/_-_-_-_-_-_-_-_-_-_ Official Song of The True Coders -_-_-_-_-_-_-_-_-_-_-_-_\
+|------------------- By: DrVrej, Cpt. Hazama, and Orion ------------------------|
+|-_-_-_-_-_-_-_-_-_-_- Remake of Hey There Delilah -_-_-_-_-_-_-_-_-_-_-_-_-_-|
+\__________________________________________________________________________/
 //Hey there AI Base, with your messy lines and broken functions 
 //Trying hard to give a shit, because the base is year-old useless shiiiiit todaaay 
 //It's like EA made this fucking code, this is baaad 

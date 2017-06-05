@@ -13,6 +13,8 @@ INFO: Used to place a target in certain situations for VJ Base SNPCs.
 ENT.SolidMovementType = "Dynamic"
 ENT.Activated = true
 ENT.UserStatusColors = true
+ENT.EnemyToIndividual = false
+ENT.EnemyToIndividualEnt = NULL
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	//self:SetModel("models/hunter/plates/plate.mdl")
@@ -50,12 +52,22 @@ function ENT:AcceptInput(key,activator,caller,data)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-	if self.Activated == false then
+	if self.EnemyToIndividual == true then
 		self.VJ_NoTarget = true
-		if self.UserStatusColors == true then self:SetColor(Color(255,0,0)) end
-	elseif self.Activated == true then
-		self.VJ_NoTarget = false
-		if self.UserStatusColors == true then self:SetColor(Color(0,255,0)) end
+		if IsValid(self.EnemyToIndividualEnt) then
+			self.EnemyToIndividualEnt:AddEntityRelationship(self,D_HT,99)
+			self:AddEntityRelationship(self.EnemyToIndividualEnt,D_HT,99)
+			self.EnemyToIndividualEnt:VJ_DoSetEnemy(self,false,false)
+			self.EnemyToIndividualEnt:SetEnemy(self)
+		end
+	else
+		if self.Activated == false then
+			self.VJ_NoTarget = true
+			if self.UserStatusColors == true then self:SetColor(Color(255,0,0)) end
+		elseif self.Activated == true then
+			self.VJ_NoTarget = false
+			if self.UserStatusColors == true then self:SetColor(Color(0,255,0)) end
+		end
 	end
 	/*if IsValid(self.VJBULLSEYE_TheAttacker) && self.Alreadydoneit == false then
 		table.insert(self.VJBULLSEYE_TheAttacker.CurrentPossibleEnemies,self)

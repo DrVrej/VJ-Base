@@ -208,6 +208,22 @@ end
 function VJ_Color8Bit2Color(bits)
 	return Color(bit.rshift(bits,5)*255/7,bit.band(bit.rshift(bits,2),0x07)*255/7,bit.band(bits,0x03)*255/3)
 end
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function VJ_CreateTestObject(pos,ang,color,rtime,mdl)
+	local ang = ang or Angle(0,0,0)
+	local color = color or Color(255,0,0)
+	local rtime = rtime or 3
+	local mdl = mdl or "models/hunter/blocks/cube025x025x025.mdl"
+	local obj = ents.Create("prop_dynamic")
+	obj:SetModel(mdl)
+	obj:SetPos(pos)
+	obj:SetAngles(ang)
+	obj:SetColor(color)
+	obj:Spawn()
+	obj:Activate()
+	timer.Simple(rtime,function() if IsValid(obj) then obj:Remove() end end)
+	return obj
+end
 -- NPC/Entity/Player Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local Entity_MetaTable = FindMetaTable("Entity")
 local NPC_MetaTable = FindMetaTable("NPC")
@@ -285,6 +301,7 @@ function NPC_MetaTable:VJ_PlaySequence(SequenceID,PlayBackRate,Wait,WaitTime,Int
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function NPC_MetaTable:VJ_TranslateWeaponActivity(ActAnim)
+	if !IsValid(self:GetActiveWeapon()) then return ActAnim end
 	if self:GetActiveWeapon():TranslateActivity(ActAnim) == -1 then return ActAnim else
 	return self:GetActiveWeapon():TranslateActivity(ActAnim) end
 end

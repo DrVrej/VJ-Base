@@ -1,0 +1,7 @@
+"UnlitGeneric"
+{
+	"$basetexture" "vgui/entities/npc_vj_mortarsynth"
+	"$nolod" 1
+	"$vertexalpha" 1
+	"$vertexcolor" 1
+}
