@@ -15,8 +15,7 @@ ENT.Model = {"models/props_debris/wood_board05a.mdl"}
 ENT.StartHealth = 10
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
-	if self:GetModel() == "models/error.mdl" then
-	self:SetModel(Model(VJ_PICKRANDOMTABLE(self.Model))) end
+	self:SetModel(Model(VJ_PICKRANDOMTABLE(self.Model)))
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:SetSolid(SOLID_VPHYSICS)
