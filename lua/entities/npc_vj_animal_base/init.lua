@@ -174,7 +174,7 @@ ENT.HasBecomeEnemyToPlayerSounds = true -- If set to false, it won't play the be
 ENT.HasFollowPlayerSounds_Follow = true -- If set to false, it won't play the follow player sounds
 ENT.HasFollowPlayerSounds_UnFollow = true -- If set to false, it won't play the unfollow player sounds
 ENT.HasOnPlayerSightSounds = true -- If set to false, it won't play the saw player sounds
-ENT.HasDamageByPlayerSounds = true -- If set to false, it won't play the stupid player sounds
+ENT.HasDamageByPlayerSounds = true -- If set to false, it won't play the damage by player sounds
 ENT.HasFootStepSound = true -- Should the SNPC make a footstep sound when it's moving?
 ENT.HasBreathSound = true -- Should it make a breathing sound?
 ENT.HasSoundTrack = false -- Does the SNPC have a sound track?
@@ -455,6 +455,10 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Controller_IntMsg(ply)
+	ply:ChatPrint("None specified...") -- Remove this line!
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetSpawnEffect(false)
 	self:VJ_DoSelectDifficulty()
@@ -501,7 +505,7 @@ function ENT:Initialize()
 	duplicator.RegisterEntityClass(self:GetClass(),VJSPAWN_SNPC_DUPE,"Model","Class","Equipment","SpawnFlags","Data")
 	//if self.Immune_Dissolve == true or self.GodMode == true then self:AddEFlags(EFL_NO_DISSOLVE) end
 	self:AddEFlags(EFL_NO_DISSOLVE)
-	if self.MovementType == VJ_MOVETYPE_GROUND then self:VJ_SetSchedule(SCHED_FALL_TO_GROUND) end
+	//if self.MovementType == VJ_MOVETYPE_GROUND then self:VJ_SetSchedule(SCHED_FALL_TO_GROUND) end
 	/*if self.VJ_IsStationary == true then
 		self.HasFootStepSound = false
 		self.HasWorldShakeOnMove = false
@@ -929,7 +933,7 @@ function ENT:Think()
 		  end
 		end*/
 	end
-	self:NextThink(CurTime() +0.1)
+	self:NextThink(CurTime()+(0.069696968793869+FrameTime()))
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

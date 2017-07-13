@@ -37,10 +37,21 @@ if (CLIENT) then
 			end
 		end
 		Panel:AddPanel(reset)
+
+		local tutorial = vgui.Create("DButton")
+		tutorial:SetFont("DermaDefaultBold")
+		tutorial:SetText("Tutorial Video")
+		tutorial:SetSize(150, 20)
+		tutorial:SetColor(Color(0,0,255,255))
+		tutorial.DoClick = function(tutorial)
+			gui.OpenURL("http://www.youtube.com/watch?v=SnuQU8Sc4cg")
+		end
+		Panel:AddPanel(tutorial)
+
 		Panel:AddControl("Label", {Text = "It's recommended to use this tool only for VJ Base SNPCs."})
-		Panel:ControlHelp("Left click to apply relationship classes on an entity.")
-		Panel:ControlHelp("Right click to obtain the current classes an entity has.")
-		Panel:ControlHelp("Press reload to apply the relationship class to yourself.")
+		Panel:ControlHelp("- Left click to apply relationship classes on an entity.")
+		Panel:ControlHelp("- Right click to obtain the current classes an entity has.")
+		Panel:ControlHelp("- Press reload to apply the relationship class to yourself.")
 		
 		VJ_NPCRELATION_TblCurrentValues = VJ_NPCRELATION_TblCurrentValues or {}
 		local CheckList = vgui.Create("DListView")

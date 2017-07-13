@@ -31,7 +31,7 @@ if (file.Exists("autorun/vj_zss_autorun.lua","LUA")) then table.insert(VJBASE_GE
 //PrintTable(InstalledVJBaseAddons)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_INSTALLATIONS(Panel)
-	Panel:AddControl( "Label", {Text = "List of downloaded addons that use VJ Base"})
+	Panel:AddControl( "Label", {Text = "List of downloaded addons that use VJ Base."})
 	Panel:ControlHelp("Version: "..VJBASE_VERSION) -- Main Number/Version/Quick Fixes
 	Panel:ControlHelp("Total Addons: "..VJBASE_GETADDONAMOUNT)
 	local CheckList = vgui.Create("DListView")
@@ -123,7 +123,7 @@ function VJ_INSTALLATIONS(Panel)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_ADDTOMENU_INSTALLATIONS()
-	spawnmenu.AddToolMenuOption("DrVrej", "VJ Base", "Installed Addons", "Installed Addons", "", "", VJ_INSTALLATIONS)
+	spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Installed Addons", "Installed Addons", "", "", VJ_INSTALLATIONS)
 end
 hook.Add( "PopulateToolMenu", "VJ_ADDTOMENU_INSTALLATIONS", VJ_ADDTOMENU_INSTALLATIONS )
 ---------------------------------------------------------------------------------------------------------------------------------------------

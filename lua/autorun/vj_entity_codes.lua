@@ -248,6 +248,28 @@ VJ_MOVETYPE_STATIONARY = 4
 
 //SetNetworkedBool
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function NPC_MetaTable:VJ_Controller_InitialMessage(ply)
+	if !IsValid(ply) then return end
+	if self.IsVJBaseSNPC == true then
+		if self.IsVJBaseSNPC_Creature then
+			ply:ChatPrint("=-=-=-= Default Controls (May differ between NPCs!) =-=-=-=")
+			ply:ChatPrint("MOUSE1: Melee Attack | MOUSE2: Range Attack")
+			ply:ChatPrint("JUMP: Leap Attack")
+			ply:ChatPrint("=-=-=-= Custom Controls (Written by the developers) =-=-=-=")
+		elseif self.IsVJBaseSNPC_Human == true then
+			ply:ChatPrint("=-=-=-= Default Controls (May differ between NPCs!) =-=-=-=")
+			ply:ChatPrint("MOUSE1: Melee Attack | MOUSE2: Weapon Attack")
+			ply:ChatPrint("JUMP: Grenade Attack | RELOAD: Reload Weapon")
+			ply:ChatPrint("=-=-=-= Custom Controls (Written by the developers) =-=-=-=")
+		else
+			-- None...
+		end
+		self:Controller_IntMsg(ply)
+	else
+		-- None...
+	end
+end
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function NPC_MetaTable:VJ_HasActiveWeapon()
 	if self.DisableWeapons == false && self:GetActiveWeapon() != NULL then return true end
 	return false

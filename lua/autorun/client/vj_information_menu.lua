@@ -9,12 +9,12 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 include('autorun/client/vj_installed_addons.lua')
 
 local function VJ_INFORMATION(Panel)
-	Panel:AddControl( "Label", {Text = "VJ Base Information:"})
-	Panel:ControlHelp("VJ Base is made by DrVrej. The main purpose of this base is for the sake of simplicity. It provides many types of bases including a very advanced artificial intelligent NPC base")
+	Panel:AddControl( "Label", {Text = "About VJ Base:"})
+	Panel:ControlHelp("VJ Base is made by DrVrej. The main purpose of this base is for the sake of simplicity. It provides many types of bases including a very advanced artificial intelligent NPC base.")
 	
 	Panel:ControlHelp("==============================")
 	
-	Panel:AddControl( "Label", {Text = "Local Player Information:"})
+	Panel:AddControl( "Label", {Text = "User Information:"})
 	
 	local map = game.GetMap() -- Map Name
 	local gmode = gmod.GetGamemode().Name -- Gamemode
@@ -34,9 +34,9 @@ local function VJ_INFORMATION(Panel)
 	Panel:ControlHelp("Steam ID - "..client:SteamID()) -- Steam ID
 	Panel:ControlHelp("Screen Resolution - "..ScrW().."x"..ScrH()) -- Player's Resolution
 	-- Check the Operation System
-	if system.IsWindows() then Panel:ControlHelp("Operating System - Windows") end
-	if system.IsOSX() then Panel:ControlHelp("Operating System - OSX") end
-	if system.IsLinux() then Panel:ControlHelp("Operating System - Linux") end
+	if system.IsWindows() then Panel:ControlHelp("Operating System - Windows")
+	elseif system.IsOSX() then Panel:ControlHelp("Operating System - OSX")
+	elseif system.IsLinux() then Panel:ControlHelp("Operating System - Linux") end
 	-- Check Mounted Games
 	if IsMounted( "hl1" ) then -- Is Half Life 1 Source mounted? Or not?
 	Panel:ControlHelp("Half Life 1 Source - Mounted") else
@@ -67,16 +67,17 @@ local function VJ_INFORMATION(Panel)
 	Panel:ControlHelp("")
 	Panel:ControlHelp("HUD - Second prefix starts with 'hud_*'")
 	Panel:ControlHelp("")
-	Panel:ControlHelp("Crosshair - Second prefix starts with 'cross_*'")
+	Panel:ControlHelp("Crosshair - Second prefix starts with 'hud_ch_*'")
 	
 	Panel:ControlHelp("==============================")
 	
 	Panel:AddControl( "Label", {Text = "Credits:"})
-	Panel:ControlHelp("Orion - Helped with many SNPC codes.")
-	Panel:ControlHelp("Cpt. Hazama - Helped with mapping and giving many good suggestions.")
-	Panel:ControlHelp("EnlistedDiabetus - For the huge support!")
+	Panel:ControlHelp("Orion - Helping with AI coding.")
+	Panel:ControlHelp("Cpt. Hazama - Helping and giving many good suggestions.")
 	Panel:ControlHelp("Robert Twigs - Giving many good suggestions.")
+	Panel:ControlHelp("EnlistedDiabetus - For the huge support!")
 	
+	Panel:ControlHelp("")
 	Panel:ControlHelp("==============================")
 	
 	Panel:ControlHelp("Copyright (c) "..os.date("20%y").." by DrVrej, All rights reserved.")
@@ -84,6 +85,6 @@ local function VJ_INFORMATION(Panel)
 end
 ----=================================----
 function VJ_ADDTOMENU_INFORMATION()
-	spawnmenu.AddToolMenuOption( "DrVrej", "VJ Base", "Information", "Information", "", "", VJ_INFORMATION, {} )
+	spawnmenu.AddToolMenuOption( "DrVrej", "Main Menu", "Information", "Information", "", "", VJ_INFORMATION, {} )
 end
 hook.Add( "PopulateToolMenu", "VJ_ADDTOMENU_INFORMATION", VJ_ADDTOMENU_INFORMATION )

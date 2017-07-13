@@ -234,7 +234,9 @@ ENT.RangeToMeleeDistance = 800 -- How close does it have to be until it uses mel
 ENT.RangeAttackAngleRadius = 100 -- What is the attack angle radius? | 100 = In front of the SNPC | 180 = All around the SNPC
 ENT.RangeUseAttachmentForPos = false -- Should the projectile spawn on a attachment?
 ENT.RangeUseAttachmentForPosID = "muzzle" -- The attachment used on the range attack if RangeUseAttachmentForPos is set to true
-ENT.RangeUpPos = 20 -- Spawning Position for range attack | + = up, - = down
+ENT.RangeAttackPos_Up = 20 -- Up/Down spawning position for range attack
+ENT.RangeAttackPos_Forward = 0 -- Forward/ Backward spawning position for range attack
+ENT.RangeAttackPos_Right = 0 -- Right/Left spawning position for range attack
 	-- To use event-based attacks, set this to false:
 ENT.TimeUntilRangeAttackProjectileRelease = 1.5 -- How much time until the projectile code is ran?
 ENT.NextRangeAttackTime = 3 -- How much time until it can use a range attack?
@@ -321,7 +323,6 @@ ENT.FollowPlayerChat = true -- Should the SNPCs say things like "They stopped fo
 ENT.FollowPlayerKey = "Use" -- The key that the player presses to make the SNPC follow them
 ENT.FollowPlayerCloseDistance = 150 -- If the SNPC is that close to the player then stand still until the player goes farther away
 ENT.NextFollowPlayerTime = 1 -- Time until it runs to the player again
-ENT.BringAlliesToMeSchedules = {SCHED_FORCED_GO} -- The Schedule that its friends play when BringAlliesToMe code is ran
 	-- Sounds ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasSounds = true -- Put to false to disable ALL sound
 ENT.HasExtraMeleeAttackSounds = false -- Set to true to use the extra melee attack sounds
@@ -344,7 +345,7 @@ ENT.HasFollowPlayerSounds_UnFollow = true -- If set to false, it won't play the 
 ENT.HasMedicSounds_BeforeHeal = true -- If set to false, it won't play any sounds before it gives a med kit to an ally
 ENT.HasMedicSounds_AfterHeal = true -- If set to false, it won't play any sounds after it gives a med kit to an ally
 ENT.HasOnPlayerSightSounds = true -- If set to false, it won't play the saw player sounds
-ENT.HasDamageByPlayerSounds = true -- If set to false, it won't play the stupid player sounds
+ENT.HasDamageByPlayerSounds = true -- If set to false, it won't play the damage by player sounds
 ENT.HasCallForHelpSounds = true -- If set to false, it won't play any sounds when it calls for help
 ENT.HasOnKilledEnemySound = true -- Should it play a sound when it kills an enemy?
 ENT.HasOnReceiveOrderSounds = true -- If set to false, it won't play any sound when it receives an order from an ally
@@ -840,6 +841,10 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Controller_IntMsg(ply)
+	ply:ChatPrint("None specified...") -- Remove this line!
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetSpawnEffect(false)
 	self:VJ_DoSelectDifficulty()
@@ -901,7 +906,7 @@ function ENT:Initialize()
 			self.CurrentPossibleEnemies = self:DoHardEntityCheck()
 		end
 	end)
-	if self.MovementType == VJ_MOVETYPE_GROUND then self:VJ_SetSchedule(SCHED_FALL_TO_GROUND) end
+	//if self.MovementType == VJ_MOVETYPE_GROUND then self:VJ_SetSchedule(SCHED_FALL_TO_GROUND) end
 	/*if self.VJ_IsStationary == true then
 		self.HasFootStepSound = false
 		self.HasWorldShakeOnMove = false
@@ -1118,8 +1123,6 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 	//self:MaintainActivity()
 	//self:TaskComplete()
 end
-ENT.AnimTbl_Walk = {ACT_WALK} -- Set the walking animations | Put multiple to let the base pick a random animation when it moves
-ENT.AnimTbl_Run = {ACT_RUN} -- Set the running animations | Put multiple to let the base pick a random animation when it moves
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_FACE_X(FaceType,CustomCode)
 	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
@@ -1196,7 +1199,7 @@ function ENT:VJ_TASK_COVER_FROM_ENEMY(MoveType,CustomCode)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_IDLE_WANDER()
-	if self.MovementType == VJ_MOVETYPE_AERIAL then self:AerialMove_Wander() return end
+	if self.MovementType == VJ_MOVETYPE_AERIAL then self:AerialMove_Wander(true) return end
 	self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Walk))
 	local vsched = ai_vj_schedule.New("vj_idle_wander")
 	//self:SetLastPosition(self:GetPos() + self:GetForward() * 300)
@@ -1214,6 +1217,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 	UseLOSChase = UseLOSChase or false
+	if self.MovementType == VJ_MOVETYPE_AERIAL then self:AerialMove_ChaseEnemy(true) return end
 	if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
 	self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Run))
 	if UseLOSChase == true then
@@ -1319,12 +1323,8 @@ function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
 	//ChaseSched = ChaseSched or VJ_PICKRANDOMTABLE(self.ChaseSchedule)
 	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_TASK_IDLE_STAND(math.Rand(6,12)) return end
 	if OverrideChasing == false && (self.DisableChasingEnemy == true or self.RangeAttack_DisableChasingEnemy == true) then self:VJ_TASK_IDLE_STAND(math.Rand(6,12)) return end
-	if self.MovementType == VJ_MOVETYPE_AERIAL then
-		self:AerialMove_ChaseEnemy(true)
-	else
-		//self:VJ_SetSchedule(ChaseSched) // SCHED_CHASE_ENEMY
-		self:VJ_TASK_CHASE_ENEMY()
-	end
+	//self:VJ_SetSchedule(ChaseSched) // SCHED_CHASE_ENEMY
+	self:VJ_TASK_CHASE_ENEMY()
 	self.NextChaseTime = CurTime() + 0.1
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1333,25 +1333,67 @@ end
 // MOVETYPE_FLY | MOVETYPE_FLYGRAVITY
 ENT.Aerial_FlyingSpeed_Calm = 80 -- The speed it should fly with, when it's wandering, moving slowly, etc. | Basically walking campared to ground SNPCs
 ENT.Aerial_FlyingSpeed_Alerted = 200 -- The speed it should fly with, when it's chasing an enemy, moving away quickly, etc. | Basically running campared to ground SNPCs
-ENT.Aerial_AnimTbl_Calm = {"mortar_forward"} -- Animations it plays when it's wandering around while idle
+ENT.Aerial_AnimTbl_Calm = {"mortar_back"} -- Animations it plays when it's wandering around while idle
 ENT.Aerial_AnimTbl_Alerted = {"mortar_forward"} -- Animations it plays when it's moving while alerted
 ENT.Aerial_EnableDebug = false -- Used for testing
 
 ENT.CurrentAnim_AerialMovement = nil
 ENT.Aerial_NextMovementAnimation = 0
-ENT.Aerial_CurrentMovementAnimation = 0
+ENT.Aerial_CurrentMovementAnimationDur = 0
 ENT.Aerial_ShouldBeFlying = false
+ENT.Aerial_CanPlayMoveAnimation = false
+ENT.Aerial_CurrentMoveAnimationType = "Wander"
 
 ENT.Aerial_TargetPos = Vector(0,0,0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:AerialMove_Animation()
+	if self:GetSequence() != self.CurrentAnim_AerialMovement /*&& self:GetActivity() == ACT_IDLE*/ && CurTime() > self.Aerial_NextMovementAnimation then
+		local animtbl = {}
+		if self.Aerial_CurrentMoveAnimationType == "Wander" then animtbl = self.Aerial_AnimTbl_Calm
+		elseif self.Aerial_CurrentMoveAnimationType == "Chase" then animtbl = self.Aerial_AnimTbl_Alerted end
+		local pickedanim = VJ_PICKRANDOMTABLE(animtbl)
+		if type(pickedanim) == "number" then pickedanim = self:GetSequenceName(self:SelectWeightedSequence(pickedanim)) end
+		local idleanimid = VJ_GetSequenceName(self,pickedanim)
+		//self.Aerial_ShouldBeFlying = true
+		self.CurrentAnim_AerialMovement = idleanimid
+		self.Aerial_CurrentMovementAnimationDur = VJ_GetSequenceDuration(self,self.CurrentAnim_AerialMovement)
+		//self:AddGestureSequence(idleanimid)
+		self:VJ_ACT_PLAYACTIVITY(pickedanim,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false})
+		self.Aerial_NextMovementAnimation = CurTime() + self.Aerial_CurrentMovementAnimationDur
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AerialMove_Wander(ShouldPlayAnim)
-	print("Running Aerial Wander")
-
-	local tr_startpos = self:GetPos()+self:OBBCenter()
-	local tr = util.TraceLine({start = tr_startpos, endpos = tr_startpos+self:GetForward()*math.random(-300,300)+self:GetRight()*math.random(-300,300)+self:GetUp()*math.random(-300,300), filter = self})
+	local Debug = self.Aerial_EnableDebug
+	local ShouldPlayAnim = ShouldPlayAnim or false
+	
+	if ShouldPlayAnim == true then
+		self.Aerial_CanPlayMoveAnimation = true
+		self.Aerial_CurrentMoveAnimationType = "Wander"
+	else
+		self.Aerial_CanPlayMoveAnimation = false
+	end
+	
+	self:SetAngles(Angle(0,math.random(0,360),0))
+	local x_neg = 1
+	local y_neg = 1
+	local z_neg = 1
+	if math.random(1,2) == 1 then x_neg = -1 end
+	if math.random(1,2) == 1 then y_neg = -1 end
+	if math.random(1,2) == 1 then z_neg = -1 end
+	local tr_startpos = self:GetPos()
+	local tr_endpos = tr_startpos + self:GetForward()*((self:OBBMaxs().x + math.random(100,200))*x_neg) + self:GetRight()*((self:OBBMaxs().y + math.random(100,200))*y_neg) + self:GetUp()*((self:OBBMaxs().z + math.random(100,200))*z_neg)
+	/*local tr_for = math.random(-300,300)
+	local tr_up = math.random(-300,300)
+	local tr_right = math.random(-300,300)
+	local tr = util.TraceLine({start = tr_startpos, endpos = tr_startpos+self:GetForward()*tr_for+self:GetRight()*tr_up+self:GetUp()*tr_right, filter = self})*/
+	local tr = util.TraceLine({start = tr_startpos, endpos = tr_endpos, filter = self})
 	self.Aerial_TargetPos = tr.HitPos
-	util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,tr.HitPos,false,self:EntIndex(),0)
 	self:SetAngles(Angle(0,(tr.HitPos-tr.StartPos):Angle().y,0))
+	if Debug == true then
+		VJ_CreateTestObject(tr.HitPos,self:GetAngles(),Color(0,255,255),5)
+		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,tr.HitPos,false,self:EntIndex(),0)
+	end
 	
 	-- Set the velocity
 	local myvel = self:GetVelocity()
@@ -1362,22 +1404,17 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AerialMove_ChaseEnemy(ShouldPlayAnim)
 	if self.Dead == true or (self.NextChaseTime > CurTime()) or self:GetEnemy() == nil then return end
-	ShouldPlayAnim = ShouldPlayAnim or false
+	local ShouldPlayAnim = ShouldPlayAnim or false
 	local Debug = self.Aerial_EnableDebug
 	
 	self:FaceCertainEntity(self:GetEnemy(),true)
 	self.Aerial_ShouldBeFlying = false
 
-	if ShouldPlayAnim == true && self:GetSequence() != self.CurrentAnim_AerialMovement /*&& self:GetActivity() == ACT_IDLE*/ && CurTime() > self.Aerial_NextMovementAnimation && (self.NextChaseTime < CurTime()) then
-		local pickedanim = VJ_PICKRANDOMTABLE(self.Aerial_AnimTbl_Alerted)
-		if type(pickedanim) == "number" then pickedanim = self:GetSequenceName(self:SelectWeightedSequence(pickedanim)) end
-		local idleanimid = VJ_GetSequenceName(self,pickedanim)
-		//self.Aerial_ShouldBeFlying = true
-		self.CurrentAnim_AerialMovement = idleanimid
-		self.Aerial_CurrentMovementAnimation = VJ_GetSequenceDuration(self,self.CurrentAnim_AerialMovement)
-		//self:AddGestureSequence(idleanimid)
-		self:VJ_ACT_PLAYACTIVITY(pickedanim,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false})
-		self.Aerial_NextMovementAnimation = CurTime() + self.Aerial_CurrentMovementAnimation
+	if ShouldPlayAnim == true && self.NextChaseTime < CurTime() then
+		self.Aerial_CanPlayMoveAnimation = true
+		self.Aerial_CurrentMoveAnimationType = "Chase"
+	else
+		self.Aerial_CanPlayMoveAnimation = false
 	end
 	
 	-- Main Calculations
@@ -1734,6 +1771,15 @@ function ENT:Think()
 	if GetConVarNumber("ai_disabled") == 0 then
 		//if !self:IsOnGround() then self:ClearGoal() end
 		self:CustomOnThink_AIEnabled()
+		if self.MovementType == VJ_MOVETYPE_AERIAL then
+			if self.Aerial_CanPlayMoveAnimation == true && self:GetVelocity():Length() > 0 then 
+				self:AerialMove_Animation()
+			else
+				if self:GetSequence() != 0 then
+					self:VJ_ACT_PLAYACTIVITY(ACT_IDLE,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false})
+				end
+			end
+		end
 		self:DoCustomIdleAnimation()
 		//if self:GetEnemy() == nil then self.Alerted = false end
 		if self.VJDEBUG_SNPC_ENABLED == true then
@@ -2059,7 +2105,7 @@ function ENT:Think()
 						self.AlreadyDoneLeapAttackFirstHit = false
 						self.AlreadyDoneFirstLeapAttack = false
 						self.IsAbleToLeapAttack = false
-						if self.LeapAttackAnimationFaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(),true) end
+						self:FaceCertainEntity(self:GetEnemy(),true)
 						self:CustomOnLeapAttack_BeforeStartTimer()
 						self:BeforeLeapAttackSoundCode()
 						timer.Create( "timer_leap_start_jump"..self.Entity:EntIndex(), self.TimeUntilLeapAttackVelocity, 1, function() self:LeapAttackVelocityCode() end)
@@ -2108,7 +2154,7 @@ function ENT:Think()
 		//self:StopAttacks()
 		//self:SelectSchedule()
 	end
-	self:NextThink(CurTime() +0.1)
+	self:NextThink(CurTime()+(0.069696968793869+FrameTime()))
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2262,7 +2308,7 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 	local AttackDist = AttackDist or self.MeleeAttackDamageDistance
 	if IsPropAttack == true then AttackDist = (self.MeleeAttackDamageDistance *1.2)/* + 50*/ end
 	if self.VJ_IsBeingControlled == false && self.MeleeAttackAnimationFaceEnemy == true && self.MeleeAttack_DoingPropAttack == false then self:FaceCertainEntity(MyEnemy,true) end
-	self.MeleeAttacking = true
+	//self.MeleeAttacking = true
 	self:CustomOnMeleeAttack_BeforeChecks()
 	if self.DisableDefaultMeleeAttackCode == true then return end
 	local attackthev = ents.FindInSphere(self:GetPos() + self:GetForward(), AttackDist)
@@ -2447,8 +2493,11 @@ function ENT:RangeAttackCode()
 			local getposoverride = self:RangeAttackCode_OverrideProjectilePos(rangeprojectile)
 			if getposoverride == 0 then
 				if self.RangeUseAttachmentForPos == false then
-				rangeprojectile:SetPos(self:GetPos()+Vector(0,-8,self.RangeUpPos)) else //self:GetAttachment(self:LookupAttachment("muzzle")).Pos
-				rangeprojectile:SetPos(self:GetAttachment(self:LookupAttachment(self.RangeUseAttachmentForPosID)).Pos) end else
+					rangeprojectile:SetPos(self:GetPos() + self:GetUp()*self.RangeAttackPos_Up + self:GetForward()*self.RangeAttackPos_Forward + self:GetRight()*self.RangeAttackPos_Right)
+				else
+					rangeprojectile:SetPos(self:GetAttachment(self:LookupAttachment(self.RangeUseAttachmentForPosID)).Pos)
+				end
+			else
 				rangeprojectile:SetPos(getposoverride)
 			end
 			rangeprojectile:SetAngles((self:GetEnemy():GetPos()-rangeprojectile:GetPos()):Angle())
@@ -2460,9 +2509,8 @@ function ENT:RangeAttackCode()
 			//if self:GetEnemy() != nil then
 			local phys = rangeprojectile:GetPhysicsObject()
 			if (phys:IsValid()) then
-				local ShootPos = self:RangeAttackCode_GetShootPos(rangeprojectile)
 				phys:Wake() //:GetNormal() *self.RangeDistance
-				phys:SetVelocity(ShootPos) //ApplyForceCenter
+				phys:SetVelocity(self:RangeAttackCode_GetShootPos(rangeprojectile)) //ApplyForceCenter
 			end
 			self:CustomRangeAttackCode_AfterProjectileSpawn(rangeprojectile)
 		end
@@ -2538,15 +2586,10 @@ function ENT:LeapAttackVelocityCode()
 	if self:GetEnemy() == nil then return end
 	self:CustomOnLeapAttackVelocityCode()
 	self:LeapAttackJumpSoundCode()
+	self:SetGroundEntity(NULL)
 	if self.LeapAttackUseCustomVelocity == true then return end
-	/*local jumpyaw
-	local jumpcode = (self:GetEnemy():GetPos() -self:GetPos()):GetNormal() *500 +self:GetUp() *200 +self:GetForward() *1000
-	jumpyaw = jumpcode:Angle().y
-	self:SetLocalVelocity(jumpcode)*/
-
 	if self.LeapAttackAnimationFaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(),true) end
-	local jumpcode = ((self:GetEnemy():GetPos() + self:OBBCenter()) -(self:GetPos() + self:OBBCenter())):GetNormal()*400 +self:GetForward()*self.LeapAttackVelocityForward +self:GetUp()*self.LeapAttackVelocityUp + self:GetRight()*self.LeapAttackVelocityRight
-	self:SetLocalVelocity(jumpcode)
+	self:SetLocalVelocity(((self:GetEnemy():GetPos() + self:OBBCenter()) -(self:GetPos() + self:OBBCenter())):GetNormal()*400 +self:GetForward()*self.LeapAttackVelocityForward +self:GetUp()*self.LeapAttackVelocityUp + self:GetRight()*self.LeapAttackVelocityRight)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAttacks(CheckTimers)
@@ -3073,7 +3116,7 @@ function ENT:BringAlliesToMe(SeeDistance,CertainAmount,CertainAmountNumber,Enemy
 					if randpos == 2 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-20,-50)) end
 					if randpos == 3 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(20,50)) end
 					if randpos == 4 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-20,-50)) end
-					x:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.BringAlliesToMeSchedules))
+					x:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
 					//return true -- It will only pick one if returning false or true
 				end
 				if CertainAmount == true && table.Count(LocalTargetTable) == CertainAmountNumber then return true end

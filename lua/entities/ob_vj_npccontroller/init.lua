@@ -90,6 +90,7 @@ function ENT:SetControlledNPC(GetEntity)
 	self.ControlledNPC:SetEnemy(NULL)
 	self.ControlledNPC.MyEnemy = NULL
 	self.ControlledNPC.Enemy = NULL
+	self.ControlledNPC:VJ_Controller_InitialMessage(self.TheController)
 	if self.ControlledNPC.IsVJBaseSNPC == true then
 		if self.ControlledNPC:GetEnemy() != nil then
 			self.ControlledNPC:AddEntityRelationship(self.ControlledNPC:GetEnemy(),D_NU,99)
@@ -219,7 +220,7 @@ function ENT:Think()
 				local DontMove = false
 				local PlyAimVec = self.TheController:GetAimVector()
 				PlyAimVec.z = 0
-				local CenterToPos = self.ControlledNPC:OBBCenter():Distance(self.ControlledNPC:OBBMins()) + 20
+				local CenterToPos = self.ControlledNPC:OBBCenter():Distance(self.ControlledNPC:OBBMins()) + 20 // self.ControlledNPC:OBBMaxs().z
 				local NPCPos = self.ControlledNPC:GetPos() + self.ControlledNPC:GetUp()*CenterToPos
 				local forwardtr = util.TraceLine({start = NPCPos, endpos = NPCPos + PlyAimVec*300, filter = {self,self.TheController,self.ControlledNPC}})
 				//local npcvel = self.ControlledNPC:GetGroundSpeedVelocity()

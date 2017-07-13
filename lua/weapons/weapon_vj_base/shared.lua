@@ -369,7 +369,7 @@ end
 function SWEP:PrimaryAttack(ShootPos,ShootDir)
 	//if self.Owner:KeyDown(IN_RELOAD) then return end
 	//self.Owner:SetFOV( 45, 0.3 )
-	if !IsFirstTimePredicted() then return end
+	//if !IsFirstTimePredicted() then return end
 	self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
 	if self.Reloading == true then return end
 	if self.Owner:IsNPC() && self.Owner.VJ_IsBeingControlled == false && self.Owner:GetEnemy() == nil then return end

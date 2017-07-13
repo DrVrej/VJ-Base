@@ -50,6 +50,16 @@ if (CLIENT) then
 		end
 		Panel:AddPanel(reset)
 		
+		local tutorial = vgui.Create("DButton")
+		tutorial:SetFont("DermaDefaultBold")
+		tutorial:SetText("Tutorial Video")
+		tutorial:SetSize(150, 20)
+		tutorial:SetColor(Color(0,0,255,255))
+		tutorial.DoClick = function(tutorial)
+			gui.OpenURL("http://www.youtube.com/watch?v=5H_hIz35W90")
+		end
+		Panel:AddPanel(tutorial)
+		
 		TblCurrentValues = TblCurrentValues or {}
 		TblCurrentLines = TblCurrentLines or {}
 		TblCurrentLinesUsable = TblCurrentLinesUsable or {}
@@ -225,7 +235,12 @@ if (CLIENT) then
 		svpos = net.ReadVector()
 		svang = net.ReadFloat()
 		svclicktype = net.ReadString()
+		local convartbl = {}
+		for k,v in pairs(DefaultConVars) do
+			convartbl[k] = GetConVarNumber(k)
+		end
 		net.Start("vj_npcspawner_sv_create")
+		net.WriteTable(convartbl)
 		net.WriteEntity(svowner)
 		net.WriteVector(svpos)
 		net.WriteFloat(svang)
@@ -242,6 +257,7 @@ else -- If SERVER
 	util.AddNetworkString("vj_npcspawner_sv_create")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcspawner_sv_create",function(len,pl)
+		convartbl = net.ReadTable()
 		svowner = net.ReadEntity()
 		svpos = net.ReadVector()
 		svang = net.ReadFloat()
@@ -258,10 +274,10 @@ else -- If SERVER
 			table.insert(spawner.EntitiesToSpawn,{EntityName = "NPC"..math.random(1,99999999),SpawnPosition = {vForward=v.SpawnPosition.x,vRight=v.SpawnPosition.y,vUp=v.SpawnPosition.z},Entities = {v.Entities},WeaponsList={v.WeaponsList}})
 		end
 		//spawner.EntitiesToSpawn = {entitiestospawntbl}
-		if GetConVarString("vjstool_npcspawner_playsound") == "1" then
+		if convartbl.vjstool_npcspawner_playsound == 1 then
 			spawner.SoundTbl_SpawnEntity = {"garrysmod/save_load1.wav","garrysmod/save_load2.wav","garrysmod/save_load3.wav","garrysmod/save_load4.wav"}
 		end
-		spawner.TimedSpawn_Time = GetConVarNumber("vjstool_npcspawner_nextspawntime")
+		spawner.TimedSpawn_Time = convartbl.vjstool_npcspawner_nextspawntime //GetConVarNumber("vjstool_npcspawner_nextspawntime")
 		if svgettype == "RightClick" then spawner.SingleSpawner = true end
 		spawner:SetCreator(svowner)
 		spawner:Spawn()

@@ -341,9 +341,9 @@ local function VJ_SNPC_DEVSETTINGS(Panel) -- Developer Settings
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_ADDTOMENU_SNPC()
-	spawnmenu.AddToolMenuOption( "DrVrej", "VJ SNPC Configures", "SNPC Options", "Options", "", "", VJ_SNPC_OPTIONS, {} )
-	spawnmenu.AddToolMenuOption( "DrVrej", "VJ SNPC Configures", "SNPC Settings", "Settings", "", "", VJ_SNPC_SETTINGS, {} )
-	spawnmenu.AddToolMenuOption( "DrVrej", "VJ SNPC Configures", "SNPC Sound Settings", "Sound Settings", "", "", VJ_SNPC_SOUNDSETTINGS, {} )
-	spawnmenu.AddToolMenuOption( "DrVrej", "VJ SNPC Configures", "SNPC Developer Settings", "Developer Settings", "", "", VJ_SNPC_DEVSETTINGS, {} )
+	spawnmenu.AddToolMenuOption( "DrVrej", "SNPCs", "SNPC Options", "Options", "", "", VJ_SNPC_OPTIONS, {} )
+	spawnmenu.AddToolMenuOption( "DrVrej", "SNPCs", "SNPC Settings", "Settings", "", "", VJ_SNPC_SETTINGS, {} )
+	spawnmenu.AddToolMenuOption( "DrVrej", "SNPCs", "SNPC Sound Settings", "Sound Settings", "", "", VJ_SNPC_SOUNDSETTINGS, {} )
+	spawnmenu.AddToolMenuOption( "DrVrej", "SNPCs", "SNPC Developer Settings", "Developer Settings", "", "", VJ_SNPC_DEVSETTINGS, {} )
 end
 hook.Add( "PopulateToolMenu", "VJ_ADDTOMENU_SNPC", VJ_ADDTOMENU_SNPC )

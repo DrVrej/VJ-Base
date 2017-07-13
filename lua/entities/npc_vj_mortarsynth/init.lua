@@ -6,7 +6,7 @@ include('shared.lua')
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
 ENT.Model = {"models/mortarsynth.mdl"} -- The game will pick a random model from the table when the SNPC is spawned | Add as many as you want
-// models/skyrim/chaurusflyer.mdl
+// models/skyrim/chaurusflyer.mdl // models/gunship.mdl // models/combine_helicopter.mdl
 ENT.StartHealth = 150
 ENT.HullType = HULL_TINY
 ENT.MovementType = VJ_MOVETYPE_AERIAL -- How does the SNPC move?
