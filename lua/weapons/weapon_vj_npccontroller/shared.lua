@@ -50,21 +50,21 @@ end
 function SWEP:PrimaryAttack()
 	if CLIENT or self.Owner:IsNPC() then return end
 	local tracedata = {}
-	tracedata.start = self.Owner:GetShootPos()
-	tracedata.endpos = self.Owner:GetShootPos() +self.Owner:GetAimVector()*10000
-	tracedata.filter = self.Owner
-	local tr = util.TraceLine(tracedata) 
-	if tr.Entity && IsValid(tr.Entity) && tr.Entity:Health() > 0 then
+	tracedata.start = self.Owner:EyePos()
+	tracedata.endpos = self.Owner:EyePos() + self.Owner:GetAimVector()*32768
+	tracedata.filter = {self.Owner}
+	local tr =  util.TraceLine(util.GetPlayerTrace(self.Owner))
+	if tr.Entity && IsValid(tr.Entity) then
 		if tr.Entity:IsPlayer() then
 			self.Owner:ChatPrint("That's a player dumbass.")
 			return
 		elseif tr.Entity:GetClass() == "prop_ragdoll" then
-			self.Owner:ChatPrint("That's a corpse you retard.")
+			self.Owner:ChatPrint("That's a ragdoll you retard.")
 			return
 		elseif tr.Entity:GetClass() == "prop_physics" then
-			self.Owner:ChatPrint("Uninstall your game now.")
+			self.Owner:ChatPrint("Uninstall your game. Now.")
 			return
-		elseif !tr.Entity:IsNPC() then
+		elseif !tr.Entity:IsNPC() && tr.Entity:Health() > 0 then
 			self.Owner:ChatPrint("This isn't an NPC, therefore you can't control it.")
 			return
 		//elseif tr.Entity.IsVJBaseSNPC_Tank == true then

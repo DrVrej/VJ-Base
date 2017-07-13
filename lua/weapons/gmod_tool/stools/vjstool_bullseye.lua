@@ -40,9 +40,19 @@ if (CLIENT) then
 		end
 		Panel:AddPanel(reset)
 		
+		local tutorial = vgui.Create("DButton")
+		tutorial:SetFont("DermaDefaultBold")
+		tutorial:SetText("Tutorial Video")
+		tutorial:SetSize(150, 20)
+		tutorial:SetColor(Color(0,0,255,255))
+		tutorial.DoClick = function(tutorial)
+			gui.OpenURL("http://www.youtube.com/watch?v=Qf-vrE-BAW4")
+		end
+		Panel:AddPanel(tutorial)
+		
 		Panel:AddControl("Label", {Text = "It's recommended to use this tool only for VJ Base SNPCs."})
-		Panel:AddControl("Label", {Text = "Press USE on the entity to activate/deactivate."})
-		Panel:AddControl("Label", {Text = "When deactivated, NPCs will no longer target it."})
+		Panel:ControlHelp("- Press USE on the entity to activate/deactivate.")
+		Panel:ControlHelp("- When deactivated, NPCs will no longer target it.")
 		Panel:AddControl("Label", {Text = "Select Solid/Movement Type:"})
 		local typebox = vgui.Create("DComboBox")
 		//typebox:SetConVar("vjstool_bullseye_type")

@@ -59,6 +59,7 @@ function ENT:StartSchedule(schedule)
 	end
 	schedule.AlreadyRanCode_OnFail = false
 	schedule.AlreadyRanCode_OnFinish = false
+	PrintTable(schedule)
 	//if schedule.Name != "vj_chase_enemy" then PrintTable(schedule) end
 	self:DoRunCode_OnFinish(self.CurrentSchedule)
 	self.CurrentSchedule = schedule

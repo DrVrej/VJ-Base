@@ -54,7 +54,7 @@ end
 function ENT:Think()
 	if self.EnemyToIndividual == true then
 		self.VJ_NoTarget = true
-		if IsValid(self.EnemyToIndividualEnt) then
+		if IsValid(self.EnemyToIndividualEnt) && self.EnemyToIndividualEnt:IsNPC() then
 			self.EnemyToIndividualEnt:AddEntityRelationship(self,D_HT,99)
 			self:AddEntityRelationship(self.EnemyToIndividualEnt,D_HT,99)
 			self.EnemyToIndividualEnt:VJ_DoSetEnemy(self,false,false)

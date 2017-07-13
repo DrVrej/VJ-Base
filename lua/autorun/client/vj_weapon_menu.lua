@@ -35,6 +35,6 @@ local function VJ_WEAPON_CLIENTSETTINGS(Panel) -- Settings
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_ADDTOMENU_WEAPON()
-	spawnmenu.AddToolMenuOption( "DrVrej", "VJ Weapon Configures", "Weapon Client Settings", "Client Settings", "", "", VJ_WEAPON_CLIENTSETTINGS, {} )
+	spawnmenu.AddToolMenuOption( "DrVrej", "Weapons", "Weapon Client Settings", "Client Settings", "", "", VJ_WEAPON_CLIENTSETTINGS, {} )
 end
 hook.Add( "PopulateToolMenu", "VJ_ADDTOMENU_WEAPON", VJ_ADDTOMENU_WEAPON )

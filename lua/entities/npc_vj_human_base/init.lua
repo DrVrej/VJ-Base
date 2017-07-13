@@ -70,8 +70,7 @@ ENT.CallForBackUpOnDamageAnimationTime = 2 -- How much time until it can use act
 ENT.NextCallForBackUpOnDamageTime1 = 9 -- Next time it use the CallForBackUpOnDamage function | The first # in math.random
 ENT.NextCallForBackUpOnDamageTime2 = 11 -- Next time it use the CallForBackUpOnDamage function | The second # in math.random
 ENT.MoveOrHideOnDamageByEnemy = true -- Should the SNPC move or hide when being damaged by an enemy?
-ENT.MoveOrHideOnDamageByEnemy_MoveSchedules = {SCHED_FORCED_GO_RUN} -- The schedule it plays when the SNPC was unable to find a hiding spot, and needs to move
-ENT.MoveOrHideOnDamageByEnemy_OnlyMove = false -- If set to true, it will only play the moving schedules and will not try to hide	
+ENT.MoveOrHideOnDamageByEnemy_OnlyMove = false -- Should it only move and not hide?	
 ENT.MoveOrHideOnDamageByEnemy_CustomActivites = {} -- The activities it plays when it finds a hiding spot
 ENT.MoveOrHideOnDamageByEnemy_HideTime1 = 3 -- How long should it hide? | First number in math.random
 ENT.MoveOrHideOnDamageByEnemy_HideTime2 = 4 -- How long should it hide? | Second number in math.random
@@ -315,7 +314,6 @@ ENT.FollowPlayerChat = true -- Should the SNPCs say things like "They stopped fo
 ENT.FollowPlayerKey = "Use" -- The key that the player presses to make the SNPC follow them
 ENT.FollowPlayerCloseDistance = 150 -- If the SNPC is that close to the player then stand still until the player goes farther away
 ENT.NextFollowPlayerTime = 1 -- Time until it runs to the player again
-ENT.BringAlliesToMeSchedules = {SCHED_FORCED_GO} -- The Schedule that its friends play when BringAlliesToMe code is ran
 	-- Sounds ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasSounds = true -- Put to false to disable ALL sounds
 ENT.HasExtraMeleeAttackSounds = false -- Set to true to use the extra melee attack sounds
@@ -336,7 +334,7 @@ ENT.HasFollowPlayerSounds_UnFollow = true -- If set to false, it won't play the 
 ENT.HasMedicSounds_BeforeHeal = true -- If set to false, it won't play any sounds before it gives a med kit to an ally
 ENT.HasMedicSounds_AfterHeal = true -- If set to false, it won't play any sounds after it gives a med kit to an ally
 ENT.HasOnPlayerSightSounds = true -- If set to false, it won't play the saw player sounds
-ENT.HasDamageByPlayerSounds = true -- If set to false, it won't play the stupid player sounds
+ENT.HasDamageByPlayerSounds = true -- If set to false, it won't play the damage by player sounds
 ENT.HasCallForHelpSounds = true -- If set to false, it won't play any sounds when it calls for help
 ENT.HasOnReceiveOrderSounds = true -- If set to false, it won't play any sound when it receives an order from an ally
 ENT.HasOnKilledEnemySound = true -- Should it play a sound when it kills an enemy?
@@ -809,6 +807,10 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Controller_IntMsg(ply)
+	ply:ChatPrint("None specified...") -- Remove this line!
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetSpawnEffect(false)
 	self:VJ_DoSelectDifficulty()
@@ -877,7 +879,7 @@ function ENT:Initialize()
 			end
 		end
 	end)
-	if self.MovementType == VJ_MOVETYPE_GROUND then self:VJ_SetSchedule(SCHED_FALL_TO_GROUND) end
+	//if self.MovementType == VJ_MOVETYPE_GROUND then self:VJ_SetSchedule(SCHED_FALL_TO_GROUND) end
 	/*if self.VJ_IsStationary == true then
 		self.HasFootStepSound = false
 		self.HasWorldShakeOnMove = false
@@ -1950,7 +1952,7 @@ function ENT:Think()
 							self.PlayingAttackAnimation = true
 							timer.Simple(self.CurrentAttackAnimationDuration,function()
 								if IsValid(self) then
-								self.PlayingAttackAnimation = false
+									self.PlayingAttackAnimation = false
 								end
 							end)
 							self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.MeleeAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
@@ -1981,7 +1983,7 @@ function ENT:Think()
 		//self:SelectSchedule()
 		self.DoingWeaponAttack = false
 	end
-	self:NextThink(CurTime() +0.1)
+	self:NextThink(CurTime()+(0.069696968793869+FrameTime()))
 	return true
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
@@ -2005,7 +2007,7 @@ function ENT:MeleeAttackCode()
 	if self.Flinching == true then return end
 	if self.ThrowingGrenade == true then return end
 	if self.VJ_IsBeingControlled == false && self.MeleeAttackAnimationFaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(),true) end
-	self.MeleeAttacking = true
+	//self.MeleeAttacking = true
 	local attackthev = ents.FindInSphere(self:GetPos() + self:GetForward(),self.MeleeAttackDamageDistance)
 	local hitentity = false
 	local HasHitNonPropEnt = false
@@ -2946,7 +2948,11 @@ function ENT:BringAlliesToMe(SeeDistance,CertainAmount,CertainAmountNumber,Enemy
 					if randpos == 2 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-20,-50)) end
 					if randpos == 3 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(20,50)) end
 					if randpos == 4 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-20,-50)) end
-					x:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.BringAlliesToMeSchedules))
+					if x:VJ_HasActiveWeapon() == false then
+						x:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
+					else
+						x:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+					end
 					//return true -- It will only pick one if returning false or true
 				end
 				if CertainAmount == true && table.Count(LocalTargetTable) == CertainAmountNumber then return true end
@@ -3059,14 +3065,15 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 				end
 
 				if killallcpts.Backward == true or killallcpts.Right == true or killallcpts.Left == true then
-					self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.MoveOrHideOnDamageByEnemy_MoveSchedules))
+					self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+					/*self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.MoveOrHideOnDamageByEnemy_MoveSchedules))
 					timer.Simple(0.2, function() if IsValid(self) then
 						timer.Simple(self:GetPathTimeToGoal() -0.2, function() if IsValid(self) then
 							self:SelectSchedule()
 						 end
 						end)
 					 end
-					end)
+					end)*/
 				end
 			end
 			self.NextMoveOrHideOnDamageByEnemyT = CurTime() + math.random(self.NextMoveOrHideOnDamageByEnemy1,self.NextMoveOrHideOnDamageByEnemy2)

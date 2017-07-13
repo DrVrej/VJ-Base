@@ -36,9 +36,19 @@ AddCSLuaFile("includes/modules/ai_vj_schedule.lua")
 AddCSLuaFile("includes/modules/ai_vj_task.lua")
 AddCSLuaFile("includes/modules/sound_vj_track.lua")
 ----=================================----
-if SERVER then
+if (SERVER) then
 	util.AddNetworkString("VJWelcome")
 	util.AddNetworkString("VJSay")
+elseif (CLIENT) then
+	hook.Add("AddToolMenuTabs", "VJ_CREATETOOLTAB", function()
+		spawnmenu.AddToolTab("DrVrej", "DrVrej", "icon16/plugin.png")
+		spawnmenu.AddToolCategory("DrVrej", "Main Menu", "Main Menu")
+		spawnmenu.AddToolCategory("DrVrej", "SNPCs", "SNPC Settings")
+		spawnmenu.AddToolCategory("DrVrej", "Weapons", "Weapon Settings")
+		spawnmenu.AddToolCategory("DrVrej", "HUDs", "HUD Settings")
+		spawnmenu.AddToolCategory("DrVrej", "Tools", "Tools")
+		spawnmenu.AddToolCategory("DrVrej", "SNPC Configures", "SNPC Configures")
+	end)
 end
 
 function DoWelcomeDrVrej(ply, command, arguements)

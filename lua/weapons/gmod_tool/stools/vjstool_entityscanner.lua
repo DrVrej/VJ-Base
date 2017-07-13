@@ -15,7 +15,7 @@ if (CLIENT) then
 	language.Add("tool.vjstool_entityscanner.0", "Left-Click to print information about the entity in console")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function DoBuildCPanel_EntityScanner(Panel)
-	Panel:AddControl("Label", {Text = "Left-Click to print information about the entity in console"})
+	Panel:AddControl("Label", {Text = "Left-Click to print information about the entity in the console"})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)
