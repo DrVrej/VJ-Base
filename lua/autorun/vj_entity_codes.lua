@@ -614,19 +614,19 @@ hook.Add("EntityEmitSound","VJ_NPC_ENTITYSOUND",VJ_NPC_ENTITYSOUND)*/
 local function VJ_NPC_FIREBULLET(Entity,data,Attacker)
 	//print(Entity)
 	if IsValid(Entity) && !Entity:IsPlayer() && Entity.IsVJBaseSNPC == true && Entity:GetActiveWeapon() != NULL && Entity:VJ_GetEnemy(true) != nil then
-		local GetCurrentWeapon = Entity:GetActiveWeapon()
+		local Wep = Entity:GetActiveWeapon()
 		local EnemyDistance = 100
 		if Entity.VJ_IsBeingControlled == true then
 		EnemyDistance = Entity:GetPos():Distance(Entity.VJ_TheController:GetEyeTrace().HitPos) else
 		EnemyDistance = Entity:GetPos():Distance(Entity:GetEnemy():GetPos()) end
-		//GetCurrentWeapon:SetClip1(GetCurrentWeapon:Clip1() -1)
+		//Wep:SetClip1(Wep:Clip1() -1)
 		//PrintTable(data)
 		//data.Callback = function(tr)
 		//print(tr)
 		//if tr.Entity:GetClass() == "prop_ragdoll" then
 		//print(tr.Entity) end
 		//end
-		if Entity.VJ_IsBeingControlled == false then
+		if Entity.VJ_IsBeingControlled == false && Wep.IsVJBaseWeapon != true then
 			data.Src = util.VJ_GetWeaponPos(Entity)
 		elseif Entity.VJ_IsBeingControlled == true && IsValid(Entity.VJ_TheController) then
 			data.Src = Entity.VJ_TheController:GetShootPos()
@@ -635,7 +635,7 @@ local function VJ_NPC_FIREBULLET(Entity,data,Attacker)
 		//data.Spread = Vector(25,25,0) else
 		if Entity.VJ_IsBeingControlled == false then
 			local fSpread = ((EnemyDistance/23)*Entity.WeaponSpread)
-			if GetCurrentWeapon.IsVJBaseWeapon == true && GetCurrentWeapon.NPC_AllowCustomSpread == true then fSpread = fSpread *GetCurrentWeapon.NPC_CustomSpread end
+			if Wep.IsVJBaseWeapon == true && Wep.NPC_AllowCustomSpread == true then fSpread = fSpread *Wep.NPC_CustomSpread end
 			fSpread = math.Clamp(fSpread,1,65)
 			data.Spread = Vector(fSpread,fSpread,0)
 			/*if EnemyDistance < 400 then
@@ -649,7 +649,7 @@ local function VJ_NPC_FIREBULLET(Entity,data,Attacker)
 		end
 		if Entity.VJ_IsBeingControlled == false then
 			//data.Dir =		Entity:GetEnemy():GetPos()-(Entity:GetEnemy():OBBMaxs():Distance(Entity:GetEnemy():OBBMins())/2)
-			//if GetCurrentWeapon:GetClass() != "weapon_shotgun" or GetCurrentWeapon:GetClass() != "weapon_annabelle" then
+			//if Wep:GetClass() != "weapon_shotgun" or Wep:GetClass() != "weapon_annabelle" then
 			//if Entity:GetEnemy():IsNPC() then
 			-- Very old System
 			//if Entity:GetEnemy():GetHullType() == HULL_TINY then
@@ -667,7 +667,7 @@ local function VJ_NPC_FIREBULLET(Entity,data,Attacker)
 			//data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():GetUp()*-50) -Entity:GetPos()
 			//end
 			//if Entity:GetEnemy():IsPlayer() then
-			//if GetCurrentWeapon:GetClass() != "weapon_shotgun" then
+			//if Wep:GetClass() != "weapon_shotgun" then
 			//data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():OBBCenter()+Entity:GetEnemy():GetUp()*-45) -Entity:GetPos() end
 		elseif Entity.VJ_IsBeingControlled == true && IsValid(Entity.VJ_TheController) then
 			data.Dir = Entity.VJ_TheController:GetAimVector()

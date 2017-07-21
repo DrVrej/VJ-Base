@@ -34,6 +34,7 @@ SWEP.NPC_NextPrimaryFire 		= 0.15 -- Next time it can use primary fire
 SWEP.NPC_TimeUntilFire	 		= 0.1 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_AllowCustomSpread		= true -- Should the weapon be able to change the NPC's spread?
 SWEP.NPC_CustomSpread	 		= 1 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
+SWEP.NPC_BulletSpawnAttachment = "" -- The attachment that the bullet spawns on, leave empty for base to decide!
 SWEP.NPC_AnimationTbl_Custom 	= {} -- Can be activity or sequence
 SWEP.NPC_AnimationTbl_General 	= {ACT_RANGE_ATTACK1,ACT_RANGE_ATTACK1_LOW,ACT_IDLE_AGITATED,ACT_IDLE_AIM_AGITATED,ACT_RUN_AIM,ACT_WALK_AIM}
 SWEP.NPC_AnimationTbl_Rifle 	= {ACT_WALK_AIM_RIFLE,ACT_RUN_AIM_RIFLE,ACT_RANGE_ATTACK_AR2,ACT_RANGE_ATTACK_AR2_LOW,ACT_IDLE_ANGRY_SMG1,ACT_RANGE_ATTACK_SMG1}
@@ -64,6 +65,7 @@ SWEP.AnimPrefix					= "python"
 SWEP.WorldModel_UseCustomPosition = false -- Should the gun use custom position? This can be used to fix guns that are in the crotch
 SWEP.WorldModel_CustomPositionAngle = Vector(-8,1,180)
 SWEP.WorldModel_CustomPositionOrigin = Vector(-1,6,1.4)
+SWEP.WorldModel_CustomPositionBone = "ValveBiped.Bip01_R_Hand" -- The bone it will use as the main point
 SWEP.WorldModel_Invisible = false -- Should the world model be invisible?
 	-- General Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.DryFireSound				= {} -- The sound that it plays when the weapon is out of ammo
@@ -170,6 +172,7 @@ function SWEP:CustomOnNPC_ServerThink() end
 function SWEP:CustomOnNPC_Reload() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Initialize()
+	self:SetNWVector("VJ_CurBulletPos",self:GetPos())
 	self:SetHoldType(self.HoldType)
 	if self.HasIdleAnimation == true then self.InitHasIdleAnimation = true end
 	self:CustomOnInitialize()
@@ -394,7 +397,13 @@ function SWEP:PrimaryAttack(ShootPos,ShootDir)
 	if self.Primary.DisableBulletCode == false then
 		local bullet = {}
 			bullet.Num = self.Primary.NumberOfShots
-			bullet.Src = self.Owner:GetShootPos()
+			local spawnpos = self.Owner:GetShootPos()
+			if self.Owner:IsNPC() then
+				spawnpos = self:GetNWVector("VJ_CurBulletPos")
+			end
+			//print(spawnpos)
+			//VJ_CreateTestObject(spawnpos,self:GetAngles(),Color(0,0,255))
+			bullet.Src = spawnpos
 			bullet.Dir = self.Owner:GetAimVector()
 			bullet.Callback = function(attacker,tr,dmginfo)
 				self:CustomOnPrimaryAttack_BulletCallback(attacker,tr,dmginfo)
@@ -622,7 +631,8 @@ function SWEP:OnRemove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:GetWeaponCustomPosition()
-	pos, ang = self.Owner:GetBonePosition(self.Owner:LookupBone("ValveBiped.Bip01_R_Hand"))
+	if self.Owner:LookupBone(self.WorldModel_CustomPositionBone) == nil then return nil end
+	pos, ang = self.Owner:GetBonePosition(self.Owner:LookupBone(self.WorldModel_CustomPositionBone))
 	ang:RotateAroundAxis(ang:Right(), self.WorldModel_CustomPositionAngle.x)
 	ang:RotateAroundAxis(ang:Up(), self.WorldModel_CustomPositionAngle.y)
 	ang:RotateAroundAxis(ang:Forward(), self.WorldModel_CustomPositionAngle.z)
@@ -634,10 +644,66 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:RunWorldModelThink()
 	if self.WorldModel_UseCustomPosition == true then
-		weppos = self:GetWeaponCustomPosition()
+		local weppos = self:GetWeaponCustomPosition()
+		if weppos == nil then return end
 		self:SetPos(weppos.pos)
 		self:SetAngles(weppos.ang)
 	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:DecideBulletPosition()
+	if !IsValid(self.Owner) then return nil end 
+	if !self.Owner:IsNPC() then return self.Owner:GetShootPos() end
+	if self.NPC_BulletSpawnAttachment != "" then
+		if self:LookupAttachment(self.NPC_BulletSpawnAttachment) == 0 or self:LookupAttachment(self.NPC_BulletSpawnAttachment) == -1 then
+			-- blah
+		else
+			hascustom = true
+			return self:GetAttachment(self:LookupAttachment(self.NPC_BulletSpawnAttachment)).Pos
+		end
+	end
+	local getmuzzle;
+	local numattachments = self:GetAttachments()
+	local numattachments = #self:GetAttachments()
+	if (self:IsValid()) then
+		for i = 1,numattachments do
+			if self:GetAttachments()[i].name == "muzzle" then
+				getmuzzle = "muzzle" break
+			elseif self:GetAttachments()[i].name == "muzzleA" then
+				getmuzzle = "muzzleA" break
+			elseif self:GetAttachments()[i].name == "muzzle_flash" then
+				getmuzzle = "muzzle_flash" break
+			elseif self:GetAttachments()[i].name == "muzzle_flash1" then
+				getmuzzle = "muzzle_flash1" break
+			elseif self:GetAttachments()[i].name == "muzzle_flash2" then
+				getmuzzle = "muzzle_flash2" break
+			elseif self:GetAttachments()[i].name == "ValveBiped.muzzle" then
+				getmuzzle = "ValveBiped.muzzle" break
+			else 
+				getmuzzle = false
+			end
+		end
+		if (getmuzzle == false) or getmuzzle == nil then
+			if self.Owner:LookupBone("ValveBiped.Bip01_R_Hand") != nil then
+				return self.Owner:GetBonePosition(self.Owner:LookupBone("ValveBiped.Bip01_R_Hand"))
+			else
+				print("WARNING: "..self:GetClass().." doesn't have a proper attachment or bone for bullet spawn!")
+				return self.Owner:EyePos()
+			end
+		end
+		//print("It has a proper attachment.")
+		return self:GetAttachment(self:LookupAttachment(getmuzzle)).Pos //+ self.Owner:GetUp()*-45
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+if (SERVER) then
+	util.AddNetworkString("vj_weapon_curbulletpos")
+
+	net.Receive("vj_weapon_curbulletpos",function(len,pl)
+		vec = net.ReadVector()
+		ent = net.ReadEntity()
+		ent:SetNWVector("VJ_CurBulletPos",vec)
+	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
@@ -645,10 +711,19 @@ if (CLIENT) then
 		if !IsValid(self) then return end
 		if self.WorldModel_Invisible == true then return end
 		//self:DrawModel()
+		local pos = self:DecideBulletPosition()
+		if pos != nil && IsValid(self.Owner) then
+			net.Start("vj_weapon_curbulletpos")
+			net.WriteVector(pos)
+			net.WriteEntity(self)
+			net.SendToServer()
+		end
+		//self:SetNWVector("VJ_CurBulletPos",self:GetAttachment(self:LookupAttachment("muzzle")).Pos)
 		if self.WorldModel_UseCustomPosition == true then
 			if IsValid(self.Owner) then
 				if self.Owner:IsPlayer() && self.Owner:InVehicle() then return end
-				weppos = self:GetWeaponCustomPosition()
+				local weppos = self:GetWeaponCustomPosition()
+				if weppos == nil then return end
 				self:SetRenderOrigin(weppos.pos)
 				self:SetRenderAngles(weppos.ang)
 				self:FrameAdvance(FrameTime())

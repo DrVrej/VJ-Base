@@ -333,6 +333,7 @@ ENT.HasFollowPlayerSounds_Follow = true -- If set to false, it won't play the fo
 ENT.HasFollowPlayerSounds_UnFollow = true -- If set to false, it won't play the unfollow player sounds
 ENT.HasMedicSounds_BeforeHeal = true -- If set to false, it won't play any sounds before it gives a med kit to an ally
 ENT.HasMedicSounds_AfterHeal = true -- If set to false, it won't play any sounds after it gives a med kit to an ally
+ENT.HasMedicSounds_ReceiveHeal = true -- If set to false, it won't play any sounds when it receives a medkit
 ENT.HasOnPlayerSightSounds = true -- If set to false, it won't play the saw player sounds
 ENT.HasDamageByPlayerSounds = true -- If set to false, it won't play the damage by player sounds
 ENT.HasCallForHelpSounds = true -- If set to false, it won't play any sounds when it calls for help
@@ -365,6 +366,7 @@ ENT.SoundTbl_FollowPlayer = {}
 ENT.SoundTbl_UnFollowPlayer = {}
 ENT.SoundTbl_MedicBeforeHeal = {}
 ENT.SoundTbl_MedicAfterHeal = {}
+ENT.SoundTbl_MedicReceiveHeal = {}
 ENT.SoundTbl_OnPlayerSight = {}
 ENT.SoundTbl_Alert = {}
 ENT.SoundTbl_CallForHelp = {}
@@ -399,6 +401,7 @@ ENT.FollowPlayerSoundChance = 1
 ENT.UnFollowPlayerSoundChance = 1
 ENT.MedicBeforeHealSoundChance = 1
 ENT.MedicAfterHealSoundChance = 1
+ENT.MedicReceiveHealSoundChance = 1
 ENT.OnPlayerSightSoundChance = 1
 ENT.AlertSoundChance = 1
 ENT.CallForHelpSoundChance = 1
@@ -455,6 +458,7 @@ ENT.FollowPlayerSoundLevel = 75
 ENT.UnFollowPlayerSoundLevel = 75
 ENT.BeforeHealSoundLevel = 75
 ENT.AfterHealSoundLevel = 75
+ENT.MedicReceiveHealSoundLevel = 75
 ENT.OnPlayerSightSoundLevel = 75
 ENT.AlertSoundLevel = 80
 ENT.CallForHelpSoundLevel = 80
@@ -502,6 +506,8 @@ ENT.BeforeHealSoundPitch1 = "UseGeneralPitch"
 ENT.BeforeHealSoundPitch2 = "UseGeneralPitch"
 ENT.AfterHealSoundPitch1 = 100
 ENT.AfterHealSoundPitch2 = 100
+ENT.MedicReceiveHealSoundPitch1 = "UseGeneralPitch"
+ENT.MedicReceiveHealSoundPitch2 = "UseGeneralPitch"
 ENT.OnPlayerSightSoundPitch1 = "UseGeneralPitch"
 ENT.OnPlayerSightSoundPitch2 = "UseGeneralPitch"
 ENT.AlertSoundPitch1 = "UseGeneralPitch"
@@ -1494,6 +1500,9 @@ function ENT:DoMedicCode_HealAlly()
 						if IsValid(self.Medic_CurrentEntToHeal) && self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then
 							self:CustomOnMedic_OnHeal()
 							self:MedicSoundCode_OnHeal()
+							if self.Medic_CurrentEntToHeal:IsNPC() && self.Medic_CurrentEntToHeal.IsVJBaseSNPC == true && self.Medic_CurrentEntToHeal.IsVJBaseSNPC_Animal != true then
+								self.Medic_CurrentEntToHeal:MedicSoundCode_ReceiveHeal()
+							end
 							self:VJ_SetSchedule(SCHED_IDLE_STAND)
 							self.Medic_CurrentEntToHeal:RemoveAllDecals()
 							local frimaxhp = self.Medic_CurrentEntToHeal:GetMaxHealth()
@@ -1531,6 +1540,7 @@ end
 function ENT:DoChangeWeapon(SetType)
 	SetType = SetType or "None"
 	if SetType != "None" then self:Give(SetType) end
+	self.Weapon_ShotsSinceLastReload = 0
 	if self:VJ_HasActiveWeapon() == true then
 		if /*self.DisableUSE_SHOT_REGULATOR == false &&*/ self.Weapons_UseRegulate[self:GetActiveWeapon():GetClass()] then
 			self:CapabilitiesAdd(bit.bor(CAP_USE_SHOT_REGULATOR))
@@ -1721,7 +1731,7 @@ function ENT:Think()
 				if (self:GetEnemy():GetPos():Distance(self:GetPos()) < 4000) then self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1 else self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.5 end
 			end
 
-			if self.IsReloadingWeapon == false && self.AllowWeaponReloading == true && self:VJ_HasActiveWeapon() == true && self.RunningAfter_FollowPlayer == false && self.ThrowingGrenade == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) then
+			if self.CurrentWeaponEntity == self:GetActiveWeapon() && self.IsReloadingWeapon == false && self.AllowWeaponReloading == true && self:VJ_HasActiveWeapon() == true && self.RunningAfter_FollowPlayer == false && self.ThrowingGrenade == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) then
 				//if CurTime() > self.NextReloadT then
 				//if math.random(1,self.ReloadChance) < 3 then
 				if self.Weapon_ShotsSinceLastReload >= self.Weapon_StartingAmmoAmount && ((self.VJ_IsBeingControlled == false) or (self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_RELOAD))) then
@@ -2321,7 +2331,7 @@ function ENT:SelectSchedule(iNPCState)
 							// self:DoChaseAnimation()
 							-- if covered, try to move forward by calculating the distance between the prop and the snpc
 							local iscovered, covertr = self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos(),false,{SetLastHiddenTime=true})
-							local guncovered, guncovertr = self:VJ_ForwardIsHidingZone(util.VJ_GetWeaponPos(self),self:GetEnemy():EyePos(),false)
+							local guncovered, guncovertr = self:VJ_ForwardIsHidingZone(self:GetActiveWeapon():GetNWVector("VJ_CurBulletPos"),self:GetEnemy():EyePos(),false)
 							//print("Is covered? ",iscovered)
 							//print("Is gun covered? ",guncovered)
 							if iscovered == true then
@@ -2341,7 +2351,9 @@ function ENT:SelectSchedule(iNPCState)
 										enepos = calc.PointPosition
 									end
 									if mypos:Distance(enepos) <= 1000 then
+										//enepos = enepos - self:GetForward()*5
 										self:SetLastPosition(enepos)
+										//VJ_CreateTestObject(enepos,self:GetAngles(),Color(0,255,255))
 										self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
 									end
 								end
@@ -2358,7 +2370,7 @@ function ENT:SelectSchedule(iNPCState)
 									self:CustomOnWeaponAttack()
 									self.Weapon_TimeSinceLastShot = 0
 									//self.NextMoveRandomlyWhenShootingT = CurTime() + 2
-									if self.CanCrouchOnWeaponAttack == true && guncovered == false && self:VJ_ForwardIsHidingZone(util.VJ_GetWeaponPos(self)+self:GetUp()*-18,self:GetEnemy():EyePos(),false) == false then
+									if self.CanCrouchOnWeaponAttack == true && guncovered == false && self:VJ_ForwardIsHidingZone(self:GetActiveWeapon():GetNWVector("VJ_CurBulletPos")+self:GetUp()*-18,self:GetEnemy():EyePos(),false) == false then
 										local curanim;
 										local crouchanim = VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponAttackCrouch)
 										local crouchchance = math.random(1,self.CanCrouchOnWeaponAttackChance)
@@ -3832,6 +3844,20 @@ function ENT:MedicSoundCode_OnHeal(CustomTbl)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:MedicSoundCode_ReceiveHeal(CustomTbl)
+	if self.HasSounds == false or self.HasMedicSounds_ReceiveHeal == false then return end
+	local randsd = math.random(1,self.MedicReceiveHealSoundChance)
+	local soundtbl = self.SoundTbl_MedicReceiveHeal
+	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
+	if randsd == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+		VJ_STOPSOUND(self.CurrentIdleSound)
+		VJ_STOPSOUND(self.CurrentFollowPlayerSound)
+		VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
+		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+		self.CurrentMedicReceiveHealSound = VJ_CreateSound(self,soundtbl,self.MedicReceiveHealSoundLevel,self:VJ_DecideSoundPitch(self.MedicReceiveHealSoundPitch1,self.MedicReceiveHealSoundPitch2))
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnPlayerSightSoundCode(CustomTbl)
 	if self.HasSounds == false or self.HasOnPlayerSightSounds == false then return end
 	local randomplayersound = math.random(1,self.OnPlayerSightSoundChance)
@@ -4203,6 +4229,7 @@ function ENT:StopAllCommonSounds()
 	VJ_STOPSOUND(self.CurrentWeaponReloadSound)
 	VJ_STOPSOUND(self.CurrentMedicBeforeHealSound)
 	VJ_STOPSOUND(self.CurrentMedicAfterHealSound)
+	VJ_STOPSOUND(self.CurrentMedicReceiveHealSound)
 	VJ_STOPSOUND(self.CurrentCallForHelpSound)
 	VJ_STOPSOUND(self.CurrentOnReceiveOrderSound)
 	VJ_STOPSOUND(self.CurrentOnKilledEnemySound)
@@ -4313,7 +4340,7 @@ function ENT:ConvarsOnInit()
 	if GetConVarNumber("vj_npc_sd_becomenemytoply") == 1 then self.HasBecomeEnemyToPlayerSounds = false end
 	if GetConVarNumber("vj_npc_sd_damagebyplayer") == 1 then self.HasDamageByPlayerSounds = false end
 	if GetConVarNumber("vj_npc_sd_onplayersight") == 1 then self.HasOnPlayerSightSounds = false end
-	if GetConVarNumber("vj_npc_sd_medic") == 1 then self.HasMedicSounds_BeforeHeal = false self.HasMedicSounds_AfterHeal = false end
+	if GetConVarNumber("vj_npc_sd_medic") == 1 then self.HasMedicSounds_BeforeHeal = false self.HasMedicSounds_AfterHeal = false self.HasMedicSounds_ReceiveHeal = false end
 	if GetConVarNumber("vj_npc_sd_reload") == 1 then self.HasWeaponReloadSounds = false end
 	if GetConVarNumber("vj_npc_sd_grenadeattack") == 1 then self.HasGrenadeAttackSounds = false end
 	if GetConVarNumber("vj_npc_sd_suppressing") == 1 then self.HasSuppressingSounds = false end
