@@ -89,22 +89,6 @@ function VJ_INSTALLATIONS(Panel)
 	end
 	Panel:AddPanel(changelog)
 	
-	local ilovedrvrej = vgui.Create("DButton") -- I LOVE DRVREJ
-	ilovedrvrej:SetFont("TargetID")
-	ilovedrvrej:SetText("Do You Love DrVrej?")
-	ilovedrvrej:SetSize(150, 25)
-	ilovedrvrej:SetColor(Color(76,153,255,255))
-	ilovedrvrej.DoClick = function(ilovedrvrej)
-		//LocalPlayer():ConCommand("say I LOVE DRVREJ!")
-		net.Start("VJSay")
-		net.WriteEntity(LocalPlayer())
-		net.WriteString("I LOVE DRVREJ!")
-		net.WriteString("vj_illuminati/Illuminati Confirmed.mp3")
-		net.SendToServer()
-		//surface.PlaySound(Sound("vj_illuminati/Illuminati Confirmed.mp3"))
-	end
-	Panel:AddPanel(ilovedrvrej)
-	
 	if (LocalPlayer():SteamID() == "STEAM_0:0:22688298") then
 		local lennyface = vgui.Create("DButton") -- *insert lenny face*
 		lennyface:SetFont("TargetID")
@@ -113,9 +97,6 @@ function VJ_INSTALLATIONS(Panel)
 		lennyface:SetColor(Color(76,153,255,255))
 		lennyface.DoClick = function(lennyface)
 			net.Start("VJSay")
-			net.WriteEntity(LocalPlayer())
-			net.WriteString("The creator of VJ Base, DrVrej is in the server!")
-			net.WriteString("vj_illuminati/Illuminati Confirmed.mp3")
 			net.SendToServer()
 		end
 		Panel:AddPanel(lennyface)
@@ -138,17 +119,6 @@ concommand.Add("vj_welcome", VJWelcomeCode)
 net.Receive("VJWelcome", VJWelcomeCode)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 concommand.Add("vj_iamhere", function(ply,cmd,args)
-	local plynull = false
-	local cansendmsg = false
-	local plyid = NULL
-	if ply == NULL then plynull = true end
-	if plynull == false && ply:SteamID() == "STEAM_0:0:22688298" then cansendmsg = true plyid = ply end
-	if IsValid(LocalPlayer()) && LocalPlayer():SteamID() == "STEAM_0:0:22688298" then cansendmsg = true plyid = LocalPlayer() end
-	if cansendmsg == true then
-		net.Start("VJSay")
-		net.WriteEntity(plyid)
-		net.WriteString("The creator of VJ Base, DrVrej is in the server!")
-		net.WriteString("vj_illuminati/Illuminati Confirmed.mp3")
-		net.SendToServer()
-	end
+	net.Start("VJSay")
+	net.SendToServer()
 end)

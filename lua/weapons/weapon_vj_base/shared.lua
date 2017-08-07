@@ -34,7 +34,7 @@ SWEP.NPC_NextPrimaryFire 		= 0.15 -- Next time it can use primary fire
 SWEP.NPC_TimeUntilFire	 		= 0.1 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_AllowCustomSpread		= true -- Should the weapon be able to change the NPC's spread?
 SWEP.NPC_CustomSpread	 		= 1 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
-SWEP.NPC_BulletSpawnAttachment = "" -- The attachment that the bullet spawns on, leave empty for base to decide!
+SWEP.NPC_BulletSpawnAttachment 	= "" -- The attachment that the bullet spawns on, leave empty for base to decide!
 SWEP.NPC_AnimationTbl_Custom 	= {} -- Can be activity or sequence
 SWEP.NPC_AnimationTbl_General 	= {ACT_RANGE_ATTACK1,ACT_RANGE_ATTACK1_LOW,ACT_IDLE_AGITATED,ACT_IDLE_AIM_AGITATED,ACT_RUN_AIM,ACT_WALK_AIM}
 SWEP.NPC_AnimationTbl_Rifle 	= {ACT_WALK_AIM_RIFLE,ACT_RUN_AIM_RIFLE,ACT_RANGE_ATTACK_AR2,ACT_RANGE_ATTACK_AR2_LOW,ACT_IDLE_ANGRY_SMG1,ACT_RANGE_ATTACK_SMG1}
@@ -117,7 +117,7 @@ SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_full"}
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_SpawnShells = true
 SWEP.PrimaryEffects_ShellAttachment = "shell"
-SWEP.PrimaryEffects_ShellType = "VJ_Weapon_RifleShell1"
+SWEP.PrimaryEffects_ShellType 	= "VJ_Weapon_RifleShell1"
 	-- VJ_Weapon_RifleShell1 | VJ_Weapon_PistolShell1 | VJ_Weapon_ShotgunShell1
 SWEP.PrimaryEffects_SpawnDynamicLight = true
 SWEP.PrimaryEffects_DynamicLightBrightness = 4
@@ -652,7 +652,7 @@ function SWEP:RunWorldModelThink()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:DecideBulletPosition()
-	if !IsValid(self.Owner) then return nil end 
+	if !IsValid(self.Owner) then return nil end
 	if !self.Owner:IsNPC() then return self.Owner:GetShootPos() end
 	if self.NPC_BulletSpawnAttachment != "" then
 		if self:LookupAttachment(self.NPC_BulletSpawnAttachment) == 0 or self:LookupAttachment(self.NPC_BulletSpawnAttachment) == -1 then

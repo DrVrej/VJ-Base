@@ -742,7 +742,7 @@ hook.Add("PlayerDeath","VJ_PLY_DEATH",VJ_PLY_DEATH)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 local function VJ_NPC_TAKEDAMAGE(target,dmginfo)
 	if IsValid(target) && IsValid(dmginfo:GetAttacker()) then
-		if target.IsVJBaseSNPC == true && dmginfo:GetAttacker():IsNPC() && dmginfo:IsBulletDamage() && (target:Disposition(dmginfo:GetAttacker()) == 3 or target:Disposition(dmginfo:GetAttacker()) == 4) && dmginfo:GetAttacker():Disposition(target) != 1 then
+		if target.IsVJBaseSNPC == true && dmginfo:GetAttacker():IsNPC() && dmginfo:IsBulletDamage() && (dmginfo:GetAttacker():GetClass() == target:GetClass() or target:Disposition(dmginfo:GetAttacker()) == 3 /*or target:Disposition(dmginfo:GetAttacker()) == 4*/) && dmginfo:GetAttacker():Disposition(target) != 1 then
 			dmginfo:SetDamage(0)
 		end
 	end

@@ -119,15 +119,14 @@ AddConvars["vj_npc_sd_suppressing"] = 0 -- Disable suppressing callout sounds
 -- Developer Settings --
 AddConvars["vj_npc_usedevcommands"] = 0 -- Should it use Dev Commands?
 AddConvars["vj_npc_printalerted"] = 0 -- Prints its Alerted status, is it alerted? Or not?
-AddConvars["vj_npc_printseenenemy"] = 0 -- Prints if it sees an enemy or not
 AddConvars["vj_npc_printdied"] = 0 -- Prints Died when the SNPC dies
 AddConvars["vj_npc_printondamage"] = 0 -- Prints when the SNPC gets damaged
 AddConvars["vj_npc_printontouch"] = 0 -- Prints when something touches the SNPC
 AddConvars["vj_npc_printstoppedattacks"] = 0 -- Prints when the SNPC stops its attacks
-AddConvars["vj_npc_printenemyclass"] = 0 -- Prints the current enemy class
 AddConvars["vj_npc_drvrejfriendly"] = 0 -- Makes the SNPC Friendly to DrVrej! =D
 AddConvars["vj_npc_printresteenemy"] = 0 -- Prints something when the SNPC has rested its enemy
 AddConvars["vj_npc_printlastseenenemy"] = 0 -- Prints the 'LastSeenEnemy' time
+AddConvars["vj_npc_printcurenemy"] = 0 -- Prints the current enemy
 	-- Human Options ----------------------------------------------------------------------------------------------------
 AddConvars["vj_npc_printammo"] = 0 -- Prints amount of ammo in the console
 AddConvars["vj_npc_printweapon"] = 0 -- Prints the weapon its using

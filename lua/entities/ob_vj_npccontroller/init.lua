@@ -81,7 +81,7 @@ function ENT:SetControlledNPC(GetEntity)
 	self.NPCBullseye:SetNoDraw(false)
 	self.NPCBullseye:DrawShadow(false)
 	self:DeleteOnRemove(self.NPCBullseye)
-	
+
 	self.ControlledNPC = GetEntity
 	self.ControlledNPC.VJ_IsBeingControlled = true
 	self.ControlledNPC.VJ_TheController = self.TheController

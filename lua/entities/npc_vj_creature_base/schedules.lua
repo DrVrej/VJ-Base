@@ -11,7 +11,8 @@ function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 	if (self:IsRunningBehavior()) then return true end
 	if (self:DoingEngineSchedule()) then return true end -- Mostly used for schedules (SCHED_)
 	//if VJ_IsCurrentAnimation(self,ACT_IDLE) && self.VJ_PlayingSequence == false && self.VJ_IsPlayingInterruptSequence == false then print("is ACT_IDLE!") self:VJ_ACT_PLAYACTIVITY(ACT_COWER,false,0,true,0,{AlwaysUseSequence=true,SequenceDuration=false,SequenceInterruptible=true}) end
-	if (!self.CurrentSchedule or (self.CurrentSchedule != nil && self.CurrentSchedule.CanBeInterrupted == true)) && (self.VJ_PlayingSequence == false && self.CanDoSelectScheduleAgain == true) /*&& self.VJ_IsPlayingInterruptSequence == false*/ then self:SelectSchedule() end
+	//if (!self.CurrentSchedule or (self.CurrentSchedule != nil && self.CurrentSchedule.CanBeInterrupted == true)) && (self.VJ_PlayingSequence == false && self.CanDoSelectScheduleAgain == true) /*&& self.VJ_IsPlayingInterruptSequence == false*/ then self:SelectSchedule() end
+	if (!self.CurrentSchedule or (self.CurrentSchedule != nil && ((self:IsMoving() && self.CurrentSchedule.CanBeInterrupted == true) or (!self:IsMoving())))) && self.VJ_PlayingSequence == false then self:SelectSchedule() end
 	if (self.CurrentSchedule) then self:DoSchedule(self.CurrentSchedule) end
 	if self.VJ_PlayingSequence == false && self.VJ_IsPlayingInterruptSequence == false && self.Aerial_ShouldBeFlying == false /*&& self:GetSequence() != self.CurrentAnim_AerialMovement && self.MovementType != VJ_MOVETYPE_AERIAL*/ then self:MaintainActivity() end
 end
@@ -59,6 +60,7 @@ function ENT:StartSchedule(schedule)
 	end
 	schedule.AlreadyRanCode_OnFail = false
 	schedule.AlreadyRanCode_OnFinish = false
+	//PrintTable(schedule)
 	//if schedule.Name != "vj_chase_enemy" then PrintTable(schedule) end
 	self:DoRunCode_OnFinish(self.CurrentSchedule)
 	self.CurrentSchedule = schedule
