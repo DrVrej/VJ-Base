@@ -7,7 +7,7 @@ Want to make an addon using this base? Simply just follow this rules: http://ste
 ## All Links:
 - Important Links: http://steamcommunity.com/groups/vrejgaming/discussions/6/523890528712003319/
 - Workshop Version: http://steamcommunity.com/sharedfiles/filedetails/?id=131759821
-- Official and Unofficial Addons: http://steamcommunity.com/sharedfiles/filedetails/?id=455199067
+- Official and Unofficial Addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1080924955
 - Rules: http://steamcommunity.com/groups/vrejgaming/discussions/6/613956964586370156/
 
 ## Notes:
