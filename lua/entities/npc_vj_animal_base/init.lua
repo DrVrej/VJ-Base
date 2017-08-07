@@ -139,7 +139,7 @@ ENT.HasGibDeathParticles = true -- Does it spawn particles on death or when it g
 ENT.RunOnTouch = true -- Runs away when something touches it
 ENT.NextRunOnTouchTime = 3 -- Next time it runs away when something touches it
 ENT.IdleSchedule_Wander = {SCHED_IDLE_WANDER} -- Animation played when the SNPC is idle, when called to wander
-ENT.AnimTbl_IdleStand = {} -- Leave empty to use schedule | Only works when AI is enabled
+ENT.AnimTbl_IdleStand = {} -- The idle animation when AI is enabled
 ENT.HasEntitiesToNoCollide = true -- If set to false, it won't run the EntitiesToNoCollide code
 ENT.EntitiesToNoCollide = {} -- Entities to not collide with when HasEntitiesToNoCollide is set to true
 ENT.NextRunAwayOnDamageTime = 5 -- Until next run after being shot when not alerted
@@ -886,8 +886,7 @@ function ENT:Think()
 		self:CustomOnThink_AIEnabled()
 		self:DoCustomIdleAnimation()
 		if self.VJDEBUG_SNPC_ENABLED == true then
-			if GetConVarNumber("vj_npc_printenemyclass") == 1 then if self:GetEnemy() != nil then print(self:GetClass().."'s Enemy: "..self:GetEnemy():GetClass()) else print(self:GetClass().."'s Enemy: None") end end
-			if GetConVarNumber("vj_npc_printseenenemy") == 1 then if self:GetEnemy() != nil then print(self:GetClass().." Has Seen an Enemy!") else print(self:GetClass().." Has NOT Seen an Enemy!") end end
+			if GetConVarNumber("vj_npc_printcurenemy") == 1 then if self:GetEnemy() != nil then print(self:GetClass().."'s Enemy: ",self:GetEnemy()) else print(self:GetClass().."'s Enemy: None") end end
 			if GetConVarNumber("vj_npc_printtakingcover") == 1 then if self.TakingCover == true then print(self:GetClass().." Is Taking Cover") else print(self:GetClass().." Is Not Taking Cover") end end
 		end
 		

@@ -84,13 +84,12 @@ end
 hook.Add("PlayerInitialSpawn", "VJBaseSpawn", VJSpawn)
 
 net.Receive("VJSay",function(len,pl)
-	ply = net.ReadEntity()
-	msg = net.ReadString()
-	soundfile = net.ReadString()
-	PrintMessage(HUD_PRINTTALK,msg)
-	local sd = CreateSound(game.GetWorld(),soundfile)
-	sd:SetSoundLevel(0)
-	sd:Play()
+	if pl:IsPlayer() && pl:SteamID() == "STEAM_0:0:22688298" then
+		PrintMessage(HUD_PRINTTALK,"The creator of VJ Base, DrVrej is in the server!")
+		local sd = CreateSound(game.GetWorld(),"vj_illuminati/Illuminati Confirmed.mp3")
+		sd:SetSoundLevel(0)
+		sd:Play()
+	end
 end)
 
 if (CLIENT) then print("VJ Base client files initialized!") else print("VJ Base server files initialized!") end

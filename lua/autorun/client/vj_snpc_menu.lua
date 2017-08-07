@@ -300,13 +300,12 @@ local function VJ_SNPC_DEVSETTINGS(Panel) -- Developer Settings
 	end
 	Panel:AddControl( "Label", {Text = "Notice: Only admins can change this settings."})
 	Panel:AddControl( "Label", {Text = "This settings are used when developing SNPCs."})
-	Panel:AddControl( "Label", {Text = "WARNING: Some of this commands cause lag!"})
+	Panel:AddControl( "Label", {Text = "WARNING: Some of this options cause lag!"})
 	Panel:AddControl("Button", {Label = "Cached Models (Console)", Command = "listmodels"})
 	local vj_devsettings_reset = {Options = {}, CVars = {}, Label = "Reset Everything:", MenuButton = "0"}
 	vj_devsettings_reset.Options["#vjbase.menugeneral.default"] = {
 	vj_npc_printammo = "0",
 	vj_npc_printweapon = "0",
-	vj_npc_printseenenemy = "0",
 	vj_npc_printalerted = "0",
 	vj_npc_printaccuracy = "0",
 	vj_npc_printdied = "0",
@@ -314,26 +313,25 @@ local function VJ_SNPC_DEVSETTINGS(Panel) -- Developer Settings
 	vj_npc_printontouch = "0",
 	vj_npc_printstoppedattacks = "0",
 	vj_npc_printtakingcover = "0",
-	vj_npc_printenemyclass = "0",
 	vj_npc_drvrejfriendly = "0",
 	vj_npc_printresteenemy = "0",
 	vj_npc_printlastseenenemy = "0",
 	vj_npc_usedevcommands = "0",
+	vj_npc_printcurenemy = "0",
 	}
 	Panel:AddControl("ComboBox", vj_devsettings_reset)
 	Panel:AddControl("Checkbox", {Label = "All SNPCs and NPCs love DrVrej?! =D", Command = "vj_npc_drvrejfriendly"})
 	Panel:AddControl("Checkbox", {Label = "Enable Developer Mode?", Command = "vj_npc_usedevcommands"})
-	Panel:ControlHelp("Many of the commands below require this to be checked!")
+	Panel:ControlHelp("Most of the options below require this to be checked!")
 	Panel:AddControl("Checkbox", {Label = "Print On Touch (Console)", Command = "vj_npc_printontouch"})
 	Panel:AddControl("Checkbox", {Label = "Print On Damage (Console)", Command = "vj_npc_printondamage"})
 	Panel:AddControl("Checkbox", {Label = "Print On Death (Console)", Command = "vj_npc_printdied"})
-	Panel:AddControl("Checkbox", {Label = "Print On Reset Enemy (Console)", Command = "vj_npc_printresteenemy"})
-	Panel:AddControl("Checkbox", {Label = "Print Stopped Attacks (Console)", Command = "vj_npc_printstoppedattacks"})
-	Panel:AddControl("Checkbox", {Label = "Print Current Enemy Class (Console)", Command = "vj_npc_printenemyclass"})
-	Panel:AddControl("Checkbox", {Label = "Print Seen Enemy (Console)", Command = "vj_npc_printseenenemy"})
-	Panel:AddControl("Checkbox", {Label = "Print Alerted (Console)", Command = "vj_npc_printalerted"})
+	Panel:AddControl("Checkbox", {Label = "Print on Stopped Attacks (Console)", Command = "vj_npc_printstoppedattacks"})
 	Panel:AddControl("Checkbox", {Label = "Print Taking Cover (Console)", Command = "vj_npc_printtakingcover"})
+	Panel:AddControl("Checkbox", {Label = "Print Alerted (Console)", Command = "vj_npc_printalerted"})
+	Panel:AddControl("Checkbox", {Label = "Print Current Enemy (Console)", Command = "vj_npc_printcurenemy"})
 	Panel:AddControl("Checkbox", {Label = "Print 'LastSeenEnemy' time (Chat/Console)", Command = "vj_npc_printlastseenenemy"})
+	Panel:AddControl("Checkbox", {Label = "Print On Reset Enemy (Console)", Command = "vj_npc_printresteenemy"})
 	Panel:AddControl( "Label", {Text = "Human Settings:"})
 	Panel:AddControl("Checkbox", {Label = "Print Current Weapon Class (Console)", Command = "vj_npc_printweapon"})
 	Panel:AddControl("Checkbox", {Label = "Print Amount of Ammo (Console)", Command = "vj_npc_printammo"})

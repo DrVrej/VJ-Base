@@ -25,7 +25,7 @@ hook.Add("PopulateVJBaseHome","AddVJBaseSpawnMenu_Home",function(pnlContent,tree
 	Header1:SetPos(40, 40)
 	Header1:SetSize(200, 70)
 	Header1:SetTextColor(Color(255, 102, 0, 255))
-	Header1:SetText("Welcome to VJ Basge!")
+	Header1:SetText("Welcome to VJ Base!")
 	hometree.PropPanel:Add(Header1)
 	
 	local Text1 = vgui.Create("DLabel")
@@ -186,7 +186,7 @@ hook.Add("PopulateVJBaseTools","AddVJBaseSpawnMenu_Tool",function(pnlContent,tre
 		for nk, nv in pairs(ToolList) do
 			if nv.Name == "DrVrej" then
 				for nk2, nv2 in pairs(nv.Items) do
-					if nv2.Text == "#Tools" then
+					if nv2.Text == "Tools" then
 						//local node = tooltree:AddNode("Default", "icon16/bullet_wrench.png")
 						local CatPropPanel = vgui.Create("ContentContainer", pnlContent)
 						CatPropPanel:SetVisible(false)

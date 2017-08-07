@@ -168,6 +168,7 @@ if (CLIENT) then
 		Panel:ControlHelp(" ") -- Spacer
 		Panel:ControlHelp("Notice: Only admins can use the clean up buttons.")
 		Panel:AddControl("Button", {Label = "Clean Up Everything", Command = "vj_cleanup_all"})
+		Panel:AddControl("Button", {Label = "Stop all Sounds", Command = "stopsound"})
 		Panel:AddControl("Button", {Label = "Remove all VJ SNPCs", Command = "vj_cleanup_snpcs"})
 		Panel:AddControl("Button", {Label = "Remove all (S)NPCs", Command = "vj_cleanup_s_npcs"})
 		Panel:AddControl("Button", {Label = "Remove all Spawners", Command = "vj_cleanup_spawners"})
@@ -178,18 +179,17 @@ if (CLIENT) then
 		Panel:AddControl("Button", {Label = "Remove all Decals", Command = "vj_cleanup_decals"})
 		Panel:AddControl("Button", {Label = "Remove all of your Weapons", Command = "vj_cleanup_playerweapon"})
 		Panel:AddControl("Button", {Label = "Remove all of your Ammo", Command = "vj_cleanup_playerammo"})
-		Panel:AddControl("Button", {Label = "Stop all Sounds", Command = "stopsound"})
 	end
 	----=================================----
 	local function VJ_MAINMENU_MISC(Panel)
-	-- Don't forget if "http" is with "s" it won't work! Take the "s" off!
 		local bugr = vgui.Create("DButton") -- Bug Report
 		bugr:SetFont("CloseCaption_Bold")
 		bugr:SetText("Report a Bug")
 		bugr:SetSize(150, 35)
 		bugr:SetColor(Color(255,0,0,255))
 		bugr.DoClick = function(bugr)
-			gui.OpenURL("http://docs.google.com/forms/d/1ZS1rSFtY4j6hJMZ_eGktYoBGScuW0GZdX4gjEJpBjjU/viewform?pli=1")
+			gui.OpenURL("http://steamcommunity.com/groups/vrejgaming/discussions/2/")
+			// http://docs.google.com/forms/d/1ZS1rSFtY4j6hJMZ_eGktYoBGScuW0GZdX4gjEJpBjjU/viewform?pli=1
 		end
 		Panel:AddPanel(bugr)
 		
@@ -199,7 +199,8 @@ if (CLIENT) then
 		suggest:SetSize(150, 20)
 		suggest:SetColor(Color(0,0,255,200))
 		suggest.DoClick = function(suggest)
-			gui.OpenURL("http://docs.google.com/forms/d/1dMj6NWEmIpP7JYRxETZtKAl_aSQ6NUY4Fp3Ci2Olc2o/viewform?pli=1")
+			gui.OpenURL("http://steamcommunity.com/groups/vrejgaming/discussions/1/")
+			// http://docs.google.com/forms/d/1dMj6NWEmIpP7JYRxETZtKAl_aSQ6NUY4Fp3Ci2Olc2o/viewform?pli=1
 		end
 		Panel:AddPanel(suggest)
 		
@@ -207,17 +208,6 @@ if (CLIENT) then
 		
 		Panel:AddControl("Label", {Text = "Follow/subscribe/like/join one of this links to get updates about my addons!"})
 		Panel:ControlHelp("Thanks for your support!")
-		
-		-- No longer used
-		/*local webstite = vgui.Create("DButton") -- Website
-		webstite:SetFont("TargetID")
-		webstite:SetText("Register on my Website!")
-		webstite:SetSize(150, 25)
-		webstite:SetColor(Color(76,153,0,255))
-		webstite.DoClick = function(webstite)
-			gui.OpenURL("http://vrejgaming.webs.com")
-		end
-		Panel:AddPanel(webstite)*/
 		
 		local steaml = vgui.Create("DButton") -- Steam Group
 		steaml:SetFont("TargetID")
@@ -229,6 +219,16 @@ if (CLIENT) then
 		end
 		Panel:AddPanel(steaml)
 		
+		local ytl = vgui.Create("DButton") -- YouTube
+		ytl:SetFont("TargetID")
+		ytl:SetText("Subscribe my YouTube Channel!")
+		ytl:SetSize(150, 25)
+		ytl:SetColor(Color(76,153,0,255))
+		ytl.DoClick = function(ytl)
+			gui.OpenURL("http://www.youtube.com/user/gmod95")
+		end
+		Panel:AddPanel(ytl)
+		
 		local fbl = vgui.Create("DButton") -- Facebook
 		fbl:SetFont("TargetID")
 		fbl:SetText("Like my Facebook Page!")
@@ -238,16 +238,6 @@ if (CLIENT) then
 			gui.OpenURL("http://www.facebook.com/VrejGaming")
 		end
 		Panel:AddPanel(fbl)
-		
-		local ytl = vgui.Create("DButton") -- YouTube
-		ytl:SetFont("TargetID")
-		ytl:SetText("Subscribe my YouTube Channel!")
-		ytl:SetSize(150, 25)
-		ytl:SetColor(Color(76,153,0,255))
-		ytl.DoClick = function(ytl)
-			gui.OpenURL("http://www.youtube.com/user/gmod95/featured")
-		end
-		Panel:AddPanel(ytl)
 
 		local tweetl = vgui.Create("DButton") -- Twitter
 		tweetl:SetFont("TargetID")
