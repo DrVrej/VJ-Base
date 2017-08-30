@@ -12,6 +12,9 @@ ENT.Category		= "VJ Bases"
 ENT.Spawnable = false
 ENT.AdminSpawnable = false
 ENT.AutomaticFrameAdvance = false
+
+ENT.IsVJBaseSNPC = true -- Is it a VJ Base SNPC?
+ENT.IsVJBaseSNPC_Animal = true -- Is it a VJ Base animal?
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, physobj)
 end

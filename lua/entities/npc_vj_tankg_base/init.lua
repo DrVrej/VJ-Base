@@ -5,7 +5,6 @@ include('shared.lua')
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
-ENT.IsVJBaseSNPC_Tank = true -- Is it a VJ Base tank SNPC?
 
 	-- Default ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Model = {} -- The game will pick a random model from the table when the SNPC is spawned | Add as many as you want 
@@ -245,7 +244,7 @@ function ENT:RangeAttack_Shell()
 	if IsValid(self:GetEnemy()) && self:GetEnemy() != NULL && self:GetEnemy() != nil /* && self.Tank_FacingTarget == true*/ then
 		if self:Visible(self:GetEnemy()) then
 			if self.HasSounds == true && GetConVarNumber("vj_npc_sd_rangeattack") == 0 then
-				self:EmitSound("vj_mili_tank/tank_fire"..math.random(1,4)..".wav",500,100)
+				VJ_EmitSound(self,"vj_mili_tank/tank_fire"..math.random(1,4)..".wav",500,100)
 			end
 			
 			//self:StartShootEffects()
