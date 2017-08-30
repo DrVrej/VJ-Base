@@ -6,7 +6,6 @@ include('shared.lua')
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
-ENT.IsVJBaseSNPC_Tank = true -- Is it a VJ Base tank SNPC?
 
 	-- Default ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Model = {} -- The game will pick a random model from the table when the SNPC is spawned | Add as many as you want 
@@ -94,7 +93,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize()
 	self:CustomInitialize_CustomTank()
-	self:PhysicsInit(SOLID_BBOX)
+	self:PhysicsInit(SOLID_BBOX) // SOLID_VPHYSICS
 	//self:CapabilitiesAdd(bit.bor(CAP_ANIMATEDFACE)) -- Breaks some SNPCs, avoid using it!
 	self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND))
 	self:SetAngles(self:GetAngles()+Angle(0,self.Tank_SpawningAngle,0))
@@ -401,8 +400,8 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:TANK_RUNOVER_SOUND()
 	if self.HasSounds == true && CurTime() > self.Tank_NextRunOverSoundT then
-	self:EmitSound("vj_gib/bones_snapping"..math.random(1,3)..".wav",80,math.random(80,100))
-	self.Tank_NextRunOverSoundT = CurTime() + 0.2
+		VJ_EmitSound(self,"vj_gib/bones_snapping"..math.random(1,3)..".wav",80,math.random(80,100))
+		self.Tank_NextRunOverSoundT = CurTime() + 0.2
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -426,7 +425,7 @@ function ENT:CustomOnPriorToKilled(dmginfo,hitgroup)
 	
 	timer.Simple(0,function()
 		if self:IsValid() then
-			self:EmitSound("vj_mili_tank/tank_death2.wav",100,100)
+			VJ_EmitSound(self,"vj_mili_tank/tank_death2.wav",100,100)
 			util.BlastDamage(self,self,self:GetPos(),200,40)
 			util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
 			if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2",self:GetPos(),Angle(0,0,0),nil) end
@@ -435,7 +434,7 @@ function ENT:CustomOnPriorToKilled(dmginfo,hitgroup)
 	
 	timer.Simple(0.5,function()
 		if self:IsValid() then
-			self:EmitSound("vj_mili_tank/tank_death2.wav",100,100)
+			VJ_EmitSound(self,"vj_mili_tank/tank_death2.wav",100,100)
 			util.BlastDamage(self,self,self:GetPos(),200,40)
 			util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
 			if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2",self:GetPos(),Angle(0,0,0),nil) end
@@ -444,7 +443,7 @@ function ENT:CustomOnPriorToKilled(dmginfo,hitgroup)
 	
 	timer.Simple(1,function()
 		if self:IsValid() then
-			self:EmitSound("vj_mili_tank/tank_death2.wav",100,100)
+			VJ_EmitSound(self,"vj_mili_tank/tank_death2.wav",100,100)
 			util.BlastDamage(self,self,self:GetPos(),200,40)
 			util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
 			if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2",self:GetPos(),Angle(0,0,0),nil) end
@@ -453,8 +452,8 @@ function ENT:CustomOnPriorToKilled(dmginfo,hitgroup)
 	
 	timer.Simple(1.5,function()
 		if self:IsValid() then
-			self:EmitSound("vj_mili_tank/tank_death2.wav",100,100)
-			self:EmitSound("vj_mili_tank/tank_death3.wav",100,100)
+			VJ_EmitSound(self,"vj_mili_tank/tank_death2.wav",100,100)
+			VJ_EmitSound(self,"vj_mili_tank/tank_death3.wav",100,100)
 			util.BlastDamage(self,self,self:GetPos(),200,40)
 			util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
 			if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2",self:GetPos(),Angle(0,0,0),nil) end

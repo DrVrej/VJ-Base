@@ -12,8 +12,6 @@ INFO: Used as a base for animal SNPCs.
 --------------------------------------------------*/
 AccessorFunc(ENT,"m_iClass","NPCClass",FORCE_NUMBER)
 AccessorFunc(ENT,"m_fMaxYawSpeed","MaxYawSpeed",FORCE_NUMBER)
-ENT.IsVJBaseSNPC = true -- Is it a VJ Base SNPC?
-ENT.IsVJBaseSNPC_Animal = true -- Is it a VJ Base animal?
 
 	-- General ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Model = {} -- The game will pick a random model from the table when the SNPC is spawned | Add as many as you want
@@ -467,7 +465,7 @@ function ENT:Initialize()
 	if self.HasHull == true then self:SetHullType(self.HullType) end
 	if self.HullSizeNormal == true then self:SetHullSizeNormal() end
 	self:SetCustomCollisionCheck()
-	if self.HasSetSolid == true then self:SetSolid(SOLID_BBOX) end
+	if self.HasSetSolid == true then self:SetSolid(SOLID_BBOX) end // SOLID_OBB
 	//self:SetMoveType(self.MoveType)
 	self:ConvarsOnInit()
 	self:DoChangeMovementType()

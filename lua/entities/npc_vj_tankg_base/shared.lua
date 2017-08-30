@@ -11,6 +11,8 @@ ENT.Category		= "VJ Bases"
  
 ENT.Spawnable = false
 ENT.AdminSpawnable = false
+
+ENT.IsVJBaseSNPC_Tank = true -- Is it a VJ Base tank SNPC?
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, physobj)
 end

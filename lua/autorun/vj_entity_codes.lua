@@ -45,6 +45,17 @@ VJ.AddEntity("Flare Round","obj_vj_flareround","DrVrej",false,0,true,vCat)
 //VJ.AddEntity("Teleport Point 2","obj_vj_teleportex2","DrVrej",true,0,true,vCat)
 
 -- Global Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function VJ_PICKRANDOMTABLE(tbl)
+	if not tbl then return false end
+	if !istable(tbl) then return tbl end
+	if istable(tbl) then
+		if #tbl < 1 then return false end -- If the table is empty then end it
+		tbl = tbl[math.random(1,#tbl)]
+	return tbl
+	end
+	return false
+end
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function VJ_RoundToMultiple(number,multiple) -- Credits to Bizzclaw for pointing me to the right direction!
 	if math.Round(number/multiple) == number/multiple then
 		return number
@@ -93,29 +104,15 @@ function VJ_CreateSound(argent,sound,soundlevel,soundpitch,stoplatestsound,sound
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function VJ_EmitSound(argent,sound,soundlevel,soundpitch,volume,channel)
-	if not sound then return end
-	if istable(sound) then
-		if #sound < 1 then return end -- If the table is empty then end it
-		sound = sound[math.random(1,#sound)]
-	end
-	argent:EmitSound(sound,soundlevel,soundpitch,volume,channel)
-	argent.LastPlayedVJSound = sound
-	if argent.IsVJBaseSNPC == true then argent:OnPlayEmitSound(sound) end
+	local sd = VJ_PICKRANDOMTABLE(sound)
+	if sd == false then return end
+	argent:EmitSound(sd,soundlevel,soundpitch,volume,channel)
+	argent.LastPlayedVJSound = sd
+	if argent.IsVJBaseSNPC == true then argent:OnPlayEmitSound(sd) end
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function VJ_STOPSOUND(vsoundname)
 	if vsoundname then vsoundname:Stop() end
-end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function VJ_PICKRANDOMTABLE(tbl)
-	if not tbl then return false end
-	if !istable(tbl) then return tbl end
-	if istable(tbl) then
-		if #tbl < 1 then return false end -- If the table is empty then end it
-		tbl = tbl[math.random(1,#tbl)]
-	return tbl
-	end
-	return false
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function VJ_AnimationExists(argent,actname)
@@ -147,6 +144,21 @@ function VJ_GetSequenceName(argent,actname)
 	if type(actname) == "number" then return argent:GetSequenceName(argent:SelectWeightedSequence(actname)) end
 	if type(actname) == "string" then if string.find(actname, "vjseq_") then actname = string.Replace(actname,"vjseq_","") end return argent:GetSequenceName(argent:LookupSequence(actname)) end
 	return nil
+end
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function VJ_SequenceToActivity(argent,seq)
+	if type(seq) == "string" then
+		local checkanim = argent:GetSequenceActivity(argent:LookupSequence(seq))
+		if checkanim == nil or checkanim == -1 then
+			return false
+		else
+			return checkanim
+		end
+	elseif type(seq) == "number" then
+		return seq
+	else
+		return false
+	end
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function VJ_IsCurrentAnimation(argent,actname)
@@ -346,8 +358,9 @@ end
 function NPC_MetaTable:VJ_IsCurrentSchedule(idcheck)
 	if istable(idcheck) == true then
 		for k,v in ipairs(idcheck) do
-		if self:IsCurrentSchedule(v) == true then
-		return true end
+			if self:IsCurrentSchedule(v) == true then
+				return true
+			end
 		end
 	else
 		if self:IsCurrentSchedule(idcheck) == true then return true end
@@ -409,7 +422,10 @@ function NPC_MetaTable:VJ_GetNearestPointToEntity(argent,SameZ)
 	local NearestPositions = {MyPosition=Vector(0,0,0), EnemyPosition=Vector(0,0,0)}
 	local Pos_Enemy, Pos_Self = argent:NearestPoint(self:GetPos() +argent:OBBCenter()), self:NearestPoint(argent:GetPos() +self:OBBCenter())
 	Pos_Enemy.z, Pos_Self.z = argent:GetPos().z, self:GetPos().z
-	if SameZ == true then Pos_Enemy.z = self:GetPos().z end
+	if SameZ == true then 
+		Pos_Enemy = Vector(Pos_Enemy.x,Pos_Enemy.y,self:GetPos().z)
+		Pos_Self = Vector(Pos_Self.x,Pos_Self.y,self:GetPos().z)
+	end
 	NearestPositions.MyPosition = Pos_Self
 	NearestPositions.EnemyPosition = Pos_Enemy
 	//local Pos_Distance = Pos_Enemy:Distance(Pos_Self)
@@ -419,17 +435,17 @@ end
 function NPC_MetaTable:VJ_GetNearestPointToEntityDistance(argent,OnlySelfGetPos)
 	if !IsValid(argent) then return end
 	OnlySelfGetPos = OnlySelfGetPos or false -- Should it only do self:GetPos() for the local entity?
-	local Pos_Enemy = argent:NearestPoint(self:GetPos() +argent:OBBCenter())
-	local Pos_Self = self:NearestPoint(argent:GetPos() +self:OBBCenter())
+	local Pos_Enemy = argent:NearestPoint(self:GetPos() + argent:OBBCenter())
+	local Pos_Self = self:NearestPoint(argent:GetPos() + self:OBBCenter())
 	if OnlySelfGetPos == true then Pos_Self = self:GetPos() end
 	Pos_Enemy.z, Pos_Self.z = argent:GetPos().z, self:GetPos().z
 	//local Pos_Distance = Pos_Enemy:Distance(Pos_Self)
-	return Pos_Enemy:Distance(Pos_Self)
+	return Pos_Enemy:Distance(Pos_Self) // math.Distance(Pos_Enemy.x,Pos_Enemy.y,Pos_Self.x,Pos_Self.y)
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,Tbl_Features)
 	if self:GetEnemy() == nil then return end
-	StartPos = StartPos or self:NearestPoint(self:GetPos() +self:OBBCenter())
+	StartPos = StartPos or self:NearestPoint(self:GetPos() + self:OBBCenter())
 	EndPos = EndPos or self:GetEnemy():EyePos()
 	AcceptWorld = AcceptWorld or false
 	local vTbl_Features = Tbl_Features or {}
@@ -610,6 +626,15 @@ hook.Add("EntityEmitSound","VJ_NPC_THEMEMUSIC",VJ_NPC_THEMEMUSIC)*/
 	PrintTable(data)
 end
 hook.Add("EntityEmitSound","VJ_NPC_ENTITYSOUND",VJ_NPC_ENTITYSOUND)*/
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+local function VJ_NPC_ENTITYSOUND(data)
+	if IsValid(data.Entity) && data.Entity:IsNPC() && data.Entity.IsVJBaseSNPC == true then
+		if string.EndsWith(data.OriginalSoundName,"stepleft") or string.EndsWith(data.OriginalSoundName,"stepright") then
+			return false
+		end
+	end
+end
+hook.Add("EntityEmitSound","VJ_NPC_ENTITYSOUND",VJ_NPC_ENTITYSOUND)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 local function VJ_NPC_FIREBULLET(Entity,data,Attacker)
 	//print(Entity)

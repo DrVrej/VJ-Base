@@ -192,6 +192,7 @@ function ENT:Think()
 				//self.ControlledNPC:SetAngles(Angle(0,self.TheController:GetAimVector():Angle().y,0))
 				self.ControlledNPC:SetLastPosition(tr_ply.HitPos) // self.TheController:GetEyeTrace().HitPos
 				self.ControlledNPC:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
+				self.ControlledNPC:VJ_TASK_IDLE_STAND()
 				//self.TestLerp = self.ControlledNPC:GetAngles().y
 				//self.ControlledNPC:SetAngles(Angle(0,Lerp(100*FrameTime(),self.TestLerp,self.TheController:GetAimVector():Angle().y),0))
 			end
