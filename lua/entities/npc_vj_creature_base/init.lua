@@ -856,8 +856,8 @@ function ENT:Initialize()
 	if VJ_PICKRANDOMTABLE(self.Model) != false then self:SetModel(Model(VJ_PICKRANDOMTABLE(self.Model))) end
 	self:SetMaxYawSpeed(self.TurningSpeed)
 	if self.HasHull == true then self:SetHullType(self.HullType) end
-	self:SetCustomCollisionCheck(true)
 	if self.HullSizeNormal == true then self:SetHullSizeNormal() end
+	self:SetCustomCollisionCheck()
 	if self.HasSetSolid == true then self:SetSolid(SOLID_BBOX) end // SOLID_OBB
 	//self:SetMoveType(self.MoveType)
 	self:ConvarsOnInit()
@@ -1740,6 +1740,7 @@ function ENT:Think()
 	//print("-------------------------------")
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
 	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
+	if self:GetVelocity():Length() <= 0 && self.MovementType == VJ_MOVETYPE_GROUND /*&& CurSched.IsMovingTask == true*/ then self:DropToFloor() end
 	
 	local CurSched = self.CurrentSchedule
 	if CurSched != nil then
@@ -2340,9 +2341,7 @@ function ENT:PushOrAttackPropsCode(CustomValuesTbl)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
-	if self:Health() <= 0 then return end
-	if self.vACT_StopAttacks == true then return end
-	if self.Flinching == true then return end
+	if self.Dead == true or self.vACT_StopAttacks == true or self.Flinching == true then return end
 	if self.StopMeleeAttackAfterFirstHit == true && self.AlreadyDoneMeleeAttackFirstHit == true then return end
 	local IsPropAttack = IsPropAttack or false
 	if self.MeleeAttack_DoingPropAttack == true then IsPropAttack = true end
@@ -2353,11 +2352,11 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 	//self.MeleeAttacking = true
 	self:CustomOnMeleeAttack_BeforeChecks()
 	if self.DisableDefaultMeleeAttackCode == true then return end
-	local attackthev = ents.FindInSphere(self:GetPos() + self:GetForward(), AttackDist)
+	local FindEnts = ents.FindInSphere(self:GetPos() + self:GetForward(), AttackDist)
 	local hitentity = false
 	local HasHitGoodProp = false
-	if attackthev != nil then
-		for _,v in pairs(attackthev) do
+	if FindEnts != nil then
+		for _,v in pairs(FindEnts) do
 			if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
 			if (v != self && v:GetClass() != self:GetClass()) && (((v:IsNPC() or (v:IsPlayer() && v:Alive())) && (self:Disposition(v) != D_LI)) or VJ_IsProp(v) == true or v:GetClass() == "func_breakable_surf" or table.HasValue(self.EntitiesToDestroyClass,v:GetClass()) or v.VJ_AddEntityToSNPCAttackList == true) then
 				if (self:GetForward():Dot((v:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackDamageAngleRadius))) then
@@ -2517,10 +2516,7 @@ function ENT:MeleeAttackCode_DoFinishTimers()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttackCode()
-	if self:Health() <= 0 then return end
-	if self.vACT_StopAttacks == true then return end
-	if self.Flinching == true then return end
-	if self.MeleeAttacking == true then return end
+	if self.Dead == true or self.vACT_StopAttacks == true or self.Flinching == true or self.MeleeAttacking == true then return end
 	if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
 	if self:GetEnemy() != nil then
 		if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
@@ -2574,15 +2570,13 @@ function ENT:RangeAttackCode_DoFinishTimers()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:LeapDamageCode()
-	if self:Health() <= 0 then return end
-	if self.vACT_StopAttacks == true then return end
-	if self.Flinching == true then return end
+	if self.Dead == true or self.vACT_StopAttacks == true or self.Flinching == true then return end
 	if self.StopLeapAttackAfterFirstHit == true && self.AlreadyDoneLeapAttackFirstHit == true then return end
 	self:CustomOnLeapAttack_BeforeChecks()
 	local hitentity = false
-	local attackthev = ents.FindInSphere(self:GetPos(),self.LeapAttackDamageDistance)
-	if attackthev != nil then
-		for _,v in pairs(attackthev) do
+	local FindEnts = ents.FindInSphere(self:GetPos(),self.LeapAttackDamageDistance)
+	if FindEnts != nil then
+		for _,v in pairs(FindEnts) do
 			if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
 			if (v:IsNPC() || (v:IsPlayer() && v:Alive())) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or VJ_IsProp(v) == true or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" then
 				self:CustomOnLeapAttack_AfterChecks(v)

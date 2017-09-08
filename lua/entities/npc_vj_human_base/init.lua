@@ -843,6 +843,7 @@ function ENT:Initialize()
 	self:DoChangeBloodColor(self.BloodColor)
 	if self.DisableInitializeCapabilities == false then self:SetInitializeCapabilities() end
 	self:SetCollisionGroup(COLLISION_GROUP_NPC)
+	self.VJ_ScaleHitGroupDamage = 0
 	self.NextThrowGrenadeT = CurTime() + math.Rand(1,5)
 	self.NextIdleSoundT_RegularChange = CurTime() + 0
 	self.NextIdleSoundT = CurTime() + math.Rand(1,12)
@@ -1589,6 +1590,8 @@ end
 function ENT:Think()
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
 	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
+	if self:GetVelocity():Length() <= 0 && self.MovementType == VJ_MOVETYPE_GROUND /*&& CurSched.IsMovingTask == true*/ then self:DropToFloor() end
+	
 	local CurSched = self.CurrentSchedule
 	if CurSched != nil then
 		if self:IsMoving() then
@@ -2045,44 +2048,41 @@ function ENT:CanDoCertainAttack(AttackName)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackCode()
-	if self:Health() <= 0 then return end
-	if self.vACT_StopAttacks == true then return end
-	if self.Flinching == true then return end
-	if self.ThrowingGrenade == true then return end
+	if self.Dead == true or self.vACT_StopAttacks == true or self.Flinching == true or self.ThrowingGrenade == true then return end
 	if self.VJ_IsBeingControlled == false && self.MeleeAttackAnimationFaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(),true) end
 	//self.MeleeAttacking = true
-	local attackthev = ents.FindInSphere(self:GetPos() + self:GetForward(),self.MeleeAttackDamageDistance)
+	local FindEnts = ents.FindInSphere(self:GetPos() + self:GetForward(),self.MeleeAttackDamageDistance)
 	local hitentity = false
 	local HasHitNonPropEnt = false
-	if attackthev != nil then
-	for _,v in pairs(attackthev) do
-		if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
-		if (v:IsNPC() || (v:IsPlayer() && v:Alive())) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or (v:GetClass() == "prop_physics") or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" then
-		if (self:GetForward():Dot((v:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackDamageAngleRadius))) then
-			local doactualdmg = DamageInfo()
-			if self.SelectedDifficulty == 0 then doactualdmg:SetDamage(self.MeleeAttackDamage/2) end -- Easy
-			if self.SelectedDifficulty == 1 then doactualdmg:SetDamage(self.MeleeAttackDamage) end -- Normal
-			if self.SelectedDifficulty == 2 then doactualdmg:SetDamage(self.MeleeAttackDamage*1.5) end -- Hard
-			if self.SelectedDifficulty == 3 then doactualdmg:SetDamage(self.MeleeAttackDamage*2.5) end -- Hell On Earth
-			if v:IsNPC() or v:IsPlayer() then doactualdmg:SetDamageForce(self:GetForward()*((doactualdmg:GetDamage()+100)*70)) end
-			doactualdmg:SetInflictor(self)
-			doactualdmg:SetAttacker(self)
-			v:TakeDamageInfo(doactualdmg, self)
-		if v:IsPlayer() then
-			v:ViewPunch(Angle(math.random(-1,1)*10,math.random(-1,1)*10,math.random(-1,1)*10))
-		end
-		VJ_DestroyCombineTurret(self,v)
-		if v:GetClass() != "prop_physics" then HasHitNonPropEnt = true end
-		if v:GetClass() == "prop_physics" && HasHitNonPropEnt == false then
-			//if table.HasValue(self.EntitiesToDestoryModel,v:GetModel()) or table.HasValue(self.EntitiesToPushModel,v:GetModel()) then
-			//hitentity = true else hitentity = false end
-			hitentity = false
-		else
-			hitentity = true
+	if FindEnts != nil then
+		for _,v in pairs(FindEnts) do
+			if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
+			if (v:IsNPC() || (v:IsPlayer() && v:Alive())) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or (v:GetClass() == "prop_physics") or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" then
+				if (self:GetForward():Dot((v:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackDamageAngleRadius))) then
+					local doactualdmg = DamageInfo()
+					if self.SelectedDifficulty == 0 then doactualdmg:SetDamage(self.MeleeAttackDamage/2) end -- Easy
+					if self.SelectedDifficulty == 1 then doactualdmg:SetDamage(self.MeleeAttackDamage) end -- Normal
+					if self.SelectedDifficulty == 2 then doactualdmg:SetDamage(self.MeleeAttackDamage*1.5) end -- Hard
+					if self.SelectedDifficulty == 3 then doactualdmg:SetDamage(self.MeleeAttackDamage*2.5) end -- Hell On Earth
+					if v:IsNPC() or v:IsPlayer() then doactualdmg:SetDamageForce(self:GetForward()*((doactualdmg:GetDamage()+100)*70)) end
+					doactualdmg:SetInflictor(self)
+					doactualdmg:SetAttacker(self)
+					v:TakeDamageInfo(doactualdmg, self)
+				if v:IsPlayer() then
+					v:ViewPunch(Angle(math.random(-1,1)*10,math.random(-1,1)*10,math.random(-1,1)*10))
+				end
+				VJ_DestroyCombineTurret(self,v)
+				if v:GetClass() != "prop_physics" then HasHitNonPropEnt = true end
+				if v:GetClass() == "prop_physics" && HasHitNonPropEnt == false then
+					//if table.HasValue(self.EntitiesToDestoryModel,v:GetModel()) or table.HasValue(self.EntitiesToPushModel,v:GetModel()) then
+					//hitentity = true else hitentity = false end
+					hitentity = false
+				else
+					hitentity = true
+					end
+				end
 			end
 		end
-	  end
-	 end
 	end
 	if hitentity == false then
 		self:CustomOnMeleeAttack_Miss()
@@ -2101,78 +2101,75 @@ function ENT:MeleeAttackCode()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ThrowGrenadeCode(CustomEnt,NoOwner)
-	if self.Dead == true then return end
-	if self:GetEnemy() != nil && !self:Visible(self:GetEnemy()) then return end
-	if self.Flinching == true or self.MeleeAttacking == true /*or self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == true*/ then return end
-	NoOwner = NoOwner or false
+	if self.Dead == true or self.Flinching == true or self.MeleeAttacking == true or (self:GetEnemy() != nil && !self:Visible(self:GetEnemy())) then return end
+	//if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == true then return end
+	local NoOwner = NoOwner or false
 	local getIsCustom = false
 	local gerModel = self.GrenadeAttackModel
 	local gerClass = self.GrenadeAttackEntity
 	local gerFussTime = self.GrenadeAttackFussTime
-	if CustomEnt != nil && CustomEnt != NULL then 
+	
+	if CustomEnt != nil && CustomEnt != NULL then -- For custom grenades
 		getIsCustom = true
 		gerModel = CustomEnt:GetModel()
 		gerClass = CustomEnt:GetClass()
 		CustomEnt:SetMoveType(MOVETYPE_NONE)
 		CustomEnt:SetParent(self)
-		//CustomEnt:SetLocalPos(self:GetPos())
 		CustomEnt:Fire("SetParentAttachment",self.GrenadeAttackAttachment)
 		//CustomEnt:SetPos(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos)
 		CustomEnt:SetAngles(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Ang)
 		if gerClass == "obj_vj_grenade" then gerFussTime = math.abs(CustomEnt.FussTime - CustomEnt.TimeSinceSpawn) end
 		if gerClass == "npc_grenade_frag" then gerFussTime = 1.5 end
 	end
+	
 	self.ThrowingGrenade = true
-	//print(ACT_COMBINE_THROW_GRENADE)
-	//self:VJ_ACT_PLAYACTIVITY(ACT_COMBINE_BUGBAIT,true,2,true)
 	self:CustomOnGrenadeAttack_BeforeThrowTime()
 	self:GrenadeAttackSoundCode()
+	
 	if self.VJ_PlayingSequence == false && self.DisableGrenadeAttackAnimation == false then 
 		self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_GrenadeAttack)
 		self.PlayingAttackAnimation = true
 		timer.Simple(VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) -0.2,function()
 			if IsValid(self) then
-			self.PlayingAttackAnimation = false
+				self.PlayingAttackAnimation = false
 			end
 		end)
 		self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,self.GrenadeAttackAnimationStopAttacks,self.GrenadeAttackAnimationStopAttacksTime,false,self.GrenadeAttackAnimationDelay)
 	end
+	
 	timer.Simple(self.TimeUntilGrenadeIsReleased,function()
 		if getIsCustom == true && !IsValid(CustomEnt) then return end
 		if IsValid(CustomEnt) then CustomEnt.VJHumanTossingAway = false CustomEnt:Remove() end
-		if self:IsValid() then
-		if self.Dead == false /*&& self:GetEnemy() != nil*/ then
-		local gerShootPos = self:GetPos() + self:GetForward()*200
-		if self:GetEnemy() == nil then
-			local iamarmo = self:VJ_CheckAllFourSides()
-			if iamarmo.Forward then gerShootPos = self:GetPos() + self:GetForward()*200 self:FaceCertainPosition(gerShootPos)
-				elseif iamarmo.Right then gerShootPos = self:GetPos() + self:GetRight()*200 self:FaceCertainPosition(gerShootPos)
-				elseif iamarmo.Left then gerShootPos = self:GetPos() + self:GetRight()*-200 self:FaceCertainPosition(gerShootPos) 
-				elseif iamarmo.Backward then gerShootPos = self:GetPos() + self:GetForward()*-200 self:FaceCertainPosition(gerShootPos) 
+		if IsValid(self) && self.Dead == false /*&& self:GetEnemy() != nil*/ then
+			local gerShootPos = self:GetPos() + self:GetForward()*200
+			if self:GetEnemy() == nil then
+				local iamarmo = self:VJ_CheckAllFourSides()
+				if iamarmo.Forward then gerShootPos = self:GetPos() + self:GetForward()*200 self:FaceCertainPosition(gerShootPos)
+					elseif iamarmo.Right then gerShootPos = self:GetPos() + self:GetRight()*200 self:FaceCertainPosition(gerShootPos)
+					elseif iamarmo.Left then gerShootPos = self:GetPos() + self:GetRight()*-200 self:FaceCertainPosition(gerShootPos) 
+					elseif iamarmo.Backward then gerShootPos = self:GetPos() + self:GetForward()*-200 self:FaceCertainPosition(gerShootPos) 
+				end
 			end
+			if self:GetEnemy() != nil then gerShootPos = self:GetEnemy():GetPos() end
+			local grenent = ents.Create(gerClass)
+			local greShootVel = gerShootPos -self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos
+			if NoOwner == false then grenent:SetOwner(self) end
+			grenent:SetPos(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos)
+			grenent:SetAngles(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Ang)
+			grenent:SetModel(Model(gerModel))
+			if gerClass == "obj_vj_grenade" then grenent.FussTime = gerFussTime end
+			grenent:Spawn()
+			grenent:Activate()
+			if gerClass == "npc_grenade_frag" then grenent:Input("SetTimer",self:GetOwner(),self:GetOwner(),gerFussTime) end
+			local phys = grenent:GetPhysicsObject()
+			if (phys:IsValid()) then
+				phys:Wake()
+				phys:AddAngleVelocity(Vector(math.Rand(500,500),math.Rand(500,500),math.Rand(500,500)))
+				phys:SetVelocity(greShootVel +self:GetUp()*math.random(self.GrenadeAttackVelUp1,self.GrenadeAttackVelUp2) +self:GetForward()*math.Rand(self.GrenadeAttackVelForward1,self.GrenadeAttackVelForward2) +self:GetRight()*math.Rand(self.GrenadeAttackVelRight1,self.GrenadeAttackVelRight2))
+			end
+			self:CustomOnGrenadeAttack_OnThrow(grenent)
 		end
-		if self:GetEnemy() != nil then gerShootPos = self:GetEnemy():GetPos() end
-		local grenent = ents.Create(gerClass)
-		local shoot_vector = gerShootPos -self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos
-		if NoOwner == false then grenent:SetOwner(self) end
-		grenent:SetPos(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos)
-		grenent:SetAngles(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Ang)
-		grenent:SetModel(Model(gerModel))
-		if gerClass == "obj_vj_grenade" then grenent.FussTime = gerFussTime end
-		grenent:Spawn()
-		grenent:Activate()
-		if gerClass == "npc_grenade_frag" then grenent:Input("SetTimer",self:GetOwner(),self:GetOwner(),gerFussTime) end
-		local phys = grenent:GetPhysicsObject()
-		if (phys:IsValid()) then
-			phys:Wake()
-			phys:AddAngleVelocity(Vector(math.Rand(500,500),math.Rand(500,500),math.Rand(500,500)))
-			phys:SetVelocity(shoot_vector +self:GetUp()*math.random(self.GrenadeAttackVelUp1,self.GrenadeAttackVelUp2) +self:GetForward()*math.Rand(self.GrenadeAttackVelForward1,self.GrenadeAttackVelForward2) +self:GetRight()*math.Rand(self.GrenadeAttackVelRight1,self.GrenadeAttackVelRight2))
-			//phys:SetVelocity((self:GetEnemy():GetPos() - self:LocalToWorld(Vector(0,0,20))) + self:GetUp()*300 + self:GetForward()*5)
-		end
-		self:CustomOnGrenadeAttack_OnThrow(grenent)
-	   end
-	  end
-	  self.ThrowingGrenade = false
+		self.ThrowingGrenade = false
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
