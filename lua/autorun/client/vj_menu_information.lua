@@ -6,9 +6,10 @@
 INFO: Used to load Information Menu for VJ Base
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
-include('autorun/client/vj_installed_addons.lua')
+include('autorun/client/vj_menu_plugins.lua')
 
 local function VJ_INFORMATION(Panel)
+	local client = LocalPlayer() -- Local Player
 	Panel:AddControl( "Label", {Text = "About VJ Base:"})
 	Panel:ControlHelp("VJ Base is made by DrVrej. The main purpose of this base is for the sake of simplicity. It provides many types of bases including a very advanced artificial intelligent NPC base.")
 	
@@ -16,19 +17,14 @@ local function VJ_INFORMATION(Panel)
 	
 	Panel:AddControl( "Label", {Text = "User Information:"})
 	
-	local map = game.GetMap() -- Map Name
-	local gmode = gmod.GetGamemode().Name -- Gamemode
-	local date = os.date("%m %d, 20%y") -- Date
-	local client = LocalPlayer() -- Local Player
-	
 	if game.SinglePlayer() then -- SMP or SSP
 	Panel:ControlHelp("Game - SinglePlayer") else
 	Panel:ControlHelp("Game - Multiplayer") end
 	Panel:ControlHelp("VJ Base Version - "..VJBASE_VERSION)
 	Panel:ControlHelp("Number of VJ Addons - "..VJBASE_GETADDONAMOUNT)
-	Panel:ControlHelp("Gamemode - "..gmode)
-	Panel:ControlHelp("Map - "..map)
-	Panel:ControlHelp("Date - "..date)
+	Panel:ControlHelp("Gamemode - "..gmod.GetGamemode().Name)
+	Panel:ControlHelp("Map - "..game.GetMap())
+	Panel:ControlHelp("Date - "..os.date("%m %d, 20%y"))
 	Panel:ControlHelp("Country - "..system.GetCountry()) -- Country
 	Panel:ControlHelp("Steam Name - "..client:Nick()) -- Steam Name
 	Panel:ControlHelp("Steam ID - "..client:SteamID()) -- Steam ID

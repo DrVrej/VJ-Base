@@ -37,7 +37,7 @@ function VJ_INSTALLATIONS(Panel)
 	local CheckList = vgui.Create("DListView")
 	CheckList:SetTooltip(false)
 	//CheckList:Center() -- No need since Size does it already
-	CheckList:SetSize( 100, 300 ) -- Size
+	CheckList:SetSize(100, 300) -- Size
 	CheckList:SetMultiSelect(false)
 	//CheckList.Paint = function()
 	//draw.RoundedBox( 8, 0, 0, CheckList:GetWide(), CheckList:GetTall(), Color( 0, 0, 100, 255 ) )
@@ -90,7 +90,7 @@ function VJ_INSTALLATIONS(Panel)
 	Panel:AddPanel(changelog)
 	
 	if (LocalPlayer():SteamID() == "STEAM_0:0:22688298") then
-		local lennyface = vgui.Create("DButton") -- *insert lenny face*
+		local lennyface = vgui.Create("DButton") -- *insert lenny face* ¯\_(?)_/¯
 		lennyface:SetFont("TargetID")
 		lennyface:SetText("I AM HERE")
 		lennyface:SetSize(150, 25)
@@ -110,9 +110,9 @@ hook.Add( "PopulateToolMenu", "VJ_ADDTOMENU_INSTALLATIONS", VJ_ADDTOMENU_INSTALL
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJWelcomeCode()
 	print("Console: This server is running VJ Base.")
-	chat.AddText(Color(255,255,0),"-=-=-=-=-=-=-=-=- ", Color(255,100,0),VJBASE_GETNAME.." - "..VJBASE_VERSION, Color(255,255,0)," -=-=-=-=-=-=-=-=-")
+	chat.AddText(Color(255,255,0),"-=-=-=-=-=-=-=-=- ", Color(0,200,200),VJBASE_GETNAME.." - "..VJBASE_VERSION, Color(255,255,0)," -=-=-=-=-=-=-=-=-")
 	chat.AddText(Color(0,255,0),"Total ", Color(0,255,0),"Addons: "..VJBASE_GETADDONAMOUNT)
-	chat.AddText(Color(255,150,0),"NOTICE: ", Color(0,255,0),"To configure ", Color(255,100,0),VJBASE_GETNAME..", ", Color(0,255,0),"click on 'DrVrej' in the spawnmenu.")
+	chat.AddText(Color(255,150,0),"NOTICE: ", Color(0,255,0),"To configure ", Color(0,200,200),VJBASE_GETNAME..", ", Color(0,255,0),"click on 'DrVrej' in the spawnmenu.")
 	chat.AddText(Color(255,255,0),"-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
 end
 concommand.Add("vj_welcome", VJWelcomeCode)

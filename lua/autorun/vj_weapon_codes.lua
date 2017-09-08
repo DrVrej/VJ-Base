@@ -65,12 +65,14 @@ AddConvars["rrrrrrrrrrrrrrrrrrrrrr"] = 0 --
 RunConsoleCommand("command_name", "value")
 */
 local AddConvars = {}
+
 -- Setting Commands --
 AddConvars["vj_wep_nomuszzleflash"] = 0 -- Should weapons make a muzzle flash?
 AddConvars["vj_wep_nomuszzleflash_dynamiclight"] = 0 -- Should weapons make a dynamic light when being fired?
 AddConvars["vj_wep_nomuszzlesmoke"] = 0 -- Should weapons make a muzzle smoke?
 AddConvars["vj_wep_nomuzzleheatwave"] = 0 -- Should weapons make a muzzle heat wave?
 AddConvars["vj_wep_nobulletshells"] = 0 -- Should weapons drop bullet shells?
+
 for k, v in pairs(AddConvars) do
 	if !ConVarExists( k ) then CreateClientConVar( k, v, true, false ) end
 end

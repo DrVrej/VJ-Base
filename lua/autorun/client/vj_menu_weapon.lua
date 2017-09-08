@@ -6,7 +6,7 @@
 INFO: Used to load the Weapon Menu for VJ Base 
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
-include('autorun/client/vj_installed_addons.lua')
+include('autorun/client/vj_menu_plugins.lua')
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_WEAPON_CLIENTSETTINGS(Panel) -- Settings
 	/*if !LocalPlayer():IsAdmin() or !LocalPlayer():IsSuperAdmin() then

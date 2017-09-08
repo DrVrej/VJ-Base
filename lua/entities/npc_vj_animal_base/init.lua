@@ -483,6 +483,7 @@ function ENT:Initialize()
 	self:DoChangeBloodColor(self.BloodColor)
 	if self.DisableInitializeCapabilities == false then self:SetInitializeCapabilities() end
 	self:SetCollisionGroup(COLLISION_GROUP_NPC)
+	self.VJ_ScaleHitGroupDamage = 0
 	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.1,3)
 	if GetConVarNumber("vj_npc_allhealth") == 0 then
 	if self.SelectedDifficulty == 0 then self:SetHealth(self.StartHealth/2) end -- Easy
@@ -868,6 +869,8 @@ function ENT:Think()
 	//if self:IsFlagSet(FL_FLY) then print("It has flag FLY set") end
 	//print(self:GetSequence())
 	//self:ConvarsOnThink()
+	if self:GetVelocity():Length() <= 0 && self.MovementType == VJ_MOVETYPE_GROUND /*&& CurSched.IsMovingTask == true*/ then self:DropToFloor() end
+	
 	self:CustomOnThink()
 	
 	if self.HasEntitiesToNoCollide == true then self:EntitiesToNoCollideCode() end -- Collison between something

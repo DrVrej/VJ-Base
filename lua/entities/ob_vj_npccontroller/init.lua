@@ -10,6 +10,7 @@ INFO: Used to control NPCs. Mainly for VJ Base SNPCs.
 ENT.VJControllerEntityIsRemoved = false
 ENT.AbleToTurn = true
 ENT.CurrentAttackAnimation = 0
+ENT.LastIdleAngle = 0
 
 util.AddNetworkString("vj_controller_hud")
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -184,15 +185,21 @@ function ENT:Think()
 		if IsValid(self.NPCBullseye) then
 			self.NPCBullseye:SetPos(tr_ply.HitPos)
 		end
+		
+		-- Turning
 		if self.ControlledNPC.PlayingAttackAnimation == false && self.AbleToTurn == true && self.ControlledNPC.IsReloadingWeapon != true && CurTime() > self.ControlledNPC.NextChaseTime && self.ControlledNPC.IsVJBaseSNPC_Tank != true && ((self.ControlledNPC.MovementType != VJ_MOVETYPE_STATIONARY) or (self.ControlledNPC.MovementType == VJ_MOVETYPE_STATIONARY && self.ControlledNPC.CanTurnWhileStationary != true)) then
 			if self.ControlledNPC:IsMoving() then
 				//self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,4),0))
 				//self.ControlledNPC:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
 			else
 				//self.ControlledNPC:SetAngles(Angle(0,self.TheController:GetAimVector():Angle().y,0))
+				local angdif = math.abs(math.AngleDifference(self.TheController:EyeAngles().y,self.LastIdleAngle))
+				self.LastIdleAngle = self.ControlledNPC:EyeAngles().y //tr_ply.HitPos
 				self.ControlledNPC:SetLastPosition(tr_ply.HitPos) // self.TheController:GetEyeTrace().HitPos
 				self.ControlledNPC:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
-				self.ControlledNPC:VJ_TASK_IDLE_STAND()
+				if (VJ_AnimationExists(self.ControlledNPC,ACT_TURN_LEFT) == false && VJ_AnimationExists(self.ControlledNPC,ACT_TURN_RIGHT) == false) or (angdif <= 50 && (self.ControlledNPC:GetActivity() != ACT_TURN_LEFT && self.ControlledNPC:GetActivity() != ACT_TURN_RIGHT)) then
+					self.ControlledNPC:VJ_TASK_IDLE_STAND()
+				end
 				//self.TestLerp = self.ControlledNPC:GetAngles().y
 				//self.ControlledNPC:SetAngles(Angle(0,Lerp(100*FrameTime(),self.TestLerp,self.TheController:GetAimVector():Angle().y),0))
 			end
@@ -200,6 +207,8 @@ function ENT:Think()
 		
 		self:CustomOnThink()
 		self.AbleToTurn = true
+		
+		-- Weapon attack
 		if self.ControlledNPC.IsVJBaseSNPC_Animal != true && self.ControlledNPC.IsVJBaseSNPC == true then
 			if IsValid(self.ControlledNPC:GetActiveWeapon()) && self.ControlledNPC.IsVJBaseSNPC_Human == true then
 				if self.ControlledNPC:GetActiveWeapon().IsVJBaseWeapon == true && self.TheController:KeyDown(IN_ATTACK2) && self.ControlledNPC.IsReloadingWeapon != true /*&& (self.ControlledNPC.Weapon_StartingAmmoAmount - self.ControlledNPC.Weapon_ShotsSinceLastReload) > 0*/ then

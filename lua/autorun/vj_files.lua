@@ -10,9 +10,6 @@ include('autorun/vj_controls.lua')
 
 -- Add Decals -------------------------------------------------------------------------------------------------------------------------
 game.AddDecal("VJ_AcidSlime1",{"vj_base/decals/vj_acidslime1","vj_base/decals/vj_acidslime2","vj_base/decals/vj_acidslime3","vj_base/decals/vj_acidslime4"})
-//game.AddDecal("vj_acidslime2","vj_base/decals/vj_acidslime2")
-//game.AddDecal("vj_acidslime3","vj_base/decals/vj_acidslime3")
-//game.AddDecal("vj_acidslime4","vj_base/decals/vj_acidslime4")
 game.AddDecal("VJ_Blood_Red",{"vj_base/decals/blood/vj_redblood1","vj_base/decals/blood/vj_redblood2","vj_base/decals/blood/vj_redblood3","vj_base/decals/blood/vj_redblood4","vj_base/decals/blood/vj_redblood5","vj_base/decals/blood/vj_redblood6"})
 game.AddDecal("VJ_Blood_Yellow",{"vj_base/decals/blood/vj_yellowblood1","vj_base/decals/blood/vj_yellowblood2","vj_base/decals/blood/vj_yellowblood3","vj_base/decals/blood/vj_yellowblood4","vj_base/decals/blood/vj_yellowblood5","vj_base/decals/blood/vj_yellowblood6"})
 game.AddDecal("VJ_Blood_Green",{"vj_base/decals/blood/vj_greenblood1","vj_base/decals/blood/vj_greenblood2","vj_base/decals/blood/vj_greenblood3","vj_base/decals/blood/vj_greenblood4","vj_base/decals/blood/vj_greenblood5","vj_base/decals/blood/vj_greenblood6"})
