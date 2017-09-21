@@ -90,7 +90,6 @@ ENT.PlayerFriendly = false -- Makes the SNPC friendly to the player and HL2 Resi
 ENT.FriendlyToVJSNPCs = true -- Set to true if you want it to be friendly to all of VJ SNPCs
 ENT.BecomeEnemyToPlayer = false -- Should the friendly SNPC become enemy towards the player if it's damaged by a player?
 ENT.BecomeEnemyToPlayerLevel = 2 -- How many times does the player have to hit the SNPC for it to become enemy?
-ENT.BecomeEnemyToPlayerSetPlayerFriendlyFalse = true -- Should it set PlayerFriendly to false?
 ENT.HasOnPlayerSight = false -- Should do something when it sees the enemy? Example: Play a sound
 ENT.OnPlayerSightDistance = 200 -- How close should the player be until it runs the code?
 ENT.OnPlayerSightDispositionLevel = 0 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
@@ -156,10 +155,11 @@ ENT.WorldShakeOnMoveFrequency = 100 -- Just leave it to 100
 ENT.DisableWorldShakeOnMoveWhileRunning = false -- It will not shake the world when it's running
 ENT.DisableWorldShakeOnMoveWhileWalking = false -- It will not shake the world when it's walking
 ENT.FollowPlayer = false -- Should the SNPC follow the player when the player presses a certain key?
-ENT.FollowPlayerChat = true -- Should the SNPCs say things like "They stopped following you"
+ENT.FollowPlayerChat = true -- Should the SNPCs say things like "Blank stopped following you" | self.AllowPrintingInChat overrides this variable!
 ENT.FollowPlayerKey = "Use" -- The key that the player presses to make the SNPC follow them
 ENT.FollowPlayerCloseDistance = 150 -- If the SNPC is that close to the player then stand still until the player goes farther away
 ENT.NextFollowPlayerTime = 1 -- Time until it runs to the player again
+ENT.AllowPrintingInChat = true -- Should this SNPC be allowed to post in player's chat? Example: "Blank no longer likes you."
 ENT.BringAlliesToMeSchedules = {SCHED_RUN_FROM_ENEMY} -- The Schedule that its friends play when BringAlliesToMe code is ran
 	-- Sounds ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasSounds = true -- Put to false to disable ALL sounds
@@ -292,9 +292,7 @@ ENT.SoundTrackPlaybackRate = 1
 ENT.Dead = false
 ENT.Flinching = false
 ENT.TakingCover = false
-ENT.VJCorpseDeleted = false
 ENT.vACT_StopAttacks = false
-ENT.NoLongerLikesThePlayer = false
 ENT.FollowingPlayer = false
 ENT.RunningAfter_FollowPlayer = false
 ENT.FollowingPlayer_WanderValue = false
@@ -823,7 +821,7 @@ function ENT:OnCondition(iCondition)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:FollowPlayerReset()
-	if self.FollowPlayerChat == true then self.FollowingPlayerName:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.") end
+	if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then self.FollowingPlayerName:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.") end
 	self.FollowingPlayer = false
 	self.RunningAfter_FollowPlayer = false
 	self.FollowingPlayerName = NULL
@@ -832,10 +830,10 @@ function ENT:FollowPlayerReset()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:FollowPlayerCode(key,activator,caller,data)
-	if self.FollowPlayer == false or  GetConVarNumber("ai_disabled") == 1 or GetConVarNumber("ai_ignoreplayers") == 1 then return end
+	if self.FollowPlayer == false or GetConVarNumber("ai_disabled") == 1 or GetConVarNumber("ai_ignoreplayers") == 1 then return end
 	if key == self.FollowPlayerKey && activator:IsValid() && activator:Alive() && activator:IsPlayer() then
 		if self:Disposition(activator) == D_HT then
-			if self.FollowPlayerChat == true then
+			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
 				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." doesn't like you, therefore it won't follow you.")
 			end
 			return
@@ -843,7 +841,7 @@ function ENT:FollowPlayerCode(key,activator,caller,data)
 		self:CustomOnFollowPlayer(key,activator,caller,data)
 		if self.FollowingPlayer == false then
 			//self:FaceCertainEntity(activator,false)
-			if self.FollowPlayerChat == true then
+			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
 			activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is now following you.") end
 			self.FollowingPlayer_WanderValue = self.DisableWandering
 			self.FollowingPlayer_ChaseValue = self.DisableChasingEnemy
@@ -873,7 +871,7 @@ function ENT:Think()
 	
 	self:CustomOnThink()
 	
-	if self.HasEntitiesToNoCollide == true then self:EntitiesToNoCollideCode() end -- Collison between something
+	self:EntitiesToNoCollideCode() -- Collison between something
 
 	if self.HasSounds == false or self.Dead == true then VJ_STOPSOUND(self.CurrentBreathSound) end
 	if self.Dead == false && self.HasBreathSound == true && self.HasSounds == true then
@@ -1172,19 +1170,19 @@ function ENT:OnTakeDamage(dmginfo,hitgroup)
 		
 		if self.BecomeEnemyToPlayer == true && DamageAttacker:IsPlayer() && GetConVarNumber("ai_disabled") == 0 && GetConVarNumber("ai_ignoreplayers") == 0 && (self:Disposition(DamageAttacker) == D_LI or self:Disposition(DamageAttacker) == D_NU) then
 			if self.AngerLevelTowardsPlayer <= self.BecomeEnemyToPlayerLevel then
-			self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1 end
+				self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1
+			end
 			if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
-			if self:Disposition(DamageAttacker) != D_HT then
-			self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo,hitgroup)
-			if self.FollowingPlayer == true then self:FollowPlayerReset() end
-			table.insert(self.VJ_AddCertainEntityAsEnemy,dmginfo:GetAttacker())
-			if GetConVarNumber("vj_npc_nosnpcchat") == 0 then
-			dmginfo:GetAttacker():PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.") end
-			self:BecomeEnemyToPlayerSoundCode() end
-			//self.NoLongerLikesThePlayer = true
-			self.Alerted = true
-			if self.BecomeEnemyToPlayerSetPlayerFriendlyFalse == true then
-			/*self.PlayerFriendly = false*/ end
+				if self:Disposition(DamageAttacker) != D_HT then
+					self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo,hitgroup)
+					if self.FollowingPlayer == true then self:FollowPlayerReset() end
+					table.insert(self.VJ_AddCertainEntityAsEnemy,dmginfo:GetAttacker())
+					if self.AllowPrintingInChat == true then
+						dmginfo:GetAttacker():PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.")
+					end
+					self:BecomeEnemyToPlayerSoundCode()
+				end
+				self.Alerted = true
 			end
 		end
 
@@ -1550,18 +1548,18 @@ end
 function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 	self:CustomOnDeath_BeforeCorpseSpawned(dmginfo,hitgroup)
 	if self.HasDeathRagdoll == true then
+		local corpsemodel = self:GetModel()
+		local corpsemodel_custom = VJ_PICKRANDOMTABLE(self.DeathCorpseModel)
+		if corpsemodel_custom != false then corpsemodel = corpsemodel_custom end
 		local corpsetype = "prop_physics"
-		if util.IsValidRagdoll(self:GetModel()) == true then 
+		if util.IsValidRagdoll(corpsemodel) == true then 
 			corpsetype = "prop_ragdoll"
-		elseif util.IsValidProp(self:GetModel()) == false && util.IsValidModel(self:GetModel()) == false then
+		elseif util.IsValidProp(corpsemodel) == false && util.IsValidModel(corpsemodel) == false then
 			corpsetype = "prop_ragdoll"
 		end
 		if self.DeathCorpseEntityClass != "UseDefaultBehavior" then corpsetype = self.DeathCorpseEntityClass end
 		//if self.VJCorpseDeleted == true then
 		self.Corpse = ents.Create(corpsetype) //end
-		local corpsemodel = self:GetModel()
-		local corpsemodel_custom = VJ_PICKRANDOMTABLE(self.DeathCorpseModel)
-		if corpsemodel_custom != false then corpsemodel = corpsemodel_custom end
 		self.Corpse:SetModel(corpsemodel)
 		self.Corpse:SetPos(self:GetPos())
 		self.Corpse:SetAngles(self:GetAngles())
@@ -1963,11 +1961,10 @@ function ENT:WorldShakeOnMoveCode()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:EntitiesToNoCollideCode()
-	if !istable(self.EntitiesToNoCollide) then return end
-	if #self.EntitiesToNoCollide < 1 then return end
+	if self.HasEntitiesToNoCollide != true or !istable(self.EntitiesToNoCollide) or #self.EntitiesToNoCollide < 1 then return end
 	for k, v in pairs (ents.GetAll()) do
-		if table.HasValue(self.EntitiesToNoCollide,v:GetClass()) then
-		constraint.NoCollide(self,v,0,0)
+		if table.HasValue(self.EntitiesToNoCollide,v) then
+			constraint.NoCollide(self,v,0,0)
 		end
 	end
 end
@@ -1998,7 +1995,7 @@ function ENT:ConvarsOnInit()
 	if GetConVarNumber("vj_npc_godmodesnpc") == 1 then self.GodMode = true end
 	if GetConVarNumber("vj_npc_nobecomeenemytoply") == 1 then self.BecomeEnemyToPlayer = false end
 	if GetConVarNumber("vj_npc_nofollowplayer") == 1 then self.FollowPlayer = false end
-	if GetConVarNumber("vj_npc_nosnpcchat") == 1 then self.FollowPlayerChat = false end
+	if GetConVarNumber("vj_npc_nosnpcchat") == 1 then self.AllowPrintingInChat = false self.FollowPlayerChat = false end
 	if GetConVarNumber("vj_npc_nogibdeathparticles") == 1 then self.HasGibDeathParticles = false end
 	if GetConVarNumber("vj_npc_nogib") == 1 then self.AllowedToGib = false self.HasGibOnDeath = false end
 	if GetConVarNumber("vj_npc_usegmoddecals") == 1 then self.BloodDecalUseGMod = true end

@@ -105,7 +105,6 @@ ENT.MoveOutOfFriendlyPlayersWay = true -- Should the SNPC move out of the way wh
 ENT.NextMoveOutOfFriendlyPlayersWayTime = 1 -- How much time until it can moves out of the player's way?
 ENT.BecomeEnemyToPlayer = false -- Should the friendly SNPC become enemy towards the player if it's damaged by a player?
 ENT.BecomeEnemyToPlayerLevel = 2 -- How many times does the player have to hit the SNPC for it to become enemy?
-ENT.BecomeEnemyToPlayerSetPlayerFriendlyFalse = true -- Should it set PlayerFriendly to false?
 	-- ====== On Player Sight Code ====== --
 ENT.HasOnPlayerSight = false -- Should do something when it sees the enemy? Example: Play a sound
 ENT.OnPlayerSightDistance = 200 -- How close should the player be until it runs the code?
@@ -307,10 +306,11 @@ ENT.CanDetectGrenades = true -- Set to false to disable the SNPC from running aw
 ENT.RunFromGrenadeDistance = 400 -- If the entity is this close to the it, then run!
 ENT.CanThrowBackDetectedGrenades = true -- Should it try to pick up the detected grenade and throw it back to the enemy? | Requires the SNPC to have a grenade attack and be able to detect grenades
 ENT.FollowPlayer = false -- Should the SNPC follow the player when the player presses a certain key?
-ENT.FollowPlayerChat = true -- Should the SNPCs say things like "They stopped following you"
+ENT.FollowPlayerChat = true -- Should the SNPCs say things like "Blank stopped following you" | self.AllowPrintingInChat overrides this variable!
 ENT.FollowPlayerKey = "Use" -- The key that the player presses to make the SNPC follow them
 ENT.FollowPlayerCloseDistance = 150 -- If the SNPC is that close to the player then stand still until the player goes farther away
 ENT.NextFollowPlayerTime = 1 -- Time until it runs to the player again
+ENT.AllowPrintingInChat = true -- Should this SNPC be allowed to post in player's chat? Example: "Blank no longer likes you."
 	-- Sounds ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasSounds = true -- Put to false to disable ALL sounds
 ENT.HasExtraMeleeAttackSounds = false -- Set to true to use the extra melee attack sounds
@@ -552,9 +552,7 @@ ENT.Alerted = false
 ENT.Dead = false
 ENT.Flinching = false
 ENT.TakingCover = false
-ENT.VJCorpseDeleted = false
 ENT.vACT_StopAttacks = false
-ENT.NoLongerLikesThePlayer = false
 ENT.FollowingPlayer = false
 ENT.RunningAfter_FollowPlayer = false
 ENT.FollowingPlayer_WanderValue = false
@@ -563,7 +561,6 @@ ENT.ThrowingGrenade = false
 ENT.ResetedEnemy = true
 ENT.VJ_IsBeingControlled = false
 ENT.VJ_PlayingSequence = false
-ENT.PlayedResetEnemyRunSchedule = false
 ENT.VJ_IsPlayingSoundTrack = false
 ENT.HasDone_PlayAlertSoundOnlyOnce = false
 ENT.PlayingAttackAnimation = false
@@ -583,7 +580,7 @@ ENT.ZombieFriendly = false
 ENT.AntlionFriendly = false
 ENT.CombineFriendly = false
 ENT.Aerial_ShouldBeFlying = false
-ENT.HasDoneReloadAnimation = true
+ENT.IsReloadingWeapon_ServerNextFire = true
 ENT.IsReloadingWeapon = false
 ENT.IsDoingFaceEnemy = false
 ENT.VJ_IsPlayingInterruptSequence = false
@@ -1407,7 +1404,7 @@ function ENT:OnCondition(iCondition)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:FollowPlayerReset()
-	if self.FollowPlayerChat == true then self.FollowingPlayerName:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.") end
+	if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then self.FollowingPlayerName:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.") end
 	self.FollowingPlayer = false
 	self.RunningAfter_FollowPlayer = false
 	self.FollowingPlayerName = NULL
@@ -1419,7 +1416,7 @@ function ENT:FollowPlayerCode(key,activator,caller,data)
 	if self.FollowPlayer == false or  GetConVarNumber("ai_disabled") == 1 or GetConVarNumber("ai_ignoreplayers") == 1 then return end
 	if key == self.FollowPlayerKey && activator:IsValid() && activator:Alive() && activator:IsPlayer() then
 		if self:Disposition(activator) == D_HT then
-			if self.FollowPlayerChat == true then
+			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
 				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." doesn't like you, therefore it won't follow you.")
 			end
 			return
@@ -1427,7 +1424,7 @@ function ENT:FollowPlayerCode(key,activator,caller,data)
 		self:CustomOnFollowPlayer(key,activator,caller,data)
 		if self.FollowingPlayer == false then
 			//self:FaceCertainEntity(activator,false)
-			if self.FollowPlayerChat == true then
+			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
 			activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is now following you.") end
 			self.FollowingPlayer_WanderValue = self.DisableWandering
 			self.FollowingPlayer_ChaseValue = self.DisableChasingEnemy
@@ -1632,8 +1629,6 @@ function ENT:Think()
 	self:ConvarsOnThink()
 	self:CustomOnThink()
 
-	if self.HasEntitiesToNoCollide == true then self:EntitiesToNoCollideCode() end -- Collison between something
-
 	if self.HasSounds == false or self.Dead == true then VJ_STOPSOUND(self.CurrentBreathSound) end
 	if self.Dead == false && self.HasBreathSound == true && self.HasSounds == true then
 		if CurTime() > self.NextBreathSoundT then
@@ -1775,7 +1770,7 @@ function ENT:Think()
 					//self.Weapon_ShotsSinceLastReload = 0
 					self.DoingWeaponAttack = false
 					self.DoingWeaponAttack_Standing = false
-					self.HasDoneReloadAnimation = false
+					self.IsReloadingWeapon_ServerNextFire = false
 					if self.VJ_IsBeingControlled == false then self.IsReloadingWeapon = true end
 					self.NextChaseTime = CurTime() + 2
 					//timer.Simple(5,function() if IsValid(self) then self.IsReloadingWeapon = false end end)
@@ -1784,7 +1779,11 @@ function ENT:Think()
 					if self.DisableWeaponReloadAnimation == false then
 						local function DoReloadAnimation(animtbl)
 							self.CurrentAnim_WeaponReload = VJ_PICKRANDOMTABLE(animtbl)
-							self.CurrentAnimDuration_WeaponReload = VJ_GetSequenceDuration(self,self.CurrentAnim_WeaponReload)-self.WeaponReloadAnimationDecreaseLengthAmount
+							local translateact = self:VJ_TranslateWeaponActivity(self.CurrentAnim_WeaponReload)
+							if VJ_AnimationExists(self,translateact) == true then
+								self.CurrentAnim_WeaponReload = translateact
+							end
+							self.CurrentAnimDuration_WeaponReload = VJ_GetSequenceDuration(self,self.CurrentAnim_WeaponReload) - self.WeaponReloadAnimationDecreaseLengthAmount
 							timer.Simple(self.CurrentAnimDuration_WeaponReload,function() if IsValid(self) then self.IsReloadingWeapon = false self.Weapon_ShotsSinceLastReload = 0 end end)
 							self:VJ_ACT_PLAYACTIVITY(self.CurrentAnim_WeaponReload,true,self.CurrentAnimDuration_WeaponReload,self.WeaponReloadAnimationFaceEnemy,self.WeaponReloadAnimationDelay,{SequenceDuration=self.CurrentAnimDuration_WeaponReload})
 						end
@@ -2759,8 +2758,9 @@ function ENT:DoHardEntityCheck()
 	return GetNPCs*/
 
 	local GetEnts = {}
-	local k,v
-	for k,v in ipairs(ents.GetAll()) do //ents.FindInSphere(self:GetPos(),30000)
+	local k, v;
+	for k, v in ipairs(ents.GetAll()) do //ents.FindInSphere(self:GetPos(),30000)
+		self:EntitiesToNoCollideCode(v)
 		if !v:IsNPC() && !v:IsPlayer() then continue end
 			if v:IsNPC() && (v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && (!v.IsVJBaseSNPC_Animal)) && v:Health() > 0 then
 				GetEnts[#GetEnts + 1] = v
@@ -3090,9 +3090,8 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 		self:DoFlinch(dmginfo,hitgroup)
 		self:DamageByPlayerCode(dmginfo,hitgroup)
 		self:PainSoundCode()
-		
-		if self.MoveOrHideOnDamageByEnemy == true && self:GetEnemy() != nil then
-		if CurTime() > self.NextMoveOrHideOnDamageByEnemyT && self:EyePos():Distance(self:GetEnemy():EyePos()) < self.Weapon_FiringDistanceFar && self:GetEnemy() != nil && self.FollowingPlayer == false && self.ThrowingGrenade == false && self.TakingCover == false && !self:IsCurrentSchedule(SCHED_RELOAD) && self:Visible(self:GetEnemy()) && self.VJ_IsBeingControlled == false && self.MeleeAttacking == false && self:IsMoving() == false then
+
+		if self.MoveOrHideOnDamageByEnemy == true && self:GetEnemy() != nil && CurTime() > self.NextMoveOrHideOnDamageByEnemyT && self:EyePos():Distance(self:GetEnemy():EyePos()) < self.Weapon_FiringDistanceFar && self:GetEnemy() != nil && self.FollowingPlayer == false && self.ThrowingGrenade == false && self.TakingCover == false && !self:IsCurrentSchedule(SCHED_RELOAD) && self:Visible(self:GetEnemy()) && self.VJ_IsBeingControlled == false && self.MeleeAttacking == false && self:IsMoving() == false then
 			if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == true && self.MoveOrHideOnDamageByEnemy_OnlyMove == false then
 				local randtime = math.Rand(self.MoveOrHideOnDamageByEnemy_HideTime1,self.MoveOrHideOnDamageByEnemy_HideTime2)
 				self.TakingCover = true
@@ -3101,37 +3100,9 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 				self:VJ_ACT_DOCROUCH(self.MoveOrHideOnDamageByEnemy_CustomActivites,{},false,5,false)
 				timer.Simple(math.Rand(self.MoveOrHideOnDamageByEnemy_NextHideTime1,self.MoveOrHideOnDamageByEnemy_NextHideTime2),function() if IsValid(self) then self.TakingCover = false end end)
 			else
-				local randpos = math.random(150,250)
-				local killallcpts = self:VJ_CheckAllFourSides(randpos)
-				local movepos_back = self:GetPos() + self:GetForward()*-randpos
-				local movepos_right = self:GetPos() + self:GetRight()*-randpos
-				local movepos_left = self:GetPos() + self:GetRight()*-randpos
-				if killallcpts.Backward == true && killallcpts.Right == true && killallcpts.Left == true then
-					self:SetLastPosition(VJ_PICKRANDOMTABLE({movepos_back,movepos_right,movepos_left}))
-				else
-				if killallcpts.Backward == true then
-					self:SetLastPosition(movepos_back)
-				elseif killallcpts.Right == true then
-					self:SetLastPosition(movepos_right)
-				elseif killallcpts.Left == true then
-					self:SetLastPosition(movepos_left)
-				 end
-				end
-
-				if killallcpts.Backward == true or killallcpts.Right == true or killallcpts.Left == true then
-					self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
-					/*self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.MoveOrHideOnDamageByEnemy_MoveSchedules))
-					timer.Simple(0.2, function() if IsValid(self) then
-						timer.Simple(self:GetPathTimeToGoal() -0.2, function() if IsValid(self) then
-							self:SelectSchedule()
-						 end
-						end)
-					 end
-					end)*/
-				end
+				self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
 			end
 			self.NextMoveOrHideOnDamageByEnemyT = CurTime() + math.random(self.NextMoveOrHideOnDamageByEnemy1,self.NextMoveOrHideOnDamageByEnemy2)
-		 end
 		end
 
 		if self.CallForBackUpOnDamage == true && CurTime() > self.NextCallForBackUpOnDamageT && self.ThrowingGrenade == false && self:GetEnemy() == nil && self.FollowingPlayer == false && self:CheckAlliesAroundMe(self.CallForBackUpOnDamageDistance).ItFoundAllies == true then
@@ -3157,19 +3128,19 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 
 		if self.BecomeEnemyToPlayer == true && DamageAttacker:IsPlayer() && GetConVarNumber("ai_disabled") == 0 && GetConVarNumber("ai_ignoreplayers") == 0 && (self:Disposition(DamageAttacker) == D_LI or self:Disposition(DamageAttacker) == D_NU) then
 			if self.AngerLevelTowardsPlayer <= self.BecomeEnemyToPlayerLevel then
-			self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1 end
+				self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1
+			end
 			if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
-			if self:Disposition(DamageAttacker) != D_HT then
-			self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo,hitgroup)
-			if self.FollowingPlayer == true then self:FollowPlayerReset() end
-			table.insert(self.VJ_AddCertainEntityAsEnemy,dmginfo:GetAttacker())
-			if GetConVarNumber("vj_npc_nosnpcchat") == 0 then
-			dmginfo:GetAttacker():PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.") end
-			self:BecomeEnemyToPlayerSoundCode() end
-			//self.NoLongerLikesThePlayer = true
-			self.Alerted = true
-			if self.BecomeEnemyToPlayerSetPlayerFriendlyFalse == true then
-			/*self.PlayerFriendly = false*/ end
+				if self:Disposition(DamageAttacker) != D_HT then
+					self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo,hitgroup)
+					if self.FollowingPlayer == true then self:FollowPlayerReset() end
+					table.insert(self.VJ_AddCertainEntityAsEnemy,dmginfo:GetAttacker())
+					if self.AllowPrintingInChat == true then
+						dmginfo:GetAttacker():PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.")
+					end
+					self:BecomeEnemyToPlayerSoundCode()
+				end
+				self.Alerted = true
 			end
 		end
 
@@ -3576,18 +3547,18 @@ end
 function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 	self:CustomOnDeath_BeforeCorpseSpawned(dmginfo,hitgroup)
 	if self.HasDeathRagdoll == true then
+		local corpsemodel = self:GetModel()
+		local corpsemodel_custom = VJ_PICKRANDOMTABLE(self.DeathCorpseModel)
+		if corpsemodel_custom != false then corpsemodel = corpsemodel_custom end
 		local corpsetype = "prop_physics"
-		if util.IsValidRagdoll(self:GetModel()) == true then 
+		if util.IsValidRagdoll(corpsemodel) == true then 
 			corpsetype = "prop_ragdoll"
-		elseif util.IsValidProp(self:GetModel()) == false && util.IsValidModel(self:GetModel()) == false then
+		elseif util.IsValidProp(corpsemodel) == false && util.IsValidModel(corpsemodel) == false then
 			corpsetype = "prop_ragdoll"
 		end
 		if self.DeathCorpseEntityClass != "UseDefaultBehavior" then corpsetype = self.DeathCorpseEntityClass end
 		//if self.VJCorpseDeleted == true then
 		self.Corpse = ents.Create(corpsetype) //end
-		local corpsemodel = self:GetModel()
-		local corpsemodel_custom = VJ_PICKRANDOMTABLE(self.DeathCorpseModel)
-		if corpsemodel_custom != false then corpsemodel = corpsemodel_custom end
 		self.Corpse:SetModel(corpsemodel)
 		self.Corpse:SetPos(self:GetPos())
 		self.Corpse:SetAngles(self:GetAngles())
@@ -4310,14 +4281,13 @@ function ENT:WorldShakeOnMoveCode()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:EntitiesToNoCollideCode()
-	if !istable(self.EntitiesToNoCollide) then return end
-	if #self.EntitiesToNoCollide < 1 then return end
-	for k, v in pairs (ents.GetAll()) do
-		if table.HasValue(self.EntitiesToNoCollide,v:GetClass()) then
-		constraint.NoCollide(self,v,0,0)
+function ENT:EntitiesToNoCollideCode(argent)
+	if self.HasEntitiesToNoCollide != true or !istable(self.EntitiesToNoCollide) or #self.EntitiesToNoCollide < 1 or !IsValid(argent) then return end
+	//for k, v in pairs (ents.GetAll()) do
+		if table.HasValue(self.EntitiesToNoCollide,argent:GetClass()) then
+			constraint.NoCollide(self,argent,0,0)
 		end
-	end
+	//end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:GetAttackSpread(Weapon,Target)
@@ -4354,7 +4324,7 @@ function ENT:ConvarsOnInit()
 	if GetConVarNumber("vj_npc_noreload") == 1 then self.AllowWeaponReloading = false end
 	if GetConVarNumber("vj_npc_nobecomeenemytoply") == 1 then self.BecomeEnemyToPlayer = false end
 	if GetConVarNumber("vj_npc_nofollowplayer") == 1 then self.FollowPlayer = false end
-	if GetConVarNumber("vj_npc_nosnpcchat") == 1 then self.FollowPlayerChat = false end
+	if GetConVarNumber("vj_npc_nosnpcchat") == 1 then self.AllowPrintingInChat = false self.FollowPlayerChat = false end
 	if GetConVarNumber("vj_npc_noweapon") == 1 then self.DisableWeapons = true end
 	//if GetConVarNumber("vj_npc_noforeverammo") == 1 then self.Weapon_UnlimitedAmmo = false end
 	if GetConVarNumber("vj_npc_nothrowgrenade") == 1 then self.HasGrenadeAttack = false end

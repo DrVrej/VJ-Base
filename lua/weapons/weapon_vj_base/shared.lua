@@ -248,9 +248,9 @@ function SWEP:NPC_ServerNextFire()
 	self:CustomOnThink()
 	self:CustomOnNPC_ServerThink()
 
-	if self.Owner.HasDoneReloadAnimation == false && self.AlreadyPlayedNPCReloadSound == false && (VJ_IsCurrentAnimation(self.Owner,self.CurrentAnim_WeaponReload) or VJ_IsCurrentAnimation(self.Owner,self.CurrentAnim_ReloadBehindCover) or VJ_IsCurrentAnimation(self.Owner,self.NPC_ReloadAnimationTbl) or VJ_IsCurrentAnimation(self.Owner,self.NPC_ReloadAnimationTbl_Custom)) then
+	if self.Owner.IsReloadingWeapon_ServerNextFire == false && self.AlreadyPlayedNPCReloadSound == false && (VJ_IsCurrentAnimation(self.Owner,self.CurrentAnim_WeaponReload) or VJ_IsCurrentAnimation(self.Owner,self.CurrentAnim_ReloadBehindCover) or VJ_IsCurrentAnimation(self.Owner,self.NPC_ReloadAnimationTbl) or VJ_IsCurrentAnimation(self.Owner,self.NPC_ReloadAnimationTbl_Custom)) then
 		self.Owner.NextThrowGrenadeT = self.Owner.NextThrowGrenadeT + 2
-		self.Owner.HasDoneReloadAnimation = true
+		self.Owner.IsReloadingWeapon_ServerNextFire = true
 		//self.Owner.IsReloadingWeapon = false
 		self:CustomOnNPC_Reload()
 		self.AlreadyPlayedNPCReloadSound = true
