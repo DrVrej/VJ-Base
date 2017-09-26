@@ -22,16 +22,17 @@ SWEP.HoldType 					= "ar2"
 SWEP.Spawnable					= true
 SWEP.AdminSpawnable				= false
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.Primary.Damage				= 5 -- Damage
+SWEP.Primary.Damage				= 10 -- Damage
 SWEP.Primary.Force				= 5 -- Force applied on the object the bullet hits
 SWEP.Primary.ClipSize			= 30 -- Max amount of bullets per clip
 SWEP.Primary.Recoil				= 0.6 -- How much recoil does the player get?
 SWEP.Primary.Delay				= 0.3 -- Time until it can shoot again
+SWEP.Primary.TracerType			= "VJ_Laserrod_Red" -- Tracer type (Examples: AR2, laster, 9mm)
 SWEP.Primary.Automatic			= true -- Is it automatic?
 SWEP.Primary.Ammo				= "SMG1" -- Ammo type
 SWEP.Primary.Sound				= {"vj_weapons/blaster/wpn_cis_blaster_fire.wav"} -- npc/roller/mine/rmine_explode_shock1.wav
 SWEP.Primary.HasDistantSound	= false -- Does it have a distant sound when the gun is shot?
-SWEP.Primary.DisableBulletCode	= true -- The bullet won't spawn, this can be used when creating a projectile-based weapon
+//SWEP.Primary.DisableBulletCode	= true -- The bullet won't spawn, this can be used when creating a projectile-based weapon
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_SpawnShells = false
 SWEP.PrimaryEffects_DynamicLightColor = Color(255, 0, 0)
@@ -46,7 +47,7 @@ SWEP.AnimTbl_Idle				= {ACT_VM_IDLE}
 SWEP.NextIdle_Deploy			= 0.5 -- How much time until it plays the idle animation after the weapon gets deployed
 SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle animation after attacking(Primary)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttack_BeforeShoot()
+/*function SWEP:CustomOnPrimaryAttack_BeforeShoot()
 if (CLIENT) then return end
 	local SpawnBlaserRod = ents.Create("obj_vj_blasterrod")
 	local OwnerPos = self.Owner:GetShootPos()
@@ -65,4 +66,4 @@ if (CLIENT) then return end
 		phy:ApplyForceCenter((self.Owner:GetEnemy():GetPos() - self.Owner:GetPos()) * 4000)
 		end
 	end
-end
+end*/
