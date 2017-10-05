@@ -9,7 +9,7 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 include('autorun/vj_controls.lua')
 
 -- Add Weapons -------------------------------------------------------------------------------------------------------------------------
-local vCat = "VJ Base" //"VJ Base"
+local vCat = "VJ Base"
 VJ.AddWeapon("AK-47","weapon_vj_ak47",false,vCat)
 VJ.AddWeapon("Glock 17","weapon_vj_glock17",false,vCat)
 VJ.AddWeapon("M16A1","weapon_vj_m16a1",false,vCat)
@@ -43,6 +43,7 @@ local function VJ_PLAYER_CANPICKUPWEAPON(ply,wep)
 	end
 	if wep.IsVJBaseWeapon == true then
 		//if wep.VJ_CanBePickedUpWithOutUse == true then return true end
+		if GetConVarNumber("vj_npc_plypickupdropwep") == 0 then return false end
 		if (ply:KeyPressed(IN_USE)) && (ply:GetEyeTrace().Entity == wep) then 
 		return true else return false end
 	end
@@ -58,6 +59,7 @@ local function VJ_PLAYER_GIVESWEP(ply,class,swep)
 	//end
 end
 hook.Add("PlayerGiveSWEP","VJ_PLAYER_GIVESWEP",VJ_PLAYER_GIVESWEP)
+
 -- Weapon ConVars ---------------------------------------------------------------------------------------------------------------------------
 /*
 AddConvars["rrrrrrrrrrrrrrrrrrrrrr"] = 0 -- 

@@ -46,15 +46,17 @@ ENT.BloodDecalUseGMod = false -- Should use the current default decals defined b
 ENT.BloodDecalDistance = 300 -- How far the decal can spawn in world units
 	-- ====== Other Variables ====== --
 ENT.GetDamageFromIsHugeMonster = false -- Should it get damaged no matter what by SNPCs that are tagged as VJ_IsHugeMonster?
-ENT.AllowIgnition = true -- Can this SNPC be set on fire?
-ENT.Immune_Dissolve = false -- Immune to Dissolving | Example: Combine Ball
 ENT.Immune_AcidPoisonRadiation = false -- Immune to Acid, Poison and Radiation
-ENT.Immune_Bullet = false -- Immune to Bullets
-ENT.Immune_Blast = false -- Immune to Explosives
-ENT.Immune_Electricity = false -- Immune to Electrical
-ENT.Immune_Freeze = false -- Immune to Freezing
-ENT.Immune_Physics = false -- Immune to Physics
-ENT.ImmuneDamagesTable = {} -- You can set Specific types of damages for the SNPC to be immune to
+ENT.Immune_Bullet = false -- Immune to bullet type damages
+ENT.Immune_Blast = false -- Immune to explosive-type damages
+ENT.Immune_Dissolve = false -- Immune to dissolving | Example: Combine Ball
+ENT.Immune_Electricity = false -- Immune to electrical-type damages | Example: shock or laser
+ENT.Immune_Fire = false -- Immune to fire-type damages
+ENT.Immune_Melee = true -- Immune to melee-type damage | Example: Crowbar, slash damages
+ENT.Immune_Physics = false -- Immune to physics impacts, won't take damage from props
+ENT.Immune_Sonic = false -- Immune to sonic-type damages
+ENT.ImmuneDamagesTable = {} -- Makes the SNPC immune to specific type of damages | Takes DMG_ enumerations
+ENT.AllowIgnition = true -- Can this SNPC be set on fire?
 ENT.RunAwayOnUnknownDamage = true -- Should run away on damage
 ENT.CallForBackUpOnDamage = true -- Should the SNPC call for help when damaged? (Only happens if the SNPC hasn't seen a enemy)
 ENT.CallForBackUpOnDamageDistance = 800 -- How far away the SNPC's call for help goes | Counted in World Units
@@ -369,6 +371,8 @@ function ENT:CustomOnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink_AIEnabled() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnChangeMovementType(SetType) end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnSchedule() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ExpressionFinished(strExp) end
@@ -484,11 +488,10 @@ function ENT:Initialize()
 	self.VJ_ScaleHitGroupDamage = 0
 	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.1,3)
 	if GetConVarNumber("vj_npc_allhealth") == 0 then
-	if self.SelectedDifficulty == 0 then self:SetHealth(self.StartHealth/2) end -- Easy
-	if self.SelectedDifficulty == 1 then self:SetHealth(self.StartHealth) end -- Normal
-	if self.SelectedDifficulty == 2 then self:SetHealth(self.StartHealth*1.5) end -- Hard
-	if self.SelectedDifficulty == 3 then self:SetHealth(self.StartHealth*2.5) end else -- Hell On Earth
-	self:SetHealth(GetConVarNumber("vj_npc_allhealth")) end
+		self:SetHealth(self:VJ_GetDifficultyValue(self.StartHealth))
+	else
+		self:SetHealth(GetConVarNumber("vj_npc_allhealth"))
+	end
 	self.StartHealth = self:Health()
 	self:SetName(self.PrintName)
 	self:SetUseType(SIMPLE_USE)
@@ -576,6 +579,7 @@ function ENT:DoChangeMovementType(SetType)
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
 		self:CapabilitiesRemove(CAP_SKIP_NAV_GROUND_CHECK)
 	end
+	self:CustomOnChangeMovementType(SetType)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoSchedule(schedule)
@@ -1111,14 +1115,16 @@ function ENT:OnTakeDamage(dmginfo,hitgroup)
 	if (self:IsOnFire()) && self:WaterLevel() == 2 then self:Extinguish() end
 
 	if table.HasValue(self.ImmuneDamagesTable,DamageType) then return end
-	if self.AllowIgnition == false && self:IsOnFire() then self:Extinguish() return false end
-	if self.Immune_Bullet == true && (dmginfo:IsBulletDamage() or DamageType == DMG_AIRBOAT or DamageType == DMG_BUCKSHOT) then return false end
-	if self.Immune_Physics == true && DamageType == DMG_CRUSH then return false end
-	if self.Immune_Blast == true && DamageType == DMG_BLAST then return false end
-	if self.Immune_Freeze == true && (DamageType == DMG_SLOWFREEZE or DamageType == DMG_FREEZE) then return false end
-	if self.Immune_Electricity == true && (DamageType == DMG_SHOCK or DamageType == DMG_SONIC or DamageType == DMG_ENERGYBEAM or DamageType == DMG_PHYSGUN) then return false end
+	if self.AllowIgnition == false && (self:IsOnFire() && IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then self:Extinguish() return false end
+	if self.Immune_Fire == true && (DamageType == DMG_BURN or DamageType == DMG_SLOWBURN or (self:IsOnFire() && IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame")) then return false end
 	if self.Immune_AcidPoisonRadiation == true && (DamageType == DMG_ACID or DamageType == DMG_RADIATION or DamageType == DMG_POISON or DamageType == DMG_NERVEGAS or DamageType == DMG_PARALYZE) then return false end
+	if self.Immune_Bullet == true && (dmginfo:IsBulletDamage() or DamageType == DMG_AIRBOAT or DamageType == DMG_BUCKSHOT) then return false end
+	if self.Immune_Blast == true && (DamageType == DMG_BLAST or DamageType == DMG_BLAST_SURFACE) then return false end
 	if self.Immune_Dissolve == true then if DamageType == DMG_DISSOLVE then return false end end
+	if self.Immune_Electricity == true && (DamageType == DMG_SHOCK or DamageType == DMG_ENERGYBEAM or DamageType == DMG_PHYSGUN) then return false end
+	if self.Immune_Melee == true && (DamageType == DMG_CLUB or DamageType == DMG_SLASH) then return false end
+	if self.Immune_Physics == true && DamageType == DMG_CRUSH then return false end
+	if self.Immune_Sonic == true && DamageType == DMG_SONIC then return false end
 	if ((IsValid(DamageInflictor) && DamageInflictorClass == "prop_combine_ball") or (IsValid(DamageAttacker) && DamageAttackerClass == "prop_combine_ball")) then
 		if self.Immune_Dissolve == true then return false end
 		if CurTime() > self.NextCanGetCombineBallDamageT then

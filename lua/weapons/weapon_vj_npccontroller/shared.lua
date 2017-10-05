@@ -64,8 +64,11 @@ function SWEP:PrimaryAttack()
 		elseif tr.Entity:GetClass() == "prop_physics" then
 			self.Owner:ChatPrint("Uninstall your game. Now.")
 			return
-		elseif !tr.Entity:IsNPC() && tr.Entity:Health() > 0 then
+		elseif !tr.Entity:IsNPC() then
 			self.Owner:ChatPrint("This isn't an NPC, therefore you can't control it.")
+			return
+		elseif tr.Entity:IsNPC() && tr.Entity:Health() <= 0 then
+			self.Owner:ChatPrint("This NPC's health is 0 or below, therefore you can't control.")
 			return
 		//elseif tr.Entity.IsVJBaseSNPC_Tank == true then
 			//tr.Entity = tr.Entity.Gunner

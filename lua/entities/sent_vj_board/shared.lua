@@ -1,4 +1,3 @@
-local VJExists = "lua/autorun/vj_base_autorun.lua"
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 
 ENT.Base 			= "base_gmodentity"
@@ -12,3 +11,9 @@ ENT.Category		= "VJ Base"
 
 ENT.Spawnable = true
 ENT.AdminOnly = false
+---------------------------------------------------------------------------------------------------------------------------------------------
+if (CLIENT) then
+	function ENT:Draw()
+		self.Entity:DrawModel()
+	end
+end

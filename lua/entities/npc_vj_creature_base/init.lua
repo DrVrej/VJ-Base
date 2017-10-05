@@ -47,15 +47,17 @@ ENT.BloodDecalUseGMod = false -- Should use the current default decals defined b
 ENT.BloodDecalDistance = 300 -- How far the decal can spawn in world units
 	-- ====== Other Variables ====== --
 ENT.GetDamageFromIsHugeMonster = false -- Should it get damaged no matter what by SNPCs that are tagged as VJ_IsHugeMonster?
-ENT.AllowIgnition = true -- Can this SNPC be set on fire?
-ENT.Immune_Dissolve = false -- Immune to Dissolving | Example: Combine Ball
 ENT.Immune_AcidPoisonRadiation = false -- Immune to Acid, Poison and Radiation
-ENT.Immune_Bullet = false -- Immune to Bullets
-ENT.Immune_Blast = false -- Immune to Explosives
-ENT.Immune_Electricity = false -- Immune to Electrical
-ENT.Immune_Freeze = false -- Immune to Freezing
-ENT.Immune_Physics = false -- Immune to Physics
-ENT.ImmuneDamagesTable = {} -- You can set Specific types of damages for the SNPC to be immune to
+ENT.Immune_Bullet = false -- Immune to bullet type damages
+ENT.Immune_Blast = false -- Immune to explosive-type damages
+ENT.Immune_Dissolve = false -- Immune to dissolving | Example: Combine Ball
+ENT.Immune_Electricity = false -- Immune to electrical-type damages | Example: shock or laser
+ENT.Immune_Fire = false -- Immune to fire-type damages
+ENT.Immune_Melee = false -- Immune to melee-type damage | Example: Crowbar, slash damages
+ENT.Immune_Physics = false -- Immune to physics impacts, won't take damage from props
+ENT.Immune_Sonic = false -- Immune to sonic-type damages
+ENT.ImmuneDamagesTable = {} -- Makes the SNPC immune to specific type of damages | Takes DMG_ enumerations
+ENT.AllowIgnition = true -- Can this SNPC be set on fire?
 ENT.RunAwayOnUnknownDamage = true -- Should run away on damage
 ENT.NextRunAwayOnDamageTime = 5 -- Until next run after being shot when not alerted
 ENT.CallForBackUpOnDamage = true -- Should the SNPC call for help when damaged? (Only happens if the SNPC hasn't seen a enemy)
@@ -701,6 +703,8 @@ function ENT:CustomOnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink_AIEnabled() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnChangeMovementType(SetType) end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnSchedule() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ExpressionFinished(strExp) end
@@ -875,13 +879,11 @@ function ENT:Initialize()
 	self:SetCollisionGroup(COLLISION_GROUP_NPC)
 	self.VJ_ScaleHitGroupDamage = 0
 	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.3,6)
-	//self:SetHealth(self.StartHealth)
 	if GetConVarNumber("vj_npc_allhealth") == 0 then
-	if self.SelectedDifficulty == 0 then self:SetHealth(self.StartHealth/2) end -- Easy
-	if self.SelectedDifficulty == 1 then self:SetHealth(self.StartHealth) end -- Normal
-	if self.SelectedDifficulty == 2 then self:SetHealth(self.StartHealth*1.5) end -- Hard
-	if self.SelectedDifficulty == 3 then self:SetHealth(self.StartHealth*2.5) end else -- Hell On Earth
-	self:SetHealth(GetConVarNumber("vj_npc_allhealth")) end
+		self:SetHealth(self:VJ_GetDifficultyValue(self.StartHealth))
+	else
+		self:SetHealth(GetConVarNumber("vj_npc_allhealth"))
+	end
 	self.StartHealth = self:Health()
 	self:SetName(self.PrintName)
 	self:SetEnemy(nil)
@@ -987,6 +989,7 @@ function ENT:DoChangeMovementType(SetType)
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
 		self:CapabilitiesRemove(CAP_SKIP_NAV_GROUND_CHECK)
 	end
+	self:CustomOnChangeMovementType(SetType)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoSchedule(schedule)
@@ -2400,10 +2403,7 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 					end
 					if self.DisableDefaultMeleeAttackDamageCode == false then
 						local doactualdmg = DamageInfo()
-						if self.SelectedDifficulty == 0 then doactualdmg:SetDamage(self.MeleeAttackDamage/2) end -- Easy
-						if self.SelectedDifficulty == 1 then doactualdmg:SetDamage(self.MeleeAttackDamage) end -- Normal
-						if self.SelectedDifficulty == 2 then doactualdmg:SetDamage(self.MeleeAttackDamage*1.5) end -- Hard
-						if self.SelectedDifficulty == 3 then doactualdmg:SetDamage(self.MeleeAttackDamage*2.5) end -- Hell On Earth
+						doactualdmg:SetDamage(self:VJ_GetDifficultyValue(self.MeleeAttackDamage))
 						doactualdmg:SetDamageType(self.MeleeAttackDamageType)
 						//doactualdmg:SetDamagePosition(self:VJ_GetNearestPointToEntity(v).MyPosition)
 						if v:IsNPC() or v:IsPlayer() then doactualdmg:SetDamageForce(self:GetForward()*((doactualdmg:GetDamage()+100)*70)) end
@@ -2576,10 +2576,7 @@ function ENT:LeapDamageCode()
 			if (v:IsNPC() || (v:IsPlayer() && v:Alive())) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or VJ_IsProp(v) == true or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" then
 				self:CustomOnLeapAttack_AfterChecks(v)
 				local leapdmg = DamageInfo()
-				if self.SelectedDifficulty == 0 then leapdmg:SetDamage(self.LeapAttackDamage/2) end -- Easy
-				if self.SelectedDifficulty == 1 then leapdmg:SetDamage(self.LeapAttackDamage) end -- Normal
-				if self.SelectedDifficulty == 2 then leapdmg:SetDamage(self.LeapAttackDamage*1.5) end -- Hard
-				if self.SelectedDifficulty == 3 then leapdmg:SetDamage(self.LeapAttackDamage*2.5) end  -- Hell On Earth
+				leapdmg:SetDamage(self:VJ_GetDifficultyValue(self.LeapAttackDamage))
 				leapdmg:SetInflictor(self)
 				leapdmg:SetDamageType(self.LeapAttackDamageType)
 				leapdmg:SetAttacker(self)
@@ -2798,7 +2795,7 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 		if cptisgay.ItFoundAllies == true then
 			for k,v in ipairs(cptisgay.FoundAllies) do
 				if v:GetEnemy() != nil && v.LastSeenEnemyTime < self.LastSeenEnemyTimeUntilReset then
-					if IsValid(v:GetEnemy()) && VJ_IsAlive(v:GetEnemy()) == true then
+					if IsValid(v:GetEnemy()) && VJ_IsAlive(v:GetEnemy()) == true && self:VJ_HasNoTarget(v:GetEnemy()) == false then
 						self:VJ_DoSetEnemy(v:GetEnemy(),true)
 						self.ResetedEnemy = false
 						return false
@@ -2867,9 +2864,9 @@ function ENT:DoAlert()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoRelationshipCheck(argent)
-	if argent:GetClass() == "ob_vj_bullseye" && (argent.EnemyToIndividual == true) && (argent.EnemyToIndividualEnt == self) then return true end
-	if (argent.VJ_NoTarget) && argent.VJ_NoTarget == true then return false end
-	//if table.HasValue(self.NPCTbl_Animals,argent:GetClass()) then return false end
+	local not_bool, not_str = self:VJ_HasNoTarget(argent)
+	if not_str == "Bullseye" then return true end
+	if not_bool == true then return false end
 	if self.NPCTbl_Animals[argent:GetClass()] then return false end
 	if argent:Health() > 0 && self:Disposition(argent) != D_LI then
 		if argent:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 1 then return false end
@@ -2938,6 +2935,12 @@ function ENT:DoEntityRelationshipCheck()
 		if !IsValid(v) then table.remove(posenemies,k) continue end
 		//if !IsValid(v) then table.remove(self.CurrentPossibleEnemies,tonumber(v)) continue end
 		if !IsValid(v) then continue end
+		if self:VJ_HasNoTarget(v) == true then
+			if self:GetEnemy() != nil && self:GetEnemy() == v then
+				self:ResetEnemy(false)
+			end
+			continue
+		end
 		//if v:Health() <= 0 then table.remove(self.CurrentPossibleEnemies,k) continue end
 		local entisfri = false
 		local vPos = v:GetPos()
@@ -2960,9 +2963,13 @@ function ENT:DoEntityRelationshipCheck()
 					if friclass == "CLASS_ZOMBIE" then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
 					if friclass == "CLASS_ANTLION" then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
 					if friclass == "CLASS_XEN" then if self:XenFriendlyCode(v) == true then entisfri = true end end
-					if (v.VJ_NPC_Class) && table.HasValue(v.VJ_NPC_Class,friclass) then
-						//print("SHOULD WORK:"..v:GetClass())
+					if ((v.VJ_NPC_Class) && table.HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
+						//print("SHOULD WORK: "..v:GetClass())
 						entisfri = true
+						if self:GetEnemy() != nil && self:GetEnemy() == v then
+							self.ResetedEnemy = true
+							self:ResetEnemy(false)
+						end
 						if v:IsNPC() then v:AddEntityRelationship(self,D_LI,99) end
 						self:AddEntityRelationship(v,D_LI,99)
 					end
@@ -2998,7 +3005,7 @@ function ENT:DoEntityRelationshipCheck()
 			if (self.PlayerFriendly == true or entisfri == true/* or self:Disposition(v) == D_LI*/) && v:IsPlayer() && !table.HasValue(self.VJ_AddCertainEntityAsEnemy,v) then entisfri = true DoPlayerSight() end// continue end
 			if entisfri == false && v:IsNPC() /*&& MyVisibleTov*/ && self.DisableMakingSelfEnemyToNPCs == false && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self,D_HT,99) end
 			if (!self.IsVJBaseSNPC_Tank) && v:IsPlayer() && self:GetEnemy() == nil && entisfri == false then
-				self:AddEntityRelationship(v,D_NU,99)
+				if entisfri == false then self:AddEntityRelationship(v,D_NU,99) end
 				if v:KeyDown(IN_DUCK) && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightdistancenum = 5000 else sightdistancenum = 2000 end end
 				if vDistanceToMy < 350 && ((!v:KeyDown(IN_DUCK) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP && ((!v:KeyDown(IN_WALK) && (v:KeyDown(IN_FORWARD) or v:KeyDown(IN_BACK) or v:KeyDown(IN_MOVELEFT) or v:KeyDown(IN_MOVERIGHT))) or (v:KeyDown(IN_SPEED) or v:KeyDown(IN_JUMP)))) or (self:VJ_DoPlayerFlashLightCheck(v,20) == true)) then self:SetTarget(v) self:VJ_TASK_FACE_X("TASK_FACE_TARGET") end
 			end
@@ -3023,7 +3030,7 @@ function ENT:DoEntityRelationshipCheck()
 				//self:AddEntityRelationship(v,D_NU,99)
 				v = self.VJ_TheControllerBullseye
 			end
-		end		
+		end
 		if self.FindEnemy_CanSeeThroughWalls == true then seethroughwall = true end
 		if self.DisableFindEnemy == false then
 			if (seethroughwall == true) or (MyVisibleTov && (vDistanceToMy < sightdistancenum)) then
@@ -3206,14 +3213,16 @@ function ENT:OnTakeDamage(dmginfo,data)
 	if (self:IsOnFire()) && self:WaterLevel() == 2 then self:Extinguish() end
 
 	if table.HasValue(self.ImmuneDamagesTable,DamageType) then return end
-	if self.AllowIgnition == false && self:IsOnFire() then self:Extinguish() return false end
-	if self.Immune_Bullet == true && (dmginfo:IsBulletDamage() or DamageType == DMG_AIRBOAT or DamageType == DMG_BUCKSHOT) then return false end
-	if self.Immune_Physics == true && DamageType == DMG_CRUSH then return false end
-	if self.Immune_Blast == true && DamageType == DMG_BLAST then return false end
-	if self.Immune_Freeze == true && (DamageType == DMG_SLOWFREEZE or DamageType == DMG_FREEZE) then return false end
-	if self.Immune_Electricity == true && (DamageType == DMG_SHOCK or DamageType == DMG_SONIC or DamageType == DMG_ENERGYBEAM or DamageType == DMG_PHYSGUN) then return false end
+	if self.AllowIgnition == false && (self:IsOnFire() && IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then self:Extinguish() return false end
+	if self.Immune_Fire == true && (DamageType == DMG_BURN or DamageType == DMG_SLOWBURN or (self:IsOnFire() && IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame")) then return false end
 	if self.Immune_AcidPoisonRadiation == true && (DamageType == DMG_ACID or DamageType == DMG_RADIATION or DamageType == DMG_POISON or DamageType == DMG_NERVEGAS or DamageType == DMG_PARALYZE) then return false end
+	if self.Immune_Bullet == true && (dmginfo:IsBulletDamage() or DamageType == DMG_AIRBOAT or DamageType == DMG_BUCKSHOT) then return false end
+	if self.Immune_Blast == true && (DamageType == DMG_BLAST or DamageType == DMG_BLAST_SURFACE) then return false end
 	if self.Immune_Dissolve == true then if DamageType == DMG_DISSOLVE then return false end end
+	if self.Immune_Electricity == true && (DamageType == DMG_SHOCK or DamageType == DMG_ENERGYBEAM or DamageType == DMG_PHYSGUN) then return false end
+	if self.Immune_Melee == true && (DamageType == DMG_CLUB or DamageType == DMG_SLASH) then return false end
+	if self.Immune_Physics == true && DamageType == DMG_CRUSH then return false end
+	if self.Immune_Sonic == true && DamageType == DMG_SONIC then return false end
 	if ((IsValid(DamageInflictor) && DamageInflictorClass == "prop_combine_ball") or (IsValid(DamageAttacker) && DamageAttackerClass == "prop_combine_ball")) then
 		if self.Immune_Dissolve == true then return false end
 		if CurTime() > self.NextCanGetCombineBallDamageT then
@@ -4085,7 +4094,7 @@ end
 function ENT:BeforeMeleeAttackSoundCode(CustomTbl,Tbl_Features)
 	if self.HasSounds == false or self.HasMeleeAttackSounds == false then return end
 	vTbl_Features = Tbl_Features or {}
-	vTbl_UseEmitSound = vTbl_Features.UseEmitSound or false
+		vTbl_UseEmitSound = vTbl_Features.UseEmitSound or false
 	local randomattacksound = math.random(1,self.BeforeMeleeAttackSoundChance)
 	local soundtbl = self.SoundTbl_BeforeMeleeAttack
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
@@ -4151,15 +4160,19 @@ function ENT:BeforeRangeAttackSoundCode(CustomTbl)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RangeAttackSoundCode(CustomTbl)
+function ENT:RangeAttackSoundCode(CustomTbl,Tbl_Features)
 	if self.HasSounds == false or self.HasRangeAttackSound == false then return end
+	vTbl_Features = Tbl_Features or {}
+		vTbl_UseEmitSound = vTbl_Features.UseEmitSound or false
 	local randomrangesound = math.random(1,self.RangeAttackSoundChance)
 	local soundtbl = self.SoundTbl_RangeAttack
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomrangesound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
 		if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
 		self.NextIdleSoundT_RegularChange = CurTime() + 1
-		self.CurrentRangeAttackSound = VJ_CreateSound(self,soundtbl,self.RangeAttackSoundLevel,self:VJ_DecideSoundPitch(self.RangeAttackPitch1,self.RangeAttackPitch2))
+		local PickType = VJ_CreateSound
+		if vTbl_UseEmitSound == true then PickType = VJ_EmitSound end
+		self.CurrentRangeAttackSound = PickType(self,soundtbl,self.RangeAttackSoundLevel,self:VJ_DecideSoundPitch(self.RangeAttackPitch1,self.RangeAttackPitch2))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

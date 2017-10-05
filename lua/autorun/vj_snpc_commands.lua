@@ -80,6 +80,7 @@ AddConvars["vj_npc_knowenemylocation"] = 0 -- Should they always know where thei
 AddConvars["vj_npc_creatureopendoor"] = 1 -- Should Creatures open doors?
 	-- Human Options ----------------------------------------------------------------------------------------------------
 AddConvars["vj_npc_dropweapon"] = 1 -- Drop Weapon on death?
+AddConvars["vj_npc_plypickupdropwep"] = 1 -- Can players pick up dropped weapons?
 AddConvars["vj_npc_accuracy_poor"] = 1 -- Accuracy = Poor
 AddConvars["vj_npc_accuracy_average"] = 0 -- Accuracy = Average
 AddConvars["vj_npc_accuracy_good"] = 0 -- Accuracy = Good
