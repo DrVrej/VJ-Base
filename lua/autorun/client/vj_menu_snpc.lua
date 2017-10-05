@@ -46,6 +46,7 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 	vj_npc_processtime = "1",
 	vj_npc_usegmoddecals = "0",
 	vj_npc_knowenemylocation = "0",
+	vj_npc_plypickupdropwep = "1",
 	}
 	Panel:AddControl("ComboBox", vj_options_reset)
 	//Panel:AddControl( "Label", { Text = "________________________________________\n"})
@@ -121,6 +122,7 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 	vj_npc_accuracy_poor = "0",vj_npc_accuracy_average = "0",vj_npc_accuracy_good = "0",vj_npc_accuracy_verygood = "0",vj_npc_accuracy_perfect = "1", }
 	Panel:AddControl("ComboBox", vj_accuracy)*/
 	Panel:AddControl("Checkbox", {Label = "Drop Weapon On Death", Command = "vj_npc_dropweapon"})
+	Panel:AddControl("Checkbox", {Label = "Players Can Pick Up Dropped Weapons", Command = "vj_npc_plypickupdropwep"})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_SNPC_SETTINGS(Panel) -- Settings

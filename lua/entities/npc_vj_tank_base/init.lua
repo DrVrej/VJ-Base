@@ -27,7 +27,6 @@ ENT.CorpseAlwaysCollide = true -- Should the corpse always collide?
 ENT.Immune_Dissolve = true -- Immune to Dissolving | Example: Combine Ball
 ENT.Immune_AcidPoisonRadiation = true -- Immune to Acid, Poison and Radiation
 ENT.Immune_Bullet = true -- Immune to Bullets
-ENT.Immune_Freeze = true -- Immune to Freezing
 ENT.Immune_Physics = true -- Immune to Physics
 ENT.ImmuneDamagesTable = {DMG_BULLET,DMG_BUCKSHOT,DMG_PHYSGUN} -- You can set Specific types of damages for the SNPC to be immune to
 //ENT.DisableFindEnemy = true -- Disables FindEnemy code, friendly code still works though
@@ -94,8 +93,9 @@ end
 function ENT:CustomOnInitialize()
 	self:CustomInitialize_CustomTank()
 	self:PhysicsInit(SOLID_BBOX) // SOLID_VPHYSICS
+	self:SetSolid(SOLID_VPHYSICS)
 	//self:CapabilitiesAdd(bit.bor(CAP_ANIMATEDFACE)) -- Breaks some SNPCs, avoid using it!
-	self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND))
+	//self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND))
 	self:SetAngles(self:GetAngles()+Angle(0,self.Tank_SpawningAngle,0))
 	//self:SetPos(self:GetPos()+Vector(0,0,90))
 	self:SetCollisionBounds(Vector(self.Tank_CollisionBoundSize, self.Tank_CollisionBoundSize, self.Tank_CollisionBoundUp), Vector(-self.Tank_CollisionBoundSize, -self.Tank_CollisionBoundSize, 0))
@@ -154,51 +154,26 @@ function ENT:GetNearDeathSparkPositions()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-/*function ENT:GetRelationship(entity)
-	if self.HasAllies == false then return end
-	local friendslist = { "npc_vj_mili_m1a1abramsg_base" } -- List
-	for _,x in pairs( friendslist ) do
-	local hl_friendlys = ents.FindByClass( x )
-	for _,x in pairs( hl_friendlys ) do
-	if entity == x then
-	return D_LI
-	end
-  end
- end
-end*/
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnTouch(entity)
-if GetConVarNumber("ai_disabled") == 1 then return end
+	if GetConVarNumber("ai_disabled") == 1 then return end
 	if self.Tank_Status == 0 then
 		self:TANK_RUNOVER_DAMAGECODE(entity)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:TANK_RUNOVER_DAMAGECODE(argent)
-// if self.HasMeleeAttack == false then return end
-if argent == NULL or argent == nil then return end
-if GetConVarNumber("vj_npc_nomelee") == 1 then return end
-if self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == argent then return end
+	// if self.HasMeleeAttack == false then return end
+	if argent == NULL or argent == nil then return end
+	if GetConVarNumber("vj_npc_nomelee") == 1 or (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == argent) then return end
 
-local function Tank_DoDamage()
-	if GetConVarNumber("vj_npc_dif_normal") == 1 then argent:TakeDamage(8,self,self) end -- Normal
-	if GetConVarNumber("vj_npc_dif_easy") == 1 then argent:TakeDamage(8 /2,self,self) end -- Easy
-	if GetConVarNumber("vj_npc_dif_hard") == 1 then argent:TakeDamage(8 *1.5,self,self) end -- Hard
-	if GetConVarNumber("vj_npc_dif_hellonearth") == 1 then argent:TakeDamage(8 *2.5,self,self) end  -- Hell On Earth
-	VJ_DestroyCombineTurret(self,argent)
-	argent:SetVelocity(self:GetForward()*-800)
-end
-
-	if (argent:IsNPC() && argent:Disposition(self) == 1 && argent:Health() > 0) then
-	if !argent:IsPlayer() && argent.IsVJBaseSNPC == true && argent.VJ_IsHugeMonster == false then
-		Tank_DoDamage()
-		self:TANK_RUNOVER_SOUND()
+	if self:Disposition(argent) == 1 && argent:Health() > 0 then
+		if (argent:IsNPC() && argent.VJ_IsHugeMonster != true && !table.HasValue(self.TankTbl_DontRunOver,argent:GetClass())) or (argent:IsPlayer() && self.PlayerFriendly == false && GetConVarNumber("ai_ignoreplayers") == 0 && argent:Alive() && self.Tank_IsMoving == true) then
+			argent:TakeDamage(self:VJ_GetDifficultyValue(8),self,self)
+			VJ_DestroyCombineTurret(self,argent)
+			argent:SetVelocity(argent:GetForward()*-200)
+			self:TANK_RUNOVER_SOUND()
+		end
 	end
-	if (argent:IsNPC() && argent.IsVJBaseSNPC != true && !table.HasValue(self.TankTbl_DontRunOver,argent:GetClass())) or (argent:IsPlayer() && self.PlayerFriendly == false && GetConVarNumber("ai_ignoreplayers") == 0 && argent:Alive() && self.Tank_IsMoving == true) then
-		Tank_DoDamage()
-		self:TANK_RUNOVER_SOUND()
-	end
- end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AngleDiffuse(ang1, ang2)
@@ -211,51 +186,42 @@ end
 function ENT:CustomOnThink()
 	if GetConVarNumber("vj_npc_noidleparticle") == 1 then return end
 	timer.Simple(0.1,function()
-	if self.Dead == false then
-	self:StartSpawnEffects() end end)
+		if IsValid(self) && self.Dead == false then
+			self:StartSpawnEffects()
+		end
+	end)
 	
 	if self:Health() < (self.StartHealth*0.30) then
-	if CurTime() > self.Tank_NextLowHealthSmokeT then
-	self.Spark1 = ents.Create("env_spark")
-	self.Spark1:SetKeyValue("MaxDelay",0.01)
-	self.Spark1:SetKeyValue("Magnitude","8")
-	self.Spark1:SetKeyValue("Spark Trail Length","3")
-	self:GetNearDeathSparkPositions()
-	self.Spark1:SetAngles(self:GetAngles())
-	//self.Spark1:Fire("LightColor", "255 255 255")
-	self.Spark1:SetParent(self)
-	self.Spark1:Spawn()
-	self.Spark1:Activate()
-	self.Spark1:Fire("StartSpark", "", 0)
-	self:DeleteOnRemove(self.Spark1)
-	
-	/*local effectdata = EffectData()
-	effectdata:SetOrigin(self:GetPos() +self:GetUp()*60 +self:GetForward()*100)
-	effectdata:SetNormal(Vector(0,0,0))
-	effectdata:SetMagnitude(5)
-	effectdata:SetScale(0.1)
-	effectdata:SetRadius(10)
-	util.Effect("Sparks",effectdata)*/
-	timer.Simple(0.1,function()
-	if self:IsValid() then
-	if self.Spark1:IsValid() then
-	self.Spark1:Remove() end
-	 end
-	end)
-	self.Tank_NextLowHealthSmokeT = CurTime() + math.random(4,6) //9999999999999999 * 999999999999999999 * 999999
-	 end
+		if CurTime() > self.Tank_NextLowHealthSmokeT then
+			//ParticleEffectAttach("vj_rpg2_smoke2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
+			
+			self.Spark1 = ents.Create("env_spark")
+			self.Spark1:SetKeyValue("MaxDelay",0.01)
+			self.Spark1:SetKeyValue("Magnitude","8")
+			self.Spark1:SetKeyValue("Spark Trail Length","3")
+			self:GetNearDeathSparkPositions()
+			self.Spark1:SetAngles(self:GetAngles())
+			//self.Spark1:Fire("LightColor", "255 255 255")
+			self.Spark1:SetParent(self)
+			self.Spark1:Spawn()
+			self.Spark1:Activate()
+			self.Spark1:Fire("StartSpark", "", 0)
+			self.Spark1:Fire("kill", "", 0.1)
+			self:DeleteOnRemove(self.Spark1)
+			
+			/*local effectdata = EffectData()
+			effectdata:SetOrigin(self:GetPos() +self:GetUp()*60 +self:GetForward()*100)
+			effectdata:SetNormal(Vector(0,0,0))
+			effectdata:SetMagnitude(5)
+			effectdata:SetScale(0.1)
+			effectdata:SetRadius(10)
+			util.Effect("Sparks",effectdata)*/
+			self.Tank_NextLowHealthSmokeT = CurTime() + math.random(4,6)
+		end
 	end
 	
-	/*if self:Health() < (self.StartHealth*0.30) then
-	if CurTime() > self.Tank_NextLowHealthSmokeT then
-	ParticleEffectAttach("vj_rpg2_smoke2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
-	self.Tank_NextLowHealthSmokeT = CurTime() + 9999999999999999 * 999999999999999999 * 999999
-	 end
-	end*/
-	
 	/*if self:Health() <= 150 then
-	print("BELOW 150!!!!!!!!!!!")
-	self.FireEffect = ents.Create( "env_fire_trail" )
+	self.FireEffect = ents.Create("env_fire_trail")
 	self.FireEffect:SetPos(self:GetPos()+self:GetUp()*100)
 	self.FireEffect:Spawn()
 	self.FireEffect:SetParent(self)
@@ -269,96 +235,71 @@ function ENT:CustomOnThink_AIEnabled()
 	for k,v in pairs(ents.FindInSphere(self:GetPos(),100)) do
 		self:TANK_RUNOVER_DAMAGECODE(v)
 	end
-
-	local fucktraces = { start = self:GetPos(), endpos = self:GetPos() + self:GetUp()*-5, filter = self }
-	local tr = util.TraceEntity( fucktraces, self ) 
-	if ( tr.HitWorld ) then
-	local phys = self:GetPhysicsObject()
-	if phys:IsValid() then
-	if phys:GetVelocity():Length() > 10 then  /*print("This fucking tank is moving")*/
-	self.Tank_IsMoving = true
-	self:TANK_MOVINGSOUND()
-	self:StartMoveEffects()
-	else VJ_STOPSOUND(self.tank_movingsd) self.Tank_IsMoving = false /*print(self:GetClass().." Is not fucking Moving!")*/ end end end
-	if ( !tr.HitWorld ) then
-	VJ_STOPSOUND(self.tank_movingsd) self.Tank_IsMoving = false /*print(self:GetClass().." Is not fucking Moving!")*/ end
 	
-/*
-	//local fucktraces = { start = self:GetPos(), endpos = self:GetPos() + self:GetUp()*-5, filter = self }
-	//local tr = util.TraceEntity( fucktraces, self ) 
-	//if ( tr.HitWorld ) then
-	if self:IsFalling() == false then
+	local tr = util.TraceEntity({start = self:GetPos(), endpos = self:GetPos() + self:GetUp()*-5, filter = self}, self)
+	if (tr.Hit) then // HitWorld
 		local phys = self:GetPhysicsObject()
-		if phys:IsValid() then
-		if phys:GetVelocity():Length() > 10 then
+		if phys:IsValid() && phys:GetVelocity():Length() > 10 then -- Moving
 			self.Tank_IsMoving = true
 			self:TANK_MOVINGSOUND()
 			self:StartMoveEffects()
-		else 
-			VJ_STOPSOUND(self.tank_movingsd) 
+		else -- Not moving
+			VJ_STOPSOUND(self.tank_movingsd)
 			self.Tank_IsMoving = false
-			end
-		 //end
 		end
-	else
-		VJ_STOPSOUND(self.tank_movingsd) 
+	end
+	if (!tr.Hit) then -- Not moving
+		VJ_STOPSOUND(self.tank_movingsd)
 		self.Tank_IsMoving = false
 	end
-*/
+
 	self:CustomOnSchedule()
 	
-	if self.Tank_Status == 0 then
+	if self.Tank_Status == 0 && (tr.Hit) then
 		if self:GetEnemy() == nil then
-		self.Tank_Status = 1
-	else
-	//print((self:GetEnemy():GetPos() -self:GetPos() +Vector(0,0,80)):Angle())
-	//print(self:GetAngles())
-	-- x = Forward | y = Right | z = Up | {x,y,z}
-	-- To make it go opposite:
-		-- Change the +15 to -15 and -15 to 15 
-		-- Change the forwad spead(Tank_ForwardSpead) to their opposite quotation(+ to -)
-		-- Change the turning speed(Tank_TurningSpeed) to their opposite quotation(+ to -)
-	local phys = self:GetPhysicsObject()
-	local Angle_Enemy = (self:GetEnemy():GetPos() -self:GetPos() +Vector(0,0,80)):Angle()
-	local Angle_Current = self:GetAngles()
-	local Angle_Diffuse = self:AngleDiffuse(Angle_Enemy.y,Angle_Current.y+self.Tank_AngleDiffuseNumber)
-	local Heigh_Ratio = (self:GetEnemy():GetPos().z - self:GetPos().z ) / self:GetPos():Distance(Vector(self:GetEnemy():GetPos().x,self:GetEnemy():GetPos().y,self:GetPos().z))
+			self.Tank_Status = 1
+		else
+			//print((self:GetEnemy():GetPos() -self:GetPos() +Vector(0,0,80)):Angle())
+			-- To make it go opposite:
+				-- Change the +15 to -15 and -15 to 15 
+				-- Change the forwad spead(Tank_ForwardSpead) to their opposite quotation(+ to -)
+				-- Change the turning speed(Tank_TurningSpeed) to their opposite quotation(+ to -)
+			local phys = self:GetPhysicsObject()
+			if phys:IsValid() then
+				local Angle_Enemy = (self:GetEnemy():GetPos() -self:GetPos() +Vector(0,0,80)):Angle()
+				local Angle_Current = self:GetAngles()
+				local Angle_Diffuse = self:AngleDiffuse(Angle_Enemy.y,Angle_Current.y+self.Tank_AngleDiffuseNumber)
+				local Heigh_Ratio = (self:GetEnemy():GetPos().z - self:GetPos().z ) / self:GetPos():Distance(Vector(self:GetEnemy():GetPos().x,self:GetEnemy():GetPos().y,self:GetPos().z))
 
-	//local fucktraces = { start = self:GetPos(), endpos = self:GetPos() + self:GetUp()*-5, filter = self }
-	//local tr = util.TraceEntity( fucktraces, self )
-	//if ( tr.HitWorld ) then
-	if Heigh_Ratio < 0.15 then -- If it is that high than move away from it
-		if phys:IsValid() then -- To help the gunner shoot
-		if self.Tank_UseGetRightForSpeed == true then
-		phys:SetVelocity(self:GetRight():GetNormal()*self.Tank_MoveAwaySpeed) else
-		phys:SetVelocity(self:GetForward():GetNormal()*self.Tank_MoveAwaySpeed) end
-	if Angle_Diffuse > 15 then
-		self:SetLocalAngles( self:GetLocalAngles() + Angle(0,self.Tank_TurningSpeed,0))
-		phys:SetAngles(self:GetAngles())
-	elseif Angle_Diffuse < -15 then
-		self:SetLocalAngles( self:GetLocalAngles() + Angle(0,-self.Tank_TurningSpeed,0))
-		phys:SetAngles(self:GetAngles())
+				if Heigh_Ratio < 0.15 then -- If it is that high than move away from it
+					-- To help the gunner shoot
+					if self.Tank_UseGetRightForSpeed == true then
+					phys:SetVelocity(self:GetRight():GetNormal()*self.Tank_MoveAwaySpeed) else
+					phys:SetVelocity(self:GetForward():GetNormal()*self.Tank_MoveAwaySpeed) end
+					if Angle_Diffuse > 15 then
+						self:SetLocalAngles( self:GetLocalAngles() + Angle(0,self.Tank_TurningSpeed,0))
+						phys:SetAngles(self:GetAngles())
+					elseif Angle_Diffuse < -15 then
+						self:SetLocalAngles( self:GetLocalAngles() + Angle(0,-self.Tank_TurningSpeed,0))
+						phys:SetAngles(self:GetAngles())
+					end
+				//if self:GetEnemy().VJ_IsHugeMonster == false then
+				elseif math.abs(Heigh_Ratio) > 1 && math.abs(Heigh_Ratio) < 0.6 then -- If it is that high than move toward it
+					-- Run over
+					if self.Tank_UseGetRightForSpeed == true then
+					phys:SetVelocity(self:GetRight():GetNormal()*self.Tank_MoveAwaySpeed) else
+					phys:SetVelocity(self:GetForward():GetNormal()*self.Tank_MoveAwaySpeed) end
+					if Angle_Diffuse > 15 then
+						self:SetLocalAngles( self:GetLocalAngles() + Angle(0,self.Tank_TurningSpeed,0))
+						phys:SetAngles(self:GetAngles())
+					elseif Angle_Diffuse < -15 then
+						self:SetLocalAngles( self:GetLocalAngles() + Angle(0,-self.Tank_TurningSpeed,0))
+						phys:SetAngles(self:GetAngles())
+					end
+				end
+			end
 		end
 	end
-	//if self:GetEnemy().VJ_IsHugeMonster == false then
-	elseif math.abs(Heigh_Ratio) > 1 && math.abs(Heigh_Ratio) < 0.6 then -- If it is that high than move toward it
-		if phys:IsValid() then -- Run over
-		if self.Tank_UseGetRightForSpeed == true then
-		phys:SetVelocity(self:GetRight():GetNormal()*self.Tank_MoveAwaySpeed) else
-		phys:SetVelocity(self:GetForward():GetNormal()*self.Tank_MoveAwaySpeed) end
-	if Angle_Diffuse > 15 then
-		self:SetLocalAngles( self:GetLocalAngles() + Angle(0,self.Tank_TurningSpeed,0))
-		phys:SetAngles(self:GetAngles())
-	elseif Angle_Diffuse < -15 then
-		self:SetLocalAngles( self:GetLocalAngles() + Angle(0,-self.Tank_TurningSpeed,0))
-		phys:SetAngles(self:GetAngles())
-		end
-	 // end
-	 end
-	end
-  // end
-  end
- end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnSchedule()
@@ -393,8 +334,8 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:TANK_MOVINGSOUND()
 	if self.HasSounds == true && GetConVarNumber("vj_npc_sd_footstep") == 0 then
-	self.tank_movingsd = CreateSound(self,"vj_mili_tank/tankdrive1.wav") self.tank_movingsd:SetSoundLevel(80)
-	self.tank_movingsd:PlayEx(1,100)
+		self.tank_movingsd = CreateSound(self,"vj_mili_tank/tankdrive1.wav") self.tank_movingsd:SetSoundLevel(80)
+		self.tank_movingsd:PlayEx(1,100)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -462,7 +403,7 @@ function ENT:CustomOnPriorToKilled(dmginfo,hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
-	util.BlastDamage( self, self, self:GetPos(),400, 40)
+	util.BlastDamage(self, self, self:GetPos(), 400, 40)
 	util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
 	
 	-- Spawn the gunner

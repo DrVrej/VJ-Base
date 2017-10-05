@@ -282,6 +282,17 @@ function NPC_MetaTable:VJ_Controller_InitialMessage(ply)
 	end
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function NPC_MetaTable:VJ_HasNoTarget(argent)
+	if argent:GetClass() == "ob_vj_bullseye" && (argent.EnemyToIndividual == true) && (argent.EnemyToIndividualEnt == self) then
+		return false, "Bullseye"
+	end
+	if ((argent.VJ_NoTarget) && argent.VJ_NoTarget == true) or (argent:IsFlagSet(FL_NOTARGET) == true) then
+		return true, ""
+	else
+		return false, ""
+	end
+end
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function NPC_MetaTable:VJ_HasActiveWeapon()
 	if self.DisableWeapons == false && self:GetActiveWeapon() != NULL then return true end
 	return false
@@ -570,7 +581,20 @@ function NPC_MetaTable:VJ_DoSelectDifficulty()
 	if GetConVarNumber("vj_npc_dif_normal") == 1 then self.SelectedDifficulty = 1 return 1 end -- Normal
 	if GetConVarNumber("vj_npc_dif_hard") == 1 then self.SelectedDifficulty = 2 return 2 end -- Hard
 	if GetConVarNumber("vj_npc_dif_hellonearth") == 1 then self.SelectedDifficulty = 3 return 3 end -- Hell On Earth
-	return false
+	return 1
+end
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function NPC_MetaTable:VJ_GetDifficultyValue(int)
+	if self.SelectedDifficulty == 0 then
+		return int/2 -- Easy
+	elseif self.SelectedDifficulty == 1 then
+		return int -- Normal
+	elseif self.SelectedDifficulty == 2 then
+		return int*1.5 -- Hard
+	elseif self.SelectedDifficulty == 3 then
+		return int*2.5 -- Hell On Earth
+	end
+	return int
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*function NPC_MetaTable:VJ_StopSoundTable(tbl)

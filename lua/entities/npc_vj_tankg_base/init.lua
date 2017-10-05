@@ -30,7 +30,6 @@ ENT.CorpseAlwaysCollide = true -- Should the corpse always collide?
 ENT.Immune_Dissolve = true -- Immune to Dissolving | Example: Combine Ball
 ENT.Immune_AcidPoisonRadiation = true -- Immune to Acid, Poison and Radiation
 ENT.Immune_Bullet = true -- Immune to Bullets
-ENT.Immune_Freeze = true -- Immune to Freezing
 ENT.Immune_Physics = true -- Immune to Physics
 ENT.ImmuneDamagesTable = {DMG_SLASH,DMG_GENERIC,DMG_CLUB,DMG_BULLET,DMG_BUCKSHOT,DMG_PHYSGUN} -- You can set Specific types of damages for the SNPC to be immune to
 ENT.DisableFindEnemy = true -- Disables FindEnemy code, friendly code still works though
