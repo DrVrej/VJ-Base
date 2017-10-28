@@ -245,11 +245,13 @@ function ENT:CustomOnThink_AIEnabled()
 			self:StartMoveEffects()
 		else -- Not moving
 			VJ_STOPSOUND(self.tank_movingsd)
+			VJ_STOPSOUND(self.tank_tracksd)
 			self.Tank_IsMoving = false
 		end
 	end
 	if (!tr.Hit) then -- Not moving
 		VJ_STOPSOUND(self.tank_movingsd)
+		VJ_STOPSOUND(self.tank_tracksd)
 		self.Tank_IsMoving = false
 	end
 
@@ -334,8 +336,11 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:TANK_MOVINGSOUND()
 	if self.HasSounds == true && GetConVarNumber("vj_npc_sd_footstep") == 0 then
-		self.tank_movingsd = CreateSound(self,"vj_mili_tank/tankdrive1.wav") self.tank_movingsd:SetSoundLevel(80)
+		self.tank_movingsd = CreateSound(self,"vj_mili_tank/tankdriving1.wav") self.tank_movingsd:SetSoundLevel(80)
 		self.tank_movingsd:PlayEx(1,100)
+		
+		self.tank_tracksd = CreateSound(self,"vj_mili_tank/tanktrack1.wav") self.tank_tracksd:SetSoundLevel(70)
+		self.tank_tracksd:PlayEx(1,100)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -449,6 +454,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove()
 	VJ_STOPSOUND(self.tank_movingsd)
+	VJ_STOPSOUND(self.tank_tracksd)
 	if IsValid(self.Gunner) then
 		self.Gunner:Remove()
 	end

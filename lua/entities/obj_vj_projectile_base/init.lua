@@ -188,15 +188,15 @@ function ENT:PhysicsCollide(data,phys)
 		if self.Dead == false then
 			self.Dead = true
 			self:DoDamageCode(data,phys)
-			if self.PaintDecalOnDeath == true && VJ_PICKRANDOMTABLE(self.DecalTbl_DeathDecals) != false then
-				timer.Simple(0.07,function() if IsValid(self) then if self.AlreadyPaintedDeathDecal == false then self.AlreadyPaintedDeathDecal = true util.Decal(VJ_PICKRANDOMTABLE(self.DecalTbl_DeathDecals), data.HitPos +data.HitNormal, data.HitPos -data.HitNormal) end end
-			 end)
+			if self.PaintDecalOnDeath == true && VJ_PICKRANDOMTABLE(self.DecalTbl_DeathDecals) != false && self.AlreadyPaintedDeathDecal == false then 
+				self.AlreadyPaintedDeathDecal = true 
+				util.Decal(VJ_PICKRANDOMTABLE(self.DecalTbl_DeathDecals), data.HitPos +data.HitNormal, data.HitPos -data.HitNormal)
 			end
 			if self.ShakeWorldOnDeath == true then util.ScreenShake(data.HitPos, self.ShakeWorldOnDeathAmplitude, self.ShakeWorldOnDeathFrequency, self.ShakeWorldOnDeathtDuration, self.ShakeWorldOnDeathRadius) end
 			self:OnCollideSoundCode()
 		end
 		self:SetDeathVariablesTrue(data,phys,true)
-		timer.Simple(0.07,function() if IsValid(self) then self:Remove() end end)
+		self:Remove()
 	end
 	
 	if self.Dead == false && self.CollideCodeWithoutRemoving == true && CurTime() > self.NextCollideCodeWithoutRemovingT then
