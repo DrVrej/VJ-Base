@@ -49,12 +49,12 @@ function TOOL:RightClick(tr)
 	
 	if Ent:IsPlayer() then
 		if Ent:IsFlagSet(FL_NOTARGET) != true then
-			Ply:ChatPrint("Set no target to ", Ent:Nick(), ": ON")
+			Ply:ChatPrint("Set no target to "..Ent:Nick()..": ON")
 			Ent:SetNoTarget(true)
 			Ent.VJ_NoTarget = true
 			return true
 		else
-			Ply:ChatPrint("Set no target to ", Ent:Nick(), ": OFF")
+			Ply:ChatPrint("Set no target to "..Ent:Nick()..": OFF")
 			Ent:SetNoTarget(false)
 			Ent.VJ_NoTarget = false
 			return true

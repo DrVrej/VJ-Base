@@ -6,89 +6,15 @@
 INFO: Used to load Particles for VJ Base
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
-
-	-- Add the file --
+	
 -- Half Life 2 Episode 2
-game.AddParticles("particles/antlion_gib_01.pcf")
-game.AddParticles("particles/antlion_gib_02.pcf")
-game.AddParticles("particles/antlion_worker.pcf")
-game.AddParticles("particles/grub_blood.pcf")
-game.AddParticles("particles/fire_01.pcf")
-game.AddParticles("particles/Advisor_FX.pcf")
-game.AddParticles("particles/striderbuster.pcf")
-game.AddParticles("particles/aurora_sphere2.pcf")
-game.AddParticles("particles/steampuff.pcf")
-game.AddParticles("particles/weapon_fx.pcf")
-game.AddParticles("particles/aurora.pcf")
--- Black Mesa Source
-game.AddParticles("particles/grenade_hornet.pcf")
--- VJ Particles
-game.AddParticles("particles/vj_blood1.pcf")
-game.AddParticles("particles/vj_impact1.pcf")
-game.AddParticles("particles/vj_explosions1.pcf")
-game.AddParticles("particles/vj_rpgtrails1.pcf")
-game.AddParticles("particles/vj_rpgtrails2.pcf")
-game.AddParticles("particles/vj_weaponfx_rifle.pcf")
---------------------------------------------------------------------------
-	-- Add the particle name --
-local particlename = {
-	"vj_bleedout_red",
-	"vj_bleedout_red_small",
-	"vj_bleedout_red_tiny",
-	"vj_bleedout_yellow",
-	"vj_bleedout_yellow_small",
-	"vj_bleedout_yellow_tiny",
--- vj_impact
-	"vj_impact1_black",
-	"vj_impact1_blue",
-	"vj_impact1_green",
-	"vj_impact1_orange",
-	"vj_impact1_purple",
-	"vj_impact1_red",
-	"vj_impact1_white",
-	"vj_impact1_yellow",
-	"vj_impact1_centaurspit",
--- vj_explosions1
-	"vj_explosion1",
-	"vj_explosion2",
-	"vj_explosion3",
-	"vj_explosionfire1",
-	"vj_explosionfire2",
-	"vj_explosionfire3",
-	"vj_explosionfire4",
-	"vj_explosionfire5",
-	"vj_explosionflash1",
-	"vj_explosionflash2",
-	"vj_explosionspark1",
-	"vj_explosionspark2",
-	"vj_explosionspark3",
-	"vj_explosionspark4",
-	"vj_shockwave1",
-	"vj_shockwave2",
-	"vj_smoke1",
-	"vj_smoke2",
-	"vj_smokespike1",
-	"vj_rocks1",
-	"vj_rocks2",
-	"vj_debris1",
-	"vj_dirt1",
--- vj_rpgtrails1
-	"vj_rpg1_fulltrail",
-	"vj_rpg1_flare",
-	"vj_rpg1_smoke",
--- vj_rpgtrails2
-	"vj_rpg2_fulltail",
-	"vj_rpg2_smoke1",
-	"vj_rpg2_smoke2",
-	"vj_rpg2_fire",
-	"vj_rpg2_flare",
-	"vj_rpg2_glow",
--- antlion_gib_01
+VJ.AddParticle("particles/antlion_gib_01.pcf",{
 	"antlion_gib_01",
 	"antlion_gib_01_juice",
 	"antlion_gib_01_trailsA",
 	"antlion_gib_01_trailsb",
--- antlion_gib_02
+})
+VJ.AddParticle("particles/antlion_gib_02.pcf",{
 	"antlion_gib_02",
 	"antlion_gib_02_blood",
 	"antlion_gib_02_floaters",
@@ -97,7 +23,8 @@ local particlename = {
 	"antlion_gib_02_slime",
 	"antlion_gib_02_trailsA",
 	"antlion_gib_02_trailsB",
--- antlion_worker
+})
+VJ.AddParticle("particles/antlion_worker.pcf",{
 	"antlion_spit",
 	"antlion_spit_02",
 	"antlion_spit_03",
@@ -105,11 +32,13 @@ local particlename = {
 	"antlion_spit_player",
 	"antlion_spit_player_splat",
 	"antlion_spit_trail",
--- grub_blood
+})
+VJ.AddParticle("particles/grub_blood.pcf",{
 	"GrubBlood",
 	"GrubSquashBlood",
 	"GrubSquashBlood2",
--- fire_01
+})
+VJ.AddParticle("particles/fire_01.pcf",{
 	"burning_engine_01",
 	"burning_engine_fire",
 	"burning_gib_01",
@@ -173,32 +102,17 @@ local particlename = {
 	"smoke_medium_02d",
 	"smoke_small_01",
 	"smoke_small_01b",
--- grenade_hornet
-	"grenade_hornet_bloop",
-	"grenade_hornet_detonate",
-	"grenade_hornet_detonate_chucks",
-	"grenade_hornet_flash",
-	"grenade_hornet_glow",
-	"grenade_hornet_trail",
-	"grenade_hornet_trail_glow",
-	"hornet_trail",
--- Advisor_FX
+})
+VJ.AddParticle("particles/Advisor_FX.pcf",{
 	"Advisor_Pod_Steam_Continuous",
--- StriderBuster
+})
+VJ.AddParticle("particles/striderbuster.pcf",{
 	"striderbuster_attach",
 	"striderbuster_break",
 	"striderbuster_break_explode",
 	"striderbuster_explode_core",
--- Aurora
-	"aurora_01",
-	"aurora_02",
-	"aurora_02b",
--- Aurora Sphere2
-	"aurora_shockwave",
-	"aurora_shockwave_debris",
-	"aurora_shockwave_ring",
-	"demo_aurora_01",
--- Steampuff
+})
+VJ.AddParticle("particles/steampuff.pcf",{
 	"steam_jet_50",
 	"steam_jet_50_steam",
 	"steam_jet_80",
@@ -207,7 +121,8 @@ local particlename = {
 	"steam_jet_80_steam",
 	"steam_large_01",
 	"steampuff",
--- WEAPON_FX
+})
+VJ.AddParticle("particles/weapon_fx.pcf",{
 	"Rocket_Smoke",
 	"explosion_turret_break",
 	"explosion_turret_fizzle",
@@ -249,5 +164,107 @@ local particlename = {
 	"Weapon_Combine_Ion_Cannon_i",
 	"Weapon_Combine_Ion_Cannon_Intake",
 	"Weapon_Combine_Ion_Cannon_Intake_b",
-}
-for _,v in ipairs(particlename) do PrecacheParticleSystem(v) end
+})
+VJ.AddParticle("particles/aurora.pcf",{
+	"aurora_01",
+	"aurora_02",
+	"aurora_02b",
+})
+VJ.AddParticle("particles/aurora_sphere2.pcf",{
+	"aurora_shockwave",
+	"aurora_shockwave_debris",
+	"aurora_shockwave_ring",
+	"demo_aurora_01",
+})
+
+-- Black Mesa Source
+VJ.AddParticle("particles/grenade_hornet.pcf",{
+	"grenade_hornet_bloop",
+	"grenade_hornet_detonate",
+	"grenade_hornet_detonate_chucks",
+	"grenade_hornet_flash",
+	"grenade_hornet_glow",
+	"grenade_hornet_trail",
+	"grenade_hornet_trail_glow",
+	"hornet_trail",
+})
+
+-- VJ Particles
+VJ.AddParticle("particles/vj_blood1.pcf",{
+	"vj_bleedout_red",
+	"vj_bleedout_red_small",
+	"vj_bleedout_red_tiny",
+	"vj_bleedout_yellow",
+	"vj_bleedout_yellow_small",
+	"vj_bleedout_yellow_tiny",
+})
+VJ.AddParticle("particles/vj_impact1.pcf",{
+	"vj_impact1_black",
+	"vj_impact1_blue",
+	"vj_impact1_green",
+	"vj_impact1_orange",
+	"vj_impact1_purple",
+	"vj_impact1_red",
+	"vj_impact1_white",
+	"vj_impact1_yellow",
+	"vj_impact1_centaurspit",
+})
+VJ.AddParticle("particles/vj_explosions1.pcf",{
+	"vj_explosion1",
+	"vj_explosion2",
+	"vj_explosion3",
+	"vj_explosionfire1",
+	"vj_explosionfire2",
+	"vj_explosionfire3",
+	"vj_explosionfire4",
+	"vj_explosionfire5",
+	"vj_explosionflash1",
+	"vj_explosionflash2",
+	"vj_explosionspark1",
+	"vj_explosionspark2",
+	"vj_explosionspark3",
+	"vj_explosionspark4",
+	"vj_shockwave1",
+	"vj_shockwave2",
+	"vj_smoke1",
+	"vj_smoke2",
+	"vj_smokespike1",
+	"vj_rocks1",
+	"vj_rocks2",
+	"vj_debris1",
+	"vj_dirt1",
+})
+VJ.AddParticle("particles/vj_rpgtrails1.pcf",{
+	"vj_rpg1_fulltrail",
+	"vj_rpg1_flare",
+	"vj_rpg1_smoke",
+})
+VJ.AddParticle("particles/vj_rpgtrails2.pcf",{
+	"vj_rpg2_fulltail",
+	"vj_rpg2_smoke1",
+	"vj_rpg2_smoke2",
+	"vj_rpg2_fire",
+	"vj_rpg2_flare",
+	"vj_rpg2_glow",
+})
+VJ.AddParticle("particles/vj_weaponfx_rifle.pcf",{
+	"vj_rifle_full",
+	"vj_rifle_glow",
+	"vj_rifle_glow_large",
+	"vj_rifle_inner",
+	"vj_rifle_side",
+	"vj_rifle_s",
+	"vj_rifle_smoke",
+	"vj_rifle_smoke_dark",
+	"vj_rifle_smoke_flash",
+	"vj_rifle_sparks1",
+	"vj_rifle_sparks2",
+	"vj_rifle_top",
+	"vj_rifle_top_glow",
+	"vj_rifle_top_left_glow",
+	"vj_rifle_world_core",
+	"vj_rifle_world_full",
+	"vj_rifle_world_glow",
+	"vj_rifle_world_smoke",
+	"vj_rifle_world_sparks",
+})

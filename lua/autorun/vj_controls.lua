@@ -181,40 +181,45 @@ VJ = {
 	local AddonProperty = { Name = addonname, Type = addontype }
 	list.Set( "VJBASE_ADDONPROPERTIES", addonname, AddonProperty )
 end,*/
-AddAddonProperty = function(addonname,addontype)
+AddAddonProperty = function(aAddonName,aAddonType)
 	if InstalledVJBaseAddons == nil then InstalledVJBaseAddons = {} end
-	table.insert(InstalledVJBaseAddons,{Name = addonname, Type = addontype})
+	table.insert(InstalledVJBaseAddons,{Name = aAddonName, Type = aAddonType})
 end,
 	-- Regular NPC ----------------------------------------------------------------------------------------------------
 AddNPC = function(nName,nClass,vCat,nAdmin)
-	local NPC = { Name = nName, Class = nClass, Category = vCat, AdminOnly = nAdmin }
-	list.Set( "NPC", NPC.Class, NPC ) //NPC //VJBASE_SPAWNABLE_NPC
-	list.Set( "VJBASE_SPAWNABLE_NPC", NPC.Class, NPC )
+	local NPC = {Name = nName, Class = nClass, Category = vCat, AdminOnly = nAdmin}
+	list.Set("NPC", NPC.Class, NPC) //NPC //VJBASE_SPAWNABLE_NPC
+	list.Set("VJBASE_SPAWNABLE_NPC", NPC.Class, NPC)
 end,
 	-- Human NPC ----------------------------------------------------------------------------------------------------
 AddNPC_HUMAN = function(nhName,nhClass,nhWeapons,vCat,nhAdmin)
-	local NPCH = { Name = nhName, Class = nhClass, Weapons = nhWeapons, Category = vCat, AdminOnly = nhAdmin }
-	list.Set( "NPC", NPCH.Class, NPCH ) //NPC //VJBASE_SPAWNABLE_NPC
-	list.Set( "VJBASE_SPAWNABLE_NPC", NPCH.Class, NPCH )
+	local NPCH = {Name = nhName, Class = nhClass, Weapons = nhWeapons, Category = vCat, AdminOnly = nhAdmin}
+	list.Set("NPC", NPCH.Class, NPCH) //NPC //VJBASE_SPAWNABLE_NPC
+	list.Set("VJBASE_SPAWNABLE_NPC", NPCH.Class, NPCH)
 end,
 	-- NPC Weapon ----------------------------------------------------------------------------------------------------
 AddNPCWeapon = function(nwName,nwClass)
-	local NPCW = { title = nwName, class = nwClass }
-	list.Set( "NPCUsableWeapons", NPCW.class, NPCW )
+	local NPCW = {title = nwName, class = nwClass}
+	list.Set("NPCUsableWeapons", NPCW.class, NPCW)
 end,
 	-- Weapon ----------------------------------------------------------------------------------------------------
 AddWeapon = function(wName,wClass,wAdmin,vCat)
-	local Weapon = { ClassName = wClass, PrintName = wName, Category = vCat, AdminOnly = wAdmin, Spawnable = true }
-	list.Set( "Weapon", wClass, Weapon ) //Weapon //VJBASE_SPAWNABLE_WEAPON
-	list.Set( "VJBASE_SPAWNABLE_WEAPON", wClass, Weapon )
-	duplicator.Allow( wClass )
+	local Weapon = {ClassName = wClass, PrintName = wName, Category = vCat, AdminOnly = wAdmin, Spawnable = true}
+	list.Set("Weapon", wClass, Weapon) //Weapon //VJBASE_SPAWNABLE_WEAPON
+	list.Set("VJBASE_SPAWNABLE_WEAPON", wClass, Weapon)
+	duplicator.Allow(wClass)
 end,
 	-- Entity ----------------------------------------------------------------------------------------------------
 AddEntity = function(eName,eClass,eAuthor,eAdmin,eOffSet,eDropToFloor,vCat)
-	local Ent = { PrintName = eName, ClassName = eClass, Author = eAuthor, AdminOnly = eAdmin, NormalOffset = eOffSet, DropToFloor = eDropToFloor, Category = vCat, Spawnable = true }
-	list.Set( "SpawnableEntities", eClass, Ent ) //SpawnableEntities //VJBASE_SPAWNABLE_ENTITIES
-	list.Set( "VJBASE_SPAWNABLE_ENTITIES", eClass, Ent )
-	duplicator.Allow( eClass )
+	local Ent = {PrintName = eName, ClassName = eClass, Author = eAuthor, AdminOnly = eAdmin, NormalOffset = eOffSet, DropToFloor = eDropToFloor, Category = vCat, Spawnable = true}
+	list.Set("SpawnableEntities", eClass, Ent) //SpawnableEntities //VJBASE_SPAWNABLE_ENTITIES
+	list.Set("VJBASE_SPAWNABLE_ENTITIES", eClass, Ent)
+	duplicator.Allow(eClass)
+end,
+	-- Particle ----------------------------------------------------------------------------------------------------
+AddParticle = function(pFileName,pParticleList)
+	game.AddParticles(pFileName)
+	for _,v in ipairs(pParticleList) do PrecacheParticleSystem(v) end
 end,
 	-- ConVar ----------------------------------------------------------------------------------------------------
 AddConVar = function(cName,cValue,cFlags)

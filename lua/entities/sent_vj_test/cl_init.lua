@@ -58,7 +58,7 @@ function OpenTheMenuCode()
 	
 	local MenuTest_1 = vgui.Create("DLabel", MenuFrame)
 	MenuTest_1:SetPos(10, 110)
-	MenuTest_1:SetText("NOTE: Only admins can use this buttons! Remember most of this commands require 'sv_cheats' to be 1")
+	MenuTest_1:SetText("NOTE: Only admins can use these buttons! Remember most of this commands require 'sv_cheats' to be 1")
 	MenuTest_1:SizeToContents()
 	
 	local MenuButton_2 = vgui.Create( "DButton", MenuFrame )
