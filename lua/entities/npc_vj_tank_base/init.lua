@@ -46,7 +46,7 @@ ENT.SoundTbl_Death = {"vj_mili_tank/tank_death1.wav"}
 ENT.AlertSoundLevel = 70
 ENT.IdleSoundLevel = 70
 ENT.CombatIdleSoundLevel = 70
-ENT.BreathSoundLevel = 70
+ENT.BreathSoundLevel = 80
 ENT.DeathSoundLevel = 100
 
 ENT.GeneralSoundPitch1 = 90
@@ -76,7 +76,7 @@ ENT.Tank_CollisionBoundUp = 100
 
 ENT.Tank_ResetedEnemy = false
 ENT.Tank_IsMoving = false
-ENT.Tank_Status = 0
+ENT.Tank_Status = 1
 ENT.Tank_NextLowHealthSmokeT = 0
 ENT.Tank_NextRunOverSoundT = 0
 ENT.TankTbl_DontRunOver = {"npc_antlionguard","npc_turret_ceiling","monster_gargantua","monster_bigmomma","monster_nihilanth","npc_strider","npc_combine_camera","npc_helicopter","npc_combinegunship","npc_combinedropship","npc_rollermine"}
@@ -239,7 +239,7 @@ function ENT:CustomOnThink_AIEnabled()
 	local tr = util.TraceEntity({start = self:GetPos(), endpos = self:GetPos() + self:GetUp()*-5, filter = self}, self)
 	if (tr.Hit) then // HitWorld
 		local phys = self:GetPhysicsObject()
-		if phys:IsValid() && phys:GetVelocity():Length() > 10 then -- Moving
+		if phys:IsValid() && phys:GetVelocity():Length() > 10 && self.Tank_Status == 0 then -- Moving
 			self.Tank_IsMoving = true
 			self:TANK_MOVINGSOUND()
 			self:StartMoveEffects()

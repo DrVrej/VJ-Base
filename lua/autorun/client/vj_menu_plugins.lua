@@ -84,10 +84,20 @@ function VJ_INSTALLATIONS(Panel)
 	changelog:SetText("Changelog")
 	changelog:SetSize(150,25)
 	changelog:SetColor(Color(0,255,0,255))
-	changelog.DoClick = function( changelog )
+	changelog.DoClick = function(changelog)
 		gui.OpenURL("http://steamcommunity.com/sharedfiles/filedetails/changelog/131759821")
 	end
 	Panel:AddPanel(changelog)
+	
+	local github = vgui.Create("DButton") -- Github
+	github:SetFont("TargetID")
+	github:SetText("Want to make an addon? Click Here!")
+	github:SetSize(150,25)
+	github:SetColor(Color(76,153,255,255))
+	github.DoClick = function(github)
+		gui.OpenURL("https://github.com/DrVrej/VJ-Base/wiki")
+	end
+	Panel:AddPanel(github)
 	
 	if (LocalPlayer():SteamID() == "STEAM_0:0:22688298") then
 		local lennyface = vgui.Create("DButton") -- *insert lenny face* ¯\_(?)_/¯
