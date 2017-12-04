@@ -1733,9 +1733,10 @@ function ENT:DoConstantlyFaceEnemyCode()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-	if self.Aerial_TargetPos.x == self:GetPos().x then
-		
-	end
+	//if self.Aerial_TargetPos.x == self:GetPos().x then
+		-- to be coded..
+	//end
+	
 	//print(self:GetPos())
 	//print("-------------------------------")
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
@@ -1964,14 +1965,15 @@ function ENT:Think()
 				end
 			end
 
-			local function DoNCA()
+			local function DoNoCACR()
 				if self.NoChaseAfterCertainRange == true then
-					local nca_fardist = self.NoChaseAfterCertainRange_FarDistance
-					local nca_closedist = self.NoChaseAfterCertainRange_CloseDistance
-					if nca_fardist == "UseRangeDistance" then nca_fardist = self.RangeDistance end
-					if nca_closedist == "UseRangeDistance" then nca_closedist = self.RangeToMeleeDistance end
-					if (self:GetEnemy():GetPos():Distance(self:GetPos()) < nca_fardist) && (self:GetEnemy():GetPos():Distance(self:GetPos()) > nca_closedist) && self:GetEnemy():Visible(self) /*&& self:CanDoCertainAttack("RangeAttack") == true*/ then
+					local fardist = self.NoChaseAfterCertainRange_FarDistance
+					local closedist = self.NoChaseAfterCertainRange_CloseDistance
+					if fardist == "UseRangeDistance" then fardist = self.RangeDistance end
+					if closedist == "UseRangeDistance" then closedist = self.RangeToMeleeDistance end
+					if (self:GetEnemy():GetPos():Distance(self:GetPos()) < fardist) && (self:GetEnemy():GetPos():Distance(self:GetPos()) > closedist) && self:GetEnemy():Visible(self) /*&& self:CanDoCertainAttack("RangeAttack") == true*/ then
 						self.RangeAttack_DisableChasingEnemy = true
+						if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then self:StopMoving() end
 					else
 						self.RangeAttack_DisableChasingEnemy = false
 						if self.CurrentSchedule != nil && self.CurrentSchedule.Name != "vj_chase_enemy" then self:DoChaseAnimation() end
@@ -1982,9 +1984,9 @@ function ENT:Think()
 			end
 			if self.NoChaseAfterCertainRange == true then
 				if self.NoChaseAfterCertainRange_Type == "OnlyRange" then
-					if self.HasRangeAttack == true then DoNCA() end
+					if self.HasRangeAttack == true then DoNoCACR() end
 				elseif self.NoChaseAfterCertainRange_Type == "Regular" then
-					DoNCA()
+					DoNoCACR()
 				end
 			end
 		end
