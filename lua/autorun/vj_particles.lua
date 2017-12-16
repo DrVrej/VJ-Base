@@ -188,6 +188,14 @@ VJ.AddParticle("particles/grenade_hornet.pcf",{
 	"grenade_hornet_trail_glow",
 	"hornet_trail",
 })
+VJ.AddParticle("particles/vj_bms_turret.pcf",{
+	"vj_bms_turret_full",
+	"vj_bms_turret_muzzle_core",
+	"vj_bms_turret_muzzle_glow",
+	"vj_bms_turret_muzzle_smoke",
+	"vj_bms_turret_muzzle_sparks",
+	"vj_bms_turret_muzzle_sparks2",
+})
 
 -- VJ Particles
 VJ.AddParticle("particles/vj_blood1.pcf",{

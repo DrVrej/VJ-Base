@@ -99,7 +99,7 @@ if (CLIENT) then
 			InsertToTable(TextEntry:GetValue())
 		end
 		Panel:AddItem(TextEntry)
-		Panel:ControlHelp("Press ENTER to add class")
+		Panel:ControlHelp("Press ENTER to add the class")
 		
 		local button_combine = vgui.Create("DButton")
 		button_combine:SetFont("DermaDefaultBold")

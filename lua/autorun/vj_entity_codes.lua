@@ -253,6 +253,11 @@ VJ_MOVETYPE_AERIAL = 2
 VJ_MOVETYPE_AQUATIC = 3 
 VJ_MOVETYPE_STATIONARY = 4
 
+VJ_BEHAVIOR_AGGRESSIVE = 1
+VJ_BEHAVIOR_NEUTRAL = 1
+VJ_BEHAVIOR_PASSIVE = 3
+VJ_BEHAVIOR_PASSIVE_NATURE = 4
+
 //VJ_MUSIC_PLAYING = false
 //VJ_MUSIC_CURRENTNPCS = {}
 
@@ -534,7 +539,7 @@ function NPC_MetaTable:VJ_GetEnemy(CheckForController)
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function NPC_MetaTable:VJ_DoSetEnemy(argent,ShouldStopActs,DoSmallWhenActiveEnemy)
-	if !IsValid(argent) then return end
+	if !IsValid(argent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then return end
 	if argent:Health() <= 0 then return end
 	if argent:IsPlayer() && (!argent:Alive() or GetConVarNumber("ai_ignoreplayers") == 1) then return end
 	DoSmallWhenActiveEnemy = DoSmallWhenActiveEnemy or false
