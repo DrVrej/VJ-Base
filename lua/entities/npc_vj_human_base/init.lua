@@ -107,6 +107,18 @@ ENT.MoveOutOfFriendlyPlayersWay = true -- Should the SNPC move out of the way wh
 ENT.NextMoveOutOfFriendlyPlayersWayTime = 1 -- How much time until it can moves out of the player's way?
 ENT.BecomeEnemyToPlayer = false -- Should the friendly SNPC become enemy towards the player if it's damaged by a player?
 ENT.BecomeEnemyToPlayerLevel = 2 -- How many times does the player have to hit the SNPC for it to become enemy?
+ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE -- Doesn't attack anything
+	-- VJ_BEHAVIOR_AGGRESSIVE = Default behavior, attacks enemies || VJ_BEHAVIOR_NEUTRAL = Neutral to everything, unless provoked
+	-- VJ_BEHAVIOR_PASSIVE = Doesn't attack, but can attacked by others || VJ_BEHAVIOR_PASSIVE_NATURE = Doesn't attack and is allied with everyone
+	-- ====== Passive Variables ====== --
+ENT.Passive_RunOnTouch = true -- Should it run away and make a alert sound when something collides with it?
+ENT.Passive_NextRunOnTouchTime1 = 3 -- How much until it can run away again when something collides with it? | First # in the math.Rand
+ENT.Passive_NextRunOnTouchTime2 = 4 -- How much until it can run away again when something collides with it? | Second # in the math.Rand
+ENT.Passive_RunOnDamage = true -- Should it run when it's damaged? | This doesn't impact how self.Passive_AlliesRunOnDamage works
+ENT.Passive_AlliesRunOnDamage = true -- Should its allies (other passive SNPCs) also run when it's damaged?
+ENT.Passive_AlliesRunOnDamageDistance = 800 -- Any allies within this distance will run when it's damaged
+ENT.Passive_NextRunOnDamageTime1 = 6 -- How much until it can run the code again? | First # in the math.Rand
+ENT.Passive_NextRunOnDamageTime2 = 7 -- How much until it can run the code again? | Second # in the math.Rand
 	-- ====== On Player Sight Code ====== --
 ENT.HasOnPlayerSight = false -- Should do something when it sees the enemy? Example: Play a sound
 ENT.OnPlayerSightDistance = 200 -- How close should the player be until it runs the code?
@@ -666,11 +678,13 @@ ENT.OnKilledEnemySoundT = 0
 ENT.LastHiddenZoneT = 0
 ENT.NextIdleStandTime = 0
 ENT.NextMoveOnGunCoveredT = 0
+ENT.Passive_NextRunOnTouchT = 0
+ENT.Passive_NextRunOnDamageT = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.NearestPointToEnemyDistance = Vector(0,0,0)
 ENT.SelectedDifficulty = 1
 	-- Tables ---------------------------------------------------------------------------------------------------------------------------------------------
-ENT.AttackTimers = {"timer_melee_finished","timer_melee_start"}
+ENT.AttackTimers = {"timer_act_stopattacks","timer_melee_finished","timer_melee_start"}
 ENT.AttackTimersCustom = {}
 ENT.EntitiesToRunFrom = {obj_vj_grenade=true,npc_grenade_frag=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true}
 ENT.Weapons_UseRegulate = {weapon_shotgun=true,weapon_crossbow=true,weapon_annabelle=true,weapon_pistol=true}
@@ -1036,7 +1050,12 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 		self.vACT_StopAttacks = true
 		self.NextChaseTime = CurTime() + vACT_StopActivitiesTime
 		self.NextIdleTime = CurTime() + vACT_StopActivitiesTime
-		timer.Simple(vACT_StopActivitiesTime,function() self.vACT_StopAttacks = false end)
+		if timer.Exists("timer_act_stopattacks") then
+			timer.Adjust("timer_act_stopattacks"..self.Entity:EntIndex(),vACT_StopActivitiesTime,1,function() self.vACT_StopAttacks = false end)
+		else
+			timer.Create("timer_act_stopattacks"..self.Entity:EntIndex(),vACT_StopActivitiesTime,1,function() self.vACT_StopAttacks = false end)
+		end
+		//timer.Simple(vACT_StopActivitiesTime,function() self.vACT_StopAttacks = false end)
 	end
 	if (vACT_CustomCode) then vACT_CustomCode() end
 	
@@ -1385,8 +1404,16 @@ end
 function ENT:Touch(entity)
 	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printontouch") == 1 then print(self:GetClass().." Has Touched "..entity:GetClass()) end end
 	self:CustomOnTouch(entity)
-	//if self.Alerted == false then
-	if self.DisableTouchFindEnemy == false && entity:IsNPC() or entity:IsPlayer() && self:GetEnemy() == nil && self:DoRelationshipCheck(entity) == true then
+	if GetConVarNumber("ai_disabled") == 1 then return end
+	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
+		if self.Passive_RunOnTouch == true && self.VJ_IsBeingControlled == false && (entity.Behavior != VJ_BEHAVIOR_PASSIVE or entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) && CurTime() > self.Passive_NextRunOnTouchT then
+			if entity:IsNPC() or entity:IsPlayer() then
+				self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) end)
+				self:AlertSoundCode()
+			end
+			self.Passive_NextRunOnTouchT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime1,self.Passive_NextRunOnTouchTime2)
+		end
+	elseif /*self.Alerted == false && */ self.DisableTouchFindEnemy == false && entity:IsNPC() or entity:IsPlayer() && self:GetEnemy() == nil && self.FollowingPlayer == false && self.VJ_IsBeingControlled == false then
 		if self:DoRelationshipCheck(entity) == true then
 			//self:FaceCertainEntity(entity)
 			self:SetTarget(entity)
@@ -2647,7 +2674,7 @@ function ENT:VJ_ACT_RESETENEMY(RunToEnemyOnReset)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
-	if self.NextResetEnemyT > CurTime() or self:VJ_IsCurrentSchedule(SCHED_ESTABLISH_LINE_OF_FIRE) == true or self.Dead == true then return false end
+	if self.NextResetEnemyT > CurTime() or self:VJ_IsCurrentSchedule(SCHED_ESTABLISH_LINE_OF_FIRE) == true or self.Dead == true then self.ResetedEnemy = false return false end
 	local NoResetAlliesSeeEnemy = NoResetAlliesSeeEnemy or false
 	local RunToEnemyOnReset = false
 	if NoResetAlliesSeeEnemy == true then
@@ -2763,7 +2790,7 @@ function ENT:DoHardEntityCheck()
 	for k, v in ipairs(ents.GetAll()) do //ents.FindInSphere(self:GetPos(),30000)
 		self:EntitiesToNoCollideCode(v)
 		if !v:IsNPC() && !v:IsPlayer() then continue end
-			if v:IsNPC() && (v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && (!v.IsVJBaseSNPC_Animal)) && v:Health() > 0 then
+			if v:IsNPC() && (v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0 then
 				GetEnts[#GetEnts + 1] = v
 			end
 		if v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 /*&& v:Alive()*/ then
@@ -2775,7 +2802,7 @@ function ENT:DoHardEntityCheck()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoEntityRelationshipCheck()
-	if GetConVarNumber("ai_disabled") == 1 or self.Dead == true then return false end
+	if GetConVarNumber("ai_disabled") == 1 or self.Dead == true or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or self.Behavior == VJ_BEHAVIOR_PASSIVE then return false end
 	self.CurrentReachableEnemies = {}
 	local posenemies = self.CurrentPossibleEnemies
 	if posenemies == nil then return false end
@@ -2815,7 +2842,7 @@ function ENT:DoEntityRelationshipCheck()
 		local function DoPlayerSight()
 			if self.HasOnPlayerSight == true && v:IsPlayer() && v:Alive() then self:OnPlayerSightCode(v) end
 		end
-		if vClass != self:GetClass() && (v:IsNPC() or v:IsPlayer()) && (!v.IsVJBaseSNPC_Animal) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
+		if vClass != self:GetClass() && (v:IsNPC() or v:IsPlayer()) && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
 			if self.HasAllies == true then
 				for _,friclass in ipairs(self.VJ_NPC_Class) do
 					if friclass == "CLASS_PLAYER_ALLY" && self.PlayerFriendly == false then self.PlayerFriendly = true end
@@ -2925,7 +2952,7 @@ function ENT:CallForHelpCode(SeeDistance)
 	local getselfclass = ents.FindInSphere(self:GetPos(),SeeDistance)
 	if (!getselfclass) then return false end
 	for _,x in pairs(getselfclass) do
-		if VJ_IsAlive(x) == true && x:IsNPC() && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && x.IsVJBaseSNPC == true && x.IsVJBaseSNPC_Animal != false && x.FollowingPlayer == false && x.VJ_IsBeingControlled == false && (!x.IsVJBaseSNPC_Tank) && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4) then
+		if VJ_IsAlive(x) == true && x:IsNPC() && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && x.IsVJBaseSNPC == true && x.IsVJBaseSNPC_Animal != false && x.Behavior != VJ_BEHAVIOR_PASSIVE && x.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && x.FollowingPlayer == false && x.VJ_IsBeingControlled == false && (!x.IsVJBaseSNPC_Tank) && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4) then
 			if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
 				if self:GetEnemy() != nil /*&& x.MovementType == VJ_MOVETYPE_STATIONARY*/ && x:GetPos():Distance(self:GetEnemy():GetPos()) > x.SightDistance then continue end
 				//if x:DoRelationshipCheck(self:GetEnemy()) == true then
@@ -2979,10 +3006,16 @@ function ENT:CheckAlliesAroundMe(SeeDistance)
 	local getselfclass = ents.FindInSphere(self:GetPos(),SeeDistance)
 	if (!getselfclass) then return end
 	for _,x in pairs(getselfclass) do
-		if (x:IsNPC() or x:GetClass() == self:GetClass()) && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4) && VJ_IsAlive(x) == true && x.IsVJBaseSNPC_Animal != false then
+		if (x:IsNPC() or x:GetClass() == self:GetClass()) && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4 or (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) && VJ_IsAlive(x) == true && x.IsVJBaseSNPC_Animal != false then
 			if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
-				table.insert(FoundEntitiesTbl,x)
-				//print(x:GetClass())
+				if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) then
+					if (x.Behavior == VJ_BEHAVIOR_PASSIVE or x.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) then
+						table.insert(FoundEntitiesTbl,x)
+					end
+				elseif (x.Behavior != VJ_BEHAVIOR_PASSIVE  or x.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) then
+					table.insert(FoundEntitiesTbl,x)
+					//print(x:GetClass())
+				end
 			end
 		end
 	end
@@ -3002,7 +3035,7 @@ function ENT:BringAlliesToMe(SeeDistance,CertainAmount,CertainAmountNumber,Enemy
 	local LocalTargetTable = {}
 	if (!findents) then return false end
 	for _,x in pairs(findents) do
-		if VJ_IsAlive(x) == true && x:IsNPC() && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4) && x.IsVJBaseSNPC_Animal != false && x.FollowingPlayer == false && x.VJ_IsBeingControlled == false && (!x.IsVJBaseSNPC_Tank) then
+		if VJ_IsAlive(x) == true && x:IsNPC() && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4) && x.IsVJBaseSNPC_Animal != false && x.Behavior != VJ_BEHAVIOR_PASSIVE && x.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && x.FollowingPlayer == false && x.VJ_IsBeingControlled == false && (!x.IsVJBaseSNPC_Tank) then
 			if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
 				if EnemyVisibleOnly == true then if x:Visible(self) == false then continue end end
 				table.insert(LocalTargetTable,x)
@@ -3103,8 +3136,24 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 		self:DoFlinch(dmginfo,hitgroup)
 		self:DamageByPlayerCode(dmginfo,hitgroup)
 		self:PainSoundCode()
-
-		if self.MoveOrHideOnDamageByEnemy == true && self:GetEnemy() != nil && CurTime() > self.NextMoveOrHideOnDamageByEnemyT && self:EyePos():Distance(self:GetEnemy():EyePos()) < self.Weapon_FiringDistanceFar && self:GetEnemy() != nil && self.FollowingPlayer == false && self.ThrowingGrenade == false && self.TakingCover == false && !self:IsCurrentSchedule(SCHED_RELOAD) && self:Visible(self:GetEnemy()) && self.VJ_IsBeingControlled == false && self.MeleeAttacking == false && self:IsMoving() == false then
+		
+		if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && CurTime() > self.Passive_NextRunOnDamageT then
+			if self.Passive_RunOnDamage == true then
+				self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) end)
+			end
+			if self.Passive_AlliesRunOnDamage then
+				local checka = self:CheckAlliesAroundMe(self.Passive_AlliesRunOnDamageDistance)
+				if checka.ItFoundAllies == true then
+					for k,v in ipairs(checka.FoundAllies) do
+						v:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) end)
+						v:AlertSoundCode()
+					end
+				end
+			end
+			self.Passive_NextRunOnDamageT = CurTime() + math.Rand(self.Passive_NextRunOnDamageTime1,self.Passive_NextRunOnDamageTime2)
+		end
+		
+		if self.MoveOrHideOnDamageByEnemy == true && self:GetEnemy() != nil && CurTime() > self.NextMoveOrHideOnDamageByEnemyT && self:EyePos():Distance(self:GetEnemy():EyePos()) < self.Weapon_FiringDistanceFar && self:GetEnemy() != nil && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.ThrowingGrenade == false && self.TakingCover == false && !self:IsCurrentSchedule(SCHED_RELOAD) && self:Visible(self:GetEnemy()) && self.VJ_IsBeingControlled == false && self.MeleeAttacking == false && self:IsMoving() == false then
 			if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == true && self.MoveOrHideOnDamageByEnemy_OnlyMove == false then
 				local randtime = math.Rand(self.MoveOrHideOnDamageByEnemy_HideTime1,self.MoveOrHideOnDamageByEnemy_HideTime2)
 				self.TakingCover = true
@@ -3118,7 +3167,7 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 			self.NextMoveOrHideOnDamageByEnemyT = CurTime() + math.random(self.NextMoveOrHideOnDamageByEnemy1,self.NextMoveOrHideOnDamageByEnemy2)
 		end
 
-		if self.CallForBackUpOnDamage == true && CurTime() > self.NextCallForBackUpOnDamageT && self.ThrowingGrenade == false && self:GetEnemy() == nil && self.FollowingPlayer == false && self:CheckAlliesAroundMe(self.CallForBackUpOnDamageDistance).ItFoundAllies == true then
+		if self.CallForBackUpOnDamage == true && CurTime() > self.NextCallForBackUpOnDamageT && self.ThrowingGrenade == false && self:GetEnemy() == nil && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:CheckAlliesAroundMe(self.CallForBackUpOnDamageDistance).ItFoundAllies == true then
 			self:BringAlliesToMe(self.CallForBackUpOnDamageDistance,self.CallForBackUpOnDamageUseCertainAmount,self.CallForBackUpOnDamageUseCertainAmountNumber)
 			self:ClearSchedule()
 			//self.TakingCover = true
@@ -3157,7 +3206,7 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 			end
 		end
 
-		if self.DisableTakeDamageFindEnemy == false && self:GetEnemy() == nil && self.TakingCover == false && self.VJ_IsBeingControlled == false /*&& self.Alerted == false*/ && GetConVarNumber("ai_disabled") == 0 then
+		if self.DisableTakeDamageFindEnemy == false && self:GetEnemy() == nil && self.TakingCover == false && self.VJ_IsBeingControlled == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& self.Alerted == false*/ && GetConVarNumber("ai_disabled") == 0 then
 			local Targets = ents.FindInSphere(self:GetPos(),self.SightDistance/2)
 			if (!Targets) then return end
 			for k,v in pairs(Targets) do

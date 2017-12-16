@@ -186,14 +186,16 @@ AddAddonProperty = function(aAddonName,aAddonType)
 	table.insert(InstalledVJBaseAddons,{Name = aAddonName, Type = aAddonType})
 end,
 	-- Regular NPC ----------------------------------------------------------------------------------------------------
-AddNPC = function(nName,nClass,vCat,nAdmin)
+AddNPC = function(nName,nClass,vCat,nAdmin,nFunc)
 	local NPC = {Name = nName, Class = nClass, Category = vCat, AdminOnly = nAdmin}
+	if (nFunc) then nFunc(NPC) end
 	list.Set("NPC", NPC.Class, NPC) //NPC //VJBASE_SPAWNABLE_NPC
 	list.Set("VJBASE_SPAWNABLE_NPC", NPC.Class, NPC)
 end,
 	-- Human NPC ----------------------------------------------------------------------------------------------------
-AddNPC_HUMAN = function(nhName,nhClass,nhWeapons,vCat,nhAdmin)
+AddNPC_HUMAN = function(nhName,nhClass,nhWeapons,vCat,nhAdmin,nhFunc)
 	local NPCH = {Name = nhName, Class = nhClass, Weapons = nhWeapons, Category = vCat, AdminOnly = nhAdmin}
+	if (nhFunc) then nhFunc(NPC) end
 	list.Set("NPC", NPCH.Class, NPCH) //NPC //VJBASE_SPAWNABLE_NPC
 	list.Set("VJBASE_SPAWNABLE_NPC", NPCH.Class, NPCH)
 end,
@@ -203,15 +205,17 @@ AddNPCWeapon = function(nwName,nwClass)
 	list.Set("NPCUsableWeapons", NPCW.class, NPCW)
 end,
 	-- Weapon ----------------------------------------------------------------------------------------------------
-AddWeapon = function(wName,wClass,wAdmin,vCat)
+AddWeapon = function(wName,wClass,wAdmin,vCat,wFunc)
 	local Weapon = {ClassName = wClass, PrintName = wName, Category = vCat, AdminOnly = wAdmin, Spawnable = true}
+	if (wFunc) then wFunc(NPC) end
 	list.Set("Weapon", wClass, Weapon) //Weapon //VJBASE_SPAWNABLE_WEAPON
 	list.Set("VJBASE_SPAWNABLE_WEAPON", wClass, Weapon)
 	duplicator.Allow(wClass)
 end,
 	-- Entity ----------------------------------------------------------------------------------------------------
-AddEntity = function(eName,eClass,eAuthor,eAdmin,eOffSet,eDropToFloor,vCat)
+AddEntity = function(eName,eClass,eAuthor,eAdmin,eOffSet,eDropToFloor,vCat,eFunc)
 	local Ent = {PrintName = eName, ClassName = eClass, Author = eAuthor, AdminOnly = eAdmin, NormalOffset = eOffSet, DropToFloor = eDropToFloor, Category = vCat, Spawnable = true}
+	if (eFunc) then eFunc(NPC) end
 	list.Set("SpawnableEntities", eClass, Ent) //SpawnableEntities //VJBASE_SPAWNABLE_ENTITIES
 	list.Set("VJBASE_SPAWNABLE_ENTITIES", eClass, Ent)
 	duplicator.Allow(eClass)
