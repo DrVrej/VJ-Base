@@ -208,6 +208,13 @@ function ENT:Think()
 		self:CustomOnThink()
 		self.AbleToTurn = true
 		
+		-- camerayin deghe pordzedzi pokhel, Chaskhadav
+		/*if self.TheController:KeyDown(IN_ATTACK2) then
+			self.PropCamera:SetParent(NULL)
+			self.PropCamera:SetPos(self.ControlledNPC:GetPos())
+			self.PropCamera:SetParent(self.ControlledNPC)
+		end*/
+		
 		-- Weapon attack
 		if self.ControlledNPC.IsVJBaseSNPC_Animal != true && self.ControlledNPC.IsVJBaseSNPC == true then
 			if IsValid(self.ControlledNPC:GetActiveWeapon()) && self.ControlledNPC.IsVJBaseSNPC_Human == true then

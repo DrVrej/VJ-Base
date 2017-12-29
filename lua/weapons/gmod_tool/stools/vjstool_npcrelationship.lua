@@ -80,7 +80,7 @@ if (CLIENT) then
 		local function InsertToTable(val)
 			if string.len(val) > 0 then
 				local val = string.upper(val)
-				if table.HasValue(VJ_NPCRELATION_TblCurrentValues,val) then
+				if VJ_HasValue(VJ_NPCRELATION_TblCurrentValues,val) then
 					chat.AddText(Color(220,20,60),"ERROR! ",Color(255,100,0),val.." ",Color(220,20,60),"already exists in the table!")
 				else
 					chat.AddText(Color(0,255,0),"Added",Color(255,100,0)," "..val.." ",Color(0,255,0),"to the class list!")

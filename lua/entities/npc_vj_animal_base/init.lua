@@ -10,6 +10,27 @@ include('schedules.lua')
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used as a base for animal SNPCs.
 --------------------------------------------------*/
+
+/*
+
+
+
+
+
+
+
+
+=== DON'T USE THIS BASE! ===
+This base has been discontinued, if you want to create a passive-like SNPC, use the behavior system in the creature or human base!
+
+
+
+
+
+
+
+
+*/
 AccessorFunc(ENT,"m_iClass","NPCClass",FORCE_NUMBER)
 AccessorFunc(ENT,"m_fMaxYawSpeed","MaxYawSpeed",FORCE_NUMBER)
 
@@ -634,7 +655,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 
 	if type(vACT_Name) != "string" && VJ_AnimationExists(self,vACT_Name) == false then
 		if self:GetActiveWeapon() != NULL then
-			if (self:GetActiveWeapon().IsVJBaseWeapon) && table.HasValue(table.GetKeys(self:GetActiveWeapon().ActivityTranslateAI),vACT_Name) != true then return end
+			if (self:GetActiveWeapon().IsVJBaseWeapon) && VJ_HasValue(table.GetKeys(self:GetActiveWeapon().ActivityTranslateAI),vACT_Name) != true then return end
 		else
 			return
 		end
@@ -992,7 +1013,7 @@ end
 function ENT:CombineFriendlyCode(argent)
 	if self.HasAllies == false then return end
 	if self.NPCTbl_Combine[argent:GetClass()] then
-	//if table.HasValue(self.NPCTbl_Combine,argent:GetClass()) then
+	//if VJ_HasValue(self.NPCTbl_Combine,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
@@ -1002,7 +1023,7 @@ end
 function ENT:ZombieFriendlyCode(argent)
 	if self.HasAllies == false then return end
 	if self.NPCTbl_Zombies[argent:GetClass()] then
-	//if table.HasValue(self.NPCTbl_Zombies,argent:GetClass()) then
+	//if VJ_HasValue(self.NPCTbl_Zombies,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
@@ -1012,7 +1033,7 @@ end
 function ENT:AntlionFriendlyCode(argent)
 	if self.HasAllies == false then return end
 	if self.NPCTbl_Antlions[argent:GetClass()] then
-	//if table.HasValue(self.NPCTbl_Antlions,argent:GetClass()) then
+	//if VJ_HasValue(self.NPCTbl_Antlions,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
@@ -1022,7 +1043,7 @@ end
 function ENT:XenFriendlyCode(argent)
 	if self.HasAllies == false then return end
 	if self.NPCTbl_Xen[argent:GetClass()] then
-	//if table.HasValue(self.NPCTbl_Xen,argent:GetClass()) then
+	//if VJ_HasValue(self.NPCTbl_Xen,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
@@ -1032,7 +1053,7 @@ end
 function ENT:PlayerAllies(argent)
 	if self.HasAllies == false then return end
 	if self.NPCTbl_Resistance[argent:GetClass()] then
-	//if table.HasValue(self.NPCTbl_Resistance,argent:GetClass()) then
+	//if VJ_HasValue(self.NPCTbl_Resistance,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true 
@@ -1114,7 +1135,7 @@ function ENT:OnTakeDamage(dmginfo,hitgroup)
 
 	if (self:IsOnFire()) && self:WaterLevel() == 2 then self:Extinguish() end
 
-	if table.HasValue(self.ImmuneDamagesTable,DamageType) then return end
+	if VJ_HasValue(self.ImmuneDamagesTable,DamageType) then return end
 	if self.AllowIgnition == false && (self:IsOnFire() && IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then self:Extinguish() return false end
 	if self.Immune_Fire == true && (DamageType == DMG_BURN or DamageType == DMG_SLOWBURN or (self:IsOnFire() && IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame")) then return false end
 	if self.Immune_AcidPoisonRadiation == true && (DamageType == DMG_ACID or DamageType == DMG_RADIATION or DamageType == DMG_POISON or DamageType == DMG_NERVEGAS or DamageType == DMG_PARALYZE) then return false end
@@ -1247,12 +1268,12 @@ function ENT:DoFlinch(dmginfo,hitgroup)
 	
 	local randflinch = math.random(1,self.FlinchChance)
 	if randflinch == 1 then
-		if (self.CanFlinch == 2 && table.HasValue(self.FlinchDamageTypes,dmginfo:GetDamageType())) or (self.CanFlinch == 1) then
+		if (self.CanFlinch == 2 && VJ_HasValue(self.FlinchDamageTypes,dmginfo:GetDamageType())) or (self.CanFlinch == 1) then
 			self:CustomOnFlinch_BeforeFlinch(dmginfo,hitgroup)
 			if self.HasHitGroupFlinching == true then
 				local HitGroupFound = false
 				for k,v in ipairs(self.HitGroupFlinching_Values) do
-					if table.HasValue(v.HitGroup,hitgroup) then
+					if VJ_HasValue(v.HitGroup,hitgroup) then
 					//if v.HitGroup == hitgroup then
 						HitGroupFound = true
 						RunFlinchCode(true,v)
@@ -1458,9 +1479,9 @@ function ENT:RunGibOnDeathCode(dmginfo,hitgroup,Tbl_Features)
 	local dmgtblempty = false
 	local usedefault = false
 	local defualtdmgs = self.DefaultGibDamageTypes
-	if table.HasValue(dmgtbl,"UseDefault") then usedefault = true end
-	if usedefault == false && (table.Count(dmgtbl) <= 0 or table.HasValue(dmgtbl,"All")) then dmgtblempty = true end
-	if (dmgtblempty == true) or (usedefault == true && table.HasValue(defualtdmgs,DamageType)) or (usedefault == false && table.HasValue(dmgtbl,DamageType)) then
+	if VJ_HasValue(dmgtbl,"UseDefault") then usedefault = true end
+	if usedefault == false && (table.Count(dmgtbl) <= 0 or VJ_HasValue(dmgtbl,"All")) then dmgtblempty = true end
+	if (dmgtblempty == true) or (usedefault == true && VJ_HasValue(defualtdmgs,DamageType)) or (usedefault == false && VJ_HasValue(dmgtbl,DamageType)) then
 		local setupgib, setupgib_extra = self:SetUpGibesOnDeath(dmginfo,hitgroup)
 		if setupgib_extra == nil then setupgib_extra = {} end
 		if setupgib == true then
@@ -1493,7 +1514,7 @@ function ENT:CreateGibEntity(Ent,Models,Tbl_Features,CustomCode)
 	if Models == "UseHuman_Big" then Models = {"models/gibs/humans/mgib_01.mdl","models/gibs/humans/mgib_02.mdl","models/gibs/humans/mgib_03.mdl","models/gibs/humans/mgib_04.mdl","models/gibs/humans/mgib_05.mdl","models/gibs/humans/mgib_06.mdl","models/gibs/humans/mgib_07.mdl"} end
 	Models = VJ_PICKRANDOMTABLE(Models)
 	local vTbl_BloodType = "Red"
-	if table.HasValue({"models/gibs/xenians/sgib_01.mdl","models/gibs/xenians/sgib_02.mdl","models/gibs/xenians/sgib_03.mdl","models/gibs/xenians/mgib_01.mdl","models/gibs/xenians/mgib_02.mdl","models/gibs/xenians/mgib_03.mdl","models/gibs/xenians/mgib_04.mdl","models/gibs/xenians/mgib_05.mdl","models/gibs/xenians/mgib_06.mdl","models/gibs/xenians/mgib_07.mdl"},Models) then
+	if VJ_HasValue({"models/gibs/xenians/sgib_01.mdl","models/gibs/xenians/sgib_02.mdl","models/gibs/xenians/sgib_03.mdl","models/gibs/xenians/mgib_01.mdl","models/gibs/xenians/mgib_02.mdl","models/gibs/xenians/mgib_03.mdl","models/gibs/xenians/mgib_04.mdl","models/gibs/xenians/mgib_05.mdl","models/gibs/xenians/mgib_06.mdl","models/gibs/xenians/mgib_07.mdl"},Models) then
 		vTbl_BloodType = "Yellow"
 	end
 	vTbl_Features = Tbl_Features or {}
@@ -1890,11 +1911,11 @@ function ENT:FootStepSoundCode(CustomTbl)
 			if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 			if VJ_PICKRANDOMTABLE(soundtbl) != false then
 				//VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
-				if self.DisableFootStepOnRun == false && (table.HasValue(VJ_RunActivites,self:GetMovementActivity()) or table.HasValue(self.CustomRunActivites,self:GetMovementActivity())) then
+				if self.DisableFootStepOnRun == false && (VJ_HasValue(VJ_RunActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomRunActivites,self:GetMovementActivity())) then
 					self:CustomOnFootStepSound_Run()
 					VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
 					self.FootStepT = CurTime() + self.FootStepTimeRun
-				elseif self.DisableFootStepOnWalk == false && (table.HasValue(VJ_WalkActivites,self:GetMovementActivity()) or table.HasValue(self.CustomWalkActivites,self:GetMovementActivity())) then
+				elseif self.DisableFootStepOnWalk == false && (VJ_HasValue(VJ_WalkActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomWalkActivites,self:GetMovementActivity())) then
 					self:CustomOnFootStepSound_Walk()
 					VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
 					self.FootStepT = CurTime() + self.FootStepTimeWalk
@@ -1954,11 +1975,11 @@ function ENT:WorldShakeOnMoveCode()
 	if self.HasWorldShakeOnMove == false or self.MovementType == VJ_MOVETYPE_STATIONARY then return end
 	if self:IsOnGround() && self:IsMoving() && CurTime() > self.WorldShakeWalkT then
 		self:CustomOnWorldShakeOnMove()
-		if self.DisableWorldShakeOnMoveWhileRunning == false && (table.HasValue(VJ_RunActivites,self:GetMovementActivity()) or table.HasValue(self.CustomRunActivites,self:GetMovementActivity())) then
+		if self.DisableWorldShakeOnMoveWhileRunning == false && (VJ_HasValue(VJ_RunActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomRunActivites,self:GetMovementActivity())) then
 			self:CustomOnWorldShakeOnMove_Run()
 			util.ScreenShake(self:GetPos(),self.WorldShakeOnMoveAmplitude,self.WorldShakeOnMoveFrequency,self.WorldShakeOnMoveDuration,self.WorldShakeOnMoveRadius)
 			self.WorldShakeWalkT = CurTime() + self.NextWorldShakeOnRun
-		elseif self.DisableWorldShakeOnMoveWhileWalking == false && (table.HasValue(VJ_WalkActivites,self:GetMovementActivity()) or table.HasValue(self.CustomWalkActivites,self:GetMovementActivity())) then
+		elseif self.DisableWorldShakeOnMoveWhileWalking == false && (VJ_HasValue(VJ_WalkActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomWalkActivites,self:GetMovementActivity())) then
 			self:CustomOnWorldShakeOnMove_Walk()
 			util.ScreenShake(self:GetPos(),self.WorldShakeOnMoveAmplitude,self.WorldShakeOnMoveFrequency,self.WorldShakeOnMoveDuration,self.WorldShakeOnMoveRadius)
 			self.WorldShakeWalkT = CurTime() + self.NextWorldShakeOnWalk
@@ -1969,7 +1990,7 @@ end
 function ENT:EntitiesToNoCollideCode()
 	if self.HasEntitiesToNoCollide != true or !istable(self.EntitiesToNoCollide) or #self.EntitiesToNoCollide < 1 then return end
 	for k, v in pairs (ents.GetAll()) do
-		if table.HasValue(self.EntitiesToNoCollide,v) then
+		if VJ_HasValue(self.EntitiesToNoCollide,v) then
 			constraint.NoCollide(self,v,0,0)
 		end
 	end
