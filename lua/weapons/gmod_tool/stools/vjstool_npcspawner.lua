@@ -233,7 +233,6 @@ if (CLIENT) then
 	net.Receive("vj_npcspawner_cl_create",function(len,pl)
 		svowner = net.ReadEntity()
 		svpos = net.ReadVector()
-		svang = net.ReadFloat()
 		svclicktype = net.ReadString()
 		local convartbl = {}
 		for k,v in pairs(DefaultConVars) do
@@ -243,7 +242,6 @@ if (CLIENT) then
 		net.WriteTable(convartbl)
 		net.WriteEntity(svowner)
 		net.WriteVector(svpos)
-		net.WriteFloat(svang)
 		net.WriteType(TblCurrentLinesUsable)
 		net.WriteString(svclicktype)
 		net.SendToServer()
@@ -260,7 +258,6 @@ else -- If SERVER
 		convartbl = net.ReadTable()
 		svowner = net.ReadEntity()
 		svpos = net.ReadVector()
-		svang = net.ReadFloat()
 		svgetlines = net.ReadType()
 		svgettype = net.ReadString()
 		if !IsValid(svowner) then return false end
@@ -268,7 +265,14 @@ else -- If SERVER
 		local spawner = ents.Create("obj_vj_spawner_base")
 		spawner.EntitiesToSpawn = {}
 		spawner:SetPos(svpos)
-		spawner:SetAngles(Angle(0,svang,0))
+		local angs = Angle(0,0,0)
+		if IsValid(svowner) then
+			angs = svowner:GetAngles()
+			angs.pitch = 0
+			angs.roll = 0
+			angs.yaw = angs.yaw + 180
+		end
+		spawner:SetAngles(angs)
 		for k,v in pairs(svgetlines) do
 			if v.IsVJBaseSpawner == true then svowner:ChatPrint("FUCK YOU") end //chat.AddText(Color(255,100,0)," Can't be spawned because it's a spawner") end
 			table.insert(spawner.EntitiesToSpawn,{EntityName = "NPC"..math.random(1,99999999),SpawnPosition = {vForward=v.SpawnPosition.x,vRight=v.SpawnPosition.y,vUp=v.SpawnPosition.z},Entities = {v.Entities},WeaponsList={v.WeaponsList}})
@@ -301,7 +305,6 @@ function TOOL:LeftClick(tr)
 	net.Start("vj_npcspawner_cl_create")
 	net.WriteEntity(self:GetOwner())
 	net.WriteVector(tr.HitPos)
-	net.WriteFloat(self:GetOwner():GetAimVector():Angle().y)
 	net.WriteString("LeftClick")
 	net.Send(self:GetOwner())
 	return true
@@ -312,7 +315,6 @@ function TOOL:RightClick(tr)
 	net.Start("vj_npcspawner_cl_create")
 	net.WriteEntity(self:GetOwner())
 	net.WriteVector(tr.HitPos)
-	net.WriteFloat(self:GetOwner():GetAimVector():Angle().y)
 	net.WriteString("RightClick")
 	net.Send(self:GetOwner())
 	return true

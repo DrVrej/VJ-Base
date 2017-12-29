@@ -56,6 +56,16 @@ function VJ_PICKRANDOMTABLE(tbl)
 	return false
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function VJ_HasValue(tbl,val)
+	if !istable(tbl) then return end
+	for x=1, #tbl do
+		if tbl[x] == val then
+			return true
+		end
+	end
+	return false
+end
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function VJ_RoundToMultiple(number,multiple) -- Credits to Bizzclaw for pointing me to the right direction!
 	if math.Round(number/multiple) == number/multiple then
 		return number
@@ -753,9 +763,10 @@ end
 hook.Add("PlayerSpawnedNPC","VJ_NPC_SPAWNED",VJ_NPC_SPAWNED)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 local function VJ_PLAYER_INITIALSPAWN(ply)
-	for k,v in ipairs(ents.GetAll()) do
-	if v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
-		v.CurrentPossibleEnemies = v:DoHardEntityCheck()
+	local getall = ents.GetAll()
+	for k,v in ipairs(getall) do
+		if v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
+			v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
 		end
 	end
 end
@@ -775,9 +786,10 @@ local function VJ_ENTITYCREATED(entity)
 	if !entity:IsNPC() then return end
 	timer.Simple(0.15,function()
 		if IsValid(entity) then
-			for k,v in pairs(ents.GetAll()) do
-				if IsValid(v) && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
-					v.CurrentPossibleEnemies = v:DoHardEntityCheck()
+			local getall = ents.GetAll()
+			for k,v in pairs(getall) do
+				if IsValid(v) && v != entity && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
+					v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
 				end
 			end
 		end
@@ -828,14 +840,13 @@ hook.Add("VJ_CreateSNPCCorpse","VJ_NPC_CORPSELIMIT",VJ_NPC_CORPSELIMIT)
 
 -- Convar Call Backs ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 cvars.AddChangeCallback("ai_ignoreplayers",function(convar_name,oldValue,newValue)
-	for k,v in pairs(ents.GetAll()) do
-		for pk,pv in pairs(player.GetAll()) do
-			if v.IsVJBaseSNPC == true then
+	local getall = ents.GetAll()
+	for k, v in pairs(getall) do
+		if v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
+			for pk, pv in pairs(player.GetAll()) do
 				v:AddEntityRelationship(pv,4,10)
-				if (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
-					if v:GetEnemy() != nil && v:GetEnemy() == pv then v:ResetEnemy() end
-					v.CurrentPossibleEnemies = v:DoHardEntityCheck()
-				end
+				if v:GetEnemy() != nil && v:GetEnemy() == pv then v:ResetEnemy() end
+				v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
 			end
 		end
 	end

@@ -114,6 +114,7 @@ SWEP.Primary.DistantSoundPitch2	= 110 -- Distant sound pitch 2
 SWEP.Primary.DistantSoundVolume	= 1 -- Distant sound volume
 SWEP.PrimaryEffects_MuzzleFlash = true
 SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_full"}
+SWEP.PrimaryEffects_MuzzleParticlesAsOne = false -- If set to true, the base will spawn all the given particles instead of picking one
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_SpawnShells = true
 SWEP.PrimaryEffects_ShellAttachment = "shell"
@@ -312,7 +313,7 @@ function SWEP:NPCAbleToShoot()
 			if check == false && ammo != "NoAmmo" then return false end
 			if self.Owner:GetEnemy() != nil && self.Owner:IsAbleToShootWeapon(true,true) == false then return false end
 		end
-		if self.Owner:GetActivity() != nil && (table.HasValue(self.NPC_AnimationTbl_General,self.Owner:GetActivity()) or table.HasValue(self.NPC_AnimationTbl_Rifle,self.Owner:GetActivity()) or table.HasValue(self.NPC_AnimationTbl_Pistol,self.Owner:GetActivity()) or table.HasValue(self.NPC_AnimationTbl_Shotgun,self.Owner:GetActivity()) or VJ_IsCurrentAnimation(self.Owner,self.NPC_AnimationTbl_Custom)) then
+		if self.Owner:GetActivity() != nil && (VJ_HasValue(self.NPC_AnimationTbl_General,self.Owner:GetActivity()) or VJ_HasValue(self.NPC_AnimationTbl_Rifle,self.Owner:GetActivity()) or VJ_HasValue(self.NPC_AnimationTbl_Pistol,self.Owner:GetActivity()) or VJ_HasValue(self.NPC_AnimationTbl_Shotgun,self.Owner:GetActivity()) or VJ_IsCurrentAnimation(self.Owner,self.NPC_AnimationTbl_Custom)) then
 			if (self.Owner.IsVJBaseSNPC_Human) then
 				local check, ammo = self.Owner:CanDoWeaponAttack()
 				if ammo == "NoAmmo" then
@@ -502,7 +503,16 @@ function SWEP:PrimaryAttackEffects()
 			vjeffectmuz:SetAttachment(muzzleattach)
 			util.Effect("VJ_Weapon_RifleMuzzle1",vjeffectmuz)
 		else
-			ParticleEffectAttach(VJ_PICKRANDOMTABLE(self.PrimaryEffects_MuzzleParticles),PATTACH_POINT_FOLLOW,self,muzzleattach)
+			if self.PrimaryEffects_MuzzleParticlesAsOne == true then
+				for k,v in pairs(self.PrimaryEffects_MuzzleParticles) do
+					if !istable(v) then
+						print(v)
+						ParticleEffectAttach(v,PATTACH_POINT_FOLLOW,self,muzzleattach)
+					end
+				end
+			else
+				ParticleEffectAttach(VJ_PICKRANDOMTABLE(self.PrimaryEffects_MuzzleParticles),PATTACH_POINT_FOLLOW,self,muzzleattach)
+			end
 		end
 	end
 	

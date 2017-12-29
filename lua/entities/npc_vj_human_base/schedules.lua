@@ -44,6 +44,11 @@ function ENT:StartSchedule(schedule)
 	if (!schedule.CanBeInterrupted) then schedule.CanBeInterrupted = false end
 	if (!schedule.ConstantlyFaceEnemy) then schedule.ConstantlyFaceEnemy = false end
 	if (!schedule.CanShootWhenMoving) then schedule.CanShootWhenMoving = false end
+	if self.MovementType == VJ_MOVETYPE_STATIONARY then
+		if schedule.IsMovingTask == true then
+			return
+		end
+	end
 	for k,v in ipairs(schedule.Tasks) do
 		if schedule.IsMovingTask == true then break end
 		if v.TaskName == "TASK_RUN_PATH" or v.TaskName == "TASK_RUN_PATH_FLEE" or v.TaskName == "TASK_RUN_PATH_TIMED" or v.TaskName == "TASK_RUN_PATH_FOR_UNITS" or v.TaskName == "TASK_RUN_PATH_WITHIN_DIST" then schedule.IsMovingTask = true schedule.IsMovingTask_Run = true break end

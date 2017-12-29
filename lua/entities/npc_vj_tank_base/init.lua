@@ -167,7 +167,7 @@ function ENT:TANK_RUNOVER_DAMAGECODE(argent)
 	if GetConVarNumber("vj_npc_nomelee") == 1 or (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == argent) then return end
 
 	if self:Disposition(argent) == 1 && argent:Health() > 0 then
-		if (argent:IsNPC() && argent.VJ_IsHugeMonster != true && !table.HasValue(self.TankTbl_DontRunOver,argent:GetClass())) or (argent:IsPlayer() && self.PlayerFriendly == false && GetConVarNumber("ai_ignoreplayers") == 0 && argent:Alive() && self.Tank_IsMoving == true) then
+		if (argent:IsNPC() && argent.VJ_IsHugeMonster != true && !VJ_HasValue(self.TankTbl_DontRunOver,argent:GetClass())) or (argent:IsPlayer() && self.PlayerFriendly == false && GetConVarNumber("ai_ignoreplayers") == 0 && argent:Alive() && self.Tank_IsMoving == true) then
 			argent:TakeDamage(self:VJ_GetDifficultyValue(8),self,self)
 			VJ_DestroyCombineTurret(self,argent)
 			argent:SetVelocity(argent:GetForward()*-200)
