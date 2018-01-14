@@ -35,6 +35,7 @@ ENT.RadiusDamage = 30 -- How much damage should it deal? Remember this is a radi
 ENT.RadiusDamageType = DMG_BLAST -- Damage type
 ENT.RadiusDamageForce = false -- Put the force amount it should apply | false = Don't apply any force
 ENT.RadiusDamageForce_Up = false -- How much up force should it have? | false = Let the base automatically decide the force using RadiusDamageForce value
+ENT.RadiusDamageDisableVisibilityCheck = false -- Should it disable the visibility check? | true = Disables the visibility check
 ENT.DoesDirectDamage = false -- Should it do a direct damage when it hits something?
 ENT.DirectDamage = 30 -- How much damage should it do when it hits something
 ENT.DirectDamageType = DMG_SLASH -- Damage type
@@ -149,7 +150,7 @@ function ENT:DoDamageCode(data,phys)
 		if self.VJHumanTossingAway == true && IsValid(self:GetParent()) && self:GetParent():IsNPC() then gethitpos = self:GetParent():GetPos() end
 		if self:GetOwner() == NULL then AttackEnt = self DoEntCheck = false end
 		//util.VJ_SphereDamage(AttackEnt,AttackEnt,gethitpos,self.RadiusDamageRadius,self.RadiusDamage,self.RadiusDamageType,DoEntCheck,self.RadiusDamageUseRealisticRadius,self.RadiusDamageForce,self.RadiusDamageForceTowardsRagdolls,self.RadiusDamageForceTowardsPhysics)
-		hitent = util.VJ_SphereDamage(AttackEnt,AttackEnt,gethitpos,self.RadiusDamageRadius,self.RadiusDamage,self.RadiusDamageType,DoEntCheck,self.RadiusDamageUseRealisticRadius,{Force=self.RadiusDamageForce,UpForce=self.RadiusDamageForce_Up,DamageAttacker=DamageAttacker})
+		hitent = util.VJ_SphereDamage(AttackEnt,AttackEnt,gethitpos,self.RadiusDamageRadius,self.RadiusDamage,self.RadiusDamageType,DoEntCheck,self.RadiusDamageUseRealisticRadius,{DisableVisibilityCheck=self.RadiusDamageDisableVisibilityCheck,Force=self.RadiusDamageForce,UpForce=self.RadiusDamageForce_Up,DamageAttacker=DamageAttacker})
 	end
 	
 	if self.DoesDirectDamage == true then

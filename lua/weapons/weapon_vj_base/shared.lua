@@ -506,7 +506,6 @@ function SWEP:PrimaryAttackEffects()
 			if self.PrimaryEffects_MuzzleParticlesAsOne == true then
 				for k,v in pairs(self.PrimaryEffects_MuzzleParticles) do
 					if !istable(v) then
-						print(v)
 						ParticleEffectAttach(v,PATTACH_POINT_FOLLOW,self,muzzleattach)
 					end
 				end

@@ -53,6 +53,9 @@ function ENT:SetUpInitializeBloodType()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
+    //if self:GetPhysicsObject():GetVelocity():Length() < 10 then
+        //self:GetPhysicsObject():SetVelocity(Vector(0,0,0))
+   //end
 	//print(self.BloodType)
 	/*if self:IsValid() then
 		self.idlesoundc = CreateSound(self, self.IdleSound1)
@@ -66,13 +69,13 @@ function ENT:PhysicsCollide(data,phys)
 	-- Effects
 	local velocityspeed = phys:GetVelocity():Length()
 	local pickcollidesd = VJ_PICKRANDOMTABLE(self.CollideSound)
-	if GetConVarNumber("vj_npc_sd_gibbing") == 0 && pickcollidesd != false && velocityspeed > 20 then
+	if GetConVarNumber("vj_npc_sd_gibbing") == 0 && pickcollidesd != false && velocityspeed > 18 then
 		self.collidesd = CreateSound(self,pickcollidesd)
 		self.collidesd:SetSoundLevel(self.CollideSoundLevel)
 		self.collidesd:PlayEx(1,math.random(self.CollideSoundPitch1,self.CollideSoundPitch2)) 
 	end
 	
-	if GetConVarNumber("vj_npc_nogibdecals") == 0 then
+	if GetConVarNumber("vj_npc_nogibdecals") == 0 && velocityspeed > 18 then
 		//local start = data.HitPos + data.HitNormal 
 		//local endpos = data.HitPos - data.HitNormal
 		if !data.Entity && math.random(1,self.Collide_DecalChance) == 1 then
