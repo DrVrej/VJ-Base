@@ -394,16 +394,17 @@ function NPC_MetaTable:VJ_IsCurrentSchedule(idcheck)
 	return false
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function NPC_MetaTable:VJ_GetAllParameters(PrintIt)
-	local Paras = {}
-	for i=0, self:GetNumPoseParameters() - 1 do
+function NPC_MetaTable:VJ_GetAllPosParameters(prt)
+	local result = {}
+	local prt = prt or false
+	for i = 0, self:GetNumPoseParameters() - 1 do
 		local min, max = self:GetPoseParameterRange(i)
-		if PrintIt == true then
+		if prt == true then
 			print(self:GetPoseParameterName(i)..' '..min.." / "..max)
 		end
-		table.insert(Paras,self:GetPoseParameterName(i))
+		table.insert(result,self:GetPoseParameterName(i))
 	end
-	return Paras
+	return result
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function NPC_MetaTable:FaceCertainPosition(pos)
@@ -698,9 +699,9 @@ local function VJ_NPC_FIREBULLET(Entity,data,Attacker)
 		//if Entity:GetEnemy():GetHullType() == HULL_TINY then
 		//data.Spread = Vector(25,25,0) else
 		if Entity.VJ_IsBeingControlled == false then
-			local fSpread = ((EnemyDistance/23)*Entity.WeaponSpread)
+			local fSpread = ((EnemyDistance/28)*Entity.WeaponSpread)
 			if Wep.IsVJBaseWeapon == true && Wep.NPC_AllowCustomSpread == true then fSpread = fSpread *Wep.NPC_CustomSpread end
-			fSpread = math.Clamp(fSpread,1,65)
+			//fSpread = math.Clamp(fSpread,1,65)
 			data.Spread = Vector(fSpread,fSpread,0)
 			/*if EnemyDistance < 400 then
 			//self:CapabilitiesRemove(CAP_AIM_GUN)
@@ -898,6 +899,7 @@ if (CLIENT) then
 		local sdspeed = net.ReadFloat()
 		local sdfadet = net.ReadFloat()
 		local entindex = ent:EntIndex()
+		//print(ent)
 		sound.PlayFile("sound/"..VJ_PICKRANDOMTABLE(sdtbl),"noplay",function(soundchannel,errorID,errorName)
 			if IsValid(soundchannel) then
 				if table.Count(VJ_CL_MUSIC_CURRENT) <= 0 then soundchannel:Play() end

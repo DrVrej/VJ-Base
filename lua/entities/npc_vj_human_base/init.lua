@@ -878,7 +878,11 @@ function ENT:Initialize()
 	if self.UseTheSameGeneralSoundPitch == true then self.UseTheSameGeneralSoundPitch_PickedNumber = math.random(self.GeneralSoundPitch1,self.GeneralSoundPitch2) end
 	self:CustomOnInitialize()
 	self:CustomInitialize() -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
-	if math.random(1,self.SoundTrackChance) == 1 then self:StartSoundTrack() end
+	timer.Simple(0.15,function()
+		if IsValid(self) then
+			if math.random(1,self.SoundTrackChance) == 1 then self:StartSoundTrack() end
+		end
+	end)
 	self:SetRenderMode(RENDERMODE_NORMAL)
 	//self:SetRenderMode(RENDERMODE_TRANSALPHA)
 	duplicator.RegisterEntityClass(self:GetClass(),VJSPAWN_SNPC_DUPE,"Model","Class","Equipment","SpawnFlags","Data")
@@ -1989,25 +1993,7 @@ function ENT:Think()
 				self.DoingWeaponAttack = false
 				self.DoingWeaponAttack_Standing = false
 			end
-			if self.HasShootWhileMoving == true then
-				if self:Visible(self:GetEnemy()) && self:IsAbleToShootWeapon(true,false) == true && self:IsMoving() && ((self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true) or (self:VJ_GetCurrentSchedule() == 35)) then
-					if (self.CurrentSchedule != nil && self.CurrentSchedule.IsMovingTask_Run == true) or self:VJ_GetCurrentSchedule() == 35 then
-						self.DoingWeaponAttack = true
-						self.DoingWeaponAttack_Standing = false
-						self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
-						self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_ShootWhileMovingRun))
-						self:SetArrivalActivity(self.CurrentWeaponAnimation)
-					elseif self.CurrentSchedule != nil && self.CurrentSchedule.IsMovingTask_Walk == true then
-						self.DoingWeaponAttack = true
-						self.DoingWeaponAttack_Standing = false
-						self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
-						self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_ShootWhileMovingWalk))
-						self:SetArrivalActivity(self.CurrentWeaponAnimation)
-					end
-				end
-			else
-				self:CapabilitiesRemove(CAP_MOVE_SHOOT)
-			end
+			self:DoWeaponAttackMovementCode()
 			if self.VJ_IsBeingControlled == false then
 				if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true then self:FaceCertainEntity(self:GetEnemy(),true) end
 				if self.MeleeAttackAnimationFaceEnemy == true && self.Dead == false && timer.Exists("timer_melee_start"..self.Entity:EntIndex()) && timer.TimeLeft("timer_melee_start"..self.Entity:EntIndex()) > 0 then self:FaceCertainEntity(self:GetEnemy(),true) end
@@ -2051,6 +2037,9 @@ function ENT:Think()
 				end
 			end
 		else
+			if self:GetArrivalActivity() == self.CurrentWeaponAnimation then
+				self:SetArrivalActivity(-1)
+			end
 			if self.DoneLastHiddenZone_CanWander == false then
 				self.DoneLastHiddenZone_CanWander = true
 				if CurTime() > self.LastHiddenZoneT then
@@ -2226,7 +2215,7 @@ end
 function ENT:WeaponAimPoseParameters(ResetPoses)
 	if (self.HasPoseParameterLooking == false) or (self.VJ_IsBeingControlled == false && self.DoingWeaponAttack == false) then return end
 	ResetPoses = ResetPoses or false
-	//local lol = self:VJ_GetAllParameters(true)
+	//self:VJ_GetAllPosParameters(true)
 	local ent = NULL
 	if self.VJ_IsBeingControlled == true then ent = self.VJ_TheController else ent = self:GetEnemy() end
 	local p_enemy = 0 -- Yaw
@@ -2247,11 +2236,35 @@ function ENT:WeaponAimPoseParameters(ResetPoses)
 		if self.PoseParameterLooking_InvertRoll == true then r_enemy = -r_enemy end
 	end
 	self:SetPoseParameter("aim_pitch",math.ApproachAngle(self:GetPoseParameter("aim_pitch"),p_enemy,self.PoseParameterLooking_TurningSpeed))
+	self:SetPoseParameter("head_pitch",math.ApproachAngle(self:GetPoseParameter("head_pitch"),p_enemy,self.PoseParameterLooking_TurningSpeed))
 	self:SetPoseParameter("aim_yaw",math.ApproachAngle(self:GetPoseParameter("aim_yaw"),y_enemy,self.PoseParameterLooking_TurningSpeed))
-	self:SetPoseParameter("aim_roll",math.ApproachAngle(self:GetPoseParameter("aim_pitch"),r_enemy,self.PoseParameterLooking_TurningSpeed))
-	self:SetPoseParameter("head_pitch",math.ApproachAngle(self:GetPoseParameter("aim_pitch"),p_enemy,self.PoseParameterLooking_TurningSpeed))
 	self:SetPoseParameter("head_yaw",math.ApproachAngle(self:GetPoseParameter("head_yaw"),y_enemy,self.PoseParameterLooking_TurningSpeed))
+	self:SetPoseParameter("aim_roll",math.ApproachAngle(self:GetPoseParameter("aim_roll"),r_enemy,self.PoseParameterLooking_TurningSpeed))
+	self:SetPoseParameter("head_roll",math.ApproachAngle(self:GetPoseParameter("head_roll"),r_enemy,self.PoseParameterLooking_TurningSpeed))
 	self.DidWeaponAttackAimParameter = true
+end
+--------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:DoWeaponAttackMovementCode(override)
+	local override = override or false -- Overrides some of the checks, only used for the internal task system!
+	if self.HasShootWhileMoving == true then
+		if self:Visible(self:GetEnemy()) && self:IsAbleToShootWeapon(true,false) == true && ((self:IsMoving() && ((self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true) or (self:VJ_GetCurrentSchedule() == 35))) or (override == true)) then
+			if ((self.CurrentSchedule != nil && self.CurrentSchedule.IsMovingTask_Run == true) or self:VJ_GetCurrentSchedule() == 35) or (override == true) then
+				self.DoingWeaponAttack = true
+				self.DoingWeaponAttack_Standing = false
+				self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
+				self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_ShootWhileMovingRun))
+				self:SetArrivalActivity(self.CurrentWeaponAnimation)
+			elseif self.CurrentSchedule != nil && self.CurrentSchedule.IsMovingTask_Walk == true then
+				self.DoingWeaponAttack = true
+				self.DoingWeaponAttack_Standing = false
+				self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
+				self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_ShootWhileMovingWalk))
+				self:SetArrivalActivity(self.CurrentWeaponAnimation)
+			end
+		end
+	else
+		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
+	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CanDoWeaponAttack()
@@ -2940,7 +2953,8 @@ function ENT:DoEntityRelationshipCheck()
 		if self.DisableFindEnemy == false then
 			if (seethroughwall == true) or (self:Visible(v) && (vDistanceToMy < sightdist)) then
 				if (self.FindEnemy_UseSphere == false && radiusoverride == 0 && (self:GetForward():Dot((vPos -MyPos):GetNormalized()) > math.cos(math.rad(self.SightAngle)))) or (self.FindEnemy_UseSphere == true or radiusoverride == 1) then
-					if self:DoRelationshipCheck(v) == true then
+					local check = self:DoRelationshipCheck(v)
+					if check == true then
 					//if (v.VJ_NoTarget && v.VJ_NoTarget != true) then continue end
 						self:AddEntityRelationship(v,D_HT,99)
 						if distlist_inserted == false then table.insert(distlist,vDistanceToMy) end
@@ -2954,6 +2968,11 @@ function ENT:DoEntityRelationshipCheck()
 						//if self:GetEnemy() == nil then
 							//self:VJ_DoSetEnemy(v,true)
 						//end
+					elseif check == false && v:IsPlayer() then
+						if self:GetEnemy() != nil && self:GetEnemy() == v then
+							self.ResetedEnemy = true
+							self:ResetEnemy(false)
+						end
 					end
 				end
 			end
@@ -3624,11 +3643,16 @@ function ENT:CreateGibEntity(Ent,Models,Tbl_Features,CustomCode)
 	vTbl_Features = Tbl_Features or {}
 	vTbl_Position = vTbl_Features.Pos or self:GetPos() +self:OBBCenter()
 	vTbl_Angle = vTbl_Features.Ang or Angle(math.Rand(-180,180),math.Rand(-180,180),math.Rand(-180,180)) //self:GetAngles()
-	-- VVV Used to set the velocity | "UseDamageForce" = To use the damage's force VVV
-	if vTbl_Features.Vel == "UseDamageForce" && self.LatestDmgInfo != nil then
-		vTbl_Velocity = self.LatestDmgInfo:GetDamageForce()/37
-	else
-		vTbl_Velocity = vTbl_Features.Vel or Vector(math.Rand(-200,200),math.Rand(-200,200),math.Rand(150,250))
+	vTbl_Velocity_NoDamageForce = vTbl_Features.Vel_NoDmgForce or false -- If set to true, it won't add the damage force to the given velocity
+	vTbl_Velocity = vTbl_Features.Vel or Vector(math.Rand(-100,100),math.Rand(-100,100),math.Rand(150,250)) -- Used to set the velocity | "UseDamageForce" = To use the damage's force only
+	if self.LatestDmgInfo != nil then
+		local dmgforce = self.LatestDmgInfo:GetDamageForce()/70
+		if vTbl_Velocity_NoDamageForce == false then
+			vTbl_Velocity = vTbl_Velocity + dmgforce
+		end
+		if vTbl_Features.Vel == "UseDamageForce" then
+			vTbl_Velocity = dmgforce
+		end
 	end
 	vTbl_AngleVelocity = vTbl_Features.AngVel or Vector(math.Rand(-200,200),math.Rand(-200,200),math.Rand(-200,200)) -- Angle velocity, how fast it rotates as it's flying
 	vTbl_BloodType = vTbl_Features.BloodType or vTbl_BloodType -- Certain entities such as the VJ Gib entity, you can use this to set its gib type
@@ -3644,8 +3668,12 @@ function ENT:CreateGibEntity(Ent,Models,Tbl_Features,CustomCode)
 	gib.IsVJBase_Gib = true
 	gib.RemoveOnCorpseDelete = vTbl_RemoveOnCorpseDelete
 	if GetConVarNumber("vj_npc_gibcollidable") == 0 then gib:SetCollisionGroup(1) end
-	gib:GetPhysicsObject():AddVelocity(vTbl_Velocity)
-	gib:GetPhysicsObject():AddAngleVelocity(vTbl_AngleVelocity)
+	local phys = gib:GetPhysicsObject()
+	if IsValid(phys) then
+		//phys:SetMass(60)
+		phys:AddVelocity(vTbl_Velocity)
+		phys:AddAngleVelocity(vTbl_AngleVelocity)
+	end
 	cleanup.ReplaceEntity(gib)
 	if GetConVarNumber("vj_npc_fadegibs") == 1 && vTbl_NoFade == false then
 		if gib:GetClass() == "prop_ragdoll" then gib:Fire("FadeAndRemove","",GetConVarNumber("vj_npc_fadegibstime")) end

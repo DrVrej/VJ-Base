@@ -14,6 +14,7 @@ function util.VJ_SphereDamage(vAttacker,vInflictor,vPosition,vDamageRadius,vDama
 	local vDamage = vDamage or 15
 	local vDamageType = vDamageType or DMG_BLAST
 	local vTbl_Features = Tbl_Features or {}
+		local vTbl_DisableVisibilityCheck = vTbl_Features.DisableVisibilityCheck or false -- Should it disable the visibility check? | true = Disables the visibility check
 		local vTbl_Force = vTbl_Features.Force or false -- The general force | false = Don't use any force
 		local vTbl_UpForce = vTbl_Features.UpForce or false -- How much up force should it have? | false = Use vTbl_Force
 		local vTbl_DamageAttacker = vTbl_Features.DamageAttacker or false -- Should it damage the attacker as well?
@@ -49,36 +50,38 @@ function util.VJ_SphereDamage(vAttacker,vInflictor,vPosition,vDamageRadius,vDama
 				doactualdmg:SetInflictor(vInflictor)
 				doactualdmg:SetDamageType(vDamageType)
 				doactualdmg:SetDamagePosition(vtoself)
+				if vTbl_Force != false then
+					local force = vTbl_Force
+					local upforce = vTbl_UpForce
+					if VJ_IsProp(v) == true or v:GetClass() == "prop_ragdoll" then
+						local phys = v:GetPhysicsObject()
+						if phys:IsValid() && phys != nil && phys != NULL then
+							if upforce == false then upforce = force/9.4 end
+							//v:SetVelocity(v:GetUp()*100000)
+							if v:GetClass() == "prop_ragdoll" then force = force * 1.5 end
+							phys:ApplyForceCenter(((v:GetPos()+v:OBBCenter()+v:GetUp()*upforce)-vPosition)*force) //+vAttacker:GetForward()*vForcePropPhysics
+						end
+					else
+						force = force*1.2
+						if upforce == false then upforce = force end
+						doactualdmg:SetDamageForce(((v:GetPos()+v:OBBCenter()+v:GetUp()*upforce)-vPosition)*force)
+					end
+				end
 				v2:TakeDamageInfo(doactualdmg)
 				VJ_DestroyCombineTurret(vAttacker,v2)
 			end
 		end
 		
-		if vBlockCertainEntities == true then
-			if (v:IsNPC() && (v:Disposition(vAttacker) != D_LI) && v:Health() > 0 && (v != vAttacker) && (v:GetClass() != vAttacker:GetClass())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 && v:Alive() && v:Health() > 0 && v.VJ_NoTarget != true) then
-				//if ((v:IsNPC() && v:Disposition(vAttacker) == 1 or v:Disposition(vAttacker) == 2) or (v:IsPlayer() && v:Alive())) && (v != vAttacker) && (v:GetClass() != vAttacker:GetClass()) then -- entity check
-				DoDamageCode(v)
-			elseif !v:IsNPC() && !v:IsPlayer() then
-				DoDamageCode(v)
-			end
-		else
-			DoDamageCode(v)
-		end
-		
-		if vTbl_Force != false then
-			local phys = v:GetPhysicsObject()
-			if phys:IsValid() && phys != nil && phys != NULL then
-				//v:SetVelocity(v:GetUp()*100000)
-				//if v:GetClass() == "prop_ragdoll" then 
-					//v:GetPhysicsObject():ApplyForceCenter(v:GetUp()*vForceRagdoll)
-				if VJ_IsProp(v) == true or v:GetClass() == "prop_ragdoll" then
-					//v:GetPhysicsObject():ApplyForceCenter(v:GetUp()*vForcePropPhysics)
-					local force = vTbl_Force
-					local upforce = vTbl_UpForce
-					if v:GetClass() == "prop_ragdoll" then force = force * 1.5 end
-					if upforce == false then upforce = force/9.4 end
-					phys:ApplyForceCenter(((v:GetPos()+v:OBBCenter()+v:GetUp()*upforce)-vPosition)*force) //+vAttacker:GetForward()*vForcePropPhysics
+		if (vTbl_DisableVisibilityCheck == false && (v:VisibleVec(vPosition) or v:Visible(vAttacker))) or (vTbl_DisableVisibilityCheck == true) then
+			if vBlockCertainEntities == true then
+				if (v:IsNPC() && (v:Disposition(vAttacker) != D_LI) && v:Health() > 0 && (v != vAttacker) && (v:GetClass() != vAttacker:GetClass())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 && v:Alive() && v:Health() > 0 && v.VJ_NoTarget != true) then
+					//if ((v:IsNPC() && v:Disposition(vAttacker) == 1 or v:Disposition(vAttacker) == 2) or (v:IsPlayer() && v:Alive())) && (v != vAttacker) && (v:GetClass() != vAttacker:GetClass()) then -- entity check
+					DoDamageCode(v)
+				elseif !v:IsNPC() && !v:IsPlayer() then
+					DoDamageCode(v)
 				end
+			else
+				DoDamageCode(v)
 			end
 		end
 		if (CustomCode) then CustomCode(v) end

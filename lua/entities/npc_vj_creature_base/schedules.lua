@@ -61,6 +61,7 @@ function ENT:StartSchedule(schedule)
 	if schedule.IsMovingTask_Run == nil then schedule.IsMovingTask_Run = false end
 	if schedule.IsMovingTask_Walk == nil then schedule.IsMovingTask_Walk = false end
 	if schedule.CanShootWhenMoving == true && self.CurrentWeaponAnimation != nil && self:GetEnemy() != nil then
+		self:DoWeaponAttackMovementCode(true)
 		self:SetArrivalActivity(self.CurrentWeaponAnimation)
 	end
 	schedule.AlreadyRanCode_OnFail = false

@@ -98,7 +98,7 @@ function ENT:CustomOnInitialize()
 	//self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND))
 	self:SetAngles(self:GetAngles()+Angle(0,self.Tank_SpawningAngle,0))
 	//self:SetPos(self:GetPos()+Vector(0,0,90))
-	self:SetCollisionBounds(Vector(self.Tank_CollisionBoundSize, self.Tank_CollisionBoundSize, self.Tank_CollisionBoundUp), Vector(-self.Tank_CollisionBoundSize, -self.Tank_CollisionBoundSize, 0))
+	self:SetCollisionBounds(Vector(self.Tank_CollisionBoundSize, self.Tank_CollisionBoundSize, self.Tank_CollisionBoundUp), Vector(-self.Tank_CollisionBoundSize, -self.Tank_CollisionBoundSize, -10))
 	//self:SetCollisionBounds(Vector(self.Tank_CollisionBound_Back, self.Tank_CollisionBound_Right, self.Tank_CollisionBoundUp), Vector(-self.Tank_CollisionBound_Front, -self.Tank_CollisionBound_Left, 0))
 	
 	local phys = self.Entity:GetPhysicsObject()
