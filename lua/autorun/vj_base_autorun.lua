@@ -1,13 +1,13 @@
 /*--------------------------------------------------
 	=============== VJ Base Autorun ===============
-	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Main Autorun file for VJ Base
 --------------------------------------------------*/
 if (CLIENT) then print("Loading VJ Base (Client)...") else print("Loading VJ Base (Server)...") end
 
-VJBASE_VERSION = "2.5.0"
+VJBASE_VERSION = "2.5.1"
 VJBASE_GETNAME = "VJ Base"
 
 -- Shared --
