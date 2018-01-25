@@ -2,7 +2,7 @@ AddCSLuaFile("shared.lua")
 include('shared.lua')
 /*--------------------------------------------------
 	=============== NPC Controller Base ===============
-	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to control NPCs. Mainly for VJ Base SNPCs.
@@ -366,7 +366,7 @@ function ENT:OnRemove()
 end
 /*--------------------------------------------------
 	=============== NPC Controler Base ===============
-	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to controll NPCs. Mainly for VJ Base SNPCs.

@@ -5,7 +5,7 @@ include('shared.lua')
 include('schedules.lua')
 /*--------------------------------------------------
 	=============== Creature SNPC Base ===============
-	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used as a base for creature SNPCs.
@@ -3778,7 +3778,7 @@ function ENT:CreateGibEntity(Ent,Models,Tbl_Features,CustomCode)
 	vTbl_Velocity = vTbl_Features.Vel or Vector(math.Rand(-100,100),math.Rand(-100,100),math.Rand(150,250)) -- Used to set the velocity | "UseDamageForce" = To use the damage's force only
 	if self.LatestDmgInfo != nil then
 		local dmgforce = self.LatestDmgInfo:GetDamageForce()/70
-		if vTbl_Velocity_NoDamageForce == false then
+		if vTbl_Velocity_NoDamageForce == false && vTbl_Features.Vel != "UseDamageForce" then
 			vTbl_Velocity = vTbl_Velocity + dmgforce
 		end
 		if vTbl_Features.Vel == "UseDamageForce" then
@@ -4703,7 +4703,7 @@ end*/
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*--------------------------------------------------
 	=============== Creature SNPC Base ===============
-	*** Copyright (c) 2012-2017 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to make creature SNPCs
