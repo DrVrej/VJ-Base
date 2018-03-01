@@ -12,6 +12,6 @@ ENT.AdminSpawnable 	= false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
 	function ENT:Draw()
-		self:DrawModel()
+		self.Entity:DrawModel()
 	end
 end

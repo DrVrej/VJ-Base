@@ -8,4 +8,4 @@ include('shared.lua')
 INFO: Used to make spawners
 --------------------------------------------------*/
 
-function ENT:Draw() self:DrawModel() end
+function ENT:Draw() self.Entity:DrawModel() end
