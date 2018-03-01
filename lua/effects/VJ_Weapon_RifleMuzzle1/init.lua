@@ -9,7 +9,7 @@ function EFFECT:Init(data)
 	self.Pos = self:GetTracerShootPos(data:GetOrigin(),data:GetEntity(),data:GetAttachment())
 	local Emitter = ParticleEmitter(self.Pos)
 	if Emitter == nil then return end
-	
+
 	LocalPlayerMagnitude = 0
 	if IsValid(data:GetEntity()) && IsValid(data:GetEntity():GetOwner()) && data:GetEntity():GetOwner():IsPlayer() && data:GetEntity().Owner == LocalPlayer() then
 		LocalPlayerMagnitude = data:GetMagnitude() else
@@ -112,7 +112,7 @@ function EFFECT:Init(data)
 	 if data:GetEntity():GetOwner():IsPlayer() then
 	  for i = 1,4 do
 		local EffectCode = Emitter:Add("effects/yellowflare",self.Pos)
-		EffectCode:SetVelocity(((data:GetNormal() + VectorRand() * 0.5) * math.Rand(150, 200)))
+		EffectCode:SetVelocity((data:GetNormal() + VectorRand() * 0.5) * math.Rand(150, 200))
 		EffectCode:SetDieTime(math.Rand(0.5, 0.8))
 		EffectCode:SetStartAlpha(255)
 		EffectCode:SetStartSize(.5)
@@ -129,7 +129,7 @@ function EFFECT:Init(data)
 	 end
 	end
   end
-  
+
   /*
     		local EffectCode = Emitter:Add("effects/muzzleflare_01",self.Pos + LocalPlayerMagnitude * data:GetNormal())
 		EffectCode:SetVelocity(data:GetNormal() + 1.1 * data:GetEntity():GetOwner():GetVelocity())
@@ -142,7 +142,7 @@ function EFFECT:Init(data)
 		EffectCode:SetRollDelta(math.Rand(-1,1)) -- How fast it rolls
 		EffectCode:SetColor(245,164,53) -- The color of the effect
 		//EffectCode:SetGravity(Vector(0,0,100)) -- The Gravity
-		
+
  		local EffectCode = Emitter:Add("effects/muzzlestarlarge_01",self.Pos + LocalPlayerMagnitude * data:GetNormal())
 		EffectCode:SetVelocity(data:GetNormal() + 1.1 * data:GetEntity():GetOwner():GetVelocity())
 		//EffectCode:SetAirResistance(200)
@@ -154,7 +154,7 @@ function EFFECT:Init(data)
 		EffectCode:SetRollDelta(math.Rand(-1,1)) -- How fast it rolls
 		EffectCode:SetColor(248,241,200) -- The color of the effect
 		//EffectCode:SetGravity(Vector(0,0,100)) -- The Gravity
-		
+
 		local EffectCode = Emitter:Add("particle/bm_whispysmoke_001",self.Pos + LocalPlayerMagnitude * data:GetNormal())
 		EffectCode:SetVelocity(data:GetNormal() + Vector(math.random(-30,30),math.random(-30,30),math.random(-30,30)))
 		EffectCode:SetDieTime(math.Rand(0.5,0.5)) -- How much time until it dies

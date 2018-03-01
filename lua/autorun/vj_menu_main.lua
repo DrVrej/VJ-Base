@@ -46,7 +46,7 @@ concommand.Add("vj_cleanup_snpcs",function(ply)
 				undo.ReplaceEntity(v,nil)
 				v:Remove()
 				i = i + 1
-			end            
+			end
 		end
 		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Removed "..i.." SNPCs\", NOTIFY_CLEANUP, 5)") end
 		ply:EmitSound("buttons/button15.wav")
@@ -62,7 +62,7 @@ concommand.Add("vj_cleanup_s_npcs", function(ply)
 				undo.ReplaceEntity(v,nil)
 				v:Remove()
 				i = i + 1
-			end            
+			end
 		end
 		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Removed "..i.." (S)NPCs\", NOTIFY_CLEANUP, 5)") end
 		ply:EmitSound("buttons/button15.wav")
@@ -73,7 +73,7 @@ end)
 concommand.Add("vj_cleanup_decals", function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		for k, v in pairs(player.GetAll()) do
-			v:ConCommand("r_cleardecals")        
+			v:ConCommand("r_cleardecals")
 		end
 		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Removed All Decals\", NOTIFY_CLEANUP, 5)") end
 		ply:EmitSound("buttons/button15.wav")
@@ -192,7 +192,7 @@ if (CLIENT) then
 			// http://docs.google.com/forms/d/1ZS1rSFtY4j6hJMZ_eGktYoBGScuW0GZdX4gjEJpBjjU/viewform?pli=1
 		end
 		Panel:AddPanel(bugr)
-		
+
 		local suggest = vgui.Create("DButton") -- Suggestions
 		suggest:SetFont("DermaDefaultBold")
 		suggest:SetText("Suggest Something")
@@ -203,12 +203,12 @@ if (CLIENT) then
 			// http://docs.google.com/forms/d/1dMj6NWEmIpP7JYRxETZtKAl_aSQ6NUY4Fp3Ci2Olc2o/viewform?pli=1
 		end
 		Panel:AddPanel(suggest)
-		
+
 		Panel:ControlHelp(" ") -- Spacer
-		
+
 		Panel:AddControl("Label", {Text = "Follow/subscribe/like/join one of this links to get updates about my addons!"})
 		Panel:ControlHelp("Thanks for your support!")
-		
+
 		local steaml = vgui.Create("DButton") -- Steam Group
 		steaml:SetFont("TargetID")
 		steaml:SetText("Join my Steam Group!")
@@ -218,7 +218,7 @@ if (CLIENT) then
 			gui.OpenURL("http://steamcommunity.com/groups/vrejgaming")
 		end
 		Panel:AddPanel(steaml)
-		
+
 		local ytl = vgui.Create("DButton") -- YouTube
 		ytl:SetFont("TargetID")
 		ytl:SetText("Subscribe my YouTube Channel!")
@@ -228,7 +228,7 @@ if (CLIENT) then
 			gui.OpenURL("http://www.youtube.com/user/gmod95")
 		end
 		Panel:AddPanel(ytl)
-		
+
 		local fbl = vgui.Create("DButton") -- Facebook
 		fbl:SetFont("TargetID")
 		fbl:SetText("Like my Facebook Page!")
@@ -248,9 +248,9 @@ if (CLIENT) then
 			gui.OpenURL("http://twitter.com/vrejgaming")
 		end
 		Panel:AddPanel(tweetl)
-		
+
 		Panel:ControlHelp(" ") -- Spacer
-		
+
 		Panel:AddControl("Label", {Text = "To Donate:"})
 		Panel:ControlHelp("By donating, you will be encouraging me to keep making and updating addons! Thank you!")
 		local donate = vgui.Create("DButton") -- Donate
@@ -262,7 +262,7 @@ if (CLIENT) then
 			gui.OpenURL("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=VTLG9CHSAEUT6")
 		end
 		Panel:AddPanel(donate)
-		
+
 		/*HTMLTest = vgui.Create("HTML")
 		HTMLTest:SetPos(50,50)
 		HTMLTest:SetSize(ScrW() - 100, ScrH() - 100)

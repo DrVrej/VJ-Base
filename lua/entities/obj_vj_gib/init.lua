@@ -28,14 +28,14 @@ function ENT:Initialize()
 	if GetConVarNumber("vj_npc_gibcollidable") == 0 then self:SetCollisionGroup(1) end
 
 	-- Physics Functions
-	local phys = self.Entity:GetPhysicsObject()
+	local phys = self:GetPhysicsObject()
 	if (phys:IsValid()) then
 		phys:Wake()
 		//phys:EnableGravity(false)
 		//phys:EnableDrag(false)
 		//phys:SetBuoyancyRatio(0)
 	end
-	
+
 	-- Misc
 	self:SetUpInitializeBloodType()
 	if GetConVarNumber("vj_npc_fadegibs") == 1 then
@@ -72,11 +72,11 @@ function ENT:PhysicsCollide(data,phys)
 	if GetConVarNumber("vj_npc_sd_gibbing") == 0 && pickcollidesd != false && velocityspeed > 18 then
 		self.collidesd = CreateSound(self,pickcollidesd)
 		self.collidesd:SetSoundLevel(self.CollideSoundLevel)
-		self.collidesd:PlayEx(1,math.random(self.CollideSoundPitch1,self.CollideSoundPitch2)) 
+		self.collidesd:PlayEx(1,math.random(self.CollideSoundPitch1,self.CollideSoundPitch2))
 	end
-	
+
 	if GetConVarNumber("vj_npc_nogibdecals") == 0 && velocityspeed > 18 then
-		//local start = data.HitPos + data.HitNormal 
+		//local start = data.HitPos + data.HitNormal
 		//local endpos = data.HitPos - data.HitNormal
 		if !data.Entity && math.random(1,self.Collide_DecalChance) == 1 then
 			self:SetLocalPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the entity is too close to the ground
