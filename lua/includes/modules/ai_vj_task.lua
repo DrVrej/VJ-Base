@@ -65,7 +65,7 @@ local TaskList = {
 ["TASK_GET_PATH_TO_BESTSOUND"] = 46,
 ["TASK_GET_PATH_TO_BESTSCENT"] = 47,
 ["TASK_RUN_PATH"] = 48,
-["TASK_WALK_PATH"] = 49, 
+["TASK_WALK_PATH"] = 49,
 ["TASK_WALK_PATH_TIMED"] = 50,
 ["TASK_WALK_PATH_WITHIN_DIST"] = 51,
 ["TASK_WALK_PATH_FOR_UNITS"] = 52,
@@ -165,7 +165,7 @@ local TaskList = {
 ["TASK_ADD_GESTURE_WAIT"] = 146,
 ["TASK_ADD_GESTURE"] = 147,
 ["TASK_GET_PATH_TO_INTERACTION_PARTNER"] = 148,
-["TASK_PRE_SCRIPT"] = 149, 
+["TASK_PRE_SCRIPT"] = 149,
 }
 
 GetTaskList = function(name) return TaskList[name] or TaskList[0] end
@@ -197,11 +197,11 @@ function Task:InitFunctionName(_start,_end,_taskdata_)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Task:IsEngineType()
-	return (self.Type == TYPE_ENGINE)
+	return self.Type == TYPE_ENGINE
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Task:IsFNameType()
-	return (self.Type == TYPE_FNAME)
+	return self.Type == TYPE_FNAME
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Task:Start(npc)

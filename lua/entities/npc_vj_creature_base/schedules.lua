@@ -99,12 +99,10 @@ function ENT:NextTask(schedule)
 	//print(self.GetNumberOfTasks)
 	//print(self.CurrentTaskID)
 	if !schedule or !self then return end
-	
 	if self.GetNumberOfTasks == nil then //1
 	print("WARNING: VJ BASE ANIMATION SYSTEM IS BROKEN!") end
 	//self:ScheduleFinished(schedule)
 	//return end
-	
 	//if self.CurrentTaskID > 3 then return end -- if CurrentTaskID more than 3, should we tell then game not to run it? Still have to figure it out
 	//print("Running NextTask")
 	self.CurrentTaskID = self.CurrentTaskID +1

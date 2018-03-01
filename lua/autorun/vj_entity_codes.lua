@@ -97,8 +97,8 @@ function VJ_CreateSound(argent,sound,soundlevel,soundpitch,stoplatestsound,sound
 	if stoplatestsound == true then -- If stopsounds is true, then the current sound
 		//if argent.CurrentSound then argent.CurrentSound:Stop() end
 		if soundid then
-		soundid:Stop()
-		soundid = nil
+			soundid:Stop()
+			soundid = nil
 		end
 	end
 	//print(sound)
@@ -129,7 +129,7 @@ function VJ_AnimationExists(argent,actname)
 	if actname == nil then return false end
 	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
 	if type(actname) == "number" then
-		if (argent:SelectWeightedSequence(actname) == -1 or argent:SelectWeightedSequence(actname) == 0) && (argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "Not Found!" or argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "No model!") then 
+		if (argent:SelectWeightedSequence(actname) == -1 or argent:SelectWeightedSequence(actname) == 0) && (argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "Not Found!" or argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "No model!") then
 		return false end
 	end
 	if type(actname) == "string" then
@@ -260,7 +260,7 @@ Entity_MetaTable.AlreadyBeingHealedByMedic = false
 
 VJ_MOVETYPE_GROUND = 1
 VJ_MOVETYPE_AERIAL = 2
-VJ_MOVETYPE_AQUATIC = 3 
+VJ_MOVETYPE_AQUATIC = 3
 VJ_MOVETYPE_STATIONARY = 4
 
 VJ_BEHAVIOR_AGGRESSIVE = 1
@@ -288,11 +288,11 @@ function NPC_MetaTable:VJ_Controller_InitialMessage(ply)
 			ply:ChatPrint("MOUSE1: Melee Attack | MOUSE2: Weapon Attack")
 			ply:ChatPrint("JUMP: Grenade Attack | RELOAD: Reload Weapon")
 			ply:ChatPrint("=-=-=-= Custom Controls (Written by the developers) =-=-=-=")
-		else
+		//else
 			-- None...
 		end
 		self:Controller_IntMsg(ply)
-	else
+	//else
 		-- None...
 	end
 end
@@ -331,7 +331,7 @@ function NPC_MetaTable:VJ_PlaySequence(SequenceID,PlayBackRate,Wait,WaitTime,Int
 	if not SequenceID then return end
 	if Interruptible == true then self.VJ_IsPlayingInterruptSequence = true self.VJ_PlayingSequence = false else self.VJ_PlayingSequence = true self.VJ_IsPlayingInterruptSequence = false end
 	self:ClearSchedule()
-	timer.Simple(0.2,function() 
+	timer.Simple(0.2,function()
 		if IsValid(self) then
 			//print(self:SequenceDuration(SequenceID))
 			if Interruptible == true then self.VJ_IsPlayingInterruptSequence = true self.VJ_PlayingSequence = false else self.VJ_PlayingSequence = true self.VJ_IsPlayingInterruptSequence = false end
@@ -394,7 +394,7 @@ function NPC_MetaTable:VJ_IsCurrentSchedule(idcheck)
 	return false
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function NPC_MetaTable:VJ_GetAllPosParameters(prt)
+function NPC_MetaTable:VJ_GetAllPoseParameters(prt)
 	local result = {}
 	local prt = prt or false
 	for i = 0, self:GetNumPoseParameters() - 1 do
@@ -449,7 +449,7 @@ function NPC_MetaTable:VJ_GetNearestPointToEntity(argent,SameZ)
 	local NearestPositions = {MyPosition=Vector(0,0,0), EnemyPosition=Vector(0,0,0)}
 	local Pos_Enemy, Pos_Self = argent:NearestPoint(self:GetPos() +argent:OBBCenter()), self:NearestPoint(argent:GetPos() +self:OBBCenter())
 	Pos_Enemy.z, Pos_Self.z = argent:GetPos().z, self:GetPos().z
-	if SameZ == true then 
+	if SameZ == true then
 		Pos_Enemy = Vector(Pos_Enemy.x,Pos_Enemy.y,self:GetPos().z)
 		Pos_Self = Vector(Pos_Self.x,Pos_Self.y,self:GetPos().z)
 	end
@@ -499,7 +499,7 @@ function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,Tbl_Fe
 		cube:Activate()
 		timer.Simple(3,function() if IsValid(cube) then cube:Remove() end end)
 	end
-	
+
 	for k,v in ipairs(ents.FindInSphere(tr.HitPos,5)) do
 		//if vTbl_SpawnTestCube == true then print(v) end
 		if v == self:GetEnemy() or self:Disposition(v) == 1 or self:Disposition(v) == 2 then
@@ -507,7 +507,7 @@ function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,Tbl_Fe
 			//if vTbl_SpawnTestCube == true then print("it hit") end
 		end
 	end
-	
+
 	if hitent == true then if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = 0 end return false, tr end
 	if EndPos:Distance(tr.HitPos) <= 10 then if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = 0 end return false end
 	if tr.HitWorld == true && self:GetPos():Distance(tr.HitPos) < 200 then if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = CurTime() + 20 end return true, tr end
@@ -639,7 +639,7 @@ hook.Add("ScaleNPCDamage", "VJ_ScaleHitGroupHook",function(ent,hitgroup,dmginfo)
 	//print(hitgroup)
 	//print(ent)
 	ent.VJ_ScaleHitGroupDamage = hitgroup
-end) 
+end)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*if SERVER then
 local function VJShouldCollideHook( ent1, ent2 )
@@ -699,8 +699,8 @@ local function VJ_NPC_FIREBULLET(Entity,data,Attacker)
 		//if Entity:GetEnemy():GetHullType() == HULL_TINY then
 		//data.Spread = Vector(25,25,0) else
 		if Entity.VJ_IsBeingControlled == false then
-			local fSpread = ((EnemyDistance/28)*Entity.WeaponSpread)
-			if Wep.IsVJBaseWeapon == true && Wep.NPC_AllowCustomSpread == true then fSpread = fSpread *Wep.NPC_CustomSpread end
+			local fSpread = (EnemyDistance/28) * Entity.WeaponSpread
+			if Wep.IsVJBaseWeapon == true && Wep.NPC_AllowCustomSpread == true then fSpread = fSpread * Wep.NPC_CustomSpread end
 			//fSpread = math.Clamp(fSpread,1,65)
 			data.Spread = Vector(fSpread,fSpread,0)
 			/*if EnemyDistance < 400 then
@@ -862,7 +862,7 @@ cvars.AddChangeCallback("vj_npc_drvrejfriendly",function(convar_name,oldValue,ne
 				if v:IsPlayer() then
 					v:SetNoTarget(true)
 					v.VJ_NoTarget = true
-				end 
+				end
 			else
 				if (v:IsPlayer() && v:SteamID() == "STEAM_0:0:22688298") then
 					v:SetNoTarget(true)
@@ -878,7 +878,7 @@ cvars.AddChangeCallback("vj_npc_drvrejfriendly",function(convar_name,oldValue,ne
 				if v:IsPlayer() then
 					v:SetNoTarget(true)
 					v.VJ_NoTarget = false
-				end 
+				end
 			else
 				if (v:IsPlayer() && v:SteamID() == "STEAM_0:0:22688298") then
 					v:SetNoTarget(false)

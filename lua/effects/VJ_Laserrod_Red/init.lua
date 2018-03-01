@@ -15,7 +15,7 @@ function EFFECT:Init( data )
 
 	if ( IsValid( ent ) && att > 0 ) then
 		if (ent.Owner == LocalPlayer() && !LocalPlayer():GetViewModel() != LocalPlayer()) then ent = ent.Owner:GetViewModel() end
-		local att = ent:GetAttachment(att)
+		att = ent:GetAttachment(att)
 		if (att) then
 			self.StartPos = att.Pos
 		end
@@ -33,7 +33,7 @@ end
 function EFFECT:Think()
 	if (CurTime() > self.DieTime) then -- If it's dead then...
 		util.Decal("fadingscorch", self.EndPos +self.Dir:GetNormalized(), self.EndPos -self.Dir:GetNormalized())
-		
+
 		local effectdata = EffectData()
 		effectdata:SetOrigin(self.EndPos + self.Dir:GetNormalized() * -2)
 		effectdata:SetNormal(self.Dir:GetNormalized() * -3)

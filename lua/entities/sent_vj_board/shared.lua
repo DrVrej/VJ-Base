@@ -14,6 +14,6 @@ ENT.AdminOnly = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
 	function ENT:Draw()
-		self.Entity:DrawModel()
+		self:DrawModel()
 	end
 end
