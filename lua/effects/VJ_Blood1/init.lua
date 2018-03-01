@@ -9,7 +9,7 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 	-- Common Blood Types --
 	Red 		= Color(130,19,10)
 	Yellow 		= Color(255,221,35)
-
+	
 	-- Code Implementation --
 	local blcolor = Color(130,19,10)
 	bloodeffect:SetColor(VJ_Color2Byte(Color(r,g,b)))
@@ -30,8 +30,8 @@ function EFFECT:Init(data)
 			Mist:SetStartSize(scale/2)
 			Mist:SetEndSize(scale)
 			Mist:SetRoll(1)
-			Mist:SetRollDelta(0)
-			Mist:SetAirResistance(1)
+			Mist:SetRollDelta(0)			
+			Mist:SetAirResistance(1)			
 			Mist:SetGravity(Vector(math.Rand(-10,10),math.Rand(-10,10),math.Rand(-100,-100)))
 			Mist:SetColor(color.r,color.g,color.b)
 		end

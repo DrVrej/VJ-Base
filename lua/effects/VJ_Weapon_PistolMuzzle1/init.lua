@@ -9,7 +9,7 @@ function EFFECT:Init(data)
 	self.Pos = self:GetTracerShootPos(data:GetOrigin(),data:GetEntity(),data:GetAttachment())
 	local Emitter = ParticleEmitter(self.Pos)
 	if Emitter == nil then return end
-
+	
 	LocalPlayerMagnitude = 0
 	if IsValid(data:GetEntity()) && IsValid(data:GetEntity():GetOwner()) && data:GetEntity():GetOwner():IsPlayer() && data:GetEntity().Owner == LocalPlayer() then
 		LocalPlayerMagnitude = data:GetMagnitude() else
@@ -104,13 +104,13 @@ function EFFECT:Init(data)
 		EffectCode:SetColor(255,255,255) -- The color of the effect
 		//EffectCode:SetGravity(Vector(0,0,100)) -- The Gravity
 	end*/
-
+	
 	if GetConVarNumber("vj_wep_nomuszzleflash") == 0 && IsValid(data:GetEntity()) then
   	if IsValid(data:GetEntity():GetOwner()) then
 	 if data:GetEntity():GetOwner():IsPlayer() then
 	  for i = 1,4 do
 		local EffectCode = Emitter:Add("effects/yellowflare",self.Pos)
-		EffectCode:SetVelocity((data:GetNormal() + VectorRand() * 0.5) * math.Rand(150, 200))
+		EffectCode:SetVelocity(((data:GetNormal() + VectorRand() * 0.5) * math.Rand(150, 200)))
 		EffectCode:SetDieTime(math.Rand(0.5, 0.8))
 		EffectCode:SetStartAlpha(255)
 		EffectCode:SetStartSize(.5)
