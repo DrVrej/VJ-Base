@@ -9,5 +9,5 @@ INFO: Used as a base for gibs
 --------------------------------------------------*/
 
 function ENT:Draw()
-	self.Entity:DrawModel()
+	self:DrawModel()
 end

@@ -1,4 +1,24 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
+/*
+
+
+
+
+
+
+
+
+=== DON'T USE THE ANIMAL BASE! ===
+The animal base has been discontinued, if you want to create a passive-like SNPC, use the behavior system in the creature or human base!
+
+
+
+
+
+
+
+
+*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Base 			= "base_entity"
 ENT.Type 			= "ai"
@@ -27,10 +47,10 @@ function ENT:SetAutomaticFrameAdvance(bUsingAnim)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*if (CLIENT) then
-local Name = "rrrrrrrrrrrrrrrrrr"
-local LangName = "rrrrrrrrrrrrrrrrrr"
-language.Add(LangName, Name)
-killicon.Add(LangName,"HUD/killicons/default",Color(255,80,0,255))
-language.Add("#"..LangName, Name)
-killicon.Add("#"..LangName,"HUD/killicons/default",Color(255,80,0,255))
+	local Name = "rrrrrrrrrrrrrrrrrr"
+	local LangName = "rrrrrrrrrrrrrrrrrr"
+	language.Add(LangName, Name)
+	killicon.Add(LangName,"HUD/killicons/default",Color(255,80,0,255))
+	language.Add("#"..LangName, Name)
+	killicon.Add("#"..LangName,"HUD/killicons/default",Color(255,80,0,255))
 end*/

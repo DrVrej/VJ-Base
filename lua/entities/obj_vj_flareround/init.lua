@@ -26,9 +26,9 @@ function ENT:Initialize()
 	self:SetSolid(SOLID_VPHYSICS)
 	self:SetOwner(self:GetOwner())
 	self:SetColor(Color(255,0,0))
-	
+
 	-- Physics Functions
-	local phys = self.Entity:GetPhysicsObject()
+	local phys = self:GetPhysicsObject()
 	if (phys:IsValid()) then
 		phys:Wake()
 		phys:EnableGravity(true)
@@ -39,7 +39,7 @@ function ENT:Initialize()
 	//util.SpriteTrail(self, 0, Color(90,90,90,255), false, 10, 1, 3, 1/(15+1)*0.5, "trails/smoke.vmt")
 	//ParticleEffectAttach("vj_rpg1_smoke", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 	//ParticleEffectAttach("vj_rpg2_smoke2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
-	util.SpriteTrail(self.Entity, 0, Color(155, 0, 0, 150), false, 1, 100, 5, 5 / ((2 + 10) * 0.5), "trails/smoke.vmt")
+	util.SpriteTrail(self, 0, Color(155, 0, 0, 150), false, 1, 100, 5, 5 / ((2 + 10) * 0.5), "trails/smoke.vmt")
 
 
 	/*self.StartLight1 = ents.Create("light_dynamic")
@@ -53,12 +53,12 @@ function ENT:Initialize()
 	self.StartLight1:Activate()
 	self.StartLight1:Fire("TurnOn", "", 0)
 	self:DeleteOnRemove(self.StartLight1)*/
-	
+
 	if self:GetOwner():IsValid() && (self:GetOwner().FlareAttackFussTime) then
 		timer.Simple(self:GetOwner().FlareAttackFussTime,function() if IsValid(self) then self:DoDeath() end end) else
 		timer.Simple(60,function() if IsValid(self) then self:DoDeath() end end)
 	end
-	
+
 	self.ENVFlare = ents.Create("env_flare")
 	self.ENVFlare:SetPos(self:GetPos())
 	self.ENVFlare:SetAngles(self:GetAngles())
@@ -67,15 +67,15 @@ function ENT:Initialize()
 	self.ENVFlare:SetKeyValue("spawnflags","4")
 	self.ENVFlare:Spawn()
 	self.ENVFlare:SetColor(Color(255,0,0))
-	
+
 	self.idlesoundc = CreateSound(self, self.IdleSound1)
 	self.idlesoundc:SetSoundLevel(60)
 	self.idlesoundc:PlayEx(1, 100)
-	
+
 	timer.Simple(2,function()
 	if IsValid(self) then
-		local phys = self.Entity:GetPhysicsObject()
-		if (phys:IsValid()) && phys:GetVelocity():Length() > 500 then
+		local phys = self:GetPhysicsObject()
+		if phys:IsValid() && phys:GetVelocity():Length() > 500 then
 		phys:SetMass(0.005)
 		timer.Simple(10,function()
 			if IsValid(self) then
@@ -123,10 +123,10 @@ function ENT:DoDeath()
 	self:StopParticles()
 
 	-- Damages
-	timer.Simple(2,function() 
-	if self != NULL then 
-		self:Remove() 
-		end 
+	timer.Simple(2,function()
+	if self != NULL then
+		self:Remove()
+		end
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

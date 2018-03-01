@@ -8,7 +8,7 @@ include('shared.lua')
 -----------------------------------------------*/
 
 	-- Default ---------------------------------------------------------------------------------------------------------------------------------------------
-ENT.Model = {} -- The game will pick a random model from the table when the SNPC is spawned | Add as many as you want 
+ENT.Model = {} -- The game will pick a random model from the table when the SNPC is spawned | Add as many as you want
 ENT.StartHealth = 200
 //ENT.MoveType = MOVETYPE_VPHYSICS
 ENT.HullType = HULL_LARGE
@@ -100,8 +100,8 @@ function ENT:CustomOnInitialize()
 	//self:SetPos(self:GetPos()+Vector(0,0,90))
 	self:SetCollisionBounds(Vector(self.Tank_CollisionBoundSize, self.Tank_CollisionBoundSize, self.Tank_CollisionBoundUp), Vector(-self.Tank_CollisionBoundSize, -self.Tank_CollisionBoundSize, -10))
 	//self:SetCollisionBounds(Vector(self.Tank_CollisionBound_Back, self.Tank_CollisionBound_Right, self.Tank_CollisionBoundUp), Vector(-self.Tank_CollisionBound_Front, -self.Tank_CollisionBound_Left, 0))
-	
-	local phys = self.Entity:GetPhysicsObject()
+
+	local phys = self:GetPhysicsObject()
 	if (phys:IsValid()) then
 		phys:Wake()
 		phys:SetMass(30000)
@@ -113,14 +113,14 @@ function ENT:CustomOnInitialize()
 	self.Gunner:SetAngles(self:GetAngles())
 	self.Gunner:SetParent(self)
 	//self:DropToFloor()
-	
+
 	/*local angrypapir = Vector(-100, -25, 50)
 	self.ActualLight1 = ents.Create( "env_projectedtexture" )
 	self.ActualLight1:SetLocalPos( self:GetPos() + (self:GetForward() * angrypapir.x ) + ( self:GetRight() * angrypapir.y ) + ( self:GetUp() * angrypapir.z ) )
 	self.ActualLight1:SetLocalAngles( self:GetAngles() +Angle(0,180,0) )
 	self.ActualLight1:SetParent( self )
 	self.ActualLight1:SetKeyValue( "enableshadows", 1 )
-	self.ActualLight1:SetKeyValue( "LightWorld", 1 )		
+	self.ActualLight1:SetKeyValue( "LightWorld", 1 )
 	self.ActualLight1:SetKeyValue( "farz", 1000 )
 	self.ActualLight1:SetKeyValue( "nearz", 1 )
 	self.ActualLight1:SetKeyValue( "lightfov", 50 )
@@ -146,7 +146,7 @@ function ENT:GetNearDeathSparkPositions()
 	local randpos = math.random(1,7)
 	if randpos == 1 then return self.Spark1:SetLocalPos(self:GetPos() +self:GetForward()*100 +self:GetUp()*60) else
 	if randpos == 2 then return self.Spark1:SetLocalPos(self:GetPos() +self:GetForward()*30 +self:GetUp()*60) end
-	if randpos == 3 then return self.Spark1:SetLocalPos(self.WhiteLight1:GetPos()) end 
+	if randpos == 3 then return self.Spark1:SetLocalPos(self.WhiteLight1:GetPos()) end
 	if randpos == 4 then return self.Spark1:SetLocalPos(self.WhiteLight2:GetPos()) end
 	if randpos == 5 then return self.Spark1:SetLocalPos(self:GetPos() +self:GetForward()*10 +self:GetUp()*60 +self:GetRight()*50) end
 	if randpos == 6 then return self.Spark1:SetLocalPos(self:GetPos() +self:GetForward()*80 +self:GetUp()*60 +self:GetRight()*-50) end
@@ -190,36 +190,34 @@ function ENT:CustomOnThink()
 			self:StartSpawnEffects()
 		end
 	end)
-	
-	if self:Health() < (self.StartHealth*0.30) then
-		if CurTime() > self.Tank_NextLowHealthSmokeT then
-			//ParticleEffectAttach("vj_rpg2_smoke2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
-			
-			self.Spark1 = ents.Create("env_spark")
-			self.Spark1:SetKeyValue("MaxDelay",0.01)
-			self.Spark1:SetKeyValue("Magnitude","8")
-			self.Spark1:SetKeyValue("Spark Trail Length","3")
-			self:GetNearDeathSparkPositions()
-			self.Spark1:SetAngles(self:GetAngles())
-			//self.Spark1:Fire("LightColor", "255 255 255")
-			self.Spark1:SetParent(self)
-			self.Spark1:Spawn()
-			self.Spark1:Activate()
-			self.Spark1:Fire("StartSpark", "", 0)
-			self.Spark1:Fire("kill", "", 0.1)
-			self:DeleteOnRemove(self.Spark1)
-			
-			/*local effectdata = EffectData()
-			effectdata:SetOrigin(self:GetPos() +self:GetUp()*60 +self:GetForward()*100)
-			effectdata:SetNormal(Vector(0,0,0))
-			effectdata:SetMagnitude(5)
-			effectdata:SetScale(0.1)
-			effectdata:SetRadius(10)
-			util.Effect("Sparks",effectdata)*/
-			self.Tank_NextLowHealthSmokeT = CurTime() + math.random(4,6)
-		end
+
+	if self:Health() < (self.StartHealth*0.30) && CurTime() > self.Tank_NextLowHealthSmokeT then
+		//ParticleEffectAttach("vj_rpg2_smoke2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
+
+		self.Spark1 = ents.Create("env_spark")
+		self.Spark1:SetKeyValue("MaxDelay",0.01)
+		self.Spark1:SetKeyValue("Magnitude","8")
+		self.Spark1:SetKeyValue("Spark Trail Length","3")
+		self:GetNearDeathSparkPositions()
+		self.Spark1:SetAngles(self:GetAngles())
+		//self.Spark1:Fire("LightColor", "255 255 255")
+		self.Spark1:SetParent(self)
+		self.Spark1:Spawn()
+		self.Spark1:Activate()
+		self.Spark1:Fire("StartSpark", "", 0)
+		self.Spark1:Fire("kill", "", 0.1)
+		self:DeleteOnRemove(self.Spark1)
+
+		/*local effectdata = EffectData()
+		effectdata:SetOrigin(self:GetPos() +self:GetUp()*60 +self:GetForward()*100)
+		effectdata:SetNormal(Vector(0,0,0))
+		effectdata:SetMagnitude(5)
+		effectdata:SetScale(0.1)
+		effectdata:SetRadius(10)
+		util.Effect("Sparks",effectdata)*/
+		self.Tank_NextLowHealthSmokeT = CurTime() + math.random(4,6)
 	end
-	
+
 	/*if self:Health() <= 150 then
 	self.FireEffect = ents.Create("env_fire_trail")
 	self.FireEffect:SetPos(self:GetPos()+self:GetUp()*100)
@@ -235,7 +233,7 @@ function ENT:CustomOnThink_AIEnabled()
 	for k,v in pairs(ents.FindInSphere(self:GetPos(),100)) do
 		self:TANK_RUNOVER_DAMAGECODE(v)
 	end
-	
+
 	local tr = util.TraceEntity({start = self:GetPos(), endpos = self:GetPos() + self:GetUp()*-5, filter = self}, self)
 	if (tr.Hit) then // HitWorld
 		local phys = self:GetPhysicsObject()
@@ -256,14 +254,14 @@ function ENT:CustomOnThink_AIEnabled()
 	end
 
 	self:CustomOnSchedule()
-	
-	if self.Tank_Status == 0 && (tr.Hit) then
+
+	if self.Tank_Status == 0 && tr.Hit then
 		if self:GetEnemy() == nil then
 			self.Tank_Status = 1
 		else
 			//print((self:GetEnemy():GetPos() -self:GetPos() +Vector(0,0,80)):Angle())
 			-- To make it go opposite:
-				-- Change the +15 to -15 and -15 to 15 
+				-- Change the +15 to -15 and -15 to 15
 				-- Change the forwad spead(Tank_ForwardSpead) to their opposite quotation(+ to -)
 				-- Change the turning speed(Tank_TurningSpeed) to their opposite quotation(+ to -)
 			local phys = self:GetPhysicsObject()
@@ -338,7 +336,7 @@ function ENT:TANK_MOVINGSOUND()
 	if self.HasSounds == true && GetConVarNumber("vj_npc_sd_footstep") == 0 then
 		self.tank_movingsd = CreateSound(self,"vj_mili_tank/tankdriving1.wav") self.tank_movingsd:SetSoundLevel(80)
 		self.tank_movingsd:PlayEx(1,100)
-		
+
 		self.tank_tracksd = CreateSound(self,"vj_mili_tank/tanktrack1.wav") self.tank_tracksd:SetSoundLevel(70)
 		self.tank_tracksd:PlayEx(1,100)
 	end
@@ -357,18 +355,18 @@ function ENT:CustomOnTakeDamage_BeforeDamage(dmginfo,hitgroup)
 		if dmginfo:GetDamage() >= 30 && dmginfo:GetAttacker().VJ_IsHugeMonster != true then
 		//dmginfo:ScaleDamage(0.5)
 			dmginfo:SetDamage(dmginfo:GetDamage() /2)
-		else 
+		else
 			dmginfo:SetDamage(0)
 		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPriorToKilled(dmginfo,hitgroup)
-	if IsValid(self.Gunner) then 
+	if IsValid(self.Gunner) then
 		self.Gunner.Dead = true
 		if self:IsOnFire() then self.Gunner:Ignite(math.Rand(8,10),0) end
 	end
-	
+
 	timer.Simple(0,function()
 		if self:IsValid() then
 			VJ_EmitSound(self,"vj_mili_tank/tank_death2.wav",100,100)
@@ -377,7 +375,7 @@ function ENT:CustomOnPriorToKilled(dmginfo,hitgroup)
 			if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2",self:GetPos(),Angle(0,0,0),nil) end
 		end
 	end)
-	
+
 	timer.Simple(0.5,function()
 		if self:IsValid() then
 			VJ_EmitSound(self,"vj_mili_tank/tank_death2.wav",100,100)
@@ -386,7 +384,7 @@ function ENT:CustomOnPriorToKilled(dmginfo,hitgroup)
 			if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2",self:GetPos(),Angle(0,0,0),nil) end
 		end
 	end)
-	
+
 	timer.Simple(1,function()
 		if self:IsValid() then
 			VJ_EmitSound(self,"vj_mili_tank/tank_death2.wav",100,100)
@@ -395,7 +393,7 @@ function ENT:CustomOnPriorToKilled(dmginfo,hitgroup)
 			if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2",self:GetPos(),Angle(0,0,0),nil) end
 		end
 	end)
-	
+
 	timer.Simple(1.5,function()
 		if self:IsValid() then
 			VJ_EmitSound(self,"vj_mili_tank/tank_death2.wav",100,100)
@@ -410,7 +408,7 @@ end
 function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
 	util.BlastDamage(self, self, self:GetPos(), 400, 40)
 	util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
-	
+
 	-- Spawn the gunner
 	if IsValid(self.Gunner) then
 		local gunnercorpse = self.Gunner:CreateDeathCorpse(dmginfo,hitgroup)
@@ -422,7 +420,7 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
 	if panisrand == 1 then
 		self:CreateExtraDeathCorpse("prop_ragdoll",VJ_PICKRANDOMTABLE(self.Tank_DeathSoldierModels),{Pos=self:GetPos()+self:GetUp()*90+self:GetRight()*-30,Vel=Vector(math.Rand(-600,600), math.Rand(-600,600),500)},function(extraent) extraent:Ignite(math.Rand(8,10),0) extraent:SetColor(Color(90,90,90)) end)
 	end
-	
+
 	self:SetPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the NPC is too close to the ground
 	local tr = util.TraceLine({
 		start = self:GetPos(),
@@ -430,7 +428,7 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
 		filter = self
 	})
 	util.Decal("Scorch",tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
-	
+
 	if self.HasGibDeathParticles == true then
 		//self.FireEffect = ents.Create( "env_fire_trail" )
 		//self.FireEffect:SetPos(self:GetPos()+self:GetUp()*70)
