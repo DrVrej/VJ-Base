@@ -1,13 +1,34 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 include('shared.lua')
+require('sound_vj_track')
 /*--------------------------------------------------
 	=============== Animal SNPC Base ===============
 	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-INFO: Used to make animal SNPCs
+INFO: Used as a base for animal SNPCs.
 --------------------------------------------------*/
-require('sound_vj_track')
+
+/*
+
+
+
+
+
+
+
+
+=== DON'T USE THE ANIMAL BASE! ===
+The animal base has been discontinued, if you want to create a passive-like SNPC, use the behavior system in the creature or human base!
+
+
+
+
+
+
+
+
+*/
 
 ENT.RenderGroup = RENDERGROUP_BOTH
 function ENT:Initialize() end
