@@ -21,7 +21,7 @@ module("ai_vj_schedule")
 local Schedule		= {}
 Schedule.__index 	= Schedule
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Schedule:Init(_debugname_) 
+function Schedule:Init(_debugname_)
 	self.DebugName 	= tostring(_debugname_)
 	self.Tasks 		= {}
 	self.TaskCount 	= 0

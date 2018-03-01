@@ -6,7 +6,7 @@
 INFO: Used to load Particles for VJ Base
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
-	
+
 -- Half Life 2 Episode 2
 VJ.AddParticle("particles/antlion_gib_01.pcf",{
 	"antlion_gib_01",

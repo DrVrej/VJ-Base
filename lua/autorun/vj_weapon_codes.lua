@@ -32,19 +32,19 @@ VJ.AddWeapon("RPG","weapon_vj_rpg",false,vCat)
 local function VJ_PLAYER_CANPICKUPWEAPON(ply,wep)
 	//print(wep:GetWeaponWorldModel())
 	if ply.VJ_CanBePickedUpWithOutUse == true && ply.VJ_CanBePickedUpWithOutUse_Class == wep:GetClass() then
-		if wep.IsVJBaseWeapon == true && !(ply:HasWeapon(wep:GetClass())) then
-			ply.VJ_CanBePickedUpWithOutUse = false 
+		if wep.IsVJBaseWeapon == true && !ply:HasWeapon(wep:GetClass()) then
+			ply.VJ_CanBePickedUpWithOutUse = false
 			ply.VJ_CanBePickedUpWithOutUse_Class = nil
 			return true
 		else
-			ply.VJ_CanBePickedUpWithOutUse = false 
+			ply.VJ_CanBePickedUpWithOutUse = false
 			ply.VJ_CanBePickedUpWithOutUse_Class = nil
 		end
 	end
 	if wep.IsVJBaseWeapon == true then
 		//if wep.VJ_CanBePickedUpWithOutUse == true then return true end
 		if GetConVarNumber("vj_npc_plypickupdropwep") == 0 then return false end
-		if (ply:KeyPressed(IN_USE)) && (ply:GetEyeTrace().Entity == wep) then 
+		if ply:KeyPressed(IN_USE) && (ply:GetEyeTrace().Entity == wep) then
 		return true else return false end
 	end
 end
@@ -62,7 +62,7 @@ hook.Add("PlayerGiveSWEP","VJ_PLAYER_GIVESWEP",VJ_PLAYER_GIVESWEP)
 
 -- Weapon ConVars ---------------------------------------------------------------------------------------------------------------------------
 /*
-AddConvars["rrrrrrrrrrrrrrrrrrrrrr"] = 0 -- 
+AddConvars["rrrrrrrrrrrrrrrrrrrrrr"] = 0 --
 
 RunConsoleCommand("command_name", "value")
 */
