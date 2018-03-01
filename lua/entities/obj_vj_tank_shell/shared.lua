@@ -13,7 +13,7 @@ if (CLIENT) then
 	killicon.Add(LangName,"HUD/killicons/default",Color(255,80,0,255))
 	language.Add("#"..LangName, Name)
 	killicon.Add("#"..LangName,"HUD/killicons/default",Color(255,80,0,255))
-	
+
 	function ENT:Think()
 		if self:IsValid() then
 			self.Emitter = ParticleEmitter(self:GetPos())

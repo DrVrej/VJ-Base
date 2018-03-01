@@ -20,8 +20,8 @@ INFO: Used as a base for animal SNPCs.
 
 
 
-=== DON'T USE THIS BASE! ===
-This base has been discontinued, if you want to create a passive-like SNPC, use the behavior system in the creature or human base!
+=== DON'T USE THE ANIMAL BASE! ===
+The animal base has been discontinued, if you want to create a passive-like SNPC, use the behavior system in the creature or human base!
 
 
 
@@ -135,7 +135,6 @@ ENT.HasDeathAnimation = false -- Does it play an animation when it dies?
 ENT.AnimTbl_Death = {ACT_DIESIMPLE} -- Death Animations
 ENT.DeathAnimationTime = 1 -- Time until the SNPC spawns its corpse and gets removed
 ENT.DeathAnimationChance = 1 -- Put 1 if you want it to play the animation all the time
-ENT.DisableDeathAnimationSCHED = false -- If set to true, it will disable the setschedule code
 ENT.WaitBeforeDeathTime = 0 -- Time until the SNPC spawns its corpse and gets removed
 ENT.SetCorpseOnFire = false -- Sets the corpse on fire when the SNPC dies
 ENT.HasDeathNotice = false -- Set to true if you want it show a message after it dies
@@ -275,7 +274,7 @@ ENT.DeathSoundLevel = 75
 -- Higher number = Higher pitch | Lower number = Lower pitch
 -- Highest number is 254
 	-- !!! Important variables !!! --
-ENT.UseTheSameGeneralSoundPitch = true 
+ENT.UseTheSameGeneralSoundPitch = true
 	-- If set to true, it will make the game decide a number when the SNPC is created and use it for all sound pitches set to "UseGeneralPitch"
 	-- It picks the number between the two variables below:
 ENT.GeneralSoundPitch1 = 80
@@ -372,7 +371,7 @@ ENT.NextCanGetCombineBallDamageT = 0
 ENT.UseTheSameGeneralSoundPitch_PickedNumber = 0
 ENT.SelectedDifficulty = 1
 	-- Tables ---------------------------------------------------------------------------------------------------------------------------------------------
-ENT.DefaultGibDamageTypes = {DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SHOCK,DMG_SONIC} 
+ENT.DefaultGibDamageTypes = {DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SHOCK,DMG_SONIC}
 
 ENT.NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
 ENT.NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true,monster_scientist=true,monster_barney=true}
@@ -613,7 +612,7 @@ function ENT:OnTaskComplete()
 	self.bTaskComplete = true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_TASK_GOTO_TARGET() 
+function ENT:VJ_TASK_GOTO_TARGET()
 	local vsched = ai_vj_schedule.New("vj_act_followtarget")
 	vsched:EngTask("TASK_GET_PATH_TO_TARGET", 0)
 	vsched:EngTask("TASK_RUN_PATH", 0)
@@ -644,7 +643,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 	local IsSequence = false
 	if string.find(vACT_Name, "vjges_") then
 		IsGesture = true
-		vACT_Name = string.Replace(vACT_Name,"vjges_","") 
+		vACT_Name = string.Replace(vACT_Name,"vjges_","")
 		if string.find(vACT_Name, "vjseq_") then
 			IsSequence = true
 			vACT_Name = string.Replace(vACT_Name,"vjseq_","")
@@ -661,7 +660,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 		end
 	end
 	if type(vACT_Name) == "string" && VJ_AnimationExists(self,vACT_Name) == false then return end
-	
+
 	local vsched = ai_vj_schedule.New("vj_act_"..vACT_Name)
 	if vTbl_AlwaysUseSequence == true then
 		IsSequence = true
@@ -680,7 +679,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 		self.NextIdleTime = CurTime() + vACT_StopActivitiesTime
 	end
 	if (vACT_CustomCode) then vACT_CustomCode() end
-	
+
 	if vTbl_AlwaysUseSequence == false && type(vACT_Name) == "string" then
 		local checkanim = self:GetSequenceActivity(self:LookupSequence(vACT_Name))
 		if string.find(vACT_Name, "vjseq_") then
@@ -696,7 +695,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 	end
 	if IsSequence == false then self.VJ_PlayingSequence = false end
 	if self.VJ_IsPlayingInterruptSequence == true then self.VJ_IsPlayingInterruptSequence = false end
-	
+
 	timer.Simple(vACT_DelayAnim,function()
 	if IsValid(self) then
 		if IsGesture == true then
@@ -824,7 +823,7 @@ function ENT:Touch(entity)
 		if self.PlayFearSoundOnTouch == true && CurTime() > self.NextOnTouchFearSoundT then
 			if self.AlertSounds_OnlyOnce == true then
 				if self.HasDone_PlayAlertSoundOnlyOnce == false then
-				self:AlertSoundCode() 
+				self:AlertSoundCode()
 				self.HasDone_PlayAlertSoundOnlyOnce = true end
 			else
 				self:AlertSoundCode()
@@ -879,7 +878,7 @@ function ENT:FollowPlayerCode(key,activator,caller,data)
 			//if self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_IDLE_STAND) end
 			timer.Simple(0.1,function() if self:IsValid() then self:VJ_TASK_GOTO_TARGET() end end)
 			self:FollowPlayerSoundCode()
-			self.FollowingPlayer = true 
+			self.FollowingPlayer = true
 		else
 			self:UnFollowPlayerSoundCode()
 			if self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_TARGET_FACE) end
@@ -893,9 +892,9 @@ function ENT:Think()
 	//print(self:GetSequence())
 	//self:ConvarsOnThink()
 	if self:GetVelocity():Length() <= 0 && self.MovementType == VJ_MOVETYPE_GROUND /*&& CurSched.IsMovingTask == true*/ then self:DropToFloor() end
-	
+
 	self:CustomOnThink()
-	
+
 	self:EntitiesToNoCollideCode() -- Collison between something
 
 	if self.HasSounds == false or self.Dead == true then VJ_STOPSOUND(self.CurrentBreathSound) end
@@ -913,11 +912,11 @@ function ENT:Think()
 			if GetConVarNumber("vj_npc_printcurenemy") == 1 then if self:GetEnemy() != nil then print(self:GetClass().."'s Enemy: ",self:GetEnemy()) else print(self:GetClass().."'s Enemy: None") end end
 			if GetConVarNumber("vj_npc_printtakingcover") == 1 then if self.TakingCover == true then print(self:GetClass().." Is Taking Cover") else print(self:GetClass().." Is Not Taking Cover") end end
 		end
-		
+
 		self:IdleSoundCode()
 		if self.DisableFootStepSoundTimer == false then self:FootStepSoundCode() end
 		self:WorldShakeOnMoveCode()
-		
+
 		if self.FollowingPlayer == true then
 			//print(self:GetTarget())
 			//print(self.FollowingPlayerName)
@@ -939,14 +938,14 @@ function ENT:Think()
 				self:FollowPlayerReset()
 			end
 		end
-		
+
 		//if self.CombineFriendly == true then self:CombineFriendlyCode() end
 		//if self.ZombieFriendly == true then self:ZombieFriendlyCode() end
 		//if self.AntlionFriendly == true then self:AntlionFriendlyCode() end
 		//if self.PlayerFriendly == true then self:PlayerAllies() end
 		//if self.FriendlyToVJSNPCs == true or GetConVarNumber("vj_npc_vjfriendly") == 1 then self:VJFriendlyCode() end
 		if self.HasOnPlayerSight == true then self:OnPlayerSightCode() end
-		
+
 		/*local frianimals = self.NPCTbl_Animals
 		table.Add(frianimals)
 		for _,x in pairs( frianimals ) do
@@ -1016,7 +1015,7 @@ function ENT:CombineFriendlyCode(argent)
 	//if VJ_HasValue(self.NPCTbl_Combine,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
-		return true 
+		return true
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1026,7 +1025,7 @@ function ENT:ZombieFriendlyCode(argent)
 	//if VJ_HasValue(self.NPCTbl_Zombies,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
-		return true 
+		return true
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1036,7 +1035,7 @@ function ENT:AntlionFriendlyCode(argent)
 	//if VJ_HasValue(self.NPCTbl_Antlions,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
-		return true 
+		return true
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1046,7 +1045,7 @@ function ENT:XenFriendlyCode(argent)
 	//if VJ_HasValue(self.NPCTbl_Xen,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
-		return true 
+		return true
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1056,7 +1055,7 @@ function ENT:PlayerAllies(argent)
 	//if VJ_HasValue(self.NPCTbl_Resistance,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
-		return true 
+		return true
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1074,7 +1073,7 @@ function ENT:CheckAlliesAroundMe(SeeDistance)
 		end
 	end
 	if table.Count(FoundEntitiesTbl) > 0 then
-		return {ItFoundAllies = true, FoundAllies = FoundEntitiesTbl} 
+		return {ItFoundAllies = true, FoundAllies = FoundEntitiesTbl}
 	else
 		return {ItFoundAllies = false, FoundAllies = nil}
 	end
@@ -1115,7 +1114,7 @@ function ENT:OnTakeDamage(dmginfo,hitgroup)
 	if self.Dead == true then return false end
 	if self.GodMode == true then return false end
 	if dmginfo:GetDamage() <= 0 then return false end
-	
+
 	local DamageInflictor = dmginfo:GetInflictor()
 	if IsValid(DamageInflictor) then local DamageInflictorClass = DamageInflictor:GetClass() end
 	local DamageAttacker = dmginfo:GetAttacker()
@@ -1123,7 +1122,7 @@ function ENT:OnTakeDamage(dmginfo,hitgroup)
 	local DamageType = dmginfo:GetDamageType()
 	local hitgroup = self.VJ_ScaleHitGroupDamage
 	self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo,hitgroup)
-	
+
 	if self.GetDamageFromIsHugeMonster == true then
 		if DamageAttacker.VJ_IsHugeMonster == true then
 			self:SetHealth(self:Health() -dmginfo:GetDamage())
@@ -1174,7 +1173,7 @@ function ENT:OnTakeDamage(dmginfo,hitgroup)
 		self:DoFlinch(dmginfo,hitgroup)
 		self:DamageByPlayerCode(dmginfo,hitgroup)
 		self:PainSoundCode()
-		
+
 		if self.CallForBackUpOnDamage == true && CurTime() > self.NextCallForBackUpOnDamageT && self:GetEnemy() == nil && self.FollowingPlayer == false && self:CheckAlliesAroundMe(self.CallForBackUpOnDamageDistance).ItFoundAllies == true then
 			self:BringAlliesToMe(self.CallForBackUpOnDamageDistance,self.CallForBackUpOnDamageUseCertainAmount,self.CallForBackUpOnDamageUseCertainAmountNumber)
 			self:ClearSchedule()
@@ -1194,7 +1193,7 @@ function ENT:OnTakeDamage(dmginfo,hitgroup)
 			end
 			self.NextCallForBackUpOnDamageT = CurTime() + math.Rand(self.NextCallForBackUpOnDamageTime1,self.NextCallForBackUpOnDamageTime2)
 		end
-		
+
 		if self.BecomeEnemyToPlayer == true && DamageAttacker:IsPlayer() && GetConVarNumber("ai_disabled") == 0 && GetConVarNumber("ai_ignoreplayers") == 0 && (self:Disposition(DamageAttacker) == D_LI or self:Disposition(DamageAttacker) == D_NU) then
 			if self.AngerLevelTowardsPlayer <= self.BecomeEnemyToPlayerLevel then
 				self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1
@@ -1236,7 +1235,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoFlinch(dmginfo,hitgroup)
 	if self.CanFlinch == 0 or self.Flinching == true or (self.NextFlinchT > CurTime()) or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
-	
+
 	local function RunFlinchCode(HitBoxBased,HitBoxInfo)
 		self.Flinching = true
 		self:StopAttacks(true)
@@ -1245,8 +1244,8 @@ function ENT:DoFlinch(dmginfo,hitgroup)
 			self.CurrentFlinchAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentFlinchAnimation) -self.FlinchAnimationDecreaseLengthAmount
 			if self.NextMoveAfterFlinchTime != "LetBaseDecide" then self.CurrentFlinchAnimationDuration = self.NextMoveAfterFlinchTime end
 			if self.NextMoveAfterFlinchTime == "LetBaseDecide" && HitBoxInfo.IsSchedule == true then self.CurrentFlinchAnimationDuration = 0.6 end
-			if HitBoxInfo.IsSchedule == true then 
-				self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.CurrentFlinchAnimation)) 
+			if HitBoxInfo.IsSchedule == true then
+				self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.CurrentFlinchAnimation))
 			else
 				self:VJ_ACT_PLAYACTIVITY(self.CurrentFlinchAnimation,false,0,false,0,{SequenceDuration=self.CurrentFlinchAnimationDuration})
 			end
@@ -1265,7 +1264,7 @@ function ENT:DoFlinch(dmginfo,hitgroup)
 		self:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup)
 		self.NextFlinchT = CurTime() + self.NextFlinchTime
 	end
-	
+
 	local randflinch = math.random(1,self.FlinchChance)
 	if randflinch == 1 then
 		if (self.CanFlinch == 2 && VJ_HasValue(self.FlinchDamageTypes,dmginfo:GetDamageType())) or (self.CanFlinch == 1) then
@@ -1295,14 +1294,14 @@ function ENT:DoChangeBloodColor(Type)
 
 	local usegmoddecals = false
 	if self.BloodDecalUseGMod == true then usegmoddecals = true end
-	
+
 	local changeparticle = true
 	local changedecal = true
 	local changepool = true
-	if VJ_PICKRANDOMTABLE(self.CustomBlood_Particle) != false then self.CurrentChoosenBlood_Particle = self.CustomBlood_Particle changeparticle = false end 
-	if VJ_PICKRANDOMTABLE(self.CustomBlood_Decal) != false then self.CurrentChoosenBlood_Decal = self.CustomBlood_Decal changedecal = false end 
-	if VJ_PICKRANDOMTABLE(self.CustomBlood_Pool) != false then self.CurrentChoosenBlood_Pool = self.CustomBlood_Pool changepool = false end 
-	
+	if VJ_PICKRANDOMTABLE(self.CustomBlood_Particle) != false then self.CurrentChoosenBlood_Particle = self.CustomBlood_Particle changeparticle = false end
+	if VJ_PICKRANDOMTABLE(self.CustomBlood_Decal) != false then self.CurrentChoosenBlood_Decal = self.CustomBlood_Decal changedecal = false end
+	if VJ_PICKRANDOMTABLE(self.CustomBlood_Pool) != false then self.CurrentChoosenBlood_Pool = self.CustomBlood_Pool changepool = false end
+
 	if Type == "Red" then
 		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"blood_impact_red_01"} end // vj_impact1_red
 		if changedecal == true then
@@ -1579,7 +1578,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		local corpsemodel_custom = VJ_PICKRANDOMTABLE(self.DeathCorpseModel)
 		if corpsemodel_custom != false then corpsemodel = corpsemodel_custom end
 		local corpsetype = "prop_physics"
-		if util.IsValidRagdoll(corpsemodel) == true then 
+		if util.IsValidRagdoll(corpsemodel) == true then
 			corpsetype = "prop_ragdoll"
 		elseif util.IsValidProp(corpsemodel) == false && util.IsValidModel(corpsemodel) == false then
 			corpsetype = "prop_ragdoll"
@@ -1596,11 +1595,11 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		self.Corpse:SetMaterial(self:GetMaterial())
 		//self.Corpse:SetName("self.Corpse" .. self:EntIndex())
 		//self.Corpse:SetModelScale(self:GetModelScale())
-		/*local dissolve = ents.Create("env_entity_dissolver") 
-		dissolve:SetPos(self.Corpse:GetPos()) 
+		/*local dissolve = ents.Create("env_entity_dissolver")
+		dissolve:SetPos(self.Corpse:GetPos())
 		dissolve:SetKeyValue("target", self.Corpse:GetName())
-		dissolve:Spawn() 
-		dissolve:Fire("Dissolve", "", 0) 
+		dissolve:Spawn()
+		dissolve:Fire("Dissolve", "", 0)
 		dissolve:Fire("kill", "", 0.3)*/
 		local fadetype = "kill"
 		if self.Corpse:GetClass() == "prop_ragdoll" then fadetype = "FadeAndRemove" end
@@ -1608,11 +1607,11 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		self.Corpse.IsVJBaseCorpse = true
 		self.Corpse.DamageInfo = dmginfo
 		self.Corpse.ExtraCorpsesToRemove = self.ExtraCorpsesToRemove_Transition
-		
+
 		if self.Bleeds == true && self.HasBloodPool == true && GetConVarNumber("vj_npc_nobloodpool") == 0 then
 			self:SpawnBloodPool(dmginfo,hitgroup)
 		end
-		
+
 		-- Miscellaneous --
 		if GetConVarNumber("ai_serverragdolls") == 0 then self.Corpse:SetCollisionGroup(1) hook.Call("VJ_CreateSNPCCorpse",nil,self.Corpse,self) else undo.ReplaceEntity(self,self.Corpse) end
 		if self.CorpseAlwaysCollide == true then self.Corpse:SetCollisionGroup(0) end
@@ -1629,7 +1628,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 			//self.Corpse:SetMaterial("models/props_foliage/tree_deciduous_01a_trunk")
 		end
 		//gamemode.Call("CreateEntityRagdoll",self,self.Corpse)
-		
+
 		-- Dissolve --
 		if (dmginfo:GetDamageType() == DMG_DISSOLVE) or (IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() == "prop_combine_ball") then
 			self.Corpse:SetName("vj_dissolve_corpse")
@@ -1643,14 +1642,14 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 			dissolver:Fire("Dissolve")
 			dissolver:Remove()
 		end
-		
+
 		-- Bone and Angle --
 		local dmgforce = dmginfo:GetDamageForce()
 		for bonelim = 1,128 do -- 128 = Bone Limit
 			local childphys = self.Corpse:GetPhysicsObjectNum(bonelim)
 			if IsValid(childphys) then
 				local childphys_bonepos, childphys_boneang = self:GetBonePosition(self.Corpse:TranslatePhysBoneToBone(bonelim))
-				if (childphys_bonepos) then 
+				if (childphys_bonepos) then
 					childphys:SetPos(childphys_bonepos)
 					if self.UsesBoneAngle == true then childphys:SetAngles(childphys_boneang) end
 					if self.Corpse:GetName() == "vj_dissolve_corpse" then
@@ -1662,7 +1661,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 				end
 			end
 		end
-		
+
 		if self.FadeCorpse == true then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",self.FadeCorpseTime) end
 		if GetConVarNumber("vj_npc_corpsefade") == 1 then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",GetConVarNumber("vj_npc_corpsefadetime")) end
 		self:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,self.Corpse)
@@ -1715,10 +1714,10 @@ function ENT:CreateExtraDeathCorpse(Ent,Models,Tbl_Features,CustomCode)
 	end
 	if vTbl_HasVelocity == true then extraent:GetPhysicsObject():AddVelocity(vTbl_Velocity) end
 	if vTbl_ShouldFade == true then
-		if extraent:GetClass() == "prop_ragdoll" then 
-			extraent:Fire("FadeAndRemove","",vTbl_ShouldFadeTime) 
+		if extraent:GetClass() == "prop_ragdoll" then
+			extraent:Fire("FadeAndRemove","",vTbl_ShouldFadeTime)
 		else
-			extraent:Fire("kill","",vTbl_ShouldFadeTime) 
+			extraent:Fire("kill","",vTbl_ShouldFadeTime)
 		end
 	end
 	if vTbl_RemoveOnCorpseDelete == true then//self.Corpse:DeleteOnRemove(extraent)
@@ -1733,7 +1732,7 @@ function ENT:OnRemove()
 	-- Stop Things --
 	self:StopAllCommonSounds()
 	self:StopParticles()
-	
+
 	//if self.HasSoundTrack == true then
 	//if self.HasSounds == true then
 	//if GetConVarNumber("vj_npc_sd_soundtrack") == 0 then
@@ -2059,7 +2058,7 @@ end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*function ENT:GetRelationship(entity)
 	if self.HasAllies == false then return end
-	
+
 	local friendslist = {"", "", "", "", "", ""} -- List
 	for _,x in pairs( friendslist ) do
 	local hl_friendlys = ents.FindByClass( x )
@@ -2069,7 +2068,7 @@ end*/
 	end
   end
  end
- 
+
 	local groupone = ents.FindByClass("npc_vj_example_*") -- Group
 	table.Add(groupone)
 	for _, x in pairs(groupone) do
@@ -2077,7 +2076,7 @@ end*/
 	return D_LI
 	end
  end
- 
+
 	local groupone = ents.FindByClass("npc_vj_example") -- Single
 	for _, x in pairs(groupone) do
 	if entity == x then
