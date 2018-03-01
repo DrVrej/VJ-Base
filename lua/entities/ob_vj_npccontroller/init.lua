@@ -60,7 +60,7 @@ function ENT:StartControlling()
 	self.TheController:DrawWorldModel(false)
 	self.ControllerHealth = self.TheController:Health()
 	self.ControllerArmor = self.TheController:Armor()
-	if (IsValid(self.TheController:GetActiveWeapon())) then
+	if (IsValid(self.TheController:GetActiveWeapon())) then 
 	self.ControllerActiveWeapon = self.TheController:GetActiveWeapon():GetClass() end
 	self.ControllerCurrentWeapons = {}
 	for k, v in pairs(self.TheController:GetWeapons()) do
@@ -140,7 +140,7 @@ function ENT:SetControlledNPC(GetEntity)
 			self.ControlledNPC.RunOnHit = false
 		end
 		if self.ControlledNPC.IsVJBaseSNPC_Human == true then
-			if self.ControlledNPC.DisableWeapons == false then
+			if self.ControlledNPC.DisableWeapons == false then 
 				self.ControlledNPC:CapabilitiesRemove(bit.bor(CAP_MOVE_SHOOT))
 				self.ControlledNPC:CapabilitiesRemove(bit.bor(CAP_AIM_GUN))
 			end
@@ -185,7 +185,7 @@ function ENT:Think()
 		if IsValid(self.NPCBullseye) then
 			self.NPCBullseye:SetPos(tr_ply.HitPos)
 		end
-
+		
 		-- Turning
 		if self.ControlledNPC.PlayingAttackAnimation == false && self.AbleToTurn == true && self.ControlledNPC.IsReloadingWeapon != true && CurTime() > self.ControlledNPC.NextChaseTime && self.ControlledNPC.IsVJBaseSNPC_Tank != true && ((self.ControlledNPC.MovementType != VJ_MOVETYPE_STATIONARY) or (self.ControlledNPC.MovementType == VJ_MOVETYPE_STATIONARY && self.ControlledNPC.CanTurnWhileStationary != true)) then
 			if self.ControlledNPC:IsMoving() then
@@ -204,17 +204,17 @@ function ENT:Think()
 				//self.ControlledNPC:SetAngles(Angle(0,Lerp(100*FrameTime(),self.TestLerp,self.TheController:GetAimVector():Angle().y),0))
 			end
 		end
-
+		
 		self:CustomOnThink()
 		self.AbleToTurn = true
-
+		
 		-- camerayin deghe pordzedzi pokhel, Chaskhadav
 		/*if self.TheController:KeyDown(IN_ATTACK2) then
 			self.PropCamera:SetParent(NULL)
 			self.PropCamera:SetPos(self.ControlledNPC:GetPos())
 			self.PropCamera:SetParent(self.ControlledNPC)
 		end*/
-
+		
 		-- Weapon attack
 		if self.ControlledNPC.IsVJBaseSNPC_Animal != true && self.ControlledNPC.IsVJBaseSNPC == true then
 			if IsValid(self.ControlledNPC:GetActiveWeapon()) && self.ControlledNPC.IsVJBaseSNPC_Human == true then
@@ -229,7 +229,7 @@ function ENT:Think()
 				end
 			end
 		end
-
+		
 		-- Movement
 		if self.ControlledNPC.MovementType != VJ_MOVETYPE_STATIONARY && self.ControlledNPC.PlayingAttackAnimation == false && CurTime() > self.ControlledNPC.NextChaseTime && self.ControlledNPC.IsVJBaseSNPC_Tank != true then
 			if (self.TheController:KeyDown(IN_FORWARD)) then
@@ -290,7 +290,7 @@ end
 function ENT:StopControlling()
 	//if !IsValid(self.TheController) then return self:Remove() end
 	self:CustomOnStopControlling()
-
+	
 	if IsValid(self.TheController) then
 		local playerpos = self.TheController:GetPos()
 		self.TheController:UnSpectate()
@@ -314,7 +314,7 @@ function ENT:StopControlling()
 		self.TheController.IsControlingNPC = false
 	end
 	self.TheController = NULL
-
+	
 	if IsValid(self.ControlledNPC) then
 		//self.ControlledNPC:StopMoving()
 		self.ControlledNPC.VJ_IsBeingControlled = false
@@ -339,7 +339,7 @@ function ENT:StopControlling()
 			self.ControlledNPC.RunOnTouch = self.VJNPC_RunOnTouch
 			self.ControlledNPC.RunOnHit = self.VJNPC_RunOnHit
 			if self.ControlledNPC.IsVJBaseSNPC_Human == true then
-				if self.ControlledNPC.DisableWeapons == false then
+				if self.ControlledNPC.DisableWeapons == false then 
 					self.ControlledNPC:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
 					self.ControlledNPC:CapabilitiesAdd(bit.bor(CAP_AIM_GUN))
 				end
