@@ -1,6 +1,5 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 include('shared.lua')
-require('sound_vj_track')
 /*--------------------------------------------------
 	=============== Creature SNPC Base ===============
 	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
@@ -8,10 +7,11 @@ require('sound_vj_track')
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to make creature SNPCs
 --------------------------------------------------*/
+require('sound_vj_track')
 
 ENT.RenderGroup = RENDERGROUP_BOTH
 function ENT:Initialize() end
-function ENT:Draw() self:DrawModel() self:CustomOnDraw() end
+function ENT:Draw() self.Entity:DrawModel() self:CustomOnDraw() end
 function ENT:DrawTranslucent() self:Draw() end
 function ENT:BuildBonePositions(NumBones,NumPhysBones) end
 function ENT:SetRagdollBones(bIn) self.m_bRagdollSetup = bIn end

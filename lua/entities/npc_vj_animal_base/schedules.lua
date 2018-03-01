@@ -4,26 +4,6 @@ require("ai_vj_schedule")
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
-/*
-
-
-
-
-
-
-
-
-=== DON'T USE THE ANIMAL BASE! ===
-The animal base has been discontinued, if you want to create a passive-like SNPC, use the behavior system in the creature or human base!
-
-
-
-
-
-
-
-
-*/
 function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 	//print("Running the RunAI")
 	//self:SetArrivalActivity(ACT_COWER)
@@ -98,12 +78,12 @@ function ENT:NextTask(schedule)
 	//print(self.GetNumberOfTasks)
 	//print(self.CurrentTaskID)
 	if !schedule or !self then return end
-
+	
 	if self.GetNumberOfTasks == nil then //1
 	print("WARNING: VJ BASE ANIMATION SYSTEM IS BROKEN!") end
 	//self:ScheduleFinished(schedule)
 	//return end
-
+	
 	//if self.CurrentTaskID > 3 then return end -- if CurrentTaskID more than 3, should we tell then game not to run it? Still have to figure it out
 	//print("Running NextTask")
 	self.CurrentTaskID = self.CurrentTaskID +1

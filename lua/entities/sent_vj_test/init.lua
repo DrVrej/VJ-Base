@@ -10,6 +10,7 @@ include('shared.lua')
 INFO: Used to Test Things
 --------------------------------------------------*/
 ENT.PainSoundT = 0
+ENT.MenuOpen = false
 
 util.AddNetworkString("vj_testentity_onmenuopen")
 util.AddNetworkString("vj_testentity_runtextsd")
@@ -70,6 +71,7 @@ function ENT:AcceptInput(key, activator, caller)
 			self:EmitSound("vo/npc/male01/hi0"..math.random(1,2)..".wav")
 			self:VJ_SetSchedule(SCHED_IDLE_STAND)
 			self:VJ_SetSchedule(SCHED_TARGET_FACE)
+			self.MenuOpen = true
 		end
 	end
 end
@@ -78,11 +80,9 @@ net.Receive("vj_testentity_runtextsd",function(len,pl)
 	ply = net.ReadEntity()
 	msg = net.ReadString()
 	soundfile = net.ReadString()
-	if ply:IsPlayer() && ply:SteamID() == "STEAM_0:0:22688298" then
-		PrintMessage(HUD_PRINTTALK,msg)
-		PrintMessage(HUD_PRINTCENTER,msg)
-		local sd = CreateSound(game.GetWorld(),soundfile)
-		sd:SetSoundLevel(0)
-		sd:Play()
-	end
+	PrintMessage(HUD_PRINTTALK,msg)
+	PrintMessage(HUD_PRINTCENTER,msg)
+	local sd = CreateSound(game.GetWorld(),soundfile)
+	sd:SetSoundLevel(0)
+	sd:Play()
 end)

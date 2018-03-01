@@ -8,4 +8,4 @@ include('shared.lua')
 INFO: Used to make projectiles
 --------------------------------------------------*/
 
-function ENT:Draw() self:DrawModel() end
+function ENT:Draw() self.Entity:DrawModel() end

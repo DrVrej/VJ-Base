@@ -7,7 +7,7 @@ include('shared.lua')
 -----------------------------------------------*/
 
 	-- Default ---------------------------------------------------------------------------------------------------------------------------------------------
-ENT.Model = {} -- The game will pick a random model from the table when the SNPC is spawned | Add as many as you want
+ENT.Model = {} -- The game will pick a random model from the table when the SNPC is spawned | Add as many as you want 
 ENT.StartHealth = 0
 //ENT.MoveType = MOVETYPE_NONE
 ENT.HullType = HULL_TINY
@@ -125,7 +125,7 @@ end
 function ENT:CustomOnThink_AIEnabled()
 	if self.Dead == true then return end
 	self:SetEnemy(self:GetParent():GetEnemy())
-
+	
 	//print(self:GetEnemy())
 	//if self.Tank_ShellReady == true then print("Tank_ShellReady = true") else print("Tank_ShellReady = false") end
 	//if self.Tank_FacingTarget == true then print("Tank_FacingTarget = true") else print("Tank_FacingTarget = false") end
@@ -133,10 +133,10 @@ function ENT:CustomOnThink_AIEnabled()
 
 	//self:FindEnemySphere()
 	//print(self:GetEnemy())
-
+	
 	if self.Tank_GunnerIsTurning == true then self:TANK_MOVINGSOUND() else VJ_STOPSOUND(self.tank_movingsd) end
 	self:CustomOnSchedule()
-
+	
 	if self.Tank_FacingTarget == false then self.FiringShell = false end
 	if self.Tank_ShellReady == false then self.FiringShell = false end
 	if self.Tank_Status == 0 then
@@ -229,13 +229,13 @@ function ENT:RangeAttack_Base()
 	if self.Tank_ShellReady == false then
 		if self.HasSounds == true then
 		if GetConVarNumber("vj_npc_sd_rangeattack") == 0 then
-		self.shootsd1 = CreateSound(self, "vehicles/tank_readyfire1.wav")
+		self.shootsd1 = CreateSound(self, "vehicles/tank_readyfire1.wav") 
 		self.shootsd1:SetSoundLevel(90)
 		self.shootsd1:PlayEx(1,100) end end
 		self.Tank_ShellReady = true
 	end
 
-	if self.Dead == false then timer.Create("timer_shell_attack"..self:EntIndex(),self.Tank_Shell_TimeUntilFire,1,Timer_ShellAttack) end
+	if self.Dead == false then timer.Create("timer_shell_attack"..self.Entity:EntIndex(),self.Tank_Shell_TimeUntilFire,1,Timer_ShellAttack) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttack_Shell()
@@ -245,7 +245,7 @@ function ENT:RangeAttack_Shell()
 			if self.HasSounds == true && GetConVarNumber("vj_npc_sd_rangeattack") == 0 then
 				VJ_EmitSound(self,"vj_mili_tank/tank_fire"..math.random(1,4)..".wav",500,100)
 			end
-
+			
 			//self:StartShootEffects()
 			self.Tank_FireLight1 = ents.Create("light_dynamic")
 			self.Tank_FireLight1:SetKeyValue("brightness", "4")
@@ -259,13 +259,13 @@ function ENT:RangeAttack_Shell()
 			self.Tank_FireLight1:Fire("TurnOn","",0)
 			self.Tank_FireLight1:Fire("Kill","",0.1)
 			self:DeleteOnRemove(self.Tank_FireLight1)
-
+			
 			local counter_effect = 0
 			for i=1,40 do
 				counter_effect = counter_effect + 0.1
 				timer.Simple(counter_effect,function() if self.Dead == false then self:StartShootEffects() end end)
 			end
-
+			
 			local particle_smoke = ents.Create("info_particle_system")
 			particle_smoke:SetKeyValue("effect_name","smoke_exhaust_01a")
 			particle_smoke:SetPos(self:LocalToWorld(self.Tank_Shell_ParticlePos))
@@ -275,7 +275,7 @@ function ENT:RangeAttack_Shell()
 			particle_smoke:Activate()
 			particle_smoke:Fire("Start","",0)
 			particle_smoke:Fire("Kill","",4)
-
+			
 			local particle_whitesmoke = ents.Create("info_particle_system")
 			particle_whitesmoke:SetKeyValue("effect_name","Advisor_Pod_Steam_Continuous")
 			particle_whitesmoke:SetPos(self:LocalToWorld(self.Tank_Shell_ParticlePos))
@@ -286,7 +286,7 @@ function ENT:RangeAttack_Shell()
 			particle_whitesmoke:Fire("Start","",0)
 			particle_whitesmoke:Fire("Kill","",4)
 			util.ScreenShake(self:GetPos(),100,200,1,2500)
-
+			
 			local flash = ents.Create("env_muzzleflash")
 			flash:SetPos(self:LocalToWorld(self.Tank_Shell_MuzzleFlashPos))
 			flash:SetKeyValue("scale","6")
@@ -294,12 +294,12 @@ function ENT:RangeAttack_Shell()
 			flash:SetKeyValue("angles",tostring(self:GetRight():Angle())) else
 			flash:SetKeyValue("angles",tostring(self:GetForward():Angle())) end
 			flash:Fire("Fire",0,0)
-
+			
 			local dust = EffectData()
 			dust:SetOrigin(self:GetParent():GetPos())
 			dust:SetScale(500)
 			util.Effect("ThumperDust",dust)
-
+			
 			local ShootPos = (self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter()-self:LocalToWorld(self.Tank_Shell_SpawnPos)):GetNormal()*self.Tank_Shell_VelocitySpeed
 			if self.Tank_FacingTarget == false then
 				if self.Tank_UsesRightAngles == true then
@@ -318,7 +318,7 @@ function ENT:RangeAttack_Shell()
 			if phys:IsValid() then
 				phys:SetVelocity(Vector(ShootPos.x,ShootPos.y,math.Clamp(ShootPos.z,self.Tank_Shell_SpawnPos.z+-735,self.Tank_Shell_SpawnPos.z+335)))
 			end
-
+			
 			self:TankBase_CustomOnShellFire(Projectile_Shell)
 			self.Tank_ShellReady = false
 			self.FiringShell = false
@@ -338,7 +338,7 @@ end
 function ENT:CustomOnRemove()
 	VJ_STOPSOUND(self.shootsd1)
 	VJ_STOPSOUND(self.tank_movingsd)
-	timer.Destroy("timer_shell_attack"..self:EntIndex())
+	timer.Destroy("timer_shell_attack"..self.Entity:EntIndex())
 end
 /*-----------------------------------------------
 	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
