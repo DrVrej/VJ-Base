@@ -34,6 +34,7 @@ VJ.AddNPC("Mortar Synth","npc_vj_mortarsynth",vCat)
 -- Entities ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local vCat = "VJ Base"
 VJ.AddEntity("Admin Health Kit","sent_vj_adminhealthkit","DrVrej",true,0,true,vCat)
+VJ.AddEntity("Player Spawnpoint","sent_vj_ply_spawnpoint","DrVrej",true,0,true,vCat)
 //VJ.AddEntity("HL2 Grenade","npc_grenade_frag","DrVrej",false,50,true,vCat)
 VJ.AddEntity("Fireplace","sent_vj_fireplace","DrVrej",false,0,true,vCat)
 VJ.AddEntity("Wooden Board","sent_vj_board","DrVrej",false,0,true,vCat)
@@ -301,7 +302,7 @@ function NPC_MetaTable:VJ_HasNoTarget(argent)
 	if argent:GetClass() == "ob_vj_bullseye" && (argent.EnemyToIndividual == true) && (argent.EnemyToIndividualEnt == self) then
 		return false, "Bullseye"
 	end
-	if ((argent.VJ_NoTarget) && argent.VJ_NoTarget == true) or (argent:IsFlagSet(FL_NOTARGET) == true) then
+	if (argent.VJ_NoTarget && argent.VJ_NoTarget == true) or (argent:IsFlagSet(FL_NOTARGET) == true) then
 		return true, ""
 	else
 		return false, ""
@@ -772,6 +773,20 @@ local function VJ_PLAYER_INITIALSPAWN(ply)
 	end
 end
 hook.Add("PlayerInitialSpawn","VJ_PLAYER_INITIALSPAWN",VJ_PLAYER_INITIALSPAWN)
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+hook.Add("PlayerSelectSpawn","VJ_PLAYER_SELECTSPAWN",function(ply)
+	local points = {}
+	for k,v in ipairs(ents.FindByClass("sent_vj_ply_spawnpoint")) do
+		if (v.Active == true) then
+			table.insert(points,v)
+		end
+	end
+	local result = VJ_PICKRANDOMTABLE(points)
+	if result != false then
+		return result
+	end
+end)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* -- Obsolete! | Has many problems and doesn't solve lag
 local VJ_TblNPCs = {}
@@ -898,7 +913,7 @@ if (CLIENT) then
 		local sdvol = net.ReadFloat()
 		local sdspeed = net.ReadFloat()
 		local sdfadet = net.ReadFloat()
-		local entindex = ent:EntIndex()
+		//local entindex = ent:EntIndex()
 		//print(ent)
 		sound.PlayFile("sound/"..VJ_PICKRANDOMTABLE(sdtbl),"noplay",function(soundchannel,errorID,errorName)
 			if IsValid(soundchannel) then

@@ -16,6 +16,7 @@ function ENT:DrawTranslucent() self:Draw() end
 function ENT:BuildBonePositions(NumBones,NumPhysBones) end
 function ENT:SetRagdollBones(bIn) self.m_bRagdollSetup = bIn end
 function ENT:DoRagdollBone(PhysBoneNum,BoneNum) /*self:SetBonePosition(BoneNum,Pos,Angle)*/ end
+//function ENT:CalcAbsolutePosition(pos, ang) end
 -- Custom functions ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnDraw() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
