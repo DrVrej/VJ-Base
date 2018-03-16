@@ -3017,7 +3017,7 @@ function ENT:DoEntityRelationshipCheck()
 					if friclass == "CLASS_ZOMBIE" then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
 					if friclass == "CLASS_ANTLION" then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
 					if friclass == "CLASS_XEN" then if self:XenFriendlyCode(v) == true then entisfri = true end end
-					if ((v.VJ_NPC_Class) && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
+					if (v.VJ_NPC_Class && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
 						//print("SHOULD WORK: "..v:GetClass())
 						entisfri = true
 						if self:GetEnemy() != nil && self:GetEnemy() == v then
@@ -3270,7 +3270,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 	local DamageAttacker = dmginfo:GetAttacker()
 	if IsValid(DamageAttacker) then local DamageAttackerClass = DamageAttacker:GetClass() end
 	local DamageType = dmginfo:GetDamageType()
-	local hitgroup = self.VJ_ScaleHitGroupDamage
+	hitgroup = self.VJ_ScaleHitGroupDamage
 	self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo,hitgroup)
 
 	if self.GetDamageFromIsHugeMonster == true then
@@ -3613,7 +3613,7 @@ function ENT:DoChangeBloodColor(Type)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodParticles(dmginfo,hitgroup)
-	local DamageType = dmginfo:GetDamageType()
+	//local DamageType = dmginfo:GetDamageType()
 	local DamagePos = dmginfo:GetDamagePosition()
 	if DamagePos == Vector(0,0,0) then DamagePos = self:GetPos() + self:OBBCenter() end
 	//if DamageType == DMG_ACID or DamageType == DMG_RADIATION or DamageType == DMG_POISON or DamageType == DMG_CRUSH or DamageType == DMG_SLASH or DamageType == DMG_GENERIC or self:IsOnFire() then DoUnPositionedParticle() return false end
@@ -4266,7 +4266,7 @@ function ENT:MeleeAttackSoundCode(CustomTbl,CustomTblExtra)
 	if self.HasExtraMeleeAttackSounds == true then
 		//self:EmitSound( "npc/zombie/claw_strike"..math.random(1,3)..".wav", 70, 100)
 		local randextraattacks = math.random(1,self.ExtraMeleeSoundChance)
-		local soundtbl = self.SoundTbl_MeleeAttackExtra
+		soundtbl = self.SoundTbl_MeleeAttackExtra
 		if CustomTblExtra != nil && #CustomTblExtra != 0 then soundtbl = CustomTblExtra end
 		if randextraattacks == 1 /*&& VJ_PICKRANDOMTABLE(soundtbl) != false*/ then
 			if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
