@@ -209,7 +209,8 @@ ENT.MeleeAttackAngleRadius = 100 -- What is the attack angle radius? | 100 = In 
 ENT.MeleeAttackDamageDistance = 70 -- How far does the damage go?
 ENT.MeleeAttackDamageAngleRadius = 100 -- What is the damage angle radius? | 100 = In front of the SNPC | 180 = All around the SNPC
 ENT.TimeUntilMeleeAttackDamage = 0.5 -- This counted in seconds | This calculates the time until it hits something
-ENT.NextAnyAttackTime_Melee = 0.4 -- How much time until it can use any attack again? | Counted in Seconds
+	-- To let the base automatically detect the attack duration, set this to false:
+ENT.NextAnyAttackTime_Melee = false -- How much time until it can use any attack again? | Counted in Seconds
 ENT.NextAnyAttackTime_Melee_DoRand = false -- False = Don't use random time | Number = Picks a random number between the regular timer and this timer
 	-- Weapon Attack ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Weapon_FiringDistanceFar = 3000 -- How far away it can shoot
@@ -2118,7 +2119,7 @@ function ENT:MeleeAttackCode()
 		self:MeleeAttackSoundCode()
 	end
 	if self.AlreadyDoneFirstMeleeAttack == false then
-		timer.Create( "timer_melee_finished" .. self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Melee,self.NextAnyAttackTime_Melee_DoRand), 1, function()
+		timer.Create("timer_melee_finished" .. self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Melee,self.NextAnyAttackTime_Melee_DoRand,self.TimeUntilMeleeAttackDamage,self.CurrentAttackAnimationDuration), 1, function()
 			self:StopAttacks()
 			self:DoChaseAnimation()
 			self.IsAbleToMeleeAttack = true
