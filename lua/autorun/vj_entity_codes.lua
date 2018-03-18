@@ -586,11 +586,20 @@ function NPC_MetaTable:VJ_DoSetEnemy(argent,ShouldStopActs,DoSmallWhenActiveEnem
 	end
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function NPC_MetaTable:DecideAttackTimer(Timer1,Timer2)
-	if isnumber(Timer2) then
-		return math.Rand(Timer1,Timer2)
+function NPC_MetaTable:DecideAttackTimer(Timer1,Timer2,UntilDamage,AnimDuration)
+	local result = Timer1
+	if Timer1 == false then
+		if UntilDamage == false then -- Event-based
+			result = AnimDuration
+		else -- Timer-based
+			result = AnimDuration - UntilDamage
+		end
 	end
-	return Timer1
+	if isnumber(Timer2) then
+		result = math.Rand(result,Timer2)
+	end
+	//print(result)
+	return result
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function NPC_MetaTable:VJ_DoSelectDifficulty()

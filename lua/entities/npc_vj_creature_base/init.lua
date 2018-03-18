@@ -196,7 +196,8 @@ ENT.MeleeAttackDamageAngleRadius = 100 -- What is the damage angle radius? | 100
 ENT.TimeUntilMeleeAttackDamage = 0.6 -- This counted in seconds | This calculates the time until it hits something
 ENT.NextMeleeAttackTime = 0 -- How much time until it can use a melee attack?
 ENT.NextMeleeAttackTime_DoRand = false -- False = Don't use random time | Number = Picks a random number between the regular timer and this timer
-ENT.NextAnyAttackTime_Melee = 0.5 -- How much time until it can use any attack again? | Counted in Seconds
+	-- To let the base automatically detect the attack duration, set this to false:
+ENT.NextAnyAttackTime_Melee = false -- How much time until it can use any attack again? | Counted in Seconds
 ENT.NextAnyAttackTime_Melee_DoRand = false -- False = Don't use random time | Number = Picks a random number between the regular timer and this timer
 ENT.MeleeAttackReps = 1 -- How many times does it run the melee attack code?
 ENT.MeleeAttackExtraTimers = {/* Ex: 1,1.4 */} -- Extra melee attack timers | it will run the damage code after the given amount of seconds
@@ -250,7 +251,8 @@ ENT.RangeAttackPos_Right = 0 -- Right/Left spawning position for range attack
 ENT.TimeUntilRangeAttackProjectileRelease = 1.5 -- How much time until the projectile code is ran?
 ENT.NextRangeAttackTime = 3 -- How much time until it can use a range attack?
 ENT.NextRangeAttackTime_DoRand = false -- False = Don't use random time | Number = Picks a random number between the regular timer and this timer
-ENT.NextAnyAttackTime_Range = 0.1 -- How much time until it can use any attack again? | Counted in Seconds
+	-- To let the base automatically detect the attack duration, set this to false:
+ENT.NextAnyAttackTime_Range = false -- How much time until it can use any attack again? | Counted in Seconds
 ENT.NextAnyAttackTime_Range_DoRand = false -- False = Don't use random time | Number = Picks a random number between the regular timer and this timer
 ENT.RangeAttackReps = 1 -- How many times does it run the projectile code?
 ENT.RangeAttackExtraTimers = {/* Ex: 1,1.4 */} -- Extra range attack timers | it will run the projectile code after the given amount of seconds
@@ -268,7 +270,8 @@ ENT.LeapToMeleeDistance = 200 -- How close does it have to be until it uses mele
 ENT.TimeUntilLeapAttackDamage = 0.2 -- How much time until it runs the leap damage code?
 ENT.NextLeapAttackTime = 3 -- How much time until it can use a leap attack?
 ENT.NextLeapAttackTime_DoRand = false -- False = Don't use random time | Number = Picks a random number between the regular timer and this timer
-ENT.NextAnyAttackTime_Leap = 1 -- How much time until it can use any attack again? | Counted in Seconds
+	-- To let the base automatically detect the attack duration, set this to false:
+ENT.NextAnyAttackTime_Leap = false -- How much time until it can use any attack again? | Counted in Seconds
 ENT.NextAnyAttackTime_Leap_DoRand = false -- False = Don't use random time | Number = Picks a random number between the regular timer and this timer
 ENT.LeapAttackReps = 1 -- How many times does it run the leap attack code?
 ENT.LeapAttackExtraTimers = {/* Ex: 1,1.4 */} -- Extra leap attack timers | it will run the damage code after the given amount of seconds
@@ -2307,13 +2310,13 @@ function ENT:CanDoCertainAttack(AttackName)
 
 	if AttackName == "RangeAttack" then
 		// (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle)))
-		if self.IsAbleToRangeAttack == true && self:GetEnemy():Visible(self) && self.RangeAttacking == false && self.MeleeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
+		if self.IsAbleToRangeAttack == true && self:GetEnemy():Visible(self) && self.MeleeAttacking == false && self.LeapAttacking == false && self.RangeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
 			return true
 		end
 	end
 
 	if AttackName == "LeapAttack" then
-		if self.IsAbleToLeapAttack == true && self:GetEnemy():Visible(self) && self.RangeAttacking == false && self.LeapAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
+		if self.IsAbleToLeapAttack == true && self:GetEnemy():Visible(self) && self.MeleeAttacking == false && self.LeapAttacking == false && self.RangeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
 			return true
 		end
 	end
@@ -2548,12 +2551,12 @@ function ENT:VJ_DoSlowPlayer(argent,WalkSpeed,RunSpeed,SlowTime,SoundData,ExtraF
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackCode_DoFinishTimers()
-	timer.Create( "timer_melee_finished"..self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Melee,self.NextAnyAttackTime_Melee_DoRand), 1, function()
+	timer.Create("timer_melee_finished"..self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Melee,self.NextAnyAttackTime_Melee_DoRand,self.TimeUntilMeleeAttackDamage,self.CurrentAttackAnimationDuration), 1, function()
 		self:StopAttacks()
 		//if self.VJ_IsBeingControlled == false then self:FaceCertainEntity(MyEnemy,true) end
 		self:DoChaseAnimation()
 	end)
-	timer.Create( "timer_melee_finished_abletomelee"..self:EntIndex(), self:DecideAttackTimer(self.NextMeleeAttackTime,self.NextMeleeAttackTime_DoRand), 1, function()
+	timer.Create("timer_melee_finished_abletomelee"..self:EntIndex(), self:DecideAttackTimer(self.NextMeleeAttackTime,self.NextMeleeAttackTime_DoRand), 1, function()
 		self.IsAbleToMeleeAttack = true
 	end)
 end
@@ -2603,7 +2606,7 @@ function ENT:RangeAttackCode()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttackCode_DoFinishTimers()
-	timer.Create( "timer_range_finished"..self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Range,self.NextAnyAttackTime_Range_DoRand), 1, function()
+	timer.Create( "timer_range_finished"..self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Range,self.NextAnyAttackTime_Range_DoRand,self.TimeUntilRangeAttackProjectileRelease,self.CurrentAttackAnimationDuration), 1, function()
 		self:StopAttacks()
 		self:DoChaseAnimation()
 	end)
@@ -2651,7 +2654,7 @@ function ENT:LeapDamageCode()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:LeapAttackCode_DoFinishTimers()
-	timer.Create( "timer_leap_finished"..self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Leap,self.NextAnyAttackTime_Leap_DoRand), 1, function()
+	timer.Create( "timer_leap_finished"..self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Leap,self.NextAnyAttackTime_Leap_DoRand,self.TimeUntilLeapAttackDamage,self.CurrentAttackAnimationDuration), 1, function()
 		self:StopAttacks()
 		self:DoChaseAnimation()
 	end)

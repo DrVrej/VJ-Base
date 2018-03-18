@@ -37,8 +37,8 @@ SWEP.NPC_CustomSpread	 		= 1 -- This is added on top of the custom spread that's
 SWEP.NPC_BulletSpawnAttachment 	= "" -- The attachment that the bullet spawns on, leave empty for base to decide!
 SWEP.NPC_AnimationTbl_Custom 	= {} -- Can be activity or sequence
 SWEP.NPC_AnimationTbl_General 	= {ACT_RANGE_ATTACK1,ACT_RANGE_ATTACK1_LOW,ACT_IDLE_AGITATED,ACT_IDLE_AIM_AGITATED,ACT_RUN_AIM,ACT_WALK_AIM}
-SWEP.NPC_AnimationTbl_Rifle 	= {ACT_WALK_AIM_RIFLE,ACT_RUN_AIM_RIFLE,ACT_RANGE_ATTACK_AR2,ACT_RANGE_ATTACK_AR2_LOW,ACT_IDLE_ANGRY_SMG1,ACT_RANGE_ATTACK_SMG1}
-SWEP.NPC_AnimationTbl_Pistol 	= {ACT_RANGE_ATTACK_PISTOL,ACT_WALK_PISTOL}
+SWEP.NPC_AnimationTbl_Rifle 	= {ACT_WALK_AIM_RIFLE,ACT_RUN_AIM_RIFLE,ACT_RANGE_ATTACK_AR2,ACT_RANGE_ATTACK_AR2_LOW,ACT_IDLE_ANGRY_SMG1,ACT_RANGE_ATTACK_SMG1,ACT_RANGE_ATTACK_SMG1_LOW}
+SWEP.NPC_AnimationTbl_Pistol 	= {ACT_RANGE_ATTACK_PISTOL,ACT_WALK_PISTOL,ACT_RANGE_ATTACK_PISTOL_LOW}
 SWEP.NPC_AnimationTbl_Shotgun 	= {ACT_RANGE_ATTACK_SHOTGUN,ACT_RANGE_ATTACK_SHOTGUN_LOW,ACT_IDLE_SHOTGUN_AGITATED}
 SWEP.NPC_ReloadAnimationTbl_Custom = {} -- Can be activity or sequence
 SWEP.NPC_ReloadAnimationTbl		= {ACT_RELOAD,ACT_RELOAD_START,ACT_RELOAD_FINISH,ACT_RELOAD_LOW,ACT_GESTURE_RELOAD,ACT_GESTURE_RELOAD_PISTOL,ACT_GESTURE_RELOAD_SMG1,ACT_GESTURE_RELOAD_SHOTGUN,ACT_SHOTGUN_RELOAD_START,ACT_SHOTGUN_RELOAD_FINISH,ACT_SMG2_RELOAD2,ACT_RELOAD_PISTOL,ACT_RELOAD_PISTOL_LOW,ACT_RELOAD_SMG1,ACT_RELOAD_SMG1_LOW,ACT_RELOAD_SHOTGUN,ACT_RELOAD_SHOTGUN_LOW,ACT_GESTURE_RELOAD,ACT_GESTURE_RELOAD_PISTOL,ACT_GESTURE_RELOAD_SMG1,ACT_GESTURE_RELOAD_SHOTGUN}
@@ -339,6 +339,28 @@ function SWEP:NPCAbleToShoot()
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:NPC_PlayFiringGesture()
+	local anim = "gesture_shoot_ar2"
+	if self.HoldType == "ar2" then
+		anim = "gesture_shoot_ar2"
+	elseif self.HoldType == "smg" then
+		anim = "gesture_shoot_smg2"
+	elseif self.HoldType == "pistol" or self.HoldType == "revolver" then
+		if self.Owner:LookupSequence("gesture_shoot_pistol") == -1 then
+			anim = "gesture_shootp1"
+		else
+			anim = "gesture_shoot_pistol"
+		end
+	elseif self.HoldType == "crossbow" or self.HoldType == "shotgun" then
+		anim = "gesture_shoot_shotgun"
+	elseif self.HoldType == "rpg" then
+		anim = "gesture_shoot_rpg"
+	end
+	local gest = self.Owner:AddGestureSequence(self.Owner:LookupSequence(anim))
+	self.Owner:SetLayerPriority(gest,2)
+	self.Owner:SetLayerPlaybackRate(gest,0.5)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPCShoot_Primary(ShootPos,ShootDir)
 	//self:SetClip1(self:Clip1() -1)
 	//if CurTime() > self.NPC_NextPrimaryFireT then
@@ -354,6 +376,7 @@ function SWEP:NPCShoot_Primary(ShootPos,ShootDir)
 	end
 	timer.Simple(self.NPC_TimeUntilFire,function()
 		if IsValid(self) && IsValid(self.Owner) && self:NPCAbleToShoot() == true && CurTime() > self.NPC_NextPrimaryFireT then
+			self:NPC_PlayFiringGesture()
 			self:PrimaryAttack()
 			self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
 			if self.Owner.IsVJBaseSNPC == true then self.Owner.Weapon_TimeSinceLastShot = 0 end
