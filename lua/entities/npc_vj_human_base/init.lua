@@ -677,6 +677,7 @@ ENT.NextIdleStandTime = 0
 ENT.NextMoveOnGunCoveredT = 0
 ENT.Passive_NextRunOnTouchT = 0
 ENT.Passive_NextRunOnDamageT = 0
+ENT.NextWanderTime = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.NearestPointToEnemyDistance = Vector(0,0,0)
 ENT.SelectedDifficulty = 1
@@ -1335,22 +1336,23 @@ function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 	-- 0 = Random | 1 = Wander | 2 = Idle Stand /\ OverrideWander = Wander no matter what
 	RestrictNumber = RestrictNumber or 0
 	OverrideWander = OverrideWander or false
-	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_TASK_IDLE_STAND() return end
-	if self.LastHiddenZone_CanWander == false then self:VJ_TASK_IDLE_STAND() return end
-	if OverrideWander == false && self.DisableWandering == true && (RestrictNumber == 1 or RestrictNumber == 0) then self:VJ_TASK_IDLE_STAND() return end
-	if RestrictNumber == 0 then
+	if (self.MovementType == VJ_MOVETYPE_STATIONARY) or (self.LastHiddenZone_CanWander == false) or (self.NextWanderTime > CurTime()) then RestrictNumber = 2 end
+	if OverrideWander == false && self.DisableWandering == true && (RestrictNumber == 1 or RestrictNumber == 0) then
+		RestrictNumber = 2
+	end
+	if RestrictNumber == 0 then -- kharen: gam ge bidedi, gam ge gena
 		if math.random(1,3) == 1 then
 			/*self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.IdleSchedule_Wander))*/ self:VJ_TASK_IDLE_WANDER() else self:VJ_TASK_IDLE_STAND()
 		end
-	end
-	if RestrictNumber == 1 then
+	elseif RestrictNumber == 1 then -- bideder
 		//self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.IdleSchedule_Wander))
 		self:VJ_TASK_IDLE_WANDER()
-	end
-	if RestrictNumber == 2 then
+	elseif RestrictNumber == 2 then -- deghed getser
 		self:VJ_TASK_IDLE_STAND()
 	end
-	self.NextIdleTime = CurTime() + math.random(2,6)
+	if RestrictNumber != 2 then
+		self.NextWanderTime = CurTime() + math.Rand(3,6) // self.NextIdleTime
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
@@ -2682,6 +2684,7 @@ function ENT:VJ_ACT_RESETENEMY(RunToEnemyOnReset)
 	local vsched = ai_vj_schedule.New("vj_act_resetenemy")
 	if self:GetEnemy() != nil then vsched:EngTask("TASK_FORGET", self:GetEnemy()) end
 	//vsched:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
+	self.NextWanderTime = CurTime() + math.Rand(3,5)
 	if self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && RunToEnemyOnReset == true && CurTime() > self.LastHiddenZoneT && self.LastHiddenZone_CanWander == true && self.MeleeAttacking != true && self.RangeAttacking != true && self.LeapAttacking != true then
 		//ParticleEffect("explosion_turret_break", self.LatestEnemyPosition, Angle(0,0,0))
 		self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Walk))
