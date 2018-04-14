@@ -14,7 +14,6 @@ SWEP.SlotPos					= 1 -- Which part of that slot do you want the SWEP to be in? (
 SWEP.SwayScale 					= 2 -- Default is 1, The scale of the viewmodel sway
 end
 	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.NPC_EnableDontUseRegulate 	= false -- Used for VJ Base SNPCs, if enabled the SNPC will remove use regulate
 SWEP.NPC_NextPrimaryFire 		= 0.25 -- Next time it can use primary fire
 SWEP.NPC_CustomSpread	 		= 0.8 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------

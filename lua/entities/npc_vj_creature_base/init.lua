@@ -66,7 +66,8 @@ ENT.CallForBackUpOnDamageUseCertainAmount = true -- Should the SNPC only call ce
 ENT.CallForBackUpOnDamageUseCertainAmountNumber = 3 -- How many people should it call if certain amount is enabled?
 ENT.DisableCallForBackUpOnDamageAnimation = true -- Disables the animation when the CallForBackUpOnDamage function is called
 ENT.CallForBackUpOnDamageAnimation = {ACT_SIGNAL_GROUP} -- Animation used if the SNPC does the CallForBackUpOnDamage function
-ENT.CallForBackUpOnDamageAnimationTime = 2 -- How much time until it can use activities
+	-- To let the base automatically detect the animation duration, set this to false:
+ENT.CallForBackUpOnDamageAnimationTime = false -- How much time until it can use activities
 ENT.NextCallForBackUpOnDamageTime1 = 9 -- Next time it use the CallForBackUpOnDamage function | The first # in math.random
 ENT.NextCallForBackUpOnDamageTime2 = 11 -- Next time it use the CallForBackUpOnDamage function | The second # in math.random
 ENT.HasDamageByPlayer = true -- Should the SNPC do something when it's hit by a player? Example: Play a sound or animation
@@ -123,10 +124,11 @@ ENT.CallForHelpDistance = 2000 -- -- How far away the SNPC's call for help goes 
 ENT.NextCallForHelpTime = 4 -- Time until it calls for help again
 ENT.HasCallForHelpAnimation = true -- if true, it will play the call for help animation
 ENT.AnimTbl_CallForHelp = {} -- Call For Help Animations
-ENT.CallForHelpAnimationDelay = 0.1 -- It will wait certain amount of time before playing the animation
+ENT.CallForHelpAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 ENT.CallForHelpAnimationPlayBackRate = 0.5 -- How fast should the animation play? | Currently only for gestures!
 ENT.CallForHelpStopAnimations = true -- Should it stop attacks for a certain amount of time?
-ENT.CallForHelpStopAnimationsTime = 1.5 -- How long should it stop attacks?
+	-- To let the base automatically detect the animation duration, set this to false:
+ENT.CallForHelpStopAnimationsTime = false -- How long should it stop attacks?
 ENT.CallForHelpAnimationFaceEnemy = true -- Should it face the enemy when playing the animation?
 ENT.NextCallForHelpAnimationTime = 30 -- How much time until it can play the animation again?
 	-- ====== Medic Code ====== --
@@ -143,8 +145,6 @@ ENT.Medic_SpawnPropOnHealAttachment = "anim_attachment_LH" -- The attachment it 
 	-- ====== Base Numbers, Use carefully! ====== --
 ENT.DisableMakingSelfEnemyToNPCs = false -- Disables the "AddEntityRelationship" that runs in think
 ENT.NextEntityCheckTime = 1 -- Time until it runs the NPC check
-ENT.NextHardEntityCheck1 = 80 -- Next time it will do hard entity check | The first # in math.random
-ENT.NextHardEntityCheck2 = 100 -- Next time it will do hard entity check | The second # in math.random
 	-- Death ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasDeathRagdoll = true -- If set to false, it will not spawn the regular ragdoll of the SNPC
 ENT.DeathCorpseEntityClass = "UseDefaultBehavior" -- The entity class it creates | "UseDefaultBehavior" = Let the base automatically detect the type
@@ -306,6 +306,7 @@ ENT.PoseParameterLooking_InvertPitch = false -- Inverts the pitch poseparameters
 ENT.PoseParameterLooking_InvertYaw = false -- Inverts the yaw poseparameters (Y)
 ENT.PoseParameterLooking_InvertRoll = false -- Inverts the roll poseparameters (Z)
 ENT.PoseParameterLooking_TurningSpeed = 10 -- How fast does the parameter turn?
+ENT.PoseParameterLooking_Names = {pitch={},yaw={},roll={}} -- Custom pose parameters to use, can put as many as needed
 ENT.NoChaseAfterCertainRange = false -- Should the SNPC not be able to chase when it's between number x and y?
 ENT.NoChaseAfterCertainRange_FarDistance = 2000 -- How far until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
 ENT.NoChaseAfterCertainRange_CloseDistance = 300 -- How near until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
@@ -670,7 +671,6 @@ ENT.CurrentAnim_IdleStand = 0
 ENT.CurrentFlinchAnimation = 0
 ENT.CurrentFlinchAnimationDuration = 0
 ENT.NextFlinchT = 0
-ENT.CurrentAnim_CallForBackUpOnDamage = 0
 ENT.NextCanGetCombineBallDamageT = 0
 ENT.UseTheSameGeneralSoundPitch_PickedNumber = 0
 ENT.OnKilledEnemySoundT = 0
@@ -1312,11 +1312,10 @@ function ENT:VJ_TASK_IDLE_STAND()
 	local animtbl = self.AnimTbl_IdleStand
 	local checkedtbl = {}
 	local hasanim = false
-	for k,v in ipairs(animtbl) do
-		v = VJ_SequenceToActivity(self,v)
-		if v != false then
-			-- If animation not in the IdleStand table, then continue!
-			if hasanim == false && self.CurrentAnim_IdleStand == v then
+	for k,v in ipairs(animtbl) do -- Amen animation-nere ara
+		v = VJ_SequenceToActivity(self,v) -- Nayir yete animation-e sequence-e, activity-e tartsoor
+		if v != false then -- Yete v-en false che, sharnage!
+			if hasanim == false && self.CurrentAnim_IdleStand == v then -- Yete animation-e IdleStand table-en meche che, ooremen sharnage!
 				hasanim = true
 			end
 			if self:GetActivity() != v then
@@ -1324,7 +1323,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 			end
 		end
 	end
-	if #animtbl > 1 then
+	if #animtbl > 1 then -- Yete IdleStand table-e meg en aveli e, sharnage!
 		if hasanim == true && self.NextIdleStandTime > CurTime() then return end
 		animtbl = checkedtbl
 	end
@@ -1739,7 +1738,7 @@ function ENT:DoMedicCode_HealAlly()
 						if IsValid(self.Medic_CurrentEntToHeal) && self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then
 							self:CustomOnMedic_OnHeal()
 							self:MedicSoundCode_OnHeal()
-							if self.Medic_CurrentEntToHeal:IsNPC() && self.self.Medic_CurrentEntToHeal.IsVJBaseSNPC == true && self.self.Medic_CurrentEntToHeal.IsVJBaseSNPC_Animal != true then
+							if self.Medic_CurrentEntToHeal:IsNPC() && self.Medic_CurrentEntToHeal.IsVJBaseSNPC == true && self.Medic_CurrentEntToHeal.IsVJBaseSNPC_Animal != true then
 								self.Medic_CurrentEntToHeal:MedicSoundCode_ReceiveHeal()
 							end
 							self:VJ_SetSchedule(SCHED_IDLE_STAND)
@@ -2258,8 +2257,8 @@ function ENT:PoseParameterLookingCode(ResetPoses)
 	//self:VJ_GetAllPoseParameters(true)
 	local ent = NULL
 	if self.VJ_IsBeingControlled == true then ent = self.VJ_TheController else ent = self:GetEnemy() end
-	local p_enemy = 0 -- Yaw
-	local y_enemy = 0 -- Pitch
+	local p_enemy = 0 -- Pitch
+	local y_enemy = 0 -- Yaw
 	local r_enemy = 0 -- Roll
 	if IsValid(ent) && ResetPoses == false then
 		local self_pos = self:GetPos() + self:OBBCenter()
@@ -2274,6 +2273,16 @@ function ENT:PoseParameterLookingCode(ResetPoses)
 		if self.PoseParameterLooking_InvertYaw == true then y_enemy = -y_enemy end
 		r_enemy = math.AngleDifference(enemy_ang.z,self_ang.z)
 		if self.PoseParameterLooking_InvertRoll == true then r_enemy = -r_enemy end
+	end
+	local names = self.PoseParameterLooking_Names
+	for x=1, #names.pitch do
+		self:SetPoseParameter(names.pitch[x],math.ApproachAngle(self:GetPoseParameter(names.pitch[x]),p_enemy,self.PoseParameterLooking_TurningSpeed))
+	end
+	for x=1, #names.yaw do
+		self:SetPoseParameter(names.yaw[x],math.ApproachAngle(self:GetPoseParameter(names.yaw[x]),y_enemy,self.PoseParameterLooking_TurningSpeed))
+	end
+	for x=1, #names.roll do
+		self:SetPoseParameter(names.roll[x],math.ApproachAngle(self:GetPoseParameter(names.roll[x]),r_enemy,self.PoseParameterLooking_TurningSpeed))
 	end
 	self:SetPoseParameter("aim_pitch",math.ApproachAngle(self:GetPoseParameter("aim_pitch"),p_enemy,self.PoseParameterLooking_TurningSpeed))
 	self:SetPoseParameter("head_pitch",math.ApproachAngle(self:GetPoseParameter("head_pitch"),p_enemy,self.PoseParameterLooking_TurningSpeed))
@@ -2964,7 +2973,7 @@ function ENT:DoHardEntityCheck(CustomTbl)
 		if !CustomTbl[x]:IsNPC() && !CustomTbl[x]:IsPlayer() then continue end
 		local v = CustomTbl[x]
 		self:EntitiesToNoCollideCode(v)
-		if v:IsNPC() && (v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0 then
+		if v:IsNPC() && (v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0 then
 			GetEnts[#GetEnts + 1] = v
 		end
 		if v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 /*&& v:Alive()*/ then
@@ -3153,7 +3162,8 @@ function ENT:CallForHelpCode(SeeDistance)
 					self:CallForHelpSoundCode()
 					//timer.Simple(1,function() if IsValid(self) && IsValid(x) then x:OnReceiveOrderSoundCode() end end)
 					if self.HasCallForHelpAnimation == true && CurTime() > self.NextCallForHelpAnimationT then
-						self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.AnimTbl_CallForHelp),self.CallForHelpStopAnimations,self.CallForHelpStopAnimationsTime,self.CallForHelpAnimationFaceEnemy,self.CallForHelpAnimationDelay,{PlayBackRate=self.CallForHelpAnimationPlayBackRate})
+						local pickanim = VJ_PICKRANDOMTABLE(self.AnimTbl_CallForHelp)
+						self:VJ_ACT_PLAYACTIVITY(pickanim,self.CallForHelpStopAnimations,self:DecideAnimationLength(pickanim,self.CallForHelpStopAnimationsTime),self.CallForHelpAnimationFaceEnemy,self.CallForHelpAnimationDelay,{PlayBackRate=self.CallForHelpAnimationPlayBackRate})
 						self.NextCallForHelpAnimationT = CurTime() + self.NextCallForHelpAnimationTime
 					end
 					if self:GetPos():Distance(x:GetPos()) < SeeDistance then
@@ -3352,9 +3362,9 @@ function ENT:OnTakeDamage(dmginfo,data)
 			self:ClearSchedule()
 			//self.TakingCover = true
 			self.NextFlinchT = CurTime() + 1
-			self.CurrentAnim_CallForBackUpOnDamage = VJ_PICKRANDOMTABLE(self.CallForBackUpOnDamageAnimation)
-			if VJ_AnimationExists(self,self.CurrentAnim_CallForBackUpOnDamage) == true && self.DisableCallForBackUpOnDamageAnimation == false then
-				self:VJ_ACT_PLAYACTIVITY(self.CurrentAnim_CallForBackUpOnDamage,true,self.CallForBackUpOnDamageAnimationTime,true)
+			local pickanim = VJ_PICKRANDOMTABLE(self.CallForBackUpOnDamageAnimation)
+			if VJ_AnimationExists(self,pickanim) == true && self.DisableCallForBackUpOnDamageAnimation == false then
+				self:VJ_ACT_PLAYACTIVITY(pickanim,true,self:DecideAnimationLength(pickanim,self.CallForBackUpOnDamageAnimationTime),true)
 			else
 				self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
 				//self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
