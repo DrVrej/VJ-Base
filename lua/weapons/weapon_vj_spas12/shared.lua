@@ -14,8 +14,8 @@ SWEP.SlotPos					= 4 -- Which part of that slot do you want the SWEP to be in? (
 SWEP.UseHands					= true
 end
 	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.NPC_EnableDontUseRegulate 	= true -- Used for VJ Base SNPCs, if enabled the SNPC will remove use regulate
 SWEP.NPC_NextPrimaryFire 		= 0.9 -- Next time it can use primary fire
+SWEP.NPC_CustomSpread	 		= 2.5 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
 SWEP.NPC_ExtraFireSound			= {"vj_weapons/perform_shotgunpump.wav"} -- Plays an extra sound after it fires (Example: Bolt action sound)
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel					= "models/weapons/c_shotgun.mdl"
@@ -69,11 +69,9 @@ function SWEP:CustomOnPrimaryAttack_AfterShoot()
 	//end
 	//self.FirstTimeShotShotgun = true
 	timer.Simple(0.2,function()
-	if IsValid(self) then
-	if self.Owner:IsValid() && self.Owner:IsPlayer() then
-		self.Weapon:EmitSound(Sound("weapons/shotgun/shotgun_cock.wav"),80,100)
-		self.Weapon:SendWeaponAnim(ACT_SHOTGUN_PUMP)
+		if IsValid(self) && IsValid(self.Owner) && self.Owner:IsPlayer() then
+			self.Weapon:EmitSound(Sound("weapons/shotgun/shotgun_cock.wav"),80,100)
+			self.Weapon:SendWeaponAnim(ACT_SHOTGUN_PUMP)
 		end
-	end
- end)
+	end)
 end

@@ -29,7 +29,7 @@ SWEP.AutoSwitchTo				= false -- Auto switch to this weapon when it's picked up
 SWEP.AutoSwitchFrom				= false -- Auto switch weapon when the owner picks up a better weapon
 end
 	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.NPC_EnableDontUseRegulate 	= true -- Used for VJ Base SNPCs, if enabled the SNPC will remove use regulate
+	-- Set this fault to disable the timer automatically running the firing code, this allows for event-based SNPCs to fire at their own pace:
 SWEP.NPC_NextPrimaryFire 		= 0.15 -- Next time it can use primary fire
 SWEP.NPC_TimeUntilFire	 		= 0.1 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_AllowCustomSpread		= true -- Should the weapon be able to change the NPC's spread?
@@ -67,6 +67,7 @@ SWEP.WorldModel_CustomPositionAngle = Vector(-8,1,180)
 SWEP.WorldModel_CustomPositionOrigin = Vector(-1,6,1.4)
 SWEP.WorldModel_CustomPositionBone = "ValveBiped.Bip01_R_Hand" -- The bone it will use as the main point
 SWEP.WorldModel_Invisible = false -- Should the world model be invisible?
+SWEP.WorldModel_NoShadow = false -- Should the world model have a shadow?
 	-- General Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.DryFireSound				= {} -- The sound that it plays when the weapon is out of ammo
 SWEP.DryFireSoundLevel 			= 50 -- Dry fire sound level
@@ -94,6 +95,7 @@ SWEP.Primary.AllowFireInWater	= false -- If true, you will be able to use primar
 SWEP.Primary.Damage				= 5 -- Damage
 SWEP.Primary.PlayerDamage		= "Same" -- Only applies for players | "Same" = Same as self.Primary.Damage, "Double" = Double the self.Primary.Damage OR put a number to be different from self.Primary.Damage
 SWEP.Primary.Force				= 5 -- Force applied on the object the bullet hits
+SWEP.Primary.NumberOfShots		= 1 -- How many shots per attack?
 SWEP.Primary.ClipSize			= 30 -- Max amount of bullets per clip
 SWEP.Primary.PickUpAmmoAmount 	= "Default" -- How much ammo should the player get the gun is picked up? | "Default" = 3 Clips
 SWEP.Primary.Recoil				= 0.3 -- How much recoil does the player get?
@@ -160,6 +162,16 @@ function SWEP:CustomOnPrimaryAttack_AfterShoot() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BulletCallback(attacker,tr,dmginfo) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnPrimaryAttackEffects()
+	-- Not returning to true will make the base effects not to spawn
+	return true
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomBulletSpawnPosition()
+	-- Return a position to override the bullet spawn position
+	return false
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnFireAnimationEvent(pos,ang,event,options) return false end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnDeploy() end
@@ -198,28 +210,29 @@ function SWEP:Initialize()
 	self:SetDefaultValues(self.HoldType)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:SetDefaultValues(curtype)
+function SWEP:SetDefaultValues(curtype,force)
 	curtype = curtype or "ar2"
+	force = force or false
 	if curtype == "pistol" then
-		if VJ_PICKRANDOMTABLE(self.DeploySound) == false then self.DeploySound = {"weapons/draw_pistol.wav"} end
-		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_pistol.wav"} end
-		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_pistol.wav"} end
+		if VJ_PICKRANDOMTABLE(self.DeploySound) == false or force == true then self.DeploySound = {"weapons/draw_pistol.wav"} end
+		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false or force == true then self.DryFireSound = {"vj_weapons/dryfire_pistol.wav"} end
+		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false or force == true then self.NPC_ReloadSound = {"vj_weapons/reload_pistol.wav"} end
 	elseif curtype == "revolver" then
-		if VJ_PICKRANDOMTABLE(self.DeploySound) == false then self.DeploySound = {"weapons/draw_pistol.wav"} end
-		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_revolver.wav"} end
-		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_revolver.wav"} end
+		if VJ_PICKRANDOMTABLE(self.DeploySound) == false or force == true then self.DeploySound = {"weapons/draw_pistol.wav"} end
+		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false or force == true then self.DryFireSound = {"vj_weapons/dryfire_revolver.wav"} end
+		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false or force == true then self.NPC_ReloadSound = {"vj_weapons/reload_revolver.wav"} end
 	elseif curtype == "shotgun" or curtype == "crossbow" then
-		if VJ_PICKRANDOMTABLE(self.DeploySound) == false then self.DeploySound = {"weapons/draw_rifle.wav"} end
-		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
-		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_shotgun.wav"} end
+		if VJ_PICKRANDOMTABLE(self.DeploySound) == false or force == true then self.DeploySound = {"weapons/draw_rifle.wav"} end
+		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false or force == true then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
+		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false or force == true then self.NPC_ReloadSound = {"vj_weapons/reload_shotgun.wav"} end
 	elseif curtype == "rpg" then
-		if VJ_PICKRANDOMTABLE(self.DeploySound) == false then self.DeploySound = {"weapons/draw_rifle.wav"} end
-		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
-		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_rpg.wav"} end
+		if VJ_PICKRANDOMTABLE(self.DeploySound) == false or force == true then self.DeploySound = {"weapons/draw_rifle.wav"} end
+		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false or force == true then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
+		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false or force == true then self.NPC_ReloadSound = {"vj_weapons/reload_rpg.wav"} end
 	elseif curtype == "smg" or curtype == "ar2" then
-		if VJ_PICKRANDOMTABLE(self.DeploySound) == false then self.DeploySound = {"weapons/draw_rifle.wav"} end
-		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
-		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_rifle.wav"} end
+		if VJ_PICKRANDOMTABLE(self.DeploySound) == false or force == true then self.DeploySound = {"weapons/draw_rifle.wav"} end
+		if VJ_PICKRANDOMTABLE(self.DryFireSound) == false or force == true then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
+		if VJ_PICKRANDOMTABLE(self.NPC_ReloadSound) == false or force == true then self.NPC_ReloadSound = {"vj_weapons/reload_rifle.wav"} end
 	else
 		self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"}
 		self.NPC_ReloadSound = {"vj_weapons/reload_rifle.wav"}
@@ -303,7 +316,7 @@ function SWEP:NPC_ServerNextFire()
 			end
 		end
 	end*/
-	if self:NPCAbleToShoot() == true then FireCode() end
+	if self.NPC_NextPrimaryFire != false && self:NPCAbleToShoot() == true then FireCode() end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPCAbleToShoot()
@@ -321,7 +334,9 @@ function SWEP:NPCAbleToShoot()
 					if CurTime() > self.NextNPCDrySoundT then
 						local sdtbl = VJ_PICKRANDOMTABLE(self.DryFireSound)
 						if sdtbl != false then self:EmitSound(sdtbl,80,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) end
-						self.NextNPCDrySoundT = CurTime() + self.NPC_NextPrimaryFire
+						if self.NPC_NextPrimaryFire != false then
+							self.NextNPCDrySoundT = CurTime() + self.NPC_NextPrimaryFire
+						end
 					end
 					return false
 				else
@@ -376,9 +391,13 @@ function SWEP:NPCShoot_Primary(ShootPos,ShootDir)
 	end
 	timer.Simple(self.NPC_TimeUntilFire,function()
 		if IsValid(self) && IsValid(self.Owner) && self:NPCAbleToShoot() == true && CurTime() > self.NPC_NextPrimaryFireT then
-			self:NPC_PlayFiringGesture()
+			if self.Owner.DisableWeaponFiringGesture != true then
+				self:NPC_PlayFiringGesture()
+			end
 			self:PrimaryAttack()
-			self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
+			if self.NPC_NextPrimaryFire != false then
+				self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
+			end
 			if self.Owner.IsVJBaseSNPC == true then self.Owner.Weapon_TimeSinceLastShot = 0 end
 		end
 	end)
@@ -496,11 +515,6 @@ function SWEP:DoIdleAnimation()
 	if self.Reloading == true then return end
 	self:CustomOnIdle()
 	self:SendWeaponAnim(VJ_PICKRANDOMTABLE(self.AnimTbl_Idle))
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttackEffects()
-	-- Not returning to true will make the base effects not to spawn
-	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttackEffects()
@@ -686,6 +700,10 @@ end
 function SWEP:DecideBulletPosition()
 	if !IsValid(self.Owner) then return nil end
 	if !self.Owner:IsNPC() then return self.Owner:GetShootPos() end
+	local customPos = self:CustomBulletSpawnPosition()
+	if customPos != false then
+		return customPos
+	end
 	if self.NPC_BulletSpawnAttachment != "" then
 		if self:LookupAttachment(self.NPC_BulletSpawnAttachment) == 0 or self:LookupAttachment(self.NPC_BulletSpawnAttachment) == -1 then
 			-- blah
@@ -742,6 +760,9 @@ if (CLIENT) then
 	function SWEP:DrawWorldModel()
 		if !IsValid(self) then return end
 		if self.WorldModel_Invisible == true then return end
+		if self.WorldModel_NoShadow == true then
+			self:DrawShadow(false)
+		end
 		//self:DrawModel()
 		local pos = self:DecideBulletPosition()
 		if pos != nil && IsValid(self.Owner) then

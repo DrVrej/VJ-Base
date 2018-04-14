@@ -15,7 +15,6 @@ SWEP.SwayScale 					= 4 -- Default is 1, The scale of the viewmodel sway
 SWEP.UseHands					= true
 end
 	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.NPC_EnableDontUseRegulate 	= false -- Used for VJ Base SNPCs, if enabled the SNPC will remove use regulate
 SWEP.NPC_NextPrimaryFire 		= 0.9 -- Next time it can use primary fires
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel					= "models/weapons/c_357.mdl"

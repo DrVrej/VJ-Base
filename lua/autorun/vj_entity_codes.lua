@@ -602,6 +602,18 @@ function NPC_MetaTable:DecideAttackTimer(Timer1,Timer2,UntilDamage,AnimDuration)
 	return result
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function NPC_MetaTable:DecideAnimationLength(Anim,Value,Decrease)
+	local result = 0
+	Decrease = Decrease or 0
+	if isbool(Anim) then return result end
+	if Value == false then
+		result = VJ_GetSequenceDuration(self,Anim) - Decrease
+	elseif isnumber(Value) then
+		result = Value
+	end
+	return result
+end
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function NPC_MetaTable:VJ_DoSelectDifficulty()
 	if GetConVarNumber("vj_npc_dif_easy") == 1 then self.SelectedDifficulty = 0 return 0 end -- Easy
 	if GetConVarNumber("vj_npc_dif_normal") == 1 then self.SelectedDifficulty = 1 return 1 end -- Normal
