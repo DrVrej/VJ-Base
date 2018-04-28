@@ -13,7 +13,7 @@ ENT.Active = true -- Is this spawnpoint active?
 function ENT:Initialize()
 	self:SetModel("models/props_junk/sawblade001a.mdl")
 	self:PhysicsInit(SOLID_VPHYSICS)
-	self:SetMoveType(MOVETYPE_VPHYSICS)
+	self:SetMoveType(MOVETYPE_NONE)
 	self:SetSolid(SOLID_VPHYSICS)
 	self:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 	self:SetUseType(SIMPLE_USE)

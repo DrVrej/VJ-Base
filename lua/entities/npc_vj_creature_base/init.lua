@@ -8,101 +8,53 @@ include('schedules.lua')
 	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-INFO: Used as a base for creature SNPCs.
+	INFO: Used as a base for creature SNPCs.
 --------------------------------------------------*/
 AccessorFunc(ENT,"m_iClass","NPCClass",FORCE_NUMBER)
 AccessorFunc(ENT,"m_fMaxYawSpeed","MaxYawSpeed",FORCE_NUMBER)
-
-	-- General ---------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Model = {} -- The game will pick a random model from the table when the SNPC is spawned | Add as many as you want
 ENT.StartHealth = GetConVarNumber("vj_snpchealth")
+ENT.VJ_IsHugeMonster = false -- Is this a huge monster?
+	-- This is mostly used for massive or boss SNPCs, it affects certain part of the SNPC, for example the SNPC won't receive any knock back
+	-- ====== Collision / Hitbox Variables ====== --
 ENT.HullType = HULL_HUMAN
 ENT.HasHull = true -- Set to false to disable HULL
 ENT.HullSizeNormal = true -- set to false to cancel out the self:SetHullSizeNormal()
 ENT.HasSetSolid = true -- set to false to disable SetSolid
+	-- ====== Sight & Speed Variables ====== --
 ENT.SightDistance = 10000 -- How far it can see
 ENT.SightAngle = 80 -- The sight angle | Example: 180 would make the it see all around it | Measured in degrees and then converted to radians
 ENT.TurningSpeed = 20 -- How fast it can turn
-ENT.VJ_IsHugeMonster = false -- Is this a huge monster?
-	-- ====== Movement Code ====== --
+	-- ====== Movement Variables ====== --
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
 ENT.CanTurnWhileStationary = true -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
-	-- Blood & Damages ---------------------------------------------------------------------------------------------------------------------------------------------
-ENT.GodMode = false -- Immune to everything
-	-- ====== Blood-Related Variables ====== --
-ENT.Bleeds = true -- Does the SNPC bleed? (Blood decal, particle, etc.)
-ENT.BloodColor = "" -- The blood type, this will determine what it should use (decal, particle, etc.)
-	-- Types: "Red" || "Yellow" || "Green" || "Orange" || "Blue" || "Purple" || "White" || "Oil"
--- Use the following variables to customize the blood the way you want it:
-ENT.HasBloodParticle = true -- Does it spawn a particle when damaged?
-ENT.HasBloodDecal = true -- Does it spawn a decal when damaged?
-ENT.HasBloodPool = true -- Does it have a blood pool?
-ENT.CustomBlood_Particle = {} -- Particles to spawn when it's damaged
-ENT.CustomBlood_Decal = {} -- Decals to spawn when it's damaged
-ENT.CustomBlood_Pool = {} -- Blood pool types after it dies
-ENT.BloodPoolSize = "Normal" -- What's the size of the blood pool?
-	-- Current Sizes: "Normal" || "Small" || "Tiny"
-ENT.BloodDecalUseGMod = false -- Should use the current default decals defined by Garry's Mod? (This only applies for certain blood types only!)
-ENT.BloodDecalDistance = 300 -- How far the decal can spawn in world units
-	-- ====== Other Variables ====== --
-ENT.GetDamageFromIsHugeMonster = false -- Should it get damaged no matter what by SNPCs that are tagged as VJ_IsHugeMonster?
-ENT.Immune_AcidPoisonRadiation = false -- Immune to Acid, Poison and Radiation
-ENT.Immune_Bullet = false -- Immune to bullet type damages
-ENT.Immune_Blast = false -- Immune to explosive-type damages
-ENT.Immune_Dissolve = false -- Immune to dissolving | Example: Combine Ball
-ENT.Immune_Electricity = false -- Immune to electrical-type damages | Example: shock or laser
-ENT.Immune_Fire = false -- Immune to fire-type damages
-ENT.Immune_Melee = false -- Immune to melee-type damage | Example: Crowbar, slash damages
-ENT.Immune_Physics = false -- Immune to physics impacts, won't take damage from props
-ENT.Immune_Sonic = false -- Immune to sonic-type damages
-ENT.ImmuneDamagesTable = {} -- Makes the SNPC immune to specific type of damages | Takes DMG_ enumerations
-ENT.AllowIgnition = true -- Can this SNPC be set on fire?
-ENT.RunAwayOnUnknownDamage = true -- Should run away on damage
-ENT.NextRunAwayOnDamageTime = 5 -- Until next run after being shot when not alerted
-ENT.CallForBackUpOnDamage = true -- Should the SNPC call for help when damaged? (Only happens if the SNPC hasn't seen a enemy)
-ENT.CallForBackUpOnDamageDistance = 800 -- How far away the SNPC's call for help goes | Counted in World Units
-ENT.CallForBackUpOnDamageUseCertainAmount = true -- Should the SNPC only call certain amount of people?
-ENT.CallForBackUpOnDamageUseCertainAmountNumber = 3 -- How many people should it call if certain amount is enabled?
-ENT.DisableCallForBackUpOnDamageAnimation = true -- Disables the animation when the CallForBackUpOnDamage function is called
-ENT.CallForBackUpOnDamageAnimation = {ACT_SIGNAL_GROUP} -- Animation used if the SNPC does the CallForBackUpOnDamage function
-	-- To let the base automatically detect the animation duration, set this to false:
-ENT.CallForBackUpOnDamageAnimationTime = false -- How much time until it can use activities
-ENT.NextCallForBackUpOnDamageTime1 = 9 -- Next time it use the CallForBackUpOnDamage function | The first # in math.random
-ENT.NextCallForBackUpOnDamageTime2 = 11 -- Next time it use the CallForBackUpOnDamage function | The second # in math.random
-ENT.HasDamageByPlayer = true -- Should the SNPC do something when it's hit by a player? Example: Play a sound or animation
-ENT.DamageByPlayerDispositionLevel = 0 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
-ENT.DamageByPlayerNextTime1 = 2 -- How much time should it pass until it runs the code again? | First number in math.random
-ENT.DamageByPlayerNextTime2 = 2 -- How much time should it pass until it runs the code again? | Second number in math.random
-	-- ====== Flinching Code ====== --
-ENT.CanFlinch = 0 -- 0 = Don't flinch | 1 = Flinch at any damage | 2 = Flinch only from certain damages
-ENT.FlinchDamageTypes = {DMG_BLAST} -- If it uses damage-based flinching, which types of damages should it flinch from?
-ENT.FlinchChance = 16 -- Chance of it flinching from 1 to x | 1 will make it always flinch
-ENT.NextMoveAfterFlinchTime = "LetBaseDecide" -- How much time until it can move, attack, etc. | Use this for schedules or else the base will set the time 0.6 if it sees it's a schedule!
-ENT.NextFlinchTime = 5 -- How much time until it can flinch again?
-ENT.FlinchAnimation_UseSchedule = false -- false = SCHED_ | true = ACT_
-ENT.ScheduleTbl_Flinch = {SCHED_FLINCH_PHYSICS} -- If it uses schedule-based animation, implement the schedule types here | Common: SCHED_BIG_FLINCH, SCHED_SMALL_FLINCH, SCHED_FLINCH_PHYSICS
-ENT.AnimTbl_Flinch = {ACT_FLINCH_PHYSICS} -- If it uses normal based animation, use this
-ENT.FlinchAnimationDecreaseLengthAmount = 0 -- This will decrease the time it can move, attack, etc. | Use it to fix animation pauses after it finished the flinch animation
-ENT.HasHitGroupFlinching = false -- It will flinch when hit in certain hitgroups | It can also have certain animations to play in certain hitgroups
-ENT.HitGroupFlinching_DefaultWhenNotHit = true -- If it uses hitgroup flinching, should it do the regular flinch if it doesn't hit any of the specified hitgroups?
-ENT.HitGroupFlinching_Values = {/* EXAMPLES: {HitGroup = {1}, IsSchedule = true, Animation = {SCHED_BIG_FLINCH}},{HitGroup = {4}, IsSchedule = false, Animation = {ACT_FLINCH_STOMACH}} */} -- if "IsSchedule" is set to true, "Animation" needs to be a schedule
-	-- Relationships ---------------------------------------------------------------------------------------------------------------------------------------------
+	-- ====== Miscellaneous Variables ====== --
+ENT.HasEntitiesToNoCollide = true -- If set to false, it won't run the EntitiesToNoCollide code
+ENT.EntitiesToNoCollide = {} -- Entities to not collide with when HasEntitiesToNoCollide is set to true
+ENT.AllowPrintingInChat = true -- Should this SNPC be allowed to post in player's chat? Example: "Blank no longer likes you."
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ AI / Relationship Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasAllies = true -- Put to false if you want it not to have any allies
 ENT.VJ_NPC_Class = {} -- NPCs with the same class with be allied to each other
 	-- Common Classes: Combine = CLASS_COMBINE || Zombie = CLASS_ZOMBIE || Antlions = CLASS_ANTLION || Xen = CLASS_XEN || Player Friendly = CLASS_PLAYER_ALLY
-ENT.VJ_FriendlyNPCsSingle = {}
-ENT.VJ_FriendlyNPCsGroup = {}
-ENT.PlayerFriendly = false -- Makes the SNPC friendly to the player and HL2 Resistance
 ENT.FriendsWithAllPlayerAllies = false -- Should this SNPC be friends with all other player allies that are running on VJ Base?
+ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE -- Doesn't attack anything
+	-- VJ_BEHAVIOR_AGGRESSIVE = Default behavior, attacks enemies || VJ_BEHAVIOR_NEUTRAL = Neutral to everything, unless provoked
+	-- VJ_BEHAVIOR_PASSIVE = Doesn't attack, but can attacked by others || VJ_BEHAVIOR_PASSIVE_NATURE = Doesn't attack and is allied with everyone
 ENT.MoveOutOfFriendlyPlayersWay = true -- Should the SNPC move out of the way when a friendly player comes close to it?
 ENT.NextMoveOutOfFriendlyPlayersWayTime = 1 -- How much time until it can moves out of the player's way?
 ENT.BecomeEnemyToPlayer = false -- Should the friendly SNPC become enemy towards the player if it's damaged by a player?
 ENT.BecomeEnemyToPlayerLevel = 2 -- How many times does the player have to hit the SNPC for it to become enemy?
-ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE -- Doesn't attack anything
-	-- VJ_BEHAVIOR_AGGRESSIVE = Default behavior, attacks enemies || VJ_BEHAVIOR_NEUTRAL = Neutral to everything, unless provoked
-	-- VJ_BEHAVIOR_PASSIVE = Doesn't attack, but can attacked by others || VJ_BEHAVIOR_PASSIVE_NATURE = Doesn't attack and is allied with everyone
-	-- ====== Passive Variables ====== --
+	-- ====== Old Variables (Can still be used, but it's recommended not to use them) ====== --
+ENT.VJ_FriendlyNPCsSingle = {}
+ENT.VJ_FriendlyNPCsGroup = {}
+ENT.PlayerFriendly = false -- Makes the SNPC friendly to the player and HL2 Resistance
+	-- ====== Passive Behavior Variables ====== --
 ENT.Passive_RunOnTouch = true -- Should it run away and make a alert sound when something collides with it?
 ENT.Passive_NextRunOnTouchTime1 = 3 -- How much until it can run away again when something collides with it? | First # in the math.Rand
 ENT.Passive_NextRunOnTouchTime2 = 4 -- How much until it can run away again when something collides with it? | Second # in the math.Rand
@@ -111,14 +63,14 @@ ENT.Passive_AlliesRunOnDamage = true -- Should its allies (other passive SNPCs) 
 ENT.Passive_AlliesRunOnDamageDistance = 800 -- Any allies within this distance will run when it's damaged
 ENT.Passive_NextRunOnDamageTime1 = 6 -- How much until it can run the code again? | First # in the math.Rand
 ENT.Passive_NextRunOnDamageTime2 = 7 -- How much until it can run the code again? | Second # in the math.Rand
-	-- ====== On Player Sight Code ====== --
+	-- ====== On Player Sight Variables ====== --
 ENT.HasOnPlayerSight = false -- Should do something when it sees the enemy? Example: Play a sound
 ENT.OnPlayerSightDistance = 200 -- How close should the player be until it runs the code?
 ENT.OnPlayerSightDispositionLevel = 0 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 ENT.OnPlayerSightOnlyOnce = true -- Should it only run the code once?
 ENT.OnPlayerSightNextTime1 = 15 -- How much time should it pass until it runs the code again? | First number in math.random
 ENT.OnPlayerSightNextTime2 = 20 -- How much time should it pass until it runs the code again? | Second number in math.random
-	-- ====== Call For Help Code ====== --
+	-- ====== Call For Help Variables ====== --
 ENT.CallForHelp = true -- Does the SNPC call for help?
 ENT.CallForHelpDistance = 2000 -- -- How far away the SNPC's call for help goes | Counted in World Units
 ENT.NextCallForHelpTime = 4 -- Time until it calls for help again
@@ -131,7 +83,7 @@ ENT.CallForHelpStopAnimations = true -- Should it stop attacks for a certain amo
 ENT.CallForHelpStopAnimationsTime = false -- How long should it stop attacks?
 ENT.CallForHelpAnimationFaceEnemy = true -- Should it face the enemy when playing the animation?
 ENT.NextCallForHelpAnimationTime = 30 -- How much time until it can play the animation again?
-	-- ====== Medic Code ====== --
+	-- ====== Medic Variables ====== --
 ENT.IsMedicSNPC = false -- Is this SNPC a medic? Does it heal other friendly friendly SNPCs, and players(If friendly)
 ENT.AnimTbl_Medic_GiveHealth = {ACT_SPECIAL_ATTACK1} -- Animations is plays when giving health to an ally
 ENT.Medic_CheckDistance = 600 -- How far does it check for allies that are hurt? | World units
@@ -142,56 +94,181 @@ ENT.Medic_NextHealTime2 = 15 -- How much time until it can give health to an all
 ENT.Medic_SpawnPropOnHeal = true -- Should it spawn a prop, such as small health vial at a attachment when healing an ally?
 ENT.Medic_SpawnPropOnHealModel = "models/healthvial.mdl" -- The model that it spawns
 ENT.Medic_SpawnPropOnHealAttachment = "anim_attachment_LH" -- The attachment it spawns on
-	-- ====== Base Numbers, Use carefully! ====== --
+	-- ====== Follow Player Variables ====== --
+ENT.FollowPlayer = false -- Should the SNPC follow the player when the player presses a certain key?
+ENT.FollowPlayerChat = true -- Should the SNPCs say things like "Blank stopped following you" | self.AllowPrintingInChat overrides this variable!
+ENT.FollowPlayerKey = "Use" -- The key that the player presses to make the SNPC follow them
+ENT.FollowPlayerCloseDistance = 150 -- If the SNPC is that close to the player then stand still until the player goes farther away
+ENT.NextFollowPlayerTime = 1 -- Time until it runs to the player again
+	-- ====== Movement & Idle Variables ====== --
+ENT.AnimTbl_IdleStand = {ACT_IDLE} -- The idle animation when AI is enabled
+ENT.AnimTbl_Walk = {ACT_WALK} -- Set the walking animations | Put multiple to let the base pick a random animation when it moves
+ENT.AnimTbl_Run = {ACT_RUN} -- Set the running animations | Put multiple to let the base pick a random animation when it moves
+ENT.DisableWandering = false -- Disables wandering when the SNPC is idle
+ENT.DisableChasingEnemy = false -- Disables the SNPC chasing the enemy
+	-- ====== Constantly Face Enemy Variables ====== --
+ENT.ConstantlyFaceEnemy = false -- Should it face the enemy constantly?
+ENT.ConstantlyFaceEnemy_IfVisible = true -- Should it only face the enemy if it's visible?
+ENT.ConstantlyFaceEnemy_IfAttacking = false -- Should it face the enemy when attacking?
+ENT.ConstantlyFaceEnemy_Postures = "Both" -- "Both" = Moving or standing | "Moving" = Only when moving | "Standing" = Only when standing
+ENT.ConstantlyFaceEnemyDistance = 2500 -- How close does it have to be until it starts to face the enemy?
+	-- ====== Pose Parameter Variables ====== --
+ENT.HasPoseParameterLooking = true -- Does it look at its enemy using poseparameters?
+ENT.PoseParameterLooking_InvertPitch = false -- Inverts the pitch poseparameters (X)
+ENT.PoseParameterLooking_InvertYaw = false -- Inverts the yaw poseparameters (Y)
+ENT.PoseParameterLooking_InvertRoll = false -- Inverts the roll poseparameters (Z)
+ENT.PoseParameterLooking_TurningSpeed = 10 -- How fast does the parameter turn?
+ENT.PoseParameterLooking_Names = {pitch={},yaw={},roll={}} -- Custom pose parameters to use, can put as many as needed
+	-- ====== No Chase After Certain Distance Variables ====== --
+ENT.NoChaseAfterCertainRange = false -- Should the SNPC not be able to chase when it's between number x and y?
+ENT.NoChaseAfterCertainRange_FarDistance = 2000 -- How far until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
+ENT.NoChaseAfterCertainRange_CloseDistance = 300 -- How near until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
+ENT.NoChaseAfterCertainRange_Type = "Regular" -- "Regular" = Default behavior | "OnlyRange" = Only does it if it's able to range attack
+	-- ====== Control Variables ====== --
+	-- Use these variables very careful! One wrong change can mess up the whole SNPC!
+ENT.FindEnemy_UseSphere = false -- Should the SNPC be able to see all around him? (360) | Objects and walls can still block its sight!
+ENT.FindEnemy_CanSeeThroughWalls = false -- Should it be able to see through walls and objects? | Can be useful if you want to make it know where the enemy is at all times
+ENT.DisableFindEnemy = false -- Disables FindEnemy code, friendly code still works though
+ENT.DisableSelectSchedule = false -- Disables Schedule code, Custom Schedule can still work
+ENT.DisableTakeDamageFindEnemy = false -- Disable the SNPC finding the enemy when being damaged
+ENT.DisableTouchFindEnemy = false -- Disable the SNPC finding the enemy when being touched
 ENT.DisableMakingSelfEnemyToNPCs = false -- Disables the "AddEntityRelationship" that runs in think
+ENT.LastSeenEnemyTimeUntilReset = 15 -- Time until it resets its enemy if its current enemy is not visible
 ENT.NextEntityCheckTime = 1 -- Time until it runs the NPC check
-	-- Death ---------------------------------------------------------------------------------------------------------------------------------------------
+	-- ====== Miscellaneous Variables ====== --
+ENT.DisableInitializeCapabilities = false -- If enabled, all of the Capabilities will be disabled, allowing you to add your own
+ENT.AttackTimersCustom = {}
+ENT.PushProps = true -- Should it push props when trying to move?
+ENT.AttackProps = true -- Should it attack props when trying to move?
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Damaged / Injured Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-- ====== Blood-Related Variables ====== --
+ENT.Bleeds = true -- Does the SNPC bleed? (Blood decal, particle, etc.)
+ENT.BloodColor = "" -- The blood type, this will determine what it should use (decal, particle, etc.)
+	-- Types: "Red" || "Yellow" || "Green" || "Orange" || "Blue" || "Purple" || "White" || "Oil"
+ENT.HasBloodParticle = true -- Does it spawn a particle when damaged?
+ENT.HasBloodDecal = true -- Does it spawn a decal when damaged?
+ENT.HasBloodPool = true -- Does it have a blood pool?
+ENT.CustomBlood_Particle = {} -- Particles to spawn when it's damaged
+ENT.CustomBlood_Decal = {} -- Decals to spawn when it's damaged
+ENT.CustomBlood_Pool = {} -- Blood pool types after it dies
+ENT.BloodPoolSize = "Normal" -- What's the size of the blood pool?
+	-- Sizes: "Normal" || "Small" || "Tiny"
+ENT.BloodDecalUseGMod = false -- Should use the current default decals defined by Garry's Mod? (This only applies for certain blood types only!)
+ENT.BloodDecalDistance = 300 -- How far the decal can spawn in world units
+	-- ====== Immunity Variables ====== --
+ENT.GodMode = false -- Immune to everything
+ENT.Immune_AcidPoisonRadiation = false -- Immune to Acid, Poison and Radiation
+ENT.Immune_Bullet = false -- Immune to bullet type damages
+ENT.Immune_Blast = false -- Immune to explosive-type damages
+ENT.Immune_Dissolve = false -- Immune to dissolving | Example: Combine Ball
+ENT.Immune_Electricity = false -- Immune to electrical-type damages | Example: shock or laser
+ENT.Immune_Fire = false -- Immune to fire-type damages
+ENT.Immune_Melee = false -- Immune to melee-type damage | Example: Crowbar, slash damages
+ENT.Immune_Physics = false -- Immune to physics impacts, won't take damage from props
+ENT.Immune_Sonic = false -- Immune to sonic-type damages
+ENT.ImmuneDamagesTable = {} -- Makes the SNPC immune to specific type of damages | Takes DMG_ enumerations
+ENT.GetDamageFromIsHugeMonster = false -- Should it get damaged no matter what by SNPCs that are tagged as VJ_IsHugeMonster?
+ENT.AllowIgnition = true -- Can this SNPC be set on fire?
+	-- ====== Flinching Variables ====== --
+ENT.CanFlinch = 0 -- 0 = Don't flinch | 1 = Flinch at any damage | 2 = Flinch only from certain damages
+ENT.FlinchDamageTypes = {DMG_BLAST} -- If it uses damage-based flinching, which types of damages should it flinch from?
+ENT.FlinchChance = 16 -- Chance of it flinching from 1 to x | 1 will make it always flinch
+ENT.NextMoveAfterFlinchTime = "LetBaseDecide" -- How much time until it can move, attack, etc. | Use this for schedules or else the base will set the time 0.6 if it sees it's a schedule!
+ENT.NextFlinchTime = 5 -- How much time until it can flinch again?
+ENT.FlinchAnimation_UseSchedule = false -- false = SCHED_ | true = ACT_
+ENT.ScheduleTbl_Flinch = {SCHED_FLINCH_PHYSICS} -- If it uses schedule-based animation, implement the schedule types here | Common: SCHED_BIG_FLINCH, SCHED_SMALL_FLINCH, SCHED_FLINCH_PHYSICS
+ENT.AnimTbl_Flinch = {ACT_FLINCH_PHYSICS} -- If it uses normal based animation, use this
+ENT.FlinchAnimationDecreaseLengthAmount = 0 -- This will decrease the time it can move, attack, etc. | Use it to fix animation pauses after it finished the flinch animation
+ENT.HasHitGroupFlinching = false -- It will flinch when hit in certain hitgroups | It can also have certain animations to play in certain hitgroups
+ENT.HitGroupFlinching_DefaultWhenNotHit = true -- If it uses hitgroup flinching, should it do the regular flinch if it doesn't hit any of the specified hitgroups?
+ENT.HitGroupFlinching_Values = {/* EXAMPLES: {HitGroup = {1}, IsSchedule = true, Animation = {SCHED_BIG_FLINCH}},{HitGroup = {4}, IsSchedule = false, Animation = {ACT_FLINCH_STOMACH}} */} -- if "IsSchedule" is set to true, "Animation" needs to be a schedule
+	-- ====== Damage By Player Variables ====== --
+ENT.HasDamageByPlayer = true -- Should the SNPC do something when it's hit by a player? Example: Play a sound or animation
+ENT.DamageByPlayerDispositionLevel = 0 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
+ENT.DamageByPlayerNextTime1 = 2 -- How much time should it pass until it runs the code again? | First number in math.random
+ENT.DamageByPlayerNextTime2 = 2 -- How much time should it pass until it runs the code again? | Second number in math.random
+	-- ====== Run Away On Unknown Damage Variables ====== --
+ENT.RunAwayOnUnknownDamage = true -- Should run away on damage
+ENT.NextRunAwayOnDamageTime = 5 -- Until next run after being shot when not alerted
+	-- ====== Call For Back On Damage Variables ====== --
+ENT.CallForBackUpOnDamage = true -- Should the SNPC call for help when damaged? (Only happens if the SNPC hasn't seen a enemy)
+ENT.CallForBackUpOnDamageDistance = 800 -- How far away the SNPC's call for help goes | Counted in World Units
+ENT.CallForBackUpOnDamageUseCertainAmount = true -- Should the SNPC only call certain amount of people?
+ENT.CallForBackUpOnDamageUseCertainAmountNumber = 3 -- How many people should it call if certain amount is enabled?
+ENT.CallForBackUpOnDamageAnimation = {ACT_SIGNAL_GROUP} -- Animation used if the SNPC does the CallForBackUpOnDamage function
+	-- To let the base automatically detect the animation duration, set this to false:
+ENT.DisableCallForBackUpOnDamageAnimation = true -- Disables the animation when the CallForBackUpOnDamage function is called
+ENT.CallForBackUpOnDamageAnimationTime = false -- How much time until it can use activities
+ENT.NextCallForBackUpOnDamageTime1 = 9 -- Next time it use the CallForBackUpOnDamage function | The first # in math.random
+ENT.NextCallForBackUpOnDamageTime2 = 11 -- Next time it use the CallForBackUpOnDamage function | The second # in math.random
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Killed & Corpse Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-- ====== Corpse Variables ====== --
 ENT.HasDeathRagdoll = true -- If set to false, it will not spawn the regular ragdoll of the SNPC
 ENT.DeathCorpseEntityClass = "UseDefaultBehavior" -- The entity class it creates | "UseDefaultBehavior" = Let the base automatically detect the type
 ENT.DeathCorpseModel = {} -- The corpse model that it will spawn when it dies | Leave empty to use the NPC's model | Put as many models as desired, the base will pick a random one.
-ENT.CorpseAlwaysCollide = false -- Should the corpse always collide?
-ENT.HasDeathBodyGroup = true -- Set to true if you want to put a bodygroup when it dies
-ENT.CustomBodyGroup = false -- Set true if you want to set custom bodygroup
-ENT.DeathBodyGroupA = 0 -- Used for Custom Bodygroup | Group = A
-ENT.DeathBodyGroupB = 0 -- Used for Custom Bodygroup | Group = B
-ENT.DeathSkin = 0 -- Used to override the death skin | 0 = Use the skin that the SNPC had before it died
+ENT.DeathCorpseSkin = -1 -- Used to override the death skin | -1 = Use the skin that the SNPC had before it died
+ENT.DeathCorpseSetBodyGroup = true -- Should it get the models bodygroups and set it to the corpse? When set to false, it uses the model's default bodygroups
+	-- Set both of the following BodyGroup variables to a number greater than -1 to set a custom bodygroup for the corpse:
+ENT.DeathBodyGroupA = -1 -- Used for Custom Bodygroup | Group = A
+ENT.DeathBodyGroupB = -1 -- Used for Custom Bodygroup | Group = B
+ENT.DeathCorpseAlwaysCollide = false -- Should the corpse always collide?
 ENT.FadeCorpse = false -- Fades the ragdoll on death
 ENT.FadeCorpseTime = 10 -- How much time until the ragdoll fades | Unit = Seconds
+ENT.SetCorpseOnFire = false -- Sets the corpse on fire when the SNPC dies
+ENT.UsesBoneAngle = true -- This can be used to stop the corpse glitching or flying on death
+ENT.UsesDamageForceOnDeath = true -- Disables the damage force on death | Useful for SNPCs with Death Animations
+ENT.WaitBeforeDeathTime = 0 -- Time until the SNPC spawns its corpse and gets removed
+	-- ====== Death Animation Variables ====== --
 ENT.HasDeathAnimation = false -- Does it play an animation when it dies?
 ENT.AnimTbl_Death = {} -- Death Animations
 ENT.DeathAnimationTime = 1 -- Time until the SNPC spawns its corpse and gets removed
 ENT.DeathAnimationChance = 1 -- Put 1 if you want it to play the animation all the time
-ENT.WaitBeforeDeathTime = 0 -- Time until the SNPC spawns its corpse and gets removed
-ENT.SetCorpseOnFire = false -- Sets the corpse on fire when the SNPC dies
-ENT.HasDeathNotice = false -- Set to true if you want it show a message after it dies
-ENT.DeathNoticePosition = HUD_PRINTCENTER -- Were you want the message to show. Examples: HUD_PRINTCENTER, HUD_PRINTCONSOLE, HUD_PRINTTALK
-ENT.DeathNoticeWriting = "Example: Spider Queen Has Been Defeated!" -- Message that will appear
-ENT.UsesBoneAngle = true -- This can be used to stop the corpse glitching or flying on death
-ENT.UsesDamageForceOnDeath = true -- Disables the damage force on death | Useful for SNPCs with Death Animations
-ENT.HasItemDropsOnDeath = true -- Should it drop items on death?
-ENT.ItemDropsOnDeathChance = 14 -- If set to 1, it will always drop it
-ENT.ItemDropsOnDeath_EntityList = {} -- List of items it will randomly pick from | Leave it empty to drop nothing or to make your own dropping code (Using CustomOn...)
-ENT.BringFriendsOnDeath = true -- Should the SNPC's friends come to its position before it dies?
-ENT.BringFriendsOnDeathDistance = 800 -- How far away does the signal go? | Counted in World Units
-ENT.BringFriendsOnDeathUseCertainAmount = true -- Should the SNPC only call certain amount of people?
-ENT.BringFriendsOnDeathUseCertainAmountNumber = 3 -- How many people should it call if certain amount is enabled?
+	-- ====== Dismemberment/Gib Variables ====== --
 ENT.AllowedToGib = true -- Is it allowed to gib in general? This can be on death or when shot in a certain place
 ENT.HasGibOnDeath = true -- Is it allowed to gib on death?
 ENT.GibOnDeathDamagesTable = {"UseDefault"} -- Damages that it gibs from | "UseDefault" = Uses default damage types | "All" = Gib from any damage
 ENT.HasGibOnDeathSounds = true -- Does it have gib sounds? | Mostly used for the settings menu
 ENT.HasGibDeathParticles = true -- Does it spawn particles on death or when it gibs? | Mostly used for the settings menu
-	-- Melee Attack ---------------------------------------------------------------------------------------------------------------------------------------------
+	-- ====== Item Drops On Death Variables ====== --
+ENT.HasItemDropsOnDeath = true -- Should it drop items on death?
+ENT.ItemDropsOnDeathChance = 14 -- If set to 1, it will always drop it
+ENT.ItemDropsOnDeath_EntityList = {} -- List of items it will randomly pick from | Leave it empty to drop nothing or to make your own dropping code (Using CustomOn...)
+	-- ====== Ally Reaction On Death Variables ====== --
+	-- Default: Creature base uses BringFriends and Human base uses AlertFriends
+	-- BringFriendsOnDeath takes priority over AlertFriendsOnDeath!
+ENT.BringFriendsOnDeath = true -- Should the SNPC's friends come to its position before it dies?
+ENT.BringFriendsOnDeathDistance = 800 -- How far away does the signal go? | Counted in World Units
+ENT.BringFriendsOnDeathUseCertainAmount = true -- Should the SNPC only call certain amount of people?
+ENT.BringFriendsOnDeathUseCertainAmountNumber = 3 -- How many people should it call if certain amount is enabled?
+ENT.AlertFriendsOnDeath = false -- Should the SNPCs allies get alerted when it dies? | Its allies will also need to have this variable set to true!
+ENT.AlertFriendsOnDeathDistance = 800 -- How far away does the signal go? | Counted in World Units
+ENT.AlertFriendsOnDeathUseCertainAmountNumber = 50 -- How many people should it alert?
+ENT.AnimTbl_AlertFriendsOnDeath = {ACT_RANGE_ATTACK1} -- Animations it plays when an ally dies that also has AlertFriendsOnDeath set to true
+	-- ====== Miscellaneous Variables ====== --
+ENT.HasDeathNotice = false -- Set to true if you want it show a message after it dies
+ENT.DeathNoticePosition = HUD_PRINTCENTER -- Were you want the message to show. Examples: HUD_PRINTCENTER, HUD_PRINTCONSOLE, HUD_PRINTTALK
+ENT.DeathNoticeWriting = "Example: Spider Queen Has Been Defeated!" -- Message that will appear
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Melee Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasMeleeAttack = true -- Should the SNPC have a melee attack?
 ENT.MeleeAttackDamage = GetConVarNumber("vj_snpcdamage")
 ENT.MeleeAttackDamageType = DMG_SLASH -- Type of Damage
+	-- ====== Animation Variables ====== --
 ENT.AnimTbl_MeleeAttack = {ACT_MELEE_ATTACK1} -- Melee Attack Animations
 ENT.MeleeAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 ENT.MeleeAttackAnimationFaceEnemy = true -- Should it face the enemy while playing the melee attack animation?
 ENT.MeleeAttackAnimationDecreaseLengthAmount = 0 -- This will decrease the time until starts chasing again. Use it to fix animation pauses until it chases the enemy.
+	-- ====== Distance Variables ====== --
 ENT.MeleeAttackDistance = 60 -- How close does it have to be until it attacks?
 ENT.MeleeAttackAngleRadius = 100 -- What is the attack angle radius? | 100 = In front of the SNPC | 180 = All around the SNPC
 ENT.MeleeAttackDamageDistance = 80 -- How far does the damage go?
 ENT.MeleeAttackDamageAngleRadius = 100 -- What is the damage angle radius? | 100 = In front of the SNPC | 180 = All around the SNPC
+	-- ====== Timer Variables ====== --
 	-- To use event-based attacks, set this to false:
 ENT.TimeUntilMeleeAttackDamage = 0.6 -- This counted in seconds | This calculates the time until it hits something
 ENT.NextMeleeAttackTime = 0 -- How much time until it can use a melee attack?
@@ -202,7 +279,11 @@ ENT.NextAnyAttackTime_Melee_DoRand = false -- False = Don't use random time | Nu
 ENT.MeleeAttackReps = 1 -- How many times does it run the melee attack code?
 ENT.MeleeAttackExtraTimers = {/* Ex: 1,1.4 */} -- Extra melee attack timers | it will run the damage code after the given amount of seconds
 ENT.StopMeleeAttackAfterFirstHit = false -- Should it stop the melee attack from running rest of timers when it hits an enemy?
-ENT.MeleeAttack_NoProps = false -- If set to true, it won't attack or push any props (Mostly used with multiple melee attacks)
+	-- ====== Control Variables ====== --
+ENT.DisableMeleeAttackAnimation = false -- if true, it will disable the animation code
+ENT.DisableDefaultMeleeAttackCode = false -- When set to true, it will completely disable the melee attack code
+ENT.DisableDefaultMeleeAttackDamageCode = false -- Disables the default melee attack damage code
+	-- ====== Knock Back Variables ====== --
 ENT.HasMeleeAttackKnockBack = false -- If true, it will cause a knockback to its enemy
 ENT.MeleeAttackKnockBack_Forward1 = 100 -- How far it will push you forward | First in math.random
 ENT.MeleeAttackKnockBack_Forward2 = 100 -- How far it will push you forward | Second in math.random
@@ -210,43 +291,47 @@ ENT.MeleeAttackKnockBack_Up1 = 10 -- How far it will push you up | First in math
 ENT.MeleeAttackKnockBack_Up2 = 10 -- How far it will push you up | Second in math.random
 ENT.MeleeAttackKnockBack_Right1 = 0 -- How far it will push you right | First in math.random
 ENT.MeleeAttackKnockBack_Right2 = 0 -- How far it will push you right | Second in math.random
-ENT.MeleeAttackWorldShakeOnMiss = false -- Should it shake the world when it misses during melee attack?
-ENT.MeleeAttackWorldShakeOnMissAmplitude = 16 -- How much the screen will shake | From 1 to 16, 1 = really low 16 = really high
-ENT.MeleeAttackWorldShakeOnMissRadius = 2000 -- How far the screen shake goes, in world units
-ENT.MeleeAttackWorldShakeOnMissDuration = 1 -- How long the screen shake will last, in seconds
-ENT.MeleeAttackWorldShakeOnMissFrequency = 100 -- Just leave it to 100
-ENT.MeleeAttackSetEnemyOnFire = false -- Sets the enemy on fire when it does the melee attack
-ENT.MeleeAttackSetEnemyOnFireTime = 6 -- For how long should the enemy be set on fire || Counted in seconds
-ENT.HasMeleeAttackDSPSound = false -- Applies a DSP (Digital Signal Processor) to the player
-ENT.MeleeAttackDSPSoundType = 34 -- What type? Search online for the types
-ENT.SlowPlayerOnMeleeAttack = false -- If true, then the player will slow down
-ENT.SlowPlayerOnMeleeAttack_WalkSpeed = 100 -- Walking Speed when Slow Player is on
-ENT.SlowPlayerOnMeleeAttack_RunSpeed = 100 -- Running Speed when Slow Player is on
-ENT.SlowPlayerOnMeleeAttackTime = 5 -- How much time until player's Speed resets
+	-- ====== Slow Player Variables ====== --
+	-- Causes the affected enemy to continue taking damage even after the attack and cause them to basically bleed
 ENT.MeleeAttackBleedEnemy = false -- Should the enemy bleed when attacked by melee?
 ENT.MeleeAttackBleedEnemyChance = 4 -- How much chance there is that the enemy will bleed? | 1 = always
 ENT.MeleeAttackBleedEnemyDamage = 1 -- How much damage will the enemy get on every rep?
 ENT.MeleeAttackBleedEnemyTime = 1 -- How much time until the next rep?
 ENT.MeleeAttackBleedEnemyReps = 4 -- How many reps?
-ENT.DisableMeleeAttackAnimation = false -- if true, it will disable the animation code
-ENT.DisableDefaultMeleeAttackDamageCode = false -- Disables the default melee attack damage code
-ENT.DisableDefaultMeleeAttackCode = false -- When set to true, it will completely disable the melee attack code
-	-- Range Attack ---------------------------------------------------------------------------------------------------------------------------------------------
+	-- ====== Slow Player Variables ====== --
+	-- Causes the affected player to slow down
+ENT.SlowPlayerOnMeleeAttack = false -- If true, then the player will slow down
+ENT.SlowPlayerOnMeleeAttack_WalkSpeed = 100 -- Walking Speed when Slow Player is on
+ENT.SlowPlayerOnMeleeAttack_RunSpeed = 100 -- Running Speed when Slow Player is on
+ENT.SlowPlayerOnMeleeAttackTime = 5 -- How much time until player's Speed resets
+	-- ====== World Shake On Miss Variables ====== --
+ENT.MeleeAttackWorldShakeOnMiss = false -- Should it shake the world when it misses during melee attack?
+ENT.MeleeAttackWorldShakeOnMissAmplitude = 16 -- How much the screen will shake | From 1 to 16, 1 = really low 16 = really high
+ENT.MeleeAttackWorldShakeOnMissRadius = 2000 -- How far the screen shake goes, in world units
+ENT.MeleeAttackWorldShakeOnMissDuration = 1 -- How long the screen shake will last, in seconds
+ENT.MeleeAttackWorldShakeOnMissFrequency = 100 -- Just leave it to 100
+	-- ====== Miscellaneous Variables ====== --
+ENT.MeleeAttack_NoProps = false -- If set to true, it won't attack or push any props (Mostly used with multiple melee attacks)
+ENT.MeleeAttackSetEnemyOnFire = false -- Sets the enemy on fire when it does the melee attack
+ENT.MeleeAttackSetEnemyOnFireTime = 6 -- For how long should the enemy be set on fire || Counted in seconds
+ENT.HasMeleeAttackDSPSound = false -- Applies a DSP (Digital Signal Processor) to the player
+ENT.MeleeAttackDSPSoundType = 34 -- What type? Search online for the types
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Range Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasRangeAttack = false -- Should the SNPC have a range attack?
 ENT.RangeAttackEntityToSpawn = "grenade_spit" -- The entity that is spawned when range attacking
+	-- ====== Animation Variables ====== --
 ENT.AnimTbl_RangeAttack = {ACT_RANGE_ATTACK1} -- Range Attack Animations
 ENT.RangeAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 ENT.RangeAttackAnimationFaceEnemy = true -- Should it face the enemy while playing the range attack animation?
 ENT.RangeAttackAnimationDecreaseLengthAmount = 0 -- This will decrease the time until starts chasing again. Use it to fix animation pauses until it chases the enemy.
 ENT.RangeAttackAnimationStopMovement = true -- Should it stop moving when performing a range attack?
+	-- ====== Distance Variables ====== --
 ENT.RangeDistance = 2000 -- This is how far away it can shoot
 ENT.RangeToMeleeDistance = 800 -- How close does it have to be until it uses melee?
 ENT.RangeAttackAngleRadius = 100 -- What is the attack angle radius? | 100 = In front of the SNPC | 180 = All around the SNPC
-ENT.RangeUseAttachmentForPos = false -- Should the projectile spawn on a attachment?
-ENT.RangeUseAttachmentForPosID = "muzzle" -- The attachment used on the range attack if RangeUseAttachmentForPos is set to true
-ENT.RangeAttackPos_Up = 20 -- Up/Down spawning position for range attack
-ENT.RangeAttackPos_Forward = 0 -- Forward/ Backward spawning position for range attack
-ENT.RangeAttackPos_Right = 0 -- Right/Left spawning position for range attack
+	-- ====== Timer Variables ====== --
 	-- To use event-based attacks, set this to false:
 ENT.TimeUntilRangeAttackProjectileRelease = 1.5 -- How much time until the projectile code is ran?
 ENT.NextRangeAttackTime = 3 -- How much time until it can use a range attack?
@@ -256,18 +341,34 @@ ENT.NextAnyAttackTime_Range = false -- How much time until it can use any attack
 ENT.NextAnyAttackTime_Range_DoRand = false -- False = Don't use random time | Number = Picks a random number between the regular timer and this timer
 ENT.RangeAttackReps = 1 -- How many times does it run the projectile code?
 ENT.RangeAttackExtraTimers = {/* Ex: 1,1.4 */} -- Extra range attack timers | it will run the projectile code after the given amount of seconds
+	-- ====== Projectile Spawn Position Variables ====== --
+ENT.RangeUseAttachmentForPos = false -- Should the projectile spawn on a attachment?
+ENT.RangeUseAttachmentForPosID = "muzzle" -- The attachment used on the range attack if RangeUseAttachmentForPos is set to true
+ENT.RangeAttackPos_Up = 20 -- Up/Down spawning position for range attack
+ENT.RangeAttackPos_Forward = 0 -- Forward/ Backward spawning position for range attack
+ENT.RangeAttackPos_Right = 0 -- Right/Left spawning position for range attack
+	-- ====== Control Variables ====== --
 ENT.DisableDefaultRangeAttackCode = false -- When true, it won't spawn the range attack entity, allowing you to make your own
 ENT.DisableRangeAttackAnimation = false -- if true, it will disable the animation code
-	-- Leap Attack ---------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Leap Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasLeapAttack = false -- Should the SNPC have a leap attack?
+ENT.LeapAttackDamage = GetConVarNumber("vj_snpcleapdamage")
+ENT.LeapAttackDamageType = DMG_SLASH -- Type of Damage
+	-- ====== Animation Variables ====== --
 ENT.AnimTbl_LeapAttack = {ACT_SPECIAL_ATTACK1} -- Melee Attack Animations
 ENT.LeapAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 ENT.LeapAttackAnimationFaceEnemy = false -- Should it face the enemy while playing the leap attack animation?
 ENT.LeapAttackAnimationDecreaseLengthAmount = 0 -- This will decrease the time until starts chasing again. Use it to fix animation pauses until it chases the enemy.
+	-- ====== Distance Variables ====== --
 ENT.LeapDistance = 500 -- The distance of the leap, for example if it is set to 500, when the SNPC is 500 Unit away, it will jump
 ENT.LeapToMeleeDistance = 200 -- How close does it have to be until it uses melee?
+ENT.LeapAttackDamageDistance = 100 -- How far does the damage go?
+	-- ====== Timer Variables ====== --
 	-- To use event-based attacks, set this to false:
 ENT.TimeUntilLeapAttackDamage = 0.2 -- How much time until it runs the leap damage code?
+ENT.TimeUntilLeapAttackVelocity = 0.1 -- How much time until it runs the velocity code?
 ENT.NextLeapAttackTime = 3 -- How much time until it can use a leap attack?
 ENT.NextLeapAttackTime_DoRand = false -- False = Don't use random time | Number = Picks a random number between the regular timer and this timer
 	-- To let the base automatically detect the attack duration, set this to false:
@@ -276,50 +377,23 @@ ENT.NextAnyAttackTime_Leap_DoRand = false -- False = Don't use random time | Num
 ENT.LeapAttackReps = 1 -- How many times does it run the leap attack code?
 ENT.LeapAttackExtraTimers = {/* Ex: 1,1.4 */} -- Extra leap attack timers | it will run the damage code after the given amount of seconds
 ENT.StopLeapAttackAfterFirstHit = true -- Should it stop the leap attack from running rest of timers when it hits an enemy?
-ENT.TimeUntilLeapAttackVelocity = 0.1 -- How much time until it runs the velocity code?
-ENT.LeapAttackUseCustomVelocity = false -- Should it disable the default velocity system?
+	-- ====== Velocity Variables ====== --
 ENT.LeapAttackVelocityForward = 2000 -- How much forward force should it apply?
 ENT.LeapAttackVelocityUp = 200 -- How much upward force should it apply?
 ENT.LeapAttackVelocityRight = 0 -- How much right force should it apply?
-ENT.LeapAttackDamage = GetConVarNumber("vj_snpcleapdamage")
-ENT.LeapAttackDamageDistance = 100 -- How far does the damage go?
-ENT.LeapAttackDamageType = DMG_SLASH -- Type of Damage
+	-- ====== Control Variables ====== --
+ENT.LeapAttackUseCustomVelocity = false -- Should it disable the default velocity system?
 ENT.DisableLeapAttackAnimation = false -- if true, it will disable the animation code
-	-- Miscellaneous ---------------------------------------------------------------------------------------------------------------------------------------------
-ENT.FindEnemy_UseSphere = false -- Should the SNPC be able to see all around him? (360) | Objects and walls can still block its sight!
-ENT.FindEnemy_CanSeeThroughWalls = false -- Should it be able to see through walls and objects? | Can be useful if you want to make it know where the enemy is at all times
-ENT.DisableTakeDamageFindEnemy = false -- Disable the SNPC finding the enemy when being damaged
-ENT.DisableTouchFindEnemy = false -- Disable the SNPC finding the enemy when being touched
-ENT.LastSeenEnemyTimeUntilReset = 15 -- Time until it resets its enemy if its current enemy is not visible
-ENT.AnimTbl_IdleStand = {ACT_IDLE} -- The idle animation when AI is enabled
-ENT.AnimTbl_Walk = {ACT_WALK} -- Set the walking animations | Put multiple to let the base pick a random animation when it moves
-ENT.AnimTbl_Run = {ACT_RUN} -- Set the running animations | Put multiple to let the base pick a random animation when it moves
-//ENT.IdleSchedule_Wander = {SCHED_IDLE_WANDER} -- Animation played when the SNPC is idle, when called to wander
-//ENT.ChaseSchedule = {SCHED_CHASE_ENEMY} -- Animation played when the SNPC is trying to chase the enemy
-ENT.ConstantlyFaceEnemy = false -- Should it face the enemy constantly?
-ENT.ConstantlyFaceEnemy_IfVisible = true -- Should it only face the enemy if it's visible?
-ENT.ConstantlyFaceEnemy_IfAttacking = false -- Should it face the enemy when attacking?
-ENT.ConstantlyFaceEnemy_Postures = "Both" -- "Both" = Moving or standing | "Moving" = Only when moving | "Standing" = Only when standing
-ENT.ConstantlyFaceEnemyDistance = 2500 -- How close does it have to be until it starts to face the enemy?
-ENT.HasPoseParameterLooking = true -- Does it look at its enemy using poseparameters?
-ENT.PoseParameterLooking_InvertPitch = false -- Inverts the pitch poseparameters (X)
-ENT.PoseParameterLooking_InvertYaw = false -- Inverts the yaw poseparameters (Y)
-ENT.PoseParameterLooking_InvertRoll = false -- Inverts the roll poseparameters (Z)
-ENT.PoseParameterLooking_TurningSpeed = 10 -- How fast does the parameter turn?
-ENT.PoseParameterLooking_Names = {pitch={},yaw={},roll={}} -- Custom pose parameters to use, can put as many as needed
-ENT.NoChaseAfterCertainRange = false -- Should the SNPC not be able to chase when it's between number x and y?
-ENT.NoChaseAfterCertainRange_FarDistance = 2000 -- How far until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
-ENT.NoChaseAfterCertainRange_CloseDistance = 300 -- How near until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
-ENT.NoChaseAfterCertainRange_Type = "Regular" -- "Regular" = Default behavior | "OnlyRange" = Only does it if it's able to range attack
-ENT.HasEntitiesToNoCollide = true -- If set to false, it won't run the EntitiesToNoCollide code
-ENT.EntitiesToNoCollide = {} -- Entities to not collide with when HasEntitiesToNoCollide is set to true
-ENT.DisableWandering = false -- Disables wandering when the SNPC is idle
-ENT.DisableChasingEnemy = false -- Disables the SNPC chasing the enemy
-ENT.DisableFindEnemy = false -- Disables FindEnemy code, friendly code still works though
-ENT.DisableSelectSchedule = false -- Disables Schedule code, Custom Schedule can still work
-ENT.DisableInitializeCapabilities = false -- If enabled, all of the Capabilities will be disabled, allowing you to add your own
-ENT.CustomWalkActivites = {} -- Custom walk activities
-ENT.CustomRunActivites = {} -- Custom run activities
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Sound Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ENT.HasSounds = true -- Put to false to disable ALL sounds!
+	-- ====== Footstep Sound / World Shake On Move Variables ====== --
+ENT.DisableFootStepSoundTimer = false -- If set to true, it will disable the time system for the footstep sound code, allowing you to use other ways like model events
+ENT.FootStepTimeRun = 0.5 -- Next foot step sound when it is running
+ENT.FootStepTimeWalk = 1 -- Next foot step sound when it is walking
+ENT.DisableFootStepOnRun = false -- It will not play the footstep sound when running
+ENT.DisableFootStepOnWalk = false -- It will not play the footstep sound when walking
 ENT.HasWorldShakeOnMove = false -- Should the world shake when it's moving?
 ENT.NextWorldShakeOnRun = 0.5 -- How much time until the world shakes while it's running
 ENT.NextWorldShakeOnWalk = 1 -- How much time until the world shakes while it's walking
@@ -329,62 +403,49 @@ ENT.WorldShakeOnMoveDuration = 0.4 -- How long the screen shake will last, in se
 ENT.WorldShakeOnMoveFrequency = 100 -- Just leave it to 100
 ENT.DisableWorldShakeOnMoveWhileRunning = false -- It will not shake the world when it's running
 ENT.DisableWorldShakeOnMoveWhileWalking = false -- It will not shake the world when it's walking
-ENT.PushProps = true -- Should it push props when trying to move?
-ENT.AttackProps = true -- Should it attack props when trying to move?
-ENT.FollowPlayer = false -- Should the SNPC follow the player when the player presses a certain key?
-ENT.FollowPlayerChat = true -- Should the SNPCs say things like "Blank stopped following you" | self.AllowPrintingInChat overrides this variable!
-ENT.FollowPlayerKey = "Use" -- The key that the player presses to make the SNPC follow them
-ENT.FollowPlayerCloseDistance = 150 -- If the SNPC is that close to the player then stand still until the player goes farther away
-ENT.NextFollowPlayerTime = 1 -- Time until it runs to the player again
-ENT.AllowPrintingInChat = true -- Should this SNPC be allowed to post in player's chat? Example: "Blank no longer likes you."
-	-- Sounds ---------------------------------------------------------------------------------------------------------------------------------------------
-ENT.HasSounds = true -- Put to false to disable ALL sound
-ENT.HasExtraMeleeAttackSounds = false -- Set to true to use the extra melee attack sounds
-ENT.HasImpactSounds = true -- If set to false, it won't play the impact sounds
-ENT.HasAlertSounds = true -- If set to false, it won't play the alert sounds
-ENT.HasMeleeAttackSounds = true -- If set to false, it won't play the melee attack sound
-ENT.HasMeleeAttackMissSounds = true -- If set to false, it won't play the melee attack miss sound
-ENT.HasBeforeLeapAttackSound = true -- If set to false, it won't play any sounds before leap attack code is ran
-ENT.HasLeapAttackJumpSound = true -- If set to false, it won't play any sounds when it leaps at the enemy while leap attacking
-ENT.HasLeapAttackDamageSound = true -- If set to false, it won't play any sounds when it successfully hits the enemy while leap attacking
-ENT.HasLeapAttackDamageMissSound = true -- If set to false, it won't play any sounds when it misses the enemy while leap attacking
-ENT.HasBeforeRangeAttackSound = true -- If set to false, it won't play the before range attack sounds
-ENT.HasRangeAttackSound = true -- If set to false, it won't play the range attack sounds
+	-- The following custom variables are used for timer-based footstep & world shake
+	-- Add any animations that should be used to trigger a sound or shake the world, only add animations if the base doesn't recognize an animation as a movement!
+ENT.CustomWalkActivites = {} -- Custom walk activities
+ENT.CustomRunActivites = {} -- Custom run activities
+	-- ====== Idle Sound Variables ====== --
+ENT.IdleSounds_PlayOnAttacks = false -- It will be able to continue and play idle sounds when it performs an attack
+ENT.IdleSounds_NoRegularIdleOnAlerted = false -- if set to true, it will not play the regular idle sound table if the combat idle sound table is empty
+	-- ====== Miscellaneous Variables ====== --
+ENT.AlertSounds_OnlyOnce = false -- After it plays it once, it will never play it again
+ENT.BeforeMeleeAttackSounds_WaitTime = 0 -- Time until it starts playing the Before Melee Attack sounds
+ENT.OnlyDoKillEnemyWhenClear = true -- If set to true, it will only play the OnKilledEnemy sound when there isn't any other enemies
+	-- ====== Main Control Variables ====== --
+ENT.HasFootStepSound = true -- Should the SNPC make a footstep sound when it's moving?
+ENT.HasBreathSound = true -- Should it make a breathing sound?
 ENT.HasIdleSounds = true -- If set to false, it won't play the idle sounds
-ENT.HasPainSounds = true -- If set to false, it won't play the pain sounds
-ENT.HasDeathSounds = true -- If set to false, it won't play the death sounds
-ENT.HasBecomeEnemyToPlayerSounds = true -- If set to false, it won't play the become enemy to player sounds
+ENT.HasOnReceiveOrderSounds = true -- If set to false, it won't play any sound when it receives an order from an ally
 ENT.HasFollowPlayerSounds_Follow = true -- If set to false, it won't play the follow player sounds
 ENT.HasFollowPlayerSounds_UnFollow = true -- If set to false, it won't play the unfollow player sounds
 ENT.HasMedicSounds_BeforeHeal = true -- If set to false, it won't play any sounds before it gives a med kit to an ally
 ENT.HasMedicSounds_AfterHeal = true -- If set to false, it won't play any sounds after it gives a med kit to an ally
 ENT.HasMedicSounds_ReceiveHeal = true -- If set to false, it won't play any sounds when it receives a medkit
 ENT.HasOnPlayerSightSounds = true -- If set to false, it won't play the saw player sounds
-ENT.HasDamageByPlayerSounds = true -- If set to false, it won't play the damage by player sounds
+ENT.HasAlertSounds = true -- If set to false, it won't play the alert sounds
 ENT.HasCallForHelpSounds = true -- If set to false, it won't play any sounds when it calls for help
-ENT.HasOnKilledEnemySound = true -- Should it play a sound when it kills an enemy?
-ENT.HasOnReceiveOrderSounds = true -- If set to false, it won't play any sound when it receives an order from an ally
-ENT.HasFootStepSound = true -- Should the SNPC make a footstep sound when it's moving?
-ENT.HasBreathSound = true -- Should it make a breathing sound?
-ENT.HasSoundTrack = false -- Does the SNPC have a sound track?
+ENT.HasBecomeEnemyToPlayerSounds = true -- If set to false, it won't play the become enemy to player sounds
+ENT.HasMeleeAttackSounds = true -- If set to false, it won't play the melee attack sound
+ENT.HasExtraMeleeAttackSounds = false -- Set to true to use the extra melee attack sounds
+ENT.HasMeleeAttackMissSounds = true -- If set to false, it won't play the melee attack miss sound
 ENT.HasMeleeAttackSlowPlayerSound = true -- Does it have a sound when it slows down the player?
-	-- ====== Sound Settings ====== --
-ENT.DisableFootStepSoundTimer = false -- If set to true, it will disable the time system for the footstep sound code, allowing you to use other ways like model events
-ENT.FootStepTimeRun = 0.5 -- Next foot step sound when it is running
-ENT.FootStepTimeWalk = 1 -- Next foot step sound when it is walking
-ENT.DisableFootStepOnRun = false -- It will not play the footstep sound when running
-ENT.DisableFootStepOnWalk = false -- It will not play the footstep sound when walking
-ENT.IdleSounds_PlayOnAttacks = false -- It will be able to continue and play idle sounds when it performs an attack
-ENT.IdleSounds_NoRegularIdleOnAlerted = false -- if set to true, it will not play the regular idle sound table if the combat idle sound table is empty
-ENT.AlertSounds_OnlyOnce = false -- After it plays it once, it will never play it again
-ENT.BeforeMeleeAttackSounds_WaitTime = 0 -- Time until it starts playing the Before Melee Attack sounds
-ENT.OnlyDoKillEnemyWhenClear = true -- When there is no enemy in sight
-	-- ====== Fade Out Times ====== --
--- Put to 0 if you want it to stop instantly
-ENT.MeleeAttackSlowPlayerSoundFadeOutTime = 1
-ENT.SoundTrackFadeOutTime = 2
-	-- ====== Sound File Paths ====== --
--- Leave blank if you don't want any sounds to play
+ENT.HasBeforeRangeAttackSound = true -- If set to false, it won't play the before range attack sounds
+ENT.HasRangeAttackSound = true -- If set to false, it won't play the range attack sounds
+ENT.HasBeforeLeapAttackSound = true -- If set to false, it won't play any sounds before leap attack code is ran
+ENT.HasLeapAttackJumpSound = true -- If set to false, it won't play any sounds when it leaps at the enemy while leap attacking
+ENT.HasLeapAttackDamageSound = true -- If set to false, it won't play any sounds when it successfully hits the enemy while leap attacking
+ENT.HasLeapAttackDamageMissSound = true -- If set to false, it won't play any sounds when it misses the enemy while leap attacking
+ENT.HasOnKilledEnemySound = true -- Should it play a sound when it kills an enemy?
+ENT.HasPainSounds = true -- If set to false, it won't play the pain sounds
+ENT.HasImpactSounds = true -- If set to false, it won't play the impact sounds
+ENT.HasDamageByPlayerSounds = true -- If set to false, it won't play the damage by player sounds
+ENT.HasDeathSounds = true -- If set to false, it won't play the death sounds
+ENT.HasSoundTrack = false -- Does the SNPC have a sound track?
+	-- ====== File Path Variables ====== --
+	-- Leave blank if you don't want any sounds to play
 ENT.SoundTbl_FootStep = {}
 ENT.SoundTbl_Breath = {}
 ENT.SoundTbl_Idle = {}
@@ -416,13 +477,17 @@ ENT.SoundTbl_Impact = {}
 ENT.SoundTbl_DamageByPlayer = {}
 ENT.SoundTbl_Death = {}
 ENT.SoundTbl_SoundTrack = {}
-
+	-- ====== Default File Path Variables ====== --
+	-- It's recommended not to edit these tables, instead override them using the tabels above
 ENT.DefaultSoundTbl_MedicAfterHeal = {"items/smallmedkit1.wav"}
 ENT.DefaultSoundTbl_MeleeAttackExtra = {"npc/zombie/claw_strike1.wav","npc/zombie/claw_strike2.wav","npc/zombie/claw_strike3.wav"}
 ENT.DefaultSoundTbl_Impact = {"vj_flesh/alien_flesh1.wav"}
-	-- ====== Sound Chances ====== --
--- Higher number = less chance of playing | 1 = Always play
--- This are all counted in seconds
+	-- ====== Fade Out Time Variables ====== --
+	-- Put to 0 if you want it to stop instantly
+ENT.MeleeAttackSlowPlayerSoundFadeOutTime = 1
+ENT.SoundTrackFadeOutTime = 2
+	-- ====== Sound Chance Variables ====== --
+	-- Higher number = less chance of playing | 1 = Always play
 ENT.IdleSoundChance = 2
 ENT.CombatIdleSoundChance = 1
 ENT.OnReceiveOrderSoundChance = 1
@@ -451,9 +516,8 @@ ENT.ImpactSoundChance = 1
 ENT.DamageByPlayerSoundChance = 1
 ENT.DeathSoundChance = 1
 ENT.SoundTrackChance = 1
-	-- ====== Sound Timer ====== --
--- Randomized time between the two variables, x amount of time has to pass for the sound to play again
--- This are all counted in seconds
+	-- ====== Timer Variables ====== --
+	-- Randomized time between the two variables, x amount of time has to pass for the sound to play again | Counted in seconds
 ENT.NextSoundTime_Breath1 = 1
 ENT.NextSoundTime_Breath2 = 1
 ENT.NextSoundTime_Idle1 = 4
@@ -466,13 +530,13 @@ ENT.NextSoundTime_Pain1 = 2
 ENT.NextSoundTime_Pain2 = 2
 ENT.NextSoundTime_DamageByPlayer1 = 2
 ENT.NextSoundTime_DamageByPlayer2 = 2.3
-	-- ====== Sound Volume ====== --
--- Number between 0 and 1
--- 0 = No sound, 1 = normal/loudest
+	-- ====== Volume Variables ====== --
+	-- Number must be between 0 and 1
+	-- 0 = No sound, 1 = normal/loudest
 ENT.SoundTrackVolume = 1
-	-- ====== Sound Levels ====== --
--- EmitSound is from 0 to 511 | CreateSound is from 0 to 180
--- More Information: https://developer.valvesoftware.com/wiki/Soundscripts#SoundLevel_Flags
+	-- ====== Sound Level Variables ====== --
+	-- The proper number are usually range from 0 to 180, though it can go as high as 511
+	-- More Information: https://developer.valvesoftware.com/wiki/Soundscripts#SoundLevel_Flags
 ENT.FootStepSoundLevel = 70
 ENT.BreathSoundLevel = 60
 ENT.IdleSoundLevel = 75
@@ -504,16 +568,15 @@ ENT.ImpactSoundLevel = 60
 ENT.DamageByPlayerSoundLevel = 75
 ENT.DeathSoundLevel = 75
 //ENT.SoundTrackLevel = 0.9
-	-- ====== Sound Pitch ====== --
--- Higher number = Higher pitch | Lower number = Lower pitch
--- Highest number is 254
-	-- !!! Important variables !!! --
+	-- ====== Sound Pitch Variables ====== --
+	-- Higher number = Higher pitch | Lower number = Lower pitch
+	-- Highest acceptable number is 254
 ENT.UseTheSameGeneralSoundPitch = true
 	-- If set to true, it will make the game decide a number when the SNPC is created and use it for all sound pitches set to "UseGeneralPitch"
-	-- It picks the number between the two variables below:
+	-- It picks the number between these two variables below:
 ENT.GeneralSoundPitch1 = 80
 ENT.GeneralSoundPitch2 = 100
-	-- This two variables control any sound pitch variable that is set to "UseGeneralPitch"
+	-- These two variables control any sound pitch variable that is set to "UseGeneralPitch"
 	-- To not use these variables for a certain sound pitch, just put the desired number in the specific sound pitch
 ENT.FootStepPitch1 = 80
 ENT.FootStepPitch2 = 100
@@ -573,145 +636,14 @@ ENT.DamageByPlayerPitch1 = "UseGeneralPitch"
 ENT.DamageByPlayerPitch2 = "UseGeneralPitch"
 ENT.DeathSoundPitch1 = "UseGeneralPitch"
 ENT.DeathSoundPitch2 = "UseGeneralPitch"
-	-- ====== Sound Playback Rate ====== --
--- How fast should a sound play?
--- 1 = normal, 2 = twice the normal speed, 0.5 = half the normal speed
+	-- ====== Playback Rate Variables ====== --
+	-- Decides how fast the sound should play
+	-- Examples: 1 = normal, 2 = twice the normal speed, 0.5 = half the normal speed
 ENT.SoundTrackPlaybackRate = 1
-	-- Independent Variables ---------------------------------------------------------------------------------------------------------------------------------------------
--- These should be left as they are
-ENT.MeleeAttacking = false
-ENT.RangeAttacking = false
-ENT.LeapAttacking = false
-ENT.Alerted = false
-ENT.Dead = false
-ENT.Flinching = false
-ENT.TakingCover = false
-ENT.vACT_StopAttacks = false
-ENT.FollowingPlayer = false
-ENT.RunningAfter_FollowPlayer = false
-ENT.FollowingPlayer_WanderValue = false
-ENT.FollowingPlayer_ChaseValue = false
-ENT.ResetedEnemy = true
-ENT.VJ_IsBeingControlled = false
-ENT.VJ_PlayingSequence = false
-ENT.VJ_IsPlayingSoundTrack = false
-ENT.HasDone_PlayAlertSoundOnlyOnce = false
-ENT.PlayingAttackAnimation = false
-ENT.OnPlayerSight_AlreadySeen = false
-ENT.VJDEBUG_SNPC_ENABLED = false
-ENT.DoingMoveOutOfFriendlyPlayersWay = false
-ENT.MeleeAttack_DoingPropAttack = false
-ENT.Medic_IsHealingAlly = false
-ENT.Medic_WanderValue = false
-ENT.Medic_ChaseValue = false
-ENT.AlreadyDoneMedicThinkCode = false
-ENT.AlreadyBeingHealedByMedic = false
-ENT.ZombieFriendly = false
-ENT.AntlionFriendly = false
-ENT.CombineFriendly = false
-ENT.AlreadyDoneMeleeAttackFirstHit = false
-ENT.AlreadyDoneLeapAttackFirstHit = false
-ENT.IsAbleToMeleeAttack = true
-ENT.IsAbleToRangeAttack = true
-ENT.IsAbleToLeapAttack = true
-ENT.RangeAttack_DisableChasingEnemy = false
-ENT.IsDoingFaceEnemy = false
-ENT.VJ_IsPlayingInterruptSequence = false
-ENT.AlreadyDoneFirstMeleeAttack = false
-ENT.CanDoSelectScheduleAgain = true
-ENT.DoingVJDeathDissolve = false
-ENT.HasBeenGibbedOnDeath = false
-ENT.DeathAnimationCodeRan = false
-ENT.AlreadyDone_RunSelectSchedule_FollowPlayer = false
-ENT.AlreadyDoneRangeAttackFirstProjectile = false
-ENT.AlreadyDoneFirstLeapAttack = false
-ENT.VJ_IsBeingControlled_Tool = false
-ENT.LastHiddenZone_CanWander = true
-ENT.DoneLastHiddenZone_CanWander = false
-ENT.FollowingPlayerName = NULL
-ENT.MyEnemy = NULL
-ENT.VJ_TheController = NULL
-ENT.VJ_TheControllerEntity = NULL
-ENT.VJ_TheControllerBullseye = NULL
-ENT.Medic_CurrentEntToHeal = NULL
-ENT.Medic_SpawnedProp = NULL
-ENT.LastPlayedVJSound = nil
-ENT.LatestEnemyClass = nil
-ENT.LatestTaskName = nil
-ENT.LatestDmgInfo = nil
-ENT.NextMoveOutOfFriendlyPlayersWayT = 0
-ENT.TestT = 0
-ENT.NextFollowPlayerT = 0
-ENT.AngerLevelTowardsPlayer = 0
-ENT.NextBreathSoundT = 0
-ENT.FootStepT = 0
-ENT.PainSoundT = 0
-ENT.WorldShakeWalkT = 0
-ENT.NextRunAwayOnDamageT = 0
-ENT.NextIdleSoundT = 0
-ENT.NextEntityCheckT = 0
-ENT.NextFindEnemyT = 0
-ENT.NextCallForHelpT = 0
-ENT.NextCallForBackUpOnDamageT = 0
-ENT.NextAlertSoundT = 0
-ENT.LastSeenEnemyTime = 0
-ENT.NextCallForHelpAnimationT = 0
-ENT.NextResetEnemyT = 0
-ENT.CurrentAttackAnimation = 0
-ENT.CurrentAttackAnimationDuration = 0
-ENT.NextIdleTime = 0
-ENT.NextChaseTime = 0
-ENT.OnPlayerSightNextT = 0
-ENT.NextDamageByPlayerT = 0
-ENT.NextDamageByPlayerSoundT = 0
-ENT.TimeSinceLastSeenEnemy = 0
-ENT.TimeSinceSeenEnemy = 0
-ENT.Medic_NextHealT = 0
-ENT.CurrentAnim_IdleStand = 0
-ENT.CurrentFlinchAnimation = 0
-ENT.CurrentFlinchAnimationDuration = 0
-ENT.NextFlinchT = 0
-ENT.NextCanGetCombineBallDamageT = 0
-ENT.UseTheSameGeneralSoundPitch_PickedNumber = 0
-ENT.OnKilledEnemySoundT = 0
-ENT.LastHiddenZoneT = 0
-ENT.NextIdleStandTime = 0
-ENT.Passive_NextRunOnTouchT = 0
-ENT.Passive_NextRunOnDamageT = 0
-ENT.NextWanderTime = 0
-ENT.LatestEnemyPosition = Vector(0,0,0)
-ENT.NearestPointToEnemyDistance = Vector(0,0,0)
-ENT.SelectedDifficulty = 1
-	-- Tables ---------------------------------------------------------------------------------------------------------------------------------------------
-ENT.AttackTimers = {"timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap"}
-ENT.AttackTimersCustom = {}
-ENT.EntitiesToDestoryModel = {"models/props_phx/construct/wood/wood_wire_angle360x2.mdl","models/props_phx/construct/wood/wood_wire_angle360x1.mdl","models/props_phx/construct/wood/wood_wire_angle180x2.mdl","models/props_phx/construct/wood/wood_wire_angle180x1.mdl","models/props_phx/construct/wood/wood_wire_angle90x2.mdl","models/props_phx/construct/wood/wood_wire_angle90x1.mdl","models/props_phx/construct/wood/wood_wire2x2b.mdl","models/props_phx/construct/wood/wood_wire2x2x2b.mdl","models/props_phx/construct/wood/wood_wire2x2.mdl","models/props_phx/construct/wood/wood_wire1x2x2b.mdl","models/props_phx/construct/wood/wood_wire1x2b.mdl","models/props_phx/construct/wood/wood_wire1x2.mdl","models/props_phx/construct/wood/wood_wire1x1x2b.mdl","models/props_phx/construct/wood/wood_wire1x1x2.mdl","models/props_phx/construct/wood/wood_wire1x1x1.mdl","models/props_phx/construct/wood/wood_wire1x1.mdl","models/props_phx/construct/wood/wood_dome360.mdl","models/props_phx/construct/wood/wood_dome180.mdl","models/props_phx/construct/wood/wood_dome90.mdl","models/props_phx/construct/wood/wood_curve90x2.mdl","models/props_phx/construct/wood/wood_curve90x1.mdl","models/props_phx/construct/wood/wood_curve360x2.mdl","models/props_phx/construct/wood/wood_curve360x1.mdl","models/props_phx/construct/wood/wood_curve180x2.mdl","models/props_phx/construct/wood/wood_curve180x1.mdl","models/props_phx/construct/wood/wood_angle360.mdl","models/props_phx/construct/wood/wood_angle180.mdl","models/props_phx/construct/wood/wood_angle90.mdl","models/props_phx/construct/wood/wood_panel4x4.mdl","models/props_phx/construct/wood/wood_panel2x4.mdl","models/props_phx/construct/wood/wood_panel2x2.mdl" ,"models/props_phx/construct/wood/wood_panel1x2.mdl","models/props_phx/construct/wood/wood_panel1x1.mdl","models/props_phx/construct/wood/wood_boardx4.mdl","models/props_phx/construct/wood/wood_boardx2.mdl" ,"models/props_phx/construct/wood/wood_boardx1.mdl","models/props_debris/wood_board07a.mdl","models/props_debris/wood_board06a.mdl","models/props_debris/wood_board05a.mdl","models/props_debris/wood_board04a.mdl","models/props_debris/wood_board03a.mdl","models/props_debris/wood_board01a.mdl","models/props_debris/wood_board02a.mdl","models/props_junk/wood_pallet001a.mdl","models/props_wasteland/barricade002a.mdl","models/props_wasteland/barricade001a.mdl","models/props_junk/wood_crate002a.mdl","models/props_junk/wood_crate001a.mdl","models/props_junk/wood_crate001a_damaged.mdl","models/props_junk/wood_crate001a_damagedmax.mdl","models/props_wasteland/dockplank01a.mdl","models/props_wasteland/dockplank01b.mdl","models/props_wasteland/wood_fence01a.mdl","models/props_wasteland/wood_fence02a.mdl","models/props_interiors/furniture_shelf01a.mdl","models/props_c17/shelfunit01a.mdl","models/props_c17/furnituredresser001a.mdl","models/props_wasteland/cafeteria_table001a.mdl","models/props_c17/furnituretable001a.mdl","models/props_c17/furnituretable002a.mdl","models/props_c17/furnituredrawer001a.mdl"}
-ENT.EntitiesToDestroyClass = {"func_breakable","func_physbox"} //"func_breakable_surf"
-ENT.EntitiesToPushModel = {"models/props_c17/oildrum001.mdl","models/props_borealis/bluebarrel001.mdl"}
-ENT.VJ_AddCertainEntityAsEnemy = {}
-ENT.VJ_AddCertainEntityAsFriendly = {}
-ENT.DefaultGibDamageTypes = {DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SHOCK,DMG_SONIC}
-ENT.CurrentReachableEnemies = {}
-
-ENT.NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
-ENT.NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true,monster_scientist=true,monster_barney=true}
-ENT.NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack=true}
-ENT.NPCTbl_Zombies = {npc_fastzombie_torso=true,npc_zombine=true,npc_zombie_torso=true,npc_zombie=true,npc_poisonzombie=true,npc_headcrab_fast=true,npc_headcrab_black=true,npc_headcrab=true,npc_fastzombie=true,monster_zombie=true,monster_headcrab=true,monster_babycrab=true}
-ENT.NPCTbl_Antlions = {npc_antlion=true,npc_antlionguard=true,npc_antlion_worker=true}
-ENT.NPCTbl_Xen = {monster_bullchicken=true,monster_alien_grunt=true,monster_alien_slave=true,monster_alien_controller=true,monster_houndeye=true,monster_gargantua=true,monster_nihilanth=true}
-
-/*vSound = {}
-vSound.Test = {}
-for k,v in pairs(vSound) do
-	for c,d in pairs(vSound[k]) do
-	util.PrecacheSound(d)
-	end
-end*/
-
-//function VJ_TABLERANDOM(vtblname) return vtblname[math.random(1,table.Count(vtblname))] end
-//function VJ_STOPSOUND(vsoundname) if vsoundname then vsoundname:Stop() end end
-
-//util.AddNetworkString("vj_creature_onthememusic")
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-- Use the functions below to customize certain parts of the base or to add new custom systems
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize() /* -- Example: self:SetCollisionBounds(Vector(50, 50, 100), Vector(-50, -50, 0)) */ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -866,6 +798,130 @@ function ENT:CustomOnRemove() end
 function ENT:Controller_IntMsg(ply)
 	ply:ChatPrint("None specified...") -- Remove this line!
 end
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ ///// WARNING: Don't touch anything below this line! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ENT.MeleeAttacking = false
+ENT.RangeAttacking = false
+ENT.LeapAttacking = false
+ENT.Alerted = false
+ENT.Dead = false
+ENT.Flinching = false
+ENT.TakingCover = false
+ENT.vACT_StopAttacks = false
+ENT.FollowingPlayer = false
+ENT.RunningAfter_FollowPlayer = false
+ENT.FollowingPlayer_WanderValue = false
+ENT.FollowingPlayer_ChaseValue = false
+ENT.ResetedEnemy = true
+ENT.VJ_IsBeingControlled = false
+ENT.VJ_PlayingSequence = false
+ENT.VJ_IsPlayingSoundTrack = false
+ENT.HasDone_PlayAlertSoundOnlyOnce = false
+ENT.PlayingAttackAnimation = false
+ENT.OnPlayerSight_AlreadySeen = false
+ENT.VJDEBUG_SNPC_ENABLED = false
+ENT.DoingMoveOutOfFriendlyPlayersWay = false
+ENT.MeleeAttack_DoingPropAttack = false
+ENT.Medic_IsHealingAlly = false
+ENT.Medic_WanderValue = false
+ENT.Medic_ChaseValue = false
+ENT.AlreadyDoneMedicThinkCode = false
+ENT.AlreadyBeingHealedByMedic = false
+ENT.ZombieFriendly = false
+ENT.AntlionFriendly = false
+ENT.CombineFriendly = false
+ENT.AlreadyDoneMeleeAttackFirstHit = false
+ENT.AlreadyDoneLeapAttackFirstHit = false
+ENT.IsAbleToMeleeAttack = true
+ENT.IsAbleToRangeAttack = true
+ENT.IsAbleToLeapAttack = true
+ENT.RangeAttack_DisableChasingEnemy = false
+ENT.IsDoingFaceEnemy = false
+ENT.VJ_IsPlayingInterruptSequence = false
+ENT.AlreadyDoneFirstMeleeAttack = false
+ENT.CanDoSelectScheduleAgain = true
+ENT.DoingVJDeathDissolve = false
+ENT.HasBeenGibbedOnDeath = false
+ENT.DeathAnimationCodeRan = false
+ENT.AlreadyDone_RunSelectSchedule_FollowPlayer = false
+ENT.AlreadyDoneRangeAttackFirstProjectile = false
+ENT.AlreadyDoneFirstLeapAttack = false
+ENT.VJ_IsBeingControlled_Tool = false
+ENT.LastHiddenZone_CanWander = true
+ENT.DoneLastHiddenZone_CanWander = false
+ENT.FollowingPlayerName = NULL
+ENT.MyEnemy = NULL
+ENT.VJ_TheController = NULL
+ENT.VJ_TheControllerEntity = NULL
+ENT.VJ_TheControllerBullseye = NULL
+ENT.Medic_CurrentEntToHeal = NULL
+ENT.Medic_SpawnedProp = NULL
+ENT.LastPlayedVJSound = nil
+ENT.LatestEnemyClass = nil
+ENT.LatestTaskName = nil
+ENT.LatestDmgInfo = nil
+ENT.NextMoveOutOfFriendlyPlayersWayT = 0
+ENT.TestT = 0
+ENT.NextFollowPlayerT = 0
+ENT.AngerLevelTowardsPlayer = 0
+ENT.NextBreathSoundT = 0
+ENT.FootStepT = 0
+ENT.PainSoundT = 0
+ENT.WorldShakeWalkT = 0
+ENT.NextRunAwayOnDamageT = 0
+ENT.NextIdleSoundT = 0
+ENT.NextEntityCheckT = 0
+ENT.NextFindEnemyT = 0
+ENT.NextCallForHelpT = 0
+ENT.NextCallForBackUpOnDamageT = 0
+ENT.NextAlertSoundT = 0
+ENT.LastSeenEnemyTime = 0
+ENT.NextCallForHelpAnimationT = 0
+ENT.NextResetEnemyT = 0
+ENT.CurrentAttackAnimation = 0
+ENT.CurrentAttackAnimationDuration = 0
+ENT.NextIdleTime = 0
+ENT.NextChaseTime = 0
+ENT.OnPlayerSightNextT = 0
+ENT.NextDamageByPlayerT = 0
+ENT.NextDamageByPlayerSoundT = 0
+ENT.TimeSinceLastSeenEnemy = 0
+ENT.TimeSinceSeenEnemy = 0
+ENT.Medic_NextHealT = 0
+ENT.CurrentAnim_IdleStand = 0
+ENT.CurrentFlinchAnimation = 0
+ENT.CurrentFlinchAnimationDuration = 0
+ENT.NextFlinchT = 0
+ENT.NextCanGetCombineBallDamageT = 0
+ENT.UseTheSameGeneralSoundPitch_PickedNumber = 0
+ENT.OnKilledEnemySoundT = 0
+ENT.LastHiddenZoneT = 0
+ENT.NextIdleStandTime = 0
+ENT.Passive_NextRunOnTouchT = 0
+ENT.Passive_NextRunOnDamageT = 0
+ENT.NextWanderTime = 0
+ENT.LatestEnemyPosition = Vector(0,0,0)
+ENT.NearestPointToEnemyDistance = Vector(0,0,0)
+ENT.SelectedDifficulty = 1
+ENT.VJ_AddCertainEntityAsEnemy = {}
+ENT.VJ_AddCertainEntityAsFriendly = {}
+ENT.CurrentReachableEnemies = {}
+ENT.AttackTimers = {"timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap"}
+ENT.DefaultGibDamageTypes = {DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SHOCK,DMG_SONIC}
+ENT.EntitiesToDestroyClass = {"func_breakable","func_physbox"} //"func_breakable_surf"
+ENT.NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
+ENT.NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true,monster_scientist=true,monster_barney=true}
+ENT.NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack=true}
+ENT.NPCTbl_Zombies = {npc_fastzombie_torso=true,npc_zombine=true,npc_zombie_torso=true,npc_zombie=true,npc_poisonzombie=true,npc_headcrab_fast=true,npc_headcrab_black=true,npc_headcrab=true,npc_fastzombie=true,monster_zombie=true,monster_headcrab=true,monster_babycrab=true}
+ENT.NPCTbl_Antlions = {npc_antlion=true,npc_antlionguard=true,npc_antlion_worker=true}
+ENT.NPCTbl_Xen = {monster_bullchicken=true,monster_alien_grunt=true,monster_alien_slave=true,monster_alien_controller=true,monster_houndeye=true,monster_gargantua=true,monster_nihilanth=true}
+
+//util.AddNetworkString("vj_creature_onthememusic")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetSpawnEffect(false)
@@ -1250,6 +1306,7 @@ function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 	if self.MovementType == VJ_MOVETYPE_AERIAL then self:AerialMove_ChaseEnemy(true) return end
 	//if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
 	if self.LatestEnemyPosition == self:GetEnemy():GetPos() && self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
+	if self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
 	self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Run))
 	if UseLOSChase == true then
 		local vsched = ai_vj_schedule.New("vj_chase_enemy")
@@ -3681,8 +3738,22 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PriorToKilled(dmginfo,hitgroup)
 	if self.Medic_IsHealingAlly == true then self:DoMedicCode_Reset() end
+	
 	if self.BringFriendsOnDeath == true then
 		self:BringAlliesToMe(self.BringFriendsOnDeathDistance,self.BringFriendsOnDeathUseCertainAmount,self.BringFriendsOnDeathUseCertainAmountNumber,true)
+	elseif self.AlertFriendsOnDeath == true then
+		local checkents = self:CheckAlliesAroundMe(self.AlertFriendsOnDeathDistance)
+		local LocalTargetTable = {}
+		if checkents.ItFoundAllies == true then
+			for k,v in ipairs(checkents.FoundAllies) do
+				if v:GetEnemy() == nil && v.AlertFriendsOnDeath == true && #LocalTargetTable != self.AlertFriendsOnDeathUseCertainAmountNumber then
+					table.insert(LocalTargetTable,v)
+					v:FaceCertainEntity(self,false)
+					v:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(v.AnimTbl_AlertFriendsOnDeath),false,0,false)
+					v.NextIdleTime = CurTime() + math.Rand(5,8)
+				end
+			end
+		end
 	end
 
 	local function DoKilled()
@@ -3912,11 +3983,23 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 
 		-- Miscellaneous --
 		if GetConVarNumber("ai_serverragdolls") == 0 then self.Corpse:SetCollisionGroup(1) hook.Call("VJ_CreateSNPCCorpse",nil,self.Corpse,self) else undo.ReplaceEntity(self,self.Corpse) end
-		if self.CorpseAlwaysCollide == true then self.Corpse:SetCollisionGroup(0) end
-		self.Corpse:SetSkin(self.DeathSkin)
-		if self.DeathSkin == 0 then self.Corpse:SetSkin(self:GetSkin()) end
-		if self.HasDeathBodyGroup == true then for i = 0,18 do self.Corpse:SetBodygroup(i,self:GetBodygroup(i)) end -- 18 = Bodygroup limit
-		if self.CustomBodyGroup == true then self.Corpse:SetBodygroup(self.DeathBodyGroupA,self.DeathBodyGroupB) end end -- Custom Bodygroup
+		if self.DeathCorpseAlwaysCollide == true then self.Corpse:SetCollisionGroup(0) end
+		
+		if self.DeathCorpseSkin == -1 then
+			self.Corpse:SetSkin(self:GetSkin())
+		else
+			self.Corpse:SetSkin(self.DeathCorpseSkin)
+		end
+		
+		if self.DeathCorpseSetBodyGroup == true then -- Yete asega true-e, ooremen gerna bodygroup tenel
+			for i = 0,18 do -- 18 = Bodygroup limit
+				self.Corpse:SetBodygroup(i,self:GetBodygroup(i))
+			end
+			if self.DeathBodyGroupA != -1 && self.DeathBodyGroupB != -1 then -- Yete as yergooke nevaz meg chene, user-en terdz tevere kordzadze
+				self.Corpse:SetBodygroup(self.DeathBodyGroupA,self.DeathBodyGroupB)
+			end
+		end
+		
 		cleanup.ReplaceEntity(self,self.Corpse) -- Delete on cleanup
 		if GetConVarNumber("vj_npc_undocorpse") == 1 then undo.ReplaceEntity(self,self.Corpse) end -- Undoable
 		if self.SetCorpseOnFire == true then self.Corpse:Ignite(math.Rand(8,10),0) end -- Set it on fire when it dies

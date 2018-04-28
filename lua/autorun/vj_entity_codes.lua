@@ -809,6 +809,16 @@ hook.Add("PlayerSelectSpawn","VJ_PLAYER_SELECTSPAWN",function(ply)
 	end
 end)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+hook.Add("PhysgunPickup","VJ_PLAYER_PHYSGUN_PICKUP",function(ply,ent)
+	if ent:GetClass() == "sent_vj_ply_spawnpoint" then
+		if ply:IsAdmin() then
+			return true
+		else
+			return false
+		end
+	end
+end)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* -- Obsolete! | Has many problems and doesn't solve lag
 local VJ_TblNPCs = {}
 local function VJ_ENTITYCREATED(entity)
