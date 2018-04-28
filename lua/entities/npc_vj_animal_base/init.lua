@@ -123,12 +123,11 @@ ENT.OnPlayerSightNextTime2 = 20 -- How much time should it pass until it runs th
 ENT.HasDeathRagdoll = true -- If set to false, it will not spawn the regular ragdoll of the SNPC
 ENT.DeathCorpseEntityClass = "UseDefaultBehavior" -- The entity class it creates | "UseDefaultBehavior" = Let the base automatically detect the type
 ENT.DeathCorpseModel = {} -- The corpse model that it will spawn when it dies | Leave empty to use the NPC's model | Put as many models as desired, the base will pick a random one.
-ENT.CorpseAlwaysCollide = false -- Should the corpse always collide?
-ENT.HasDeathBodyGroup = true -- Set to true if you want to put a bodygroup when it dies
-ENT.CustomBodyGroup = false -- Set true if you want to set custom bodygroup
+ENT.DeathCorpseAlwaysCollide = false -- Should the corpse always collide?
+ENT.DeathCorpseSetBodyGroup = true -- Set to true if you want to put a bodygroup when it dies
 ENT.DeathBodyGroupA = 0 -- Used for Custom Bodygroup | Group = A
 ENT.DeathBodyGroupB = 0 -- Used for Custom Bodygroup | Group = B
-ENT.DeathSkin = 0 -- Used to override the death skin | 0 = Use the skin that the SNPC had before it died
+ENT.DeathCorpseSkin = 0 -- Used to override the death skin | 0 = Use the skin that the SNPC had before it died
 ENT.FadeCorpse = false -- Fades the ragdoll on death
 ENT.FadeCorpseTime = 10 -- How much time until the ragdoll fades | Unit = Seconds
 ENT.HasDeathAnimation = false -- Does it play an animation when it dies?
@@ -1614,10 +1613,10 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 
 		-- Miscellaneous --
 		if GetConVarNumber("ai_serverragdolls") == 0 then self.Corpse:SetCollisionGroup(1) hook.Call("VJ_CreateSNPCCorpse",nil,self.Corpse,self) else undo.ReplaceEntity(self,self.Corpse) end
-		if self.CorpseAlwaysCollide == true then self.Corpse:SetCollisionGroup(0) end
-		self.Corpse:SetSkin(self.DeathSkin)
-		if self.DeathSkin == 0 then self.Corpse:SetSkin(self:GetSkin()) end
-		if self.HasDeathBodyGroup == true then for i = 0,18 do self.Corpse:SetBodygroup(i,self:GetBodygroup(i)) end -- 18 = Bodygroup limit
+		if self.DeathCorpseAlwaysCollide == true then self.Corpse:SetCollisionGroup(0) end
+		self.Corpse:SetSkin(self.DeathCorpseSkin)
+		if self.DeathCorpseSkin == 0 then self.Corpse:SetSkin(self:GetSkin()) end
+		if self.DeathCorpseSetBodyGroup == true then for i = 0,18 do self.Corpse:SetBodygroup(i,self:GetBodygroup(i)) end -- 18 = Bodygroup limit
 		if self.CustomBodyGroup == true then self.Corpse:SetBodygroup(self.DeathBodyGroupA,self.DeathBodyGroupB) end end -- Custom Bodygroup
 		cleanup.ReplaceEntity(self,self.Corpse) -- Delete on cleanup
 		if GetConVarNumber("vj_npc_undocorpse") == 1 then undo.ReplaceEntity(self,self.Corpse) end -- Undoable
