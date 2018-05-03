@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models/vj_weapons/w_k3/GripK3_D"
+	"$surfaceprop" "metal"
+	"$model" "1"
+}
