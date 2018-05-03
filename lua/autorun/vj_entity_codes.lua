@@ -25,6 +25,7 @@ VJ.AddNPCWeapon("VJ_SPAS-12","weapon_vj_spas12")
 VJ.AddNPCWeapon("VJ_357","weapon_vj_357")
 VJ.AddNPCWeapon("VJ_FlareGun","weapon_vj_flaregun")
 VJ.AddNPCWeapon("VJ_RPG","weapon_vj_rpg")
+VJ.AddNPCWeapon("VJ_K-3","weapon_vj_k3")
 
 -- NPCs ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local vCat = "VJ Base"
