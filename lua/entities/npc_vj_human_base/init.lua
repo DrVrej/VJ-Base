@@ -774,6 +774,7 @@ ENT.Medic_WanderValue = false
 ENT.Medic_ChaseValue = false
 ENT.AlreadyDoneMedicThinkCode = false
 ENT.AlreadyBeingHealedByMedic = false
+ENT.VJFriendly = false
 ENT.ZombieFriendly = false
 ENT.AntlionFriendly = false
 ENT.CombineFriendly = false
@@ -2686,7 +2687,7 @@ function ENT:CheckForGrenades()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJFriendlyCode(argent)
-	if self.HasAllies == false or GetConVarNumber("vj_npc_vjfriendly") == 0 then return false end
+	if self.HasAllies == false then return end
 	argent:AddEntityRelationship(self,D_LI,99)
 	self:AddEntityRelationship(argent,D_LI,99)
 	return true
@@ -2900,7 +2901,7 @@ function ENT:DoHardEntityCheck(CustomTbl)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoEntityRelationshipCheck()
-	if GetConVarNumber("ai_disabled") == 1 or self.Dead == true or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.Behavior == VJ_BEHAVIOR_PASSIVE*/ then return false end
+	if self.Dead == true or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.Behavior == VJ_BEHAVIOR_PASSIVE*/ then return false end
 	self.CurrentReachableEnemies = {}
 	local posenemies = self.CurrentPossibleEnemies
 	if posenemies == nil then return false end
@@ -2908,7 +2909,7 @@ function ENT:DoEntityRelationshipCheck()
 		//self.CurrentPossibleEnemies = self:DoHardEntityCheck()
 	//self.NextHardEntityCheckT = CurTime() + math.random(self.NextHardEntityCheck1,self.NextHardEntityCheck2) end
 	//print(self:GetName().."'s Enemies:")
-	//PrintTable(self.CurrentPossibleEnemies)
+	//PrintTable(posenemies)
 
 	/*if table.Count(self.CurrentPossibleEnemies) == 0 && CurTime() > self.NextHardEntityCheckT then
 		self.CurrentPossibleEnemies = self:DoHardEntityCheck()
@@ -2919,7 +2920,7 @@ function ENT:DoEntityRelationshipCheck()
 	for k, v in ipairs(posenemies) do
 		if !IsValid(v) then table.remove(posenemies,k) continue end
 		//if !IsValid(v) then table.remove(self.CurrentPossibleEnemies,tonumber(v)) continue end
-		if !IsValid(v) then continue end
+		//if !IsValid(v) then continue end
 		if self:VJ_HasNoTarget(v) == true then
 			if self:GetEnemy() != nil && self:GetEnemy() == v then
 				self:ResetEnemy(false)
@@ -2983,10 +2984,10 @@ function ENT:DoEntityRelationshipCheck()
 							self:AddEntityRelationship(v,D_LI,99)
 						end
 					end
-					if v.IsVJBaseSNPC == true then if self:VJFriendlyCode(v) then entisfri = true end end
+					if v.IsVJBaseSNPC == true && self.VJFriendly == true then if self:VJFriendlyCode(v) == true then entisfri = true end end
 				end
 			end
-			if (self.PlayerFriendly == true or entisfri == true/* or self:Disposition(v) == D_LI*/) && v:IsPlayer() && !VJ_HasValue(self.VJ_AddCertainEntityAsEnemy,v) then entisfri = true DoPlayerSight() end// continue end
+			if (self.PlayerFriendly == true or entisfri == true/* or self:Disposition(v) == D_LI*/) && v:IsPlayer() && !VJ_HasValue(self.VJ_AddCertainEntityAsEnemy,v) then entisfri = true /*DoPlayerSight()*/ end// continue end
 			if entisfri == false && v:IsNPC() /*&& MyVisibleTov*/ && self.DisableMakingSelfEnemyToNPCs == false && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self,D_HT,99) end
 			if (!self.IsVJBaseSNPC_Tank) && v:IsPlayer() && self:GetEnemy() == nil && entisfri == false then
 				if entisfri == false then self:AddEntityRelationship(v,D_NU,99) end
@@ -4543,6 +4544,7 @@ function ENT:ConvarsOnInit()
 	if GetConVarNumber("vj_npc_usedevcommands") == 1 then self.VJDEBUG_SNPC_ENABLED = true end
 	self.NextEntityCheckTime = GetConVarNumber("vj_npc_processtime")
 	if GetConVarNumber("vj_npc_sd_nosounds") == 1 then self.HasSounds = false end
+	if GetConVarNumber("vj_npc_vjfriendly") == 1 then self.VJFriendly = true end
 	if GetConVarNumber("vj_npc_playerfriendly") == 1 then self.PlayerFriendly = true end
 	if GetConVarNumber("vj_npc_zombiefriendly") == 1 then self.ZombieFriendly = true end
 	if GetConVarNumber("vj_npc_antlionfriendly") == 1 then self.AntlionFriendly = true end

@@ -303,7 +303,7 @@ function NPC_MetaTable:VJ_HasNoTarget(argent)
 	if argent:GetClass() == "ob_vj_bullseye" && (argent.EnemyToIndividual == true) && (argent.EnemyToIndividualEnt == self) then
 		return false, "Bullseye"
 	end
-	if (argent.VJ_NoTarget && argent.VJ_NoTarget == true) or (argent:IsFlagSet(FL_NOTARGET) == true) then
+	if (argent.VJ_NoTarget == true) or (argent:IsFlagSet(FL_NOTARGET) == true) then
 		return true, ""
 	else
 		return false, ""
