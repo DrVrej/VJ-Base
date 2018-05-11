@@ -832,16 +832,18 @@ hook.Add("OnEntityCreated","VJ_ENTITYCREATED",VJ_ENTITYCREATED)*/
 local function VJ_ENTITYCREATED(entity)
 	if (CLIENT) then return end
 	if !entity:IsNPC() then return end
-	timer.Simple(0.15,function()
-		if IsValid(entity) then
-			local getall = ents.GetAll()
-			for k,v in pairs(getall) do
-				if IsValid(v) && v != entity && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
-					v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
+	if entity:GetClass() != "npc_grenade_frag" && entity:GetClass() != "bullseye_strider_focus" && entity:GetClass() != "npc_bullseye" && entity:GetClass() != "npc_enemyfinder" && entity:GetClass() != "hornet" then
+		timer.Simple(0.15,function()
+			if IsValid(entity) then
+				local getall = ents.GetAll()
+				for k,v in pairs(getall) do
+					if IsValid(v) && v != entity && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
+						v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
+					end
 				end
 			end
-		end
-	end)
+		end)
+	end
 end
 hook.Add("OnEntityCreated","VJ_ENTITYCREATED",VJ_ENTITYCREATED)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

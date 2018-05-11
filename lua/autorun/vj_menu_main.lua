@@ -209,6 +209,16 @@ if (CLIENT) then
 		Panel:AddControl("Label", {Text = "Follow/subscribe/like/join one of this links to get updates about my addons!"})
 		Panel:ControlHelp("Thanks for your support!")
 
+		local discordl = vgui.Create("DButton") -- Discord
+		discordl:SetFont("TargetID")
+		discordl:SetText("Join my Discord Server!")
+		discordl:SetSize(150, 25)
+		discordl:SetColor(Color(76,153,0,255))
+		discordl.DoClick = function(discordl)
+			gui.OpenURL("https://discord.gg/zwQjrdG")
+		end
+		Panel:AddPanel(discordl)
+		
 		local steaml = vgui.Create("DButton") -- Steam Group
 		steaml:SetFont("TargetID")
 		steaml:SetText("Join my Steam Group!")
@@ -259,7 +269,7 @@ if (CLIENT) then
 		donate:SetSize(150, 30)
 		donate:SetColor(Color(76,153,255,255))
 		donate.DoClick = function(donate)
-			gui.OpenURL("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=VTLG9CHSAEUT6")
+			gui.OpenURL("https://www.patreon.com/drvrej")
 		end
 		Panel:AddPanel(donate)
 
