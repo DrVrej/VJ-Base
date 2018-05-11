@@ -93,7 +93,7 @@ if (CLIENT) then
 		local CheckList = vgui.Create("DListView")
 			CheckList:SetTooltip(false)
 			//CheckList:Center() -- No need since Size does it already
-			CheckList:SetSize( 100, 300 ) -- Size
+			CheckList:SetSize(100, 307) -- Size
 			CheckList:SetMultiSelect(false)
 			//CheckList.Paint = function()
 			//draw.RoundedBox( 8, 0, 0, CheckList:GetWide(), CheckList:GetTall(), Color( 0, 0, 100, 255 ) )

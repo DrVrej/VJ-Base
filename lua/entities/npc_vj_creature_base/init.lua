@@ -922,6 +922,26 @@ ENT.NPCTbl_Zombies = {npc_fastzombie_torso=true,npc_zombine=true,npc_zombie_tors
 ENT.NPCTbl_Antlions = {npc_antlion=true,npc_antlionguard=true,npc_antlion_worker=true}
 ENT.NPCTbl_Xen = {monster_bullchicken=true,monster_alien_grunt=true,monster_alien_slave=true,monster_alien_controller=true,monster_houndeye=true,monster_gargantua=true,monster_nihilanth=true}
 
+/*
+local ipairs = ipairs
+local pairs = pairs
+local GetConVarNumber = GetConVarNumber
+local Angle = Angle
+local IsValid = IsValid
+local istable = istable
+local print = print
+local type = type
+local Vector = Vector
+local table = table
+local math = math
+local string = string
+local timer = timer
+local ents = ents
+local util = util
+local player = player
+local bit = bit
+*/
+
 //util.AddNetworkString("vj_creature_onthememusic")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
@@ -2418,13 +2438,14 @@ end
 // lua_run for k,v in ipairs(player.GetAll()) do v:GetEyeTrace().Entity:SetHealth(100) end
 --------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PushOrAttackPropsCode(CustomValuesTbl)
+	if self.PushProps == false && self.AttackProps == false then return end
+	
 	CustomValuesTbl = CustomValuesTbl or {}
 	IsSingleValue = CustomValuesTbl.IsSingleValue or 0
 	CustomMeleeDistance = CustomValuesTbl.CustomMeleeDistance or math.Clamp(self.MeleeAttackDamageDistance-30,self.MeleeAttackDistance,self.MeleeAttackDamageDistance) //self.MeleeAttackDamageDistance
 	local isanentitytoattack = false
-	if self.PushProps == false && self.AttackProps == false then return end
 
-	local valuestoattack
+	local valuestoattack;
 	//local dist = Vector(self:OBBMins().x,0,0):Distance(Vector(self:OBBMaxs().x,0,0)) // self:GetCollisionBounds()
 	//local halfdist = dist /2
 	if IsSingleValue == 0 then
@@ -2438,19 +2459,17 @@ function ENT:PushOrAttackPropsCode(CustomValuesTbl)
 		if VJ_IsProp(v) == true or isanentitytoattack == true then
 			//print(self:VJ_GetNearestPointToEntityDistance(v,1))
 			//print(self:DoPropVisibiltyCheckForPushAttackProps(v))
-			if /*self:VJ_GetNearestPointToEntityDistance(v) < (CustomMeleeDistance) &&*/ self:DoPropVisibiltyCheckForPushAttackProps(v) /*&& self:Visible(v)*/ && (self:GetForward():Dot((v:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius / 1.3))) && phys:IsValid() && phys != nil && phys != NULL && v:GetCollisionGroup() != COLLISION_GROUP_DEBRIS && v:GetCollisionGroup() != COLLISION_GROUP_DEBRIS_TRIGGER && v:GetCollisionGroup() != COLLISION_GROUP_DISSOLVING && v:GetCollisionGroup() != COLLISION_GROUP_IN_VEHICLE then
+			if /*self:VJ_GetNearestPointToEntityDistance(v) < (CustomMeleeDistance) &&*/ self:DoPropVisibiltyCheckForPushAttackProps(v) /*&& self:Visible(v)*/ && (self:GetForward():Dot((v:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius / 1.3))) && IsValid(phys) && v:GetCollisionGroup() != COLLISION_GROUP_DEBRIS && v:GetCollisionGroup() != COLLISION_GROUP_DEBRIS_TRIGGER && v:GetCollisionGroup() != COLLISION_GROUP_DISSOLVING && v:GetCollisionGroup() != COLLISION_GROUP_IN_VEHICLE then
 				if isanentitytoattack == true then return true end
 				//print("IT SHOULD WORK "..v:GetClass())
-				if phys:GetMass() > 4 && phys:GetSurfaceArea() > 800 then
+				if self.PushProps == true && phys:GetMass() > 4 && phys:GetSurfaceArea() > 800 then
 					local selfphys = self:GetPhysicsObject()
-					if self.PushProps == true && selfphys:IsValid() && selfphys != nil && selfphys != NULL && selfphys:GetSurfaceArea() >= phys:GetSurfaceArea() && !VJ_HasValue(self.EntitiesToDestroyClass,v:GetClass()) then
+					if IsValid(selfphys) && selfphys:GetSurfaceArea() >= phys:GetSurfaceArea() then
 						return true
 					end
 				end
-				if self.AttackProps == true then
-					if v:Health() > 0 /*(VJ_HasValue(self.EntitiesToDestoryModel,v:GetModel()) or VJ_HasValue(self.EntitiesToDestroyClass,v:GetClass())) &&*/ then
-						return true
-					end
+				if self.AttackProps == true && v:Health() > 0 /*(VJ_HasValue(self.EntitiesToDestoryModel,v:GetModel()) or VJ_HasValue(self.EntitiesToDestroyClass,v:GetClass())) &&*/ then
+					return true
 				end
 			end
 		end
@@ -2969,8 +2988,7 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoAlert()
-	if self:GetEnemy() == nil then return end
-	if self.Alerted == true then return end
+	if self:GetEnemy() == nil or self.Alerted == true then return end
 	self.Alerted = true
 	self.LastSeenEnemyTime = 0
 	self:CustomOnAlert()
@@ -2990,13 +3008,12 @@ end
 function ENT:DoRelationshipCheck(argent)
 	local not_bool, not_str = self:VJ_HasNoTarget(argent)
 	if not_str == "Bullseye" then return true end
-	if not_bool == true then return false end
-	if self.NPCTbl_Animals[argent:GetClass()] then return false end
+	if not_bool == true or self.NPCTbl_Animals[argent:GetClass()] then return false end
 	if argent:Health() > 0 && self:Disposition(argent) != D_LI then
 		if argent:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 1 then return false end
 		if VJ_HasValue(self.VJ_AddCertainEntityAsFriendly,argent) then return false end
 		if VJ_HasValue(self.VJ_AddCertainEntityAsEnemy,argent) then return true end
-		if (argent:IsNPC() && !argent.FriendlyToVJSNPCs && argent:Health() > 0 && ((argent:Disposition(self) == D_HT) or (argent:Disposition(self) == D_NU && argent.VJ_IsBeingControlled == true))) or (argent:IsPlayer() && self.PlayerFriendly == false && self:Disposition(argent) != D_LI && GetConVarNumber("ai_ignoreplayers") == 0 && argent:Alive()) then
+		if (argent:IsNPC() && !argent.FriendlyToVJSNPCs && argent:Health() > 0 && ((argent:Disposition(self) == D_HT) or (argent:Disposition(self) == D_NU && argent.VJ_IsBeingControlled == true))) or (argent:IsPlayer() && self.PlayerFriendly == false && GetConVarNumber("ai_ignoreplayers") == 0 && argent:Alive()) then
 			//if argent.VJ_NoTarget == false then
 			//if (argent.VJ_NoTarget) then if argent.VJ_NoTarget == false then continue end end
 			return true
@@ -3059,6 +3076,11 @@ function ENT:DoEntityRelationshipCheck()
 
 	local distlist = {}
 	local enemyseen = false
+	local MyPos = self:GetPos()
+	local sightdist = self.SightDistance
+	local function DoPlayerSight(ent)
+		if self.HasOnPlayerSight == true && ent:Alive() then self:OnPlayerSightCode(ent) end
+	end
 	for k, v in ipairs(posenemies) do
 		if !IsValid(v) then table.remove(posenemies,k) continue end
 		//if !IsValid(v) then table.remove(self.CurrentPossibleEnemies,tonumber(v)) continue end
@@ -3072,17 +3094,14 @@ function ENT:DoEntityRelationshipCheck()
 		//if v:Health() <= 0 then table.remove(self.CurrentPossibleEnemies,k) continue end
 		local entisfri = false
 		local vPos = v:GetPos()
-		local MyPos = self:GetPos()
 		local vDistanceToMy = vPos:Distance(MyPos)
-		local sightdist = self.SightDistance
 		if vDistanceToMy > sightdist then continue end
 		local vClass = v:GetClass()
+		local vNPC = v:IsNPC()
+		local vPlayer = v:IsPlayer()
 		local radiusoverride = 0
 		local seethroughwall = false
-		local function DoPlayerSight()
-			if self.HasOnPlayerSight == true && v:IsPlayer() && v:Alive() then self:OnPlayerSightCode(v) end
-		end
-		if vClass != self:GetClass() && (v:IsNPC() or v:IsPlayer()) && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
+		if vClass != self:GetClass() && (vNPC or vPlayer) && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
 			if self.HasAllies == true then
 				for _,friclass in ipairs(self.VJ_NPC_Class) do
 					if friclass == "CLASS_PLAYER_ALLY" && self.PlayerFriendly == false then self.PlayerFriendly = true end
@@ -3097,11 +3116,11 @@ function ENT:DoEntityRelationshipCheck()
 							self.ResetedEnemy = true
 							self:ResetEnemy(false)
 						end
-						if v:IsNPC() then v:AddEntityRelationship(self,D_LI,99) end
+						if vNPC then v:AddEntityRelationship(self,D_LI,99) end
 						self:AddEntityRelationship(v,D_LI,99)
 					end
 				end
-				if v:IsNPC() then
+				if vNPC then
 					for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
 						//for k,v in ipairs(ents.FindByClass(fritbl)) do
 						if string.find(vClass, fritbl) then
@@ -3129,12 +3148,14 @@ function ENT:DoEntityRelationshipCheck()
 					if v.IsVJBaseSNPC == true && self.VJFriendly == true then if self:VJFriendlyCode(v) == true then entisfri = true end end
 				end
 			end
-			if (self.PlayerFriendly == true or entisfri == true/* or self:Disposition(v) == D_LI*/) && v:IsPlayer() && !VJ_HasValue(self.VJ_AddCertainEntityAsEnemy,v) then entisfri = true /*DoPlayerSight()*/ end// continue end
-			if entisfri == false && v:IsNPC() /*&& MyVisibleTov*/ && self.DisableMakingSelfEnemyToNPCs == false && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self,D_HT,99) end
-			if (!self.IsVJBaseSNPC_Tank) && v:IsPlayer() && self:GetEnemy() == nil && entisfri == false then
-				if entisfri == false then self:AddEntityRelationship(v,D_NU,99) end
-				if v:KeyDown(IN_DUCK) && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightdist = 5000 else sightdist = 2000 end end
-				if vDistanceToMy < 350 && ((!v:KeyDown(IN_DUCK) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP && ((!v:KeyDown(IN_WALK) && (v:KeyDown(IN_FORWARD) or v:KeyDown(IN_BACK) or v:KeyDown(IN_MOVELEFT) or v:KeyDown(IN_MOVERIGHT))) or (v:KeyDown(IN_SPEED) or v:KeyDown(IN_JUMP)))) or (self:VJ_DoPlayerFlashLightCheck(v,20) == true)) then self:SetTarget(v) self:VJ_TASK_FACE_X("TASK_FACE_TARGET") end
+			if entisfri == false && vNPC /*&& MyVisibleTov*/ && self.DisableMakingSelfEnemyToNPCs == false && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self,D_HT,99) end
+			if vPlayer then
+				if (self.PlayerFriendly == true or entisfri == true/* or self:Disposition(v) == D_LI*/) && !VJ_HasValue(self.VJ_AddCertainEntityAsEnemy,v) then entisfri = true self:AddEntityRelationship(v,D_LI,99) /*DoPlayerSight()*/ end// continue end
+				if (!self.IsVJBaseSNPC_Tank) && self:GetEnemy() == nil && entisfri == false then
+					if entisfri == false then self:AddEntityRelationship(v,D_NU,99) end
+					if v:Crouching() && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightdist = 5000 else sightdist = 2000 end end
+					if vDistanceToMy < 350 && ((!v:Crouching() && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP && ((!v:KeyDown(IN_WALK) && (v:KeyDown(IN_FORWARD) or v:KeyDown(IN_BACK) or v:KeyDown(IN_MOVELEFT) or v:KeyDown(IN_MOVERIGHT))) or (v:KeyDown(IN_SPEED) or v:KeyDown(IN_JUMP)))) or (self:VJ_DoPlayerFlashLightCheck(v,20) == true)) then self:SetTarget(v) self:VJ_TASK_FACE_X("TASK_FACE_TARGET") end
+				end
 			end
 		end
 		local distlist_closest = false
@@ -3177,7 +3198,7 @@ function ENT:DoEntityRelationshipCheck()
 						//if self:GetEnemy() == nil then
 							//self:VJ_DoSetEnemy(v,true)
 						//end
-					elseif check == false && v:IsPlayer() then
+					elseif check == false && vPlayer then
 						if self:GetEnemy() != nil && self:GetEnemy() == v then
 							self.ResetedEnemy = true
 							self:ResetEnemy(false)
@@ -3186,7 +3207,7 @@ function ENT:DoEntityRelationshipCheck()
 				end
 			end
 		end
-		DoPlayerSight()
+		if vPlayer then DoPlayerSight(v) end
 	//return true
 	end
 	if enemyseen == true then return true else return false end
@@ -3214,7 +3235,7 @@ function ENT:CallForHelpCode(SeeDistance)
 			if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
 				if self:GetEnemy() != nil /*&& x.MovementType == VJ_MOVETYPE_STATIONARY*/ && x:GetPos():Distance(self:GetEnemy():GetPos()) > x.SightDistance then continue end
 				//if x:DoRelationshipCheck(self:GetEnemy()) == true then
-				if x:GetEnemy() == nil && x:Disposition(self:GetEnemy()) != D_LI /*&& !self:IsCurrentSchedule(SCHED_FORCED_GO_RUN) == true && !self:IsCurrentSchedule(SCHED_FORCED_GO) == true*/ then
+				if x:GetEnemy() == nil && ((!self:GetEnemy():IsPlayer() && x:Disposition(self:GetEnemy()) != D_LI) or (self:GetEnemy():IsPlayer())) /*&& !self:IsCurrentSchedule(SCHED_FORCED_GO_RUN) == true && !self:IsCurrentSchedule(SCHED_FORCED_GO) == true*/ then
 					local goingtomove = false
 					self:CustomOnCallForHelp()
 					self:CallForHelpSoundCode()

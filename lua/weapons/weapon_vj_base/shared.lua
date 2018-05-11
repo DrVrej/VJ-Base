@@ -30,8 +30,9 @@ SWEP.AutoSwitchFrom				= false -- Auto switch weapon when the owner picks up a b
 end
 	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 	-- Set this fault to disable the timer automatically running the firing code, this allows for event-based SNPCs to fire at their own pace:
-SWEP.NPC_NextPrimaryFire 		= 0.15 -- Next time it can use primary fire
+SWEP.NPC_NextPrimaryFire 		= 0.1 -- Next time it can use primary fire
 SWEP.NPC_TimeUntilFire	 		= 0.1 -- How much time until the bullet/projectile is fired?
+SWEP.NPC_TimeUntilFireExtraTimers = {} -- Extra timers, which will make the gun fire again! | The seconds are counted after the self.NPC_TimeUntilFire!
 SWEP.NPC_AllowCustomSpread		= true -- Should the weapon be able to change the NPC's spread?
 SWEP.NPC_CustomSpread	 		= 1 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
 SWEP.NPC_BulletSpawnAttachment 	= "" -- The attachment that the bullet spawns on, leave empty for base to decide!
@@ -278,7 +279,9 @@ function SWEP:NPC_ServerNextFire()
 		//timer.Simple(0.2,function() if self:IsValid() && IsValid(self.Owner) && self.Owner:IsValid() && self.Owner:IsNPC() then self:NPCShoot_Primary(ShootPos,ShootDir) end end)
 		hook.Remove("Think", self)
 		//print(self.NPC_NextPrimaryFire)
-		timer.Simple(0.15, function() hook.Add("Think",self,self.NPC_ServerNextFire) end)
+		local nxt = self.NPC_NextPrimaryFire
+		if nxt > 0.15 then nxt = 0.15 end
+		timer.Simple(nxt, function() hook.Add("Think",self,self.NPC_ServerNextFire) end)
 		//self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
 		/*if self:IsValid() && self.Owner:IsValid() && self.Owner.IsVJBaseSNPC == true && self.Owner.Weapon_ChangeIdleAnimToShoot == true then
 			if self.Owner:GetEnemy() != nil then
@@ -397,6 +400,9 @@ function SWEP:NPCShoot_Primary(ShootPos,ShootDir)
 			self:PrimaryAttack()
 			if self.NPC_NextPrimaryFire != false then
 				self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
+				for tk, tv in ipairs(self.NPC_TimeUntilFireExtraTimers) do
+					timer.Simple(tv, function() if IsValid(self) && IsValid(self.Owner) && self:NPCAbleToShoot() == true then self:PrimaryAttack() end end)
+				end
 			end
 			if self.Owner.IsVJBaseSNPC == true then self.Owner.Weapon_TimeSinceLastShot = 0 end
 		end
@@ -414,7 +420,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttack(ShootPos,ShootDir)
 	//if self.Owner:KeyDown(IN_RELOAD) then return end
-	//self.Owner:SetFOV( 45, 0.3 )
+	//self.Owner:SetFOV(45, 0.3)
 	//if !IsFirstTimePredicted() then return end
 	self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
 	if self.Reloading == true then return end
