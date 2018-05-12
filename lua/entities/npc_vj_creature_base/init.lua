@@ -1704,6 +1704,11 @@ function ENT:FollowPlayerCode(key,activator,caller,data)
 				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." doesn't like you, therefore it won't follow you.")
 			end
 			return
+		elseif self:Disposition(activator) == D_NU then
+			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
+				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is neutral to you, therefore it won't follow you.")
+			end
+			return
 		end
 		self:CustomOnFollowPlayer(key,activator,caller,data)
 		if self.FollowingPlayer == false then
@@ -3177,6 +3182,7 @@ function ENT:DoEntityRelationshipCheck()
 			if self.VJ_TheControllerBullseye != v then
 				//self:AddEntityRelationship(v,D_NU,99)
 				v = self.VJ_TheControllerBullseye
+				vPlayer = false
 			end
 		end
 		if self.FindEnemy_CanSeeThroughWalls == true then seethroughwall = true end

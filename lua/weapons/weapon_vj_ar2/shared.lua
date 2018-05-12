@@ -13,6 +13,10 @@ SWEP.Slot						= 2 -- Which weapon slot you want your SWEP to be in? (1 2 3 4 5 
 SWEP.SlotPos					= 4 -- Which part of that slot do you want the SWEP to be in? (1 2 3 4 5 6)
 SWEP.UseHands					= true
 end
+	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.NPC_NextPrimaryFire 		= 0.9 -- Next time it can use primary fire
+SWEP.NPC_TimeUntilFire	 		= 0.1 -- How much time until the bullet/projectile is fired?
+SWEP.NPC_TimeUntilFireExtraTimers = {0.1,0.2,0.3,0.4,0.5,0.6} -- Extra timers, which will make the gun fire again! | The seconds are counted after the self.NPC_TimeUntilFire!
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel					= "models/weapons/c_irifle.mdl"
 SWEP.WorldModel					= "models/weapons/w_irifle.mdl"
