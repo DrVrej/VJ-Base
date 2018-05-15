@@ -3,11 +3,9 @@
 	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-INFO: Used to load utils for VJ Base
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 
--- Add Utils -------------------------------------------------------------------------------------------------------------------------
 function util.VJ_SphereDamage(vAttacker,vInflictor,vPosition,vDamageRadius,vDamage,vDamageType,vBlockCertainEntities,vUseRealisticRadius,Tbl_Features,CustomCode)
 	local vPosition = vPosition or vAttacker:GetPos()
 	local vDamageRadius = vDamageRadius or 150

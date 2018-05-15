@@ -695,6 +695,8 @@ function SWEP:GetWeaponCustomPosition()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:RunWorldModelThink()
+	self:SetNWBool("VJ_WorldModel_Invisible",self.WorldModel_Invisible)
+	
 	if self.WorldModel_UseCustomPosition == true then
 		local weppos = self:GetWeaponCustomPosition()
 		if weppos == nil then return end
@@ -765,7 +767,8 @@ end
 if (CLIENT) then
 	function SWEP:DrawWorldModel()
 		if !IsValid(self) then return end
-		if self.WorldModel_Invisible == true then return end
+		if self:GetNWBool("VJ_WorldModel_Invisible") == true then return end
+		
 		if self.WorldModel_NoShadow == true then
 			self:DrawShadow(false)
 		end

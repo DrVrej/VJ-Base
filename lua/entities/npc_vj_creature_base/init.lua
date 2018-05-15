@@ -95,7 +95,8 @@ ENT.Medic_SpawnPropOnHeal = true -- Should it spawn a prop, such as small health
 ENT.Medic_SpawnPropOnHealModel = "models/healthvial.mdl" -- The model that it spawns
 ENT.Medic_SpawnPropOnHealAttachment = "anim_attachment_LH" -- The attachment it spawns on
 	-- ====== Follow Player Variables ====== --
-ENT.FollowPlayer = false -- Should the SNPC follow the player when the player presses a certain key?
+	-- Will only follow a player that's friendly to it!
+ENT.FollowPlayer = true -- Should the SNPC follow the player when the player presses a certain key?
 ENT.FollowPlayerChat = true -- Should the SNPCs say things like "Blank stopped following you" | self.AllowPrintingInChat overrides this variable!
 ENT.FollowPlayerKey = "Use" -- The key that the player presses to make the SNPC follow them
 ENT.FollowPlayerCloseDistance = 150 -- If the SNPC is that close to the player then stand still until the player goes farther away
@@ -134,7 +135,7 @@ ENT.DisableTakeDamageFindEnemy = false -- Disable the SNPC finding the enemy whe
 ENT.DisableTouchFindEnemy = false -- Disable the SNPC finding the enemy when being touched
 ENT.DisableMakingSelfEnemyToNPCs = false -- Disables the "AddEntityRelationship" that runs in think
 ENT.LastSeenEnemyTimeUntilReset = 15 -- Time until it resets its enemy if its current enemy is not visible
-ENT.NextEntityCheckTime = 1 -- Time until it runs the NPC check
+ENT.NextProcessTime = 1 -- Time until it runs the essential part of the AI, which can be performance heavy!
 	-- ====== Miscellaneous Variables ====== --
 ENT.DisableInitializeCapabilities = false -- If enabled, all of the Capabilities will be disabled, allowing you to add your own
 ENT.AttackTimersCustom = {}
@@ -876,7 +877,7 @@ ENT.PainSoundT = 0
 ENT.WorldShakeWalkT = 0
 ENT.NextRunAwayOnDamageT = 0
 ENT.NextIdleSoundT = 0
-ENT.NextEntityCheckT = 0
+ENT.NextProcessT = 0
 ENT.NextFindEnemyT = 0
 ENT.NextCallForHelpT = 0
 ENT.NextCallForBackUpOnDamageT = 0
@@ -1102,7 +1103,9 @@ end
 function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActivitiesTime,vACT_FaceEnemy,vACT_DelayAnim,vACT_AdvancedFeatures,vACT_CustomCode)
 	if vACT_Name == nil or vACT_Name == false then return end
 	vACT_StopActivities = vACT_StopActivities or false
-	vACT_StopActivitiesTime = vACT_StopActivitiesTime or 0
+	if vACT_StopActivitiesTime == nil then
+		vACT_StopActivitiesTime = 0 -- Set this value to false to let the base calculate the time
+	end
 	vACT_FaceEnemy = vACT_FaceEnemy or false
 	vACT_DelayAnim = vACT_DelayAnim or 0
 	vACT_AdvancedFeatures = vACT_AdvancedFeatures or {}
@@ -1125,7 +1128,11 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 		if self:LookupSequence(vACT_Name) == -1 then vACT_Name = tonumber(vACT_Name) end
 		//vACT_Name = tonumber(string.Replace(vACT_Name,"vjges_",""))
 	end
-
+	
+	if vACT_StopActivitiesTime == false then
+		vACT_StopActivitiesTime = self:DecideAnimationLength(vACT_Name,false)
+	end
+	
 	if type(vACT_Name) != "string" && VJ_AnimationExists(self,vACT_Name) == false then
 		if self:GetActiveWeapon() != NULL then
 			if self:GetActiveWeapon().IsVJBaseWeapon && VJ_HasValue(table.GetKeys(self:GetActiveWeapon().ActivityTranslateAI),vACT_Name) != true then return end
@@ -1435,7 +1442,7 @@ end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 	if self.IsVJBaseSNPC_Tank == true then return end
-	if /*self.VJ_PlayingSequence == true or*/ self.VJ_IsBeingControlled == true or self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextIdleTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
+	if /*self.VJ_PlayingSequence == true or*/ self.VJ_IsBeingControlled == true /*or self.FollowingPlayer == true*/ or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextIdleTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
 	-- 0 = Random | 1 = Wander | 2 = Idle Stand /\ OverrideWander = Wander no matter what
 	RestrictNumber = RestrictNumber or 0
 	OverrideWander = OverrideWander or false
@@ -1711,6 +1718,12 @@ function ENT:FollowPlayerCode(key,activator,caller,data)
 			return
 		end
 		self:CustomOnFollowPlayer(key,activator,caller,data)
+		if self.MovementType == VJ_MOVETYPE_STATIONARY or self.MovementType == VJ_MOVETYPE_PHYSICS then
+			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
+				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is currently stationary, therefore it's unable follow you.")
+			end
+			return
+		end
 		if self.FollowingPlayer == false then
 			//self:FaceCertainEntity(activator,false)
 			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
@@ -1754,7 +1767,7 @@ function ENT:DoMedicCode_FindAllies()
 	for k,v in ipairs(findallies) do
 		if !v:IsNPC() && !v:IsPlayer() then continue end
 		if v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic == false && (!v.IsVJBaseSNPC_Tank) && v:Health() <= v:GetMaxHealth() * 0.75 && ((v.IsVJBaseSNPC == true && self:GetEnemy() == nil && v:GetEnemy() == nil) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0)) then
-			if self:DoRelationshipCheck(v) == false then
+			if self:Disposition(v) == D_LI && self:DoRelationshipCheck(v) == false then
 				self.Medic_NextHealT = CurTime() + math.Rand(self.Medic_NextHealTime1,self.Medic_NextHealTime2)
 				self.NextIdleTime = CurTime() + 5
 				self.NextChaseTime = CurTime() + 5
@@ -1969,7 +1982,7 @@ function ENT:Think()
 			//print(self:GetTarget())
 			//print(self.FollowingPlayerName)
 			if GetConVarNumber("ai_ignoreplayers") == 0 then
-				if !self.FollowingPlayerName:Alive() then self:FollowPlayerReset() end
+				if !self.FollowingPlayerName:Alive() or self:Disposition(self.FollowingPlayerName) != D_LI then self:FollowPlayerReset() end
 				if CurTime() > self.NextFollowPlayerT && IsValid(self.FollowingPlayerName) && self.FollowingPlayerName:Alive() && self.AlreadyBeingHealedByMedic == false then
 					local DistanceToPly = self:GetPos():Distance(self.FollowingPlayerName:GetPos())
 					self:SetTarget(self.FollowingPlayerName)
@@ -2008,11 +2021,11 @@ function ENT:Think()
 		//end
 		*/
 
-		if self.Dead == false && self.PlayerFriendly == true && self.MoveOutOfFriendlyPlayersWay == true && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && CurTime() > self.NextMoveOutOfFriendlyPlayersWayT && GetConVarNumber("ai_ignoreplayers") == 0 /*&& self:GetEnemy() == nil*/ then
+		if self.MoveOutOfFriendlyPlayersWay == true && self.Dead == false /*&& self.PlayerFriendly == true*/ && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && CurTime() > self.NextMoveOutOfFriendlyPlayersWayT && GetConVarNumber("ai_ignoreplayers") == 0 /*&& self:GetEnemy() == nil*/ then
+			local dist = 20
+			if self.FollowingPlayer == true then dist = 10 end
 			for k,v in ipairs(player.GetAll()) do
-				local moveawaydis = 20
-				if self.FollowingPlayer == true then moveawaydis = 10 end
-				if self:DoRelationshipCheck(v) == false && (self:VJ_GetNearestPointToEntityDistance(v) < moveawaydis) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
+				if self:Disposition(v) == D_LI && self:DoRelationshipCheck(v) == false && (self:VJ_GetNearestPointToEntityDistance(v) < dist) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
 					self.NextFollowPlayerT = CurTime() + 2
 					self.DoingMoveOutOfFriendlyPlayersWay = true
 					//self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-50,-50))
@@ -2031,6 +2044,8 @@ function ENT:Think()
 							end
 						end)
 					end*/
+					//vsched.CanShootWhenMoving = true
+					//vsched.ConstantlyFaceEnemy = true
 					vsched.IsMovingTask = true
 					vsched.IsMovingTask_Run = true
 					self:StartSchedule(vsched)
@@ -2068,9 +2083,9 @@ function ENT:Think()
 		end*/
 
 		if self:GetEnemy() != nil then
-			if self.IsDoingFaceEnemy == true && self.VJ_IsBeingControlled == false then self:SetAngles(Angle(0,(self:GetEnemy():GetPos()-self:GetPos()):Angle().y,0)) end
+			if self.IsDoingFaceEnemy == true /*&& self.VJ_IsBeingControlled == false*/ then self:SetAngles(Angle(0,(self:GetEnemy():GetPos()-self:GetPos()):Angle().y,0)) end
 			self:DoConstantlyFaceEnemyCode()
-			if (self.CurrentSchedule != nil && self.CurrentSchedule.ConstantlyFaceEnemy == true && self.VJ_IsBeingControlled == false) then self:SetAngles(Angle(0,(self:GetEnemy():GetPos()-self:GetPos()):Angle().y,0)) end
+			if (self.CurrentSchedule != nil && self.CurrentSchedule.ConstantlyFaceEnemy == true /*&& self.VJ_IsBeingControlled == false*/) then self:SetAngles(Angle(0,(self:GetEnemy():GetPos()-self:GetPos()):Angle().y,0)) end
 			self.ResetedEnemy = false
 			self:UpdateEnemyMemory(self:GetEnemy(),self:GetEnemy():GetPos())
 			self.LatestEnemyPosition = self:GetEnemy():GetPos()
@@ -2121,11 +2136,11 @@ function ENT:Think()
 			end
 		end
 
-		if CurTime() > self.NextEntityCheckT then
+		if CurTime() > self.NextProcessT then
 			self:DoEntityRelationshipCheck()
 			self:DoMedicCode_FindAllies()
 			self:DoMedicCode_HealAlly()
-		self.NextEntityCheckT = CurTime() + self.NextEntityCheckTime end
+		self.NextProcessT = CurTime() + self.NextProcessTime end
 
 		if self.ResetedEnemy == false then
 			if self.LastSeenEnemyTime > self.LastSeenEnemyTimeUntilReset && (!self.IsVJBaseSNPC_Tank) then
@@ -2155,12 +2170,12 @@ function ENT:Think()
 		if self:GetEnemy() != nil then
 			//if self.MovementType == VJ_MOVETYPE_AERIAL then self:SelectSchedule() end//self:AerialMove_ChaseEnemy(true) end
 
-			if self.VJ_IsBeingControlled == false then
+			//if self.VJ_IsBeingControlled == false then
 				if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true then self:FaceCertainEntity(self:GetEnemy(),true) end
 				if self.MeleeAttackAnimationFaceEnemy == true && self.MeleeAttack_DoingPropAttack == false && self.Dead == false && self.MeleeAttacking == true /*&& timer.Exists("timer_melee_start"..self:EntIndex()) && timer.TimeLeft("timer_melee_start"..self:EntIndex()) > 0*/ then self:FaceCertainEntity(self:GetEnemy(),true) end
 				if self.RangeAttackAnimationFaceEnemy == true && self.Dead == false && self.RangeAttacking == true /*&& timer.Exists("timer_range_start"..self:EntIndex()) && timer.TimeLeft("timer_range_start"..self:EntIndex()) > 0*/ then self:FaceCertainEntity(self:GetEnemy(),true) end
 				if self.LeapAttackAnimationFaceEnemy == true && self.Dead == false && self.LeapAttacking == true /*&& timer.Exists("timer_leap_start"..self:EntIndex()) && timer.TimeLeft("timer_leap_start"..self:EntIndex()) > 0*/ then self:FaceCertainEntity(self:GetEnemy(),true) end
-			end
+			//end
 			//if self.PlayingAttackAnimation == true then self:FaceCertainEntity(self:GetEnemy(),true) end
 			self.ResetedEnemy = false
 			self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(self:GetEnemy())
@@ -2192,7 +2207,7 @@ function ENT:Think()
 						self.AlreadyDoneMeleeAttackFirstHit = false
 						self.IsAbleToMeleeAttack = false
 						self.AlreadyDoneFirstMeleeAttack = false
-						if self.VJ_IsBeingControlled == false && ispropattack == false then self:FaceCertainEntity(self:GetEnemy(),true) end
+						if /*self.VJ_IsBeingControlled == false &&*/ ispropattack == false then self:FaceCertainEntity(self:GetEnemy(),true) end
 						self:CustomOnMeleeAttack_BeforeStartTimer()
 						timer.Simple(self.BeforeMeleeAttackSounds_WaitTime,function() if IsValid(self) then self:BeforeMeleeAttackSoundCode() end end)
 						self.NextAlertSoundT = CurTime() + 0.4
@@ -2490,7 +2505,7 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 	local MyEnemy = CustomEnt or self:GetEnemy()
 	local AttackDist = AttackDist or self.MeleeAttackDamageDistance
 	//if IsPropAttack == true then AttackDist = (self.MeleeAttackDamageDistance *1.2)/* + 50*/ end
-	if self.VJ_IsBeingControlled == false && self.MeleeAttackAnimationFaceEnemy == true && self.MeleeAttack_DoingPropAttack == false then self:FaceCertainEntity(MyEnemy,true) end
+	if /*self.VJ_IsBeingControlled == false &&*/ self.MeleeAttackAnimationFaceEnemy == true && self.MeleeAttack_DoingPropAttack == false then self:FaceCertainEntity(MyEnemy,true) end
 	//self.MeleeAttacking = true
 	self:CustomOnMeleeAttack_BeforeChecks()
 	if self.DisableDefaultMeleeAttackCode == true then return end
@@ -2662,7 +2677,7 @@ function ENT:RangeAttackCode()
 		self:RangeAttackSoundCode()
 		self.RangeAttacking = true
 		self:CustomRangeAttackCode()
-		if self.VJ_IsBeingControlled == false && self.RangeAttackAnimationFaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(),true) end
+		if /*self.VJ_IsBeingControlled == false &&*/ self.RangeAttackAnimationFaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(),true) end
 		//if self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_COMBAT_STAND) end
 		//self:PointAtEntity(self:GetEnemy())
 		if self.DisableDefaultRangeAttackCode == false then
@@ -2831,7 +2846,7 @@ function ENT:OnPlayerSightCode(argent)
 	if GetConVarNumber("ai_ignoreplayers") == 1 then return end
 	if (CurTime() > self.OnPlayerSightNextT) && argent:IsPlayer() && (argent:GetPos():Distance(self:GetPos()) < self.OnPlayerSightDistance) && self:Visible(argent) && (self:GetForward():Dot((argent:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) then
 		if self.OnPlayerSightDispositionLevel == 1 && self:Disposition(argent) != D_LI && self:Disposition(argent) != D_NU then return end
-		if self.OnPlayerSightDispositionLevel == 2 && (self:Disposition(argent) == D_LI or self:Disposition(argent) == D_NU) then return end
+		if self.OnPlayerSightDispositionLevel == 2 && (self:Disposition(argent) == D_LI) then return end
 		self.OnPlayerSight_AlreadySeen = true
 		self:CustomOnPlayerSight(argent)
 		self:OnPlayerSightSoundCode()
@@ -4635,14 +4650,6 @@ function ENT:RemoveAttackTimers()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:NoCollide_CombineBall()
-	for k, v in pairs (ents.GetAll()) do
-		if v:GetClass() == "prop_combine_ball" then
-			constraint.NoCollide( self, v, 0, 0 )
-		end
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:WorldShakeOnMoveCode()
 	if self.HasWorldShakeOnMove == false or self.MovementType == VJ_MOVETYPE_STATIONARY then return end
 	if self:IsOnGround() && self:IsMoving() && CurTime() > self.WorldShakeWalkT then
@@ -4659,6 +4666,14 @@ function ENT:WorldShakeOnMoveCode()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:NoCollide_CombineBall()
+	for k, v in pairs (ents.GetAll()) do
+		if v:GetClass() == "prop_combine_ball" then
+			constraint.NoCollide(self, v, 0, 0)
+		end
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:EntitiesToNoCollideCode(argent)
 	if self.HasEntitiesToNoCollide != true or !istable(self.EntitiesToNoCollide) or !IsValid(argent) then return end
 	for x=1, #self.EntitiesToNoCollide do
@@ -4671,7 +4686,7 @@ end
 function ENT:ConvarsOnInit()
 --<>-- Convars that run on Initialize --<>--
 	if GetConVarNumber("vj_npc_usedevcommands") == 1 then self.VJDEBUG_SNPC_ENABLED = true end
-	self.NextEntityCheckTime = GetConVarNumber("vj_npc_processtime")
+	self.NextProcessTime = GetConVarNumber("vj_npc_processtime")
 	if GetConVarNumber("vj_npc_sd_nosounds") == 1 then self.HasSounds = false end
 	if GetConVarNumber("vj_npc_vjfriendly") == 1 then self.VJFriendly = true end
 	if GetConVarNumber("vj_npc_playerfriendly") == 1 then self.PlayerFriendly = true end

@@ -3,21 +3,38 @@
 	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-INFO: Used to load Entity autorun codes for VJ Base
-	=-=-=-= NOTES =-=-=-=
-- Relationships cause lag!
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 include('autorun/vj_controls.lua')
 
--- NPC Weapons ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-VJ.AddNPCWeapon("VJ_Package", "weapon_citizenpackage")
-VJ.AddNPCWeapon("VJ_Suitcase", "weapon_citizensuitcase")
-VJ.AddNPCWeapon("VJ_AK-47", "weapon_vj_ak47")
-VJ.AddNPCWeapon("VJ_M16A1", "weapon_vj_m16a1")
-VJ.AddNPCWeapon("VJ_Glock17", "weapon_vj_glock17")
-VJ.AddNPCWeapon("VJ_MP40", "weapon_vj_mp40")
-VJ.AddNPCWeapon("VJ_Blaster", "weapon_vj_blaster")
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Spawn Menu Creation ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-- ====== NPCs ====== --
+local vCat = "VJ Base"
+VJ.AddNPC("VJ Test NPC","sent_vj_test",vCat)
+VJ.AddNPC("Mortar Synth","npc_vj_mortarsynth",vCat)
+
+	-- ====== Entities ====== --
+local vCat = "VJ Base"
+VJ.AddEntity("Admin Health Kit","sent_vj_adminhealthkit","DrVrej",true,0,true,vCat)
+VJ.AddEntity("Player Spawnpoint","sent_vj_ply_spawnpoint","DrVrej",true,0,true,vCat)
+VJ.AddEntity("Fireplace","sent_vj_fireplace","DrVrej",false,0,true,vCat)
+VJ.AddEntity("Wooden Board","sent_vj_board","DrVrej",false,0,true,vCat)
+VJ.AddEntity("Grenade","obj_vj_grenade","DrVrej",false,0,true,vCat)
+VJ.AddEntity("Flare Round","obj_vj_flareround","DrVrej",false,0,true,vCat)
+//VJ.AddEntity("HL2 Grenade","npc_grenade_frag","DrVrej",false,50,true,vCat)
+//VJ.AddEntity("Supply Box","item_dynamic_resupply","DrVrej",false,0,true,vCat)
+//VJ.AddEntity("Supply Crate","item_ammo_crate","DrVrej",false,0,true,vCat)
+
+	-- ====== NPC Weapons ====== --
+VJ.AddNPCWeapon("VJ_Package","weapon_citizenpackage")
+VJ.AddNPCWeapon("VJ_Suitcase","weapon_citizensuitcase")
+VJ.AddNPCWeapon("VJ_AK-47","weapon_vj_ak47")
+VJ.AddNPCWeapon("VJ_M16A1","weapon_vj_m16a1")
+VJ.AddNPCWeapon("VJ_Glock17","weapon_vj_glock17")
+VJ.AddNPCWeapon("VJ_MP40","weapon_vj_mp40")
+VJ.AddNPCWeapon("VJ_Blaster","weapon_vj_blaster")
 VJ.AddNPCWeapon("VJ_AR2","weapon_vj_ar2")
 VJ.AddNPCWeapon("VJ_SMG1","weapon_vj_smg1")
 VJ.AddNPCWeapon("VJ_9mmPistol","weapon_vj_9mmpistol")
@@ -26,27 +43,9 @@ VJ.AddNPCWeapon("VJ_357","weapon_vj_357")
 VJ.AddNPCWeapon("VJ_FlareGun","weapon_vj_flaregun")
 VJ.AddNPCWeapon("VJ_RPG","weapon_vj_rpg")
 VJ.AddNPCWeapon("VJ_K-3","weapon_vj_k3")
-
--- NPCs ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-local vCat = "VJ Base"
-VJ.AddNPC("VJ Test NPC","sent_vj_test",vCat)
-VJ.AddNPC("Mortar Synth","npc_vj_mortarsynth",vCat)
-
--- Entities ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-local vCat = "VJ Base"
-VJ.AddEntity("Admin Health Kit","sent_vj_adminhealthkit","DrVrej",true,0,true,vCat)
-VJ.AddEntity("Player Spawnpoint","sent_vj_ply_spawnpoint","DrVrej",true,0,true,vCat)
-//VJ.AddEntity("HL2 Grenade","npc_grenade_frag","DrVrej",false,50,true,vCat)
-VJ.AddEntity("Fireplace","sent_vj_fireplace","DrVrej",false,0,true,vCat)
-VJ.AddEntity("Wooden Board","sent_vj_board","DrVrej",false,0,true,vCat)
-VJ.AddEntity("Grenade","obj_vj_grenade","DrVrej",false,0,true,vCat)
-VJ.AddEntity("Flare Round","obj_vj_flareround","DrVrej",false,0,true,vCat)
-//VJ.AddEntity("Supply Box","item_dynamic_resupply","DrVrej",false,0,true,vCat)
-//VJ.AddEntity("Supply Crate","item_ammo_crate","DrVrej",false,0,true,vCat)
-//VJ.AddEntity("Teleport Point 1","obj_vj_teleportex1","DrVrej",true,0,true,vCat)
-//VJ.AddEntity("Teleport Point 2","obj_vj_teleportex2","DrVrej",true,0,true,vCat)
-
--- Global Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Global Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_PICKRANDOMTABLE(tbl)
 	if not tbl then return false end
 	if !istable(tbl) then return tbl end
@@ -57,7 +56,7 @@ function VJ_PICKRANDOMTABLE(tbl)
 	end
 	return false
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_HasValue(tbl,val)
 	if !istable(tbl) then return end
 	for x=1, #tbl do
@@ -67,7 +66,7 @@ function VJ_HasValue(tbl,val)
 	end
 	return false
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_RoundToMultiple(number,multiple) -- Credits to Bizzclaw for pointing me to the right direction!
 	if math.Round(number/multiple) == number/multiple then
 		return number
@@ -75,7 +74,7 @@ function VJ_RoundToMultiple(number,multiple) -- Credits to Bizzclaw for pointing
 		return math.Round(number/multiple) * multiple
 	end
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_FindInCone(Position,Direction,Distance,Degrees,Tbl_Features)
 	local vTbl_Features = Tbl_Features or {}
 		local vTbl_AllEntities = vTbl_Features.AllEntities or false -- Should it detect all types of entities? | False = NPCs and Players only!
@@ -89,7 +88,7 @@ function VJ_FindInCone(Position,Direction,Distance,Degrees,Tbl_Features)
 	end
 	return Foundents
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_CreateSound(argent,sound,soundlevel,soundpitch,stoplatestsound,sounddsp)
 	if not sound then return end
 	if istable(sound) then
@@ -114,7 +113,7 @@ function VJ_CreateSound(argent,sound,soundlevel,soundpitch,stoplatestsound,sound
 	if argent.IsVJBaseSNPC == true then argent:OnPlayCreateSound(soundid,sound) end
 	return soundid
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_EmitSound(argent,sound,soundlevel,soundpitch,volume,channel)
 	local sd = VJ_PICKRANDOMTABLE(sound)
 	if sd == false then return end
@@ -122,11 +121,11 @@ function VJ_EmitSound(argent,sound,soundlevel,soundpitch,volume,channel)
 	argent.LastPlayedVJSound = sd
 	if argent.IsVJBaseSNPC == true then argent:OnPlayEmitSound(sd) end
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_STOPSOUND(vsoundname)
 	if vsoundname then vsoundname:Stop() end
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_AnimationExists(argent,actname)
 	if actname == nil then return false end
 	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
@@ -141,7 +140,7 @@ function VJ_AnimationExists(argent,actname)
 	end
 	return true
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_GetSequenceDuration(argent,actname)
 	if VJ_AnimationExists(argent,actname) == false then return 0 end
 	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
@@ -149,7 +148,7 @@ function VJ_GetSequenceDuration(argent,actname)
 	if type(actname) == "string" then if string.find(actname, "vjseq_") then actname = string.Replace(actname,"vjseq_","") end return argent:SequenceDuration(argent:LookupSequence(actname)) end
 	return 0
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_GetSequenceName(argent,actname)
 	if VJ_AnimationExists(argent,actname) == false then return nil end
 	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
@@ -157,7 +156,7 @@ function VJ_GetSequenceName(argent,actname)
 	if type(actname) == "string" then if string.find(actname, "vjseq_") then actname = string.Replace(actname,"vjseq_","") end return argent:GetSequenceName(argent:LookupSequence(actname)) end
 	return nil
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_SequenceToActivity(argent,seq)
 	if type(seq) == "string" then
 		local checkanim = argent:GetSequenceActivity(argent:LookupSequence(seq))
@@ -172,7 +171,7 @@ function VJ_SequenceToActivity(argent,seq)
 		return false
 	end
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_IsCurrentAnimation(argent,actname)
 	local gotit = false
 	local actname = actname or {}
@@ -192,17 +191,17 @@ function VJ_IsCurrentAnimation(argent,actname)
 	//if actname == argent:GetSequenceName(argent:GetSequence()) then return true end
 	return false
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_IsProp(argent)
 	if argent:GetClass() == "prop_physics" or argent:GetClass() == "prop_physics_multiplayer" or argent:GetClass() == "prop_physics_respawnable" then return true end
 	return false
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_IsAlive(argent)
 	if argent.Dead == true then return false end
 	return argent:Health() > 0
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_DestroyCombineTurret(vSelf,argent)
 	if argent == NULL or argent == nil then return false end
 	if argent:GetClass() == "npc_turret_floor" && !argent.VJ_TurretDestroyed then
@@ -224,15 +223,15 @@ function VJ_DestroyCombineTurret(vSelf,argent)
 	end
 	return false
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_Color2Byte(color)
 	return bit.lshift(math.floor(color.r*7/255),5)+bit.lshift(math.floor(color.g*7/255),2)+math.floor(color.b*3/255)
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_Color8Bit2Color(bits)
 	return Color(bit.rshift(bits,5)*255/7,bit.band(bit.rshift(bits,2),0x07)*255/7,bit.band(bits,0x03)*255/3)
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_CreateTestObject(pos,ang,color,rtime,mdl)
 	local ang = ang or Angle(0,0,0)
 	local color = color or Color(255,0,0)
@@ -248,35 +247,20 @@ function VJ_CreateTestObject(pos,ang,color,rtime,mdl)
 	timer.Simple(rtime,function() if IsValid(obj) then obj:Remove() end end)
 	return obj
 end
--- NPC/Entity/Player Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-local Entity_MetaTable = FindMetaTable("Entity")
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ NPC / Player Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local NPC_MetaTable = FindMetaTable("NPC")
 local Player_MetaTable = FindMetaTable("Player")
 
 //NPC_MetaTable.VJ_NoTarget = false
 //Player_MetaTable.VJ_NoTarget = false
-//Entity_MetaTable.VJ_NoTarget = false
 NPC_MetaTable.AlreadyBeingHealedByMedic = false
 Player_MetaTable.AlreadyBeingHealedByMedic = false
-Entity_MetaTable.AlreadyBeingHealedByMedic = false
-
-VJ_MOVETYPE_GROUND = 1
-VJ_MOVETYPE_AERIAL = 2
-VJ_MOVETYPE_AQUATIC = 3
-VJ_MOVETYPE_STATIONARY = 4
-
-VJ_BEHAVIOR_AGGRESSIVE = 1
-VJ_BEHAVIOR_NEUTRAL = 1
-VJ_BEHAVIOR_PASSIVE = 3
-VJ_BEHAVIOR_PASSIVE_NATURE = 4
-
-//VJ_MUSIC_PLAYING = false
-//VJ_MUSIC_CURRENTNPCS = {}
 
 //NPC_MetaTable.VJ_NPC_Class = {}
 
-//SetNetworkedBool
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_Controller_InitialMessage(ply)
 	if !IsValid(ply) then return end
 	if self.IsVJBaseSNPC == true then
@@ -298,7 +282,7 @@ function NPC_MetaTable:VJ_Controller_InitialMessage(ply)
 		-- None...
 	end
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_HasNoTarget(argent)
 	if argent:GetClass() == "ob_vj_bullseye" && (argent.EnemyToIndividual == true) && (argent.EnemyToIndividualEnt == self) then
 		return false, "Bullseye"
@@ -309,12 +293,7 @@ function NPC_MetaTable:VJ_HasNoTarget(argent)
 		return false, ""
 	end
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function NPC_MetaTable:VJ_HasActiveWeapon()
-	if self.DisableWeapons == false && self:GetActiveWeapon() != NULL then return true end
-	return false
-end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_DecideSoundPitch(Pitch1,Pitch2)
 	//if pitch1 == nil then return end
 	local getpitch1 = self.GeneralSoundPitch1
@@ -328,7 +307,19 @@ function NPC_MetaTable:VJ_DecideSoundPitch(Pitch1,Pitch2)
 	if Pitch2 != "UseGeneralPitch" && isnumber(Pitch2) then getpitch2 = Pitch2 end
 	return math.random(getpitch1,getpitch2)
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
+function NPC_MetaTable:DecideAnimationLength(Anim,Value,Decrease)
+	local result = 0
+	Decrease = Decrease or 0
+	if isbool(Anim) then return result end
+	if Value == false then
+		result = VJ_GetSequenceDuration(self,Anim) - Decrease
+	elseif isnumber(Value) then
+		result = Value
+	end
+	return result
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_PlaySequence(SequenceID,PlayBackRate,Wait,WaitTime,Interruptible)
 	if not SequenceID then return end
 	if Interruptible == true then self.VJ_IsPlayingInterruptSequence = true self.VJ_PlayingSequence = false else self.VJ_PlayingSequence = true self.VJ_IsPlayingInterruptSequence = false end
@@ -361,41 +352,13 @@ function NPC_MetaTable:VJ_PlaySequence(SequenceID,PlayBackRate,Wait,WaitTime,Int
 		end
 	end)
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_TranslateWeaponActivity(ActAnim)
 	if !IsValid(self:GetActiveWeapon()) then return ActAnim end
 	if self:GetActiveWeapon():TranslateActivity(ActAnim) == -1 then return ActAnim else
 	return self:GetActiveWeapon():TranslateActivity(ActAnim) end
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function NPC_MetaTable:VJ_SetSchedule(scheduleid)
-	if self.VJ_PlayingSequence == true then return end
-	self.VJ_IsPlayingInterruptSequence = false
-	//if self.MovementType == VJ_MOVETYPE_AERIAL then return end
-	//print(self:GetName().." - "..scheduleid)
-	self:SetSchedule(scheduleid)
-end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function NPC_MetaTable:VJ_GetCurrentSchedule()
-	for s = 0, LAST_SHARED_SCHEDULE-1 do
-		if (self:IsCurrentSchedule(s)) then return s end
-	end
-	return 0
-end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function NPC_MetaTable:VJ_IsCurrentSchedule(idcheck)
-	if istable(idcheck) == true then
-		for k,v in ipairs(idcheck) do
-			if self:IsCurrentSchedule(v) == true then
-				return true
-			end
-		end
-	else
-		if self:IsCurrentSchedule(idcheck) == true then return true end
-	end
-	return false
-end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetAllPoseParameters(prt)
 	local result = {}
 	local prt = prt or false
@@ -408,14 +371,14 @@ function NPC_MetaTable:VJ_GetAllPoseParameters(prt)
 	end
 	return result
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:FaceCertainPosition(pos)
 	pos = pos or Vector(0,0,0)
 	local setang = Angle(0,(pos-self:GetPos()):Angle().y,0)
 	self:SetAngles(setang)
 	return setang
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:FaceCertainEntity(argent,OnlyIfSeenEnemy,FaceEnemyTime)
 	if GetConVarNumber("ai_disabled") == 1 then return false end
 	if !IsValid(argent) then return false end
@@ -433,7 +396,7 @@ function NPC_MetaTable:FaceCertainEntity(argent,OnlyIfSeenEnemy,FaceEnemyTime)
 	end
 	return false
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetNearestPointToVector(pos,SameZ)
 	local SameZ = SameZ or false -- Should the Z of the pos be the same as the NPC's?
 	local NearestPositions = {MyPosition=Vector(0,0,0), PointPosition=Vector(0,0,0)}
@@ -444,7 +407,7 @@ function NPC_MetaTable:VJ_GetNearestPointToVector(pos,SameZ)
 	NearestPositions.PointPosition = Pos_Point
 	return NearestPositions
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetNearestPointToEntity(argent,SameZ)
 	if !IsValid(argent) then return end
 	local SameZ = SameZ or false -- Should the Z of the pos be the same as the NPC's?
@@ -460,7 +423,7 @@ function NPC_MetaTable:VJ_GetNearestPointToEntity(argent,SameZ)
 	//local Pos_Distance = Pos_Enemy:Distance(Pos_Self)
 	return NearestPositions
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetNearestPointToEntityDistance(argent,OnlySelfGetPos)
 	if !IsValid(argent) then return end
 	OnlySelfGetPos = OnlySelfGetPos or false -- Should it only do self:GetPos() for the local entity?
@@ -471,7 +434,7 @@ function NPC_MetaTable:VJ_GetNearestPointToEntityDistance(argent,OnlySelfGetPos)
 	//local Pos_Distance = Pos_Enemy:Distance(Pos_Self)
 	return Pos_Enemy:Distance(Pos_Self) // math.Distance(Pos_Enemy.x,Pos_Enemy.y,Pos_Self.x,Pos_Self.y)
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,Tbl_Features)
 	if self:GetEnemy() == nil then return end
 	StartPos = StartPos or self:NearestPoint(self:GetPos() + self:OBBCenter())
@@ -516,7 +479,7 @@ function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,Tbl_Fe
 	if /*tr.Entity == NULL or tr.Entity:IsNPC() or tr.Entity:IsPlayer() or*/ tr.Entity == self:GetEnemy() or (AcceptWorld == false && tr.HitWorld == true) then
 	if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = 0 end return false, tr else if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = CurTime() + 20 end return true, tr end
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_CheckAllFourSides(CheckDistance)
 	CheckDistance = CheckDistance or 200
 	local SidesThatAreGood = {Forward=false, Backward=false, Right=false, Left=false}
@@ -537,20 +500,20 @@ function NPC_MetaTable:VJ_CheckAllFourSides(CheckDistance)
 	end
 	return SidesThatAreGood
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_DoPlayerFlashLightCheck(argent,lookang)
 	if argent:IsPlayer() && argent:FlashlightIsOn() == true && (argent:GetForward():Dot((self:GetPos() -argent:GetPos()):GetNormalized()) > math.cos(math.rad(lookang))) then
 		return true else return false
 	end
 	return false
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetEnemy(CheckForController)
 	CheckForController = CheckForController or false
 	if CheckForController == true && self.VJ_IsBeingControlled == true then return 1 end
 	return self:GetEnemy()
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_DoSetEnemy(argent,ShouldStopActs,DoSmallWhenActiveEnemy)
 	if !IsValid(argent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then return end
 	if argent:Health() <= 0 then return end
@@ -586,7 +549,12 @@ function NPC_MetaTable:VJ_DoSetEnemy(argent,ShouldStopActs,DoSmallWhenActiveEnem
 		end
 	end
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
+function NPC_MetaTable:VJ_HasActiveWeapon()
+	if self.DisableWeapons == false && self:GetActiveWeapon() != NULL then return true end
+	return false
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:DecideAttackTimer(Timer1,Timer2,UntilDamage,AnimDuration)
 	local result = Timer1
 	if Timer1 == false then
@@ -602,19 +570,7 @@ function NPC_MetaTable:DecideAttackTimer(Timer1,Timer2,UntilDamage,AnimDuration)
 	//print(result)
 	return result
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function NPC_MetaTable:DecideAnimationLength(Anim,Value,Decrease)
-	local result = 0
-	Decrease = Decrease or 0
-	if isbool(Anim) then return result end
-	if Value == false then
-		result = VJ_GetSequenceDuration(self,Anim) - Decrease
-	elseif isnumber(Value) then
-		result = Value
-	end
-	return result
-end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_DoSelectDifficulty()
 	if GetConVarNumber("vj_npc_dif_easy") == 1 then self.SelectedDifficulty = 0 return 0 end -- Easy
 	if GetConVarNumber("vj_npc_dif_normal") == 1 then self.SelectedDifficulty = 1 return 1 end -- Normal
@@ -622,7 +578,7 @@ function NPC_MetaTable:VJ_DoSelectDifficulty()
 	if GetConVarNumber("vj_npc_dif_hellonearth") == 1 then self.SelectedDifficulty = 3 return 3 end -- Hell On Earth
 	return 1
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetDifficultyValue(int)
 	if self.SelectedDifficulty == 0 then
 		return int/2 -- Easy
@@ -635,7 +591,35 @@ function NPC_MetaTable:VJ_GetDifficultyValue(int)
 	end
 	return int
 end
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
+function NPC_MetaTable:VJ_SetSchedule(scheduleid)
+	if self.VJ_PlayingSequence == true then return end
+	self.VJ_IsPlayingInterruptSequence = false
+	//if self.MovementType == VJ_MOVETYPE_AERIAL then return end
+	//print(self:GetName().." - "..scheduleid)
+	self:SetSchedule(scheduleid)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function NPC_MetaTable:VJ_GetCurrentSchedule()
+	for s = 0, LAST_SHARED_SCHEDULE-1 do
+		if (self:IsCurrentSchedule(s)) then return s end
+	end
+	return 0
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function NPC_MetaTable:VJ_IsCurrentSchedule(idcheck)
+	if istable(idcheck) == true then
+		for k,v in ipairs(idcheck) do
+			if self:IsCurrentSchedule(v) == true then
+				return true
+			end
+		end
+	else
+		if self:IsCurrentSchedule(idcheck) == true then return true end
+	end
+	return false
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 /*function NPC_MetaTable:VJ_StopSoundTable(tbl)
 	if not tbl then return end
 	if istable(tbl) then
@@ -644,7 +628,7 @@ end
 		end
 	end
 end*/
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 -- Broken, don't use!
 /*function NPC_MetaTable:VJ_IsPlayingSoundFromTable(tbl) -- Get whether if a sound is playing from a certain table
 	if not tbl then return false end
@@ -656,21 +640,22 @@ end*/
 	end
 	return false
 end*/
-
--- Hooks ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Hooks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("ScaleNPCDamage", "VJ_ScaleHitGroupHook",function(ent,hitgroup,dmginfo)
 	//print(hitgroup)
 	//print(ent)
 	ent.VJ_ScaleHitGroupDamage = hitgroup
 end)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 /*if SERVER then
 local function VJShouldCollideHook( ent1, ent2 )
 	if ent1:vj_NoCollide(ent2) == false then return false end
 end
-hook.Add( "ShouldCollide", "VJShouldCollideHook", VJShouldCollideHook )
+hook.Add("ShouldCollide", "VJShouldCollideHook", VJShouldCollideHook)
 end*/
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 /*local function VJ_NPC_THEMEMUSIC(data,Entity,SoundName)
 	//print("regular code running")
 		local vjanimalcleanup = ents.FindByClass("npc_vjanimal_*")
@@ -684,23 +669,16 @@ end*/
 	end end
 end
 hook.Add("EntityEmitSound","VJ_NPC_THEMEMUSIC",VJ_NPC_THEMEMUSIC)*/
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*local function VJ_NPC_ENTITYSOUND(data,Entity,SoundName)
-	PrintTable(data)
-end
-hook.Add("EntityEmitSound","VJ_NPC_ENTITYSOUND",VJ_NPC_ENTITYSOUND)*/
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-local function VJ_NPC_ENTITYSOUND(data)
+---------------------------------------------------------------------------------------------------------------------------------------------
+hook.Add("EntityEmitSound","VJ_NPC_ENTITYSOUND",function(data)
 	if IsValid(data.Entity) && data.Entity:IsNPC() && data.Entity.IsVJBaseSNPC == true then
 		if string.EndsWith(data.OriginalSoundName,"stepleft") or string.EndsWith(data.OriginalSoundName,"stepright") then
 			return false
 		end
 	end
-end
-hook.Add("EntityEmitSound","VJ_NPC_ENTITYSOUND",VJ_NPC_ENTITYSOUND)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-local function VJ_NPC_FIREBULLET(Entity,data,Attacker)
-	//print(Entity)
+end)
+---------------------------------------------------------------------------------------------------------------------------------------------
+hook.Add("EntityFireBullets","VJ_NPC_FIREBULLET",function(Entity,data,Attacker)
 	if IsValid(Entity) && !Entity:IsPlayer() && Entity.IsVJBaseSNPC == true && Entity:GetActiveWeapon() != NULL && Entity:VJ_GetEnemy(true) != nil then
 		local Wep = Entity:GetActiveWeapon()
 		local EnemyDistance = 100
@@ -774,29 +752,23 @@ local function VJ_NPC_FIREBULLET(Entity,data,Attacker)
 		//Entity.Weapon_TimeSinceLastShot = 0
 		return true
 	end
-	//if Entity:GetClass() == "npc_vj_mili_marine" then
-	//for k, v in pairs (ents.GetAll()) do
-end
-hook.Add("EntityFireBullets","VJ_NPC_FIREBULLET",VJ_NPC_FIREBULLET)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-local function VJ_NPC_SPAWNED(ply,ent)
+end)
+---------------------------------------------------------------------------------------------------------------------------------------------
+hook.Add("PlayerSpawnedNPC","VJ_NPC_SPAWNED",function(ply,ent)
 	if ent.IsVJBaseSNPC == true or ent.IsVJBaseSpawner == true then
 		ent:SetCreator(ply)
 	end
-end
-hook.Add("PlayerSpawnedNPC","VJ_NPC_SPAWNED",VJ_NPC_SPAWNED)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-local function VJ_PLAYER_INITIALSPAWN(ply)
+end)
+---------------------------------------------------------------------------------------------------------------------------------------------
+hook.Add("PlayerInitialSpawn","VJ_PLAYER_INITIALSPAWN",function(ply)
 	local getall = ents.GetAll()
 	for k,v in ipairs(getall) do
 		if v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
 			v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
 		end
 	end
-end
-hook.Add("PlayerInitialSpawn","VJ_PLAYER_INITIALSPAWN",VJ_PLAYER_INITIALSPAWN)
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+end)
+---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerSelectSpawn","VJ_PLAYER_SELECTSPAWN",function(ply)
 	local points = {}
 	for k,v in ipairs(ents.FindByClass("sent_vj_ply_spawnpoint")) do
@@ -809,7 +781,7 @@ hook.Add("PlayerSelectSpawn","VJ_PLAYER_SELECTSPAWN",function(ply)
 		return result
 	end
 end)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PhysgunPickup","VJ_PLAYER_PHYSGUN_PICKUP",function(ply,ent)
 	if ent:GetClass() == "sent_vj_ply_spawnpoint" then
 		if ply:IsAdmin() then
@@ -819,7 +791,7 @@ hook.Add("PhysgunPickup","VJ_PLAYER_PHYSGUN_PICKUP",function(ply,ent)
 		end
 	end
 end)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 /* -- Obsolete! | Has many problems and doesn't solve lag
 local VJ_TblNPCs = {}
 local function VJ_ENTITYCREATED(entity)
@@ -828,8 +800,8 @@ local function VJ_ENTITYCREATED(entity)
 	end
 end
 hook.Add("OnEntityCreated","VJ_ENTITYCREATED",VJ_ENTITYCREATED)*/
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-local function VJ_ENTITYCREATED(entity)
+---------------------------------------------------------------------------------------------------------------------------------------------
+hook.Add("OnEntityCreated","VJ_ENTITYCREATED",function(entity)
 	if (CLIENT) then return end
 	if !entity:IsNPC() then return end
 	if entity:GetClass() != "npc_grenade_frag" && entity:GetClass() != "bullseye_strider_focus" && entity:GetClass() != "npc_bullseye" && entity:GetClass() != "npc_enemyfinder" && entity:GetClass() != "hornet" then
@@ -844,9 +816,8 @@ local function VJ_ENTITYCREATED(entity)
 			end
 		end)
 	end
-end
-hook.Add("OnEntityCreated","VJ_ENTITYCREATED",VJ_ENTITYCREATED)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+end)
+---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_NPCPLY_DEATH(npc,attacker,inflictor)
 	if attacker.IsVJBaseSNPC == true && (attacker.IsVJBaseSNPC_Human == true or attacker.IsVJBaseSNPC_Creature == true) then
 		attacker:DoKilledEnemy(npc,attacker,inflictor)
@@ -855,18 +826,17 @@ end
 local function VJ_PLY_DEATH(victim,inflictor,attacker) VJ_NPCPLY_DEATH(victim,attacker,inflictor) end -- Arguments are flipped between the hooks for some reason...
 hook.Add("OnNPCKilled","VJ_NPC_DEATH",VJ_NPCPLY_DEATH)
 hook.Add("PlayerDeath","VJ_PLY_DEATH",VJ_PLY_DEATH)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-local function VJ_NPC_TAKEDAMAGE(target,dmginfo)
+---------------------------------------------------------------------------------------------------------------------------------------------
+hook.Add("EntityTakeDamage","VJ_NPC_TAKEDAMAGE",function(target,dmginfo)
 	if IsValid(target) && IsValid(dmginfo:GetAttacker()) then
 		if target.IsVJBaseSNPC == true && dmginfo:GetAttacker():IsNPC() && dmginfo:IsBulletDamage() && (dmginfo:GetAttacker():GetClass() == target:GetClass() or target:Disposition(dmginfo:GetAttacker()) == 3 /*or target:Disposition(dmginfo:GetAttacker()) == 4*/) && dmginfo:GetAttacker():Disposition(target) != 1 then
 			dmginfo:SetDamage(0)
 		end
 	end
-end
-hook.Add("EntityTakeDamage","VJ_NPC_TAKEDAMAGE",VJ_NPC_TAKEDAMAGE)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+end)
+---------------------------------------------------------------------------------------------------------------------------------------------
 VJCorpseTbl = {}
-local function VJ_NPC_CORPSELIMIT(Corpse,Owner)
+hook.Add("VJ_CreateSNPCCorpse","VJ_NPC_CORPSELIMIT",function(Corpse,Owner)
 	if IsValid(Corpse) then
 		if Corpse.IsVJBaseCorpse == true then
 			for k, v in pairs(VJCorpseTbl) do
@@ -885,10 +855,10 @@ local function VJ_NPC_CORPSELIMIT(Corpse,Owner)
 			end
 		end
 	end
-end
-hook.Add("VJ_CreateSNPCCorpse","VJ_NPC_CORPSELIMIT",VJ_NPC_CORPSELIMIT)
-
--- Convar Call Backs ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+end)
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Convar Callbacks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 cvars.AddChangeCallback("ai_ignoreplayers",function(convar_name,oldValue,newValue)
 	local getall = ents.GetAll()
 	for k, v in pairs(getall) do
@@ -901,7 +871,7 @@ cvars.AddChangeCallback("ai_ignoreplayers",function(convar_name,oldValue,newValu
 		end
 	end
 end)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---------------------------------------------------------------------------------------------------------------------------------------------
 cvars.AddChangeCallback("vj_npc_drvrejfriendly",function(convar_name,oldValue,newValue)
 	//print(newValue)
 	if newValue == "1" then
@@ -937,8 +907,9 @@ cvars.AddChangeCallback("vj_npc_drvrejfriendly",function(convar_name,oldValue,ne
 		end
 	end
 end)
-
--- Net Messages ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Net Messages ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
 	net.Receive("vj_music_run",function(len)
 		VJ_CL_MUSIC_CURRENT = VJ_CL_MUSIC_CURRENT or {}
@@ -982,18 +953,28 @@ if (CLIENT) then
 		end)
 	end)
 end
-
+---------------------------------------------------------------------------------------------------------------------------------------------
 if (SERVER) then
 	util.AddNetworkString("vj_music_run")
 end
-
+---------------------------------------------------------------------------------------------------------------------------------------------
 /*if (CLIENT) then
 	require("sound_vj_track")
 	sound_vj_track.Add("VJ_SpiderQueenThemeMusic","vj_dm_spidermonster/Dark Messiah - Avatar of the Spider Goddess.wav",161)
 end*/
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Global Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+VJ_MOVETYPE_GROUND = 1
+VJ_MOVETYPE_AERIAL = 2
+VJ_MOVETYPE_AQUATIC = 3
+VJ_MOVETYPE_STATIONARY = 4
+VJ_MOVETYPE_PHYSICS = 5
 
--- Tables ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//CLASS_VJ_PLAYERFRIENDLY = 1
+VJ_BEHAVIOR_AGGRESSIVE = 1
+VJ_BEHAVIOR_NEUTRAL = 1
+VJ_BEHAVIOR_PASSIVE = 3
+VJ_BEHAVIOR_PASSIVE_NATURE = 4
 
 VJ_WalkActivites = {
 	ACT_WALK,

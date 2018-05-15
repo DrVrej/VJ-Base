@@ -3,7 +3,6 @@
 	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-INFO: Used to load Information Menu for VJ Base
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 include('autorun/client/vj_menu_plugins.lua')
@@ -80,7 +79,6 @@ local function VJ_INFORMATION(Panel)
 	Panel:ControlHelp("No parts of this base or any of its contents may be reproduced, copied, modified or adapted, without the prior written consent of the author, unless otherwise indicated for stand-alone materials.")
 end
 ----=================================----
-function VJ_ADDTOMENU_INFORMATION()
-	spawnmenu.AddToolMenuOption( "DrVrej", "Main Menu", "Information", "Information", "", "", VJ_INFORMATION, {} )
-end
-hook.Add( "PopulateToolMenu", "VJ_ADDTOMENU_INFORMATION", VJ_ADDTOMENU_INFORMATION )
+hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_INFORMATION", function()
+	spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Information", "Information", "", "", VJ_INFORMATION, {})
+end)

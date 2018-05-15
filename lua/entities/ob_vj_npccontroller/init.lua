@@ -72,7 +72,7 @@ function ENT:SetControlledNPC(GetEntity)
 	self.NPCBullseye = ents.Create("ob_vj_bullseye")
 	self.NPCBullseye:SetPos(GetEntity:GetPos() + GetEntity:GetForward()*100 + GetEntity:GetUp()*50)//Vector(GetEntity:OBBMaxs().x +20,0,GetEntity:OBBMaxs().z +20))
 	self.NPCBullseye:SetModel("models/hunter/blocks/cube025x025x025.mdl")
-	self.NPCBullseye:SetParent(GetEntity)
+	//self.NPCBullseye:SetParent(GetEntity)
 	self.NPCBullseye:SetRenderMode(RENDERMODE_NONE)
 	self.NPCBullseye:Spawn()
 	self.NPCBullseye:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
@@ -208,7 +208,7 @@ function ENT:Think()
 		self:CustomOnThink()
 		self.AbleToTurn = true
 
-		-- camerayin deghe pordzedzi pokhel, Chaskhadav
+		-- camerayin deghe portsetsi pokhel, Chaskhadav
 		/*if self.TheController:KeyDown(IN_ATTACK2) then
 			self.PropCamera:SetParent(NULL)
 			self.PropCamera:SetPos(self.ControlledNPC:GetPos())

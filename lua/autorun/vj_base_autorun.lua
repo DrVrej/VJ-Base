@@ -3,7 +3,6 @@
 	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-	INFO: Main Autorun file for VJ Base
 
 	██    ██      ██     ██████   █████  ███████ ███████
 	██    ██      ██     ██   ██ ██   ██ ██      ██
@@ -38,11 +37,13 @@ AddCSLuaFile("autorun/client/vj_menu_weapon.lua")
 -- Server --
 AddCSLuaFile("autorun/server/vj_functions.lua")
 
--- Modules
+-- Modules --
 AddCSLuaFile("includes/modules/ai_vj_schedule.lua")
 AddCSLuaFile("includes/modules/ai_vj_task.lua")
 AddCSLuaFile("includes/modules/sound_vj_track.lua")
-----=================================----
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Main Hooks / Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if (SERVER) then
 	util.AddNetworkString("VJWelcome")
 	util.AddNetworkString("VJSay")
@@ -57,8 +58,8 @@ elseif (CLIENT) then
 		spawnmenu.AddToolCategory("DrVrej", "SNPC Configures", "SNPC Configures")
 	end)
 end
-
-function DoWelcomeDrVrej(ply, command, arguements)
+---------------------------------------------------------------------------------------------------------------------------------------------
+hook.Add("PlayerInitialSpawn", "drvrejplayerInitialSpawn", function(ply,command,arguements)
 	//if game.SinglePlayer() then return end
 	if (ply:SteamID() == "STEAM_0:0:22688298") then
 		PrintMessage(HUD_PRINTTALK,"DrVrej Has Joined The Game!")
@@ -68,18 +69,16 @@ function DoWelcomeDrVrej(ply, command, arguements)
 		sd:Play()
 		timer.Simple(10,function() if sd then sd:Stop() end end)
 	end
-end
-hook.Add("PlayerInitialSpawn", "drvrejplayerInitialSpawn", DoWelcomeDrVrej)
-
-function VJSpawn(ply)
+end)
+---------------------------------------------------------------------------------------------------------------------------------------------
+hook.Add("PlayerInitialSpawn", "VJBaseSpawn", function(ply)
 	timer.Simple(1, function()
-	net.Start("VJWelcome")
-	net.Send(ply)
-	//print(engine.GetGames())
+		net.Start("VJWelcome")
+		net.Send(ply)
+		//print(engine.GetGames())
 	end)
-end
-hook.Add("PlayerInitialSpawn", "VJBaseSpawn", VJSpawn)
-
+end)
+---------------------------------------------------------------------------------------------------------------------------------------------
 net.Receive("VJSay",function(len,pl)
 	if pl:IsPlayer() && pl:SteamID() == "STEAM_0:0:22688298" then
 		PrintMessage(HUD_PRINTTALK,"The creator of VJ Base, DrVrej is in the server!")
@@ -88,7 +87,7 @@ net.Receive("VJSay",function(len,pl)
 		sd:Play()
 	end
 end)
-
+---------------------------------------------------------------------------------------------------------------------------------------------
 if (SLVBase) then
 	timer.Simple(1,function()
 		if not VJCONFLICT then
@@ -120,7 +119,9 @@ if (SLVBase) then
 end
 
 if (CLIENT) then print("VJ Base client files initialized!") else print("VJ Base server files initialized!") end
--- Raps and Sounds -------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Songs ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*
 /_-_-_-_-_-_-_-_-_-_ Official Song of The True Coders -_-_-_-_-_-_-_-_-_-_-_-_\
 |------------------- By: DrVrej, Cpt. Hazama, and Orion ------------------------|
