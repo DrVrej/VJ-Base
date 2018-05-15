@@ -3,12 +3,13 @@
 	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-INFO: Used to load Weapon autorun codes for VJ Base
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 include('autorun/vj_controls.lua')
 
--- Add Weapons -------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Spawn Menu Creation ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local vCat = "VJ Base"
 VJ.AddWeapon("AK-47","weapon_vj_ak47",false,vCat)
 VJ.AddWeapon("Glock 17","weapon_vj_glock17",false,vCat)
@@ -23,13 +24,10 @@ VJ.AddWeapon("Flare Gun","weapon_vj_flaregun",false,vCat)
 VJ.AddWeapon("SMG1","weapon_vj_smg1",false,vCat)
 VJ.AddWeapon("SPAS-12","weapon_vj_spas12",false,vCat)
 VJ.AddWeapon("RPG","weapon_vj_rpg",false,vCat)
-//VJ.AddWeapon("Physgun","weapon_physcannon",true,vCat)
-//VJ.AddWeapon("Physcannon","weapon_physgun",true,vCat)
-//VJ.AddWeapon("Tool Gun","gmod_tool",true,vCat)
-//VJ.AddWeapon("Camera","gmod_camera",true,vCat)
-
--- Hooks ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-local function VJ_PLAYER_CANPICKUPWEAPON(ply,wep)
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Hooks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+hook.Add("PlayerCanPickupWeapon","VJ_PLAYER_CANPICKUPWEAPON",function(ply,wep)
 	//print(wep:GetWeaponWorldModel())
 	if ply.VJ_CanBePickedUpWithOutUse == true && ply.VJ_CanBePickedUpWithOutUse_Class == wep:GetClass() then
 		if wep.IsVJBaseWeapon == true && !ply:HasWeapon(wep:GetClass()) then
@@ -47,34 +45,27 @@ local function VJ_PLAYER_CANPICKUPWEAPON(ply,wep)
 		if ply:KeyPressed(IN_USE) && (ply:GetEyeTrace().Entity == wep) then
 		return true else return false end
 	end
-end
-hook.Add("PlayerCanPickupWeapon","VJ_PLAYER_CANPICKUPWEAPON",VJ_PLAYER_CANPICKUPWEAPON)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-local function VJ_PLAYER_GIVESWEP(ply,class,swep)
+end)
+---------------------------------------------------------------------------------------------------------------------------------------------
+hook.Add("PlayerGiveSWEP","VJ_PLAYER_GIVESWEP",function(ply,class,swep)
 	//if swep.IsVJBaseWeapon == true then
 		ply.VJ_CanBePickedUpWithOutUse = true
 		ply.VJ_CanBePickedUpWithOutUse_Class = class
 		timer.Simple(0.1,function() if IsValid(ply) then ply.VJ_CanBePickedUpWithOutUse = false ply.VJ_CanBePickedUpWithOutUse_Class = nil end end)
 		//PrintTable(swep)
 	//end
-end
-hook.Add("PlayerGiveSWEP","VJ_PLAYER_GIVESWEP",VJ_PLAYER_GIVESWEP)
+end)
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Convars ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+local ConvarList = {}
 
--- Weapon ConVars ---------------------------------------------------------------------------------------------------------------------------
-/*
-AddConvars["rrrrrrrrrrrrrrrrrrrrrr"] = 0 --
+ConvarList["vj_wep_nomuszzleflash"] = 0 -- Should weapons make a muzzle flash?
+ConvarList["vj_wep_nomuszzleflash_dynamiclight"] = 0 -- Should weapons make a dynamic light when being fired?
+ConvarList["vj_wep_nomuszzlesmoke"] = 0 -- Should weapons make a muzzle smoke?
+ConvarList["vj_wep_nomuzzleheatwave"] = 0 -- Should weapons make a muzzle heat wave?
+ConvarList["vj_wep_nobulletshells"] = 0 -- Should weapons drop bullet shells?
 
-RunConsoleCommand("command_name", "value")
-*/
-local AddConvars = {}
-
--- Setting Commands --
-AddConvars["vj_wep_nomuszzleflash"] = 0 -- Should weapons make a muzzle flash?
-AddConvars["vj_wep_nomuszzleflash_dynamiclight"] = 0 -- Should weapons make a dynamic light when being fired?
-AddConvars["vj_wep_nomuszzlesmoke"] = 0 -- Should weapons make a muzzle smoke?
-AddConvars["vj_wep_nomuzzleheatwave"] = 0 -- Should weapons make a muzzle heat wave?
-AddConvars["vj_wep_nobulletshells"] = 0 -- Should weapons drop bullet shells?
-
-for k, v in pairs(AddConvars) do
-	if !ConVarExists( k ) then CreateClientConVar( k, v, true, false ) end
+for k, v in pairs(ConvarList) do
+	if !ConVarExists(k) then CreateClientConVar(k, v, true, false) end
 end

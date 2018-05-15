@@ -214,7 +214,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Task:Start_FName(npc)
 	if (!self.StartFunctionName) then return end
-	npc[ self.StartFunctionName ]( npc, self.TaskData )
+	npc[self.StartFunctionName](npc, self.TaskData)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Task:Run(npc)

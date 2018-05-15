@@ -3,7 +3,6 @@
 	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-INFO: Used to load the SNPC Menu for VJ Base 
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 include('autorun/client/vj_menu_plugins.lua')
@@ -21,32 +20,32 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 	local vj_options_reset = {Options = {}, CVars = {}, Label = "Reset Everything:", MenuButton = "0"}
 	//vj_options_reset:SetText("Select Default to reset everything")
 	vj_options_reset.Options["#vjbase.menugeneral.default"] = {
-	vj_npc_godmodesnpc = "0",
-	vj_npc_playerfriendly =	"0",
-	vj_npc_zombiefriendly = "0",
-	vj_npc_antlionfriendly = "0",
-	vj_npc_combinefriendly = "0",
-	vj_npc_corpsefade = "0",
-	vj_npc_corpsefadetime = "10",
-	vj_npc_undocorpse = "0",
-	vj_npc_allhealth = "0",
-	vj_npc_fadegibs = "1",
-	vj_npc_fadegibstime = "30",
-	vj_npc_gibcollidable = "0",
-	vj_npc_dif_easy = "0",vj_npc_dif_normal = "1",vj_npc_dif_hard = "0",vj_npc_dif_hellonearth = "0",
-	vj_npc_addfrags = "1",
-	vj_npc_showhudonkilled = "1",
-	vj_npc_dropweapon = "1",
-	vj_npc_itemdrops = "1",
-	vj_npc_accuracy_poor = "1",vj_npc_accuracy_average = "0",vj_npc_accuracy_good = "0",vj_npc_accuracy_verygood = "0",vj_npc_accuracy_perfect = "0",
-	vj_npc_creatureopendoor = "1",
-	vj_npc_vjfriendly = "0",
-	vj_npc_globalcorpselimit = "32",
-	vj_npc_seedistance = "0",
-	vj_npc_processtime = "1",
-	vj_npc_usegmoddecals = "0",
-	vj_npc_knowenemylocation = "0",
-	vj_npc_plypickupdropwep = "1",
+		vj_npc_godmodesnpc = "0",
+		vj_npc_playerfriendly =	"0",
+		vj_npc_zombiefriendly = "0",
+		vj_npc_antlionfriendly = "0",
+		vj_npc_combinefriendly = "0",
+		vj_npc_corpsefade = "0",
+		vj_npc_corpsefadetime = "10",
+		vj_npc_undocorpse = "0",
+		vj_npc_allhealth = "0",
+		vj_npc_fadegibs = "1",
+		vj_npc_fadegibstime = "30",
+		vj_npc_gibcollidable = "0",
+		vj_npc_dif_easy = "0",vj_npc_dif_normal = "1",vj_npc_dif_hard = "0",vj_npc_dif_hellonearth = "0",
+		vj_npc_addfrags = "1",
+		vj_npc_showhudonkilled = "1",
+		vj_npc_dropweapon = "1",
+		vj_npc_itemdrops = "1",
+		vj_npc_accuracy_poor = "1",vj_npc_accuracy_average = "0",vj_npc_accuracy_good = "0",vj_npc_accuracy_verygood = "0",vj_npc_accuracy_perfect = "0",
+		vj_npc_creatureopendoor = "1",
+		vj_npc_vjfriendly = "0",
+		vj_npc_globalcorpselimit = "32",
+		vj_npc_seedistance = "0",
+		vj_npc_processtime = "1",
+		vj_npc_usegmoddecals = "0",
+		vj_npc_knowenemylocation = "0",
+		vj_npc_plypickupdropwep = "1",
 	}
 	Panel:AddControl("ComboBox", vj_options_reset)
 	//Panel:AddControl( "Label", { Text = "________________________________________\n"})
@@ -147,37 +146,37 @@ local function VJ_SNPC_SETTINGS(Panel) -- Settings
 	Panel:AddControl( "Label", {Text = "WARNING: Only future spawned SNPCs will be affected!"})
 	local vj_settings_reset = {Options = {}, CVars = {}, Label = "Reset Everything:", MenuButton = "0"}
 	vj_settings_reset.Options["#vjbase.menugeneral.default"] = { 
-	vj_npc_nocorpses = "0",
-	vj_npc_nobleed = "0",
-	vj_npc_nomelee = "0",
-	vj_npc_norange = "0",
-	vj_npc_noleap = "0",
-	vj_npc_noflinching = "0",
-	vj_npc_noallies = "0",
-	vj_npc_noweapon = "0",
-	vj_npc_noforeverammo = "0",
-	vj_npc_nowandering = "0",
-	vj_npc_nogib = "0",
-	vj_npc_nodeathanimation = "0",
-	vj_npc_noscarednade = "0",
-	vj_npc_animal_runontouch = "0",
-	vj_npc_animal_runonhit = "0",
-	vj_npc_slowplayer = "0",
-	vj_npc_bleedenemyonmelee = "0",
-	vj_npc_noproppush = "0",
-	vj_npc_nopropattack = "0",
-	vj_npc_nogibdeathparticles = "0",
-	vj_npc_noidleparticle = "0",
-	vj_npc_nogibdecals = "0",
-	vj_npc_noreload = "0",
-	vj_npc_nouseregulator = "0",
-	vj_npc_nobecomeenemytoply = "0",
-	vj_npc_nofollowplayer = "0",
-	vj_npc_nothrowgrenade = "0",
-	vj_npc_nobloodpool = "0",
-	vj_npc_nochasingenemy = "0",
-	vj_npc_nosnpcchat = "0",
-	vj_npc_nomedics = "0",
+		vj_npc_nocorpses = "0",
+		vj_npc_nobleed = "0",
+		vj_npc_nomelee = "0",
+		vj_npc_norange = "0",
+		vj_npc_noleap = "0",
+		vj_npc_noflinching = "0",
+		vj_npc_noallies = "0",
+		vj_npc_noweapon = "0",
+		vj_npc_noforeverammo = "0",
+		vj_npc_nowandering = "0",
+		vj_npc_nogib = "0",
+		vj_npc_nodeathanimation = "0",
+		vj_npc_noscarednade = "0",
+		vj_npc_animal_runontouch = "0",
+		vj_npc_animal_runonhit = "0",
+		vj_npc_slowplayer = "0",
+		vj_npc_bleedenemyonmelee = "0",
+		vj_npc_noproppush = "0",
+		vj_npc_nopropattack = "0",
+		vj_npc_nogibdeathparticles = "0",
+		vj_npc_noidleparticle = "0",
+		vj_npc_nogibdecals = "0",
+		vj_npc_noreload = "0",
+		vj_npc_nouseregulator = "0",
+		vj_npc_nobecomeenemytoply = "0",
+		vj_npc_nofollowplayer = "0",
+		vj_npc_nothrowgrenade = "0",
+		vj_npc_nobloodpool = "0",
+		vj_npc_nochasingenemy = "0",
+		vj_npc_nosnpcchat = "0",
+		vj_npc_nomedics = "0",
 	}
 	Panel:AddControl("ComboBox", vj_settings_reset)
 	Panel:AddControl( "Label", {Text = "Shared Settings:"})
@@ -239,38 +238,36 @@ local function VJ_SNPC_SOUNDSETTINGS(Panel) -- Sound Settings
 	Panel:AddControl( "Label", {Text = "WARNING: Only future spawned SNPCs will be affected!"})
 	local vj_soundsettings_reset = {Options = {}, CVars = {}, Label = "Reset Everything:", MenuButton = "0"}
 	vj_soundsettings_reset.Options["#vjbase.menugeneral.default"] = {
-	vj_npc_sd_nosounds = "0",
-	vj_npc_sd_idle = "0",
-	vj_npc_sd_alert = "0",
-	vj_npc_sd_pain = "0",
-	vj_npc_sd_death = "0",
-	vj_npc_sd_footstep = "0",
-	vj_npc_sd_soundtrack = "0",
-	vj_npc_sd_meleeattack = "0",
-	vj_npc_sd_meleeattackmiss = "0",
-	vj_npc_sd_rangeattack = "0",
-	vj_npc_sd_leapattack = "0",
-	//vj_npc_sd_combatidle = "0",
-	vj_npc_sd_ongrenadesight = "0",
-	vj_npc_sd_onplayersight = "0",
-	vj_npc_sd_damagebyplayer = "0",
-	vj_npc_sd_slowplayer = "0",
-	vj_npc_sd_gibbing = "0",
-	vj_npc_sd_breath = "0",
-	vj_npc_sd_followplayer = "0",
-	vj_npc_sd_becomenemytoply = "0",
-	vj_npc_sd_medic = "0",
-	vj_npc_sd_reload = "0",
-	vj_npc_sd_grenadeattack = "0",
-	vj_npc_sd_suppressing = "0",
-	vj_npc_sd_callforhelp = "0",
-	vj_npc_sd_onreceiveorder = "0",
+		vj_npc_sd_nosounds = "0",
+		vj_npc_sd_idle = "0",
+		vj_npc_sd_alert = "0",
+		vj_npc_sd_pain = "0",
+		vj_npc_sd_death = "0",
+		vj_npc_sd_footstep = "0",
+		vj_npc_sd_soundtrack = "0",
+		vj_npc_sd_meleeattack = "0",
+		vj_npc_sd_meleeattackmiss = "0",
+		vj_npc_sd_rangeattack = "0",
+		vj_npc_sd_leapattack = "0",
+		vj_npc_sd_ongrenadesight = "0",
+		vj_npc_sd_onplayersight = "0",
+		vj_npc_sd_damagebyplayer = "0",
+		vj_npc_sd_slowplayer = "0",
+		vj_npc_sd_gibbing = "0",
+		vj_npc_sd_breath = "0",
+		vj_npc_sd_followplayer = "0",
+		vj_npc_sd_becomenemytoply = "0",
+		vj_npc_sd_medic = "0",
+		vj_npc_sd_reload = "0",
+		vj_npc_sd_grenadeattack = "0",
+		vj_npc_sd_suppressing = "0",
+		vj_npc_sd_callforhelp = "0",
+		vj_npc_sd_onreceiveorder = "0",
 	}
 	Panel:AddControl("ComboBox", vj_soundsettings_reset)
 	Panel:AddControl("Checkbox", {Label = "Disable All Sounds", Command = "vj_npc_sd_nosounds"})
 	Panel:AddControl("Checkbox", {Label = "Disable Sound Tracks", Command = "vj_npc_sd_soundtrack"})
 	Panel:AddControl("Checkbox", {Label = "Disable Idle Sounds", Command = "vj_npc_sd_idle"})
-	//Panel:AddControl("Checkbox", {Label = "Disable Combat Idle Sounds", Command = "vj_npc_sd_combatidle"})
 	Panel:AddControl("Checkbox", {Label = "Disable Breathing Sounds", Command = "vj_npc_sd_breath"})
 	Panel:AddControl("Checkbox", {Label = "Disable Footstep Sounds", Command = "vj_npc_sd_footstep"})
 	Panel:AddControl("Checkbox", {Label = "Disable Melee Attack Sounds", Command = "vj_npc_sd_meleeattack"})
@@ -315,20 +312,20 @@ local function VJ_SNPC_DEVSETTINGS(Panel) -- Developer Settings
 	Panel:AddControl("Button", {Label = "Cached Models (Console)", Command = "listmodels"})
 	local vj_devsettings_reset = {Options = {}, CVars = {}, Label = "Reset Everything:", MenuButton = "0"}
 	vj_devsettings_reset.Options["#vjbase.menugeneral.default"] = {
-	vj_npc_printammo = "0",
-	vj_npc_printweapon = "0",
-	vj_npc_printalerted = "0",
-	vj_npc_printaccuracy = "0",
-	vj_npc_printdied = "0",
-	vj_npc_printondamage = "0",
-	vj_npc_printontouch = "0",
-	vj_npc_printstoppedattacks = "0",
-	vj_npc_printtakingcover = "0",
-	vj_npc_drvrejfriendly = "0",
-	vj_npc_printresteenemy = "0",
-	vj_npc_printlastseenenemy = "0",
-	vj_npc_usedevcommands = "0",
-	vj_npc_printcurenemy = "0",
+		vj_npc_printammo = "0",
+		vj_npc_printweapon = "0",
+		vj_npc_printalerted = "0",
+		vj_npc_printaccuracy = "0",
+		vj_npc_printdied = "0",
+		vj_npc_printondamage = "0",
+		vj_npc_printontouch = "0",
+		vj_npc_printstoppedattacks = "0",
+		vj_npc_printtakingcover = "0",
+		vj_npc_drvrejfriendly = "0",
+		vj_npc_printresteenemy = "0",
+		vj_npc_printlastseenenemy = "0",
+		vj_npc_usedevcommands = "0",
+		vj_npc_printcurenemy = "0",
 	}
 	Panel:AddControl("ComboBox", vj_devsettings_reset)
 	Panel:AddControl("Checkbox", {Label = "All SNPCs and NPCs love DrVrej?! =D", Command = "vj_npc_drvrejfriendly"})
@@ -349,10 +346,9 @@ local function VJ_SNPC_DEVSETTINGS(Panel) -- Developer Settings
 	Panel:AddControl("Checkbox", {Label = "Print Gun Accuracy (Console)", Command = "vj_npc_printaccuracy"})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_ADDTOMENU_SNPC()
-	spawnmenu.AddToolMenuOption( "DrVrej", "SNPCs", "SNPC Options", "Options", "", "", VJ_SNPC_OPTIONS, {} )
-	spawnmenu.AddToolMenuOption( "DrVrej", "SNPCs", "SNPC Settings", "Settings", "", "", VJ_SNPC_SETTINGS, {} )
-	spawnmenu.AddToolMenuOption( "DrVrej", "SNPCs", "SNPC Sound Settings", "Sound Settings", "", "", VJ_SNPC_SOUNDSETTINGS, {} )
-	spawnmenu.AddToolMenuOption( "DrVrej", "SNPCs", "SNPC Developer Settings", "Developer Settings", "", "", VJ_SNPC_DEVSETTINGS, {} )
-end
-hook.Add( "PopulateToolMenu", "VJ_ADDTOMENU_SNPC", VJ_ADDTOMENU_SNPC )
+hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_SNPC", function()
+	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "SNPC Options", "Options", "", "", VJ_SNPC_OPTIONS, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "SNPC Settings", "Settings", "", "", VJ_SNPC_SETTINGS, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "SNPC Sound Settings", "Sound Settings", "", "", VJ_SNPC_SOUNDSETTINGS, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "SNPC Developer Settings", "Developer Settings", "", "", VJ_SNPC_DEVSETTINGS, {})
+end)

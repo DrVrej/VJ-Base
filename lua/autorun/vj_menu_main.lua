@@ -3,10 +3,11 @@
 	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-INFO: Used to load the main menu for VJ Base
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
--- Console Commands ---------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Console Commands ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 concommand.Add("vj_cleanup_all",function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		game.CleanUpMap()
@@ -14,7 +15,7 @@ concommand.Add("vj_cleanup_all",function(ply)
 		ply:EmitSound("buttons/button15.wav")
 	end
 end)
-----=================================----
+---------------------------------------------------------------------------------------------------------------------------------------------
 concommand.Add("vj_cleanup_snpcscorpse",function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		local i = 0
@@ -36,7 +37,7 @@ concommand.Add("vj_cleanup_snpcscorpse",function(ply)
 		ply:EmitSound("buttons/button15.wav")
 	end
 end)
-----=================================----
+---------------------------------------------------------------------------------------------------------------------------------------------
 concommand.Add("vj_cleanup_snpcs",function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		local i = 0
@@ -53,7 +54,7 @@ concommand.Add("vj_cleanup_snpcs",function(ply)
 		//ply:ChatPrint("Removed "..i.." SNPCs")
 	end
 end)
-----=================================----
+---------------------------------------------------------------------------------------------------------------------------------------------
 concommand.Add("vj_cleanup_s_npcs", function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		local i = 0
@@ -69,7 +70,7 @@ concommand.Add("vj_cleanup_s_npcs", function(ply)
 		//ply:ChatPrint("Removed "..i.." SNPCs")
 	end
 end)
-----=================================----
+---------------------------------------------------------------------------------------------------------------------------------------------
 concommand.Add("vj_cleanup_decals", function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		for k, v in pairs(player.GetAll()) do
@@ -79,7 +80,7 @@ concommand.Add("vj_cleanup_decals", function(ply)
 		ply:EmitSound("buttons/button15.wav")
 	end
 end)
-----=================================----
+---------------------------------------------------------------------------------------------------------------------------------------------
 concommand.Add("vj_cleanup_playerammo", function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		ply:RemoveAllAmmo()
@@ -87,7 +88,7 @@ concommand.Add("vj_cleanup_playerammo", function(ply)
 		ply:EmitSound("buttons/button15.wav")
 	end
 end)
-----=================================----
+---------------------------------------------------------------------------------------------------------------------------------------------
 concommand.Add("vj_cleanup_playerweapon", function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		ply:StripWeapons()
@@ -95,7 +96,7 @@ concommand.Add("vj_cleanup_playerweapon", function(ply)
 		ply:EmitSound("buttons/button15.wav")
 	end
 end)
-----=================================----
+---------------------------------------------------------------------------------------------------------------------------------------------
 concommand.Add("vj_cleanup_vjgibs", function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		local i = 0
@@ -110,7 +111,7 @@ concommand.Add("vj_cleanup_vjgibs", function(ply)
 		ply:EmitSound("buttons/button15.wav")
 	end
 end)
-----=================================----
+---------------------------------------------------------------------------------------------------------------------------------------------
 concommand.Add("vj_cleanup_props", function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		local i = 0
@@ -125,7 +126,7 @@ concommand.Add("vj_cleanup_props", function(ply)
 		ply:EmitSound("buttons/button15.wav")
 	end
 end)
-----=================================----
+---------------------------------------------------------------------------------------------------------------------------------------------
 concommand.Add("vj_cleanup_groundweapons", function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		local i = 0
@@ -140,7 +141,7 @@ concommand.Add("vj_cleanup_groundweapons", function(ply)
 		ply:EmitSound("buttons/button15.wav")
 	end
 end)
-----=================================----
+---------------------------------------------------------------------------------------------------------------------------------------------
 concommand.Add("vj_cleanup_spawners", function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		local i = 0
@@ -155,7 +156,9 @@ concommand.Add("vj_cleanup_spawners", function(ply)
 		ply:EmitSound("buttons/button15.wav")
 	end
 end)
--- Main Menu ---------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Main Menu ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
 	local function VJ_MAINMENU_CLEANUP(Panel)
 		if !game.SinglePlayer() then
@@ -294,13 +297,13 @@ if (CLIENT) then
 		local vj_resetadminmenu = {Options = {}, CVars = {}, Label = "Reset Everything:", MenuButton = "0"}
 		//vj_resetadminmenu:SetText("Select Default to reset everything")
 		vj_resetadminmenu.Options["#vjbase.menugeneral.default"] = {
-		sbox_noclip = "1",
-		sbox_weapons =	"1",
-		sbox_playershurtplayers = "1",
-		sbox_godmode = "0",
-		sv_gravity = "600",
-		host_timescale = "1",
-		phys_timescale = "1",
+			sbox_noclip = "1",
+			sbox_weapons =	"1",
+			sbox_playershurtplayers = "1",
+			sbox_godmode = "0",
+			sv_gravity = "600",
+			host_timescale = "1",
+			phys_timescale = "1",
 		}
 		Panel:AddControl("ComboBox", vj_resetadminmenu)
 		Panel:ControlHelp(" ") -- Spacer
@@ -321,24 +324,9 @@ if (CLIENT) then
 		end
 	end
 	----=================================----
-	function VJ_ADDTOMENU_MAIN()
-		spawnmenu.AddToolMenuOption( "DrVrej", "Main Menu", "Clean Up", "Clean Up", "", "", VJ_MAINMENU_CLEANUP, {} )
-		spawnmenu.AddToolMenuOption( "DrVrej", "Main Menu", "Contact and Support", "Contact and Support", "", "", VJ_MAINMENU_MISC, {} )
-		spawnmenu.AddToolMenuOption( "DrVrej", "Main Menu", "Admin Server Settings", "Admin Server Settings", "", "", VJ_MAINMENU_ADMINSERVER, {} )
-	end
-		hook.Add( "PopulateToolMenu", "VJ_ADDTOMENU_MAIN", VJ_ADDTOMENU_MAIN )
+	hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_MAIN", function()
+		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Clean Up", "Clean Up", "", "", VJ_MAINMENU_CLEANUP, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Contact and Support", "Contact and Support", "", "", VJ_MAINMENU_MISC, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Admin Server Settings", "Admin Server Settings", "", "", VJ_MAINMENU_ADMINSERVER, {})
+	end)
 end
--- Misc ---------------------------------------------------------------------------------------------------------------------------------------------
-/*function vrej_welcome(ply)
-timer.Simple(1, function()
-ply:ChatPrint("------------------- DrVrej's SNPCs -------------------")
-ply:ChatPrint("If you find a bug, contact me to my Steam Account or My website")
-ply:ChatPrint("Make sure you have VJ Base! Or else my addons won't work!")
-ply:ChatPrint("SignUp On My Website! http://vrejgaming.webs.com/")
-ply:ChatPrint("Join My Steam Group! http://steamcommunity.com/groups/vrejgaming")
-ply:ChatPrint("Like My Page On FaceBook! http://www.facebook.com/VrejGaming")
-ply:ChatPrint("Follow Me on Twitter! https://twitter.com/vrejgaming")
-ply:ChatPrint("Subscribe me on YouTube! http://www.youtube.com/user/gmod95")
-end)
-end
-hook.Add("PlayerInitialSpawn","vrej_welcome",vrej_welcome)*/

@@ -3,7 +3,6 @@
 	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-INFO: Used to Check what addons are installed that use VJ Base
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 VJBASE_GETADDONS = InstalledVJBaseAddons
@@ -113,10 +112,9 @@ function VJ_INSTALLATIONS(Panel)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_ADDTOMENU_INSTALLATIONS()
+hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_INSTALLATIONS", function()
 	spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Installed Addons", "Installed Addons", "", "", VJ_INSTALLATIONS)
-end
-hook.Add( "PopulateToolMenu", "VJ_ADDTOMENU_INSTALLATIONS", VJ_ADDTOMENU_INSTALLATIONS )
+end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJWelcomeCode()
 	print("Console: This server is running VJ Base.")
