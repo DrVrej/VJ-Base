@@ -202,7 +202,7 @@ else -- If SERVER
 					if v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Creature == true or v.IsVJBaseSNPC_Human == true) then
 						//v:VJ_TASK_GOTO_LASTPOS("TASK_RUN_PATH")
 						v:VJ_TASK_GOTO_LASTPOS("TASK_RUN_PATH",function(x) 
-							if v:GetEnemy() != nil && v:Visible(v:GetEnemy()) then
+							if IsValid(v:GetEnemy()) && v:Visible(v:GetEnemy()) then
 								x:EngTask("TASK_FACE_ENEMY", 0) 
 								x.CanShootWhenMoving = true 
 								x.ConstantlyFaceEnemy = true
@@ -215,7 +215,7 @@ else -- If SERVER
 					if v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Creature == true or v.IsVJBaseSNPC_Human == true) then
 						//v:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
 						v:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) 
-							if v:GetEnemy() != nil && v:Visible(v:GetEnemy()) then
+							if IsValid(v:GetEnemy()) && v:Visible(v:GetEnemy()) then
 								x:EngTask("TASK_FACE_ENEMY", 0) 
 								x.CanShootWhenMoving = true 
 								x.ConstantlyFaceEnemy = true

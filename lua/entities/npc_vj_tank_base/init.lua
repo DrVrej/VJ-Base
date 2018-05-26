@@ -256,7 +256,7 @@ function ENT:CustomOnThink_AIEnabled()
 	self:CustomOnSchedule()
 
 	if self.Tank_Status == 0 && tr.Hit then
-		if self:GetEnemy() == nil then
+		if !IsValid(self:GetEnemy()) then
 			self.Tank_Status = 1
 		else
 			//print((self:GetEnemy():GetPos() -self:GetPos() +Vector(0,0,80)):Angle())
@@ -307,7 +307,7 @@ function ENT:CustomOnSchedule()
 
 	self:IdleSoundCode()
 
-	if self:GetEnemy() == nil then
+	if !IsValid(self:GetEnemy()) then
 		if self.Tank_ResetedEnemy == false then
 		self.Tank_ResetedEnemy = true
 		self:ResetEnemy() end

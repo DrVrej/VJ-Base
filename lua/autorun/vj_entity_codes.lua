@@ -208,7 +208,7 @@ function VJ_DestroyCombineTurret(vSelf,argent)
 		argent:Fire("selfdestruct", "", 0)
 		local phys = argent:GetPhysicsObject()
 		if phys:IsValid() && phys != nil && phys != NULL then
-			if vSelf:IsNPC() == true && vSelf:GetEnemy() != nil then
+			if vSelf:IsNPC() == true && IsValid(vSelf:GetEnemy()) then
 				phys:EnableMotion(true)
 				phys:ApplyForceCenter(vSelf:GetForward() *10000)
 			else
@@ -384,7 +384,7 @@ function NPC_MetaTable:FaceCertainEntity(argent,OnlyIfSeenEnemy,FaceEnemyTime)
 	if !IsValid(argent) then return false end
 	if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false then return end
 	FaceEnemyTime = FaceEnemyTime or 0
-	if OnlyIfSeenEnemy == true && self:GetEnemy() != nil then
+	if OnlyIfSeenEnemy == true && IsValid(self:GetEnemy()) then
 		local setangs = Angle(0,(argent:GetPos()-self:GetPos()):Angle().y,0)
 		self.IsDoingFaceEnemy = true
 		timer.Simple(FaceEnemyTime,function() if IsValid(self) then self.IsDoingFaceEnemy = false end end)
@@ -436,7 +436,7 @@ function NPC_MetaTable:VJ_GetNearestPointToEntityDistance(argent,OnlySelfGetPos)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,Tbl_Features)
-	if self:GetEnemy() == nil then return end
+	if !IsValid(self:GetEnemy()) then return end
 	StartPos = StartPos or self:NearestPoint(self:GetPos() + self:OBBCenter())
 	EndPos = EndPos or self:GetEnemy():EyePos()
 	AcceptWorld = AcceptWorld or false
@@ -520,7 +520,7 @@ function NPC_MetaTable:VJ_DoSetEnemy(argent,ShouldStopActs,DoSmallWhenActiveEnem
 	if argent:IsPlayer() && (!argent:Alive() or GetConVarNumber("ai_ignoreplayers") == 1) then return end
 	DoSmallWhenActiveEnemy = DoSmallWhenActiveEnemy or false
 	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == argent then self:DoMedicCode_Reset() end
-	if DoSmallWhenActiveEnemy == true && self:GetEnemy() != nil then
+	if DoSmallWhenActiveEnemy == true && IsValid(self:GetEnemy()) then
 		self:AddEntityRelationship(argent,D_HT,99)
 		//self:SetEnemy(argent)
 		self.MyEnemy = argent
@@ -865,7 +865,7 @@ cvars.AddChangeCallback("ai_ignoreplayers",function(convar_name,oldValue,newValu
 		if v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
 			for pk, pv in pairs(player.GetAll()) do
 				v:AddEntityRelationship(pv,4,10)
-				if v:GetEnemy() != nil && v:GetEnemy() == pv then v:ResetEnemy() end
+				if IsValid(v:GetEnemy()) && v:GetEnemy() == pv then v:ResetEnemy() end
 				v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
 			end
 		end

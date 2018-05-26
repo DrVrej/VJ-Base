@@ -284,7 +284,7 @@ function SWEP:NPC_ServerNextFire()
 		timer.Simple(nxt, function() hook.Add("Think",self,self.NPC_ServerNextFire) end)
 		//self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
 		/*if self:IsValid() && self.Owner:IsValid() && self.Owner.IsVJBaseSNPC == true && self.Owner.Weapon_ChangeIdleAnimToShoot == true then
-			if self.Owner:GetEnemy() != nil then
+			if IsValid(self.Owner:GetEnemy()) then
 				print("CHANGED HOlDTYPE")
 				local htype = self:GetHoldType()
 				self.ActivityTranslateAI[ACT_IDLE] = ACT_RANGE_ATTACK_PISTOL
@@ -327,7 +327,7 @@ function SWEP:NPCAbleToShoot()
 		if (self.Owner.IsVJBaseSNPC_Human) then
 			local check, ammo = self.Owner:CanDoWeaponAttack()
 			if check == false && ammo != "NoAmmo" then return false end
-			if self.Owner:GetEnemy() != nil && self.Owner:IsAbleToShootWeapon(true,true) == false then return false end
+			if IsValid(self.Owner:GetEnemy()) && self.Owner:IsAbleToShootWeapon(true,true) == false then return false end
 		end
 		if self.Owner:GetActivity() != nil && (VJ_HasValue(self.NPC_AnimationTbl_General,self.Owner:GetActivity()) or VJ_HasValue(self.NPC_AnimationTbl_Rifle,self.Owner:GetActivity()) or VJ_HasValue(self.NPC_AnimationTbl_Pistol,self.Owner:GetActivity()) or VJ_HasValue(self.NPC_AnimationTbl_Shotgun,self.Owner:GetActivity()) or VJ_IsCurrentAnimation(self.Owner,self.NPC_AnimationTbl_Custom)) then
 			if (self.Owner.IsVJBaseSNPC_Human) then
@@ -384,7 +384,7 @@ function SWEP:NPCShoot_Primary(ShootPos,ShootDir)
 	//if CurTime() > self.NPC_NextPrimaryFireT then
 	//self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
 	if (!self:IsValid()) or (!self.Owner:IsValid()) then return end
-	if self.Owner.VJ_IsBeingControlled == false && (!self.Owner:GetEnemy()) then return end
+	if self.Owner.VJ_IsBeingControlled == false && !IsValid(self.Owner:GetEnemy()) then return end
 	if self.Owner.VJ_IsBeingControlled == false && (!self.Owner:Visible(self.Owner:GetEnemy())) then return end
 	if self.Owner.IsVJBaseSNPC == true then
 		//self.Owner.Weapon_TimeSinceLastShot = 0
@@ -424,7 +424,7 @@ function SWEP:PrimaryAttack(ShootPos,ShootDir)
 	//if !IsFirstTimePredicted() then return end
 	self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
 	if self.Reloading == true then return end
-	if self.Owner:IsNPC() && self.Owner.VJ_IsBeingControlled == false && self.Owner:GetEnemy() == nil then return end
+	if self.Owner:IsNPC() && self.Owner.VJ_IsBeingControlled == false && !IsValid(self.Owner:GetEnemy()) then return end
 	if self.Owner:IsPlayer() && self.Primary.AllowFireInWater == false && self.Owner:WaterLevel() == 3 && self.Reloading == false then self:EmitSound(VJ_PICKRANDOMTABLE(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) return end
 	if self:Clip1() <= 0 && self.Reloading == false then self:EmitSound(VJ_PICKRANDOMTABLE(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) return end
 	if (!self:CanPrimaryAttack()) then return end

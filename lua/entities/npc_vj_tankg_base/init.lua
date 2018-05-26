@@ -140,7 +140,7 @@ function ENT:CustomOnThink_AIEnabled()
 	if self.Tank_FacingTarget == false then self.FiringShell = false end
 	if self.Tank_ShellReady == false then self.FiringShell = false end
 	if self.Tank_Status == 0 then
-		if self:GetEnemy() == nil then
+		if !IsValid(self:GetEnemy()) then
 		self.Tank_Status = 1
 		self.Tank_GunnerIsTurning = false
 	else
@@ -180,7 +180,7 @@ end
 function ENT:CustomOnSchedule()
 	if self.Dead == true then return end
 
-	if self:GetEnemy() == nil then
+	if !IsValid(self:GetEnemy()) then
 		if self.Tank_ResetedEnemy == false then
 		self.Tank_ResetedEnemy = true
 		self:ResetEnemy() end
@@ -215,7 +215,7 @@ function ENT:RangeAttack_Base()
 	if self.Tank_ProperHeightShoot == false then return end
 	if self:GetParent().VJ_IsBeingControlled == true && !self:GetParent().VJ_TheController:KeyDown(IN_ATTACK2) then return end
 	//if self.Tank_FacingTarget == true then
-	//if (self:GetEnemy() != nil && self:GetEnemy() != NULL) then
+	//if (IsValid(self:GetEnemy()) && self:GetEnemy() != NULL) then
 		//if self:GetEnemy():IsNPC() then
 			//self:GetEnemy():VJ_SetSchedule(SCHED_TAKE_COVER_FROM_ENEMY)
 		//end
@@ -240,7 +240,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttack_Shell()
 	if (self.Dead == true) or (self.Dead == false && GetConVarNumber("ai_disabled") == 1) or (self.Tank_ProperHeightShoot == false) then return end
-	if IsValid(self:GetEnemy()) && self:GetEnemy() != NULL && self:GetEnemy() != nil /* && self.Tank_FacingTarget == true*/ then
+	if IsValid(self:GetEnemy()) && self:GetEnemy() != NULL && IsValid(self:GetEnemy()) /* && self.Tank_FacingTarget == true*/ then
 		if self:Visible(self:GetEnemy()) then
 			if self.HasSounds == true && GetConVarNumber("vj_npc_sd_rangeattack") == 0 then
 				VJ_EmitSound(self,"vj_mili_tank/tank_fire"..math.random(1,4)..".wav",500,100)

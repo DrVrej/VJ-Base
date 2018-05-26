@@ -62,7 +62,7 @@ function ENT:StartSchedule(schedule)
 		schedule.IsMovingTask_Run = false
 		schedule.IsMovingTask_Walk = false
 	end
-	if schedule.CanShootWhenMoving == true && self.CurrentWeaponAnimation != nil && self:GetEnemy() != nil then
+	if schedule.CanShootWhenMoving == true && self.CurrentWeaponAnimation != nil && IsValid(self:GetEnemy()) then
 		self:SetArrivalActivity(self.CurrentWeaponAnimation)
 	end
 	schedule.AlreadyRanCode_OnFinish = false
