@@ -796,6 +796,8 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Controller_Initialize(ply) end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Controller_IntMsg(ply)
 	ply:ChatPrint("None specified...") -- Remove this line!
 end
@@ -1466,7 +1468,7 @@ function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
-	if !IsValid(self:GetEnemy()) or self:GetEnemy() == nil then return end
+	if !IsValid(self:GetEnemy()) or !IsValid(self:GetEnemy()) then return end
 	if self.VJ_IsBeingControlled == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true /*or self.VJ_PlayingSequence == true*/ or self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextChaseTime > CurTime()) then return end
 	if self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) < self.MeleeAttackDistance && self:GetEnemy():Visible(self) && (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then self:VJ_TASK_IDLE_STAND() return end
 	-- OverrideChasing = Chase no matter what
@@ -1559,7 +1561,7 @@ function ENT:AerialMove_Wander(ShouldPlayAnim)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AerialMove_ChaseEnemy(ShouldPlayAnim)
-	if self.Dead == true or (self.NextChaseTime > CurTime()) or self:GetEnemy() == nil then return end
+	if self.Dead == true or (self.NextChaseTime > CurTime()) or !IsValid(self:GetEnemy()) then return end
 	local ShouldPlayAnim = ShouldPlayAnim or false
 	local Debug = self.Aerial_EnableDebug
 
@@ -1670,7 +1672,7 @@ function ENT:Touch(entity)
 			end
 			self.Passive_NextRunOnTouchT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime1,self.Passive_NextRunOnTouchTime2)
 		end
-	elseif /*self.Alerted == false && */ self.DisableTouchFindEnemy == false && entity:IsNPC() or entity:IsPlayer() && self:GetEnemy() == nil && self.FollowingPlayer == false && self.VJ_IsBeingControlled == false then
+	elseif /*self.Alerted == false && */ self.DisableTouchFindEnemy == false && entity:IsNPC() or entity:IsPlayer() && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.VJ_IsBeingControlled == false then
 		if self:DoRelationshipCheck(entity) == true then
 			//self:FaceCertainEntity(entity)
 			self:SetTarget(entity)
@@ -1766,7 +1768,7 @@ function ENT:DoMedicCode_FindAllies()
 	local findallies = ents.FindInSphere(self:GetPos(),self.Medic_CheckDistance)
 	for k,v in ipairs(findallies) do
 		if !v:IsNPC() && !v:IsPlayer() then continue end
-		if v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic == false && (!v.IsVJBaseSNPC_Tank) && v:Health() <= v:GetMaxHealth() * 0.75 && ((v.IsVJBaseSNPC == true && self:GetEnemy() == nil && v:GetEnemy() == nil) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0)) then
+		if v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic == false && (!v.IsVJBaseSNPC_Tank) && v:Health() <= v:GetMaxHealth() * 0.75 && ((v.IsVJBaseSNPC == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0)) then
 			if self:Disposition(v) == D_LI && self:DoRelationshipCheck(v) == false then
 				self.Medic_NextHealT = CurTime() + math.Rand(self.Medic_NextHealTime1,self.Medic_NextHealTime2)
 				self.NextIdleTime = CurTime() + 5
@@ -1870,9 +1872,13 @@ function ENT:DoConstantlyFaceEnemyCode()
 	end
 	return false
 end
+function ENT:GetEnemy()
+	print("pppppppppp")
+	return self
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-//if self:GetEnemy() != nil then
+//if IsValid(self:GetEnemy()) then
 	//print(self:GetBlockingEntity())// end
 	// if self:IsUnreachable(self:GetEnemy()) && enemy noclipping then...
 
@@ -1966,9 +1972,9 @@ function ENT:Think()
 			end
 		end
 		//self:DoCustomIdleAnimation()
-		//if self:GetEnemy() == nil then self.Alerted = false end
+		//if !IsValid(self:GetEnemy()) then self.Alerted = false end
 		if self.VJDEBUG_SNPC_ENABLED == true then
-			if GetConVarNumber("vj_npc_printcurenemy") == 1 then if self:GetEnemy() != nil then print(self:GetClass().."'s Enemy: ",self:GetEnemy()) else print(self:GetClass().."'s Enemy: None") end end
+			if GetConVarNumber("vj_npc_printcurenemy") == 1 then if IsValid(self:GetEnemy()) then print(self:GetClass().."'s Enemy: ",self:GetEnemy()) else print(self:GetClass().."'s Enemy: None") end end
 			if GetConVarNumber("vj_npc_printalerted") == 1 then if self.Alerted == true then print(self:GetClass().." Is Alerted!") else print(self:GetClass().." Is Not Alerted!") end end
 			if GetConVarNumber("vj_npc_printtakingcover") == 1 then if self.TakingCover == true then print(self:GetClass().." Is Taking Cover") else print(self:GetClass().." Is Not Taking Cover") end end
 			if GetConVarNumber("vj_npc_printlastseenenemy") == 1 then PrintMessage(HUD_PRINTTALK, self.LastSeenEnemyTime.." ("..self:GetName()..")") end
@@ -2013,7 +2019,7 @@ function ENT:Think()
 			if type(ideanimrand) == "number" then ideanimrand = self:GetSequenceName(self:SelectWeightedSequence(ideanimrand)) end
 			print(ideanimrand)
 			// self:IsCurrentSchedule(SCHED_IDLE_STAND) == true &&
-			if self:GetEnemy() == nil && !self:IsMoving() && !self.CurrentSchedule && table.Count(idleanim) > 0 && self:GetSequenceName(self:SelectWeightedSequence(ACT_IDLE)) == self:GetSequenceName(self:GetSequence()) && self:GetSequenceName(self:GetSequence()) != ideanimrand then
+			if !IsValid(self:GetEnemy()) && !self:IsMoving() && !self.CurrentSchedule && table.Count(idleanim) > 0 && self:GetSequenceName(self:SelectWeightedSequence(ACT_IDLE)) == self:GetSequenceName(self:GetSequence()) && self:GetSequenceName(self:GetSequence()) != ideanimrand then
 				//print("Should Change Anim!")
 				self:VJ_ACT_PLAYACTIVITY(ideanimrand,false,0,true,0)
 			end
@@ -2021,7 +2027,7 @@ function ENT:Think()
 		//end
 		*/
 
-		if self.MoveOutOfFriendlyPlayersWay == true && self.Dead == false /*&& self.PlayerFriendly == true*/ && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && CurTime() > self.NextMoveOutOfFriendlyPlayersWayT && GetConVarNumber("ai_ignoreplayers") == 0 /*&& self:GetEnemy() == nil*/ then
+		if self.MoveOutOfFriendlyPlayersWay == true && self.Dead == false /*&& self.PlayerFriendly == true*/ && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && CurTime() > self.NextMoveOutOfFriendlyPlayersWayT && GetConVarNumber("ai_ignoreplayers") == 0 /*&& !IsValid(self:GetEnemy())*/ then
 			local dist = 20
 			if self.FollowingPlayer == true then dist = 10 end
 			for k,v in ipairs(player.GetAll()) do
@@ -2056,7 +2062,7 @@ function ENT:Think()
 			end
 		end
 
-		/*if self:GetEnemy() != nil then
+		/*if IsValid(self:GetEnemy()) then
 		if self:GetEnemy():GetClass() == "player" then
 		//if !self:GetEnemy():Alive() then
 			self:SetEnemy(NULL)
@@ -2082,7 +2088,7 @@ function ENT:Think()
 			end
 		end*/
 
-		if self:GetEnemy() != nil then
+		if IsValid(self:GetEnemy()) then
 			if self.IsDoingFaceEnemy == true /*&& self.VJ_IsBeingControlled == false*/ then self:SetAngles(Angle(0,(self:GetEnemy():GetPos()-self:GetPos()):Angle().y,0)) end
 			self:DoConstantlyFaceEnemyCode()
 			if (self.CurrentSchedule != nil && self.CurrentSchedule.ConstantlyFaceEnemy == true /*&& self.VJ_IsBeingControlled == false*/) then self:SetAngles(Angle(0,(self:GetEnemy():GetPos()-self:GetPos()):Angle().y,0)) end
@@ -2148,7 +2154,7 @@ function ENT:Think()
 				self:ResetEnemy(true)
 			end
 
-			if self:GetEnemy() != nil then
+			if IsValid(self:GetEnemy()) then
 				if !IsValid(self:GetEnemy()) or self:GetEnemy():Health() <= 0 then
 					self.ResetedEnemy = true
 					self:ResetEnemy(true)
@@ -2167,7 +2173,7 @@ function ENT:Think()
 		--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 			-- Attack Timers --
 		if self.MovementType == VJ_MOVETYPE_AERIAL then self:SelectSchedule() end
-		if self:GetEnemy() != nil then
+		if IsValid(self:GetEnemy()) then
 			//if self.MovementType == VJ_MOVETYPE_AERIAL then self:SelectSchedule() end//self:AerialMove_ChaseEnemy(true) end
 
 			//if self.VJ_IsBeingControlled == false then
@@ -2672,7 +2678,7 @@ end
 function ENT:RangeAttackCode()
 	if self.Dead == true or self.vACT_StopAttacks == true or self.Flinching == true or self.MeleeAttacking == true then return end
 	if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
-	if self:GetEnemy() != nil then
+	if IsValid(self:GetEnemy()) then
 		if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
 		self:RangeAttackSoundCode()
 		self.RangeAttacking = true
@@ -2698,7 +2704,7 @@ function ENT:RangeAttackCode()
 			rangeprojectile:SetOwner(self)
 			rangeprojectile:SetPhysicsAttacker(self)
 			//constraint.NoCollide(self,rangeprojectile,0,0)
-			//if self:GetEnemy() != nil then
+			//if IsValid(self:GetEnemy()) then
 			local phys = rangeprojectile:GetPhysicsObject()
 			if (phys:IsValid()) then
 				phys:Wake() //:GetNormal() *self.RangeDistance
@@ -2772,7 +2778,7 @@ function ENT:LeapAttackCode_DoFinishTimers()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:LeapAttackVelocityCode()
-	if self:GetEnemy() == nil then return end
+	if !IsValid(self:GetEnemy()) then return end
 	self:CustomOnLeapAttackVelocityCode()
 	self:LeapAttackJumpSoundCode()
 	self:SetGroundEntity(NULL)
@@ -2809,7 +2815,7 @@ function ENT:SelectSchedule()
 	self:CustomOnSchedule()
 	if self.DisableSelectSchedule == true then return end
 	-- If the enemy is out of reach, then make reset the enemy!
-	if self:GetEnemy() != nil then -- If seen enemy
+	if IsValid(self:GetEnemy()) then -- If seen enemy
 		if (self:GetEnemy():GetPos():Distance(self:GetPos()) > self.SightDistance) then
 			self.TakingCover = false
 			self:DoIdleAnimation()
@@ -2818,7 +2824,7 @@ function ENT:SelectSchedule()
 	end
 	if self.PlayingAttackAnimation == false then
 		-- If the enemy is less than the sight distance, then chase the enemy!
-		if self:GetEnemy() != nil then
+		if IsValid(self:GetEnemy()) then
 			if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.SightDistance) then
 				//print("schedule = chase")
 				//self:UpdateEnemyMemory(self:GetEnemy(),self:GetEnemy():GetPos())
@@ -2927,7 +2933,7 @@ end
 function ENT:VJ_ACT_RESETENEMY(RunToEnemyOnReset)
 	local RunToEnemyOnReset = RunToEnemyOnReset or false
 	local vsched = ai_vj_schedule.New("vj_act_resetenemy")
-	if self:GetEnemy() != nil then vsched:EngTask("TASK_FORGET", self:GetEnemy()) end
+	if IsValid(self:GetEnemy()) then vsched:EngTask("TASK_FORGET", self:GetEnemy()) end
 	//vsched:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
 	self.NextWanderTime = CurTime() + math.Rand(3,5)
 	if self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && RunToEnemyOnReset == true && CurTime() > self.LastHiddenZoneT && self.LastHiddenZone_CanWander == true && self.MeleeAttacking != true && self.RangeAttacking != true && self.LeapAttacking != true then
@@ -2957,7 +2963,7 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 		local cptisgay = self:CheckAlliesAroundMe(1000)
 		if cptisgay.ItFoundAllies == true then
 			for k,v in ipairs(cptisgay.FoundAllies) do
-				if v:GetEnemy() != nil && v.LastSeenEnemyTime < self.LastSeenEnemyTimeUntilReset then
+				if IsValid(v:GetEnemy()) && v.LastSeenEnemyTime < self.LastSeenEnemyTimeUntilReset then
 					if IsValid(v:GetEnemy()) && VJ_IsAlive(v:GetEnemy()) == true && self:VJ_HasNoTarget(v:GetEnemy()) == false then
 						self:VJ_DoSetEnemy(v:GetEnemy(),true)
 						self.ResetedEnemy = false
@@ -2969,7 +2975,7 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 		local curenes = self.CurrentReachableEnemies
 		if istable(curenes) then
 			for k,v in ipairs(curenes) do
-				if IsValid(v) && ((self:GetEnemy() == nil) or (self:GetEnemy() != nil && self:GetEnemy() != v)) then
+				if IsValid(v) && ((!IsValid(self:GetEnemy())) or (IsValid(self:GetEnemy()) && self:GetEnemy() != v)) then
 					self:VJ_DoSetEnemy(v,false,true)
 					self.ResetedEnemy = false
 					return false
@@ -2979,7 +2985,7 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 	end
 	//print(self.LatestEnemyPosition)
 	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printresteenemy") == 1 then print(self:GetName().." has reseted its enemy") end end
-	if self:GetEnemy() != nil then
+	if IsValid(self:GetEnemy()) then
 		if self.FollowingPlayer == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && self.LatestEnemyPosition != Vector(0,0,0) then
 			self:SetLastPosition(self.LatestEnemyPosition)
 			RunToEnemyOnReset = true
@@ -3008,7 +3014,7 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoAlert()
-	if self:GetEnemy() == nil or self.Alerted == true then return end
+	if !IsValid(self:GetEnemy()) or self.Alerted == true then return end
 	self.Alerted = true
 	self.LastSeenEnemyTime = 0
 	self:CustomOnAlert()
@@ -3106,7 +3112,7 @@ function ENT:DoEntityRelationshipCheck()
 		//if !IsValid(v) then table.remove(self.CurrentPossibleEnemies,tonumber(v)) continue end
 		//if !IsValid(v) then continue end
 		if self:VJ_HasNoTarget(v) == true then
-			if self:GetEnemy() != nil && self:GetEnemy() == v then
+			if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
 				self:ResetEnemy(false)
 			end
 			continue
@@ -3132,7 +3138,7 @@ function ENT:DoEntityRelationshipCheck()
 					if (v.VJ_NPC_Class && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
 						//print("SHOULD WORK: "..v:GetClass())
 						entisfri = true
-						if self:GetEnemy() != nil && self:GetEnemy() == v then
+						if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
 							self.ResetedEnemy = true
 							self:ResetEnemy(false)
 						end
@@ -3171,7 +3177,7 @@ function ENT:DoEntityRelationshipCheck()
 			if entisfri == false && vNPC /*&& MyVisibleTov*/ && self.DisableMakingSelfEnemyToNPCs == false && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self,D_HT,99) end
 			if vPlayer then
 				if (self.PlayerFriendly == true or entisfri == true/* or self:Disposition(v) == D_LI*/) && !VJ_HasValue(self.VJ_AddCertainEntityAsEnemy,v) then entisfri = true self:AddEntityRelationship(v,D_LI,99) /*DoPlayerSight()*/ end// continue end
-				if (!self.IsVJBaseSNPC_Tank) && self:GetEnemy() == nil && entisfri == false then
+				if (!self.IsVJBaseSNPC_Tank) && !IsValid(self:GetEnemy()) && entisfri == false then
 					if entisfri == false then self:AddEntityRelationship(v,D_NU,99) end
 					if v:Crouching() && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightdist = 5000 else sightdist = 2000 end end
 					if vDistanceToMy < 350 && ((!v:Crouching() && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP && ((!v:KeyDown(IN_WALK) && (v:KeyDown(IN_FORWARD) or v:KeyDown(IN_BACK) or v:KeyDown(IN_MOVELEFT) or v:KeyDown(IN_MOVERIGHT))) or (v:KeyDown(IN_SPEED) or v:KeyDown(IN_JUMP)))) or (self:VJ_DoPlayerFlashLightCheck(v,20) == true)) then self:SetTarget(v) self:VJ_TASK_FACE_X("TASK_FACE_TARGET") end
@@ -3186,7 +3192,7 @@ function ENT:DoEntityRelationshipCheck()
 				distlist_closest = true
 			end
 			//table.insert(distlist,vDistanceToMy)
-			if self:GetEnemy() != nil && v == self:GetEnemy() then
+			if IsValid(self:GetEnemy()) && v == self:GetEnemy() then
 				table.insert(distlist,vDistanceToMy)
 				distlist_inserted = true
 			end
@@ -3216,11 +3222,11 @@ function ENT:DoEntityRelationshipCheck()
 							self:SetEnemy(v)
 						end
 						//self:VJ_DoSetEnemy(v,true,true)
-						//if self:GetEnemy() == nil then
+						//if !IsValid(self:GetEnemy()) then
 							//self:VJ_DoSetEnemy(v,true)
 						//end
 					elseif check == false && vPlayer then
-						if self:GetEnemy() != nil && self:GetEnemy() == v then
+						if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
 							self.ResetedEnemy = true
 							self:ResetEnemy(false)
 						end
@@ -3254,9 +3260,9 @@ function ENT:CallForHelpCode(SeeDistance)
 	for _,x in pairs(getselfclass) do
 		if VJ_IsAlive(x) == true && x:IsNPC() && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && x.IsVJBaseSNPC == true && x.IsVJBaseSNPC_Animal != false /*&& x.Behavior != VJ_BEHAVIOR_PASSIVE*/ && x.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && x.FollowingPlayer == false && x.VJ_IsBeingControlled == false && (!x.IsVJBaseSNPC_Tank) && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4) then
 			if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
-				if self:GetEnemy() != nil /*&& x.MovementType == VJ_MOVETYPE_STATIONARY*/ && x:GetPos():Distance(self:GetEnemy():GetPos()) > x.SightDistance then continue end
+				if IsValid(self:GetEnemy()) /*&& x.MovementType == VJ_MOVETYPE_STATIONARY*/ && x:GetPos():Distance(self:GetEnemy():GetPos()) > x.SightDistance then continue end
 				//if x:DoRelationshipCheck(self:GetEnemy()) == true then
-				if x:GetEnemy() == nil && ((!self:GetEnemy():IsPlayer() && x:Disposition(self:GetEnemy()) != D_LI) or (self:GetEnemy():IsPlayer())) /*&& !self:IsCurrentSchedule(SCHED_FORCED_GO_RUN) == true && !self:IsCurrentSchedule(SCHED_FORCED_GO) == true*/ then
+				if !IsValid(x:GetEnemy()) && ((!self:GetEnemy():IsPlayer() && x:Disposition(self:GetEnemy()) != D_LI) or (self:GetEnemy():IsPlayer())) /*&& !self:IsCurrentSchedule(SCHED_FORCED_GO_RUN) == true && !self:IsCurrentSchedule(SCHED_FORCED_GO) == true*/ then
 					local goingtomove = false
 					self:CustomOnCallForHelp()
 					self:CallForHelpSoundCode()
@@ -3269,7 +3275,7 @@ function ENT:CallForHelpCode(SeeDistance)
 					if self:GetPos():Distance(x:GetPos()) < SeeDistance then
 						//PrintTable(LocalTargetTable)
 						if (CurTime() > x.NextChaseTime) then
-							if IsValid(self:GetEnemy()) && self:GetEnemy() != nil then
+							if IsValid(self:GetEnemy()) && IsValid(self:GetEnemy()) then
 								if self:GetEnemy():IsPlayer() && x.PlayerFriendly == true then
 									table.insert(x.VJ_AddCertainEntityAsEnemy,self:GetEnemy())
 								end
@@ -3346,7 +3352,7 @@ function ENT:BringAlliesToMe(SeeDistance,CertainAmount,CertainAmountNumber,Enemy
 			if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
 				if EnemyVisibleOnly == true then if x:Visible(self) == false then continue end end
 				table.insert(LocalTargetTable,x)
-				if x:GetEnemy() == nil && self:GetPos():Distance(x:GetPos()) < SeeDistance then
+				if !IsValid(x:GetEnemy()) && self:GetPos():Distance(x:GetPos()) < SeeDistance then
 					//print(table.ToString(LocalTargetTable,"stupid table",true)) //end
 					local randpos = math.random(1,4)
 					if randpos == 1 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(20,50)) end
@@ -3367,7 +3373,7 @@ function ENT:DoKilledEnemy(argent,attacker,inflictor)
 	if !IsValid(argent) then return end
 	timer.Simple(0.15,function()
 		if IsValid(self) then
-			if (self.OnlyDoKillEnemyWhenClear == false) or (self.OnlyDoKillEnemyWhenClear == true && self:GetEnemy() == nil) then
+			if (self.OnlyDoKillEnemyWhenClear == false) or (self.OnlyDoKillEnemyWhenClear == true && !IsValid(self:GetEnemy())) then
 				self:OnKilledEnemySoundCode()
 				self:CustomOnDoKilledEnemy(argent,attacker,inflictor)
 			end
@@ -3457,7 +3463,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 			self.Passive_NextRunOnDamageT = CurTime() + math.Rand(self.Passive_NextRunOnDamageTime1,self.Passive_NextRunOnDamageTime2)
 		end
 
-		if self.CallForBackUpOnDamage == true && CurTime() > self.NextCallForBackUpOnDamageT && self:GetEnemy() == nil && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:CheckAlliesAroundMe(self.CallForBackUpOnDamageDistance).ItFoundAllies == true then
+		if self.CallForBackUpOnDamage == true && CurTime() > self.NextCallForBackUpOnDamageT && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:CheckAlliesAroundMe(self.CallForBackUpOnDamageDistance).ItFoundAllies == true then
 			self:BringAlliesToMe(self.CallForBackUpOnDamageDistance,self.CallForBackUpOnDamageUseCertainAmount,self.CallForBackUpOnDamageUseCertainAmountNumber)
 			self:ClearSchedule()
 			//self.TakingCover = true
@@ -3508,7 +3514,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 			end
 		end
 
-		if self.DisableTakeDamageFindEnemy == false && self:GetEnemy() == nil && self.TakingCover == false && self.VJ_IsBeingControlled == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& self.Alerted == false*/ && GetConVarNumber("ai_disabled") == 0 && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE then
+		if self.DisableTakeDamageFindEnemy == false && !IsValid(self:GetEnemy()) && self.TakingCover == false && self.VJ_IsBeingControlled == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& self.Alerted == false*/ && GetConVarNumber("ai_disabled") == 0 && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE then
 			local Targets = ents.FindInSphere(self:GetPos(),self.SightDistance/2)
 			if (!Targets) then return end
 			for k,v in pairs(Targets) do
@@ -3575,7 +3581,7 @@ function ENT:DoFlinch(dmginfo,hitgroup)
 				self:VJ_ACT_PLAYACTIVITY(self.CurrentFlinchAnimation,false,0,false,0,{SequenceDuration=self.CurrentFlinchAnimationDuration})
 			end
 		end
-		timer.Simple(self.CurrentFlinchAnimationDuration,function() if IsValid(self) then self.Flinching = false if self:GetEnemy() != nil then self:DoChaseAnimation() else self:DoIdleAnimation() end end end)
+		timer.Simple(self.CurrentFlinchAnimationDuration,function() if IsValid(self) then self.Flinching = false if IsValid(self:GetEnemy()) then self:DoChaseAnimation() else self:DoIdleAnimation() end end end)
 		self:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup)
 		self.NextFlinchT = CurTime() + self.NextFlinchTime
 	end
@@ -3789,7 +3795,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 		local LocalTargetTable = {}
 		if checkents.ItFoundAllies == true then
 			for k,v in ipairs(checkents.FoundAllies) do
-				if v:GetEnemy() == nil && v.AlertFriendsOnDeath == true && #LocalTargetTable != self.AlertFriendsOnDeathUseCertainAmountNumber then
+				if !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath == true && #LocalTargetTable != self.AlertFriendsOnDeathUseCertainAmountNumber then
 					table.insert(LocalTargetTable,v)
 					v:FaceCertainEntity(self,false)
 					v:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(v.AnimTbl_AlertFriendsOnDeath),false,0,false)
@@ -4282,7 +4288,7 @@ function ENT:IdleSoundCode(CustomTbl)
 	if (self.NextIdleSoundT_RegularChange < CurTime()) then
 		if CurTime() > self.NextIdleSoundT then
 			local PlayCombatIdleSds = false
-			if self:GetEnemy() != nil then PlayCombatIdleSds = true else PlayCombatIdleSds = false end
+			if IsValid(self:GetEnemy()) then PlayCombatIdleSds = true else PlayCombatIdleSds = false end
 			if VJ_PICKRANDOMTABLE(self.SoundTbl_CombatIdle) == false then
 				if self.IdleSounds_NoRegularIdleOnAlerted == false then
 					PlayCombatIdleSds = false

@@ -93,7 +93,8 @@ function ENT:SetControlledNPC(GetEntity)
 	self.ControlledNPC.Enemy = NULL
 	self.ControlledNPC:VJ_Controller_InitialMessage(self.TheController)
 	if self.ControlledNPC.IsVJBaseSNPC == true then
-		if self.ControlledNPC:GetEnemy() != nil then
+		self.ControlledNPC:Controller_Initialize(self.TheController)
+		if IsValid(self.ControlledNPC:GetEnemy()) then
 			self.ControlledNPC:AddEntityRelationship(self.ControlledNPC:GetEnemy(),D_NU,99)
 			self.ControlledNPC:GetEnemy():AddEntityRelationship(self.ControlledNPC,D_NU,99)
 			self.ControlledNPC:ResetEnemy(false)

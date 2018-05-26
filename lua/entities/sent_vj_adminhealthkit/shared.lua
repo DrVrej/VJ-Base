@@ -16,7 +16,7 @@ function ENT:Draw()
 	self:DrawModel()
 
 	local ledcolor = Color(0,255,0,255)
-  	local Position = self:GetPos() +self:GetForward()*7 +self:GetUp()*6 +self:GetRight()*2
+  	local Position = self:GetPos() + self:GetForward()*7 + self:GetUp()*6 + self:GetRight()*2
 	local Angles = self:GetAngles()
 	Angles:RotateAroundAxis(Angles:Right(), Vector(90, 90, 90).x)
 	Angles:RotateAroundAxis(Angles:Up(), Vector(90, 90, 90).y)
