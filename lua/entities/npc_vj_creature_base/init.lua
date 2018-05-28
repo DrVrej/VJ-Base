@@ -1400,7 +1400,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 	local checkedtbl = {}
 	local hasanim = false
 	for k,v in ipairs(animtbl) do -- Amen animation-nere ara
-		v = VJ_SequenceToActivity(self,v) -- Nayir yete animation-e sequence-e, activity-e tartsoor
+		v = VJ_SequenceToActivity(self,v) -- Nayir yete animation-e sequence-e, activity tartsoor
 		if v != false then -- Yete v-en false che, sharnage!
 			if hasanim == false && self.CurrentAnim_IdleStand == v then -- Yete animation-e IdleStand table-en meche che, ooremen sharnage!
 				hasanim = true
@@ -1872,13 +1872,8 @@ function ENT:DoConstantlyFaceEnemyCode()
 	end
 	return false
 end
-function ENT:GetEnemy()
-	print("pppppppppp")
-	return self
-end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-//if IsValid(self:GetEnemy()) then
 	//print(self:GetBlockingEntity())// end
 	// if self:IsUnreachable(self:GetEnemy()) && enemy noclipping then...
 
@@ -2814,8 +2809,8 @@ function ENT:SelectSchedule()
 	if self.VJ_IsBeingControlled == true then return end
 	self:CustomOnSchedule()
 	if self.DisableSelectSchedule == true then return end
-	-- If the enemy is out of reach, then make reset the enemy!
-	if IsValid(self:GetEnemy()) then -- If seen enemy
+	-- If the enemy is out of reach, then make it reset the enemy!
+	if IsValid(self:GetEnemy()) then
 		if (self:GetEnemy():GetPos():Distance(self:GetPos()) > self.SightDistance) then
 			self.TakingCover = false
 			self:DoIdleAnimation()
@@ -2826,21 +2821,17 @@ function ENT:SelectSchedule()
 		-- If the enemy is less than the sight distance, then chase the enemy!
 		if IsValid(self:GetEnemy()) then
 			if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.SightDistance) then
-				//print("schedule = chase")
 				//self:UpdateEnemyMemory(self:GetEnemy(),self:GetEnemy():GetPos())
 				self:DoChaseAnimation()
-			else -- If there is no enemy, then wander or stand still
+			else -- If it's more than the sight distance, then idle / wander
 				self.TakingCover = false
-				//print("schedule = idle 1")
 				self:DoIdleAnimation()
 			end
-		elseif self.Alerted == true then -- But if it's alerted then...
+		/*elseif self.Alerted == true then -- But if it's alerted then...
 			self.TakingCover = false
-			//print("schedule = idle 2")
-			self:DoIdleAnimation()
+			self:DoIdleAnimation()*/
 		else -- Or else...
 			self.TakingCover = false
-			//print("schedule = idle 3")
 			self:DoIdleAnimation()
 		end
 	end
