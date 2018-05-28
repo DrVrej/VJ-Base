@@ -358,21 +358,27 @@ function SWEP:NPCAbleToShoot()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_PlayFiringGesture()
-	local anim = "gesture_shoot_ar2"
-	if self.HoldType == "ar2" then
-		anim = "gesture_shoot_ar2"
-	elseif self.HoldType == "smg" then
-		anim = "gesture_shoot_smg2"
-	elseif self.HoldType == "pistol" or self.HoldType == "revolver" then
-		if self.Owner:LookupSequence("gesture_shoot_pistol") == -1 then
-			anim = "gesture_shootp1"
-		else
-			anim = "gesture_shoot_pistol"
+	local customg = VJ_PICKRANDOMTABLE(self.Owner.AnimTbl_WeaponAttackFiringGesture)
+	if customg != false then
+		anim = customg
+		anim = VJ_GetSequenceName(self.Owner,anim)
+	else
+		local anim = "gesture_shoot_ar2"
+		if self.HoldType == "ar2" then
+			anim = "gesture_shoot_ar2"
+		elseif self.HoldType == "smg" then
+			anim = "gesture_shoot_smg2"
+		elseif self.HoldType == "pistol" or self.HoldType == "revolver" then
+			if self.Owner:LookupSequence("gesture_shoot_pistol") == -1 then
+				anim = "gesture_shootp1"
+			else
+				anim = "gesture_shoot_pistol"
+			end
+		elseif self.HoldType == "crossbow" or self.HoldType == "shotgun" then
+			anim = "gesture_shoot_shotgun"
+		elseif self.HoldType == "rpg" then
+			anim = "gesture_shoot_rpg"
 		end
-	elseif self.HoldType == "crossbow" or self.HoldType == "shotgun" then
-		anim = "gesture_shoot_shotgun"
-	elseif self.HoldType == "rpg" then
-		anim = "gesture_shoot_rpg"
 	end
 	local gest = self.Owner:AddGestureSequence(self.Owner:LookupSequence(anim))
 	self.Owner:SetLayerPriority(gest,2)

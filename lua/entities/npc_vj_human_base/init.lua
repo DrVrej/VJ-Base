@@ -296,6 +296,7 @@ ENT.WeaponAttackSchedule = {SCHED_RANGE_ATTACK1} -- Schedule played when the SNP
 ENT.CanCrouchOnWeaponAttack = true -- Can it crouch while shooting?
 ENT.AnimTbl_WeaponAttackCrouch = {ACT_RANGE_ATTACK1_LOW} -- Animation played when the SNPC does weapon attack while crouching | For VJ Weapons
 ENT.CanCrouchOnWeaponAttackChance = 2 -- How much chance of crouching? | 1 = Crouch every time
+ENT.AnimTbl_WeaponAttackFiringGesture = {} -- Firing Gesture animations used when the SNPC is firing the weapon | Leave empty for the base to decide
 ENT.DisableWeaponFiringGesture = false -- If set to true, it will disable the weapon firing gestures
 	-- ====== Moving-Firing Variables ====== --
 ENT.HasShootWhileMoving = true -- Can it shoot while moving?
@@ -1349,11 +1350,10 @@ function ENT:VJ_TASK_IDLE_STAND()
 	local animtbl = self.AnimTbl_IdleStand
 	local checkedtbl = {}
 	local hasanim = false
-	for k,v in ipairs(animtbl) do
-		v = VJ_SequenceToActivity(self,v)
-		if v != false then
-			-- If animation not in the IdleStand table, then continue!
-			if hasanim == false && self.CurrentAnim_IdleStand == v then
+	for k,v in ipairs(animtbl) do -- Amen animation-nere ara
+		v = VJ_SequenceToActivity(self,v) -- Nayir yete animation-e sequence-e, activity tartsoor
+		if v != false then -- Yete v-en false che, sharnage!
+			if hasanim == false && self.CurrentAnim_IdleStand == v then -- Yete animation-e IdleStand table-en meche che, ooremen sharnage!
 				hasanim = true
 			end
 			if self:GetActivity() != v then
@@ -1361,7 +1361,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 			end
 		end
 	end
-	if #animtbl > 1 then
+	if #animtbl > 1 then -- Yete IdleStand table-e meg en aveli e, sharnage!
 		if hasanim == true && self.NextIdleStandTime > CurTime() then return end
 		animtbl = checkedtbl
 	end
