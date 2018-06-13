@@ -107,10 +107,10 @@ SWEP.Primary.TracerType			= "Tracer" -- Tracer type (Examples: AR2, laster, 9mm)
 SWEP.Primary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
 SWEP.Primary.Automatic			= true -- Is it automatic?
 SWEP.Primary.Ammo				= "SMG1" -- Ammo type
-SWEP.Primary.Sound				= {"vj_weapons/ak47/ak47_single.wav"}
 SWEP.AnimTbl_PrimaryFire		= {ACT_VM_PRIMARYATTACK}
+SWEP.Primary.Sound				= {}
+SWEP.Primary.DistantSound		= {}
 SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
-SWEP.Primary.DistantSound		= {"vj_weapons/ak47/ak47_single_dist.wav"}
 SWEP.Primary.DistantSoundLevel	= 140 -- Distant sound level
 SWEP.Primary.DistantSoundPitch1	= 90 -- Distant sound pitch 1
 SWEP.Primary.DistantSoundPitch2	= 110 -- Distant sound pitch 2
@@ -263,7 +263,7 @@ function SWEP:NPC_ServerNextFire()
 	self:CustomOnThink()
 	self:CustomOnNPC_ServerThink()
 
-	if self.Owner.IsReloadingWeapon_ServerNextFire == false && self.AlreadyPlayedNPCReloadSound == false && (VJ_IsCurrentAnimation(self.Owner,self.CurrentAnim_WeaponReload) or VJ_IsCurrentAnimation(self.Owner,self.CurrentAnim_ReloadBehindCover) or VJ_IsCurrentAnimation(self.Owner,self.NPC_ReloadAnimationTbl) or VJ_IsCurrentAnimation(self.Owner,self.NPC_ReloadAnimationTbl_Custom)) then
+	if self.Owner.IsReloadingWeapon_ServerNextFire == false && self.AlreadyPlayedNPCReloadSound == false && (VJ_IsCurrentAnimation(self.Owner,self.CurrentAnim_WeaponReload) or VJ_IsCurrentAnimation(self.Owner,self.CurrentAnim_ReloadBehindCover) or VJ_IsCurrentAnimation(self.Owner,self.NPC_ReloadAnimationTbl) or VJ_IsCurrentAnimation(self.Owner,self.NPC_ReloadAnimationTbl_Custom) or VJ_IsCurrentAnimation(self.Owner,self.Owner.AnimTbl_WeaponReload)) then
 		self.Owner.NextThrowGrenadeT = self.Owner.NextThrowGrenadeT + 2
 		self.Owner.IsReloadingWeapon_ServerNextFire = true
 		//self.Owner.IsReloadingWeapon = false
@@ -359,11 +359,12 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_PlayFiringGesture()
 	local customg = VJ_PICKRANDOMTABLE(self.Owner.AnimTbl_WeaponAttackFiringGesture)
+	local anim = ""
 	if customg != false then
 		anim = customg
 		anim = VJ_GetSequenceName(self.Owner,anim)
 	else
-		local anim = "gesture_shoot_ar2"
+		anim = "gesture_shoot_ar2"
 		if self.HoldType == "ar2" then
 			anim = "gesture_shoot_ar2"
 		elseif self.HoldType == "smg" then
@@ -443,9 +444,15 @@ function SWEP:PrimaryAttack(ShootPos,ShootDir)
 				end
 			end)
 		end
-		sound.Play(VJ_PICKRANDOMTABLE(self.Primary.Sound),self:GetPos(),80,math.random(90,100))
+		local firesd = VJ_PICKRANDOMTABLE(self.Primary.Sound)
+		if firesd != false then
+			sound.Play(firesd,self:GetPos(),80,math.random(90,100))
+		end
 		if self.Primary.HasDistantSound == true then
-			sound.Play(VJ_PICKRANDOMTABLE(self.Primary.DistantSound),self:GetPos(),self.Primary.DistantSoundLevel,math.random(self.Primary.DistantSoundPitch1,self.Primary.DistantSoundPitch2),self.Primary.DistantSoundVolume)
+			local farsd = VJ_PICKRANDOMTABLE(self.Primary.DistantSound)
+			if farsd != false then
+				sound.Play(farsd,self:GetPos(),self.Primary.DistantSoundLevel,math.random(self.Primary.DistantSoundPitch1,self.Primary.DistantSoundPitch2),self.Primary.DistantSoundVolume)
+			end
 		end
 	end
 	//self:EmitSound(Sound(self.Primary.Sound),80,self.Primary.SoundPitch)
