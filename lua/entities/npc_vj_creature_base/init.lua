@@ -814,7 +814,6 @@ ENT.LeapAttacking = false
 ENT.Alerted = false
 ENT.Dead = false
 ENT.Flinching = false
-ENT.TakingCover = false
 ENT.vACT_StopAttacks = false
 ENT.FollowingPlayer = false
 ENT.RunningAfter_FollowPlayer = false
@@ -909,6 +908,7 @@ ENT.NextIdleStandTime = 0
 ENT.Passive_NextRunOnTouchT = 0
 ENT.Passive_NextRunOnDamageT = 0
 ENT.NextWanderTime = 0
+ENT.TakingCoverT = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.NearestPointToEnemyDistance = Vector(0,0,0)
 ENT.SelectedDifficulty = 1
@@ -1469,7 +1469,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
 	if !IsValid(self:GetEnemy()) or !IsValid(self:GetEnemy()) then return end
-	if self.VJ_IsBeingControlled == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true /*or self.VJ_PlayingSequence == true*/ or self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextChaseTime > CurTime()) then return end
+	if self.VJ_IsBeingControlled == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true /*or self.VJ_PlayingSequence == true*/ or self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextChaseTime > CurTime()) or CurTime() < self.TakingCoverT then return end
 	if self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) < self.MeleeAttackDistance && self:GetEnemy():Visible(self) && (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then self:VJ_TASK_IDLE_STAND() return end
 	-- OverrideChasing = Chase no matter what
 	OverrideChasing = OverrideChasing or false
@@ -1737,7 +1737,14 @@ function ENT:FollowPlayerCode(key,activator,caller,data)
 			self:SetTarget(activator)
 			self.FollowingPlayerName = activator
 			self:StopMoving()
-			self:VJ_TASK_FACE_X("TASK_FACE_TARGET",function(x) x.RunCode_OnFinish = function() self:VJ_TASK_GOTO_TARGET("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end) end end)
+			self:VJ_TASK_FACE_X("TASK_FACE_TARGET",function(x) x.RunCode_OnFinish = function()
+				local DistanceToPly = self:GetPos():Distance(self.FollowingPlayerName:GetPos())
+				local movetype = "TASK_RUN_PATH"
+				if DistanceToPly < 220 then
+					movetype = "TASK_WALK_PATH"
+				end
+				self:VJ_TASK_GOTO_TARGET(movetype,function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end) 
+			end end)
 			//timer.Simple(0.15,function() if self:IsValid() && self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_TARGET_FACE) end end)
 			//if self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_IDLE_STAND) end
 			//timer.Simple(0.1,function() if self:IsValid() then self:VJ_TASK_GOTO_TARGET() end end)
@@ -1971,7 +1978,7 @@ function ENT:Think()
 		if self.VJDEBUG_SNPC_ENABLED == true then
 			if GetConVarNumber("vj_npc_printcurenemy") == 1 then if IsValid(self:GetEnemy()) then print(self:GetClass().."'s Enemy: ",self:GetEnemy()) else print(self:GetClass().."'s Enemy: None") end end
 			if GetConVarNumber("vj_npc_printalerted") == 1 then if self.Alerted == true then print(self:GetClass().." Is Alerted!") else print(self:GetClass().." Is Not Alerted!") end end
-			if GetConVarNumber("vj_npc_printtakingcover") == 1 then if self.TakingCover == true then print(self:GetClass().." Is Taking Cover") else print(self:GetClass().." Is Not Taking Cover") end end
+			if GetConVarNumber("vj_npc_printtakingcover") == 1 then if CurTime() > self.TakingCoverT == true then print(self:GetClass().." Is Not Taking Cover") else print(self:GetClass().." Is Taking Cover ("..self.TakingCoverT-CurTime()..")") end end
 			if GetConVarNumber("vj_npc_printlastseenenemy") == 1 then PrintMessage(HUD_PRINTTALK, self.LastSeenEnemyTime.." ("..self:GetName()..")") end
 		end
 
@@ -1990,7 +1997,11 @@ function ENT:Think()
 					if DistanceToPly > self.FollowPlayerCloseDistance then
 						self.RunningAfter_FollowPlayer = true
 						self.AlreadyDone_RunSelectSchedule_FollowPlayer = false
-						self:VJ_TASK_GOTO_TARGET("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+						local movetype = "TASK_RUN_PATH"
+						if DistanceToPly < 220 then
+							movetype = "TASK_WALK_PATH"
+						end
+						self:VJ_TASK_GOTO_TARGET(movetype,function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
 					elseif self.AlreadyDone_RunSelectSchedule_FollowPlayer == false then
 						self:StopMoving()
 						self.RunningAfter_FollowPlayer = false
@@ -2812,7 +2823,7 @@ function ENT:SelectSchedule()
 	-- If the enemy is out of reach, then make it reset the enemy!
 	if IsValid(self:GetEnemy()) then
 		if (self:GetEnemy():GetPos():Distance(self:GetPos()) > self.SightDistance) then
-			self.TakingCover = false
+			self.TakingCoverT = 0
 			self:DoIdleAnimation()
 			self:ResetEnemy()
 		end
@@ -2824,14 +2835,14 @@ function ENT:SelectSchedule()
 				//self:UpdateEnemyMemory(self:GetEnemy(),self:GetEnemy():GetPos())
 				self:DoChaseAnimation()
 			else -- If it's more than the sight distance, then idle / wander
-				self.TakingCover = false
+				self.TakingCoverT = 0
 				self:DoIdleAnimation()
 			end
 		/*elseif self.Alerted == true then -- But if it's alerted then...
-			self.TakingCover = false
+			self.TakingCoverT = 0
 			self:DoIdleAnimation()*/
 		else -- Or else...
-			self.TakingCover = false
+			self.TakingCoverT = 0
 			self:DoIdleAnimation()
 		end
 	end
@@ -3457,7 +3468,6 @@ function ENT:OnTakeDamage(dmginfo,data)
 		if self.CallForBackUpOnDamage == true && CurTime() > self.NextCallForBackUpOnDamageT && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:CheckAlliesAroundMe(self.CallForBackUpOnDamageDistance).ItFoundAllies == true then
 			self:BringAlliesToMe(self.CallForBackUpOnDamageDistance,self.CallForBackUpOnDamageUseCertainAmount,self.CallForBackUpOnDamageUseCertainAmountNumber)
 			self:ClearSchedule()
-			//self.TakingCover = true
 			self.NextFlinchT = CurTime() + 1
 			local pickanim = VJ_PICKRANDOMTABLE(self.CallForBackUpOnDamageAnimation)
 			if VJ_AnimationExists(self,pickanim) == true && self.DisableCallForBackUpOnDamageAnimation == false then
@@ -3505,11 +3515,12 @@ function ENT:OnTakeDamage(dmginfo,data)
 			end
 		end
 
-		if self.DisableTakeDamageFindEnemy == false && !IsValid(self:GetEnemy()) && self.TakingCover == false && self.VJ_IsBeingControlled == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& self.Alerted == false*/ && GetConVarNumber("ai_disabled") == 0 && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE then
+		if self.DisableTakeDamageFindEnemy == false && !IsValid(self:GetEnemy()) && CurTime() > self.TakingCoverT && self.VJ_IsBeingControlled == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& self.Alerted == false*/ && GetConVarNumber("ai_disabled") == 0 && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE then
 			local Targets = ents.FindInSphere(self:GetPos(),self.SightDistance/2)
 			if (!Targets) then return end
 			for k,v in pairs(Targets) do
 				if self:Visible(v) && self:DoRelationshipCheck(v) == true then
+					self.NextCallForHelpT = CurTime() + 1
 					self:VJ_DoSetEnemy(v,true)
 					self:DoChaseAnimation() else
 					//self:CallForHelpCode(self.CallForHelpDistance)
