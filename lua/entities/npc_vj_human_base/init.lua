@@ -405,6 +405,7 @@ ENT.HasIdleSounds = true -- If set to false, it won't play the idle sounds
 ENT.HasOnReceiveOrderSounds = true -- If set to false, it won't play any sound when it receives an order from an ally
 ENT.HasFollowPlayerSounds_Follow = true -- If set to false, it won't play the follow player sounds
 ENT.HasFollowPlayerSounds_UnFollow = true -- If set to false, it won't play the unfollow player sounds
+ENT.HasMoveOutOfPlayersWaySounds = true -- If set to false, it won't play any sounds when it moves out of the player's way
 ENT.HasMedicSounds_BeforeHeal = true -- If set to false, it won't play any sounds before it gives a med kit to an ally
 ENT.HasMedicSounds_AfterHeal = true -- If set to false, it won't play any sounds after it gives a med kit to an ally
 ENT.HasMedicSounds_ReceiveHeal = true -- If set to false, it won't play any sounds when it receives a medkit
@@ -434,6 +435,7 @@ ENT.SoundTbl_CombatIdle = {}
 ENT.SoundTbl_OnReceiveOrder = {}
 ENT.SoundTbl_FollowPlayer = {}
 ENT.SoundTbl_UnFollowPlayer = {}
+ENT.SoundTbl_MoveOutOfPlayersWay = {}
 ENT.SoundTbl_MedicBeforeHeal = {}
 ENT.SoundTbl_MedicAfterHeal = {}
 ENT.SoundTbl_MedicReceiveHeal = {}
@@ -472,6 +474,7 @@ ENT.CombatIdleSoundChance = 1
 ENT.OnReceiveOrderSoundChance = 1
 ENT.FollowPlayerSoundChance = 1
 ENT.UnFollowPlayerSoundChance = 1
+ENT.MoveOutOfPlayersWaySoundChance = 2
 ENT.MedicBeforeHealSoundChance = 1
 ENT.MedicAfterHealSoundChance = 1
 ENT.MedicReceiveHealSoundChance = 1
@@ -528,6 +531,7 @@ ENT.CombatIdleSoundLevel = 80
 ENT.OnReceiveOrderSoundLevel = 80
 ENT.FollowPlayerSoundLevel = 75
 ENT.UnFollowPlayerSoundLevel = 75
+ENT.MoveOutOfPlayersWaySoundLevel = 75
 ENT.BeforeHealSoundLevel = 75
 ENT.AfterHealSoundLevel = 75
 ENT.MedicReceiveHealSoundLevel = 75
@@ -573,6 +577,8 @@ ENT.FollowPlayerPitch1 = "UseGeneralPitch"
 ENT.FollowPlayerPitch2 = "UseGeneralPitch"
 ENT.UnFollowPlayerPitch1 = "UseGeneralPitch"
 ENT.UnFollowPlayerPitch2 = "UseGeneralPitch"
+ENT.MoveOutOfPlayersWaySoundPitch1 = "UseGeneralPitch"
+ENT.MoveOutOfPlayersWaySoundPitch2 = "UseGeneralPitch"
 ENT.BeforeHealSoundPitch1 = "UseGeneralPitch"
 ENT.BeforeHealSoundPitch2 = "UseGeneralPitch"
 ENT.AfterHealSoundPitch1 = 100
@@ -1837,6 +1843,7 @@ function ENT:Think()
 			for k,v in ipairs(player.GetAll()) do
 				if self:Disposition(v) == D_LI && self:DoRelationshipCheck(v) == false && (self:VJ_GetNearestPointToEntityDistance(v) < dist) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
 					self.NextFollowPlayerT = CurTime() + 2
+					self:MoveOutOfPlayersWaySoundCode()
 					self.DoingMoveOutOfFriendlyPlayersWay = true
 					//self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-50,-50))
 					self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Run))
@@ -3378,6 +3385,11 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 					self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo,hitgroup)
 					if self.FollowingPlayer == true then self:FollowPlayerReset() end
 					table.insert(self.VJ_AddCertainEntityAsEnemy,dmginfo:GetAttacker())
+					if !IsValid(self:GetEnemy()) then
+						self:StopMoving()
+						self:SetTarget(dmginfo:GetAttacker())
+						self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+					end
 					if self.AllowPrintingInChat == true then
 						dmginfo:GetAttacker():PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.")
 					end
@@ -4116,6 +4128,7 @@ function ENT:FollowPlayerSoundCode(CustomTbl)
 		VJ_STOPSOUND(self.CurrentIdleSound)
 		VJ_STOPSOUND(self.CurrentFollowPlayerSound)
 		VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
+		VJ_STOPSOUND(self.CurrentMoveOutOfPlayersWaySound)
 		VJ_STOPSOUND(self.CurrentWeaponReloadSound)
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 		self.CurrentFollowPlayerSound = VJ_CreateSound(self,soundtbl,self.FollowPlayerSoundLevel,self:VJ_DecideSoundPitch(self.FollowPlayerPitch1,self.FollowPlayerPitch2))
@@ -4131,9 +4144,25 @@ function ENT:UnFollowPlayerSoundCode(CustomTbl)
 		VJ_STOPSOUND(self.CurrentIdleSound)
 		VJ_STOPSOUND(self.CurrentFollowPlayerSound)
 		VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
+		VJ_STOPSOUND(self.CurrentMoveOutOfPlayersWaySound)
 		VJ_STOPSOUND(self.CurrentWeaponReloadSound)
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 		self.CurrentUnFollowPlayerSound = VJ_CreateSound(self,soundtbl,self.UnFollowPlayerSoundLevel,self:VJ_DecideSoundPitch(self.UnFollowPlayerPitch1,self.UnFollowPlayerPitch2))
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:MoveOutOfPlayersWaySoundCode(CustomTbl)
+	if self.HasSounds == false or self.HasMoveOutOfPlayersWaySounds == false then return end
+	local randomplayersound = math.random(1,self.MoveOutOfPlayersWaySoundChance)
+	local soundtbl = self.SoundTbl_MoveOutOfPlayersWay
+	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
+	if randomplayersound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+		VJ_STOPSOUND(self.CurrentIdleSound)
+		VJ_STOPSOUND(self.CurrentFollowPlayerSound)
+		VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
+		VJ_STOPSOUND(self.CurrentWeaponReloadSound)
+		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+		self.CurrentMoveOutOfPlayersWaySound = VJ_CreateSound(self,soundtbl,self.MoveOutOfPlayersWaySoundLevel,self:VJ_DecideSoundPitch(self.MoveOutOfPlayersWaySoundPitch1,self.MoveOutOfPlayersWaySoundPitch2))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -4146,6 +4175,7 @@ function ENT:MedicSoundCode_BeforeHeal(CustomTbl)
 		VJ_STOPSOUND(self.CurrentIdleSound)
 		VJ_STOPSOUND(self.CurrentFollowPlayerSound)
 		VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
+		VJ_STOPSOUND(self.CurrentMoveOutOfPlayersWaySound)
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 		self.CurrentMedicBeforeHealSound = VJ_CreateSound(self,soundtbl,self.BeforeHealSoundLevel,self:VJ_DecideSoundPitch(self.BeforeHealSoundPitch1,self.BeforeHealSoundPitch2))
 	end
@@ -4178,6 +4208,7 @@ function ENT:MedicSoundCode_ReceiveHeal(CustomTbl)
 		VJ_STOPSOUND(self.CurrentIdleSound)
 		VJ_STOPSOUND(self.CurrentFollowPlayerSound)
 		VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
+		VJ_STOPSOUND(self.CurrentMoveOutOfPlayersWaySound)
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 		self.CurrentMedicReceiveHealSound = VJ_CreateSound(self,soundtbl,self.MedicReceiveHealSoundLevel,self:VJ_DecideSoundPitch(self.MedicReceiveHealSoundPitch1,self.MedicReceiveHealSoundPitch2))
 	end
@@ -4431,6 +4462,7 @@ function ENT:BecomeEnemyToPlayerSoundCode(CustomTbl)
 		VJ_STOPSOUND(self.CurrentAlertSound)
 		VJ_STOPSOUND(self.CurrentFollowPlayerSound)
 		VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
+		VJ_STOPSOUND(self.CurrentMoveOutOfPlayersWaySound)
 		VJ_STOPSOUND(self.CurrentOnPlayerSightSound)
 		VJ_STOPSOUND(self.CurrentDamageByPlayerSound)
 		VJ_STOPSOUND(self.CurrentWeaponReloadSound)
@@ -4545,6 +4577,7 @@ function ENT:StopAllCommonSounds()
 	VJ_STOPSOUND(self.CurrentPainSound)
 	VJ_STOPSOUND(self.CurrentFollowPlayerSound)
 	VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
+	VJ_STOPSOUND(self.CurrentMoveOutOfPlayersWaySound)
 	VJ_STOPSOUND(self.CurrentBecomeEnemyToPlayerSound)
 	VJ_STOPSOUND(self.CurrentOnPlayerSightSound)
 	VJ_STOPSOUND(self.CurrentDamageByPlayerSound)
