@@ -211,6 +211,7 @@ if (CLIENT) then
 			end
 		//MenuFrame:AddItem(CheckList)
 		//CheckList:SizeToContents()
+		CheckList:AddLine("Unknown","None")
 		for k,v in pairs(list.Get("NPCUsableWeapons")) do
 			CheckList:AddLine(v.title,v.class)
 		end
@@ -274,7 +275,7 @@ else -- If SERVER
 		end
 		spawner:SetAngles(angs)
 		for k,v in pairs(svgetlines) do
-			if v.IsVJBaseSpawner == true then svowner:ChatPrint("FUCK YOU") end //chat.AddText(Color(255,100,0)," Can't be spawned because it's a spawner") end
+			//if v.IsVJBaseSpawner == true then svowner:ChatPrint("Can't be spawned because it's a spawner") end
 			table.insert(spawner.EntitiesToSpawn,{EntityName = "NPC"..math.random(1,99999999),SpawnPosition = {vForward=v.SpawnPosition.x,vRight=v.SpawnPosition.y,vUp=v.SpawnPosition.z},Entities = {v.Entities},WeaponsList={v.WeaponsList}})
 		end
 		//spawner.EntitiesToSpawn = {entitiestospawntbl}

@@ -284,7 +284,7 @@ VJ.AddParticle("particles/vj_weaponfx_rifle.pcf",{
 	"vj_rifle_smoke_dark",
 	"vj_rifle_sparks1",
 	"vj_rifle_sparks2",
-	
+	-- Regular
 	"vj_rifle_full",
 	"vj_rifle_glow",
 	"vj_rifle_glow_large",
@@ -295,7 +295,7 @@ VJ.AddParticle("particles/vj_weaponfx_rifle.pcf",{
 	"vj_rifle_top",
 	"vj_rifle_top_glow",
 	"vj_rifle_top_left_glow",
-	
+	-- Blue
 	"vj_rifle_full_blue",
 	"vj_rifle_glow_blue",
 	"vj_rifle_glow_large_blue",

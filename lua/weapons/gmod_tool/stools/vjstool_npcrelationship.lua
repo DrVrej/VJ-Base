@@ -4,7 +4,8 @@ TOOL.Tab = "DrVrej"
 TOOL.Command = nil
 TOOL.ConfigName = ""
 
-TOOL.ClientConVar["playerinteract"] = 1
+//TOOL.ClientConVar["playerinteract"] = 1
+TOOL.ClientConVar["allytoplyallies"] = 1
 
 local DefaultConVars = {}
 for k,v in pairs(TOOL.ClientConVar) do
@@ -17,7 +18,6 @@ if (CLIENT) then
 	language.Add("tool.vjstool_npcrelationship.0", "Left-Click to apply relationship, Right-Click to obtain the current classes, Press Reload to apply to yourself")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	local function DoBuildCPanel_Relationship(Panel)
-		// Combine = CLASS_COMBINE || Zombie = CLASS_ZOMBIE || Antlions = CLASS_ANTLION || Xen = CLASS_XEN
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
 		reset:SetText("Reset To Default")
@@ -101,45 +101,47 @@ if (CLIENT) then
 		Panel:AddItem(TextEntry)
 		Panel:ControlHelp("Press ENTER to add the class")
 		
-		local button_combine = vgui.Create("DButton")
-		button_combine:SetFont("DermaDefaultBold")
-		button_combine:SetText("Insert Combine Class")
-		button_combine:SetSize(50,20)
-		button_combine:SetColor(Color(0,0,0,255))
-		button_combine.DoClick = function(button_combine)
+		local button = vgui.Create("DButton")
+		button:SetFont("DermaDefaultBold")
+		button:SetText("Insert Combine Class")
+		button:SetSize(50,20)
+		button:SetColor(Color(0,0,0,255))
+		button.DoClick = function(button)
 			InsertToTable("CLASS_COMBINE")
 		end
-		Panel:AddPanel(button_combine)
+		Panel:AddPanel(button)
 		
-		local button_combine = vgui.Create("DButton")
-		button_combine:SetFont("DermaDefaultBold")
-		button_combine:SetText("Insert Resistance Class")
-		button_combine:SetSize(50,20)
-		button_combine:SetColor(Color(0,0,0,255))
-		button_combine.DoClick = function(button_combine)
-			InsertToTable("CLASS_PLAYER_ALLY")
-		end
-		Panel:AddPanel(button_combine)
-		
-		local button_combine = vgui.Create("DButton")
-		button_combine:SetFont("DermaDefaultBold")
-		button_combine:SetText("Insert Antlion Class")
-		button_combine:SetSize(50,20)
-		button_combine:SetColor(Color(0,0,0,255))
-		button_combine.DoClick = function(button_combine)
+		local button = vgui.Create("DButton")
+		button:SetFont("DermaDefaultBold")
+		button:SetText("Insert Antlion Class")
+		button:SetSize(50,20)
+		button:SetColor(Color(0,0,0,255))
+		button.DoClick = function(button)
 			InsertToTable("CLASS_ANTLION")
 		end
-		Panel:AddPanel(button_combine)
+		Panel:AddPanel(button)
 		
-		local button_combine = vgui.Create("DButton")
-		button_combine:SetFont("DermaDefaultBold")
-		button_combine:SetText("Insert Zombie Class")
-		button_combine:SetSize(50,20)
-		button_combine:SetColor(Color(0,0,0,255))
-		button_combine.DoClick = function(button_combine)
+		local button = vgui.Create("DButton")
+		button:SetFont("DermaDefaultBold")
+		button:SetText("Insert Zombie Class")
+		button:SetSize(50,20)
+		button:SetColor(Color(0,0,0,255))
+		button.DoClick = function(button)
 			InsertToTable("CLASS_ZOMBIE")
 		end
-		Panel:AddPanel(button_combine)
+		Panel:AddPanel(button)
+		
+		local button = vgui.Create("DButton")
+		button:SetFont("DermaDefaultBold")
+		button:SetText("Insert Resistance Class")
+		button:SetSize(50,20)
+		button:SetColor(Color(0,0,0,255))
+		button.DoClick = function(button)
+			InsertToTable("CLASS_PLAYER_ALLY")
+		end
+		Panel:AddPanel(button)
+		Panel:AddControl("Checkbox", {Label = "Allied with all player allies?", Command = "vjstool_npcrelationship_allytoplyallies"})
+		Panel:ControlHelp("Only applies for VJ Base SNPCs and requires the SNPC to have CLASS_PLAYER_ALLY")
 		
 		//Panel:AddControl("Label", {Text = "For PLAYER entities Only:"})
 		//Panel:AddControl("Checkbox", {Label = "Make NPCs interact with friendly player", Command = "vjstool_npcspawner_playerinteract"})
@@ -173,12 +175,15 @@ if (CLIENT) then
 		ent = net.ReadEntity()
 		entname = net.ReadString()
 		clicktype = net.ReadString()
+		allynum = net.ReadFloat()
 		if clicktype == "ReloadClick" then entname = "Yourself" end
 		chat.AddText(Color(0,255,0),"Applied the relationship class table on",Color(255,100,0)," "..entname)
 		net.Start("vj_npcrelationship_sr_leftclick")
 		net.WriteEntity(ent)
+		//net.WriteTable(self)
 		net.WriteString(clicktype)
 		net.WriteTable(VJ_NPCRELATION_TblCurrentValues)
+		net.WriteFloat(allynum)
 		net.SendToServer()
 	end)
 else
@@ -190,8 +195,12 @@ else
 		ent = net.ReadEntity()
 		clicktype = net.ReadString()
 		classtbl = net.ReadTable()
+		allynum = net.ReadFloat()
 		if #classtbl > 0 then
 			ent.VJ_NPC_Class = classtbl
+			if (ent.IsVJBaseSNPC) && allynum == 1 && table.HasValue(classtbl,"CLASS_PLAYER_ALLY") then
+				ent.FriendsWithAllPlayerAllies = true
+			end
 		else
 			ent.VJ_NPC_Class = {nil}
 		end
@@ -209,6 +218,7 @@ function TOOL:LeftClick(tr)
 			net.WriteEntity(ent)
 			net.WriteString(entname)
 			net.WriteString("LeftClick")
+			net.WriteFloat(self:GetClientNumber("allytoplyallies"))
 			net.Send(self:GetOwner())
 			return true
 		end

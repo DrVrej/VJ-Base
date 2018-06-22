@@ -152,6 +152,7 @@ SWEP.AlreadyPlayedNPCReloadSound = false
 SWEP.NPC_NextPrimaryFireT		= 0
 SWEP.Primary.DefaultClip 		= 0
 SWEP.NextNPCDrySoundT 			= 0
+SWEP.NPC_AnimationSet = "Custom"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -190,6 +191,15 @@ function SWEP:Initialize()
 	self:SetHoldType(self.HoldType)
 	if self.HasIdleAnimation == true then self.InitHasIdleAnimation = true end
 	self:CustomOnInitialize()
+	if IsValid(self.Owner) then
+		if VJ_AnimationExists(self.Owner,ACT_WALK_AIM_PISTOL) == true && VJ_AnimationExists(self.Owner,ACT_RUN_AIM_PISTOL) == true && VJ_AnimationExists(self.Owner,ACT_POLICE_HARASS1) == true then
+			self.NPC_AnimationSet = "Metrocop"
+		elseif VJ_AnimationExists(self.Owner,"cheer1") == true && VJ_AnimationExists(self.Owner,"wave_smg1") == true && VJ_AnimationExists(self.Owner,ACT_BUSY_SIT_GROUND) == true then
+			self.NPC_AnimationSet = "Rebel"
+		elseif VJ_AnimationExists(self.Owner,"signal_takecover") == true && VJ_AnimationExists(self.Owner,"grenthrow") == true && VJ_AnimationExists(self.Owner,"bugbait_hit") == true then
+			self.NPC_AnimationSet = "Combine"
+		end
+	end
 	if (SERVER) then
 		self:SetNPCMinBurst(10)
 		self:SetNPCMaxBurst(20)
@@ -601,7 +611,9 @@ end
 function SWEP:FireAnimationEvent(pos,ang,event,options)
 	local getcustom = self:CustomOnFireAnimationEvent(pos,ang,event,options)
 	if getcustom == true then return true end
-
+	
+	if event == 22 or event == 6001 then return true end
+	
 	if GetConVarNumber("vj_wep_nomuszzleflash") == 1 then
 		if event == 21 or event == 22 or event == 5001 or event == 5003 then
 			return true

@@ -1492,6 +1492,13 @@ function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
 	self.NextChaseTime = CurTime() + 0.1
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:BusyWithActivity()
+	if self.vACT_StopAttacks == true or self.PlayingAttackAnimation == true then 
+		return true
+	end
+	return false
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 -- !!!!!!! WIP - AERIAL BASE !!!!!!! --
 
 // MOVETYPE_FLY | MOVETYPE_FLYGRAVITY
@@ -1742,15 +1749,17 @@ function ENT:FollowPlayerCode(key,activator,caller,data)
 			self.DisableChasingEnemy = true
 			self:SetTarget(activator)
 			self.FollowingPlayerName = activator
-			self:StopMoving()
-			self:VJ_TASK_FACE_X("TASK_FACE_TARGET",function(x) x.RunCode_OnFinish = function()
-				local DistanceToPly = self:GetPos():Distance(self.FollowingPlayerName:GetPos())
-				local movetype = "TASK_RUN_PATH"
-				if DistanceToPly < 220 then
-					movetype = "TASK_WALK_PATH"
-				end
-				self:VJ_TASK_GOTO_TARGET(movetype,function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end) 
-			end end)
+			if self:BusyWithActivity() == false then
+				self:StopMoving()
+				self:VJ_TASK_FACE_X("TASK_FACE_TARGET",function(x) x.RunCode_OnFinish = function()
+					local DistanceToPly = self:GetPos():Distance(self.FollowingPlayerName:GetPos())
+					local movetype = "TASK_RUN_PATH"
+					if DistanceToPly < 220 then
+						movetype = "TASK_WALK_PATH"
+					end
+					self:VJ_TASK_GOTO_TARGET(movetype,function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end) 
+				end end)
+			end
 			//timer.Simple(0.15,function() if self:IsValid() && self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_TARGET_FACE) end end)
 			//if self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_IDLE_STAND) end
 			//timer.Simple(0.1,function() if self:IsValid() then self:VJ_TASK_GOTO_TARGET() end end)
@@ -1758,7 +1767,9 @@ function ENT:FollowPlayerCode(key,activator,caller,data)
 			self.FollowingPlayer = true
 		else
 			self:UnFollowPlayerSoundCode()
-			self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+			if self:BusyWithActivity() == false then
+				self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+			end
 			//if self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_TARGET_FACE) end
 			self:FollowPlayerReset()
 		end
@@ -1782,7 +1793,7 @@ function ENT:DoMedicCode_FindAllies()
 	for k,v in ipairs(findallies) do
 		if !v:IsNPC() && !v:IsPlayer() then continue end
 		if v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic == false && (!v.IsVJBaseSNPC_Tank) && v:Health() <= v:GetMaxHealth() * 0.75 && ((v.IsVJBaseSNPC == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0)) then
-			if self:Disposition(v) == D_LI && self:DoRelationshipCheck(v) == false then
+			if /*self:Disposition(v) == D_LI &&*/ self:DoRelationshipCheck(v) == false then
 				self.Medic_NextHealT = CurTime() + math.Rand(self.Medic_NextHealTime1,self.Medic_NextHealTime2)
 				self.NextIdleTime = CurTime() + 5
 				self.NextChaseTime = CurTime() + 5
@@ -1885,6 +1896,7 @@ function ENT:DoConstantlyFaceEnemyCode()
 	end
 	return false
 end
+
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	//print(self:GetBlockingEntity())// end
@@ -1999,19 +2011,35 @@ function ENT:Think()
 				if !self.FollowingPlayerName:Alive() or self:Disposition(self.FollowingPlayerName) != D_LI then self:FollowPlayerReset() end
 				if CurTime() > self.NextFollowPlayerT && IsValid(self.FollowingPlayerName) && self.FollowingPlayerName:Alive() && self.AlreadyBeingHealedByMedic == false then
 					local DistanceToPly = self:GetPos():Distance(self.FollowingPlayerName:GetPos())
+					local busy = self:BusyWithActivity()
+					local abletomove = true
 					self:SetTarget(self.FollowingPlayerName)
+					if busy == true && DistanceToPly < (self.FollowPlayerCloseDistance * 4) then
+						abletomove = false
+					end
 					if DistanceToPly > self.FollowPlayerCloseDistance then
-						self.RunningAfter_FollowPlayer = true
-						self.AlreadyDone_RunSelectSchedule_FollowPlayer = false
-						local movetype = "TASK_RUN_PATH"
-						if DistanceToPly < 220 then
-							movetype = "TASK_WALK_PATH"
+						if abletomove == true then
+							self.RunningAfter_FollowPlayer = true
+							self.AlreadyDone_RunSelectSchedule_FollowPlayer = false
+							if busy == false then
+								local movetype = "TASK_RUN_PATH"
+								if DistanceToPly < 220 then
+									movetype = "TASK_WALK_PATH"
+								end
+								self:VJ_TASK_GOTO_TARGET(movetype,function(x)
+									x.CanShootWhenMoving = true
+									if self:VJ_HasActiveWeapon() == true then
+										x.ConstantlyFaceEnemy = true
+									end
+								end)
+							end
 						end
-						self:VJ_TASK_GOTO_TARGET(movetype,function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
 					elseif self.AlreadyDone_RunSelectSchedule_FollowPlayer == false then
-						self:StopMoving()
+						if busy == false then
+							self:StopMoving()
+							self:SelectSchedule()
+						end
 						self.RunningAfter_FollowPlayer = false
-						self:SelectSchedule()
 						self.AlreadyDone_RunSelectSchedule_FollowPlayer = true
 					end
 					self.NextFollowPlayerT = CurTime() + self.NextFollowPlayerTime
@@ -2039,11 +2067,11 @@ function ENT:Think()
 		//end
 		*/
 
-		if self.MoveOutOfFriendlyPlayersWay == true && self.Dead == false /*&& self.PlayerFriendly == true*/ && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && CurTime() > self.NextMoveOutOfFriendlyPlayersWayT && GetConVarNumber("ai_ignoreplayers") == 0 /*&& !IsValid(self:GetEnemy())*/ then
+		if self.MoveOutOfFriendlyPlayersWay == true && self.Dead == false /*&& self.PlayerFriendly == true*/ && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && CurTime() > self.NextMoveOutOfFriendlyPlayersWayT && GetConVarNumber("ai_ignoreplayers") == 0 && self:BusyWithActivity() == false /*&& !IsValid(self:GetEnemy())*/ then
 			local dist = 20
 			if self.FollowingPlayer == true then dist = 10 end
 			for k,v in ipairs(player.GetAll()) do
-				if self:Disposition(v) == D_LI && self:DoRelationshipCheck(v) == false && (self:VJ_GetNearestPointToEntityDistance(v) < dist) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
+				if /*self:Disposition(v) == D_LI &&*/ self:DoRelationshipCheck(v) == false && (self:VJ_GetNearestPointToEntityDistance(v) < dist) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
 					self.NextFollowPlayerT = CurTime() + 2
 					self:MoveOutOfPlayersWaySoundCode()
 					self.DoingMoveOutOfFriendlyPlayersWay = true
@@ -2427,7 +2455,7 @@ end
 function ENT:CanDoCertainAttack(AttackName)
 	AttackName = AttackName or "MeleeAttack"
 	-- Attack Names: "MeleeAttack" || "RangeAttack" || "LeapAttack"
-	if self.vACT_StopAttacks == true or self.Flinching == true or self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.VJ_IsBeingControlled == true*/ then return false end
+	if self.RunningAfter_FollowPlayer == true or self.vACT_StopAttacks == true or self.Flinching == true or self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.VJ_IsBeingControlled == true*/ then return false end
 
 	if AttackName == "MeleeAttack" then
 		if self.IsAbleToMeleeAttack == true && self.MeleeAttacking == false && self.LeapAttacking == false && self.RangeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
@@ -3041,19 +3069,23 @@ function ENT:DoAlert()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoRelationshipCheck(argent)
-	local not_bool, not_str = self:VJ_HasNoTarget(argent)
-	if not_str == "Bullseye" then return true end
-	if not_bool == true or self.NPCTbl_Animals[argent:GetClass()] then return false end
+	-- false = Tematsine pari e
+	-- "Neutral" = Tematsine ne keshe ne pari e
+	-- true == Tematsine tsnami e
+	local nt_bool, nt_str = self:VJ_HasNoTarget(argent)
+	if nt_str == "Bullseye" then return true end
+	if nt_bool == true or self.NPCTbl_Animals[argent:GetClass()] then return "Neutral" end
+	if self:GetClass() == argent:GetClass() then return false end
 	if argent:Health() > 0 && self:Disposition(argent) != D_LI then
-		if argent:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 1 then return false end
+		if argent:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 1 then return "Neutral" end
 		if VJ_HasValue(self.VJ_AddCertainEntityAsFriendly,argent) then return false end
 		if VJ_HasValue(self.VJ_AddCertainEntityAsEnemy,argent) then return true end
-		if (argent:IsNPC() && !argent.FriendlyToVJSNPCs && argent:Health() > 0 && ((argent:Disposition(self) == D_HT) or (argent:Disposition(self) == D_NU && argent.VJ_IsBeingControlled == true))) or (argent:IsPlayer() && self.PlayerFriendly == false && GetConVarNumber("ai_ignoreplayers") == 0 && argent:Alive()) then
+		if (argent:IsNPC() && !argent.FriendlyToVJSNPCs && ((argent:Disposition(self) == D_HT) or (argent:Disposition(self) == D_NU && argent.VJ_IsBeingControlled == true))) or (argent:IsPlayer() && self.PlayerFriendly == false && argent:Alive()) then
 			//if argent.VJ_NoTarget == false then
 			//if (argent.VJ_NoTarget) then if argent.VJ_NoTarget == false then continue end end
 			return true
 		else
-			return false
+			return "Neutral"
 		end
 	end
 	return false
@@ -3144,7 +3176,7 @@ function ENT:DoEntityRelationshipCheck()
 					if friclass == "CLASS_ZOMBIE" then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
 					if friclass == "CLASS_ANTLION" then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
 					if friclass == "CLASS_XEN" then if self:XenFriendlyCode(v) == true then entisfri = true end end
-					if (v.VJ_NPC_Class && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
+					if (v.VJ_NPC_Class && friclass != "CLASS_PLAYER_ALLY" && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
 						//print("SHOULD WORK: "..v:GetClass())
 						entisfri = true
 						if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
@@ -3569,7 +3601,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoFlinch(dmginfo,hitgroup)
-	if self.CanFlinch == 0 or self.Flinching == true or (self.NextFlinchT > CurTime()) or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
+	if self.CanFlinch == 0 or self.Flinching == true or CurTime() < self.TakingCoverT or (self.NextFlinchT > CurTime()) or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
 
 	local function RunFlinchCode(HitBoxBased,HitBoxInfo)
 		self.Flinching = true
@@ -4080,11 +4112,16 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 			dissolver:SetPos(self.Corpse:GetPos())
 			dissolver:Spawn()
 			dissolver:Activate()
-			dissolver:SetKeyValue("target","vj_dissolve_corpse")
+			//dissolver:SetKeyValue("target","vj_dissolve_corpse")
 			dissolver:SetKeyValue("magnitude",100)
 			dissolver:SetKeyValue("dissolvetype",0)
-			dissolver:Fire("Dissolve")
-			dissolver:Remove()
+			dissolver:Fire("Dissolve","vj_dissolve_corpse")
+			if IsValid(self.TheDroppedWeapon) then
+				self.TheDroppedWeapon:SetName("vj_dissolve_weapon")
+				dissolver:Fire("Dissolve","vj_dissolve_weapon")
+			end
+			dissolver:Fire("Kill","",0.1)
+			//dissolver:Remove()
 		end
 
 		-- Bone and Angle --
