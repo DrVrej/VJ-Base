@@ -110,7 +110,7 @@ function ENT:Initialize()
 	self:CustomOnInitializeBeforePhys()
 
 	local phys = self.Entity:GetPhysicsObject()
-	if (phys:IsValid()) then
+	if IsValid(phys) then
 		self:CustomPhysicsObjectOnInitialize(phys)
 	end
 	

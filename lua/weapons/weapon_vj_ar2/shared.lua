@@ -34,7 +34,7 @@ SWEP.Primary.Ammo				= "AR2" -- Ammo type
 SWEP.Primary.Sound				= {"Weapon_AR2.NPC_Single"}
 SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
 SWEP.Primary.DistantSound		= {"Weapon_AR2.NPC_Single"}
-SWEP.PrimaryEffects_MuzzleFlash = false
+SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_full_blue"}
 SWEP.PrimaryEffects_SpawnShells = false
 SWEP.PrimaryEffects_DynamicLightColor = Color(0, 31, 225)
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------

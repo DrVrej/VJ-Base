@@ -30,7 +30,7 @@ SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun
 SWEP.Primary.DistantSound		= {"Weapon_SMG1.NPC_Single"}
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellAttachment = 2
-SWEP.PrimaryEffects_ShellType = "VJ_Weapon_RifleShell1"
+SWEP.PrimaryEffects_ShellType = "VJ_Weapon_PistolShell1"
 	-- Idle Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasIdleAnimation			= true -- Does it have a idle animation?
 SWEP.AnimTbl_Idle				= {ACT_VM_IDLE}

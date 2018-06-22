@@ -60,7 +60,7 @@ function ENT:Use(activator, caller)
 		//activator:SetHealth(activator:Health() +1000000)
 		activator:PrintMessage(HUD_PRINTTALK, "You turned the fireplace on.") 
 	else
-		activator:PrintMessage(HUD_PRINTTALK, "You turned the fireplace off")
+		activator:PrintMessage(HUD_PRINTTALK, "You turned the fireplace off.")
 		self.FirePlaceOn = false
 		self:StopParticles()
 		if self.firesound1 then self.firesound1:Stop() end

@@ -87,18 +87,6 @@ function util.VJ_SphereDamage(vAttacker,vInflictor,vPosition,vDamageRadius,vDama
 	return Foundents
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function util.VJ_GetSNPCsWithActiveSoundTracks() -- !!!!! Deprecated Function !!!!! --
-	local TableEntities = {}
-	for k,v in ipairs(ents.GetAll()) do
-		if v:IsNPC() then
-			if v:GetNetworkedBool("VJ_IsPlayingSoundTrack") == true then
-				table.insert(TableEntities,v)
-			end
-		end
-	end
-	return TableEntities
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function util.VJ_GetWeaponPos(GetClassEntity)
 	if GetClassEntity:GetActiveWeapon() == NULL then return false end
 	local wep = GetClassEntity:GetActiveWeapon()
@@ -134,4 +122,16 @@ function util.VJ_GetWeaponPos(GetClassEntity)
 		//print("It has a proper attachment.")
 		return wep:GetAttachment(wep:LookupAttachment(getmuzzle)).Pos //+ GetClassEntity:GetUp()*-45
 	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function util.VJ_GetSNPCsWithActiveSoundTracks() -- !!!!! Deprecated Function !!!!! --
+	local TableEntities = {}
+	for k,v in ipairs(ents.GetAll()) do
+		if v:IsNPC() then
+			if v:GetNetworkedBool("VJ_IsPlayingSoundTrack") == true then
+				table.insert(TableEntities,v)
+			end
+		end
+	end
+	return TableEntities
 end
