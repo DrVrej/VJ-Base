@@ -43,6 +43,7 @@ function ENT:StartSchedule(schedule)
 	if (!schedule.StopScheduleIfNotMoving) then schedule.StopScheduleIfNotMoving = false end
 	if (!schedule.CanBeInterrupted) then schedule.CanBeInterrupted = false end
 	if (!schedule.ConstantlyFaceEnemy) then schedule.ConstantlyFaceEnemy = false end
+	if (!schedule.ConstantlyFaceEnemyVisible) then schedule.ConstantlyFaceEnemyVisible = false end
 	if (!schedule.CanShootWhenMoving) then schedule.CanShootWhenMoving = false end
 	if self.MovementType == VJ_MOVETYPE_STATIONARY then
 		if schedule.IsMovingTask == true then
@@ -58,6 +59,19 @@ function ENT:StartSchedule(schedule)
 		schedule.IsMovingTask_Walk = false
 	end
 	if schedule.IsMovingTask == nil then schedule.IsMovingTask = false end
+	if schedule.IsMovingTask == true then
+		local tr = util.TraceHull({
+			start = self:GetPos(),
+			endpos = self:GetPos(),
+			mins = self:OBBMins() + Vector(0,0,2),
+			maxs = self:OBBMaxs() + Vector(0,0,2),
+			filter = self
+		})
+		if IsValid(tr.Entity) && tr.Entity:IsNPC() && !VJ_HasValue(self.EntitiesToNoCollide,tr.Entity:GetClass()) then
+			self:DoRunCode_OnFail(schedule)
+			return
+		end
+	end
 	if schedule.IsMovingTask_Run == nil then schedule.IsMovingTask_Run = false end
 	if schedule.IsMovingTask_Walk == nil then schedule.IsMovingTask_Walk = false end
 	if schedule.CanShootWhenMoving == true && self.CurrentWeaponAnimation != nil && IsValid(self:GetEnemy()) then

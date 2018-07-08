@@ -128,6 +128,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_AnimationExists(argent,actname)
 	if actname == nil then return false end
+	if isbool(actname) then return false end
 	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
 	if type(actname) == "number" then
 		if (argent:SelectWeightedSequence(actname) == -1 or argent:SelectWeightedSequence(actname) == 0) && (argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "Not Found!" or argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "No model!") then
@@ -746,7 +747,7 @@ hook.Add("EntityFireBullets","VJ_NPC_FIREBULLET",function(Entity,data,Attacker)
 			util.Effect("effect_fo3_laserhit", laserhit)
 			//tr.HitPos:Ignite( 8, 0 )
 		return true end*/
-	//	end
+		//end
 		//data.Src = util.VJ_GetWeaponPos(Entity) //Entity:EyePos() + Entity:GetUp()*-40
 		Entity.Weapon_ShotsSinceLastReload = Entity.Weapon_ShotsSinceLastReload + 1
 		//Entity.Weapon_TimeSinceLastShot = 0

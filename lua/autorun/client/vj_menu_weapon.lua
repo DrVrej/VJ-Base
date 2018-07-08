@@ -15,15 +15,7 @@ local function VJ_WEAPON_CLIENTSETTINGS(Panel) -- Settings
 	end*/
 
 	Panel:AddControl( "Label", {Text = "Notice: This settings are client, meaning it won't change for other people!"})
-	local vj_settings_reset = {Options = {}, CVars = {}, Label = "Reset Everything:", MenuButton = "0"}
-	vj_settings_reset.Options["#vjbase.menugeneral.default"] = { 
-		vj_wep_nomuszzleflash = "0",
-		vj_wep_nomuszzlesmoke = "0",
-		vj_wep_nomuzzleheatwave = "0",
-		vj_wep_nobulletshells = "0",
-		vj_wep_nomuszzleflash_dynamiclight = "0",
-	}
-	Panel:AddControl("ComboBox", vj_settings_reset)
+	Panel:AddControl("Button",{Text = "Reset Everything", Command = "vj_wep_nomuszzleflash 0\n vj_wep_nomuszzlesmoke 0\n vj_wep_nomuzzleheatwave 0\n vj_wep_nobulletshells 0\n vj_wep_nomuszzleflash_dynamiclight 0"})
 	Panel:AddControl("Checkbox", {Label = "Disable Muzzle Flash", Command = "vj_wep_nomuszzleflash"})
 	Panel:AddControl("Checkbox", {Label = "Disable Muzzle Flash Dynamic Light", Command = "vj_wep_nomuszzleflash_dynamiclight"})
 	Panel:ControlHelp("Disabling muzzle flash will also disable this")

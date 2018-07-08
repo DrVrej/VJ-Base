@@ -159,13 +159,14 @@ function ENT:SetControlledNPC(GetEntity)
 	end)
 	self:CustomOnSetControlledNPC()
 end
-ENT.TestLerp = 0
+//ENT.TestLerp = 0
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	if (!self.PropCamera:IsValid()) then self:StopControlling() return end
 	if !IsValid(self.TheController) or self.TheController:KeyDown(IN_USE) or self.TheController:Health() <= 0 or (!self.TheController.IsControlingNPC) or !IsValid(self.ControlledNPC) or (self.ControlledNPC:Health() <= 0) then self:StopControlling() return end
 	if self.TheController.IsControlingNPC != true then return end
 	if (self.TheController.IsControlingNPC) && IsValid(self.ControlledNPC) then
+		if self.ControlledNPC.Flinching == true then return end
 		local AttackTypes = {MeleeAttack=false,RangeAttack=false,LeapAttack=false,WeaponAttack=false,GrenadeAttack=false,Ammo="---"}
 		if self.ControlledNPC.IsVJBaseSNPC == true then
 			if self.ControlledNPC.HasMeleeAttack == true then AttackTypes["MeleeAttack"] = true end
