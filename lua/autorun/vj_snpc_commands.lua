@@ -34,6 +34,7 @@ ConvarList["vj_npc_slowplayer"] = 0 -- Disables SNPCs slowing down player's spee
 ConvarList["vj_npc_bleedenemyonmelee"] = 0 -- Disable SNPCs bleeding their enemy on melee attack
 ConvarList["vj_npc_noproppush"] = 0 -- Disable SNPCs pushing props
 ConvarList["vj_npc_nopropattack"] = 0 -- Disable SNPCs attacking props
+ConvarList["vj_npc_nomeleedmgdsp"] = 0 -- Disables the melee attack DSP effect on heavy damages
 	-- ====== Human Settings ====== --
 ConvarList["vj_npc_noweapon"] = 0 -- No Weapon - Human
 ConvarList["vj_npc_noforeverammo"] = 0 -- No unlimited ammo - Human

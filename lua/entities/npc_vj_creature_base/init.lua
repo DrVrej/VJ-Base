@@ -32,6 +32,12 @@ ENT.TurningSpeed = 20 -- How fast it can turn
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
 ENT.CanTurnWhileStationary = true -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
+	-- Aerial Movetype Variables:
+ENT.Aerial_FlyingSpeed_Calm = 80 -- The speed it should fly with, when it's wandering, moving slowly, etc. | Basically walking campared to ground SNPCs
+ENT.Aerial_FlyingSpeed_Alerted = 200 -- The speed it should fly with, when it's chasing an enemy, moving away quickly, etc. | Basically running campared to ground SNPCs
+ENT.Aerial_AnimTbl_Calm = {"mortar_back"} -- Animations it plays when it's wandering around while idle
+ENT.Aerial_AnimTbl_Alerted = {"mortar_forward"} -- Animations it plays when it's moving while alerted
+ENT.Aerial_EnableDebug = false -- Used for testing
 	-- ====== Miscellaneous Variables ====== --
 ENT.HasEntitiesToNoCollide = true -- If set to false, it won't run the EntitiesToNoCollide code
 ENT.EntitiesToNoCollide = {} -- Entities to not collide with when HasEntitiesToNoCollide is set to true
@@ -66,7 +72,7 @@ ENT.Passive_NextRunOnDamageTime2 = 7 -- How much until it can run the code again
 	-- ====== On Player Sight Variables ====== --
 ENT.HasOnPlayerSight = false -- Should do something when it sees the enemy? Example: Play a sound
 ENT.OnPlayerSightDistance = 200 -- How close should the player be until it runs the code?
-ENT.OnPlayerSightDispositionLevel = 0 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
+ENT.OnPlayerSightDispositionLevel = 1 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 ENT.OnPlayerSightOnlyOnce = true -- Should it only run the code once?
 ENT.OnPlayerSightNextTime1 = 15 -- How much time should it pass until it runs the code again? | First number in math.random
 ENT.OnPlayerSightNextTime2 = 20 -- How much time should it pass until it runs the code again? | Second number in math.random
@@ -187,7 +193,7 @@ ENT.HitGroupFlinching_DefaultWhenNotHit = true -- If it uses hitgroup flinching,
 ENT.HitGroupFlinching_Values = {/* EXAMPLES: {HitGroup = {1}, IsSchedule = true, Animation = {SCHED_BIG_FLINCH}},{HitGroup = {4}, IsSchedule = false, Animation = {ACT_FLINCH_STOMACH}} */} -- if "IsSchedule" is set to true, "Animation" needs to be a schedule
 	-- ====== Damage By Player Variables ====== --
 ENT.HasDamageByPlayer = true -- Should the SNPC do something when it's hit by a player? Example: Play a sound or animation
-ENT.DamageByPlayerDispositionLevel = 0 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
+ENT.DamageByPlayerDispositionLevel = 1 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 ENT.DamageByPlayerNextTime1 = 2 -- How much time should it pass until it runs the code again? | First number in math.random
 ENT.DamageByPlayerNextTime2 = 2 -- How much time should it pass until it runs the code again? | Second number in math.random
 	-- ====== Run Away On Unknown Damage Variables ====== --
@@ -198,12 +204,12 @@ ENT.CallForBackUpOnDamage = true -- Should the SNPC call for help when damaged? 
 ENT.CallForBackUpOnDamageDistance = 800 -- How far away the SNPC's call for help goes | Counted in World Units
 ENT.CallForBackUpOnDamageUseCertainAmount = true -- Should the SNPC only call certain amount of people?
 ENT.CallForBackUpOnDamageUseCertainAmountNumber = 3 -- How many people should it call if certain amount is enabled?
-ENT.CallForBackUpOnDamageAnimation = {ACT_SIGNAL_GROUP} -- Animation used if the SNPC does the CallForBackUpOnDamage function
+ENT.CallForBackUpOnDamageAnimation = {} -- Animation used if the SNPC does the CallForBackUpOnDamage function
 	-- To let the base automatically detect the animation duration, set this to false:
-ENT.DisableCallForBackUpOnDamageAnimation = true -- Disables the animation when the CallForBackUpOnDamage function is called
 ENT.CallForBackUpOnDamageAnimationTime = false -- How much time until it can use activities
 ENT.NextCallForBackUpOnDamageTime1 = 9 -- Next time it use the CallForBackUpOnDamage function | The first # in math.random
 ENT.NextCallForBackUpOnDamageTime2 = 11 -- Next time it use the CallForBackUpOnDamage function | The second # in math.random
+ENT.DisableCallForBackUpOnDamageAnimation = false -- Disables the animation when the CallForBackUpOnDamage function is called
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Killed & Corpse Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -226,7 +232,8 @@ ENT.WaitBeforeDeathTime = 0 -- Time until the SNPC spawns its corpse and gets re
 	-- ====== Death Animation Variables ====== --
 ENT.HasDeathAnimation = false -- Does it play an animation when it dies?
 ENT.AnimTbl_Death = {} -- Death Animations
-ENT.DeathAnimationTime = 1 -- Time until the SNPC spawns its corpse and gets removed
+	-- To let the base automatically detect the animation duration, set this to false:
+ENT.DeathAnimationTime = false -- Time until the SNPC spawns its corpse and gets removed
 ENT.DeathAnimationChance = 1 -- Put 1 if you want it to play the animation all the time
 	-- ====== Dismemberment/Gib Variables ====== --
 ENT.AllowedToGib = true -- Is it allowed to gib in general? This can be on death or when shot in a certain place
@@ -311,12 +318,15 @@ ENT.MeleeAttackWorldShakeOnMissAmplitude = 16 -- How much the screen will shake 
 ENT.MeleeAttackWorldShakeOnMissRadius = 2000 -- How far the screen shake goes, in world units
 ENT.MeleeAttackWorldShakeOnMissDuration = 1 -- How long the screen shake will last, in seconds
 ENT.MeleeAttackWorldShakeOnMissFrequency = 100 -- Just leave it to 100
+	-- ====== Digital Signal Processor Variables ====== --
+ENT.HasMeleeAttackDSPSound = true -- Applies a DSP (Digital Signal Processor) to the player(s) that got hit
+ENT.MeleeAttackDSPSoundType = 32 -- What type of DSP effect? | Search online for the types
+ENT.MeleeAttackDSPSoundUseDamage = true -- Should it only do the DSP effect if gets damaged x or greater amount
+ENT.MeleeAttackDSPSoundUseDamageAmount = 60 -- Any damage that is greater than or equal to this number will cause the DSP effect to play
 	-- ====== Miscellaneous Variables ====== --
 ENT.MeleeAttack_NoProps = false -- If set to true, it won't attack or push any props (Mostly used with multiple melee attacks)
 ENT.MeleeAttackSetEnemyOnFire = false -- Sets the enemy on fire when it does the melee attack
 ENT.MeleeAttackSetEnemyOnFireTime = 6 -- For how long should the enemy be set on fire || Counted in seconds
-ENT.HasMeleeAttackDSPSound = false -- Applies a DSP (Digital Signal Processor) to the player
-ENT.MeleeAttackDSPSoundType = 34 -- What type? Search online for the types
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Range Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -522,6 +532,7 @@ ENT.DeathSoundChance = 1
 ENT.SoundTrackChance = 1
 	-- ====== Timer Variables ====== --
 	-- Randomized time between the two variables, x amount of time has to pass for the sound to play again | Counted in seconds
+ENT.NextSoundTime_Breath_BaseDecide = true -- Let the base decide the next sound time, if it can't it will use the numbers below
 ENT.NextSoundTime_Breath1 = 1
 ENT.NextSoundTime_Breath2 = 1
 ENT.NextSoundTime_Idle1 = 4
@@ -651,6 +662,8 @@ ENT.SoundTrackPlaybackRate = 1
 ------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- Use the functions below to customize certain parts of the base or to add new custom systems
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnPreInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize() /* -- Example: self:SetCollisionBounds(Vector(50, 50, 100), Vector(-50, -50, 0)) */ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -954,6 +967,7 @@ local bit = bit
 //util.AddNetworkString("vj_creature_onthememusic")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
+	self:CustomOnPreInitialize()
 	self:SetSpawnEffect(false)
 	self:VJ_DoSelectDifficulty()
 	if VJ_PICKRANDOMTABLE(self.Model) != false then self:SetModel(Model(VJ_PICKRANDOMTABLE(self.Model))) end
@@ -1393,6 +1407,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 		//end
 		-----------------
 	//end
+	if self.MovementType == VJ_MOVETYPE_AERIAL && self:GetVelocity():Length() > 0 then return end
 	if self.MovementType == VJ_MOVETYPE_AERIAL then self:AerialMove_Stop() return end
 
 	/*local vschedIdleStand = ai_vj_schedule.New("vj_idle_stand")
@@ -1500,14 +1515,7 @@ function ENT:BusyWithActivity()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- !!!!!!! WIP - AERIAL BASE !!!!!!! --
-
 // MOVETYPE_FLY | MOVETYPE_FLYGRAVITY
-ENT.Aerial_FlyingSpeed_Calm = 80 -- The speed it should fly with, when it's wandering, moving slowly, etc. | Basically walking campared to ground SNPCs
-ENT.Aerial_FlyingSpeed_Alerted = 200 -- The speed it should fly with, when it's chasing an enemy, moving away quickly, etc. | Basically running campared to ground SNPCs
-ENT.Aerial_AnimTbl_Calm = {"mortar_back"} -- Animations it plays when it's wandering around while idle
-ENT.Aerial_AnimTbl_Alerted = {"mortar_forward"} -- Animations it plays when it's moving while alerted
-ENT.Aerial_EnableDebug = false -- Used for testing
-
 ENT.CurrentAnim_AerialMovement = nil
 ENT.Aerial_NextMovementAnimation = 0
 ENT.Aerial_CurrentMovementAnimationDur = 0
@@ -1544,7 +1552,7 @@ function ENT:AerialMove_Wander(ShouldPlayAnim)
 	else
 		self.Aerial_CanPlayMoveAnimation = false
 	end
-
+	
 	self:SetAngles(Angle(0,math.random(0,360),0))
 	local x_neg = 1
 	local y_neg = 1
@@ -1974,8 +1982,16 @@ function ENT:Think()
 	if self.HasSounds == false or self.Dead == true then VJ_STOPSOUND(self.CurrentBreathSound) end
 	if self.Dead == false && self.HasBreathSound == true && self.HasSounds == true then
 		if CurTime() > self.NextBreathSoundT then
-			self.CurrentBreathSound = VJ_CreateSound(self,self.SoundTbl_Breath,self.BreathSoundLevel,self:VJ_DecideSoundPitch(self.BreathSoundPitch1,self.BreathSoundPitch2))
-			self.NextBreathSoundT = CurTime() + math.Rand(self.NextSoundTime_Breath1,self.NextSoundTime_Breath2)
+			local brsd = VJ_PICKRANDOMTABLE(self.SoundTbl_Breath)
+			local dur = math.Rand(self.NextSoundTime_Breath1,self.NextSoundTime_Breath2)
+			if brsd != false then
+				VJ_STOPSOUND(self.CurrentBreathSound)
+				if self.NextSoundTime_Breath_BaseDecide == true then
+					dur = SoundDuration(brsd)
+				end
+				self.CurrentBreathSound = VJ_CreateSound(self,brsd,self.BreathSoundLevel,self:VJ_DecideSoundPitch(self.BreathSoundPitch1,self.BreathSoundPitch2))
+			end
+			self.NextBreathSoundT = CurTime() + dur
 		end
 	end
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
@@ -2029,7 +2045,7 @@ function ENT:Think()
 								self:VJ_TASK_GOTO_TARGET(movetype,function(x)
 									x.CanShootWhenMoving = true
 									if self:VJ_HasActiveWeapon() == true then
-										x.ConstantlyFaceEnemy = true
+										x.ConstantlyFaceEnemyVisible = true
 									end
 								end)
 							end
@@ -2132,7 +2148,7 @@ function ENT:Think()
 		if IsValid(self:GetEnemy()) then
 			if self.IsDoingFaceEnemy == true /*&& self.VJ_IsBeingControlled == false*/ then self:SetAngles(Angle(0,(self:GetEnemy():GetPos()-self:GetPos()):Angle().y,0)) end
 			self:DoConstantlyFaceEnemyCode()
-			if (self.CurrentSchedule != nil && self.CurrentSchedule.ConstantlyFaceEnemy == true /*&& self.VJ_IsBeingControlled == false*/) then self:SetAngles(Angle(0,(self:GetEnemy():GetPos()-self:GetPos()):Angle().y,0)) end
+			if (self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(self:GetEnemy()))) /*&& self.VJ_IsBeingControlled == false*/) then self:SetAngles(Angle(0,(self:GetEnemy():GetPos()-self:GetPos()):Angle().y,0)) end
 			self.ResetedEnemy = false
 			self:UpdateEnemyMemory(self:GetEnemy(),self:GetEnemy():GetPos())
 			self.LatestEnemyPosition = self:GetEnemy():GetPos()
@@ -2604,6 +2620,7 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 					self:CustomOnMeleeAttack_AfterChecks(v)
 					if self.HasMeleeAttackKnockBack == true && v.MovementType != VJ_MOVETYPE_STATIONARY then
 						if v.VJ_IsHugeMonster != true or v.IsVJBaseSNPC_Tank == true then
+							v:SetGroundEntity(NULL)
 							v:SetVelocity(self:GetForward()*math.random(self.MeleeAttackKnockBack_Forward1,self.MeleeAttackKnockBack_Forward2) +self:GetUp()*math.random(self.MeleeAttackKnockBack_Up1,self.MeleeAttackKnockBack_Up2) +self:GetRight()*math.random(self.MeleeAttackKnockBack_Right1,self.MeleeAttackKnockBack_Right2))
 						end
 					end
@@ -2629,8 +2646,10 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 						end
 					end
 					if v:IsPlayer() then
+						if self.HasMeleeAttackDSPSound == true && ((self.MeleeAttackDSPSoundUseDamage == false) or (self.MeleeAttackDSPSoundUseDamage == true && self.MeleeAttackDamage >= self.MeleeAttackDSPSoundUseDamageAmount && GetConVarNumber("vj_npc_nomeleedmgdsp") == 0)) then
+							v:SetDSP(self.MeleeAttackDSPSoundType,false)
+						end
 						v:ViewPunch(Angle(math.random(-1,1)*self.MeleeAttackDamage,math.random(-1,1)*self.MeleeAttackDamage,math.random(-1,1)*self.MeleeAttackDamage))
-						if self.HasMeleeAttackDSPSound == true then v:SetDSP(self.MeleeAttackDSPSoundType,false) end
 						if self.SlowPlayerOnMeleeAttack == true then
 							self:VJ_DoSlowPlayer(v,self.SlowPlayerOnMeleeAttack_WalkSpeed,self.SlowPlayerOnMeleeAttack_RunSpeed,self.SlowPlayerOnMeleeAttackTime,{PlaySound=self.HasMeleeAttackSlowPlayerSound,SoundTable=self.SoundTbl_MeleeAttackSlowPlayer,SoundLevel=self.MeleeAttackSlowPlayerSoundLevel,FadeOutTime=self.MeleeAttackSlowPlayerSoundFadeOutTime},{})
 							self:CustomOnMeleeAttack_SlowPlayer(v)
@@ -3896,9 +3915,11 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 			if randanim != 1 then DoKilled() return end
 			if randanim == 1 then
 				self:CustomDeathAnimationCode(dmginfo,hitgroup)
-				self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.AnimTbl_Death),true,self.DeathAnimationTime,false,0,{SequenceDuration=self.DeathAnimationTime})
+				local pickanim = VJ_PICKRANDOMTABLE(self.AnimTbl_Death)
+				local seltime = self:DecideAnimationLength(pickanim,self.DeathAnimationTime)
+				self:VJ_ACT_PLAYACTIVITY(pickanim,true,seltime,false)
 				self.DeathAnimationCodeRan = true
-				timer.Simple(self.DeathAnimationTime,DoKilled)
+				timer.Simple(seltime,DoKilled)
 			end
 		else
 			DoKilled()
@@ -4124,9 +4145,25 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 			//dissolver:Remove()
 		end
 
+		/*
+				local iNumPhysObjects = self.Corpse:GetPhysicsObjectCount()
+		for Bone = 0, iNumPhysObjects-1 do
+
+			local PhysObj = self.Corpse:GetPhysicsObjectNum( Bone )
+			if ( PhysObj:IsValid() ) then
+
+				local Pos, Ang = self:GetBonePosition( self.Corpse:TranslatePhysBoneToBone( Bone ) )
+				PhysObj:SetPos( Pos )
+				PhysObj:SetAngles( Ang )
+
+			end
+
+		end
+		*/
+		
 		-- Bone and Angle --
 		local dmgforce = dmginfo:GetDamageForce()
-		for bonelim = 1,128 do -- 128 = Bone Limit
+		for bonelim = 1,self.Corpse:GetPhysicsObjectCount() do -- 128 = Bone Limit
 			local childphys = self.Corpse:GetPhysicsObjectNum(bonelim)
 			if IsValid(childphys) then
 				local childphys_bonepos, childphys_boneang = self:GetBonePosition(self.Corpse:TranslatePhysBoneToBone(bonelim))
@@ -4635,7 +4672,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:FootStepSoundCode(CustomTbl)
 	if self.HasSounds == false or self.HasFootStepSound == false or self.MovementType == VJ_MOVETYPE_STATIONARY then return end
-	if self:IsOnGround() && self:GetGroundEntity() != NULL && self:IsMoving() then
+	if self:IsOnGround() && self:GetGroundEntity() != NULL then
 		if self.DisableFootStepSoundTimer == true then
 			self:CustomOnFootStepSound()
 			local soundtbl = self.SoundTbl_FootStep
@@ -4644,7 +4681,7 @@ function ENT:FootStepSoundCode(CustomTbl)
 				VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
 			end
 		end
-		if self.DisableFootStepSoundTimer == false && CurTime() > self.FootStepT then
+		if self.DisableFootStepSoundTimer == false && self:IsMoving() && CurTime() > self.FootStepT then
 			self:CustomOnFootStepSound()
 			local soundtbl = self.SoundTbl_FootStep
 			if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end

@@ -17,38 +17,7 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 	end
 	Panel:AddControl( "Label", {Text = "Notice: Only admins can change this options."})
 	Panel:AddControl( "Label", {Text = "WARNING: Only future spawned SNPCs will be affected!"})
-	local vj_options_reset = {Options = {}, CVars = {}, Label = "Reset Everything:", MenuButton = "0"}
-	//vj_options_reset:SetText("Select Default to reset everything")
-	vj_options_reset.Options["#vjbase.menugeneral.default"] = {
-		vj_npc_godmodesnpc = "0",
-		vj_npc_playerfriendly =	"0",
-		vj_npc_zombiefriendly = "0",
-		vj_npc_antlionfriendly = "0",
-		vj_npc_combinefriendly = "0",
-		vj_npc_corpsefade = "0",
-		vj_npc_corpsefadetime = "10",
-		vj_npc_undocorpse = "0",
-		vj_npc_allhealth = "0",
-		vj_npc_fadegibs = "1",
-		vj_npc_fadegibstime = "30",
-		vj_npc_gibcollidable = "0",
-		vj_npc_dif_easy = "0",vj_npc_dif_normal = "1",vj_npc_dif_hard = "0",vj_npc_dif_hellonearth = "0",
-		vj_npc_addfrags = "1",
-		vj_npc_showhudonkilled = "1",
-		vj_npc_dropweapon = "1",
-		vj_npc_itemdrops = "1",
-		vj_npc_accuracy_poor = "1",vj_npc_accuracy_average = "0",vj_npc_accuracy_good = "0",vj_npc_accuracy_verygood = "0",vj_npc_accuracy_perfect = "0",
-		vj_npc_creatureopendoor = "1",
-		vj_npc_vjfriendly = "0",
-		vj_npc_globalcorpselimit = "32",
-		vj_npc_seedistance = "0",
-		vj_npc_processtime = "1",
-		vj_npc_usegmoddecals = "0",
-		vj_npc_knowenemylocation = "0",
-		vj_npc_plypickupdropwep = "1",
-	}
-	Panel:AddControl("ComboBox", vj_options_reset)
-	//Panel:AddControl( "Label", { Text = "________________________________________\n"})
+	Panel:AddControl("Button",{Text = "Reset Everything", Command = "vj_npc_godmodesnpc 0\nvj_npc_playerfriendly 0\nvj_npc_zombiefriendly 0\nvj_npc_antlionfriendly 0\nvj_npc_combinefriendly 0\nvj_npc_corpsefade 0\nvj_npc_corpsefadetime 10\nvj_npc_undocorpse 0\nvj_npc_allhealth 0\nvj_npc_fadegibs 1\nvj_npc_fadegibstime 30\nvj_npc_gibcollidable 0\nvj_npc_dif_easy 0\nvj_npc_dif_normal 1\nvj_npc_dif_hard 0\nvj_npc_dif_hellonearth 0\nvj_npc_addfrags 1\nvj_npc_showhudonkilled 1\nvj_npc_dropweapon 1\nvj_npc_itemdrops 1\nvj_npc_accuracy_poor 1\nvj_npc_accuracy_average 0\nvj_npc_accuracy_good 0\nvj_npc_accuracy_verygood 0\nvj_npc_accuracy_perfect 0\nvj_npc_creatureopendoor 1\nvj_npc_vjfriendly 0\nvj_npc_globalcorpselimit 32\nvj_npc_seedistance 0\nvj_npc_processtime 1\nvj_npc_usegmoddecals 0\nvj_npc_knowenemylocation 0\nvj_npc_plypickupdropwep 1"})
 	Panel:AddControl( "Label", {Text = "Relationship Options:"})
 	Panel:ControlHelp("NOTE: Relationships can cause a massive lag!")
 	Panel:AddControl("Checkbox", {Label = "Player Friendly", Command = "vj_npc_playerfriendly"})
@@ -144,42 +113,7 @@ local function VJ_SNPC_SETTINGS(Panel) -- Settings
 
 	Panel:AddControl( "Label", {Text = "Notice: Only admins can change this settings."})
 	Panel:AddControl( "Label", {Text = "WARNING: Only future spawned SNPCs will be affected!"})
-	local vj_settings_reset = {Options = {}, CVars = {}, Label = "Reset Everything:", MenuButton = "0"}
-	vj_settings_reset.Options["#vjbase.menugeneral.default"] = { 
-		vj_npc_nocorpses = "0",
-		vj_npc_nobleed = "0",
-		vj_npc_nomelee = "0",
-		vj_npc_norange = "0",
-		vj_npc_noleap = "0",
-		vj_npc_noflinching = "0",
-		vj_npc_noallies = "0",
-		vj_npc_noweapon = "0",
-		vj_npc_noforeverammo = "0",
-		vj_npc_nowandering = "0",
-		vj_npc_nogib = "0",
-		vj_npc_nodeathanimation = "0",
-		vj_npc_noscarednade = "0",
-		vj_npc_animal_runontouch = "0",
-		vj_npc_animal_runonhit = "0",
-		vj_npc_slowplayer = "0",
-		vj_npc_bleedenemyonmelee = "0",
-		vj_npc_noproppush = "0",
-		vj_npc_nopropattack = "0",
-		vj_npc_nogibdeathparticles = "0",
-		vj_npc_noidleparticle = "0",
-		vj_npc_nogibdecals = "0",
-		vj_npc_noreload = "0",
-		vj_npc_nouseregulator = "0",
-		vj_npc_nobecomeenemytoply = "0",
-		vj_npc_nofollowplayer = "0",
-		vj_npc_nothrowgrenade = "0",
-		vj_npc_nobloodpool = "0",
-		vj_npc_nochasingenemy = "0",
-		vj_npc_nosnpcchat = "0",
-		vj_npc_nomedics = "0",
-	}
-	Panel:AddControl("ComboBox", vj_settings_reset)
-	Panel:AddControl( "Label", {Text = "Shared Settings:"})
+	Panel:AddControl("Button",{Text = "Reset Everything", Command = "vj_npc_nocorpses 0\nvj_npc_nobleed 0\nvj_npc_nomelee 0\nvj_npc_norange 0\nvj_npc_noleap 0\nvj_npc_noflinching 0\nvj_npc_noallies 0\nvj_npc_noweapon 0\nvj_npc_noforeverammo 0\nvj_npc_nowandering 0\nvj_npc_nogib 0\nvj_npc_nodeathanimation 0\nvj_npc_noscarednade 0\nvj_npc_animal_runontouch 0\nvj_npc_animal_runonhit 0\nvj_npc_slowplayer 0\nvj_npc_bleedenemyonmelee 0\nvj_npc_noproppush 0\nvj_npc_nopropattack 0\nvj_npc_nogibdeathparticles 0\nvj_npc_noidleparticle 0\nvj_npc_nogibdecals 0\nvj_npc_noreload 0\nvj_npc_nouseregulator 0\nvj_npc_nobecomeenemytoply 0\nvj_npc_nofollowplayer 0\nvj_npc_nothrowgrenade 0\nvj_npc_nobloodpool 0\nvj_npc_nochasingenemy 0\nvj_npc_nosnpcchat 0\nvj_npc_nomedics 0\nvj_npc_nomeleedmgdsp 0"})
 	Panel:AddControl("Checkbox", {Label = "Disable Wandering", Command = "vj_npc_nowandering"})
 	Panel:ControlHelp("They won't wander around when idle")
 	Panel:AddControl("Checkbox", {Label = "Disable Chasing Enemy", Command = "vj_npc_nochasingenemy"})
@@ -212,6 +146,7 @@ local function VJ_SNPC_SETTINGS(Panel) -- Settings
 	Panel:AddControl("Checkbox", {Label = "Disable Players Bleeding on Melee Attack", Command = "vj_npc_bleedenemyonmelee"})
 	Panel:AddControl("Checkbox", {Label = "Disable Prop Pushing", Command = "vj_npc_noproppush"})
 	Panel:AddControl("Checkbox", {Label = "Disable Prop Attacking", Command = "vj_npc_nopropattack"})
+	Panel:AddControl("Checkbox", {Label = "Disable DSP Effect On Heavy Damages (Melee)", Command = "vj_npc_nomeleedmgdsp"})
 	Panel:AddControl( "Label", {Text = "Human Settings:"})
 	Panel:AddControl("Checkbox", {Label = "Disable Weapons", Command = "vj_npc_noweapon"})
 	Panel:ControlHelp("Humans will not be able to use weapons!")
@@ -236,35 +171,7 @@ local function VJ_SNPC_SOUNDSETTINGS(Panel) -- Sound Settings
 	end
 	Panel:AddControl( "Label", {Text = "Notice: Only admins can change this settings."})
 	Panel:AddControl( "Label", {Text = "WARNING: Only future spawned SNPCs will be affected!"})
-	local vj_soundsettings_reset = {Options = {}, CVars = {}, Label = "Reset Everything:", MenuButton = "0"}
-	vj_soundsettings_reset.Options["#vjbase.menugeneral.default"] = {
-		vj_npc_sd_nosounds = "0",
-		vj_npc_sd_idle = "0",
-		vj_npc_sd_alert = "0",
-		vj_npc_sd_pain = "0",
-		vj_npc_sd_death = "0",
-		vj_npc_sd_footstep = "0",
-		vj_npc_sd_soundtrack = "0",
-		vj_npc_sd_meleeattack = "0",
-		vj_npc_sd_meleeattackmiss = "0",
-		vj_npc_sd_rangeattack = "0",
-		vj_npc_sd_leapattack = "0",
-		vj_npc_sd_ongrenadesight = "0",
-		vj_npc_sd_onplayersight = "0",
-		vj_npc_sd_damagebyplayer = "0",
-		vj_npc_sd_slowplayer = "0",
-		vj_npc_sd_gibbing = "0",
-		vj_npc_sd_breath = "0",
-		vj_npc_sd_followplayer = "0",
-		vj_npc_sd_becomenemytoply = "0",
-		vj_npc_sd_medic = "0",
-		vj_npc_sd_reload = "0",
-		vj_npc_sd_grenadeattack = "0",
-		vj_npc_sd_suppressing = "0",
-		vj_npc_sd_callforhelp = "0",
-		vj_npc_sd_onreceiveorder = "0",
-	}
-	Panel:AddControl("ComboBox", vj_soundsettings_reset)
+	Panel:AddControl("Button",{Text = "Reset Everything", Command = "vj_npc_sd_nosounds 0\n vj_npc_sd_idle 0\n vj_npc_sd_alert 0\n vj_npc_sd_pain 0\n vj_npc_sd_death 0\n vj_npc_sd_footstep 0\n vj_npc_sd_soundtrack 0\n vj_npc_sd_meleeattack 0\n vj_npc_sd_meleeattackmiss 0\n vj_npc_sd_rangeattack 0\n vj_npc_sd_leapattack 0\n vj_npc_sd_ongrenadesight 0\n vj_npc_sd_onplayersight 0\n vj_npc_sd_damagebyplayer 0\n vj_npc_sd_slowplayer 0\n vj_npc_sd_gibbing 0\n vj_npc_sd_breath 0\n vj_npc_sd_followplayer 0\n vj_npc_sd_becomenemytoply 0\n vj_npc_sd_medic 0\n vj_npc_sd_reload 0\n vj_npc_sd_grenadeattack 0\n vj_npc_sd_suppressing 0\n vj_npc_sd_callforhelp 0\n vj_npc_sd_onreceiveorder 0"})
 	Panel:AddControl("Checkbox", {Label = "Disable All Sounds", Command = "vj_npc_sd_nosounds"})
 	Panel:AddControl("Checkbox", {Label = "Disable Sound Tracks", Command = "vj_npc_sd_soundtrack"})
 	Panel:AddControl("Checkbox", {Label = "Disable Idle Sounds", Command = "vj_npc_sd_idle"})
@@ -294,8 +201,8 @@ local function VJ_SNPC_SOUNDSETTINGS(Panel) -- Sound Settings
 	Panel:AddControl( "Label", {Text = "Human Settings:"})
 	Panel:AddControl("Checkbox", {Label = "Disable Grenade Attack Sounds", Command = "vj_npc_sd_grenadeattack"})
 	Panel:AddControl("Checkbox", {Label = "Disable On Grenade Sight Sounds", Command = "vj_npc_sd_ongrenadesight"})
-	Panel:AddControl("Checkbox", {Label = "Disable Reload Callout Sounds", Command = "vj_npc_sd_reload"})
 	Panel:AddControl("Checkbox", {Label = "Disable Suppressing Callout Sounds", Command = "vj_npc_sd_suppressing"})
+	Panel:AddControl("Checkbox", {Label = "Disable Reload Callout Sounds", Command = "vj_npc_sd_reload"})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_SNPC_DEVSETTINGS(Panel) -- Developer Settings
@@ -309,25 +216,7 @@ local function VJ_SNPC_DEVSETTINGS(Panel) -- Developer Settings
 	Panel:AddControl( "Label", {Text = "Notice: Only admins can change this settings."})
 	Panel:AddControl( "Label", {Text = "This settings are used when developing SNPCs."})
 	Panel:AddControl( "Label", {Text = "WARNING: Some of this options cause lag!"})
-	Panel:AddControl("Button", {Label = "Cached Models (Console)", Command = "listmodels"})
-	local vj_devsettings_reset = {Options = {}, CVars = {}, Label = "Reset Everything:", MenuButton = "0"}
-	vj_devsettings_reset.Options["#vjbase.menugeneral.default"] = {
-		vj_npc_printammo = "0",
-		vj_npc_printweapon = "0",
-		vj_npc_printalerted = "0",
-		vj_npc_printaccuracy = "0",
-		vj_npc_printdied = "0",
-		vj_npc_printondamage = "0",
-		vj_npc_printontouch = "0",
-		vj_npc_printstoppedattacks = "0",
-		vj_npc_printtakingcover = "0",
-		vj_npc_drvrejfriendly = "0",
-		vj_npc_printresteenemy = "0",
-		vj_npc_printlastseenenemy = "0",
-		vj_npc_usedevcommands = "0",
-		vj_npc_printcurenemy = "0",
-	}
-	Panel:AddControl("ComboBox", vj_devsettings_reset)
+	Panel:AddControl("Button",{Text = "Reset Everything", Command = "vj_npc_printammo 0\n vj_npc_printweapon 0\n vj_npc_printalerted 0\n vj_npc_printaccuracy 0\n vj_npc_printdied 0\n vj_npc_printondamage 0\n vj_npc_printontouch 0\n vj_npc_printstoppedattacks 0\n vj_npc_printtakingcover 0\n vj_npc_drvrejfriendly 0\n vj_npc_printresteenemy 0\n vj_npc_printlastseenenemy 0\n vj_npc_usedevcommands 0\n vj_npc_printcurenemy 0"})
 	Panel:AddControl("Checkbox", {Label = "All SNPCs and NPCs love DrVrej?! =D", Command = "vj_npc_drvrejfriendly"})
 	Panel:AddControl("Checkbox", {Label = "Enable Developer Mode?", Command = "vj_npc_usedevcommands"})
 	Panel:ControlHelp("Most of the options below require this to be checked!")
@@ -344,6 +233,7 @@ local function VJ_SNPC_DEVSETTINGS(Panel) -- Developer Settings
 	Panel:AddControl("Checkbox", {Label = "Print Current Weapon Class (Console)", Command = "vj_npc_printweapon"})
 	Panel:AddControl("Checkbox", {Label = "Print Amount of Ammo (Console)", Command = "vj_npc_printammo"})
 	Panel:AddControl("Checkbox", {Label = "Print Gun Accuracy (Console)", Command = "vj_npc_printaccuracy"})
+	Panel:AddControl("Button", {Label = "Cached Models (Console)", Command = "listmodels"})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_SNPC", function()
