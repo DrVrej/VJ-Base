@@ -817,6 +817,7 @@ ENT.WeaponUseEnemyEyePos = false
 ENT.LastHiddenZone_CanWander = true
 ENT.DoneLastHiddenZone_CanWander = false
 ENT.AlreadyDoneMeleeAttackFirstHit = false
+ENT.WeaponHolstered = false
 ENT.FollowingPlayerName = NULL
 ENT.MyEnemy = NULL
 ENT.VJ_TheController = NULL
@@ -2523,7 +2524,7 @@ function ENT:SelectSchedule(iNPCState)
 	-- Attack Position --
 		if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.SightDistance) then
 			self:IdleSoundCode()
-			if self:VJ_HasActiveWeapon() == false && self.NoWeapon_UseScaredBehavior == true && self.VJ_IsBeingControlled == false then
+			if self:VJ_HasActiveWeapon() == false && CurTime() > self.NextChaseTime && self.NoWeapon_UseScaredBehavior == true && self.VJ_IsBeingControlled == false then
 				self.AnimTbl_IdleStand = self.AnimTbl_ScaredBehaviorStand
 				if self.FollowingPlayer == false then
 					if self:Visible(self:GetEnemy()) then
@@ -3920,8 +3921,9 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		local corpsetype = "prop_physics"
 		if util.IsValidRagdoll(corpsemodel) == true then
 			corpsetype = "prop_ragdoll"
-		elseif util.IsValidProp(corpsemodel) == false && util.IsValidModel(corpsemodel) == false then
-			corpsetype = "prop_ragdoll"
+		elseif util.IsValidProp(corpsemodel) == false or util.IsValidModel(corpsemodel) == false then
+			if IsValid(self.TheDroppedWeapon) then self.TheDroppedWeapon:Remove() end
+			return false
 		end
 		if self.DeathCorpseEntityClass != "UseDefaultBehavior" then corpsetype = self.DeathCorpseEntityClass end
 		//if self.VJCorpseDeleted == true then
@@ -3935,12 +3937,6 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		self.Corpse:SetMaterial(self:GetMaterial())
 		//self.Corpse:SetName("self.Corpse" .. self:EntIndex())
 		//self.Corpse:SetModelScale(self:GetModelScale())
-		/*local dissolve = ents.Create("env_entity_dissolver")
-		dissolve:SetPos(self.Corpse:GetPos())
-		dissolve:SetKeyValue("target", self.Corpse:GetName())
-		dissolve:Spawn()
-		dissolve:Fire("Dissolve", "", 0)
-		dissolve:Fire("kill", "", 0.3)*/
 		local fadetype = "kill"
 		if self.Corpse:GetClass() == "prop_ragdoll" then fadetype = "FadeAndRemove" end
 		self.Corpse.FadeCorpseType = fadetype
@@ -4001,8 +3997,19 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		end
 
 		-- Bone and Angle --
+		/*
+		for Bone = 0, self.Corpse:GetPhysicsObjectCount()-1 do
+			local PhysObj = self.Corpse:GetPhysicsObjectNum(Bone)
+			if (PhysObj:IsValid()) then
+				local Pos, Ang = self:GetBonePosition( self.Corpse:TranslatePhysBoneToBone(Bone))
+				PhysObj:SetPos(Pos)
+				PhysObj:SetAngles(Ang)
+			end
+		end
+		*/
+		
 		local dmgforce = dmginfo:GetDamageForce()
-		for bonelim = 1,128 do -- 128 = Bone Limit
+		for bonelim = 1,self.Corpse:GetPhysicsObjectCount() do -- 128 = Bone Limit
 			local childphys = self.Corpse:GetPhysicsObjectNum(bonelim)
 			if IsValid(childphys) then
 				local childphys_bonepos, childphys_boneang = self:GetBonePosition(self.Corpse:TranslatePhysBoneToBone(bonelim))
@@ -4013,7 +4020,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 						childphys:EnableGravity(false)
 						childphys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
 					else
-						if self.UsesDamageForceOnDeath == true then childphys:SetVelocity(dmgforce /40) end
+						if self.UsesDamageForceOnDeath == true && self.DeathAnimationCodeRan == false then childphys:SetVelocity(dmgforce /40) end
 					end
 				end
 			end

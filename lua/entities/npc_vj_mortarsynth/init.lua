@@ -10,6 +10,8 @@ ENT.Model = {"models/mortarsynth.mdl"} -- The game will pick a random model from
 ENT.StartHealth = 150
 ENT.HullType = HULL_TINY
 ENT.MovementType = VJ_MOVETYPE_AERIAL -- How does the SNPC move?
+ENT.Aerial_AnimTbl_Calm = {"mortar_back"} -- Animations it plays when it's wandering around while idle
+ENT.Aerial_AnimTbl_Alerted = {"mortar_forward"} -- Animations it plays when it's moving while alerted
 ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.VJ_NPC_Class = {"CLASS_COMBINE"} -- NPCs with the same class with be allied to each other
 ENT.BloodColor = "Oil" -- The blood type, this will determine what it should use (decal, particle, etc.)

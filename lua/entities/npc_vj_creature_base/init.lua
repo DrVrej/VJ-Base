@@ -35,8 +35,8 @@ ENT.CanTurnWhileStationary = true -- If set to true, the SNPC will be able to tu
 	-- Aerial Movetype Variables:
 ENT.Aerial_FlyingSpeed_Calm = 80 -- The speed it should fly with, when it's wandering, moving slowly, etc. | Basically walking campared to ground SNPCs
 ENT.Aerial_FlyingSpeed_Alerted = 200 -- The speed it should fly with, when it's chasing an enemy, moving away quickly, etc. | Basically running campared to ground SNPCs
-ENT.Aerial_AnimTbl_Calm = {"mortar_back"} -- Animations it plays when it's wandering around while idle
-ENT.Aerial_AnimTbl_Alerted = {"mortar_forward"} -- Animations it plays when it's moving while alerted
+ENT.Aerial_AnimTbl_Calm = {} -- Animations it plays when it's wandering around while idle
+ENT.Aerial_AnimTbl_Alerted = {} -- Animations it plays when it's moving while alerted
 ENT.Aerial_EnableDebug = false -- Used for testing
 	-- ====== Miscellaneous Variables ====== --
 ENT.HasEntitiesToNoCollide = true -- If set to false, it won't run the EntitiesToNoCollide code
@@ -4046,8 +4046,9 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		local corpsetype = "prop_physics"
 		if util.IsValidRagdoll(corpsemodel) == true then
 			corpsetype = "prop_ragdoll"
-		elseif util.IsValidProp(corpsemodel) == false && util.IsValidModel(corpsemodel) == false then
-			corpsetype = "prop_ragdoll"
+		elseif util.IsValidProp(corpsemodel) == false or util.IsValidModel(corpsemodel) == false then
+			if IsValid(self.TheDroppedWeapon) then self.TheDroppedWeapon:Remove() end
+			return false
 		end
 		if self.DeathCorpseEntityClass != "UseDefaultBehavior" then corpsetype = self.DeathCorpseEntityClass end
 		//if self.VJCorpseDeleted == true then
@@ -4061,12 +4062,6 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		self.Corpse:SetMaterial(self:GetMaterial())
 		//self.Corpse:SetName("self.Corpse" .. self:EntIndex())
 		//self.Corpse:SetModelScale(self:GetModelScale())
-		/*local dissolve = ents.Create("env_entity_dissolver")
-		dissolve:SetPos(self.Corpse:GetPos())
-		dissolve:SetKeyValue("target", self.Corpse:GetName())
-		dissolve:Spawn()
-		dissolve:Fire("Dissolve", "", 0)
-		dissolve:Fire("kill", "", 0.3)*/
 		local fadetype = "kill"
 		if self.Corpse:GetClass() == "prop_ragdoll" then fadetype = "FadeAndRemove" end
 		self.Corpse.FadeCorpseType = fadetype
@@ -4144,24 +4139,19 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 			dissolver:Fire("Kill","",0.1)
 			//dissolver:Remove()
 		end
-
+		
+		-- Bone and Angle --
 		/*
-				local iNumPhysObjects = self.Corpse:GetPhysicsObjectCount()
-		for Bone = 0, iNumPhysObjects-1 do
-
-			local PhysObj = self.Corpse:GetPhysicsObjectNum( Bone )
-			if ( PhysObj:IsValid() ) then
-
-				local Pos, Ang = self:GetBonePosition( self.Corpse:TranslatePhysBoneToBone( Bone ) )
-				PhysObj:SetPos( Pos )
-				PhysObj:SetAngles( Ang )
-
+		for Bone = 0, self.Corpse:GetPhysicsObjectCount()-1 do
+			local PhysObj = self.Corpse:GetPhysicsObjectNum(Bone)
+			if (PhysObj:IsValid()) then
+				local Pos, Ang = self:GetBonePosition( self.Corpse:TranslatePhysBoneToBone(Bone))
+				PhysObj:SetPos(Pos)
+				PhysObj:SetAngles(Ang)
 			end
-
 		end
 		*/
 		
-		-- Bone and Angle --
 		local dmgforce = dmginfo:GetDamageForce()
 		for bonelim = 1,self.Corpse:GetPhysicsObjectCount() do -- 128 = Bone Limit
 			local childphys = self.Corpse:GetPhysicsObjectNum(bonelim)
@@ -4174,7 +4164,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 						childphys:EnableGravity(false)
 						childphys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
 					else
-						if self.UsesDamageForceOnDeath == true then childphys:SetVelocity(dmgforce /40) end
+						if self.UsesDamageForceOnDeath == true && self.DeathAnimationCodeRan == false then childphys:SetVelocity(dmgforce /40) end
 					end
 				end
 			end

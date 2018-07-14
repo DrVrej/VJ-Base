@@ -251,6 +251,19 @@ function SWEP:SetDefaultValues(curtype,force)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:TranslateActivity(act)
+	if (self.Owner:IsNPC()) then
+		if (self.ActivityTranslateAI[act]) && self.Owner.WeaponHolstered == false then
+			return self.ActivityTranslateAI[act]
+		end
+		return -1
+	end
+	if (self.ActivityTranslate[act] != nil) then
+		return self.ActivityTranslate[act]
+	end
+	return -1
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_ServerThinkAlways()
 	if (CLIENT) then return end
 	if !self:IsValid() or !self.Owner:IsValid() then return end
