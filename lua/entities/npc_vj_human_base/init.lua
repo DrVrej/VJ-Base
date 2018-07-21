@@ -1358,6 +1358,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 		//end
 		-----------------
 	//end
+	if self.MovementType == VJ_MOVETYPE_AERIAL && self:GetVelocity():Length() > 0 then return end
 	if self.MovementType == VJ_MOVETYPE_AERIAL then self:AerialMove_Stop() return end
 
 	/*local vschedIdleStand = ai_vj_schedule.New("vj_idle_stand")
@@ -1368,33 +1369,42 @@ function ENT:VJ_TASK_IDLE_STAND()
 	self:StartSchedule(vschedIdleStand)*/
 
 	local animtbl = self.AnimTbl_IdleStand
-	local checkedtbl = {}
+	//local checkedtbl = {}
 	local hasanim = false
 	for k,v in ipairs(animtbl) do -- Amen animation-nere ara
-		v = VJ_SequenceToActivity(self,v) -- Nayir yete animation-e sequence-e, activity tartsoor
+		v = VJ_SequenceToActivity(self,v) -- Nayir yete animation e sequence e, activity tartsoor
 		if v != false then -- Yete v-en false che, sharnage!
 			if hasanim == false && self.CurrentAnim_IdleStand == v then -- Yete animation-e IdleStand table-en meche che, ooremen sharnage!
 				hasanim = true
 			end
-			if self:GetActivity() != v then
-				table.insert(checkedtbl,v)
-			end
+			//if self:GetActivity() != v then
+				//table.insert(checkedtbl,v)
+			//end
 		end
 	end
 	if #animtbl > 1 then -- Yete IdleStand table-e meg en aveli e, sharnage!
 		if hasanim == true && self.NextIdleStandTime > CurTime() then return end
-		animtbl = checkedtbl
+		//animtbl = checkedtbl
 	end
 	local finaltbl = VJ_PICKRANDOMTABLE(animtbl)
-	if finaltbl == false then finaltbl = ACT_IDLE return end
+	if finaltbl == false then finaltbl = ACT_IDLE end -- Yete animation-me chi kedav, ter barz animation e
 	finaltbl = VJ_SequenceToActivity(self,finaltbl)
-	if finaltbl == false then return false end -- Make sure no strings get through!
+	if finaltbl == false then return false end -- Vesdah yegher vor minag tevov animation-er e gernan antsnel!
 	self.CurrentAnim_IdleStand = finaltbl
 	if hasanim == true && CurTime() > self.NextIdleStandTime then
 		self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0)
-		self.NextIdleStandTime = CurTime() + self:SequenceDuration(self:SelectWeightedSequence(finaltbl))
+		self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),finaltbl)
+		timer.Simple(0.1,function() -- 0.1 hedvargyan espase menchevor khaghe pokhe animation e
+			if IsValid(self) then
+				local curseq = self:GetSequence()
+				if VJ_SequenceToActivity(self,self:GetSequenceName(curseq)) == finaltbl then -- Nayir yete himagva animation e nooynene
+					self.NextIdleStandTime = CurTime() + (self:SequenceDuration(curseq) - 0.15) -- Yete nooynene ooremen jamanage tir animation-en yergarootyan chap!
+				end
+			end
+		end)
+		self.NextIdleStandTime = CurTime() + 0.15 //self:SequenceDuration(self:SelectWeightedSequence(finaltbl))
 	end
-	self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),finaltbl)
+	//self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),finaltbl)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*function ENT:DoCustomIdleAnimation()
@@ -3962,7 +3972,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 			for i = 0,18 do -- 18 = Bodygroup limit
 				self.Corpse:SetBodygroup(i,self:GetBodygroup(i))
 			end
-			if self.DeathBodyGroupA != -1 && self.DeathBodyGroupB != -1 then -- Yete as yergooke nevaz meg chene, user-en terdz tevere kordzadze
+			if self.DeathBodyGroupA != -1 && self.DeathBodyGroupB != -1 then -- Yete as yergooke nevaz meg chene, user-en teradz tevere kordzadze
 				self.Corpse:SetBodygroup(self.DeathBodyGroupA,self.DeathBodyGroupB)
 			end
 		end

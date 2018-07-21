@@ -524,7 +524,11 @@ function SWEP:PrimaryAttack(ShootPos,ShootDir)
 					bullet.Damage = self.Primary.PlayerDamage
 				end
 			else
-				bullet.Damage = self.Primary.Damage
+				if self.Owner.IsVJBaseSNPC == true then
+					bullet.Damage = self.Owner:VJ_GetDifficultyValue(self.Primary.Damage)
+				else
+					bullet.Damage = self.Primary.Damage
+				end
 			end
 			bullet.AmmoType = self.Primary.Ammo
 			self.Owner:FireBullets(bullet)

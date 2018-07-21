@@ -47,10 +47,10 @@ VJ.AddNPCWeapon("VJ_K-3","weapon_vj_k3")
 ------ Global Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_PICKRANDOMTABLE(tbl)
-	if not tbl then return false end
-	if !istable(tbl) then return tbl end
+	if not tbl then return false end -- Yete tbl-e pame choone meche, getsoor!
+	if !istable(tbl) then return tbl end -- Yete table chene, getsoor!
 	if istable(tbl) then
-		if #tbl < 1 then return false end -- If the table is empty then end it
+		if #tbl < 1 then return false end -- Yete table-e barabe ( meg en aveli kich), getsoor!
 		tbl = tbl[math.random(1,#tbl)]
 	return tbl
 	end
@@ -873,7 +873,7 @@ cvars.AddChangeCallback("ai_ignoreplayers",function(convar_name,oldValue,newValu
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-cvars.AddChangeCallback("vj_npc_drvrejfriendly",function(convar_name,oldValue,newValue)
+/*cvars.AddChangeCallback("vj_npc_drvrejfriendly",function(convar_name,oldValue,newValue)
 	//print(newValue)
 	if newValue == "1" then
 		//print("They no longer detect DrVrej!")
@@ -907,7 +907,7 @@ cvars.AddChangeCallback("vj_npc_drvrejfriendly",function(convar_name,oldValue,ne
 			end
 		end
 	end
-end)
+end)*/
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Net Messages ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

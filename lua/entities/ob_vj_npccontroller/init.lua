@@ -235,36 +235,44 @@ function ENT:Think()
 		-- Movement
 		if self.ControlledNPC.MovementType != VJ_MOVETYPE_STATIONARY && self.ControlledNPC.PlayingAttackAnimation == false && CurTime() > self.ControlledNPC.NextChaseTime && self.ControlledNPC.IsVJBaseSNPC_Tank != true then
 			if (self.TheController:KeyDown(IN_FORWARD)) then
-				//self.PropCamera:SetPos(self.PropCamera:GetLocalPos() +self.PropCamera:GetUp()*1.5)
-				local DontMove = false
-				local PlyAimVec = self.TheController:GetAimVector()
-				PlyAimVec.z = 0
-				local CenterToPos = self.ControlledNPC:OBBCenter():Distance(self.ControlledNPC:OBBMins()) + 20 // self.ControlledNPC:OBBMaxs().z
-				local NPCPos = self.ControlledNPC:GetPos() + self.ControlledNPC:GetUp()*CenterToPos
-				local forwardtr = util.TraceLine({start = NPCPos, endpos = NPCPos + PlyAimVec*300, filter = {self,self.TheController,self.ControlledNPC}})
-				//local npcvel = self.ControlledNPC:GetGroundSpeedVelocity()
-				//if self.ControlledNPC:GetMovementActivity() > 0 then print(self.ControlledNPC:GetSequenceGroundSpeed(self.ControlledNPC:SelectWeightedSequence(self.ControlledNPC:GetMovementActivity()))) end
-				//self.ControlledNPC:GetSequenceGroundSpeed(self.ControlledNPC:SelectWeightedSequence(self.ControlledNPC:GetActivity()))
-				//Vector(math.abs(npcvel.x),math.abs(npcvel.y),math.abs(npcvel.z))
-				local CalculateWallToNPC = NPCPos:Distance(forwardtr.HitPos) - 40
-				//VJ_CreateTestObject(NPCPos,self:GetAngles(),Color(0,255,255)) -- NPC's calculated position
-				//VJ_CreateTestObject(forwardtr.HitPos,self:GetAngles(),Color(255,255,0)) -- forward trace position
-				if NPCPos:Distance(forwardtr.HitPos) >= 51 then
-					local FinalPos = Vector((self.ControlledNPC:GetPos()+self.TheController:GetAimVector()*CalculateWallToNPC).x,(self.ControlledNPC:GetPos()+self.TheController:GetAimVector()*CalculateWallToNPC).y,forwardtr.HitPos.z)
-					local downtr = util.TraceLine({start = FinalPos, endpos = FinalPos + self:GetUp()*-(200+CenterToPos), filter = {self,self.TheController,self.ControlledNPC}})
-					local CalculateDownDistance = (FinalPos.z-CenterToPos) - downtr.HitPos.z
-					if CalculateDownDistance >= 150 then
-						DontMove = true
-						CalculateWallToNPC = CalculateWallToNPC - CalculateDownDistance
+				if self.ControlledNPC.MovementType == VJ_MOVETYPE_AERIAL then
+					if (self.TheController:KeyDown(IN_SPEED)) then
+						self.ControlledNPC:AerialMove_ChaseEnemy(true)
+					else
+						self.ControlledNPC:AerialMove_ChaseEnemy(true,true)
 					end
-					FinalPos = Vector((self.ControlledNPC:GetPos()+self.TheController:GetAimVector()*CalculateWallToNPC).x,(self.ControlledNPC:GetPos()+self.TheController:GetAimVector()*CalculateWallToNPC).y,forwardtr.HitPos.z)
-					//VJ_CreateTestObject(downtr.HitPos,self:GetAngles(),Color(0,255,0)) -- Down trace position
-					//VJ_CreateTestObject(FinalPos,self:GetAngles(),Color(255,0,0)) -- Final move position
-					if DontMove == false then
-						self.ControlledNPC:SetLastPosition(FinalPos)
-						local movetype = "TASK_WALK_PATH"
-						if (self.TheController:KeyDown(IN_SPEED)) then movetype = "TASK_RUN_PATH" end
-						self.ControlledNPC:VJ_TASK_GOTO_LASTPOS(movetype,function(x) /*self.ControlledNPC:SetLastPosition(self.TheController:GetEyeTrace().HitPos)*/ x:EngTask("TASK_FACE_LASTPOSITION", 0) end)
+				else
+					//self.PropCamera:SetPos(self.PropCamera:GetLocalPos() +self.PropCamera:GetUp()*1.5)
+					local DontMove = false
+					local PlyAimVec = self.TheController:GetAimVector()
+					PlyAimVec.z = 0
+					local CenterToPos = self.ControlledNPC:OBBCenter():Distance(self.ControlledNPC:OBBMins()) + 20 // self.ControlledNPC:OBBMaxs().z
+					local NPCPos = self.ControlledNPC:GetPos() + self.ControlledNPC:GetUp()*CenterToPos
+					local forwardtr = util.TraceLine({start = NPCPos, endpos = NPCPos + PlyAimVec*300, filter = {self,self.TheController,self.ControlledNPC}})
+					//local npcvel = self.ControlledNPC:GetGroundSpeedVelocity()
+					//if self.ControlledNPC:GetMovementActivity() > 0 then print(self.ControlledNPC:GetSequenceGroundSpeed(self.ControlledNPC:SelectWeightedSequence(self.ControlledNPC:GetMovementActivity()))) end
+					//self.ControlledNPC:GetSequenceGroundSpeed(self.ControlledNPC:SelectWeightedSequence(self.ControlledNPC:GetActivity()))
+					//Vector(math.abs(npcvel.x),math.abs(npcvel.y),math.abs(npcvel.z))
+					local CalculateWallToNPC = NPCPos:Distance(forwardtr.HitPos) - 40
+					//VJ_CreateTestObject(NPCPos,self:GetAngles(),Color(0,255,255)) -- NPC's calculated position
+					//VJ_CreateTestObject(forwardtr.HitPos,self:GetAngles(),Color(255,255,0)) -- forward trace position
+					if NPCPos:Distance(forwardtr.HitPos) >= 51 then
+						local FinalPos = Vector((self.ControlledNPC:GetPos()+self.TheController:GetAimVector()*CalculateWallToNPC).x,(self.ControlledNPC:GetPos()+self.TheController:GetAimVector()*CalculateWallToNPC).y,forwardtr.HitPos.z)
+						local downtr = util.TraceLine({start = FinalPos, endpos = FinalPos + self:GetUp()*-(200+CenterToPos), filter = {self,self.TheController,self.ControlledNPC}})
+						local CalculateDownDistance = (FinalPos.z-CenterToPos) - downtr.HitPos.z
+						if CalculateDownDistance >= 150 then
+							DontMove = true
+							CalculateWallToNPC = CalculateWallToNPC - CalculateDownDistance
+						end
+						FinalPos = Vector((self.ControlledNPC:GetPos()+self.TheController:GetAimVector()*CalculateWallToNPC).x,(self.ControlledNPC:GetPos()+self.TheController:GetAimVector()*CalculateWallToNPC).y,forwardtr.HitPos.z)
+						//VJ_CreateTestObject(downtr.HitPos,self:GetAngles(),Color(0,255,0)) -- Down trace position
+						//VJ_CreateTestObject(FinalPos,self:GetAngles(),Color(255,0,0)) -- Final move position
+						if DontMove == false then
+							self.ControlledNPC:SetLastPosition(FinalPos)
+							local movetype = "TASK_WALK_PATH"
+							if (self.TheController:KeyDown(IN_SPEED)) then movetype = "TASK_RUN_PATH" end
+							self.ControlledNPC:VJ_TASK_GOTO_LASTPOS(movetype,function(x) /*self.ControlledNPC:SetLastPosition(self.TheController:GetEyeTrace().HitPos)*/ x:EngTask("TASK_FACE_LASTPOSITION", 0) end)
+						end
 					end
 				end
 			elseif (self.TheController:KeyDown(IN_BACK)) then
@@ -280,6 +288,7 @@ function ENT:Think()
 				if (self.TheController:KeyDown(IN_SPEED)) then self.ControlledNPC:VJ_TASK_GOTO_LASTPOS("TASK_RUN_PATH") else self.ControlledNPC:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH") end
 			elseif (!self.TheController:KeyDown(IN_SPEED) && !self.TheController:KeyDown(IN_MOVERIGHT) && !self.TheController:KeyDown(IN_MOVELEFT) && !self.TheController:KeyDown(IN_BACK) && !self.TheController:KeyDown(IN_FORWARD)) then
 				self.ControlledNPC:StopMoving()
+				if self.ControlledNPC.MovementType == VJ_MOVETYPE_AERIAL then self.ControlledNPC:AerialMove_Stop() end
 			end
 			if (self.TheController:KeyDown(IN_USE)) then
 				self.ControlledNPC:StopMoving()

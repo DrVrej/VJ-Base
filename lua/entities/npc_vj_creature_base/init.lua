@@ -1418,33 +1418,42 @@ function ENT:VJ_TASK_IDLE_STAND()
 	self:StartSchedule(vschedIdleStand)*/
 
 	local animtbl = self.AnimTbl_IdleStand
-	local checkedtbl = {}
+	//local checkedtbl = {}
 	local hasanim = false
 	for k,v in ipairs(animtbl) do -- Amen animation-nere ara
-		v = VJ_SequenceToActivity(self,v) -- Nayir yete animation-e sequence-e, activity tartsoor
+		v = VJ_SequenceToActivity(self,v) -- Nayir yete animation e sequence e, activity tartsoor
 		if v != false then -- Yete v-en false che, sharnage!
 			if hasanim == false && self.CurrentAnim_IdleStand == v then -- Yete animation-e IdleStand table-en meche che, ooremen sharnage!
 				hasanim = true
 			end
-			if self:GetActivity() != v then
-				table.insert(checkedtbl,v)
-			end
+			//if self:GetActivity() != v then
+				//table.insert(checkedtbl,v)
+			//end
 		end
 	end
 	if #animtbl > 1 then -- Yete IdleStand table-e meg en aveli e, sharnage!
 		if hasanim == true && self.NextIdleStandTime > CurTime() then return end
-		animtbl = checkedtbl
+		//animtbl = checkedtbl
 	end
 	local finaltbl = VJ_PICKRANDOMTABLE(animtbl)
-	if finaltbl == false then finaltbl = ACT_IDLE return end
+	if finaltbl == false then finaltbl = ACT_IDLE end -- Yete animation-me chi kedav, ter barz animation e
 	finaltbl = VJ_SequenceToActivity(self,finaltbl)
-	if finaltbl == false then return false end -- Make sure no strings get through!
+	if finaltbl == false then return false end -- Vesdah yegher vor minag tevov animation-er e gernan antsnel!
 	self.CurrentAnim_IdleStand = finaltbl
 	if hasanim == true && CurTime() > self.NextIdleStandTime then
 		self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0)
-		self.NextIdleStandTime = CurTime() + self:SequenceDuration(self:SelectWeightedSequence(finaltbl))
+		self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),finaltbl)
+		timer.Simple(0.1,function() -- 0.1 hedvargyan espase menchevor khaghe pokhe animation e
+			if IsValid(self) then
+				local curseq = self:GetSequence()
+				if VJ_SequenceToActivity(self,self:GetSequenceName(curseq)) == finaltbl then -- Nayir yete himagva animation e nooynene
+					self.NextIdleStandTime = CurTime() + (self:SequenceDuration(curseq) - 0.15) -- Yete nooynene ooremen jamanage tir animation-en yergarootyan chap!
+				end
+			end
+		end)
+		self.NextIdleStandTime = CurTime() + 0.15 //self:SequenceDuration(self:SelectWeightedSequence(finaltbl))
 	end
-	self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),finaltbl)
+	//self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),finaltbl)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*function ENT:DoCustomIdleAnimation()
@@ -1521,15 +1530,15 @@ ENT.Aerial_NextMovementAnimation = 0
 ENT.Aerial_CurrentMovementAnimationDur = 0
 ENT.Aerial_ShouldBeFlying = false
 ENT.Aerial_CanPlayMoveAnimation = false
-ENT.Aerial_CurrentMoveAnimationType = "Wander"
+ENT.Aerial_CurrentMoveAnimationType = "Calm"
 
 ENT.Aerial_TargetPos = Vector(0,0,0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AerialMove_Animation()
 	if self:GetSequence() != self.CurrentAnim_AerialMovement /*&& self:GetActivity() == ACT_IDLE*/ && CurTime() > self.Aerial_NextMovementAnimation then
 		local animtbl = {}
-		if self.Aerial_CurrentMoveAnimationType == "Wander" then animtbl = self.Aerial_AnimTbl_Calm
-		elseif self.Aerial_CurrentMoveAnimationType == "Chase" then animtbl = self.Aerial_AnimTbl_Alerted end
+		if self.Aerial_CurrentMoveAnimationType == "Calm" then animtbl = self.Aerial_AnimTbl_Calm
+		elseif self.Aerial_CurrentMoveAnimationType == "Alert" then animtbl = self.Aerial_AnimTbl_Alerted end
 		local pickedanim = VJ_PICKRANDOMTABLE(animtbl)
 		if type(pickedanim) == "number" then pickedanim = self:GetSequenceName(self:SelectWeightedSequence(pickedanim)) end
 		local idleanimid = VJ_GetSequenceName(self,pickedanim)
@@ -1548,7 +1557,7 @@ function ENT:AerialMove_Wander(ShouldPlayAnim)
 
 	if ShouldPlayAnim == true then
 		self.Aerial_CanPlayMoveAnimation = true
-		self.Aerial_CurrentMoveAnimationType = "Wander"
+		self.Aerial_CurrentMoveAnimationType = "Calm"
 	else
 		self.Aerial_CanPlayMoveAnimation = false
 	end
@@ -1581,23 +1590,32 @@ function ENT:AerialMove_Wander(ShouldPlayAnim)
 	if Debug == true then ParticleEffect("vj_impact1_centaurspit", tr.HitPos, Angle(0,0,0), self) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AerialMove_ChaseEnemy(ShouldPlayAnim)
+function ENT:AerialMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
 	if self.Dead == true or (self.NextChaseTime > CurTime()) or !IsValid(self:GetEnemy()) then return end
 	local ShouldPlayAnim = ShouldPlayAnim or false
+	local UseCalmVariables = UseCalmVariables or false
+	local MoveSpeed = self.Aerial_FlyingSpeed_Alerted
 	local Debug = self.Aerial_EnableDebug
 
+	if UseCalmVariables == true then
+		MoveSpeed = self.Aerial_FlyingSpeed_Calm
+	end
 	self:FaceCertainEntity(self:GetEnemy(),true)
 	self.Aerial_ShouldBeFlying = false
 
 	if ShouldPlayAnim == true && self.NextChaseTime < CurTime() then
 		self.Aerial_CanPlayMoveAnimation = true
-		self.Aerial_CurrentMoveAnimationType = "Chase"
+		if UseCalmVariables == true then
+			self.Aerial_CurrentMoveAnimationType = "Calm"
+		else
+			self.Aerial_CurrentMoveAnimationType = "Alert"
+		end
 	else
 		self.Aerial_CanPlayMoveAnimation = false
 	end
 
 	-- Main Calculations
-	local vel_up = 20 //self.Aerial_FlyingSpeed_Alerted
+	local vel_up = 20 //MoveSpeed
 	local vel_for = 1
 	local vel_stop = false
 	local getenemyz = "None"
@@ -1649,10 +1667,10 @@ function ENT:AerialMove_ChaseEnemy(ShouldPlayAnim)
 	end
 	if getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
 		if Debug == true then print("Aerial: GOING UP [CHASE]") end
-		vel_up = self.Aerial_FlyingSpeed_Alerted //100
+		vel_up = MoveSpeed //100
 	elseif getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
 		if Debug == true then print("Aerial: GOING DOWN [CHASE]") end
-		vel_up = -self.Aerial_FlyingSpeed_Alerted //-100
+		vel_up = -MoveSpeed //-100
 	end
 	/*if tr_up_startpos:Distance(tr_up.HitPos) <= 100 && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
 		print("DOWN - ",tr_up_startpos:Distance(tr_up.HitPos))
@@ -1663,7 +1681,7 @@ function ENT:AerialMove_ChaseEnemy(ShouldPlayAnim)
 	if vel_stop == false then
 		//local myvel = self:GetVelocity()
 		//local enevel = self:GetEnemy():GetVelocity()
-		local vel_set = ((self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter())-(self:GetPos()+self:OBBCenter())):GetNormal()*self.Aerial_FlyingSpeed_Alerted +self:GetUp()*vel_up +self:GetForward()*vel_for
+		local vel_set = ((self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter())-(self:GetPos()+self:OBBCenter())):GetNormal()*MoveSpeed +self:GetUp()*vel_up +self:GetForward()*vel_for
 		//local vel_set_yaw = vel_set:Angle().y
 		self:SetLocalVelocity(vel_set)
 		if Debug == true then ParticleEffect("vj_impact1_centaurspit", self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter(), Angle(0,0,0), self) end
@@ -4106,7 +4124,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 			for i = 0,18 do -- 18 = Bodygroup limit
 				self.Corpse:SetBodygroup(i,self:GetBodygroup(i))
 			end
-			if self.DeathBodyGroupA != -1 && self.DeathBodyGroupB != -1 then -- Yete as yergooke nevaz meg chene, user-en terdz tevere kordzadze
+			if self.DeathBodyGroupA != -1 && self.DeathBodyGroupB != -1 then -- Yete as yergooke nevaz meg chene, user-en teradz tevere kordzadze
 				self.Corpse:SetBodygroup(self.DeathBodyGroupA,self.DeathBodyGroupB)
 			end
 		end

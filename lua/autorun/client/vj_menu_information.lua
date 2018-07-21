@@ -73,6 +73,8 @@ local function VJ_INFORMATION(Panel)
 	Panel:ControlHelp("Orion - Helped in the first version of the base (2011-2012)")
 	Panel:ControlHelp("Cpt. Hazama - Suggestions + testing")
 	Panel:ControlHelp("Mawskeeto - Bloodpool textures + testing")
+	Panel:ControlHelp("China-Mandem - Original K-3 Model")
+	
 	
 	Panel:ControlHelp("")
 	Panel:ControlHelp("==============================")
