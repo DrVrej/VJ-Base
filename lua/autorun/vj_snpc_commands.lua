@@ -122,7 +122,7 @@ ConvarList["vj_npc_printdied"] = 0 -- Prints Died when the SNPC dies
 ConvarList["vj_npc_printondamage"] = 0 -- Prints when the SNPC gets damaged
 ConvarList["vj_npc_printontouch"] = 0 -- Prints when something touches the SNPC
 ConvarList["vj_npc_printstoppedattacks"] = 0 -- Prints when the SNPC stops its attacks
-ConvarList["vj_npc_drvrejfriendly"] = 0 -- Makes the SNPC Friendly to DrVrej! =D
+//ConvarList["vj_npc_drvrejfriendly"] = 0 -- Makes the SNPC Friendly to DrVrej! =D
 ConvarList["vj_npc_printresteenemy"] = 0 -- Prints something when the SNPC has rested its enemy
 ConvarList["vj_npc_printlastseenenemy"] = 0 -- Prints the 'LastSeenEnemy' time
 ConvarList["vj_npc_printcurenemy"] = 0 -- Prints the current enemy
