@@ -253,7 +253,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:TranslateActivity(act)
 	if (self.Owner:IsNPC()) then
-		if (self.ActivityTranslateAI[act]) && self.Owner.WeaponHolstered == false then
+		if (self.ActivityTranslateAI[act]) && ((!self.Owner.IsVJBaseSNPC) or (self.Owner.IsVJBaseSNPC == true && self.Owner.WeaponHolstered == false)) then
 			return self.ActivityTranslateAI[act]
 		end
 		return -1
@@ -279,8 +279,8 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_ServerNextFire()
 	if (CLIENT) then return end
-	if !self:IsValid() && !IsValid(self.Owner) && !self.Owner:IsValid() && !self.Owner:IsNPC() then return end
-	if self:IsValid() && IsValid(self.Owner) && self.Owner:IsValid() && self.Owner:IsNPC() && self.Owner:GetActivity() == nil then return end
+	if !self:IsValid() && !IsValid(self.Owner) && !self.Owner:IsNPC() then return end
+	if self:IsValid() && IsValid(self.Owner) && self.Owner:IsNPC() && self.Owner:GetActivity() == nil then return end
 
 	self:RunWorldModelThink()
 	self:CustomOnThink()

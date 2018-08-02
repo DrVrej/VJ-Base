@@ -3447,8 +3447,9 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 			if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
 				if self:Disposition(DamageAttacker) != D_HT then
 					self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo,hitgroup)
-					if self.FollowingPlayer == true then self:FollowPlayerReset() end
+					if self.FollowingPlayer == true && self.FollowingPlayerName == dmginfo:GetAttacker() then self:FollowPlayerReset() end
 					table.insert(self.VJ_AddCertainEntityAsEnemy,dmginfo:GetAttacker())
+					self:AddEntityRelationship(DamageAttacker,D_HT,99)
 					if !IsValid(self:GetEnemy()) then
 						self:StopMoving()
 						self:SetTarget(dmginfo:GetAttacker())

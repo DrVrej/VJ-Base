@@ -1040,7 +1040,11 @@ function ENT:Initialize()
 	end*/
 	//self:SetModelScale(self:GetModelScale()*1.5)
 end
-function ENT:CustomInitialize() end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- !!!!!!!!!!!!!! DO NOT USE THESE FUNCTIONS OR VARIABLES !!!!!!!!!!!!!! [Backwards Compatibility!]
+-- Most of these will most likely be removed in the future!
+ENT.DeathSkin = 0
+function ENT:CustomInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetInitializeCapabilities()
 -- Add as many as you want --
@@ -3580,8 +3584,9 @@ function ENT:OnTakeDamage(dmginfo,data)
 			if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
 				if self:Disposition(DamageAttacker) != D_HT then
 					self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo,hitgroup)
-					if self.FollowingPlayer == true then self:FollowPlayerReset() end
+					if self.FollowingPlayer == true && self.FollowingPlayerName == dmginfo:GetAttacker() then self:FollowPlayerReset() end
 					table.insert(self.VJ_AddCertainEntityAsEnemy,dmginfo:GetAttacker())
+					self:AddEntityRelationship(DamageAttacker,D_HT,99)
 					if !IsValid(self:GetEnemy()) then
 						self:StopMoving()
 						self:SetTarget(dmginfo:GetAttacker())
