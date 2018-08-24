@@ -359,8 +359,8 @@ ENT.RangeAttackPos_Up = 20 -- Up/Down spawning position for range attack
 ENT.RangeAttackPos_Forward = 0 -- Forward/ Backward spawning position for range attack
 ENT.RangeAttackPos_Right = 0 -- Right/Left spawning position for range attack
 	-- ====== Control Variables ====== --
-ENT.DisableDefaultRangeAttackCode = false -- When true, it won't spawn the range attack entity, allowing you to make your own
 ENT.DisableRangeAttackAnimation = false -- if true, it will disable the animation code
+ENT.DisableDefaultRangeAttackCode = false -- When true, it won't spawn the range attack entity, allowing you to make your own
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Leap Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -393,8 +393,8 @@ ENT.LeapAttackVelocityForward = 2000 -- How much forward force should it apply?
 ENT.LeapAttackVelocityUp = 200 -- How much upward force should it apply?
 ENT.LeapAttackVelocityRight = 0 -- How much right force should it apply?
 	-- ====== Control Variables ====== --
-ENT.LeapAttackUseCustomVelocity = false -- Should it disable the default velocity system?
 ENT.DisableLeapAttackAnimation = false -- if true, it will disable the animation code
+ENT.LeapAttackUseCustomVelocity = false -- Should it disable the default velocity system?
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Sound Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2443,6 +2443,8 @@ function ENT:PoseParameterLookingCode(ResetPoses)
 	local p_enemy = 0 -- Pitch
 	local y_enemy = 0 -- Yaw
 	local r_enemy = 0 -- Roll
+	local ang_dif = math.AngleDifference
+	local ang_app = math.ApproachAngle
 	if IsValid(ent) && ResetPoses == false then
 		local self_pos = self:GetPos() + self:OBBCenter()
 		local enemy_pos = false //Vector(0,0,0)
@@ -2450,29 +2452,29 @@ function ENT:PoseParameterLookingCode(ResetPoses)
 		if enemy_pos == false then return end
 		local self_ang = self:GetAngles()
 		local enemy_ang = (enemy_pos - self_pos):Angle()
-		p_enemy = math.AngleDifference(enemy_ang.p,self_ang.p)
+		p_enemy = ang_dif(enemy_ang.p,self_ang.p)
 		if self.PoseParameterLooking_InvertPitch == true then p_enemy = -p_enemy end
-		y_enemy = math.AngleDifference(enemy_ang.y,self_ang.y)
+		y_enemy = ang_dif(enemy_ang.y,self_ang.y)
 		if self.PoseParameterLooking_InvertYaw == true then y_enemy = -y_enemy end
-		r_enemy = math.AngleDifference(enemy_ang.z,self_ang.z)
+		r_enemy = ang_dif(enemy_ang.z,self_ang.z)
 		if self.PoseParameterLooking_InvertRoll == true then r_enemy = -r_enemy end
 	end
 	local names = self.PoseParameterLooking_Names
 	for x=1, #names.pitch do
-		self:SetPoseParameter(names.pitch[x],math.ApproachAngle(self:GetPoseParameter(names.pitch[x]),p_enemy,self.PoseParameterLooking_TurningSpeed))
+		self:SetPoseParameter(names.pitch[x],ang_app(self:GetPoseParameter(names.pitch[x]),p_enemy,self.PoseParameterLooking_TurningSpeed))
 	end
 	for x=1, #names.yaw do
-		self:SetPoseParameter(names.yaw[x],math.ApproachAngle(self:GetPoseParameter(names.yaw[x]),y_enemy,self.PoseParameterLooking_TurningSpeed))
+		self:SetPoseParameter(names.yaw[x],ang_app(self:GetPoseParameter(names.yaw[x]),y_enemy,self.PoseParameterLooking_TurningSpeed))
 	end
 	for x=1, #names.roll do
-		self:SetPoseParameter(names.roll[x],math.ApproachAngle(self:GetPoseParameter(names.roll[x]),r_enemy,self.PoseParameterLooking_TurningSpeed))
+		self:SetPoseParameter(names.roll[x],ang_app(self:GetPoseParameter(names.roll[x]),r_enemy,self.PoseParameterLooking_TurningSpeed))
 	end
-	self:SetPoseParameter("aim_pitch",math.ApproachAngle(self:GetPoseParameter("aim_pitch"),p_enemy,self.PoseParameterLooking_TurningSpeed))
-	self:SetPoseParameter("head_pitch",math.ApproachAngle(self:GetPoseParameter("head_pitch"),p_enemy,self.PoseParameterLooking_TurningSpeed))
-	self:SetPoseParameter("aim_yaw",math.ApproachAngle(self:GetPoseParameter("aim_yaw"),y_enemy,self.PoseParameterLooking_TurningSpeed))
-	self:SetPoseParameter("head_yaw",math.ApproachAngle(self:GetPoseParameter("head_yaw"),y_enemy,self.PoseParameterLooking_TurningSpeed))
-	self:SetPoseParameter("aim_roll",math.ApproachAngle(self:GetPoseParameter("aim_roll"),r_enemy,self.PoseParameterLooking_TurningSpeed))
-	self:SetPoseParameter("head_roll",math.ApproachAngle(self:GetPoseParameter("head_roll"),r_enemy,self.PoseParameterLooking_TurningSpeed))
+	self:SetPoseParameter("aim_pitch",ang_app(self:GetPoseParameter("aim_pitch"),p_enemy,self.PoseParameterLooking_TurningSpeed))
+	self:SetPoseParameter("head_pitch",ang_app(self:GetPoseParameter("head_pitch"),p_enemy,self.PoseParameterLooking_TurningSpeed))
+	self:SetPoseParameter("aim_yaw",ang_app(self:GetPoseParameter("aim_yaw"),y_enemy,self.PoseParameterLooking_TurningSpeed))
+	self:SetPoseParameter("head_yaw",ang_app(self:GetPoseParameter("head_yaw"),y_enemy,self.PoseParameterLooking_TurningSpeed))
+	self:SetPoseParameter("aim_roll",ang_app(self:GetPoseParameter("aim_roll"),r_enemy,self.PoseParameterLooking_TurningSpeed))
+	self:SetPoseParameter("head_roll",ang_app(self:GetPoseParameter("head_roll"),r_enemy,self.PoseParameterLooking_TurningSpeed))
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoAddExtraAttackTimers(vName,vTime,vReps,vFunction)
@@ -3146,25 +3148,24 @@ function ENT:DoHardEntityCheck(CustomTbl)
 		end
 	end
 	return GetNPCs*/
-	local CustomTbl = CustomTbl
-	if CustomTbl == nil then
-		CustomTbl = ents.GetAll()
-	end
-	local GetEnts = {}
+	local EntsTbl = CustomTbl or ents.GetAll()
+	local EntsFinal = {}
+	local count = 1
 	//for k, v in ipairs(CustomTbl) do //ents.FindInSphere(self:GetPos(),30000)
-	for x=1, #CustomTbl do
-		if !CustomTbl[x]:IsNPC() && !CustomTbl[x]:IsPlayer() then continue end
-		local v = CustomTbl[x]
+	for x=1, #EntsTbl do
+		if !EntsTbl[x]:IsNPC() && !EntsTbl[x]:IsPlayer() then continue end
+		local v = EntsTbl[x]
 		self:EntitiesToNoCollideCode(v)
 		if v:IsNPC() && (v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0 then
-			GetEnts[#GetEnts + 1] = v
-		end
-		if v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 /*&& v:Alive()*/ then
-			GetEnts[#GetEnts + 1] = v
+			EntsFinal[count] = v
+			count = count + 1
+		elseif v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 /*&& v:Alive()*/ then
+			EntsFinal[count] = v
+			count = count + 1
 		end
 	end
-	//table.Merge(GetEnts,self.CurrentPossibleEnemies)
-	return GetEnts
+	//table.Merge(EntsFinal,self.CurrentPossibleEnemies)
+	return EntsFinal
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoEntityRelationshipCheck()
