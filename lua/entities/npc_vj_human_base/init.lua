@@ -3931,13 +3931,16 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		local corpsemodel_custom = VJ_PICKRANDOMTABLE(self.DeathCorpseModel)
 		if corpsemodel_custom != false then corpsemodel = corpsemodel_custom end
 		local corpsetype = "prop_physics"
-		if util.IsValidRagdoll(corpsemodel) == true then
-			corpsetype = "prop_ragdoll"
-		elseif util.IsValidProp(corpsemodel) == false or util.IsValidModel(corpsemodel) == false then
-			if IsValid(self.TheDroppedWeapon) then self.TheDroppedWeapon:Remove() end
-			return false
+		if self.DeathCorpseEntityClass == "UseDefaultBehavior" then
+			if util.IsValidRagdoll(corpsemodel) == true then
+				corpsetype = "prop_ragdoll"
+			elseif util.IsValidProp(corpsemodel) == false or util.IsValidModel(corpsemodel) == false then
+				if IsValid(self.TheDroppedWeapon) then self.TheDroppedWeapon:Remove() end
+				return false
+			end
+		else
+			corpsetype = self.DeathCorpseEntityClass
 		end
-		if self.DeathCorpseEntityClass != "UseDefaultBehavior" then corpsetype = self.DeathCorpseEntityClass end
 		//if self.VJCorpseDeleted == true then
 		self.Corpse = ents.Create(corpsetype) //end
 		self.Corpse:SetModel(corpsemodel)
