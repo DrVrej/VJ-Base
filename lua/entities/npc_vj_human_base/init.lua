@@ -894,7 +894,8 @@ ENT.VJ_AddCertainEntityAsFriendly = {}
 ENT.CurrentReachableEnemies = {}
 ENT.AttackTimers = {"timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee"}
 ENT.DefaultGibDamageTypes = {DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SHOCK,DMG_SONIC}
-ENT.EntitiesToRunFrom = {obj_vj_grenade=true,npc_grenade_frag=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true}
+ENT.EntitiesToRunFrom = {obj_spore=true,obj_vj_grenade=true,obj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true,cw_flash_thrown=true}
+ENT.tbl_ThrowableGrenades = {"obj_spore","obj_vj_grenade","obj_handgrenade","npc_grenade_frag","obj_cpt_grenade","cw_grenade_thrown","cw_flash_thrown","cw_smoke_thrown"}
 ENT.Weapons_UseRegulate = {weapon_shotgun=true,weapon_crossbow=true,weapon_annabelle=true,weapon_pistol=true}
 ENT.Weapons_DontUseRegulate = {weapon_smg1=true,weapon_ar2=true}
 ENT.NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
@@ -2352,6 +2353,11 @@ function ENT:ThrowGrenadeCode(CustomEnt,NoOwner)
 		CustomEnt:SetAngles(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Ang)
 		if gerClass == "obj_vj_grenade" then gerFussTime = math.abs(CustomEnt.FussTime - CustomEnt.TimeSinceSpawn) end
 		if gerClass == "npc_grenade_frag" then gerFussTime = 1.5 end
+		if gerClass == "obj_cpt_grenade" then gerFussTime = 2 end
+		if gerClass == "obj_handgrenade" then gerFussTime = 1 end
+		if gerClass == "obj_spore" then gerFussTime = 1 end
+		if gerClass == "doom3_grenade" then gerFussTime = 1.5 end
+		if (gerClass == "fas2_thrown_m67" || gerClass == "cw_grenade_thrown" || gerClass == "cw_flash_thrown" || gerClass == "cw_smoke_thrown") then gerFussTime = 1.5 end
 	end
 
 	self.ThrowingGrenade = true
@@ -2390,6 +2396,11 @@ function ENT:ThrowGrenadeCode(CustomEnt,NoOwner)
 			grenent:SetAngles(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Ang)
 			grenent:SetModel(Model(gerModel))
 			if gerClass == "obj_vj_grenade" then grenent.FussTime = gerFussTime end
+			if gerClass == "obj_cpt_grenade" then grenent:SetTimer(gerFussTime) end
+			if gerClass == "obj_handgrenade" then grenent:SetExplodeDelay(gerFussTime) end
+			if gerClass == "obj_spore" then grenent:SetGrenade(true) end
+			if gerClass == "doom3_grenade" then grenent:SetExplodeDelay(gerFussTime) end
+			if (gerClass == "cw_grenade_thrown" || gerClass == "cw_flash_thrown" || gerClass == "cw_smoke_thrown") then grenent:SetOwner(self); grenent:Fuse(gerFussTime) end
 			grenent:Spawn()
 			grenent:Activate()
 			if gerClass == "npc_grenade_frag" then grenent:Input("SetTimer",self:GetOwner(),self:GetOwner(),gerFussTime) end
@@ -2805,7 +2816,7 @@ function ENT:CheckForGrenades()
 				self:OnGrenadeSightSoundCode()
 				self.HasSeenGrenade = true
 				self.TakingCoverT = CurTime() + 4
-				if /*IsValid(self:GetEnemy()) &&*/v.VJHumanNoPickup != true && v.VJHumanTossingAway != true && self.CanThrowBackDetectedGrenades == true && self.HasGrenadeAttack == true && v:GetVelocity():Length() < 400 && self:VJ_GetNearestPointToEntityDistance(v) < 100 && (v:GetClass() == "npc_grenade_frag" or v:GetClass() == "obj_vj_grenade") then
+				if /*IsValid(self:GetEnemy()) &&*/v.VJHumanNoPickup != true && v.VJHumanTossingAway != true && self.CanThrowBackDetectedGrenades == true && self.HasGrenadeAttack == true && v:GetVelocity():Length() < 400 && self:VJ_GetNearestPointToEntityDistance(v) < 100 && (table.HasValue(self.tbl_ThrowableGrenades,v:GetClass())) then
 					self.NextGrenadeAttackSoundT = CurTime() + 3
 					self:ThrowGrenadeCode(v,true)
 					v.VJHumanTossingAway = true
