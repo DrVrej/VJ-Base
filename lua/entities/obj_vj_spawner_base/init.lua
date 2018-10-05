@@ -49,6 +49,8 @@ function ENT:CustomOnThink_BeforeAliveChecks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink_AfterAliveChecks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnRemove() end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnAnEntity(keys,values,initspawn)
 	local k = keys
 	local v = values
@@ -150,6 +152,7 @@ function ENT:DoSingleSpawnerRemove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
+	self:CustomOnRemove()
 	self.Dead = true
 	VJ_STOPSOUND(self.CurrentIdleSound)
 	if self.SingleSpawner == false && self.CurrentEntities != nil then
