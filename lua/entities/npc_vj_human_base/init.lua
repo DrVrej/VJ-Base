@@ -886,6 +886,7 @@ ENT.NextMoveOnGunCoveredT = 0
 ENT.Passive_NextRunOnTouchT = 0
 ENT.Passive_NextRunOnDamageT = 0
 ENT.NextWanderTime = 0
+ENT.Weapon_DoingCrouchAttackT = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.NearestPointToEnemyDistance = Vector(0,0,0)
 ENT.SelectedDifficulty = 1
@@ -895,9 +896,9 @@ ENT.CurrentReachableEnemies = {}
 ENT.AttackTimers = {"timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee"}
 ENT.DefaultGibDamageTypes = {DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SHOCK,DMG_SONIC}
 ENT.EntitiesToRunFrom = {obj_spore=true,obj_vj_grenade=true,obj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true,cw_flash_thrown=true}
-ENT.tbl_ThrowableGrenades = {"obj_spore","obj_vj_grenade","obj_handgrenade","npc_grenade_frag","obj_cpt_grenade","cw_grenade_thrown","cw_flash_thrown","cw_smoke_thrown"}
-ENT.Weapons_UseRegulate = {weapon_shotgun=true,weapon_crossbow=true,weapon_annabelle=true,weapon_pistol=true}
-ENT.Weapons_DontUseRegulate = {weapon_smg1=true,weapon_ar2=true}
+ENT.EntitiesToThrowBack = {obj_spore=true,obj_vj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,obj_cpt_grenade=true,cw_grenade_thrown=true,cw_flash_thrown=true,cw_smoke_thrown=true}
+//ENT.Weapons_UseRegulate = {weapon_shotgun=true,weapon_crossbow=true,weapon_annabelle=true,weapon_pistol=true}
+//ENT.Weapons_DontUseRegulate = {weapon_smg1=true,weapon_ar2=true}
 ENT.NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
 ENT.NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true,monster_scientist=true,monster_barney=true}
 ENT.NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack=true}
@@ -1755,14 +1756,14 @@ function ENT:DoChangeWeapon(SetType)
 	SetType = SetType or "None"
 	if SetType != "None" then self:Give(SetType) end
 	self.Weapon_ShotsSinceLastReload = 0
-	if self:VJ_HasActiveWeapon() == true then
-		if /*self.DisableUSE_SHOT_REGULATOR == false &&*/ self.Weapons_UseRegulate[self:GetActiveWeapon():GetClass()] then
+	/*if self:VJ_HasActiveWeapon() == true then
+		if self.Weapons_UseRegulate[self:GetActiveWeapon():GetClass()] then // self.DisableUSE_SHOT_REGULATOR == false
 			self:CapabilitiesAdd(bit.bor(CAP_USE_SHOT_REGULATOR))
 		end
 		if self.Weapons_DontUseRegulate[self:GetActiveWeapon():GetClass()] then //or self:GetActiveWeapon().NPC_EnableDontUseRegulate == true then
 			self:CapabilitiesRemove(CAP_USE_SHOT_REGULATOR)
 		end
-	end
+	end*/
 	self:CustomOnDoChangeWeapon(self:GetActiveWeapon(),self.CurrentWeaponEntity)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2681,11 +2682,12 @@ function ENT:SelectSchedule(iNPCState)
 										local curanim;
 										local crouchanim = VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponAttackCrouch)
 										local crouchchance = math.random(1,self.CanCrouchOnWeaponAttackChance)
-										if crouchchance == 1 && VJ_AnimationExists(self,self:VJ_TranslateWeaponActivity(crouchanim)) == true && iscovered == false && SelfToEnemyDistance > 500 then
-											curanim = crouchanim //VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponAttackCrouch)
+										if ((crouchchance == 1) or (CurTime() <= self.Weapon_DoingCrouchAttackT)) && VJ_AnimationExists(self,self:VJ_TranslateWeaponActivity(crouchanim)) == true && iscovered == false && SelfToEnemyDistance > 500 then
+											curanim = crouchanim
 											//local actualanim = curanim
 											if type(curanim) != "string" then curanim = self:VJ_TranslateWeaponActivity(curanim) end
 											self.CurrentWeaponAnimation = curanim
+											self.Weapon_DoingCrouchAttackT = CurTime() + 2 // Asiga bedke vor vestah elank yed votgi cheler hemen
 											if VJ_IsCurrentAnimation(self,curanim) == false then self:VJ_ACT_PLAYACTIVITY(curanim,false,0,true) end
 										else
 											curanim = VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponAttack)
@@ -2730,6 +2732,8 @@ function ENT:SelectSchedule(iNPCState)
 							timer.Simple(0.3,function() if IsValid(self) then self.DoingWeaponAttack = true self.DoingWeaponAttack_Standing = true end end)
 							self:CustomOnWeaponAttack()
 							self.Weapon_TimeSinceLastShot = 0
+							self.Weapon_ShotsSinceLastReload = 0
+							self:GetActiveWeapon():SetClip1(99999)
 							self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.WeaponAttackSchedule))
 						end
 						//end
@@ -2816,7 +2820,7 @@ function ENT:CheckForGrenades()
 				self:OnGrenadeSightSoundCode()
 				self.HasSeenGrenade = true
 				self.TakingCoverT = CurTime() + 4
-				if /*IsValid(self:GetEnemy()) &&*/v.VJHumanNoPickup != true && v.VJHumanTossingAway != true && self.CanThrowBackDetectedGrenades == true && self.HasGrenadeAttack == true && v:GetVelocity():Length() < 400 && self:VJ_GetNearestPointToEntityDistance(v) < 100 && (table.HasValue(self.tbl_ThrowableGrenades,v:GetClass())) then
+				if /*IsValid(self:GetEnemy()) &&*/v.VJHumanNoPickup != true && v.VJHumanTossingAway != true && self.CanThrowBackDetectedGrenades == true && self.HasGrenadeAttack == true && v:GetVelocity():Length() < 400 && self:VJ_GetNearestPointToEntityDistance(v) < 100 && self.EntitiesToThrowBack[v:GetClass()] then
 					self.NextGrenadeAttackSoundT = CurTime() + 3
 					self:ThrowGrenadeCode(v,true)
 					v.VJHumanTossingAway = true
@@ -2825,6 +2829,7 @@ function ENT:CheckForGrenades()
 				//if self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY) end
 				self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
 				timer.Simple(4,function() if IsValid(self) then self.HasSeenGrenade = false end end)
+				break;
 				//else
 				//self.HasSeenGrenade = false
 				//return
