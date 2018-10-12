@@ -28,8 +28,8 @@ VJ.AddEntity("Flare Round","obj_vj_flareround","DrVrej",false,0,true,vCat)
 //VJ.AddEntity("Supply Crate","item_ammo_crate","DrVrej",false,0,true,vCat)
 
 	-- ====== NPC Weapons ====== --
-VJ.AddNPCWeapon("VJ_Package","weapon_citizenpackage")
-VJ.AddNPCWeapon("VJ_Suitcase","weapon_citizensuitcase")
+//VJ.AddNPCWeapon("VJ_Package","weapon_citizenpackage")
+//VJ.AddNPCWeapon("VJ_Suitcase","weapon_citizensuitcase")
 VJ.AddNPCWeapon("VJ_AK-47","weapon_vj_ak47")
 VJ.AddNPCWeapon("VJ_M16A1","weapon_vj_m16a1")
 VJ.AddNPCWeapon("VJ_Glock17","weapon_vj_glock17")
