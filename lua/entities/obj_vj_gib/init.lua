@@ -10,13 +10,12 @@ include("shared.lua")
 INFO: Used as a base for gibs
 --------------------------------------------------*/
 ENT.BloodType = "Red"
-ENT.Collide_Decal = "Blood"
+ENT.Collide_Decal = "Default"
 ENT.Collide_DecalChance = 3
 ENT.CollideSound = {"physics/flesh/flesh_squishy_impact_hard1.wav","physics/flesh/flesh_squishy_impact_hard2.wav","physics/flesh/flesh_squishy_impact_hard3.wav","physics/flesh/flesh_squishy_impact_hard4.wav"}
 ENT.CollideSoundLevel = 60
 ENT.CollideSoundPitch1 = 80
 ENT.CollideSoundPitch2 = 100
-ENT.Collide_Decal = "Blood"
 
 ENT.IsVJBaseCorpse = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -44,11 +43,15 @@ function ENT:Initialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetUpInitializeBloodType()
-	local bloodtype = self.BloodType
-	if bloodtype == "Red" then
-		self.Collide_Decal = "VJ_Blood_Red"
-	elseif bloodtype == "Yellow" then
-		self.Collide_Decal = "VJ_Blood_Yellow"
+	if self.Collide_Decal == "Default" then
+		local bloodtype = self.BloodType
+		if bloodtype == "Red" then
+			self.Collide_Decal = "VJ_Blood_Red"
+		elseif bloodtype == "Yellow" then
+			self.Collide_Decal = "VJ_Blood_Yellow"
+		end
+	else
+		
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
