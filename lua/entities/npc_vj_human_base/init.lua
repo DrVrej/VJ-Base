@@ -895,8 +895,8 @@ ENT.VJ_AddCertainEntityAsFriendly = {}
 ENT.CurrentReachableEnemies = {}
 ENT.AttackTimers = {"timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee"}
 ENT.DefaultGibDamageTypes = {DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SHOCK,DMG_SONIC}
-ENT.EntitiesToRunFrom = {obj_spore=true,obj_vj_grenade=true,obj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true,cw_flash_thrown=true}
-ENT.EntitiesToThrowBack = {obj_spore=true,obj_vj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,obj_cpt_grenade=true,cw_grenade_thrown=true,cw_flash_thrown=true,cw_smoke_thrown=true}
+ENT.EntitiesToRunFrom = {obj_spore=true,obj_vj_grenade=true,obj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true,cw_flash_thrown=true,ent_hl1_grenade=true}
+ENT.EntitiesToThrowBack = {obj_spore=true,obj_vj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,obj_cpt_grenade=true,cw_grenade_thrown=true,cw_flash_thrown=true,cw_smoke_thrown=true,ent_hl1_grenade=true}
 //ENT.Weapons_UseRegulate = {weapon_shotgun=true,weapon_crossbow=true,weapon_annabelle=true,weapon_pistol=true}
 //ENT.Weapons_DontUseRegulate = {weapon_smg1=true,weapon_ar2=true}
 ENT.NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
@@ -2391,7 +2391,8 @@ function ENT:ThrowGrenadeCode(CustomEnt,NoOwner)
 			end
 			if IsValid(self:GetEnemy()) then gerShootPos = self:GetEnemy():GetPos() end
 			local grenent = ents.Create(gerClass)
-			local greShootVel = gerShootPos -self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos
+			local greShootVelPos = gerShootPos - self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos
+			local getShootVel = greShootVelPos + self:GetUp()*math.random(self.GrenadeAttackVelUp1,self.GrenadeAttackVelUp2) + self:GetForward()*math.Rand(self.GrenadeAttackVelForward1,self.GrenadeAttackVelForward2) + self:GetRight()*math.Rand(self.GrenadeAttackVelRight1,self.GrenadeAttackVelRight2)
 			if NoOwner == false then grenent:SetOwner(self) end
 			grenent:SetPos(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos)
 			grenent:SetAngles(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Ang)
@@ -2401,7 +2402,8 @@ function ENT:ThrowGrenadeCode(CustomEnt,NoOwner)
 			if gerClass == "obj_handgrenade" then grenent:SetExplodeDelay(gerFussTime) end
 			if gerClass == "obj_spore" then grenent:SetGrenade(true) end
 			if gerClass == "doom3_grenade" then grenent:SetExplodeDelay(gerFussTime) end
-			if (gerClass == "cw_grenade_thrown" || gerClass == "cw_flash_thrown" || gerClass == "cw_smoke_thrown") then grenent:SetOwner(self); grenent:Fuse(gerFussTime) end
+			if (gerClass == "cw_grenade_thrown" or gerClass == "cw_flash_thrown" or gerClass == "cw_smoke_thrown") then grenent:SetOwner(self); grenent:Fuse(gerFussTime) end
+			if gerClass == "ent_hl1_grenade" then grenent:ShootTimed(CustomEnt, getShootVel, gerFussTime) end
 			grenent:Spawn()
 			grenent:Activate()
 			if gerClass == "npc_grenade_frag" then grenent:Input("SetTimer",self:GetOwner(),self:GetOwner(),gerFussTime) end
@@ -2409,7 +2411,7 @@ function ENT:ThrowGrenadeCode(CustomEnt,NoOwner)
 			if (phys:IsValid()) then
 				phys:Wake()
 				phys:AddAngleVelocity(Vector(math.Rand(500,500),math.Rand(500,500),math.Rand(500,500)))
-				phys:SetVelocity(greShootVel +self:GetUp()*math.random(self.GrenadeAttackVelUp1,self.GrenadeAttackVelUp2) +self:GetForward()*math.Rand(self.GrenadeAttackVelForward1,self.GrenadeAttackVelForward2) +self:GetRight()*math.Rand(self.GrenadeAttackVelRight1,self.GrenadeAttackVelRight2))
+				phys:SetVelocity(getShootVel)
 			end
 			self:CustomOnGrenadeAttack_OnThrow(grenent)
 		end
