@@ -3098,55 +3098,66 @@ function ENT:DoEntityRelationshipCheck()
 		local radiusoverride = 0
 		local seethroughwall = false
 		if vClass != self:GetClass() && (vNPC or vPlayer) && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
+			local inEneTbl = VJ_HasValue(self.VJ_AddCertainEntityAsEnemy,v)
 			if self.HasAllies == true then
-				for _,friclass in ipairs(self.VJ_NPC_Class) do
-					if friclass == "CLASS_PLAYER_ALLY" && self.PlayerFriendly == false then self.PlayerFriendly = true end
-					if friclass == "CLASS_COMBINE" then if self:CombineFriendlyCode(v) == true then entisfri = true end end
-					if friclass == "CLASS_ZOMBIE" then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
-					if friclass == "CLASS_ANTLION" then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
-					if friclass == "CLASS_XEN" then if self:XenFriendlyCode(v) == true then entisfri = true end end
-					if (v.VJ_NPC_Class && friclass != "CLASS_PLAYER_ALLY" && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
-						//print("SHOULD WORK: "..v:GetClass())
-						entisfri = true
-						if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
-							self.ResetedEnemy = true
-							self:ResetEnemy(false)
+				if inEneTbl == false then
+					for _,friclass in ipairs(self.VJ_NPC_Class) do
+						if friclass == "CLASS_PLAYER_ALLY" && self.PlayerFriendly == false then self.PlayerFriendly = true end
+						if friclass == "CLASS_COMBINE" then if self:CombineFriendlyCode(v) == true then entisfri = true end end
+						if friclass == "CLASS_ZOMBIE" then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
+						if friclass == "CLASS_ANTLION" then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
+						if friclass == "CLASS_XEN" then if self:XenFriendlyCode(v) == true then entisfri = true end end
+						if (v.VJ_NPC_Class && friclass != "CLASS_PLAYER_ALLY" && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
+							//print("SHOULD WORK: "..v:GetClass())
+							entisfri = true
+							if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
+								self.ResetedEnemy = true
+								self:ResetEnemy(false)
+							end
+							if vNPC then v:AddEntityRelationship(self,D_LI,99) end
+							self:AddEntityRelationship(v,D_LI,99)
 						end
-						if vNPC then v:AddEntityRelationship(self,D_LI,99) end
-						self:AddEntityRelationship(v,D_LI,99)
 					end
-				end
-				if vNPC then
-					for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
-						//for k,v in ipairs(ents.FindByClass(fritbl)) do
-						if string.find(vClass, fritbl) then
+					if vNPC then
+						for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
+							//for k,v in ipairs(ents.FindByClass(fritbl)) do
+							if string.find(vClass, fritbl) then
+								entisfri = true
+								v:AddEntityRelationship(self,D_LI,99)
+								self:AddEntityRelationship(v,D_LI,99)
+							end
+						end
+						if VJ_HasValue(self.VJ_FriendlyNPCsSingle,vClass) then
 							entisfri = true
 							v:AddEntityRelationship(self,D_LI,99)
 							self:AddEntityRelationship(v,D_LI,99)
 						end
-					end
-					if VJ_HasValue(self.VJ_FriendlyNPCsSingle,vClass) then
-						entisfri = true
-						v:AddEntityRelationship(self,D_LI,99)
-						self:AddEntityRelationship(v,D_LI,99)
-					end
-					if self.CombineFriendly == true then if self:CombineFriendlyCode(v) == true then entisfri = true end end
-					if self.ZombieFriendly == true then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
-					if self.AntlionFriendly == true then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
-					if self.PlayerFriendly == true then
-						if self:PlayerAllies(v) == true then entisfri = true end
-						if self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true then
-							entisfri = true
-							v:AddEntityRelationship(self,D_LI,99)
-							self:AddEntityRelationship(v,D_LI,99)
+						if self.CombineFriendly == true then if self:CombineFriendlyCode(v) == true then entisfri = true end end
+						if self.ZombieFriendly == true then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
+						if self.AntlionFriendly == true then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
+						if self.PlayerFriendly == true then
+							if self:PlayerAllies(v) == true then entisfri = true end
+							if self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true then
+								entisfri = true
+								v:AddEntityRelationship(self,D_LI,99)
+								self:AddEntityRelationship(v,D_LI,99)
+							end
 						end
+						if v.IsVJBaseSNPC == true && self.VJFriendly == true then if self:VJFriendlyCode(v) == true then entisfri = true end end
 					end
-					if v.IsVJBaseSNPC == true && self.VJFriendly == true then if self:VJFriendlyCode(v) == true then entisfri = true end end
 				end
 			end
 			if entisfri == false && vNPC /*&& MyVisibleTov*/ && self.DisableMakingSelfEnemyToNPCs == false && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self,D_HT,99) end
 			if vPlayer then
-				if (self.PlayerFriendly == true or entisfri == true/* or self:Disposition(v) == D_LI*/) && !VJ_HasValue(self.VJ_AddCertainEntityAsEnemy,v) then entisfri = true self:AddEntityRelationship(v,D_LI,99) /*DoPlayerSight()*/ end// continue end
+				if (self.PlayerFriendly == true or entisfri == true/* or self:Disposition(v) == D_LI*/) then
+					if inEneTbl == false then
+						entisfri = true
+						self:AddEntityRelationship(v,D_LI,99)
+						//DoPlayerSight()
+					else
+						entisfri = false
+					end
+				end
 				if (!self.IsVJBaseSNPC_Tank) && !IsValid(self:GetEnemy()) && entisfri == false then
 					if entisfri == false then self:AddEntityRelationship(v,D_NU,99) end
 					if v:Crouching() && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightdist = 5000 else sightdist = 2000 end end
