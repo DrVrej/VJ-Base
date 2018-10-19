@@ -1706,6 +1706,8 @@ function ENT:DoMedicCode_HealAlly()
 				self:VJ_ACT_PLAYACTIVITY(lolcptlook,true,animtime,false)
 				if self.Medic_CurrentEntToHeal.MovementType == VJ_MOVETYPE_STATIONARY && self.Medic_CurrentEntToHeal.CanTurnWhileStationary == true then dontdoturn = true end
 				if !self.Medic_CurrentEntToHeal:IsPlayer() && dontdoturn == false then
+					self.NextWanderTime = CurTime() + 2
+					self.Medic_CurrentEntToHeal:StopMoving()
 					self.Medic_CurrentEntToHeal:SetTarget(self)
 					self.Medic_CurrentEntToHeal:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 					//self.Medic_CurrentEntToHeal:VJ_SetSchedule(SCHED_TARGET_FACE)
