@@ -4059,7 +4059,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		*/
 		
 		local dmgforce = dmginfo:GetDamageForce()
-		for bonelim = 1,self.Corpse:GetPhysicsObjectCount() do -- 128 = Bone Limit
+		for bonelim = 0, self.Corpse:GetPhysicsObjectCount() - 1 do -- 128 = Bone Limit
 			local childphys = self.Corpse:GetPhysicsObjectNum(bonelim)
 			if IsValid(childphys) then
 				local childphys_bonepos, childphys_boneang = self:GetBonePosition(self.Corpse:TranslatePhysBoneToBone(bonelim))
@@ -4075,7 +4075,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 				end
 			end
 		end
-
+	
 		if IsValid(self.TheDroppedWeapon) then table.insert(self.Corpse.ExtraCorpsesToRemove,self.TheDroppedWeapon) end
 		if self.FadeCorpse == true then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",self.FadeCorpseTime) end
 		if GetConVarNumber("vj_npc_corpsefade") == 1 then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",GetConVarNumber("vj_npc_corpsefadetime")) end
@@ -4175,8 +4175,7 @@ function ENT:DropWeaponOnDeathCode(dmginfo,hitgroup)
 	if self:GetActiveWeapon("ai_weapon_rpg") then local weaponhas = "weapon_rpg"
 	if self:GetActiveWeapon("ai_weapon_357") then local weaponhas = "weapon_357"*/
 
-
-	gunang = Angle(0,0,0)
+	local gunang = Angle(0,0,0)
 	if self:GetActiveWeapon():GetClass() == "weapon_ar2" or self:GetActiveWeapon():GetClass() == "weapon_vj_ar2" or self:GetActiveWeapon():GetClass() == "weapon_vj_blaster" then gunang = Angle(0,180,0) end
 	if self:GetActiveWeapon():GetClass() == "weapon_pistol" or self:GetActiveWeapon():GetClass() == "weapon_vj_9mmpistol" or self:GetActiveWeapon():GetClass() == "weapon_vj_357" then gunang = Angle(0,180,0) end
 	if self:GetActiveWeapon():GetClass() == "weapon_shotgun" or self:GetActiveWeapon():GetClass() == "weapon_vj_spas12" then gunang = Angle(0,180,0) end

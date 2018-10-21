@@ -4197,7 +4197,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		*/
 		
 		local dmgforce = dmginfo:GetDamageForce()
-		for bonelim = 1,self.Corpse:GetPhysicsObjectCount() do -- 128 = Bone Limit
+		for bonelim = 0, self.Corpse:GetPhysicsObjectCount() - 1 do -- 128 = Bone Limit
 			local childphys = self.Corpse:GetPhysicsObjectNum(bonelim)
 			if IsValid(childphys) then
 				local childphys_bonepos, childphys_boneang = self:GetBonePosition(self.Corpse:TranslatePhysBoneToBone(bonelim))
@@ -4213,7 +4213,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 				end
 			end
 		end
-
+		
 		if self.FadeCorpse == true then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",self.FadeCorpseTime) end
 		if GetConVarNumber("vj_npc_corpsefade") == 1 then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",GetConVarNumber("vj_npc_corpsefadetime")) end
 		self:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,self.Corpse)
