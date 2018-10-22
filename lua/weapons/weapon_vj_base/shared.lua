@@ -145,7 +145,6 @@ SWEP.Secondary.Sound			= {"vj_weapons/ak47/ak47_single.wav"}
 SWEP.AnimTbl_SecondaryFire		= {ACT_VM_SECONDARYATTACK}
 SWEP.Secondary.DistantSound		= {"vj_weapons/ak47/ak47_single_dist.wav"}
 	-- Independent Variables ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.Deleted					= false
 SWEP.Reloading 					= false
 SWEP.InitHasIdleAnimation		= false
 SWEP.AlreadyPlayedNPCReloadSound = false
@@ -181,6 +180,8 @@ function SWEP:CustomOnDeploy() end
 function SWEP:CustomOnIdle() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnReload() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnRemove() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnNPC_ServerThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -720,8 +721,8 @@ function SWEP:OwnerChanged()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnRemove()
+	self:CustomOnRemove()
 	self:StopParticles()
-	self.Deleted = true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:GetWeaponCustomPosition()
