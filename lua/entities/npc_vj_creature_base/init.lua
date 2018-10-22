@@ -4184,18 +4184,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 			//dissolver:Remove()
 		end
 		
-		-- Bone and Angle --
-		/*
-		for Bone = 0, self.Corpse:GetPhysicsObjectCount()-1 do
-			local PhysObj = self.Corpse:GetPhysicsObjectNum(Bone)
-			if (PhysObj:IsValid()) then
-				local Pos, Ang = self:GetBonePosition( self.Corpse:TranslatePhysBoneToBone(Bone))
-				PhysObj:SetPos(Pos)
-				PhysObj:SetAngles(Ang)
-			end
-		end
-		*/
-		
+		-- Bone and Angle --		
 		local dmgforce = dmginfo:GetDamageForce()
 		for bonelim = 0, self.Corpse:GetPhysicsObjectCount() - 1 do -- 128 = Bone Limit
 			local childphys = self.Corpse:GetPhysicsObjectNum(bonelim)

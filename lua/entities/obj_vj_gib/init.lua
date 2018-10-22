@@ -49,9 +49,19 @@ function ENT:SetUpInitializeBloodType()
 			self.Collide_Decal = "VJ_Blood_Red"
 		elseif bloodtype == "Yellow" then
 			self.Collide_Decal = "VJ_Blood_Yellow"
+		elseif bloodtype == "Green" then
+			self.Collide_Decal = "VJ_Blood_Green"
+		elseif bloodtype == "Orange" then
+			self.Collide_Decal = "VJ_Blood_Orange"
+		elseif bloodtype == "Blue" then
+			self.Collide_Decal = "VJ_Blood_Blue"
+		elseif bloodtype == "Purple" then
+			self.Collide_Decal = "VJ_Blood_Purple"
+		elseif bloodtype == "White" then
+			self.Collide_Decal = "VJ_Blood_White"
+		elseif bloodtype == "Oil" then
+			self.Collide_Decal = "VJ_Blood_Oil"
 		end
-	else
-		
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

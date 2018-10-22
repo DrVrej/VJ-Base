@@ -3947,9 +3947,7 @@ end
 function ENT:OnKilled(dmginfo,hitgroup)
 	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printdied") == 1 then print(self:GetClass().." Died!") end end
 	self:CustomOnKilled(dmginfo,hitgroup)
-	if /*dmginfo:GetDamageType() != DMG_DISSOLVE &&*/ self.DropWeaponOnDeath == true && self:VJ_HasActiveWeapon() == true then
-		self:DropWeaponOnDeathCode(dmginfo,hitgroup)
-	end
+	self:DropWeaponOnDeathCode(dmginfo,hitgroup)
 	if math.random(1,self.ItemDropsOnDeathChance) == 1 then self:RunItemDropsOnDeathCode(dmginfo,hitgroup) end -- Item drops on death
 	if self.HasDeathNotice == true then PrintMessage(self.DeathNoticePosition, self.DeathNoticeWriting) end -- Death notice on death
 	self:ClearEnemyMemory()
@@ -4047,17 +4045,6 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		end
 
 		-- Bone and Angle --
-		/*
-		for Bone = 0, self.Corpse:GetPhysicsObjectCount()-1 do
-			local PhysObj = self.Corpse:GetPhysicsObjectNum(Bone)
-			if (PhysObj:IsValid()) then
-				local Pos, Ang = self:GetBonePosition( self.Corpse:TranslatePhysBoneToBone(Bone))
-				PhysObj:SetPos(Pos)
-				PhysObj:SetAngles(Ang)
-			end
-		end
-		*/
-		
 		local dmgforce = dmginfo:GetDamageForce()
 		for bonelim = 0, self.Corpse:GetPhysicsObjectCount() - 1 do -- 128 = Bone Limit
 			local childphys = self.Corpse:GetPhysicsObjectNum(bonelim)
@@ -4163,17 +4150,9 @@ function ENT:OnRemove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DropWeaponOnDeathCode(dmginfo,hitgroup)
+	if self.DropWeaponOnDeath != true or self:VJ_HasActiveWeapon() != true /*or dmginfo:GetDamageType() == DMG_DISSOLVE*/ then return end
+	
 	self:CustomOnDropWeapon(dmginfo,hitgroup)
-	/*if self:GetActiveWeapon():GetClass() == "weapon_smg1" then print("SMG1") end
-	if self:GetActiveWeapon("ai_weapon_ar2") then local weaponhas = "weapon_ar2"
-	if self:GetActiveWeapon("ai_weapon_shotgun") then local weaponhas = "weapon_shotgun"
-	if self:GetActiveWeapon("ai_weapon_pistol") then local weaponhas = "weapon_pistol"
-	if self:GetActiveWeapon("ai_weapon_crossbow") then local weaponhas = "weapon_crossbow"
-	if self:GetActiveWeapon("ai_weapon_stunstick") then local weaponhas = "weapon_stunstick"
-	if self:GetActiveWeapon("ai_weapon_crowbar") then local weaponhas = "weapon_crowbar"
-	if self:GetActiveWeapon("weapon_annabelle") then local weaponhas = "weapon_annabelle"
-	if self:GetActiveWeapon("ai_weapon_rpg") then local weaponhas = "weapon_rpg"
-	if self:GetActiveWeapon("ai_weapon_357") then local weaponhas = "weapon_357"*/
 
 	local gunang = Angle(0,0,0)
 	if self:GetActiveWeapon():GetClass() == "weapon_ar2" or self:GetActiveWeapon():GetClass() == "weapon_vj_ar2" or self:GetActiveWeapon():GetClass() == "weapon_vj_blaster" then gunang = Angle(0,180,0) end
@@ -4198,10 +4177,9 @@ function ENT:DropWeaponOnDeathCode(dmginfo,hitgroup)
 	if nohandattach == false then
 	self.TheDroppedWeapon:SetPos(self:GetAttachment(self:LookupAttachment(self.DropWeaponOnDeathAttachment)).Pos) else
 	self.TheDroppedWeapon:SetPos(self:GetActiveWeapon():GetPos()) end
-	//Angle(math.random(-50,50),math.random(-50,50),math.random(-50,50))
 	if nohandattach == false then
-	self.TheDroppedWeapon:SetAngles(self:GetAttachment(self:LookupAttachment(self.DropWeaponOnDeathAttachment)).Ang +gunang) else
-	self.TheDroppedWeapon:SetAngles(self:GetActiveWeapon():GetAngles() +gunang) end
+	self.TheDroppedWeapon:SetAngles(self:GetAttachment(self:LookupAttachment(self.DropWeaponOnDeathAttachment)).Ang + gunang) else
+	self.TheDroppedWeapon:SetAngles(self:GetActiveWeapon():GetAngles() + gunang) end
 	self.TheDroppedWeapon:Spawn()
 	self.TheDroppedWeapon:Activate()
 	local noforce = false
@@ -4212,12 +4190,6 @@ function ENT:DropWeaponOnDeathCode(dmginfo,hitgroup)
 	if noforce == false && IsValid(phys) then
 		phys:SetMass(60)
 		phys:ApplyForceCenter(dmginfo:GetDamageForce())
-		/*if self:GetActiveWeapon():GetClass() == "weapon_pistol" or self:GetActiveWeapon():GetClass() == "weapon_vj_9mmpistol" or self:GetActiveWeapon():GetClass() == "weapon_vj_357" then phys:ApplyForceCenter(dmginfo:GetDamageForce() /30)
-		elseif self:GetActiveWeapon():GetClass() == "weapon_vj_glock17" then phys:ApplyForceCenter(dmginfo:GetDamageForce() /20)
-		elseif self:GetActiveWeapon():GetClass() == "weapon_vj_ak47" or self:GetActiveWeapon():GetClass() == "weapon_vj_m16a1" then phys:ApplyForceCenter(dmginfo:GetDamageForce() /50)
-		elseif self:GetActiveWeapon():GetClass() == "weapon_vj_mp40" then phys:ApplyForceCenter(dmginfo:GetDamageForce() /12) else
-		phys:ApplyForceCenter(dmginfo:GetDamageForce() /6)
-		end*/
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
