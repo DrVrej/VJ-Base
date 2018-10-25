@@ -1148,7 +1148,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 		end
 		//timer.Simple(vACT_StopActivitiesTime,function() self.vACT_StopAttacks = false end)
 	end
-	if (vACT_CustomCode) then vACT_CustomCode() end
+	if (vACT_CustomCode) then vACT_CustomCode(vsched) end
 
 	if vTbl_AlwaysUseSequence == false && type(vACT_Name) == "string" then
 		local checkanim = self:GetSequenceActivity(self:LookupSequence(vACT_Name))

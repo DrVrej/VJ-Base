@@ -82,7 +82,7 @@ function ENT:StartSchedule(schedule)
 	schedule.AlreadyRanCode_OnFinish = false
 	//PrintTable(schedule)
 	//if schedule.Name != "vj_chase_enemy" then PrintTable(schedule) end
-	self:DoRunCode_OnFinish(self.CurrentSchedule)
+	self:DoRunCode_OnFinish(self.CurrentSchedule) -- Yete arten schedule garne, verchatsoor
 	self.CurrentSchedule = schedule
 	self.CurrentTaskID = 1
 	self.GetNumberOfTasks = tonumber(schedule:NumTasks()) -- Or else nil
