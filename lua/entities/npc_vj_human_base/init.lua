@@ -748,6 +748,8 @@ function ENT:CustomRareDropsOnDeathCode(dmginfo,hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnDropWeapon(dmginfo,hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnDropWeapon_AfterWeaponSpawned(dmginfo,hitgroup,GetWeapon) end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnDeath_BeforeCorpseSpawned(dmginfo,hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse) end
@@ -4191,6 +4193,8 @@ function ENT:DropWeaponOnDeathCode(dmginfo,hitgroup)
 		phys:SetMass(60)
 		phys:ApplyForceCenter(dmginfo:GetDamageForce())
 	end
+	
+	self:CustomOnDropWeapon_AfterWeaponSpawned(dmginfo,hitgroup,self.TheDroppedWeapon)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RunItemDropsOnDeathCode(dmginfo,hitgroup)
