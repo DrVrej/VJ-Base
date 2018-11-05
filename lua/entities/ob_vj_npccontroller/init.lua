@@ -39,7 +39,7 @@ function ENT:StartControlling()
 	self.TheController.IsControlingNPC = true
 
 	self.PropCamera = ents.Create("prop_dynamic")
-	self.PropCamera:SetPos(self.ControlledNPC:GetPos() +Vector(0,0,self.ControlledNPC:OBBMaxs().z +20)) //self.ControlledNPC:EyePos()
+	self.PropCamera:SetPos(self.ControlledNPC:GetPos() + Vector(0,0,self.ControlledNPC:OBBMaxs().z +20)) //self.ControlledNPC:EyePos()
 	self.PropCamera:SetModel("models/props_junk/watermelon01_chunk02c.mdl")
 	self.PropCamera:SetParent(self.ControlledNPC)
 	self.PropCamera:SetRenderMode(RENDERMODE_NONE)

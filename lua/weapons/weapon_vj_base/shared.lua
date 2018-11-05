@@ -175,6 +175,10 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnFireAnimationEvent(pos,ang,event,options) return false end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnDrawWorldModel() -- This is client only!
+	return true -- return false to not draw the world model
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnDeploy() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnIdle() end
@@ -810,6 +814,9 @@ end
 if (CLIENT) then
 	function SWEP:DrawWorldModel()
 		if !IsValid(self) then return end
+		
+		if self:CustomOnDrawWorldModel() == false then return end
+		
 		if self:GetNWBool("VJ_WorldModel_Invisible") == true then return end
 		
 		if self.WorldModel_NoShadow == true then
