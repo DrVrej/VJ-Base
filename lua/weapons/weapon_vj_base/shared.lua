@@ -151,7 +151,7 @@ SWEP.AlreadyPlayedNPCReloadSound = false
 SWEP.NPC_NextPrimaryFireT		= 0
 SWEP.Primary.DefaultClip 		= 0
 SWEP.NextNPCDrySoundT 			= 0
-SWEP.NPC_AnimationSet = "Custom"
+SWEP.NPC_AnimationSet 			= "Custom"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------

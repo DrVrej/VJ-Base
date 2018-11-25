@@ -1715,23 +1715,28 @@ function ENT:DoMedicCode_HealAlly()
 					//self.Medic_CurrentEntToHeal:VJ_SetSchedule(SCHED_TARGET_FACE)
 				end
 				timer.Simple(animtime,function()
-					if IsValid(self) then
-						if IsValid(self.Medic_CurrentEntToHeal) && self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then
-							self:CustomOnMedic_OnHeal()
-							self:MedicSoundCode_OnHeal()
-							if self.Medic_CurrentEntToHeal:IsNPC() && self.Medic_CurrentEntToHeal.IsVJBaseSNPC == true && self.Medic_CurrentEntToHeal.IsVJBaseSNPC_Animal != true then
-								self.Medic_CurrentEntToHeal:MedicSoundCode_ReceiveHeal()
+					if IsValid(self) then -- Yete NPC ter hos e...
+						if IsValid(self.Medic_CurrentEntToHeal) then -- Yete NPC vor meng bidi aghektsnenk hos e...
+							if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then
+								self:CustomOnMedic_OnHeal()
+								self:MedicSoundCode_OnHeal()
+								if self.Medic_CurrentEntToHeal:IsNPC() && self.Medic_CurrentEntToHeal.IsVJBaseSNPC == true && self.Medic_CurrentEntToHeal.IsVJBaseSNPC_Animal != true then
+									self.Medic_CurrentEntToHeal:MedicSoundCode_ReceiveHeal()
+								end
+								self.Medic_CurrentEntToHeal:RemoveAllDecals()
+								local frimaxhp = self.Medic_CurrentEntToHeal:GetMaxHealth()
+								local fricurhp = self.Medic_CurrentEntToHeal:Health()
+								self.Medic_CurrentEntToHeal:SetHealth(math.Clamp(fricurhp + self.Medic_HealthAmount,fricurhp,frimaxhp))
+								self:DoMedicCode_Reset()
+							else -- Ere vor NPC yed yerta mouys NPC-en yedeven
+								self.AlreadyDoneMedicThinkCode = false
 							end
-							self:VJ_SetSchedule(SCHED_IDLE_STAND)
-							self.Medic_CurrentEntToHeal:RemoveAllDecals()
-							local frimaxhp = self.Medic_CurrentEntToHeal:GetMaxHealth()
-							local fricurhp = self.Medic_CurrentEntToHeal:Health()
-							self.Medic_CurrentEntToHeal:SetHealth(math.Clamp(fricurhp + self.Medic_HealthAmount,fricurhp,frimaxhp))
+						else -- Yete NPC vor meng bidi aghektsnenk hos che, amen inch yed normaltsoor
+							self:DoMedicCode_Reset()
 						end
-						self:DoMedicCode_Reset()
 					end
 				end)
-			else
+			else -- Ere vor NPC yed yerta mouys NPC-en yedeven
 				self.NextIdleTime = CurTime() + 4
 				self.NextChaseTime = CurTime() + 4
 				self:SetTarget(self.Medic_CurrentEntToHeal)
