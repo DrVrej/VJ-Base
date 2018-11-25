@@ -231,4 +231,11 @@ AddConVar = function(cName,cValue,cFlags)
 		CreateConVar(cName,cValue,cFlags)
 	end
 end,
+	-- Client ConVar ----------------------------------------------------------------------------------------------------
+AddClientConVar = function(cName,cValue,cFlags)
+	if !ConVarExists(cName) then
+		local cFlags = cFlags or {FCVAR_ARCHIVE}
+		CreateClientConVar(cName,cValue,cFlags)
+	end
+end,
 }

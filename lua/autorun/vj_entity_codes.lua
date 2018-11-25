@@ -751,6 +751,7 @@ hook.Add("EntityFireBullets","VJ_NPC_FIREBULLET",function(Entity,data,Attacker)
 		//data.Src = util.VJ_GetWeaponPos(Entity) //Entity:EyePos() + Entity:GetUp()*-40
 		if Wep.IsVJBaseWeapon == true then
 			Entity.Weapon_ShotsSinceLastReload = Entity.Weapon_ShotsSinceLastReload + 1
+			Wep:SetClip1(Entity.Weapon_StartingAmmoAmount - Entity.Weapon_ShotsSinceLastReload)
 		end
 		//Entity.Weapon_TimeSinceLastShot = 0
 		return true
