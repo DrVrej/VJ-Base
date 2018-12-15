@@ -57,6 +57,10 @@ function VJ_PICKRANDOMTABLE(tbl)
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function VJ_STOPSOUND(vsoundname)
+	if vsoundname then vsoundname:Stop() end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_HasValue(tbl,val)
 	if !istable(tbl) then return end
 	for x=1, #tbl do
@@ -120,10 +124,6 @@ function VJ_EmitSound(argent,sound,soundlevel,soundpitch,volume,channel)
 	argent:EmitSound(sd,soundlevel,soundpitch,volume,channel)
 	argent.LastPlayedVJSound = sd
 	if argent.IsVJBaseSNPC == true then argent:OnPlayEmitSound(sd) end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_STOPSOUND(vsoundname)
-	if vsoundname then vsoundname:Stop() end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_AnimationExists(argent,actname)
@@ -672,9 +672,23 @@ end
 hook.Add("EntityEmitSound","VJ_NPC_THEMEMUSIC",VJ_NPC_THEMEMUSIC)*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("EntityEmitSound","VJ_NPC_ENTITYSOUND",function(data)
-	if IsValid(data.Entity) && data.Entity:IsNPC() && data.Entity.IsVJBaseSNPC == true then
-		if string.EndsWith(data.OriginalSoundName,"stepleft") or string.EndsWith(data.OriginalSoundName,"stepright") then
-			return false
+	local ent = data.Entity
+	if IsValid(ent) then
+		//PrintTable(data)
+		if (SERVER) && ent:IsPlayer() && data.SoundLevel >= 75 then
+			/*print("---------------------------")
+			PrintTable(data)*/
+			if string.StartWith(data.OriginalSoundName, "player/footsteps") && (ent:Crouching() or ent:KeyDown(IN_WALK)) then
+				// Pamenal mi ener
+			else
+				ent.VJ_LastInvestigateSd = CurTime()
+				ent.VJ_LastInvestigateSdLevel = data.SoundLevel
+			end
+		end
+		if ent:IsNPC() && ent.IsVJBaseSNPC == true then
+			if string.EndsWith(data.OriginalSoundName,"stepleft") or string.EndsWith(data.OriginalSoundName,"stepright") then
+				return false
+			end
 		end
 	end
 end)

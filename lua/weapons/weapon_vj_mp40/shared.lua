@@ -12,11 +12,13 @@ if (CLIENT) then
 SWEP.Slot						= 2 -- Which weapon slot you want your SWEP to be in? (1 2 3 4 5 6) 
 SWEP.SlotPos					= 4 -- Which part of that slot do you want the SWEP to be in? (1 2 3 4 5 6)
 SWEP.SwayScale 					= 1 -- Default is 1, The scale of the viewmodel sway
+SWEP.UseHands					= true
 end
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.ViewModel					= "models/weapons/v_mp40.mdl"
+SWEP.ViewModel					= "models/vj_weapons/c_mp40.mdl"
 SWEP.WorldModel					= "models/weapons/w_mp40_n.mdl"
 SWEP.HoldType 					= "smg"
+SWEP.ViewModelFOV				= 45 -- Player FOV for the view model
 SWEP.Spawnable					= true
 SWEP.AdminSpawnable				= false
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
