@@ -18,9 +18,10 @@ SWEP.NPC_NextPrimaryFire 		= 5 -- Next time it can use primary fire
 SWEP.NPC_TimeUntilFire	 		= 0.8 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_ReloadSound			= {"vj_weapons/reload_rpg.wav"}
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.ViewModel					= "models/vj_weapons/v_rpg7.mdl" // "models/weapons/c_rpg.mdl"
+SWEP.ViewModel					= "models/vj_weapons/c_rpg7.mdl" // "models/weapons/c_rpg.mdl"
 SWEP.WorldModel					= "models/vj_weapons/w_rpg7.mdl" // "models/weapons/w_rocket_launcher.mdl"
 SWEP.HoldType 					= "ar2"
+SWEP.ViewModelFOV				= 60 -- Player FOV for the view model
 SWEP.Spawnable					= true
 SWEP.AdminSpawnable				= false
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------

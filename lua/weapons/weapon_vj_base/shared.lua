@@ -474,7 +474,8 @@ function SWEP:PrimaryAttack(ShootPos,ShootDir)
 		end
 		local firesd = VJ_PICKRANDOMTABLE(self.Primary.Sound)
 		if firesd != false then
-			sound.Play(firesd,self:GetPos(),80,math.random(90,100))
+			self:EmitSound(firesd, 80, math.random(90,100))
+			//sound.Play(firesd,self:GetPos(),80,math.random(90,100))
 		end
 		if self.Primary.HasDistantSound == true then
 			local farsd = VJ_PICKRANDOMTABLE(self.Primary.DistantSound)

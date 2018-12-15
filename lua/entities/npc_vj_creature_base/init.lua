@@ -126,6 +126,8 @@ ENT.PoseParameterLooking_InvertYaw = false -- Inverts the yaw poseparameters (Y)
 ENT.PoseParameterLooking_InvertRoll = false -- Inverts the roll poseparameters (Z)
 ENT.PoseParameterLooking_TurningSpeed = 10 -- How fast does the parameter turn?
 ENT.PoseParameterLooking_Names = {pitch={},yaw={},roll={}} -- Custom pose parameters to use, can put as many as needed
+	-- ====== Sound Detection Variables ====== --
+ENT.InvestigateSoundDistance = 8 -- How far away can the SNPC hear sounds? | This number is timed by the calculated volume of the detectable sound.
 	-- ====== No Chase After Certain Distance Variables ====== --
 ENT.NoChaseAfterCertainRange = false -- Should the SNPC not be able to chase when it's between number x and y?
 ENT.NoChaseAfterCertainRange_FarDistance = 2000 -- How far until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
@@ -437,6 +439,7 @@ ENT.HasMedicSounds_BeforeHeal = true -- If set to false, it won't play any sound
 ENT.HasMedicSounds_AfterHeal = true -- If set to false, it won't play any sounds after it gives a med kit to an ally
 ENT.HasMedicSounds_ReceiveHeal = true -- If set to false, it won't play any sounds when it receives a medkit
 ENT.HasOnPlayerSightSounds = true -- If set to false, it won't play the saw player sounds
+ENT.HasInvestigateSounds = true -- If set to false, it won't play any sounds when it's investigating something
 ENT.HasAlertSounds = true -- If set to false, it won't play the alert sounds
 ENT.HasCallForHelpSounds = true -- If set to false, it won't play any sounds when it calls for help
 ENT.HasBecomeEnemyToPlayerSounds = true -- If set to false, it won't play the become enemy to player sounds
@@ -470,6 +473,7 @@ ENT.SoundTbl_MedicBeforeHeal = {}
 ENT.SoundTbl_MedicAfterHeal = {}
 ENT.SoundTbl_MedicReceiveHeal = {}
 ENT.SoundTbl_OnPlayerSight = {}
+ENT.SoundTbl_Investigate = {}
 ENT.SoundTbl_Alert = {}
 ENT.SoundTbl_CallForHelp = {}
 ENT.SoundTbl_BecomeEnemyToPlayer = {}
@@ -511,6 +515,7 @@ ENT.MedicBeforeHealSoundChance = 1
 ENT.MedicAfterHealSoundChance = 1
 ENT.MedicReceiveHealSoundChance = 1
 ENT.OnPlayerSightSoundChance = 1
+ENT.InvestigateSoundChance = 1
 ENT.AlertSoundChance = 1
 ENT.CallForHelpSoundChance = 1
 ENT.BecomeEnemyToPlayerChance = 1
@@ -537,6 +542,8 @@ ENT.NextSoundTime_Breath1 = 1
 ENT.NextSoundTime_Breath2 = 1
 ENT.NextSoundTime_Idle1 = 4
 ENT.NextSoundTime_Idle2 = 11
+ENT.NextSoundTime_Investigate1 = 5
+ENT.NextSoundTime_Investigate2 = 5
 ENT.NextSoundTime_Alert1 = 2
 ENT.NextSoundTime_Alert2 = 3
 ENT.NextSoundTime_OnKilledEnemy1 = 3
@@ -564,6 +571,7 @@ ENT.BeforeHealSoundLevel = 75
 ENT.AfterHealSoundLevel = 75
 ENT.MedicReceiveHealSoundLevel = 75
 ENT.OnPlayerSightSoundLevel = 75
+ENT.InvestigateSoundLevel = 80
 ENT.AlertSoundLevel = 80
 ENT.CallForHelpSoundLevel = 80
 ENT.BecomeEnemyToPlayerSoundLevel = 75
@@ -618,6 +626,8 @@ ENT.MedicReceiveHealSoundPitch1 = "UseGeneralPitch"
 ENT.MedicReceiveHealSoundPitch2 = "UseGeneralPitch"
 ENT.OnPlayerSightSoundPitch1 = "UseGeneralPitch"
 ENT.OnPlayerSightSoundPitch2 = "UseGeneralPitch"
+ENT.InvestigateSoundPitch1 = "UseGeneralPitch"
+ENT.InvestigateSoundPitch2 = "UseGeneralPitch"
 ENT.AlertSoundPitch1 = "UseGeneralPitch"
 ENT.AlertSoundPitch2 = "UseGeneralPitch"
 ENT.CallForHelpSoundPitch1 = "UseGeneralPitch"
@@ -928,6 +938,8 @@ ENT.Passive_NextRunOnTouchT = 0
 ENT.Passive_NextRunOnDamageT = 0
 ENT.NextWanderTime = 0
 ENT.TakingCoverT = 0
+ENT.NextInvestigateSoundMove = 0
+ENT.NextInvestigateSoundT = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.NearestPointToEnemyDistance = Vector(0,0,0)
 ENT.SelectedDifficulty = 1
@@ -1392,7 +1404,7 @@ function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_IDLE_STAND()
-	if self:IsMoving() or (self.NextIdleTime > CurTime()) then return end
+	if self:IsMoving() or (self.NextIdleTime > CurTime()) or self.CurrentSchedule != nil then return end
 	//if (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_idle_stand") or (self.CurrentAnim_CustomIdle != 0 && VJ_IsCurrentAnimation(self,self.CurrentAnim_CustomIdle) == true) then return end
 	//local vsched = ai_vj_schedule.New("vj_act_idlestand")
 	//vsched:EngTask("TASK_WAIT", waittime)
@@ -3281,7 +3293,24 @@ function ENT:DoEntityRelationshipCheck()
 				if (!self.IsVJBaseSNPC_Tank) && !IsValid(self:GetEnemy()) && entisfri == false then
 					if entisfri == false then self:AddEntityRelationship(v,D_NU,99) end
 					if v:Crouching() && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightdist = 5000 else sightdist = 2000 end end
-					if vDistanceToMy < 350 && ((!v:Crouching() && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP && ((!v:KeyDown(IN_WALK) && (v:KeyDown(IN_FORWARD) or v:KeyDown(IN_BACK) or v:KeyDown(IN_MOVELEFT) or v:KeyDown(IN_MOVERIGHT))) or (v:KeyDown(IN_SPEED) or v:KeyDown(IN_JUMP)))) or (self:VJ_DoPlayerFlashLightCheck(v,20) == true)) then self:SetTarget(v) self:VJ_TASK_FACE_X("TASK_FACE_TARGET") end
+					if vDistanceToMy < (self.InvestigateSoundDistance * v.VJ_LastInvestigateSdLevel) && ((CurTime() - v.VJ_LastInvestigateSd) <= 1) then
+						if self:Visible(v) then
+							self:SetTarget(v)
+							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+							self:InvestigateSoundCode()
+						elseif self.NextInvestigateSoundMove < CurTime() then
+							if self.FollowingPlayer == false then
+								self:SetLastPosition(v:GetPos())
+								self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
+							end
+							self:InvestigateSoundCode()
+							self.NextInvestigateSoundMove = CurTime() + 2
+						end
+					elseif vDistanceToMy < 350 && ((self:VJ_DoPlayerFlashLightCheck(v,20) == true)) then
+						//			   Asiga hoser ^ (!v:Crouching() && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP && ((!v:KeyDown(IN_WALK) && (v:KeyDown(IN_FORWARD) or v:KeyDown(IN_BACK) or v:KeyDown(IN_MOVELEFT) or v:KeyDown(IN_MOVERIGHT))) or (v:KeyDown(IN_SPEED) or v:KeyDown(IN_JUMP)))) or
+						self:SetTarget(v)
+						self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+					end
 				end
 			end
 		end
@@ -4451,6 +4480,21 @@ function ENT:IdleSoundCode(CustomTbl)
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:InvestigateSoundCode(CustomTbl)
+	if self.HasSounds == false or self.HasInvestigateSounds == false then return end
+	if CurTime() > self.NextInvestigateSoundT then
+		local randsd = math.random(1,self.InvestigateSoundChance)
+		local soundtbl = self.SoundTbl_Investigate
+		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
+		if randsd == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+			VJ_STOPSOUND(self.CurrentInvestigateSound)
+			self.NextIdleSoundT = self.NextIdleSoundT + 2
+			self.CurrentInvestigateSound = VJ_CreateSound(self,soundtbl,self.InvestigateSoundLevel,self:VJ_DecideSoundPitch(self.InvestigateSoundPitch1,self.InvestigateSoundPitch2))
+		end
+		self.NextInvestigateSoundT = CurTime() + math.Rand(self.NextSoundTime_Investigate1,self.NextSoundTime_Investigate2)
+	end
+end
+--------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnReceiveOrderSoundCode(CustomTbl)
 	if self.HasSounds == false or self.HasOnReceiveOrderSounds == false then return end
 	local randomalertsound = math.random(1,self.OnReceiveOrderSoundChance)
@@ -4471,6 +4515,7 @@ function ENT:AlertSoundCode(CustomTbl)
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomalertsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
 		VJ_STOPSOUND(self.CurrentIdleSound)
+		VJ_STOPSOUND(self.CurrentInvestigateSound)
 		self.NextIdleSoundT = self.NextIdleSoundT + 2
 		self.CurrentAlertSound = VJ_CreateSound(self,soundtbl,self.AlertSoundLevel,self:VJ_DecideSoundPitch(self.AlertSoundPitch1,self.AlertSoundPitch2))
 	end
@@ -4759,6 +4804,7 @@ end
 function ENT:StopAllCommonSounds()
 	VJ_STOPSOUND(self.CurrentBreathSound)
 	VJ_STOPSOUND(self.CurrentIdleSound)
+	VJ_STOPSOUND(self.CurrentInvestigateSound)
 	VJ_STOPSOUND(self.CurrentAlertSound)
 	VJ_STOPSOUND(self.CurrentBeforeMeleeAttackSound)
 	VJ_STOPSOUND(self.CurrentMeleeAttackSound)
