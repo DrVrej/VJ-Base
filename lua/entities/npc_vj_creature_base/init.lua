@@ -127,7 +127,7 @@ ENT.PoseParameterLooking_InvertRoll = false -- Inverts the roll poseparameters (
 ENT.PoseParameterLooking_TurningSpeed = 10 -- How fast does the parameter turn?
 ENT.PoseParameterLooking_Names = {pitch={},yaw={},roll={}} -- Custom pose parameters to use, can put as many as needed
 	-- ====== Sound Detection Variables ====== --
-ENT.InvestigateSoundDistance = 8 -- How far away can the SNPC hear sounds? | This number is timed by the calculated volume of the detectable sound.
+ENT.InvestigateSoundDistance = 9 -- How far away can the SNPC hear sounds? | This number is timed by the calculated volume of the detectable sound.
 	-- ====== No Chase After Certain Distance Variables ====== --
 ENT.NoChaseAfterCertainRange = false -- Should the SNPC not be able to chase when it's between number x and y?
 ENT.NoChaseAfterCertainRange_FarDistance = 2000 -- How far until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
@@ -3294,12 +3294,11 @@ function ENT:DoEntityRelationshipCheck()
 					if entisfri == false then self:AddEntityRelationship(v,D_NU,99) end
 					if v:Crouching() && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightdist = 5000 else sightdist = 2000 end end
 					if vDistanceToMy < (self.InvestigateSoundDistance * v.VJ_LastInvestigateSdLevel) && ((CurTime() - v.VJ_LastInvestigateSd) <= 1) then
-						if self:Visible(v) then
-							self:SetTarget(v)
-							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-							self:InvestigateSoundCode()
-						elseif self.NextInvestigateSoundMove < CurTime() then
-							if self.FollowingPlayer == false then
+						if self.NextInvestigateSoundMove < CurTime() then
+							if self:Visible(v) then
+								self:SetTarget(v)
+								self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+							elseif self.FollowingPlayer == false then
 								self:SetLastPosition(v:GetPos())
 								self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
 							end

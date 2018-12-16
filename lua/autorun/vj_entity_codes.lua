@@ -676,13 +676,15 @@ hook.Add("EntityEmitSound","VJ_NPC_ENTITYSOUND",function(data)
 	if IsValid(ent) then
 		//PrintTable(data)
 		if (SERVER) && ent:IsPlayer() && data.SoundLevel >= 75 then
-			/*print("---------------------------")
-			PrintTable(data)*/
+			//print("---------------------------")
+			//PrintTable(data)
 			if string.StartWith(data.OriginalSoundName, "player/footsteps") && (ent:Crouching() or ent:KeyDown(IN_WALK)) then
 				// Pamenal mi ener
 			else
 				ent.VJ_LastInvestigateSd = CurTime()
-				ent.VJ_LastInvestigateSdLevel = data.SoundLevel
+				local volex = 0
+				if data.Volume <= 0.4 then volex = 15 end
+				ent.VJ_LastInvestigateSdLevel = (data.SoundLevel * (data.Volume)) + volex
 			end
 		end
 		if ent:IsNPC() && ent.IsVJBaseSNPC == true then
