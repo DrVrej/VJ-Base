@@ -121,7 +121,7 @@ ENT.PoseParameterLooking_InvertRoll = false -- Inverts the roll poseparameters (
 ENT.PoseParameterLooking_TurningSpeed = 10 -- How fast does the parameter turn?
 ENT.PoseParameterLooking_Names = {pitch={},yaw={},roll={}} -- Custom pose parameters to use, can put as many as needed
 	-- ====== Sound Detection Variables ====== --
-ENT.InvestigateSoundDistance = 5 -- How far away can the SNPC hear sounds? | This number is timed by the calculated volume of the detectable sound.
+ENT.InvestigateSoundDistance = 9 -- How far away can the SNPC hear sounds? | This number is timed by the calculated volume of the detectable sound.
 	-- ====== Control Variables ====== --
 	-- Use these variables very careful! One wrong change can mess up the whole SNPC!
 ENT.FindEnemy_UseSphere = false -- Should the SNPC be able to see all around him? (360) | Objects and walls can still block its sight!
