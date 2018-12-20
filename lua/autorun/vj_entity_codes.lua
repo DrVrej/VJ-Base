@@ -783,6 +783,8 @@ end)
 hook.Add("PlayerInitialSpawn","VJ_PLAYER_INITIALSPAWN",function(ply)
 	local getall = ents.GetAll()
 	for k,v in ipairs(getall) do
+		v.VJ_LastInvestigateSd = 0
+		v.VJ_LastInvestigateSdLevel = 0
 		if v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
 			v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
 		end
