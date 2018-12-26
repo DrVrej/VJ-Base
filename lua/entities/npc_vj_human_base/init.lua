@@ -1354,7 +1354,7 @@ function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_IDLE_STAND()
-	if self:IsMoving() or (self.NextIdleTime > CurTime()) or self.CurrentSchedule != nil then return end
+	if self:IsMoving() or (self.NextIdleTime > CurTime()) /*or self.CurrentSchedule != nil*/ then return end
 	//if (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_idle_stand") or (self.CurrentAnim_CustomIdle != 0 && VJ_IsCurrentAnimation(self,self.CurrentAnim_CustomIdle) == true) then return end
 	//local vsched = ai_vj_schedule.New("vj_act_idlestand")
 	//vsched:EngTask("TASK_WAIT", waittime)
@@ -1407,9 +1407,11 @@ function ENT:VJ_TASK_IDLE_STAND()
 	if finaltbl == false then return false end -- Vesdah yegher vor minag tevov animation-er e gernan antsnel!
 	self.CurrentAnim_IdleStand = finaltbl
 	if hasanim == true && CurTime() > self.NextIdleStandTime then
-		self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0)
+		if self.CurrentSchedule == nil then -- Yete ooresh pame chenergor 
+			self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0) -- Asiga chi tenesne yerp vor nouyn animation-e enen ne yedev yedevi, ge sarin
+		end
 		self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),finaltbl)
-		timer.Simple(0.1,function() -- 0.1 hedvargyan espase menchevor khaghe pokhe animation e
+		timer.Simple(0.1,function() -- 0.1 hedvargyan espase minchevor khaghe pokhe animation e
 			if IsValid(self) then
 				local curseq = self:GetSequence()
 				if VJ_SequenceToActivity(self,self:GetSequenceName(curseq)) == finaltbl then -- Nayir yete himagva animation e nooynene
