@@ -30,7 +30,6 @@ SWEP.Primary.Delay				= 0.25 -- Time until it can shoot again
 SWEP.Primary.Automatic			= true -- Is it automatic?
 SWEP.Primary.Ammo				= "Pistol" -- Ammo type
 SWEP.Primary.Sound				= {"Weapon_Pistol.Single"}
-SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
 SWEP.Primary.DistantSound		= {"Weapon_Pistol.NPC_Single"}
 SWEP.Primary.AllowFireInWater	= true -- If true, you will be able to use primary fire in water
 SWEP.PrimaryEffects_MuzzleAttachment = 1
