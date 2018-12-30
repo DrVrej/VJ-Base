@@ -17,8 +17,8 @@ end
 	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.NPC_NextPrimaryFire 		= 0.9 -- Next time it can use primary fires
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.ViewModel					= "models/weapons/c_357.mdl"
-SWEP.WorldModel					= "models/weapons/w_357.mdl"
+SWEP.ViewModel					= "models/vj_weapons/v_flaregun.mdl"
+SWEP.WorldModel					= "models/vj_weapons/w_flaregun.mdl"
 SWEP.HoldType 					= "revolver"
 SWEP.Spawnable					= true
 SWEP.AdminSpawnable				= false
@@ -31,7 +31,6 @@ SWEP.Primary.Delay				= 0.9 -- Time until it can shoot again
 SWEP.Primary.Automatic			= false -- Is it automatic?
 SWEP.Primary.Ammo				= "357" -- Ammo type
 SWEP.Primary.Sound				= {"vj_weapons/flare/fire.wav"}
-SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
 SWEP.Primary.DistantSound		= {"vj_weapons/flare/fire_dist.wav"}
 //SWEP.Primary.DistantSoundVolume	= 0.25 -- Distant sound volume
 SWEP.Primary.DisableBulletCode	= true -- The bullet won't spawn, this can be used when creating a projectile-based weapon

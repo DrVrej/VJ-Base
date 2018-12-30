@@ -31,7 +31,6 @@ SWEP.Primary.Delay				= 0.1 -- Time until it can shoot again
 SWEP.Primary.Automatic			= true -- Is it automatic?
 SWEP.Primary.Ammo				= "SMG1" -- Ammo type
 SWEP.Primary.Sound				= {"vj_weapons/mp_40/mp40_single.wav"}
-SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
 SWEP.Primary.DistantSound		= {"vj_weapons/mp_40/mp40_single_dist.wav"}
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellAttachment = 2

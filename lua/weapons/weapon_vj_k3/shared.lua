@@ -21,7 +21,6 @@ SWEP.Primary.Force				= 1 -- Force applied on the object the bullet hits
 SWEP.Primary.ClipSize			= 45 -- Max amount of bullets per clip
 SWEP.Primary.Ammo				= "357" -- Ammo type
 SWEP.Primary.Sound				= {"vj_weapons/k3_armenian/k3_fire.wav"}
-SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
 SWEP.Primary.DistantSound		= {"vj_weapons/k3_armenian/k3_fire_dist.wav"}
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_ShellAttachment = 2
