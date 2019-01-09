@@ -1,6 +1,6 @@
 /*--------------------------------------------------
 	=============== Entity Stuff ===============
-	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2019 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
@@ -50,7 +50,7 @@ function VJ_PICKRANDOMTABLE(tbl)
 	if not tbl then return false end -- Yete tbl-e pame choone meche, getsoor!
 	if !istable(tbl) then return tbl end -- Yete table chene, getsoor!
 	if istable(tbl) then
-		if #tbl < 1 then return false end -- Yete table-e barabe ( meg en aveli kich), getsoor!
+		if #tbl < 1 then return false end -- Yete table-e barabe (meg en aveli kich), getsoor!
 		tbl = tbl[math.random(1,#tbl)]
 	return tbl
 	end
