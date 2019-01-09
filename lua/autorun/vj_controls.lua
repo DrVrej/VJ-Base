@@ -1,11 +1,10 @@
 /*--------------------------------------------------
 	=============== VJ Controls ===============
-	*** Copyright (c) 2012-2018 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2019 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
--- "I stroked the keyboard so hard that it made me moist. The stroking sound was so HD that Valve decided to use it for its future games." - VP Snipes
 
 /*
 if (CLIENT) then

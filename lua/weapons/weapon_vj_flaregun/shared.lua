@@ -25,9 +25,9 @@ SWEP.AdminSpawnable				= false
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Damage				= 20 -- Damage
 SWEP.Primary.Force				= 1 -- Force applied on the object the bullet hits
-SWEP.Primary.ClipSize			= 6 -- Max amount of bullets per clip
+SWEP.Primary.ClipSize			= 1 -- Max amount of bullets per clip
 SWEP.Primary.Recoil				= 2 -- How much recoil does the player get?
-SWEP.Primary.Delay				= 0.9 -- Time until it can shoot again
+SWEP.Primary.Delay				= 0.2 -- Time until it can shoot again
 SWEP.Primary.Automatic			= false -- Is it automatic?
 SWEP.Primary.Ammo				= "357" -- Ammo type
 SWEP.Primary.Sound				= {"vj_weapons/flare/fire.wav"}
@@ -38,10 +38,6 @@ SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_SpawnShells = false
 	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.DelayOnDeploy 				= 0.6 -- Time until it can shoot again after deploying the weapon
-	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.HasReloadSound				= false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
-SWEP.Reload_TimeUntilAmmoIsSet	= 2.7 -- Time until ammo is set to the weapon
-SWEP.Reload_TimeUntilFinished	= 3.5 -- How much time until the player can play idle animation, shoot, etc.
 	-- Idle Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasIdleAnimation			= true -- Does it have a idle animation?
 SWEP.AnimTbl_Idle				= {ACT_VM_IDLE}
@@ -50,20 +46,21 @@ SWEP.NextIdle_PrimaryAttack		= 0.5 -- How much time until it plays the idle anim
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BeforeShoot()
 if (CLIENT) then return end
-	local SpawnBlaserRod = ents.Create("obj_vj_flareround")
-	if self.Owner:IsPlayer() then
-	SpawnBlaserRod:SetPos(self.Owner:GetShootPos()) else
-	SpawnBlaserRod:SetPos(self:GetAttachment(self:LookupAttachment("muzzle")).Pos) end
-	SpawnBlaserRod:SetAngles(self.Owner:GetAngles())
-	SpawnBlaserRod:SetOwner(self.Owner)
-	SpawnBlaserRod:Activate()
-	SpawnBlaserRod:Spawn()
+	local flareround = ents.Create("obj_vj_flareround")
+	//if self.Owner:IsPlayer() then
+	//flareround:SetPos(self.Owner:GetShootPos()) else
+	flareround:SetPos(self:GetAttachment(self:LookupAttachment("muzzle")).Pos)// end
+	flareround:SetAngles(self.Owner:GetAngles())
+	flareround:SetOwner(self.Owner)
+	flareround:Activate()
+	flareround:Spawn()
 
-	local phy = SpawnBlaserRod:GetPhysicsObject()
+	local phy = flareround:GetPhysicsObject()
 	if phy:IsValid() then
 		if self.Owner:IsPlayer() then
-		phy:ApplyForceCenter((self.Owner:GetAimVector() * 15000)) else //200000
-		phy:ApplyForceCenter(((self.Owner:GetEnemy():GetPos() - self.Owner:GetPos()) * 15000))
+			phy:ApplyForceCenter((self.Owner:GetAimVector() * 15000))
+		else
+			phy:ApplyForceCenter(((self.Owner:GetEnemy():GetPos() - self.Owner:GetPos()) * 15000))
 		end
 	end
 end

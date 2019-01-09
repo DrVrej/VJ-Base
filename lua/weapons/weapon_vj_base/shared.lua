@@ -364,7 +364,7 @@ function SWEP:NPCAbleToShoot()
 					if self.Owner.VJ_IsBeingControlled == true then self.Owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER,"Press R to reload!") end
 					if CurTime() > self.NextNPCDrySoundT then
 						local sdtbl = VJ_PICKRANDOMTABLE(self.DryFireSound)
-						if sdtbl != false then self:EmitSound(sdtbl,80,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) end
+						if sdtbl != false then self.Owner:EmitSound(sdtbl,80,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) end
 						if self.NPC_NextPrimaryFire != false then
 							self.NextNPCDrySoundT = CurTime() + self.NPC_NextPrimaryFire
 						end
@@ -460,8 +460,8 @@ function SWEP:PrimaryAttack(ShootPos,ShootDir)
 	self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
 	if self.Reloading == true then return end
 	if self.Owner:IsNPC() && self.Owner.VJ_IsBeingControlled == false && !IsValid(self.Owner:GetEnemy()) then return end
-	if self.Owner:IsPlayer() && self.Primary.AllowFireInWater == false && self.Owner:WaterLevel() == 3 && self.Reloading == false then self:EmitSound(VJ_PICKRANDOMTABLE(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) return end
-	if self:Clip1() <= 0 && self.Reloading == false then self:EmitSound(VJ_PICKRANDOMTABLE(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) return end
+	if self.Owner:IsPlayer() && self.Primary.AllowFireInWater == false && self.Owner:WaterLevel() == 3 && self.Reloading == false then self.Owner:EmitSound(VJ_PICKRANDOMTABLE(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) return end
+	if self:Clip1() <= 0 && self.Reloading == false then self.Owner:EmitSound(VJ_PICKRANDOMTABLE(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) return end
 	if (!self:CanPrimaryAttack()) then return end
 	self:CustomOnPrimaryAttack_BeforeShoot()
 	if (SERVER) then
