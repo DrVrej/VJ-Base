@@ -44,13 +44,13 @@ SWEP.NPC_AnimationTbl_Shotgun 	= {ACT_RANGE_ATTACK_SHOTGUN,ACT_RANGE_ATTACK_SHOT
 SWEP.NPC_ReloadAnimationTbl_Custom = {} -- Can be activity or sequence
 SWEP.NPC_ReloadAnimationTbl		= {ACT_RELOAD,ACT_RELOAD_START,ACT_RELOAD_FINISH,ACT_RELOAD_LOW,ACT_GESTURE_RELOAD,ACT_GESTURE_RELOAD_PISTOL,ACT_GESTURE_RELOAD_SMG1,ACT_GESTURE_RELOAD_SHOTGUN,ACT_SHOTGUN_RELOAD_START,ACT_SHOTGUN_RELOAD_FINISH,ACT_SMG2_RELOAD2,ACT_RELOAD_PISTOL,ACT_RELOAD_PISTOL_LOW,ACT_RELOAD_SMG1,ACT_RELOAD_SMG1_LOW,ACT_RELOAD_SHOTGUN,ACT_RELOAD_SHOTGUN_LOW,ACT_GESTURE_RELOAD,ACT_GESTURE_RELOAD_PISTOL,ACT_GESTURE_RELOAD_SMG1,ACT_GESTURE_RELOAD_SHOTGUN}
 SWEP.NPC_HasReloadSound			= true -- Should it play a sound when the base detects the SNPC playing a reload animation?
+SWEP.NPC_ReloadSound			= {} -- Sounds it plays when the base detects the SNPC playing a reload animation
+SWEP.NPC_ReloadSoundLevel		= 60 -- How far does the sound go?
 SWEP.NPC_ExtraFireSound			= {} -- Plays an extra sound after it fires (Example: Bolt action sound)
 SWEP.NPC_ExtraFireSoundTime		= 0.4 -- How much time until it plays the sound (After Firing)?
 SWEP.NPC_ExtraFireSoundLevel	= 70 -- How far does the sound go?
 SWEP.NPC_ExtraFireSoundPitch1	= 90
 SWEP.NPC_ExtraFireSoundPitch2	= 100
-SWEP.NPC_ReloadSound			= {} -- Sounds it plays when the base detects the SNPC playing a reload animation
-SWEP.NPC_ReloadSoundLevel		= 60 -- How far does the sound go?
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.MadeForNPCsOnly 			= false -- Is tihs weapon meant to be for NPCs only?
 SWEP.ViewModel					= "models/weapons/v_rif_ak47.mdl"
@@ -667,7 +667,7 @@ if !IsValid(self) or !IsValid(self.Owner) or !self.Owner:Alive() or !self.Owner:
 		local test = setcorrectnum + self:Clip1()
 		self.Reloading = true
 		self:CustomOnReload()
-		if self.HasReloadSound == true then self:EmitSound(VJ_PICKRANDOMTABLE(self.ReloadSound),50,math.random(90,100)) end
+		if self.HasReloadSound == true then self.Owner:EmitSound(VJ_PICKRANDOMTABLE(self.ReloadSound),50,math.random(90,100)) end
 		if self.Owner:IsPlayer() then
 			self:SendWeaponAnim(VJ_PICKRANDOMTABLE(self.AnimTbl_Reload)) //self:SendWeaponAnim(VJ_PICKRANDOMTABLE(self.AnimTbl_Reload))
 			self.Owner:SetAnimation(PLAYER_RELOAD)
