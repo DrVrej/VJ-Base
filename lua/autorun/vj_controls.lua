@@ -189,13 +189,25 @@ AddNPC = function(nName,nClass,vCat,nAdmin,nFunc)
 	if (nFunc) then nFunc(NPC) end
 	list.Set("NPC", NPC.Class, NPC) //NPC //VJBASE_SPAWNABLE_NPC
 	list.Set("VJBASE_SPAWNABLE_NPC", NPC.Class, NPC)
+	if (CLIENT) then
+		language.Add(NPC.Class, NPC.Name)
+		killicon.Add(NPC.Class,"HUD/killicons/default",Color(255,80,0,255))
+		language.Add("#"..NPC.Class, NPC.Name)
+		killicon.Add("#"..NPC.Class,"HUD/killicons/default",Color(255,80,0,255))
+	end
 end,
 	-- Human NPC ----------------------------------------------------------------------------------------------------
 AddNPC_HUMAN = function(nhName,nhClass,nhWeapons,vCat,nhAdmin,nhFunc)
 	local NPCH = {Name = nhName, Class = nhClass, Weapons = nhWeapons, Category = vCat, AdminOnly = nhAdmin}
-	if (nhFunc) then nhFunc(NPC) end
+	if (nhFunc) then nhFunc(NPCH) end
 	list.Set("NPC", NPCH.Class, NPCH) //NPC //VJBASE_SPAWNABLE_NPC
 	list.Set("VJBASE_SPAWNABLE_NPC", NPCH.Class, NPCH)
+	if (CLIENT) then
+		language.Add(NPCH.Class, NPCH.Name)
+		killicon.Add(NPCH.Class,"HUD/killicons/default",Color(255,80,0,255))
+		language.Add("#"..NPCH.Class, NPCH.Name)
+		killicon.Add("#"..NPCH.Class,"HUD/killicons/default",Color(255,80,0,255))
+	end
 end,
 	-- NPC Weapon ----------------------------------------------------------------------------------------------------
 AddNPCWeapon = function(nwName,nwClass)
@@ -205,7 +217,7 @@ end,
 	-- Weapon ----------------------------------------------------------------------------------------------------
 AddWeapon = function(wName,wClass,wAdmin,vCat,wFunc)
 	local Weapon = {ClassName = wClass, PrintName = wName, Category = vCat, AdminOnly = wAdmin, Spawnable = true}
-	if (wFunc) then wFunc(NPC) end
+	if (wFunc) then wFunc(Weapon) end
 	list.Set("Weapon", wClass, Weapon) //Weapon //VJBASE_SPAWNABLE_WEAPON
 	list.Set("VJBASE_SPAWNABLE_WEAPON", wClass, Weapon)
 	duplicator.Allow(wClass)
@@ -213,7 +225,7 @@ end,
 	-- Entity ----------------------------------------------------------------------------------------------------
 AddEntity = function(eName,eClass,eAuthor,eAdmin,eOffSet,eDropToFloor,vCat,eFunc)
 	local Ent = {PrintName = eName, ClassName = eClass, Author = eAuthor, AdminOnly = eAdmin, NormalOffset = eOffSet, DropToFloor = eDropToFloor, Category = vCat, Spawnable = true}
-	if (eFunc) then eFunc(NPC) end
+	if (eFunc) then eFunc(Ent) end
 	list.Set("SpawnableEntities", eClass, Ent) //SpawnableEntities //VJBASE_SPAWNABLE_ENTITIES
 	list.Set("VJBASE_SPAWNABLE_ENTITIES", eClass, Ent)
 	duplicator.Allow(eClass)
