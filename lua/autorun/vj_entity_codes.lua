@@ -551,6 +551,36 @@ function NPC_MetaTable:VJ_DoSetEnemy(argent,ShouldStopActs,DoSmallWhenActiveEnem
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function NPC_MetaTable:CalculateProjectile(Type, StartPos, EndPos, Vel)
+	if Type == "Line" then -- Suggested to disable gravity!
+		return ((EndPos - StartPos):GetNormal()) * Vel
+	elseif Type == "Curve" then
+		-- Oknoutyoun: https://gamedev.stackexchange.com/questions/53552/how-can-i-find-a-projectiles-launch-angle
+		-- Negar: https://wikimedia.org/api/rest_v1/media/math/render/svg/4db61cb4c3140b763d9480e51f90050967288397
+		local result = Vector(EndPos.x - StartPos.x, EndPos.y - StartPos.y, 0) -- Verchnagan deghe
+		local pos_x = result:Length()
+		local pos_y = EndPos.z - StartPos.z
+		local grav = physenv.GetGravity():Length()
+		local sqrtcalc1 = (Vel * Vel * Vel * Vel)
+		local sqrtcalc2 = - grav * (grav *(pos_x * pos_x) + 2 * pos_y * (Vel * Vel))
+		local calcsum = sqrtcalc1 + sqrtcalc2 -- Yergou tevere aveltsour
+		if calcsum < 0 then -- Yete teve nevas e, ooremen sharnage
+			calcsum = math.abs(calcsum)
+		end
+		local angsqrt =  math.sqrt(calcsum)
+		local angpos = math.atan(((Vel * Vel) + angsqrt) / (grav * pos_x))
+		local angneg = math.atan(((Vel * Vel) - angsqrt) / (grav * pos_x))
+		local pitch = 1
+		if angpos > angneg then
+			pitch = angneg -- Yete asiga angpos enes ne, aveli veregele
+		else
+			pitch = angpos
+		end
+		result.z = math.tan(pitch) * pos_x
+		return result:GetNormal() * Vel
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_HasActiveWeapon()
 	if self.DisableWeapons == false && self:GetActiveWeapon() != NULL then return true end
 	return false

@@ -6,97 +6,97 @@ include('shared.lua')
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
-
-	-- Default ---------------------------------------------------------------------------------------------------------------------------------------------
-ENT.Model = {} -- The game will pick a random model from the table when the SNPC is spawned | Add as many as you want
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.StartHealth = 200
-//ENT.MoveType = MOVETYPE_VPHYSICS
 ENT.HullType = HULL_LARGE
 ENT.VJ_IsHugeMonster = true -- Is this a huge monster?
 ENT.MovementType = VJ_MOVETYPE_PHYSICS -- How does the SNPC move?
----------------------------------------------------------------------------------------------------------------------------------------------
-ENT.HasAllies = true -- Put to false if you want it not to have any allies
 ENT.Bleeds = false -- Does the SNPC bleed? (Blood decal, particle, etc.)
-ENT.HasMeleeAttack = false -- Should the SNPC have a melee attack?
-ENT.DisableWeapons = true -- If set to true, it won't be able to use weapons
-ENT.DisableInitializeCapabilities = true -- If true, it will disable the initialize capabilities, this will allow you to add your own
-ENT.DisableSelectSchedule = true -- Disables Schedule code, Custom Schedule can still work
-//ENT.HasIdleSounds = false -- If set to false, it won't play the idle sounds
-ENT.HasPainSounds = false -- If set to false, it won't play the pain sounds
-ENT.DeathCorpseAlwaysCollide = true -- Should the corpse always collide?
 ENT.Immune_Dissolve = true -- Immune to Dissolving | Example: Combine Ball
 ENT.Immune_AcidPoisonRadiation = true -- Immune to Acid, Poison and Radiation
 ENT.Immune_Bullet = true -- Immune to Bullets
 ENT.Immune_Physics = true -- Immune to Physics
 ENT.ImmuneDamagesTable = {DMG_BULLET,DMG_BUCKSHOT,DMG_PHYSGUN} -- You can set Specific types of damages for the SNPC to be immune to
-//ENT.DisableFindEnemy = true -- Disables FindEnemy code, friendly code still works though
 ENT.FindEnemy_UseSphere = true -- Should the SNPC be able to see all around him? (360) | Objects and walls can still block its sight!
-ENT.CallForHelp = false -- Does the SNPC call for help?
-ENT.WaitBeforeDeathTime = 2 -- Time until the SNPC spawns its corpse and gets removedz
 ENT.GetDamageFromIsHugeMonster = true -- Should it get damaged no matter what by SNPCs that are tagged as VJ_IsHugeMonster?
+ENT.DeathCorpseAlwaysCollide = true -- Should the corpse always collide?
+ENT.WaitBeforeDeathTime = 2 -- Time until the SNPC spawns its corpse and gets removed
+ENT.HasMeleeAttack = false -- Should the SNPC have a melee attack?
+ENT.DisableInitializeCapabilities = true -- If true, it will disable the initialize capabilities, this will allow you to add your own
+ENT.DisableSelectSchedule = true -- Disables Schedule code, Custom Schedule can still work
 ENT.DisableWandering = true -- Disables wandering when the SNPC is idle
 ENT.BringFriendsOnDeath = false -- Should the SNPC's friends come to its position before it dies?
 ENT.CallForBackUpOnDamage = false -- Should the SNPC call for help when damaged? (Only happens if the SNPC hasn't seen a enemy)
 ENT.MoveOrHideOnDamageByEnemy = false -- Should the SNPC move or hide when being damaged by an enemy?
+ENT.CallForHelp = false -- Does the SNPC call for help?
+ENT.HasPainSounds = false -- If set to false, it won't play the pain sounds
 	-- ====== Sound File Paths ====== --
 -- Leave blank if you don't want any sounds to play
 ENT.SoundTbl_Breath = {"vj_mili_tank/tankidle1.wav"}
 ENT.SoundTbl_Death = {"vj_mili_tank/tank_death1.wav"}
-
 ENT.AlertSoundLevel = 70
 ENT.IdleSoundLevel = 70
 ENT.CombatIdleSoundLevel = 70
 ENT.BreathSoundLevel = 80
 ENT.DeathSoundLevel = 100
-
 ENT.GeneralSoundPitch1 = 90
 ENT.GeneralSoundPitch2 = 100
-
-//ENT.NextSoundTime_Breath1 = 6.1 -- Time until it plays the sound again
-
--- Tank Base
-ENT.Tank_GunnerENT = "npc_vj_tankg_base"
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Tank Base Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ENT.Tank_GunnerENT = "npc_vj_tankg_base" -- The SNPC that will be the gunner (The head of the tank)
 ENT.Tank_SpawningAngle = 180
 ENT.Tank_AngleDiffuseNumber = 180
-ENT.Tank_TurningSpeed = 1.5 -- Turning Speed
-ENT.Tank_ForwardSpead = 70 -- Forward speed
-ENT.Tank_MoveAwaySpeed = -70 -- Move away speed
 ENT.Tank_UseGetRightForSpeed = false -- Should it use GetRight instead of GetForward when driving?
+ENT.Tank_DeathSoldierModels = {} -- The corpses it will spawn on death (Example: A soldier)
+
+	-- ====== SightVariables ====== --
 ENT.Tank_SeeClose = 500 -- If the enemy is closer than this number, than move!
 ENT.Tank_SeeFar = 4000 -- If the enemy is higher than this number, than move!
 ENT.Tank_SeeLimit = 6000 -- How far can it see?
-ENT.Tank_DeathSoldierModels = {}
 
-//ENT.Tank_CollisionBound_Back = 90
-//ENT.Tank_CollisionBound_Front = 90
-//ENT.Tank_CollisionBound_Right = 90
-//ENT.Tank_CollisionBound_Left = 90
+	-- ====== Tank Movement Variables ====== --
+ENT.Tank_TurningSpeed = 1.5 -- Turning Speed
+ENT.Tank_ForwardSpead = 70 -- Forward speed
+ENT.Tank_MoveAwaySpeed = -70 -- Move away speed
+
+	-- ====== Collision Variables ====== --
 ENT.Tank_CollisionBoundSize = 90
 ENT.Tank_CollisionBoundUp = 100
-
-ENT.Tank_ResetedEnemy = false
-ENT.Tank_IsMoving = false
-ENT.Tank_Status = 1
-ENT.Tank_NextLowHealthSmokeT = 0
-ENT.Tank_NextRunOverSoundT = 0
-ENT.TankTbl_DontRunOver = {"npc_antlionguard","npc_turret_ceiling","monster_gargantua","monster_bigmomma","monster_nihilanth","npc_strider","npc_combine_camera","npc_helicopter","npc_combinegunship","npc_combinedropship","npc_rollermine"}
-
-util.AddNetworkString("vj_tank_base_spawneffects")
-util.AddNetworkString("vj_tank_base_moveeffects")
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-- Use the functions below to customize certain parts of the base or to add new custom systems
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomInitialize_CustomTank() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_GunnerSpawnPosition()
 	return self:GetPos()
 end
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ ///// WARNING: Don't touch anything below this line! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+util.AddNetworkString("vj_tank_base_spawneffects")
+util.AddNetworkString("vj_tank_base_moveeffects")
+
+ENT.Tank_ResetedEnemy = false
+ENT.Tank_IsMoving = false
+ENT.Tank_Status = 1
+ENT.Tank_NextLowHealthSmokeT = 0
+ENT.Tank_NextRunOverSoundT = 0
+ENT.TankTbl_DontRunOver = {npc_antlionguard=true,npc_turret_ceiling=true,monster_gargantua=true,monster_bigmomma=true,monster_nihilanth=true,npc_strider=true,npc_combine_camera=true,npc_helicopter=true,npc_combinegunship=true,npc_combinedropship=true,npc_rollermine=true}
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize()
 	self:CustomInitialize_CustomTank()
 	self:PhysicsInit(SOLID_BBOX) // SOLID_VPHYSICS
 	self:SetSolid(SOLID_VPHYSICS)
-	//self:CapabilitiesAdd(bit.bor(CAP_ANIMATEDFACE)) -- Breaks some SNPCs, avoid using it!
-	//self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND))
-	self:SetAngles(self:GetAngles()+Angle(0,self.Tank_SpawningAngle,0))
+	self:SetAngles(self:GetAngles() + Angle(0,self.Tank_SpawningAngle,0))
 	//self:SetPos(self:GetPos()+Vector(0,0,90))
 	self:SetCollisionBounds(Vector(self.Tank_CollisionBoundSize, self.Tank_CollisionBoundSize, self.Tank_CollisionBoundUp), Vector(-self.Tank_CollisionBoundSize, -self.Tank_CollisionBoundSize, -10))
 	//self:SetCollisionBounds(Vector(self.Tank_CollisionBound_Back, self.Tank_CollisionBound_Right, self.Tank_CollisionBoundUp), Vector(-self.Tank_CollisionBound_Front, -self.Tank_CollisionBound_Left, 0))
@@ -163,11 +163,11 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:TANK_RUNOVER_DAMAGECODE(argent)
 	// if self.HasMeleeAttack == false then return end
-	if argent == NULL or argent == nil then return end
+	if !IsValid(argent) then return end
 	if GetConVarNumber("vj_npc_nomelee") == 1 or (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == argent) then return end
 
 	if self:Disposition(argent) == 1 && argent:Health() > 0 then
-		if (argent:IsNPC() && argent.VJ_IsHugeMonster != true && !VJ_HasValue(self.TankTbl_DontRunOver,argent:GetClass())) or (argent:IsPlayer() && self.PlayerFriendly == false && GetConVarNumber("ai_ignoreplayers") == 0 && argent:Alive() && self.Tank_IsMoving == true) then
+		if (argent:IsNPC() && argent.VJ_IsHugeMonster != true && !self.TankTbl_DontRunOver[argent:GetClass()]) or (argent:IsPlayer() && self.PlayerFriendly == false && GetConVarNumber("ai_ignoreplayers") == 0 && argent:Alive() && self.Tank_IsMoving == true) then
 			argent:TakeDamage(self:VJ_GetDifficultyValue(8),self,self)
 			VJ_DestroyCombineTurret(self,argent)
 			argent:SetVelocity(argent:GetForward()*-200)
@@ -333,13 +333,13 @@ function ENT:CustomOnSchedule()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:TANK_MOVINGSOUND()
-	if self.HasSounds == true && GetConVarNumber("vj_npc_sd_footstep") == 0 then
-		self.tank_movingsd = CreateSound(self,"vj_mili_tank/tankdriving1.wav") self.tank_movingsd:SetSoundLevel(80)
-		self.tank_movingsd:PlayEx(1,100)
+	if self.HasSounds == false or self.HasFootStepSound == false then return end
+	
+	self.tank_movingsd = CreateSound(self,"vj_mili_tank/tankdriving1.wav") self.tank_movingsd:SetSoundLevel(80)
+	self.tank_movingsd:PlayEx(1,100)
 
-		self.tank_tracksd = CreateSound(self,"vj_mili_tank/tanktrack1.wav") self.tank_tracksd:SetSoundLevel(70)
-		self.tank_tracksd:PlayEx(1,100)
-	end
+	self.tank_tracksd = CreateSound(self,"vj_mili_tank/tanktrack1.wav") self.tank_tracksd:SetSoundLevel(70)
+	self.tank_tracksd:PlayEx(1,100)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:TANK_RUNOVER_SOUND()
