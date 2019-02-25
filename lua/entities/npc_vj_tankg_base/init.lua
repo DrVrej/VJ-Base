@@ -44,12 +44,10 @@ ENT.Tank_AngleDiffuseNumber = 180
 ENT.Tank_UseNegativeAngleDiffuseNumber = false
 ENT.Tank_AngleDiffuseGeneralNumber = 5
 ENT.Tank_UsesRightAngles = false -- For models that are rotated towards the right side
-
 	-- ====== SightVariables ====== --
 ENT.Tank_SeeClose = 350 -- If the enemy is closer than this number, than don't shoot!
 ENT.Tank_SeeFar = 5000 -- If the enemy is higher than this number, than don't shoot!
 ENT.Tank_SeeLimit = 6000 -- How far can it see?
-
 	-- ====== Tank Shell Variables ====== --
 ENT.Tank_Shell_TimeUntilFire = 2 -- How much time until it fires the shell?
 ENT.Tank_Shell_SpawnPos = Vector(-170,0,65)

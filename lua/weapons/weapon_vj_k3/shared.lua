@@ -8,7 +8,7 @@ SWEP.Purpose					= "This weapon is made for Players and NPCs"
 SWEP.Instructions				= "Controls are like a regular weapon."
 SWEP.Category					= "VJ Base"
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.MadeForNPCsOnly 			= true -- Is tihs weapon meant to be for NPCs only?
+SWEP.MadeForNPCsOnly 			= true -- Is this weapon meant to be for NPCs only?
 SWEP.WorldModel					= "models/vj_weapons/w_k3.mdl"
 SWEP.HoldType 					= "ar2"
 	-- World Model ---------------------------------------------------------------------------------------------------------------------------------------------

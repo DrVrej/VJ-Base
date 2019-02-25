@@ -602,6 +602,22 @@ function NPC_MetaTable:DecideAttackTimer(Timer1,Timer2,UntilDamage,AnimDuration)
 	return result
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function NPC_MetaTable:DoFormation_Diamond(ent,it,spacing)
+	it = it or 0
+	spacing = spacing or 50
+	if it == 0 then
+		ent:SetLastPosition(self:GetPos() + self:GetForward()*spacing + self:GetRight()*spacing)
+	elseif it == 1 then
+		ent:SetLastPosition(self:GetPos() + self:GetForward()*-spacing + self:GetRight()*spacing)
+	elseif it == 2 then
+		ent:SetLastPosition(self:GetPos() + self:GetForward()*spacing + self:GetRight()*-spacing)
+	elseif it == 3 then
+		ent:SetLastPosition(self:GetPos() + self:GetForward()*-spacing + self:GetRight()*-spacing)
+	else
+		ent:SetLastPosition(self:GetPos() + self:GetForward()*(spacing + (3 * it)) + self:GetRight()*(spacing + (3 * it)))
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_DoSelectDifficulty()
 	if GetConVarNumber("vj_npc_dif_easy") == 1 then self.SelectedDifficulty = 0 return 0 end -- Easy
 	if GetConVarNumber("vj_npc_dif_normal") == 1 then self.SelectedDifficulty = 1 return 1 end -- Normal
