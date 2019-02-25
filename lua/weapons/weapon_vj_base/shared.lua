@@ -52,7 +52,7 @@ SWEP.NPC_ExtraFireSoundLevel	= 70 -- How far does the sound go?
 SWEP.NPC_ExtraFireSoundPitch1	= 90
 SWEP.NPC_ExtraFireSoundPitch2	= 100
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.MadeForNPCsOnly 			= false -- Is tihs weapon meant to be for NPCs only?
+SWEP.MadeForNPCsOnly 			= false -- Is this weapon meant to be for NPCs only?
 SWEP.ViewModel					= "models/weapons/v_rif_ak47.mdl"
 SWEP.WorldModel					= "models/weapons/w_rif_ak47.mdl"
 SWEP.HoldType 					= "ar2"

@@ -205,7 +205,7 @@ ENT.NextRunAwayOnDamageTime = 5 -- Until next run after being shot when not aler
 ENT.CallForBackUpOnDamage = true -- Should the SNPC call for help when damaged? (Only happens if the SNPC hasn't seen a enemy)
 ENT.CallForBackUpOnDamageDistance = 800 -- How far away the SNPC's call for help goes | Counted in World Units
 ENT.CallForBackUpOnDamageUseCertainAmount = true -- Should the SNPC only call certain amount of people?
-ENT.CallForBackUpOnDamageUseCertainAmountNumber = 3 -- How many people should it call if certain amount is enabled?
+ENT.CallForBackUpOnDamageUseCertainAmountNumber = 4 -- How many people should it call if certain amount is enabled?
 ENT.CallForBackUpOnDamageAnimation = {} -- Animation used if the SNPC does the CallForBackUpOnDamage function
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.CallForBackUpOnDamageAnimationTime = false -- How much time until it can use activities
@@ -237,6 +237,7 @@ ENT.AnimTbl_Death = {} -- Death Animations
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.DeathAnimationTime = false -- Time until the SNPC spawns its corpse and gets removed
 ENT.DeathAnimationChance = 1 -- Put 1 if you want it to play the animation all the time
+ENT.DeathAnimationDecreaseLengthAmount = 0 -- This will decrease the time until it turns into a corpse
 	-- ====== Dismemberment/Gib Variables ====== --
 ENT.AllowedToGib = true -- Is it allowed to gib in general? This can be on death or when shot in a certain place
 ENT.HasGibOnDeath = true -- Is it allowed to gib on death?
@@ -273,6 +274,7 @@ ENT.AnimTbl_MeleeAttack = {ACT_MELEE_ATTACK1} -- Melee Attack Animations
 ENT.MeleeAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 ENT.MeleeAttackAnimationFaceEnemy = true -- Should it face the enemy while playing the melee attack animation?
 ENT.MeleeAttackAnimationDecreaseLengthAmount = 0 -- This will decrease the time until starts chasing again. Use it to fix animation pauses until it chases the enemy.
+ENT.MeleeAttackAnimationAllowOtherTasks = false -- If set to true, the animation will not stop other tasks from playing, such as chasing | Useful for gesture attacks!
 	-- ====== Distance Variables ====== --
 ENT.MeleeAttackDistance = 60 -- How close does it have to be until it attacks?
 ENT.MeleeAttackAngleRadius = 100 -- What is the attack angle radius? | 100 = In front of the SNPC | 180 = All around the SNPC
@@ -683,6 +685,8 @@ function ENT:CustomOnThink_AIEnabled() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnChangeMovementType(SetType) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOn_PoseParameterLookingCode(pitch,yaw,roll) end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnSchedule() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ExpressionFinished(strExp) end
@@ -948,7 +952,7 @@ ENT.VJ_AddCertainEntityAsFriendly = {}
 ENT.CurrentReachableEnemies = {}
 ENT.AttackTimers = {"timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap"}
 ENT.DefaultGibDamageTypes = {DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SHOCK,DMG_SONIC}
-ENT.EntitiesToDestroyClass = {"func_breakable","func_physbox"} //"func_breakable_surf"
+ENT.EntitiesToDestroyClass = {"func_breakable","func_physbox","prop_door_rotating"} //"func_breakable_surf"
 ENT.NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
 ENT.NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true,monster_scientist=true,monster_barney=true}
 ENT.NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack=true}
@@ -2320,13 +2324,15 @@ function ENT:Think()
 						if self.DisableMeleeAttackAnimation == false then
 							self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_MeleeAttack)
 							self.CurrentAttackAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) -self.MeleeAttackAnimationDecreaseLengthAmount
-							self.PlayingAttackAnimation = true
-							timer.Simple(self.CurrentAttackAnimationDuration,function()
-								if IsValid(self) then
-									self.PlayingAttackAnimation = false
-									//if self.TimeUntilMeleeAttackDamage == false then self:StopAttacks() end
-								end
-							end)
+							if self.MeleeAttackAnimationAllowOtherTasks == false then
+								self.PlayingAttackAnimation = true
+								timer.Simple(self.CurrentAttackAnimationDuration,function()
+									if IsValid(self) then
+										self.PlayingAttackAnimation = false
+										//if self.TimeUntilMeleeAttackDamage == false then self:StopAttacks() end
+									end
+								end)
+							end
 							self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.MeleeAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
 						end
 						if ispropattack == true then self.MeleeAttack_DoingPropAttack = true else self.MeleeAttack_DoingPropAttack = false end
@@ -2480,6 +2486,9 @@ function ENT:PoseParameterLookingCode(ResetPoses)
 		r_enemy = ang_dif(enemy_ang.z,self_ang.z)
 		if self.PoseParameterLooking_InvertRoll == true then r_enemy = -r_enemy end
 	end
+	
+	self:CustomOn_PoseParameterLookingCode(p_enemy,y_enemy,r_enemy)
+	
 	local names = self.PoseParameterLooking_Names
 	for x=1, #names.pitch do
 		self:SetPoseParameter(names.pitch[x],ang_app(self:GetPoseParameter(names.pitch[x]),p_enemy,self.PoseParameterLooking_TurningSpeed))
@@ -2584,6 +2593,7 @@ function ENT:PushOrAttackPropsCode(CustomValuesTbl)
 	for k,v in pairs(valuestoattack) do
 		local phys = v:GetPhysicsObject()
 		if VJ_HasValue(self.EntitiesToDestroyClass,v:GetClass()) or v.VJ_AddEntityToSNPCAttackList == true then isanentitytoattack = true end
+		if v:GetClass() == "prop_door_rotating" && v:Health() <= 0 then isanentitytoattack = false end
 		if VJ_IsProp(v) == true or isanentitytoattack == true then
 			//print(self:VJ_GetNearestPointToEntityDistance(v,1))
 			//print(self:DoPropVisibiltyCheckForPushAttackProps(v))
@@ -3470,34 +3480,42 @@ function ENT:CheckAlliesAroundMe(SeeDistance)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:BringAlliesToMe(SeeDistance,CertainAmount,CertainAmountNumber,EnemyVisibleOnly)
+function ENT:BringAlliesToMe(Type,SeeDistance,CertainAmount,CertainAmountNumber,AllyVisibleOnly)
 	//if self.CallForBackUpOnDamage == false then return end
+	Type = Type or "Random" -- Types:   "Random" || "Diamond"
 	SeeDistance = SeeDistance or 800
-	EnemyVisibleOnly = EnemyVisibleOnly or false
+	AllyVisibleOnly = AllyVisibleOnly or false
 	CertainAmountNumber = CertainAmountNumber or 3
 	local findents = ents.FindInSphere(self:GetPos(),SeeDistance)
-	local LocalTargetTable = {}
 	if (!findents) then return false end
+	local it = 0
 	for _,x in pairs(findents) do
 		if VJ_IsAlive(x) == true && x:IsNPC() && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4) && x.IsVJBaseSNPC_Animal != false && x.Behavior != VJ_BEHAVIOR_PASSIVE && x.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && x.FollowingPlayer == false && x.VJ_IsBeingControlled == false && (!x.IsVJBaseSNPC_Tank) then
 			if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
-				if EnemyVisibleOnly == true then if x:Visible(self) == false then continue end end
-				table.insert(LocalTargetTable,x)
+				if AllyVisibleOnly == true then if x:Visible(self) == false then continue end end
 				if !IsValid(x:GetEnemy()) && self:GetPos():Distance(x:GetPos()) < SeeDistance then
-					//print(table.ToString(LocalTargetTable,"stupid table",true)) //end
-					local randpos = math.random(1,4)
-					if randpos == 1 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(20,50)) end
-					if randpos == 2 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-20,-50)) end
-					if randpos == 3 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(20,50)) end
-					if randpos == 4 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-20,-50)) end
-					x:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
-					//return true -- It will only pick one if returning false or true
+					self.NextWanderTime = CurTime() + 8
+					x.NextWanderTime = CurTime() + 8
+					if Type == "Random" then
+						local randpos = math.random(1,4)
+						if randpos == 1 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(20,50)) end
+						if randpos == 2 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-20,-50)) end
+						if randpos == 3 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(20,50)) end
+						if randpos == 4 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-20,-50)) end
+					elseif Type == "Diamond" then
+						self:DoFormation_Diamond(x,it)
+					end
+					if x:VJ_HasActiveWeapon() == false then
+						x:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
+					else
+						x:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+					end
+					it = it + 1
 				end
-				if CertainAmount == true && table.Count(LocalTargetTable) == CertainAmountNumber then return true end
+				if CertainAmount == true && it == CertainAmountNumber then return true end
 			end
 		end
 	end
-	//print(table.ToString(LocalTargetTable,"stupid table",true))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoKilledEnemy(argent,attacker,inflictor)
@@ -3519,27 +3537,25 @@ function ENT:OnTakeDamage(dmginfo,data)
 	if dmginfo:GetDamage() <= 0 then return false end
 
 	local DamageInflictor = dmginfo:GetInflictor()
-	if IsValid(DamageInflictor) then local DamageInflictorClass = DamageInflictor:GetClass() end
 	local DamageAttacker = dmginfo:GetAttacker()
-	if IsValid(DamageAttacker) then local DamageAttackerClass = DamageAttacker:GetClass() end
 	local DamageType = dmginfo:GetDamageType()
 	hitgroup = self.VJ_ScaleHitGroupDamage
 	self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo,hitgroup)
 
 	if self.GetDamageFromIsHugeMonster == true then
 		if DamageAttacker.VJ_IsHugeMonster == true then
-			self:SetHealth(self:Health() -dmginfo:GetDamage())
+			self:SetHealth(self:Health() - dmginfo:GetDamage())
 		end
 		if self:Health() <= 0 && self.Dead == false then
 			self:PriorToKilled(dmginfo,hitgroup)
 		end
 	end
-
+	
 	if self:IsOnFire() && self:WaterLevel() == 2 then self:Extinguish() end
 
 	if VJ_HasValue(self.ImmuneDamagesTable,DamageType) then return end
-	if self.AllowIgnition == false && (self:IsOnFire() && IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then self:Extinguish() return false end
-	if self.Immune_Fire == true && (DamageType == DMG_BURN or DamageType == DMG_SLOWBURN or (self:IsOnFire() && IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame")) then return false end
+	if self.AllowIgnition == false && (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor == "entityflame" && DamageAttacker:GetClass() == "entityflame") then self:Extinguish() return false end
+	if self.Immune_Fire == true && (DamageType == DMG_BURN or DamageType == DMG_SLOWBURN or (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() == "entityflame" && DamageAttacker:GetClass() == "entityflame")) then return false end
 	if self.Immune_AcidPoisonRadiation == true && (DamageType == DMG_ACID or DamageType == DMG_RADIATION or DamageType == DMG_POISON or DamageType == DMG_NERVEGAS or DamageType == DMG_PARALYZE) then return false end
 	if self.Immune_Bullet == true && (dmginfo:IsBulletDamage() or DamageType == DMG_AIRBOAT or DamageType == DMG_BUCKSHOT) then return false end
 	if self.Immune_Blast == true && (DamageType == DMG_BLAST or DamageType == DMG_BLAST_SURFACE) then return false end
@@ -3548,7 +3564,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 	if self.Immune_Melee == true && (DamageType == DMG_CLUB or DamageType == DMG_SLASH) then return false end
 	if self.Immune_Physics == true && DamageType == DMG_CRUSH then return false end
 	if self.Immune_Sonic == true && DamageType == DMG_SONIC then return false end
-	if ((IsValid(DamageInflictor) && DamageInflictorClass == "prop_combine_ball") or (IsValid(DamageAttacker) && DamageAttackerClass == "prop_combine_ball")) then
+	if (IsValid(DamageInflictor) && DamageInflictor:GetClass() == "prop_combine_ball") or (IsValid(DamageAttacker) && DamageAttacker:GetClass() == "prop_combine_ball") then
 		if self.Immune_Dissolve == true then return false end
 		if CurTime() > self.NextCanGetCombineBallDamageT then
 			dmginfo:SetDamage(math.random(400,500))
@@ -3594,8 +3610,8 @@ function ENT:OnTakeDamage(dmginfo,data)
 			self.Passive_NextRunOnDamageT = CurTime() + math.Rand(self.Passive_NextRunOnDamageTime1,self.Passive_NextRunOnDamageTime2)
 		end
 
-		if self.CallForBackUpOnDamage == true && CurTime() > self.NextCallForBackUpOnDamageT && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:CheckAlliesAroundMe(self.CallForBackUpOnDamageDistance).ItFoundAllies == true then
-			self:BringAlliesToMe(self.CallForBackUpOnDamageDistance,self.CallForBackUpOnDamageUseCertainAmount,self.CallForBackUpOnDamageUseCertainAmountNumber)
+		if self.CallForBackUpOnDamage == true && CurTime() > self.NextCallForBackUpOnDamageT && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && DamageInflictor:GetClass() != "entityflame" && DamageAttacker:GetClass() != "entityflame" && self:CheckAlliesAroundMe(self.CallForBackUpOnDamageDistance).ItFoundAllies == true then
+			self:BringAlliesToMe("Random",self.CallForBackUpOnDamageDistance,self.CallForBackUpOnDamageUseCertainAmount,self.CallForBackUpOnDamageUseCertainAmountNumber)
 			self:ClearSchedule()
 			self.NextFlinchT = CurTime() + 1
 			local pickanim = VJ_PICKRANDOMTABLE(self.CallForBackUpOnDamageAnimation)
@@ -3613,18 +3629,18 @@ function ENT:OnTakeDamage(dmginfo,data)
 			end
 			self.NextCallForBackUpOnDamageT = CurTime() + math.Rand(self.NextCallForBackUpOnDamageTime1,self.NextCallForBackUpOnDamageTime2)
 		end
-
-		/*
-		if (dmginfo:GetAttacker():IsPlayer() or dmginfo:GetAttacker():IsNPC()) and dmginfo:GetAttacker():GetActiveWeapon():GetClass() == "weapon_crossbow" then --GetInflictor seems not to work in this case.
+		
+		/*if DamageInflictor:GetClass() == "crossbow_bolt" then
+			print("test")
 			local mdlBolt = ents.Create("prop_dynamic_override")
 			mdlBolt:SetPos(dmginfo:GetDamagePosition())
-			mdlBolt:SetAngles(dmginfo:GetAttacker():GetAngles())
+			mdlBolt:SetAngles(DamageAttacker:GetAngles())
 			mdlBolt:SetModel("models/crossbow_bolt.mdl")
 			mdlBolt:SetParent(self)
 			mdlBolt:Spawn()
 			mdlBolt:Activate()
-		end
-		*/
+		end*/
+		
 
 		if self.BecomeEnemyToPlayer == true && self.VJ_IsBeingControlled == false && DamageAttacker:IsPlayer() && GetConVarNumber("ai_disabled") == 0 && GetConVarNumber("ai_ignoreplayers") == 0 && (self:Disposition(DamageAttacker) == D_LI or self:Disposition(DamageAttacker) == D_NU) then
 			if self.AngerLevelTowardsPlayer <= self.BecomeEnemyToPlayerLevel then
@@ -3633,16 +3649,16 @@ function ENT:OnTakeDamage(dmginfo,data)
 			if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
 				if self:Disposition(DamageAttacker) != D_HT then
 					self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo,hitgroup)
-					if self.FollowingPlayer == true && self.FollowingPlayerName == dmginfo:GetAttacker() then self:FollowPlayerReset() end
-					table.insert(self.VJ_AddCertainEntityAsEnemy,dmginfo:GetAttacker())
+					if self.FollowingPlayer == true && self.FollowingPlayerName == DamageAttacker then self:FollowPlayerReset() end
+					table.insert(self.VJ_AddCertainEntityAsEnemy,DamageAttacker)
 					self:AddEntityRelationship(DamageAttacker,D_HT,99)
 					if !IsValid(self:GetEnemy()) then
 						self:StopMoving()
-						self:SetTarget(dmginfo:GetAttacker())
+						self:SetTarget(DamageAttacker)
 						self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 					end
 					if self.AllowPrintingInChat == true then
-						dmginfo:GetAttacker():PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.")
+						DamageAttacker:PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.")
 					end
 					self:BecomeEnemyToPlayerSoundCode()
 				end
@@ -3650,7 +3666,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 			end
 		end
 
-		if self.DisableTakeDamageFindEnemy == false && !IsValid(self:GetEnemy()) && CurTime() > self.TakingCoverT && self.VJ_IsBeingControlled == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& self.Alerted == false*/ && GetConVarNumber("ai_disabled") == 0 && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE then
+		if self.DisableTakeDamageFindEnemy == false && !IsValid(self:GetEnemy()) && CurTime() > self.TakingCoverT && self.VJ_IsBeingControlled == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& self.Alerted == false*/ && GetConVarNumber("ai_disabled") == 0 then
 			local Targets = ents.FindInSphere(self:GetPos(),self.SightDistance/2)
 			if (!Targets) then return end
 			for k,v in pairs(Targets) do
@@ -3679,10 +3695,10 @@ function ENT:OnTakeDamage(dmginfo,data)
 
 	if self:Health() <= 0 && self.Dead == false then
 		self:RemoveEFlags(EFL_NO_DISSOLVE)
-		if (dmginfo:GetDamageType() == DMG_DISSOLVE) or (IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() == "prop_combine_ball") then
+		if (dmginfo:GetDamageType() == DMG_DISSOLVE) or (IsValid(DamageInflictor) && DamageInflictor:GetClass() == "prop_combine_ball") then
 			local dissolve = DamageInfo()
 			dissolve:SetDamage(self:Health())
-			dissolve:SetAttacker(dmginfo:GetAttacker())
+			dissolve:SetAttacker(DamageAttacker)
 			dissolve:SetDamageType(DMG_DISSOLVE)
 			self.DoingVJDeathDissolve = true
 			self:TakeDamageInfo(dissolve)
@@ -3872,15 +3888,15 @@ function ENT:DoChangeBloodColor(Type)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodParticles(dmginfo,hitgroup)
-	//local DamageType = dmginfo:GetDamageType()
-	local DamagePos = dmginfo:GetDamagePosition()
-	if DamagePos == Vector(0,0,0) then DamagePos = self:GetPos() + self:OBBCenter() end
-	//if DamageType == DMG_ACID or DamageType == DMG_RADIATION or DamageType == DMG_POISON or DamageType == DMG_CRUSH or DamageType == DMG_SLASH or DamageType == DMG_GENERIC or self:IsOnFire() then DoUnPositionedParticle() return false end
-	local particlename = VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Particle)
-	if particlename == false then return end
+	local p_name = VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Particle)
+	if p_name == false then return end
+	
+	local dmg_pos = dmginfo:GetDamagePosition()
+	if dmg_pos == Vector(0,0,0) then dmg_pos = self:GetPos() + self:OBBCenter() end
+	
 	local spawnparticle = ents.Create("info_particle_system")
-	spawnparticle:SetKeyValue("effect_name",particlename)
-	spawnparticle:SetPos(DamagePos)
+	spawnparticle:SetKeyValue("effect_name",p_name)
+	spawnparticle:SetPos(dmg_pos)
 	spawnparticle:Spawn()
 	spawnparticle:Activate()
 	spawnparticle:Fire("Start","",0)
@@ -3891,13 +3907,13 @@ function ENT:SpawnBloodDecal(dmginfo,hitgroup)
 	if VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal) == false then return end
 	local DamageForce = dmginfo:GetDamageForce()
 	local DamagePos = dmginfo:GetDamagePosition()
-	local length = math.Clamp(DamageForce:Length() *10, 100, self.BloodDecalDistance)
-	local EndPos = DamagePos +DamageForce:GetNormal() *length
+	local length = math.Clamp(DamageForce:Length() * 10, 100, self.BloodDecalDistance)
+	local EndPos = DamagePos + DamageForce:GetNormal() * length
 	local tr = util.TraceLine({start = DamagePos, endpos = EndPos, filter = self})
 	//if !tr.HitWorld then return end
 	util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal),tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
-	for i=1,2 do
-		if math.random(1,2) == 1 then util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal),tr.HitPos +tr.HitNormal +Vector(math.random(-70,70),math.random(-70,70),0),tr.HitPos -tr.HitNormal) end
+	for i = 1, 2 do
+		if math.random(1,2) == 1 then util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal), tr.HitPos + tr.HitNormal + Vector(math.random(-70,70),math.random(-70,70),0), tr.HitPos - tr.HitNormal) end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3914,7 +3930,7 @@ function ENT:SpawnBloodPool(dmginfo,hitgroup)
 				filter = GetCorpse, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
 				mask = CONTENTS_SOLID
 			})
-			-- (X,Y,Z),(front,up,side)
+			-- (X,Y,Z) | (Ver, Var, Goghme)
 			if tr.HitWorld && (tr.HitNormal == Vector(0.0,0.0,1.0)) then // (tr.Fraction <= 0.405)
 				ParticleEffect(GetBloodPool,tr.HitPos,Angle(0,0,0),nil)
 			end
@@ -3926,7 +3942,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 	if self.Medic_IsHealingAlly == true then self:DoMedicCode_Reset() end
 	
 	if self.BringFriendsOnDeath == true then
-		self:BringAlliesToMe(self.BringFriendsOnDeathDistance,self.BringFriendsOnDeathUseCertainAmount,self.BringFriendsOnDeathUseCertainAmountNumber,true)
+		self:BringAlliesToMe("Random",self.BringFriendsOnDeathDistance,self.BringFriendsOnDeathUseCertainAmount,self.BringFriendsOnDeathUseCertainAmountNumber,true)
 	elseif self.AlertFriendsOnDeath == true then
 		local checkents = self:CheckAlliesAroundMe(self.AlertFriendsOnDeathDistance)
 		local LocalTargetTable = {}
@@ -3988,7 +4004,8 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 			if randanim == 1 then
 				self:CustomDeathAnimationCode(dmginfo,hitgroup)
 				local pickanim = VJ_PICKRANDOMTABLE(self.AnimTbl_Death)
-				local seltime = self:DecideAnimationLength(pickanim,self.DeathAnimationTime)
+				local seltime = self:DecideAnimationLength(pickanim,self.DeathAnimationTime) - self.DeathAnimationDecreaseLengthAmount
+				self:RemoveAllGestures()
 				self:VJ_ACT_PLAYACTIVITY(pickanim,true,seltime,false)
 				self.DeathAnimationCodeRan = true
 				timer.Simple(seltime,DoKilled)
@@ -4226,8 +4243,10 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 			if IsValid(childphys) then
 				local childphys_bonepos, childphys_boneang = self:GetBonePosition(self.Corpse:TranslatePhysBoneToBone(bonelim))
 				if (childphys_bonepos) then
-					childphys:SetPos(childphys_bonepos)
-					if self.UsesBoneAngle == true then childphys:SetAngles(childphys_boneang) end
+					if math.Round(math.abs(childphys_boneang.r)) != 90 then
+						if self.UsesBoneAngle == true then childphys:SetAngles(childphys_boneang) end
+						childphys:SetPos(childphys_bonepos)
+					end
 					if self.Corpse:GetName() == "vj_dissolve_corpse" then
 						childphys:EnableGravity(false)
 						childphys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)

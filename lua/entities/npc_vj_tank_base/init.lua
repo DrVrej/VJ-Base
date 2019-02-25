@@ -51,17 +51,14 @@ ENT.Tank_SpawningAngle = 180
 ENT.Tank_AngleDiffuseNumber = 180
 ENT.Tank_UseGetRightForSpeed = false -- Should it use GetRight instead of GetForward when driving?
 ENT.Tank_DeathSoldierModels = {} -- The corpses it will spawn on death (Example: A soldier)
-
 	-- ====== SightVariables ====== --
 ENT.Tank_SeeClose = 500 -- If the enemy is closer than this number, than move!
 ENT.Tank_SeeFar = 4000 -- If the enemy is higher than this number, than move!
 ENT.Tank_SeeLimit = 6000 -- How far can it see?
-
 	-- ====== Tank Movement Variables ====== --
 ENT.Tank_TurningSpeed = 1.5 -- Turning Speed
 ENT.Tank_ForwardSpead = 70 -- Forward speed
 ENT.Tank_MoveAwaySpeed = -70 -- Move away speed
-
 	-- ====== Collision Variables ====== --
 ENT.Tank_CollisionBoundSize = 90
 ENT.Tank_CollisionBoundUp = 100
