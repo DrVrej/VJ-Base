@@ -952,7 +952,7 @@ ENT.VJ_AddCertainEntityAsFriendly = {}
 ENT.CurrentReachableEnemies = {}
 ENT.AttackTimers = {"timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap"}
 ENT.DefaultGibDamageTypes = {DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SHOCK,DMG_SONIC}
-ENT.EntitiesToDestroyClass = {"func_breakable","func_physbox","prop_door_rotating"} //"func_breakable_surf"
+ENT.EntitiesToDestroyClass = {func_breakable=true,func_physbox=true,prop_door_rotating=true} //"func_breakable_surf"
 ENT.NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
 ENT.NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true,monster_scientist=true,monster_barney=true}
 ENT.NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack=true}
@@ -2592,7 +2592,7 @@ function ENT:PushOrAttackPropsCode(CustomValuesTbl)
 	end
 	for k,v in pairs(valuestoattack) do
 		local phys = v:GetPhysicsObject()
-		if VJ_HasValue(self.EntitiesToDestroyClass,v:GetClass()) or v.VJ_AddEntityToSNPCAttackList == true then isanentitytoattack = true end
+		if self.EntitiesToDestroyClass[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true then isanentitytoattack = true end
 		if v:GetClass() == "prop_door_rotating" && v:Health() <= 0 then isanentitytoattack = false end
 		if VJ_IsProp(v) == true or isanentitytoattack == true then
 			//print(self:VJ_GetNearestPointToEntityDistance(v,1))
@@ -2606,7 +2606,7 @@ function ENT:PushOrAttackPropsCode(CustomValuesTbl)
 						return true
 					end
 				end
-				if self.AttackProps == true && v:Health() > 0 /*(VJ_HasValue(self.EntitiesToDestoryModel,v:GetModel()) or VJ_HasValue(self.EntitiesToDestroyClass,v:GetClass())) &&*/ then
+				if self.AttackProps == true && v:Health() > 0 /*(VJ_HasValue(self.EntitiesToDestoryModel,v:GetModel()) or self.EntitiesToDestroyClass[v:GetClass()] &&*/ then
 					return true
 				end
 			end
@@ -2633,7 +2633,7 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 	if FindEnts != nil then
 		for _,v in pairs(FindEnts) do
 			if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
-			if (v != self && v:GetClass() != self:GetClass()) && (((v:IsNPC() or (v:IsPlayer() && v:Alive())) && (self:Disposition(v) != D_LI)) or VJ_IsProp(v) == true or v:GetClass() == "func_breakable_surf" or VJ_HasValue(self.EntitiesToDestroyClass,v:GetClass()) or v.VJ_AddEntityToSNPCAttackList == true) then
+			if (v != self && v:GetClass() != self:GetClass()) && (((v:IsNPC() or (v:IsPlayer() && v:Alive())) && (self:Disposition(v) != D_LI)) or VJ_IsProp(v) == true or v:GetClass() == "func_breakable_surf" or self.EntitiesToDestroyClass[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) then
 				if (self:GetForward():Dot((v:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackDamageAngleRadius))) then
 					//if IsPropAttack == true && self:GetPos():Distance(v:GetPos()) <= AttackDist /2 && v:GetClass() != "prop_physics" && v:GetClass() != "func_breakable_surf" && v:GetClass() != "func_breakable" then continue end
 					if IsPropAttack == true && (v:IsPlayer() or v:IsNPC()) then
@@ -2647,7 +2647,7 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 					if VJ_IsProp(v) == true then
 						local phys = v:GetPhysicsObject()
 						if phys:IsValid() && phys != nil && phys != NULL then
-							//if VJ_HasValue(self.EntitiesToDestoryModel,v:GetModel()) or VJ_HasValue(self.EntitiesToDestroyClass,v:GetClass()) or VJ_HasValue(self.EntitiesToPushModel,v:GetModel()) then
+							//if VJ_HasValue(self.EntitiesToDestoryModel,v:GetModel()) or self.EntitiesToDestroyClass[v:GetClass()] or VJ_HasValue(self.EntitiesToPushModel,v:GetModel()) then
 							if self:PushOrAttackPropsCode({IsSingleValue=v,CustomMeleeDistance=AttackDist}) then
 								HasHitGoodProp = true
 								phys:EnableMotion(true)
@@ -3334,7 +3334,7 @@ function ENT:DoEntityRelationshipCheck()
 			end
 			//table.insert(distlist,vDistanceToMy)
 			if IsValid(self:GetEnemy()) && v == self:GetEnemy() then
-				table.insert(distlist,vDistanceToMy)
+				distlist[distlist_num+1] = vDistanceToMy
 				distlist_inserted = true
 			end
 		elseif entisfri == true then
@@ -3355,8 +3355,8 @@ function ENT:DoEntityRelationshipCheck()
 					if check == true then
 					//if (v.VJ_NoTarget && v.VJ_NoTarget != true) then continue end
 						self:AddEntityRelationship(v,D_HT,99)
-						if distlist_inserted == false then table.insert(distlist,vDistanceToMy) end
-						table.insert(self.CurrentReachableEnemies,v)
+						if distlist_inserted == false then distlist[#distlist+1] = vDistanceToMy end
+						self.CurrentReachableEnemies[#self.CurrentReachableEnemies] = v
 						enemyseen = true
 						if distlist_closest == true then
 							self:VJ_DoSetEnemy(v,true,true)
@@ -3381,18 +3381,6 @@ function ENT:DoEntityRelationshipCheck()
 	if enemyseen == true then return true else return false end
 	//return false
 end
----------------------------------------------------------------------------------------------------------------------------------------------
-/*function ENT:Distance(entity)
-	return self:GetPos():Distance(entity:GetPos())
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:GetClosestInTable(tb)
-	local nt = {}
-	for k,v in ipairs(tb) do
-	nt[self:Distance(v)] = self:Distance( v )
-	end
- return table.SortByKey(nt,true)[1]
-end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CallForHelpCode(SeeDistance)
 	if self.CallForHelp == false or self.ThrowingGrenade == true then return false end
@@ -3456,25 +3444,27 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CheckAlliesAroundMe(SeeDistance)
 	SeeDistance = SeeDistance or 800
-	local FoundEntitiesTbl = {}
-	local getselfclass = ents.FindInSphere(self:GetPos(),SeeDistance)
-	if (!getselfclass) then return end
-	for _,x in pairs(getselfclass) do
+	local findents = ents.FindInSphere(self:GetPos(),SeeDistance)
+	if (!findents) then return end
+	local FoundAlliesTbl = {}
+	local it = 0
+	for _,x in pairs(findents) do
 		if (x:IsNPC() or x:GetClass() == self:GetClass()) && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4 or (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) && VJ_IsAlive(x) == true && x.IsVJBaseSNPC_Animal != false then
 			if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
 				if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) then
 					if (x.Behavior == VJ_BEHAVIOR_PASSIVE or x.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) then
-						table.insert(FoundEntitiesTbl,x)
+						it = it + 1
+						FoundAlliesTbl[it] = x
 					end
 				elseif (x.Behavior != VJ_BEHAVIOR_PASSIVE  or x.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) then
-					table.insert(FoundEntitiesTbl,x)
-					//print(x:GetClass())
+					it = it + 1
+					FoundAlliesTbl[it] = x
 				end
 			end
 		end
 	end
-	if table.Count(FoundEntitiesTbl) > 0 then
-		return {ItFoundAllies = true, FoundAllies = FoundEntitiesTbl}
+	if it > 0 then
+		return {ItFoundAllies = true, FoundAllies = FoundAlliesTbl}
 	else
 		return {ItFoundAllies = false, FoundAllies = nil}
 	end
@@ -3539,7 +3529,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 	local DamageInflictor = dmginfo:GetInflictor()
 	local DamageAttacker = dmginfo:GetAttacker()
 	local DamageType = dmginfo:GetDamageType()
-	hitgroup = self.VJ_ScaleHitGroupDamage
+	local hitgroup = self.VJ_ScaleHitGroupDamage
 	self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo,hitgroup)
 
 	if self.GetDamageFromIsHugeMonster == true then
@@ -3945,11 +3935,13 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 		self:BringAlliesToMe("Random",self.BringFriendsOnDeathDistance,self.BringFriendsOnDeathUseCertainAmount,self.BringFriendsOnDeathUseCertainAmountNumber,true)
 	elseif self.AlertFriendsOnDeath == true then
 		local checkents = self:CheckAlliesAroundMe(self.AlertFriendsOnDeathDistance)
-		local LocalTargetTable = {}
 		if checkents.ItFoundAllies == true then
+			local enttbl = {}
+			local it = 0
 			for k,v in ipairs(checkents.FoundAllies) do
-				if !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath == true && #LocalTargetTable != self.AlertFriendsOnDeathUseCertainAmountNumber then
-					table.insert(LocalTargetTable,v)
+				if !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath == true && #enttbl != self.AlertFriendsOnDeathUseCertainAmountNumber then
+					it = it + 1
+					enttbl[it] = v
 					v:FaceCertainEntity(self,false)
 					v:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(v.AnimTbl_AlertFriendsOnDeath),false,0,false)
 					v.NextIdleTime = CurTime() + math.Rand(5,8)
