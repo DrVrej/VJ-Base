@@ -38,7 +38,7 @@ function util.VJ_SphereDamage(vAttacker,vInflictor,vPosition,vDamageRadius,vDama
 		end
 		
 		local function DoDamageCode(v2)
-			table.insert(Foundents,v)
+			Foundents[#Foundents+1] = v
 			if (v2:GetClass() == "npc_strider" or v2:GetClass() == "npc_combinedropship" or v2:GetClass() == "npc_combinegunship" or v2:GetClass() == "npc_helicopter") then
 				v2:TakeDamage(Finaldmg,vAttacker,vInflictor)
 			else
@@ -124,7 +124,7 @@ function util.VJ_GetWeaponPos(GetClassEntity)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function util.VJ_GetSNPCsWithActiveSoundTracks() -- !!!!! Deprecated Function !!!!! --
+/*function util.VJ_GetSNPCsWithActiveSoundTracks() -- !!!!! Deprecated Function !!!!! --
 	local TableEntities = {}
 	for k,v in ipairs(ents.GetAll()) do
 		if v:IsNPC() then
@@ -134,4 +134,4 @@ function util.VJ_GetSNPCsWithActiveSoundTracks() -- !!!!! Deprecated Function !!
 		end
 	end
 	return TableEntities
-end
+end*/

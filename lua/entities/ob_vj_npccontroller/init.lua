@@ -89,7 +89,6 @@ function ENT:SetControlledNPC(GetEntity)
 	self.ControlledNPC.VJ_TheControllerEntity = self
 	self.ControlledNPC.VJ_TheControllerBullseye = self.NPCBullseye
 	self.ControlledNPC:SetEnemy(NULL)
-	self.ControlledNPC.MyEnemy = NULL
 	self.ControlledNPC.Enemy = NULL
 	self.ControlledNPC:VJ_Controller_InitialMessage(self.TheController)
 	if self.ControlledNPC.IsVJBaseSNPC == true then

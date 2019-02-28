@@ -409,7 +409,7 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
 	-- Spawn the gunner
 	if IsValid(self.Gunner) then
 		local gunnercorpse = self.Gunner:CreateDeathCorpse(dmginfo,hitgroup)
-		if IsValid(gunnercorpse) then table.insert(GetCorpse.ExtraCorpsesToRemove,gunnercorpse) end
+		if IsValid(gunnercorpse) then GetCorpse.ExtraCorpsesToRemove[#GetCorpse.ExtraCorpsesToRemove+1] = gunnercorpse end
 	end
 
 	-- Spawn the Soldier
