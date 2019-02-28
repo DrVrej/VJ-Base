@@ -524,7 +524,6 @@ function NPC_MetaTable:VJ_DoSetEnemy(argent,ShouldStopActs,DoSmallWhenActiveEnem
 	if DoSmallWhenActiveEnemy == true && IsValid(self:GetEnemy()) then
 		self:AddEntityRelationship(argent,D_HT,99)
 		//self:SetEnemy(argent)
-		self.MyEnemy = argent
 		self:UpdateEnemyMemory(argent,argent:GetPos())
 		//if self.MovementType == VJ_MOVETYPE_STATIONARY or self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 			//self:SetEnemy(argent)
@@ -533,7 +532,6 @@ function NPC_MetaTable:VJ_DoSetEnemy(argent,ShouldStopActs,DoSmallWhenActiveEnem
 		self.NextResetEnemyT = CurTime() + 0.5 //2
 		self:AddEntityRelationship(argent,D_HT,99)
 		self:SetEnemy(argent)
-		self.MyEnemy = argent
 		self:UpdateEnemyMemory(argent,argent:GetPos())
 		if ShouldStopActs == true then
 			self:ClearGoal()
