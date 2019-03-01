@@ -47,9 +47,9 @@ SWEP.NextIdle_PrimaryAttack		= 0.5 -- How much time until it plays the idle anim
 function SWEP:CustomOnPrimaryAttack_BeforeShoot()
 if (CLIENT) then return end
 	local flareround = ents.Create("obj_vj_flareround")
-	//if self.Owner:IsPlayer() then
-	//flareround:SetPos(self.Owner:GetShootPos()) else
-	flareround:SetPos(self:GetAttachment(self:LookupAttachment("muzzle")).Pos)// end
+	if self.Owner:IsPlayer() then
+	flareround:SetPos(self.Owner:GetShootPos()) else
+	flareround:SetPos(self:GetAttachment(self:LookupAttachment("muzzle")).Pos) end
 	flareround:SetAngles(self.Owner:GetAngles())
 	flareround:SetOwner(self.Owner)
 	flareround:Activate()
