@@ -7,7 +7,7 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 
 require("ai_vj_schedule")
-local getsched = ai_vj_schedule.New -- Pervent stackoverflow
+local getsched = ai_vj_schedule.New -- Pervent stack overflow
 function ai_vj_schedule.New(name)
 	local actualsched = getsched(name)
 	actualsched.Name = name

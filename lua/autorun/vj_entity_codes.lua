@@ -47,12 +47,13 @@ VJ.AddNPCWeapon("VJ_K-3","weapon_vj_k3")
 ------ Global Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_PICKRANDOMTABLE(tbl)
-	if not tbl then return false end -- Yete tbl-e pame choone meche, getsoor!
-	if !istable(tbl) then return tbl end -- Yete table chene, getsoor!
+	if not tbl then return false end -- Yete table pame choone meche, veratartsour false!
 	if istable(tbl) then
-		if #tbl < 1 then return false end -- Yete table-e barabe (meg en aveli kich), getsoor!
+		if #tbl < 1 then return false end -- Yete table barabe (meg en aveli kich), getsoor!
 		tbl = tbl[math.random(1,#tbl)]
-	return tbl
+		return tbl
+	else
+		return tbl -- Yete table che, veratartsour abranke
 	end
 	return false
 end
@@ -62,7 +63,7 @@ function VJ_STOPSOUND(vsoundname)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_HasValue(tbl,val)
-	if !istable(tbl) then return end
+	if !istable(tbl) then return false end
 	for x=1, #tbl do
 		if tbl[x] == val then
 			return true
@@ -127,8 +128,7 @@ function VJ_EmitSound(argent,sound,soundlevel,soundpitch,volume,channel)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_AnimationExists(argent,actname)
-	if actname == nil then return false end
-	if isbool(actname) then return false end
+	if actname == nil or isbool(actname) then return false end
 	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
 	if type(actname) == "number" then
 		if (argent:SelectWeightedSequence(actname) == -1 or argent:SelectWeightedSequence(actname) == 0) && (argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "Not Found!" or argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "No model!") then
@@ -204,7 +204,7 @@ function VJ_IsAlive(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_DestroyCombineTurret(vSelf,argent)
-	if argent == NULL or argent == nil then return false end
+	if !IsValid(argent) then return false end
 	if argent:GetClass() == "npc_turret_floor" && !argent.VJ_TurretDestroyed then
 		argent:Fire("selfdestruct", "", 0)
 		local phys = argent:GetPhysicsObject()
@@ -381,9 +381,8 @@ function NPC_MetaTable:FaceCertainPosition(pos)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:FaceCertainEntity(argent,OnlyIfSeenEnemy,FaceEnemyTime)
-	if GetConVarNumber("ai_disabled") == 1 then return false end
-	if !IsValid(argent) then return false end
-	if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false then return end
+	if !IsValid(argent) or GetConVarNumber("ai_disabled") == 1 then return false end
+	if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false then return false end
 	FaceEnemyTime = FaceEnemyTime or 0
 	if OnlyIfSeenEnemy == true && IsValid(self:GetEnemy()) then
 		local setangs = Angle(0,(argent:GetPos()-self:GetPos()):Angle().y,0)
@@ -437,7 +436,7 @@ function NPC_MetaTable:VJ_GetNearestPointToEntityDistance(argent,OnlySelfGetPos)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,Tbl_Features)
-	if !IsValid(self:GetEnemy()) then return end
+	if !IsValid(self:GetEnemy()) then return false end
 	StartPos = StartPos or self:NearestPoint(self:GetPos() + self:OBBCenter())
 	EndPos = EndPos or self:GetEnemy():EyePos()
 	AcceptWorld = AcceptWorld or false
@@ -503,8 +502,8 @@ function NPC_MetaTable:VJ_CheckAllFourSides(CheckDistance)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_DoPlayerFlashLightCheck(argent,lookang)
-	if argent:IsPlayer() && argent:FlashlightIsOn() == true && (argent:GetForward():Dot((self:GetPos() -argent:GetPos()):GetNormalized()) > math.cos(math.rad(lookang))) then
-		return true else return false
+	if argent:IsPlayer() && argent:FlashlightIsOn() == true && (argent:GetForward():Dot((self:GetPos() - argent:GetPos()):GetNormalized()) > math.cos(math.rad(lookang))) then
+		return true
 	end
 	return false
 end
@@ -626,13 +625,13 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetDifficultyValue(int)
 	if self.SelectedDifficulty == 0 then
-		return int/2 -- Easy
+		return int / 2 -- Easy
 	elseif self.SelectedDifficulty == 1 then
 		return int -- Normal
 	elseif self.SelectedDifficulty == 2 then
-		return int*1.5 -- Hard
+		return int * 1.5 -- Hard
 	elseif self.SelectedDifficulty == 3 then
-		return int*2.5 -- Hell On Earth
+		return int * 2.5 -- Hell On Earth
 	end
 	return int
 end
@@ -839,7 +838,7 @@ hook.Add("PlayerSelectSpawn","VJ_PLAYER_SELECTSPAWN",function(ply)
 	local points = {}
 	for k,v in ipairs(ents.FindByClass("sent_vj_ply_spawnpoint")) do
 		if (v.Active == true) then
-			table.insert(points,v)
+			points[#points+1] = v
 		end
 	end
 	local result = VJ_PICKRANDOMTABLE(points)
@@ -868,8 +867,7 @@ end
 hook.Add("OnEntityCreated","VJ_ENTITYCREATED",VJ_ENTITYCREATED)*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("OnEntityCreated","VJ_ENTITYCREATED",function(entity)
-	if (CLIENT) then return end
-	if !entity:IsNPC() then return end
+	if (CLIENT) or !entity:IsNPC() then return end
 	if entity:GetClass() != "npc_grenade_frag" && entity:GetClass() != "bullseye_strider_focus" && entity:GetClass() != "npc_bullseye" && entity:GetClass() != "npc_enemyfinder" && entity:GetClass() != "hornet" then
 		timer.Simple(0.15,function()
 			if IsValid(entity) then
@@ -988,7 +986,7 @@ if (CLIENT) then
 		//print(ent)
 		sound.PlayFile("sound/"..VJ_PICKRANDOMTABLE(sdtbl),"noplay",function(soundchannel,errorID,errorName)
 			if IsValid(soundchannel) then
-				if table.Count(VJ_CL_MUSIC_CURRENT) <= 0 then soundchannel:Play() end
+				if #(VJ_CL_MUSIC_CURRENT) <= 0 then soundchannel:Play() end
 				soundchannel:EnableLooping(true)
 				soundchannel:SetVolume(sdvol)
 				soundchannel:SetPlaybackRate(sdspeed)
@@ -1006,7 +1004,7 @@ if (CLIENT) then
 					table.remove(VJ_CL_MUSIC_CURRENT,k)
 				end
 			end
-			if table.Count(VJ_CL_MUSIC_CURRENT) <= 0 then
+			if #(VJ_CL_MUSIC_CURRENT) <= 0 then
 				timer.Remove("vj_music_think")
 				VJ_CL_MUSIC_CURRENT = {}
 			else
