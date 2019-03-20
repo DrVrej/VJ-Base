@@ -720,7 +720,7 @@ function ENT:CustomOnWorldShakeOnMove_Walk() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnAlert() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnCallForHelp() end
+function ENT:CustomOnCallForHelp(ally) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomAttack() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1083,7 +1083,7 @@ function ENT:DoChangeMovementType(SetType)
 		self:SetMoveType(MOVETYPE_STEP)
 		self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND))
 		if VJ_AnimationExists(self,ACT_JUMP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_JUMP)) end
-		if VJ_AnimationExists(self,ACT_CLIMB_UP) == true && VJ_AnimationExists(self,ACT_CLIMB_DISMOUNT) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
+		if VJ_AnimationExists(self,ACT_CLIMB_UP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
 		//self:CapabilitiesRemove(CAP_SKIP_NAV_GROUND_CHECK)
 		self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK))
@@ -2066,7 +2066,7 @@ function ENT:Think()
 			//print(self:GetTarget())
 			//print(self.FollowingPlayerName)
 			if GetConVarNumber("ai_ignoreplayers") == 0 then
-				if !self.FollowingPlayerName:Alive() or self:Disposition(self.FollowingPlayerName) != D_LI then self:FollowPlayerReset() end
+				if !IsValid(self.FollowingPlayerName) && !self.FollowingPlayerName:Alive() or self:Disposition(self.FollowingPlayerName) != D_LI then self:FollowPlayerReset() end
 				if CurTime() > self.NextFollowPlayerT && IsValid(self.FollowingPlayerName) && self.FollowingPlayerName:Alive() && self.AlreadyBeingHealedByMedic == false then
 					local DistanceToPly = self:GetPos():Distance(self.FollowingPlayerName:GetPos())
 					local busy = self:BusyWithActivity()
@@ -2935,14 +2935,12 @@ function ENT:DamageByPlayerCode(dmginfo,hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJFriendlyCode(argent)
-	if self.HasAllies == false then return end
 	argent:AddEntityRelationship(self,D_LI,99)
 	self:AddEntityRelationship(argent,D_LI,99)
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CombineFriendlyCode(argent)
-	if self.HasAllies == false then return end
 	if self.NPCTbl_Combine[argent:GetClass()] then
 	//if VJ_HasValue(self.NPCTbl_Combine,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
@@ -2952,7 +2950,6 @@ function ENT:CombineFriendlyCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ZombieFriendlyCode(argent)
-	if self.HasAllies == false then return end
 	if self.NPCTbl_Zombies[argent:GetClass()] then
 	//if VJ_HasValue(self.NPCTbl_Zombies,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
@@ -2962,7 +2959,6 @@ function ENT:ZombieFriendlyCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AntlionFriendlyCode(argent)
-	if self.HasAllies == false then return end
 	if self.NPCTbl_Antlions[argent:GetClass()] then
 	//if VJ_HasValue(self.NPCTbl_Antlions,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
@@ -2972,7 +2968,6 @@ function ENT:AntlionFriendlyCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:XenFriendlyCode(argent)
-	if self.HasAllies == false then return end
 	if self.NPCTbl_Xen[argent:GetClass()] then
 	//if VJ_HasValue(self.NPCTbl_Xen,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
@@ -2982,7 +2977,6 @@ function ENT:XenFriendlyCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlayerAllies(argent)
-	if self.HasAllies == false then return end
 	if self.NPCTbl_Resistance[argent:GetClass()] then
 	//if VJ_HasValue(self.NPCTbl_Resistance,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
@@ -3191,52 +3185,49 @@ function ENT:DoEntityRelationshipCheck()
 		local seethroughwall = false
 		if vClass != self:GetClass() && (vNPC or vPlayer) && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
 			local inEneTbl = VJ_HasValue(self.VJ_AddCertainEntityAsEnemy,v)
-			if self.HasAllies == true then
-				if inEneTbl == false then
-					for _,friclass in ipairs(self.VJ_NPC_Class) do
-						if friclass == "CLASS_PLAYER_ALLY" && self.PlayerFriendly == false then self.PlayerFriendly = true end
-						if friclass == "CLASS_COMBINE" then if self:CombineFriendlyCode(v) == true then entisfri = true end end
-						if friclass == "CLASS_ZOMBIE" then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
-						if friclass == "CLASS_ANTLION" then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
-						if friclass == "CLASS_XEN" then if self:XenFriendlyCode(v) == true then entisfri = true end end
-						if (v.VJ_NPC_Class && friclass != "CLASS_PLAYER_ALLY" && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
-							//print("SHOULD WORK: "..v:GetClass())
-							entisfri = true
-							if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
-								self.ResetedEnemy = true
-								self:ResetEnemy(false)
-							end
-							if vNPC then v:AddEntityRelationship(self,D_LI,99) end
-							self:AddEntityRelationship(v,D_LI,99)
+			if self.HasAllies == true && inEneTbl == false then
+				for _,friclass in ipairs(self.VJ_NPC_Class) do
+					if friclass == "CLASS_PLAYER_ALLY" && self.PlayerFriendly == false then self.PlayerFriendly = true end
+					if friclass == "CLASS_COMBINE" then if self:CombineFriendlyCode(v) == true then entisfri = true end end
+					if friclass == "CLASS_ZOMBIE" then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
+					if friclass == "CLASS_ANTLION" then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
+					if friclass == "CLASS_XEN" then if self:XenFriendlyCode(v) == true then entisfri = true end end
+					if (v.VJ_NPC_Class && friclass != "CLASS_PLAYER_ALLY" && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
+						entisfri = true
+						if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
+							self.ResetedEnemy = true
+							self:ResetEnemy(false)
 						end
+						if vNPC then v:AddEntityRelationship(self,D_LI,99) end
+						self:AddEntityRelationship(v,D_LI,99)
 					end
-					if vNPC then
-						for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
-							//for k,v in ipairs(ents.FindByClass(fritbl)) do
-							if string.find(vClass, fritbl) then
-								entisfri = true
-								v:AddEntityRelationship(self,D_LI,99)
-								self:AddEntityRelationship(v,D_LI,99)
-							end
-						end
-						if VJ_HasValue(self.VJ_FriendlyNPCsSingle,vClass) then
+				end
+				if vNPC then
+					for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
+						//for k,v in ipairs(ents.FindByClass(fritbl)) do
+						if string.find(vClass, fritbl) then
 							entisfri = true
 							v:AddEntityRelationship(self,D_LI,99)
 							self:AddEntityRelationship(v,D_LI,99)
 						end
-						if self.CombineFriendly == true then if self:CombineFriendlyCode(v) == true then entisfri = true end end
-						if self.ZombieFriendly == true then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
-						if self.AntlionFriendly == true then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
-						if self.PlayerFriendly == true then
-							if self:PlayerAllies(v) == true then entisfri = true end
-							if self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true then
-								entisfri = true
-								v:AddEntityRelationship(self,D_LI,99)
-								self:AddEntityRelationship(v,D_LI,99)
-							end
-						end
-						if v.IsVJBaseSNPC == true && self.VJFriendly == true then if self:VJFriendlyCode(v) == true then entisfri = true end end
 					end
+					if VJ_HasValue(self.VJ_FriendlyNPCsSingle,vClass) then
+						entisfri = true
+						v:AddEntityRelationship(self,D_LI,99)
+						self:AddEntityRelationship(v,D_LI,99)
+					end
+					if self.CombineFriendly == true then if self:CombineFriendlyCode(v) == true then entisfri = true end end
+					if self.ZombieFriendly == true then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
+					if self.AntlionFriendly == true then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
+					if self.PlayerFriendly == true then
+						if self:PlayerAllies(v) == true then entisfri = true end
+						if self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true then
+							entisfri = true
+							v:AddEntityRelationship(self,D_LI,99)
+							self:AddEntityRelationship(v,D_LI,99)
+						end
+					end
+					if v.IsVJBaseSNPC == true && self.VJFriendly == true then if self:VJFriendlyCode(v) == true then entisfri = true end end
 				end
 			end
 			if entisfri == false && vNPC /*&& MyVisibleTov*/ && self.DisableMakingSelfEnemyToNPCs == false && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self,D_HT,99) end
@@ -3378,7 +3369,7 @@ function ENT:CallForHelpCode(SeeDistance)
 				//if x:DoRelationshipCheck(ene) == true then
 				if !IsValid(x:GetEnemy()) && ((!ene:IsPlayer() && x:Disposition(ene) != D_LI) or (ene:IsPlayer())) /*&& !self:IsCurrentSchedule(SCHED_FORCED_GO_RUN) == true && !self:IsCurrentSchedule(SCHED_FORCED_GO) == true*/ then
 					local goingtomove = false
-					self:CustomOnCallForHelp()
+					self:CustomOnCallForHelp(x)
 					self:CallForHelpSoundCode()
 					//timer.Simple(1,function() if IsValid(self) && IsValid(x) then x:OnReceiveOrderSoundCode() end end)
 					if self.HasCallForHelpAnimation == true && CurTime() > self.NextCallForHelpAnimationT then

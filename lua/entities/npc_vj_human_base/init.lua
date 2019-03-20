@@ -20,7 +20,7 @@ ENT.StartHealth = GetConVarNumber("vj_snpchealth")
 ENT.VJ_IsHugeMonster = false -- Is this a huge monster?
 	-- This is mostly used for massive or boss SNPCs, it affects certain part of the SNPC, for example the SNPC won't receive any knock back
 	-- ====== Collision / Hitbox Variables ====== --
-ENT.HullType = HULL_TINY
+ENT.HullType = HULL_HUMAN
 ENT.HasHull = true -- Set to false to disable HULL
 ENT.HullSizeNormal = true -- set to false to cancel out the self:SetHullSizeNormal()
 ENT.HasSetSolid = true -- set to false to disable SetSolid
@@ -686,7 +686,7 @@ function ENT:CustomOnDoChangeWeapon(NewWeapon,OldWeapon) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnAlert() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnCallForHelp() end
+function ENT:CustomOnCallForHelp(ally) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomAttack() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1876,7 +1876,7 @@ function ENT:Think()
 			//print(self:GetTarget())
 			//print(self.FollowingPlayerName)
 			if GetConVarNumber("ai_ignoreplayers") == 0 then
-				if !self.FollowingPlayerName:Alive() or self:Disposition(self.FollowingPlayerName) != D_LI then self:FollowPlayerReset() end
+				if !IsValid(self.FollowingPlayerName) && !self.FollowingPlayerName:Alive() or self:Disposition(self.FollowingPlayerName) != D_LI then self:FollowPlayerReset() end
 				if CurTime() > self.NextFollowPlayerT && IsValid(self.FollowingPlayerName) && self.FollowingPlayerName:Alive() && self.AlreadyBeingHealedByMedic == false then
 					local DistanceToPly = self:GetPos():Distance(self.FollowingPlayerName:GetPos())
 					local busy = self:BusyWithActivity()
@@ -2333,7 +2333,7 @@ function ENT:ThrowGrenadeCode(CustomEnt,NoOwner)
 	local gerClass = self.GrenadeAttackEntity
 	local gerFussTime = self.GrenadeAttackFussTime
 
-	if CustomEnt != nil && CustomEnt != NULL then -- For custom grenades
+	if IsValid(CustomEnt) then -- Custom nernagner gamal nernagner vor yete bidi nede
 		getIsCustom = true
 		gerModel = CustomEnt:GetModel()
 		gerClass = CustomEnt:GetClass()
@@ -2342,13 +2342,15 @@ function ENT:ThrowGrenadeCode(CustomEnt,NoOwner)
 		CustomEnt:Fire("SetParentAttachment",self.GrenadeAttackAttachment)
 		//CustomEnt:SetPos(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos)
 		CustomEnt:SetAngles(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Ang)
-		if gerClass == "obj_vj_grenade" then gerFussTime = math.abs(CustomEnt.FussTime - CustomEnt.TimeSinceSpawn) end
-		if gerClass == "npc_grenade_frag" then gerFussTime = 1.5 end
-		if gerClass == "obj_cpt_grenade" then gerFussTime = 2 end
-		if gerClass == "obj_handgrenade" then gerFussTime = 1 end
-		if gerClass == "obj_spore" then gerFussTime = 1 end
-		if gerClass == "doom3_grenade" then gerFussTime = 1.5 end
-		if (gerClass == "fas2_thrown_m67" || gerClass == "cw_grenade_thrown" || gerClass == "cw_flash_thrown" || gerClass == "cw_smoke_thrown") then gerFussTime = 1.5 end
+		if gerClass == "obj_vj_grenade" then
+			gerFussTime = math.abs(CustomEnt.FussTime - CustomEnt.TimeSinceSpawn)
+		elseif gerClass == "obj_handgrenade" or gerClass == "obj_spore" then
+			gerFussTime = 1
+		elseif gerClass == "npc_grenade_frag" or gerClass == "doom3_grenade" or gerClass == "fas2_thrown_m67" or gerClass == "cw_grenade_thrown" or gerClass == "cw_flash_thrown" or gerClass == "cw_smoke_thrown" then
+			gerFussTime = 1.5
+		elseif gerClass == "obj_cpt_grenade" then
+			gerFussTime = 2
+		end
 	end
 
 	self.ThrowingGrenade = true
@@ -2358,7 +2360,7 @@ function ENT:ThrowGrenadeCode(CustomEnt,NoOwner)
 	if self.VJ_PlayingSequence == false && self.DisableGrenadeAttackAnimation == false then
 		self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_GrenadeAttack)
 		self.PlayingAttackAnimation = true
-		timer.Simple(VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) -0.2,function()
+		timer.Simple(VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) - 0.2,function()
 			if IsValid(self) then
 				self.PlayingAttackAnimation = false
 			end
@@ -2369,41 +2371,48 @@ function ENT:ThrowGrenadeCode(CustomEnt,NoOwner)
 	timer.Simple(self.TimeUntilGrenadeIsReleased,function()
 		if getIsCustom == true && !IsValid(CustomEnt) then return end
 		if IsValid(CustomEnt) then CustomEnt.VJHumanTossingAway = false CustomEnt:Remove() end
-		if IsValid(self) && self.Dead == false /*&& IsValid(self:GetEnemy())*/ then
+		if IsValid(self) && self.Dead == false /*&& IsValid(self:GetEnemy())*/ then -- Yete SNPC ter artoon e...
 			local gerShootPos = self:GetPos() + self:GetForward()*200
-			if !IsValid(self:GetEnemy()) then
+			if IsValid(self:GetEnemy()) then 
+				gerShootPos = self:GetEnemy():GetPos()
+			else -- Yete teshnami chooni, nede amenan lav goghme
 				local iamarmo = self:VJ_CheckAllFourSides()
-				if iamarmo.Forward then gerShootPos = self:GetPos() + self:GetForward()*200 self:FaceCertainPosition(gerShootPos)
-					elseif iamarmo.Right then gerShootPos = self:GetPos() + self:GetRight()*200 self:FaceCertainPosition(gerShootPos)
-					elseif iamarmo.Left then gerShootPos = self:GetPos() + self:GetRight()*-200 self:FaceCertainPosition(gerShootPos)
-					elseif iamarmo.Backward then gerShootPos = self:GetPos() + self:GetForward()*-200 self:FaceCertainPosition(gerShootPos)
+				if iamarmo.Forward then gerShootPos = self:GetPos() + self:GetForward()*200; self:FaceCertainPosition(gerShootPos)
+					elseif iamarmo.Right then gerShootPos = self:GetPos() + self:GetRight()*200; self:FaceCertainPosition(gerShootPos)
+					elseif iamarmo.Left then gerShootPos = self:GetPos() + self:GetRight()*-200; self:FaceCertainPosition(gerShootPos)
+					elseif iamarmo.Backward then gerShootPos = self:GetPos() + self:GetForward()*-200; self:FaceCertainPosition(gerShootPos)
 				end
 			end
-			if IsValid(self:GetEnemy()) then gerShootPos = self:GetEnemy():GetPos() end
-			local grenent = ents.Create(gerClass)
-			local greShootVelPos = gerShootPos - self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos
-			local getShootVel = greShootVelPos + self:GetUp()*math.random(self.GrenadeAttackVelUp1,self.GrenadeAttackVelUp2) + self:GetForward()*math.Rand(self.GrenadeAttackVelForward1,self.GrenadeAttackVelForward2) + self:GetRight()*math.Rand(self.GrenadeAttackVelRight1,self.GrenadeAttackVelRight2)
-			if NoOwner == false then grenent:SetOwner(self) end
-			grenent:SetPos(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos)
-			grenent:SetAngles(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Ang)
-			grenent:SetModel(Model(gerModel))
-			if gerClass == "obj_vj_grenade" then grenent.FussTime = gerFussTime end
-			if gerClass == "obj_cpt_grenade" then grenent:SetTimer(gerFussTime) end
-			if gerClass == "obj_handgrenade" then grenent:SetExplodeDelay(gerFussTime) end
-			if gerClass == "obj_spore" then grenent:SetGrenade(true) end
-			if gerClass == "doom3_grenade" then grenent:SetExplodeDelay(gerFussTime) end
-			if (gerClass == "cw_grenade_thrown" or gerClass == "cw_flash_thrown" or gerClass == "cw_smoke_thrown") then grenent:SetOwner(self); grenent:Fuse(gerFussTime) end
-			if gerClass == "ent_hl1_grenade" then grenent:ShootTimed(CustomEnt, getShootVel, gerFussTime) end
-			grenent:Spawn()
-			grenent:Activate()
-			if gerClass == "npc_grenade_frag" then grenent:Input("SetTimer",self:GetOwner(),self:GetOwner(),gerFussTime) end
-			local phys = grenent:GetPhysicsObject()
+			local gent = ents.Create(gerClass)
+			local getShootVel = (gerShootPos - self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos) + (self:GetUp()*math.random(self.GrenadeAttackVelUp1,self.GrenadeAttackVelUp2) + self:GetForward()*math.Rand(self.GrenadeAttackVelForward1,self.GrenadeAttackVelForward2) + self:GetRight()*math.Rand(self.GrenadeAttackVelRight1,self.GrenadeAttackVelRight2))
+			if NoOwner == false then gent:SetOwner(self) end
+			gent:SetPos(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos)
+			gent:SetAngles(self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Ang)
+			gent:SetModel(Model(gerModel))
+			if gerClass == "obj_vj_grenade" then
+				gent.FussTime = gerFussTime
+			elseif gerClass == "obj_cpt_grenade" then
+				gent:SetTimer(gerFussTime)
+			elseif gerClass == "obj_spore" then
+				gent:SetGrenade(true)
+			elseif gerClass == "ent_hl1_grenade" then
+				gent:ShootTimed(CustomEnt, getShootVel, gerFussTime)
+			elseif gerClass == "doom3_grenade" or gerClass == "obj_handgrenade" then
+				gent:SetExplodeDelay(gerFussTime)
+			elseif gerClass == "cw_grenade_thrown" or gerClass == "cw_flash_thrown" or gerClass == "cw_smoke_thrown" then
+				gent:SetOwner(self)
+				gent:Fuse(gerFussTime)
+			end
+			gent:Spawn()
+			gent:Activate()
+			if gerClass == "npc_grenade_frag" then gent:Input("SetTimer",self:GetOwner(),self:GetOwner(),gerFussTime) end
+			local phys = gent:GetPhysicsObject()
 			if (phys:IsValid()) then
 				phys:Wake()
 				phys:AddAngleVelocity(Vector(math.Rand(500,500),math.Rand(500,500),math.Rand(500,500)))
 				phys:SetVelocity(getShootVel)
 			end
-			self:CustomOnGrenadeAttack_OnThrow(grenent)
+			self:CustomOnGrenadeAttack_OnThrow(gent)
 		end
 		self.ThrowingGrenade = false
 	end)
@@ -2803,7 +2812,7 @@ function ENT:CheckForGrenades()
 	for k,v in pairs(FindNearbyGrenades) do
 		local IsFriendlyGrenade = false
 		if self.EntitiesToRunFrom[v:GetClass()] && self:Visible(v) then
-			if v:GetOwner() != nil && v:GetOwner() != NULL && v:GetOwner().IsVJBaseSNPC == true && (self:Disposition(v:GetOwner()) == D_LI or self:Disposition(v:GetOwner()) == D_NU) then
+			if IsValid(v:GetOwner()) && v:GetOwner().IsVJBaseSNPC == true && (self:Disposition(v:GetOwner()) == D_LI or self:Disposition(v:GetOwner()) == D_NU) then
 				IsFriendlyGrenade = true
 			end
 			if IsFriendlyGrenade == false then
@@ -2829,14 +2838,12 @@ function ENT:CheckForGrenades()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJFriendlyCode(argent)
-	if self.HasAllies == false then return end
 	argent:AddEntityRelationship(self,D_LI,99)
 	self:AddEntityRelationship(argent,D_LI,99)
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CombineFriendlyCode(argent)
-	if self.HasAllies == false then return end
 	if self.NPCTbl_Combine[argent:GetClass()] then
 	//if VJ_HasValue(self.NPCTbl_Combine,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
@@ -2846,7 +2853,6 @@ function ENT:CombineFriendlyCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ZombieFriendlyCode(argent)
-	if self.HasAllies == false then return end
 	if self.NPCTbl_Zombies[argent:GetClass()] then
 	//if VJ_HasValue(self.NPCTbl_Zombies,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
@@ -2856,7 +2862,6 @@ function ENT:ZombieFriendlyCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AntlionFriendlyCode(argent)
-	if self.HasAllies == false then return end
 	if self.NPCTbl_Antlions[argent:GetClass()] then
 	//if VJ_HasValue(self.NPCTbl_Antlions,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
@@ -2866,7 +2871,6 @@ function ENT:AntlionFriendlyCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:XenFriendlyCode(argent)
-	if self.HasAllies == false then return end
 	if self.NPCTbl_Xen[argent:GetClass()] then
 	//if VJ_HasValue(self.NPCTbl_Xen,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
@@ -2876,7 +2880,6 @@ function ENT:XenFriendlyCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlayerAllies(argent)
-	if self.HasAllies == false then return end
 	if self.NPCTbl_Resistance[argent:GetClass()] then
 	//if VJ_HasValue(self.NPCTbl_Resistance,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
@@ -3085,52 +3088,49 @@ function ENT:DoEntityRelationshipCheck()
 		local seethroughwall = false
 		if vClass != self:GetClass() && (vNPC or vPlayer) && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
 			local inEneTbl = VJ_HasValue(self.VJ_AddCertainEntityAsEnemy,v)
-			if self.HasAllies == true then
-				if inEneTbl == false then
-					for _,friclass in ipairs(self.VJ_NPC_Class) do
-						if friclass == "CLASS_PLAYER_ALLY" && self.PlayerFriendly == false then self.PlayerFriendly = true end
-						if friclass == "CLASS_COMBINE" then if self:CombineFriendlyCode(v) == true then entisfri = true end end
-						if friclass == "CLASS_ZOMBIE" then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
-						if friclass == "CLASS_ANTLION" then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
-						if friclass == "CLASS_XEN" then if self:XenFriendlyCode(v) == true then entisfri = true end end
-						if (v.VJ_NPC_Class && friclass != "CLASS_PLAYER_ALLY" && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
-							//print("SHOULD WORK: "..v:GetClass())
-							entisfri = true
-							if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
-								self.ResetedEnemy = true
-								self:ResetEnemy(false)
-							end
-							if vNPC then v:AddEntityRelationship(self,D_LI,99) end
-							self:AddEntityRelationship(v,D_LI,99)
+			if self.HasAllies == true && inEneTbl == false then
+				for _,friclass in ipairs(self.VJ_NPC_Class) do
+					if friclass == "CLASS_PLAYER_ALLY" && self.PlayerFriendly == false then self.PlayerFriendly = true end
+					if friclass == "CLASS_COMBINE" then if self:CombineFriendlyCode(v) == true then entisfri = true end end
+					if friclass == "CLASS_ZOMBIE" then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
+					if friclass == "CLASS_ANTLION" then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
+					if friclass == "CLASS_XEN" then if self:XenFriendlyCode(v) == true then entisfri = true end end
+					if (v.VJ_NPC_Class && friclass != "CLASS_PLAYER_ALLY" && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
+						entisfri = true
+						if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
+							self.ResetedEnemy = true
+							self:ResetEnemy(false)
 						end
+						if vNPC then v:AddEntityRelationship(self,D_LI,99) end
+						self:AddEntityRelationship(v,D_LI,99)
 					end
-					if vNPC then
-						for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
-							//for k,v in ipairs(ents.FindByClass(fritbl)) do
-							if string.find(vClass, fritbl) then
-								entisfri = true
-								v:AddEntityRelationship(self,D_LI,99)
-								self:AddEntityRelationship(v,D_LI,99)
-							end
-						end
-						if VJ_HasValue(self.VJ_FriendlyNPCsSingle,vClass) then
+				end
+				if vNPC then
+					for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
+						//for k,v in ipairs(ents.FindByClass(fritbl)) do
+						if string.find(vClass, fritbl) then
 							entisfri = true
 							v:AddEntityRelationship(self,D_LI,99)
 							self:AddEntityRelationship(v,D_LI,99)
 						end
-						if self.CombineFriendly == true then if self:CombineFriendlyCode(v) == true then entisfri = true end end
-						if self.ZombieFriendly == true then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
-						if self.AntlionFriendly == true then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
-						if self.PlayerFriendly == true then
-							if self:PlayerAllies(v) == true then entisfri = true end
-							if self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true then
-								entisfri = true
-								v:AddEntityRelationship(self,D_LI,99)
-								self:AddEntityRelationship(v,D_LI,99)
-							end
-						end
-						if v.IsVJBaseSNPC == true && self.VJFriendly == true then if self:VJFriendlyCode(v) == true then entisfri = true end end
 					end
+					if VJ_HasValue(self.VJ_FriendlyNPCsSingle,vClass) then
+						entisfri = true
+						v:AddEntityRelationship(self,D_LI,99)
+						self:AddEntityRelationship(v,D_LI,99)
+					end
+					if self.CombineFriendly == true then if self:CombineFriendlyCode(v) == true then entisfri = true end end
+					if self.ZombieFriendly == true then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
+					if self.AntlionFriendly == true then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
+					if self.PlayerFriendly == true then
+						if self:PlayerAllies(v) == true then entisfri = true end
+						if self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true then
+							entisfri = true
+							v:AddEntityRelationship(self,D_LI,99)
+							self:AddEntityRelationship(v,D_LI,99)
+						end
+					end
+					if v.IsVJBaseSNPC == true && self.VJFriendly == true then if self:VJFriendlyCode(v) == true then entisfri = true end end
 				end
 			end
 			if entisfri == false && vNPC /*&& MyVisibleTov*/ && self.DisableMakingSelfEnemyToNPCs == false && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self,D_HT,99) end
@@ -3272,7 +3272,7 @@ function ENT:CallForHelpCode(SeeDistance)
 				//if x:DoRelationshipCheck(ene) == true then
 				if !IsValid(x:GetEnemy()) && ((!ene:IsPlayer() && x:Disposition(ene) != D_LI) or (ene:IsPlayer())) /*&& !self:IsCurrentSchedule(SCHED_FORCED_GO_RUN) == true && !self:IsCurrentSchedule(SCHED_FORCED_GO) == true*/ then
 					local goingtomove = false
-					self:CustomOnCallForHelp()
+					self:CustomOnCallForHelp(x)
 					self:CallForHelpSoundCode()
 					//timer.Simple(1,function() if IsValid(self) && IsValid(x) then x:OnReceiveOrderSoundCode() end end)
 					if self.HasCallForHelpAnimation == true && CurTime() > self.NextCallForHelpAnimationT then
