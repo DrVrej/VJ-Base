@@ -130,7 +130,7 @@ ENT.DisableSelectSchedule = false -- Disables Schedule code, Custom Schedule can
 ENT.DisableTakeDamageFindEnemy = false -- Disable the SNPC finding the enemy when being damaged
 ENT.DisableTouchFindEnemy = false -- Disable the SNPC finding the enemy when being touched
 ENT.DisableMakingSelfEnemyToNPCs = false -- Disables the "AddEntityRelationship" that runs in think
-ENT.LastSeenEnemyTimeUntilReset = 15 -- Time until it resets its enemy if its current enemy is not visible
+ENT.LastSeenEnemyTimeUntilReset = 1 //15 -- Time until it resets its enemy if its current enemy is not visible
 ENT.NextProcessTime = 1 -- Time until it runs the essential part of the AI, which can be performance heavy!
 	-- ====== Miscellaneous Variables ====== --
 ENT.DisableInitializeCapabilities = false -- If enabled, all of the Capabilities will be disabled, allowing you to add your own
@@ -413,6 +413,7 @@ ENT.HasMedicSounds_AfterHeal = true -- If set to false, it won't play any sounds
 ENT.HasMedicSounds_ReceiveHeal = true -- If set to false, it won't play any sounds when it receives a medkit
 ENT.HasOnPlayerSightSounds = true -- If set to false, it won't play the saw player sounds
 ENT.HasInvestigateSounds = true -- If set to false, it won't play any sounds when it's investigating something
+ENT.HasLostEnemySounds = true -- If set to false, it won't play any sounds when it looses it enemy
 ENT.HasAlertSounds = true -- If set to false, it won't play the alert sounds
 ENT.HasCallForHelpSounds = true -- If set to false, it won't play any sounds when it calls for help
 ENT.HasBecomeEnemyToPlayerSounds = true -- If set to false, it won't play the become enemy to player sounds
@@ -444,6 +445,7 @@ ENT.SoundTbl_MedicAfterHeal = {}
 ENT.SoundTbl_MedicReceiveHeal = {}
 ENT.SoundTbl_OnPlayerSight = {}
 ENT.SoundTbl_Investigate = {}
+ENT.SoundTbl_LostEnemy = {}
 ENT.SoundTbl_Alert = {}
 ENT.SoundTbl_CallForHelp = {}
 ENT.SoundTbl_BecomeEnemyToPlayer = {}
@@ -484,6 +486,7 @@ ENT.MedicAfterHealSoundChance = 1
 ENT.MedicReceiveHealSoundChance = 1
 ENT.OnPlayerSightSoundChance = 1
 ENT.InvestigateSoundChance = 1
+ENT.LostEnemySoundChance = 1
 ENT.AlertSoundChance = 1
 ENT.CallForHelpSoundChance = 1
 ENT.BecomeEnemyToPlayerChance = 1
@@ -510,6 +513,8 @@ ENT.NextSoundTime_Idle1 = 8
 ENT.NextSoundTime_Idle2 = 25
 ENT.NextSoundTime_Investigate1 = 5
 ENT.NextSoundTime_Investigate2 = 5
+ENT.NextSoundTime_LostEnemy1 = 5
+ENT.NextSoundTime_LostEnemy2 = 6
 ENT.NextSoundTime_Alert1 = 2
 ENT.NextSoundTime_Alert2 = 3
 ENT.NextSoundTime_OnGrenadeSight1 = 3
@@ -544,6 +549,7 @@ ENT.AfterHealSoundLevel = 75
 ENT.MedicReceiveHealSoundLevel = 75
 ENT.OnPlayerSightSoundLevel = 75
 ENT.InvestigateSoundLevel = 80
+ENT.LostEnemySoundLevel = 75
 ENT.AlertSoundLevel = 80
 ENT.CallForHelpSoundLevel = 80
 ENT.BecomeEnemyToPlayerSoundLevel = 75
@@ -597,6 +603,8 @@ ENT.OnPlayerSightSoundPitch1 = "UseGeneralPitch"
 ENT.OnPlayerSightSoundPitch2 = "UseGeneralPitch"
 ENT.InvestigateSoundPitch1 = "UseGeneralPitch"
 ENT.InvestigateSoundPitch2 = "UseGeneralPitch"
+ENT.LostEnemySoundPitch1 = "UseGeneralPitch"
+ENT.LostEnemySoundPitch2 = "UseGeneralPitch"
 ENT.AlertSoundPitch1 = "UseGeneralPitch"
 ENT.AlertSoundPitch2 = "UseGeneralPitch"
 ENT.CallForHelpSoundPitch1 = "UseGeneralPitch"
@@ -684,7 +692,9 @@ function ENT:CustomOnWorldShakeOnMove_Walk() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnDoChangeWeapon(NewWeapon,OldWeapon) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnAlert() end
+function ENT:CustomOnInvestigate(argent) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnAlert(argent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnCallForHelp(ally) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -897,6 +907,7 @@ ENT.NextWanderTime = 0
 ENT.Weapon_DoingCrouchAttackT = 0
 ENT.NextInvestigateSoundMove = 0
 ENT.NextInvestigateSoundT = 0
+ENT.LostEnemySoundT = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.NearestPointToEnemyDistance = Vector(0,0,0)
 ENT.SelectedDifficulty = 1
@@ -2081,6 +2092,7 @@ function ENT:Think()
 
 		if self.ResetedEnemy == false then
 			if self.LastSeenEnemyTime > self.LastSeenEnemyTimeUntilReset && (!self.IsVJBaseSNPC_Tank) then
+				self:LostEnemySoundCode()
 				self.ResetedEnemy = true
 				self:ResetEnemy(true)
 			end
@@ -2213,7 +2225,7 @@ function ENT:Think()
 			
 			self.TimeSinceSeenEnemy = 0
 			self.TimeSinceLastSeenEnemy = self.TimeSinceLastSeenEnemy + 0.1
-			if self.ResetedEnemy == false && (!self.IsVJBaseSNPC_Tank) then self.ResetedEnemy = true self:ResetEnemy(true) end
+			if self.ResetedEnemy == false && (!self.IsVJBaseSNPC_Tank) then self:LostEnemySoundCode() self.ResetedEnemy = true self:ResetEnemy(true) end
 			/*if CurTime() > self.NextFindEnemyT then
 			if self.DisableFindEnemy == false then self:FindEnemy() end
 			self.NextFindEnemyT = CurTime() + self.NextFindEnemyTime end*/
@@ -2972,11 +2984,11 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 	self:VJ_ACT_RESETENEMY(RunToEnemyOnReset)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoAlert()
+function ENT:DoAlert(argent)
 	if !IsValid(self:GetEnemy()) or self.Alerted == true then return end
 	self.Alerted = true
 	self.LastSeenEnemyTime = 0
-	self:CustomOnAlert()
+	self:CustomOnAlert(argent)
 	if CurTime() > self.NextAlertSoundT then
 		if self.AlertSounds_OnlyOnce == true then
 			if self.HasDone_PlayAlertSoundOnlyOnce == false then
@@ -3156,6 +3168,7 @@ function ENT:DoEntityRelationshipCheck()
 								self:SetLastPosition(v:GetPos())
 								self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
 							end
+							self:CustomOnInvestigate(v)
 							self:InvestigateSoundCode()
 							self.NextInvestigateSoundMove = CurTime() + 2
 						end
@@ -3192,13 +3205,13 @@ function ENT:DoEntityRelationshipCheck()
 		if self.FindEnemy_CanSeeThroughWalls == true then seethroughwall = true end
 		if self.DisableFindEnemy == false then
 			if (seethroughwall == true) or (self:Visible(v) && (vDistanceToMy < sightdist)) then
-				if (self.FindEnemy_UseSphere == false && radiusoverride == 0 && (self:GetForward():Dot((vPos -MyPos):GetNormalized()) > math.cos(math.rad(self.SightAngle)))) or (self.FindEnemy_UseSphere == true or radiusoverride == 1) then
+				if (self.FindEnemy_UseSphere == false && radiusoverride == 0 && (self:GetForward():Dot((vPos - MyPos):GetNormalized()) > math.cos(math.rad(self.SightAngle)))) or (self.FindEnemy_UseSphere == true or radiusoverride == 1) then
 					local check = self:DoRelationshipCheck(v)
 					if check == true then
 					//if (v.VJ_NoTarget && v.VJ_NoTarget != true) then continue end
 						self:AddEntityRelationship(v,D_HT,99)
 						if distlist_inserted == false then distlist[#distlist+1] = vDistanceToMy end
-						self.CurrentReachableEnemies[#self.CurrentReachableEnemies] = v
+						self.CurrentReachableEnemies[#self.CurrentReachableEnemies+1] = v
 						enemyseen = true
 						if distlist_closest == true then
 							self:VJ_DoSetEnemy(v,true,true)
@@ -3406,6 +3419,7 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 	local DamageAttacker = dmginfo:GetAttacker()
 	local DamageType = dmginfo:GetDamageType()
 	local hitgroup = self.VJ_ScaleHitGroupDamage
+	if IsValid(DamageInflictor) && DamageInflictor:GetClass() == "prop_ragdoll" && DamageInflictor:GetVelocity():Length() <= 100 then return false end
 	self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo,hitgroup)
 
 	if self.GetDamageFromIsHugeMonster == true then
@@ -3418,7 +3432,7 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 	end
 
 	if self:IsOnFire() && self:WaterLevel() == 2 then self:Extinguish() end
-
+	
 	if VJ_HasValue(self.ImmuneDamagesTable,DamageType) then return end
 	if self.AllowIgnition == false && (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() == "entityflame" && DamageAttacker:GetClass() == "entityflame") then self:Extinguish() return false end
 	if self.Immune_Fire == true && (DamageType == DMG_BURN or DamageType == DMG_SLOWBURN or (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() == "entityflame" && DamageAttacker:GetClass() == "entityflame")) then return false end
@@ -3449,7 +3463,7 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 	self:CustomOnTakeDamage_AfterDamage(dmginfo,hitgroup)
 	if self.Bleeds == true && dmginfo:GetDamage() > 0 then
 		self:CustomOnTakeDamage_OnBleed(dmginfo,hitgroup)
-		if self.HasBloodParticle == true then self:SpawnBloodParticles(dmginfo,hitgroup) end
+		if self.HasBloodParticle == true && ((!self:IsOnFire()) or (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() != "entityflame" && DamageAttacker:GetClass() != "entityflame")) then self:SpawnBloodParticles(dmginfo,hitgroup) end
 		if self.HasBloodDecal == true then self:SpawnBloodDecal(dmginfo,hitgroup) end
 		self:ImpactSoundCode()
 	end
@@ -4398,10 +4412,26 @@ function ENT:InvestigateSoundCode(CustomTbl)
 		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 		if randsd == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
 			VJ_STOPSOUND(self.CurrentInvestigateSound)
+			VJ_STOPSOUND(self.CurrentLostEnemySound)
 			self.NextIdleSoundT = self.NextIdleSoundT + 2
 			self.CurrentInvestigateSound = VJ_CreateSound(self,soundtbl,self.InvestigateSoundLevel,self:VJ_DecideSoundPitch(self.InvestigateSoundPitch1,self.InvestigateSoundPitch2))
 		end
 		self.NextInvestigateSoundT = CurTime() + math.Rand(self.NextSoundTime_Investigate1,self.NextSoundTime_Investigate2)
+	end
+end
+--------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:LostEnemySoundCode(CustomTbl)
+	if self.HasSounds == false or self.HasLostEnemySounds == false then return end
+	if CurTime() > self.LostEnemySoundT then
+		local randsd = math.random(1,self.LostEnemySoundChance)
+		local soundtbl = self.SoundTbl_LostEnemy
+		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
+		if randsd == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+			VJ_STOPSOUND(self.CurrentLostEnemySound)
+			self.NextIdleSoundT = self.NextIdleSoundT + 2
+			self.CurrentLostEnemySound = VJ_CreateSound(self,soundtbl,self.LostEnemySoundLevel,self:VJ_DecideSoundPitch(self.LostEnemySoundPitch1,self.LostEnemySoundPitch2))
+		end
+		self.LostEnemySoundT = CurTime() + math.Rand(self.NextSoundTime_LostEnemy1,self.NextSoundTime_LostEnemy2)
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
@@ -4412,6 +4442,7 @@ function ENT:OnReceiveOrderSoundCode(CustomTbl)
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomalertsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
 		VJ_STOPSOUND(self.CurrentIdleSound)
+		VJ_STOPSOUND(self.CurrentLostEnemySound)
 		self.NextIdleSoundT = self.NextIdleSoundT + 2
 		self.NextAlertSoundT = CurTime() + 2
 		self.CurrentOnReceiveOrderSound = VJ_CreateSound(self,soundtbl,self.OnReceiveOrderSoundLevel,self:VJ_DecideSoundPitch(self.OnReceiveOrderSoundPitch1,self.OnReceiveOrderSoundPitch2))
@@ -4426,6 +4457,7 @@ function ENT:AlertSoundCode(CustomTbl)
 	if randomalertsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
 		VJ_STOPSOUND(self.CurrentIdleSound)
 		VJ_STOPSOUND(self.CurrentInvestigateSound)
+		VJ_STOPSOUND(self.CurrentLostEnemySound)
 		self.NextIdleSoundT = self.NextIdleSoundT + 2
 		self.NextSuppressingSoundT = self.NextSuppressingSoundT + 2.5
 		self.CurrentAlertSound = VJ_CreateSound(self,soundtbl,self.AlertSoundLevel,self:VJ_DecideSoundPitch(self.AlertSoundPitch1,self.AlertSoundPitch2))
@@ -4712,6 +4744,7 @@ function ENT:StopAllCommonSounds()
 	VJ_STOPSOUND(self.CurrentBreathSound)
 	VJ_STOPSOUND(self.CurrentIdleSound)
 	VJ_STOPSOUND(self.CurrentInvestigateSound)
+	VJ_STOPSOUND(self.CurrentLostEnemySound)
 	VJ_STOPSOUND(self.CurrentAlertSound)
 	VJ_STOPSOUND(self.CurrentBeforeMeleeAttackSound)
 	//VJ_STOPSOUND(self.CurrentMeleeAttackSound)

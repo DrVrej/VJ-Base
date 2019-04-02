@@ -537,7 +537,7 @@ function NPC_MetaTable:VJ_DoSetEnemy(argent,ShouldStopActs,DoSmallWhenActiveEnem
 			self:StopMoving()
 		end
 		if self.Alerted == false then
-			self:DoAlert()
+			self:DoAlert(argent)
 			/*self.NextChaseTime = self.NextChaseTime + self.NextChaseTimeOnSetEnemy
 			timer.Simple(self.NextChaseTimeOnSetEnemy,function()
 				if IsValid(self) then
