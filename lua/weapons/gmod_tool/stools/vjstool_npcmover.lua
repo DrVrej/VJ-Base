@@ -190,6 +190,7 @@ else -- If SERVER
 			end
 		end
 	end)
+	
 	net.Receive("vj_npcmover_sv_startmove",function(len,pl)
 		sventtable = net.ReadTable()
 		svwalktype = net.ReadString()
@@ -229,6 +230,7 @@ else -- If SERVER
 		end
 		//self:MoveNPC(sventity,svvector,svwalktype)
 	end)
+	
 	net.Receive("vj_npcmover_removesingle",function(len,pl)
 		brahent = net.ReadEntity()
 		//TOOL:RemoveNPC(brahent)
@@ -239,6 +241,7 @@ else -- If SERVER
 			brahent:SelectSchedule()
 		end
 	end)
+	
 	net.Receive("vj_npcmover_removeall",function(len,pl)
 		brahtbl = net.ReadTable()
 		for k,v in ipairs(brahtbl) do

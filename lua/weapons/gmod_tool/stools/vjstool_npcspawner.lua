@@ -262,40 +262,43 @@ else -- If SERVER
 		svgetlines = net.ReadType()
 		svgettype = net.ReadString()
 		if !IsValid(svowner) then return false end
-		if table.Count(svgetlines) <= 0 then svowner:ChatPrint("Nothing to spawn!") return false end
-		local spawner = ents.Create("obj_vj_spawner_base")
-		spawner.EntitiesToSpawn = {}
-		spawner:SetPos(svpos)
-		local angs = Angle(0,0,0)
-		if IsValid(svowner) then
-			angs = svowner:GetAngles()
-			angs.pitch = 0
-			angs.roll = 0
-			angs.yaw = angs.yaw + 180
-		end
-		spawner:SetAngles(angs)
-		for k,v in pairs(svgetlines) do
-			//if v.IsVJBaseSpawner == true then svowner:ChatPrint("Can't be spawned because it's a spawner") end
-			table.insert(spawner.EntitiesToSpawn,{EntityName = "NPC"..math.random(1,99999999),SpawnPosition = {vForward=v.SpawnPosition.x,vRight=v.SpawnPosition.y,vUp=v.SpawnPosition.z},Entities = {v.Entities},WeaponsList={v.WeaponsList}})
-		end
-		//spawner.EntitiesToSpawn = {entitiestospawntbl}
-		if convartbl.vjstool_npcspawner_playsound == 1 then
-			spawner.SoundTbl_SpawnEntity = {"garrysmod/save_load1.wav","garrysmod/save_load2.wav","garrysmod/save_load3.wav","garrysmod/save_load4.wav"}
-		end
-		spawner.TimedSpawn_Time = convartbl.vjstool_npcspawner_nextspawntime //GetConVarNumber("vjstool_npcspawner_nextspawntime")
-		if svgettype == "RightClick" then spawner.SingleSpawner = true end
-		spawner:SetCreator(svowner)
-		spawner:Spawn()
-		spawner:Activate()
-		undo.Create("NPC Spawner")
-		undo.AddEntity(spawner)
-		undo.SetPlayer(svowner)
-		undo.Finish()
-		for vpk,vpv in pairs(spawner.CurrentEntities) do
-			if IsValid(vpv.TheEntity) && vpv.TheEntity.IsVJBaseSpawner == true && vpv.TheEntity.SingleSpawner == true then
-				vpv.TheEntity:SetCreator(svowner)
-				table.remove(spawner.CurrentEntities,vpk)
-				if table.Count(spawner.CurrentEntities) <= 0 then spawner:Remove() end
+		local wep = svowner:GetActiveWeapon()
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcspawner" then
+			if table.Count(svgetlines) <= 0 then svowner:ChatPrint("Nothing to spawn!") return false end
+			local spawner = ents.Create("obj_vj_spawner_base")
+			spawner.EntitiesToSpawn = {}
+			spawner:SetPos(svpos)
+			local angs = Angle(0,0,0)
+			if IsValid(svowner) then
+				angs = svowner:GetAngles()
+				angs.pitch = 0
+				angs.roll = 0
+				angs.yaw = angs.yaw + 180
+			end
+			spawner:SetAngles(angs)
+			for k,v in pairs(svgetlines) do
+				//if v.IsVJBaseSpawner == true then svowner:ChatPrint("Can't be spawned because it's a spawner") end
+				table.insert(spawner.EntitiesToSpawn,{EntityName = "NPC"..math.random(1,99999999),SpawnPosition = {vForward=v.SpawnPosition.x,vRight=v.SpawnPosition.y,vUp=v.SpawnPosition.z},Entities = {v.Entities},WeaponsList={v.WeaponsList}})
+			end
+			//spawner.EntitiesToSpawn = {entitiestospawntbl}
+			if convartbl.vjstool_npcspawner_playsound == 1 then
+				spawner.SoundTbl_SpawnEntity = {"garrysmod/save_load1.wav","garrysmod/save_load2.wav","garrysmod/save_load3.wav","garrysmod/save_load4.wav"}
+			end
+			spawner.TimedSpawn_Time = convartbl.vjstool_npcspawner_nextspawntime //GetConVarNumber("vjstool_npcspawner_nextspawntime")
+			if svgettype == "RightClick" then spawner.SingleSpawner = true end
+			spawner:SetCreator(svowner)
+			spawner:Spawn()
+			spawner:Activate()
+			undo.Create("NPC Spawner")
+			undo.AddEntity(spawner)
+			undo.SetPlayer(svowner)
+			undo.Finish()
+			for vpk,vpv in pairs(spawner.CurrentEntities) do
+				if IsValid(vpv.TheEntity) && vpv.TheEntity.IsVJBaseSpawner == true && vpv.TheEntity.SingleSpawner == true then
+					vpv.TheEntity:SetCreator(svowner)
+					table.remove(spawner.CurrentEntities,vpk)
+					if table.Count(spawner.CurrentEntities) <= 0 then spawner:Remove() end
+				end
 			end
 		end
 	end)
