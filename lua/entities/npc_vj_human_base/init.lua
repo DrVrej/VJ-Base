@@ -130,7 +130,7 @@ ENT.DisableSelectSchedule = false -- Disables Schedule code, Custom Schedule can
 ENT.DisableTakeDamageFindEnemy = false -- Disable the SNPC finding the enemy when being damaged
 ENT.DisableTouchFindEnemy = false -- Disable the SNPC finding the enemy when being touched
 ENT.DisableMakingSelfEnemyToNPCs = false -- Disables the "AddEntityRelationship" that runs in think
-ENT.LastSeenEnemyTimeUntilReset = 1 //15 -- Time until it resets its enemy if its current enemy is not visible
+ENT.LastSeenEnemyTimeUntilReset = 15 -- Time until it resets its enemy if its current enemy is not visible
 ENT.NextProcessTime = 1 -- Time until it runs the essential part of the AI, which can be performance heavy!
 	-- ====== Miscellaneous Variables ====== --
 ENT.DisableInitializeCapabilities = false -- If enabled, all of the Capabilities will be disabled, allowing you to add your own
