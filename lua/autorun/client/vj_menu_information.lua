@@ -16,22 +16,23 @@ local function VJ_INFORMATION(Panel)
 	
 	Panel:AddControl( "Label", {Text = "User Information:"})
 	
+	Panel:ControlHelp("Date - "..os.date("%m %d, 20%y"))
+	Panel:ControlHelp("Country - "..system.GetCountry())
+	Panel:ControlHelp("Steam Name - "..client:Nick()) -- Steam Name
+	Panel:ControlHelp("Steam ID - "..client:SteamID()) -- Steam ID
 	if game.SinglePlayer() then -- SMP or SSP
 	Panel:ControlHelp("Game - SinglePlayer") else
 	Panel:ControlHelp("Game - Multiplayer") end
-	Panel:ControlHelp("VJ Base Version - "..VJBASE_VERSION)
-	Panel:ControlHelp("Number of VJ Addons - "..VJBASE_GETADDONAMOUNT)
 	Panel:ControlHelp("Gamemode - "..gmod.GetGamemode().Name)
 	Panel:ControlHelp("Map - "..game.GetMap())
-	Panel:ControlHelp("Date - "..os.date("%m %d, 20%y"))
-	Panel:ControlHelp("Country - "..system.GetCountry()) -- Country
-	Panel:ControlHelp("Steam Name - "..client:Nick()) -- Steam Name
-	Panel:ControlHelp("Steam ID - "..client:SteamID()) -- Steam ID
-	Panel:ControlHelp("Screen Resolution - "..ScrW().."x"..ScrH()) -- Player's Resolution
+	Panel:ControlHelp("VJ Base Version - "..VJBASE_VERSION)
+	Panel:ControlHelp("Number of VJ Plugins - "..VJBASE_TOTALPLUGINS)
 	-- Check the Operation System
 	if system.IsWindows() then Panel:ControlHelp("Operating System - Windows")
 	elseif system.IsOSX() then Panel:ControlHelp("Operating System - OSX")
 	elseif system.IsLinux() then Panel:ControlHelp("Operating System - Linux") end
+	Panel:ControlHelp("Screen Resolution - "..ScrW().."x"..ScrH()) -- Player's Resolution
+	Panel:ControlHelp("")
 	-- Check Mounted Games
 	if IsMounted( "hl1" ) then -- Is Half Life 1 Source mounted? Or not?
 	Panel:ControlHelp("Half Life 1 Source - Mounted") else
@@ -50,13 +51,12 @@ local function VJ_INFORMATION(Panel)
 	
 	Panel:AddControl( "Label", {Text = "Command Information:"})
 	Panel:ControlHelp("--- All Commands Start with 'vj_' ---")
-	Panel:ControlHelp("--- '*' means etc. ---")
 	Panel:ControlHelp("")
 	Panel:ControlHelp("Base Commands - First prefix usually starts with 'vj_*'")
 	Panel:ControlHelp("")
-	Panel:ControlHelp("SNPC Settings/Options - Second prefix starts with 'npc_*'")
+	Panel:ControlHelp("SNPC Configurations - Second prefix starts with 'npc_*'")
 	Panel:ControlHelp("")
-	Panel:ControlHelp("SNPC Health/Damage - Second prefix starts with the name initials of the addon")
+	Panel:ControlHelp("SNPC Health/Damage - Second prefix starts with the initials of the addon's name")
 	Panel:ControlHelp("")
 	Panel:ControlHelp("Weapons - Second prefix starts with 'wep_*'")
 	Panel:ControlHelp("")
