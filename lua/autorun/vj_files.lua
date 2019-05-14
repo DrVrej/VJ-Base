@@ -55,10 +55,17 @@ util.PrecacheModel("models/spitball_small.mdl")
 -- Menu Language -------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
 	language.Add("vjbase.menugeneral.default", "Default")
+	
+	language.Add("vjbase.menudifficulty.neanderthal", "Neanderthal | -99% Health and Damage")
+	language.Add("vjbase.menudifficulty.childs_play", "Child's Play | -75% Health and Damage")
 	language.Add("vjbase.menudifficulty.easy", "Easy | -50% Health and Damage")
 	language.Add("vjbase.menudifficulty.normal", "Normal | Original Health and Damage")
 	language.Add("vjbase.menudifficulty.hard", "Hard | +50% Health and Damage")
-	language.Add("vjbase.menudifficulty.hellonearth", "Hell On Earth | +150% Health and Damage")
+	language.Add("vjbase.menudifficulty.insane", "Insane | +100% Health and Damage")
+	language.Add("vjbase.menudifficulty.impossible", "Impossible | +150% Health and Damage")
+	language.Add("vjbase.menudifficulty.nightmare", "Nightmare | +250% Health and Damage")
+	language.Add("vjbase.menudifficulty.hell_on_earth", "Hell On Earth | +350% Health and Damage")
+	language.Add("vjbase.menudifficulty.total_annihilation", "Total Annihilation | +500% Health and Damage")
 end
 
 -- Fonts -------------------------------------------------------------------------------------------------------------------------

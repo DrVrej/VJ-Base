@@ -180,8 +180,8 @@ VJ = {
 	list.Set( "VJBASE_ADDONPROPERTIES", addonname, AddonProperty )
 end,*/
 AddAddonProperty = function(aAddonName,aAddonType)
-	if InstalledVJBaseAddons == nil then InstalledVJBaseAddons = {} end
-	table.insert(InstalledVJBaseAddons,{Name = aAddonName, Type = aAddonType})
+	if VJBASE_PLUGINS == nil then VJBASE_PLUGINS = {} end
+	table.insert(VJBASE_PLUGINS,{Name = aAddonName, Type = aAddonType})
 end,
 	-- Regular NPC ----------------------------------------------------------------------------------------------------
 AddNPC = function(nName,nClass,vCat,nAdmin,nFunc)

@@ -1169,6 +1169,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 		end
 		//timer.Simple(vACT_StopActivitiesTime,function() self.vACT_StopAttacks = false end)
 	end
+	self.NextIdleStandTime = 0
 	if (vACT_CustomCode) then vACT_CustomCode(vsched) end
 
 	if vTbl_AlwaysUseSequence == false && type(vACT_Name) == "string" then

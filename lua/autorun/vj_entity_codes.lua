@@ -616,22 +616,31 @@ function NPC_MetaTable:DoFormation_Diamond(ent,it,spacing)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_DoSelectDifficulty()
-	if GetConVarNumber("vj_npc_dif_easy") == 1 then self.SelectedDifficulty = 0 return 0 end -- Easy
-	if GetConVarNumber("vj_npc_dif_normal") == 1 then self.SelectedDifficulty = 1 return 1 end -- Normal
-	if GetConVarNumber("vj_npc_dif_hard") == 1 then self.SelectedDifficulty = 2 return 2 end -- Hard
-	if GetConVarNumber("vj_npc_dif_hellonearth") == 1 then self.SelectedDifficulty = 3 return 3 end -- Hell On Earth
-	return 1
+	self.SelectedDifficulty = GetConVarNumber("vj_npc_difficulty")
+	return self.SelectedDifficulty
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetDifficultyValue(int)
-	if self.SelectedDifficulty == 0 then
-		return int / 2 -- Easy
+	if self.SelectedDifficulty == -3 then
+		return math.Clamp(int - (int * 0.99),1,int)
+	elseif self.SelectedDifficulty == -2 then
+		return math.Clamp(int - (int * 0.75),1,int)
+	elseif self.SelectedDifficulty == -1 then
+		return int / 2
+	elseif self.SelectedDifficulty == 0 then -- Normal
+		return int
 	elseif self.SelectedDifficulty == 1 then
-		return int -- Normal
+		return int + (int * 0.5)
 	elseif self.SelectedDifficulty == 2 then
-		return int * 1.5 -- Hard
+		return int * 2
 	elseif self.SelectedDifficulty == 3 then
-		return int * 2.5 -- Hell On Earth
+		return int + (int * 1.5)
+	elseif self.SelectedDifficulty == 4 then
+		return int + (int * 2.5)
+	elseif self.SelectedDifficulty == 5 then
+		return int + (int * 3.5)
+	elseif self.SelectedDifficulty == 6 then
+		return int + (int * 5.0)
 	end
 	return int
 end

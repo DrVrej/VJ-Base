@@ -189,10 +189,9 @@ if (CLIENT) then
 		bugr:SetFont("CloseCaption_Bold")
 		bugr:SetText("Report a Bug")
 		bugr:SetSize(150, 35)
-		bugr:SetColor(Color(255,0,0,255))
+		bugr:SetColor(Color(231, 76, 60, 255))
 		bugr.DoClick = function(bugr)
 			gui.OpenURL("http://steamcommunity.com/groups/vrejgaming/discussions/2/")
-			// http://docs.google.com/forms/d/1ZS1rSFtY4j6hJMZ_eGktYoBGScuW0GZdX4gjEJpBjjU/viewform?pli=1
 		end
 		Panel:AddPanel(bugr)
 
@@ -200,23 +199,22 @@ if (CLIENT) then
 		suggest:SetFont("DermaDefaultBold")
 		suggest:SetText("Suggest Something")
 		suggest:SetSize(150, 20)
-		suggest:SetColor(Color(0,0,255,200))
+		suggest:SetColor(Color(211, 84, 0, 200))
 		suggest.DoClick = function(suggest)
 			gui.OpenURL("http://steamcommunity.com/groups/vrejgaming/discussions/1/")
-			// http://docs.google.com/forms/d/1dMj6NWEmIpP7JYRxETZtKAl_aSQ6NUY4Fp3Ci2Olc2o/viewform?pli=1
 		end
 		Panel:AddPanel(suggest)
 
 		Panel:ControlHelp(" ") -- Spacer
 
-		Panel:AddControl("Label", {Text = "Follow/subscribe/like/join one of this links to get updates about my addons!"})
+		Panel:AddControl("Label", {Text = "Follow one of these links to get updates about my addons!"})
 		Panel:ControlHelp("Thanks for your support!")
 
 		local discordl = vgui.Create("DButton") -- Discord
 		discordl:SetFont("TargetID")
-		discordl:SetText("Join my Discord Server!")
+		discordl:SetText("Join me on Discord!")
 		discordl:SetSize(150, 25)
-		discordl:SetColor(Color(76,153,0,255))
+		discordl:SetColor(Color(39, 174, 96, 255))
 		discordl.DoClick = function(discordl)
 			gui.OpenURL("https://discord.gg/zwQjrdG")
 		end
@@ -224,9 +222,9 @@ if (CLIENT) then
 		
 		local steaml = vgui.Create("DButton") -- Steam Group
 		steaml:SetFont("TargetID")
-		steaml:SetText("Join my Steam Group!")
+		steaml:SetText("Join me on Steam!")
 		steaml:SetSize(150, 25)
-		steaml:SetColor(Color(76,153,0,255))
+		steaml:SetColor(Color(39, 174, 96, 255))
 		steaml.DoClick = function(steaml)
 			gui.OpenURL("http://steamcommunity.com/groups/vrejgaming")
 		end
@@ -234,9 +232,9 @@ if (CLIENT) then
 
 		local ytl = vgui.Create("DButton") -- YouTube
 		ytl:SetFont("TargetID")
-		ytl:SetText("Subscribe my YouTube Channel!")
+		ytl:SetText("Subscribe me on YouTube!")
 		ytl:SetSize(150, 25)
-		ytl:SetColor(Color(76,153,0,255))
+		ytl:SetColor(Color(39, 174, 96, 255))
 		ytl.DoClick = function(ytl)
 			gui.OpenURL("http://www.youtube.com/user/gmod95")
 		end
@@ -244,9 +242,9 @@ if (CLIENT) then
 
 		local fbl = vgui.Create("DButton") -- Facebook
 		fbl:SetFont("TargetID")
-		fbl:SetText("Like my Facebook Page!")
+		fbl:SetText("Like me on FaceBook!")
 		fbl:SetSize(150, 25)
-		fbl:SetColor(Color(76,153,0,255))
+		fbl:SetColor(Color(39, 174, 96, 255))
 		fbl.DoClick = function(fbl)
 			gui.OpenURL("http://www.facebook.com/VrejGaming")
 		end
@@ -254,27 +252,26 @@ if (CLIENT) then
 
 		local tweetl = vgui.Create("DButton") -- Twitter
 		tweetl:SetFont("TargetID")
-		tweetl:SetText("Follow my Twitter Page!")
+		tweetl:SetText("Follow me on Twitter!")
 		tweetl:SetSize(150, 25)
-		tweetl:SetColor(Color(76,153,0,255))
+		tweetl:SetColor(Color(39, 174, 96, 255))
 		tweetl.DoClick = function(tweetl)
 			gui.OpenURL("http://twitter.com/vrejgaming")
 		end
 		Panel:AddPanel(tweetl)
 
 		Panel:ControlHelp(" ") -- Spacer
-
-		Panel:AddControl("Label", {Text = "To Donate:"})
-		Panel:ControlHelp("By donating, you will be encouraging me to keep making and updating addons! Thank you!")
+		
 		local donate = vgui.Create("DButton") -- Donate
 		donate:SetFont("TargetID")
-		donate:SetText("Donate to Help!")
+		donate:SetText("Donate me on Patron!")
 		donate:SetSize(150, 30)
-		donate:SetColor(Color(76,153,255,255))
+		donate:SetColor(Color(52, 152, 219, 255))
 		donate.DoClick = function(donate)
 			gui.OpenURL("https://www.patreon.com/drvrej")
 		end
 		Panel:AddPanel(donate)
+		Panel:ControlHelp("Donations help and encourage me to continue making/updating addons! Thank you!")
 
 		/*HTMLTest = vgui.Create("HTML")
 		HTMLTest:SetPos(50,50)

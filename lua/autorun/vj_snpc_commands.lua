@@ -49,6 +49,7 @@ ConvarList["vj_npc_animal_runonhit"] = 0 -- Disable animals running away when hi
 ------ Options ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ConvarList["vj_npc_godmodesnpc"] = 0 -- The SNPC will never die!
+ConvarList["vj_npc_difficulty"] = 0 -- Difficulty of the SNPCs
 ConvarList["vj_npc_vjfriendly"] = 0 -- Makes the SNPC Friendly to all VJ SNPCs
 ConvarList["vj_npc_playerfriendly"] = 0 -- Makes the SNPC Friendly to Players
 ConvarList["vj_npc_zombiefriendly"] = 0 -- Makes the SNPC Friendly to Zombies
@@ -61,10 +62,6 @@ ConvarList["vj_npc_allhealth"] = 0 -- Health Changer
 ConvarList["vj_npc_gibcollidable"] = 0 -- Collidable Gibs?
 ConvarList["vj_npc_fadegibs"] = 1 -- Should Gibs Fade or not?
 ConvarList["vj_npc_fadegibstime"] = 30 -- Gib Fade Time
-ConvarList["vj_npc_dif_easy"] = 0 -- Difficulty: Easy
-ConvarList["vj_npc_dif_normal"] = 1 -- Difficulty: Normal
-ConvarList["vj_npc_dif_hard"] = 0 -- Difficulty: Hard
-ConvarList["vj_npc_dif_hellonearth"] = 0 -- Difficulty: Hell On Earth
 ConvarList["vj_npc_addfrags"] = 1 -- Disable frags(points) being added to player's scoreboard
 ConvarList["vj_npc_showhudonkilled"] = 1 -- Show HUD display when the SNPC dies
 ConvarList["vj_npc_itemdrops"] = 1 -- item drops on death?
