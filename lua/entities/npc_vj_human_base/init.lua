@@ -2047,7 +2047,7 @@ function ENT:Think()
 				if (ene:GetPos():Distance(self:GetPos()) < 4000) then self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1 else self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.5 end
 			end
 
-			if self.ThrowingGrenade == false && self.CallForHelp == true then
+			if self.ThrowingGrenade == false && self.CallForHelp == true && self.Dead == false then
 				if CurTime() > self.NextCallForHelpT then
 					self:CallForHelpCode(self.CallForHelpDistance)
 					self.NextCallForHelpT = CurTime() + self.NextCallForHelpTime

@@ -692,8 +692,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Holster(wep)
 	//if CLIENT then return end
-	if self == wep then return end
-	if self.Reloading == true then return end
+	if self == wep or self.Reloading == true then return end
 	self.HasIdleAnimation = false
 	//self:SendWeaponAnim(ACT_VM_HOLSTER)
 	return true

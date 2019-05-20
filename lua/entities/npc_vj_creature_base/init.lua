@@ -300,7 +300,7 @@ ENT.MeleeAttackKnockBack_Up1 = 10 -- How far it will push you up | First in math
 ENT.MeleeAttackKnockBack_Up2 = 10 -- How far it will push you up | Second in math.random
 ENT.MeleeAttackKnockBack_Right1 = 0 -- How far it will push you right | First in math.random
 ENT.MeleeAttackKnockBack_Right2 = 0 -- How far it will push you right | Second in math.random
-	-- ====== Slow Player Variables ====== --
+	-- ====== Bleed Enemy Variables ====== --
 	-- Causes the affected enemy to continue taking damage even after the attack and cause them to basically bleed
 ENT.MeleeAttackBleedEnemy = false -- Should the enemy bleed when attacked by melee?
 ENT.MeleeAttackBleedEnemyChance = 4 -- How much chance there is that the enemy will bleed? | 1 = always
@@ -2185,7 +2185,7 @@ function ENT:Think()
 				self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1
 			end
 
-			if self.CallForHelp == true then
+			if self.CallForHelp == true && self.Dead == false then
 				if CurTime() > self.NextCallForHelpT then
 					self:CallForHelpCode(self.CallForHelpDistance)
 					self.NextCallForHelpT = CurTime() + self.NextCallForHelpTime
