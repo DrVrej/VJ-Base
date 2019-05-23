@@ -7,10 +7,15 @@ include('shared.lua')
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to control NPCs. Mainly for VJ Base SNPCs.
 --------------------------------------------------*/
+ENT.LastPressedKey = BUTTON_CODE_NONE
+ENT.LastPressedKeyTime = 0
 ENT.VJControllerEntityIsRemoved = false
 ENT.AbleToTurn = true
 ENT.CurrentAttackAnimation = 0
 ENT.LastIdleAngle = 0
+ENT.CrosshairTrackingActivated = false
+ENT.ZoomLevel = 0
+ENT.ZoomLevelOriginalZ = 0
 
 util.AddNetworkString("vj_controller_hud")
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -19,6 +24,8 @@ function ENT:CustomOnInitialize() end
 function ENT:CustomOnSetControlledNPC() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnKeyPressed(key) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnStopControlling() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -37,6 +44,7 @@ function ENT:StartControlling()
 	//if (self.TheController) then return end
 	//print(self.TheController)
 	self.TheController.IsControlingNPC = true
+	self.TheController.VJ_TheControllerEntity = self
 
 	self.PropCamera = ents.Create("prop_dynamic")
 	self.PropCamera:SetPos(self.ControlledNPC:GetPos() + Vector(0,0,self.ControlledNPC:OBBMaxs().z +20)) //self.ControlledNPC:EyePos()
@@ -66,6 +74,8 @@ function ENT:StartControlling()
 	for k, v in pairs(self.TheController:GetWeapons()) do
 	table.insert(self.ControllerCurrentWeapons,v:GetClass()) end
 	self.TheController:StripWeapons()
+	
+	self.ZoomLevelOriginalZ = self.PropCamera:GetLocalPos()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetControlledNPC(GetEntity)
@@ -160,36 +170,79 @@ function ENT:SetControlledNPC(GetEntity)
 end
 //ENT.TestLerp = 0
 ---------------------------------------------------------------------------------------------------------------------------------------------
+hook.Add("PlayerButtonDown","VJ_NPC_CONTROLLER",function(ply, button)
+	//print(button)
+	if ply.IsControlingNPC == true && IsValid(ply.VJ_TheControllerEntity) then
+		local cent = ply.VJ_TheControllerEntity
+		cent.LastPressedKey = button
+		cent.LastPressedKeyTime = CurTime()
+		cent:CustomOnKeyPressed(key)
+		
+		if button == KEY_T then
+			cent:DoCrosshairTracking()
+		end
+		
+		if button == KEY_MINUS then
+			cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() + Vector(0,0,4))
+			cent.ZoomLevel = cent.ZoomLevel + 4
+		elseif button == KEY_EQUAL then
+			cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() - Vector(0,0,4))
+			cent.ZoomLevel = cent.ZoomLevel - 4
+		end
+		
+		if button == KEY_BACKSPACE then
+			cent.PropCamera:SetLocalPos(cent.ZoomLevelOriginalZ)
+			cent.ZoomLevel = 0
+		end
+	end
+end)
+---------------------------------------------------------------------------------------------------------------------------------------------
+hook.Add("KeyPress","VJ_NPC_CONTROLLER",function(ply, key)
+	if ply.IsControlingNPC == true && IsValid(ply.VJ_TheControllerEntity) then
+		local cent = ply.VJ_TheControllerEntity
+		if key == IN_USE then
+			cent:StopControlling()
+		end
+	end
+end)
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	if (!self.PropCamera:IsValid()) then self:StopControlling() return end
 	if !IsValid(self.TheController) or self.TheController:KeyDown(IN_USE) or self.TheController:Health() <= 0 or (!self.TheController.IsControlingNPC) or !IsValid(self.ControlledNPC) or (self.ControlledNPC:Health() <= 0) then self:StopControlling() return end
 	if self.TheController.IsControlingNPC != true then return end
 	if (self.TheController.IsControlingNPC) && IsValid(self.ControlledNPC) then
 		if self.ControlledNPC.Flinching == true then return end
-		local AttackTypes = {MeleeAttack=false,RangeAttack=false,LeapAttack=false,WeaponAttack=false,GrenadeAttack=false,Ammo="---"}
-		if self.ControlledNPC.IsVJBaseSNPC == true then
-			if self.ControlledNPC.HasMeleeAttack == true then AttackTypes["MeleeAttack"] = true end
-			if self.ControlledNPC.HasRangeAttack == true then AttackTypes["RangeAttack"] = true end
-			if self.ControlledNPC.HasLeapAttack == true then AttackTypes["LeapAttack"] = true end
-			if IsValid(self.ControlledNPC:GetActiveWeapon()) then AttackTypes["WeaponAttack"] = true AttackTypes["Ammo"] = self.ControlledNPC.Weapon_StartingAmmoAmount - self.ControlledNPC.Weapon_ShotsSinceLastReload end
-			if self.ControlledNPC.HasGrenadeAttack == true then AttackTypes["GrenadeAttack"] = true end
+		
+		if self.TheController:GetInfoNum("vj_npc_cont_hud",1) == 1 then
+			local AttackTypes = {MeleeAttack=false,RangeAttack=false,LeapAttack=false,WeaponAttack=false,GrenadeAttack=false,Ammo="---"}
+			if self.ControlledNPC.IsVJBaseSNPC == true then
+				if self.ControlledNPC.HasMeleeAttack == true then AttackTypes["MeleeAttack"] = true end
+				if self.ControlledNPC.HasRangeAttack == true then AttackTypes["RangeAttack"] = true end
+				if self.ControlledNPC.HasLeapAttack == true then AttackTypes["LeapAttack"] = true end
+				if IsValid(self.ControlledNPC:GetActiveWeapon()) then AttackTypes["WeaponAttack"] = true AttackTypes["Ammo"] = self.ControlledNPC.Weapon_StartingAmmoAmount - self.ControlledNPC.Weapon_ShotsSinceLastReload end
+				if self.ControlledNPC.HasGrenadeAttack == true then AttackTypes["GrenadeAttack"] = true end
+			end
+			net.Start("vj_controller_hud")
+			net.WriteBool(false)
+			net.WriteFloat(self.ControlledNPC:GetMaxHealth())
+			net.WriteFloat(self.ControlledNPC:Health())
+			net.WriteString(self.ControlledNPC:GetName())
+			net.WriteTable(AttackTypes)
+			net.Send(self.TheController)
 		end
-		net.Start("vj_controller_hud")
-		net.WriteBool(false)
-		net.WriteFloat(self.ControlledNPC:GetMaxHealth())
-		net.WriteFloat(self.ControlledNPC:Health())
-		net.WriteString(self.ControlledNPC:GetName())
-		net.WriteTable(AttackTypes)
-		net.Send(self.TheController)
+		
 		if #self.TheController:GetWeapons() > 0 then self.TheController:StripWeapons() end
 		local tr_ply = util.TraceLine({start = self.TheController:EyePos(), endpos = self.TheController:EyePos() + (self.TheController:GetAimVector() * 32768), filter = {self.TheController,self.ControlledNPC}})
 		if IsValid(self.NPCBullseye) then
 			self.NPCBullseye:SetPos(tr_ply.HitPos)
 		end
-
+		
 		-- Turning
 		if self.ControlledNPC.PlayingAttackAnimation == false && self.AbleToTurn == true && self.ControlledNPC.IsReloadingWeapon != true && CurTime() > self.ControlledNPC.NextChaseTime && self.ControlledNPC.IsVJBaseSNPC_Tank != true && ((self.ControlledNPC.MovementType != VJ_MOVETYPE_STATIONARY) or (self.ControlledNPC.MovementType == VJ_MOVETYPE_STATIONARY && self.ControlledNPC.CanTurnWhileStationary != true)) then
 			if self.ControlledNPC:IsMoving() then
+				//if self.CrosshairTrackingActivated == true then
+					//self.ControlledNPC:FaceCertainEntity(self.NPCBullseye,false)
+				//end
 				//self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,4),0))
 				//self.ControlledNPC:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
 			else
@@ -230,7 +283,6 @@ function ENT:Think()
 				end
 			end
 		end
-		
 
 		-- Movement
 		if self.ControlledNPC.MovementType != VJ_MOVETYPE_STATIONARY && self.ControlledNPC.PlayingAttackAnimation == false && CurTime() > self.ControlledNPC.NextChaseTime && self.ControlledNPC.IsVJBaseSNPC_Tank != true then
@@ -255,7 +307,6 @@ function ENT:Think()
 					else
 						self:StartMovement(self.TheController:GetAimVector(),Angle(0,0,0))
 					end
-					//self.PropCamera:SetPos(self.PropCamera:GetLocalPos() +self.PropCamera:GetUp()*1.5)
 				end
 			elseif gerta_bac then
 				if gerta_lef then
@@ -294,8 +345,10 @@ function ENT:StartMovement(Dir,Rot)
 	//self.ControlledNPC:GetSequenceGroundSpeed(self.ControlledNPC:SelectWeightedSequence(self.ControlledNPC:GetActivity()))
 	//Vector(math.abs(npcvel.x),math.abs(npcvel.y),math.abs(npcvel.z))
 	local CalculateWallToNPC = NPCPos:Distance(forwardtr.HitPos) - 40
-	//VJ_CreateTestObject(NPCPos,self:GetAngles(),Color(0,255,255)) -- NPC's calculated position
-	//VJ_CreateTestObject(forwardtr.HitPos,self:GetAngles(),Color(255,255,0)) -- forward trace position
+	if self.TheController:GetInfoNum("vj_npc_cont_devents",0) == 1 then
+		VJ_CreateTestObject(NPCPos,self:GetAngles(),Color(0,255,255)) -- NPC's calculated position
+		VJ_CreateTestObject(forwardtr.HitPos,self:GetAngles(),Color(255,255,0)) -- forward trace position
+	end
 	if NPCPos:Distance(forwardtr.HitPos) >= 51 then
 		local FinalPos = Vector((self.ControlledNPC:GetPos()+PlyAimVec*CalculateWallToNPC).x,(self.ControlledNPC:GetPos()+PlyAimVec*CalculateWallToNPC).y,forwardtr.HitPos.z)
 		local downtr = util.TraceLine({start = FinalPos, endpos = FinalPos + self:GetUp()*-(200+CenterToPos), filter = {self,self.TheController,self.ControlledNPC}})
@@ -305,14 +358,26 @@ function ENT:StartMovement(Dir,Rot)
 			CalculateWallToNPC = CalculateWallToNPC - CalculateDownDistance
 		end
 		FinalPos = Vector((self.ControlledNPC:GetPos()+PlyAimVec*CalculateWallToNPC).x,(self.ControlledNPC:GetPos()+PlyAimVec*CalculateWallToNPC).y,forwardtr.HitPos.z)
-		//VJ_CreateTestObject(downtr.HitPos,self:GetAngles(),Color(0,255,0)) -- Down trace position
-		//VJ_CreateTestObject(FinalPos,self:GetAngles(),Color(255,0,0)) -- Final move position
+		if self.TheController:GetInfoNum("vj_npc_cont_devents",0) == 1 then
+			VJ_CreateTestObject(downtr.HitPos,self:GetAngles(),Color(0,255,0)) -- Down trace position
+			VJ_CreateTestObject(FinalPos,self:GetAngles(),Color(255,0,0)) -- Final move position
+		end
 		if DontMove == false then
 			self.ControlledNPC:SetLastPosition(FinalPos)
 			local movetype = "TASK_WALK_PATH"
 			if (self.TheController:KeyDown(IN_SPEED)) then movetype = "TASK_RUN_PATH" end
-			self.ControlledNPC:VJ_TASK_GOTO_LASTPOS(movetype,function(x) /*self.ControlledNPC:SetLastPosition(self.TheController:GetEyeTrace().HitPos)*/ x:EngTask("TASK_FACE_LASTPOSITION", 0) end)
+			self.ControlledNPC:VJ_TASK_GOTO_LASTPOS(movetype,function(x) /*self.ControlledNPC:SetLastPosition(self.TheController:GetEyeTrace().HitPos)*/ if self.CrosshairTrackingActivated == true then x.ConstantlyFaceEnemy = true else x:EngTask("TASK_FACE_LASTPOSITION", 0) end end)
 		end
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:DoCrosshairTracking()
+	if self.CrosshairTrackingActivated == false then
+		self.TheController:ChatPrint("Bullseye tracking activated!")
+		self.CrosshairTrackingActivated = true
+	else
+		self.TheController:ChatPrint("Bullseye tracking deactivated!")
+		self.CrosshairTrackingActivated = false
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -341,6 +406,7 @@ function ENT:StopControlling()
 		self.TheController:SetHealth(self.ControllerHealth)
 		self.TheController:SetArmor(self.ControllerArmor)
 		self.TheController.IsControlingNPC = false
+		self.TheController.VJ_TheControllerEntity = NULL
 	end
 	self.TheController = NULL
 
