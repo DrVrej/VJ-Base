@@ -271,7 +271,7 @@ function ENT:Think()
 
 		-- Weapon attack
 		if self.ControlledNPC.IsVJBaseSNPC_Animal != true && self.ControlledNPC.IsVJBaseSNPC == true then
-			if IsValid(self.ControlledNPC:GetActiveWeapon()) && self.ControlledNPC.IsVJBaseSNPC_Human == true then
+			if IsValid(self.ControlledNPC:GetActiveWeapon()) && self.ControlledNPC.IsVJBaseSNPC_Human == true && !self.ControlledNPC:IsMoving() then
 				if self.ControlledNPC:GetActiveWeapon().IsVJBaseWeapon == true && self.TheController:KeyDown(IN_ATTACK2) && self.ControlledNPC.IsReloadingWeapon != true /*&& (self.ControlledNPC.Weapon_StartingAmmoAmount - self.ControlledNPC.Weapon_ShotsSinceLastReload) > 0*/ then
 					self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,100),0))
 					self.AbleToTurn = false
@@ -366,7 +366,19 @@ function ENT:StartMovement(Dir,Rot)
 			self.ControlledNPC:SetLastPosition(FinalPos)
 			local movetype = "TASK_WALK_PATH"
 			if (self.TheController:KeyDown(IN_SPEED)) then movetype = "TASK_RUN_PATH" end
-			self.ControlledNPC:VJ_TASK_GOTO_LASTPOS(movetype,function(x) /*self.ControlledNPC:SetLastPosition(self.TheController:GetEyeTrace().HitPos)*/ if self.CrosshairTrackingActivated == true then x.ConstantlyFaceEnemy = true else x:EngTask("TASK_FACE_LASTPOSITION", 0) end end)
+			self.ControlledNPC:VJ_TASK_GOTO_LASTPOS(movetype,function(x)
+				//self.ControlledNPC:SetLastPosition(self.TheController:GetEyeTrace().HitPos)
+				if self.TheController:KeyDown(IN_ATTACK2) then
+					x.ConstantlyFaceEnemy = true
+					x.CanShootWhenMoving = true
+				else
+					if self.CrosshairTrackingActivated == true then
+						x.ConstantlyFaceEnemy = true
+					else
+						x:EngTask("TASK_FACE_LASTPOSITION", 0)
+					end
+				end
+			end)
 		end
 	end
 end
