@@ -5,6 +5,7 @@
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
+include('autorun/vj_controls.lua')
 
 local ConvarList = {}
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -128,6 +129,11 @@ ConvarList["vj_npc_printammo"] = 0 -- Prints amount of ammo in the console
 ConvarList["vj_npc_printweapon"] = 0 -- Prints the weapon its using
 ConvarList["vj_npc_printaccuracy"] = 0 -- Prints how accurate the SNPC is with weapons
 ConvarList["vj_npc_printtakingcover"] = 0 -- Prints whether the SNPC is taking cover or not
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Developer Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+VJ.AddClientConVar("vj_npc_cont_hud", 1, "Display HUD") -- Display HUD (When controlling)
+VJ.AddClientConVar("vj_npc_cont_devents", 0, "Display developer entities") -- Display developer entities
 ---------------------------------------------------------------------------------------------------------------------------
 for k, v in pairs(ConvarList) do
 	if !ConVarExists(k) then CreateConVar(k, v, {FCVAR_ARCHIVE}) end

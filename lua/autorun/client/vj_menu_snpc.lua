@@ -254,9 +254,27 @@ local function VJ_SNPC_DEVSETTINGS(Panel) -- Developer Settings
 	Panel:AddControl("Button", {Label = "Cached Models (Console)", Command = "listmodels"})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local function VJ_SNPC_NPCONTROLLERSETTINGS(Panel) -- NPC Controller Settings
+	Panel:AddControl( "Label", {Text = "Notice: These are client-side settings only!"})
+	Panel:AddControl("Checkbox", {Label = "Display HUD", Command = "vj_npc_cont_hud"})
+	Panel:AddControl("Checkbox", {Label = "Display Developer Entities", Command = "vj_npc_cont_devents"})
+	Panel:AddControl( "Label", {Text = "Controlls:"})
+	Panel:ControlHelp("W A S D | Movement (Supports 8-Way)")
+	Panel:ControlHelp("USE | Exit the Controller")
+	Panel:ControlHelp("FIRE1 | Melee Attack")
+	Panel:ControlHelp("FIRE2 | Range / Weapon Attack")
+	Panel:ControlHelp("JUMP | Leap / Grenade Attack")
+	Panel:ControlHelp("RELOAD | Reload Weapon")
+	Panel:ControlHelp("T | Toggle Bullseye Tracking")
+	Panel:ControlHelp("- | Zoom Out")
+	Panel:ControlHelp("= | Zoom In")
+	Panel:ControlHelp("BACKSPACE | Reset Zoom")
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_SNPC", function()
 	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "SNPC Options", "Options", "", "", VJ_SNPC_OPTIONS, {})
 	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "SNPC Settings", "Settings", "", "", VJ_SNPC_SETTINGS, {})
 	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "SNPC Sound Settings", "Sound Settings", "", "", VJ_SNPC_SOUNDSETTINGS, {})
 	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "SNPC Developer Settings", "Developer Settings", "", "", VJ_SNPC_DEVSETTINGS, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "NPC Controller Settings", "NPC Controller Settings", "", "", VJ_SNPC_NPCONTROLLERSETTINGS, {})
 end)
