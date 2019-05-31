@@ -2733,16 +2733,23 @@ function ENT:VJ_DoSlowPlayer(argent,WalkSpeed,RunSpeed,SlowTime,SoundData,ExtraF
 	end
 	local slowplysd = self.CurrentSlowPlayerSound
 	local slowplysd_fade = vSD_FadeOutTime
-
-	timer.Create("timer_melee_slowply"..self:EntIndex(), SlowTime, 1, function()
+	local timername = "timer_act_stopattacks"..argent:EntIndex()
+	
+	if timer.Exists(timername) then
+		if timer.TimeLeft(timername) > SlowTime then
+			return
+		end
+	end
+	timer.Create(timername, SlowTime, 1, function()
 		argent:SetWalkSpeed(argent.VJ_SlowDownPlayerWalkSpeed)
 		argent:SetRunSpeed(argent.VJ_SlowDownPlayerRunSpeed)
 		argent.VJ_HasAlreadyBeenSlowedDown = false
 		argent.VJ_HasAlreadyBeenSlowedDown_NoInterrupt = false
 		if slowplysd then slowplysd:FadeOut(slowplysd_fade) end
-		if !IsValid(argent) then timer.Remove("timer_melee_slowply") end
+		if !IsValid(argent) then timer.Remove(timername) end
 	end)
 end
+-- Set the player as the timer holder and adjust it if there is already an existing one
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackCode_DoFinishTimers()
 	timer.Create("timer_melee_finished"..self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Melee,self.NextAnyAttackTime_Melee_DoRand,self.TimeUntilMeleeAttackDamage,self.CurrentAttackAnimationDuration), 1, function()
