@@ -256,9 +256,12 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_SNPC_NPCONTROLLERSETTINGS(Panel) -- NPC Controller Settings
 	Panel:AddControl( "Label", {Text = "Notice: These are client-side settings only!"})
+	Panel:AddControl("Button",{Text = "Reset Everything", Command = "vj_npc_cont_hud 1\n vj_npc_cont_zoomdist 5\n vj_npc_cont_devents 0"})
 	Panel:AddControl("Checkbox", {Label = "Display HUD", Command = "vj_npc_cont_hud"})
+	Panel:AddControl("Slider",{Label = "Zoom Distance",min = 5,max = 300,Command = "vj_npc_cont_zoomdist"})
+	Panel:ControlHelp("How far or close the zoom changes every click.")
 	Panel:AddControl("Checkbox", {Label = "Display Developer Entities", Command = "vj_npc_cont_devents"})
-	Panel:AddControl( "Label", {Text = "Controlls:"})
+	Panel:AddControl( "Label", {Text = "Controls:"})
 	Panel:ControlHelp("W A S D | Movement (Supports 8-Way)")
 	Panel:ControlHelp("USE | Exit the Controller")
 	Panel:ControlHelp("FIRE1 | Melee Attack")
@@ -266,8 +269,12 @@ local function VJ_SNPC_NPCONTROLLERSETTINGS(Panel) -- NPC Controller Settings
 	Panel:ControlHelp("JUMP | Leap / Grenade Attack")
 	Panel:ControlHelp("RELOAD | Reload Weapon")
 	Panel:ControlHelp("T | Toggle Bullseye Tracking")
-	Panel:ControlHelp("- | Zoom Out")
-	Panel:ControlHelp("= | Zoom In")
+	Panel:ControlHelp("RUN + UP ARROW | Move Camera Up")
+	Panel:ControlHelp("RUN + Down ARROW | Move Camera Down")
+	Panel:ControlHelp("UP ARROW | Move Camera Forward")
+	Panel:ControlHelp("Down ARROW | Move Camera Backward")
+	Panel:ControlHelp("LEFT ARROW | Move Camera Left")
+	Panel:ControlHelp("RIGHT ARROW | Move Camera Right")
 	Panel:ControlHelp("BACKSPACE | Reset Zoom")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
