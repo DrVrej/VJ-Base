@@ -62,6 +62,12 @@ ENT.OnCollideSoundChance = 1 -- How much chance to play the sound? 1 = always
 ENT.OnCollideSoundLevel = 80
 ENT.OnCollideSoundPitch1 = 80
 ENT.OnCollideSoundPitch2 = 100
+ENT.HasOnRemoveSounds = true -- Should it play a sound when it gets removed?
+ENT.SoundTbl_OnRemove = {}
+ENT.OnRemoveSoundChance = 1 -- How much chance to play the sound? 1 = always
+ENT.OnRemoveSoundLevel = 90
+ENT.OnRemoveSoundPitch1 = 80
+ENT.OnRemoveSoundPitch2 = 100
 	-- Independent Variables ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.AlreadyPaintedDeathDecal = false
 ENT.Dead = false
@@ -212,6 +218,7 @@ function ENT:PhysicsCollide(data,phys)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
+	self:OnRemoveSoundCode()
 	self.Dead = true
 	VJ_STOPSOUND(self.CurrentIdleSound)
 	self:CustomOnRemove()
@@ -255,6 +262,14 @@ function ENT:OnCollideSoundCode()
 	local randomdeathsound = math.random(1,self.OnCollideSoundChance)
 	if randomdeathsound == 1 then
 		self.CurrentDeathSound = VJ_CreateSound(self,self.SoundTbl_OnCollide,self.OnCollideSoundLevel,math.random(self.OnCollideSoundPitch1,self.OnCollideSoundPitch2))
+	end
+end
+--------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OnRemoveSoundCode()
+	if self.HasOnRemoveSounds == false then return end
+	local randomdeathsound = math.random(1,self.OnRemoveSoundChance)
+	if randomdeathsound == 1 then
+		self.CurrentDeathSound = VJ_CreateSound(self,self.SoundTbl_OnRemove,self.OnRemoveSoundLevel,math.random(self.OnRemoveSoundPitch1,self.OnRemoveSoundPitch2))
 	end
 end
 /*--------------------------------------------------
