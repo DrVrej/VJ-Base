@@ -14,7 +14,6 @@ ENT.AbleToTurn = true
 ENT.CurrentAttackAnimation = 0
 ENT.LastIdleAngle = 0
 ENT.CrosshairTrackingActivated = false
-ENT.ZoomLevel = 0
 ENT.ZoomLevelOriginalZ = 0
 
 util.AddNetworkString("vj_controller_hud")
@@ -176,39 +175,53 @@ hook.Add("PlayerButtonDown","VJ_NPC_CONTROLLER",function(ply, button)
 		local cent = ply.VJ_TheControllerEntity
 		cent.LastPressedKey = button
 		cent.LastPressedKeyTime = CurTime()
-		cent:CustomOnKeyPressed(key)
+		cent:CustomOnKeyPressed(button)
+		
+		if button == KEY_END then
+			cent:StopControlling()
+		end
 		
 		if button == KEY_T then
 			cent:DoCrosshairTracking()
 		end
 		
-		if button == KEY_MINUS then
-			cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() + Vector(0,0,4))
-			cent.ZoomLevel = cent.ZoomLevel + 4
-		elseif button == KEY_EQUAL then
-			cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() - Vector(0,0,4))
-			cent.ZoomLevel = cent.ZoomLevel - 4
+		local zoom = ply:GetInfoNum("vj_npc_cont_zoomdist",5)
+		if button == KEY_LEFT then
+			cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() + Vector(0,zoom,0))
+		elseif button == KEY_RIGHT then
+			cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() - Vector(0,zoom,0))
+		elseif button == KEY_UP then
+			if ply:KeyDown(IN_SPEED) then
+				cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() + Vector(0,0,zoom))
+			else
+				cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() + Vector(zoom,0,0))
+			end
+		elseif button == KEY_DOWN then
+			if ply:KeyDown(IN_SPEED) then
+				cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() - Vector(0,0,zoom))
+			else
+				cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() - Vector(zoom,0,0))
+			end
 		end
 		
 		if button == KEY_BACKSPACE then
 			cent.PropCamera:SetLocalPos(cent.ZoomLevelOriginalZ)
-			cent.ZoomLevel = 0
 		end
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("KeyPress","VJ_NPC_CONTROLLER",function(ply, key)
+/*hook.Add("KeyPress","VJ_NPC_CONTROLLER",function(ply, key)
 	if ply.IsControlingNPC == true && IsValid(ply.VJ_TheControllerEntity) then
 		local cent = ply.VJ_TheControllerEntity
 		if key == IN_USE then
 			cent:StopControlling()
 		end
 	end
-end)
+end)*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	if (!self.PropCamera:IsValid()) then self:StopControlling() return end
-	if !IsValid(self.TheController) or self.TheController:KeyDown(IN_USE) or self.TheController:Health() <= 0 or (!self.TheController.IsControlingNPC) or !IsValid(self.ControlledNPC) or (self.ControlledNPC:Health() <= 0) then self:StopControlling() return end
+	if !IsValid(self.TheController) /*or self.TheController:KeyDown(IN_USE)*/ or self.TheController:Health() <= 0 or (!self.TheController.IsControlingNPC) or !IsValid(self.ControlledNPC) or (self.ControlledNPC:Health() <= 0) then self:StopControlling() return end
 	if self.TheController.IsControlingNPC != true then return end
 	if (self.TheController.IsControlingNPC) && IsValid(self.ControlledNPC) then
 		if self.ControlledNPC.Flinching == true then return end
@@ -270,16 +283,14 @@ function ENT:Think()
 		end*/
 
 		-- Weapon attack
-		if self.ControlledNPC.IsVJBaseSNPC_Animal != true && self.ControlledNPC.IsVJBaseSNPC == true then
-			if IsValid(self.ControlledNPC:GetActiveWeapon()) && self.ControlledNPC.IsVJBaseSNPC_Human == true && !self.ControlledNPC:IsMoving() then
-				if self.ControlledNPC:GetActiveWeapon().IsVJBaseWeapon == true && self.TheController:KeyDown(IN_ATTACK2) && self.ControlledNPC.IsReloadingWeapon != true /*&& (self.ControlledNPC.Weapon_StartingAmmoAmount - self.ControlledNPC.Weapon_ShotsSinceLastReload) > 0*/ then
-					self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,100),0))
+		if IsValid(self.ControlledNPC:GetActiveWeapon()) && self.ControlledNPC.IsVJBaseSNPC == true && self.ControlledNPC.IsVJBaseSNPC_Human == true && !self.ControlledNPC:IsMoving() then
+			if self.ControlledNPC:GetActiveWeapon().IsVJBaseWeapon == true && self.TheController:KeyDown(IN_ATTACK2) && self.ControlledNPC.IsReloadingWeapon != true /*&& (self.ControlledNPC.Weapon_StartingAmmoAmount - self.ControlledNPC.Weapon_ShotsSinceLastReload) > 0*/ then
+				self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,100),0))
+				self.AbleToTurn = false
+				if VJ_IsCurrentAnimation(self.ControlledNPC,self.ControlledNPC:VJ_TranslateWeaponActivity(self.ControlledNPC.CurrentWeaponAnimation)) == false && VJ_IsCurrentAnimation(self.ControlledNPC,self.ControlledNPC.AnimTbl_WeaponAttack) == false then
 					self.AbleToTurn = false
-					if VJ_IsCurrentAnimation(self.ControlledNPC,self.ControlledNPC:VJ_TranslateWeaponActivity(self.ControlledNPC.CurrentWeaponAnimation)) == false && VJ_IsCurrentAnimation(self.ControlledNPC,self.ControlledNPC.AnimTbl_WeaponAttack) == false then
-						self.AbleToTurn = false
-						self.ControlledNPC.CurrentWeaponAnimation = VJ_PICKRANDOMTABLE(self.ControlledNPC.AnimTbl_WeaponAttack)
-						self.ControlledNPC:VJ_ACT_PLAYACTIVITY(self.ControlledNPC.CurrentWeaponAnimation,false,2,false)
-					end
+					self.ControlledNPC.CurrentWeaponAnimation = VJ_PICKRANDOMTABLE(self.ControlledNPC.AnimTbl_WeaponAttack)
+					self.ControlledNPC:VJ_ACT_PLAYACTIVITY(self.ControlledNPC.CurrentWeaponAnimation,false,2,false)
 				end
 			end
 		end
@@ -324,10 +335,10 @@ function ENT:Think()
 				self.ControlledNPC:StopMoving()
 				if self.ControlledNPC.MovementType == VJ_MOVETYPE_AERIAL then self.ControlledNPC:AerialMove_Stop() end
 			end
-			if (self.TheController:KeyDown(IN_USE)) then
+			/*if (self.TheController:KeyDown(IN_USE)) then
 				self.ControlledNPC:StopMoving()
 				self:StopControlling()
-			end
+			end*/
 		end
 	end
 end
@@ -368,7 +379,7 @@ function ENT:StartMovement(Dir,Rot)
 			if (self.TheController:KeyDown(IN_SPEED)) then movetype = "TASK_RUN_PATH" end
 			self.ControlledNPC:VJ_TASK_GOTO_LASTPOS(movetype,function(x)
 				//self.ControlledNPC:SetLastPosition(self.TheController:GetEyeTrace().HitPos)
-				if self.TheController:KeyDown(IN_ATTACK2) then
+				if self.TheController:KeyDown(IN_ATTACK2) && self.ControlledNPC.IsVJBaseSNPC_Human == true then
 					x.ConstantlyFaceEnemy = true
 					x.CanShootWhenMoving = true
 				else
