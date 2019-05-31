@@ -263,7 +263,7 @@ local function VJ_SNPC_NPCONTROLLERSETTINGS(Panel) -- NPC Controller Settings
 	Panel:AddControl("Checkbox", {Label = "Display Developer Entities", Command = "vj_npc_cont_devents"})
 	Panel:AddControl( "Label", {Text = "Controls:"})
 	Panel:ControlHelp("W A S D | Movement (Supports 8-Way)")
-	Panel:ControlHelp("USE | Exit the Controller")
+	Panel:ControlHelp("END | Exit the Controller")
 	Panel:ControlHelp("FIRE1 | Melee Attack")
 	Panel:ControlHelp("FIRE2 | Range / Weapon Attack")
 	Panel:ControlHelp("JUMP | Leap / Grenade Attack")
