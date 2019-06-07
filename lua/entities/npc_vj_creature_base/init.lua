@@ -201,8 +201,7 @@ ENT.NextRunAwayOnDamageTime = 5 -- Until next run after being shot when not aler
 	-- ====== Call For Back On Damage Variables ====== --
 ENT.CallForBackUpOnDamage = true -- Should the SNPC call for help when damaged? (Only happens if the SNPC hasn't seen a enemy)
 ENT.CallForBackUpOnDamageDistance = 800 -- How far away the SNPC's call for help goes | Counted in World Units
-ENT.CallForBackUpOnDamageUseCertainAmount = true -- Should the SNPC only call certain amount of people?
-ENT.CallForBackUpOnDamageUseCertainAmountNumber = 4 -- How many people should it call if certain amount is enabled?
+ENT.CallForBackUpOnDamageLimit = 4 -- How many people should it call? | 0 = Unlimited
 ENT.CallForBackUpOnDamageAnimation = {} -- Animation used if the SNPC does the CallForBackUpOnDamage function
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.CallForBackUpOnDamageAnimationTime = false -- How much time until it can use activities
@@ -250,11 +249,10 @@ ENT.ItemDropsOnDeath_EntityList = {} -- List of items it will randomly pick from
 	-- BringFriendsOnDeath takes priority over AlertFriendsOnDeath!
 ENT.BringFriendsOnDeath = true -- Should the SNPC's friends come to its position before it dies?
 ENT.BringFriendsOnDeathDistance = 800 -- How far away does the signal go? | Counted in World Units
-ENT.BringFriendsOnDeathUseCertainAmount = true -- Should the SNPC only call certain amount of people?
-ENT.BringFriendsOnDeathUseCertainAmountNumber = 3 -- How many people should it call if certain amount is enabled?
+ENT.BringFriendsOnDeathLimit = 3 -- How many people should it call? | 0 = Unlimited
 ENT.AlertFriendsOnDeath = false -- Should the SNPCs allies get alerted when it dies? | Its allies will also need to have this variable set to true!
 ENT.AlertFriendsOnDeathDistance = 800 -- How far away does the signal go? | Counted in World Units
-ENT.AlertFriendsOnDeathUseCertainAmountNumber = 50 -- How many people should it alert?
+ENT.AlertFriendsOnDeathLimit = 50 -- How many people should it alert?
 ENT.AnimTbl_AlertFriendsOnDeath = {ACT_RANGE_ATTACK1} -- Animations it plays when an ally dies that also has AlertFriendsOnDeath set to true
 	-- ====== Miscellaneous Variables ====== --
 ENT.HasDeathNotice = false -- Set to true if you want it show a message after it dies
@@ -802,6 +800,8 @@ function ENT:CustomOnDamageByPlayer(dmginfo,hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomWhenBecomingEnemyTowardsPlayer(dmginfo,hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnSetEnemyOnDamage(dmginfo,hitgroup) end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetUpGibesOnDeath(dmginfo,hitgroup)
 	return false -- Return to true if it gibbed!
 	/*--------------------------------------
@@ -821,6 +821,8 @@ function ENT:SetUpGibesOnDeath(dmginfo,hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomGibOnDeathSounds(dmginfo,hitgroup) return true end -- returning false will make the default gibbing sounds not play
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnAllyDeath(argent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPriorToKilled(dmginfo,hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -914,6 +916,7 @@ ENT.NextBreathSoundT = 0
 ENT.FootStepT = 0
 ENT.PainSoundT = 0
 ENT.WorldShakeWalkT = 0
+ENT.NextSetEnemyOnDamageT = 0
 ENT.NextRunAwayOnDamageT = 0
 ENT.NextIdleSoundT = 0
 ENT.NextProcessT = 0
@@ -2733,7 +2736,7 @@ function ENT:VJ_DoSlowPlayer(argent,WalkSpeed,RunSpeed,SlowTime,SoundData,ExtraF
 	end
 	local slowplysd = self.CurrentSlowPlayerSound
 	local slowplysd_fade = vSD_FadeOutTime
-	local timername = "timer_act_stopattacks"..argent:EntIndex()
+	local timername = "timer_melee_slowply"..argent:EntIndex()
 	
 	if timer.Exists(timername) then
 		if timer.TimeLeft(timername) > SlowTime then
@@ -2749,7 +2752,6 @@ function ENT:VJ_DoSlowPlayer(argent,WalkSpeed,RunSpeed,SlowTime,SoundData,ExtraF
 		if !IsValid(argent) then timer.Remove(timername) end
 	end)
 end
--- Set the player as the timer holder and adjust it if there is already an existing one
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackCode_DoFinishTimers()
 	timer.Create("timer_melee_finished"..self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Melee,self.NextAnyAttackTime_Melee_DoRand,self.TimeUntilMeleeAttackDamage,self.CurrentAttackAnimationDuration), 1, function()
@@ -3267,6 +3269,7 @@ function ENT:DoEntityRelationshipCheck()
 					if vDistanceToMy < (self.InvestigateSoundDistance * v.VJ_LastInvestigateSdLevel) && ((CurTime() - v.VJ_LastInvestigateSd) <= 1) then
 						if self.NextInvestigateSoundMove < CurTime() then
 							if self:Visible(v) then
+								self:StopMoving()
 								self:SetTarget(v)
 								self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 							elseif self.FollowingPlayer == false then
@@ -3464,19 +3467,19 @@ function ENT:CheckAlliesAroundMe(SeeDistance)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:BringAlliesToMe(Type,SeeDistance,CertainAmount,CertainAmountNumber,AllyVisibleOnly)
+function ENT:BringAlliesToMe(Type,SeeDistance,EntsTable,LimitNumber,VisibleOnly)
 	//if self.CallForBackUpOnDamage == false then return end
 	Type = Type or "Random" -- Types:   "Random" || "Diamond"
 	SeeDistance = SeeDistance or 800
-	AllyVisibleOnly = AllyVisibleOnly or false
-	CertainAmountNumber = CertainAmountNumber or 3
-	local findents = ents.FindInSphere(self:GetPos(),SeeDistance)
-	if (!findents) then return false end
+	VisibleOnly = VisibleOnly or false
+	EntsTable = EntsTable or ents.FindInSphere(self:GetPos(),SeeDistance)
+	LimitNumber = LimitNumber or 3 -- 0 for none
+	if (!EntsTable) then return false end
 	local it = 0
-	for _,x in pairs(findents) do
+	for _,x in pairs(EntsTable) do
 		if VJ_IsAlive(x) == true && x:IsNPC() && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4) && x.IsVJBaseSNPC_Animal != false && x.Behavior != VJ_BEHAVIOR_PASSIVE && x.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && x.FollowingPlayer == false && x.VJ_IsBeingControlled == false && (!x.IsVJBaseSNPC_Tank) then
 			if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
-				if AllyVisibleOnly == true then if x:Visible(self) == false then continue end end
+				if VisibleOnly == true then if x:Visible(self) == false then continue end end
 				if !IsValid(x:GetEnemy()) && self:GetPos():Distance(x:GetPos()) < SeeDistance then
 					self.NextWanderTime = CurTime() + 8
 					x.NextWanderTime = CurTime() + 8
@@ -3496,7 +3499,7 @@ function ENT:BringAlliesToMe(Type,SeeDistance,CertainAmount,CertainAmountNumber,
 					end
 					it = it + 1
 				end
-				if CertainAmount == true && it == CertainAmountNumber then return true end
+				if LimitNumber != 0 && it == LimitNumber then return true end
 			end
 		end
 	end
@@ -3595,24 +3598,27 @@ function ENT:OnTakeDamage(dmginfo,data)
 			self.Passive_NextRunOnDamageT = CurTime() + math.Rand(self.Passive_NextRunOnDamageTime1,self.Passive_NextRunOnDamageTime2)
 		end
 
-		if self.CallForBackUpOnDamage == true && CurTime() > self.NextCallForBackUpOnDamageT && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && DamageInflictor:GetClass() != "entityflame" && DamageAttacker:GetClass() != "entityflame" && self:CheckAlliesAroundMe(self.CallForBackUpOnDamageDistance).ItFoundAllies == true then
-			self:BringAlliesToMe("Random",self.CallForBackUpOnDamageDistance,self.CallForBackUpOnDamageUseCertainAmount,self.CallForBackUpOnDamageUseCertainAmountNumber)
-			self:ClearSchedule()
-			self.NextFlinchT = CurTime() + 1
-			local pickanim = VJ_PICKRANDOMTABLE(self.CallForBackUpOnDamageAnimation)
-			if VJ_AnimationExists(self,pickanim) == true && self.DisableCallForBackUpOnDamageAnimation == false then
-				self:VJ_ACT_PLAYACTIVITY(pickanim,true,self:DecideAnimationLength(pickanim,self.CallForBackUpOnDamageAnimationTime),true)
-			else
-				self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
-				//self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
-				/*local vschedHide = ai_vj_schedule.New("vj_hide_callbackupondamage")
-				vschedHide:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
-				vschedHide:EngTask("TASK_RUN_PATH", 0)
-				vschedHide:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-				vschedHide.ResetOnFail = true
-				self:StartSchedule(vschedHide)*/
+		if self.CallForBackUpOnDamage == true && CurTime() > self.NextCallForBackUpOnDamageT && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && DamageInflictor:GetClass() != "entityflame" && DamageAttacker:GetClass() != "entityflame" then
+			local allies = self:CheckAlliesAroundMe(self.CallForBackUpOnDamageDistance)
+			if allies.ItFoundAllies == true then
+				self:BringAlliesToMe("Random",self.CallForBackUpOnDamageDistance,allies.FoundAllies,self.CallForBackUpOnDamageLimit)
+				self:ClearSchedule()
+				self.NextFlinchT = CurTime() + 1
+				local pickanim = VJ_PICKRANDOMTABLE(self.CallForBackUpOnDamageAnimation)
+				if VJ_AnimationExists(self,pickanim) == true && self.DisableCallForBackUpOnDamageAnimation == false then
+					self:VJ_ACT_PLAYACTIVITY(pickanim,true,self:DecideAnimationLength(pickanim,self.CallForBackUpOnDamageAnimationTime),true)
+				else
+					self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+					//self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
+					/*local vschedHide = ai_vj_schedule.New("vj_hide_callbackupondamage")
+					vschedHide:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
+					vschedHide:EngTask("TASK_RUN_PATH", 0)
+					vschedHide:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+					vschedHide.ResetOnFail = true
+					self:StartSchedule(vschedHide)*/
+				end
+				self.NextCallForBackUpOnDamageT = CurTime() + math.Rand(self.NextCallForBackUpOnDamageTime1,self.NextCallForBackUpOnDamageTime2)
 			end
-			self.NextCallForBackUpOnDamageT = CurTime() + math.Rand(self.NextCallForBackUpOnDamageTime1,self.NextCallForBackUpOnDamageTime2)
 		end
 		
 		/*if DamageInflictor:GetClass() == "crossbow_bolt" then
@@ -3652,13 +3658,25 @@ function ENT:OnTakeDamage(dmginfo,data)
 		end
 
 		if self.DisableTakeDamageFindEnemy == false && !IsValid(self:GetEnemy()) && CurTime() > self.TakingCoverT && self.VJ_IsBeingControlled == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& self.Alerted == false*/ && GetConVarNumber("ai_disabled") == 0 then
-			local Targets = ents.FindInSphere(self:GetPos(),self.SightDistance/2)
+			local sightdist = self.SightDistance / 2 -- Gesvadz tive
+			-- Yete gesvadz tive hazaren aveli kich e, ere vor chi ges e tive...
+			-- Yete tive 2000 - 4000 mechene, ere vor mishd 2000 ela...
+			-- Yete 4000 aveli e, ere vor gesvadz tive kordzadz e
+			if sightdist <= 1000 then
+				sightdist = self.SightDistance
+			else
+				sightdist = math.Clamp(sightdist,2000,self.SightDistance)
+			end
+			local Targets = ents.FindInSphere(self:GetPos(),sightdist)
 			if (!Targets) then return end
 			for k,v in pairs(Targets) do
-				if self:Visible(v) && self:DoRelationshipCheck(v) == true then
+				if CurTime() > self.NextSetEnemyOnDamageT && self:Visible(v) && self:DoRelationshipCheck(v) == true then
+					self:CustomOnSetEnemyOnDamage(dmginfo,hitgroup)
 					self.NextCallForHelpT = CurTime() + 1
 					self:VJ_DoSetEnemy(v,true)
-					self:DoChaseAnimation() else
+					self:DoChaseAnimation()
+					self.NextSetEnemyOnDamageT = CurTime() + 1
+				else
 					//self:CallForHelpCode(self.CallForHelpDistance)
 					if CurTime() > self.NextRunAwayOnDamageT then
 						if self.FollowingPlayer == false && self.RunAwayOnUnknownDamage == true && self.MovementType != VJ_MOVETYPE_STATIONARY then
@@ -3916,25 +3934,30 @@ end
 function ENT:PriorToKilled(dmginfo,hitgroup)
 	if self.Medic_IsHealingAlly == true then self:DoMedicCode_Reset() end
 	
-	if self.BringFriendsOnDeath == true then
-		self:BringAlliesToMe("Random",self.BringFriendsOnDeathDistance,self.BringFriendsOnDeathUseCertainAmount,self.BringFriendsOnDeathUseCertainAmountNumber,true)
-	elseif self.AlertFriendsOnDeath == true then
-		local checkents = self:CheckAlliesAroundMe(self.AlertFriendsOnDeathDistance)
-		if checkents.ItFoundAllies == true then
-			local enttbl = {}
-			local it = 0
-			for k,v in ipairs(checkents.FoundAllies) do
-				if !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath == true && #enttbl != self.AlertFriendsOnDeathUseCertainAmountNumber then
-					it = it + 1
-					enttbl[it] = v
-					v:FaceCertainEntity(self,false)
-					v:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(v.AnimTbl_AlertFriendsOnDeath),false,0,false)
-					v.NextIdleTime = CurTime() + math.Rand(5,8)
-				end
+	local checkdist = 800 -- Nayir vormeg tive amenan medzen e, adiga ere vor poon tive ela
+	if self.BringFriendsOnDeathDistance > 800 then checkdist = self.BringFriendsOnDeathDistance end
+	if self.AlertFriendsOnDeathDistance > 800 then checkdist = self.AlertFriendsOnDeathDistance end
+	local allies = self:CheckAlliesAroundMe(checkdist)
+	if allies.ItFoundAllies == true then
+		local fallies = allies.FoundAllies
+		local noalert = true -- Don't run the AlertFriendsOnDeath if we have BringFriendsOnDeath enabled!
+		if self.BringFriendsOnDeath == true then
+			self:BringAlliesToMe("Random",self.BringFriendsOnDeathDistance,fallies,self.BringFriendsOnDeathLimit,true)
+			noalert = false
+		end
+		local it = 0
+		for k,v in ipairs(fallies) do
+			v:CustomOnAllyDeath(self)
+			
+			if self.AlertFriendsOnDeath == true && noalert == true && !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath == true && it != self.AlertFriendsOnDeathLimit && self:GetPos():Distance(v:GetPos()) < self.AlertFriendsOnDeathDistance then
+				it = it + 1
+				v:FaceCertainEntity(self,false)
+				v:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(v.AnimTbl_AlertFriendsOnDeath),false,0,false)
+				v.NextIdleTime = CurTime() + math.Rand(5,8)
 			end
 		end
 	end
-
+	
 	local function DoKilled()
 		if IsValid(self) then
 			if self.WaitBeforeDeathTime == 0 then
