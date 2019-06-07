@@ -211,7 +211,7 @@ function SWEP:Initialize()
 		self:SetNPCFireRate(10)
 
 		if self.Owner:IsNPC() then
-			self:SetWeaponHoldType(self.HoldType)
+			//self:SetWeaponHoldType(self.HoldType)
 			if self.Owner:GetClass() == "npc_citizen" then self.Owner:Fire("DisableWeaponPickup") end
 			self.Owner:SetKeyValue("spawnflags","256") -- Long Visibility Shooting since HL2 NPCs are blind
 			if self.Owner:GetClass() != "npc_citizen" then
