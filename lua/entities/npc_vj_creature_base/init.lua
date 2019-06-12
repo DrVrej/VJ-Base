@@ -452,6 +452,7 @@ ENT.HasLeapAttackJumpSound = true -- If set to false, it won't play any sounds w
 ENT.HasLeapAttackDamageSound = true -- If set to false, it won't play any sounds when it successfully hits the enemy while leap attacking
 ENT.HasLeapAttackDamageMissSound = true -- If set to false, it won't play any sounds when it misses the enemy while leap attacking
 ENT.HasOnKilledEnemySound = true -- Should it play a sound when it kills an enemy?
+ENT.HasAllyDeathSound = true -- Should it paly a sound when an ally dies?
 ENT.HasPainSounds = true -- If set to false, it won't play the pain sounds
 ENT.HasImpactSounds = true -- If set to false, it won't play the impact sounds
 ENT.HasDamageByPlayerSounds = true -- If set to false, it won't play the damage by player sounds
@@ -488,6 +489,7 @@ ENT.SoundTbl_LeapAttackJump = {}
 ENT.SoundTbl_LeapAttackDamage = {}
 ENT.SoundTbl_LeapAttackDamageMiss = {}
 ENT.SoundTbl_OnKilledEnemy = {}
+ENT.SoundTbl_AllyDeath = {}
 ENT.SoundTbl_Pain = {}
 ENT.SoundTbl_Impact = {}
 ENT.SoundTbl_DamageByPlayer = {}
@@ -530,6 +532,7 @@ ENT.LeapAttackJumpSoundChance = 1
 ENT.LeapAttackDamageSoundChance = 1
 ENT.LeapAttackDamageMissSoundChance = 1
 ENT.OnKilledEnemySoundChance = 1
+ENT.AllyDeathSoundChance = 4
 ENT.PainSoundChance = 1
 ENT.ImpactSoundChance = 1
 ENT.DamageByPlayerSoundChance = 1
@@ -550,6 +553,8 @@ ENT.NextSoundTime_Alert1 = 2
 ENT.NextSoundTime_Alert2 = 3
 ENT.NextSoundTime_OnKilledEnemy1 = 3
 ENT.NextSoundTime_OnKilledEnemy2 = 5
+ENT.NextSoundTime_AllyDeath1 = 3
+ENT.NextSoundTime_AllyDeath2 = 5
 ENT.NextSoundTime_Pain1 = 2
 ENT.NextSoundTime_Pain2 = 2
 ENT.NextSoundTime_DamageByPlayer1 = 2
@@ -590,6 +595,7 @@ ENT.LeapAttackJumpSoundLevel = 75
 ENT.LeapAttackDamageSoundLevel = 75
 ENT.LeapAttackDamageMissSoundLevel = 75
 ENT.OnKilledEnemySoundLevel = 80
+ENT.AllyDeathSoundLevel = 80
 ENT.PainSoundLevel = 75
 ENT.ImpactSoundLevel = 60
 ENT.DamageByPlayerSoundLevel = 75
@@ -661,6 +667,8 @@ ENT.LeapAttackDamageMissSoundPitch1 = "UseGeneralPitch"
 ENT.LeapAttackDamageMissSoundPitch2 = "UseGeneralPitch"
 ENT.OnKilledEnemySoundPitch1 = "UseGeneralPitch"
 ENT.OnKilledEnemySoundPitch2 = "UseGeneralPitch"
+ENT.AllyDeathSoundPitch1 = "UseGeneralPitch"
+ENT.AllyDeathSoundPitch2 = "UseGeneralPitch"
 ENT.PainSoundPitch1 = "UseGeneralPitch"
 ENT.PainSoundPitch2 = "UseGeneralPitch"
 ENT.ImpactSoundPitch1 = 80
@@ -915,6 +923,7 @@ ENT.AngerLevelTowardsPlayer = 0
 ENT.NextBreathSoundT = 0
 ENT.FootStepT = 0
 ENT.PainSoundT = 0
+ENT.AllyDeathSoundT = 0
 ENT.WorldShakeWalkT = 0
 ENT.NextSetEnemyOnDamageT = 0
 ENT.NextRunAwayOnDamageT = 0
@@ -1961,7 +1970,6 @@ function ENT:DoConstantlyFaceEnemyCode()
 	end
 	return false
 end
-
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	//print(self:GetBlockingEntity())// end
@@ -3948,6 +3956,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 		local it = 0
 		for k,v in ipairs(fallies) do
 			v:CustomOnAllyDeath(self)
+			v:AllyDeathSoundCode()
 			
 			if self.AlertFriendsOnDeath == true && noalert == true && !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath == true && it != self.AlertFriendsOnDeathLimit && self:GetPos():Distance(v:GetPos()) < self.AlertFriendsOnDeathDistance then
 				it = it + 1
@@ -4752,6 +4761,21 @@ function ENT:BecomeEnemyToPlayerSoundCode(CustomTbl)
 		self.CurrentBecomeEnemyToPlayerSound = VJ_CreateSound(self,soundtbl,self.BecomeEnemyToPlayerSoundLevel,self:VJ_DecideSoundPitch(self.BecomeEnemyToPlayerPitch1,self.BecomeEnemyToPlayerPitch2))
 	end
 end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:AllyDeathSoundCode(CustomTbl)
+	if self.HasSounds == false or self.HasAllyDeathSound == false then return end
+	if CurTime() > self.AllyDeathSoundT then
+		local randsd = math.random(1,self.AllyDeathSoundChance)
+		local soundtbl = self.SoundTbl_AllyDeath
+		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
+		if randsd == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+			VJ_STOPSOUND(self.CurrentIdleSound)
+			self.NextIdleSoundT = self.NextIdleSoundT + 2
+			self.CurrentAllyDeathSound = VJ_CreateSound(self,soundtbl,self.AllyDeathSoundLevel,self:VJ_DecideSoundPitch(self.AllyDeathSoundPitch1,self.AllyDeathSoundPitch2))
+		end
+		self.AllyDeathSoundT = CurTime() + math.Rand(self.NextSoundTime_AllyDeath1,self.NextSoundTime_AllyDeath2)
+	end
+end
 --------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PainSoundCode(CustomTbl)
 	if self.HasSounds == false or self.HasPainSounds == false then return end
@@ -4862,6 +4886,7 @@ function ENT:StopAllCommonSounds()
 	VJ_STOPSOUND(self.CurrentCallForHelpSound)
 	VJ_STOPSOUND(self.CurrentOnReceiveOrderSound)
 	VJ_STOPSOUND(self.CurrentOnKilledEnemySound)
+	VJ_STOPSOUND(self.CurrentAllyDeathSound)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RemoveAttackTimers()
