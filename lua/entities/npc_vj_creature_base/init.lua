@@ -2089,7 +2089,7 @@ function ENT:Think()
 			//print(self:GetTarget())
 			//print(self.FollowingPlayerName)
 			if GetConVarNumber("ai_ignoreplayers") == 0 then
-				if !IsValid(self.FollowingPlayerName) && (!self.FollowingPlayerName:Alive() or self:Disposition(self.FollowingPlayerName) != D_LI) then self:FollowPlayerReset() end
+				if !IsValid(self.FollowingPlayerName) or !self.FollowingPlayerName:Alive() or self:Disposition(self.FollowingPlayerName) != D_LI then self:FollowPlayerReset() end
 				if CurTime() > self.NextFollowPlayerT && IsValid(self.FollowingPlayerName) && self.FollowingPlayerName:Alive() && self.AlreadyBeingHealedByMedic == false then
 					local DistanceToPly = self:GetPos():Distance(self.FollowingPlayerName:GetPos())
 					local busy = self:BusyWithActivity()
