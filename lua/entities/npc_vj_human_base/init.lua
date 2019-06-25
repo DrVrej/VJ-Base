@@ -43,7 +43,7 @@ ENT.HasAllies = true -- Put to false if you want it not to have any allies
 ENT.VJ_NPC_Class = {} -- NPCs with the same class with be allied to each other
 	-- Common Classes: Combine = CLASS_COMBINE || Zombie = CLASS_ZOMBIE || Antlions = CLASS_ANTLION || Xen = CLASS_XEN || Player Friendly = CLASS_PLAYER_ALLY
 ENT.FriendsWithAllPlayerAllies = false -- Should this SNPC be friends with all other player allies that are running on VJ Base?
-ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE -- Doesn't attack anything
+ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE -- The behavior of the SNPC
 	-- VJ_BEHAVIOR_AGGRESSIVE = Default behavior, attacks enemies || VJ_BEHAVIOR_NEUTRAL = Neutral to everything, unless provoked
 	-- VJ_BEHAVIOR_PASSIVE = Doesn't attack, but can attacked by others || VJ_BEHAVIOR_PASSIVE_NATURE = Doesn't attack and is allied with everyone
 ENT.MoveOutOfFriendlyPlayersWay = true -- Should the SNPC move out of the way when a friendly player comes close to it?
@@ -1034,9 +1034,11 @@ function ENT:SetInitializeCapabilities()
 	self:CapabilitiesAdd(bit.bor(CAP_ANIMATEDFACE))
 	self:CapabilitiesAdd(bit.bor(CAP_TURN_HEAD))
 	//if self.VJ_IsStationary == false then self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND)) end
-	self:CapabilitiesAdd(bit.bor(CAP_OPEN_DOORS))
-	self:CapabilitiesAdd(bit.bor(CAP_AUTO_DOORS))
-	self:CapabilitiesAdd(bit.bor(CAP_USE))
+	if self.CanOpenDoors == true then
+		self:CapabilitiesAdd(bit.bor(CAP_OPEN_DOORS))
+		self:CapabilitiesAdd(bit.bor(CAP_AUTO_DOORS))
+		self:CapabilitiesAdd(bit.bor(CAP_USE))
+	end
 	//self:CapabilitiesAdd(bit.bor(CAP_MOVE_JUMP))
 	self:CapabilitiesAdd(bit.bor(CAP_DUCK))
 	//if self.HasSquad == true then self:CapabilitiesAdd(bit.bor(CAP_SQUAD)) end
@@ -1797,7 +1799,10 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChangeWeapon(SetType)
 	SetType = SetType or "None"
-	if SetType != "None" then self:Give(SetType) end
+	if SetType != "None" then
+		if IsValid(self:GetActiveWeapon()) then self:GetActiveWeapon():Remove() end
+		self:Give(SetType)
+	end
 	self.Weapon_ShotsSinceLastReload = 0
 	/*if self:VJ_HasActiveWeapon() == true then
 		if self.Weapons_UseRegulate[self:GetActiveWeapon():GetClass()] then // self.DisableUSE_SHOT_REGULATOR == false

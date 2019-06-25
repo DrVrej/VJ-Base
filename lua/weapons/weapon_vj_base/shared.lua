@@ -817,7 +817,7 @@ if (CLIENT) then
 		
 		if self:CustomOnDrawWorldModel() == false then return end
 		
-		if self:GetNWBool("VJ_WorldModel_Invisible") == true then return end
+		if self:GetNWBool("VJ_WorldModel_Invisible") == true or self.WorldModel_Invisible == true then return end
 		
 		if self.WorldModel_NoShadow == true then
 			self:DrawShadow(false)
