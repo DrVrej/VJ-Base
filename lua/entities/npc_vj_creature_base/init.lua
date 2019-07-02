@@ -165,7 +165,7 @@ ENT.CustomBlood_Pool = {} -- Blood pool types after it dies
 ENT.BloodPoolSize = "Normal" -- What's the size of the blood pool?
 	-- Sizes: "Normal" || "Small" || "Tiny"
 ENT.BloodDecalUseGMod = false -- Should use the current default decals defined by Garry's Mod? (This only applies for certain blood types only!)
-ENT.BloodDecalDistance = 300 -- How far the decal can spawn in world units
+ENT.BloodDecalDistance = 150 -- How far the decal can spawn in world units
 	-- ====== Immunity Variables ====== --
 ENT.GodMode = false -- Immune to everything
 ENT.Immune_AcidPoisonRadiation = false -- Immune to Acid, Poison and Radiation
@@ -3907,15 +3907,23 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodDecal(dmginfo,hitgroup)
 	if VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal) == false then return end
-	local DamageForce = dmginfo:GetDamageForce()
-	local DamagePos = dmginfo:GetDamagePosition()
-	local length = math.Clamp(DamageForce:Length() * 10, 100, self.BloodDecalDistance)
-	local EndPos = DamagePos + DamageForce:GetNormal() * length
-	local tr = util.TraceLine({start = DamagePos, endpos = EndPos, filter = self})
+	local dmg_force = dmginfo:GetDamageForce()
+	local dmg_pos = dmginfo:GetDamagePosition()
+	if dmg_pos == Vector(0,0,0) then dmg_pos = self:GetPos() + self:OBBCenter() end
+	
+	-- Badi verayi ayroun-e
+	local tr = util.TraceLine({start = dmg_pos, endpos = (dmg_pos + dmg_force:GetNormal() * math.Clamp(dmg_force:Length() * 10, 100, self.BloodDecalDistance)), filter = self})
 	//if !tr.HitWorld then return end
-	util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal),tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
+	util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal), tr.HitPos+tr.HitNormal, tr.HitPos-tr.HitNormal, self)
 	for i = 1, 2 do
-		if math.random(1,2) == 1 then util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal), tr.HitPos + tr.HitNormal + Vector(math.random(-70,70),math.random(-70,70),0), tr.HitPos - tr.HitNormal) end
+		if math.random(1,2) == 1 then util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal), tr.HitPos + tr.HitNormal + Vector(math.random(-70,70), math.random(-70,70),0), tr.HitPos - tr.HitNormal, self) end
+	end
+	
+	-- Kedni verayi ayroun-e
+	if math.random(1,2) == 1 then
+		local d2_endpos = dmg_pos + Vector(0, 0, -math.Clamp(dmg_force:Length() * 10, 100, self.BloodDecalDistance))
+		util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal), dmg_pos, d2_endpos, self)
+		if math.random(1,2) == 1 then util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal), dmg_pos, d2_endpos + Vector(math.random(-120,120), math.random(-120,120),0),self) end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
