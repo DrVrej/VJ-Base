@@ -5,7 +5,7 @@ ENT.Type 			= "anim"
 ENT.PrintName 		= "VJ Prop Animatable"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
-ENT.Purpose 		= "Used for defending a certain area from enemies, SNPCs will attack it when close."
+ENT.Purpose 		= "Used to make simple props and animate them, since prop_dynamic doesn't work properly in Garry's Mod."
 ENT.Instructions 	= "Don't change anything."
 ENT.Category		= "VJ Base"
 
