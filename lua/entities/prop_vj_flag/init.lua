@@ -13,6 +13,12 @@ function ENT:CustomOnInitialize()
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:ResetSequence("Idle")
+	
+	self.WaveSound = VJ_CreateSound(self,"vj_misc/flag_loop.wav",60)
+end
+
+function ENT:OnRemove()
+	VJ_STOPSOUND(self.WaveSound)
 end
 /*--------------------------------------------------
 	=============== Flag Entity ===============
