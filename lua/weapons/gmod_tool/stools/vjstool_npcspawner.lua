@@ -12,7 +12,7 @@ TOOL.ClientConVar["spawnpos_forward"] = 0
 TOOL.ClientConVar["spawnpos_right"] = 0
 TOOL.ClientConVar["spawnpos_up"] = 0
 TOOL.ClientConVar["weaponequip"] = "None"
-TOOL.ClientConVar["weaponequipname"] = "Unknown"
+TOOL.ClientConVar["weaponequipname"] = "None"
 TOOL.ClientConVar["nextspawntime"] = 3
 
 local DefaultConVars = {}
@@ -211,11 +211,12 @@ if (CLIENT) then
 			end
 		//MenuFrame:AddItem(CheckList)
 		//CheckList:SizeToContents()
-		CheckList:AddLine("Unknown","None")
 		for k,v in pairs(list.Get("NPCUsableWeapons")) do
 			CheckList:AddLine(v.title,v.class)
 		end
 		CheckList:SortByColumn(1,false)
+		CheckList:AddLine("None","None")
+		CheckList:AddLine("Default","Default")
 	end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	concommand.Add("vj_npcspawner_updatelist",function(pl,cmd,args)

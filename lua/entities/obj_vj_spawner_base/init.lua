@@ -15,7 +15,9 @@ ENT.SingleSpawner = false -- If set to true, it will spawn the entities once the
 	-- General ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Model = {""} -- The models it should spawn with | Picks a random one from the table
 ENT.EntitiesToSpawn = {
-	{EntityName = "NPC1",SpawnPosition = {vForward=0,vRight=0,vUp=0},Entities = {"npc_vj_name"}}, -- Extras: WeaponsList = {}
+	{EntityName = "NPC1",SpawnPosition = {vForward=0,vRight=0,vUp=0},Entities = {"npc_vj_name"}},
+	-- Extras: --
+	-- WeaponsList = {} (Use "default" to make it spawn the NPC with its default weapons)
 }
 ENT.TimedSpawn_Time = 3 -- How much time until it spawns another SNPC?
 ENT.TimedSpawn_OnlyOne = true -- If it's true then it will only have one SNPC spawned at a time
@@ -69,7 +71,14 @@ function ENT:SpawnAnEntity(keys,values,initspawn)
 	getthename:Spawn()
 	getthename:Activate()
 	if v.WeaponsList != nil && VJ_PICKRANDOMTABLE(v.WeaponsList) != false && VJ_PICKRANDOMTABLE(v.WeaponsList) != NULL && VJ_PICKRANDOMTABLE(v.WeaponsList) != "None" && VJ_PICKRANDOMTABLE(v.WeaponsList) != "none" then hasweps = true wepslist = v.WeaponsList end
-	if hasweps == true then getthename:Give(VJ_PICKRANDOMTABLE(v.WeaponsList)) end
+	if hasweps == true then
+		local randwep = VJ_PICKRANDOMTABLE(v.WeaponsList) -- Kharen zenkme zad e
+		if randwep == "default" then
+			getthename:Give(VJ_PICKRANDOMTABLE(list.Get("NPC")[getthename:GetClass()].Weapons))
+		else
+			getthename:Give(randwep)
+		end
+	end
 	if initspawn == false then table.remove(self.CurrentEntities,k) end
 	table.insert(self.CurrentEntities,k,{EntityName=v.EntityName,SpawnPosition=v.SpawnPosition,Entities=v.Entities,TheEntity=getthename,WeaponsList=wepslist,Dead=false/*NextTimedSpawnT=CurTime()+self.TimedSpawn_Time*/})
 	self:SpawnEntitySoundCode()
