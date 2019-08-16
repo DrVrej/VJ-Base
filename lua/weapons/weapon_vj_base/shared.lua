@@ -814,10 +814,11 @@ end
 if (CLIENT) then
 	function SWEP:DrawWorldModel()
 		if !IsValid(self) then return end
+		local nodraw = false
 		
-		if self:CustomOnDrawWorldModel() == false then return end
+		if self:CustomOnDrawWorldModel() == false then nodraw = true end
 		
-		if self:GetNWBool("VJ_WorldModel_Invisible") == true or self.WorldModel_Invisible == true then return end
+		if self:GetNWBool("VJ_WorldModel_Invisible") == true or self.WorldModel_Invisible == true then nodraw = true end
 		
 		if self.WorldModel_NoShadow == true then
 			self:DrawShadow(false)
@@ -840,14 +841,14 @@ if (CLIENT) then
 				self:SetRenderAngles(weppos.ang)
 				self:FrameAdvance(FrameTime())
 				self:SetupBones()
-				self:DrawModel()
+				if nodraw == false then self:DrawModel() end
 			else
 				self:SetRenderOrigin(nil)
 				self:SetRenderAngles(nil)
-				self:DrawModel()
+				if nodraw == false then self:DrawModel() end
 			end
 		else
-			self:DrawModel()
+			if nodraw == false then self:DrawModel() end
 		end
 	end
 end
