@@ -92,6 +92,8 @@ ENT.NextCallForHelpAnimationTime = 30 -- How much time until it can play the ani
 	-- ====== Medic Variables ====== --
 ENT.IsMedicSNPC = false -- Is this SNPC a medic? Does it heal other friendly friendly SNPCs, and players(If friendly)
 ENT.AnimTbl_Medic_GiveHealth = {ACT_SPECIAL_ATTACK1} -- Animations is plays when giving health to an ally
+ENT.Medic_DisableAnimation = false -- if true, it will disable the animation code
+ENT.Medic_TimeUntilHeal = false -- Time until the ally receives health | Set to false to let the base decide the time
 ENT.Medic_CheckDistance = 600 -- How far does it check for allies that are hurt? | World units
 ENT.Medic_HealDistance = 100 -- How close does it have to be until it stops moving and heals its ally?
 ENT.Medic_HealthAmount = 25 -- How health does it give?
@@ -1912,11 +1914,12 @@ function ENT:DoMedicCode_HealAlly()
 					self.Medic_SpawnedProp:SetRenderMode(RENDERMODE_TRANSALPHA)
 					self:DeleteOnRemove(self.Medic_SpawnedProp)
 				end
-				local lolcptlook = VJ_PICKRANDOMTABLE(self.AnimTbl_Medic_GiveHealth)
-				local animtime = VJ_GetSequenceDuration(self,lolcptlook)
+				local anim = VJ_PICKRANDOMTABLE(self.AnimTbl_Medic_GiveHealth)
 				local dontdoturn = false
 				self:FaceCertainEntity(self.Medic_CurrentEntToHeal,false)
-				self:VJ_ACT_PLAYACTIVITY(lolcptlook,true,animtime,false)
+				if self.Medic_DisableAnimation != true then
+					self:VJ_ACT_PLAYACTIVITY(anim,true,false,false)
+				end
 				if self.Medic_CurrentEntToHeal.MovementType == VJ_MOVETYPE_STATIONARY && self.Medic_CurrentEntToHeal.CanTurnWhileStationary == true then dontdoturn = true end
 				if !self.Medic_CurrentEntToHeal:IsPlayer() && dontdoturn == false then
 					self.NextWanderTime = CurTime() + 2
@@ -1925,7 +1928,7 @@ function ENT:DoMedicCode_HealAlly()
 					self.Medic_CurrentEntToHeal:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 					//self.Medic_CurrentEntToHeal:VJ_SetSchedule(SCHED_TARGET_FACE)
 				end
-				timer.Simple(animtime,function()
+				timer.Simple(self:DecideAnimationLength(anim,self.Medic_TimeUntilHeal,0),function()
 					if IsValid(self) then -- Yete NPC ter hos e...
 						if IsValid(self.Medic_CurrentEntToHeal) then -- Yete NPC vor meng bidi aghektsnenk hos e...
 							if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then
@@ -4383,10 +4386,7 @@ function ENT:FollowPlayerSoundCode(CustomTbl)
 	local soundtbl = self.SoundTbl_FollowPlayer
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomplayersound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		VJ_STOPSOUND(self.CurrentIdleSound)
-		VJ_STOPSOUND(self.CurrentFollowPlayerSound)
-		VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
-		VJ_STOPSOUND(self.CurrentMoveOutOfPlayersWaySound)
+		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 		self.CurrentFollowPlayerSound = VJ_CreateSound(self,soundtbl,self.FollowPlayerSoundLevel,self:VJ_DecideSoundPitch(self.FollowPlayerPitch1,self.FollowPlayerPitch2))
 	end
@@ -4398,10 +4398,7 @@ function ENT:UnFollowPlayerSoundCode(CustomTbl)
 	local soundtbl = self.SoundTbl_UnFollowPlayer
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomplayersound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		VJ_STOPSOUND(self.CurrentIdleSound)
-		VJ_STOPSOUND(self.CurrentFollowPlayerSound)
-		VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
-		VJ_STOPSOUND(self.CurrentMoveOutOfPlayersWaySound)
+		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 		self.CurrentUnFollowPlayerSound = VJ_CreateSound(self,soundtbl,self.UnFollowPlayerSoundLevel,self:VJ_DecideSoundPitch(self.UnFollowPlayerPitch1,self.UnFollowPlayerPitch2))
 	end
@@ -4413,10 +4410,7 @@ function ENT:MoveOutOfPlayersWaySoundCode(CustomTbl)
 	local soundtbl = self.SoundTbl_MoveOutOfPlayersWay
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomplayersound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		VJ_STOPSOUND(self.CurrentIdleSound)
-		VJ_STOPSOUND(self.CurrentFollowPlayerSound)
-		VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
-		VJ_STOPSOUND(self.CurrentWeaponReloadSound)
+		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 		self.CurrentMoveOutOfPlayersWaySound = VJ_CreateSound(self,soundtbl,self.MoveOutOfPlayersWaySoundLevel,self:VJ_DecideSoundPitch(self.MoveOutOfPlayersWaySoundPitch1,self.MoveOutOfPlayersWaySoundPitch2))
 	end
@@ -4428,10 +4422,7 @@ function ENT:MedicSoundCode_BeforeHeal(CustomTbl)
 	local soundtbl = self.SoundTbl_MedicBeforeHeal
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randsd == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		VJ_STOPSOUND(self.CurrentIdleSound)
-		VJ_STOPSOUND(self.CurrentFollowPlayerSound)
-		VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
-		VJ_STOPSOUND(self.CurrentMoveOutOfPlayersWaySound)
+		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 		self.CurrentMedicBeforeHealSound = VJ_CreateSound(self,soundtbl,self.BeforeHealSoundLevel,self:VJ_DecideSoundPitch(self.BeforeHealSoundPitch1,self.BeforeHealSoundPitch2))
 	end
@@ -4443,9 +4434,7 @@ function ENT:MedicSoundCode_OnHeal(CustomTbl)
 	local soundtbl = self.SoundTbl_MedicAfterHeal
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randsd == 1 /*&& VJ_PICKRANDOMTABLE(soundtbl) != false*/ then
-		VJ_STOPSOUND(self.CurrentIdleSound)
-		VJ_STOPSOUND(self.CurrentFollowPlayerSound)
-		VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
+		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 		if VJ_PICKRANDOMTABLE(soundtbl) == false then
 			self.CurrentMedicAfterHealSound = VJ_CreateSound(self,self.DefaultSoundTbl_MedicAfterHeal,self.AfterHealSoundLevel,self:VJ_DecideSoundPitch(self.AfterHealSoundPitch1,self.AfterHealSoundPitch2))
@@ -4461,10 +4450,7 @@ function ENT:MedicSoundCode_ReceiveHeal(CustomTbl)
 	local soundtbl = self.SoundTbl_MedicReceiveHeal
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randsd == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		VJ_STOPSOUND(self.CurrentIdleSound)
-		VJ_STOPSOUND(self.CurrentFollowPlayerSound)
-		VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
-		VJ_STOPSOUND(self.CurrentMoveOutOfPlayersWaySound)
+		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 		self.CurrentMedicReceiveHealSound = VJ_CreateSound(self,soundtbl,self.MedicReceiveHealSoundLevel,self:VJ_DecideSoundPitch(self.MedicReceiveHealSoundPitch1,self.MedicReceiveHealSoundPitch2))
 	end
@@ -4476,9 +4462,7 @@ function ENT:OnPlayerSightSoundCode(CustomTbl)
 	local soundtbl = self.SoundTbl_OnPlayerSight
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomplayersound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		VJ_STOPSOUND(self.CurrentIdleSound)
-		VJ_STOPSOUND(self.CurrentOnPlayerSightSound)
-		VJ_STOPSOUND(self.CurrentAlertSound)
+		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 		self.NextAlertSoundT = CurTime() + math.random(1,2)
 		self.CurrentOnPlayerSightSound = VJ_CreateSound(self,soundtbl,self.OnPlayerSightSoundLevel,self:VJ_DecideSoundPitch(self.OnPlayerSightSoundPitch1,self.OnPlayerSightSoundPitch2))
@@ -4525,7 +4509,7 @@ function ENT:InvestigateSoundCode(CustomTbl)
 		local soundtbl = self.SoundTbl_Investigate
 		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 		if randsd == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-			VJ_STOPSOUND(self.CurrentInvestigateSound)
+			self:StopAllCommonSpeechSounds()
 			self.NextIdleSoundT = self.NextIdleSoundT + 2
 			self.CurrentInvestigateSound = VJ_CreateSound(self,soundtbl,self.InvestigateSoundLevel,self:VJ_DecideSoundPitch(self.InvestigateSoundPitch1,self.InvestigateSoundPitch2))
 		end
@@ -4540,7 +4524,7 @@ function ENT:LostEnemySoundCode(CustomTbl)
 		local soundtbl = self.SoundTbl_LostEnemy
 		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 		if randsd == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-			VJ_STOPSOUND(self.CurrentLostEnemySound)
+			self:StopAllCommonSpeechSounds()
 			self.NextIdleSoundT = self.NextIdleSoundT + 2
 			self.CurrentLostEnemySound = VJ_CreateSound(self,soundtbl,self.LostEnemySoundLevel,self:VJ_DecideSoundPitch(self.LostEnemySoundPitch1,self.LostEnemySoundPitch2))
 		end
@@ -4554,7 +4538,7 @@ function ENT:OnReceiveOrderSoundCode(CustomTbl)
 	local soundtbl = self.SoundTbl_OnReceiveOrder
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomalertsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		VJ_STOPSOUND(self.CurrentIdleSound)
+		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT = self.NextIdleSoundT + 2
 		self.NextAlertSoundT = CurTime() + 2
 		self.CurrentOnReceiveOrderSound = VJ_CreateSound(self,soundtbl,self.OnReceiveOrderSoundLevel,self:VJ_DecideSoundPitch(self.OnReceiveOrderSoundPitch1,self.OnReceiveOrderSoundPitch2))
@@ -4567,8 +4551,7 @@ function ENT:AlertSoundCode(CustomTbl)
 	local soundtbl = self.SoundTbl_Alert
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomalertsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		VJ_STOPSOUND(self.CurrentIdleSound)
-		VJ_STOPSOUND(self.CurrentInvestigateSound)
+		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT = self.NextIdleSoundT + 2
 		self.CurrentAlertSound = VJ_CreateSound(self,soundtbl,self.AlertSoundLevel,self:VJ_DecideSoundPitch(self.AlertSoundPitch1,self.AlertSoundPitch2))
 	end
@@ -4580,7 +4563,7 @@ function ENT:CallForHelpSoundCode(CustomTbl)
 	local soundtbl = self.SoundTbl_CallForHelp
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomalertsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		VJ_STOPSOUND(self.CurrentIdleSound)
+		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT = self.NextIdleSoundT + 2
 		self.CurrentCallForHelpSound = VJ_CreateSound(self,soundtbl,self.CallForHelpSoundLevel,self:VJ_DecideSoundPitch(self.CallForHelpSoundPitch1,self.CallForHelpSoundPitch2))
 	end
@@ -4593,7 +4576,7 @@ function ENT:OnKilledEnemySoundCode(CustomTbl)
 		local soundtbl = self.SoundTbl_OnKilledEnemy
 		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 		if randomalertsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-			VJ_STOPSOUND(self.CurrentIdleSound)
+			self:StopAllCommonSpeechSounds()
 			self.NextIdleSoundT = self.NextIdleSoundT + 2
 			self.CurrentOnKilledEnemySound = VJ_CreateSound(self,soundtbl,self.OnKilledEnemySoundLevel,self:VJ_DecideSoundPitch(self.OnKilledEnemySoundPitch1,self.OnKilledEnemySoundPitch2))
 		end
@@ -4609,8 +4592,7 @@ function ENT:DamageByPlayerSoundCode(CustomTbl)
 		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 		if randomplayersound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
 			self.NextIdleSoundT_RegularChange = CurTime() + 1
-			VJ_STOPSOUND(self.CurrentIdleSound)
-			VJ_STOPSOUND(self.CurrentOnPlayerSightSound)
+			self:StopAllCommonSpeechSounds()
 			timer.Simple(0.05,function() if IsValid(self) then VJ_STOPSOUND(self.CurrentPainSound) end end)
 			self.CurrentDamageByPlayerSound = VJ_CreateSound(self,soundtbl,self.DamageByPlayerSoundLevel,self:VJ_DecideSoundPitch(self.DamageByPlayerPitch1,self.DamageByPlayerPitch2))
 		end
@@ -4760,12 +4742,7 @@ function ENT:BecomeEnemyToPlayerSoundCode(CustomTbl)
 		self.NextAlertSoundT = CurTime() + 1
 		timer.Simple(1.3,function() if IsValid(self) then VJ_STOPSOUND(self.CurrentAlertSound) end end)
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2,3)
-		VJ_STOPSOUND(self.CurrentIdleSound)
-		VJ_STOPSOUND(self.CurrentAlertSound)
-		VJ_STOPSOUND(self.CurrentFollowPlayerSound)
-		VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
-		VJ_STOPSOUND(self.CurrentMoveOutOfPlayersWaySound)
-		VJ_STOPSOUND(self.CurrentOnPlayerSightSound)
+		self:StopAllCommonSpeechSounds()
 		timer.Simple(0.05,function() if IsValid(self) then VJ_STOPSOUND(self.CurrentPainSound) end end)
 		self.CurrentBecomeEnemyToPlayerSound = VJ_CreateSound(self,soundtbl,self.BecomeEnemyToPlayerSoundLevel,self:VJ_DecideSoundPitch(self.BecomeEnemyToPlayerPitch1,self.BecomeEnemyToPlayerPitch2))
 	end
@@ -4778,7 +4755,7 @@ function ENT:AllyDeathSoundCode(CustomTbl)
 		local soundtbl = self.SoundTbl_AllyDeath
 		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 		if randsd == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-			VJ_STOPSOUND(self.CurrentIdleSound)
+			self:StopAllCommonSpeechSounds()
 			self.NextIdleSoundT = self.NextIdleSoundT + 2
 			self.CurrentAllyDeathSound = VJ_CreateSound(self,soundtbl,self.AllyDeathSoundLevel,self:VJ_DecideSoundPitch(self.AllyDeathSoundPitch1,self.AllyDeathSoundPitch2))
 		end
@@ -4866,6 +4843,26 @@ function ENT:StartSoundTrack()
 	net.WriteFloat(self.SoundTrackPlaybackRate)
 	net.WriteFloat(self.SoundTrackFadeOutTime)
 	net.Broadcast()
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:StopAllCommonSpeechSounds()
+	VJ_STOPSOUND(self.CurrentIdleSound)
+	VJ_STOPSOUND(self.CurrentInvestigateSound)
+	VJ_STOPSOUND(self.CurrentLostEnemySound)
+	VJ_STOPSOUND(self.CurrentAlertSound)
+	VJ_STOPSOUND(self.CurrentFollowPlayerSound)
+	VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
+	VJ_STOPSOUND(self.CurrentMoveOutOfPlayersWaySound)
+	VJ_STOPSOUND(self.CurrentBecomeEnemyToPlayerSound)
+	VJ_STOPSOUND(self.CurrentOnPlayerSightSound)
+	VJ_STOPSOUND(self.CurrentDamageByPlayerSound)
+	VJ_STOPSOUND(self.CurrentMedicBeforeHealSound)
+	VJ_STOPSOUND(self.CurrentMedicAfterHealSound)
+	VJ_STOPSOUND(self.CurrentMedicReceiveHealSound)
+	VJ_STOPSOUND(self.CurrentCallForHelpSound)
+	VJ_STOPSOUND(self.CurrentOnReceiveOrderSound)
+	VJ_STOPSOUND(self.CurrentOnKilledEnemySound)
+	VJ_STOPSOUND(self.CurrentAllyDeathSound)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAllCommonSounds()
