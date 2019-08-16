@@ -4740,6 +4740,7 @@ function ENT:BecomeEnemyToPlayerSoundCode(CustomTbl)
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomenemyplysound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
 		self.NextAlertSoundT = CurTime() + 1
+		self.NextInvestigateSoundT = CurTime() + 2
 		timer.Simple(1.3,function() if IsValid(self) then VJ_STOPSOUND(self.CurrentAlertSound) end end)
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2,3)
 		self:StopAllCommonSpeechSounds()
@@ -4849,7 +4850,6 @@ function ENT:StopAllCommonSpeechSounds()
 	VJ_STOPSOUND(self.CurrentIdleSound)
 	VJ_STOPSOUND(self.CurrentInvestigateSound)
 	VJ_STOPSOUND(self.CurrentLostEnemySound)
-	VJ_STOPSOUND(self.CurrentAlertSound)
 	VJ_STOPSOUND(self.CurrentFollowPlayerSound)
 	VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
 	VJ_STOPSOUND(self.CurrentMoveOutOfPlayersWaySound)
