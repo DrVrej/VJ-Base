@@ -396,6 +396,7 @@ ENT.DisableWorldShakeOnMoveWhileWalking = false -- It will not shake the world w
 ENT.CustomWalkActivites = {} -- Custom walk activities
 ENT.CustomRunActivites = {} -- Custom run activities
 	-- ====== Idle Sound Variables ====== --
+ENT.IdleSounds_PlayOnAttacks = false -- It will be able to continue and play idle sounds when it performs an attack
 ENT.IdleSounds_NoRegularIdleOnAlerted = false -- if set to true, it will not play the regular idle sound table if the combat idle sound table is empty
 	-- ====== Miscellaneous Variables ====== --
 ENT.AlertSounds_OnlyOnce = false -- After it plays it once, it will never play it again
@@ -2570,7 +2571,7 @@ function ENT:SelectSchedule(iNPCState)
 		self:GetActiveWeapon():SetClip1(10)
 		self:VJ_SetSchedule(SCHED_RELOAD)
 	end*/
-	-- Idle Position --
+	-- Idle Behavior --
 	if !IsValid(self:GetEnemy()) then
 		//if self.PlayerFriendly == true then self:PlayerAllies() end
 		//self:HLRelationshops()
@@ -2582,7 +2583,7 @@ function ENT:SelectSchedule(iNPCState)
 			self.AnimTbl_IdleStand = {}
 		end
 	else
-	-- Attack Position --
+	-- Combat Behavior --
 		if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.SightDistance) then
 			self:IdleSoundCode()
 			if self:VJ_HasActiveWeapon() == false && CurTime() > self.NextChaseTime && self.NoWeapon_UseScaredBehavior == true && self.VJ_IsBeingControlled == false then
@@ -4314,395 +4315,413 @@ function ENT:RunItemDropsOnDeathCode(dmginfo,hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:FollowPlayerSoundCode(CustomTbl)
+function ENT:FollowPlayerSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasFollowPlayerSounds_Follow == false then return end
-	local randomplayersound = math.random(1,self.FollowPlayerSoundChance)
-	local soundtbl = self.SoundTbl_FollowPlayer
-	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randomplayersound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+	Type = Type or VJ_CreateSound
+	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_FollowPlayer)
+	if (math.random(1,self.FollowPlayerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+		if ctbl != false then sdtbl = ctbl end
+		print(VJ_CreateSound)
 		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
-		self.CurrentFollowPlayerSound = VJ_CreateSound(self,soundtbl,self.FollowPlayerSoundLevel,self:VJ_DecideSoundPitch(self.FollowPlayerPitch1,self.FollowPlayerPitch2))
+		self.CurrentFollowPlayerSound = Type(self,sdtbl,self.FollowPlayerSoundLevel,self:VJ_DecideSoundPitch(self.FollowPlayerPitch1,self.FollowPlayerPitch2))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:UnFollowPlayerSoundCode(CustomTbl)
+function ENT:UnFollowPlayerSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasFollowPlayerSounds_UnFollow == false then return end
-	local randomplayersound = math.random(1,self.UnFollowPlayerSoundChance)
-	local soundtbl = self.SoundTbl_UnFollowPlayer
-	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randomplayersound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+	Type = Type or VJ_CreateSound
+	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_UnFollowPlayer)
+	if (math.random(1,self.UnFollowPlayerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+		print("ggggggg")
+		print(VJ_CreateSound)
+		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
-		self.CurrentUnFollowPlayerSound = VJ_CreateSound(self,soundtbl,self.UnFollowPlayerSoundLevel,self:VJ_DecideSoundPitch(self.UnFollowPlayerPitch1,self.UnFollowPlayerPitch2))
+		self.CurrentUnFollowPlayerSound = Type(self,sdtbl,self.UnFollowPlayerSoundLevel,self:VJ_DecideSoundPitch(self.UnFollowPlayerPitch1,self.UnFollowPlayerPitch2))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MoveOutOfPlayersWaySoundCode(CustomTbl)
+function ENT:MoveOutOfPlayersWaySoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasMoveOutOfPlayersWaySounds == false then return end
-	local randomplayersound = math.random(1,self.MoveOutOfPlayersWaySoundChance)
-	local soundtbl = self.SoundTbl_MoveOutOfPlayersWay
-	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randomplayersound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+	Type = Type or VJ_CreateSound
+	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_MoveOutOfPlayersWay)
+	if (math.random(1,self.MoveOutOfPlayersWaySoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
-		self.CurrentMoveOutOfPlayersWaySound = VJ_CreateSound(self,soundtbl,self.MoveOutOfPlayersWaySoundLevel,self:VJ_DecideSoundPitch(self.MoveOutOfPlayersWaySoundPitch1,self.MoveOutOfPlayersWaySoundPitch2))
+		self.CurrentMoveOutOfPlayersWaySound = Type(self,sdtbl,self.MoveOutOfPlayersWaySoundLevel,self:VJ_DecideSoundPitch(self.MoveOutOfPlayersWaySoundPitch1,self.MoveOutOfPlayersWaySoundPitch2))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MedicSoundCode_BeforeHeal(CustomTbl)
+function ENT:MedicSoundCode_BeforeHeal(CustomTbl,Type)
 	if self.HasSounds == false or self.HasMedicSounds_BeforeHeal == false then return end
-	local randsd = math.random(1,self.MedicBeforeHealSoundChance)
-	local soundtbl = self.SoundTbl_MedicBeforeHeal
-	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randsd == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+	Type = Type or VJ_CreateSound
+	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_MedicBeforeHeal)
+	if (math.random(1,self.MedicBeforeHealSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
-		self.CurrentMedicBeforeHealSound = VJ_CreateSound(self,soundtbl,self.BeforeHealSoundLevel,self:VJ_DecideSoundPitch(self.BeforeHealSoundPitch1,self.BeforeHealSoundPitch2))
+		self.CurrentMedicBeforeHealSound = Type(self,sdtbl,self.BeforeHealSoundLevel,self:VJ_DecideSoundPitch(self.BeforeHealSoundPitch1,self.BeforeHealSoundPitch2))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MedicSoundCode_OnHeal(CustomTbl)
+function ENT:MedicSoundCode_OnHeal(CustomTbl,Type)
 	if self.HasSounds == false or self.HasMedicSounds_AfterHeal == false then return end
-	local randsd = math.random(1,self.MedicAfterHealSoundChance)
-	local soundtbl = self.SoundTbl_MedicAfterHeal
-	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randsd == 1 /*&& VJ_PICKRANDOMTABLE(soundtbl) != false*/ then
+	Type = Type or VJ_CreateSound
+	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_MedicAfterHeal)
+	if sdtbl == false then sdtbl = VJ_PICKRANDOMTABLE(self.DefaultSoundTbl_MedicAfterHeal) end -- Default table
+	if (math.random(1,self.MedicAfterHealSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
-		if VJ_PICKRANDOMTABLE(soundtbl) == false then
-			self.CurrentMedicAfterHealSound = VJ_CreateSound(self,self.DefaultSoundTbl_MedicAfterHeal,self.AfterHealSoundLevel,self:VJ_DecideSoundPitch(self.AfterHealSoundPitch1,self.AfterHealSoundPitch2))
-		else
-			self.CurrentMedicAfterHealSound = VJ_CreateSound(self,soundtbl,self.AfterHealSoundLevel,self:VJ_DecideSoundPitch(self.AfterHealSoundPitch1,self.AfterHealSoundPitch2))
-		end
+		self.CurrentMedicAfterHealSound = Type(self,sdtbl,self.AfterHealSoundLevel,self:VJ_DecideSoundPitch(self.AfterHealSoundPitch1,self.AfterHealSoundPitch2))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MedicSoundCode_ReceiveHeal(CustomTbl)
+function ENT:MedicSoundCode_ReceiveHeal(CustomTbl,Type)
 	if self.HasSounds == false or self.HasMedicSounds_ReceiveHeal == false then return end
-	local randsd = math.random(1,self.MedicReceiveHealSoundChance)
-	local soundtbl = self.SoundTbl_MedicReceiveHeal
-	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randsd == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+	Type = Type or VJ_CreateSound
+	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_MedicReceiveHeal)
+	if (math.random(1,self.MedicReceiveHealSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
-		self.CurrentMedicReceiveHealSound = VJ_CreateSound(self,soundtbl,self.MedicReceiveHealSoundLevel,self:VJ_DecideSoundPitch(self.MedicReceiveHealSoundPitch1,self.MedicReceiveHealSoundPitch2))
+		self.CurrentMedicReceiveHealSound = Type(self,sdtbl,self.MedicReceiveHealSoundLevel,self:VJ_DecideSoundPitch(self.MedicReceiveHealSoundPitch1,self.MedicReceiveHealSoundPitch2))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnPlayerSightSoundCode(CustomTbl)
+function ENT:OnPlayerSightSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasOnPlayerSightSounds == false then return end
-	local randomplayersound = math.random(1,self.OnPlayerSightSoundChance)
-	local soundtbl = self.SoundTbl_OnPlayerSight
-	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randomplayersound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+	Type = Type or VJ_CreateSound
+	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_OnPlayerSight)
+	if (math.random(1,self.OnPlayerSightSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 		self.NextAlertSoundT = CurTime() + math.random(1,2)
-		self.CurrentOnPlayerSightSound = VJ_CreateSound(self,soundtbl,self.OnPlayerSightSoundLevel,self:VJ_DecideSoundPitch(self.OnPlayerSightSoundPitch1,self.OnPlayerSightSoundPitch2))
+		self.CurrentOnPlayerSightSound = Type(self,sdtbl,self.OnPlayerSightSoundLevel,self:VJ_DecideSoundPitch(self.OnPlayerSightSoundPitch1,self.OnPlayerSightSoundPitch2))
 	end
 end
+
+//ENT.
+//ENT.
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:IdleSoundCode(CustomTbl)
+function ENT:IdleSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasIdleSounds == false or self.Dead == true then return end
-	if (self.NextIdleSoundT_RegularChange < CurTime()) then
-		if CurTime() > self.NextIdleSoundT then
-			local PlayCombatIdleSds = false
-			if IsValid(self:GetEnemy()) then PlayCombatIdleSds = true else PlayCombatIdleSds = false end
-			if VJ_PICKRANDOMTABLE(self.SoundTbl_CombatIdle) == false then
-				if self.IdleSounds_NoRegularIdleOnAlerted == false then
-					PlayCombatIdleSds = false
-				end
+	if (self.NextIdleSoundT_RegularChange < CurTime()) && (CurTime() > self.NextIdleSoundT) then
+		Type = Type or VJ_CreateSound
+		
+		local hasenemy = false -- Ayo yete teshnami ouni
+		if IsValid(self:GetEnemy()) then
+			hasenemy = true
+			-- Yete CombatIdle tsayn chouni YEV gerna barz tsayn hanel, ere vor barz tsayn han e
+			if VJ_PICKRANDOMTABLE(self.SoundTbl_CombatIdle) == false && self.IdleSounds_NoRegularIdleOnAlerted == false then
+				hasenemy = false
 			end
-			if PlayCombatIdleSds == false then
-				local randomidlesound = math.random(1,self.IdleSoundChance)
-				local soundtbl = self.SoundTbl_Idle
-				if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-				if randomidlesound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false /*&& self:VJ_IsPlayingSoundFromTable(self.SoundTbl_Idle) == false*/ then
-					self.CurrentIdleSound = VJ_CreateSound(self,soundtbl,self.IdleSoundLevel,self:VJ_DecideSoundPitch(self.IdleSoundPitch1,self.IdleSoundPitch2))
-				end
-			end
-			if PlayCombatIdleSds == true then
-				local randomenemytalksound = math.random(1,self.CombatIdleSoundChance)
-				local soundtbl = self.SoundTbl_CombatIdle
-				if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-				if randomenemytalksound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-					//VJ_STOPSOUND(self.CurrentIdleSound)
-					self.CurrentIdleSound = VJ_CreateSound(self,soundtbl,self.CombatIdleSoundLevel,self:VJ_DecideSoundPitch(self.CombatIdleSoundPitch1,self.CombatIdleSoundPitch2))
-				end
-			end
-			self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle1,self.NextSoundTime_Idle2)
 		end
+		
+		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+		if hasenemy == true then
+			local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_CombatIdle)
+			if (math.random(1,self.CombatIdleSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+				if ctbl != false then sdtbl = ctbl end
+				self.CurrentIdleSound = Type(self,sdtbl,self.CombatIdleSoundLevel,self:VJ_DecideSoundPitch(self.CombatIdleSoundPitch1,self.CombatIdleSoundPitch2))
+			end
+		else
+			local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_Idle)
+			if (math.random(1,self.IdleSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+				if ctbl != false then sdtbl = ctbl end
+				self.CurrentIdleSound = Type(self,sdtbl,self.IdleSoundLevel,self:VJ_DecideSoundPitch(self.IdleSoundPitch1,self.IdleSoundPitch2))
+			end
+		end
+		self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle1,self.NextSoundTime_Idle2)
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:InvestigateSoundCode(CustomTbl)
+function ENT:InvestigateSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasInvestigateSounds == false then return end
 	if CurTime() > self.NextInvestigateSoundT then
-		local randsd = math.random(1,self.InvestigateSoundChance)
-		local soundtbl = self.SoundTbl_Investigate
-		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-		if randsd == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+		Type = Type or VJ_CreateSound
+		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_Investigate)
+		if (math.random(1,self.InvestigateSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+			if ctbl != false then sdtbl = ctbl end
 			self:StopAllCommonSpeechSounds()
 			self.NextIdleSoundT = self.NextIdleSoundT + 2
-			self.CurrentInvestigateSound = VJ_CreateSound(self,soundtbl,self.InvestigateSoundLevel,self:VJ_DecideSoundPitch(self.InvestigateSoundPitch1,self.InvestigateSoundPitch2))
+			self.CurrentInvestigateSound = Type(self,sdtbl,self.InvestigateSoundLevel,self:VJ_DecideSoundPitch(self.InvestigateSoundPitch1,self.InvestigateSoundPitch2))
 		end
 		self.NextInvestigateSoundT = CurTime() + math.Rand(self.NextSoundTime_Investigate1,self.NextSoundTime_Investigate2)
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:LostEnemySoundCode(CustomTbl)
+function ENT:LostEnemySoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasLostEnemySounds == false then return end
 	if CurTime() > self.LostEnemySoundT then
-		local randsd = math.random(1,self.LostEnemySoundChance)
-		local soundtbl = self.SoundTbl_LostEnemy
-		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-		if randsd == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+		Type = Type or VJ_CreateSound
+		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_LostEnemy)
+		if (math.random(1,self.LostEnemySoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+			if ctbl != false then sdtbl = ctbl end
 			self:StopAllCommonSpeechSounds()
 			self.NextIdleSoundT = self.NextIdleSoundT + 2
-			self.CurrentLostEnemySound = VJ_CreateSound(self,soundtbl,self.LostEnemySoundLevel,self:VJ_DecideSoundPitch(self.LostEnemySoundPitch1,self.LostEnemySoundPitch2))
+			self.CurrentLostEnemySound = Type(self,sdtbl,self.LostEnemySoundLevel,self:VJ_DecideSoundPitch(self.LostEnemySoundPitch1,self.LostEnemySoundPitch2))
 		end
 		self.LostEnemySoundT = CurTime() + math.Rand(self.NextSoundTime_LostEnemy1,self.NextSoundTime_LostEnemy2)
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnReceiveOrderSoundCode(CustomTbl)
+function ENT:OnReceiveOrderSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasOnReceiveOrderSounds == false then return end
-	local randomalertsound = math.random(1,self.OnReceiveOrderSoundChance)
-	local soundtbl = self.SoundTbl_OnReceiveOrder
-	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randomalertsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+	Type = Type or VJ_CreateSound
+	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_OnReceiveOrder)
+	if (math.random(1,self.OnReceiveOrderSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT = self.NextIdleSoundT + 2
 		self.NextAlertSoundT = CurTime() + 2
-		self.CurrentOnReceiveOrderSound = VJ_CreateSound(self,soundtbl,self.OnReceiveOrderSoundLevel,self:VJ_DecideSoundPitch(self.OnReceiveOrderSoundPitch1,self.OnReceiveOrderSoundPitch2))
+		self.CurrentOnReceiveOrderSound = Type(self,sdtbl,self.OnReceiveOrderSoundLevel,self:VJ_DecideSoundPitch(self.OnReceiveOrderSoundPitch1,self.OnReceiveOrderSoundPitch2))
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AlertSoundCode(CustomTbl)
+function ENT:AlertSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasAlertSounds == false then return end
-	local randomalertsound = math.random(1,self.AlertSoundChance)
-	local soundtbl = self.SoundTbl_Alert
-	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randomalertsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+	Type = Type or VJ_CreateSound
+	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_Alert)
+	if (math.random(1,self.AlertSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT = self.NextIdleSoundT + 2
 		self.NextSuppressingSoundT = self.NextSuppressingSoundT + 2.5
-		self.CurrentAlertSound = VJ_CreateSound(self,soundtbl,self.AlertSoundLevel,self:VJ_DecideSoundPitch(self.AlertSoundPitch1,self.AlertSoundPitch2))
+		self.CurrentAlertSound = Type(self,sdtbl,self.AlertSoundLevel,self:VJ_DecideSoundPitch(self.AlertSoundPitch1,self.AlertSoundPitch2))
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CallForHelpSoundCode(CustomTbl)
+function ENT:CallForHelpSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasCallForHelpSounds == false then return end
-	local randomalertsound = math.random(1,self.CallForHelpSoundChance)
-	local soundtbl = self.SoundTbl_CallForHelp
-	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randomalertsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+	Type = Type or VJ_CreateSound
+	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_CallForHelp)
+	if (math.random(1,self.CallForHelpSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT = self.NextIdleSoundT + 2
 		self.NextSuppressingSoundT = self.NextSuppressingSoundT + 2.5
-		self.CurrentCallForHelpSound = VJ_CreateSound(self,soundtbl,self.CallForHelpSoundLevel,self:VJ_DecideSoundPitch(self.CallForHelpSoundPitch1,self.CallForHelpSoundPitch2))
+		self.CurrentCallForHelpSound = Type(self,sdtbl,self.CallForHelpSoundLevel,self:VJ_DecideSoundPitch(self.CallForHelpSoundPitch1,self.CallForHelpSoundPitch2))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnKilledEnemySoundCode(CustomTbl)
+function ENT:OnKilledEnemySoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasOnKilledEnemySound == false then return end
-		if CurTime() > self.OnKilledEnemySoundT then
-		local randomalertsound = math.random(1,self.OnKilledEnemySoundChance)
-		local soundtbl = self.SoundTbl_OnKilledEnemy
-		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-		if randomalertsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+	if CurTime() > self.OnKilledEnemySoundT then
+		Type = Type or VJ_CreateSound
+		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_OnKilledEnemy)
+		if (math.random(1,self.OnKilledEnemySoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+			if ctbl != false then sdtbl = ctbl end
 			self:StopAllCommonSpeechSounds()
 			self.NextIdleSoundT = self.NextIdleSoundT + 2
-			self.CurrentOnKilledEnemySound = VJ_CreateSound(self,soundtbl,self.OnKilledEnemySoundLevel,self:VJ_DecideSoundPitch(self.OnKilledEnemySoundPitch1,self.OnKilledEnemySoundPitch2))
+			self.CurrentOnKilledEnemySound = Type(self,sdtbl,self.OnKilledEnemySoundLevel,self:VJ_DecideSoundPitch(self.OnKilledEnemySoundPitch1,self.OnKilledEnemySoundPitch2))
 		end
 		self.OnKilledEnemySoundT = CurTime() + math.Rand(self.NextSoundTime_OnKilledEnemy1,self.NextSoundTime_OnKilledEnemy2)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DamageByPlayerSoundCode(CustomTbl)
+function ENT:DamageByPlayerSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasDamageByPlayerSounds == false then return end
 	if CurTime() > self.NextDamageByPlayerSoundT then
-		local randomplayersound = math.random(1,self.DamageByPlayerSoundChance)
-		local soundtbl = self.SoundTbl_DamageByPlayer
-		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-		if randomplayersound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-			self.NextIdleSoundT_RegularChange = CurTime() + 1
+		Type = Type or VJ_CreateSound
+		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_DamageByPlayer)
+		if (math.random(1,self.DamageByPlayerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+			if ctbl != false then sdtbl = ctbl end
 			self:StopAllCommonSpeechSounds()
+			self.NextIdleSoundT_RegularChange = CurTime() + 1
 			timer.Simple(0.05,function() if IsValid(self) then VJ_STOPSOUND(self.CurrentPainSound) end end)
-			self.CurrentDamageByPlayerSound = VJ_CreateSound(self,soundtbl,self.DamageByPlayerSoundLevel,self:VJ_DecideSoundPitch(self.DamageByPlayerPitch1,self.DamageByPlayerPitch2))
+			self.CurrentDamageByPlayerSound = Type(self,sdtbl,self.DamageByPlayerSoundLevel,self:VJ_DecideSoundPitch(self.DamageByPlayerPitch1,self.DamageByPlayerPitch2))
 		end
 		self.NextDamageByPlayerSoundT = CurTime() + math.Rand(self.NextSoundTime_DamageByPlayer1,self.NextSoundTime_DamageByPlayer2)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:BeforeMeleeAttackSoundCode(CustomTbl)
+function ENT:BeforeMeleeAttackSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasMeleeAttackSounds == false then return end
-	local randomattacksound = math.random(1,self.BeforeMeleeAttackSoundChance)
-	local soundtbl = self.SoundTbl_BeforeMeleeAttack
-	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randomattacksound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		VJ_STOPSOUND(self.CurrentIdleSound)
+	Type = Type or VJ_CreateSound
+	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_BeforeMeleeAttack)
+	if (math.random(1,self.BeforeMeleeAttackSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+		if ctbl != false then sdtbl = ctbl end
+		if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
 		self.NextIdleSoundT_RegularChange = CurTime() + 1
-		self.CurrentBeforeMeleeAttackSound = VJ_CreateSound(self,soundtbl,self.BeforeMeleeAttackSoundLevel,self:VJ_DecideSoundPitch(self.BeforeMeleeAttackSoundPitch1,self.BeforeMeleeAttackSoundPitch2))
+		self.CurrentBeforeMeleeAttackSound = Type(self,sdtbl,self.BeforeMeleeAttackSoundLevel,self:VJ_DecideSoundPitch(self.BeforeMeleeAttackSoundPitch1,self.BeforeMeleeAttackSoundPitch2))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MeleeAttackSoundCode(CustomTbl,CustomTblExtra)
+function ENT:MeleeAttackSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasMeleeAttackSounds == false then return end
-	local randomattacksound = math.random(1,self.MeleeAttackSoundChance)
-	local soundtbl = self.SoundTbl_MeleeAttack
-	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randomattacksound == 1 /*&& VJ_PICKRANDOMTABLE(soundtbl) != false*/ then
-		VJ_STOPSOUND(self.CurrentIdleSound)
+	Type = Type or VJ_CreateSound
+	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_MeleeAttack)
+	if sdtbl == false then sdtbl = VJ_PICKRANDOMTABLE(self.DefaultSoundTbl_MeleeAttack) end -- Default table
+	if (math.random(1,self.MeleeAttackSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+		if ctbl != false then sdtbl = ctbl end
+		if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
 		self.NextIdleSoundT_RegularChange = CurTime() + 1
-		if VJ_PICKRANDOMTABLE(soundtbl) == false then
-			self.CurrentMeleeAttackSound = VJ_CreateSound(self,self.DefaultSoundTbl_MeleeAttack,self.MeleeAttackSoundLevel,self:VJ_DecideSoundPitch(self.MeleeAttackSoundPitch1,self.MeleeAttackSoundPitch2))
-		else
-			self.CurrentMeleeAttackSound = VJ_CreateSound(self,soundtbl,self.MeleeAttackSoundLevel,self:VJ_DecideSoundPitch(self.MeleeAttackSoundPitch1,self.MeleeAttackSoundPitch2))
-		end
+		self.CurrentMeleeAttackSound = Type(self,sdtbl,self.MeleeAttackSoundLevel,self:VJ_DecideSoundPitch(self.MeleeAttackSoundPitch1,self.MeleeAttackSoundPitch2))
 	end
+	
 	if self.HasExtraMeleeAttackSounds == true then
-		//self:EmitSound( "npc/zombie/claw_strike"..math.random(1,3)..".wav", 70, 100)
-		local randextraattacks = math.random(1,self.ExtraMeleeSoundChance)
-		soundtbl = self.SoundTbl_MeleeAttackExtra
-		if CustomTblExtra != nil && #CustomTblExtra != 0 then soundtbl = CustomTblExtra end
-		if randextraattacks == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_MeleeAttackExtra)
+		if (math.random(1,self.ExtraMeleeSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 			VJ_STOPSOUND(self.CurrentIdleSound)
-			//self.CurrentExtraMeleeAttackSound = VJ_CreateSound(self,soundtbl,self.ExtraMeleeAttackSoundLevel,math.random(self.ExtraMeleeSoundPitch1,self.ExtraMeleeSoundPitch2))
-			VJ_EmitSound(self,self.DefaultSoundTbl_MeleeAttackExtra,self.ExtraMeleeAttackSoundLevel,self:VJ_DecideSoundPitch(self.ExtraMeleeSoundPitch1,self.ExtraMeleeSoundPitch2))
+			self.CurrentExtraMeleeAttackSound = VJ_EmitSound(self,sdtbl,self.ExtraMeleeAttackSoundLevel,self:VJ_DecideSoundPitch(self.ExtraMeleeSoundPitch1,self.ExtraMeleeSoundPitch2))
 		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MeleeAttackMissSoundCode(CustomTbl)
+function ENT:MeleeAttackMissSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasMeleeAttackMissSounds == false then return end
-	local randommisssound = math.random(1,self.MeleeAttackMissSoundChance)
-	local soundtbl = self.SoundTbl_MeleeAttackMiss
-	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randommisssound == 1 /*&& VJ_PICKRANDOMTABLE(soundtbl) != false*/ then
+	Type = Type or VJ_EmitSound
+	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_MeleeAttackMiss)
+	if sdtbl == false then sdtbl = VJ_PICKRANDOMTABLE(self.DefaultSoundTbl_MeleeAttackMiss) end -- Default table
+	if (math.random(1,self.MeleeAttackMissSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+		if ctbl != false then sdtbl = ctbl end
 		VJ_STOPSOUND(self.CurrentIdleSound)
 		self.NextIdleSoundT_RegularChange = CurTime() + 1
-		if table.Count(self.SoundTbl_MeleeAttackMiss) == 0 then
-			self.CurrentMeleeAttackMissSound = VJ_CreateSound(self,self.DefaultSoundTbl_MeleeAttackMiss,self.MeleeAttackMissSoundLevel,self:VJ_DecideSoundPitch(self.MeleeAttackMissSoundPitch1,self.MeleeAttackMissSoundPitch2))
-		else
-			self.CurrentMeleeAttackMissSound = VJ_CreateSound(self,soundtbl,self.MeleeAttackMissSoundLevel,self:VJ_DecideSoundPitch(self.MeleeAttackMissSoundPitch1,self.MeleeAttackMissSoundPitch2))
-		end
+		self.CurrentMeleeAttackMissSound = Type(self,sdtbl,self.MeleeAttackMissSoundLevel,self:VJ_DecideSoundPitch(self.MeleeAttackMissSoundPitch1,self.MeleeAttackMissSoundPitch2))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SuppressingSoundCode(CustomTbl)
+function ENT:SuppressingSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasSuppressingSounds == false then return end
 	if CurTime() > self.NextSuppressingSoundT then
-		local randsound = math.random(1,self.SuppressingSoundChance)
-		local soundtbl = self.SoundTbl_Suppressing
-		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-		if randsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+		Type = Type or VJ_CreateSound
+		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_Suppressing)
+		if (math.random(1,self.SuppressingSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+			if ctbl != false then sdtbl = ctbl end
 			self:StopAllCommonSpeechSounds()
 			self.NextIdleSoundT_RegularChange = CurTime() + 2
-			self.CurrentSuppressingSound = VJ_CreateSound(self,soundtbl,self.SuppressingSoundLevel,self:VJ_DecideSoundPitch(self.SuppressingPitch1,self.SuppressingPitch2))
+			self.CurrentSuppressingSound = Type(self,sdtbl,self.SuppressingSoundLevel,self:VJ_DecideSoundPitch(self.SuppressingPitch1,self.SuppressingPitch2))
 		end
 		self.NextSuppressingSoundT = CurTime() + math.Rand(self.NextSoundTime_Suppressing1,self.NextSoundTime_Suppressing2)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:WeaponReloadSoundCode(CustomTbl)
+function ENT:WeaponReloadSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasWeaponReloadSounds == false then return end
 	if CurTime() > self.NextWeaponReloadSoundT then
-		local randsound = math.random(1,self.WeaponReloadSoundChance)
-		local soundtbl = self.SoundTbl_WeaponReload
-		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-		if randsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+		Type = Type or VJ_CreateSound
+		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_WeaponReload)
+		if (math.random(1,self.WeaponReloadSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+			if ctbl != false then sdtbl = ctbl end
 			self:StopAllCommonSpeechSounds()
 			self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
-			self.CurrentWeaponReloadSound = VJ_CreateSound(self,soundtbl,self.WeaponReloadSoundLevel,self:VJ_DecideSoundPitch(self.WeaponReloadSoundPitch1,self.WeaponReloadSoundPitch2))
+			self.CurrentWeaponReloadSound = Type(self,sdtbl,self.WeaponReloadSoundLevel,self:VJ_DecideSoundPitch(self.WeaponReloadSoundPitch1,self.WeaponReloadSoundPitch2))
 		end
 		self.NextWeaponReloadSoundT = CurTime() + math.Rand(self.NextSoundTime_WeaponReload1,self.NextSoundTime_WeaponReload2)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:GrenadeAttackSoundCode(CustomTbl)
+function ENT:GrenadeAttackSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasGrenadeAttackSounds == false then return end
 	if CurTime() > self.NextGrenadeAttackSoundT then
-		local randomgrnadesound = math.random(1,self.GrenadeAttackSoundChance)
-		local soundtbl = self.SoundTbl_GrenadeAttack
-		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-		if randomgrnadesound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-			self:StopAllCommonSpeechSounds()
+		Type = Type or VJ_CreateSound
+		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_GrenadeAttack)
+		if (math.random(1,self.GrenadeAttackSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+			if ctbl != false then sdtbl = ctbl end
+			if self.IdleSounds_PlayOnAttacks == false then self:StopAllCommonSpeechSounds() end
 			self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
-			self.CurrentGrenadeAttackSound = VJ_CreateSound(self,soundtbl,self.GrenadeAttackSoundLevel,self:VJ_DecideSoundPitch(self.GrenadeAttackSoundPitch1,self.GrenadeAttackSoundPitch2))
+			self.CurrentGrenadeAttackSound = Type(self,sdtbl,self.GrenadeAttackSoundLevel,self:VJ_DecideSoundPitch(self.GrenadeAttackSoundPitch1,self.GrenadeAttackSoundPitch2))
 		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnGrenadeSightSoundCode(CustomTbl)
+function ENT:OnGrenadeSightSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasOnGrenadeSightSounds == false then return end
 	if CurTime() > self.NextOnGrenadeSightSoundT then
-		local randomgrnadesound = math.random(1,self.OnGrenadeSightSoundChance)
-		local soundtbl = self.SoundTbl_OnGrenadeSight
-		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-		if randomgrnadesound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+		Type = Type or VJ_CreateSound
+		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_OnGrenadeSight)
+		if (math.random(1,self.OnGrenadeSightSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+			if ctbl != false then sdtbl = ctbl end
 			self:StopAllCommonSpeechSounds()
 			self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
-			self.CurrentOnGrenadeSightSound = VJ_CreateSound(self,soundtbl,self.OnGrenadeSightSoundLevel,self:VJ_DecideSoundPitch(self.OnGrenadeSightSoundPitch1,self.OnGrenadeSightSoundPitch2))
+			self.CurrentOnGrenadeSightSound = Type(self,sdtbl,self.OnGrenadeSightSoundLevel,self:VJ_DecideSoundPitch(self.OnGrenadeSightSoundPitch1,self.OnGrenadeSightSoundPitch2))
 		end
 		self.NextOnGrenadeSightSoundT = CurTime() + math.Rand(self.NextSoundTime_OnGrenadeSight1,self.NextSoundTime_OnGrenadeSight2)
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:BecomeEnemyToPlayerSoundCode(CustomTbl)
+function ENT:BecomeEnemyToPlayerSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasBecomeEnemyToPlayerSounds == false then return end
-	local randomenemyplysound = math.random(1,self.BecomeEnemyToPlayerChance)
-	local soundtbl = self.SoundTbl_BecomeEnemyToPlayer
-	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randomenemyplysound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		self.NextAlertSoundT = CurTime() + 1
-		self.NextInvestigateSoundT = CurTime() + 2
-		timer.Simple(1.3,function() if IsValid(self) then VJ_STOPSOUND(self.CurrentAlertSound) end end)
-		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2,3)
+	Type = Type or VJ_CreateSound
+	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_BecomeEnemyToPlayer)
+	if (math.random(1,self.BecomeEnemyToPlayerChance) == 1 && sdtbl != false) or (ctbl != false) then
+		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
 		timer.Simple(0.05,function() if IsValid(self) then VJ_STOPSOUND(self.CurrentPainSound) end end)
-		self.CurrentBecomeEnemyToPlayerSound = VJ_CreateSound(self,soundtbl,self.BecomeEnemyToPlayerSoundLevel,self:VJ_DecideSoundPitch(self.BecomeEnemyToPlayerPitch1,self.BecomeEnemyToPlayerPitch2))
+		timer.Simple(1.3,function() if IsValid(self) then VJ_STOPSOUND(self.CurrentAlertSound) end end)
+		self.NextAlertSoundT = CurTime() + 1
+		self.NextInvestigateSoundT = CurTime() + 2
+		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2,3)
+		self.CurrentBecomeEnemyToPlayerSound = Type(self,sdtbl,self.BecomeEnemyToPlayerSoundLevel,self:VJ_DecideSoundPitch(self.BecomeEnemyToPlayerPitch1,self.BecomeEnemyToPlayerPitch2))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AllyDeathSoundCode(CustomTbl)
+function ENT:AllyDeathSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasAllyDeathSound == false then return end
 	if CurTime() > self.AllyDeathSoundT then
-		local randsd = math.random(1,self.AllyDeathSoundChance)
-		local soundtbl = self.SoundTbl_AllyDeath
-		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-		if randsd == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+		Type = Type or VJ_CreateSound
+		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_AllyDeath)
+		if (math.random(1,self.AllyDeathSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+			if ctbl != false then sdtbl = ctbl end
 			self:StopAllCommonSpeechSounds()
 			self.NextIdleSoundT = self.NextIdleSoundT + 2
-			self.CurrentAllyDeathSound = VJ_CreateSound(self,soundtbl,self.AllyDeathSoundLevel,self:VJ_DecideSoundPitch(self.AllyDeathSoundPitch1,self.AllyDeathSoundPitch2))
+			self.CurrentAllyDeathSound = Type(self,sdtbl,self.AllyDeathSoundLevel,self:VJ_DecideSoundPitch(self.AllyDeathSoundPitch1,self.AllyDeathSoundPitch2))
 		end
 		self.AllyDeathSoundT = CurTime() + math.Rand(self.NextSoundTime_AllyDeath1,self.NextSoundTime_AllyDeath2)
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PainSoundCode(CustomTbl)
+function ENT:PainSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasPainSounds == false then return end
 	if CurTime() > self.PainSoundT then
-		local randompainsound = math.random(1,self.PainSoundChance)
-		local soundtbl = self.SoundTbl_Pain
-		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-		if randompainsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+		Type = Type or VJ_CreateSound
+		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_Pain)
+		if (math.random(1,self.PainSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+			if ctbl != false then sdtbl = ctbl end
 			VJ_STOPSOUND(self.CurrentIdleSound)
 			self.NextIdleSoundT_RegularChange = CurTime() + 1
-			self.CurrentPainSound = VJ_CreateSound(self,soundtbl,self.PainSoundLevel,self:VJ_DecideSoundPitch(self.PainSoundPitch1,self.PainSoundPitch2))
+			self.CurrentPainSound = Type(self,sdtbl,self.PainSoundLevel,self:VJ_DecideSoundPitch(self.PainSoundPitch1,self.PainSoundPitch2))
 		end
 		self.PainSoundT = CurTime() + math.Rand(self.NextSoundTime_Pain1,self.NextSoundTime_Pain2)
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DeathSoundCode(CustomTbl)
+function ENT:DeathSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasDeathSounds == false then return end
-	local deathsound = math.random(1,self.DeathSoundChance)
-	local soundtbl = self.SoundTbl_Death
-	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if deathsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
-		self.CurrentDeathSound = VJ_CreateSound(self,soundtbl,self.DeathSoundLevel,self:VJ_DecideSoundPitch(self.DeathSoundPitch1,self.DeathSoundPitch2))
+	Type = Type or VJ_CreateSound
+	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_Death)
+	if (math.random(1,self.DeathSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+		if ctbl != false then sdtbl = ctbl end
+		self.CurrentDeathSound = Type(self,sdtbl,self.DeathSoundLevel,self:VJ_DecideSoundPitch(self.DeathSoundPitch1,self.DeathSoundPitch2))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -4749,17 +4768,15 @@ function ENT:FootStepSoundCode(CustomTbl)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:ImpactSoundCode(CustomTbl)
+function ENT:ImpactSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasImpactSounds == false then return end
-	local randomimpactsound = math.random(1,self.ImpactSoundChance)
-	local soundtbl = self.SoundTbl_Impact
-	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randomimpactsound == 1 then
-		if VJ_PICKRANDOMTABLE(soundtbl) == false then
-			VJ_EmitSound(self,self.DefaultSoundTbl_Impact,self.ImpactSoundLevel,self:VJ_DecideSoundPitch(self.ImpactSoundPitch1,self.ImpactSoundPitch2))
-		else
-			VJ_EmitSound(self,soundtbl,self.ImpactSoundLevel,self:VJ_DecideSoundPitch(self.ImpactSoundPitch1,self.ImpactSoundPitch2))
-		end
+	Type = Type or VJ_EmitSound
+	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_Impact)
+	if sdtbl == false then sdtbl = VJ_PICKRANDOMTABLE(self.DefaultSoundTbl_Impact) end -- Default table
+	if (math.random(1,self.ImpactSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+		if ctbl != false then sdtbl = ctbl end
+		self.CurrentImpactSound = Type(self,sdtbl,self.ImpactSoundLevel,self:VJ_DecideSoundPitch(self.ImpactSoundPitch1,self.ImpactSoundPitch2))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
