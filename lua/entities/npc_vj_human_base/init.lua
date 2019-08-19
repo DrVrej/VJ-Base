@@ -4477,7 +4477,10 @@ function ENT:IdleSoundCode(CustomTbl,Type)
 						local dur = SoundDuration(sdtbl2)
 						if dur == 0 then dur = 3 end
 						testent.NextIdleSoundT = CurTime() + dur + 0.5
-						self.NextIdleTime = CurTime() + (dur + 0.3)
+						self.NextIdleTime = CurTime() + 1
+						self.NextWanderTime = CurTime() + (dur + 1.5)
+						self:StopMoving()
+						testent:StopMoving()
 						self:SetTarget(testent)
 						self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 						testent:SetTarget(self)
