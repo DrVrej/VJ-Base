@@ -186,7 +186,8 @@ ENT.AllowIgnition = true -- Can this SNPC be set on fire?
 ENT.CanFlinch = 0 -- 0 = Don't flinch | 1 = Flinch at any damage | 2 = Flinch only from certain damages
 ENT.FlinchDamageTypes = {DMG_BLAST} -- If it uses damage-based flinching, which types of damages should it flinch from?
 ENT.FlinchChance = 16 -- Chance of it flinching from 1 to x | 1 will make it always flinch
-ENT.NextMoveAfterFlinchTime = "LetBaseDecide" -- How much time until it can move, attack, etc. | Use this for schedules or else the base will set the time 0.6 if it sees it's a schedule!
+	-- To let the base automatically detect the animation duration, set this to false:
+ENT.NextMoveAfterFlinchTime = false -- How much time until it can move, attack, etc.
 ENT.NextFlinchTime = 5 -- How much time until it can flinch again?
 ENT.AnimTbl_Flinch = {ACT_FLINCH_PHYSICS} -- If it uses normal based animation, use this
 ENT.FlinchAnimationDecreaseLengthAmount = 0 -- This will decrease the time it can move, attack, etc. | Use it to fix animation pauses after it finished the flinch animation
@@ -968,8 +969,6 @@ ENT.TimeSinceLastSeenEnemy = 0
 ENT.TimeSinceSeenEnemy = 0
 ENT.Medic_NextHealT = 0
 ENT.CurrentAnim_IdleStand = 0
-ENT.CurrentFlinchAnimation = 0
-ENT.CurrentFlinchAnimationDuration = 0
 ENT.NextFlinchT = 0
 ENT.NextCanGetCombineBallDamageT = 0
 ENT.UseTheSameGeneralSoundPitch_PickedNumber = 0
@@ -3751,21 +3750,16 @@ end
 function ENT:DoFlinch(dmginfo,hitgroup)
 	if self.CanFlinch == 0 or self.Flinching == true or CurTime() < self.TakingCoverT or (self.NextFlinchT > CurTime()) or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
 
-	local function RunFlinchCode(HitBoxBased,HitBoxInfo)
+	local function RunFlinchCode(HitBoxInfo)
 		self.Flinching = true
 		self:StopAttacks(true)
-		if HitBoxBased == true then
-			self.CurrentFlinchAnimation = VJ_PICKRANDOMTABLE(HitBoxInfo.Animation)
-			self.CurrentFlinchAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentFlinchAnimation) -self.FlinchAnimationDecreaseLengthAmount
-			if self.NextMoveAfterFlinchTime != "LetBaseDecide" then self.CurrentFlinchAnimationDuration = self.NextMoveAfterFlinchTime end
-			self:VJ_ACT_PLAYACTIVITY(self.CurrentFlinchAnimation,false,0,false,0,{SequenceDuration=self.CurrentFlinchAnimationDuration})
-		else
-			self.CurrentFlinchAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_Flinch)
-			self.CurrentFlinchAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentFlinchAnimation) -self.FlinchAnimationDecreaseLengthAmount
-			if self.NextMoveAfterFlinchTime != "LetBaseDecide" then self.CurrentFlinchAnimationDuration = self.NextMoveAfterFlinchTime end
-			self:VJ_ACT_PLAYACTIVITY(self.CurrentFlinchAnimation,false,0,false,0,{SequenceDuration=self.CurrentFlinchAnimationDuration})
-		end
-		timer.Simple(self.CurrentFlinchAnimationDuration,function() if IsValid(self) then self.Flinching = false if IsValid(self:GetEnemy()) then self:DoChaseAnimation() else self:DoIdleAnimation() end end end)
+		local animtbl = self.AnimTbl_Flinch
+		if HitBoxInfo != nil then animtbl = HitBoxInfo.Animation end
+		local anim = VJ_PICKRANDOMTABLE(animtbl)
+		local animdur = VJ_GetSequenceDuration(self,anim) - self.FlinchAnimationDecreaseLengthAmount
+		if self.NextMoveAfterFlinchTime != "LetBaseDecide" && self.NextMoveAfterFlinchTime != false then animdur = self.NextMoveAfterFlinchTime end -- "LetBaseDecide" = Backwards compatibility
+		self:VJ_ACT_PLAYACTIVITY(anim,true,animdur,false,0,{SequenceDuration=animdur})
+		timer.Simple(animdur,function() if IsValid(self) then self.Flinching = false if IsValid(self:GetEnemy()) then self:DoChaseAnimation() else self:DoIdleAnimation() end end end)
 		self:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup)
 		self.NextFlinchT = CurTime() + self.NextFlinchTime
 	end
@@ -3780,14 +3774,14 @@ function ENT:DoFlinch(dmginfo,hitgroup)
 					if VJ_HasValue(v.HitGroup,hitgroup) then
 					//if v.HitGroup == hitgroup then
 						HitGroupFound = true
-						RunFlinchCode(true,v)
+						RunFlinchCode(v)
 					end
 				end
 				if HitGroupFound == false && self.HitGroupFlinching_DefaultWhenNotHit == true then
-					RunFlinchCode(false)
+					RunFlinchCode(nil)
 				end
 			else
-				RunFlinchCode(false)
+				RunFlinchCode(nil)
 			end
 		end
 	end
