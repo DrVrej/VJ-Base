@@ -398,6 +398,11 @@ ENT.CustomRunActivites = {} -- Custom run activities
 	-- ====== Idle Sound Variables ====== --
 ENT.IdleSounds_PlayOnAttacks = false -- It will be able to continue and play idle sounds when it performs an attack
 ENT.IdleSounds_NoRegularIdleOnAlerted = false -- if set to true, it will not play the regular idle sound table if the combat idle sound table is empty
+	-- ====== Idle dialogue Sound Variables ====== --
+	-- When an allied SNPC or a allied player is in range, the SNPC will play a different sound table. If the ally is a VJ SNPC and has dialogue answer sounds, it will respond to this SNPC
+ENT.HasIdleDialogueSounds = true -- If set to false, it won't play the idle dialogue sounds
+ENT.HasIdleDialogueAnswerSounds = true -- If set to false, it won't play the idle dialogue answer sounds
+ENT.IdleDialogueDistance = 350 -- How close should the ally be for the SNPC to talk to the ally?
 	-- ====== Miscellaneous Variables ====== --
 ENT.AlertSounds_OnlyOnce = false -- After it plays it once, it will never play it again
 ENT.BeforeMeleeAttackSounds_WaitTime = 0 -- Time until it starts playing the Before Melee Attack sounds
@@ -438,6 +443,8 @@ ENT.HasSoundTrack = false -- Does the SNPC have a sound track?
 ENT.SoundTbl_FootStep = {}
 ENT.SoundTbl_Breath = {}
 ENT.SoundTbl_Idle = {}
+ENT.SoundTbl_IdleDialogue = {}
+ENT.SoundTbl_IdleDialogueAnswer = {}
 ENT.SoundTbl_CombatIdle = {}
 ENT.SoundTbl_OnReceiveOrder = {}
 ENT.SoundTbl_FollowPlayer = {}
@@ -480,6 +487,7 @@ ENT.SoundTrackFadeOutTime = 2
 	-- ====== Sound Chance Variables ====== --
 	-- Higher number = less chance of playing | 1 = Always play
 ENT.IdleSoundChance = 3
+ENT.IdleDialogueAnswerSoundChance = 1
 ENT.CombatIdleSoundChance = 1
 ENT.OnReceiveOrderSoundChance = 1
 ENT.FollowPlayerSoundChance = 1
@@ -546,6 +554,8 @@ ENT.SoundTrackVolume = 1
 ENT.FootStepSoundLevel = 70
 ENT.BreathSoundLevel = 60
 ENT.IdleSoundLevel = 75
+ENT.IdleDialogueSoundLevel = 75
+ENT.IdleDialogueAnswerSoundLevel = 75
 ENT.CombatIdleSoundLevel = 80
 ENT.OnReceiveOrderSoundLevel = 80
 ENT.FollowPlayerSoundLevel = 75
@@ -591,6 +601,10 @@ ENT.BreathSoundPitch1 = 100
 ENT.BreathSoundPitch2 = 100
 ENT.IdleSoundPitch1 = "UseGeneralPitch"
 ENT.IdleSoundPitch2 = "UseGeneralPitch"
+ENT.IdleDialogueSoundPitch1 = "UseGeneralPitch"
+ENT.IdleDialogueSoundPitch2 = "UseGeneralPitch"
+ENT.IdleDialogueAnswerSoundPitch1 = "UseGeneralPitch"
+ENT.IdleDialogueAnswerSoundPitch2 = "UseGeneralPitch"
 ENT.CombatIdleSoundPitch1 = "UseGeneralPitch"
 ENT.CombatIdleSoundPitch2 = "UseGeneralPitch"
 ENT.OnReceiveOrderSoundPitch1 = "UseGeneralPitch"
@@ -681,6 +695,10 @@ function ENT:CustomOnCondition(iCondition) end
 function ENT:CustomOnAcceptInput(key,activator,caller,data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnFollowPlayer(key,activator,caller,data) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnIdleDialogue() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnIdleDialogueAnswer() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMedic_BeforeHeal() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -4410,9 +4428,6 @@ function ENT:OnPlayerSightSoundCode(CustomTbl,Type)
 		self.CurrentOnPlayerSightSound = Type(self,sdtbl,self.OnPlayerSightSoundLevel,self:VJ_DecideSoundPitch(self.OnPlayerSightSoundPitch1,self.OnPlayerSightSoundPitch2))
 	end
 end
-
-//ENT.
-//ENT.
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IdleSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasIdleSounds == false or self.Dead == true then return end
@@ -4437,12 +4452,59 @@ function ENT:IdleSoundCode(CustomTbl,Type)
 			end
 		else
 			local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_Idle)
-			if (math.random(1,self.IdleSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+			local sdtbl2 = VJ_PICKRANDOMTABLE(self.SoundTbl_IdleDialogue)
+			local sdrand = math.random(1,self.IdleSoundChance)
+			if sdtbl2 != false && sdrand == 1 && self.HasIdleDialogueSounds == true then
+				local testent, testsd = self:IdleDialogueSoundCodeTest()
+				if testent != false then
+					self:CustomOnIdleDialogue()
+					self.CurrentIdleSound = Type(self,sdtbl2,self.IdleDialogueSoundLevel,self:VJ_DecideSoundPitch(self.IdleDialogueSoundPitch1,self.IdleDialogueSoundPitch2))
+					if testsd == true then
+						local dur = SoundDuration(sdtbl2)
+						if dur == 0 then dur = 3 end
+						testent.NextIdleSoundT = CurTime() + dur + 0.5
+						timer.Simple(dur, function()
+							if IsValid(self) && IsValid(testent) then
+								testent:IdleDialogueAnswerSoundCode()
+							end
+						end)
+					end
+				end
+			elseif (sdrand == 1 && sdtbl != false) or (ctbl != false) then
 				if ctbl != false then sdtbl = ctbl end
 				self.CurrentIdleSound = Type(self,sdtbl,self.IdleSoundLevel,self:VJ_DecideSoundPitch(self.IdleSoundPitch1,self.IdleSoundPitch2))
 			end
 		end
 		self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle1,self.NextSoundTime_Idle2)
+	end
+end
+--------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:IdleDialogueSoundCodeTest()
+	local ret = false
+	for k,v in ipairs(ents.FindInSphere(self:GetPos(),self.IdleDialogueDistance)) do
+		if v:IsPlayer() && self:DoRelationshipCheck(v) == false then
+			ret = v
+		elseif v != self && ((self:GetClass() == v:GetClass()) or (v:IsNPC() && self:DoRelationshipCheck(v) == false)) then
+			ret = v
+			if v.IsVJBaseSNPC == true && VJ_PICKRANDOMTABLE(self.SoundTbl_IdleDialogueAnswer) != false then
+				return v, true -- Yete VJ NPC e, ere vor function-e gena
+			end
+		end
+	end
+	return ret, false
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:IdleDialogueAnswerSoundCode(CustomTbl,Type)
+	if self.HasSounds == false or self.HasIdleDialogueAnswerSounds == false then return end
+	Type = Type or VJ_CreateSound
+	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_IdleDialogueAnswer)
+	if (math.random(1,self.IdleDialogueAnswerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+		if ctbl != false then sdtbl = ctbl end
+		self:CustomOnIdleDialogueAnswer()
+		self:StopAllCommonSpeechSounds()
+		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2,3)
+		self.CurrentIdleDialogueAnswerSound = Type(self,sdtbl,self.IdleDialogueAnswerSoundLevel,self:VJ_DecideSoundPitch(self.IdleDialogueAnswerSoundPitch1,self.IdleDialogueAnswerSoundPitch2))
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
@@ -4794,6 +4856,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAllCommonSpeechSounds()
 	VJ_STOPSOUND(self.CurrentIdleSound)
+	VJ_STOPSOUND(self.CurrentIdleDialogueAnswerSound)
 	VJ_STOPSOUND(self.CurrentInvestigateSound)
 	VJ_STOPSOUND(self.CurrentLostEnemySound)
 	VJ_STOPSOUND(self.CurrentFollowPlayerSound)
@@ -4816,6 +4879,7 @@ end
 function ENT:StopAllCommonSounds()
 	VJ_STOPSOUND(self.CurrentBreathSound)
 	VJ_STOPSOUND(self.CurrentIdleSound)
+	VJ_STOPSOUND(self.CurrentIdleDialogueAnswerSound)
 	VJ_STOPSOUND(self.CurrentInvestigateSound)
 	VJ_STOPSOUND(self.CurrentLostEnemySound)
 	VJ_STOPSOUND(self.CurrentAlertSound)
