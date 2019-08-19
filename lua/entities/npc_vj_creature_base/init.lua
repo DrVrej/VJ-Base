@@ -427,7 +427,7 @@ ENT.IdleSounds_NoRegularIdleOnAlerted = false -- if set to true, it will not pla
 	-- When an allied SNPC or a allied player is in range, the SNPC will play a different sound table. If the ally is a VJ SNPC and has dialogue answer sounds, it will respond to this SNPC
 ENT.HasIdleDialogueSounds = true -- If set to false, it won't play the idle dialogue sounds
 ENT.HasIdleDialogueAnswerSounds = true -- If set to false, it won't play the idle dialogue answer sounds
-ENT.IdleDialogueDistance = 350 -- How close should the ally be for the SNPC to talk to the ally?
+ENT.IdleDialogueDistance = 400 -- How close should the ally be for the SNPC to talk to the ally?
 	-- ====== Miscellaneous Variables ====== --
 ENT.AlertSounds_OnlyOnce = false -- After it plays it once, it will never play it again
 ENT.BeforeMeleeAttackSounds_WaitTime = 0 -- Time until it starts playing the Before Melee Attack sounds
@@ -3244,14 +3244,22 @@ function ENT:DoEntityRelationshipCheck()
 					if friclass == "CLASS_ZOMBIE" then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
 					if friclass == "CLASS_ANTLION" then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
 					if friclass == "CLASS_XEN" then if self:XenFriendlyCode(v) == true then entisfri = true end end
-					if (v.VJ_NPC_Class && friclass != "CLASS_PLAYER_ALLY" && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
-						entisfri = true
-						if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
-							self.ResetedEnemy = true
-							self:ResetEnemy(false)
+					if (v.VJ_NPC_Class /*&& friclass != "CLASS_PLAYER_ALLY"*/ && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
+						if friclass == "CLASS_PLAYER_ALLY" then
+							if self.FriendsWithAllPlayerAllies == true && v.FriendsWithAllPlayerAllies == true then
+								entisfri = true
+								if vNPC then v:AddEntityRelationship(self,D_LI,99) end
+								self:AddEntityRelationship(v,D_LI,99)
+							end
+						else
+							entisfri = true
+							if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
+								self.ResetedEnemy = true
+								self:ResetEnemy(false)
+							end
+							if vNPC then v:AddEntityRelationship(self,D_LI,99) end
+							self:AddEntityRelationship(v,D_LI,99)
 						end
-						if vNPC then v:AddEntityRelationship(self,D_LI,99) end
-						self:AddEntityRelationship(v,D_LI,99)
 					end
 				end
 				if vNPC then
@@ -4516,7 +4524,13 @@ function ENT:IdleSoundCode(CustomTbl,Type)
 			local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_Idle)
 			local sdtbl2 = VJ_PICKRANDOMTABLE(self.SoundTbl_IdleDialogue)
 			local sdrand = math.random(1,self.IdleSoundChance)
-			if sdtbl2 != false && sdrand == 1 && self.HasIdleDialogueSounds == true then
+			local function RegularIdle()
+				if (sdrand == 1 && sdtbl != false) or (ctbl != false) then
+					if ctbl != false then sdtbl = ctbl end
+					self.CurrentIdleSound = Type(self,sdtbl,self.IdleSoundLevel,self:VJ_DecideSoundPitch(self.IdleSoundPitch1,self.IdleSoundPitch2))
+				end
+			end
+			if sdtbl2 != false && sdrand == 1 && self.HasIdleDialogueSounds == true && math.random(1,2) == 1 then
 				local testent, testsd = self:IdleDialogueSoundCodeTest()
 				if testent != false then
 					self:CustomOnIdleDialogue()
@@ -4525,16 +4539,22 @@ function ENT:IdleSoundCode(CustomTbl,Type)
 						local dur = SoundDuration(sdtbl2)
 						if dur == 0 then dur = 3 end
 						testent.NextIdleSoundT = CurTime() + dur + 0.5
-						timer.Simple(dur, function()
+						self.NextIdleTime = CurTime() + (dur + 0.3)
+						self:SetTarget(testent)
+						self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+						testent:SetTarget(self)
+						testent:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+						timer.Simple(dur + 0.3, function()
 							if IsValid(self) && IsValid(testent) then
 								testent:IdleDialogueAnswerSoundCode()
 							end
 						end)
 					end
+				else
+					RegularIdle()
 				end
-			elseif (sdrand == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
-				self.CurrentIdleSound = Type(self,sdtbl,self.IdleSoundLevel,self:VJ_DecideSoundPitch(self.IdleSoundPitch1,self.IdleSoundPitch2))
+			else
+				RegularIdle()
 			end
 		end
 		self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle1,self.NextSoundTime_Idle2)
@@ -4546,9 +4566,9 @@ function ENT:IdleDialogueSoundCodeTest()
 	for k,v in ipairs(ents.FindInSphere(self:GetPos(),self.IdleDialogueDistance)) do
 		if v:IsPlayer() && self:DoRelationshipCheck(v) == false then
 			ret = v
-		elseif v != self && ((self:GetClass() == v:GetClass()) or (v:IsNPC() && self:DoRelationshipCheck(v) == false)) then
+		elseif v != self && ((self:GetClass() == v:GetClass()) or (v:IsNPC() && self:DoRelationshipCheck(v) == false)) && self:Visible(v) then
 			ret = v
-			if v.IsVJBaseSNPC == true && VJ_PICKRANDOMTABLE(self.SoundTbl_IdleDialogueAnswer) != false then
+			if v.IsVJBaseSNPC == true && VJ_PICKRANDOMTABLE(v.SoundTbl_IdleDialogueAnswer) != false then
 				return v, true -- Yete VJ NPC e, ere vor function-e gena
 			end
 		end
