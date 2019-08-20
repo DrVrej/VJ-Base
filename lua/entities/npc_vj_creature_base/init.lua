@@ -3753,6 +3753,7 @@ function ENT:DoFlinch(dmginfo,hitgroup)
 	local function RunFlinchCode(HitBoxInfo)
 		self.Flinching = true
 		self:StopAttacks(true)
+		self.PlayingAttackAnimation = false
 		local animtbl = self.AnimTbl_Flinch
 		if HitBoxInfo != nil then animtbl = HitBoxInfo.Animation end
 		local anim = VJ_PICKRANDOMTABLE(animtbl)
