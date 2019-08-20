@@ -37,7 +37,7 @@ SWEP.NPC_AllowCustomSpread		= true -- Should the weapon be able to change the NP
 SWEP.NPC_CustomSpread	 		= 1 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
 SWEP.NPC_BulletSpawnAttachment 	= "" -- The attachment that the bullet spawns on, leave empty for base to decide!
 SWEP.NPC_AnimationTbl_Custom 	= {} -- Can be activity or sequence
-SWEP.NPC_AnimationTbl_General 	= {ACT_RANGE_ATTACK1,ACT_RANGE_ATTACK1_LOW,ACT_IDLE_AGITATED,ACT_IDLE_AIM_AGITATED,ACT_RUN_AIM,ACT_WALK_AIM}
+SWEP.NPC_AnimationTbl_General 	= {ACT_RANGE_ATTACK1,ACT_RANGE_ATTACK2,ACT_RANGE_ATTACK1_LOW,ACT_IDLE_AGITATED,ACT_IDLE_AIM_AGITATED,ACT_RUN_AIM,ACT_WALK_AIM}
 SWEP.NPC_AnimationTbl_Rifle 	= {ACT_WALK_AIM_RIFLE,ACT_RUN_AIM_RIFLE,ACT_RANGE_ATTACK_AR2,ACT_RANGE_ATTACK_AR2_LOW,ACT_IDLE_ANGRY_SMG1,ACT_RANGE_ATTACK_SMG1,ACT_RANGE_ATTACK_SMG1_LOW}
 SWEP.NPC_AnimationTbl_Pistol 	= {ACT_RANGE_ATTACK_PISTOL,ACT_WALK_PISTOL,ACT_RANGE_ATTACK_PISTOL_LOW}
 SWEP.NPC_AnimationTbl_Shotgun 	= {ACT_RANGE_ATTACK_SHOTGUN,ACT_RANGE_ATTACK_SHOTGUN_LOW,ACT_IDLE_SHOTGUN_AGITATED}

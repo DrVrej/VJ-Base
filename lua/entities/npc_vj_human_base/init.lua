@@ -2745,6 +2745,7 @@ function ENT:SelectSchedule(iNPCState)
 											curanim = crouchanim
 											//local actualanim = curanim
 											if type(curanim) != "string" then curanim = self:VJ_TranslateWeaponActivity(curanim) end
+											if VJ_AnimationExists(self,curanim) == false then curanim = self.CurrentWeaponAnimation end
 											self.CurrentWeaponAnimation = curanim
 											self.Weapon_DoingCrouchAttackT = CurTime() + 2 // Asiga bedke vor vestah elank yed votgi cheler hemen
 											if VJ_IsCurrentAnimation(self,curanim) == false then self:VJ_ACT_PLAYACTIVITY(curanim,false,0,true) end
@@ -2753,6 +2754,7 @@ function ENT:SelectSchedule(iNPCState)
 											//local actualanim = curanim
 											self.CurrentWeaponAnimation = curanim
 											if type(curanim) != "string" then curanim = self:VJ_TranslateWeaponActivity(curanim) end
+											if VJ_AnimationExists(self,curanim) == false then curanim = self.CurrentWeaponAnimation end
 											if VJ_IsCurrentAnimation(self,curanim) == false then self:VJ_ACT_PLAYACTIVITY(curanim,false,0,true) end
 										end
 									else
@@ -2760,6 +2762,7 @@ function ENT:SelectSchedule(iNPCState)
 										//local actualanim = curanim
 										self.CurrentWeaponAnimation = curanim
 										if type(curanim) != "string" then curanim = self:VJ_TranslateWeaponActivity(curanim) end
+										if VJ_AnimationExists(self,curanim) == false then curanim = self.CurrentWeaponAnimation end
 										if VJ_IsCurrentAnimation(self,curanim) == false then self:VJ_ACT_PLAYACTIVITY(curanim,false,0,true) end
 									end
 								end
@@ -4030,6 +4033,7 @@ function ENT:CreateGibEntity(Ent,Models,Tbl_Features,CustomCode)
 	vTbl_AngleVelocity = vTbl_Features.AngVel or Vector(math.Rand(-200,200),math.Rand(-200,200),math.Rand(-200,200)) -- Angle velocity, how fast it rotates as it's flying
 	vTbl_BloodType = vTbl_Features.BloodType or vTbl_BloodType -- Certain entities such as the VJ Gib entity, you can use this to set its gib type
 	vTbl_BloodDecal = vTbl_Features.BloodDecal or "Default" -- The decal it spawns when it collides with something, leave empty to let the base decide
+	vTbl_CollideSound = vTbl_Features.CollideSound or "Default" -- The sound it plays when it collides with something, leave empty to let the base decide
 	vTbl_NoFade = vTbl_Features.NoFade or false -- Should it fade away and delete?
 	vTbl_RemoveOnCorpseDelete = vTbl_Features.RemoveOnCorpseDelete or false -- Should the entity get removed if the corpse is removed?
 	local gib = ents.Create(Ent)
@@ -4039,6 +4043,7 @@ function ENT:CreateGibEntity(Ent,Models,Tbl_Features,CustomCode)
 	if gib:GetClass() == "obj_vj_gib" then
 		gib.BloodType = vTbl_BloodType
 		gib.Collide_Decal = vTbl_BloodDecal
+		gib.CollideSound = vTbl_CollideSound
 	end
 	gib:Spawn()
 	gib:Activate()
