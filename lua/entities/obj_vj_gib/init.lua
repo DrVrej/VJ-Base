@@ -12,7 +12,7 @@ INFO: Used as a base for gibs
 ENT.BloodType = "Red"
 ENT.Collide_Decal = "Default"
 ENT.Collide_DecalChance = 3
-ENT.CollideSound = {"physics/flesh/flesh_squishy_impact_hard1.wav","physics/flesh/flesh_squishy_impact_hard2.wav","physics/flesh/flesh_squishy_impact_hard3.wav","physics/flesh/flesh_squishy_impact_hard4.wav"}
+ENT.CollideSound = "Default" -- Make it a table to use custom sounds!
 ENT.CollideSoundLevel = 60
 ENT.CollideSoundPitch1 = 80
 ENT.CollideSoundPitch2 = 100
@@ -43,6 +43,10 @@ function ENT:Initialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetUpInitializeBloodType()
+	if self.CollideSound == "Default" then
+		self.CollideSound = {"physics/flesh/flesh_squishy_impact_hard1.wav","physics/flesh/flesh_squishy_impact_hard2.wav","physics/flesh/flesh_squishy_impact_hard3.wav","physics/flesh/flesh_squishy_impact_hard4.wav"}
+	end
+	
 	if self.Collide_Decal == "Default" then
 		local bloodtype = self.BloodType
 		if bloodtype == "Red" then
@@ -98,8 +102,10 @@ function ENT:PhysicsCollide(data,phys)
 				endpos = self:GetPos() - (data.HitNormal * -30),
 				filter = self //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
 			})
-			util.Decal(self.Collide_Decal,tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
-			//util.Decal(self.Collide_Decal,start,endpos)
+			if self.Collide_Decal != "" then
+				util.Decal(self.Collide_Decal,tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
+				//util.Decal(self.Collide_Decal,start,endpos)
+			end
 		end
 	end
 end

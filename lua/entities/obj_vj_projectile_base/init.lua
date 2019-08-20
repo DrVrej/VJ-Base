@@ -13,7 +13,7 @@ INFO: Used to make projectiles.
 ENT.Model = {""} -- The models it should spawn with | Picks a random one from the table
 ENT.PhysicsInitType = SOLID_VPHYSICS
 ENT.MoveType = MOVETYPE_VPHYSICS -- Move type, recommended to keep it as it is
-ENT.MoveCollideType = MOVECOLLIDE_DEFAULT -- Move type | Some examples: MOVECOLLIDE_FLY_BOUNCE, MOVECOLLIDE_FLY_SLIDE
+ENT.MoveCollideType = MOVECOLLIDE_FLY_BOUNCE -- Move type | Some examples: MOVECOLLIDE_FLY_BOUNCE, MOVECOLLIDE_FLY_SLIDE
 ENT.CollisionGroupType = COLLISION_GROUP_PROJECTILE -- Collision type, recommended to keep it as it is
 ENT.SolidType = SOLID_CUSTOM -- Solid type, recommended to keep it as it is
 ENT.ShouldSetOwner = true -- Should it set a owner?

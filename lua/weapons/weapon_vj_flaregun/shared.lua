@@ -45,7 +45,7 @@ SWEP.NextIdle_Deploy			= 0.5 -- How much time until it plays the idle animation 
 SWEP.NextIdle_PrimaryAttack		= 0.5 -- How much time until it plays the idle animation after attacking(Primary)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BeforeShoot()
-if (CLIENT) then return end
+	if (CLIENT) then return end
 	local flareround = ents.Create("obj_vj_flareround")
 	if self.Owner:IsPlayer() then
 	flareround:SetPos(self.Owner:GetShootPos()) else
