@@ -328,10 +328,11 @@ ENT.NextMoveRandomlyWhenShootingTime1 = 3 -- How much time until it can move ran
 ENT.NextMoveRandomlyWhenShootingTime2 = 6 -- How much time until it can move randomly when shooting? | Second number in math.random
 	-- ====== Wait For Enemy To Come Out Variables ====== --
 ENT.WaitForEnemyToComeOut = true -- Should it wait for the enemy to come out from hiding?
-ENT.AnimTbl_CustomWaitForEnemyToComeOut = {} -- Leave empty to use the default animations from the base | The base will play the firing animations
 ENT.WaitForEnemyToComeOutTime1 = 5 -- How much time should it wait until it starts chasing the enemy? | First number in math.random
 ENT.WaitForEnemyToComeOutTime2 = 7 -- How much time should it wait until it starts chasing the enemy? | Second number in math.random
 ENT.WaitForEnemyToComeOutDistance = 100 -- If it's this close to the enemy, it won't do it
+ENT.HasLostWeaponSightAnimation = false -- Set to true if you would like the SNPC to play a different animation when it has lost sight of the enemy and can't fire at it
+ENT.AnimTbl_LostWeaponSight = {ACT_IDLE_ANGRY} -- The animations that it will play if the variable above is set to true
 	-- ====== Scared Behavior Variables ====== --
 ENT.NoWeapon_UseScaredBehavior = true -- Should it use the scared behavior when it sees an enemy and doesn't have a weapon?
 ENT.AnimTbl_ScaredBehaviorStand = {ACT_COWER} -- The animation it will when it's just standing still | Replaces the idle stand animation
@@ -2675,8 +2676,11 @@ function ENT:SelectSchedule(iNPCState)
 					// (self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()) +self:GetUp()*30,self:GetEnemy():EyePos() +self:GetUp()*30,true,{SpawnTestCube=true})
 					if (self:VJ_ForwardIsHidingZone(self:EyePos(),self:GetEnemy():EyePos(),true) == true) && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()) +self:GetUp()*30,self:GetEnemy():EyePos() +self:GetUp()*30,true) /*or self:VJ_ForwardIsHidingZone(util.VJ_GetWeaponPos(self),self:GetEnemy():EyePos()) == true*/ /*or (!self:Visible(self:GetEnemy()))*/ then -- Chase enemy or wait for enemy if hiding
 						//if self:VJ_IsCurrentSchedule(self.WeaponAttackSchedule) != true then
-						if self.AllowToDo_WaitForEnemyToComeOut == true && self.IsReloadingWeapon == false && self.Weapon_TimeSinceLastShot <= 5 && self.WaitingForEnemyToComeOut == false && (SelfToEnemyDistance < self.Weapon_FiringDistanceFar) && (SelfToEnemyDistance > self.WaitForEnemyToComeOutDistance) && self:VJ_IsCurrentSchedule(self.WeaponAttackSchedule) != true then
+						if self.WaitForEnemyToComeOut == true && self.AllowToDo_WaitForEnemyToComeOut == true && self.IsReloadingWeapon == false && self.Weapon_TimeSinceLastShot <= 5 && self.WaitingForEnemyToComeOut == false && (SelfToEnemyDistance < self.Weapon_FiringDistanceFar) && (SelfToEnemyDistance > self.WaitForEnemyToComeOutDistance) && self:VJ_IsCurrentSchedule(self.WeaponAttackSchedule) != true then
 							self.WaitingForEnemyToComeOut = true
+							if self.HasLostWeaponSightAnimation == true then
+								self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_LostWeaponSight,false,0,true)
+							end
 							self.NextChaseTime = CurTime() + math.Rand(self.WaitForEnemyToComeOutTime1,self.WaitForEnemyToComeOutTime2)
 						elseif self.DisableChasingEnemy == false && self.IsReloadingWeapon == false && CurTime() > self.LastHiddenZoneT then
 							self.DoingWeaponAttack = false
@@ -3661,6 +3665,7 @@ function ENT:DoFlinch(dmginfo,hitgroup)
 	local function RunFlinchCode(HitBoxInfo)
 		self.Flinching = true
 		self:StopAttacks(true)
+		self.PlayingAttackAnimation = false
 		local animtbl = self.AnimTbl_Flinch
 		if HitBoxInfo != nil then animtbl = HitBoxInfo.Animation end
 		local anim = VJ_PICKRANDOMTABLE(animtbl)
