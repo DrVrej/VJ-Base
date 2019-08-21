@@ -102,6 +102,7 @@ ENT.Medic_NextHealTime2 = 15 -- How much time until it can give health to an all
 ENT.Medic_SpawnPropOnHeal = true -- Should it spawn a prop, such as small health vial at a attachment when healing an ally?
 ENT.Medic_SpawnPropOnHealModel = "models/healthvial.mdl" -- The model that it spawns
 ENT.Medic_SpawnPropOnHealAttachment = "anim_attachment_LH" -- The attachment it spawns on
+ENT.Medic_CanBeHealed = true -- If set to false, this SNPC can't be healed!
 	-- ====== Follow Player Variables ====== --
 	-- Will only follow a player that's friendly to it!
 ENT.FollowPlayer = true -- Should the SNPC follow the player when the player presses a certain key?
@@ -429,6 +430,7 @@ ENT.IdleSounds_NoRegularIdleOnAlerted = false -- if set to true, it will not pla
 ENT.HasIdleDialogueSounds = true -- If set to false, it won't play the idle dialogue sounds
 ENT.HasIdleDialogueAnswerSounds = true -- If set to false, it won't play the idle dialogue answer sounds
 ENT.IdleDialogueDistance = 400 -- How close should the ally be for the SNPC to talk to the ally?
+ENT.IdleDialogueCanTurn = true -- If set to false, it won't turn when a dialogue occurs
 	-- ====== Miscellaneous Variables ====== --
 ENT.AlertSounds_OnlyOnce = false -- After it plays it once, it will never play it again
 ENT.BeforeMeleeAttackSounds_WaitTime = 0 -- Time until it starts playing the Before Melee Attack sounds
@@ -739,6 +741,8 @@ function ENT:CustomOnIdleDialogueAnswer() end
 function ENT:CustomOnMedic_BeforeHeal() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMedic_OnHeal() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnMedic_OnReset() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPlayerSight(argent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1323,6 +1327,7 @@ function ENT:VJ_TASK_FACE_X(FaceType,CustomCode)
 	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
 	if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false) or (self.IsVJBaseSNPC_Tank == true) then return end
 	FaceType = FaceType or "TASK_FACE_TARGET"
+	self.NextIdleStandTime = CurTime() + 1.2
 	local vschedFaceX = ai_vj_schedule.New("vj_face_x")
 	vschedFaceX:EngTask(FaceType, 0)
 	if (CustomCode) then CustomCode(vschedFaceX) end
@@ -1475,7 +1480,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 	vschedIdleStand:EngTask("TASK_WAIT_INDEFINITE")
 	vschedIdleStand.CanBeInterrupted = true
 	self:StartSchedule(vschedIdleStand)*/
-	
+
 	local animtbl = self.AnimTbl_IdleStand
 	//local checkedtbl = {}
 	local hasanim = false
@@ -1495,11 +1500,11 @@ function ENT:VJ_TASK_IDLE_STAND()
 		//animtbl = checkedtbl
 	end
 	local finaltbl = VJ_PICKRANDOMTABLE(animtbl)
-	if finaltbl == false then finaltbl = ACT_IDLE end -- Yete animation-me chi kedav, ter barz animation e
+	if finaltbl == false then finaltbl = ACT_IDLE hasanim = true end -- Yete animation-me chi kedav, ter barz animation e
 	finaltbl = VJ_SequenceToActivity(self,finaltbl)
 	if finaltbl == false then return false end -- Vesdah yegher vor minag tevov animation-er e gernan antsnel!
 	self.CurrentAnim_IdleStand = finaltbl
-	if hasanim == true && CurTime() > self.NextIdleStandTime then
+	if (hasanim == true && CurTime() > self.NextIdleStandTime) then
 		if self.CurrentSchedule == nil then -- Yete ooresh pame chenergor 
 			self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0) -- Asiga chi tenesne yerp vor nouyn animation-e enen ne yedev yedevi, ge sarin
 		end
@@ -1879,7 +1884,7 @@ function ENT:DoMedicCode_FindAllies()
 	local findallies = ents.FindInSphere(self:GetPos(),self.Medic_CheckDistance)
 	for k,v in ipairs(findallies) do
 		if !v:IsNPC() && !v:IsPlayer() then continue end
-		if v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic == false && (!v.IsVJBaseSNPC_Tank) && v:Health() <= v:GetMaxHealth() * 0.75 && ((v.IsVJBaseSNPC == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0)) then
+		if v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic == false && (!v.IsVJBaseSNPC_Tank) && v:Health() <= v:GetMaxHealth() * 0.75 && ((v.IsVJBaseSNPC == true && v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0)) then
 			if /*self:Disposition(v) == D_LI &&*/ self:DoRelationshipCheck(v) == false then
 				self.Medic_NextHealT = CurTime() + math.Rand(self.Medic_NextHealTime1,self.Medic_NextHealTime2)
 				self.NextIdleTime = CurTime() + 5
@@ -1961,6 +1966,8 @@ function ENT:DoMedicCode_HealAlly()
 								self:DoMedicCode_Reset()
 							else -- Ere vor NPC yed yerta mouys NPC-en yedeven
 								self.AlreadyDoneMedicThinkCode = false
+								if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
+								self:CustomOnMedic_OnReset()
 							end
 						else -- Yete NPC vor meng bidi aghektsnenk hos che, amen inch yed normaltsoor
 							self:DoMedicCode_Reset()
@@ -4538,12 +4545,16 @@ function ENT:IdleSoundCode(CustomTbl,Type)
 						testent.NextIdleSoundT = CurTime() + dur + 0.5
 						self.NextIdleTime = CurTime() + 1
 						self.NextWanderTime = CurTime() + (dur + 1.5)
-						self:StopMoving()
-						testent:StopMoving()
-						self:SetTarget(testent)
-						self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-						testent:SetTarget(self)
-						testent:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+						if self.IdleDialogueCanTurn == true then
+							self:StopMoving()
+							self:SetTarget(testent)
+							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+						end
+						if testent.IdleDialogueCanTurn == true then
+							testent:StopMoving()
+							testent:SetTarget(self)
+							testent:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+						end
 						timer.Simple(dur + 0.3, function()
 							if IsValid(self) && IsValid(testent) then
 								testent:IdleDialogueAnswerSoundCode()
