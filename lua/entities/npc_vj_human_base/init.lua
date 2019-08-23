@@ -762,7 +762,7 @@ function ENT:CustomOnTakeDamage_AfterDamage(dmginfo,hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnTakeDamage_OnBleed(dmginfo,hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnFlinch_BeforeFlinch(dmginfo,hitgroup) end
+function ENT:CustomOnFlinch_BeforeFlinch(dmginfo,hitgroup) end -- Return false to disallow the flinch from playing
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3691,7 +3691,8 @@ function ENT:DoFlinch(dmginfo,hitgroup)
 	local randflinch = math.random(1,self.FlinchChance)
 	if randflinch == 1 then
 		if (self.CanFlinch == 2 && VJ_HasValue(self.FlinchDamageTypes,dmginfo:GetDamageType())) or (self.CanFlinch == 1) then
-			self:CustomOnFlinch_BeforeFlinch(dmginfo,hitgroup)
+			local allow = self:CustomOnFlinch_BeforeFlinch(dmginfo,hitgroup)
+			if allow == false then return end
 			if self.HasHitGroupFlinching == true then
 				local HitGroupFound = false
 				for k,v in ipairs(self.HitGroupFlinching_Values) do
