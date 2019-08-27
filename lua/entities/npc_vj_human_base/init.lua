@@ -1539,6 +1539,7 @@ function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
 		self:VJ_TASK_CHASE_ENEMY(false)
 	end
 	//if self:VJ_HasActiveWeapon() == true then self:VJ_TASK_CHASE_ENEMY(true) else self:VJ_TASK_CHASE_ENEMY(false) end
+	if self.NextChaseTime > CurTime() then return end
 	self.NextChaseTime = CurTime() + 0.1
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
