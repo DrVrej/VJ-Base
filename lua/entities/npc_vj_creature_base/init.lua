@@ -1579,6 +1579,7 @@ function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
 	if OverrideChasing == false && (self.DisableChasingEnemy == true or self.RangeAttack_DisableChasingEnemy == true) then self:VJ_TASK_IDLE_STAND() return end
 	//self:VJ_SetSchedule(ChaseSched) // SCHED_CHASE_ENEMY
 	self:VJ_TASK_CHASE_ENEMY()
+	if self.NextChaseTime > CurTime() then return end
 	self.NextChaseTime = CurTime() + 0.1
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
