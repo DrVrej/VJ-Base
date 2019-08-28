@@ -3688,6 +3688,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 					if self.FollowingPlayer == true && self.FollowingPlayerName == DamageAttacker then self:FollowPlayerReset() end
 					self.VJ_AddCertainEntityAsEnemy[#self.VJ_AddCertainEntityAsEnemy+1] = DamageAttacker
 					self:AddEntityRelationship(DamageAttacker,D_HT,99)
+					self.TakingCoverT = CurTime() + 2
 					if !IsValid(self:GetEnemy()) then
 						self:StopMoving()
 						self:SetTarget(DamageAttacker)
