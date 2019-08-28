@@ -732,6 +732,8 @@ function ENT:CustomOnCondition(iCondition) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnAcceptInput(key,activator,caller,data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnHandleAnimEvent(ev,evTime,evCycle,evType,evOptions) end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnFollowPlayer(key,activator,caller,data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnIdleDialogue() end
@@ -1791,6 +1793,18 @@ end
 function ENT:AcceptInput(key,activator,caller,data)
 	self:CustomOnAcceptInput(key,activator,caller,data)
 	self:FollowPlayerCode(key,activator,caller,data)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:HandleAnimEvent(ev,evTime,evCycle,evType,evOptions)
+	self:CustomOnHandleAnimEvent(ev,evTime,evCycle,evType,evOptions)
+	/*
+	print("----------------------------")
+	print(ev)
+	print(evTime)
+	print(evCycle)
+	print(evType)
+	print(evOptions)
+	*/
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnCondition(iCondition)
