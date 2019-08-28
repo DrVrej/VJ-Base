@@ -740,6 +740,10 @@ function ENT:CustomOnMeleeAttack_BeforeStartTimer() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_AfterStartTimer() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnIsAbleToShootWeapon()
+	return true -- Set this to false to disallow shooting
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnWeaponAttack() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnWaitForEnemyToComeOut() end
@@ -2567,6 +2571,7 @@ function ENT:IsAbleToShootWeapon(CheckDistance,CheckDistanceOnly,EnemyDistance)
 	CheckDistance = CheckDistance or false -- Check for distance and weapon time as well?
 	CheckDistanceOnly = CheckDistanceOnly or false -- Should it only check the above statment?
 	EnemyDistance = EnemyDistance or self:EyePos():Distance(self:GetEnemy():EyePos()) -- Distance used for CheckDistance
+	if self:CustomOnIsAbleToShootWeapon() == false then return end
 	local havedist = false
 	local havechecks = false
 	if self.VJ_IsBeingControlled == true then CheckDistance = false CheckDistanceOnly = false end
