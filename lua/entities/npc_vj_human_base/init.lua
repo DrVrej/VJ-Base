@@ -2609,7 +2609,9 @@ function ENT:SelectSchedule(iNPCState)
 		//self:HLRelationshops()
 		//self:FindEnemy()
 		if /*self:VJ_HasActiveWeapon() == true && */self.ThrowingGrenade == false then self:DoIdleAnimation() end
-		self.TakingCoverT = 0
+		if self.Alerted == false then
+			self.TakingCoverT = 0
+		end
 		self:IdleSoundCode()
 		if self:VJ_HasActiveWeapon() == false && self.NoWeapon_UseScaredBehavior == true then
 			self.AnimTbl_IdleStand = {}
@@ -3609,6 +3611,7 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 					if self.FollowingPlayer == true && self.FollowingPlayerName == DamageAttacker then self:FollowPlayerReset() end
 					self.VJ_AddCertainEntityAsEnemy[#self.VJ_AddCertainEntityAsEnemy+1] = DamageAttacker
 					self:AddEntityRelationship(DamageAttacker,D_HT,99)
+					self.TakingCoverT = CurTime() + 2
 					if !IsValid(self:GetEnemy()) then
 						self:StopMoving()
 						self:SetTarget(DamageAttacker)
@@ -4608,8 +4611,8 @@ function ENT:AlertSoundCode(CustomTbl,Type)
 	if (math.random(1,self.AlertSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
-		self.NextIdleSoundT = self.NextIdleSoundT + 2
-		self.NextSuppressingSoundT = self.NextSuppressingSoundT + 2.5
+		self.NextIdleSoundT = self.NextIdleSoundT + 3
+		self.NextSuppressingSoundT = self.NextSuppressingSoundT + 4
 		self.CurrentAlertSound = Type(self,sdtbl,self.AlertSoundLevel,self:VJ_DecideSoundPitch(self.AlertSoundPitch1,self.AlertSoundPitch2))
 	end
 end
