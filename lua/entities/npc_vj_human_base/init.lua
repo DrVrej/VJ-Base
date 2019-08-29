@@ -4384,7 +4384,6 @@ function ENT:FollowPlayerSoundCode(CustomTbl,Type)
 	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_FollowPlayer)
 	if (math.random(1,self.FollowPlayerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
-		print(VJ_CreateSound)
 		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 		self.CurrentFollowPlayerSound = Type(self,sdtbl,self.FollowPlayerSoundLevel,self:VJ_DecideSoundPitch(self.FollowPlayerPitch1,self.FollowPlayerPitch2))
@@ -4397,8 +4396,6 @@ function ENT:UnFollowPlayerSoundCode(CustomTbl,Type)
 	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
 	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_UnFollowPlayer)
 	if (math.random(1,self.UnFollowPlayerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-		print("ggggggg")
-		print(VJ_CreateSound)
 		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
