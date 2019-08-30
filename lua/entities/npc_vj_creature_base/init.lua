@@ -37,7 +37,13 @@ ENT.Aerial_FlyingSpeed_Calm = 80 -- The speed it should fly with, when it's wand
 ENT.Aerial_FlyingSpeed_Alerted = 200 -- The speed it should fly with, when it's chasing an enemy, moving away quickly, etc. | Basically running campared to ground SNPCs
 ENT.Aerial_AnimTbl_Calm = {} -- Animations it plays when it's wandering around while idle
 ENT.Aerial_AnimTbl_Alerted = {} -- Animations it plays when it's moving while alerted
-ENT.Aerial_EnableDebug = false -- Used for testing
+	-- Aquatic Movetype Variables:
+ENT.Aquatic_SwimmingSpeed_Calm = 80 -- The speed it should swim with, when it's wandering, moving slowly, etc. | Basically walking campared to ground SNPCs
+ENT.Aquatic_SwimmingSpeed_Alerted = 200 -- The speed it should swim with, when it's chasing an enemy, moving away quickly, etc. | Basically running campared to ground SNPCs
+ENT.Aquatic_AnimTbl_Calm = {} -- Animations it plays when it's wandering around while idle
+ENT.Aquatic_AnimTbl_Alerted = {} -- Animations it plays when it's moving while alerted
+	-- Aerial & Aquatic Variables:
+ENT.AA_EnableDebug = false -- Used for testing aerial and aquatic SNPCs
 	-- ====== Miscellaneous Variables ====== --
 ENT.HasEntitiesToNoCollide = true -- If set to false, it won't run the EntitiesToNoCollide code
 ENT.EntitiesToNoCollide = {} -- Entities to not collide with when HasEntitiesToNoCollide is set to true
@@ -114,6 +120,7 @@ ENT.NextFollowPlayerTime = 1 -- Time until it runs to the player again
 ENT.AnimTbl_IdleStand = {ACT_IDLE} -- The idle animation when AI is enabled
 ENT.AnimTbl_Walk = {ACT_WALK} -- Set the walking animations | Put multiple to let the base pick a random animation when it moves
 ENT.AnimTbl_Run = {ACT_RUN} -- Set the running animations | Put multiple to let the base pick a random animation when it moves
+ENT.IdleAlwaysWander = false -- If set to true, it will make the SNPC always wander when idling
 ENT.DisableWandering = false -- Disables wandering when the SNPC is idle
 ENT.DisableChasingEnemy = false -- Disables the SNPC chasing the enemy
 	-- ====== Constantly Face Enemy Variables ====== --
@@ -1401,7 +1408,7 @@ function ENT:VJ_TASK_COVER_FROM_ENEMY(MoveType,CustomCode)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_IDLE_WANDER()
-	if self.MovementType == VJ_MOVETYPE_AERIAL then self:AerialMove_Wander(true) return end
+	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_Wander(true) return end
 	self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Walk))
 	local vsched = ai_vj_schedule.New("vj_idle_wander")
 	//self:SetLastPosition(self:GetPos() + self:GetForward() * 300)
@@ -1419,7 +1426,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 	UseLOSChase = UseLOSChase or false
-	if self.MovementType == VJ_MOVETYPE_AERIAL then self:AerialMove_ChaseEnemy(true) return end
+	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_ChaseEnemy(true) return end
 	//if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
 	if self.LatestEnemyPosition == self:GetEnemy():GetPos() && self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
 	if self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
@@ -1473,8 +1480,8 @@ function ENT:VJ_TASK_IDLE_STAND()
 		//end
 		-----------------
 	//end
-	if self.MovementType == VJ_MOVETYPE_AERIAL && self:GetVelocity():Length() > 0 then return end
-	if self.MovementType == VJ_MOVETYPE_AERIAL then self:AerialMove_Stop() return end
+	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
+	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_Stop() return end
 
 	/*local vschedIdleStand = ai_vj_schedule.New("vj_idle_stand")
 	//vschedIdleStand:EngTask("TASK_FACE_REASONABLE")
@@ -1546,6 +1553,7 @@ function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 	-- 0 = Random | 1 = Wander | 2 = Idle Stand /\ OverrideWander = Wander no matter what
 	RestrictNumber = RestrictNumber or 0
 	OverrideWander = OverrideWander or false
+	if self.IdleAlwaysWander == true then RestrictNumber = 1 end
 	if (self.MovementType == VJ_MOVETYPE_STATIONARY) or (self.LastHiddenZone_CanWander == false) or (self.NextWanderTime > CurTime()) then RestrictNumber = 2 end
 	if OverrideWander == false && self.DisableWandering == true && (RestrictNumber == 1 or RestrictNumber == 0) then
 		RestrictNumber = 2
@@ -1592,46 +1600,65 @@ function ENT:BusyWithActivity()
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
--- !!!!!!! WIP - AERIAL BASE !!!!!!! --
+-- !!!!!!! WIP - AERIAL & AQUATIC BASE !!!!!!! --
 // MOVETYPE_FLY | MOVETYPE_FLYGRAVITY
-ENT.CurrentAnim_AerialMovement = nil
-ENT.Aerial_NextMovementAnimation = 0
-ENT.Aerial_CurrentMovementAnimationDur = 0
-ENT.Aerial_ShouldBeFlying = false
-ENT.Aerial_CanPlayMoveAnimation = false
-ENT.Aerial_CurrentMoveAnimationType = "Calm"
-
-ENT.Aerial_TargetPos = Vector(0,0,0)
+ENT.CurrentAnim_AAMovement = nil
+ENT.AA_NextMovementAnimation = 0
+ENT.AA_CanPlayMoveAnimation = false
+ENT.AA_CurrentMoveAnimationType = "Calm"
+//ENT.AA_TargetPos = Vector(0,0,0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AerialMove_Animation()
-	if self:GetSequence() != self.CurrentAnim_AerialMovement /*&& self:GetActivity() == ACT_IDLE*/ && CurTime() > self.Aerial_NextMovementAnimation then
+function ENT:AAMove_Animation()
+	if self:GetSequence() != self.CurrentAnim_AAMovement /*&& self:GetActivity() == ACT_IDLE*/ && CurTime() > self.AA_NextMovementAnimation then
 		local animtbl = {}
-		if self.Aerial_CurrentMoveAnimationType == "Calm" then animtbl = self.Aerial_AnimTbl_Calm
-		elseif self.Aerial_CurrentMoveAnimationType == "Alert" then animtbl = self.Aerial_AnimTbl_Alerted end
+		if self.AA_CurrentMoveAnimationType == "Calm" then
+			if self.MovementType == VJ_MOVETYPE_AQUATIC then
+				animtbl = self.Aquatic_AnimTbl_Calm
+			else
+				animtbl = self.Aerial_AnimTbl_Calm
+			end
+		elseif self.AA_CurrentMoveAnimationType == "Alert" then
+			if self.MovementType == VJ_MOVETYPE_AQUATIC then
+				animtbl = self.Aquatic_AnimTbl_Alerted
+			else
+				animtbl = self.Aerial_AnimTbl_Alerted
+			end
+		end
 		local pickedanim = VJ_PICKRANDOMTABLE(animtbl)
 		if type(pickedanim) == "number" then pickedanim = self:GetSequenceName(self:SelectWeightedSequence(pickedanim)) end
 		local idleanimid = VJ_GetSequenceName(self,pickedanim)
-		//self.Aerial_ShouldBeFlying = true
-		self.CurrentAnim_AerialMovement = idleanimid
-		self.Aerial_CurrentMovementAnimationDur = VJ_GetSequenceDuration(self,self.CurrentAnim_AerialMovement)
+		self.CurrentAnim_AAMovement = idleanimid
 		//self:AddGestureSequence(idleanimid)
 		self:VJ_ACT_PLAYACTIVITY(pickedanim,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false})
-		self.Aerial_NextMovementAnimation = CurTime() + self.Aerial_CurrentMovementAnimationDur
+		self.AA_NextMovementAnimation = CurTime() + VJ_GetSequenceDuration(self,self.CurrentAnim_AAMovement)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AerialMove_Wander(ShouldPlayAnim)
-	local Debug = self.Aerial_EnableDebug
-	local ShouldPlayAnim = ShouldPlayAnim or false
-
-	if ShouldPlayAnim == true then
-		self.Aerial_CanPlayMoveAnimation = true
-		self.Aerial_CurrentMoveAnimationType = "Calm"
-	else
-		self.Aerial_CanPlayMoveAnimation = false
+function ENT:AAMove_Stop()
+	if self:GetVelocity():Length() > 0 then
+		self:SetLocalVelocity(Vector(0,0,0))
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:AAMove_Wander(ShouldPlayAnim,NoFace)
+	local calmspeed = self.Aerial_FlyingSpeed_Calm
+	local ForceDown = ForceDown or false
+	if self.MovementType == VJ_MOVETYPE_AQUATIC then
+		if self:WaterLevel() < 3 then self:AAMove_Stop() ForceDown = true end
+		calmspeed = self.Aquatic_SwimmingSpeed_Calm
 	end
 	
-	self:SetAngles(Angle(0,math.random(0,360),0))
+	local Debug = self.AA_EnableDebug
+	ShouldPlayAnim = ShouldPlayAnim or false
+	NoFace = NoFace or false
+
+	if ShouldPlayAnim == true then
+		self.AA_CanPlayMoveAnimation = true
+		self.AA_CurrentMoveAnimationType = "Calm"
+	else
+		self.AA_CanPlayMoveAnimation = false
+	end
+	if NoFace == false then self:SetAngles(Angle(0,math.random(0,360),0)) end
 	local x_neg = 1
 	local y_neg = 1
 	local z_neg = 1
@@ -1640,13 +1667,16 @@ function ENT:AerialMove_Wander(ShouldPlayAnim)
 	if math.random(1,2) == 1 then z_neg = -1 end
 	local tr_startpos = self:GetPos()
 	local tr_endpos = tr_startpos + self:GetForward()*((self:OBBMaxs().x + math.random(100,200))*x_neg) + self:GetRight()*((self:OBBMaxs().y + math.random(100,200))*y_neg) + self:GetUp()*((self:OBBMaxs().z + math.random(100,200))*z_neg)
+	if ForceDown == true then
+		tr_endpos = tr_startpos + self:GetUp()*((self:OBBMaxs().z + math.random(100,150))*-1)
+	end
 	/*local tr_for = math.random(-300,300)
 	local tr_up = math.random(-300,300)
 	local tr_right = math.random(-300,300)
 	local tr = util.TraceLine({start = tr_startpos, endpos = tr_startpos+self:GetForward()*tr_for+self:GetRight()*tr_up+self:GetUp()*tr_right, filter = self})*/
 	local tr = util.TraceLine({start = tr_startpos, endpos = tr_endpos, filter = self})
-	self.Aerial_TargetPos = tr.HitPos
-	self:SetAngles(Angle(0,(tr.HitPos-tr.StartPos):Angle().y,0))
+	//self.AA_TargetPos = tr.HitPos
+	if NoFace == false then self:SetAngles(Angle(0,(tr.HitPos-tr.StartPos):Angle().y,0)) end
 	if Debug == true then
 		VJ_CreateTestObject(tr.HitPos,self:GetAngles(),Color(0,255,255),5)
 		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,tr.HitPos,false,self:EntIndex(),0)
@@ -1654,33 +1684,61 @@ function ENT:AerialMove_Wander(ShouldPlayAnim)
 
 	-- Set the velocity
 	//local myvel = self:GetVelocity()
-	local vel_set = (tr.HitPos-self:GetPos()):GetNormal()*self.Aerial_FlyingSpeed_Calm
+	local vel_set = (tr.HitPos-self:GetPos()):GetNormal()*calmspeed
 	self:SetLocalVelocity(vel_set)
 	if Debug == true then ParticleEffect("vj_impact1_centaurspit", tr.HitPos, Angle(0,0,0), self) end
 end
+// && IsValid(self:GetEnemy()) && self:GetEnemy():WaterLevel() > 2
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AerialMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
+function ENT:AAMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
 	if self.Dead == true or (self.NextChaseTime > CurTime()) or !IsValid(self:GetEnemy()) then return end
 	local ShouldPlayAnim = ShouldPlayAnim or false
 	local UseCalmVariables = UseCalmVariables or false
+	local Debug = self.AA_EnableDebug
 	local MoveSpeed = self.Aerial_FlyingSpeed_Alerted
-	local Debug = self.Aerial_EnableDebug
-
+	if self.MovementType == VJ_MOVETYPE_AQUATIC then
+		if Debug == true then
+			print("--------")
+			print("ME WL: "..self:WaterLevel())
+			print("ENEMY WL: "..self:GetEnemy():WaterLevel())
+		end
+		-- Yete chouri e YEV leman marmine chourin mech-e che, ere vor gena yev kharen kal e
+		if self:WaterLevel() <= 2 && self:GetVelocity():Length() > 0 then return end
+		if self:WaterLevel() <= 1 && self:GetVelocity():Length() > 0 then self:AAMove_Wander(true,true) return end
+		if self:GetEnemy():WaterLevel() == 0 then self:DoIdleAnimation(1) return end -- Yete teshnamin chouren tours e, getsour
+		if self:GetEnemy():WaterLevel() <= 1 then -- Yete 0-en ver e, ere vor nayi yete gerna teshanmi-in gerna hasnil
+			local trene = util.TraceLine({
+				start = self:GetEnemy():GetPos() + self:OBBCenter(),
+				endpos = (self:GetEnemy():GetPos() + self:OBBCenter()) + self:GetEnemy():GetUp()*-20,
+				filter = self,
+				mins = self:OBBMins(),
+				maxs = self:OBBMaxs()
+			})
+			//PrintTable(trene)
+			VJ_CreateTestObject(trene.HitPos,self:GetAngles(),Color(0,255,0),5)
+			if trene.Hit == true then return end
+		end
+		MoveSpeed = self.Aquatic_SwimmingSpeed_Alerted
+	end
+	
 	if UseCalmVariables == true then
-		MoveSpeed = self.Aerial_FlyingSpeed_Calm
+		if self.MovementType == VJ_MOVETYPE_AQUATIC then
+			MoveSpeed = self.Aquatic_SwimmingSpeed_Calm
+		else
+			MoveSpeed = self.Aerial_FlyingSpeed_Calm
+		end
 	end
 	self:FaceCertainEntity(self:GetEnemy(),true)
-	self.Aerial_ShouldBeFlying = false
 
 	if ShouldPlayAnim == true && self.NextChaseTime < CurTime() then
-		self.Aerial_CanPlayMoveAnimation = true
+		self.AA_CanPlayMoveAnimation = true
 		if UseCalmVariables == true then
-			self.Aerial_CurrentMoveAnimationType = "Calm"
+			self.AA_CurrentMoveAnimationType = "Calm"
 		else
-			self.Aerial_CurrentMoveAnimationType = "Alert"
+			self.AA_CurrentMoveAnimationType = "Alert"
 		end
 	else
-		self.Aerial_CanPlayMoveAnimation = false
+		self.AA_CanPlayMoveAnimation = false
 	end
 
 	-- Main Calculations
@@ -1688,8 +1746,9 @@ function ENT:AerialMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
 	local vel_for = 1
 	local vel_stop = false
 	local getenemyz = "None"
-	local startpos = self:VJ_GetNearestPointToEntity(self:GetEnemy()).MyPosition // self:GetPos()
-	local endpos = self:VJ_GetNearestPointToEntity(self:GetEnemy()).EnemyPosition // self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter()
+	local nearpos = self:VJ_GetNearestPointToEntity(self:GetEnemy())
+	local startpos = nearpos.MyPosition // self:GetPos()
+	local endpos = nearpos.EnemyPosition // self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter()
 	local tr = util.TraceHull({
 		start = startpos,
 		endpos = endpos,
@@ -1701,7 +1760,7 @@ function ENT:AerialMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
 	local selftohitpos_dist = startpos:Distance(selftohitpos)
 	if Debug == true then util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,tr.HitPos,false,self:EntIndex(),0) end //vortigaunt_beam
 	if selftohitpos_dist <= 16 && tr.HitWorld == true then
-		if Debug == true then print("Aerial: Forward Blocked! [CHASE]") end
+		if Debug == true then print("AA: Forward Blocked! [CHASE]") end
 		vel_for = 1
 		//vel_for = -200
 		//vel_stop = true
@@ -1713,32 +1772,35 @@ function ENT:AerialMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
 
 	-- Z Calculations
 	local z_self = (self:GetPos()+self:OBBCenter()).z
-	local z_ene = (self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter()).z
+	local enepos = self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter()
+	if self.MovementType == VJ_MOVETYPE_AQUATIC then
+		enepos = self:GetEnemy():GetPos()
+	end
 	local tr_up_startpos = self:GetPos()+self:OBBCenter()
 	//local tr_up = util.TraceLine({start = tr_up_startpos,endpos = self:GetPos()+self:OBBCenter()+self:GetUp()*300,filter = self})
 	local tr_down_startpos = self:GetPos()+self:OBBCenter()
 	local tr_down = util.TraceLine({start = tr_up_startpos,endpos = self:GetPos()+self:OBBCenter()+self:GetUp()*-300,filter = self})
 	//print("UP - ",tr_up_startpos:Distance(tr_up.HitPos))
-	//print(math.abs(z_ene)," OKK ",z_ene)
+	//print(math.abs(enepos.z)," OKK ",enepos.z)
 	//print(math.abs(z_self)," OKK ",z_self)
-	if z_ene >= z_self then
-		if math.abs(z_ene - z_self) >= 10 then
-			if Debug == true then print("Aerial: UP [CHASE]") end
+	if enepos.z >= z_self then
+		if math.abs(enepos.z - z_self) >= 10 then
+			if Debug == true then print("AA: UP [CHASE]") end
 			getenemyz = "Up"
 			//vel_up = 100
 		end
-	elseif z_ene <= z_self then
-		if math.abs(z_self - z_ene) >= 10 then
-			if Debug == true then print("Aerial: DOWN [CHASE]") end
+	elseif enepos.z <= z_self then
+		if math.abs(z_self - enepos.z) >= 10 then
+			if Debug == true then print("AA: DOWN [CHASE]") end
 			getenemyz = "Down"
 			//vel_up = -100
 		end
 	end
 	if getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
-		if Debug == true then print("Aerial: GOING UP [CHASE]") end
+		if Debug == true then print("AA: GOING UP [CHASE]") end
 		vel_up = MoveSpeed //100
 	elseif getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
-		if Debug == true then print("Aerial: GOING DOWN [CHASE]") end
+		if Debug == true then print("AA: GOING DOWN [CHASE]") end
 		vel_up = -MoveSpeed //-100
 	end
 	/*if tr_up_startpos:Distance(tr_up.HitPos) <= 100 && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
@@ -1750,20 +1812,14 @@ function ENT:AerialMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
 	if vel_stop == false then
 		//local myvel = self:GetVelocity()
 		//local enevel = self:GetEnemy():GetVelocity()
-		local vel_set = ((self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter())-(self:GetPos()+self:OBBCenter())):GetNormal()*MoveSpeed +self:GetUp()*vel_up +self:GetForward()*vel_for
+		local vel_set = ((enepos)-(self:GetPos()+self:OBBCenter())):GetNormal()*MoveSpeed +self:GetUp()*vel_up +self:GetForward()*vel_for
 		//local vel_set_yaw = vel_set:Angle().y
 		self:SetLocalVelocity(vel_set)
-		if Debug == true then ParticleEffect("vj_impact1_centaurspit", self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter(), Angle(0,0,0), self) end
+		if Debug == true then ParticleEffect("vj_impact1_centaurspit", enepos, Angle(0,0,0), self) end
 	else
-		self:AerialMove_Stop()
+		self:AAMove_Stop()
 	end
 	//self.NextChaseTime = CurTime() + 0.1
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AerialMove_Stop()
-	if self:GetVelocity():Length() > 0 then
-		self:SetLocalVelocity(Vector(0,0,0))
-	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
@@ -2018,7 +2074,7 @@ function ENT:Think()
 	//print(self:GetBlockingEntity())// end
 	// if self:IsUnreachable(self:GetEnemy()) && enemy noclipping then...
 
-	//if self.Aerial_TargetPos.x == self:GetPos().x then
+	//if self.AA_TargetPos.x == self:GetPos().x then
 		-- to be coded..
 	//end
 
@@ -2106,13 +2162,13 @@ function ENT:Think()
 	if GetConVarNumber("ai_disabled") == 0 then
 		//if !self:IsOnGround() then self:ClearGoal() end
 		self:CustomOnThink_AIEnabled()
-		if self.MovementType == VJ_MOVETYPE_AERIAL then
-			if self.Aerial_CanPlayMoveAnimation == true && self:GetVelocity():Length() > 0 then
-				self:AerialMove_Animation()
-			else
-				if self:GetSequence() != 0 && self.PlayingAttackAnimation == false then
-					self:VJ_ACT_PLAYACTIVITY(ACT_IDLE,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false})
-				end
+		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then -- Yete terogh gam chouri SNPC ene...
+			-- Yete chouri e YEV leman marmine chourin mech-e che, ere vor gena yev kharen kal e
+			if self.MovementType == VJ_MOVETYPE_AQUATIC && self:WaterLevel() <= 2 && self:GetVelocity():Length() > 0 then self:AAMove_Wander(true,true) return end
+			if self.AA_CanPlayMoveAnimation == true && self:GetVelocity():Length() > 0 then
+				self:AAMove_Animation()
+			elseif self:GetSequence() != 0 && self.PlayingAttackAnimation == false then
+				self:VJ_ACT_PLAYACTIVITY(ACT_IDLE,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false})
 			end
 		end
 		//self:DoCustomIdleAnimation()
@@ -2293,10 +2349,10 @@ function ENT:Think()
 
 		--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 			-- Attack Timers --
-		if self.MovementType == VJ_MOVETYPE_AERIAL then self:SelectSchedule() end
+		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:SelectSchedule() end
 		ene = self:GetEnemy()
 		if IsValid(ene) then
-			//if self.MovementType == VJ_MOVETYPE_AERIAL then self:SelectSchedule() end//self:AerialMove_ChaseEnemy(true) end
+			//if self.MovementType == VJ_MOVETYPE_AERIAL then self:SelectSchedule() end//self:AAMove_ChaseEnemy(true) end
 
 			//if self.VJ_IsBeingControlled == false then
 				if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true then self:FaceCertainEntity(ene,true) end
@@ -2470,7 +2526,7 @@ function ENT:Think()
 			//self.RangeAttacking = false
 		end
 	else
-		if self.MovementType == VJ_MOVETYPE_AERIAL then self:AerialMove_Stop() end
+		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_Stop() end
 		//self:StopAttacks()
 		//self:SelectSchedule()
 	end

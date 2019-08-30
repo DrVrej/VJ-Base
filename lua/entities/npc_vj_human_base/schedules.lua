@@ -14,7 +14,7 @@ function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 	//if (!self.CurrentSchedule or (self.CurrentSchedule != nil && self.CurrentSchedule.CanBeInterrupted == true)) && (self.VJ_PlayingSequence == false && self.CanDoSelectScheduleAgain == true) /*&& self.VJ_IsPlayingInterruptSequence == false*/ then self:SelectSchedule() end
 	if (!self.CurrentSchedule or (self.CurrentSchedule != nil && ((self:IsMoving() && self.CurrentSchedule.CanBeInterrupted == true) or (!self:IsMoving())))) && self.VJ_PlayingSequence == false then self:SelectSchedule() end
 	if (self.CurrentSchedule) then self:DoSchedule(self.CurrentSchedule) end
-	if self.VJ_PlayingSequence == false && self.VJ_IsPlayingInterruptSequence == false && self.Aerial_ShouldBeFlying == false /*&& self:GetSequence() != self.CurrentAnim_AerialMovement && self.MovementType != VJ_MOVETYPE_AERIAL*/ then self:MaintainActivity() end
+	if self.VJ_PlayingSequence == false && self.VJ_IsPlayingInterruptSequence == false /*&& self:GetSequence() != self.CurrentAnim_AAMovement && (self.MovementType != VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC)*/ then self:MaintainActivity() end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoRunCode_OnFail(schedule)
@@ -31,7 +31,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule(iNPCState)
 	if self.VJ_PlayingSequence == true /*or self.VJ_IsPlayingInterruptSequence == true*/ then return end
-	//if self.MovementType == VJ_MOVETYPE_AERIAL then return end
+	//if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then return end
 	//self:VJ_SetSchedule(SCHED_IDLE_STAND)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
