@@ -108,6 +108,7 @@ ENT.NextFollowPlayerTime = 1 -- Time until it runs to the player again
 ENT.AnimTbl_IdleStand = {ACT_IDLE} -- The idle animation when AI is enabled
 ENT.AnimTbl_Walk = {ACT_WALK} -- Set the walking animations | Put multiple to let the base pick a random animation when it moves
 ENT.AnimTbl_Run = {ACT_RUN} -- Set the running animations | Put multiple to let the base pick a random animation when it moves
+ENT.IdleAlwaysWander = false -- If set to true, it will make the SNPC always wander when idling
 ENT.DisableWandering = false -- Disables wandering when the SNPC is idle
 ENT.DisableChasingEnemy = false -- Disables the SNPC chasing the enemy
 	-- ====== Constantly Face Enemy Variables ====== --
@@ -862,7 +863,6 @@ ENT.VJFriendly = false
 ENT.ZombieFriendly = false
 ENT.AntlionFriendly = false
 ENT.CombineFriendly = false
-ENT.Aerial_ShouldBeFlying = false
 ENT.IsReloadingWeapon_ServerNextFire = true
 ENT.IsReloadingWeapon = false
 ENT.IsDoingFaceEnemy = false
@@ -1429,8 +1429,8 @@ function ENT:VJ_TASK_IDLE_STAND()
 		//end
 		-----------------
 	//end
-	if self.MovementType == VJ_MOVETYPE_AERIAL && self:GetVelocity():Length() > 0 then return end
-	if self.MovementType == VJ_MOVETYPE_AERIAL then self:AerialMove_Stop() return end
+	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
+	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_Stop() return end
 
 	/*local vschedIdleStand = ai_vj_schedule.New("vj_idle_stand")
 	//vschedIdleStand:EngTask("TASK_FACE_REASONABLE")
@@ -1502,6 +1502,7 @@ function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 	-- 0 = Random | 1 = Wander | 2 = Idle Stand /\ OverrideWander = Wander no matter what
 	RestrictNumber = RestrictNumber or 0
 	OverrideWander = OverrideWander or false
+	if self.IdleAlwaysWander == true then RestrictNumber = 1 end
 	if (self.MovementType == VJ_MOVETYPE_STATIONARY) or (self.LastHiddenZone_CanWander == false) or (self.NextWanderTime > CurTime()) then RestrictNumber = 2 end
 	if OverrideWander == false && self.DisableWandering == true && (RestrictNumber == 1 or RestrictNumber == 0) then
 		RestrictNumber = 2

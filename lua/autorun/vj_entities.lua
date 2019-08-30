@@ -423,7 +423,7 @@ function NPC_MetaTable:VJ_GetNearestPointToEntity(argent,SameZ)
 	if !IsValid(argent) then return end
 	local SameZ = SameZ or false -- Should the Z of the pos be the same as the NPC's?
 	local NearestPositions = {MyPosition=Vector(0,0,0), EnemyPosition=Vector(0,0,0)}
-	local Pos_Enemy, Pos_Self = argent:NearestPoint(self:GetPos() +argent:OBBCenter()), self:NearestPoint(argent:GetPos() +self:OBBCenter())
+	local Pos_Enemy, Pos_Self = argent:NearestPoint(self:GetPos() + argent:OBBCenter()), self:NearestPoint(argent:GetPos() + self:OBBCenter())
 	Pos_Enemy.z, Pos_Self.z = argent:GetPos().z, self:GetPos().z
 	if SameZ == true then
 		Pos_Enemy = Vector(Pos_Enemy.x,Pos_Enemy.y,self:GetPos().z)
@@ -659,7 +659,7 @@ end
 function NPC_MetaTable:VJ_SetSchedule(scheduleid)
 	if self.VJ_PlayingSequence == true then return end
 	self.VJ_IsPlayingInterruptSequence = false
-	//if self.MovementType == VJ_MOVETYPE_AERIAL then return end
+	//if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then return end
 	//print(self:GetName().." - "..scheduleid)
 	self:SetSchedule(scheduleid)
 end

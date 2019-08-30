@@ -304,11 +304,11 @@ function ENT:Think()
 			local gerta_arak = self.TheController:KeyDown(IN_SPEED)
 			
 			if gerta_for then
-				if self.ControlledNPC.MovementType == VJ_MOVETYPE_AERIAL then
+				if self.ControlledNPC.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 					if gerta_arak then
-						self.ControlledNPC:AerialMove_ChaseEnemy(true)
+						self.ControlledNPC:AAMove_ChaseEnemy(true)
 					else
-						self.ControlledNPC:AerialMove_ChaseEnemy(true,true)
+						self.ControlledNPC:AAMove_ChaseEnemy(true,true)
 					end
 				else
 					if gerta_lef then
@@ -333,7 +333,7 @@ function ENT:Think()
 				self:StartMovement(self.TheController:GetAimVector(),Angle(0,-90,0))
 			elseif !gerta_arak && !gerta_rig && !gerta_lef && !gerta_bac && !gerta_for then
 				self.ControlledNPC:StopMoving()
-				if self.ControlledNPC.MovementType == VJ_MOVETYPE_AERIAL then self.ControlledNPC:AerialMove_Stop() end
+				if self.ControlledNPC.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self.ControlledNPC:AAMove_Stop() end
 			end
 			/*if (self.TheController:KeyDown(IN_USE)) then
 				self.ControlledNPC:StopMoving()
