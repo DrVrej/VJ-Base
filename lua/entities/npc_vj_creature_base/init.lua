@@ -1517,7 +1517,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 		if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
 			if self:GetSequence() == 0 or self.PlayingAttackAnimation == true then return end
 			self:AAMove_Stop()
-			self:VJ_ACT_PLAYACTIVITY(finaltbl,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false})
+			self:VJ_ACT_PLAYACTIVITY(finaltbl,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false,SequenceInterruptible=true})
 		end
 		if self.CurrentSchedule == nil then -- Yete ooresh pame chenergor 
 			self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0) -- Asiga chi tenesne yerp vor nouyn animation-e enen ne yedev yedevi, ge sarin
@@ -1640,6 +1640,7 @@ function ENT:AAMove_Animation()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AAMove_Stop()
+	if self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then return end
 	if self:GetVelocity():Length() > 0 then
 		self:SetLocalVelocity(Vector(0,0,0))
 	end
@@ -2316,7 +2317,7 @@ function ENT:Think()
 				if closedist == "UseRangeDistance" then closedist = self.RangeToMeleeDistance end
 				if (ene:GetPos():Distance(self:GetPos()) < fardist) && (ene:GetPos():Distance(self:GetPos()) > closedist) && ene:Visible(self) /*&& self:CanDoCertainAttack("RangeAttack") == true*/ then
 					self.RangeAttack_DisableChasingEnemy = true
-					if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then self:StopMoving() end
+					if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then self:StopMoving() self:AAMove_Stop() end
 				else
 					self.RangeAttack_DisableChasingEnemy = false
 					if self.CurrentSchedule != nil && self.CurrentSchedule.Name != "vj_chase_enemy" then self:DoChaseAnimation() end
@@ -2456,6 +2457,9 @@ function ENT:Think()
 							self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_RangeAttack)
 							self.CurrentAttackAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) -self.RangeAttackAnimationDecreaseLengthAmount
 							self.PlayingAttackAnimation = true
+							if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
+								self.NextIdleTime = CurTime() + self.CurrentAttackAnimationDuration + 0.1 -- Bedke vorovhedev ays desag SNPC-neroun animation-nin ge gedervigor!
+							end
 							timer.Simple(self.CurrentAttackAnimationDuration,function()
 								if IsValid(self) then
 									self.PlayingAttackAnimation = false
@@ -2499,6 +2503,9 @@ function ENT:Think()
 							self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_LeapAttack)
 							self.CurrentAttackAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) -self.LeapAttackAnimationDecreaseLengthAmount
 							self.PlayingAttackAnimation = true
+							if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
+								self.NextIdleTime = CurTime() + self.CurrentAttackAnimationDuration + 0.1 -- Bedke vorovhedev ays desag SNPC-neroun animation-nin ge gedervigor!
+							end
 							timer.Simple(self.CurrentAttackAnimationDuration,function()
 								if IsValid(self) then
 									self.PlayingAttackAnimation = false
