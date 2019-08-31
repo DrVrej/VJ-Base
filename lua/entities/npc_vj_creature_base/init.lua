@@ -1480,8 +1480,8 @@ function ENT:VJ_TASK_IDLE_STAND()
 		//end
 		-----------------
 	//end
-	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
-	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_Stop() return end
+	//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
+	//if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_Stop() return end
 
 	/*local vschedIdleStand = ai_vj_schedule.New("vj_idle_stand")
 	//vschedIdleStand:EngTask("TASK_FACE_REASONABLE")
@@ -1514,6 +1514,11 @@ function ENT:VJ_TASK_IDLE_STAND()
 	if finaltbl == false then return false end -- Vesdah yegher vor minag tevov animation-er e gernan antsnel!
 	self.CurrentAnim_IdleStand = finaltbl
 	if (hasanim == true && CurTime() > self.NextIdleStandTime) then
+		if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
+			if self:GetSequence() == 0 or self.PlayingAttackAnimation == true then return end
+			self:AAMove_Stop()
+			self:VJ_ACT_PLAYACTIVITY(finaltbl,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false})
+		end
 		if self.CurrentSchedule == nil then -- Yete ooresh pame chenergor 
 			self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0) -- Asiga chi tenesne yerp vor nouyn animation-e enen ne yedev yedevi, ge sarin
 		end
@@ -1685,6 +1690,7 @@ function ENT:AAMove_Wander(ShouldPlayAnim,NoFace)
 	-- Set the velocity
 	//local myvel = self:GetVelocity()
 	local vel_set = (tr.HitPos-self:GetPos()):GetNormal()*calmspeed
+	self.NextIdleTime = CurTime() + (tr.HitPos:Distance(tr_startpos) / vel_set:Length())
 	self:SetLocalVelocity(vel_set)
 	if Debug == true then ParticleEffect("vj_impact1_centaurspit", tr.HitPos, Angle(0,0,0), self) end
 end
@@ -1715,7 +1721,7 @@ function ENT:AAMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
 				maxs = self:OBBMaxs()
 			})
 			//PrintTable(trene)
-			VJ_CreateTestObject(trene.HitPos,self:GetAngles(),Color(0,255,0),5)
+			//VJ_CreateTestObject(trene.HitPos,self:GetAngles(),Color(0,255,0),5)
 			if trene.Hit == true then return end
 		end
 		MoveSpeed = self.Aquatic_SwimmingSpeed_Alerted
@@ -1773,7 +1779,7 @@ function ENT:AAMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
 	-- Z Calculations
 	local z_self = (self:GetPos()+self:OBBCenter()).z
 	local enepos = self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter()
-	if self.MovementType == VJ_MOVETYPE_AQUATIC then
+	if self.MovementType == VJ_MOVETYPE_AQUATIC && self:GetEnemy():WaterLevel() < 3 then
 		enepos = self:GetEnemy():GetPos()
 	end
 	local tr_up_startpos = self:GetPos()+self:OBBCenter()
@@ -1814,6 +1820,7 @@ function ENT:AAMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
 		//local enevel = self:GetEnemy():GetVelocity()
 		local vel_set = ((enepos)-(self:GetPos()+self:OBBCenter())):GetNormal()*MoveSpeed +self:GetUp()*vel_up +self:GetForward()*vel_for
 		//local vel_set_yaw = vel_set:Angle().y
+		self.NextIdleTime = CurTime() + (tr.HitPos:Distance(startpos) / vel_set:Length())
 		self:SetLocalVelocity(vel_set)
 		if Debug == true then ParticleEffect("vj_impact1_centaurspit", enepos, Angle(0,0,0), self) end
 	else
@@ -2164,11 +2171,11 @@ function ENT:Think()
 		self:CustomOnThink_AIEnabled()
 		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then -- Yete terogh gam chouri SNPC ene...
 			-- Yete chouri e YEV leman marmine chourin mech-e che, ere vor gena yev kharen kal e
-			if self.MovementType == VJ_MOVETYPE_AQUATIC && self:WaterLevel() <= 2 && self:GetVelocity():Length() > 0 then self:AAMove_Wander(true,true) return end
+			if self.MovementType == VJ_MOVETYPE_AQUATIC && self:WaterLevel() <= 2 && self:GetVelocity():Length() > 0 then self:AAMove_Wander(true,true) end
 			if self.AA_CanPlayMoveAnimation == true && self:GetVelocity():Length() > 0 then
 				self:AAMove_Animation()
-			elseif self:GetSequence() != 0 && self.PlayingAttackAnimation == false then
-				self:VJ_ACT_PLAYACTIVITY(ACT_IDLE,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false})
+			//elseif self:GetSequence() != 0 && self.PlayingAttackAnimation == false then
+				//self:VJ_ACT_PLAYACTIVITY(ACT_IDLE,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false})
 			end
 		end
 		//self:DoCustomIdleAnimation()
@@ -2400,6 +2407,9 @@ function ENT:Think()
 							self.CurrentAttackAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) -self.MeleeAttackAnimationDecreaseLengthAmount
 							if self.MeleeAttackAnimationAllowOtherTasks == false then
 								self.PlayingAttackAnimation = true
+								if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
+									self.NextIdleTime = CurTime() + self.CurrentAttackAnimationDuration + 0.1 -- Bedke vorovhedev ays desag SNPC-neroun animation-nin ge gedervigor!
+								end
 								timer.Simple(self.CurrentAttackAnimationDuration,function()
 									if IsValid(self) then
 										self.PlayingAttackAnimation = false
