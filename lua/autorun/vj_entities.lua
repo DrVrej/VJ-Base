@@ -264,6 +264,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local NPC_MetaTable = FindMetaTable("NPC")
 local Player_MetaTable = FindMetaTable("Player")
+local Entity_MetaTable = FindMetaTable("Entity")
 
 //NPC_MetaTable.VJ_NoTarget = false
 //Player_MetaTable.VJ_NoTarget = false
@@ -559,7 +560,7 @@ function NPC_MetaTable:VJ_DoSetEnemy(argent,ShouldStopActs,DoSmallWhenActiveEnem
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:CalculateProjectile(Type, StartPos, EndPos, Vel)
+function Entity_MetaTable:CalculateProjectile(Type, StartPos, EndPos, Vel)
 	if Type == "Line" then -- Suggested to disable gravity!
 		return ((EndPos - StartPos):GetNormal()) * Vel
 	elseif Type == "Curve" then
