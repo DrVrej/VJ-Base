@@ -1515,7 +1515,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 	self.CurrentAnim_IdleStand = finaltbl
 	if (hasanim == true && CurTime() > self.NextIdleStandTime) then
 		if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
-			if self:GetSequence() == 0 or self.PlayingAttackAnimation == true then return end
+			if /*self:GetSequence() == 0 or*/ self:BusyWithActivity() == true then return end
 			self:AAMove_Stop()
 			self:VJ_ACT_PLAYACTIVITY(finaltbl,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false,SequenceInterruptible=true})
 		end
@@ -1614,7 +1614,7 @@ ENT.AA_CurrentMoveAnimationType = "Calm"
 //ENT.AA_TargetPos = Vector(0,0,0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AAMove_Animation()
-	if self:GetSequence() != self.CurrentAnim_AAMovement /*&& self:GetActivity() == ACT_IDLE*/ && CurTime() > self.AA_NextMovementAnimation then
+	if self:GetSequence() != self.CurrentAnim_AAMovement && self:BusyWithActivity() == false /*&& self:GetActivity() == ACT_IDLE*/ && CurTime() > self.AA_NextMovementAnimation then
 		local animtbl = {}
 		if self.AA_CurrentMoveAnimationType == "Calm" then
 			if self.MovementType == VJ_MOVETYPE_AQUATIC then
@@ -1634,7 +1634,7 @@ function ENT:AAMove_Animation()
 		local idleanimid = VJ_GetSequenceName(self,pickedanim)
 		self.CurrentAnim_AAMovement = idleanimid
 		//self:AddGestureSequence(idleanimid)
-		self:VJ_ACT_PLAYACTIVITY(pickedanim,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false})
+		self:VJ_ACT_PLAYACTIVITY(pickedanim,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false,SequenceInterruptible=true})
 		self.AA_NextMovementAnimation = CurTime() + VJ_GetSequenceDuration(self,self.CurrentAnim_AAMovement)
 	end
 end

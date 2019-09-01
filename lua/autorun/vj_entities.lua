@@ -336,11 +336,11 @@ end
 function NPC_MetaTable:VJ_PlaySequence(SequenceID,PlayBackRate,Wait,WaitTime,Interruptible)
 	if not SequenceID then return end
 	if Interruptible == true then self.VJ_IsPlayingInterruptSequence = true self.VJ_PlayingSequence = false else self.VJ_PlayingSequence = true self.VJ_IsPlayingInterruptSequence = false end
-	self:ClearSchedule()
-	timer.Simple(0.2,function()
-		if IsValid(self) then
+	//self:ClearSchedule()
+	//timer.Simple(0.2,function()
+		//if IsValid(self) then
 			//print(self:SequenceDuration(SequenceID))
-			if Interruptible == true then self.VJ_IsPlayingInterruptSequence = true self.VJ_PlayingSequence = false else self.VJ_PlayingSequence = true self.VJ_IsPlayingInterruptSequence = false end
+			//if Interruptible == true then self.VJ_IsPlayingInterruptSequence = true self.VJ_PlayingSequence = false else self.VJ_PlayingSequence = true self.VJ_IsPlayingInterruptSequence = false end
 			//self.vACT_StopAttacks = true
 			self:ClearSchedule()
 			self:StopMoving()
@@ -362,8 +362,8 @@ function NPC_MetaTable:VJ_PlaySequence(SequenceID,PlayBackRate,Wait,WaitTime,Int
 					end
 				end)
 			end
-		end
-	end)
+		//end
+	//end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_TranslateWeaponActivity(ActAnim)
