@@ -1429,8 +1429,8 @@ function ENT:VJ_TASK_IDLE_STAND()
 		//end
 		-----------------
 	//end
-	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
-	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_Stop() return end
+	//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
+	//if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_Stop() return end
 
 	/*local vschedIdleStand = ai_vj_schedule.New("vj_idle_stand")
 	//vschedIdleStand:EngTask("TASK_FACE_REASONABLE")
@@ -1463,6 +1463,11 @@ function ENT:VJ_TASK_IDLE_STAND()
 	if finaltbl == false then return false end -- Vesdah yegher vor minag tevov animation-er e gernan antsnel!
 	self.CurrentAnim_IdleStand = finaltbl
 	if (hasanim == true && CurTime() > self.NextIdleStandTime) then
+		if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
+			if /*self:GetSequence() == 0 or*/ self:BusyWithActivity() == true then return end
+			self:AAMove_Stop()
+			self:VJ_ACT_PLAYACTIVITY(finaltbl,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false,SequenceInterruptible=true})
+		end
 		if self.CurrentSchedule == nil then -- Yete ooresh pame chenergor 
 			self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0) -- Asiga chi tenesne yerp vor nouyn animation-e enen ne yedev yedevi, ge sarin
 		end
