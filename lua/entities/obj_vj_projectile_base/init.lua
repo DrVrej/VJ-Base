@@ -46,13 +46,13 @@ ENT.HasStartupSounds = true -- Does it make a sound when the projectile is creat
 ENT.SoundTbl_Startup = {}
 ENT.StartupSoundChance = 1 -- How much chance to play the sound? 1 = always
 ENT.StartupSoundLevel = 80
-ENT.StartupSoundPitch1 = 80
+ENT.StartupSoundPitch1 = 90
 ENT.StartupSoundPitch2 = 100
 ENT.HasIdleSounds = true -- Does it have idle sounds?
 ENT.SoundTbl_Idle = {}
 ENT.IdleSoundChance = 1 -- How much chance to play the sound? 1 = always
 ENT.IdleSoundLevel = 80
-ENT.IdleSoundPitch1 = 80
+ENT.IdleSoundPitch1 = 90
 ENT.IdleSoundPitch2 = 100
 ENT.NextSoundTime_Idle1 = 0.2
 ENT.NextSoundTime_Idle2 = 0.5
@@ -60,13 +60,13 @@ ENT.HasOnCollideSounds = true -- Should it play a sound when it collides somethi
 ENT.SoundTbl_OnCollide = {}
 ENT.OnCollideSoundChance = 1 -- How much chance to play the sound? 1 = always
 ENT.OnCollideSoundLevel = 80
-ENT.OnCollideSoundPitch1 = 80
+ENT.OnCollideSoundPitch1 = 90
 ENT.OnCollideSoundPitch2 = 100
 ENT.HasOnRemoveSounds = true -- Should it play a sound when it gets removed?
 ENT.SoundTbl_OnRemove = {}
 ENT.OnRemoveSoundChance = 1 -- How much chance to play the sound? 1 = always
 ENT.OnRemoveSoundLevel = 90
-ENT.OnRemoveSoundPitch1 = 80
+ENT.OnRemoveSoundPitch1 = 90
 ENT.OnRemoveSoundPitch2 = 100
 	-- Independent Variables ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.AlreadyPaintedDeathDecal = false

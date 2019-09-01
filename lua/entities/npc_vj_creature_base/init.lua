@@ -2317,7 +2317,8 @@ function ENT:Think()
 				if closedist == "UseRangeDistance" then closedist = self.RangeToMeleeDistance end
 				if (ene:GetPos():Distance(self:GetPos()) < fardist) && (ene:GetPos():Distance(self:GetPos()) > closedist) && ene:Visible(self) /*&& self:CanDoCertainAttack("RangeAttack") == true*/ then
 					self.RangeAttack_DisableChasingEnemy = true
-					if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then self:StopMoving() self:AAMove_Stop() end
+					if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then self:StopMoving() end
+					if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_Stop() end
 				else
 					self.RangeAttack_DisableChasingEnemy = false
 					if self.CurrentSchedule != nil && self.CurrentSchedule.Name != "vj_chase_enemy" then self:DoChaseAnimation() end
