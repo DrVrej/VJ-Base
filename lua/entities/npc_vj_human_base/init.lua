@@ -1528,7 +1528,7 @@ function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
-	if !IsValid(self:GetEnemy()) or !IsValid(self:GetEnemy()) then return end
+	if !IsValid(self:GetEnemy()) then return end
 	if self.VJ_IsBeingControlled == true or self.IsVJBaseSNPC_Tank == true or /*self.VJ_PlayingSequence == true or*/ self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextChaseTime > CurTime()) or CurTime() < self.TakingCoverT then return end
 	if self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) < self.MeleeAttackDistance && self:GetEnemy():Visible(self) && (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then self:VJ_TASK_IDLE_STAND() return end
 	-- OverrideChasing = Chase no matter what
