@@ -1579,8 +1579,9 @@ function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
-	if !IsValid(self:GetEnemy()) or !IsValid(self:GetEnemy()) then return end
-	if self.VJ_IsBeingControlled == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true /*or self.VJ_PlayingSequence == true*/ or self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextChaseTime > CurTime()) or CurTime() < self.TakingCoverT then return end
+	if !IsValid(self:GetEnemy()) then return end
+	if self.PlayingAttackAnimation == true && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then return end
+	if self.VJ_IsBeingControlled == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true /*or self.VJ_PlayingSequence == true*/ or self.FollowingPlayer == true or self.Dead == true or (self.NextChaseTime > CurTime()) or CurTime() < self.TakingCoverT then return end
 	if self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) < self.MeleeAttackDistance && self:GetEnemy():Visible(self) && (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then self:VJ_TASK_IDLE_STAND() return end
 	-- OverrideChasing = Chase no matter what
 	OverrideChasing = OverrideChasing or false
@@ -1819,10 +1820,11 @@ function ENT:AAMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
 	if vel_stop == false then
 		//local myvel = self:GetVelocity()
 		//local enevel = self:GetEnemy():GetVelocity()
-		local vel_set = ((enepos)-(self:GetPos()+self:OBBCenter())):GetNormal()*MoveSpeed +self:GetUp()*vel_up +self:GetForward()*vel_for
+		local vel_set = ((enepos) - (self:GetPos() + self:OBBCenter())):GetNormal()*MoveSpeed + self:GetUp()*vel_up + self:GetForward()*vel_for
 		//local vel_set_yaw = vel_set:Angle().y
 		self.NextIdleTime = CurTime() + (tr.HitPos:Distance(startpos) / vel_set:Length())
 		self:SetLocalVelocity(vel_set)
+		//print("fffffffffffffffffff"..math.random(1,100000))
 		if Debug == true then ParticleEffect("vj_impact1_centaurspit", enepos, Angle(0,0,0), self) end
 	else
 		self:AAMove_Stop()
@@ -2409,9 +2411,6 @@ function ENT:Think()
 							self.CurrentAttackAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) -self.MeleeAttackAnimationDecreaseLengthAmount
 							if self.MeleeAttackAnimationAllowOtherTasks == false then
 								self.PlayingAttackAnimation = true
-								if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
-									self.NextIdleTime = CurTime() + self.CurrentAttackAnimationDuration + 0.1 -- Bedke vorovhedev ays desag SNPC-neroun animation-nin ge gedervigor!
-								end
 								timer.Simple(self.CurrentAttackAnimationDuration,function()
 									if IsValid(self) then
 										self.PlayingAttackAnimation = false
@@ -2458,9 +2457,6 @@ function ENT:Think()
 							self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_RangeAttack)
 							self.CurrentAttackAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) -self.RangeAttackAnimationDecreaseLengthAmount
 							self.PlayingAttackAnimation = true
-							if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
-								self.NextIdleTime = CurTime() + self.CurrentAttackAnimationDuration + 0.1 -- Bedke vorovhedev ays desag SNPC-neroun animation-nin ge gedervigor!
-							end
 							timer.Simple(self.CurrentAttackAnimationDuration,function()
 								if IsValid(self) then
 									self.PlayingAttackAnimation = false
@@ -2504,9 +2500,6 @@ function ENT:Think()
 							self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_LeapAttack)
 							self.CurrentAttackAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) -self.LeapAttackAnimationDecreaseLengthAmount
 							self.PlayingAttackAnimation = true
-							if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
-								self.NextIdleTime = CurTime() + self.CurrentAttackAnimationDuration + 0.1 -- Bedke vorovhedev ays desag SNPC-neroun animation-nin ge gedervigor!
-							end
 							timer.Simple(self.CurrentAttackAnimationDuration,function()
 								if IsValid(self) then
 									self.PlayingAttackAnimation = false
@@ -3036,7 +3029,7 @@ function ENT:SelectSchedule()
 			self:ResetEnemy()
 		end
 	end
-	if self.PlayingAttackAnimation == false then
+	if self.PlayingAttackAnimation == false or self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 		-- If the enemy is less than the sight distance, then chase the enemy!
 		if IsValid(self:GetEnemy()) then
 			if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.SightDistance) then
