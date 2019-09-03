@@ -686,6 +686,8 @@ function ENT:CustomOnThink_AIEnabled() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnChangeMovementType(SetType) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnIsJumpLegal(startPos,apex,endPos) end -- Return nothing to let base decide, return true to make it jump, return false to disallow jumping
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnSchedule() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ExpressionFinished(strExp) end
@@ -1092,7 +1094,7 @@ function ENT:DoChangeMovementType(SetType)
 	if self.MovementType == VJ_MOVETYPE_GROUND then
 		self:SetMoveType(MOVETYPE_STEP)
 		self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND))
-		//if VJ_AnimationExists(self,ACT_JUMP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_JUMP)) end
+		if VJ_AnimationExists(self,ACT_JUMP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_JUMP)) end
 		//if VJ_AnimationExists(self,ACT_CLIMB_UP) == true && VJ_AnimationExists(self,ACT_CLIMB_DISMOUNT) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
 		if self.DisableWeapons == false then self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT)) end
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
@@ -1146,6 +1148,22 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTaskComplete()
 	self.bTaskComplete = true
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:IsJumpLegal(startPos,apex,endPos)
+	/*print("--------------")
+	print(startPos)
+	print(apex)
+	print(endPos)*/
+	local result = self:CustomOnIsJumpLegal(startPos,apex,endPos)
+	if result != nil then return result end
+	local dist_apex = startPos:Distance(apex)
+	local dist_end = startPos:Distance(apex)
+	/*print(dist_apex)
+	print(dist_end)*/
+	if dist_apex > 150 then return false end
+	if dist_end > 150 then return nil end
+	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActivitiesTime,vACT_FaceEnemy,vACT_DelayAnim,vACT_AdvancedFeatures,vACT_CustomCode)
@@ -1388,7 +1406,7 @@ function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 	UseLOSChase = UseLOSChase or false
 	//if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
 	if self.LatestEnemyPosition == self:GetEnemy():GetPos() && self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
-	if self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
+	if self:GetActivity() == ACT_JUMP or self:GetActivity() == ACT_GLIDE or self:GetActivity() == ACT_LAND or self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
 	self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Run))
 	if UseLOSChase == true then
 		local vsched = ai_vj_schedule.New("vj_chase_enemy")
@@ -2111,9 +2129,9 @@ function ENT:Think()
 		local ene = self:GetEnemy()
 		if IsValid(ene) then
 			if self.DoingWeaponAttack == true then self:SuppressingSoundCode() end
-			if self.IsDoingFaceEnemy == true /*&& self.VJ_IsBeingControlled == false*/ then self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle()) end
+			if self.IsDoingFaceEnemy == true /*&& self.VJ_IsBeingControlled == false*/ then self:SetAngles(self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle())) end
 			self:DoConstantlyFaceEnemyCode()
-			if (self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene))) /*&& self.VJ_IsBeingControlled == false*/) then self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle()) end
+			if (self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene))) /*&& self.VJ_IsBeingControlled == false*/) then self:SetAngles(self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle())) end
 			self.ResetedEnemy = false
 			self:UpdateEnemyMemory(ene,ene:GetPos())
 			self.LatestEnemyPosition = ene:GetPos()

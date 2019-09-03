@@ -36,6 +36,7 @@ SWEP.NPC_TimeUntilFireExtraTimers = {} -- Extra timers, which will make the gun 
 SWEP.NPC_AllowCustomSpread		= true -- Should the weapon be able to change the NPC's spread?
 SWEP.NPC_CustomSpread	 		= 1 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
 SWEP.NPC_BulletSpawnAttachment 	= "" -- The attachment that the bullet spawns on, leave empty for base to decide!
+SWEP.NPC_CanBePickedUp			= true -- Can this weapon be picked up by NPCs? (Ex: Rebels)
 SWEP.NPC_AnimationTbl_Custom 	= {} -- Can be activity or sequence
 SWEP.NPC_AnimationTbl_General 	= {ACT_RANGE_ATTACK1,ACT_RANGE_ATTACK2,ACT_RANGE_ATTACK1_LOW,ACT_IDLE_AGITATED,ACT_IDLE_AIM_AGITATED,ACT_RUN_AIM,ACT_WALK_AIM}
 SWEP.NPC_AnimationTbl_Rifle 	= {ACT_WALK_AIM_RIFLE,ACT_RUN_AIM_RIFLE,ACT_RANGE_ATTACK_AR2,ACT_RANGE_ATTACK_AR2_LOW,ACT_IDLE_ANGRY_SMG1,ACT_RANGE_ATTACK_SMG1,ACT_RANGE_ATTACK_SMG1_LOW}
@@ -190,6 +191,11 @@ function SWEP:CustomOnRemove() end
 function SWEP:CustomOnNPC_ServerThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnNPC_Reload() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CanBePickedUpByNPCs()
+	if self.NPC_CanBePickedUp == false then return end
+	return true
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Initialize()
 	self:SetNWVector("VJ_CurBulletPos",self:GetPos())
@@ -742,6 +748,7 @@ function SWEP:GetWeaponCustomPosition()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:RunWorldModelThink()
+	if !IsValid(self.Owner) then return end
 	self:SetNWBool("VJ_WorldModel_Invisible",self.WorldModel_Invisible)
 	
 	if self.WorldModel_UseCustomPosition == true then
