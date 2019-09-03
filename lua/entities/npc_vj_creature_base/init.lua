@@ -28,6 +28,7 @@ ENT.HasSetSolid = true -- set to false to disable SetSolid
 ENT.SightDistance = 10000 -- How far it can see
 ENT.SightAngle = 80 -- The sight angle | Example: 180 would make the it see all around it | Measured in degrees and then converted to radians
 ENT.TurningSpeed = 20 -- How fast it can turn
+ENT.TurningUseAllAxis = true -- If set to true, angles will not be restricted to y-axis, it will change all axes (plural axis)
 	-- ====== Movement Variables ====== --
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
@@ -1317,9 +1318,15 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 			///self:ClearGoal()
 			if IsSequence == false then
 				self.VJ_PlayingSequence = false
-				if vACT_FaceEnemy == true then
-				vsched:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY",vACT_Name) else
-				vsched:EngTask("TASK_PLAY_SEQUENCE",vACT_Name) end
+				if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+					vsched:EngTask("TASK_SET_ACTIVITY",vACT_Name) -- To avoid AutoMovement stopping the velocity
+				else
+					if vACT_FaceEnemy == true then
+						vsched:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY",vACT_Name)
+					else
+						vsched:EngTask("TASK_PLAY_SEQUENCE",vACT_Name)
+					end
+				end
 			end
 			//self:ClearSchedule()
 			//self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0)
@@ -1582,7 +1589,7 @@ function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
 	if !IsValid(self:GetEnemy()) then return end
 	if self.PlayingAttackAnimation == true && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then return end
 	if self.VJ_IsBeingControlled == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true /*or self.VJ_PlayingSequence == true*/ or self.FollowingPlayer == true or self.Dead == true or (self.NextChaseTime > CurTime()) or CurTime() < self.TakingCoverT then return end
-	if self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) < self.MeleeAttackDistance && self:GetEnemy():Visible(self) && (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then self:VJ_TASK_IDLE_STAND() return end
+	if self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) < self.MeleeAttackDistance && self:GetEnemy():Visible(self) && (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then self:AAMove_Stop() self:VJ_TASK_IDLE_STAND() return end
 	-- OverrideChasing = Chase no matter what
 	OverrideChasing = OverrideChasing or false
 	if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) then
@@ -1612,6 +1619,8 @@ ENT.CurrentAnim_AAMovement = nil
 ENT.AA_NextMovementAnimation = 0
 ENT.AA_CanPlayMoveAnimation = false
 ENT.AA_CurrentMoveAnimationType = "Calm"
+ENT.AA_MoveLength_Wander = 0
+ENT.AA_MoveLength_Chase = 0
 //ENT.AA_TargetPos = Vector(0,0,0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AAMove_Animation()
@@ -1683,7 +1692,7 @@ function ENT:AAMove_Wander(ShouldPlayAnim,NoFace)
 	local tr = util.TraceLine({start = tr_startpos, endpos = tr_startpos+self:GetForward()*tr_for+self:GetRight()*tr_up+self:GetUp()*tr_right, filter = self})*/
 	local tr = util.TraceLine({start = tr_startpos, endpos = tr_endpos, filter = self})
 	//self.AA_TargetPos = tr.HitPos
-	if NoFace == false then self:SetAngles(Angle(0,(tr.HitPos-tr.StartPos):Angle().y,0)) end
+	if NoFace == false then self:SetAngles(self:VJ_ReturnAngle((tr.HitPos-tr.StartPos):Angle())) end
 	if Debug == true then
 		VJ_CreateTestObject(tr.HitPos,self:GetAngles(),Color(0,255,255),5)
 		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,tr.HitPos,false,self:EntIndex(),0)
@@ -1692,7 +1701,12 @@ function ENT:AAMove_Wander(ShouldPlayAnim,NoFace)
 	-- Set the velocity
 	//local myvel = self:GetVelocity()
 	local vel_set = (tr.HitPos-self:GetPos()):GetNormal()*calmspeed
-	self.NextIdleTime = CurTime() + (tr.HitPos:Distance(tr_startpos) / vel_set:Length())
+	local vel_len = CurTime() + (tr.HitPos:Distance(tr_startpos) / vel_set:Length())
+	self.AA_MoveLength_Chase = 0
+	if vel_len == vel_len then -- Check for NaN
+		self.AA_MoveLength_Wander = vel_len
+		self.NextIdleTime = vel_len
+	end
 	self:SetLocalVelocity(vel_set)
 	if Debug == true then ParticleEffect("vj_impact1_centaurspit", tr.HitPos, Angle(0,0,0), self) end
 end
@@ -1822,9 +1836,13 @@ function ENT:AAMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
 		//local enevel = self:GetEnemy():GetVelocity()
 		local vel_set = ((enepos) - (self:GetPos() + self:OBBCenter())):GetNormal()*MoveSpeed + self:GetUp()*vel_up + self:GetForward()*vel_for
 		//local vel_set_yaw = vel_set:Angle().y
-		self.NextIdleTime = CurTime() + (tr.HitPos:Distance(startpos) / vel_set:Length())
 		self:SetLocalVelocity(vel_set)
-		//print("fffffffffffffffffff"..math.random(1,100000))
+		local vel_len = CurTime() + (tr.HitPos:Distance(startpos) / vel_set:Length())
+		self.AA_MoveLength_Wander = 0
+		if vel_len == vel_len then -- Check for NaN
+			self.AA_MoveLength_Chase = vel_len
+			self.NextIdleTime = vel_len
+		end
 		if Debug == true then ParticleEffect("vj_impact1_centaurspit", enepos, Angle(0,0,0), self) end
 	else
 		self:AAMove_Stop()
@@ -2074,7 +2092,7 @@ function ENT:DoConstantlyFaceEnemyCode()
 			if self.ConstantlyFaceEnemy_Postures == "Moving" && !self:IsMoving() then return false end
 			if self.ConstantlyFaceEnemy_Postures == "Standing" && self:IsMoving() then return false end
 		end
-		self:SetAngles(Angle(0,(self:GetEnemy():GetPos()-self:GetPos()):Angle().y,0))
+		self:SetAngles(self:VJ_ReturnAngle((self:GetEnemy():GetPos()-self:GetPos()):Angle()))
 		return true
 	end
 	return false
@@ -2285,9 +2303,9 @@ function ENT:Think()
 		
 		local ene = self:GetEnemy()
 		if IsValid(ene) then
-			if self.IsDoingFaceEnemy == true /*&& self.VJ_IsBeingControlled == false*/ then self:SetAngles(Angle(0,(ene:GetPos()-self:GetPos()):Angle().y,0)) end
+			if self.IsDoingFaceEnemy == true /*&& self.VJ_IsBeingControlled == false*/ then self:SetAngles(self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle())) end
 			self:DoConstantlyFaceEnemyCode()
-			if (self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene))) /*&& self.VJ_IsBeingControlled == false*/) then self:SetAngles(Angle(0,(ene:GetPos()-self:GetPos()):Angle().y,0)) end
+			if (self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene))) /*&& self.VJ_IsBeingControlled == false*/) then self:SetAngles(self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle())) end
 			self.ResetedEnemy = false
 			self:UpdateEnemyMemory(ene,ene:GetPos())
 			self.LatestEnemyPosition = ene:GetPos()
@@ -2320,7 +2338,7 @@ function ENT:Think()
 				if (ene:GetPos():Distance(self:GetPos()) < fardist) && (ene:GetPos():Distance(self:GetPos()) > closedist) && ene:Visible(self) /*&& self:CanDoCertainAttack("RangeAttack") == true*/ then
 					self.RangeAttack_DisableChasingEnemy = true
 					if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then self:StopMoving() end
-					if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_Stop() end
+					if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && CurTime() > self.AA_MoveLength_Wander /*&& ((self.AA_CurrentMoveAnimationType != "Calm") or (self.AA_CurrentMoveAnimationType == "Calm" && self:GetVelocity():Length() > 0))*/ then self:AAMove_Wander(true,false) /*self:AAMove_Stop()*/ end
 				else
 					self.RangeAttack_DisableChasingEnemy = false
 					if self.CurrentSchedule != nil && self.CurrentSchedule.Name != "vj_chase_enemy" then self:DoChaseAnimation() end

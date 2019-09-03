@@ -28,6 +28,7 @@ ENT.HasSetSolid = true -- set to false to disable SetSolid
 ENT.SightDistance = 10000 -- How far it can see
 ENT.SightAngle = 80 -- The sight angle | Example: 180 would make the it see all around it | Measured in degrees and then converted to radians
 ENT.TurningSpeed = 20 -- How fast it can turn
+ENT.TurningUseAllAxis = false -- If set to true, angles will not be restricted to y-axis, it will change all axes (plural axis)
 	-- ====== Movement Variables ====== --
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
@@ -1234,6 +1235,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 	if IsSequence == false then self.VJ_PlayingSequence = false end
 	if self.VJ_IsPlayingInterruptSequence == true then self.VJ_IsPlayingInterruptSequence = false end
 
+	if !isnumber(vACT_DelayAnim) then vACT_DelayAnim = 0 end
 	timer.Simple(vACT_DelayAnim,function()
 	if IsValid(self) then
 		if IsGesture == true then
@@ -1264,14 +1266,21 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 			//if self.Dead == true then vsched:EngTask("TASK_STOP_MOVING", 0) end
 			//vsched:EngTask("TASK_STOP_MOVING", 0)
 			//vsched:EngTask("TASK_STOP_MOVING", 0)
+			//self:FrameAdvance(0)
 			self:StopMoving()
 			self:ClearSchedule()
 			///self:ClearGoal()
 			if IsSequence == false then
 				self.VJ_PlayingSequence = false
-				if vACT_FaceEnemy == true then
-				vsched:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY",vACT_Name) else
-				vsched:EngTask("TASK_PLAY_SEQUENCE",vACT_Name) end
+				if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+					vsched:EngTask("TASK_SET_ACTIVITY",vACT_Name) -- To avoid AutoMovement stopping the velocity
+				else
+					if vACT_FaceEnemy == true then
+						vsched:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY",vACT_Name)
+					else
+						vsched:EngTask("TASK_PLAY_SEQUENCE",vACT_Name)
+					end
+				end
 			end
 			//self:ClearSchedule()
 			//self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0)
@@ -1847,7 +1856,7 @@ function ENT:DoConstantlyFaceEnemyCode()
 			if self.ConstantlyFaceEnemy_Postures == "Moving" && !self:IsMoving() then return false end
 			if self.ConstantlyFaceEnemy_Postures == "Standing" && self:IsMoving() then return false end
 		end
-		self:SetAngles(Angle(0,(self:GetEnemy():GetPos()-self:GetPos()):Angle().y,0))
+		self:SetAngles(self:VJ_ReturnAngle((self:GetEnemy():GetPos()-self:GetPos()):Angle()))
 		return true
 	end
 	return false
@@ -2102,9 +2111,9 @@ function ENT:Think()
 		local ene = self:GetEnemy()
 		if IsValid(ene) then
 			if self.DoingWeaponAttack == true then self:SuppressingSoundCode() end
-			if self.IsDoingFaceEnemy == true /*&& self.VJ_IsBeingControlled == false*/ then self:SetAngles(Angle(0,(ene:GetPos()-self:GetPos()):Angle().y,0)) end
+			if self.IsDoingFaceEnemy == true /*&& self.VJ_IsBeingControlled == false*/ then self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle()) end
 			self:DoConstantlyFaceEnemyCode()
-			if (self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene))) /*&& self.VJ_IsBeingControlled == false*/) then self:SetAngles(Angle(0,(ene:GetPos()-self:GetPos()):Angle().y,0)) end
+			if (self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene))) /*&& self.VJ_IsBeingControlled == false*/) then self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle()) end
 			self.ResetedEnemy = false
 			self:UpdateEnemyMemory(ene,ene:GetPos())
 			self.LatestEnemyPosition = ene:GetPos()
