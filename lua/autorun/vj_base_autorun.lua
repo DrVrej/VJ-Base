@@ -34,9 +34,6 @@ AddCSLuaFile("autorun/client/vj_menu_plugins.lua")
 AddCSLuaFile("autorun/client/vj_menu_snpc.lua")
 AddCSLuaFile("autorun/client/vj_menu_weapon.lua")
 
--- Server --
-AddCSLuaFile("autorun/server/vj_functions.lua")
-
 -- Modules --
 AddCSLuaFile("includes/modules/ai_vj_schedule.lua")
 AddCSLuaFile("includes/modules/ai_vj_task.lua")

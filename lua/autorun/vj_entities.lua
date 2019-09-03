@@ -385,6 +385,13 @@ function NPC_MetaTable:VJ_GetAllPoseParameters(prt)
 	return result
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function NPC_MetaTable:VJ_ReturnAngle(ang)
+	if self.TurningUseAllAxis == true then
+		return Angle(ang.x, ang.y, ang.z)
+	end
+	return Angle(0, ang.y, 0)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:FaceCertainPosition(pos)
 	pos = pos or Vector(0,0,0)
 	local setang = Angle(0,(pos-self:GetPos()):Angle().y,0)
@@ -397,14 +404,15 @@ function NPC_MetaTable:FaceCertainEntity(argent,OnlyIfSeenEnemy,FaceEnemyTime)
 	if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false then return false end
 	FaceEnemyTime = FaceEnemyTime or 0
 	if OnlyIfSeenEnemy == true && IsValid(self:GetEnemy()) then
-		local setangs = Angle(0,(argent:GetPos()-self:GetPos()):Angle().y,0)
+		local setangs = self:VJ_ReturnAngle((argent:GetPos()-self:GetPos()):Angle())
 		self.IsDoingFaceEnemy = true
 		timer.Simple(FaceEnemyTime,function() if IsValid(self) then self.IsDoingFaceEnemy = false end end)
 		self:SetAngles(setangs)
 		return setangs //SetLocalAngles
 	else
-		self:SetAngles(Angle(0,(argent:GetPos()-self:GetPos()):Angle().y,0))
-		return Angle(0,(argent:GetPos()-self:GetPos()):Angle().y,0)
+		local setangs = self:VJ_ReturnAngle((argent:GetPos()-self:GetPos()):Angle())
+		self:SetAngles(setangs)
+		return setangs
 	end
 	return false
 end
