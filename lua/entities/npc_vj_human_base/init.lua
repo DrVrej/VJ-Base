@@ -4014,6 +4014,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 	self:SetCollisionGroup(1)
 	self:RunGibOnDeathCode(dmginfo,hitgroup)
 	self:DeathSoundCode()
+	self:AAMove_Stop()
 	if self.HasDeathAnimation != true then DoKilled() return end
 	if self.HasDeathAnimation == true then
 		if GetConVarNumber("vj_npc_nodeathanimation") == 1 or GetConVarNumber("ai_disabled") == 1 or ((dmginfo:GetDamageType() == DMG_DISSOLVE) or (IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() == "prop_combine_ball")) then DoKilled() return end
