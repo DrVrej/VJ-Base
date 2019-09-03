@@ -28,7 +28,7 @@ ENT.HasSetSolid = true -- set to false to disable SetSolid
 ENT.SightDistance = 10000 -- How far it can see
 ENT.SightAngle = 80 -- The sight angle | Example: 180 would make the it see all around it | Measured in degrees and then converted to radians
 ENT.TurningSpeed = 20 -- How fast it can turn
-ENT.TurningUseAllAxis = true -- If set to true, angles will not be restricted to y-axis, it will change all axes (plural axis)
+ENT.TurningUseAllAxis = false -- If set to true, angles will not be restricted to y-axis, it will change all axes (plural axis)
 	-- ====== Movement Variables ====== --
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
@@ -724,6 +724,8 @@ function ENT:CustomOnThink_AIEnabled() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnChangeMovementType(SetType) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnIsJumpLegal(startPos,apex,endPos) end -- Return nothing to let base decide, return true to make it jump, return false to disallow jumping
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOn_PoseParameterLookingCode(pitch,yaw,roll) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnSchedule() end
@@ -1194,6 +1196,22 @@ function ENT:OnTaskComplete()
 	self.bTaskComplete = true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:IsJumpLegal(startPos,apex,endPos)
+	/*print("--------------")
+	print(startPos)
+	print(apex)
+	print(endPos)*/
+	local result = self:CustomOnIsJumpLegal(startPos,apex,endPos)
+	if result != nil then return result end
+	local dist_apex = startPos:Distance(apex)
+	local dist_end = startPos:Distance(apex)
+	/*print(dist_apex)
+	print(dist_end)*/
+	if dist_apex > 550 then return nil end
+	if dist_end > 550 then return nil end
+	return true
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActivitiesTime,vACT_FaceEnemy,vACT_DelayAnim,vACT_AdvancedFeatures,vACT_CustomCode)
 	if vACT_Name == nil or vACT_Name == false then return end
 	vACT_StopActivities = vACT_StopActivities or false
@@ -1436,7 +1454,7 @@ function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_ChaseEnemy(true) return end
 	//if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
 	if self.LatestEnemyPosition == self:GetEnemy():GetPos() && self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
-	if self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
+	if self:GetActivity() == ACT_JUMP or self:GetActivity() == ACT_GLIDE or self:GetActivity() == ACT_LAND or self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
 	self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Run))
 	if UseLOSChase == true then
 		local vsched = ai_vj_schedule.New("vj_chase_enemy")
