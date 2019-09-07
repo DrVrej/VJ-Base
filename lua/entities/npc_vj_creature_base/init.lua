@@ -1410,6 +1410,7 @@ function ENT:VJ_TASK_GOTO_PLAYER(MoveType,CustomCode)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_COVER_FROM_ENEMY(MoveType,CustomCode)
+	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_Wander(true) return end
 	MoveType = MoveType or "TASK_RUN_PATH"
 	local vsched = ai_vj_schedule.New("vj_cover_from_enemy")
 	vsched:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
@@ -1728,7 +1729,6 @@ function ENT:AAMove_Wander(ShouldPlayAnim,NoFace)
 	self:SetLocalVelocity(vel_set)
 	if Debug == true then ParticleEffect("vj_impact1_centaurspit", tr.HitPos, Angle(0,0,0), self) end
 end
-// && IsValid(self:GetEnemy()) && self:GetEnemy():WaterLevel() > 2
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AAMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
 	if self.Dead == true or (self.NextChaseTime > CurTime()) or !IsValid(self:GetEnemy()) then return end
