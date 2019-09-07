@@ -1364,6 +1364,7 @@ function ENT:VJ_TASK_GOTO_PLAYER(MoveType,CustomCode)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_COVER_FROM_ENEMY(MoveType,CustomCode)
+	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_Wander(true) return end
 	MoveType = MoveType or "TASK_RUN_PATH"
 	local vsched = ai_vj_schedule.New("vj_cover_from_enemy")
 	vsched:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
