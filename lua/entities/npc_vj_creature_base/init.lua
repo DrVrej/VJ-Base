@@ -998,6 +998,7 @@ ENT.TakingCoverT = 0
 ENT.NextInvestigateSoundMove = 0
 ENT.NextInvestigateSoundT = 0
 ENT.LostEnemySoundT = 0
+ENT.NextDoAnyAttackT = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.NearestPointToEnemyDistance = Vector(0,0,0)
 ENT.SelectedDifficulty = 1
@@ -2646,7 +2647,7 @@ end
 function ENT:CanDoCertainAttack(AttackName)
 	AttackName = AttackName or "MeleeAttack"
 	-- Attack Names: "MeleeAttack" || "RangeAttack" || "LeapAttack"
-	if self.RunningAfter_FollowPlayer == true or self.vACT_StopAttacks == true or self.Flinching == true or self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.VJ_IsBeingControlled == true*/ then return false end
+	if self.NextDoAnyAttackT > CurTime() or self.RunningAfter_FollowPlayer == true or self.vACT_StopAttacks == true or self.Flinching == true or self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.VJ_IsBeingControlled == true*/ then return false end
 
 	if AttackName == "MeleeAttack" then
 		if self.IsAbleToMeleeAttack == true && self.MeleeAttacking == false && self.LeapAttacking == false && self.RangeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
