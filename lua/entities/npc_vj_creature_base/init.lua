@@ -2357,6 +2357,7 @@ function ENT:Think()
 				if (ene:GetPos():Distance(self:GetPos()) < fardist) && (ene:GetPos():Distance(self:GetPos()) > closedist) && ene:Visible(self) /*&& self:CanDoCertainAttack("RangeAttack") == true*/ then
 					self.RangeAttack_DisableChasingEnemy = true
 					if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then self:StopMoving() end
+					if self.MovementType == VJ_MOVETYPE_GROUND && !self:IsMoving() then self:SetAngles(self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle())) end
 					if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && CurTime() > self.AA_MoveLength_Wander /*&& ((self.AA_CurrentMoveAnimationType != "Calm") or (self.AA_CurrentMoveAnimationType == "Calm" && self:GetVelocity():Length() > 0))*/ then self:AAMove_Wander(true,false) /*self:AAMove_Stop()*/ end
 				else
 					self.RangeAttack_DisableChasingEnemy = false
