@@ -45,6 +45,7 @@ ENT.Aquatic_AnimTbl_Calm = {} -- Animations it plays when it's wandering around 
 ENT.Aquatic_AnimTbl_Alerted = {} -- Animations it plays when it's moving while alerted
 	-- Aerial & Aquatic Variables:
 ENT.AA_EnableDebug = false -- Used for testing aerial and aquatic SNPCs
+ENT.AA_ConstantlyMove = false -- Used for aerial and aquatic SNPCs, makes them constantly move
 	-- ====== Miscellaneous Variables ====== --
 ENT.HasEntitiesToNoCollide = true -- If set to false, it won't run the EntitiesToNoCollide code
 ENT.EntitiesToNoCollide = {} -- Entities to not collide with when HasEntitiesToNoCollide is set to true
@@ -1600,7 +1601,7 @@ function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 	elseif RestrictNumber == 2 then -- deghed getser
 		self:VJ_TASK_IDLE_STAND()
 	end
-	if RestrictNumber != 2 then
+	if RestrictNumber != 2 && self.AA_ConstantlyMove == false then
 		self.NextWanderTime = CurTime() + math.Rand(3,6) // self.NextIdleTime
 	end
 end
@@ -1729,6 +1730,132 @@ function ENT:AAMove_Wander(ShouldPlayAnim,NoFace)
 	end
 	self:SetLocalVelocity(vel_set)
 	if Debug == true then ParticleEffect("vj_impact1_centaurspit", tr.HitPos, Angle(0,0,0), self) end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:AAMove_MoveToPos(Ent,ShouldPlayAnim)
+	if !IsValid(Ent) then return end
+	local MoveSpeed = self.Aerial_FlyingSpeed_Calm
+	if self.MovementType == VJ_MOVETYPE_AQUATIC then
+		if Debug == true then
+			print("--------")
+			print("ME WL: "..self:WaterLevel())
+			print("ENEMY WL: "..self:GetEnemy():WaterLevel())
+		end
+		-- Yete chouri e YEV leman marmine chourin mech-e che, ere vor gena yev kharen kal e
+		if self:WaterLevel() <= 2 && self:GetVelocity():Length() > 0 then return end
+		if self:WaterLevel() <= 1 && self:GetVelocity():Length() > 0 then self:AAMove_Wander(true,true) return end
+		if self:GetEnemy():WaterLevel() == 0 then self:DoIdleAnimation(1) return end -- Yete teshnamin chouren tours e, getsour
+		if self:GetEnemy():WaterLevel() <= 1 then -- Yete 0-en ver e, ere vor nayi yete gerna teshanmi-in gerna hasnil
+			local trene = util.TraceLine({
+				start = self:GetEnemy():GetPos() + self:OBBCenter(),
+				endpos = (self:GetEnemy():GetPos() + self:OBBCenter()) + self:GetEnemy():GetUp()*-20,
+				filter = self,
+				mins = self:OBBMins(),
+				maxs = self:OBBMaxs()
+			})
+			//PrintTable(trene)
+			//VJ_CreateTestObject(trene.HitPos,self:GetAngles(),Color(0,255,0),5)
+			if trene.Hit == true then return end
+		end
+		MoveSpeed = self.Aquatic_SwimmingSpeed_Alerted
+	end
+	
+	local Debug = self.AA_EnableDebug
+	ShouldPlayAnim = ShouldPlayAnim or false
+	NoFace = NoFace or false
+
+	if ShouldPlayAnim == true then
+		self.AA_CanPlayMoveAnimation = true
+		self.AA_CurrentMoveAnimationType = "Calm"
+	else
+		self.AA_CanPlayMoveAnimation = false
+	end
+	
+	-- Main Calculations
+	local vel_up = 20 //MoveSpeed
+	local vel_for = 1
+	local vel_stop = false
+	local getenemyz = "None"
+	local nearpos = self:VJ_GetNearestPointToEntity(Ent)
+	local startpos = nearpos.MyPosition // self:GetPos()
+	local endpos = nearpos.EnemyPosition // Ent:GetPos()+Ent:OBBCenter()
+	local tr = util.TraceHull({
+		start = startpos,
+		endpos = endpos,
+		filter = self,
+		mins = self:OBBMins(),
+		maxs = self:OBBMaxs()
+	})
+	local selftohitpos = tr.HitPos
+	local selftohitpos_dist = startpos:Distance(selftohitpos)
+	if Debug == true then util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,tr.HitPos,false,self:EntIndex(),0) end //vortigaunt_beam
+	if selftohitpos_dist <= 16 && tr.HitWorld == true then
+		if Debug == true then print("AA: Forward Blocked! [CHASE]") end
+		vel_for = 1
+		//vel_for = -200
+		//vel_stop = true
+	end
+	//else
+
+	-- X Calculations
+		-- Coming soon!
+
+	-- Z Calculations
+	local z_self = (self:GetPos()+self:OBBCenter()).z
+	local enepos = Ent:GetPos()+Ent:OBBCenter()
+	if self.MovementType == VJ_MOVETYPE_AQUATIC && Ent:WaterLevel() < 3 then
+		enepos = Ent:GetPos()
+	end
+	local tr_up_startpos = self:GetPos()+self:OBBCenter()
+	//local tr_up = util.TraceLine({start = tr_up_startpos,endpos = self:GetPos()+self:OBBCenter()+self:GetUp()*300,filter = self})
+	local tr_down_startpos = self:GetPos()+self:OBBCenter()
+	local tr_down = util.TraceLine({start = tr_up_startpos,endpos = self:GetPos()+self:OBBCenter()+self:GetUp()*-300,filter = self})
+	//print("UP - ",tr_up_startpos:Distance(tr_up.HitPos))
+	//print(math.abs(enepos.z)," OKK ",enepos.z)
+	//print(math.abs(z_self)," OKK ",z_self)
+	if enepos.z >= z_self then
+		if math.abs(enepos.z - z_self) >= 10 then
+			if Debug == true then print("AA: UP [CHASE]") end
+			getenemyz = "Up"
+			//vel_up = 100
+		end
+	elseif enepos.z <= z_self then
+		if math.abs(z_self - enepos.z) >= 10 then
+			if Debug == true then print("AA: DOWN [CHASE]") end
+			getenemyz = "Down"
+			//vel_up = -100
+		end
+	end
+	if getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
+		if Debug == true then print("AA: GOING UP [CHASE]") end
+		vel_up = MoveSpeed //100
+	elseif getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
+		if Debug == true then print("AA: GOING DOWN [CHASE]") end
+		vel_up = -MoveSpeed //-100
+	end
+	/*if tr_up_startpos:Distance(tr_up.HitPos) <= 100 && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
+		print("DOWN - ",tr_up_startpos:Distance(tr_up.HitPos))
+		vel_up = -100
+	end*/
+
+	-- Set the velocity
+	if vel_stop == false then
+		//local myvel = self:GetVelocity()
+		//local enevel = Ent:GetVelocity()
+		local vel_set = ((enepos) - (self:GetPos() + self:OBBCenter())):GetNormal()*MoveSpeed + self:GetUp()*vel_up + self:GetForward()*vel_for
+		//local vel_set_yaw = vel_set:Angle().y
+		self:SetAngles(self:VJ_ReturnAngle((vel_set):Angle()))
+		self:SetLocalVelocity(vel_set)
+		local vel_len = CurTime() + (tr.HitPos:Distance(startpos) / vel_set:Length())
+		self.AA_MoveLength_Wander = 0
+		if vel_len == vel_len then -- Check for NaN
+			self.AA_MoveLength_Chase = vel_len
+			self.NextIdleTime = vel_len
+		end
+		if Debug == true then ParticleEffect("vj_impact1_centaurspit", enepos, Angle(0,0,0), self) end
+	else
+		self:AAMove_Stop()
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AAMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
