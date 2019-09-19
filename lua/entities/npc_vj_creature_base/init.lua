@@ -1712,34 +1712,45 @@ function ENT:AAMove_Wander(ShouldPlayAnim,NoFace)
 	local tr_right = math.random(-300,300)
 	local tr = util.TraceLine({start = tr_startpos, endpos = tr_startpos+self:GetForward()*tr_for+self:GetRight()*tr_up+self:GetUp()*tr_right, filter = self})*/
 	local tr = util.TraceLine({start = tr_startpos, endpos = tr_endpos, filter = self})
-	//self.AA_TargetPos = tr.HitPos
-	if NoFace == false then self:SetAngles(self:VJ_ReturnAngle((tr.HitPos-tr.StartPos):Angle())) end
+	local finalpos = tr.HitPos
+	if ForceDown == false && self.MovementType == VJ_MOVETYPE_AERIAL then -- Yete ches estibergor vor var yerta YEV loghatsough SNPC che, sharnage...
+		local tr_check = util.TraceLine({start = finalpos, endpos = finalpos + Vector(0,0,-100), filter = self})
+		if tr_check.HitWorld == true then -- Yete askharin zargav, ere vor shad var chishne
+			finalpos = finalpos + self:GetUp()*(100 - tr_check.HitPos:Distance(finalpos))
+		end
+	end
+	//self.AA_TargetPos = finalpos
+	if NoFace == false then self:SetAngles(self:VJ_ReturnAngle((finalpos-tr.StartPos):Angle())) end
 	if Debug == true then
-		VJ_CreateTestObject(tr.HitPos,self:GetAngles(),Color(0,255,255),5)
-		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,tr.HitPos,false,self:EntIndex(),0)
+		VJ_CreateTestObject(finalpos,self:GetAngles(),Color(0,255,255),5)
+		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,finalpos,false,self:EntIndex(),0)
 	end
 
 	-- Set the velocity
 	//local myvel = self:GetVelocity()
-	local vel_set = (tr.HitPos-self:GetPos()):GetNormal()*calmspeed
-	local vel_len = CurTime() + (tr.HitPos:Distance(tr_startpos) / vel_set:Length())
+	local vel_set = (finalpos-self:GetPos()):GetNormal()*calmspeed
+	local vel_len = CurTime() + (finalpos:Distance(tr_startpos) / vel_set:Length())
 	self.AA_MoveLength_Chase = 0
 	if vel_len == vel_len then -- Check for NaN
 		self.AA_MoveLength_Wander = vel_len
 		self.NextIdleTime = vel_len
 	end
 	self:SetLocalVelocity(vel_set)
-	if Debug == true then ParticleEffect("vj_impact1_centaurspit", tr.HitPos, Angle(0,0,0), self) end
+	if Debug == true then ParticleEffect("vj_impact1_centaurspit", finalpos, Angle(0,0,0), self) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AAMove_MoveToPos(Ent,ShouldPlayAnim)
+function ENT:AAMove_MoveToPos(Ent,ShouldPlayAnim,vAdditionalFeatures)
 	if !IsValid(Ent) then return end
+	vAd_AdditionalFeatures = vAdditionalFeatures or {}
+	vAd_PosForward = vAd_AdditionalFeatures.PosForward or 1 -- This will add the given value to the set position's forward
+	vAd_PosUp = vAd_AdditionalFeatures.PosUp or 1 -- This will add the given value to the set position's up
+	vAd_PosRight = vAd_AdditionalFeatures.PosRight or 1 -- This will add the given value to the set position's right
 	local MoveSpeed = self.Aerial_FlyingSpeed_Calm
 	if self.MovementType == VJ_MOVETYPE_AQUATIC then
 		if Debug == true then
 			print("--------")
 			print("ME WL: "..self:WaterLevel())
-			print("ENEMY WL: "..self:GetEnemy():WaterLevel())
+			print("Move To Pos WL: "..self:GetEnemy():WaterLevel())
 		end
 		-- Yete chouri e YEV leman marmine chourin mech-e che, ere vor gena yev kharen kal e
 		if self:WaterLevel() <= 2 && self:GetVelocity():Length() > 0 then return end
@@ -1802,9 +1813,9 @@ function ENT:AAMove_MoveToPos(Ent,ShouldPlayAnim)
 
 	-- Z Calculations
 	local z_self = (self:GetPos()+self:OBBCenter()).z
-	local enepos = Ent:GetPos()+Ent:OBBCenter()
+	local enepos = (Ent:GetPos() + Ent:OBBCenter()) + Ent:GetForward()*vAd_PosForward + Ent:GetUp()*vAd_PosUp + Ent:GetRight()*vAd_PosRight
 	if self.MovementType == VJ_MOVETYPE_AQUATIC && Ent:WaterLevel() < 3 then
-		enepos = Ent:GetPos()
+		enepos = Ent:GetPos() + Ent:GetForward()*vAd_PosForward + Ent:GetUp()*vAd_PosUp + Ent:GetRight()*vAd_PosRight
 	end
 	local tr_up_startpos = self:GetPos()+self:OBBCenter()
 	//local tr_up = util.TraceLine({start = tr_up_startpos,endpos = self:GetPos()+self:OBBCenter()+self:GetUp()*300,filter = self})
