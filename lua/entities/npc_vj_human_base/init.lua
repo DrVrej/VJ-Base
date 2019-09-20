@@ -3326,7 +3326,7 @@ function ENT:DoEntityRelationshipCheck()
 			end
 		end
 		if self.FindEnemy_CanSeeThroughWalls == true then seethroughwall = true end
-		if self.DisableFindEnemy == false then
+		if ((self.Behavior == VJ_BEHAVIOR_NEUTRAL && self.Alerted == true) or self.Behavior != VJ_BEHAVIOR_NEUTRAL) && self.DisableFindEnemy == false then
 			if (seethroughwall == true) or (self:Visible(v) && (vDistanceToMy < sightdist)) then
 				if (self.FindEnemy_UseSphere == false && radiusoverride == 0 && (self:GetForward():Dot((vPos - MyPos):GetNormalized()) > math.cos(math.rad(self.SightAngle)))) or (self.FindEnemy_UseSphere == true or radiusoverride == 1) then
 					local check = self:DoRelationshipCheck(v)
