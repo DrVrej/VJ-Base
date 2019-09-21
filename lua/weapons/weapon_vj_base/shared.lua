@@ -71,6 +71,7 @@ SWEP.WorldModel_CustomPositionBone = "ValveBiped.Bip01_R_Hand" -- The bone it wi
 SWEP.WorldModel_Invisible = false -- Should the world model be invisible?
 SWEP.WorldModel_NoShadow = false -- Should the world model have a shadow?
 	-- General Settings ---------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.HasDryFireSound			= true -- Should it play a sound when it's out of ammo?
 SWEP.DryFireSound				= {} -- The sound that it plays when the weapon is out of ammo
 SWEP.DryFireSoundLevel 			= 50 -- Dry fire sound level
 SWEP.DryFireSoundPitch1 		= 90 -- Dry fire sound pitch 1
@@ -368,7 +369,7 @@ function SWEP:NPCAbleToShoot()
 				local check, ammo = self.Owner:CanDoWeaponAttack()
 				if ammo == "NoAmmo" then
 					if self.Owner.VJ_IsBeingControlled == true then self.Owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER,"Press R to reload!") end
-					if CurTime() > self.NextNPCDrySoundT then
+					if self.HasDryFireSound == true && CurTime() > self.NextNPCDrySoundT then
 						local sdtbl = VJ_PICKRANDOMTABLE(self.DryFireSound)
 						if sdtbl != false then self.Owner:EmitSound(sdtbl,80,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) end
 						if self.NPC_NextPrimaryFire != false then
