@@ -1002,6 +1002,7 @@ ENT.LostEnemySoundT = 0
 ENT.NextDoAnyAttackT = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.NearestPointToEnemyDistance = Vector(0,0,0)
+ENT.CurrentTurningAngle = false
 ENT.SelectedDifficulty = 1
 ENT.VJ_AddCertainEntityAsEnemy = {}
 ENT.VJ_AddCertainEntityAsFriendly = {}
@@ -1695,7 +1696,7 @@ function ENT:AAMove_Wander(ShouldPlayAnim,NoFace)
 	else
 		self.AA_CanPlayMoveAnimation = false
 	end
-	if NoFace == false then self:SetAngles(Angle(0,math.random(0,360),0)) end
+	//if NoFace == false then self:SetLocalAngularVelocity(Angle(0,math.random(0,360),0)) end
 	local x_neg = 1
 	local y_neg = 1
 	local z_neg = 1
@@ -1720,7 +1721,14 @@ function ENT:AAMove_Wander(ShouldPlayAnim,NoFace)
 		end
 	end
 	//self.AA_TargetPos = finalpos
-	if NoFace == false then self:SetAngles(self:VJ_ReturnAngle((finalpos-tr.StartPos):Angle())) end
+	
+	-- Angle time test (PHYSICS)
+	/*local test1 = math.AngleDifference(tr.StartPos:Angle().y, self:VJ_ReturnAngle((finalpos-tr.StartPos):Angle()).y)
+	local test2 = (math.rad(test1) / math.rad(self:VJ_ReturnAngle((finalpos-tr.StartPos):Angle()).y)) * 20
+	self.yep = CurTime() + math.abs(test2)
+	self.yep2 = self:VJ_ReturnAngle((finalpos-tr.StartPos):Angle())*/
+	
+	if NoFace == false then self.CurrentTurningAngle = self:VJ_ReturnAngle((finalpos-tr.StartPos):Angle()) end //self:SetLocalAngularVelocity(self:VJ_ReturnAngle((finalpos-tr.StartPos):Angle())) end
 	if Debug == true then
 		VJ_CreateTestObject(finalpos,self:GetAngles(),Color(0,255,255),5)
 		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,finalpos,false,self:EntIndex(),0)
@@ -1855,7 +1863,8 @@ function ENT:AAMove_MoveToPos(Ent,ShouldPlayAnim,vAdditionalFeatures)
 		//local enevel = Ent:GetVelocity()
 		local vel_set = ((enepos) - (self:GetPos() + self:OBBCenter())):GetNormal()*MoveSpeed + self:GetUp()*vel_up + self:GetForward()*vel_for
 		//local vel_set_yaw = vel_set:Angle().y
-		self:SetAngles(self:VJ_ReturnAngle((vel_set):Angle()))
+		self.CurrentTurningAngle = self:VJ_ReturnAngle(self:VJ_ReturnAngle((vel_set):Angle()))
+		//self:SetAngles(self:VJ_ReturnAngle((vel_set):Angle()))
 		self:SetLocalVelocity(vel_set)
 		local vel_len = CurTime() + (tr.HitPos:Distance(startpos) / vel_set:Length())
 		self.AA_MoveLength_Wander = 0
@@ -1921,10 +1930,8 @@ function ENT:AAMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
 	end
 
 	-- Main Calculations
-	local vel_up = 20 //MoveSpeed
 	local vel_for = 1
 	local vel_stop = false
-	local getenemyz = "None"
 	local nearpos = self:VJ_GetNearestPointToEntity(self:GetEnemy())
 	local startpos = nearpos.MyPosition // self:GetPos()
 	local endpos = nearpos.EnemyPosition // self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter()
@@ -1935,34 +1942,51 @@ function ENT:AAMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
 		mins = self:OBBMins(),
 		maxs = self:OBBMaxs()
 	})
-	local selftohitpos = tr.HitPos
-	local selftohitpos_dist = startpos:Distance(selftohitpos)
-	if Debug == true then util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,tr.HitPos,false,self:EntIndex(),0) end //vortigaunt_beam
-	if selftohitpos_dist <= 16 && tr.HitWorld == true then
+	local tr_hitpos = tr.HitPos
+	local dist_selfhit = startpos:Distance(tr_hitpos)
+	if Debug == true then util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,tr_hitpos,false,self:EntIndex(),0) end //vortigaunt_beam
+	if dist_selfhit <= 16 && tr.HitWorld == true then
 		if Debug == true then print("AA: Forward Blocked! [CHASE]") end
 		vel_for = 1
 		//vel_for = -200
 		//vel_stop = true
 	end
-	//else
-
-	-- X Calculations
-		-- Coming soon!
-
-	-- Z Calculations
-	local z_self = (self:GetPos()+self:OBBCenter()).z
 	local enepos = self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter()
 	if self.MovementType == VJ_MOVETYPE_AQUATIC && self:GetEnemy():WaterLevel() < 3 then
 		enepos = self:GetEnemy():GetPos()
 	end
+	//else
+	
+	-- X Calculations
+		-- Coming soon!
+	
+	-- Z Calculations
+	local vel_up = MoveSpeed
+	local dist_selfhit_z = enepos.z - startpos.z -- Get the distance between the hit position and the start position
+	if dist_selfhit_z > 0 then -- Yete 0-en ver e, ere vor 20-en minchev sahmani tive hasni
+		if Debug == true then print("AA: GOING UP [CHASE]") end
+		vel_up = math.Clamp(dist_selfhit_z, 20, MoveSpeed)
+	elseif dist_selfhit_z < 0 then -- Yete 0-en var e, ere vor nevaz 20-en minchev nevaz sahmani tive hasni
+		if Debug == true then print("AA: GOING DOWN [CHASE]") end
+		vel_up = -math.Clamp(math.abs(dist_selfhit_z), 20, MoveSpeed)
+	else
+		vel_up = 0
+	end
+	
+	if dist_selfhit < 100 then -- Yete 100-en var e tive, esel e vor modig e, ere vor gamatsna
+		MoveSpeed = math.Clamp(dist_selfhit, 100, MoveSpeed)
+	end
+	
+	-- Deprecated z-calculation code
+	/*
+	local getenemyz = "None"
+	local z_self = (self:GetPos()+self:OBBCenter()).z
 	local tr_up_startpos = self:GetPos()+self:OBBCenter()
 	//local tr_up = util.TraceLine({start = tr_up_startpos,endpos = self:GetPos()+self:OBBCenter()+self:GetUp()*300,filter = self})
 	local tr_down_startpos = self:GetPos()+self:OBBCenter()
 	local tr_down = util.TraceLine({start = tr_up_startpos,endpos = self:GetPos()+self:OBBCenter()+self:GetUp()*-300,filter = self})
-	//print("UP - ",tr_up_startpos:Distance(tr_up.HitPos))
-	//print(math.abs(enepos.z)," OKK ",enepos.z)
-	//print(math.abs(z_self)," OKK ",z_self)
-	if enepos.z >= z_self then
+	//print("UP - ",tr_up_startpos:Distance(tr_up.HitPos))*/
+	/*if enepos.z >= z_self then
 		if math.abs(enepos.z - z_self) >= 10 then
 			if Debug == true then print("AA: UP [CHASE]") end
 			getenemyz = "Up"
@@ -1972,29 +1996,31 @@ function ENT:AAMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
 		if math.abs(z_self - enepos.z) >= 10 then
 			if Debug == true then print("AA: DOWN [CHASE]") end
 			getenemyz = "Down"
-			//vel_up = -100
+			//vel_up = -MoveSpeed
 		end
-	end
-	if getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
+	end*/
+	/*if getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
 		if Debug == true then print("AA: GOING UP [CHASE]") end
 		vel_up = MoveSpeed //100
 	elseif getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
 		if Debug == true then print("AA: GOING DOWN [CHASE]") end
 		vel_up = -MoveSpeed //-100
 	end
+	*/
+	
+	-- Other old code
 	/*if tr_up_startpos:Distance(tr_up.HitPos) <= 100 && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
 		print("DOWN - ",tr_up_startpos:Distance(tr_up.HitPos))
 		vel_up = -100
 	end*/
-
-	-- Set the velocity
+	
+	-- Final velocity
 	if vel_stop == false then
-		//local myvel = self:GetVelocity()
-		//local enevel = self:GetEnemy():GetVelocity()
+		self.CurrentTurningAngle = false
 		local vel_set = ((enepos) - (self:GetPos() + self:OBBCenter())):GetNormal()*MoveSpeed + self:GetUp()*vel_up + self:GetForward()*vel_for
 		//local vel_set_yaw = vel_set:Angle().y
 		self:SetLocalVelocity(vel_set)
-		local vel_len = CurTime() + (tr.HitPos:Distance(startpos) / vel_set:Length())
+		local vel_len = CurTime() + (dist_selfhit / vel_set:Length())
 		self.AA_MoveLength_Wander = 0
 		if vel_len == vel_len then -- Check for NaN
 			self.AA_MoveLength_Chase = vel_len
@@ -2458,6 +2484,10 @@ function ENT:Think()
 			end
 		end*/
 		
+		if self.CurrentTurningAngle != false then
+			self:SetAngles(Angle(math.ApproachAngle(self:GetAngles().p, self.CurrentTurningAngle.p, self.TurningSpeed),math.ApproachAngle(self:GetAngles().y, self.CurrentTurningAngle.y, self.TurningSpeed),math.ApproachAngle(self:GetAngles().r, self.CurrentTurningAngle.r, self.TurningSpeed)))
+		end
+	
 		local ene = self:GetEnemy()
 		if IsValid(ene) then
 			if self.IsDoingFaceEnemy == true /*&& self.VJ_IsBeingControlled == false*/ then self:SetAngles(self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle())) end
