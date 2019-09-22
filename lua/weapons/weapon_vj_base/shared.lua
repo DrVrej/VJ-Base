@@ -129,23 +129,6 @@ SWEP.PrimaryEffects_SpawnDynamicLight = true
 SWEP.PrimaryEffects_DynamicLightBrightness = 4
 SWEP.PrimaryEffects_DynamicLightDistance = 120
 SWEP.PrimaryEffects_DynamicLightColor = Color(255, 150, 60)
-	-- Secondary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.Secondary.Damage			= 5 -- Damage
-SWEP.Secondary.PlayerDamage		= 2 -- Only applies for players | "Same" = Same as self.Primary.Damage, "Double" = Double the self.Primary.Damage OR put a number to be different from self.Primary.Damage
-SWEP.Secondary.Force			= 5 -- Force applied on the object the bullet hits
-SWEP.Secondary.NumberOfShots	= 1 -- How many shots per attack?
-SWEP.Secondary.ClipSize			= -1 -- Max amount of bullets per clip
-SWEP.Secondary.DefaultClip		= -1 -- How much ammo do you get when you first pick up the weapon?
-SWEP.Secondary.Recoil			= 0.3 -- How much recoil does the player get?
-SWEP.Secondary.Cone				= 7 -- How accurate is the bullet? (Players)
-SWEP.Secondary.Delay			= 0.1 -- Time until it can shoot again
-SWEP.Secondary.Tracer			= 1
-SWEP.Secondary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
-SWEP.Secondary.Automatic		= false -- Is it automatic?
-SWEP.Secondary.Ammo				= "none" -- Ammo type
-SWEP.Secondary.Sound			= {"vj_weapons/ak47/ak47_single.wav"}
-SWEP.AnimTbl_SecondaryFire		= {ACT_VM_SECONDARYATTACK}
-SWEP.Secondary.DistantSound		= {"vj_weapons/ak47/ak47_single_dist.wav"}
 	-- Independent Variables ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Reloading 					= false
 SWEP.InitHasIdleAnimation		= false
@@ -460,7 +443,7 @@ function SWEP:GetCapabilities()
 	return bit.bor(CAP_WEAPON_RANGE_ATTACK1,CAP_INNATE_RANGE_ATTACK1)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:PrimaryAttack(ShootPos,ShootDir)
+function SWEP:PrimaryAttack(UseAlt)
 	//if self.Owner:KeyDown(IN_RELOAD) then return end
 	//self.Owner:SetFOV(45, 0.3)
 	//if !IsFirstTimePredicted() then return end
