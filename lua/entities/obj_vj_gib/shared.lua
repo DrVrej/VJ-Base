@@ -10,3 +10,7 @@ ENT.Category		= "VJ Bases"
 
 ENT.Spawnable		= false
 ENT.AdminSpawnable	= false
+
+if (CLIENT) then
+	function ENT:Draw() self:DrawModel() end
+end
