@@ -1,6 +1,5 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 AddCSLuaFile("shared.lua")
-AddCSLuaFile("cl_init.lua")
 include("shared.lua")
 /*--------------------------------------------------
 	=============== Gib Base ===============
