@@ -752,7 +752,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnWeaponAttack() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMoveMoveRandomlyWhenShooting() end -- Returning false will disable the base code
+function ENT:CustomOnMoveRandomlyWhenShooting() end -- Returning false will disable the base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnWaitForEnemyToComeOut() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2838,7 +2838,7 @@ function ENT:SelectSchedule(iNPCState)
 							if self.FollowingPlayer == false && self.MoveRandomlyWhenShooting == true && self.DoingWeaponAttack == true && self.DoingWeaponAttack_Standing == true && CurTime() > self.NextMoveRandomlyWhenShootingT && self.TimeSinceSeenEnemy > 2 && (SelfToEnemyDistance < (self.Weapon_FiringDistanceFar /1.25)) then
 								if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == false then
 									//self:SetMovementActivity(ACT_RUN_AIM)
-									if self:CustomOnMoveMoveRandomlyWhenShooting() != false then
+									if self:CustomOnMoveRandomlyWhenShooting() != false then
 										local randpos = math.random(150,400)
 										local checkdist = self:VJ_CheckAllFourSides(randpos)
 										local randmove = {}
