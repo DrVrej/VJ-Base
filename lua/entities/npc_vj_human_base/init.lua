@@ -752,6 +752,8 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnWeaponAttack() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnMoveMoveRandomlyWhenShooting() end -- Returning false will disable the base code
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnWaitForEnemyToComeOut() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnWeaponReload() end
@@ -2836,21 +2838,23 @@ function ENT:SelectSchedule(iNPCState)
 							if self.FollowingPlayer == false && self.MoveRandomlyWhenShooting == true && self.DoingWeaponAttack == true && self.DoingWeaponAttack_Standing == true && CurTime() > self.NextMoveRandomlyWhenShootingT && self.TimeSinceSeenEnemy > 2 && (SelfToEnemyDistance < (self.Weapon_FiringDistanceFar /1.25)) then
 								if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == false then
 									//self:SetMovementActivity(ACT_RUN_AIM)
-									local randpos = math.random(150,400)
-									local checkdist = self:VJ_CheckAllFourSides(randpos)
-									local randmove = {}
-									if checkdist.Backward == true then randmove[#randmove+1] = "Backward" end
-									if checkdist.Right == true then randmove[#randmove+1] = "Right" end
-									if checkdist.Left == true then randmove[#randmove+1] = "Left"end
-									local pickmove = VJ_PICKRANDOMTABLE(randmove)
-									if pickmove == "Backward" then self:SetLastPosition(self:GetPos() + self:GetForward()*-randpos) end
-									if pickmove == "Right" then self:SetLastPosition(self:GetPos() + self:GetRight()*randpos) end
-									if pickmove == "Left" then self:SetLastPosition(self:GetPos() + self:GetRight()*-randpos) end
-									if pickmove == "Backward" or pickmove == "Right" or pickmove == "Left" then
-										self:StopMoving()
-										self:VJ_TASK_GOTO_LASTPOS(VJ_PICKRANDOMTABLE({"TASK_RUN_PATH","TASK_WALK_PATH"}),function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+									if self:CustomOnMoveMoveRandomlyWhenShooting() != false then
+										local randpos = math.random(150,400)
+										local checkdist = self:VJ_CheckAllFourSides(randpos)
+										local randmove = {}
+										if checkdist.Backward == true then randmove[#randmove+1] = "Backward" end
+										if checkdist.Right == true then randmove[#randmove+1] = "Right" end
+										if checkdist.Left == true then randmove[#randmove+1] = "Left"end
+										local pickmove = VJ_PICKRANDOMTABLE(randmove)
+										if pickmove == "Backward" then self:SetLastPosition(self:GetPos() + self:GetForward()*-randpos) end
+										if pickmove == "Right" then self:SetLastPosition(self:GetPos() + self:GetRight()*randpos) end
+										if pickmove == "Left" then self:SetLastPosition(self:GetPos() + self:GetRight()*-randpos) end
+										if pickmove == "Backward" or pickmove == "Right" or pickmove == "Left" then
+											self:StopMoving()
+											self:VJ_TASK_GOTO_LASTPOS(VJ_PICKRANDOMTABLE({"TASK_RUN_PATH","TASK_WALK_PATH"}),function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+										end
+										self.NextMoveRandomlyWhenShootingT = CurTime() + math.Rand(self.NextMoveRandomlyWhenShootingTime1,self.NextMoveRandomlyWhenShootingTime2)
 									end
-									self.NextMoveRandomlyWhenShootingT = CurTime() + math.Rand(self.NextMoveRandomlyWhenShootingTime1,self.NextMoveRandomlyWhenShootingTime2)
 								end
 							end
 						else -- None VJ Base weapons

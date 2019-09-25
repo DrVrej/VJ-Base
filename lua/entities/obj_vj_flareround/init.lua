@@ -1,5 +1,4 @@
 AddCSLuaFile("shared.lua")
-AddCSLuaFile("cl_init.lua")
 include("shared.lua")
 /*-----------------------------------------------
 	*** Copyright (c) 2012-2019 by DrVrej, All rights reserved. ***
