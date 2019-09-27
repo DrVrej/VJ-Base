@@ -738,7 +738,15 @@ function ENT:CustomOnAlert(argent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnCallForHelp(ally) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:SetNearestPointToEntityPosition()
+	return self:GetPos() + self:GetForward() -- Override this to use a different position
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomAttack() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:SetMeleeAttackDamagePosition()
+	return self:GetPos() + self:GetForward() -- Override this to use a different position
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_Miss() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1022,7 +1030,11 @@ function ENT:Initialize()
 	end
 	self.StartHealth = self:Health()
 	//if self.HasSquad == true then self:Fire("setsquad",self.SquadName,0) end
-	self:SetName(self.PrintName)
+	if self.PrintName == "" then
+		self:SetName(list.Get("NPC")[self:GetClass()].Name)
+	else
+		self:SetName(self.PrintName)
+	end
 	self:SetEnemy(nil)
 	self:SetUseType(SIMPLE_USE)
 	//self.Corpse = ents.Create(self.DeathCorpseEntityClass)
@@ -2365,7 +2377,7 @@ function ENT:MeleeAttackCode()
 	if self.StopMeleeAttackAfterFirstHit == true && self.AlreadyDoneMeleeAttackFirstHit == true then return end
 	if /*self.VJ_IsBeingControlled == false &&*/ self.MeleeAttackAnimationFaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(),true) end
 	//self.MeleeAttacking = true
-	local FindEnts = ents.FindInSphere(self:GetPos() + self:GetForward(),self.MeleeAttackDamageDistance)
+	local FindEnts = ents.FindInSphere(self:SetMeleeAttackDamagePosition(),self.MeleeAttackDamageDistance)
 	local hitentity = false
 	local HasHitNonPropEnt = false
 	if FindEnts != nil then

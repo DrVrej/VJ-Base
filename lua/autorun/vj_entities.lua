@@ -432,11 +432,11 @@ function NPC_MetaTable:VJ_GetNearestPointToEntity(argent,SameZ)
 	if !IsValid(argent) then return end
 	local SameZ = SameZ or false -- Should the Z of the pos be the same as the NPC's?
 	local NearestPositions = {MyPosition=Vector(0,0,0), EnemyPosition=Vector(0,0,0)}
-	local Pos_Enemy, Pos_Self = argent:NearestPoint(self:GetPos() + argent:OBBCenter()), self:NearestPoint(argent:GetPos() + self:OBBCenter())
-	Pos_Enemy.z, Pos_Self.z = argent:GetPos().z, self:GetPos().z
+	local Pos_Enemy, Pos_Self = argent:NearestPoint(self:SetNearestPointToEntityPosition() + argent:OBBCenter()), self:NearestPoint(argent:GetPos() + self:OBBCenter())
+	Pos_Enemy.z, Pos_Self.z = argent:GetPos().z, self:SetNearestPointToEntityPosition().z
 	if SameZ == true then
-		Pos_Enemy = Vector(Pos_Enemy.x,Pos_Enemy.y,self:GetPos().z)
-		Pos_Self = Vector(Pos_Self.x,Pos_Self.y,self:GetPos().z)
+		Pos_Enemy = Vector(Pos_Enemy.x,Pos_Enemy.y,self:SetNearestPointToEntityPosition().z)
+		Pos_Self = Vector(Pos_Self.x,Pos_Self.y,self:SetNearestPointToEntityPosition().z)
 	end
 	NearestPositions.MyPosition = Pos_Self
 	NearestPositions.EnemyPosition = Pos_Enemy
@@ -446,11 +446,11 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetNearestPointToEntityDistance(argent,OnlySelfGetPos)
 	if !IsValid(argent) then return end
-	OnlySelfGetPos = OnlySelfGetPos or false -- Should it only do self:GetPos() for the local entity?
-	local Pos_Enemy = argent:NearestPoint(self:GetPos() + argent:OBBCenter())
+	OnlySelfGetPos = OnlySelfGetPos or false -- Should it only do its self position for the local entity?
+	local Pos_Enemy = argent:NearestPoint(self:SetNearestPointToEntityPosition() + argent:OBBCenter())
 	local Pos_Self = self:NearestPoint(argent:GetPos() + self:OBBCenter())
-	if OnlySelfGetPos == true then Pos_Self = self:GetPos() end
-	Pos_Enemy.z, Pos_Self.z = argent:GetPos().z, self:GetPos().z
+	if OnlySelfGetPos == true then Pos_Self = self:SetNearestPointToEntityPosition() end
+	Pos_Enemy.z, Pos_Self.z = argent:GetPos().z, self:SetNearestPointToEntityPosition().z
 	//local Pos_Distance = Pos_Enemy:Distance(Pos_Self)
 	return Pos_Enemy:Distance(Pos_Self) // math.Distance(Pos_Enemy.x,Pos_Enemy.y,Pos_Self.x,Pos_Self.y)
 end
