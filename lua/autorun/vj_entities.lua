@@ -325,7 +325,7 @@ function NPC_MetaTable:DecideAnimationLength(Anim,Value,Decrease)
 	local result = 0
 	Decrease = Decrease or 0
 	if isbool(Anim) then return result end
-	if Value == false then
+	if Value == false then -- Used internally by the base, recommanded to just leave it to false
 		result = VJ_GetSequenceDuration(self,Anim) - Decrease
 	elseif isnumber(Value) then
 		result = Value
