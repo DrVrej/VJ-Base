@@ -777,6 +777,10 @@ function ENT:CustomOnAlert(argent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnCallForHelp(ally) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:SetNearestPointToEntityPosition()
+	return self:GetPos() + self:GetForward() -- Override this to use a different position
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomAttack() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MultipleMeleeAttacks() end
@@ -788,6 +792,10 @@ function ENT:CustomOnMeleeAttack_BeforeStartTimer() end
 function ENT:CustomOnMeleeAttack_AfterStartTimer() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_BeforeChecks() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:SetMeleeAttackDamagePosition()
+	return self:GetPos() + self:GetForward() -- Override this to use a different position
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_AfterChecks(TheHitEntity) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1074,7 +1082,11 @@ function ENT:Initialize()
 		self:SetHealth(GetConVarNumber("vj_npc_allhealth"))
 	end
 	self.StartHealth = self:Health()
-	self:SetName(self.PrintName)
+	if self.PrintName == "" then
+		self:SetName(list.Get("NPC")[self:GetClass()].Name)
+	else
+		self:SetName(self.PrintName)
+	end
 	self:SetEnemy(nil)
 	self:SetUseType(SIMPLE_USE)
 	//self.Corpse = ents.Create(self.DeathCorpseEntityClass)
@@ -2892,7 +2904,7 @@ function ENT:PushOrAttackPropsCode(CustomValuesTbl)
 	//local dist = Vector(self:OBBMins().x,0,0):Distance(Vector(self:OBBMaxs().x,0,0)) // self:GetCollisionBounds()
 	//local halfdist = dist /2
 	if IsSingleValue == 0 then
-		valuestoattack = ents.FindInSphere(self:GetPos() + self:GetForward(), CustomMeleeDistance)  //ents.FindInSphere(self:GetPos(),halfdist + self.MeleeAttackDistance*2) // self.MeleeAttackDistance *5
+		valuestoattack = ents.FindInSphere(self:SetMeleeAttackDamagePosition(), CustomMeleeDistance)  //ents.FindInSphere(self:GetPos(),halfdist + self.MeleeAttackDistance*2) // self.MeleeAttackDistance *5
 	else
 		valuestoattack = {IsSingleValue}
 	end
@@ -2935,7 +2947,7 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 	//self.MeleeAttacking = true
 	self:CustomOnMeleeAttack_BeforeChecks()
 	if self.DisableDefaultMeleeAttackCode == true then return end
-	local FindEnts = ents.FindInSphere(self:GetPos() + self:GetForward(), AttackDist)
+	local FindEnts = ents.FindInSphere(self:SetMeleeAttackDamagePosition(), AttackDist)
 	local hitentity = false
 	local HasHitGoodProp = false
 	if FindEnts != nil then
