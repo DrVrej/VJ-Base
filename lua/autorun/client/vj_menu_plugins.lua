@@ -29,8 +29,8 @@ if (file.Exists("autorun/vj_zss_autorun.lua","LUA")) then table.insert(VJBASE_PL
 //PrintTable(VJBASE_PLUGINS)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_PLUGINS(Panel)
-	Panel:AddControl( "Label", {Text = "List of downloaded addons that use VJ Base."})
-	Panel:ControlHelp("Version: "..VJBASE_VERSION) -- Main Number/Version/Quick Fixes
+	Panel:AddControl( "Label", {Text = "List of installed addons that use VJ Base."})
+	Panel:ControlHelp("Version: "..VJBASE_VERSION) -- Main Number / Version / Patches
 	Panel:ControlHelp("Total Plugins: "..VJBASE_TOTALPLUGINS)
 	local CheckList = vgui.Create("DListView")
 	CheckList:SetTooltip(false)
@@ -49,7 +49,7 @@ function VJ_PLUGINS(Panel)
 		for k,v in SortedPairsByMemberValue(VJBASE_PLUGINS,"Name") do
 			CheckList:AddLine(v.Name,v.Type)
 		end else
-		CheckList:AddLine("No Plugins Found","")
+		CheckList:AddLine("No Plugins Found.","")
 	end
 	/*
 	if table.KeyFromValue(VJBASE_PLUGINS, "aliensw") then CheckList:AddLine( "Alien Swarm","SNPC" ) end

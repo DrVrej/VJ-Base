@@ -61,6 +61,7 @@ ENT.FriendsWithAllPlayerAllies = false -- Should this SNPC be friends with all o
 ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE -- The behavior of the SNPC
 	-- VJ_BEHAVIOR_AGGRESSIVE = Default behavior, attacks enemies || VJ_BEHAVIOR_NEUTRAL = Neutral to everything, unless provoked
 	-- VJ_BEHAVIOR_PASSIVE = Doesn't attack, but can attacked by others || VJ_BEHAVIOR_PASSIVE_NATURE = Doesn't attack and is allied with everyone
+ENT.IsGuard = false -- If set to false, it will attempt to stick to its current position at all times
 ENT.MoveOutOfFriendlyPlayersWay = true -- Should the SNPC move out of the way when a friendly player comes close to it?
 ENT.BecomeEnemyToPlayer = false -- Should the friendly SNPC become enemy towards the player if it's damaged by a player?
 ENT.BecomeEnemyToPlayerLevel = 2 -- How many times does the player have to hit the SNPC for it to become enemy?
@@ -1008,8 +1009,8 @@ ENT.NextInvestigateSoundMove = 0
 ENT.NextInvestigateSoundT = 0
 ENT.LostEnemySoundT = 0
 ENT.NextDoAnyAttackT = 0
+ENT.NearestPointToEnemyDistance = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
-ENT.NearestPointToEnemyDistance = Vector(0,0,0)
 ENT.CurrentTurningAngle = false
 ENT.SelectedDifficulty = 1
 ENT.VJ_AddCertainEntityAsEnemy = {}
@@ -1601,7 +1602,7 @@ function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 	OverrideWander = OverrideWander or false
 	if self.IdleAlwaysWander == true then RestrictNumber = 1 end
 	if (self.MovementType == VJ_MOVETYPE_STATIONARY) or (self.LastHiddenZone_CanWander == false) or (self.NextWanderTime > CurTime()) then RestrictNumber = 2 end
-	if OverrideWander == false && self.DisableWandering == true && (RestrictNumber == 1 or RestrictNumber == 0) then
+	if OverrideWander == false && (self.DisableWandering == true or self.IsGuard == true) && (RestrictNumber == 1 or RestrictNumber == 0) then
 		RestrictNumber = 2
 	end
 	if RestrictNumber == 0 then -- kharen: gam ge bidedi, gam ge gena
@@ -1633,7 +1634,7 @@ function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
 	end
 	//ChaseSched = ChaseSched or VJ_PICKRANDOMTABLE(self.ChaseSchedule)
 	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_TASK_IDLE_STAND() return end
-	if OverrideChasing == false && (self.DisableChasingEnemy == true or self.RangeAttack_DisableChasingEnemy == true) then self:VJ_TASK_IDLE_STAND() return end
+	if OverrideChasing == false && (self.DisableChasingEnemy == true or self.IsGuard == true or self.RangeAttack_DisableChasingEnemy == true) then self:VJ_TASK_IDLE_STAND() return end
 	//self:VJ_SetSchedule(ChaseSched) // SCHED_CHASE_ENEMY
 	self:VJ_TASK_CHASE_ENEMY()
 	if self.NextChaseTime > CurTime() then return end
@@ -2528,7 +2529,7 @@ function ENT:Think()
 			self.TimeSinceLastSeenEnemy = 0
 			self.TimeSinceSeenEnemy = self.TimeSinceSeenEnemy + 0.1
 			if (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (ene:GetPos():Distance(self:GetPos()) < self.SightDistance) then
-				seentr = util.TraceLine({start = self:NearestPoint(self:GetPos() +self:OBBCenter()),endpos = ene:EyePos(),filter = function(ent) if (ent:GetClass() == self:GetClass() or self:Disposition(ent) == D_LI) then return false end end})
+				local seentr = util.TraceLine({start = self:NearestPoint(self:GetPos() +self:OBBCenter()),endpos = ene:EyePos(),filter = function(ent) if (ent:GetClass() == self:GetClass() or self:Disposition(ent) == D_LI) then return false end end})
 				if (ene:Visible(self) or (IsValid(seentr.Entity) && seentr.Entity:GetClass() == ene)) then
 					self.LastSeenEnemyTime = 0
 				else
@@ -3365,7 +3366,7 @@ function ENT:VJ_ACT_RESETENEMY(RunToEnemyOnReset)
 	if IsValid(self:GetEnemy()) then vsched:EngTask("TASK_FORGET", self:GetEnemy()) end
 	//vsched:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
 	self.NextWanderTime = CurTime() + math.Rand(3,5)
-	if self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && RunToEnemyOnReset == true && CurTime() > self.LastHiddenZoneT && self.LastHiddenZone_CanWander == true && self.MeleeAttacking != true && self.RangeAttacking != true && self.LeapAttacking != true then
+	if self.IsGuard == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && RunToEnemyOnReset == true && CurTime() > self.LastHiddenZoneT && self.LastHiddenZone_CanWander == true && self.MeleeAttacking != true && self.RangeAttacking != true && self.LeapAttacking != true then
 		//ParticleEffect("explosion_turret_break", self.LatestEnemyPosition, Angle(0,0,0))
 		self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Walk))
 		vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)

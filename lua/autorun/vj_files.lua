@@ -7,7 +7,9 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 include('autorun/vj_controls.lua')
 
--- Add Decals -------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Decals ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 game.AddDecal("VJ_AcidSlime1",{"vj_base/decals/vj_acidslime1","vj_base/decals/vj_acidslime2","vj_base/decals/vj_acidslime3","vj_base/decals/vj_acidslime4"})
 game.AddDecal("VJ_Blood_Red",{"vj_base/decals/blood/vj_redblood1","vj_base/decals/blood/vj_redblood2","vj_base/decals/blood/vj_redblood3","vj_base/decals/blood/vj_redblood4","vj_base/decals/blood/vj_redblood5","vj_base/decals/blood/vj_redblood6"})
 game.AddDecal("VJ_Blood_Yellow",{"vj_base/decals/blood/vj_yellowblood1","vj_base/decals/blood/vj_yellowblood2","vj_base/decals/blood/vj_yellowblood3","vj_base/decals/blood/vj_yellowblood4","vj_base/decals/blood/vj_yellowblood5","vj_base/decals/blood/vj_yellowblood6"})
@@ -17,7 +19,10 @@ game.AddDecal("VJ_Blood_Blue",{"vj_base/decals/blood/vj_blueblood1","vj_base/dec
 game.AddDecal("VJ_Blood_Purple",{"vj_base/decals/blood/vj_purpleblood1","vj_base/decals/blood/vj_purpleblood2","vj_base/decals/blood/vj_purpleblood3","vj_base/decals/blood/vj_purpleblood4","vj_base/decals/blood/vj_purpleblood5","vj_base/decals/blood/vj_purpleblood6"})
 game.AddDecal("VJ_Blood_White",{"vj_base/decals/blood/vj_whiteblood1","vj_base/decals/blood/vj_whiteblood2","vj_base/decals/blood/vj_whiteblood3","vj_base/decals/blood/vj_whiteblood4","vj_base/decals/blood/vj_whiteblood5","vj_base/decals/blood/vj_whiteblood6"})
 game.AddDecal("VJ_Blood_Oil",{"vj_base/decals/blood/vj_oilblood1","vj_base/decals/blood/vj_oilblood2","vj_base/decals/blood/vj_oilblood3","vj_base/decals/blood/vj_oilblood4","vj_base/decals/blood/vj_oilblood5","vj_base/decals/blood/vj_oilblood6"})
--- Precache Models -------------------------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Model Precaching ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- Alien Gibs --
 util.PrecacheModel("models/gibs/xenians/mgib_01.mdl")
 util.PrecacheModel("models/gibs/xenians/mgib_02.mdl")
@@ -52,7 +57,9 @@ util.PrecacheModel("models/spitball_large.mdl")
 util.PrecacheModel("models/spitball_medium.mdl")
 util.PrecacheModel("models/spitball_small.mdl")
 
--- Menu Language -------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Language files ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
 	language.Add("vjbase.menugeneral.default", "Default")
 	
@@ -66,9 +73,21 @@ if (CLIENT) then
 	language.Add("vjbase.menudifficulty.nightmare", "Nightmare | +250% Health and Damage")
 	language.Add("vjbase.menudifficulty.hell_on_earth", "Hell On Earth | +350% Health and Damage")
 	language.Add("vjbase.menudifficulty.total_annihilation", "Total Annihilation | +500% Health and Damage")
+	
+	language.Add("vjbase.menuproperties.control", "TAKE CONTROL")
+	language.Add("vjbase.menuproperties.guard", "Toggle Guarding")
+	language.Add("vjbase.menuproperties.wander", "Toggle Wandering")
+	language.Add("vjbase.menuproperties.medic", "Make Medic (Toggle)")
+	language.Add("vjbase.menuproperties.allyme", "Ally To Me")
+	language.Add("vjbase.menuproperties.hostileme", "Hostile To Me")
+	language.Add("vjbase.menuproperties.slay", "Slay")
+	language.Add("vjbase.menuproperties.gib", "Gib (If Valid)")
+	language.Add("vjbase.menuproperties.devmode", "Toggle Developer Mode")
 end
 
--- Fonts -------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Fonts ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
 	surface.CreateFont( "VJFont_Trebuchet24_Large",{
 		font = "Trebuchet24",
