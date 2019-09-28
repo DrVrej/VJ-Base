@@ -40,8 +40,6 @@ SWEP.Secondary.ClipSize 		= -1
 SWEP.Secondary.DefaultClip 		= -1
 SWEP.Secondary.Automatic 		= false
 SWEP.Secondary.Ammo 			= "none"
-	-- Independent Variables ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.Deleted					= false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Initialize()
 	self:SetWeaponHoldType(self.HoldType)
@@ -59,7 +57,7 @@ function SWEP:PrimaryAttack()
 			self.Owner:ChatPrint("That's a player dumbass.")
 			return
 		elseif tr.Entity:GetClass() == "prop_ragdoll" then
-			self.Owner:ChatPrint("That's a ragdoll you retard.")
+			self.Owner:ChatPrint("You are about to become that corpse.")
 			return
 		elseif tr.Entity:GetClass() == "prop_physics" then
 			self.Owner:ChatPrint("Uninstall your game. Now.")
@@ -92,9 +90,3 @@ function SWEP:PrimaryAttack()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:SecondaryAttack() return false end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:Think() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:Reload() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:OnRemove() self.Deleted = true end
