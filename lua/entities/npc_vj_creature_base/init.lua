@@ -370,7 +370,7 @@ ENT.RangeAttackExtraTimers = {/* Ex: 1,1.4 */} -- Extra range attack timers | it
 ENT.RangeUseAttachmentForPos = false -- Should the projectile spawn on a attachment?
 ENT.RangeUseAttachmentForPosID = "muzzle" -- The attachment used on the range attack if RangeUseAttachmentForPos is set to true
 ENT.RangeAttackPos_Up = 20 -- Up/Down spawning position for range attack
-ENT.RangeAttackPos_Forward = 0 -- Forward/ Backward spawning position for range attack
+ENT.RangeAttackPos_Forward = 0 -- Forward/Backward spawning position for range attack
 ENT.RangeAttackPos_Right = 0 -- Right/Left spawning position for range attack
 	-- ====== Control Variables ====== --
 ENT.DisableRangeAttackAnimation = false -- if true, it will disable the animation code

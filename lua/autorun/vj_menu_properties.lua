@@ -39,14 +39,6 @@ properties.Add("vj_pr_npc_control",{
 				obj:SetControlledNPC(ent)
 				obj:Spawn()
 				obj:StartControlling()
-				
-				if ent.IsGuard == true then
-					ply:ChatPrint("Disabled Guarding for "..ent:GetName()..".")
-					ent.IsGuard = false
-				else
-					ply:ChatPrint("Enabled Guarding for "..ent:GetName()..".")
-					ent.IsGuard = true
-				end
 			else
 				ply:ChatPrint("Can't control "..ent:GetName().." its health is 0 or below.")
 			end
@@ -86,6 +78,7 @@ properties.Add("vj_pr_npc_guard",{
 				ent.IsGuard = false
 			else
 				ply:ChatPrint("Enabled Guarding for "..ent:GetName()..".")
+				ent:StopMoving()
 				ent.IsGuard = true
 			end
 		else
@@ -123,6 +116,7 @@ properties.Add("vj_pr_npc_wander",{
 				ent.DisableWandering = false
 			else
 				ply:ChatPrint("Disabled Wandering for "..ent:GetName()..".")
+				ent:StopMoving()
 				ent.DisableWandering = true
 			end
 		else
@@ -188,6 +182,11 @@ properties.Add("vj_pr_npc_allyme",{
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		table.insert(ent.VJ_AddCertainEntityAsFriendly,ply)
+		for k,v in ipairs(ent.VJ_AddCertainEntityAsEnemy) do
+			if v:IsPlayer() && v:GetName() == ply:GetName() then
+				table.remove(ent.VJ_AddCertainEntityAsEnemy,k)
+			end
+		end
 		ply:ChatPrint(ent:GetName().." Became an ally to you.")
 	end
 })
@@ -216,6 +215,11 @@ properties.Add("vj_pr_npc_hostileme",{
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		table.insert(ent.VJ_AddCertainEntityAsEnemy,ply)
+		for k,v in ipairs(ent.VJ_AddCertainEntityAsFriendly) do
+			if v:IsPlayer() && v:GetName() == ply:GetName() then
+				table.remove(ent.VJ_AddCertainEntityAsFriendly,k)
+			end
+		end
 		ply:ChatPrint(ent:GetName().." Became hostile to you.")
 	end
 })
