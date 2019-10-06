@@ -89,7 +89,7 @@ function ENT:CustomOnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnTakeDamage(dmginfo) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnPhysicsCollide(data,phys) end
+function ENT:CustomOnPhysicsCollide(data,phys) end -- Return false to disable the base functions from running
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnCollideWithoutRemove(data,phys) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -114,7 +114,7 @@ function ENT:Initialize()
 	
 	self:CustomOnInitializeBeforePhys()
 
-	local phys = self.Entity:GetPhysicsObject()
+	local phys = self:GetPhysicsObject()
 	if IsValid(phys) then
 		self:CustomPhysicsObjectOnInitialize(phys)
 	end
@@ -188,31 +188,31 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data,phys)
 	//self.Dead = true
-	self:CustomOnPhysicsCollide(data,phys)
-	
-	if self.RemoveOnHit == true then
-		if self.Dead == false then
-			self.Dead = true
-			self:DoDamageCode(data,phys)
-			if self.PaintDecalOnDeath == true && VJ_PICKRANDOMTABLE(self.DecalTbl_DeathDecals) != false && self.AlreadyPaintedDeathDecal == false then 
-				self.AlreadyPaintedDeathDecal = true 
-				util.Decal(VJ_PICKRANDOMTABLE(self.DecalTbl_DeathDecals), data.HitPos +data.HitNormal, data.HitPos -data.HitNormal)
+	if self:CustomOnPhysicsCollide(data,phys) != false then
+		if self.RemoveOnHit == true then
+			if self.Dead == false then
+				self.Dead = true
+				self:DoDamageCode(data,phys)
+				if self.PaintDecalOnDeath == true && VJ_PICKRANDOMTABLE(self.DecalTbl_DeathDecals) != false && self.AlreadyPaintedDeathDecal == false then 
+					self.AlreadyPaintedDeathDecal = true 
+					util.Decal(VJ_PICKRANDOMTABLE(self.DecalTbl_DeathDecals), data.HitPos +data.HitNormal, data.HitPos -data.HitNormal)
+				end
+				if self.ShakeWorldOnDeath == true then util.ScreenShake(data.HitPos, self.ShakeWorldOnDeathAmplitude, self.ShakeWorldOnDeathFrequency, self.ShakeWorldOnDeathtDuration, self.ShakeWorldOnDeathRadius) end
+				self:OnCollideSoundCode()
 			end
-			if self.ShakeWorldOnDeath == true then util.ScreenShake(data.HitPos, self.ShakeWorldOnDeathAmplitude, self.ShakeWorldOnDeathFrequency, self.ShakeWorldOnDeathtDuration, self.ShakeWorldOnDeathRadius) end
+			self:SetDeathVariablesTrue(data,phys,true)
+			self:Remove()
+		end
+		
+		if self.Dead == false && self.CollideCodeWithoutRemoving == true && CurTime() > self.NextCollideCodeWithoutRemovingT then
+			self:DoDamageCode(data,phys)
 			self:OnCollideSoundCode()
+			if self.PaintDecalOnCollide == true && VJ_PICKRANDOMTABLE(self.DecalTbl_OnCollideDecals) != false && self.AlreadyPaintedDeathDecal == false then
+				util.Decal(VJ_PICKRANDOMTABLE(self.DecalTbl_OnCollideDecals), data.HitPos +data.HitNormal, data.HitPos -data.HitNormal)
+			end
+			self:CustomOnCollideWithoutRemove(data,phys)
+			self.NextCollideCodeWithoutRemovingT = CurTime() + math.Rand(self.NextCollideCodeWithoutRemovingTime1,self.NextCollideCodeWithoutRemovingTime2)
 		end
-		self:SetDeathVariablesTrue(data,phys,true)
-		self:Remove()
-	end
-	
-	if self.Dead == false && self.CollideCodeWithoutRemoving == true && CurTime() > self.NextCollideCodeWithoutRemovingT then
-		self:DoDamageCode(data,phys)
-		self:OnCollideSoundCode()
-		if self.PaintDecalOnCollide == true && VJ_PICKRANDOMTABLE(self.DecalTbl_OnCollideDecals) != false && self.AlreadyPaintedDeathDecal == false then
-			util.Decal(VJ_PICKRANDOMTABLE(self.DecalTbl_OnCollideDecals), data.HitPos +data.HitNormal, data.HitPos -data.HitNormal)
-		end
-		self:CustomOnCollideWithoutRemove(data,phys)
-		self.NextCollideCodeWithoutRemovingT = CurTime() + math.Rand(self.NextCollideCodeWithoutRemovingTime1,self.NextCollideCodeWithoutRemovingTime2)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
