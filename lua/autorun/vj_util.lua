@@ -37,6 +37,7 @@ function util.VJ_SphereDamage(vAttacker,vInflictor,vPosition,vDamageRadius,vDama
 		end
 		
 		local function DoDamageCode(v2)
+			if (CustomCode) then CustomCode(v) end
 			Foundents[#Foundents+1] = v
 			if (v2:GetClass() == "npc_strider" or v2:GetClass() == "npc_combinedropship" or v2:GetClass() == "npc_combinegunship" or v2:GetClass() == "npc_helicopter") then
 				v2:TakeDamage(Finaldmg,vAttacker,vInflictor)
@@ -81,7 +82,6 @@ function util.VJ_SphereDamage(vAttacker,vInflictor,vPosition,vDamageRadius,vDama
 				DoDamageCode(v)
 			end
 		end
-		if (CustomCode) then CustomCode(v) end
 	end
 	return Foundents
 end

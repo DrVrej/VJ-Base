@@ -579,8 +579,8 @@ function Entity_MetaTable:CalculateProjectile(Type, StartPos, EndPos, Vel)
 		local pos_y = EndPos.z - StartPos.z
 		local grav = physenv.GetGravity():Length()
 		local sqrtcalc1 = (Vel * Vel * Vel * Vel)
-		local sqrtcalc2 = - grav * (grav *(pos_x * pos_x) + 2 * pos_y * (Vel * Vel))
-		local calcsum = sqrtcalc1 + sqrtcalc2 -- Yergou tevere aveltsour
+		local sqrtcalc2 = grav * ((grav * (pos_x * pos_x)) + (2 * pos_y * (Vel * Vel)))
+		local calcsum = sqrtcalc1 - sqrtcalc2 -- Yergou tevere aveltsour
 		if calcsum < 0 then -- Yete teve nevas e, ooremen sharnage
 			calcsum = math.abs(calcsum)
 		end
