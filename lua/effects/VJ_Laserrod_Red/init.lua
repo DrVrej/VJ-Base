@@ -32,7 +32,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function EFFECT:Think()
 	if (CurTime() > self.DieTime) then -- If it's dead then...
-		util.Decal("fadingscorch", self.EndPos +self.Dir:GetNormalized(), self.EndPos -self.Dir:GetNormalized())
+		util.Decal("fadingscorch", self.EndPos + self.Dir:GetNormalized(), self.EndPos - self.Dir:GetNormalized())
 
 		local effectdata = EffectData()
 		effectdata:SetOrigin(self.EndPos + self.Dir:GetNormalized() * -2)

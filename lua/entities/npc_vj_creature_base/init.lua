@@ -2659,7 +2659,7 @@ function ENT:Think()
 						if self.TimeUntilMeleeAttackDamage == false then
 							self:MeleeAttackCode_DoFinishTimers()
 						else
-							timer.Create( "timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage, self.MeleeAttackReps, function() if ispropattack == true then self:MeleeAttackCode(true) else self:MeleeAttackCode() end end)
+							timer.Create("timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage, self.MeleeAttackReps, function() if ispropattack == true then self:MeleeAttackCode(true) else self:MeleeAttackCode() end end)
 							for tk, tv in ipairs(self.MeleeAttackExtraTimers) do
 								self:DoAddExtraAttackTimers("timer_melee_start_"..math.Round(CurTime())+math.random(1,99999999),tv,1,"MeleeAttack")
 							end
@@ -2704,7 +2704,7 @@ function ENT:Think()
 						if self.TimeUntilRangeAttackProjectileRelease == false then
 							self:RangeAttackCode_DoFinishTimers()
 						else
-							timer.Create( "timer_range_start"..self:EntIndex(), self.TimeUntilRangeAttackProjectileRelease, self.RangeAttackReps, function() self:RangeAttackCode() end)
+							timer.Create("timer_range_start"..self:EntIndex(), self.TimeUntilRangeAttackProjectileRelease, self.RangeAttackReps, function() self:RangeAttackCode() end)
 							for tk, tv in ipairs(self.RangeAttackExtraTimers) do
 								self:DoAddExtraAttackTimers("timer_range_start_"..math.Round(CurTime())+math.random(1,99999999),tv,1,"RangeAttack")
 							end

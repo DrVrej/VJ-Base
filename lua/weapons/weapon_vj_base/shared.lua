@@ -52,6 +52,14 @@ SWEP.NPC_ExtraFireSoundTime		= 0.4 -- How much time until it plays the sound (Af
 SWEP.NPC_ExtraFireSoundLevel	= 70 -- How far does the sound go?
 SWEP.NPC_ExtraFireSoundPitch1	= 90
 SWEP.NPC_ExtraFireSoundPitch2	= 100
+	-- ====== Secondary Fire Variables ====== --
+SWEP.NPC_HasSecondaryFireNext = false -- Can the weapon have a secondary fire?
+SWEP.NPC_SecondaryFireChance = 3 -- Chance that the secondary fire is used | 1 = always
+SWEP.NPC_SecondaryFireNext = {12,15} -- How much time until the secondary fire can be used again?
+SWEP.NPC_SecondaryFireDistance = 1000 -- How close does the owner's enemy have to be for it to fire?
+SWEP.NPC_HasSecondaryFireSound = true -- Can the secondary fire sound be played?
+SWEP.NPC_SecondaryFireSound = {} -- The sound it plays when the secondary fire is used
+SWEP.NPC_SecondaryFireSoundLevel = 70 -- The sound level to use for the secondary firing sound
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.MadeForNPCsOnly 			= false -- Is this weapon meant to be for NPCs only?
 SWEP.ViewModel					= "models/weapons/v_rif_ak47.mdl"
@@ -105,7 +113,7 @@ SWEP.Primary.Recoil				= 0.3 -- How much recoil does the player get?
 SWEP.Primary.Cone				= 7 -- How accurate is the bullet? (Players)
 SWEP.Primary.Delay				= 0.1 -- Time until it can shoot again
 SWEP.Primary.Tracer				= 1
-SWEP.Primary.TracerType			= "Tracer" -- Tracer type (Examples: AR2, laster, 9mm)
+SWEP.Primary.TracerType			= "Tracer" -- Tracer type (Examples: AR2)
 SWEP.Primary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
 SWEP.Primary.Automatic			= true -- Is it automatic?
 SWEP.Primary.Ammo				= "SMG1" -- Ammo type
@@ -137,6 +145,8 @@ SWEP.NPC_NextPrimaryFireT		= 0
 SWEP.Primary.DefaultClip 		= 0
 SWEP.NextNPCDrySoundT 			= 0
 SWEP.NPC_AnimationSet 			= "Custom"
+SWEP.NPC_SecondaryFireNextT 	= 0
+SWEP.NPC_SecondaryFirePerforming = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -148,15 +158,27 @@ function SWEP:CustomOnPrimaryAttack_AfterShoot() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BulletCallback(attacker,tr,dmginfo) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttackEffects()
-	-- Not returning to true will make the base effects not to spawn
-	return true
+function SWEP:CustomOnPrimaryAttackEffects() return true end -- Not returning to true will make the base effects not to spawn
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:NPC_SecondaryFire()
+	/* An example:
+	local pos = self:GetNWVector("VJ_CurBulletPos")
+	local proj = ents.Create("prop_combine_ball")
+	proj:SetPos(pos)
+	proj:SetAngles(self.Owner:GetAngles())
+	proj:Spawn()
+	proj:Activate()
+	proj:Fire("Explode","",4)
+	local phys = proj:GetPhysicsObject()
+	if phys:IsValid() then
+		phys:Wake()
+		phys:SetVelocity(self.Owner:CalculateProjectile("Line", pos, self.Owner:GetEnemy():GetPos() + self.Owner:GetEnemy():OBBCenter(), 2000))
+	end
+	VJ_EmitSound(self.Owner,"weapons/ar2/npc_ar2_altfire.wav",90) // "weapons/cguard/charging.wav"
+	*/
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomBulletSpawnPosition()
-	-- Return a position to override the bullet spawn position
-	return false
-end
+function SWEP:CustomBulletSpawnPosition() return false end -- Return a position to override the bullet spawn position
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnFireAnimationEvent(pos,ang,event,options) return false end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -185,6 +207,7 @@ function SWEP:Initialize()
 	self:SetNWVector("VJ_CurBulletPos",self:GetPos())
 	self:SetHoldType(self.HoldType)
 	if self.HasIdleAnimation == true then self.InitHasIdleAnimation = true end
+	self.NPC_SecondaryFireNextT = math.Rand(1,3)
 	self:CustomOnInitialize()
 	if IsValid(self.Owner) then
 		if VJ_AnimationExists(self.Owner,ACT_WALK_AIM_PISTOL) == true && VJ_AnimationExists(self.Owner,ACT_RUN_AIM_PISTOL) == true && VJ_AnimationExists(self.Owner,ACT_POLICE_HARASS1) == true then
@@ -340,7 +363,8 @@ function SWEP:NPC_ServerNextFire()
 	if self.NPC_NextPrimaryFire != false && self:NPCAbleToShoot() == true then FireCode() end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:NPCAbleToShoot()
+function SWEP:NPCAbleToShoot(CheckSec)
+	CheckSec = CheckSec or false -- Make it only check conditions that secondary fire needs
 	if self:IsValid() && IsValid(self.Owner) && self.Owner:IsValid() && self.Owner:IsNPC() then
 		if (self.Owner.IsVJBaseSNPC_Human) then
 			local check, ammo = self.Owner:CanDoWeaponAttack()
@@ -370,6 +394,8 @@ function SWEP:NPCAbleToShoot()
 					return true
 				end
 			end
+		elseif CheckSec == true then
+			return true
 		end
 	end
 	return false
@@ -417,6 +443,26 @@ function SWEP:NPCShoot_Primary(ShootPos,ShootDir)
 		self.Owner:WeaponAimPoseParameters()
 		//if self.Owner.IsVJBaseSNPC == true then self.Owner.Weapon_TimeSinceLastShot = 0 end
 	end
+	
+	if self.NPC_HasSecondaryFireNext == true && self.NPC_SecondaryFirePerforming == false && CurTime() > self.NPC_SecondaryFireNextT && self.Owner.CanUseSecondaryOnWeaponAttack == true && self.Owner:GetEnemy():GetPos():Distance(self.Owner:GetPos()) <= self.NPC_SecondaryFireDistance then
+		if math.random(1,self.NPC_SecondaryFireChance) == 1 then
+			self.Owner:VJ_ACT_PLAYACTIVITY(self.Owner.AnimTbl_WeaponAttackSecondary,true,false,true,0)
+			self.NPC_SecondaryFirePerforming = true
+			if self.NPC_HasSecondaryFireSound == true then VJ_EmitSound(self.Owner,self.NPC_SecondaryFireSound,self.NPC_SecondaryFireSoundLevel) end
+			timer.Simple(self.Owner.WeaponAttackSecondaryTimeUntilFire,function()
+				if IsValid(self) && IsValid(self.Owner) && self:NPCAbleToShoot(true) == true && CurTime() > self.NPC_SecondaryFireNextT then
+					self.NPC_SecondaryFirePerforming = false
+					self:NPC_SecondaryFire()
+					if self.NPC_SecondaryFireNext != false then
+						self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext[1],self.NPC_SecondaryFireNext[2])
+					end
+				end
+			end)
+		else
+			self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext[1],self.NPC_SecondaryFireNext[2])
+		end
+	end
+	
 	timer.Simple(self.NPC_TimeUntilFire,function()
 		if IsValid(self) && IsValid(self.Owner) && self:NPCAbleToShoot() == true && CurTime() > self.NPC_NextPrimaryFireT then
 			if self.Owner.DisableWeaponFiringGesture != true then
