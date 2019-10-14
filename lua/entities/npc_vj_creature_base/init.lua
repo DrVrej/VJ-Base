@@ -519,7 +519,7 @@ ENT.SoundTbl_DamageByPlayer = {}
 ENT.SoundTbl_Death = {}
 ENT.SoundTbl_SoundTrack = {}
 	-- ====== Default File Path Variables ====== --
-	-- It's recommended not to edit these tables, instead override them using the tabels above
+	-- It's recommended not to edit these tables, instead override them using the tables above
 ENT.DefaultSoundTbl_MedicAfterHeal = {"items/smallmedkit1.wav"}
 ENT.DefaultSoundTbl_MeleeAttackExtra = {"npc/zombie/claw_strike1.wav","npc/zombie/claw_strike2.wav","npc/zombie/claw_strike3.wav"}
 ENT.DefaultSoundTbl_Impact = {"vj_flesh/alien_flesh1.wav"}
