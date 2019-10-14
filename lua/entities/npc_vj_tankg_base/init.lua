@@ -44,7 +44,7 @@ ENT.Tank_AngleDiffuseNumber = 180
 ENT.Tank_UseNegativeAngleDiffuseNumber = false
 ENT.Tank_AngleDiffuseGeneralNumber = 5
 ENT.Tank_UsesRightAngles = false -- For models that are rotated towards the right side
-	-- ====== SightVariables ====== --
+	-- ====== Sight Variables ====== --
 ENT.Tank_SeeClose = 350 -- If the enemy is closer than this number, than don't shoot!
 ENT.Tank_SeeFar = 5000 -- If the enemy is higher than this number, than don't shoot!
 ENT.Tank_SeeLimit = 6000 -- How far can it see?
@@ -56,6 +56,9 @@ ENT.Tank_Shell_VelocitySpeed = 5000 -- How fast should the tank shell travel?
 ENT.Tank_Shell_DynamicLightPos = Vector(-200,0,0)
 ENT.Tank_Shell_MuzzleFlashPos = Vector(0,-235,18)
 ENT.Tank_Shell_ParticlePos = Vector(-205,00,72)
+
+//util.AddNetworkString("vj_tankg_base_spawneffects")
+//util.AddNetworkString("vj_tankg_base_shooteffects")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -63,7 +66,27 @@ ENT.Tank_Shell_ParticlePos = Vector(-205,00,72)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomInitialize_CustomTank() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:TankBase_CustomOnShellFire(Shell) end
+function ENT:Tank_CustomOnThink() return true end -- Return false to disable the default base code
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Tank_CustomOnShellFire(Shell) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:StartSpawnEffects()
+	/* Example:
+	net.Start("vj_tankg_base_spawneffects")
+	net.WriteEntity(self)
+	net.Broadcast()
+	*/
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:StartShootEffects()
+	/* Example:
+	net.Start("vj_tankg_base_shooteffects")
+	net.WriteEntity(self)
+	net.Broadcast()
+	*/
+end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -71,9 +94,6 @@ function ENT:TankBase_CustomOnShellFire(Shell) end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-util.AddNetworkString("vj_tankg_base_spawneffects")
-util.AddNetworkString("vj_tankg_base_shooteffects")
-
 ENT.Tank_FacingTarget = false -- Is it facing the enemy?
 ENT.Tank_ShellReady = false -- Is the shell ready?
 ENT.Tank_ProperHeightShoot = false -- Is the enemy position proper height for it to shoot?
@@ -87,31 +107,6 @@ function ENT:CustomOnInitialize()
 	self.Tank_ShellReady = false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:StartSpawnEffects()
-	net.Start("vj_tankg_base_spawneffects")
-	net.WriteEntity(self)
-	net.Broadcast()
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:StartShootEffects()
-	net.Start("vj_tankg_base_shooteffects")
-	net.WriteEntity(self)
-	net.Broadcast()
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-/*function ENT:GetRelationship(entity)
-	if self.HasAllies == false then return end
-	local friendslist = { "npc_vj_tank_base" } -- List
-	for _,x in pairs( friendslist ) do
-	local hl_friendlys = ents.FindByClass( x )
-	for _,x in pairs( hl_friendlys ) do
-	if entity == x then
-	return D_LI
-	end
-  end
- end
-end*/
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AngleDiffuse(ang1, ang2)
 	local outcome = ang1 - ang2
 	if outcome < -180 then outcome = outcome + 360 end
@@ -120,13 +115,15 @@ function ENT:AngleDiffuse(ang1, ang2)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink()
-	//if !self:GetParent() then self:Remove() end
-	if GetConVarNumber("vj_npc_noidleparticle") == 1 then return end
-	timer.Simple(0.1,function()
-		if IsValid(self) && self.Dead == false then
-			self:StartSpawnEffects()
-		end
-	end)
+	if self:Tank_CustomOnThink() == true then
+		//if !self:GetParent() then self:Remove() end
+		if GetConVarNumber("vj_npc_noidleparticle") == 1 then return end
+		timer.Simple(0.1,function()
+			if IsValid(self) && self.Dead == false then
+				self:StartSpawnEffects()
+			end
+		end)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink_AIEnabled()
@@ -140,7 +137,7 @@ function ENT:CustomOnThink_AIEnabled()
 	//self:FindEnemySphere()
 	//print(self:GetEnemy())
 
-	if self.Tank_GunnerIsTurning == true then self:TANK_MOVINGSOUND() else VJ_STOPSOUND(self.tank_movingsd) end
+	if self.Tank_GunnerIsTurning == true then self:Tank_Sound_Moving() else VJ_STOPSOUND(self.tank_movingsd) end
 	self:CustomOnSchedule()
 
 	if self.Tank_FacingTarget == false then self.FiringShell = false end
@@ -208,7 +205,7 @@ function ENT:CustomOnSchedule()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:TANK_MOVINGSOUND()
+function ENT:Tank_Sound_Moving()
 	if self.HasSounds == false or self.HasFootStepSound == false then return end
 	
 	self.tank_movingsd = CreateSound(self, "vj_mili_tank/tank_gunnermove2_x.wav")
@@ -226,26 +223,26 @@ function ENT:RangeAttack_Base()
 		//end
 	//end
 
-	local function Timer_ShellAttack()
-		self:RangeAttack_Shell()
-		self.FiringShell = false
-	end
-
 	if self.Tank_ShellReady == false then
-		if self.HasSounds == true then
-		if GetConVarNumber("vj_npc_sd_rangeattack") == 0 then
-		self.shootsd1 = CreateSound(self, "vehicles/tank_readyfire1.wav")
-		self.shootsd1:SetSoundLevel(90)
-		self.shootsd1:PlayEx(1,100) end end
+		if self.HasSounds == true && self.HasRangeAttackSound == true then
+			self.shootsd1 = CreateSound(self, "vehicles/tank_readyfire1.wav")
+			self.shootsd1:SetSoundLevel(90)
+			self.shootsd1:PlayEx(1,100)
+		end
 		self.Tank_ShellReady = true
 	end
 
-	if self.Dead == false then timer.Create("timer_shell_attack"..self:EntIndex(),self.Tank_Shell_TimeUntilFire,1,Timer_ShellAttack) end
+	if self.Dead == false then
+		timer.Create("timer_shell_attack"..self:EntIndex(),self.Tank_Shell_TimeUntilFire,1,function()
+			self:RangeAttack_Shell()
+			self.FiringShell = false
+		end)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttack_Shell()
 	if (self.Dead == true) or (self.Dead == false && GetConVarNumber("ai_disabled") == 1) or (self.Tank_ProperHeightShoot == false) then return end
-	if IsValid(self:GetEnemy()) && self:GetEnemy() != NULL && IsValid(self:GetEnemy()) /* && self.Tank_FacingTarget == true*/ then
+	if IsValid(self:GetEnemy()) /* && self.Tank_FacingTarget == true*/ then
 		if self:Visible(self:GetEnemy()) then
 			if self.HasSounds == true && GetConVarNumber("vj_npc_sd_rangeattack") == 0 then
 				VJ_EmitSound(self,"vj_mili_tank/tank_fire"..math.random(1,4)..".wav",500,100)
@@ -305,7 +302,7 @@ function ENT:RangeAttack_Shell()
 			dust:SetScale(500)
 			util.Effect("ThumperDust",dust)
 
-			local ShootPos = (self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter()-self:LocalToWorld(self.Tank_Shell_SpawnPos)):GetNormal()*self.Tank_Shell_VelocitySpeed
+			local ShootPos = (self:GetEnemy():GetPos() + self:GetEnemy():OBBCenter() - self:LocalToWorld(self.Tank_Shell_SpawnPos)):GetNormal()*self.Tank_Shell_VelocitySpeed
 			if self.Tank_FacingTarget == false then
 				if self.Tank_UsesRightAngles == true then
 					ShootPos = self:GetRight()*ShootPos:Length()
@@ -324,7 +321,7 @@ function ENT:RangeAttack_Shell()
 				phys:SetVelocity(Vector(ShootPos.x,ShootPos.y,math.Clamp(ShootPos.z,self.Tank_Shell_SpawnPos.z+-735,self.Tank_Shell_SpawnPos.z+335)))
 			end
 
-			self:TankBase_CustomOnShellFire(Projectile_Shell)
+			self:Tank_CustomOnShellFire(Projectile_Shell)
 			self.Tank_ShellReady = false
 			self.FiringShell = false
 		else
@@ -336,8 +333,10 @@ function ENT:RangeAttack_Shell()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
-	GetCorpse:GetPhysicsObject():AddVelocity(Vector(math.Rand(-200,200), math.Rand(-200,200),math.Rand(200,400)))
-	GetCorpse:GetPhysicsObject():AddAngleVelocity(Vector(math.Rand(-100,100),math.Rand(-100,100),math.Rand(-100,100)))
+	if self:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse) == true then
+		GetCorpse:GetPhysicsObject():AddVelocity(Vector(math.Rand(-200,200), math.Rand(-200,200),math.Rand(200,400)))
+		GetCorpse:GetPhysicsObject():AddAngleVelocity(Vector(math.Rand(-100,100),math.Rand(-100,100),math.Rand(-100,100)))
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove()
