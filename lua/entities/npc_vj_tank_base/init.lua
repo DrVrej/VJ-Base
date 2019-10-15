@@ -108,6 +108,8 @@ function ENT:Tank_CustomOnPriorToKilled(dmginfo,hitgroup) return true end -- Ret
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse) return true end -- Return false to disable the default base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Tank_CustomOnDeath_AfterCorpseSpawned_Effects(dmginfo,hitgroup,GetCorpse) return true end -- Return false to disable the default base code
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSpawnEffects()
 	/* Example:
 	net.Start("vj_tank_base_spawneffects")
@@ -352,29 +354,6 @@ function ENT:CustomOnSchedule()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_Sound_Moving()
-	if self.HasSounds == false or self.HasFootStepSound == false then return end
-	
-	local sdtbl1 = VJ_PICKRANDOMTABLE(self.Tank_SoundTbl_DrivingEngine)
-	if sdtbl1 == false then sdtbl1 = VJ_PICKRANDOMTABLE(self.Tank_DefaultSoundTbl_DrivingEngine) end -- Default table
-	self.tank_movingsd = VJ_CreateSound(self,sdtbl1,80,100)
-	self.Tank_NextRunOverSoundT = CurTime() + 0.2
-	
-	local sdtbl2 = VJ_PICKRANDOMTABLE(self.Tank_SoundTbl_Track)
-	if sdtbl2 == false then sdtbl2 = VJ_PICKRANDOMTABLE(self.Tank_DefaultSoundTbl_Track) end -- Default table
-	self.tank_tracksd = VJ_CreateSound(self,sdtbl2,70,100)
-	self.Tank_NextRunOverSoundT = CurTime() + 0.2
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_Sound_RunOver()
-	if self.HasSounds == true && CurTime() > self.Tank_NextRunOverSoundT then
-		local sdtbl = VJ_PICKRANDOMTABLE(self.Tank_SoundTbl_RunOver)
-		if sdtbl == false then sdtbl = VJ_PICKRANDOMTABLE(self.Tank_DefaultSoundTbl_RunOver) end -- Default table
-		self:EmitSound(sdtbl,80,math.random(80,100))
-		self.Tank_NextRunOverSoundT = CurTime() + 0.2
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnTakeDamage_BeforeDamage(dmginfo,hitgroup)
 	local dmgtype = dmginfo:GetDamageType()
 	if (dmgtype == DMG_SLASH or dmgtype == DMG_GENERIC or dmgtype == DMG_CLUB) then
@@ -395,7 +374,7 @@ function ENT:CustomOnPriorToKilled(dmginfo,hitgroup)
 	if self:Tank_CustomOnPriorToKilled(dmginfo,hitgroup) == true then
 		for i=0,1,0.5 do
 			timer.Simple(i,function()
-				if self:IsValid() then
+				if IsValid(self) then
 					VJ_EmitSound(self,"vj_mili_tank/tank_death2.wav",100,100)
 					util.BlastDamage(self,self,self:GetPos(),200,40)
 					util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
@@ -405,7 +384,7 @@ function ENT:CustomOnPriorToKilled(dmginfo,hitgroup)
 		end
 		
 		timer.Simple(1.5,function()
-			if self:IsValid() then
+			if IsValid(self) then
 				VJ_EmitSound(self,"vj_mili_tank/tank_death2.wav",100,100)
 				VJ_EmitSound(self,"vj_mili_tank/tank_death3.wav",100,100)
 				util.BlastDamage(self,self,self:GetPos(),200,40)
@@ -440,25 +419,27 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
 		util.Decal(VJ_PICKRANDOMTABLE(self.Tank_DeathDecal), tr.HitPos+tr.HitNormal, tr.HitPos-tr.HitNormal)
 
 		if self.HasGibDeathParticles == true then
-			//self.FireEffect = ents.Create( "env_fire_trail" )
-			//self.FireEffect:SetPos(self:GetPos()+self:GetUp()*70)
-			//self.FireEffect:Spawn()
-			//self.FireEffect:SetParent(GetCorpse)
-			//ParticleEffectAttach("smoke_large_01b",PATTACH_ABSORIGIN_FOLLOW,GetCorpse,0)
-			ParticleEffect("vj_explosion3",self:GetPos(),Angle(0,0,0),nil)
-			ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*-130,Angle(0,0,0),nil)
-			ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*130,Angle(0,0,0),nil)
-			ParticleEffectAttach("smoke_burning_engine_01",PATTACH_ABSORIGIN_FOLLOW,GetCorpse,0)
-			
-			local explosioneffect = EffectData()
-			explosioneffect:SetOrigin(self:GetPos())
-			util.Effect("VJ_Medium_Explosion1",explosioneffect)
-			util.Effect("Explosion", explosioneffect)
-			
-			local dusteffect = EffectData()
-			dusteffect:SetOrigin(self:GetPos())
-			dusteffect:SetScale(800)
-			util.Effect("ThumperDust",dusteffect)
+			if self:Tank_CustomOnDeath_AfterCorpseSpawned_Effects(dmginfo,hitgroup,GetCorpse) == true then
+				//self.FireEffect = ents.Create( "env_fire_trail" )
+				//self.FireEffect:SetPos(self:GetPos()+self:GetUp()*70)
+				//self.FireEffect:Spawn()
+				//self.FireEffect:SetParent(GetCorpse)
+				//ParticleEffectAttach("smoke_large_01b",PATTACH_ABSORIGIN_FOLLOW,GetCorpse,0)
+				ParticleEffect("vj_explosion3",self:GetPos(),Angle(0,0,0),nil)
+				ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*-130,Angle(0,0,0),nil)
+				ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*130,Angle(0,0,0),nil)
+				ParticleEffectAttach("smoke_burning_engine_01",PATTACH_ABSORIGIN_FOLLOW,GetCorpse,0)
+				
+				local explosioneffect = EffectData()
+				explosioneffect:SetOrigin(self:GetPos())
+				util.Effect("VJ_Medium_Explosion1",explosioneffect)
+				util.Effect("Explosion", explosioneffect)
+				
+				local dusteffect = EffectData()
+				dusteffect:SetOrigin(self:GetPos())
+				dusteffect:SetScale(800)
+				util.Effect("ThumperDust",dusteffect)
+			end
 		end
 	end
 end
@@ -469,6 +450,29 @@ function ENT:CustomOnRemove()
 	if IsValid(self.Gunner) then
 		self.Gunner:Remove()
 	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Tank_Sound_Moving()
+	if self.HasSounds == false or self.HasFootStepSound == false then return end
+	
+	local sdtbl1 = VJ_PICKRANDOMTABLE(self.Tank_SoundTbl_DrivingEngine)
+	if sdtbl1 == false then sdtbl1 = VJ_PICKRANDOMTABLE(self.Tank_DefaultSoundTbl_DrivingEngine) end -- Default table
+	self.tank_movingsd = VJ_CreateSound(self,sdtbl1,80,100)
+	self.Tank_NextRunOverSoundT = CurTime() + 0.2
+	
+	local sdtbl2 = VJ_PICKRANDOMTABLE(self.Tank_SoundTbl_Track)
+	if sdtbl2 == false then sdtbl2 = VJ_PICKRANDOMTABLE(self.Tank_DefaultSoundTbl_Track) end -- Default table
+	self.tank_tracksd = VJ_CreateSound(self,sdtbl2,70,100)
+	self.Tank_NextRunOverSoundT = CurTime() + 0.2
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Tank_Sound_RunOver()
+	if self.HasSounds == false or CurTime() < self.Tank_NextRunOverSoundT then return end
+	
+	local sdtbl = VJ_PICKRANDOMTABLE(self.Tank_SoundTbl_RunOver)
+	if sdtbl == false then sdtbl = VJ_PICKRANDOMTABLE(self.Tank_DefaultSoundTbl_RunOver) end -- Default table
+	self:EmitSound(sdtbl,80,math.random(80,100))
+	self.Tank_NextRunOverSoundT = CurTime() + 0.2
 end
 /*-----------------------------------------------
 	*** Copyright (c) 2012-2019 by DrVrej, All rights reserved. ***
