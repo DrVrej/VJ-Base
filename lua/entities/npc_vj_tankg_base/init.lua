@@ -56,6 +56,14 @@ ENT.Tank_Shell_VelocitySpeed = 5000 -- How fast should the tank shell travel?
 ENT.Tank_Shell_DynamicLightPos = Vector(-200,0,0)
 ENT.Tank_Shell_MuzzleFlashPos = Vector(0,-235,18)
 ENT.Tank_Shell_ParticlePos = Vector(-205,00,72)
+	-- ====== Sound Variables ====== --
+ENT.Tank_SoundTbl_Turning = {}
+ENT.Tank_SoundTbl_ReloadShell = {}
+ENT.Tank_SoundTbl_FireShell = {}
+
+ENT.Tank_DefaultSoundTbl_Turning = {"vj_mili_tank/tank_gunnermove2_x.wav"}
+ENT.Tank_DefaultSoundTbl_ReloadShell = {"vehicles/tank_readyfire1.wav"}
+ENT.Tank_DefaultSoundTbl_FireShell = {"vj_mili_tank/tank_fire1","vj_mili_tank/tank_fire2","vj_mili_tank/tank_fire3","vj_mili_tank/tank_fire4"}
 
 //util.AddNetworkString("vj_tankg_base_spawneffects")
 //util.AddNetworkString("vj_tankg_base_shooteffects")
@@ -163,7 +171,7 @@ function ENT:CustomOnThink_AIEnabled()
 				self.Tank_FacingTarget = true
 				if self:Visible(self:GetEnemy()) then
 				if GetConVarNumber("vj_npc_norange") == 0 then
-				self:RangeAttack_Base() end end
+				self:Tank_PrepareShell() end end
 			elseif Angle_Diffuse > self.Tank_AngleDiffuseGeneralNumber then
 				self:SetLocalAngles(self:GetLocalAngles() + Angle(0,5,0))
 				self.Tank_GunnerIsTurning = true
@@ -205,15 +213,7 @@ function ENT:CustomOnSchedule()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_Sound_Moving()
-	if self.HasSounds == false or self.HasFootStepSound == false then return end
-	
-	self.tank_movingsd = CreateSound(self, "vj_mili_tank/tank_gunnermove2_x.wav")
-	self.tank_movingsd:SetSoundLevel(80)
-	self.tank_movingsd:PlayEx(1,100)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RangeAttack_Base()
+function ENT:Tank_PrepareShell()
 	if self.Tank_ProperHeightShoot == false then return end
 	if self:GetParent().VJ_IsBeingControlled == true && !self:GetParent().VJ_TheController:KeyDown(IN_ATTACK2) then return end
 	//if self.Tank_FacingTarget == true then
@@ -225,28 +225,24 @@ function ENT:RangeAttack_Base()
 
 	if self.Tank_ShellReady == false then
 		if self.HasSounds == true && self.HasRangeAttackSound == true then
-			self.shootsd1 = CreateSound(self, "vehicles/tank_readyfire1.wav")
-			self.shootsd1:SetSoundLevel(90)
-			self.shootsd1:PlayEx(1,100)
+			self:Tank_Sound_ReloadShell()
 		end
 		self.Tank_ShellReady = true
 	end
 
 	if self.Dead == false then
 		timer.Create("timer_shell_attack"..self:EntIndex(),self.Tank_Shell_TimeUntilFire,1,function()
-			self:RangeAttack_Shell()
+			self:Tank_FireShell()
 			self.FiringShell = false
 		end)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RangeAttack_Shell()
+function ENT:Tank_FireShell()
 	if (self.Dead == true) or (self.Dead == false && GetConVarNumber("ai_disabled") == 1) or (self.Tank_ProperHeightShoot == false) then return end
 	if IsValid(self:GetEnemy()) /* && self.Tank_FacingTarget == true*/ then
 		if self:Visible(self:GetEnemy()) then
-			if self.HasSounds == true && GetConVarNumber("vj_npc_sd_rangeattack") == 0 then
-				VJ_EmitSound(self,"vj_mili_tank/tank_fire"..math.random(1,4)..".wav",500,100)
-			end
+			self:Tank_Sound_FireShell()
 
 			//self:StartShootEffects()
 			self.Tank_FireLight1 = ents.Create("light_dynamic")
@@ -343,6 +339,30 @@ function ENT:CustomOnRemove()
 	VJ_STOPSOUND(self.shootsd1)
 	VJ_STOPSOUND(self.tank_movingsd)
 	timer.Destroy("timer_shell_attack"..self:EntIndex())
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Tank_Sound_Moving()
+	if self.HasSounds == false or self.HasFootStepSound == false then return end
+	
+	local sdtbl = VJ_PICKRANDOMTABLE(self.Tank_SoundTbl_Turning)
+	if sdtbl == false then sdtbl = VJ_PICKRANDOMTABLE(self.Tank_DefaultSoundTbl_Turning) end -- Default table
+	self.tank_movingsd = VJ_CreateSound(self,sdtbl,80,100)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Tank_Sound_ReloadShell()
+	if self.HasSounds == false or self.HasFootStepSound == false then return end
+	
+	local sdtbl = VJ_PICKRANDOMTABLE(self.Tank_SoundTbl_ReloadShell)
+	if sdtbl == false then sdtbl = VJ_PICKRANDOMTABLE(self.Tank_DefaultSoundTbl_ReloadShell) end -- Default table
+	self.shootsd1 = VJ_CreateSound(self,sdtbl,90,100)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Tank_Sound_FireShell()
+	if self.HasSounds == false or self.HasRangeAttackSound == false then return end
+	
+	local sdtbl = VJ_PICKRANDOMTABLE(self.Tank_SoundTbl_FireShell)
+	if sdtbl == false then sdtbl = VJ_PICKRANDOMTABLE(self.Tank_DefaultSoundTbl_FireShell) end -- Default table
+	VJ_EmitSound(self,sdtbl,500,100)
 end
 /*-----------------------------------------------
 	*** Copyright (c) 2012-2019 by DrVrej, All rights reserved. ***
