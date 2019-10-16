@@ -898,6 +898,7 @@ ENT.WeaponUseEnemyEyePos = false
 ENT.LastHiddenZone_CanWander = true
 ENT.DoneLastHiddenZone_CanWander = false
 ENT.AlreadyDoneMeleeAttackFirstHit = false
+ENT.NoWeapon_UseScaredBehavior_Active = false
 ENT.WeaponHolstered = false
 ENT.FollowingPlayerName = NULL
 ENT.VJ_TheController = NULL
@@ -1488,6 +1489,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 	self:StartSchedule(vschedIdleStand)*/
 
 	local animtbl = self.AnimTbl_IdleStand
+	if self.NoWeapon_UseScaredBehavior_Active == true then animtbl = self.AnimTbl_ScaredBehaviorStand end
 	//local checkedtbl = {}
 	local hasanim = false
 	for k,v in ipairs(animtbl) do -- Amen animation-nere ara
@@ -1550,13 +1552,12 @@ end
 end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
-	if self.IsVJBaseSNPC_Tank == true then return end
 	if /*self.VJ_PlayingSequence == true or*/ self.VJ_IsBeingControlled == true /*or self.FollowingPlayer == true*/ or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextIdleTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
 	-- 0 = Random | 1 = Wander | 2 = Idle Stand /\ OverrideWander = Wander no matter what
 	RestrictNumber = RestrictNumber or 0
 	OverrideWander = OverrideWander or false
 	if self.IdleAlwaysWander == true then RestrictNumber = 1 end
-	if (self.MovementType == VJ_MOVETYPE_STATIONARY) or (self.LastHiddenZone_CanWander == false) or (self.NextWanderTime > CurTime()) then RestrictNumber = 2 end
+	if (self.MovementType == VJ_MOVETYPE_STATIONARY) or (self.IsVJBaseSNPC_Tank == true) or (self.LastHiddenZone_CanWander == false) or (self.NextWanderTime > CurTime()) then RestrictNumber = 2 end
 	if OverrideWander == false && (self.DisableWandering == true or self.IsGuard == true) && (RestrictNumber == 1 or RestrictNumber == 0) then
 		RestrictNumber = 2
 	end
@@ -2681,23 +2682,23 @@ function ENT:SelectSchedule(iNPCState)
 			self.TakingCoverT = 0
 		end
 		self:IdleSoundCode()
-		if self:VJ_HasActiveWeapon() == false && self.NoWeapon_UseScaredBehavior == true then
-			self.AnimTbl_IdleStand = {}
-		end
+		self.NoWeapon_UseScaredBehavior_Active = false
 	else
 	-- Combat Behavior --
 		if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.SightDistance) then
 			self:IdleSoundCode()
 			if self:VJ_HasActiveWeapon() == false && CurTime() > self.NextChaseTime && self.NoWeapon_UseScaredBehavior == true && self.VJ_IsBeingControlled == false then
-				self.AnimTbl_IdleStand = self.AnimTbl_ScaredBehaviorStand
+				//self.AnimTbl_IdleStand = self.AnimTbl_ScaredBehaviorStand
+				self.NoWeapon_UseScaredBehavior_Active = true
 				if self.FollowingPlayer == false then
 					if self:Visible(self:GetEnemy()) then
-						//self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
 						self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) end)
 					else
 						self:DoIdleAnimation(2)
 					end
 				end
+			else
+				self.NoWeapon_UseScaredBehavior_Active = false
 			end
 			local EnemyPos = self:GetEnemy():EyePos()
 			local SelfToEnemyDistance = self:EyePos():Distance(EnemyPos)

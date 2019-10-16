@@ -42,6 +42,7 @@ ENT.IdleSoundLevel = 70
 ENT.CombatIdleSoundLevel = 70
 ENT.BreathSoundLevel = 80
 ENT.DeathSoundLevel = 100
+
 ENT.GeneralSoundPitch1 = 90
 ENT.GeneralSoundPitch2 = 100
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -327,7 +328,8 @@ function ENT:CustomOnSchedule()
 	if self:Health() <= 0 or self.Dead == true then return end
 
 	self:IdleSoundCode()
-
+	self:DoIdleAnimation()
+	
 	if !IsValid(self:GetEnemy()) then
 		if self.Tank_ResetedEnemy == false then
 			self.Tank_ResetedEnemy = true
