@@ -40,6 +40,7 @@ ENT.DirectDamage = 30 -- How much damage should it do when it hits something
 ENT.DirectDamageType = DMG_SLASH -- Damage type
 ENT.PaintDecalOnDeath = true -- Should it paint a decal when it hits something?
 ENT.DecalTbl_DeathDecals = {} -- Decals that paint when the projectile dies | It picks a random one from this table
+ENT.DelayedRemove = 0 -- Change this to a number greater than 0 to delay the removal of the entity
 	-- Sounds ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasStartupSounds = true -- Does it make a sound when the projectile is created?
 ENT.SoundTbl_Startup = {}
@@ -187,6 +188,7 @@ function ENT:DoDamageCode(data,phys)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data,phys)
+	if self.Dead == true then return end
 	//self.Dead = true
 	if self:CustomOnPhysicsCollide(data,phys) != false then
 		if self.RemoveOnHit == true then
@@ -201,7 +203,16 @@ function ENT:PhysicsCollide(data,phys)
 				self:OnCollideSoundCode()
 			end
 			self:SetDeathVariablesTrue(data,phys,true)
-			self:Remove()
+			if self.DelayedRemove > 0 then
+				self:SetNoDraw(true)
+				self:SetMoveType(MOVETYPE_NONE)
+				self:AddSolidFlags(FSOLID_NOT_SOLID)
+				self:SetLocalVelocity(Vector())
+				SafeRemoveEntityDelayed(self, self.DelayedRemove)
+				self:OnRemove()
+			else
+				self:Remove()
+			end
 		end
 		
 		if self.Dead == false && self.CollideCodeWithoutRemoving == true && CurTime() > self.NextCollideCodeWithoutRemovingT then

@@ -451,7 +451,7 @@ function SWEP:NPCShoot_Primary(ShootPos,ShootDir)
 			self.NPC_SecondaryFirePerforming = true
 			if self.NPC_HasSecondaryFireSound == true then VJ_EmitSound(self.Owner,self.NPC_SecondaryFireSound,self.NPC_SecondaryFireSoundLevel) end
 			timer.Simple(self.Owner.WeaponAttackSecondaryTimeUntilFire,function()
-				if IsValid(self) && IsValid(self.Owner) && self:NPCAbleToShoot(true) == true && CurTime() > self.NPC_SecondaryFireNextT then
+				if IsValid(self) && IsValid(self.Owner) && IsValid(self.Owner:GetEnemy()) && self:NPCAbleToShoot(true) == true && CurTime() > self.NPC_SecondaryFireNextT then
 					self.NPC_SecondaryFirePerforming = false
 					self:NPC_SecondaryFire()
 					if self.NPC_SecondaryFireNext != false then
