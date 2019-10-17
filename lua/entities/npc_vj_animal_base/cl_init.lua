@@ -32,7 +32,7 @@ The animal base has been discontinued, if you want to create a passive-like SNPC
 
 ENT.RenderGroup = RENDERGROUP_BOTH
 function ENT:Initialize() end
-function ENT:Draw() self.Entity:DrawModel() self:CustomOnDraw() end
+function ENT:Draw() self:DrawModel() self:CustomOnDraw() end
 function ENT:DrawTranslucent() self:Draw() end
 function ENT:BuildBonePositions(NumBones,NumPhysBones) end
 function ENT:SetRagdollBones(bIn) self.m_bRagdollSetup = bIn end

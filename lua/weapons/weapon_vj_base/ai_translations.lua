@@ -15,8 +15,8 @@ function SWEP:SetupWeaponHoldTypeForAI(htype)
 	local medzZenk_Kalel = ACT_WALK_RIFLE
 	if self.NPC_AnimationSet == "Combine" && (htype == "pistol" or htype == "revolver") then
 		rifleOverride = true
-		medzZenk_Genal = VJ_SequenceToActivity(self.Owner,"idle_unarmed")
-		medzZenk_Kalel = VJ_SequenceToActivity(self.Owner,"walkunarmed_all")
+		medzZenk_Genal = VJ_SequenceToActivity(self:GetOwner(),"idle_unarmed")
+		medzZenk_Kalel = VJ_SequenceToActivity(self:GetOwner(),"walkunarmed_all")
 	end
 	
 	-- Yete NPC-en Metrocop-e gamal Rebel-e, ere vor medz zenki animation-ere kordzadze yerp vor ge kalegor

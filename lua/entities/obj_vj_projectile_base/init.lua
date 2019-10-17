@@ -6,9 +6,10 @@ include("shared.lua")
 	*** Copyright (c) 2012-2019 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-INFO: Used to make projectiles.
 --------------------------------------------------*/
-	-- General ---------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Model = {""} -- The models it should spawn with | Picks a random one from the table
 ENT.PhysicsInitType = SOLID_VPHYSICS
 ENT.MoveType = MOVETYPE_VPHYSICS -- Move type, recommended to keep it as it is
@@ -16,17 +17,20 @@ ENT.MoveCollideType = MOVECOLLIDE_FLY_BOUNCE -- Move type | Some examples: MOVEC
 ENT.CollisionGroupType = COLLISION_GROUP_PROJECTILE -- Collision type, recommended to keep it as it is
 ENT.SolidType = SOLID_CUSTOM -- Solid type, recommended to keep it as it is
 ENT.ShouldSetOwner = true -- Should it set a owner?
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Collision / Damage Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.RemoveOnHit = true -- Should it remove itself when it touches something? | It will run the hit sound, place a decal, etc.
 ENT.PaintDecalOnCollide = true -- Should it paint decals when it collides with something? | Use this only when using a projectile that doesn't get removed when it collides with something
 ENT.DecalTbl_OnCollideDecals = {} -- Decals that paint when the projectile collides with something | It picks a random one from this table
 ENT.CollideCodeWithoutRemoving = false -- If RemoveOnHit is set to false, you can still make the projectile deal damage, place a decal, etc.
-ENT.NextCollideCodeWithoutRemovingTime1 = 1 -- Time until it can run the code again | First number in math.random
-ENT.NextCollideCodeWithoutRemovingTime2 = 1 -- Time until it can run the code again | Second number in math.random
+ENT.NextCollideWithoutRemove = VJ_Rand(1,1) -- Time until it can run the code again
 ENT.ShakeWorldOnDeath = false -- Should the world shake when the projectile hits something?
 ENT.ShakeWorldOnDeathAmplitude = 16 -- How much the screen will shake | From 1 to 16, 1 = really low 16 = really high
 ENT.ShakeWorldOnDeathRadius = 3000 -- How far the screen shake goes, in world units
 ENT.ShakeWorldOnDeathtDuration = 1 -- How long the screen shake will last, in seconds
 ENT.ShakeWorldOnDeathFrequency = 200 -- The frequency
+	-- ====== Radius Damage Variables ====== --
 ENT.DoesRadiusDamage = false -- Should it do a blast damage when it hits something?
 ENT.RadiusDamageRadius = 250 -- How far the damage go? The farther away it's from its enemy, the less damage it will do | Counted in world units
 ENT.RadiusDamageUseRealisticRadius = true -- Should the damage decrease the farther away the enemy is from the position that the projectile hit?
@@ -35,45 +39,58 @@ ENT.RadiusDamageType = DMG_BLAST -- Damage type
 ENT.RadiusDamageForce = false -- Put the force amount it should apply | false = Don't apply any force
 ENT.RadiusDamageForce_Up = false -- How much up force should it have? | false = Let the base automatically decide the force using RadiusDamageForce value
 ENT.RadiusDamageDisableVisibilityCheck = false -- Should it disable the visibility check? | true = Disables the visibility check
+	-- ====== Direct Damage Variables ====== --
 ENT.DoesDirectDamage = false -- Should it do a direct damage when it hits something?
 ENT.DirectDamage = 30 -- How much damage should it do when it hits something
 ENT.DirectDamageType = DMG_SLASH -- Damage type
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Killed / Remove Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.PaintDecalOnDeath = true -- Should it paint a decal when it hits something?
 ENT.DecalTbl_DeathDecals = {} -- Decals that paint when the projectile dies | It picks a random one from this table
 ENT.DelayedRemove = 0 -- Change this to a number greater than 0 to delay the removal of the entity
-	-- Sounds ---------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Sound Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasStartupSounds = true -- Does it make a sound when the projectile is created?
-ENT.SoundTbl_Startup = {}
-ENT.StartupSoundChance = 1 -- How much chance to play the sound? 1 = always
-ENT.StartupSoundLevel = 80
-ENT.StartupSoundPitch1 = 90
-ENT.StartupSoundPitch2 = 100
 ENT.HasIdleSounds = true -- Does it have idle sounds?
+ENT.HasOnCollideSounds = true -- Should it play a sound when it collides something?
+ENT.HasOnRemoveSounds = true -- Should it play a sound when it gets removed?
+	-- ====== File Path Variables ====== --
+	-- Leave blank if you don't want any sounds to play
+ENT.SoundTbl_Startup = {}
 ENT.SoundTbl_Idle = {}
-ENT.IdleSoundChance = 1 -- How much chance to play the sound? 1 = always
-ENT.IdleSoundLevel = 80
-ENT.IdleSoundPitch1 = 90
-ENT.IdleSoundPitch2 = 100
+ENT.SoundTbl_OnCollide = {}
+ENT.SoundTbl_OnRemove = {}
+	-- ====== Sound Chance Variables ====== --
+	-- Higher number = less chance of playing | 1 = Always play
+ENT.StartupSoundChance = 1
+ENT.IdleSoundChance = 1
+ENT.OnCollideSoundChance = 1
+ENT.OnRemoveSoundChance = 1
+	-- ====== Timer Variables ====== --
 ENT.NextSoundTime_Idle1 = 0.2
 ENT.NextSoundTime_Idle2 = 0.5
-ENT.HasOnCollideSounds = true -- Should it play a sound when it collides something?
-ENT.SoundTbl_OnCollide = {}
-ENT.OnCollideSoundChance = 1 -- How much chance to play the sound? 1 = always
+	-- ====== Sound Level Variables ====== --
+	-- The proper number are usually range from 0 to 180, though it can go as high as 511
+	-- More Information: https://developer.valvesoftware.com/wiki/Soundscripts#SoundLevel_Flags
+ENT.StartupSoundLevel = 80
+ENT.IdleSoundLevel = 80
 ENT.OnCollideSoundLevel = 80
+ENT.OnRemoveSoundLevel = 90
+	-- ====== Sound Pitch Variables ====== --
+ENT.StartupSoundPitch1 = 90
+ENT.StartupSoundPitch2 = 100
+ENT.IdleSoundPitch1 = 90
+ENT.IdleSoundPitch2 = 100
 ENT.OnCollideSoundPitch1 = 90
 ENT.OnCollideSoundPitch2 = 100
-ENT.HasOnRemoveSounds = true -- Should it play a sound when it gets removed?
-ENT.SoundTbl_OnRemove = {}
-ENT.OnRemoveSoundChance = 1 -- How much chance to play the sound? 1 = always
-ENT.OnRemoveSoundLevel = 90
 ENT.OnRemoveSoundPitch1 = 90
 ENT.OnRemoveSoundPitch2 = 100
-	-- Independent Variables ---------------------------------------------------------------------------------------------------------------------------------------------
-ENT.AlreadyPaintedDeathDecal = false
-ENT.Dead = false
-ENT.NextIdleSoundT = 0
-ENT.NextCollideCodeWithoutRemovingT = 0
-ENT.ParentsEnemy = nil
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-- Use the functions below to customize certain parts of the base or to add new custom systems
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitializeBeforePhys() /* Example: self:PhysicsInitSphere(1, "metal_bouncy") */ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -99,6 +116,18 @@ function ENT:CustomOnDoDamage(data,phys,hitent) end
 function ENT:DeathEffects(data,phys) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove() end
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ ///// WARNING: Don't touch anything below this line! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ENT.AlreadyPaintedDeathDecal = false
+ENT.Dead = false
+ENT.NextIdleSoundT = 0
+ENT.NextCollideWithoutRemoveT = 0
+ENT.ParentsEnemy = nil
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	if self:GetModel() == "models/error.mdl" then
@@ -130,7 +159,7 @@ function ENT:Think()
 	if self.Dead == true then VJ_STOPSOUND(self.CurrentIdleSound) return end
 	
 	//self:SetAngles(self:GetVelocity():GetNormal():Angle())
-	if IsValid(self.Owner) && self.Owner:IsNPC() then self.ParentsEnemy = self.Owner:GetEnemy() end
+	if IsValid(self:GetOwner()) && self:GetOwner():IsNPC() then self.ParentsEnemy = self:GetOwner():GetEnemy() end
 
 	//print(self:GetOwner())
 	self:CustomOnThink()
@@ -215,14 +244,14 @@ function ENT:PhysicsCollide(data,phys)
 			end
 		end
 		
-		if self.Dead == false && self.CollideCodeWithoutRemoving == true && CurTime() > self.NextCollideCodeWithoutRemovingT then
+		if self.Dead == false && self.CollideCodeWithoutRemoving == true && CurTime() > self.NextCollideWithoutRemoveT then
 			self:DoDamageCode(data,phys)
 			self:OnCollideSoundCode()
 			if self.PaintDecalOnCollide == true && VJ_PICKRANDOMTABLE(self.DecalTbl_OnCollideDecals) != false && self.AlreadyPaintedDeathDecal == false then
-				util.Decal(VJ_PICKRANDOMTABLE(self.DecalTbl_OnCollideDecals), data.HitPos +data.HitNormal, data.HitPos -data.HitNormal)
+				util.Decal(VJ_PICKRANDOMTABLE(self.DecalTbl_OnCollideDecals), data.HitPos + data.HitNormal, data.HitPos - data.HitNormal)
 			end
 			self:CustomOnCollideWithoutRemove(data,phys)
-			self.NextCollideCodeWithoutRemovingT = CurTime() + math.Rand(self.NextCollideCodeWithoutRemovingTime1,self.NextCollideCodeWithoutRemovingTime2)
+			self.NextCollideWithoutRemoveT = CurTime() + math.Rand(self.NextCollideWithoutRemove.a, self.NextCollideWithoutRemove.b)
 		end
 	end
 end
@@ -287,5 +316,4 @@ end
 	*** Copyright (c) 2012-2019 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-INFO: Used to make projectiles.
 --------------------------------------------------*/
