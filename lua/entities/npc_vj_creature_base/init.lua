@@ -2399,6 +2399,9 @@ function ENT:Think()
 	end
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	if GetConVarNumber("ai_disabled") == 0 then
+		if self:GetArrivalActivity() == -1 then
+			self:SetArrivalActivity(self.CurrentAnim_IdleStand)
+		end
 		//if !self:IsOnGround() then self:ClearGoal() end
 		self:CustomOnThink_AIEnabled()
 		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then -- Yete terogh gam chouri SNPC ene...

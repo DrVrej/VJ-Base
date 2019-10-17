@@ -1982,6 +1982,10 @@ function ENT:Think()
 	end
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	if GetConVarNumber("ai_disabled") == 0 then
+		if self:GetArrivalActivity() == -1 then
+			self:SetArrivalActivity(self.CurrentAnim_IdleStand)
+		end
+		
 		self:CustomOnThink_AIEnabled()
 		//self:DoCustomIdleAnimation()
 		//if IsValid(self:GetEnemy()) then self.Alerted = true else self.Alerted = false end
@@ -2336,7 +2340,7 @@ function ENT:Think()
 			end
 			
 			if self:GetArrivalActivity() == self.CurrentWeaponAnimation then
-				self:SetArrivalActivity(-1)
+				self:SetArrivalActivity(self.CurrentAnim_IdleStand)
 			end
 			
 			if self.DoneLastHiddenZone_CanWander == false then
