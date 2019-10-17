@@ -70,7 +70,7 @@ function ENT:Touch(entity)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, physobj)
-	//self.Entity:EmitSound("physics/cardboard/cardboard_box_impact_soft"..math.random(1,5)..".wav")
+	//self:EmitSound("physics/cardboard/cardboard_box_impact_soft"..math.random(1,5)..".wav")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()

@@ -39,7 +39,7 @@ function ENT:Initialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartControlling()
-	//self.TheController = self.Owner
+	//self.TheController = self:GetOwner()
 	//if (self.TheController) then return end
 	//print(self.TheController)
 	self.TheController.IsControlingNPC = true

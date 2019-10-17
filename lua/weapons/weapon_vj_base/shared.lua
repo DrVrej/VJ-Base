@@ -55,7 +55,7 @@ SWEP.NPC_ExtraFireSoundPitch2	= 100
 	-- ====== Secondary Fire Variables ====== --
 SWEP.NPC_HasSecondaryFireNext = false -- Can the weapon have a secondary fire?
 SWEP.NPC_SecondaryFireChance = 3 -- Chance that the secondary fire is used | 1 = always
-SWEP.NPC_SecondaryFireNext = {12,15} -- How much time until the secondary fire can be used again?
+SWEP.NPC_SecondaryFireNext = VJ_Rand(12,15) -- How much time until the secondary fire can be used again?
 SWEP.NPC_SecondaryFireDistance = 1000 -- How close does the owner's enemy have to be for it to fire?
 SWEP.NPC_HasSecondaryFireSound = true -- Can the secondary fire sound be played?
 SWEP.NPC_SecondaryFireSound = {} -- The sound it plays when the secondary fire is used
@@ -165,7 +165,7 @@ function SWEP:NPC_SecondaryFire()
 	local pos = self:GetNWVector("VJ_CurBulletPos")
 	local proj = ents.Create("prop_combine_ball")
 	proj:SetPos(pos)
-	proj:SetAngles(self.Owner:GetAngles())
+	proj:SetAngles(self:GetOwner():GetAngles())
 	proj:SetOwner(self)
 	proj:Spawn()
 	proj:Activate()
@@ -173,9 +173,9 @@ function SWEP:NPC_SecondaryFire()
 	local phys = proj:GetPhysicsObject()
 	if phys:IsValid() then
 		phys:Wake()
-		phys:SetVelocity(self.Owner:CalculateProjectile("Line", pos, self.Owner:GetEnemy():GetPos() + self.Owner:GetEnemy():OBBCenter(), 2000))
+		phys:SetVelocity(self:GetOwner():CalculateProjectile("Line", pos, self:GetOwner():GetEnemy():GetPos() + self:GetOwner():GetEnemy():OBBCenter(), 2000))
 	end
-	VJ_EmitSound(self.Owner,"weapons/ar2/npc_ar2_altfire.wav",90) // "weapons/cguard/charging.wav"
+	VJ_EmitSound(self:GetOwner(),"weapons/ar2/npc_ar2_altfire.wav",90) // "weapons/cguard/charging.wav"
 	*/
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -210,12 +210,12 @@ function SWEP:Initialize()
 	if self.HasIdleAnimation == true then self.InitHasIdleAnimation = true end
 	self.NPC_SecondaryFireNextT = math.Rand(1,3)
 	self:CustomOnInitialize()
-	if IsValid(self.Owner) then
-		if VJ_AnimationExists(self.Owner,ACT_WALK_AIM_PISTOL) == true && VJ_AnimationExists(self.Owner,ACT_RUN_AIM_PISTOL) == true && VJ_AnimationExists(self.Owner,ACT_POLICE_HARASS1) == true then
+	if IsValid(self:GetOwner()) then
+		if VJ_AnimationExists(self:GetOwner(),ACT_WALK_AIM_PISTOL) == true && VJ_AnimationExists(self:GetOwner(),ACT_RUN_AIM_PISTOL) == true && VJ_AnimationExists(self:GetOwner(),ACT_POLICE_HARASS1) == true then
 			self.NPC_AnimationSet = "Metrocop"
-		elseif VJ_AnimationExists(self.Owner,"cheer1") == true && VJ_AnimationExists(self.Owner,"wave_smg1") == true && VJ_AnimationExists(self.Owner,ACT_BUSY_SIT_GROUND) == true then
+		elseif VJ_AnimationExists(self:GetOwner(),"cheer1") == true && VJ_AnimationExists(self:GetOwner(),"wave_smg1") == true && VJ_AnimationExists(self:GetOwner(),ACT_BUSY_SIT_GROUND) == true then
 			self.NPC_AnimationSet = "Rebel"
-		elseif VJ_AnimationExists(self.Owner,"signal_takecover") == true && VJ_AnimationExists(self.Owner,"grenthrow") == true && VJ_AnimationExists(self.Owner,"bugbait_hit") == true then
+		elseif VJ_AnimationExists(self:GetOwner(),"signal_takecover") == true && VJ_AnimationExists(self:GetOwner(),"grenthrow") == true && VJ_AnimationExists(self:GetOwner(),"bugbait_hit") == true then
 			self.NPC_AnimationSet = "Combine"
 		end
 	end
@@ -224,18 +224,18 @@ function SWEP:Initialize()
 		self:SetNPCMaxBurst(20)
 		self:SetNPCFireRate(10)
 
-		if self.Owner:IsNPC() then
+		if self:GetOwner():IsNPC() then
 			//self:SetWeaponHoldType(self.HoldType)
-			if self.Owner:GetClass() == "npc_citizen" then self.Owner:Fire("DisableWeaponPickup") end
-			self.Owner:SetKeyValue("spawnflags","256") -- Long Visibility Shooting since HL2 NPCs are blind
-			if self.Owner:GetClass() != "npc_citizen" then
+			if self:GetOwner():GetClass() == "npc_citizen" then self:GetOwner():Fire("DisableWeaponPickup") end
+			self:GetOwner():SetKeyValue("spawnflags","256") -- Long Visibility Shooting since HL2 NPCs are blind
+			if self:GetOwner():GetClass() != "npc_citizen" then
 				hook.Add("Think",self,self.NPC_ServerThink)
 				hook.Add("AlwaysThink",self,self.NPC_ServerThinkAlways)
 			end
 		end
 	end
-	if self.Owner:IsNPC() && self.Owner.IsVJBaseSNPC then
-		self.Owner.Weapon_StartingAmmoAmount = self.Primary.ClipSize
+	if self:GetOwner():IsNPC() && self:GetOwner().IsVJBaseSNPC then
+		self:GetOwner().Weapon_StartingAmmoAmount = self.Primary.ClipSize
 	end
 	self:SetDefaultValues(self.HoldType)
 end
@@ -271,8 +271,8 @@ function SWEP:SetDefaultValues(curtype,force)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:TranslateActivity(act)
-	if (self.Owner:IsNPC()) then
-		if (self.ActivityTranslateAI[act]) && ((!self.Owner.IsVJBaseSNPC) or (self.Owner.IsVJBaseSNPC == true && self.Owner.WeaponHolstered == false)) then
+	if (self:GetOwner():IsNPC()) then
+		if (self.ActivityTranslateAI[act]) && ((!self:GetOwner().IsVJBaseSNPC) or (self:GetOwner().IsVJBaseSNPC == true && self:GetOwner().WeaponHolstered == false)) then
 			return self.ActivityTranslateAI[act]
 		end
 		return -1
@@ -285,48 +285,48 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_ServerThinkAlways()
 	if (CLIENT) then return end
-	if !self:IsValid() or !self.Owner:IsValid() then return end
+	if !self:IsValid() or !self:GetOwner():IsValid() then return end
 	hook.Remove("AlwaysThink", self)
 	hook.Add("AlwaysThink",self,self.NPC_ServerThinkAlways)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_ServerThink()
 	if (CLIENT) then return end
-	if !self:IsValid() or !self.Owner:IsValid() then return end
+	if !self:IsValid() or !self:GetOwner():IsValid() then return end
 	self:NPC_ServerNextFire()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_ServerNextFire()
 	if (CLIENT) then return end
-	if !self:IsValid() && !IsValid(self.Owner) && !self.Owner:IsNPC() then return end
-	if self:IsValid() && IsValid(self.Owner) && self.Owner:IsNPC() && self.Owner:GetActivity() == nil then return end
+	if !self:IsValid() && !IsValid(self:GetOwner()) && !self:GetOwner():IsNPC() then return end
+	if self:IsValid() && IsValid(self:GetOwner()) && self:GetOwner():IsNPC() && self:GetOwner():GetActivity() == nil then return end
 
 	self:RunWorldModelThink()
 	self:CustomOnThink()
 	self:CustomOnNPC_ServerThink()
 
-	if self.Owner.IsReloadingWeapon_ServerNextFire == false && self.AlreadyPlayedNPCReloadSound == false && (VJ_IsCurrentAnimation(self.Owner,self.CurrentAnim_WeaponReload) or VJ_IsCurrentAnimation(self.Owner,self.CurrentAnim_ReloadBehindCover) or VJ_IsCurrentAnimation(self.Owner,self.NPC_ReloadAnimationTbl) or VJ_IsCurrentAnimation(self.Owner,self.NPC_ReloadAnimationTbl_Custom) or VJ_IsCurrentAnimation(self.Owner,self.Owner.AnimTbl_WeaponReload)) then
-		self.Owner.NextThrowGrenadeT = self.Owner.NextThrowGrenadeT + 2
-		self.Owner.IsReloadingWeapon_ServerNextFire = true
-		//self.Owner.IsReloadingWeapon = false
+	if self:GetOwner().IsReloadingWeapon_ServerNextFire == false && self.AlreadyPlayedNPCReloadSound == false && (VJ_IsCurrentAnimation(self:GetOwner(),self.CurrentAnim_WeaponReload) or VJ_IsCurrentAnimation(self:GetOwner(),self.CurrentAnim_ReloadBehindCover) or VJ_IsCurrentAnimation(self:GetOwner(),self.NPC_ReloadAnimationTbl) or VJ_IsCurrentAnimation(self:GetOwner(),self.NPC_ReloadAnimationTbl_Custom) or VJ_IsCurrentAnimation(self:GetOwner(),self:GetOwner().AnimTbl_WeaponReload)) then
+		self:GetOwner().NextThrowGrenadeT = self:GetOwner().NextThrowGrenadeT + 2
+		self:GetOwner().IsReloadingWeapon_ServerNextFire = true
+		//self:GetOwner().IsReloadingWeapon = false
 		self:CustomOnNPC_Reload()
 		self.AlreadyPlayedNPCReloadSound = true
-		if self.NPC_HasReloadSound == true then VJ_EmitSound(self.Owner,self.NPC_ReloadSound,self.NPC_ReloadSoundLevel) end
+		if self.NPC_HasReloadSound == true then VJ_EmitSound(self:GetOwner(),self.NPC_ReloadSound,self.NPC_ReloadSoundLevel) end
 		timer.Simple(3,function() if IsValid(self) then self.AlreadyPlayedNPCReloadSound = false end end)
 	end
 
 	local function FireCode()
 		self:NPCShoot_Primary(ShootPos,ShootDir)
-		//timer.Simple(0.1,function() if self:IsValid() && IsValid(self.Owner) && self.Owner:IsValid() && self.Owner:IsNPC() then self:NPCShoot_Primary(ShootPos,ShootDir) end end)
-		//timer.Simple(0.2,function() if self:IsValid() && IsValid(self.Owner) && self.Owner:IsValid() && self.Owner:IsNPC() then self:NPCShoot_Primary(ShootPos,ShootDir) end end)
+		//timer.Simple(0.1,function() if self:IsValid() && IsValid(self:GetOwner()) && self:GetOwner():IsValid() && self:GetOwner():IsNPC() then self:NPCShoot_Primary(ShootPos,ShootDir) end end)
+		//timer.Simple(0.2,function() if self:IsValid() && IsValid(self:GetOwner()) && self:GetOwner():IsValid() && self:GetOwner():IsNPC() then self:NPCShoot_Primary(ShootPos,ShootDir) end end)
 		hook.Remove("Think", self)
 		//print(self.NPC_NextPrimaryFire)
 		local nxt = self.NPC_NextPrimaryFire
 		if nxt > 0.15 then nxt = 0.15 end
 		timer.Simple(nxt, function() hook.Add("Think",self,self.NPC_ServerNextFire) end)
 		//self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
-		/*if self:IsValid() && self.Owner:IsValid() && self.Owner.IsVJBaseSNPC == true && self.Owner.Weapon_ChangeIdleAnimToShoot == true then
-			if IsValid(self.Owner:GetEnemy()) then
+		/*if self:IsValid() && self:GetOwner():IsValid() && self:GetOwner().IsVJBaseSNPC == true && self:GetOwner().Weapon_ChangeIdleAnimToShoot == true then
+			if IsValid(self:GetOwner():GetEnemy()) then
 				print("CHANGED HOlDTYPE")
 				local htype = self:GetHoldType()
 				self.ActivityTranslateAI[ACT_IDLE] = ACT_RANGE_ATTACK_PISTOL
@@ -348,15 +348,15 @@ function SWEP:NPC_ServerNextFire()
 			self:SetupWeaponHoldTypeForAI(self:GetHoldType())
 		end*/
 	end
-	//self.Owner:Weapon_TranslateActivity(self.Owner:GetActivity())
-	//print(self:TranslateActivity(self.Owner:GetActivity()))
-	//print(self.Owner:GetActivity())
+	//self:GetOwner():Weapon_TranslateActivity(self:GetOwner():GetActivity())
+	//print(self:TranslateActivity(self:GetOwner():GetActivity()))
+	//print(self:GetOwner():GetActivity())
 	//if self.NPC_UsePistolBehavior == true then
-	/*if self:IsValid() && IsValid(self.Owner) && self.Owner:IsValid() && self.Owner:IsNPC() then if self.Owner:GetActivity() != nil then
-		if self.Owner:SelectWeightedSequence(self.Owner:GetActivity()) == -1 && self.Owner:GetActivity() != ACT_RANGE_ATTACK1 then
+	/*if self:IsValid() && IsValid(self:GetOwner()) && self:GetOwner():IsValid() && self:GetOwner():IsNPC() then if self:GetOwner():GetActivity() != nil then
+		if self:GetOwner():SelectWeightedSequence(self:GetOwner():GetActivity()) == -1 && self:GetOwner():GetActivity() != ACT_RANGE_ATTACK1 then
 			print("ERROR: VJ Weapon Base was unable to get a correct animation for its owner")
-			//self.Owner.DoingWeaponAttack = true
-			//self.Owner:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.Owner.AnimTbl_WeaponAttack),false,0,true)
+			//self:GetOwner().DoingWeaponAttack = true
+			//self:GetOwner():VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self:GetOwner().AnimTbl_WeaponAttack),false,0,true)
 			//return
 			end
 		end
@@ -366,32 +366,32 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPCAbleToShoot(CheckSec)
 	CheckSec = CheckSec or false -- Make it only check conditions that secondary fire needs
-	if self:IsValid() && IsValid(self.Owner) && self.Owner:IsValid() && self.Owner:IsNPC() then
-		if (self.Owner.IsVJBaseSNPC_Human) then
-			local check, ammo = self.Owner:CanDoWeaponAttack()
+	if self:IsValid() && IsValid(self:GetOwner()) && self:GetOwner():IsValid() && self:GetOwner():IsNPC() then
+		if (self:GetOwner().IsVJBaseSNPC_Human) then
+			local check, ammo = self:GetOwner():CanDoWeaponAttack()
 			if check == false && ammo != "NoAmmo" then return false end
-			if IsValid(self.Owner:GetEnemy()) && self.Owner:IsAbleToShootWeapon(true,true) == false then return false end
+			if IsValid(self:GetOwner():GetEnemy()) && self:GetOwner():IsAbleToShootWeapon(true,true) == false then return false end
 		end
-		if self.Owner:GetActivity() != nil && (VJ_HasValue(self.NPC_AnimationTbl_General,self.Owner:GetActivity()) or VJ_HasValue(self.NPC_AnimationTbl_Rifle,self.Owner:GetActivity()) or VJ_HasValue(self.NPC_AnimationTbl_Pistol,self.Owner:GetActivity()) or VJ_HasValue(self.NPC_AnimationTbl_Shotgun,self.Owner:GetActivity()) or VJ_IsCurrentAnimation(self.Owner,self.NPC_AnimationTbl_Custom)) then
-			if (self.Owner.IsVJBaseSNPC_Human) then
-				local check, ammo = self.Owner:CanDoWeaponAttack()
+		if self:GetOwner():GetActivity() != nil && (VJ_HasValue(self.NPC_AnimationTbl_General,self:GetOwner():GetActivity()) or VJ_HasValue(self.NPC_AnimationTbl_Rifle,self:GetOwner():GetActivity()) or VJ_HasValue(self.NPC_AnimationTbl_Pistol,self:GetOwner():GetActivity()) or VJ_HasValue(self.NPC_AnimationTbl_Shotgun,self:GetOwner():GetActivity()) or VJ_IsCurrentAnimation(self:GetOwner(),self.NPC_AnimationTbl_Custom)) then
+			if (self:GetOwner().IsVJBaseSNPC_Human) then
+				local check, ammo = self:GetOwner():CanDoWeaponAttack()
 				if ammo == "NoAmmo" then
-					if self.Owner.VJ_IsBeingControlled == true then self.Owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER,"Press R to reload!") end
+					if self:GetOwner().VJ_IsBeingControlled == true then self:GetOwner().VJ_TheController:PrintMessage(HUD_PRINTCENTER,"Press R to reload!") end
 					if self.HasDryFireSound == true && CurTime() > self.NextNPCDrySoundT then
 						local sdtbl = VJ_PICKRANDOMTABLE(self.DryFireSound)
-						if sdtbl != false then self.Owner:EmitSound(sdtbl,80,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) end
+						if sdtbl != false then self:GetOwner():EmitSound(sdtbl,80,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) end
 						if self.NPC_NextPrimaryFire != false then
 							self.NextNPCDrySoundT = CurTime() + self.NPC_NextPrimaryFire
 						end
 					end
 					return false
 				else
-					if self.Owner:VJ_GetEnemy(true) != nil then
+					if self:GetOwner():VJ_GetEnemy(true) != nil then
 						return true
 					end
 				end
 			else
-				if self.Owner:VJ_GetEnemy(true) != nil then
+				if self:GetOwner():VJ_GetEnemy(true) != nil then
 					return true
 				end
 			end
@@ -403,11 +403,11 @@ function SWEP:NPCAbleToShoot(CheckSec)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_PlayFiringGesture()
-	local customg = VJ_PICKRANDOMTABLE(self.Owner.AnimTbl_WeaponAttackFiringGesture)
+	local customg = VJ_PICKRANDOMTABLE(self:GetOwner().AnimTbl_WeaponAttackFiringGesture)
 	local anim = ""
 	if customg != false then
 		anim = customg
-		anim = VJ_GetSequenceName(self.Owner,anim)
+		anim = VJ_GetSequenceName(self:GetOwner(),anim)
 	else
 		anim = "gesture_shoot_ar2"
 		if self.HoldType == "ar2" then
@@ -415,7 +415,7 @@ function SWEP:NPC_PlayFiringGesture()
 		elseif self.HoldType == "smg" then
 			anim = "gesture_shoot_smg2"
 		elseif self.HoldType == "pistol" or self.HoldType == "revolver" then
-			if self.Owner:LookupSequence("gesture_shoot_pistol") == -1 then
+			if self:GetOwner():LookupSequence("gesture_shoot_pistol") == -1 then
 				anim = "gesture_shootp1"
 			else
 				anim = "gesture_shoot_pistol"
@@ -426,57 +426,57 @@ function SWEP:NPC_PlayFiringGesture()
 			anim = "gesture_shoot_rpg"
 		end
 	end
-	local gest = self.Owner:AddGestureSequence(self.Owner:LookupSequence(anim))
-	self.Owner:SetLayerPriority(gest,2)
-	self.Owner:SetLayerPlaybackRate(gest,0.5)
+	local gest = self:GetOwner():AddGestureSequence(self:GetOwner():LookupSequence(anim))
+	self:GetOwner():SetLayerPriority(gest,2)
+	self:GetOwner():SetLayerPlaybackRate(gest,0.5)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPCShoot_Primary(ShootPos,ShootDir)
 	//self:SetClip1(self:Clip1() -1)
 	//if CurTime() > self.NPC_NextPrimaryFireT then
 	//self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
-	if (!self:IsValid()) or (!self.Owner:IsValid()) then return end
-	if self.Owner.VJ_IsBeingControlled == false && !IsValid(self.Owner:GetEnemy()) then return end
-	if self.Owner.VJ_IsBeingControlled == false && (!self.Owner:Visible(self.Owner:GetEnemy())) then return end
-	if self.Owner.IsVJBaseSNPC == true then
-		//self.Owner.Weapon_TimeSinceLastShot = 0
-		self.Owner.NextWeaponAttackAimPoseParametersReset = CurTime() + 1
-		self.Owner:WeaponAimPoseParameters()
-		//if self.Owner.IsVJBaseSNPC == true then self.Owner.Weapon_TimeSinceLastShot = 0 end
+	if (!self:IsValid()) or (!self:GetOwner():IsValid()) then return end
+	if self:GetOwner().VJ_IsBeingControlled == false && !IsValid(self:GetOwner():GetEnemy()) then return end
+	if self:GetOwner().VJ_IsBeingControlled == false && (!self:GetOwner():Visible(self:GetOwner():GetEnemy())) then return end
+	if self:GetOwner().IsVJBaseSNPC == true then
+		//self:GetOwner().Weapon_TimeSinceLastShot = 0
+		self:GetOwner().NextWeaponAttackAimPoseParametersReset = CurTime() + 1
+		self:GetOwner():WeaponAimPoseParameters()
+		//if self:GetOwner().IsVJBaseSNPC == true then self:GetOwner().Weapon_TimeSinceLastShot = 0 end
 	end
 	
-	if self.NPC_HasSecondaryFireNext == true && self.NPC_SecondaryFirePerforming == false && CurTime() > self.NPC_SecondaryFireNextT && self.Owner.CanUseSecondaryOnWeaponAttack == true && self.Owner:GetEnemy():GetPos():Distance(self.Owner:GetPos()) <= self.NPC_SecondaryFireDistance then
+	if self.NPC_HasSecondaryFireNext == true && self.NPC_SecondaryFirePerforming == false && CurTime() > self.NPC_SecondaryFireNextT && self:GetOwner().CanUseSecondaryOnWeaponAttack == true && self:GetOwner():GetEnemy():GetPos():Distance(self:GetOwner():GetPos()) <= self.NPC_SecondaryFireDistance then
 		if math.random(1,self.NPC_SecondaryFireChance) == 1 then
-			self.Owner:VJ_ACT_PLAYACTIVITY(self.Owner.AnimTbl_WeaponAttackSecondary,true,false,true,0)
+			self:GetOwner():VJ_ACT_PLAYACTIVITY(self:GetOwner().AnimTbl_WeaponAttackSecondary,true,false,true,0)
 			self.NPC_SecondaryFirePerforming = true
-			if self.NPC_HasSecondaryFireSound == true then VJ_EmitSound(self.Owner,self.NPC_SecondaryFireSound,self.NPC_SecondaryFireSoundLevel) end
-			timer.Simple(self.Owner.WeaponAttackSecondaryTimeUntilFire,function()
-				if IsValid(self) && IsValid(self.Owner) && IsValid(self.Owner:GetEnemy()) && self:NPCAbleToShoot(true) == true && CurTime() > self.NPC_SecondaryFireNextT then
+			if self.NPC_HasSecondaryFireSound == true then VJ_EmitSound(self:GetOwner(),self.NPC_SecondaryFireSound,self.NPC_SecondaryFireSoundLevel) end
+			timer.Simple(self:GetOwner().WeaponAttackSecondaryTimeUntilFire,function()
+				if IsValid(self) && IsValid(self:GetOwner()) && IsValid(self:GetOwner():GetEnemy()) && self:NPCAbleToShoot(true) == true && CurTime() > self.NPC_SecondaryFireNextT then
 					self.NPC_SecondaryFirePerforming = false
 					self:NPC_SecondaryFire()
 					if self.NPC_SecondaryFireNext != false then
-						self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext[1],self.NPC_SecondaryFireNext[2])
+						self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
 					end
 				end
 			end)
 		else
-			self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext[1],self.NPC_SecondaryFireNext[2])
+			self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
 		end
 	end
 	
 	timer.Simple(self.NPC_TimeUntilFire,function()
-		if IsValid(self) && IsValid(self.Owner) && self:NPCAbleToShoot() == true && CurTime() > self.NPC_NextPrimaryFireT then
-			if self.Owner.DisableWeaponFiringGesture != true then
+		if IsValid(self) && IsValid(self:GetOwner()) && self:NPCAbleToShoot() == true && CurTime() > self.NPC_NextPrimaryFireT then
+			if self:GetOwner().DisableWeaponFiringGesture != true then
 				self:NPC_PlayFiringGesture()
 			end
 			self:PrimaryAttack()
 			if self.NPC_NextPrimaryFire != false then
 				self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
 				for tk, tv in ipairs(self.NPC_TimeUntilFireExtraTimers) do
-					timer.Simple(tv, function() if IsValid(self) && IsValid(self.Owner) && self:NPCAbleToShoot() == true then self:PrimaryAttack() end end)
+					timer.Simple(tv, function() if IsValid(self) && IsValid(self:GetOwner()) && self:NPCAbleToShoot() == true then self:PrimaryAttack() end end)
 				end
 			end
-			if self.Owner.IsVJBaseSNPC == true then self.Owner.Weapon_TimeSinceLastShot = 0 end
+			if self:GetOwner().IsVJBaseSNPC == true then self:GetOwner().Weapon_TimeSinceLastShot = 0 end
 		end
 	end)
 	//end
@@ -491,21 +491,21 @@ function SWEP:GetCapabilities()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttack(UseAlt)
-	//if self.Owner:KeyDown(IN_RELOAD) then return end
-	//self.Owner:SetFOV(45, 0.3)
+	//if self:GetOwner():KeyDown(IN_RELOAD) then return end
+	//self:GetOwner():SetFOV(45, 0.3)
 	//if !IsFirstTimePredicted() then return end
 	self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
 	if self.Reloading == true then return end
-	if self.Owner:IsNPC() && self.Owner.VJ_IsBeingControlled == false && !IsValid(self.Owner:GetEnemy()) then return end
-	if self.Owner:IsPlayer() && self.Primary.AllowFireInWater == false && self.Owner:WaterLevel() == 3 && self.Reloading == false then self.Owner:EmitSound(VJ_PICKRANDOMTABLE(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) return end
-	if self:Clip1() <= 0 && self.Reloading == false then self.Owner:EmitSound(VJ_PICKRANDOMTABLE(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) return end
+	if self:GetOwner():IsNPC() && self:GetOwner().VJ_IsBeingControlled == false && !IsValid(self:GetOwner():GetEnemy()) then return end
+	if self:GetOwner():IsPlayer() && self.Primary.AllowFireInWater == false && self:GetOwner():WaterLevel() == 3 && self.Reloading == false then self:GetOwner():EmitSound(VJ_PICKRANDOMTABLE(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) return end
+	if self:Clip1() <= 0 && self.Reloading == false then self:GetOwner():EmitSound(VJ_PICKRANDOMTABLE(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) return end
 	if (!self:CanPrimaryAttack()) then return end
 	self:CustomOnPrimaryAttack_BeforeShoot()
 	if (SERVER) then
-		if self.Owner:IsNPC() then
+		if self:GetOwner():IsNPC() then
 			timer.Simple(self.NPC_ExtraFireSoundTime,function()
-				if IsValid(self) && IsValid(self.Owner) then
-					VJ_EmitSound(self.Owner,self.NPC_ExtraFireSound,self.NPC_ExtraFireSoundLevel,math.Rand(self.NPC_ExtraFireSoundPitch1,self.NPC_ExtraFireSoundPitch2))
+				if IsValid(self) && IsValid(self:GetOwner()) then
+					VJ_EmitSound(self:GetOwner(),self.NPC_ExtraFireSound,self.NPC_ExtraFireSoundLevel,math.Rand(self.NPC_ExtraFireSoundPitch1,self.NPC_ExtraFireSoundPitch2))
 				end
 			end)
 		end
@@ -525,14 +525,14 @@ function SWEP:PrimaryAttack(UseAlt)
 	if self.Primary.DisableBulletCode == false then
 		local bullet = {}
 			bullet.Num = self.Primary.NumberOfShots
-			local spawnpos = self.Owner:GetShootPos()
-			if self.Owner:IsNPC() then
+			local spawnpos = self:GetOwner():GetShootPos()
+			if self:GetOwner():IsNPC() then
 				spawnpos = self:GetNWVector("VJ_CurBulletPos")
 			end
 			//print(spawnpos)
 			//VJ_CreateTestObject(spawnpos,self:GetAngles(),Color(0,0,255))
 			bullet.Src = spawnpos
-			bullet.Dir = self.Owner:GetAimVector()
+			bullet.Dir = self:GetOwner():GetAimVector()
 			bullet.Callback = function(attacker,tr,dmginfo)
 				self:CustomOnPrimaryAttack_BulletCallback(attacker,tr,dmginfo)
 			end
@@ -552,13 +552,13 @@ function SWEP:PrimaryAttack(UseAlt)
 				end*/
 				//tr.HitPos:Ignite(8,0)
 				//return true end
-			if self.Owner:IsPlayer() then
+			if self:GetOwner():IsPlayer() then
 				bullet.Spread = Vector((self.Primary.Cone /60)/4,(self.Primary.Cone /60)/4,0)
 			end
 			bullet.Tracer = self.Primary.Tracer
 			bullet.TracerName = self.Primary.TracerType
 			bullet.Force = self.Primary.Force
-			if self.Owner:IsPlayer() then
+			if self:GetOwner():IsPlayer() then
 				if self.Primary.PlayerDamage == "Same" then
 					bullet.Damage = self.Primary.Damage
 				elseif self.Primary.PlayerDamage == "Double" then
@@ -567,27 +567,27 @@ function SWEP:PrimaryAttack(UseAlt)
 					bullet.Damage = self.Primary.PlayerDamage
 				end
 			else
-				if self.Owner.IsVJBaseSNPC == true then
-					bullet.Damage = self.Owner:VJ_GetDifficultyValue(self.Primary.Damage)
+				if self:GetOwner().IsVJBaseSNPC == true then
+					bullet.Damage = self:GetOwner():VJ_GetDifficultyValue(self.Primary.Damage)
 				else
 					bullet.Damage = self.Primary.Damage
 				end
 			end
 			bullet.AmmoType = self.Primary.Ammo
-			self.Owner:FireBullets(bullet)
+			self:GetOwner():FireBullets(bullet)
 	else
-		if self.Owner:IsNPC() && self.Owner.IsVJBaseSNPC == true then
-			self.Owner.Weapon_ShotsSinceLastReload = self.Owner.Weapon_ShotsSinceLastReload + 1
+		if self:GetOwner():IsNPC() && self:GetOwner().IsVJBaseSNPC == true then
+			self:GetOwner().Weapon_ShotsSinceLastReload = self:GetOwner().Weapon_ShotsSinceLastReload + 1
 		end
 	end
-	if GetConVarNumber("vj_wep_nomuszzleflash") == 0 then self.Owner:MuzzleFlash() end
+	if GetConVarNumber("vj_wep_nomuszzleflash") == 0 then self:GetOwner():MuzzleFlash() end
 	self:PrimaryAttackEffects()
-	if self.Owner:IsPlayer() then
+	if self:GetOwner():IsPlayer() then
 	self:ShootEffects("ToolTracer")
 	self:SendWeaponAnim(VJ_PICKRANDOMTABLE(self.AnimTbl_PrimaryFire))
-	self.Owner:SetAnimation(PLAYER_ATTACK1)
-	self.Owner:ViewPunch(Angle(-self.Primary.Recoil,0,0)) end
-	if !self.Owner:IsNPC() then
+	self:GetOwner():SetAnimation(PLAYER_ATTACK1)
+	self:GetOwner():ViewPunch(Angle(-self.Primary.Recoil,0,0)) end
+	if !self:GetOwner():IsNPC() then
 		self:TakePrimaryAmmo(self.Primary.TakeAmmo)
 	end
 	self:CustomOnPrimaryAttack_AfterShoot()
@@ -610,22 +610,22 @@ function SWEP:PrimaryAttackEffects()
 	local customeffects = self:CustomOnPrimaryAttackEffects()
 	if customeffects != true then return end
 	/*local vjeffectmuz = EffectData()
-	vjeffectmuz:SetOrigin(self.Owner:GetShootPos())
+	vjeffectmuz:SetOrigin(self:GetOwner():GetShootPos())
 	vjeffectmuz:SetEntity(self)
-	vjeffectmuz:SetStart(self.Owner:GetShootPos())
-	vjeffectmuz:SetNormal(self.Owner:GetAimVector())
+	vjeffectmuz:SetStart(self:GetOwner():GetShootPos())
+	vjeffectmuz:SetNormal(self:GetOwner():GetAimVector())
 	vjeffectmuz:SetAttachment(1)
 	util.Effect("VJ_Weapon_RifleMuzzle1",vjeffectmuz)*/
 
 	if self.PrimaryEffects_MuzzleFlash == true && GetConVarNumber("vj_wep_nomuszzleflash") == 0 then
 		local muzzleattach = self.PrimaryEffects_MuzzleAttachment
 		if isnumber(muzzleattach) == false then muzzleattach = self:LookupAttachment(muzzleattach) end
-		if self.Owner:IsPlayer() && self.Owner:GetViewModel() != nil then
+		if self:GetOwner():IsPlayer() && self:GetOwner():GetViewModel() != nil then
 			local vjeffectmuz = EffectData()
-			vjeffectmuz:SetOrigin(self.Owner:GetShootPos())
+			vjeffectmuz:SetOrigin(self:GetOwner():GetShootPos())
 			vjeffectmuz:SetEntity(self)
-			vjeffectmuz:SetStart(self.Owner:GetShootPos())
-			vjeffectmuz:SetNormal(self.Owner:GetAimVector())
+			vjeffectmuz:SetStart(self:GetOwner():GetShootPos())
+			vjeffectmuz:SetNormal(self:GetOwner():GetAimVector())
 			vjeffectmuz:SetAttachment(muzzleattach)
 			util.Effect("VJ_Weapon_RifleMuzzle1",vjeffectmuz)
 		else
@@ -641,13 +641,13 @@ function SWEP:PrimaryAttackEffects()
 		end
 	end
 
-	if self.PrimaryEffects_SpawnShells == true && !self.Owner:IsPlayer() && GetConVarNumber("vj_wep_nobulletshells") == 0 then
+	if self.PrimaryEffects_SpawnShells == true && !self:GetOwner():IsPlayer() && GetConVarNumber("vj_wep_nobulletshells") == 0 then
 		local shellattach = self.PrimaryEffects_ShellAttachment
 		if isnumber(shellattach) == false then shellattach = self:LookupAttachment(shellattach) end
 		local vjeffect = EffectData()
 		vjeffect:SetEntity(self)
-		vjeffect:SetOrigin(self.Owner:GetShootPos())
-		vjeffect:SetNormal(self.Owner:GetAimVector())
+		vjeffect:SetOrigin(self:GetOwner():GetShootPos())
+		vjeffect:SetNormal(self:GetOwner():GetAimVector())
 		vjeffect:SetAttachment(shellattach)
 		util.Effect(self.PrimaryEffects_ShellType,vjeffect)
 	end
@@ -656,7 +656,7 @@ function SWEP:PrimaryAttackEffects()
 		local FireLight1 = ents.Create("light_dynamic")
 		FireLight1:SetKeyValue("brightness", self.PrimaryEffects_DynamicLightBrightness)
 		FireLight1:SetKeyValue("distance", self.PrimaryEffects_DynamicLightDistance)
-		if self.Owner:IsPlayer() then FireLight1:SetLocalPos(self.Owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else FireLight1:SetLocalPos(self:GetAttachment(1).Pos) end
+		if self:GetOwner():IsPlayer() then FireLight1:SetLocalPos(self:GetOwner():GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else FireLight1:SetLocalPos(self:GetAttachment(1).Pos) end
 		FireLight1:SetLocalAngles(self:GetAngles())
 		FireLight1:Fire("Color", self.PrimaryEffects_DynamicLightColor.r.." "..self.PrimaryEffects_DynamicLightColor.g.." "..self.PrimaryEffects_DynamicLightColor.b)
 		FireLight1:SetParent(self)
@@ -697,18 +697,18 @@ function SWEP:Think()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Reload()
-if !IsValid(self) or !IsValid(self.Owner) or !self.Owner:Alive() or !self.Owner:IsPlayer() or self.Owner:GetAmmoCount(self.Primary.Ammo) == 0 or !self.Owner:KeyDown(IN_RELOAD) or self.Reloading == true then return end
+if !IsValid(self) or !IsValid(self:GetOwner()) or !self:GetOwner():Alive() or !self:GetOwner():IsPlayer() or self:GetOwner():GetAmmoCount(self.Primary.Ammo) == 0 or !self:GetOwner():KeyDown(IN_RELOAD) or self.Reloading == true then return end
 	local smallerthanthis = self.Primary.ClipSize - 1
 	if self:Clip1() <= smallerthanthis then
 		local setcorrectnum = self.Primary.ClipSize - self:Clip1()
 		local test = setcorrectnum + self:Clip1()
 		self.Reloading = true
 		self:CustomOnReload()
-		if self.HasReloadSound == true then self.Owner:EmitSound(VJ_PICKRANDOMTABLE(self.ReloadSound),50,math.random(90,100)) end
-		if self.Owner:IsPlayer() then
+		if self.HasReloadSound == true then self:GetOwner():EmitSound(VJ_PICKRANDOMTABLE(self.ReloadSound),50,math.random(90,100)) end
+		if self:GetOwner():IsPlayer() then
 			self:SendWeaponAnim(VJ_PICKRANDOMTABLE(self.AnimTbl_Reload)) //self:SendWeaponAnim(VJ_PICKRANDOMTABLE(self.AnimTbl_Reload))
-			self.Owner:SetAnimation(PLAYER_RELOAD)
-			timer.Simple(self.Reload_TimeUntilAmmoIsSet,function() if self:IsValid() then self.Owner:RemoveAmmo(setcorrectnum,self.Primary.Ammo) self:SetClip1(test) end end)
+			self:GetOwner():SetAnimation(PLAYER_RELOAD)
+			timer.Simple(self.Reload_TimeUntilAmmoIsSet,function() if self:IsValid() then self:GetOwner():RemoveAmmo(setcorrectnum,self.Primary.Ammo) self:SetClip1(test) end end)
 			timer.Simple(self.Reload_TimeUntilFinished,function() if self:IsValid() then self.Reloading = false self:DoIdleAnimation() end end)
 		end
 		return true
@@ -717,7 +717,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Deploy()
 	if self.InitHasIdleAnimation == true then self.HasIdleAnimation = true end
-	if self.Owner:IsPlayer() then
+	if self:GetOwner():IsPlayer() then
 	self:CustomOnDeploy()
 	self:SendWeaponAnim(VJ_PICKRANDOMTABLE(self.AnimTbl_Deploy))
 	if self.HasDeploySound == true then
@@ -737,15 +737,15 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Equip()
 	self:SetClip1(self.Primary.ClipSize)
-	if self.Owner:IsPlayer() then
+	if self:GetOwner():IsPlayer() then
 		if self.Primary.PickUpAmmoAmount == "Default" then
-			self.Owner:GiveAmmo(self.Primary.ClipSize*2,self.Primary.Ammo)
+			self:GetOwner():GiveAmmo(self.Primary.ClipSize*2,self.Primary.Ammo)
 		elseif isnumber(self.Primary.PickUpAmmoAmount) then
-			self.Owner:GiveAmmo(self.Primary.PickUpAmmoAmount,self.Primary.Ammo)
+			self:GetOwner():GiveAmmo(self.Primary.PickUpAmmoAmount,self.Primary.Ammo)
 		end
-		//self.Owner:RemoveAmmo(self.Primary.DefaultClip,self.Primary.Ammo)
+		//self:GetOwner():RemoveAmmo(self.Primary.DefaultClip,self.Primary.Ammo)
 		if self.MadeForNPCsOnly == true then
-			self.Owner:PrintMessage(HUD_PRINTTALK,self.PrintName.." removed! It's made for NPCs only!")
+			self:GetOwner():PrintMessage(HUD_PRINTTALK,self.PrintName.." removed! It's made for NPCs only!")
 			self:Remove()
 		end
 	end
@@ -767,8 +767,8 @@ function SWEP:OnRemove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:GetWeaponCustomPosition()
-	if self.Owner:LookupBone(self.WorldModel_CustomPositionBone) == nil then return nil end
-	pos, ang = self.Owner:GetBonePosition(self.Owner:LookupBone(self.WorldModel_CustomPositionBone))
+	if self:GetOwner():LookupBone(self.WorldModel_CustomPositionBone) == nil then return nil end
+	pos, ang = self:GetOwner():GetBonePosition(self:GetOwner():LookupBone(self.WorldModel_CustomPositionBone))
 	ang:RotateAroundAxis(ang:Right(), self.WorldModel_CustomPositionAngle.x)
 	ang:RotateAroundAxis(ang:Up(), self.WorldModel_CustomPositionAngle.y)
 	ang:RotateAroundAxis(ang:Forward(), self.WorldModel_CustomPositionAngle.z)
@@ -779,7 +779,7 @@ function SWEP:GetWeaponCustomPosition()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:RunWorldModelThink()
-	if !IsValid(self.Owner) then return end
+	if !IsValid(self:GetOwner()) then return end
 	self:SetNWBool("VJ_WorldModel_Invisible",self.WorldModel_Invisible)
 	
 	if self.WorldModel_UseCustomPosition == true then
@@ -791,8 +791,8 @@ function SWEP:RunWorldModelThink()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:DecideBulletPosition()
-	if !IsValid(self.Owner) then return nil end
-	if !self.Owner:IsNPC() then return self.Owner:GetShootPos() end
+	if !IsValid(self:GetOwner()) then return nil end
+	if !self:GetOwner():IsNPC() then return self:GetOwner():GetShootPos() end
 	local customPos = self:CustomBulletSpawnPosition()
 	if customPos != false then
 		return customPos
@@ -827,15 +827,15 @@ function SWEP:DecideBulletPosition()
 			end
 		end
 		if (getmuzzle == false) or getmuzzle == nil then
-			if self.Owner:LookupBone("ValveBiped.Bip01_R_Hand") != nil then
-				return self.Owner:GetBonePosition(self.Owner:LookupBone("ValveBiped.Bip01_R_Hand"))
+			if self:GetOwner():LookupBone("ValveBiped.Bip01_R_Hand") != nil then
+				return self:GetOwner():GetBonePosition(self:GetOwner():LookupBone("ValveBiped.Bip01_R_Hand"))
 			else
 				print("WARNING: "..self:GetClass().." doesn't have a proper attachment or bone for bullet spawn!")
-				return self.Owner:EyePos()
+				return self:GetOwner():EyePos()
 			end
 		end
 		//print("It has a proper attachment.")
-		return self:GetAttachment(self:LookupAttachment(getmuzzle)).Pos //+ self.Owner:GetUp()*-45
+		return self:GetAttachment(self:LookupAttachment(getmuzzle)).Pos //+ self:GetOwner():GetUp()*-45
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -863,7 +863,7 @@ if (CLIENT) then
 		end
 		//self:DrawModel()
 		local pos = self:DecideBulletPosition()
-		if pos != nil && IsValid(self.Owner) then
+		if pos != nil && IsValid(self:GetOwner()) then
 			net.Start("vj_weapon_curbulletpos")
 			net.WriteVector(pos)
 			net.WriteEntity(self)
@@ -871,8 +871,8 @@ if (CLIENT) then
 		end
 		//self:SetNWVector("VJ_CurBulletPos",self:GetAttachment(self:LookupAttachment("muzzle")).Pos)
 		if self.WorldModel_UseCustomPosition == true then
-			if IsValid(self.Owner) then
-				if self.Owner:IsPlayer() && self.Owner:InVehicle() then return end
+			if IsValid(self:GetOwner()) then
+				if self:GetOwner():IsPlayer() && self:GetOwner():InVehicle() then return end
 				local weppos = self:GetWeaponCustomPosition()
 				if weppos == nil then return end
 				self:SetRenderOrigin(weppos.pos)

@@ -53,21 +53,21 @@ SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle anim
 function SWEP:CustomOnPrimaryAttack_BeforeShoot()
 if (CLIENT) then return end
 	local SpawnBlaserRod = ents.Create("obj_vj_tank_shell")
-	local OwnerPos = self.Owner:GetShootPos()
-	local OwnerAng = self.Owner:GetAimVector():Angle()
+	local OwnerPos = self:GetOwner():GetShootPos()
+	local OwnerAng = self:GetOwner():GetAimVector():Angle()
 	OwnerPos = OwnerPos + OwnerAng:Forward()*-20 + OwnerAng:Up()*-9 + OwnerAng:Right()*10
-	if self.Owner:IsPlayer() then SpawnBlaserRod:SetPos(OwnerPos) else SpawnBlaserRod:SetPos(self:GetAttachment(self:LookupAttachment("missile")).Pos) end
-	if self.Owner:IsPlayer() then SpawnBlaserRod:SetAngles(OwnerAng) else SpawnBlaserRod:SetAngles(self.Owner:GetAngles()) end
-	SpawnBlaserRod:SetOwner(self.Owner)
+	if self:GetOwner():IsPlayer() then SpawnBlaserRod:SetPos(OwnerPos) else SpawnBlaserRod:SetPos(self:GetAttachment(self:LookupAttachment("missile")).Pos) end
+	if self:GetOwner():IsPlayer() then SpawnBlaserRod:SetAngles(OwnerAng) else SpawnBlaserRod:SetAngles(self:GetOwner():GetAngles()) end
+	SpawnBlaserRod:SetOwner(self:GetOwner())
 	SpawnBlaserRod:Activate()
 	SpawnBlaserRod:Spawn()
 	
 	local phy = SpawnBlaserRod:GetPhysicsObject()
 	if phy:IsValid() then
-		if self.Owner:IsPlayer() then
-		phy:ApplyForceCenter(self.Owner:GetAimVector() * 4000) else //200000
-		//phy:ApplyForceCenter((self.Owner:GetEnemy():GetPos() - self.Owner:GetPos()) * 4000)
-		phy:ApplyForceCenter(((self.Owner:GetEnemy():GetPos()+self.Owner:GetEnemy():OBBCenter()+self.Owner:GetEnemy():GetUp()*-45) - self.Owner:GetPos()+self.Owner:OBBCenter()+self.Owner:GetEnemy():GetUp()*-45) * 4000)
+		if self:GetOwner():IsPlayer() then
+		phy:ApplyForceCenter(self:GetOwner():GetAimVector() * 4000) else //200000
+		//phy:ApplyForceCenter((self:GetOwner():GetEnemy():GetPos() - self:GetOwner():GetPos()) * 4000)
+		phy:ApplyForceCenter(((self:GetOwner():GetEnemy():GetPos()+self:GetOwner():GetEnemy():OBBCenter()+self:GetOwner():GetEnemy():GetUp()*-45) - self:GetOwner():GetPos()+self:GetOwner():OBBCenter()+self:GetOwner():GetEnemy():GetUp()*-45) * 4000)
 		//data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():OBBCenter()+Entity:GetEnemy():GetUp()*-45) -Entity:GetPos()+Entity:OBBCenter()+Entity:GetEnemy():GetUp()*-45
 		end
 	end

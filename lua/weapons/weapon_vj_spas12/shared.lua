@@ -54,20 +54,20 @@ SWEP.FirstTimeShotShotgun = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*function SWEP:CustomOnNPC_ServerThink()
 	print("debeck")
-	if self.Owner:GetActivity() != ACT_RANGE_ATTACK1 then
+	if self:GetOwner():GetActivity() != ACT_RANGE_ATTACK1 then
 	print("Fuck")
 	self.FirstTimeShotShotgun = false
 	end
 end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_AfterShoot()
-	//if self.Owner:IsNPC() && (self.Owner.IsVJBaseSNPC) && self.FirstTimeShotShotgun == true /*&& self.Owner:GetActivity() != ACT_RANGE_ATTACK1*/ then
+	//if self:GetOwner():IsNPC() && (self:GetOwner().IsVJBaseSNPC) && self.FirstTimeShotShotgun == true /*&& self:GetOwner():GetActivity() != ACT_RANGE_ATTACK1*/ then
 	//self.FirstTimeShotShotgun = true
-	//self.Owner:VJ_ACT_PLAYACTIVITY(ACT_RANGE_ATTACK_SHOTGUN,false,0,true)
+	//self:GetOwner():VJ_ACT_PLAYACTIVITY(ACT_RANGE_ATTACK_SHOTGUN,false,0,true)
 	//end
 	//self.FirstTimeShotShotgun = true
 	timer.Simple(0.2,function()
-		if IsValid(self) && IsValid(self.Owner) && self.Owner:IsPlayer() then
+		if IsValid(self) && IsValid(self:GetOwner()) && self:GetOwner():IsPlayer() then
 			self.Weapon:EmitSound(Sound("weapons/shotgun/shotgun_cock.wav"),80,100)
 			self.Weapon:SendWeaponAnim(ACT_SHOTGUN_PUMP)
 		end
