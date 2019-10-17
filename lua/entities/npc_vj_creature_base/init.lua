@@ -3882,7 +3882,6 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTakeDamage(dmginfo,data)
 	if self.DoingVJDeathDissolve == true then self.DoingVJDeathDissolve = false return true end
-	if self.Dead == true then return false end
 	if self.GodMode == true then return false end
 	if dmginfo:GetDamage() <= 0 then return false end
 
@@ -3905,7 +3904,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 	if self:IsOnFire() && self:WaterLevel() == 2 then self:Extinguish() end
 
 	if VJ_HasValue(self.ImmuneDamagesTable,DamageType) then return end
-	if self.AllowIgnition == false && (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() == "entityflame" && DamageAttacker:GetClass() == "entityflame") then print("gay") self:Extinguish() return false end
+	if self.AllowIgnition == false && (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() == "entityflame" && DamageAttacker:GetClass() == "entityflame") then self:Extinguish() return false end
 	if self.Immune_Fire == true && (DamageType == DMG_BURN or DamageType == DMG_SLOWBURN or (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() == "entityflame" && DamageAttacker:GetClass() == "entityflame")) then return false end
 	if self.Immune_AcidPoisonRadiation == true && (DamageType == DMG_ACID or DamageType == DMG_RADIATION or DamageType == DMG_POISON or DamageType == DMG_NERVEGAS or DamageType == DMG_PARALYZE) then return false end
 	if self.Immune_Bullet == true && (dmginfo:IsBulletDamage() or DamageType == DMG_AIRBOAT or DamageType == DMG_BUCKSHOT) then return false end
@@ -3926,18 +3925,23 @@ function ENT:OnTakeDamage(dmginfo,data)
 		end
 	end
 
+	local function DoBleed()
+		if self.Bleeds == true && dmginfo:GetDamage() > 0 then
+			self:CustomOnTakeDamage_OnBleed(dmginfo,hitgroup)
+			if self.HasBloodParticle == true && ((!self:IsOnFire()) or (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() != "entityflame" && DamageAttacker:GetClass() != "entityflame")) then self:SpawnBloodParticles(dmginfo,hitgroup) end
+			if self.HasBloodDecal == true then self:SpawnBloodDecal(dmginfo,hitgroup) end
+			self:ImpactSoundCode()
+		end
+	end
+	if self.Dead == true then DoBleed() return false end
+	
 	self:CustomOnTakeDamage_BeforeDamage(dmginfo,hitgroup)
 	if dmginfo:GetDamage() <= 0 then return false end
 	self.LatestDmgInfo = dmginfo
-	self:SetHealth(self:Health() -dmginfo:GetDamage())
+	self:SetHealth(self:Health() - dmginfo:GetDamage())
 	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printondamage") == 1 then print(self:GetClass().." Got Damaged! | Amount = "..dmginfo:GetDamage()) end end
 	self:CustomOnTakeDamage_AfterDamage(dmginfo,hitgroup)
-	if self.Bleeds == true && dmginfo:GetDamage() > 0 then
-		self:CustomOnTakeDamage_OnBleed(dmginfo,hitgroup)
-		if self.HasBloodParticle == true && ((!self:IsOnFire()) or (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() != "entityflame" && DamageAttacker:GetClass() != "entityflame")) then self:SpawnBloodParticles(dmginfo,hitgroup) end
-		if self.HasBloodDecal == true then self:SpawnBloodDecal(dmginfo,hitgroup) end
-		self:ImpactSoundCode()
-	end
+	DoBleed()
 
 	if self:Health() >= 0 then
 		self:DoFlinch(dmginfo,hitgroup)
