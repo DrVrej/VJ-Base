@@ -1177,13 +1177,14 @@ function ENT:IsJumpLegal(startPos,apex,endPos)
 	print(apex)
 	print(endPos)*/
 	local result = self:CustomOnIsJumpLegal(startPos,apex,endPos)
-	if result != nil then return result end
+	if result != nil then if result == true then self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190) end return result end
 	local dist_apex = startPos:Distance(apex)
 	local dist_end = startPos:Distance(apex)
 	/*print(dist_apex)
 	print(dist_end)*/
 	if dist_apex > 150 then return false end
 	if dist_end > 150 then return nil end
+	self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190)
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
