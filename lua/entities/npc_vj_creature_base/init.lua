@@ -1010,6 +1010,7 @@ ENT.NextInvestigateSoundT = 0
 ENT.LostEnemySoundT = 0
 ENT.NextDoAnyAttackT = 0
 ENT.NearestPointToEnemyDistance = 0
+ENT.JumpLegalLandingTime = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.CurrentTurningAngle = false
 ENT.SelectedDifficulty = 1
@@ -1218,13 +1219,14 @@ function ENT:IsJumpLegal(startPos,apex,endPos)
 	print(apex)
 	print(endPos)*/
 	local result = self:CustomOnIsJumpLegal(startPos,apex,endPos)
-	if result != nil then return result end
+	if result != nil then if result == true then self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190) end return result end
 	local dist_apex = startPos:Distance(apex)
 	local dist_end = startPos:Distance(apex)
 	/*print(dist_apex)
 	print(dist_end)*/
 	if dist_apex > 550 then return nil end
 	if dist_end > 550 then return nil end
+	self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190)
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1471,7 +1473,7 @@ function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_ChaseEnemy(true) return end
 	//if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
 	if self.LatestEnemyPosition == self:GetEnemy():GetPos() && self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
-	if self:GetActivity() == ACT_JUMP or self:GetActivity() == ACT_GLIDE or self:GetActivity() == ACT_LAND or self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
+	if (CurTime() <= self.JumpLegalLandingTime && (self:GetActivity() == ACT_JUMP or self:GetActivity() == ACT_GLIDE or self:GetActivity() == ACT_LAND)) or self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
 	self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Run))
 	if UseLOSChase == true then
 		local vsched = ai_vj_schedule.New("vj_chase_enemy")
@@ -1635,7 +1637,16 @@ function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
 	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_TASK_IDLE_STAND() return end
 	if OverrideChasing == false && (self.DisableChasingEnemy == true or self.IsGuard == true or self.RangeAttack_DisableChasingEnemy == true) then self:VJ_TASK_IDLE_STAND() return end
 	//self:VJ_SetSchedule(ChaseSched) // SCHED_CHASE_ENEMY
-	self:VJ_TASK_CHASE_ENEMY()
+	if self:IsUnreachable(self:GetEnemy()) == true then
+		if math.random(1,30) == 1 then
+			if !self:IsMoving() then
+				self.NextWanderTime = 0
+			end
+			self:DoIdleAnimation(1)
+		end
+	else
+		self:VJ_TASK_CHASE_ENEMY()
+	end
 	if self.NextChaseTime > CurTime() then return end
 	self.NextChaseTime = CurTime() + 0.1
 end
@@ -2310,6 +2321,7 @@ function ENT:DoConstantlyFaceEnemyCode()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
+	//self:SetPoseParameter("move_yaw",180)
 	//print(self:GetBlockingEntity())// end
 	// if self:IsUnreachable(self:GetEnemy()) && enemy noclipping then...
 
@@ -2729,6 +2741,7 @@ function ENT:Think()
 						self.AlreadyDoneLeapAttackFirstHit = false
 						self.AlreadyDoneFirstLeapAttack = false
 						self.IsAbleToLeapAttack = false
+						self.JumpLegalLandingTime = 0
 						self:FaceCertainEntity(ene,true)
 						self:CustomOnLeapAttack_BeforeStartTimer()
 						self:BeforeLeapAttackSoundCode()
