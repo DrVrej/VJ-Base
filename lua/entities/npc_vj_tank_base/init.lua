@@ -65,7 +65,8 @@ ENT.Tank_CollisionBoundSize = 90
 ENT.Tank_CollisionBoundUp = 100
 ENT.Tank_CollisionBoundDown = -10
 	-- ====== Death Variables ====== --
-ENT.Tank_DeathSoldierModels = {} -- The corpses it will spawn on death (Example: A soldier)
+ENT.Tank_DeathSoldierModels = {} -- The corpses it will spawn on death (Example: A soldier) | false = Don't spawn anything
+ENT.Tank_DeathSoldierChance = 3 -- The chance that the soldier spawns | 1 = always
 ENT.Tank_DeathDecal = {"Scorch"} -- The decal that it places on the ground when it dies
 	-- ====== Sound Variables ====== --
 ENT.Tank_SoundTbl_DrivingEngine = {}
@@ -108,6 +109,8 @@ end
 function ENT:Tank_CustomOnPriorToKilled(dmginfo,hitgroup) return true end -- Return false to disable the default base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse) return true end -- Return false to disable the default base code
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Tank_CustomOnDeath_AfterDeathSoldierSpawned(dmginfo,hitgroup,SoldierCorpse) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_CustomOnDeath_AfterCorpseSpawned_Effects(dmginfo,hitgroup,GetCorpse) return true end -- Return false to disable the default base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -407,9 +410,10 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
 		util.BlastDamage(self, self, self:GetPos(), 400, 40)
 		util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
 	
-		-- Spawn the Soldier
-		if math.random(1,3) == 1 then
-			self:CreateExtraDeathCorpse("prop_ragdoll",VJ_PICKRANDOMTABLE(self.Tank_DeathSoldierModels),{Pos=self:GetPos()+self:GetUp()*90+self:GetRight()*-30,Vel=Vector(math.Rand(-600,600), math.Rand(-600,600),500)},function(extraent) extraent:Ignite(math.Rand(8,10),0); extraent:SetColor(Color(90,90,90)) end)
+		-- Spawn the death soldier
+		local smdl = VJ_PICKRANDOMTABLE(self.Tank_DeathSoldierModels)
+		if smdl != false && math.random(1,self.Tank_DeathSoldierChance) == 1 then
+			self:CreateExtraDeathCorpse("prop_ragdoll",smdl,{Pos=self:GetPos()+self:GetUp()*90+self:GetRight()*-30,Vel=Vector(math.Rand(-600,600), math.Rand(-600,600),500)},function(extraent) extraent:Ignite(math.Rand(8,10),0); extraent:SetColor(Color(90,90,90)); self:Tank_CustomOnDeath_AfterDeathSoldierSpawned(dmginfo,hitgroup,extraent) end)
 		end
 
 		self:SetPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the NPC is too close to the ground

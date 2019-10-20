@@ -63,7 +63,7 @@ ENT.Tank_SoundTbl_FireShell = {}
 
 ENT.Tank_DefaultSoundTbl_Turning = {"vj_mili_tank/tank_gunnermove2_x.wav"}
 ENT.Tank_DefaultSoundTbl_ReloadShell = {"vehicles/tank_readyfire1.wav"}
-ENT.Tank_DefaultSoundTbl_FireShell = {"vj_mili_tank/tank_fire1","vj_mili_tank/tank_fire2","vj_mili_tank/tank_fire3","vj_mili_tank/tank_fire4"}
+ENT.Tank_DefaultSoundTbl_FireShell = {"vj_mili_tank/tank_fire1.wav","vj_mili_tank/tank_fire2.wav","vj_mili_tank/tank_fire3.wav","vj_mili_tank/tank_fire4.wav"}
 
 //util.AddNetworkString("vj_tankg_base_spawneffects")
 //util.AddNetworkString("vj_tankg_base_shooteffects")
@@ -157,6 +157,7 @@ function ENT:CustomOnThink_AIEnabled()
 		else
 			local Angle_Enemy = (self:GetEnemy():GetPos() - self:GetPos() /*+ Vector(80,0,80)*/):Angle()
 			local Angle_Current = self:GetAngles()
+			local Angle_Diffuse;
 			if self.Tank_UseNegativeAngleDiffuseNumber == true then
 			Angle_Diffuse = self:AngleDiffuse(Angle_Enemy.y,Angle_Current.y-self.Tank_AngleDiffuseNumber) else -- Cannon looking direction
 			Angle_Diffuse = self:AngleDiffuse(Angle_Enemy.y,Angle_Current.y+self.Tank_AngleDiffuseNumber) end -- Cannon looking direction
@@ -200,8 +201,8 @@ function ENT:CustomOnSchedule()
 		//self:FindEnemySphere()
 	else
 		self.Tank_ResetedEnemy = false
-		EnemyPos = self:GetEnemy():GetPos()
-		EnemyPosToSelf = self:GetPos():Distance(EnemyPos)
+		local EnemyPos = self:GetEnemy():GetPos()
+		local EnemyPosToSelf = self:GetPos():Distance(EnemyPos)
 		if self:GetParent().VJ_IsBeingControlled == true then
 			self.Tank_Status = 0
 		elseif self:GetParent().VJ_IsBeingControlled == false then
@@ -217,19 +218,13 @@ function ENT:CustomOnSchedule()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_PrepareShell()
-	if self.Tank_ProperHeightShoot == false then return end
-	if self:GetParent().VJ_IsBeingControlled == true && !self:GetParent().VJ_TheController:KeyDown(IN_ATTACK2) then return end
-	//if self.Tank_FacingTarget == true then
-	//if (IsValid(self:GetEnemy()) && self:GetEnemy() != NULL) then
-		//if self:GetEnemy():IsNPC() then
-			//self:GetEnemy():VJ_SetSchedule(SCHED_TAKE_COVER_FROM_ENEMY)
-		//end
-	//end
+	if self.Tank_ProperHeightShoot == false or (self:GetParent().VJ_IsBeingControlled == true && !self:GetParent().VJ_TheController:KeyDown(IN_ATTACK2)) then return end
+	/*if self.Tank_FacingTarget == true && IsValid(self:GetEnemy() && IsValid(self:GetEnemy()) && self:GetEnemy():IsNPC() then
+		self:GetEnemy():VJ_SetSchedule(SCHED_TAKE_COVER_FROM_ENEMY)
+	end*/
 
 	if self.Tank_ShellReady == false then
-		if self.HasSounds == true && self.HasRangeAttackSound == true then
-			self:Tank_Sound_ReloadShell()
-		end
+		self:Tank_Sound_ReloadShell()
 		self.Tank_ShellReady = true
 	end
 
@@ -242,93 +237,88 @@ function ENT:Tank_PrepareShell()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_FireShell()
-	if (self.Dead == true) or (self.Dead == false && GetConVarNumber("ai_disabled") == 1) or (self.Tank_ProperHeightShoot == false) then return end
-	if IsValid(self:GetEnemy()) /* && self.Tank_FacingTarget == true*/ then
-		if self:Visible(self:GetEnemy()) then
-			self:Tank_Sound_FireShell()
+	if (self.Dead == true) or (GetConVarNumber("ai_disabled") == 1) or (self.Tank_ProperHeightShoot == false) or (!IsValid(self:GetEnemy())) then return end // self.Tank_FacingTarget != true
+	if self:Visible(self:GetEnemy()) then
+		self:Tank_Sound_FireShell()
+		
+		self.Tank_FireLight1 = ents.Create("light_dynamic")
+		self.Tank_FireLight1:SetKeyValue("brightness", "4")
+		self.Tank_FireLight1:SetKeyValue("distance", "400")
+		self.Tank_FireLight1:SetPos(self:LocalToWorld(self.Tank_Shell_DynamicLightPos))
+		self.Tank_FireLight1:SetLocalAngles(self:GetAngles())
+		self.Tank_FireLight1:Fire("Color", "255 150 60")
+		self.Tank_FireLight1:SetParent(self)
+		self.Tank_FireLight1:Spawn()
+		self.Tank_FireLight1:Activate()
+		self.Tank_FireLight1:Fire("TurnOn","",0)
+		self.Tank_FireLight1:Fire("Kill","",0.1)
+		self:DeleteOnRemove(self.Tank_FireLight1)
 
-			//self:StartShootEffects()
-			self.Tank_FireLight1 = ents.Create("light_dynamic")
-			self.Tank_FireLight1:SetKeyValue("brightness", "4")
-			self.Tank_FireLight1:SetKeyValue("distance", "400")
-			self.Tank_FireLight1:SetPos(self:LocalToWorld(self.Tank_Shell_DynamicLightPos))
-			self.Tank_FireLight1:SetLocalAngles(self:GetAngles())
-			self.Tank_FireLight1:Fire("Color", "255 150 60")
-			self.Tank_FireLight1:SetParent(self)
-			self.Tank_FireLight1:Spawn()
-			self.Tank_FireLight1:Activate()
-			self.Tank_FireLight1:Fire("TurnOn","",0)
-			self.Tank_FireLight1:Fire("Kill","",0.1)
-			self:DeleteOnRemove(self.Tank_FireLight1)
-
-			local counter_effect = 0
-			for i=1,40 do
-				counter_effect = counter_effect + 0.1
-				timer.Simple(counter_effect,function() if self.Dead == false then self:StartShootEffects() end end)
-			end
-
-			local particle_smoke = ents.Create("info_particle_system")
-			particle_smoke:SetKeyValue("effect_name","smoke_exhaust_01a")
-			particle_smoke:SetPos(self:LocalToWorld(self.Tank_Shell_ParticlePos))
-			particle_smoke:SetAngles(Angle(self:GetAngles().x,-self:GetAngles().y,self:GetAngles().z))
-			particle_smoke:SetParent(self)
-			particle_smoke:Spawn()
-			particle_smoke:Activate()
-			particle_smoke:Fire("Start","",0)
-			particle_smoke:Fire("Kill","",4)
-
-			local particle_whitesmoke = ents.Create("info_particle_system")
-			particle_whitesmoke:SetKeyValue("effect_name","Advisor_Pod_Steam_Continuous")
-			particle_whitesmoke:SetPos(self:LocalToWorld(self.Tank_Shell_ParticlePos))
-			particle_whitesmoke:SetAngles(Angle(self:GetAngles().x,-self:GetAngles().y,self:GetAngles().z))
-			particle_whitesmoke:SetParent(self)
-			particle_whitesmoke:Spawn()
-			particle_whitesmoke:Activate()
-			particle_whitesmoke:Fire("Start","",0)
-			particle_whitesmoke:Fire("Kill","",4)
-			util.ScreenShake(self:GetPos(),100,200,1,2500)
-
-			local flash = ents.Create("env_muzzleflash")
-			flash:SetPos(self:LocalToWorld(self.Tank_Shell_MuzzleFlashPos))
-			flash:SetKeyValue("scale","6")
-			if self.Tank_UsesRightAngles == true then
-			flash:SetKeyValue("angles",tostring(self:GetRight():Angle())) else
-			flash:SetKeyValue("angles",tostring(self:GetForward():Angle())) end
-			flash:Fire("Fire",0,0)
-
-			local dust = EffectData()
-			dust:SetOrigin(self:GetParent():GetPos())
-			dust:SetScale(500)
-			util.Effect("ThumperDust",dust)
-
-			local ShootPos = (self:GetEnemy():GetPos() + self:GetEnemy():OBBCenter() - self:LocalToWorld(self.Tank_Shell_SpawnPos)):GetNormal()*self.Tank_Shell_VelocitySpeed
-			if self.Tank_FacingTarget == false then
-				if self.Tank_UsesRightAngles == true then
-					ShootPos = self:GetRight()*ShootPos:Length()
-				else
-					ShootPos = self:GetForward()*-ShootPos:Length()
-				end
-			end
-			local Projectile_Shell = ents.Create(self.Tank_Shell_EntityToSpawn)
-			Projectile_Shell:SetPos(self:LocalToWorld(self.Tank_Shell_SpawnPos))
-			Projectile_Shell:SetAngles(ShootPos:Angle())
-			Projectile_Shell:Spawn()
-			Projectile_Shell:Activate()
-			Projectile_Shell:SetOwner(self)
-			local phys = Projectile_Shell:GetPhysicsObject()
-			if phys:IsValid() then
-				phys:SetVelocity(Vector(ShootPos.x,ShootPos.y,math.Clamp(ShootPos.z,self.Tank_Shell_SpawnPos.z+-735,self.Tank_Shell_SpawnPos.z+335)))
-			end
-
-			self:Tank_CustomOnShellFire(Projectile_Shell)
-			self.Tank_ShellReady = false
-			self.FiringShell = false
-		else
-			self.Tank_ShellReady = false
-			self.FiringShell = false
-			self.Tank_FacingTarget = false
+		local counter_effect = 0
+		for i=1,40 do
+			counter_effect = counter_effect + 0.1
+			timer.Simple(counter_effect,function() if self.Dead == false then self:StartShootEffects() end end)
 		end
+
+		local particle_smoke = ents.Create("info_particle_system")
+		particle_smoke:SetKeyValue("effect_name","smoke_exhaust_01a")
+		particle_smoke:SetPos(self:LocalToWorld(self.Tank_Shell_ParticlePos))
+		particle_smoke:SetAngles(Angle(self:GetAngles().x,-self:GetAngles().y,self:GetAngles().z))
+		particle_smoke:SetParent(self)
+		particle_smoke:Spawn()
+		particle_smoke:Activate()
+		particle_smoke:Fire("Start","",0)
+		particle_smoke:Fire("Kill","",4)
+
+		local particle_whitesmoke = ents.Create("info_particle_system")
+		particle_whitesmoke:SetKeyValue("effect_name","Advisor_Pod_Steam_Continuous")
+		particle_whitesmoke:SetPos(self:LocalToWorld(self.Tank_Shell_ParticlePos))
+		particle_whitesmoke:SetAngles(Angle(self:GetAngles().x,-self:GetAngles().y,self:GetAngles().z))
+		particle_whitesmoke:SetParent(self)
+		particle_whitesmoke:Spawn()
+		particle_whitesmoke:Activate()
+		particle_whitesmoke:Fire("Start","",0)
+		particle_whitesmoke:Fire("Kill","",4)
+
+		local flash = ents.Create("env_muzzleflash")
+		flash:SetPos(self:LocalToWorld(self.Tank_Shell_MuzzleFlashPos))
+		flash:SetKeyValue("scale","6")
+		if self.Tank_UsesRightAngles == true then
+		flash:SetKeyValue("angles",tostring(self:GetRight():Angle())) else
+		flash:SetKeyValue("angles",tostring(self:GetForward():Angle())) end
+		flash:Fire("Fire",0,0)
+
+		local dust = EffectData()
+		dust:SetOrigin(self:GetParent():GetPos())
+		dust:SetScale(500)
+		util.Effect("ThumperDust",dust)
+		util.ScreenShake(self:GetPos(),100,200,1,2500)
+		
+		local ShootPos = (self:GetEnemy():GetPos() + self:GetEnemy():OBBCenter() - self:LocalToWorld(self.Tank_Shell_SpawnPos)):GetNormal()*self.Tank_Shell_VelocitySpeed
+		if self.Tank_FacingTarget == false then
+			if self.Tank_UsesRightAngles == true then
+				ShootPos = self:GetRight()*ShootPos:Length()
+			else
+				ShootPos = self:GetForward()*-ShootPos:Length()
+			end
+		end
+		local Projectile_Shell = ents.Create(self.Tank_Shell_EntityToSpawn)
+		Projectile_Shell:SetPos(self:LocalToWorld(self.Tank_Shell_SpawnPos))
+		Projectile_Shell:SetAngles(ShootPos:Angle())
+		Projectile_Shell:Spawn()
+		Projectile_Shell:Activate()
+		Projectile_Shell:SetOwner(self)
+		local phys = Projectile_Shell:GetPhysicsObject()
+		if phys:IsValid() then
+			phys:SetVelocity(Vector(ShootPos.x,ShootPos.y,math.Clamp(ShootPos.z,self.Tank_Shell_SpawnPos.z+-735,self.Tank_Shell_SpawnPos.z+335)))
+		end
+		
+		self:Tank_CustomOnShellFire(Projectile_Shell)
+	else
+		self.Tank_FacingTarget = false
 	end
+	self.Tank_ShellReady = false
+	self.FiringShell = false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
@@ -353,7 +343,7 @@ function ENT:Tank_Sound_Moving()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_Sound_ReloadShell()
-	if self.HasSounds == false or self.HasFootStepSound == false then return end
+	if self.HasSounds == false or self.HasRangeAttackSound == false then return end
 	
 	local sdtbl = VJ_PICKRANDOMTABLE(self.Tank_SoundTbl_ReloadShell)
 	if sdtbl == false then sdtbl = VJ_PICKRANDOMTABLE(self.Tank_DefaultSoundTbl_ReloadShell) end -- Default table
