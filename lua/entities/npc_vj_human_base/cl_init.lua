@@ -9,7 +9,7 @@ require('sound_vj_track')
 INFO: Used to make human SNPCs
 --------------------------------------------------*/
 
-ENT.RenderGroup = RENDERGROUP_BOTH
+//ENT.RenderGroup = RENDERGROUP_BOTH
 function ENT:Initialize() end
 function ENT:Draw() self:DrawModel() self:CustomOnDraw() end
 function ENT:DrawTranslucent() self:Draw() end
