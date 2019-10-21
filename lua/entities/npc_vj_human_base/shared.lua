@@ -16,14 +16,8 @@ ENT.AutomaticFrameAdvance = false
 ENT.IsVJBaseSNPC = true -- Is it a VJ Base SNPC?
 ENT.IsVJBaseSNPC_Human = true -- Is it a VJ Base human?
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PhysicsCollide(data, physobj)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PhysicsUpdate(physobj)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SetAutomaticFrameAdvance(bUsingAnim)
-	self.AutomaticFrameAdvance = bUsingAnim
+function ENT:SetAutomaticFrameAdvance(val)
+	self.AutomaticFrameAdvance = val
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*if (CLIENT) then

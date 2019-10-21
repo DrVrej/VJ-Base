@@ -996,6 +996,8 @@ ENT.NPCTbl_Xen = {monster_bullchicken=true,monster_alien_grunt=true,monster_alie
 function ENT:Initialize()
 	self:CustomOnPreInitialize()
 	self:SetSpawnEffect(false)
+	self:SetRenderMode(RENDERMODE_NORMAL)
+	//self:SetRenderMode(RENDERMODE_TRANSALPHA)
 	self:VJ_DoSelectDifficulty()
 	self:SetModel(Model(VJ_PICKRANDOMTABLE(self.Model)))
 	self:SetMaxYawSpeed(self.TurningSpeed)
@@ -1052,8 +1054,6 @@ function ENT:Initialize()
 			if math.random(1,self.SoundTrackChance) == 1 then self:StartSoundTrack() end
 		end
 	end)
-	self:SetRenderMode(RENDERMODE_NORMAL)
-	//self:SetRenderMode(RENDERMODE_TRANSALPHA)
 	duplicator.RegisterEntityClass(self:GetClass(),VJSPAWN_SNPC_DUPE,"Model","Class","Equipment","SpawnFlags","Data")
 	//if self.Immune_Dissolve == true or self.GodMode == true then self:AddEFlags(EFL_NO_DISSOLVE) end
 	self:AddEFlags(EFL_NO_DISSOLVE)

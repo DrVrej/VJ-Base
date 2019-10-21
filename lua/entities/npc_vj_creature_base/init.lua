@@ -1052,6 +1052,9 @@ local bit = bit
 function ENT:Initialize()
 	self:CustomOnPreInitialize()
 	self:SetSpawnEffect(false)
+	self:SetRenderMode(RENDERMODE_NORMAL)
+	//self:SetRenderMode(RENDERMODE_TRANSALPHA)
+	//self:DrawShadow(true)
 	self:VJ_DoSelectDifficulty()
 	if VJ_PICKRANDOMTABLE(self.Model) != false then self:SetModel(Model(VJ_PICKRANDOMTABLE(self.Model))) end
 	self:SetMaxYawSpeed(self.TurningSpeed)
@@ -1100,9 +1103,6 @@ function ENT:Initialize()
 			if math.random(1,self.SoundTrackChance) == 1 then self:StartSoundTrack() end
 		end
 	end)
-	self:SetRenderMode(RENDERMODE_NORMAL)
-	//self:SetRenderMode(RENDERMODE_TRANSALPHA)
-	self:DrawShadow(true)
 	duplicator.RegisterEntityClass(self:GetClass(),VJSPAWN_SNPC_DUPE,"Model","Class","Equipment","SpawnFlags","Data")
 	//table.insert(self.VJ_FriendlyNPCsGroup,"npc_vj_mili*")
 	//print(table.Count(self.VJ_FriendlyNPCsGroup))
