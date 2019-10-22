@@ -973,11 +973,11 @@ ENT.NextInvestigateSoundT = 0
 ENT.LostEnemySoundT = 0
 ENT.NextDoAnyAttackT = 0
 ENT.NearestPointToEnemyDistance = 0
+ENT.ReachableEnemyCount = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.SelectedDifficulty = 1
 ENT.VJ_AddCertainEntityAsEnemy = {}
 ENT.VJ_AddCertainEntityAsFriendly = {}
-ENT.CurrentReachableEnemies = {}
 ENT.AttackTimers = {"timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee"}
 ENT.DefaultGibDamageTypes = {DMG_ALWAYSGIB,DMG_ENERGYBEAM,DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SONIC}
 ENT.EntitiesToRunFrom = {obj_spore=true,obj_vj_grenade=true,obj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true,cw_flash_thrown=true,ent_hl1_grenade=true}
@@ -3083,16 +3083,17 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 				end
 			end
 		end
-		local curenes = self.CurrentReachableEnemies
-		if istable(curenes) then
-			for k,v in ipairs(curenes) do
-				if IsValid(v) && ((!IsValid(self:GetEnemy())) or (IsValid(self:GetEnemy()) && self:GetEnemy() != v)) then
+		local curenes = self.ReachableEnemyCount //self.CurrentReachableEnemies
+		//if istable(curenes) then
+			//for k,v in ipairs(curenes) do
+				//if IsValid(v) && ((!IsValid(self:GetEnemy())) or (IsValid(self:GetEnemy()) && self:GetEnemy() != v)) then
+				if (IsValid(self:GetEnemy()) && (curenes - 1) >= 1) or (!IsValid(self:GetEnemy()) && curenes >= 1) then
 					self:VJ_DoSetEnemy(v,false,true)
 					self.ResetedEnemy = false
 					return false
 				end
-			end
-		end
+			//end
+		//end
 	end
 	
 	//print(self.LatestEnemyPosition)
@@ -3202,7 +3203,6 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoEntityRelationshipCheck()
 	if self.Dead == true or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.Behavior == VJ_BEHAVIOR_PASSIVE*/ then return false end
-	self.CurrentReachableEnemies = {}
 	local posenemies = self.CurrentPossibleEnemies
 	if posenemies == nil then return false end
 	//if CurTime() > self.NextHardEntityCheckT then
@@ -3215,209 +3215,221 @@ function ENT:DoEntityRelationshipCheck()
 		self.CurrentPossibleEnemies = self:DoHardEntityCheck()
 	self.NextHardEntityCheckT = CurTime() + math.random(50,70) end*/
 	
-	local distlist = {}
+	self.ReachableEnemyCount = 0
+	//local distlist = {}
+	local closestdist = nil
 	local enemyseen = false
 	local MyPos = self:GetPos()
 	local sightdist = self.SightDistance
-	for k, v in ipairs(posenemies) do
-		if !IsValid(v) then table.remove(posenemies,k) continue end
-		//if !IsValid(v) then table.remove(self.CurrentPossibleEnemies,tonumber(v)) continue end
-		//if !IsValid(v) then continue end
-		if self:VJ_HasNoTarget(v) == true then
-			if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
-				self:ResetEnemy(false)
+	local it = 1
+	//for k, v in ipairs(posenemies) do
+	while it <= #posenemies do
+		local v = posenemies[it]
+		if !IsValid(v) then
+			table.remove(posenemies,it)
+		else
+			it = it + 1
+			//if !IsValid(v) then table.remove(self.CurrentPossibleEnemies,tonumber(v)) continue end
+			//if !IsValid(v) then continue end
+			if self:VJ_HasNoTarget(v) == true then
+				if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
+					self:ResetEnemy(false)
+				end
+				continue
 			end
-			continue
-		end
-		//if v:Health() <= 0 then table.remove(self.CurrentPossibleEnemies,k) continue end
-		local entisfri = false
-		local vPos = v:GetPos()
-		local vDistanceToMy = vPos:Distance(MyPos)
-		if vDistanceToMy > sightdist then continue end
-		local vClass = v:GetClass()
-		local vNPC = v:IsNPC()
-		local vPlayer = v:IsPlayer()
-		local radiusoverride = 0
-		local seethroughwall = false
-		if vClass != self:GetClass() && (vNPC or vPlayer) && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
-			local inEneTbl = VJ_HasValue(self.VJ_AddCertainEntityAsEnemy,v)
-			if self.HasAllies == true && inEneTbl == false then
-				for _,friclass in ipairs(self.VJ_NPC_Class) do
-					if friclass == "CLASS_PLAYER_ALLY" && self.PlayerFriendly == false then self.PlayerFriendly = true end
-					if friclass == "CLASS_COMBINE" then if self:CombineFriendlyCode(v) == true then entisfri = true end end
-					if friclass == "CLASS_ZOMBIE" then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
-					if friclass == "CLASS_ANTLION" then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
-					if friclass == "CLASS_XEN" then if self:XenFriendlyCode(v) == true then entisfri = true end end
-					if (v.VJ_NPC_Class /*&& friclass != "CLASS_PLAYER_ALLY"*/ && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
-						if friclass == "CLASS_PLAYER_ALLY" then
-							if self.FriendsWithAllPlayerAllies == true && v.FriendsWithAllPlayerAllies == true then
+			//if v:Health() <= 0 then table.remove(self.CurrentPossibleEnemies,k) continue end
+			local entisfri = false
+			local vPos = v:GetPos()
+			local vDistanceToMy = vPos:Distance(MyPos)
+			if vDistanceToMy > sightdist then continue end
+			local vClass = v:GetClass()
+			local vNPC = v:IsNPC()
+			local vPlayer = v:IsPlayer()
+			local radiusoverride = 0
+			local seethroughwall = false
+			if vClass != self:GetClass() && (vNPC or vPlayer) && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
+				local inEneTbl = VJ_HasValue(self.VJ_AddCertainEntityAsEnemy,v)
+				if self.HasAllies == true && inEneTbl == false then
+					for _,friclass in ipairs(self.VJ_NPC_Class) do
+						if friclass == "CLASS_PLAYER_ALLY" && self.PlayerFriendly == false then self.PlayerFriendly = true end
+						if friclass == "CLASS_COMBINE" then if self:CombineFriendlyCode(v) == true then entisfri = true end end
+						if friclass == "CLASS_ZOMBIE" then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
+						if friclass == "CLASS_ANTLION" then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
+						if friclass == "CLASS_XEN" then if self:XenFriendlyCode(v) == true then entisfri = true end end
+						if (v.VJ_NPC_Class /*&& friclass != "CLASS_PLAYER_ALLY"*/ && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
+							if friclass == "CLASS_PLAYER_ALLY" then
+								if self.FriendsWithAllPlayerAllies == true && v.FriendsWithAllPlayerAllies == true then
+									entisfri = true
+									if vNPC then v:AddEntityRelationship(self,D_LI,99) end
+									self:AddEntityRelationship(v,D_LI,99)
+								end
+							else
 								entisfri = true
+								if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
+									self.ResetedEnemy = true
+									self:ResetEnemy(false)
+								end
 								if vNPC then v:AddEntityRelationship(self,D_LI,99) end
 								self:AddEntityRelationship(v,D_LI,99)
 							end
-						else
+						end
+					end
+					if vNPC then
+						for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
+							//for k,v in ipairs(ents.FindByClass(fritbl)) do
+							if string.find(vClass, fritbl) then
+								entisfri = true
+								v:AddEntityRelationship(self,D_LI,99)
+								self:AddEntityRelationship(v,D_LI,99)
+							end
+						end
+						if VJ_HasValue(self.VJ_FriendlyNPCsSingle,vClass) then
 							entisfri = true
+							v:AddEntityRelationship(self,D_LI,99)
+							self:AddEntityRelationship(v,D_LI,99)
+						end
+						if self.CombineFriendly == true then if self:CombineFriendlyCode(v) == true then entisfri = true end end
+						if self.ZombieFriendly == true then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
+						if self.AntlionFriendly == true then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
+						if self.PlayerFriendly == true then
+							if self:PlayerAllies(v) == true then entisfri = true end
+							if self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true then
+								entisfri = true
+								v:AddEntityRelationship(self,D_LI,99)
+								self:AddEntityRelationship(v,D_LI,99)
+							end
+						end
+						if v.IsVJBaseSNPC == true && self.VJFriendly == true then if self:VJFriendlyCode(v) == true then entisfri = true end end
+					end
+				end
+				if entisfri == false && vNPC /*&& MyVisibleTov*/ && self.DisableMakingSelfEnemyToNPCs == false && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self,D_HT,99) end
+				if vPlayer then
+					if (self.PlayerFriendly == true or entisfri == true/* or self:Disposition(v) == D_LI*/) then
+						if inEneTbl == false then
+							entisfri = true
+							self:AddEntityRelationship(v,D_LI,99)
+							//DoPlayerSight()
+						else
+							entisfri = false
+						end
+					end
+					if (!self.IsVJBaseSNPC_Tank) && !IsValid(self:GetEnemy()) && entisfri == false then
+						if entisfri == false then self:AddEntityRelationship(v,D_NU,99) end
+						if v:Crouching() && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightdist = 5000 else sightdist = 2000 end end
+						if vDistanceToMy < (self.InvestigateSoundDistance * v.VJ_LastInvestigateSdLevel) && ((CurTime() - v.VJ_LastInvestigateSd) <= 1) then
+							if self.NextInvestigateSoundMove < CurTime() then
+								if self:Visible(v) then
+									self:StopMoving()
+									self:SetTarget(v)
+									self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+								elseif self.FollowingPlayer == false then
+									self:SetLastPosition(v:GetPos())
+									self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
+								end
+								self:CustomOnInvestigate(v)
+								self:InvestigateSoundCode()
+								self.NextInvestigateSoundMove = CurTime() + 2
+							end
+						elseif vDistanceToMy < 350 && ((self:VJ_DoPlayerFlashLightCheck(v,20) == true)) then
+							//			   Asiga hoser ^ (!v:Crouching() && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP && ((!v:KeyDown(IN_WALK) && (v:KeyDown(IN_FORWARD) or v:KeyDown(IN_BACK) or v:KeyDown(IN_MOVELEFT) or v:KeyDown(IN_MOVERIGHT))) or (v:KeyDown(IN_SPEED) or v:KeyDown(IN_JUMP)))) or
+							self:SetTarget(v)
+							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+						end
+					end
+				end
+			end
+			//local distlist_closest = false
+			//local distlist_inserted = false
+			local closestdist_do = false
+			/*if entisfri == false then
+				local distlist_num = #distlist
+				if (distlist_num != 0 && vDistanceToMy < math.min(unpack(distlist))) or (distlist_num == 0) then
+					distlist_closest = true
+				end
+				//table.insert(distlist,vDistanceToMy)
+				if IsValid(self:GetEnemy()) && v == self:GetEnemy() then
+					distlist[distlist_num+1] = vDistanceToMy
+					distlist_inserted = true
+				end
+			elseif entisfri == true then
+				distlist_closest = true
+			end*/
+			if self.VJ_IsBeingControlled == true then
+				if self.VJ_TheControllerBullseye != v then
+					//self:AddEntityRelationship(v,D_NU,99)
+					v = self.VJ_TheControllerBullseye
+					vPlayer = false
+				end
+			end
+			if self.FindEnemy_CanSeeThroughWalls == true then seethroughwall = true end
+			if ((self.Behavior == VJ_BEHAVIOR_NEUTRAL && self.Alerted == true) or self.Behavior != VJ_BEHAVIOR_NEUTRAL) && self.DisableFindEnemy == false then
+				if (seethroughwall == true) or (self:Visible(v) && (vDistanceToMy < sightdist)) then
+					if (self.FindEnemy_UseSphere == false && radiusoverride == 0 && (self:GetForward():Dot((vPos - MyPos):GetNormalized()) > math.cos(math.rad(self.SightAngle)))) or (self.FindEnemy_UseSphere == true or radiusoverride == 1) then
+						local check = self:DoRelationshipCheck(v)
+						if check == true then
+						//if (v.VJ_NoTarget && v.VJ_NoTarget != true) then continue end
+							self:AddEntityRelationship(v,D_HT,99)
+							//if distlist_inserted == false then distlist[#distlist+1] = vDistanceToMy end
+							if (closestdist == nil) or (vDistanceToMy < closestdist) then closestdist = vDistanceToMy; closestdist_do = true end
+							//self.CurrentReachableEnemies[#self.CurrentReachableEnemies+1] = v
+							self.ReachableEnemyCount = self.ReachableEnemyCount + 1
+							enemyseen = true
+							if closestdist_do == true then // distlist_closest == true
+								self:VJ_DoSetEnemy(v,true,true)
+								self:SetEnemy(v)
+							end
+							//self:VJ_DoSetEnemy(v,true,true)
+							//if !IsValid(self:GetEnemy()) then
+								//self:VJ_DoSetEnemy(v,true)
+							//end
+						elseif check == false && vPlayer then
 							if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
 								self.ResetedEnemy = true
 								self:ResetEnemy(false)
 							end
-							if vNPC then v:AddEntityRelationship(self,D_LI,99) end
-							self:AddEntityRelationship(v,D_LI,99)
 						end
 					end
-				end
-				if vNPC then
-					for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
-						//for k,v in ipairs(ents.FindByClass(fritbl)) do
-						if string.find(vClass, fritbl) then
-							entisfri = true
-							v:AddEntityRelationship(self,D_LI,99)
-							self:AddEntityRelationship(v,D_LI,99)
-						end
-					end
-					if VJ_HasValue(self.VJ_FriendlyNPCsSingle,vClass) then
-						entisfri = true
-						v:AddEntityRelationship(self,D_LI,99)
-						self:AddEntityRelationship(v,D_LI,99)
-					end
-					if self.CombineFriendly == true then if self:CombineFriendlyCode(v) == true then entisfri = true end end
-					if self.ZombieFriendly == true then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
-					if self.AntlionFriendly == true then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
-					if self.PlayerFriendly == true then
-						if self:PlayerAllies(v) == true then entisfri = true end
-						if self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true then
-							entisfri = true
-							v:AddEntityRelationship(self,D_LI,99)
-							self:AddEntityRelationship(v,D_LI,99)
-						end
-					end
-					if v.IsVJBaseSNPC == true && self.VJFriendly == true then if self:VJFriendlyCode(v) == true then entisfri = true end end
 				end
 			end
-			if entisfri == false && vNPC /*&& MyVisibleTov*/ && self.DisableMakingSelfEnemyToNPCs == false && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self,D_HT,99) end
 			if vPlayer then
-				if (self.PlayerFriendly == true or entisfri == true/* or self:Disposition(v) == D_LI*/) then
-					if inEneTbl == false then
-						entisfri = true
-						self:AddEntityRelationship(v,D_LI,99)
-						//DoPlayerSight()
-					else
-						entisfri = false
-					end
-				end
-				if (!self.IsVJBaseSNPC_Tank) && !IsValid(self:GetEnemy()) && entisfri == false then
-					if entisfri == false then self:AddEntityRelationship(v,D_NU,99) end
-					if v:Crouching() && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightdist = 5000 else sightdist = 2000 end end
-					if vDistanceToMy < (self.InvestigateSoundDistance * v.VJ_LastInvestigateSdLevel) && ((CurTime() - v.VJ_LastInvestigateSd) <= 1) then
-						if self.NextInvestigateSoundMove < CurTime() then
-							if self:Visible(v) then
-								self:StopMoving()
-								self:SetTarget(v)
-								self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-							elseif self.FollowingPlayer == false then
-								self:SetLastPosition(v:GetPos())
-								self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
-							end
-							self:CustomOnInvestigate(v)
-							self:InvestigateSoundCode()
-							self.NextInvestigateSoundMove = CurTime() + 2
-						end
-					elseif vDistanceToMy < 350 && ((self:VJ_DoPlayerFlashLightCheck(v,20) == true)) then
-						//			   Asiga hoser ^ (!v:Crouching() && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP && ((!v:KeyDown(IN_WALK) && (v:KeyDown(IN_FORWARD) or v:KeyDown(IN_BACK) or v:KeyDown(IN_MOVELEFT) or v:KeyDown(IN_MOVERIGHT))) or (v:KeyDown(IN_SPEED) or v:KeyDown(IN_JUMP)))) or
-						self:SetTarget(v)
-						self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-					end
-				end
-			end
-		end
-		local distlist_closest = false
-		local distlist_inserted = false
-		if entisfri == false then
-			local distlist_num = #distlist
-			if (distlist_num != 0 && vDistanceToMy < math.min(unpack(distlist))) or (distlist_num == 0) then
-				distlist_closest = true
-			end
-			//table.insert(distlist,vDistanceToMy)
-			if IsValid(self:GetEnemy()) && v == self:GetEnemy() then
-				distlist[distlist_num+1] = vDistanceToMy
-				distlist_inserted = true
-			end
-		elseif entisfri == true then
-			distlist_closest = true
-		end
-		if self.VJ_IsBeingControlled == true then
-			if self.VJ_TheControllerBullseye != v then
-				//self:AddEntityRelationship(v,D_NU,99)
-				v = self.VJ_TheControllerBullseye
-				vPlayer = false
-			end
-		end
-		if self.FindEnemy_CanSeeThroughWalls == true then seethroughwall = true end
-		if ((self.Behavior == VJ_BEHAVIOR_NEUTRAL && self.Alerted == true) or self.Behavior != VJ_BEHAVIOR_NEUTRAL) && self.DisableFindEnemy == false then
-			if (seethroughwall == true) or (self:Visible(v) && (vDistanceToMy < sightdist)) then
-				if (self.FindEnemy_UseSphere == false && radiusoverride == 0 && (self:GetForward():Dot((vPos - MyPos):GetNormalized()) > math.cos(math.rad(self.SightAngle)))) or (self.FindEnemy_UseSphere == true or radiusoverride == 1) then
-					local check = self:DoRelationshipCheck(v)
-					if check == true then
-					//if (v.VJ_NoTarget && v.VJ_NoTarget != true) then continue end
-						self:AddEntityRelationship(v,D_HT,99)
-						if distlist_inserted == false then distlist[#distlist+1] = vDistanceToMy end
-						self.CurrentReachableEnemies[#self.CurrentReachableEnemies+1] = v
-						enemyseen = true
-						if distlist_closest == true then
-							self:VJ_DoSetEnemy(v,true,true)
-							self:SetEnemy(v)
-						end
-						//self:VJ_DoSetEnemy(v,true,true)
-						//if !IsValid(self:GetEnemy()) then
-							//self:VJ_DoSetEnemy(v,true)
-						//end
-					elseif check == false && vPlayer then
-						if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
-							self.ResetedEnemy = true
-							self:ResetEnemy(false)
+				if entisfri == true && self.MoveOutOfFriendlyPlayersWay == true && CurTime() > self.NextMoveOutOfFriendlyPlayersWayT && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && self:BusyWithActivity() == false then
+					local dist = 20
+					if self.FollowingPlayer == true then dist = 10 end
+					if /*self:Disposition(v) == D_LI &&*/ (self:VJ_GetNearestPointToEntityDistance(v) < dist) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
+						self.NextFollowPlayerT = CurTime() + 2
+						self:MoveOutOfPlayersWaySoundCode()
+						//self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-50,-50))
+						self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Run))
+						local vsched = ai_vj_schedule.New("vj_move_away")
+						vsched:EngTask("TASK_MOVE_AWAY_PATH", 120)
+						vsched:EngTask("TASK_RUN_PATH", 0)
+						vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+						/*vsched.RunCode_OnFinish = function()
+							timer.Simple(0.1,function()
+								if IsValid(self) then
+									self:SetTarget(v)
+									local vschedMoveAwayFail = ai_vj_schedule.New("vj_move_away_fail")
+									vschedMoveAwayFail:EngTask("TASK_FACE_TARGET", 0)
+									self:StartSchedule(vschedMoveAwayFail)
+								end
+							end)
+						end*/
+						//vsched.CanShootWhenMoving = true
+						//vsched.ConstantlyFaceEnemy = true
+						vsched.IsMovingTask = true
+						vsched.IsMovingTask_Run = true
+						self:StartSchedule(vsched)
+						if self.NextProcessTime > 0.5 then
+							self.NextMoveOutOfFriendlyPlayersWayT = 0
+						else
+							self.NextMoveOutOfFriendlyPlayersWayT = CurTime() + 0.5
 						end
 					end
 				end
+				if self.HasOnPlayerSight == true then self:OnPlayerSightCode(v) end
 			end
 		end
-		if vPlayer then
-			if entisfri == true && self.MoveOutOfFriendlyPlayersWay == true && CurTime() > self.NextMoveOutOfFriendlyPlayersWayT && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && self:BusyWithActivity() == false then
-				local dist = 20
-				if self.FollowingPlayer == true then dist = 10 end
-				if /*self:Disposition(v) == D_LI &&*/ (self:VJ_GetNearestPointToEntityDistance(v) < dist) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
-					self.NextFollowPlayerT = CurTime() + 2
-					self:MoveOutOfPlayersWaySoundCode()
-					//self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-50,-50))
-					self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Run))
-					local vsched = ai_vj_schedule.New("vj_move_away")
-					vsched:EngTask("TASK_MOVE_AWAY_PATH", 120)
-					vsched:EngTask("TASK_RUN_PATH", 0)
-					vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-					/*vsched.RunCode_OnFinish = function()
-						timer.Simple(0.1,function()
-							if IsValid(self) then
-								self:SetTarget(v)
-								local vschedMoveAwayFail = ai_vj_schedule.New("vj_move_away_fail")
-								vschedMoveAwayFail:EngTask("TASK_FACE_TARGET", 0)
-								self:StartSchedule(vschedMoveAwayFail)
-							end
-						end)
-					end*/
-					//vsched.CanShootWhenMoving = true
-					//vsched.ConstantlyFaceEnemy = true
-					vsched.IsMovingTask = true
-					vsched.IsMovingTask_Run = true
-					self:StartSchedule(vsched)
-					if self.NextProcessTime > 0.5 then
-						self.NextMoveOutOfFriendlyPlayersWayT = 0
-					else
-						self.NextMoveOutOfFriendlyPlayersWayT = CurTime() + 0.5
-					end
-				end
-			end
-			if self.HasOnPlayerSight == true then self:OnPlayerSightCode(v) end
-		end
-	//return true
+		//return true
 	end
 	if enemyseen == true then return true else return false end
 	//return false
