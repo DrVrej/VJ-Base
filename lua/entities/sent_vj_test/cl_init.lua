@@ -7,7 +7,6 @@ include('shared.lua')
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to Test Things
 --------------------------------------------------*/
-ENT.RenderGroup = RENDERGROUP_BOTH
 function ENT:Draw() self:DrawModel() end
 
 usermessage.Hook("vj_testentity_onmenuopen",function()

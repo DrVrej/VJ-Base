@@ -1058,7 +1058,7 @@ function ENT:Initialize()
 	self:SetMaxYawSpeed(self.TurningSpeed)
 	if self.HasHull == true then self:SetHullType(self.HullType) end
 	if self.HullSizeNormal == true then self:SetHullSizeNormal() end
-	self:SetCustomCollisionCheck()
+	//self:SetCustomCollisionCheck()
 	if self.HasSetSolid == true then self:SetSolid(SOLID_BBOX) end // SOLID_OBB
 	//self:SetMoveType(self.MoveType)
 	self:ConvarsOnInit()
@@ -1090,7 +1090,7 @@ function ENT:Initialize()
 	else
 		self:SetName(self.PrintName)
 	end
-	self:SetEnemy(nil)
+	//self:SetEnemy(nil)
 	self:SetUseType(SIMPLE_USE)
 	//self.Corpse = ents.Create(self.DeathCorpseEntityClass)
 	if self.UseTheSameGeneralSoundPitch == true then self.UseTheSameGeneralSoundPitch_PickedNumber = math.random(self.GeneralSoundPitch1,self.GeneralSoundPitch2) end
@@ -3401,15 +3401,13 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 	NoResetAlliesSeeEnemy = NoResetAlliesSeeEnemy or false
 	local RunToEnemyOnReset = false
 	if NoResetAlliesSeeEnemy == true then
-		local cptisgay = self:CheckAlliesAroundMe(1000)
-		if cptisgay.ItFoundAllies == true then
-			for k,v in ipairs(cptisgay.FoundAllies) do
-				if IsValid(v:GetEnemy()) && v.LastSeenEnemyTime < self.LastSeenEnemyTimeUntilReset then
-					if IsValid(v:GetEnemy()) && VJ_IsAlive(v:GetEnemy()) == true && self:VJ_HasNoTarget(v:GetEnemy()) == false then
-						self:VJ_DoSetEnemy(v:GetEnemy(),true)
-						self.ResetedEnemy = false
-						return false
-					end
+		local checkallies = self:CheckAlliesAroundMe(1000)
+		if checkallies != nil then
+			for k,v in ipairs(checkallies) do
+				if IsValid(v:GetEnemy()) && v.LastSeenEnemyTime < self.LastSeenEnemyTimeUntilReset && VJ_IsAlive(v:GetEnemy()) == true && self:VJ_HasNoTarget(v:GetEnemy()) == false && self:GetPos():Distance(v:GetEnemy():GetPos()) <= self.SightDistance then
+					self:VJ_DoSetEnemy(v:GetEnemy(),true)
+					self.ResetedEnemy = false
+					return false
 				end
 			end
 		end
@@ -3450,7 +3448,6 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 	if IsValid(self.LatestEnemyClass) && self.LatestEnemyClass:IsPlayer() then self:AddEntityRelationship(self.LatestEnemyClass,4,10) end
 	self.Alerted = false
 	self:SetEnemy(NULL)
-	self:SetEnemy(nil)
 	self:ClearEnemyMemory()
 	//self:UpdateEnemyMemory(self,self:GetPos())
 	self:VJ_ACT_RESETENEMY(RunToEnemyOnReset)
@@ -3845,9 +3842,9 @@ function ENT:CheckAlliesAroundMe(SeeDistance)
 		end
 	end
 	if it > 0 then
-		return {ItFoundAllies = true, FoundAllies = FoundAlliesTbl}
+		return FoundAlliesTbl
 	else
-		return {ItFoundAllies = false, FoundAllies = nil}
+		return nil
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3975,8 +3972,8 @@ function ENT:OnTakeDamage(dmginfo,data)
 			end
 			if self.Passive_AlliesRunOnDamage then
 				local checka = self:CheckAlliesAroundMe(self.Passive_AlliesRunOnDamageDistance)
-				if checka.ItFoundAllies == true then
-					for k,v in ipairs(checka.FoundAllies) do
+				if checka != nil then
+					for k,v in ipairs(checka) do
 						v.Passive_NextRunOnDamageT = CurTime() + math.Rand(v.Passive_NextRunOnDamageTime1,v.Passive_NextRunOnDamageTime2)
 						v:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) end)
 						v:AlertSoundCode()
@@ -3988,8 +3985,8 @@ function ENT:OnTakeDamage(dmginfo,data)
 
 		if self.CallForBackUpOnDamage == true && CurTime() > self.NextCallForBackUpOnDamageT && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && ((!IsValid(DamageInflictor)) or (IsValid(DamageInflictor) && DamageInflictor:GetClass() != "entityflame")) && IsValid(DamageAttacker) && DamageAttacker:GetClass() != "entityflame" then
 			local allies = self:CheckAlliesAroundMe(self.CallForBackUpOnDamageDistance)
-			if allies.ItFoundAllies == true then
-				self:BringAlliesToMe("Random",self.CallForBackUpOnDamageDistance,allies.FoundAllies,self.CallForBackUpOnDamageLimit)
+			if allies != nil then
+				self:BringAlliesToMe("Random",self.CallForBackUpOnDamageDistance,allies,self.CallForBackUpOnDamageLimit)
 				self:ClearSchedule()
 				self.NextFlinchT = CurTime() + 1
 				local pickanim = VJ_PICKRANDOMTABLE(self.CallForBackUpOnDamageAnimation)
@@ -4332,15 +4329,14 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 	if self.BringFriendsOnDeathDistance > 800 then checkdist = self.BringFriendsOnDeathDistance end
 	if self.AlertFriendsOnDeathDistance > 800 then checkdist = self.AlertFriendsOnDeathDistance end
 	local allies = self:CheckAlliesAroundMe(checkdist)
-	if allies.ItFoundAllies == true then
-		local fallies = allies.FoundAllies
+	if allies != nil then
 		local noalert = true -- Don't run the AlertFriendsOnDeath if we have BringFriendsOnDeath enabled!
 		if self.BringFriendsOnDeath == true then
-			self:BringAlliesToMe("Random",self.BringFriendsOnDeathDistance,fallies,self.BringFriendsOnDeathLimit,true)
+			self:BringAlliesToMe("Random",self.BringFriendsOnDeathDistance,allies,self.BringFriendsOnDeathLimit,true)
 			noalert = false
 		end
 		local it = 0
-		for k,v in ipairs(fallies) do
+		for k,v in ipairs(allies) do
 			v:CustomOnAllyDeath(self)
 			v:AllyDeathSoundCode()
 			

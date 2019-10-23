@@ -953,6 +953,63 @@ hook.Add("VJ_CreateSNPCCorpse","VJ_NPC_CORPSELIMIT",function(Corpse,Owner)
 		end
 	end
 end)
+---------------------------------------------------------------------------------------------------------------------------------------------
+/*if (SERVER) then
+	VJ_CurrentPossibleEnemies = {}
+	VJ_CurrentVJSNPCs = {}
+	VJ_NextRelationCheck = 0
+	hook.Add("Think","VJ_SNPC_THINK",function()
+		if CurTime() > VJ_NextRelationCheck then
+			local it = 1
+			while it <= #VJ_CurrentPossibleEnemies do
+				local v = VJ_CurrentPossibleEnemies[it]
+				if !IsValid(v) then
+					table.remove(VJ_CurrentPossibleEnemies,it)
+				else
+					it = it + 1
+					local it2 = 1
+					while it2 <= #VJ_CurrentVJSNPCs do
+						local v2 = VJ_CurrentVJSNPCs[it2]
+						if IsValid(v2) then
+							it2 = it2 + 1
+							if (v2 != v) && (v2:GetClass() != v:GetClass()) && IsValid(v) && (v:GetPos():Distance(v2:GetPos()) <= v2.SightDistance) then
+								if v2:VJ_HasNoTarget(v) == true then
+									if IsValid(v2:GetEnemy()) && v2:GetEnemy() == v then
+										v2:ResetEnemy(false)
+									end
+								else
+									v2:DoEntityRelationshipCheck(v)
+								end
+							end
+						end
+					end
+				end
+			end
+			VJ_NextRelationCheck = CurTime() + 1
+		end
+	end)
+	
+	hook.Add("EntityRemoved","VJ_SNPC_ENTITYREMOVED",function(ent)
+		if !ent:IsNPC() then return end
+		table.RemoveByValue(VJ_CurrentPossibleEnemies,ent)
+		if ent.IsVJBaseSNPC == true then
+			table.RemoveByValue(VJ_CurrentVJSNPCs,ent)
+		end
+		print("removed")
+	end)
+	
+	hook.Add("OnEntityCreated","VJ_ENTITYCREATED",function(entity)
+		if (CLIENT) or !entity:IsNPC() then return end
+		if entity:GetClass() != "npc_grenade_frag" && entity:GetClass() != "bullseye_strider_focus" && entity:GetClass() != "npc_bullseye" && entity:GetClass() != "npc_enemyfinder" && entity:GetClass() != "hornet" then
+			if IsValid(entity) then
+				VJ_CurrentPossibleEnemies[#VJ_CurrentPossibleEnemies+1] = entity
+				if entity.IsVJBaseSNPC == true then
+					VJ_CurrentVJSNPCs[#VJ_CurrentVJSNPCs+1] = entity
+				end
+			end
+		end
+	end)
+end*/
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Convar Callbacks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
