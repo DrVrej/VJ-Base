@@ -198,7 +198,7 @@ function VJ_IsCurrentAnimation(argent,actname)
 	end
 
 	for k,v in ipairs(actname) do
-		if type(v) == "number" then v = argent:GetSequenceName(argent:SelectWeightedSequence(v)) end
+		if type(v) == "number" && v != -1 then v = argent:GetSequenceName(argent:SelectWeightedSequence(v)) end
 		if v == argent:GetSequenceName(argent:GetSequence()) then
 			gotit = true
 		end

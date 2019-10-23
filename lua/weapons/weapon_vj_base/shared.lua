@@ -37,11 +37,6 @@ SWEP.NPC_AllowCustomSpread		= true -- Should the weapon be able to change the NP
 SWEP.NPC_CustomSpread	 		= 1 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
 SWEP.NPC_BulletSpawnAttachment 	= "" -- The attachment that the bullet spawns on, leave empty for base to decide!
 SWEP.NPC_CanBePickedUp			= true -- Can this weapon be picked up by NPCs? (Ex: Rebels)
-SWEP.NPC_AnimationTbl_Custom 	= {} -- Can be activity or sequence
-SWEP.NPC_AnimationTbl_General 	= {ACT_RANGE_ATTACK1,ACT_RANGE_ATTACK2,ACT_RANGE_ATTACK1_LOW,ACT_IDLE_AGITATED,ACT_IDLE_AIM_AGITATED,ACT_RUN_AIM,ACT_WALK_AIM}
-SWEP.NPC_AnimationTbl_Rifle 	= {ACT_WALK_AIM_RIFLE,ACT_RUN_AIM_RIFLE,ACT_RANGE_ATTACK_AR2,ACT_RANGE_ATTACK_AR2_LOW,ACT_IDLE_ANGRY_SMG1,ACT_RANGE_ATTACK_SMG1,ACT_RANGE_ATTACK_SMG1_LOW}
-SWEP.NPC_AnimationTbl_Pistol 	= {ACT_RANGE_ATTACK_PISTOL,ACT_WALK_PISTOL,ACT_RANGE_ATTACK_PISTOL_LOW}
-SWEP.NPC_AnimationTbl_Shotgun 	= {ACT_RANGE_ATTACK_SHOTGUN,ACT_RANGE_ATTACK_SHOTGUN_LOW,ACT_IDLE_SHOTGUN_AGITATED}
 SWEP.NPC_ReloadAnimationTbl_Custom = {} -- Can be activity or sequence
 SWEP.NPC_ReloadAnimationTbl		= {ACT_RELOAD,ACT_RELOAD_START,ACT_RELOAD_FINISH,ACT_RELOAD_LOW,ACT_GESTURE_RELOAD,ACT_GESTURE_RELOAD_PISTOL,ACT_GESTURE_RELOAD_SMG1,ACT_GESTURE_RELOAD_SHOTGUN,ACT_SHOTGUN_RELOAD_START,ACT_SHOTGUN_RELOAD_FINISH,ACT_SMG2_RELOAD2,ACT_RELOAD_PISTOL,ACT_RELOAD_PISTOL_LOW,ACT_RELOAD_SMG1,ACT_RELOAD_SMG1_LOW,ACT_RELOAD_SHOTGUN,ACT_RELOAD_SHOTGUN_LOW,ACT_GESTURE_RELOAD,ACT_GESTURE_RELOAD_PISTOL,ACT_GESTURE_RELOAD_SMG1,ACT_GESTURE_RELOAD_SHOTGUN}
 SWEP.NPC_HasReloadSound			= true -- Should it play a sound when the base detects the SNPC playing a reload animation?
@@ -372,7 +367,7 @@ function SWEP:NPCAbleToShoot(CheckSec)
 			if check == false && ammo != "NoAmmo" then return false end
 			if IsValid(self:GetOwner():GetEnemy()) && self:GetOwner():IsAbleToShootWeapon(true,true) == false then return false end
 		end
-		if self:GetOwner():GetActivity() != nil && (VJ_HasValue(self.NPC_AnimationTbl_General,self:GetOwner():GetActivity()) or VJ_HasValue(self.NPC_AnimationTbl_Rifle,self:GetOwner():GetActivity()) or VJ_HasValue(self.NPC_AnimationTbl_Pistol,self:GetOwner():GetActivity()) or VJ_HasValue(self.NPC_AnimationTbl_Shotgun,self:GetOwner():GetActivity()) or VJ_IsCurrentAnimation(self:GetOwner(),self.NPC_AnimationTbl_Custom)) then
+		if self:GetOwner():GetActivity() != nil && (((self:GetOwner().IsVJBaseSNPC_Human) && ((self:GetOwner().CurrentWeaponAnimation == self:GetOwner():GetActivity()) or (self:GetOwner():GetActivity() == self:GetOwner():VJ_TranslateWeaponActivity(self:GetOwner().CurrentWeaponAnimation)) or (self:GetOwner().DoingWeaponAttack_Standing == false && self:GetOwner().DoingWeaponAttack == true))) or (!(self:GetOwner().IsVJBaseSNPC_Human))) then
 			if (self:GetOwner().IsVJBaseSNPC_Human) then
 				local check, ammo = self:GetOwner():CanDoWeaponAttack()
 				if ammo == "NoAmmo" then

@@ -66,8 +66,6 @@ ENT.MoveOutOfFriendlyPlayersWay = true -- Should the SNPC move out of the way wh
 ENT.BecomeEnemyToPlayer = false -- Should the friendly SNPC become enemy towards the player if it's damaged by a player?
 ENT.BecomeEnemyToPlayerLevel = 2 -- How many times does the player have to hit the SNPC for it to become enemy?
 	-- ====== Old Variables (Can still be used, but it's recommended not to use them) ====== --
-ENT.VJ_FriendlyNPCsSingle = {}
-ENT.VJ_FriendlyNPCsGroup = {}
 ENT.PlayerFriendly = false -- Makes the SNPC friendly to the player and HL2 Resistance
 	-- ====== Passive Behavior Variables ====== --
 ENT.Passive_RunOnTouch = true -- Should it run away and make a alert sound when something collides with it?
@@ -1104,8 +1102,6 @@ function ENT:Initialize()
 		end
 	end)
 	duplicator.RegisterEntityClass(self:GetClass(),VJSPAWN_SNPC_DUPE,"Model","Class","Equipment","SpawnFlags","Data")
-	//table.insert(self.VJ_FriendlyNPCsGroup,"npc_vj_mili*")
-	//print(table.Count(self.VJ_FriendlyNPCsGroup))
 	//if self.Immune_Dissolve == true or self.GodMode == true then self:AddEFlags(EFL_NO_DISSOLVE) end
 	self:AddEFlags(EFL_NO_DISSOLVE)
 	self.VJ_AddCertainEntityAsEnemy = {}
@@ -3609,7 +3605,7 @@ function ENT:DoEntityRelationshipCheck()
 						end
 					end
 					if vNPC then
-						for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
+						/*for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
 							//for k,v in ipairs(ents.FindByClass(fritbl)) do
 							if string.find(vClass, fritbl) then
 								entisfri = true
@@ -3621,7 +3617,7 @@ function ENT:DoEntityRelationshipCheck()
 							entisfri = true
 							v:AddEntityRelationship(self,D_LI,99)
 							self:AddEntityRelationship(v,D_LI,99)
-						end
+						end*/
 						if self.CombineFriendly == true then if self:CombineFriendlyCode(v) == true then entisfri = true end end
 						if self.ZombieFriendly == true then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
 						if self.AntlionFriendly == true then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
