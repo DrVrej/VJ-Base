@@ -204,16 +204,19 @@ SWEP.RenderGroup = RENDERGROUP_OPAQUE
 
 SWEP.Reloading = false
 SWEP.InitHasIdleAnimation = false
-SWEP.NPC_NextPrimaryFireT = 0
 SWEP.Primary.DefaultClip = 0
 SWEP.NextNPCDrySoundT = 0
+SWEP.NPC_NextPrimaryFireT = 0
 SWEP.NPC_AnimationSet = "Custom"
 SWEP.NPC_SecondaryFireNextT = 0
 SWEP.NPC_SecondaryFirePerforming = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CanBePickedUpByNPCs()
-	if self.NPC_CanBePickedUp == false then return end
-	return true
+function SWEP:Precache()
+	util.PrecacheSound(self.Primary.Sound)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:GetCapabilities()
+	return bit.bor(CAP_WEAPON_RANGE_ATTACK1,CAP_INNATE_RANGE_ATTACK1)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Initialize()
@@ -293,6 +296,11 @@ function SWEP:TranslateActivity(act)
 		return self.ActivityTranslate[act]
 	end
 	return -1
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CanBePickedUpByNPCs()
+	if self.NPC_CanBePickedUp == false then return end
+	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_ServerThinkAlways()
@@ -378,32 +386,33 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPCAbleToShoot(CheckSec)
 	CheckSec = CheckSec or false -- Make it only check conditions that secondary fire needs
-	if self:IsValid() && IsValid(self:GetOwner()) && self:GetOwner():IsValid() && self:GetOwner():IsNPC() then
-		if (self:GetOwner().IsVJBaseSNPC_Human) then
-			local check, ammo = self:GetOwner():CanDoWeaponAttack()
+	local owner = self:GetOwner()
+	if self:IsValid() && IsValid(owner) && owner:IsValid() && owner:IsNPC() then
+		if (owner.IsVJBaseSNPC_Human) then
+			local check, ammo = owner:CanDoWeaponAttack()
 			if check == false && ammo != "NoAmmo" then return false end
-			if IsValid(self:GetOwner():GetEnemy()) && self:GetOwner():IsAbleToShootWeapon(true,true) == false then return false end
+			if IsValid(owner:GetEnemy()) && owner:IsAbleToShootWeapon(true,true) == false then return false end
 		end
-		if self:GetOwner():GetActivity() != nil && (((self:GetOwner().IsVJBaseSNPC_Human) && ((self:GetOwner().CurrentWeaponAnimation == self:GetOwner():GetActivity()) or (self:GetOwner():GetActivity() == self:GetOwner():VJ_TranslateWeaponActivity(self:GetOwner().CurrentWeaponAnimation)) or (self:GetOwner().DoingWeaponAttack_Standing == false && self:GetOwner().DoingWeaponAttack == true))) or (!(self:GetOwner().IsVJBaseSNPC_Human))) then
-			if (self:GetOwner().IsVJBaseSNPC_Human) then
-				local check, ammo = self:GetOwner():CanDoWeaponAttack()
+		if owner:GetActivity() != nil && (((owner.IsVJBaseSNPC_Human) && ((owner.CurrentWeaponAnimation == owner:GetActivity()) or (owner:GetActivity() == owner:VJ_TranslateWeaponActivity(owner.CurrentWeaponAnimation)) or (owner.DoingWeaponAttack_Standing == false && owner.DoingWeaponAttack == true))) or (!(owner.IsVJBaseSNPC_Human))) then
+			if (owner.IsVJBaseSNPC_Human) then
+				local check, ammo = owner:CanDoWeaponAttack()
 				if ammo == "NoAmmo" then
-					if self:GetOwner().VJ_IsBeingControlled == true then self:GetOwner().VJ_TheController:PrintMessage(HUD_PRINTCENTER,"Press R to reload!") end
+					if owner.VJ_IsBeingControlled == true then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER,"Press R to reload!") end
 					if self.HasDryFireSound == true && CurTime() > self.NextNPCDrySoundT then
 						local sdtbl = VJ_PICKRANDOMTABLE(self.DryFireSound)
-						if sdtbl != false then self:GetOwner():EmitSound(sdtbl,80,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) end
+						if sdtbl != false then owner:EmitSound(sdtbl,80,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) end
 						if self.NPC_NextPrimaryFire != false then
 							self.NextNPCDrySoundT = CurTime() + self.NPC_NextPrimaryFire
 						end
 					end
 					return false
 				else
-					if self:GetOwner():VJ_GetEnemy(true) != nil then
+					if owner:VJ_GetEnemy(true) != nil then
 						return true
 					end
 				end
 			else
-				if self:GetOwner():VJ_GetEnemy(true) != nil then
+				if owner:VJ_GetEnemy(true) != nil then
 					return true
 				end
 			end
@@ -415,11 +424,12 @@ function SWEP:NPCAbleToShoot(CheckSec)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_PlayFiringGesture()
-	local customg = VJ_PICKRANDOMTABLE(self:GetOwner().AnimTbl_WeaponAttackFiringGesture)
+	local owner = self:GetOwner()
+	local customg = VJ_PICKRANDOMTABLE(owner.AnimTbl_WeaponAttackFiringGesture)
 	local anim = ""
 	if customg != false then
 		anim = customg
-		anim = VJ_GetSequenceName(self:GetOwner(),anim)
+		anim = VJ_GetSequenceName(owner,anim)
 	else
 		anim = "gesture_shoot_ar2"
 		if self.HoldType == "ar2" then
@@ -427,7 +437,7 @@ function SWEP:NPC_PlayFiringGesture()
 		elseif self.HoldType == "smg" then
 			anim = "gesture_shoot_smg2"
 		elseif self.HoldType == "pistol" or self.HoldType == "revolver" then
-			if self:GetOwner():LookupSequence("gesture_shoot_pistol") == -1 then
+			if owner:LookupSequence("gesture_shoot_pistol") == -1 then
 				anim = "gesture_shootp1"
 			else
 				anim = "gesture_shoot_pistol"
@@ -438,9 +448,9 @@ function SWEP:NPC_PlayFiringGesture()
 			anim = "gesture_shoot_rpg"
 		end
 	end
-	local gest = self:GetOwner():AddGestureSequence(self:GetOwner():LookupSequence(anim))
-	self:GetOwner():SetLayerPriority(gest,2)
-	self:GetOwner():SetLayerPlaybackRate(gest,0.5)
+	local gest = owner:AddGestureSequence(owner:LookupSequence(anim))
+	owner:SetLayerPriority(gest,2)
+	owner:SetLayerPlaybackRate(gest,0.5)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPCShoot_Primary(ShootPos,ShootDir)
@@ -498,14 +508,6 @@ function SWEP:NPC_ReloadWeapon()
 	self:GetOwner().NextThrowGrenadeT = self:GetOwner().NextThrowGrenadeT + 2
 	self:CustomOnNPC_Reload()
 	if self.NPC_HasReloadSound == true then VJ_EmitSound(self:GetOwner(),self.NPC_ReloadSound,self.NPC_ReloadSoundLevel) end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:Precache()
-	util.PrecacheSound(self.Primary.Sound)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:GetCapabilities()
-	return bit.bor(CAP_WEAPON_RANGE_ATTACK1,CAP_INNATE_RANGE_ATTACK1)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttack(UseAlt)
@@ -627,6 +629,8 @@ end
 function SWEP:PrimaryAttackEffects()
 	local customeffects = self:CustomOnPrimaryAttackEffects()
 	if customeffects != true then return end
+	local owner = self:GetOwner()
+	
 	/*local vjeffectmuz = EffectData()
 	vjeffectmuz:SetOrigin(self:GetOwner():GetShootPos())
 	vjeffectmuz:SetEntity(self)
@@ -635,54 +639,56 @@ function SWEP:PrimaryAttackEffects()
 	vjeffectmuz:SetAttachment(1)
 	util.Effect("VJ_Weapon_RifleMuzzle1",vjeffectmuz)*/
 
-	if self.PrimaryEffects_MuzzleFlash == true && GetConVarNumber("vj_wep_nomuszzleflash") == 0 then
-		local muzzleattach = self.PrimaryEffects_MuzzleAttachment
-		if isnumber(muzzleattach) == false then muzzleattach = self:LookupAttachment(muzzleattach) end
-		if self:GetOwner():IsPlayer() && self:GetOwner():GetViewModel() != nil then
-			local vjeffectmuz = EffectData()
-			vjeffectmuz:SetOrigin(self:GetOwner():GetShootPos())
-			vjeffectmuz:SetEntity(self)
-			vjeffectmuz:SetStart(self:GetOwner():GetShootPos())
-			vjeffectmuz:SetNormal(self:GetOwner():GetAimVector())
-			vjeffectmuz:SetAttachment(muzzleattach)
-			util.Effect("VJ_Weapon_RifleMuzzle1",vjeffectmuz)
-		else
-			if self.PrimaryEffects_MuzzleParticlesAsOne == true then
-				for k,v in pairs(self.PrimaryEffects_MuzzleParticles) do
-					if !istable(v) then
-						ParticleEffectAttach(v,PATTACH_POINT_FOLLOW,self,muzzleattach)
-					end
-				end
+	if GetConVarNumber("vj_wep_nomuszzleflash") == 0 then
+		if self.PrimaryEffects_MuzzleFlash == true then
+			local muzzleattach = self.PrimaryEffects_MuzzleAttachment
+			if isnumber(muzzleattach) == false then muzzleattach = self:LookupAttachment(muzzleattach) end
+			if owner:IsPlayer() && owner:GetViewModel() != nil then
+				local vjeffectmuz = EffectData()
+				vjeffectmuz:SetOrigin(owner:GetShootPos())
+				vjeffectmuz:SetEntity(self)
+				vjeffectmuz:SetStart(owner:GetShootPos())
+				vjeffectmuz:SetNormal(owner:GetAimVector())
+				vjeffectmuz:SetAttachment(muzzleattach)
+				util.Effect("VJ_Weapon_RifleMuzzle1",vjeffectmuz)
 			else
-				ParticleEffectAttach(VJ_PICKRANDOMTABLE(self.PrimaryEffects_MuzzleParticles),PATTACH_POINT_FOLLOW,self,muzzleattach)
+				if self.PrimaryEffects_MuzzleParticlesAsOne == true then
+					for k,v in pairs(self.PrimaryEffects_MuzzleParticles) do
+						if !istable(v) then
+							ParticleEffectAttach(v,PATTACH_POINT_FOLLOW,self,muzzleattach)
+						end
+					end
+				else
+					ParticleEffectAttach(VJ_PICKRANDOMTABLE(self.PrimaryEffects_MuzzleParticles),PATTACH_POINT_FOLLOW,self,muzzleattach)
+				end
 			end
+		end
+		
+		if (SERVER) && self.PrimaryEffects_SpawnDynamicLight == true && GetConVarNumber("vj_wep_nomuszzleflash_dynamiclight") == 0 then
+			local FireLight1 = ents.Create("light_dynamic")
+			FireLight1:SetKeyValue("brightness", self.PrimaryEffects_DynamicLightBrightness)
+			FireLight1:SetKeyValue("distance", self.PrimaryEffects_DynamicLightDistance)
+			if owner:IsPlayer() then FireLight1:SetLocalPos(owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else FireLight1:SetLocalPos(self:GetAttachment(1).Pos) end
+			FireLight1:SetLocalAngles(self:GetAngles())
+			FireLight1:Fire("Color", self.PrimaryEffects_DynamicLightColor.r.." "..self.PrimaryEffects_DynamicLightColor.g.." "..self.PrimaryEffects_DynamicLightColor.b)
+			FireLight1:SetParent(self)
+			FireLight1:Spawn()
+			FireLight1:Activate()
+			FireLight1:Fire("TurnOn","",0)
+			FireLight1:Fire("Kill","",0.07)
+			self:DeleteOnRemove(FireLight1)
 		end
 	end
 
-	if self.PrimaryEffects_SpawnShells == true && !self:GetOwner():IsPlayer() && GetConVarNumber("vj_wep_nobulletshells") == 0 then
+	if self.PrimaryEffects_SpawnShells == true && !owner:IsPlayer() && GetConVarNumber("vj_wep_nobulletshells") == 0 then
 		local shellattach = self.PrimaryEffects_ShellAttachment
 		if isnumber(shellattach) == false then shellattach = self:LookupAttachment(shellattach) end
 		local vjeffect = EffectData()
 		vjeffect:SetEntity(self)
-		vjeffect:SetOrigin(self:GetOwner():GetShootPos())
-		vjeffect:SetNormal(self:GetOwner():GetAimVector())
+		vjeffect:SetOrigin(owner:GetShootPos())
+		vjeffect:SetNormal(owner:GetAimVector())
 		vjeffect:SetAttachment(shellattach)
 		util.Effect(self.PrimaryEffects_ShellType,vjeffect)
-	end
-
-	if SERVER && self.PrimaryEffects_SpawnDynamicLight == true && GetConVarNumber("vj_wep_nomuszzleflash") == 0 && GetConVarNumber("vj_wep_nomuszzleflash_dynamiclight") == 0 then
-		local FireLight1 = ents.Create("light_dynamic")
-		FireLight1:SetKeyValue("brightness", self.PrimaryEffects_DynamicLightBrightness)
-		FireLight1:SetKeyValue("distance", self.PrimaryEffects_DynamicLightDistance)
-		if self:GetOwner():IsPlayer() then FireLight1:SetLocalPos(self:GetOwner():GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else FireLight1:SetLocalPos(self:GetAttachment(1).Pos) end
-		FireLight1:SetLocalAngles(self:GetAngles())
-		FireLight1:Fire("Color", self.PrimaryEffects_DynamicLightColor.r.." "..self.PrimaryEffects_DynamicLightColor.g.." "..self.PrimaryEffects_DynamicLightColor.b)
-		FireLight1:SetParent(self)
-		FireLight1:Spawn()
-		FireLight1:Activate()
-		FireLight1:Fire("TurnOn","",0)
-		FireLight1:Fire("Kill","",0.07)
-		self:DeleteOnRemove(FireLight1)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -715,7 +721,7 @@ function SWEP:Think()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Reload()
-if !IsValid(self) or !IsValid(self:GetOwner()) or !self:GetOwner():Alive() or !self:GetOwner():IsPlayer() or self:GetOwner():GetAmmoCount(self.Primary.Ammo) == 0 or !self:GetOwner():KeyDown(IN_RELOAD) or self.Reloading == true then return end
+	if !IsValid(self) or !IsValid(self:GetOwner()) or !self:GetOwner():Alive() or !self:GetOwner():IsPlayer() or self:GetOwner():GetAmmoCount(self.Primary.Ammo) == 0 or !self:GetOwner():KeyDown(IN_RELOAD) or self.Reloading == true then return end
 	local smallerthanthis = self.Primary.ClipSize - 1
 	if self:Clip1() <= smallerthanthis then
 		local setcorrectnum = self.Primary.ClipSize - self:Clip1()
@@ -738,9 +744,8 @@ function SWEP:Deploy()
 	if self:GetOwner():IsPlayer() then
 		self:CustomOnDeploy()
 		self:SendWeaponAnim(VJ_PICKRANDOMTABLE(self.AnimTbl_Deploy))
-		if self.HasDeploySound == true then
-		self:EmitSound(VJ_PICKRANDOMTABLE(self.DeploySound),50,math.random(90,100)) end
-		self:SetNextPrimaryFire(CurTime() +self.DelayOnDeploy)
+		if self.HasDeploySound == true then self:EmitSound(VJ_PICKRANDOMTABLE(self.DeploySound),50,math.random(90,100)) end
+		self:SetNextPrimaryFire(CurTime() + self.DelayOnDeploy)
 	end
 	timer.Simple(self.NextIdle_Deploy,function() if self:IsValid() then self:DoIdleAnimation() end end)
 	return true -- Or else the player won't be able to get the weapon!
@@ -794,7 +799,7 @@ function SWEP:GetWeaponCustomPosition()
 	pos = pos + self.WorldModel_CustomPositionOrigin.x * ang:Right()
 	pos = pos + self.WorldModel_CustomPositionOrigin.y * ang:Forward()
 	pos = pos + self.WorldModel_CustomPositionOrigin.z * ang:Up()
-	return {pos=pos,ang=ang}
+	return {pos = pos, ang = ang}
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:RunWorldModelThink()
@@ -818,7 +823,7 @@ function SWEP:DecideBulletPosition()
 	end
 	if self.NPC_BulletSpawnAttachment != "" then
 		if self:LookupAttachment(self.NPC_BulletSpawnAttachment) == 0 or self:LookupAttachment(self.NPC_BulletSpawnAttachment) == -1 then
-			-- blah
+			-- Axper jan, Hay es?
 		else
 			hascustom = true
 			return self:GetAttachment(self:LookupAttachment(self.NPC_BulletSpawnAttachment)).Pos

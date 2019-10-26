@@ -56,13 +56,11 @@ ENT.BecomeEnemyToPlayerLevel = 2 -- How many times does the player have to hit t
 ENT.PlayerFriendly = false -- Makes the SNPC friendly to the player and HL2 Resistance
 	-- ====== Passive Behavior Variables ====== --
 ENT.Passive_RunOnTouch = true -- Should it run away and make a alert sound when something collides with it?
-ENT.Passive_NextRunOnTouchTime1 = 3 -- How much until it can run away again when something collides with it? | First # in the math.Rand
-ENT.Passive_NextRunOnTouchTime2 = 4 -- How much until it can run away again when something collides with it? | Second # in the math.Rand
+ENT.Passive_NextRunOnTouchTime = VJ_Rand(3,4) -- How much until it can run away again when something collides with it?
 ENT.Passive_RunOnDamage = true -- Should it run when it's damaged? | This doesn't impact how self.Passive_AlliesRunOnDamage works
 ENT.Passive_AlliesRunOnDamage = true -- Should its allies (other passive SNPCs) also run when it's damaged?
 ENT.Passive_AlliesRunOnDamageDistance = 800 -- Any allies within this distance will run when it's damaged
-ENT.Passive_NextRunOnDamageTime1 = 6 -- How much until it can run the code again? | First # in the math.Rand
-ENT.Passive_NextRunOnDamageTime2 = 7 -- How much until it can run the code again? | Second # in the math.Rand
+ENT.Passive_NextRunOnDamageTime = VJ_Rand(6,7) -- How much until it can run the code again?
 	-- ====== On Player Sight Variables ====== --
 ENT.HasOnPlayerSight = false -- Should do something when it sees the enemy? Example: Play a sound
 ENT.OnPlayerSightDistance = 200 -- How close should the player be until it runs the code?
@@ -199,19 +197,16 @@ ENT.CallForBackUpOnDamageLimit = 4 -- How many people should it call? | 0 = Unli
 ENT.CallForBackUpOnDamageAnimation = {ACT_SIGNAL_GROUP} -- Animation used if the SNPC does the CallForBackUpOnDamage function
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.CallForBackUpOnDamageAnimationTime = false -- How much time until it can use activities
-ENT.NextCallForBackUpOnDamageTime1 = 9 -- Next time it use the CallForBackUpOnDamage function | The first # in math.random
-ENT.NextCallForBackUpOnDamageTime2 = 11 -- Next time it use the CallForBackUpOnDamage function | The second # in math.random
+ENT.NextCallForBackUpOnDamageTime = VJ_Rand(9,11) -- Next time it use the CallForBackUpOnDamage function
 ENT.DisableCallForBackUpOnDamageAnimation = false -- Disables the animation when the CallForBackUpOnDamage function is called
 	-- ====== Taking Cover Variables ====== --
 ENT.AnimTbl_TakingCover = {} -- The animation it plays when hiding in a covered position, leave empty to let the base decide
+ENT.AnimTbl_MoveToCover = {ACT_RUN_CROUCH} -- The animation it plays when moving to a covered position
 	-- ====== Move Or Hide On Damage Variables ====== --
 ENT.MoveOrHideOnDamageByEnemy = true -- Should the SNPC move or hide when being damaged by an enemy?
 ENT.MoveOrHideOnDamageByEnemy_OnlyMove = false -- Should it only move and not hide?
 ENT.AnimTbl_MoveOrHideOnDamageByEnemy = {} -- The activities it plays when it finds a hiding spot | This will override self.AnimTbl_TakingCover and and the base animations
-ENT.MoveOrHideOnDamageByEnemy_HideTime1 = 3 -- How long should it hide? | First number in math.random
-ENT.MoveOrHideOnDamageByEnemy_HideTime2 = 4 -- How long should it hide? | Second number in math.random
-ENT.MoveOrHideOnDamageByEnemy_NextHideTime1 = 7 -- How long until it can hide again? | First number in math.random
-ENT.MoveOrHideOnDamageByEnemy_NextHideTime2 = 8 -- How long until it can hide again? | Second number in math.random
+ENT.MoveOrHideOnDamageByEnemy_HideTime = VJ_Rand(3,4) -- How long should it hide?
 ENT.NextMoveOrHideOnDamageByEnemy1 = 3 -- How much time until it moves or hides on damage by enemy? | The first # in math.random
 ENT.NextMoveOrHideOnDamageByEnemy2 = 3.5 -- How much time until it moves or hides on damage by enemy? | The second # in math.random
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1663,7 +1658,7 @@ function ENT:Touch(entity)
 					self:AlertSoundCode()
 				end
 			end
-			self.Passive_NextRunOnTouchT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime1,self.Passive_NextRunOnTouchTime2)
+			self.Passive_NextRunOnTouchT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
 		end
 	elseif /*self.Alerted == false && */ self.DisableTouchFindEnemy == false && entity:IsNPC() or entity:IsPlayer() && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.VJ_IsBeingControlled == false then
 		if self:DoRelationshipCheck(entity) == true then
@@ -2149,6 +2144,7 @@ function ENT:Think()
 			//self.NextReloadT = CurTime() + self.NextReloadTime end end end
 		end
 		
+		if self.DoingWeaponAttack == true then self:CapabilitiesRemove(CAP_TURN_HEAD) else self:CapabilitiesAdd(bit.bor(CAP_TURN_HEAD)) end
 		if IsValid(ene) then
 			if self.DoingWeaponAttack == true then self:SuppressingSoundCode() end
 			if self.IsDoingFaceEnemy == true /*&& self.VJ_IsBeingControlled == false*/ then self:SetAngles(self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle())) end
@@ -2796,17 +2792,30 @@ function ENT:SelectSchedule(iNPCState)
 									if IsValid(covertr.Entity) then
 										calc = self:VJ_GetNearestPointToEntity(covertr.Entity,true)
 										mypos = calc.MyPosition
-										enepos = calc.EnemyPosition
+										enepos = calc.EnemyPosition - self:GetForward()*15
 									else
 										calc = self:VJ_GetNearestPointToVector(tr.HitPos,true)
 										mypos = calc.MyPosition
-										enepos = calc.PointPosition
+										enepos = calc.PointPosition - self:GetForward()*15
 									end
 									if mypos:Distance(enepos) <= 1000 then
 										//enepos = enepos - self:GetForward()*5
 										self:SetLastPosition(enepos)
 										//VJ_CreateTestObject(enepos,self:GetAngles(),Color(0,255,255))
-										self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+										local vsched = ai_vj_schedule.New("vj_goto_cover")
+										vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
+										vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+										vsched.IsMovingTask = true
+										vsched.ConstantlyFaceEnemy = true
+										local coveranim = VJ_PICKRANDOMTABLE(self.AnimTbl_MoveToCover)
+										if VJ_AnimationExists(self,self:VJ_TranslateWeaponActivity(coveranim)) == true then
+											self:SetMovementActivity(ACT_RUN_CROUCH)
+										else
+											vsched.CanShootWhenMoving = true
+											vsched.IsMovingTask_Run = true
+										end
+										self:StartSchedule(vsched)
+										//self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
 									end
 									self.NextMoveOnGunCoveredT = CurTime() + 2
 								end
@@ -2833,7 +2842,7 @@ function ENT:SelectSchedule(iNPCState)
 											if type(curanim) != "string" then curanim = self:VJ_TranslateWeaponActivity(curanim) end
 											if VJ_AnimationExists(self,curanim) == false then curanim = self.CurrentWeaponAnimation end
 											self.CurrentWeaponAnimation = curanim
-											self.Weapon_DoingCrouchAttackT = CurTime() + 2 // Asiga bedke vor vestah elank yed votgi cheler hemen
+											self.Weapon_DoingCrouchAttackT = CurTime() + 2 -- Asiga bedke vor vestah elank yed votgi cheler hemen
 											if VJ_IsCurrentAnimation(self,curanim) == false then self:VJ_ACT_PLAYACTIVITY(curanim,false,0,true) end
 										else
 											curanim = VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponAttack)
@@ -3640,19 +3649,19 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 				local checka = self:CheckAlliesAroundMe(self.Passive_AlliesRunOnDamageDistance)
 				if checka != nil then
 					for k,v in ipairs(checka) do
-						v.Passive_NextRunOnDamageT = CurTime() + math.Rand(v.Passive_NextRunOnDamageTime1,v.Passive_NextRunOnDamageTime2)
+						v.Passive_NextRunOnDamageT = CurTime() + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
 						v:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) end)
 						//v:AlertSoundCode() -- Miyan gentaninaroon hamar!
 					end
 				end
 			end
-			self.Passive_NextRunOnDamageT = CurTime() + math.Rand(self.Passive_NextRunOnDamageTime1,self.Passive_NextRunOnDamageTime2)
+			self.Passive_NextRunOnDamageT = CurTime() + math.Rand(self.Passive_NextRunOnDamageTime.a, self.Passive_NextRunOnDamageTime.b)
 		end
 
 		if self.MoveOrHideOnDamageByEnemy == true && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && IsValid(self:GetEnemy()) && CurTime() > self.NextMoveOrHideOnDamageByEnemyT && self:EyePos():Distance(self:GetEnemy():EyePos()) < self.Weapon_FiringDistanceFar && IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.ThrowingGrenade == false && CurTime() > self.TakingCoverT && self:Visible(self:GetEnemy()) && self.VJ_IsBeingControlled == false && self.MeleeAttacking == false && self.IsReloadingWeapon == false then
 			local rancode = false
 			if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == true && self.MoveOrHideOnDamageByEnemy_OnlyMove == false then
-				self:VJ_ACT_TAKE_COVER(self.AnimTbl_MoveOrHideOnDamageByEnemy,false,math.Rand(self.MoveOrHideOnDamageByEnemy_HideTime1,self.MoveOrHideOnDamageByEnemy_HideTime2),false)
+				self:VJ_ACT_TAKE_COVER(self.AnimTbl_MoveOrHideOnDamageByEnemy,false,math.Rand(self.MoveOrHideOnDamageByEnemy_HideTime.a, self.MoveOrHideOnDamageByEnemy_HideTime.b),false)
 				rancode = true
 			elseif !self:IsMoving() then
 				self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
@@ -3682,7 +3691,7 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 					vschedHide.ResetOnFail = true
 					self:StartSchedule(vschedHide)*/
 				end
-				self.NextCallForBackUpOnDamageT = CurTime() + math.Rand(self.NextCallForBackUpOnDamageTime1,self.NextCallForBackUpOnDamageTime2)
+				self.NextCallForBackUpOnDamageT = CurTime() + math.Rand(self.NextCallForBackUpOnDamageTime.a, self.NextCallForBackUpOnDamageTime.b)
 			end
 		end
 
