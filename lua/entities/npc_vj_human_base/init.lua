@@ -140,7 +140,7 @@ ENT.NextProcessTime = 1 -- Time until it runs the essential part of the AI, whic
 	-- ====== Miscellaneous Variables ====== --
 ENT.DisableInitializeCapabilities = false -- If enabled, all of the Capabilities will be disabled, allowing you to add your own
 ENT.AttackTimersCustom = {}
-ENT.DistanceToRunFromEnemy = 150 -- When the enemy is this close, the SNPC will back away | Put to 0, to never back away
+ENT.RunFromEnemy_Distance = 150 -- When the enemy is this close, the SNPC will back away | Put to 0, to never back away
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Damaged / Injured Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -879,7 +879,6 @@ ENT.VJFriendly = false
 ENT.ZombieFriendly = false
 ENT.AntlionFriendly = false
 ENT.CombineFriendly = false
-ENT.IsReloadingWeapon_ServerNextFire = true
 ENT.IsReloadingWeapon = false
 ENT.IsDoingFaceEnemy = false
 ENT.VJ_IsPlayingInterruptSequence = false
@@ -997,7 +996,7 @@ function ENT:Initialize()
 	self:SetRenderMode(RENDERMODE_NORMAL)
 	//self:SetRenderMode(RENDERMODE_TRANSALPHA)
 	self:VJ_DoSelectDifficulty()
-	self:SetModel(Model(VJ_PICKRANDOMTABLE(self.Model)))
+	self:SetModel(VJ_PICKRANDOMTABLE(self.Model))
 	self:SetMaxYawSpeed(self.TurningSpeed)
 	if self.HasHull == true then self:SetHullType(self.HullType) end
 	if self.HullSizeNormal == true then self:SetHullSizeNormal() end
@@ -2068,26 +2067,24 @@ function ENT:Think()
 				end)
 			end
 		end*/
-
+		
+		local ene = self:GetEnemy()
+		
 		//print(self.Weapon_ShotsSinceLastReload)
 		//print(self.Weapon_StartingAmmoAmount)
 		if self.Weapon_StartingAmmoAmount == nil then
 			self.Weapon_StartingAmmoAmount = 30
 		end
-		
 		//print(self:HasCondition(13))
-		if self.AllowWeaponReloading == true && self.CurrentWeaponEntity == self:GetActiveWeapon() && self.IsReloadingWeapon == false && self:VJ_HasActiveWeapon() == true && self.RunningAfter_FollowPlayer == false && self.ThrowingGrenade == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) then
-			local teshnami = IsValid(self:GetEnemy()) -- Teshnami ooni, gam voch?
-			local controlled = false
-			if self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_RELOAD) then controlled = true end
+		if self.AllowWeaponReloading == true && self.CurrentWeaponEntity == self:GetActiveWeapon() && self.IsReloadingWeapon == false && self:VJ_HasActiveWeapon() == true && self.RunningAfter_FollowPlayer == false && self.ThrowingGrenade == false && self.MeleeAttacking == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) then
+			local teshnami = IsValid(ene) -- Teshnami ooni, gam voch?
 			//if CurTime() > self.NextReloadT then
 			//if math.random(1,self.ReloadChance) < 3 then
-			if (teshnami == false && self.Weapon_ShotsSinceLastReload > 0 && self.TimeSinceLastSeenEnemy > math.random(3,8) && !self:IsMoving()) or (teshnami == true && self.Weapon_ShotsSinceLastReload >= self.Weapon_StartingAmmoAmount) or (controlled == true && self.Weapon_ShotsSinceLastReload > 0) then
+			if (teshnami == false && self.Weapon_ShotsSinceLastReload > 0 && self.TimeSinceLastSeenEnemy > math.random(3,8) && !self:IsMoving()) or (teshnami == true && self.Weapon_ShotsSinceLastReload >= self.Weapon_StartingAmmoAmount) or (self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_RELOAD) && self.Weapon_ShotsSinceLastReload > 0) then
 				if self.Weapon_UnlimitedAmmo == true then self:GetActiveWeapon():SetClip1(99999) end
 				//self.Weapon_ShotsSinceLastReload = 0
 				self.DoingWeaponAttack = false
 				self.DoingWeaponAttack_Standing = false
-				self.IsReloadingWeapon_ServerNextFire = false
 				if self.VJ_IsBeingControlled == false then self.IsReloadingWeapon = true end
 				self.NextChaseTime = CurTime() + 2
 				//timer.Simple(5,function() if IsValid(self) then self.IsReloadingWeapon = false end end)
@@ -2095,6 +2092,7 @@ function ENT:Think()
 				self:CustomOnWeaponReload()
 				if self.DisableWeaponReloadAnimation == false then
 					local function DoReloadAnimation(animtbl)
+						self:GetActiveWeapon():NPC_ReloadWeapon()
 						self.CurrentAnim_WeaponReload = VJ_PICKRANDOMTABLE(animtbl)
 						local translateact = self:VJ_TranslateWeaponActivity(self.CurrentAnim_WeaponReload)
 						if VJ_AnimationExists(self,translateact) == true then
@@ -2105,27 +2103,22 @@ function ENT:Think()
 						self:VJ_ACT_PLAYACTIVITY(self.CurrentAnim_WeaponReload,true,self.CurrentAnimDuration_WeaponReload,self.WeaponReloadAnimationFaceEnemy,self.WeaponReloadAnimationDelay,{SequenceDuration=self.CurrentAnimDuration_WeaponReload})
 					end
 					if self.VJ_IsBeingControlled == true then
-						if self.VJ_TheController:KeyDown(IN_RELOAD) then
+						if self.VJ_TheController:KeyDown(IN_RELOAD) then -- When being controlled
 							self.IsReloadingWeapon = true
 							DoReloadAnimation(self.AnimTbl_WeaponReload)
 						end
-					else
-						if teshnami == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos(),false,{SetLastHiddenTime=true}) == true then
+					else -- If not being controlled...
+						if teshnami == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos()+self:OBBCenter()),ene:EyePos(),false,{SetLastHiddenTime=true}) == true then -- Behvedadz
 							self.CurrentAnim_WeaponReload = VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponReloadBehindCover)
 							if VJ_AnimationExists(self,self.CurrentAnim_WeaponReload) == true or VJ_AnimationExists(self,self:VJ_TranslateWeaponActivity(self.CurrentAnim_WeaponReload)) then
 								DoReloadAnimation(self.CurrentAnim_WeaponReload)
-							else
+							else -- Yete animation chouni...
 								DoReloadAnimation(self.AnimTbl_WeaponReload)
 							end
-						else
-							if self.IsGuard == true or self.FollowingPlayer == true or self.VJ_IsBeingControlled_Tool == true or teshnami == false then
+						else -- Yete bahvedadz che...
+							if self.IsGuard == true or self.FollowingPlayer == true or self.VJ_IsBeingControlled_Tool == true or teshnami == false then -- Getsadz letsenel togh ene (Mi vazer!)
 								DoReloadAnimation(self.AnimTbl_WeaponReload)
-							else
-								/*self:CapabilitiesRemove(CAP_MOVE_SHOOT)
-								timer.Simple(2,function() if IsValid(self) then
-									self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
-									end
-								end)*/
+							else -- Togh vaz e
 								self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Run))
 								local vschedWeaponReload = ai_vj_schedule.New("vj_weapon_reload")
 								vschedWeaponReload:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
@@ -2135,23 +2128,27 @@ function ENT:Think()
 								vschedWeaponReload.IsMovingTask = true
 								vschedWeaponReload.IsMovingTask_Run = true
 								vschedWeaponReload.RunCode_OnFinish = function()
-									DoReloadAnimation(self.AnimTbl_WeaponReload)
-									self:CustomOnWeaponReload_AfterRanToCover()
+									-- Yete teshnamin modig e, zenke mi letsener!
+									if self.HasRunFromEnemy == true && (self:GetPos():Distance(self:GetEnemy():GetPos()) <= self.RunFromEnemy_Distance) then
+										self.IsReloadingWeapon = false
+									else
+										DoReloadAnimation(self.AnimTbl_WeaponReload)
+										self:CustomOnWeaponReload_AfterRanToCover()
+									end
 								end
 								self:StartSchedule(vschedWeaponReload)
-								//self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.WeaponReloadSchedule_Regular)) end -- SCHED_HIDE_AND_RELOAD or SCHED_RELOAD
 							end
 						end
 					end
 				else
 					self.Weapon_ShotsSinceLastReload = 0
 					self.IsReloadingWeapon = false
+					self:GetActiveWeapon():NPC_ReloadWeapon()
 				end
 			end
 			//self.NextReloadT = CurTime() + self.NextReloadTime end end end
 		end
 		
-		local ene = self:GetEnemy()
 		if IsValid(ene) then
 			if self.DoingWeaponAttack == true then self:SuppressingSoundCode() end
 			if self.IsDoingFaceEnemy == true /*&& self.VJ_IsBeingControlled == false*/ then self:SetAngles(self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle())) end
@@ -2370,7 +2367,7 @@ end
 function ENT:CanDoCertainAttack(AttackName)
 	AttackName = AttackName or "MeleeAttack"
 	-- Attack Names: "MeleeAttack"
-	if self.NextDoAnyAttackT > CurTime() or self.RunningAfter_FollowPlayer == true or self.vACT_StopAttacks == true or self.Flinching == true or self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.VJ_IsBeingControlled == true*/ then return false end
+	if self.NextDoAnyAttackT > CurTime() or self.RunningAfter_FollowPlayer == true or self.vACT_StopAttacks == true or self.Flinching == true or self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or self.IsReloadingWeapon == true /*or self.VJ_IsBeingControlled == true*/ then return false end
 
 	if AttackName == "MeleeAttack" then
 		if self.IsAbleToMeleeAttack == true && self.MeleeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
@@ -2706,7 +2703,7 @@ function ENT:SelectSchedule(iNPCState)
 			local EnemyPos = self:GetEnemy():EyePos()
 			local SelfToEnemyDistance = self:EyePos():Distance(EnemyPos)
 			local dontshoot = false
-			if SelfToEnemyDistance < self.DistanceToRunFromEnemy && CurTime() > self.TakingCoverT && CurTime() > self.NextChaseTime && self.MeleeAttacking == false && self:VJ_HasActiveWeapon() == true && self.FollowingPlayer == false && self.ThrowingGrenade == false && self.VJ_PlayingSequence == false && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos()+self:OBBCenter()),self:GetEnemy():EyePos()) == false then
+			if self.HasRunFromEnemy == true && self:GetPos():Distance(self:GetEnemy():GetPos()) <= self.RunFromEnemy_Distance && CurTime() > self.TakingCoverT && CurTime() > self.NextChaseTime && self.MeleeAttacking == false && self:VJ_HasActiveWeapon() == true && self.FollowingPlayer == false && self.ThrowingGrenade == false && self.VJ_PlayingSequence == false && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos()+self:OBBCenter()),self:GetEnemy():EyePos()) == false then
 				local checkdist = self:VJ_CheckAllFourSides(200)
 				local randmove = {}
 				if checkdist.Backward == true then randmove[#randmove+1] = "Backward" end
@@ -2717,6 +2714,7 @@ function ENT:SelectSchedule(iNPCState)
 				if pickmove == "Right" then self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(200,200)) end
 				if pickmove == "Left" then self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-200,-200)) end
 				if pickmove == "Backward" or pickmove == "Right" or pickmove == "Left" then
+					self.IsReloadingWeapon = false
 					self.TakingCoverT = CurTime() + 2
 					dontshoot = true
 					self:VJ_TASK_GOTO_LASTPOS("TASK_RUN_PATH",function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)

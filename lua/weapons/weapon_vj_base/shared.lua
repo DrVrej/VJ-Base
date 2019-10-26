@@ -1,52 +1,61 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 IncludeCS("ai_translations.lua")
----------------------------------------------------------------------------------------------------------------------------------------------
-//SWEP.Base 					= "weapon_base"
-SWEP.PrintName					= "VJ Weapon Base"
-SWEP.Author 					= "DrVrej"
-SWEP.Contact					= "http://steamcommunity.com/groups/vrejgaming"
-SWEP.Purpose					= "This weapon is made for Players and NPCs"
-SWEP.Instructions				= "Controls are like a regular weapon."
-SWEP.Category					= "VJ Base"
-SWEP.IsVJBaseWeapon				= true
-	-- Client Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
-SWEP.Slot						= 2 -- Which weapon slot you want your SWEP to be in? (1 2 3 4 5 6)
-SWEP.SlotPos					= 4 -- Which part of that slot do you want the SWEP to be in? (1 2 3 4 5 6)
-SWEP.SwayScale 					= 1 -- Default is 1, The scale of the viewmodel sway
-SWEP.CSMuzzleFlashes 			= false -- Use CS:S Muzzle flash?
-SWEP.DrawAmmo					= true -- Draw regular Garry's Mod HUD?
-SWEP.DrawCrosshair				= true -- Draw Crosshair?
-SWEP.DrawWeaponInfoBox 			= true -- Should the information box show in the weapon selection menu?
-SWEP.BounceWeaponIcon 			= true -- Should the icon bounce in the weapon selection menu?
-SWEP.RenderGroup 				= RENDERGROUP_OPAQUE
-//SWEP.UseHands					= true
-end
-	-- Server Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-if (SERVER) then
-SWEP.Weight						= 30 -- Decides whether we should switch from/to this
-SWEP.AutoSwitchTo				= false -- Auto switch to this weapon when it's picked up
-SWEP.AutoSwitchFrom				= false -- Auto switch weapon when the owner picks up a better weapon
-end
-	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-	-- Set this fault to disable the timer automatically running the firing code, this allows for event-based SNPCs to fire at their own pace:
-SWEP.NPC_NextPrimaryFire 		= 0.1 -- Next time it can use primary fire
-SWEP.NPC_TimeUntilFire	 		= 0.1 -- How much time until the bullet/projectile is fired?
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Core & Information-Related Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//SWEP.Base = "weapon_base"
+SWEP.PrintName = "VJ Weapon Base"
+SWEP.Author = "DrVrej"
+SWEP.Contact = "http://steamcommunity.com/groups/vrejgaming"
+SWEP.Purpose = "This weapon is made for Players and NPCs"
+SWEP.Instructions = "Controls are like a regular weapon."
+SWEP.Category = "VJ Base"
+//SWEP.Spawnable = false
+//SWEP.AdminOnly = false
+SWEP.MadeForNPCsOnly = false -- Is this weapon meant to be for NPCs only?
+SWEP.HoldType = "ar2"
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ View Model Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.ViewModel = "models/weapons/v_rif_ak47.mdl"
+SWEP.UseHands = false -- Should this weapon use Garry's Mod hands? (The model must support it!)
+SWEP.ViewModelFlip = false -- Flip the model? Usally used for CS:S models
+SWEP.ViewModelFOV = 55 -- Player FOV for the view model
+SWEP.BobScale = 1.5 -- Bob effect when moving
+SWEP.SwayScale = 1 -- Default is 1, The scale of the viewmodel sway
+SWEP.CSMuzzleFlashes = false -- Recommanded to enable for Counter Strike: Source models
+SWEP.DrawAmmo = true -- Draw regular Garry's Mod HUD?
+SWEP.DrawCrosshair = true -- Draw Crosshair?
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ World Model Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.WorldModel = "models/weapons/w_rif_ak47.mdl"
+SWEP.WorldModel_UseCustomPosition = false -- Should the gun use custom position? This can be used to fix guns that are in the crotch
+SWEP.WorldModel_CustomPositionAngle = Vector(-8,1,180)
+SWEP.WorldModel_CustomPositionOrigin = Vector(-1,6,1.4)
+SWEP.WorldModel_CustomPositionBone = "ValveBiped.Bip01_R_Hand" -- The bone it will use as the main point
+SWEP.WorldModel_Invisible = false -- Should the world model be invisible?
+SWEP.WorldModel_NoShadow = false -- Should the world model have a shadow?
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ General NPC Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-- Set this to false to disable the timer automatically running the firing code, this allows for event-based SNPCs to fire at their own pace:
+SWEP.NPC_NextPrimaryFire = 0.1 -- Next time it can use primary fire
+SWEP.NPC_TimeUntilFire = 0.1 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_TimeUntilFireExtraTimers = {} -- Extra timers, which will make the gun fire again! | The seconds are counted after the self.NPC_TimeUntilFire!
-SWEP.NPC_AllowCustomSpread		= true -- Should the weapon be able to change the NPC's spread?
-SWEP.NPC_CustomSpread	 		= 1 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
-SWEP.NPC_BulletSpawnAttachment 	= "" -- The attachment that the bullet spawns on, leave empty for base to decide!
-SWEP.NPC_CanBePickedUp			= true -- Can this weapon be picked up by NPCs? (Ex: Rebels)
-SWEP.NPC_ReloadAnimationTbl_Custom = {} -- Can be activity or sequence
-SWEP.NPC_ReloadAnimationTbl		= {ACT_RELOAD,ACT_RELOAD_START,ACT_RELOAD_FINISH,ACT_RELOAD_LOW,ACT_GESTURE_RELOAD,ACT_GESTURE_RELOAD_PISTOL,ACT_GESTURE_RELOAD_SMG1,ACT_GESTURE_RELOAD_SHOTGUN,ACT_SHOTGUN_RELOAD_START,ACT_SHOTGUN_RELOAD_FINISH,ACT_SMG2_RELOAD2,ACT_RELOAD_PISTOL,ACT_RELOAD_PISTOL_LOW,ACT_RELOAD_SMG1,ACT_RELOAD_SMG1_LOW,ACT_RELOAD_SHOTGUN,ACT_RELOAD_SHOTGUN_LOW,ACT_GESTURE_RELOAD,ACT_GESTURE_RELOAD_PISTOL,ACT_GESTURE_RELOAD_SMG1,ACT_GESTURE_RELOAD_SHOTGUN}
-SWEP.NPC_HasReloadSound			= true -- Should it play a sound when the base detects the SNPC playing a reload animation?
-SWEP.NPC_ReloadSound			= {} -- Sounds it plays when the base detects the SNPC playing a reload animation
-SWEP.NPC_ReloadSoundLevel		= 60 -- How far does the sound go?
-SWEP.NPC_ExtraFireSound			= {} -- Plays an extra sound after it fires (Example: Bolt action sound)
-SWEP.NPC_ExtraFireSoundTime		= 0.4 -- How much time until it plays the sound (After Firing)?
-SWEP.NPC_ExtraFireSoundLevel	= 70 -- How far does the sound go?
-SWEP.NPC_ExtraFireSoundPitch1	= 90
-SWEP.NPC_ExtraFireSoundPitch2	= 100
+SWEP.NPC_AllowCustomSpread = true -- Should the weapon be able to change the NPC's spread?
+SWEP.NPC_CustomSpread = 1 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
+SWEP.NPC_BulletSpawnAttachment = "" -- The attachment that the bullet spawns on, leave empty for base to decide!
+SWEP.NPC_CanBePickedUp = true -- Can this weapon be picked up by NPCs? (Ex: Rebels)
+	-- ====== Reload Variables ====== --
+SWEP.NPC_HasReloadSound = true -- Should it play a sound when the base detects the SNPC playing a reload animation?
+SWEP.NPC_ReloadSound = {} -- Sounds it plays when the base detects the SNPC playing a reload animation
+SWEP.NPC_ReloadSoundLevel = 60 -- How far does the sound go?
+	-- ====== Extra Firing Sound Variables ====== --
+SWEP.NPC_ExtraFireSound = {} -- Plays an extra sound after it fires (Example: Bolt action sound)
+SWEP.NPC_ExtraFireSoundTime = 0.4 -- How much time until it plays the sound (After Firing)?
+SWEP.NPC_ExtraFireSoundLevel = 70 -- How far does the sound go?
+SWEP.NPC_ExtraFireSoundPitch = VJ_Rand(90,100) -- How much time until the secondary fire can be used again?
 	-- ====== Secondary Fire Variables ====== --
 SWEP.NPC_HasSecondaryFireNext = false -- Can the weapon have a secondary fire?
 SWEP.NPC_SecondaryFireChance = 3 -- Chance that the secondary fire is used | 1 = always
@@ -55,97 +64,93 @@ SWEP.NPC_SecondaryFireDistance = 1000 -- How close does the owner's enemy have t
 SWEP.NPC_HasSecondaryFireSound = true -- Can the secondary fire sound be played?
 SWEP.NPC_SecondaryFireSound = {} -- The sound it plays when the secondary fire is used
 SWEP.NPC_SecondaryFireSoundLevel = 70 -- The sound level to use for the secondary firing sound
-	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.MadeForNPCsOnly 			= false -- Is this weapon meant to be for NPCs only?
-SWEP.ViewModel					= "models/weapons/v_rif_ak47.mdl"
-SWEP.WorldModel					= "models/weapons/w_rif_ak47.mdl"
-SWEP.HoldType 					= "ar2"
-SWEP.ViewModelFlip				= false -- Flip the model? Usally used for CS:S models
-SWEP.ViewModelFOV				= 55 -- Player FOV for the view model
-SWEP.BobScale					= 1.5 -- Bob effect when moving
-//SWEP.Spawnable				= false
-//SWEP.AdminOnly				= false
-SWEP.AnimPrefix					= "python"
-	-- World Model ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.WorldModel_UseCustomPosition = false -- Should the gun use custom position? This can be used to fix guns that are in the crotch
-SWEP.WorldModel_CustomPositionAngle = Vector(-8,1,180)
-SWEP.WorldModel_CustomPositionOrigin = Vector(-1,6,1.4)
-SWEP.WorldModel_CustomPositionBone = "ValveBiped.Bip01_R_Hand" -- The bone it will use as the main point
-SWEP.WorldModel_Invisible = false -- Should the world model be invisible?
-SWEP.WorldModel_NoShadow = false -- Should the world model have a shadow?
-	-- General Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.HasDryFireSound			= true -- Should it play a sound when it's out of ammo?
-SWEP.DryFireSound				= {} -- The sound that it plays when the weapon is out of ammo
-SWEP.DryFireSoundLevel 			= 50 -- Dry fire sound level
-SWEP.DryFireSoundPitch1 		= 90 -- Dry fire sound pitch 1
-SWEP.DryFireSoundPitch2 		= 100 -- Dry fire sound pitch 2
-	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.DelayOnDeploy 				= 1 -- Time until it can shoot again after deploying the weapon
-SWEP.AnimTbl_Deploy				= {ACT_VM_DRAW}
-SWEP.HasDeploySound				= true -- Does the weapon have a deploy sound?
-SWEP.DeploySound				= {} -- Sound played when the weapon is deployed
-	-- Idle Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.HasIdleAnimation			= false -- Does it have a idle animation?
-SWEP.AnimTbl_Idle				= {ACT_VM_IDLE}
-SWEP.NextIdle_Deploy			= 0.5 -- How much time until it plays the idle animation after the weapon gets deployed
-SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle animation after attacking(Primary)
-	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.HasReloadSound				= false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
-SWEP.ReloadSound				= {}
-SWEP.AnimTbl_Reload				= {ACT_VM_RELOAD}
-SWEP.Reload_TimeUntilAmmoIsSet	= 1 -- Time until ammo is set to the weapon
-SWEP.Reload_TimeUntilFinished	= 2 -- How much time until the player can play idle animation, shoot, etc.
-	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.Primary.DisableBulletCode	= false -- The bullet won't spawn, this can be used when creating a projectile-based weapon
-SWEP.Primary.AllowFireInWater	= false -- If true, you will be able to use primary fire in water
-SWEP.Primary.Damage				= 5 -- Damage
-SWEP.Primary.PlayerDamage		= "Same" -- Only applies for players | "Same" = Same as self.Primary.Damage, "Double" = Double the self.Primary.Damage OR put a number to be different from self.Primary.Damage
-SWEP.Primary.Force				= 5 -- Force applied on the object the bullet hits
-SWEP.Primary.NumberOfShots		= 1 -- How many shots per attack?
-SWEP.Primary.ClipSize			= 30 -- Max amount of bullets per clip
-SWEP.Primary.PickUpAmmoAmount 	= "Default" -- How much ammo should the player get the gun is picked up? | "Default" = 3 Clips
-SWEP.Primary.Recoil				= 0.3 -- How much recoil does the player get?
-SWEP.Primary.Cone				= 7 -- How accurate is the bullet? (Players)
-SWEP.Primary.Delay				= 0.1 -- Time until it can shoot again
-SWEP.Primary.Tracer				= 1
-SWEP.Primary.TracerType			= "Tracer" -- Tracer type (Examples: AR2)
-SWEP.Primary.TakeAmmo			= 1 -- How much ammo should it take on each shot?
-SWEP.Primary.Automatic			= true -- Is it automatic?
-SWEP.Primary.Ammo				= "SMG1" -- Ammo type
-SWEP.AnimTbl_PrimaryFire		= {ACT_VM_PRIMARYATTACK}
-SWEP.Primary.Sound				= {}
-SWEP.Primary.DistantSound		= {}
-SWEP.Primary.HasDistantSound	= true -- Does it have a distant sound when the gun is shot?
-SWEP.Primary.DistantSoundLevel	= 140 -- Distant sound level
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ General Player Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-- ====== Inventory-Related Variables ====== --
+SWEP.Slot = 2 -- Which weapon slot you want your SWEP to be in? (1 2 3 4 5 6)
+SWEP.SlotPos = 4 -- Which part of that slot do you want the SWEP to be in? (1 2 3 4 5 6)
+SWEP.Weight = 30 -- Decides whether we should switch from/to this
+SWEP.AutoSwitchTo = false -- Auto switch to this weapon when it's picked up
+SWEP.AutoSwitchFrom = false -- Auto switch weapon when the owner picks up a better weapon
+SWEP.DrawWeaponInfoBox = true -- Should the information box show in the weapon selection menu?
+SWEP.BounceWeaponIcon = true -- Should the icon bounce in the weapon selection menu?
+	-- ====== Deployment Variables ====== --
+SWEP.DelayOnDeploy = 1 -- Time until it can shoot again after deploying the weapon
+SWEP.AnimTbl_Deploy = {ACT_VM_DRAW}
+SWEP.HasDeploySound = true -- Does the weapon have a deploy sound?
+SWEP.DeploySound = {} -- Sound played when the weapon is deployed
+	-- ====== Idle Variables ====== --
+SWEP.HasIdleAnimation = false -- Does it have a idle animation?
+SWEP.AnimTbl_Idle = {ACT_VM_IDLE}
+SWEP.NextIdle_Deploy = 0.5 -- How much time until it plays the idle animation after the weapon gets deployed
+SWEP.NextIdle_PrimaryAttack = 0.1 -- How much time until it plays the idle animation after attacking(Primary)
+	-- ====== Reload Variables ====== --
+SWEP.HasReloadSound = false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
+SWEP.ReloadSound = {}
+SWEP.AnimTbl_Reload = {ACT_VM_RELOAD}
+SWEP.Reload_TimeUntilAmmoIsSet = 1 -- Time until ammo is set to the weapon
+SWEP.Reload_TimeUntilFinished = 2 -- How much time until the player can play idle animation, shoot, etc.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Dry Fire Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-- Examples: Under water, out of ammo
+SWEP.HasDryFireSound = true -- Should it play a sound when it's out of ammo?
+SWEP.DryFireSound = {} -- The sound that it plays when the weapon is out of ammo
+SWEP.DryFireSoundLevel = 50 -- Dry fire sound level
+SWEP.DryFireSoundPitch1 = 90 -- Dry fire sound pitch 1
+SWEP.DryFireSoundPitch2 = 100 -- Dry fire sound pitch 2
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Primary Fire Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.Primary.DisableBulletCode = false -- The bullet won't spawn, this can be used when creating a projectile-based weapon
+SWEP.Primary.AllowFireInWater = false -- If true, you will be able to use primary fire in water
+SWEP.Primary.Damage = 5 -- Damage
+SWEP.Primary.PlayerDamage = "Same" -- Only applies for players | "Same" = Same as self.Primary.Damage, "Double" = Double the self.Primary.Damage OR put a number to be different from self.Primary.Damage
+SWEP.Primary.Force = 5 -- Force applied on the object the bullet hits
+SWEP.Primary.NumberOfShots = 1 -- How many shots per attack?
+SWEP.Primary.ClipSize = 30 -- Max amount of bullets per clip
+SWEP.Primary.PickUpAmmoAmount = "Default" -- How much ammo should the player get the gun is picked up? | "Default" = 3 Clips
+SWEP.Primary.Recoil = 0.3 -- How much recoil does the player get?
+SWEP.Primary.Cone = 7 -- How accurate is the bullet? (Players)
+SWEP.Primary.Delay = 0.1 -- Time until it can shoot again
+SWEP.Primary.Tracer = 1
+SWEP.Primary.TracerType = "Tracer" -- Tracer type (Examples: AR2)
+SWEP.Primary.TakeAmmo = 1 -- How much ammo should it take on each shot?
+SWEP.Primary.Automatic = true -- Is it automatic?
+SWEP.Primary.Ammo = "SMG1" -- Ammo type
+SWEP.AnimTbl_PrimaryFire = {ACT_VM_PRIMARYATTACK}
+	-- ====== Sound Variables ====== --
+SWEP.Primary.Sound = {}
+SWEP.Primary.DistantSound = {}
+SWEP.Primary.HasDistantSound = true -- Does it have a distant sound when the gun is shot?
+SWEP.Primary.DistantSoundLevel = 140 -- Distant sound level
 SWEP.Primary.DistantSoundPitch1	= 90 -- Distant sound pitch 1
 SWEP.Primary.DistantSoundPitch2	= 110 -- Distant sound pitch 2
 SWEP.Primary.DistantSoundVolume	= 1 -- Distant sound volume
+	-- ====== Effect Variables ====== --
 SWEP.PrimaryEffects_MuzzleFlash = true
 SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_full"}
 SWEP.PrimaryEffects_MuzzleParticlesAsOne = false -- If set to true, the base will spawn all the given particles instead of picking one
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_SpawnShells = true
 SWEP.PrimaryEffects_ShellAttachment = "shell"
-SWEP.PrimaryEffects_ShellType 	= "VJ_Weapon_RifleShell1"
-	-- VJ_Weapon_RifleShell1 | VJ_Weapon_PistolShell1 | VJ_Weapon_ShotgunShell1
+SWEP.PrimaryEffects_ShellType = "VJ_Weapon_RifleShell1" -- VJ_Weapon_RifleShell1 | VJ_Weapon_PistolShell1 | VJ_Weapon_ShotgunShell1
 SWEP.PrimaryEffects_SpawnDynamicLight = true
 SWEP.PrimaryEffects_DynamicLightBrightness = 4
 SWEP.PrimaryEffects_DynamicLightDistance = 120
 SWEP.PrimaryEffects_DynamicLightColor = Color(255, 150, 60)
-	-- Independent Variables ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.Reloading 					= false
-SWEP.InitHasIdleAnimation		= false
-SWEP.AlreadyPlayedNPCReloadSound = false
-SWEP.NPC_NextPrimaryFireT		= 0
-SWEP.Primary.DefaultClip 		= 0
-SWEP.NextNPCDrySoundT 			= 0
-SWEP.NPC_AnimationSet 			= "Custom"
-SWEP.NPC_SecondaryFireNextT 	= 0
-SWEP.NPC_SecondaryFirePerforming = false
----------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-- Use the functions below to customize certain parts of the base or to add new custom systems
 function SWEP:CustomOnInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnThink() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnNPC_ServerThink() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnNPC_Reload() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BeforeShoot() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -153,7 +158,7 @@ function SWEP:CustomOnPrimaryAttack_AfterShoot() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BulletCallback(attacker,tr,dmginfo) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttackEffects() return true end -- Not returning to true will make the base effects not to spawn
+function SWEP:CustomOnPrimaryAttackEffects() return true end -- Return false to make the base effects not spawn
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_SecondaryFire()
 	/* An example:
@@ -178,9 +183,7 @@ function SWEP:CustomBulletSpawnPosition() return false end -- Return a position 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnFireAnimationEvent(pos,ang,event,options) return false end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnDrawWorldModel() -- This is client only!
-	return true -- return false to not draw the world model
-end
+function SWEP:CustomOnDrawWorldModel()return true end -- Return false to not draw the world model | This is client side only!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnDeploy() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -189,10 +192,24 @@ function SWEP:CustomOnIdle() end
 function SWEP:CustomOnReload() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnRemove() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnNPC_ServerThink() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnNPC_Reload() end
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ ///// WARNING: Don't touch anything below this line! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.IsVJBaseWeapon = true
+SWEP.RenderGroup = RENDERGROUP_OPAQUE
+
+SWEP.Reloading = false
+SWEP.InitHasIdleAnimation = false
+SWEP.NPC_NextPrimaryFireT = 0
+SWEP.Primary.DefaultClip = 0
+SWEP.NextNPCDrySoundT = 0
+SWEP.NPC_AnimationSet = "Custom"
+SWEP.NPC_SecondaryFireNextT = 0
+SWEP.NPC_SecondaryFirePerforming = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CanBePickedUpByNPCs()
 	if self.NPC_CanBePickedUp == false then return end
@@ -300,7 +317,7 @@ function SWEP:NPC_ServerNextFire()
 	self:CustomOnThink()
 	self:CustomOnNPC_ServerThink()
 
-	if self:GetOwner().IsReloadingWeapon_ServerNextFire == false && self.AlreadyPlayedNPCReloadSound == false && (VJ_IsCurrentAnimation(self:GetOwner(),self.CurrentAnim_WeaponReload) or VJ_IsCurrentAnimation(self:GetOwner(),self.CurrentAnim_ReloadBehindCover) or VJ_IsCurrentAnimation(self:GetOwner(),self.NPC_ReloadAnimationTbl) or VJ_IsCurrentAnimation(self:GetOwner(),self.NPC_ReloadAnimationTbl_Custom) or VJ_IsCurrentAnimation(self:GetOwner(),self:GetOwner().AnimTbl_WeaponReload)) then
+	/*if self:GetOwner().IsReloadingWeapon_ServerNextFire == false && self.AlreadyPlayedNPCReloadSound == false && (VJ_IsCurrentAnimation(self:GetOwner(),self.CurrentAnim_WeaponReload) or VJ_IsCurrentAnimation(self:GetOwner(),self.CurrentAnim_ReloadBehindCover) or VJ_IsCurrentAnimation(self:GetOwner(),self.NPC_ReloadAnimationTbl) or VJ_IsCurrentAnimation(self:GetOwner(),self.NPC_ReloadAnimationTbl_Custom) or VJ_IsCurrentAnimation(self:GetOwner(),self:GetOwner().AnimTbl_WeaponReload)) then
 		self:GetOwner().NextThrowGrenadeT = self:GetOwner().NextThrowGrenadeT + 2
 		self:GetOwner().IsReloadingWeapon_ServerNextFire = true
 		//self:GetOwner().IsReloadingWeapon = false
@@ -308,7 +325,7 @@ function SWEP:NPC_ServerNextFire()
 		self.AlreadyPlayedNPCReloadSound = true
 		if self.NPC_HasReloadSound == true then VJ_EmitSound(self:GetOwner(),self.NPC_ReloadSound,self.NPC_ReloadSoundLevel) end
 		timer.Simple(3,function() if IsValid(self) then self.AlreadyPlayedNPCReloadSound = false end end)
-	end
+	end*/
 
 	local function FireCode()
 		self:NPCShoot_Primary(ShootPos,ShootDir)
@@ -477,6 +494,12 @@ function SWEP:NPCShoot_Primary(ShootPos,ShootDir)
 	//end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:NPC_ReloadWeapon()
+	self:GetOwner().NextThrowGrenadeT = self:GetOwner().NextThrowGrenadeT + 2
+	self:CustomOnNPC_Reload()
+	if self.NPC_HasReloadSound == true then VJ_EmitSound(self:GetOwner(),self.NPC_ReloadSound,self.NPC_ReloadSoundLevel) end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Precache()
 	util.PrecacheSound(self.Primary.Sound)
 end
@@ -500,7 +523,7 @@ function SWEP:PrimaryAttack(UseAlt)
 		if self:GetOwner():IsNPC() then
 			timer.Simple(self.NPC_ExtraFireSoundTime,function()
 				if IsValid(self) && IsValid(self:GetOwner()) then
-					VJ_EmitSound(self:GetOwner(),self.NPC_ExtraFireSound,self.NPC_ExtraFireSoundLevel,math.Rand(self.NPC_ExtraFireSoundPitch1,self.NPC_ExtraFireSoundPitch2))
+					VJ_EmitSound(self:GetOwner(),self.NPC_ExtraFireSound,self.NPC_ExtraFireSoundLevel,math.Rand(self.NPC_ExtraFireSoundPitch.a, self.NPC_ExtraFireSoundPitch.b))
 				end
 			end)
 		end
@@ -713,11 +736,12 @@ end
 function SWEP:Deploy()
 	if self.InitHasIdleAnimation == true then self.HasIdleAnimation = true end
 	if self:GetOwner():IsPlayer() then
-	self:CustomOnDeploy()
-	self:SendWeaponAnim(VJ_PICKRANDOMTABLE(self.AnimTbl_Deploy))
-	if self.HasDeploySound == true then
-	self:EmitSound(VJ_PICKRANDOMTABLE(self.DeploySound),50,math.random(90,100)) end
-	self:SetNextPrimaryFire(CurTime() +self.DelayOnDeploy) end
+		self:CustomOnDeploy()
+		self:SendWeaponAnim(VJ_PICKRANDOMTABLE(self.AnimTbl_Deploy))
+		if self.HasDeploySound == true then
+		self:EmitSound(VJ_PICKRANDOMTABLE(self.DeploySound),50,math.random(90,100)) end
+		self:SetNextPrimaryFire(CurTime() +self.DelayOnDeploy)
+	end
 	timer.Simple(self.NextIdle_Deploy,function() if self:IsValid() then self:DoIdleAnimation() end end)
 	return true -- Or else the player won't be able to get the weapon!
 end
