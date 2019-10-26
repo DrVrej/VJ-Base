@@ -1054,11 +1054,11 @@ function ENT:Initialize()
 	//self:SetRenderMode(RENDERMODE_TRANSALPHA)
 	//self:DrawShadow(true)
 	self:VJ_DoSelectDifficulty()
-	if VJ_PICKRANDOMTABLE(self.Model) != false then self:SetModel(Model(VJ_PICKRANDOMTABLE(self.Model))) end
+	if VJ_PICKRANDOMTABLE(self.Model) != false then self:SetModel(VJ_PICKRANDOMTABLE(self.Model)) end
 	self:SetMaxYawSpeed(self.TurningSpeed)
 	if self.HasHull == true then self:SetHullType(self.HullType) end
 	if self.HullSizeNormal == true then self:SetHullSizeNormal() end
-	//self:SetCustomCollisionCheck()
+	self:SetCustomCollisionCheck()
 	if self.HasSetSolid == true then self:SetSolid(SOLID_BBOX) end // SOLID_OBB
 	//self:SetMoveType(self.MoveType)
 	self:ConvarsOnInit()
