@@ -1008,6 +1008,7 @@ ENT.NearestPointToEnemyDistance = 0
 ENT.JumpLegalLandingTime = 0
 ENT.ReachableEnemyCount = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
+ENT.LatestVisibleEnemyPosition = Vector(0,0,0)
 ENT.CurrentTurningAngle = false
 ENT.SelectedDifficulty = 1
 ENT.VJ_AddCertainEntityAsEnemy = {}
@@ -2539,6 +2540,7 @@ function ENT:Think()
 				local seentr = util.TraceLine({start = self:NearestPoint(self:GetPos() +self:OBBCenter()),endpos = ene:EyePos(),filter = function(ent) if (ent:GetClass() == self:GetClass() or self:Disposition(ent) == D_LI) then return false end end})
 				if (ene:Visible(self) or (IsValid(seentr.Entity) && seentr.Entity:GetClass() == ene)) then
 					self.LastSeenEnemyTime = 0
+					self.LatestVisibleEnemyPosition = ene:GetPos()
 				else
 					self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1
 				end

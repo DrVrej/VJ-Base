@@ -51,7 +51,7 @@ SWEP.NextIdle_Deploy			= 0.5 -- How much time until it plays the idle animation 
 SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle animation after attacking(Primary)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BeforeShoot()
-if (CLIENT) then return end
+	if (CLIENT) then return end
 	local SpawnBlaserRod = ents.Create("obj_vj_tank_shell")
 	local OwnerPos = self:GetOwner():GetShootPos()
 	local OwnerAng = self:GetOwner():GetAimVector():Angle()
