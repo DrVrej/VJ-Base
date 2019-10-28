@@ -41,7 +41,9 @@ function ENT:CustomOnThink()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnTakeDamage(dmginfo)
-	self:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce() * 0.1)
+	if IsValid(self:GetPhysicsObject()) then
+		self:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce() * 0.1)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPhysicsCollide(data,phys)

@@ -477,7 +477,6 @@ function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,Tbl_Fe
 	//print(tr.Entity)
 	//PrintTable(tr)
 	if vTbl_SpawnTestCube == true then
-		print("allah")
 		-- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
 		local cube = ents.Create("prop_dynamic")
 		cube:SetModel("models/hunter/blocks/cube025x025x025.mdl")
@@ -775,22 +774,25 @@ hook.Add("EntityFireBullets","VJ_NPC_FIREBULLET",function(Entity,data,Attacker)
 	if IsValid(Entity) && !Entity:IsPlayer() && Entity.IsVJBaseSNPC == true && Entity:GetActiveWeapon() != NULL && Entity:VJ_GetEnemy(true) != nil then
 		local Wep = Entity:GetActiveWeapon()
 		local EnemyDistance = 100
+		local ene = Entity:GetEnemy()
 		if Entity.VJ_IsBeingControlled == true then
-		EnemyDistance = Entity:GetPos():Distance(Entity.VJ_TheController:GetEyeTrace().HitPos) else
-		EnemyDistance = Entity:GetPos():Distance(Entity:GetEnemy():GetPos()) end
+			EnemyDistance = Entity:GetPos():Distance(Entity.VJ_TheController:GetEyeTrace().HitPos)
+		else
+			EnemyDistance = Entity:GetPos():Distance(ene:GetPos())
+		end
 		//Wep:SetClip1(Wep:Clip1() -1)
 		//PrintTable(data)
 		//data.Callback = function(tr)
-		//print(tr)
-		//if tr.Entity:GetClass() == "prop_ragdoll" then
-		//print(tr.Entity) end
+			//print(tr)
+			//if tr.Entity:GetClass() == "prop_ragdoll" then
+			//print(tr.Entity) end
 		//end
 		if Entity.VJ_IsBeingControlled == false && Wep.IsVJBaseWeapon != true then
 			data.Src = util.VJ_GetWeaponPos(Entity)
 		elseif Entity.VJ_IsBeingControlled == true && IsValid(Entity.VJ_TheController) then
 			data.Src = Entity.VJ_TheController:GetShootPos()
 		end
-		//if Entity:GetEnemy():GetHullType() == HULL_TINY then
+		//if ene:GetHullType() == HULL_TINY then
 		//data.Spread = Vector(25,25,0) else
 		if Entity.VJ_IsBeingControlled == false then
 			local fSpread = (EnemyDistance/28) * Entity.WeaponSpread
@@ -799,7 +801,7 @@ hook.Add("EntityFireBullets","VJ_NPC_FIREBULLET",function(Entity,data,Attacker)
 			data.Spread = Vector(fSpread,fSpread,0)
 			/*if EnemyDistance < 400 then
 			//self:CapabilitiesRemove(CAP_AIM_GUN)
-			data.Spread = Vector(30,30,0) else //end //Entity:GetEnemy():GetPos()
+			data.Spread = Vector(30,30,0) else //end //ene:GetPos()
 			if EnemyDistance < 600 && EnemyDistance > 400 then
 			data.Spread = Vector(40,40,0) else
 			data.Spread = Vector(Entity.WeaponSpread,Entity.WeaponSpread,0) end end*/
@@ -807,27 +809,27 @@ hook.Add("EntityFireBullets","VJ_NPC_FIREBULLET",function(Entity,data,Attacker)
 			//data.Spread = Vector(1,1,0)
 		end
 		if Entity.VJ_IsBeingControlled == false then
-			//data.Dir =		Entity:GetEnemy():GetPos()-(Entity:GetEnemy():OBBMaxs():Distance(Entity:GetEnemy():OBBMins())/2)
+			//data.Dir =		ene:GetPos()-(ene:OBBMaxs():Distance(ene:OBBMins())/2)
 			//if Wep:GetClass() != "weapon_shotgun" or Wep:GetClass() != "weapon_annabelle" then
-			//if Entity:GetEnemy():IsNPC() then
+			//if ene:IsNPC() then
 			-- Very old System
-			//if Entity:GetEnemy():GetHullType() == HULL_TINY then
-				//data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():GetUp()*-50)-Entity:GetPos() else
-				//data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():GetUp()*-20)-Entity:GetPos()
+			//if ene:GetHullType() == HULL_TINY then
+				//data.Dir = (ene:GetPos()+ene:GetUp()*-50)-Entity:GetPos() else
+				//data.Dir = (ene:GetPos()+ene:GetUp()*-20)-Entity:GetPos()
 			//end
-			//data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():OBBCenter()+Entity:GetEnemy():GetUp()*-45) -Entity:GetPos()+Entity:OBBCenter()+Entity:GetEnemy():GetUp()*-45
+			//data.Dir = (ene:GetPos()+ene:OBBCenter()+ene:GetUp()*-45) -Entity:GetPos()+Entity:OBBCenter()+ene:GetUp()*-45
 			if Entity.WeaponUseEnemyEyePos == true then
-				data.Dir = (Entity:GetEnemy():EyePos()+Entity:GetEnemy():GetUp()*-5)-data.Src
+				data.Dir = (ene:EyePos()+ene:GetUp()*-5)-data.Src
 			else
-				data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():OBBCenter())-data.Src
+				data.Dir = (ene:GetPos()+ene:OBBCenter())-data.Src
 			end
 			Entity.WeaponUseEnemyEyePos = false
 			-- Just a test
-			//data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():GetUp()*-50) -Entity:GetPos()
+			//data.Dir = (ene:GetPos()+ene:GetUp()*-50) -Entity:GetPos()
 			//end
-			//if Entity:GetEnemy():IsPlayer() then
+			//if ene:IsPlayer() then
 			//if Wep:GetClass() != "weapon_shotgun" then
-			//data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():OBBCenter()+Entity:GetEnemy():GetUp()*-45) -Entity:GetPos() end
+			//data.Dir = (ene:GetPos()+ene:OBBCenter()+ene:GetUp()*-45) -Entity:GetPos() end
 		elseif Entity.VJ_IsBeingControlled == true && IsValid(Entity.VJ_TheController) then
 			data.Dir = Entity.VJ_TheController:GetAimVector()
 		end
