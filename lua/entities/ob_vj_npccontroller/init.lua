@@ -15,6 +15,7 @@ ENT.CurrentAttackAnimation = 0
 ENT.LastIdleAngle = 0
 ENT.CrosshairTrackingActivated = false
 ENT.ZoomLevelOriginalZ = 0
+ENT.CanQuitPossessor = true
 
 util.AddNetworkString("vj_controller_hud")
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -177,7 +178,7 @@ hook.Add("PlayerButtonDown","VJ_NPC_CONTROLLER",function(ply, button)
 		cent.LastPressedKeyTime = CurTime()
 		cent:CustomOnKeyPressed(button)
 		
-		if button == KEY_END then
+		if cent.CanQuitPossessor and button == KEY_END then
 			cent:StopControlling()
 		end
 		
