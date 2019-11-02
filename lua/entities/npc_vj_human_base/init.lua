@@ -33,6 +33,7 @@ ENT.TurningUseAllAxis = false -- If set to true, angles will not be restricted t
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
 ENT.CanTurnWhileStationary = true -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
+ENT.MaxJumpLegalDistance = 150 -- The max distance the NPC can jump (Usually from one node to another)
 	-- ====== Miscellaneous Variables ====== --
 ENT.HasEntitiesToNoCollide = true -- If set to false, it won't run the EntitiesToNoCollide code
 ENT.EntitiesToNoCollide = {} -- Entities to not collide with when HasEntitiesToNoCollide is set to true
@@ -1176,8 +1177,8 @@ function ENT:IsJumpLegal(startPos,apex,endPos)
 	local dist_end = startPos:Distance(apex)
 	/*print(dist_apex)
 	print(dist_end)*/
-	if dist_apex > 150 then return false end
-	if dist_end > 150 then return nil end
+	if dist_apex > self.MaxJumpDistance then return false end
+	if dist_end > self.MaxJumpDistance then return nil end
 	self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190)
 	return true
 end
