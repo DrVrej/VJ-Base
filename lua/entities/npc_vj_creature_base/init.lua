@@ -33,6 +33,7 @@ ENT.TurningUseAllAxis = false -- If set to true, angles will not be restricted t
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
 ENT.CanTurnWhileStationary = true -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
+ENT.MaxJumpLegalDistance = 550 -- The max distance the NPC can jump (Usually from one node to another)
 	-- Aerial Movetype Variables:
 ENT.Aerial_FlyingSpeed_Calm = 80 -- The speed it should fly with, when it's wandering, moving slowly, etc. | Basically walking campared to ground SNPCs
 ENT.Aerial_FlyingSpeed_Alerted = 200 -- The speed it should fly with, when it's chasing an enemy, moving away quickly, etc. | Basically running campared to ground SNPCs
@@ -142,6 +143,10 @@ ENT.NoChaseAfterCertainRange = false -- Should the SNPC not be able to chase whe
 ENT.NoChaseAfterCertainRange_FarDistance = 2000 -- How far until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
 ENT.NoChaseAfterCertainRange_CloseDistance = 300 -- How near until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
 ENT.NoChaseAfterCertainRange_Type = "Regular" -- "Regular" = Default behavior | "OnlyRange" = Only does it if it's able to range attack
+	-- ====== Miscellaneous Variables ====== --
+ENT.PushProps = true -- Should it push props when trying to move?
+ENT.AttackProps = true -- Should it attack props when trying to move?
+ENT.PropAP_MaxSize = 1 -- This is a scale number | x > 1  = Larger props | x < 1  = Smaller props | x = 1  == Default base value
 	-- ====== Control Variables ====== --
 	-- Use these variables very careful! One wrong change can mess up the whole SNPC!
 ENT.FindEnemy_UseSphere = false -- Should the SNPC be able to see all around him? (360) | Objects and walls can still block its sight!
@@ -156,8 +161,6 @@ ENT.NextProcessTime = 1 -- Time until it runs the essential part of the AI, whic
 	-- ====== Miscellaneous Variables ====== --
 ENT.DisableInitializeCapabilities = false -- If enabled, all of the Capabilities will be disabled, allowing you to add your own
 ENT.AttackTimersCustom = {}
-ENT.PushProps = true -- Should it push props when trying to move?
-ENT.AttackProps = true -- Should it attack props when trying to move?
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Damaged / Injured Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1218,8 +1221,8 @@ function ENT:IsJumpLegal(startPos,apex,endPos)
 	local dist_end = startPos:Distance(apex)
 	/*print(dist_apex)
 	print(dist_end)*/
-	if dist_apex > 550 then return nil end
-	if dist_end > 550 then return nil end
+	if dist_apex > self.MaxJumpLegalDistance then return nil end
+	if dist_end > self.MaxJumpLegalDistance then return nil end
 	self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190)
 	return true
 end
@@ -2933,7 +2936,7 @@ function ENT:PushOrAttackPropsCode(CustomValuesTbl)
 				//print("IT SHOULD WORK "..v:GetClass())
 				if self.PushProps == true && phys:GetMass() > 4 && phys:GetSurfaceArea() > 800 then
 					local selfphys = self:GetPhysicsObject()
-					if IsValid(selfphys) && selfphys:GetSurfaceArea() >= phys:GetSurfaceArea() then
+					if IsValid(selfphys) && (selfphys:GetSurfaceArea() * self.PropAP_MaxSize) >= phys:GetSurfaceArea() then
 						return true
 					end
 				end
