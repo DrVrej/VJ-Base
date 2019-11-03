@@ -328,8 +328,7 @@ ENT.NextMoveRandomlyWhenShootingTime1 = 3 -- How much time until it can move ran
 ENT.NextMoveRandomlyWhenShootingTime2 = 6 -- How much time until it can move randomly when shooting? | Second number in math.random
 	-- ====== Wait For Enemy To Come Out Variables ====== --
 ENT.WaitForEnemyToComeOut = true -- Should it wait for the enemy to come out from hiding?
-ENT.WaitForEnemyToComeOutTime1 = 5 -- How much time should it wait until it starts chasing the enemy? | First number in math.random
-ENT.WaitForEnemyToComeOutTime2 = 7 -- How much time should it wait until it starts chasing the enemy? | Second number in math.random
+ENT.WaitForEnemyToComeOutTime = VJ_Set(5,7) -- How much time should it wait until it starts chasing the enemy?
 ENT.WaitForEnemyToComeOutDistance = 100 -- If it's this close to the enemy, it won't do it
 ENT.HasLostWeaponSightAnimation = false -- Set to true if you would like the SNPC to play a different animation when it has lost sight of the enemy and can't fire at it
 ENT.AnimTbl_LostWeaponSight = {ACT_IDLE_ANGRY} -- The animations that it will play if the variable above is set to true
@@ -693,6 +692,8 @@ function ENT:ExpressionFinished(strExp) end
 function ENT:OnPlayCreateSound(SoundData,SoundFile) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnPlayEmitSound(SoundData) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OnFireBullet(ent,data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnTouch(entity) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1175,8 +1176,8 @@ function ENT:IsJumpLegal(startPos,apex,endPos)
 	local dist_end = startPos:Distance(apex)
 	/*print(dist_apex)
 	print(dist_end)*/
-	if dist_apex > self.MaxJumpDistance then return false end
-	if dist_end > self.MaxJumpDistance then return nil end
+	if dist_apex > self.MaxJumpLegalDistance then return false end
+	if dist_end > self.MaxJumpLegalDistance then return nil end
 	self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190)
 	return true
 end
@@ -2790,7 +2791,7 @@ function ENT:SelectSchedule(iNPCState)
 							if self.HasLostWeaponSightAnimation == true then
 								self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_LostWeaponSight,false,0,true)
 							end
-							self.NextChaseTime = CurTime() + math.Rand(self.WaitForEnemyToComeOutTime1,self.WaitForEnemyToComeOutTime2)
+							self.NextChaseTime = CurTime() + math.Rand(self.WaitForEnemyToComeOutTime.a, self.WaitForEnemyToComeOutTime.b)
 						elseif self.DisableChasingEnemy == false && self.IsReloadingWeapon == false && CurTime() > self.LastHiddenZoneT then
 							self.DoingWeaponAttack = false
 							self.DoingWeaponAttack_Standing = false
@@ -2931,7 +2932,7 @@ function ENT:SelectSchedule(iNPCState)
 							if self.WaitForEnemyToComeOut == true then
 								self:StopMoving()
 								self.DoingWeaponAttack_Standing = false
-								self.NextChaseTime = CurTime() + math.Rand(self.WaitForEnemyToComeOutTime1,self.WaitForEnemyToComeOutTime2)
+								self.NextChaseTime = CurTime() + math.Rand(self.WaitForEnemyToComeOutTime.a, self.WaitForEnemyToComeOutTime.b)
 								self:CustomOnWaitForEnemyToComeOut()
 								local myanim = VJ_PICK(self.AnimTbl_CustomWaitForEnemyToComeOut)
 								if myanim == true then // !VJ_IsCurrentAnimation(self,self.CurrentWeaponAnimation)
