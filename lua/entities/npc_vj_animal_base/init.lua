@@ -480,7 +480,7 @@ end
 function ENT:Initialize()
 	self:SetSpawnEffect(false)
 	self:VJ_DoSelectDifficulty()
-	self:SetModel(Model(VJ_PICKRANDOMTABLE(self.Model)))
+	self:SetModel(Model(VJ_PICK(self.Model)))
 	self:SetMaxYawSpeed(self.TurningSpeed)
 	if self.HasHull == true then self:SetHullType(self.HullType) end
 	if self.HullSizeNormal == true then self:SetHullSizeNormal() end
@@ -494,9 +494,9 @@ function ENT:Initialize()
 	self.CurrentChoosenBlood_Pool = {}
 	self.ExtraCorpsesToRemove_Transition = {}
 	if self.BloodColor == "" then -- Backwards Compatibility!
-		if VJ_PICKRANDOMTABLE(self.BloodDecal) == "Blood" then
+		if VJ_PICK(self.BloodDecal) == "Blood" then
 			self.BloodColor = "Red"
-		elseif  VJ_PICKRANDOMTABLE(self.BloodDecal) == "YellowBlood" then
+		elseif  VJ_PICK(self.BloodDecal) == "YellowBlood" then
 			self.BloodColor = "Yellow"
 		end
 	end
@@ -636,7 +636,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 	vTbl_AlwaysUseGesture = vACT_AdvancedFeatures.AlwaysUseGesture or false
 	vTbl_PlayBackRate = vACT_AdvancedFeatures.PlayBackRate or 0.5
 	//vACT_CustomCode = vACT_CustomCode or function() end
-	if istable(vACT_Name) then vACT_Name = VJ_PICKRANDOMTABLE(vACT_Name) end
+	if istable(vACT_Name) then vACT_Name = VJ_PICK(vACT_Name) end
 	local IsGesture = false
 	local IsSequence = false
 	if string.find(vACT_Name, "vjges_") then
@@ -759,7 +759,7 @@ function ENT:VJ_TASK_IDLE_STAND(waittime)
 	//local idletbl = self.AnimTbl_IdleStand
 	//if table.Count(idletbl) > 0 /*&& self:GetSequenceName(self:GetSequence()) != ideanimrand_act*/ then
 	//	if VJ_IsCurrentAnimation(self,self.CurrentAnim_IdleStand) != true /*&& VJ_IsCurrentAnimation(self,ACT_IDLE) && self.VJ_PlayingSequence == false && self.VJ_IsPlayingInterruptSequence == false*/ then
-	//		self.CurrentAnim_IdleStand = VJ_PICKRANDOMTABLE({idletbl})
+	//		self.CurrentAnim_IdleStand = VJ_PICK({idletbl})
 	//		self:VJ_ACT_PLAYACTIVITY(self.CurrentAnim_IdleStand,false,0,true,0,{AlwaysUseSequence=true,SequenceDuration=false,SequenceInterruptible=true})
 	//	end
 	//else
@@ -771,7 +771,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoCustomIdleAnimation()
 	local idletbl = self.AnimTbl_IdleStand
-	local idletblrand = VJ_PICKRANDOMTABLE(idletbl)
+	local idletblrand = VJ_PICK(idletbl)
 	if idletblrand == false then return end
 	if self:GetActivity() == ACT_IDLE then
 		if type(idletblrand) == "string" then
@@ -796,11 +796,11 @@ function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 	if OverrideWander == false && self.DisableWandering == true && (RestrictNumber == 1 or RestrictNumber == 0) then self:VJ_TASK_IDLE_STAND(math.Rand(2,4)) return end
 	if RestrictNumber == 0 then
 		if math.random(1,2) == 1 then
-			self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.IdleSchedule_Wander)) else self:VJ_TASK_IDLE_STAND(math.Rand(2,4))
+			self:VJ_SetSchedule(VJ_PICK(self.IdleSchedule_Wander)) else self:VJ_TASK_IDLE_STAND(math.Rand(2,4))
 		end
 	end
 	if RestrictNumber == 1 then
-		self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.IdleSchedule_Wander))
+		self:VJ_SetSchedule(VJ_PICK(self.IdleSchedule_Wander))
 	end
 	if RestrictNumber == 2 then
 		self:VJ_TASK_IDLE_STAND(math.Rand(2,4))
@@ -1097,7 +1097,7 @@ function ENT:BringAlliesToMe(SeeDistance,CertainAmount,CertainAmountNumber,Enemy
 					if randpos == 2 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-20,-50)) end
 					if randpos == 3 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(20,50)) end
 					if randpos == 4 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-20,-50)) end
-					x:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.BringAlliesToMeSchedules))
+					x:VJ_SetSchedule(VJ_PICK(self.BringAlliesToMeSchedules))
 					//return true -- It will only pick one if returning false or true
 				end
 				if CertainAmount == true && table.Count(LocalTargetTable) == CertainAmountNumber then return true end
@@ -1177,7 +1177,7 @@ function ENT:OnTakeDamage(dmginfo,hitgroup)
 			self:ClearSchedule()
 			//self.TakingCover = true
 			self.NextFlinchT = CurTime() + 1
-			self.CurrentAnim_CallForBackUpOnDamage = VJ_PICKRANDOMTABLE(self.CallForBackUpOnDamageAnimation)
+			self.CurrentAnim_CallForBackUpOnDamage = VJ_PICK(self.CallForBackUpOnDamageAnimation)
 			if VJ_AnimationExists(self,self.CurrentAnim_CallForBackUpOnDamage) == true && self.DisableCallForBackUpOnDamageAnimation == false then
 				self:VJ_ACT_PLAYACTIVITY(self.CurrentAnim_CallForBackUpOnDamage,true,self.CallForBackUpOnDamageAnimationTime,true)
 			else
@@ -1238,22 +1238,22 @@ function ENT:DoFlinch(dmginfo,hitgroup)
 		self.Flinching = true
 		self:StopAttacks(true)
 		if HitBoxBased == true then
-			self.CurrentFlinchAnimation = VJ_PICKRANDOMTABLE(HitBoxInfo.Animation)
+			self.CurrentFlinchAnimation = VJ_PICK(HitBoxInfo.Animation)
 			self.CurrentFlinchAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentFlinchAnimation) -self.FlinchAnimationDecreaseLengthAmount
 			if self.NextMoveAfterFlinchTime != "LetBaseDecide" then self.CurrentFlinchAnimationDuration = self.NextMoveAfterFlinchTime end
 			if self.NextMoveAfterFlinchTime == "LetBaseDecide" && HitBoxInfo.IsSchedule == true then self.CurrentFlinchAnimationDuration = 0.6 end
 			if HitBoxInfo.IsSchedule == true then
-				self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.CurrentFlinchAnimation))
+				self:VJ_SetSchedule(VJ_PICK(self.CurrentFlinchAnimation))
 			else
 				self:VJ_ACT_PLAYACTIVITY(self.CurrentFlinchAnimation,false,0,false,0,{SequenceDuration=self.CurrentFlinchAnimationDuration})
 			end
 		else
-			if self.FlinchAnimation_UseSchedule == true then self.CurrentFlinchAnimation = VJ_PICKRANDOMTABLE(self.ScheduleTbl_Flinch) else self.CurrentFlinchAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_Flinch) end
+			if self.FlinchAnimation_UseSchedule == true then self.CurrentFlinchAnimation = VJ_PICK(self.ScheduleTbl_Flinch) else self.CurrentFlinchAnimation = VJ_PICK(self.AnimTbl_Flinch) end
 			self.CurrentFlinchAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentFlinchAnimation) -self.FlinchAnimationDecreaseLengthAmount
 			if self.NextMoveAfterFlinchTime != "LetBaseDecide" then self.CurrentFlinchAnimationDuration = self.NextMoveAfterFlinchTime end
 			if self.NextMoveAfterFlinchTime == "LetBaseDecide" && self.FlinchAnimation_UseSchedule == true then self.CurrentFlinchAnimationDuration = 0.6 end
 			if self.FlinchAnimation_UseSchedule == true then
-				self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.CurrentFlinchAnimation))
+				self:VJ_SetSchedule(VJ_PICK(self.CurrentFlinchAnimation))
 			else
 				self:VJ_ACT_PLAYACTIVITY(self.CurrentFlinchAnimation,false,0,false,0,{SequenceDuration=self.CurrentFlinchAnimationDuration})
 			end
@@ -1296,9 +1296,9 @@ function ENT:DoChangeBloodColor(Type)
 	local changeparticle = true
 	local changedecal = true
 	local changepool = true
-	if VJ_PICKRANDOMTABLE(self.CustomBlood_Particle) != false then self.CurrentChoosenBlood_Particle = self.CustomBlood_Particle changeparticle = false end
-	if VJ_PICKRANDOMTABLE(self.CustomBlood_Decal) != false then self.CurrentChoosenBlood_Decal = self.CustomBlood_Decal changedecal = false end
-	if VJ_PICKRANDOMTABLE(self.CustomBlood_Pool) != false then self.CurrentChoosenBlood_Pool = self.CustomBlood_Pool changepool = false end
+	if VJ_PICK(self.CustomBlood_Particle) != false then self.CurrentChoosenBlood_Particle = self.CustomBlood_Particle changeparticle = false end
+	if VJ_PICK(self.CustomBlood_Decal) != false then self.CurrentChoosenBlood_Decal = self.CustomBlood_Decal changedecal = false end
+	if VJ_PICK(self.CustomBlood_Pool) != false then self.CurrentChoosenBlood_Pool = self.CustomBlood_Pool changepool = false end
 
 	if Type == "Red" then
 		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"blood_impact_red_01"} end // vj_impact1_red
@@ -1368,7 +1368,7 @@ function ENT:SpawnBloodParticles(dmginfo,hitgroup)
 	local DamagePos = dmginfo:GetDamagePosition()
 	if DamagePos == Vector(0,0,0) then DamagePos = self:GetPos() + self:OBBCenter() end
 	//if DamageType == DMG_ACID or DamageType == DMG_RADIATION or DamageType == DMG_POISON or DamageType == DMG_CRUSH or DamageType == DMG_SLASH or DamageType == DMG_GENERIC or self:IsOnFire() then DoUnPositionedParticle() return false end
-	local particlename = VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Particle)
+	local particlename = VJ_PICK(self.CurrentChoosenBlood_Particle)
 	if particlename == false then return end
 	local spawnparticle = ents.Create("info_particle_system")
 	spawnparticle:SetKeyValue("effect_name",particlename)
@@ -1380,23 +1380,23 @@ function ENT:SpawnBloodParticles(dmginfo,hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodDecal(dmginfo,hitgroup)
-	if VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal) == false then return end
+	if VJ_PICK(self.CurrentChoosenBlood_Decal) == false then return end
 	local DamageForce = dmginfo:GetDamageForce()
 	local DamagePos = dmginfo:GetDamagePosition()
 	local length = math.Clamp(DamageForce:Length() *10, 100, self.BloodDecalDistance)
 	local EndPos = DamagePos +DamageForce:GetNormal() *length
 	local tr = util.TraceLine({start = DamagePos, endpos = EndPos, filter = self})
 	//if !tr.HitWorld then return end
-	util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal),tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
+	util.Decal(VJ_PICK(self.CurrentChoosenBlood_Decal),tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
 	for i=1,2 do
-		if math.random(1,2) == 1 then util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal),tr.HitPos +tr.HitNormal +Vector(math.random(-70,70),math.random(-70,70),0),tr.HitPos -tr.HitNormal) end
+		if math.random(1,2) == 1 then util.Decal(VJ_PICK(self.CurrentChoosenBlood_Decal),tr.HitPos +tr.HitNormal +Vector(math.random(-70,70),math.random(-70,70),0),tr.HitPos -tr.HitNormal) end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodPool(dmginfo,hitgroup)
 	if !IsValid(self.Corpse) then return end
 	local GetCorpse = self.Corpse
-	local GetBloodPool = VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Pool)
+	local GetBloodPool = VJ_PICK(self.CurrentChoosenBlood_Pool)
 	if GetBloodPool == false then return end
 	timer.Simple(2.2,function()
 		if IsValid(GetCorpse) then
@@ -1431,7 +1431,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 
 	-- Blood decal on the ground
 	if self.Bleeds == true && self.HasBloodDecal == true then
-		local pickdecal = VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal)
+		local pickdecal = VJ_PICK(self.CurrentChoosenBlood_Decal)
 		if pickdecal != false then
 			self:SetLocalPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the NPC is too close to the ground
 			local tr = util.TraceLine({
@@ -1458,7 +1458,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 			if randanim != 1 then DoKilled() return end
 			if randanim == 1 then
 				self:CustomDeathAnimationCode(dmginfo,hitgroup)
-				self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(self.AnimTbl_Death),true,self.DeathAnimationTime,false,0,{SequenceDuration=self.DeathAnimationTime})
+				self:VJ_ACT_PLAYACTIVITY(VJ_PICK(self.AnimTbl_Death),true,self.DeathAnimationTime,false,0,{SequenceDuration=self.DeathAnimationTime})
 				self.DeathAnimationCodeRan = true
 				timer.Simple(self.DeathAnimationTime,DoKilled)
 			end
@@ -1509,7 +1509,7 @@ function ENT:CreateGibEntity(Ent,Models,Tbl_Features,CustomCode)
 	if Models == "UseAlien_Big" then Models = {"models/gibs/xenians/mgib_01.mdl","models/gibs/xenians/mgib_02.mdl","models/gibs/xenians/mgib_03.mdl","models/gibs/xenians/mgib_04.mdl","models/gibs/xenians/mgib_05.mdl","models/gibs/xenians/mgib_06.mdl","models/gibs/xenians/mgib_07.mdl"} end
 	if Models == "UseHuman_Small" then Models = {"models/gibs/humans/sgib_01.mdl","models/gibs/humans/sgib_02.mdl","models/gibs/humans/sgib_03.mdl"} end
 	if Models == "UseHuman_Big" then Models = {"models/gibs/humans/mgib_01.mdl","models/gibs/humans/mgib_02.mdl","models/gibs/humans/mgib_03.mdl","models/gibs/humans/mgib_04.mdl","models/gibs/humans/mgib_05.mdl","models/gibs/humans/mgib_06.mdl","models/gibs/humans/mgib_07.mdl"} end
-	Models = VJ_PICKRANDOMTABLE(Models)
+	Models = VJ_PICK(Models)
 	local vTbl_BloodType = "Red"
 	if VJ_HasValue({"models/gibs/xenians/sgib_01.mdl","models/gibs/xenians/sgib_02.mdl","models/gibs/xenians/sgib_03.mdl","models/gibs/xenians/mgib_01.mdl","models/gibs/xenians/mgib_02.mdl","models/gibs/xenians/mgib_03.mdl","models/gibs/xenians/mgib_04.mdl","models/gibs/xenians/mgib_05.mdl","models/gibs/xenians/mgib_06.mdl","models/gibs/xenians/mgib_07.mdl"},Models) then
 		vTbl_BloodType = "Yellow"
@@ -1573,7 +1573,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 	self:CustomOnDeath_BeforeCorpseSpawned(dmginfo,hitgroup)
 	if self.HasDeathRagdoll == true then
 		local corpsemodel = self:GetModel()
-		local corpsemodel_custom = VJ_PICKRANDOMTABLE(self.DeathCorpseModel)
+		local corpsemodel_custom = VJ_PICK(self.DeathCorpseModel)
 		if corpsemodel_custom != false then corpsemodel = corpsemodel_custom end
 		local corpsetype = "prop_physics"
 		if util.IsValidRagdoll(corpsemodel) == true then
@@ -1698,7 +1698,7 @@ function ENT:CreateExtraDeathCorpse(Ent,Models,Tbl_Features,CustomCode)
 	vTbl_RemoveOnCorpseDelete = vTbl_Features.RemoveOnCorpseDelete -- Should the entity get removed if the corpse is removed?
 		if vTbl_RemoveOnCorpseDelete == nil then vTbl_RemoveOnCorpseDelete = true end
 	local extraent = ents.Create(Ent)
-	if Models != "None" then extraent:SetModel(VJ_PICKRANDOMTABLE(Models)) end
+	if Models != "None" then extraent:SetModel(VJ_PICK(Models)) end
 	extraent:SetPos(vTbl_Position)
 	extraent:SetAngles(vTbl_Angle)
 	extraent:Spawn()
@@ -1745,7 +1745,7 @@ end
 function ENT:RunItemDropsOnDeathCode(dmginfo,hitgroup)
 	if self.HasItemDropsOnDeath == false then return end
 	self:CustomRareDropsOnDeathCode(dmginfo,hitgroup)
-	local entlist = VJ_PICKRANDOMTABLE(self.ItemDropsOnDeath_EntityList)
+	local entlist = VJ_PICK(self.ItemDropsOnDeath_EntityList)
 	if entlist != false then
 		local randdrop = ents.Create(entlist)
 		randdrop:SetPos(self:GetPos() +self:OBBCenter())
@@ -1765,7 +1765,7 @@ function ENT:FollowPlayerSoundCode(CustomTbl)
 	local randomplayersound = math.random(1,self.FollowPlayerSoundChance)
 	local soundtbl = self.SoundTbl_FollowPlayer
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randomplayersound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+	if randomplayersound == 1 && VJ_PICK(soundtbl) != false then
 		VJ_STOPSOUND(self.CurrentIdleSound)
 		VJ_STOPSOUND(self.CurrentFollowPlayerSound)
 		VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
@@ -1779,7 +1779,7 @@ function ENT:UnFollowPlayerSoundCode(CustomTbl)
 	local randomplayersound = math.random(1,self.UnFollowPlayerSoundChance)
 	local soundtbl = self.SoundTbl_UnFollowPlayer
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randomplayersound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+	if randomplayersound == 1 && VJ_PICK(soundtbl) != false then
 		VJ_STOPSOUND(self.CurrentIdleSound)
 		VJ_STOPSOUND(self.CurrentFollowPlayerSound)
 		VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
@@ -1793,7 +1793,7 @@ function ENT:OnPlayerSightSoundCode(CustomTbl)
 	local randomplayersound = math.random(1,self.OnPlayerSightSoundChance)
 	local soundtbl = self.SoundTbl_OnPlayerSight
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randomplayersound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+	if randomplayersound == 1 && VJ_PICK(soundtbl) != false then
 		VJ_STOPSOUND(self.CurrentIdleSound)
 		VJ_STOPSOUND(self.CurrentOnPlayerSightSound)
 		VJ_STOPSOUND(self.CurrentAlertSound)
@@ -1810,7 +1810,7 @@ function ENT:IdleSoundCode(CustomTbl)
 			local randomidlesound = math.random(1,self.IdleSoundChance)
 			local soundtbl = self.SoundTbl_Idle
 			if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-			if randomidlesound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false /*&& self:VJ_IsPlayingSoundFromTable(self.SoundTbl_Idle) == false*/ then
+			if randomidlesound == 1 && VJ_PICK(soundtbl) != false /*&& self:VJ_IsPlayingSoundFromTable(self.SoundTbl_Idle) == false*/ then
 				self.CurrentIdleSound = VJ_CreateSound(self,soundtbl,self.IdleSoundLevel,self:VJ_DecideSoundPitch(self.IdleSoundPitch1,self.IdleSoundPitch2))
 			end
 			self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle1,self.NextSoundTime_Idle2)
@@ -1823,7 +1823,7 @@ function ENT:AlertSoundCode(CustomTbl)
 	local randomalertsound = math.random(1,self.AlertSoundChance)
 	local soundtbl = self.SoundTbl_Alert
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randomalertsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+	if randomalertsound == 1 && VJ_PICK(soundtbl) != false then
 		VJ_STOPSOUND(self.CurrentIdleSound)
 		self.NextIdleSoundT = self.NextIdleSoundT + 2
 		self.CurrentAlertSound = VJ_CreateSound(self,soundtbl,self.AlertSoundLevel,self:VJ_DecideSoundPitch(self.AlertSoundPitch1,self.AlertSoundPitch2))
@@ -1836,7 +1836,7 @@ function ENT:DamageByPlayerSoundCode(CustomTbl)
 		local randomplayersound = math.random(1,self.DamageByPlayerSoundChance)
 		local soundtbl = self.SoundTbl_DamageByPlayer
 		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-		if randomplayersound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+		if randomplayersound == 1 && VJ_PICK(soundtbl) != false then
 			self.NextIdleSoundT_RegularChange = CurTime() + 1
 			VJ_STOPSOUND(self.CurrentIdleSound)
 			VJ_STOPSOUND(self.CurrentOnPlayerSightSound)
@@ -1852,7 +1852,7 @@ function ENT:BecomeEnemyToPlayerSoundCode(CustomTbl)
 	local randomenemyplysound = math.random(1,self.BecomeEnemyToPlayerChance)
 	local soundtbl = self.SoundTbl_BecomeEnemyToPlayer
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if randomenemyplysound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+	if randomenemyplysound == 1 && VJ_PICK(soundtbl) != false then
 		self.NextAlertSoundT = CurTime() + 1
 		timer.Simple(1.3,function() if IsValid(self) then VJ_STOPSOUND(self.CurrentAlertSound) end end)
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2,3)
@@ -1872,7 +1872,7 @@ function ENT:PainSoundCode(CustomTbl)
 		local randompainsound = math.random(1,self.PainSoundChance)
 		local soundtbl = self.SoundTbl_Pain
 		if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-		if randompainsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+		if randompainsound == 1 && VJ_PICK(soundtbl) != false then
 			VJ_STOPSOUND(self.CurrentIdleSound)
 			self.NextIdleSoundT_RegularChange = CurTime() + 1
 			self.CurrentPainSound = VJ_CreateSound(self,soundtbl,self.PainSoundLevel,self:VJ_DecideSoundPitch(self.PainSoundPitch1,self.PainSoundPitch2))
@@ -1886,7 +1886,7 @@ function ENT:DeathSoundCode(CustomTbl)
 	local deathsound = math.random(1,self.DeathSoundChance)
 	local soundtbl = self.SoundTbl_Death
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-	if deathsound == 1 && VJ_PICKRANDOMTABLE(soundtbl) != false then
+	if deathsound == 1 && VJ_PICK(soundtbl) != false then
 		self.CurrentDeathSound = VJ_CreateSound(self,soundtbl,self.DeathSoundLevel,self:VJ_DecideSoundPitch(self.DeathSoundPitch1,self.DeathSoundPitch2))
 	end
 end
@@ -1898,7 +1898,7 @@ function ENT:FootStepSoundCode(CustomTbl)
 			self:CustomOnFootStepSound()
 			local soundtbl = self.SoundTbl_FootStep
 			if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-			if VJ_PICKRANDOMTABLE(soundtbl) != false then
+			if VJ_PICK(soundtbl) != false then
 				VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
 			end
 		end
@@ -1906,7 +1906,7 @@ function ENT:FootStepSoundCode(CustomTbl)
 			self:CustomOnFootStepSound()
 			local soundtbl = self.SoundTbl_FootStep
 			if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-			if VJ_PICKRANDOMTABLE(soundtbl) != false then
+			if VJ_PICK(soundtbl) != false then
 				//VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
 				if self.DisableFootStepOnRun == false && (VJ_HasValue(VJ_RunActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomRunActivites,self:GetMovementActivity())) then
 					self:CustomOnFootStepSound_Run()
@@ -1928,7 +1928,7 @@ function ENT:ImpactSoundCode(CustomTbl)
 	local soundtbl = self.SoundTbl_Impact
 	if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 	if randomimpactsound == 1 then
-		if VJ_PICKRANDOMTABLE(soundtbl) == false then
+		if VJ_PICK(soundtbl) == false then
 			VJ_EmitSound(self,self.DefaultSoundTbl_Impact,self.ImpactSoundLevel,self:VJ_DecideSoundPitch(self.ImpactSoundPitch1,self.ImpactSoundPitch2))
 		else
 			VJ_EmitSound(self,soundtbl,self.ImpactSoundLevel,self:VJ_DecideSoundPitch(self.ImpactSoundPitch1,self.ImpactSoundPitch2))

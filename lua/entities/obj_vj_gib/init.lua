@@ -84,7 +84,7 @@ end
 function ENT:PhysicsCollide(data,phys)
 	-- Effects
 	local velocityspeed = phys:GetVelocity():Length()
-	local pickcollidesd = VJ_PICKRANDOMTABLE(self.CollideSound)
+	local pickcollidesd = VJ_PICK(self.CollideSound)
 	if GetConVarNumber("vj_npc_sd_gibbing") == 0 && pickcollidesd != false && velocityspeed > 18 then
 		self.collidesd = CreateSound(self,pickcollidesd)
 		self.collidesd:SetSoundLevel(self.CollideSoundLevel)
