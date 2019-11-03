@@ -411,7 +411,7 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
 		util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
 	
 		-- Spawn the death soldier
-		local smdl = VJ_PICKRANDOMTABLE(self.Tank_DeathSoldierModels)
+		local smdl = VJ_PICK(self.Tank_DeathSoldierModels)
 		if smdl != false && math.random(1,self.Tank_DeathSoldierChance) == 1 then
 			self:CreateExtraDeathCorpse("prop_ragdoll",smdl,{Pos=self:GetPos()+self:GetUp()*90+self:GetRight()*-30,Vel=Vector(math.Rand(-600,600), math.Rand(-600,600),500)},function(extraent) extraent:Ignite(math.Rand(8,10),0); extraent:SetColor(Color(90,90,90)); self:Tank_CustomOnDeath_AfterDeathSoldierSpawned(dmginfo,hitgroup,extraent) end)
 		end
@@ -422,7 +422,7 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
 			endpos = self:GetPos() - Vector(0, 0, 500),
 			filter = self
 		})
-		util.Decal(VJ_PICKRANDOMTABLE(self.Tank_DeathDecal), tr.HitPos+tr.HitNormal, tr.HitPos-tr.HitNormal)
+		util.Decal(VJ_PICK(self.Tank_DeathDecal), tr.HitPos+tr.HitNormal, tr.HitPos-tr.HitNormal)
 
 		if self.HasGibDeathParticles == true then
 			if self:Tank_CustomOnDeath_AfterCorpseSpawned_Effects(dmginfo,hitgroup,GetCorpse) == true then
@@ -461,13 +461,13 @@ end
 function ENT:Tank_Sound_Moving()
 	if self.HasSounds == false or self.HasFootStepSound == false then return end
 	
-	local sdtbl1 = VJ_PICKRANDOMTABLE(self.Tank_SoundTbl_DrivingEngine)
-	if sdtbl1 == false then sdtbl1 = VJ_PICKRANDOMTABLE(self.Tank_DefaultSoundTbl_DrivingEngine) end -- Default table
+	local sdtbl1 = VJ_PICK(self.Tank_SoundTbl_DrivingEngine)
+	if sdtbl1 == false then sdtbl1 = VJ_PICK(self.Tank_DefaultSoundTbl_DrivingEngine) end -- Default table
 	self.tank_movingsd = VJ_CreateSound(self,sdtbl1,80,100)
 	self.Tank_NextRunOverSoundT = CurTime() + 0.2
 	
-	local sdtbl2 = VJ_PICKRANDOMTABLE(self.Tank_SoundTbl_Track)
-	if sdtbl2 == false then sdtbl2 = VJ_PICKRANDOMTABLE(self.Tank_DefaultSoundTbl_Track) end -- Default table
+	local sdtbl2 = VJ_PICK(self.Tank_SoundTbl_Track)
+	if sdtbl2 == false then sdtbl2 = VJ_PICK(self.Tank_DefaultSoundTbl_Track) end -- Default table
 	self.tank_tracksd = VJ_CreateSound(self,sdtbl2,70,100)
 	self.Tank_NextRunOverSoundT = CurTime() + 0.2
 end
@@ -475,8 +475,8 @@ end
 function ENT:Tank_Sound_RunOver()
 	if self.HasSounds == false or CurTime() < self.Tank_NextRunOverSoundT then return end
 	
-	local sdtbl = VJ_PICKRANDOMTABLE(self.Tank_SoundTbl_RunOver)
-	if sdtbl == false then sdtbl = VJ_PICKRANDOMTABLE(self.Tank_DefaultSoundTbl_RunOver) end -- Default table
+	local sdtbl = VJ_PICK(self.Tank_SoundTbl_RunOver)
+	if sdtbl == false then sdtbl = VJ_PICK(self.Tank_DefaultSoundTbl_RunOver) end -- Default table
 	self:EmitSound(sdtbl,80,math.random(80,100))
 	self.Tank_NextRunOverSoundT = CurTime() + 0.2
 end

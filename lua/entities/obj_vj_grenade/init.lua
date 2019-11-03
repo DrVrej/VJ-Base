@@ -86,7 +86,7 @@ function ENT:DeathEffects()
 	start = self:GetPos(),
 	endpos = self:GetPos() - Vector(0, 0, 100),
 	filter = self })
-	util.Decal(VJ_PICKRANDOMTABLE(self.DecalTbl_DeathDecals),tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
+	util.Decal(VJ_PICK(self.DecalTbl_DeathDecals),tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
 	
 	self:DoDamageCode()
 	self:SetDeathVariablesTrue(nil,nil,false)

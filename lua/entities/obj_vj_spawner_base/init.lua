@@ -64,16 +64,16 @@ function ENT:SpawnAnEntity(keys,values,initspawn)
 	
 	local getthename = v.EntityName
 	local spawnpos = v.SpawnPosition
-	local getthename = ents.Create(VJ_PICKRANDOMTABLE(v.Entities))
+	local getthename = ents.Create(VJ_PICK(v.Entities))
 	getthename:SetPos(self:GetPos() +self:GetForward()*spawnpos.vForward +self:GetRight()*spawnpos.vRight +self:GetUp()*spawnpos.vUp)
 	getthename:SetAngles(self:GetAngles())
 	getthename:Spawn()
 	getthename:Activate()
-	if v.WeaponsList != nil && VJ_PICKRANDOMTABLE(v.WeaponsList) != false && VJ_PICKRANDOMTABLE(v.WeaponsList) != NULL && VJ_PICKRANDOMTABLE(v.WeaponsList) != "None" && VJ_PICKRANDOMTABLE(v.WeaponsList) != "none" then hasweps = true wepslist = v.WeaponsList end
+	if v.WeaponsList != nil && VJ_PICK(v.WeaponsList) != false && VJ_PICK(v.WeaponsList) != NULL && VJ_PICK(v.WeaponsList) != "None" && VJ_PICK(v.WeaponsList) != "none" then hasweps = true wepslist = v.WeaponsList end
 	if hasweps == true then
-		local randwep = VJ_PICKRANDOMTABLE(v.WeaponsList) -- Kharen zenkme zad e
+		local randwep = VJ_PICK(v.WeaponsList) -- Kharen zenkme zad e
 		if randwep == "default" then
-			getthename:Give(VJ_PICKRANDOMTABLE(list.Get("NPC")[getthename:GetClass()].Weapons))
+			getthename:Give(VJ_PICK(list.Get("NPC")[getthename:GetClass()].Weapons))
 		else
 			getthename:Give(randwep)
 		end
@@ -88,7 +88,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	if self:GetModel() == "models/error.mdl" then
-	self:SetModel(VJ_PICKRANDOMTABLE(self.Model)) end
+	self:SetModel(VJ_PICK(self.Model)) end
 	self:DrawShadow(false)
 	self:SetNoDraw(true)
 	self:SetNotSolid(true)

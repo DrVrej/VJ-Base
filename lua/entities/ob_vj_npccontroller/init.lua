@@ -290,7 +290,7 @@ function ENT:Think()
 				self.AbleToTurn = false
 				if VJ_IsCurrentAnimation(self.ControlledNPC,self.ControlledNPC:VJ_TranslateWeaponActivity(self.ControlledNPC.CurrentWeaponAnimation)) == false && VJ_IsCurrentAnimation(self.ControlledNPC,self.ControlledNPC.AnimTbl_WeaponAttack) == false then
 					self.AbleToTurn = false
-					self.ControlledNPC.CurrentWeaponAnimation = VJ_PICKRANDOMTABLE(self.ControlledNPC.AnimTbl_WeaponAttack)
+					self.ControlledNPC.CurrentWeaponAnimation = VJ_PICK(self.ControlledNPC.AnimTbl_WeaponAttack)
 					self.ControlledNPC:VJ_ACT_PLAYACTIVITY(self.ControlledNPC.CurrentWeaponAnimation,false,2,false)
 				end
 			end

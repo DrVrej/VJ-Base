@@ -16,7 +16,6 @@ VJ.AddNPC("VJ Test NPC","sent_vj_test",vCat)
 VJ.AddNPC("Mortar Synth","npc_vj_mortarsynth",vCat)
 
 	-- ====== Entities ====== --
-local vCat = "VJ Base"
 VJ.AddEntity("Admin Health Kit","sent_vj_adminhealthkit","DrVrej",true,0,true,vCat)
 VJ.AddEntity("Player Spawnpoint","sent_vj_ply_spawnpoint","DrVrej",true,0,true,vCat)
 VJ.AddEntity("Fireplace","sent_vj_fireplace","DrVrej",false,0,true,vCat)
@@ -57,11 +56,19 @@ if (SERVER) then
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_Rand(a, b)
-	return {a=a, b=b}
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_PICKRANDOMTABLE(tbl)
+	if not tbl then return false end -- Yete table pame choone meche, veratartsour false!
+	if istable(tbl) then
+		if #tbl < 1 then return false end -- Yete table barabe (meg en aveli kich), getsoor!
+		tbl = tbl[math.random(1,#tbl)]
+		return tbl
+	else
+		return tbl -- Yete table che, veratartsour abranke
+	end
+	return false
+end
+--------- Same ---------
+function VJ_PICK(tbl)
 	if not tbl then return false end -- Yete table pame choone meche, veratartsour false!
 	if istable(tbl) then
 		if #tbl < 1 then return false end -- Yete table barabe (meg en aveli kich), getsoor!
@@ -75,6 +82,10 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_STOPSOUND(vsoundname)
 	if vsoundname then vsoundname:Stop() end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function VJ_Set(a,b) -- A set of 2 numbers: a, b
+	return {a=a, b=b}
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_HasValue(tbl,val)
@@ -135,7 +146,7 @@ function VJ_CreateSound(argent,sound,soundlevel,soundpitch,stoplatestsound,sound
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_EmitSound(argent,sound,soundlevel,soundpitch,volume,channel)
-	local sd = VJ_PICKRANDOMTABLE(sound)
+	local sd = VJ_PICK(sound)
 	if sd == false then return end
 	argent:EmitSound(sd,soundlevel,soundpitch,volume,channel)
 	argent.LastPlayedVJSound = sd
@@ -876,7 +887,7 @@ hook.Add("PlayerSelectSpawn","VJ_PLAYER_SELECTSPAWN",function(ply)
 			points[#points+1] = v
 		end
 	end
-	local result = VJ_PICKRANDOMTABLE(points)
+	local result = VJ_PICK(points)
 	if result != false then
 		return result
 	end
@@ -1076,7 +1087,7 @@ if (CLIENT) then
 		local sdfadet = net.ReadFloat()
 		//local entindex = ent:EntIndex()
 		//print(ent)
-		sound.PlayFile("sound/"..VJ_PICKRANDOMTABLE(sdtbl),"noplay",function(soundchannel,errorID,errorName)
+		sound.PlayFile("sound/"..VJ_PICK(sdtbl),"noplay",function(soundchannel,errorID,errorName)
 			if IsValid(soundchannel) then
 				if #(VJ_CL_MUSIC_CURRENT) <= 0 then soundchannel:Play() end
 				soundchannel:EnableLooping(true)

@@ -24,7 +24,7 @@ ENT.RemoveOnHit = true -- Should it remove itself when it touches something? | I
 ENT.PaintDecalOnCollide = true -- Should it paint decals when it collides with something? | Use this only when using a projectile that doesn't get removed when it collides with something
 ENT.DecalTbl_OnCollideDecals = {} -- Decals that paint when the projectile collides with something | It picks a random one from this table
 ENT.CollideCodeWithoutRemoving = false -- If RemoveOnHit is set to false, you can still make the projectile deal damage, place a decal, etc.
-ENT.NextCollideWithoutRemove = VJ_Rand(1,1) -- Time until it can run the code again
+ENT.NextCollideWithoutRemove = VJ_Set(1,1) -- Time until it can run the code again
 ENT.ShakeWorldOnDeath = false -- Should the world shake when the projectile hits something?
 ENT.ShakeWorldOnDeathAmplitude = 16 -- How much the screen will shake | From 1 to 16, 1 = really low 16 = really high
 ENT.ShakeWorldOnDeathRadius = 3000 -- How far the screen shake goes, in world units
@@ -131,7 +131,7 @@ ENT.ParentsEnemy = nil
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	if self:GetModel() == "models/error.mdl" then
-	self:SetModel(VJ_PICKRANDOMTABLE(self.Model)) end
+	self:SetModel(VJ_PICK(self.Model)) end
 	self:PhysicsInit(self.PhysicsInitType)
 	self:SetMoveType(self.MoveType)
 	self:SetMoveCollide(self.MoveCollideType)
@@ -224,9 +224,9 @@ function ENT:PhysicsCollide(data,phys)
 			if self.Dead == false then
 				self.Dead = true
 				self:DoDamageCode(data,phys)
-				if self.PaintDecalOnDeath == true && VJ_PICKRANDOMTABLE(self.DecalTbl_DeathDecals) != false && self.AlreadyPaintedDeathDecal == false then 
+				if self.PaintDecalOnDeath == true && VJ_PICK(self.DecalTbl_DeathDecals) != false && self.AlreadyPaintedDeathDecal == false then 
 					self.AlreadyPaintedDeathDecal = true 
-					util.Decal(VJ_PICKRANDOMTABLE(self.DecalTbl_DeathDecals), data.HitPos +data.HitNormal, data.HitPos -data.HitNormal)
+					util.Decal(VJ_PICK(self.DecalTbl_DeathDecals), data.HitPos +data.HitNormal, data.HitPos -data.HitNormal)
 				end
 				if self.ShakeWorldOnDeath == true then util.ScreenShake(data.HitPos, self.ShakeWorldOnDeathAmplitude, self.ShakeWorldOnDeathFrequency, self.ShakeWorldOnDeathtDuration, self.ShakeWorldOnDeathRadius) end
 				self:OnCollideSoundCode()
@@ -247,8 +247,8 @@ function ENT:PhysicsCollide(data,phys)
 		if self.Dead == false && self.CollideCodeWithoutRemoving == true && CurTime() > self.NextCollideWithoutRemoveT then
 			self:DoDamageCode(data,phys)
 			self:OnCollideSoundCode()
-			if self.PaintDecalOnCollide == true && VJ_PICKRANDOMTABLE(self.DecalTbl_OnCollideDecals) != false && self.AlreadyPaintedDeathDecal == false then
-				util.Decal(VJ_PICKRANDOMTABLE(self.DecalTbl_OnCollideDecals), data.HitPos + data.HitNormal, data.HitPos - data.HitNormal)
+			if self.PaintDecalOnCollide == true && VJ_PICK(self.DecalTbl_OnCollideDecals) != false && self.AlreadyPaintedDeathDecal == false then
+				util.Decal(VJ_PICK(self.DecalTbl_OnCollideDecals), data.HitPos + data.HitNormal, data.HitPos - data.HitNormal)
 			end
 			self:CustomOnCollideWithoutRemove(data,phys)
 			self.NextCollideWithoutRemoveT = CurTime() + math.Rand(self.NextCollideWithoutRemove.a, self.NextCollideWithoutRemove.b)

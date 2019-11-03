@@ -334,24 +334,24 @@ end
 function ENT:Tank_Sound_Moving()
 	if self.HasSounds == false or self.HasFootStepSound == false then return end
 	
-	local sdtbl = VJ_PICKRANDOMTABLE(self.Tank_SoundTbl_Turning)
-	if sdtbl == false then sdtbl = VJ_PICKRANDOMTABLE(self.Tank_DefaultSoundTbl_Turning) end -- Default table
+	local sdtbl = VJ_PICK(self.Tank_SoundTbl_Turning)
+	if sdtbl == false then sdtbl = VJ_PICK(self.Tank_DefaultSoundTbl_Turning) end -- Default table
 	self.tank_movingsd = VJ_CreateSound(self,sdtbl,80,100)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_Sound_ReloadShell()
 	if self.HasSounds == false or self.HasRangeAttackSound == false then return end
 	
-	local sdtbl = VJ_PICKRANDOMTABLE(self.Tank_SoundTbl_ReloadShell)
-	if sdtbl == false then sdtbl = VJ_PICKRANDOMTABLE(self.Tank_DefaultSoundTbl_ReloadShell) end -- Default table
+	local sdtbl = VJ_PICK(self.Tank_SoundTbl_ReloadShell)
+	if sdtbl == false then sdtbl = VJ_PICK(self.Tank_DefaultSoundTbl_ReloadShell) end -- Default table
 	self.shootsd1 = VJ_CreateSound(self,sdtbl,90,100)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_Sound_FireShell()
 	if self.HasSounds == false or self.HasRangeAttackSound == false then return end
 	
-	local sdtbl = VJ_PICKRANDOMTABLE(self.Tank_SoundTbl_FireShell)
-	if sdtbl == false then sdtbl = VJ_PICKRANDOMTABLE(self.Tank_DefaultSoundTbl_FireShell) end -- Default table
+	local sdtbl = VJ_PICK(self.Tank_SoundTbl_FireShell)
+	if sdtbl == false then sdtbl = VJ_PICK(self.Tank_DefaultSoundTbl_FireShell) end -- Default table
 	VJ_EmitSound(self,sdtbl,500,100)
 end
 /*-----------------------------------------------

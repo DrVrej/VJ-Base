@@ -57,11 +57,11 @@ ENT.BecomeEnemyToPlayerLevel = 2 -- How many times does the player have to hit t
 ENT.PlayerFriendly = false -- Makes the SNPC friendly to the player and HL2 Resistance
 	-- ====== Passive Behavior Variables ====== --
 ENT.Passive_RunOnTouch = true -- Should it run away and make a alert sound when something collides with it?
-ENT.Passive_NextRunOnTouchTime = VJ_Rand(3,4) -- How much until it can run away again when something collides with it?
+ENT.Passive_NextRunOnTouchTime = VJ_Set(3,4) -- How much until it can run away again when something collides with it?
 ENT.Passive_RunOnDamage = true -- Should it run when it's damaged? | This doesn't impact how self.Passive_AlliesRunOnDamage works
 ENT.Passive_AlliesRunOnDamage = true -- Should its allies (other passive SNPCs) also run when it's damaged?
 ENT.Passive_AlliesRunOnDamageDistance = 800 -- Any allies within this distance will run when it's damaged
-ENT.Passive_NextRunOnDamageTime = VJ_Rand(6,7) -- How much until it can run the code again?
+ENT.Passive_NextRunOnDamageTime = VJ_Set(6,7) -- How much until it can run the code again?
 	-- ====== On Player Sight Variables ====== --
 ENT.HasOnPlayerSight = false -- Should do something when it sees the enemy? Example: Play a sound
 ENT.OnPlayerSightDistance = 200 -- How close should the player be until it runs the code?
@@ -201,13 +201,13 @@ ENT.CallForBackUpOnDamageLimit = 4 -- How many people should it call? | 0 = Unli
 ENT.CallForBackUpOnDamageAnimation = {ACT_SIGNAL_GROUP} -- Animation used if the SNPC does the CallForBackUpOnDamage function
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.CallForBackUpOnDamageAnimationTime = false -- How much time until it can use activities
-ENT.NextCallForBackUpOnDamageTime = VJ_Rand(9,11) -- Next time it use the CallForBackUpOnDamage function
+ENT.NextCallForBackUpOnDamageTime = VJ_Set(9,11) -- Next time it use the CallForBackUpOnDamage function
 ENT.DisableCallForBackUpOnDamageAnimation = false -- Disables the animation when the CallForBackUpOnDamage function is called
 	-- ====== Move Or Hide On Damage Variables ====== --
 ENT.MoveOrHideOnDamageByEnemy = true -- Should the SNPC move or hide when being damaged by an enemy?
 ENT.MoveOrHideOnDamageByEnemy_OnlyMove = false -- Should it only move and not hide?
 ENT.AnimTbl_MoveOrHideOnDamageByEnemy = {} -- The activities it plays when it finds a hiding spot | This will override self.AnimTbl_TakingCover and and the base animations
-ENT.MoveOrHideOnDamageByEnemy_HideTime = VJ_Rand(3,4) -- How long should it hide?
+ENT.MoveOrHideOnDamageByEnemy_HideTime = VJ_Set(3,4) -- How long should it hide?
 ENT.NextMoveOrHideOnDamageByEnemy1 = 3 -- How much time until it moves or hides on damage by enemy? | The first # in math.random
 ENT.NextMoveOrHideOnDamageByEnemy2 = 3.5 -- How much time until it moves or hides on damage by enemy? | The second # in math.random
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -219,9 +219,7 @@ ENT.DeathCorpseEntityClass = "UseDefaultBehavior" -- The entity class it creates
 ENT.DeathCorpseModel = {} -- The corpse model that it will spawn when it dies | Leave empty to use the NPC's model | Put as many models as desired, the base will pick a random one.
 ENT.DeathCorpseSkin = -1 -- Used to override the death skin | -1 = Use the skin that the SNPC had before it died
 ENT.DeathCorpseSetBodyGroup = true -- Should it get the models bodygroups and set it to the corpse? When set to false, it uses the model's default bodygroups
-	-- Set both of the following BodyGroup variables to a number greater than -1 to set a custom bodygroup for the corpse:
-ENT.DeathBodyGroupA = -1 -- Used for Custom Bodygroup | Group = A
-ENT.DeathBodyGroupB = -1 -- Used for Custom Bodygroup | Group = B
+ENT.DeathCorpseBodyGroup = VJ_Set(-1,-1) -- #1 = the category of the first bodygroup | #2 = the value of the second bodygroup | Set -1 for #1 to let the base decide the corpse's bodygroup
 ENT.DeathCorpseAlwaysCollide = false -- Should the corpse always collide?
 ENT.FadeCorpse = false -- Fades the ragdoll on death
 ENT.FadeCorpseTime = 10 -- How much time until the ragdoll fades | Unit = Seconds
@@ -994,7 +992,7 @@ function ENT:Initialize()
 	self:SetRenderMode(RENDERMODE_NORMAL)
 	//self:SetRenderMode(RENDERMODE_TRANSALPHA)
 	self:VJ_DoSelectDifficulty()
-	self:SetModel(VJ_PICKRANDOMTABLE(self.Model))
+	self:SetModel(VJ_PICK(self.Model))
 	self:SetMaxYawSpeed(self.TurningSpeed)
 	if self.HasHull == true then self:SetHullType(self.HullType) end
 	if self.HullSizeNormal == true then self:SetHullSizeNormal() end
@@ -1008,9 +1006,9 @@ function ENT:Initialize()
 	self.CurrentChoosenBlood_Pool = {}
 	self.ExtraCorpsesToRemove_Transition = {}
 	if self.BloodColor == "" then -- Backwards Compatibility!
-		if VJ_PICKRANDOMTABLE(self.BloodDecal) == "Blood" then
+		if VJ_PICK(self.BloodDecal) == "Blood" then
 			self.BloodColor = "Red"
-		elseif  VJ_PICKRANDOMTABLE(self.BloodDecal) == "YellowBlood" then
+		elseif  VJ_PICK(self.BloodDecal) == "YellowBlood" then
 			self.BloodColor = "Yellow"
 		end
 	end
@@ -1198,7 +1196,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 	vTbl_AlwaysUseGesture = vACT_AdvancedFeatures.AlwaysUseGesture or false
 	vTbl_PlayBackRate = vACT_AdvancedFeatures.PlayBackRate or 0.5
 	//vACT_CustomCode = vACT_CustomCode or function() end
-	if istable(vACT_Name) then vACT_Name = VJ_PICKRANDOMTABLE(vACT_Name) end
+	if istable(vACT_Name) then vACT_Name = VJ_PICK(vACT_Name) end
 	local IsGesture = false
 	local IsSequence = false
 	if string.find(vACT_Name, "vjges_") then
@@ -1346,7 +1344,7 @@ function ENT:VJ_TASK_GOTO_LASTPOS(MoveType,CustomCode)
 	//vsched:EngTask(MoveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched.IsMovingTask = true
-	if MoveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
+	if MoveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
 	//self.CanDoSelectScheduleAgain = false
 	//vsched.RunCode_OnFinish = function()
 		//self.CanDoSelectScheduleAgain = true
@@ -1363,7 +1361,7 @@ function ENT:VJ_TASK_GOTO_TARGET(MoveType,CustomCode)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched:EngTask("TASK_FACE_TARGET", 1)
 	vsched.IsMovingTask = true
-	if MoveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
+	if MoveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
 	if (CustomCode) then CustomCode(vsched) end
 	self:StartSchedule(vsched)
 end
@@ -1375,7 +1373,7 @@ function ENT:VJ_TASK_GOTO_PLAYER(MoveType,CustomCode)
 	//vsched:EngTask(MoveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched.IsMovingTask = true
-	if MoveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
+	if MoveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
 	if (CustomCode) then CustomCode(vsched) end
 	self:StartSchedule(vsched)
 end
@@ -1388,7 +1386,7 @@ function ENT:VJ_TASK_COVER_FROM_ENEMY(MoveType,CustomCode)
 	//vsched:EngTask(MoveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched.IsMovingTask = true
-	if MoveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
+	if MoveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
 	vsched.RunCode_OnFail = function()
 		local vschedFail = ai_vj_schedule.New("vj_cover_from_enemy_fail")
 		vschedFail:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 1)
@@ -1396,7 +1394,7 @@ function ENT:VJ_TASK_COVER_FROM_ENEMY(MoveType,CustomCode)
 		//vschedFail:EngTask(MoveType, 0)
 		vschedFail:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 		vschedFail.IsMovingTask = true
-		if MoveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Run)) vschedFail.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Walk)) vschedFail.IsMovingTask_Walk = true end
+		if MoveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vschedFail.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vschedFail.IsMovingTask_Walk = true end
 		if (CustomCode) then CustomCode(vschedFail) end
 		self:StartSchedule(vschedFail)
 	end
@@ -1405,7 +1403,7 @@ function ENT:VJ_TASK_COVER_FROM_ENEMY(MoveType,CustomCode)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_IDLE_WANDER()
-	self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Walk))
+	self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk))
 	local vsched = ai_vj_schedule.New("vj_idle_wander")
 	//self:SetLastPosition(self:GetPos() + self:GetForward() * 300)
 	//vsched:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 0)
@@ -1425,7 +1423,7 @@ function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 	//if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
 	if self.LatestEnemyPosition == self:GetEnemy():GetPos() && self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
 	if self:GetActivity() == ACT_JUMP or self:GetActivity() == ACT_GLIDE or self:GetActivity() == ACT_LAND or self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
-	self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Run))
+	self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 	if UseLOSChase == true then
 		local vsched = ai_vj_schedule.New("vj_chase_enemy")
 		vsched:EngTask("TASK_GET_PATH_TO_ENEMY_LOS", 0)
@@ -1464,7 +1462,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 	//local idletbl = self.AnimTbl_IdleStand
 	//if table.Count(idletbl) > 0 /*&& self:GetSequenceName(self:GetSequence()) != ideanimrand_act*/ then
 	//	if VJ_IsCurrentAnimation(self,self.CurrentAnim_IdleStand) != true /*&& VJ_IsCurrentAnimation(self,ACT_IDLE) && self.VJ_PlayingSequence == false && self.VJ_IsPlayingInterruptSequence == false*/ then
-	//		self.CurrentAnim_IdleStand = VJ_PICKRANDOMTABLE({idletbl})
+	//		self.CurrentAnim_IdleStand = VJ_PICK({idletbl})
 	//		self:VJ_ACT_PLAYACTIVITY(self.CurrentAnim_IdleStand,false,0,true,0,{AlwaysUseSequence=true,SequenceDuration=false,SequenceInterruptible=true})
 	//	end
 	//else
@@ -1503,7 +1501,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 		if hasanim == true && self.NextIdleStandTime > CurTime() then return end
 		//animtbl = checkedtbl
 	end
-	local finaltbl = VJ_PICKRANDOMTABLE(animtbl)
+	local finaltbl = VJ_PICK(animtbl)
 	if finaltbl == false then finaltbl = ACT_IDLE hasanim = true end -- Yete animation-me chi kedav, ter barz animation e
 	finaltbl = VJ_SequenceToActivity(self,finaltbl)
 	if finaltbl == false then return false end -- Vesdah yegher vor minag tevov animation-er e gernan antsnel!
@@ -1532,7 +1530,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*function ENT:DoCustomIdleAnimation()
-	self.CurrentAnim_CustomIdle = VJ_PICKRANDOMTABLE(self.AnimTbl_IdleStand)
+	self.CurrentAnim_CustomIdle = VJ_PICK(self.AnimTbl_IdleStand)
 	if self.CurrentAnim_CustomIdle == false then self.CurrentAnim_CustomIdle = 0 return end
 	if self:GetActivity() == ACT_IDLE then
 		if type(self.CurrentAnim_CustomIdle) == "string" then
@@ -1559,10 +1557,10 @@ function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 	end
 	if RestrictNumber == 0 then -- kharen: gam ge bidedi, gam ge gena
 		if math.random(1,3) == 1 then
-			/*self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.IdleSchedule_Wander))*/ self:VJ_TASK_IDLE_WANDER() else self:VJ_TASK_IDLE_STAND()
+			/*self:VJ_SetSchedule(VJ_PICK(self.IdleSchedule_Wander))*/ self:VJ_TASK_IDLE_WANDER() else self:VJ_TASK_IDLE_STAND()
 		end
 	elseif RestrictNumber == 1 then -- bideder
-		//self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.IdleSchedule_Wander))
+		//self:VJ_SetSchedule(VJ_PICK(self.IdleSchedule_Wander))
 		self:VJ_TASK_IDLE_WANDER()
 	elseif RestrictNumber == 2 then -- deghed getser
 		self:VJ_TASK_IDLE_STAND()
@@ -1578,7 +1576,7 @@ function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
 	if self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) < self.MeleeAttackDistance && self:GetEnemy():Visible(self) && (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then self:VJ_TASK_IDLE_STAND() return end
 	-- OverrideChasing = Chase no matter what
 	OverrideChasing = OverrideChasing or false
-	//ChaseSched = ChaseSched or VJ_PICKRANDOMTABLE(self.ChaseSchedule)
+	//ChaseSched = ChaseSched or VJ_PICK(self.ChaseSchedule)
 	local DoScheduleBasedChase = false
 	if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) then
 		self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) end)
@@ -1615,8 +1613,8 @@ function ENT:VJ_ACT_TAKE_COVER(CustomAnimTbl,StopActs,StopActsTime,FaceEnemy)
 	StopActsTime = StopActsTime or 3
 	FaceEnemy = FaceEnemy or false
 	local didanim = false
-	local pickcust = VJ_PICKRANDOMTABLE(CustomAnimTbl)
-	local pickcustb = VJ_PICKRANDOMTABLE(self.AnimTbl_TakingCover)
+	local pickcust = VJ_PICK(CustomAnimTbl)
+	local pickcustb = VJ_PICK(self.AnimTbl_TakingCover)
 	
 	if pickcust != false then
 		self:VJ_ACT_PLAYACTIVITY(pickcust,StopActs,StopActsTime,FaceEnemy,0,{SequenceDuration=StopActsTime})
@@ -1626,7 +1624,7 @@ function ENT:VJ_ACT_TAKE_COVER(CustomAnimTbl,StopActs,StopActsTime,FaceEnemy)
 		didanim = true
 	elseif VJ_AnimationExists(self,"Leanwall_CrouchLeft_A_idle") == true then -- Combine
 		// "Leanwall_CrouchLeft_A_idle", "Leanwall_CrouchLeft_B_idle", "Leanwall_CrouchLeft_C_idle", "Leanwall_CrouchLeft_D_idle"
-		self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE({"vjseq_Leanwall_CrouchLeft_A_idle", "vjseq_Leanwall_CrouchLeft_B_idle", "vjseq_Leanwall_CrouchLeft_C_idle", "vjseq_Leanwall_CrouchLeft_D_idle"}),StopActs,StopActsTime,FaceEnemy,0,{SequenceDuration=StopActsTime,SequenceInterruptible=true})
+		self:VJ_ACT_PLAYACTIVITY(VJ_PICK({"vjseq_Leanwall_CrouchLeft_A_idle", "vjseq_Leanwall_CrouchLeft_B_idle", "vjseq_Leanwall_CrouchLeft_C_idle", "vjseq_Leanwall_CrouchLeft_D_idle"}),StopActs,StopActsTime,FaceEnemy,0,{SequenceDuration=StopActsTime,SequenceInterruptible=true})
 		didanim = true
 	elseif VJ_AnimationExists(self,"Crouch_idle_pistol") == true then -- Metro Police
 		// "Crouch_idle_pistol", "Crouch_idle_smg1"
@@ -1639,7 +1637,7 @@ function ENT:VJ_ACT_TAKE_COVER(CustomAnimTbl,StopActs,StopActsTime,FaceEnemy)
 		end
 	elseif VJ_AnimationExists(self,"CoverLow_L") == true then -- Rebel
 		// "CoverLow_L", "CoverLow_R", "Crouch_Idle_RPG"
-		self:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE({"vjseq_CoverLow_L", "vjseq_CoverLow_R", "vjseq_Crouch_Idle_RPG"}),StopActs,StopActsTime,FaceEnemy,0,{SequenceDuration=StopActsTime})
+		self:VJ_ACT_PLAYACTIVITY(VJ_PICK({"vjseq_CoverLow_L", "vjseq_CoverLow_R", "vjseq_Crouch_Idle_RPG"}),StopActs,StopActsTime,FaceEnemy,0,{SequenceDuration=StopActsTime})
 		didanim = true
 	end
 	
@@ -1835,7 +1833,7 @@ function ENT:DoMedicCode_HealAlly()
 					self.Medic_SpawnedProp:SetRenderMode(RENDERMODE_TRANSALPHA)
 					self:DeleteOnRemove(self.Medic_SpawnedProp)
 				end
-				local anim = VJ_PICKRANDOMTABLE(self.AnimTbl_Medic_GiveHealth)
+				local anim = VJ_PICK(self.AnimTbl_Medic_GiveHealth)
 				local dontdoturn = false
 				self:FaceCertainEntity(self.Medic_CurrentEntToHeal,false)
 				if self.Medic_DisableAnimation != true then
@@ -1925,10 +1923,10 @@ function ENT:Think()
 	if CurSched != nil then
 		if self:IsMoving() then
 			if CurSched.IsMovingTask_Walk == true && !VJ_HasValue(self.AnimTbl_Walk,self:GetMovementActivity()) then
-				self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Walk))
+				self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk))
 			end
 			if CurSched.IsMovingTask_Run == true && !VJ_HasValue(self.AnimTbl_Run,self:GetMovementActivity()) then
-				self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Run))
+				self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 			end
 		end
 		if CurSched.StopScheduleIfNotMoving == true && (!self:IsMoving() or (self:GetBlockingEntity() != nil && self:GetBlockingEntity():IsNPC())) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
@@ -1964,7 +1962,7 @@ function ENT:Think()
 	if self.HasSounds == false or self.Dead == true then VJ_STOPSOUND(self.CurrentBreathSound) end
 	if self.Dead == false && self.HasBreathSound == true && self.HasSounds == true then
 		if CurTime() > self.NextBreathSoundT then
-			local brsd = VJ_PICKRANDOMTABLE(self.SoundTbl_Breath)
+			local brsd = VJ_PICK(self.SoundTbl_Breath)
 			local dur = math.Rand(self.NextSoundTime_Breath1,self.NextSoundTime_Breath2)
 			if brsd != false then
 				VJ_STOPSOUND(self.CurrentBreathSound)
@@ -2091,7 +2089,7 @@ function ENT:Think()
 				if self.DisableWeaponReloadAnimation == false then
 					local function DoReloadAnimation(animtbl)
 						self:GetActiveWeapon():NPC_ReloadWeapon()
-						self.CurrentAnim_WeaponReload = VJ_PICKRANDOMTABLE(animtbl)
+						self.CurrentAnim_WeaponReload = VJ_PICK(animtbl)
 						local translateact = self:VJ_TranslateWeaponActivity(self.CurrentAnim_WeaponReload)
 						if VJ_AnimationExists(self,translateact) == true then
 							self.CurrentAnim_WeaponReload = translateact
@@ -2107,7 +2105,7 @@ function ENT:Think()
 						end
 					else -- If not being controlled...
 						if teshnami == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos()+self:OBBCenter()),ene:EyePos(),false,{SetLastHiddenTime=true}) == true then -- Behvedadz
-							self.CurrentAnim_WeaponReload = VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponReloadBehindCover)
+							self.CurrentAnim_WeaponReload = VJ_PICK(self.AnimTbl_WeaponReloadBehindCover)
 							if VJ_AnimationExists(self,self.CurrentAnim_WeaponReload) == true or VJ_AnimationExists(self,self:VJ_TranslateWeaponActivity(self.CurrentAnim_WeaponReload)) then
 								DoReloadAnimation(self.CurrentAnim_WeaponReload)
 							else -- Yete animation chouni...
@@ -2117,7 +2115,7 @@ function ENT:Think()
 							if self.IsGuard == true or self.FollowingPlayer == true or self.VJ_IsBeingControlled_Tool == true or teshnami == false then -- Getsadz letsenel togh ene (Mi vazer!)
 								DoReloadAnimation(self.AnimTbl_WeaponReload)
 							else -- Togh vaz e
-								self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Run))
+								self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 								local vschedWeaponReload = ai_vj_schedule.New("vj_weapon_reload")
 								vschedWeaponReload:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
 								//vschedWeaponReload:EngTask("TASK_RUN_PATH", 0)
@@ -2255,7 +2253,7 @@ function ENT:Think()
 		if IsValid(ene) then
 			self.DoneLastHiddenZone_CanWander = false
 			if self:VJ_HasActiveWeapon() == false && self.NoWeapon_UseScaredBehavior == true && self.VJ_IsBeingControlled == false then
-				local anim = VJ_PICKRANDOMTABLE(self.AnimTbl_ScaredBehaviorMovement)
+				local anim = VJ_PICK(self.AnimTbl_ScaredBehaviorMovement)
 				if anim != false then
 					self:SetMovementActivity(anim)
 				else
@@ -2265,7 +2263,7 @@ function ENT:Think()
 						self:SetMovementActivity(ACT_RUN_CROUCH_RIFLE)
 					end
 				end
-				self:SetArrivalActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_ScaredBehaviorStand))
+				self:SetArrivalActivity(VJ_PICK(self.AnimTbl_ScaredBehaviorStand))
 			end
 			self:WeaponAimPoseParameters()
 			if (self:Visible(ene) == false or (!VJ_HasValue(self.AnimTbl_WeaponAttack,self:GetActivity()) && !VJ_HasValue(self.AnimTbl_WeaponAttackCrouch,self:GetActivity()))) then
@@ -2301,7 +2299,7 @@ function ENT:Think()
 						timer.Simple(self.BeforeMeleeAttackSounds_WaitTime,function() if IsValid(self) then self:BeforeMeleeAttackSoundCode() end end)
 						self.NextAlertSoundT = CurTime() + 0.4
 						if self.DisableMeleeAttackAnimation == false then
-							self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_MeleeAttack)
+							self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_MeleeAttack)
 							self.CurrentAttackAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) -self.MeleeAttackAnimationDecreaseLengthAmount
 							if self.MeleeAttackAnimationAllowOtherTasks == false then
 								self.PlayingAttackAnimation = true
@@ -2514,7 +2512,7 @@ function ENT:ThrowGrenadeCode(CustomEnt,NoOwner)
 	self:GrenadeAttackSoundCode()
 
 	if self.DisableGrenadeAttackAnimation == false then
-		self.CurrentAttackAnimation = VJ_PICKRANDOMTABLE(self.AnimTbl_GrenadeAttack)
+		self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_GrenadeAttack)
 		self.PlayingAttackAnimation = true
 		timer.Simple(VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) - 0.2,function()
 			if IsValid(self) then
@@ -2629,7 +2627,7 @@ function ENT:DoWeaponAttackMovementCode(override)
 	if self.HasShootWhileMoving == true then
 		if self:Visible(self:GetEnemy()) && self:IsAbleToShootWeapon(true,false) == true && ((self:IsMoving() && ((self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true) or (self:VJ_GetCurrentSchedule() == 35))) or (override == true)) then
 			if ((self.CurrentSchedule != nil && self.CurrentSchedule.IsMovingTask_Run == true) or self:VJ_GetCurrentSchedule() == 35) or (override == true) then
-				local anim = VJ_PICKRANDOMTABLE(self.AnimTbl_ShootWhileMovingRun)
+				local anim = VJ_PICK(self.AnimTbl_ShootWhileMovingRun)
 				if VJ_AnimationExists(self,anim) == true or VJ_AnimationExists(self,self:VJ_TranslateWeaponActivity(anim)) then
 					self.DoingWeaponAttack = true
 					self.DoingWeaponAttack_Standing = false
@@ -2638,7 +2636,7 @@ function ENT:DoWeaponAttackMovementCode(override)
 					self:SetArrivalActivity(self.CurrentWeaponAnimation)
 				end
 			elseif self.CurrentSchedule != nil && self.CurrentSchedule.IsMovingTask_Walk == true then
-				local anim = VJ_PICKRANDOMTABLE(self.AnimTbl_ShootWhileMovingWalk)
+				local anim = VJ_PICK(self.AnimTbl_ShootWhileMovingWalk)
 				if VJ_AnimationExists(self,anim) == true or VJ_AnimationExists(self,self:VJ_TranslateWeaponActivity(anim)) then
 					self.DoingWeaponAttack = true
 					self.DoingWeaponAttack_Standing = false
@@ -2734,7 +2732,7 @@ function ENT:SelectSchedule(iNPCState)
 				if checkdist.Backward == true then randmove[#randmove+1] = "Backward" end
 				if checkdist.Right == true then randmove[#randmove+1] = "Right" end
 				if checkdist.Left == true then randmove[#randmove+1] = "Left" end
-				local pickmove = VJ_PICKRANDOMTABLE(randmove)
+				local pickmove = VJ_PICK(randmove)
 				if pickmove == "Backward" then self:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-200,-200)) end
 				if pickmove == "Right" then self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(200,200)) end
 				if pickmove == "Left" then self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-200,-200)) end
@@ -2774,7 +2772,7 @@ function ENT:SelectSchedule(iNPCState)
 							local randmove = {}
 							if checkdist.Right == true then randmove[#randmove+1] = "Right" end
 							if checkdist.Left == true then randmove[#randmove+1] = "Left" end
-							local pickmove = VJ_PICKRANDOMTABLE(randmove)
+							local pickmove = VJ_PICK(randmove)
 							if pickmove == "Right" then self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(30,40)) end
 							if pickmove == "Left" then self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-40,-30)) end
 							if pickmove == "Right" or pickmove == "Left" then
@@ -2836,7 +2834,7 @@ function ENT:SelectSchedule(iNPCState)
 										vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 										vsched.IsMovingTask = true
 										vsched.ConstantlyFaceEnemy = true
-										local coveranim = VJ_PICKRANDOMTABLE(self.AnimTbl_MoveToCover)
+										local coveranim = VJ_PICK(self.AnimTbl_MoveToCover)
 										if VJ_AnimationExists(self,self:VJ_TranslateWeaponActivity(coveranim)) == true then
 											self:SetMovementActivity(ACT_RUN_CROUCH)
 										else
@@ -2863,7 +2861,7 @@ function ENT:SelectSchedule(iNPCState)
 									//self.NextMoveRandomlyWhenShootingT = CurTime() + 2
 									if self.CanCrouchOnWeaponAttack == true && guncovered == false && self:VJ_ForwardIsHidingZone(self:GetActiveWeapon():GetNWVector("VJ_CurBulletPos")+self:GetUp()*-18,self:GetEnemy():EyePos(),false) == false then
 										local curanim;
-										local crouchanim = VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponAttackCrouch)
+										local crouchanim = VJ_PICK(self.AnimTbl_WeaponAttackCrouch)
 										local crouchchance = math.random(1,self.CanCrouchOnWeaponAttackChance)
 										if ((crouchchance == 1) or (CurTime() <= self.Weapon_DoingCrouchAttackT)) && VJ_AnimationExists(self,self:VJ_TranslateWeaponActivity(crouchanim)) == true && iscovered == false && SelfToEnemyDistance > 500 then
 											curanim = crouchanim
@@ -2874,7 +2872,7 @@ function ENT:SelectSchedule(iNPCState)
 											self.Weapon_DoingCrouchAttackT = CurTime() + 2 -- Asiga bedke vor vestah elank yed votgi cheler hemen
 											if VJ_IsCurrentAnimation(self,curanim) == false then self:VJ_ACT_PLAYACTIVITY(curanim,false,0,true) end
 										else
-											curanim = VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponAttack)
+											curanim = VJ_PICK(self.AnimTbl_WeaponAttack)
 											//local actualanim = curanim
 											self.CurrentWeaponAnimation = curanim
 											if type(curanim) != "string" then curanim = self:VJ_TranslateWeaponActivity(curanim) end
@@ -2882,7 +2880,7 @@ function ENT:SelectSchedule(iNPCState)
 											if VJ_IsCurrentAnimation(self,curanim) == false then self:VJ_ACT_PLAYACTIVITY(curanim,false,0,true) end
 										end
 									else
-										curanim = VJ_PICKRANDOMTABLE(self.AnimTbl_WeaponAttack)
+										curanim = VJ_PICK(self.AnimTbl_WeaponAttack)
 										//local actualanim = curanim
 										self.CurrentWeaponAnimation = curanim
 										if type(curanim) != "string" then curanim = self:VJ_TranslateWeaponActivity(curanim) end
@@ -2902,13 +2900,13 @@ function ENT:SelectSchedule(iNPCState)
 										if checkdist.Backward == true then randmove[#randmove+1] = "Backward" end
 										if checkdist.Right == true then randmove[#randmove+1] = "Right" end
 										if checkdist.Left == true then randmove[#randmove+1] = "Left"end
-										local pickmove = VJ_PICKRANDOMTABLE(randmove)
+										local pickmove = VJ_PICK(randmove)
 										if pickmove == "Backward" then self:SetLastPosition(self:GetPos() + self:GetForward()*-randpos) end
 										if pickmove == "Right" then self:SetLastPosition(self:GetPos() + self:GetRight()*randpos) end
 										if pickmove == "Left" then self:SetLastPosition(self:GetPos() + self:GetRight()*-randpos) end
 										if pickmove == "Backward" or pickmove == "Right" or pickmove == "Left" then
 											self:StopMoving()
-											self:VJ_TASK_GOTO_LASTPOS(VJ_PICKRANDOMTABLE({"TASK_RUN_PATH","TASK_WALK_PATH"}),function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+											self:VJ_TASK_GOTO_LASTPOS(VJ_PICK({"TASK_RUN_PATH","TASK_WALK_PATH"}),function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
 										end
 										self.NextMoveRandomlyWhenShootingT = CurTime() + math.Rand(self.NextMoveRandomlyWhenShootingTime1,self.NextMoveRandomlyWhenShootingTime2)
 									end
@@ -2922,7 +2920,7 @@ function ENT:SelectSchedule(iNPCState)
 							self.Weapon_TimeSinceLastShot = 0
 							self.Weapon_ShotsSinceLastReload = 0
 							self:GetActiveWeapon():SetClip1(99999)
-							self:VJ_SetSchedule(VJ_PICKRANDOMTABLE(self.WeaponAttackSchedule))
+							self:VJ_SetSchedule(VJ_PICK(self.WeaponAttackSchedule))
 						end
 						//end
 						//else self.DoingWeaponAttack = false end
@@ -2935,7 +2933,7 @@ function ENT:SelectSchedule(iNPCState)
 								self.DoingWeaponAttack_Standing = false
 								self.NextChaseTime = CurTime() + math.Rand(self.WaitForEnemyToComeOutTime1,self.WaitForEnemyToComeOutTime2)
 								self:CustomOnWaitForEnemyToComeOut()
-								local myanim = VJ_PICKRANDOMTABLE(self.AnimTbl_CustomWaitForEnemyToComeOut)
+								local myanim = VJ_PICK(self.AnimTbl_CustomWaitForEnemyToComeOut)
 								if myanim == true then // !VJ_IsCurrentAnimation(self,self.CurrentWeaponAnimation)
 									self:VJ_ACT_PLAYACTIVITY(myanim,false,2,true)
 								elseif !VJ_IsCurrentAnimation(self,self.CurrentWeaponAnimation) then
@@ -3083,7 +3081,7 @@ function ENT:VJ_ACT_RESETENEMY(RunToEnemyOnReset)
 	self.NextWanderTime = CurTime() + math.Rand(3,5)
 	if self.IsGuard == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && RunToEnemyOnReset == true && CurTime() > self.LastHiddenZoneT && self.LastHiddenZone_CanWander == true && self.MeleeAttacking != true && self.RangeAttacking != true && self.LeapAttacking != true then
 		//ParticleEffect("explosion_turret_break", self.LatestEnemyPosition, Angle(0,0,0))
-		self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Walk))
+		self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk))
 		vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
 		//vsched:EngTask("TASK_WALK_PATH", 0)
 		vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
@@ -3430,7 +3428,7 @@ function ENT:DoEntityRelationshipCheck()
 						self.NextFollowPlayerT = CurTime() + 2
 						self:MoveOutOfPlayersWaySoundCode()
 						//self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-50,-50))
-						self:SetMovementActivity(VJ_PICKRANDOMTABLE(self.AnimTbl_Run))
+						self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 						local vsched = ai_vj_schedule.New("vj_move_away")
 						vsched:EngTask("TASK_MOVE_AWAY_PATH", 120)
 						vsched:EngTask("TASK_RUN_PATH", 0)
@@ -3482,7 +3480,7 @@ function ENT:CallForHelpCode(SeeDistance)
 					self:CallForHelpSoundCode()
 					//timer.Simple(1,function() if IsValid(self) && IsValid(x) then x:OnReceiveOrderSoundCode() end end)
 					if self.HasCallForHelpAnimation == true && CurTime() > self.NextCallForHelpAnimationT then
-						local pickanim = VJ_PICKRANDOMTABLE(self.AnimTbl_CallForHelp)
+						local pickanim = VJ_PICK(self.AnimTbl_CallForHelp)
 						self:VJ_ACT_PLAYACTIVITY(pickanim,self.CallForHelpStopAnimations,self:DecideAnimationLength(pickanim,self.CallForHelpStopAnimationsTime),self.CallForHelpAnimationFaceEnemy,self.CallForHelpAnimationDelay,{PlayBackRate=self.CallForHelpAnimationPlayBackRate})
 						self.NextCallForHelpAnimationT = CurTime() + self.NextCallForHelpAnimationTime
 					end
@@ -3707,7 +3705,7 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 				self:BringAlliesToMe("Random",self.CallForBackUpOnDamageDistance,allies,self.CallForBackUpOnDamageLimit)
 				self:ClearSchedule()
 				self.NextFlinchT = CurTime() + 1
-				local pickanim = VJ_PICKRANDOMTABLE(self.CallForBackUpOnDamageAnimation)
+				local pickanim = VJ_PICK(self.CallForBackUpOnDamageAnimation)
 				if VJ_AnimationExists(self,pickanim) == true && self.DisableCallForBackUpOnDamageAnimation == false then
 					self:VJ_ACT_PLAYACTIVITY(pickanim,true,self:DecideAnimationLength(pickanim,self.CallForBackUpOnDamageAnimationTime),true)
 				else
@@ -3811,7 +3809,7 @@ function ENT:DoFlinch(dmginfo,hitgroup)
 		self.PlayingAttackAnimation = false
 		local animtbl = self.AnimTbl_Flinch
 		if HitBoxInfo != nil then animtbl = HitBoxInfo.Animation end
-		local anim = VJ_PICKRANDOMTABLE(animtbl)
+		local anim = VJ_PICK(animtbl)
 		local animdur = VJ_GetSequenceDuration(self,anim) - self.FlinchAnimationDecreaseLengthAmount
 		if self.NextMoveAfterFlinchTime != "LetBaseDecide" && self.NextMoveAfterFlinchTime != false then animdur = self.NextMoveAfterFlinchTime end -- "LetBaseDecide" = Backwards compatibility
 		self:VJ_ACT_PLAYACTIVITY(anim,true,animdur,false,0,{SequenceDuration=animdur})
@@ -3854,9 +3852,9 @@ function ENT:DoChangeBloodColor(Type)
 	local changeparticle = true
 	local changedecal = true
 	local changepool = true
-	if VJ_PICKRANDOMTABLE(self.CustomBlood_Particle) != false then self.CurrentChoosenBlood_Particle = self.CustomBlood_Particle changeparticle = false end
-	if VJ_PICKRANDOMTABLE(self.CustomBlood_Decal) != false then self.CurrentChoosenBlood_Decal = self.CustomBlood_Decal changedecal = false end
-	if VJ_PICKRANDOMTABLE(self.CustomBlood_Pool) != false then self.CurrentChoosenBlood_Pool = self.CustomBlood_Pool changepool = false end
+	if VJ_PICK(self.CustomBlood_Particle) != false then self.CurrentChoosenBlood_Particle = self.CustomBlood_Particle changeparticle = false end
+	if VJ_PICK(self.CustomBlood_Decal) != false then self.CurrentChoosenBlood_Decal = self.CustomBlood_Decal changedecal = false end
+	if VJ_PICK(self.CustomBlood_Pool) != false then self.CurrentChoosenBlood_Pool = self.CustomBlood_Pool changepool = false end
 
 	if Type == "Red" then
 		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"blood_impact_red_01"} end // vj_impact1_red
@@ -3970,7 +3968,7 @@ function ENT:DoChangeBloodColor(Type)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodParticles(dmginfo,hitgroup)
-	local p_name = VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Particle)
+	local p_name = VJ_PICK(self.CurrentChoosenBlood_Particle)
 	if p_name == false then return end
 	
 	local dmg_pos = dmginfo:GetDamagePosition()
@@ -3986,7 +3984,7 @@ function ENT:SpawnBloodParticles(dmginfo,hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodDecal(dmginfo,hitgroup)
-	if VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal) == false then return end
+	if VJ_PICK(self.CurrentChoosenBlood_Decal) == false then return end
 	local dmg_force = dmginfo:GetDamageForce()
 	local dmg_pos = dmginfo:GetDamagePosition()
 	if dmg_pos == Vector(0,0,0) then dmg_pos = self:GetPos() + self:OBBCenter() end
@@ -3994,23 +3992,23 @@ function ENT:SpawnBloodDecal(dmginfo,hitgroup)
 	-- Badi verayi ayroun-e
 	local tr = util.TraceLine({start = dmg_pos, endpos = (dmg_pos + dmg_force:GetNormal() * math.Clamp(dmg_force:Length() * 10, 100, self.BloodDecalDistance)), filter = self})
 	//if !tr.HitWorld then return end
-	util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal), tr.HitPos+tr.HitNormal, tr.HitPos-tr.HitNormal, self)
+	util.Decal(VJ_PICK(self.CurrentChoosenBlood_Decal), tr.HitPos+tr.HitNormal, tr.HitPos-tr.HitNormal, self)
 	for i = 1, 2 do
-		if math.random(1,2) == 1 then util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal), tr.HitPos + tr.HitNormal + Vector(math.random(-70,70), math.random(-70,70),0), tr.HitPos - tr.HitNormal, self) end
+		if math.random(1,2) == 1 then util.Decal(VJ_PICK(self.CurrentChoosenBlood_Decal), tr.HitPos + tr.HitNormal + Vector(math.random(-70,70), math.random(-70,70),0), tr.HitPos - tr.HitNormal, self) end
 	end
 	
 	-- Kedni verayi ayroun-e
 	if math.random(1,2) == 1 then
 		local d2_endpos = dmg_pos + Vector(0, 0, -math.Clamp(dmg_force:Length() * 10, 100, self.BloodDecalDistance))
-		util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal), dmg_pos, d2_endpos, self)
-		if math.random(1,2) == 1 then util.Decal(VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal), dmg_pos, d2_endpos + Vector(math.random(-120,120), math.random(-120,120),0),self) end
+		util.Decal(VJ_PICK(self.CurrentChoosenBlood_Decal), dmg_pos, d2_endpos, self)
+		if math.random(1,2) == 1 then util.Decal(VJ_PICK(self.CurrentChoosenBlood_Decal), dmg_pos, d2_endpos + Vector(math.random(-120,120), math.random(-120,120),0),self) end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodPool(dmginfo,hitgroup)
 	if !IsValid(self.Corpse) then return end
 	local GetCorpse = self.Corpse
-	local GetBloodPool = VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Pool)
+	local GetBloodPool = VJ_PICK(self.CurrentChoosenBlood_Pool)
 	if GetBloodPool == false then return end
 	timer.Simple(2.2,function()
 		if IsValid(GetCorpse) then
@@ -4049,7 +4047,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 			if self.AlertFriendsOnDeath == true && noalert == true && !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath == true && it != self.AlertFriendsOnDeathLimit && self:GetPos():Distance(v:GetPos()) < self.AlertFriendsOnDeathDistance then
 				it = it + 1
 				v:FaceCertainEntity(self,false)
-				v:VJ_ACT_PLAYACTIVITY(VJ_PICKRANDOMTABLE(v.AnimTbl_AlertFriendsOnDeath),false,0,false)
+				v:VJ_ACT_PLAYACTIVITY(VJ_PICK(v.AnimTbl_AlertFriendsOnDeath),false,0,false)
 				v.NextIdleTime = CurTime() + math.Rand(5,8)
 			end
 		end
@@ -4067,7 +4065,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 
 	-- Blood decal on the ground
 	if self.Bleeds == true && self.HasBloodDecal == true then
-		local pickdecal = VJ_PICKRANDOMTABLE(self.CurrentChoosenBlood_Decal)
+		local pickdecal = VJ_PICK(self.CurrentChoosenBlood_Decal)
 		if pickdecal != false then
 			self:SetLocalPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the NPC is too close to the ground
 			local tr = util.TraceLine({
@@ -4098,7 +4096,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 			if randanim != 1 then DoKilled() return end
 			if randanim == 1 then
 				self:CustomDeathAnimationCode(dmginfo,hitgroup)
-				local pickanim = VJ_PICKRANDOMTABLE(self.AnimTbl_Death)
+				local pickanim = VJ_PICK(self.AnimTbl_Death)
 				local seltime = self:DecideAnimationLength(pickanim,self.DeathAnimationTime) - self.DeathAnimationDecreaseLengthAmount
 				self:RemoveAllGestures()
 				self:VJ_ACT_PLAYACTIVITY(pickanim,true,seltime,false)
@@ -4152,7 +4150,7 @@ function ENT:CreateGibEntity(Ent,Models,Tbl_Features,CustomCode)
 	if Models == "UseAlien_Big" then Models = {"models/gibs/xenians/mgib_01.mdl","models/gibs/xenians/mgib_02.mdl","models/gibs/xenians/mgib_03.mdl","models/gibs/xenians/mgib_04.mdl","models/gibs/xenians/mgib_05.mdl","models/gibs/xenians/mgib_06.mdl","models/gibs/xenians/mgib_07.mdl"} end
 	if Models == "UseHuman_Small" then Models = {"models/gibs/humans/sgib_01.mdl","models/gibs/humans/sgib_02.mdl","models/gibs/humans/sgib_03.mdl"} end
 	if Models == "UseHuman_Big" then Models = {"models/gibs/humans/mgib_01.mdl","models/gibs/humans/mgib_02.mdl","models/gibs/humans/mgib_03.mdl","models/gibs/humans/mgib_04.mdl","models/gibs/humans/mgib_05.mdl","models/gibs/humans/mgib_06.mdl","models/gibs/humans/mgib_07.mdl"} end
-	Models = VJ_PICKRANDOMTABLE(Models)
+	Models = VJ_PICK(Models)
 	local vTbl_BloodType = "Red"
 	if VJ_HasValue({"models/gibs/xenians/sgib_01.mdl","models/gibs/xenians/sgib_02.mdl","models/gibs/xenians/sgib_03.mdl","models/gibs/xenians/mgib_01.mdl","models/gibs/xenians/mgib_02.mdl","models/gibs/xenians/mgib_03.mdl","models/gibs/xenians/mgib_04.mdl","models/gibs/xenians/mgib_05.mdl","models/gibs/xenians/mgib_06.mdl","models/gibs/xenians/mgib_07.mdl"},Models) then
 		vTbl_BloodType = "Yellow"
@@ -4232,7 +4230,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 	self:CustomOnDeath_BeforeCorpseSpawned(dmginfo,hitgroup)
 	if self.HasDeathRagdoll == true then
 		local corpsemodel = self:GetModel()
-		local corpsemodel_custom = VJ_PICKRANDOMTABLE(self.DeathCorpseModel)
+		local corpsemodel_custom = VJ_PICK(self.DeathCorpseModel)
 		if corpsemodel_custom != false then corpsemodel = corpsemodel_custom end
 		local corpsetype = "prop_physics"
 		if self.DeathCorpseEntityClass == "UseDefaultBehavior" then
@@ -4281,8 +4279,8 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 			for i = 0,18 do -- 18 = Bodygroup limit
 				self.Corpse:SetBodygroup(i,self:GetBodygroup(i))
 			end
-			if self.DeathBodyGroupA != -1 && self.DeathBodyGroupB != -1 then -- Yete as yergooke nevaz meg chene, user-en teradz tevere kordzadze
-				self.Corpse:SetBodygroup(self.DeathBodyGroupA,self.DeathBodyGroupB)
+			if self.DeathCorpseBodyGroup.a != -1 then -- Yete asiga nevaz meg chene, user-in teradz tevere kordzadze
+				self.Corpse:SetBodygroup(self.DeathCorpseBodyGroup.a, self.DeathCorpseBodyGroup.b)
 			end
 		end
 		
@@ -4376,7 +4374,7 @@ function ENT:CreateExtraDeathCorpse(Ent,Models,Tbl_Features,CustomCode)
 	vTbl_RemoveOnCorpseDelete = vTbl_Features.RemoveOnCorpseDelete -- Should the entity get removed if the corpse is removed?
 		if vTbl_RemoveOnCorpseDelete == nil then vTbl_RemoveOnCorpseDelete = true end
 	local extraent = ents.Create(Ent)
-	if Models != "None" then extraent:SetModel(VJ_PICKRANDOMTABLE(Models)) end
+	if Models != "None" then extraent:SetModel(VJ_PICK(Models)) end
 	extraent:SetPos(vTbl_Position)
 	extraent:SetAngles(vTbl_Angle)
 	extraent:Spawn()
@@ -4471,7 +4469,7 @@ end
 function ENT:RunItemDropsOnDeathCode(dmginfo,hitgroup)
 	if self.HasItemDropsOnDeath == false then return end
 	self:CustomRareDropsOnDeathCode(dmginfo,hitgroup)
-	local entlist = VJ_PICKRANDOMTABLE(self.ItemDropsOnDeath_EntityList)
+	local entlist = VJ_PICK(self.ItemDropsOnDeath_EntityList)
 	if entlist != false then
 		local randdrop = ents.Create(entlist)
 		randdrop:SetPos(self:GetPos() +self:OBBCenter())
@@ -4489,8 +4487,8 @@ end
 function ENT:FollowPlayerSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasFollowPlayerSounds_Follow == false then return end
 	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_FollowPlayer)
+	local ctbl = VJ_PICK(CustomTbl)
+	local sdtbl = VJ_PICK(self.SoundTbl_FollowPlayer)
 	if (math.random(1,self.FollowPlayerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
@@ -4502,8 +4500,8 @@ end
 function ENT:UnFollowPlayerSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasFollowPlayerSounds_UnFollow == false then return end
 	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_UnFollowPlayer)
+	local ctbl = VJ_PICK(CustomTbl)
+	local sdtbl = VJ_PICK(self.SoundTbl_UnFollowPlayer)
 	if (math.random(1,self.UnFollowPlayerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
@@ -4515,8 +4513,8 @@ end
 function ENT:MoveOutOfPlayersWaySoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasMoveOutOfPlayersWaySounds == false then return end
 	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_MoveOutOfPlayersWay)
+	local ctbl = VJ_PICK(CustomTbl)
+	local sdtbl = VJ_PICK(self.SoundTbl_MoveOutOfPlayersWay)
 	if (math.random(1,self.MoveOutOfPlayersWaySoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
@@ -4528,8 +4526,8 @@ end
 function ENT:MedicSoundCode_BeforeHeal(CustomTbl,Type)
 	if self.HasSounds == false or self.HasMedicSounds_BeforeHeal == false then return end
 	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_MedicBeforeHeal)
+	local ctbl = VJ_PICK(CustomTbl)
+	local sdtbl = VJ_PICK(self.SoundTbl_MedicBeforeHeal)
 	if (math.random(1,self.MedicBeforeHealSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
@@ -4541,9 +4539,9 @@ end
 function ENT:MedicSoundCode_OnHeal(CustomTbl,Type)
 	if self.HasSounds == false or self.HasMedicSounds_AfterHeal == false then return end
 	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_MedicAfterHeal)
-	if sdtbl == false then sdtbl = VJ_PICKRANDOMTABLE(self.DefaultSoundTbl_MedicAfterHeal) end -- Default table
+	local ctbl = VJ_PICK(CustomTbl)
+	local sdtbl = VJ_PICK(self.SoundTbl_MedicAfterHeal)
+	if sdtbl == false then sdtbl = VJ_PICK(self.DefaultSoundTbl_MedicAfterHeal) end -- Default table
 	if (math.random(1,self.MedicAfterHealSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
@@ -4555,8 +4553,8 @@ end
 function ENT:MedicSoundCode_ReceiveHeal(CustomTbl,Type)
 	if self.HasSounds == false or self.HasMedicSounds_ReceiveHeal == false then return end
 	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_MedicReceiveHeal)
+	local ctbl = VJ_PICK(CustomTbl)
+	local sdtbl = VJ_PICK(self.SoundTbl_MedicReceiveHeal)
 	if (math.random(1,self.MedicReceiveHealSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
@@ -4568,8 +4566,8 @@ end
 function ENT:OnPlayerSightSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasOnPlayerSightSounds == false then return end
 	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_OnPlayerSight)
+	local ctbl = VJ_PICK(CustomTbl)
+	local sdtbl = VJ_PICK(self.SoundTbl_OnPlayerSight)
 	if (math.random(1,self.OnPlayerSightSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
@@ -4588,21 +4586,21 @@ function ENT:IdleSoundCode(CustomTbl,Type)
 		if IsValid(self:GetEnemy()) then
 			hasenemy = true
 			-- Yete CombatIdle tsayn chouni YEV gerna barz tsayn hanel, ere vor barz tsayn han e
-			if VJ_PICKRANDOMTABLE(self.SoundTbl_CombatIdle) == false && self.IdleSounds_NoRegularIdleOnAlerted == false then
+			if VJ_PICK(self.SoundTbl_CombatIdle) == false && self.IdleSounds_NoRegularIdleOnAlerted == false then
 				hasenemy = false
 			end
 		end
 		
-		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
+		local ctbl = VJ_PICK(CustomTbl)
 		if hasenemy == true then
-			local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_CombatIdle)
+			local sdtbl = VJ_PICK(self.SoundTbl_CombatIdle)
 			if (math.random(1,self.CombatIdleSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 				if ctbl != false then sdtbl = ctbl end
 				self.CurrentIdleSound = Type(self,sdtbl,self.CombatIdleSoundLevel,self:VJ_DecideSoundPitch(self.CombatIdleSoundPitch1,self.CombatIdleSoundPitch2))
 			end
 		else
-			local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_Idle)
-			local sdtbl2 = VJ_PICKRANDOMTABLE(self.SoundTbl_IdleDialogue)
+			local sdtbl = VJ_PICK(self.SoundTbl_Idle)
+			local sdtbl2 = VJ_PICK(self.SoundTbl_IdleDialogue)
 			local sdrand = math.random(1,self.IdleSoundChance)
 			local function RegularIdle()
 				if (sdrand == 1 && sdtbl != false) or (ctbl != false) then
@@ -4655,7 +4653,7 @@ function ENT:IdleDialogueSoundCodeTest()
 			ret = v
 		elseif v != self && ((self:GetClass() == v:GetClass()) or (v:IsNPC() && self:DoRelationshipCheck(v) == false)) && self:Visible(v) then
 			ret = v
-			if v.IsVJBaseSNPC == true && VJ_PICKRANDOMTABLE(v.SoundTbl_IdleDialogueAnswer) != false then
+			if v.IsVJBaseSNPC == true && VJ_PICK(v.SoundTbl_IdleDialogueAnswer) != false then
 				return v, true -- Yete VJ NPC e, ere vor function-e gena
 			end
 		end
@@ -4666,8 +4664,8 @@ end
 function ENT:IdleDialogueAnswerSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasIdleDialogueAnswerSounds == false then return end
 	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_IdleDialogueAnswer)
+	local ctbl = VJ_PICK(CustomTbl)
+	local sdtbl = VJ_PICK(self.SoundTbl_IdleDialogueAnswer)
 	if (math.random(1,self.IdleDialogueAnswerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		self:CustomOnIdleDialogueAnswer()
@@ -4681,8 +4679,8 @@ function ENT:InvestigateSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasInvestigateSounds == false then return end
 	if CurTime() > self.NextInvestigateSoundT then
 		Type = Type or VJ_CreateSound
-		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_Investigate)
+		local ctbl = VJ_PICK(CustomTbl)
+		local sdtbl = VJ_PICK(self.SoundTbl_Investigate)
 		if (math.random(1,self.InvestigateSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 			if ctbl != false then sdtbl = ctbl end
 			self:StopAllCommonSpeechSounds()
@@ -4697,8 +4695,8 @@ function ENT:LostEnemySoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasLostEnemySounds == false then return end
 	if CurTime() > self.LostEnemySoundT then
 		Type = Type or VJ_CreateSound
-		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_LostEnemy)
+		local ctbl = VJ_PICK(CustomTbl)
+		local sdtbl = VJ_PICK(self.SoundTbl_LostEnemy)
 		if (math.random(1,self.LostEnemySoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 			if ctbl != false then sdtbl = ctbl end
 			self:StopAllCommonSpeechSounds()
@@ -4712,8 +4710,8 @@ end
 function ENT:OnReceiveOrderSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasOnReceiveOrderSounds == false then return end
 	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_OnReceiveOrder)
+	local ctbl = VJ_PICK(CustomTbl)
+	local sdtbl = VJ_PICK(self.SoundTbl_OnReceiveOrder)
 	if (math.random(1,self.OnReceiveOrderSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
@@ -4726,8 +4724,8 @@ end
 function ENT:AlertSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasAlertSounds == false then return end
 	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_Alert)
+	local ctbl = VJ_PICK(CustomTbl)
+	local sdtbl = VJ_PICK(self.SoundTbl_Alert)
 	if (math.random(1,self.AlertSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
@@ -4740,8 +4738,8 @@ end
 function ENT:CallForHelpSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasCallForHelpSounds == false then return end
 	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_CallForHelp)
+	local ctbl = VJ_PICK(CustomTbl)
+	local sdtbl = VJ_PICK(self.SoundTbl_CallForHelp)
 	if (math.random(1,self.CallForHelpSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
@@ -4755,8 +4753,8 @@ function ENT:OnKilledEnemySoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasOnKilledEnemySound == false then return end
 	if CurTime() > self.OnKilledEnemySoundT then
 		Type = Type or VJ_CreateSound
-		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_OnKilledEnemy)
+		local ctbl = VJ_PICK(CustomTbl)
+		local sdtbl = VJ_PICK(self.SoundTbl_OnKilledEnemy)
 		if (math.random(1,self.OnKilledEnemySoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 			if ctbl != false then sdtbl = ctbl end
 			self:StopAllCommonSpeechSounds()
@@ -4771,8 +4769,8 @@ function ENT:DamageByPlayerSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasDamageByPlayerSounds == false then return end
 	if CurTime() > self.NextDamageByPlayerSoundT then
 		Type = Type or VJ_CreateSound
-		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_DamageByPlayer)
+		local ctbl = VJ_PICK(CustomTbl)
+		local sdtbl = VJ_PICK(self.SoundTbl_DamageByPlayer)
 		if (math.random(1,self.DamageByPlayerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 			if ctbl != false then sdtbl = ctbl end
 			self:StopAllCommonSpeechSounds()
@@ -4787,8 +4785,8 @@ end
 function ENT:BeforeMeleeAttackSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasMeleeAttackSounds == false then return end
 	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_BeforeMeleeAttack)
+	local ctbl = VJ_PICK(CustomTbl)
+	local sdtbl = VJ_PICK(self.SoundTbl_BeforeMeleeAttack)
 	if (math.random(1,self.BeforeMeleeAttackSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
@@ -4800,9 +4798,9 @@ end
 function ENT:MeleeAttackSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasMeleeAttackSounds == false then return end
 	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_MeleeAttack)
-	if sdtbl == false then sdtbl = VJ_PICKRANDOMTABLE(self.DefaultSoundTbl_MeleeAttack) end -- Default table
+	local ctbl = VJ_PICK(CustomTbl)
+	local sdtbl = VJ_PICK(self.SoundTbl_MeleeAttack)
+	if sdtbl == false then sdtbl = VJ_PICK(self.DefaultSoundTbl_MeleeAttack) end -- Default table
 	if (math.random(1,self.MeleeAttackSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
@@ -4811,7 +4809,7 @@ function ENT:MeleeAttackSoundCode(CustomTbl,Type)
 	end
 	
 	if self.HasExtraMeleeAttackSounds == true then
-		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_MeleeAttackExtra)
+		local sdtbl = VJ_PICK(self.SoundTbl_MeleeAttackExtra)
 		if (math.random(1,self.ExtraMeleeSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 			VJ_STOPSOUND(self.CurrentIdleSound)
 			self.CurrentExtraMeleeAttackSound = VJ_EmitSound(self,sdtbl,self.ExtraMeleeAttackSoundLevel,self:VJ_DecideSoundPitch(self.ExtraMeleeSoundPitch1,self.ExtraMeleeSoundPitch2))
@@ -4822,9 +4820,9 @@ end
 function ENT:MeleeAttackMissSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasMeleeAttackMissSounds == false then return end
 	Type = Type or VJ_EmitSound
-	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_MeleeAttackMiss)
-	if sdtbl == false then sdtbl = VJ_PICKRANDOMTABLE(self.DefaultSoundTbl_MeleeAttackMiss) end -- Default table
+	local ctbl = VJ_PICK(CustomTbl)
+	local sdtbl = VJ_PICK(self.SoundTbl_MeleeAttackMiss)
+	if sdtbl == false then sdtbl = VJ_PICK(self.DefaultSoundTbl_MeleeAttackMiss) end -- Default table
 	if (math.random(1,self.MeleeAttackMissSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		VJ_STOPSOUND(self.CurrentIdleSound)
@@ -4837,8 +4835,8 @@ function ENT:SuppressingSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasSuppressingSounds == false then return end
 	if CurTime() > self.NextSuppressingSoundT then
 		Type = Type or VJ_CreateSound
-		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_Suppressing)
+		local ctbl = VJ_PICK(CustomTbl)
+		local sdtbl = VJ_PICK(self.SoundTbl_Suppressing)
 		if (math.random(1,self.SuppressingSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 			if ctbl != false then sdtbl = ctbl end
 			self:StopAllCommonSpeechSounds()
@@ -4853,8 +4851,8 @@ function ENT:WeaponReloadSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasWeaponReloadSounds == false then return end
 	if CurTime() > self.NextWeaponReloadSoundT then
 		Type = Type or VJ_CreateSound
-		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_WeaponReload)
+		local ctbl = VJ_PICK(CustomTbl)
+		local sdtbl = VJ_PICK(self.SoundTbl_WeaponReload)
 		if (math.random(1,self.WeaponReloadSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 			if ctbl != false then sdtbl = ctbl end
 			self:StopAllCommonSpeechSounds()
@@ -4869,8 +4867,8 @@ function ENT:GrenadeAttackSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasGrenadeAttackSounds == false then return end
 	if CurTime() > self.NextGrenadeAttackSoundT then
 		Type = Type or VJ_CreateSound
-		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_GrenadeAttack)
+		local ctbl = VJ_PICK(CustomTbl)
+		local sdtbl = VJ_PICK(self.SoundTbl_GrenadeAttack)
 		if (math.random(1,self.GrenadeAttackSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 			if ctbl != false then sdtbl = ctbl end
 			if self.IdleSounds_PlayOnAttacks == false then self:StopAllCommonSpeechSounds() end
@@ -4884,8 +4882,8 @@ function ENT:OnGrenadeSightSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasOnGrenadeSightSounds == false then return end
 	if CurTime() > self.NextOnGrenadeSightSoundT then
 		Type = Type or VJ_CreateSound
-		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_OnGrenadeSight)
+		local ctbl = VJ_PICK(CustomTbl)
+		local sdtbl = VJ_PICK(self.SoundTbl_OnGrenadeSight)
 		if (math.random(1,self.OnGrenadeSightSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 			if ctbl != false then sdtbl = ctbl end
 			self:StopAllCommonSpeechSounds()
@@ -4899,8 +4897,8 @@ end
 function ENT:BecomeEnemyToPlayerSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasBecomeEnemyToPlayerSounds == false then return end
 	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_BecomeEnemyToPlayer)
+	local ctbl = VJ_PICK(CustomTbl)
+	local sdtbl = VJ_PICK(self.SoundTbl_BecomeEnemyToPlayer)
 	if (math.random(1,self.BecomeEnemyToPlayerChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
@@ -4917,8 +4915,8 @@ function ENT:AllyDeathSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasAllyDeathSound == false then return end
 	if CurTime() > self.AllyDeathSoundT then
 		Type = Type or VJ_CreateSound
-		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_AllyDeath)
+		local ctbl = VJ_PICK(CustomTbl)
+		local sdtbl = VJ_PICK(self.SoundTbl_AllyDeath)
 		if (math.random(1,self.AllyDeathSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 			if ctbl != false then sdtbl = ctbl end
 			self:StopAllCommonSpeechSounds()
@@ -4933,8 +4931,8 @@ function ENT:PainSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasPainSounds == false then return end
 	if CurTime() > self.PainSoundT then
 		Type = Type or VJ_CreateSound
-		local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-		local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_Pain)
+		local ctbl = VJ_PICK(CustomTbl)
+		local sdtbl = VJ_PICK(self.SoundTbl_Pain)
 		if (math.random(1,self.PainSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 			if ctbl != false then sdtbl = ctbl end
 			VJ_STOPSOUND(self.CurrentIdleSound)
@@ -4948,8 +4946,8 @@ end
 function ENT:DeathSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasDeathSounds == false then return end
 	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_Death)
+	local ctbl = VJ_PICK(CustomTbl)
+	local sdtbl = VJ_PICK(self.SoundTbl_Death)
 	if (math.random(1,self.DeathSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		self.CurrentDeathSound = Type(self,sdtbl,self.DeathSoundLevel,self:VJ_DecideSoundPitch(self.DeathSoundPitch1,self.DeathSoundPitch2))
@@ -4963,8 +4961,8 @@ function ENT:FootStepSoundCode(CustomTbl)
 			self:CustomOnFootStepSound()
 			local soundtbl = self.SoundTbl_FootStep
 			if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-			//if VJ_PICKRANDOMTABLE(soundtbl) != false then
-			if VJ_PICKRANDOMTABLE(soundtbl) == false then
+			//if VJ_PICK(soundtbl) != false then
+			if VJ_PICK(soundtbl) == false then
 				VJ_EmitSound(self,self.DefaultSoundTbl_FootStep,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
 			else
 				VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
@@ -4975,11 +4973,11 @@ function ENT:FootStepSoundCode(CustomTbl)
 			self:CustomOnFootStepSound()
 			local soundtbl = self.SoundTbl_FootStep
 			if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
-			//if VJ_PICKRANDOMTABLE(soundtbl) != false then
+			//if VJ_PICK(soundtbl) != false then
 				//VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
 				if self.DisableFootStepOnRun == false && (VJ_HasValue(VJ_RunActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomRunActivites,self:GetMovementActivity())) then
 					self:CustomOnFootStepSound_Run()
-					if VJ_PICKRANDOMTABLE(soundtbl) == false then
+					if VJ_PICK(soundtbl) == false then
 						VJ_EmitSound(self,self.DefaultSoundTbl_FootStep,self.v,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
 					else
 						VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
@@ -4987,7 +4985,7 @@ function ENT:FootStepSoundCode(CustomTbl)
 					self.FootStepT = CurTime() + self.FootStepTimeRun
 				elseif self.DisableFootStepOnWalk == false && (VJ_HasValue(VJ_WalkActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomWalkActivites,self:GetMovementActivity())) then
 					self:CustomOnFootStepSound_Walk()
-					if VJ_PICKRANDOMTABLE(soundtbl) == false then
+					if VJ_PICK(soundtbl) == false then
 						VJ_EmitSound(self,self.DefaultSoundTbl_FootStep,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
 					else
 						VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
@@ -5002,9 +5000,9 @@ end
 function ENT:ImpactSoundCode(CustomTbl,Type)
 	if self.HasSounds == false or self.HasImpactSounds == false then return end
 	Type = Type or VJ_EmitSound
-	local ctbl = VJ_PICKRANDOMTABLE(CustomTbl)
-	local sdtbl = VJ_PICKRANDOMTABLE(self.SoundTbl_Impact)
-	if sdtbl == false then sdtbl = VJ_PICKRANDOMTABLE(self.DefaultSoundTbl_Impact) end -- Default table
+	local ctbl = VJ_PICK(CustomTbl)
+	local sdtbl = VJ_PICK(self.SoundTbl_Impact)
+	if sdtbl == false then sdtbl = VJ_PICK(self.DefaultSoundTbl_Impact) end -- Default table
 	if (math.random(1,self.ImpactSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		self.CurrentImpactSound = Type(self,sdtbl,self.ImpactSoundLevel,self:VJ_DecideSoundPitch(self.ImpactSoundPitch1,self.ImpactSoundPitch2))

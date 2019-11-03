@@ -14,7 +14,7 @@ ENT.StartHealth = 10
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	if self:GetModel() == "models/error.mdl" then
-	self:SetModel(Model(VJ_PICKRANDOMTABLE(self.Model))) end
+	self:SetModel(Model(VJ_PICK(self.Model))) end
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:SetSolid(SOLID_VPHYSICS)
