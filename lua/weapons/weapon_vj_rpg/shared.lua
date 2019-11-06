@@ -17,6 +17,7 @@ end
 SWEP.NPC_NextPrimaryFire 		= 5 -- Next time it can use primary fire
 SWEP.NPC_TimeUntilFire	 		= 0.8 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_ReloadSound			= {"vj_weapons/reload_rpg.wav"}
+SWEP.NPC_BulletSpawnAttachment = "missile" -- The attachment that the bullet spawns on, leave empty for base to decide!
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel					= "models/vj_weapons/c_rpg7.mdl" // "models/weapons/c_rpg.mdl"
 SWEP.WorldModel					= "models/vj_weapons/w_rpg7.mdl" // "models/weapons/w_rocket_launcher.mdl"
@@ -52,23 +53,21 @@ SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle anim
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BeforeShoot()
 	if (CLIENT) then return end
-	local SpawnBlaserRod = ents.Create("obj_vj_tank_shell")
-	local OwnerPos = self:GetOwner():GetShootPos()
-	local OwnerAng = self:GetOwner():GetAimVector():Angle()
-	OwnerPos = OwnerPos + OwnerAng:Forward()*-20 + OwnerAng:Up()*-9 + OwnerAng:Right()*10
-	if self:GetOwner():IsPlayer() then SpawnBlaserRod:SetPos(OwnerPos) else SpawnBlaserRod:SetPos(self:GetAttachment(self:LookupAttachment("missile")).Pos) end
-	if self:GetOwner():IsPlayer() then SpawnBlaserRod:SetAngles(OwnerAng) else SpawnBlaserRod:SetAngles(self:GetOwner():GetAngles()) end
-	SpawnBlaserRod:SetOwner(self:GetOwner())
-	SpawnBlaserRod:Activate()
-	SpawnBlaserRod:Spawn()
+	local proj = ents.Create("obj_vj_tank_shell")
+	local ply_Ang = self:GetOwner():GetAimVector():Angle()
+	local ply_Pos = self:GetOwner():GetShootPos() + ply_Ang:Forward()*-20 + ply_Ang:Up()*-9 + ply_Ang:Right()*10
+	if self:GetOwner():IsPlayer() then proj:SetPos(ply_Pos) else proj:SetPos(self:GetNWVector("VJ_CurBulletPos")) end
+	if self:GetOwner():IsPlayer() then proj:SetAngles(ply_Ang) else proj:SetAngles(self:GetOwner():GetAngles()) end
+	proj:SetOwner(self:GetOwner())
+	proj:Activate()
+	proj:Spawn()
 	
-	local phy = SpawnBlaserRod:GetPhysicsObject()
-	if phy:IsValid() then
+	local phys = proj:GetPhysicsObject()
+	if phys:IsValid() then
 		if self:GetOwner():IsPlayer() then
-		phy:ApplyForceCenter(self:GetOwner():GetAimVector() * 4000) else //200000
-		//phy:ApplyForceCenter((self:GetOwner():GetEnemy():GetPos() - self:GetOwner():GetPos()) * 4000)
-		phy:ApplyForceCenter(((self:GetOwner():GetEnemy():GetPos()+self:GetOwner():GetEnemy():OBBCenter()+self:GetOwner():GetEnemy():GetUp()*-45) - self:GetOwner():GetPos()+self:GetOwner():OBBCenter()+self:GetOwner():GetEnemy():GetUp()*-45) * 4000)
-		//data.Dir = (Entity:GetEnemy():GetPos()+Entity:GetEnemy():OBBCenter()+Entity:GetEnemy():GetUp()*-45) -Entity:GetPos()+Entity:OBBCenter()+Entity:GetEnemy():GetUp()*-45
+			phys:SetVelocity(self:GetOwner():GetAimVector() * 2500)
+		else
+			phys:SetVelocity(self:GetOwner():CalculateProjectile("Line", self:GetNWVector("VJ_CurBulletPos"), self:GetOwner():GetEnemy():GetPos() + self:GetOwner():GetEnemy():OBBCenter(), 2500))
 		end
 	end
 end
