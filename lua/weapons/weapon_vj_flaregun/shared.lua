@@ -46,21 +46,21 @@ SWEP.NextIdle_PrimaryAttack		= 0.5 -- How much time until it plays the idle anim
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BeforeShoot()
 	if (CLIENT) then return end
-	local flareround = ents.Create("obj_vj_flareround")
-	if self:GetOwner():IsPlayer() then
-	flareround:SetPos(self:GetOwner():GetShootPos()) else
-	flareround:SetPos(self:GetAttachment(self:LookupAttachment("muzzle")).Pos) end
-	flareround:SetAngles(self:GetOwner():GetAngles())
-	flareround:SetOwner(self:GetOwner())
-	flareround:Activate()
-	flareround:Spawn()
-
-	local phy = flareround:GetPhysicsObject()
-	if phy:IsValid() then
+	local proj = ents.Create("obj_vj_flareround")
+	local ply_Ang = self:GetOwner():GetAimVector():Angle()
+	local ply_Pos = self:GetOwner():GetShootPos()
+	if self:GetOwner():IsPlayer() then proj:SetPos(ply_Pos) else proj:SetPos(self:GetNWVector("VJ_CurBulletPos")) end
+	if self:GetOwner():IsPlayer() then proj:SetAngles(ply_Ang) else proj:SetAngles(self:GetOwner():GetAngles()) end
+	proj:SetOwner(self:GetOwner())
+	proj:Activate()
+	proj:Spawn()
+	
+	local phys = proj:GetPhysicsObject()
+	if phys:IsValid() then
 		if self:GetOwner():IsPlayer() then
-			phy:ApplyForceCenter((self:GetOwner():GetAimVector() * 15000))
+			phys:SetVelocity((self:GetOwner():GetAimVector() * 15000))
 		else
-			phy:ApplyForceCenter(((self:GetOwner():GetEnemy():GetPos() - self:GetOwner():GetPos()) * 15000))
+			phys:SetVelocity(self:GetOwner():CalculateProjectile("Line", self:GetNWVector("VJ_CurBulletPos"), self:GetOwner():GetEnemy():GetPos() + self:GetOwner():GetEnemy():OBBCenter(), 15000))
 		end
 	end
 end
