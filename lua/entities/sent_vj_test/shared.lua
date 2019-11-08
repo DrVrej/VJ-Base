@@ -13,6 +13,6 @@ ENT.Spawnable = false
 ENT.AdminOnly = false
 ENT.AutomaticFrameAdvance = true
 
-function ENT:SetAutomaticFrameAdvance( bUsingAnim )
+function ENT:SetAutomaticFrameAdvance(bUsingAnim)
 	self.AutomaticFrameAdvance = bUsingAnim
 end

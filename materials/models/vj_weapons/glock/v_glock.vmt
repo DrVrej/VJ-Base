@@ -1,0 +1,51 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models\vj_weapons\glock/v_glock"
+	"$bumpmap" "models\vj_weapons\glock/v_glock_normal"
+
+	"$envmap" "env_cubemap"
+//	"$normalmapalphaenvmapmask" "1"
+	"$envmaptint" "[.10 .10 .10]"
+	"$nocull" "1"
+	
+	"$phong" "1"
+	"$phongexponent" "10"
+	"$phongboost" "0.05"
+	"$phongfresnelranges"	"[.5 1 1]"
+	"$phongalbedotint" "1"
+	"$BasemapAlphaPhongMask" "0.5"
+	
+
+	// Rim lighting parameters
+	"$rimlight" "1"
+	"$rimlightexponent" "25"
+	"$rimlightboost" "0.125"
+
+	"$selfillum" "1"
+	"$selfillumtint" "[0 0 0]"
+
+	"$tintA" "[5 3 1]"
+	"$tintB" "[.15 .15 .15]"
+
+//	$detail "effects/models/model_blood_red.vtf"
+	$detailscale 5
+	$detailblendfactor 0.0
+	$detailblendmode 0
+	Proxies
+	{
+		ModelDetailFx
+		{
+		}
+
+		"FlashyWeapon"
+		{
+			"resultVar" "$tintB"
+		}
+		"Multiply"
+		{
+			"srcVar1" "$tintA"
+			"srcVar2" "$tintB"
+			"resultVar" "$selfillumtint"
+		}
+	}
+}

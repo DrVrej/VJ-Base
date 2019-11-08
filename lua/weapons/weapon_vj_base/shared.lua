@@ -17,7 +17,7 @@ SWEP.HoldType = "ar2"
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ View Model Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.ViewModel = "models/weapons/v_rif_ak47.mdl"
+SWEP.ViewModel = "models/weapons/v_flaregun.mdl"
 SWEP.UseHands = false -- Should this weapon use Garry's Mod hands? (The model must support it!)
 SWEP.ViewModelFlip = false -- Flip the model? Usally used for CS:S models
 SWEP.ViewModelFOV = 55 -- Player FOV for the view model
@@ -287,7 +287,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:TranslateActivity(act)
 	if (self:GetOwner():IsNPC()) then
-		if (self.ActivityTranslateAI[act]) && ((!self:GetOwner().IsVJBaseSNPC) or (self:GetOwner().IsVJBaseSNPC == true && self:GetOwner().WeaponHolstered == false)) then
+		if (self.ActivityTranslateAI[act]) && ((!self:GetOwner().IsVJBaseSNPC) or (self:GetOwner().IsVJBaseSNPC == true)) then
 			return self.ActivityTranslateAI[act]
 		end
 		return -1

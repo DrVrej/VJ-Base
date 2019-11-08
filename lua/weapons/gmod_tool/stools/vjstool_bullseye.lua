@@ -82,7 +82,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
 	if (CLIENT) then return true end
-		local spawner = ents.Create("ob_vj_bullseye")
+		local spawner = ents.Create("obj_vj_bullseye")
 		spawner:SetPos(tr.HitPos)
 		spawner:SetModel(GetConVarString("vjstool_bullseye_modeldirectory"))
 		spawner.SolidMovementType = GetConVarString("vjstool_bullseye_type")

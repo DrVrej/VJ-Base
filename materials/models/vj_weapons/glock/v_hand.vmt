@@ -1,0 +1,41 @@
+"VertexLitGeneric"
+{	
+//THIS IS KEVINS HEV HAND TEXTURE
+//PLASTIC GLOVE TEXTURE
+	"$baseTexture" "models\vj_weapons\glock/v_hand"
+	"$bumpmap" "models\vj_weapons\glock/v_hand_normal"
+
+	"$nodecal" "1"
+	"$multipass" "0"
+	"$nocull" "1"
+
+	"$envmap" "env_cubemap"
+	"$normalmapalphaenvmapmask" "1"
+	"$envmaptint" "[.001 .001 .001]"
+//	"$envmapcontrast" "1.0"
+
+	"$phong" "1"
+	"$phongboost" "0.7"
+	"$phongexponent" "15"
+	"$phongalbedotint" "1"
+	"$phongfresnelranges"	"[0.04 0.4 1.5]"
+
+	// Rim lighting parameters
+//	"$rimlight" "1"
+	"$rimlightexponent" "20"
+	"$rimlightboost" "0.05"
+
+//	$detail "effects/models/model_blood_red.vtf"
+	$detailscale 5
+	$detailblendfactor 0.0
+	$detailblendmode 0
+
+	$viewmodelhands 1
+
+	Proxies
+	{
+		ModelDetailFx
+		{
+		}
+	}
+}

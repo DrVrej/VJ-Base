@@ -27,7 +27,7 @@ SWEP.AutoSwitchFrom				= false -- Auto switch weapon when the owner picks up a b
 end
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel					= "models/vj_weapons/v_glock.mdl"
-SWEP.WorldModel					= "models/weapons/w_glock.mdl"
+SWEP.WorldModel					= "models/vj_weapons/w_glock.mdl"
 SWEP.HoldType 					= "pistol"
 SWEP.Spawnable					= true
 SWEP.AdminSpawnable				= false
@@ -79,7 +79,7 @@ function SWEP:PrimaryAttack()
 		if (!tr.Entity.IsVJBaseSNPC) then
 			self:GetOwner():ChatPrint("NOTE: VJ NPC controller is mainly made for VJ Base SNPCs!")
 		end
-		local SpawnControllerObject = ents.Create("ob_vj_npccontroller")
+		local SpawnControllerObject = ents.Create("obj_vj_npccontroller")
 		SpawnControllerObject.TheController = self:GetOwner()
 		SpawnControllerObject:SetControlledNPC(tr.Entity)
 		SpawnControllerObject:Spawn()

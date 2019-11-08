@@ -892,7 +892,6 @@ ENT.LastHiddenZone_CanWander = true
 ENT.DoneLastHiddenZone_CanWander = false
 ENT.AlreadyDoneMeleeAttackFirstHit = false
 ENT.NoWeapon_UseScaredBehavior_Active = false
-ENT.WeaponHolstered = false
 ENT.FollowingPlayerName = NULL
 ENT.VJ_TheController = NULL
 ENT.VJ_TheControllerEntity = NULL
@@ -2386,7 +2385,7 @@ function ENT:MeleeAttackCode()
 	if FindEnts != nil then
 		for _,v in pairs(FindEnts) do
 			if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
-			if (v:IsNPC() || (v:IsPlayer() && v:Alive() && GetConVarNumber("ai_ignoreplayers") == 0)) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or (v:GetClass() == "prop_physics") or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" then
+			if (v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVarNumber("ai_ignoreplayers") == 0)) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or (v:GetClass() == "prop_physics") or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" then
 				if (self:GetForward():Dot((v:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackDamageAngleRadius))) then
 					local doactualdmg = DamageInfo()
 					doactualdmg:SetDamage(self:VJ_GetDifficultyValue(self.MeleeAttackDamage))

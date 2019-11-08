@@ -18,7 +18,7 @@ SWEP.NPC_NextPrimaryFire 		= 0.25 -- Next time it can use primary fire
 SWEP.NPC_CustomSpread	 		= 0.8 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel					= "models/vj_weapons/v_glock.mdl"
-SWEP.WorldModel					= "models/weapons/w_glock.mdl"
+SWEP.WorldModel					= "models/vj_weapons/w_glock.mdl"
 SWEP.HoldType 					= "pistol"
 SWEP.ViewModelFOV				= 70 -- Player FOV for the view model
 SWEP.Spawnable					= true

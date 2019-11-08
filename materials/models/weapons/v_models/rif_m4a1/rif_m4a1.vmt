@@ -1,7 +1,0 @@
-VertexLitGeneric
-{
-	"$basetexture"	"models\weapons\v_models\rif_m4a1\rif_m4a1"
-	"$envmap" "env_cubemap"
-	"$envmapmask" "models\weapons\v_models\rif_m4a1\rif_m4a1_ref"
-
-}

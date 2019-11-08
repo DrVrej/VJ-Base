@@ -16,7 +16,7 @@ SWEP.UseHands					= true
 end
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel					= "models/vj_weapons/c_mp40.mdl"
-SWEP.WorldModel					= "models/weapons/w_mp40_n.mdl"
+SWEP.WorldModel					= "models/vj_weapons/w_mp40.mdl"
 SWEP.HoldType 					= "smg"
 SWEP.ViewModelFOV				= 45 -- Player FOV for the view model
 SWEP.Spawnable					= true
