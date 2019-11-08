@@ -877,14 +877,25 @@ hook.Add("PlayerSpawnedNPC","VJ_NPC_SPAWNED",function(ply,ent)
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerInitialSpawn","VJ_PLAYER_INITIALSPAWN",function(ply)
-	local getall = ents.GetAll()
+	if IsValid(ply) then
+		ply.VJ_LastInvestigateSd = 0
+		ply.VJ_LastInvestigateSdLevel = 0
+		local EntsTbl = ents.GetAll()
+		for x=1, #EntsTbl do
+			local v = EntsTbl[x]
+			if v:IsNPC() && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
+				v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = ply
+			end
+		end
+	end
+	/*local getall = ents.GetAll()
 	for k,v in ipairs(getall) do
 		v.VJ_LastInvestigateSd = 0
 		v.VJ_LastInvestigateSdLevel = 0
 		if v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
 			v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
 		end
-	end
+	end*/
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerSelectSpawn","VJ_PLAYER_SELECTSPAWN",function(ply)
@@ -921,7 +932,31 @@ hook.Add("OnEntityCreated","VJ_ENTITYCREATED",VJ_ENTITYCREATED)*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("OnEntityCreated","VJ_ENTITYCREATED",function(entity)
 	if (CLIENT) or !entity:IsNPC() then return end
-	if entity:GetClass() != "npc_grenade_frag" && entity:GetClass() != "bullseye_strider_focus" && entity:GetClass() != "npc_bullseye" && entity:GetClass() != "npc_enemyfinder" && entity:GetClass() != "hornet" then
+	if (entity:IsNPC() && entity:GetClass() != "npc_grenade_frag" && entity:GetClass() != "bullseye_strider_focus" && entity:GetClass() != "npc_bullseye" && entity:GetClass() != "npc_enemyfinder" && entity:GetClass() != "hornet" && (!entity.IsVJBaseSNPC_Animal)) or (entity:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0) then
+		timer.Simple(0.1,function()
+			if IsValid(entity) then
+				local EntsTbl = ents.GetAll()
+				local count = 1
+				for x=1, #EntsTbl do
+					if !EntsTbl[x]:IsNPC() && !EntsTbl[x]:IsPlayer() then continue end
+					
+					local v = EntsTbl[x]
+					if entity.IsVJBaseSNPC == true then
+						entity:EntitiesToNoCollideCode(v)
+						if (v:IsNPC() && (v:GetClass() != entity:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 /*&& v:Alive()*/) then
+							entity.CurrentPossibleEnemies[count] = v
+							count = count + 1
+						end
+					end
+	
+					if v != entity && entity:GetClass() != v:GetClass() && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) && (entity:IsNPC() && entity:Health() > 0 && (entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) or (entity:IsPlayer()) then
+						v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = entity //v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
+					end
+				end
+			end
+		end)
+	end
+	/*if entity:GetClass() != "npc_grenade_frag" && entity:GetClass() != "bullseye_strider_focus" && entity:GetClass() != "npc_bullseye" && entity:GetClass() != "npc_enemyfinder" && entity:GetClass() != "hornet" then
 		timer.Simple(0.15,function()
 			if IsValid(entity) then
 				local getall = ents.GetAll()
@@ -932,7 +967,7 @@ hook.Add("OnEntityCreated","VJ_ENTITYCREATED",function(entity)
 				end
 			end
 		end)
-	end
+	end*/
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_NPCPLY_DEATH(npc,attacker,inflictor)
@@ -1044,7 +1079,7 @@ cvars.AddChangeCallback("ai_ignoreplayers",function(convar_name,oldValue,newValu
 			end
 		end
 	end
-end)
+end)	
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*cvars.AddChangeCallback("vj_npc_drvrejfriendly",function(convar_name,oldValue,newValue)
 	//print(newValue)
