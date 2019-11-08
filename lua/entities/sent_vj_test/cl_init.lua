@@ -10,12 +10,13 @@ INFO: Used to Test Things
 function ENT:Draw() self:DrawModel() end
 
 usermessage.Hook("vj_testentity_onmenuopen",function()
-	local welmsg = {}
-	welmsg[1] = "Welcome to my shop, how can I help you?"
-	welmsg[2] = "Hi!"
-	welmsg[3] = "Hello "..LocalPlayer():GetName()..", You need anything?"
-	welmsg[4] = "What can I do for you "..LocalPlayer():GetName().."?"
-	welmsg[5] = "This ain't cheap stuff, but it is good!"
+	local welmsg = {
+		"Welcome to my shop, how can I help you?",
+		"Hi!",
+		"Hello "..LocalPlayer():GetName()..", You need anything?",
+		"What can I do for you "..LocalPlayer():GetName().."?",
+		"This ain't cheap stuff, but it is good!",
+	}
 
 	local Frame = vgui.Create("DFrame")
 	Frame:SetSize(600, 300)

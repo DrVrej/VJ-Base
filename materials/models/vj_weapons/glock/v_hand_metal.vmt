@@ -1,0 +1,37 @@
+//"EDITOR_SHADER"
+"VertexLitGeneric"
+{
+	"$SHADERNAME" "model_standard"
+
+	"$baseTexture" "models\vj_weapons\glock/v_hand_sheet"
+	"$bumpmap" "models\vj_weapons\glock/v_hand_sheet_normal"
+
+//metal
+	"$envmap" "env_cubemap"
+	"$basealphaenvmapmask" "0"
+	"$envmaptint" "[.2 .2 .2]"
+
+	"$phong" "1"
+	"$phongexponent" "15"
+	"$phongboost" "2.8"
+	"$phongfresnelranges"	"[0.4 0.9 2.6]"
+	"$phongalbedotint" "1"
+
+	// Rim lighting parameters
+	"$rimlight" "1"
+	"$rimlightexponent" "25"
+	"$rimlightboost" "0.5"
+
+//	$detail "effects/models/model_blood_red.vtf"
+	$detailscale 5
+	$detailblendfactor 0.0
+	$detailblendmode 0
+
+	$viewmodelhands 1
+	Proxies
+	{
+		ModelDetailFx
+		{
+		}
+	}
+}

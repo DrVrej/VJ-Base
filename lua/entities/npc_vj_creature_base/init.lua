@@ -3193,7 +3193,7 @@ function ENT:LeapDamageCode()
 	if FindEnts != nil then
 		for _,v in pairs(FindEnts) do
 			if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
-			if (v:IsNPC() || (v:IsPlayer() && v:Alive()) && GetConVarNumber("ai_ignoreplayers") == 0) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or VJ_IsProp(v) == true or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" then
+			if (v:IsNPC() or (v:IsPlayer() && v:Alive()) && GetConVarNumber("ai_ignoreplayers") == 0) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or VJ_IsProp(v) == true or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" then
 				self:CustomOnLeapAttack_AfterChecks(v)
 				local leapdmg = DamageInfo()
 				leapdmg:SetDamage(self:VJ_GetDifficultyValue(self.LeapAttackDamage))

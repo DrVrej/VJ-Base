@@ -1,0 +1,15 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models\vj_weapons\mp40\view/v_mp40"
+	"$bumpmap" "models\vj_weapons\mp40\view/v_mp40_normal"
+	"$phong" "1"
+
+	
+	"$phongboost" "1"
+	"$phongfresnelranges"	"[0.1 0.8 0.8]"
+//	"$halflambert" "1"
+	"$phongexponenttexture" "models\weapons\v_models\mp40/v_mp40_exponent"
+							}
+
+
+
