@@ -1056,7 +1056,7 @@ function ENT:Initialize()
 	if GetConVarNumber("vj_npc_seedistance") == 0 then self.SightDistance = self.SightDistance else self.SightDistance = GetConVarNumber("vj_npc_seedistance") end
 	timer.Simple(0.1,function()
 		if IsValid(self) then
-			self.CurrentPossibleEnemies = self:DoHardEntityCheck()
+			//self.CurrentPossibleEnemies = self:DoHardEntityCheck()
 			if self:VJ_HasActiveWeapon() == true then
 				self.Weapon_StartingAmmoAmount = self:GetActiveWeapon():Clip1()
 				if self.Weapon_UnlimitedAmmo == true then self:GetActiveWeapon():SetClip1(99999) end
@@ -3218,10 +3218,7 @@ function ENT:DoHardEntityCheck(CustomTbl)
 		if !EntsTbl[x]:IsNPC() && !EntsTbl[x]:IsPlayer() then continue end
 		local v = EntsTbl[x]
 		self:EntitiesToNoCollideCode(v)
-		if v:IsNPC() && (v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0 then
-			EntsFinal[count] = v
-			count = count + 1
-		elseif v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 /*&& v:Alive()*/ then
+		if (v:IsNPC() && v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) && v:Health() > 0) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 /*&& v:Alive()*/) then
 			EntsFinal[count] = v
 			count = count + 1
 		end
