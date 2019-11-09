@@ -19,6 +19,9 @@ SWEP.WorldModel					= "models/weapons/w_smg1.mdl"
 SWEP.HoldType 					= "smg"
 SWEP.Spawnable					= true
 SWEP.AdminSpawnable				= false
+	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.NPC_HasSecondaryFire = true -- Can the weapon have a secondary fire?
+SWEP.NPC_SecondaryFireSound = {"weapons/ar2/ar2_altfire.wav"} -- The sound it plays when the secondary fire is used
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Damage				= 5 -- Damage
 SWEP.Primary.ClipSize			= 45 -- Max amount of bullets per clip
@@ -38,3 +41,18 @@ SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle anim
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound				= true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
 SWEP.ReloadSound				= {"weapons/smg1/smg1_reload.wav"}
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:NPC_SecondaryFire()
+	local pos = self:GetNWVector("VJ_CurBulletPos")
+	local proj = ents.Create("obj_vj_grenade_rifle")
+	proj:SetPos(pos)
+	proj:SetAngles(self:GetOwner():GetAngles())
+	proj:SetOwner(self:GetOwner())
+	proj:Spawn()
+	proj:Activate()
+	local phys = proj:GetPhysicsObject()
+	if phys:IsValid() then
+		phys:Wake()
+		phys:SetVelocity(self:GetOwner():CalculateProjectile("Curve", pos, self:GetOwner():GetEnemy():GetPos() + self:GetOwner():GetEnemy():OBBCenter(), 1000))
+	end
+end
