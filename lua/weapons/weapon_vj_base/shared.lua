@@ -57,13 +57,13 @@ SWEP.NPC_ExtraFireSoundTime = 0.4 -- How much time until it plays the sound (Aft
 SWEP.NPC_ExtraFireSoundLevel = 70 -- How far does the sound go?
 SWEP.NPC_ExtraFireSoundPitch = VJ_Set(90,100) -- How much time until the secondary fire can be used again?
 	-- ====== Secondary Fire Variables ====== --
-SWEP.NPC_HasSecondaryFireNext = false -- Can the weapon have a secondary fire?
+SWEP.NPC_HasSecondaryFire = false -- Can the weapon have a secondary fire?
 SWEP.NPC_SecondaryFireChance = 3 -- Chance that the secondary fire is used | 1 = always
 SWEP.NPC_SecondaryFireNext = VJ_Set(12,15) -- How much time until the secondary fire can be used again?
 SWEP.NPC_SecondaryFireDistance = 1000 -- How close does the owner's enemy have to be for it to fire?
 SWEP.NPC_HasSecondaryFireSound = true -- Can the secondary fire sound be played?
 SWEP.NPC_SecondaryFireSound = {} -- The sound it plays when the secondary fire is used
-SWEP.NPC_SecondaryFireSoundLevel = 70 -- The sound level to use for the secondary firing sound
+SWEP.NPC_SecondaryFireSoundLevel = 90 -- The sound level to use for the secondary firing sound
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ General Player Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -467,15 +467,15 @@ function SWEP:NPCShoot_Primary(ShootPos,ShootDir)
 		//if self:GetOwner().IsVJBaseSNPC == true then self:GetOwner().Weapon_TimeSinceLastShot = 0 end
 	end
 	
-	if self.NPC_HasSecondaryFireNext == true && self.NPC_SecondaryFirePerforming == false && CurTime() > self.NPC_SecondaryFireNextT && self:GetOwner().CanUseSecondaryOnWeaponAttack == true && self:GetOwner():GetEnemy():GetPos():Distance(self:GetOwner():GetPos()) <= self.NPC_SecondaryFireDistance then
+	if self.NPC_HasSecondaryFire == true && self.NPC_SecondaryFirePerforming == false && CurTime() > self.NPC_SecondaryFireNextT && self:GetOwner().CanUseSecondaryOnWeaponAttack == true && self:GetOwner():GetEnemy():GetPos():Distance(self:GetOwner():GetPos()) <= self.NPC_SecondaryFireDistance then
 		if math.random(1,self.NPC_SecondaryFireChance) == 1 then
 			self:GetOwner():VJ_ACT_PLAYACTIVITY(self:GetOwner().AnimTbl_WeaponAttackSecondary,true,false,true,0)
 			self.NPC_SecondaryFirePerforming = true
-			if self.NPC_HasSecondaryFireSound == true then VJ_EmitSound(self:GetOwner(),self.NPC_SecondaryFireSound,self.NPC_SecondaryFireSoundLevel) end
 			timer.Simple(self:GetOwner().WeaponAttackSecondaryTimeUntilFire,function()
 				if IsValid(self) && IsValid(self:GetOwner()) && IsValid(self:GetOwner():GetEnemy()) && self:NPCAbleToShoot(true) == true && CurTime() > self.NPC_SecondaryFireNextT then
 					self.NPC_SecondaryFirePerforming = false
 					self:NPC_SecondaryFire()
+					if self.NPC_HasSecondaryFireSound == true then VJ_EmitSound(self:GetOwner(),self.NPC_SecondaryFireSound,self.NPC_SecondaryFireSoundLevel) end
 					if self.NPC_SecondaryFireNext != false then
 						self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
 					end
