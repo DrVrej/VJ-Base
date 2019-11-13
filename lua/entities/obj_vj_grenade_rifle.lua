@@ -14,7 +14,7 @@ ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Information		= "Projectiles for my addons"
 ENT.Category		= "VJ Base"
 
-ENT.Spawnable = true
+ENT.Spawnable = false
 ENT.AdminOnly = false
 
 if (CLIENT) then
