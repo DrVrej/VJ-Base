@@ -223,7 +223,7 @@ function SWEP:Initialize()
 	self:SetNWVector("VJ_CurBulletPos",self:GetPos())
 	self:SetHoldType(self.HoldType)
 	if self.HasIdleAnimation == true then self.InitHasIdleAnimation = true end
-	self.NPC_SecondaryFireNextT = math.Rand(1,3)
+	self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
 	self:CustomOnInitialize()
 	if IsValid(self:GetOwner()) then
 		if VJ_AnimationExists(self:GetOwner(),ACT_WALK_AIM_PISTOL) == true && VJ_AnimationExists(self:GetOwner(),ACT_RUN_AIM_PISTOL) == true && VJ_AnimationExists(self:GetOwner(),ACT_POLICE_HARASS1) == true then
@@ -616,7 +616,7 @@ function SWEP:PrimaryAttack(UseAlt)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:SecondaryAttack()
-	return false -- We don't want a secondary shot
+	return false -- We don't want a secondary attack
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:DoIdleAnimation()
@@ -668,10 +668,10 @@ function SWEP:PrimaryAttackEffects()
 			local FireLight1 = ents.Create("light_dynamic")
 			FireLight1:SetKeyValue("brightness", self.PrimaryEffects_DynamicLightBrightness)
 			FireLight1:SetKeyValue("distance", self.PrimaryEffects_DynamicLightDistance)
-			if owner:IsPlayer() then FireLight1:SetLocalPos(owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else FireLight1:SetLocalPos(self:GetAttachment(1).Pos) end
+			if owner:IsPlayer() then FireLight1:SetLocalPos(owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else FireLight1:SetLocalPos(self:GetNWVector("VJ_CurBulletPos")) end
 			FireLight1:SetLocalAngles(self:GetAngles())
 			FireLight1:Fire("Color", self.PrimaryEffects_DynamicLightColor.r.." "..self.PrimaryEffects_DynamicLightColor.g.." "..self.PrimaryEffects_DynamicLightColor.b)
-			FireLight1:SetParent(self)
+			//FireLight1:SetParent(self)
 			FireLight1:Spawn()
 			FireLight1:Activate()
 			FireLight1:Fire("TurnOn","",0)
