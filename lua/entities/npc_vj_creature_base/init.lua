@@ -639,10 +639,8 @@ ENT.BreathSoundPitch1 = 100
 ENT.BreathSoundPitch2 = 100
 ENT.IdleSoundPitch1 = "UseGeneralPitch"
 ENT.IdleSoundPitch2 = "UseGeneralPitch"
-ENT.IdleDialogueSoundPitch1 = "UseGeneralPitch"
-ENT.IdleDialogueSoundPitch2 = "UseGeneralPitch"
-ENT.IdleDialogueAnswerSoundPitch1 = "UseGeneralPitch"
-ENT.IdleDialogueAnswerSoundPitch2 = "UseGeneralPitch"
+ENT.IdleDialogueSoundPitch = VJ_Set("UseGeneralPitch","UseGeneralPitch")
+ENT.IdleDialogueAnswerSoundPitch = VJ_Set("UseGeneralPitch","UseGeneralPitch")
 ENT.CombatIdleSoundPitch1 = "UseGeneralPitch"
 ENT.CombatIdleSoundPitch2 = "UseGeneralPitch"
 ENT.OnReceiveOrderSoundPitch1 = "UseGeneralPitch"
@@ -4880,7 +4878,7 @@ function ENT:IdleSoundCode(CustomTbl,Type)
 				local testent, testsd = self:IdleDialogueSoundCodeTest()
 				if testent != false then
 					self:CustomOnIdleDialogue()
-					self.CurrentIdleSound = Type(self,sdtbl2,self.IdleDialogueSoundLevel,self:VJ_DecideSoundPitch(self.IdleDialogueSoundPitch1,self.IdleDialogueSoundPitch2))
+					self.CurrentIdleSound = Type(self,sdtbl2,self.IdleDialogueSoundLevel,self:VJ_DecideSoundPitch(self.IdleDialogueSoundPitch.a,self.IdleDialogueSoundPitch.b))
 					if testsd == true then
 						local dur = SoundDuration(sdtbl2)
 						if dur == 0 then dur = 3 end
@@ -4939,7 +4937,7 @@ function ENT:IdleDialogueAnswerSoundCode(CustomTbl,Type)
 		self:CustomOnIdleDialogueAnswer()
 		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2,3)
-		self.CurrentIdleDialogueAnswerSound = Type(self,sdtbl,self.IdleDialogueAnswerSoundLevel,self:VJ_DecideSoundPitch(self.IdleDialogueAnswerSoundPitch1,self.IdleDialogueAnswerSoundPitch2))
+		self.CurrentIdleDialogueAnswerSound = Type(self,sdtbl,self.IdleDialogueAnswerSoundLevel,self:VJ_DecideSoundPitch(self.IdleDialogueAnswerSoundPitch.a,self.IdleDialogueAnswerSoundPitch.b))
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
