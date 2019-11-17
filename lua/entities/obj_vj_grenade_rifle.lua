@@ -28,7 +28,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !(SERVER) then return end
 
-ENT.Model = {"models/items/ar2_grenade.mdl"} -- The models it should spawn with | Picks a random one from the table
+ENT.Model = {"models/weapons/ar2_grenade.mdl"} -- The models it should spawn with | Picks a random one from the table
 ENT.DoesRadiusDamage = true -- Should it do a blast damage when it hits something?
 ENT.RadiusDamageRadius = 150 -- How far the damage go? The farther away it's from its enemy, the less damage it will do | Counted in world units
 ENT.RadiusDamage = 80 -- How much damage should it deal? Remember this is a radius damage, therefore it will do less damage the farther away the entity is from its enemy
@@ -38,6 +38,10 @@ ENT.RadiusDamageForce = 90 -- Put the force amount it should apply | false = Don
 ENT.DecalTbl_DeathDecals = {"Scorch"} -- Decals that paint when the projectile dies | It picks a random one from this table
 ENT.SoundTbl_OnRemove = {""}
 ENT.OnRemoveSoundLevel = 100
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnInitializeBeforePhys()
+	self:PhysicsInitSphere(5, "metal_bouncy")
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize()
 	ParticleEffectAttach("smoke_gib_01", PATTACH_ABSORIGIN_FOLLOW, self, 0)
