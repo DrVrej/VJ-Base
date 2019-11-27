@@ -910,9 +910,9 @@ ENT.Dead = false
 ENT.Flinching = false
 ENT.vACT_StopAttacks = false
 ENT.FollowingPlayer = false
-ENT.RunningAfter_FollowPlayer = false
-ENT.FollowingPlayer_WanderValue = false
-ENT.FollowingPlayer_ChaseValue = false
+ENT.FollowPlayer_GoingAfter = false
+ENT.FollowPlayer_WanderValue = false
+ENT.FollowPlayer_ChaseValue = false
 ENT.ResetedEnemy = true
 ENT.VJ_IsBeingControlled = false
 ENT.VJ_PlayingSequence = false
@@ -928,9 +928,6 @@ ENT.Medic_ChaseValue = false
 ENT.AlreadyDoneMedicThinkCode = false
 ENT.AlreadyBeingHealedByMedic = false
 ENT.VJFriendly = false
-ENT.ZombieFriendly = false
-ENT.AntlionFriendly = false
-ENT.CombineFriendly = false
 ENT.AlreadyDoneMeleeAttackFirstHit = false
 ENT.AlreadyDoneLeapAttackFirstHit = false
 ENT.IsAbleToMeleeAttack = true
@@ -950,7 +947,7 @@ ENT.AlreadyDoneFirstLeapAttack = false
 ENT.VJ_IsBeingControlled_Tool = false
 ENT.LastHiddenZone_CanWander = true
 ENT.DoneLastHiddenZone_CanWander = false
-ENT.FollowingPlayerName = NULL
+ENT.FollowPlayer_Entity = NULL
 ENT.VJ_TheController = NULL
 ENT.VJ_TheControllerEntity = NULL
 ENT.VJ_TheControllerBullseye = NULL
@@ -958,9 +955,7 @@ ENT.Medic_CurrentEntToHeal = NULL
 ENT.Medic_SpawnedProp = NULL
 ENT.LastPlayedVJSound = nil
 ENT.LatestEnemyClass = nil
-ENT.LatestTaskName = nil
 ENT.LatestDmgInfo = nil
-ENT.NextMoveOutOfFriendlyPlayersWayT = 0
 ENT.TestT = 0
 ENT.NextFollowPlayerT = 0
 ENT.AngerLevelTowardsPlayer = 0
@@ -1199,7 +1194,6 @@ function ENT:DoChangeMovementType(SetType)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoSchedule(schedule)
-	self.LatestTaskName = schedule.Name
 	if self:TaskFinished() then self:NextTask(schedule) end
 	if self.CurrentTask then self:RunTask(self.CurrentTask) end
 end
@@ -2118,12 +2112,12 @@ function ENT:OnCondition(iCondition)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:FollowPlayerReset()
-	if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then self.FollowingPlayerName:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.") end
+	if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then self.FollowPlayer_Entity:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.") end
 	self.FollowingPlayer = false
-	self.RunningAfter_FollowPlayer = false
-	self.FollowingPlayerName = NULL
-	self.DisableWandering = self.FollowingPlayer_WanderValue
-	self.DisableChasingEnemy = self.FollowingPlayer_ChaseValue
+	self.FollowPlayer_GoingAfter = false
+	self.FollowPlayer_Entity = NULL
+	self.DisableWandering = self.FollowPlayer_WanderValue
+	self.DisableChasingEnemy = self.FollowPlayer_ChaseValue
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:FollowPlayerCode(key,activator,caller,data)
@@ -2151,16 +2145,16 @@ function ENT:FollowPlayerCode(key,activator,caller,data)
 			//self:FaceCertainEntity(activator,false)
 			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
 			activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is now following you.") end
-			self.FollowingPlayer_WanderValue = self.DisableWandering
-			self.FollowingPlayer_ChaseValue = self.DisableChasingEnemy
+			self.FollowPlayer_WanderValue = self.DisableWandering
+			self.FollowPlayer_ChaseValue = self.DisableChasingEnemy
 			self.DisableWandering = true
 			self.DisableChasingEnemy = true
 			self:SetTarget(activator)
-			self.FollowingPlayerName = activator
+			self.FollowPlayer_Entity = activator
 			if self:BusyWithActivity() == false then
 				self:StopMoving()
 				self:VJ_TASK_FACE_X("TASK_FACE_TARGET",function(x) x.RunCode_OnFinish = function()
-					local DistanceToPly = self:GetPos():Distance(self.FollowingPlayerName:GetPos())
+					local DistanceToPly = self:GetPos():Distance(self.FollowPlayer_Entity:GetPos())
 					local movetype = "TASK_RUN_PATH"
 					if DistanceToPly < 220 then
 						movetype = "TASK_WALK_PATH"
@@ -2230,7 +2224,7 @@ end
 function ENT:DoMedicCode_HealAlly()
 	if self.IsMedicSNPC == true && self.Medic_IsHealingAlly == true && self.AlreadyDoneMedicThinkCode == false then
 		if !IsValid(self.Medic_CurrentEntToHeal) or VJ_IsAlive(self.Medic_CurrentEntToHeal) != true then self:DoMedicCode_Reset() return false end
-		//print(self.FollowingPlayerName)
+		//print(self.FollowPlayer_Entity)
 		if IsValid(self.Medic_CurrentEntToHeal) && VJ_IsAlive(self.Medic_CurrentEntToHeal) == true then
 			if self.Medic_CurrentEntToHeal:Health() > self.Medic_CurrentEntToHeal:GetMaxHealth() * 0.75 then self:DoMedicCode_Reset() return false end
 			if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then
@@ -2435,20 +2429,20 @@ function ENT:Think()
 
 		if self.FollowingPlayer == true then
 			//print(self:GetTarget())
-			//print(self.FollowingPlayerName)
+			//print(self.FollowPlayer_Entity)
 			if GetConVarNumber("ai_ignoreplayers") == 0 then
-				if !IsValid(self.FollowingPlayerName) or !self.FollowingPlayerName:Alive() or self:Disposition(self.FollowingPlayerName) != D_LI then self:FollowPlayerReset() end
-				if CurTime() > self.NextFollowPlayerT && IsValid(self.FollowingPlayerName) && self.FollowingPlayerName:Alive() && self.AlreadyBeingHealedByMedic == false then
-					local DistanceToPly = self:GetPos():Distance(self.FollowingPlayerName:GetPos())
+				if !IsValid(self.FollowPlayer_Entity) or !self.FollowPlayer_Entity:Alive() or self:Disposition(self.FollowPlayer_Entity) != D_LI then self:FollowPlayerReset() end
+				if CurTime() > self.NextFollowPlayerT && IsValid(self.FollowPlayer_Entity) && self.FollowPlayer_Entity:Alive() && self.AlreadyBeingHealedByMedic == false then
+					local DistanceToPly = self:GetPos():Distance(self.FollowPlayer_Entity:GetPos())
 					local busy = self:BusyWithActivity()
 					local abletomove = true
-					self:SetTarget(self.FollowingPlayerName)
+					self:SetTarget(self.FollowPlayer_Entity)
 					if busy == true && DistanceToPly < (self.FollowPlayerCloseDistance * 4) then
 						abletomove = false
 					end
 					if DistanceToPly > self.FollowPlayerCloseDistance then
 						if abletomove == true then
-							self.RunningAfter_FollowPlayer = true
+							self.FollowPlayer_GoingAfter = true
 							self.AlreadyDone_RunSelectSchedule_FollowPlayer = false
 							if busy == false then
 								local movetype = "TASK_RUN_PATH"
@@ -2468,7 +2462,7 @@ function ENT:Think()
 							self:StopMoving()
 							self:SelectSchedule()
 						end
-						self.RunningAfter_FollowPlayer = false
+						self.FollowPlayer_GoingAfter = false
 						self.AlreadyDone_RunSelectSchedule_FollowPlayer = true
 					end
 					self.NextFollowPlayerT = CurTime() + self.NextFollowPlayerTime
@@ -2856,7 +2850,7 @@ end
 function ENT:CanDoCertainAttack(AttackName)
 	AttackName = AttackName or "MeleeAttack"
 	-- Attack Names: "MeleeAttack" || "RangeAttack" || "LeapAttack"
-	if self.NextDoAnyAttackT > CurTime() or self.RunningAfter_FollowPlayer == true or self.vACT_StopAttacks == true or self.Flinching == true or self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.VJ_IsBeingControlled == true*/ then return false end
+	if self.NextDoAnyAttackT > CurTime() or self.FollowPlayer_GoingAfter == true or self.vACT_StopAttacks == true or self.Flinching == true or self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.VJ_IsBeingControlled == true*/ then return false end
 
 	if AttackName == "MeleeAttack" then
 		if self.IsAbleToMeleeAttack == true && self.MeleeAttacking == false && self.LeapAttacking == false && self.RangeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
@@ -3612,9 +3606,6 @@ function ENT:DoEntityRelationshipCheck()
 							v:AddEntityRelationship(self,D_LI,99)
 							self:AddEntityRelationship(v,D_LI,99)
 						end*/
-						if self.CombineFriendly == true then if self:CombineFriendlyCode(v) == true then entisfri = true end end
-						if self.ZombieFriendly == true then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
-						if self.AntlionFriendly == true then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
 						if self.PlayerFriendly == true then
 							if self:PlayerAllies(v) == true then entisfri = true end
 							if self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true then
@@ -3716,7 +3707,7 @@ function ENT:DoEntityRelationshipCheck()
 				end
 			end
 			if vPlayer then
-				if entisfri == true && self.MoveOutOfFriendlyPlayersWay == true && CurTime() > self.NextMoveOutOfFriendlyPlayersWayT && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && self:BusyWithActivity() == false then
+				if entisfri == true && self.MoveOutOfFriendlyPlayersWay == true && !self:IsMoving() && CurTime() > self.TakingCoverT && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && self:BusyWithActivity() == false then
 					local dist = 20
 					if self.FollowingPlayer == true then dist = 10 end
 					if /*self:Disposition(v) == D_LI &&*/ (self:VJ_GetNearestPointToEntityDistance(v) < dist) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
@@ -3743,11 +3734,7 @@ function ENT:DoEntityRelationshipCheck()
 						vsched.IsMovingTask = true
 						vsched.IsMovingTask_Run = true
 						self:StartSchedule(vsched)
-						if self.NextProcessTime > 0.5 then
-							self.NextMoveOutOfFriendlyPlayersWayT = 0
-						else
-							self.NextMoveOutOfFriendlyPlayersWayT = CurTime() + 0.5
-						end
+						self.TakingCoverT = CurTime() + 0.2
 					end
 				end
 				if self.HasOnPlayerSight == true then self:OnPlayerSightCode(v) end
@@ -4022,7 +4009,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 			if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
 				if self:Disposition(DamageAttacker) != D_HT then
 					self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo,hitgroup)
-					if self.FollowingPlayer == true && self.FollowingPlayerName == DamageAttacker then self:FollowPlayerReset() end
+					if self.FollowingPlayer == true && self.FollowPlayer_Entity == DamageAttacker then self:FollowPlayerReset() end
 					self.VJ_AddCertainEntityAsEnemy[#self.VJ_AddCertainEntityAsEnemy+1] = DamageAttacker
 					self:AddEntityRelationship(DamageAttacker,D_HT,99)
 					self.TakingCoverT = CurTime() + 2
@@ -5388,14 +5375,11 @@ function ENT:ConvarsOnInit()
 	if GetConVarNumber("vj_npc_sd_nosounds") == 1 then self.HasSounds = false end
 	if GetConVarNumber("vj_npc_vjfriendly") == 1 then self.VJFriendly = true end
 	if GetConVarNumber("vj_npc_playerfriendly") == 1 then self.PlayerFriendly = true end
-	if GetConVarNumber("vj_npc_zombiefriendly") == 1 then self.ZombieFriendly = true end
-	if GetConVarNumber("vj_npc_antlionfriendly") == 1 then self.AntlionFriendly = true end
-	if GetConVarNumber("vj_npc_combinefriendly") == 1 then self.CombineFriendly = true end
+	if GetConVarNumber("vj_npc_antlionfriendly") == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_ANTLION" end
+	if GetConVarNumber("vj_npc_combinefriendly") == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_COMBINE" end
+	if GetConVarNumber("vj_npc_zombiefriendly") == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_ZOMBIE" end
 	if GetConVarNumber("vj_npc_noallies") == 1 then
 		self.HasAllies = false
-		self.ZombieFriendly = false
-		self.AntlionFriendly = false
-		self.CombineFriendly = false
 		self.PlayerFriendly = false
 	end
 	if GetConVarNumber("vj_npc_nocorpses") == 1 then self.HasDeathRagdoll = false end
