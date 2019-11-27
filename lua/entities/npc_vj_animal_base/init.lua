@@ -315,9 +315,9 @@ ENT.Flinching = false
 ENT.TakingCover = false
 ENT.vACT_StopAttacks = false
 ENT.FollowingPlayer = false
-ENT.RunningAfter_FollowPlayer = false
-ENT.FollowingPlayer_WanderValue = false
-ENT.FollowingPlayer_ChaseValue = false
+ENT.FollowPlayer_GoingAfter = false
+ENT.FollowPlayer_WanderValue = false
+ENT.FollowPlayer_ChaseValue = false
 ENT.VJ_IsBeingControlled = false
 ENT.VJ_PlayingSequence = false
 ENT.VJ_IsPlayingSoundTrack = false
@@ -336,7 +336,7 @@ ENT.DoingVJDeathDissolve = false
 ENT.HasBeenGibbedOnDeath = false
 ENT.DeathAnimationCodeRan = false
 ENT.VJ_IsBeingControlled_Tool = false
-ENT.FollowingPlayerName = NULL
+ENT.FollowPlayer_Entity = NULL
 ENT.VJ_TheController = NULL
 ENT.VJ_TheControllerEntity = NULL
 ENT.VJ_TheControllerBullseye = NULL
@@ -843,12 +843,12 @@ function ENT:OnCondition(iCondition)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:FollowPlayerReset()
-	if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then self.FollowingPlayerName:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.") end
+	if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then self.FollowPlayer_Entity:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.") end
 	self.FollowingPlayer = false
-	self.RunningAfter_FollowPlayer = false
-	self.FollowingPlayerName = NULL
-	self.DisableWandering = self.FollowingPlayer_WanderValue
-	self.DisableChasingEnemy = self.FollowingPlayer_ChaseValue
+	self.FollowPlayer_GoingAfter = false
+	self.FollowPlayer_Entity = NULL
+	self.DisableWandering = self.FollowPlayer_WanderValue
+	self.DisableChasingEnemy = self.FollowPlayer_ChaseValue
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:FollowPlayerCode(key,activator,caller,data)
@@ -865,12 +865,12 @@ function ENT:FollowPlayerCode(key,activator,caller,data)
 			//self:FaceCertainEntity(activator,false)
 			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
 			activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is now following you.") end
-			self.FollowingPlayer_WanderValue = self.DisableWandering
-			self.FollowingPlayer_ChaseValue = self.DisableChasingEnemy
+			self.FollowPlayer_WanderValue = self.DisableWandering
+			self.FollowPlayer_ChaseValue = self.DisableChasingEnemy
 			self.DisableWandering = true
 			self.DisableChasingEnemy = true
 			self:SetTarget(activator)
-			self.FollowingPlayerName = activator
+			self.FollowPlayer_Entity = activator
 			self:StopMoving()
 			timer.Simple(0.15,function() if self:IsValid() && self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_TARGET_FACE) end end)
 			//if self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_IDLE_STAND) end
@@ -917,18 +917,18 @@ function ENT:Think()
 
 		if self.FollowingPlayer == true then
 			//print(self:GetTarget())
-			//print(self.FollowingPlayerName)
+			//print(self.FollowPlayer_Entity)
 			if GetConVarNumber("ai_ignoreplayers") == 0 then
-				if !self.FollowingPlayerName:Alive() then self:FollowPlayerReset() end
-				if CurTime() > self.NextFollowPlayerT && IsValid(self.FollowingPlayerName) && self.FollowingPlayerName:Alive() && self.AlreadyBeingHealedByMedic == false then
-					local DistanceToPly = self:GetPos():Distance(self.FollowingPlayerName:GetPos())
-					self:SetTarget(self.FollowingPlayerName)
+				if !self.FollowPlayer_Entity:Alive() then self:FollowPlayerReset() end
+				if CurTime() > self.NextFollowPlayerT && IsValid(self.FollowPlayer_Entity) && self.FollowPlayer_Entity:Alive() && self.AlreadyBeingHealedByMedic == false then
+					local DistanceToPly = self:GetPos():Distance(self.FollowPlayer_Entity:GetPos())
+					self:SetTarget(self.FollowPlayer_Entity)
 					if DistanceToPly > self.FollowPlayerCloseDistance then
-						self.RunningAfter_FollowPlayer = true
+						self.FollowPlayer_GoingAfter = true
 						self:VJ_TASK_GOTO_TARGET()
 					else
 						self:StopMoving()
-						self.RunningAfter_FollowPlayer = false
+						self.FollowPlayer_GoingAfter = false
 					end
 					self.NextFollowPlayerT = CurTime() + self.NextFollowPlayerTime
 				end
