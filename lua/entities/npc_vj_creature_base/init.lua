@@ -33,7 +33,7 @@ ENT.TurningUseAllAxis = false -- If set to true, angles will not be restricted t
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
 ENT.CanTurnWhileStationary = true -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
-ENT.MaxJumpLegalDistance = 550 -- The max distance the NPC can jump (Usually from one node to another)
+ENT.MaxJumpLegalDistance = VJ_Set(400, 550) -- The max distance the NPC can jump (Usually from one node to another) | ( UP, DOWN )
 	-- Aerial Movetype Variables:
 ENT.Aerial_FlyingSpeed_Calm = 80 -- The speed it should fly with, when it's wandering, moving slowly, etc. | Basically walking campared to ground SNPCs
 ENT.Aerial_FlyingSpeed_Alerted = 200 -- The speed it should fly with, when it's chasing an enemy, moving away quickly, etc. | Basically running campared to ground SNPCs
@@ -1203,18 +1203,23 @@ function ENT:OnTaskComplete()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IsJumpLegal(startPos,apex,endPos)
-	/*print("--------------")
+	/*print("---------------------")
 	print(startPos)
 	print(apex)
 	print(endPos)*/
 	local result = self:CustomOnIsJumpLegal(startPos,apex,endPos)
 	if result != nil then if result == true then self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190) end return result end
 	local dist_apex = startPos:Distance(apex)
-	local dist_end = startPos:Distance(apex)
-	/*print(dist_apex)
-	print(dist_end)*/
-	if dist_apex > self.MaxJumpLegalDistance then return nil end
-	if dist_end > self.MaxJumpLegalDistance then return nil end
+	local dist_end = startPos:Distance(endPos)
+	local maxdist = self.MaxJumpLegalDistance.a -- Var gam Ver | Arachin tive varva hamar ter
+	-- Aravel = Ver, Nevaz = Var
+	if endPos.z - startPos.z <= 0 then maxdist = self.MaxJumpLegalDistance.b end -- Ver bidi tsadke
+	/*print("---------------------")
+	print(endPos.z - startPos.z)
+	print("Apex: "..dist_apex)
+	print("End Pos: "..dist_end)*/
+	if dist_apex > maxdist then return nil end
+	if dist_end > maxdist then return nil end
 	self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190)
 	return true
 end
