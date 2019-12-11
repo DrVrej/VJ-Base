@@ -115,7 +115,6 @@ ConvarList["vj_npc_sd_suppressing"] = 0 -- Disable suppressing callout sounds
 ------ Developer Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ConvarList["vj_npc_usedevcommands"] = 0 -- Should it use Dev Commands?
-ConvarList["vj_npc_printalerted"] = 0 -- Prints its Alerted status, is it alerted? Or not?
 ConvarList["vj_npc_printdied"] = 0 -- Prints Died when the SNPC dies
 ConvarList["vj_npc_printondamage"] = 0 -- Prints when the SNPC gets damaged
 ConvarList["vj_npc_printontouch"] = 0 -- Prints when something touches the SNPC

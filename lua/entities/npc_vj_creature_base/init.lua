@@ -33,7 +33,7 @@ ENT.TurningUseAllAxis = false -- If set to true, angles will not be restricted t
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
 ENT.CanTurnWhileStationary = true -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
-ENT.MaxJumpLegalDistance = VJ_Set(400, 550) -- The max distance the NPC can jump (Usually from one node to another) | ( UP, DOWN )
+ENT.MaxJumpLegalDistance = VJ_Set(400,550) -- The max distance the NPC can jump (Usually from one node to another) | ( UP, DOWN )
 	-- Aerial Movetype Variables:
 ENT.Aerial_FlyingSpeed_Calm = 80 -- The speed it should fly with, when it's wandering, moving slowly, etc. | Basically walking campared to ground SNPCs
 ENT.Aerial_FlyingSpeed_Alerted = 200 -- The speed it should fly with, when it's chasing an enemy, moving away quickly, etc. | Basically running campared to ground SNPCs
@@ -207,8 +207,7 @@ ENT.HitGroupFlinching_Values = {/* EXAMPLES: {HitGroup = {HITGROUP_LEFTLEG}, Ani
 	-- ====== Damage By Player Variables ====== --
 ENT.HasDamageByPlayer = true -- Should the SNPC do something when it's hit by a player? Example: Play a sound or animation
 ENT.DamageByPlayerDispositionLevel = 1 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
-ENT.DamageByPlayerNextTime1 = 2 -- How much time should it pass until it runs the code again? | First number in math.random
-ENT.DamageByPlayerNextTime2 = 2 -- How much time should it pass until it runs the code again? | Second number in math.random
+ENT.DamageByPlayerTime = VJ_Set(2,2) -- How much time until it can run the Damage By Player code?
 	-- ====== Run Away On Unknown Damage Variables ====== --
 ENT.RunAwayOnUnknownDamage = true -- Should run away on damage
 ENT.NextRunAwayOnDamageTime = 5 -- Until next run after being shot when not alerted
@@ -2422,7 +2421,7 @@ function ENT:Think()
 		//self:DoCustomIdleAnimation()
 		//if !IsValid(self:GetEnemy()) then self.Alerted = false end
 		if self.VJDEBUG_SNPC_ENABLED == true then
-			if GetConVarNumber("vj_npc_printcurenemy") == 1 then if IsValid(self:GetEnemy()) then print(self:GetClass().."'s Enemy: ",self:GetEnemy()) else print(self:GetClass().."'s Enemy: None") end end
+			if GetConVarNumber("vj_npc_printcurenemy") == 1 then print(self:GetClass().."'s Enemy: ",self:GetEnemy()," Alerted? ",self.Alerted) end
 			if GetConVarNumber("vj_npc_printalerted") == 1 then if self.Alerted == true then print(self:GetClass().." Is Alerted!") else print(self:GetClass().." Is Not Alerted!") end end
 			if GetConVarNumber("vj_npc_printtakingcover") == 1 then if CurTime() > self.TakingCoverT == true then print(self:GetClass().." Is Not Taking Cover") else print(self:GetClass().." Is Taking Cover ("..self.TakingCoverT-CurTime()..")") end end
 			if GetConVarNumber("vj_npc_printlastseenenemy") == 1 then PrintMessage(HUD_PRINTTALK, self.LastSeenEnemyTime.." ("..self:GetName()..")") end
@@ -3314,7 +3313,7 @@ function ENT:DamageByPlayerCode(dmginfo,hitgroup)
 			if self.DamageByPlayerDispositionLevel == 2 && (self:Disposition(theattack) == D_LI or self:Disposition(theattack) == D_NU) then return end
 			self:CustomOnDamageByPlayer(dmginfo,hitgroup)
 			self:DamageByPlayerSoundCode()
-			self.NextDamageByPlayerT = CurTime() + math.Rand(self.DamageByPlayerNextTime1,self.DamageByPlayerNextTime2)
+			self.NextDamageByPlayerT = CurTime() + math.Rand(self.DamageByPlayerTime.a,self.DamageByPlayerTime.b)
 		end
 	end
 end
@@ -3756,7 +3755,7 @@ function ENT:CallForHelpCode(SeeDistance)
 	local findents = ents.FindInSphere(self:GetPos(),SeeDistance)
 	if (!findents) then return false end
 	for _,x in pairs(findents) do
-		if x:IsNPC() && x != self && x.IsVJBaseSNPC == true && VJ_IsAlive(x) == true /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && x.IsVJBaseSNPC_Animal != false /*&& x.Behavior != VJ_BEHAVIOR_PASSIVE*/ && x.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && x.FollowingPlayer == false && x.VJ_IsBeingControlled == false && (!x.IsVJBaseSNPC_Tank) && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4) then
+		if x:IsNPC() && x != self && x.IsVJBaseSNPC == true && VJ_IsAlive(x) == true /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && x.IsVJBaseSNPC_Animal != false /*&& x.Behavior != VJ_BEHAVIOR_PASSIVE*/ && x.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& x.FollowingPlayer == false*/ && x.VJ_IsBeingControlled == false && (!x.IsVJBaseSNPC_Tank) && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4) then
 			if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
 				local ene = self:GetEnemy()
 				if IsValid(ene) /*&& x.MovementType == VJ_MOVETYPE_STATIONARY*/ && x:GetPos():Distance(ene:GetPos()) > x.SightDistance then continue end -- Yete teshnamin shad herou e, mi sharnager

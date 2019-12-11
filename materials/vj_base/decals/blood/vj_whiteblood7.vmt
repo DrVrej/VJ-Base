@@ -1,7 +1,6 @@
-"LightmappedGeneric"
+"DecalModulate"
 {
 	"$basetexture" "vj_base/decals/blood/vj_whiteblood7"
-	"$translucent" 1
 	"$decal" 1
 	"$decalscale" 0.12
 	"$vertexcolor" 1
