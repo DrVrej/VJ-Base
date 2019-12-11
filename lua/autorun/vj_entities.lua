@@ -234,16 +234,9 @@ function VJ_DestroyCombineTurret(vSelf,argent)
 	if argent:GetClass() == "npc_turret_floor" && !argent.VJ_TurretDestroyed then
 		argent:Fire("selfdestruct", "", 0)
 		local phys = argent:GetPhysicsObject()
-		if phys:IsValid() && phys != nil && phys != NULL then
-			if vSelf:IsNPC() == true && IsValid(vSelf:GetEnemy()) then
-				phys:EnableMotion(true)
-				phys:ApplyForceCenter(vSelf:GetForward() *10000)
-			else
-				//if vSelf:IsPlayer() then
-					phys:EnableMotion(true)
-					phys:ApplyForceCenter(vSelf:GetForward() *10000)
-				//end
-			end
+		if IsValid(phys) then
+			phys:EnableMotion(true)
+			phys:ApplyForceCenter(vSelf:GetForward() *10000)
 		end
 		argent.VJ_TurretDestroyed = true
 		return true
@@ -287,7 +280,6 @@ NPC_MetaTable.AlreadyBeingHealedByMedic = false
 Player_MetaTable.AlreadyBeingHealedByMedic = false
 
 //NPC_MetaTable.VJ_NPC_Class = {}
-
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_Controller_InitialMessage(ply)
 	if !IsValid(ply) then return end
