@@ -1909,8 +1909,19 @@ function ENT:DoChangeWeapon(SetType)
 	end*/
 	self:CustomOnDoChangeWeapon(self:GetActiveWeapon(),self.CurrentWeaponEntity)
 end
+//ENT.TurningLerp = Angle(0,0,0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
+	/*if self.FollowingPlayer == true then
+		if self.TurningLerp == Angle(0,0,0) then self.TurningLerp = Angle(0,self:GetAngles().y,0) end
+		self.TurningLerp = LerpAngle(0.25,self.TurningLerp,Angle(0,(self.FollowPlayer_Entity:GetPos() - self:GetPos()):Angle().y,0)) // 0.25
+		print(self:GetAngles())
+		print(self.FollowPlayer_Entity:GetPos())
+		print(self.TurningLerp)
+		print((math.abs( math.AngleDifference(self:GetAngles().y, self.TurningLerp.y)) / (0.25)))
+		//print(self.TurningLerp)
+		self:SetAngles(Angle(self.TurningLerp))
+	end*/
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
 	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
 	if self:GetVelocity():Length() <= 0 && self.MovementType == VJ_MOVETYPE_GROUND /*&& CurSched.IsMovingTask == true*/ then self:DropToFloor() end
@@ -3459,7 +3470,6 @@ function ENT:CallForHelpCode(SeeDistance)
 				local ene = self:GetEnemy()
 				if IsValid(ene) /*&& x.MovementType == VJ_MOVETYPE_STATIONARY*/ && x:GetPos():Distance(ene:GetPos()) > x.SightDistance then continue end -- Yete teshnamin shad herou e, mi sharnager
 				//if x:DoRelationshipCheck(ene) == true then
-				print(x)
 				if !IsValid(x:GetEnemy()) && ((!ene:IsPlayer() && x:Disposition(ene) != D_LI) or (ene:IsPlayer())) /*&& !self:IsCurrentSchedule(SCHED_FORCED_GO_RUN) == true && !self:IsCurrentSchedule(SCHED_FORCED_GO) == true*/ then
 					local goingtomove = false
 					self:CustomOnCallForHelp(x)
@@ -3474,7 +3484,6 @@ function ENT:CallForHelpCode(SeeDistance)
 						if (CurTime() > x.NextChaseTime) then
 							if IsValid(ene) then
 								if ene:IsPlayer() && x.PlayerFriendly == true then
-									print(x)
 									x.VJ_AddCertainEntityAsEnemy[#x.VJ_AddCertainEntityAsEnemy+1] = ene
 								end
 								x:VJ_DoSetEnemy(ene,true)
