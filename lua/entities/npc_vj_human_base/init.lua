@@ -958,6 +958,7 @@ ENT.LostEnemySoundT = 0
 ENT.NextDoAnyAttackT = 0
 ENT.NearestPointToEnemyDistance = 0
 ENT.ReachableEnemyCount = 0
+ENT.LatestEnemyDistance = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.LatestVisibleEnemyPosition = Vector(0,0,0)
 ENT.SelectedDifficulty = 1
@@ -1515,7 +1516,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 		timer.Simple(0.1,function() -- 0.1 hedvargyan espase minchevor khaghe pokhe animation e
 			if IsValid(self) then
 				local curseq = self:GetSequence()
-				if VJ_SequenceToActivity(self,self:GetSequenceName(curseq)) == finaltbl then -- Nayir yete himagva animation e nooynene
+				if VJ_SequenceToActivity(self,self:GetSequenceName(curseq)) == self:VJ_TranslateWeaponActivity(finaltbl) then -- Nayir yete himagva animation e nooynene
 					self.NextIdleStandTime = CurTime() + (self:SequenceDuration(curseq) - 0.15) -- Yete nooynene ooremen jamanage tir animation-en yergarootyan chap!
 				end
 			end
@@ -1591,7 +1592,11 @@ function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
 	end
 	//if self:VJ_HasActiveWeapon() == true then self:VJ_TASK_CHASE_ENEMY(true) else self:VJ_TASK_CHASE_ENEMY(false) end
 	if self.NextChaseTime > CurTime() then return end
-	self.NextChaseTime = CurTime() + 0.1
+	if self.LatestEnemyDistance > 2000 then
+		self.NextChaseTime = CurTime() + 1
+	else
+		self.NextChaseTime = CurTime() + 0.1
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:BusyWithActivity()
@@ -2160,19 +2165,20 @@ function ENT:Think()
 			self.ResetedEnemy = false
 			self:UpdateEnemyMemory(ene,ene:GetPos())
 			self.LatestEnemyPosition = ene:GetPos()
+			self.LatestEnemyDistance = self:GetPos():Distance(ene:GetPos())
 			self.LatestEnemyClass = ene
 			self.TimeSinceLastSeenEnemy = 0
 			self.TimeSinceSeenEnemy = self.TimeSinceSeenEnemy + 0.1
-			if (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (ene:GetPos():Distance(self:GetPos()) < self.SightDistance) then
+			if (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (self.LatestEnemyDistance < self.SightDistance) then
 				local seentr = util.TraceLine({start = self:NearestPoint(self:GetPos() +self:OBBCenter()),endpos = ene:EyePos(),filter = function(ent) if (ent:GetClass() == self:GetClass() or self:Disposition(ent) == D_LI) then return false end end})
 				if (ene:Visible(self) or (IsValid(seentr.Entity) && seentr.Entity:GetClass() == ene)) then
 					self.LastSeenEnemyTime = 0
 					self.LatestVisibleEnemyPosition = ene:GetPos()
 				else
-					if (ene:GetPos():Distance(self:GetPos()) < 4000) then self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1 else self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.5 end
+					if (self.LatestEnemyDistance < 4000) then self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1 else self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.5 end
 				end
 			else
-				if (ene:GetPos():Distance(self:GetPos()) < 4000) then self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1 else self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.5 end
+				if (self.LatestEnemyDistance < 4000) then self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1 else self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.5 end
 			end
 
 			if self.ThrowingGrenade == false && self.CallForHelp == true && self.Dead == false then
@@ -2193,8 +2199,7 @@ function ENT:Think()
 						finalc = math.random(1,math.floor(chance / 2))
 					end
 					if finalc == 1 then
-						local EnemyDistance = self:GetPos():Distance(ene:GetPos())
-						if EnemyDistance < self.GrenadeAttackThrowDistance && EnemyDistance > self.GrenadeAttackThrowDistanceClose then
+						if self.LatestEnemyDistance < self.GrenadeAttackThrowDistance && self.LatestEnemyDistance > self.GrenadeAttackThrowDistanceClose then
 							self:ThrowGrenadeCode()
 						end
 					end
@@ -2714,7 +2719,8 @@ function ENT:SelectSchedule(iNPCState)
 		self.NoWeapon_UseScaredBehavior_Active = false
 	else
 	-- Combat Behavior --
-		if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.SightDistance) then
+		self.LatestEnemyDistance = self:GetEnemy():GetPos():Distance(self:GetPos())
+		if (self.LatestEnemyDistance < self.SightDistance) then
 			self:IdleSoundCode()
 			if self:VJ_HasActiveWeapon() == false && CurTime() > self.NextChaseTime && self.NoWeapon_UseScaredBehavior == true && self.VJ_IsBeingControlled == false then
 				//self.AnimTbl_IdleStand = self.AnimTbl_ScaredBehaviorStand
@@ -2732,7 +2738,7 @@ function ENT:SelectSchedule(iNPCState)
 			local EnemyPos = self:GetEnemy():EyePos()
 			local SelfToEnemyDistance = self:EyePos():Distance(EnemyPos)
 			local dontshoot = false
-			if self.HasRunFromEnemy == true && self:GetPos():Distance(self:GetEnemy():GetPos()) <= self.RunFromEnemy_Distance && CurTime() > self.TakingCoverT && CurTime() > self.NextChaseTime && self.MeleeAttacking == false && self:VJ_HasActiveWeapon() == true && self.FollowingPlayer == false && self.ThrowingGrenade == false && self.VJ_PlayingSequence == false && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos()+self:OBBCenter()),self:GetEnemy():EyePos()) == false then
+			if self.HasRunFromEnemy == true && self.LatestEnemyDistance <= self.RunFromEnemy_Distance && CurTime() > self.TakingCoverT && CurTime() > self.NextChaseTime && self.MeleeAttacking == false && self:VJ_HasActiveWeapon() == true && self.FollowingPlayer == false && self.ThrowingGrenade == false && self.VJ_PlayingSequence == false && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos()+self:OBBCenter()),self:GetEnemy():EyePos()) == false then
 				local checkdist = self:VJ_CheckAllFourSides(200)
 				local randmove = {}
 				if checkdist.Backward == true then randmove[#randmove+1] = "Backward" end
@@ -2966,7 +2972,7 @@ function ENT:SelectSchedule(iNPCState)
 				end
 			end
 		end
-		if IsValid(self:GetEnemy()) && self:GetEnemy():GetPos():Distance(self:GetPos()) > self.SightDistance then
+		if IsValid(self:GetEnemy()) && self.LatestEnemyDistance > self.SightDistance then
 			self:ResetEnemy(false)
 		end
 	end

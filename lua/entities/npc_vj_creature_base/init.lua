@@ -1002,6 +1002,7 @@ ENT.NextDoAnyAttackT = 0
 ENT.NearestPointToEnemyDistance = 0
 ENT.JumpLegalLandingTime = 0
 ENT.ReachableEnemyCount = 0
+ENT.LatestEnemyDistance = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.LatestVisibleEnemyPosition = Vector(0,0,0)
 ENT.CurrentTurningAngle = false
@@ -1641,7 +1642,11 @@ function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
 		self:VJ_TASK_CHASE_ENEMY()
 	end
 	if self.NextChaseTime > CurTime() then return end
-	self.NextChaseTime = CurTime() + 0.1
+	if self.LatestEnemyDistance > 2000 then
+		self.NextChaseTime = CurTime() + 1
+	else
+		self.NextChaseTime = CurTime() + 0.1
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:BusyWithActivity()
@@ -2532,10 +2537,11 @@ function ENT:Think()
 			self.ResetedEnemy = false
 			self:UpdateEnemyMemory(ene,ene:GetPos())
 			self.LatestEnemyPosition = ene:GetPos()
+			self.LatestEnemyDistance = self:GetPos():Distance(ene:GetPos())
 			self.LatestEnemyClass = ene
 			self.TimeSinceLastSeenEnemy = 0
 			self.TimeSinceSeenEnemy = self.TimeSinceSeenEnemy + 0.1
-			if (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (ene:GetPos():Distance(self:GetPos()) < self.SightDistance) then
+			if (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (self.LatestEnemyDistance < self.SightDistance) then
 				local seentr = util.TraceLine({start = self:NearestPoint(self:GetPos() +self:OBBCenter()),endpos = ene:EyePos(),filter = function(ent) if (ent:GetClass() == self:GetClass() or self:Disposition(ent) == D_LI) then return false end end})
 				if (ene:Visible(self) or (IsValid(seentr.Entity) && seentr.Entity:GetClass() == ene)) then
 					self.LastSeenEnemyTime = 0
@@ -2559,7 +2565,7 @@ function ENT:Think()
 				local closedist = self.NoChaseAfterCertainRange_CloseDistance
 				if fardist == "UseRangeDistance" then fardist = self.RangeDistance end
 				if closedist == "UseRangeDistance" then closedist = self.RangeToMeleeDistance end
-				if (ene:GetPos():Distance(self:GetPos()) < fardist) && (ene:GetPos():Distance(self:GetPos()) > closedist) && ene:Visible(self) /*&& self:CanDoCertainAttack("RangeAttack") == true*/ then
+				if (self.LatestEnemyDistance < fardist) && (self.LatestEnemyDistance > closedist) && ene:Visible(self) /*&& self:CanDoCertainAttack("RangeAttack") == true*/ then
 					self.RangeAttack_DisableChasingEnemy = true
 					if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then self:StopMoving() end
 					if self.MovementType == VJ_MOVETYPE_GROUND && !self:IsMoving() then self:SetAngles(self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle())) end
@@ -2685,7 +2691,7 @@ function ENT:Think()
 					local isbeingcontrolled_attack = false
 					if self.VJ_IsBeingControlled == true then isbeingcontrolled = true end
 					if isbeingcontrolled == true && self.VJ_TheController:KeyDown(IN_ATTACK2) then isbeingcontrolled_attack = true end
-					if (isbeingcontrolled == true && isbeingcontrolled_attack == true && self:CustomAttackCheck_RangeAttack() == true) or (isbeingcontrolled == false && self:CustomAttackCheck_RangeAttack() == true && (ene:GetPos():Distance(self:GetPos()) < self.RangeDistance) && (ene:GetPos():Distance(self:GetPos()) > self.RangeToMeleeDistance) && (self:GetForward():Dot((ene:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.RangeAttackAngleRadius)))) then
+					if (isbeingcontrolled == true && isbeingcontrolled_attack == true && self:CustomAttackCheck_RangeAttack() == true) or (isbeingcontrolled == false && self:CustomAttackCheck_RangeAttack() == true && (self.LatestEnemyDistance < self.RangeDistance) && (self.LatestEnemyDistance > self.RangeToMeleeDistance) && (self:GetForward():Dot((ene:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.RangeAttackAngleRadius)))) then
 						if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
 						self.RangeAttacking = true
 						self.IsAbleToRangeAttack = false
@@ -2730,7 +2736,7 @@ function ENT:Think()
 					local isbeingcontrolled_attack = false
 					if self.VJ_IsBeingControlled == true then isbeingcontrolled = true end
 					if isbeingcontrolled == true && self.VJ_TheController:KeyDown(IN_JUMP) then isbeingcontrolled_attack = true end
-					if (isbeingcontrolled == true && isbeingcontrolled_attack == true && self:CustomAttackCheck_LeapAttack() == true) or (isbeingcontrolled == false && self:CustomAttackCheck_LeapAttack() == true && (self:IsOnGround() && self:GetPos():Distance(ene:GetPos()) < self.LeapDistance) && (self:GetPos():Distance(ene:GetPos()) > self.LeapToMeleeDistance)) then
+					if (isbeingcontrolled == true && isbeingcontrolled_attack == true && self:CustomAttackCheck_LeapAttack() == true) or (isbeingcontrolled == false && self:CustomAttackCheck_LeapAttack() == true && (self:IsOnGround() && self.LatestEnemyDistance < self.LeapDistance) && (self.LatestEnemyDistance > self.LeapToMeleeDistance)) then
 						self.LeapAttacking = true
 						self.AlreadyDoneLeapAttackFirstHit = false
 						self.AlreadyDoneFirstLeapAttack = false
@@ -3267,7 +3273,8 @@ function ENT:SelectSchedule()
 	if self.DisableSelectSchedule == true then return end
 	-- If the enemy is out of reach, then make it reset the enemy!
 	if IsValid(self:GetEnemy()) then
-		if (self:GetEnemy():GetPos():Distance(self:GetPos()) > self.SightDistance) then
+		self.LatestEnemyDistance = self:GetEnemy():GetPos():Distance(self:GetPos())
+		if (self.LatestEnemyDistance > self.SightDistance) then
 			self.TakingCoverT = 0
 			self:DoIdleAnimation()
 			self:ResetEnemy()
@@ -3276,7 +3283,7 @@ function ENT:SelectSchedule()
 	if self.PlayingAttackAnimation == false or self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 		-- If the enemy is less than the sight distance, then chase the enemy!
 		if IsValid(self:GetEnemy()) then
-			if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.SightDistance) then
+			if (self.LatestEnemyDistance < self.SightDistance) then
 				//self:UpdateEnemyMemory(self:GetEnemy(),self:GetEnemy():GetPos())
 				self:DoChaseAnimation()
 			else -- If it's more than the sight distance, then idle / wander
