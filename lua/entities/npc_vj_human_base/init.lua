@@ -1516,7 +1516,8 @@ function ENT:VJ_TASK_IDLE_STAND()
 		timer.Simple(0.1,function() -- 0.1 hedvargyan espase minchevor khaghe pokhe animation e
 			if IsValid(self) then
 				local curseq = self:GetSequence()
-				if VJ_SequenceToActivity(self,self:GetSequenceName(curseq)) == self:VJ_TranslateWeaponActivity(finaltbl) then -- Nayir yete himagva animation e nooynene
+				local seqtoact = VJ_SequenceToActivity(self,self:GetSequenceName(curseq))
+				if seqtoact == finaltbl or seqtoact == self:VJ_TranslateWeaponActivity(finaltbl) then -- Nayir yete himagva animation e nooynene
 					self.NextIdleStandTime = CurTime() + (self:SequenceDuration(curseq) - 0.15) -- Yete nooynene ooremen jamanage tir animation-en yergarootyan chap!
 				end
 			end
