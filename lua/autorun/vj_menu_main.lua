@@ -304,6 +304,7 @@ if (CLIENT) then
 		}
 		Panel:AddControl("ComboBox", vj_resetadminmenu)
 		Panel:ControlHelp(" ") -- Spacer
+		Panel:AddControl("Checkbox", {Label = "Restrict SNPC Properties to Admins Only", Command = "vj_npc_admin_properties"})
 		Panel:AddControl("Checkbox", {Label = "Allow NoClip", Command = "sbox_noclip"})
 		Panel:AddControl("Checkbox", {Label = "Allow Weapons", Command = "sbox_weapons"})
 		Panel:AddControl("Checkbox", {Label = "Allow PvP", Command = "sbox_playershurtplayers"})

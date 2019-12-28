@@ -1,7 +1,7 @@
 "VertexLitGeneric"
 {
 	"$baseTexture" "models/vj_props/armenia_flagpole01"
-	"$envmap" "env_cubemap"
-	"$envmapsaturation"	".4"
-	"$envmapcontrast"	".5"
+	//"$envmap" "env_cubemap"
+	//"$envmapsaturation"	"0"
+	//"$envmapcontrast"	"1"
 }
