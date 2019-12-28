@@ -7,6 +7,11 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 
 AddCSLuaFile()
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+hook.Add("CanProperty","VJ_PLY_CAN_PROPERTY",function(ply,property,ent)
+	if GetConVarNumber("vj_npc_admin_properties") == 1 && !ply:IsAdmin() && property == "vj_npc_properties" then ply:ChatPrint("These options are restricted to Admin only!") return false end
+end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ SNPC Controlling ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -19,6 +24,7 @@ properties.Add("vj_pr_npc_control",{
 	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
 		if (!IsValid(ent)) then return false end
 		if (ent:IsPlayer()) or !ent:IsNPC() then return false end
+		if (!gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)) then return false end
 		if ent.IsVJBaseSNPC != true then return false end
 		return true
 	end,
@@ -59,6 +65,7 @@ properties.Add("vj_pr_npc_guard",{
 	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
 		if (!IsValid(ent)) then return false end
 		if (ent:IsPlayer()) or !ent:IsNPC() then return false end
+		if (!gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)) then return false end
 		if ent.IsVJBaseSNPC != true then return false end
 		return true
 	end,
@@ -97,6 +104,7 @@ properties.Add("vj_pr_npc_wander",{
 	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
 		if (!IsValid(ent)) then return false end
 		if (ent:IsPlayer()) or !ent:IsNPC() then return false end
+		if (!gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)) then return false end
 		if ent.IsVJBaseSNPC != true then return false end
 		return true
 	end,
@@ -135,6 +143,7 @@ properties.Add("vj_pr_npc_medic",{
 	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
 		if (!IsValid(ent)) then return false end
 		if (ent:IsPlayer()) or !ent:IsNPC() then return false end
+		if (!gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)) then return false end
 		if ent.IsVJBaseSNPC != true then return false end
 		return true
 	end,
@@ -168,6 +177,7 @@ properties.Add("vj_pr_npc_allyme",{
 	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
 		if (!IsValid(ent)) then return false end
 		if (ent:IsPlayer()) or !ent:IsNPC() then return false end
+		if (!gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)) then return false end
 		if ent.IsVJBaseSNPC != true then return false end
 		return true
 	end,
@@ -201,6 +211,7 @@ properties.Add("vj_pr_npc_hostileme",{
 	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
 		if (!IsValid(ent)) then return false end
 		if (ent:IsPlayer()) or !ent:IsNPC() then return false end
+		if (!gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)) then return false end
 		if ent.IsVJBaseSNPC != true then return false end
 		return true
 	end,
@@ -234,6 +245,7 @@ properties.Add("vj_pr_npc_slay",{
 	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
 		if (!IsValid(ent)) then return false end
 		if (ent:IsPlayer()) or !ent:IsNPC() then return false end
+		if (!gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)) then return false end
 		if ent.IsVJBaseSNPC != true then return false end
 		return true
 	end,
@@ -262,6 +274,7 @@ properties.Add("vj_pr_npc_gib",{
 	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
 		if (!IsValid(ent)) then return false end
 		if (ent:IsPlayer()) or !ent:IsNPC() then return false end
+		if (!gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)) then return false end
 		if ent.IsVJBaseSNPC != true then return false end
 		return true
 	end,
@@ -295,6 +308,7 @@ properties.Add("vj_pr_npc_devmode",{
 	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
 		if (!IsValid(ent)) then return false end
 		if (ent:IsPlayer()) or !ent:IsNPC() then return false end
+		if (!gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)) then return false end
 		if ent.IsVJBaseSNPC != true then return false end
 		return true
 	end,
