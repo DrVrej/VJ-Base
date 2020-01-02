@@ -33,6 +33,7 @@ ENT.TurningUseAllAxis = false -- If set to true, angles will not be restricted t
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
 ENT.CanTurnWhileStationary = true -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
+ENT.Stationary_UseNoneMoveType = false -- Technical variable, use this if there is any issues with the SNPC's position, though it does have its downsides, so use it only when needed
 ENT.MaxJumpLegalDistance = VJ_Set(120,150) -- The max distance the NPC can jump (Usually from one node to another) | ( UP, DOWN )
 	-- ====== Miscellaneous Variables ====== --
 ENT.HasEntitiesToNoCollide = true -- If set to false, it won't run the EntitiesToNoCollide code
@@ -1129,7 +1130,11 @@ function ENT:DoChangeMovementType(SetType)
 		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
 	end
 	if self.MovementType == VJ_MOVETYPE_STATIONARY then
-		self:SetMoveType(MOVETYPE_NONE)
+		if self.Stationary_UseNoneMoveType == true then
+			self:SetMoveType(MOVETYPE_NONE)
+		else
+			self:SetMoveType(MOVETYPE_FLY)
+		end
 		self:CapabilitiesRemove(CAP_MOVE_GROUND)
 		self:CapabilitiesRemove(CAP_MOVE_JUMP)
 		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
@@ -4097,7 +4102,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 	if self.HasDeathAnimation != true then DoKilled() return end
 	if self.HasDeathAnimation == true then
 		if GetConVarNumber("vj_npc_nodeathanimation") == 1 or GetConVarNumber("ai_disabled") == 1 or ((dmginfo:GetDamageType() == DMG_DISSOLVE) or (IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() == "prop_combine_ball")) then DoKilled() return end
-		if (dmginfo:GetDamageType() != DMG_DISSOLVE) && (IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() != "prop_combine_ball") then
+		if dmginfo:GetDamageType() != DMG_DISSOLVE then
 			local randanim = math.random(1,self.DeathAnimationChance)
 			if randanim != 1 then DoKilled() return end
 			if randanim == 1 then
