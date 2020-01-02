@@ -810,6 +810,8 @@ function ENT:CustomGibOnDeathSounds(dmginfo,hitgroup) return true end -- returni
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnAllyDeath(argent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnInitialKilled(dmginfo,hitgroup) end -- Ran the moment the NPC dies!
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPriorToKilled(dmginfo,hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomDeathAnimationCode(dmginfo,hitgroup) end
@@ -4030,6 +4032,7 @@ function ENT:SpawnBloodPool(dmginfo,hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PriorToKilled(dmginfo,hitgroup)
+	self:CustomOnInitialKilled(dmginfo,hitgroup)
 	if self.Medic_IsHealingAlly == true then self:DoMedicCode_Reset() end
 	
 	local checkdist = 800 -- Nayir vormeg tive amenan medzen e, adiga ere vor poon tive ela
