@@ -927,6 +927,7 @@ hook.Add("OnEntityCreated","VJ_ENTITYCREATED",function(entity)
 	if (entity:IsNPC() && entity:GetClass() != "npc_grenade_frag" && entity:GetClass() != "bullseye_strider_focus" && entity:GetClass() != "npc_bullseye" && entity:GetClass() != "npc_enemyfinder" && entity:GetClass() != "hornet" && (!entity.IsVJBaseSNPC_Animal)) or (entity:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0) then
 		timer.Simple(0.1,function()
 			if IsValid(entity) then
+				if entity.CurrentPossibleEnemies == nil then entity.CurrentPossibleEnemies = {} end
 				local EntsTbl = ents.GetAll()
 				local count = 1
 				for x=1, #EntsTbl do
