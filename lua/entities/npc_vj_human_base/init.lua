@@ -703,7 +703,7 @@ function ENT:CustomOnHandleAnimEvent(ev,evTime,evCycle,evType,evOptions) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnFollowPlayer(key,activator,caller,data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnIdleDialogue() end
+function ENT:CustomOnIdleDialogue(argent, CanAnswer) return true end -- argent = An entity that it can talk to | CanAnswer = If the entity can answer back | Return false to not run the code!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnIdleDialogueAnswer() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -4622,29 +4622,32 @@ function ENT:IdleSoundCode(CustomTbl,Type)
 			if sdtbl2 != false && sdrand == 1 && self.HasIdleDialogueSounds == true && math.random(1,2) == 1 then
 				local testent, testsd = self:IdleDialogueSoundCodeTest()
 				if testent != false then
-					self:CustomOnIdleDialogue()
-					self.CurrentIdleSound = Type(self,sdtbl2,self.IdleDialogueSoundLevel,self:VJ_DecideSoundPitch(self.IdleDialogueSoundPitch.a,self.IdleDialogueSoundPitch.b))
-					if testsd == true then
-						local dur = SoundDuration(sdtbl2)
-						if dur == 0 then dur = 3 end
-						testent.NextIdleSoundT = CurTime() + dur + 0.5
-						self.NextIdleTime = CurTime() + 1
-						self.NextWanderTime = CurTime() + (dur + 1.5)
-						if self.IdleDialogueCanTurn == true then
-							self:StopMoving()
-							self:SetTarget(testent)
-							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-						end
-						if testent.IdleDialogueCanTurn == true then
-							testent:StopMoving()
-							testent:SetTarget(self)
-							testent:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-						end
-						timer.Simple(dur + 0.3, function()
-							if IsValid(self) && IsValid(testent) then
-								testent:IdleDialogueAnswerSoundCode()
+					if self:CustomOnIdleDialogue(testent, testsd) == false then
+						RegularIdle()
+					else
+						self.CurrentIdleSound = Type(self,sdtbl2,self.IdleDialogueSoundLevel,self:VJ_DecideSoundPitch(self.IdleDialogueSoundPitch.a,self.IdleDialogueSoundPitch.b))
+						if testsd == true then
+							local dur = SoundDuration(sdtbl2)
+							if dur == 0 then dur = 3 end
+							testent.NextIdleSoundT = CurTime() + dur + 0.5
+							self.NextIdleTime = CurTime() + 1
+							self.NextWanderTime = CurTime() + (dur + 1.5)
+							if self.IdleDialogueCanTurn == true then
+								self:StopMoving()
+								self:SetTarget(testent)
+								self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 							end
-						end)
+							if testent.IdleDialogueCanTurn == true then
+								testent:StopMoving()
+								testent:SetTarget(self)
+								testent:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+							end
+							timer.Simple(dur + 0.3, function()
+								if IsValid(self) && IsValid(testent) then
+									testent:IdleDialogueAnswerSoundCode()
+								end
+							end)
+						end
 					end
 				else
 					RegularIdle()
