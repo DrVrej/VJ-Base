@@ -3015,7 +3015,7 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 							end
 						end
 					end
-					self:CustomOnMeleeAttack_AfterChecks(v)
+					if self:CustomOnMeleeAttack_AfterChecks(v) == true then continue end
 					if self.HasMeleeAttackKnockBack == true && v.MovementType != VJ_MOVETYPE_STATIONARY then
 						if v.VJ_IsHugeMonster != true or v.IsVJBaseSNPC_Tank == true then
 							v:SetGroundEntity(NULL)
