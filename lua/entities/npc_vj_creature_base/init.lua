@@ -794,7 +794,7 @@ function ENT:SetMeleeAttackDamagePosition()
 	return self:GetPos() + self:GetForward() -- Override this to use a different position
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMeleeAttack_AfterChecks(TheHitEntity) end
+function ENT:CustomOnMeleeAttack_AfterChecks(TheHitEntity) return false end -- return true to disable the attack and move onto the next entity!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_BleedEnemy(TheHitEntity) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
