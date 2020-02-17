@@ -17,7 +17,7 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 	end
 	Panel:AddControl( "Label", {Text = "Notice: Only admins can change this options."})
 	Panel:AddControl( "Label", {Text = "WARNING: Only future spawned SNPCs will be affected!"})
-	Panel:AddControl("Button",{Text = "Reset Everything", Command = "vj_npc_godmodesnpc 0\nvj_npc_playerfriendly 0\nvj_npc_zombiefriendly 0\nvj_npc_antlionfriendly 0\nvj_npc_combinefriendly 0\nvj_npc_corpsefade 0\nvj_npc_corpsefadetime 10\nvj_npc_undocorpse 0\nvj_npc_allhealth 0\nvj_npc_fadegibs 1\nvj_npc_fadegibstime 30\nvj_npc_gibcollidable 0\nvj_npc_addfrags 1\nvj_npc_showhudonkilled 1\nvj_npc_dropweapon 1\nvj_npc_itemdrops 1\nvj_npc_accuracy_poor 1\nvj_npc_accuracy_average 0\nvj_npc_accuracy_good 0\nvj_npc_accuracy_verygood 0\nvj_npc_accuracy_perfect 0\nvj_npc_creatureopendoor 1\nvj_npc_vjfriendly 0\nvj_npc_globalcorpselimit 32\nvj_npc_seedistance 0\nvj_npc_processtime 1\nvj_npc_usegmoddecals 0\nvj_npc_knowenemylocation 0\nvj_npc_plypickupdropwep 1\nvj_npc_difficulty 0"})
+	Panel:AddControl("Button",{Text = "Reset Everything", Command = "vj_npc_godmodesnpc 0\nvj_npc_playerfriendly 0\nvj_npc_zombiefriendly 0\nvj_npc_antlionfriendly 0\nvj_npc_combinefriendly 0\nvj_npc_corpsefade 0\nvj_npc_corpsefadetime 10\nvj_npc_undocorpse 0\nvj_npc_allhealth 0\nvj_npc_fadegibs 1\nvj_npc_fadegibstime 30\nvj_npc_gibcollidable 0\nvj_npc_addfrags 1\nvj_npc_showhudonkilled 1\nvj_npc_dropweapon 1\nvj_npc_itemdrops 1\nvj_npc_accuracy_poor 1\nvj_npc_accuracy_average 0\nvj_npc_accuracy_good 0\nvj_npc_accuracy_verygood 0\nvj_npc_accuracy_perfect 0\nvj_npc_creatureopendoor 1\nvj_npc_vjfriendly 0\nvj_npc_globalcorpselimit 32\nvj_npc_seedistance 0\nvj_npc_processtime 1\nvj_npc_usegmoddecals 0\nvj_npc_knowenemylocation 0\nvj_npc_plypickupdropwep 1\nvj_npc_difficulty 0\nvj_npc_human_canjump 1"})
 	local vj_difficulty = {Options = {}, CVars = {}, Label = "Select the Difficulty:", MenuButton = "0"}
 	vj_difficulty.Options["#vjbase.menudifficulty.neanderthal"] = {vj_npc_difficulty = "-3"}
 	vj_difficulty.Options["#vjbase.menudifficulty.childs_play"] = {vj_npc_difficulty = "-2"}
@@ -95,6 +95,7 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 	Panel:AddControl("Checkbox", {Label = "Add points to the player's scoreboard when killed", Command = "vj_npc_addfrags"})
 	Panel:AddControl("Checkbox", {Label = "Creatures Can Open Doors", Command = "vj_npc_creatureopendoor"})
 	Panel:AddControl("Checkbox", {Label = "Humans Drop Weapon On Death", Command = "vj_npc_dropweapon"})
+	Panel:AddControl("Checkbox", {Label = "Humans Can Jump", Command = "vj_npc_human_canjump"})
 	Panel:AddControl("Checkbox", {Label = "Players Can Pick Up Dropped Weapons", Command = "vj_npc_plypickupdropwep"})
 	/*local vj_accuracy = {Options = {}, CVars = {}, Label = "Gun Accuracy:", MenuButton = "0"}
 	vj_accuracy.Options["Poor"] = {
