@@ -79,12 +79,13 @@ ConvarList["vj_npc_knowenemylocation"] = 0 -- Should they always know where thei
 ConvarList["vj_npc_creatureopendoor"] = 1 -- Should Creatures open doors?
 	-- ====== Human Options ====== --
 ConvarList["vj_npc_dropweapon"] = 1 -- Drop Weapon on death?
+ConvarList["vj_npc_human_canjump"] = 1 -- Can the human SNPCs jump?
 ConvarList["vj_npc_plypickupdropwep"] = 1 -- Can players pick up dropped weapons?
-ConvarList["vj_npc_accuracy_poor"] = 1 -- Accuracy = Poor
-ConvarList["vj_npc_accuracy_average"] = 0 -- Accuracy = Average
-ConvarList["vj_npc_accuracy_good"] = 0 -- Accuracy = Good
-ConvarList["vj_npc_accuracy_verygood"] = 0 -- Accuracy = Very Good
-ConvarList["vj_npc_accuracy_perfect"] = 0 -- Accuracy = Perfect
+//ConvarList["vj_npc_accuracy_poor"] = 1 -- Accuracy = Poor
+//ConvarList["vj_npc_accuracy_average"] = 0 -- Accuracy = Average
+//ConvarList["vj_npc_accuracy_good"] = 0 -- Accuracy = Good
+//ConvarList["vj_npc_accuracy_verygood"] = 0 -- Accuracy = Very Good
+//ConvarList["vj_npc_accuracy_perfect"] = 0 -- Accuracy = Perfect
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Sound Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

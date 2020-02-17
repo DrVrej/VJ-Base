@@ -1104,7 +1104,7 @@ function ENT:DoChangeMovementType(SetType)
 	if self.MovementType == VJ_MOVETYPE_GROUND then
 		self:SetMoveType(MOVETYPE_STEP)
 		self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND))
-		if VJ_AnimationExists(self,ACT_JUMP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_JUMP)) end
+		if VJ_AnimationExists(self,ACT_JUMP) == true && GetConVarNumber("vj_npc_human_canjump") == 1 then self:CapabilitiesAdd(bit.bor(CAP_MOVE_JUMP)) end
 		//if VJ_AnimationExists(self,ACT_CLIMB_UP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
 		if self.DisableWeapons == false then self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT)) end
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
