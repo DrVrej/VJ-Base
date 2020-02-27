@@ -1,5 +1,5 @@
 /*--------------------------------------------------
-	=============== Information Menu ===============
+	=============== Client Main Menu ===============
 	*** Copyright (c) 2012-2020 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
@@ -72,7 +72,7 @@ local function VJ_INFORMATION(Panel)
 	Panel:ControlHelp("Valve - AK-47, M16A1 and MP40 models")
 	Panel:ControlHelp("Orion - Helped in the first version of the base (2011-2012)")
 	Panel:ControlHelp("Cpt. Hazama - Suggestions + testing")
-	Panel:ControlHelp("Mawskeeto - Bloodpool textures + testing")
+	Panel:ControlHelp("Oteek - Bloodpool textures + testing")
 	Panel:ControlHelp("China-Mandem - Original K-3 Model")
 	
 	
@@ -83,6 +83,27 @@ local function VJ_INFORMATION(Panel)
 	Panel:ControlHelp("No parts of this base or any of its contents may be reproduced, copied, modified or adapted, without the prior written consent of the author, unless otherwise indicated for stand-alone materials.")
 end
 ----=================================----
+local function VJ_MAINMENU_CLIENT(Panel)
+	Panel:AddControl( "Label", {Text = "#vjbase.menu.clsettings.label"})
+	
+	-- Icons: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+	local vj_combo_box = vgui.Create("DComboBox")
+	vj_combo_box:SetSize(100, 30)
+	vj_combo_box:SetValue("#vjbase.menu.clsettings.labellang")
+	vj_combo_box:AddChoice("English", "english", false, "flags16/us.png")
+	vj_combo_box:AddChoice("Հայերեն", "armenian", false, "flags16/am.png")
+	vj_combo_box:AddChoice("Русский", "russian", false, "flags16/ru.png")
+	vj_combo_box:AddChoice("Deutsche", "german", false, "flags16/de.png")
+	vj_combo_box:AddChoice("Französisch", "french", false, "flags16/fr.png")
+	vj_combo_box.OnSelect = function(data, index, text)
+		RunConsoleCommand("vj_language", vj_combo_box:GetOptionData(index))
+		chat.AddText(Color(255,215,0), "VJ Base Language Set To: ", Color(30,200,255), text)
+		timer.Simple(0.2,function() VJ_REFRESH_LANGUAGE(val) end) -- Bedke kichme espasenk minchevor command-e update ela
+	end
+	Panel:AddPanel(vj_combo_box)
+end
+----=================================----
 hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_INFORMATION", function()
 	spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Information", "Information", "", "", VJ_INFORMATION, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Client Settings", "Client Settings", "", "", VJ_MAINMENU_CLIENT, {})
 end)

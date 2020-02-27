@@ -5,6 +5,8 @@
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
+
+VJ.AddClientConVar("vj_language", "english", "Display developer entities") -- The current VJ Base Language
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Console Commands ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -170,7 +172,7 @@ if (CLIENT) then
 		end
 		Panel:ControlHelp(" ") -- Spacer
 		Panel:ControlHelp("Notice: Only admins can use the clean up buttons.")
-		Panel:AddControl("Button", {Label = "Clean Up Everything", Command = "vj_cleanup_all"})
+		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.everything", Command = "vj_cleanup_all"})
 		Panel:AddControl("Button", {Label = "Stop all Sounds", Command = "stopsound"})
 		Panel:AddControl("Button", {Label = "Remove all VJ SNPCs", Command = "vj_cleanup_snpcs"})
 		Panel:AddControl("Button", {Label = "Remove all (S)NPCs", Command = "vj_cleanup_s_npcs"})

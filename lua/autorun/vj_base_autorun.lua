@@ -13,7 +13,7 @@
 --------------------------------------------------*/
 if (CLIENT) then print("Loading VJ Base (Client)...") else print("Loading VJ Base (Server)...") end
 
-VJBASE_VERSION = "2.10.3"
+VJBASE_VERSION = "2.11.0"
 VJBASE_GETNAME = "VJ Base"
 
 -- Shared --
@@ -23,6 +23,7 @@ AddCSLuaFile("autorun/vj_controls.lua")
 AddCSLuaFile("autorun/vj_entities.lua")
 AddCSLuaFile("autorun/vj_entities_cmds.lua")
 AddCSLuaFile("autorun/vj_files.lua")
+AddCSLuaFile("autorun/vj_files_language.lua")
 AddCSLuaFile("autorun/vj_files_particles.lua")
 AddCSLuaFile("autorun/vj_menu_main.lua")
 AddCSLuaFile("autorun/vj_menu_properties.lua")
@@ -30,7 +31,7 @@ AddCSLuaFile("autorun/vj_util.lua")
 AddCSLuaFile("autorun/vj_weapons.lua")
 
 -- Client --
-AddCSLuaFile("autorun/client/vj_menu_information.lua")
+AddCSLuaFile("autorun/client/vj_menu_main_client.lua")
 AddCSLuaFile("autorun/client/vj_menu_plugins.lua")
 AddCSLuaFile("autorun/client/vj_menu_snpc.lua")
 AddCSLuaFile("autorun/client/vj_menu_weapon.lua")
