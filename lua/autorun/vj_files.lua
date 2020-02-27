@@ -58,34 +58,6 @@ util.PrecacheModel("models/spitball_medium.mdl")
 util.PrecacheModel("models/spitball_small.mdl")
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Language files ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
-	language.Add("vjbase.menugeneral.default", "Default")
-	
-	language.Add("vjbase.menudifficulty.neanderthal", "Neanderthal | -99% Health and Damage")
-	language.Add("vjbase.menudifficulty.childs_play", "Child's Play | -75% Health and Damage")
-	language.Add("vjbase.menudifficulty.easy", "Easy | -50% Health and Damage")
-	language.Add("vjbase.menudifficulty.normal", "Normal | Original Health and Damage")
-	language.Add("vjbase.menudifficulty.hard", "Hard | +50% Health and Damage")
-	language.Add("vjbase.menudifficulty.insane", "Insane | +100% Health and Damage")
-	language.Add("vjbase.menudifficulty.impossible", "Impossible | +150% Health and Damage")
-	language.Add("vjbase.menudifficulty.nightmare", "Nightmare | +250% Health and Damage")
-	language.Add("vjbase.menudifficulty.hell_on_earth", "Hell On Earth | +350% Health and Damage")
-	language.Add("vjbase.menudifficulty.total_annihilation", "Total Annihilation | +500% Health and Damage")
-	
-	language.Add("vjbase.menuproperties.control", "TAKE CONTROL")
-	language.Add("vjbase.menuproperties.guard", "Toggle Guarding")
-	language.Add("vjbase.menuproperties.wander", "Toggle Wandering")
-	language.Add("vjbase.menuproperties.medic", "Make Medic (Toggle)")
-	language.Add("vjbase.menuproperties.allyme", "Ally To Me")
-	language.Add("vjbase.menuproperties.hostileme", "Hostile To Me")
-	language.Add("vjbase.menuproperties.slay", "Slay")
-	language.Add("vjbase.menuproperties.gib", "Gib (If Valid)")
-	language.Add("vjbase.menuproperties.devmode", "Toggle Developer Mode")
-end
-
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Fonts ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
