@@ -3437,7 +3437,7 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 	end
 	
 	//print(self.LatestEnemyPosition)
-	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printresteenemy") == 1 then print(self:GetName().." has reseted its enemy") end end
+	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printresetenemy") == 1 then print(self:GetName().." has reseted its enemy") end end
 	if IsValid(self:GetEnemy()) then
 		if self.FollowingPlayer == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && self.LatestEnemyPosition != Vector(0,0,0) then
 			self:SetLastPosition(self.LatestEnemyPosition)

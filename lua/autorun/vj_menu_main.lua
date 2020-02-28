@@ -164,12 +164,12 @@ end)
 if (CLIENT) then
 	local function VJ_MAINMENU_CLEANUP(Panel)
 		if !game.SinglePlayer() && (!LocalPlayer():IsAdmin() or !LocalPlayer():IsSuperAdmin()) then
-			Panel:AddControl("Label", {Text = "#vjbase.menugeneral.admin.not"})
-			Panel:ControlHelp("#vjbase.menugeneral.admin.only")
+			Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
+			Panel:ControlHelp("#vjbase.menu.general.admin.only")
 			return
 		end
 		Panel:ControlHelp(" ") -- Spacer
-		Panel:ControlHelp("#vjbase.menugeneral.admin.only")
+		Panel:ControlHelp("#vjbase.menu.general.admin.only")
 		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.everything", Command = "vj_cleanup_all"})
 		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.stopsounds", Command = "stopsound"})
 		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.vjnpcs", Command = "vj_cleanup_snpcs"})
@@ -272,15 +272,15 @@ if (CLIENT) then
 	----=================================----
 	local function VJ_MAINMENU_ADMINSERVER(Panel)
 		if !game.SinglePlayer() && (!LocalPlayer():IsAdmin() or !LocalPlayer():IsSuperAdmin()) then
-			Panel:AddControl("Label", {Text = "#vjbase.menugeneral.admin.not"})
-			Panel:ControlHelp("#vjbase.menugeneral.admin.only")
+			Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
+			Panel:ControlHelp("#vjbase.menu.general.admin.only")
 			return
 		end
-		Panel:AddControl("Label", {Text = "#vjbase.menugeneral.admin.only"})
+		Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.only"})
 		Panel:AddControl("Label", {Text = "#vjbase.menu.svsettings.label"})
-		local vj_resetadminmenu = {Options = {}, CVars = {}, Label = "#vjbase.menugeneral.reset.everything.colon", MenuButton = "0"}
+		local vj_resetadminmenu = {Options = {}, CVars = {}, Label = "#vjbase.menu.general.reset.everything.colon", MenuButton = "0"}
 		//vj_resetadminmenu:SetText("Select Default to reset everything")
-		vj_resetadminmenu.Options["#vjbase.menugeneral.default"] = {
+		vj_resetadminmenu.Options["#vjbase.menu.general.default"] = {
 			sbox_noclip = "1",
 			sbox_weapons =	"1",
 			sbox_playershurtplayers = "1",

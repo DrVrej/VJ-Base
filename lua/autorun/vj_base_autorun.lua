@@ -50,12 +50,12 @@ if (SERVER) then
 elseif (CLIENT) then
 	hook.Add("AddToolMenuTabs", "VJ_CREATETOOLTAB", function()
 		spawnmenu.AddToolTab("DrVrej", "DrVrej", "icon16/plugin.png")
-		spawnmenu.AddToolCategory("DrVrej", "Main Menu", "Main Menu")
-		spawnmenu.AddToolCategory("DrVrej", "SNPCs", "SNPC Settings")
-		spawnmenu.AddToolCategory("DrVrej", "Weapons", "Weapon Settings")
-		spawnmenu.AddToolCategory("DrVrej", "HUDs", "HUD Settings")
-		spawnmenu.AddToolCategory("DrVrej", "Tools", "Tools")
-		spawnmenu.AddToolCategory("DrVrej", "SNPC Configures", "SNPC Configures")
+		spawnmenu.AddToolCategory("DrVrej", "Main Menu", "#vjbase.menu.tabs.mainmenu")
+		spawnmenu.AddToolCategory("DrVrej", "SNPCs", "#vjbase.menu.tabs.settings.snpc")
+		spawnmenu.AddToolCategory("DrVrej", "Weapons", "#vjbase.menu.tabs.settings.weapon")
+		spawnmenu.AddToolCategory("DrVrej", "HUDs", "#vjbase.menu.tabs.settings.hud")
+		spawnmenu.AddToolCategory("DrVrej", "Tools", "#vjbase.menu.tabs.tools")
+		spawnmenu.AddToolCategory("DrVrej", "SNPC Configures", "#vjbase.menu.tabs.configures.snpc")
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
