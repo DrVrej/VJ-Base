@@ -9,12 +9,12 @@ include('autorun/client/vj_menu_plugins.lua')
 
 local function VJ_INFORMATION(Panel)
 	local client = LocalPlayer() -- Local Player
-	Panel:AddControl( "Label", {Text = "About VJ Base:"})
+	Panel:AddControl("Label", {Text = "About VJ Base:"})
 	Panel:ControlHelp("VJ Base is made by DrVrej. The main purpose of this base is for the sake of simplicity. It provides many types of bases including a very advanced artificial intelligent NPC base.")
 	
 	Panel:ControlHelp("==============================")
 	
-	Panel:AddControl( "Label", {Text = "User Information:"})
+	Panel:AddControl("Label", {Text = "User Information:"})
 	
 	Panel:ControlHelp("Date - "..os.date("%m %d, 20%y"))
 	Panel:ControlHelp("Country - "..system.GetCountry())
@@ -49,7 +49,7 @@ local function VJ_INFORMATION(Panel)
 	
 	Panel:ControlHelp("==============================")
 	
-	Panel:AddControl( "Label", {Text = "Command Information:"})
+	Panel:AddControl("Label", {Text = "Command Information:"})
 	Panel:ControlHelp("--- All Commands Start with 'vj_' ---")
 	Panel:ControlHelp("")
 	Panel:ControlHelp("Base Commands - First prefix usually starts with 'vj_*'")
@@ -66,7 +66,7 @@ local function VJ_INFORMATION(Panel)
 	
 	Panel:ControlHelp("==============================")
 	
-	Panel:AddControl( "Label", {Text = "Credits:"})
+	Panel:AddControl("Label", {Text = "Credits:"})
 	Panel:ControlHelp("DrVrej(Me) - Everything, from coding to fixing models and materials to sound editing")
 	Panel:ControlHelp("Black Mesa Source - Original non-edited gib models, blood pool texture, and glock 17 model")
 	Panel:ControlHelp("Valve - AK-47, M16A1 and MP40 models")
@@ -84,7 +84,7 @@ local function VJ_INFORMATION(Panel)
 end
 ----=================================----
 local function VJ_MAINMENU_CLIENT(Panel)
-	Panel:AddControl( "Label", {Text = "#vjbase.menu.clsettings.label"})
+	Panel:AddControl("Label", {Text = "#vjbase.menu.clsettings.label"})
 	
 	-- Icons: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
 	local vj_combo_box = vgui.Create("DComboBox")
@@ -94,16 +94,19 @@ local function VJ_MAINMENU_CLIENT(Panel)
 	vj_combo_box:AddChoice("Հայերեն", "armenian", false, "flags16/am.png")
 	vj_combo_box:AddChoice("Русский", "russian", false, "flags16/ru.png")
 	vj_combo_box:AddChoice("Deutsche", "german", false, "flags16/de.png")
-	vj_combo_box:AddChoice("Französisch", "french", false, "flags16/fr.png")
+	vj_combo_box:AddChoice("Français", "french", false, "flags16/fr.png")
+	vj_combo_box:AddChoice("Lietuvių", "lithuanian", false, "flags16/lt.png")
+	vj_combo_box:AddChoice("Español (Latino Americano)", "spanish_lt", false, "flags16/mx.png")
+	vj_combo_box:AddChoice("Português (Brasileiro)", "portuguese_br", false, "flags16/br.png")
 	vj_combo_box.OnSelect = function(data, index, text)
 		RunConsoleCommand("vj_language", vj_combo_box:GetOptionData(index))
-		chat.AddText(Color(255,215,0), "VJ Base Language Set To: ", Color(30,200,255), text)
+		chat.AddText(Color(255,215,0), "#vjbase.menu.clsettings.notify.lang", " ", Color(30,200,255), text)
 		timer.Simple(0.2,function() VJ_REFRESH_LANGUAGE(val) end) -- Bedke kichme espasenk minchevor command-e update ela
 	end
 	Panel:AddPanel(vj_combo_box)
 end
 ----=================================----
 hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_INFORMATION", function()
-	spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Information", "Information", "", "", VJ_INFORMATION, {})
-	spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Client Settings", "Client Settings", "", "", VJ_MAINMENU_CLIENT, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Information", "#vjbase.menu.info", "", "", VJ_INFORMATION, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Client Settings", "#vjbase.menu.clsettings", "", "", VJ_MAINMENU_CLIENT, {})
 end)

@@ -163,33 +163,31 @@ end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
 	local function VJ_MAINMENU_CLEANUP(Panel)
-		if !game.SinglePlayer() then
-		if !LocalPlayer():IsAdmin() or !LocalPlayer():IsSuperAdmin() then
-			Panel:AddControl( "Label", {Text = "You are not a admin!"})
-			Panel:ControlHelp("Notice: Only admins can use the clean up buttons.")
+		if !game.SinglePlayer() && (!LocalPlayer():IsAdmin() or !LocalPlayer():IsSuperAdmin()) then
+			Panel:AddControl("Label", {Text = "#vjbase.menugeneral.admin.not"})
+			Panel:ControlHelp("#vjbase.menugeneral.admin.only")
 			return
-			end
 		end
 		Panel:ControlHelp(" ") -- Spacer
-		Panel:ControlHelp("Notice: Only admins can use the clean up buttons.")
+		Panel:ControlHelp("#vjbase.menugeneral.admin.only")
 		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.everything", Command = "vj_cleanup_all"})
-		Panel:AddControl("Button", {Label = "Stop all Sounds", Command = "stopsound"})
-		Panel:AddControl("Button", {Label = "Remove all VJ SNPCs", Command = "vj_cleanup_snpcs"})
-		Panel:AddControl("Button", {Label = "Remove all (S)NPCs", Command = "vj_cleanup_s_npcs"})
-		Panel:AddControl("Button", {Label = "Remove all Spawners", Command = "vj_cleanup_spawners"})
-		Panel:AddControl("Button", {Label = "Remove all Corpses", Command = "vj_cleanup_snpcscorpse"})
-		Panel:AddControl("Button", {Label = "Remove all VJ Gibs", Command = "vj_cleanup_vjgibs"})
-		Panel:AddControl("Button", {Label = "Remove all Ground Weapons", Command = "vj_cleanup_groundweapons"})
-		Panel:AddControl("Button", {Label = "Remove all Props", Command = "vj_cleanup_props"})
-		Panel:AddControl("Button", {Label = "Remove all Decals", Command = "vj_cleanup_decals"})
-		Panel:AddControl("Button", {Label = "Remove all of your Weapons", Command = "vj_cleanup_playerweapon"})
-		Panel:AddControl("Button", {Label = "Remove all of your Ammo", Command = "vj_cleanup_playerammo"})
+		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.stopsounds", Command = "stopsound"})
+		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.vjnpcs", Command = "vj_cleanup_snpcs"})
+		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.npcs", Command = "vj_cleanup_s_npcs"})
+		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.spawners", Command = "vj_cleanup_spawners"})
+		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.corpses", Command = "vj_cleanup_snpcscorpse"})
+		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.vjgibs", Command = "vj_cleanup_vjgibs"})
+		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.groundweapons", Command = "vj_cleanup_groundweapons"})
+		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.props", Command = "vj_cleanup_props"})
+		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.decals", Command = "vj_cleanup_decals"})
+		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.allweapons", Command = "vj_cleanup_playerweapon"})
+		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.allammo", Command = "vj_cleanup_playerammo"})
 	end
 	----=================================----
 	local function VJ_MAINMENU_MISC(Panel)
 		local bugr = vgui.Create("DButton") -- Bug Report
 		bugr:SetFont("CloseCaption_Bold")
-		bugr:SetText("Report a Bug")
+		bugr:SetText("#vjbase.menu.helpsupport.reportbug")
 		bugr:SetSize(150, 35)
 		bugr:SetColor(Color(231, 76, 60, 255))
 		bugr.DoClick = function(bugr)
@@ -199,7 +197,7 @@ if (CLIENT) then
 
 		local suggest = vgui.Create("DButton") -- Suggestions
 		suggest:SetFont("DermaDefaultBold")
-		suggest:SetText("Suggest Something")
+		suggest:SetText("#vjbase.menu.helpsupport.suggestion")
 		suggest:SetSize(150, 20)
 		suggest:SetColor(Color(211, 84, 0, 200))
 		suggest.DoClick = function(suggest)
@@ -209,12 +207,12 @@ if (CLIENT) then
 
 		Panel:ControlHelp(" ") -- Spacer
 
-		Panel:AddControl("Label", {Text = "Follow one of these links to get updates about my addons!"})
-		Panel:ControlHelp("Thanks for your support!")
+		Panel:AddControl("Label", {Text = "#vjbase.menu.helpsupport.label1"})
+		Panel:ControlHelp("#vjbase.menu.helpsupport.thanks")
 
 		local discordl = vgui.Create("DButton") -- Discord
 		discordl:SetFont("TargetID")
-		discordl:SetText("Join me on Discord!")
+		discordl:SetText("#vjbase.menu.helpsupport.discord")
 		discordl:SetSize(150, 25)
 		discordl:SetColor(Color(39, 174, 96, 255))
 		discordl.DoClick = function(discordl)
@@ -224,7 +222,7 @@ if (CLIENT) then
 		
 		local steaml = vgui.Create("DButton") -- Steam Group
 		steaml:SetFont("TargetID")
-		steaml:SetText("Join me on Steam!")
+		steaml:SetText("#vjbase.menu.helpsupport.steam")
 		steaml:SetSize(150, 25)
 		steaml:SetColor(Color(39, 174, 96, 255))
 		steaml.DoClick = function(steaml)
@@ -234,7 +232,7 @@ if (CLIENT) then
 
 		local ytl = vgui.Create("DButton") -- YouTube
 		ytl:SetFont("TargetID")
-		ytl:SetText("Subscribe me on YouTube!")
+		ytl:SetText("#vjbase.menu.helpsupport.youtube")
 		ytl:SetSize(150, 25)
 		ytl:SetColor(Color(39, 174, 96, 255))
 		ytl.DoClick = function(ytl)
@@ -242,19 +240,9 @@ if (CLIENT) then
 		end
 		Panel:AddPanel(ytl)
 
-		local fbl = vgui.Create("DButton") -- Facebook
-		fbl:SetFont("TargetID")
-		fbl:SetText("Like me on FaceBook!")
-		fbl:SetSize(150, 25)
-		fbl:SetColor(Color(39, 174, 96, 255))
-		fbl.DoClick = function(fbl)
-			gui.OpenURL("http://www.facebook.com/VrejGaming")
-		end
-		Panel:AddPanel(fbl)
-
 		local tweetl = vgui.Create("DButton") -- Twitter
 		tweetl:SetFont("TargetID")
-		tweetl:SetText("Follow me on Twitter!")
+		tweetl:SetText("#vjbase.menu.helpsupport.twtiter")
 		tweetl:SetSize(150, 25)
 		tweetl:SetColor(Color(39, 174, 96, 255))
 		tweetl.DoClick = function(tweetl)
@@ -266,14 +254,14 @@ if (CLIENT) then
 		
 		local donate = vgui.Create("DButton") -- Donate
 		donate:SetFont("TargetID")
-		donate:SetText("Donate me on Patron!")
+		donate:SetText("#Donate me on Patron!")
 		donate:SetSize(150, 30)
 		donate:SetColor(Color(52, 152, 219, 255))
 		donate.DoClick = function(donate)
 			gui.OpenURL("https://www.patreon.com/drvrej")
 		end
 		Panel:AddPanel(donate)
-		Panel:ControlHelp("Donations help and encourage me to continue making/updating addons! Thank you!")
+		Panel:ControlHelp("#vjbase.menu.helpsupport.label2")
 
 		/*HTMLTest = vgui.Create("HTML")
 		HTMLTest:SetPos(50,50)
@@ -283,17 +271,14 @@ if (CLIENT) then
 	end
 	----=================================----
 	local function VJ_MAINMENU_ADMINSERVER(Panel)
-		if !game.SinglePlayer() then
-		if !LocalPlayer():IsAdmin() or !LocalPlayer():IsSuperAdmin() then
-			Panel:AddControl( "Label", {Text = "You are not a admin!"})
-			Panel:ControlHelp("Notice: Only admins can use this settings.")
+		if !game.SinglePlayer() && (!LocalPlayer():IsAdmin() or !LocalPlayer():IsSuperAdmin()) then
+			Panel:AddControl("Label", {Text = "#vjbase.menugeneral.admin.not"})
+			Panel:ControlHelp("#vjbase.menugeneral.admin.only")
 			return
-			end
 		end
-		//Panel:AddControl("Header",{Description = "TESTINGGGGGGGGGGG"})
-		Panel:AddControl( "Label", {Text = "Notice: Only admins can change this settings."})
-		Panel:AddControl( "Label", {Text = "WARNING: SOME SETTINGS NEED CHEATS ENABLED!"})
-		local vj_resetadminmenu = {Options = {}, CVars = {}, Label = "Reset Everything:", MenuButton = "0"}
+		Panel:AddControl("Label", {Text = "#vjbase.menugeneral.admin.only"})
+		Panel:AddControl("Label", {Text = "#vjbase.menu.svsettings.label"})
+		local vj_resetadminmenu = {Options = {}, CVars = {}, Label = "#vjbase.menugeneral.reset.everything.colon", MenuButton = "0"}
 		//vj_resetadminmenu:SetText("Select Default to reset everything")
 		vj_resetadminmenu.Options["#vjbase.menugeneral.default"] = {
 			sbox_noclip = "1",
@@ -306,18 +291,18 @@ if (CLIENT) then
 		}
 		Panel:AddControl("ComboBox", vj_resetadminmenu)
 		Panel:ControlHelp(" ") -- Spacer
-		Panel:AddControl("Checkbox", {Label = "Restrict SNPC Properties to Admins Only", Command = "vj_npc_admin_properties"})
-		Panel:AddControl("Checkbox", {Label = "Allow NoClip", Command = "sbox_noclip"})
-		Panel:AddControl("Checkbox", {Label = "Allow Weapons", Command = "sbox_weapons"})
-		Panel:AddControl("Checkbox", {Label = "Allow PvP", Command = "sbox_playershurtplayers"})
-		Panel:AddControl("Checkbox", {Label = "God Mode (Everyone)", Command = "sbox_godmode"})
-		Panel:AddControl("Checkbox", {Label = "Bone Manipulate NPCs", Command = "sbox_bonemanip_npc"})
-		Panel:AddControl("Checkbox", {Label = "Bone Manipulate Players", Command = "sbox_bonemanip_player"})
-		Panel:AddControl("Checkbox", {Label = "Bone Manipulate Others", Command = "sbox_bonemanip_misc"})
-		Panel:AddControl("Slider",{Label = "General TimeScale",Type = "Float",min = 0.1,max = 10,Command = "host_timescale"})
-		Panel:AddControl("Slider",{Label = "Physics TimeScale",Type = "Float",min = 0,max = 2,Command = "phys_timescale"})
-		Panel:AddControl("Slider",{Label = "General Gravity",Type = "Float",min = -200,max = 600,Command = "sv_gravity"})
-		Panel:AddControl( "Label", {Text = "Max Props/Entities:"})
+		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.admin.npcproperties", Command = "vj_npc_admin_properties"})
+		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.noclip", Command = "sbox_noclip"})
+		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.weapons", Command = "sbox_weapons"})
+		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.pvp", Command = "sbox_playershurtplayers"})
+		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.godmode", Command = "sbox_godmode"})
+		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.bonemanip.npcs", Command = "sbox_bonemanip_npc"})
+		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.bonemanip.players", Command = "sbox_bonemanip_player"})
+		Panel:AddControl("Checkbox", {Label = "#vjbase.menu.svsettings.bonemanip.others", Command = "sbox_bonemanip_misc"})
+		Panel:AddControl("Slider",{Label = "#vjbase.menu.svsettings.timescale.general",Type = "Float",min = 0.1,max = 10,Command = "host_timescale"})
+		Panel:AddControl("Slider",{Label = "#vjbase.menu.svsettings.timescale.physics",Type = "Float",min = 0,max = 2,Command = "phys_timescale"})
+		Panel:AddControl("Slider",{Label = "#vjbase.menu.svsettings.gravity",Type = "Float",min = -200,max = 600,Command = "sv_gravity"})
+		Panel:AddControl("Label", {Text = "#vjbase.menu.svsettings.maxentsprops"})
 		for _, x in pairs(cleanup.GetTable()) do -- Simply receives all of the GMod limit convars
 			if (!GetConVar("sbox_max"..x)) then continue end
 			Panel:AddControl("Slider",{Label = "#max_"..x, Command = "sbox_max"..x, Min = "0", Max = "9999"})
@@ -325,8 +310,8 @@ if (CLIENT) then
 	end
 	----=================================----
 	hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_MAIN", function()
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Clean Up", "Clean Up", "", "", VJ_MAINMENU_CLEANUP, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Contact and Support", "Contact and Support", "", "", VJ_MAINMENU_MISC, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Admin Server Settings", "Admin Server Settings", "", "", VJ_MAINMENU_ADMINSERVER, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Clean Up", "#vjbase.menu.cleanup", "", "", VJ_MAINMENU_CLEANUP, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Contact and Support", "#vjbase.menu.helpsupport", "", "", VJ_MAINMENU_MISC, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Admin Server Settings", "#vjbase.menu.svsettings", "", "", VJ_MAINMENU_ADMINSERVER, {})
 	end)
 end
