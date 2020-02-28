@@ -12,7 +12,7 @@ local function VJ_INFORMATION(Panel)
 	Panel:AddControl("Label", {Text = "About VJ Base:"})
 	Panel:ControlHelp("VJ Base is made by DrVrej. The main purpose of this base is for the sake of simplicity. It provides many types of bases including a very advanced artificial intelligent NPC base.")
 	
-	Panel:ControlHelp("==============================")
+	//Panel:ControlHelp("==============================")
 	
 	Panel:AddControl("Label", {Text = "User Information:"})
 	
@@ -20,51 +20,42 @@ local function VJ_INFORMATION(Panel)
 	Panel:ControlHelp("Country - "..system.GetCountry())
 	Panel:ControlHelp("Steam Name - "..client:Nick()) -- Steam Name
 	Panel:ControlHelp("Steam ID - "..client:SteamID()) -- Steam ID
+	local ga = "Game"
 	if game.SinglePlayer() then -- SMP or SSP
-	Panel:ControlHelp("Game - SinglePlayer") else
-	Panel:ControlHelp("Game - Multiplayer") end
+		Panel:ControlHelp(ga.." - SinglePlayer")
+	else
+		Panel:ControlHelp(ga.." - Multiplayer")
+	end
 	Panel:ControlHelp("Gamemode - "..gmod.GetGamemode().Name)
 	Panel:ControlHelp("Map - "..game.GetMap())
 	Panel:ControlHelp("VJ Base Version - "..VJBASE_VERSION)
 	Panel:ControlHelp("Number of VJ Plugins - "..VJBASE_TOTALPLUGINS)
+	
 	-- Check the Operation System
-	if system.IsWindows() then Panel:ControlHelp("Operating System - Windows")
-	elseif system.IsOSX() then Panel:ControlHelp("Operating System - OSX")
-	elseif system.IsLinux() then Panel:ControlHelp("Operating System - Linux") end
+	local ops = "Operating System"
+	if system.IsWindows() then Panel:ControlHelp(ops.." - Windows")
+	elseif system.IsOSX() then Panel:ControlHelp(ops.." - OSX")
+	elseif system.IsLinux() then Panel:ControlHelp(ops.." - Linux") end
 	Panel:ControlHelp("Screen Resolution - "..ScrW().."x"..ScrH()) -- Player's Resolution
 	Panel:ControlHelp("")
-	-- Check Mounted Games
-	if IsMounted( "hl1" ) then -- Is Half Life 1 Source mounted? Or not?
-	Panel:ControlHelp("Half Life 1 Source - Mounted") else
-	Panel:ControlHelp("Half Life 1 Source - Not Mounted") end
-	if IsMounted( "episodic" ) then -- Is HL2 EP1 mounted? Or not?
-	Panel:ControlHelp("Half Life 2 Episode 1 - Mounted") else
-	Panel:ControlHelp("Half Life 2 Episode 1 - Not Mounted") end
-	if IsMounted( "ep2" ) then -- Is HL2 EP2 mounted? Or not?
-	Panel:ControlHelp("Half Life 2 Episode 2 - Mounted") else
-	Panel:ControlHelp("Half Life 2 Episode 2 - Not Mounted") end
-	if IsMounted( "cstrike" ) then -- Is Counter Strike Source mounted? Or not?
-	Panel:ControlHelp("Counter Strike Source - Mounted") else
-	Panel:ControlHelp("Counter Strike Source - Not Mounted") end
 	
-	Panel:ControlHelp("==============================")
+	-- Check Mounted Games
+	Panel:ControlHelp("Half Life 1 Source Mounted - "..tostring(IsMounted( "hl1")))
+	Panel:ControlHelp("Half Life 2 Episode 1 Mounted - "..tostring(IsMounted( "episodic")))
+	Panel:ControlHelp("Half Life 2 Episode 2 Mounted - "..tostring(IsMounted( "ep2")))
+	Panel:ControlHelp("Counter Strike Source Mounted - "..tostring(IsMounted( "cstrike")))
+	
+	//Panel:ControlHelp("==============================")
 	
 	Panel:AddControl("Label", {Text = "Command Information:"})
 	Panel:ControlHelp("--- All Commands Start with 'vj_' ---")
 	Panel:ControlHelp("")
-	Panel:ControlHelp("Base Commands - First prefix usually starts with 'vj_*'")
-	Panel:ControlHelp("")
-	Panel:ControlHelp("SNPC Configurations - Second prefix starts with 'npc_*'")
-	Panel:ControlHelp("")
-	Panel:ControlHelp("SNPC Health/Damage - Second prefix starts with the initials of the addon's name")
-	Panel:ControlHelp("")
-	Panel:ControlHelp("Weapons - Second prefix starts with 'wep_*'")
-	Panel:ControlHelp("")
-	Panel:ControlHelp("HUD - Second prefix starts with 'hud_*'")
-	Panel:ControlHelp("")
-	Panel:ControlHelp("Crosshair - Second prefix starts with 'hud_ch_*'")
+	Panel:ControlHelp("SNPC Configurations - 'vj_npc_*'")
+	Panel:ControlHelp("Weapons - 'vj_wep_*'")
+	Panel:ControlHelp("HUD - 'vj_hud_*'")
+	Panel:ControlHelp("Crosshair - 'vj_hud_ch_*'")
 	
-	Panel:ControlHelp("==============================")
+	//Panel:ControlHelp("==============================")
 	
 	Panel:AddControl("Label", {Text = "Credits:"})
 	Panel:ControlHelp("DrVrej(Me) - Everything, from coding to fixing models and materials to sound editing")

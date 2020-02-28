@@ -9,7 +9,7 @@ include('autorun/client/vj_menu_plugins.lua')
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_WEAPON_CLIENTSETTINGS(Panel) -- Client Settings
 	Panel:AddControl("Label", {Text = "#vjbase.menu.clweapon.notice"})
-	Panel:AddControl("Button",{Text = "#vjbase.menugeneral.reset.everything", Command = "vj_wep_nomuszzleflash 0\n vj_wep_nomuszzlesmoke 0\n vj_wep_nomuzzleheatwave 0\n vj_wep_nobulletshells 0\n vj_wep_nomuszzleflash_dynamiclight 0"})
+	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_wep_nomuszzleflash 0\n vj_wep_nomuszzlesmoke 0\n vj_wep_nomuzzleheatwave 0\n vj_wep_nobulletshells 0\n vj_wep_nomuszzleflash_dynamiclight 0"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.clweapon.togglemuzzle", Command = "vj_wep_nomuszzleflash"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.clweapon.togglemuzzlelight", Command = "vj_wep_nomuszzleflash_dynamiclight"})
 	Panel:ControlHelp("#vjbase.menu.clweapon.togglemuzzle.label")

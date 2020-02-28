@@ -19,8 +19,8 @@ function VJ_PLUGINS(Panel)
 	//CheckList:Center() -- No need since Size does it already
 	CheckList:SetSize(100, 300) -- Size
 	CheckList:SetMultiSelect(false)
-	CheckList:AddColumn("Name") -- Add column
-	CheckList:AddColumn("Type") -- Add column
+	CheckList:AddColumn("#vjbase.menu.plugins.header1") -- Add column
+	CheckList:AddColumn("#vjbase.menu.plugins.header2") -- Add column
 	//Panel:SetName("Test") -- Renames the blue label
 	if VJBASE_PLUGINS != nil then
 		for k,v in SortedPairsByMemberValue(VJBASE_PLUGINS,"Name") do
