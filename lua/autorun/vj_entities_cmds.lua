@@ -42,10 +42,8 @@ ConvarList["vj_npc_nopropattack"] = 0 -- Disable SNPCs attacking props
 ConvarList["vj_npc_nomeleedmgdsp"] = 0 -- Disables the melee attack DSP effect on heavy damages
 	-- ====== Human Settings ====== --
 ConvarList["vj_npc_noweapon"] = 0 -- No Weapon - Human
-ConvarList["vj_npc_noforeverammo"] = 0 -- No unlimited ammo - Human
 ConvarList["vj_npc_noscarednade"] = 0 -- Disable running from grenades
 ConvarList["vj_npc_noreload"] = 0 -- Disable reloading
-ConvarList["vj_npc_nouseregulator"] = 0 -- Disables CAP_USE_SHOT_REGULATOR
 ConvarList["vj_npc_nothrowgrenade"] = 0 -- Disable humans SNPCs throwing grenades
 	-- ====== Animal Settings ====== --
 ConvarList["vj_npc_animal_runontouch"] = 0 -- Disable animals running away on touch
@@ -81,11 +79,6 @@ ConvarList["vj_npc_creatureopendoor"] = 1 -- Should Creatures open doors?
 ConvarList["vj_npc_dropweapon"] = 1 -- Drop Weapon on death?
 ConvarList["vj_npc_human_canjump"] = 1 -- Can the human SNPCs jump?
 ConvarList["vj_npc_plypickupdropwep"] = 1 -- Can players pick up dropped weapons?
-//ConvarList["vj_npc_accuracy_poor"] = 1 -- Accuracy = Poor
-//ConvarList["vj_npc_accuracy_average"] = 0 -- Accuracy = Average
-//ConvarList["vj_npc_accuracy_good"] = 0 -- Accuracy = Good
-//ConvarList["vj_npc_accuracy_verygood"] = 0 -- Accuracy = Very Good
-//ConvarList["vj_npc_accuracy_perfect"] = 0 -- Accuracy = Perfect
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Sound Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -124,7 +117,6 @@ ConvarList["vj_npc_printdied"] = 0 -- Prints Died when the SNPC dies
 ConvarList["vj_npc_printondamage"] = 0 -- Prints when the SNPC gets damaged
 ConvarList["vj_npc_printontouch"] = 0 -- Prints when something touches the SNPC
 ConvarList["vj_npc_printstoppedattacks"] = 0 -- Prints when the SNPC stops its attacks
-//ConvarList["vj_npc_drvrejfriendly"] = 0 -- Makes the SNPC Friendly to DrVrej! =D
 ConvarList["vj_npc_printresteenemy"] = 0 -- Prints something when the SNPC has rested its enemy
 ConvarList["vj_npc_printlastseenenemy"] = 0 -- Prints the 'LastSeenEnemy' time
 ConvarList["vj_npc_printcurenemy"] = 0 -- Prints the current enemy
