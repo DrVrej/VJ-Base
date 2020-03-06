@@ -242,7 +242,7 @@ if (CLIENT) then
 
 		local tweetl = vgui.Create("DButton") -- Twitter
 		tweetl:SetFont("TargetID")
-		tweetl:SetText("#vjbase.menu.helpsupport.twtiter")
+		tweetl:SetText("#vjbase.menu.helpsupport.twitter")
 		tweetl:SetSize(150, 25)
 		tweetl:SetColor(Color(39, 174, 96, 255))
 		tweetl.DoClick = function(tweetl)
@@ -254,7 +254,7 @@ if (CLIENT) then
 		
 		local donate = vgui.Create("DButton") -- Donate
 		donate:SetFont("TargetID")
-		donate:SetText("#Donate me on Patron!")
+		donate:SetText("#vjbase.menu.helpsupport.patreon")
 		donate:SetSize(150, 30)
 		donate:SetColor(Color(52, 152, 219, 255))
 		donate.DoClick = function(donate)

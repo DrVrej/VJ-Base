@@ -9,16 +9,16 @@ include('autorun/vj_controls.lua')
 
 /*
 	How it works:
-	* Looks for the current set language and translates all the strings that are given.
-	* If a string isn't translated, it will automatically default to English.
-	* When a updated while in a map, it will try to refresh some of the menus, but many menus requires a map restart!
+		* Looks for the current set language and translates all the strings that are given.
+		* If a string isn't translated, it will automatically default to English.
+		* When a updated while in a map, it will try to refresh some of the menus, but many menus requires a map restart!
 	
 	How to edit & contribute:
-	* Make any edits in any language you would like.
-	* If a line doesn't exist in your language, then copy & paste it from the default (English) list.
-	* Once you are done translating or editing, you can push the edited file on GitHub.
-	* Once the file is pushed, I will review it and merge it with the base, it will then be included with the next update on Workshop.
-	* NOTE: Over time more lines will be added in the default (English) list. You are welcome to check back whenever and copy & paste any new lines that added and translate it.
+		* Make any edits in any language you would like.
+		* If a line doesn't exist in your language, then copy & paste it from the default (English) list.
+		* Once you are done translating or editing, you can push the edited file on GitHub.
+		* Once the file is pushed, I will review it and merge it with the base, it will then be included with the next update on Workshop.
+		* NOTE: Over time more lines will be added in the default (English) list. You are welcome to check back whenever and copy & paste any new lines that added and translate it.
 	
 	Q: I would like to translate and my language isn't listed below =(
 	A: No worries! Just simply contact me (DrVrej) and I will set up the profile for your language!
@@ -81,7 +81,7 @@ if (CLIENT) then
 		add("vjbase.menu.helpsupport.discord", "Join me on Discord!")
 		add("vjbase.menu.helpsupport.steam", "Join me on Steam!")
 		add("vjbase.menu.helpsupport.youtube", "Subscribe me on YouTube!")
-		add("vjbase.menu.helpsupport.twtiter", "Follow me on Twitter!")
+		add("vjbase.menu.helpsupport.twitter", "Follow me on Twitter!")
 		add("vjbase.menu.helpsupport.patreon", "Donate me on Patreon!")
 		add("vjbase.menu.helpsupport.label1", "Follow one of these links to get updates about my addons!")
 		add("vjbase.menu.helpsupport.label2", "Donations help and encourage me to continue making/updating addons! Thank you!")
