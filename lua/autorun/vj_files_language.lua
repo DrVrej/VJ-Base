@@ -23,6 +23,9 @@ include('autorun/vj_controls.lua')
 	Q: I would like to translate and my language isn't listed below =(
 	A: No worries! Just simply contact me (DrVrej) and I will set up the profile for your language!
 	
+	Q: Someone has already translated my language, how can I contribute now?
+	A: You can go over the translated lines and fix any errors. You can also compare it with the English version and make sure all lines are translated!
+	
 	Thank you to all of your contributions everyone!
 */
 
