@@ -278,7 +278,7 @@ if (CLIENT) then
 		end
 		Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.only"})
 		Panel:AddControl("Label", {Text = "#vjbase.menu.svsettings.label"})
-		local vj_resetadminmenu = {Options = {}, CVars = {}, Label = "#vjbase.menu.general.reset.everything.colon", MenuButton = "0"}
+		local vj_resetadminmenu = {Options = {}, CVars = {}, Label = language.GetPhrase("#vjbase.menu.general.reset.everything")..":", MenuButton = "0"}
 		//vj_resetadminmenu:SetText("Select Default to reset everything")
 		vj_resetadminmenu.Options["#vjbase.menu.general.default"] = {
 			sbox_noclip = "1",
