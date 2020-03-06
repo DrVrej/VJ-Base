@@ -19,6 +19,11 @@ include('autorun/vj_controls.lua')
 	* Once you are done translating or editing, you can push the edited file on GitHub.
 	* Once the file is pushed, I will review it and merge it with the base, it will then be included with the next update on Workshop.
 	* NOTE: Over time more lines will be added in the default (English) list. You are welcome to check back whenever and copy & paste any new lines that added and translate it.
+	
+	Q: I would like to translate and my language isn't listed below =(
+	A: No worries! Just simply contact me (DrVrej) and I will set up the profile for your language!
+	
+	Thank you to all of your contributions everyone!
 */
 
 if (CLIENT) then
