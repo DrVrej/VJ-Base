@@ -82,7 +82,7 @@ if (CLIENT) then
 		add("vjbase.menu.helpsupport.steam", "Join me on Steam!")
 		add("vjbase.menu.helpsupport.youtube", "Subscribe me on YouTube!")
 		add("vjbase.menu.helpsupport.twtiter", "Follow me on Twitter!")
-		add("vjbase.menu.helpsupport.patron", "Donate me on Patron!")
+		add("vjbase.menu.helpsupport.patreon", "Donate me on Patreon!")
 		add("vjbase.menu.helpsupport.label1", "Follow one of these links to get updates about my addons!")
 		add("vjbase.menu.helpsupport.label2", "Donations help and encourage me to continue making/updating addons! Thank you!")
 		add("vjbase.menu.helpsupport.thanks", "Thanks for your support!")
@@ -435,14 +435,14 @@ if (CLIENT) then
 			add("vjbase.menu.general.snpc.warnfuture", "ADVERTENCIA: ¡Solamente SNPCs aparecidos en el futuro serán afectados!")
 			add("vjbase.menu.general.snpc.creaturesettings", "Opciones de creatura:")
 			add("vjbase.menu.general.snpc.humansettings", "Opciones de humano:")
-					
+		-- Menu Tabs			
 			add("vjbase.menu.tabs.mainmenu", "Menú Principal")
 			add("vjbase.menu.tabs.settings.snpc", "Opciones de SNPC")
 			add("vjbase.menu.tabs.settings.weapon", "Opciones de Arma")
 			add("vjbase.menu.tabs.settings.hud", "Opciones de HUD")
 			add("vjbase.menu.tabs.tools", "Herramientas")
 			add("vjbase.menu.tabs.configures.snpc", "Configuraciones de SNPC")
-					
+		-- Main Menu			
 			add("vjbase.menu.cleanup", "Limpiar")
 			add("vjbase.menu.cleanup.everything", "Limpiar Todo")
 			add("vjbase.menu.cleanup.stopsounds", "Parar Todos los Sonidos")
@@ -456,6 +456,18 @@ if (CLIENT) then
 			add("vjbase.menu.cleanup.remove.decals", "Remover todos los Sprays")
 			add("vjbase.menu.cleanup.remove.allweapons", "Remover todas tus Armas")
 			add("vjbase.menu.cleanup.remove.allammo", "Remover toda tu Munición")
+			
+			add("vjbase.menu.helpsupport", "Contacto y Apoyo")
+			add("vjbase.menu.helpsupport.reportbug", "Reportar un Bug")
+			add("vjbase.menu.helpsupport.suggestion", "Sugerir Algo")
+			add("vjbase.menu.helpsupport.discord", "Unete a mi servidor de Discord!")
+			add("vjbase.menu.helpsupport.steam", "Unete a mi grupo de Steam!")
+			add("vjbase.menu.helpsupport.youtube", "Suscribete a mi canal de YouTube!")
+			add("vjbase.menu.helpsupport.twitter", "Sigueme en Twitter!")
+			add("vjbase.menu.helpsupport.patreon", "Doname en Patreon!")
+			add("vjbase.menu.helpsupport.label1", "Sigueme en uno de estos links para estar al pendiente de mis addons!")
+			add("vjbase.menu.helpsupport.label2", "Las donaciones me ayudan y me motivan a crear/actualizar addons! Gracias!")
+			add("vjbase.menu.helpsupport.thanks", "Gracias por el apoyo!")
 					
 		elseif conv == "portuguese_br" then ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 			
