@@ -424,7 +424,36 @@ if (CLIENT) then
 		elseif conv == "lithuanian" then
 			
 		elseif conv == "spanish_lt" then
-			
+		-- General Menu (Used everywhere)
+			add("vjbase.menu.general.default", "Predeterminado")
+			add("vjbase.menu.general.admin.only", "Nota: Solo admins pueden usar este menú.")
+			add("vjbase.menu.general.admin.not", "¡No eres un admin!")
+			add("vjbase.menu.general.reset.everything", "Resetear a predeterminado")
+			add("vjbase.menu.general.snpc.warnfuture", "ADVERTENCIA: ¡Solamente SNPCs aparecidos en el futuro serán afectados!")
+			add("vjbase.menu.general.snpc.creaturesettings", "Opciones de creatura:")
+			add("vjbase.menu.general.snpc.humansettings", "Opciones de humano:")
+					
+			add("vjbase.menu.tabs.mainmenu", "Menú Principal")
+			add("vjbase.menu.tabs.settings.snpc", "Opciones de SNPC")
+			add("vjbase.menu.tabs.settings.weapon", "Opciones de Arma")
+			add("vjbase.menu.tabs.settings.hud", "Opciones de HUD")
+			add("vjbase.menu.tabs.tools", "Herramientas")
+			add("vjbase.menu.tabs.configures.snpc", "Configuraciones de SNPC")
+					
+			add("vjbase.menu.cleanup", "Limpiar")
+			add("vjbase.menu.cleanup.everything", "Limpiar Todo")
+			add("vjbase.menu.cleanup.stopsounds", "Parar Todos los Sonidos")
+			add("vjbase.menu.cleanup.remove.vjnpcs", "Remover todos los SNPCs de VJ")
+			add("vjbase.menu.cleanup.remove.npcs", "Remover todos los (S)NPCs")
+			add("vjbase.menu.cleanup.remove.spawners", "Remover todos los Creadores")
+			add("vjbase.menu.cleanup.remove.corpses", "Remover todos los Cadaveres")
+			add("vjbase.menu.cleanup.remove.vjgibs", "Remover todos los Gibs VJ")
+			add("vjbase.menu.cleanup.remove.groundweapons", "Remover Todas las Armas del suelo")
+			add("vjbase.menu.cleanup.remove.props", "Remover todos los Props")
+			add("vjbase.menu.cleanup.remove.decals", "Remover todos los Sprays")
+			add("vjbase.menu.cleanup.remove.allweapons", "Remover todas tus Armas")
+			add("vjbase.menu.cleanup.remove.allammo", "Remover toda tu Munición")
+					
 		elseif conv == "portuguese_br" then
 			
 		end
