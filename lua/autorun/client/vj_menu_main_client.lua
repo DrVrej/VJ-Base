@@ -30,6 +30,7 @@ local function VJ_INFORMATION(Panel)
 	Panel:ControlHelp("Map - "..game.GetMap())
 	Panel:ControlHelp("VJ Base Version - "..VJBASE_VERSION)
 	Panel:ControlHelp("Number of VJ Plugins - "..VJBASE_TOTALPLUGINS)
+	Panel:ControlHelp("Selected VJ Language - "..GetConVar("vj_language"):GetString())
 	
 	-- Check the Operation System
 	local ops = "Operating System"
