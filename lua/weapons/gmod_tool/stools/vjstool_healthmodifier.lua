@@ -1,47 +1,54 @@
-TOOL.Name = "Health Modifier"
-TOOL.Category = "Tools"
+TOOL.Name = "#tool.vjstool_healthmodifier.name"
 TOOL.Tab = "DrVrej"
-TOOL.Command = nil
-TOOL.ConfigName = ""
+TOOL.Category = "Tools"
+TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
+
+TOOL.Information = {
+	{name = "left"},
+	{name = "right"},
+	{name = "reload"},
+}
 
 TOOL.ClientConVar["health"] = "100"
 TOOL.ClientConVar["godmode"] = 0
 
+-- Just to make it easier to reset everything to default
 local DefaultConVars = {}
 for k,v in pairs(TOOL.ClientConVar) do
 	DefaultConVars["vjstool_healthmodifier_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
-	language.Add("tool.vjstool_healthmodifier.name", "Health Modifier")
-	language.Add("tool.vjstool_healthmodifier.desc", "Modify the health of an entity")
-	language.Add("tool.vjstool_healthmodifier.0", "Left-Click to set its health, Right-Click to set its health & max health, Reload-Key to heal the entity's to its max health")
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function TOOL.BuildCPanel(Panel)
-	//PrintTable(DefaultConVars)
-	//Panel:AddControl("Header", {Text = "NPC Tool", Description = "Left click to change the NPC's property"})
-	
-	local reset = vgui.Create("DButton")
-	reset:SetFont("DermaDefaultBold")
-	reset:SetText("Reset To Default")
-	reset:SetSize(150, 25)
-	reset:SetColor(Color(0,0,0,255))
-	reset.DoClick = function(reset)
-		for k,v in pairs(DefaultConVars) do
-			LocalPlayer():ConCommand(k.." "..v)
-			//LocalPlayer():ConCommand("vjstool_healthmodifier_health 100")
+	function DoBuildCPanel_VJ_HealthModifier(Panel)
+		local reset = vgui.Create("DButton")
+		reset:SetFont("DermaDefaultBold")
+		reset:SetText("#vjbase.menu.general.reset.everything")
+		reset:SetSize(150,25)
+		reset:SetColor(Color(0,0,0,255))
+		reset.DoClick = function(reset)
+			for k,v in pairs(DefaultConVars) do
+				if v == "" then
+				LocalPlayer():ConCommand(k.." ".."None")
+			else
+				LocalPlayer():ConCommand(k.." "..v) end
+				timer.Simple(0.05,function()
+					GetPanel = controlpanel.Get("vjstool_healthmodifier")
+					GetPanel:ClearControls()
+					DoBuildCPanel_VJ_HealthModifier(GetPanel)
+				end)
+			end
 		end
+		Panel:AddPanel(reset)
+		
+		Panel:AddControl("Label", {Text = "#tool.vjstool_healthmodifier.adminonly"})
+		Panel:AddControl("Slider", {Label = "#tool.vjstool_healthmodifier.sliderhealth", min = 0, max = 10000, Command = "vjstool_healthmodifier_health"})
+		Panel:AddControl("Checkbox", {Label = "#tool.vjstool_healthmodifier.togglegodmode", Command = "vjstool_healthmodifier_godmode"})
+		Panel:ControlHelp("#tool.vjstool_healthmodifier.togglegodmode")
 	end
-	Panel:AddPanel(reset)
-	
-	Panel:AddControl("Label", {Text = "Only admins can change or heal another player's health"})
-	Panel:ControlHelp("- Left click to set its health.")
-	Panel:ControlHelp("- Right click to set its health & max health.")
-	Panel:ControlHelp("- Reload-key to heal the entity's to its max health.")
-	Panel:AddControl("Slider", {Label = "Health",min = 0,max = 10000,Command = "vjstool_healthmodifier_health"})
-	Panel:AddControl("Checkbox", {Label = "God Mode (invincible)", Command = "vjstool_healthmodifier_godmode"})
-	Panel:ControlHelp("Currently only for VJ Base SNPCs")
+---------------------------------------------------------------------------------------------------------------------------------------------
+	function TOOL.BuildCPanel(Panel)
+		DoBuildCPanel_VJ_HealthModifier(Panel)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)

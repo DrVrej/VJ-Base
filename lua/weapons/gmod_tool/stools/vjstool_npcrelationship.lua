@@ -1,34 +1,36 @@
-TOOL.Name = "NPC Relationship Modifier"
-TOOL.Category = "Tools"
+TOOL.Name = "#tool.vjstool_npcrelationship.name"
 TOOL.Tab = "DrVrej"
-TOOL.Command = nil
-TOOL.ConfigName = ""
+TOOL.Category = "Tools"
+TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
+
+TOOL.Information = {
+	{name = "left"},
+	{name = "right"},
+	{name = "reload"},
+}
 
 //TOOL.ClientConVar["playerinteract"] = 1
 TOOL.ClientConVar["allytoplyallies"] = 1
 
+-- Just to make it easier to reset everything to default
 local DefaultConVars = {}
 for k,v in pairs(TOOL.ClientConVar) do
 	DefaultConVars["vjstool_npcrelationship_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
-	language.Add("tool.vjstool_npcrelationship.name", "NPC Relationship Modifier")
-	language.Add("tool.vjstool_npcrelationship.desc", "Modify a NPC's relationship")
-	language.Add("tool.vjstool_npcrelationship.0", "Left-Click to apply relationship, Right-Click to obtain the current classes, Press Reload to apply to yourself")
----------------------------------------------------------------------------------------------------------------------------------------------
 	local function DoBuildCPanel_Relationship(Panel)
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
-		reset:SetText("Reset To Default")
+		reset:SetText("#vjbase.menu.general.reset.everything")
 		reset:SetSize(150,25)
 		reset:SetColor(Color(0,0,0,255))
 		reset.DoClick = function(reset)
 			for k,v in pairs(DefaultConVars) do
-				if v == "" then LocalPlayer():ConCommand(k.." ".."None") else
+				if v == "" then
+				LocalPlayer():ConCommand(k.." ".."None")
+			else
 				LocalPlayer():ConCommand(k.." "..v) end
-				table.Empty(VJ_NPCRELATION_TblCurrentValues)
-				//LocalPlayer():ConCommand("vjstool_npcproperty_health 100")
 				timer.Simple(0.05,function()
 					GetPanel = controlpanel.Get("vjstool_npcrelationship")
 					GetPanel:ClearControls()
@@ -40,7 +42,7 @@ if (CLIENT) then
 
 		local tutorial = vgui.Create("DButton")
 		tutorial:SetFont("DermaDefaultBold")
-		tutorial:SetText("Tutorial Video")
+		tutorial:SetText("#tool.vjstool.menu.tutorialvideo")
 		tutorial:SetSize(150, 20)
 		tutorial:SetColor(Color(0,0,255,255))
 		tutorial.DoClick = function(tutorial)
@@ -48,10 +50,8 @@ if (CLIENT) then
 		end
 		Panel:AddPanel(tutorial)
 
-		Panel:AddControl("Label", {Text = "It's recommended to use this tool only for VJ Base SNPCs."})
-		Panel:ControlHelp("- Left click to apply relationship classes on an entity.")
-		Panel:ControlHelp("- Right click to obtain the current classes an entity has.")
-		Panel:ControlHelp("- Press reload to apply the relationship class to yourself.")
+		Panel:AddControl("Label", {Text = "#tool.vjstool.menu.label.recommendation"})
+		Panel:ControlHelp("#tool.vjstool_npcrelationship.label1")
 		
 		VJ_NPCRELATION_TblCurrentValues = VJ_NPCRELATION_TblCurrentValues or {}
 		local CheckList = vgui.Create("DListView")
@@ -59,10 +59,7 @@ if (CLIENT) then
 			//CheckList:Center() -- No need since Size does it already
 			CheckList:SetSize( 100, 300 ) -- Size
 			CheckList:SetMultiSelect(false)
-			//CheckList.Paint = function()
-			//draw.RoundedBox( 8, 0, 0, CheckList:GetWide(), CheckList:GetTall(), Color( 0, 0, 100, 255 ) )
-			//end
-			CheckList:AddColumn("Class")
+			CheckList:AddColumn("#tool.vjstool_npcrelationship.header")
 			CheckList.OnRowSelected = function(rowIndex,row) chat.AddText(Color(0,255,0),"Double click to ",Color(255,100,0),"remove ",Color(0,255,0),"a class") end
 			function CheckList:DoDoubleClick(lineID,line)
 				chat.AddText(Color(255,100,0)," "..line:GetValue(1).." ",Color(0,255,0),"removed!")
@@ -99,11 +96,11 @@ if (CLIENT) then
 			InsertToTable(TextEntry:GetValue())
 		end
 		Panel:AddItem(TextEntry)
-		Panel:ControlHelp("Press ENTER to add the class")
+		Panel:ControlHelp("#tool.vjstool_npcrelationship.label2")
 		
 		local button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
-		button:SetText("Insert Combine Class")
+		button:SetText("#tool.vjstool_npcrelationship.button.combine")
 		button:SetSize(50,20)
 		button:SetColor(Color(0,0,0,255))
 		button.DoClick = function(button)
@@ -113,7 +110,7 @@ if (CLIENT) then
 		
 		local button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
-		button:SetText("Insert Antlion Class")
+		button:SetText("#tool.vjstool_npcrelationship.button.antlion")
 		button:SetSize(50,20)
 		button:SetColor(Color(0,0,0,255))
 		button.DoClick = function(button)
@@ -123,7 +120,7 @@ if (CLIENT) then
 		
 		local button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
-		button:SetText("Insert Zombie Class")
+		button:SetText("#tool.vjstool_npcrelationship.button.zombie")
 		button:SetSize(50,20)
 		button:SetColor(Color(0,0,0,255))
 		button.DoClick = function(button)
@@ -133,15 +130,15 @@ if (CLIENT) then
 		
 		local button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
-		button:SetText("Insert Resistance Class")
+		button:SetText("#tool.vjstool_npcrelationship.button.player")
 		button:SetSize(50,20)
 		button:SetColor(Color(0,0,0,255))
 		button.DoClick = function(button)
 			InsertToTable("CLASS_PLAYER_ALLY")
 		end
 		Panel:AddPanel(button)
-		Panel:AddControl("Checkbox", {Label = "Allied with all player allies?", Command = "vjstool_npcrelationship_allytoplyallies"})
-		Panel:ControlHelp("Only applies for VJ Base SNPCs and requires the SNPC to have CLASS_PLAYER_ALLY")
+		Panel:AddControl("Checkbox", {Label = "#tool.vjstool_npcrelationship.togglealliedply", Command = "vjstool_npcrelationship_allytoplyallies"})
+		Panel:ControlHelp(language.GetPhrase("#tool.vjstool_npcrelationship.label3").." CLASS_PLAYER_ALLY")
 		
 		//Panel:AddControl("Label", {Text = "For PLAYER entities Only:"})
 		//Panel:AddControl("Checkbox", {Label = "Make NPCs interact with friendly player", Command = "vjstool_npcspawner_playerinteract"})
@@ -177,7 +174,7 @@ if (CLIENT) then
 		clicktype = net.ReadString()
 		allynum = net.ReadFloat()
 		if clicktype == "ReloadClick" then entname = "Yourself" end
-		chat.AddText(Color(0,255,0),"Applied the relationship class table on",Color(255,100,0)," "..entname)
+		chat.AddText(Color(0,255,0),"#tool.vjstool_npcrelationship.print.applied",Color(255,100,0)," "..entname)
 		net.Start("vj_npcrelationship_sr_leftclick")
 		net.WriteEntity(ent)
 		//net.WriteTable(self)

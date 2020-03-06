@@ -12,6 +12,13 @@ include('autorun/vj_controls.lua')
 	* Looks for the current set language and translates all the strings that are given.
 	* If a string isn't translated, it will automatically default to English.
 	* When a updated while in a map, it will try to refresh some of the menus, but many menus requires a map restart!
+	
+	How to edit & contribute:
+	* Make any edits in any language you would like.
+	* If a line doesn't exist in your language, then copy & paste it from the default (English) list.
+	* Once you are done translating or editing, you can push the edited file on GitHub.
+	* Once the file is pushed, I will review it and merge it with the base, it will then be included with the next update on Workshop.
+	* NOTE: Over time more lines will be added in the default (English) list. You are welcome to check back whenever and copy & paste any new lines that added and translate it.
 */
 
 if (CLIENT) then
@@ -22,24 +29,17 @@ if (CLIENT) then
 	function VJ_REFRESH_LANGUAGE()
 		local conv = GetConVar("vj_language"):GetString()
 		
-		add("vjbase.menugeneral.default", "Default") -- Deprecated, don't use or translate.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- ///// WARNING: Don't touch anything above this line! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		-- DEFAULT (English) LIST | Copy & paste any of the lines below to your preferred language to translate it.
+		add("vjbase.menugeneral.default", "Default") -- DO NOT TRANSLATE. (Deprecated)
 		
 		-- General Base (Used everywhere)
-		// add("vjbase.general.print.runningvj", "Notice: This server is running VJ Base.")
+		// add("vjbase.general.print.runningvj", "Notice: This server is running VJ Base.") -- DO NOT TRANSLATE.
 		
 		-- General Menu (Used everywhere)
 		add("vjbase.menu.general.default", "Default")
 		add("vjbase.menu.general.admin.only", "Notice: Only admins can use this menu.")
 		add("vjbase.menu.general.admin.not", "You are not a admin!")
-		add("vjbase.menu.general.reset.everything", "Reset Everything")
-		add("vjbase.menu.general.reset.everything.colon", "Reset Everything:")
+		add("vjbase.menu.general.reset.everything", "Reset To Default")
 		add("vjbase.menu.general.snpc.warnfuture", "WARNING: Only future spawned SNPCs will be affected!")
 		add("vjbase.menu.general.snpc.creaturesettings", "Creature Settings:")
 		add("vjbase.menu.general.snpc.humansettings", "Human Settings:")
@@ -96,7 +96,7 @@ if (CLIENT) then
 		
 		add("vjbase.menu.clsettings", "Client Settings")
 		add("vjbase.menu.clsettings.label", "Use this menu to customize your client settings, servers can't change these settings!")
-		add("vjbase.menu.clsettings.labellang", "Select the Language:")
+		add("vjbase.menu.clsettings.labellang", "Language Selection...")
 		add("vjbase.menu.clsettings.notify.lang", "VJ Base Language Set To:")
 		
 		add("vjbase.menu.info", "Information")
@@ -303,6 +303,111 @@ if (CLIENT) then
 		add("vjbase.menuproperties.gib", "Gib (If Valid)")
 		add("vjbase.menuproperties.devmode", "Toggle Developer Mode")
 		
+		-- Tools
+		add("tool.vjstool.menu.tutorialvideo", "Tutorial Video")
+		add("tool.vjstool.menu.label.recommendation", "Recommended to use this tool only for VJ Base SNPCs.")
+		
+		add("tool.vjstool_bullseye.name", "NPC Bullseye")
+		add("tool.vjstool_bullseye.desc", "Creates a bullseye that NPCs will target")
+		add("tool.vjstool_bullseye.left", "Left-Click to create a bullseye")
+		add("tool.vjstool_bullseye.menu.help1", "Press USE on the entity to activate/deactivate.")
+		add("tool.vjstool_bullseye.menu.help2", "When deactivated, NPCs will no longer target it.")
+		add("tool.vjstool_bullseye.menu.label1", "Select Movement Type")
+		add("tool.vjstool_bullseye.menu.label2", "Model Directory")
+		add("tool.vjstool_bullseye.menu.toggleusestatus", "Use Status Colors (Activated/Deactivated)")
+		add("tool.vjstool_bullseye.menu.togglestartactivated", "Start Activated")
+		
+		add("tool.vjstool_entityscanner.name", "Entity Scanner")
+		add("tool.vjstool_entityscanner.desc", "Get information about an entity")
+		add("tool.vjstool_entityscanner.left", "Left-Click to print information about the entity in console")
+		add("tool.vjstool_entityscanner.label", "Prints information about any selected entity, it's printed in the console.")
+		
+		add("tool.vjstool_healthmodifier.name", "Health Modifier")
+		add("tool.vjstool_healthmodifier.desc", "Modify the health of an entity")
+		add("tool.vjstool_healthmodifier.left", "Left-Click to set its health")
+		add("tool.vjstool_healthmodifier.right", "Right-Click to set its health & max health")
+		add("tool.vjstool_healthmodifier.reload", "Reload-Key to heal the entity's to its max health")
+		add("tool.vjstool_healthmodifier.adminonly", "Only admins can modify or heal another player's health.")
+		add("tool.vjstool_healthmodifier.sliderhealth", "Health")
+		add("tool.vjstool_healthmodifier.togglegodmode", "God Mode (invincible)")
+		add("tool.vjstool_healthmodifier.label", "Currently only for VJ Base SNPCs.")
+		
+		add("tool.vjstool_notarget.name", "No Target")
+		add("tool.vjstool_notarget.desc", "Setting no target will make all NPCs not see a certain player or NPC")
+		add("tool.vjstool_notarget.left", "Left-Click to toggle no target to yourself")
+		add("tool.vjstool_notarget.right", "Right-Click to toggle no target to the current player or NPC")
+		add("tool.vjstool_notarget.label", "When a no target is enabled on an entity, NPCs will not target it!")
+		
+		add("tool.vjstool_npcequipment.name", "NPC Equipment")
+		add("tool.vjstool_npcequipment.desc", "Changes the NPC's equipment")
+		add("tool.vjstool_npcequipment.left", "Left-Click to change the NPC's equipment")
+		add("tool.vjstool_npcequipment.right", "Right-Click to remove the NPC's equipment")
+		add("tool.vjstool_npcequipment.label", "Changes or removes an NPC's equipment.")
+		add("tool.vjstool_npcequipment.selectedequipment", "Selected Equipment")
+		add("tool.vjstool_npcequipment.print.doubleclick", "Double click to select a weapon.")
+		add("tool.vjstool_npcequipment.print.weaponselected1", "Weapon")
+		add("tool.vjstool_npcequipment.print.weaponselected2", "selected!")
+		add("tool.vjstool_npcequipment.header1", "Name")
+		add("tool.vjstool_npcequipment.header2", "Class")
+		
+		add("tool.vjstool_npcmover.name", "NPC Mover")
+		add("tool.vjstool_npcmover.desc", "Move an NPC or a group of NPCs")
+		add("tool.vjstool_npcmover.left", "Left-Click to select")
+		add("tool.vjstool_npcmover.right", "Right-Click to move(Run)")
+		add("tool.vjstool_npcmover.reload", "Reload-Key to move(walk)")
+		add("tool.vjstool_npcmover.header1", "Name")
+		add("tool.vjstool_npcmover.header2", "Class")
+		add("tool.vjstool_npcmover.header3", "Information")
+		add("tool.vjstool_npcmover.buttonunselectall", "Unselect All NPCs")
+		add("tool.vjstool_npcmover.print.unselectedall", "Unselected all NPCs!")
+		add("tool.vjstool_npcmover.print.unselectedall.error", "Nothing to unselect!")
+		
+		add("tool.vjstool_npcrelationship.name", "NPC Relationship Modifier")
+		add("tool.vjstool_npcrelationship.desc", "Modify a NPC's relationship")
+		add("tool.vjstool_npcrelationship.left", "Left-Click to apply relationship")
+		add("tool.vjstool_npcrelationship.right", "Right-Click to obtain the current classes")
+		add("tool.vjstool_npcrelationship.reload", "Press Reload to apply to yourself")
+		add("tool.vjstool_npcrelationship.label1", "Modifies the relationship of an NPC, basically how it feels towards another entity.")
+		add("tool.vjstool_npcrelationship.header", "Class")
+		add("tool.vjstool_npcrelationship.label2", "Press return to add the class.")
+		add("tool.vjstool_npcrelationship.button.combine", "Insert Combine Class")
+		add("tool.vjstool_npcrelationship.button.antlion", "Insert Antlion Class")
+		add("tool.vjstool_npcrelationship.button.zombie", "Insert Zombie Class")
+		add("tool.vjstool_npcrelationship.button.player", "Insert Player Class")
+		add("tool.vjstool_npcrelationship.togglealliedply", "Allied with all player allies?")
+		add("tool.vjstool_npcrelationship.label3", "Only applies for VJ Base SNPCs and requires the SNPC to have")
+		add("tool.vjstool_npcrelationship.print.applied", "Applied the relationship class table on")
+		
+		add("tool.vjstool_npcspawner.name", "NPC Spawner")
+		add("tool.vjstool_npcspawner.desc", "Creates an spawner")
+		add("tool.vjstool_npcspawner.left", "Left-Click to create a spawner")
+		add("tool.vjstool_npcspawner.right", "Right-Click to spawn the NPCs once")
+		add("tool.vjstool_npcspawner.selectednpc", "Selected NPC")
+		add("tool.vjstool_npcspawner.spawnpos.forward", "Position | Forward")
+		add("tool.vjstool_npcspawner.spawnpos.right", "Position | Right")
+		add("tool.vjstool_npcspawner.spawnpos.up", "Position | Up")
+		add("tool.vjstool_npcspawner.selectweapon", "Selected Weapon")
+		add("tool.vjstool_npcspawner.button.updatelist", "Update List")
+		add("tool.vjstool_npcspawner.label1", "Double click on an item to remove it.")
+		add("tool.vjstool_npcspawner.header1", "Name")
+		add("tool.vjstool_npcspawner.header2", "Position")
+		add("tool.vjstool_npcspawner.header3", "Equipment")
+		add("tool.vjstool_npcspawner.label2", "Extra Options")
+		add("tool.vjstool_npcspawner.toggle.spawnsound", "Play NPC Spawning Sound?")
+		add("tool.vjstool_npcspawner.nextspawntime", "Next Spawn Time")
+		add("tool.vjstool_npcspawner.popup.header1", "Name")
+		add("tool.vjstool_npcspawner.popup.header2", "Class")
+		add("tool.vjstool_npcspawner.popup.header3", "Category")
+		add("tool.vjstool_npcspawner.title1", "Double click to select an NPC.")
+		add("tool.vjstool_npcspawner.title2", "Double click to select a weapon.")
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ ///// WARNING: Don't touch anything above this line! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 		if conv == "armenian" then
 			
 		elseif conv == "russian" then
@@ -318,9 +423,6 @@ if (CLIENT) then
 		elseif conv == "portuguese_br" then
 			
 		end
-		
-		print("VJ Base Language Set To: "..conv)
-	end
 	
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -328,6 +430,8 @@ if (CLIENT) then
 ------ ///// WARNING: Don't touch anything below this line! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
+		print("VJ Base Language Set To: "..conv)
+	end
 	VJ_REFRESH_LANGUAGE() -- Arachin ankam ganch e, garevor e asiga!
 end

@@ -1,50 +1,50 @@
-TOOL.Name = "NPC Equipment"
-TOOL.Category = "Tools"
+TOOL.Name = "#tool.vjstool_npcequipment.name"
 TOOL.Tab = "DrVrej"
-TOOL.Command = nil
-TOOL.ConfigName = ""
+TOOL.Category = "Tools"
+TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
+
+TOOL.Information = {
+	{name = "left"},
+	{name = "right"},
+}
 
 TOOL.ClientConVar["weaponclass"] = "None"
 TOOL.ClientConVar["weaponname"] = "Unknown"
 
+-- Just to make it easier to reset everything to default
 local DefaultConVars = {}
 for k,v in pairs(TOOL.ClientConVar) do
 	DefaultConVars["vjstool_npcequipment_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
-	language.Add("tool.vjstool_npcequipment.name", "NPC Equipment")
-	language.Add("tool.vjstool_npcequipment.desc", "Changes the NPC's equipment")
-	language.Add("tool.vjstool_npcequipment.0", "Left-Click to change the NPC's equipment, Right-Click to remove the NPC's equipment")
-	
-	//language.Add("vjbase.npctools.health", "Health")
----------------------------------------------------------------------------------------------------------------------------------------------
 	local function DoBuildCPanel_VJ_NPCEquipment(Panel)
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
-		reset:SetText("Reset To Default")
+		reset:SetText("#vjbase.menu.general.reset.everything")
 		reset:SetSize(150,25)
 		reset:SetColor(Color(0,0,0,255))
 		reset.DoClick = function(reset)
 			for k,v in pairs(DefaultConVars) do
-				if v == "" then LocalPlayer():ConCommand(k.." ".."None") else
+				if v == "" then
+				LocalPlayer():ConCommand(k.." ".."None")
+			else
 				LocalPlayer():ConCommand(k.." "..v) end
 				timer.Simple(0.05,function()
-				GetPanel = controlpanel.Get("vjstool_npcequipment")
-				GetPanel:ClearControls()
-				DoBuildCPanel_VJ_NPCEquipment(GetPanel)
+					GetPanel = controlpanel.Get("vjstool_npcequipment")
+					GetPanel:ClearControls()
+					DoBuildCPanel_VJ_NPCEquipment(GetPanel)
 				end)
 			end
 		end
 		Panel:AddPanel(reset)
 		
-		Panel:AddControl("Label", {Text = "It's recommended to use this tool only for VJ Base SNPCs."})
-		Panel:ControlHelp("- Left-Click to change the NPC's equipment.")
-		Panel:ControlHelp("- Right-Click to remove the NPC's equipment.")
+		Panel:AddControl("Label", {Text = "#tool.vjstool.menu.label.recommendation"})
+		Panel:ControlHelp("#tool.vjstool_npcequipment.label")
 		
 		local selectwep = vgui.Create("DTextEntry")
 		selectwep:SetEditable(false)
-		selectwep:SetText("Selected Weapon: "..GetConVarString("vjstool_npcequipment_weaponname").." ["..GetConVarString("vjstool_npcequipment_weaponclass").."]")
+		selectwep:SetText(language.GetPhrase("#tool.vjstool_npcequipment.selectedequipment")..": "..GetConVarString("vjstool_npcequipment_weaponname").." ["..GetConVarString("vjstool_npcequipment_weaponclass").."]")
 		selectwep.OnGetFocus = function() LocalPlayer():ConCommand("vj_npcequipment_openwepselect") end
 		Panel:AddItem(selectwep)
 	end
@@ -57,7 +57,7 @@ if (CLIENT) then
 		local MenuFrame = vgui.Create('DFrame')
 		MenuFrame:SetSize(420, 440)
 		MenuFrame:SetPos(ScrW()*0.6, ScrH()*0.1)
-		MenuFrame:SetTitle("Double click to select a weapon")
+		MenuFrame:SetTitle("#tool.vjstool_npcequipment.print.doubleclick")
 		//MenuFrame:SetBackgroundBlur(true)
 		MenuFrame:SetFocusTopLevel(true)
 		MenuFrame:SetSizable(true)
@@ -71,11 +71,11 @@ if (CLIENT) then
 			CheckList:SetPos(10,30)
 			CheckList:SetSize(400,400) -- Size
 			CheckList:SetMultiSelect(false)
-			CheckList:AddColumn("Name")
-			CheckList:AddColumn("Class")
-			CheckList.OnRowSelected = function() chat.AddText(Color(0,255,0),"Double click to select a weapon") end
+			CheckList:AddColumn("#tool.vjstool_npcequipment.header1")
+			CheckList:AddColumn("#tool.vjstool_npcequipment.header2")
+			CheckList.OnRowSelected = function() chat.AddText(Color(0,255,0), "#tool.vjstool_npcequipment.print.doubleclick") end
 			function CheckList:DoDoubleClick(lineID,line)
-				chat.AddText(Color(0,255,0),"Weapon",Color(255,100,0)," "..line:GetValue(1).." ",Color(0,255,0),"selected!")
+				chat.AddText(Color(0,255,0), "#tool.vjstool_npcequipment.print.weaponselected1", Color(255,100,0), " "..line:GetValue(1).." ", Color(0,255,0), "#tool.vjstool_npcequipment.print.weaponselected2")
 				LocalPlayer():ConCommand("vjstool_npcequipment_weaponname "..line:GetValue(1))
 				LocalPlayer():ConCommand("vjstool_npcequipment_weaponclass "..line:GetValue(2))
 				MenuFrame:Close()
@@ -92,8 +92,6 @@ if (CLIENT) then
 		end
 		CheckList:SortByColumn(1,false)
 	end)
-else -- If SERVER
-	-- Yayyyy nothing.....for now...
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)

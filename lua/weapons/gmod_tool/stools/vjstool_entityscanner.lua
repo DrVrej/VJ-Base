@@ -1,28 +1,26 @@
-TOOL.Name = "Entity Scanner"
-TOOL.Category = "Tools"
+TOOL.Name = "#tool.vjstool_entityscanner.name"
 TOOL.Tab = "DrVrej"
-TOOL.Command = nil
-TOOL.ConfigName = ""
+TOOL.Category = "Tools"
+TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
 
+TOOL.Information = {
+	{name = "left"},
+}
+
+-- Just to make it easier to reset everything to default
 local DefaultConVars = {}
 for k,v in pairs(TOOL.ClientConVar) do
 	DefaultConVars["vjstool_entityscanner_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
-	language.Add("tool.vjstool_entityscanner.name", "Entity Scanner")
-	language.Add("tool.vjstool_entityscanner.desc", "Get information about an entity")
-	language.Add("tool.vjstool_entityscanner.0", "Left-Click to print information about the entity in console")
----------------------------------------------------------------------------------------------------------------------------------------------
-local function DoBuildCPanel_EntityScanner(Panel)
-	Panel:AddControl("Label", {Text = "Left-Click to print information about the entity in the console"})
-end
+	local function DoBuildCPanel_EntityScanner(Panel)
+		Panel:AddControl("Label", {Text = "#tool.vjstool_entityscanner.label"})
+	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)
 		DoBuildCPanel_EntityScanner(Panel)
 	end
-else -- If SERVER
-	// Nothing...
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)

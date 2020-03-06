@@ -1,130 +1,131 @@
-TOOL.Name = "NPC Mover"
-TOOL.Category = "Tools"
+TOOL.Name = "#tool.vjstool_npcmover.name"
 TOOL.Tab = "DrVrej"
-TOOL.Command = nil
-TOOL.ConfigName = ""
+TOOL.Category = "Tools"
+TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
 
+TOOL.Information = {
+	{name = "left"},
+	{name = "right"},
+	{name = "reload"},
+}
+
+-- Just to make it easier to reset everything to default
 local DefaultConVars = {}
 for k,v in pairs(TOOL.ClientConVar) do
 	DefaultConVars["vjstool_npcmover_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
-	language.Add("tool.vjstool_npcmover.name", "NPC Mover")
-	language.Add("tool.vjstool_npcmover.desc", "Move an NPC or a group of NPCs")
-	language.Add("tool.vjstool_npcmover.0", "Left-Click to select, Right-Click to move(Run), Reload-Key to move(walk)")
-	
-	//language.Add("vjbase.npctools.health", "Health")
----------------------------------------------------------------------------------------------------------------------------------------------
-local function DoBuildCPanel_Mover(Panel)
-	//PrintTable(DefaultConVars)
-	//Panel:AddControl("Header", {Text = "NPC Tool", Description = "Left click to change the NPC's property"})
-	TblCurrentValues = TblCurrentValues or {}
-	TblCurrentLines = TblCurrentLines or {}
-	
-	local reset = vgui.Create("DButton") -- Bug Report
-	reset:SetFont("DermaDefaultBold")
-	reset:SetText("Reset To Default")
-	reset:SetSize(150, 25)
-	reset:SetColor(Color(0,0,0,255))
-	reset.DoClick = function(reset)
-		for k,v in pairs(DefaultConVars) do
-			LocalPlayer():ConCommand(k.." "..v)
-			//LocalPlayer():ConCommand("vjstool_npcproperty_health 100")
-			timer.Simple(0.05,function()
-			GetPanel = controlpanel.Get("vjstool_npcmover")
-			GetPanel:ClearControls()
-			DoBuildCPanel_Mover(GetPanel)
-			end)
+	local function DoBuildCPanel_Mover(Panel)
+		VJ_MOVE_TblCurrentValues = VJ_MOVE_TblCurrentValues or {}
+		VJ_MOVE_TblCurrentLines = VJ_MOVE_TblCurrentLines or {}
+		
+		local reset = vgui.Create("DButton")
+		reset:SetFont("DermaDefaultBold")
+		reset:SetText("#vjbase.menu.general.reset.everything")
+		reset:SetSize(150,25)
+		reset:SetColor(Color(0,0,0,255))
+		reset.DoClick = function(reset)
+			for k,v in pairs(DefaultConVars) do
+				if v == "" then
+				LocalPlayer():ConCommand(k.." ".."None")
+			else
+				LocalPlayer():ConCommand(k.." "..v) end
+				timer.Simple(0.05,function()
+					GetPanel = controlpanel.Get("vjstool_npcmover")
+					GetPanel:ClearControls()
+					DoBuildCPanel_Mover(GetPanel)
+				end)
+			end
 		end
-	end
-	Panel:AddPanel(reset)
-	Panel:AddControl("Label", {Text = "It's recommended to use this tool only for VJ Base SNPCs."})
-	local CheckList = vgui.Create("DListView")
-		CheckList:SetTooltip(false)
-		//CheckList:Center() -- No need since Size does it already
-		CheckList:SetSize( 100, 300 ) -- Size
-		CheckList:SetMultiSelect(false)
-		//CheckList.Paint = function()
-		//draw.RoundedBox( 8, 0, 0, CheckList:GetWide(), CheckList:GetTall(), Color( 0, 0, 100, 255 ) )
-		//end
-		CheckList:AddColumn("Name")
-		CheckList:AddColumn("Class")
-		//CheckList:AddColumn("Index")
-		CheckList:AddColumn("Information")
-		//CheckList:AddColumn("Position")
-		//CheckList:AddColumn("Equipment")
-		for k,v in ipairs(TblCurrentValues) do
-			if IsValid(v) then
-			local locname = "Unknown"
-				for lk,lv in pairs(list.Get("NPC")) do
-					if v:GetClass() == lv.Class then locname = lv.Name end
+		Panel:AddPanel(reset)
+		
+		Panel:AddControl("Label", {Text = "#tool.vjstool.menu.label.recommendation"})
+		local CheckList = vgui.Create("DListView")
+			CheckList:SetTooltip(false)
+			//CheckList:Center() -- No need since Size does it already
+			CheckList:SetSize(100, 300) -- Size
+			CheckList:SetMultiSelect(false)
+			//CheckList.Paint = function()
+			//draw.RoundedBox(8, 0, 0, CheckList:GetWide(), CheckList:GetTall(), Color(0, 0, 100, 255))
+			//end
+			CheckList:AddColumn("#tool.vjstool_npcmover.header1")
+			CheckList:AddColumn("#tool.vjstool_npcmover.header2")
+			//CheckList:AddColumn("Index")
+			CheckList:AddColumn("#tool.vjstool_npcmover.header3")
+			//CheckList:AddColumn("Position")
+			//CheckList:AddColumn("Equipment")
+			for k,v in ipairs(VJ_MOVE_TblCurrentValues) do
+				if IsValid(v) then
+				local locname = "Unknown"
+					for lk,lv in pairs(list.Get("NPC")) do
+						if v:GetClass() == lv.Class then locname = lv.Name end
+					end
+					CheckList:AddLine(locname,v:GetClass(),v) //v:EntIndex()
+					//CheckList:AddLine(v)
 				end
-				CheckList:AddLine(locname,v:GetClass(),v) //v:EntIndex()
-				//CheckList:AddLine(v)
 			end
-		end
-		CheckList.OnRowSelected = function(rowIndex,row) chat.AddText(Color(0,255,0),"Double click to ",Color(255,100,0),"unselect ",Color(0,255,0),"a NPC") end
-		function CheckList:DoDoubleClick(lineID,line)
-			chat.AddText(Color(0,255,0),"NPC",Color(255,100,0)," "..line:GetValue(1).." ",Color(0,255,0),"unselected!")
-			net.Start("vj_npcmover_removesingle")
-			net.WriteEntity(line:GetValue(3))
+			CheckList.OnRowSelected = function(rowIndex,row) chat.AddText(Color(0,255,0),"Double click to ",Color(255,100,0),"unselect ",Color(0,255,0),"a NPC") end
+			function CheckList:DoDoubleClick(lineID,line)
+				chat.AddText(Color(0,255,0),"NPC",Color(255,100,0)," "..line:GetValue(1).." ",Color(0,255,0),"unselected!")
+				net.Start("vj_npcmover_removesingle")
+				net.WriteEntity(line:GetValue(3))
+				net.SendToServer()
+				CheckList:RemoveLine(lineID)
+				table.Empty(VJ_MOVE_TblCurrentValues)
+				for kLine,vLine in pairs(CheckList:GetLines()) do
+					table.insert(VJ_MOVE_TblCurrentValues,vLine:GetValue(3))
+				end
+			end
+		Panel:AddItem(CheckList)
+		//VJ_MOVE_TblCurrentLines = CheckList:GetLines()
+				
+		local unselectall = vgui.Create("DButton")
+		unselectall:SetFont("DermaDefaultBold")
+		unselectall:SetText("#tool.vjstool_npcmover.buttonunselectall")
+		unselectall:SetSize(150, 25)
+		unselectall:SetColor(Color(0,0,0,255))
+		unselectall.DoClick = function(unselectall)
+			local brah = VJ_MOVE_TblCurrentValues
+			if table.Count(brah) > 0 then
+				chat.AddText(Color(255,100,0), "#tool.vjstool_npcmover.print.unselectedall")
+			else
+				chat.AddText(Color(0,255,0), "#tool.vjstool_npcmover.print.unselectedall.error")
+			end
+			net.Start("vj_npcmover_removeall")
+			net.WriteTable(brah)
 			net.SendToServer()
-			CheckList:RemoveLine(lineID)
-			table.Empty(TblCurrentValues)
-			for kLine,vLine in pairs(CheckList:GetLines()) do
-				table.insert(TblCurrentValues,vLine:GetValue(3))
-			end
+			table.Empty(brah)
+			CheckList:Clear()
 		end
-	Panel:AddItem(CheckList)
-	//TblCurrentLines = CheckList:GetLines()
-			
-	local unselectall = vgui.Create("DButton") -- Bug Report
-	unselectall:SetFont("DermaDefaultBold")
-	unselectall:SetText("Unselect All NPCs")
-	unselectall:SetSize(150, 25)
-	unselectall:SetColor(Color(0,0,0,255))
-	unselectall.DoClick = function(unselectall)
-		local brah = TblCurrentValues
-		if table.Count(brah) > 0 then
-			chat.AddText(Color(255,100,0),"Unselected all NPCs!")
-		else
-			chat.AddText(Color(0,255,0),"Nothing to unselect!")
-		end
-		net.Start("vj_npcmover_removeall")
-		net.WriteTable(brah)
-		net.SendToServer()
-		table.Empty(brah)
-		CheckList:Clear()
+		Panel:AddPanel(unselectall)
+		//Panel:AddControl("Checkbox", {Label = "Kill The Enemy", Command = "vjstool_npccontroller_killenemy"})
 	end
-	Panel:AddPanel(unselectall)
-	//Panel:AddControl("Checkbox", {Label = "Kill The Enemy", Command = "vjstool_npccontroller_killenemy"})
-end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcmover_cl_create",function(len,pl)
 		sventity = net.ReadEntity()
 		sventname = net.ReadString()
-		TblCurrentValues = TblCurrentValues or {}
-		//if svchangetype == "AddNPC" then table.insert(TblCurrentValues,sventity) end
+		VJ_MOVE_TblCurrentValues = VJ_MOVE_TblCurrentValues or {}
+		//if svchangetype == "AddNPC" then table.insert(VJ_MOVE_TblCurrentValues,sventity) end
 		local changetype = "None"
-		for k,v in ipairs(TblCurrentValues) do
-			if !IsValid(v) then table.remove(TblCurrentValues,k) continue end
+		for k,v in ipairs(VJ_MOVE_TblCurrentValues) do
+			if !IsValid(v) then table.remove(VJ_MOVE_TblCurrentValues,k) continue end
 			if v == sventity then
 				chat.AddText(Color(0,255,0),"NPC",Color(255,100,0)," "..sventname.." ",Color(0,255,0),"unselected!")
 				changetype = "RemoveNPC"
-				table.remove(TblCurrentValues,k)
+				table.remove(VJ_MOVE_TblCurrentValues,k)
 			//else
 				//print("Added to the table")
 				//changetype = "AddNPC"
-				//table.insert(TblCurrentValues,sventity)
+				//table.insert(VJ_MOVE_TblCurrentValues,sventity)
 			end
 		end
-		//if table.Count(TblCurrentValues) == 0 && changetype != "RemoveNPC" then
-		//if (changetype == "AddNPC") or (table.Count(TblCurrentValues) == 0 && changetype != "RemoveNPC") then
+		//if table.Count(VJ_MOVE_TblCurrentValues) == 0 && changetype != "RemoveNPC" then
+		//if (changetype == "AddNPC") or (table.Count(VJ_MOVE_TblCurrentValues) == 0 && changetype != "RemoveNPC") then
 		if changetype != "RemoveNPC" then
 			chat.AddText(Color(0,255,0),"NPC",Color(255,100,0)," "..sventname.." ",Color(0,255,0),"selected!")
 			changetype = "AddNPC"
-			table.insert(TblCurrentValues,sventity)
+			table.insert(VJ_MOVE_TblCurrentValues,sventity)
 		end
 		GetPanel = controlpanel.Get("vjstool_npcmover")
 		GetPanel:ClearControls()
@@ -135,23 +136,23 @@ end
 		net.SendToServer()
 		//print("Current Entity: ",sventity)
 		//print("--------------")
-		//PrintTable(TblCurrentValues)
+		//PrintTable(VJ_MOVE_TblCurrentValues)
 		//print("--------------")
 	end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcmover_cl_startmove",function(len,pl)
 		svwalktype = net.ReadString()
 		svvector = net.ReadVector()
-		for k,v in ipairs(TblCurrentValues) do
+		for k,v in ipairs(VJ_MOVE_TblCurrentValues) do
 			if !IsValid(v) then 
-				table.remove(TblCurrentValues,k)
+				table.remove(VJ_MOVE_TblCurrentValues,k)
 				GetPanel = controlpanel.Get("vjstool_npcmover")
 				GetPanel:ClearControls()
 				DoBuildCPanel_Mover(GetPanel)
 			end
 		end
 		net.Start("vj_npcmover_sv_startmove")
-		net.WriteTable(TblCurrentValues)
+		net.WriteTable(VJ_MOVE_TblCurrentValues)
 		net.WriteString(svwalktype)
 		net.WriteVector(svvector)
 		net.SendToServer()

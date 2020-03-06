@@ -1,28 +1,27 @@
-TOOL.Name = "No Target"
-TOOL.Category = "Tools"
+TOOL.Name = "#tool.vjstool_notarget.name"
 TOOL.Tab = "DrVrej"
-TOOL.Command = nil
-TOOL.ConfigName = ""
+TOOL.Category = "Tools"
+TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
 
+TOOL.Information = {
+	{name = "left"},
+	{name = "right"},
+}
+
+-- Just to make it easier to reset everything to default
 local DefaultConVars = {}
 for k,v in pairs(TOOL.ClientConVar) do
 	DefaultConVars["vjstool_notarget_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
-	language.Add("tool.vjstool_notarget.name", "No Target")
-	language.Add("tool.vjstool_notarget.desc", "Setting no target will make all NPCs not see a certain player or NPC")
-	language.Add("tool.vjstool_notarget.0", "Left-Click to toggle no target to yourself, Right-Click to toggle no target to the current player or NPC")
----------------------------------------------------------------------------------------------------------------------------------------------
-local function DoBuildCPanel_NoTarget(Panel)
-	Panel:AddControl("Label", {Text = "Left-Click to set no target to yourself, Right-Click to set no target to the current player or NPC"})
-end
+	local function DoBuildCPanel_NoTarget(Panel)
+		Panel:AddControl("Label", {Text = "#tool.vjstool_notarget.label"})
+	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)
 		DoBuildCPanel_NoTarget(Panel)
 	end
-else -- If SERVER
-	// Nothing...
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)

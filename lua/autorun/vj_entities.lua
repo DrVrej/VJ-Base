@@ -374,7 +374,8 @@ function NPC_MetaTable:VJ_PlaySequence(SequenceID,PlayBackRate,Wait,WaitTime,Int
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_TranslateWeaponActivity(ActAnim)
-	if !IsValid(self:GetActiveWeapon()) then return ActAnim end
+print(self:GetActiveWeapon().IsVJBaseSWEP)
+	if !IsValid(self:GetActiveWeapon()) or self:GetActiveWeapon().IsVJBaseSWEP != true then return ActAnim end
 	if self:GetActiveWeapon():TranslateActivity(ActAnim) == -1 then return ActAnim else
 	return self:GetActiveWeapon():TranslateActivity(ActAnim) end
 end
