@@ -11,6 +11,9 @@ TOOL.Information = {
 
 TOOL.ClientConVar["health"] = "100"
 TOOL.ClientConVar["godmode"] = 0
+TOOL.ClientConVar["healthregen"] = 0
+TOOL.ClientConVar["healthregen_amt"] = 4
+TOOL.ClientConVar["healthregen_delay"] = 8
 
 -- Just to make it easier to reset everything to default
 local DefaultConVars = {}
@@ -42,8 +45,11 @@ if (CLIENT) then
 		
 		Panel:AddControl("Label", {Text = "#tool.vjstool_healthmodifier.adminonly"})
 		Panel:AddControl("Slider", {Label = "#tool.vjstool_healthmodifier.sliderhealth", min = 0, max = 10000, Command = "vjstool_healthmodifier_health"})
+		Panel:AddControl("Label", {Text = "#tool.vjstool_healthmodifier.label1"})
 		Panel:AddControl("Checkbox", {Label = "#tool.vjstool_healthmodifier.togglegodmode", Command = "vjstool_healthmodifier_godmode"})
-		Panel:ControlHelp("#tool.vjstool_healthmodifier.togglegodmode")
+		Panel:AddControl("Checkbox", {Label = "#tool.vjstool_healthmodifier.togglehealthregen", Command = "vjstool_healthmodifier_healthregen"})
+		Panel:AddControl("Slider", {Label = "#tool.vjstool_healthmodifier.sliderhealthregenamt", min = 0, max = 10000, Command = "vjstool_healthmodifier_healthregen_amt"})
+		Panel:AddControl("Slider", {Label = "#tool.vjstool_healthmodifier.sliderhealthregendelay", min = 0, max = 10000, Command = "vjstool_healthmodifier_healthregen_delay"})
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)
@@ -66,6 +72,13 @@ function TOOL:LeftClick(tr)
 				Ply:ChatPrint("Set "..trent:GetClass().."'s health to "..self:GetClientNumber("health"))
 				if trent:IsNPC() then
 					if self:GetClientNumber("godmode") == 1 then trent.GodMode = true else trent.GodMode = false end
+					if trent.IsVJBaseSNPC == true then
+						if self:GetClientNumber("healthregen") == 1 then
+							trent.HasHealthRegeneration = true
+							trent.HealthRegenerationAmount = self:GetClientNumber("healthregen_amt")
+							trent.HealthRegenerationDelay = VJ_Set(self:GetClientNumber("healthregen_delay"), self:GetClientNumber("healthregen_delay"))
+						end
+					end
 				end
 				return true
 			end
@@ -89,6 +102,13 @@ function TOOL:RightClick(tr)
 				Ply:ChatPrint("Set "..trent:GetClass().."'s health and max health to "..self:GetClientNumber("health"))
 				if trent:IsNPC() then
 					if self:GetClientNumber("godmode") == 1 then trent.GodMode = true else trent.GodMode = false end
+					if trent.IsVJBaseSNPC == true then
+						if self:GetClientNumber("healthregen") == 1 then
+							trent.HasHealthRegeneration = true
+							trent.HealthRegenerationAmount = self:GetClientNumber("healthregen_amt")
+							trent.HealthRegenerationDelay = VJ_Set(self:GetClientNumber("healthregen_delay"), self:GetClientNumber("healthregen_delay"))
+						end
+					end
 				end
 				return true
 			end

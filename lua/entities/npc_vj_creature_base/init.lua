@@ -16,9 +16,14 @@ AccessorFunc(ENT,"m_fMaxYawSpeed","MaxYawSpeed",FORCE_NUMBER)
 ------ Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Model = {} -- The game will pick a random model from the table when the SNPC is spawned | Add as many as you want
-ENT.StartHealth = GetConVarNumber("vj_snpchealth")
 ENT.VJ_IsHugeMonster = false -- Is this a huge monster?
 	-- This is mostly used for massive or boss SNPCs, it affects certain part of the SNPC, for example the SNPC won't receive any knock back
+	-- ====== Health ====== --
+ENT.StartHealth = 50
+ENT.HasHealthRegeneration = false -- Can the SNPC regenerate its health?
+ENT.HealthRegenerationAmount = 4 -- How much should the health increase after every delay?
+ENT.HealthRegenerationDelay = VJ_Set(8,10) -- How much time until the health increases
+ENT.HealthRegenerationResetOnDmg = true -- Should the delay reset when it receives damage?
 	-- ====== Collision / Hitbox Variables ====== --
 ENT.HullType = HULL_HUMAN
 ENT.HasHull = true -- Set to false to disable HULL
@@ -273,7 +278,7 @@ ENT.DeathNoticeWriting = "Example: Spider Queen Has Been Defeated!" -- Message t
 ------ Melee Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasMeleeAttack = true -- Should the SNPC have a melee attack?
-ENT.MeleeAttackDamage = GetConVarNumber("vj_snpcdamage")
+ENT.MeleeAttackDamage = 10
 ENT.MeleeAttackDamageType = DMG_SLASH -- Type of Damage
 	-- ====== Animation Variables ====== --
 ENT.AnimTbl_MeleeAttack = {ACT_MELEE_ATTACK1} -- Melee Attack Animations
@@ -375,7 +380,7 @@ ENT.DisableDefaultRangeAttackCode = false -- When true, it won't spawn the range
 ------ Leap Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasLeapAttack = false -- Should the SNPC have a leap attack?
-ENT.LeapAttackDamage = GetConVarNumber("vj_snpcleapdamage")
+ENT.LeapAttackDamage = 15
 ENT.LeapAttackDamageType = DMG_SLASH -- Type of Damage
 	-- ====== Animation Variables ====== --
 ENT.AnimTbl_LeapAttack = {ACT_SPECIAL_ATTACK1} -- Melee Attack Animations
@@ -1006,6 +1011,7 @@ ENT.NearestPointToEnemyDistance = 0
 ENT.JumpLegalLandingTime = 0
 ENT.ReachableEnemyCount = 0
 ENT.LatestEnemyDistance = 0
+ENT.HealthRegenerationDelayT = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.LatestVisibleEnemyPosition = Vector(0,0,0)
 ENT.CurrentTurningAngle = false
@@ -2442,6 +2448,11 @@ function ENT:Think()
 		self:IdleSoundCode()
 		if self.DisableFootStepSoundTimer == false then self:FootStepSoundCode() end
 		self:WorldShakeOnMoveCode()
+		
+		if self.HasHealthRegeneration == true && self.Dead == false && CurTime() > self.HealthRegenerationDelayT then
+			self:SetHealth(math.Clamp(self:Health() + self.HealthRegenerationAmount, self:Health(), self:GetMaxHealth()))
+			self.HealthRegenerationDelayT = CurTime() + math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b)
+		end
 
 		if self.FollowingPlayer == true then
 			//print(self:GetTarget())
@@ -3956,6 +3967,9 @@ function ENT:OnTakeDamage(dmginfo,data)
 	if dmginfo:GetDamage() <= 0 then return false end
 	self.LatestDmgInfo = dmginfo
 	self:SetHealth(self:Health() - dmginfo:GetDamage())
+	if self.HasHealthRegeneration == true && self.HealthRegenerationResetOnDmg == true then
+		self.HealthRegenerationDelayT = CurTime() + (math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b) * 1.5)
+	end
 	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printondamage") == 1 then print(self:GetClass().." Got Damaged! | Amount = "..dmginfo:GetDamage()) end end
 	self:CustomOnTakeDamage_AfterDamage(dmginfo,hitgroup)
 	DoBleed()
