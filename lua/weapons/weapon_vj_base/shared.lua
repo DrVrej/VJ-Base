@@ -523,7 +523,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	if self:Clip1() <= 0 && self.Reloading == false then self:GetOwner():EmitSound(VJ_PICK(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) return end
 	if (!self:CanPrimaryAttack()) then return end
 	self:CustomOnPrimaryAttack_BeforeShoot()
-	if (SERVER) then
+	//if (SERVER) then
 		if self:GetOwner():IsNPC() then
 			timer.Simple(self.NPC_ExtraFireSoundTime,function()
 				if IsValid(self) && IsValid(self:GetOwner()) then
@@ -542,7 +542,7 @@ function SWEP:PrimaryAttack(UseAlt)
 				sound.Play(farsd,self:GetPos(),self.Primary.DistantSoundLevel,math.random(self.Primary.DistantSoundPitch1,self.Primary.DistantSoundPitch2),self.Primary.DistantSoundVolume)
 			end
 		end
-	end
+	//end
 	//self:EmitSound(Sound(self.Primary.Sound),80,self.Primary.SoundPitch)
 	if self.Primary.DisableBulletCode == false then
 		local bullet = {}
