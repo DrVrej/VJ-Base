@@ -337,8 +337,11 @@ if (CLIENT) then
 		add("tool.vjstool_healthmodifier.reload", "Heal the entity to its max health")
 		add("tool.vjstool_healthmodifier.adminonly", "Only admins can modify or heal another player's health.")
 		add("tool.vjstool_healthmodifier.sliderhealth", "Health")
+		add("tool.vjstool_healthmodifier.label1", "Following are only for VJ Base SNPCs:")
 		add("tool.vjstool_healthmodifier.togglegodmode", "God Mode (invincible)")
-		add("tool.vjstool_healthmodifier.label", "Currently only for VJ Base SNPCs.")
+		add("tool.vjstool_healthmodifier.togglehealthregen", "Enable Health Regeneration")
+		add("tool.vjstool_healthmodifier.sliderhealthregenamt", "Regeneration Amount")
+		add("tool.vjstool_healthmodifier.sliderhealthregendelay", "Regeneration Delay")
 		
 		add("tool.vjstool_notarget.name", "No Target")
 		add("tool.vjstool_notarget.desc", "Setting no target will make all NPCs not see a certain entity")
