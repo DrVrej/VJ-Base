@@ -501,7 +501,7 @@ if (CLIENT) then
 			add("vjbase.menu.plugins.makeaddon", "Norite sukurti priedą? Spūstelėkite čia!")
 			
 			-- SNPC Menus
-			add("vjbase.menu.snpc.options", "Nustatymai")
+			add("vjbase.menu.snpc.options", "Pasirenkami parametrai")
 			add("vjbase.menu.snpc.options.difficulty.header", "Pasirinkite sunkumą:")
 			add("vjbase.menu.snpc.options.difficulty.neanderthal", "Neandertaliečių | -99% sveikatos ir žalos")
 			add("vjbase.menu.snpc.options.difficulty.childs_play", "Vaikų žaidimas | -75% sveikatos ir žalos")
@@ -693,7 +693,7 @@ if (CLIENT) then
 			add("vjbase.menuproperties.devmode", "Įjungti programuotojo rėžimą")
 			
 			-- Tools
-			add("tool.vjstool.menu.tutorialvideo", "Mokomasis vaizdo įrašas")
+			add("tool.vjstool.menu.tutorialvideo", "Mokomasis vaizdo įrašas (anglų kalba)")
 			add("tool.vjstool.menu.label.recommendation", "Rekomenduojama naudoti šį įrankį tik „VJ Base“ veikėjams.")
 			
 			add("tool.vjstool_bullseye.name", "Veikėjo taikinys")
@@ -715,7 +715,7 @@ if (CLIENT) then
 			add("tool.vjstool_healthmodifier.desc", "Pakeiskite objekto sveikatą")
 			add("tool.vjstool_healthmodifier.left", "Nustatykite sveikatą")
 			add("tool.vjstool_healthmodifier.right", "Nustatykite sveikatą ir maks. sveikatą")
-			add("tool.vjstool_healthmodifier.reload", "Pagyditi objekta iki maksimalaus sveikatos procento")
+			add("tool.vjstool_healthmodifier.reload", "Pagydyti objektą iki maksimalaus sveikatos procento")
 			add("tool.vjstool_healthmodifier.adminonly", "Tik administratoriai gali keisti sveikatą arba gydyti kitus žaidėjus.")
 			add("tool.vjstool_healthmodifier.sliderhealth", "Sveikata")
 			add("tool.vjstool_healthmodifier.togglegodmode", "Nemirtingumas")
