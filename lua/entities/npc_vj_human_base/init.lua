@@ -3600,14 +3600,11 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoKilledEnemy(argent,attacker,inflictor)
 	if !IsValid(argent) then return end
-	timer.Simple(0.15,function()
-		if IsValid(self) then
-			if (self.OnlyDoKillEnemyWhenClear == false) or (self.OnlyDoKillEnemyWhenClear == true && !IsValid(self:GetEnemy())) then
-				self:OnKilledEnemySoundCode()
-				self:CustomOnDoKilledEnemy(argent,attacker,inflictor)
-			end
-		end
-	end)
+	-- If it can only do it if there is no enemies left then check --> (If there no valid enemy) OR (The number of enemies is 1 or less)
+	if (self.OnlyDoKillEnemyWhenClear == false) or (self.OnlyDoKillEnemyWhenClear == true && (!IsValid(self:GetEnemy()) or (self.ReachableEnemyCount <= 1))) then
+		self:OnKilledEnemySoundCode()
+		self:CustomOnDoKilledEnemy(argent,attacker,inflictor)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTakeDamage(dmginfo,data,hitgroup)
