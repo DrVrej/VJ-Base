@@ -2828,7 +2828,14 @@ function ENT:PoseParameterLookingCode(ResetPoses)
 	if IsValid(ent) && ResetPoses == false then
 		local self_pos = self:GetPos() + self:OBBCenter()
 		local enemy_pos = false //Vector(0,0,0)
-		if self.VJ_IsBeingControlled == true then enemy_pos = self.VJ_TheController:GetEyeTrace().HitPos else enemy_pos = ent:GetPos() + ent:OBBCenter() end
+		if self.VJ_IsBeingControlled == true then
+			//enemy_pos = self.VJ_TheController:GetEyeTrace().HitPos
+			local gettr = util.GetPlayerTrace(self.VJ_TheController) -- Get the player's trace
+			local tr = util.TraceLine({start = gettr.start, endpos = gettr.endpos, filter = {self, self.VJ_TheController}}) -- Apply the filter to it (The player and the NPC)
+			enemy_pos = tr.HitPos
+		else
+			enemy_pos = ent:GetPos() + ent:OBBCenter()
+		end
 		if enemy_pos == false then return end
 		local self_ang = self:GetAngles()
 		local enemy_ang = (enemy_pos - self_pos):Angle()
