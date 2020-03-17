@@ -298,7 +298,11 @@ function TOOL:LeftClick(tr)
 	if !tr.Entity:IsNPC() then return end
 	net.Start("vj_npcmover_cl_create")
 	net.WriteEntity(tr.Entity)
-	net.WriteString(tr.Entity:GetName())
+	if tr.Entity:GetName() == "" then
+		net.WriteString(list.Get("NPC")[tr.Entity:GetClass()].Name)
+	else
+		net.WriteString(tr.Entity:GetName())
+	end
 	net.Send(self:GetOwner())
 	return true
 end
