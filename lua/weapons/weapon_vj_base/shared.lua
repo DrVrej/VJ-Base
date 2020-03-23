@@ -160,7 +160,7 @@ function SWEP:CustomOnPrimaryAttack_AfterShoot() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BulletCallback(attacker,tr,dmginfo) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttackEffects() return true end -- Return false to make the base effects not spawn
+function SWEP:CustomOnPrimaryAttackEffects() return true end -- Return false to disable the base effects
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_SecondaryFire()
 	/* An example:
@@ -468,105 +468,102 @@ function SWEP:PrimaryAttack(UseAlt)
 	//if self:GetOwner():KeyDown(IN_RELOAD) then return end
 	//self:GetOwner():SetFOV(45, 0.3)
 	//if !IsFirstTimePredicted() then return end
+	
 	self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
+	local owner = self:GetOwner()
+	local isnpc = owner:IsNPC()
+	local isply = owner:IsPlayer()
+	
 	if self.Reloading == true then return end
-	if self:GetOwner():IsNPC() && self:GetOwner().VJ_IsBeingControlled == false && !IsValid(self:GetOwner():GetEnemy()) then return end
-	if self:GetOwner():IsPlayer() && self.Primary.AllowFireInWater == false && self:GetOwner():WaterLevel() == 3 && self.Reloading == false then self:GetOwner():EmitSound(VJ_PICK(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) return end
-	if self:Clip1() <= 0 && self.Reloading == false then self:GetOwner():EmitSound(VJ_PICK(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) return end
+	if isnpc && owner.VJ_IsBeingControlled == false && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return end
+	if (isply && self.Primary.AllowFireInWater == false && owner:WaterLevel() == 3) or (self:Clip1() <= 0) then owner:EmitSound(VJ_PICK(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) return end
 	if (!self:CanPrimaryAttack()) then return end
 	self:CustomOnPrimaryAttack_BeforeShoot()
-	//if (SERVER) then
-		if self:GetOwner():IsNPC() then
-			timer.Simple(self.NPC_ExtraFireSoundTime,function()
-				if IsValid(self) && IsValid(self:GetOwner()) then
-					VJ_EmitSound(self:GetOwner(),self.NPC_ExtraFireSound,self.NPC_ExtraFireSoundLevel,math.Rand(self.NPC_ExtraFireSoundPitch.a, self.NPC_ExtraFireSoundPitch.b))
-				end
-			end)
-		end
-		local firesd = VJ_PICK(self.Primary.Sound)
-		if firesd != false then
-			self:EmitSound(firesd, 80, math.random(90,100))
-			//sound.Play(firesd,self:GetPos(),80,math.random(90,100))
-		end
-		if self.Primary.HasDistantSound == true then
-			local farsd = VJ_PICK(self.Primary.DistantSound)
-			if farsd != false then
-				sound.Play(farsd,self:GetPos(),self.Primary.DistantSoundLevel,math.random(self.Primary.DistantSoundPitch1,self.Primary.DistantSoundPitch2),self.Primary.DistantSoundVolume)
+	
+	if isnpc then
+		timer.Simple(self.NPC_ExtraFireSoundTime, function()
+			if IsValid(self) && IsValid(owner) then
+				VJ_EmitSound(owner,self.NPC_ExtraFireSound,self.NPC_ExtraFireSoundLevel,math.Rand(self.NPC_ExtraFireSoundPitch.a, self.NPC_ExtraFireSoundPitch.b))
 			end
+		end)
+	end
+	local firesd = VJ_PICK(self.Primary.Sound)
+	if firesd != false then
+		self:EmitSound(firesd, 80, math.random(90,100))
+		//sound.Play(firesd,self:GetPos(),80,math.random(90,100))
+	end
+	if self.Primary.HasDistantSound == true then
+		local farsd = VJ_PICK(self.Primary.DistantSound)
+		if farsd != false then
+			sound.Play(farsd,self:GetPos(),self.Primary.DistantSoundLevel,math.random(self.Primary.DistantSoundPitch1,self.Primary.DistantSoundPitch2),self.Primary.DistantSoundVolume)
 		end
-	//end
-	//self:EmitSound(Sound(self.Primary.Sound),80,self.Primary.SoundPitch)
+	end
+	
 	if self.Primary.DisableBulletCode == false then
 		local bullet = {}
 			bullet.Num = self.Primary.NumberOfShots
-			local spawnpos = self:GetOwner():GetShootPos()
-			if self:GetOwner():IsNPC() then
+			bullet.Tracer = self.Primary.Tracer
+			bullet.TracerName = self.Primary.TracerType
+			bullet.Force = self.Primary.Force
+			bullet.Dir = owner:GetAimVector()
+			bullet.AmmoType = self.Primary.Ammo
+			
+			-- Spawn Position
+			local spawnpos = owner:GetShootPos()
+			if isnpc then
 				spawnpos = self:GetNWVector("VJ_CurBulletPos")
 			end
 			//print(spawnpos)
 			//VJ_CreateTestObject(spawnpos,self:GetAngles(),Color(0,0,255))
 			bullet.Src = spawnpos
-			bullet.Dir = self:GetOwner():GetAimVector()
-			bullet.Callback = function(attacker,tr,dmginfo)
+			
+			-- Callback
+			bullet.Callback = function(attacker, tr, dmginfo)
 				self:CustomOnPrimaryAttack_BulletCallback(attacker,tr,dmginfo)
-			end
-				/*bullet.Callback = function(attacker, tr, dmginfo)
-				local laserhit = EffectData()
-				laserhit:SetOrigin(tr.HitPos)
-				laserhit:SetNormal(tr.HitNormal)
-				laserhit:SetScale(80)
-				util.Effect("VJ_Small_Explosion1", laserhit)
-
-				bullet.Callback = function(attacker, tr, dmginfo)
-				local laserhit = EffectData()
+				/*local laserhit = EffectData()
 				laserhit:SetOrigin(tr.HitPos)
 				laserhit:SetNormal(tr.HitNormal)
 				laserhit:SetScale(25)
 				util.Effect("AR2Impact", laserhit)
-				end*/
-				//tr.HitPos:Ignite(8,0)
-				//return true end
-			if self:GetOwner():IsPlayer() then
-				bullet.Spread = Vector((self.Primary.Cone /60)/4,(self.Primary.Cone /60)/4,0)
+				tr.HitPos:Ignite(8,0)*/
 			end
-			bullet.Tracer = self.Primary.Tracer
-			bullet.TracerName = self.Primary.TracerType
-			bullet.Force = self.Primary.Force
-			if self:GetOwner():IsPlayer() then
+			
+			-- Damage
+			if isply then
+				bullet.Spread = Vector((self.Primary.Cone / 60) / 4, (self.Primary.Cone / 60) / 4, 0)
 				if self.Primary.PlayerDamage == "Same" then
 					bullet.Damage = self.Primary.Damage
 				elseif self.Primary.PlayerDamage == "Double" then
-					bullet.Damage = self.Primary.Damage *2
+					bullet.Damage = self.Primary.Damage * 2
 				elseif isnumber(self.Primary.PlayerDamage) then
 					bullet.Damage = self.Primary.PlayerDamage
 				end
 			else
-				if self:GetOwner().IsVJBaseSNPC == true then
-					bullet.Damage = self:GetOwner():VJ_GetDifficultyValue(self.Primary.Damage)
+				if owner.IsVJBaseSNPC == true then
+					bullet.Damage = owner:VJ_GetDifficultyValue(self.Primary.Damage)
 				else
 					bullet.Damage = self.Primary.Damage
 				end
 			end
-			bullet.AmmoType = self.Primary.Ammo
-			self:GetOwner():FireBullets(bullet)
+		owner:FireBullets(bullet)
 	else
-		if self:GetOwner():IsNPC() && self:GetOwner().IsVJBaseSNPC == true then
-			self:GetOwner().Weapon_ShotsSinceLastReload = self:GetOwner().Weapon_ShotsSinceLastReload + 1
+		if isnpc && owner.IsVJBaseSNPC == true then -- Make sure the VJ SNPC recognizes that it lost a ammunition, even though it was a custom bullet code
+			owner.Weapon_ShotsSinceLastReload = owner.Weapon_ShotsSinceLastReload + 1
 		end
 	end
-	if GetConVarNumber("vj_wep_nomuszzleflash") == 0 then self:GetOwner():MuzzleFlash() end
+	
+	if GetConVarNumber("vj_wep_nomuszzleflash") == 0 then owner:MuzzleFlash() end
 	self:PrimaryAttackEffects()
-	if self:GetOwner():IsPlayer() then
-	self:ShootEffects("ToolTracer")
-	self:SendWeaponAnim(VJ_PICK(self.AnimTbl_PrimaryFire))
-	self:GetOwner():SetAnimation(PLAYER_ATTACK1)
-	self:GetOwner():ViewPunch(Angle(-self.Primary.Recoil,0,0)) end
-	if !self:GetOwner():IsNPC() then
+	if isply then
+		//self:ShootEffects("ToolTracer") -- Deprecated
+		self:SendWeaponAnim(VJ_PICK(self.AnimTbl_PrimaryFire))
+		owner:SetAnimation(PLAYER_ATTACK1)
+		owner:ViewPunch(Angle(-self.Primary.Recoil, 0, 0))
 		self:TakePrimaryAmmo(self.Primary.TakeAmmo)
 	end
 	self:CustomOnPrimaryAttack_AfterShoot()
 	//self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
-	timer.Simple(self.NextIdle_PrimaryAttack,function() if IsValid(self) then self:DoIdleAnimation() end end)
+	timer.Simple(self.NextIdle_PrimaryAttack, function() if IsValid(self) then self:DoIdleAnimation() end end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:SecondaryAttack()
@@ -574,8 +571,7 @@ function SWEP:SecondaryAttack()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:DoIdleAnimation()
-	if self.HasIdleAnimation == false then return end
-	if self.Reloading == true then return end
+	if self.HasIdleAnimation == false or self.Reloading == true then return end
 	self:CustomOnIdle()
 	self:SendWeaponAnim(VJ_PICK(self.AnimTbl_Idle))
 end
@@ -668,10 +664,6 @@ end
 function SWEP:Think()
 	self:RunWorldModelThink()
 	self:CustomOnThink()
-	//if CurTime() > self.NextIdleT then
-	//self:SendWeaponAnim(ACT_VM_IDLE)
-	//self.NextIdleT = CurTime() + self.NextIdleTime
-	//end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Reload()
@@ -731,7 +723,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:EquipAmmo(ply)
 	if ply:IsPlayer() then
-		ply:GiveAmmo(self.Primary.ClipSize,self.Primary.Ammo)
+		ply:GiveAmmo(self.Primary.ClipSize, self.Primary.Ammo)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -746,7 +738,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:GetWeaponCustomPosition()
 	if self:GetOwner():LookupBone(self.WorldModel_CustomPositionBone) == nil then return nil end
-	pos, ang = self:GetOwner():GetBonePosition(self:GetOwner():LookupBone(self.WorldModel_CustomPositionBone))
+	local pos, ang = self:GetOwner():GetBonePosition(self:GetOwner():LookupBone(self.WorldModel_CustomPositionBone))
 	ang:RotateAroundAxis(ang:Right(), self.WorldModel_CustomPositionAngle.x)
 	ang:RotateAroundAxis(ang:Up(), self.WorldModel_CustomPositionAngle.y)
 	ang:RotateAroundAxis(ang:Forward(), self.WorldModel_CustomPositionAngle.z)
