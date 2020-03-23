@@ -48,7 +48,7 @@ VJ.AddNPCWeapon("VJ_K-3","weapon_vj_k3")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if (SERVER) then
 	require("ai_vj_schedule")
-	local getsched = ai_vj_schedule.New -- Pervent stack overflow
+	local getsched = ai_vj_schedule.New -- Prevent stack overflow
 	function ai_vj_schedule.New(name)
 		local actualsched = getsched(name)
 		actualsched.Name = name
@@ -374,7 +374,7 @@ function NPC_MetaTable:VJ_PlaySequence(SequenceID,PlayBackRate,Wait,WaitTime,Int
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_TranslateWeaponActivity(ActAnim)
-	if !IsValid(self:GetActiveWeapon()) or self:GetActiveWeapon().IsVJBaseSWEP != true then return ActAnim end
+	if !IsValid(self:GetActiveWeapon()) or self:GetActiveWeapon().IsVJBaseWeapon != true then return ActAnim end
 	if self:GetActiveWeapon():TranslateActivity(ActAnim) == -1 then return ActAnim else
 	return self:GetActiveWeapon():TranslateActivity(ActAnim) end
 end

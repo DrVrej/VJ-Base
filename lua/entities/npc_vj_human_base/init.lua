@@ -124,6 +124,7 @@ ENT.ConstantlyFaceEnemy_Postures = "Both" -- "Both" = Moving or standing | "Movi
 ENT.ConstantlyFaceEnemyDistance = 2500 -- How close does it have to be until it starts to face the enemy?
 	-- ====== Pose Parameter Variables ====== --
 ENT.HasPoseParameterLooking = true -- Does it look at its enemy using poseparameters?
+ENT.PoseParameterLooking_CanReset = true -- Should it reset its pose parameters if there is no enemies?
 ENT.PoseParameterLooking_InvertPitch = false -- Inverts the pitch poseparameters (X)
 ENT.PoseParameterLooking_InvertYaw = false -- Inverts the yaw poseparameters (Y)
 ENT.PoseParameterLooking_InvertRoll = false -- Inverts the roll poseparameters (Z)
@@ -735,6 +736,8 @@ function ENT:CustomOnWorldShakeOnMove_Walk() end
 function ENT:CustomOnDoChangeWeapon(NewWeapon,OldWeapon) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInvestigate(argent) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnResetEnemy() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnAlert(argent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2640,7 +2643,10 @@ function ENT:WeaponAimPoseParameters(ResetPoses)
 		if self.PoseParameterLooking_InvertYaw == true then y_enemy = -y_enemy end
 		r_enemy = ang_dif(enemy_ang.z,self_ang.z)
 		if self.PoseParameterLooking_InvertRoll == true then r_enemy = -r_enemy end
+	elseif self.PoseParameterLooking_CanReset == false then
+		return
 	end
+	
 	local names = self.PoseParameterLooking_Names
 	for x=1, #names.pitch do
 		self:SetPoseParameter(names.pitch[x],ang_app(self:GetPoseParameter(names.pitch[x]),p_enemy,self.PoseParameterLooking_TurningSpeed))
@@ -2651,6 +2657,7 @@ function ENT:WeaponAimPoseParameters(ResetPoses)
 	for x=1, #names.roll do
 		self:SetPoseParameter(names.roll[x],ang_app(self:GetPoseParameter(names.roll[x]),r_enemy,self.PoseParameterLooking_TurningSpeed))
 	end
+	
 	self:SetPoseParameter("aim_pitch",ang_app(self:GetPoseParameter("aim_pitch"),p_enemy,self.PoseParameterLooking_TurningSpeed))
 	self:SetPoseParameter("head_pitch",ang_app(self:GetPoseParameter("head_pitch"),p_enemy,self.PoseParameterLooking_TurningSpeed))
 	self:SetPoseParameter("aim_yaw",ang_app(self:GetPoseParameter("aim_yaw"),y_enemy,self.PoseParameterLooking_TurningSpeed))
@@ -3192,6 +3199,7 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 	self:ClearEnemyMemory()
 	//self:UpdateEnemyMemory(self,self:GetPos())
 	self:VJ_ACT_RESETENEMY(RunToEnemyOnReset)
+	self:CustomOnResetEnemy()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoAlert(argent)

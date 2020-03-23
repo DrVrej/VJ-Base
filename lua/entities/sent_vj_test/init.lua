@@ -78,7 +78,7 @@ net.Receive("vj_testentity_runtextsd",function(len,pl)
 	local ply = net.ReadEntity()
 	local msg = net.ReadString()
 	local soundfile = net.ReadString()
-	if ply:IsPlayer() && ply:SteamID() == "STEAM_0:0:22688298" or game.SinglePlayer() == true then
+	if (ply:IsPlayer() && ply:SteamID() == "STEAM_0:0:22688298") or (game.SinglePlayer() == true) then
 		PrintMessage(HUD_PRINTTALK,msg)
 		PrintMessage(HUD_PRINTCENTER,msg)
 		local filter;
