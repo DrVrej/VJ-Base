@@ -19,44 +19,51 @@ ENT.Spawnable = true
 ENT.AdminOnly = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
+	ENT.NextActivationCheckT = 0
+	ENT.NextFireLightT = 0
+	ENT.DoneFireParticles = false
+	
 	function ENT:Draw()
 		self:DrawModel()
 	end
-	---------------------------------------------------------------------------------------------------------------------------------------------
-	net.Receive("vj_fireplace_turnon1", function()
-		local ent = net.ReadEntity()
-		if !IsValid(ent) or ent:GetClass() != "sent_vj_fireplace" then return end
-		ent.FireLight1 = DynamicLight(ent:EntIndex())
-		if (ent.FireLight1) then
-			ent.FireLight1.Pos = ent:GetPos() +ent:GetUp() * 15
-			ent.FireLight1.r = 255
-			ent.FireLight1.g = 100
-			ent.FireLight1.b = 0
-			ent.FireLight1.Brightness = 2
-			ent.FireLight1.Size = 400
-			ent.FireLight1.Decay = 400
-			ent.FireLight1.DieTime = CurTime() + 1
+	
+	function ENT:Think()
+		if CurTime() > self.NextActivationCheckT then
+			if self:GetNWBool("VJ_FirePlace_Activated") == true then
+				if self.DoneFireParticles == false then
+					self.DoneFireParticles = true
+					ParticleEffectAttach("env_fire_tiny_smoke",PATTACH_ABSORIGIN_FOLLOW,self,0)
+					ParticleEffectAttach("env_embers_large",PATTACH_ABSORIGIN_FOLLOW,self,0)
+				end
+				if CurTime() > self.NextFireLightT then
+					local FireLight1 = DynamicLight(self:EntIndex())
+					if (FireLight1) then
+						FireLight1.Pos = self:GetPos() +self:GetUp() * 15
+						FireLight1.R = 255
+						FireLight1.G = 100
+						FireLight1.B = 0
+						FireLight1.Brightness = 2
+						FireLight1.Size = 400
+						FireLight1.Decay = 400
+						FireLight1.DieTime = CurTime() + 1
+					end
+					self.NextFireLightT = CurTime() + 0.2
+				end
+			else
+				self.DoneFireParticles = false
+			end
+			self.NextActivationCheckT = CurTime() + 0.1
 		end
-	end)
-	---------------------------------------------------------------------------------------------------------------------------------------------
-	net.Receive("vj_fireplace_turnon2", function()
-		local ent = net.ReadEntity()
-		if !IsValid(ent) or ent:GetClass() != "sent_vj_fireplace" then return end
-		ParticleEffectAttach("env_fire_tiny_smoke",PATTACH_ABSORIGIN_FOLLOW,ent,0)
-		ParticleEffectAttach("env_embers_large",PATTACH_ABSORIGIN_FOLLOW,ent,0)
-	end)
+	end
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !(SERVER) then return end
 
 ENT.FirePlaceOn = false
-ENT.FirePlaceDoneParticle = false
-ENT.FirePlaceTurnOn2T = 0
 
-util.AddNetworkString("vj_fireplace_turnon1")
-util.AddNetworkString("vj_fireplace_turnon2")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
+	self:SetNWBool("VJ_FirePlace_Activated", false)
 	self:SetModel("models/vj_props/fireplace.mdl")
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_NONE)
@@ -64,21 +71,10 @@ function ENT:Initialize()
 	self:SetUseType(SIMPLE_USE)
 	
 	self:SetCollisionBounds(Vector(25,25,25),Vector(-25,-25,1))
-	//timer.Simple(0,function() self:SetPos(self:GetPos() +self:GetUp()*-2.5) end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-	if self.FirePlaceOn == true then
-		if self.FirePlaceDoneParticle == false then
-			self.FirePlaceDoneParticle = true
-			net.Start("vj_fireplace_turnon2")
-			net.WriteEntity(self)
-			net.Broadcast()
-		end
-		net.Start("vj_fireplace_turnon1")
-		net.WriteEntity(self)
-		net.Broadcast()
-	else
+	if self.FirePlaceOn == false then
 		VJ_STOPSOUND(self.firesd)
 		self:StopParticles()
 	end
@@ -86,17 +82,18 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Use(activator, caller)
 	if self.FirePlaceOn == false then
+		self:SetNWBool("VJ_FirePlace_Activated", true)
 		self.FirePlaceOn = true
-		self.FirePlaceDoneParticle = false
 		self:EmitSound(Sound("ambient/fire/mtov_flame2.wav"),60,100)
 		self.firesd = CreateSound(self,"ambient/fire/fire_small_loop1.wav") self.firesd:SetSoundLevel(60)
 		self.firesd:PlayEx(1,100)
 		activator:PrintMessage(HUD_PRINTTALK, "You turned on the fireplace.") 
 	else
-		activator:PrintMessage(HUD_PRINTTALK, "You turned off the fireplace.")
+		self:SetNWBool("VJ_FirePlace_Activated", false)
 		self.FirePlaceOn = false
 		self:StopParticles()
 		VJ_STOPSOUND(self.firesd)
+		activator:PrintMessage(HUD_PRINTTALK, "You turned off the fireplace.")
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
