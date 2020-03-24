@@ -318,6 +318,10 @@ end
 function SWEP:NPC_ServerNextFire()
 	if (CLIENT) or !IsValid(self) or !IsValid(self:GetOwner()) or !self:GetOwner():IsNPC() then return end
 	if self:GetOwner():GetActivity() == nil then return end
+	
+	//print("------------------")
+	//VJ_CreateTestObject(self:DecideBulletPosition(),self:GetAngles(),Color(255,0,255),1)
+	//VJ_CreateTestObject(self:GetNWVector("VJ_CurBulletPos"),self:GetAngles(),Color(0,0,255),1)
 
 	self:RunWorldModelThink()
 	self:CustomOnThink()
@@ -811,11 +815,16 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if (SERVER) then
 	util.AddNetworkString("vj_weapon_curbulletpos")
-
-	net.Receive("vj_weapon_curbulletpos",function(len,pl)
-		vec = net.ReadVector()
-		ent = net.ReadEntity()
-		ent:SetNWVector("VJ_CurBulletPos",vec)
+	
+	net.Receive("vj_weapon_curbulletpos", function(len,pl)
+		local vec = net.ReadVector()
+		local enti = net.ReadInt(15)
+		local ent = ents.GetByIndex(enti)
+		ent.worldupdate = ent.worldupdate or 0
+		if ent.worldupdate <= CurTime() then
+			ent:SetNWVector("VJ_CurBulletPos",vec)
+			ent.worldupdate = CurTime() + 0.33
+		end
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -836,7 +845,8 @@ if (CLIENT) then
 		if pos != nil && IsValid(self:GetOwner()) then
 			net.Start("vj_weapon_curbulletpos")
 			net.WriteVector(pos)
-			net.WriteEntity(self)
+			//net.WriteEntity(self)
+			net.WriteInt(self:EntIndex(), 15)
 			net.SendToServer()
 		end
 		//self:SetNWVector("VJ_CurBulletPos",self:GetAttachment(self:LookupAttachment("muzzle")).Pos)
