@@ -753,10 +753,9 @@ function SWEP:GetWeaponCustomPosition()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:RunWorldModelThink()
-	if !IsValid(self:GetOwner()) then return end
 	self:SetNWBool("VJ_WorldModel_Invisible",self.WorldModel_Invisible)
 	
-	if self.WorldModel_UseCustomPosition == true then
+	if IsValid(self:GetOwner()) && self.WorldModel_UseCustomPosition == true then
 		local weppos = self:GetWeaponCustomPosition()
 		if weppos == nil then return end
 		self:SetPos(weppos.pos)
@@ -818,8 +817,7 @@ if (SERVER) then
 	
 	net.Receive("vj_weapon_curbulletpos", function(len,pl)
 		local vec = net.ReadVector()
-		local enti = net.ReadInt(15)
-		local ent = ents.GetByIndex(enti)
+		local ent = ents.GetByIndex(net.ReadInt(15))
 		ent.worldupdate = ent.worldupdate or 0
 		if ent.worldupdate <= CurTime() then
 			ent:SetNWVector("VJ_CurBulletPos",vec)
