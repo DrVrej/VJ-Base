@@ -863,7 +863,7 @@ hook.Add("EntityFireBullets","VJ_NPC_FIREBULLET", function(ent,data)
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("Initialize","VJ_Initialize",function()
-	RunConsoleCommand("sv_pvsskipanimation", "0") -- Stop this game-breaking bug from ever happening again.
+	RunConsoleCommand("sv_pvsskipanimation", "0") -- Fix attachments, bones, positions, angles etc. being broken in NPCs!
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerSpawnedNPC","VJ_NPC_SPAWNED",function(ply,ent)

@@ -2335,6 +2335,8 @@ function ENT:DoConstantlyFaceEnemyCode()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
+	self:SetCondition(1) -- Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case sv_pvsskipanimation isn't disabled!
+	
 	//self:SetPoseParameter("move_yaw",180)
 	//print(self:GetBlockingEntity())// end
 	// if self:IsUnreachable(self:GetEnemy()) && enemy noclipping then...
