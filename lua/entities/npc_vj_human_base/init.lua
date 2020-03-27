@@ -1934,6 +1934,8 @@ end
 //ENT.TurningLerp = Angle(0,0,0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
+	self:SetCondition(1) -- Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case sv_pvsskipanimation isn't disabled!
+	
 	/*if self.FollowingPlayer == true then
 		if self.TurningLerp == Angle(0,0,0) then self.TurningLerp = Angle(0,self:GetAngles().y,0) end
 		self.TurningLerp = LerpAngle(0.25,self.TurningLerp,Angle(0,(self.FollowPlayer_Entity:GetPos() - self:GetPos()):Angle().y,0)) // 0.25

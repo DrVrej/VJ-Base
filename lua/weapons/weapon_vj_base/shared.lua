@@ -221,7 +221,7 @@ function SWEP:GetCapabilities()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Initialize()
-	self:SetNWVector("VJ_CurBulletPos",self:GetPos())
+	self:SetNWVector("VJ_CurBulletPos", self:GetPos())
 	self:SetHoldType(self.HoldType)
 	if self.HasIdleAnimation == true then self.InitHasIdleAnimation = true end
 	self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
@@ -317,6 +317,12 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_ServerNextFire()
 	if (CLIENT) or !IsValid(self) or !IsValid(self:GetOwner()) or !self:GetOwner():IsNPC() then return end
+	
+	local pos = self:DecideBulletPosition()
+	if pos != nil then
+		self:SetNWVector("VJ_CurBulletPos", pos)
+	end
+	
 	if self:GetOwner():GetActivity() == nil then return end
 	
 	//print("------------------")
@@ -753,7 +759,7 @@ function SWEP:GetWeaponCustomPosition()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:RunWorldModelThink()
-	self:SetNWBool("VJ_WorldModel_Invisible",self.WorldModel_Invisible)
+	self:SetNWBool("VJ_WorldModel_Invisible", self.WorldModel_Invisible)
 	
 	if IsValid(self:GetOwner()) && self.WorldModel_UseCustomPosition == true then
 		local weppos = self:GetWeaponCustomPosition()
@@ -812,8 +818,8 @@ function SWEP:DecideBulletPosition()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if (SERVER) then
-	util.AddNetworkString("vj_weapon_curbulletpos")
+/*if (SERVER) then
+	util.AddNetworkString("vj_weapon_curbulletpos") -- No longer needed, disabling sv_pvsskipanimation fixes it!
 	
 	net.Receive("vj_weapon_curbulletpos", function(len,pl)
 		local vec = net.ReadVector()
@@ -826,30 +832,29 @@ if (SERVER) then
 			end
 		end
 	end)
-end
+end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if (CLIENT) then
 	function SWEP:DrawWorldModel()
 		if !IsValid(self) then return end
+		
 		local nodraw = false
-		
 		if self:CustomOnDrawWorldModel() == false then nodraw = true end
-		
 		if self:GetNWBool("VJ_WorldModel_Invisible") == true or self.WorldModel_Invisible == true then nodraw = true end
 		
 		if self.WorldModel_NoShadow == true then
 			self:DrawShadow(false)
 		end
-		//self:DrawModel()
-		local pos = self:DecideBulletPosition()
+		
+		-- No longer needed, disabling sv_pvsskipanimation fixes it!
+		/*local pos = self:DecideBulletPosition()
 		if pos != nil && IsValid(self:GetOwner()) then
 			net.Start("vj_weapon_curbulletpos")
 			net.WriteVector(pos)
-			//net.WriteEntity(self)
 			net.WriteInt(self:EntIndex(), 15)
 			net.SendToServer()
-		end
-		//self:SetNWVector("VJ_CurBulletPos",self:GetAttachment(self:LookupAttachment("muzzle")).Pos)
+		end*/
+		
 		if self.WorldModel_UseCustomPosition == true then
 			if IsValid(self:GetOwner()) then
 				if self:GetOwner():IsPlayer() && self:GetOwner():InVehicle() then return end
