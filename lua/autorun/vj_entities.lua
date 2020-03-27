@@ -862,6 +862,10 @@ hook.Add("EntityFireBullets","VJ_NPC_FIREBULLET", function(ent,data)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
+hook.Add("Initialize","VJ_Initialize",function()
+	RunConsoleCommand("sv_pvsskipanimation", "0") -- Stop this game-breaking bug from ever happening again.
+end)
+---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerSpawnedNPC","VJ_NPC_SPAWNED",function(ply,ent)
 	if ent.IsVJBaseSNPC == true or ent.IsVJBaseSpawner == true then
 		ent:SetCreator(ply)
