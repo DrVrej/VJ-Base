@@ -818,10 +818,12 @@ if (SERVER) then
 	net.Receive("vj_weapon_curbulletpos", function(len,pl)
 		local vec = net.ReadVector()
 		local ent = ents.GetByIndex(net.ReadInt(15))
-		ent.worldupdate = ent.worldupdate or 0
-		if ent.worldupdate <= CurTime() then
-			ent:SetNWVector("VJ_CurBulletPos",vec)
-			ent.worldupdate = CurTime() + 0.33
+		if IsValid(ent) then
+			ent.worldupdate = ent.worldupdate or 0
+			if ent.worldupdate <= CurTime() then
+				ent:SetNWVector("VJ_CurBulletPos",vec)
+				ent.worldupdate = CurTime() + 0.33
+			end
 		end
 	end)
 end

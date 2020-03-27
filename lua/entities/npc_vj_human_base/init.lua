@@ -4358,10 +4358,10 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 			if IsValid(childphys) then
 				local childphys_bonepos, childphys_boneang = self:GetBonePosition(self.Corpse:TranslatePhysBoneToBone(bonelim))
 				if (childphys_bonepos) then
-					if math.Round(math.abs(childphys_boneang.r)) != 90 then
+					//if math.Round(math.abs(childphys_boneang.r)) != 90 then -- Fixes ragdolls rotating, no longer needed!    --->    sv_pvsskipanimation 0
 						if self.UsesBoneAngle == true then childphys:SetAngles(childphys_boneang) end
 						childphys:SetPos(childphys_bonepos)
-					end
+					//end
 					if self.Corpse:GetName() == "vj_dissolve_corpse" then
 						childphys:EnableGravity(false)
 						childphys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
