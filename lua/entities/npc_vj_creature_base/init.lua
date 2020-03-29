@@ -2638,7 +2638,7 @@ function ENT:Think()
 			//if self.MovementType == VJ_MOVETYPE_AERIAL then self:SelectSchedule() end//self:AAMove_ChaseEnemy(true) end
 
 			//if self.VJ_IsBeingControlled == false then
-				if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true then self:FaceCertainEntity(ene,true) end
+				if self.Dead == false && self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true then self:FaceCertainEntity(ene,true) end
 				if self.MeleeAttackAnimationFaceEnemy == true && self.MeleeAttack_DoingPropAttack == false && self.Dead == false && self.MeleeAttacking == true /*&& timer.Exists("timer_melee_start"..self:EntIndex()) && timer.TimeLeft("timer_melee_start"..self:EntIndex()) > 0*/ then self:FaceCertainEntity(ene,true) end
 				if self.RangeAttackAnimationFaceEnemy == true && self.Dead == false && self.RangeAttacking == true /*&& timer.Exists("timer_range_start"..self:EntIndex()) && timer.TimeLeft("timer_range_start"..self:EntIndex()) > 0*/ then self:FaceCertainEntity(ene,true) end
 				if self.LeapAttackAnimationFaceEnemy == true && self.Dead == false && self.LeapAttacking == true /*&& timer.Exists("timer_leap_start"..self:EntIndex()) && timer.TimeLeft("timer_leap_start"..self:EntIndex()) > 0*/ then self:FaceCertainEntity(ene,true) end

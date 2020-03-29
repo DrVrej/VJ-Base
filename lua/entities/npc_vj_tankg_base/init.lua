@@ -106,6 +106,7 @@ ENT.Tank_ProperHeightShoot = false -- Is the enemy position proper height for it
 ENT.Tank_ResetedEnemy = false
 ENT.Tank_GunnerIsTurning = false
 ENT.Tank_Status = 0
+ENT.Tank_TurningLerp = nil
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize()
 	self:CustomInitialize_CustomTank()
@@ -172,12 +173,18 @@ function ENT:CustomOnThink_AIEnabled()
 				if GetConVarNumber("vj_npc_norange") == 0 then
 				self:Tank_PrepareShell() end end
 			elseif Angle_Diffuse > self.Tank_AngleDiffuseGeneralNumber then
-				self:SetLocalAngles(self:GetLocalAngles() + Angle(0,5,0))
+				if self.Tank_TurningLerp == nil then self.Tank_TurningLerp = self:GetLocalAngles() end
+				self.Tank_TurningLerp = LerpAngle(1, self.Tank_TurningLerp, self.Tank_TurningLerp + Angle(0, math.Clamp(Angle_Diffuse, 0, 5), 0))
+				self:SetLocalAngles(self.Tank_TurningLerp)
+				//self:SetLocalAngles(self:GetLocalAngles() + Angle(0,5,0))
 				self.Tank_GunnerIsTurning = true
 				self.Tank_FacingTarget = false
 				self.FiringShell = false
 			elseif Angle_Diffuse < -self.Tank_AngleDiffuseGeneralNumber then
-				self:SetLocalAngles(self:GetLocalAngles() + Angle(0,-5,0))
+				if self.Tank_TurningLerp == nil then self.Tank_TurningLerp = self:GetLocalAngles() end
+				self.Tank_TurningLerp = LerpAngle(1, self.Tank_TurningLerp, self.Tank_TurningLerp + Angle(0, -math.Clamp(math.abs(Angle_Diffuse), 0, 5), 0))
+				self:SetLocalAngles(self.Tank_TurningLerp)
+				//self:SetLocalAngles(self:GetLocalAngles() + Angle(0,-5,0))
 				self.Tank_GunnerIsTurning = true
 				self.Tank_FacingTarget = false
 				self.FiringShell = false
