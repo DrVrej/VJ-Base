@@ -1931,20 +1931,23 @@ function ENT:DoChangeWeapon(SetType)
 	end*/
 	self:CustomOnDoChangeWeapon(self:GetActiveWeapon(),self.CurrentWeaponEntity)
 end
-//ENT.TurningLerp = Angle(0,0,0)
+//ENT.TurningLerp = nil
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	self:SetCondition(1) -- Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case sv_pvsskipanimation isn't disabled!
 	
 	/*if self.FollowingPlayer == true then
-		if self.TurningLerp == Angle(0,0,0) then self.TurningLerp = Angle(0,self:GetAngles().y,0) end
-		self.TurningLerp = LerpAngle(0.25,self.TurningLerp,Angle(0,(self.FollowPlayer_Entity:GetPos() - self:GetPos()):Angle().y,0)) // 0.25
-		print(self:GetAngles())
-		print(self.FollowPlayer_Entity:GetPos())
-		print(self.TurningLerp)
-		print((math.abs( math.AngleDifference(self:GetAngles().y, self.TurningLerp.y)) / (0.25)))
+		if self.TurningLerp == nil then self.TurningLerp = Angle(0,self:GetAngles().y,0) end
+		self.TurningLerp = LerpAngle(math.Clamp(FrameTime() * 5, 0.2, 1), self.TurningLerp, Angle(0,(self.FollowPlayer_Entity:GetPos() - self:GetPos()):Angle().y, 0))
+		print("------------")
+		print((self.FollowPlayer_Entity:GetPos() - self:GetPos()):Angle().y)
+		print("Mine: ", self:GetAngles())
+		print("Target: ", self.FollowPlayer_Entity:GetAngles())
+		print("Lerp: ", self.TurningLerp)
+		print(math.abs(math.AngleDifference(self:GetAngles().y, self.TurningLerp.y)))
+		print(math.abs(math.AngleDifference(self:GetAngles().y, self.TurningLerp.y)) / (0.5))
 		//print(self.TurningLerp)
-		self:SetAngles(Angle(self.TurningLerp))
+		self:SetAngles(self.TurningLerp)
 	end*/
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
 	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
@@ -2108,7 +2111,7 @@ function ENT:Think()
 			self.Weapon_StartingAmmoAmount = 30
 		end
 		//print(self:HasCondition(13))
-		if self.AllowWeaponReloading == true && self.CurrentWeaponEntity == self:GetActiveWeapon() && self.IsReloadingWeapon == false && self:VJ_HasActiveWeapon() == true && self.FollowPlayer_GoingAfter == false && self.ThrowingGrenade == false && self.MeleeAttacking == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) then
+		if self.Dead == false && self.AllowWeaponReloading == true && self.CurrentWeaponEntity == self:GetActiveWeapon() && self.IsReloadingWeapon == false && self:VJ_HasActiveWeapon() == true && self.FollowPlayer_GoingAfter == false && self.ThrowingGrenade == false && self.MeleeAttacking == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) then
 			local teshnami = IsValid(ene) -- Teshnami ooni, gam voch?
 			//if CurTime() > self.NextReloadT then
 			//if math.random(1,self.ReloadChance) < 3 then
@@ -2308,7 +2311,7 @@ function ENT:Think()
 			end
 			self:DoWeaponAttackMovementCode()
 			//if self.VJ_IsBeingControlled == false then
-				if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true then self:FaceCertainEntity(ene,true) end
+				if self.Dead == false && self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true then self:FaceCertainEntity(ene,true) end
 				if self.MeleeAttackAnimationFaceEnemy == true && self.Dead == false && timer.Exists("timer_melee_start"..self:EntIndex()) && timer.TimeLeft("timer_melee_start"..self:EntIndex()) > 0 then self:FaceCertainEntity(ene,true) end
 				if self.GrenadeAttackAnimationFaceEnemy == true && self.Dead == false && self.ThrowingGrenade == true && self:Visible(ene) == true then self:FaceCertainEntity(ene,true) end
 			//end

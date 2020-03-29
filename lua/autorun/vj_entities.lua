@@ -47,6 +47,8 @@ VJ.AddNPCWeapon("VJ_K-3","weapon_vj_k3")
 ------ Global Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if (SERVER) then
+	util.AddNetworkString("vj_music_run")
+	
 	require("ai_vj_schedule")
 	local getsched = ai_vj_schedule.New -- Prevent stack overflow
 	function ai_vj_schedule.New(name)
@@ -699,6 +701,7 @@ function NPC_MetaTable:VJ_IsCurrentSchedule(idcheck)
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+ -- !!!!! Deprecated Function !!!!! --
 /*function NPC_MetaTable:VJ_StopSoundTable(tbl)
 	if not tbl then return end
 	if istable(tbl) then
@@ -708,7 +711,7 @@ end
 	end
 end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
--- Broken, don't use!
+ -- !!!!! Deprecated Function | Broken! !!!!! --
 /*function NPC_MetaTable:VJ_IsPlayingSoundFromTable(tbl) -- Get whether if a sound is playing from a certain table
 	if not tbl then return false end
 	if istable(tbl) then
@@ -722,32 +725,11 @@ end*/
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Hooks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("ScaleNPCDamage", "VJ_ScaleHitGroupHook",function(ent,hitgroup,dmginfo)
+hook.Add("ScaleNPCDamage", "VJ_ScaleHitGroupHook", function(npc, hitgroup, dmginfo)
+	//print(npc)
 	//print(hitgroup)
-	//print(ent)
-	ent.VJ_ScaleHitGroupDamage = hitgroup
+	npc.VJ_ScaleHitGroupDamage = hitgroup
 end)
----------------------------------------------------------------------------------------------------------------------------------------------
-/*if SERVER then
-local function VJShouldCollideHook( ent1, ent2 )
-	if ent1:vj_NoCollide(ent2) == false then return false end
-end
-hook.Add("ShouldCollide", "VJShouldCollideHook", VJShouldCollideHook)
-end*/
----------------------------------------------------------------------------------------------------------------------------------------------
-/*local function VJ_NPC_THEMEMUSIC(data,Entity,SoundName)
-	//print("regular code running")
-		local vjanimalcleanup = ents.FindByClass("npc_vjanimal_*")
-		local cleandatsnpc = ents.FindByClass("npc_vj_*")
-		table.Add(cleandatsnpc,vjanimalcleanup)
-		for _, x in pairs(cleandatsnpc,vjanimalcleanup) do
-		if x == data.Entity then
-		//x:VJ_STOPSOUND(x.Theme)
-		//print("IT WORKED!")
-	return false
-	end end
-end
-hook.Add("EntityEmitSound","VJ_NPC_THEMEMUSIC",VJ_NPC_THEMEMUSIC)*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("EntityEmitSound","VJ_NPC_ENTITYSOUND",function(data)
 	local ent = data.Entity
@@ -1006,7 +988,7 @@ hook.Add("VJ_CreateSNPCCorpse","VJ_NPC_CORPSELIMIT",function(Corpse,Owner)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-/*if (SERVER) then
+/*if (SERVER) then -- An old test that can be ignored
 	VJ_CurrentPossibleEnemies = {}
 	VJ_CurrentVJSNPCs = {}
 	VJ_NextRelationCheck = 0
@@ -1076,43 +1058,7 @@ cvars.AddChangeCallback("ai_ignoreplayers",function(convar_name,oldValue,newValu
 			end
 		end
 	end
-end)	
----------------------------------------------------------------------------------------------------------------------------------------------
-/*cvars.AddChangeCallback("vj_npc_drvrejfriendly",function(convar_name,oldValue,newValue)
-	//print(newValue)
-	if newValue == "1" then
-		//print("They no longer detect DrVrej!")
-		for k,v in pairs(ents.GetAll()) do
-			if game.SinglePlayer() then
-				if v:IsPlayer() then
-					v:SetNoTarget(true)
-					v.VJ_NoTarget = true
-				end
-			else
-				if (v:IsPlayer() && v:SteamID() == "STEAM_0:0:22688298") then
-					v:SetNoTarget(true)
-					v.VJ_NoTarget = true
-				end
-			end
-		end
-	end
-	if newValue == "0" then
-		//print("They now detect DrVrej!")
-		for k,v in pairs(ents.GetAll()) do
-			if game.SinglePlayer() then
-				if v:IsPlayer() then
-					v:SetNoTarget(true)
-					v.VJ_NoTarget = false
-				end
-			else
-				if (v:IsPlayer() && v:SteamID() == "STEAM_0:0:22688298") then
-					v:SetNoTarget(false)
-					v.VJ_NoTarget = false
-				end
-			end
-		end
-	end
-end)*/
+end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Net Messages ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1158,10 +1104,6 @@ if (CLIENT) then
 			end
 		end)
 	end)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-if (SERVER) then
-	util.AddNetworkString("vj_music_run")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*if (CLIENT) then
