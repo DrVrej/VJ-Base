@@ -52,6 +52,7 @@ if (CLIENT) then
 
 		local NPCCategories = {}
 		local NPCList = list.Get("VJBASE_SPAWNABLE_NPC")
+		local CatInfoList = list.Get("VJBASE_CATEGORY_INFO")
 		for k, v in pairs(NPCList) do
 			local Category = v.Category or "Uncategorized"
 			if Category == "VJ Base" then Category = "Default" end
@@ -60,7 +61,11 @@ if (CLIENT) then
 			NPCCategories[Category] = Tab
 		end
 		for CategoryName, v in SortedPairs(NPCCategories) do
-			local node = npctree:AddNode(CategoryName, "icon16/monkey.png")
+			local icon = "icon16/monkey.png"
+			if list.HasEntry("VJBASE_CATEGORY_INFO", CategoryName) then
+				icon = CatInfoList[CategoryName].icon
+			end
+			local node = npctree:AddNode(CategoryName, icon)
 			local CatPropPanel = vgui.Create("ContentContainer", pnlContent)
 			CatPropPanel:SetVisible(false)
 			local Header = vgui.Create("ContentHeader", npctree.PropPanel)
@@ -97,6 +102,7 @@ if (CLIENT) then
 
 		local WeaponCategories = {}
 		local WeaponList = list.Get("VJBASE_SPAWNABLE_WEAPON")
+		local CatInfoList = list.Get("VJBASE_CATEGORY_INFO")
 		for k, v in pairs(WeaponList) do
 			if (!v.Spawnable && !v.AdminSpawnable) then continue end
 			v.Category = v.Category or "Uncategorized"
@@ -105,7 +111,11 @@ if (CLIENT) then
 			table.insert(WeaponCategories[v.Category], v)
 		end
 		for CategoryName, v in SortedPairs(WeaponCategories) do
-			local node = weapontree:AddNode(CategoryName, "icon16/gun.png")
+			local icon = "icon16/gun.png"
+			if list.HasEntry("VJBASE_CATEGORY_INFO", CategoryName) then
+				icon = CatInfoList[CategoryName].icon
+			end
+			local node = weapontree:AddNode(CategoryName, icon)
 			local CatPropPanel = vgui.Create("ContentContainer", pnlContent)
 			CatPropPanel:SetVisible(false)
 			local Header = vgui.Create("ContentHeader", weapontree.PropPanel)
@@ -140,6 +150,7 @@ if (CLIENT) then
 
 		local EntityCategories = {}
 		local SpawnableEntitiesList = list.Get("VJBASE_SPAWNABLE_ENTITIES")
+		local CatInfoList = list.Get("VJBASE_CATEGORY_INFO")
 		if (SpawnableEntitiesList) then
 			for k, v in pairs(SpawnableEntitiesList) do
 				v.Category = v.Category or "Uncategorized"
@@ -149,7 +160,11 @@ if (CLIENT) then
 			end
 		end
 		for CategoryName, v in SortedPairs(EntityCategories) do
-			local node = entitytree:AddNode(CategoryName, "icon16/bricks.png")
+			local icon = "icon16/bricks.png"
+			if list.HasEntry("VJBASE_CATEGORY_INFO", CategoryName) then
+				icon = CatInfoList[CategoryName].icon
+			end
+			local node = entitytree:AddNode(CategoryName, icon)
 			local CatPropPanel = vgui.Create("ContentContainer", pnlContent)
 			CatPropPanel:SetVisible(false)
 			local Header = vgui.Create("ContentHeader", entitytree.PropPanel)
@@ -187,7 +202,7 @@ if (CLIENT) then
 			for nk, nv in pairs(ToolList) do
 				if nv.Name == "DrVrej" then
 					for nk2, nv2 in pairs(nv.Items) do
-						if nv2.Text == "Tools" then
+						if nv2.ItemName == "Tools" then
 							//local node = tooltree:AddNode("Default", "icon16/bullet_wrench.png")
 							local CatPropPanel = vgui.Create("ContentContainer", pnlContent)
 							CatPropPanel:SetVisible(false)
