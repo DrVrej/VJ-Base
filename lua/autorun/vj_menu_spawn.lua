@@ -39,9 +39,9 @@ if (CLIENT) then
 		hometree:InternalDoClick()
 	end)
 	--[-------------------------------------------------------]--
-	hook.Add("PopulateVJBaseNPC","AddVJBaseSpawnMenu_NPC",function(pnlContent,tree,node)
+	hook.Add("PopulateVJBaseNPC", "AddVJBaseSpawnMenu_NPC", function(pnlContent, tree, node)
 		local npctree = tree:AddNode("SNPCs", "icon16/monkey.png")
-		npctree:MoveToFront()
+		npctree:MoveToFront() -- Automatically select this folder when the menu first opens
 		npctree.PropPanel = vgui.Create("ContentContainer", pnlContent)
 		npctree.PropPanel:SetVisible(false)
 		npctree.PropPanel:SetTriggerSpawnlistChange(false)
@@ -49,10 +49,11 @@ if (CLIENT) then
 		function npctree:DoClick()
 			pnlContent:SwitchPanel(self.PropPanel)
 		end
-
-		local NPCCategories = {}
+		
 		local NPCList = list.Get("VJBASE_SPAWNABLE_NPC")
 		local CatInfoList = list.Get("VJBASE_CATEGORY_INFO")
+		
+		local NPCCategories = {}
 		for k, v in pairs(NPCList) do
 			local Category = v.Category or "Uncategorized"
 			if Category == "VJ Base" then Category = "Default" end
@@ -60,6 +61,7 @@ if (CLIENT) then
 			Tab[k] = v
 			NPCCategories[Category] = Tab
 		end
+		
 		for CategoryName, v in SortedPairs(NPCCategories) do
 			local icon = "icon16/monkey.png"
 			if list.HasEntry("VJBASE_CATEGORY_INFO", CategoryName) then
@@ -68,9 +70,15 @@ if (CLIENT) then
 			local node = npctree:AddNode(CategoryName, icon)
 			local CatPropPanel = vgui.Create("ContentContainer", pnlContent)
 			CatPropPanel:SetVisible(false)
-			local Header = vgui.Create("ContentHeader", npctree.PropPanel)
-			Header:SetText(CategoryName)
-			npctree.PropPanel:Add(Header)
+			
+			-- Write the name of the categories in both the general menu and in its own menu
+			local generalHeader = vgui.Create("ContentHeader", npctree.PropPanel)
+			generalHeader:SetText(CategoryName)
+			npctree.PropPanel:Add(generalHeader)
+			local catHeader = vgui.Create("ContentHeader", CatPropPanel)
+			catHeader:SetText(CategoryName)
+			CatPropPanel:Add(catHeader)
+			
 			for name, ent in SortedPairsByMemberValue(v,"Name") do
 				local t = {
 					nicename	= ent.Name or name,
@@ -230,16 +238,61 @@ if (CLIENT) then
 		end
 		tooltree:SetExpanded(true)
 	end)
+	
 	--[-------------------------------------------------------]--
-	spawnmenu.AddCreationTab("VJ Base",function()
+	-- Adds the searching functionality for the VJ Base spawn menu. Note: This algorithm is based on the base GMod algorithm.
+	search.AddProvider(function(str)
+		local results = {}
+		local entities = {}
+		
+		local function searchList(lname, lctype)
+			for k, v in pairs(list.Get(lname)) do
+				v.ClassName = k
+				v.PrintName = v.PrintName or v.Name
+				v.ScriptedEntityType = lctype
+				table.insert(entities, v)
+			end
+		end
+		searchList("VJBASE_SPAWNABLE_NPC", "npc")
+		searchList("VJBASE_SPAWNABLE_WEAPON", "weapon")
+		searchList("VJBASE_SPAWNABLE_ENTITIES", "entity")
+		// searchList("VJBASE_SPAWNABLE_VEHICLES", "vehicle") -- vehicle (Not yet lol)
+
+		for k, v in pairs(entities) do
+			local name = v.PrintName
+			local name_c = v.ClassName
+			if (!name && !name_c) then continue end
+			
+			if ((name && name:lower():find(str, nil, true)) or (name_c && name_c:lower():find(str, nil, true))) then
+				local entry = {
+					text = v.PrintName or v.ClassName,
+					icon = spawnmenu.CreateContentIcon(v.ScriptedEntityType or "entity", nil, {
+						nicename = v.PrintName or v.ClassName,
+						spawnname = v.ClassName,
+						material = "entities/" .. v.ClassName .. ".png",
+						admin = v.AdminOnly
+					}),
+					words = {v}
+				}
+
+				table.insert(results, entry)
+			end
+		end
+		table.SortByMember(results, "text", true)
+		return results
+	end, "vjbase_npcs")
+
+	--[-------------------------------------------------------]--
+	spawnmenu.AddCreationTab("VJ Base", function()
 		local ctrl = vgui.Create("SpawnmenuContentPanel")
+		ctrl:EnableSearch("vjbase_npcs", "PopulateVJBaseNPC")
 		//ctrl:CallPopulateHook("PopulateVJBaseHome")
 		ctrl:CallPopulateHook("PopulateVJBaseNPC")
 		ctrl:CallPopulateHook("PopulateVJBaseWeapons")
 		ctrl:CallPopulateHook("PopulateVJBaseEntities")
 		ctrl:CallPopulateHook("PopulateVJBaseTools")
 		return ctrl
-	end,"icon16/plugin.png",60,"All VJ Base related stuff is located here!")
+	end, "icon16/plugin.png", 60, "All VJ Base related stuff is located here!")
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Spawn Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
