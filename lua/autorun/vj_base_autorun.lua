@@ -13,7 +13,7 @@
 --------------------------------------------------*/
 if (CLIENT) then print("Loading VJ Base (Client)...") else print("Loading VJ Base (Server)...") end
 
-VJBASE_VERSION = "2.11.0"
+VJBASE_VERSION = "2.11.1"
 VJBASE_GETNAME = "VJ Base"
 
 -- Shared --
@@ -49,7 +49,7 @@ if (SERVER) then
 	util.AddNetworkString("VJSay")
 elseif (CLIENT) then
 	hook.Add("AddToolMenuTabs", "VJ_CREATETOOLTAB", function()
-		spawnmenu.AddToolTab("DrVrej", "DrVrej", "icon16/plugin.png")
+		spawnmenu.AddToolTab("DrVrej", "DrVrej", "vj_base/icons/vrejgaming.png") // "icon16/plugin.png"
 		spawnmenu.AddToolCategory("DrVrej", "Main Menu", "#vjbase.menu.tabs.mainmenu")
 		spawnmenu.AddToolCategory("DrVrej", "SNPCs", "#vjbase.menu.tabs.settings.snpc")
 		spawnmenu.AddToolCategory("DrVrej", "Weapons", "#vjbase.menu.tabs.settings.weapon")
