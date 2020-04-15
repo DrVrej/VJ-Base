@@ -966,7 +966,6 @@ ENT.Medic_SpawnedProp = NULL
 ENT.LastPlayedVJSound = nil
 ENT.LatestEnemyClass = nil
 ENT.LatestDmgInfo = nil
-ENT.TestT = 0
 ENT.NextFollowPlayerT = 0
 ENT.AngerLevelTowardsPlayer = 0
 ENT.NextBreathSoundT = 0
@@ -978,7 +977,6 @@ ENT.NextSetEnemyOnDamageT = 0
 ENT.NextRunAwayOnDamageT = 0
 ENT.NextIdleSoundT = 0
 ENT.NextProcessT = 0
-ENT.NextFindEnemyT = 0
 ENT.NextCallForHelpT = 0
 ENT.NextCallForBackUpOnDamageT = 0
 ENT.NextAlertSoundT = 0
@@ -1022,14 +1020,16 @@ ENT.SelectedDifficulty = 1
 ENT.VJ_AddCertainEntityAsEnemy = {}
 ENT.VJ_AddCertainEntityAsFriendly = {}
 ENT.AttackTimers = {"timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap"}
-ENT.DefaultGibDamageTypes = {DMG_ALWAYSGIB,DMG_ENERGYBEAM,DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SONIC}
 ENT.EntitiesToDestroyClass = {func_breakable=true,func_physbox=true,prop_door_rotating=true} // func_breakable_surf
-ENT.NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
-ENT.NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true,monster_scientist=true,monster_barney=true}
-ENT.NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack=true}
-ENT.NPCTbl_Zombies = {npc_fastzombie_torso=true,npc_zombine=true,npc_zombie_torso=true,npc_zombie=true,npc_poisonzombie=true,npc_headcrab_fast=true,npc_headcrab_black=true,npc_headcrab=true,npc_fastzombie=true,monster_zombie=true,monster_headcrab=true,monster_babycrab=true}
-ENT.NPCTbl_Antlions = {npc_antlion=true,npc_antlionguard=true,npc_antlion_worker=true}
-ENT.NPCTbl_Xen = {monster_bullchicken=true,monster_alien_grunt=true,monster_alien_slave=true,monster_alien_controller=true,monster_houndeye=true,monster_gargantua=true,monster_nihilanth=true}
+
+-- Static values
+local DefaultGibDamageTypes = {DMG_ALWAYSGIB,DMG_ENERGYBEAM,DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SONIC}
+local NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
+local NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true,monster_scientist=true,monster_barney=true}
+local NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack=true}
+local NPCTbl_Zombies = {npc_fastzombie_torso=true,npc_zombine=true,npc_zombie_torso=true,npc_zombie=true,npc_poisonzombie=true,npc_headcrab_fast=true,npc_headcrab_black=true,npc_headcrab=true,npc_fastzombie=true,monster_zombie=true,monster_headcrab=true,monster_babycrab=true}
+local NPCTbl_Antlions = {npc_antlion=true,npc_antlionguard=true,npc_antlion_worker=true}
+local NPCTbl_Xen = {monster_bullchicken=true,monster_alien_grunt=true,monster_alien_slave=true,monster_alien_controller=true,monster_houndeye=true,monster_gargantua=true,monster_nihilanth=true}
 	
 /*
 local ipairs = ipairs
@@ -1107,7 +1107,7 @@ function ENT:Initialize()
 			if math.random(1,self.SoundTrackChance) == 1 then self:StartSoundTrack() end
 		end
 	end)
-	duplicator.RegisterEntityClass(self:GetClass(),VJSPAWN_SNPC_DUPE,"Model","Class","Equipment","SpawnFlags","Data")
+	duplicator.RegisterEntityClass(self:GetClass(),VJSPAWN_SNPC_DUPE,"Class","Equipment","SpawnFlags","Data")
 	//if self.Immune_Dissolve == true or self.GodMode == true then self:AddEFlags(EFL_NO_DISSOLVE) end
 	self:AddEFlags(EFL_NO_DISSOLVE)
 	self.VJ_AddCertainEntityAsEnemy = {}
@@ -2403,11 +2403,6 @@ function ENT:Think()
 	end*/
 
 	//print(self.CurrentTask)
-	//self:GetBonePosition(self:LookupBone("Bip01 R Hand")
-	//print(#util.VJ_GetSNPCsWithActiveSoundTracks())
-	//util.ParticleTracerEx( "vortigaunt_beam", self:GetPos(), lpos, false, self:EntIndex(), 2)
-	//self:SetColor(Color(0,0,0))
-	//self:ConvarsOnThink()
 	self:CustomOnThink()
 
 	if self.HasSounds == false or self.Dead == true then VJ_STOPSOUND(self.CurrentBreathSound) end
@@ -3365,8 +3360,8 @@ function ENT:VJFriendlyCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CombineFriendlyCode(argent)
-	if self.NPCTbl_Combine[argent:GetClass()] then
-	//if VJ_HasValue(self.NPCTbl_Combine,argent:GetClass()) then
+	if NPCTbl_Combine[argent:GetClass()] then
+	//if VJ_HasValue(NPCTbl_Combine,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true
@@ -3374,8 +3369,8 @@ function ENT:CombineFriendlyCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ZombieFriendlyCode(argent)
-	if self.NPCTbl_Zombies[argent:GetClass()] then
-	//if VJ_HasValue(self.NPCTbl_Zombies,argent:GetClass()) then
+	if NPCTbl_Zombies[argent:GetClass()] then
+	//if VJ_HasValue(NPCTbl_Zombies,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true
@@ -3383,8 +3378,8 @@ function ENT:ZombieFriendlyCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AntlionFriendlyCode(argent)
-	if self.NPCTbl_Antlions[argent:GetClass()] then
-	//if VJ_HasValue(self.NPCTbl_Antlions,argent:GetClass()) then
+	if NPCTbl_Antlions[argent:GetClass()] then
+	//if VJ_HasValue(NPCTbl_Antlions,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true
@@ -3392,8 +3387,8 @@ function ENT:AntlionFriendlyCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:XenFriendlyCode(argent)
-	if self.NPCTbl_Xen[argent:GetClass()] then
-	//if VJ_HasValue(self.NPCTbl_Xen,argent:GetClass()) then
+	if NPCTbl_Xen[argent:GetClass()] then
+	//if VJ_HasValue(NPCTbl_Xen,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true
@@ -3401,8 +3396,8 @@ function ENT:XenFriendlyCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlayerAllies(argent)
-	if self.NPCTbl_Resistance[argent:GetClass()] then
-	//if VJ_HasValue(self.NPCTbl_Resistance,argent:GetClass()) then
+	if NPCTbl_Resistance[argent:GetClass()] then
+	//if VJ_HasValue(NPCTbl_Resistance,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true
@@ -3516,7 +3511,7 @@ function ENT:DoRelationshipCheck(argent)
 	-- true == Tematsine tsnami e
 	local nt_bool, nt_str = self:VJ_HasNoTarget(argent)
 	if nt_str == "Bullseye" then return true end
-	if nt_bool == true or self.NPCTbl_Animals[argent:GetClass()] then return "Neutral" end
+	if nt_bool == true or NPCTbl_Animals[argent:GetClass()] then return "Neutral" end
 	if self:GetClass() == argent:GetClass() then return false end
 	if argent:Health() > 0 && self:Disposition(argent) != D_LI then
 		if argent:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 1 then return "Neutral" end
@@ -4445,10 +4440,9 @@ function ENT:RunGibOnDeathCode(dmginfo,hitgroup,Tbl_Features)
 	local dmgtbl = vTbl_Features.CustomDmgTbl or self.GibOnDeathDamagesTable
 	local dmgtblempty = false
 	local usedefault = false
-	local defualtdmgs = self.DefaultGibDamageTypes
 	if VJ_HasValue(dmgtbl,"UseDefault") then usedefault = true end
 	if usedefault == false && (#dmgtbl <= 0 or VJ_HasValue(dmgtbl,"All")) then dmgtblempty = true end
-	if (dmgtblempty == true) or (usedefault == true && VJ_HasValue(defualtdmgs,DamageType)) or (usedefault == false && VJ_HasValue(dmgtbl,DamageType)) then
+	if (dmgtblempty == true) or (usedefault == true && VJ_HasValue(DefaultGibDamageTypes,DamageType)) or (usedefault == false && VJ_HasValue(dmgtbl,DamageType)) then
 		local setupgib, setupgib_extra = self:SetUpGibesOnDeath(dmginfo,hitgroup)
 		if setupgib_extra == nil then setupgib_extra = {} end
 		if setupgib == true then
@@ -4748,21 +4742,11 @@ end
 function ENT:OnRemove()
 	self:CustomOnRemove()
 	self.Dead = true
-	-- Stop Things --
+	
 	if self.Medic_IsHealingAlly == true then self:DoMedicCode_Reset() end
 	self:StopAllCommonSounds()
 	self:RemoveAttackTimers()
 	self:StopParticles()
-
-	//if self.HasSoundTrack == true then
-	//if self.HasSounds == true then
-	//if GetConVarNumber("vj_npc_sd_soundtrack") == 0 then
-	//if self.thememusicsd:IsPlaying() == true then
-	//if self.thememusicsd then self.thememusicsd:FadeOut(self.SoundTrackFadeOutTime) end
-	//end
-   //end
-  //end
- //end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RunItemDropsOnDeathCode(dmginfo,hitgroup)
@@ -4771,7 +4755,7 @@ function ENT:RunItemDropsOnDeathCode(dmginfo,hitgroup)
 	local entlist = VJ_PICK(self.ItemDropsOnDeath_EntityList)
 	if entlist != false then
 		local randdrop = ents.Create(entlist)
-		randdrop:SetPos(self:GetPos() +self:OBBCenter())
+		randdrop:SetPos(self:GetPos() + self:OBBCenter())
 		randdrop:SetAngles(self:GetAngles())
 		randdrop:Spawn()
 		randdrop:Activate()
@@ -5480,9 +5464,6 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-/*function ENT:ConvarsOnThink() -- Obsolete! | Causes lag!
-end/*
----------------------------------------------------------------------------------------------------------------------------------------------
 /*function ENT:FindEnemy()
 //self:AddRelationship( "npc_barnacle  D_LI  99" )
 if self.FindEnemy_UseSphere == true then
@@ -5495,10 +5476,10 @@ if (!EnemyTargets) then return end
 //table.Add(EnemyTargets)
 for k,v in pairs(EnemyTargets) do
 	//if (v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag") && v:IsNPC() or (v:IsPlayer() && self.PlayerFriendly == false && GetConVarNumber("ai_ignoreplayers") == 0) && self:Visible(v) then
-	//if self.CombineFriendly == true then if VJ_HasValue(self.NPCTbl_Combine,v:GetClass()) then return end end
-	//if self.ZombieFriendly == true then if VJ_HasValue(self.NPCTbl_Zombies,v:GetClass()) then return end end
-	//if self.AntlionFriendly == true then if VJ_HasValue(self.NPCTbl_Antlions,v:GetClass()) then return end end
-	//if self.PlayerFriendly == true then if VJ_HasValue(self.NPCTbl_Resistance,v:GetClass()) then return end end
+	//if self.CombineFriendly == true then if VJ_HasValue(NPCTbl_Combine,v:GetClass()) then return end end
+	//if self.ZombieFriendly == true then if VJ_HasValue(NPCTbl_Zombies,v:GetClass()) then return end end
+	//if self.AntlionFriendly == true then if VJ_HasValue(NPCTbl_Antlions,v:GetClass()) then return end end
+	//if self.PlayerFriendly == true then if VJ_HasValue(NPCTbl_Resistance,v:GetClass()) then return end end
 	//if GetConVarNumber("vj_npc_vjfriendly") == 1 then
 	//local frivj = ents.FindByClass("npc_vj_*") table.Add(frivj) for _, x in pairs(frivj) do return end end
 	//local vjanimalfriendly = ents.FindByClass("npc_vjanimal_*") table.Add(vjanimalfriendly) for _, x in pairs(vjanimalfriendly) do return end

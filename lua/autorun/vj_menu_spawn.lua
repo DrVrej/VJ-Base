@@ -241,14 +241,14 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Spawn Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-local function VJSPAWN_NPCINTERNAL(Player,Position,Normal,Class,Equipment)
+local function VJSPAWN_NPCINTERNAL(Player, Position, Normal, Class, Equipment, SpawnFlagsSaved)
 	if (CLIENT) then return end
 	print("Running VJ Base SNPC Internal...")
 	local NPCList = list.Get("NPC") //VJBASE_SPAWNABLE_NPC
 	local NPCData = NPCList[Class]
 	if NPCList[Class] == nil then print("VJ Base SNPC Internal canceled an NPC from spawning, because it's not listed in the NPC menu.") return end
 	PrintTable(NPCList[Class])
-	///if !IsValid(NPCData) then print("VJ Base SNPC Internal was unable to spawn the SNPC, it didn't find any NPC Data to use") return end
+	//if !IsValid(NPCData) then print("VJ Base SNPC Internal was unable to spawn the SNPC, it didn't find any NPC Data to use") return end
 	print("VJ Base SNPC Internal is spawning: "..NPCData.Class)
 
 	-- Don't let them spawn this entity if it isn't in our NPC Spawn list.
@@ -279,7 +279,7 @@ local function VJSPAWN_NPCINTERNAL(Player,Position,Normal,Class,Equipment)
 	if (!IsValid(NPC)) then return print("VJ Base SNPC Internal was unable to spawn the SNPC, the class didn't exist!") end
 	NPC:SetPos(Position)
 	
-	-- Rotate to face player (expected behaviour)
+	-- Rotate to face player (expected behavior)
 	local Angles = Angle( 0, 0, 0 )
 		if ( IsValid( Player ) ) then
 			Angles = Player:GetAngles()
@@ -300,6 +300,7 @@ local function VJSPAWN_NPCINTERNAL(Player,Position,Normal,Class,Equipment)
 	local SpawnFlags = bit.bor( SF_NPC_FADE_CORPSE, SF_NPC_ALWAYSTHINK )
 	if ( NPCData.SpawnFlags ) then SpawnFlags = bit.bor( SpawnFlags, NPCData.SpawnFlags ) end
 	if ( NPCData.TotalSpawnFlags ) then SpawnFlags = NPCData.TotalSpawnFlags end
+	if ( SpawnFlagsSaved ) then SpawnFlags = SpawnFlagsSaved end
 	NPC:SetKeyValue( "spawnflags", SpawnFlags )
 
 	-- Optional Key Values
@@ -334,6 +335,7 @@ local function VJSPAWN_NPCINTERNAL(Player,Position,Normal,Class,Equipment)
 	return NPC
 end
 -------------------------------------------------------------------------------------------------------------------------
+/*
 function VJSPAWN_NPC( player, NPCClassName, WeaponName, tr )
 	if (CLIENT) then return end
 	//if ( !NPCClassName ) then return end
@@ -382,17 +384,30 @@ function VJSPAWN_NPC( player, NPCClassName, WeaponName, tr )
 	//end
 end
 concommand.Add("vjbase_spawnnpc", function(ply,cmd,args) VJSPAWN_NPC(ply,args[1],args[2]) end)
+*/
 -------------------------------------------------------------------------------------------------------------------------
-function VJSPAWN_SNPC_DUPE( Player, Model, Class, Equipment, SpawnFlags, Data )
-	if (!gamemode.Call("PlayerSpawnNPC",Player,Class,Equipment)) then return end
-	local Entity = VJSPAWN_NPCINTERNAL(Player,Data.Pos,Vector(0,0,1),Class,Equipment,SpawnFlags)
-	if (IsValid(Entity)) then
-		duplicator.DoGeneric(Entity,Data)
-		if (IsValid(Player)) then
-			gamemode.Call("PlayerSpawnedNPC",Player,Entity)
-			Player:AddCleanup("npcs",Entity)
+function VJSPAWN_SNPC_DUPE(ply, class, equipment, spawnflags, data) -- Based on the GMod NPCs, had to recreate it here because it's not a global function
+	PrintTable(data)
+	if (!gamemode.Call("PlayerSpawnNPC", ply, class, equipment)) then return end -- Don't create if this player isn't allowed to spawn NPCs!
+
+	local normal = Vector(0, 0, 1)
+	local NPCList = list.Get("NPC")
+	local NPCData = NPCList[class]
+	if (NPCData && NPCData.OnCeiling) then normal = Vector(0, 0, -1) end
+
+	local ent = VJSPAWN_NPCINTERNAL(ply, data.Pos, normal, class, equipment, spawnflags)
+	if (IsValid(ent)) then
+		local pos = ent:GetPos() -- Prevents the NPCs from falling through the floor
+		duplicator.DoGeneric(ent, data) -- Applies generic every-day entity stuff for ent from table data (wiki)
+		if (!NPCData.OnCeiling && !NPCData.NoDrop) then
+			ent:SetPos(pos)
+			ent:DropToFloor()
 		end
-		table.Add(Entity:GetTable(),Data)
+		if (IsValid(ply)) then
+			gamemode.Call("PlayerSpawnedNPC", ply, ent)
+			ply:AddCleanup("npcs", ent)
+		end
+		table.Add(ent:GetTable(), data)
 	end
-	return Entity
+	return ent
 end

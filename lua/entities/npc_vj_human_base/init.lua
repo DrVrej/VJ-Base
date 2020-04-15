@@ -908,7 +908,6 @@ ENT.LastPlayedVJSound = nil
 ENT.LatestEnemyClass = nil
 ENT.LatestDmgInfo = nil
 ENT.Weapon_ShotsSinceLastReload = 0
-ENT.TestT = 0
 ENT.NextFollowPlayerT = 0
 ENT.AngerLevelTowardsPlayer = 0
 ENT.NextBreathSoundT = 0
@@ -922,7 +921,6 @@ ENT.NextIdleSoundT = 0
 ENT.NextNoWeaponT = 0
 ENT.NextCallForHelpT = 0
 ENT.NextProcessT = 0
-ENT.NextFindEnemyT = 0
 ENT.NextThrowGrenadeT = 0
 ENT.NextCallForBackUpOnDamageT = 0
 ENT.NextOnGrenadeSightSoundT = 0
@@ -977,17 +975,17 @@ ENT.SelectedDifficulty = 1
 ENT.VJ_AddCertainEntityAsEnemy = {}
 ENT.VJ_AddCertainEntityAsFriendly = {}
 ENT.AttackTimers = {"timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee"}
-ENT.DefaultGibDamageTypes = {DMG_ALWAYSGIB,DMG_ENERGYBEAM,DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SONIC}
 ENT.EntitiesToRunFrom = {obj_spore=true,obj_vj_grenade=true,obj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true,cw_flash_thrown=true,ent_hl1_grenade=true}
 ENT.EntitiesToThrowBack = {obj_spore=true,obj_vj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,obj_cpt_grenade=true,cw_grenade_thrown=true,cw_flash_thrown=true,cw_smoke_thrown=true,ent_hl1_grenade=true}
-//ENT.Weapons_UseRegulate = {weapon_shotgun=true,weapon_crossbow=true,weapon_annabelle=true,weapon_pistol=true}
-//ENT.Weapons_DontUseRegulate = {weapon_smg1=true,weapon_ar2=true}
-ENT.NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
-ENT.NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true,monster_scientist=true,monster_barney=true}
-ENT.NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack=true}
-ENT.NPCTbl_Zombies = {npc_fastzombie_torso=true,npc_zombine=true,npc_zombie_torso=true,npc_zombie=true,npc_poisonzombie=true,npc_headcrab_fast=true,npc_headcrab_black=true,npc_headcrab=true,npc_fastzombie=true,monster_zombie=true,monster_headcrab=true,monster_babycrab=true}
-ENT.NPCTbl_Antlions = {npc_antlion=true,npc_antlionguard=true,npc_antlion_worker=true}
-ENT.NPCTbl_Xen = {monster_bullchicken=true,monster_alien_grunt=true,monster_alien_slave=true,monster_alien_controller=true,monster_houndeye=true,monster_gargantua=true,monster_nihilanth=true}
+
+-- Static values
+local DefaultGibDamageTypes = {DMG_ALWAYSGIB,DMG_ENERGYBEAM,DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SONIC}
+local NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
+local NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true,monster_scientist=true,monster_barney=true}
+local NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack=true}
+local NPCTbl_Zombies = {npc_fastzombie_torso=true,npc_zombine=true,npc_zombie_torso=true,npc_zombie=true,npc_poisonzombie=true,npc_headcrab_fast=true,npc_headcrab_black=true,npc_headcrab=true,npc_fastzombie=true,monster_zombie=true,monster_headcrab=true,monster_babycrab=true}
+local NPCTbl_Antlions = {npc_antlion=true,npc_antlionguard=true,npc_antlion_worker=true}
+local NPCTbl_Xen = {monster_bullchicken=true,monster_alien_grunt=true,monster_alien_slave=true,monster_alien_controller=true,monster_houndeye=true,monster_gargantua=true,monster_nihilanth=true}
 
 //util.AddNetworkString("vj_human_onthememusic")
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1052,7 +1050,7 @@ function ENT:Initialize()
 			if math.random(1,self.SoundTrackChance) == 1 then self:StartSoundTrack() end
 		end
 	end)
-	duplicator.RegisterEntityClass(self:GetClass(),VJSPAWN_SNPC_DUPE,"Model","Class","Equipment","SpawnFlags","Data")
+	duplicator.RegisterEntityClass(self:GetClass(), VJSPAWN_SNPC_DUPE, "Class", "Equipment", "SpawnFlags", "Data")
 	//if self.Immune_Dissolve == true or self.GodMode == true then self:AddEFlags(EFL_NO_DISSOLVE) end
 	self:AddEFlags(EFL_NO_DISSOLVE)
 	self.VJ_AddCertainEntityAsEnemy = {}
@@ -1913,6 +1911,8 @@ function ENT:DoConstantlyFaceEnemyCode()
 	end
 	return false
 end
+//ENT.Weapons_UseRegulate = {weapon_shotgun=true,weapon_crossbow=true,weapon_annabelle=true,weapon_pistol=true}
+//ENT.Weapons_DontUseRegulate = {weapon_smg1=true,weapon_ar2=true}
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChangeWeapon(SetType)
 	SetType = SetType or "None"
@@ -1929,7 +1929,7 @@ function ENT:DoChangeWeapon(SetType)
 			self:CapabilitiesRemove(CAP_USE_SHOT_REGULATOR)
 		end
 	end*/
-	self:CustomOnDoChangeWeapon(self:GetActiveWeapon(),self.CurrentWeaponEntity)
+	self:CustomOnDoChangeWeapon(self:GetActiveWeapon(), self.CurrentWeaponEntity)
 end
 //ENT.TurningLerp = nil
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1981,16 +1981,10 @@ function ENT:Think()
 		end
 	end
 	if self.DoingWeaponAttack == false then self.DoingWeaponAttack_Standing = false end
-	//if CurTime() > self.TestT then
-	//self:VJ_ACT_PLAYACTIVITY(ACT_SIGNAL_ADVANCE,true,2,true,0.5)
-	//self.TestT = CurTime() + 200 end
-	//if self:GetActiveWeapon():GetClass() == "weapon_smg1" then print("SMG1") end
-	//self:SetColor(Color(0,1000,0))
 
 	if self.CurrentWeaponEntity != self:GetActiveWeapon() then self:DoChangeWeapon() end
 	self.CurrentWeaponEntity = self:GetActiveWeapon()
-
-	//self:ConvarsOnThink()
+	
 	self:CustomOnThink()
 
 	if self.HasSounds == false or self.Dead == true then VJ_STOPSOUND(self.CurrentBreathSound) end
@@ -2023,8 +2017,8 @@ function ENT:Think()
 			if GetConVarNumber("vj_npc_printlastseenenemy") == 1 then PrintMessage(HUD_PRINTTALK, self.LastSeenEnemyTime.." ("..self:GetName()..")") end
 			if self:VJ_HasActiveWeapon() == true then
 				if GetConVarNumber("vj_npc_printaccuracy") == 1 then print(self:GetClass().."'s Accuracy (Weapon Spread, Proficiency) = "..self.WeaponSpread.." | "..self:GetCurrentWeaponProficiency()) end
-				if GetConVarNumber("vj_npc_printammo") == 1 then print(self:GetClass().."'s Ammo = VJ Ammo: "..self.Weapon_ShotsSinceLastReload.."/"..self.Weapon_StartingAmmoAmount.." | GMod Ammo: "..self:GetActiveWeapon():Clip1()) end
-				if GetConVarNumber("vj_npc_printweapon") == 1 then print(self:GetClass().."'s",self:GetActiveWeapon()) end
+				if GetConVarNumber("vj_npc_printammo") == 1 then print(self:GetClass().."'s Ammo = VJ Ammo: "..self.Weapon_ShotsSinceLastReload.."/"..self.Weapon_StartingAmmoAmount.." | GMod Ammo: "..self.CurrentWeaponEntity:Clip1()) end
+				if GetConVarNumber("vj_npc_printweapon") == 1 then print(self:GetClass().."'s", self.CurrentWeaponEntity) end
 			end
 		end
 
@@ -2036,9 +2030,9 @@ function ENT:Think()
 			self.HealthRegenerationDelayT = CurTime() + math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b)
 		end
 		
-		if self:GetActiveWeapon() != NULL then self.Weapon_TimeSinceLastShot = self.Weapon_TimeSinceLastShot + 0.1 end
+		if self.CurrentWeaponEntity != NULL then self.Weapon_TimeSinceLastShot = self.Weapon_TimeSinceLastShot + 0.1 end
 
-		/*if self:GetActiveWeapon() == NULL then
+		/*if self.CurrentWeaponEntity == NULL then
 			self.AnimTbl_IdleStand = {"Idle_Unarmed"}
 			self:SetMovementActivity(self:GetSequenceActivity(self:LookupSequence("WalkUnarmed_all")))
 		end*/
@@ -2111,12 +2105,12 @@ function ENT:Think()
 			self.Weapon_StartingAmmoAmount = 30
 		end
 		//print(self:HasCondition(13))
-		if self.Dead == false && self.AllowWeaponReloading == true && self.CurrentWeaponEntity == self:GetActiveWeapon() && self.IsReloadingWeapon == false && self:VJ_HasActiveWeapon() == true && self.FollowPlayer_GoingAfter == false && self.ThrowingGrenade == false && self.MeleeAttacking == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) then
+		if self.Dead == false && self.AllowWeaponReloading == true && self.IsReloadingWeapon == false && self:VJ_HasActiveWeapon() == true && self.FollowPlayer_GoingAfter == false && self.ThrowingGrenade == false && self.MeleeAttacking == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) then
 			local teshnami = IsValid(ene) -- Teshnami ooni, gam voch?
 			//if CurTime() > self.NextReloadT then
 			//if math.random(1,self.ReloadChance) < 3 then
 			if (teshnami == false && self.Weapon_ShotsSinceLastReload > 0 && self.TimeSinceLastSeenEnemy > math.random(3,8) && !self:IsMoving()) or (teshnami == true && self.Weapon_ShotsSinceLastReload >= self.Weapon_StartingAmmoAmount) or (self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_RELOAD) && self.Weapon_ShotsSinceLastReload > 0) then
-				if self.Weapon_UnlimitedAmmo == true then self:GetActiveWeapon():SetClip1(99999) end
+				if self.Weapon_UnlimitedAmmo == true then self.CurrentWeaponEntity:SetClip1(99999) end
 				//self.Weapon_ShotsSinceLastReload = 0
 				self.DoingWeaponAttack = false
 				self.DoingWeaponAttack_Standing = false
@@ -2127,7 +2121,7 @@ function ENT:Think()
 				self:CustomOnWeaponReload()
 				if self.DisableWeaponReloadAnimation == false then
 					local function DoReloadAnimation(animtbl)
-						self:GetActiveWeapon():NPC_ReloadWeapon()
+						self.CurrentWeaponEntity:NPC_ReloadWeapon()
 						self.CurrentAnim_WeaponReload = VJ_PICK(animtbl)
 						local translateact = self:VJ_TranslateWeaponActivity(self.CurrentAnim_WeaponReload)
 						if VJ_AnimationExists(self,translateact) == true then
@@ -2178,7 +2172,7 @@ function ENT:Think()
 				else
 					self.Weapon_ShotsSinceLastReload = 0
 					self.IsReloadingWeapon = false
-					self:GetActiveWeapon():NPC_ReloadWeapon()
+					self.CurrentWeaponEntity:NPC_ReloadWeapon()
 				end
 			end
 			//self.NextReloadT = CurTime() + self.NextReloadTime end end end
@@ -2241,7 +2235,7 @@ function ENT:Think()
 			self:CheckForGrenades()
 			self:DoMedicCode_FindAllies()
 			self:DoMedicCode_HealAlly()
-			/*if IsValid(self:GetEnemy()) && self:Visible(self:GetEnemy()) && (self:GetActiveWeapon().IsVJBaseWeapon) && self.DoingWeaponAttack == false then
+			/*if IsValid(self:GetEnemy()) && self:Visible(self:GetEnemy()) && (self.CurrentWeaponEntity.IsVJBaseWeapon) && self.DoingWeaponAttack == false then
 				//self:FaceCertainEntity(self:GetEnemy(),true)
 				if !VJ_HasValue(self.AnimTbl_WeaponAttack,self:GetActivity()) && !VJ_HasValue(self.AnimTbl_WeaponAttackCrouch,self:GetActivity()) then
 				self:SelectSchedule()
@@ -2263,7 +2257,7 @@ function ENT:Think()
 			end
 		end
 
-		//if self:HasCondition(4) then print("conf worked") self:GetActiveWeapon():SetClip1(45) end
+		//if self:HasCondition(4) then print("conf worked") self.CurrentWeaponEntity:SetClip1(45) end
 
 		/*if CurTime() > self.NextCallForHelpT then
 		local SequenceID = self:LookupSequence("shootAR2s")
@@ -2274,7 +2268,7 @@ function ENT:Think()
 		//self:ResetSequence(SequenceID)
 		self.NextCallForHelpT = CurTime() + 0.1 end*/
 		//self:SetNPCState(NPC_STATE_COMBAT)
-
+self:SetMovementActivity(ACT_WALK_AIM_RIFLE)
 		/*if IsValid(self:GetEnemy()) then
 			print(self:Visible(self:GetEnemy()))
 			if self:Visible(self:GetEnemy()) == false then
@@ -3080,8 +3074,8 @@ function ENT:VJFriendlyCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CombineFriendlyCode(argent)
-	if self.NPCTbl_Combine[argent:GetClass()] then
-	//if VJ_HasValue(self.NPCTbl_Combine,argent:GetClass()) then
+	if NPCTbl_Combine[argent:GetClass()] then
+	//if VJ_HasValue(NPCTbl_Combine,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true
@@ -3089,8 +3083,8 @@ function ENT:CombineFriendlyCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ZombieFriendlyCode(argent)
-	if self.NPCTbl_Zombies[argent:GetClass()] then
-	//if VJ_HasValue(self.NPCTbl_Zombies,argent:GetClass()) then
+	if NPCTbl_Zombies[argent:GetClass()] then
+	//if VJ_HasValue(NPCTbl_Zombies,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true
@@ -3098,8 +3092,8 @@ function ENT:ZombieFriendlyCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AntlionFriendlyCode(argent)
-	if self.NPCTbl_Antlions[argent:GetClass()] then
-	//if VJ_HasValue(self.NPCTbl_Antlions,argent:GetClass()) then
+	if NPCTbl_Antlions[argent:GetClass()] then
+	//if VJ_HasValue(NPCTbl_Antlions,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true
@@ -3107,8 +3101,8 @@ function ENT:AntlionFriendlyCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:XenFriendlyCode(argent)
-	if self.NPCTbl_Xen[argent:GetClass()] then
-	//if VJ_HasValue(self.NPCTbl_Xen,argent:GetClass()) then
+	if NPCTbl_Xen[argent:GetClass()] then
+	//if VJ_HasValue(NPCTbl_Xen,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true
@@ -3116,8 +3110,8 @@ function ENT:XenFriendlyCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlayerAllies(argent)
-	if self.NPCTbl_Resistance[argent:GetClass()] then
-	//if VJ_HasValue(self.NPCTbl_Resistance,argent:GetClass()) then
+	if NPCTbl_Resistance[argent:GetClass()] then
+	//if VJ_HasValue(NPCTbl_Resistance,argent:GetClass()) then
 		argent:AddEntityRelationship(self,D_LI,99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true
@@ -3231,7 +3225,7 @@ function ENT:DoRelationshipCheck(argent)
 	-- true == Tematsine tsnami e
 	local nt_bool, nt_str = self:VJ_HasNoTarget(argent)
 	if nt_str == "Bullseye" then return true end
-	if nt_bool == true or self.NPCTbl_Animals[argent:GetClass()] then return "Neutral" end
+	if nt_bool == true or NPCTbl_Animals[argent:GetClass()] then return "Neutral" end
 	if self:GetClass() == argent:GetClass() then return false end
 	if argent:Health() > 0 && self:Disposition(argent) != D_LI then
 		if argent:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 1 then return "Neutral" end
@@ -4159,10 +4153,9 @@ function ENT:RunGibOnDeathCode(dmginfo,hitgroup,Tbl_Features)
 	local dmgtbl = vTbl_Features.CustomDmgTbl or self.GibOnDeathDamagesTable
 	local dmgtblempty = false
 	local usedefault = false
-	local defualtdmgs = self.DefaultGibDamageTypes
 	if VJ_HasValue(dmgtbl,"UseDefault") then usedefault = true end
 	if usedefault == false && (#dmgtbl <= 0 or VJ_HasValue(dmgtbl,"All")) then dmgtblempty = true end
-	if (dmgtblempty == true) or (usedefault == true && VJ_HasValue(defualtdmgs,DamageType)) or (usedefault == false && VJ_HasValue(dmgtbl,DamageType)) then
+	if (dmgtblempty == true) or (usedefault == true && VJ_HasValue(DefaultGibDamageTypes,DamageType)) or (usedefault == false && VJ_HasValue(dmgtbl,DamageType)) then
 		local setupgib, setupgib_extra = self:SetUpGibesOnDeath(dmginfo,hitgroup)
 		if setupgib_extra == nil then setupgib_extra = {} end
 		if setupgib == true then
@@ -4446,62 +4439,52 @@ end
 function ENT:OnRemove()
 	self:CustomOnRemove()
 	self.Dead = true
-	-- Stop Things --
+	
 	if self.Medic_IsHealingAlly == true then self:DoMedicCode_Reset() end
 	self:StopAllCommonSounds()
 	self:RemoveAttackTimers()
 	self:StopParticles()
-
-	//if self.HasSoundTrack == true then
-	//if self.HasSounds == true then
-	//if GetConVarNumber("vj_npc_sd_soundtrack") == 0 then
-	//if self.thememusicsd:IsPlaying() == true then
-	//if self.thememusicsd then self.thememusicsd:FadeOut(self.SoundTrackFadeOutTime) end
-	//end
-   //end
-  //end
- //end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DropWeaponOnDeathCode(dmginfo,hitgroup)
 	if self.DropWeaponOnDeath != true or self:VJ_HasActiveWeapon() != true /*or dmginfo:GetDamageType() == DMG_DISSOLVE*/ then return end
 	
 	self:CustomOnDropWeapon(dmginfo,hitgroup)
-
+	
+	self.CurrentWeaponEntity = self:GetActiveWeapon()
 	local gunang = Angle(0,0,0)
-	if self:GetActiveWeapon():GetClass() == "weapon_ar2" or self:GetActiveWeapon():GetClass() == "weapon_vj_ar2" or self:GetActiveWeapon():GetClass() == "weapon_vj_blaster" then gunang = Angle(0,180,0) end
-	if self:GetActiveWeapon():GetClass() == "weapon_pistol" or self:GetActiveWeapon():GetClass() == "weapon_vj_9mmpistol" or self:GetActiveWeapon():GetClass() == "weapon_vj_357" then gunang = Angle(0,180,0) end
-	if self:GetActiveWeapon():GetClass() == "weapon_shotgun" or self:GetActiveWeapon():GetClass() == "weapon_vj_spas12" then gunang = Angle(0,180,0) end
-	if self:GetActiveWeapon():GetClass() == "weapon_annabelle" then gunang = Angle(0,180,0) end
-	if self:GetActiveWeapon():GetClass() == "weapon_rpg" then gunang = Angle(0,180,0) end
-	if self:GetActiveWeapon():GetClass() == "weapon_citizenpackage" then gunang = Angle(0,180,0) end
-	if self:GetActiveWeapon():GetClass() == "weapon_crowbar" then gunang = Angle(90,0,0) end
-	if self:GetActiveWeapon():GetClass() == "weapon_stunstick" then gunang = Angle(90,0,0) end
+	local tbl1 = {weapon_ar2=true, weapon_vj_ar2=true, weapon_vj_blaster=true, weapon_pistol=true, weapon_vj_9mmpistol=true, weapon_vj_357=true, weapon_shotgun=true, weapon_vj_spas12=true, weapon_annabelle=true, weapon_rpg = true}
+	local tbl2 = {weapon_crowbar=true, weapon_stunstick=true}
+	if tbl1[self.CurrentWeaponEntity:GetClass()] == true then
+		gunang = Angle(0,180,0)
+	elseif tbl2[self.CurrentWeaponEntity:GetClass()] == true then
+		gunang = Angle(90,0,0)
+	end
 
 	local nohandattach = true
-	for k,v in ipairs(self:GetAttachments()) do
-		if v.name == self.DropWeaponOnDeathAttachment then
-			nohandattach = false
+	if self.CurrentWeaponEntity.WorldModel_UseCustomPosition != true then
+		for k,v in ipairs(self:GetAttachments()) do
+			if v.name == self.DropWeaponOnDeathAttachment then
+				nohandattach = false
+			end
 		end
 	end
-	if self:GetActiveWeapon().WorldModel_UseCustomPosition == true then nohandattach = true end
-	//local gunpos = self:GetAttachment(self:LookupAttachment("gun"))
 
-	self.TheDroppedWeapon = ents.Create(self:GetActiveWeapon():GetClass())
+	self.TheDroppedWeapon = ents.Create(self.CurrentWeaponEntity:GetClass())
 	if nohandattach == false then
-	self.TheDroppedWeapon:SetPos(self:GetAttachment(self:LookupAttachment(self.DropWeaponOnDeathAttachment)).Pos) else
-	self.TheDroppedWeapon:SetPos(self:GetActiveWeapon():GetPos()) end
+		self.TheDroppedWeapon:SetPos(self:GetAttachment(self:LookupAttachment(self.DropWeaponOnDeathAttachment)).Pos)
+	else
+		self.TheDroppedWeapon:SetPos(self.CurrentWeaponEntity:GetPos())
+	end
 	if nohandattach == false then
-	self.TheDroppedWeapon:SetAngles(self:GetAttachment(self:LookupAttachment(self.DropWeaponOnDeathAttachment)).Ang + gunang) else
-	self.TheDroppedWeapon:SetAngles(self:GetActiveWeapon():GetAngles() + gunang) end
+		self.TheDroppedWeapon:SetAngles(self:GetAttachment(self:LookupAttachment(self.DropWeaponOnDeathAttachment)).Ang + gunang)
+	else
+		self.TheDroppedWeapon:SetAngles(self.CurrentWeaponEntity:GetAngles() + gunang)
+	end
 	self.TheDroppedWeapon:Spawn()
 	self.TheDroppedWeapon:Activate()
-	local noforce = false
 	local phys = self.TheDroppedWeapon:GetPhysicsObject()
-	if IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() == "prop_combine_ball" then
-		noforce = true
-	end
-	if noforce == false && IsValid(phys) then
+	if ((IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() == "prop_combine_ball") or (!IsValid(dmginfo:GetInflictor()))) && IsValid(phys) then
 		phys:SetMass(60)
 		phys:ApplyForceCenter(dmginfo:GetDamageForce())
 	end
@@ -4515,7 +4498,7 @@ function ENT:RunItemDropsOnDeathCode(dmginfo,hitgroup)
 	local entlist = VJ_PICK(self.ItemDropsOnDeath_EntityList)
 	if entlist != false then
 		local randdrop = ents.Create(entlist)
-		randdrop:SetPos(self:GetPos() +self:OBBCenter())
+		randdrop:SetPos(self:GetPos() + self:OBBCenter())
 		randdrop:SetAngles(self:GetAngles())
 		randdrop:Spawn()
 		randdrop:Activate()
@@ -5235,9 +5218,6 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-/*function ENT:ConvarsOnThink() -- Obsolete! | Causes lag!
-end/*
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*function ENT:FindEnemy()
 //self:AddRelationship( "npc_barnacle  D_LI  99" )
 if self.FindEnemy_UseSphere == true then
@@ -5250,10 +5230,10 @@ if (!EnemyTargets) then return end
 //table.Add(EnemyTargets)
 for k,v in pairs(EnemyTargets) do
 	//if (v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag") && v:IsNPC() or (v:IsPlayer() && self.PlayerFriendly == false && GetConVarNumber("ai_ignoreplayers") == 0) && self:Visible(v) then
-	//if self.CombineFriendly == true then if VJ_HasValue(self.NPCTbl_Combine,v:GetClass()) then return end end
-	//if self.ZombieFriendly == true then if VJ_HasValue(self.NPCTbl_Zombies,v:GetClass()) then return end end
-	//if self.AntlionFriendly == true then if VJ_HasValue(self.NPCTbl_Antlions,v:GetClass()) then return end end
-	//if self.PlayerFriendly == true then if VJ_HasValue(self.NPCTbl_Resistance,v:GetClass()) then return end end
+	//if self.CombineFriendly == true then if VJ_HasValue(NPCTbl_Combine,v:GetClass()) then return end end
+	//if self.ZombieFriendly == true then if VJ_HasValue(NPCTbl_Zombies,v:GetClass()) then return end end
+	//if self.AntlionFriendly == true then if VJ_HasValue(NPCTbl_Antlions,v:GetClass()) then return end end
+	//if self.PlayerFriendly == true then if VJ_HasValue(NPCTbl_Resistance,v:GetClass()) then return end end
 	//if GetConVarNumber("vj_npc_vjfriendly") == 1 then
 	//local frivj = ents.FindByClass("npc_vj_*") table.Add(frivj) for _, x in pairs(frivj) do return end end
 	//local vjanimalfriendly = ents.FindByClass("npc_vjanimal_*") table.Add(vjanimalfriendly) for _, x in pairs(vjanimalfriendly) do return end
