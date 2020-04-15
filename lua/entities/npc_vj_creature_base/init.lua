@@ -422,8 +422,6 @@ ENT.FootStepTimeWalk = 1 -- Next foot step sound when it is walking
 ENT.DisableFootStepOnRun = false -- It will not play the footstep sound when running
 ENT.DisableFootStepOnWalk = false -- It will not play the footstep sound when walking
 ENT.HasWorldShakeOnMove = false -- Should the world shake when it's moving?
-ENT.NextWorldShakeOnRun = 0.5 -- How much time until the world shakes while it's running
-ENT.NextWorldShakeOnWalk = 1 -- How much time until the world shakes while it's walking
 ENT.WorldShakeOnMoveAmplitude = 10 -- How much the screen will shake | From 1 to 16, 1 = really low 16 = really high
 ENT.WorldShakeOnMoveRadius = 1000 -- How far the screen shake goes, in world units
 ENT.WorldShakeOnMoveDuration = 0.4 -- How long the screen shake will last, in seconds
@@ -520,11 +518,14 @@ ENT.SoundTbl_Impact = {}
 ENT.SoundTbl_DamageByPlayer = {}
 ENT.SoundTbl_Death = {}
 ENT.SoundTbl_SoundTrack = {}
-	-- ====== Default File Path Variables ====== --
-	-- It's recommended not to edit these tables, instead override them using the tables above
-ENT.DefaultSoundTbl_MedicAfterHeal = {"items/smallmedkit1.wav"}
-ENT.DefaultSoundTbl_MeleeAttackExtra = {"npc/zombie/claw_strike1.wav","npc/zombie/claw_strike2.wav","npc/zombie/claw_strike3.wav"}
-ENT.DefaultSoundTbl_Impact = {"vj_flesh/alien_flesh1.wav"}
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ ///// WARNING: Don't change anything in this box! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- These are the default file paths in case the user doesn't put one (tables above).
+local DefaultSoundTbl_MedicAfterHeal = {"items/smallmedkit1.wav"}
+local DefaultSoundTbl_MeleeAttackExtra = {"npc/zombie/claw_strike1.wav","npc/zombie/claw_strike2.wav","npc/zombie/claw_strike3.wav"}
+local DefaultSoundTbl_Impact = {"vj_flesh/alien_flesh1.wav"}
+------ ///// WARNING: Don't change anything in this box! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- ====== Fade Out Time Variables ====== --
 	-- Put to 0 if you want it to stop instantly
 ENT.MeleeAttackSlowPlayerSoundFadeOutTime = 1
@@ -769,10 +770,6 @@ function ENT:CustomOnFootStepSound_Run() end
 function ENT:CustomOnFootStepSound_Walk() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnWorldShakeOnMove() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnWorldShakeOnMove_Run() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnWorldShakeOnMove_Walk() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInvestigate(argent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1059,7 +1056,7 @@ function ENT:Initialize()
 	self:SetRenderMode(RENDERMODE_NORMAL)
 	//self:SetRenderMode(RENDERMODE_TRANSALPHA)
 	//self:DrawShadow(true)
-	self:VJ_DoSelectDifficulty()
+	self.SelectedDifficulty = GetConVarNumber("vj_npc_difficulty")
 	if VJ_PICK(self.Model) != false then self:SetModel(VJ_PICK(self.Model)) end
 	self:SetMaxYawSpeed(self.TurningSpeed)
 	if self.HasHull == true then self:SetHullType(self.HullType) end
@@ -1136,7 +1133,6 @@ ENT.DeathSkin = 0
 function ENT:CustomInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetInitializeCapabilities()
--- Add as many as you want --
 	//self:CapabilitiesAdd(bit.bor(CAP_ANIMATEDFACE)) -- Breaks some SNPCs, avoid using it!
 	self:CapabilitiesAdd(bit.bor(CAP_TURN_HEAD))
 	//if self.VJ_IsStationary == false && self.MovementType != VJ_MOVETYPE_AERIAL then self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND)) end
@@ -2447,7 +2443,7 @@ function ENT:Think()
 
 		self:IdleSoundCode()
 		if self.DisableFootStepSoundTimer == false then self:FootStepSoundCode() end
-		self:WorldShakeOnMoveCode()
+		//self:WorldShakeOnMoveCode()
 		
 		if self.HasHealthRegeneration == true && self.Dead == false && CurTime() > self.HealthRegenerationDelayT then
 			self:SetHealth(math.Clamp(self:Health() + self.HealthRegenerationAmount, self:Health(), self:GetMaxHealth()))
@@ -3353,57 +3349,6 @@ function ENT:DamageByPlayerCode(dmginfo,hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJFriendlyCode(argent)
-	argent:AddEntityRelationship(self,D_LI,99)
-	self:AddEntityRelationship(argent,D_LI,99)
-	return true
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CombineFriendlyCode(argent)
-	if NPCTbl_Combine[argent:GetClass()] then
-	//if VJ_HasValue(NPCTbl_Combine,argent:GetClass()) then
-		argent:AddEntityRelationship(self,D_LI,99)
-		self:AddEntityRelationship(argent,D_LI,99)
-		return true
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:ZombieFriendlyCode(argent)
-	if NPCTbl_Zombies[argent:GetClass()] then
-	//if VJ_HasValue(NPCTbl_Zombies,argent:GetClass()) then
-		argent:AddEntityRelationship(self,D_LI,99)
-		self:AddEntityRelationship(argent,D_LI,99)
-		return true
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AntlionFriendlyCode(argent)
-	if NPCTbl_Antlions[argent:GetClass()] then
-	//if VJ_HasValue(NPCTbl_Antlions,argent:GetClass()) then
-		argent:AddEntityRelationship(self,D_LI,99)
-		self:AddEntityRelationship(argent,D_LI,99)
-		return true
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:XenFriendlyCode(argent)
-	if NPCTbl_Xen[argent:GetClass()] then
-	//if VJ_HasValue(NPCTbl_Xen,argent:GetClass()) then
-		argent:AddEntityRelationship(self,D_LI,99)
-		self:AddEntityRelationship(argent,D_LI,99)
-		return true
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PlayerAllies(argent)
-	if NPCTbl_Resistance[argent:GetClass()] then
-	//if VJ_HasValue(NPCTbl_Resistance,argent:GetClass()) then
-		argent:AddEntityRelationship(self,D_LI,99)
-		self:AddEntityRelationship(argent,D_LI,99)
-		return true
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_ACT_RESETENEMY(RunToEnemyOnReset)
 	local RunToEnemyOnReset = RunToEnemyOnReset or false
 	local vsched = ai_vj_schedule.New("vj_act_resetenemy")
@@ -3610,10 +3555,34 @@ function ENT:DoEntityRelationshipCheck()
 				if self.HasAllies == true && inEneTbl == false then
 					for _,friclass in ipairs(self.VJ_NPC_Class) do
 						if friclass == "CLASS_PLAYER_ALLY" && self.PlayerFriendly == false then self.PlayerFriendly = true end
-						if friclass == "CLASS_COMBINE" then if self:CombineFriendlyCode(v) == true then entisfri = true end end
-						if friclass == "CLASS_ZOMBIE" then if self:ZombieFriendlyCode(v) == true then entisfri = true end end
-						if friclass == "CLASS_ANTLION" then if self:AntlionFriendlyCode(v) == true then entisfri = true end end
-						if friclass == "CLASS_XEN" then if self:XenFriendlyCode(v) == true then entisfri = true end end
+						if friclass == "CLASS_COMBINE" then
+							if NPCTbl_Combine[vClass] then
+								v:AddEntityRelationship(self,D_LI,99)
+								self:AddEntityRelationship(v,D_LI,99)
+								entisfri = true
+							end
+						end
+						if friclass == "CLASS_ZOMBIE" then
+							if NPCTbl_Zombies[vClass] then
+								v:AddEntityRelationship(self,D_LI,99)
+								self:AddEntityRelationship(v,D_LI,99)
+								entisfri = true
+							end
+						end
+						if friclass == "CLASS_ANTLION" then
+							if NPCTbl_Antlions[vClass] then
+								v:AddEntityRelationship(self,D_LI,99)
+								self:AddEntityRelationship(v,D_LI,99)
+								entisfri = true
+							end
+						end
+						if friclass == "CLASS_XEN" then
+							if NPCTbl_Xen[vClass] then
+								v:AddEntityRelationship(self,D_LI,99)
+								self:AddEntityRelationship(v,D_LI,99)
+								entisfri = true
+							end
+						end
 						if (v.VJ_NPC_Class /*&& friclass != "CLASS_PLAYER_ALLY"*/ && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
 							if friclass == "CLASS_PLAYER_ALLY" then
 								if self.FriendsWithAllPlayerAllies == true && v.FriendsWithAllPlayerAllies == true then
@@ -3633,8 +3602,8 @@ function ENT:DoEntityRelationshipCheck()
 						end
 					end
 					if vNPC then
+						-- Deprecated system
 						/*for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
-							//for k,v in ipairs(ents.FindByClass(fritbl)) do
 							if string.find(vClass, fritbl) then
 								entisfri = true
 								v:AddEntityRelationship(self,D_LI,99)
@@ -3647,14 +3616,22 @@ function ENT:DoEntityRelationshipCheck()
 							self:AddEntityRelationship(v,D_LI,99)
 						end*/
 						if self.PlayerFriendly == true then
-							if self:PlayerAllies(v) == true then entisfri = true end
+							if NPCTbl_Resistance[vClass] then
+								v:AddEntityRelationship(self,D_LI,99)
+								self:AddEntityRelationship(v,D_LI,99)
+								entisfri = true
+							end
 							if self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true then
 								entisfri = true
 								v:AddEntityRelationship(self,D_LI,99)
 								self:AddEntityRelationship(v,D_LI,99)
 							end
 						end
-						if v.IsVJBaseSNPC == true && self.VJFriendly == true then if self:VJFriendlyCode(v) == true then entisfri = true end end
+						if self.VJFriendly == true && v.IsVJBaseSNPC == true then
+							v:AddEntityRelationship(self,D_LI,99)
+							self:AddEntityRelationship(v,D_LI,99)
+							entisfri = true
+						end
 					end
 				end
 				if entisfri == false && vNPC /*&& MyVisibleTov*/ && self.DisableMakingSelfEnemyToNPCs == false && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self,D_HT,99) end
@@ -3678,14 +3655,14 @@ function ENT:DoEntityRelationshipCheck()
 									self:SetTarget(v)
 									self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 								elseif self.FollowingPlayer == false then
-									self:SetLastPosition(v:GetPos())
+									self:SetLastPosition(vPos)
 									self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
 								end
 								self:CustomOnInvestigate(v)
 								self:InvestigateSoundCode()
 								self.NextInvestigateSoundMove = CurTime() + 2
 							end
-						elseif vDistanceToMy < 350 && ((self:VJ_DoPlayerFlashLightCheck(v,20) == true)) then
+						elseif vDistanceToMy < 350 && v:FlashlightIsOn() == true && (v:GetForward():Dot((MyPos - vPos):GetNormalized()) > math.cos(math.rad(20))) then
 							//			   Asiga hoser ^ (!v:Crouching() && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP && ((!v:KeyDown(IN_WALK) && (v:KeyDown(IN_FORWARD) or v:KeyDown(IN_BACK) or v:KeyDown(IN_MOVELEFT) or v:KeyDown(IN_MOVERIGHT))) or (v:KeyDown(IN_SPEED) or v:KeyDown(IN_JUMP)))) or
 							self:SetTarget(v)
 							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
@@ -4824,7 +4801,7 @@ function ENT:MedicSoundCode_OnHeal(CustomTbl,Type)
 	Type = Type or VJ_CreateSound
 	local ctbl = VJ_PICK(CustomTbl)
 	local sdtbl = VJ_PICK(self.SoundTbl_MedicAfterHeal)
-	if sdtbl == false then sdtbl = VJ_PICK(self.DefaultSoundTbl_MedicAfterHeal) end -- Default table
+	if sdtbl == false then sdtbl = VJ_PICK(DefaultSoundTbl_MedicAfterHeal) end -- Default table
 	if (math.random(1,self.MedicAfterHealSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		self:StopAllCommonSpeechSounds()
@@ -5093,7 +5070,7 @@ function ENT:MeleeAttackSoundCode(CustomTbl,Type)
 	
 	if self.HasExtraMeleeAttackSounds == true then
 		local sdtbl = VJ_PICK(self.SoundTbl_MeleeAttackExtra)
-		if sdtbl == false then sdtbl = VJ_PICK(self.DefaultSoundTbl_MeleeAttackExtra) end -- Default table
+		if sdtbl == false then sdtbl = VJ_PICK(DefaultSoundTbl_MeleeAttackExtra) end -- Default table
 		if (math.random(1,self.ExtraMeleeSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 			VJ_STOPSOUND(self.CurrentIdleSound)
 			self.CurrentExtraMeleeAttackSound = VJ_EmitSound(self,sdtbl,self.ExtraMeleeAttackSoundLevel,self:VJ_DecideSoundPitch(self.ExtraMeleeSoundPitch1,self.ExtraMeleeSoundPitch2))
@@ -5106,7 +5083,6 @@ function ENT:MeleeAttackMissSoundCode(CustomTbl,Type)
 	Type = Type or VJ_EmitSound
 	local ctbl = VJ_PICK(CustomTbl)
 	local sdtbl = VJ_PICK(self.SoundTbl_MeleeAttackMiss)
-	if sdtbl == false then sdtbl = VJ_PICK(self.DefaultSoundTbl_MeleeAttackMiss) end -- Default table
 	if (math.random(1,self.MeleeAttackMissSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		VJ_STOPSOUND(self.CurrentIdleSound)
@@ -5262,6 +5238,7 @@ function ENT:FootStepSoundCode(CustomTbl)
 			if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 			if VJ_PICK(soundtbl) != false then
 				VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
+				if self.HasWorldShakeOnMove == true then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude, self.WorldShakeOnMoveFrequency, self.WorldShakeOnMoveDuration, self.WorldShakeOnMoveRadius) end
 			end
 		end
 		if self.DisableFootStepSoundTimer == false && self:IsMoving() && CurTime() > self.FootStepT then
@@ -5273,10 +5250,12 @@ function ENT:FootStepSoundCode(CustomTbl)
 				if self.DisableFootStepOnRun == false && (VJ_HasValue(VJ_RunActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomRunActivites,self:GetMovementActivity())) then
 					self:CustomOnFootStepSound_Run()
 					VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
+					if self.HasWorldShakeOnMove == true && self.DisableWorldShakeOnMoveWhileRunning == false then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude, self.WorldShakeOnMoveFrequency, self.WorldShakeOnMoveDuration, self.WorldShakeOnMoveRadius) end
 					self.FootStepT = CurTime() + self.FootStepTimeRun
 				elseif self.DisableFootStepOnWalk == false && (VJ_HasValue(VJ_WalkActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomWalkActivites,self:GetMovementActivity())) then
 					self:CustomOnFootStepSound_Walk()
 					VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
+					if self.HasWorldShakeOnMove == true && self.DisableWorldShakeOnMoveWhileWalking == false then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude, self.WorldShakeOnMoveFrequency, self.WorldShakeOnMoveDuration, self.WorldShakeOnMoveRadius) end
 					self.FootStepT = CurTime() + self.FootStepTimeWalk
 				end
 			end
@@ -5289,7 +5268,7 @@ function ENT:ImpactSoundCode(CustomTbl,Type)
 	Type = Type or VJ_EmitSound
 	local ctbl = VJ_PICK(CustomTbl)
 	local sdtbl = VJ_PICK(self.SoundTbl_Impact)
-	if sdtbl == false then sdtbl = VJ_PICK(self.DefaultSoundTbl_Impact) end -- Default table
+	if sdtbl == false then sdtbl = VJ_PICK(DefaultSoundTbl_Impact) end -- Default table
 	if (math.random(1,self.ImpactSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
 		self.CurrentImpactSound = Type(self,sdtbl,self.ImpactSoundLevel,self:VJ_DecideSoundPitch(self.ImpactSoundPitch1,self.ImpactSoundPitch2))
@@ -5365,22 +5344,6 @@ function ENT:RemoveAttackTimers()
 	end
 	for _,v in ipairs(self.AttackTimersCustom) do
 		timer.Remove(v..self:EntIndex())
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:WorldShakeOnMoveCode()
-	if self.HasWorldShakeOnMove == false or self.MovementType == VJ_MOVETYPE_STATIONARY then return end
-	if self:IsOnGround() && self:IsMoving() && CurTime() > self.WorldShakeWalkT then
-		self:CustomOnWorldShakeOnMove()
-		if self.DisableWorldShakeOnMoveWhileRunning == false && (VJ_HasValue(VJ_RunActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomRunActivites,self:GetMovementActivity())) then
-			self:CustomOnWorldShakeOnMove_Run()
-			util.ScreenShake(self:GetPos(),self.WorldShakeOnMoveAmplitude,self.WorldShakeOnMoveFrequency,self.WorldShakeOnMoveDuration,self.WorldShakeOnMoveRadius)
-			self.WorldShakeWalkT = CurTime() + self.NextWorldShakeOnRun
-		elseif self.DisableWorldShakeOnMoveWhileWalking == false && (VJ_HasValue(VJ_WalkActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomWalkActivites,self:GetMovementActivity())) then
-			self:CustomOnWorldShakeOnMove_Walk()
-			util.ScreenShake(self:GetPos(),self.WorldShakeOnMoveAmplitude,self.WorldShakeOnMoveFrequency,self.WorldShakeOnMoveDuration,self.WorldShakeOnMoveRadius)
-			self.WorldShakeWalkT = CurTime() + self.NextWorldShakeOnWalk
-		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

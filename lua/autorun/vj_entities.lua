@@ -58,18 +58,6 @@ if (SERVER) then
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_PICKRANDOMTABLE(tbl)
-	if not tbl then return false end -- Yete table pame choone meche, veratartsour false!
-	if istable(tbl) then
-		if #tbl < 1 then return false end -- Yete table barabe (meg en aveli kich), getsoor!
-		tbl = tbl[math.random(1,#tbl)]
-		return tbl
-	else
-		return tbl -- Yete table che, veratartsour abranke
-	end
-	return false
-end
---------- Same ---------
 function VJ_PICK(tbl)
 	if not tbl then return false end -- Yete table pame choone meche, veratartsour false!
 	if istable(tbl) then
@@ -81,13 +69,25 @@ function VJ_PICK(tbl)
 	end
 	return false
 end
+-- Backwards compatibility, don't use!
+	function VJ_PICKRANDOMTABLE(tbl)
+		if not tbl then return false end -- Yete table pame choone meche, veratartsour false!
+		if istable(tbl) then
+			if #tbl < 1 then return false end -- Yete table barabe (meg en aveli kich), getsoor!
+			tbl = tbl[math.random(1,#tbl)]
+			return tbl
+		else
+			return tbl -- Yete table che, veratartsour abranke
+		end
+		return false
+	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_STOPSOUND(vsoundname)
 	if vsoundname then vsoundname:Stop() end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_Set(a,b) -- A set of 2 numbers: a, b
-	return {a=a, b=b}
+function VJ_Set(a, b) -- A set of 2 numbers: a, b
+	return {a = a, b = b}
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_HasValue(tbl,val)
@@ -100,15 +100,15 @@ function VJ_HasValue(tbl,val)
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_RoundToMultiple(number,multiple) -- Credits to Bizzclaw for pointing me to the right direction!
-	if math.Round(number/multiple) == number/multiple then
+function VJ_RoundToMultiple(number, multiple) -- Credits to Bizzclaw for pointing me to the right direction!
+	if math.Round(number / multiple) == number / multiple then
 		return number
 	else
-		return math.Round(number/multiple) * multiple
+		return math.Round(number / multiple) * multiple
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_FindInCone(Position,Direction,Distance,Degrees,Tbl_Features)
+function VJ_FindInCone(Position, Direction, Distance, Degrees, Tbl_Features)
 	local vTbl_Features = Tbl_Features or {}
 		local vTbl_AllEntities = vTbl_Features.AllEntities or false -- Should it detect all types of entities? | False = NPCs and Players only!
 	local EntitiesFound = ents.FindInSphere(Position,Distance)
@@ -155,7 +155,7 @@ function VJ_EmitSound(argent,sound,soundlevel,soundpitch,volume,channel)
 	if argent.IsVJBaseSNPC == true then argent:OnPlayEmitSound(sd) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_AnimationExists(argent,actname)
+function VJ_AnimationExists(argent, actname)
 	if actname == nil or isbool(actname) then return false end
 	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
 	if type(actname) == "number" then
@@ -170,7 +170,7 @@ function VJ_AnimationExists(argent,actname)
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_GetSequenceDuration(argent,actname)
+function VJ_GetSequenceDuration(argent, actname)
 	if VJ_AnimationExists(argent,actname) == false then return 0 end
 	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
 	if type(actname) == "number" then return argent:SequenceDuration(argent:SelectWeightedSequence(actname)) end
@@ -178,7 +178,7 @@ function VJ_GetSequenceDuration(argent,actname)
 	return 0
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_GetSequenceName(argent,actname)
+function VJ_GetSequenceName(argent, actname)
 	if VJ_AnimationExists(argent,actname) == false then return nil end
 	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
 	if type(actname) == "number" then return argent:GetSequenceName(argent:SelectWeightedSequence(actname)) end
@@ -186,7 +186,7 @@ function VJ_GetSequenceName(argent,actname)
 	return nil
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_SequenceToActivity(argent,seq)
+function VJ_SequenceToActivity(argent, seq)
 	if type(seq) == "string" then
 		local checkanim = argent:GetSequenceActivity(argent:LookupSequence(seq))
 		if checkanim == nil or checkanim == -1 then
@@ -201,7 +201,7 @@ function VJ_SequenceToActivity(argent,seq)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_IsCurrentAnimation(argent,actname)
+function VJ_IsCurrentAnimation(argent, actname)
 	local gotit = false
 	local actname = actname or {}
 	if istable(actname) then
@@ -231,7 +231,7 @@ function VJ_IsAlive(argent)
 	return argent:Health() > 0
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_DestroyCombineTurret(vSelf,argent)
+function VJ_DestroyCombineTurret(vSelf, argent)
 	if !IsValid(argent) then return false end
 	if argent:GetClass() == "npc_turret_floor" && !argent.VJ_TurretDestroyed then
 		argent:Fire("selfdestruct", "", 0)
@@ -316,7 +316,7 @@ function NPC_MetaTable:VJ_HasNoTarget(argent)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_DecideSoundPitch(Pitch1,Pitch2)
+function NPC_MetaTable:VJ_DecideSoundPitch(Pitch1, Pitch2)
 	//if pitch1 == nil then return end
 	local getpitch1 = self.GeneralSoundPitch1
 	local getpitch2 = self.GeneralSoundPitch2
@@ -334,7 +334,7 @@ function NPC_MetaTable:DecideAnimationLength(Anim,Value,Decrease)
 	local result = 0
 	Decrease = Decrease or 0
 	if isbool(Anim) then return result end
-	if Value == false then -- Used internally by the base, recommanded to just leave it to false
+	if Value == false then -- Used internally by the base, recommended to just leave it to false
 		result = VJ_GetSequenceDuration(self,Anim) - Decrease
 	elseif isnumber(Value) then
 		result = Value
@@ -345,34 +345,27 @@ end
 function NPC_MetaTable:VJ_PlaySequence(SequenceID,PlayBackRate,Wait,WaitTime,Interruptible)
 	if not SequenceID then return end
 	if Interruptible == true then self.VJ_IsPlayingInterruptSequence = true self.VJ_PlayingSequence = false else self.VJ_PlayingSequence = true self.VJ_IsPlayingInterruptSequence = false end
-	//self:ClearSchedule()
-	//timer.Simple(0.2,function()
-		//if IsValid(self) then
-			//print(self:SequenceDuration(SequenceID))
-			//if Interruptible == true then self.VJ_IsPlayingInterruptSequence = true self.VJ_PlayingSequence = false else self.VJ_PlayingSequence = true self.VJ_IsPlayingInterruptSequence = false end
-			//self.vACT_StopAttacks = true
-			self:ClearSchedule()
-			self:StopMoving()
-			if istable(SequenceID) then
-				if #SequenceID < 1 then return end
-				SequenceID = tostring(table.Random(SequenceID))
+	
+	self:ClearSchedule()
+	self:StopMoving()
+	if istable(SequenceID) then
+		if #SequenceID < 1 then return end
+		SequenceID = tostring(table.Random(SequenceID))
+	end
+	local animid = self:LookupSequence(SequenceID)
+	self:ResetSequence(animid)
+	self:ResetSequenceInfo()
+	self:SetCycle(0)
+	if PlayBackRate then self:SetPlaybackRate(PlayBackRate) end
+	if Wait == true then
+		timer.Simple(WaitTime,function() //self:SequenceDuration(animid)
+			if IsValid(self) then
+				self.VJ_IsPlayingInterruptSequence = false
+				self.VJ_PlayingSequence = false
+				//self.vACT_StopAttacks = false
 			end
-			local animid = self:LookupSequence(SequenceID)
-			self:ResetSequence(animid)
-			self:ResetSequenceInfo()
-			self:SetCycle(0)
-			if PlayBackRate then self:SetPlaybackRate(PlayBackRate) end
-			if Wait == true then
-				timer.Simple(WaitTime,function() //self:SequenceDuration(animid)
-					if IsValid(self) then
-						self.VJ_IsPlayingInterruptSequence = false
-						self.VJ_PlayingSequence = false
-						//self.vACT_StopAttacks = false
-					end
-				end)
-			end
-		//end
-	//end)
+		end)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_TranslateWeaponActivity(ActAnim)
@@ -383,7 +376,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetAllPoseParameters(prt)
 	local result = {}
-	local prt = prt or false
+	prt = prt or false
 	for i = 0, self:GetNumPoseParameters() - 1 do
 		local min, max = self:GetPoseParameterRange(i)
 		if prt == true then
@@ -439,7 +432,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetNearestPointToEntity(argent,SameZ)
 	if !IsValid(argent) then return end
-	local SameZ = SameZ or false -- Should the Z of the pos be the same as the NPC's?
+	SameZ = SameZ or false -- Should the Z of the pos be the same as the NPC's?
 	local NearestPositions = {MyPosition=Vector(0,0,0), EnemyPosition=Vector(0,0,0)}
 	local Pos_Enemy, Pos_Self = argent:NearestPoint(self:SetNearestPointToEntityPosition() + argent:OBBCenter()), self:NearestPoint(argent:GetPos() + self:OBBCenter())
 	Pos_Enemy.z, Pos_Self.z = argent:GetPos().z, self:SetNearestPointToEntityPosition().z
@@ -527,13 +520,6 @@ function NPC_MetaTable:VJ_CheckAllFourSides(CheckDistance)
 		end
 	end
 	return SidesThatAreGood
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_DoPlayerFlashLightCheck(argent,lookang)
-	if argent:IsPlayer() && argent:FlashlightIsOn() == true && (argent:GetForward():Dot((self:GetPos() - argent:GetPos()):GetNormalized()) > math.cos(math.rad(lookang))) then
-		return true
-	end
-	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetEnemy(CheckForController)
@@ -643,11 +629,6 @@ function NPC_MetaTable:DoFormation_Diamond(ent,it,spacing)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_DoSelectDifficulty()
-	self.SelectedDifficulty = GetConVarNumber("vj_npc_difficulty")
-	return self.SelectedDifficulty
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetDifficultyValue(int)
 	if self.SelectedDifficulty == -3 then
 		return math.Clamp(int - (int * 0.99),1,int)
@@ -681,13 +662,18 @@ function NPC_MetaTable:VJ_SetSchedule(scheduleid)
 	self:SetSchedule(scheduleid)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+ -- !!!!! Deprecated Function !!!!! --
+/*
 function NPC_MetaTable:VJ_GetCurrentSchedule()
 	for s = 0, LAST_SHARED_SCHEDULE-1 do
 		if (self:IsCurrentSchedule(s)) then return s end
 	end
 	return 0
 end
+*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
+ -- !!!!! Deprecated Function !!!!! --
+/*
 function NPC_MetaTable:VJ_IsCurrentSchedule(idcheck)
 	if istable(idcheck) == true then
 		for k,v in ipairs(idcheck) do
@@ -700,6 +686,7 @@ function NPC_MetaTable:VJ_IsCurrentSchedule(idcheck)
 	end
 	return false
 end
+*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
  -- !!!!! Deprecated Function !!!!! --
 /*function NPC_MetaTable:VJ_StopSoundTable(tbl)
@@ -731,7 +718,7 @@ hook.Add("ScaleNPCDamage", "VJ_ScaleHitGroupHook", function(npc, hitgroup, dmgin
 	npc.VJ_ScaleHitGroupDamage = hitgroup
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("EntityEmitSound","VJ_NPC_ENTITYSOUND",function(data)
+hook.Add("EntityEmitSound","VJ_NPC_ENTITYSOUND", function(data)
 	local ent = data.Entity
 	if IsValid(ent) then
 		//PrintTable(data)
@@ -755,7 +742,7 @@ hook.Add("EntityEmitSound","VJ_NPC_ENTITYSOUND",function(data)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("EntityFireBullets","VJ_NPC_FIREBULLET", function(ent,data)
+hook.Add("EntityFireBullets","VJ_NPC_FIREBULLET", function(ent, data)
 	if IsValid(ent) && !ent:IsPlayer() && ent.IsVJBaseSNPC == true then
 		local ret = nil
 		if ent:GetActiveWeapon() != NULL && ent:VJ_GetEnemy(true) != nil then
@@ -898,15 +885,6 @@ hook.Add("PhysgunPickup","VJ_PLAYER_PHYSGUN_PICKUP",function(ply,ent)
 		end
 	end
 end)
----------------------------------------------------------------------------------------------------------------------------------------------
-/* -- Obsolete! | Has many problems and doesn't solve lag
-local VJ_TblNPCs = {}
-local function VJ_ENTITYCREATED(entity)
-	if entity:IsNPC() then
-		table.insert(VJ_TblNPCs,entity)
-	end
-end
-hook.Add("OnEntityCreated","VJ_ENTITYCREATED",VJ_ENTITYCREATED)*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("OnEntityCreated","VJ_ENTITYCREATED",function(entity)
 	if (CLIENT) or !entity:IsNPC() then return end
