@@ -1684,14 +1684,7 @@ function ENT:Touch(entity)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_TestLag()
-	for i = 1, 1000 do
-		self:DoEntityRelationshipCheck()
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AcceptInput(key,activator,caller,data)
-	self:VJ_TestLag()
 	self:CustomOnAcceptInput(key,activator,caller,data)
 	self:FollowPlayerCode(key,activator,caller,data)
 end
