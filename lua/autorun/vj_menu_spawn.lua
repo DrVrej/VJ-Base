@@ -42,7 +42,7 @@ if (CLIENT) then
 	local function VJ_PopulateTrees(pnlContent, tree, node, vjTreeName, vjIcon, vjList)
 		local roottree = tree:AddNode(vjTreeName, vjIcon)
 		if vjTreeName == "SNPCs" then
-			roottree:MoveToFront() -- Automatically select this folder when the menu first opens
+			roottree:MoveToFront() -- Make this the main tree
 		end
 		roottree.PropPanel = vgui.Create("ContentContainer", pnlContent)
 		roottree.PropPanel:SetVisible(false)
@@ -124,7 +124,9 @@ if (CLIENT) then
 			end
 		end
 		roottree:SetExpanded(true)
-		roottree:InternalDoClick()
+		if vjTreeName == "SNPCs" then
+			roottree:InternalDoClick() -- Automatically select this folder when the menu first opens
+		end
 	end
 	--[-------------------------------------------------------]--
 	hook.Add("PopulateVJBaseNPC", "AddVJBaseSpawnMenu_NPC", function(pnlContent, tree, node)
