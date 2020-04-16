@@ -10,6 +10,21 @@ include('autorun/vj_controls.lua')
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Spawn Menu Creation ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-- ====== Category Information (Many are for popular categories used in both official and unofficial addons ====== --
+VJ.AddCategoryInfo("Alien Swarm", {Icon = "vj_base/icons/alienswarm.png"})
+VJ.AddCategoryInfo("Black Mesa", {Icon = "vj_base/icons/blackmesa.png"})
+VJ.AddCategoryInfo("Cry Of Fear", {Icon = "vj_base/icons/cryoffear.png"})
+VJ.AddCategoryInfo("Dark Messiah", {Icon = "vj_base/icons/darkmessiah.png"})
+VJ.AddCategoryInfo("E.Y.E Divine Cybermancy", {Icon = "vj_base/icons/eyedc.png"})
+VJ.AddCategoryInfo("Fallout", {Icon = "vj_base/icons/fallout.png"})
+VJ.AddCategoryInfo("Killing Floor 1", {Icon = "vj_base/icons/kf1.png"})
+VJ.AddCategoryInfo("Left 4 Dead", {Icon = "vj_base/icons/l4d.png"})
+VJ.AddCategoryInfo("Mass Effect 3", {Icon = "vj_base/icons/masseffect3.png"})
+VJ.AddCategoryInfo("Military", {Icon = "vj_base/icons/mil1.png"})
+VJ.AddCategoryInfo("No More Room In Hell", {Icon = "vj_base/icons/nmrih.png"})
+VJ.AddCategoryInfo("Star Wars", {Icon = "vj_base/icons/starwars.png"})
+VJ.AddCategoryInfo("Zombies", {Icon = "vj_base/icons/zombies.png"})
+
 	-- ====== NPCs ====== --
 local vCat = "VJ Base"
 VJ.AddNPC("VJ Test NPC","sent_vj_test",vCat)
