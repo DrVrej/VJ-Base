@@ -428,10 +428,6 @@ ENT.WorldShakeOnMoveDuration = 0.4 -- How long the screen shake will last, in se
 ENT.WorldShakeOnMoveFrequency = 100 -- Just leave it to 100
 ENT.DisableWorldShakeOnMoveWhileRunning = false -- It will not shake the world when it's running
 ENT.DisableWorldShakeOnMoveWhileWalking = false -- It will not shake the world when it's walking
-	-- The following custom variables are used for timer-based footstep & world shake
-	-- Add any animations that should be used to trigger a sound or shake the world, only add animations if the base doesn't recognize an animation as a movement!
-ENT.CustomWalkActivites = {} -- Custom walk activities
-ENT.CustomRunActivites = {} -- Custom run activities
 	-- ====== Idle Sound Variables ====== --
 ENT.IdleSounds_PlayOnAttacks = false -- It will be able to continue and play idle sounds when it performs an attack
 ENT.IdleSounds_NoRegularIdleOnAlerted = false -- if set to true, it will not play the regular idle sound table if the combat idle sound table is empty
@@ -2340,8 +2336,7 @@ function ENT:Think()
 	//if self.AA_TargetPos.x == self:GetPos().x then
 		-- to be coded..
 	//end
-
-	//print(self:GetPos())
+	
 	//print("-------------------------------")
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
 	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
@@ -4375,6 +4370,8 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 		end
 	end
 
+	local DamageInflictor = dmginfo:GetInflictor()
+	local DamageAttacker = dmginfo:GetAttacker()
 	self.Dead = true
 	self:RemoveAttackTimers()
 	self.MeleeAttacking = false
@@ -4383,7 +4380,8 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 	self.HasRangeAttack = false
 	self.HasMeleeAttack = false
 	self:StopAllCommonSounds()
-	self:DeathNotice_PlayerPoints(dmginfo,hitgroup)
+	if GetConVarNumber("vj_npc_showhudonkilled") == 1 then gamemode.Call("OnNPCKilled",self,DamageAttacker,DamageInflictor,dmginfo) end
+	if GetConVarNumber("vj_npc_addfrags") == 1 && DamageAttacker:IsPlayer() then DamageAttacker:AddFrags(1) end
 	self:CustomOnPriorToKilled(dmginfo,hitgroup)
 	self:SetCollisionGroup(1)
 	self:RunGibOnDeathCode(dmginfo,hitgroup)
@@ -4391,7 +4389,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 	self:AAMove_Stop()
 	if self.HasDeathAnimation != true then DoKilled() return end
 	if self.HasDeathAnimation == true then
-		if GetConVarNumber("vj_npc_nodeathanimation") == 1 or GetConVarNumber("ai_disabled") == 1 or ((dmginfo:GetDamageType() == DMG_DISSOLVE) or (IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() == "prop_combine_ball")) then DoKilled() return end
+		if GetConVarNumber("vj_npc_nodeathanimation") == 1 or GetConVarNumber("ai_disabled") == 1 or ((dmginfo:GetDamageType() == DMG_DISSOLVE) or (IsValid(DamageInflictor) && DamageInflictor:GetClass() == "prop_combine_ball")) then DoKilled() return end
 		if dmginfo:GetDamageType() != DMG_DISSOLVE then
 			local randanim = math.random(1,self.DeathAnimationChance)
 			if randanim != 1 then DoKilled() return end
@@ -4506,17 +4504,10 @@ function ENT:CreateGibEntity(Ent,Models,Tbl_Features,CustomCode)
 	if (CustomCode) then CustomCode(gib) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DeathNotice_PlayerPoints(dmginfo,hitgroup)
-	local DamageInflictor = dmginfo:GetInflictor()
-	local DamageAttacker = dmginfo:GetAttacker()
-	if GetConVarNumber("vj_npc_showhudonkilled") == 1 then gamemode.Call("OnNPCKilled",self,DamageAttacker,DamageInflictor,dmginfo) end
-	if GetConVarNumber("vj_npc_addfrags") == 1 && DamageAttacker:IsPlayer() then DamageAttacker:AddFrags(1) end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnKilled(dmginfo,hitgroup)
 	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printdied") == 1 then print(self:GetClass().." Died!") end end
 	self:CustomOnKilled(dmginfo,hitgroup)
-	if math.random(1,self.ItemDropsOnDeathChance) == 1 then self:RunItemDropsOnDeathCode(dmginfo,hitgroup) end -- Item drops on death
+	self:RunItemDropsOnDeathCode(dmginfo,hitgroup) -- Item drops on death
 	if self.HasDeathNotice == true then PrintMessage(self.DeathNoticePosition, self.DeathNoticeWriting) end -- Death notice on death
 	self:ClearEnemyMemory()
 	self:ClearSchedule()
@@ -4728,18 +4719,20 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RunItemDropsOnDeathCode(dmginfo,hitgroup)
 	if self.HasItemDropsOnDeath == false then return end
-	self:CustomRareDropsOnDeathCode(dmginfo,hitgroup)
-	local entlist = VJ_PICK(self.ItemDropsOnDeath_EntityList)
-	if entlist != false then
-		local randdrop = ents.Create(entlist)
-		randdrop:SetPos(self:GetPos() + self:OBBCenter())
-		randdrop:SetAngles(self:GetAngles())
-		randdrop:Spawn()
-		randdrop:Activate()
-		local phys = randdrop:GetPhysicsObject()
-		if IsValid(phys) then
-			phys:SetMass(60)
-			phys:ApplyForceCenter(dmginfo:GetDamageForce())
+	if math.random(1,self.ItemDropsOnDeathChance) == 1 then
+		self:CustomRareDropsOnDeathCode(dmginfo,hitgroup)
+		local entlist = VJ_PICK(self.ItemDropsOnDeath_EntityList)
+		if entlist != false then
+			local randdrop = ents.Create(entlist)
+			randdrop:SetPos(self:GetPos() + self:OBBCenter())
+			randdrop:SetAngles(self:GetAngles())
+			randdrop:Spawn()
+			randdrop:Activate()
+			local phys = randdrop:GetPhysicsObject()
+			if IsValid(phys) then
+				phys:SetMass(60)
+				phys:ApplyForceCenter(dmginfo:GetDamageForce())
+			end
 		end
 	end
 end
@@ -5238,25 +5231,27 @@ function ENT:FootStepSoundCode(CustomTbl)
 			if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 			if VJ_PICK(soundtbl) != false then
 				VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
-				if self.HasWorldShakeOnMove == true then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude, self.WorldShakeOnMoveFrequency, self.WorldShakeOnMoveDuration, self.WorldShakeOnMoveRadius) end
 			end
-		end
-		if self.DisableFootStepSoundTimer == false && self:IsMoving() && CurTime() > self.FootStepT then
+			if self.HasWorldShakeOnMove == true then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude, self.WorldShakeOnMoveFrequency, self.WorldShakeOnMoveDuration, self.WorldShakeOnMoveRadius) end
+			return
+		elseif self:IsMoving() && CurTime() > self.FootStepT then
 			self:CustomOnFootStepSound()
 			local soundtbl = self.SoundTbl_FootStep
 			if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 			if VJ_PICK(soundtbl) != false then
-				//VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
-				if self.DisableFootStepOnRun == false && (VJ_HasValue(VJ_RunActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomRunActivites,self:GetMovementActivity())) then
+				local CurSched = self.CurrentSchedule
+				if self.DisableFootStepOnRun == false && ((VJ_HasValue(self.AnimTbl_Run,self:GetMovementActivity())) or (CurSched != nil  && CurSched.IsMovingTask_Run == true)) /*(VJ_HasValue(VJ_RunActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomRunActivites,self:GetMovementActivity()))*/ then
 					self:CustomOnFootStepSound_Run()
 					VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
 					if self.HasWorldShakeOnMove == true && self.DisableWorldShakeOnMoveWhileRunning == false then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude, self.WorldShakeOnMoveFrequency, self.WorldShakeOnMoveDuration, self.WorldShakeOnMoveRadius) end
 					self.FootStepT = CurTime() + self.FootStepTimeRun
-				elseif self.DisableFootStepOnWalk == false && (VJ_HasValue(VJ_WalkActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomWalkActivites,self:GetMovementActivity())) then
+					return
+				elseif self.DisableFootStepOnWalk == false && (VJ_HasValue(self.AnimTbl_Walk,self:GetMovementActivity()) or (CurSched != nil  && CurSched.IsMovingTask_Walk == true)) /*(VJ_HasValue(VJ_WalkActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomWalkActivites,self:GetMovementActivity()))*/ then
 					self:CustomOnFootStepSound_Walk()
 					VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch1,self.FootStepPitch2))
 					if self.HasWorldShakeOnMove == true && self.DisableWorldShakeOnMoveWhileWalking == false then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude, self.WorldShakeOnMoveFrequency, self.WorldShakeOnMoveDuration, self.WorldShakeOnMoveRadius) end
 					self.FootStepT = CurTime() + self.FootStepTimeWalk
+					return
 				end
 			end
 		end
@@ -5347,14 +5342,6 @@ function ENT:RemoveAttackTimers()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:NoCollide_CombineBall()
-	for k, v in pairs (ents.GetAll()) do
-		if v:GetClass() == "prop_combine_ball" then
-			constraint.NoCollide(self, v, 0, 0)
-		end
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:EntitiesToNoCollideCode(argent)
 	if self.HasEntitiesToNoCollide != true or !istable(self.EntitiesToNoCollide) or !IsValid(argent) then return end
 	for x=1, #self.EntitiesToNoCollide do
@@ -5427,6 +5414,16 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+/*
+function ENT:NoCollide_CombineBall()
+	for k, v in pairs (ents.GetAll()) do
+		if v:GetClass() == "prop_combine_ball" then
+			constraint.NoCollide(self, v, 0, 0)
+		end
+	end
+end
+*/
+---------------------------------------------------------------------------------------------------------------------------------------------
 /*function ENT:FindEnemy()
 //self:AddRelationship( "npc_barnacle  D_LI  99" )
 if self.FindEnemy_UseSphere == true then

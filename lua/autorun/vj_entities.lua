@@ -11,6 +11,7 @@ include('autorun/vj_controls.lua')
 ------ Spawn Menu Creation ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- ====== Category Information (Many are for popular categories used in both official and unofficial addons ====== --
+	-- Steam\appcache\librarycache
 VJ.AddCategoryInfo("Alien Swarm", {Icon = "vj_base/icons/alienswarm.png"})
 VJ.AddCategoryInfo("Black Mesa", {Icon = "vj_base/icons/blackmesa.png"})
 VJ.AddCategoryInfo("Cry Of Fear", {Icon = "vj_base/icons/cryoffear.png"})
@@ -59,8 +60,19 @@ VJ.AddNPCWeapon("VJ_FlareGun","weapon_vj_flaregun")
 VJ.AddNPCWeapon("VJ_RPG","weapon_vj_rpg")
 VJ.AddNPCWeapon("VJ_K-3","weapon_vj_k3")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Global Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Global Functions & Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+VJ_MOVETYPE_GROUND = 1
+VJ_MOVETYPE_AERIAL = 2
+VJ_MOVETYPE_AQUATIC = 3
+VJ_MOVETYPE_STATIONARY = 4
+VJ_MOVETYPE_PHYSICS = 5
+
+VJ_BEHAVIOR_AGGRESSIVE = 1
+VJ_BEHAVIOR_NEUTRAL = 2
+VJ_BEHAVIOR_PASSIVE = 3
+VJ_BEHAVIOR_PASSIVE_NATURE = 4
+---------------------------------------------------------------------------------------------------------------------------------------------
 if (SERVER) then
 	util.AddNetworkString("vj_music_run")
 	
@@ -121,6 +133,14 @@ function VJ_RoundToMultiple(number, multiple) -- Credits to Bizzclaw for pointin
 	else
 		return math.Round(number / multiple) * multiple
 	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function VJ_Color2Byte(color)
+	return bit.lshift(math.floor(color.r*7/255),5)+bit.lshift(math.floor(color.g*7/255),2)+math.floor(color.b*3/255)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function VJ_Color8Bit2Color(bits)
+	return Color(bit.rshift(bits,5)*255/7,bit.band(bit.rshift(bits,2),0x07)*255/7,bit.band(bits,0x03)*255/3)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_FindInCone(Position, Direction, Distance, Degrees, Tbl_Features)
@@ -259,14 +279,6 @@ function VJ_DestroyCombineTurret(vSelf, argent)
 		return true
 	end
 	return false
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_Color2Byte(color)
-	return bit.lshift(math.floor(color.r*7/255),5)+bit.lshift(math.floor(color.g*7/255),2)+math.floor(color.b*3/255)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_Color8Bit2Color(bits)
-	return Color(bit.rshift(bits,5)*255/7,bit.band(bit.rshift(bits,2),0x07)*255/7,bit.band(bits,0x03)*255/3)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_CreateTestObject(pos,ang,color,rtime,mdl)
@@ -1103,85 +1115,3 @@ end
 	require("sound_vj_track")
 	sound_vj_track.Add("VJ_SpiderQueenThemeMusic","vj_dm_spidermonster/Dark Messiah - Avatar of the Spider Goddess.wav",161)
 end*/
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Global Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-VJ_MOVETYPE_GROUND = 1
-VJ_MOVETYPE_AERIAL = 2
-VJ_MOVETYPE_AQUATIC = 3
-VJ_MOVETYPE_STATIONARY = 4
-VJ_MOVETYPE_PHYSICS = 5
-
-VJ_BEHAVIOR_AGGRESSIVE = 1
-VJ_BEHAVIOR_NEUTRAL = 2
-VJ_BEHAVIOR_PASSIVE = 3
-VJ_BEHAVIOR_PASSIVE_NATURE = 4
-
-VJ_WalkActivites = {
-	ACT_WALK,
-	ACT_WALK_RELAXED,
-	ACT_WALK_AGITATED,
-	ACT_WALK_STEALTH,
-	ACT_WALK_HURT,
-	ACT_WALK_SCARED,
-	ACT_WALK_ON_FIRE,
-	ACT_WALK_CARRY,
-	ACT_WALK_ANGRY,
-	ACT_WALK_AIM,
-	ACT_WALK_AIM_RELAXED,
-	ACT_WALK_AIM_STIMULATED,
-	ACT_WALK_AIM_AGITATED,
-	ACT_WALK_AIM_STEALTH,
-	ACT_WALK_CROUCH,
-	ACT_WALK_CROUCH_AIM,
-	ACT_WALK_PACKAGE,
-	ACT_WALK_SUITCASE,
-	ACT_WALK_RIFLE_RELAXED,
-	ACT_WALK_RIFLE_STIMULATED,
-	ACT_WALK_AIM_RIFLE_STIMULATED,
-	ACT_WALK_RPG,
-	ACT_WALK_CROUCH_RPG,
-	ACT_WALK_RPG_RELAXED,
-	ACT_WALK_RIFLE,
-	ACT_WALK_AIM_RIFLE,
-	ACT_WALK_CROUCH_RIFLE,
-	ACT_WALK_CROUCH_AIM_RIFLE,
-	ACT_WALK_AIM_SHOTGUN,
-	ACT_WALK_PISTOL,
-	ACT_WALK_AIM_PISTOL,
-	ACT_WALK_STEALTH_PISTOL,
-	ACT_WALK_AIM_STEALTH_PISTOL,
-}
-
-VJ_RunActivites = {
-	ACT_RUN,
-	ACT_RUN_RELAXED,
-	ACT_RUN_AGITATED,
-	ACT_RUN_STEALTH,
-	ACT_RUN_HURT,
-	ACT_RUN_SCARED,
-	ACT_RUN_ON_FIRE,
-	ACT_RUN_PROTECTED,
-	ACT_RUN_AIM,
-	ACT_RUN_AIM_RELAXED,
-	ACT_RUN_AIM_STIMULATED,
-	ACT_RUN_AIM_AGITATED,
-	ACT_RUN_AIM_STEALTH,
-	ACT_RUN_CROUCH,
-	ACT_RUN_CROUCH_AIM,
-	ACT_RUN_RIFLE_RELAXED,
-	ACT_RUN_RIFLE_STIMULATED,
-	ACT_RUN_AIM_RIFLE_STIMULATED,
-	ACT_RUN_RPG,
-	ACT_RUN_CROUCH_RPG,
-	ACT_RUN_RPG_RELAXED,
-	ACT_RUN_RIFLE,
-	ACT_RUN_AIM_RIFLE,
-	ACT_RUN_CROUCH_RIFLE,
-	ACT_RUN_CROUCH_AIM_RIFLE,
-	ACT_RUN_AIM_SHOTGUN,
-	ACT_RUN_PISTOL,
-	ACT_RUN_AIM_PISTOL,
-	ACT_RUN_STEALTH_PISTOL,
-	ACT_RUN_AIM_STEALTH_PISTOL,
-}
