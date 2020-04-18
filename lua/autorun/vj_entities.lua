@@ -192,13 +192,20 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_AnimationExists(argent, actname)
 	if actname == nil or isbool(actname) then return false end
-	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
-	if type(actname) == "number" then
+	
+	-- Get rid of the gesture prefix
+	if string.find(actname, "vjges_") then
+		actname = string.Replace(actname, "vjges_", "")
+		if argent:LookupSequence(actname) == -1 then
+			actname = tonumber(actname)
+		end
+	end
+	
+	if isnumber(actname) then
 		if (argent:SelectWeightedSequence(actname) == -1 or argent:SelectWeightedSequence(actname) == 0) && (argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "Not Found!" or argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "No model!") then
 		return false end
-	end
-	if type(actname) == "string" then
-		if string.find(actname, "vjseq_") then actname = string.Replace(actname,"vjseq_","") end
+	elseif isstring(actname) then
+		if string.find(actname, "vjseq_") then actname = string.Replace(actname, "vjseq_", "") end
 		if argent:LookupSequence(actname) == -1 then
 		return false end
 	end
@@ -206,30 +213,44 @@ function VJ_AnimationExists(argent, actname)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_GetSequenceDuration(argent, actname)
-	if VJ_AnimationExists(argent,actname) == false then return 0 end
-	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
-	if type(actname) == "number" then return argent:SequenceDuration(argent:SelectWeightedSequence(actname)) end
-	if type(actname) == "string" then if string.find(actname, "vjseq_") then actname = string.Replace(actname,"vjseq_","") end return argent:SequenceDuration(argent:LookupSequence(actname)) end
+	if VJ_AnimationExists(argent, actname) == false then return 0 end -- Invalid animation, so 0
+	
+	-- Get rid of the gesture prefix
+	if string.find(actname, "vjges_") then
+		actname = string.Replace(actname, "vjges_", "")
+		if argent:LookupSequence(actname) == -1 then
+			actname = tonumber(actname)
+		end
+	end
+	
+	if isnumber(actname) then
+		return argent:SequenceDuration(argent:SelectWeightedSequence(actname))
+	elseif isstring(actname) then
+		if string.find(actname, "vjseq_") then
+			actname = string.Replace(actname, "vjseq_", "")
+		end
+		return argent:SequenceDuration(argent:LookupSequence(actname))
+	end
 	return 0
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_GetSequenceName(argent, actname)
-	if VJ_AnimationExists(argent,actname) == false then return nil end
+	if VJ_AnimationExists(argent, actname) == false then return 0 end -- Invalid animation, so 0
 	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
-	if type(actname) == "number" then return argent:GetSequenceName(argent:SelectWeightedSequence(actname)) end
-	if type(actname) == "string" then if string.find(actname, "vjseq_") then actname = string.Replace(actname,"vjseq_","") end return argent:GetSequenceName(argent:LookupSequence(actname)) end
+	if isnumber(actname) then return argent:GetSequenceName(argent:SelectWeightedSequence(actname)) end
+	if isstring(actname) then if string.find(actname, "vjseq_") then actname = string.Replace(actname,"vjseq_","") end return argent:GetSequenceName(argent:LookupSequence(actname)) end
 	return nil
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_SequenceToActivity(argent, seq)
-	if type(seq) == "string" then
+	if isstring(actname) then
 		local checkanim = argent:GetSequenceActivity(argent:LookupSequence(seq))
 		if checkanim == nil or checkanim == -1 then
 			return false
 		else
 			return checkanim
 		end
-	elseif type(seq) == "number" then
+	elseif isnumber(seq) then
 		return seq
 	else
 		return false
@@ -357,33 +378,61 @@ function NPC_MetaTable:VJ_DecideSoundPitch(Pitch1, Pitch2)
 	return math.random(getpitch1,getpitch2)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:DecideAnimationLength(Anim,Value,Decrease)
-	local result = 0
+function NPC_MetaTable:DecideAnimationLength(Anim, Value, Decrease)
 	Decrease = Decrease or 0
-	if isbool(Anim) then return result end
+	if isbool(Anim) then return 0 end
+	
+	local result = 0
 	if Value == false then -- Used internally by the base, recommended to just leave it to false
-		result = VJ_GetSequenceDuration(self,Anim) - Decrease
+		result = VJ_GetSequenceDuration(self, Anim) - Decrease
 	elseif isnumber(Value) then
 		result = Value
 	end
-	return result
+	return result / self:GetPlaybackRate()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_PlaySequence(SequenceID,PlayBackRate,Wait,WaitTime,Interruptible)
-	if not SequenceID then return end
-	if Interruptible == true then self.VJ_IsPlayingInterruptSequence = true self.VJ_PlayingSequence = false else self.VJ_PlayingSequence = true self.VJ_IsPlayingInterruptSequence = false end
+function NPC_MetaTable:DecideAttackTimer(Timer1, Timer2, UntilDamage, AnimDuration)
+	local result = Timer1
+	-- AnimDuration has already calculated the playback rate!
+	if Timer1 == false then -- Let the base decide..
+		if UntilDamage == false then -- Event-based
+			result = AnimDuration
+		else -- Timer-based
+			result = AnimDuration - (UntilDamage / self:GetPlaybackRate())
+		end
+	else -- If a specific number has been put then make sure to calculate it playback rate
+		result = result / self:GetPlaybackRate()
+	end
+	
+	-- If a 2nd value is given (Used for randomization), calculate its playback rate as well and then get a random value between it and the result
+	if isnumber(Timer2) then
+		result = math.Rand(result, Timer2 / self:GetPlaybackRate())
+	end
+	
+	return result --/ self:GetPlaybackRate()
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function NPC_MetaTable:VJ_PlaySequence(SequenceID, PlayBackRate, Wait, WaitTime, Interruptible)
+	if !SequenceID then return end
+	if Interruptible == true then
+		self.VJ_PlayingSequence = false
+		self.VJ_IsPlayingInterruptSequence = true
+	else
+		self.VJ_PlayingSequence = true
+		self.VJ_IsPlayingInterruptSequence = false
+	end
 	
 	self:ClearSchedule()
 	self:StopMoving()
-	if istable(SequenceID) then
-		if #SequenceID < 1 then return end
-		SequenceID = tostring(table.Random(SequenceID))
-	end
+	SequenceID = VJ_PICK(SequenceID)
 	local animid = self:LookupSequence(SequenceID)
 	self:ResetSequence(animid)
 	self:ResetSequenceInfo()
 	self:SetCycle(0)
-	if PlayBackRate then self:SetPlaybackRate(PlayBackRate) end
+	if isnumber(PlayBackRate) then
+		self.AnimationPlaybackRate = PlayBackRate
+		self:SetPlaybackRate(PlayBackRate)
+	end
 	if Wait == true then
 		timer.Simple(WaitTime,function() //self:SequenceDuration(animid)
 			if IsValid(self) then
@@ -396,9 +445,16 @@ function NPC_MetaTable:VJ_PlaySequence(SequenceID,PlayBackRate,Wait,WaitTime,Int
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_TranslateWeaponActivity(ActAnim)
-	if !IsValid(self:GetActiveWeapon()) or self:GetActiveWeapon().IsVJBaseWeapon != true then return ActAnim end
+	/*if !IsValid(self:GetActiveWeapon()) or self:GetActiveWeapon().IsVJBaseWeapon != true then return ActAnim end
 	if self:GetActiveWeapon():TranslateActivity(ActAnim) == -1 then return ActAnim else
-	return self:GetActiveWeapon():TranslateActivity(ActAnim) end
+	return self:GetActiveWeapon():TranslateActivity(ActAnim) end*/
+	
+	if !IsValid(self:GetActiveWeapon()) then return ActAnim end
+	if self.WeaponAnimTranslations[ActAnim] == nil then
+		return ActAnim
+	else
+		return self.WeaponAnimTranslations[ActAnim]
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetAllPoseParameters(prt)
@@ -622,22 +678,6 @@ end
 function NPC_MetaTable:VJ_HasActiveWeapon()
 	if self.DisableWeapons == false && self:GetActiveWeapon() != NULL then return true end
 	return false
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:DecideAttackTimer(Timer1,Timer2,UntilDamage,AnimDuration)
-	local result = Timer1
-	if Timer1 == false then
-		if UntilDamage == false then -- Event-based
-			result = AnimDuration
-		else -- Timer-based
-			result = AnimDuration - UntilDamage
-		end
-	end
-	if isnumber(Timer2) then
-		result = math.Rand(result,Timer2)
-	end
-	//print(result)
-	return result
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:DoFormation_Diamond(ent,it,spacing)

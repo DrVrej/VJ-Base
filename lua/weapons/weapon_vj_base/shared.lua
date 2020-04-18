@@ -288,7 +288,11 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:TranslateActivity(act)
 	if (self:GetOwner():IsNPC()) then
-		if (self.ActivityTranslateAI[act]) && ((!self:GetOwner().IsVJBaseSNPC) or (self:GetOwner().IsVJBaseSNPC == true)) then
+		if self:GetOwner().IsVJBaseSNPC == true then
+			if (self:GetOwner().WeaponAnimTranslations[act]) then
+				return self:GetOwner().WeaponAnimTranslations[act]
+			end
+		elseif (self.ActivityTranslateAI[act]) then -- For non-VJ NPCs
 			return self.ActivityTranslateAI[act]
 		end
 		return -1
