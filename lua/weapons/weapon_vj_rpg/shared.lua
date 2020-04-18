@@ -21,7 +21,7 @@ SWEP.NPC_BulletSpawnAttachment = "missile" -- The attachment that the bullet spa
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel					= "models/vj_weapons/c_rpg7.mdl" // "models/weapons/c_rpg.mdl"
 SWEP.WorldModel					= "models/vj_weapons/w_rpg7.mdl" // "models/weapons/w_rocket_launcher.mdl"
-SWEP.HoldType 					= "ar2"
+SWEP.HoldType 					= "rpg"
 SWEP.ViewModelFOV				= 60 -- Player FOV for the view model
 SWEP.Spawnable					= true
 SWEP.AdminSpawnable				= false

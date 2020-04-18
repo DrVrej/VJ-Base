@@ -34,6 +34,7 @@ ENT.SightDistance = 10000 -- How far it can see
 ENT.SightAngle = 80 -- The sight angle | Example: 180 would make the it see all around it | Measured in degrees and then converted to radians
 ENT.TurningSpeed = 20 -- How fast it can turn
 ENT.TurningUseAllAxis = false -- If set to true, angles will not be restricted to y-axis, it will change all axes (plural axis)
+ENT.AnimationPlaybackRate = 1 -- Controls the playback rate of all the animations
 	-- ====== Movement Variables ====== --
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
@@ -1050,6 +1051,7 @@ function ENT:Initialize()
 	self.VJ_AddCertainEntityAsEnemy = {}
 	self.VJ_AddCertainEntityAsFriendly = {}
 	self.CurrentPossibleEnemies = {}
+	self.WeaponAnimTranslations = {}
 	if GetConVarNumber("vj_npc_seedistance") == 0 then self.SightDistance = self.SightDistance else self.SightDistance = GetConVarNumber("vj_npc_seedistance") end
 	timer.Simple(0.1,function()
 		if IsValid(self) then
@@ -1186,148 +1188,159 @@ function ENT:IsJumpLegal(startPos,apex,endPos)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActivitiesTime,vACT_FaceEnemy,vACT_DelayAnim,vACT_AdvancedFeatures,vACT_CustomCode)
-	if vACT_Name == nil or vACT_Name == false then return end
+	vACT_Name = VJ_PICK(vACT_Name)
+	if vACT_Name == false then return end
+	
 	vACT_StopActivities = vACT_StopActivities or false
-	if vACT_StopActivitiesTime == nil then
+	if vACT_StopActivitiesTime == nil then -- If user didn't put anything, then default it to 0
 		vACT_StopActivitiesTime = 0 -- Set this value to false to let the base calculate the time
 	end
-	vACT_FaceEnemy = vACT_FaceEnemy or false
-	vACT_DelayAnim = vACT_DelayAnim or 0
+	vACT_FaceEnemy = vACT_FaceEnemy or false -- Should it face the enemy while playing this animation?
+	vACT_DelayAnim = tonumber(vACT_DelayAnim) or 0 -- How much time until it starts playing the animation (seconds)
 	vACT_AdvancedFeatures = vACT_AdvancedFeatures or {}
-	vTbl_AlwaysUseSequence = vACT_AdvancedFeatures.AlwaysUseSequence or false
-	vTbl_SequenceDuration = vACT_AdvancedFeatures.SequenceDuration -- Done automatically
-	vTbl_SequenceInterruptible = vACT_AdvancedFeatures.SequenceInterruptible or false -- Can it be Interrupted? (Mostly used for idle animations)
-	vTbl_AlwaysUseGesture = vACT_AdvancedFeatures.AlwaysUseGesture or false
-	vTbl_PlayBackRate = vACT_AdvancedFeatures.PlayBackRate or 0.5
-	//vACT_CustomCode = vACT_CustomCode or function() end
-	if istable(vACT_Name) then vACT_Name = VJ_PICK(vACT_Name) end
+		vTbl_AlwaysUseSequence = vACT_AdvancedFeatures.AlwaysUseSequence or false -- Will force the animation to use sequence
+		vTbl_SequenceDuration = vACT_AdvancedFeatures.SequenceDuration -- How long is the sequence? This is done automatically, so recommended to not change it
+		vTbl_SequenceInterruptible = vACT_AdvancedFeatures.SequenceInterruptible or false -- Can it be Interrupted? (Mostly used for idle animations)
+		vTbl_AlwaysUseGesture = vACT_AdvancedFeatures.AlwaysUseGesture or false -- Will force the animation to use gesture
+		vTbl_PlayBackRate = vACT_AdvancedFeatures.PlayBackRate or self.AnimationPlaybackRate -- How fast should the animation play?
+		vTbl_PlayBackRateCalculated = vACT_AdvancedFeatures.PlayBackRateCalculated or false -- Has vACT_StopActivitiesTime already been calculated for the playback rate?
+	
 	local IsGesture = false
 	local IsSequence = false
-	if string.find(vACT_Name, "vjges_") then
+	local IsString = isstring(vACT_Name)
+	
+	-- Gesture handling
+	if string.find(vACT_Name, "vjges_") then -- Gesture string-fixing
 		IsGesture = true
-		vACT_Name = string.Replace(vACT_Name,"vjges_","")
-		if string.find(vACT_Name, "vjseq_") then
+		vACT_Name = string.Replace(vACT_Name, "vjges_", "") -- Delete the gesture prefix
+		if string.find(vACT_Name, "vjseq_") then -- If the 2nd prefix is a sequence, then this is a gesture-sequence
 			IsSequence = true
-			vACT_Name = string.Replace(vACT_Name,"vjseq_","")
-		end
-		if self:LookupSequence(vACT_Name) == -1 then vACT_Name = tonumber(vACT_Name) end
-		//vACT_Name = tonumber(string.Replace(vACT_Name,"vjges_",""))
-	end
-	
-	if vACT_StopActivitiesTime == false then
-		vACT_StopActivitiesTime = self:DecideAnimationLength(vACT_Name,false)
-	end
-	
-	if type(vACT_Name) != "string" && VJ_AnimationExists(self,vACT_Name) == false then
-		if self:GetActiveWeapon() != NULL then
-			if self:GetActiveWeapon().IsVJBaseWeapon && VJ_HasValue(table.GetKeys(self:GetActiveWeapon().ActivityTranslateAI),vACT_Name) != true then return end
-		else
-			return
+			vACT_Name = string.Replace(vACT_Name, "vjseq_", "") -- Delete the second prefix
+		elseif self:LookupSequence(vACT_Name) == -1 then -- Check if it's a number by looking up the string. If it's not, then it will later be converted to an activity
+			vACT_Name = tonumber(vACT_Name)
 		end
 	end
-	if type(vACT_Name) == "string" && VJ_AnimationExists(self,vACT_Name) == false then return end
-
-	local vsched = ai_vj_schedule.New("vj_act_"..vACT_Name)
-	if vTbl_AlwaysUseSequence == true then
-		IsSequence = true
-		if type(vACT_Name) == "number" then
-			vACT_Name = self:GetSequenceName(self:SelectWeightedSequence(vACT_Name))
-		end
-	end
-	if vTbl_AlwaysUseGesture == true then
+	if vTbl_AlwaysUseGesture == true then -- If we must always use a gesture
 		IsGesture = true
-		if type(vACT_Name) == "number" then
+		if isnumber(vACT_Name) then -- If it's an activity, then convert it to a string
 			vACT_Name = self:GetSequenceName(self:SelectWeightedSequence(vACT_Name))
 		end
 	end
-	//vsched:EngTask("TASK_RESET_ACTIVITY", 0)
+	
+	-- Sequence handling
+	if vTbl_AlwaysUseSequence == true then -- If we must always use a sequence
+		IsSequence = true
+		if isnumber(vACT_Name) then -- If it's an activity, then convert it to a string
+			vACT_Name = self:GetSequenceName(self:SelectWeightedSequence(vACT_Name))
+		end
+	elseif IsString then -- Sequence string-fixing
+		if string.find(vACT_Name, "vjseq_") then -- If the sequence prefix is given...
+			IsSequence = true
+			vACT_Name = string.Replace(vACT_Name, "vjseq_", "") -- Delete the sequence prefix
+		else -- If prefix isn't given then check if it can be converted to an activity or else just play it as a sequence
+			local checkanim = self:GetSequenceActivity(self:LookupSequence(vACT_Name))
+			if checkanim == nil or checkanim == -1 then
+				IsSequence = true
+			else
+				vACT_Name = checkanim -- Play it as an activity
+			end
+		end
+	end
+	
+	-- If the given animation doesn't exist, then check to see if it does in the weapon translation list
+	if VJ_AnimationExists(self, vACT_Name) == false then
+		if !IsString && IsValid(self:GetActiveWeapon()) then -- If it's an activity and has a valid weapon then check for weapon translation
+			-- If it returns the same activity as vACT_Name, then there isn't even a translation for it so don't play any animation =(
+			if self:GetActiveWeapon().IsVJBaseWeapon && self:VJ_TranslateWeaponActivity(vACT_Name) == vACT_Name then return end
+		else
+			return -- No animation =(
+		end
+	end
+	
 	if vACT_StopActivities == true then
+		if vACT_StopActivitiesTime == false then -- if it's false, then let the base calculate the time
+			vACT_StopActivitiesTime = self:DecideAnimationLength(vACT_Name, false)
+		elseif vTbl_PlayBackRateCalculated == false then -- Make sure not to calculate the playback rate when it already has!
+			vACT_StopActivitiesTime = vACT_StopActivitiesTime / self:GetPlaybackRate()
+		end
+		
 		self:StopAttacks(true)
 		self.vACT_StopAttacks = true
 		self.NextChaseTime = CurTime() + vACT_StopActivitiesTime
 		self.NextIdleTime = CurTime() + vACT_StopActivitiesTime
+		
+		-- If there is already a timer, then adjust it instead of creating a new one
 		if timer.Exists("timer_act_stopattacks") then
-			timer.Adjust("timer_act_stopattacks"..self:EntIndex(),vACT_StopActivitiesTime,1,function() self.vACT_StopAttacks = false end)
+			timer.Adjust("timer_act_stopattacks"..self:EntIndex(), vACT_StopActivitiesTime, 1, function() self.vACT_StopAttacks = false end)
 		else
-			timer.Create("timer_act_stopattacks"..self:EntIndex(),vACT_StopActivitiesTime,1,function() self.vACT_StopAttacks = false end)
+			timer.Create("timer_act_stopattacks"..self:EntIndex(), vACT_StopActivitiesTime, 1, function() self.vACT_StopAttacks = false end)
 		end
-		//timer.Simple(vACT_StopActivitiesTime,function() self.vACT_StopAttacks = false end)
 	end
+	
+	local vsched = ai_vj_schedule.New("vj_act_"..vACT_Name)
+	if (vACT_CustomCode) then vACT_CustomCode(vsched, vACT_Name) end
+	
 	self.NextIdleStandTime = 0
-	if (vACT_CustomCode) then vACT_CustomCode(vsched) end
-
-	if vTbl_AlwaysUseSequence == false && type(vACT_Name) == "string" then
-		local checkanim = self:GetSequenceActivity(self:LookupSequence(vACT_Name))
-		if string.find(vACT_Name, "vjseq_") then
-			IsSequence = true
-			vACT_Name = string.Replace(vACT_Name,"vjseq_","")
-		else
-			if checkanim == nil or checkanim == -1 then
-				IsSequence = true
-			else
-				vACT_Name = checkanim
-			end
-		end
-	end
 	if IsSequence == false then self.VJ_PlayingSequence = false end
 	if self.VJ_IsPlayingInterruptSequence == true then self.VJ_IsPlayingInterruptSequence = false end
-
-	if !isnumber(vACT_DelayAnim) then vACT_DelayAnim = 0 end
-	timer.Simple(vACT_DelayAnim,function()
-	if IsValid(self) then
-		if IsGesture == true then
-			local gesttest = false
-			if IsSequence == false then gesttest = self:AddGesture(vACT_Name) end
-			if IsSequence == true then gesttest = self:AddGestureSequence(self:LookupSequence(vACT_Name)) end
-			if gesttest != false then
-				//self:ClearSchedule()
-				//self:SetLayerBlendIn(1,0)
-				//self:SetLayerBlendOut(1,0)
-				self:SetLayerPriority(gesttest,1) // 2
-				//self:SetLayerWeight(gesttest,1)
-				self:SetLayerPlaybackRate(gesttest,vTbl_PlayBackRate)
-				//self:SetLayerDuration(gesttest,3)
-				//print(self:GetLayerDuration(gesttest))
-			end
-		end
-		if IsSequence == true && IsGesture == false then
-			seqwait = true
-			if vTbl_SequenceDuration == false then seqwait = false end
-			vTbl_SequenceDuration = vTbl_SequenceDuration or self:SequenceDuration(self:LookupSequence(vACT_Name))
-			if vACT_FaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(),true,vTbl_SequenceDuration) end
-			self:VJ_PlaySequence(vACT_Name,1,seqwait,vTbl_SequenceDuration,vTbl_SequenceInterruptible)
-		end
-		if IsGesture == false then
-			self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0)
-			//vsched:EngTask("TASK_RESET_ACTIVITY", 0)
-			//if self.Dead == true then vsched:EngTask("TASK_STOP_MOVING", 0) end
-			//vsched:EngTask("TASK_STOP_MOVING", 0)
-			//vsched:EngTask("TASK_STOP_MOVING", 0)
-			//self:FrameAdvance(0)
-			self:StopMoving()
-			self:ClearSchedule()
-			///self:ClearGoal()
-			if IsSequence == false then
-				self.VJ_PlayingSequence = false
-				if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
-					vsched:EngTask("TASK_SET_ACTIVITY",vACT_Name) -- To avoid AutoMovement stopping the velocity
+	
+	timer.Simple(vACT_DelayAnim, function()
+		if IsValid(self) then
+			self.AnimationPlaybackRate = vTbl_PlayBackRate
+			self:SetPlaybackRate(vTbl_PlayBackRate)
+			if IsGesture == true then
+				local gesture = false
+				if IsSequence == true then
+					gesture = self:AddGestureSequence(self:LookupSequence(vACT_Name))
 				else
-					if vACT_FaceEnemy == true then
-						vsched:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY",vACT_Name)
+					gesture = self:AddGesture(vACT_Name)
+				end
+				if gesture != false then
+					//self:ClearSchedule()
+					//self:SetLayerBlendIn(1, 0)
+					//self:SetLayerBlendOut(1, 0)
+					self:SetLayerPriority(gesture, 1) // 2
+					//self:SetLayerWeight(gesture, 1)
+					self:SetLayerPlaybackRate(gesture, vTbl_PlayBackRate * 0.5)
+					//self:SetLayerDuration(gesture, 3)
+					//print(self:GetLayerDuration(gesture))
+				end
+			elseif IsSequence == true then
+				seqwait = true
+				if vTbl_SequenceDuration == false then seqwait = false end
+				vTbl_SequenceDuration = (vTbl_SequenceDuration or self:SequenceDuration(self:LookupSequence(vACT_Name))) / self.AnimationPlaybackRate
+				if vACT_FaceEnemy == true then
+					self:FaceCertainEntity(self:GetEnemy(), true, vTbl_SequenceDuration)
+				end
+				self:VJ_PlaySequence(vACT_Name, vTbl_PlayBackRate, seqwait, vTbl_SequenceDuration, vTbl_SequenceInterruptible)
+			end
+			if IsGesture == false then -- If it's sequence or activity
+				self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0) //vsched:EngTask("TASK_RESET_ACTIVITY", 0)
+				//if self.Dead == true then vsched:EngTask("TASK_STOP_MOVING", 0) end
+				//vsched:EngTask("TASK_STOP_MOVING", 0)
+				//self:FrameAdvance(0)
+				self:StopMoving()
+				self:ClearSchedule()
+				//self:ClearGoal()
+				
+				if IsSequence == false then -- Only if activity
+					self.VJ_PlayingSequence = false
+					if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+						vsched:EngTask("TASK_SET_ACTIVITY", vACT_Name) -- To avoid AutoMovement stopping the velocity
 					else
-						vsched:EngTask("TASK_PLAY_SEQUENCE",vACT_Name)
+						if vACT_FaceEnemy == true then
+							vsched:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY", vACT_Name)
+						else
+							vsched:EngTask("TASK_PLAY_SEQUENCE", vACT_Name)
+						end
 					end
 				end
+				
+				//self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0)
+				self:StartSchedule(vsched)
 			end
-			//self:ClearSchedule()
-			//self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0)
-			self:StartSchedule(vsched)
-			//self:MaintainActivity()
 		end
-	 end
 	end)
-	//self:MaintainActivity()
-	//self:TaskComplete()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_FACE_X(FaceType,CustomCode)
@@ -1516,7 +1529,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 			self:AAMove_Stop()
 			self:VJ_ACT_PLAYACTIVITY(finaltbl,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false,SequenceInterruptible=true})
 		end
-		if self.CurrentSchedule == nil then -- Yete ooresh pame chenergor 
+		if self.CurrentSchedule == nil then -- Yete ooresh pame chenergor
 			self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0) -- Asiga chi tenesne yerp vor nouyn animation-e enen ne yedev yedevi, ge sarin
 		end
 		self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),finaltbl)
@@ -1525,7 +1538,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 				local curseq = self:GetSequence()
 				local seqtoact = VJ_SequenceToActivity(self,self:GetSequenceName(curseq))
 				if seqtoact == finaltbl or seqtoact == self:VJ_TranslateWeaponActivity(finaltbl) then -- Nayir yete himagva animation e nooynene
-					self.NextIdleStandTime = CurTime() + (self:SequenceDuration(curseq) - 0.15) -- Yete nooynene ooremen jamanage tir animation-en yergarootyan chap!
+					self.NextIdleStandTime = CurTime() + ((self:SequenceDuration(curseq) - 0.15) / self:GetPlaybackRate()) -- Yete nooynene ooremen jamanage tir animation-en yergarootyan chap!
 				end
 			end
 		end)
@@ -1653,6 +1666,166 @@ function ENT:VJ_ACT_TAKE_COVER(CustomAnimTbl,StopActs,StopActsTime,FaceEnemy)
 	if didanim == true then
 		self.NextChaseTime = CurTime() + StopActsTime
 		self.TakingCoverT = CurTime() + StopActsTime
+	end
+end
+ENT.ModelAnimationSet = "Custom"
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnSetupWeaponHoldTypeAnims()
+	return false -- return true to disable the base code
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:SetupWeaponHoldTypeAnims(htype)
+	if VJ_AnimationExists(self,ACT_WALK_AIM_PISTOL) == true && VJ_AnimationExists(self,ACT_RUN_AIM_PISTOL) == true && VJ_AnimationExists(self,ACT_POLICE_HARASS1) == true then
+		self.ModelAnimationSet = "Metrocop"
+	elseif VJ_AnimationExists(self,"cheer1") == true && VJ_AnimationExists(self,"wave_smg1") == true && VJ_AnimationExists(self,ACT_BUSY_SIT_GROUND) == true then
+		self.ModelAnimationSet = "Rebel"
+	elseif VJ_AnimationExists(self,"signal_takecover") == true && VJ_AnimationExists(self,"grenthrow") == true && VJ_AnimationExists(self,"bugbait_hit") == true then
+		self.ModelAnimationSet = "Combine"
+	end
+	self.WeaponAnimTranslations = {}
+	if self:CustomOnSetupWeaponHoldTypeAnims() == true then return end
+	
+	-- Make metrocops to not translate crouch walking and make the crouch running a walking one instead
+	local MetrocopShotgun = false
+	if self.ModelAnimationSet == "Metrocop" then
+		self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_WALK_CROUCH
+	end
+	
+	-- Make combine use rifle animations with minor edits if it's holding a handgun
+	local CombineHandgun = false
+	local rifle_idle = ACT_IDLE_SMG1
+	local rifle_walk = ACT_WALK_RIFLE
+	if self.ModelAnimationSet == "Combine" && (htype == "pistol" or htype == "revolver") then
+		CombineHandgun = true
+		rifle_idle = VJ_SequenceToActivity(self, "idle_unarmed")
+		rifle_walk = VJ_SequenceToActivity(self, "walkunarmed_all")
+	end
+	
+	-- Metrocops & Combine will use these if the hold type is RPG | Metrocop will use these if the hold type is a shotgun or crossbow | Combine will use these if the hold type is a handgun
+	if (self.ModelAnimationSet == "Metrocop" && (htype == "crossbow" or htype == "shotgun")) or CombineHandgun == true or htype == "ar2" or htype == "smg" or (htype == "rpg" && (self.ModelAnimationSet == "Metrocop" or self.ModelAnimationSet == "Combine")) then
+		-- Make rebels use SMG crouch firing and their own unique AR2 reloading
+		local rifle_crouchfiring = ACT_RANGE_ATTACK_AR2_LOW
+		local rifle_ar2reload = ACT_RELOAD_SMG1
+		if self.ModelAnimationSet == "Rebel" then
+			rifle_crouchfiring = ACT_RANGE_ATTACK_SMG1_LOW
+			rifle_ar2reload = VJ_SequenceToActivity(self, "reload_ar2")
+		end
+		
+		-- Note: Metrocops must use smg animation, they don't have any animations for AR2!
+		if (htype == "ar2" or CombineHandgun == true) && self.ModelAnimationSet != "Metrocop" then
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_AR2
+			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_AR2
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 			= rifle_crouchfiring
+			self.WeaponAnimTranslations[ACT_RELOAD] 					= rifle_ar2reload
+		elseif htype == "smg" or htype == "rpg" or self.ModelAnimationSet == "Metrocop" then
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_SMG1
+			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SMG1
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SMG1_LOW
+			self.WeaponAnimTranslations[ACT_RELOAD] 					= ACT_RELOAD_SMG1
+		end
+		self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_SMG1_LOW
+		self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
+		
+		self.WeaponAnimTranslations[ACT_IDLE] 							= rifle_idle
+		self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SMG1
+		
+		self.WeaponAnimTranslations[ACT_WALK] 							= rifle_walk
+		self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
+		if self.ModelAnimationSet != "Metrocop" then -- Don't translate it for metrocops!
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE
+		end
+		self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
+		
+		self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_RIFLE
+		self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
+		if self.ModelAnimationSet != "Metrocop" then -- Don't translate it for metrocops!
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 				= ACT_RUN_CROUCH_RIFLE
+		end
+		self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+	elseif htype == "crossbow" or htype == "shotgun" then -- Metrocops can't use this set
+		-- Make rebels use rifle/smg animations for certain actions
+		local shotgun_idle = ACT_SHOTGUN_IDLE4
+		local shotgun_attacklow = ACT_RANGE_ATTACK_SHOTGUN_LOW
+		local shotgun_walkaiming = ACT_WALK_AIM_SHOTGUN
+		local shotgun_runaiming = ACT_RUN_AIM_SHOTGUN
+		if self.ModelAnimationSet == "Rebel" then
+			shotgun_idle = ACT_IDLE_SHOTGUN_RELAXED
+			shotgun_attacklow = ACT_RANGE_ATTACK_SMG1_LOW
+			shotgun_walkaiming = ACT_WALK_AIM_RIFLE
+			shotgun_runaiming = ACT_RUN_AIM_RIFLE
+		end
+	
+		self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_SHOTGUN
+		self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_SHOTGUN
+		self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= shotgun_attacklow
+		self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_SMG1_LOW
+		self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SHOTGUN
+		self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW //ACT_RELOAD_SHOTGUN_LOW
+		
+		self.WeaponAnimTranslations[ACT_IDLE] 							= shotgun_idle
+		self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SHOTGUN
+		
+		self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_AIM_SHOTGUN
+		self.WeaponAnimTranslations[ACT_WALK_AIM] 						= shotgun_walkaiming
+		if self.ModelAnimationSet != "Metrocop" then -- Don't translate it for metrocops!
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE
+		end
+		self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
+		
+		self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_RIFLE
+		self.WeaponAnimTranslations[ACT_RUN_AIM] 						= shotgun_runaiming
+		if self.ModelAnimationSet != "Metrocop" then -- Don't translate it for metrocops!
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 				= ACT_RUN_CROUCH_RIFLE
+		end
+		self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+	elseif htype == "rpg" then -- Only rebels use the following...
+		self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_RPG
+		self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_SMG1
+		self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SMG1_LOW
+		self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_LOW_RPG
+		self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SMG1
+		self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
+		
+		self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_IDLE_RPG
+		self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_RPG
+		
+		self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_RPG
+		self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
+		self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RPG
+		self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_RPG
+		
+		self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_RPG
+		self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
+		self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RPG
+		self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_RPG
+	elseif htype == "pistol" or htype == "revolver" then
+		-- Make rebels use rifle move-aiming animations
+		local handgun_walkaiming = ACT_WALK_AIM_PISTOL
+		local handgun_runaiming = ACT_RUN_AIM_PISTOL
+		if self.ModelAnimationSet == "Rebel" then
+			handgun_walkaiming = ACT_WALK_AIM_RIFLE
+			handgun_runaiming = ACT_RUN_AIM_RIFLE
+		end
+		
+		self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_PISTOL
+		self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_PISTOL
+		self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_PISTOL_LOW
+		self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_PISTOL_LOW
+		self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_PISTOL
+		self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_PISTOL_LOW
+		
+		self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_IDLE_PISTOL
+		self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_PISTOL
+		
+		self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_PISTOL
+		self.WeaponAnimTranslations[ACT_WALK_AIM] 						= handgun_walkaiming
+		//self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE -- No need to translate
+		self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
+		
+		self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_PISTOL
+		self.WeaponAnimTranslations[ACT_RUN_AIM] 						= handgun_runaiming
+		//self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE -- No need to translate
+		self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1908,11 +2081,12 @@ end
 //ENT.Weapons_DontUseRegulate = {weapon_smg1=true,weapon_ar2=true}
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChangeWeapon(SetType)
-	SetType = SetType or "None"
-	if SetType != "None" then
+	SetType = SetType or nil
+	if SetType != nil then
 		if IsValid(self:GetActiveWeapon()) then self:GetActiveWeapon():Remove() end
 		self:Give(SetType)
 	end
+	self:SetupWeaponHoldTypeAnims(self:GetActiveWeapon():GetHoldType())
 	self.Weapon_ShotsSinceLastReload = 0
 	/*if self:VJ_HasActiveWeapon() == true then
 		if self.Weapons_UseRegulate[self:GetActiveWeapon():GetClass()] then // self.DisableUSE_SHOT_REGULATOR == false
@@ -1927,6 +2101,7 @@ end
 //ENT.TurningLerp = nil
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
+	self:SetPlaybackRate(self.AnimationPlaybackRate)
 	self:SetCondition(1) -- Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case sv_pvsskipanimation isn't disabled!
 	
 	/*if self.FollowingPlayer == true then
@@ -2120,9 +2295,9 @@ function ENT:Think()
 						if VJ_AnimationExists(self,translateact) == true then
 							self.CurrentAnim_WeaponReload = translateact
 						end
-						self.CurrentAnimDuration_WeaponReload = VJ_GetSequenceDuration(self,self.CurrentAnim_WeaponReload) - self.WeaponReloadAnimationDecreaseLengthAmount
+						self.CurrentAnimDuration_WeaponReload = self:DecideAnimationLength(self.CurrentAnim_WeaponReload, false, self.WeaponReloadAnimationDecreaseLengthAmount)
 						timer.Simple(self.CurrentAnimDuration_WeaponReload,function() if IsValid(self) then self.IsReloadingWeapon = false self.Weapon_ShotsSinceLastReload = 0 end end)
-						self:VJ_ACT_PLAYACTIVITY(self.CurrentAnim_WeaponReload,true,self.CurrentAnimDuration_WeaponReload,self.WeaponReloadAnimationFaceEnemy,self.WeaponReloadAnimationDelay,{SequenceDuration=self.CurrentAnimDuration_WeaponReload})
+						self:VJ_ACT_PLAYACTIVITY(self.CurrentAnim_WeaponReload,true,self.CurrentAnimDuration_WeaponReload,self.WeaponReloadAnimationFaceEnemy,self.WeaponReloadAnimationDelay,{SequenceDuration=self.CurrentAnimDuration_WeaponReload, PlayBackRateCalculated=true})
 					end
 					if self.VJ_IsBeingControlled == true then
 						if self.VJ_TheController:KeyDown(IN_RELOAD) then -- When being controlled
@@ -2326,7 +2501,7 @@ function ENT:Think()
 						self.NextAlertSoundT = CurTime() + 0.4
 						if self.DisableMeleeAttackAnimation == false then
 							self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_MeleeAttack)
-							self.CurrentAttackAnimationDuration = VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) -self.MeleeAttackAnimationDecreaseLengthAmount
+							self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, self.MeleeAttackAnimationDecreaseLengthAmount)
 							if self.MeleeAttackAnimationAllowOtherTasks == false then
 								self.PlayingAttackAnimation = true
 								timer.Simple(self.CurrentAttackAnimationDuration,function()
@@ -2340,7 +2515,7 @@ function ENT:Think()
 						if self.TimeUntilMeleeAttackDamage == false then
 							self:MeleeAttackCode_DoFinishTimers()
 						else
-							timer.Create( "timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage, self.MeleeAttackReps, function() self:MeleeAttackCode() end)
+							timer.Create( "timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self:GetPlaybackRate(), self.MeleeAttackReps, function() self:MeleeAttackCode() end)
 							for tk, tv in ipairs(self.MeleeAttackExtraTimers) do
 								self:DoAddExtraAttackTimers("timer_melee_start_"..math.Round(CurTime())+math.random(1,99999999),tv,1,"MeleeAttack")
 							end
@@ -2540,12 +2715,12 @@ function ENT:ThrowGrenadeCode(CustomEnt,NoOwner)
 	if self.DisableGrenadeAttackAnimation == false then
 		self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_GrenadeAttack)
 		self.PlayingAttackAnimation = true
-		timer.Simple(VJ_GetSequenceDuration(self,self.CurrentAttackAnimation) - 0.2,function()
+		timer.Simple(self:DecideAnimationLength(self.CurrentAttackAnimation, false, 0.2),function()
 			if IsValid(self) then
 				self.PlayingAttackAnimation = false
 			end
 		end)
-		self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,self.GrenadeAttackAnimationStopAttacks,self:DecideAnimationLength(self.CurrentAttackAnimation,self.GrenadeAttackAnimationStopAttacksTime),false,self.GrenadeAttackAnimationDelay)
+		self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,self.GrenadeAttackAnimationStopAttacks,self:DecideAnimationLength(self.CurrentAttackAnimation,self.GrenadeAttackAnimationStopAttacksTime),false,self.GrenadeAttackAnimationDelay, {PlayBackRateCalculated=true})
 	end
 
 	timer.Simple(self.TimeUntilGrenadeIsReleased,function()
@@ -3489,7 +3664,7 @@ function ENT:CallForHelpCode(SeeDistance)
 					//timer.Simple(1,function() if IsValid(self) && IsValid(x) then x:OnReceiveOrderSoundCode() end end)
 					if self.HasCallForHelpAnimation == true && CurTime() > self.NextCallForHelpAnimationT then
 						local pickanim = VJ_PICK(self.AnimTbl_CallForHelp)
-						self:VJ_ACT_PLAYACTIVITY(pickanim,self.CallForHelpStopAnimations,self:DecideAnimationLength(pickanim,self.CallForHelpStopAnimationsTime),self.CallForHelpAnimationFaceEnemy,self.CallForHelpAnimationDelay,{PlayBackRate=self.CallForHelpAnimationPlayBackRate})
+						self:VJ_ACT_PLAYACTIVITY(pickanim,self.CallForHelpStopAnimations,self:DecideAnimationLength(pickanim,self.CallForHelpStopAnimationsTime),self.CallForHelpAnimationFaceEnemy,self.CallForHelpAnimationDelay,{PlayBackRate=self.CallForHelpAnimationPlayBackRate, PlayBackRateCalculated=true})
 						self.NextCallForHelpAnimationT = CurTime() + self.NextCallForHelpAnimationTime
 					end
 					if self:GetPos():Distance(x:GetPos()) < SeeDistance then
@@ -3715,7 +3890,7 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 				self.NextFlinchT = CurTime() + 1
 				local pickanim = VJ_PICK(self.CallForBackUpOnDamageAnimation)
 				if VJ_AnimationExists(self,pickanim) == true && self.DisableCallForBackUpOnDamageAnimation == false then
-					self:VJ_ACT_PLAYACTIVITY(pickanim,true,self:DecideAnimationLength(pickanim,self.CallForBackUpOnDamageAnimationTime),true)
+					self:VJ_ACT_PLAYACTIVITY(pickanim,true,self:DecideAnimationLength(pickanim,self.CallForBackUpOnDamageAnimationTime),true, 0, {PlayBackRateCalculated=true})
 				else
 					self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
 					//self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
@@ -3818,9 +3993,9 @@ function ENT:DoFlinch(dmginfo,hitgroup)
 		local animtbl = self.AnimTbl_Flinch
 		if HitBoxInfo != nil then animtbl = HitBoxInfo.Animation end
 		local anim = VJ_PICK(animtbl)
-		local animdur = VJ_GetSequenceDuration(self,anim) - self.FlinchAnimationDecreaseLengthAmount
+		local animdur = self:DecideAnimationLength(anim, false, self.FlinchAnimationDecreaseLengthAmount)
 		if self.NextMoveAfterFlinchTime != "LetBaseDecide" && self.NextMoveAfterFlinchTime != false then animdur = self.NextMoveAfterFlinchTime end -- "LetBaseDecide" = Backwards compatibility
-		self:VJ_ACT_PLAYACTIVITY(anim,true,animdur,false,0,{SequenceDuration=animdur})
+		self:VJ_ACT_PLAYACTIVITY(anim,true,animdur,false,0,{SequenceDuration=animdur, PlayBackRateCalculated=true})
 		timer.Simple(animdur,function() if IsValid(self) then self.Flinching = false if IsValid(self:GetEnemy()) then self:DoChaseAnimation() else self:DoIdleAnimation() end end end)
 		self:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup)
 		self.NextFlinchT = CurTime() + self.NextFlinchTime
@@ -4111,7 +4286,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 				local pickanim = VJ_PICK(self.AnimTbl_Death)
 				local seltime = self:DecideAnimationLength(pickanim,self.DeathAnimationTime) - self.DeathAnimationDecreaseLengthAmount
 				self:RemoveAllGestures()
-				self:VJ_ACT_PLAYACTIVITY(pickanim,true,seltime,false)
+				self:VJ_ACT_PLAYACTIVITY(pickanim, true, seltime, false, 0, {PlayBackRateCalculated=true})
 				self.DeathAnimationCodeRan = true
 				timer.Simple(seltime,DoKilled)
 			end

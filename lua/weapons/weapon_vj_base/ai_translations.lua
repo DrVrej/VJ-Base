@@ -1,6 +1,8 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 
 function SWEP:SetupWeaponHoldTypeForAI(htype)
+	if self:GetOwner().IsVJBaseSNPC == true then return end
+	
 	-- Yete NPC-en Rebel-e, ere vor medz zenki animation-ere kordzadze yerp vor ge kalegor
 	local bezdigZenk_Kalel = ACT_WALK_AIM_PISTOL
 	local bezdigZenk_Vazel = ACT_RUN_AIM_PISTOL
@@ -25,7 +27,7 @@ function SWEP:SetupWeaponHoldTypeForAI(htype)
 	local bonbakshen_Vazel = ACT_RUN_AIM_SHOTGUN
 	if self.NPC_AnimationSet == "Metrocop" or self.NPC_AnimationSet == "Rebel" then
 		bonbakshen_varichadz = ACT_RANGE_ATTACK_SMG1_LOW
-		onbakshen_Kalel = ACT_WALK_AIM_RIFLE
+		bonbakshen_Kalel = ACT_WALK_AIM_RIFLE
 		bonbakshen_Vazel = ACT_RUN_AIM_RIFLE
 	end
 	
@@ -94,7 +96,7 @@ function SWEP:SetupWeaponHoldTypeForAI(htype)
 		self.ActivityTranslateAI[ACT_IDLE_AIM_AGITATED] 			= ACT_SHOTGUN_IDLE_DEEP
 		
 		self.ActivityTranslateAI[ACT_WALK] 							= ACT_WALK_AIM_SHOTGUN					-- ****
-		self.ActivityTranslateAI[ACT_WALK_AIM] 						= onbakshen_Kalel						-- ****
+		self.ActivityTranslateAI[ACT_WALK_AIM] 						= ACT_WALK_AIM_SHOTGUN						-- ****
 		self.ActivityTranslateAI[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE					-- ****
 		self.ActivityTranslateAI[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
 		self.ActivityTranslateAI[ACT_WALK_RELAXED] 					= ACT_WALK_AIM_SHOTGUN
@@ -163,32 +165,12 @@ function SWEP:SetupWeaponHoldTypeForAI(htype)
 		self.ActivityTranslateAI[ACT_GESTURE_RELOAD] 				= ACT_GESTURE_RELOAD_PISTOL
 		self.ActivityTranslateAI[ACT_IDLE] 							= ACT_IDLE_PISTOL
 		self.ActivityTranslateAI[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_PISTOL
-		/*self.ActivityTranslateAI[ACT_IDLE_RELAXED] 				= ACT_IDLE_SMG1_RELAXED
-		self.ActivityTranslateAI[ACT_IDLE_STIMULATED] 				= ACT_IDLE_SMG1_STIMULATED
-		self.ActivityTranslateAI[ACT_IDLE_AGITATED] 				= ACT_IDLE_ANGRY_SMG1
-		self.ActivityTranslateAI[ACT_IDLE_AIM_RELAXED] 				= ACT_IDLE_SMG1_RELAXED
-		self.ActivityTranslateAI[ACT_IDLE_AIM_STIMULATED] 			= ACT_IDLE_AIM_RIFLE_STIMULATED
-		self.ActivityTranslateAI[ACT_IDLE_AIM_AGITATED] 			= ACT_IDLE_ANGRY_SMG1*/
+		
 		self.ActivityTranslateAI[ACT_WALK] 							= ACT_WALK_PISTOL
 		self.ActivityTranslateAI[ACT_WALK_AIM] 						= bezdigZenk_Kalel
-		/*self.ActivityTranslateAI[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE
-		self.ActivityTranslateAI[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
-		self.ActivityTranslateAI[ACT_WALK_RELAXED] 					= ACT_WALK_RIFLE_RELAXED
-		self.ActivityTranslateAI[ACT_WALK_STIMULATED] 				= ACT_WALK_RIFLE_STIMULATED
-		self.ActivityTranslateAI[ACT_WALK_AGITATED] 				= ACT_WALK_AIM_RIFLE
-		self.ActivityTranslateAI[ACT_WALK_AIM_RELAXED] 				= ACT_WALK_RIFLE_RELAXED
-		self.ActivityTranslateAI[ACT_WALK_AIM_STIMULATED] 			= ACT_WALK_AIM_RIFLE_STIMULATED
-		self.ActivityTranslateAI[ACT_WALK_AIM_AGITATED] 			= ACT_WALK_AIM_RIFLE*/
+		
 		self.ActivityTranslateAI[ACT_RUN] 							= ACT_RUN_PISTOL
 		self.ActivityTranslateAI[ACT_RUN_AIM] 						= bezdigZenk_Vazel
-		/*self.ActivityTranslateAI[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
-		self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
-		self.ActivityTranslateAI[ACT_RUN_RELAXED] 					= ACT_RUN_RIFLE_RELAXED
-		self.ActivityTranslateAI[ACT_RUN_STIMULATED] 				= ACT_RUN_RIFLE_STIMULATED
-		self.ActivityTranslateAI[ACT_RUN_AGITATED] 					= ACT_RUN_AIM_RIFLE
-		self.ActivityTranslateAI[ACT_RUN_AIM_RELAXED] 				= ACT_RUN_RIFLE_RELAXED
-		self.ActivityTranslateAI[ACT_RUN_AIM_STIMULATED] 			= ACT_RUN_AIM_RIFLE_STIMULATED
-		self.ActivityTranslateAI[ACT_RUN_AIM_AGITATED] 				= ACT_RUN_AIM_RIFLE*/
 	end
 	return
 end
