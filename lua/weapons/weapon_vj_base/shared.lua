@@ -20,11 +20,11 @@ SWEP.HoldType = "ar2"
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel = "models/weapons/v_flaregun.mdl"
 SWEP.UseHands = false -- Should this weapon use Garry's Mod hands? (The model must support it!)
-SWEP.ViewModelFlip = false -- Flip the model? Usally used for CS:S models
+SWEP.ViewModelFlip = false -- Flip the model? Usually used for CS:S models
 SWEP.ViewModelFOV = 55 -- Player FOV for the view model
 SWEP.BobScale = 1.5 -- Bob effect when moving
 SWEP.SwayScale = 1 -- Default is 1, The scale of the viewmodel sway
-SWEP.CSMuzzleFlashes = false -- Recommanded to enable for Counter Strike: Source models
+SWEP.CSMuzzleFlashes = false -- Recommended to enable for Counter Strike: Source models
 SWEP.DrawAmmo = true -- Draw regular Garry's Mod HUD?
 SWEP.DrawCrosshair = true -- Draw Crosshair?
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -212,10 +212,6 @@ SWEP.NPC_AnimationSet = "Custom"
 SWEP.NPC_SecondaryFireNextT = 0
 SWEP.NPC_SecondaryFirePerforming = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:Precache()
-	util.PrecacheSound(self.Primary.Sound)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:GetCapabilities()
 	return bit.bor(CAP_WEAPON_RANGE_ATTACK1,CAP_INNATE_RANGE_ATTACK1)
 end
@@ -244,10 +240,7 @@ function SWEP:Initialize()
 			//self:SetWeaponHoldType(self.HoldType)
 			if self:GetOwner():GetClass() == "npc_citizen" then self:GetOwner():Fire("DisableWeaponPickup") end -- If it's a citizen, disable them picking up weapons from the ground
 			self:GetOwner():SetKeyValue("spawnflags","256") -- Long Visibility Shooting since HL2 NPCs are blind
-			//if self:GetOwner():GetClass() != "npc_citizen" then
-				hook.Add("Think",self,self.NPC_ServerThink)
-				hook.Add("AlwaysThink",self,self.NPC_ServerThinkAlways)
-			//end
+			hook.Add("Think", self, self.NPC_ServerNextFire)
 		end
 	end
 	if self:GetOwner():IsNPC() && self:GetOwner().IsVJBaseSNPC then
@@ -256,7 +249,7 @@ function SWEP:Initialize()
 	self:SetDefaultValues(self.HoldType)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:SetDefaultValues(curtype,force)
+function SWEP:SetDefaultValues(curtype, force)
 	curtype = curtype or "ar2"
 	force = force or false
 	if curtype == "pistol" then
@@ -297,6 +290,8 @@ function SWEP:TranslateActivity(act)
 		end
 		return -1
 	end
+	
+	-- For non-NPCs
 	if (self.ActivityTranslate[act] != nil) then
 		return self.ActivityTranslate[act]
 	end
@@ -306,17 +301,6 @@ end
 function SWEP:CanBePickedUpByNPCs()
 	if self.NPC_CanBePickedUp == false then return end
 	return true
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:NPC_ServerThinkAlways()
-	if (CLIENT) or !IsValid(self) or !IsValid(self:GetOwner()) then return end
-	hook.Remove("AlwaysThink", self)
-	hook.Add("AlwaysThink",self,self.NPC_ServerThinkAlways)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:NPC_ServerThink()
-	if (CLIENT) or !IsValid(self) or !IsValid(self:GetOwner()) then return end
-	self:NPC_ServerNextFire()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_ServerNextFire()
@@ -343,7 +327,7 @@ function SWEP:NPC_ServerNextFire()
 		//print(self.NPC_NextPrimaryFire)
 		local nxt = self.NPC_NextPrimaryFire
 		if nxt > 0.15 then nxt = 0.15 end -- Yete nxt aveli medz e 0.15, ere vor 0.15 ela
-		timer.Simple(nxt, function() hook.Add("Think",self,self.NPC_ServerNextFire) end)
+		timer.Simple(nxt, function() hook.Add("Think", self, self.NPC_ServerNextFire) end)
 		//self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
 	end
 	if self.NPC_NextPrimaryFire != false && self:NPCAbleToShoot() == true then FireCode() end
@@ -553,7 +537,7 @@ function SWEP:PrimaryAttack(UseAlt)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:SecondaryAttack()
-	return false -- We don't want a secondary attack
+	return false -- No secondary attack
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:DoIdleAnimation()
@@ -563,15 +547,14 @@ function SWEP:DoIdleAnimation()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttackEffects()
-	local customeffects = self:CustomOnPrimaryAttackEffects()
-	if customeffects != true then return end
+	if self:CustomOnPrimaryAttackEffects() != true then return end
 	local owner = self:GetOwner()
 	
 	/*local vjeffectmuz = EffectData()
-	vjeffectmuz:SetOrigin(self:GetOwner():GetShootPos())
+	vjeffectmuz:SetOrigin(owner:GetShootPos())
 	vjeffectmuz:SetEntity(self)
-	vjeffectmuz:SetStart(self:GetOwner():GetShootPos())
-	vjeffectmuz:SetNormal(self:GetOwner():GetAimVector())
+	vjeffectmuz:SetStart(owner:GetShootPos())
+	vjeffectmuz:SetNormal(owner:GetAimVector())
 	vjeffectmuz:SetAttachment(1)
 	util.Effect("VJ_Weapon_RifleMuzzle1",vjeffectmuz)*/
 
@@ -713,10 +696,6 @@ function SWEP:EquipAmmo(ply)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:OwnerChanged()
-	//self:GetOwner()
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnRemove()
 	self:CustomOnRemove()
 	self:StopParticles()
@@ -746,8 +725,9 @@ function SWEP:RunWorldModelThink()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:DecideBulletPosition()
-	if !IsValid(self:GetOwner()) then return nil end
-	if !self:GetOwner():IsNPC() then return self:GetOwner():GetShootPos() end
+	local owner = self:GetOwner()
+	if !IsValid(owner) then return nil end
+	if !owner:IsNPC() then return owner:GetShootPos() end
 	local customPos = self:CustomBulletSpawnPosition()
 	if customPos != false then
 		return customPos
@@ -782,15 +762,15 @@ function SWEP:DecideBulletPosition()
 			end
 		end
 		if (getmuzzle == false) or getmuzzle == nil then
-			if self:GetOwner():LookupBone("ValveBiped.Bip01_R_Hand") != nil then
-				return self:GetOwner():GetBonePosition(self:GetOwner():LookupBone("ValveBiped.Bip01_R_Hand"))
+			if owner:LookupBone("ValveBiped.Bip01_R_Hand") != nil then
+				return owner:GetBonePosition(owner:LookupBone("ValveBiped.Bip01_R_Hand"))
 			else
 				print("WARNING: "..self:GetClass().." doesn't have a proper attachment or bone for bullet spawn!")
-				return self:GetOwner():EyePos()
+				return owner:EyePos()
 			end
 		end
 		//print("It has a proper attachment.")
-		return self:GetAttachment(self:LookupAttachment(getmuzzle)).Pos //+ self:GetOwner():GetUp()*-45
+		return self:GetAttachment(self:LookupAttachment(getmuzzle)).Pos //+ owner:GetUp()*-45
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
