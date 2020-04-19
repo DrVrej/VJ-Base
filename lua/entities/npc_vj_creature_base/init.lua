@@ -96,7 +96,7 @@ ENT.NextCallForHelpTime = 4 -- Time until it calls for help again
 ENT.HasCallForHelpAnimation = true -- if true, it will play the call for help animation
 ENT.AnimTbl_CallForHelp = {} -- Call For Help Animations
 ENT.CallForHelpAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
-ENT.CallForHelpAnimationPlayBackRate = 0.5 -- How fast should the animation play? | Currently only for gestures!
+ENT.CallForHelpAnimationPlayBackRate = 1 -- How fast should the animation play? | Currently only for gestures!
 ENT.CallForHelpStopAnimations = true -- Should it stop attacks for a certain amount of time?
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.CallForHelpStopAnimationsTime = false -- How long should it stop attacks?
@@ -2194,10 +2194,10 @@ function ENT:FollowPlayerCode(key,activator,caller,data)
 			//timer.Simple(0.15,function() if self:IsValid() && self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_TARGET_FACE) end end)
 			//if self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_IDLE_STAND) end
 			//timer.Simple(0.1,function() if self:IsValid() then self:VJ_TASK_GOTO_TARGET() end end)
-			self:FollowPlayerSoundCode()
+			self:PlaySound("FollowPlayer")
 			self.FollowingPlayer = true
 		else
-			self:UnFollowPlayerSoundCode()
+			self:PlaySound("UnFollowPlayer")
 			if self:BusyWithActivity() == false then
 				self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 			end
@@ -3555,33 +3555,10 @@ function ENT:DoEntityRelationshipCheck()
 				if self.HasAllies == true && inEneTbl == false then
 					for _,friclass in ipairs(self.VJ_NPC_Class) do
 						if friclass == "CLASS_PLAYER_ALLY" && self.PlayerFriendly == false then self.PlayerFriendly = true end
-						if friclass == "CLASS_COMBINE" then
-							if NPCTbl_Combine[vClass] then
-								v:AddEntityRelationship(self,D_LI,99)
-								self:AddEntityRelationship(v,D_LI,99)
-								entisfri = true
-							end
-						end
-						if friclass == "CLASS_ZOMBIE" then
-							if NPCTbl_Zombies[vClass] then
-								v:AddEntityRelationship(self,D_LI,99)
-								self:AddEntityRelationship(v,D_LI,99)
-								entisfri = true
-							end
-						end
-						if friclass == "CLASS_ANTLION" then
-							if NPCTbl_Antlions[vClass] then
-								v:AddEntityRelationship(self,D_LI,99)
-								self:AddEntityRelationship(v,D_LI,99)
-								entisfri = true
-							end
-						end
-						if friclass == "CLASS_XEN" then
-							if NPCTbl_Xen[vClass] then
-								v:AddEntityRelationship(self,D_LI,99)
-								self:AddEntityRelationship(v,D_LI,99)
-								entisfri = true
-							end
+						if (friclass == "CLASS_COMBINE" && NPCTbl_Combine[vClass]) or (friclass == "CLASS_ZOMBIE" && NPCTbl_Zombies[vClass]) or (friclass == "CLASS_ANTLION" && NPCTbl_Antlions[vClass]) or (friclass == "CLASS_XEN" && NPCTbl_Xen[vClass]) then
+							v:AddEntityRelationship(self,D_LI,99)
+							self:AddEntityRelationship(v,D_LI,99)
+							entisfri = true
 						end
 						if (v.VJ_NPC_Class /*&& friclass != "CLASS_PLAYER_ALLY"*/ && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
 							if friclass == "CLASS_PLAYER_ALLY" then
@@ -3724,12 +3701,12 @@ function ENT:DoEntityRelationshipCheck()
 				end
 			end
 			if vPlayer then
-				if entisfri == true && self.MoveOutOfFriendlyPlayersWay == true && !self:IsMoving() && CurTime() > self.TakingCoverT && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && self:BusyWithActivity() == false then
+				if entisfri == true && self.MoveOutOfFriendlyPlayersWay == true && self.IsGuard == false && !self:IsMoving() && CurTime() > self.TakingCoverT && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && self:BusyWithActivity() == false then
 					local dist = 20
 					if self.FollowingPlayer == true then dist = 10 end
 					if /*self:Disposition(v) == D_LI &&*/ (self:VJ_GetNearestPointToEntityDistance(v) < dist) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
 						self.NextFollowPlayerT = CurTime() + 2
-						self:MoveOutOfPlayersWaySoundCode()
+						self:PlaySound("MoveOutOfPlayersWay")
 						//self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-50,-50))
 						self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 						local vsched = ai_vj_schedule.New("vj_move_away")
@@ -3777,7 +3754,7 @@ function ENT:CallForHelpCode(SeeDistance)
 					local goingtomove = false
 					self:CustomOnCallForHelp(x)
 					self:CallForHelpSoundCode()
-					//timer.Simple(1,function() if IsValid(self) && IsValid(x) then x:OnReceiveOrderSoundCode() end end)
+					//timer.Simple(1,function() if IsValid(self) && IsValid(x) then x:PlaySound("OnReceiveOrder") end end)
 					if self.HasCallForHelpAnimation == true && CurTime() > self.NextCallForHelpAnimationT then
 						local pickanim = VJ_PICK(self.AnimTbl_CallForHelp)
 						self:VJ_ACT_PLAYACTIVITY(pickanim,self.CallForHelpStopAnimations,self:DecideAnimationLength(pickanim,self.CallForHelpStopAnimationsTime),self.CallForHelpAnimationFaceEnemy,self.CallForHelpAnimationDelay,{PlayBackRate=self.CallForHelpAnimationPlayBackRate, PlayBackRateCalculated=true})
@@ -3814,7 +3791,7 @@ function ENT:CallForHelpCode(SeeDistance)
 							end
 						end
 					end
-					if goingtomove == true then x:OnReceiveOrderSoundCode() end
+					if goingtomove == true then x:PlaySound("OnReceiveOrder") end
 				end
 			end
 		end
@@ -4742,45 +4719,6 @@ function ENT:RunItemDropsOnDeathCode(dmginfo,hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:FollowPlayerSoundCode(CustomTbl,Type)
-	if self.HasSounds == false or self.HasFollowPlayerSounds_Follow == false then return end
-	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICK(CustomTbl)
-	local sdtbl = VJ_PICK(self.SoundTbl_FollowPlayer)
-	if (math.random(1,self.FollowPlayerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-		if ctbl != false then sdtbl = ctbl end
-		self:StopAllCommonSpeechSounds()
-		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
-		self.CurrentFollowPlayerSound = Type(self,sdtbl,self.FollowPlayerSoundLevel,self:VJ_DecideSoundPitch(self.FollowPlayerPitch1,self.FollowPlayerPitch2))
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:UnFollowPlayerSoundCode(CustomTbl,Type)
-	if self.HasSounds == false or self.HasFollowPlayerSounds_UnFollow == false then return end
-	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICK(CustomTbl)
-	local sdtbl = VJ_PICK(self.SoundTbl_UnFollowPlayer)
-	if (math.random(1,self.UnFollowPlayerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-		if ctbl != false then sdtbl = ctbl end
-		self:StopAllCommonSpeechSounds()
-		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
-		self.CurrentUnFollowPlayerSound = Type(self,sdtbl,self.UnFollowPlayerSoundLevel,self:VJ_DecideSoundPitch(self.UnFollowPlayerPitch1,self.UnFollowPlayerPitch2))
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MoveOutOfPlayersWaySoundCode(CustomTbl,Type)
-	if self.HasSounds == false or self.HasMoveOutOfPlayersWaySounds == false then return end
-	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICK(CustomTbl)
-	local sdtbl = VJ_PICK(self.SoundTbl_MoveOutOfPlayersWay)
-	if (math.random(1,self.MoveOutOfPlayersWaySoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-		if ctbl != false then sdtbl = ctbl end
-		self:StopAllCommonSpeechSounds()
-		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
-		self.CurrentMoveOutOfPlayersWaySound = Type(self,sdtbl,self.MoveOutOfPlayersWaySoundLevel,self:VJ_DecideSoundPitch(self.MoveOutOfPlayersWaySoundPitch1,self.MoveOutOfPlayersWaySoundPitch2))
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MedicSoundCode_BeforeHeal(CustomTbl,Type)
 	if self.HasSounds == false or self.HasMedicSounds_BeforeHeal == false then return end
 	Type = Type or VJ_CreateSound
@@ -4965,20 +4903,6 @@ function ENT:LostEnemySoundCode(CustomTbl,Type)
 			self.CurrentLostEnemySound = Type(self,sdtbl,self.LostEnemySoundLevel,self:VJ_DecideSoundPitch(self.LostEnemySoundPitch1,self.LostEnemySoundPitch2))
 		end
 		self.LostEnemySoundT = CurTime() + math.Rand(self.NextSoundTime_LostEnemy1,self.NextSoundTime_LostEnemy2)
-	end
-end
---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnReceiveOrderSoundCode(CustomTbl,Type)
-	if self.HasSounds == false or self.HasOnReceiveOrderSounds == false then return end
-	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICK(CustomTbl)
-	local sdtbl = VJ_PICK(self.SoundTbl_OnReceiveOrder)
-	if (math.random(1,self.OnReceiveOrderSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-		if ctbl != false then sdtbl = ctbl end
-		self:StopAllCommonSpeechSounds()
-		self.NextIdleSoundT = self.NextIdleSoundT + 2
-		self.NextAlertSoundT = CurTime() + 2
-		self.CurrentOnReceiveOrderSound = Type(self,sdtbl,self.OnReceiveOrderSoundLevel,self:VJ_DecideSoundPitch(self.OnReceiveOrderSoundPitch1,self.OnReceiveOrderSoundPitch2))
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------

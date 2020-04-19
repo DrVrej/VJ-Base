@@ -83,7 +83,7 @@ ENT.NextCallForHelpTime = 4 -- Time until it calls for help again
 ENT.HasCallForHelpAnimation = true -- if true, it will play the call for help animation
 ENT.AnimTbl_CallForHelp = {ACT_SIGNAL_ADVANCE,ACT_SIGNAL_FORWARD} -- Call For Help Animations
 ENT.CallForHelpAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
-ENT.CallForHelpAnimationPlayBackRate = 0.5 -- How fast should the animation play? | Currently only for gestures!
+ENT.CallForHelpAnimationPlayBackRate = 1 -- How fast should the animation play? | Currently only for gestures!
 ENT.CallForHelpStopAnimations = true -- Should it stop attacks for a certain amount of time?
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.CallForHelpStopAnimationsTime = false -- How long should it stop attacks?
@@ -687,6 +687,8 @@ function ENT:CustomOnChangeMovementType(SetType) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnIsJumpLegal(startPos,apex,endPos) end -- Return nothing to let base decide, return true to make it jump, return false to disallow jumping
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnSetupWeaponHoldTypeAnims() return false end -- return true to disable the base code
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnSchedule() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ExpressionFinished(strExp) end
@@ -966,6 +968,7 @@ ENT.HealthRegenerationDelayT = 0
 ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.LatestVisibleEnemyPosition = Vector(0,0,0)
 ENT.SelectedDifficulty = 1
+ENT.ModelAnimationSet = 0
 ENT.VJ_AddCertainEntityAsEnemy = {}
 ENT.VJ_AddCertainEntityAsFriendly = {}
 ENT.AttackTimers = {"timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee"}
@@ -1667,19 +1670,25 @@ function ENT:VJ_ACT_TAKE_COVER(CustomAnimTbl,StopActs,StopActsTime,FaceEnemy)
 		self.TakingCoverT = CurTime() + StopActsTime
 	end
 end
-ENT.ModelAnimationSet = 0
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnSetupWeaponHoldTypeAnims()
-	return false -- return true to disable the base code
+function ENT:DoChangeWeapon(SetType)
+	SetType = SetType or nil
+	if SetType != nil then
+		if IsValid(self:GetActiveWeapon()) then self:GetActiveWeapon():Remove() end
+		self:Give(SetType)
+	end
+	self:SetupWeaponHoldTypeAnims(self:GetActiveWeapon():GetHoldType())
+	self.Weapon_ShotsSinceLastReload = 0
+	self:CustomOnDoChangeWeapon(self:GetActiveWeapon(), self.CurrentWeaponEntity)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetupWeaponHoldTypeAnims(htype)
 	if VJ_AnimationExists(self, "signal_takecover") == true && VJ_AnimationExists(self, "grenthrow") == true && VJ_AnimationExists(self, "bugbait_hit") == true then
-		self.ModelAnimationSet = 1
+		self.ModelAnimationSet = 1 -- Combine
 	elseif VJ_AnimationExists(self, ACT_WALK_AIM_PISTOL) == true && VJ_AnimationExists(self, ACT_RUN_AIM_PISTOL) == true && VJ_AnimationExists(self, ACT_POLICE_HARASS1) == true then
-		self.ModelAnimationSet = 2
+		self.ModelAnimationSet = 2 -- Metrocop
 	elseif VJ_AnimationExists(self, "cheer1") == true && VJ_AnimationExists(self, "wave_smg1") == true && VJ_AnimationExists(self, ACT_BUSY_SIT_GROUND) == true then
-		self.ModelAnimationSet = 3
+		self.ModelAnimationSet = 3 -- Rebel
 	end
 	
 	self.WeaponAnimTranslations = {}
@@ -1688,7 +1697,7 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 	if self.ModelAnimationSet == 1 then --=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 		-- Use rifle animations with minor edits if it's holding a handgun
 		local rifle_idle = ACT_IDLE_SMG1
-		local rifle_walk = ACT_WALK_RIFLE
+		local rifle_walk = VJ_PICK({ACT_WALK_RIFLE, VJ_SequenceToActivity(self, "walkeasy_all")})
 		if htype == "pistol" or htype == "revolver" then
 			rifle_idle = VJ_SequenceToActivity(self, "idle_unarmed")
 			rifle_walk = VJ_SequenceToActivity(self, "walkunarmed_all")
@@ -1776,43 +1785,55 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_IDLE_PISTOL
 			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_PISTOL
 			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_PISTOL
+			self.WeaponAnimTranslations[ACT_WALK] 							= VJ_PICK({ACT_WALK, ACT_WALK_PISTOL})
 			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_PISTOL
 			//self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE -- No need to translate
 			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
 			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_PISTOL
+			self.WeaponAnimTranslations[ACT_RUN] 							= VJ_PICK({ACT_RUN, ACT_RUN_PISTOL})
 			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_PISTOL
 			//self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE -- No need to translate
 			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
 		end
 	elseif self.ModelAnimationSet == 3 then --=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
-		if htype == "ar2" or htype == "smg" then
-			if htype == "ar2" then
-				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_AR2
-				self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_AR2
-				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_AR2_LOW
-				self.WeaponAnimTranslations[ACT_RELOAD] 					= VJ_SequenceToActivity(self, "reload_ar2")
-				self.WeaponAnimTranslations[ACT_IDLE] 						= VJ_PICK({VJ_SequenceToActivity(self, "idle_relaxed_ar2_1"), VJ_SequenceToActivity(self, "idle_alert_ar2_1"), VJ_SequenceToActivity(self, "idle_angry_ar2")})
-			elseif htype == "smg" then
-				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_SMG1
-				self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SMG1
-				self.WeaponAnimTranslations[ACT_RELOAD] 					= ACT_RELOAD_SMG1
-				self.WeaponAnimTranslations[ACT_IDLE] 						= VJ_PICK({ACT_IDLE_SMG1_RELAXED, ACT_IDLE_SMG1_STIMULATED, ACT_IDLE_SMG1, VJ_SequenceToActivity(self, "idle_smg1_relaxed")})
-			end
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SMG1_LOW
+		if htype == "ar2" then
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_AR2
+			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_AR2
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_AR2_LOW
 			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_SMG1_LOW
+			self.WeaponAnimTranslations[ACT_RELOAD] 						= VJ_SequenceToActivity(self, "reload_ar2")
 			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
 			
+			self.WeaponAnimTranslations[ACT_IDLE] 							= VJ_PICK({VJ_SequenceToActivity(self, "idle_relaxed_ar2_1"), VJ_SequenceToActivity(self, "idle_alert_ar2_1"), VJ_SequenceToActivity(self, "idle_angry_ar2")})
 			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SMG1
 			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_RIFLE
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
+			self.WeaponAnimTranslations[ACT_WALK] 							= VJ_PICK({ACT_WALK_RIFLE, VJ_SequenceToActivity(self, "walk_ar2_relaxed_all"), VJ_SequenceToActivity(self, "walkalerthold_ar2_all1"), VJ_SequenceToActivity(self, "walkholdall1_ar2")})
+			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= VJ_PICK({VJ_SequenceToActivity(self, "walkaimall1_ar2"), VJ_SequenceToActivity(self, "walkalertaim_ar2_all1")})
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RPG
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
+			
+			self.WeaponAnimTranslations[ACT_RUN] 							= VJ_PICK({VJ_SequenceToActivity(self, "run_alert_holding_ar2_all"), VJ_SequenceToActivity(self, "run_ar2_relaxed_all"), VJ_SequenceToActivity(self, "run_holding_ar2_all")})
+			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= VJ_PICK({ACT_RUN_AIM_RIFLE, VJ_SequenceToActivity(self, "run_alert_aiming_ar2_all")})
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RPG
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		elseif htype == "smg" then
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_SMG1
+			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_SMG1
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SMG1_LOW
+			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_SMG1_LOW
+			self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SMG1
+			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
+			
+			self.WeaponAnimTranslations[ACT_IDLE] 							= VJ_PICK({ACT_IDLE_SMG1_RELAXED, ACT_IDLE_SMG1_STIMULATED, ACT_IDLE_SMG1, VJ_SequenceToActivity(self, "idle_smg1_relaxed")})
+			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SMG1
+			
+			self.WeaponAnimTranslations[ACT_WALK] 							= VJ_PICK({ACT_WALK_RIFLE, ACT_WALK_RIFLE_RELAXED, ACT_WALK_RIFLE_STIMULATED})
+			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= VJ_PICK({ACT_WALK_AIM_RIFLE, ACT_WALK_AIM_RIFLE_STIMULATED})
 			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE
 			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
 			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_RIFLE
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
+			self.WeaponAnimTranslations[ACT_RUN] 							= VJ_PICK({ACT_RUN_RIFLE, ACT_RUN_RIFLE_STIMULATED, ACT_RUN_RIFLE_RELAXED})
+			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= VJ_PICK({ACT_RUN_AIM_RIFLE, ACT_RUN_AIM_RIFLE_STIMULATED})
 			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
 			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
 		elseif htype == "crossbow" or htype == "shotgun" then
@@ -1826,14 +1847,14 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 			self.WeaponAnimTranslations[ACT_IDLE] 							= VJ_PICK({ACT_IDLE_SHOTGUN_RELAXED, ACT_IDLE_SHOTGUN_STIMULATED})
 			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SHOTGUN
 			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_AIM_SHOTGUN
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE
+			self.WeaponAnimTranslations[ACT_WALK] 							= VJ_PICK({ACT_WALK_RIFLE, VJ_SequenceToActivity(self, "walk_ar2_relaxed_all"), VJ_SequenceToActivity(self, "walkalerthold_ar2_all1"), VJ_SequenceToActivity(self, "walkholdall1_ar2")})
+			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= VJ_PICK({VJ_SequenceToActivity(self, "walkaimall1_ar2"), VJ_SequenceToActivity(self, "walkalertaim_ar2_all1")})
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RPG
 			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
 			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_RIFLE
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
+			self.WeaponAnimTranslations[ACT_RUN] 							= VJ_PICK({VJ_SequenceToActivity(self, "run_alert_holding_ar2_all"), VJ_SequenceToActivity(self, "run_ar2_relaxed_all"), VJ_SequenceToActivity(self, "run_holding_ar2_all")})
+			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= VJ_PICK({ACT_RUN_AIM_RIFLE, VJ_SequenceToActivity(self, "run_alert_aiming_ar2_all")})
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RPG
 			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
 		elseif htype == "rpg" then
 			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_RPG
@@ -1846,15 +1867,15 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 			self.WeaponAnimTranslations[ACT_IDLE] 							= VJ_PICK({ACT_IDLE_RPG, ACT_IDLE_RPG_RELAXED})
 			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_RPG
 			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_RPG
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
+			self.WeaponAnimTranslations[ACT_WALK] 							= VJ_PICK({ACT_WALK_RPG, ACT_WALK_RPG_RELAXED})
+			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= VJ_PICK({VJ_SequenceToActivity(self, "walkaimall1_ar2"), VJ_SequenceToActivity(self, "walkalertaim_ar2_all1")})
 			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RPG
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_RPG
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
 			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_RPG
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
+			self.WeaponAnimTranslations[ACT_RUN] 							= VJ_PICK({ACT_RUN_RPG, ACT_RUN_RPG_RELAXED})
+			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= VJ_PICK({ACT_RUN_AIM_RIFLE, VJ_SequenceToActivity(self, "run_alert_aiming_ar2_all")})
 			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RPG
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_RPG
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
 		elseif htype == "pistol" or htype == "revolver" then
 			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_PISTOL
 			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_PISTOL
@@ -1867,12 +1888,12 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_PISTOL
 			
 			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_PISTOL
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
+			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= VJ_PICK({VJ_SequenceToActivity(self, "walkaimall1_ar2"), VJ_SequenceToActivity(self, "walkalertaim_ar2_all1")})
 			//self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE -- No need to translate
 			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
 			
 			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_PISTOL
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
+			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= VJ_SequenceToActivity(self, "run_alert_aiming_ar2_all")
 			//self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE -- No need to translate
 			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
 		end
@@ -1983,10 +2004,10 @@ function ENT:FollowPlayerCode(key,activator,caller,data)
 			//timer.Simple(0.15,function() if self:IsValid() && self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_TARGET_FACE) end end)
 			//if self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_IDLE_STAND) end
 			//timer.Simple(0.1,function() if self:IsValid() then self:VJ_TASK_GOTO_TARGET() end end)
-			self:FollowPlayerSoundCode()
+			self:PlaySound("FollowPlayer")
 			self.FollowingPlayer = true
 		else
-			self:UnFollowPlayerSoundCode()
+			self:PlaySound("UnFollowPlayer")
 			if self:BusyWithActivity() == false then
 				self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 			end
@@ -2126,27 +2147,6 @@ function ENT:DoConstantlyFaceEnemyCode()
 		return true
 	end
 	return false
-end
-//ENT.Weapons_UseRegulate = {weapon_shotgun=true,weapon_crossbow=true,weapon_annabelle=true,weapon_pistol=true}
-//ENT.Weapons_DontUseRegulate = {weapon_smg1=true,weapon_ar2=true}
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoChangeWeapon(SetType)
-	SetType = SetType or nil
-	if SetType != nil then
-		if IsValid(self:GetActiveWeapon()) then self:GetActiveWeapon():Remove() end
-		self:Give(SetType)
-	end
-	self:SetupWeaponHoldTypeAnims(self:GetActiveWeapon():GetHoldType())
-	self.Weapon_ShotsSinceLastReload = 0
-	/*if self:VJ_HasActiveWeapon() == true then
-		if self.Weapons_UseRegulate[self:GetActiveWeapon():GetClass()] then // self.DisableUSE_SHOT_REGULATOR == false
-			self:CapabilitiesAdd(bit.bor(CAP_USE_SHOT_REGULATOR))
-		end
-		if self.Weapons_DontUseRegulate[self:GetActiveWeapon():GetClass()] then //or self:GetActiveWeapon().NPC_EnableDontUseRegulate == true then
-			self:CapabilitiesRemove(CAP_USE_SHOT_REGULATOR)
-		end
-	end*/
-	self:CustomOnDoChangeWeapon(self:GetActiveWeapon(), self.CurrentWeaponEntity)
 end
 //ENT.TurningLerp = nil
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3489,33 +3489,10 @@ function ENT:DoEntityRelationshipCheck()
 				if self.HasAllies == true && inEneTbl == false then
 					for _,friclass in ipairs(self.VJ_NPC_Class) do
 						if friclass == "CLASS_PLAYER_ALLY" && self.PlayerFriendly == false then self.PlayerFriendly = true end
-						if friclass == "CLASS_COMBINE" then
-							if NPCTbl_Combine[vClass] then
-								v:AddEntityRelationship(self,D_LI,99)
-								self:AddEntityRelationship(v,D_LI,99)
-								entisfri = true
-							end
-						end
-						if friclass == "CLASS_ZOMBIE" then
-							if NPCTbl_Zombies[vClass] then
-								v:AddEntityRelationship(self,D_LI,99)
-								self:AddEntityRelationship(v,D_LI,99)
-								entisfri = true
-							end
-						end
-						if friclass == "CLASS_ANTLION" then
-							if NPCTbl_Antlions[vClass] then
-								v:AddEntityRelationship(self,D_LI,99)
-								self:AddEntityRelationship(v,D_LI,99)
-								entisfri = true
-							end
-						end
-						if friclass == "CLASS_XEN" then
-							if NPCTbl_Xen[vClass] then
-								v:AddEntityRelationship(self,D_LI,99)
-								self:AddEntityRelationship(v,D_LI,99)
-								entisfri = true
-							end
+						if (friclass == "CLASS_COMBINE" && NPCTbl_Combine[vClass]) or (friclass == "CLASS_ZOMBIE" && NPCTbl_Zombies[vClass]) or (friclass == "CLASS_ANTLION" && NPCTbl_Antlions[vClass]) or (friclass == "CLASS_XEN" && NPCTbl_Xen[vClass]) then
+							v:AddEntityRelationship(self,D_LI,99)
+							self:AddEntityRelationship(v,D_LI,99)
+							entisfri = true
 						end
 						if (v.VJ_NPC_Class /*&& friclass != "CLASS_PLAYER_ALLY"*/ && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
 							if friclass == "CLASS_PLAYER_ALLY" then
@@ -3658,12 +3635,12 @@ function ENT:DoEntityRelationshipCheck()
 				end
 			end
 			if vPlayer then
-				if entisfri == true && self.MoveOutOfFriendlyPlayersWay == true && !self:IsMoving() && CurTime() > self.TakingCoverT && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && self:BusyWithActivity() == false then
+				if entisfri == true && self.MoveOutOfFriendlyPlayersWay == true && self.IsGuard == false && !self:IsMoving() && CurTime() > self.TakingCoverT && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && self:BusyWithActivity() == false then
 					local dist = 20
 					if self.FollowingPlayer == true then dist = 10 end
 					if /*self:Disposition(v) == D_LI &&*/ (self:VJ_GetNearestPointToEntityDistance(v) < dist) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
 						self.NextFollowPlayerT = CurTime() + 2
-						self:MoveOutOfPlayersWaySoundCode()
+						self:PlaySound("MoveOutOfPlayersWay")
 						//self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-50,-50))
 						self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 						local vsched = ai_vj_schedule.New("vj_move_away")
@@ -3711,7 +3688,7 @@ function ENT:CallForHelpCode(SeeDistance)
 					local goingtomove = false
 					self:CustomOnCallForHelp(x)
 					self:CallForHelpSoundCode()
-					//timer.Simple(1,function() if IsValid(self) && IsValid(x) then x:OnReceiveOrderSoundCode() end end)
+					//timer.Simple(1,function() if IsValid(self) && IsValid(x) then x:PlaySound("OnReceiveOrder") end end)
 					if self.HasCallForHelpAnimation == true && CurTime() > self.NextCallForHelpAnimationT then
 						local pickanim = VJ_PICK(self.AnimTbl_CallForHelp)
 						self:VJ_ACT_PLAYACTIVITY(pickanim,self.CallForHelpStopAnimations,self:DecideAnimationLength(pickanim,self.CallForHelpStopAnimationsTime),self.CallForHelpAnimationFaceEnemy,self.CallForHelpAnimationDelay,{PlayBackRate=self.CallForHelpAnimationPlayBackRate, PlayBackRateCalculated=true})
@@ -3748,7 +3725,7 @@ function ENT:CallForHelpCode(SeeDistance)
 							end
 						end
 					end
-					if goingtomove == true then x:OnReceiveOrderSoundCode() end
+					if goingtomove == true then x:PlaySound("OnReceiveOrder") end
 				end
 			end
 		end
@@ -4704,43 +4681,57 @@ function ENT:RunItemDropsOnDeathCode(dmginfo,hitgroup)
 		end
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:FollowPlayerSoundCode(CustomTbl,Type)
-	if self.HasSounds == false or self.HasFollowPlayerSounds_Follow == false then return end
+------------------- --------------------------------------------------------------------------------------------------------------------------
+function ENT:PlaySound(Set, CustomSd, Type)
+	if self.HasSounds == false or Set == nil then return end
 	Type = Type or VJ_CreateSound
 	local ctbl = VJ_PICK(CustomTbl)
-	local sdtbl = VJ_PICK(self.SoundTbl_FollowPlayer)
-	if (math.random(1,self.FollowPlayerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-		if ctbl != false then sdtbl = ctbl end
-		self:StopAllCommonSpeechSounds()
-		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
-		self.CurrentFollowPlayerSound = Type(self,sdtbl,self.FollowPlayerSoundLevel,self:VJ_DecideSoundPitch(self.FollowPlayerPitch1,self.FollowPlayerPitch2))
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:UnFollowPlayerSoundCode(CustomTbl,Type)
-	if self.HasSounds == false or self.HasFollowPlayerSounds_UnFollow == false then return end
-	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICK(CustomTbl)
-	local sdtbl = VJ_PICK(self.SoundTbl_UnFollowPlayer)
-	if (math.random(1,self.UnFollowPlayerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-		if ctbl != false then sdtbl = ctbl end
-		self:StopAllCommonSpeechSounds()
-		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
-		self.CurrentUnFollowPlayerSound = Type(self,sdtbl,self.UnFollowPlayerSoundLevel,self:VJ_DecideSoundPitch(self.UnFollowPlayerPitch1,self.UnFollowPlayerPitch2))
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MoveOutOfPlayersWaySoundCode(CustomTbl,Type)
-	if self.HasSounds == false or self.HasMoveOutOfPlayersWaySounds == false then return end
-	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICK(CustomTbl)
-	local sdtbl = VJ_PICK(self.SoundTbl_MoveOutOfPlayersWay)
-	if (math.random(1,self.MoveOutOfPlayersWaySoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-		if ctbl != false then sdtbl = ctbl end
-		self:StopAllCommonSpeechSounds()
-		self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
-		self.CurrentMoveOutOfPlayersWaySound = Type(self,sdtbl,self.MoveOutOfPlayersWaySoundLevel,self:VJ_DecideSoundPitch(self.MoveOutOfPlayersWaySoundPitch1,self.MoveOutOfPlayersWaySoundPitch2))
+	
+	if Set == "FollowPlayer" then
+		if self.HasFollowPlayerSounds_Follow == true then
+			local sdtbl = VJ_PICK(self.SoundTbl_FollowPlayer)
+			if (math.random(1, self.FollowPlayerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+				if ctbl != false then sdtbl = ctbl end
+				self:StopAllCommonSpeechSounds()
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.CurrentFollowPlayerSound = Type(self, sdtbl, self.FollowPlayerSoundLevel, self:VJ_DecideSoundPitch(self.FollowPlayerPitch1, self.FollowPlayerPitch2))
+			end
+		end
+		return
+	elseif Set == "UnFollowPlayer" then
+		if self.HasFollowPlayerSounds_UnFollow == true then
+			local sdtbl = VJ_PICK(self.SoundTbl_UnFollowPlayer)
+			if (math.random(1, self.UnFollowPlayerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+				if ctbl != false then sdtbl = ctbl end
+				self:StopAllCommonSpeechSounds()
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.CurrentUnFollowPlayerSound = Type(self, sdtbl, self.UnFollowPlayerSoundLevel, self:VJ_DecideSoundPitch(self.UnFollowPlayerPitch1, self.UnFollowPlayerPitch2))
+			end
+		end
+		return
+	elseif Set == "OnReceiveOrder" then
+		if self.HasOnReceiveOrderSounds == true then
+			local sdtbl = VJ_PICK(self.SoundTbl_OnReceiveOrder)
+			if (math.random(1, self.OnReceiveOrderSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+				if ctbl != false then sdtbl = ctbl end
+				self:StopAllCommonSpeechSounds()
+				self.NextIdleSoundT = self.NextIdleSoundT + 2
+				self.NextAlertSoundT = CurTime() + 2
+				self.CurrentOnReceiveOrderSound = Type(self, sdtbl, self.OnReceiveOrderSoundLevel, self:VJ_DecideSoundPitch(self.OnReceiveOrderSoundPitch1, self.OnReceiveOrderSoundPitch2))
+			end
+		end
+		return
+	elseif Set == "MoveOutOfPlayersWay" then
+		if self.HasMoveOutOfPlayersWaySounds == true then
+			local sdtbl = VJ_PICK(self.SoundTbl_MoveOutOfPlayersWay)
+			if (math.random(1, self.MoveOutOfPlayersWaySoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+				if ctbl != false then sdtbl = ctbl end
+				self:StopAllCommonSpeechSounds()
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.CurrentMoveOutOfPlayersWaySound = Type(self, sdtbl, self.MoveOutOfPlayersWaySoundLevel, self:VJ_DecideSoundPitch(self.MoveOutOfPlayersWaySoundPitch1, self.MoveOutOfPlayersWaySoundPitch2))
+			end
+		end
+		return
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -4928,20 +4919,6 @@ function ENT:LostEnemySoundCode(CustomTbl,Type)
 			self.CurrentLostEnemySound = Type(self,sdtbl,self.LostEnemySoundLevel,self:VJ_DecideSoundPitch(self.LostEnemySoundPitch1,self.LostEnemySoundPitch2))
 		end
 		self.LostEnemySoundT = CurTime() + math.Rand(self.NextSoundTime_LostEnemy1,self.NextSoundTime_LostEnemy2)
-	end
-end
---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnReceiveOrderSoundCode(CustomTbl,Type)
-	if self.HasSounds == false or self.HasOnReceiveOrderSounds == false then return end
-	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICK(CustomTbl)
-	local sdtbl = VJ_PICK(self.SoundTbl_OnReceiveOrder)
-	if (math.random(1,self.OnReceiveOrderSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-		if ctbl != false then sdtbl = ctbl end
-		self:StopAllCommonSpeechSounds()
-		self.NextIdleSoundT = self.NextIdleSoundT + 2
-		self.NextAlertSoundT = CurTime() + 2
-		self.CurrentOnReceiveOrderSound = Type(self,sdtbl,self.OnReceiveOrderSoundLevel,self:VJ_DecideSoundPitch(self.OnReceiveOrderSoundPitch1,self.OnReceiveOrderSoundPitch2))
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
