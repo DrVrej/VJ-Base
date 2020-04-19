@@ -389,36 +389,6 @@ function SWEP:NPCAbleToShoot(CheckSec)
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:NPC_PlayFiringGesture()
-	local owner = self:GetOwner()
-	local customg = VJ_PICK(owner.AnimTbl_WeaponAttackFiringGesture)
-	local anim = ""
-	if customg != false then
-		anim = customg
-		anim = VJ_GetSequenceName(owner,anim)
-	else
-		anim = "gesture_shoot_ar2"
-		if self.HoldType == "ar2" then
-			anim = "gesture_shoot_ar2"
-		elseif self.HoldType == "smg" then
-			anim = "gesture_shoot_smg2"
-		elseif self.HoldType == "pistol" or self.HoldType == "revolver" then
-			if owner:LookupSequence("gesture_shoot_pistol") == -1 then
-				anim = "gesture_shootp1"
-			else
-				anim = "gesture_shoot_pistol"
-			end
-		elseif self.HoldType == "crossbow" or self.HoldType == "shotgun" then
-			anim = "gesture_shoot_shotgun"
-		elseif self.HoldType == "rpg" then
-			anim = "gesture_shoot_rpg"
-		end
-	end
-	local gest = owner:AddGestureSequence(owner:LookupSequence(anim))
-	owner:SetLayerPriority(gest, 2)
-	owner:SetLayerPlaybackRate(gest, 0.5)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPCShoot_Primary(ShootPos,ShootDir)
 	//self:SetClip1(self:Clip1() - 1)
 	//if CurTime() > self.NPC_NextPrimaryFireT then
@@ -457,7 +427,9 @@ function SWEP:NPCShoot_Primary(ShootPos,ShootDir)
 	timer.Simple(self.NPC_TimeUntilFire,function()
 		if IsValid(self) && IsValid(owner) && self:NPCAbleToShoot() == true && CurTime() > self.NPC_NextPrimaryFireT then
 			if owner.DisableWeaponFiringGesture != true then
-				self:NPC_PlayFiringGesture()
+				local owner = self:GetOwner()
+				local anim = owner:VJ_TranslateWeaponActivity(VJ_PICK(owner.AnimTbl_WeaponAttackFiringGesture))
+				owner:VJ_ACT_PLAYACTIVITY(anim, false, false, false, 0, {AlwaysUseGesture=true})
 			end
 			self:PrimaryAttack()
 			if self.NPC_NextPrimaryFire != false then
