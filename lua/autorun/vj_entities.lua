@@ -243,7 +243,7 @@ function VJ_GetSequenceName(argent, actname)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_SequenceToActivity(argent, seq)
-	if isstring(actname) then
+	if isstring(seq) then
 		local checkanim = argent:GetSequenceActivity(argent:LookupSequence(seq))
 		if checkanim == nil or checkanim == -1 then
 			return false

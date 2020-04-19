@@ -306,12 +306,11 @@ ENT.Weapon_NoSpawnMenu = false -- If set to true, the NPC weapon setting in the 
 ENT.Weapon_FiringDistanceFar = 3000 -- How far away it can shoot
 ENT.Weapon_FiringDistanceClose = 10 -- How close until it stops shooting
 	-- ====== Standing-Firing Variables ====== --
-ENT.AnimTbl_WeaponAttack = {ACT_RANGE_ATTACK1} -- Animation played when the SNPC does weapon attack | For VJ Weapons
-ENT.WeaponAttackSchedule = {SCHED_RANGE_ATTACK1} -- Schedule played when the SNPC does weapon attack | For None-VJ Weapons
+ENT.AnimTbl_WeaponAttack = {ACT_RANGE_ATTACK1} -- Animation played when the SNPC does weapon attack
 ENT.CanCrouchOnWeaponAttack = true -- Can it crouch while shooting?
 ENT.AnimTbl_WeaponAttackCrouch = {ACT_RANGE_ATTACK1_LOW} -- Animation played when the SNPC does weapon attack while crouching | For VJ Weapons
 ENT.CanCrouchOnWeaponAttackChance = 2 -- How much chance of crouching? | 1 = Crouch every time
-ENT.AnimTbl_WeaponAttackFiringGesture = {} -- Firing Gesture animations used when the SNPC is firing the weapon | Leave empty for the base to decide
+ENT.AnimTbl_WeaponAttackFiringGesture = {ACT_GESTURE_RANGE_ATTACK1} -- Firing Gesture animations used when the SNPC is firing the weapon
 ENT.DisableWeaponFiringGesture = false -- If set to true, it will disable the weapon firing gestures
 	-- ====== Secondary Fire Variables ====== --
 ENT.CanUseSecondaryOnWeaponAttack = true -- Can the NPC use a secondary fire if it's available?
@@ -1290,7 +1289,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 			self:SetPlaybackRate(vTbl_PlayBackRate)
 			if IsGesture == true then
 				local gesture = false
-				if IsSequence == true then
+				if IsSequence == true or isstring(vACT_Name) then
 					gesture = self:AddGestureSequence(self:LookupSequence(vACT_Name))
 				else
 					gesture = self:AddGesture(vACT_Name)
@@ -1668,164 +1667,215 @@ function ENT:VJ_ACT_TAKE_COVER(CustomAnimTbl,StopActs,StopActsTime,FaceEnemy)
 		self.TakingCoverT = CurTime() + StopActsTime
 	end
 end
-ENT.ModelAnimationSet = "Custom"
+ENT.ModelAnimationSet = 0
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnSetupWeaponHoldTypeAnims()
 	return false -- return true to disable the base code
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetupWeaponHoldTypeAnims(htype)
-	if VJ_AnimationExists(self,ACT_WALK_AIM_PISTOL) == true && VJ_AnimationExists(self,ACT_RUN_AIM_PISTOL) == true && VJ_AnimationExists(self,ACT_POLICE_HARASS1) == true then
-		self.ModelAnimationSet = "Metrocop"
-	elseif VJ_AnimationExists(self,"cheer1") == true && VJ_AnimationExists(self,"wave_smg1") == true && VJ_AnimationExists(self,ACT_BUSY_SIT_GROUND) == true then
-		self.ModelAnimationSet = "Rebel"
-	elseif VJ_AnimationExists(self,"signal_takecover") == true && VJ_AnimationExists(self,"grenthrow") == true && VJ_AnimationExists(self,"bugbait_hit") == true then
-		self.ModelAnimationSet = "Combine"
+	if VJ_AnimationExists(self, "signal_takecover") == true && VJ_AnimationExists(self, "grenthrow") == true && VJ_AnimationExists(self, "bugbait_hit") == true then
+		self.ModelAnimationSet = 1
+	elseif VJ_AnimationExists(self, ACT_WALK_AIM_PISTOL) == true && VJ_AnimationExists(self, ACT_RUN_AIM_PISTOL) == true && VJ_AnimationExists(self, ACT_POLICE_HARASS1) == true then
+		self.ModelAnimationSet = 2
+	elseif VJ_AnimationExists(self, "cheer1") == true && VJ_AnimationExists(self, "wave_smg1") == true && VJ_AnimationExists(self, ACT_BUSY_SIT_GROUND) == true then
+		self.ModelAnimationSet = 3
 	end
+	
 	self.WeaponAnimTranslations = {}
 	if self:CustomOnSetupWeaponHoldTypeAnims() == true then return end
 	
-	-- Make metrocops to not translate crouch walking and make the crouch running a walking one instead
-	local MetrocopShotgun = false
-	if self.ModelAnimationSet == "Metrocop" then
-		self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_WALK_CROUCH
-	end
-	
-	-- Make combine use rifle animations with minor edits if it's holding a handgun
-	local CombineHandgun = false
-	local rifle_idle = ACT_IDLE_SMG1
-	local rifle_walk = ACT_WALK_RIFLE
-	if self.ModelAnimationSet == "Combine" && (htype == "pistol" or htype == "revolver") then
-		CombineHandgun = true
-		rifle_idle = VJ_SequenceToActivity(self, "idle_unarmed")
-		rifle_walk = VJ_SequenceToActivity(self, "walkunarmed_all")
-	end
-	
-	-- Metrocops & Combine will use these if the hold type is RPG | Metrocop will use these if the hold type is a shotgun or crossbow | Combine will use these if the hold type is a handgun
-	if (self.ModelAnimationSet == "Metrocop" && (htype == "crossbow" or htype == "shotgun")) or CombineHandgun == true or htype == "ar2" or htype == "smg" or (htype == "rpg" && (self.ModelAnimationSet == "Metrocop" or self.ModelAnimationSet == "Combine")) then
-		-- Make rebels use SMG crouch firing and their own unique AR2 reloading
-		local rifle_crouchfiring = ACT_RANGE_ATTACK_AR2_LOW
-		local rifle_ar2reload = ACT_RELOAD_SMG1
-		if self.ModelAnimationSet == "Rebel" then
-			rifle_crouchfiring = ACT_RANGE_ATTACK_SMG1_LOW
-			rifle_ar2reload = VJ_SequenceToActivity(self, "reload_ar2")
+	if self.ModelAnimationSet == 1 then --=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
+		-- Use rifle animations with minor edits if it's holding a handgun
+		local rifle_idle = ACT_IDLE_SMG1
+		local rifle_walk = ACT_WALK_RIFLE
+		if htype == "pistol" or htype == "revolver" then
+			rifle_idle = VJ_SequenceToActivity(self, "idle_unarmed")
+			rifle_walk = VJ_SequenceToActivity(self, "walkunarmed_all")
 		end
 		
-		-- Note: Metrocops must use smg animation, they don't have any animations for AR2!
-		if (htype == "ar2" or CombineHandgun == true) && self.ModelAnimationSet != "Metrocop" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_AR2
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_AR2
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 			= rifle_crouchfiring
-			self.WeaponAnimTranslations[ACT_RELOAD] 					= rifle_ar2reload
-		elseif htype == "smg" or htype == "rpg" or self.ModelAnimationSet == "Metrocop" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_SMG1
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SMG1
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SMG1_LOW
-			self.WeaponAnimTranslations[ACT_RELOAD] 					= ACT_RELOAD_SMG1
+		if htype == "ar2" or htype == "smg" or htype == "rpg" or htype == "pistol" or htype == "revolver" then
+			if htype == "ar2" or htype == "pistol" or htype == "revolver" then
+				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_AR2
+				self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_AR2
+				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_AR2_LOW
+				self.WeaponAnimTranslations[ACT_RELOAD] 					= ACT_RELOAD_SMG1
+			elseif htype == "smg" or htype == "rpg" then
+				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_SMG1
+				self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SMG1
+				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SMG1_LOW
+				self.WeaponAnimTranslations[ACT_RELOAD] 					= ACT_RELOAD_SMG1
+			end
+			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_SMG1_LOW
+			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
+			
+			self.WeaponAnimTranslations[ACT_IDLE] 							= rifle_idle
+			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SMG1
+			
+			self.WeaponAnimTranslations[ACT_WALK] 							= rifle_walk
+			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
+			
+			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_RIFLE
+			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		elseif htype == "crossbow" or htype == "shotgun" then
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_SHOTGUN
+			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_SHOTGUN
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SHOTGUN_LOW
+			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_SMG1_LOW
+			self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SHOTGUN
+			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
+			
+			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_SHOTGUN_IDLE4
+			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SHOTGUN
+			
+			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_AIM_SHOTGUN
+			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_SHOTGUN
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
+			
+			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_RIFLE
+			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_SHOTGUN
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
 		end
-		self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_SMG1_LOW
-		self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
+	elseif self.ModelAnimationSet == 2 then --=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
+		-- Do not translate crouch walking and also make the crouch running a walking one instead
+		self.WeaponAnimTranslations[ACT_RUN_CROUCH] 						= ACT_WALK_CROUCH
 		
-		self.WeaponAnimTranslations[ACT_IDLE] 							= rifle_idle
-		self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SMG1
-		
-		self.WeaponAnimTranslations[ACT_WALK] 							= rifle_walk
-		self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
-		if self.ModelAnimationSet != "Metrocop" then -- Don't translate it for metrocops!
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE
+		if htype == "smg" or htype == "rpg" or htype == "ar2" or htype == "crossbow" or htype == "shotgun" then
+			-- Note: Metrocops must use smg animation, they don't have any animations for AR2!
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_SMG1
+			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_SMG1
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SMG1_LOW
+			self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SMG1
+			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_SMG1_LOW
+			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
+			
+			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_IDLE_SMG1
+			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SMG1
+			
+			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_RIFLE
+			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
+			
+			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_RIFLE
+			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		elseif htype == "pistol" or htype == "revolver" then	
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_PISTOL
+			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_PISTOL
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_PISTOL_LOW
+			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_PISTOL_LOW
+			self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_PISTOL
+			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_PISTOL_LOW
+			
+			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_IDLE_PISTOL
+			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_PISTOL
+			
+			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_PISTOL
+			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_PISTOL
+			//self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE -- No need to translate
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
+			
+			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_PISTOL
+			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_PISTOL
+			//self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE -- No need to translate
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
 		end
-		self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
-		
-		self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_RIFLE
-		self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
-		if self.ModelAnimationSet != "Metrocop" then -- Don't translate it for metrocops!
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 				= ACT_RUN_CROUCH_RIFLE
+	elseif self.ModelAnimationSet == 3 then --=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
+		if htype == "ar2" or htype == "smg" then
+			if htype == "ar2" then
+				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_AR2
+				self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_AR2
+				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_AR2_LOW
+				self.WeaponAnimTranslations[ACT_RELOAD] 					= VJ_SequenceToActivity(self, "reload_ar2")
+				self.WeaponAnimTranslations[ACT_IDLE] 						= VJ_PICK({VJ_SequenceToActivity(self, "idle_relaxed_ar2_1"), VJ_SequenceToActivity(self, "idle_alert_ar2_1"), VJ_SequenceToActivity(self, "idle_angry_ar2")})
+			elseif htype == "smg" then
+				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_SMG1
+				self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SMG1
+				self.WeaponAnimTranslations[ACT_RELOAD] 					= ACT_RELOAD_SMG1
+				self.WeaponAnimTranslations[ACT_IDLE] 						= VJ_PICK({ACT_IDLE_SMG1_RELAXED, ACT_IDLE_SMG1_STIMULATED, ACT_IDLE_SMG1, VJ_SequenceToActivity(self, "idle_smg1_relaxed")})
+			end
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SMG1_LOW
+			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_SMG1_LOW
+			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
+			
+			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SMG1
+			
+			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_RIFLE
+			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
+			
+			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_RIFLE
+			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		elseif htype == "crossbow" or htype == "shotgun" then
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_SHOTGUN
+			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_SHOTGUN
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SMG1_LOW
+			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_SMG1_LOW
+			self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SHOTGUN
+			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW //ACT_RELOAD_SHOTGUN_LOW
+			
+			self.WeaponAnimTranslations[ACT_IDLE] 							= VJ_PICK({ACT_IDLE_SHOTGUN_RELAXED, ACT_IDLE_SHOTGUN_STIMULATED})
+			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SHOTGUN
+			
+			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_AIM_SHOTGUN
+			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
+			
+			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_RIFLE
+			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		elseif htype == "rpg" then
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_RPG
+			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_RPG
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SMG1_LOW
+			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_LOW_RPG
+			self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SMG1
+			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
+			
+			self.WeaponAnimTranslations[ACT_IDLE] 							= VJ_PICK({ACT_IDLE_RPG, ACT_IDLE_RPG_RELAXED})
+			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_RPG
+			
+			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_RPG
+			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RPG
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_RPG
+			
+			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_RPG
+			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RPG
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_RPG
+		elseif htype == "pistol" or htype == "revolver" then
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_PISTOL
+			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_PISTOL
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_PISTOL_LOW
+			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_PISTOL_LOW
+			self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_PISTOL
+			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_PISTOL_LOW
+			
+			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_IDLE_PISTOL
+			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_PISTOL
+			
+			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_PISTOL
+			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
+			//self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE -- No need to translate
+			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
+			
+			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_PISTOL
+			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
+			//self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE -- No need to translate
+			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
 		end
-		self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
-	elseif htype == "crossbow" or htype == "shotgun" then -- Metrocops can't use this set
-		-- Make rebels use rifle/smg animations for certain actions
-		local shotgun_idle = ACT_SHOTGUN_IDLE4
-		local shotgun_attacklow = ACT_RANGE_ATTACK_SHOTGUN_LOW
-		local shotgun_walkaiming = ACT_WALK_AIM_SHOTGUN
-		local shotgun_runaiming = ACT_RUN_AIM_SHOTGUN
-		if self.ModelAnimationSet == "Rebel" then
-			shotgun_idle = ACT_IDLE_SHOTGUN_RELAXED
-			shotgun_attacklow = ACT_RANGE_ATTACK_SMG1_LOW
-			shotgun_walkaiming = ACT_WALK_AIM_RIFLE
-			shotgun_runaiming = ACT_RUN_AIM_RIFLE
-		end
-	
-		self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_SHOTGUN
-		self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_SHOTGUN
-		self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= shotgun_attacklow
-		self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_SMG1_LOW
-		self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SHOTGUN
-		self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW //ACT_RELOAD_SHOTGUN_LOW
-		
-		self.WeaponAnimTranslations[ACT_IDLE] 							= shotgun_idle
-		self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SHOTGUN
-		
-		self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_AIM_SHOTGUN
-		self.WeaponAnimTranslations[ACT_WALK_AIM] 						= shotgun_walkaiming
-		if self.ModelAnimationSet != "Metrocop" then -- Don't translate it for metrocops!
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE
-		end
-		self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
-		
-		self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_RIFLE
-		self.WeaponAnimTranslations[ACT_RUN_AIM] 						= shotgun_runaiming
-		if self.ModelAnimationSet != "Metrocop" then -- Don't translate it for metrocops!
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 				= ACT_RUN_CROUCH_RIFLE
-		end
-		self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
-	elseif htype == "rpg" then -- Only rebels use the following...
-		self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_RPG
-		self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_SMG1
-		self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SMG1_LOW
-		self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_LOW_RPG
-		self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SMG1
-		self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
-		
-		self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_IDLE_RPG
-		self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_RPG
-		
-		self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_RPG
-		self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
-		self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RPG
-		self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_RPG
-		
-		self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_RPG
-		self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
-		self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RPG
-		self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_RPG
-	elseif htype == "pistol" or htype == "revolver" then
-		-- Make rebels use rifle move-aiming animations
-		local handgun_walkaiming = ACT_WALK_AIM_PISTOL
-		local handgun_runaiming = ACT_RUN_AIM_PISTOL
-		if self.ModelAnimationSet == "Rebel" then
-			handgun_walkaiming = ACT_WALK_AIM_RIFLE
-			handgun_runaiming = ACT_RUN_AIM_RIFLE
-		end
-		
-		self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_PISTOL
-		self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_PISTOL
-		self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_PISTOL_LOW
-		self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_PISTOL_LOW
-		self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_PISTOL
-		self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_PISTOL_LOW
-		
-		self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_IDLE_PISTOL
-		self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_PISTOL
-		
-		self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_PISTOL
-		self.WeaponAnimTranslations[ACT_WALK_AIM] 						= handgun_walkaiming
-		//self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE -- No need to translate
-		self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
-		
-		self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_PISTOL
-		self.WeaponAnimTranslations[ACT_RUN_AIM] 						= handgun_runaiming
-		//self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE -- No need to translate
-		self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3131,7 +3181,7 @@ function ENT:SelectSchedule(iNPCState)
 							self.Weapon_TimeSinceLastShot = 0
 							self.Weapon_ShotsSinceLastReload = 0
 							self:GetActiveWeapon():SetClip1(99999)
-							self:VJ_SetSchedule(VJ_PICK(self.WeaponAttackSchedule))
+							self:VJ_SetSchedule(SCHED_RANGE_ATTACK1)
 						end
 						//end
 						//else self.DoingWeaponAttack = false end

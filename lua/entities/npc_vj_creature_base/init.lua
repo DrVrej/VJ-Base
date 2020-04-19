@@ -1336,7 +1336,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 			self:SetPlaybackRate(vTbl_PlayBackRate)
 			if IsGesture == true then
 				local gesture = false
-				if IsSequence == true then
+				if IsSequence == true or isstring(vACT_Name) then
 					gesture = self:AddGestureSequence(self:LookupSequence(vACT_Name))
 				else
 					gesture = self:AddGesture(vACT_Name)
