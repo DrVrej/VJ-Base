@@ -1107,6 +1107,8 @@ function ENT:Initialize()
 	self.VJ_AddCertainEntityAsEnemy = {}
 	self.VJ_AddCertainEntityAsFriendly = {}
 	self.CurrentPossibleEnemies = {}
+	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + 1) -- Make sure they don't wander as soon as they spawn (Only if self.NextWanderTime isn't already given a value!)
+	
 	if GetConVarNumber("vj_npc_seedistance") == 0 then self.SightDistance = self.SightDistance else self.SightDistance = GetConVarNumber("vj_npc_seedistance") end
 	timer.Simple(0.1,function()
 		if IsValid(self) then
@@ -3943,7 +3945,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 	if self:Health() >= 0 then
 		self:DoFlinch(dmginfo,hitgroup)
 		self:DamageByPlayerCode(dmginfo,hitgroup)
-		self:PainSoundCode()
+		self:PlaySound("Pain")
 
 		if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && CurTime() > self.Passive_NextRunOnDamageT then
 			if self.Passive_RunOnDamage == true then
@@ -5004,6 +5006,18 @@ function ENT:PlaySound(Set, CustomSd, Type)
 			self.AllyDeathSoundT = CurTime() + math.Rand(self.NextSoundTime_AllyDeath1, self.NextSoundTime_AllyDeath2)
 		end
 		return
+	elseif Set == "Pain" then
+		if self.HasPainSounds == true && CurTime() > self.PainSoundT then
+			local sdtbl = VJ_PICK(self.SoundTbl_Pain)
+			if (math.random(1, self.PainSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+				if ctbl != false then sdtbl = ctbl end
+				VJ_STOPSOUND(self.CurrentIdleSound)
+				self.NextIdleSoundT_RegularChange = CurTime() + 1
+				self.CurrentPainSound = Type(self, sdtbl, self.PainSoundLevel, self:VJ_DecideSoundPitch(self.PainSoundPitch1, self.PainSoundPitch2))
+			end
+			self.PainSoundT = CurTime() + math.Rand(self.NextSoundTime_Pain1, self.NextSoundTime_Pain2)
+		end
+		return
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -5147,22 +5161,6 @@ function ENT:LeapAttackDamageMissSoundCode(CustomTbl,Type)
 		if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
 		self.NextIdleSoundT_RegularChange = CurTime() + 1
 		self.CurrentLeapAttackDamageMissSound = Type(self,sdtbl,self.LeapAttackDamageMissSoundLevel,self:VJ_DecideSoundPitch(self.LeapAttackDamageMissSoundPitch1,self.LeapAttackDamageMissSoundPitch2))
-	end
-end
---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PainSoundCode(CustomTbl,Type)
-	if self.HasSounds == false or self.HasPainSounds == false then return end
-	if CurTime() > self.PainSoundT then
-		Type = Type or VJ_CreateSound
-		local ctbl = VJ_PICK(CustomTbl)
-		local sdtbl = VJ_PICK(self.SoundTbl_Pain)
-		if (math.random(1,self.PainSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-			if ctbl != false then sdtbl = ctbl end
-			VJ_STOPSOUND(self.CurrentIdleSound)
-			self.NextIdleSoundT_RegularChange = CurTime() + 1
-			self.CurrentPainSound = Type(self,sdtbl,self.PainSoundLevel,self:VJ_DecideSoundPitch(self.PainSoundPitch1,self.PainSoundPitch2))
-		end
-		self.PainSoundT = CurTime() + math.Rand(self.NextSoundTime_Pain1,self.NextSoundTime_Pain2)
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
