@@ -994,9 +994,9 @@ hook.Add("OnEntityCreated","VJ_ENTITYCREATED",function(entity)
 	end*/
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local function VJ_NPCPLY_DEATH(npc,attacker,inflictor)
+local function VJ_NPCPLY_DEATH(npc, attacker, inflictor)
 	if attacker.IsVJBaseSNPC == true && (attacker.IsVJBaseSNPC_Human == true or attacker.IsVJBaseSNPC_Creature == true) then
-		attacker:DoKilledEnemy(npc,attacker,inflictor)
+		attacker:DoKilledEnemy(npc, attacker, inflictor)
 	end
 end
 local function VJ_PLY_DEATH(victim,inflictor,attacker) VJ_NPCPLY_DEATH(victim,attacker,inflictor) end -- Arguments are flipped between the hooks for some reason...

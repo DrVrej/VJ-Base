@@ -2101,7 +2101,7 @@ function ENT:Touch(entity)
 			if entity:IsNPC() or entity:IsPlayer() then
 				if self:DoRelationshipCheck(entity) then
 					self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) end)
-					self:AlertSoundCode()
+					self:PlaySound("Alert")
 				end
 			end
 			self.Passive_NextRunOnTouchT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
@@ -3086,12 +3086,12 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 		end
 	end
 	if hitentity == true then
-		self:MeleeAttackSoundCode()
+		self:PlaySound("MeleeAttack")
 		if self.StopMeleeAttackAfterFirstHit == true then self.AlreadyDoneMeleeAttackFirstHit = true /*self:StopMoving()*/ end
 	else
 		self:CustomOnMeleeAttack_Miss()
 		if self.MeleeAttackWorldShakeOnMiss == true then util.ScreenShake(self:GetPos(),self.MeleeAttackWorldShakeOnMissAmplitude,self.MeleeAttackWorldShakeOnMissFrequency,self.MeleeAttackWorldShakeOnMissDuration,self.MeleeAttackWorldShakeOnMissRadius) end
-		self:MeleeAttackMissSoundCode()
+		self:PlaySound("MeleeAttackMiss", {}, VJ_EmitSound)
 	end
 	//if self.VJ_IsBeingControlled == false && self.MeleeAttackAnimationFaceEnemy == true then self:FaceCertainEntity(MyEnemy,true) end
 	if self.AlreadyDoneFirstMeleeAttack == false && self.TimeUntilMeleeAttackDamage != false then
@@ -3443,11 +3443,11 @@ function ENT:DoAlert(argent)
 	if CurTime() > self.NextAlertSoundT then
 		if self.AlertSounds_OnlyOnce == true then
 			if self.HasDone_PlayAlertSoundOnlyOnce == false then
-				self:AlertSoundCode()
+				self:PlaySound("Alert")
 				self.HasDone_PlayAlertSoundOnlyOnce = true
 			end
 		else
-			self:AlertSoundCode()
+			self:PlaySound("Alert")
 		end
 		self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert1,self.NextSoundTime_Alert2)
 	end
@@ -3957,7 +3957,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 					for k,v in ipairs(checka) do
 						v.Passive_NextRunOnDamageT = CurTime() + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
 						v:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) end)
-						v:AlertSoundCode()
+						v:PlaySound("Alert")
 					end
 				end
 			end
@@ -4721,120 +4721,8 @@ function ENT:RunItemDropsOnDeathCode(dmginfo,hitgroup)
 		end
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:IdleSoundCode(CustomTbl,Type)
-	if self.HasSounds == false or self.HasIdleSounds == false or self.Dead == true then return end
-	if (self.NextIdleSoundT_RegularChange < CurTime()) && (CurTime() > self.NextIdleSoundT) then
-		Type = Type or VJ_CreateSound
-		
-		local hasenemy = false -- Ayo yete teshnami ouni
-		if IsValid(self:GetEnemy()) then
-			hasenemy = true
-			-- Yete CombatIdle tsayn chouni YEV gerna barz tsayn hanel, ere vor barz tsayn han e
-			if VJ_PICK(self.SoundTbl_CombatIdle) == false && self.IdleSounds_NoRegularIdleOnAlerted == false then
-				hasenemy = false
-			end
-		end
-		
-		local ctbl = VJ_PICK(CustomTbl)
-		if hasenemy == true then
-			local sdtbl = VJ_PICK(self.SoundTbl_CombatIdle)
-			if (math.random(1,self.CombatIdleSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
-				self.CurrentIdleSound = Type(self,sdtbl,self.CombatIdleSoundLevel,self:VJ_DecideSoundPitch(self.CombatIdleSoundPitch1,self.CombatIdleSoundPitch2))
-			end
-		else
-			local sdtbl = VJ_PICK(self.SoundTbl_Idle)
-			local sdtbl2 = VJ_PICK(self.SoundTbl_IdleDialogue)
-			local sdrand = math.random(1,self.IdleSoundChance)
-			local function RegularIdle()
-				if (sdrand == 1 && sdtbl != false) or (ctbl != false) then
-					if ctbl != false then sdtbl = ctbl end
-					self.CurrentIdleSound = Type(self,sdtbl,self.IdleSoundLevel,self:VJ_DecideSoundPitch(self.IdleSoundPitch1,self.IdleSoundPitch2))
-				end
-			end
-			if sdtbl2 != false && sdrand == 1 && self.HasIdleDialogueSounds == true && math.random(1,2) == 1 then
-				local testent, testsd = self:IdleDialogueSoundCodeTest()
-				if testent != false then
-					if self:CustomOnIdleDialogue(testent, testsd) == false then
-						RegularIdle()
-					else
-						self.CurrentIdleSound = Type(self,sdtbl2,self.IdleDialogueSoundLevel,self:VJ_DecideSoundPitch(self.IdleDialogueSoundPitch.a,self.IdleDialogueSoundPitch.b))
-						if testsd == true then
-							local dur = SoundDuration(sdtbl2)
-							if dur == 0 then dur = 3 end
-							testent.NextIdleSoundT = CurTime() + dur + 0.5
-							self.NextIdleTime = CurTime() + 1
-							self.NextWanderTime = CurTime() + (dur + 1.5)
-							if self.IdleDialogueCanTurn == true then
-								self:StopMoving()
-								self:SetTarget(testent)
-								self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-							end
-							if testent.IdleDialogueCanTurn == true then
-								testent:StopMoving()
-								testent:SetTarget(self)
-								testent:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-							end
-							timer.Simple(dur + 0.3, function()
-								if IsValid(self) && IsValid(testent) then
-									testent:IdleDialogueAnswerSoundCode()
-								end
-							end)
-						end
-					end
-				else
-					RegularIdle()
-				end
-			else
-				RegularIdle()
-			end
-		end
-		self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle1,self.NextSoundTime_Idle2)
-	end
-end
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:IdleDialogueSoundCodeTest()
-	local ret = false
-	for k,v in ipairs(ents.FindInSphere(self:GetPos(),self.IdleDialogueDistance)) do
-		if v:IsPlayer() && self:DoRelationshipCheck(v) == false then
-			ret = v
-		elseif v != self && ((self:GetClass() == v:GetClass()) or (v:IsNPC() && self:DoRelationshipCheck(v) == false)) && self:Visible(v) then
-			ret = v
-			if v.IsVJBaseSNPC == true && VJ_PICK(v.SoundTbl_IdleDialogueAnswer) != false then
-				return v, true -- Yete VJ NPC e, ere vor function-e gena
-			end
-		end
-	end
-	return ret, false
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:IdleDialogueAnswerSoundCode(CustomTbl,Type)
-	if self.HasSounds == false or self.HasIdleDialogueAnswerSounds == false then return end
-	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICK(CustomTbl)
-	local sdtbl = VJ_PICK(self.SoundTbl_IdleDialogueAnswer)
-	if (math.random(1,self.IdleDialogueAnswerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-		if ctbl != false then sdtbl = ctbl end
-		self:CustomOnIdleDialogueAnswer()
-		self:StopAllCommonSpeechSounds()
-		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2,3)
-		self.CurrentIdleDialogueAnswerSound = Type(self,sdtbl,self.IdleDialogueAnswerSoundLevel,self:VJ_DecideSoundPitch(self.IdleDialogueAnswerSoundPitch.a,self.IdleDialogueAnswerSoundPitch.b))
-	end
-end
---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AlertSoundCode(CustomTbl,Type)
-	if self.HasSounds == false or self.HasAlertSounds == false then return end
-	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICK(CustomTbl)
-	local sdtbl = VJ_PICK(self.SoundTbl_Alert)
-	if (math.random(1,self.AlertSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-		if ctbl != false then sdtbl = ctbl end
-		self:StopAllCommonSpeechSounds()
-		self.NextIdleSoundT = self.NextIdleSoundT + 2
-		self.CurrentAlertSound = Type(self,sdtbl,self.AlertSoundLevel,self:VJ_DecideSoundPitch(self.AlertSoundPitch1,self.AlertSoundPitch2))
-	end
-end
+function ENT:AlertSoundCode(CustomTbl,Type) self:PlaySound("Alert", CustomTbl, Type) end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 --------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DeathSoundCode(CustomTbl,Type) self:PlaySound("Death", CustomTbl, Type) end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -4960,6 +4848,17 @@ function ENT:PlaySound(Set, CustomSd, Type)
 				self.CurrentLostEnemySound = Type(self, sdtbl, self.LostEnemySoundLevel, self:VJ_DecideSoundPitch(self.LostEnemySoundPitch1, self.LostEnemySoundPitch2))
 			end
 			self.LostEnemySoundT = CurTime() + math.Rand(self.NextSoundTime_LostEnemy1, self.NextSoundTime_LostEnemy2)
+		end
+		return
+	elseif Set == "Alert" then
+		if self.HasAlertSounds == true then
+			local sdtbl = VJ_PICK(self.SoundTbl_Alert)
+			if (math.random(1, self.AlertSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+				if ctbl != false then sdtbl = ctbl end
+				self:StopAllCommonSpeechSounds()
+				self.NextIdleSoundT = self.NextIdleSoundT + 2
+				self.CurrentAlertSound = Type(self, sdtbl, self.AlertSoundLevel, self:VJ_DecideSoundPitch(self.AlertSoundPitch1, self.AlertSoundPitch2))
+			end
 		end
 		return
 	elseif Set == "CallForHelp" then
@@ -5101,6 +5000,36 @@ function ENT:PlaySound(Set, CustomSd, Type)
 			end
 		end
 		return
+	elseif Set == "MeleeAttack" then
+		if self.HasMeleeAttackSounds == true then
+			local sdtbl = VJ_PICK(self.SoundTbl_MeleeAttack)
+			if (math.random(1, self.MeleeAttackSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+				if ctbl != false then sdtbl = ctbl end
+				if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+				self.NextIdleSoundT_RegularChange = CurTime() + 1
+				self.CurrentMeleeAttackSound = Type(self, sdtbl, self.MeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.MeleeAttackSoundPitch1, self.MeleeAttackSoundPitch2))
+			end
+			if self.HasExtraMeleeAttackSounds == true then
+				local sdtbl = VJ_PICK(self.SoundTbl_MeleeAttackExtra)
+				if sdtbl == false then sdtbl = VJ_PICK(DefaultSoundTbl_MeleeAttackExtra) end -- Default table
+				if (math.random(1, self.ExtraMeleeSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+					if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+					self.CurrentExtraMeleeAttackSound = VJ_EmitSound(self, sdtbl, self.ExtraMeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.ExtraMeleeSoundPitch1, self.ExtraMeleeSoundPitch2))
+				end
+			end
+		end
+		return
+	elseif Set == "MeleeAttackMiss" then
+		if self.HasMeleeAttackMissSounds == true then
+			local sdtbl = VJ_PICK(self.SoundTbl_MeleeAttackMiss)
+			if (math.random(1, self.MeleeAttackMissSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+				if ctbl != false then sdtbl = ctbl end
+				if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+				self.NextIdleSoundT_RegularChange = CurTime() + 1
+				self.CurrentMeleeAttackMissSound = Type(self, sdtbl, self.MeleeAttackMissSoundLevel, self:VJ_DecideSoundPitch(self.MeleeAttackMissSoundPitch1, self.MeleeAttackMissSoundPitch2))
+			end
+		end
+		return
 	elseif Set == "LeapAttackJump" then
 		if self.HasLeapAttackJumpSound == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_LeapAttackJump)
@@ -5136,41 +5065,106 @@ function ENT:PlaySound(Set, CustomSd, Type)
 		return
 	end
 end
-// self:PlaySound("LeapAttackDamageMiss")
-
+// self:PlaySound("Alert")
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MeleeAttackSoundCode(CustomTbl,Type)
-	if self.HasSounds == false or self.HasMeleeAttackSounds == false then return end
-	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICK(CustomTbl)
-	local sdtbl = VJ_PICK(self.SoundTbl_MeleeAttack)
-	if (math.random(1,self.MeleeAttackSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-		if ctbl != false then sdtbl = ctbl end
-		if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end
-		self.NextIdleSoundT_RegularChange = CurTime() + 1
-		self.CurrentMeleeAttackSound = Type(self,sdtbl,self.MeleeAttackSoundLevel,self:VJ_DecideSoundPitch(self.MeleeAttackSoundPitch1,self.MeleeAttackSoundPitch2))
-	end
-	
-	if self.HasExtraMeleeAttackSounds == true then
-		local sdtbl = VJ_PICK(self.SoundTbl_MeleeAttackExtra)
-		if sdtbl == false then sdtbl = VJ_PICK(DefaultSoundTbl_MeleeAttackExtra) end -- Default table
-		if (math.random(1,self.ExtraMeleeSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-			VJ_STOPSOUND(self.CurrentIdleSound)
-			self.CurrentExtraMeleeAttackSound = VJ_EmitSound(self,sdtbl,self.ExtraMeleeAttackSoundLevel,self:VJ_DecideSoundPitch(self.ExtraMeleeSoundPitch1,self.ExtraMeleeSoundPitch2))
+function ENT:IdleSoundCode(CustomTbl,Type)
+	if self.HasSounds == false or self.HasIdleSounds == false or self.Dead == true then return end
+	if (self.NextIdleSoundT_RegularChange < CurTime()) && (CurTime() > self.NextIdleSoundT) then
+		Type = Type or VJ_CreateSound
+		
+		local hasenemy = false -- Ayo yete teshnami ouni
+		if IsValid(self:GetEnemy()) then
+			hasenemy = true
+			-- Yete CombatIdle tsayn chouni YEV gerna barz tsayn hanel, ere vor barz tsayn han e
+			if VJ_PICK(self.SoundTbl_CombatIdle) == false && self.IdleSounds_NoRegularIdleOnAlerted == false then
+				hasenemy = false
+			end
 		end
+		
+		local ctbl = VJ_PICK(CustomTbl)
+		if hasenemy == true then
+			local sdtbl = VJ_PICK(self.SoundTbl_CombatIdle)
+			if (math.random(1,self.CombatIdleSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+				if ctbl != false then sdtbl = ctbl end
+				self.CurrentIdleSound = Type(self,sdtbl,self.CombatIdleSoundLevel,self:VJ_DecideSoundPitch(self.CombatIdleSoundPitch1,self.CombatIdleSoundPitch2))
+			end
+		else
+			local sdtbl = VJ_PICK(self.SoundTbl_Idle)
+			local sdtbl2 = VJ_PICK(self.SoundTbl_IdleDialogue)
+			local sdrand = math.random(1,self.IdleSoundChance)
+			local function RegularIdle()
+				if (sdrand == 1 && sdtbl != false) or (ctbl != false) then
+					if ctbl != false then sdtbl = ctbl end
+					self.CurrentIdleSound = Type(self,sdtbl,self.IdleSoundLevel,self:VJ_DecideSoundPitch(self.IdleSoundPitch1,self.IdleSoundPitch2))
+				end
+			end
+			if sdtbl2 != false && sdrand == 1 && self.HasIdleDialogueSounds == true && math.random(1,2) == 1 then
+				local testent, testsd = self:IdleDialogueSoundCodeTest()
+				if testent != false then
+					if self:CustomOnIdleDialogue(testent, testsd) == false then
+						RegularIdle()
+					else
+						self.CurrentIdleSound = Type(self,sdtbl2,self.IdleDialogueSoundLevel,self:VJ_DecideSoundPitch(self.IdleDialogueSoundPitch.a,self.IdleDialogueSoundPitch.b))
+						if testsd == true then
+							local dur = SoundDuration(sdtbl2)
+							if dur == 0 then dur = 3 end
+							testent.NextIdleSoundT = CurTime() + dur + 0.5
+							self.NextIdleTime = CurTime() + 1
+							self.NextWanderTime = CurTime() + (dur + 1.5)
+							if self.IdleDialogueCanTurn == true then
+								self:StopMoving()
+								self:SetTarget(testent)
+								self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+							end
+							if testent.IdleDialogueCanTurn == true then
+								testent:StopMoving()
+								testent:SetTarget(self)
+								testent:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+							end
+							timer.Simple(dur + 0.3, function()
+								if IsValid(self) && IsValid(testent) then
+									testent:IdleDialogueAnswerSoundCode()
+								end
+							end)
+						end
+					end
+				else
+					RegularIdle()
+				end
+			else
+				RegularIdle()
+			end
+		end
+		self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle1,self.NextSoundTime_Idle2)
 	end
 end
+--------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:IdleDialogueSoundCodeTest()
+	local ret = false
+	for k,v in ipairs(ents.FindInSphere(self:GetPos(),self.IdleDialogueDistance)) do
+		if v:IsPlayer() && self:DoRelationshipCheck(v) == false then
+			ret = v
+		elseif v != self && ((self:GetClass() == v:GetClass()) or (v:IsNPC() && self:DoRelationshipCheck(v) == false)) && self:Visible(v) then
+			ret = v
+			if v.IsVJBaseSNPC == true && VJ_PICK(v.SoundTbl_IdleDialogueAnswer) != false then
+				return v, true -- Yete VJ NPC e, ere vor function-e gena
+			end
+		end
+	end
+	return ret, false
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MeleeAttackMissSoundCode(CustomTbl,Type)
-	if self.HasSounds == false or self.HasMeleeAttackMissSounds == false then return end
-	Type = Type or VJ_EmitSound
+function ENT:IdleDialogueAnswerSoundCode(CustomTbl,Type)
+	if self.HasSounds == false or self.HasIdleDialogueAnswerSounds == false then return end
+	Type = Type or VJ_CreateSound
 	local ctbl = VJ_PICK(CustomTbl)
-	local sdtbl = VJ_PICK(self.SoundTbl_MeleeAttackMiss)
-	if (math.random(1,self.MeleeAttackMissSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+	local sdtbl = VJ_PICK(self.SoundTbl_IdleDialogueAnswer)
+	if (math.random(1,self.IdleDialogueAnswerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
-		VJ_STOPSOUND(self.CurrentIdleSound)
-		self.NextIdleSoundT_RegularChange = CurTime() + 1
-		self.CurrentMeleeAttackMissSound = Type(self,sdtbl,self.MeleeAttackMissSoundLevel,self:VJ_DecideSoundPitch(self.MeleeAttackMissSoundPitch1,self.MeleeAttackMissSoundPitch2))
+		self:CustomOnIdleDialogueAnswer()
+		self:StopAllCommonSpeechSounds()
+		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2,3)
+		self.CurrentIdleDialogueAnswerSound = Type(self,sdtbl,self.IdleDialogueAnswerSoundLevel,self:VJ_DecideSoundPitch(self.IdleDialogueAnswerSoundPitch.a,self.IdleDialogueAnswerSoundPitch.b))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -5227,6 +5221,7 @@ function ENT:StopAllCommonSpeechSounds()
 	VJ_STOPSOUND(self.CurrentIdleDialogueAnswerSound)
 	VJ_STOPSOUND(self.CurrentInvestigateSound)
 	VJ_STOPSOUND(self.CurrentLostEnemySound)
+	VJ_STOPSOUND(self.CurrentAlertSound)
 	VJ_STOPSOUND(self.CurrentFollowPlayerSound)
 	VJ_STOPSOUND(self.CurrentUnFollowPlayerSound)
 	VJ_STOPSOUND(self.CurrentMoveOutOfPlayersWaySound)
@@ -5292,7 +5287,7 @@ function ENT:EntitiesToNoCollideCode(argent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ConvarsOnInit()
---<>-- Convars that run on Initialize --<>--
+	--<>-- Convars that run on Initialize --<>--
 	if GetConVarNumber("vj_npc_usedevcommands") == 1 then self.VJDEBUG_SNPC_ENABLED = true end
 	self.NextProcessTime = GetConVarNumber("vj_npc_processtime")
 	if GetConVarNumber("vj_npc_sd_nosounds") == 1 then self.HasSounds = false end
@@ -5301,10 +5296,7 @@ function ENT:ConvarsOnInit()
 	if GetConVarNumber("vj_npc_antlionfriendly") == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_ANTLION" end
 	if GetConVarNumber("vj_npc_combinefriendly") == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_COMBINE" end
 	if GetConVarNumber("vj_npc_zombiefriendly") == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_ZOMBIE" end
-	if GetConVarNumber("vj_npc_noallies") == 1 then
-		self.HasAllies = false
-		self.PlayerFriendly = false
-	end
+	if GetConVarNumber("vj_npc_noallies") == 1 then self.HasAllies = false self.PlayerFriendly = false end
 	if GetConVarNumber("vj_npc_nocorpses") == 1 then self.HasDeathRagdoll = false end
 	if GetConVarNumber("vj_npc_itemdrops") == 0 then self.HasItemDropsOnDeath = false end
 	if GetConVarNumber("vj_npc_noproppush") == 1 then self.PushProps = false end
@@ -5350,7 +5342,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- ///// OBSOLETE FUNCTIONS | Recommanded not to use! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ ///// OBSOLETE FUNCTIONS | Recommended not to use! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
