@@ -1674,11 +1674,14 @@ function ENT:VJ_ACT_TAKE_COVER(CustomAnimTbl,StopActs,StopActsTime,FaceEnemy)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoChangeWeapon(SetType)
-	SetType = SetType or nil
-	if SetType == nil then return end
-	if IsValid(self:GetActiveWeapon()) then self:GetActiveWeapon():Remove() end
-	self:Give(SetType)
+function ENT:DoChangeWeapon(wep)
+	wep = wep or nil -- The weapon to give or setup | Setting it nil will only setup the current active weapon
+	
+	if wep != nil then -- Only remove and actually give the weapon if the function isn't given a weapon class to set
+		if IsValid(self:GetActiveWeapon()) then self:GetActiveWeapon():Remove() end
+		self:Give(wep)
+	end
+	
 	self:SetupWeaponHoldTypeAnims(self:GetActiveWeapon():GetHoldType())
 	self.Weapon_ShotsSinceLastReload = 0
 	self:CustomOnDoChangeWeapon(self:GetActiveWeapon(), self.CurrentWeaponEntity)
@@ -5024,6 +5027,7 @@ function ENT:IdleSoundCode(CustomTbl,Type)
 		end
 		
 		local ctbl = VJ_PICK(CustomTbl)
+		local setT = true
 		if hasenemy == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_CombatIdle)
 			if (math.random(1,self.CombatIdleSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
@@ -5037,22 +5041,26 @@ function ENT:IdleSoundCode(CustomTbl,Type)
 			local function RegularIdle()
 				if (sdrand == 1 && sdtbl != false) or (ctbl != false) then
 					if ctbl != false then sdtbl = ctbl end
-					self.CurrentIdleSound = Type(self,sdtbl,self.IdleSoundLevel,self:VJ_DecideSoundPitch(self.IdleSoundPitch1,self.IdleSoundPitch2))
+					self.CurrentIdleSound = Type(self, sdtbl, self.IdleSoundLevel, self:VJ_DecideSoundPitch(self.IdleSoundPitch1, self.IdleSoundPitch2))
 				end
 			end
-			if sdtbl2 != false && sdrand == 1 && self.HasIdleDialogueSounds == true && math.random(1,2) == 1 then
-				local testent, testsd = self:IdleDialogueSoundCodeTest()
+			if sdtbl2 != false && sdrand == 1 && self.HasIdleDialogueSounds == true && math.random(1,1) == 1 then
+				local testent, testvj = self:IdleDialogueSoundCodeTest()
 				if testent != false then
-					if self:CustomOnIdleDialogue(testent, testsd) == false then
+					if self:CustomOnIdleDialogue(testent, testvj) == false then
 						RegularIdle()
 					else
-						self.CurrentIdleSound = Type(self,sdtbl2,self.IdleDialogueSoundLevel,self:VJ_DecideSoundPitch(self.IdleDialogueSoundPitch.a,self.IdleDialogueSoundPitch.b))
-						if testsd == true then
+						self.CurrentIdleSound = Type(self, sdtbl2, self.IdleDialogueSoundLevel, self:VJ_DecideSoundPitch(self.IdleDialogueSoundPitch.a, self.IdleDialogueSoundPitch.b))
+						if testvj == true then -- If we have a VJ SNPC
 							local dur = SoundDuration(sdtbl2)
-							if dur == 0 then dur = 3 end
-							testent.NextIdleSoundT = CurTime() + dur + 0.5
-							self.NextIdleTime = CurTime() + 1
-							self.NextWanderTime = CurTime() + (dur + 1.5)
+							if dur == 0 then dur = 3 end -- Since some file types don't return a duration =(
+							
+							setT = false
+							self.NextIdleSoundT = CurTime() + (dur + 0.5)
+							self.NextWanderTime = CurTime() + (dur + 0.5)
+							testent.NextIdleSoundT = CurTime() + (dur + 0.5)
+							testent.NextWanderTime = CurTime() + (dur + 0.5)
+							
 							if self.IdleDialogueCanTurn == true then
 								self:StopMoving()
 								self:SetTarget(testent)
@@ -5063,9 +5071,17 @@ function ENT:IdleSoundCode(CustomTbl,Type)
 								testent:SetTarget(self)
 								testent:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 							end
+							
+							-- For the other SNPC to answer back:
 							timer.Simple(dur + 0.3, function()
 								if IsValid(self) && IsValid(testent) then
-									testent:IdleDialogueAnswerSoundCode()
+									local response = testent:IdleDialogueAnswerSoundCode()
+									if response > 0 then -- If the ally responded, then make sure both SNPCs stand still & don't play another idle sound until the whole conversation is finished!
+										self.NextIdleSoundT = CurTime() + (response + 0.5)
+										self.NextWanderTime = CurTime() + (response + 1)
+										testent.NextIdleSoundT = CurTime() + (response + 0.5)
+										testent.NextWanderTime = CurTime() + (response + 1)
+									end
 								end
 							end)
 						end
@@ -5077,13 +5093,17 @@ function ENT:IdleSoundCode(CustomTbl,Type)
 				RegularIdle()
 			end
 		end
-		self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle1,self.NextSoundTime_Idle2)
+		if setT == true then
+			self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle1,self.NextSoundTime_Idle2)
+		end
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IdleDialogueSoundCodeTest()
+	-- Don't break the loop unless we hit a VJ SNPC
+	-- If no VJ SNPC is hit, then just simply return the last checked friendly player or NPC
 	local ret = false
-	for k,v in ipairs(ents.FindInSphere(self:GetPos(),self.IdleDialogueDistance)) do
+	for k, v in ipairs(ents.FindInSphere(self:GetPos(), self.IdleDialogueDistance)) do
 		if v:IsPlayer() && self:DoRelationshipCheck(v) == false then
 			ret = v
 		elseif v != self && ((self:GetClass() == v:GetClass()) or (v:IsNPC() && self:DoRelationshipCheck(v) == false)) && self:Visible(v) then
@@ -5097,7 +5117,7 @@ function ENT:IdleDialogueSoundCodeTest()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IdleDialogueAnswerSoundCode(CustomTbl,Type)
-	if self.HasSounds == false or self.HasIdleDialogueAnswerSounds == false then return end
+	if self.HasSounds == false or self.HasIdleDialogueAnswerSounds == false then return 0 end
 	Type = Type or VJ_CreateSound
 	local ctbl = VJ_PICK(CustomTbl)
 	local sdtbl = VJ_PICK(self.SoundTbl_IdleDialogueAnswer)
@@ -5107,6 +5127,9 @@ function ENT:IdleDialogueAnswerSoundCode(CustomTbl,Type)
 		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2,3)
 		self.CurrentIdleDialogueAnswerSound = Type(self,sdtbl,self.IdleDialogueAnswerSoundLevel,self:VJ_DecideSoundPitch(self.IdleDialogueAnswerSoundPitch.a,self.IdleDialogueAnswerSoundPitch.b))
+		return SoundDuration(sdtbl) -- Return the duration of the sound, which will be used to make the other SNPC stand still
+	else
+		return 0
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
