@@ -1682,9 +1682,11 @@ function ENT:DoChangeWeapon(wep)
 		self:Give(wep)
 	end
 	
-	self:SetupWeaponHoldTypeAnims(self:GetActiveWeapon():GetHoldType())
-	self.Weapon_ShotsSinceLastReload = 0
-	self:CustomOnDoChangeWeapon(self:GetActiveWeapon(), self.CurrentWeaponEntity)
+	if IsValid(self:GetActiveWeapon()) then
+		self:SetupWeaponHoldTypeAnims(self:GetActiveWeapon():GetHoldType())
+		self.Weapon_ShotsSinceLastReload = 0
+		self:CustomOnDoChangeWeapon(self:GetActiveWeapon(), self.CurrentWeaponEntity)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetupWeaponHoldTypeAnims(htype)
