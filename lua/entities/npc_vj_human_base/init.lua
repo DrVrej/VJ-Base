@@ -1916,7 +1916,7 @@ function ENT:Touch(entity)
 			if entity:IsNPC() or entity:IsPlayer() then
 				if self:DoRelationshipCheck(entity) then
 					self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) end)
-					self:PlaySound("Alert")
+					self:PlaySoundSystem("Alert")
 				end
 			end
 			self.Passive_NextRunOnTouchT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
@@ -2011,10 +2011,10 @@ function ENT:FollowPlayerCode(key,activator,caller,data)
 			//timer.Simple(0.15,function() if self:IsValid() && self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_TARGET_FACE) end end)
 			//if self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_IDLE_STAND) end
 			//timer.Simple(0.1,function() if self:IsValid() then self:VJ_TASK_GOTO_TARGET() end end)
-			self:PlaySound("FollowPlayer")
+			self:PlaySoundSystem("FollowPlayer")
 			self.FollowingPlayer = true
 		else
-			self:PlaySound("UnFollowPlayer")
+			self:PlaySoundSystem("UnFollowPlayer")
 			if self:BusyWithActivity() == false then
 				self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 			end
@@ -2077,7 +2077,7 @@ function ENT:DoMedicCode_HealAlly()
 			if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then
 				self.AlreadyDoneMedicThinkCode = true
 				self:CustomOnMedic_BeforeHeal()
-				self:PlaySound("MedicBeforeHeal")
+				self:PlaySoundSystem("MedicBeforeHeal")
 				if self.Medic_SpawnPropOnHeal == true && self:LookupAttachment(self.Medic_SpawnPropOnHealAttachment) != 0 then
 					self.Medic_SpawnedProp = ents.Create("prop_physics")
 					self.Medic_SpawnedProp:SetModel(self.Medic_SpawnPropOnHealModel)
@@ -2112,9 +2112,9 @@ function ENT:DoMedicCode_HealAlly()
 						if IsValid(self.Medic_CurrentEntToHeal) then -- Yete NPC vor meng bidi aghektsnenk hos e...
 							if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then
 								self:CustomOnMedic_OnHeal()
-								self:PlaySound("MedicOnHeal")
+								self:PlaySoundSystem("MedicOnHeal")
 								if self.Medic_CurrentEntToHeal:IsNPC() && self.Medic_CurrentEntToHeal.IsVJBaseSNPC == true && self.Medic_CurrentEntToHeal.IsVJBaseSNPC_Animal != true then
-									self.Medic_CurrentEntToHeal:PlaySound("MedicReceiveHeal")
+									self.Medic_CurrentEntToHeal:PlaySoundSystem("MedicReceiveHeal")
 								end
 								self.Medic_CurrentEntToHeal:RemoveAllDecals()
 								local frimaxhp = self.Medic_CurrentEntToHeal:GetMaxHealth()
@@ -2342,7 +2342,7 @@ function ENT:Think()
 				if self.VJ_IsBeingControlled == false then self.IsReloadingWeapon = true end
 				self.NextChaseTime = CurTime() + 2
 				//timer.Simple(5,function() if IsValid(self) then self.IsReloadingWeapon = false end end)
-				if teshnami == true then self:PlaySound("WeaponReload") end
+				if teshnami == true then self:PlaySoundSystem("WeaponReload") end
 				self:CustomOnWeaponReload()
 				if self.DisableWeaponReloadAnimation == false then
 					local function DoReloadAnimation(animtbl)
@@ -2405,7 +2405,7 @@ function ENT:Think()
 		
 		if self.DoingWeaponAttack == true then self:CapabilitiesRemove(CAP_TURN_HEAD) else self:CapabilitiesAdd(bit.bor(CAP_TURN_HEAD)) end
 		if IsValid(ene) then
-			if self.DoingWeaponAttack == true then self:PlaySound("Suppressing") end
+			if self.DoingWeaponAttack == true then self:PlaySoundSystem("Suppressing") end
 			if self.IsDoingFaceEnemy == true /*&& self.VJ_IsBeingControlled == false*/ then self:SetAngles(self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle())) end
 			self:DoConstantlyFaceEnemyCode()
 			if (self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene))) /*&& self.VJ_IsBeingControlled == false*/) then self:SetAngles(self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle())) end
@@ -2471,7 +2471,7 @@ function ENT:Think()
 
 		if self.ResetedEnemy == false then
 			if self.LastSeenEnemyTime > self.LastSeenEnemyTimeUntilReset && (!self.IsVJBaseSNPC_Tank) then
-				self:PlaySound("LostEnemy")
+				self:PlaySoundSystem("LostEnemy")
 				self.ResetedEnemy = true
 				self:ResetEnemy(true)
 			end
@@ -2554,7 +2554,7 @@ function ENT:Think()
 						self.AlreadyDoneFirstMeleeAttack = false
 						/*if self.VJ_IsBeingControlled == false then*/ self:FaceCertainEntity(ene,true) //end
 						self:CustomOnMeleeAttack_BeforeStartTimer()
-						timer.Simple(self.BeforeMeleeAttackSounds_WaitTime,function() if IsValid(self) then self:PlaySound("BeforeMeleeAttack") end end)
+						timer.Simple(self.BeforeMeleeAttackSounds_WaitTime,function() if IsValid(self) then self:PlaySoundSystem("BeforeMeleeAttack") end end)
 						self.NextAlertSoundT = CurTime() + 0.4
 						if self.DisableMeleeAttackAnimation == false then
 							self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_MeleeAttack)
@@ -2604,7 +2604,7 @@ function ENT:Think()
 			
 			self.TimeSinceSeenEnemy = 0
 			self.TimeSinceLastSeenEnemy = self.TimeSinceLastSeenEnemy + 0.1
-			if self.ResetedEnemy == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySound("LostEnemy") self.ResetedEnemy = true self:ResetEnemy(true) end
+			if self.ResetedEnemy == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") self.ResetedEnemy = true self:ResetEnemy(true) end
 			/*if CurTime() > self.NextFindEnemyT then
 			if self.DisableFindEnemy == false then self:FindEnemy() end
 			self.NextFindEnemyT = CurTime() + self.NextFindEnemyTime end*/
@@ -2668,11 +2668,11 @@ function ENT:MeleeAttackCode()
 		end
 	end
 	if hitentity == true then
-		self:PlaySound("MeleeAttack")
+		self:PlaySoundSystem("MeleeAttack")
 		if self.StopMeleeAttackAfterFirstHit == true then self.AlreadyDoneMeleeAttackFirstHit = true /*self:StopMoving()*/ end
 	else
 		self:CustomOnMeleeAttack_Miss()
-		self:PlaySound("MeleeAttackMiss", {}, VJ_EmitSound)
+		self:PlaySoundSystem("MeleeAttackMiss", {}, VJ_EmitSound)
 	end
 	if self.AlreadyDoneFirstMeleeAttack == false && self.TimeUntilMeleeAttackDamage != false then
 		self:MeleeAttackCode_DoFinishTimers()
@@ -2767,7 +2767,7 @@ function ENT:ThrowGrenadeCode(CustomEnt,NoOwner)
 
 	self.ThrowingGrenade = true
 	self:CustomOnGrenadeAttack_BeforeThrowTime()
-	self:PlaySound("GrenadeAttack")
+	self:PlaySoundSystem("GrenadeAttack")
 
 	if self.DisableGrenadeAttackAnimation == false then
 		self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_GrenadeAttack)
@@ -3241,7 +3241,7 @@ function ENT:OnPlayerSightCode(argent)
 		if self.OnPlayerSightDispositionLevel == 2 && (self:Disposition(argent) == D_LI) then return end
 		self.OnPlayerSight_AlreadySeen = true
 		self:CustomOnPlayerSight(argent)
-		self:PlaySound("OnPlayerSight")
+		self:PlaySoundSystem("OnPlayerSight")
 		if self.OnPlayerSightOnlyOnce == false then self.OnPlayerSightNextT = CurTime() + math.Rand(self.OnPlayerSightNextTime1,self.OnPlayerSightNextTime2) end
 	end
 end
@@ -3253,7 +3253,7 @@ function ENT:DamageByPlayerCode(dmginfo,hitgroup)
 			if self.DamageByPlayerDispositionLevel == 1 && self:Disposition(theattack) != D_LI && self:Disposition(theattack) != D_NU then return end
 			if self.DamageByPlayerDispositionLevel == 2 && (self:Disposition(theattack) == D_LI or self:Disposition(theattack) == D_NU) then return end
 			self:CustomOnDamageByPlayer(dmginfo,hitgroup)
-			self:PlaySound("DamageByPlayer")
+			self:PlaySoundSystem("DamageByPlayer")
 			self.NextDamageByPlayerT = CurTime() + math.Rand(self.DamageByPlayerTime.a,self.DamageByPlayerTime.b)
 		end
 	end
@@ -3269,7 +3269,7 @@ function ENT:CheckForGrenades()
 				IsFriendlyGrenade = true
 			end
 			if IsFriendlyGrenade == false then
-				self:PlaySound("OnGrenadeSight")
+				self:PlaySoundSystem("OnGrenadeSight")
 				self.HasSeenGrenade = true
 				self.TakingCoverT = CurTime() + 4
 				if /*IsValid(self:GetEnemy()) &&*/v.VJHumanNoPickup != true && v.VJHumanTossingAway != true && self.CanThrowBackDetectedGrenades == true && self.HasGrenadeAttack == true && v:GetVelocity():Length() < 400 && self:VJ_GetNearestPointToEntityDistance(v) < 100 && self.EntitiesToThrowBack[v:GetClass()] then
@@ -3381,11 +3381,11 @@ function ENT:DoAlert(argent)
 	if CurTime() > self.NextAlertSoundT then
 		if self.AlertSounds_OnlyOnce == true then
 			if self.HasDone_PlayAlertSoundOnlyOnce == false then
-				self:PlaySound("Alert")
+				self:PlaySoundSystem("Alert")
 				self.HasDone_PlayAlertSoundOnlyOnce = true
 			end
 		else
-			self:PlaySound("Alert")
+			self:PlaySoundSystem("Alert")
 		end
 		self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert1,self.NextSoundTime_Alert2)
 	end
@@ -3577,7 +3577,7 @@ function ENT:DoEntityRelationshipCheck()
 									self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
 								end
 								self:CustomOnInvestigate(v)
-								self:PlaySound("InvestigateSound")
+								self:PlaySoundSystem("InvestigateSound")
 								self.NextInvestigateSoundMove = CurTime() + 2
 							end
 						elseif vDistanceToMy < 350 && v:FlashlightIsOn() == true && (v:GetForward():Dot((MyPos - vPos):GetNormalized()) > math.cos(math.rad(20))) then
@@ -3647,7 +3647,7 @@ function ENT:DoEntityRelationshipCheck()
 					if self.FollowingPlayer == true then dist = 10 end
 					if /*self:Disposition(v) == D_LI &&*/ (self:VJ_GetNearestPointToEntityDistance(v) < dist) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
 						self.NextFollowPlayerT = CurTime() + 2
-						self:PlaySound("MoveOutOfPlayersWay")
+						self:PlaySoundSystem("MoveOutOfPlayersWay")
 						//self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-50,-50))
 						self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 						local vsched = ai_vj_schedule.New("vj_move_away")
@@ -3694,8 +3694,8 @@ function ENT:CallForHelpCode(SeeDistance)
 				if !IsValid(x:GetEnemy()) && ((!ene:IsPlayer() && x:Disposition(ene) != D_LI) or (ene:IsPlayer())) /*&& !self:IsCurrentSchedule(SCHED_FORCED_GO_RUN) == true && !self:IsCurrentSchedule(SCHED_FORCED_GO) == true*/ then
 					local goingtomove = false
 					self:CustomOnCallForHelp(x)
-					self:PlaySound("CallForHelp")
-					//timer.Simple(1,function() if IsValid(self) && IsValid(x) then x:PlaySound("OnReceiveOrder") end end)
+					self:PlaySoundSystem("CallForHelp")
+					//timer.Simple(1,function() if IsValid(self) && IsValid(x) then x:PlaySoundSystem("OnReceiveOrder") end end)
 					if self.HasCallForHelpAnimation == true && CurTime() > self.NextCallForHelpAnimationT then
 						local pickanim = VJ_PICK(self.AnimTbl_CallForHelp)
 						self:VJ_ACT_PLAYACTIVITY(pickanim,self.CallForHelpStopAnimations,self:DecideAnimationLength(pickanim,self.CallForHelpStopAnimationsTime),self.CallForHelpAnimationFaceEnemy,self.CallForHelpAnimationDelay,{PlayBackRate=self.CallForHelpAnimationPlayBackRate, PlayBackRateCalculated=true})
@@ -3732,7 +3732,7 @@ function ENT:CallForHelpCode(SeeDistance)
 							end
 						end
 					end
-					if goingtomove == true then x:PlaySound("OnReceiveOrder") end
+					if goingtomove == true then x:PlaySoundSystem("OnReceiveOrder") end
 				end
 			end
 		end
@@ -3809,7 +3809,7 @@ function ENT:DoKilledEnemy(argent,attacker,inflictor)
 	if !IsValid(argent) then return end
 	-- If it can only do it if there is no enemies left then check --> (If there no valid enemy) OR (The number of enemies is 1 or less)
 	if (self.OnlyDoKillEnemyWhenClear == false) or (self.OnlyDoKillEnemyWhenClear == true && (!IsValid(self:GetEnemy()) or (self.ReachableEnemyCount <= 1))) then
-		self:PlaySound("OnKilledEnemy")
+		self:PlaySoundSystem("OnKilledEnemy")
 		self:CustomOnDoKilledEnemy(argent,attacker,inflictor)
 	end
 end
@@ -3864,7 +3864,7 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 			self:CustomOnTakeDamage_OnBleed(dmginfo,hitgroup)
 			if self.HasBloodParticle == true && ((!self:IsOnFire()) or (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() != "entityflame" && DamageAttacker:GetClass() != "entityflame")) then self:SpawnBloodParticles(dmginfo,hitgroup) end
 			if self.HasBloodDecal == true then self:SpawnBloodDecal(dmginfo,hitgroup) end
-			self:PlaySound("Impact", nil, VJ_EmitSound)
+			self:PlaySoundSystem("Impact", nil, VJ_EmitSound)
 		end
 	end
 	if self.Dead == true then DoBleed() return false end
@@ -3883,7 +3883,7 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 	if self:Health() >= 0 then
 		self:DoFlinch(dmginfo,hitgroup)
 		self:DamageByPlayerCode(dmginfo,hitgroup)
-		self:PlaySound("Pain")
+		self:PlaySoundSystem("Pain")
 
 		if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && CurTime() > self.Passive_NextRunOnDamageT then
 			if self.Passive_RunOnDamage == true then
@@ -3895,7 +3895,7 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 					for k,v in ipairs(checka) do
 						v.Passive_NextRunOnDamageT = CurTime() + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
 						v:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) end)
-						//v:PlaySound("Alert") -- Miyan gentaninaroon hamar!
+						//v:PlaySoundSystem("Alert") -- Miyan gentaninaroon hamar!
 					end
 				end
 			end
@@ -3958,7 +3958,7 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 					if self.AllowPrintingInChat == true then
 						DamageAttacker:PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.")
 					end
-					self:PlaySound("BecomeEnemyToPlayer")
+					self:PlaySoundSystem("BecomeEnemyToPlayer")
 				end
 				self.Alerted = true
 			end
@@ -4260,7 +4260,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 		local it = 0
 		for k,v in ipairs(allies) do
 			v:CustomOnAllyDeath(self)
-			v:PlaySound("AllyDeath")
+			v:PlaySoundSystem("AllyDeath")
 			
 			if self.AlertFriendsOnDeath == true && noalert == true && !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath == true && it != self.AlertFriendsOnDeathLimit && self:GetPos():Distance(v:GetPos()) < self.AlertFriendsOnDeathDistance then
 				it = it + 1
@@ -4307,7 +4307,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 	self:CustomOnPriorToKilled(dmginfo,hitgroup)
 	self:SetCollisionGroup(1)
 	self:RunGibOnDeathCode(dmginfo,hitgroup)
-	self:PlaySound("Death")
+	self:PlaySoundSystem("Death")
 	//self:AAMove_Stop()
 	if self.HasDeathAnimation != true then DoKilled() return end
 	if self.HasDeathAnimation == true then
@@ -4689,11 +4689,11 @@ function ENT:RunItemDropsOnDeathCode(dmginfo,hitgroup)
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AlertSoundCode(CustomTbl,Type) self:PlaySound("Alert", CustomTbl, Type) end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
+function ENT:AlertSoundCode(CustomTbl,Type) self:PlaySoundSystem("Alert", CustomTbl, Type) end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DeathSoundCode(CustomTbl,Type) self:PlaySound("Death", CustomTbl, Type) end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
+function ENT:DeathSoundCode(CustomTbl,Type) self:PlaySoundSystem("Death", CustomTbl, Type) end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PlaySound(Set, CustomSd, Type)
+function ENT:PlaySoundSystem(Set, CustomSd, Type)
 	if self.HasSounds == false or Set == nil then return end
 	Type = Type or VJ_CreateSound
 	local ctbl = VJ_PICK(CustomSd)
