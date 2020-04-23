@@ -1297,12 +1297,13 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 	
 	-- If the given animation doesn't exist, then check to see if it does in the weapon translation list
 	if VJ_AnimationExists(self, vACT_Name) == false then
-		if !IsString && IsValid(self:GetActiveWeapon()) then -- If it's an activity and has a valid weapon then check for weapon translation
+		return -- This isn't a human SNPC, no need to check for weapon translation
+		/*if !IsString && IsValid(self:GetActiveWeapon()) then -- If it's an activity and has a valid weapon then check for weapon translation
 			-- If it returns the same activity as vACT_Name, then there isn't even a translation for it so don't play any animation =(
-			if self:GetActiveWeapon().IsVJBaseWeapon && self:VJ_TranslateWeaponActivity(vACT_Name) == vACT_Name then return end
+			if self:GetActiveWeapon().IsVJBaseWeapon && self:TranslateToWeaponAnim(vACT_Name) == vACT_Name then return end
 		else
 			return -- No animation =(
-		end
+		end*/
 	end
 	
 	if vACT_StopActivities == true then

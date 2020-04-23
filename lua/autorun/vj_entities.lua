@@ -258,8 +258,7 @@ function VJ_SequenceToActivity(argent, seq)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_IsCurrentAnimation(argent, actname)
-	local gotit = false
-	local actname = actname or {}
+	actname = actname or {}
 	if istable(actname) then
 		if #actname < 1 then return false end -- If the table is empty then end it
 	else
@@ -267,12 +266,11 @@ function VJ_IsCurrentAnimation(argent, actname)
 	end
 
 	for k,v in ipairs(actname) do
-		if type(v) == "number" && v != -1 then v = argent:GetSequenceName(argent:SelectWeightedSequence(v)) end
+		if isnumber(v) && v != -1 then v = argent:GetSequenceName(argent:SelectWeightedSequence(v)) end -- Translate activity to sequence
 		if v == argent:GetSequenceName(argent:GetSequence()) then
-			gotit = true
+			return true
 		end
 	end
-	if gotit == true then return true end
 	//if actname == argent:GetSequenceName(argent:GetSequence()) then return true end
 	return false
 end
@@ -441,19 +439,6 @@ function NPC_MetaTable:VJ_PlaySequence(SequenceID, PlayBackRate, Wait, WaitTime,
 				//self.vACT_StopAttacks = false
 			end
 		end)
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_TranslateWeaponActivity(ActAnim)
-	/*if !IsValid(self:GetActiveWeapon()) or self:GetActiveWeapon().IsVJBaseWeapon != true then return ActAnim end
-	if self:GetActiveWeapon():TranslateActivity(ActAnim) == -1 then return ActAnim else
-	return self:GetActiveWeapon():TranslateActivity(ActAnim) end*/
-	
-	if !IsValid(self:GetActiveWeapon()) then return ActAnim end
-	if self.WeaponAnimTranslations[ActAnim] == nil then
-		return ActAnim
-	else
-		return self.WeaponAnimTranslations[ActAnim]
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
