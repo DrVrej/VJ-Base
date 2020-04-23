@@ -343,7 +343,7 @@ function SWEP:NPCAbleToShoot(CheckSec)
 			if check == false && ammo != "NoAmmo" then return false end
 			if IsValid(owner:GetEnemy()) && owner:IsAbleToShootWeapon(true,true) == false then return false end
 		end
-		if owner:GetActivity() != nil && (((owner.IsVJBaseSNPC_Human) && ((owner.CurrentWeaponAnimation == owner:GetActivity()) or (owner:GetActivity() == owner:VJ_TranslateWeaponActivity(owner.CurrentWeaponAnimation)) or (owner.DoingWeaponAttack_Standing == false && owner.DoingWeaponAttack == true))) or (!(owner.IsVJBaseSNPC_Human))) then
+		if owner:GetActivity() != nil && (((owner.IsVJBaseSNPC_Human) && ((owner.CurrentWeaponAnimation == owner:GetActivity()) or (owner:GetActivity() == owner:TranslateToWeaponAnim(owner.CurrentWeaponAnimation)) or (owner.DoingWeaponAttack_Standing == false && owner.DoingWeaponAttack == true))) or (!(owner.IsVJBaseSNPC_Human))) then
 			if (owner.IsVJBaseSNPC_Human) then
 				local check, ammo = owner:CanDoWeaponAttack()
 				if ammo == "NoAmmo" then
@@ -412,7 +412,7 @@ function SWEP:NPCShoot_Primary(ShootPos,ShootDir)
 		if IsValid(self) && IsValid(owner) && self:NPCAbleToShoot() == true && CurTime() > self.NPC_NextPrimaryFireT then
 			if owner.DisableWeaponFiringGesture != true then
 				local owner = self:GetOwner()
-				local anim = owner:VJ_TranslateWeaponActivity(VJ_PICK(owner.AnimTbl_WeaponAttackFiringGesture))
+				local anim = owner:TranslateToWeaponAnim(VJ_PICK(owner.AnimTbl_WeaponAttackFiringGesture))
 				owner:VJ_ACT_PLAYACTIVITY(anim, false, false, false, 0, {AlwaysUseGesture=true})
 			end
 			self:PrimaryAttack()

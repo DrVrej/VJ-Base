@@ -288,7 +288,7 @@ function ENT:Think()
 			if self.ControlledNPC:GetActiveWeapon().IsVJBaseWeapon == true && self.TheController:KeyDown(IN_ATTACK2) && self.ControlledNPC.IsReloadingWeapon == false && self.ControlledNPC.MeleeAttacking == false && self.ControlledNPC.ThrowingGrenade == false && self.ControlledNPC.vACT_StopAttacks == false /*&& (self.ControlledNPC.Weapon_StartingAmmoAmount - self.ControlledNPC.Weapon_ShotsSinceLastReload) > 0*/ then
 				self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,100),0))
 				self.AbleToTurn = false
-				if VJ_IsCurrentAnimation(self.ControlledNPC,self.ControlledNPC:VJ_TranslateWeaponActivity(self.ControlledNPC.CurrentWeaponAnimation)) == false && VJ_IsCurrentAnimation(self.ControlledNPC,self.ControlledNPC.AnimTbl_WeaponAttack) == false then
+				if VJ_IsCurrentAnimation(self.ControlledNPC,self.ControlledNPC:TranslateToWeaponAnim(self.ControlledNPC.CurrentWeaponAnimation)) == false && VJ_IsCurrentAnimation(self.ControlledNPC,self.ControlledNPC.AnimTbl_WeaponAttack) == false then
 					self.AbleToTurn = false
 					self.ControlledNPC.CurrentWeaponAnimation = VJ_PICK(self.ControlledNPC.AnimTbl_WeaponAttack)
 					self.ControlledNPC:VJ_ACT_PLAYACTIVITY(self.ControlledNPC.CurrentWeaponAnimation,false,2,false)
