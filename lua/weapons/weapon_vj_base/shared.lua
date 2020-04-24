@@ -339,30 +339,27 @@ function SWEP:NPCAbleToShoot(CheckSec)
 	local owner = self:GetOwner()
 	if IsValid(owner) && owner:IsNPC() then
 		if (owner.IsVJBaseSNPC_Human) then
-			local check, ammo = owner:CanDoWeaponAttack()
-			if check == false && ammo != "NoAmmo" then return false end
-			if IsValid(owner:GetEnemy()) && owner:IsAbleToShootWeapon(true,true) == false then return false end
+			if IsValid(owner:GetEnemy()) && owner:IsAbleToShootWeapon(true, true) == false then return false end
 		end
 		if owner:GetActivity() != nil && (((owner.IsVJBaseSNPC_Human) && ((owner.CurrentWeaponAnimation == owner:GetActivity()) or (owner:GetActivity() == owner:TranslateToWeaponAnim(owner.CurrentWeaponAnimation)) or (owner.DoingWeaponAttack_Standing == false && owner.DoingWeaponAttack == true))) or (!(owner.IsVJBaseSNPC_Human))) then
 			if (owner.IsVJBaseSNPC_Human) then
-				local check, ammo = owner:CanDoWeaponAttack()
-				if ammo == "NoAmmo" then
+				if owner.AllowWeaponReloading == true && owner.Weapon_ShotsSinceLastReload >= owner.Weapon_StartingAmmoAmount then -- No ammo!
 					if owner.VJ_IsBeingControlled == true then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER,"Press R to reload!") end
 					if self.HasDryFireSound == true && CurTime() > self.NextNPCDrySoundT then
 						local sdtbl = VJ_PICK(self.DryFireSound)
-						if sdtbl != false then owner:EmitSound(sdtbl,80,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) end
+						if sdtbl != false then owner:EmitSound(sdtbl, 80, math.random(self.DryFireSoundPitch1, self.DryFireSoundPitch2)) end
 						if self.NPC_NextPrimaryFire != false then
 							self.NextNPCDrySoundT = CurTime() + self.NPC_NextPrimaryFire
 						end
 					end
 					return false
 				else
-					if owner:VJ_GetEnemy(true) != nil then
+					if (owner.VJ_IsBeingControlled == true or IsValid(owner:GetEnemy())) then
 						return true
 					end
 				end
 			else
-				if owner:VJ_GetEnemy(true) != nil then
+				if (owner.VJ_IsBeingControlled == true or IsValid(owner:GetEnemy())) then
 					return true
 				end
 			end
