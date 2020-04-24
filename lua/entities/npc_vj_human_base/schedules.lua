@@ -76,7 +76,7 @@ function ENT:StartSchedule(schedule)
 	if schedule.IsMovingTask_Run == nil then schedule.IsMovingTask_Run = false end
 	if schedule.IsMovingTask_Walk == nil then schedule.IsMovingTask_Walk = false end
 	if schedule.CanShootWhenMoving == true && self.CurrentWeaponAnimation != nil && IsValid(self:GetEnemy()) then
-		self:DoWeaponAttackMovementCode(true)
+		self:DoWeaponAttackMovementCode(true, (schedule.IsMovingTask_Walk and 1 or 0)) -- Send 1 if the current task is walking!
 		self:SetArrivalActivity(self.CurrentWeaponAnimation)
 	end
 	schedule.AlreadyRanCode_OnFail = false

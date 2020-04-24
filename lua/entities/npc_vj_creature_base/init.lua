@@ -2486,7 +2486,7 @@ function ENT:Think()
 								end
 								self:VJ_TASK_GOTO_TARGET(movetype,function(x)
 									x.CanShootWhenMoving = true
-									if self:VJ_HasActiveWeapon() == true then
+									if IsValid(self:GetActiveWeapon()) then
 										x.ConstantlyFaceEnemyVisible = true
 									end
 								end)
@@ -3855,7 +3855,7 @@ function ENT:BringAlliesToMe(Type,SeeDistance,EntsTable,LimitNumber,VisibleOnly)
 					elseif Type == "Diamond" then
 						self:DoFormation_Diamond(x,it)
 					end
-					if x:VJ_HasActiveWeapon() == false then
+					if !IsValid(x:GetActiveWeapon()) then
 						x:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
 					else
 						x:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)

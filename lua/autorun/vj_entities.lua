@@ -571,29 +571,23 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_CheckAllFourSides(CheckDistance)
 	CheckDistance = CheckDistance or 200
-	local SidesThatAreGood = {Forward=false, Backward=false, Right=false, Left=false}
+	local result = {Forward=false, Backward=false, Right=false, Left=false}
 	local i = 0
-	for k,v in ipairs({self:GetForward(),-self:GetForward(),self:GetRight(),-self:GetRight()}) do
-		i = i +1
+	for k, v in ipairs({self:GetForward(), -self:GetForward(), self:GetRight(), -self:GetRight()}) do
+		i = i + 1
 		tr = util.TraceLine({
-			start = self:GetPos() +self:OBBCenter(),
-			endpos = self:GetPos() +self:OBBCenter() +v *CheckDistance,
+			start = self:GetPos() + self:OBBCenter(),
+			endpos = self:GetPos() + self:OBBCenter() + v*CheckDistance,
 			filter = self
 		})
 		if self:GetPos():Distance(tr.HitPos) >= CheckDistance then
-			if i == 1 then SidesThatAreGood.Forward = true end
-			if i == 2 then SidesThatAreGood.Backward = true end
-			if i == 3 then SidesThatAreGood.Right = true end
-			if i == 4 then SidesThatAreGood.Left = true  end
+			if i == 1 then result.Forward = true end
+			if i == 2 then result.Backward = true end
+			if i == 3 then result.Right = true end
+			if i == 4 then result.Left = true  end
 		end
 	end
-	return SidesThatAreGood
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_GetEnemy(CheckForController)
-	CheckForController = CheckForController or false
-	if CheckForController == true && self.VJ_IsBeingControlled == true then return 1 end
-	return self:GetEnemy()
+	return result
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_DoSetEnemy(argent,ShouldStopActs,DoSmallWhenActiveEnemy)
@@ -660,12 +654,7 @@ function Entity_MetaTable:CalculateProjectile(Type, StartPos, EndPos, Vel)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_HasActiveWeapon()
-	if self.DisableWeapons == false && self:GetActiveWeapon() != NULL then return true end
-	return false
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:DoFormation_Diamond(ent,it,spacing)
+function NPC_MetaTable:DoFormation_Diamond(ent, it, spacing)
 	it = it or 0
 	spacing = spacing or 50
 	if it == 0 then
@@ -797,7 +786,7 @@ end)
 hook.Add("EntityFireBullets","VJ_NPC_FIREBULLET", function(ent, data)
 	if IsValid(ent) && !ent:IsPlayer() && ent.IsVJBaseSNPC == true then
 		local ret = nil
-		if ent:GetActiveWeapon() != NULL && ent:VJ_GetEnemy(true) != nil then
+		if IsValid(ent:GetActiveWeapon()) && (ent.VJ_IsBeingControlled == true or IsValid(ent:GetEnemy())) then
 			local Wep = ent:GetActiveWeapon()
 			local ene = ent:GetEnemy()
 			local EnemyDistance = 100
