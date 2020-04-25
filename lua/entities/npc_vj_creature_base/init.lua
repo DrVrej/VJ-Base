@@ -2367,7 +2367,7 @@ function ENT:Think()
 				self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 			end
 		end
-		if CurSched.StopScheduleIfNotMoving == true && (!self:IsMoving() or (self:GetBlockingEntity() != nil && self:GetBlockingEntity():IsNPC())) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
+		if (CurSched.StopScheduleIfNotMoving == true or CurSched.StopScheduleIfNotMoving_Any == true) && (!self:IsMoving() or (IsValid(self:GetBlockingEntity()) && (self:GetBlockingEntity():IsNPC() or CurSched.StopScheduleIfNotMoving_Any == true))) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
 			self:ScheduleFinished(CurSched)
 			//self:SetCondition(35)
 			//self:StopMoving()

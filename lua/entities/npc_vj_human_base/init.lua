@@ -2207,7 +2207,7 @@ function ENT:Think()
 				self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 			end
 		end
-		if CurSched.StopScheduleIfNotMoving == true && (!self:IsMoving() or (self:GetBlockingEntity() != nil && self:GetBlockingEntity():IsNPC())) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
+		if (CurSched.StopScheduleIfNotMoving == true or CurSched.StopScheduleIfNotMoving_Any == true) && (!self:IsMoving() or (IsValid(self:GetBlockingEntity()) && (self:GetBlockingEntity():IsNPC() or CurSched.StopScheduleIfNotMoving_Any == true))) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
 			self:ScheduleFinished(CurSched)
 			//self:SetCondition(35)
 			//self:StopMoving()
@@ -2909,7 +2909,7 @@ function ENT:DoWeaponAttackMovementCode(override, type)
 	override = override or false -- Overrides some of the checks, only used for the internal task system!
 	type = type or 0 -- This is used alone with override. | 0 = Run, 1 = Walk
 	if self.HasShootWhileMoving == true then 
-		if self:Visible(self:GetEnemy()) && self:IsAbleToShootWeapon(true,false) == true && ((self:IsMoving() && ((self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true))) or (override == true)) then
+		if self:Visible(self:GetEnemy()) && self:IsAbleToShootWeapon(true, false) == true && ((self:IsMoving() && ((self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true))) or (override == true)) then
 			if (override == true && type == 0) or (self.CurrentSchedule != nil && self.CurrentSchedule.IsMovingTask_Run == true) then
 				local anim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_ShootWhileMovingRun))
 				if VJ_AnimationExists(self,anim) == true then
@@ -2937,11 +2937,12 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IsAbleToShootWeapon(CheckDistance, CheckDistanceOnly, EnemyDistance)
 	CheckDistance = CheckDistance or false -- Check for distance and weapon time as well?
-	CheckDistanceOnly = CheckDistanceOnly or false -- Should it only check the above statment?
+	CheckDistanceOnly = CheckDistanceOnly or false -- Should it only check the above statement?
 	EnemyDistance = EnemyDistance or self:EyePos():Distance(self:GetEnemy():EyePos()) -- Distance used for CheckDistance
 	if self:CustomOnIsAbleToShootWeapon() == false then return end
 	local havedist = false
 	local havechecks = false
+	
 	if self.VJ_IsBeingControlled == true then CheckDistance = false CheckDistanceOnly = false end
 	if CheckDistance == true then
 		if CurTime() > self.NextWeaponAttackT && EnemyDistance < self.Weapon_FiringDistanceFar && EnemyDistance > self.Weapon_FiringDistanceClose then
@@ -2980,9 +2981,9 @@ function ENT:SelectSchedule(iNPCState)
 	else -- Combat Behavior --
 		local wep = self:GetActiveWeapon()
 		local ene = self:GetEnemy()
-		self.LatestEnemyDistance = ene:GetPos():Distance(self:GetPos())
+		local enedist = ene:GetPos():Distance(self:GetPos())
 		
-		if self.LatestEnemyDistance < self.SightDistance then -- If the enemy is in sight then continue
+		if enedist < self.SightDistance then -- If the enemy is in sight then continue
 			self:IdleSoundCode()
 			
 			-- Scared behavior system
@@ -2999,10 +3000,12 @@ function ENT:SelectSchedule(iNPCState)
 				self.NoWeapon_UseScaredBehavior_Active = false
 			end
 			
-			local EnemyPos = ene:EyePos()
-			local SelfToEnemyDistance = self:EyePos():Distance(EnemyPos)
+			local enepos_eye = ene:EyePos()
+			local enedist_eye = self:EyePos():Distance(enepos_eye)
 			local dontshoot = false
-			if self.HasRunFromEnemy == true && self.LatestEnemyDistance <= self.RunFromEnemy_Distance && CurTime() > self.TakingCoverT && CurTime() > self.NextChaseTime && self.MeleeAttacking == false && IsValid(wep) && self.FollowingPlayer == false && self.ThrowingGrenade == false && self.VJ_PlayingSequence == false && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos()+self:OBBCenter()),ene:EyePos()) == false then
+			
+			--Back away from the enemy if it's to close
+			if self.HasRunFromEnemy == true && IsValid(wep) && enedist <= self.RunFromEnemy_Distance && CurTime() > self.TakingCoverT && CurTime() > self.NextChaseTime && self.MeleeAttacking == false && self.FollowingPlayer == false && self.ThrowingGrenade == false && self.VJ_PlayingSequence == false && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos()+self:OBBCenter()),enepos_eye) == false then
 				local checkdist = self:VJ_CheckAllFourSides(200)
 				local randmove = {}
 				if checkdist.Backward == true then randmove[#randmove+1] = "Backward" end
@@ -3020,96 +3023,85 @@ function ENT:SelectSchedule(iNPCState)
 				end
 			end
 			
-			//if self.IsReloadingWeapon == false && IsValid(wep) && self.MeleeAttacking == false && self.FollowPlayer_GoingAfter == false && self.ThrowingGrenade == false && self.vACT_StopAttacks == false && self:VJ_GetNearestPointToEntityDistance(ene) > self.MeleeAttackDistance then
-			if dontshoot == false && self:IsAbleToShootWeapon(false,false,SelfToEnemyDistance) == true then
-				if SelfToEnemyDistance > self.Weapon_FiringDistanceFar or CurTime() < self.NextWeaponAttackT then
+			if dontshoot == false && self:IsAbleToShootWeapon(false, false, enedist_eye) == true then
+				if enedist_eye > self.Weapon_FiringDistanceFar or CurTime() < self.NextWeaponAttackT then -- Enemy to far away or not allowed to fire a weapon
 					self:DoChaseAnimation()
 					self.AllowToDo_WaitForEnemyToComeOut = false
-				//elseif SelfToEnemyDistance < self.Weapon_FiringDistanceFar && SelfToEnemyDistance > self.Weapon_FiringDistanceClose then -- If shoot distance is bigger than the enemy position and if the enemy position is bigger than the shoot distance close
-				elseif self:IsAbleToShootWeapon(true,true,SelfToEnemyDistance) == true then
-					if self.DoingWeaponAttack_Standing == true && CurTime() > self.TakingCoverT then -- If ally in line of fire, then move
-						local hitent = false
-						tr = util.TraceLine({
-							start = self:NearestPoint(self:GetPos() +self:OBBCenter()),
-							endpos = ene:EyePos(),
-							filter = self
-						})
-						for k,v in ipairs(ents.FindInSphere(tr.HitPos,5)) do
-							if v:IsNPC() && v != self && (self:Disposition(v) == D_LI or self:Disposition(v) == D_NU) then
-								hitent = true
-							end
-						end
-						-- Move when way blocked
-						if hitent == true && tr.HitPos:Distance(tr.StartPos) <= 3000 then
-							local checkdist = self:VJ_CheckAllFourSides(40)
-							local randmove = {}
-							if checkdist.Right == true then randmove[#randmove+1] = "Right" end
-							if checkdist.Left == true then randmove[#randmove+1] = "Left" end
-							local pickmove = VJ_PICK(randmove)
-							if pickmove == "Right" then self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(30,40)) end
-							if pickmove == "Left" then self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-40,-30)) end
-							if pickmove == "Right" or pickmove == "Left" then
-								self:StopMoving()
-								self.NextChaseTime = CurTime() + 1
-								self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
-							end
-						end
-					end
-					// (self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()) +self:GetUp()*30,ene:EyePos() +self:GetUp()*30,true,{SpawnTestCube=true})
-					if (self:VJ_ForwardIsHidingZone(self:EyePos(),ene:EyePos(),true) == true) && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()) +self:GetUp()*30,ene:EyePos() +self:GetUp()*30,true) /*or self:VJ_ForwardIsHidingZone(util.VJ_GetWeaponPos(self),ene:EyePos()) == true*/ /*or (!self:Visible(ene))*/ then -- Chase enemy or wait for enemy if hiding
-						//if self:VJ_IsCurrentSchedule(self.WeaponAttackSchedule) != true then
-						if self.WaitForEnemyToComeOut == true && self.AllowToDo_WaitForEnemyToComeOut == true && self.IsReloadingWeapon == false && self.Weapon_TimeSinceLastShot <= 5 && self.WaitingForEnemyToComeOut == false && (SelfToEnemyDistance < self.Weapon_FiringDistanceFar) && (SelfToEnemyDistance > self.WaitForEnemyToComeOutDistance) then
+				elseif self:IsAbleToShootWeapon(true, true, enedist_eye) == true then -- Check if enemy is in sight, then continue...
+					//self:VJ_ForwardIsHidingZone(self:EyePos(), enepos_eye, true, {SpawnTestCube=true})
+					-- If I can't see the enemy then either wait for it or charge at the enemy
+					if self:VJ_ForwardIsHidingZone(self:EyePos(), enepos_eye, true) == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() + self:OBBCenter()) + self:GetUp()*30, enepos_eye + self:GetUp()*30, true) /*or self:VJ_ForwardIsHidingZone(util.VJ_GetWeaponPos(self),enepos_eye) == true*/ /*or (!self:Visible(ene))*/ then -- Chase enemy or wait for enemy if hiding
+						if self.WaitForEnemyToComeOut == true && self.AllowToDo_WaitForEnemyToComeOut == true && self.IsReloadingWeapon == false && self.Weapon_TimeSinceLastShot <= 5 && self.WaitingForEnemyToComeOut == false && (enedist_eye < self.Weapon_FiringDistanceFar) && (enedist_eye > self.WaitForEnemyToComeOutDistance) then
+						-- Wait for the enemy to come out
 							self.WaitingForEnemyToComeOut = true
 							if self.HasLostWeaponSightAnimation == true then
-								self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_LostWeaponSight,false,0,true)
+								self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_LostWeaponSight, false, 0, true)
 							end
 							self.NextChaseTime = CurTime() + math.Rand(self.WaitForEnemyToComeOutTime.a, self.WaitForEnemyToComeOutTime.b)
 						elseif self.DisableChasingEnemy == false && self.IsReloadingWeapon == false && CurTime() > self.LastHiddenZoneT then
+						-- Go after the enemy!
 							self.DoingWeaponAttack = false
 							self.DoingWeaponAttack_Standing = false
 							self:DoChaseAnimation()
 						end
-					else
+					else -- I can see the enemy...
 						self.AllowToDo_WaitForEnemyToComeOut = true
-						// CurTime() > self.TakingCoverT
-						//if self:Visible(ene) /*&& (self:GetForward():Dot((ene:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle)))*/ then
 						if (wep.IsVJBaseWeapon) then -- VJ Base weapons
 							self:FaceCertainEntity(ene,true)
 							local dontattack = false
 							// self:DoChaseAnimation()
 							-- if covered, try to move forward by calculating the distance between the prop and the NPC
-							local iscovered, covertr = self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),ene:EyePos(),false,{SetLastHiddenTime=true})
-							local guncovered, guncovertr = self:VJ_ForwardIsHidingZone(wep:GetNWVector("VJ_CurBulletPos"),ene:EyePos(),false)
-							//print("Is covered? ",iscovered)
-							//print("Is gun covered? ",guncovered)
-							if iscovered == true then
-								if CurTime() < self.TakingCoverT then dontattack = true end
-								self.WeaponUseEnemyEyePos = true
-								if dontattack == false && guncovered == true && !guncovertr.Entity:IsNPC() && !guncovertr.Entity:IsPlayer() && self.TimeSinceSeenEnemy > 0.5 && CurTime() > self.NextMoveOnGunCoveredT then
-									self.WeaponUseEnemyEyePos = true
+							local covered_npc, covertr = self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() + self:OBBCenter()), enepos_eye, false, {SetLastHiddenTime=true})
+							local covered_wep, guncovertr = self:VJ_ForwardIsHidingZone(wep:GetNWVector("VJ_CurBulletPos"), enepos_eye, false)
+							//print("Is covered? ",covered_npc)
+							//print("Is gun covered? ",covered_wep)
+							local covered_isobj = true
+							if covered_npc == false or (IsValid(covertr.Entity) && (covertr.Entity:IsNPC() or covertr.Entity:IsPlayer())) then
+								covered_isobj = false
+							end
+							
+							-- If ally in line of fire, then move
+							if covered_isobj == false && self.DoingWeaponAttack_Standing == true && CurTime() > self.TakingCoverT && IsValid(guncovertr.Entity) && guncovertr.Entity:IsNPC() && guncovertr.Entity != self && (self:Disposition(guncovertr.Entity) == D_LI or self:Disposition(guncovertr.Entity) == D_NU) && guncovertr.HitPos:Distance(guncovertr.StartPos) <= 3000 then
+								local checkdist = self:VJ_CheckAllFourSides(40)
+								local randmove = {}
+								if checkdist.Right == true then randmove[#randmove+1] = "Right" end
+								if checkdist.Left == true then randmove[#randmove+1] = "Left" end
+								local pickmove = VJ_PICK(randmove)
+								if pickmove == "Right" then self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(30,40)) end
+								if pickmove == "Left" then self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-40,-30)) end
+								if pickmove == "Right" or pickmove == "Left" then
+									self:StopMoving()
+									self.NextChaseTime = CurTime() + 1
+									self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+								end
+							end
+							
+							if covered_npc == true then
+								if CurTime() < self.TakingCoverT then dontattack = true end -- Behind cover and is taking cover, don't fire!
+								self.WeaponUseEnemyEyePos = true -- Make the bullet direction go towards the head of the enemy
+								
+								if dontattack == false && self.TimeSinceSeenEnemy > 0.5 && CurTime() > self.NextMoveOnGunCoveredT && ((covertr.HitPos:Distance(self:GetPos()) > 150 && covered_isobj == true) or (covered_wep == true && !guncovertr.Entity:IsNPC() && !guncovertr.Entity:IsPlayer())) then
 									local calc;
-									local mypos;
+									local enepos;
 									if IsValid(covertr.Entity) then
-										calc = self:VJ_GetNearestPointToEntity(covertr.Entity,true)
-										mypos = calc.MyPosition
+										calc = self:VJ_GetNearestPointToEntity(covertr.Entity, true)
 										enepos = calc.EnemyPosition - self:GetForward()*15
 									else
-										calc = self:VJ_GetNearestPointToVector(tr.HitPos,true)
-										mypos = calc.MyPosition
+										calc = self:VJ_GetNearestPointToVector(tr.HitPos, true)
 										enepos = calc.PointPosition - self:GetForward()*15
 									end
-									if mypos:Distance(enepos) <= 1000 then
-										//enepos = enepos - self:GetForward()*5
+									if calc.MyPosition:Distance(enepos) <= 1000 then
 										self:SetLastPosition(enepos)
-										//VJ_CreateTestObject(enepos,self:GetAngles(),Color(0,255,255))
+										//VJ_CreateTestObject(enepos, self:GetAngles(), Color(0,255,255))
 										local vsched = ai_vj_schedule.New("vj_goto_cover")
 										vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
 										vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 										vsched.IsMovingTask = true
 										vsched.ConstantlyFaceEnemy = true
-										local coveranim = VJ_PICK(self.AnimTbl_MoveToCover)
-										if VJ_AnimationExists(self,self:TranslateToWeaponAnim(coveranim)) == true then
-											self:SetMovementActivity(ACT_RUN_CROUCH)
+										vsched.StopScheduleIfNotMoving_Any = true
+										local coveranim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_MoveToCover))
+										if VJ_AnimationExists(self, coveranim) == true then
+											self:SetMovementActivity(coveranim)
 										else
 											vsched.CanShootWhenMoving = true
 											vsched.IsMovingTask_Run = true
@@ -3119,7 +3111,10 @@ function ENT:SelectSchedule(iNPCState)
 									end
 									self.NextMoveOnGunCoveredT = CurTime() + 2
 								end
+							else -- NPC not covered
+								self.WeaponUseEnemyEyePos = false -- Make the bullet direction go towards the center of the enemy rather then its head
 							end
+							
 							if dontattack == false && CurTime() > self.NextWeaponAttackT /*&& self.DoingWeaponAttack == false*/ then
 								-- If the current animation is already a firing animation, then imply just tell the base It's already firing and don't restart the animation
 								if VJ_IsCurrentAnimation(self, self:TranslateToWeaponAnim(self.CurrentWeaponAnimation)) == true then
@@ -3133,7 +3128,7 @@ function ENT:SelectSchedule(iNPCState)
 									//self.NextMoveRandomlyWhenShootingT = CurTime() + 2
 									local resultanim;
 									local anim_crouch = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponAttackCrouch))
-									if self.CanCrouchOnWeaponAttack == true && iscovered == false && guncovered == false && SelfToEnemyDistance > 500 && VJ_AnimationExists(self, anim_crouch) == true && ((math.random(1, self.CanCrouchOnWeaponAttackChance) == 1) or (CurTime() <= self.Weapon_DoingCrouchAttackT)) && self:VJ_ForwardIsHidingZone(wep:GetNWVector("VJ_CurBulletPos") + self:GetUp()*-18, ene:EyePos(), false) == false then
+									if self.CanCrouchOnWeaponAttack == true && covered_npc == false && covered_wep == false && enedist_eye > 500 && VJ_AnimationExists(self, anim_crouch) == true && ((math.random(1, self.CanCrouchOnWeaponAttackChance) == 1) or (CurTime() <= self.Weapon_DoingCrouchAttackT)) && self:VJ_ForwardIsHidingZone(wep:GetNWVector("VJ_CurBulletPos") + self:GetUp()*-18, enepos_eye, false) == false then
 										resultanim = anim_crouch
 										self.Weapon_DoingCrouchAttackT = CurTime() + 2 -- Asiga bedke vor vestah elank yed votgi cheler hemen
 									else -- Not crouching
@@ -3148,8 +3143,8 @@ function ENT:SelectSchedule(iNPCState)
 								end
 							end
 							-- Move randomly when shooting
-							if self.FollowingPlayer == false && self.MoveRandomlyWhenShooting == true && self.DoingWeaponAttack == true && self.DoingWeaponAttack_Standing == true && CurTime() > self.NextMoveRandomlyWhenShootingT && self.TimeSinceSeenEnemy > 2 && (SelfToEnemyDistance < (self.Weapon_FiringDistanceFar /1.25)) then
-								if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),ene:EyePos()) == false then
+							if covered_npc == false && self.FollowingPlayer == false && self.MoveRandomlyWhenShooting == true && self.DoingWeaponAttack == true && self.DoingWeaponAttack_Standing == true && CurTime() > self.NextMoveRandomlyWhenShootingT && self.TimeSinceSeenEnemy > 2 && (enedist_eye < (self.Weapon_FiringDistanceFar /1.25)) then
+								if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),enepos_eye) == false then
 									//self:SetMovementActivity(ACT_RUN_AIM)
 									if self:CustomOnMoveRandomlyWhenShooting() != false then
 										local randpos = math.random(150,400)
@@ -3181,35 +3176,12 @@ function ENT:SelectSchedule(iNPCState)
 							self:VJ_SetSchedule(SCHED_RANGE_ATTACK1)
 						end
 					end
-					-- Deprecated code | Wait for enemy to come out (Old system)
-					/*if !self:Visible(ene) then
-						if self.IsReloadingWeapon == false && self.AllowToDo_WaitForEnemyToComeOut == true && self.Weapon_TimeSinceLastShot <= 5 && self.WaitingForEnemyToComeOut == false && (SelfToEnemyDistance < (self.Weapon_FiringDistanceFar)) && SelfToEnemyDistance > self.WaitForEnemyToComeOutDistance then
-							if self.WaitForEnemyToComeOut == true then
-								self:StopMoving()
-								self.DoingWeaponAttack_Standing = false
-								self.NextChaseTime = CurTime() + math.Rand(self.WaitForEnemyToComeOutTime.a, self.WaitForEnemyToComeOutTime.b)
-								self:CustomOnWaitForEnemyToComeOut()
-								local myanim = VJ_PICK(self.AnimTbl_CustomWaitForEnemyToComeOut)
-								if myanim == true then // !VJ_IsCurrentAnimation(self,self.CurrentWeaponAnimation)
-									self:VJ_ACT_PLAYACTIVITY(myanim,false,2,true)
-								elseif !VJ_IsCurrentAnimation(self,self.CurrentWeaponAnimation) then
-									self:VJ_ACT_PLAYACTIVITY(self.CurrentWeaponAnimation,false,2,true)
-								end
-								//local wepanim = self.CurrentWeaponAnimation
-								//local actualanim = wepanim
-								//if type(wepanim) != "string" then wepanim = self:TranslateToWeaponAnim(wepanim) end
-								//if VJ_IsCurrentAnimation(self,wepanim) == false then self:VJ_ACT_PLAYACTIVITY(actualanim,false,2,true) end
-								//self:VJ_ACT_TAKE_COVER(self.AnimTbl_CustomWaitForEnemyToComeOut,{ACT_IDLE_ANGRY},false,2,true)
-							end
-							self.WaitingForEnemyToComeOut = true
-						end
-					end*/
 				end
 			end
-		end
-		if IsValid(ene) && self.LatestEnemyDistance > self.SightDistance then
+		elseif IsValid(ene) then
 			self:ResetEnemy(false)
 		end
+		self.LatestEnemyDistance = ene:GetPos():Distance(self:GetPos())
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
