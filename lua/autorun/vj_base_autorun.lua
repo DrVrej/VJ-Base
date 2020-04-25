@@ -13,7 +13,7 @@
 --------------------------------------------------*/
 if (CLIENT) then print("Loading VJ Base (Client)...") else print("Loading VJ Base (Server)...") end
 
-VJBASE_VERSION = "2.11.1"
+VJBASE_VERSION = "2.12.0"
 VJBASE_GETNAME = "VJ Base"
 
 -- Shared --
@@ -59,30 +59,27 @@ elseif (CLIENT) then
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("PlayerInitialSpawn", "drvrejplayerInitialSpawn", function(ply,command,arguements)
-	//if game.SinglePlayer() then return end
+hook.Add("PlayerInitialSpawn", "VJBaseSpawn", function(ply, transition)
+	-- Simple message for the users
+	timer.Simple(1, function()
+		net.Start("VJWelcome")
+		net.Send(ply)
+	end)
+	
 	if (ply:SteamID() == "STEAM_0:0:22688298") then
 		PrintMessage(HUD_PRINTTALK,"DrVrej Has Joined The Game!")
 		PrintMessage(HUD_PRINTCENTER,"DrVrej Has Joined The Game!")
 		local sd = CreateSound(game.GetWorld(),"vj_illuminati/Illuminati Confirmed.mp3")
 		sd:SetSoundLevel(0)
 		sd:Play()
-		timer.Simple(10,function() if sd then sd:Stop() end end)
+		timer.Simple(10, function() if sd then sd:Stop() end end)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("PlayerInitialSpawn", "VJBaseSpawn", function(ply)
-	timer.Simple(1, function()
-		net.Start("VJWelcome")
-		net.Send(ply)
-		//print(engine.GetGames())
-	end)
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
-net.Receive("VJSay",function(len,pl)
+net.Receive("VJSay", function(len, pl)
 	if pl:IsPlayer() && pl:SteamID() == "STEAM_0:0:22688298" then
-		PrintMessage(HUD_PRINTTALK,"The creator of VJ Base, DrVrej is in the server!")
-		local sd = CreateSound(game.GetWorld(),"vj_illuminati/Illuminati Confirmed.mp3")
+		PrintMessage(HUD_PRINTTALK, "DrVrej is in the server!")
+		local sd = CreateSound(game.GetWorld(), "vj_illuminati/Illuminati Confirmed.mp3")
 		sd:SetSoundLevel(0)
 		sd:Play()
 	end

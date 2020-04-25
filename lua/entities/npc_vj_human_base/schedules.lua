@@ -38,14 +38,15 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSchedule(schedule)
 	self:ClearCondition(35)
-	if (!schedule.RunCode_OnFail) then schedule.RunCode_OnFail = nil end
-	if (!schedule.RunCode_OnFinish) then schedule.RunCode_OnFinish = nil end
+	if (!schedule.RunCode_OnFail) then schedule.RunCode_OnFail = nil end -- Code that will run ONLY when it fails!
+	if (!schedule.RunCode_OnFinish) then schedule.RunCode_OnFinish = nil end -- Code that will run once the task finished (Will run even if failed)
 	if (!schedule.ResetOnFail) then schedule.ResetOnFail = false end
-	if (!schedule.StopScheduleIfNotMoving) then schedule.StopScheduleIfNotMoving = false end
+	if (!schedule.StopScheduleIfNotMoving) then schedule.StopScheduleIfNotMoving = false end -- Will stop from certain entities, such as other NPCs
+	if (!schedule.StopScheduleIfNotMoving_Any) then schedule.StopScheduleIfNotMoving_Any = false end -- Will stop from any blocking entity!
 	if (!schedule.CanBeInterrupted) then schedule.CanBeInterrupted = false end
-	if (!schedule.ConstantlyFaceEnemy) then schedule.ConstantlyFaceEnemy = false end
+	if (!schedule.ConstantlyFaceEnemy) then schedule.ConstantlyFaceEnemy = false end -- Constantly face the enemy while doing this task
 	if (!schedule.ConstantlyFaceEnemyVisible) then schedule.ConstantlyFaceEnemyVisible = false end
-	if (!schedule.CanShootWhenMoving) then schedule.CanShootWhenMoving = false end
+	if (!schedule.CanShootWhenMoving) then schedule.CanShootWhenMoving = false end -- Is it able to fire when moving?
 	if self.MovementType == VJ_MOVETYPE_STATIONARY then
 		if schedule.IsMovingTask == true then
 			return

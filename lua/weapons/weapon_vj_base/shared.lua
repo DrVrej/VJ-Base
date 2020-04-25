@@ -44,7 +44,6 @@ SWEP.WorldModel_NoShadow = false -- Should the world model have a shadow?
 SWEP.NPC_NextPrimaryFire = 0.1 -- Next time it can use primary fire
 SWEP.NPC_TimeUntilFire = 0.1 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_TimeUntilFireExtraTimers = {} -- Extra timers, which will make the gun fire again! | The seconds are counted after the self.NPC_TimeUntilFire!
-SWEP.NPC_AllowCustomSpread = true -- Should the weapon be able to change the NPC's spread?
 SWEP.NPC_CustomSpread = 1 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
 SWEP.NPC_BulletSpawnAttachment = "" -- The attachment that the bullet spawns on, leave empty for base to decide!
 SWEP.NPC_CanBePickedUp = true -- Can this weapon be picked up by NPCs? (Ex: Rebels)
@@ -405,13 +404,8 @@ function SWEP:NPCShoot_Primary(ShootPos,ShootDir)
 	end
 	
 	-- Primary Fire
-	timer.Simple(self.NPC_TimeUntilFire,function()
+	timer.Simple(self.NPC_TimeUntilFire, function()
 		if IsValid(self) && IsValid(owner) && self:NPCAbleToShoot() == true && CurTime() > self.NPC_NextPrimaryFireT then
-			if owner.DisableWeaponFiringGesture != true then
-				local owner = self:GetOwner()
-				local anim = owner:TranslateToWeaponAnim(VJ_PICK(owner.AnimTbl_WeaponAttackFiringGesture))
-				owner:VJ_ACT_PLAYACTIVITY(anim, false, false, false, 0, {AlwaysUseGesture=true})
-			end
 			self:PrimaryAttack()
 			if self.NPC_NextPrimaryFire != false then
 				self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
@@ -447,7 +441,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	if (!self:CanPrimaryAttack()) then return end
 	self:CustomOnPrimaryAttack_BeforeShoot()
 	
-	if isnpc then
+	if isnpc && owner.IsVJBaseSNPC == true then
 		timer.Simple(self.NPC_ExtraFireSoundTime, function()
 			if IsValid(self) && IsValid(owner) then
 				VJ_EmitSound(owner,self.NPC_ExtraFireSound,self.NPC_ExtraFireSoundLevel,math.Rand(self.NPC_ExtraFireSoundPitch.a, self.NPC_ExtraFireSoundPitch.b))
@@ -463,6 +457,14 @@ function SWEP:PrimaryAttack(UseAlt)
 		local farsd = VJ_PICK(self.Primary.DistantSound)
 		if farsd != false then
 			sound.Play(farsd,self:GetPos(),self.Primary.DistantSoundLevel,math.random(self.Primary.DistantSoundPitch1,self.Primary.DistantSoundPitch2),self.Primary.DistantSoundVolume)
+		end
+	end
+	
+	if isnpc == true then
+		if owner.DisableWeaponFiringGesture != true then
+			local owner = self:GetOwner()
+			local anim = owner:TranslateToWeaponAnim(VJ_PICK(owner.AnimTbl_WeaponAttackFiringGesture))
+			owner:VJ_ACT_PLAYACTIVITY(anim, false, false, false, 0, {AlwaysUseGesture=true})
 		end
 	end
 	

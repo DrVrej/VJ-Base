@@ -526,7 +526,7 @@ function NPC_MetaTable:VJ_GetNearestPointToEntityDistance(argent,OnlySelfGetPos)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,Tbl_Features)
-	if !IsValid(self:GetEnemy()) then return false end
+	if !IsValid(self:GetEnemy()) then return false, {} end
 	StartPos = StartPos or self:NearestPoint(self:GetPos() + self:OBBCenter())
 	EndPos = EndPos or self:GetEnemy():EyePos()
 	AcceptWorld = AcceptWorld or false
@@ -563,7 +563,7 @@ function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,Tbl_Fe
 	end
 
 	if hitent == true then if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = 0 end return false, tr end
-	if EndPos:Distance(tr.HitPos) <= 10 then if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = 0 end return false end
+	if EndPos:Distance(tr.HitPos) <= 10 then if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = 0 end return false, tr end
 	if tr.HitWorld == true && self:GetPos():Distance(tr.HitPos) < 200 then if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = CurTime() + 20 end return true, tr end
 	if /*tr.Entity == NULL or tr.Entity:IsNPC() or tr.Entity:IsPlayer() or*/ tr.Entity == self:GetEnemy() or (AcceptWorld == false && tr.HitWorld == true) then
 	if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = 0 end return false, tr else if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = CurTime() + 20 end return true, tr end
@@ -786,87 +786,41 @@ end)
 hook.Add("EntityFireBullets","VJ_NPC_FIREBULLET", function(ent, data)
 	if IsValid(ent) && !ent:IsPlayer() && ent.IsVJBaseSNPC == true then
 		local ret = nil
-		if IsValid(ent:GetActiveWeapon()) && (ent.VJ_IsBeingControlled == true or IsValid(ent:GetEnemy())) then
-			local Wep = ent:GetActiveWeapon()
-			local ene = ent:GetEnemy()
-			local EnemyDistance = 100
-			if ent.VJ_IsBeingControlled == true then
-				EnemyDistance = ent:GetPos():Distance(ent.VJ_TheController:GetEyeTrace().HitPos)
-			else
-				EnemyDistance = ent:GetPos():Distance(ene:GetPos())
-			end
-			//Wep:SetClip1(Wep:Clip1() -1)
-			//PrintTable(data)
-			//data.Callback = function(tr)
-				//print(tr)
-				//if tr.ent:GetClass() == "prop_ragdoll" then
-				//print(tr.ent) end
-			//end
-			if ent.VJ_IsBeingControlled == false && Wep.IsVJBaseWeapon != true then
+		local wep = ent:GetActiveWeapon()
+		local ene = ent:GetEnemy()
+		if IsValid(wep) && IsValid(ene) then
+			-- Bullet spawn
+			//data.Src = util.VJ_GetWeaponPos(ent) -- Not needed, done inside the weapon base instead
+			if wep.IsVJBaseWeapon != true then
 				data.Src = util.VJ_GetWeaponPos(ent)
-			elseif ent.VJ_IsBeingControlled == true && IsValid(ent.VJ_TheController) then
-				data.Src = ent.VJ_TheController:GetShootPos()
 			end
-			//if ene:GetHullType() == HULL_TINY then
-			//data.Spread = Vector(25,25,0) else
-			if ent.VJ_IsBeingControlled == false then
-				local fSpread = (EnemyDistance/28) * ent.WeaponSpread
-				if Wep.IsVJBaseWeapon == true && Wep.NPC_AllowCustomSpread == true then fSpread = fSpread * Wep.NPC_CustomSpread end
-				//fSpread = math.Clamp(fSpread,1,65)
-				data.Spread = Vector(fSpread,fSpread,0)
-				/*if EnemyDistance < 400 then
-				//self:CapabilitiesRemove(CAP_AIM_GUN)
-				data.Spread = Vector(30,30,0) else //end //ene:GetPos()
-				if EnemyDistance < 600 && EnemyDistance > 400 then
-				data.Spread = Vector(40,40,0) else
-				data.Spread = Vector(ent.WeaponSpread,ent.WeaponSpread,0) end end*/
-			elseif ent.VJ_IsBeingControlled == true && IsValid(ent.VJ_TheController) then
-				//data.Spread = Vector(1,1,0)
+			
+			-- Bullet spread
+			// ent:GetPos():Distance(ent.VJ_TheController:GetEyeTrace().HitPos) -- Was used when NPC was being controlled
+			local fSpread = (ent:GetPos():Distance(ene:GetPos()) / 28) * ent.WeaponSpread
+			if wep.IsVJBaseWeapon == true then -- Apply the VJ Base weapon spread
+				fSpread = fSpread * wep.NPC_CustomSpread
 			end
-			if ent.VJ_IsBeingControlled == false then
-				//data.Dir =		ene:GetPos()-(ene:OBBMaxs():Distance(ene:OBBMins())/2)
-				//if Wep:GetClass() != "weapon_shotgun" or Wep:GetClass() != "weapon_annabelle" then
-				//if ene:IsNPC() then
-				-- Very old System
-				//if ene:GetHullType() == HULL_TINY then
-					//data.Dir = (ene:GetPos()+ene:GetUp()*-50)-ent:GetPos() else
-					//data.Dir = (ene:GetPos()+ene:GetUp()*-20)-ent:GetPos()
-				//end
-				//data.Dir = (ene:GetPos()+ene:OBBCenter()+ene:GetUp()*-45) -ent:GetPos()+ent:OBBCenter()+ene:GetUp()*-45
-				if ent.WeaponUseEnemyEyePos == true then
-					data.Dir = (ene:EyePos()+ene:GetUp()*-5)-data.Src
-				else
-					data.Dir = (ene:GetPos()+ene:OBBCenter())-data.Src
-				end
-				ent.WeaponUseEnemyEyePos = false
-				-- Just a test
-				//data.Dir = (ene:GetPos()+ene:GetUp()*-50) -ent:GetPos()
-				//end
-				//if ene:IsPlayer() then
-				//if Wep:GetClass() != "weapon_shotgun" then
-				//data.Dir = (ene:GetPos()+ene:OBBCenter()+ene:GetUp()*-45) -ent:GetPos() end
-			elseif ent.VJ_IsBeingControlled == true && IsValid(ent.VJ_TheController) then
-				data.Dir = ent.VJ_TheController:GetAimVector()
+			data.Spread = Vector(fSpread, fSpread, 0)
+			
+			-- Bullet direction
+			// data.Dir = ent.VJ_TheController:GetAimVector() -- Was used when NPC was being controlled
+			if ent.WeaponUseEnemyEyePos == true then
+				data.Dir = (ene:EyePos() + ene:GetUp()*-5) - data.Src
+			else
+				data.Dir = (ene:GetPos() + ene:OBBCenter()) -  data.Src
 			end
-			/*data.Callback = function(attacker, tr, dmginfo)
-				local laserhit = EffectData()
-				laserhit:SetOrigin(tr.HitPos)
-				laserhit:SetNormal(tr.HitNormal)
-				laserhit:SetScale(80)
-				util.Effect("effect_fo3_laserhit", laserhit)
-				//tr.HitPos:Ignite( 8, 0 )
-			return true end*/
-			//end
-			//data.Src = util.VJ_GetWeaponPos(ent) //ent:EyePos() + ent:GetUp()*-40
-			if Wep.IsVJBaseWeapon == true then
+			//ent.WeaponUseEnemyEyePos = false
+			
+			-- Ammo counter
+			if wep.IsVJBaseWeapon == true then
 				ent.Weapon_ShotsSinceLastReload = ent.Weapon_ShotsSinceLastReload + 1
-				//Wep:SetClip1(ent.Weapon_StartingAmmoAmount - ent.Weapon_ShotsSinceLastReload)
 			end
-			//ent.Weapon_TimeSinceLastShot = 0
+			//ent.Weapon_TimeSinceLastShot = 0 -- We don't want to change this here!
 			ret = true
 		end
 		if ent.IsVJBaseSNPC == true then
-			ent:OnFireBullet(ent,data)
+			ent:OnFireBullet(ent, data)
 		end
 		if ret == true then return true end
 	end
