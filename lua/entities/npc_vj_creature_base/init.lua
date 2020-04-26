@@ -1597,22 +1597,6 @@ function ENT:VJ_TASK_IDLE_STAND()
 	//self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),finaltbl)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-/*function ENT:DoCustomIdleAnimation()
-	self.CurrentAnim_CustomIdle = VJ_PICK(self.AnimTbl_IdleStand)
-	if self.CurrentAnim_CustomIdle == false then self.CurrentAnim_CustomIdle = 0 return end
-	if self:GetActivity() == ACT_IDLE then
-		if type(self.CurrentAnim_CustomIdle) == "string" then
-			local checkanim = self:GetSequenceActivity(self:LookupSequence(self.CurrentAnim_CustomIdle))
-			if checkanim == nil or checkanim == -1 then
-				return false
-			else
-				self.CurrentAnim_CustomIdle = checkanim
-			end
-		end
-		self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"), self.CurrentAnim_CustomIdle)
-	end
-end*/
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 	if /*self.VJ_PlayingSequence == true or*/ self.VJ_IsBeingControlled == true /*or self.FollowingPlayer == true*/ or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextIdleTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
 	-- 0 = Random | 1 = Wander | 2 = Idle Stand /\ OverrideWander = Wander no matter what
@@ -1638,38 +1622,36 @@ function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
-	if !IsValid(self:GetEnemy()) then return end
-	if self.PlayingAttackAnimation == true && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then return end
-	if self.VJ_IsBeingControlled == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true /*or self.VJ_PlayingSequence == true*/ or self.FollowingPlayer == true or self.Dead == true or (self.NextChaseTime > CurTime()) or CurTime() < self.TakingCoverT then return end
-	if self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) < self.MeleeAttackDistance && self:GetEnemy():Visible(self) && (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then self:AAMove_Stop() self:VJ_TASK_IDLE_STAND() return end
-	-- OverrideChasing = Chase no matter what
-	OverrideChasing = OverrideChasing or false
-	if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) then
-		self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) end)
+function ENT:DoChaseAnimation(OverrideChasing)
+	local ene = self:GetEnemy()
+	if self.Dead == true or self.VJ_IsBeingControlled == true or self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.PlayingAttackAnimation == true && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
+	if self:VJ_GetNearestPointToEntityDistance(ene) < self.MeleeAttackDistance && ene:Visible(self) && (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then self:AAMove_Stop() self:VJ_TASK_IDLE_STAND() return end
+	
+	OverrideChasing = OverrideChasing or false -- OverrideChasing = Chase no matter what
+	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_TASK_IDLE_STAND() return end -- Stationary SNPCs aren't allowed to move!
+	
+	-- For non-aggressive SNPCs
+	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
+		self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
 		self.NextChaseTime = CurTime() + 3
 		return
 	end
-	//ChaseSched = ChaseSched or VJ_PICK(self.ChaseSchedule)
-	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_TASK_IDLE_STAND() return end
+	
 	if OverrideChasing == false && (self.DisableChasingEnemy == true or self.IsGuard == true or self.RangeAttack_DisableChasingEnemy == true) then self:VJ_TASK_IDLE_STAND() return end
-	//self:VJ_SetSchedule(ChaseSched) // SCHED_CHASE_ENEMY
-	if self:IsUnreachable(self:GetEnemy()) == true then
-		if math.random(1,30) == 1 then
-			if !self:IsMoving() then
-				self.NextWanderTime = 0
-			end
-			self:DoIdleAnimation(1)
+	
+	-- If the enemy is not reachable then wander around
+	if self:IsUnreachable(ene) == true && math.random(1, 30) == 1 then
+		if !self:IsMoving() then
+			self.NextWanderTime = 0
 		end
-	else
+		self:DoIdleAnimation(1)
+	else -- Is reachable, so chase the enemy!
 		self:VJ_TASK_CHASE_ENEMY()
 	end
-	if self.NextChaseTime > CurTime() then return end
-	if self.LatestEnemyDistance > 2000 then
-		self.NextChaseTime = CurTime() + 1
-	else
-		self.NextChaseTime = CurTime() + 0.1
-	end
+	
+	-- Set the next chase time
+	if self.NextChaseTime > CurTime() then return end -- Don't set it if it's already set!
+	self.NextChaseTime = CurTime() + (((self.LatestEnemyDistance > 2000) and 1) or 0.1) -- If the enemy is far, increase the delay!
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:BusyWithActivity()
@@ -5099,7 +5081,7 @@ function ENT:IdleSoundCode(CustomTbl,Type)
 					self.CurrentIdleSound = Type(self, sdtbl, self.IdleSoundLevel, self:VJ_DecideSoundPitch(self.IdleSoundPitch1, self.IdleSoundPitch2))
 				end
 			end
-			if sdtbl2 != false && sdrand == 1 && self.HasIdleDialogueSounds == true && math.random(1,1) == 1 then
+			if sdtbl2 != false && sdrand == 1 && self.HasIdleDialogueSounds == true && math.random(1,2) == 1 then
 				local testent, testvj = self:IdleDialogueSoundCodeTest()
 				if testent != false then
 					if self:CustomOnIdleDialogue(testent, testvj) == false then
@@ -5163,7 +5145,7 @@ function ENT:IdleDialogueSoundCodeTest()
 			ret = v
 		elseif v != self && ((self:GetClass() == v:GetClass()) or (v:IsNPC() && self:DoRelationshipCheck(v) == false)) && self:Visible(v) then
 			ret = v
-			if v.IsVJBaseSNPC == true && VJ_PICK(v.SoundTbl_IdleDialogueAnswer) != false then
+			if v.IsVJBaseSNPC == true && v.Dead == false && VJ_PICK(v.SoundTbl_IdleDialogueAnswer) != false then
 				return v, true -- Yete VJ NPC e, ere vor function-e gena
 			end
 		end
@@ -5172,7 +5154,7 @@ function ENT:IdleDialogueSoundCodeTest()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IdleDialogueAnswerSoundCode(CustomTbl,Type)
-	if self.HasSounds == false or self.HasIdleDialogueAnswerSounds == false then return 0 end
+	if self.Dead == true or self.HasSounds == false or self.HasIdleDialogueAnswerSounds == false then return 0 end
 	Type = Type or VJ_CreateSound
 	local ctbl = VJ_PICK(CustomTbl)
 	local sdtbl = VJ_PICK(self.SoundTbl_IdleDialogueAnswer)

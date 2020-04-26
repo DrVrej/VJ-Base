@@ -134,7 +134,7 @@ ENT.PoseParameterLooking_Names = {pitch={},yaw={},roll={}} -- Custom pose parame
 	-- ====== Sound Detection Variables ====== --
 ENT.InvestigateSoundDistance = 9 -- How far away can the SNPC hear sounds? | This number is timed by the calculated volume of the detectable sound.
 	-- ====== Taking Cover Variables ====== --
-ENT.AnimTbl_TakingCover = {} -- The animation it plays when hiding in a covered position, leave empty to let the base decide
+ENT.AnimTbl_TakingCover = {ACT_COVER_LOW} -- The animation it plays when hiding in a covered position, leave empty to let the base decide
 ENT.AnimTbl_MoveToCover = {ACT_RUN_CROUCH} -- The animation it plays when moving to a covered position
 	-- ====== Control Variables ====== --
 	-- Use these variables very careful! One wrong change can mess up the whole SNPC!
@@ -213,7 +213,6 @@ ENT.DisableCallForBackUpOnDamageAnimation = false -- Disables the animation when
 	-- ====== Move Or Hide On Damage Variables ====== --
 ENT.MoveOrHideOnDamageByEnemy = true -- Should the SNPC move or hide when being damaged by an enemy?
 ENT.MoveOrHideOnDamageByEnemy_OnlyMove = false -- Should it only move and not hide?
-ENT.AnimTbl_MoveOrHideOnDamageByEnemy = {} -- The activities it plays when it finds a hiding spot | This will override self.AnimTbl_TakingCover and and the base animations
 ENT.MoveOrHideOnDamageByEnemy_HideTime = VJ_Set(3,4) -- How long should it hide?
 ENT.NextMoveOrHideOnDamageByEnemy1 = 3 -- How much time until it moves or hides on damage by enemy? | The first # in math.random
 ENT.NextMoveOrHideOnDamageByEnemy2 = 3.5 -- How much time until it moves or hides on damage by enemy? | The second # in math.random
@@ -1557,22 +1556,6 @@ function ENT:VJ_TASK_IDLE_STAND()
 	//self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),finaltbl)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-/*function ENT:DoCustomIdleAnimation()
-	self.CurrentAnim_CustomIdle = VJ_PICK(self.AnimTbl_IdleStand)
-	if self.CurrentAnim_CustomIdle == false then self.CurrentAnim_CustomIdle = 0 return end
-	if self:GetActivity() == ACT_IDLE then
-		if type(self.CurrentAnim_CustomIdle) == "string" then
-			local checkanim = self:GetSequenceActivity(self:LookupSequence(self.CurrentAnim_CustomIdle))
-			if checkanim == nil or checkanim == -1 then
-				return false
-			else
-				self.CurrentAnim_CustomIdle = checkanim
-			end
-		end
-		self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"), self.CurrentAnim_CustomIdle)
-	end
-end*/
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 	if /*self.VJ_PlayingSequence == true or*/ self.VJ_IsBeingControlled == true /*or self.FollowingPlayer == true*/ or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextIdleTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
 	-- 0 = Random | 1 = Wander | 2 = Idle Stand /\ OverrideWander = Wander no matter what
@@ -1598,36 +1581,33 @@ function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoChaseAnimation(OverrideChasing,ChaseSched)
-	if !IsValid(self:GetEnemy()) then return end
-	if self.VJ_IsBeingControlled == true or self.IsVJBaseSNPC_Tank == true or /*self.VJ_PlayingSequence == true or*/ self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextChaseTime > CurTime()) or CurTime() < self.TakingCoverT then return end
-	if self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) < self.MeleeAttackDistance && self:GetEnemy():Visible(self) && (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then self:VJ_TASK_IDLE_STAND() return end
-	-- OverrideChasing = Chase no matter what
-	OverrideChasing = OverrideChasing or false
-	//ChaseSched = ChaseSched or VJ_PICK(self.ChaseSchedule)
-	local DoScheduleBasedChase = false
-	if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) then
-		self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) end)
+function ENT:DoChaseAnimation(OverrideChasing)
+	local ene = self:GetEnemy()
+	if self.Dead == true or self.VJ_IsBeingControlled == true or self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.PlayingAttackAnimation == true && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
+	if self:VJ_GetNearestPointToEntityDistance(ene) < self.MeleeAttackDistance && ene:Visible(self) && (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then self:VJ_TASK_IDLE_STAND() return end
+	
+	OverrideChasing = OverrideChasing or false -- OverrideChasing = Chase no matter what
+	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_TASK_IDLE_STAND() return end -- Stationary SNPCs aren't allowed to move!
+	
+	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
+		self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
 		self.NextChaseTime = CurTime() + 3
 		return
 	end
-	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_TASK_IDLE_STAND() return end
-	if self:HasCondition(31) && IsValid(self:GetActiveWeapon()) then DoScheduleBasedChase = true end
-	if OverrideChasing == false && (self.DisableChasingEnemy == true or self.IsGuard == true) then self:VJ_TASK_IDLE_STAND() return end
-	//if self.HasWalkingCapability == false then self:VJ_TASK_IDLE_STAND() else
-	if DoScheduleBasedChase == true then
+	
+	if OverrideChasing == false && (self.DisableChasingEnemy == true or self.IsGuard == true or self.RangeAttack_DisableChasingEnemy == true) then self:VJ_TASK_IDLE_STAND() return end
+	
+	-- If the enemy is not reachable
+	if (self:HasCondition(31) or self:IsUnreachable(self:GetEnemy())) && IsValid(self:GetActiveWeapon()) == true then
 		//self:VJ_SetSchedule(SCHED_ESTABLISH_LINE_OF_FIRE)
 		self:VJ_TASK_CHASE_ENEMY(true)
-	else
+	else -- Is reachable, so chase the enemy!
 		self:VJ_TASK_CHASE_ENEMY(false)
 	end
-	//if IsValid(self:GetActiveWeapon()) then self:VJ_TASK_CHASE_ENEMY(true) else self:VJ_TASK_CHASE_ENEMY(false) end
-	if self.NextChaseTime > CurTime() then return end
-	if self.LatestEnemyDistance > 2000 then
-		self.NextChaseTime = CurTime() + 1
-	else
-		self.NextChaseTime = CurTime() + 0.1
-	end
+	
+	-- Set the next chase time
+	if self.NextChaseTime > CurTime() then return end -- Don't set it if it's already set!
+	self.NextChaseTime = CurTime() + (((self.LatestEnemyDistance > 2000) and 1) or 0.1) -- If the enemy is far, increase the delay!
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:BusyWithActivity()
@@ -1635,48 +1615,6 @@ function ENT:BusyWithActivity()
 		return true
 	end
 	return false
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_ACT_TAKE_COVER(CustomAnimTbl,StopActs,StopActsTime,FaceEnemy)
-	CustomAnimTbl = CustomAnimTbl or {}
-	StopActs = StopActs or "Partial"
-		-- "Full" = Stops all activities and prevents the SNPC from moving or attacking
-		-- "Partial" = Stops the SNPC from chasing the enemy and performing attacks unless the enemy is fully visible and in sight
-	StopActsTime = StopActsTime or 3
-	FaceEnemy = FaceEnemy or false
-	local didanim = false
-	local pickcust = VJ_PICK(CustomAnimTbl)
-	local pickcustb = VJ_PICK(self.AnimTbl_TakingCover)
-	
-	if pickcust != false then
-		self:VJ_ACT_PLAYACTIVITY(pickcust,StopActs,StopActsTime,FaceEnemy,0,{SequenceDuration=StopActsTime})
-		didanim = true
-	elseif pickcustb != false then
-		self:VJ_ACT_PLAYACTIVITY(pickcustb,StopActs,StopActsTime,FaceEnemy,0,{SequenceDuration=StopActsTime})
-		didanim = true
-	elseif VJ_AnimationExists(self,"Leanwall_CrouchLeft_A_idle") == true then -- Combine
-		// "Leanwall_CrouchLeft_A_idle", "Leanwall_CrouchLeft_B_idle", "Leanwall_CrouchLeft_C_idle", "Leanwall_CrouchLeft_D_idle"
-		self:VJ_ACT_PLAYACTIVITY(VJ_PICK({"vjseq_Leanwall_CrouchLeft_A_idle", "vjseq_Leanwall_CrouchLeft_B_idle", "vjseq_Leanwall_CrouchLeft_C_idle", "vjseq_Leanwall_CrouchLeft_D_idle"}),StopActs,StopActsTime,FaceEnemy,0,{SequenceDuration=StopActsTime,SequenceInterruptible=true})
-		didanim = true
-	elseif VJ_AnimationExists(self,"Crouch_idle_pistol") == true then -- Metro Police
-		// "Crouch_idle_pistol", "Crouch_idle_smg1"
-		if self:GetActiveWeapon().HoldType == "pistol" or self:GetActiveWeapon().HoldType == "revolver" then
-			self:VJ_ACT_PLAYACTIVITY("vjseq_Crouch_idle_pistol",StopActs,StopActsTime,FaceEnemy,0,{SequenceDuration=StopActsTime})
-			didanim = true
-		else
-			self:VJ_ACT_PLAYACTIVITY("vjseq_Crouch_idle_smg1",StopActs,StopActsTime,FaceEnemy,0,{SequenceDuration=StopActsTime})
-			didanim = true
-		end
-	elseif VJ_AnimationExists(self,"CoverLow_L") == true then -- Rebel
-		// "CoverLow_L", "CoverLow_R", "Crouch_Idle_RPG"
-		self:VJ_ACT_PLAYACTIVITY(VJ_PICK({"vjseq_CoverLow_L", "vjseq_CoverLow_R", "vjseq_Crouch_Idle_RPG"}),StopActs,StopActsTime,FaceEnemy,0,{SequenceDuration=StopActsTime})
-		didanim = true
-	end
-	
-	if didanim == true then
-		self.NextChaseTime = CurTime() + StopActsTime
-		self.TakingCoverT = CurTime() + StopActsTime
-	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChangeWeapon(wep)
@@ -1705,7 +1643,7 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 		self.ModelAnimationSet = 1 -- Combine
 	elseif VJ_AnimationExists(self, ACT_WALK_AIM_PISTOL) == true && VJ_AnimationExists(self, ACT_RUN_AIM_PISTOL) == true && VJ_AnimationExists(self, ACT_POLICE_HARASS1) == true then
 		self.ModelAnimationSet = 2 -- Metrocop
-	elseif VJ_AnimationExists(self, "cheer1") == true && VJ_AnimationExists(self, "wave_smg1") == true && VJ_AnimationExists(self, ACT_BUSY_SIT_GROUND) == true then
+	elseif VJ_AnimationExists(self, "coverlow_r") == true && VJ_AnimationExists(self, "wave_smg1") == true && VJ_AnimationExists(self, ACT_BUSY_SIT_GROUND) == true then
 		self.ModelAnimationSet = 3 -- Rebel
 	end
 	
@@ -1721,6 +1659,8 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 			rifle_walk = VJ_SequenceToActivity(self, "walkunarmed_all")
 		end
 		
+		-- "Leanwall_CrouchLeft_A_idle", "Leanwall_CrouchLeft_B_idle", "Leanwall_CrouchLeft_C_idle", "Leanwall_CrouchLeft_D_idle"
+		self.WeaponAnimTranslations[ACT_COVER_LOW] 							= {ACT_COVER, "vjseq_Leanwall_CrouchLeft_A_idle", "vjseq_Leanwall_CrouchLeft_B_idle", "vjseq_Leanwall_CrouchLeft_C_idle", "vjseq_Leanwall_CrouchLeft_D_idle"}
 		if htype == "ar2" or htype == "smg" or htype == "rpg" or htype == "pistol" or htype == "revolver" then
 			if htype == "ar2" or htype == "pistol" or htype == "revolver" then
 				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_AR2
@@ -1733,7 +1673,6 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SMG1_LOW
 				//self.WeaponAnimTranslations[ACT_RELOAD] 					= ACT_RELOAD_SMG1 -- No need to translate
 			end
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_SMG1_LOW
 			//self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW -- No need to translate
 			
 			self.WeaponAnimTranslations[ACT_IDLE] 							= rifle_idle
@@ -1752,7 +1691,6 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_SHOTGUN
 			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_SHOTGUN
 			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SHOTGUN_LOW
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_SMG1_LOW
 			//self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SHOTGUN -- No need to translate
 			//self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW -- No need to translate
 			
@@ -1814,11 +1752,13 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
 		end
 	elseif self.ModelAnimationSet == 3 then -- Rebel =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
+		-- handguns use a different set!
+		self.WeaponAnimTranslations[ACT_COVER_LOW] 							= {ACT_COVER_LOW_RPG, ACT_COVER_LOW, "vjseq_coverlow_l", "vjseq_coverlow_r"}
+		
 		if htype == "ar2" then
 			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_AR2
 			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_AR2
 			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_AR2_LOW
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_SMG1_LOW
 			self.WeaponAnimTranslations[ACT_RELOAD] 						= VJ_SequenceToActivity(self, "reload_ar2")
 			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
 			
@@ -1838,7 +1778,6 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_SMG1
 			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_SMG1
 			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SMG1_LOW
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_SMG1_LOW
 			self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SMG1
 			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
 			
@@ -1858,7 +1797,6 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_SHOTGUN
 			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_SHOTGUN
 			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SMG1_LOW
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_SMG1_LOW
 			self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SHOTGUN
 			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW //ACT_RELOAD_SHOTGUN_LOW
 			
@@ -1878,7 +1816,6 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_RPG
 			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_RPG
 			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SMG1_LOW
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_LOW_RPG
 			self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SMG1
 			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
 			
@@ -1898,7 +1835,7 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_PISTOL
 			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_PISTOL
 			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_PISTOL_LOW
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_PISTOL_LOW
+			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= {"crouchidle_panicked4", "vjseq_crouchidlehide"}
 			self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_PISTOL
 			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_PISTOL_LOW
 			
@@ -3854,15 +3791,18 @@ function ENT:OnTakeDamage(dmginfo,data,hitgroup)
 		end
 
 		if self.MoveOrHideOnDamageByEnemy == true && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && IsValid(self:GetEnemy()) && CurTime() > self.NextMoveOrHideOnDamageByEnemyT && self:EyePos():Distance(self:GetEnemy():EyePos()) < self.Weapon_FiringDistanceFar && IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.ThrowingGrenade == false && CurTime() > self.TakingCoverT && self:Visible(self:GetEnemy()) && self.VJ_IsBeingControlled == false && self.MeleeAttacking == false && self.IsReloadingWeapon == false then
-			local rancode = false
-			if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == true && self.MoveOrHideOnDamageByEnemy_OnlyMove == false then
-				self:VJ_ACT_TAKE_COVER(self.AnimTbl_MoveOrHideOnDamageByEnemy,false,math.Rand(self.MoveOrHideOnDamageByEnemy_HideTime.a, self.MoveOrHideOnDamageByEnemy_HideTime.b),false)
-				rancode = true
+			if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == true && self.MoveOrHideOnDamageByEnemy_OnlyMove == false then			
+				//self:VJ_ACT_TAKE_COVER(self.AnimTbl_MoveOrHideOnDamageByEnemy,false,math.Rand(self.MoveOrHideOnDamageByEnemy_HideTime.a, self.MoveOrHideOnDamageByEnemy_HideTime.b),false)
+				local anim = VJ_PICK(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_TakingCover)))
+				if VJ_AnimationExists(self, anim) == true then
+					local hidet = math.Rand(self.MoveOrHideOnDamageByEnemy_HideTime.a, self.MoveOrHideOnDamageByEnemy_HideTime.b)
+					self:VJ_ACT_PLAYACTIVITY(anim ,false, hidet, false, 0, {SequenceDuration=hidet})
+					self.NextChaseTime = CurTime() + hidet
+					self.TakingCoverT = CurTime() + hidet
+				end
+				self.NextMoveOrHideOnDamageByEnemyT = CurTime() + math.random(self.NextMoveOrHideOnDamageByEnemy1,self.NextMoveOrHideOnDamageByEnemy2)
 			elseif !self:IsMoving() then
 				self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
-				rancode = true
-			end
-			if rancode == true then
 				self.NextMoveOrHideOnDamageByEnemyT = CurTime() + math.random(self.NextMoveOrHideOnDamageByEnemy1,self.NextMoveOrHideOnDamageByEnemy2)
 			end
 		end
@@ -4997,7 +4937,7 @@ function ENT:IdleSoundCode(CustomTbl,Type)
 					self.CurrentIdleSound = Type(self, sdtbl, self.IdleSoundLevel, self:VJ_DecideSoundPitch(self.IdleSoundPitch1, self.IdleSoundPitch2))
 				end
 			end
-			if sdtbl2 != false && sdrand == 1 && self.HasIdleDialogueSounds == true && math.random(1,1) == 1 then
+			if sdtbl2 != false && sdrand == 1 && self.HasIdleDialogueSounds == true && math.random(1,2) == 1 then
 				local testent, testvj = self:IdleDialogueSoundCodeTest()
 				if testent != false then
 					if self:CustomOnIdleDialogue(testent, testvj) == false then
@@ -5061,7 +5001,7 @@ function ENT:IdleDialogueSoundCodeTest()
 			ret = v
 		elseif v != self && ((self:GetClass() == v:GetClass()) or (v:IsNPC() && self:DoRelationshipCheck(v) == false)) && self:Visible(v) then
 			ret = v
-			if v.IsVJBaseSNPC == true && VJ_PICK(v.SoundTbl_IdleDialogueAnswer) != false then
+			if v.IsVJBaseSNPC == true && v.Dead == false && VJ_PICK(v.SoundTbl_IdleDialogueAnswer) != false then
 				return v, true -- Yete VJ NPC e, ere vor function-e gena
 			end
 		end
@@ -5070,7 +5010,7 @@ function ENT:IdleDialogueSoundCodeTest()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IdleDialogueAnswerSoundCode(CustomTbl,Type)
-	if self.HasSounds == false or self.HasIdleDialogueAnswerSounds == false then return 0 end
+	if self.Dead == true or self.HasSounds == false or self.HasIdleDialogueAnswerSounds == false then return 0 end
 	Type = Type or VJ_CreateSound
 	local ctbl = VJ_PICK(CustomTbl)
 	local sdtbl = VJ_PICK(self.SoundTbl_IdleDialogueAnswer)
