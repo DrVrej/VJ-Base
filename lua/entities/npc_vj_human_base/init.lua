@@ -885,7 +885,7 @@ ENT.AllowToDo_WaitForEnemyToComeOut = true
 ENT.DoingVJDeathDissolve = false
 ENT.HasBeenGibbedOnDeath = false
 ENT.DeathAnimationCodeRan = false
-ENT.AlreadyDone_RunSelectSchedule_FollowPlayer = false
+ENT.FollowPlayer_DoneSelectSchedule = false
 ENT.VJ_IsBeingControlled_Tool = false
 ENT.WeaponUseEnemyEyePos = false
 ENT.LastHiddenZone_CanWander = true
@@ -2117,6 +2117,7 @@ end
 function ENT:Think()
 	self:SetCondition(1) -- Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case sv_pvsskipanimation isn't disabled!
 	
+	-- Turning angle test
 	/*if self.FollowingPlayer == true then
 		if self.TurningLerp == nil then self.TurningLerp = Angle(0,self:GetAngles().y,0) end
 		self.TurningLerp = LerpAngle(math.Clamp(FrameTime() * 5, 0.2, 1), self.TurningLerp, Angle(0,(self.FollowPlayer_Entity:GetPos() - self:GetPos()):Angle().y, 0))
@@ -2130,6 +2131,7 @@ function ENT:Think()
 		//print(self.TurningLerp)
 		self:SetAngles(self.TurningLerp)
 	end*/
+	
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
 	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
 	if self:GetVelocity():Length() <= 0 && self.MovementType == VJ_MOVETYPE_GROUND /*&& CurSched.IsMovingTask == true*/ then self:DropToFloor() end
@@ -2161,38 +2163,29 @@ function ENT:Think()
 			//print("VJ Base: Task Failed Condition Identified! "..self:GetName())
 		end
 	end
+	
 	if self.DoingWeaponAttack == false then self.DoingWeaponAttack_Standing = false end
-
 	if self.CurrentWeaponEntity != self:GetActiveWeapon() then self:DoChangeWeapon() end
 	self.CurrentWeaponEntity = self:GetActiveWeapon()
 	
 	self:CustomOnThink()
-
-	if self.HasSounds == false or self.Dead == true then VJ_STOPSOUND(self.CurrentBreathSound) end
+	
 	if self.Dead == false && self.HasBreathSound == true && self.HasSounds == true then
 		if CurTime() > self.NextBreathSoundT then
 			local brsd = VJ_PICK(self.SoundTbl_Breath)
-			local dur = math.Rand(self.NextSoundTime_Breath1,self.NextSoundTime_Breath2)
+			local dur = math.Rand(self.NextSoundTime_Breath1, self.NextSoundTime_Breath2)
 			if brsd != false then
 				VJ_STOPSOUND(self.CurrentBreathSound)
 				if self.NextSoundTime_Breath_BaseDecide == true then
 					dur = SoundDuration(brsd)
 				end
-				self.CurrentBreathSound = VJ_CreateSound(self,brsd,self.BreathSoundLevel,self:VJ_DecideSoundPitch(self.BreathSoundPitch1,self.BreathSoundPitch2))
+				self.CurrentBreathSound = VJ_CreateSound(self, brsd, self.BreathSoundLevel, self:VJ_DecideSoundPitch(self.BreathSoundPitch1, self.BreathSoundPitch2))
 			end
 			self.NextBreathSoundT = CurTime() + dur
 		end
 	end
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	if GetConVarNumber("ai_disabled") == 0 then
-		self:SetPlaybackRate(self.AnimationPlaybackRate)
-		if self:GetArrivalActivity() == -1 then
-			self:SetArrivalActivity(self.CurrentAnim_IdleStand)
-		end
-		
-		self:CustomOnThink_AIEnabled()
-		//self:DoCustomIdleAnimation()
-		//if IsValid(self:GetEnemy()) then self.Alerted = true else self.Alerted = false end
 		if self.VJDEBUG_SNPC_ENABLED == true then
 			if GetConVarNumber("vj_npc_printcurenemy") == 1 then print(self:GetClass().."'s Enemy: ",self:GetEnemy()," Alerted? ",self.Alerted) end
 			if GetConVarNumber("vj_npc_printtakingcover") == 1 then if CurTime() > self.TakingCoverT == true then print(self:GetClass().." Is Not Taking Cover") else print(self:GetClass().." Is Taking Cover ("..self.TakingCoverT-CurTime()..")") end end
@@ -2203,9 +2196,15 @@ function ENT:Think()
 				if GetConVarNumber("vj_npc_printweapon") == 1 then print(self:GetClass().."'s", self.CurrentWeaponEntity) end
 			end
 		end
-
+		
+		self:SetPlaybackRate(self.AnimationPlaybackRate)
+		if self:GetArrivalActivity() == -1 then
+			self:SetArrivalActivity(self.CurrentAnim_IdleStand)
+		end
+		
+		self:CustomOnThink_AIEnabled()
+		
 		if self.DisableFootStepSoundTimer == false then self:FootStepSoundCode() end
-		//self:WorldShakeOnMoveCode()
 		
 		if self.HasHealthRegeneration == true && self.Dead == false && CurTime() > self.HealthRegenerationDelayT then
 			self:SetHealth(math.Clamp(self:Health() + self.HealthRegenerationAmount, self:Health(), self:GetMaxHealth()))
@@ -2213,49 +2212,36 @@ function ENT:Think()
 		end
 		
 		if self.CurrentWeaponEntity != NULL then self.Weapon_TimeSinceLastShot = self.Weapon_TimeSinceLastShot + 0.1 end
-
-		/*if self.CurrentWeaponEntity == NULL then
-			self.AnimTbl_IdleStand = {"Idle_Unarmed"}
-			self:SetMovementActivity(self:GetSequenceActivity(self:LookupSequence("WalkUnarmed_all")))
-		end*/
-
+		
 		if self.FollowingPlayer == true then
 			//print(self:GetTarget())
 			//print(self.FollowPlayer_Entity)
-			if GetConVarNumber("ai_ignoreplayers") == 0 then
-				if !IsValid(self.FollowPlayer_Entity) or !self.FollowPlayer_Entity:Alive() or self:Disposition(self.FollowPlayer_Entity) != D_LI then self:FollowPlayerReset() end
-				if CurTime() > self.NextFollowPlayerT && IsValid(self.FollowPlayer_Entity) && self.FollowPlayer_Entity:Alive() && self.AlreadyBeingHealedByMedic == false then
+			if IsValid(self.FollowPlayer_Entity) && self.FollowPlayer_Entity:Alive() && self:Disposition(self.FollowPlayer_Entity) == D_LI then 
+				if CurTime() > self.NextFollowPlayerT && self.AlreadyBeingHealedByMedic == false then
 					local DistanceToPly = self:GetPos():Distance(self.FollowPlayer_Entity:GetPos())
 					local busy = self:BusyWithActivity()
-					local abletomove = true
 					self:SetTarget(self.FollowPlayer_Entity)
-					if busy == true && DistanceToPly < (self.FollowPlayerCloseDistance * 4) then
-						abletomove = false
-					end
-					if DistanceToPly > self.FollowPlayerCloseDistance then
-						if abletomove == true then
-							self.FollowPlayer_GoingAfter = true
-							self.AlreadyDone_RunSelectSchedule_FollowPlayer = false
+					if DistanceToPly > self.FollowPlayerCloseDistance then -- If the player is far then move
+						-- If we are not very far and busy with another activity (ex: attacking) then don't move to the player yet!
+						if !((busy == true and (DistanceToPly < (self.FollowPlayerCloseDistance * 4)))) then
 							if busy == false then
-								local movetype = "TASK_RUN_PATH"
-								if DistanceToPly < 220 then
-									movetype = "TASK_WALK_PATH"
-								end
-								self:VJ_TASK_GOTO_TARGET(movetype,function(x)
+								self.FollowPlayer_GoingAfter = true
+								self.FollowPlayer_DoneSelectSchedule = false
+								-- If player is close, then just walk towards instead of running
+								local movetype = (DistanceToPly < 220 and "TASK_WALK_PATH") or "TASK_RUN_PATH"
+								self:VJ_TASK_GOTO_TARGET(movetype, function(x)
 									x.CanShootWhenMoving = true
-									if IsValid(self:GetActiveWeapon()) then
-										x.ConstantlyFaceEnemyVisible = true
-									end
+									x.ConstantlyFaceEnemyVisible = (IsValid(self:GetActiveWeapon()) and true) or false
 								end)
 							end
 						end
-					elseif self.AlreadyDone_RunSelectSchedule_FollowPlayer == false then
-						if busy == false then
+					elseif self.FollowPlayer_DoneSelectSchedule == false then -- If it's close to the player...
+						if busy == false then -- If we aren't busy with a schedule, make it stop moving and do something
 							self:StopMoving()
 							self:SelectSchedule()
 						end
 						self.FollowPlayer_GoingAfter = false
-						self.AlreadyDone_RunSelectSchedule_FollowPlayer = true
+						self.FollowPlayer_DoneSelectSchedule = true
 					end
 					self.NextFollowPlayerT = CurTime() + self.NextFollowPlayerTime
 				end

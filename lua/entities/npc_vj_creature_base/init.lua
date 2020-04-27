@@ -945,7 +945,7 @@ ENT.CanDoSelectScheduleAgain = true
 ENT.DoingVJDeathDissolve = false
 ENT.HasBeenGibbedOnDeath = false
 ENT.DeathAnimationCodeRan = false
-ENT.AlreadyDone_RunSelectSchedule_FollowPlayer = false
+ENT.FollowPlayer_DoneSelectSchedule = false
 ENT.AlreadyDoneRangeAttackFirstProjectile = false
 ENT.AlreadyDoneFirstLeapAttack = false
 ENT.VJ_IsBeingControlled_Tool = false
@@ -2327,14 +2327,13 @@ function ENT:Think()
 	self:SetCondition(1) -- Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case sv_pvsskipanimation isn't disabled!
 	
 	//self:SetPoseParameter("move_yaw",180)
-	//print(self:GetBlockingEntity())// end
+	
 	// if self:IsUnreachable(self:GetEnemy()) && enemy noclipping then...
 
 	//if self.AA_TargetPos.x == self:GetPos().x then
 		-- to be coded..
 	//end
 	
-	//print("-------------------------------")
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
 	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
 	if self:GetVelocity():Length() <= 0 && self.MovementType == VJ_MOVETYPE_GROUND /*&& CurSched.IsMovingTask == true*/ then self:DropToFloor() end
@@ -2366,121 +2365,87 @@ function ENT:Think()
 			//print("VJ Base: Task Failed Condition Identified! "..self:GetName())
 		end
 	end
-	/*if CurTime() > self.TestT then
-		self:AddLayeredSequence(self:SelectWeightedSequence(ACT_IDLE),1)
-		self:SetLayerPlaybackRate(1,0.1)
-		self:SetLayerLooping(1,true)
-		timer.Simple(0.5,function() print(self:IsValidLayer(1)) end)
-	self.TestT = CurTime() + 2 end*/
-	//self:SetPlaybackRate(1)
-	//self:AddGesture(ACT_IDLE)
-	//print(self:IsPlayingGesture(ACT_IDLE))
-	//print(self:GetArrivalActivity())
-	//self:SetArrivalActivity(ACT_MELEE_ATTACK1)
-
-	/*if CurTime() > self.OldMeleeTimer then
-	for _, backwards in ipairs({"_as_*", "_dmvj_", "_eye_", "_zss_", "_nmrih_"}) do
-	if string.find(self:GetClass(), backwards) then
-	self.IsUsingOldMeleeAttackSystem = true
-	print("found string") else
-	if self.IsUsingOldMeleeAttackSystem == false then
-	print("didn't find string")
-	self.IsUsingOldMeleeAttackSystem = false end
-	end end
-	self.OldMeleeTimer = CurTime() + 999999999999999999 *999999999999999999 +999999999999999 *99
-	end*/
-
-	//print(self.CurrentTask)
+	
 	self:CustomOnThink()
-
-	if self.HasSounds == false or self.Dead == true then VJ_STOPSOUND(self.CurrentBreathSound) end
+	
 	if self.Dead == false && self.HasBreathSound == true && self.HasSounds == true then
 		if CurTime() > self.NextBreathSoundT then
 			local brsd = VJ_PICK(self.SoundTbl_Breath)
-			local dur = math.Rand(self.NextSoundTime_Breath1,self.NextSoundTime_Breath2)
+			local dur = math.Rand(self.NextSoundTime_Breath1, self.NextSoundTime_Breath2)
 			if brsd != false then
 				VJ_STOPSOUND(self.CurrentBreathSound)
 				if self.NextSoundTime_Breath_BaseDecide == true then
 					dur = SoundDuration(brsd)
 				end
-				self.CurrentBreathSound = VJ_CreateSound(self,brsd,self.BreathSoundLevel,self:VJ_DecideSoundPitch(self.BreathSoundPitch1,self.BreathSoundPitch2))
+				self.CurrentBreathSound = VJ_CreateSound(self, brsd, self.BreathSoundLevel, self:VJ_DecideSoundPitch(self.BreathSoundPitch1, self.BreathSoundPitch2))
 			end
 			self.NextBreathSoundT = CurTime() + dur
 		end
 	end
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	if GetConVarNumber("ai_disabled") == 0 then
-		self:SetPlaybackRate(self.AnimationPlaybackRate)
-		if self:GetArrivalActivity() == -1 then
-			self:SetArrivalActivity(self.CurrentAnim_IdleStand)
-		end
-		
-		//if !self:IsOnGround() then self:ClearGoal() end
-		self:CustomOnThink_AIEnabled()
-		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then -- Yete terogh gam chouri SNPC ene...
-			-- Yete chouri e YEV leman marmine chourin mech-e che, ere vor gena yev kharen kal e
-			if self.MovementType == VJ_MOVETYPE_AQUATIC && self:WaterLevel() <= 2 && self:GetVelocity():Length() > 0 then self:AAMove_Wander(true,true) end
-			if self.AA_CanPlayMoveAnimation == true && self:GetVelocity():Length() > 0 then
-				self:AAMove_Animation()
-			//elseif self:GetSequence() != 0 && self.PlayingAttackAnimation == false then
-				//self:VJ_ACT_PLAYACTIVITY(ACT_IDLE,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false})
-			end
-		end
-		//self:DoCustomIdleAnimation()
-		//if !IsValid(self:GetEnemy()) then self.Alerted = false end
 		if self.VJDEBUG_SNPC_ENABLED == true then
 			if GetConVarNumber("vj_npc_printcurenemy") == 1 then print(self:GetClass().."'s Enemy: ",self:GetEnemy()," Alerted? ",self.Alerted) end
 			if GetConVarNumber("vj_npc_printalerted") == 1 then if self.Alerted == true then print(self:GetClass().." Is Alerted!") else print(self:GetClass().." Is Not Alerted!") end end
 			if GetConVarNumber("vj_npc_printtakingcover") == 1 then if CurTime() > self.TakingCoverT == true then print(self:GetClass().." Is Not Taking Cover") else print(self:GetClass().." Is Taking Cover ("..self.TakingCoverT-CurTime()..")") end end
 			if GetConVarNumber("vj_npc_printlastseenenemy") == 1 then PrintMessage(HUD_PRINTTALK, self.LastSeenEnemyTime.." ("..self:GetName()..")") end
 		end
+		
+		self:SetPlaybackRate(self.AnimationPlaybackRate)
+		if self:GetArrivalActivity() == -1 then
+			self:SetArrivalActivity(self.CurrentAnim_IdleStand)
+		end
+		
+		self:CustomOnThink_AIEnabled()
 
 		self:IdleSoundCode()
 		if self.DisableFootStepSoundTimer == false then self:FootStepSoundCode() end
-		//self:WorldShakeOnMoveCode()
 		
 		if self.HasHealthRegeneration == true && self.Dead == false && CurTime() > self.HealthRegenerationDelayT then
 			self:SetHealth(math.Clamp(self:Health() + self.HealthRegenerationAmount, self:Health(), self:GetMaxHealth()))
 			self.HealthRegenerationDelayT = CurTime() + math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b)
 		end
-
+		
+		-- For AA move types
+		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+			-- Yete chouri e YEV leman marmine chourin mech-e che, ere vor gena yev kharen kal e
+			if self.MovementType == VJ_MOVETYPE_AQUATIC && self:WaterLevel() <= 2 && self:GetVelocity():Length() > 0 then
+				self:AAMove_Wander(true, true)
+			end
+			if self.AA_CanPlayMoveAnimation == true && self:GetVelocity():Length() > 0 then
+				self:AAMove_Animation()
+			end
+		end
+		
 		if self.FollowingPlayer == true then
 			//print(self:GetTarget())
 			//print(self.FollowPlayer_Entity)
-			if GetConVarNumber("ai_ignoreplayers") == 0 then
-				if !IsValid(self.FollowPlayer_Entity) or !self.FollowPlayer_Entity:Alive() or self:Disposition(self.FollowPlayer_Entity) != D_LI then self:FollowPlayerReset() end
-				if CurTime() > self.NextFollowPlayerT && IsValid(self.FollowPlayer_Entity) && self.FollowPlayer_Entity:Alive() && self.AlreadyBeingHealedByMedic == false then
+			if IsValid(self.FollowPlayer_Entity) && self.FollowPlayer_Entity:Alive() && self:Disposition(self.FollowPlayer_Entity) == D_LI then 
+				if CurTime() > self.NextFollowPlayerT && self.AlreadyBeingHealedByMedic == false then
 					local DistanceToPly = self:GetPos():Distance(self.FollowPlayer_Entity:GetPos())
 					local busy = self:BusyWithActivity()
-					local abletomove = true
 					self:SetTarget(self.FollowPlayer_Entity)
-					if busy == true && DistanceToPly < (self.FollowPlayerCloseDistance * 4) then
-						abletomove = false
-					end
-					if DistanceToPly > self.FollowPlayerCloseDistance then
-						if abletomove == true then
-							self.FollowPlayer_GoingAfter = true
-							self.AlreadyDone_RunSelectSchedule_FollowPlayer = false
+					if DistanceToPly > self.FollowPlayerCloseDistance then -- If the player is far then move
+						-- If we are not very far and busy with another activity (ex: attacking) then don't move to the player yet!
+						if !((busy == true and (DistanceToPly < (self.FollowPlayerCloseDistance * 4)))) then
 							if busy == false then
-								local movetype = "TASK_RUN_PATH"
-								if DistanceToPly < 220 then
-									movetype = "TASK_WALK_PATH"
-								end
-								self:VJ_TASK_GOTO_TARGET(movetype,function(x)
+								self.FollowPlayer_GoingAfter = true
+								self.FollowPlayer_DoneSelectSchedule = false
+								-- If player is close, then just walk towards instead of running
+								local movetype = (DistanceToPly < 220 and "TASK_WALK_PATH") or "TASK_RUN_PATH"
+								self:VJ_TASK_GOTO_TARGET(movetype, function(x)
 									x.CanShootWhenMoving = true
-									if IsValid(self:GetActiveWeapon()) then
-										x.ConstantlyFaceEnemyVisible = true
-									end
+									x.ConstantlyFaceEnemyVisible = (IsValid(self:GetActiveWeapon()) and true) or false
 								end)
 							end
 						end
-					elseif self.AlreadyDone_RunSelectSchedule_FollowPlayer == false then
-						if busy == false then
+					elseif self.FollowPlayer_DoneSelectSchedule == false then -- If it's close to the player...
+						if busy == false then -- If we aren't busy with a schedule, make it stop moving and do something
 							self:StopMoving()
 							self:SelectSchedule()
 						end
 						self.FollowPlayer_GoingAfter = false
-						self.AlreadyDone_RunSelectSchedule_FollowPlayer = true
+						self.FollowPlayer_DoneSelectSchedule = true
 					end
 					self.NextFollowPlayerT = CurTime() + self.NextFollowPlayerTime
 				end
