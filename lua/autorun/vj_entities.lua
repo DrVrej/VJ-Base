@@ -1020,12 +1020,13 @@ end*/
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Convar Callbacks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-cvars.AddChangeCallback("ai_ignoreplayers",function(convar_name,oldValue,newValue)
+cvars.AddChangeCallback("ai_ignoreplayers",function(convar_name, oldValue, newValue)
 	local getall = ents.GetAll()
 	for k, v in pairs(getall) do
 		if v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
+			if v.FollowingPlayer == true then v:FollowPlayerReset() end -- Reset if it's following the player
 			for pk, pv in pairs(player.GetAll()) do
-				v:AddEntityRelationship(pv,4,10)
+				v:AddEntityRelationship(pv, 4, 10)
 				if IsValid(v:GetEnemy()) && v:GetEnemy() == pv then v:ResetEnemy() end
 				v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
 			end
