@@ -10,8 +10,8 @@ include('schedules.lua')
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 	INFO: Used as a base for creature SNPCs.
 --------------------------------------------------*/
-AccessorFunc(ENT,"m_iClass","NPCClass",FORCE_NUMBER)
-AccessorFunc(ENT,"m_fMaxYawSpeed","MaxYawSpeed",FORCE_NUMBER)
+AccessorFunc(ENT, "m_iClass", "NPCClass", FORCE_NUMBER)
+AccessorFunc(ENT, "m_fMaxYawSpeed", "MaxYawSpeed", FORCE_NUMBER)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -19,7 +19,7 @@ ENT.Model = {} -- The game will pick a random model from the table when the SNPC
 ENT.VJ_IsHugeMonster = false -- Is this a huge monster?
 	-- This is mostly used for massive or boss SNPCs, it affects certain part of the SNPC, for example the SNPC won't receive any knock back
 	-- ====== Health ====== --
-ENT.StartHealth = 50
+ENT.StartHealth = 50 -- The starting health of the NPC
 ENT.HasHealthRegeneration = false -- Can the SNPC regenerate its health?
 ENT.HealthRegenerationAmount = 4 -- How much should the health increase after every delay?
 ENT.HealthRegenerationDelay = VJ_Set(8,10) -- How much time until the health increases
@@ -86,7 +86,7 @@ ENT.Passive_NextRunOnDamageTime = VJ_Set(6,7) -- How much until it can run the c
 ENT.HasOnPlayerSight = false -- Should do something when it sees the enemy? Example: Play a sound
 ENT.OnPlayerSightDistance = 200 -- How close should the player be until it runs the code?
 ENT.OnPlayerSightDispositionLevel = 1 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
-ENT.OnPlayerSightOnlyOnce = true -- Should it only run the code once?
+ENT.OnPlayerSightOnlyOnce = true --If true, it will only run the code once | Sets self.HasOnPlayerSight to false once it runs!
 ENT.OnPlayerSightNextTime1 = 15 -- How much time should it pass until it runs the code again? | First number in math.random
 ENT.OnPlayerSightNextTime2 = 20 -- How much time should it pass until it runs the code again? | Second number in math.random
 	-- ====== Call For Help Variables ====== --
@@ -923,7 +923,6 @@ ENT.VJ_PlayingSequence = false
 ENT.VJ_IsPlayingSoundTrack = false
 ENT.HasDone_PlayAlertSoundOnlyOnce = false
 ENT.PlayingAttackAnimation = false
-ENT.OnPlayerSight_AlreadySeen = false
 ENT.VJDEBUG_SNPC_ENABLED = false
 ENT.MeleeAttack_DoingPropAttack = false
 ENT.Medic_IsHealingAlly = false
@@ -1246,12 +1245,12 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 	vACT_FaceEnemy = vACT_FaceEnemy or false -- Should it face the enemy while playing this animation?
 	vACT_DelayAnim = tonumber(vACT_DelayAnim) or 0 -- How much time until it starts playing the animation (seconds)
 	vACT_AdvancedFeatures = vACT_AdvancedFeatures or {}
-		vTbl_AlwaysUseSequence = vACT_AdvancedFeatures.AlwaysUseSequence or false -- Will force the animation to use sequence
-		vTbl_SequenceDuration = vACT_AdvancedFeatures.SequenceDuration -- How long is the sequence? This is done automatically, so recommended to not change it
-		vTbl_SequenceInterruptible = vACT_AdvancedFeatures.SequenceInterruptible or false -- Can it be Interrupted? (Mostly used for idle animations)
-		vTbl_AlwaysUseGesture = vACT_AdvancedFeatures.AlwaysUseGesture or false -- Will force the animation to use gesture
-		vTbl_PlayBackRate = vACT_AdvancedFeatures.PlayBackRate or self.AnimationPlaybackRate -- How fast should the animation play?
-		vTbl_PlayBackRateCalculated = vACT_AdvancedFeatures.PlayBackRateCalculated or false -- Has vACT_StopActivitiesTime already been calculated for the playback rate?
+		local vTbl_AlwaysUseSequence = vACT_AdvancedFeatures.AlwaysUseSequence or false -- Will force the animation to use sequence
+		local vTbl_SequenceDuration = vACT_AdvancedFeatures.SequenceDuration -- How long is the sequence? This is done automatically, so recommended to not change it
+		local vTbl_SequenceInterruptible = vACT_AdvancedFeatures.SequenceInterruptible or false -- Can it be Interrupted? (Mostly used for idle animations)
+		local vTbl_AlwaysUseGesture = vACT_AdvancedFeatures.AlwaysUseGesture or false -- Will force the animation to use gesture
+		local vTbl_PlayBackRate = vACT_AdvancedFeatures.PlayBackRate or self.AnimationPlaybackRate -- How fast should the animation play?
+		local vTbl_PlayBackRateCalculated = vACT_AdvancedFeatures.PlayBackRateCalculated or false -- Has vACT_StopActivitiesTime already been calculated for the playback rate?
 	
 	local IsGesture = false
 	local IsSequence = false
@@ -1524,23 +1523,6 @@ end
 function ENT:VJ_TASK_IDLE_STAND()
 	if self:IsMoving() or (self.NextIdleTime > CurTime()) /*or self.CurrentSchedule != nil*/ then return end
 	//if (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_idle_stand") or (self.CurrentAnim_CustomIdle != 0 && VJ_IsCurrentAnimation(self,self.CurrentAnim_CustomIdle) == true) then return end
-	//local vsched = ai_vj_schedule.New("vj_act_idlestand")
-	//vsched:EngTask("TASK_WAIT", waittime)
-	//self:StartSchedule(vsched)
-	//print(self:GetSequenceName(self:GetSequence()))
-	//local idletbl = self.AnimTbl_IdleStand
-	//if table.Count(idletbl) > 0 /*&& self:GetSequenceName(self:GetSequence()) != ideanimrand_act*/ then
-	//	if VJ_IsCurrentAnimation(self,self.CurrentAnim_IdleStand) != true /*&& VJ_IsCurrentAnimation(self,ACT_IDLE) && self.VJ_PlayingSequence == false && self.VJ_IsPlayingInterruptSequence == false*/ then
-	//		self.CurrentAnim_IdleStand = VJ_PICK({idletbl})
-	//		self:VJ_ACT_PLAYACTIVITY(self.CurrentAnim_IdleStand,false,0,true,0,{AlwaysUseSequence=true,SequenceDuration=false,SequenceInterruptible=true})
-	//	end
-	//else
-		-- Before --------
-		//if self:IsCurrentSchedule(SCHED_IDLE_STAND) != true then
-		//	self:VJ_SetSchedule(SCHED_IDLE_STAND)
-		//end
-		-----------------
-	//end
 	//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
 	//if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_Stop() return end
 
@@ -2454,49 +2436,8 @@ function ENT:Think()
 			end
 		end
 
-		/*
-		//if CurTime() > self.TestT then
-			//if type(vACT_Name) != "string" && self:SelectWeightedSequence(vACT_Name) == -1 && self:GetSequenceName(self:SelectWeightedSequence(vACT_Name)) == "Not Found!" then
-			//print(self:GetSequenceName(self:GetSequence()))
-			//print(self:VJ_GetNPCSchedule())
-			local idleanim = self.AnimTbl_IdleStand
-			local ideanimrand = VJ_PICK(idleanim)
-			if type(ideanimrand) == "number" then ideanimrand = self:GetSequenceName(self:SelectWeightedSequence(ideanimrand)) end
-			print(ideanimrand)
-			// self:IsCurrentSchedule(SCHED_IDLE_STAND) == true &&
-			if !IsValid(self:GetEnemy()) && !self:IsMoving() && !self.CurrentSchedule && table.Count(idleanim) > 0 && self:GetSequenceName(self:SelectWeightedSequence(ACT_IDLE)) == self:GetSequenceName(self:GetSequence()) && self:GetSequenceName(self:GetSequence()) != ideanimrand then
-				//print("Should Change Anim!")
-				self:VJ_ACT_PLAYACTIVITY(ideanimrand,false,0,true,0)
-			end
-		//self.TestT = CurTime() + VJ_GetSequenceDuration(self,ideanimrand)
-		//end
-		*/
-
-		/*if IsValid(self:GetEnemy()) then
-		if self:GetEnemy():GetClass() == "player" then
-		//if !self:GetEnemy():Alive() then
-			self:SetEnemy(NULL)
-			self.MyEnemy = NULL
-			//self:AddEntityRelationship(self:GetEnemy(),4,10)
-			print("Working")
-			end
-		 //end
-		end*/
-
 		//print(self:GetPathTimeToGoal())
 		//print(self:GetPathDistanceToGoal())
-		/*if self.PlayedResetEnemyRunSchedule == true && !self:IsCurrentSchedule(SCHED_FORCED_GO_RUN) == true && (!self.IsVJBaseSNPC_Tank) then
-			self.PlayedResetEnemyRunSchedule = false
-			if self.Alerted == false then
-				//self:VJ_SetSchedule(SCHED_ALERT_SCAN)
-				//self:VJ_ACT_PLAYACTIVITY(ACT_RANGE_ATTACK1,true,2,false)
-				timer.Simple(5,function()
-					if self:IsValid() && self.DisableWandering == false then
-						self:DoIdleAnimation(1)
-					end
-				end)
-			end
-		end*/
 		
 		if self.CurrentTurningAngle != false then
 			self:SetAngles(Angle(math.ApproachAngle(self:GetAngles().p, self.CurrentTurningAngle.p, self.TurningSpeed),math.ApproachAngle(self:GetAngles().y, self.CurrentTurningAngle.y, self.TurningSpeed),math.ApproachAngle(self:GetAngles().r, self.CurrentTurningAngle.r, self.TurningSpeed)))
@@ -2860,9 +2801,6 @@ function ENT:CanDoCertainAttack(AttackName)
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoPropVisibiltyCheckForPushAttackProps(CheckEnt)
-	// argent:NearestPoint(self:GetPos() +argent:OBBCenter()), self:NearestPoint(argent:GetPos() +self:OBBCenter())
-	// start = self:NearestPoint(self:GetPos() +self:OBBCenter()),
-	// endpos = CheckEnt:NearestPoint(CheckEnt:GetPos() +CheckEnt:OBBCenter()),
 	if CheckEnt == NULL or CheckEnt == nil then return end
 	tr = util.TraceLine({
 		start = self:GetPos(),
@@ -2870,46 +2808,27 @@ function ENT:DoPropVisibiltyCheckForPushAttackProps(CheckEnt)
 		filter = self
 	})
 	//print(tr.Entity)
-	/*local test = ents.Create("prop_dynamic") -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
-	test:SetModel("models/hunter/blocks/cube025x025x025.mdl")
-	test:SetPos(tr.HitPos)
-	test:SetAngles(self:GetAngles())
-	test:SetColor(Color(255,0,0))
-	test:Spawn()
-	test:Activate()
-	timer.Simple(2,function() test:Remove() end)*/
+	// VJ_CreateTestObject(tr.HitPos)
 
 	if tr.Entity == NULL or tr.HitWorld == true or tr.HitSky == true then
 	return false else return true end
 end
-// lua_run for k,v in ipairs(player.GetAll()) do v:GetEyeTrace().Entity:SetHealth(100) end
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PushOrAttackPropsCode(CustomValuesTbl)
+function ENT:PushOrAttackPropsCode(IsSingleValue, CustomMeleeDistance)
 	if self.PushProps == false && self.AttackProps == false then return end
-	
-	CustomValuesTbl = CustomValuesTbl or {}
-	IsSingleValue = CustomValuesTbl.IsSingleValue or 0
-	CustomMeleeDistance = CustomValuesTbl.CustomMeleeDistance or math.Clamp(self.MeleeAttackDamageDistance-30,self.MeleeAttackDistance,self.MeleeAttackDamageDistance) //self.MeleeAttackDamageDistance
-	local isanentitytoattack = false
-	local valuestoattack;
-	//local dist = Vector(self:OBBMins().x,0,0):Distance(Vector(self:OBBMaxs().x,0,0)) // self:GetCollisionBounds()
-	//local halfdist = dist /2
-	if IsSingleValue == 0 then
-		valuestoattack = ents.FindInSphere(self:SetMeleeAttackDamagePosition(), CustomMeleeDistance)  //ents.FindInSphere(self:GetPos(),halfdist + self.MeleeAttackDistance*2) // self.MeleeAttackDistance *5
-	else
-		valuestoattack = {IsSingleValue}
-	end
 	local isp = VJ_IsProp
-	for k,v in pairs(valuestoattack) do
-		if self.EntitiesToDestroyClass[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true then isanentitytoattack = true end
-		if v:GetClass() == "prop_door_rotating" && v:Health() <= 0 then isanentitytoattack = false end
-		if isp(v) == true or isanentitytoattack == true then
+	
+	for k,v in pairs(IsSingleValue or ents.FindInSphere(self:SetMeleeAttackDamagePosition(), (CustomMeleeDistance or math.Clamp(self.MeleeAttackDamageDistance - 30, self.MeleeAttackDistance, self.MeleeAttackDamageDistance)))) do
+		local notprop = false
+		if self.EntitiesToDestroyClass[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true then notprop = true end
+		if v:GetClass() == "prop_door_rotating" && v:Health() <= 0 then notprop = false end
+		if isp(v) == true or notprop == true then
 			local phys = v:GetPhysicsObject()
 			//print(self:VJ_GetNearestPointToEntityDistance(v,1))
 			//print(self:DoPropVisibiltyCheckForPushAttackProps(v))
 			-- Serpevadz abrankner: self:VJ_GetNearestPointToEntityDistance(v) < (CustomMeleeDistance) && self:Visible(v)
 			if IsValid(phys) && self:DoPropVisibiltyCheckForPushAttackProps(v) && (self:GetForward():Dot((v:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius / 1.3))) && v:GetCollisionGroup() != COLLISION_GROUP_DEBRIS && v:GetCollisionGroup() != COLLISION_GROUP_DEBRIS_TRIGGER && v:GetCollisionGroup() != COLLISION_GROUP_DISSOLVING && v:GetCollisionGroup() != COLLISION_GROUP_IN_VEHICLE then
-				if isanentitytoattack == true then return true end -- Bedke chiga sharnagenk, vorovhedev arten kidenk vor gerna zarnel as abrankin
+				if notprop == true then return true end -- Bedke chiga sharnagenk, vorovhedev arten kidenk vor gerna zarnel as abrankin
 				//print("IT SHOULD WORK "..v:GetClass())
 				if self.PushProps == true && phys:GetMass() > 4 && phys:GetSurfaceArea() > 800 then
 					local selfphys = self:GetPhysicsObject()
@@ -2959,7 +2878,7 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 						local phys = v:GetPhysicsObject()
 						if phys:IsValid() && phys != nil && phys != NULL then
 							//if VJ_HasValue(self.EntitiesToDestoryModel,v:GetModel()) or self.EntitiesToDestroyClass[v:GetClass()] or VJ_HasValue(self.EntitiesToPushModel,v:GetModel()) then
-							if self:PushOrAttackPropsCode({IsSingleValue=v,CustomMeleeDistance=AttackDist}) then
+							if self:PushOrAttackPropsCode({v}, AttackDist) then
 								HasHitGoodProp = true
 								phys:EnableMotion(true)
 								//phys:EnableGravity(true)
@@ -3053,10 +2972,10 @@ function ENT:VJ_DoSlowPlayer(argent,WalkSpeed,RunSpeed,SlowTime,SoundData,ExtraF
 	RunSpeed = RunSpeed or 50
 	SlowTime = SlowTime or 5
 	SoundData = SoundData or {}
-		vSD_PlaySound = SoundData.PlaySound or false -- Should it play a sound?
-		vSD_SoundTable = SoundData.SoundTable or {} -- Sounds it should play (Picks randomly)
-		vSD_SoundLevel = SoundData.SoundLevel or 100 -- How loud should the sound play?
-		vSD_FadeOutTime = SoundData.FadeOutTime or 1 -- How long until it the sound fully fades out?
+		local vSD_PlaySound = SoundData.PlaySound or false -- Should it play a sound?
+		local vSD_SoundTable = SoundData.SoundTable or {} -- Sounds it should play (Picks randomly)
+		local vSD_SoundLevel = SoundData.SoundLevel or 100 -- How loud should the sound play?
+		local vSD_FadeOutTime = SoundData.FadeOutTime or 1 -- How long until it the sound fully fades out?
 	ExtraFeatures = ExtraFeatures or {}
 		vEF_NoInterrupt = ExtraFeatures.NoInterrupt or false -- If set to true, the player's speed won't change by another instance of this code
 	local walkspeed_before = argent:GetWalkSpeed()
@@ -3221,24 +3140,26 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAttacks(CheckTimers)
 	if self:Health() <= 0 then return end
-	//self:TaskComplete()
 	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printstoppedattacks") == 1 then print(self:GetClass().." Stopped all Attacks!") end end
+	
 	if CheckTimers == true then
-		//self.IsAbleToMeleeAttack = true
-		//self.IsAbleToRangeAttack = true
-		//self.IsAbleToLeapAttack = true
 		if self.MeleeAttacking == true && self.AlreadyDoneFirstMeleeAttack == false then self:MeleeAttackCode_DoFinishTimers() end
 		if self.RangeAttacking == true && self.AlreadyDoneRangeAttackFirstProjectile == false then self:RangeAttackCode_DoFinishTimers() end
 		if self.LeapAttacking == true && self.AlreadyDoneFirstLeapAttack == false then self:LeapAttackCode_DoFinishTimers() end
 	end
+	
+	-- Melee
 	self.MeleeAttacking = false
-	self.RangeAttacking = false
-	self.LeapAttacking = false
 	self.AlreadyDoneMeleeAttackFirstHit = false
 	self.AlreadyDoneFirstMeleeAttack = false
+	-- Range
+	self.RangeAttacking = false
+	self.AlreadyDoneRangeAttackFirstProjectile = false
+	-- Leap
+	self.LeapAttacking = false
 	self.AlreadyDoneLeapAttackFirstHit = false
 	self.AlreadyDoneFirstLeapAttack = false
-	self.AlreadyDoneRangeAttackFirstProjectile = false
+
 	self:DoChaseAnimation()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3246,44 +3167,22 @@ function ENT:SelectSchedule()
 	if self.VJ_IsBeingControlled == true then return end
 	self:CustomOnSchedule()
 	if self.DisableSelectSchedule == true then return end
-	-- If the enemy is out of reach, then make it reset the enemy!
-	if IsValid(self:GetEnemy()) then
-		self.LatestEnemyDistance = self:GetEnemy():GetPos():Distance(self:GetPos())
-		if (self.LatestEnemyDistance > self.SightDistance) then
-			self.TakingCoverT = 0
-			self:DoIdleAnimation()
-			self:ResetEnemy()
-		end
-	end
-	if self.PlayingAttackAnimation == false or self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
-		-- If the enemy is less than the sight distance, then chase the enemy!
-		if IsValid(self:GetEnemy()) then
-			if (self.LatestEnemyDistance < self.SightDistance) then
-				//self:UpdateEnemyMemory(self:GetEnemy(),self:GetEnemy():GetPos())
-				self:DoChaseAnimation()
-			else -- If it's more than the sight distance, then idle / wander
-				self.TakingCoverT = 0
-				self:DoIdleAnimation()
-			end
-		/*elseif self.Alerted == true then -- But if it's alerted then...
+	
+	local ene = self:GetEnemy()
+	if IsValid(ene) && (ene:GetPos():Distance(self:GetPos()) > self.SightDistance) then -- If the enemy is out of reach, then reset the enemy!
+		self.TakingCoverT = 0
+		self:DoIdleAnimation()
+		self:ResetEnemy()
+	elseif self.PlayingAttackAnimation == false or self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+		if IsValid(ene) then -- Chase the enemy
+			self:DoChaseAnimation()
+		/*elseif self.Alerted == true then -- No enemy, but alerted
 			self.TakingCoverT = 0
 			self:DoIdleAnimation()*/
-		else -- Or else...
+		else -- Idle
 			self.TakingCoverT = 0
 			self:DoIdleAnimation()
 		end
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnPlayerSightCode(argent)
-	if self.HasOnPlayerSight == false or !argent:Alive() or (self.OnPlayerSightOnlyOnce == true && self.OnPlayerSight_AlreadySeen == true) or GetConVarNumber("ai_ignoreplayers") == 1 then return end
-	if (CurTime() > self.OnPlayerSightNextT) && argent:IsPlayer() && (argent:GetPos():Distance(self:GetPos()) < self.OnPlayerSightDistance) && self:Visible(argent) && (self:GetForward():Dot((argent:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) then
-		if self.OnPlayerSightDispositionLevel == 1 && self:Disposition(argent) != D_LI && self:Disposition(argent) != D_NU then return end
-		if self.OnPlayerSightDispositionLevel == 2 && (self:Disposition(argent) == D_LI) then return end
-		self.OnPlayerSight_AlreadySeen = true
-		self:CustomOnPlayerSight(argent)
-		self:PlaySoundSystem("OnPlayerSight")
-		if self.OnPlayerSightOnlyOnce == false then self.OnPlayerSightNextT = CurTime() + math.Rand(self.OnPlayerSightNextTime1,self.OnPlayerSightNextTime2) end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3682,7 +3581,21 @@ function ENT:DoEntityRelationshipCheck()
 						self.TakingCoverT = CurTime() + 0.2
 					end
 				end
-				if self.HasOnPlayerSight == true then self:OnPlayerSightCode(v) end
+				
+				-- HasOnPlayerSight system, used to do certain actions when it sees the player
+				if self.HasOnPlayerSight == true && v:Alive() &&(CurTime() > self.OnPlayerSightNextT) && (v:GetPos():Distance(self:GetPos()) < self.OnPlayerSightDistance) && self:Visible(v) && (self:GetForward():Dot((v:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) then
+					-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
+					local disp = self.OnPlayerSightDispositionLevel
+					if (disp == 0) or (disp == 1 && (self:Disposition(v) == D_LI or self:Disposition(v) == D_NU)) or (disp == 2 && self:Disposition(v) != D_LI) then
+						self:CustomOnPlayerSight(v)
+						self:PlaySoundSystem("OnPlayerSight")
+						if self.OnPlayerSightOnlyOnce == true then -- If it's only suppose to play it once then turn the system off
+							self.HasOnPlayerSight = false
+						else
+							self.OnPlayerSightNextT = CurTime() + math.Rand(self.OnPlayerSightNextTime1, self.OnPlayerSightNextTime2)
+						end
+					end
+				end
 			end
 		end
 		//return true
