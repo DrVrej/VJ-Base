@@ -921,7 +921,6 @@ ENT.ResetedEnemy = true
 ENT.VJ_IsBeingControlled = false
 ENT.VJ_PlayingSequence = false
 ENT.VJ_IsPlayingSoundTrack = false
-ENT.HasDone_PlayAlertSoundOnlyOnce = false
 ENT.PlayingAttackAnimation = false
 ENT.VJDEBUG_SNPC_ENABLED = false
 ENT.MeleeAttack_DoingPropAttack = false
@@ -3288,13 +3287,9 @@ function ENT:DoAlert(argent)
 	self.LastSeenEnemyTime = 0
 	self:CustomOnAlert(argent)
 	if CurTime() > self.NextAlertSoundT then
+		self:PlaySoundSystem("Alert")
 		if self.AlertSounds_OnlyOnce == true then
-			if self.HasDone_PlayAlertSoundOnlyOnce == false then
-				self:PlaySoundSystem("Alert")
-				self.HasDone_PlayAlertSoundOnlyOnce = true
-			end
-		else
-			self:PlaySoundSystem("Alert")
+			self.HasAlertSounds = false
 		end
 		self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert1,self.NextSoundTime_Alert2)
 	end
@@ -4717,7 +4712,7 @@ function ENT:PlaySoundSystem(Set, CustomSd, Type)
 			if (math.random(1, self.AlertSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 				if ctbl != false then sdtbl = ctbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT = self.NextIdleSoundT + 2
+				self.NextIdleSoundT = CurTime() + ((((SoundDuration(sdtbl) > 0) and SoundDuration(sdtbl)) or 2) + 1)
 				self.CurrentAlertSound = Type(self, sdtbl, self.AlertSoundLevel, self:VJ_DecideSoundPitch(self.AlertSoundPitch1, self.AlertSoundPitch2))
 			end
 		end

@@ -862,7 +862,6 @@ ENT.ResetedEnemy = true
 ENT.VJ_IsBeingControlled = false
 ENT.VJ_PlayingSequence = false
 ENT.VJ_IsPlayingSoundTrack = false
-ENT.HasDone_PlayAlertSoundOnlyOnce = false
 ENT.PlayingAttackAnimation = false
 ENT.DoingWeaponAttack = false
 ENT.DoingWeaponAttack_Standing = false
@@ -2291,7 +2290,7 @@ function ENT:Think()
 								vschedWeaponReload.IsMovingTask_Run = true
 								vschedWeaponReload.RunCode_OnFinish = function()
 									-- Yete teshnamin modig e, zenke mi letsener!
-									if (self.MeleeAttacking == true) or (self.HasWeaponBackAway == true && (self:GetPos():Distance(self:GetEnemy():GetPos()) <= self.WeaponBackAway_Distance)) then
+									if (self.MeleeAttacking == true) or (IsValid(self:GetEnemy()) && self.HasWeaponBackAway == true && (self:GetPos():Distance(self:GetEnemy():GetPos()) <= self.WeaponBackAway_Distance)) then
 										self.IsReloadingWeapon = false
 										timer.Remove("timer_reload_end"..self:EntIndex()) -- Remove the timer to make sure it doesn't set reloading to false at a random time (later on)
 									else
@@ -3216,13 +3215,9 @@ function ENT:DoAlert(argent)
 	self.LastSeenEnemyTime = 0
 	self:CustomOnAlert(argent)
 	if CurTime() > self.NextAlertSoundT then
+		self:PlaySoundSystem("Alert")
 		if self.AlertSounds_OnlyOnce == true then
-			if self.HasDone_PlayAlertSoundOnlyOnce == false then
-				self:PlaySoundSystem("Alert")
-				self.HasDone_PlayAlertSoundOnlyOnce = true
-			end
-		else
-			self:PlaySoundSystem("Alert")
+			self.HasAlertSounds = false
 		end
 		self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert1,self.NextSoundTime_Alert2)
 	end
@@ -4673,7 +4668,7 @@ function ENT:PlaySoundSystem(Set, CustomSd, Type)
 			if (math.random(1, self.AlertSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 				if ctbl != false then sdtbl = ctbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT = self.NextIdleSoundT + 2
+				self.NextIdleSoundT = CurTime() + ((((SoundDuration(sdtbl) > 0) and SoundDuration(sdtbl)) or 2) + 1)
 				self.NextSuppressingSoundT = CurTime() + 4
 				self.CurrentAlertSound = Type(self, sdtbl, self.AlertSoundLevel, self:VJ_DecideSoundPitch(self.AlertSoundPitch1, self.AlertSoundPitch2))
 			end
