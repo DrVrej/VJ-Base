@@ -4146,6 +4146,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 
 	local DamageInflictor = dmginfo:GetInflictor()
 	local DamageAttacker = dmginfo:GetAttacker()
+	if DamageAttacker:GetClass() == "npc_barnacle" then self.HasDeathRagdoll = false end -- Don't make a corpse if it's killed by a barnacle!
 	self.Dead = true
 	self:RemoveAttackTimers()
 	self.MeleeAttacking = false

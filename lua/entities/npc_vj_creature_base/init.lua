@@ -1022,7 +1022,7 @@ local NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=t
 local NPCTbl_Zombies = {npc_fastzombie_torso=true,npc_zombine=true,npc_zombie_torso=true,npc_zombie=true,npc_poisonzombie=true,npc_headcrab_fast=true,npc_headcrab_black=true,npc_headcrab=true,npc_fastzombie=true,monster_zombie=true,monster_headcrab=true,monster_babycrab=true}
 local NPCTbl_Antlions = {npc_antlion=true,npc_antlionguard=true,npc_antlion_worker=true}
 local NPCTbl_Xen = {monster_bullchicken=true,monster_alien_grunt=true,monster_alien_slave=true,monster_alien_controller=true,monster_houndeye=true,monster_gargantua=true,monster_nihilanth=true}
-	
+
 /*
 local ipairs = ipairs
 local pairs = pairs
@@ -4213,6 +4213,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 
 	local DamageInflictor = dmginfo:GetInflictor()
 	local DamageAttacker = dmginfo:GetAttacker()
+	if DamageAttacker:GetClass() == "npc_barnacle" then self.HasDeathRagdoll = false end -- Don't make a corpse if it's killed by a barnacle!
 	self.Dead = true
 	self:RemoveAttackTimers()
 	self.MeleeAttacking = false
