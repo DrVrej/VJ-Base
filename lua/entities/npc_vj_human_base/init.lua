@@ -869,8 +869,6 @@ ENT.WaitingForEnemyToComeOut = false
 ENT.VJDEBUG_SNPC_ENABLED = false
 ENT.DidWeaponAttackAimParameter = false
 ENT.Medic_IsHealingAlly = false
-ENT.Medic_WanderValue = false
-ENT.Medic_ChaseValue = false
 ENT.AlreadyDoneMedicThinkCode = false
 ENT.AlreadyBeingHealedByMedic = false
 ENT.VJFriendly = false
@@ -1156,15 +1154,6 @@ function ENT:DoChangeMovementType(SetType)
 		self:CapabilitiesRemove(CAP_SKIP_NAV_GROUND_CHECK)
 	end
 	self:CustomOnChangeMovementType(SetType)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoSchedule(schedule)
-	if self:TaskFinished() then self:NextTask(schedule) end
-	if self.CurrentTask then self:RunTask(self.CurrentTask) end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnTaskComplete()
-	self.bTaskComplete = true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IsJumpLegal(startPos,apex,endPos)
@@ -1544,7 +1533,7 @@ function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 	RestrictNumber = RestrictNumber or 0
 	OverrideWander = OverrideWander or false
 	if self.IdleAlwaysWander == true then RestrictNumber = 1 end
-	if (self.MovementType == VJ_MOVETYPE_STATIONARY) or (self.IsVJBaseSNPC_Tank == true) or (self.LastHiddenZone_CanWander == false) or (self.NextWanderTime > CurTime()) then RestrictNumber = 2 end
+	if (self.MovementType == VJ_MOVETYPE_STATIONARY) or (self.IsVJBaseSNPC_Tank == true) or (self.LastHiddenZone_CanWander == false) or (self.NextWanderTime > CurTime()) or (self.FollowingPlayer == true) or (self.Medic_IsHealingAlly == true) then RestrictNumber = 2 end
 	if OverrideWander == false && (self.DisableWandering == true or self.IsGuard == true) && (RestrictNumber == 1 or RestrictNumber == 0) then
 		RestrictNumber = 2
 	end
@@ -1565,12 +1554,18 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChaseAnimation(OverrideChasing)
 	local ene = self:GetEnemy()
-	if self.Dead == true or self.VJ_IsBeingControlled == true or self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.PlayingAttackAnimation == true && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
+	if self.Dead == true or self.VJ_IsBeingControlled == true or self.PlayingAttackAnimation == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.PlayingAttackAnimation == true && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
 	if self:VJ_GetNearestPointToEntityDistance(ene) < self.MeleeAttackDistance && ene:Visible(self) && (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then self:VJ_TASK_IDLE_STAND() return end
 	
-	OverrideChasing = OverrideChasing or false -- OverrideChasing = Chase no matter what
-	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_TASK_IDLE_STAND() return end -- Stationary SNPCs aren't allowed to move!
+	OverrideChasing = OverrideChasing or false -- true = Chase no matter what
 	
+	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
+	if self.MovementType == VJ_MOVETYPE_STATIONARY or self.FollowingPlayer == true or self.Medic_IsHealingAlly == true then
+		self:VJ_TASK_IDLE_STAND()
+		return
+	end
+	
+	-- For non-aggressive SNPCs
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
 		self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
 		self.NextChaseTime = CurTime() + 3
@@ -1967,115 +1962,97 @@ function ENT:DoMedicCode_Reset()
 	self:CustomOnMedic_OnReset()
 	if IsValid(self.Medic_CurrentEntToHeal) then self.Medic_CurrentEntToHeal.AlreadyBeingHealedByMedic = false end
 	if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
+	self.Medic_NextHealT = CurTime() + math.Rand(self.Medic_NextHealTime1, self.Medic_NextHealTime2)
 	self.Medic_IsHealingAlly = false
 	self.AlreadyDoneMedicThinkCode = false
 	self.Medic_CurrentEntToHeal = NULL
-	self.DisableWandering = self.Medic_WanderValue
-	self.DisableChasingEnemy = self.Medic_ChaseValue
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoMedicCode_FindAllies()
-	-- for k,v in ipairs(player.GetAll()) do v.AlreadyBeingHealedByMedic = false end
-	if self.IsMedicSNPC == false or self.Medic_IsHealingAlly == true or CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled == true then return false end
-	local findallies = ents.FindInSphere(self:GetPos(),self.Medic_CheckDistance)
-	for k,v in ipairs(findallies) do
-		if !v:IsNPC() && !v:IsPlayer() then continue end
-		if v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic == false && (!v.IsVJBaseSNPC_Tank) && v:Health() <= v:GetMaxHealth() * 0.75 && ((v.IsVJBaseSNPC == true && v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0)) then
-			if /*self:Disposition(v) == D_LI &&*/ self:DoRelationshipCheck(v) == false then
-				self.Medic_NextHealT = CurTime() + math.Rand(self.Medic_NextHealTime1,self.Medic_NextHealTime2)
-				self.NextIdleTime = CurTime() + 5
-				self.NextChaseTime = CurTime() + 5
-				self.Medic_WanderValue = self.DisableWandering
-				self.Medic_ChaseValue = self.DisableChasingEnemy
-				self.DisableWandering = true
-				self.DisableChasingEnemy = true
-				self.Medic_CurrentEntToHeal = v
-				self.Medic_IsHealingAlly = true
-				self.AlreadyDoneMedicThinkCode = false
-				v.AlreadyBeingHealedByMedic = true
-				//self:SelectSchedule()
-				//self:VJ_SetSchedule(SCHED_IDLE_STAND)
-				self:SelectSchedule()
-				self:StopMoving()
-				self:StopMoving()
-				self:SetTarget(v)
-				self:VJ_TASK_GOTO_TARGET()
-			return true
+function ENT:DoMedicCode()
+	if self.IsMedicSNPC == false then return end
+	if self.Medic_IsHealingAlly == false then
+		if CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled == true then return end
+		for k,v in ipairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
+			if v.IsVJBaseSNPC != true && !v:IsPlayer() then continue end -- If it's not a VJ Base SNPC or a player, then move on
+			if v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic != true && (!v.IsVJBaseSNPC_Tank) && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0)) then
+				if self:DoRelationshipCheck(v) == false then -- Make sure it's an ally
+					self.Medic_CurrentEntToHeal = v
+					self.Medic_IsHealingAlly = true
+					self.AlreadyDoneMedicThinkCode = false
+					v.AlreadyBeingHealedByMedic = true
+					self:StopMoving()
+					self:SetTarget(v)
+					self:VJ_TASK_GOTO_TARGET()
+					return
+				end
 			end
 		end
-	end
-	return false
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoMedicCode_HealAlly()
-	if self.IsMedicSNPC == true && self.Medic_IsHealingAlly == true && self.AlreadyDoneMedicThinkCode == false then
-		if !IsValid(self.Medic_CurrentEntToHeal) or VJ_IsAlive(self.Medic_CurrentEntToHeal) != true then self:DoMedicCode_Reset() return false end
-		//print(self.FollowPlayer_Entity)
-		if IsValid(self.Medic_CurrentEntToHeal) && VJ_IsAlive(self.Medic_CurrentEntToHeal) == true then
-			if self.Medic_CurrentEntToHeal:Health() > self.Medic_CurrentEntToHeal:GetMaxHealth() * 0.75 then self:DoMedicCode_Reset() return false end
-			if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then
-				self.AlreadyDoneMedicThinkCode = true
-				self:CustomOnMedic_BeforeHeal()
-				self:PlaySoundSystem("MedicBeforeHeal")
-				if self.Medic_SpawnPropOnHeal == true && self:LookupAttachment(self.Medic_SpawnPropOnHealAttachment) != 0 then
-					self.Medic_SpawnedProp = ents.Create("prop_physics")
-					self.Medic_SpawnedProp:SetModel(self.Medic_SpawnPropOnHealModel)
-					self.Medic_SpawnedProp:SetLocalPos(self:GetPos())
-					self.Medic_SpawnedProp:SetOwner(self)
-					self.Medic_SpawnedProp:SetParent(self)
-					self.Medic_SpawnedProp:Fire("SetParentAttachment",self.Medic_SpawnPropOnHealAttachment)
-					self.Medic_SpawnedProp:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
-					self.Medic_SpawnedProp:Spawn()
-					self.Medic_SpawnedProp:Activate()
-					self.Medic_SpawnedProp:SetSolid(SOLID_NONE)
-					//self.Medic_SpawnedProp:AddEffects(EF_BONEMERGE)
-					self.Medic_SpawnedProp:SetRenderMode(RENDERMODE_TRANSALPHA)
-					self:DeleteOnRemove(self.Medic_SpawnedProp)
-				end
-				local anim = VJ_PICK(self.AnimTbl_Medic_GiveHealth)
-				local dontdoturn = false
-				self:FaceCertainEntity(self.Medic_CurrentEntToHeal,false)
-				if self.Medic_DisableAnimation != true then
-					self:VJ_ACT_PLAYACTIVITY(anim,true,false,false)
-				end
-				if self.Medic_CurrentEntToHeal.MovementType == VJ_MOVETYPE_STATIONARY && self.Medic_CurrentEntToHeal.CanTurnWhileStationary == true then dontdoturn = true end
-				if !self.Medic_CurrentEntToHeal:IsPlayer() && dontdoturn == false then
-					self.NextWanderTime = CurTime() + 2
-					self.Medic_CurrentEntToHeal:StopMoving()
-					self.Medic_CurrentEntToHeal:SetTarget(self)
-					self.Medic_CurrentEntToHeal:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-					//self.Medic_CurrentEntToHeal:VJ_SetSchedule(SCHED_TARGET_FACE)
-				end
-				timer.Simple(self:DecideAnimationLength(anim,self.Medic_TimeUntilHeal,0),function()
-					if IsValid(self) then -- Yete NPC ter hos e...
-						if IsValid(self.Medic_CurrentEntToHeal) then -- Yete NPC vor meng bidi aghektsnenk hos e...
-							if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then
-								self:CustomOnMedic_OnHeal()
-								self:PlaySoundSystem("MedicOnHeal")
-								if self.Medic_CurrentEntToHeal:IsNPC() && self.Medic_CurrentEntToHeal.IsVJBaseSNPC == true && self.Medic_CurrentEntToHeal.IsVJBaseSNPC_Animal != true then
-									self.Medic_CurrentEntToHeal:PlaySoundSystem("MedicReceiveHeal")
-								end
-								self.Medic_CurrentEntToHeal:RemoveAllDecals()
-								local frimaxhp = self.Medic_CurrentEntToHeal:GetMaxHealth()
-								local fricurhp = self.Medic_CurrentEntToHeal:Health()
-								self.Medic_CurrentEntToHeal:SetHealth(math.Clamp(fricurhp + self.Medic_HealthAmount,fricurhp,frimaxhp))
-								self:DoMedicCode_Reset()
-							else -- Ere vor NPC yed yerta mouys NPC-en yedeven
-								self.AlreadyDoneMedicThinkCode = false
-								if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
-								self:CustomOnMedic_OnReset()
-							end
-						else -- Yete NPC vor meng bidi aghektsnenk hos che, amen inch yed normaltsoor
-							self:DoMedicCode_Reset()
-						end
-					end
-				end)
-			else -- Ere vor NPC yed yerta mouys NPC-en yedeven
-				self.NextIdleTime = CurTime() + 4
-				self.NextChaseTime = CurTime() + 4
-				self:SetTarget(self.Medic_CurrentEntToHeal)
-				self:VJ_TASK_GOTO_TARGET()
+	elseif self.AlreadyDoneMedicThinkCode == false then
+		if !IsValid(self.Medic_CurrentEntToHeal) or VJ_IsAlive(self.Medic_CurrentEntToHeal) != true or (self.Medic_CurrentEntToHeal:Health() > self.Medic_CurrentEntToHeal:GetMaxHealth() * 0.75) then self:DoMedicCode_Reset() return end
+		if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then -- Are we in healing distance?
+			self.AlreadyDoneMedicThinkCode = true
+			self:CustomOnMedic_BeforeHeal()
+			self:PlaySoundSystem("MedicBeforeHeal")
+			
+			-- Spawn the prop
+			if self.Medic_SpawnPropOnHeal == true && self:LookupAttachment(self.Medic_SpawnPropOnHealAttachment) != 0 then
+				self.Medic_SpawnedProp = ents.Create("prop_physics")
+				self.Medic_SpawnedProp:SetModel(self.Medic_SpawnPropOnHealModel)
+				self.Medic_SpawnedProp:SetLocalPos(self:GetPos())
+				self.Medic_SpawnedProp:SetOwner(self)
+				self.Medic_SpawnedProp:SetParent(self)
+				self.Medic_SpawnedProp:Fire("SetParentAttachment", self.Medic_SpawnPropOnHealAttachment)
+				self.Medic_SpawnedProp:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
+				self.Medic_SpawnedProp:Spawn()
+				self.Medic_SpawnedProp:Activate()
+				self.Medic_SpawnedProp:SetSolid(SOLID_NONE)
+				//self.Medic_SpawnedProp:AddEffects(EF_BONEMERGE)
+				self.Medic_SpawnedProp:SetRenderMode(RENDERMODE_TRANSALPHA)
+				self:DeleteOnRemove(self.Medic_SpawnedProp)
 			end
+			
+			local anim = VJ_PICK(self.AnimTbl_Medic_GiveHealth)
+			self:FaceCertainEntity(self.Medic_CurrentEntToHeal, false)
+			if self.Medic_DisableAnimation != true then
+				self:VJ_ACT_PLAYACTIVITY(anim, true, false, false)
+			end
+			
+			-- Make the ally turn and look at me
+			local noturn = (self.Medic_CurrentEntToHeal.MovementType == VJ_MOVETYPE_STATIONARY and self.Medic_CurrentEntToHeal.CanTurnWhileStationary == false) or false
+			if !self.Medic_CurrentEntToHeal:IsPlayer() && noturn == false then
+				self.NextWanderTime = CurTime() + 2
+				self.NextChaseTime = CurTime() + 2
+				self.Medic_CurrentEntToHeal:StopMoving()
+				self.Medic_CurrentEntToHeal:SetTarget(self)
+				self.Medic_CurrentEntToHeal:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+			end
+			
+			timer.Simple(self:DecideAnimationLength(anim, self.Medic_TimeUntilHeal, 0), function()
+				if IsValid(self) then
+					if !IsValid(self.Medic_CurrentEntToHeal) then self:DoMedicCode_Reset() goto reset end -- Ally doesn't exist anymore, reset
+					if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then -- Are we still in healing distance?
+						self:CustomOnMedic_OnHeal()
+						self:PlaySoundSystem("MedicOnHeal")
+						if self.Medic_CurrentEntToHeal.IsVJBaseSNPC == true && self.Medic_CurrentEntToHeal.IsVJBaseSNPC_Animal != true then
+							self.Medic_CurrentEntToHeal:PlaySoundSystem("MedicReceiveHeal")
+						end
+						self.Medic_CurrentEntToHeal:RemoveAllDecals()
+						local fricurhp = self.Medic_CurrentEntToHeal:Health()
+						self.Medic_CurrentEntToHeal:SetHealth(math.Clamp(fricurhp + self.Medic_HealthAmount, fricurhp, self.Medic_CurrentEntToHeal:GetMaxHealth()))
+						self:DoMedicCode_Reset()
+					else -- If we are no longer in healing distance, go after the ally again
+						self.AlreadyDoneMedicThinkCode = false
+						if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
+						self:CustomOnMedic_OnReset()
+					end
+					::reset::
+				end
+			end)
+		else -- If we aren't in healing distance, then go after the ally
+			self.NextIdleTime = CurTime() + 4
+			self.NextChaseTime = CurTime() + 4
+			self:SetTarget(self.Medic_CurrentEntToHeal)
+			self:VJ_TASK_GOTO_TARGET()
 		end
 	end
 end
@@ -2199,7 +2176,7 @@ function ENT:Think()
 			//print(self:GetTarget())
 			//print(self.FollowPlayer_Entity)
 			if IsValid(self.FollowPlayer_Entity) && self.FollowPlayer_Entity:Alive() && self:Disposition(self.FollowPlayer_Entity) == D_LI then 
-				if CurTime() > self.NextFollowPlayerT && self.AlreadyBeingHealedByMedic == false then
+				if CurTime() > self.NextFollowPlayerT && self.AlreadyBeingHealedByMedic != true then
 					local DistanceToPly = self:GetPos():Distance(self.FollowPlayer_Entity:GetPos())
 					local busy = self:BusyWithActivity()
 					self:SetTarget(self.FollowPlayer_Entity)
@@ -2365,8 +2342,7 @@ function ENT:Think()
 		if CurTime() > self.NextProcessT then
 			self:DoEntityRelationshipCheck()
 			self:CheckForGrenades()
-			self:DoMedicCode_FindAllies()
-			self:DoMedicCode_HealAlly()
+			self:DoMedicCode()
 			/*if IsValid(self:GetEnemy()) && self:Visible(self:GetEnemy()) && (self.CurrentWeaponEntity.IsVJBaseWeapon) && self.DoingWeaponAttack == false then
 				//self:FaceCertainEntity(self:GetEnemy(),true)
 				if !VJ_HasValue(self.AnimTbl_WeaponAttack,self:GetActivity()) && !VJ_HasValue(self.AnimTbl_WeaponAttackCrouch,self:GetActivity()) then

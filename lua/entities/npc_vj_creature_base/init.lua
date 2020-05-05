@@ -3,6 +3,7 @@ AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("shared.lua")
 include('shared.lua')
 include('schedules.lua')
+include('movetype_aa.lua')
 /*--------------------------------------------------
 	=============== Creature SNPC Base ===============
 	*** Copyright (c) 2012-2020 by DrVrej, All rights reserved. ***
@@ -925,8 +926,6 @@ ENT.PlayingAttackAnimation = false
 ENT.VJDEBUG_SNPC_ENABLED = false
 ENT.MeleeAttack_DoingPropAttack = false
 ENT.Medic_IsHealingAlly = false
-ENT.Medic_WanderValue = false
-ENT.Medic_ChaseValue = false
 ENT.AlreadyDoneMedicThinkCode = false
 ENT.AlreadyBeingHealedByMedic = false
 ENT.VJFriendly = false
@@ -1200,15 +1199,6 @@ function ENT:DoChangeMovementType(SetType)
 		self:CapabilitiesRemove(CAP_SKIP_NAV_GROUND_CHECK)
 	end
 	self:CustomOnChangeMovementType(SetType)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoSchedule(schedule)
-	if self:TaskFinished() then self:NextTask(schedule) end
-	if self.CurrentTask then self:RunTask(self.CurrentTask) end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnTaskComplete()
-	self.bTaskComplete = true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IsJumpLegal(startPos,apex,endPos)
@@ -1584,7 +1574,7 @@ function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
 	RestrictNumber = RestrictNumber or 0
 	OverrideWander = OverrideWander or false
 	if self.IdleAlwaysWander == true then RestrictNumber = 1 end
-	if (self.MovementType == VJ_MOVETYPE_STATIONARY) or (self.IsVJBaseSNPC_Tank == true) or (self.LastHiddenZone_CanWander == false) or (self.NextWanderTime > CurTime()) then RestrictNumber = 2 end
+	if (self.MovementType == VJ_MOVETYPE_STATIONARY) or (self.IsVJBaseSNPC_Tank == true) or (self.LastHiddenZone_CanWander == false) or (self.NextWanderTime > CurTime()) or (self.FollowingPlayer == true) or (self.Medic_IsHealingAlly == true) then RestrictNumber = 2 end
 	if OverrideWander == false && (self.DisableWandering == true or self.IsGuard == true) && (RestrictNumber == 1 or RestrictNumber == 0) then
 		RestrictNumber = 2
 	end
@@ -1605,11 +1595,16 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChaseAnimation(OverrideChasing)
 	local ene = self:GetEnemy()
-	if self.Dead == true or self.VJ_IsBeingControlled == true or self.FollowingPlayer == true or self.PlayingAttackAnimation == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.PlayingAttackAnimation == true && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
+	if self.Dead == true or self.VJ_IsBeingControlled == true or self.PlayingAttackAnimation == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.PlayingAttackAnimation == true && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
 	if self:VJ_GetNearestPointToEntityDistance(ene) < self.MeleeAttackDistance && ene:Visible(self) && (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then self:AAMove_Stop() self:VJ_TASK_IDLE_STAND() return end
 	
-	OverrideChasing = OverrideChasing or false -- OverrideChasing = Chase no matter what
-	if self.MovementType == VJ_MOVETYPE_STATIONARY then self:VJ_TASK_IDLE_STAND() return end -- Stationary SNPCs aren't allowed to move!
+	OverrideChasing = OverrideChasing or false -- true = Chase no matter what
+	
+	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
+	if self.MovementType == VJ_MOVETYPE_STATIONARY or self.FollowingPlayer == true or self.Medic_IsHealingAlly == true then
+		self:VJ_TASK_IDLE_STAND()
+		return
+	end
 	
 	-- For non-aggressive SNPCs
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
@@ -1640,420 +1635,6 @@ function ENT:BusyWithActivity()
 		return true
 	end
 	return false
-end
----------------------------------------------------------------------------------------------------------------------------------------------
--- !!!!!!! WIP - AERIAL & AQUATIC BASE !!!!!!! --
-// MOVETYPE_FLY | MOVETYPE_FLYGRAVITY
-ENT.CurrentAnim_AAMovement = nil
-ENT.AA_NextMovementAnimation = 0
-ENT.AA_CanPlayMoveAnimation = false
-ENT.AA_CurrentMoveAnimationType = "Calm"
-ENT.AA_MoveLength_Wander = 0
-ENT.AA_MoveLength_Chase = 0
-//ENT.AA_TargetPos = Vector(0,0,0)
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AAMove_Animation()
-	if self:GetSequence() != self.CurrentAnim_AAMovement && self:BusyWithActivity() == false /*&& self:GetActivity() == ACT_IDLE*/ && CurTime() > self.AA_NextMovementAnimation then
-		local animtbl = {}
-		if self.AA_CurrentMoveAnimationType == "Calm" then
-			if self.MovementType == VJ_MOVETYPE_AQUATIC then
-				animtbl = self.Aquatic_AnimTbl_Calm
-			else
-				animtbl = self.Aerial_AnimTbl_Calm
-			end
-		elseif self.AA_CurrentMoveAnimationType == "Alert" then
-			if self.MovementType == VJ_MOVETYPE_AQUATIC then
-				animtbl = self.Aquatic_AnimTbl_Alerted
-			else
-				animtbl = self.Aerial_AnimTbl_Alerted
-			end
-		end
-		local pickedanim = VJ_PICK(animtbl)
-		if type(pickedanim) == "number" then pickedanim = self:GetSequenceName(self:SelectWeightedSequence(pickedanim)) end
-		local idleanimid = VJ_GetSequenceName(self,pickedanim)
-		self.CurrentAnim_AAMovement = idleanimid
-		//self:AddGestureSequence(idleanimid)
-		self:VJ_ACT_PLAYACTIVITY(pickedanim,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false,SequenceInterruptible=true})
-		self.AA_NextMovementAnimation = CurTime() + self:DecideAnimationLength(self.CurrentAnim_AAMovement, false)
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AAMove_Stop()
-	if self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then return end
-	if self:GetVelocity():Length() > 0 then
-		self:SetLocalVelocity(Vector(0,0,0))
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AAMove_Wander(ShouldPlayAnim,NoFace)
-	local calmspeed = self.Aerial_FlyingSpeed_Calm
-	local ForceDown = ForceDown or false
-	if self.MovementType == VJ_MOVETYPE_AQUATIC then
-		if self:WaterLevel() < 3 then self:AAMove_Stop() ForceDown = true end
-		calmspeed = self.Aquatic_SwimmingSpeed_Calm
-	end
-	
-	local Debug = self.AA_EnableDebug
-	ShouldPlayAnim = ShouldPlayAnim or false
-	NoFace = NoFace or false
-
-	if ShouldPlayAnim == true then
-		self.AA_CanPlayMoveAnimation = true
-		self.AA_CurrentMoveAnimationType = "Calm"
-	else
-		self.AA_CanPlayMoveAnimation = false
-	end
-	//if NoFace == false then self:SetLocalAngularVelocity(Angle(0,math.random(0,360),0)) end
-	local x_neg = 1
-	local y_neg = 1
-	local z_neg = 1
-	if math.random(1,2) == 1 then x_neg = -1 end
-	if math.random(1,2) == 1 then y_neg = -1 end
-	if math.random(1,2) == 1 then z_neg = -1 end
-	local tr_startpos = self:GetPos()
-	local tr_endpos = tr_startpos + self:GetForward()*((self:OBBMaxs().x + math.random(100,200))*x_neg) + self:GetRight()*((self:OBBMaxs().y + math.random(100,200))*y_neg) + self:GetUp()*((self:OBBMaxs().z + math.random(100,200))*z_neg)
-	if ForceDown == true then
-		tr_endpos = tr_startpos + self:GetUp()*((self:OBBMaxs().z + math.random(100,150))*-1)
-	end
-	/*local tr_for = math.random(-300,300)
-	local tr_up = math.random(-300,300)
-	local tr_right = math.random(-300,300)
-	local tr = util.TraceLine({start = tr_startpos, endpos = tr_startpos+self:GetForward()*tr_for+self:GetRight()*tr_up+self:GetUp()*tr_right, filter = self})*/
-	local tr = util.TraceLine({start = tr_startpos, endpos = tr_endpos, filter = self})
-	local finalpos = tr.HitPos
-	if ForceDown == false && self.MovementType == VJ_MOVETYPE_AERIAL then -- Yete ches estibergor vor var yerta YEV loghatsough SNPC che, sharnage...
-		local tr_check = util.TraceLine({start = finalpos, endpos = finalpos + Vector(0,0,-100), filter = self})
-		if tr_check.HitWorld == true then -- Yete askharin zargav, ere vor shad var chishne
-			finalpos = finalpos + self:GetUp()*(100 - tr_check.HitPos:Distance(finalpos))
-		end
-	end
-	//self.AA_TargetPos = finalpos
-	
-	-- Angle time test (PHYSICS)
-	/*local test1 = math.AngleDifference(tr.StartPos:Angle().y, self:VJ_ReturnAngle((finalpos-tr.StartPos):Angle()).y)
-	local test2 = (math.rad(test1) / math.rad(self:VJ_ReturnAngle((finalpos-tr.StartPos):Angle()).y)) * 20
-	self.yep = CurTime() + math.abs(test2)
-	self.yep2 = self:VJ_ReturnAngle((finalpos-tr.StartPos):Angle())*/
-	
-	if NoFace == false then self.CurrentTurningAngle = self:VJ_ReturnAngle((finalpos-tr.StartPos):Angle()) end //self:SetLocalAngularVelocity(self:VJ_ReturnAngle((finalpos-tr.StartPos):Angle())) end
-	if Debug == true then
-		VJ_CreateTestObject(finalpos,self:GetAngles(),Color(0,255,255),5)
-		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,finalpos,false,self:EntIndex(),0)
-	end
-
-	-- Set the velocity
-	//local myvel = self:GetVelocity()
-	local vel_set = (finalpos-self:GetPos()):GetNormal()*calmspeed
-	local vel_len = CurTime() + (finalpos:Distance(tr_startpos) / vel_set:Length())
-	self.AA_MoveLength_Chase = 0
-	if vel_len == vel_len then -- Check for NaN
-		self.AA_MoveLength_Wander = vel_len
-		self.NextIdleTime = vel_len
-	end
-	self:SetLocalVelocity(vel_set)
-	if Debug == true then ParticleEffect("vj_impact1_centaurspit", finalpos, Angle(0,0,0), self) end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AAMove_MoveToPos(Ent,ShouldPlayAnim,vAdditionalFeatures)
-	if !IsValid(Ent) then return end
-	vAd_AdditionalFeatures = vAdditionalFeatures or {}
-	vAd_PosForward = vAd_AdditionalFeatures.PosForward or 1 -- This will add the given value to the set position's forward
-	vAd_PosUp = vAd_AdditionalFeatures.PosUp or 1 -- This will add the given value to the set position's up
-	vAd_PosRight = vAd_AdditionalFeatures.PosRight or 1 -- This will add the given value to the set position's right
-	local MoveSpeed = self.Aerial_FlyingSpeed_Calm
-	if self.MovementType == VJ_MOVETYPE_AQUATIC then
-		if Debug == true then
-			print("--------")
-			print("ME WL: "..self:WaterLevel())
-			print("Move To Pos WL: "..Ent:WaterLevel())
-		end
-		-- Yete chouri e YEV leman marmine chourin mech-e che, ere vor gena yev kharen kal e
-		if self:WaterLevel() <= 2 && self:GetVelocity():Length() > 0 then return end
-		if self:WaterLevel() <= 1 && self:GetVelocity():Length() > 0 then self:AAMove_Wander(true,true) return end
-		if Ent:WaterLevel() == 0 then self:DoIdleAnimation(1) return end -- Yete teshnamin chouren tours e, getsour
-		if Ent:WaterLevel() <= 1 then -- Yete 0-en ver e, ere vor nayi yete gerna teshanmi-in gerna hasnil
-			local trene = util.TraceLine({
-				start = Ent:GetPos() + self:OBBCenter(),
-				endpos = (Ent:GetPos() + self:OBBCenter()) + Ent:GetUp()*-20,
-				filter = self,
-				mins = self:OBBMins(),
-				maxs = self:OBBMaxs()
-			})
-			//PrintTable(trene)
-			//VJ_CreateTestObject(trene.HitPos,self:GetAngles(),Color(0,255,0),5)
-			if trene.Hit == true then return end
-		end
-		MoveSpeed = self.Aquatic_SwimmingSpeed_Alerted
-	end
-	
-	local Debug = self.AA_EnableDebug
-	ShouldPlayAnim = ShouldPlayAnim or false
-	NoFace = NoFace or false
-
-	if ShouldPlayAnim == true then
-		self.AA_CanPlayMoveAnimation = true
-		self.AA_CurrentMoveAnimationType = "Calm"
-	else
-		self.AA_CanPlayMoveAnimation = false
-	end
-	
-	-- Main Calculations
-	local vel_for = 1
-	local vel_stop = false
-	local nearpos = self:VJ_GetNearestPointToEntity(Ent)
-	local startpos = nearpos.MyPosition // self:GetPos()
-	local endpos = nearpos.EnemyPosition // Ent:GetPos()+Ent:OBBCenter()
-	local tr = util.TraceHull({
-		start = startpos,
-		endpos = endpos,
-		filter = self,
-		mins = self:OBBMins(),
-		maxs = self:OBBMaxs()
-	})
-	local tr_hitpos = tr.HitPos
-	local dist_selfhit = startpos:Distance(tr_hitpos)
-	if Debug == true then util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,tr_hitpos,false,self:EntIndex(),0) end //vortigaunt_beam
-	if dist_selfhit <= 16 && tr.HitWorld == true then
-		if Debug == true then print("AA: Forward Blocked! [CHASE]") end
-		vel_for = 1
-		//vel_for = -200
-		//vel_stop = true
-	end
-	local enepos = (Ent:GetPos() + Ent:OBBCenter()) + Ent:GetForward()*vAd_PosForward + Ent:GetUp()*vAd_PosUp + Ent:GetRight()*vAd_PosRight
-	if self.MovementType == VJ_MOVETYPE_AQUATIC && Ent:WaterLevel() < 3 then
-		enepos = Ent:GetPos() + Ent:GetForward()*vAd_PosForward + Ent:GetUp()*vAd_PosUp + Ent:GetRight()*vAd_PosRight
-	end
-	
-	-- X Calculations
-		-- Coming soon!
-	
-	-- Z Calculations
-	local vel_up = MoveSpeed
-	local dist_selfhit_z = enepos.z - startpos.z -- Get the distance between the hit position and the start position
-	if dist_selfhit_z > 0 then -- Yete 0-en ver e, ere vor 20-en minchev sahmani tive hasni
-		if Debug == true then print("AA: GOING UP [CHASE]") end
-		vel_up = math.Clamp(dist_selfhit_z, 20, MoveSpeed)
-	elseif dist_selfhit_z < 0 then -- Yete 0-en var e, ere vor nevaz 20-en minchev nevaz sahmani tive hasni
-		if Debug == true then print("AA: GOING DOWN [CHASE]") end
-		vel_up = -math.Clamp(math.abs(dist_selfhit_z), 20, MoveSpeed)
-	else
-		vel_up = 0
-	end
-	
-	if dist_selfhit < 100 then -- Yete 100-en var e tive, esel e vor modig e, ere vor gamatsna
-		MoveSpeed = math.Clamp(dist_selfhit, 100, MoveSpeed)
-	end
-	
-	-- Deprecated z-calculation code
-	/*
-	local getenemyz = "None"
-	local z_self = (self:GetPos()+self:OBBCenter()).z
-	local tr_up_startpos = self:GetPos()+self:OBBCenter()
-	//local tr_up = util.TraceLine({start = tr_up_startpos,endpos = self:GetPos()+self:OBBCenter()+self:GetUp()*300,filter = self})
-	local tr_down_startpos = self:GetPos()+self:OBBCenter()
-	local tr_down = util.TraceLine({start = tr_up_startpos,endpos = self:GetPos()+self:OBBCenter()+self:GetUp()*-300,filter = self})
-	//print("UP - ",tr_up_startpos:Distance(tr_up.HitPos))*/
-	/*if enepos.z >= z_self then
-		if math.abs(enepos.z - z_self) >= 10 then
-			if Debug == true then print("AA: UP [CHASE]") end
-			getenemyz = "Up"
-			//vel_up = 100
-		end
-	elseif enepos.z <= z_self then
-		if math.abs(z_self - enepos.z) >= 10 then
-			if Debug == true then print("AA: DOWN [CHASE]") end
-			getenemyz = "Down"
-			//vel_up = -MoveSpeed
-		end
-	end*/
-	/*if getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
-		if Debug == true then print("AA: GOING UP [CHASE]") end
-		vel_up = MoveSpeed //100
-	elseif getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
-		if Debug == true then print("AA: GOING DOWN [CHASE]") end
-		vel_up = -MoveSpeed //-100
-	end
-	*/
-	
-	-- Other old code
-	/*if tr_up_startpos:Distance(tr_up.HitPos) <= 100 && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
-		print("DOWN - ",tr_up_startpos:Distance(tr_up.HitPos))
-		vel_up = -100
-	end*/
-
-	-- Set the velocity
-	if vel_stop == false then
-		//local myvel = self:GetVelocity()
-		//local enevel = Ent:GetVelocity()
-		local vel_set = ((enepos) - (self:GetPos() + self:OBBCenter())):GetNormal()*MoveSpeed + self:GetUp()*vel_up + self:GetForward()*vel_for
-		//local vel_set_yaw = vel_set:Angle().y
-		self.CurrentTurningAngle = self:VJ_ReturnAngle(self:VJ_ReturnAngle((vel_set):Angle()))
-		//self:SetAngles(self:VJ_ReturnAngle((vel_set):Angle()))
-		self:SetLocalVelocity(vel_set)
-		local vel_len = CurTime() + (tr.HitPos:Distance(startpos) / vel_set:Length())
-		self.AA_MoveLength_Wander = 0
-		if vel_len == vel_len then -- Check for NaN
-			self.AA_MoveLength_Chase = vel_len
-			self.NextIdleTime = vel_len
-		end
-		if Debug == true then ParticleEffect("vj_impact1_centaurspit", enepos, Angle(0,0,0), self) end
-	else
-		self:AAMove_Stop()
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AAMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
-	if self.Dead == true or (self.NextChaseTime > CurTime()) or !IsValid(self:GetEnemy()) then return end
-	local ShouldPlayAnim = ShouldPlayAnim or false
-	local UseCalmVariables = UseCalmVariables or false
-	local Debug = self.AA_EnableDebug
-	local MoveSpeed = self.Aerial_FlyingSpeed_Alerted
-	if self.MovementType == VJ_MOVETYPE_AQUATIC then
-		if Debug == true then
-			print("--------")
-			print("ME WL: "..self:WaterLevel())
-			print("ENEMY WL: "..self:GetEnemy():WaterLevel())
-		end
-		-- Yete chouri e YEV leman marmine chourin mech-e che, ere vor gena yev kharen kal e
-		if self:WaterLevel() <= 2 && self:GetVelocity():Length() > 0 then return end
-		if self:WaterLevel() <= 1 && self:GetVelocity():Length() > 0 then self:AAMove_Wander(true,true) return end
-		if self:GetEnemy():WaterLevel() == 0 then self:DoIdleAnimation(1) return end -- Yete teshnamin chouren tours e, getsour
-		if self:GetEnemy():WaterLevel() <= 1 then -- Yete 0-en ver e, ere vor nayi yete gerna teshanmi-in gerna hasnil
-			local trene = util.TraceLine({
-				start = self:GetEnemy():GetPos() + self:OBBCenter(),
-				endpos = (self:GetEnemy():GetPos() + self:OBBCenter()) + self:GetEnemy():GetUp()*-20,
-				filter = self,
-				mins = self:OBBMins(),
-				maxs = self:OBBMaxs()
-			})
-			//PrintTable(trene)
-			//VJ_CreateTestObject(trene.HitPos,self:GetAngles(),Color(0,255,0),5)
-			if trene.Hit == true then return end
-		end
-		MoveSpeed = self.Aquatic_SwimmingSpeed_Alerted
-	end
-	
-	if UseCalmVariables == true then
-		if self.MovementType == VJ_MOVETYPE_AQUATIC then
-			MoveSpeed = self.Aquatic_SwimmingSpeed_Calm
-		else
-			MoveSpeed = self.Aerial_FlyingSpeed_Calm
-		end
-	end
-	self:FaceCertainEntity(self:GetEnemy(),true)
-
-	if ShouldPlayAnim == true && self.NextChaseTime < CurTime() then
-		self.AA_CanPlayMoveAnimation = true
-		if UseCalmVariables == true then
-			self.AA_CurrentMoveAnimationType = "Calm"
-		else
-			self.AA_CurrentMoveAnimationType = "Alert"
-		end
-	else
-		self.AA_CanPlayMoveAnimation = false
-	end
-
-	-- Main Calculations
-	local vel_for = 1
-	local vel_stop = false
-	local nearpos = self:VJ_GetNearestPointToEntity(self:GetEnemy())
-	local startpos = nearpos.MyPosition // self:GetPos()
-	local endpos = nearpos.EnemyPosition // self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter()
-	local tr = util.TraceHull({
-		start = startpos,
-		endpos = endpos,
-		filter = self,
-		mins = self:OBBMins(),
-		maxs = self:OBBMaxs()
-	})
-	local tr_hitpos = tr.HitPos
-	local dist_selfhit = startpos:Distance(tr_hitpos)
-	if Debug == true then util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,tr_hitpos,false,self:EntIndex(),0) end //vortigaunt_beam
-	if dist_selfhit <= 16 && tr.HitWorld == true then
-		if Debug == true then print("AA: Forward Blocked! [CHASE]") end
-		vel_for = 1
-		//vel_for = -200
-		//vel_stop = true
-	end
-	local enepos = self:GetEnemy():GetPos()+self:GetEnemy():OBBCenter()
-	if self.MovementType == VJ_MOVETYPE_AQUATIC && self:GetEnemy():WaterLevel() < 3 then
-		enepos = self:GetEnemy():GetPos()
-	end
-	
-	-- X Calculations
-		-- Coming soon!
-	
-	-- Z Calculations
-	local vel_up = MoveSpeed
-	local dist_selfhit_z = enepos.z - startpos.z -- Get the distance between the hit position and the start position
-	if dist_selfhit_z > 0 then -- Yete 0-en ver e, ere vor 20-en minchev sahmani tive hasni
-		if Debug == true then print("AA: GOING UP [CHASE]") end
-		vel_up = math.Clamp(dist_selfhit_z, 20, MoveSpeed)
-	elseif dist_selfhit_z < 0 then -- Yete 0-en var e, ere vor nevaz 20-en minchev nevaz sahmani tive hasni
-		if Debug == true then print("AA: GOING DOWN [CHASE]") end
-		vel_up = -math.Clamp(math.abs(dist_selfhit_z), 20, MoveSpeed)
-	else
-		vel_up = 0
-	end
-	
-	if dist_selfhit < 100 then -- Yete 100-en var e tive, esel e vor modig e, ere vor gamatsna
-		MoveSpeed = math.Clamp(dist_selfhit, 100, MoveSpeed)
-	end
-	
-	-- Deprecated z-calculation code
-	/*
-	local getenemyz = "None"
-	local z_self = (self:GetPos()+self:OBBCenter()).z
-	local tr_up_startpos = self:GetPos()+self:OBBCenter()
-	//local tr_up = util.TraceLine({start = tr_up_startpos,endpos = self:GetPos()+self:OBBCenter()+self:GetUp()*300,filter = self})
-	local tr_down_startpos = self:GetPos()+self:OBBCenter()
-	local tr_down = util.TraceLine({start = tr_up_startpos,endpos = self:GetPos()+self:OBBCenter()+self:GetUp()*-300,filter = self})
-	//print("UP - ",tr_up_startpos:Distance(tr_up.HitPos))*/
-	/*if enepos.z >= z_self then
-		if math.abs(enepos.z - z_self) >= 10 then
-			if Debug == true then print("AA: UP [CHASE]") end
-			getenemyz = "Up"
-			//vel_up = 100
-		end
-	elseif enepos.z <= z_self then
-		if math.abs(z_self - enepos.z) >= 10 then
-			if Debug == true then print("AA: DOWN [CHASE]") end
-			getenemyz = "Down"
-			//vel_up = -MoveSpeed
-		end
-	end*/
-	/*if getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
-		if Debug == true then print("AA: GOING UP [CHASE]") end
-		vel_up = MoveSpeed //100
-	elseif getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
-		if Debug == true then print("AA: GOING DOWN [CHASE]") end
-		vel_up = -MoveSpeed //-100
-	end
-	*/
-	
-	-- Other old code
-	/*if tr_up_startpos:Distance(tr_up.HitPos) <= 100 && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
-		print("DOWN - ",tr_up_startpos:Distance(tr_up.HitPos))
-		vel_up = -100
-	end*/
-	
-	-- Final velocity
-	if vel_stop == false then
-		self.CurrentTurningAngle = false
-		local vel_set = ((enepos) - (self:GetPos() + self:OBBCenter())):GetNormal()*MoveSpeed + self:GetUp()*vel_up + self:GetForward()*vel_for
-		//local vel_set_yaw = vel_set:Angle().y
-		self:SetLocalVelocity(vel_set)
-		local vel_len = CurTime() + (dist_selfhit / vel_set:Length())
-		self.AA_MoveLength_Wander = 0
-		if vel_len == vel_len then -- Check for NaN
-			self.AA_MoveLength_Chase = vel_len
-			self.NextIdleTime = vel_len
-		end
-		if Debug == true then ParticleEffect("vj_impact1_centaurspit", enepos, Angle(0,0,0), self) end
-	else
-		self:AAMove_Stop()
-	end
-	//self.NextChaseTime = CurTime() + 0.1
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
@@ -2174,117 +1755,100 @@ function ENT:FollowPlayerCode(key,activator,caller,data)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoMedicCode_Reset()
+	self:CustomOnMedic_OnReset()
 	if IsValid(self.Medic_CurrentEntToHeal) then self.Medic_CurrentEntToHeal.AlreadyBeingHealedByMedic = false end
 	if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
+	self.Medic_NextHealT = CurTime() + math.Rand(self.Medic_NextHealTime1, self.Medic_NextHealTime2)
 	self.Medic_IsHealingAlly = false
 	self.AlreadyDoneMedicThinkCode = false
 	self.Medic_CurrentEntToHeal = NULL
-	self.DisableWandering = self.Medic_WanderValue
-	self.DisableChasingEnemy = self.Medic_ChaseValue
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoMedicCode_FindAllies()
-	-- for k,v in ipairs(player.GetAll()) do v.AlreadyBeingHealedByMedic = false end
-	if self.IsMedicSNPC == false or self.Medic_IsHealingAlly == true or CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled == true then return false end
-	local findallies = ents.FindInSphere(self:GetPos(),self.Medic_CheckDistance)
-	for k,v in ipairs(findallies) do
-		if !v:IsNPC() && !v:IsPlayer() then continue end
-		if v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic == false && (!v.IsVJBaseSNPC_Tank) && v:Health() <= v:GetMaxHealth() * 0.75 && ((v.IsVJBaseSNPC == true && v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0)) then
-			if /*self:Disposition(v) == D_LI &&*/ self:DoRelationshipCheck(v) == false then
-				self.Medic_NextHealT = CurTime() + math.Rand(self.Medic_NextHealTime1,self.Medic_NextHealTime2)
-				self.NextIdleTime = CurTime() + 5
-				self.NextChaseTime = CurTime() + 5
-				self.Medic_WanderValue = self.DisableWandering
-				self.Medic_ChaseValue = self.DisableChasingEnemy
-				self.DisableWandering = true
-				self.DisableChasingEnemy = true
-				self.Medic_CurrentEntToHeal = v
-				self.Medic_IsHealingAlly = true
-				self.AlreadyDoneMedicThinkCode = false
-				v.AlreadyBeingHealedByMedic = true
-				//self:SelectSchedule()
-				//self:VJ_SetSchedule(SCHED_IDLE_STAND)
-				self:SelectSchedule()
-				self:StopMoving()
-				self:StopMoving()
-				self:SetTarget(v)
-				self:VJ_TASK_GOTO_TARGET()
-			return true
+function ENT:DoMedicCode()
+	if self.IsMedicSNPC == false then return end
+	if self.Medic_IsHealingAlly == false then
+		if CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled == true then return end
+		for k,v in ipairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
+			if v.IsVJBaseSNPC != true && !v:IsPlayer() then continue end -- If it's not a VJ Base SNPC or a player, then move on
+			if v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic != true && (!v.IsVJBaseSNPC_Tank) && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0)) then
+				if self:DoRelationshipCheck(v) == false then -- Make sure it's an ally
+					self.Medic_CurrentEntToHeal = v
+					self.Medic_IsHealingAlly = true
+					self.AlreadyDoneMedicThinkCode = false
+					v.AlreadyBeingHealedByMedic = true
+					self:StopMoving()
+					self:SetTarget(v)
+					self:VJ_TASK_GOTO_TARGET()
+					return
+				end
 			end
 		end
-	end
-	return false
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoMedicCode_HealAlly()
-	if self.IsMedicSNPC == true && self.Medic_IsHealingAlly == true && self.AlreadyDoneMedicThinkCode == false then
-		if !IsValid(self.Medic_CurrentEntToHeal) or VJ_IsAlive(self.Medic_CurrentEntToHeal) != true then self:DoMedicCode_Reset() return false end
-		//print(self.FollowPlayer_Entity)
-		if IsValid(self.Medic_CurrentEntToHeal) && VJ_IsAlive(self.Medic_CurrentEntToHeal) == true then
-			if self.Medic_CurrentEntToHeal:Health() > self.Medic_CurrentEntToHeal:GetMaxHealth() * 0.75 then self:DoMedicCode_Reset() return false end
-			if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then
-				self.AlreadyDoneMedicThinkCode = true
-				self:CustomOnMedic_BeforeHeal()
-				self:PlaySoundSystem("MedicBeforeHeal")
-				if self.Medic_SpawnPropOnHeal == true && self:LookupAttachment(self.Medic_SpawnPropOnHealAttachment) != 0 then
-					self.Medic_SpawnedProp = ents.Create("prop_physics")
-					self.Medic_SpawnedProp:SetModel(self.Medic_SpawnPropOnHealModel)
-					self.Medic_SpawnedProp:SetLocalPos(self:GetPos())
-					self.Medic_SpawnedProp:SetOwner(self)
-					self.Medic_SpawnedProp:SetParent(self)
-					self.Medic_SpawnedProp:Fire("SetParentAttachment",self.Medic_SpawnPropOnHealAttachment)
-					self.Medic_SpawnedProp:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
-					self.Medic_SpawnedProp:Spawn()
-					self.Medic_SpawnedProp:Activate()
-					self.Medic_SpawnedProp:SetSolid(SOLID_NONE)
-					//self.Medic_SpawnedProp:AddEffects(EF_BONEMERGE)
-					self.Medic_SpawnedProp:SetRenderMode(RENDERMODE_TRANSALPHA)
-					self:DeleteOnRemove(self.Medic_SpawnedProp)
-				end
-				local anim = VJ_PICK(self.AnimTbl_Medic_GiveHealth)
-				local dontdoturn = false
-				self:FaceCertainEntity(self.Medic_CurrentEntToHeal,false)
-				if self.Medic_DisableAnimation != true then
-					self:VJ_ACT_PLAYACTIVITY(anim,true,false,false)
-				end
-				if self.Medic_CurrentEntToHeal.MovementType == VJ_MOVETYPE_STATIONARY && self.Medic_CurrentEntToHeal.CanTurnWhileStationary == true then dontdoturn = true end
-				if !self.Medic_CurrentEntToHeal:IsPlayer() && dontdoturn == false then
-					self.NextWanderTime = CurTime() + 2
-					self.Medic_CurrentEntToHeal:StopMoving()
-					self.Medic_CurrentEntToHeal:SetTarget(self)
-					self.Medic_CurrentEntToHeal:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-					//self.Medic_CurrentEntToHeal:VJ_SetSchedule(SCHED_TARGET_FACE)
-				end
-				timer.Simple(self:DecideAnimationLength(anim,self.Medic_TimeUntilHeal,0),function()
-					if IsValid(self) then -- Yete NPC ter hos e...
-						if IsValid(self.Medic_CurrentEntToHeal) then -- Yete NPC vor meng bidi aghektsnenk hos e...
-							if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then
-								self:CustomOnMedic_OnHeal()
-								self:PlaySoundSystem("MedicOnHeal")
-								if self.Medic_CurrentEntToHeal:IsNPC() && self.Medic_CurrentEntToHeal.IsVJBaseSNPC == true && self.Medic_CurrentEntToHeal.IsVJBaseSNPC_Animal != true then
-									self.Medic_CurrentEntToHeal:PlaySoundSystem("MedicReceiveHeal")
-								end
-								self.Medic_CurrentEntToHeal:RemoveAllDecals()
-								local frimaxhp = self.Medic_CurrentEntToHeal:GetMaxHealth()
-								local fricurhp = self.Medic_CurrentEntToHeal:Health()
-								self.Medic_CurrentEntToHeal:SetHealth(math.Clamp(fricurhp + self.Medic_HealthAmount,fricurhp,frimaxhp))
-								self:DoMedicCode_Reset()
-							else -- Ere vor NPC yed yerta mouys NPC-en yedeven
-								self.AlreadyDoneMedicThinkCode = false
-								if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
-								self:CustomOnMedic_OnReset()
-							end
-						else -- Yete NPC vor meng bidi aghektsnenk hos che, amen inch yed normaltsoor
-							self:DoMedicCode_Reset()
-						end
-					end
-				end)
-			else -- Ere vor NPC yed yerta mouys NPC-en yedeven
-				self.NextIdleTime = CurTime() + 4
-				self.NextChaseTime = CurTime() + 4
-				self:SetTarget(self.Medic_CurrentEntToHeal)
-				self:VJ_TASK_GOTO_TARGET()
+	elseif self.AlreadyDoneMedicThinkCode == false then
+		if !IsValid(self.Medic_CurrentEntToHeal) or VJ_IsAlive(self.Medic_CurrentEntToHeal) != true or (self.Medic_CurrentEntToHeal:Health() > self.Medic_CurrentEntToHeal:GetMaxHealth() * 0.75) then self:DoMedicCode_Reset() return end
+		if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then -- Are we in healing distance?
+			self.AlreadyDoneMedicThinkCode = true
+			self:CustomOnMedic_BeforeHeal()
+			self:PlaySoundSystem("MedicBeforeHeal")
+			
+			-- Spawn the prop
+			if self.Medic_SpawnPropOnHeal == true && self:LookupAttachment(self.Medic_SpawnPropOnHealAttachment) != 0 then
+				self.Medic_SpawnedProp = ents.Create("prop_physics")
+				self.Medic_SpawnedProp:SetModel(self.Medic_SpawnPropOnHealModel)
+				self.Medic_SpawnedProp:SetLocalPos(self:GetPos())
+				self.Medic_SpawnedProp:SetOwner(self)
+				self.Medic_SpawnedProp:SetParent(self)
+				self.Medic_SpawnedProp:Fire("SetParentAttachment", self.Medic_SpawnPropOnHealAttachment)
+				self.Medic_SpawnedProp:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
+				self.Medic_SpawnedProp:Spawn()
+				self.Medic_SpawnedProp:Activate()
+				self.Medic_SpawnedProp:SetSolid(SOLID_NONE)
+				//self.Medic_SpawnedProp:AddEffects(EF_BONEMERGE)
+				self.Medic_SpawnedProp:SetRenderMode(RENDERMODE_TRANSALPHA)
+				self:DeleteOnRemove(self.Medic_SpawnedProp)
 			end
+			
+			local anim = VJ_PICK(self.AnimTbl_Medic_GiveHealth)
+			self:FaceCertainEntity(self.Medic_CurrentEntToHeal, false)
+			if self.Medic_DisableAnimation != true then
+				self:VJ_ACT_PLAYACTIVITY(anim, true, false, false)
+			end
+			
+			-- Make the ally turn and look at me
+			local noturn = (self.Medic_CurrentEntToHeal.MovementType == VJ_MOVETYPE_STATIONARY and self.Medic_CurrentEntToHeal.CanTurnWhileStationary == false) or false
+			if !self.Medic_CurrentEntToHeal:IsPlayer() && noturn == false then
+				self.NextWanderTime = CurTime() + 2
+				self.NextChaseTime = CurTime() + 2
+				self.Medic_CurrentEntToHeal:StopMoving()
+				self.Medic_CurrentEntToHeal:SetTarget(self)
+				self.Medic_CurrentEntToHeal:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+			end
+			
+			timer.Simple(self:DecideAnimationLength(anim, self.Medic_TimeUntilHeal, 0), function()
+				if IsValid(self) then
+					if !IsValid(self.Medic_CurrentEntToHeal) then self:DoMedicCode_Reset() goto reset end -- Ally doesn't exist anymore, reset
+					if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then -- Are we still in healing distance?
+						self:CustomOnMedic_OnHeal()
+						self:PlaySoundSystem("MedicOnHeal")
+						if self.Medic_CurrentEntToHeal.IsVJBaseSNPC == true && self.Medic_CurrentEntToHeal.IsVJBaseSNPC_Animal != true then
+							self.Medic_CurrentEntToHeal:PlaySoundSystem("MedicReceiveHeal")
+						end
+						self.Medic_CurrentEntToHeal:RemoveAllDecals()
+						local fricurhp = self.Medic_CurrentEntToHeal:Health()
+						self.Medic_CurrentEntToHeal:SetHealth(math.Clamp(fricurhp + self.Medic_HealthAmount, fricurhp, self.Medic_CurrentEntToHeal:GetMaxHealth()))
+						self:DoMedicCode_Reset()
+					else -- If we are no longer in healing distance, go after the ally again
+						self.AlreadyDoneMedicThinkCode = false
+						if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
+						self:CustomOnMedic_OnReset()
+					end
+					::reset::
+				end
+			end)
+		else -- If we aren't in healing distance, then go after the ally
+			self.NextIdleTime = CurTime() + 4
+			self.NextChaseTime = CurTime() + 4
+			self:SetTarget(self.Medic_CurrentEntToHeal)
+			self:VJ_TASK_GOTO_TARGET()
 		end
 	end
 end
@@ -2402,7 +1966,7 @@ function ENT:Think()
 			//print(self:GetTarget())
 			//print(self.FollowPlayer_Entity)
 			if IsValid(self.FollowPlayer_Entity) && self.FollowPlayer_Entity:Alive() && self:Disposition(self.FollowPlayer_Entity) == D_LI then 
-				if CurTime() > self.NextFollowPlayerT && self.AlreadyBeingHealedByMedic == false then
+				if CurTime() > self.NextFollowPlayerT && self.AlreadyBeingHealedByMedic != true then
 					local DistanceToPly = self:GetPos():Distance(self.FollowPlayer_Entity:GetPos())
 					local busy = self:BusyWithActivity()
 					self:SetTarget(self.FollowPlayer_Entity)
@@ -2494,8 +2058,7 @@ function ENT:Think()
 
 		if CurTime() > self.NextProcessT then
 			self:DoEntityRelationshipCheck()
-			self:DoMedicCode_FindAllies()
-			self:DoMedicCode_HealAlly()
+			self:DoMedicCode()
 			self.NextProcessT = CurTime() + self.NextProcessTime
 		end
 

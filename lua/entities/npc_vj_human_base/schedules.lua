@@ -91,10 +91,10 @@ function ENT:StartSchedule(schedule)
 	self:SetTask(schedule:GetTask(1))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-/*function ENT:DoSchedule(schedule)
-	if (self.CurrentTask) then self:RunTask(self.CurrentTask) end
-	if (self:TaskFinished()) then self:NextTask(schedule) end
-end*/
+function ENT:DoSchedule(schedule)
+	if self:TaskFinished() then self:NextTask(schedule) end
+	if self.CurrentTask then self:RunTask(self.CurrentTask) end
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ScheduleFinished(schedule)
 	schedule = schedule or self.CurrentSchedule
