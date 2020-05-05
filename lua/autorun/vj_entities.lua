@@ -320,13 +320,11 @@ end
 ------ NPC / Player Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local NPC_MetaTable = FindMetaTable("NPC")
-local Player_MetaTable = FindMetaTable("Player")
+//local Player_MetaTable = FindMetaTable("Player")
 local Entity_MetaTable = FindMetaTable("Entity")
 
 //NPC_MetaTable.VJ_NoTarget = false
 //Player_MetaTable.VJ_NoTarget = false
-NPC_MetaTable.AlreadyBeingHealedByMedic = false
-Player_MetaTable.AlreadyBeingHealedByMedic = false
 
 //NPC_MetaTable.VJ_NPC_Class = {}
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -377,15 +375,16 @@ function NPC_MetaTable:VJ_DecideSoundPitch(Pitch1, Pitch2)
 	return math.random(getpitch1,getpitch2)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:DecideAnimationLength(Anim, Value, Decrease)
+function NPC_MetaTable:DecideAnimationLength(Anim, Val, Decrease)
 	Decrease = Decrease or 0
 	if isbool(Anim) then return 0 end
 	
 	local result = 0
-	if Value == false then -- Used internally by the base, recommended to just leave it to false
+	-- Val = Used internally by the base, overrides the result and returns Val is instead
+	if Val == false then
 		result = VJ_GetSequenceDuration(self, Anim) - Decrease
-	elseif isnumber(Value) then
-		result = Value
+	elseif isnumber(Val) then
+		result = Val
 	end
 	return result / self:GetPlaybackRate()
 end
