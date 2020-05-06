@@ -916,8 +916,6 @@ ENT.Flinching = false
 ENT.vACT_StopAttacks = false
 ENT.FollowingPlayer = false
 ENT.FollowPlayer_GoingAfter = false
-ENT.FollowPlayer_WanderValue = false
-ENT.FollowPlayer_ChaseValue = false
 ENT.ResetedEnemy = true
 ENT.VJ_IsBeingControlled = false
 ENT.VJ_PlayingSequence = false
@@ -1568,27 +1566,29 @@ function ENT:VJ_TASK_IDLE_STAND()
 	//self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),finaltbl)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoIdleAnimation(RestrictNumber,OverrideWander)
-	if /*self.VJ_PlayingSequence == true or*/ self.VJ_IsBeingControlled == true /*or self.FollowingPlayer == true*/ or self.PlayingAttackAnimation == true or self.Dead == true or (self.NextIdleTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
-	-- 0 = Random | 1 = Wander | 2 = Idle Stand /\ OverrideWander = Wander no matter what
-	RestrictNumber = RestrictNumber or 0
-	OverrideWander = OverrideWander or false
-	if self.IdleAlwaysWander == true then RestrictNumber = 1 end
-	if (self.MovementType == VJ_MOVETYPE_STATIONARY) or (self.IsVJBaseSNPC_Tank == true) or (self.LastHiddenZone_CanWander == false) or (self.NextWanderTime > CurTime()) or (self.FollowingPlayer == true) or (self.Medic_IsHealingAlly == true) then RestrictNumber = 2 end
-	if OverrideWander == false && (self.DisableWandering == true or self.IsGuard == true) && (RestrictNumber == 1 or RestrictNumber == 0) then
-		RestrictNumber = 2
+function ENT:DoIdleAnimation(IdleType)
+	if self.Dead == true or self.VJ_IsBeingControlled == true or self.PlayingAttackAnimation == true or (self.NextIdleTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
+	IdleType = IdleType or 0 -- 0 = Random | 1 = Wander | 2 = Idle Stand
+	
+	if self.IdleAlwaysWander == true then IdleType = 1 end
+	
+	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
+	if self.DisableWandering == true or self.IsGuard == true or self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsVJBaseSNPC_Tank == true or self.LastHiddenZone_CanWander == false or self.NextWanderTime > CurTime() or self.FollowingPlayer == true or self.Medic_IsHealingAlly == true then
+		IdleType = 2
 	end
-	if RestrictNumber == 0 then -- kharen: gam ge bidedi, gam ge gena
+	
+	if IdleType == 0 then -- Random (Wander & Idle Stand)
 		if math.random(1,3) == 1 then
-			/*self:VJ_SetSchedule(VJ_PICK(self.IdleSchedule_Wander))*/ self:VJ_TASK_IDLE_WANDER() else self:VJ_TASK_IDLE_STAND()
+			self:VJ_TASK_IDLE_WANDER() else self:VJ_TASK_IDLE_STAND()
 		end
-	elseif RestrictNumber == 1 then -- bideder
-		//self:VJ_SetSchedule(VJ_PICK(self.IdleSchedule_Wander))
+	elseif IdleType == 1 then -- Wander
 		self:VJ_TASK_IDLE_WANDER()
-	elseif RestrictNumber == 2 then -- deghed getser
+	elseif IdleType == 2 then -- Idle Stand
 		self:VJ_TASK_IDLE_STAND()
+		return -- Don't set self.NextWanderTime below
 	end
-	if RestrictNumber != 2 && self.AA_ConstantlyMove == false then
+	
+	if self.AA_ConstantlyMove != true then
 		self.NextWanderTime = CurTime() + math.Rand(3,6) // self.NextIdleTime
 	end
 end
@@ -1640,24 +1640,18 @@ end
 function ENT:Touch(entity)
 	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printontouch") == 1 then print(self:GetClass().." Has Touched "..entity:GetClass()) end end
 	self:CustomOnTouch(entity)
-	if GetConVarNumber("ai_disabled") == 1 then return end
+	if GetConVarNumber("ai_disabled") == 1 or self.VJ_IsBeingControlled == true then return end
+	
+	-- If it's a passive SNPC...
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
-		if self.Passive_RunOnTouch == true && self.VJ_IsBeingControlled == false && (entity.Behavior != VJ_BEHAVIOR_PASSIVE or entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) && CurTime() > self.Passive_NextRunOnTouchT then
-			if entity:IsNPC() or entity:IsPlayer() then
-				if self:DoRelationshipCheck(entity) then
-					self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) end)
-					self:PlaySoundSystem("Alert")
-				end
-			end
+		if self.Passive_RunOnTouch == true && CurTime() > self.Passive_NextRunOnTouchT && entity.Behavior != VJ_BEHAVIOR_PASSIVE && entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:DoRelationshipCheck(entity) != false && (entity:IsNPC() or entity:IsPlayer()) then
+			self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
+			self:PlaySoundSystem("Alert")
 			self.Passive_NextRunOnTouchT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
 		end
-	elseif /*self.Alerted == false && */ self.DisableTouchFindEnemy == false && entity:IsNPC() or entity:IsPlayer() && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.VJ_IsBeingControlled == false then
-		if self:DoRelationshipCheck(entity) == true then
-			//self:FaceCertainEntity(entity)
-			self:SetTarget(entity)
-			self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-			//self:VJ_SetSchedule(SCHED_TARGET_FACE)
-		end
+	elseif self.DisableTouchFindEnemy == false && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && (entity:IsNPC() or entity:IsPlayer()) && self:DoRelationshipCheck(entity) != false then
+		self:SetTarget(entity)
+		self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1688,67 +1682,65 @@ function ENT:OnCondition(iCondition)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:FollowPlayerReset()
-	if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then self.FollowPlayer_Entity:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.") end
+	if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
+		self.FollowPlayer_Entity:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.")
+	end
 	self.FollowingPlayer = false
 	self.FollowPlayer_GoingAfter = false
 	self.FollowPlayer_Entity = NULL
-	self.DisableWandering = self.FollowPlayer_WanderValue
-	self.DisableChasingEnemy = self.FollowPlayer_ChaseValue
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:FollowPlayerCode(key,activator,caller,data)
+function ENT:FollowPlayerCode(key, activator, caller, data)
 	if self.FollowPlayer == false or GetConVarNumber("ai_disabled") == 1 or GetConVarNumber("ai_ignoreplayers") == 1 then return end
-	if key == self.FollowPlayerKey && activator:IsValid() && activator:Alive() && activator:IsPlayer() then
-		if self:Disposition(activator) == D_HT then
+	
+	if key == self.FollowPlayerKey && activator:IsValid() && activator:IsPlayer() && activator:Alive() then
+		if self:Disposition(activator) == D_HT then -- If it's an enemy
 			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
-				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." doesn't like you, therefore it won't follow you.")
+				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is hostile to you, therefore it won't follow you.")
 			end
 			return
-		elseif self:Disposition(activator) == D_NU then
+		elseif self:Disposition(activator) == D_NU then -- If it's neutral
 			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
 				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is neutral to you, therefore it won't follow you.")
 			end
 			return
+		elseif self.FollowingPlayer == true && activator != self.FollowPlayer_Entity then -- Already following a player
+			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
+				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is already following another player, therefore it won't follow you.")
+			end
+			return
 		end
-		self:CustomOnFollowPlayer(key,activator,caller,data)
+		
+		self:CustomOnFollowPlayer(key, activator, caller, data)
 		if self.MovementType == VJ_MOVETYPE_STATIONARY or self.MovementType == VJ_MOVETYPE_PHYSICS then
 			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
 				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is currently stationary, therefore it's unable follow you.")
 			end
 			return
 		end
+		
 		if self.FollowingPlayer == false then
-			//self:FaceCertainEntity(activator,false)
 			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
-			activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is now following you.") end
-			self.FollowPlayer_WanderValue = self.DisableWandering
-			self.FollowPlayer_ChaseValue = self.DisableChasingEnemy
-			self.DisableWandering = true
-			self.DisableChasingEnemy = true
-			self:SetTarget(activator)
-			self.FollowPlayer_Entity = activator
-			if self:BusyWithActivity() == false then
-				self:StopMoving()
-				self:VJ_TASK_FACE_X("TASK_FACE_TARGET",function(x) x.RunCode_OnFinish = function()
-					local DistanceToPly = self:GetPos():Distance(self.FollowPlayer_Entity:GetPos())
-					local movetype = "TASK_RUN_PATH"
-					if DistanceToPly < 220 then
-						movetype = "TASK_WALK_PATH"
-					end
-					self:VJ_TASK_GOTO_TARGET(movetype,function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end) 
-				end end)
+				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is now following you.")
 			end
-			//timer.Simple(0.15,function() if self:IsValid() && self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_TARGET_FACE) end end)
-			//if self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_IDLE_STAND) end
-			//timer.Simple(0.1,function() if self:IsValid() then self:VJ_TASK_GOTO_TARGET() end end)
-			self:PlaySoundSystem("FollowPlayer")
+			self.FollowPlayer_Entity = activator
 			self.FollowingPlayer = true
-		else
+			self:PlaySoundSystem("FollowPlayer")
+			self:SetTarget(activator)
+			if self:BusyWithActivity() == false then -- Face the player and then walk or run to it
+				self:StopMoving()
+				self:VJ_TASK_FACE_X("TASK_FACE_TARGET", function(x)
+					x.RunCode_OnFinish = function()
+						local movet = ((self:GetPos():Distance(self.FollowPlayer_Entity:GetPos()) < 220) and "TASK_WALK_PATH") or "TASK_RUN_PATH"
+						self:VJ_TASK_GOTO_TARGET(movet, function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end) 
+					end
+				end)
+			end
+		else -- Unfollow the player
 			self:PlaySoundSystem("UnFollowPlayer")
 			if self:BusyWithActivity() == false then
 				self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 			end
-			//if self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_TARGET_FACE) end
 			self:FollowPlayerReset()
 		end
 	end
