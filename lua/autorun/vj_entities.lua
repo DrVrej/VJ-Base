@@ -163,13 +163,13 @@ function VJ_CreateSound(argent,sound,soundlevel,soundpitch,stoplatestsound,sound
 		if #sound < 1 then return end -- If the table is empty then end it
 		sound = sound[math.random(1,#sound)]
 	end
-	if stoplatestsound == true then -- If stopsounds is true, then the current sound
+	/*if stoplatestsound == true then -- If stopsounds is true, then the current sound
 		//if argent.CurrentSound then argent.CurrentSound:Stop() end
 		if soundid then
 			soundid:Stop()
 			soundid = nil
 		end
-	end
+	end*/
 	//print(sound)
 	soundid = CreateSound(argent, sound)
 	soundid:SetSoundLevel(soundlevel or 75)
@@ -265,7 +265,7 @@ function VJ_IsCurrentAnimation(argent, actname)
 		actname = {actname}
 	end
 
-	for k,v in ipairs(actname) do
+	for _,v in ipairs(actname) do
 		if isnumber(v) && v != -1 then v = argent:GetSequenceName(argent:SelectWeightedSequence(v)) end -- Translate activity to sequence
 		if v == argent:GetSequenceName(argent:GetSequence()) then
 			return true
@@ -487,8 +487,8 @@ function NPC_MetaTable:FaceCertainEntity(argent,OnlyIfSeenEnemy,FaceEnemyTime)
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_GetNearestPointToVector(pos,SameZ)
-	local SameZ = SameZ or false -- Should the Z of the pos be the same as the NPC's?
+function NPC_MetaTable:VJ_GetNearestPointToVector(pos, SameZ)
+	SameZ = SameZ or false -- Should the Z of the pos be the same as the NPC's?
 	local NearestPositions = {MyPosition=Vector(0,0,0), PointPosition=Vector(0,0,0)}
 	local Pos_Point, Pos_Self = pos, self:NearestPoint(pos +self:OBBCenter())
 	Pos_Point.z, Pos_Self.z = pos.z, self:GetPos().z
@@ -498,7 +498,7 @@ function NPC_MetaTable:VJ_GetNearestPointToVector(pos,SameZ)
 	return NearestPositions
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_GetNearestPointToEntity(argent,SameZ)
+function NPC_MetaTable:VJ_GetNearestPointToEntity(argent, SameZ)
 	if !IsValid(argent) then return end
 	SameZ = SameZ or false -- Should the Z of the pos be the same as the NPC's?
 	local NearestPositions = {MyPosition=Vector(0,0,0), EnemyPosition=Vector(0,0,0)}
@@ -554,7 +554,7 @@ function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,Tbl_Fe
 		timer.Simple(3,function() if IsValid(cube) then cube:Remove() end end)
 	end
 
-	for k,v in ipairs(ents.FindInSphere(tr.HitPos,5)) do
+	for _,v in ipairs(ents.FindInSphere(tr.HitPos,5)) do
 		//if vTbl_SpawnTestCube == true then print(v) end
 		if v == self:GetEnemy() or self:Disposition(v) == 1 or self:Disposition(v) == 2 then
 			hitent = true
@@ -573,7 +573,7 @@ function NPC_MetaTable:VJ_CheckAllFourSides(CheckDistance)
 	CheckDistance = CheckDistance or 200
 	local result = {Forward=false, Backward=false, Right=false, Left=false}
 	local i = 0
-	for k, v in ipairs({self:GetForward(), -self:GetForward(), self:GetRight(), -self:GetRight()}) do
+	for _, v in ipairs({self:GetForward(), -self:GetForward(), self:GetRight(), -self:GetRight()}) do
 		i = i + 1
 		tr = util.TraceLine({
 			start = self:GetPos() + self:OBBCenter(),
@@ -590,36 +590,28 @@ function NPC_MetaTable:VJ_CheckAllFourSides(CheckDistance)
 	return result
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_DoSetEnemy(argent,ShouldStopActs,DoSmallWhenActiveEnemy)
-	if !IsValid(argent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then return end
-	if argent:Health() <= 0 then return end
-	if argent:IsPlayer() && (!argent:Alive() or GetConVarNumber("ai_ignoreplayers") == 1) then return end
+function NPC_MetaTable:VJ_DoSetEnemy(argent, ShouldStopActs, DoSmallWhenActiveEnemy)
+	if !IsValid(argent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or argent:Health() <= 0 or (argent:IsPlayer() && (!argent:Alive() or GetConVarNumber("ai_ignoreplayers") == 1)) then return end
 	DoSmallWhenActiveEnemy = DoSmallWhenActiveEnemy or false
 	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == argent then self:DoMedicCode_Reset() end
 	if DoSmallWhenActiveEnemy == true && IsValid(self:GetEnemy()) then
-		self:AddEntityRelationship(argent,D_HT,99)
+		self:AddEntityRelationship(argent, D_HT, 99)
 		//self:SetEnemy(argent)
-		self:UpdateEnemyMemory(argent,argent:GetPos())
+		self:UpdateEnemyMemory(argent, argent:GetPos())
 		//if self.MovementType == VJ_MOVETYPE_STATIONARY or self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 			//self:SetEnemy(argent)
 		//end
 	else
 		self.NextResetEnemyT = CurTime() + 0.5 //2
-		self:AddEntityRelationship(argent,D_HT,99)
+		self:AddEntityRelationship(argent, D_HT, 99)
 		self:SetEnemy(argent)
-		self:UpdateEnemyMemory(argent,argent:GetPos())
+		self:UpdateEnemyMemory(argent, argent:GetPos())
 		if ShouldStopActs == true then
 			self:ClearGoal()
 			self:StopMoving()
 		end
 		if self.Alerted == false then
 			self:DoAlert(argent)
-			/*self.NextChaseTime = self.NextChaseTime + self.NextChaseTimeOnSetEnemy
-			timer.Simple(self.NextChaseTimeOnSetEnemy,function()
-				if IsValid(self) then
-					self:DoChaseAnimation()
-				end
-			end)*/
 		end
 	end
 end
@@ -765,7 +757,7 @@ end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerSelectSpawn", "VJ_PlayerSelectSpawn", function(ply)
 	local points = {}
-	for k,v in ipairs(ents.FindByClass("sent_vj_ply_spawnpoint")) do
+	for _,v in ipairs(ents.FindByClass("sent_vj_ply_spawnpoint")) do
 		if (v.Active == true) then
 			points[#points + 1] = v
 		end
@@ -806,7 +798,7 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(entity)
-	if (CLIENT) or !entity:IsNPC() then return end
+	if CLIENT or !entity:IsNPC() then return end
 	if (entity:IsNPC() && entity:GetClass() != "npc_grenade_frag" && entity:GetClass() != "bullseye_strider_focus" && entity:GetClass() != "npc_bullseye" && entity:GetClass() != "npc_enemyfinder" && entity:GetClass() != "hornet" && (!entity.IsVJBaseSNPC_Animal)) or (entity:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0) then
 		timer.Simple(0.1,function()
 			if IsValid(entity) then
@@ -852,7 +844,7 @@ hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 	if IsValid(ent) then
 		//PrintTable(data)
 		-- Investigate System
-		if (SERVER) && ent:IsPlayer() && data.SoundLevel >= 75 then
+		if SERVER && ent:IsPlayer() && data.SoundLevel >= 75 then
 			//print("---------------------------")
 			//PrintTable(data)
 			if string.StartWith(data.OriginalSoundName, "player/footsteps") && (ent:Crouching() or ent:KeyDown(IN_WALK)) then
@@ -861,15 +853,13 @@ hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 				ent.VJ_LastInvestigateSd = CurTime()
 				local volex = 0
 				if data.Volume <= 0.4 then volex = 15 end
-				ent.VJ_LastInvestigateSdLevel = (data.SoundLevel * (data.Volume)) + volex
+				ent.VJ_LastInvestigateSdLevel = (data.SoundLevel * data.Volume) + volex
 			end
 		end
 		
 		-- Disable the built-in shitty footsteps sounds for the human models
-		if ent:IsNPC() && ent.IsVJBaseSNPC == true then
-			if string.EndsWith(data.OriginalSoundName,"stepleft") or string.EndsWith(data.OriginalSoundName,"stepright") then
-				return false
-			end
+		if ent:IsNPC() && ent.IsVJBaseSNPC == true && (string.EndsWith(data.OriginalSoundName,"stepleft") or string.EndsWith(data.OriginalSoundName,"stepright")) then
+			return false
 		end
 	end
 end)
@@ -968,10 +958,10 @@ end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 cvars.AddChangeCallback("ai_ignoreplayers",function(convar_name, oldValue, newValue)
 	local getall = ents.GetAll()
-	for k, v in pairs(getall) do
+	for _, v in pairs(getall) do
 		if v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
 			if v.FollowingPlayer == true then v:FollowPlayerReset() end -- Reset if it's following the player
-			for pk, pv in pairs(player.GetAll()) do
+			for _, pv in pairs(player.GetAll()) do
 				v:AddEntityRelationship(pv, 4, 10)
 				if IsValid(v:GetEnemy()) && v:GetEnemy() == pv then v:ResetEnemy() end
 				v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
@@ -989,12 +979,12 @@ if (CLIENT) then
 		local sdtbl = net.ReadTable()
 		local sdvol = net.ReadFloat()
 		local sdspeed = net.ReadFloat()
-		local sdfadet = net.ReadFloat()
+		//local sdfadet = net.ReadFloat()
 		//local entindex = ent:EntIndex()
 		//print(ent)
 		sound.PlayFile("sound/"..VJ_PICK(sdtbl),"noplay",function(soundchannel,errorID,errorName)
 			if IsValid(soundchannel) then
-				if #(VJ_CL_MUSIC_CURRENT) <= 0 then soundchannel:Play() end
+				if #VJ_CL_MUSIC_CURRENT <= 0 then soundchannel:Play() end
 				soundchannel:EnableLooping(true)
 				soundchannel:SetVolume(sdvol)
 				soundchannel:SetPlaybackRate(sdspeed)
@@ -1012,11 +1002,11 @@ if (CLIENT) then
 					table.remove(VJ_CL_MUSIC_CURRENT,k)
 				end
 			end
-			if #(VJ_CL_MUSIC_CURRENT) <= 0 then
+			if #VJ_CL_MUSIC_CURRENT <= 0 then
 				timer.Remove("vj_music_think")
 				VJ_CL_MUSIC_CURRENT = {}
 			else
-				for k,v in pairs(VJ_CL_MUSIC_CURRENT) do
+				for _,v in pairs(VJ_CL_MUSIC_CURRENT) do
 					if IsValid(v.npc) && IsValid(v.channel) then
 						v.channel:Play() break
 					end

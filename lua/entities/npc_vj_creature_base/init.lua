@@ -1896,19 +1896,17 @@ function ENT:Think()
 	
 	self:CustomOnThink()
 	
-	if self.Dead == false && self.HasBreathSound == true && self.HasSounds == true then
-		if CurTime() > self.NextBreathSoundT then
-			local brsd = VJ_PICK(self.SoundTbl_Breath)
-			local dur = math.Rand(self.NextSoundTime_Breath1, self.NextSoundTime_Breath2)
-			if brsd != false then
-				VJ_STOPSOUND(self.CurrentBreathSound)
-				if self.NextSoundTime_Breath_BaseDecide == true then
-					dur = SoundDuration(brsd)
-				end
-				self.CurrentBreathSound = VJ_CreateSound(self, brsd, self.BreathSoundLevel, self:VJ_DecideSoundPitch(self.BreathSoundPitch1, self.BreathSoundPitch2))
+	if self.Dead == false && self.HasBreathSound == true && self.HasSounds == true && CurTime() > self.NextBreathSoundT then
+		local brsd = VJ_PICK(self.SoundTbl_Breath)
+		local dur = math.Rand(self.NextSoundTime_Breath1, self.NextSoundTime_Breath2)
+		if brsd != false then
+			VJ_STOPSOUND(self.CurrentBreathSound)
+			if self.NextSoundTime_Breath_BaseDecide == true then
+				dur = SoundDuration(brsd)
 			end
-			self.NextBreathSoundT = CurTime() + dur
+			self.CurrentBreathSound = VJ_CreateSound(self, brsd, self.BreathSoundLevel, self:VJ_DecideSoundPitch(self.BreathSoundPitch1, self.BreathSoundPitch2))
 		end
+		self.NextBreathSoundT = CurTime() + dur
 	end
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	if GetConVarNumber("ai_disabled") == 0 then
@@ -1955,17 +1953,15 @@ function ENT:Think()
 					self:SetTarget(self.FollowPlayer_Entity)
 					if DistanceToPly > self.FollowPlayerCloseDistance then -- If the player is far then move
 						-- If we are not very far and busy with another activity (ex: attacking) then don't move to the player yet!
-						if !((busy == true and (DistanceToPly < (self.FollowPlayerCloseDistance * 4)))) then
-							if busy == false then
-								self.FollowPlayer_GoingAfter = true
-								self.FollowPlayer_DoneSelectSchedule = false
-								-- If player is close, then just walk towards instead of running
-								local movetype = (DistanceToPly < 220 and "TASK_WALK_PATH") or "TASK_RUN_PATH"
-								self:VJ_TASK_GOTO_TARGET(movetype, function(x)
-									x.CanShootWhenMoving = true
-									x.ConstantlyFaceEnemyVisible = (IsValid(self:GetActiveWeapon()) and true) or false
-								end)
-							end
+						if !(busy == true and (DistanceToPly < (self.FollowPlayerCloseDistance * 4))) && busy == false then
+							self.FollowPlayer_GoingAfter = true
+							self.FollowPlayer_DoneSelectSchedule = false
+							-- If player is close, then just walk towards it instead of running
+							local movetype = (DistanceToPly < 220 and "TASK_WALK_PATH") or "TASK_RUN_PATH"
+							self:VJ_TASK_GOTO_TARGET(movetype, function(x)
+								x.CanShootWhenMoving = true
+								x.ConstantlyFaceEnemyVisible = (IsValid(self:GetActiveWeapon()) and true) or false
+							end)
 						end
 					elseif self.FollowPlayer_DoneSelectSchedule == false then -- If it's close to the player...
 						if busy == false then -- If we aren't busy with a schedule, make it stop moving and do something
@@ -2013,11 +2009,9 @@ function ENT:Think()
 				self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1
 			end
 
-			if self.CallForHelp == true && self.Dead == false then
-				if CurTime() > self.NextCallForHelpT then
-					self:CallForHelpCode(self.CallForHelpDistance)
-					self.NextCallForHelpT = CurTime() + self.NextCallForHelpTime
-				end
+			if self.CallForHelp == true && self.Dead == false && CurTime() > self.NextCallForHelpT then
+				self:CallForHelpCode(self.CallForHelpDistance)
+				self.NextCallForHelpT = CurTime() + self.NextCallForHelpTime
 			end
 
 			if self.NoChaseAfterCertainRange == true && ((self.NoChaseAfterCertainRange_Type == "OnlyRange" && self.HasRangeAttack == true) or (self.NoChaseAfterCertainRange_Type == "Regular")) then
@@ -2082,143 +2076,134 @@ function ENT:Think()
 			end
 
 			-- Melee Attack --------------------------------------------------------------------------------------------------------------------------------------------
-			if self.HasMeleeAttack == true then
-				//print(self:NearestPoint(ene:GetPos() +self:OBBCenter()):Distance(ene:NearestPoint(self:GetPos() +ene:OBBCenter())))
-				//PrintMessage(HUD_PRINTTALK,self:VJ_GetNearestPointToEntityDistance(ene))
-				// ene:GetPos():Distance(self:GetPos())
-				if self:CanDoCertainAttack("MeleeAttack") == true then
-					self:MultipleMeleeAttacks()
-					local getproppushorattack = self:PushOrAttackPropsCode()
-					local ispropattack = false
-					local isnormalattack = false
-					local isbeingcontrolled = false
-					if self.VJ_IsBeingControlled == true then isbeingcontrolled = true end
-					if getproppushorattack == true then ispropattack = true end
-					if isbeingcontrolled == false && self.NearestPointToEnemyDistance < self.MeleeAttackDistance && ene:Visible(self) then ispropattack = false isnormalattack = true end
-					if isbeingcontrolled == true && self.VJ_TheController:KeyDown(IN_ATTACK) then ispropattack = false isnormalattack = true end
-					if (isbeingcontrolled == true && isnormalattack == true && self:CustomAttackCheck_MeleeAttack() == true) or (isbeingcontrolled == false && self:CustomAttackCheck_MeleeAttack() == true && (isnormalattack == true or (ispropattack == true && self.MeleeAttack_NoProps == false)) && (self:GetForward():Dot((ene:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius)))) then
-						self.MeleeAttacking = true
-						self.RangeAttacking = false
-						self.AlreadyDoneMeleeAttackFirstHit = false
-						self.IsAbleToMeleeAttack = false
-						self.AlreadyDoneFirstMeleeAttack = false
-						if /*self.VJ_IsBeingControlled == false &&*/ ispropattack == false then self:FaceCertainEntity(ene,true) end
-						self:CustomOnMeleeAttack_BeforeStartTimer()
-						timer.Simple(self.BeforeMeleeAttackSounds_WaitTime,function() if IsValid(self) then self:PlaySoundSystem("BeforeMeleeAttack") end end)
-						self.NextAlertSoundT = CurTime() + 0.4
-						if self.DisableMeleeAttackAnimation == false then
-							self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_MeleeAttack)
-							self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, self.MeleeAttackAnimationDecreaseLengthAmount)
-							if self.MeleeAttackAnimationAllowOtherTasks == false then
-								self.PlayingAttackAnimation = true
-								timer.Simple(self.CurrentAttackAnimationDuration,function()
-									if IsValid(self) then
-										self.PlayingAttackAnimation = false
-										//if self.TimeUntilMeleeAttackDamage == false then self:StopAttacks() end
-									end
-								end)
-							end
-							self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.MeleeAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
+			if self.HasMeleeAttack == true && self:CanDoCertainAttack("MeleeAttack") == true then
+				self:MultipleMeleeAttacks()
+				local getproppushorattack = self:PushOrAttackPropsCode()
+				local ispropattack = false
+				local isnormalattack = false
+				local isbeingcontrolled = false
+				if self.VJ_IsBeingControlled == true then isbeingcontrolled = true end
+				if getproppushorattack == true then ispropattack = true end
+				if isbeingcontrolled == false && self.NearestPointToEnemyDistance < self.MeleeAttackDistance && ene:Visible(self) then ispropattack = false isnormalattack = true end
+				if isbeingcontrolled == true && self.VJ_TheController:KeyDown(IN_ATTACK) then ispropattack = false isnormalattack = true end
+				if (isbeingcontrolled == true && isnormalattack == true && self:CustomAttackCheck_MeleeAttack() == true) or (isbeingcontrolled == false && self:CustomAttackCheck_MeleeAttack() == true && (isnormalattack == true or (ispropattack == true && self.MeleeAttack_NoProps == false)) && (self:GetForward():Dot((ene:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius)))) then
+					self.MeleeAttacking = true
+					self.RangeAttacking = false
+					self.AlreadyDoneMeleeAttackFirstHit = false
+					self.IsAbleToMeleeAttack = false
+					self.AlreadyDoneFirstMeleeAttack = false
+					if /*self.VJ_IsBeingControlled == false &&*/ ispropattack == false then self:FaceCertainEntity(ene,true) end
+					self:CustomOnMeleeAttack_BeforeStartTimer()
+					timer.Simple(self.BeforeMeleeAttackSounds_WaitTime,function() if IsValid(self) then self:PlaySoundSystem("BeforeMeleeAttack") end end)
+					self.NextAlertSoundT = CurTime() + 0.4
+					if self.DisableMeleeAttackAnimation == false then
+						self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_MeleeAttack)
+						self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, self.MeleeAttackAnimationDecreaseLengthAmount)
+						if self.MeleeAttackAnimationAllowOtherTasks == false then
+							self.PlayingAttackAnimation = true
+							timer.Simple(self.CurrentAttackAnimationDuration,function()
+								if IsValid(self) then
+									self.PlayingAttackAnimation = false
+									//if self.TimeUntilMeleeAttackDamage == false then self:StopAttacks() end
+								end
+							end)
 						end
-						if ispropattack == true then self.MeleeAttack_DoingPropAttack = true else self.MeleeAttack_DoingPropAttack = false end
-						if self.TimeUntilMeleeAttackDamage == false then
-							self:MeleeAttackCode_DoFinishTimers()
-						else
-							timer.Create("timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self:GetPlaybackRate(), self.MeleeAttackReps, function() if ispropattack == true then self:MeleeAttackCode(true) else self:MeleeAttackCode() end end)
-							for tk, tv in ipairs(self.MeleeAttackExtraTimers) do
-								self:DoAddExtraAttackTimers("timer_melee_start_"..math.Round(CurTime())+math.random(1,99999999),tv,1,"MeleeAttack")
-							end
-						end
-						self:CustomOnMeleeAttack_AfterStartTimer()
+						self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.MeleeAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
 					end
+					if ispropattack == true then self.MeleeAttack_DoingPropAttack = true else self.MeleeAttack_DoingPropAttack = false end
+					if self.TimeUntilMeleeAttackDamage == false then
+						self:MeleeAttackCode_DoFinishTimers()
+					else
+						timer.Create("timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self:GetPlaybackRate(), self.MeleeAttackReps, function() if ispropattack == true then self:MeleeAttackCode(true) else self:MeleeAttackCode() end end)
+						for _, tv in ipairs(self.MeleeAttackExtraTimers) do
+							self:DoAddExtraAttackTimers("timer_melee_start_"..math.Round(CurTime())+math.random(1,99999999),tv,1,"MeleeAttack")
+						end
+					end
+					self:CustomOnMeleeAttack_AfterStartTimer()
 				end
 			end
 
 			-- Range Attack --------------------------------------------------------------------------------------------------------------------------------------------
-			if self.HasRangeAttack == true then
-				if self:CanDoCertainAttack("RangeAttack") == true then
-					self:MultipleRangeAttacks()
-					local isbeingcontrolled = false
-					local isbeingcontrolled_attack = false
-					if self.VJ_IsBeingControlled == true then isbeingcontrolled = true end
-					if isbeingcontrolled == true && self.VJ_TheController:KeyDown(IN_ATTACK2) then isbeingcontrolled_attack = true end
-					if (isbeingcontrolled == true && isbeingcontrolled_attack == true && self:CustomAttackCheck_RangeAttack() == true) or (isbeingcontrolled == false && self:CustomAttackCheck_RangeAttack() == true && (self.LatestEnemyDistance < self.RangeDistance) && (self.LatestEnemyDistance > self.RangeToMeleeDistance) && (self:GetForward():Dot((ene:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.RangeAttackAngleRadius)))) then
-						if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
-						self.RangeAttacking = true
-						self.IsAbleToRangeAttack = false
-						self.AlreadyDoneRangeAttackFirstProjectile = false
-						self:CustomOnRangeAttack_BeforeStartTimer()
-						self:PlaySoundSystem("BeforeRangeAttack")
-						if self.DisableRangeAttackAnimation == false then
-							if self.RangeAttackAnimationStopMovement == true then
-								self:ClearSchedule()
-								self:StopMoving()
-							end
-							self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_RangeAttack)
-							self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, self.RangeAttackAnimationDecreaseLengthAmount)
-							self.PlayingAttackAnimation = true
-							timer.Simple(self.CurrentAttackAnimationDuration,function()
-								if IsValid(self) then
-									self.PlayingAttackAnimation = false
-									//if self.RangeAttacking == true then self:VJ_SetSchedule(SCHED_CHASE_ENEMY) end
-									//if self.TimeUntilRangeAttackProjectileRelease == false then self:StopAttacks() end
-								end
-							end)
-							self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.RangeAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
+			if self.HasRangeAttack == true && self:CanDoCertainAttack("RangeAttack") == true then
+				self:MultipleRangeAttacks()
+				local isbeingcontrolled = false
+				local isbeingcontrolled_attack = false
+				if self.VJ_IsBeingControlled == true then isbeingcontrolled = true end
+				if isbeingcontrolled == true && self.VJ_TheController:KeyDown(IN_ATTACK2) then isbeingcontrolled_attack = true end
+				if (isbeingcontrolled == true && isbeingcontrolled_attack == true && self:CustomAttackCheck_RangeAttack() == true) or (isbeingcontrolled == false && self:CustomAttackCheck_RangeAttack() == true && (self.LatestEnemyDistance < self.RangeDistance) && (self.LatestEnemyDistance > self.RangeToMeleeDistance) && (self:GetForward():Dot((ene:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.RangeAttackAngleRadius)))) then
+					if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
+					self.RangeAttacking = true
+					self.IsAbleToRangeAttack = false
+					self.AlreadyDoneRangeAttackFirstProjectile = false
+					self:CustomOnRangeAttack_BeforeStartTimer()
+					self:PlaySoundSystem("BeforeRangeAttack")
+					if self.DisableRangeAttackAnimation == false then
+						if self.RangeAttackAnimationStopMovement == true then
+							self:ClearSchedule()
+							self:StopMoving()
 						end
-						if self.TimeUntilRangeAttackProjectileRelease == false then
-							self:RangeAttackCode_DoFinishTimers()
-						else
-							timer.Create("timer_range_start"..self:EntIndex(), self.TimeUntilRangeAttackProjectileRelease / self:GetPlaybackRate(), self.RangeAttackReps, function() self:RangeAttackCode() end)
-							for tk, tv in ipairs(self.RangeAttackExtraTimers) do
-								self:DoAddExtraAttackTimers("timer_range_start_"..math.Round(CurTime())+math.random(1,99999999),tv,1,"RangeAttack")
+						self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_RangeAttack)
+						self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, self.RangeAttackAnimationDecreaseLengthAmount)
+						self.PlayingAttackAnimation = true
+						timer.Simple(self.CurrentAttackAnimationDuration,function()
+							if IsValid(self) then
+								self.PlayingAttackAnimation = false
+								//if self.RangeAttacking == true then self:VJ_SetSchedule(SCHED_CHASE_ENEMY) end
+								//if self.TimeUntilRangeAttackProjectileRelease == false then self:StopAttacks() end
 							end
-						end
-						self:CustomOnRangeAttack_AfterStartTimer()
+						end)
+						self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.RangeAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
 					end
+					if self.TimeUntilRangeAttackProjectileRelease == false then
+						self:RangeAttackCode_DoFinishTimers()
+					else
+						timer.Create("timer_range_start"..self:EntIndex(), self.TimeUntilRangeAttackProjectileRelease / self:GetPlaybackRate(), self.RangeAttackReps, function() self:RangeAttackCode() end)
+						for _, tv in ipairs(self.RangeAttackExtraTimers) do
+							self:DoAddExtraAttackTimers("timer_range_start_"..math.Round(CurTime())+math.random(1,99999999),tv,1,"RangeAttack")
+						end
+					end
+					self:CustomOnRangeAttack_AfterStartTimer()
 				end
 			end
 
 			-- Leap Attack --------------------------------------------------------------------------------------------------------------------------------------------
-			if self.HasLeapAttack == true then
-				if self:CanDoCertainAttack("LeapAttack") == true then
-					self:MultipleLeapAttacks()
-					local isbeingcontrolled = false
-					local isbeingcontrolled_attack = false
-					if self.VJ_IsBeingControlled == true then isbeingcontrolled = true end
-					if isbeingcontrolled == true && self.VJ_TheController:KeyDown(IN_JUMP) then isbeingcontrolled_attack = true end
-					if (isbeingcontrolled == true && isbeingcontrolled_attack == true && self:CustomAttackCheck_LeapAttack() == true) or (isbeingcontrolled == false && self:CustomAttackCheck_LeapAttack() == true && (self:IsOnGround() && self.LatestEnemyDistance < self.LeapDistance) && (self.LatestEnemyDistance > self.LeapToMeleeDistance)) then
-						self.LeapAttacking = true
-						self.AlreadyDoneLeapAttackFirstHit = false
-						self.AlreadyDoneFirstLeapAttack = false
-						self.IsAbleToLeapAttack = false
-						self.JumpLegalLandingTime = 0
-						self:FaceCertainEntity(ene,true)
-						self:CustomOnLeapAttack_BeforeStartTimer()
-						self:PlaySoundSystem("BeforeRangeAttack")
-						timer.Create( "timer_leap_start_jump"..self:EntIndex(), self.TimeUntilLeapAttackVelocity / self:GetPlaybackRate(), 1, function() self:LeapAttackVelocityCode() end)
-						if self.DisableLeapAttackAnimation == false then
-							self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_LeapAttack)
-							self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, self.LeapAttackAnimationDecreaseLengthAmount)
-							self.PlayingAttackAnimation = true
-							timer.Simple(self.CurrentAttackAnimationDuration,function()
-								if IsValid(self) then
-									self.PlayingAttackAnimation = false
-									//if self.TimeUntilLeapAttackDamage == false then self:StopAttacks() end
-								end
-							end)
-							self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.LeapAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
-						end
-						if self.TimeUntilLeapAttackDamage == false then
-							self:LeapAttackCode_DoFinishTimers()
-						else
-							timer.Create( "timer_leap_start"..self:EntIndex(), self.TimeUntilLeapAttackDamage / self:GetPlaybackRate(), self.LeapAttackReps, function() self:LeapDamageCode() end)
-							for tk, tv in ipairs(self.LeapAttackExtraTimers) do
-								self:DoAddExtraAttackTimers("timer_leap_start_"..math.Round(CurTime())+math.random(1,99999999),tv,1,"LeapAttack")
+			if self.HasLeapAttack == true && self:CanDoCertainAttack("LeapAttack") == true then
+				self:MultipleLeapAttacks()
+				local isbeingcontrolled = false
+				local isbeingcontrolled_attack = false
+				if self.VJ_IsBeingControlled == true then isbeingcontrolled = true end
+				if isbeingcontrolled == true && self.VJ_TheController:KeyDown(IN_JUMP) then isbeingcontrolled_attack = true end
+				if (isbeingcontrolled == true && isbeingcontrolled_attack == true && self:CustomAttackCheck_LeapAttack() == true) or (isbeingcontrolled == false && self:CustomAttackCheck_LeapAttack() == true && (self:IsOnGround() && self.LatestEnemyDistance < self.LeapDistance) && (self.LatestEnemyDistance > self.LeapToMeleeDistance)) then
+					self.LeapAttacking = true
+					self.AlreadyDoneLeapAttackFirstHit = false
+					self.AlreadyDoneFirstLeapAttack = false
+					self.IsAbleToLeapAttack = false
+					self.JumpLegalLandingTime = 0
+					self:FaceCertainEntity(ene,true)
+					self:CustomOnLeapAttack_BeforeStartTimer()
+					self:PlaySoundSystem("BeforeRangeAttack")
+					timer.Create( "timer_leap_start_jump"..self:EntIndex(), self.TimeUntilLeapAttackVelocity / self:GetPlaybackRate(), 1, function() self:LeapAttackVelocityCode() end)
+					if self.DisableLeapAttackAnimation == false then
+						self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_LeapAttack)
+						self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, self.LeapAttackAnimationDecreaseLengthAmount)
+						self.PlayingAttackAnimation = true
+						timer.Simple(self.CurrentAttackAnimationDuration,function()
+							if IsValid(self) then
+								self.PlayingAttackAnimation = false
+								//if self.TimeUntilLeapAttackDamage == false then self:StopAttacks() end
 							end
-						end
-						self:CustomOnLeapAttack_AfterStartTimer()
+						end)
+						self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.LeapAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
 					end
+					if self.TimeUntilLeapAttackDamage == false then
+						self:LeapAttackCode_DoFinishTimers()
+					else
+						timer.Create( "timer_leap_start"..self:EntIndex(), self.TimeUntilLeapAttackDamage / self:GetPlaybackRate(), self.LeapAttackReps, function() self:LeapDamageCode() end)
+						for _, tv in ipairs(self.LeapAttackExtraTimers) do
+							self:DoAddExtraAttackTimers("timer_leap_start_"..math.Round(CurTime())+math.random(1,99999999),tv,1,"LeapAttack")
+						end
+					end
+					self:CustomOnLeapAttack_AfterStartTimer()
 				end
 			end
 		else
@@ -2323,31 +2308,24 @@ function ENT:CanDoCertainAttack(AttackName)
 	-- Attack Names: "MeleeAttack" || "RangeAttack" || "LeapAttack"
 	if self.NextDoAnyAttackT > CurTime() or self.FollowPlayer_GoingAfter == true or self.vACT_StopAttacks == true or self.Flinching == true or self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.VJ_IsBeingControlled == true*/ then return false end
 
-	if AttackName == "MeleeAttack" then
-		if self.IsAbleToMeleeAttack == true && self.MeleeAttacking == false && self.LeapAttacking == false && self.RangeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
+	if AttackName == "MeleeAttack" && self.IsAbleToMeleeAttack == true && self.MeleeAttacking == false && self.LeapAttacking == false && self.RangeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
 		// if self.VJ_IsBeingControlled == true then if self.VJ_TheController:KeyDown(IN_ATTACK) then return true else return false end end
-			return true
-		end
+		return true
 	end
 
-	if AttackName == "RangeAttack" then
-		// (self:GetForward():Dot((self:GetEnemy():GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle)))
-		if self.IsAbleToRangeAttack == true && self:GetEnemy():Visible(self) && self.MeleeAttacking == false && self.LeapAttacking == false && self.RangeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
-			return true
-		end
+	if AttackName == "RangeAttack" && self.IsAbleToRangeAttack == true && self:GetEnemy():Visible(self) && self.MeleeAttacking == false && self.LeapAttacking == false && self.RangeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
+		return true
 	end
 
-	if AttackName == "LeapAttack" then
-		if self.IsAbleToLeapAttack == true && self:GetEnemy():Visible(self) && self.MeleeAttacking == false && self.LeapAttacking == false && self.RangeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
-			return true
-		end
+	if AttackName == "LeapAttack" && self.IsAbleToLeapAttack == true && self:GetEnemy():Visible(self) && self.MeleeAttacking == false && self.LeapAttacking == false && self.RangeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
+		return true
 	end
 	return false
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoPropVisibiltyCheckForPushAttackProps(CheckEnt)
 	if CheckEnt == NULL or CheckEnt == nil then return end
-	tr = util.TraceLine({
+	local tr = util.TraceLine({
 		start = self:GetPos(),
 		endpos = CheckEnt:GetPos() + CheckEnt:GetUp()*10,
 		filter = self
@@ -2363,7 +2341,7 @@ function ENT:PushOrAttackPropsCode(IsSingleValue, CustomMeleeDistance)
 	if self.PushProps == false && self.AttackProps == false then return end
 	local isp = VJ_IsProp
 	
-	for k,v in pairs(IsSingleValue or ents.FindInSphere(self:SetMeleeAttackDamagePosition(), (CustomMeleeDistance or math.Clamp(self.MeleeAttackDamageDistance - 30, self.MeleeAttackDistance, self.MeleeAttackDamageDistance)))) do
+	for _,v in pairs(IsSingleValue or ents.FindInSphere(self:SetMeleeAttackDamagePosition(), CustomMeleeDistance or math.Clamp(self.MeleeAttackDamageDistance - 30, self.MeleeAttackDistance, self.MeleeAttackDamageDistance))) do
 		local notprop = false
 		if self.EntitiesToDestroyClass[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true then notprop = true end
 		if v:GetClass() == "prop_door_rotating" && v:Health() <= 0 then notprop = false end
@@ -2393,10 +2371,10 @@ end
 function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 	if self.Dead == true or self.vACT_StopAttacks == true or self.Flinching == true then return end
 	if self.StopMeleeAttackAfterFirstHit == true && self.AlreadyDoneMeleeAttackFirstHit == true then return end
-	local IsPropAttack = IsPropAttack or false
+	IsPropAttack = IsPropAttack or false
 	if self.MeleeAttack_DoingPropAttack == true then IsPropAttack = true end
 	local MyEnemy = CustomEnt or self:GetEnemy()
-	local AttackDist = AttackDist or self.MeleeAttackDamageDistance
+	AttackDist = AttackDist or self.MeleeAttackDamageDistance
 	//if IsPropAttack == true then AttackDist = (self.MeleeAttackDamageDistance *1.2)/* + 50*/ end
 	if /*self.VJ_IsBeingControlled == false &&*/ self.MeleeAttackAnimationFaceEnemy == true && self.MeleeAttack_DoingPropAttack == false then self:FaceCertainEntity(MyEnemy,true) end
 	//self.MeleeAttacking = true
@@ -2421,7 +2399,7 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 					end
 					if VJ_IsProp(v) == true then
 						local phys = v:GetPhysicsObject()
-						if phys:IsValid() && phys != nil && phys != NULL then
+						if IsValid(phys) then
 							//if VJ_HasValue(self.EntitiesToDestoryModel,v:GetModel()) or self.EntitiesToDestroyClass[v:GetClass()] or VJ_HasValue(self.EntitiesToPushModel,v:GetModel()) then
 							if self:PushOrAttackPropsCode({v}, AttackDist) then
 								HasHitGoodProp = true
@@ -2432,7 +2410,6 @@ function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
 								//if util.IsValidPhysicsObject(v,1) then
 								constraint.RemoveConstraints(v,"Weld") //end
 								if self.PushProps == true then
-									local phys = v:GetPhysicsObject()
 									if MyEnemy != nil then
 										local posfor = phys:GetMass() * 700
 										local posup = phys:GetMass() * 200
@@ -2685,7 +2662,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAttacks(CheckTimers)
 	if self:Health() <= 0 then return end
-	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printstoppedattacks") == 1 then print(self:GetClass().." Stopped all Attacks!") end end
+	if self.VJDEBUG_SNPC_ENABLED == true && GetConVarNumber("vj_npc_printstoppedattacks") == 1 then print(self:GetClass().." Stopped all Attacks!") end
 	
 	if CheckTimers == true then
 		if self.MeleeAttacking == true && self.AlreadyDoneFirstMeleeAttack == false then self:MeleeAttackCode_DoFinishTimers() end
@@ -2745,7 +2722,7 @@ function ENT:DamageByPlayerCode(dmginfo,hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_ACT_RESETENEMY(RunToEnemyOnReset)
-	local RunToEnemyOnReset = RunToEnemyOnReset or false
+	RunToEnemyOnReset = RunToEnemyOnReset or false
 	local vsched = ai_vj_schedule.New("vj_act_resetenemy")
 	if IsValid(self:GetEnemy()) then vsched:EngTask("TASK_FORGET", self:GetEnemy()) end
 	//vsched:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
@@ -2776,7 +2753,7 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 	if NoResetAlliesSeeEnemy == true then
 		local checkallies = self:CheckAlliesAroundMe(1000)
 		if checkallies != nil then
-			for k,v in ipairs(checkallies) do
+			for _,v in ipairs(checkallies) do
 				if IsValid(v:GetEnemy()) && v.LastSeenEnemyTime < self.LastSeenEnemyTimeUntilReset && VJ_IsAlive(v:GetEnemy()) == true && self:VJ_HasNoTarget(v:GetEnemy()) == false && self:GetPos():Distance(v:GetEnemy():GetPos()) <= self.SightDistance then
 					self:VJ_DoSetEnemy(v:GetEnemy(),true)
 					self.ResetedEnemy = false
@@ -2785,20 +2762,16 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 			end
 		end
 		local curenes = self.ReachableEnemyCount //self.CurrentReachableEnemies
-		//if istable(curenes) then
-			//for k,v in ipairs(curenes) do
-				//if IsValid(v) && ((!IsValid(self:GetEnemy())) or (IsValid(self:GetEnemy()) && self:GetEnemy() != v)) then
-				if (IsValid(self:GetEnemy()) && (curenes - 1) >= 1) or (!IsValid(self:GetEnemy()) && curenes >= 1) then
-					self:VJ_DoSetEnemy(v,false,true)
-					self.ResetedEnemy = false
-					return false
-				end
-			//end
-		//end
+		-- If the current number of reachable enemies is higher then 1, then don't reset
+		if (IsValid(self:GetEnemy()) && (curenes - 1) >= 1) or (!IsValid(self:GetEnemy()) && curenes >= 1) then
+			//self:VJ_DoSetEnemy(v, false, true)
+			self.ResetedEnemy = false
+			return false
+		end
 	end
 	
 	//print(self.LatestEnemyPosition)
-	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printresetenemy") == 1 then print(self:GetName().." has reseted its enemy") end end
+	if self.VJDEBUG_SNPC_ENABLED == true && GetConVarNumber("vj_npc_printresetenemy") == 1 then print(self:GetName().." has reseted its enemy") end
 	if IsValid(self:GetEnemy()) then
 		if self.FollowingPlayer == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && self.LatestEnemyPosition != Vector(0,0,0) then
 			self:SetLastPosition(self.LatestEnemyPosition)
@@ -3054,12 +3027,10 @@ function ENT:DoEntityRelationshipCheck()
 			elseif entisfri == true then
 				distlist_closest = true
 			end*/
-			if self.VJ_IsBeingControlled == true then
-				if self.VJ_TheControllerBullseye != v then
-					//self:AddEntityRelationship(v,D_NU,99)
-					v = self.VJ_TheControllerBullseye
-					vPlayer = false
-				end
+			if self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye != v then
+				//self:AddEntityRelationship(v,D_NU,99)
+				v = self.VJ_TheControllerBullseye
+				vPlayer = false
 			end
 			if self.FindEnemy_CanSeeThroughWalls == true then seethroughwall = true end
 			if ((self.Behavior == VJ_BEHAVIOR_NEUTRAL && self.Alerted == true) or self.Behavior != VJ_BEHAVIOR_NEUTRAL) && self.DisableFindEnemy == false then
@@ -3278,7 +3249,7 @@ function ENT:DoKilledEnemy(argent,attacker,inflictor)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnTakeDamage(dmginfo,data)
+function ENT:OnTakeDamage(dmginfo)
 	if self.DoingVJDeathDissolve == true then self.DoingVJDeathDissolve = false return true end
 	if self.GodMode == true then return false end
 	if dmginfo:GetDamage() <= 0 then return false end
@@ -3307,7 +3278,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 	if self.Immune_AcidPoisonRadiation == true && (DamageType == DMG_ACID or DamageType == DMG_RADIATION or DamageType == DMG_POISON or DamageType == DMG_NERVEGAS or DamageType == DMG_PARALYZE) then return false end
 	if self.Immune_Bullet == true && (dmginfo:IsBulletDamage() or DamageType == DMG_AIRBOAT or DamageType == DMG_BUCKSHOT) then return false end
 	if self.Immune_Blast == true && (DamageType == DMG_BLAST or DamageType == DMG_BLAST_SURFACE) then return false end
-	if self.Immune_Dissolve == true then if DamageType == DMG_DISSOLVE then return false end end
+	if self.Immune_Dissolve == true && DamageType == DMG_DISSOLVE then return false end
 	if self.Immune_Electricity == true && (DamageType == DMG_SHOCK or DamageType == DMG_ENERGYBEAM or DamageType == DMG_PHYSGUN) then return false end
 	if self.Immune_Melee == true && (DamageType == DMG_CLUB or DamageType == DMG_SLASH) then return false end
 	if self.Immune_Physics == true && DamageType == DMG_CRUSH then return false end
@@ -3340,7 +3311,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 	if self.HasHealthRegeneration == true && self.HealthRegenerationResetOnDmg == true then
 		self.HealthRegenerationDelayT = CurTime() + (math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b) * 1.5)
 	end
-	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printondamage") == 1 then print(self:GetClass().." Got Damaged! | Amount = "..dmginfo:GetDamage()) end end
+	if self.VJDEBUG_SNPC_ENABLED == true && GetConVarNumber("vj_npc_printondamage") == 1 then print(self:GetClass().." Got Damaged! | Amount = "..dmginfo:GetDamage()) end
 	self:CustomOnTakeDamage_AfterDamage(dmginfo,hitgroup)
 	DoBleed()
 
@@ -3356,7 +3327,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 			if self.Passive_AlliesRunOnDamage then
 				local checka = self:CheckAlliesAroundMe(self.Passive_AlliesRunOnDamageDistance)
 				if checka != nil then
-					for k,v in ipairs(checka) do
+					for _,v in ipairs(checka) do
 						v.Passive_NextRunOnDamageT = CurTime() + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
 						v:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) end)
 						v:PlaySoundSystem("Alert")
@@ -3438,7 +3409,7 @@ function ENT:OnTakeDamage(dmginfo,data)
 			end
 			local Targets = ents.FindInSphere(self:GetPos(),sightdist)
 			if (!Targets) then return end
-			for k,v in pairs(Targets) do
+			for _,v in pairs(Targets) do
 				if CurTime() > self.NextSetEnemyOnDamageT && self:Visible(v) && self:DoRelationshipCheck(v) == true then
 					self:CustomOnSetEnemyOnDamage(dmginfo,hitgroup)
 					self.NextCallForHelpT = CurTime() + 1
@@ -3504,7 +3475,7 @@ function ENT:DoFlinch(dmginfo,hitgroup)
 			if allow == false then return end
 			if self.HasHitGroupFlinching == true then
 				local HitGroupFound = false
-				for k,v in ipairs(self.HitGroupFlinching_Values) do
+				for _,v in ipairs(self.HitGroupFlinching_Values) do
 					if VJ_HasValue(v.HitGroup,hitgroup) then
 					//if v.HitGroup == hitgroup then
 						HitGroupFound = true
@@ -3522,7 +3493,7 @@ function ENT:DoFlinch(dmginfo,hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChangeBloodColor(Type)
-	local Type = Type or "None"
+	Type = Type or "None"
 	if Type == "" then Type = "None" end
 
 	local usegmoddecals = false
@@ -3669,10 +3640,10 @@ function ENT:SpawnBloodDecal(dmginfo,hitgroup)
 	if dmg_pos == Vector(0,0,0) then dmg_pos = self:GetPos() + self:OBBCenter() end
 	
 	-- Badi verayi ayroun-e
-	local tr = util.TraceLine({start = dmg_pos, endpos = (dmg_pos + dmg_force:GetNormal() * math.Clamp(dmg_force:Length() * 10, 100, self.BloodDecalDistance)), filter = self})
+	local tr = util.TraceLine({start = dmg_pos, endpos = dmg_pos + dmg_force:GetNormal() * math.Clamp(dmg_force:Length() * 10, 100, self.BloodDecalDistance), filter = self})
 	//if !tr.HitWorld then return end
 	util.Decal(VJ_PICK(self.CurrentChoosenBlood_Decal), tr.HitPos+tr.HitNormal, tr.HitPos-tr.HitNormal, self)
-	for i = 1, 2 do
+	for _ = 1, 2 do
 		if math.random(1,2) == 1 then util.Decal(VJ_PICK(self.CurrentChoosenBlood_Decal), tr.HitPos + tr.HitNormal + Vector(math.random(-70,70), math.random(-70,70),0), tr.HitPos - tr.HitNormal, self) end
 	end
 	
@@ -3720,7 +3691,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 			noalert = false
 		end
 		local it = 0
-		for k,v in ipairs(allies) do
+		for _,v in ipairs(allies) do
 			v:CustomOnAllyDeath(self)
 			v:PlaySoundSystem("AllyDeath")
 			
@@ -3893,7 +3864,7 @@ function ENT:CreateGibEntity(Ent,Models,Tbl_Features,CustomCode)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnKilled(dmginfo,hitgroup)
-	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printdied") == 1 then print(self:GetClass().." Died!") end end
+	if self.VJDEBUG_SNPC_ENABLED == true && GetConVarNumber("vj_npc_printdied") == 1 then print(self:GetClass().." Died!") end
 	self:CustomOnKilled(dmginfo,hitgroup)
 	self:RunItemDropsOnDeathCode(dmginfo,hitgroup) -- Item drops on death
 	if self.HasDeathNotice == true then PrintMessage(self.DeathNoticePosition, self.DeathNoticeWriting) end -- Death notice on death
@@ -4035,7 +4006,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		if GetConVarNumber("vj_npc_corpsefade") == 1 then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",GetConVarNumber("vj_npc_corpsefadetime")) end
 		self:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,self.Corpse)
 		self.Corpse:CallOnRemove("vj_"..self.Corpse:EntIndex(),function(ent,exttbl)
-			for k,v in ipairs(exttbl) do
+			for _,v in ipairs(exttbl) do
 				if IsValid(v) then
 					if v:GetClass() == "prop_ragdoll" then v:Fire("FadeAndRemove","",0) else v:Fire("kill","",0) end
 				end
@@ -4043,7 +4014,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		end,self.Corpse.ExtraCorpsesToRemove)
 		return self.Corpse
 	else
-		for k,v in ipairs(self.ExtraCorpsesToRemove_Transition) do
+		for _,v in ipairs(self.ExtraCorpsesToRemove_Transition) do
 			if v.IsVJBase_Gib == true && v.RemoveOnCorpseDelete == true then
 				v:Remove()
 			end
@@ -4413,7 +4384,7 @@ function ENT:PlaySoundSystem(Set, CustomSd, Type)
 				self.CurrentMeleeAttackSound = Type(self, sdtbl, self.MeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.MeleeAttackSoundPitch1, self.MeleeAttackSoundPitch2))
 			end
 			if self.HasExtraMeleeAttackSounds == true then
-				local sdtbl = VJ_PICK(self.SoundTbl_MeleeAttackExtra)
+				sdtbl = VJ_PICK(self.SoundTbl_MeleeAttackExtra)
 				if sdtbl == false then sdtbl = VJ_PICK(DefaultSoundTbl_MeleeAttackExtra) end -- Default table
 				if (math.random(1, self.ExtraMeleeSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 					if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
@@ -4560,7 +4531,7 @@ function ENT:IdleDialogueSoundCodeTest()
 	-- Don't break the loop unless we hit a VJ SNPC
 	-- If no VJ SNPC is hit, then just simply return the last checked friendly player or NPC
 	local ret = false
-	for k, v in ipairs(ents.FindInSphere(self:GetPos(), self.IdleDialogueDistance)) do
+	for _, v in ipairs(ents.FindInSphere(self:GetPos(), self.IdleDialogueDistance)) do
 		if v:IsPlayer() && self:DoRelationshipCheck(v) == false then
 			ret = v
 		elseif v != self && ((self:GetClass() == v:GetClass()) or (v:IsNPC() && self:DoRelationshipCheck(v) == false)) && self:Visible(v) then
@@ -4634,7 +4605,7 @@ function ENT:StartSoundTrack()
 	net.WriteTable(self.SoundTbl_SoundTrack)
 	net.WriteFloat(self.SoundTrackVolume)
 	net.WriteFloat(self.SoundTrackPlaybackRate)
-	net.WriteFloat(self.SoundTrackFadeOutTime)
+	//net.WriteFloat(self.SoundTrackFadeOutTime)
 	net.Broadcast()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
