@@ -2912,8 +2912,6 @@ function ENT:DoEntityRelationshipCheck()
 			local vClass = v:GetClass()
 			local vNPC = v:IsNPC()
 			local vPlayer = v:IsPlayer()
-			local radiusoverride = 0
-			local seethroughwall = false
 			if vClass != self:GetClass() && (vNPC or vPlayer) && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
 				local inEneTbl = VJ_HasValue(self.VJ_AddCertainEntityAsEnemy,v)
 				if self.HasAllies == true && inEneTbl == false then
@@ -3011,55 +3009,28 @@ function ENT:DoEntityRelationshipCheck()
 					end
 				end
 			end
-			//local distlist_closest = false
-			//local distlist_inserted = false
-			local closestdist_do = false
-			/*if entisfri == false then
-				local distlist_num = #distlist
-				if (distlist_num != 0 && vDistanceToMy < math.min(unpack(distlist))) or (distlist_num == 0) then
-					distlist_closest = true
-				end
-				//table.insert(distlist,vDistanceToMy)
-				if IsValid(self:GetEnemy()) && v == self:GetEnemy() then
-					distlist[distlist_num+1] = vDistanceToMy
-					distlist_inserted = true
-				end
-			elseif entisfri == true then
-				distlist_closest = true
-			end*/
 			if self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye != v then
 				//self:AddEntityRelationship(v,D_NU,99)
 				v = self.VJ_TheControllerBullseye
 				vPlayer = false
 			end
-			if self.FindEnemy_CanSeeThroughWalls == true then seethroughwall = true end
-			if ((self.Behavior == VJ_BEHAVIOR_NEUTRAL && self.Alerted == true) or self.Behavior != VJ_BEHAVIOR_NEUTRAL) && self.DisableFindEnemy == false then
-				if (seethroughwall == true) or (self:Visible(v) && (vDistanceToMy < sightdist)) then
-					if (self.FindEnemy_UseSphere == false && radiusoverride == 0 && (self:GetForward():Dot((vPos - MyPos):GetNormalized()) > math.cos(math.rad(self.SightAngle)))) or (self.FindEnemy_UseSphere == true or radiusoverride == 1) then
-						local check = self:DoRelationshipCheck(v)
-						if check == true then
-						//if (v.VJ_NoTarget && v.VJ_NoTarget != true) then continue end
-							self:AddEntityRelationship(v,D_HT,99)
-							//if distlist_inserted == false then distlist[#distlist+1] = vDistanceToMy end
-							if (closestdist == nil) or (vDistanceToMy < closestdist) then closestdist = vDistanceToMy; closestdist_do = true end
-							//self.CurrentReachableEnemies[#self.CurrentReachableEnemies+1] = v
-							self.ReachableEnemyCount = self.ReachableEnemyCount + 1
-							enemyseen = true
-							if closestdist_do == true then // distlist_closest == true
-								self:VJ_DoSetEnemy(v,true,true)
-								self:SetEnemy(v)
-							end
-							//self:VJ_DoSetEnemy(v,true,true)
-							//if !IsValid(self:GetEnemy()) then
-								//self:VJ_DoSetEnemy(v,true)
-							//end
-						elseif check == false && vPlayer then
-							if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
-								self.ResetedEnemy = true
-								self:ResetEnemy(false)
-							end
-						end
+			local radiusoverride = 0
+			if self.DisableFindEnemy == false && ((self.Behavior == VJ_BEHAVIOR_NEUTRAL && self.Alerted == true) or self.Behavior != VJ_BEHAVIOR_NEUTRAL) && ((self.FindEnemy_CanSeeThroughWalls == true) or (self:Visible(v) && (vDistanceToMy < sightdist))) && ((self.FindEnemy_UseSphere == false && radiusoverride == 0 && (self:GetForward():Dot((vPos - MyPos):GetNormalized()) > math.cos(math.rad(self.SightAngle)))) or (self.FindEnemy_UseSphere == true or radiusoverride == 1)) then
+				local check = self:DoRelationshipCheck(v)
+				if check == true then -- Is enemy
+					enemyseen = true
+					self.ReachableEnemyCount = self.ReachableEnemyCount + 1
+					self:AddEntityRelationship(v, D_HT, 99)
+					-- If the detected enemy is closer than the previous enemy, the set this as the enemy!
+					if (closestdist == nil) or (vDistanceToMy < closestdist) then
+						closestdist = vDistanceToMy
+						self:VJ_DoSetEnemy(v, true, true)
+						self:SetEnemy(v)
 					end
+				-- If the current enemy is a friendly player, then reset the enemy!
+				elseif check == false && vPlayer && IsValid(self:GetEnemy()) && self:GetEnemy() == v then
+					self.ResetedEnemy = true
+					self:ResetEnemy(false)
 				end
 			end
 			if vPlayer then
@@ -4012,6 +3983,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 				end
 			end
 		end,self.Corpse.ExtraCorpsesToRemove)
+		hook.Call("CreateEntityRagdoll", nil, self, self.Corpse)
 		return self.Corpse
 	else
 		for _,v in ipairs(self.ExtraCorpsesToRemove_Transition) do
