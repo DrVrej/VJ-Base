@@ -2014,7 +2014,7 @@ function ENT:StartSoundTrack()
 	net.WriteTable(self.SoundTbl_SoundTrack)
 	net.WriteFloat(self.SoundTrackVolume)
 	net.WriteFloat(self.SoundTrackPlaybackRate)
-	net.WriteFloat(self.SoundTrackFadeOutTime)
+	//net.WriteFloat(self.SoundTrackFadeOutTime)
 	net.Broadcast()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
