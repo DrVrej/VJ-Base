@@ -1,8 +1,8 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("shared.lua")
-include('shared.lua')
-include('schedules.lua')
+include("shared.lua")
+include("schedules.lua")
 /*--------------------------------------------------
 	=============== Human SNPC Base ===============
 	*** Copyright (c) 2012-2020 by DrVrej, All rights reserved. ***
@@ -1036,8 +1036,8 @@ function ENT:Initialize()
 	self:CustomOnInitialize()
 	self:CustomInitialize() -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 	timer.Simple(0.15,function()
-		if IsValid(self) then
-			if math.random(1,self.SoundTrackChance) == 1 then self:StartSoundTrack() end
+		if IsValid(self) && math.random(1,self.SoundTrackChance) == 1 then
+			self:StartSoundTrack()
 		end
 	end)
 	duplicator.RegisterEntityClass(self:GetClass(), VJSPAWN_SNPC_DUPE, "Class", "Equipment", "SpawnFlags", "Data")
@@ -1087,14 +1087,9 @@ function ENT:SetInitializeCapabilities()
 	//self:CapabilitiesAdd(bit.bor(CAP_MOVE_JUMP))
 	self:CapabilitiesAdd(bit.bor(CAP_DUCK))
 	//if self.HasSquad == true then self:CapabilitiesAdd(bit.bor(CAP_SQUAD)) end
-	if self.DisableWeapons == false then
-		if self.Weapon_NoSpawnMenu == false then
-			self:CapabilitiesAdd(bit.bor(CAP_USE_WEAPONS))
-			self:CapabilitiesAdd(bit.bor(CAP_WEAPON_RANGE_ATTACK1))
-		end
-		//if self.DisableUSE_SHOT_REGULATOR == false then self:CapabilitiesAdd(bit.bor(CAP_USE_SHOT_REGULATOR)) end
-	//if self.VJ_IsStationary == false then self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT)) end
-	//self:CapabilitiesAdd(bit.bor(CAP_AIM_GUN))
+	if self.DisableWeapons == false && self.Weapon_NoSpawnMenu == false then
+		self:CapabilitiesAdd(bit.bor(CAP_USE_WEAPONS))
+		self:CapabilitiesAdd(bit.bor(CAP_WEAPON_RANGE_ATTACK1))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1322,12 +1317,10 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 					self.VJ_PlayingSequence = false
 					if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 						vsched:EngTask("TASK_SET_ACTIVITY", vACT_Name) -- To avoid AutoMovement stopping the velocity
+					elseif vACT_FaceEnemy == true then
+						vsched:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY", vACT_Name)
 					else
-						if vACT_FaceEnemy == true then
-							vsched:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY", vACT_Name)
-						else
-							vsched:EngTask("TASK_PLAY_SEQUENCE", vACT_Name)
-						end
+						vsched:EngTask("TASK_PLAY_SEQUENCE", vACT_Name)
 					end
 				end
 				
@@ -1481,7 +1474,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 	if self.NoWeapon_UseScaredBehavior_Active == true then animtbl = self.AnimTbl_ScaredBehaviorStand end
 	//local checkedtbl = {}
 	local hasanim = false
-	for k,v in ipairs(animtbl) do -- Amen animation-nere ara
+	for _,v in ipairs(animtbl) do -- Amen animation-nere ara
 		v = VJ_SequenceToActivity(self,v) -- Nayir yete animation e sequence e, activity tartsoor
 		if v != false then -- Yete v-en false che, sharnage!
 			if hasanim == false && self.CurrentAnim_IdleStand == v then -- Yete animation-e IdleStand table-en meche che, ooremen sharnage!
@@ -1843,7 +1836,7 @@ function ENT:TranslateToWeaponAnim(actname)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
-	if self.VJDEBUG_SNPC_ENABLED == true then if GetConVarNumber("vj_npc_printontouch") == 1 then print(self:GetClass().." Has Touched "..entity:GetClass()) end end
+	if self.VJDEBUG_SNPC_ENABLED == true && GetConVarNumber("vj_npc_printontouch") == 1 then print(self:GetClass().." Has Touched "..entity:GetClass()) end
 	self:CustomOnTouch(entity)
 	if GetConVarNumber("ai_disabled") == 1 or self.VJ_IsBeingControlled == true then return end
 	
@@ -1937,7 +1930,7 @@ function ENT:FollowPlayerCode(key, activator, caller, data)
 				self:VJ_TASK_FACE_X("TASK_FACE_TARGET", function(x)
 					x.RunCode_OnFinish = function()
 						local movet = ((self:GetPos():Distance(self.FollowPlayer_Entity:GetPos()) < 220) and "TASK_WALK_PATH") or "TASK_RUN_PATH"
-						self:VJ_TASK_GOTO_TARGET(movet, function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end) 
+						self:VJ_TASK_GOTO_TARGET(movet, function(y) y.CanShootWhenMoving = true y.ConstantlyFaceEnemy = true end) 
 					end
 				end)
 			end
@@ -1965,19 +1958,17 @@ function ENT:DoMedicCode()
 	if self.IsMedicSNPC == false then return end
 	if self.Medic_IsHealingAlly == false then
 		if CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled == true then return end
-		for k,v in ipairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
+		for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
 			if v.IsVJBaseSNPC != true && !v:IsPlayer() then continue end -- If it's not a VJ Base SNPC or a player, then move on
-			if v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic != true && (!v.IsVJBaseSNPC_Tank) && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0)) then
-				if self:DoRelationshipCheck(v) == false then -- Make sure it's an ally
-					self.Medic_CurrentEntToHeal = v
-					self.Medic_IsHealingAlly = true
-					self.AlreadyDoneMedicThinkCode = false
-					v.AlreadyBeingHealedByMedic = true
-					self:StopMoving()
-					self:SetTarget(v)
-					self:VJ_TASK_GOTO_TARGET()
-					return
-				end
+			if v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic != true && (!v.IsVJBaseSNPC_Tank) && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0)) && self:DoRelationshipCheck(v) == false then
+				self.Medic_CurrentEntToHeal = v
+				self.Medic_IsHealingAlly = true
+				self.AlreadyDoneMedicThinkCode = false
+				v.AlreadyBeingHealedByMedic = true
+				self:StopMoving()
+				self:SetTarget(v)
+				self:VJ_TASK_GOTO_TARGET()
+				return
 			end
 		end
 	elseif self.AlreadyDoneMedicThinkCode == false then
@@ -2022,23 +2013,25 @@ function ENT:DoMedicCode()
 			
 			timer.Simple(self:DecideAnimationLength(anim, self.Medic_TimeUntilHeal, 0), function()
 				if IsValid(self) then
-					if !IsValid(self.Medic_CurrentEntToHeal) then self:DoMedicCode_Reset() goto reset end -- Ally doesn't exist anymore, reset
-					if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then -- Are we still in healing distance?
-						self:CustomOnMedic_OnHeal()
-						self:PlaySoundSystem("MedicOnHeal")
-						if self.Medic_CurrentEntToHeal.IsVJBaseSNPC == true && self.Medic_CurrentEntToHeal.IsVJBaseSNPC_Animal != true then
-							self.Medic_CurrentEntToHeal:PlaySoundSystem("MedicReceiveHeal")
-						end
-						self.Medic_CurrentEntToHeal:RemoveAllDecals()
-						local fricurhp = self.Medic_CurrentEntToHeal:Health()
-						self.Medic_CurrentEntToHeal:SetHealth(math.Clamp(fricurhp + self.Medic_HealthAmount, fricurhp, self.Medic_CurrentEntToHeal:GetMaxHealth()))
+					if !IsValid(self.Medic_CurrentEntToHeal) then -- Ally doesn't exist anymore, reset
 						self:DoMedicCode_Reset()
-					else -- If we are no longer in healing distance, go after the ally again
-						self.AlreadyDoneMedicThinkCode = false
-						if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
-						self:CustomOnMedic_OnReset()
+					else -- If it exists...
+						if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then -- Are we still in healing distance?
+							self:CustomOnMedic_OnHeal()
+							self:PlaySoundSystem("MedicOnHeal")
+							if self.Medic_CurrentEntToHeal.IsVJBaseSNPC == true && self.Medic_CurrentEntToHeal.IsVJBaseSNPC_Animal != true then
+								self.Medic_CurrentEntToHeal:PlaySoundSystem("MedicReceiveHeal")
+							end
+							self.Medic_CurrentEntToHeal:RemoveAllDecals()
+							local fricurhp = self.Medic_CurrentEntToHeal:Health()
+							self.Medic_CurrentEntToHeal:SetHealth(math.Clamp(fricurhp + self.Medic_HealthAmount, fricurhp, self.Medic_CurrentEntToHeal:GetMaxHealth()))
+							self:DoMedicCode_Reset()
+						else -- If we are no longer in healing distance, go after the ally again
+							self.AlreadyDoneMedicThinkCode = false
+							if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
+							self:CustomOnMedic_OnReset()
+						end
 					end
-					::reset::
 				end
 			end)
 		else -- If we aren't in healing distance, then go after the ally
@@ -2103,10 +2096,8 @@ function ENT:Think()
 			//self:SetCondition(35)
 			//self:StopMoving()
 		end
-		if self:HasCondition(35) && CurSched.AlreadyRanCode_OnFail == false then
-			if self:DoRunCode_OnFail(CurSched) == true then
-				self:ClearCondition(35)
-			end
+		if self:HasCondition(35) && CurSched.AlreadyRanCode_OnFail == false && self:DoRunCode_OnFail(CurSched) == true then
+			self:ClearCondition(35)
 		end
 		if CurSched.ResetOnFail == true && self:HasCondition(35) == true then
 			self:StopMoving()

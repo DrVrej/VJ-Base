@@ -1,5 +1,5 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
-include('shared.lua')
+include("shared.lua")
 //require('sound_vj_track')
 /*--------------------------------------------------
 	=============== Human SNPC Base ===============
