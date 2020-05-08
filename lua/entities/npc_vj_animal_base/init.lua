@@ -181,7 +181,7 @@ ENT.FollowPlayerKey = "Use" -- The key that the player presses to make the SNPC 
 ENT.FollowPlayerCloseDistance = 150 -- If the SNPC is that close to the player then stand still until the player goes farther away
 ENT.NextFollowPlayerTime = 1 -- Time until it runs to the player again
 ENT.AllowPrintingInChat = true -- Should this SNPC be allowed to post in player's chat? Example: "Blank no longer likes you."
-ENT.BringAlliesToMeSchedules = {SCHED_RUN_FROM_ENEMY} -- The Schedule that its friends play when BringAlliesToMe code is ran
+ENT.BringAlliesToMeSchedules = {SCHED_RUN_FROM_ENEMY} -- The Schedule that its friends play when Allies_Bring code is ran
 	-- Sounds ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasSounds = true -- Put to false to disable ALL sounds
 ENT.HasImpactSounds = true -- If set to false, it won't play the impact sounds
@@ -1057,7 +1057,7 @@ function ENT:PlayerAllies(argent)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CheckAlliesAroundMe(SeeDistance)
+function ENT:Allies_Check(SeeDistance)
 	SeeDistance = SeeDistance or 800
 	local FoundEntitiesTbl = {}
 	local getselfclass = ents.FindInSphere(self:GetPos(),SeeDistance)
@@ -1077,7 +1077,7 @@ function ENT:CheckAlliesAroundMe(SeeDistance)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:BringAlliesToMe(SeeDistance,CertainAmount,CertainAmountNumber,EnemyVisibleOnly)
+function ENT:Allies_Bring(SeeDistance,CertainAmount,CertainAmountNumber,EnemyVisibleOnly)
 	//if self.CallForBackUpOnDamage == false then return end
 	SeeDistance = SeeDistance or 800
 	EnemyVisibleOnly = EnemyVisibleOnly or false
@@ -1172,8 +1172,8 @@ function ENT:OnTakeDamage(dmginfo,hitgroup)
 		self:DamageByPlayerCode(dmginfo,hitgroup)
 		self:PainSoundCode()
 
-		if self.CallForBackUpOnDamage == true && CurTime() > self.NextCallForBackUpOnDamageT && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self:CheckAlliesAroundMe(self.CallForBackUpOnDamageDistance).ItFoundAllies == true then
-			self:BringAlliesToMe(self.CallForBackUpOnDamageDistance,self.CallForBackUpOnDamageUseCertainAmount,self.CallForBackUpOnDamageUseCertainAmountNumber)
+		if self.CallForBackUpOnDamage == true && CurTime() > self.NextCallForBackUpOnDamageT && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self:Allies_Check(self.CallForBackUpOnDamageDistance).ItFoundAllies == true then
+			self:Allies_Bring(self.CallForBackUpOnDamageDistance,self.CallForBackUpOnDamageUseCertainAmount,self.CallForBackUpOnDamageUseCertainAmountNumber)
 			self:ClearSchedule()
 			//self.TakingCover = true
 			self.NextFlinchT = CurTime() + 1
@@ -1416,7 +1416,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PriorToKilled(dmginfo,hitgroup)
 	if self.BringFriendsOnDeath == true then
-		self:BringAlliesToMe(self.BringFriendsOnDeathDistance,self.BringFriendsOnDeathUseCertainAmount,self.BringFriendsOnDeathUseCertainAmountNumber,true)
+		self:Allies_Bring(self.BringFriendsOnDeathDistance,self.BringFriendsOnDeathUseCertainAmount,self.BringFriendsOnDeathUseCertainAmountNumber,true)
 	end
 
 	local function DoKilled()
