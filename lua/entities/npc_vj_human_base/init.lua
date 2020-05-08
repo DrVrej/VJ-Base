@@ -1663,7 +1663,6 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 			if htype == "crossbow" then
 				self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_AR2
 			else
-				print("aaa")
 				self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_SHOTGUN
 			end
 			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SHOTGUN_LOW
@@ -3117,7 +3116,7 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 	NoResetAlliesSeeEnemy = NoResetAlliesSeeEnemy or false
 	local RunToEnemyOnReset = false
 	if NoResetAlliesSeeEnemy == true then
-		local checkallies = self:CheckAlliesAroundMe(1000)
+		local checkallies = self:Allies_Check(1000)
 		if checkallies != nil then
 			for _,v in ipairs(checkallies) do
 				if IsValid(v:GetEnemy()) && v.LastSeenEnemyTime < self.LastSeenEnemyTimeUntilReset && VJ_IsAlive(v:GetEnemy()) == true && self:VJ_HasNoTarget(v:GetEnemy()) == false && self:GetPos():Distance(v:GetEnemy():GetPos()) <= self.SightDistance then
@@ -3511,24 +3510,22 @@ function ENT:CallForHelpCode(SeeDistance)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CheckAlliesAroundMe(SeeDistance)
-	SeeDistance = SeeDistance or 800
-	local findents = ents.FindInSphere(self:GetPos(),SeeDistance)
-	if (!findents) then return end
+function ENT:Allies_Check(dist)
+	dist = dist or 800 -- How far can it check for allies
+	local entsTbl = ents.FindInSphere(self:GetPos(), dist)
+	if (!entsTbl) then return end
 	local FoundAlliesTbl = {}
 	local it = 0
-	for _,x in pairs(findents) do
-		if (x:IsNPC() or x:GetClass() == self:GetClass()) && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4 or (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) && VJ_IsAlive(x) == true && x.IsVJBaseSNPC_Animal != false then
-			if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
-				if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) then
-					if (x.Behavior == VJ_BEHAVIOR_PASSIVE or x.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) then
-						it = it + 1
-						FoundAlliesTbl[it] = x
-					end
-				elseif (x.Behavior != VJ_BEHAVIOR_PASSIVE  or x.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) then
+	for _, v in pairs(entsTbl) do
+		if VJ_IsAlive(v) == true && v:IsNPC() && v != self && (v:GetClass() == self:GetClass() or (v:Disposition(self) == D_LI or v.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) && v.IsVJBaseSNPC_Animal != false && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
+			if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
+				if v.Behavior == VJ_BEHAVIOR_PASSIVE or v.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
 					it = it + 1
-					FoundAlliesTbl[it] = x
+					FoundAlliesTbl[it] = v
 				end
+			else
+				it = it + 1
+				FoundAlliesTbl[it] = v
 			end
 		end
 	end
@@ -3539,40 +3536,44 @@ function ENT:CheckAlliesAroundMe(SeeDistance)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:BringAlliesToMe(Type,SeeDistance,EntsTable,LimitNumber,VisibleOnly)
-	//if self.CallForBackUpOnDamage == false then return end
-	Type = Type or "Random" -- Types:   "Random" || "Diamond"
-	SeeDistance = SeeDistance or 800
-	VisibleOnly = VisibleOnly or false
-	EntsTable = EntsTable or ents.FindInSphere(self:GetPos(),SeeDistance)
-	LimitNumber = LimitNumber or 3 -- 0 for none
-	if (!EntsTable) then return false end
+function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
+	formType = formType or "Random" -- Formation type: "Random" || "Diamond"
+	dist = dist or 800 -- How far can it check for allies
+	entsTbl = entsTbl or ents.FindInSphere(self:GetPos(), dist)
+	limit = limit or 3 -- Setting to 0 will automatically become 1
+	onlyVis = onlyVis or false -- Check only entities that are visible
+	if (!entsTbl) then return false end
 	local it = 0
-	for _,x in pairs(EntsTable) do
-		if VJ_IsAlive(x) == true && x:IsNPC() && x != self /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4) && x.IsVJBaseSNPC_Animal != false && x.Behavior != VJ_BEHAVIOR_PASSIVE && x.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && x.FollowingPlayer == false && x.VJ_IsBeingControlled == false && (!x.IsVJBaseSNPC_Tank) then
-			if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
-				if VisibleOnly == true then if x:Visible(self) == false then continue end end
-				if !IsValid(x:GetEnemy()) && self:GetPos():Distance(x:GetPos()) < SeeDistance then
-					self.NextWanderTime = CurTime() + 8
-					x.NextWanderTime = CurTime() + 8
-					if Type == "Random" then
-						local randpos = math.random(1,4)
-						if randpos == 1 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(20,50)) end
-						if randpos == 2 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-20,-50)) end
-						if randpos == 3 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(20,50)) end
-						if randpos == 4 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-20,-50)) end
-					elseif Type == "Diamond" then
-						self:DoFormation_Diamond(x,it)
+	for _, v in pairs(entsTbl) do
+		if VJ_IsAlive(v) == true && v:IsNPC() && v != self && (v:GetClass() == self:GetClass() or v:Disposition(self) == D_LI) && v.IsVJBaseSNPC_Animal != false && v.Behavior != VJ_BEHAVIOR_PASSIVE && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && v.FollowingPlayer == false && v.VJ_IsBeingControlled == false && (!v.IsVJBaseSNPC_Tank) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
+			if onlyVis == true && !v:Visible(self) then continue end
+			if !IsValid(v:GetEnemy()) && self:GetPos():Distance(v:GetPos()) < dist then
+				self.NextWanderTime = CurTime() + 8
+				v.NextWanderTime = CurTime() + 8
+				it = it + 1
+				-- Formation
+				if formType == "Random" then
+					local randpos = math.random(1, 4)
+					if randpos == 1 then
+						v:SetLastPosition(self:GetPos() + self:GetRight()*math.random(20, 50))
+					elseif randpos == 2 then
+						v:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-20, -50))
+					elseif randpos == 3 then
+						v:SetLastPosition(self:GetPos() + self:GetForward()*math.random(20, 50))
+					elseif randpos == 4 then
+						v:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-20, -50))
 					end
-					if !IsValid(x:GetActiveWeapon()) then
-						x:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
-					else
-						x:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
-					end
-					it = it + 1
+				elseif formType == "Diamond" then
+					self:DoFormation_Diamond(v,it)
 				end
-				if LimitNumber != 0 && it == LimitNumber then return true end
+				-- Move type
+				if v.IsVJBaseSNPC_Human == true && !IsValid(v:GetActiveWeapon()) then
+					v:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
+				else
+					v:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH", function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+				end
 			end
+			if limit != 0 && it >= limit then return true end -- Return true if it reached the limit
 		end
 	end
 end
@@ -3581,8 +3582,8 @@ function ENT:DoKilledEnemy(argent,attacker,inflictor)
 	if !IsValid(argent) then return end
 	-- If it can only do it if there is no enemies left then check --> (If there no valid enemy) OR (The number of enemies is 1 or less)
 	if (self.OnlyDoKillEnemyWhenClear == false) or (self.OnlyDoKillEnemyWhenClear == true && (!IsValid(self:GetEnemy()) or (self.ReachableEnemyCount <= 1))) then
+		self:CustomOnDoKilledEnemy(argent, attacker, inflictor)
 		self:PlaySoundSystem("OnKilledEnemy")
-		self:CustomOnDoKilledEnemy(argent,attacker,inflictor)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3652,27 +3653,28 @@ function ENT:OnTakeDamage(dmginfo)
 	self:CustomOnTakeDamage_AfterDamage(dmginfo,hitgroup)
 	DoBleed()
 
+	-- Make passive NPCs run and their allies as well
+	if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && CurTime() > self.Passive_NextRunOnDamageT then
+		if self.Passive_RunOnDamage == true && self:Health() >= 0 then -- Don't run if not allowed or dead
+			self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
+		end
+		if self.Passive_AlliesRunOnDamage == true then
+			local checka = self:Allies_Check(self.Passive_AlliesRunOnDamageDistance)
+			if checka != nil then
+				for _,v in ipairs(checka) do
+					v.Passive_NextRunOnDamageT = CurTime() + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
+					v:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
+					v:PlaySoundSystem("Alert")
+				end
+			end
+		end
+		self.Passive_NextRunOnDamageT = CurTime() + math.Rand(self.Passive_NextRunOnDamageTime.a, self.Passive_NextRunOnDamageTime.b)
+	end
+
 	if self:Health() >= 0 then
 		self:DoFlinch(dmginfo,hitgroup)
 		self:DamageByPlayerCode(dmginfo,hitgroup)
 		self:PlaySoundSystem("Pain")
-
-		if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && CurTime() > self.Passive_NextRunOnDamageT then
-			if self.Passive_RunOnDamage == true then
-				self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) end)
-			end
-			if self.Passive_AlliesRunOnDamage then
-				local checka = self:CheckAlliesAroundMe(self.Passive_AlliesRunOnDamageDistance)
-				if checka != nil then
-					for _,v in ipairs(checka) do
-						v.Passive_NextRunOnDamageT = CurTime() + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
-						v:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) end)
-						//v:PlaySoundSystem("Alert") -- Miyan gentaninaroon hamar!
-					end
-				end
-			end
-			self.Passive_NextRunOnDamageT = CurTime() + math.Rand(self.Passive_NextRunOnDamageTime.a, self.Passive_NextRunOnDamageTime.b)
-		end
 
 		if self.MoveOrHideOnDamageByEnemy == true && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && IsValid(self:GetEnemy()) && CurTime() > self.NextMoveOrHideOnDamageByEnemyT && self:EyePos():Distance(self:GetEnemy():EyePos()) < self.Weapon_FiringDistanceFar && IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.ThrowingGrenade == false && CurTime() > self.TakingCoverT && self:Visible(self:GetEnemy()) && self.VJ_IsBeingControlled == false && self.MeleeAttacking == false && self.IsReloadingWeapon == false then
 			if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == true && self.MoveOrHideOnDamageByEnemy_OnlyMove == false then			
@@ -3692,9 +3694,9 @@ function ENT:OnTakeDamage(dmginfo)
 		end
 
 		if self.CallForBackUpOnDamage == true && CurTime() > self.NextCallForBackUpOnDamageT && self.ThrowingGrenade == false && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && ((!IsValid(DamageInflictor)) or (IsValid(DamageInflictor) && DamageInflictor:GetClass() != "entityflame")) && IsValid(DamageAttacker) && DamageAttacker:GetClass() != "entityflame" then
-			local allies = self:CheckAlliesAroundMe(self.CallForBackUpOnDamageDistance)
+			local allies = self:Allies_Check(self.CallForBackUpOnDamageDistance)
 			if allies != nil then
-				self:BringAlliesToMe("Random",self.CallForBackUpOnDamageDistance,allies,self.CallForBackUpOnDamageLimit)
+				self:Allies_Bring("Random",self.CallForBackUpOnDamageDistance,allies,self.CallForBackUpOnDamageLimit)
 				self:ClearSchedule()
 				self.NextFlinchT = CurTime() + 1
 				local pickanim = VJ_PICK(self.CallForBackUpOnDamageAnimation)
@@ -3986,7 +3988,6 @@ function ENT:SpawnBloodDecal(dmginfo,hitgroup)
 	//if !tr.HitWorld then return end
 	util.Decal(VJ_PICK(self.CurrentChoosenBlood_Decal), tr.HitPos+tr.HitNormal, tr.HitPos-tr.HitNormal, self)
 	for _ = 1, 2 do
-		print("lololoololol")
 		if math.random(1,2) == 1 then util.Decal(VJ_PICK(self.CurrentChoosenBlood_Decal), tr.HitPos + tr.HitNormal + Vector(math.random(-70,70), math.random(-70,70),0), tr.HitPos - tr.HitNormal, self) end
 	end
 	
@@ -4026,11 +4027,11 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 	local checkdist = 800 -- Nayir vormeg tive amenan medzen e, adiga ere vor poon tive ela
 	if self.BringFriendsOnDeathDistance > 800 then checkdist = self.BringFriendsOnDeathDistance end
 	if self.AlertFriendsOnDeathDistance > 800 then checkdist = self.AlertFriendsOnDeathDistance end
-	local allies = self:CheckAlliesAroundMe(checkdist)
+	local allies = self:Allies_Check(checkdist)
 	if allies != nil then
 		local noalert = true -- Don't run the AlertFriendsOnDeath if we have BringFriendsOnDeath enabled!
 		if self.BringFriendsOnDeath == true then
-			self:BringAlliesToMe("Random",self.BringFriendsOnDeathDistance,allies,self.BringFriendsOnDeathLimit,true)
+			self:Allies_Bring("Random",self.BringFriendsOnDeathDistance,allies,self.BringFriendsOnDeathLimit,true)
 			noalert = false
 		end
 		local it = 0

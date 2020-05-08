@@ -184,7 +184,7 @@ function SWEP:CustomBulletSpawnPosition() return false end -- Return a position 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnFireAnimationEvent(pos,ang,event,options) return false end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnDrawWorldModel()return true end -- Return false to not draw the world model | This is client side only!
+function SWEP:CustomOnDrawWorldModel() return true end -- Return false to not draw the world model | This is client side only!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnDeploy() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
