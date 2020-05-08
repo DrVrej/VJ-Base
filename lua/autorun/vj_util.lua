@@ -7,10 +7,10 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 
 function util.VJ_SphereDamage(vAttacker,vInflictor,vPosition,vDamageRadius,vDamage,vDamageType,vBlockCertainEntities,vUseRealisticRadius,Tbl_Features,CustomCode)
-	local vPosition = vPosition or vAttacker:GetPos()
-	local vDamageRadius = vDamageRadius or 150
-	local vDamage = vDamage or 15
-	local vDamageType = vDamageType or DMG_BLAST
+	vPosition = vPosition or vAttacker:GetPos()
+	vDamageRadius = vDamageRadius or 150
+	vDamage = vDamage or 15
+	vDamageType = vDamageType or DMG_BLAST
 	local vTbl_Features = Tbl_Features or {}
 		local vTbl_DisableVisibilityCheck = vTbl_Features.DisableVisibilityCheck or false -- Should it disable the visibility check? | true = Disables the visibility check
 		local vTbl_Force = vTbl_Features.Force or false -- The general force | false = Don't use any force
@@ -28,7 +28,7 @@ function util.VJ_SphereDamage(vAttacker,vInflictor,vPosition,vDamageRadius,vDama
 		Findents = ents.FindInSphere(vPosition,vDamageRadius)
 	end
 	if (!Findents) then return end
-	for k,v in pairs(Findents) do
+	for _,v in pairs(Findents) do
 		if (vAttacker.VJ_IsBeingControlled == true && vAttacker.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
 		if v:EntIndex() == vAttacker:EntIndex() && vTbl_DamageAttacker == false then continue end
 		local vtoself = v:NearestPoint(vPosition) -- From the enemy position to the given position
@@ -90,10 +90,8 @@ function util.VJ_GetWeaponPos(GetClassEntity)
 	if GetClassEntity:GetActiveWeapon() == NULL then return false end
 	local wep = GetClassEntity:GetActiveWeapon()
 	local getmuzzle;
-	local numattachments = wep:GetAttachments()
-	local numattachments = #wep:GetAttachments()
 	if (wep:IsValid()) then
-		for i = 1,numattachments do
+		for i = 1, #wep:GetAttachments() do
 			if wep:GetAttachments()[i].name == "muzzle" then
 				getmuzzle = "muzzle" break
 			elseif wep:GetAttachments()[i].name == "muzzleA" then

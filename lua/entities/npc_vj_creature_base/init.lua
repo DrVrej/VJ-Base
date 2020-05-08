@@ -980,7 +980,7 @@ ENT.OnPlayerSightNextT = 0
 ENT.NextDamageByPlayerT = 0
 ENT.NextDamageByPlayerSoundT = 0
 ENT.TimeSinceLastSeenEnemy = 0
-ENT.TimeSinceSeenEnemy = 0
+ENT.TimeSinceSetEnemy = 0
 ENT.Medic_NextHealT = 0
 ENT.CurrentAnim_IdleStand = 0
 ENT.NextFlinchT = 0
@@ -1987,18 +1987,22 @@ function ENT:Think()
 	
 		local ene = self:GetEnemy()
 		if IsValid(ene) then
-			if self.IsDoingFaceEnemy == true /*&& self.VJ_IsBeingControlled == false*/ then self:SetAngles(self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle())) end
 			self:DoConstantlyFaceEnemyCode()
-			if (self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene))) /*&& self.VJ_IsBeingControlled == false*/) then self:SetAngles(self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle())) end
+			if self.IsDoingFaceEnemy == true or (self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene)))) then
+				self:SetAngles(self:VJ_ReturnAngle((ene:GetPos() - self:GetPos()):Angle()))
+			end
+
 			self.ResetedEnemy = false
-			self:UpdateEnemyMemory(ene,ene:GetPos())
+			self:UpdateEnemyMemory(ene, ene:GetPos())
 			self.LatestEnemyPosition = ene:GetPos()
 			self.LatestEnemyDistance = self:GetPos():Distance(ene:GetPos())
 			self.LatestEnemyClass = ene
-			self.TimeSinceLastSeenEnemy = 0
-			self.TimeSinceSeenEnemy = self.TimeSinceSeenEnemy + 0.1
 			if (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (self.LatestEnemyDistance < self.SightDistance) then
-				local seentr = util.TraceLine({start = self:NearestPoint(self:GetPos() +self:OBBCenter()),endpos = ene:EyePos(),filter = function(ent) if (ent:GetClass() == self:GetClass() or self:Disposition(ent) == D_LI) then return false end end})
+				local seentr = util.TraceLine({
+					start = self:NearestPoint(self:GetPos() + self:OBBCenter()),
+					endpos = ene:EyePos(),
+					filter = function(ent) if (ent:GetClass() == self:GetClass() or self:Disposition(ent) == D_LI) then return false end end -- Ignore allies
+				})
 				if (ene:Visible(self) or (IsValid(seentr.Entity) && seentr.Entity:GetClass() == ene)) then
 					self.LastSeenEnemyTime = 0
 					self.LatestVisibleEnemyPosition = ene:GetPos()
@@ -2009,26 +2013,29 @@ function ENT:Think()
 				self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1
 			end
 
-			if self.CallForHelp == true && self.Dead == false && CurTime() > self.NextCallForHelpT then
-				self:CallForHelpCode(self.CallForHelpDistance)
-				self.NextCallForHelpT = CurTime() + self.NextCallForHelpTime
-			end
+			if self.Dead == false then
+				-- Call for help
+				if self.CallForHelp == true && CurTime() > self.NextCallForHelpT then
+					self:CallForHelpCode(self.CallForHelpDistance)
+					self.NextCallForHelpT = CurTime() + self.NextCallForHelpTime
+				end
 
-			if self.NoChaseAfterCertainRange == true && ((self.NoChaseAfterCertainRange_Type == "OnlyRange" && self.HasRangeAttack == true) or (self.NoChaseAfterCertainRange_Type == "Regular")) then
-				local fardist = self.NoChaseAfterCertainRange_FarDistance
-				local closedist = self.NoChaseAfterCertainRange_CloseDistance
-				if fardist == "UseRangeDistance" then fardist = self.RangeDistance end
-				if closedist == "UseRangeDistance" then closedist = self.RangeToMeleeDistance end
-				if (self.LatestEnemyDistance < fardist) && (self.LatestEnemyDistance > closedist) && ene:Visible(self) /*&& self:CanDoCertainAttack("RangeAttack") == true*/ then
-					self.RangeAttack_DisableChasingEnemy = true
-					if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then self:StopMoving() end
-					if self.MovementType == VJ_MOVETYPE_GROUND && !self:IsMoving() then self:SetAngles(self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle())) end
-					if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && CurTime() > self.AA_MoveLength_Wander /*&& ((self.AA_CurrentMoveAnimationType != "Calm") or (self.AA_CurrentMoveAnimationType == "Calm" && self:GetVelocity():Length() > 0))*/ then self:AAMove_Wander(true,false) /*self:AAMove_Stop()*/ end
-				else
-					self.RangeAttack_DisableChasingEnemy = false
-					if self.CurrentSchedule != nil && self.CurrentSchedule.Name != "vj_chase_enemy" then self:DoChaseAnimation() end
-					//if GetConVarNumber("vj_npc_nochasingenemy") == 0 then self.DisableChasingEnemy = true end else
-					//if GetConVarNumber("vj_npc_nochasingenemy") == 0 then self.DisableChasingEnemy = false end
+				if self.NoChaseAfterCertainRange == true && ((self.NoChaseAfterCertainRange_Type == "OnlyRange" && self.HasRangeAttack == true) or (self.NoChaseAfterCertainRange_Type == "Regular")) then
+					local fardist = self.NoChaseAfterCertainRange_FarDistance
+					local closedist = self.NoChaseAfterCertainRange_CloseDistance
+					if fardist == "UseRangeDistance" then fardist = self.RangeDistance end
+					if closedist == "UseRangeDistance" then closedist = self.RangeToMeleeDistance end
+					if (self.LatestEnemyDistance < fardist) && (self.LatestEnemyDistance > closedist) && ene:Visible(self) /*&& self:CanDoCertainAttack("RangeAttack") == true*/ then
+						self.RangeAttack_DisableChasingEnemy = true
+						if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then self:StopMoving() end
+						if self.MovementType == VJ_MOVETYPE_GROUND && !self:IsMoving() then self:SetAngles(self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle())) end
+						if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && CurTime() > self.AA_MoveLength_Wander /*&& ((self.AA_CurrentMoveAnimationType != "Calm") or (self.AA_CurrentMoveAnimationType == "Calm" && self:GetVelocity():Length() > 0))*/ then self:AAMove_Wander(true,false) /*self:AAMove_Stop()*/ end
+					else
+						self.RangeAttack_DisableChasingEnemy = false
+						if self.CurrentSchedule != nil && self.CurrentSchedule.Name != "vj_chase_enemy" then self:DoChaseAnimation() end
+						//if GetConVarNumber("vj_npc_nochasingenemy") == 0 then self.DisableChasingEnemy = true end else
+						//if GetConVarNumber("vj_npc_nochasingenemy") == 0 then self.DisableChasingEnemy = false end
+					end
 				end
 			end
 		end
@@ -2211,7 +2218,7 @@ function ENT:Think()
 				self:PoseParameterLookingCode(true)
 				//self:ClearPoseParameters()
 			end
-			self.TimeSinceSeenEnemy = 0
+			self.TimeSinceSetEnemy = 0
 			self.TimeSinceLastSeenEnemy = self.TimeSinceLastSeenEnemy + 0.1
 			if self.ResetedEnemy == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") self.ResetedEnemy = true self:ResetEnemy(true) end
 			//self:NextThink(CurTime()+10)

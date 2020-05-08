@@ -25,7 +25,7 @@ if (CLIENT) then
 		reset:SetText("#vjbase.menu.general.reset.everything")
 		reset:SetSize(150,25)
 		reset:SetColor(Color(0,0,0,255))
-		reset.DoClick = function(reset)
+		reset.DoClick = function()
 			for k,v in pairs(DefaultConVars) do
 				if v == "" then
 				LocalPlayer():ConCommand(k.." ".."None")
@@ -45,7 +45,7 @@ if (CLIENT) then
 		tutorial:SetText("#tool.vjstool.menu.tutorialvideo")
 		tutorial:SetSize(150, 20)
 		tutorial:SetColor(Color(0,0,255,255))
-		tutorial.DoClick = function(tutorial)
+		tutorial.DoClick = function()
 			gui.OpenURL("http://www.youtube.com/watch?v=Qf-vrE-BAW4")
 		end
 		Panel:AddPanel(tutorial)

@@ -280,7 +280,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:TranslateActivity(act)
 	if (self:GetOwner():IsNPC()) then
-		if self:GetOwner().IsVJBaseSNPC == true then
+		if self:GetOwner().IsVJBaseSNPC_Human == true then
 			if (self:GetOwner().WeaponAnimTranslations[act]) then
 				return self:GetOwner().WeaponAnimTranslations[act]
 			end
@@ -303,7 +303,7 @@ function SWEP:CanBePickedUpByNPCs()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_ServerNextFire()
-	if (CLIENT) or !IsValid(self) or !IsValid(self:GetOwner()) or !self:GetOwner():IsNPC() then return end
+	if CLIENT or !IsValid(self) or !IsValid(self:GetOwner()) or !self:GetOwner():IsNPC() then return end
 	
 	local pos = self:DecideBulletPosition()
 	if pos != nil then
@@ -321,7 +321,7 @@ function SWEP:NPC_ServerNextFire()
 	self:CustomOnNPC_ServerThink()
 
 	local function FireCode()
-		self:NPCShoot_Primary(ShootPos,ShootDir) -- Panpoushde zarg
+		self:NPCShoot_Primary() -- Panpoushde zarg
 		hook.Remove("Think", self)
 		//print(self.NPC_NextPrimaryFire)
 		local nxt = self.NPC_NextPrimaryFire
@@ -337,10 +337,10 @@ function SWEP:NPCAbleToShoot(CheckSec)
 	CheckSec = CheckSec or false -- Make it only check conditions that secondary fire needs
 	local owner = self:GetOwner()
 	if IsValid(owner) && owner:IsNPC() then
-		if (owner.IsVJBaseSNPC_Human) then
-			if IsValid(owner:GetEnemy()) && owner:IsAbleToShootWeapon(true, true) == false then return false end
+		if owner.IsVJBaseSNPC_Human == true && IsValid(owner:GetEnemy()) && owner:IsAbleToShootWeapon(true, true) == false then
+			return false
 		end
-		if owner:GetActivity() != nil && (((owner.IsVJBaseSNPC_Human) && ((owner.CurrentWeaponAnimation == owner:GetActivity()) or (owner:GetActivity() == owner:TranslateToWeaponAnim(owner.CurrentWeaponAnimation)) or (owner.DoingWeaponAttack_Standing == false && owner.DoingWeaponAttack == true))) or (!(owner.IsVJBaseSNPC_Human))) then
+		if owner:GetActivity() != nil && ((owner.IsVJBaseSNPC_Human == true && ((owner.CurrentWeaponAnimation == owner:GetActivity()) or (owner:GetActivity() == owner:TranslateToWeaponAnim(owner.CurrentWeaponAnimation)) or (owner.DoingWeaponAttack_Standing == false && owner.DoingWeaponAttack == true))) or (!owner.IsVJBaseSNPC_Human)) then
 			if (owner.IsVJBaseSNPC_Human) then
 				if owner.AllowWeaponReloading == true && owner.Weapon_ShotsSinceLastReload >= owner.Weapon_StartingAmmoAmount then -- No ammo!
 					if owner.VJ_IsBeingControlled == true then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER,"Press R to reload!") end
@@ -369,7 +369,7 @@ function SWEP:NPCAbleToShoot(CheckSec)
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:NPCShoot_Primary(ShootPos,ShootDir)
+function SWEP:NPCShoot_Primary(ShootPos, ShootDir)
 	//self:SetClip1(self:Clip1() - 1)
 	//if CurTime() > self.NPC_NextPrimaryFireT then
 	//self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
@@ -409,7 +409,7 @@ function SWEP:NPCShoot_Primary(ShootPos,ShootDir)
 			self:PrimaryAttack()
 			if self.NPC_NextPrimaryFire != false then
 				self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
-				for tk, tv in ipairs(self.NPC_TimeUntilFireExtraTimers) do
+				for _, tv in ipairs(self.NPC_TimeUntilFireExtraTimers) do
 					timer.Simple(tv, function() if IsValid(self) && IsValid(owner) && self:NPCAbleToShoot() == true then self:PrimaryAttack() end end)
 				end
 			end
@@ -460,12 +460,9 @@ function SWEP:PrimaryAttack(UseAlt)
 		end
 	end
 	
-	if isnpc == true then
-		if owner.DisableWeaponFiringGesture != true then
-			local owner = self:GetOwner()
-			local anim = owner:TranslateToWeaponAnim(VJ_PICK(owner.AnimTbl_WeaponAttackFiringGesture))
-			owner:VJ_ACT_PLAYACTIVITY(anim, false, false, false, 0, {AlwaysUseGesture=true})
-		end
+	if owner.IsVJBaseSNPC_Human == true && owner.DisableWeaponFiringGesture != true then
+		local anim = owner:TranslateToWeaponAnim(VJ_PICK(owner.AnimTbl_WeaponAttackFiringGesture))
+		owner:VJ_ACT_PLAYACTIVITY(anim, false, false, false, 0, {AlwaysUseGesture=true})
 	end
 	
 	if self.Primary.DisableBulletCode == false then
@@ -571,7 +568,7 @@ function SWEP:PrimaryAttackEffects()
 				util.Effect("VJ_Weapon_RifleMuzzle1",vjeffectmuz)
 			else
 				if self.PrimaryEffects_MuzzleParticlesAsOne == true then
-					for k,v in pairs(self.PrimaryEffects_MuzzleParticles) do
+					for _,v in pairs(self.PrimaryEffects_MuzzleParticles) do
 						if !istable(v) then
 							ParticleEffectAttach(v,PATTACH_POINT_FOLLOW,self,muzzleattach)
 						end
@@ -582,7 +579,7 @@ function SWEP:PrimaryAttackEffects()
 			end
 		end
 		
-		if (SERVER) && self.PrimaryEffects_SpawnDynamicLight == true && GetConVarNumber("vj_wep_nomuszzleflash_dynamiclight") == 0 then
+		if SERVER && self.PrimaryEffects_SpawnDynamicLight == true && GetConVarNumber("vj_wep_nomuszzleflash_dynamiclight") == 0 then
 			local FireLight1 = ents.Create("light_dynamic")
 			FireLight1:SetKeyValue("brightness", self.PrimaryEffects_DynamicLightBrightness)
 			FireLight1:SetKeyValue("distance", self.PrimaryEffects_DynamicLightDistance)
@@ -616,16 +613,12 @@ function SWEP:FireAnimationEvent(pos,ang,event,options)
 	
 	if event == 22 or event == 6001 then return true end
 	
-	if GetConVarNumber("vj_wep_nomuszzleflash") == 1 then
-		if event == 21 or event == 22 or event == 5001 or event == 5003 then
-			return true
-		end
+	if GetConVarNumber("vj_wep_nomuszzleflash") == 1 && event == 21 or event == 22 or event == 5001 or event == 5003 then
+		return true
 	end
 
-	if GetConVarNumber("vj_wep_nobulletshells") == 1 then
-		if event == 20 or event == 6001 then
-			return true
-		end
+	if GetConVarNumber("vj_wep_nobulletshells") == 1 && event == 20 or event == 6001 then
+		return true
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -731,13 +724,9 @@ function SWEP:DecideBulletPosition()
 	if customPos != false then
 		return customPos
 	end
-	if self.NPC_BulletSpawnAttachment != "" then
-		if self:LookupAttachment(self.NPC_BulletSpawnAttachment) == 0 or self:LookupAttachment(self.NPC_BulletSpawnAttachment) == -1 then
-			-- Axper jan, Hay es?
-		else
-			hascustom = true
-			return self:GetAttachment(self:LookupAttachment(self.NPC_BulletSpawnAttachment)).Pos
-		end
+	if self.NPC_BulletSpawnAttachment != "" && self:LookupAttachment(self.NPC_BulletSpawnAttachment) != 0 && self:LookupAttachment(self.NPC_BulletSpawnAttachment) != -1 then
+		hascustom = true
+		return self:GetAttachment(self:LookupAttachment(self.NPC_BulletSpawnAttachment)).Pos
 	end
 	local getmuzzle;
 	//local numattachments = self:GetAttachments()

@@ -24,7 +24,7 @@ if (CLIENT) then
 		reset:SetText("#vjbase.menu.general.reset.everything")
 		reset:SetSize(150,25)
 		reset:SetColor(Color(0,0,0,255))
-		reset.DoClick = function(reset)
+		reset.DoClick = function()
 			for k,v in pairs(DefaultConVars) do
 				if v == "" then
 				LocalPlayer():ConCommand(k.." ".."None")
@@ -87,7 +87,7 @@ if (CLIENT) then
 			end
 		//MenuFrame:AddItem(CheckList)
 		//CheckList:SizeToContents()
-		for k,v in pairs(list.Get("NPCUsableWeapons")) do
+		for _,v in pairs(list.Get("NPCUsableWeapons")) do
 			CheckList:AddLine(v.title,v.class)
 		end
 		CheckList:SortByColumn(1,false)

@@ -32,7 +32,7 @@ if (CLIENT) then
 		reset:SetText("#vjbase.menu.general.reset.everything")
 		reset:SetSize(150,25)
 		reset:SetColor(Color(0,0,0,255))
-		reset.DoClick = function(reset)
+		reset.DoClick = function()
 			for k,v in pairs(DefaultConVars) do
 				if v == "" then
 				LocalPlayer():ConCommand(k.." ".."None")
@@ -52,7 +52,7 @@ if (CLIENT) then
 		tutorial:SetText("#tool.vjstool.menu.tutorialvideo")
 		tutorial:SetSize(150, 20)
 		tutorial:SetColor(Color(0,0,255,255))
-		tutorial.DoClick = function(tutorial)
+		tutorial.DoClick = function()
 			gui.OpenURL("http://www.youtube.com/watch?v=5H_hIz35W90")
 		end
 		Panel:AddPanel(tutorial)
@@ -89,7 +89,7 @@ if (CLIENT) then
 				chat.AddText(Color(0,255,0),"NPC",Color(255,100,0)," "..line:GetValue(1).." ",Color(0,255,0),"removed!")
 				CheckList:RemoveLine(lineID)
 				table.Empty(VJ_NPCSPAWNER_TblCurrentLinesUsable)
-				for kLine,vLine in pairs(VJ_NPCSPAWNER_TblCurrentLines) do
+				for _,vLine in pairs(VJ_NPCSPAWNER_TblCurrentLines) do
 					table.insert(VJ_NPCSPAWNER_TblCurrentLinesUsable,{Entities=vLine:GetValue(4),SpawnPosition=vLine:GetValue(2),WeaponsList=vLine:GetValue(3),EntityName=vLine:GetValue(1)})
 				end
 			end
@@ -102,12 +102,12 @@ if (CLIENT) then
 			end
 		end
 		table.Empty(VJ_NPCSPAWNER_TblCurrentValues)
-		for kLine,vLine in pairs(VJ_NPCSPAWNER_TblCurrentLines) do
+		for _,vLine in pairs(VJ_NPCSPAWNER_TblCurrentLines) do
 			CheckList:AddLine(vLine:GetValue(1),vLine:GetValue(2),vLine:GetValue(3),vLine:GetValue(4))
 		end
 		VJ_NPCSPAWNER_TblCurrentLines = CheckList:GetLines()
 		table.Empty(VJ_NPCSPAWNER_TblCurrentLinesUsable)
-		for kLine,vLine in pairs(VJ_NPCSPAWNER_TblCurrentLines) do
+		for _,vLine in pairs(VJ_NPCSPAWNER_TblCurrentLines) do
 			table.insert(VJ_NPCSPAWNER_TblCurrentLinesUsable,{Entities=vLine:GetValue(4),SpawnPosition=vLine:GetValue(2),WeaponsList=vLine:GetValue(3),EntityName=vLine:GetValue(1)})
 		end
 		Panel:AddControl("Label", {Text = language.GetPhrase("#tool.vjstool_npcspawner.label2")..":"})
@@ -151,7 +151,7 @@ if (CLIENT) then
 			end
 		//MenuFrame:AddItem(CheckList)
 		//CheckList:SizeToContents()
-		for k,v in pairs(list.Get("NPC")) do
+		for _,v in pairs(list.Get("NPC")) do
 			getcat = v.Category
 			if v.Category == "" then getcat = "Unknown" end
 			CheckList:AddLine(v.Name,v.Class,getcat)
@@ -194,7 +194,7 @@ if (CLIENT) then
 			end
 		//MenuFrame:AddItem(CheckList)
 		//CheckList:SizeToContents()
-		for k,v in pairs(list.Get("NPCUsableWeapons")) do
+		for _,v in pairs(list.Get("NPCUsableWeapons")) do
 			CheckList:AddLine(v.title,v.class)
 		end
 		CheckList:SortByColumn(1,false)
@@ -220,7 +220,7 @@ if (CLIENT) then
 		svpos = net.ReadVector()
 		svclicktype = net.ReadString()
 		local convartbl = {}
-		for k,v in pairs(DefaultConVars) do
+		for k,_ in pairs(DefaultConVars) do
 			convartbl[k] = GetConVarNumber(k)
 		end
 		net.Start("vj_npcspawner_sv_create")
@@ -260,7 +260,7 @@ else -- If SERVER
 				angs.yaw = angs.yaw + 180
 			end
 			spawner:SetAngles(angs)
-			for k,v in pairs(svgetlines) do
+			for _,v in pairs(svgetlines) do
 				//if v.IsVJBaseSpawner == true then svowner:ChatPrint("Can't be spawned because it's a spawner") end
 				table.insert(spawner.EntitiesToSpawn,{EntityName = "NPC"..math.random(1,99999999),SpawnPosition = {vForward=v.SpawnPosition.x,vRight=v.SpawnPosition.y,vUp=v.SpawnPosition.z},Entities = {v.Entities},WeaponsList={v.WeaponsList}})
 			end

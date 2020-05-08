@@ -123,6 +123,7 @@ function ENT:AAMove_MoveToPos(Ent,ShouldPlayAnim,vAdditionalFeatures)
 	vAd_PosUp = vAd_AdditionalFeatures.PosUp or 1 -- This will add the given value to the set position's up
 	vAd_PosRight = vAd_AdditionalFeatures.PosRight or 1 -- This will add the given value to the set position's right
 	local MoveSpeed = self.Aerial_FlyingSpeed_Calm
+	local Debug = self.AA_EnableDebug
 	if self.MovementType == VJ_MOVETYPE_AQUATIC then
 		if Debug == true then
 			print("--------")
@@ -148,7 +149,6 @@ function ENT:AAMove_MoveToPos(Ent,ShouldPlayAnim,vAdditionalFeatures)
 		MoveSpeed = self.Aquatic_SwimmingSpeed_Alerted
 	end
 	
-	local Debug = self.AA_EnableDebug
 	ShouldPlayAnim = ShouldPlayAnim or false
 	NoFace = NoFace or false
 
@@ -247,7 +247,7 @@ function ENT:AAMove_MoveToPos(Ent,ShouldPlayAnim,vAdditionalFeatures)
 	if vel_stop == false then
 		//local myvel = self:GetVelocity()
 		//local enevel = Ent:GetVelocity()
-		local vel_set = ((enepos) - (self:GetPos() + self:OBBCenter())):GetNormal()*MoveSpeed + self:GetUp()*vel_up + self:GetForward()*vel_for
+		local vel_set = (enepos - (self:GetPos() + self:OBBCenter())):GetNormal()*MoveSpeed + self:GetUp()*vel_up + self:GetForward()*vel_for
 		//local vel_set_yaw = vel_set:Angle().y
 		self.CurrentTurningAngle = self:VJ_ReturnAngle(self:VJ_ReturnAngle((vel_set):Angle()))
 		//self:SetAngles(self:VJ_ReturnAngle((vel_set):Angle()))
@@ -266,8 +266,8 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AAMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
 	if self.Dead == true or (self.NextChaseTime > CurTime()) or !IsValid(self:GetEnemy()) then return end
-	local ShouldPlayAnim = ShouldPlayAnim or false
-	local UseCalmVariables = UseCalmVariables or false
+	ShouldPlayAnim = ShouldPlayAnim or false
+	UseCalmVariables = UseCalmVariables or false
 	local Debug = self.AA_EnableDebug
 	local MoveSpeed = self.Aerial_FlyingSpeed_Alerted
 	if self.MovementType == VJ_MOVETYPE_AQUATIC then
@@ -402,7 +402,7 @@ function ENT:AAMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
 	-- Final velocity
 	if vel_stop == false then
 		self.CurrentTurningAngle = false
-		local vel_set = ((enepos) - (self:GetPos() + self:OBBCenter())):GetNormal()*MoveSpeed + self:GetUp()*vel_up + self:GetForward()*vel_for
+		local vel_set = (enepos - (self:GetPos() + self:OBBCenter())):GetNormal()*MoveSpeed + self:GetUp()*vel_up + self:GetForward()*vel_for
 		//local vel_set_yaw = vel_set:Angle().y
 		self:SetLocalVelocity(vel_set)
 		local vel_len = CurTime() + (dist_selfhit / vel_set:Length())

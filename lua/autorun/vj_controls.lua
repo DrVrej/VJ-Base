@@ -246,14 +246,14 @@ end,
 	-- ConVar ----------------------------------------------------------------------------------------------------
 AddConVar = function(cName,cValue,cFlags)
 	if !ConVarExists(cName) then
-		local cFlags = cFlags or {FCVAR_NONE}
+		cFlags = cFlags or {FCVAR_NONE}
 		CreateConVar(cName,cValue,cFlags)
 	end
 end,
 	-- Client ConVar ----------------------------------------------------------------------------------------------------
 AddClientConVar = function(cName,cValue,cHelpText)
 	if !ConVarExists(cName) then
-		local cHelpText = cHelpText or ""
+		cHelpText = cHelpText or ""
 		CreateClientConVar(cName,cValue,true,true,cHelpText)
 	end
 end,

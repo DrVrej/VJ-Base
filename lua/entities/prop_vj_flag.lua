@@ -15,7 +15,7 @@ ENT.Purpose 		= "Used for flags."
 ENT.Instructions 	= "Don't change anything."
 ENT.Category		= "VJ Base"
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-if !(SERVER) then return end
+if !SERVER then return end
 
 function ENT:CustomOnInitialize()
 	self:SetModel("models/vj_props/armenian_flag01.mdl")

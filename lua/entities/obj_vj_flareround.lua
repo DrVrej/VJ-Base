@@ -27,7 +27,7 @@ if (CLIENT) then
 	function ENT:Draw() self:DrawModel() end
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-if !(SERVER) then return end
+if !SERVER then return end
 
 ENT.IdleSound1 = Sound("weapons/flaregun/burn.wav")
 ENT.TouchSound = Sound("weapons/hegrenade/he_bounce-1.wav")
@@ -112,7 +112,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 //print(self:GetOwner())
-if self.Dead == true then if self.idlesoundc then self.idlesoundc:Stop() end end
+if self.Dead == true && self.idlesoundc then self.idlesoundc:Stop() end
 /*if self:IsValid() then
 if self.Dead == false then
 	self.idlesoundc = CreateSound(self, self.IdleSound1)

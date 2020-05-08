@@ -595,6 +595,7 @@ function NPC_MetaTable:VJ_DoSetEnemy(argent, ShouldStopActs, DoSmallWhenActiveEn
 	DoSmallWhenActiveEnemy = DoSmallWhenActiveEnemy or false
 	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == argent then self:DoMedicCode_Reset() end
 	if DoSmallWhenActiveEnemy == true && IsValid(self:GetEnemy()) then
+		self.TimeSinceLastSeenEnemy = 0
 		self:AddEntityRelationship(argent, D_HT, 99)
 		//self:SetEnemy(argent)
 		self:UpdateEnemyMemory(argent, argent:GetPos())
@@ -602,6 +603,8 @@ function NPC_MetaTable:VJ_DoSetEnemy(argent, ShouldStopActs, DoSmallWhenActiveEn
 			//self:SetEnemy(argent)
 		//end
 	else
+		self.TimeSinceLastSeenEnemy = 0
+		self.TimeSinceSetEnemy = CurTime()
 		self.NextResetEnemyT = CurTime() + 0.5 //2
 		self:AddEntityRelationship(argent, D_HT, 99)
 		self:SetEnemy(argent)

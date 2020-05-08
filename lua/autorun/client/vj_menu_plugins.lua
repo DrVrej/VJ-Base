@@ -23,7 +23,7 @@ function VJ_PLUGINS(Panel)
 	CheckList:AddColumn("#vjbase.menu.plugins.header2") -- Add column
 	//Panel:SetName("Test") -- Renames the blue label
 	if VJBASE_PLUGINS != nil then
-		for k,v in SortedPairsByMemberValue(VJBASE_PLUGINS,"Name") do
+		for _,v in SortedPairsByMemberValue(VJBASE_PLUGINS,"Name") do
 			CheckList:AddLine(v.Name,v.Type)
 		end
 	else
@@ -43,7 +43,7 @@ function VJ_PLUGINS(Panel)
 	changelog:SetText("#vjbase.menu.plugins.changelog")
 	changelog:SetSize(150,25)
 	changelog:SetColor(Color(39, 174, 96, 255))
-	changelog.DoClick = function(changelog)
+	changelog.DoClick = function(x)
 		gui.OpenURL("http://steamcommunity.com/sharedfiles/filedetails/changelog/131759821")
 	end
 	Panel:AddPanel(changelog)
@@ -54,7 +54,7 @@ function VJ_PLUGINS(Panel)
 	github:SetText("#vjbase.menu.plugins.makeaddon")
 	github:SetSize(150,25)
 	github:SetColor(Color(52, 152, 219, 255))
-	github.DoClick = function(github)
+	github.DoClick = function(x)
 		gui.OpenURL("https://github.com/DrVrej/VJ-Base/wiki")
 	end
 	Panel:AddPanel(github)
@@ -66,7 +66,7 @@ function VJ_PLUGINS(Panel)
 		lennyface:SetText("I AM HERE")
 		lennyface:SetSize(150, 25)
 		lennyface:SetColor(Color(52, 152, 219, 255))
-		lennyface.DoClick = function(lennyface)
+		lennyface.DoClick = function(x)
 			net.Start("VJSay")
 			net.SendToServer()
 		end
@@ -91,7 +91,7 @@ function VJWelcomeCode()
     local ra = "<"
 	local la = ">"
     local dashes = ""
-	for i= 1,29 do dashes = dashes.."-" end
+	for _ = 1,29 do dashes = dashes.."-" end
     
     chat.AddText(Color(255,215,0),"|"..dashes..la, Color(0,255,255), " "..VJBASE_GETNAME.." ", Color(30,200,255), VJBASE_VERSION.." ", Color(255,215,0), ra..dashes.."|")
     chat.AddText(Color(255,215,0),"|- ", Color(255,255,0),"NOTICE! ", Color(255,255,255), "To configure ", Color(0,255,255), VJBASE_GETNAME.." ", Color(255,255,255), " click on ", Color(0,255,255), "DrVrej", Color(255,255,255)," in the spawn menu! ", Color(255,215,0),"-|")

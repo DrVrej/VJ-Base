@@ -25,7 +25,7 @@ if (CLIENT) then
 		reset:SetText("#vjbase.menu.general.reset.everything")
 		reset:SetSize(150,25)
 		reset:SetColor(Color(0,0,0,255))
-		reset.DoClick = function(reset)
+		reset.DoClick = function()
 			for k,v in pairs(DefaultConVars) do
 				if v == "" then
 				LocalPlayer():ConCommand(k.." ".."None")
@@ -45,7 +45,7 @@ if (CLIENT) then
 		tutorial:SetText("#tool.vjstool.menu.tutorialvideo")
 		tutorial:SetSize(150, 20)
 		tutorial:SetColor(Color(0,0,255,255))
-		tutorial.DoClick = function(tutorial)
+		tutorial.DoClick = function()
 			gui.OpenURL("http://www.youtube.com/watch?v=SnuQU8Sc4cg")
 		end
 		Panel:AddPanel(tutorial)
@@ -65,18 +65,18 @@ if (CLIENT) then
 				chat.AddText(Color(255,100,0)," "..line:GetValue(1).." ",Color(0,255,0),"removed!")
 				CheckList:RemoveLine(lineID)
 				table.Empty(VJ_NPCRELATION_TblCurrentValues)
-				for kLine,vLine in pairs(CheckList:GetLines()) do
+				for _,vLine in pairs(CheckList:GetLines()) do
 					table.insert(VJ_NPCRELATION_TblCurrentValues,vLine:GetValue(1))
 				end
 			end
 		Panel:AddItem(CheckList)
-		for k,v in pairs(VJ_NPCRELATION_TblCurrentValues) do
+		for _,v in pairs(VJ_NPCRELATION_TblCurrentValues) do
 			CheckList:AddLine(v)
 		end
 		
 		local function InsertToTable(val)
 			if string.len(val) > 0 then
-				local val = string.upper(val)
+				val = string.upper(val)
 				if VJ_HasValue(VJ_NPCRELATION_TblCurrentValues,val) then
 					chat.AddText(Color(220,20,60),"ERROR! ",Color(255,100,0),val.." ",Color(220,20,60),"already exists in the table!")
 				else
@@ -103,37 +103,37 @@ if (CLIENT) then
 		button:SetText("#tool.vjstool_npcrelationship.button.combine")
 		button:SetSize(50,20)
 		button:SetColor(Color(0,0,0,255))
-		button.DoClick = function(button)
+		button.DoClick = function()
 			InsertToTable("CLASS_COMBINE")
 		end
 		Panel:AddPanel(button)
 		
-		local button = vgui.Create("DButton")
+		button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
 		button:SetText("#tool.vjstool_npcrelationship.button.antlion")
 		button:SetSize(50,20)
 		button:SetColor(Color(0,0,0,255))
-		button.DoClick = function(button)
+		button.DoClick = function()
 			InsertToTable("CLASS_ANTLION")
 		end
 		Panel:AddPanel(button)
 		
-		local button = vgui.Create("DButton")
+		button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
 		button:SetText("#tool.vjstool_npcrelationship.button.zombie")
 		button:SetSize(50,20)
 		button:SetColor(Color(0,0,0,255))
-		button.DoClick = function(button)
+		button.DoClick = function()
 			InsertToTable("CLASS_ZOMBIE")
 		end
 		Panel:AddPanel(button)
 		
-		local button = vgui.Create("DButton")
+		button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
 		button:SetText("#tool.vjstool_npcrelationship.button.player")
 		button:SetSize(50,20)
 		button:SetColor(Color(0,0,0,255))
-		button.DoClick = function(button)
+		button.DoClick = function()
 			InsertToTable("CLASS_PLAYER_ALLY")
 		end
 		Panel:AddPanel(button)
@@ -151,10 +151,10 @@ if (CLIENT) then
 	
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcrelationship_cl_select",function(len,pl)
-		ent = net.ReadEntity()
-		entname = net.ReadString()
-		hasclasstbl = net.ReadBool()
-		classtbl = net.ReadTable()
+		//local ent = net.ReadEntity()
+		local entname = net.ReadString()
+		//local hasclasstbl = net.ReadBool()
+		local classtbl = net.ReadTable()
 		chat.AddText(Color(0,255,0),"Obtained",Color(255,100,0)," "..entname.."'s ",Color(0,255,0),"relationship class list!")
 		//print(ent)
 		//print(hasclasstbl)
@@ -169,16 +169,16 @@ if (CLIENT) then
 	end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcrelationship_cl_leftclick",function(len,pl)
-		ent = net.ReadEntity()
-		entname = net.ReadString()
-		clicktype = net.ReadString()
-		allynum = net.ReadFloat()
+		local ent = net.ReadEntity()
+		local entname = net.ReadString()
+		local clicktype = net.ReadString()
+		local allynum = net.ReadFloat()
 		if clicktype == "ReloadClick" then entname = "Yourself" end
 		chat.AddText(Color(0,255,0),"#tool.vjstool_npcrelationship.print.applied",Color(255,100,0)," "..entname)
 		net.Start("vj_npcrelationship_sr_leftclick")
 		net.WriteEntity(ent)
 		//net.WriteTable(self)
-		net.WriteString(clicktype)
+		//net.WriteString(clicktype)
 		net.WriteTable(VJ_NPCRELATION_TblCurrentValues)
 		net.WriteFloat(allynum)
 		net.SendToServer()
@@ -189,13 +189,13 @@ else
 	util.AddNetworkString("vj_npcrelationship_sr_leftclick")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcrelationship_sr_leftclick",function(len,pl)
-		ent = net.ReadEntity()
-		clicktype = net.ReadString()
-		classtbl = net.ReadTable()
-		allynum = net.ReadFloat()
+		local ent = net.ReadEntity()
+		//local clicktype = net.ReadString()
+		local classtbl = net.ReadTable()
+		local allynum = net.ReadFloat()
 		if #classtbl > 0 then
 			ent.VJ_NPC_Class = classtbl
-			if (ent.IsVJBaseSNPC) && allynum == 1 && table.HasValue(classtbl,"CLASS_PLAYER_ALLY") then
+			if ent.IsVJBaseSNPC == true && allynum == 1 && table.HasValue(classtbl,"CLASS_PLAYER_ALLY") then
 				ent.FriendsWithAllPlayerAllies = true
 			end
 		else
@@ -207,47 +207,43 @@ end
 function TOOL:LeftClick(tr)
 	if (CLIENT) then return true end
 	local ent = tr.Entity
-	if IsValid(ent) then
-		if ent:IsPlayer() or ent:IsNPC() then
-			local entname = ent:GetName()
-			if entname == "" then entname = ent:GetClass() end
-			net.Start("vj_npcrelationship_cl_leftclick")
-			net.WriteEntity(ent)
-			net.WriteString(entname)
-			net.WriteString("LeftClick")
-			net.WriteFloat(self:GetClientNumber("allytoplyallies"))
-			net.Send(self:GetOwner())
-			return true
-		end
+	if IsValid(ent) && ent:IsPlayer() or ent:IsNPC() then
+		local entname = ent:GetName()
+		if entname == "" then entname = ent:GetClass() end
+		net.Start("vj_npcrelationship_cl_leftclick")
+		net.WriteEntity(ent)
+		net.WriteString(entname)
+		net.WriteString("LeftClick")
+		net.WriteFloat(self:GetClientNumber("allytoplyallies"))
+		net.Send(self:GetOwner())
+		return true
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:RightClick(tr)
 	if (CLIENT) then return true end
 	local ent = tr.Entity
-	if IsValid(ent) then
-		if ent:IsPlayer() or ent:IsNPC() then
-			local hasclasstbl = false
-			local classtbl = {nil}
-			local entname = ent:GetName()
-			if entname == "" then entname = ent:GetClass() end
-			if (ent.VJ_NPC_Class) then
-				hasclasstbl = true
-				//classtbl = ent.VJ_NPC_Class
-				for k,v in ipairs(ent.VJ_NPC_Class) do
-					table.insert(classtbl,v)
-				end
-				//if (classtbl.BaseClass) then table.remove(classtbl,BaseClass) end
+	if IsValid(ent) && ent:IsPlayer() or ent:IsNPC() then
+		//local hasclasstbl = false
+		local classtbl = {nil}
+		local entname = ent:GetName()
+		if entname == "" then entname = ent:GetClass() end
+		if (ent.VJ_NPC_Class) then
+			//hasclasstbl = true
+			//classtbl = ent.VJ_NPC_Class
+			for _,v in ipairs(ent.VJ_NPC_Class) do
+				table.insert(classtbl,v)
 			end
-			//PrintTable(ent.VJ_NPC_Class)
-			net.Start("vj_npcrelationship_cl_select")
-			net.WriteEntity(ent)
-			net.WriteString(entname)
-			net.WriteBool(hasclasstbl)
-			net.WriteTable(classtbl)
-			net.Send(self:GetOwner())
-			return true
+			//if (classtbl.BaseClass) then table.remove(classtbl,BaseClass) end
 		end
+		//PrintTable(ent.VJ_NPC_Class)
+		net.Start("vj_npcrelationship_cl_select")
+		//net.WriteEntity(ent)
+		net.WriteString(entname)
+		//net.WriteBool(hasclasstbl)
+		net.WriteTable(classtbl)
+		net.Send(self:GetOwner())
+		return true
 	end
 	/*	local trent = tr.Entity
 		trent:SetHealth(self:GetClientNumber("health"))

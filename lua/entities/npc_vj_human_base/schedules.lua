@@ -47,12 +47,10 @@ function ENT:StartSchedule(schedule)
 	if (!schedule.ConstantlyFaceEnemy) then schedule.ConstantlyFaceEnemy = false end -- Constantly face the enemy while doing this task
 	if (!schedule.ConstantlyFaceEnemyVisible) then schedule.ConstantlyFaceEnemyVisible = false end
 	if (!schedule.CanShootWhenMoving) then schedule.CanShootWhenMoving = false end -- Is it able to fire when moving?
-	if self.MovementType == VJ_MOVETYPE_STATIONARY then
-		if schedule.IsMovingTask == true then
-			return
-		end
+	if self.MovementType == VJ_MOVETYPE_STATIONARY && schedule.IsMovingTask == true then
+		return
 	end
-	for k,v in ipairs(schedule.Tasks) do
+	for _,v in ipairs(schedule.Tasks) do
 		if schedule.IsMovingTask == true then break end
 		if v.TaskName == "TASK_RUN_PATH" or v.TaskName == "TASK_RUN_PATH_FLEE" or v.TaskName == "TASK_RUN_PATH_TIMED" or v.TaskName == "TASK_RUN_PATH_FOR_UNITS" or v.TaskName == "TASK_RUN_PATH_WITHIN_DIST" then schedule.IsMovingTask = true schedule.IsMovingTask_Run = true break end
 		if v.TaskName == "TASK_WALK_PATH" or v.TaskName == "TASK_WALK_PATH_TIMED" or v.TaskName == "TASK_WALK_PATH_WITHIN_DIST" or v.TaskName == "TASK_WALK_PATH_FOR_UNITS" then schedule.IsMovingTask = true schedule.IsMovingTask_Walk = true break end
@@ -77,7 +75,7 @@ function ENT:StartSchedule(schedule)
 	if schedule.IsMovingTask_Run == nil then schedule.IsMovingTask_Run = false end
 	if schedule.IsMovingTask_Walk == nil then schedule.IsMovingTask_Walk = false end
 	if schedule.CanShootWhenMoving == true && self.CurrentWeaponAnimation != nil && IsValid(self:GetEnemy()) then
-		self:DoWeaponAttackMovementCode(true, (schedule.IsMovingTask_Walk and 1 or 0)) -- Send 1 if the current task is walking!
+		self:DoWeaponAttackMovementCode(true, (schedule.IsMovingTask_Walk and 1) or 0) -- Send 1 if the current task is walking!
 		self:SetArrivalActivity(self.CurrentWeaponAnimation)
 	end
 	schedule.AlreadyRanCode_OnFail = false
