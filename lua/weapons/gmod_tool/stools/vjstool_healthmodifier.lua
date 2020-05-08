@@ -28,7 +28,7 @@ if (CLIENT) then
 		reset:SetText("#vjbase.menu.general.reset.everything")
 		reset:SetSize(150,25)
 		reset:SetColor(Color(0,0,0,255))
-		reset.DoClick = function(reset)
+		reset.DoClick = function()
 			for k,v in pairs(DefaultConVars) do
 				if v == "" then
 				LocalPlayer():ConCommand(k.." ".."None")
@@ -72,12 +72,10 @@ function TOOL:LeftClick(tr)
 				Ply:ChatPrint("Set "..trent:GetClass().."'s health to "..self:GetClientNumber("health"))
 				if trent:IsNPC() then
 					if self:GetClientNumber("godmode") == 1 then trent.GodMode = true else trent.GodMode = false end
-					if trent.IsVJBaseSNPC == true then
-						if self:GetClientNumber("healthregen") == 1 then
-							trent.HasHealthRegeneration = true
-							trent.HealthRegenerationAmount = self:GetClientNumber("healthregen_amt")
-							trent.HealthRegenerationDelay = VJ_Set(self:GetClientNumber("healthregen_delay"), self:GetClientNumber("healthregen_delay"))
-						end
+					if trent.IsVJBaseSNPC == true && self:GetClientNumber("healthregen") == 1 then
+						trent.HasHealthRegeneration = true
+						trent.HealthRegenerationAmount = self:GetClientNumber("healthregen_amt")
+						trent.HealthRegenerationDelay = VJ_Set(self:GetClientNumber("healthregen_delay"), self:GetClientNumber("healthregen_delay"))
 					end
 				end
 				return true
@@ -102,12 +100,10 @@ function TOOL:RightClick(tr)
 				Ply:ChatPrint("Set "..trent:GetClass().."'s health and max health to "..self:GetClientNumber("health"))
 				if trent:IsNPC() then
 					if self:GetClientNumber("godmode") == 1 then trent.GodMode = true else trent.GodMode = false end
-					if trent.IsVJBaseSNPC == true then
-						if self:GetClientNumber("healthregen") == 1 then
-							trent.HasHealthRegeneration = true
-							trent.HealthRegenerationAmount = self:GetClientNumber("healthregen_amt")
-							trent.HealthRegenerationDelay = VJ_Set(self:GetClientNumber("healthregen_delay"), self:GetClientNumber("healthregen_delay"))
-						end
+					if trent.IsVJBaseSNPC == true && self:GetClientNumber("healthregen") == 1 then
+						trent.HasHealthRegeneration = true
+						trent.HealthRegenerationAmount = self:GetClientNumber("healthregen_amt")
+						trent.HealthRegenerationDelay = VJ_Set(self:GetClientNumber("healthregen_delay"), self:GetClientNumber("healthregen_delay"))
 					end
 				end
 				return true

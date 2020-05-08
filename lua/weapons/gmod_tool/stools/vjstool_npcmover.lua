@@ -25,7 +25,7 @@ if (CLIENT) then
 		reset:SetText("#vjbase.menu.general.reset.everything")
 		reset:SetSize(150,25)
 		reset:SetColor(Color(0,0,0,255))
-		reset.DoClick = function(reset)
+		reset.DoClick = function()
 			for k,v in pairs(DefaultConVars) do
 				if v == "" then
 				LocalPlayer():ConCommand(k.." ".."None")
@@ -55,10 +55,10 @@ if (CLIENT) then
 			CheckList:AddColumn("#tool.vjstool_npcmover.header3")
 			//CheckList:AddColumn("Position")
 			//CheckList:AddColumn("Equipment")
-			for k,v in ipairs(VJ_MOVE_TblCurrentValues) do
+			for _,v in ipairs(VJ_MOVE_TblCurrentValues) do
 				if IsValid(v) then
 				local locname = "Unknown"
-					for lk,lv in pairs(list.Get("NPC")) do
+					for _,lv in pairs(list.Get("NPC")) do
 						if v:GetClass() == lv.Class then locname = lv.Name end
 					end
 					CheckList:AddLine(locname,v:GetClass(),v) //v:EntIndex()
@@ -73,7 +73,7 @@ if (CLIENT) then
 				net.SendToServer()
 				CheckList:RemoveLine(lineID)
 				table.Empty(VJ_MOVE_TblCurrentValues)
-				for kLine,vLine in pairs(CheckList:GetLines()) do
+				for _,vLine in pairs(CheckList:GetLines()) do
 					table.insert(VJ_MOVE_TblCurrentValues,vLine:GetValue(3))
 				end
 			end
@@ -85,7 +85,7 @@ if (CLIENT) then
 		unselectall:SetText("#tool.vjstool_npcmover.buttonunselectall")
 		unselectall:SetSize(150, 25)
 		unselectall:SetColor(Color(0,0,0,255))
-		unselectall.DoClick = function(unselectall)
+		unselectall.DoClick = function()
 			local brah = VJ_MOVE_TblCurrentValues
 			if table.Count(brah) > 0 then
 				chat.AddText(Color(255,100,0), "#tool.vjstool_npcmover.print.unselectedall")
@@ -196,7 +196,7 @@ else -- If SERVER
 		sventtable = net.ReadTable()
 		svwalktype = net.ReadString()
 		svvector = net.ReadVector()
-		for k,v in ipairs(sventtable) do
+		for _,v in ipairs(sventtable) do
 			if IsValid(v) then
 				v:StopMoving()
 				v:SetLastPosition(svvector)
@@ -245,7 +245,7 @@ else -- If SERVER
 	
 	net.Receive("vj_npcmover_removeall",function(len,pl)
 		brahtbl = net.ReadTable()
-		for k,v in ipairs(brahtbl) do
+		for _,v in ipairs(brahtbl) do
 			//TOOL:RemoveNPC(v)
 			v.VJ_IsBeingControlled_Tool = false
 			if v.IsVJBaseSNPC == true then

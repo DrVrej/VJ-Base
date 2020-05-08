@@ -64,7 +64,7 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 		vid:SetText("#vjbase.menu.snpc.options.whatisprocesstime")
 		vid:SetSize(150,25)
 		//vid:SetColor(Color(76,153,255,255))
-		vid.DoClick = function(vid)
+		vid.DoClick = function()
 			gui.OpenURL("https://www.youtube.com/watch?v=7wKsCmGpieU")
 		end
 	Panel:AddPanel(vid)

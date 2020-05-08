@@ -20,7 +20,7 @@ function EFFECT:Init(data)
 	local color = VJ_Color8Bit2Color(data:GetColor())
 	
 	self.Emitter = ParticleEmitter(origin)
-	for buzz = 0,6 do
+	for _ = 0,6 do
 		local Mist = self.Emitter:Add("particle/smokesprites_000"..math.random(1,9),origin)
 		if (Mist) then
 			Mist:SetVelocity(Vector(math.random(-30,30),math.random(-30,30),math.random(-50,50)))

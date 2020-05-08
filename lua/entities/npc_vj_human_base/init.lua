@@ -81,7 +81,7 @@ ENT.CallForHelp = true -- Does the SNPC call for help?
 ENT.CallForHelpDistance = 2000 -- -- How far away the SNPC's call for help goes | Counted in World Units
 ENT.NextCallForHelpTime = 4 -- Time until it calls for help again
 ENT.HasCallForHelpAnimation = true -- if true, it will play the call for help animation
-ENT.AnimTbl_CallForHelp = {ACT_SIGNAL_ADVANCE,ACT_SIGNAL_FORWARD} -- Call For Help Animations
+ENT.AnimTbl_CallForHelp = {ACT_SIGNAL_ADVANCE, ACT_SIGNAL_FORWARD} -- Call For Help Animations
 ENT.CallForHelpAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 ENT.CallForHelpAnimationPlayBackRate = 1 -- How fast should the animation play? | Currently only for gestures!
 ENT.CallForHelpStopAnimations = true -- Should it stop attacks for a certain amount of time?
@@ -929,7 +929,7 @@ ENT.NextDamageByPlayerSoundT = 0
 ENT.NextWeaponAttackAimPoseParametersReset = 0
 ENT.NextWeaponReloadSoundT = 0
 ENT.TimeSinceLastSeenEnemy = 0
-ENT.TimeSinceSeenEnemy = 0
+ENT.TimeSinceSetEnemy = 0
 ENT.Medic_NextHealT = 0
 ENT.Weapon_TimeSinceLastShot = 5
 ENT.NextMoveRandomlyWhenShootingT = 0
@@ -2266,51 +2266,67 @@ function ENT:Think()
 				end
 			end
 		end
-		
-		if self.DoingWeaponAttack == true then self:CapabilitiesRemove(CAP_TURN_HEAD) else self:CapabilitiesAdd(bit.bor(CAP_TURN_HEAD)) end
+
+		if self.DoingWeaponAttack == true then self:CapabilitiesRemove(CAP_TURN_HEAD) else self:CapabilitiesAdd(bit.bor(CAP_TURN_HEAD)) end -- Fixes their heads breaking
 		if IsValid(ene) then
 			if self.DoingWeaponAttack == true then self:PlaySoundSystem("Suppressing") end
-			if self.IsDoingFaceEnemy == true /*&& self.VJ_IsBeingControlled == false*/ then self:SetAngles(self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle())) end
 			self:DoConstantlyFaceEnemyCode()
-			if (self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene))) /*&& self.VJ_IsBeingControlled == false*/) then self:SetAngles(self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle())) end
+			if self.IsDoingFaceEnemy == true or (self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene)))) then
+				self:SetAngles(self:VJ_ReturnAngle((ene:GetPos() - self:GetPos()):Angle()))
+			end
+
 			self.ResetedEnemy = false
-			self:UpdateEnemyMemory(ene,ene:GetPos())
+			self:UpdateEnemyMemory(ene, ene:GetPos())
 			self.LatestEnemyPosition = ene:GetPos()
 			self.LatestEnemyDistance = self:GetPos():Distance(ene:GetPos())
 			self.LatestEnemyClass = ene
-			self.TimeSinceLastSeenEnemy = 0
-			self.TimeSinceSeenEnemy = self.TimeSinceSeenEnemy + 0.1
 			if (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (self.LatestEnemyDistance < self.SightDistance) then
-				local seentr = util.TraceLine({start = self:NearestPoint(self:GetPos() +self:OBBCenter()),endpos = ene:EyePos(),filter = function(ent) if (ent:GetClass() == self:GetClass() or self:Disposition(ent) == D_LI) then return false end end})
+				local seentr = util.TraceLine({
+					start = self:NearestPoint(self:GetPos() + self:OBBCenter()),
+					endpos = ene:EyePos(),
+					filter = function(ent) if (ent:GetClass() == self:GetClass() or self:Disposition(ent) == D_LI) then return false end end -- Ignore allies
+				})
 				if (ene:Visible(self) or (IsValid(seentr.Entity) && seentr.Entity:GetClass() == ene)) then
 					self.LastSeenEnemyTime = 0
 					self.LatestVisibleEnemyPosition = ene:GetPos()
 				else
-					if (self.LatestEnemyDistance < 4000) then self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1 else self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.5 end
+					if self.LatestEnemyDistance < 4000 then -- If the enemy is very far then loose sight faster
+						self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1
+					else
+						self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.5
+					end
 				end
 			else
-				if (self.LatestEnemyDistance < 4000) then self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1 else self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.5 end
+				if self.LatestEnemyDistance < 4000 then -- If the enemy is very far then loose sight faster
+					self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1
+				else
+					self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.5
+				end
 			end
 
-			if self.ThrowingGrenade == false && self.CallForHelp == true && self.Dead == false && CurTime() > self.NextCallForHelpT then
-				self:CallForHelpCode(self.CallForHelpDistance)
-				self.NextCallForHelpT = CurTime() + self.NextCallForHelpTime
-			end
-
-			if self.HasGrenadeAttack == true && self.IsReloadingWeapon == false && self.vACT_StopAttacks == false && CurTime() > self.NextThrowGrenadeT && CurTime() > self.TakingCoverT then
-				if self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_JUMP) then
-					self:ThrowGrenadeCode()
-					self.NextThrowGrenadeT = CurTime() + math.random(self.NextThrowGrenadeTime1,self.NextThrowGrenadeTime2)
-				elseif self.VJ_IsBeingControlled == false then
-					local chance = self.ThrowGrenadeChance
-					local finalc = math.random(1,chance)
-					if chance != 1 && chance != 2 && chance != 3 && (ene.IsVJBaseSNPC_Tank or !self:Visible(ene)) then -- Shede misd meg gela!
-						finalc = math.random(1,math.floor(chance / 2))
-					end
-					if finalc == 1 && self.LatestEnemyDistance < self.GrenadeAttackThrowDistance && self.LatestEnemyDistance > self.GrenadeAttackThrowDistanceClose then
+			if self.Dead == false then
+				-- Call for help
+				if self.ThrowingGrenade == false && self.CallForHelp == true && CurTime() > self.NextCallForHelpT then
+					self:CallForHelpCode(self.CallForHelpDistance)
+					self.NextCallForHelpT = CurTime() + self.NextCallForHelpTime
+				end
+				
+				-- Grenade attack
+				if self.HasGrenadeAttack == true && self.IsReloadingWeapon == false && self.vACT_StopAttacks == false && CurTime() > self.NextThrowGrenadeT && CurTime() > self.TakingCoverT then
+					if self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_JUMP) then
 						self:ThrowGrenadeCode()
+						self.NextThrowGrenadeT = CurTime() + math.random(self.NextThrowGrenadeTime1,self.NextThrowGrenadeTime2)
+					elseif self.VJ_IsBeingControlled == false then
+						local chance = self.ThrowGrenadeChance
+						local finalc = math.random(1,chance)
+						if chance != 1 && chance != 2 && chance != 3 && (ene.IsVJBaseSNPC_Tank or !self:Visible(ene)) then -- Shede misd meg gela!
+							finalc = math.random(1,math.floor(chance / 2))
+						end
+						if finalc == 1 && self.LatestEnemyDistance < self.GrenadeAttackThrowDistance && self.LatestEnemyDistance > self.GrenadeAttackThrowDistanceClose then
+							self:ThrowGrenadeCode()
+						end
+						self.NextThrowGrenadeT = CurTime() + math.random(self.NextThrowGrenadeTime1,self.NextThrowGrenadeTime2)
 					end
-					self.NextThrowGrenadeT = CurTime() + math.random(self.NextThrowGrenadeTime1,self.NextThrowGrenadeTime2)
 				end
 			end
 		end
@@ -2457,7 +2473,7 @@ function ENT:Think()
 				end
 			end
 			
-			self.TimeSinceSeenEnemy = 0
+			self.TimeSinceSetEnemy = 0
 			self.TimeSinceLastSeenEnemy = self.TimeSinceLastSeenEnemy + 0.1
 			if self.ResetedEnemy == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") self.ResetedEnemy = true self:ResetEnemy(true) end
 			/*if CurTime() > self.NextFindEnemyT then
@@ -2922,7 +2938,7 @@ function ENT:SelectSchedule(iNPCState)
 								self.WeaponUseEnemyEyePos = true -- Make the bullet direction go towards the head of the enemy
 								if CurTime() < self.TakingCoverT then dontattack = true end -- Behind cover and is taking cover, don't fire!
 								
-								if dontattack == false && self.TimeSinceSeenEnemy > 0.5 && CurTime() > self.NextMoveOnGunCoveredT && ((covertr.HitPos:Distance(self:GetPos()) > 150 && covered_isobj == true) or (covered_wep == true && !guncovertr.Entity:IsNPC() && !guncovertr.Entity:IsPlayer())) then
+								if dontattack == false && CurTime() > self.NextMoveOnGunCoveredT && ((covertr.HitPos:Distance(self:GetPos()) > 150 && covered_isobj == true) or (covered_wep == true && !guncovertr.Entity:IsNPC() && !guncovertr.Entity:IsPlayer())) then
 									local calc;
 									local enepos;
 									if IsValid(covertr.Entity) then
@@ -2985,7 +3001,7 @@ function ENT:SelectSchedule(iNPCState)
 								end
 							end
 							-- Move randomly when shooting
-							if covered_npc == false && self.FollowingPlayer == false && self.MoveRandomlyWhenShooting == true && self.DoingWeaponAttack == true && self.DoingWeaponAttack_Standing == true && CurTime() > self.NextMoveRandomlyWhenShootingT && self.TimeSinceSeenEnemy > 2 && (enedist_eye < (self.Weapon_FiringDistanceFar / 1.25)) && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),enepos_eye) == false && self:CustomOnMoveRandomlyWhenShooting() != false then
+							if covered_npc == false && self.FollowingPlayer == false && self.MoveRandomlyWhenShooting == true && self.DoingWeaponAttack == true && self.DoingWeaponAttack_Standing == true && CurTime() > self.NextMoveRandomlyWhenShootingT && (CurTime() - self.TimeSinceSetEnemy) > 2 && (enedist_eye < (self.Weapon_FiringDistanceFar / 1.25)) && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),enepos_eye) == false && self:CustomOnMoveRandomlyWhenShooting() != false then
 								local randpos = math.random(150,400)
 								local checkdist = self:VJ_CheckAllFourSides(randpos)
 								local randmove = {}

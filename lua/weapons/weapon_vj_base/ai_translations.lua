@@ -1,7 +1,7 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 
 function SWEP:SetupWeaponHoldTypeForAI(htype)
-	if self:GetOwner().IsVJBaseSNPC == true then return end
+	if self:GetOwner().IsVJBaseSNPC_Human == true then return end
 	
 	-- Yete NPC-en Rebel-e, ere vor medz zenki animation-ere kordzadze yerp vor ge kalegor
 	local bezdigZenk_Kalel = ACT_WALK_AIM_PISTOL
@@ -23,7 +23,6 @@ function SWEP:SetupWeaponHoldTypeForAI(htype)
 	
 	-- Yete NPC-en Metrocop-e gamal Rebel-e, ere vor medz zenki animation-ere kordzadze yerp vor ge kalegor
 	local bonbakshen_varichadz = ACT_RANGE_ATTACK_SHOTGUN_LOW
-	local bonbakshen_Kalel = ACT_WALK_AIM_SHOTGUN
 	local bonbakshen_Vazel = ACT_RUN_AIM_SHOTGUN
 	if self.NPC_AnimationSet == "Metrocop" or self.NPC_AnimationSet == "Rebel" then
 		bonbakshen_varichadz = ACT_RANGE_ATTACK_SMG1_LOW

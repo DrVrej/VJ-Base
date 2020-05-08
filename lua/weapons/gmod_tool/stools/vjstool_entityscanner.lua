@@ -26,7 +26,6 @@ end
 function TOOL:LeftClick(tr)
 	if (CLIENT) then return true end
 	if !IsValid(tr.Entity) then return false end
-	local Ply = self:GetOwner()
 	local Ent = tr.Entity
 	local Phys = Ent:GetPhysicsObject()
 	PrintMessage(HUD_PRINTCONSOLE,"------------------- Name = "..Ent:GetName().." ||| Class = "..Ent:GetClass().." ||| Index = "..Ent:EntIndex().." -------------------")
