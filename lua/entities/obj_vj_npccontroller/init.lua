@@ -71,7 +71,7 @@ function ENT:StartControlling()
 	if (IsValid(self.TheController:GetActiveWeapon())) then
 	self.ControllerActiveWeapon = self.TheController:GetActiveWeapon():GetClass() end
 	self.ControllerCurrentWeapons = {}
-	for k, v in pairs(self.TheController:GetWeapons()) do
+	for _, v in pairs(self.TheController:GetWeapons()) do
 	table.insert(self.ControllerCurrentWeapons,v:GetClass()) end
 	self.TheController:StripWeapons()
 	
@@ -149,11 +149,9 @@ function ENT:SetControlledNPC(GetEntity)
 			self.ControlledNPC.RunOnTouch = false
 			self.ControlledNPC.RunOnHit = false
 		end
-		if self.ControlledNPC.IsVJBaseSNPC_Human == true then
-			if self.ControlledNPC.DisableWeapons == false then
-				self.ControlledNPC:CapabilitiesRemove(bit.bor(CAP_MOVE_SHOOT))
-				self.ControlledNPC:CapabilitiesRemove(bit.bor(CAP_AIM_GUN))
-			end
+		if self.ControlledNPC.IsVJBaseSNPC_Human == true && self.ControlledNPC.DisableWeapons == false then
+			self.ControlledNPC:CapabilitiesRemove(bit.bor(CAP_MOVE_SHOOT))
+			self.ControlledNPC:CapabilitiesRemove(bit.bor(CAP_AIM_GUN))
 		end
 	end
 	self.ControlledNPC:StopMoving()
@@ -224,7 +222,7 @@ function ENT:Think()
 	if (!self.PropCamera:IsValid()) then self:StopControlling() return end
 	if !IsValid(self.TheController) /*or self.TheController:KeyDown(IN_USE)*/ or self.TheController:Health() <= 0 or (!self.TheController.IsControlingNPC) or !IsValid(self.ControlledNPC) or (self.ControlledNPC:Health() <= 0) then self:StopControlling() return end
 	if self.TheController.IsControlingNPC != true then return end
-	if (self.TheController.IsControlingNPC) && IsValid(self.ControlledNPC) then
+	if self.TheController.IsControlingNPC && IsValid(self.ControlledNPC) then
 		if self.ControlledNPC.Flinching == true then return end
 		
 		if self.TheController:GetInfoNum("vj_npc_cont_hud",1) == 1 then
@@ -253,13 +251,14 @@ function ENT:Think()
 		
 		-- Turning
 		if self.ControlledNPC.PlayingAttackAnimation == false && self.AbleToTurn == true && self.ControlledNPC.IsReloadingWeapon != true && CurTime() > self.ControlledNPC.NextChaseTime && self.ControlledNPC.IsVJBaseSNPC_Tank != true && ((self.ControlledNPC.MovementType != VJ_MOVETYPE_STATIONARY) or (self.ControlledNPC.MovementType == VJ_MOVETYPE_STATIONARY && self.ControlledNPC.CanTurnWhileStationary != true)) then
-			if self.ControlledNPC:IsMoving() then
+			//if self.ControlledNPC:IsMoving() then
 				//if self.CrosshairTrackingActivated == true then
 					//self.ControlledNPC:FaceCertainEntity(self.NPCBullseye,false)
 				//end
 				//self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,4),0))
 				//self.ControlledNPC:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
-			else
+			//else
+			if !self.ControlledNPC:IsMoving() then
 				//self.ControlledNPC:SetAngles(Angle(0,self.TheController:GetAimVector():Angle().y,0))
 				local angdif = math.abs(math.AngleDifference(self.TheController:EyeAngles().y,self.LastIdleAngle))
 				self.LastIdleAngle = self.ControlledNPC:EyeAngles().y //tr_ply.HitPos
@@ -284,15 +283,13 @@ function ENT:Think()
 		end*/
 
 		-- Weapon attack
-		if IsValid(self.ControlledNPC:GetActiveWeapon()) && self.ControlledNPC.IsVJBaseSNPC == true && self.ControlledNPC.IsVJBaseSNPC_Human == true && !self.ControlledNPC:IsMoving() then
-			if self.ControlledNPC:GetActiveWeapon().IsVJBaseWeapon == true && self.TheController:KeyDown(IN_ATTACK2) && self.ControlledNPC.IsReloadingWeapon == false && self.ControlledNPC.MeleeAttacking == false && self.ControlledNPC.ThrowingGrenade == false && self.ControlledNPC.vACT_StopAttacks == false /*&& (self.ControlledNPC.Weapon_StartingAmmoAmount - self.ControlledNPC.Weapon_ShotsSinceLastReload) > 0*/ then
-				self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,100),0))
+		if IsValid(self.ControlledNPC:GetActiveWeapon()) && self.ControlledNPC.IsVJBaseSNPC == true && self.ControlledNPC.IsVJBaseSNPC_Human == true && !self.ControlledNPC:IsMoving() && self.ControlledNPC:GetActiveWeapon().IsVJBaseWeapon == true && self.TheController:KeyDown(IN_ATTACK2) && self.ControlledNPC.IsReloadingWeapon == false && self.ControlledNPC.MeleeAttacking == false && self.ControlledNPC.ThrowingGrenade == false && self.ControlledNPC.vACT_StopAttacks == false /*&& (self.ControlledNPC.Weapon_StartingAmmoAmount - self.ControlledNPC.Weapon_ShotsSinceLastReload) > 0*/ then
+			self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,100),0))
+			self.AbleToTurn = false
+			if VJ_IsCurrentAnimation(self.ControlledNPC,self.ControlledNPC:TranslateToWeaponAnim(self.ControlledNPC.CurrentWeaponAnimation)) == false && VJ_IsCurrentAnimation(self.ControlledNPC,self.ControlledNPC.AnimTbl_WeaponAttack) == false then
 				self.AbleToTurn = false
-				if VJ_IsCurrentAnimation(self.ControlledNPC,self.ControlledNPC:TranslateToWeaponAnim(self.ControlledNPC.CurrentWeaponAnimation)) == false && VJ_IsCurrentAnimation(self.ControlledNPC,self.ControlledNPC.AnimTbl_WeaponAttack) == false then
-					self.AbleToTurn = false
-					self.ControlledNPC.CurrentWeaponAnimation = VJ_PICK(self.ControlledNPC.AnimTbl_WeaponAttack)
-					self.ControlledNPC:VJ_ACT_PLAYACTIVITY(self.ControlledNPC.CurrentWeaponAnimation,false,2,false)
-				end
+				self.ControlledNPC.CurrentWeaponAnimation = VJ_PICK(self.ControlledNPC.AnimTbl_WeaponAttack)
+				self.ControlledNPC:VJ_ACT_PLAYACTIVITY(self.ControlledNPC.CurrentWeaponAnimation,false,2,false)
 			end
 		end
 
@@ -417,7 +414,7 @@ function ENT:StopControlling()
 		if IsValid(self.PropCamera) then
 		self.TheController:SetPos(self.PropCamera:GetPos() +self.PropCamera:GetUp()*100) else
 		self.TheController:SetPos(playerpos) end
-		for k, v in pairs(self.ControllerCurrentWeapons) do
+		for _, v in pairs(self.ControllerCurrentWeapons) do
 		self.TheController:Give(v) end
 		if (self.ControllerActiveWeapon) then self.TheController:SelectWeapon(self.ControllerActiveWeapon) end
 		self.TheController:SetNoDraw(false)
@@ -457,11 +454,9 @@ function ENT:StopControlling()
 			self.ControlledNPC.CanDetectGrenades = self.VJNPC_RunsAwayFromGrenades
 			self.ControlledNPC.RunOnTouch = self.VJNPC_RunOnTouch
 			self.ControlledNPC.RunOnHit = self.VJNPC_RunOnHit
-			if self.ControlledNPC.IsVJBaseSNPC_Human == true then
-				if self.ControlledNPC.DisableWeapons == false then
-					self.ControlledNPC:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
-					self.ControlledNPC:CapabilitiesAdd(bit.bor(CAP_AIM_GUN))
-				end
+			if self.ControlledNPC.IsVJBaseSNPC_Human == true && self.ControlledNPC.DisableWeapons == false then
+				self.ControlledNPC:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
+				self.ControlledNPC:CapabilitiesAdd(bit.bor(CAP_AIM_GUN))
 			end
 		end
 	end

@@ -188,14 +188,12 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_RunOver(argent)
 	if (!IsValid(argent)) or (GetConVarNumber("vj_npc_nomelee") == 1 /*or self.HasMeleeAttack == false*/) or (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == argent) then return end
-	if self:Disposition(argent) == 1 && argent:Health() > 0 then
-		if (argent:IsNPC() && argent.VJ_IsHugeMonster != true && !self.TankTbl_DontRunOver[argent:GetClass()]) or (argent:IsPlayer() && self.PlayerFriendly == false && GetConVarNumber("ai_ignoreplayers") == 0 && argent:Alive() && self.Tank_IsMoving == true) then
-			self:Tank_CustomOnRunOver(argent)
-			argent:TakeDamage(self:VJ_GetDifficultyValue(8),self,self)
-			VJ_DestroyCombineTurret(self,argent)
-			argent:SetVelocity(argent:GetForward()*-200)
-			self:Tank_Sound_RunOver()
-		end
+	if self:Disposition(argent) == 1 && argent:Health() > 0 && (argent:IsNPC() && argent.VJ_IsHugeMonster != true && !self.TankTbl_DontRunOver[argent:GetClass()]) or (argent:IsPlayer() && self.PlayerFriendly == false && GetConVarNumber("ai_ignoreplayers") == 0 && argent:Alive() && self.Tank_IsMoving == true) then
+		self:Tank_CustomOnRunOver(argent)
+		argent:TakeDamage(self:VJ_GetDifficultyValue(8),self,self)
+		VJ_DestroyCombineTurret(self,argent)
+		argent:SetVelocity(argent:GetForward()*-200)
+		self:Tank_Sound_RunOver()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -255,7 +253,7 @@ function ENT:CustomOnThink_AIEnabled()
 	if self.Dead == true then return end
 	//timer.Simple(0.1, function() if self.Dead == false then ParticleEffect("smoke_exhaust_01",self:LocalToWorld(Vector(150,30,30)),Angle(0,0,0),self) end end)
 	//timer.Simple(0.2, function() if self.Dead == false then self:StopParticles() end end)
-	for k,v in pairs(ents.FindInSphere(self:GetPos(),100)) do
+	for _, v in pairs(ents.FindInSphere(self:GetPos(),100)) do
 		self:Tank_RunOver(v)
 	end
 
@@ -424,28 +422,26 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
 		})
 		util.Decal(VJ_PICK(self.Tank_DeathDecal), tr.HitPos+tr.HitNormal, tr.HitPos-tr.HitNormal)
 
-		if self.HasGibDeathParticles == true then
-			if self:Tank_CustomOnDeath_AfterCorpseSpawned_Effects(dmginfo,hitgroup,GetCorpse) == true then
-				//self.FireEffect = ents.Create( "env_fire_trail" )
-				//self.FireEffect:SetPos(self:GetPos()+self:GetUp()*70)
-				//self.FireEffect:Spawn()
-				//self.FireEffect:SetParent(GetCorpse)
-				//ParticleEffectAttach("smoke_large_01b",PATTACH_ABSORIGIN_FOLLOW,GetCorpse,0)
-				ParticleEffect("vj_explosion3",self:GetPos(),Angle(0,0,0),nil)
-				ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*-130,Angle(0,0,0),nil)
-				ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*130,Angle(0,0,0),nil)
-				ParticleEffectAttach("smoke_burning_engine_01",PATTACH_ABSORIGIN_FOLLOW,GetCorpse,0)
-				
-				local explosioneffect = EffectData()
-				explosioneffect:SetOrigin(self:GetPos())
-				util.Effect("VJ_Medium_Explosion1",explosioneffect)
-				util.Effect("Explosion", explosioneffect)
-				
-				local dusteffect = EffectData()
-				dusteffect:SetOrigin(self:GetPos())
-				dusteffect:SetScale(800)
-				util.Effect("ThumperDust",dusteffect)
-			end
+		if self.HasGibDeathParticles == true && self:Tank_CustomOnDeath_AfterCorpseSpawned_Effects(dmginfo,hitgroup,GetCorpse) == true then
+			//self.FireEffect = ents.Create( "env_fire_trail" )
+			//self.FireEffect:SetPos(self:GetPos()+self:GetUp()*70)
+			//self.FireEffect:Spawn()
+			//self.FireEffect:SetParent(GetCorpse)
+			//ParticleEffectAttach("smoke_large_01b",PATTACH_ABSORIGIN_FOLLOW,GetCorpse,0)
+			ParticleEffect("vj_explosion3",self:GetPos(),Angle(0,0,0),nil)
+			ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*-130,Angle(0,0,0),nil)
+			ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*130,Angle(0,0,0),nil)
+			ParticleEffectAttach("smoke_burning_engine_01",PATTACH_ABSORIGIN_FOLLOW,GetCorpse,0)
+			
+			local explosioneffect = EffectData()
+			explosioneffect:SetOrigin(self:GetPos())
+			util.Effect("VJ_Medium_Explosion1",explosioneffect)
+			util.Effect("Explosion", explosioneffect)
+			
+			local dusteffect = EffectData()
+			dusteffect:SetOrigin(self:GetPos())
+			dusteffect:SetScale(800)
+			util.Effect("ThumperDust",dusteffect)
 		end
 	end
 end

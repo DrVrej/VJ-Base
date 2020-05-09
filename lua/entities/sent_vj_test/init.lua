@@ -24,7 +24,7 @@ function ENT:Initialize()
 	self:SetUseType(SIMPLE_USE) -- Makes the ENT.Use hook only get called once at every use.
 	self:DropToFloor()
 	self:SetMaxYawSpeed(25)
-	for k, v in pairs(player.GetAll()) do
+	for _, v in pairs(player.GetAll()) do
 		self:SetTarget(v)
 	end
 end
@@ -42,7 +42,7 @@ function ENT:SelectSchedule()
 	self:VJ_SetSchedule(SCHED_IDLE_WANDER)
 	local MyNearbyTargets = ents.FindInSphere(self:GetPos(),150)
 	if (!MyNearbyTargets) then return end
-	for k,v in pairs(MyNearbyTargets) do
+	for _,v in pairs(MyNearbyTargets) do
 		if v:IsPlayer() then
 			self:VJ_SetSchedule(SCHED_IDLE_STAND)
 			self:VJ_SetSchedule(SCHED_TARGET_FACE)
@@ -61,16 +61,14 @@ function ENT:OnTakeDamage()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AcceptInput(key, activator, caller)
-	if key == "Use" && activator:IsPlayer() then
-		if activator:IsValid() && activator:Alive() then
-			self:SetTarget(activator)
-			self:EmitSound(Sound("vj_illuminati/Illuminati Confirmed.mp3"),0)
-			umsg.Start("vj_testentity_onmenuopen", activator)
-			umsg.End()
-			self:EmitSound("vo/npc/male01/hi0"..math.random(1,2)..".wav")
-			self:VJ_SetSchedule(SCHED_IDLE_STAND)
-			self:VJ_SetSchedule(SCHED_TARGET_FACE)
-		end
+	if key == "Use" && activator:IsPlayer() && activator:IsValid() && activator:Alive() then
+		self:SetTarget(activator)
+		self:EmitSound(Sound("vj_illuminati/Illuminati Confirmed.mp3"),0)
+		umsg.Start("vj_testentity_onmenuopen", activator)
+		umsg.End()
+		self:EmitSound("vo/npc/male01/hi0"..math.random(1,2)..".wav")
+		self:VJ_SetSchedule(SCHED_IDLE_STAND)
+		self:VJ_SetSchedule(SCHED_TARGET_FACE)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

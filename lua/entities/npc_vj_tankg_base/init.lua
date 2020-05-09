@@ -169,9 +169,9 @@ function ENT:CustomOnThink_AIEnabled()
 				self.Tank_GunnerIsTurning = false
 				self.FiringShell = true
 				self.Tank_FacingTarget = true
-				if self:Visible(self:GetEnemy()) then
-				if GetConVarNumber("vj_npc_norange") == 0 then
-				self:Tank_PrepareShell() end end
+				if self:Visible(self:GetEnemy()) && GetConVarNumber("vj_npc_norange") == 0 then
+					self:Tank_PrepareShell() 
+				end
 			elseif Angle_Diffuse > self.Tank_AngleDiffuseGeneralNumber then
 				if self.Tank_TurningLerp == nil then self.Tank_TurningLerp = self:GetLocalAngles() end
 				self.Tank_TurningLerp = LerpAngle(1, self.Tank_TurningLerp, self.Tank_TurningLerp + Angle(0, math.Clamp(Angle_Diffuse, 0, 5), 0))
@@ -260,7 +260,7 @@ function ENT:Tank_FireShell()
 		self:DeleteOnRemove(self.Tank_FireLight1)
 
 		local counter_effect = 0
-		for i=1,40 do
+		for _ = 1, 40 do
 			counter_effect = counter_effect + 0.1
 			timer.Simple(counter_effect,function() if self.Dead == false then self:StartShootEffects() end end)
 		end

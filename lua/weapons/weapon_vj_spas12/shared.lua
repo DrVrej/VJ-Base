@@ -68,8 +68,8 @@ function SWEP:CustomOnPrimaryAttack_AfterShoot()
 	//self.FirstTimeShotShotgun = true
 	timer.Simple(0.2,function()
 		if IsValid(self) && IsValid(self:GetOwner()) && self:GetOwner():IsPlayer() then
-			self.Weapon:EmitSound(Sound("weapons/shotgun/shotgun_cock.wav"),80,100)
-			self.Weapon:SendWeaponAnim(ACT_SHOTGUN_PUMP)
+			self:EmitSound(Sound("weapons/shotgun/shotgun_cock.wav"),80,100)
+			self:SendWeaponAnim(ACT_SHOTGUN_PUMP)
 		end
 	end)
 end
