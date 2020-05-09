@@ -42,7 +42,7 @@ usermessage.Hook("vj_testentity_onmenuopen",function()
 		LocalPlayer():EmitSound(Sound("vj_illuminati/Illuminati Confirmed.mp3"),0,200)
 	end
 	
-	local label = vgui.Create("DLabel", Frame)
+	label = vgui.Create("DLabel", Frame)
 	label:SetPos(10, 110)
 	label:SetText("NOTE: Only admins can use these buttons! Most of this commands require 'sv_cheats' to be 1")
 	label:SizeToContents()

@@ -52,10 +52,10 @@ function ENT:CustomOnThink_AfterAliveChecks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SpawnAnEntity(keys,values,initspawn)
+function ENT:SpawnAnEntity(keys, values, initspawn)
 	local k = keys
 	local v = values
-	local initspawn = initspawn or false
+	initspawn = initspawn or false
 	local overridedisable = false
 	local hasweps = false
 	local wepslist = {}
@@ -64,7 +64,7 @@ function ENT:SpawnAnEntity(keys,values,initspawn)
 	
 	local getthename = v.EntityName
 	local spawnpos = v.SpawnPosition
-	local getthename = ents.Create(VJ_PICK(v.Entities))
+	getthename = ents.Create(VJ_PICK(v.Entities))
 	getthename:SetPos(self:GetPos() +self:GetForward()*spawnpos.vForward +self:GetRight()*spawnpos.vRight +self:GetUp()*spawnpos.vUp)
 	getthename:SetAngles(self:GetAngles())
 	getthename:Spawn()
@@ -83,7 +83,7 @@ function ENT:SpawnAnEntity(keys,values,initspawn)
 	self:SpawnEntitySoundCode()
 	if self.VJBaseSpawnerDisabled == true && overridedisable == true then getthename:Remove() return end
 	self:CustomOnEntitySpawn(v.EntityName,v.SpawnPosition,v.Entities,TheEntity)
-	timer.Simple(0.1,function() if IsValid(self) then if self.SingleSpawner == true then self:DoSingleSpawnerRemove() end end end)
+	timer.Simple(0.1,function() if IsValid(self) && self.SingleSpawner == true then self:DoSingleSpawnerRemove() end end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
@@ -144,7 +144,7 @@ function ENT:SpawnEntitySoundCode()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoSingleSpawnerRemove()
-	for k,v in ipairs(self.CurrentEntities) do
+	for _, v in ipairs(self.CurrentEntities) do
 		if IsValid(v.TheEntity) && self:GetCreator() != nil then
 			//cleanup.ReplaceEntity(self,v.TheEntity)
 			//undo.ReplaceEntity(self,v.TheEntity)
@@ -164,7 +164,7 @@ function ENT:OnRemove()
 	self.Dead = true
 	VJ_STOPSOUND(self.CurrentIdleSound)
 	if self.SingleSpawner == false && self.CurrentEntities != nil then
-		for k,v in ipairs(self.CurrentEntities) do
+		for _, v in ipairs(self.CurrentEntities) do
 			if IsValid(v.TheEntity) && v.TheEntity then v.TheEntity:Remove() end
 		end
 	end

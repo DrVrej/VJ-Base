@@ -58,7 +58,7 @@ function SWEP:CustomOnPrimaryAttack_BeforeShoot()
 	local phys = proj:GetPhysicsObject()
 	if phys:IsValid() then
 		if self:GetOwner():IsPlayer() then
-			phys:SetVelocity((self:GetOwner():GetAimVector() * 15000))
+			phys:SetVelocity(self:GetOwner():GetAimVector() * 15000)
 		else
 			phys:SetVelocity(self:GetOwner():CalculateProjectile("Line", self:GetNWVector("VJ_CurBulletPos"), self:GetOwner():GetEnemy():GetPos() + self:GetOwner():GetEnemy():OBBCenter(), 15000))
 		end

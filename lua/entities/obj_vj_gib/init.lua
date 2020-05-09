@@ -81,7 +81,7 @@ function ENT:Think()
 	end*/
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PhysicsCollide(data,phys)
+function ENT:PhysicsCollide(data, phys)
 	-- Effects
 	local velocityspeed = phys:GetVelocity():Length()
 	local pickcollidesd = VJ_PICK(self.CollideSound)
@@ -91,20 +91,16 @@ function ENT:PhysicsCollide(data,phys)
 		self.collidesd:PlayEx(1,math.random(self.CollideSoundPitch1,self.CollideSoundPitch2))
 	end
 	
-	if GetConVarNumber("vj_npc_nogibdecals") == 0 && velocityspeed > 18 then
-		//local start = data.HitPos + data.HitNormal
-		//local endpos = data.HitPos - data.HitNormal
-		if !data.Entity && math.random(1,self.Collide_DecalChance) == 1 then
-			self:SetLocalPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the entity is too close to the ground
-			local tr = util.TraceLine({
-				start = self:GetPos(),
-				endpos = self:GetPos() - (data.HitNormal * -30),
-				filter = self //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
-			})
-			if self.Collide_Decal != "" then
-				util.Decal(self.Collide_Decal,tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
-				//util.Decal(self.Collide_Decal,start,endpos)
-			end
+	if GetConVarNumber("vj_npc_nogibdecals") == 0 && velocityspeed > 18 && !data.Entity && math.random(1, self.Collide_DecalChance) == 1 then
+		self:SetLocalPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the entity is too close to the ground
+		local tr = util.TraceLine({
+			start = self:GetPos(),
+			endpos = self:GetPos() - (data.HitNormal * -30),
+			filter = self //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
+		})
+		if self.Collide_Decal != "" then
+			util.Decal(self.Collide_Decal,tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
+			//util.Decal(self.Collide_Decal,start,endpos)
 		end
 	end
 end

@@ -1469,25 +1469,18 @@ function ENT:VJ_TASK_IDLE_STAND()
 	vschedIdleStand:EngTask("TASK_WAIT_INDEFINITE")
 	vschedIdleStand.CanBeInterrupted = true
 	self:StartSchedule(vschedIdleStand)*/
-
+	
 	local animtbl = self.AnimTbl_IdleStand
-	if self.NoWeapon_UseScaredBehavior_Active == true then animtbl = self.AnimTbl_ScaredBehaviorStand end
-	//local checkedtbl = {}
 	local hasanim = false
 	for _,v in ipairs(animtbl) do -- Amen animation-nere ara
 		v = VJ_SequenceToActivity(self,v) -- Nayir yete animation e sequence e, activity tartsoor
-		if v != false then -- Yete v-en false che, sharnage!
-			if hasanim == false && self.CurrentAnim_IdleStand == v then -- Yete animation-e IdleStand table-en meche che, ooremen sharnage!
-				hasanim = true
-			end
-			//if self:GetActivity() != v then
-				//table.insert(checkedtbl,v)
-			//end
+		if v != false && hasanim == false && self.CurrentAnim_IdleStand == v then -- Yete animation-e IdleStand table-en meche che, ooremen sharnage!
+			hasanim = true
 		end
 	end
-	if #animtbl > 1 then -- Yete IdleStand table-e meg en aveli e, sharnage!
-		if hasanim == true && self.NextIdleStandTime > CurTime() then return end
-		//animtbl = checkedtbl
+	-- Yete IdleStand table-e meg en aveli e, sharnage!
+	if #animtbl > 1 && hasanim == true && self.NextIdleStandTime > CurTime() then
+		return
 	end
 	local finaltbl = VJ_PICK(animtbl)
 	if finaltbl == false then finaltbl = ACT_IDLE hasanim = true end -- Yete animation-me chi kedav, ter barz animation e

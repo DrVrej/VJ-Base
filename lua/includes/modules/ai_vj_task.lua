@@ -189,7 +189,7 @@ function Task:InitEngine(_taskname_, _taskdata_)
 	self.Type 				= TYPE_ENGINE
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Task:InitFunctionName(_start,_end,_taskdata_)
+function Task:InitFunctionName(_start, _end, _taskdata_)
 	self.StartFunctionName 	= _start
 	self.FunctionName 		= _end
 	self.TaskData 			= _taskdata_
