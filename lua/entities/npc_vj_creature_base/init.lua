@@ -123,7 +123,7 @@ ENT.FollowPlayer = true -- Should the SNPC follow the player when the player pre
 ENT.FollowPlayerChat = true -- Should the SNPCs say things like "Blank stopped following you" | self.AllowPrintingInChat overrides this variable!
 ENT.FollowPlayerKey = "Use" -- The key that the player presses to make the SNPC follow them
 ENT.FollowPlayerCloseDistance = 150 -- If the SNPC is that close to the player then stand still until the player goes farther away
-ENT.NextFollowPlayerTime = 1 -- Time until it runs to the player again
+ENT.NextFollowPlayerTime = 0.5 -- Time until it runs to the player again
 	-- ====== Movement & Idle Variables ====== --
 ENT.AnimTbl_IdleStand = {ACT_IDLE} -- The idle animation when AI is enabled
 ENT.AnimTbl_Walk = {ACT_WALK} -- Set the walking animations | Put multiple to let the base pick a random animation when it moves
@@ -3090,56 +3090,37 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CallForHelpCode(SeeDistance)
 	if self.CallForHelp == false or self.ThrowingGrenade == true then return false end
-	local findents = ents.FindInSphere(self:GetPos(),SeeDistance)
-	if (!findents) then return false end
-	for _,x in pairs(findents) do
-		if x:IsNPC() && x != self && x.IsVJBaseSNPC == true && VJ_IsAlive(x) == true /*&& x:GetClass() == self:GetClass()*/ && x:Disposition(self) != 1 && x:Disposition(self) != 2 && x.IsVJBaseSNPC_Animal != false /*&& x.Behavior != VJ_BEHAVIOR_PASSIVE*/ && x.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& x.FollowingPlayer == false*/ && x.VJ_IsBeingControlled == false && (!x.IsVJBaseSNPC_Tank) && (x:GetClass() == self:GetClass() or x:Disposition(self) != 4) then
-			if x.BringFriendsOnDeath == true or x.CallForBackUpOnDamage == true or x.CallForHelp == true then
-				local ene = self:GetEnemy()
-				if IsValid(ene) /*&& x.MovementType == VJ_MOVETYPE_STATIONARY*/ && x:GetPos():Distance(ene:GetPos()) > x.SightDistance then continue end -- Yete teshnamin shad herou e, mi sharnager
-				//if x:DoRelationshipCheck(ene) == true then
-				if !IsValid(x:GetEnemy()) && ((!ene:IsPlayer() && x:Disposition(ene) != D_LI) or (ene:IsPlayer())) /*&& !self:IsCurrentSchedule(SCHED_FORCED_GO_RUN) == true && !self:IsCurrentSchedule(SCHED_FORCED_GO) == true*/ then
-					local goingtomove = false
-					self:CustomOnCallForHelp(x)
+	local entsTbl = ents.FindInSphere(self:GetPos(), SeeDistance)
+	if (!entsTbl) then return false end
+	for _,v in pairs(entsTbl) do
+		if v:IsNPC() && v != self && v.IsVJBaseSNPC == true && VJ_IsAlive(v) == true && (v:GetClass() == self:GetClass() or v:Disposition(self) == D_LI) && v.IsVJBaseSNPC_Animal != false && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& v.FollowingPlayer == false*/ && v.VJ_IsBeingControlled == false && (!v.IsVJBaseSNPC_Tank) && v.CallForHelp == true then
+			local ene = self:GetEnemy()
+			if IsValid(ene) then
+				if v:GetPos():Distance(ene:GetPos()) > v.SightDistance then continue end -- Enemy to far away for ally, discontinue!
+				//if v:DoRelationshipCheck(ene) == true then
+				if !IsValid(v:GetEnemy()) && ((!ene:IsPlayer() && v:Disposition(ene) != D_LI) or (ene:IsPlayer())) then
+					self:CustomOnCallForHelp(v)
 					self:PlaySoundSystem("CallForHelp")
-					//timer.Simple(1,function() if IsValid(self) && IsValid(x) then x:PlaySoundSystem("OnReceiveOrder") end end)
+					-- Play the animation
 					if self.HasCallForHelpAnimation == true && CurTime() > self.NextCallForHelpAnimationT then
 						local pickanim = VJ_PICK(self.AnimTbl_CallForHelp)
-						self:VJ_ACT_PLAYACTIVITY(pickanim,self.CallForHelpStopAnimations,self:DecideAnimationLength(pickanim,self.CallForHelpStopAnimationsTime),self.CallForHelpAnimationFaceEnemy,self.CallForHelpAnimationDelay,{PlayBackRate=self.CallForHelpAnimationPlayBackRate, PlayBackRateCalculated=true})
+						self:VJ_ACT_PLAYACTIVITY(pickanim, self.CallForHelpStopAnimations, self:DecideAnimationLength(pickanim, self.CallForHelpStopAnimationsTime), self.CallForHelpAnimationFaceEnemy, self.CallForHelpAnimationDelay, {PlayBackRate=self.CallForHelpAnimationPlayBackRate, PlayBackRateCalculated=true})
 						self.NextCallForHelpAnimationT = CurTime() + self.NextCallForHelpAnimationTime
 					end
-					if self:GetPos():Distance(x:GetPos()) < SeeDistance then
-						if (CurTime() > x.NextChaseTime) then
-							if IsValid(ene) then
-								if ene:IsPlayer() && x.PlayerFriendly == true then
-									x.VJ_AddCertainEntityAsEnemy[#x.VJ_AddCertainEntityAsEnemy+1] = ene
-								end
-								x:VJ_DoSetEnemy(ene,true)
-								if x.Behavior != VJ_BEHAVIOR_PASSIVE then
-									if x:Visible(ene) then
-										x:SetTarget(ene)
-										x:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-									else
-										goingtomove = true
-										x:DoChaseAnimation()
-									end
-								end
-							else
-								if x.Behavior == VJ_BEHAVIOR_PASSIVE then
-									x:DoChaseAnimation()
-								else
-									goingtomove = true
-									local randpos = math.random(1,4)
-									if randpos == 1 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(20,50))
-									elseif randpos == 2 then x:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-20,-50))
-									elseif randpos == 3 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(20,50))
-									elseif randpos == 4 then x:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-20,-50)) end
-									self:VJ_TASK_GOTO_LASTPOS("TASK_RUN_PATH",function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
-								end
-							end
+					-- If the enemy is a player and the ally is player-friendly then make that player an enemy to the ally
+					if ene:IsPlayer() && v.PlayerFriendly == true then
+						v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy + 1] = ene
+					end
+					v:VJ_DoSetEnemy(ene, true)
+					if CurTime() > v.NextChaseTime then
+						if v.Behavior != VJ_BEHAVIOR_PASSIVE && v:Visible(ene) then
+							v:SetTarget(ene)
+							v:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+						else
+							v:PlaySoundSystem("OnReceiveOrder")
+							v:DoChaseAnimation()
 						end
 					end
-					if goingtomove == true then x:PlaySoundSystem("OnReceiveOrder") end
 				end
 			end
 		end
@@ -3425,8 +3406,8 @@ function ENT:OnTakeDamage(dmginfo)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoFlinch(dmginfo,hitgroup)
-	if self.CanFlinch == 0 or self.Flinching == true or CurTime() < self.TakingCoverT or (self.NextFlinchT > CurTime()) or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
+function ENT:DoFlinch(dmginfo, hitgroup)
+	if self.CanFlinch == 0 or self.Flinching == true or self.TakingCoverT > CurTime() or self.NextFlinchT > CurTime() or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
 
 	local function RunFlinchCode(HitBoxInfo)
 		self.Flinching = true
@@ -3437,32 +3418,32 @@ function ENT:DoFlinch(dmginfo,hitgroup)
 		local anim = VJ_PICK(animtbl)
 		local animdur = self:DecideAnimationLength(anim, false, self.FlinchAnimationDecreaseLengthAmount)
 		if self.NextMoveAfterFlinchTime != "LetBaseDecide" && self.NextMoveAfterFlinchTime != false then animdur = self.NextMoveAfterFlinchTime end -- "LetBaseDecide" = Backwards compatibility
-		self:VJ_ACT_PLAYACTIVITY(anim,true,animdur,false,0,{SequenceDuration=animdur, PlayBackRateCalculated=true})
-		timer.Simple(animdur,function() if IsValid(self) then self.Flinching = false if IsValid(self:GetEnemy()) then self:DoChaseAnimation() else self:DoIdleAnimation() end end end)
-		self:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup)
+		self:VJ_ACT_PLAYACTIVITY(anim, true, animdur, false, 0, {SequenceDuration=animdur, PlayBackRateCalculated=true})
+		timer.Simple(animdur, function()
+			if IsValid(self) then
+				self.Flinching = false
+			end 
+		end)
+		self:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup)
 		self.NextFlinchT = CurTime() + self.NextFlinchTime
 	end
 
-	local randflinch = math.random(1,self.FlinchChance)
-	if randflinch == 1 then
-		if (self.CanFlinch == 2 && VJ_HasValue(self.FlinchDamageTypes,dmginfo:GetDamageType())) or (self.CanFlinch == 1) then
-			local allow = self:CustomOnFlinch_BeforeFlinch(dmginfo,hitgroup)
-			if allow == false then return end
-			if self.HasHitGroupFlinching == true then
-				local HitGroupFound = false
-				for _,v in ipairs(self.HitGroupFlinching_Values) do
-					if VJ_HasValue(v.HitGroup,hitgroup) then
-					//if v.HitGroup == hitgroup then
-						HitGroupFound = true
-						RunFlinchCode(v)
-					end
+	if math.random(1, self.FlinchChance) == 1 && ((self.CanFlinch == 1) or (self.CanFlinch == 2 && VJ_HasValue(self.FlinchDamageTypes, dmginfo:GetDamageType()))) then
+		if self:CustomOnFlinch_BeforeFlinch(dmginfo, hitgroup) == false then return end
+		if self.HasHitGroupFlinching == true then -- Hitgroup flinching
+			local HitGroupFound = false
+			-- Search through the hitgroup tables
+			for _, v in ipairs(self.HitGroupFlinching_Values) do
+				if VJ_HasValue(v.HitGroup, hitgroup) then
+					HitGroupFound = true
+					RunFlinchCode(v)
 				end
-				if HitGroupFound == false && self.HitGroupFlinching_DefaultWhenNotHit == true then
-					RunFlinchCode(nil)
-				end
-			else
+			end
+			if HitGroupFound == false && self.HitGroupFlinching_DefaultWhenNotHit == true then
 				RunFlinchCode(nil)
 			end
+		else -- Non-hitgroup
+			RunFlinchCode(nil)
 		end
 	end
 end
