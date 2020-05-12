@@ -2509,14 +2509,13 @@ function ENT:MeleeAttackCode()
 	if FindEnts != nil then
 		for _,v in pairs(FindEnts) do
 			if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
-			if (v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVarNumber("ai_ignoreplayers") == 0)) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or (v:GetClass() == "prop_physics") or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" then
-				if (self:GetForward():Dot((v:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackDamageAngleRadius))) then
-					local doactualdmg = DamageInfo()
-					doactualdmg:SetDamage(self:VJ_GetDifficultyValue(self.MeleeAttackDamage))
-					if v:IsNPC() or v:IsPlayer() then doactualdmg:SetDamageForce(self:GetForward()*((doactualdmg:GetDamage()+100)*70)) end
-					doactualdmg:SetInflictor(self)
-					doactualdmg:SetAttacker(self)
-					v:TakeDamageInfo(doactualdmg, self)
+			if (v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVarNumber("ai_ignoreplayers") == 0)) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or (v:GetClass() == "prop_physics") or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" && (self:GetForward():Dot((v:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackDamageAngleRadius))) then
+				local doactualdmg = DamageInfo()
+				doactualdmg:SetDamage(self:VJ_GetDifficultyValue(self.MeleeAttackDamage))
+				if v:IsNPC() or v:IsPlayer() then doactualdmg:SetDamageForce(self:GetForward()*((doactualdmg:GetDamage()+100)*70)) end
+				doactualdmg:SetInflictor(self)
+				doactualdmg:SetAttacker(self)
+				v:TakeDamageInfo(doactualdmg, self)
 				if v:IsPlayer() then
 					v:ViewPunch(Angle(math.random(-1,1)*10,math.random(-1,1)*10,math.random(-1,1)*10))
 				end
@@ -2528,7 +2527,6 @@ function ENT:MeleeAttackCode()
 					hitentity = false
 				else
 					hitentity = true
-					end
 				end
 			end
 		end
