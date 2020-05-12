@@ -815,7 +815,9 @@ function ENT:CustomOnRangeAttack_AfterStartTimer() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomRangeAttackCode() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomRangeAttackCode_AfterProjectileSpawn(TheProjectile) end
+function ENT:CustomRangeAttackCode_BeforeProjectileSpawn(TheProjectile) end -- This is ran before Spawn() is called
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomRangeAttackCode_AfterProjectileSpawn(TheProjectile) end -- Called after Spawn()
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttackCode_OverrideProjectilePos(TheProjectile) return 0 end -- return other value then 0 to override the projectile's position
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2523,10 +2525,8 @@ function ENT:VJ_DoSlowPlayer(argent,WalkSpeed,RunSpeed,SlowTime,SoundData,ExtraF
 	local slowplysd_fade = vSD_FadeOutTime
 	local timername = "timer_melee_slowply"..argent:EntIndex()
 	
-	if timer.Exists(timername) then
-		if timer.TimeLeft(timername) > SlowTime then
-			return
-		end
+	if timer.Exists(timername) && timer.TimeLeft(timername) > SlowTime then
+		return
 	end
 	timer.Create(timername, SlowTime, 1, function()
 		argent:SetWalkSpeed(argent.VJ_SlowDownPlayerWalkSpeed)
@@ -2573,6 +2573,7 @@ function ENT:RangeAttackCode()
 				rangeprojectile:SetPos(getposoverride)
 			end
 			rangeprojectile:SetAngles((self:GetEnemy():GetPos()-rangeprojectile:GetPos()):Angle())
+			self:CustomRangeAttackCode_BeforeProjectileSpawn(rangeprojectile)
 			rangeprojectile:Spawn()
 			rangeprojectile:Activate()
 			rangeprojectile:SetOwner(self)
