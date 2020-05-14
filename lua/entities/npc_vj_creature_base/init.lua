@@ -1022,100 +1022,56 @@ local NPCTbl_Zombies = {npc_fastzombie_torso=true,npc_zombine=true,npc_zombie_to
 local NPCTbl_Antlions = {npc_antlion=true,npc_antlionguard=true,npc_antlion_worker=true}
 local NPCTbl_Xen = {monster_bullchicken=true,monster_alien_grunt=true,monster_alien_slave=true,monster_alien_controller=true,monster_houndeye=true,monster_gargantua=true,monster_nihilanth=true}
 
-/*
-local ipairs = ipairs
-local pairs = pairs
-local GetConVarNumber = GetConVarNumber
-local Angle = Angle
-local IsValid = IsValid
-local istable = istable
-local print = print
-local type = type
-local Vector = Vector
-local table = table
-local math = math
-local string = string
-local timer = timer
-local ents = ents
-local util = util
-local player = player
-local bit = bit
-*/
-
 //util.AddNetworkString("vj_creature_onthememusic")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:CustomOnPreInitialize()
 	self:SetSpawnEffect(false)
-	self:SetRenderMode(RENDERMODE_NORMAL)
-	//self:SetRenderMode(RENDERMODE_TRANSALPHA)
-	//self:DrawShadow(true)
+	self:SetRenderMode(RENDERMODE_NORMAL) // RENDERMODE_TRANSALPHA
+	self:AddEFlags(EFL_NO_DISSOLVE)
+	self:SetUseType(SIMPLE_USE)
+	self:SetName((self.PrintName == "" and list.Get("NPC")[self:GetClass()].Name) or self.PrintName)
 	self.SelectedDifficulty = GetConVarNumber("vj_npc_difficulty")
 	if VJ_PICK(self.Model) != false then self:SetModel(VJ_PICK(self.Model)) end
-	self:SetMaxYawSpeed(self.TurningSpeed)
 	if self.HasHull == true then self:SetHullType(self.HullType) end
 	if self.HullSizeNormal == true then self:SetHullSizeNormal() end
-	self:SetCustomCollisionCheck()
 	if self.HasSetSolid == true then self:SetSolid(SOLID_BBOX) end // SOLID_OBB
-	//self:SetMoveType(self.MoveType)
+	self:SetCollisionGroup(COLLISION_GROUP_NPC)
+	self:SetCustomCollisionCheck()
+	self:SetMaxYawSpeed(self.TurningSpeed)
 	self:ConvarsOnInit()
 	self:DoChangeMovementType()
 	self.CurrentChoosenBlood_Particle = {}
 	self.CurrentChoosenBlood_Decal = {}
 	self.CurrentChoosenBlood_Pool = {}
 	self.ExtraCorpsesToRemove_Transition = {}
+	self.VJ_AddCertainEntityAsEnemy = {}
+	self.VJ_AddCertainEntityAsFriendly = {}
+	self.CurrentPossibleEnemies = {}
+	self.VJ_ScaleHitGroupDamage = 0
+	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.3, 6)
+	if self.UseTheSameGeneralSoundPitch == true then self.UseTheSameGeneralSoundPitch_PickedNumber = math.random(self.GeneralSoundPitch1,self.GeneralSoundPitch2) end
 	if self.BloodColor == "" then -- Backwards Compatibility!
-		if VJ_PICK(self.BloodDecal) == "Blood" then
+		if self.BloodDecal == "Blood" then
 			self.BloodColor = "Red"
-		elseif  VJ_PICK(self.BloodDecal) == "YellowBlood" then
+		elseif self.BloodDecal == "YellowBlood" then
 			self.BloodColor = "Yellow"
 		end
 	end
 	self:DoChangeBloodColor(self.BloodColor)
 	if self.DisableInitializeCapabilities == false then self:SetInitializeCapabilities() end
-	self:SetCollisionGroup(COLLISION_GROUP_NPC)
-	self.VJ_ScaleHitGroupDamage = 0
-	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.3,6)
-	if GetConVarNumber("vj_npc_allhealth") == 0 then
-		self:SetHealth(self:VJ_GetDifficultyValue(self.StartHealth))
-	else
-		self:SetHealth(GetConVarNumber("vj_npc_allhealth"))
-	end
+	self:SetHealth((GetConVarNumber("vj_npc_allhealth") > 0) and GetConVarNumber("vj_npc_allhealth") or self:VJ_GetDifficultyValue(self.StartHealth))
 	self.StartHealth = self:Health()
-	if self.PrintName == "" then
-		self:SetName(list.Get("NPC")[self:GetClass()].Name)
-	else
-		self:SetName(self.PrintName)
-	end
-	//self:SetEnemy(nil)
-	self:SetUseType(SIMPLE_USE)
-	//self.Corpse = ents.Create(self.DeathCorpseEntityClass)
-	if self.UseTheSameGeneralSoundPitch == true then self.UseTheSameGeneralSoundPitch_PickedNumber = math.random(self.GeneralSoundPitch1,self.GeneralSoundPitch2) end
 	self:CustomOnInitialize()
 	self:CustomInitialize() -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
-	timer.Simple(0.15,function()
-		if IsValid(self) && math.random(1,self.SoundTrackChance) == 1 then
+	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + 1) -- If self.NextWanderTime isn't given a value then wait at least 1 sec before wandering
+	self.SightDistance = (GetConVarNumber("vj_npc_seedistance") > 0) and GetConVarNumber("vj_npc_seedistance") or self.SightDistance
+	timer.Simple(0.15, function()
+		if IsValid(self) then
 			self:StartSoundTrack()
 		end
 	end)
-	duplicator.RegisterEntityClass(self:GetClass(),VJSPAWN_SNPC_DUPE,"Class","Equipment","SpawnFlags","Data")
-	//if self.Immune_Dissolve == true or self.GodMode == true then self:AddEFlags(EFL_NO_DISSOLVE) end
-	self:AddEFlags(EFL_NO_DISSOLVE)
-	self.VJ_AddCertainEntityAsEnemy = {}
-	self.VJ_AddCertainEntityAsFriendly = {}
-	self.CurrentPossibleEnemies = {}
-	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + 1) -- Make sure they don't wander as soon as they spawn (Only if self.NextWanderTime isn't already given a value!)
-	
-	if GetConVarNumber("vj_npc_seedistance") == 0 then self.SightDistance = self.SightDistance else self.SightDistance = GetConVarNumber("vj_npc_seedistance") end
-	//if self.MovementType == VJ_MOVETYPE_GROUND then self:VJ_SetSchedule(SCHED_FALL_TO_GROUND) end
-	/*if self.VJ_IsStationary == true then
-		self.HasFootStepSound = false
-		self.HasWorldShakeOnMove = false
-		self.RunAwayOnUnknownDamage = false
-		self.DisableWandering = true
-		self.DisableChasingEnemy = true
-	end*/
-	//self:SetModelScale(self:GetModelScale()*1.5)
+	duplicator.RegisterEntityClass(self:GetClass(), VJSPAWN_SNPC_DUPE, "Class", "Equipment", "SpawnFlags", "Data")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- !!!!!!!!!!!!!! DO NOT USE THESE FUNCTIONS OR VARIABLES !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -1126,19 +1082,11 @@ function ENT:CustomInitialize() end
 function ENT:SetInitializeCapabilities()
 	//self:CapabilitiesAdd(bit.bor(CAP_ANIMATEDFACE)) -- Breaks some SNPCs, avoid using it!
 	self:CapabilitiesAdd(bit.bor(CAP_TURN_HEAD))
-	//if self.VJ_IsStationary == false && self.MovementType != VJ_MOVETYPE_AERIAL then self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND)) end
 	if GetConVarNumber("vj_npc_creatureopendoor") == 1 && self.CanOpenDoors == true then
 		self:CapabilitiesAdd(bit.bor(CAP_OPEN_DOORS))
 		self:CapabilitiesAdd(bit.bor(CAP_AUTO_DOORS))
 		self:CapabilitiesAdd(bit.bor(CAP_USE))
 	end
-	//self:CapabilitiesAdd(bit.bor(CAP_MOVE_JUMP))
-	//self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
-	//self:CapabilitiesAdd(bit.bor(CAP_AIM_GUN))
-	//if self.MovementType == VJ_MOVETYPE_AERIAL then
-	//	self:CapabilitiesAdd(bit.bor(CAP_MOVE_FLY))
-	//	self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK))
-	//end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChangeMovementType(SetType)
@@ -4557,14 +4505,16 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSoundTrack()
 	if self.HasSounds == false or self.HasSoundTrack == false then return end
-	self.VJ_IsPlayingSoundTrack = true
-	net.Start("vj_music_run")
-	net.WriteEntity(self)
-	net.WriteTable(self.SoundTbl_SoundTrack)
-	net.WriteFloat(self.SoundTrackVolume)
-	net.WriteFloat(self.SoundTrackPlaybackRate)
-	//net.WriteFloat(self.SoundTrackFadeOutTime)
-	net.Broadcast()
+	if math.random(1, self.SoundTrackChance) == 1 then
+		self.VJ_IsPlayingSoundTrack = true
+		net.Start("vj_music_run")
+		net.WriteEntity(self)
+		net.WriteTable(self.SoundTbl_SoundTrack)
+		net.WriteFloat(self.SoundTrackVolume)
+		net.WriteFloat(self.SoundTrackPlaybackRate)
+		//net.WriteFloat(self.SoundTrackFadeOutTime)
+		net.Broadcast()
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAllCommonSpeechSounds()

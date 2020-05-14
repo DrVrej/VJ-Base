@@ -911,8 +911,6 @@ hook.Add("EntityFireBullets","VJ_NPC_FIREBULLET", function(ent, data)
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("ScaleNPCDamage", "VJ_ScaleHitGroupHook", function(npc, hitgroup, dmginfo)
-	//print(npc)
-	//print(hitgroup)
 	npc.VJ_ScaleHitGroupDamage = hitgroup
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
