@@ -285,14 +285,13 @@ function VJ_IsAlive(argent)
 	return argent:Health() > 0
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_DestroyCombineTurret(vSelf, argent)
-	if !IsValid(argent) then return false end
+function VJ_DestroyCombineTurret(selfent, argent)
 	if argent:GetClass() == "npc_turret_floor" && !argent.VJ_TurretDestroyed then
 		argent:Fire("selfdestruct", "", 0)
 		local phys = argent:GetPhysicsObject()
 		if IsValid(phys) then
 			phys:EnableMotion(true)
-			phys:ApplyForceCenter(vSelf:GetForward() *10000)
+			phys:ApplyForceCenter(selfent:GetForward()*10000)
 		end
 		argent.VJ_TurretDestroyed = true
 		return true
@@ -422,17 +421,15 @@ function NPC_MetaTable:VJ_PlaySequence(SequenceID, PlayBackRate, Wait, WaitTime,
 	
 	self:ClearSchedule()
 	self:StopMoving()
-	SequenceID = VJ_PICK(SequenceID)
-	local animid = self:LookupSequence(SequenceID)
-	self:ResetSequence(animid)
+	self:ResetSequence(self:LookupSequence(VJ_PICK(SequenceID)))
 	self:ResetSequenceInfo()
-	self:SetCycle(0)
+	self:SetCycle(0) -- Start from the beginning
 	if isnumber(PlayBackRate) then
 		self.AnimationPlaybackRate = PlayBackRate
 		self:SetPlaybackRate(PlayBackRate)
 	end
 	if Wait == true then
-		timer.Simple(WaitTime,function() //self:SequenceDuration(animid)
+		timer.Simple(WaitTime, function() //self:SequenceDuration(animid)
 			if IsValid(self) then
 				self.VJ_IsPlayingInterruptSequence = false
 				self.VJ_PlayingSequence = false
