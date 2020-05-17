@@ -895,7 +895,6 @@ ENT.Medic_CurrentEntToHeal = NULL
 ENT.Medic_SpawnedProp = NULL
 ENT.CurrentWeaponEntity = NULL
 ENT.LastPlayedVJSound = nil
-ENT.LatestEnemyClass = nil
 ENT.LatestDmgInfo = nil
 ENT.Weapon_ShotsSinceLastReload = 0
 ENT.NextFollowPlayerT = 0
@@ -2013,16 +2012,14 @@ function ENT:DoMedicCode()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoConstantlyFaceEnemyCode()
-	if self.Dead == true or self.VJ_IsBeingControlled == true then return false end
-	if self.ConstantlyFaceEnemy == true && self:GetEnemy():GetPos():Distance(self:GetPos()) < self.ConstantlyFaceEnemyDistance then
-		if self.ConstantlyFaceEnemy_IfVisible == true && !self:Visible(self:GetEnemy()) then return false end
+	if self.VJ_IsBeingControlled == true or self.ConstantlyFaceEnemy != true then return false end
+	if self:GetEnemy():GetPos():Distance(self:GetPos()) < self.ConstantlyFaceEnemyDistance then
+		if self.ConstantlyFaceEnemy_IfVisible == true && !self:Visible(self:GetEnemy()) then return false end -- Only face if the enemy is visible!
 		if self.ConstantlyFaceEnemy_IfAttacking == false && (self.MeleeAttacking == true or self.LeapAttacking == true or self.RangeAttacking == true or self.ThrowingGrenade == true) then return false end
-		if self.ConstantlyFaceEnemy_Postures != "Both" then
-			if self.ConstantlyFaceEnemy_Postures == "Moving" && !self:IsMoving() then return false end
-			if self.ConstantlyFaceEnemy_Postures == "Standing" && self:IsMoving() then return false end
+		if (self.ConstantlyFaceEnemy_Postures == "Both") or (self.ConstantlyFaceEnemy_Postures == "Moving" && self:IsMoving()) or (self.ConstantlyFaceEnemy_Postures == "Standing" && !self:IsMoving()) then
+			self:SetAngles(self:VJ_ReturnAngle((self:GetEnemy():GetPos()-self:GetPos()):Angle()))
+			return true
 		end
-		self:SetAngles(self:VJ_ReturnAngle((self:GetEnemy():GetPos()-self:GetPos()):Angle()))
-		return true
 	end
 	return false
 end
@@ -2121,8 +2118,7 @@ function ENT:Think()
 			self.HealthRegenerationDelayT = CurTime() + math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b)
 		end
 		
-		if self.CurrentWeaponEntity != NULL then self.Weapon_TimeSinceLastShot = self.Weapon_TimeSinceLastShot + 0.1 end
-		
+		-- Player Following
 		if self.FollowingPlayer == true then
 			//print(self:GetTarget())
 			//print(self.FollowPlayer_Entity)
@@ -2162,9 +2158,10 @@ function ENT:Think()
 		//print(self:GetPathDistanceToGoal())
 		
 		local ene = self:GetEnemy()
-		
+		if self.DoingWeaponAttack == true then self:CapabilitiesRemove(CAP_TURN_HEAD) else self:CapabilitiesAdd(bit.bor(CAP_TURN_HEAD)) end -- Fixes their heads breaking
 		//print(self.Weapon_ShotsSinceLastReload)
 		//print(self.Weapon_StartingAmmoAmount)
+		if self.CurrentWeaponEntity != NULL then self.Weapon_TimeSinceLastShot = self.Weapon_TimeSinceLastShot + 0.1 end
 		if self.Weapon_StartingAmmoAmount == nil then
 			self.Weapon_StartingAmmoAmount = 30
 		end
@@ -2235,28 +2232,34 @@ function ENT:Think()
 			end
 		end
 
-		if self.DoingWeaponAttack == true then self:CapabilitiesRemove(CAP_TURN_HEAD) else self:CapabilitiesAdd(bit.bor(CAP_TURN_HEAD)) end -- Fixes their heads breaking
-		if IsValid(ene) then
-			if self.DoingWeaponAttack == true then self:PlaySoundSystem("Suppressing") end
-			self:DoConstantlyFaceEnemyCode()
-			if self.IsDoingFaceEnemy == true or (self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene)))) then
-				self:SetAngles(self:VJ_ReturnAngle((ene:GetPos() - self:GetPos()):Angle()))
-			end
-
-			self.ResetedEnemy = false
-			self:UpdateEnemyMemory(ene, ene:GetPos())
-			self.LatestEnemyPosition = ene:GetPos()
-			self.LatestEnemyDistance = self:GetPos():Distance(ene:GetPos())
-			self.LatestEnemyClass = ene
-			if (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (self.LatestEnemyDistance < self.SightDistance) then
-				local seentr = util.TraceLine({
-					start = self:NearestPoint(self:GetPos() + self:OBBCenter()),
-					endpos = ene:EyePos(),
-					filter = function(ent) if (ent:GetClass() == self:GetClass() or self:Disposition(ent) == D_LI) then return false end end -- Ignore allies
-				})
-				if (ene:Visible(self) or (IsValid(seentr.Entity) && seentr.Entity:GetClass() == ene)) then
-					self.LastSeenEnemyTime = 0
-					self.LatestVisibleEnemyPosition = ene:GetPos()
+		if self.Dead == false then
+			if IsValid(ene) then
+				if self.DoingWeaponAttack == true then self:PlaySoundSystem("Suppressing") end
+				self:DoConstantlyFaceEnemyCode()
+				if self.IsDoingFaceEnemy == true or (self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene)))) then
+					self:SetAngles(self:VJ_ReturnAngle((ene:GetPos() - self:GetPos()):Angle()))
+				end
+				-- Set the enemy variables
+				self.ResetedEnemy = false
+				self:UpdateEnemyMemory(ene, ene:GetPos())
+				self.LatestEnemyPosition = ene:GetPos()
+				self.LatestEnemyDistance = self:GetPos():Distance(ene:GetPos())
+				if (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (self.LatestEnemyDistance < self.SightDistance) then
+					local seentr = util.TraceLine({
+						start = self:NearestPoint(self:GetPos() + self:OBBCenter()),
+						endpos = ene:EyePos(),
+						filter = function(ent) if (ent:GetClass() == self:GetClass() or self:Disposition(ent) == D_LI) then return false end end -- Ignore allies
+					})
+					if (ene:Visible(self) or (IsValid(seentr.Entity) && seentr.Entity:GetClass() == ene)) then
+						self.LastSeenEnemyTime = 0
+						self.LatestVisibleEnemyPosition = ene:GetPos()
+					else
+						if self.LatestEnemyDistance < 4000 then -- If the enemy is very far then loose sight faster
+							self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1
+						else
+							self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.5
+						end
+					end
 				else
 					if self.LatestEnemyDistance < 4000 then -- If the enemy is very far then loose sight faster
 						self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1
@@ -2264,15 +2267,7 @@ function ENT:Think()
 						self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.5
 					end
 				end
-			else
-				if self.LatestEnemyDistance < 4000 then -- If the enemy is very far then loose sight faster
-					self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1
-				else
-					self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.5
-				end
-			end
 
-			if self.Dead == false then
 				-- Call for help
 				if self.ThrowingGrenade == false && self.CallForHelp == true && CurTime() > self.NextCallForHelpT then
 					self:CallForHelpCode(self.CallForHelpDistance)
@@ -2297,56 +2292,29 @@ function ENT:Think()
 					end
 				end
 			end
-		end
 
-		if CurTime() > self.NextProcessT then
-			self:DoEntityRelationshipCheck()
-			self:CheckForGrenades()
-			self:DoMedicCode()
-			/*if IsValid(self:GetEnemy()) && self:Visible(self:GetEnemy()) && (self.CurrentWeaponEntity.IsVJBaseWeapon) && self.DoingWeaponAttack == false then
-				//self:FaceCertainEntity(self:GetEnemy(),true)
-				if !VJ_HasValue(self.AnimTbl_WeaponAttack,self:GetActivity()) && !VJ_HasValue(self.AnimTbl_WeaponAttackCrouch,self:GetActivity()) then
-				self:SelectSchedule()
-				end
-			end*/
-			self.NextProcessT = CurTime() + self.NextProcessTime
+			if CurTime() > self.NextProcessT then
+				self:DoEntityRelationshipCheck()
+				self:CheckForGrenades()
+				self:DoMedicCode()
+				self.NextProcessT = CurTime() + self.NextProcessTime
+			end
 		end
 
 		if self.ResetedEnemy == false then
+			-- Reset enemy if it doesn't exist or it's dead
+			if (!IsValid(self:GetEnemy())) or (IsValid(self:GetEnemy()) && self:GetEnemy():Health() <= 0) then
+				self.ResetedEnemy = true
+				self:ResetEnemy(true)
+			end
+
+			-- Reset enemy if it has been unseen for a while
 			if self.LastSeenEnemyTime > self.LastSeenEnemyTimeUntilReset && (!self.IsVJBaseSNPC_Tank) then
 				self:PlaySoundSystem("LostEnemy")
 				self.ResetedEnemy = true
 				self:ResetEnemy(true)
 			end
-
-			if (!IsValid(self:GetEnemy())) or (IsValid(self:GetEnemy()) && self:GetEnemy():Health() <= 0) then
-				self.ResetedEnemy = true
-				self:ResetEnemy(true)
-			end
 		end
-
-		//if self:HasCondition(4) then print("conf worked") self.CurrentWeaponEntity:SetClip1(45) end
-
-		/*if CurTime() > self.NextCallForHelpT then
-		local SequenceID = self:LookupSequence("shootAR2s")
-		self:SetSequence(SequenceID)
-		self:SetPlaybackRate(0.01)
-		self:SetNPCState(NPC_STATE_COMBAT)
-		//self:MaintainActivity()
-		//self:ResetSequence(SequenceID)
-		self.NextCallForHelpT = CurTime() + 0.1 end*/
-		//self:SetNPCState(NPC_STATE_COMBAT)
-		//self:SetMovementActivity(ACT_WALK_AIM_RIFLE)
-		/*if IsValid(self:GetEnemy()) then
-			print(self:Visible(self:GetEnemy()))
-			if self:Visible(self:GetEnemy()) == false then
-			if self:GetMovementActivity() == ACT_WALK then
-				self:SetMovementActivity(ACT_WALK_AIM_RIFLE)
-			end
-			self:SetLastPosition(self:GetEnemy():GetPos())
-			self:VJ_SetSchedule(SCHED_FORCED_GO)
-			end
-		end*/
 
 		--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 			-- Attack Timers --
@@ -2383,11 +2351,7 @@ function ENT:Think()
 
 			-- Melee Attack Timer --
 			if self.HasMeleeAttack == true && self:CanDoCertainAttack("MeleeAttack") == true then
-				local isbeingcontrolled = false
-				local isbeingcontrolled_attack = false
-				if self.VJ_IsBeingControlled == true then isbeingcontrolled = true end
-				if isbeingcontrolled == true && self.VJ_TheController:KeyDown(IN_ATTACK) then isbeingcontrolled_attack = true end
-				if (isbeingcontrolled == true && isbeingcontrolled_attack == true) or (isbeingcontrolled == false && (self.NearestPointToEnemyDistance < self.MeleeAttackDistance && ene:Visible(self)) /*&& self.VJ_PlayingSequence == false*/ && (self:GetForward():Dot((ene:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius)))) then
+				if (self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (self.VJ_IsBeingControlled == false && (self.NearestPointToEnemyDistance < self.MeleeAttackDistance && ene:Visible(self)) /*&& self.VJ_PlayingSequence == false*/ && (self:GetForward():Dot((ene:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius)))) then
 					self.MeleeAttacking = true
 					self.AlreadyDoneMeleeAttackFirstHit = false
 					self.IsAbleToMeleeAttack = false
@@ -2449,11 +2413,10 @@ function ENT:Think()
 			self.NextFindEnemyT = CurTime() + self.NextFindEnemyTime end*/
 			//self.MeleeAttacking = false
 		end
-	else
-		//self:SelectSchedule()
+	else -- AI Not enabled
 		self.DoingWeaponAttack = false
 	end
-	self:NextThink(CurTime()+(0.069696968793869+FrameTime()))
+	self:NextThink(CurTime() + (0.069696968793869 + FrameTime()))
 	return true
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
@@ -3118,7 +3081,6 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 		self:AddEntityRelationship(self:GetEnemy(),4,10)
 	end
 	
-	if IsValid(self.LatestEnemyClass) && self.LatestEnemyClass:IsPlayer() then self:AddEntityRelationship(self.LatestEnemyClass,4,10) end
 	self.Alerted = false
 	self:SetEnemy(NULL)
 	self:ClearEnemyMemory()
@@ -3196,7 +3158,7 @@ function ENT:DoHardEntityCheck(CustomTbl)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoEntityRelationshipCheck()
-	if self.Dead == true or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.Behavior == VJ_BEHAVIOR_PASSIVE*/ then return false end
+	if self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.Behavior == VJ_BEHAVIOR_PASSIVE*/ then return false end
 	local posenemies = self.CurrentPossibleEnemies
 	if posenemies == nil then return false end
 	//if CurTime() > self.NextHardEntityCheckT then
