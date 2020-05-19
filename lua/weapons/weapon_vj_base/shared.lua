@@ -422,7 +422,7 @@ end
 function SWEP:NPC_ReloadWeapon()
 	self:GetOwner().NextThrowGrenadeT = self:GetOwner().NextThrowGrenadeT + 2
 	self:CustomOnNPC_Reload()
-	if self.NPC_HasReloadSound == true then VJ_EmitSound(self:GetOwner(),self.NPC_ReloadSound,self.NPC_ReloadSoundLevel) end
+	if self.NPC_HasReloadSound == true then VJ_EmitSound(self:GetOwner(), self.NPC_ReloadSound, self.NPC_ReloadSoundLevel) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttack(UseAlt)
