@@ -1036,11 +1036,13 @@ function ENT:Initialize()
 	if self.DisableWeapons == false then
 		timer.Simple(0.1, function()
 			if IsValid(self) then
-				if IsValid(self:GetActiveWeapon())then
+				if IsValid(self:GetActiveWeapon()) then
 					self.Weapon_StartingAmmoAmount = self:GetActiveWeapon():Clip1()
-				elseif IsValid(self:GetCreator()) && GetConVarNumber("vj_npc_nosnpcchat") == 0 then
-					if self.Weapon_NoSpawnMenu == false then self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: "..self:GetName().." needs a weapon!") end
-					if !self:GetActiveWeapon().IsVJBaseWeapon then self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: "..self:GetName().." requires a VJ Base weapon to work properly!") end
+					if IsValid(self:GetCreator()) && GetConVarNumber("vj_npc_nosnpcchat") == 0 && !self:GetActiveWeapon().IsVJBaseWeapon then
+						self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: "..self:GetName().." requires a VJ Base weapon to work properly!")
+					end
+				elseif IsValid(self:GetCreator()) && GetConVarNumber("vj_npc_nosnpcchat") == 0 && self.Weapon_NoSpawnMenu == false then
+					self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: "..self:GetName().." needs a weapon!")
 				end
 			end
 		end)
@@ -2169,13 +2171,12 @@ function ENT:Think()
 		-- Weapon Reloading
 		if self.Dead == false && self.AllowWeaponReloading == true && self.IsReloadingWeapon == false && IsValid(self:GetActiveWeapon()) && self.FollowPlayer_GoingAfter == false && self.ThrowingGrenade == false && self.MeleeAttacking == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) then
 			local teshnami = IsValid(ene) -- Teshnami ooni, gam voch?
-			if (teshnami == false && self.Weapon_ShotsSinceLastReload > 0 && self.TimeSinceLastSeenEnemy > math.random(3,8) && !self:IsMoving()) or (teshnami == true && self.Weapon_ShotsSinceLastReload >= self.Weapon_StartingAmmoAmount) or (self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_RELOAD) && self.Weapon_ShotsSinceLastReload > 0) then
+			if (self.VJ_IsBeingControlled == false && ((teshnami == false && self.Weapon_ShotsSinceLastReload > 0 && self.TimeSinceLastSeenEnemy > math.random(3,8) && !self:IsMoving()) or (teshnami == true && self.Weapon_ShotsSinceLastReload >= self.Weapon_StartingAmmoAmount))) or (self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_RELOAD) && self.Weapon_ShotsSinceLastReload > 0) then
 				//self.Weapon_ShotsSinceLastReload = 0
 				self.DoingWeaponAttack = false
 				self.DoingWeaponAttack_Standing = false
 				if self.VJ_IsBeingControlled == false then self.IsReloadingWeapon = true end
 				self.NextChaseTime = CurTime() + 2
-				//timer.Simple(5,function() if IsValid(self) then self.IsReloadingWeapon = false end end)
 				if teshnami == true then self:PlaySoundSystem("WeaponReload") end -- tsayn han e minag yete teshnami ga!
 				self:CustomOnWeaponReload()
 				if self.DisableWeaponReloadAnimation == false then
@@ -2190,10 +2191,8 @@ function ENT:Think()
 						return false -- The given animation was invalid!
 					end
 					if self.VJ_IsBeingControlled == true then -- When being controlled
-						if self.VJ_TheController:KeyDown(IN_RELOAD) then -- Make sure the player is holding down reload
-							self.IsReloadingWeapon = true
-							DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
-						end
+						self.IsReloadingWeapon = true
+						DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
 					else -- Not being controlled...
 						if teshnami == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos()+self:OBBCenter()),ene:EyePos(),false,{SetLastHiddenTime=true}) == true then -- Behvedadz
 							local ranim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReloadBehindCover)) -- Get the animation or if it has a translation, then get the tanslated animation
@@ -2204,13 +2203,13 @@ function ENT:Think()
 								DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
 							else -- Togh vaz e
 								self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
-								local vschedWeaponReload = ai_vj_schedule.New("vj_weapon_reload")
-								vschedWeaponReload:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
-								vschedWeaponReload:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-								vschedWeaponReload.StopScheduleIfNotMoving = true
-								vschedWeaponReload.IsMovingTask = true
-								vschedWeaponReload.IsMovingTask_Run = true
-								vschedWeaponReload.RunCode_OnFinish = function()
+								local vsched = ai_vj_schedule.New("vj_weapon_reload")
+								vsched:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
+								vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+								vsched.StopScheduleIfNotMoving = true
+								vsched.IsMovingTask = true
+								vsched.IsMovingTask_Run = true
+								vsched.RunCode_OnFinish = function()
 									-- Yete teshnamin modig e, zenke mi letsener!
 									if (self.MeleeAttacking == true) or (IsValid(self:GetEnemy()) && self.HasWeaponBackAway == true && (self:GetPos():Distance(self:GetEnemy():GetPos()) <= self.WeaponBackAway_Distance)) then
 										self.IsReloadingWeapon = false
@@ -2220,7 +2219,7 @@ function ENT:Think()
 										self:CustomOnWeaponReload_AfterRanToCover()
 									end
 								end
-								self:StartSchedule(vschedWeaponReload)
+								self:StartSchedule(vsched)
 							end
 						end
 					end
@@ -2334,55 +2333,53 @@ function ENT:Think()
 				end
 				self:SetArrivalActivity(VJ_PICK(self.AnimTbl_ScaredBehaviorStand))
 			end
-			self:WeaponAimPoseParameters()
-			if self:Visible(ene) == false /*or (!VJ_HasValue(self.AnimTbl_WeaponAttack,self:GetActivity()) && !VJ_HasValue(self.AnimTbl_WeaponAttackCrouch,self:GetActivity()))*/ then
-				self.DoingWeaponAttack = false
-				self.DoingWeaponAttack_Standing = false
-			end
-			self:DoWeaponAttackMovementCode()
-			//if self.VJ_IsBeingControlled == false then
-				if self.Dead == false && self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true then self:FaceCertainEntity(ene,true) end
+			if self.Dead == false then
+				if self:Visible(ene) == false then
+					self.DoingWeaponAttack = false
+					self.DoingWeaponAttack_Standing = false
+				end
+				self:DoWeaponAttackMovementCode()
+				self:WeaponAimPoseParameters()
+
+				if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true then self:FaceCertainEntity(ene,true) end
 				if self.MeleeAttackAnimationFaceEnemy == true && self.Dead == false && timer.Exists("timer_melee_start"..self:EntIndex()) && timer.TimeLeft("timer_melee_start"..self:EntIndex()) > 0 then self:FaceCertainEntity(ene,true) end
 				if self.GrenadeAttackAnimationFaceEnemy == true && self.Dead == false && self.ThrowingGrenade == true && self:Visible(ene) == true then self:FaceCertainEntity(ene,true) end
-			//end
-			//if self.PlayingAttackAnimation == true then self:FaceCertainEntity(ene,true) end
+			end
 			self.ResetedEnemy = false
 			self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene)
 
-			-- Melee Attack Timer --
-			if self.HasMeleeAttack == true && self:CanDoCertainAttack("MeleeAttack") == true then
-				if (self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (self.VJ_IsBeingControlled == false && (self.NearestPointToEnemyDistance < self.MeleeAttackDistance && ene:Visible(self)) /*&& self.VJ_PlayingSequence == false*/ && (self:GetForward():Dot((ene:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius)))) then
-					self.MeleeAttacking = true
-					self.AlreadyDoneMeleeAttackFirstHit = false
-					self.IsAbleToMeleeAttack = false
-					self.AlreadyDoneFirstMeleeAttack = false
-					/*if self.VJ_IsBeingControlled == false then*/ self:FaceCertainEntity(ene,true) //end
-					self:CustomOnMeleeAttack_BeforeStartTimer()
-					timer.Simple(self.BeforeMeleeAttackSounds_WaitTime,function() if IsValid(self) then self:PlaySoundSystem("BeforeMeleeAttack") end end)
-					self.NextAlertSoundT = CurTime() + 0.4
-					if self.DisableMeleeAttackAnimation == false then
-						self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_MeleeAttack)
-						self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, self.MeleeAttackAnimationDecreaseLengthAmount)
-						if self.MeleeAttackAnimationAllowOtherTasks == false then
-							self.PlayingAttackAnimation = true
-							timer.Simple(self.CurrentAttackAnimationDuration,function()
-								if IsValid(self) then
-									self.PlayingAttackAnimation = false
-								end
-							end)
-						end
-						self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.MeleeAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
+			-- Melee Attack --------------------------------------------------------------------------------------------------------------------------------------------
+			if self.HasMeleeAttack == true && self:CanDoCertainAttack("MeleeAttack") == true && (self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (self.VJ_IsBeingControlled == false && (self.NearestPointToEnemyDistance < self.MeleeAttackDistance && ene:Visible(self)) && (self:GetForward():Dot((ene:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius)))) then
+				self.MeleeAttacking = true
+				self.AlreadyDoneMeleeAttackFirstHit = false
+				self.IsAbleToMeleeAttack = false
+				self.AlreadyDoneFirstMeleeAttack = false
+				/*if self.VJ_IsBeingControlled == false then*/ self:FaceCertainEntity(ene,true) //end
+				self:CustomOnMeleeAttack_BeforeStartTimer()
+				timer.Simple(self.BeforeMeleeAttackSounds_WaitTime,function() if IsValid(self) then self:PlaySoundSystem("BeforeMeleeAttack") end end)
+				self.NextAlertSoundT = CurTime() + 0.4
+				if self.DisableMeleeAttackAnimation == false then
+					self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_MeleeAttack)
+					self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, self.MeleeAttackAnimationDecreaseLengthAmount)
+					if self.MeleeAttackAnimationAllowOtherTasks == false then
+						self.PlayingAttackAnimation = true
+						timer.Simple(self.CurrentAttackAnimationDuration,function()
+							if IsValid(self) then
+								self.PlayingAttackAnimation = false
+							end
+						end)
 					end
-					if self.TimeUntilMeleeAttackDamage == false then
-						self:MeleeAttackCode_DoFinishTimers()
-					else
-						timer.Create( "timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self:GetPlaybackRate(), self.MeleeAttackReps, function() self:MeleeAttackCode() end)
-						for _, tv in ipairs(self.MeleeAttackExtraTimers) do
-							self:DoAddExtraAttackTimers("timer_melee_start_"..math.Round(CurTime())+math.random(1,99999999),tv,1,"MeleeAttack")
-						end
-					end
-					self:CustomOnMeleeAttack_AfterStartTimer()
+					self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.MeleeAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
 				end
+				if self.TimeUntilMeleeAttackDamage == false then
+					self:MeleeAttackCode_DoFinishTimers()
+				else
+					timer.Create( "timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self:GetPlaybackRate(), self.MeleeAttackReps, function() self:MeleeAttackCode() end)
+					for _, tv in ipairs(self.MeleeAttackExtraTimers) do
+						self:DoAddExtraAttackTimers("timer_melee_start_"..math.Round(CurTime())+math.random(1,99999999),tv,1,"MeleeAttack")
+					end
+				end
+				self:CustomOnMeleeAttack_AfterStartTimer()
 			end
 		else -- No Enemy
 			self.DoingWeaponAttack = false
