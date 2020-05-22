@@ -25,6 +25,7 @@ ENT.PaintDecalOnCollide = true -- Should it paint decals when it collides with s
 ENT.DecalTbl_OnCollideDecals = {} -- Decals that paint when the projectile collides with something | It picks a random one from this table
 ENT.CollideCodeWithoutRemoving = false -- If RemoveOnHit is set to false, you can still make the projectile deal damage, place a decal, etc.
 ENT.NextCollideWithoutRemove = VJ_Set(1,1) -- Time until it can run the code again
+	-- ====== Shake World On Death Variables ====== --
 ENT.ShakeWorldOnDeath = false -- Should the world shake when the projectile hits something?
 ENT.ShakeWorldOnDeathAmplitude = 16 -- How much the screen will shake | From 1 to 16, 1 = really low 16 = really high
 ENT.ShakeWorldOnDeathRadius = 3000 -- How far the screen shake goes, in world units
