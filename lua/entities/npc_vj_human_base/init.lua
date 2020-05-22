@@ -334,7 +334,7 @@ ENT.NextMoveRandomlyWhenShootingTime1 = 3 -- How much time until it can move ran
 ENT.NextMoveRandomlyWhenShootingTime2 = 6 -- How much time until it can move randomly when shooting? | Second number in math.random
 	-- ====== Wait For Enemy To Come Out Variables ====== --
 ENT.WaitForEnemyToComeOut = true -- Should it wait for the enemy to come out from hiding?
-ENT.WaitForEnemyToComeOutTime = VJ_Set(5,7) -- How much time should it wait until it starts chasing the enemy?
+ENT.WaitForEnemyToComeOutTime = VJ_Set(3,5) -- How much time should it wait until it starts chasing the enemy?
 ENT.WaitForEnemyToComeOutDistance = 100 -- If it's this close to the enemy, it won't do it
 ENT.HasLostWeaponSightAnimation = false -- Set to true if you would like the SNPC to play a different animation when it has lost sight of the enemy and can't fire at it
 ENT.AnimTbl_LostWeaponSight = {ACT_IDLE_ANGRY} -- The animations that it will play if the variable above is set to true
@@ -1030,6 +1030,28 @@ function ENT:Initialize()
 	timer.Simple(0.15, function()
 		if IsValid(self) then
 			self:StartSoundTrack()
+
+			-- pitch
+			if self:LookupPoseParameter("aim_pitch") then
+				self.PoseParameterLooking_Names.pitch[#self.PoseParameterLooking_Names.pitch + 1] = "aim_pitch"
+			end
+			if self:LookupPoseParameter("head_pitch") then
+				self.PoseParameterLooking_Names.pitch[#self.PoseParameterLooking_Names.pitch + 1] = "head_pitch"
+			end
+			-- yaw
+			if self:LookupPoseParameter("aim_yaw") then
+				self.PoseParameterLooking_Names.yaw[#self.PoseParameterLooking_Names.yaw + 1] = "aim_yaw"
+			end
+			if self:LookupPoseParameter("head_yaw") then
+				self.PoseParameterLooking_Names.yaw[#self.PoseParameterLooking_Names.yaw + 1] = "head_yaw"
+			end
+			-- roll
+			if self:LookupPoseParameter("aim_roll") then
+				self.PoseParameterLooking_Names.roll[#self.PoseParameterLooking_Names.roll + 1] = "aim_roll"
+			end
+			if self:LookupPoseParameter("head_roll") then
+				self.PoseParameterLooking_Names.roll[#self.PoseParameterLooking_Names.roll + 1] = "head_roll"
+			end
 		end
 	end)
 	duplicator.RegisterEntityClass(self:GetClass(), VJSPAWN_SNPC_DUPE, "Class", "Equipment", "SpawnFlags", "Data")
@@ -2186,6 +2208,7 @@ function ENT:Think()
 							local dur = self:DecideAnimationLength(anim, false, self.WeaponReloadAnimationDecreaseLengthAmount)
 							timer.Create("timer_reload_end"..self:EntIndex(), dur, 1, function() if IsValid(self) then self.IsReloadingWeapon = false self.Weapon_ShotsSinceLastReload = 0 end end)
 							self:VJ_ACT_PLAYACTIVITY(anim, true, dur, self.WeaponReloadAnimationFaceEnemy, self.WeaponReloadAnimationDelay, {SequenceDuration=dur, PlayBackRateCalculated=true})
+							self.AllowToDo_WaitForEnemyToComeOut = false
 							return true -- We have successfully ran the animation!
 						end
 						return false -- The given animation was invalid!
@@ -2339,7 +2362,7 @@ function ENT:Think()
 					self.DoingWeaponAttack_Standing = false
 				end
 				self:DoWeaponAttackMovementCode()
-				self:WeaponAimPoseParameters()
+				self:DoPoseParameterLooking()
 
 				if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true then self:FaceCertainEntity(ene,true) end
 				if self.MeleeAttackAnimationFaceEnemy == true && self.Dead == false && timer.Exists("timer_melee_start"..self:EntIndex()) && timer.TimeLeft("timer_melee_start"..self:EntIndex()) > 0 then self:FaceCertainEntity(ene,true) end
@@ -2635,7 +2658,7 @@ function ENT:ThrowGrenadeCode(CustomEnt, NoOwner)
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:WeaponAimPoseParameters(ResetPoses)
+function ENT:DoPoseParameterLooking(ResetPoses)
 	if (self.HasPoseParameterLooking == false) or (self.VJ_IsBeingControlled == false && self.DoingWeaponAttack == false) then return end
 	ResetPoses = ResetPoses or false
 	//self:VJ_GetAllPoseParameters(true)
@@ -2644,11 +2667,8 @@ function ENT:WeaponAimPoseParameters(ResetPoses)
 	local p_enemy = 0 -- Pitch
 	local y_enemy = 0 -- Yaw
 	local r_enemy = 0 -- Roll
-	local ang_dif = math.AngleDifference
-	local ang_app = math.ApproachAngle
 	if IsValid(ent) && ResetPoses == false then
-		local self_pos = self:GetPos() + self:OBBCenter()
-		local enemy_pos = false //Vector(0,0,0)
+		local enemy_pos = false
 		if self.VJ_IsBeingControlled == true then
 			//enemy_pos = self.VJ_TheController:GetEyeTrace().HitPos
 			local gettr = util.GetPlayerTrace(self.VJ_TheController) -- Get the player's trace
@@ -2659,34 +2679,28 @@ function ENT:WeaponAimPoseParameters(ResetPoses)
 		end
 		if enemy_pos == false then return end
 		local self_ang = self:GetAngles()
-		local enemy_ang = (enemy_pos - self_pos):Angle()
-		p_enemy = ang_dif(enemy_ang.p,self_ang.p)
+		local enemy_ang = (enemy_pos - (self:GetPos() + self:OBBCenter())):Angle()
+		p_enemy = math.AngleDifference(enemy_ang.p, self_ang.p)
 		if self.PoseParameterLooking_InvertPitch == true then p_enemy = -p_enemy end
-		y_enemy = ang_dif(enemy_ang.y,self_ang.y)
+		y_enemy = math.AngleDifference(enemy_ang.y, self_ang.y)
 		if self.PoseParameterLooking_InvertYaw == true then y_enemy = -y_enemy end
-		r_enemy = ang_dif(enemy_ang.z,self_ang.z)
+		r_enemy = math.AngleDifference(enemy_ang.z, self_ang.z)
 		if self.PoseParameterLooking_InvertRoll == true then r_enemy = -r_enemy end
-	elseif self.PoseParameterLooking_CanReset == false then
+	elseif self.PoseParameterLooking_CanReset == false then -- Should it reset its pose parameters if there is no enemies?
 		return
 	end
 	
+	local ang_app = math.ApproachAngle
 	local names = self.PoseParameterLooking_Names
-	for x=1, #names.pitch do
-		self:SetPoseParameter(names.pitch[x],ang_app(self:GetPoseParameter(names.pitch[x]),p_enemy,self.PoseParameterLooking_TurningSpeed))
+	for x = 1, #names.pitch do
+		self:SetPoseParameter(names.pitch[x], ang_app(self:GetPoseParameter(names.pitch[x]), p_enemy, self.PoseParameterLooking_TurningSpeed))
 	end
-	for x=1, #names.yaw do
-		self:SetPoseParameter(names.yaw[x],ang_app(self:GetPoseParameter(names.yaw[x]),y_enemy,self.PoseParameterLooking_TurningSpeed))
+	for x = 1, #names.yaw do
+		self:SetPoseParameter(names.yaw[x], ang_app(self:GetPoseParameter(names.yaw[x]), y_enemy, self.PoseParameterLooking_TurningSpeed))
 	end
-	for x=1, #names.roll do
-		self:SetPoseParameter(names.roll[x],ang_app(self:GetPoseParameter(names.roll[x]),r_enemy,self.PoseParameterLooking_TurningSpeed))
+	for x = 1, #names.roll do
+		self:SetPoseParameter(names.roll[x], ang_app(self:GetPoseParameter(names.roll[x]), r_enemy, self.PoseParameterLooking_TurningSpeed))
 	end
-	
-	self:SetPoseParameter("aim_pitch",ang_app(self:GetPoseParameter("aim_pitch"),p_enemy,self.PoseParameterLooking_TurningSpeed))
-	self:SetPoseParameter("head_pitch",ang_app(self:GetPoseParameter("head_pitch"),p_enemy,self.PoseParameterLooking_TurningSpeed))
-	self:SetPoseParameter("aim_yaw",ang_app(self:GetPoseParameter("aim_yaw"),y_enemy,self.PoseParameterLooking_TurningSpeed))
-	self:SetPoseParameter("head_yaw",ang_app(self:GetPoseParameter("head_yaw"),y_enemy,self.PoseParameterLooking_TurningSpeed))
-	self:SetPoseParameter("aim_roll",ang_app(self:GetPoseParameter("aim_roll"),r_enemy,self.PoseParameterLooking_TurningSpeed))
-	self:SetPoseParameter("head_roll",ang_app(self:GetPoseParameter("head_roll"),r_enemy,self.PoseParameterLooking_TurningSpeed))
 	self.DidWeaponAttackAimParameter = true
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
