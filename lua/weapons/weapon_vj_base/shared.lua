@@ -379,7 +379,7 @@ function SWEP:NPCShoot_Primary(ShootPos, ShootDir)
 	if owner.IsVJBaseSNPC == true then
 		//owner.Weapon_TimeSinceLastShot = 0
 		owner.NextWeaponAttackAimPoseParametersReset = CurTime() + 1
-		owner:WeaponAimPoseParameters()
+		owner:DoPoseParameterLooking()
 		//if owner.IsVJBaseSNPC == true then owner.Weapon_TimeSinceLastShot = 0 end
 	end
 	
