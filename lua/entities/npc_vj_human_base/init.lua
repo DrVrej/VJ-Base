@@ -134,7 +134,7 @@ ENT.PoseParameterLooking_Names = {pitch={},yaw={},roll={}} -- Custom pose parame
 	-- ====== Sound Detection Variables ====== --
 ENT.InvestigateSoundDistance = 9 -- How far away can the SNPC hear sounds? | This number is timed by the calculated volume of the detectable sound.
 	-- ====== Taking Cover Variables ====== --
-ENT.AnimTbl_TakingCover = {ACT_COVER_LOW} -- The animation it plays when hiding in a covered position, leave empty to let the base decide
+ENT.AnimTbl_TakingCover = {ACT_COVER_LOW} -- The animation it plays when hiding in a covered position
 ENT.AnimTbl_MoveToCover = {ACT_RUN_CROUCH} -- The animation it plays when moving to a covered position
 	-- ====== Control Variables ====== --
 	-- Use these variables very careful! One wrong change can mess up the whole SNPC!
@@ -154,17 +154,17 @@ ENT.AttackTimersCustom = {}
 ------ Damaged / Injured Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- ====== Blood-Related Variables ====== --
+	-- Leave custom blood tables empty to let the base decide depending on the blood type
 ENT.Bleeds = true -- Does the SNPC bleed? (Blood decal, particle, etc.)
 ENT.BloodColor = "" -- The blood type, this will determine what it should use (decal, particle, etc.)
 	-- Types: "Red" || "Yellow" || "Green" || "Orange" || "Blue" || "Purple" || "White" || "Oil"
 ENT.HasBloodParticle = true -- Does it spawn a particle when damaged?
-ENT.HasBloodDecal = true -- Does it spawn a decal when damaged?
-ENT.HasBloodPool = true -- Does it have a blood pool?
 ENT.CustomBlood_Particle = {} -- Particles to spawn when it's damaged
-ENT.CustomBlood_Decal = {} -- Decals to spawn when it's damaged
+ENT.HasBloodPool = true -- Does it have a blood pool?
 ENT.CustomBlood_Pool = {} -- Blood pool types after it dies
-ENT.BloodPoolSize = "Normal" -- What's the size of the blood pool?
-	-- Sizes: "Normal" || "Small" || "Tiny"
+ENT.BloodPoolSize = "Normal" -- What's the size of the blood pool? | Sizes: "Normal" || "Small" || "Tiny"
+ENT.HasBloodDecal = true -- Does it spawn a decal when damaged?
+ENT.CustomBlood_Decal = {} -- Decals to spawn when it's damaged
 ENT.BloodDecalUseGMod = false -- Should use the current default decals defined by Garry's Mod? (This only applies for certain blood types only!)
 ENT.BloodDecalDistance = 150 -- How far the decal can spawn in world units
 	-- ====== Immunity Variables ====== --
@@ -360,8 +360,8 @@ ENT.GrenadeAttackThrowDistance = 1500 -- How far it can throw grenades
 ENT.GrenadeAttackThrowDistanceClose = 400 -- How close until it stops throwing grenades
 	-- ====== Timer Variables ====== --
 ENT.TimeUntilGrenadeIsReleased = 0.72 -- Time until the grenade is released
-	-- To let the base automatically detect the attack duration, set this to false:
 ENT.GrenadeAttackAnimationStopAttacks = true -- Should it stop attacks for a certain amount of time?
+	-- To let the base automatically detect the attack duration, set this to false:
 ENT.GrenadeAttackAnimationStopAttacksTime = false -- How long should it stop attacks?
 ENT.GrenadeAttackFussTime = 3 -- Time until the grenade explodes
 	-- ====== Projectile Spawn & Velocity Variables ====== --
@@ -877,7 +877,6 @@ ENT.IsAbleToMeleeAttack = true
 ENT.AlreadyDoneFirstMeleeAttack = false
 ENT.CanDoSelectScheduleAgain = true
 ENT.AllowToDo_WaitForEnemyToComeOut = true
-ENT.DoingVJDeathDissolve = false
 ENT.HasBeenGibbedOnDeath = false
 ENT.DeathAnimationCodeRan = false
 ENT.FollowPlayer_DoneSelectSchedule = false
@@ -963,7 +962,7 @@ ENT.SelectedDifficulty = 1
 ENT.ModelAnimationSet = 0
 ENT.VJ_AddCertainEntityAsEnemy = {}
 ENT.VJ_AddCertainEntityAsFriendly = {}
-ENT.AttackTimers = {"timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_reload_end"}
+ENT.TimersToRemove = {"timer_act_seq_wait","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_reload_end"}
 ENT.EntitiesToRunFrom = {obj_spore=true,obj_vj_grenade=true,obj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true,cw_flash_thrown=true,ent_hl1_grenade=true}
 ENT.EntitiesToThrowBack = {obj_spore=true,obj_vj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,obj_cpt_grenade=true,cw_grenade_thrown=true,cw_flash_thrown=true,cw_smoke_thrown=true,ent_hl1_grenade=true}
 
@@ -995,9 +994,6 @@ function ENT:Initialize()
 	self:SetMaxYawSpeed(self.TurningSpeed)
 	self:ConvarsOnInit()
 	self:DoChangeMovementType()
-	self.CurrentChoosenBlood_Particle = {}
-	self.CurrentChoosenBlood_Decal = {}
-	self.CurrentChoosenBlood_Pool = {}
 	self.ExtraCorpsesToRemove_Transition = {}
 	self.VJ_AddCertainEntityAsEnemy = {}
 	self.VJ_AddCertainEntityAsFriendly = {}
@@ -1014,7 +1010,7 @@ function ENT:Initialize()
 			self.BloodColor = "Yellow"
 		end
 	end
-	self:DoChangeBloodColor(self.BloodColor)
+	self:SetupBloodColor()
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
 		self.DisableWeapons = true
 		self.Weapon_NoSpawnMenu = true
@@ -2292,7 +2288,7 @@ function ENT:Think()
 
 				-- Call for help
 				if self.ThrowingGrenade == false && self.CallForHelp == true && CurTime() > self.NextCallForHelpT then
-					self:CallForHelpCode(self.CallForHelpDistance)
+					self:Allies_CallHelp(self.CallForHelpDistance)
 					self.NextCallForHelpT = CurTime() + self.NextCallForHelpTime
 				end
 				
@@ -2372,34 +2368,30 @@ function ENT:Think()
 			self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene)
 
 			-- Melee Attack --------------------------------------------------------------------------------------------------------------------------------------------
-			if self.HasMeleeAttack == true && self:CanDoCertainAttack("MeleeAttack") == true && (self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (self.VJ_IsBeingControlled == false && (self.NearestPointToEnemyDistance < self.MeleeAttackDistance && ene:Visible(self)) && (self:GetForward():Dot((ene:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius)))) then
+			if self.HasMeleeAttack == true && self:CanDoCertainAttack("MeleeAttack") == true && ((self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (self.VJ_IsBeingControlled == false && (self.NearestPointToEnemyDistance < self.MeleeAttackDistance && ene:Visible(self)) && (self:GetForward():Dot((ene:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))))) then
 				self.MeleeAttacking = true
-				self.AlreadyDoneMeleeAttackFirstHit = false
 				self.IsAbleToMeleeAttack = false
+				self.AlreadyDoneMeleeAttackFirstHit = false
 				self.AlreadyDoneFirstMeleeAttack = false
-				/*if self.VJ_IsBeingControlled == false then*/ self:FaceCertainEntity(ene,true) //end
+				self:FaceCertainEntity(ene, true)
 				self:CustomOnMeleeAttack_BeforeStartTimer()
-				timer.Simple(self.BeforeMeleeAttackSounds_WaitTime,function() if IsValid(self) then self:PlaySoundSystem("BeforeMeleeAttack") end end)
+				timer.Simple(self.BeforeMeleeAttackSounds_WaitTime, function() if IsValid(self) then self:PlaySoundSystem("BeforeMeleeAttack") end end)
 				self.NextAlertSoundT = CurTime() + 0.4
 				if self.DisableMeleeAttackAnimation == false then
 					self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_MeleeAttack)
 					self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, self.MeleeAttackAnimationDecreaseLengthAmount)
-					if self.MeleeAttackAnimationAllowOtherTasks == false then
+					if self.MeleeAttackAnimationAllowOtherTasks == false then -- Useful for gesture-based attacks
 						self.PlayingAttackAnimation = true
-						timer.Simple(self.CurrentAttackAnimationDuration,function()
-							if IsValid(self) then
-								self.PlayingAttackAnimation = false
-							end
-						end)
+						timer.Create("timer_act_playingattack"..self:EntIndex(), self.CurrentAttackAnimationDuration, 1, function() self.PlayingAttackAnimation = false end)
 					end
 					self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.MeleeAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
 				end
 				if self.TimeUntilMeleeAttackDamage == false then
 					self:MeleeAttackCode_DoFinishTimers()
-				else
+				else -- If it's not event based...
 					timer.Create( "timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self:GetPlaybackRate(), self.MeleeAttackReps, function() self:MeleeAttackCode() end)
 					for _, tv in ipairs(self.MeleeAttackExtraTimers) do
-						self:DoAddExtraAttackTimers("timer_melee_start_"..math.Round(CurTime())+math.random(1,99999999),tv,1,"MeleeAttack")
+						self:DoAddExtraAttackTimers("timer_melee_start_"..math.Round(CurTime()) + math.random(1,99999999), tv, 1, "MeleeAttack")
 					end
 				end
 				self:CustomOnMeleeAttack_AfterStartTimer()
@@ -2507,7 +2499,7 @@ function ENT:DoAddExtraAttackTimers(vName,vTime,vReps,vFunction)
 		if vFunction == "MeleeAttack" then self:MeleeAttackCode() end
 	end
 	
-	self.AttackTimers[#self.AttackTimers+1] = vName
+	self.TimersToRemove[#self.TimersToRemove+1] = vName
 	timer.Create(vName..self:EntIndex(), vTime, vReps, function() DoAttack() end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2593,12 +2585,9 @@ function ENT:ThrowGrenadeCode(CustomEnt, NoOwner)
 
 	if self.DisableGrenadeAttackAnimation == false then
 		self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_GrenadeAttack)
+		self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, 0.2)
 		self.PlayingAttackAnimation = true
-		timer.Simple(self:DecideAnimationLength(self.CurrentAttackAnimation, false, 0.2),function()
-			if IsValid(self) then
-				self.PlayingAttackAnimation = false
-			end
-		end)
+		timer.Create("timer_act_playingattack"..self:EntIndex(), self.CurrentAttackAnimationDuration, 1, function() self.PlayingAttackAnimation = false end)
 		self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,self.GrenadeAttackAnimationStopAttacks,self:DecideAnimationLength(self.CurrentAttackAnimation,self.GrenadeAttackAnimationStopAttacksTime),false,self.GrenadeAttackAnimationDelay, {PlayBackRateCalculated=true})
 	end
 
@@ -2656,6 +2645,38 @@ function ENT:ThrowGrenadeCode(CustomEnt, NoOwner)
 		end
 		self.ThrowingGrenade = false
 	end)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CheckForGrenades()
+	if self.CanDetectGrenades == false or self.ThrowingGrenade == true or self.HasSeenGrenade == true or self.VJ_IsBeingControlled == true then return end
+	for _,v in pairs(ents.FindInSphere(self:GetPos(), self.RunFromGrenadeDistance)) do
+		local allyGren = false -- Don't throw back if it's an ally grenade
+		if self.EntitiesToRunFrom[v:GetClass()] && self:Visible(v) then
+			if IsValid(v:GetOwner()) && v:GetOwner().IsVJBaseSNPC == true && self:Disposition(v:GetOwner()) == D_LI then
+				allyGren = true
+			end
+			if allyGren == false then
+				self:PlaySoundSystem("OnGrenadeSight")
+				self.HasSeenGrenade = true
+				self.TakingCoverT = CurTime() + 4
+				-- If has the ability to throw it back, then throw the grenade!
+				if v.VJHumanNoPickup != true && v.VJHumanTossingAway != true && self.CanThrowBackDetectedGrenades == true && self.HasGrenadeAttack == true && v:GetVelocity():Length() < 400 && self:VJ_GetNearestPointToEntityDistance(v) < 100 && self.EntitiesToThrowBack[v:GetClass()] then
+					self.NextGrenadeAttackSoundT = CurTime() + 3
+					self:ThrowGrenadeCode(v, true)
+					v.VJHumanTossingAway = true
+					//v:Remove()
+				end
+				self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH", function(x)
+					x.CanShootWhenMoving = true
+					x.ConstantlyFaceEnemy = true
+					x.RunCode_OnFinish = function()
+						self.HasSeenGrenade = false
+					end
+				end)
+				break;
+			end
+		end
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoPoseParameterLooking(ResetPoses)
@@ -2961,7 +2982,8 @@ function ENT:SelectSchedule(iNPCState)
 						else -- None VJ Base weapons
 							self:FaceCertainEntity(ene,true)
 							self.WaitingForEnemyToComeOut = false
-							timer.Simple(0.3,function() if IsValid(self) then self.DoingWeaponAttack = true self.DoingWeaponAttack_Standing = true end end)
+							self.DoingWeaponAttack = true
+							self.DoingWeaponAttack_Standing = true
 							self:CustomOnWeaponAttack()
 							self.Weapon_TimeSinceLastShot = 0
 							self.Weapon_ShotsSinceLastReload = 0
@@ -2987,37 +3009,6 @@ function ENT:DamageByPlayerCode(dmginfo,hitgroup)
 			self:CustomOnDamageByPlayer(dmginfo,hitgroup)
 			self:PlaySoundSystem("DamageByPlayer")
 			self.NextDamageByPlayerT = CurTime() + math.Rand(self.DamageByPlayerTime.a,self.DamageByPlayerTime.b)
-		end
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CheckForGrenades()
-	if self.CanDetectGrenades == false or self.ThrowingGrenade == true or self.HasSeenGrenade == true or self.VJ_IsBeingControlled == true then return end
-	local FindNearbyGrenades = ents.FindInSphere(self:GetPos(),self.RunFromGrenadeDistance)
-	for _,v in pairs(FindNearbyGrenades) do
-		local IsFriendlyGrenade = false
-		if self.EntitiesToRunFrom[v:GetClass()] && self:Visible(v) then
-			if IsValid(v:GetOwner()) && v:GetOwner().IsVJBaseSNPC == true && (self:Disposition(v:GetOwner()) == D_LI or self:Disposition(v:GetOwner()) == D_NU) then
-				IsFriendlyGrenade = true
-			end
-			if IsFriendlyGrenade == false then
-				self:PlaySoundSystem("OnGrenadeSight")
-				self.HasSeenGrenade = true
-				self.TakingCoverT = CurTime() + 4
-				if /*IsValid(self:GetEnemy()) &&*/v.VJHumanNoPickup != true && v.VJHumanTossingAway != true && self.CanThrowBackDetectedGrenades == true && self.HasGrenadeAttack == true && v:GetVelocity():Length() < 400 && self:VJ_GetNearestPointToEntityDistance(v) < 100 && self.EntitiesToThrowBack[v:GetClass()] then
-					self.NextGrenadeAttackSoundT = CurTime() + 3
-					self:ThrowGrenadeCode(v,true)
-					v.VJHumanTossingAway = true
-					//v:Remove()
-				end
-				//if self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY) end
-				self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
-				timer.Simple(4,function() if IsValid(self) then self.HasSeenGrenade = false end end)
-				break;
-				//else
-				//self.HasSeenGrenade = false
-				//return
-			end
 		end
 	end
 end
@@ -3387,9 +3378,9 @@ function ENT:DoEntityRelationshipCheck()
 	//return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CallForHelpCode(SeeDistance)
+function ENT:Allies_CallHelp(dist)
 	if self.CallForHelp == false or self.ThrowingGrenade == true then return false end
-	local entsTbl = ents.FindInSphere(self:GetPos(), SeeDistance)
+	local entsTbl = ents.FindInSphere(self:GetPos(), dist)
 	if (!entsTbl) then return false end
 	for _,v in pairs(entsTbl) do
 		if v:IsNPC() && v != self && v.IsVJBaseSNPC == true && VJ_IsAlive(v) == true && (v:GetClass() == self:GetClass() or v:Disposition(self) == D_LI) && v.IsVJBaseSNPC_Animal != false && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& v.FollowingPlayer == false*/ && v.VJ_IsBeingControlled == false && (!v.IsVJBaseSNPC_Tank) && v.CallForHelp == true then
@@ -3504,80 +3495,67 @@ function ENT:DoKilledEnemy(argent,attacker,inflictor)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTakeDamage(dmginfo)
-	if self.DoingVJDeathDissolve == true then self.DoingVJDeathDissolve = false return true end
-	if self.GodMode == true then return false end
-	if dmginfo:GetDamage() <= 0 then return false end
-
+	if self.GodMode == true or dmginfo:GetDamage() <= 0 then return end
 	local DamageInflictor = dmginfo:GetInflictor()
 	local DamageAttacker = dmginfo:GetAttacker()
 	local DamageType = dmginfo:GetDamageType()
 	local hitgroup = self.VJ_ScaleHitGroupDamage
-	if IsValid(DamageInflictor) && DamageInflictor:GetClass() == "prop_ragdoll" && DamageInflictor:GetVelocity():Length() <= 100 then return false end
+	if IsValid(DamageInflictor) && DamageInflictor:GetClass() == "prop_ragdoll" && DamageInflictor:GetVelocity():Length() <= 100 then return end
 	self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo,hitgroup)
-
-	if self.GetDamageFromIsHugeMonster == true then
-		if DamageAttacker.VJ_IsHugeMonster == true then
-			self:SetHealth(self:Health() - dmginfo:GetDamage())
-		end
-		if self:Health() <= 0 && self.Dead == false then
-			self:PriorToKilled(dmginfo,hitgroup)
-		end
-	end
-
-	if self:IsOnFire() && self:WaterLevel() == 2 then self:Extinguish() end
+	if self:IsOnFire() && self:WaterLevel() == 2 then self:Extinguish() end -- If we are in water, then extinguish the fire
 	
-	if VJ_HasValue(self.ImmuneDamagesTable,DamageType) then return end
-	if self.AllowIgnition == false && (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() == "entityflame" && DamageAttacker:GetClass() == "entityflame") then self:Extinguish() return false end
-	if self.Immune_Fire == true && (DamageType == DMG_BURN or DamageType == DMG_SLOWBURN or (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() == "entityflame" && DamageAttacker:GetClass() == "entityflame")) then return false end
-	if self.Immune_AcidPoisonRadiation == true && (DamageType == DMG_ACID or DamageType == DMG_RADIATION or DamageType == DMG_POISON or DamageType == DMG_NERVEGAS or DamageType == DMG_PARALYZE) then return false end
-	if self.Immune_Bullet == true && (dmginfo:IsBulletDamage() or DamageType == DMG_AIRBOAT or DamageType == DMG_BUCKSHOT) then return false end
-	if self.Immune_Blast == true && (DamageType == DMG_BLAST or DamageType == DMG_BLAST_SURFACE) then return false end
-	if self.Immune_Dissolve == true && DamageType == DMG_DISSOLVE then return false end
-	if self.Immune_Electricity == true && (DamageType == DMG_SHOCK or DamageType == DMG_ENERGYBEAM or DamageType == DMG_PHYSGUN) then return false end
-	if self.Immune_Melee == true && (DamageType == DMG_CLUB or DamageType == DMG_SLASH) then return false end
-	if self.Immune_Physics == true && DamageType == DMG_CRUSH then return false end
-	if self.Immune_Sonic == true && DamageType == DMG_SONIC then return false end
+	-- If it should always take damage from huge monsters, then skip immunity checks!
+	if self.GetDamageFromIsHugeMonster == true && DamageAttacker.VJ_IsHugeMonster == true then
+		goto skip_immunity
+	end
+	if VJ_HasValue(self.ImmuneDamagesTable, DamageType) then return end
+	if self.AllowIgnition == false && self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() == "entityflame" && DamageAttacker:GetClass() == "entityflame" then self:Extinguish() return end
+	if self.Immune_Fire == true && (DamageType == DMG_BURN or DamageType == DMG_SLOWBURN or (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() == "entityflame" && DamageAttacker:GetClass() == "entityflame")) then return end
+	if (self.Immune_AcidPoisonRadiation == true && (DamageType == DMG_ACID or DamageType == DMG_RADIATION or DamageType == DMG_POISON or DamageType == DMG_NERVEGAS or DamageType == DMG_PARALYZE)) or (self.Immune_Bullet == true && (dmginfo:IsBulletDamage() or DamageType == DMG_AIRBOAT or DamageType == DMG_BUCKSHOT)) or (self.Immune_Blast == true && (DamageType == DMG_BLAST or DamageType == DMG_BLAST_SURFACE)) or (self.Immune_Dissolve == true && DamageType == DMG_DISSOLVE) or (self.Immune_Electricity == true && (DamageType == DMG_SHOCK or DamageType == DMG_ENERGYBEAM or DamageType == DMG_PHYSGUN)) or (self.Immune_Melee == true && (DamageType == DMG_CLUB or DamageType == DMG_SLASH)) or (self.Immune_Physics == true && DamageType == DMG_CRUSH) or (self.Immune_Sonic == true && DamageType == DMG_SONIC) then return end
 	if (IsValid(DamageInflictor) && DamageInflictor:GetClass() == "prop_combine_ball") or (IsValid(DamageAttacker) && DamageAttacker:GetClass() == "prop_combine_ball") then
-		if self.Immune_Dissolve == true then return false end
+		if self.Immune_Dissolve == true then return end
+		-- Make sure combine ball does reasonable damage and doesn't spam it!
 		if CurTime() > self.NextCanGetCombineBallDamageT then
 			dmginfo:SetDamage(math.random(400,500))
 			dmginfo:SetDamageType(DMG_DISSOLVE)
 			self.NextCanGetCombineBallDamageT = CurTime() + 0.2
 		else
-			dmginfo:SetDamage(1)
+			return
 		end
 	end
-	
+
+	::skip_immunity::
 	local function DoBleed()
-		if self.Bleeds == true && dmginfo:GetDamage() > 0 then
+		if self.Bleeds == true then
 			self:CustomOnTakeDamage_OnBleed(dmginfo,hitgroup)
+			-- Spawn the blood particle only if it's not caused by the default fire entity [Causes the damage position to be at Vector(0,0,0)]
 			if self.HasBloodParticle == true && ((!self:IsOnFire()) or (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() != "entityflame" && DamageAttacker:GetClass() != "entityflame")) then self:SpawnBloodParticles(dmginfo,hitgroup) end
 			if self.HasBloodDecal == true then self:SpawnBloodDecal(dmginfo,hitgroup) end
 			self:PlaySoundSystem("Impact", nil, VJ_EmitSound)
 		end
 	end
-	if self.Dead == true then DoBleed() return false end
+	if self.Dead == true then DoBleed() return end -- If dead then just bleed but take no damage
 	
 	self:CustomOnTakeDamage_BeforeDamage(dmginfo,hitgroup)
-	if dmginfo:GetDamage() <= 0 then return false end
+	if dmginfo:GetDamage() <= 0 then return end -- Only take damage if it's above 0!
 	self.LatestDmgInfo = dmginfo
 	self:SetHealth(self:Health() - dmginfo:GetDamage())
+	if self.VJDEBUG_SNPC_ENABLED == true && GetConVarNumber("vj_npc_printondamage") == 1 then print(self:GetClass().." Got Damaged! | Amount = "..dmginfo:GetDamage()) end
 	if self.HasHealthRegeneration == true && self.HealthRegenerationResetOnDmg == true then
 		self.HealthRegenerationDelayT = CurTime() + (math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b) * 1.5)
 	end
-	if self.VJDEBUG_SNPC_ENABLED == true && GetConVarNumber("vj_npc_printondamage") == 1 then print(self:GetClass().." Got Damaged! | Amount = "..dmginfo:GetDamage()) end
 	self:CustomOnTakeDamage_AfterDamage(dmginfo,hitgroup)
 	DoBleed()
 
 	-- Make passive NPCs run and their allies as well
 	if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && CurTime() > self.Passive_NextRunOnDamageT then
-		if self.Passive_RunOnDamage == true && self:Health() >= 0 then -- Don't run if not allowed or dead
+		if self.Passive_RunOnDamage == true && self:Health() > 0 then -- Don't run if not allowed or dead
 			self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
 		end
-		if self.Passive_AlliesRunOnDamage == true then
-			local checka = self:Allies_Check(self.Passive_AlliesRunOnDamageDistance)
-			if checka != nil then
-				for _,v in ipairs(checka) do
+		if self.Passive_AlliesRunOnDamage == true then -- Make passive allies run
+			local allies = self:Allies_Check(self.Passive_AlliesRunOnDamageDistance)
+			if allies != nil then
+				for _,v in ipairs(allies) do
 					v.Passive_NextRunOnDamageT = CurTime() + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
 					v:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
 					v:PlaySoundSystem("Alert")
@@ -3587,9 +3565,9 @@ function ENT:OnTakeDamage(dmginfo)
 		self.Passive_NextRunOnDamageT = CurTime() + math.Rand(self.Passive_NextRunOnDamageTime.a, self.Passive_NextRunOnDamageTime.b)
 	end
 
-	if self:Health() >= 0 then
-		self:DoFlinch(dmginfo,hitgroup)
-		self:DamageByPlayerCode(dmginfo,hitgroup)
+	if self:Health() > 0 then
+		self:DoFlinch(dmginfo, hitgroup)
+		self:DamageByPlayerCode(dmginfo, hitgroup)
 		self:PlaySoundSystem("Pain")
 
 		if self.MoveOrHideOnDamageByEnemy == true && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && IsValid(self:GetEnemy()) && CurTime() > self.NextMoveOrHideOnDamageByEnemyT && self:EyePos():Distance(self:GetEnemy():EyePos()) < self.Weapon_FiringDistanceFar && IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.ThrowingGrenade == false && CurTime() > self.TakingCoverT && self:Visible(self:GetEnemy()) && self.VJ_IsBeingControlled == false && self.MeleeAttacking == false && self.IsReloadingWeapon == false then
@@ -3657,7 +3635,7 @@ function ENT:OnTakeDamage(dmginfo)
 			end
 		end
 
-		if self.DisableTakeDamageFindEnemy == false && !IsValid(self:GetEnemy()) && CurTime() > self.TakingCoverT && self.VJ_IsBeingControlled == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& self.Alerted == false*/ && GetConVarNumber("ai_disabled") == 0 then
+		if self.DisableTakeDamageFindEnemy == false && self:BusyWithActivity() == false && !IsValid(self:GetEnemy()) && CurTime() > self.TakingCoverT && self.VJ_IsBeingControlled == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& self.Alerted == false*/ && GetConVarNumber("ai_disabled") == 0 then
 			local sightdist = self.SightDistance / 2 -- Gesvadz tive
 			-- Yete gesvadz tive hazaren aveli kich e, ere vor chi ges e tive...
 			-- Yete tive 2000 - 4000 mechene, ere vor mishd 2000 ela...
@@ -3677,7 +3655,7 @@ function ENT:OnTakeDamage(dmginfo)
 					self:DoChaseAnimation()
 					self.NextSetEnemyOnDamageT = CurTime() + 1
 				else
-					//self:CallForHelpCode(self.CallForHelpDistance)
+					//self:Allies_CallHelp(self.CallForHelpDistance)
 					if CurTime() > self.NextRunAwayOnDamageT then
 						if self.FollowingPlayer == false && self.RunAwayOnUnknownDamage == true && self.MovementType != VJ_MOVETYPE_STATIONARY then
 							self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
@@ -3695,7 +3673,7 @@ function ENT:OnTakeDamage(dmginfo)
 			end
 		end
 	end
-
+	
 	if self:Health() <= 0 && self.Dead == false then
 		self:RemoveEFlags(EFL_NO_DISSOLVE)
 		if (dmginfo:GetDamageType() == DMG_DISSOLVE) or (IsValid(DamageInflictor) && DamageInflictor:GetClass() == "prop_combine_ball") then
@@ -3703,7 +3681,6 @@ function ENT:OnTakeDamage(dmginfo)
 			dissolve:SetDamage(self:Health())
 			dissolve:SetAttacker(DamageAttacker)
 			dissolve:SetDamageType(DMG_DISSOLVE)
-			self.DoingVJDeathDissolve = true
 			self:TakeDamageInfo(dissolve)
 		end
 		self:PriorToKilled(dmginfo,hitgroup)
@@ -3723,11 +3700,7 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 		local animdur = self:DecideAnimationLength(anim, false, self.FlinchAnimationDecreaseLengthAmount)
 		if self.NextMoveAfterFlinchTime != "LetBaseDecide" && self.NextMoveAfterFlinchTime != false then animdur = self.NextMoveAfterFlinchTime end -- "LetBaseDecide" = Backwards compatibility
 		self:VJ_ACT_PLAYACTIVITY(anim, true, animdur, false, 0, {SequenceDuration=animdur, PlayBackRateCalculated=true})
-		timer.Simple(animdur, function()
-			if IsValid(self) then
-				self.Flinching = false
-			end 
-		end)
+		timer.Create("timer_act_flinching"..self:EntIndex(), animdur, 1, function() self.Flinching = false end)
 		self:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup)
 		self.NextFlinchT = CurTime() + self.NextFlinchTime
 	end
@@ -3751,134 +3724,126 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 		end
 	end
 end
+/*
+	self.CurrentChoosenBlood_Particle, self.CurrentChoosenBlood_Decal, self.CurrentChoosenBlood_Pool = {}
+*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoChangeBloodColor(Type)
-	Type = Type or "None"
-	if Type == "" then Type = "None" end
-
-	local usegmoddecals = false
-	if self.BloodDecalUseGMod == true then usegmoddecals = true end
-
-	local changeparticle = true
-	local changedecal = true
-	local changepool = true
-	if VJ_PICK(self.CustomBlood_Particle) != false then self.CurrentChoosenBlood_Particle = self.CustomBlood_Particle changeparticle = false end
-	if VJ_PICK(self.CustomBlood_Decal) != false then self.CurrentChoosenBlood_Decal = self.CustomBlood_Decal changedecal = false end
-	if VJ_PICK(self.CustomBlood_Pool) != false then self.CurrentChoosenBlood_Pool = self.CustomBlood_Pool changepool = false end
-
+function ENT:SetupBloodColor()
+	local Type = self.BloodColor
+	if Type == "" then return end
 	if Type == "Red" then
-		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"blood_impact_red_01"} end // vj_impact1_red
-		if changedecal == true then
-			if usegmoddecals == true then
-				self.CurrentChoosenBlood_Decal = {"Blood"}
+		if VJ_PICK(self.CustomBlood_Particle) == false then self.CustomBlood_Particle = {"blood_impact_red_01"} end // vj_impact1_red
+		if VJ_PICK(self.CustomBlood_Decal) == false then
+			if self.BloodDecalUseGMod == true then
+				self.CustomBlood_Decal = {"Blood"}
 			else
-				self.CurrentChoosenBlood_Decal = {"VJ_Blood_Red"}
+				self.CustomBlood_Decal = {"VJ_Blood_Red"}
 			end
 		end
-		if changepool == true then
+		if VJ_PICK(self.CustomBlood_Pool) == false then
 			if self.BloodPoolSize == "Small" then
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_red_small"}
+				self.CustomBlood_Pool = {"vj_bleedout_red_small"}
 			elseif self.BloodPoolSize == "Tiny" then
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_red_tiny"}
+				self.CustomBlood_Pool = {"vj_bleedout_red_tiny"}
 			else
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_red"}
+				self.CustomBlood_Pool = {"vj_bleedout_red"}
 			end
 		end
 	elseif Type == "Yellow" then
-		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"blood_impact_yellow_01"} end // vj_impact1_yellow
-		if changedecal == true then
-			if usegmoddecals == true then
-				self.CurrentChoosenBlood_Decal = {"YellowBlood"}
+		if VJ_PICK(self.CustomBlood_Particle) == false then self.CustomBlood_Particle = {"blood_impact_yellow_01"} end // vj_impact1_yellow
+		if VJ_PICK(self.CustomBlood_Decal) == false then
+			if self.BloodDecalUseGMod == true then
+				self.CustomBlood_Decal = {"YellowBlood"}
 			else
-				self.CurrentChoosenBlood_Decal = {"VJ_Blood_Yellow"}
+				self.CustomBlood_Decal = {"VJ_Blood_Yellow"}
 			end
 		end
-		if changepool == true then
+		if VJ_PICK(self.CustomBlood_Pool) == false then
 			if self.BloodPoolSize == "Small" then
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_yellow_small"}
+				self.CustomBlood_Pool = {"vj_bleedout_yellow_small"}
 			elseif self.BloodPoolSize == "Tiny" then
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_yellow_tiny"}
+				self.CustomBlood_Pool = {"vj_bleedout_yellow_tiny"}
 			else
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_yellow"}
+				self.CustomBlood_Pool = {"vj_bleedout_yellow"}
 			end
 		end
 	elseif Type == "Green" then
-		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_green"} end
-		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Green"} end
-		if changepool == true then
+		if VJ_PICK(self.CustomBlood_Particle) == false then self.CustomBlood_Particle = {"vj_impact1_green"} end
+		if VJ_PICK(self.CustomBlood_Decal) == false then self.CustomBlood_Decal = {"VJ_Blood_Green"} end
+		if VJ_PICK(self.CustomBlood_Pool) == false then
 			if self.BloodPoolSize == "Small" then
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_green_small"}
+				self.CustomBlood_Pool = {"vj_bleedout_green_small"}
 			elseif self.BloodPoolSize == "Tiny" then
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_green_tiny"}
+				self.CustomBlood_Pool = {"vj_bleedout_green_tiny"}
 			else
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_green"}
+				self.CustomBlood_Pool = {"vj_bleedout_green"}
 			end
 		end
 	elseif Type == "Orange" then
-		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_orange"} end
-		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Orange"} end
-		if changepool == true then
+		if VJ_PICK(self.CustomBlood_Particle) == false then self.CustomBlood_Particle = {"vj_impact1_orange"} end
+		if VJ_PICK(self.CustomBlood_Decal) == false then self.CustomBlood_Decal = {"VJ_Blood_Orange"} end
+		if VJ_PICK(self.CustomBlood_Pool) == false then
 			if self.BloodPoolSize == "Small" then
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_orange_small"}
+				self.CustomBlood_Pool = {"vj_bleedout_orange_small"}
 			elseif self.BloodPoolSize == "Tiny" then
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_orange_tiny"}
+				self.CustomBlood_Pool = {"vj_bleedout_orange_tiny"}
 			else
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_orange"}
+				self.CustomBlood_Pool = {"vj_bleedout_orange"}
 			end
 		end
 	elseif Type == "Blue" then
-		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_blue"} end
-		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Blue"} end
-		if changepool == true then
+		if VJ_PICK(self.CustomBlood_Particle) == false then self.CustomBlood_Particle = {"vj_impact1_blue"} end
+		if VJ_PICK(self.CustomBlood_Decal) == false then self.CustomBlood_Decal = {"VJ_Blood_Blue"} end
+		if VJ_PICK(self.CustomBlood_Pool) == false then
 			if self.BloodPoolSize == "Small" then
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_blue_small"}
+				self.CustomBlood_Pool = {"vj_bleedout_blue_small"}
 			elseif self.BloodPoolSize == "Tiny" then
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_blue_tiny"}
+				self.CustomBlood_Pool = {"vj_bleedout_blue_tiny"}
 			else
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_blue"}
+				self.CustomBlood_Pool = {"vj_bleedout_blue"}
 			end
 		end
 	elseif Type == "Purple" then
-		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_purple"} end
-		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Purple"} end
-		if changepool == true then
+		if VJ_PICK(self.CustomBlood_Particle) == false then self.CustomBlood_Particle = {"vj_impact1_purple"} end
+		if VJ_PICK(self.CustomBlood_Decal) == false then self.CustomBlood_Decal = {"VJ_Blood_Purple"} end
+		if VJ_PICK(self.CustomBlood_Pool) == false then
 			if self.BloodPoolSize == "Small" then
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_purple_small"}
+				self.CustomBlood_Pool = {"vj_bleedout_purple_small"}
 			elseif self.BloodPoolSize == "Tiny" then
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_purple_tiny"}
+				self.CustomBlood_Pool = {"vj_bleedout_purple_tiny"}
 			else
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_purple"}
+				self.CustomBlood_Pool = {"vj_bleedout_purple"}
 			end
 		end
 	elseif Type == "White" then
-		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_white"} end
-		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_White"} end
-		if changepool == true then
+		if VJ_PICK(self.CustomBlood_Particle) == false then self.CustomBlood_Particle = {"vj_impact1_white"} end
+		if VJ_PICK(self.CustomBlood_Decal) == false then self.CustomBlood_Decal = {"VJ_Blood_White"} end
+		if VJ_PICK(self.CustomBlood_Pool) == false then
 			if self.BloodPoolSize == "Small" then
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_white_small"}
+				self.CustomBlood_Pool = {"vj_bleedout_white_small"}
 			elseif self.BloodPoolSize == "Tiny" then
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_white_tiny"}
+				self.CustomBlood_Pool = {"vj_bleedout_white_tiny"}
 			else
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_white"}
+				self.CustomBlood_Pool = {"vj_bleedout_white"}
 			end
 		end
 	elseif Type == "Oil" then
-		if changeparticle == true then self.CurrentChoosenBlood_Particle = {"vj_impact1_black"} end
-		if changedecal == true then self.CurrentChoosenBlood_Decal = {"VJ_Blood_Oil"} end
-		if changepool == true then
+		if VJ_PICK(self.CustomBlood_Particle) == false then self.CustomBlood_Particle = {"vj_impact1_black"} end
+		if VJ_PICK(self.CustomBlood_Decal) == false then self.CustomBlood_Decal = {"VJ_Blood_Oil"} end
+		if VJ_PICK(self.CustomBlood_Pool) == false then
 			if self.BloodPoolSize == "Small" then
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_oil_small"}
+				self.CustomBlood_Pool = {"vj_bleedout_oil_small"}
 			elseif self.BloodPoolSize == "Tiny" then
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_oil_tiny"}
+				self.CustomBlood_Pool = {"vj_bleedout_oil_tiny"}
 			else
-				self.CurrentChoosenBlood_Pool = {"vj_bleedout_oil"}
+				self.CustomBlood_Pool = {"vj_bleedout_oil"}
 			end
 		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodParticles(dmginfo,hitgroup)
-	local p_name = VJ_PICK(self.CurrentChoosenBlood_Particle)
+	local p_name = VJ_PICK(self.CustomBlood_Particle)
 	if p_name == false then return end
 	
 	local dmg_pos = dmginfo:GetDamagePosition()
@@ -3894,7 +3859,7 @@ function ENT:SpawnBloodParticles(dmginfo,hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodDecal(dmginfo,hitgroup)
-	if VJ_PICK(self.CurrentChoosenBlood_Decal) == false then return end
+	if VJ_PICK(self.CustomBlood_Decal) == false then return end
 	local dmg_force = dmginfo:GetDamageForce()
 	local dmg_pos = dmginfo:GetDamagePosition()
 	if dmg_pos == Vector(0,0,0) then dmg_pos = self:GetPos() + self:OBBCenter() end
@@ -3902,23 +3867,23 @@ function ENT:SpawnBloodDecal(dmginfo,hitgroup)
 	-- Badi verayi ayroun-e
 	local tr = util.TraceLine({start = dmg_pos, endpos = dmg_pos + dmg_force:GetNormal() * math.Clamp(dmg_force:Length() * 10, 100, self.BloodDecalDistance), filter = self})
 	//if !tr.HitWorld then return end
-	util.Decal(VJ_PICK(self.CurrentChoosenBlood_Decal), tr.HitPos+tr.HitNormal, tr.HitPos-tr.HitNormal, self)
+	util.Decal(VJ_PICK(self.CustomBlood_Decal), tr.HitPos+tr.HitNormal, tr.HitPos-tr.HitNormal, self)
 	for _ = 1, 2 do
-		if math.random(1,2) == 1 then util.Decal(VJ_PICK(self.CurrentChoosenBlood_Decal), tr.HitPos + tr.HitNormal + Vector(math.random(-70,70), math.random(-70,70),0), tr.HitPos - tr.HitNormal, self) end
+		if math.random(1,2) == 1 then util.Decal(VJ_PICK(self.CustomBlood_Decal), tr.HitPos + tr.HitNormal + Vector(math.random(-70,70), math.random(-70,70),0), tr.HitPos - tr.HitNormal, self) end
 	end
 	
 	-- Kedni verayi ayroun-e
 	if math.random(1,2) == 1 then
 		local d2_endpos = dmg_pos + Vector(0, 0, -math.Clamp(dmg_force:Length() * 10, 100, self.BloodDecalDistance))
-		util.Decal(VJ_PICK(self.CurrentChoosenBlood_Decal), dmg_pos, d2_endpos, self)
-		if math.random(1,2) == 1 then util.Decal(VJ_PICK(self.CurrentChoosenBlood_Decal), dmg_pos, d2_endpos + Vector(math.random(-120,120), math.random(-120,120),0),self) end
+		util.Decal(VJ_PICK(self.CustomBlood_Decal), dmg_pos, d2_endpos, self)
+		if math.random(1,2) == 1 then util.Decal(VJ_PICK(self.CustomBlood_Decal), dmg_pos, d2_endpos + Vector(math.random(-120,120), math.random(-120,120),0),self) end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodPool(dmginfo,hitgroup)
 	if !IsValid(self.Corpse) then return end
 	local GetCorpse = self.Corpse
-	local GetBloodPool = VJ_PICK(self.CurrentChoosenBlood_Pool)
+	local GetBloodPool = VJ_PICK(self.CustomBlood_Pool)
 	if GetBloodPool == false then return end
 	timer.Simple(2.2,function()
 		if IsValid(GetCorpse) then
@@ -3976,7 +3941,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 
 	-- Blood decal on the ground
 	if self.Bleeds == true && self.HasBloodDecal == true then
-		local pickdecal = VJ_PICK(self.CurrentChoosenBlood_Decal)
+		local pickdecal = VJ_PICK(self.CustomBlood_Decal)
 		if pickdecal != false then
 			self:SetLocalPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the NPC is too close to the ground
 			local tr = util.TraceLine({
@@ -4933,7 +4898,7 @@ function ENT:StopAllCommonSounds()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RemoveAttackTimers()
-	for _,v in ipairs(self.AttackTimers) do
+	for _,v in ipairs(self.TimersToRemove) do
 		timer.Remove(v..self:EntIndex())
 	end
 	for _,v in ipairs(self.AttackTimersCustom) do

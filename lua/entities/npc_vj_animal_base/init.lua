@@ -500,7 +500,7 @@ function ENT:Initialize()
 			self.BloodColor = "Yellow"
 		end
 	end
-	self:DoChangeBloodColor(self.BloodColor)
+	self:SetupBloodColor(self.BloodColor)
 	if self.DisableInitializeCapabilities == false then self:SetInitializeCapabilities() end
 	self:SetCollisionGroup(COLLISION_GROUP_NPC)
 	self.VJ_ScaleHitGroupDamage = 0
@@ -1286,7 +1286,7 @@ function ENT:DoFlinch(dmginfo,hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoChangeBloodColor(Type)
+function ENT:SetupBloodColor(Type)
 	local Type = Type or "None"
 	if Type == "" then Type = "None" end
 

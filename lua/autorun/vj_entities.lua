@@ -430,12 +430,10 @@ function NPC_MetaTable:VJ_PlaySequence(SequenceID, PlayBackRate, Wait, WaitTime,
 		self:SetPlaybackRate(PlayBackRate)
 	end
 	if Wait == true then
-		timer.Simple(WaitTime, function() //self:SequenceDuration(animid)
-			if IsValid(self) then
-				self.VJ_IsPlayingInterruptSequence = false
-				self.VJ_PlayingSequence = false
-				//self.vACT_StopAttacks = false
-			end
+		timer.Create("timer_act_seq_wait"..self:EntIndex(), WaitTime, 1, function()
+			self.VJ_IsPlayingInterruptSequence = false
+			self.VJ_PlayingSequence = false
+			//self.vACT_StopAttacks = false
 		end)
 	end
 end
@@ -474,7 +472,7 @@ function NPC_MetaTable:FaceCertainEntity(argent,OnlyIfSeenEnemy,FaceEnemyTime)
 	if OnlyIfSeenEnemy == true && IsValid(self:GetEnemy()) then
 		local setangs = self:VJ_ReturnAngle((argent:GetPos()-self:GetPos()):Angle())
 		self.IsDoingFaceEnemy = true
-		timer.Simple(FaceEnemyTime,function() if IsValid(self) then self.IsDoingFaceEnemy = false end end)
+		timer.Create("timer_act_flinching"..self:EntIndex(), FaceEnemyTime, 1, function() self.IsDoingFaceEnemy = false end)
 		self:SetAngles(setangs)
 		return setangs //SetLocalAngles
 	else
