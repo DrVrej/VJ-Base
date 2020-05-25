@@ -777,11 +777,13 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 	if IsValid(ply) then
 		ply.VJ_LastInvestigateSd = 0
 		ply.VJ_LastInvestigateSdLevel = 0
-		local EntsTbl = ents.GetAll()
-		for x=1, #EntsTbl do
-			local v = EntsTbl[x]
-			if v:IsNPC() && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
-				v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = ply
+		if GetConVarNumber("ai_ignoreplayers") == 0 then
+			local EntsTbl = ents.GetAll()
+			for x = 1, #EntsTbl do
+				local v = EntsTbl[x]
+				if v:IsNPC() && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
+					v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = ply
+				end
 			end
 		end
 	end
@@ -798,26 +800,27 @@ end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(entity)
 	if CLIENT or !entity:IsNPC() then return end
-	if (entity:IsNPC() && entity:GetClass() != "npc_grenade_frag" && entity:GetClass() != "bullseye_strider_focus" && entity:GetClass() != "npc_bullseye" && entity:GetClass() != "npc_enemyfinder" && entity:GetClass() != "hornet" && (!entity.IsVJBaseSNPC_Animal)) or (entity:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0) then
-		timer.Simple(0.1,function()
+	if entity:GetClass() != "npc_grenade_frag" && entity:GetClass() != "bullseye_strider_focus" && entity:GetClass() != "npc_bullseye" && entity:GetClass() != "npc_enemyfinder" && entity:GetClass() != "hornet" && (!entity.IsVJBaseSNPC_Animal) then
+		timer.Simple(0.1, function() -- Make sure the SNPC is initialized properly
 			if IsValid(entity) then
-				if entity.CurrentPossibleEnemies == nil then entity.CurrentPossibleEnemies = {} end
+				if entity.IsVJBaseSNPC == true && entity.CurrentPossibleEnemies == nil then entity.CurrentPossibleEnemies = {} end
 				local EntsTbl = ents.GetAll()
 				local count = 1
-				for x=1, #EntsTbl do
-					if !EntsTbl[x]:IsNPC() && !EntsTbl[x]:IsPlayer() then continue end
-					
+				for x = 1, #EntsTbl do
 					local v = EntsTbl[x]
-					if entity.IsVJBaseSNPC == true then
-						entity:EntitiesToNoCollideCode(v)
-						if (v:IsNPC() && (v:GetClass() != entity:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 /*&& v:Alive()*/) then
-							entity.CurrentPossibleEnemies[count] = v
-							count = count + 1
+					if v:IsNPC() or v:IsPlayer() then
+						-- Add enemies to the created entity (if it's a VJ Base SNPC)
+						if entity.IsVJBaseSNPC == true then
+							entity:EntitiesToNoCollideCode(v)
+							if (v:IsNPC() && (v:GetClass() != entity:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 /*&& v:Alive()*/) then
+								entity.CurrentPossibleEnemies[count] = v
+								count = count + 1
+							end
 						end
-					end
-	
-					if v != entity && entity:GetClass() != v:GetClass() && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) && (entity:IsNPC() && entity:Health() > 0 && (entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) or (entity:IsPlayer()) then
-						v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = entity //v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
+						-- Add the created entity to the list of possible enemies of VJ Base SNPCs
+						if v != entity && entity:GetClass() != v:GetClass() && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) && (entity:IsNPC() && entity:Health() > 0 && (entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) or (entity:IsPlayer()) then
+							v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = entity //v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
+						end
 					end
 				end
 			end
@@ -954,14 +957,32 @@ end)
 ------ Convar Callbacks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 cvars.AddChangeCallback("ai_ignoreplayers",function(convar_name, oldValue, newValue)
-	local getall = ents.GetAll()
-	for _, v in pairs(getall) do
-		if v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
-			if v.FollowingPlayer == true then v:FollowPlayerReset() end -- Reset if it's following the player
-			for _, pv in pairs(player.GetAll()) do
-				v:AddEntityRelationship(pv, 4, 10)
-				if IsValid(v:GetEnemy()) && v:GetEnemy() == pv then v:ResetEnemy() end
-				v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
+	if newValue == 0 then
+		local getall = ents.GetAll()
+		for x = 1, #getall do
+			local v = getall[x]
+			if v:IsNPC() && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
+				v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = ply
+			end
+		end
+	else
+		local getall = ents.GetAll()
+		for _, v in pairs(getall) do
+			if v.IsVJBaseSNPC == true && v.IsVJBaseSNPC_Animal != true then
+				if v.FollowingPlayer == true then v:FollowPlayerReset() end -- Reset if it's following the player
+				//v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
+				local posenemies = v.CurrentPossibleEnemies
+				local it = 1
+				while it <= #posenemies do
+					local x = posenemies[it]
+					if !IsValid(x) or x:IsPlayer() then
+						v:AddEntityRelationship(x, D_NU, 10) -- Make the player neutral
+						if IsValid(v:GetEnemy()) && v:GetEnemy() == x then v:ResetEnemy() end -- Reset the NPC's enemy if it's a player
+						table.remove(posenemies, it) -- Remove the player from possible enemy table
+					else
+						it = it + 1
+					end
+				end
 			end
 		end
 	end
