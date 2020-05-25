@@ -3128,37 +3128,6 @@ function ENT:DoRelationshipCheck(argent)
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoHardEntityCheck(CustomTbl)
-	/*local GetNPCs = {}
-	GetNPCs = ents.FindByClass("npc_*")
-	GetNPCs = table.Add(GetNPCs,ents.FindByClass("monster_*"))
-	if GetConVarNumber("ai_ignoreplayers") == 0 then
-	GetNPCs = table.Add(GetNPCs,player.GetAll()) end
-	if (!ents) then return end
-	for _, x in pairs(GetNPCs) do
-	if (x:GetClass() == self:GetClass() or x:GetClass() == "npc_grenade_frag" or (x.IsVJBaseSNPC_Animal)) then
-		if VJ_HasValue(GetNPCs,x:GetClass()) then
-		table.remove(GetNPCs,x:GetClass()) end
-		end
-	end
-	return GetNPCs*/
-	local EntsTbl = CustomTbl or ents.GetAll()
-	local EntsFinal = {}
-	local count = 1
-	//for k, v in ipairs(CustomTbl) do //ents.FindInSphere(self:GetPos(),30000)
-	for x=1, #EntsTbl do
-		if !EntsTbl[x]:IsNPC() && !EntsTbl[x]:IsPlayer() then continue end
-		local v = EntsTbl[x]
-		self:EntitiesToNoCollideCode(v)
-		if (v:IsNPC() && v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) && v:Health() > 0) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 /*&& v:Alive()*/) then
-			EntsFinal[count] = v
-			count = count + 1
-		end
-	end
-	//table.Merge(EntsFinal,self.CurrentPossibleEnemies)
-	return EntsFinal
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoEntityRelationshipCheck()
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.Behavior == VJ_BEHAVIOR_PASSIVE*/ then return false end
 	local posenemies = self.CurrentPossibleEnemies
@@ -4990,6 +4959,26 @@ function ENT:VJ_HasActiveWeapon() -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!
 	if self.DisableWeapons == false && self:GetActiveWeapon() != NULL then return true end
 	return false
 end
+---------------------------------------------------------------------------------------------------------------------------------------------
+/*
+function ENT:DoHardEntityCheck(CustomTbl)
+	local EntsTbl = CustomTbl or ents.GetAll()
+	local EntsFinal = {}
+	local count = 1
+	//for k, v in ipairs(CustomTbl) do //ents.FindInSphere(self:GetPos(),30000)
+	for x=1, #EntsTbl do
+		if !EntsTbl[x]:IsNPC() && !EntsTbl[x]:IsPlayer() then continue end
+		local v = EntsTbl[x]
+		self:EntitiesToNoCollideCode(v)
+		if (v:IsNPC() && v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) && v:Health() > 0) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0) then
+			EntsFinal[count] = v
+			count = count + 1
+		end
+	end
+	//table.Merge(EntsFinal,self.CurrentPossibleEnemies)
+	return EntsFinal
+end
+*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*
 function ENT:NoCollide_CombineBall()

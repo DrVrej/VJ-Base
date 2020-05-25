@@ -2463,7 +2463,6 @@ end
 function ENT:MeleeAttackCode_DoFinishTimers()
 	timer.Create("timer_melee_finished"..self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Melee,self.NextAnyAttackTime_Melee_DoRand,self.TimeUntilMeleeAttackDamage,self.CurrentAttackAnimationDuration), 1, function()
 		self:StopAttacks()
-		//if self.VJ_IsBeingControlled == false then self:FaceCertainEntity(MyEnemy,true) end
 		self:DoChaseAnimation()
 	end)
 	timer.Create("timer_melee_finished_abletomelee"..self:EntIndex(), self:DecideAttackTimer(self.NextMeleeAttackTime,self.NextMeleeAttackTime_DoRand), 1, function()
@@ -2473,41 +2472,39 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttackCode()
 	if self.Dead == true or self.vACT_StopAttacks == true or self.Flinching == true or self.MeleeAttacking == true then return end
-	if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
 	if IsValid(self:GetEnemy()) then
-		if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
-		self:PlaySoundSystem("RangeAttack")
 		self.RangeAttacking = true
-		self:CustomRangeAttackCode()
-		if /*self.VJ_IsBeingControlled == false &&*/ self.RangeAttackAnimationFaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(),true) end
-		//if self.VJ_PlayingSequence == false then self:VJ_SetSchedule(SCHED_COMBAT_STAND) end
+		self:PlaySoundSystem("RangeAttack")
+		if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
+		if self.RangeAttackAnimationFaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(), true) end
 		//self:PointAtEntity(self:GetEnemy())
+		self:CustomRangeAttackCode()
+		-- Default projectile code
 		if self.DisableDefaultRangeAttackCode == false then
-			local rangeprojectile = ents.Create(self.RangeAttackEntityToSpawn)
-			local getposoverride = self:RangeAttackCode_OverrideProjectilePos(rangeprojectile)
-			if getposoverride == 0 then
+			local projectile = ents.Create(self.RangeAttackEntityToSpawn)
+			local spawnpos_override = self:RangeAttackCode_OverrideProjectilePos(projectile)
+			if spawnpos_override == 0 then -- 0 = Let base decide
 				if self.RangeUseAttachmentForPos == false then
-					rangeprojectile:SetPos(self:GetPos() + self:GetUp()*self.RangeAttackPos_Up + self:GetForward()*self.RangeAttackPos_Forward + self:GetRight()*self.RangeAttackPos_Right)
+					projectile:SetPos(self:GetPos() + self:GetUp()*self.RangeAttackPos_Up + self:GetForward()*self.RangeAttackPos_Forward + self:GetRight()*self.RangeAttackPos_Right)
 				else
-					rangeprojectile:SetPos(self:GetAttachment(self:LookupAttachment(self.RangeUseAttachmentForPosID)).Pos)
+					projectile:SetPos(self:GetAttachment(self:LookupAttachment(self.RangeUseAttachmentForPosID)).Pos)
 				end
-			else
-				rangeprojectile:SetPos(getposoverride)
+			else -- Custom position
+				projectile:SetPos(spawnpos_override)
 			end
-			rangeprojectile:SetAngles((self:GetEnemy():GetPos()-rangeprojectile:GetPos()):Angle())
-			self:CustomRangeAttackCode_BeforeProjectileSpawn(rangeprojectile)
-			rangeprojectile:Spawn()
-			rangeprojectile:Activate()
-			rangeprojectile:SetOwner(self)
-			rangeprojectile:SetPhysicsAttacker(self)
-			//constraint.NoCollide(self,rangeprojectile,0,0)
-			//if IsValid(self:GetEnemy()) then
-			local phys = rangeprojectile:GetPhysicsObject()
+			projectile:SetAngles((self:GetEnemy():GetPos() - projectile:GetPos()):Angle())
+			self:CustomRangeAttackCode_BeforeProjectileSpawn(projectile)
+			projectile:Spawn()
+			projectile:Activate()
+			projectile:SetOwner(self)
+			projectile:SetPhysicsAttacker(self)
+			//constraint.NoCollide(self,projectile,0,0)
+			local phys = projectile:GetPhysicsObject()
 			if (phys:IsValid()) then
-				phys:Wake() //:GetNormal() *self.RangeDistance
-				phys:SetVelocity(self:RangeAttackCode_GetShootPos(rangeprojectile)) //ApplyForceCenter
+				phys:Wake()
+				phys:SetVelocity(self:RangeAttackCode_GetShootPos(projectile)) //ApplyForceCenter
 			end
-			self:CustomRangeAttackCode_AfterProjectileSpawn(rangeprojectile)
+			self:CustomRangeAttackCode_AfterProjectileSpawn(projectile)
 		end
 	end
 	if self.AlreadyDoneRangeAttackFirstProjectile == false && self.TimeUntilRangeAttackProjectileRelease != false then
@@ -2758,37 +2755,6 @@ function ENT:DoRelationshipCheck(argent)
 		end
 	end
 	return false
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoHardEntityCheck(CustomTbl)
-	/*local GetNPCs = {}
-	GetNPCs = ents.FindByClass("npc_*")
-	GetNPCs = table.Add(GetNPCs,ents.FindByClass("monster_*"))
-	if GetConVarNumber("ai_ignoreplayers") == 0 then
-	GetNPCs = table.Add(GetNPCs,player.GetAll()) end
-	if (!ents) then return end
-	for _, x in pairs(GetNPCs) do
-	if (x:GetClass() == self:GetClass() or x:GetClass() == "npc_grenade_frag" or (x.IsVJBaseSNPC_Animal)) then
-		if VJ_HasValue(GetNPCs,x:GetClass()) then
-		table.remove(GetNPCs,x:GetClass()) end
-		end
-	end
-	return GetNPCs*/
-	local EntsTbl = CustomTbl or ents.GetAll()
-	local EntsFinal = {}
-	local count = 1
-	//for k, v in ipairs(CustomTbl) do //ents.FindInSphere(self:GetPos(),30000)
-	for x=1, #EntsTbl do
-		if !EntsTbl[x]:IsNPC() && !EntsTbl[x]:IsPlayer() then continue end
-		local v = EntsTbl[x]
-		self:EntitiesToNoCollideCode(v)
-		if (v:IsNPC() && v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) && v:Health() > 0) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 /*&& v:Alive()*/) then
-			EntsFinal[count] = v
-			count = count + 1
-		end
-	end
-	//table.Merge(EntsFinal,self.CurrentPossibleEnemies)
-	return EntsFinal
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoEntityRelationshipCheck()
@@ -4590,6 +4556,26 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+/*
+function ENT:DoHardEntityCheck(CustomTbl)
+	local EntsTbl = CustomTbl or ents.GetAll()
+	local EntsFinal = {}
+	local count = 1
+	//for k, v in ipairs(CustomTbl) do //ents.FindInSphere(self:GetPos(),30000)
+	for x=1, #EntsTbl do
+		if !EntsTbl[x]:IsNPC() && !EntsTbl[x]:IsPlayer() then continue end
+		local v = EntsTbl[x]
+		self:EntitiesToNoCollideCode(v)
+		if (v:IsNPC() && v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) && v:Health() > 0) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0) then
+			EntsFinal[count] = v
+			count = count + 1
+		end
+	end
+	//table.Merge(EntsFinal,self.CurrentPossibleEnemies)
+	return EntsFinal
+end
+*/
+---------------------------------------------------------------------------------------------------------------------------------------------
 /*
 function ENT:NoCollide_CombineBall()
 	for k, v in pairs (ents.GetAll()) do
