@@ -34,7 +34,7 @@ SWEP.WorldModel = "models/weapons/w_rif_ak47.mdl"
 SWEP.WorldModel_UseCustomPosition = false -- Should the gun use custom position? This can be used to fix guns that are in the crotch
 SWEP.WorldModel_CustomPositionAngle = Vector(-8,1,180)
 SWEP.WorldModel_CustomPositionOrigin = Vector(-1,6,1.4)
-SWEP.WorldModel_CustomPositionBone = "ValveBiped.Bip01_R_Hand" -- The bone it will use as the main point
+SWEP.WorldModel_CustomPositionBone = "ValveBiped.Bip01_R_Hand" -- The bone it will use as the main point (Owner's bone)
 SWEP.WorldModel_Invisible = false -- Should the world model be invisible?
 SWEP.WorldModel_NoShadow = false -- Should the world model have a shadow?
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -47,6 +47,9 @@ SWEP.NPC_TimeUntilFireExtraTimers = {} -- Extra timers, which will make the gun 
 SWEP.NPC_CustomSpread = 1 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
 SWEP.NPC_BulletSpawnAttachment = "" -- The attachment that the bullet spawns on, leave empty for base to decide!
 SWEP.NPC_CanBePickedUp = true -- Can this weapon be picked up by NPCs? (Ex: Rebels)
+	-- ====== Firing Distance ====== --
+SWEP.NPC_FiringDistanceScale = 1 -- Changes how far the NPC can fire | 1 = No change, x < 1 = closer, x > 1 = farther
+SWEP.NPC_FiringDistanceMax = 100000 -- Maximum firing distance | Clamped at the maximum sight distance of the NPC
 	-- ====== Reload Variables ====== --
 SWEP.NPC_HasReloadSound = true -- Should it play a sound when the base detects the SNPC playing a reload animation?
 SWEP.NPC_ReloadSound = {} -- Sounds it plays when the base detects the SNPC playing a reload animation
@@ -147,6 +150,8 @@ SWEP.PrimaryEffects_DynamicLightColor = Color(255, 150, 60)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnEquip(NewOwner) end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnNPC_ServerThink() end
@@ -221,31 +226,51 @@ function SWEP:Initialize()
 	if self.HasIdleAnimation == true then self.InitHasIdleAnimation = true end
 	self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
 	self:CustomOnInitialize()
-	if IsValid(self:GetOwner()) then
-		if VJ_AnimationExists(self:GetOwner(),ACT_WALK_AIM_PISTOL) == true && VJ_AnimationExists(self:GetOwner(),ACT_RUN_AIM_PISTOL) == true && VJ_AnimationExists(self:GetOwner(),ACT_POLICE_HARASS1) == true then
-			self.NPC_AnimationSet = "Metrocop"
-		elseif VJ_AnimationExists(self:GetOwner(),"cheer1") == true && VJ_AnimationExists(self:GetOwner(),"wave_smg1") == true && VJ_AnimationExists(self:GetOwner(),ACT_BUSY_SIT_GROUND) == true then
-			self.NPC_AnimationSet = "Rebel"
-		elseif VJ_AnimationExists(self:GetOwner(),"signal_takecover") == true && VJ_AnimationExists(self:GetOwner(),"grenthrow") == true && VJ_AnimationExists(self:GetOwner(),"bugbait_hit") == true then
-			self.NPC_AnimationSet = "Combine"
-		end
-	end
 	if (SERVER) then
+		//self:SetWeaponHoldType(self.HoldType)
 		self:SetNPCMinBurst(10)
 		self:SetNPCMaxBurst(20)
 		self:SetNPCFireRate(10)
-
-		if self:GetOwner():IsNPC() then
-			//self:SetWeaponHoldType(self.HoldType)
-			if self:GetOwner():GetClass() == "npc_citizen" then self:GetOwner():Fire("DisableWeaponPickup") end -- If it's a citizen, disable them picking up weapons from the ground
-			self:GetOwner():SetKeyValue("spawnflags","256") -- Long Visibility Shooting since HL2 NPCs are blind
-			hook.Add("Think", self, self.NPC_ServerNextFire)
-		end
-	end
-	if self:GetOwner():IsNPC() && self:GetOwner().IsVJBaseSNPC then
-		self:GetOwner().Weapon_StartingAmmoAmount = self.Primary.ClipSize
 	end
 	self:SetDefaultValues(self.HoldType)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:Equip(NewOwner)
+	self:SetClip1(self.Primary.ClipSize)
+	if NewOwner:IsPlayer() then
+		if self.Primary.PickUpAmmoAmount == "Default" then
+			NewOwner:GiveAmmo(self.Primary.ClipSize*2,self.Primary.Ammo)
+		elseif isnumber(self.Primary.PickUpAmmoAmount) then
+			NewOwner:GiveAmmo(self.Primary.PickUpAmmoAmount,self.Primary.Ammo)
+		end
+		//NewOwner:RemoveAmmo(self.Primary.DefaultClip,self.Primary.Ammo)
+		if self.MadeForNPCsOnly == true then
+			NewOwner:PrintMessage(HUD_PRINTTALK,self.PrintName.." removed! It's made for NPCs only!")
+			self:Remove()
+		end
+	elseif NewOwner:IsNPC() then
+		if VJ_AnimationExists(NewOwner,ACT_WALK_AIM_PISTOL) == true && VJ_AnimationExists(NewOwner,ACT_RUN_AIM_PISTOL) == true && VJ_AnimationExists(NewOwner,ACT_POLICE_HARASS1) == true then
+			self.NPC_AnimationSet = "Metrocop"
+		elseif VJ_AnimationExists(NewOwner,"cheer1") == true && VJ_AnimationExists(NewOwner,"wave_smg1") == true && VJ_AnimationExists(NewOwner,ACT_BUSY_SIT_GROUND) == true then
+			self.NPC_AnimationSet = "Rebel"
+		elseif VJ_AnimationExists(NewOwner,"signal_takecover") == true && VJ_AnimationExists(NewOwner,"grenthrow") == true && VJ_AnimationExists(NewOwner,"bugbait_hit") == true then
+			self.NPC_AnimationSet = "Combine"
+		end
+
+		if NewOwner:GetClass() == "npc_citizen" then NewOwner:Fire("DisableWeaponPickup") end -- If it's a citizen, disable them picking up weapons from the ground
+		NewOwner:SetKeyValue("spawnflags","256") -- Long Visibility Shooting since HL2 NPCs are blind
+		hook.Add("Think", self, self.NPC_ServerNextFire)
+
+		if NewOwner.IsVJBaseSNPC then
+			NewOwner.Weapon_StartingAmmoAmount = self.Primary.ClipSize
+			if NewOwner.IsVJBaseSNPC_Human == true then
+				NewOwner.Weapon_OriginalFiringDistanceFar = NewOwner.Weapon_OriginalFiringDistanceFar or NewOwner.Weapon_FiringDistanceFar
+				NewOwner.Weapon_FiringDistanceFar = math.Clamp(NewOwner.Weapon_OriginalFiringDistanceFar * self.NPC_FiringDistanceScale, NewOwner.Weapon_FiringDistanceClose, self.NPC_FiringDistanceMax)
+				print(NewOwner.Weapon_FiringDistanceFar)
+			end
+		end
+	end
+	self:CustomOnEquip(NewOwner)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:SetDefaultValues(curtype, force)
@@ -298,8 +323,7 @@ function SWEP:TranslateActivity(act)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CanBePickedUpByNPCs()
-	if self.NPC_CanBePickedUp == false then return end
-	return true
+	return self.NPC_CanBePickedUp
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_ServerNextFire()
@@ -664,22 +688,6 @@ function SWEP:Holster(wep)
 	self.HasIdleAnimation = false
 	//self:SendWeaponAnim(ACT_VM_HOLSTER)
 	return true
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:Equip()
-	self:SetClip1(self.Primary.ClipSize)
-	if self:GetOwner():IsPlayer() then
-		if self.Primary.PickUpAmmoAmount == "Default" then
-			self:GetOwner():GiveAmmo(self.Primary.ClipSize*2,self.Primary.Ammo)
-		elseif isnumber(self.Primary.PickUpAmmoAmount) then
-			self:GetOwner():GiveAmmo(self.Primary.PickUpAmmoAmount,self.Primary.Ammo)
-		end
-		//self:GetOwner():RemoveAmmo(self.Primary.DefaultClip,self.Primary.Ammo)
-		if self.MadeForNPCsOnly == true then
-			self:GetOwner():PrintMessage(HUD_PRINTTALK,self.PrintName.." removed! It's made for NPCs only!")
-			self:Remove()
-		end
-	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:EquipAmmo(ply)

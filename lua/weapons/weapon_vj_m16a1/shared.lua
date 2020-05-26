@@ -16,7 +16,10 @@ SWEP.UseHands					= true
 end
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel					= "models/weapons/cstrike/c_rif_m4a1.mdl"
-SWEP.WorldModel					= "models/weapons/w_rif_m4a1.mdl"
+SWEP.WorldModel					= "models/vj_weapons/w_csgo_m4a1_s.mdl"
+SWEP.WorldModel_UseCustomPosition = true -- Should the gun use custom position? This can be used to fix guns that are in the crotch
+SWEP.WorldModel_CustomPositionAngle = Vector(0, 90, 180)
+SWEP.WorldModel_CustomPositionOrigin = Vector(-3.4, -1, 0)
 SWEP.HoldType 					= "ar2"
 SWEP.ViewModelFlip				= false -- Flip the model? Usally used for CS:S models
 SWEP.Spawnable					= true
