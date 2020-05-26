@@ -872,6 +872,7 @@ ENT.AlreadyBeingHealedByMedic = false
 ENT.VJFriendly = false
 ENT.IsReloadingWeapon = false
 ENT.IsDoingFaceEnemy = false
+ENT.IsDoingFacePosition = false
 ENT.VJ_IsPlayingInterruptSequence = false
 ENT.IsAbleToMeleeAttack = true
 ENT.AlreadyDoneFirstMeleeAttack = false
@@ -956,7 +957,6 @@ ENT.NearestPointToEnemyDistance = 0
 ENT.ReachableEnemyCount = 0
 ENT.LatestEnemyDistance = 0
 ENT.HealthRegenerationDelayT = 0
-ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.LatestVisibleEnemyPosition = Vector(0,0,0)
 ENT.SelectedDifficulty = 1
 ENT.ModelAnimationSet = 0
@@ -1417,7 +1417,7 @@ end
 function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 	UseLOSChase = UseLOSChase or false
 	//if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
-	if self.LatestEnemyPosition == self:GetEnemy():GetPos() && self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
+	if (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) > 12) && self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
 	if self:GetActivity() == ACT_JUMP or self:GetActivity() == ACT_GLIDE or self:GetActivity() == ACT_LAND or self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
 	self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 	if UseLOSChase == true then
@@ -1553,8 +1553,10 @@ function ENT:DoChaseAnimation(OverrideChasing)
 	
 	-- If the enemy is not reachable
 	if (self:HasCondition(31) or self:IsUnreachable(self:GetEnemy())) && IsValid(self:GetActiveWeapon()) == true then
-		//self:VJ_SetSchedule(SCHED_ESTABLISH_LINE_OF_FIRE)
-		self:VJ_TASK_CHASE_ENEMY(true)
+		self:RememberUnreachable(self:GetEnemy(), 3)
+		if self.CurrentSchedule == nil or (self.CurrentSchedule != nil && self.CurrentSchedule.Name != "vj_chase_enemy") then
+			self:VJ_TASK_CHASE_ENEMY(true)
+		end
 	else -- Is reachable, so chase the enemy!
 		self:VJ_TASK_CHASE_ENEMY(false)
 	end
@@ -2037,7 +2039,7 @@ function ENT:DoConstantlyFaceEnemyCode()
 		if self.ConstantlyFaceEnemy_IfVisible == true && !self:Visible(self:GetEnemy()) then return false end -- Only face if the enemy is visible!
 		if self.ConstantlyFaceEnemy_IfAttacking == false && (self.MeleeAttacking == true or self.LeapAttacking == true or self.RangeAttacking == true or self.ThrowingGrenade == true) then return false end
 		if (self.ConstantlyFaceEnemy_Postures == "Both") or (self.ConstantlyFaceEnemy_Postures == "Moving" && self:IsMoving()) or (self.ConstantlyFaceEnemy_Postures == "Standing" && !self:IsMoving()) then
-			self:SetAngles(self:VJ_ReturnAngle((self:GetEnemy():GetPos()-self:GetPos()):Angle()))
+			self:FaceCertainEntity(self:GetEnemy())
 			return true
 		end
 	end
@@ -2047,21 +2049,6 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	self:SetCondition(1) -- Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case sv_pvsskipanimation isn't disabled!
-	
-	-- Turning angle test
-	/*if self.FollowingPlayer == true then
-		if self.TurningLerp == nil then self.TurningLerp = Angle(0,self:GetAngles().y,0) end
-		self.TurningLerp = LerpAngle(math.Clamp(FrameTime() * 5, 0.2, 1), self.TurningLerp, Angle(0,(self.FollowPlayer_Entity:GetPos() - self:GetPos()):Angle().y, 0))
-		print("------------")
-		print((self.FollowPlayer_Entity:GetPos() - self:GetPos()):Angle().y)
-		print("Mine: ", self:GetAngles())
-		print("Target: ", self.FollowPlayer_Entity:GetAngles())
-		print("Lerp: ", self.TurningLerp)
-		print(math.abs(math.AngleDifference(self:GetAngles().y, self.TurningLerp.y)))
-		print(math.abs(math.AngleDifference(self:GetAngles().y, self.TurningLerp.y)) / (0.5))
-		//print(self.TurningLerp)
-		self:SetAngles(self.TurningLerp)
-	end*/
 	
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
 	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
@@ -2250,17 +2237,25 @@ function ENT:Think()
 			end
 		end
 
+		-- Turn to the current face position
+		if self.IsDoingFacePosition != false then
+			local setangs = self.IsDoingFacePosition
+			self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
+			self:SetIdealYawAndUpdate(setangs.y)
+		end
+
 		if self.Dead == false then
 			if IsValid(ene) then
 				if self.DoingWeaponAttack == true then self:PlaySoundSystem("Suppressing") end
 				self:DoConstantlyFaceEnemyCode()
 				if self.IsDoingFaceEnemy == true or (self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene)))) then
-					self:SetAngles(self:VJ_ReturnAngle((ene:GetPos() - self:GetPos()):Angle()))
+					local setangs = self:VJ_ReturnAngle((ene:GetPos() - self:GetPos()):Angle())
+					self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
+					self:SetIdealYawAndUpdate(setangs.y)
 				end
 				-- Set the enemy variables
 				self.ResetedEnemy = false
 				self:UpdateEnemyMemory(ene, ene:GetPos())
-				self.LatestEnemyPosition = ene:GetPos()
 				self.LatestEnemyDistance = self:GetPos():Distance(ene:GetPos())
 				if (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (self.LatestEnemyDistance < self.SightDistance) then
 					local seentr = util.TraceLine({
@@ -2333,6 +2328,11 @@ function ENT:Think()
 				self:ResetEnemy(true)
 			end
 		end
+		
+		//VJ_CreateTestObject(self:GetEnemyLastSeenPos())
+		/*print(self:HasEnemyMemory())
+		print(self:GetEnemyLastTimeSeen() - CurTime())
+		print(self:GetEnemyFirstTimeSeen() - CurTime())*/
 
 		--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 			-- Attack Timers --
@@ -2556,6 +2556,14 @@ function ENT:ThrowGrenadeCode(CustomEnt, NoOwner)
 		getSpawnAngle = self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Ang
 	end
 	
+	if self.DisableGrenadeAttackAnimation == false then
+		self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_GrenadeAttack)
+		self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, 0.2)
+		self.PlayingAttackAnimation = true
+		timer.Create("timer_act_playingattack"..self:EntIndex(), self.CurrentAttackAnimationDuration, 1, function() self.PlayingAttackAnimation = false end)
+		self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation, self.GrenadeAttackAnimationStopAttacks, self:DecideAnimationLength(self.CurrentAttackAnimation,self.GrenadeAttackAnimationStopAttacksTime), true, self.GrenadeAttackAnimationDelay, {PlayBackRateCalculated=true})
+	end
+
 	if IsValid(CustomEnt) then -- Custom nernagner gamal nernagner vor yete bidi nede
 		getIsCustom = true
 		gerModel = CustomEnt:GetModel()
@@ -2579,19 +2587,24 @@ function ENT:ThrowGrenadeCode(CustomEnt, NoOwner)
 		end
 	end
 
+	if !IsValid(self:GetEnemy()) then
+		local iamarmo = self:VJ_CheckAllFourSides()
+		local facepos = false
+		if iamarmo.Forward then facepos = self:GetPos() + self:GetForward()*200; doit = true;
+		elseif iamarmo.Right then facepos = self:GetPos() + self:GetRight()*200;  doit = true;
+		elseif iamarmo.Left then facepos = self:GetPos() + self:GetRight()*-200;  doit = true;
+		elseif iamarmo.Backward then facepos = self:GetPos() + self:GetForward()*-200;  doit = true;
+		end
+		if facepos != false then
+			self:FaceCertainPosition(facepos, self.CurrentAttackAnimationDuration or 1.5)
+		end
+	end
+
 	self.ThrowingGrenade = true
 	self:CustomOnGrenadeAttack_BeforeThrowTime()
 	self:PlaySoundSystem("GrenadeAttack")
 
-	if self.DisableGrenadeAttackAnimation == false then
-		self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_GrenadeAttack)
-		self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, 0.2)
-		self.PlayingAttackAnimation = true
-		timer.Create("timer_act_playingattack"..self:EntIndex(), self.CurrentAttackAnimationDuration, 1, function() self.PlayingAttackAnimation = false end)
-		self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,self.GrenadeAttackAnimationStopAttacks,self:DecideAnimationLength(self.CurrentAttackAnimation,self.GrenadeAttackAnimationStopAttacksTime),false,self.GrenadeAttackAnimationDelay, {PlayBackRateCalculated=true})
-	end
-
-	timer.Simple(self.TimeUntilGrenadeIsReleased,function()
+	timer.Simple(self.TimeUntilGrenadeIsReleased, function()
 		if getIsCustom == true && !IsValid(CustomEnt) then return end
 		if IsValid(CustomEnt) then CustomEnt.VJHumanTossingAway = false CustomEnt:Remove() end
 		if IsValid(self) && self.Dead == false /*&& IsValid(self:GetEnemy())*/ then -- Yete SNPC ter artoon e...
@@ -2599,16 +2612,16 @@ function ENT:ThrowGrenadeCode(CustomEnt, NoOwner)
 			if IsValid(self:GetEnemy()) then
 				if !self:Visible(self:GetEnemy()) && self:VisibleVec(self.LatestVisibleEnemyPosition) && self:GetEnemy():GetPos():Distance(self.LatestVisibleEnemyPosition) <= 600 then
 					gerThrowPos = self.LatestVisibleEnemyPosition
-					self:FaceCertainPosition(gerThrowPos)
+					self:FaceCertainPosition(gerThrowPos, 80)
 				else
 					gerThrowPos = self:GetEnemy():GetPos()
 				end
 			else -- Yete teshnami chooni, nede amenan lav goghme
 				local iamarmo = self:VJ_CheckAllFourSides()
-				if iamarmo.Forward then gerThrowPos = self:GetPos() + self:GetForward()*200; self:FaceCertainPosition(gerThrowPos)
-					elseif iamarmo.Right then gerThrowPos = self:GetPos() + self:GetRight()*200; self:FaceCertainPosition(gerThrowPos)
-					elseif iamarmo.Left then gerThrowPos = self:GetPos() + self:GetRight()*-200; self:FaceCertainPosition(gerThrowPos)
-					elseif iamarmo.Backward then gerThrowPos = self:GetPos() + self:GetForward()*-200; self:FaceCertainPosition(gerThrowPos)
+				if iamarmo.Forward then gerThrowPos = self:GetPos() + self:GetForward()*200; self:FaceCertainPosition(gerThrowPos, 100)
+				elseif iamarmo.Right then gerThrowPos = self:GetPos() + self:GetRight()*200; self:FaceCertainPosition(gerThrowPos, 100)
+				elseif iamarmo.Left then gerThrowPos = self:GetPos() + self:GetRight()*-200; self:FaceCertainPosition(gerThrowPos, 100)
+				elseif iamarmo.Backward then gerThrowPos = self:GetPos() + self:GetForward()*-200; self:FaceCertainPosition(gerThrowPos, 100)
 				end
 			end
 			local gent = ents.Create(gerClass)
@@ -3062,30 +3075,20 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 		end
 	end
 	
-	//print(self.LatestEnemyPosition)
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVarNumber("vj_npc_printresetenemy") == 1 then print(self:GetName().." has reseted its enemy") end
 	if IsValid(self:GetEnemy()) then
-		if self.FollowingPlayer == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && self.LatestEnemyPosition != Vector(0,0,0) then
-			self:SetLastPosition(self.LatestEnemyPosition)
+		if self.FollowingPlayer == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && self:GetEnemyLastKnownPos() != Vector(0,0,0) then
+			self:SetLastPosition(self:GetEnemyLastKnownPos())
 			RunToEnemyOnReset = true
-			/*timer.Simple(0.15,function()
-			if self:IsValid() then
-			if self.FollowingPlayer == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && self.LatestEnemyPosition != Vector(0,0,0) then // && self.DisableWandering == false
-			self:VJ_SetSchedule(SCHED_FORCED_GO_RUN)
-			self.PlayedResetEnemyRunSchedule = true
-			//self:DoIdleAnimation()
-			end
-		  end
-		 end)*/
 		end
-		//table.remove(self.CurrentPossibleEnemies,tonumber(self:GetEnemy()))
-		//table.Empty(self.CurrentPossibleEnemies)
-		self:AddEntityRelationship(self:GetEnemy(),4,10)
+
+		self:MarkEnemyAsEluded(self:GetEnemy())
+		//self:ClearEnemyMemory(self:GetEnemy()) // Completely resets the enemy memory
+		self:AddEntityRelationship(self:GetEnemy(), 4, 10)
 	end
 	
 	self.Alerted = false
 	self:SetEnemy(NULL)
-	self:ClearEnemyMemory()
 	//self:UpdateEnemyMemory(self,self:GetPos())
 	self:VJ_ACT_RESETENEMY(RunToEnemyOnReset)
 	self:CustomOnResetEnemy()
@@ -3269,6 +3272,12 @@ function ENT:DoEntityRelationshipCheck()
 					end
 				end
 			end
+			/*print("----------")
+			print(self:HasEnemyEluded(v))
+			print(self:HasEnemyMemory(v))
+			print(CurTime() - self:GetEnemyLastTimeSeen(v))
+			print(CurTime() - self:GetEnemyFirstTimeSeen(v))*/
+
 			if self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye != v then
 				//self:AddEntityRelationship(v,D_NU,99)
 				v = self.VJ_TheControllerBullseye

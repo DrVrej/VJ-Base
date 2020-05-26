@@ -936,6 +936,7 @@ ENT.IsAbleToRangeAttack = true
 ENT.IsAbleToLeapAttack = true
 ENT.RangeAttack_DisableChasingEnemy = false
 ENT.IsDoingFaceEnemy = false
+ENT.IsDoingFacePosition = false
 ENT.VJ_IsPlayingInterruptSequence = false
 ENT.AlreadyDoneFirstMeleeAttack = false
 ENT.CanDoSelectScheduleAgain = true
@@ -1002,9 +1003,8 @@ ENT.JumpLegalLandingTime = 0
 ENT.ReachableEnemyCount = 0
 ENT.LatestEnemyDistance = 0
 ENT.HealthRegenerationDelayT = 0
-ENT.LatestEnemyPosition = Vector(0,0,0)
 ENT.LatestVisibleEnemyPosition = Vector(0,0,0)
-ENT.CurrentTurningAngle = false
+ENT.AA_CurrentTurnAng = false
 ENT.SelectedDifficulty = 1
 ENT.VJ_AddCertainEntityAsEnemy = {}
 ENT.VJ_AddCertainEntityAsFriendly = {}
@@ -1181,6 +1181,10 @@ function ENT:IsJumpLegal(startPos,apex,endPos)
 	if dist_end > maxdist then return nil end
 	self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190)
 	return true
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OnChangeActivity(newAct)
+	//print(newAct)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActivitiesTime,vACT_FaceEnemy,vACT_DelayAnim,vACT_AdvancedFeatures,vACT_CustomCode)
@@ -1435,7 +1439,7 @@ function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 	UseLOSChase = UseLOSChase or false
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_ChaseEnemy(true) return end
 	//if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
-	if self.LatestEnemyPosition == self:GetEnemy():GetPos() && self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
+	if (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) > 12) && self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
 	if (CurTime() <= self.JumpLegalLandingTime && (self:GetActivity() == ACT_JUMP or self:GetActivity() == ACT_GLIDE or self:GetActivity() == ACT_LAND)) or self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
 	self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 	if UseLOSChase == true then
@@ -1570,11 +1574,18 @@ function ENT:DoChaseAnimation(OverrideChasing)
 	if OverrideChasing == false && (self.DisableChasingEnemy == true or self.IsGuard == true or self.RangeAttack_DisableChasingEnemy == true) then self:VJ_TASK_IDLE_STAND() return end
 	
 	-- If the enemy is not reachable then wander around
-	if self:IsUnreachable(ene) == true && math.random(1, 30) == 1 then
-		if !self:IsMoving() then
-			self.NextWanderTime = 0
+	if self:IsUnreachable(ene) == true && (self.HasRangeAttack == true or math.random(1, 30) == 1) then
+		self:RememberUnreachable(self:GetEnemy(), 3)
+		if self.HasRangeAttack == true then -- Ranged NPCs
+			if self.CurrentSchedule == nil or (self.CurrentSchedule != nil && self.CurrentSchedule.Name != "vj_chase_enemy") then
+				self:VJ_TASK_CHASE_ENEMY(true)
+			end
+		else -- Non-range NPCs
+			if !self:IsMoving() then
+				self.NextWanderTime = 0
+			end
+			self:DoIdleAnimation(1)
 		end
-		self:DoIdleAnimation(1)
 	else -- Is reachable, so chase the enemy!
 		self:VJ_TASK_CHASE_ENEMY()
 	end
@@ -1805,7 +1816,7 @@ function ENT:DoConstantlyFaceEnemyCode()
 		if self.ConstantlyFaceEnemy_IfVisible == true && !self:Visible(self:GetEnemy()) then return false end -- Only face if the enemy is visible!
 		if self.ConstantlyFaceEnemy_IfAttacking == false && (self.MeleeAttacking == true or self.LeapAttacking == true or self.RangeAttacking == true or self.ThrowingGrenade == true) then return false end
 		if (self.ConstantlyFaceEnemy_Postures == "Both") or (self.ConstantlyFaceEnemy_Postures == "Moving" && self:IsMoving()) or (self.ConstantlyFaceEnemy_Postures == "Standing" && !self:IsMoving()) then
-			self:SetAngles(self:VJ_ReturnAngle((self:GetEnemy():GetPos()-self:GetPos()):Angle()))
+			self:FaceCertainEntity(self:GetEnemy())
 			return true
 		end
 	end
@@ -1942,21 +1953,32 @@ function ENT:Think()
 		//print(self:GetPathDistanceToGoal())
 		
 		-- Used for AA SNPCs
-		if self.CurrentTurningAngle != false then
-			self:SetAngles(Angle(math.ApproachAngle(self:GetAngles().p, self.CurrentTurningAngle.p, self.TurningSpeed),math.ApproachAngle(self:GetAngles().y, self.CurrentTurningAngle.y, self.TurningSpeed),math.ApproachAngle(self:GetAngles().r, self.CurrentTurningAngle.r, self.TurningSpeed)))
+		if self.AA_CurrentTurnAng != false then
+			local setangs = self.AA_CurrentTurnAng
+			self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
+			self:SetIdealYawAndUpdate(setangs.y)
+			//self:SetAngles(Angle(math.ApproachAngle(self:GetAngles().p, self.AA_CurrentTurnAng.p, self.TurningSpeed),math.ApproachAngle(self:GetAngles().y, self.AA_CurrentTurnAng.y, self.TurningSpeed),math.ApproachAngle(self:GetAngles().r, self.AA_CurrentTurnAng.r, self.TurningSpeed)))
 		end
-	
+
+		-- Turn to the current face position
+		if self.IsDoingFacePosition != false then
+			local setangs = self.IsDoingFacePosition
+			self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
+			self:SetIdealYawAndUpdate(setangs.y)
+		end
+
 		local ene = self:GetEnemy()
 		if self.Dead == false then
 			if IsValid(ene) then
 				self:DoConstantlyFaceEnemyCode()
 				if self.IsDoingFaceEnemy == true or (self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene)))) then
-					self:SetAngles(self:VJ_ReturnAngle((ene:GetPos() - self:GetPos()):Angle()))
+					local setangs = self:VJ_ReturnAngle((ene:GetPos() - self:GetPos()):Angle())
+					self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
+					self:SetIdealYawAndUpdate(setangs.y)
 				end
 				-- Set the enemy variables
 				self.ResetedEnemy = false
 				self:UpdateEnemyMemory(ene, ene:GetPos())
-				self.LatestEnemyPosition = ene:GetPos()
 				self.LatestEnemyDistance = self:GetPos():Distance(ene:GetPos())
 				if (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (self.LatestEnemyDistance < self.SightDistance) then
 					local seentr = util.TraceLine({
@@ -1989,7 +2011,7 @@ function ENT:Think()
 					if (self.LatestEnemyDistance < fardist) && (self.LatestEnemyDistance > closedist) && ene:Visible(self) /*&& self:CanDoCertainAttack("RangeAttack") == true*/ then
 						self.RangeAttack_DisableChasingEnemy = true
 						if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then self:StopMoving() end
-						if self.MovementType == VJ_MOVETYPE_GROUND && !self:IsMoving() then self:SetAngles(self:VJ_ReturnAngle((ene:GetPos()-self:GetPos()):Angle())) end
+						if self.MovementType == VJ_MOVETYPE_GROUND && !self:IsMoving() then self:FaceCertainEntity(self:GetEnemy()) end
 						if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && CurTime() > self.AA_MoveLength_Wander /*&& ((self.AA_CurrentMoveAnimationType != "Calm") or (self.AA_CurrentMoveAnimationType == "Calm" && self:GetVelocity():Length() > 0))*/ then self:AAMove_Wander(true,false) /*self:AAMove_Stop()*/ end
 					else
 						self.RangeAttack_DisableChasingEnemy = false
@@ -2691,25 +2713,16 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 		end
 	end
 	
-	//print(self.LatestEnemyPosition)
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVarNumber("vj_npc_printresetenemy") == 1 then print(self:GetName().." has reseted its enemy") end
 	if IsValid(self:GetEnemy()) then
-		if self.FollowingPlayer == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && self.LatestEnemyPosition != Vector(0,0,0) then
-			self:SetLastPosition(self.LatestEnemyPosition)
+		if self.FollowingPlayer == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && self:GetEnemyLastKnownPos() != Vector(0,0,0) then
+			self:SetLastPosition(self:GetEnemyLastKnownPos())
 			RunToEnemyOnReset = true
-			/*timer.Simple(0.15,function()
-			if self:IsValid() then
-			if self.FollowingPlayer == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && self.LatestEnemyPosition != Vector(0,0,0) then // && self.DisableWandering == false
-			self:VJ_SetSchedule(SCHED_FORCED_GO_RUN)
-			self.PlayedResetEnemyRunSchedule = true
-			//self:DoIdleAnimation()
-			end
-		  end
-		 end)*/
 		end
-		//table.remove(self.CurrentPossibleEnemies,tonumber(self:GetEnemy()))
-		//table.Empty(self.CurrentPossibleEnemies)
-		self:AddEntityRelationship(self:GetEnemy(),4,10)
+		
+		self:MarkEnemyAsEluded(self:GetEnemy())
+		//self:ClearEnemyMemory(self:GetEnemy()) // Completely resets the enemy memory
+		self:AddEntityRelationship(self:GetEnemy(), 4, 10)
 	end
 	
 	self.Alerted = false
