@@ -97,7 +97,7 @@ function ENT:AAMove_Wander(ShouldPlayAnim,NoFace)
 	self.yep = CurTime() + math.abs(test2)
 	self.yep2 = self:VJ_ReturnAngle((finalpos-tr.StartPos):Angle())*/
 	
-	if NoFace == false then self.CurrentTurningAngle = self:VJ_ReturnAngle((finalpos-tr.StartPos):Angle()) end //self:SetLocalAngularVelocity(self:VJ_ReturnAngle((finalpos-tr.StartPos):Angle())) end
+	if NoFace == false then self.AA_CurrentTurnAng = self:VJ_ReturnAngle((finalpos-tr.StartPos):Angle()) end //self:SetLocalAngularVelocity(self:VJ_ReturnAngle((finalpos-tr.StartPos):Angle())) end
 	if Debug == true then
 		VJ_CreateTestObject(finalpos,self:GetAngles(),Color(0,255,255),5)
 		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,finalpos,false,self:EntIndex(),0)
@@ -249,7 +249,7 @@ function ENT:AAMove_MoveToPos(Ent,ShouldPlayAnim,vAdditionalFeatures)
 		//local enevel = Ent:GetVelocity()
 		local vel_set = (enepos - (self:GetPos() + self:OBBCenter())):GetNormal()*MoveSpeed + self:GetUp()*vel_up + self:GetForward()*vel_for
 		//local vel_set_yaw = vel_set:Angle().y
-		self.CurrentTurningAngle = self:VJ_ReturnAngle(self:VJ_ReturnAngle((vel_set):Angle()))
+		self.AA_CurrentTurnAng = self:VJ_ReturnAngle(self:VJ_ReturnAngle((vel_set):Angle()))
 		//self:SetAngles(self:VJ_ReturnAngle((vel_set):Angle()))
 		self:SetLocalVelocity(vel_set)
 		local vel_len = CurTime() + (tr.HitPos:Distance(startpos) / vel_set:Length())
@@ -401,7 +401,7 @@ function ENT:AAMove_ChaseEnemy(ShouldPlayAnim,UseCalmVariables)
 	
 	-- Final velocity
 	if vel_stop == false then
-		self.CurrentTurningAngle = false
+		self.AA_CurrentTurnAng = false
 		local vel_set = (enepos - (self:GetPos() + self:OBBCenter())):GetNormal()*MoveSpeed + self:GetUp()*vel_up + self:GetForward()*vel_for
 		//local vel_set_yaw = vel_set:Angle().y
 		self:SetLocalVelocity(vel_set)

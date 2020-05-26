@@ -47,7 +47,7 @@ VJ.AddEntity("Flag","prop_vj_flag","DrVrej",false,0,true,vCat)
 //VJ.AddNPCWeapon("VJ_Package","weapon_citizenpackage")
 //VJ.AddNPCWeapon("VJ_Suitcase","weapon_citizensuitcase")
 VJ.AddNPCWeapon("VJ_AK-47","weapon_vj_ak47")
-VJ.AddNPCWeapon("VJ_M16A1","weapon_vj_m16a1")
+VJ.AddNPCWeapon("VJ_M4A1","weapon_vj_m16a1")
 VJ.AddNPCWeapon("VJ_Glock17","weapon_vj_glock17")
 VJ.AddNPCWeapon("VJ_MP40","weapon_vj_mp40")
 VJ.AddNPCWeapon("VJ_Blaster","weapon_vj_blaster")
@@ -459,26 +459,33 @@ function NPC_MetaTable:VJ_ReturnAngle(ang)
 	return Angle(0, ang.y, 0)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:FaceCertainPosition(pos)
+function NPC_MetaTable:FaceCertainPosition(pos, time)
 	pos = pos or Vector(0,0,0)
-	local setang = Angle(0,(pos-self:GetPos()):Angle().y,0)
-	self:SetAngles(setang)
-	return setang
+	time = time or 0
+	local setangs = Angle(0,(pos - self:GetPos()):Angle().y,0)
+	self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
+	self:SetIdealYawAndUpdate(setangs.y, speed)
+	self.IsDoingFacePosition = setangs
+	timer.Create("timer_act_flinching"..self:EntIndex(), time, 1, function() self.IsDoingFacePosition = false end)
+	return setangs
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:FaceCertainEntity(argent,OnlyIfSeenEnemy,FaceEnemyTime)
+function NPC_MetaTable:FaceCertainEntity(argent, OnlyIfSeenEnemy, FaceEnemyTime)
 	if !IsValid(argent) or GetConVarNumber("ai_disabled") == 1 then return false end
 	if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false then return false end
 	FaceEnemyTime = FaceEnemyTime or 0
 	if OnlyIfSeenEnemy == true && IsValid(self:GetEnemy()) then
-		local setangs = self:VJ_ReturnAngle((argent:GetPos()-self:GetPos()):Angle())
 		self.IsDoingFaceEnemy = true
 		timer.Create("timer_act_flinching"..self:EntIndex(), FaceEnemyTime, 1, function() self.IsDoingFaceEnemy = false end)
-		self:SetAngles(setangs)
+		local setangs = self:VJ_ReturnAngle((argent:GetPos() - self:GetPos()):Angle())
+		self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
+	//self:SetIdealYawAndUpdate(setangs.y)
 		return setangs //SetLocalAngles
 	else
-		local setangs = self:VJ_ReturnAngle((argent:GetPos()-self:GetPos()):Angle())
-		self:SetAngles(setangs)
+		local setangs = self:VJ_ReturnAngle((argent:GetPos() - self:GetPos()):Angle())
+		self:SetIdealYawAndUpdate(setangs.y)
+		self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
+		//self:SetIdealYawAndUpdate(setangs.y)
 		return setangs
 	end
 	return false
@@ -958,17 +965,22 @@ end)
 ------ Convar Callbacks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 cvars.AddChangeCallback("ai_ignoreplayers",function(convar_name, oldValue, newValue)
+	print(newValue)
 	if newValue == 0 then
+		print("ok")
+		local getplys = player.GetAll()
 		local getall = ents.GetAll()
 		for x = 1, #getall do
 			local v = getall[x]
 			if v:IsNPC() && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
-				v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = ply
+				print("wew")
+				for _, ply in pairs(getplys) do
+					v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = ply
+				end
 			end
 		end
 	else
-		local getall = ents.GetAll()
-		for _, v in pairs(getall) do
+		for _, v in pairs(ents.GetAll()) do
 			if v.IsVJBaseSNPC == true && v.IsVJBaseSNPC_Animal != true then
 				if v.FollowingPlayer == true then v:FollowPlayerReset() end -- Reset if it's following the player
 				//v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)

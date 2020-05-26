@@ -266,7 +266,6 @@ function SWEP:Equip(NewOwner)
 			if NewOwner.IsVJBaseSNPC_Human == true then
 				NewOwner.Weapon_OriginalFiringDistanceFar = NewOwner.Weapon_OriginalFiringDistanceFar or NewOwner.Weapon_FiringDistanceFar
 				NewOwner.Weapon_FiringDistanceFar = math.Clamp(NewOwner.Weapon_OriginalFiringDistanceFar * self.NPC_FiringDistanceScale, NewOwner.Weapon_FiringDistanceClose, self.NPC_FiringDistanceMax)
-				print(NewOwner.Weapon_FiringDistanceFar)
 			end
 		end
 	end

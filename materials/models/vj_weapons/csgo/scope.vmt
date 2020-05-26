@@ -1,15 +1,5 @@
-"Refract"
+"UnlitGeneric"
 {
-	"$model"			"1"
-	"$normalmap"		"models\vj_weapons\csgo\refract"
- 	"$refractamount"		"0.2"
- 	"$bluramount"		"0.2"
-	//"$scale"			"[0.2 0.2]"
-	"$RefractTintTexture"	"models\vj_weapons\csgo\scope"
-	"$translucent" 1
-	"$ignorez"		"1"
-	"$no_fullbright"		"1"	
-//	"$envmap"			"env_cubemap"
-//	"$normalmapalphaenvmapmask"	"1"
-//	"$envmaptint"			"[1.25 1.25 1.4]"
+    "$basetexture" "_rt_SmallFB1"
+    "$model" "1"
 }
