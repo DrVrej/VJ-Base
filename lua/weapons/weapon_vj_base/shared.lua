@@ -156,7 +156,7 @@ function SWEP:CustomOnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnNPC_ServerThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnNPC_Reload() end
+function SWEP:CustomOnReload() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BeforeShoot() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -442,9 +442,9 @@ function SWEP:NPCShoot_Primary(ShootPos, ShootDir)
 	//end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:NPC_ReloadWeapon()
+function SWEP:NPC_Reload()
 	self:GetOwner().NextThrowGrenadeT = self:GetOwner().NextThrowGrenadeT + 2
-	self:CustomOnNPC_Reload()
+	self:CustomOnReload()
 	if self.NPC_HasReloadSound == true then VJ_EmitSound(self:GetOwner(), self.NPC_ReloadSound, self.NPC_ReloadSoundLevel) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

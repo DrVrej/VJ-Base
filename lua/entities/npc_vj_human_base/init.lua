@@ -1417,20 +1417,26 @@ end
 function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 	UseLOSChase = UseLOSChase or false
 	//if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
-	if (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) > 12) && self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
+	if (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) <= 12) && self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
 	if self:GetActivity() == ACT_JUMP or self:GetActivity() == ACT_GLIDE or self:GetActivity() == ACT_LAND or self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
 	self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 	if UseLOSChase == true then
-		local vsched = ai_vj_schedule.New("vj_chase_enemy")
+		local vsched = ai_vj_schedule.New("vj_chase_enemy_los")
 		vsched:EngTask("TASK_GET_PATH_TO_ENEMY_LOS", 0)
 		//vsched:EngTask("TASK_RUN_PATH", 0)
 		vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 		//vsched:EngTask("TASK_FACE_ENEMY", 0)
-		vsched.ResetOnFail = true
+		//vsched.ResetOnFail = true
 		vsched.CanShootWhenMoving = true
 		vsched.CanBeInterrupted = true
 		vsched.IsMovingTask = true
 		vsched.IsMovingTask_Run = true
+		vsched.RunCode_OnFinish = function()
+			if IsValid(self:GetEnemy()) then
+				self:RememberUnreachable(self:GetEnemy(), 0)
+				self:VJ_TASK_CHASE_ENEMY(false)
+			end
+		end
 		self:StartSchedule(vsched)
 	else
 		local vsched = ai_vj_schedule.New("vj_chase_enemy")
@@ -1438,7 +1444,7 @@ function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 		//vsched:EngTask("TASK_RUN_PATH", 0)
 		vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 		//vsched:EngTask("TASK_FACE_ENEMY", 0)
-		vsched.ResetOnFail = true
+		//vsched.ResetOnFail = true
 		vsched.CanShootWhenMoving = true
 		//vsched.StopScheduleIfNotMoving = true
 		vsched.CanBeInterrupted = true
@@ -1553,10 +1559,8 @@ function ENT:DoChaseAnimation(OverrideChasing)
 	
 	-- If the enemy is not reachable
 	if (self:HasCondition(31) or self:IsUnreachable(self:GetEnemy())) && IsValid(self:GetActiveWeapon()) == true then
-		self:RememberUnreachable(self:GetEnemy(), 3)
-		if self.CurrentSchedule == nil or (self.CurrentSchedule != nil && self.CurrentSchedule.Name != "vj_chase_enemy") then
-			self:VJ_TASK_CHASE_ENEMY(true)
-		end
+		self:VJ_TASK_CHASE_ENEMY(true)
+		self:RememberUnreachable(self:GetEnemy(), 2)
 	else -- Is reachable, so chase the enemy!
 		self:VJ_TASK_CHASE_ENEMY(false)
 	end
@@ -2186,7 +2190,7 @@ function ENT:Think()
 				self:CustomOnWeaponReload()
 				if self.DisableWeaponReloadAnimation == false then
 					local function DoReloadAnimation(anim)
-						self.CurrentWeaponEntity:NPC_ReloadWeapon()
+						self.CurrentWeaponEntity:NPC_Reload()
 						if VJ_AnimationExists(self, anim) == true then -- Only if the given animation actually exists!
 							local dur = self:DecideAnimationLength(anim, false, self.WeaponReloadAnimationDecreaseLengthAmount)
 							timer.Create("timer_reload_end"..self:EntIndex(), dur, 1, function() if IsValid(self) then self.IsReloadingWeapon = false self.Weapon_ShotsSinceLastReload = 0 end end)
@@ -2232,7 +2236,7 @@ function ENT:Think()
 				else
 					self.Weapon_ShotsSinceLastReload = 0
 					self.IsReloadingWeapon = false
-					self.CurrentWeaponEntity:NPC_ReloadWeapon()
+					self.CurrentWeaponEntity:NPC_Reload()
 				end
 			end
 		end

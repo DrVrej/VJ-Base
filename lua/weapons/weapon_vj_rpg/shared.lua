@@ -20,7 +20,10 @@ SWEP.NPC_ReloadSound			= {"vj_weapons/reload_rpg.wav"}
 SWEP.NPC_BulletSpawnAttachment = "missile" -- The attachment that the bullet spawns on, leave empty for base to decide!
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel					= "models/vj_weapons/c_rpg7.mdl" // "models/weapons/c_rpg.mdl"
-SWEP.WorldModel					= "models/vj_weapons/w_rpg7.mdl" // "models/weapons/w_rocket_launcher.mdl"
+SWEP.WorldModel					= "models/vj_weapons/w_ins_rpg7.mdl" // "models/weapons/w_rocket_launcher.mdl"
+SWEP.WorldModel_UseCustomPosition = true -- Should the gun use custom position? This can be used to fix guns that are in the crotch
+SWEP.WorldModel_CustomPositionAngle = Vector(-10, 0, 180)
+SWEP.WorldModel_CustomPositionOrigin = Vector(-1.5, -0.5, 1)
 SWEP.HoldType 					= "rpg"
 SWEP.ViewModelFOV				= 60 -- Player FOV for the view model
 SWEP.Spawnable					= true
@@ -70,13 +73,23 @@ function SWEP:CustomOnPrimaryAttack_BeforeShoot()
 			phys:SetVelocity(self:GetOwner():CalculateProjectile("Line", self:GetNWVector("VJ_CurBulletPos"), self:GetOwner():GetEnemy():GetPos() + self:GetOwner():GetEnemy():OBBCenter(), 2500))
 		end
 	end
+	
+	self:SetBodygroup(1, 1)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttackEffects()
 	//ParticleEffect("vj_rpg2_smoke1", self:GetAttachment(3).Pos, Angle(0,0,0), self)
-	ParticleEffectAttach("smoke_exhaust_01a", PATTACH_POINT_FOLLOW, self, 3)
-	ParticleEffectAttach("smoke_exhaust_01a", PATTACH_POINT_FOLLOW, self, 3)
-	ParticleEffectAttach("smoke_exhaust_01a", PATTACH_POINT_FOLLOW, self, 3)
+	ParticleEffectAttach("smoke_exhaust_01a", PATTACH_POINT_FOLLOW, self, 2)
+	ParticleEffectAttach("smoke_exhaust_01a", PATTACH_POINT_FOLLOW, self, 2)
+	ParticleEffectAttach("smoke_exhaust_01a", PATTACH_POINT_FOLLOW, self, 2)
 	timer.Simple(4,function() if IsValid(self) then self:StopParticles() end end)
 	return true
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnReload()
+	timer.Simple(0.8, function()
+		if IsValid(self) then
+			self:SetBodygroup(1, 0)
+		end
+	end)
 end
