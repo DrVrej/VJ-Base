@@ -1439,20 +1439,24 @@ function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 	UseLOSChase = UseLOSChase or false
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_ChaseEnemy(true) return end
 	//if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
-	if (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) > 12) && self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
+	if (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) <= 12) && self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
 	if (CurTime() <= self.JumpLegalLandingTime && (self:GetActivity() == ACT_JUMP or self:GetActivity() == ACT_GLIDE or self:GetActivity() == ACT_LAND)) or self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
 	self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 	if UseLOSChase == true then
-		local vsched = ai_vj_schedule.New("vj_chase_enemy")
+		local vsched = ai_vj_schedule.New("vj_chase_enemy_los")
 		vsched:EngTask("TASK_GET_PATH_TO_ENEMY_LOS", 0)
 		//vsched:EngTask("TASK_RUN_PATH", 0)
 		vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 		//vsched:EngTask("TASK_FACE_ENEMY", 0)
-		vsched.ResetOnFail = true
+		//vsched.ResetOnFail = true
 		vsched.CanShootWhenMoving = true
 		vsched.CanBeInterrupted = true
 		vsched.IsMovingTask = true
 		vsched.IsMovingTask_Run = true
+		vsched.RunCode_OnFinish = function()
+			self:RememberUnreachable(self:GetEnemy(), 0)
+			self:VJ_TASK_CHASE_ENEMY(false)
+		end
 		self:StartSchedule(vsched)
 	else
 		local vsched = ai_vj_schedule.New("vj_chase_enemy")
@@ -1460,7 +1464,7 @@ function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 		//vsched:EngTask("TASK_RUN_PATH", 0)
 		vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 		//vsched:EngTask("TASK_FACE_ENEMY", 0)
-		vsched.ResetOnFail = true
+		//vsched.ResetOnFail = true
 		vsched.CanShootWhenMoving = true
 		//vsched.StopScheduleIfNotMoving = true
 		vsched.CanBeInterrupted = true
@@ -1575,11 +1579,9 @@ function ENT:DoChaseAnimation(OverrideChasing)
 	
 	-- If the enemy is not reachable then wander around
 	if self:IsUnreachable(ene) == true && (self.HasRangeAttack == true or math.random(1, 30) == 1) then
-		self:RememberUnreachable(self:GetEnemy(), 3)
+		self:RememberUnreachable(self:GetEnemy(), 2)
 		if self.HasRangeAttack == true then -- Ranged NPCs
-			if self.CurrentSchedule == nil or (self.CurrentSchedule != nil && self.CurrentSchedule.Name != "vj_chase_enemy") then
-				self:VJ_TASK_CHASE_ENEMY(true)
-			end
+			self:VJ_TASK_CHASE_ENEMY(true)
 		else -- Non-range NPCs
 			if !self:IsMoving() then
 				self.NextWanderTime = 0

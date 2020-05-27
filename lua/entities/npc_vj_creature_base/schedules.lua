@@ -70,6 +70,7 @@ function ENT:StartSchedule(schedule)
 	end
 	schedule.AlreadyRanCode_OnFail = false
 	schedule.AlreadyRanCode_OnFinish = false
+	// lua_run PrintTable(Entity(1):GetEyeTrace().Entity.CurrentSchedule)
 	//PrintTable(schedule)
 	//if schedule.Name != "vj_chase_enemy" then PrintTable(schedule) end
 	self:DoRunCode_OnFinish(self.CurrentSchedule) -- Yete arten schedule garne, verchatsoor
@@ -121,7 +122,7 @@ end
 function ENT:StartTask(task) if task == nil or !task or !self then return end task:Start(self) end
 function ENT:RunTask(task) if !task or !self then return end task:Run(self) end
 function ENT:TaskTime() return CurTime() - self.TaskStartTime end
-function ENT:OnTaskComplete() self.bTaskComplete = true end
+function ENT:OnTaskComplete() self:DoRunCode_OnFinish(self.CurrentSchedule) self.bTaskComplete = true end
 function ENT:TaskFinished() return self.bTaskComplete end
 function ENT:StartEngineTask(iTaskID,TaskData) end
 function ENT:RunEngineTask(iTaskID,TaskData) end
