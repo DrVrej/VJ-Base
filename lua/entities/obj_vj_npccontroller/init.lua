@@ -6,7 +6,7 @@ include('shared.lua')
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
 ENT.CanQuitController = true -- Can the user exit the controller?
-ENT.User_CanRespawn = false -- If set to false, the user will die when the NPC dies
+ENT.User_CanRespawn = true -- If set to false, the user will die when the NPC dies
 ENT.LastPressedKey = BUTTON_CODE_NONE -- The last button the user pressed
 ENT.LastPressedKeyTime = 0 -- Time since the user last pressed a key
 ENT.CrosshairTrackingActivated = false

@@ -971,7 +971,6 @@ cvars.AddChangeCallback("ai_ignoreplayers",function(convar_name, oldValue, newVa
 		for x = 1, #getall do
 			local v = getall[x]
 			if v:IsNPC() && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
-				print("wew")
 				for _, ply in pairs(getplys) do
 					v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = ply
 				end
