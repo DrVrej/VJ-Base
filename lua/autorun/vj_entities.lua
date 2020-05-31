@@ -478,8 +478,8 @@ function NPC_MetaTable:FaceCertainEntity(argent, OnlyIfSeenEnemy, FaceEnemyTime)
 		self.IsDoingFaceEnemy = true
 		timer.Create("timer_act_flinching"..self:EntIndex(), FaceEnemyTime, 1, function() self.IsDoingFaceEnemy = false end)
 		local setangs = self:VJ_ReturnAngle((argent:GetPos() - self:GetPos()):Angle())
+		self:SetIdealYawAndUpdate(setangs.y)
 		self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
-	//self:SetIdealYawAndUpdate(setangs.y)
 		return setangs //SetLocalAngles
 	else
 		local setangs = self:VJ_ReturnAngle((argent:GetPos() - self:GetPos()):Angle())
