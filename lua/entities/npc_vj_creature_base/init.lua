@@ -1185,6 +1185,9 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnChangeActivity(newAct)
 	//print(newAct)
+	if newAct == ACT_TURN_LEFT or newAct == ACT_TURN_RIGHT then
+		self.NextIdleStandTime = CurTime() + 1.2
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActivitiesTime,vACT_FaceEnemy,vACT_DelayAnim,vACT_AdvancedFeatures,vACT_CustomCode)
@@ -1346,7 +1349,7 @@ function ENT:VJ_TASK_FACE_X(FaceType,CustomCode)
 	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
 	if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false) or (self.IsVJBaseSNPC_Tank == true) then return end
 	FaceType = FaceType or "TASK_FACE_TARGET"
-	self.NextIdleStandTime = CurTime() + 1.2
+	//self.NextIdleStandTime = CurTime() + 1.2
 	local vschedFaceX = ai_vj_schedule.New("vj_face_x")
 	vschedFaceX:EngTask(FaceType, 0)
 	if (CustomCode) then CustomCode(vschedFaceX) end
