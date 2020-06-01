@@ -314,7 +314,7 @@ function ENT:Tank_FireShell()
 		Projectile_Shell:Activate()
 		Projectile_Shell:SetOwner(self)
 		local phys = Projectile_Shell:GetPhysicsObject()
-		if phys:IsValid() then
+		if IsValid(phys) then
 			phys:SetVelocity(Vector(ShootPos.x,ShootPos.y,math.Clamp(ShootPos.z,self.Tank_Shell_SpawnPos.z+-735,self.Tank_Shell_SpawnPos.z+335)))
 		end
 		

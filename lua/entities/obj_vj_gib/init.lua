@@ -27,7 +27,7 @@ function ENT:Initialize()
 
 	-- Physics Functions
 	local phys = self:GetPhysicsObject()
-	if (phys:IsValid()) then
+	if IsValid(phys) then
 		phys:Wake()
 		//phys:EnableGravity(false)
 		//phys:EnableDrag(false)

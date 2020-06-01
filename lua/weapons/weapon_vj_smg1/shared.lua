@@ -51,7 +51,7 @@ function SWEP:NPC_SecondaryFire()
 	proj:Spawn()
 	proj:Activate()
 	local phys = proj:GetPhysicsObject()
-	if phys:IsValid() then
+	if IsValid(phys) then
 		phys:Wake()
 		phys:SetVelocity(self:GetOwner():CalculateProjectile("Curve", pos, self:GetOwner():GetEnemy():GetPos() + self:GetOwner():GetEnemy():OBBCenter(), 1000))
 	end

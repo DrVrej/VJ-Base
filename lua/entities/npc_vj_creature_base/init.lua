@@ -1008,7 +1008,7 @@ ENT.AA_CurrentTurnAng = false
 ENT.SelectedDifficulty = 1
 ENT.VJ_AddCertainEntityAsEnemy = {}
 ENT.VJ_AddCertainEntityAsFriendly = {}
-ENT.TimersToRemove = {"timer_act_seq_wait","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap"}
+ENT.TimersToRemove = {"timer_act_seq_wait","timer_face_position","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap"}
 ENT.EntitiesToDestroyClass = {func_breakable=true,func_physbox=true,prop_door_rotating=true} // func_breakable_surf
 
 -- Static values
@@ -1457,8 +1457,10 @@ function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 		vsched.IsMovingTask = true
 		vsched.IsMovingTask_Run = true
 		vsched.RunCode_OnFinish = function()
-			self:RememberUnreachable(self:GetEnemy(), 0)
-			self:VJ_TASK_CHASE_ENEMY(false)
+			if IsValid(self:GetEnemy()) then
+				self:RememberUnreachable(self:GetEnemy(), 0)
+				self:VJ_TASK_CHASE_ENEMY(false)
+			end
 		end
 		self:StartSchedule(vsched)
 	else
@@ -2527,7 +2529,7 @@ function ENT:RangeAttackCode()
 			projectile:SetPhysicsAttacker(self)
 			//constraint.NoCollide(self,projectile,0,0)
 			local phys = projectile:GetPhysicsObject()
-			if (phys:IsValid()) then
+			if IsValid(phys) then
 				phys:Wake()
 				phys:SetVelocity(self:RangeAttackCode_GetShootPos(projectile)) //ApplyForceCenter
 			end

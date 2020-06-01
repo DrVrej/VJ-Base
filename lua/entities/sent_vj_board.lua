@@ -41,7 +41,7 @@ function ENT:Initialize()
 	self:SetHealth(self.StartHealth)
 	
 	local phys = self:GetPhysicsObject()
-	if phys and phys:IsValid() then
+	if phys and IsValid(phys) then
 		phys:Wake()
 	end
 end
