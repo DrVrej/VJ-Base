@@ -1006,9 +1006,10 @@ ENT.HealthRegenerationDelayT = 0
 ENT.LatestVisibleEnemyPosition = Vector(0,0,0)
 ENT.AA_CurrentTurnAng = false
 ENT.SelectedDifficulty = 1
+ENT.AIState = 0
 ENT.VJ_AddCertainEntityAsEnemy = {}
 ENT.VJ_AddCertainEntityAsFriendly = {}
-ENT.TimersToRemove = {"timer_act_seq_wait","timer_face_position","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap"}
+ENT.TimersToRemove = {"timer_state_reset","timer_act_seq_wait","timer_face_position","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap"}
 ENT.EntitiesToDestroyClass = {func_breakable=true,func_physbox=true,prop_door_rotating=true} // func_breakable_surf
 
 -- Static values
@@ -1339,6 +1340,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActiviti
 				end
 				
 				//self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0)
+				vsched.IsPlayActivity = true
 				self:StartSchedule(vsched)
 			end
 		end
