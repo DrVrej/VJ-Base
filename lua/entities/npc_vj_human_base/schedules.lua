@@ -26,7 +26,25 @@ function ENT:DoRunCode_OnFinish(schedule)
 	if schedule.RunCode_OnFinish != nil then schedule.AlreadyRanCode_OnFinish = true schedule.RunCode_OnFinish() return true end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:SetState(state, time)
+	state = state or VJ_STATE_NONE
+	time = time or -1
+	self.AIState = state
+	if time >= 0 then
+		timer.Create("timer_state_reset"..self:EntIndex(), time, 1, function()
+			self:SetState()
+		end)
+	else
+		timer.Remove("timer_state_reset"..self:EntIndex())
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:GetState()
+	return self.AIState
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSchedule(schedule)
+	if self:GetState() == VJ_STATE_ONLY_ANIMATION && schedule.IsPlayActivity != true then return end
 	self:ClearCondition(35)
 	if (!schedule.RunCode_OnFail) then schedule.RunCode_OnFail = nil end -- Code that will run ONLY when it fails!
 	if (!schedule.RunCode_OnFinish) then schedule.RunCode_OnFinish = nil end -- Code that will run once the task finished (Will run even if failed)

@@ -74,6 +74,10 @@ VJ_BEHAVIOR_AGGRESSIVE = 1
 VJ_BEHAVIOR_NEUTRAL = 2
 VJ_BEHAVIOR_PASSIVE = 3
 VJ_BEHAVIOR_PASSIVE_NATURE = 4
+
+VJ_STATE_NONE = 0 -- No state is set
+VJ_STATE_FREEZE = 1 -- AI Completely freezes
+VJ_STATE_ONLY_ANIMATION = 1000 -- It will only play animation tasks. Movements, turning and other tasks will not play!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if (SERVER) then
 	util.AddNetworkString("vj_music_run")
