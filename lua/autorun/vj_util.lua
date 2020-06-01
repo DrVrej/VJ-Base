@@ -53,7 +53,7 @@ function util.VJ_SphereDamage(vAttacker,vInflictor,vPosition,vDamageRadius,vDama
 					local upforce = vTbl_UpForce
 					if VJ_IsProp(v) == true or v:GetClass() == "prop_ragdoll" then
 						local phys = v:GetPhysicsObject()
-						if phys:IsValid() && phys != nil && phys != NULL then
+						if IsValid(phys) then
 							if upforce == false then upforce = force/9.4 end
 							//v:SetVelocity(v:GetUp()*100000)
 							if v:GetClass() == "prop_ragdoll" then force = force * 1.5 end

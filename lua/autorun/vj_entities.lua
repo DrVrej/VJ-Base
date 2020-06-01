@@ -466,7 +466,7 @@ function NPC_MetaTable:FaceCertainPosition(pos, time)
 	self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
 	self:SetIdealYawAndUpdate(setangs.y, speed)
 	self.IsDoingFacePosition = setangs
-	timer.Create("timer_act_flinching"..self:EntIndex(), time, 1, function() self.IsDoingFacePosition = false end)
+	timer.Create("timer_face_position"..self:EntIndex(), time, 1, function() self.IsDoingFacePosition = false end)
 	return setangs
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -476,7 +476,7 @@ function NPC_MetaTable:FaceCertainEntity(argent, OnlyIfSeenEnemy, FaceEnemyTime)
 	FaceEnemyTime = FaceEnemyTime or 0
 	if OnlyIfSeenEnemy == true && IsValid(self:GetEnemy()) then
 		self.IsDoingFaceEnemy = true
-		timer.Create("timer_act_flinching"..self:EntIndex(), FaceEnemyTime, 1, function() self.IsDoingFaceEnemy = false end)
+		timer.Create("timer_face_enemy"..self:EntIndex(), FaceEnemyTime, 1, function() self.IsDoingFaceEnemy = false end)
 		local setangs = self:VJ_ReturnAngle((argent:GetPos() - self:GetPos()):Angle())
 		self:SetIdealYawAndUpdate(setangs.y)
 		self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))

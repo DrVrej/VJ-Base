@@ -152,7 +152,7 @@ function ENT:CustomOnInitialize()
 	self:SetCollisionBounds(Vector(self.Tank_CollisionBoundSize, self.Tank_CollisionBoundSize, self.Tank_CollisionBoundUp), Vector(-self.Tank_CollisionBoundSize, -self.Tank_CollisionBoundSize, self.Tank_CollisionBoundDown))
 
 	local phys = self:GetPhysicsObject()
-	if (phys:IsValid()) then
+	if IsValid(phys) then
 		phys:Wake()
 		phys:SetMass(30000)
 	end
@@ -260,7 +260,7 @@ function ENT:CustomOnThink_AIEnabled()
 	local tr = util.TraceEntity({start = self:GetPos(), endpos = self:GetPos() + self:GetUp()*-5, filter = self}, self)
 	if (tr.Hit) then // HitWorld
 		local phys = self:GetPhysicsObject()
-		if phys:IsValid() && phys:GetVelocity():Length() > 10 && self.Tank_Status == 0 then -- Moving
+		if IsValid(phys) && phys:GetVelocity():Length() > 10 && self.Tank_Status == 0 then -- Moving
 			self.Tank_IsMoving = true
 			self:Tank_Sound_Moving()
 			self:StartMoveEffects()
@@ -288,7 +288,7 @@ function ENT:CustomOnThink_AIEnabled()
 				-- Change the forwad spead(Tank_ForwardSpead) to their opposite quotation(+ to -)
 				-- Change the turning speed(Tank_TurningSpeed) to their opposite quotation(+ to -)
 			local phys = self:GetPhysicsObject()
-			if phys:IsValid() then
+			if IsValid(phys) then
 				local Angle_Enemy = (self:GetEnemy():GetPos() - self:GetPos() +Vector(0,0,80)):Angle()
 				local Angle_Current = self:GetAngles()
 				local Angle_Diffuse = self:AngleDiffuse(Angle_Enemy.y,Angle_Current.y+self.Tank_AngleDiffuseNumber)

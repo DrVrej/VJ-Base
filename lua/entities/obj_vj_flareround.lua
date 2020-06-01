@@ -52,7 +52,7 @@ function ENT:Initialize()
 
 	-- Physics Functions
 	local phys = self:GetPhysicsObject()
-	if (phys:IsValid()) then
+	if IsValid(phys) then
 		phys:Wake()
 		phys:EnableGravity(true)
 		phys:SetBuoyancyRatio(0)
@@ -98,7 +98,7 @@ function ENT:Initialize()
 	timer.Simple(2,function()
 	if IsValid(self) then
 		local phys = self:GetPhysicsObject()
-		if phys:IsValid() && phys:GetVelocity():Length() > 500 then
+		if IsValid(phys) && phys:GetVelocity():Length() > 500 then
 		phys:SetMass(0.005)
 		timer.Simple(10,function()
 			if IsValid(self) then

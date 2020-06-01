@@ -66,7 +66,7 @@ function SWEP:CustomOnPrimaryAttack_BeforeShoot()
 	proj:Spawn()
 	
 	local phys = proj:GetPhysicsObject()
-	if phys:IsValid() then
+	if IsValid(phys) then
 		if self:GetOwner():IsPlayer() then
 			phys:SetVelocity(self:GetOwner():GetAimVector() * 2500)
 		else
