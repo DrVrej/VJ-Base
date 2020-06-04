@@ -77,7 +77,10 @@ VJ_BEHAVIOR_PASSIVE_NATURE = 4
 
 VJ_STATE_NONE = 0 -- No state is set
 VJ_STATE_FREEZE = 1 -- AI Completely freezes
-VJ_STATE_ONLY_ANIMATION = 1000 -- It will only play animation tasks. Movements, turning and other tasks will not play!
+VJ_STATE_ONLY_ANIMATION = 100 -- It will only play animation tasks. Movements, turning and other tasks will not play!
+
+VJ_WEP_STATE_NONE = 0 -- No state is set
+VJ_WEP_STATE_ANTI_ARMOR = 100 -- It's currently using its anti-armor weapon
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if (SERVER) then
 	util.AddNetworkString("vj_music_run")
@@ -909,7 +912,7 @@ hook.Add("EntityFireBullets","VJ_NPC_FIREBULLET", function(ent, data)
 			
 			-- Ammo counter
 			if wep.IsVJBaseWeapon == true then
-				ent.Weapon_ShotsSinceLastReload = ent.Weapon_ShotsSinceLastReload + 1
+				wep:SetClip1(wep:Clip1() - 1)
 			end
 			//ent.Weapon_TimeSinceLastShot = 0 -- We don't want to change this here!
 			ret = true

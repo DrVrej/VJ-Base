@@ -22,7 +22,7 @@ ENT.VJ_IsHugeMonster = false -- Is this a huge monster?
 ENT.StartHealth = 50 -- The starting health of the NPC
 ENT.HasHealthRegeneration = false -- Can the SNPC regenerate its health?
 ENT.HealthRegenerationAmount = 4 -- How much should the health increase after every delay?
-ENT.HealthRegenerationDelay = VJ_Set(8,10) -- How much time until the health increases
+ENT.HealthRegenerationDelay = VJ_Set(2,4) -- How much time until the health increases
 ENT.HealthRegenerationResetOnDmg = true -- Should the delay reset when it receives damage?
 	-- ====== Collision / Hitbox Variables ====== --
 ENT.HullType = HULL_HUMAN
@@ -328,6 +328,13 @@ ENT.AnimTbl_WeaponReloadBehindCover = {ACT_RELOAD_LOW} -- Animations that it pla
 ENT.WeaponReloadAnimationFaceEnemy = true -- Should it face the enemy while playing the weapon reload animation?
 ENT.WeaponReloadAnimationDecreaseLengthAmount = 0 -- This will decrease the time until it starts moving or attack again. Use it to fix animation pauses until it chases the enemy.
 ENT.WeaponReloadAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
+	-- ====== Weapon Inventory Variables ====== --
+	-- Weapons are given on spawn and the NPC will only switch to those if the requirements are met
+	-- The items that are stored in self.WeaponInventory:
+		-- Primary - Default weapon
+		-- AntiArmor - The current enemy is an armored enemy (Usually vehicle) or a boss
+ENT.WeaponInventory_AntiArmor = false -- If true, the NPC will spawn with one of the given weapons (Will only be given the weapon if it already has another!)
+ENT.WeaponInventory_AntiArmorList = {} -- It will randomly be given one of these weapons
 	-- ====== Move Randomly While Firing Variables ====== --
 ENT.MoveRandomlyWhenShooting = true -- Should it move randomly when shooting?
 ENT.NextMoveRandomlyWhenShootingTime1 = 3 -- How much time until it can move randomly when shooting? | First number in math.random
@@ -729,7 +736,7 @@ function ENT:CustomOnFootStepSound_Walk() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnWorldShakeOnMove() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnDoChangeWeapon(NewWeapon,OldWeapon) end
+function ENT:CustomOnDoChangeWeapon(newWeapon, oldWeapon, invSwitch) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInvestigate(argent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -896,7 +903,6 @@ ENT.Medic_SpawnedProp = NULL
 ENT.CurrentWeaponEntity = NULL
 ENT.LastPlayedVJSound = nil
 ENT.LatestDmgInfo = nil
-ENT.Weapon_ShotsSinceLastReload = 0
 ENT.NextFollowPlayerT = 0
 ENT.AngerLevelTowardsPlayer = 0
 ENT.NextBreathSoundT = 0
@@ -961,9 +967,10 @@ ENT.LatestVisibleEnemyPosition = Vector(0,0,0)
 ENT.SelectedDifficulty = 1
 ENT.ModelAnimationSet = 0
 ENT.AIState = 0
+ENT.Weapon_State = 0
 ENT.VJ_AddCertainEntityAsEnemy = {}
 ENT.VJ_AddCertainEntityAsFriendly = {}
-ENT.TimersToRemove = {"timer_state_reset","timer_act_seq_wait","timer_face_position","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_reload_end"}
+ENT.TimersToRemove = {"timer_weapon_state_reset","timer_state_reset","timer_act_seq_wait","timer_face_position","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_reload_end"}
 ENT.EntitiesToRunFrom = {obj_spore=true,obj_vj_grenade=true,obj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true,cw_flash_thrown=true,ent_hl1_grenade=true}
 ENT.EntitiesToThrowBack = {obj_spore=true,obj_vj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,obj_cpt_grenade=true,cw_grenade_thrown=true,cw_flash_thrown=true,cw_smoke_thrown=true,ent_hl1_grenade=true}
 
@@ -1000,6 +1007,7 @@ function ENT:Initialize()
 	self.VJ_AddCertainEntityAsFriendly = {}
 	self.CurrentPossibleEnemies = {}
 	self.WeaponAnimTranslations = {}
+	self.WeaponInventory = {}
 	self.VJ_ScaleHitGroupDamage = 0
 	self.NextThrowGrenadeT = CurTime() + math.Rand(1, 5)
 	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.3, 6)
@@ -1055,10 +1063,18 @@ function ENT:Initialize()
 	if self.DisableWeapons == false then
 		timer.Simple(0.1, function()
 			if IsValid(self) then
-				if IsValid(self:GetActiveWeapon()) then
-					self.Weapon_StartingAmmoAmount = self:GetActiveWeapon():Clip1()
-					if IsValid(self:GetCreator()) && GetConVarNumber("vj_npc_nosnpcchat") == 0 && !self:GetActiveWeapon().IsVJBaseWeapon then
+				local wep = self:GetActiveWeapon()
+				if IsValid(wep) then
+					self.WeaponInventory.Primary = wep
+					if IsValid(self:GetCreator()) && GetConVarNumber("vj_npc_nosnpcchat") == 0 && !wep.IsVJBaseWeapon then
 						self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: "..self:GetName().." requires a VJ Base weapon to work properly!")
+					end
+					if self.WeaponInventory_AntiArmor == true then
+						local antiarmor = VJ_PICK(self.WeaponInventory_AntiArmorList)
+						if antiarmor != false && wep:GetClass() != antiarmor then -- If the list isn't empty and it's not the current active weapon
+							self.WeaponInventory.AntiArmor = self:Give(antiarmor)
+						end
+						self:SelectWeapon(wep) -- Change the weapon back to the original weapon
 					end
 				elseif IsValid(self:GetCreator()) && GetConVarNumber("vj_npc_nosnpcchat") == 0 && self.Weapon_NoSpawnMenu == false then
 					self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: "..self:GetName().." needs a weapon!")
@@ -1586,25 +1602,38 @@ function ENT:BusyWithActivity()
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoChangeWeapon(wep)
+function ENT:DoChangeWeapon(wep, invSwitch)
 	wep = wep or nil -- The weapon to give or setup | Setting it nil will only setup the current active weapon
+	invSwitch = invSwitch or false -- If true, it will not delete the previous weapon!
 	local curwep = self:GetActiveWeapon()
 	
 	if self.DisableWeapons == true && IsValid(curwep) then -- Not suppose to have a weapon!
 		curwep:Remove()
-		return
+		return NULL
 	end
 	
-	if wep != nil then -- Only remove and actually give the weapon if the function isn't given a weapon class to set
-		if IsValid(curwep) then curwep:Remove() end
-		self:Give(wep)
+	if wep != nil then -- Only remove and actually give the weapon if the function is given a weapon class to set
+		if invSwitch == true then
+			self:SelectWeapon(wep)
+			VJ_EmitSound(self, {"physics/metal/weapon_impact_soft1.wav","physics/metal/weapon_impact_soft2.wav","physics/metal/weapon_impact_soft3.wav"}, 70)
+			curwep = wep
+		else
+			if IsValid(curwep) && self:GetWeaponState() != VJ_WEP_STATE_ANTI_ARMOR then
+				curwep:Remove()
+			end
+			curwep = self:Give(wep)
+			self.WeaponInventory.Primary = curwep
+		end
 	end
 	
-	if IsValid(curwep) then -- If we are giving a new weapon, then do all of the necessary set up
+	if IsValid(curwep) then -- If we are given a new weapon or switching weapon, then do all of the necessary set up
+		self.CurrentWeaponAnimation = -1
+		if invSwitch == true && curwep.IsVJBaseWeapon == true then curwep:Equip(self) end
 		self:SetupWeaponHoldTypeAnims(curwep:GetHoldType())
-		self.Weapon_ShotsSinceLastReload = 0
-		self:CustomOnDoChangeWeapon(curwep, self.CurrentWeaponEntity)
+		self:CustomOnDoChangeWeapon(curwep, self.CurrentWeaponEntity, invSwitch)
+		self.CurrentWeaponEntity = curwep
 	end
+	return curwep
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetupWeaponHoldTypeAnims(htype)
@@ -1836,6 +1865,23 @@ function ENT:TranslateToWeaponAnim(actname)
 	else -- Found an animation!
 		return translate
 	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:SetWeaponState(state, time)
+	state = state or VJ_WEP_STATE_NONE
+	time = time or -1
+	self.Weapon_State = state
+	if time >= 0 then
+		timer.Create("timer_weapon_state_reset"..self:EntIndex(), time, 1, function()
+			self:SetWeaponState()
+		end)
+	else
+		timer.Remove("timer_weapon_state_reset"..self:EntIndex())
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:GetWeaponState()
+	return self.Weapon_State
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
@@ -2094,8 +2140,10 @@ function ENT:Think()
 	end
 	
 	if self.DoingWeaponAttack == false then self.DoingWeaponAttack_Standing = false end
-	if self.CurrentWeaponEntity != self:GetActiveWeapon() then self:DoChangeWeapon() end
-	self.CurrentWeaponEntity = self:GetActiveWeapon()
+	//print("------------------")
+	//print(self:GetActiveWeapon())
+	//PrintTable(self:GetWeapons())
+	if self.CurrentWeaponEntity != self:GetActiveWeapon() then self.CurrentWeaponEntity = self:DoChangeWeapon() end
 	
 	self:CustomOnThink()
 	
@@ -2112,14 +2160,14 @@ function ENT:Think()
 		self.NextBreathSoundT = CurTime() + dur
 	end
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
-	if GetConVarNumber("ai_disabled") == 0 then
+	if GetConVarNumber("ai_disabled") == 0 && self:GetState() != VJ_STATE_FREEZE then
 		if self.VJDEBUG_SNPC_ENABLED == true then
 			if GetConVarNumber("vj_npc_printcurenemy") == 1 then print(self:GetClass().."'s Enemy: ",self:GetEnemy()," Alerted? ",self.Alerted) end
 			if GetConVarNumber("vj_npc_printtakingcover") == 1 then if CurTime() > self.TakingCoverT == true then print(self:GetClass().." Is Not Taking Cover") else print(self:GetClass().." Is Taking Cover ("..self.TakingCoverT-CurTime()..")") end end
 			if GetConVarNumber("vj_npc_printlastseenenemy") == 1 then PrintMessage(HUD_PRINTTALK, self.LastSeenEnemyTime.." ("..self:GetName()..")") end
 			if IsValid(self:GetActiveWeapon()) then
 				if GetConVarNumber("vj_npc_printaccuracy") == 1 then print(self:GetClass().."'s Accuracy (Weapon Spread, Proficiency) = "..self.WeaponSpread.." | "..self:GetCurrentWeaponProficiency()) end
-				if GetConVarNumber("vj_npc_printammo") == 1 then print(self:GetClass().."'s Ammo = VJ Ammo: "..self.Weapon_ShotsSinceLastReload.."/"..self.Weapon_StartingAmmoAmount.." | GMod Ammo: "..self.CurrentWeaponEntity:Clip1()) end
+				if GetConVarNumber("vj_npc_printammo") == 1 then print(self:GetClass().."'s Ammo = VJ Ammo: "..self.CurrentWeaponEntity:Clip1().."/"..self.CurrentWeaponEntity:GetMaxClip1()) end
 				if GetConVarNumber("vj_npc_printweapon") == 1 then print(self:GetClass().."'s", self.CurrentWeaponEntity) end
 			end
 		end
@@ -2179,18 +2227,29 @@ function ENT:Think()
 		
 		local ene = self:GetEnemy()
 		if self.DoingWeaponAttack == true then self:CapabilitiesRemove(CAP_TURN_HEAD) else self:CapabilitiesAdd(bit.bor(CAP_TURN_HEAD)) end -- Fixes their heads breaking
-		//print(self.Weapon_ShotsSinceLastReload)
-		//print(self.Weapon_StartingAmmoAmount)
-		if self.CurrentWeaponEntity != NULL then self.Weapon_TimeSinceLastShot = self.Weapon_TimeSinceLastShot + 0.1 end
-		if self.Weapon_StartingAmmoAmount == nil then
-			self.Weapon_StartingAmmoAmount = 30
+		//print("MAX CLIP: ", self.CurrentWeaponEntity:GetMaxClip1())
+		//print("CLIP: ", self.CurrentWeaponEntity:Clip1())
+		if IsValid(self.CurrentWeaponEntity) then
+			self.Weapon_TimeSinceLastShot = self.Weapon_TimeSinceLastShot + 0.1
+			-- Weapon Inventory
+			if self.IsReloadingWeapon == false && self:BusyWithActivity() == false then
+				if IsValid(ene) then
+					if IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank == true or ene.VJ_IsHugeMonster == true) && self.CurrentWeaponEntity != self.WeaponInventory.AntiArmor then
+						self:DoChangeWeapon(self.WeaponInventory.AntiArmor, true)
+						self:SetWeaponState(VJ_WEP_STATE_ANTI_ARMOR)
+					end
+				end
+				if self:GetWeaponState() == VJ_WEP_STATE_ANTI_ARMOR && (!IsValid(ene) or (IsValid(ene) && ene.IsVJBaseSNPC_Tank != true && ene.VJ_IsHugeMonster != true)) then
+					self:DoChangeWeapon(self.WeaponInventory.Primary, true)
+					self:SetWeaponState(VJ_WEP_STATE_NONE)
+				end
+			end
 		end
 		
 		-- Weapon Reloading
-		if self.Dead == false && self.AllowWeaponReloading == true && self.IsReloadingWeapon == false && IsValid(self:GetActiveWeapon()) && self.FollowPlayer_GoingAfter == false && self.ThrowingGrenade == false && self.MeleeAttacking == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) then
+		if self.Dead == false && self.AllowWeaponReloading == true && self.IsReloadingWeapon == false && IsValid(self.CurrentWeaponEntity) && self.FollowPlayer_GoingAfter == false && self.ThrowingGrenade == false && self.MeleeAttacking == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) then
 			local teshnami = IsValid(ene) -- Teshnami ooni, gam voch?
-			if (self.VJ_IsBeingControlled == false && ((teshnami == false && self.Weapon_ShotsSinceLastReload > 0 && self.TimeSinceLastSeenEnemy > math.random(3,8) && !self:IsMoving()) or (teshnami == true && self.Weapon_ShotsSinceLastReload >= self.Weapon_StartingAmmoAmount))) or (self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_RELOAD) && self.Weapon_ShotsSinceLastReload > 0) then
-				//self.Weapon_ShotsSinceLastReload = 0
+			if (self.VJ_IsBeingControlled == false && ((teshnami == false && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1() && self.TimeSinceLastSeenEnemy > math.random(3,8) && !self:IsMoving()) or (teshnami == true && self.CurrentWeaponEntity:Clip1() <= 0))) or (self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_RELOAD) && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1()) then
 				self.DoingWeaponAttack = false
 				self.DoingWeaponAttack_Standing = false
 				if self.VJ_IsBeingControlled == false then self.IsReloadingWeapon = true end
@@ -2199,10 +2258,11 @@ function ENT:Think()
 				self:CustomOnWeaponReload()
 				if self.DisableWeaponReloadAnimation == false then
 					local function DoReloadAnimation(anim)
-						self.CurrentWeaponEntity:NPC_Reload()
+						if self.CurrentWeaponEntity.IsVJBaseWeapon == true then self.CurrentWeaponEntity:NPC_Reload() end
 						if VJ_AnimationExists(self, anim) == true then -- Only if the given animation actually exists!
 							local dur = self:DecideAnimationLength(anim, false, self.WeaponReloadAnimationDecreaseLengthAmount)
-							timer.Create("timer_reload_end"..self:EntIndex(), dur, 1, function() if IsValid(self) then self.IsReloadingWeapon = false self.Weapon_ShotsSinceLastReload = 0 end end)
+							local wep = self.CurrentWeaponEntity
+							timer.Create("timer_reload_end"..self:EntIndex(), dur, 1, function() if IsValid(self) && IsValid(wep) then self.IsReloadingWeapon = false wep:SetClip1(wep:GetMaxClip1()) end end)
 							self:VJ_ACT_PLAYACTIVITY(anim, true, dur, self.WeaponReloadAnimationFaceEnemy, self.WeaponReloadAnimationDelay, {SequenceDuration=dur, PlayBackRateCalculated=true})
 							self.AllowToDo_WaitForEnemyToComeOut = false
 							return true -- We have successfully ran the animation!
@@ -2243,7 +2303,7 @@ function ENT:Think()
 						end
 					end
 				else
-					self.Weapon_ShotsSinceLastReload = 0
+					self.CurrentWeaponEntity:SetClip1(self.CurrentWeaponEntity:GetMaxClip1())
 					self.IsReloadingWeapon = false
 					self.CurrentWeaponEntity:NPC_Reload()
 				end
@@ -3006,14 +3066,13 @@ function ENT:SelectSchedule(iNPCState)
 								self.NextMoveRandomlyWhenShootingT = CurTime() + math.Rand(self.NextMoveRandomlyWhenShootingTime1,self.NextMoveRandomlyWhenShootingTime2)
 							end
 						else -- None VJ Base weapons
-							self:FaceCertainEntity(ene,true)
+							self:FaceCertainEntity(ene, true)
 							self.WaitingForEnemyToComeOut = false
 							self.DoingWeaponAttack = true
 							self.DoingWeaponAttack_Standing = true
 							self:CustomOnWeaponAttack()
 							self.Weapon_TimeSinceLastShot = 0
-							self.Weapon_ShotsSinceLastReload = 0
-							wep:SetClip1(99999)
+							//wep:SetClip1(99999)
 							self:VJ_SetSchedule(SCHED_RANGE_ATTACK1)
 						end
 					end
@@ -4472,6 +4531,7 @@ function ENT:PlaySoundSystem(Set, CustomSd, Type)
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT = CurTime() + ((((SoundDuration(sdtbl) > 0) and SoundDuration(sdtbl)) or 2) + 1)
 				self.NextSuppressingSoundT = CurTime() + 4
+				self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert1, self.NextSoundTime_Alert2)
 				self.CurrentAlertSound = Type(self, sdtbl, self.AlertSoundLevel, self:VJ_DecideSoundPitch(self.AlertSoundPitch1, self.AlertSoundPitch2))
 			end
 		end

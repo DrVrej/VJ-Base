@@ -261,12 +261,9 @@ function SWEP:Equip(NewOwner)
 		NewOwner:SetKeyValue("spawnflags","256") -- Long Visibility Shooting since HL2 NPCs are blind
 		hook.Add("Think", self, self.NPC_ServerNextFire)
 
-		if NewOwner.IsVJBaseSNPC then
-			NewOwner.Weapon_StartingAmmoAmount = self.Primary.ClipSize
-			if NewOwner.IsVJBaseSNPC_Human == true then
-				NewOwner.Weapon_OriginalFiringDistanceFar = NewOwner.Weapon_OriginalFiringDistanceFar or NewOwner.Weapon_FiringDistanceFar
-				NewOwner.Weapon_FiringDistanceFar = math.Clamp(NewOwner.Weapon_OriginalFiringDistanceFar * self.NPC_FiringDistanceScale, NewOwner.Weapon_FiringDistanceClose, self.NPC_FiringDistanceMax)
-			end
+		if NewOwner.IsVJBaseSNPC && NewOwner.IsVJBaseSNPC_Human == true then
+			NewOwner.Weapon_OriginalFiringDistanceFar = NewOwner.Weapon_OriginalFiringDistanceFar or NewOwner.Weapon_FiringDistanceFar
+			NewOwner.Weapon_FiringDistanceFar = math.Clamp(NewOwner.Weapon_OriginalFiringDistanceFar * self.NPC_FiringDistanceScale, NewOwner.Weapon_FiringDistanceClose, self.NPC_FiringDistanceMax)
 		end
 	end
 	self:CustomOnEquip(NewOwner)
@@ -327,6 +324,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_ServerNextFire()
 	if CLIENT or !IsValid(self) or !IsValid(self:GetOwner()) or !self:GetOwner():IsNPC() then return end
+	if self:GetOwner():GetActiveWeapon() != self then return end
 	
 	local pos = self:DecideBulletPosition()
 	if pos != nil then
@@ -365,7 +363,7 @@ function SWEP:NPCAbleToShoot(CheckSec)
 		end
 		if owner:GetActivity() != nil && ((owner.IsVJBaseSNPC_Human == true && ((owner.CurrentWeaponAnimation == owner:GetActivity()) or (owner:GetActivity() == owner:TranslateToWeaponAnim(owner.CurrentWeaponAnimation)) or (owner.DoingWeaponAttack_Standing == false && owner.DoingWeaponAttack == true))) or (!owner.IsVJBaseSNPC_Human)) then
 			if (owner.IsVJBaseSNPC_Human) then
-				if owner.AllowWeaponReloading == true && owner.Weapon_ShotsSinceLastReload >= owner.Weapon_StartingAmmoAmount then -- No ammo!
+				if owner.AllowWeaponReloading == true && self:Clip1() <= 0 then -- No ammo!
 					if owner.VJ_IsBeingControlled == true then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER,"Press R to reload!") end
 					if self.HasDryFireSound == true && CurTime() > self.NextNPCDrySoundT then
 						local sdtbl = VJ_PICK(self.DryFireSound)
@@ -537,7 +535,7 @@ function SWEP:PrimaryAttack(UseAlt)
 		owner:FireBullets(bullet)
 	else
 		if isnpc && owner.IsVJBaseSNPC == true then -- Make sure the VJ SNPC recognizes that it lost a ammunition, even though it was a custom bullet code
-			owner.Weapon_ShotsSinceLastReload = owner.Weapon_ShotsSinceLastReload + 1
+			self:SetClip1(self:Clip1() - 1)
 		end
 	end
 	
