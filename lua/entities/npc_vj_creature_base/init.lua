@@ -23,7 +23,7 @@ ENT.VJ_IsHugeMonster = false -- Is this a huge monster?
 ENT.StartHealth = 50 -- The starting health of the NPC
 ENT.HasHealthRegeneration = false -- Can the SNPC regenerate its health?
 ENT.HealthRegenerationAmount = 4 -- How much should the health increase after every delay?
-ENT.HealthRegenerationDelay = VJ_Set(8,10) -- How much time until the health increases
+ENT.HealthRegenerationDelay = VJ_Set(2,4) -- How much time until the health increases
 ENT.HealthRegenerationResetOnDmg = true -- Should the delay reset when it receives damage?
 	-- ====== Collision / Hitbox Variables ====== --
 ENT.HullType = HULL_HUMAN
@@ -1888,7 +1888,7 @@ function ENT:Think()
 		self.NextBreathSoundT = CurTime() + dur
 	end
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
-	if GetConVarNumber("ai_disabled") == 0 then
+	if GetConVarNumber("ai_disabled") == 0 && self:GetState() != VJ_STATE_FREEZE then
 		if self.VJDEBUG_SNPC_ENABLED == true then
 			if GetConVarNumber("vj_npc_printcurenemy") == 1 then print(self:GetClass().."'s Enemy: ",self:GetEnemy()," Alerted? ",self.Alerted) end
 			if GetConVarNumber("vj_npc_printalerted") == 1 then if self.Alerted == true then print(self:GetClass().." Is Alerted!") else print(self:GetClass().." Is Not Alerted!") end end
@@ -4068,6 +4068,7 @@ function ENT:PlaySoundSystem(Set, CustomSd, Type)
 				if ctbl != false then sdtbl = ctbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT = CurTime() + ((((SoundDuration(sdtbl) > 0) and SoundDuration(sdtbl)) or 2) + 1)
+				self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert1, self.NextSoundTime_Alert2)
 				self.CurrentAlertSound = Type(self, sdtbl, self.AlertSoundLevel, self:VJ_DecideSoundPitch(self.AlertSoundPitch1, self.AlertSoundPitch2))
 			end
 		end

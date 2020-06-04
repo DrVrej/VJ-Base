@@ -18,6 +18,7 @@ SWEP.NPC_NextPrimaryFire 		= 5 -- Next time it can use primary fire
 SWEP.NPC_TimeUntilFire	 		= 0.8 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_ReloadSound			= {"vj_weapons/reload_rpg.wav"}
 SWEP.NPC_BulletSpawnAttachment = "missile" -- The attachment that the bullet spawns on, leave empty for base to decide!
+SWEP.NPC_FiringDistanceScale = 2.5 -- Changes how far the NPC can fire | 1 = No change, x < 1 = closer, x > 1 = farther
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel					= "models/vj_weapons/c_rpg7.mdl" // "models/weapons/c_rpg.mdl"
 SWEP.WorldModel					= "models/vj_weapons/w_ins_rpg7.mdl" // "models/weapons/w_rocket_launcher.mdl"

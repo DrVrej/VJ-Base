@@ -231,7 +231,7 @@ function ENT:Think()
 				if self.ControlledNPC.HasMeleeAttack == true then AttackTypes["MeleeAttack"] = true end
 				if self.ControlledNPC.HasRangeAttack == true then AttackTypes["RangeAttack"] = true end
 				if self.ControlledNPC.HasLeapAttack == true then AttackTypes["LeapAttack"] = true end
-				if IsValid(self.ControlledNPC:GetActiveWeapon()) then AttackTypes["WeaponAttack"] = true AttackTypes["Ammo"] = self.ControlledNPC.Weapon_StartingAmmoAmount - self.ControlledNPC.Weapon_ShotsSinceLastReload end
+				if IsValid(self.ControlledNPC:GetActiveWeapon()) then AttackTypes["WeaponAttack"] = true AttackTypes["Ammo"] = self.ControlledNPC.CurrentWeaponEntity:Clip1() end
 				if self.ControlledNPC.HasGrenadeAttack == true then AttackTypes["GrenadeAttack"] = true end
 			end
 			net.Start("vj_controller_hud")
@@ -280,7 +280,7 @@ function ENT:Think()
 		end*/
 
 		-- Weapon attack
-		if IsValid(self.ControlledNPC:GetActiveWeapon()) && self.ControlledNPC.IsVJBaseSNPC == true && self.ControlledNPC.IsVJBaseSNPC_Human == true && !self.ControlledNPC:IsMoving() && self.ControlledNPC:GetActiveWeapon().IsVJBaseWeapon == true && self.TheController:KeyDown(IN_ATTACK2) && self.ControlledNPC.IsReloadingWeapon == false && self.ControlledNPC.MeleeAttacking == false && self.ControlledNPC.ThrowingGrenade == false && self.ControlledNPC.vACT_StopAttacks == false /*&& (self.ControlledNPC.Weapon_StartingAmmoAmount - self.ControlledNPC.Weapon_ShotsSinceLastReload) > 0*/ then
+		if IsValid(self.ControlledNPC:GetActiveWeapon()) && self.ControlledNPC.IsVJBaseSNPC == true && self.ControlledNPC.IsVJBaseSNPC_Human == true && !self.ControlledNPC:IsMoving() && self.ControlledNPC:GetActiveWeapon().IsVJBaseWeapon == true && self.TheController:KeyDown(IN_ATTACK2) && self.ControlledNPC.IsReloadingWeapon == false && self.ControlledNPC.MeleeAttacking == false && self.ControlledNPC.ThrowingGrenade == false && self.ControlledNPC.vACT_StopAttacks == false then
 			//self.ControlledNPC:SetAngles(Angle(0,math.ApproachAngle(self.ControlledNPC:GetAngles().y,self.TheController:GetAimVector():Angle().y,100),0))
 			self.ControlledNPC:FaceCertainPosition(tr_ply.HitPos, 0.2)
 			self.AbleToTurn = false

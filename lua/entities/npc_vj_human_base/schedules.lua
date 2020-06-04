@@ -5,6 +5,7 @@ require("ai_vj_schedule")
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
 function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
+	if self:GetState() == VJ_STATE_FREEZE then self:MaintainActivity() return end
 	//print("Running the RunAI")
 	//self:SetArrivalActivity(ACT_COWER)
 	//self:SetArrivalSpeed(1000)
@@ -30,6 +31,10 @@ function ENT:SetState(state, time)
 	state = state or VJ_STATE_NONE
 	time = time or -1
 	self.AIState = state
+	if state == VJ_STATE_FREEZE then -- Reset the tasks
+		self:TaskComplete()
+		self:VJ_TASK_IDLE_STAND()
+	end
 	if time >= 0 then
 		timer.Create("timer_state_reset"..self:EntIndex(), time, 1, function()
 			self:SetState()
@@ -137,10 +142,14 @@ function ENT:NextTask(schedule)
 	self:SetTask(schedule:GetTask(self.CurrentTaskID))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OnTaskComplete()
+	//self:DoRunCode_OnFinish(self.CurrentSchedule) -- Will break many movement tasks (Ex: Humans Taking cover to reload)
+	self.bTaskComplete = true
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartTask(task) if task == nil or !task or !self then return end task:Start(self) end
 function ENT:RunTask(task) if !task or !self then return end task:Run(self) end
 function ENT:TaskTime() return CurTime() - self.TaskStartTime end
-function ENT:OnTaskComplete() self:DoRunCode_OnFinish(self.CurrentSchedule) self.bTaskComplete = true end
 function ENT:TaskFinished() return self.bTaskComplete end
 function ENT:StartEngineTask(iTaskID,TaskData) end
 function ENT:RunEngineTask(iTaskID,TaskData) end

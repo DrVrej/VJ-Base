@@ -11,6 +11,7 @@ SWEP.Category					= "VJ Base"
 SWEP.MadeForNPCsOnly 			= true
 SWEP.NPC_TimeUntilFire	 		= 0.15 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_ReloadSound			= {"weapons/crossbow/reload1.wav"}
+SWEP.NPC_FiringDistanceScale = 2.5 -- Changes how far the NPC can fire | 1 = No change, x < 1 = closer, x > 1 = farther
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.WorldModel					= "models/weapons/w_crossbow.mdl"
 SWEP.HoldType 					= "crossbow"
