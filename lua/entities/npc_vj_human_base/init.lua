@@ -2233,11 +2233,9 @@ function ENT:Think()
 			self.Weapon_TimeSinceLastShot = self.Weapon_TimeSinceLastShot + 0.1
 			-- Weapon Inventory
 			if self.IsReloadingWeapon == false && self:BusyWithActivity() == false then
-				if IsValid(ene) then
-					if IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank == true or ene.VJ_IsHugeMonster == true) && self.CurrentWeaponEntity != self.WeaponInventory.AntiArmor then
-						self:DoChangeWeapon(self.WeaponInventory.AntiArmor, true)
-						self:SetWeaponState(VJ_WEP_STATE_ANTI_ARMOR)
-					end
+				if IsValid(ene) && IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank == true or ene.VJ_IsHugeMonster == true) && self.CurrentWeaponEntity != self.WeaponInventory.AntiArmor then
+					self:DoChangeWeapon(self.WeaponInventory.AntiArmor, true)
+					self:SetWeaponState(VJ_WEP_STATE_ANTI_ARMOR)
 				end
 				if self:GetWeaponState() == VJ_WEP_STATE_ANTI_ARMOR && (!IsValid(ene) or (IsValid(ene) && ene.IsVJBaseSNPC_Tank != true && ene.VJ_IsHugeMonster != true)) then
 					self:DoChangeWeapon(self.WeaponInventory.Primary, true)

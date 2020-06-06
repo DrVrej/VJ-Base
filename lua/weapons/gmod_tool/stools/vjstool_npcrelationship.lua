@@ -150,56 +150,65 @@ if (CLIENT) then
 	end
 	
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	net.Receive("vj_npcrelationship_cl_select",function(len,pl)
-		//local ent = net.ReadEntity()
-		local entname = net.ReadString()
-		//local hasclasstbl = net.ReadBool()
-		local classtbl = net.ReadTable()
-		chat.AddText(Color(0,255,0),"Obtained",Color(255,100,0)," "..entname.."'s ",Color(0,255,0),"relationship class list!")
-		//print(ent)
-		//print(hasclasstbl)
-		//PrintTable(classtbl)
-		//print(#classtbl)
-		VJ_NPCRELATION_TblCurrentValues = classtbl
-		timer.Simple(0.05,function()
-			GetPanel = controlpanel.Get("vjstool_npcrelationship")
-			GetPanel:ClearControls()
-			DoBuildCPanel_Relationship(GetPanel)
-		end)
+	net.Receive("vj_npcrelationship_cl_select", function(len, ply)
+		local wep = LocalPlayer():GetActiveWeapon()
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcrelationship" then
+			//local ent = net.ReadEntity()
+			local entname = net.ReadString()
+			//local hasclasstbl = net.ReadBool()
+			local classtbl = net.ReadTable()
+			chat.AddText(Color(0,255,0),"Obtained",Color(255,100,0)," "..entname.."'s ",Color(0,255,0),"relationship class list!")
+			//print(ent)
+			//print(hasclasstbl)
+			//PrintTable(classtbl)
+			//print(#classtbl)
+			VJ_NPCRELATION_TblCurrentValues = classtbl
+			timer.Simple(0.05,function()
+				GetPanel = controlpanel.Get("vjstool_npcrelationship")
+				GetPanel:ClearControls()
+				DoBuildCPanel_Relationship(GetPanel)
+			end)
+		end
 	end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	net.Receive("vj_npcrelationship_cl_leftclick",function(len,pl)
-		local ent = net.ReadEntity()
-		local entname = net.ReadString()
-		local clicktype = net.ReadString()
-		local allynum = net.ReadFloat()
-		if clicktype == "ReloadClick" then entname = "Yourself" end
-		chat.AddText(Color(0,255,0),"#tool.vjstool_npcrelationship.print.applied",Color(255,100,0)," "..entname)
-		net.Start("vj_npcrelationship_sr_leftclick")
-		net.WriteEntity(ent)
-		//net.WriteTable(self)
-		//net.WriteString(clicktype)
-		net.WriteTable(VJ_NPCRELATION_TblCurrentValues)
-		net.WriteFloat(allynum)
-		net.SendToServer()
+	net.Receive("vj_npcrelationship_cl_leftclick", function(len, ply)
+		local wep = LocalPlayer():GetActiveWeapon()
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcrelationship" then
+			local ent = net.ReadEntity()
+			local entname = net.ReadString()
+			local clicktype = net.ReadString()
+			local allynum = net.ReadFloat()
+			if clicktype == "ReloadClick" then entname = "Yourself" end
+			chat.AddText(Color(0,255,0),"#tool.vjstool_npcrelationship.print.applied",Color(255,100,0)," "..entname)
+			net.Start("vj_npcrelationship_sr_leftclick")
+			net.WriteEntity(ent)
+			//net.WriteTable(self)
+			//net.WriteString(clicktype)
+			net.WriteTable(VJ_NPCRELATION_TblCurrentValues)
+			net.WriteFloat(allynum)
+			net.SendToServer()
+		end
 	end)
 else
 	util.AddNetworkString("vj_npcrelationship_cl_select")
 	util.AddNetworkString("vj_npcrelationship_cl_leftclick")
 	util.AddNetworkString("vj_npcrelationship_sr_leftclick")
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	net.Receive("vj_npcrelationship_sr_leftclick",function(len,pl)
-		local ent = net.ReadEntity()
-		//local clicktype = net.ReadString()
-		local classtbl = net.ReadTable()
-		local allynum = net.ReadFloat()
-		if #classtbl > 0 then
-			ent.VJ_NPC_Class = classtbl
-			if ent.IsVJBaseSNPC == true && allynum == 1 && table.HasValue(classtbl,"CLASS_PLAYER_ALLY") then
-				ent.FriendsWithAllPlayerAllies = true
+	net.Receive("vj_npcrelationship_sr_leftclick", function(len, ply)
+		local wep = ply:GetActiveWeapon()
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcrelationship" then
+			local ent = net.ReadEntity()
+			//local clicktype = net.ReadString()
+			local classtbl = net.ReadTable()
+			local allynum = net.ReadFloat()
+			if #classtbl > 0 then
+				ent.VJ_NPC_Class = classtbl
+				if ent.IsVJBaseSNPC == true && allynum == 1 && table.HasValue(classtbl,"CLASS_PLAYER_ALLY") then
+					ent.FriendsWithAllPlayerAllies = true
+				end
+			else
+				ent.VJ_NPC_Class = {nil}
 			end
-		else
-			ent.VJ_NPC_Class = {nil}
 		end
 	end)
 end
