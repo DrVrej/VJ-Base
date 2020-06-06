@@ -115,7 +115,7 @@ if (CLIENT) then
 		Panel:AddControl("Slider", {Label = "#tool.vjstool_npcspawner.nextspawntime",min = 0,max = 1000,Command = "vjstool_npcspawner_nextspawntime"})
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	concommand.Add("vj_npcspawner_opennpcselect",function(pl,cmd,args)
+	concommand.Add("vj_npcspawner_opennpcselect",function(ply,cmd,args)
 		local MenuFrame = vgui.Create('DFrame')
 		MenuFrame:SetSize(420, 440)
 		MenuFrame:SetPos(ScrW()*0.6, ScrH()*0.1)
@@ -159,7 +159,7 @@ if (CLIENT) then
 		CheckList:SortByColumn(1,false)
 	end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	concommand.Add("vj_npcspawner_openwepselect",function(pl,cmd,args)
+	concommand.Add("vj_npcspawner_openwepselect",function(ply,cmd,args)
 		local MenuFrame = vgui.Create('DFrame')
 		MenuFrame:SetSize(420, 440)
 		MenuFrame:SetPos(ScrW()*0.6, ScrH()*0.1)
@@ -202,7 +202,7 @@ if (CLIENT) then
 		CheckList:AddLine("Default","Default")
 	end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	concommand.Add("vj_npcspawner_updatelist",function(pl,cmd,args)
+	concommand.Add("vj_npcspawner_updatelist",function(ply,cmd,args)
 		local spawnent = string.lower(GetConVarString("vjstool_npcspawner_spawnent"))
 		local spawnentname = GetConVarString("vjstool_npcspawner_spawnentname")
 		local spawnposfor = GetConVarString("vjstool_npcspawner_spawnpos_forward")
@@ -215,21 +215,22 @@ if (CLIENT) then
 		DoBuildCPanel_Spawner(GetPanel)
 	end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	net.Receive("vj_npcspawner_cl_create",function(len,pl)
-		svowner = net.ReadEntity()
-		svpos = net.ReadVector()
-		svclicktype = net.ReadString()
-		local convartbl = {}
-		for k,_ in pairs(DefaultConVars) do
-			convartbl[k] = GetConVarNumber(k)
+	net.Receive("vj_npcspawner_cl_create", function(len, ply)
+		local wep = LocalPlayer():GetActiveWeapon()
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcspawner" then
+			local svpos = net.ReadVector()
+			local svclicktype = net.ReadString()
+			local convartbl = {}
+			for k,_ in pairs(DefaultConVars) do
+				convartbl[k] = GetConVarNumber(k)
+			end
+			net.Start("vj_npcspawner_sv_create")
+			net.WriteTable(convartbl)
+			net.WriteVector(svpos)
+			net.WriteType(VJ_NPCSPAWNER_TblCurrentLinesUsable)
+			net.WriteString(svclicktype)
+			net.SendToServer()
 		end
-		net.Start("vj_npcspawner_sv_create")
-		net.WriteTable(convartbl)
-		net.WriteEntity(svowner)
-		net.WriteVector(svpos)
-		net.WriteType(VJ_NPCSPAWNER_TblCurrentLinesUsable)
-		net.WriteString(svclicktype)
-		net.SendToServer()
 	end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)
@@ -239,29 +240,28 @@ else -- If SERVER
 	util.AddNetworkString("vj_npcspawner_cl_create")
 	util.AddNetworkString("vj_npcspawner_sv_create")
 ---------------------------------------------------------------------------------------------------------------------------------------------
-	net.Receive("vj_npcspawner_sv_create",function(len,pl)
-		convartbl = net.ReadTable()
-		svowner = net.ReadEntity()
-		svpos = net.ReadVector()
-		svgetlines = net.ReadType()
-		svgettype = net.ReadString()
-		if !IsValid(svowner) then return false end
-		local wep = svowner:GetActiveWeapon()
+	net.Receive("vj_npcspawner_sv_create", function(len, ply)
+		local wep = ply:GetActiveWeapon()
 		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcspawner" then
-			if table.Count(svgetlines) <= 0 then svowner:ChatPrint("Nothing to spawn!") return false end
+			local convartbl = net.ReadTable()
+			local svpos = net.ReadVector()
+			local svgetlines = net.ReadType()
+			local svgettype = net.ReadString()
+			if !IsValid(ply) then return false end
+			if table.Count(svgetlines) <= 0 then ply:ChatPrint("Nothing to spawn!") return false end
 			local spawner = ents.Create("obj_vj_spawner_base")
 			spawner.EntitiesToSpawn = {}
 			spawner:SetPos(svpos)
 			local angs = Angle(0,0,0)
-			if IsValid(svowner) then
-				angs = svowner:GetAngles()
+			if IsValid(ply) then
+				angs = ply:GetAngles()
 				angs.pitch = 0
 				angs.roll = 0
 				angs.yaw = angs.yaw + 180
 			end
 			spawner:SetAngles(angs)
 			for _,v in pairs(svgetlines) do
-				//if v.IsVJBaseSpawner == true then svowner:ChatPrint("Can't be spawned because it's a spawner") end
+				//if v.IsVJBaseSpawner == true then ply:ChatPrint("Can't be spawned because it's a spawner") end
 				table.insert(spawner.EntitiesToSpawn,{EntityName = "NPC"..math.random(1,99999999),SpawnPosition = {vForward=v.SpawnPosition.x,vRight=v.SpawnPosition.y,vUp=v.SpawnPosition.z},Entities = {v.Entities},WeaponsList={v.WeaponsList}})
 			end
 			//spawner.EntitiesToSpawn = {entitiestospawntbl}
@@ -270,16 +270,16 @@ else -- If SERVER
 			end
 			spawner.TimedSpawn_Time = convartbl.vjstool_npcspawner_nextspawntime //GetConVarNumber("vjstool_npcspawner_nextspawntime")
 			if svgettype == "RightClick" then spawner.SingleSpawner = true end
-			spawner:SetCreator(svowner)
+			spawner:SetCreator(ply)
 			spawner:Spawn()
 			spawner:Activate()
 			undo.Create("NPC Spawner")
 			undo.AddEntity(spawner)
-			undo.SetPlayer(svowner)
+			undo.SetPlayer(ply)
 			undo.Finish()
 			for vpk,vpv in pairs(spawner.CurrentEntities) do
 				if IsValid(vpv.TheEntity) && vpv.TheEntity.IsVJBaseSpawner == true && vpv.TheEntity.SingleSpawner == true then
-					vpv.TheEntity:SetCreator(svowner)
+					vpv.TheEntity:SetCreator(ply)
 					table.remove(spawner.CurrentEntities,vpk)
 					if table.Count(spawner.CurrentEntities) <= 0 then spawner:Remove() end
 				end
@@ -291,7 +291,6 @@ end
 function TOOL:LeftClick(tr)
 	if (CLIENT) then return true end
 	net.Start("vj_npcspawner_cl_create")
-	net.WriteEntity(self:GetOwner())
 	net.WriteVector(tr.HitPos)
 	net.WriteString("LeftClick")
 	net.Send(self:GetOwner())
@@ -301,7 +300,6 @@ end
 function TOOL:RightClick(tr)
 	if (CLIENT) then return true end
 	net.Start("vj_npcspawner_cl_create")
-	net.WriteEntity(self:GetOwner())
 	net.WriteVector(tr.HitPos)
 	net.WriteString("RightClick")
 	net.Send(self:GetOwner())
