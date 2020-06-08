@@ -690,6 +690,8 @@ function ENT:CustomOnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink_AIEnabled() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnEntityRelationshipCheck(argent, entisfri, entdist) end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnChangeMovementType(SetType) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnIsJumpLegal(startPos,apex,endPos) end -- Return nothing to let base decide, return true to make it jump, return false to disallow jumping
@@ -718,7 +720,7 @@ function ENT:CustomOnFollowPlayer(key,activator,caller,data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnIdleDialogue(argent, CanAnswer) return true end -- argent = An entity that it can talk to | CanAnswer = If the entity can answer back | Return false to not run the code!
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnIdleDialogueAnswer() end
+function ENT:CustomOnIdleDialogueAnswer(argent) end -- argent = The entity that just talked to this NPC
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMedic_BeforeHeal() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2234,12 +2236,12 @@ function ENT:Think()
 			-- Weapon Inventory
 			if self.IsReloadingWeapon == false && self:BusyWithActivity() == false then
 				if IsValid(ene) && IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank == true or ene.VJ_IsHugeMonster == true) && self.CurrentWeaponEntity != self.WeaponInventory.AntiArmor then
-					self:DoChangeWeapon(self.WeaponInventory.AntiArmor, true)
 					self:SetWeaponState(VJ_WEP_STATE_ANTI_ARMOR)
+					self:DoChangeWeapon(self.WeaponInventory.AntiArmor, true)
 				end
 				if self:GetWeaponState() == VJ_WEP_STATE_ANTI_ARMOR && (!IsValid(ene) or (IsValid(ene) && ene.IsVJBaseSNPC_Tank != true && ene.VJ_IsHugeMonster != true)) then
-					self:DoChangeWeapon(self.WeaponInventory.Primary, true)
 					self:SetWeaponState(VJ_WEP_STATE_NONE)
+					self:DoChangeWeapon(self.WeaponInventory.Primary, true)
 				end
 			end
 		end
@@ -3419,6 +3421,7 @@ function ENT:DoEntityRelationshipCheck()
 					end
 				end
 			end
+			self:CustomOnEntityRelationshipCheck(v, entisfri, vDistanceToMy)
 		end
 		//return true
 	end
@@ -4406,7 +4409,14 @@ function ENT:PlaySoundSystem(Set, CustomSd, Type)
 	Type = Type or VJ_CreateSound
 	local ctbl = VJ_PICK(CustomSd)
 	
-	if Set == "FollowPlayer" then
+	if Set == "GeneralSpeech" then -- Used to just play general speech sounds (Custom by developers)
+		if ctbl != false then
+			self:StopAllCommonSpeechSounds()
+			self.NextIdleSoundT_RegularChange = CurTime() + ((((SoundDuration(ctbl) > 0) and SoundDuration(ctbl)) or 2) + 1)
+			self.CurrentGeneralSpeechSound = Type(self, ctbl, 80, self:VJ_DecideSoundPitch(self.GeneralSoundPitch1, self.GeneralSoundPitch2))
+		end
+		return
+	elseif Set == "FollowPlayer" then
 		if self.HasFollowPlayerSounds_Follow == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_FollowPlayer)
 			if (math.random(1, self.FollowPlayerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
@@ -4786,6 +4796,7 @@ function ENT:IdleSoundCode(CustomTbl,Type)
 							-- For the other SNPC to answer back:
 							timer.Simple(dur + 0.3, function()
 								if IsValid(self) && IsValid(testent) then
+									testent:CustomOnIdleDialogueAnswer(self)
 									local response = testent:IdleDialogueAnswerSoundCode()
 									if response > 0 then -- If the ally responded, then make sure both SNPCs stand still & don't play another idle sound until the whole conversation is finished!
 										self.NextIdleSoundT = CurTime() + (response + 0.5)
@@ -4834,7 +4845,6 @@ function ENT:IdleDialogueAnswerSoundCode(CustomTbl,Type)
 	local sdtbl = VJ_PICK(self.SoundTbl_IdleDialogueAnswer)
 	if (math.random(1,self.IdleDialogueAnswerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 		if ctbl != false then sdtbl = ctbl end
-		self:CustomOnIdleDialogueAnswer()
 		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2,3)
 		self.CurrentIdleDialogueAnswerSound = Type(self,sdtbl,self.IdleDialogueAnswerSoundLevel,self:VJ_DecideSoundPitch(self.IdleDialogueAnswerSoundPitch.a,self.IdleDialogueAnswerSoundPitch.b))
@@ -4893,6 +4903,7 @@ function ENT:StartSoundTrack()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAllCommonSpeechSounds()
+	VJ_STOPSOUND(self.CurrentGeneralSpeechSound)
 	VJ_STOPSOUND(self.CurrentIdleSound)
 	VJ_STOPSOUND(self.CurrentIdleDialogueAnswerSound)
 	VJ_STOPSOUND(self.CurrentInvestigateSound)
@@ -4916,6 +4927,7 @@ function ENT:StopAllCommonSpeechSounds()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAllCommonSounds()
+	VJ_STOPSOUND(self.CurrentGeneralSpeechSound)
 	VJ_STOPSOUND(self.CurrentBreathSound)
 	VJ_STOPSOUND(self.CurrentIdleSound)
 	VJ_STOPSOUND(self.CurrentIdleDialogueAnswerSound)
