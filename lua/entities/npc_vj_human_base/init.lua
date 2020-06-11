@@ -936,7 +936,7 @@ ENT.NextDamageByPlayerSoundT = 0
 ENT.NextWeaponAttackAimPoseParametersReset = 0
 ENT.NextWeaponReloadSoundT = 0
 ENT.TimeSinceLastSeenEnemy = 0
-ENT.TimeSinceSetEnemy = 0
+ENT.TimeSinceEnemyAcquired = 0
 ENT.Medic_NextHealT = 0
 ENT.Weapon_TimeSinceLastShot = 5
 ENT.NextMoveRandomlyWhenShootingT = 0
@@ -2109,6 +2109,27 @@ end
 //ENT.TurningLerp = nil
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
+	/* Variable Notes:
+		m_flMoveWaitFinished = Current move and wait time, used for things like when opening doors and have to stop for a second
+		m_hOpeningDoor = The door entity it's opening
+		m_vDefaultEyeOffset = The eye position, it's very close to self:EyePos()
+		m_flTimeEnemyAcquired = Everytime setenemy is called (Including NULL!)  -->  math.abs(self:GetInternalVariable("m_flTimeEnemyAcquired")
+		m_flGroundChangeTime = Time since it touched the ground (Must be from high place)
+		m_bSequenceFinished = Is it playing a animation?
+		m_vecLean = How much it's leaning (ex: Drag around with physgun)
+		
+		-- Following is just used for the face and eye looking:
+		m_hLookTarget = The entity it's looking at 
+		m_flNextRandomLookTime = Next time it can look at something (Can be used to set it as well)
+		m_flEyeIntegRate = How fast the eyes move
+		m_viewtarget = Returns the position the NPC's eye pupils are looking at (Can be used to set it as well)
+		m_flBlinktime = Time until it blinks again (Can be used to set it as well)
+	*/
+	//print("---------------------")
+	//PrintTable(self:GetSaveTable())
+	//self:SetSaveValue("m_bUsingStandardThinkTime", false)
+	//print(self:GetInternalVariable("m_flMoveWaitFinished"))
+	
 	self:SetCondition(1) -- Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case sv_pvsskipanimation isn't disabled!
 	
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
@@ -2125,7 +2146,12 @@ function ENT:Think()
 				self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 			end
 		end
-		if (CurSched.StopScheduleIfNotMoving == true or CurSched.StopScheduleIfNotMoving_Any == true) && (!self:IsMoving() or (IsValid(self:GetBlockingEntity()) && (self:GetBlockingEntity():IsNPC() or CurSched.StopScheduleIfNotMoving_Any == true))) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
+		local blockingEnt = self:GetBlockingEntity()
+		if IsValid(blockingEnt) && (blockingEnt:GetClass() == "func_door" or blockingEnt:GetClass() == "func_door_rotating") then
+			//self:SetSaveValue("m_flMoveWaitFinished", 1)
+			blockingEnt:Fire("Open")
+		end
+		if (CurSched.StopScheduleIfNotMoving == true or CurSched.StopScheduleIfNotMoving_Any == true) && (!self:IsMoving() or (IsValid(blockingEnt) && (blockingEnt:IsNPC() or CurSched.StopScheduleIfNotMoving_Any == true))) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
 			self:ScheduleFinished(CurSched)
 			//self:SetCondition(35)
 			//self:StopMoving()
@@ -2316,7 +2342,7 @@ function ENT:Think()
 			self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
 			self:SetIdealYawAndUpdate(setangs.y)
 		end
-
+		
 		if self.Dead == false then
 			if IsValid(ene) then
 				if self.DoingWeaponAttack == true then self:PlaySoundSystem("Suppressing") end
@@ -2490,7 +2516,7 @@ function ENT:Think()
 				end
 			end
 			
-			self.TimeSinceSetEnemy = 0
+			self.TimeSinceEnemyAcquired = 0
 			self.TimeSinceLastSeenEnemy = self.TimeSinceLastSeenEnemy + 0.1
 			if self.ResetedEnemy == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") self.ResetedEnemy = true self:ResetEnemy(true) end
 			/*if CurTime() > self.NextFindEnemyT then
@@ -3048,7 +3074,7 @@ function ENT:SelectSchedule(iNPCState)
 								end
 							end
 							-- Move randomly when shooting
-							if covered_npc == false && self.FollowingPlayer == false && self.MoveRandomlyWhenShooting == true && self.DoingWeaponAttack == true && self.DoingWeaponAttack_Standing == true && CurTime() > self.NextMoveRandomlyWhenShootingT && (CurTime() - self.TimeSinceSetEnemy) > 2 && (enedist_eye < (self.Weapon_FiringDistanceFar / 1.25)) && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),enepos_eye) == false && self:CustomOnMoveRandomlyWhenShooting() != false then
+							if covered_npc == false && self.FollowingPlayer == false && self.MoveRandomlyWhenShooting == true && self.DoingWeaponAttack == true && self.DoingWeaponAttack_Standing == true && CurTime() > self.NextMoveRandomlyWhenShootingT && (CurTime() - self.TimeSinceEnemyAcquired) > 2 && (enedist_eye < (self.Weapon_FiringDistanceFar / 1.25)) && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),enepos_eye) == false && self:CustomOnMoveRandomlyWhenShooting() != false then
 								local randpos = math.random(150,400)
 								local checkdist = self:VJ_CheckAllFourSides(randpos)
 								local randmove = {}
@@ -3366,7 +3392,6 @@ function ENT:DoEntityRelationshipCheck()
 					if (closestdist == nil) or (vDistanceToMy < closestdist) then
 						closestdist = vDistanceToMy
 						self:VJ_DoSetEnemy(v, true, true)
-						self:SetEnemy(v)
 					end
 				-- If the current enemy is a friendly player, then reset the enemy!
 				elseif check == false && vPlayer && IsValid(self:GetEnemy()) && self:GetEnemy() == v then

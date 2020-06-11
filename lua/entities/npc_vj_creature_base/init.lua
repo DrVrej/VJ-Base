@@ -983,7 +983,7 @@ ENT.OnPlayerSightNextT = 0
 ENT.NextDamageByPlayerT = 0
 ENT.NextDamageByPlayerSoundT = 0
 ENT.TimeSinceLastSeenEnemy = 0
-ENT.TimeSinceSetEnemy = 0
+ENT.TimeSinceEnemyAcquired = 0
 ENT.Medic_NextHealT = 0
 ENT.CurrentAnim_IdleStand = 0
 ENT.NextFlinchT = 0
@@ -1859,7 +1859,12 @@ function ENT:Think()
 				self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 			end
 		end
-		if (CurSched.StopScheduleIfNotMoving == true or CurSched.StopScheduleIfNotMoving_Any == true) && (!self:IsMoving() or (IsValid(self:GetBlockingEntity()) && (self:GetBlockingEntity():IsNPC() or CurSched.StopScheduleIfNotMoving_Any == true))) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
+		local blockingEnt = self:GetBlockingEntity()
+		if IsValid(blockingEnt) && (blockingEnt:GetClass() == "func_door" or blockingEnt:GetClass() == "func_door_rotating") then
+			//self:SetSaveValue("m_flMoveWaitFinished", 1)
+			blockingEnt:Fire("Open")
+		end
+		if (CurSched.StopScheduleIfNotMoving == true or CurSched.StopScheduleIfNotMoving_Any == true) && (!self:IsMoving() or (IsValid(blockingEnt) && (blockingEnt:IsNPC() or CurSched.StopScheduleIfNotMoving_Any == true))) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
 			self:ScheduleFinished(CurSched)
 			//self:SetCondition(35)
 			//self:StopMoving()
@@ -2188,7 +2193,7 @@ function ENT:Think()
 				self:DoPoseParameterLooking(true)
 				//self:ClearPoseParameters()
 			end
-			self.TimeSinceSetEnemy = 0
+			self.TimeSinceEnemyAcquired = 0
 			self.TimeSinceLastSeenEnemy = self.TimeSinceLastSeenEnemy + 0.1
 			if self.ResetedEnemy == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") self.ResetedEnemy = true self:ResetEnemy(true) end
 		end
@@ -2938,7 +2943,6 @@ function ENT:DoEntityRelationshipCheck()
 					if (closestdist == nil) or (vDistanceToMy < closestdist) then
 						closestdist = vDistanceToMy
 						self:VJ_DoSetEnemy(v, true, true)
-						self:SetEnemy(v)
 					end
 				-- If the current enemy is a friendly player, then reset the enemy!
 				elseif check == false && vPlayer && IsValid(self:GetEnemy()) && self:GetEnemy() == v then
