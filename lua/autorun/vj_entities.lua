@@ -601,32 +601,24 @@ function NPC_MetaTable:VJ_CheckAllFourSides(CheckDistance)
 	return result
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_DoSetEnemy(argent, ShouldStopActs, DoSmallWhenActiveEnemy)
+function NPC_MetaTable:VJ_DoSetEnemy(argent, stopMoving, doMinorIfActiveEnemy)
 	if !IsValid(argent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or argent:Health() <= 0 or (argent:IsPlayer() && (!argent:Alive() or GetConVarNumber("ai_ignoreplayers") == 1)) then return end
-	DoSmallWhenActiveEnemy = DoSmallWhenActiveEnemy or false
+	stopMoving = stopMoving or false -- Will not run if doMinorIfActiveEnemy passes!
+	doMinorIfActiveEnemy = doMinorIfActiveEnemy or false -- It will run a much quicker set enemy without resetting everything (Only if it has an active enemy!)
 	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == argent then self:DoMedicCode_Reset() end
-	if DoSmallWhenActiveEnemy == true && IsValid(self:GetEnemy()) then
-		self.TimeSinceLastSeenEnemy = 0
-		self:AddEntityRelationship(argent, D_HT, 99)
-		//self:SetEnemy(argent)
-		self:UpdateEnemyMemory(argent, argent:GetPos())
-		//if self.MovementType == VJ_MOVETYPE_STATIONARY or self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
-			//self:SetEnemy(argent)
-		//end
-	else
-		self.TimeSinceLastSeenEnemy = 0
-		self.TimeSinceSetEnemy = CurTime()
-		self.NextResetEnemyT = CurTime() + 0.5 //2
-		self:AddEntityRelationship(argent, D_HT, 99)
-		self:SetEnemy(argent)
-		self:UpdateEnemyMemory(argent, argent:GetPos())
-		if ShouldStopActs == true then
-			self:ClearGoal()
-			self:StopMoving()
-		end
-		if self.Alerted == false then
-			self:DoAlert(argent)
-		end
+	self.TimeSinceLastSeenEnemy = 0
+	self:AddEntityRelationship(argent, D_HT, 99)
+	self:SetEnemy(argent)
+	self:UpdateEnemyMemory(argent, argent:GetPos())
+	if doMinorIfActiveEnemy == true && IsValid(self:GetEnemy()) then return end -- End it here if it's a minor set enemy
+	self.TimeSinceEnemyAcquired = CurTime()
+	self.NextResetEnemyT = CurTime() + 0.5 //2
+	if stopMoving == true then
+		self:ClearGoal()
+		self:StopMoving()
+	end
+	if self.Alerted == false then
+		self:DoAlert(argent)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
