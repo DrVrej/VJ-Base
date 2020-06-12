@@ -1022,6 +1022,7 @@ local NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=t
 local NPCTbl_Zombies = {npc_fastzombie_torso=true,npc_zombine=true,npc_zombie_torso=true,npc_zombie=true,npc_poisonzombie=true,npc_headcrab_fast=true,npc_headcrab_black=true,npc_headcrab=true,npc_fastzombie=true,monster_zombie=true,monster_headcrab=true,monster_babycrab=true}
 local NPCTbl_Antlions = {npc_antlion=true,npc_antlionguard=true,npc_antlion_worker=true}
 local NPCTbl_Xen = {monster_bullchicken=true,monster_alien_grunt=true,monster_alien_slave=true,monster_alien_controller=true,monster_houndeye=true,monster_gargantua=true,monster_nihilanth=true}
+local vec_worigin = Vector(0,0,0)
 
 //util.AddNetworkString("vj_creature_onthememusic")
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2731,7 +2732,7 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 	
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVarNumber("vj_npc_printresetenemy") == 1 then print(self:GetName().." has reseted its enemy") end
 	if IsValid(self:GetEnemy()) then
-		if self.FollowingPlayer == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && self:GetEnemyLastKnownPos() != Vector(0,0,0) then
+		if self.FollowingPlayer == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && self:GetEnemyLastKnownPos() != vec_worigin then
 			self:SetLastPosition(self:GetEnemyLastKnownPos())
 			RunToEnemyOnReset = true
 		end
@@ -3465,7 +3466,7 @@ function ENT:SpawnBloodParticles(dmginfo,hitgroup)
 	if p_name == false then return end
 	
 	local dmg_pos = dmginfo:GetDamagePosition()
-	if dmg_pos == Vector(0,0,0) then dmg_pos = self:GetPos() + self:OBBCenter() end
+	if dmg_pos == vec_worigin then dmg_pos = self:GetPos() + self:OBBCenter() end
 	
 	local spawnparticle = ents.Create("info_particle_system")
 	spawnparticle:SetKeyValue("effect_name",p_name)
@@ -3480,7 +3481,7 @@ function ENT:SpawnBloodDecal(dmginfo,hitgroup)
 	if VJ_PICK(self.CustomBlood_Decal) == false then return end
 	local dmg_force = dmginfo:GetDamageForce()
 	local dmg_pos = dmginfo:GetDamagePosition()
-	if dmg_pos == Vector(0,0,0) then dmg_pos = self:GetPos() + self:OBBCenter() end
+	if dmg_pos == vec_worigin then dmg_pos = self:GetPos() + self:OBBCenter() end
 	
 	-- Badi verayi ayroun-e
 	local tr = util.TraceLine({start = dmg_pos, endpos = dmg_pos + dmg_force:GetNormal() * math.Clamp(dmg_force:Length() * 10, 100, self.BloodDecalDistance), filter = self})

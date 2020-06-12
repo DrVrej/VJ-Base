@@ -47,6 +47,7 @@ end
 function ENT:GetState()
 	return self.AIState
 end
+local tr_addvec = Vector(0,0,2)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSchedule(schedule)
 	if self:GetState() == VJ_STATE_ONLY_ANIMATION && schedule.IsPlayActivity != true then return end
@@ -77,8 +78,8 @@ function ENT:StartSchedule(schedule)
 		local tr = util.TraceHull({
 			start = self:GetPos(),
 			endpos = self:GetPos(),
-			mins = self:OBBMins() + Vector(0,0,2),
-			maxs = self:OBBMaxs() + Vector(0,0,2),
+			mins = self:OBBMins() + tr_addvec,
+			maxs = self:OBBMaxs() + tr_addvec,
 			filter = self
 		})
 		if IsValid(tr.Entity) && tr.Entity:IsNPC() && !VJ_HasValue(self.EntitiesToNoCollide,tr.Entity:GetClass()) then
