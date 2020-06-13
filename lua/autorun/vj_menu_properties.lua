@@ -259,7 +259,8 @@ properties.Add("vj_pr_npc_slay",{
 	Receive = function(self, length, ply) -- The action to perform upon using the property (Serverside)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
-		ent:TakeDamage(ent:Health(),ply,ply)
+		ent:SetHealth(0)
+		ent:TakeDamage(ent:Health() + 99999,ply,ply)
 		ply:ChatPrint("Slayed "..ent:GetName()..".")
 	end
 })
@@ -288,10 +289,11 @@ properties.Add("vj_pr_npc_gib",{
 	Receive = function(self, length, ply) -- The action to perform upon using the property (Serverside)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
+		ent:SetHealth(0)
 		local dmg = DamageInfo()
 		dmg:SetAttacker(ply)
 		dmg:SetInflictor(ply)
-		dmg:SetDamage(ent:Health())
+		dmg:SetDamage(ent:Health() + 99999)
 		dmg:SetDamageType(DMG_ALWAYSGIB)
 		ent:TakeDamageInfo(dmg)
 		ply:ChatPrint("Gibbed "..ent:GetName()..".")
