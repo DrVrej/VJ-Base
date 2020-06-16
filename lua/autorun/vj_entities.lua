@@ -608,9 +608,9 @@ function NPC_MetaTable:VJ_DoSetEnemy(argent, stopMoving, doMinorIfActiveEnemy)
 	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == argent then self:DoMedicCode_Reset() end
 	self.TimeSinceLastSeenEnemy = 0
 	self:AddEntityRelationship(argent, D_HT, 99)
-	self:SetEnemy(argent)
 	self:UpdateEnemyMemory(argent, argent:GetPos())
-	if doMinorIfActiveEnemy == true && IsValid(self:GetEnemy()) then return end -- End it here if it's a minor set enemy
+	if doMinorIfActiveEnemy == true && IsValid(self:GetEnemy()) then self:SetEnemy(argent) return end -- End it here if it's a minor set enemy
+	self:SetEnemy(argent)
 	self.TimeSinceEnemyAcquired = CurTime()
 	self.NextResetEnemyT = CurTime() + 0.5 //2
 	if stopMoving == true then
@@ -929,6 +929,7 @@ end)
 local function VJ_NPCPLY_DEATH(npc, attacker, inflictor)
 	if attacker.IsVJBaseSNPC == true && (attacker.IsVJBaseSNPC_Human == true or attacker.IsVJBaseSNPC_Creature == true) then
 		attacker:DoKilledEnemy(npc, attacker, inflictor)
+		attacker:DoEntityRelationshipCheck()
 	end
 end
 local function VJ_PLY_DEATH(victim, inflictor, attacker) VJ_NPCPLY_DEATH(victim, attacker, inflictor) end -- Arguments are flipped between the hooks for some reason...
