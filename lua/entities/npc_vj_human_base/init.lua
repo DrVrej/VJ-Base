@@ -3169,6 +3169,8 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 		-- If the current number of reachable enemies is higher then 1, then don't reset
 		if (IsValid(self:GetEnemy()) && (curenes - 1) >= 1) or (!IsValid(self:GetEnemy()) && curenes >= 1) then
 			//self:VJ_DoSetEnemy(v, false, true)
+			self:DoEntityRelationshipCheck() -- Select a new enemy
+			self.NextProcessT = CurTime() + self.NextProcessTime
 			self.ResetedEnemy = false
 			return false
 		end
