@@ -985,7 +985,7 @@ cvars.AddChangeCallback("ai_ignoreplayers",function(convar_name, oldValue, newVa
 				local it = 1
 				while it <= #posenemies do
 					local x = posenemies[it]
-					if !IsValid(x) or x:IsPlayer() then
+					if !IsValid(x) or (IsValid(x) && x:IsPlayer()) then
 						v:AddEntityRelationship(x, D_NU, 10) -- Make the player neutral
 						if IsValid(v:GetEnemy()) && v:GetEnemy() == x then v:ResetEnemy() end -- Reset the NPC's enemy if it's a player
 						table.remove(posenemies, it) -- Remove the player from possible enemy table
