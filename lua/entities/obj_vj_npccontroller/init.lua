@@ -12,6 +12,7 @@ ENT.LastPressedKeyTime = 0 -- Time since the user last pressed a key
 ENT.CrosshairTrackingActivated = false
 
 -- Control values --
+ENT.VJNPC_Values = nil -- A hash table to hold all the values that need to be reset after the NPC is uncontrolled
 ENT.AbleToTurn = true
 ENT.CurrentAttackAnimation = 0
 ENT.LastIdleAngle = 0
@@ -80,6 +81,7 @@ function ENT:StartControlling()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetControlledNPC(GetEntity)
+	-- Set the bullseye entity values
 	self.NPCBullseye = ents.Create("obj_vj_bullseye")
 	self.NPCBullseye:SetPos(GetEntity:GetPos() + GetEntity:GetForward()*100 + GetEntity:GetUp()*50)//Vector(GetEntity:OBBMaxs().x +20,0,GetEntity:OBBMaxs().z +20))
 	self.NPCBullseye:SetModel("models/hunter/blocks/cube025x025x025.mdl")
@@ -94,6 +96,7 @@ function ENT:SetControlledNPC(GetEntity)
 	self.NPCBullseye:DrawShadow(false)
 	self:DeleteOnRemove(self.NPCBullseye)
 
+	-- Set the NPC values
 	self.ControlledNPC = GetEntity
 	self.ControlledNPC.VJ_IsBeingControlled = true
 	self.ControlledNPC.VJ_TheController = self.TheController
@@ -105,60 +108,46 @@ function ENT:SetControlledNPC(GetEntity)
 	if self.ControlledNPC.IsVJBaseSNPC == true then
 		self.ControlledNPC:Controller_Initialize(self.TheController)
 		if IsValid(self.ControlledNPC:GetEnemy()) then
-			self.ControlledNPC:AddEntityRelationship(self.ControlledNPC:GetEnemy(),D_NU,99)
-			self.ControlledNPC:GetEnemy():AddEntityRelationship(self.ControlledNPC,D_NU,99)
+			self.ControlledNPC:AddEntityRelationship(self.ControlledNPC:GetEnemy(), D_NU, 99)
+			self.ControlledNPC:GetEnemy():AddEntityRelationship(self.ControlledNPC, D_NU, 99)
 			self.ControlledNPC:ResetEnemy(false)
 			self.ControlledNPC:SetEnemy(self.NPCBullseye)
 		end
-		self.VJNPC_DisableWandering = self.ControlledNPC.DisableWandering
-		self.VJNPC_DisableChasingEnemy = self.ControlledNPC.DisableChasingEnemy
-		//self.VJNPC_DisableFindEnemy = self.ControlledNPC.DisableFindEnemy
-		self.VJNPC_DisableTakeDamageFindEnemy = self.ControlledNPC.DisableTakeDamageFindEnemy
-		self.VJNPC_DisableTouchFindEnemy = self.ControlledNPC.DisableTouchFindEnemy
-		self.VJNPC_DisableSelectSchedule = self.ControlledNPC.DisableSelectSchedule
-		self.VJNPC_HasMeleeAttack = self.ControlledNPC.HasMeleeAttack
-		self.VJNPC_HasRangeAttack = self.ControlledNPC.HasRangeAttack
-		self.VJNPC_HasLeapAttack = self.ControlledNPC.HasLeapAttack
-		self.VJNPC_HasGrenadeAttack = self.ControlledNPC.HasGrenadeAttack
-		self.VJNPC_CallForHelp = self.ControlledNPC.CallForHelp
-		self.VJNPC_CallForBackUpOnDamage = self.ControlledNPC.CallForBackUpOnDamage
-		self.VJNPC_FollowPlayer = self.ControlledNPC.FollowPlayer
-		self.VJNPC_BringFriendsOnDeath = self.ControlledNPC.BringFriendsOnDeath
-		self.VJNPC_RunsAwayFromGrenades = self.ControlledNPC.CanDetectGrenades
-		self.VJNPC_RunOnTouch = self.ControlledNPC.RunOnTouch
-		self.VJNPC_RunOnHit = self.ControlledNPC.RunOnHit
-		self.ControlledNPC:ClearSchedule()
-		self.ControlledNPC.DisableSelectSchedule = true
-		//self.ControlledNPC.DisableFindEnemy = true
+		self.VJNPC_Values = {
+			[1] = self.ControlledNPC.DisableWandering,
+			[2] = self.ControlledNPC.DisableChasingEnemy,
+			[3] = self.ControlledNPC.DisableTakeDamageFindEnemy,
+			[4] = self.ControlledNPC.DisableTouchFindEnemy,
+			[5] = self.ControlledNPC.DisableSelectSchedule,
+			[6] = self.ControlledNPC.CallForHelp,
+			[7] = self.ControlledNPC.CallForBackUpOnDamage,
+			[8] = self.ControlledNPC.BringFriendsOnDeath,
+			[9] = self.ControlledNPC.FollowPlayer,
+			[10] = self.ControlledNPC.CanDetectGrenades,
+			[11] = self.ControlledNPC.Passive_RunOnTouch,
+			[12] = self.ControlledNPC.Passive_RunOnDamage,
+			[13] = self.ControlledNPC.IsGuard,
+		}
+		self.ControlledNPC.DisableWandering = true
+		self.ControlledNPC.DisableChasingEnemy = true
 		self.ControlledNPC.DisableTakeDamageFindEnemy = true
 		self.ControlledNPC.DisableTouchFindEnemy = true
-		//self.ControlledNPC.HasMeleeAttack = false
-		//self.ControlledNPC.HasRangeAttack = false
-		//self.ControlledNPC.HasLeapAttack = false
-		//self.ControlledNPC.HasGrenadeAttack = false
-		self.ControlledNPC.NextThrowGrenadeT = 0
+		self.ControlledNPC.DisableSelectSchedule = true
 		self.ControlledNPC.CallForHelp = false
 		self.ControlledNPC.CallForBackUpOnDamage = false
 		self.ControlledNPC.BringFriendsOnDeath = false
 		self.ControlledNPC.FollowPlayer = false
-		self.ControlledNPC.DisableWandering = true
-		self.ControlledNPC.DisableChasingEnemy = true
 		self.ControlledNPC.CanDetectGrenades = false
+		self.ControlledNPC.Passive_RunOnTouch = false
+		self.ControlledNPC.Passive_RunOnDamage = false
+		self.ControlledNPC.IsGuard = false
+		
 		self.ControlledNPC.vACT_StopAttacks = true
-		if self.ControlledNPC.IsVJBaseSNPC_Animal != true then
-			self.ControlledNPC:ResetEnemy() else
-			self.ControlledNPC.RunOnTouch = false
-			self.ControlledNPC.RunOnHit = false
-		end
-		if self.ControlledNPC.IsVJBaseSNPC_Human == true && self.ControlledNPC.DisableWeapons == false then
-			self.ControlledNPC:CapabilitiesRemove(bit.bor(CAP_MOVE_SHOOT))
-			self.ControlledNPC:CapabilitiesRemove(bit.bor(CAP_AIM_GUN))
-		end
+		self.ControlledNPC.NextThrowGrenadeT = 0
 	end
-	self.ControlledNPC:StopMoving()
 	self.ControlledNPC:ClearSchedule()
-	//self.ControlledNPC:VJ_SetSchedule(SCHED_IDLE_STAND)
-	timer.Simple(0.2,function()
+	self.ControlledNPC:StopMoving()
+	timer.Simple(0.2, function()
 		if IsValid(self.ControlledNPC) then
 			self.AbleToTurn = true
 			self.ControlledNPC.vACT_StopAttacks = false
@@ -185,22 +174,22 @@ hook.Add("PlayerButtonDown","VJ_NPC_CONTROLLER",function(ply, button)
 			cent:DoCrosshairTracking()
 		end
 		
-		local zoom = ply:GetInfoNum("vj_npc_cont_zoomdist",5)
+		local zoom = ply:GetInfoNum("vj_npc_cont_zoomdist", 5)
 		if button == KEY_LEFT then
-			cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() + Vector(0,zoom,0))
+			cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() + Vector(0, zoom, 0))
 		elseif button == KEY_RIGHT then
-			cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() - Vector(0,zoom,0))
+			cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() - Vector(0, zoom, 0))
 		elseif button == KEY_UP then
 			if ply:KeyDown(IN_SPEED) then
-				cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() + Vector(0,0,zoom))
+				cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() + Vector(0, 0, zoom))
 			else
-				cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() + Vector(zoom,0,0))
+				cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() + Vector(zoom, 0, 0))
 			end
 		elseif button == KEY_DOWN then
 			if ply:KeyDown(IN_SPEED) then
-				cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() - Vector(0,0,zoom))
+				cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() - Vector(0, 0, zoom))
 			else
-				cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() - Vector(zoom,0,0))
+				cent.PropCamera:SetLocalPos(cent.PropCamera:GetLocalPos() - Vector(zoom, 0, 0))
 			end
 		end
 		
@@ -231,7 +220,7 @@ function ENT:Think()
 				if self.ControlledNPC.HasMeleeAttack == true then AttackTypes["MeleeAttack"] = true end
 				if self.ControlledNPC.HasRangeAttack == true then AttackTypes["RangeAttack"] = true end
 				if self.ControlledNPC.HasLeapAttack == true then AttackTypes["LeapAttack"] = true end
-				if IsValid(self.ControlledNPC:GetActiveWeapon()) then AttackTypes["WeaponAttack"] = true AttackTypes["Ammo"] = self.ControlledNPC.CurrentWeaponEntity:Clip1() end
+				if IsValid(self.ControlledNPC:GetActiveWeapon()) then AttackTypes["WeaponAttack"] = true AttackTypes["Ammo"] = self.ControlledNPC:GetActiveWeapon():Clip1() end
 				if self.ControlledNPC.HasGrenadeAttack == true then AttackTypes["GrenadeAttack"] = true end
 			end
 			net.Start("vj_controller_hud")
@@ -346,7 +335,8 @@ function ENT:StartMovement(Dir,Rot)
 	PlyAimVec:Rotate(Rot)
 	local CenterToPos = self.ControlledNPC:OBBCenter():Distance(self.ControlledNPC:OBBMins()) + 20 // self.ControlledNPC:OBBMaxs().z
 	local NPCPos = self.ControlledNPC:GetPos() + self.ControlledNPC:GetUp()*CenterToPos
-	local forwardtr = util.TraceLine({start = NPCPos, endpos = NPCPos + PlyAimVec*300, filter = {self,self.TheController,self.ControlledNPC}})
+	local groundSpeed = math.Clamp(self.ControlledNPC:GetSequenceGroundSpeed(self.ControlledNPC:GetSequence()), 300, 9999)
+	local forwardtr = util.TraceLine({start = NPCPos, endpos = NPCPos + PlyAimVec*groundSpeed, filter = {self,self.TheController,self.ControlledNPC}})
 	//local npcvel = self.ControlledNPC:GetGroundSpeedVelocity()
 	//if self.ControlledNPC:GetMovementActivity() > 0 then print(self.ControlledNPC:GetSequenceGroundSpeed(self.ControlledNPC:SelectWeightedSequence(self.ControlledNPC:GetMovementActivity()))) end
 	//self.ControlledNPC:GetSequenceGroundSpeed(self.ControlledNPC:SelectWeightedSequence(self.ControlledNPC:GetActivity()))
@@ -439,26 +429,19 @@ function ENT:StopControlling()
 		self.ControlledNPC.VJ_TheControllerEntity = NULL
 		//self.ControlledNPC:ClearSchedule()
 		if self.ControlledNPC.IsVJBaseSNPC == true then
-			self.ControlledNPC.DisableWandering = self.VJNPC_DisableWandering
-			self.ControlledNPC.DisableChasingEnemy = self.VJNPC_DisableChasingEnemy
-			//self.ControlledNPC.DisableFindEnemy = self.VJNPC_DisableFindEnemy
-			self.ControlledNPC.DisableTakeDamageFindEnemy = self.VJNPC_DisableTakeDamageFindEnemy
-			self.ControlledNPC.DisableTouchFindEnemy = self.VJNPC_DisableTouchFindEnemy
-			self.ControlledNPC.DisableSelectSchedule = self.VJNPC_DisableSelectSchedule
-			self.ControlledNPC.HasMeleeAttack = self.VJNPC_HasMeleeAttack
-			self.ControlledNPC.HasRangeAttack = self.VJNPC_HasRangeAttack
-			self.ControlledNPC.HasLeapAttack = self.VJNPC_HasLeapAttack
-			self.ControlledNPC.CallForHelp = self.VJNPC_CallForHelp
-			self.ControlledNPC.CallForBackUpOnDamage = self.VJNPC_CallForBackUpOnDamage
-			self.ControlledNPC.FollowPlayer = self.VJNPC_FollowPlayer
-			self.ControlledNPC.BringFriendsOnDeath = self.VJNPC_BringFriendsOnDeath
-			self.ControlledNPC.CanDetectGrenades = self.VJNPC_RunsAwayFromGrenades
-			self.ControlledNPC.RunOnTouch = self.VJNPC_RunOnTouch
-			self.ControlledNPC.RunOnHit = self.VJNPC_RunOnHit
-			if self.ControlledNPC.IsVJBaseSNPC_Human == true && self.ControlledNPC.DisableWeapons == false then
-				self.ControlledNPC:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
-				self.ControlledNPC:CapabilitiesAdd(bit.bor(CAP_AIM_GUN))
-			end
+			self.ControlledNPC.DisableWandering = self.VJNPC_Values[1]
+			self.ControlledNPC.DisableChasingEnemy = self.VJNPC_Values[2]
+			self.ControlledNPC.DisableTakeDamageFindEnemy = self.VJNPC_Values[3]
+			self.ControlledNPC.DisableTouchFindEnemy = self.VJNPC_Values[4]
+			self.ControlledNPC.DisableSelectSchedule = self.VJNPC_Values[5]
+			self.ControlledNPC.CallForHelp = self.VJNPC_Values[6]
+			self.ControlledNPC.CallForBackUpOnDamage = self.VJNPC_Values[7]
+			self.ControlledNPC.BringFriendsOnDeath = self.VJNPC_Values[8]
+			self.ControlledNPC.FollowPlayer = self.VJNPC_Values[9]
+			self.ControlledNPC.CanDetectGrenades = self.VJNPC_Values[10]
+			self.ControlledNPC.Passive_RunOnTouch = self.VJNPC_Values[11]
+			self.ControlledNPC.Passive_RunOnDamage = self.VJNPC_Values[12]
+			self.ControlledNPC.IsGuard = self.VJNPC_Values[13]
 		end
 	end
 	//self.PropCamera:Remove()
