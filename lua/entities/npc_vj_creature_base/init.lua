@@ -1190,7 +1190,8 @@ end
 function ENT:OnChangeActivity(newAct)
 	//print(newAct)
 	if newAct == ACT_TURN_LEFT or newAct == ACT_TURN_RIGHT then
-		self.NextIdleStandTime = CurTime() + 1.2
+		self.NextIdleStandTime = CurTime() + VJ_GetSequenceDuration(self, self:GetSequenceName(self:GetSequence()))
+		//self.NextIdleStandTime = CurTime() + 1.2
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1627,6 +1628,7 @@ function ENT:Touch(entity)
 			self.Passive_NextRunOnTouchT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
 		end
 	elseif self.DisableTouchFindEnemy == false && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && (entity:IsNPC() or entity:IsPlayer()) && self:DoRelationshipCheck(entity) != false then
+		self:StopMoving()
 		self:SetTarget(entity)
 		self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 	end
@@ -1715,6 +1717,8 @@ function ENT:FollowPlayerCode(key, activator, caller, data)
 			end
 		else -- Unfollow the player
 			self:PlaySoundSystem("UnFollowPlayer")
+			self:StopMoving()
+			self.NextWanderTime = CurTime() + 2
 			if self:BusyWithActivity() == false then
 				self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 			end
