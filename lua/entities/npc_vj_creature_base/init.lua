@@ -1006,6 +1006,7 @@ ENT.ReachableEnemyCount = 0
 ENT.LatestEnemyDistance = 0
 ENT.HealthRegenerationDelayT = 0
 ENT.LatestVisibleEnemyPosition = Vector(0,0,0)
+ENT.GuardingPosition = nil
 ENT.AA_CurrentTurnAng = false
 ENT.SelectedDifficulty = 1
 ENT.AIState = 0
@@ -1702,6 +1703,7 @@ function ENT:FollowPlayerCode(key, activator, caller, data)
 			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
 				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is now following you.")
 			end
+			self.GuardingPosition = nil -- Reset the guarding position
 			self.FollowPlayer_Entity = activator
 			self.FollowingPlayer = true
 			self:PlaySoundSystem("FollowPlayer")
@@ -2201,6 +2203,20 @@ function ENT:Think()
 			self.TimeSinceEnemyAcquired = 0
 			self.TimeSinceLastSeenEnemy = self.TimeSinceLastSeenEnemy + 0.1
 			if self.ResetedEnemy == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") self.ResetedEnemy = true self:ResetEnemy(true) end
+		end
+		-- Guarding Position
+		if self.IsGuard == true && self.FollowingPlayer == false then
+			if self.GuardingPosition == nil then -- If it hasn't been set then set the guard position to its current position
+				self.GuardingPosition = self:GetPos()
+			end
+			 -- If it's far from the guarding position, then go there!
+			if !self:IsMoving() && self:BusyWithActivity() == false then
+				local dist = self:GetPos():Distance(self.GuardingPosition) -- Distance to the guard position
+				if dist > 50 then
+					self:SetLastPosition(self.GuardingPosition)
+					self:VJ_TASK_GOTO_LASTPOS(dist <= 800 and "TASK_WALK_PATH" or "TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+				end
+			end
 		end
 	else -- AI Not enabled
 		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_Stop() end

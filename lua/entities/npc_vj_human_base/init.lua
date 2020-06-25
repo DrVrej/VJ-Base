@@ -966,6 +966,7 @@ ENT.ReachableEnemyCount = 0
 ENT.LatestEnemyDistance = 0
 ENT.HealthRegenerationDelayT = 0
 ENT.LatestVisibleEnemyPosition = Vector(0,0,0)
+ENT.GuardingPosition = nil
 ENT.SelectedDifficulty = 1
 ENT.ModelAnimationSet = 0
 ENT.AIState = 0
@@ -1975,6 +1976,7 @@ function ENT:FollowPlayerCode(key, activator, caller, data)
 			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
 				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is now following you.")
 			end
+			self.GuardingPosition = nil -- Reset the guarding position
 			self.FollowPlayer_Entity = activator
 			self.FollowingPlayer = true
 			self:PlaySoundSystem("FollowPlayer")
@@ -2529,6 +2531,20 @@ function ENT:Think()
 			self.NextFindEnemyT = CurTime() + self.NextFindEnemyTime end*/
 			//self.MeleeAttacking = false
 		end
+		-- Guarding Position
+		if self.IsGuard == true && self.FollowingPlayer == false then
+			if self.GuardingPosition == nil then -- If it hasn't been set then set the guard position to its current position
+				self.GuardingPosition = self:GetPos()
+			end
+			 -- If it's far from the guarding position, then go there!
+			if !self:IsMoving() && self:BusyWithActivity() == false then
+				local dist = self:GetPos():Distance(self.GuardingPosition) -- Distance to the guard position
+				if dist > 50 then
+					self:SetLastPosition(self.GuardingPosition)
+					self:VJ_TASK_GOTO_LASTPOS(dist <= 800 and "TASK_WALK_PATH" or "TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+				end
+			end
+		end
 	else -- AI Not enabled
 		self.DoingWeaponAttack = false
 	end
@@ -3079,7 +3095,7 @@ function ENT:SelectSchedule(iNPCState)
 								end
 							end
 							-- Move randomly when shooting
-							if covered_npc == false && self.FollowingPlayer == false && self.MoveRandomlyWhenShooting == true && self.DoingWeaponAttack == true && self.DoingWeaponAttack_Standing == true && CurTime() > self.NextMoveRandomlyWhenShootingT && (CurTime() - self.TimeSinceEnemyAcquired) > 2 && (enedist_eye < (self.Weapon_FiringDistanceFar / 1.25)) && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),enepos_eye) == false && self:CustomOnMoveRandomlyWhenShooting() != false then
+							if covered_npc == false && self.IsGuard != true && self.FollowingPlayer == false && self.MoveRandomlyWhenShooting == true && self.DoingWeaponAttack == true && self.DoingWeaponAttack_Standing == true && CurTime() > self.NextMoveRandomlyWhenShootingT && (CurTime() - self.TimeSinceEnemyAcquired) > 2 && (enedist_eye < (self.Weapon_FiringDistanceFar / 1.25)) && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),enepos_eye) == false && self:CustomOnMoveRandomlyWhenShooting() != false then
 								local randpos = math.random(150,400)
 								local checkdist = self:VJ_CheckAllFourSides(randpos)
 								local randmove = {}

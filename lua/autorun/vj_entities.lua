@@ -852,6 +852,7 @@ hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 	local ent = data.Entity
 	if IsValid(ent) then
 		//PrintTable(data)
+		
 		-- Investigate System
 		if SERVER && ent:IsPlayer() && data.SoundLevel >= 75 then
 			//print("---------------------------")
