@@ -153,9 +153,9 @@ ENT.NoChaseAfterCertainRange_FarDistance = 2000 -- How far until it can chase ag
 ENT.NoChaseAfterCertainRange_CloseDistance = 300 -- How near until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
 ENT.NoChaseAfterCertainRange_Type = "Regular" -- "Regular" = Default behavior | "OnlyRange" = Only does it if it's able to range attack
 	-- ====== Miscellaneous Variables ====== --
-ENT.PushProps = true -- Should it push props when trying to move?
 ENT.AttackProps = true -- Should it attack props when trying to move?
-ENT.PropAP_MaxSize = 1 -- This is a scale number | x > 1  = Larger props | x < 1  = Smaller props | x = 1  == Default base value
+ENT.PushProps = true -- Should it push props when trying to move?
+ENT.PropAP_MaxSize = 1 -- This is a scale number for the max size it can attack/push | x < 1  = Smaller props & x > 1  = Larger props | Default base value: 1
 	-- ====== Control Variables ====== --
 	-- Use these variables very careful! One wrong change can mess up the whole SNPC!
 ENT.FindEnemy_UseSphere = false -- Should the SNPC be able to see all around him? (360) | Objects and walls can still block its sight!
@@ -2090,7 +2090,7 @@ function ENT:Think()
 				local attacktype = 0 -- 0 = No attack | 1 = Normal attack | 2 = Prop attack
 				if (self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (self.VJ_IsBeingControlled == false && self.NearestPointToEnemyDistance < self.MeleeAttackDistance && ene:Visible(self)) then
 					attacktype = 1
-				elseif self:PushOrAttackPropsCode() == true && self.MeleeAttack_NoProps == true then
+				elseif self:PushOrAttackPropsCode() == true && self.MeleeAttack_NoProps == false then
 					attacktype = 2
 				end
 				if self:CustomAttackCheck_MeleeAttack() == true && ((self.VJ_IsBeingControlled == true && attacktype == 1) or (self.VJ_IsBeingControlled == false && attacktype != 0 && (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))))) then
@@ -2323,28 +2323,26 @@ end
 --------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PushOrAttackPropsCode(IsSingleValue, CustomMeleeDistance)
 	if self.PushProps == false && self.AttackProps == false then return end
-	local isp = VJ_IsProp
-	
+	local isprop = VJ_IsProp
 	for _,v in pairs(IsSingleValue or ents.FindInSphere(self:SetMeleeAttackDamagePosition(), CustomMeleeDistance or math.Clamp(self.MeleeAttackDamageDistance - 30, self.MeleeAttackDistance, self.MeleeAttackDamageDistance))) do
-		local notprop = false
-		if self.EntitiesToDestroyClass[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true then notprop = true end
-		if v:GetClass() == "prop_door_rotating" && v:Health() <= 0 then notprop = false end
-		if isp(v) == true or notprop == true then
-			local phys = v:GetPhysicsObject()
-			//print(self:VJ_GetNearestPointToEntityDistance(v,1))
+		local isEnt = (self.EntitiesToDestroyClass[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) and true or false -- Whether or not it's a prop or an entity to attack
+		if v:GetClass() == "prop_door_rotating" && v:Health() <= 0 then isEnt = false end -- If it's a door and it has no health, then don't attack it!
+		if isprop(v) == true or isEnt == true then --If it's a prop or a entity then atttack
 			//print(self:DoPropVisibiltyCheckForPushAttackProps(v))
+			local phys = v:GetPhysicsObject()
 			-- Serpevadz abrankner: self:VJ_GetNearestPointToEntityDistance(v) < (CustomMeleeDistance) && self:Visible(v)
 			if IsValid(phys) && self:DoPropVisibiltyCheckForPushAttackProps(v) && (self:GetForward():Dot((v:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius / 1.3))) && v:GetCollisionGroup() != COLLISION_GROUP_DEBRIS && v:GetCollisionGroup() != COLLISION_GROUP_DEBRIS_TRIGGER && v:GetCollisionGroup() != COLLISION_GROUP_DISSOLVING && v:GetCollisionGroup() != COLLISION_GROUP_IN_VEHICLE then
-				if notprop == true then return true end -- Bedke chiga sharnagenk, vorovhedev arten kidenk vor gerna zarnel as abrankin
-				//print("IT SHOULD WORK "..v:GetClass())
+				if isEnt == true then return true end -- Since it's an entity, no need to check for size etc.
+				-- Attack if the prop has health higher than 0
+				if self.AttackProps == true && v:Health() > 0 then
+					return true
+				end
+				-- Push the prop if it's not a small object and if the NPC is appropriately sized to push the object
 				if self.PushProps == true && phys:GetMass() > 4 && phys:GetSurfaceArea() > 800 then
 					local selfphys = self:GetPhysicsObject()
 					if IsValid(selfphys) && (selfphys:GetSurfaceArea() * self.PropAP_MaxSize) >= phys:GetSurfaceArea() then
 						return true
 					end
-				end
-				if self.AttackProps == true && v:Health() > 0 /*(VJ_HasValue(self.EntitiesToDestoryModel,v:GetModel()) or self.EntitiesToDestroyClass[v:GetClass()] &&*/ then
-					return true
 				end
 			end
 		end
@@ -3033,12 +3031,13 @@ function ENT:Allies_CallHelp(SeeDistance)
 	local entsTbl = ents.FindInSphere(self:GetPos(), SeeDistance)
 	if (!entsTbl) then return false end
 	for _,v in pairs(entsTbl) do
-		if v:IsNPC() && v != self && v.IsVJBaseSNPC == true && VJ_IsAlive(v) == true && (v:GetClass() == self:GetClass() or v:Disposition(self) == D_LI) && v.IsVJBaseSNPC_Animal != false && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& v.FollowingPlayer == false*/ && v.VJ_IsBeingControlled == false && (!v.IsVJBaseSNPC_Tank) && v.CallForHelp == true && v.IsGuard != true then
+		if v:IsNPC() && v != self && v.IsVJBaseSNPC == true && VJ_IsAlive(v) == true && (v:GetClass() == self:GetClass() or v:Disposition(self) == D_LI) && v.IsVJBaseSNPC_Animal != false && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& v.FollowingPlayer == false*/ && v.VJ_IsBeingControlled == false && (!v.IsVJBaseSNPC_Tank) && v.CallForHelp == true then
 			local ene = self:GetEnemy()
 			if IsValid(ene) then
 				if v:GetPos():Distance(ene:GetPos()) > v.SightDistance then continue end -- Enemy to far away for ally, discontinue!
 				//if v:DoRelationshipCheck(ene) == true then
 				if !IsValid(v:GetEnemy()) && ((!ene:IsPlayer() && v:Disposition(ene) != D_LI) or (ene:IsPlayer())) then
+					if v.IsGuard == true && !v:Visible(ene) then continue end -- If it's guarding and enemy is not visible, then don't call!
 					self:CustomOnCallForHelp(v)
 					self:PlaySoundSystem("CallForHelp")
 					-- Play the animation
