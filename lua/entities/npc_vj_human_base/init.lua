@@ -1090,6 +1090,7 @@ end
 function ENT:CustomInitialize() end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetInitializeCapabilities()
+	self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK))
 	self:CapabilitiesAdd(bit.bor(CAP_ANIMATEDFACE))
 	self:CapabilitiesAdd(bit.bor(CAP_TURN_HEAD))
 	if self.CanOpenDoors == true then
@@ -1115,13 +1116,10 @@ function ENT:DoChangeMovementType(SetType)
 		//if VJ_AnimationExists(self,ACT_CLIMB_UP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
 		if self.DisableWeapons == false then self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT)) end
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
-		//self:CapabilitiesRemove(CAP_SKIP_NAV_GROUND_CHECK)
-		self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK))
 	end
 	if self.MovementType == VJ_MOVETYPE_AERIAL then
 		self:SetMoveType(MOVETYPE_FLY)
 		self:CapabilitiesAdd(bit.bor(CAP_MOVE_FLY))
-		self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK))
 		self:CapabilitiesRemove(CAP_MOVE_GROUND)
 		self:CapabilitiesRemove(CAP_MOVE_JUMP)
 		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
@@ -1130,7 +1128,6 @@ function ENT:DoChangeMovementType(SetType)
 	if self.MovementType == VJ_MOVETYPE_AQUATIC then
 		self:SetMoveType(MOVETYPE_FLY)
 		self:CapabilitiesAdd(bit.bor(CAP_MOVE_FLY))
-		self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK))
 		self:CapabilitiesRemove(CAP_MOVE_GROUND)
 		self:CapabilitiesRemove(CAP_MOVE_JUMP)
 		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
@@ -1147,7 +1144,6 @@ function ENT:DoChangeMovementType(SetType)
 		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
 		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
-		self:CapabilitiesRemove(CAP_SKIP_NAV_GROUND_CHECK)
 	end
 	if self.MovementType == VJ_MOVETYPE_PHYSICS then
 		self:SetMoveType(MOVETYPE_VPHYSICS)
@@ -1156,7 +1152,6 @@ function ENT:DoChangeMovementType(SetType)
 		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
 		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
-		self:CapabilitiesRemove(CAP_SKIP_NAV_GROUND_CHECK)
 	end
 	self:CustomOnChangeMovementType(SetType)
 end

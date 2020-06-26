@@ -320,7 +320,7 @@ ENT.MeleeAttackKnockBack_Right2 = 0 -- How far it will push you right | Second i
 	-- ====== Bleed Enemy Variables ====== --
 	-- Causes the affected enemy to continue taking damage even after the attack and cause them to basically bleed
 ENT.MeleeAttackBleedEnemy = false -- Should the enemy bleed when attacked by melee?
-ENT.MeleeAttackBleedEnemyChance = 4 -- How much chance there is that the enemy will bleed? | 1 = always
+ENT.MeleeAttackBleedEnemyChance = 3 -- How much chance there is that the enemy will bleed? | 1 = always
 ENT.MeleeAttackBleedEnemyDamage = 1 -- How much damage will the enemy get on every rep?
 ENT.MeleeAttackBleedEnemyTime = 1 -- How much time until the next rep?
 ENT.MeleeAttackBleedEnemyReps = 4 -- How many reps?
@@ -1102,6 +1102,7 @@ ENT.DeathSkin = 0
 function ENT:CustomInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetInitializeCapabilities()
+	self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK))
 	//self:CapabilitiesAdd(bit.bor(CAP_ANIMATEDFACE)) -- Breaks some SNPCs, avoid using it!
 	self:CapabilitiesAdd(bit.bor(CAP_TURN_HEAD))
 	if GetConVarNumber("vj_npc_creatureopendoor") == 1 && self.CanOpenDoors == true then
@@ -1120,13 +1121,10 @@ function ENT:DoChangeMovementType(SetType)
 		if VJ_AnimationExists(self,ACT_JUMP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_JUMP)) end
 		if VJ_AnimationExists(self,ACT_CLIMB_UP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
-		//self:CapabilitiesRemove(CAP_SKIP_NAV_GROUND_CHECK)
-		self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK))
 	end
 	if self.MovementType == VJ_MOVETYPE_AERIAL then
 		self:SetMoveType(MOVETYPE_FLY)
 		self:CapabilitiesAdd(bit.bor(CAP_MOVE_FLY))
-		self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK))
 		self:CapabilitiesRemove(CAP_MOVE_GROUND)
 		self:CapabilitiesRemove(CAP_MOVE_JUMP)
 		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
@@ -1135,7 +1133,6 @@ function ENT:DoChangeMovementType(SetType)
 	if self.MovementType == VJ_MOVETYPE_AQUATIC then
 		self:SetMoveType(MOVETYPE_FLY)
 		self:CapabilitiesAdd(bit.bor(CAP_MOVE_FLY))
-		self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK))
 		self:CapabilitiesRemove(CAP_MOVE_GROUND)
 		self:CapabilitiesRemove(CAP_MOVE_JUMP)
 		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
@@ -1152,7 +1149,6 @@ function ENT:DoChangeMovementType(SetType)
 		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
 		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
-		self:CapabilitiesRemove(CAP_SKIP_NAV_GROUND_CHECK)
 	end
 	if self.MovementType == VJ_MOVETYPE_PHYSICS then
 		self:SetMoveType(MOVETYPE_VPHYSICS)
@@ -1161,7 +1157,6 @@ function ENT:DoChangeMovementType(SetType)
 		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
 		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
-		self:CapabilitiesRemove(CAP_SKIP_NAV_GROUND_CHECK)
 	end
 	self:CustomOnChangeMovementType(SetType)
 end
@@ -2321,10 +2316,10 @@ function ENT:DoPropVisibiltyCheckForPushAttackProps(CheckEnt)
 	return false else return true end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PushOrAttackPropsCode(IsSingleValue, CustomMeleeDistance)
+function ENT:PushOrAttackPropsCode(CustomEnts, CustomMeleeDistance)
 	if self.PushProps == false && self.AttackProps == false then return end
 	local isprop = VJ_IsProp
-	for _,v in pairs(IsSingleValue or ents.FindInSphere(self:SetMeleeAttackDamagePosition(), CustomMeleeDistance or math.Clamp(self.MeleeAttackDamageDistance - 30, self.MeleeAttackDistance, self.MeleeAttackDamageDistance))) do
+	for _,v in pairs(CustomEnts or ents.FindInSphere(self:SetMeleeAttackDamagePosition(), CustomMeleeDistance or math.Clamp(self.MeleeAttackDamageDistance - 30, self.MeleeAttackDistance, self.MeleeAttackDamageDistance))) do
 		local isEnt = (self.EntitiesToDestroyClass[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) and true or false -- Whether or not it's a prop or an entity to attack
 		if v:GetClass() == "prop_door_rotating" && v:Health() <= 0 then isEnt = false end -- If it's a door and it has no health, then don't attack it!
 		if isprop(v) == true or isEnt == true then --If it's a prop or a entity then atttack
@@ -2350,121 +2345,96 @@ function ENT:PushOrAttackPropsCode(IsSingleValue, CustomMeleeDistance)
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MeleeAttackCode(IsPropAttack,AttackDist,CustomEnt)
-	if self.Dead == true or self.vACT_StopAttacks == true or self.Flinching == true then return end
-	if self.StopMeleeAttackAfterFirstHit == true && self.AlreadyDoneMeleeAttackFirstHit == true then return end
-	IsPropAttack = IsPropAttack or false
-	if self.MeleeAttack_DoingPropAttack == true then IsPropAttack = true end
-	local MyEnemy = CustomEnt or self:GetEnemy()
-	AttackDist = AttackDist or self.MeleeAttackDamageDistance
-	//if IsPropAttack == true then AttackDist = (self.MeleeAttackDamageDistance *1.2)/* + 50*/ end
-	if /*self.VJ_IsBeingControlled == false &&*/ self.MeleeAttackAnimationFaceEnemy == true && self.MeleeAttack_DoingPropAttack == false then self:FaceCertainEntity(MyEnemy,true) end
+function ENT:MeleeAttackCode(isPropAttack, attackDist, CustomEnt)
+	if self.Dead == true or self.vACT_StopAttacks == true or self.Flinching == true or (self.StopMeleeAttackAfterFirstHit == true && self.AlreadyDoneMeleeAttackFirstHit == true) then return end
+	isPropAttack = isPropAttack or self.MeleeAttack_DoingPropAttack -- Is this a prop attack?
+	attackDist = attackDist or self.MeleeAttackDamageDistance -- How far should the attack go?
+	local curEnemy = CustomEnt or self:GetEnemy()
+	if self.MeleeAttackAnimationFaceEnemy == true && isPropAttack == false then self:FaceCertainEntity(curEnemy, true) end
 	//self.MeleeAttacking = true
 	self:CustomOnMeleeAttack_BeforeChecks()
 	if self.DisableDefaultMeleeAttackCode == true then return end
-	local FindEnts = ents.FindInSphere(self:SetMeleeAttackDamagePosition(), AttackDist)
-	local hitentity = false
-	local HasHitGoodProp = false
-	if FindEnts != nil then
-		for _,v in pairs(FindEnts) do
-			if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
-			if (v != self && v:GetClass() != self:GetClass()) && (((v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVarNumber("ai_ignoreplayers") == 0)) && (self:Disposition(v) != D_LI)) or VJ_IsProp(v) == true or v:GetClass() == "func_breakable_surf" or self.EntitiesToDestroyClass[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) then
-				if (self:GetForward():Dot((Vector(v:GetPos().x,v:GetPos().y,0) - Vector(self:GetPos().x,self:GetPos().y,0)):GetNormalized()) > math.cos(math.rad(self.MeleeAttackDamageAngleRadius))) then
-					//if IsPropAttack == true && self:GetPos():Distance(v:GetPos()) <= AttackDist /2 && v:GetClass() != "prop_physics" && v:GetClass() != "func_breakable_surf" && v:GetClass() != "func_breakable" then continue end
-					if IsPropAttack == true && (v:IsPlayer() or v:IsNPC()) then
-						//print(self:GetPos():Distance(v:GetPos()))
-						//print(self.MeleeAttackDistance)
-						//print(self:GetPos():Distance(v:GetPos()) >= self:VJ_GetNearestPointToEntityDistance(v))
-						//print(self:VJ_GetNearestPointToEntityDistance(v) <= self.MeleeAttackDistance)
-						//if (self:GetPos():Distance(v:GetPos()) <= self:VJ_GetNearestPointToEntityDistance(v) && self:VJ_GetNearestPointToEntityDistance(v) <= self.MeleeAttackDistance) == false then
-						if self:VJ_GetNearestPointToEntityDistance(v) > self.MeleeAttackDistance then continue end
-					end
-					if VJ_IsProp(v) == true then
-						local phys = v:GetPhysicsObject()
-						if IsValid(phys) then
-							//if VJ_HasValue(self.EntitiesToDestoryModel,v:GetModel()) or self.EntitiesToDestroyClass[v:GetClass()] or VJ_HasValue(self.EntitiesToPushModel,v:GetModel()) then
-							if self:PushOrAttackPropsCode({v}, AttackDist) then
-								HasHitGoodProp = true
-								phys:EnableMotion(true)
-								//phys:EnableGravity(true)
-								phys:Wake()
-								//constraint.RemoveAll(v)
-								//if util.IsValidPhysicsObject(v,1) then
-								constraint.RemoveConstraints(v,"Weld") //end
-								if self.PushProps == true then
-									if MyEnemy != nil then
-										local posfor = phys:GetMass() * 700
-										local posup = phys:GetMass() * 200
-										phys:ApplyForceCenter(MyEnemy:GetPos()+self:GetForward() *posfor +self:GetUp()*posup)
-										//phys:ApplyForceCenter(MyEnemy:GetPos()+self:GetForward() *25000 +self:GetUp()*7000)
-										/*if v:GetModel() == "models/props_c17/oildrum001.mdl" then
-										phys:ApplyForceCenter(MyEnemy:GetPos()+self:GetForward() *25000 +self:GetUp()*7000) end
-										if v:GetModel() == "models/props_borealis/bluebarrel001.mdl" then
-										phys:ApplyForceCenter(MyEnemy:GetPos()+self:GetForward() *55000 +self:GetUp()*10000) end*/
-									end
-								end
-							end
-						end
-					end
-					if self:CustomOnMeleeAttack_AfterChecks(v) == true then continue end
-					if self.HasMeleeAttackKnockBack == true && v.MovementType != VJ_MOVETYPE_STATIONARY then
-						if v.VJ_IsHugeMonster != true or v.IsVJBaseSNPC_Tank == true then
-							v:SetGroundEntity(NULL)
-							v:SetVelocity(self:GetForward()*math.random(self.MeleeAttackKnockBack_Forward1,self.MeleeAttackKnockBack_Forward2) +self:GetUp()*math.random(self.MeleeAttackKnockBack_Up1,self.MeleeAttackKnockBack_Up2) +self:GetRight()*math.random(self.MeleeAttackKnockBack_Right1,self.MeleeAttackKnockBack_Right2))
-						end
-					end
-					if self.DisableDefaultMeleeAttackDamageCode == false then
-						local doactualdmg = DamageInfo()
-						doactualdmg:SetDamage(self:VJ_GetDifficultyValue(self.MeleeAttackDamage))
-						doactualdmg:SetDamageType(self.MeleeAttackDamageType)
-						//doactualdmg:SetDamagePosition(self:VJ_GetNearestPointToEntity(v).MyPosition)
-						if v:IsNPC() or v:IsPlayer() then doactualdmg:SetDamageForce(self:GetForward()*((doactualdmg:GetDamage()+100)*70)) end
-						doactualdmg:SetInflictor(self)
-						doactualdmg:SetAttacker(self)
-						v:TakeDamageInfo(doactualdmg, self)
-					end
-					if self.MeleeAttackSetEnemyOnFire == true then v:Ignite(self.MeleeAttackSetEnemyOnFireTime,0) end
-					if (v:IsNPC() && (!VJ_IsHugeMonster)) or v:IsPlayer() then
-						if self.MeleeAttackBleedEnemy == true then
-							self:CustomOnMeleeAttack_BleedEnemy(v)
-							if math.random(1,self.MeleeAttackBleedEnemyChance) == 1 then
-								timer.Create("timer_melee_bleedply",self.MeleeAttackBleedEnemyTime,self.MeleeAttackBleedEnemyReps,function() if IsValid(v) then v:TakeDamage(self.MeleeAttackBleedEnemyDamage,self,self) end end)
-							end
-							if !v:IsValid() then timer.Remove("timer_melee_bleedply") end
-							if v:IsPlayer() then if !v:Alive() then timer.Remove("timer_melee_bleedply") end end
-						end
-					end
-					if v:IsPlayer() then
-						if self.HasMeleeAttackDSPSound == true && ((self.MeleeAttackDSPSoundUseDamage == false) or (self.MeleeAttackDSPSoundUseDamage == true && self.MeleeAttackDamage >= self.MeleeAttackDSPSoundUseDamageAmount && GetConVarNumber("vj_npc_nomeleedmgdsp") == 0)) then
-							v:SetDSP(self.MeleeAttackDSPSoundType,false)
-						end
-						v:ViewPunch(Angle(math.random(-1,1)*self.MeleeAttackDamage,math.random(-1,1)*self.MeleeAttackDamage,math.random(-1,1)*self.MeleeAttackDamage))
-						if self.SlowPlayerOnMeleeAttack == true then
-							self:VJ_DoSlowPlayer(v,self.SlowPlayerOnMeleeAttack_WalkSpeed,self.SlowPlayerOnMeleeAttack_RunSpeed,self.SlowPlayerOnMeleeAttackTime,{PlaySound=self.HasMeleeAttackSlowPlayerSound,SoundTable=self.SoundTbl_MeleeAttackSlowPlayer,SoundLevel=self.MeleeAttackSlowPlayerSoundLevel,FadeOutTime=self.MeleeAttackSlowPlayerSoundFadeOutTime},{})
-							self:CustomOnMeleeAttack_SlowPlayer(v)
-						end
-					end
-					VJ_DestroyCombineTurret(self,v)
-					if VJ_IsProp(v) == true then
-						if HasHitGoodProp == true then
-							hitentity = true
-						end
-					else
-						hitentity = true
+	local myPos = self:GetPos()
+	local hitRegistered = false
+	for _,v in pairs(ents.FindInSphere(self:SetMeleeAttackDamagePosition(), attackDist)) do
+		if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end -- If controlled and v is the bullseye OR it's a player controlling then don't damage!
+		if v != self && v:GetClass() != self:GetClass() && (((v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVarNumber("ai_ignoreplayers") == 0)) && self:Disposition(v) != D_LI) or VJ_IsProp(v) == true or v:GetClass() == "func_breakable_surf" or self.EntitiesToDestroyClass[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) && self:GetForward():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math.cos(math.rad(self.MeleeAttackDamageAngleRadius)) then
+			if isPropAttack == true && (v:IsPlayer() or v:IsNPC()) && self:VJ_GetNearestPointToEntityDistance(v) > self.MeleeAttackDistance then continue end //if (self:GetPos():Distance(v:GetPos()) <= self:VJ_GetNearestPointToEntityDistance(v) && self:VJ_GetNearestPointToEntityDistance(v) <= self.MeleeAttackDistance) == false then
+			if self:CustomOnMeleeAttack_AfterChecks(v) == true then continue end
+			local vProp = VJ_IsProp(v)
+			-- Remove prop constraints and push it (If possbile)
+			if vProp == true then
+				local phys = v:GetPhysicsObject()
+				if IsValid(phys) && self:PushOrAttackPropsCode({v}, attackDist) then
+					hitRegistered = true
+					phys:EnableMotion(true)
+					//phys:EnableGravity(true)
+					phys:Wake()
+					//constraint.RemoveAll(v)
+					//if util.IsValidPhysicsObject(v, 1) then
+					constraint.RemoveConstraints(v, "Weld") //end
+					if self.PushProps == true then
+						phys:ApplyForceCenter((curEnemy != nil and curEnemy:GetPos() or myPos) + self:GetForward()*(phys:GetMass() * 700) + self:GetUp()*(phys:GetMass() * 200))
 					end
 				end
 			end
+			-- Knockback
+			if self.HasMeleeAttackKnockBack == true && v.MovementType != VJ_MOVETYPE_STATIONARY && (v.VJ_IsHugeMonster != true or v.IsVJBaseSNPC_Tank == true) then
+				v:SetGroundEntity(NULL)
+				v:SetVelocity(self:GetForward()*math.random(self.MeleeAttackKnockBack_Forward1, self.MeleeAttackKnockBack_Forward2) + self:GetUp()*math.random(self.MeleeAttackKnockBack_Up1, self.MeleeAttackKnockBack_Up2) + self:GetRight()*math.random(self.MeleeAttackKnockBack_Right1, self.MeleeAttackKnockBack_Right2))
+			end
+			-- Damage
+			if self.DisableDefaultMeleeAttackDamageCode == false then
+				local applyDmg = DamageInfo()
+				applyDmg:SetDamage(self:VJ_GetDifficultyValue(self.MeleeAttackDamage))
+				applyDmg:SetDamageType(self.MeleeAttackDamageType)
+				//applyDmg:SetDamagePosition(self:VJ_GetNearestPointToEntity(v).MyPosition)
+				if v:IsNPC() or v:IsPlayer() then applyDmg:SetDamageForce(self:GetForward()*((applyDmg:GetDamage()+100)*70)) end
+				applyDmg:SetInflictor(self)
+				applyDmg:SetAttacker(self)
+				v:TakeDamageInfo(applyDmg, self)
+			end
+			if self.MeleeAttackSetEnemyOnFire == true then v:Ignite(self.MeleeAttackSetEnemyOnFireTime) end
+			-- Bleed Enemy
+			if self.MeleeAttackBleedEnemy == true && math.random(1, self.MeleeAttackBleedEnemyChance) == 1 && ((v:IsNPC() && (!VJ_IsHugeMonster)) or v:IsPlayer()) then
+				self:CustomOnMeleeAttack_BleedEnemy(v)
+				local tName = "timer_melee_bleedply"..v:EntIndex() -- Timer's name
+				local tDmg = self.MeleeAttackBleedEnemyDamage -- How much damage each rep does
+				timer.Create(tName, self.MeleeAttackBleedEnemyTime, self.MeleeAttackBleedEnemyReps, function()
+					if IsValid(v) && v:Health() > 0 then
+						v:TakeDamage(tDmg, self, self)
+					else -- Remove the timer if the entity is dead in attempt to remove it before the entity respawns (Essential for players)
+						timer.Remove(tName)
+					end
+				end)
+			end
+			if v:IsPlayer() then
+				-- Apply DSP
+				if self.HasMeleeAttackDSPSound == true && ((self.MeleeAttackDSPSoundUseDamage == false) or (self.MeleeAttackDSPSoundUseDamage == true && self.MeleeAttackDamage >= self.MeleeAttackDSPSoundUseDamageAmount && GetConVarNumber("vj_npc_nomeleedmgdsp") == 0)) then
+					v:SetDSP(self.MeleeAttackDSPSoundType,false)
+				end
+				v:ViewPunch(Angle(math.random(-1, 1)*self.MeleeAttackDamage, math.random(-1, 1)*self.MeleeAttackDamage, math.random(-1, 1)*self.MeleeAttackDamage))
+				-- Slow Player
+				if self.SlowPlayerOnMeleeAttack == true then
+					self:VJ_DoSlowPlayer(v, self.SlowPlayerOnMeleeAttack_WalkSpeed, self.SlowPlayerOnMeleeAttack_RunSpeed, self.SlowPlayerOnMeleeAttackTime, {PlaySound=self.HasMeleeAttackSlowPlayerSound, SoundTable=self.SoundTbl_MeleeAttackSlowPlayer, SoundLevel=self.MeleeAttackSlowPlayerSoundLevel, FadeOutTime=self.MeleeAttackSlowPlayerSoundFadeOutTime})
+					self:CustomOnMeleeAttack_SlowPlayer(v)
+				end
+			end
+			VJ_DestroyCombineTurret(self,v)
+			if !vProp then -- Only for non-props...
+				hitRegistered = true
+			end
 		end
 	end
-	if hitentity == true then
+	if hitRegistered == true then
 		self:PlaySoundSystem("MeleeAttack")
 		if self.StopMeleeAttackAfterFirstHit == true then self.AlreadyDoneMeleeAttackFirstHit = true /*self:StopMoving()*/ end
 	else
 		self:CustomOnMeleeAttack_Miss()
-		if self.MeleeAttackWorldShakeOnMiss == true then util.ScreenShake(self:GetPos(),self.MeleeAttackWorldShakeOnMissAmplitude,self.MeleeAttackWorldShakeOnMissFrequency,self.MeleeAttackWorldShakeOnMissDuration,self.MeleeAttackWorldShakeOnMissRadius) end
+		if self.MeleeAttackWorldShakeOnMiss == true then util.ScreenShake(myPos,self.MeleeAttackWorldShakeOnMissAmplitude,self.MeleeAttackWorldShakeOnMissFrequency,self.MeleeAttackWorldShakeOnMissDuration,self.MeleeAttackWorldShakeOnMissRadius) end
 		self:PlaySoundSystem("MeleeAttackMiss", {}, VJ_EmitSound)
 	end
-	//if self.VJ_IsBeingControlled == false && self.MeleeAttackAnimationFaceEnemy == true then self:FaceCertainEntity(MyEnemy,true) end
+	//if self.VJ_IsBeingControlled == false && self.MeleeAttackAnimationFaceEnemy == true then self:FaceCertainEntity(curEnemy,true) end
 	if self.AlreadyDoneFirstMeleeAttack == false && self.TimeUntilMeleeAttackDamage != false then
 		self:MeleeAttackCode_DoFinishTimers()
 	end
@@ -2584,7 +2554,7 @@ function ENT:LeapDamageCode()
 	if self.Dead == true or self.vACT_StopAttacks == true or self.Flinching == true then return end
 	if self.StopLeapAttackAfterFirstHit == true && self.AlreadyDoneLeapAttackFirstHit == true then return end
 	self:CustomOnLeapAttack_BeforeChecks()
-	local hitentity = false
+	local hitRegistered = false
 	local FindEnts = ents.FindInSphere(self:GetPos(),self.LeapAttackDamageDistance)
 	if FindEnts != nil then
 		for _,v in pairs(FindEnts) do
@@ -2601,11 +2571,11 @@ function ENT:LeapDamageCode()
 				if v:IsPlayer() then
 					v:ViewPunch(Angle(math.random(-1,1)*self.LeapAttackDamage,math.random(-1,1)*self.LeapAttackDamage,math.random(-1,1)*self.LeapAttackDamage))
 				end
-				hitentity = true
+				hitRegistered = true
 			end
 		end
 	end
- 	if hitentity == false then
+ 	if hitRegistered == false then
 		self:CustomOnLeapAttack_Miss()
 		self:PlaySoundSystem("LeapAttackDamageMiss", nil, VJ_EmitSound)
 	else
