@@ -52,3 +52,9 @@ SWEP.HasIdleAnimation			= true -- Does it have a idle animation?
 SWEP.AnimTbl_Idle				= {ACT_VM_IDLE}
 SWEP.NextIdle_Deploy			= 0.5 -- How much time until it plays the idle animation after the weapon gets deployed
 SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle animation after attacking(Primary)
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnEquip(NewOwner) -- REMOVE: Temporary fix for the BMS assassin, it should instead be implemented in the assassin itself
+	if IsValid(NewOwner) && NewOwner:GetClass() == "npc_vj_bmssec_assassin" then
+		NewOwner.AnimTbl_WeaponAttack = {ACT_RANGE_ATTACK_PISTOL}
+	end
+end
