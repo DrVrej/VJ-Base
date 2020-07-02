@@ -2808,6 +2808,8 @@ function ENT:CheckForGrenades()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:WeaponAimPoseParameters(ResetPoses) self:DoPoseParameterLooking(ResetPoses) end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoPoseParameterLooking(ResetPoses)
 	if (self.HasPoseParameterLooking == false) or (self.VJ_IsBeingControlled == false && self.DoingWeaponAttack == false) then return end
 	ResetPoses = ResetPoses or false
