@@ -998,6 +998,7 @@ ENT.NextWanderTime = 0
 ENT.TakingCoverT = 0
 ENT.NextInvestigateSoundMove = 0
 ENT.NextInvestigateSoundT = 0
+ENT.NextCallForHelpSoundT = 0
 ENT.LostEnemySoundT = 0
 ENT.NextDoAnyAttackT = 0
 ENT.NearestPointToEnemyDistance = 0
@@ -1014,9 +1015,9 @@ ENT.VJ_AddCertainEntityAsEnemy = {}
 ENT.VJ_AddCertainEntityAsFriendly = {}
 ENT.TimersToRemove = {"timer_state_reset","timer_act_seq_wait","timer_face_position","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap"}
 ENT.EntitiesToDestroyClass = {func_breakable=true,func_physbox=true,prop_door_rotating=true} // func_breakable_surf
+ENT.DefaultGibDamageTypes = {DMG_ALWAYSGIB,DMG_ENERGYBEAM,DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SONIC}
 
 -- Static values
-local DefaultGibDamageTypes = {DMG_ALWAYSGIB,DMG_ENERGYBEAM,DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SONIC}
 local NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
 local NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true,monster_scientist=true,monster_barney=true}
 local NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack=true}
@@ -4080,13 +4081,14 @@ function ENT:PlaySoundSystem(Set, CustomSd, Type)
 		end
 		return
 	elseif Set == "CallForHelp" then
-		if self.HasCallForHelpSounds == true then
+		if self.HasCallForHelpSounds == true && CurTime() > self.NextCallForHelpSoundT then
 			local sdtbl = VJ_PICK(self.SoundTbl_CallForHelp)
 			if (math.random(1, self.CallForHelpSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 				if ctbl != false then sdtbl = ctbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT = self.NextIdleSoundT + 2
 				self.CurrentCallForHelpSound = Type(self, sdtbl, self.CallForHelpSoundLevel, self:VJ_DecideSoundPitch(self.CallForHelpSoundPitch1, self.CallForHelpSoundPitch2))
+				self.NextCallForHelpSoundT = CurTime() + 2
 			end
 		end
 		return
