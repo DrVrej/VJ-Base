@@ -38,6 +38,7 @@ properties.Add("vj_pr_npc_control",{
 	Receive = function(self, length, ply) -- The action to perform upon using the property (Serverside)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
+		if !ply:Alive() then return end -- Keep the player from becoming a zombie =)
 		if ent.VJ_IsBeingControlled != true then
 			if ent:Health() > 0 then
 				local obj = ents.Create("obj_vj_npccontroller")

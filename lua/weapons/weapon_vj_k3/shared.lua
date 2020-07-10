@@ -13,8 +13,8 @@ SWEP.WorldModel					= "models/vj_weapons/w_k3.mdl"
 SWEP.HoldType 					= "ar2"
 	-- World Model ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.WorldModel_UseCustomPosition = true -- Should the gun use custom position? This can be used to fix guns that are in the crotch
-SWEP.WorldModel_CustomPositionAngle = Vector(-10,0,180)
-SWEP.WorldModel_CustomPositionOrigin = Vector(-10,-8,-61)
+SWEP.WorldModel_CustomPositionAngle = Vector(-10, 0, 180)
+SWEP.WorldModel_CustomPositionOrigin = Vector(-10, -8, -61)
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Damage				= 12 -- Damage
 SWEP.Primary.Force				= 1 -- Force applied on the object the bullet hits
