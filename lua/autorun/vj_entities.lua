@@ -61,6 +61,7 @@ VJ.AddNPCWeapon("VJ_RPG","weapon_vj_rpg")
 VJ.AddNPCWeapon("VJ_K-3","weapon_vj_k3")
 VJ.AddNPCWeapon("VJ_Crossbow","weapon_vj_crossbow")
 VJ.AddNPCWeapon("VJ_SSG-08","weapon_vj_ssg08")
+VJ.AddNPCWeapon("VJ_Crowbar","weapon_vj_crowbar")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Global Functions & Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -80,7 +81,8 @@ VJ_STATE_FREEZE = 1 -- AI Completely freezes
 VJ_STATE_ONLY_ANIMATION = 100 -- It will only play animation tasks. Movements, turning and other tasks will not play!
 
 VJ_WEP_STATE_NONE = 0 -- No state is set
-VJ_WEP_STATE_ANTI_ARMOR = 100 -- It's currently using its anti-armor weapon
+VJ_WEP_STATE_ANTI_ARMOR = 20 -- It's currently using its anti-armor weapon
+VJ_WEP_STATE_MELEE = 21 -- It's currently using its melee weapon
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if (SERVER) then
 	util.AddNetworkString("vj_music_run")
@@ -618,6 +620,7 @@ function NPC_MetaTable:VJ_DoSetEnemy(argent, stopMoving, doMinorIfActiveEnemy)
 		self:StopMoving()
 	end
 	if self.Alerted == false then
+		self.LatestEnemyDistance = self:GetPos():Distance(argent:GetPos())
 		self:DoAlert(argent)
 	end
 end

@@ -332,9 +332,12 @@ ENT.WeaponReloadAnimationDelay = 0 -- It will wait certain amount of time before
 	-- Weapons are given on spawn and the NPC will only switch to those if the requirements are met
 	-- The items that are stored in self.WeaponInventory:
 		-- Primary - Default weapon
-		-- AntiArmor - The current enemy is an armored enemy (Usually vehicle) or a boss
+		-- AntiArmor - Current enemy is an armored enemy (Usually vehicle) or a boss
+		-- Melee - Current enemy is (very close and the NPC is out of ammo) OR (in regular melee attack distance) + must have more than 25% health
 ENT.WeaponInventory_AntiArmor = false -- If true, the NPC will spawn with one of the given weapons (Will only be given the weapon if it already has another!)
 ENT.WeaponInventory_AntiArmorList = {} -- It will randomly be given one of these weapons
+ENT.WeaponInventory_Melee = false -- If true, the NPC will spawn with one of the given weapons (Will only be given the weapon if it already has another!)
+ENT.WeaponInventory_MeleeList = {} -- It will randomly be given one of these weapons
 	-- ====== Move Randomly While Firing Variables ====== --
 ENT.MoveRandomlyWhenShooting = true -- Should it move randomly when shooting?
 ENT.NextMoveRandomlyWhenShootingTime1 = 3 -- How much time until it can move randomly when shooting? | First number in math.random
@@ -941,6 +944,7 @@ ENT.Medic_NextHealT = 0
 ENT.Weapon_TimeSinceLastShot = 5
 ENT.NextMoveRandomlyWhenShootingT = 0
 ENT.NextWeaponAttackT = 0
+ENT.NextMeleeWeaponAttackT = 0
 ENT.CurrentWeaponAnimation = -1
 ENT.NextGrenadeAttackSoundT = 0
 ENT.CurrentAnim_IdleStand = 0
@@ -1080,6 +1084,15 @@ function ENT:Initialize()
 							self.WeaponInventory.AntiArmor = self:Give(antiarmor)
 						end
 						self:SelectWeapon(wep) -- Change the weapon back to the original weapon
+						wep:Equip(self)
+					end
+					if self.WeaponInventory_Melee == true then
+						local melee = VJ_PICK(self.WeaponInventory_MeleeList)
+						if melee != false && wep:GetClass() != melee then -- If the list isn't empty and it's not the current active weapon
+							self.WeaponInventory.Melee = self:Give(melee)
+						end
+						self:SelectWeapon(wep) -- Change the weapon back to the original weapon
+						wep:Equip(self)
 					end
 				elseif IsValid(self:GetCreator()) && GetConVarNumber("vj_npc_nosnpcchat") == 0 && self.Weapon_NoSpawnMenu == false then
 					self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: "..self:GetName().." needs a weapon!")
@@ -1584,7 +1597,7 @@ function ENT:DoChaseAnimation(OverrideChasing)
 	if OverrideChasing == false && (self.DisableChasingEnemy == true or self.IsGuard == true or self.RangeAttack_DisableChasingEnemy == true) then self:VJ_TASK_IDLE_STAND() return end
 	
 	-- If the enemy is not reachable
-	if (self:HasCondition(31) or self:IsUnreachable(self:GetEnemy())) && IsValid(self:GetActiveWeapon()) == true then
+	if (self:HasCondition(31) or self:IsUnreachable(self:GetEnemy())) && (IsValid(self:GetActiveWeapon()) == true && (!self:GetActiveWeapon().IsMeleeWeapon)) then
 		self:VJ_TASK_CHASE_ENEMY(true)
 		self:RememberUnreachable(self:GetEnemy(), 2)
 	else -- Is reachable, so chase the enemy!
@@ -1619,7 +1632,7 @@ function ENT:DoChangeWeapon(wep, invSwitch)
 			VJ_EmitSound(self, {"physics/metal/weapon_impact_soft1.wav","physics/metal/weapon_impact_soft2.wav","physics/metal/weapon_impact_soft3.wav"}, 70)
 			curwep = wep
 		else
-			if IsValid(curwep) && self:GetWeaponState() != VJ_WEP_STATE_ANTI_ARMOR then
+			if IsValid(curwep) && self:GetWeaponState() != VJ_WEP_STATE_ANTI_ARMOR && self:GetWeaponState() != VJ_WEP_STATE_MELEE then
 				curwep:Remove()
 			end
 			curwep = self:Give(wep)
@@ -1654,14 +1667,14 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 		-- Use rifle animations with minor edits if it's holding a handgun
 		local rifle_idle = ACT_IDLE_SMG1
 		local rifle_walk = VJ_PICK({ACT_WALK_RIFLE, VJ_SequenceToActivity(self, "walkeasy_all")})
-		if htype == "pistol" or htype == "revolver" then
+		if htype == "pistol" or htype == "revolver" or htype == "melee" or htype == "melee2" or htype == "knife" then
 			rifle_idle = VJ_SequenceToActivity(self, "idle_unarmed")
 			rifle_walk = VJ_SequenceToActivity(self, "walkunarmed_all")
 		end
 		
 		-- "Leanwall_CrouchLeft_A_idle", "Leanwall_CrouchLeft_B_idle", "Leanwall_CrouchLeft_C_idle", "Leanwall_CrouchLeft_D_idle"
 		self.WeaponAnimTranslations[ACT_COVER_LOW] 							= {ACT_COVER, "vjseq_Leanwall_CrouchLeft_A_idle", "vjseq_Leanwall_CrouchLeft_B_idle", "vjseq_Leanwall_CrouchLeft_C_idle", "vjseq_Leanwall_CrouchLeft_D_idle"}
-		if htype == "ar2" or htype == "smg" or htype == "rpg" or htype == "pistol" or htype == "revolver" then
+		if htype == "ar2" or htype == "smg" or htype == "rpg" or htype == "pistol" or htype == "revolver" or htype == "melee" or htype == "melee2" or htype == "knife" then
 			if htype == "ar2" or htype == "pistol" or htype == "revolver" then
 				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_AR2
 				self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_AR2
@@ -1672,6 +1685,11 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 				self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SMG1
 				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SMG1_LOW
 				//self.WeaponAnimTranslations[ACT_RELOAD] 					= ACT_RELOAD_SMG1 -- No need to translate
+			elseif htype == "melee" or htype == "melee2" or htype == "knife" then
+				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 				= ACT_MELEE_ATTACK1
+				self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= false -- Don't play anything!
+				//self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 		= ACT_RANGE_ATTACK_SMG1_LOW -- Not used for melee
+				//self.WeaponAnimTranslations[ACT_RELOAD] 					= ACT_RELOAD_SMG1 -- Not used for melee
 			end
 			//self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW -- No need to translate
 			
@@ -1754,6 +1772,26 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_PISTOL
 			//self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE -- No need to translate
 			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		elseif htype == "melee" or htype == "melee2" or htype == "knife" then
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_MELEE_ATTACK_SWING
+			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= false //ACT_MELEE_ATTACK_SWING_GESTURE -- Don't play anything!
+			//self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SMG1_LOW -- Not used for melee
+			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COWER
+			//self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SMG1 -- Not used for melee
+			//self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW -- Not used for melee
+			
+			self.WeaponAnimTranslations[ACT_IDLE] 							= {ACT_IDLE, ACT_IDLE, VJ_SequenceToActivity(self, "plazathreat1")}
+			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_MELEE
+			
+			self.WeaponAnimTranslations[ACT_WALK] 							= VJ_PICK({ACT_WALK, ACT_WALK_ANGRY})
+			//self.WeaponAnimTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_RIFLE -- Not used for melee
+			//self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE -- No need to translate
+			//self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE -- Not used for melee
+			
+			//self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN -- No need to translate
+			//self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE -- Not used for melee
+			//self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE -- No need to translate
+			//self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE -- Not used for melee
 		end
 	elseif self.ModelAnimationSet == 3 then -- Rebel =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 		-- handguns use a different set!
@@ -1855,6 +1893,26 @@ function ENT:SetupWeaponHoldTypeAnims(htype)
 			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= VJ_SequenceToActivity(self, "run_alert_aiming_ar2_all")
 			//self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE -- No need to translate
 			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		elseif htype == "melee" or htype == "melee2" or htype == "knife" then
+			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_MELEE_ATTACK_SWING
+			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= false -- Don't play anything!
+			//self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SMG1_LOW -- Not used for melee
+			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= {"crouchidle_panicked4", "vjseq_crouchidlehide"}
+			//self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SMG1 -- Not used for melee
+			//self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW -- Not used for melee
+			
+			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_IDLE
+			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_MELEE
+			
+			//self.WeaponAnimTranslations[ACT_WALK] 						= ACT_WALK -- No need to translate
+			//self.WeaponAnimTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_RIFLE -- Not used for melee
+			//self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE -- No need to translate
+			//self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE -- Not used for melee
+			
+			self.WeaponAnimTranslations[ACT_RUN] 							= VJ_SequenceToActivity(self, "run_all_panicked")
+			//self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE -- Not used for melee
+			//self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE -- No need to translate
+			//self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE -- Not used for melee
 		end
 	end
 end
@@ -1864,6 +1922,9 @@ function ENT:TranslateToWeaponAnim(actname)
 	if translate == nil then -- If no animation found, then just return the given activity
 		return actname
 	else -- Found an animation!
+		if istable(translate) then
+			return VJ_PICK(translate)
+		end
 		return translate
 	end
 end
@@ -2263,20 +2324,34 @@ function ENT:Think()
 		if IsValid(self.CurrentWeaponEntity) then
 			self.Weapon_TimeSinceLastShot = self.Weapon_TimeSinceLastShot + 0.1
 			-- Weapon Inventory
-			if self.IsReloadingWeapon == false && self:BusyWithActivity() == false then
-				if IsValid(ene) && IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank == true or ene.VJ_IsHugeMonster == true) && self.CurrentWeaponEntity != self.WeaponInventory.AntiArmor then
-					self:SetWeaponState(VJ_WEP_STATE_ANTI_ARMOR)
-					self:DoChangeWeapon(self.WeaponInventory.AntiArmor, true)
+			if /*self.IsReloadingWeapon == false &&*/ self:BusyWithActivity() == false then
+				if IsValid(ene) then
+					if IsValid(self.WeaponInventory.Melee) && ((self.LatestEnemyDistance < self.MeleeAttackDistance) or (self.LatestEnemyDistance < 300 && self.CurrentWeaponEntity:Clip1() <= 0)) && (self:Health() > self:GetMaxHealth() * 0.25) && self.CurrentWeaponEntity != self.WeaponInventory.Melee then
+						self.IsReloadingWeapon = false -- Since the reloading can be cut off, reset it back to false, or else it can mess up its behavior!
+						timer.Remove("timer_reload_end"..self:EntIndex())
+						self:SetWeaponState(VJ_WEP_STATE_MELEE)
+						self:DoChangeWeapon(self.WeaponInventory.Melee, true)
+					elseif self.IsReloadingWeapon == false && IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank == true or ene.VJ_IsHugeMonster == true) && self.CurrentWeaponEntity != self.WeaponInventory.AntiArmor then
+						self:SetWeaponState(VJ_WEP_STATE_ANTI_ARMOR)
+						self:DoChangeWeapon(self.WeaponInventory.AntiArmor, true)
+					end
 				end
-				if self:GetWeaponState() == VJ_WEP_STATE_ANTI_ARMOR && (!IsValid(ene) or (IsValid(ene) && ene.IsVJBaseSNPC_Tank != true && ene.VJ_IsHugeMonster != true)) then
-					self:SetWeaponState(VJ_WEP_STATE_NONE)
-					self:DoChangeWeapon(self.WeaponInventory.Primary, true)
+				if self.IsReloadingWeapon == false then
+					-- Reset weapon status from melee to primary
+					if self:GetWeaponState() == VJ_WEP_STATE_MELEE && (!IsValid(ene) or (IsValid(ene) && self.LatestEnemyDistance >= 300)) then
+						self:SetWeaponState(VJ_WEP_STATE_NONE)
+						self:DoChangeWeapon(self.WeaponInventory.Primary, true)
+					-- Reset weapon status from anti-armor to primary
+					elseif self:GetWeaponState() == VJ_WEP_STATE_ANTI_ARMOR && (!IsValid(ene) or (IsValid(ene) && ene.IsVJBaseSNPC_Tank != true && ene.VJ_IsHugeMonster != true)) then
+						self:SetWeaponState(VJ_WEP_STATE_NONE)
+						self:DoChangeWeapon(self.WeaponInventory.Primary, true)
+					end
 				end
 			end
 		end
 		
 		-- Weapon Reloading
-		if self.Dead == false && self.AllowWeaponReloading == true && self.IsReloadingWeapon == false && IsValid(self.CurrentWeaponEntity) && self.FollowPlayer_GoingAfter == false && self.ThrowingGrenade == false && self.MeleeAttacking == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) then
+		if self.Dead == false && self.AllowWeaponReloading == true && self.IsReloadingWeapon == false && (IsValid(self.CurrentWeaponEntity) && (!self.CurrentWeaponEntity.IsMeleeWeapon)) && self.FollowPlayer_GoingAfter == false && self.ThrowingGrenade == false && self.MeleeAttacking == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) then
 			local teshnami = IsValid(ene) -- Teshnami ooni, gam voch?
 			if (self.VJ_IsBeingControlled == false && ((teshnami == false && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1() && self.TimeSinceLastSeenEnemy > math.random(3,8) && !self:IsMoving()) or (teshnami == true && self.CurrentWeaponEntity:Clip1() <= 0))) or (self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_RELOAD) && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1()) then
 				self.DoingWeaponAttack = false
@@ -2470,7 +2545,7 @@ function ENT:Think()
 			self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene)
 
 			-- Melee Attack --------------------------------------------------------------------------------------------------------------------------------------------
-			if self.HasMeleeAttack == true && self:CanDoCertainAttack("MeleeAttack") == true && ((self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (self.VJ_IsBeingControlled == false && (self.NearestPointToEnemyDistance < self.MeleeAttackDistance && ene:Visible(self)) && (self:GetForward():Dot((ene:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))))) then
+			if self.HasMeleeAttack == true && self:CanDoCertainAttack("MeleeAttack") == true && (!IsValid(self.CurrentWeaponEntity) or (IsValid(self.CurrentWeaponEntity) && (!self.CurrentWeaponEntity.IsMeleeWeapon))) && ((self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (self.VJ_IsBeingControlled == false && (self.NearestPointToEnemyDistance < self.MeleeAttackDistance && ene:Visible(self)) && (self:GetForward():Dot((ene:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))))) then
 				self.MeleeAttacking = true
 				self.IsAbleToMeleeAttack = false
 				self.AlreadyDoneMeleeAttackFirstHit = false
@@ -2859,7 +2934,9 @@ end
 function ENT:DoWeaponAttackMovementCode(override, type)
 	override = override or false -- Overrides some of the checks, only used for the internal task system!
 	type = type or 0 -- This is used alone with override. | 0 = Run, 1 = Walk
-	if self.HasShootWhileMoving == true then 
+	if (self.CurrentWeaponEntity.IsMeleeWeapon) then
+		self.DoingWeaponAttack = false
+	elseif self.HasShootWhileMoving == true then
 		if self:Visible(self:GetEnemy()) && self:IsAbleToShootWeapon(true, false) == true && ((self:IsMoving() && (self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true)) or (override == true)) then
 			if (override == true && type == 0) or (self.CurrentSchedule != nil && self.CurrentSchedule.IsMovingTask_Run == true) then
 				local anim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_ShootWhileMovingRun))
@@ -2895,7 +2972,7 @@ function ENT:IsAbleToShootWeapon(CheckDistance, CheckDistanceOnly, EnemyDistance
 	local havechecks = false
 	
 	if self.VJ_IsBeingControlled == true then CheckDistance = false CheckDistanceOnly = false end
-	if CheckDistance == true && CurTime() > self.NextWeaponAttackT && EnemyDistance < self.Weapon_FiringDistanceFar && EnemyDistance > self.Weapon_FiringDistanceClose then
+	if CheckDistance == true && CurTime() > self.NextWeaponAttackT && EnemyDistance < self.Weapon_FiringDistanceFar && ((EnemyDistance > self.Weapon_FiringDistanceClose) or self.CurrentWeaponEntity.IsMeleeWeapon) then
 		havedist = true
 	end
 	if CheckDistanceOnly == true then
@@ -2905,7 +2982,7 @@ function ENT:IsAbleToShootWeapon(CheckDistance, CheckDistanceOnly, EnemyDistance
 			return false
 		end
 	end
-	if self.IsReloadingWeapon == false && IsValid(self:GetActiveWeapon()) && self.MeleeAttacking == false && self.ThrowingGrenade == false && self.vACT_StopAttacks == false && self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) > self.MeleeAttackDistance then
+	if IsValid(self:GetActiveWeapon()) && self.ThrowingGrenade == false && self.vACT_StopAttacks == false && (self:GetActiveWeapon().IsMeleeWeapon) or (self.IsReloadingWeapon == false && self.MeleeAttacking == false && self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) > self.MeleeAttackDistance) then
 		havechecks = true
 		if CheckDistance == false then return true end
 	end
@@ -2954,7 +3031,7 @@ function ENT:SelectSchedule(iNPCState)
 			local dontshoot = false
 			
 			-- Back away from the enemy if it's to close
-			if self.HasWeaponBackAway == true && IsValid(wep) && enedist <= self.WeaponBackAway_Distance && CurTime() > self.TakingCoverT && CurTime() > self.NextChaseTime && self.MeleeAttacking == false && self.FollowingPlayer == false && self.ThrowingGrenade == false && self.VJ_PlayingSequence == false && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos()+self:OBBCenter()),enepos_eye) == false then
+			if self.HasWeaponBackAway == true && (IsValid(wep) && (!wep.IsMeleeWeapon)) && enedist <= self.WeaponBackAway_Distance && CurTime() > self.TakingCoverT && CurTime() > self.NextChaseTime && self.MeleeAttacking == false && self.FollowingPlayer == false && self.ThrowingGrenade == false && self.VJ_PlayingSequence == false && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos()+self:OBBCenter()),enepos_eye) == false then
 				local checkdist = self:VJ_CheckAllFourSides(200)
 				local randmove = {}
 				if checkdist.Backward == true then randmove[#randmove+1] = "Backward" end
@@ -2980,7 +3057,7 @@ function ENT:SelectSchedule(iNPCState)
 					//self:VJ_ForwardIsHidingZone(self:EyePos(), enepos_eye, true, {SpawnTestCube=true})
 					-- If I can't see the enemy then either wait for it or charge at the enemy
 					if self:VJ_ForwardIsHidingZone(self:EyePos(), enepos_eye, true) == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() + self:OBBCenter()) + self:GetUp()*30, enepos_eye + self:GetUp()*30, true) /*or self:VJ_ForwardIsHidingZone(util.VJ_GetWeaponPos(self),enepos_eye) == true*/ /*or (!self:Visible(ene))*/ then -- Chase enemy or wait for enemy if hiding
-						if self.WaitForEnemyToComeOut == true && self.AllowToDo_WaitForEnemyToComeOut == true && self.IsReloadingWeapon == false && self.Weapon_TimeSinceLastShot <= 5 && self.WaitingForEnemyToComeOut == false && (enedist_eye < self.Weapon_FiringDistanceFar) && (enedist_eye > self.WaitForEnemyToComeOutDistance) then
+						if self.WaitForEnemyToComeOut == true && (!wep.IsMeleeWeapon) && self.AllowToDo_WaitForEnemyToComeOut == true && self.IsReloadingWeapon == false && self.Weapon_TimeSinceLastShot <= 5 && self.WaitingForEnemyToComeOut == false && (enedist_eye < self.Weapon_FiringDistanceFar) && (enedist_eye > self.WaitForEnemyToComeOutDistance) then
 						-- Wait for the enemy to come out
 							self.WaitingForEnemyToComeOut = true
 							if self.HasLostWeaponSightAnimation == true then
@@ -3008,92 +3085,105 @@ function ENT:SelectSchedule(iNPCState)
 							if covered_npc == false or (IsValid(covertr.Entity) && (covertr.Entity:IsNPC() or covertr.Entity:IsPlayer())) then
 								covered_isobj = false
 							end
-							
-							-- If ally in line of fire, then move
-							if covered_isobj == false && self.DoingWeaponAttack_Standing == true && CurTime() > self.TakingCoverT && IsValid(guncovertr.Entity) && guncovertr.Entity:IsNPC() && guncovertr.Entity != self && (self:Disposition(guncovertr.Entity) == D_LI or self:Disposition(guncovertr.Entity) == D_NU) && guncovertr.HitPos:Distance(guncovertr.StartPos) <= 3000 then
-								local checkdist = self:VJ_CheckAllFourSides(40)
-								local randmove = {}
-								if checkdist.Right == true then randmove[#randmove+1] = "Right" end
-								if checkdist.Left == true then randmove[#randmove+1] = "Left" end
-								local pickmove = VJ_PICK(randmove)
-								if pickmove == "Right" then self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(30,40)) end
-								if pickmove == "Left" then self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-40,-30)) end
-								if pickmove == "Right" or pickmove == "Left" then
-									self:StopMoving()
-									self.NextChaseTime = CurTime() + 1
-									self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+							if !wep.IsMeleeWeapon then
+								-- If ally in line of fire, then move
+								if covered_isobj == false && self.DoingWeaponAttack_Standing == true && CurTime() > self.TakingCoverT && IsValid(guncovertr.Entity) && guncovertr.Entity:IsNPC() && guncovertr.Entity != self && (self:Disposition(guncovertr.Entity) == D_LI or self:Disposition(guncovertr.Entity) == D_NU) && guncovertr.HitPos:Distance(guncovertr.StartPos) <= 3000 then
+									local checkdist = self:VJ_CheckAllFourSides(40)
+									local randmove = {}
+									if checkdist.Right == true then randmove[#randmove+1] = "Right" end
+									if checkdist.Left == true then randmove[#randmove+1] = "Left" end
+									local pickmove = VJ_PICK(randmove)
+									if pickmove == "Right" then self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(30,40)) end
+									if pickmove == "Left" then self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-40,-30)) end
+									if pickmove == "Right" or pickmove == "Left" then
+										self:StopMoving()
+										self.NextChaseTime = CurTime() + 1
+										self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+									end
 								end
-							end
-							
-							-- If the NPC is behind cover...
-							if covered_npc == true then
-								self.WeaponUseEnemyEyePos = true -- Make the bullet direction go towards the head of the enemy
-								if CurTime() < self.TakingCoverT then dontattack = true end -- Behind cover and is taking cover, don't fire!
 								
-								if dontattack == false && CurTime() > self.NextMoveOnGunCoveredT && ((covertr.HitPos:Distance(self:GetPos()) > 150 && covered_isobj == true) or (covered_wep == true && !guncovertr.Entity:IsNPC() && !guncovertr.Entity:IsPlayer())) then
-									local calc;
-									local enepos;
-									if IsValid(covertr.Entity) then
-										calc = self:VJ_GetNearestPointToEntity(covertr.Entity, true)
-										enepos = calc.EnemyPosition - self:GetForward()*15
-									else
-										calc = self:VJ_GetNearestPointToVector(covertr.HitPos, true)
-										enepos = calc.PointPosition - self:GetForward()*15
-									end
-									if calc.MyPosition:Distance(enepos) <= 1000 then
-										self:SetLastPosition(enepos)
-										//VJ_CreateTestObject(enepos, self:GetAngles(), Color(0,255,255))
-										local vsched = ai_vj_schedule.New("vj_goto_cover")
-										vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-										vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-										vsched.IsMovingTask = true
-										vsched.ConstantlyFaceEnemy = true
-										vsched.StopScheduleIfNotMoving_Any = true
-										local coveranim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_MoveToCover))
-										if VJ_AnimationExists(self, coveranim) == true then
-											self:SetMovementActivity(coveranim)
+								-- If the NPC is behind cover...
+								if covered_npc == true then
+									self.WeaponUseEnemyEyePos = true -- Make the bullet direction go towards the head of the enemy
+									if CurTime() < self.TakingCoverT then dontattack = true end -- Behind cover and is taking cover, don't fire!
+									
+									if dontattack == false && CurTime() > self.NextMoveOnGunCoveredT && ((covertr.HitPos:Distance(self:GetPos()) > 150 && covered_isobj == true) or (covered_wep == true && !guncovertr.Entity:IsNPC() && !guncovertr.Entity:IsPlayer())) then
+										local calc;
+										local enepos;
+										if IsValid(covertr.Entity) then
+											calc = self:VJ_GetNearestPointToEntity(covertr.Entity, true)
+											enepos = calc.EnemyPosition - self:GetForward()*15
 										else
-											vsched.CanShootWhenMoving = true
-											vsched.IsMovingTask_Run = true
+											calc = self:VJ_GetNearestPointToVector(covertr.HitPos, true)
+											enepos = calc.PointPosition - self:GetForward()*15
 										end
-										self:StartSchedule(vsched)
-										//self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+										if calc.MyPosition:Distance(enepos) <= 1000 then
+											self:SetLastPosition(enepos)
+											//VJ_CreateTestObject(enepos, self:GetAngles(), Color(0,255,255))
+											local vsched = ai_vj_schedule.New("vj_goto_cover")
+											vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
+											vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+											vsched.IsMovingTask = true
+											vsched.ConstantlyFaceEnemy = true
+											vsched.StopScheduleIfNotMoving_Any = true
+											local coveranim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_MoveToCover))
+											if VJ_AnimationExists(self, coveranim) == true then
+												self:SetMovementActivity(coveranim)
+											else
+												vsched.CanShootWhenMoving = true
+												vsched.IsMovingTask_Run = true
+											end
+											self:StartSchedule(vsched)
+											//self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+										end
+										self.NextMoveOnGunCoveredT = CurTime() + 2
 									end
-									self.NextMoveOnGunCoveredT = CurTime() + 2
+								else -- NPC not covered
+									self.WeaponUseEnemyEyePos = false -- Make the bullet direction go towards the center of the enemy rather then its head
 								end
-							else -- NPC not covered
-								self.WeaponUseEnemyEyePos = false -- Make the bullet direction go towards the center of the enemy rather then its head
 							end
 							
 							if dontattack == false && CurTime() > self.NextWeaponAttackT /*&& self.DoingWeaponAttack == false*/ then
-								-- If the current animation is already a firing animation, then imply just tell the base It's already firing and don't restart the animation
-								if VJ_IsCurrentAnimation(self, self:TranslateToWeaponAnim(self.CurrentWeaponAnimation)) == true then
-									self.DoingWeaponAttack = true
-									self.DoingWeaponAttack_Standing = true
-								-- If the current activity isn't the last weapon animation and it's not a transition, then continue
-								elseif self:GetActivity() != self.CurrentWeaponAnimation && self:GetActivity() != ACT_TRANSITION then
+								if (wep.IsMeleeWeapon) then -- Melee Only
 									self:CustomOnWeaponAttack()
-									self.WaitingForEnemyToComeOut = false
-									self.Weapon_TimeSinceLastShot = 0
-									//self.NextMoveRandomlyWhenShootingT = CurTime() + 2
-									local resultanim;
-									local anim_crouch = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponAttackCrouch))
-									if self.CanCrouchOnWeaponAttack == true && covered_npc == false && covered_wep == false && enedist_eye > 500 && VJ_AnimationExists(self, anim_crouch) == true && ((math.random(1, self.CanCrouchOnWeaponAttackChance) == 1) or (CurTime() <= self.Weapon_DoingCrouchAttackT)) && self:VJ_ForwardIsHidingZone(wep:GetNWVector("VJ_CurBulletPos") + self:GetUp()*-18, enepos_eye, false) == false then
-										resultanim = anim_crouch
-										self.Weapon_DoingCrouchAttackT = CurTime() + 2 -- Asiga bedke vor vestah elank yed votgi cheler hemen
-									else -- Not crouching
-										resultanim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponAttack))
-									end
-									if VJ_AnimationExists(self, resultanim) == true && VJ_IsCurrentAnimation(self, resultanim) == false then
+									local resultanim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponAttack))
+									if CurTime() > self.NextMeleeWeaponAttackT && VJ_AnimationExists(self, resultanim) == true /*&& VJ_IsCurrentAnimation(self, resultanim) == false*/ then
+										local animlength = VJ_GetSequenceDuration(self, resultanim)
+										wep.NPC_NextPrimaryFire = animlength -- Make melee weapons dynamically change the next primary fire
+										self.NextMeleeWeaponAttackT = CurTime() + animlength
 										self.CurrentWeaponAnimation = resultanim
-										self:VJ_ACT_PLAYACTIVITY(resultanim, false, 0, true)
+										self:VJ_ACT_PLAYACTIVITY(resultanim, true, false, true)
+									end
+								else -- Regular weapons
+									-- If the current animation is already a firing animation, then imply just tell the base It's already firing and don't restart the animation
+									if VJ_IsCurrentAnimation(self, self:TranslateToWeaponAnim(self.CurrentWeaponAnimation)) == true then
 										self.DoingWeaponAttack = true
 										self.DoingWeaponAttack_Standing = true
+									-- If the current activity isn't the last weapon animation and it's not a transition, then continue
+									elseif self:GetActivity() != self.CurrentWeaponAnimation && self:GetActivity() != ACT_TRANSITION then
+										self:CustomOnWeaponAttack()
+										self.WaitingForEnemyToComeOut = false
+										self.Weapon_TimeSinceLastShot = 0
+										//self.NextMoveRandomlyWhenShootingT = CurTime() + 2
+										local resultanim;
+										local anim_crouch = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponAttackCrouch))
+										if self.CanCrouchOnWeaponAttack == true && covered_npc == false && covered_wep == false && enedist_eye > 500 && VJ_AnimationExists(self, anim_crouch) == true && ((math.random(1, self.CanCrouchOnWeaponAttackChance) == 1) or (CurTime() <= self.Weapon_DoingCrouchAttackT)) && self:VJ_ForwardIsHidingZone(wep:GetNWVector("VJ_CurBulletPos") + self:GetUp()*-18, enepos_eye, false) == false then
+											resultanim = anim_crouch
+											self.Weapon_DoingCrouchAttackT = CurTime() + 2 -- Asiga bedke vor vestah elank yed votgi cheler hemen
+										else -- Not crouching
+											resultanim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponAttack))
+										end
+										if VJ_AnimationExists(self, resultanim) == true && VJ_IsCurrentAnimation(self, resultanim) == false then
+											self.CurrentWeaponAnimation = resultanim
+											self:VJ_ACT_PLAYACTIVITY(resultanim, false, 0, true)
+											self.DoingWeaponAttack = true
+											self.DoingWeaponAttack_Standing = true
+										end
 									end
 								end
 							end
 							-- Move randomly when shooting
-							if covered_npc == false && self.IsGuard != true && self.FollowingPlayer == false && self.MoveRandomlyWhenShooting == true && self.DoingWeaponAttack == true && self.DoingWeaponAttack_Standing == true && CurTime() > self.NextMoveRandomlyWhenShootingT && (CurTime() - self.TimeSinceEnemyAcquired) > 2 && (enedist_eye < (self.Weapon_FiringDistanceFar / 1.25)) && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),enepos_eye) == false && self:CustomOnMoveRandomlyWhenShooting() != false then
+							if covered_npc == false && self.IsGuard != true && self.FollowingPlayer == false && self.MoveRandomlyWhenShooting == true && (!wep.IsMeleeWeapon) && (!wep.NPC_StandingOnly) && self.DoingWeaponAttack == true && self.DoingWeaponAttack_Standing == true && CurTime() > self.NextMoveRandomlyWhenShootingT && (CurTime() - self.TimeSinceEnemyAcquired) > 2 && (enedist_eye < (self.Weapon_FiringDistanceFar / 1.25)) && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),enepos_eye) == false && self:CustomOnMoveRandomlyWhenShooting() != false then
 								local randpos = math.random(150,400)
 								local checkdist = self:VJ_CheckAllFourSides(randpos)
 								local randmove = {}
@@ -3669,6 +3759,7 @@ function ENT:OnTakeDamage(dmginfo)
 		self:PlaySoundSystem("Pain")
 
 		if self.MoveOrHideOnDamageByEnemy == true && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && IsValid(self:GetEnemy()) && CurTime() > self.NextMoveOrHideOnDamageByEnemyT && self:EyePos():Distance(self:GetEnemy():EyePos()) < self.Weapon_FiringDistanceFar && IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.ThrowingGrenade == false && CurTime() > self.TakingCoverT && self:Visible(self:GetEnemy()) && self.VJ_IsBeingControlled == false && self.MeleeAttacking == false && self.IsReloadingWeapon == false then
+			local wep = self:GetActiveWeapon()
 			if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == true && self.MoveOrHideOnDamageByEnemy_OnlyMove == false then			
 				//self:VJ_ACT_TAKE_COVER(self.AnimTbl_MoveOrHideOnDamageByEnemy,false,math.Rand(self.MoveOrHideOnDamageByEnemy_HideTime.a, self.MoveOrHideOnDamageByEnemy_HideTime.b),false)
 				local anim = VJ_PICK(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_TakingCover)))
@@ -3679,7 +3770,7 @@ function ENT:OnTakeDamage(dmginfo)
 					self.TakingCoverT = CurTime() + hidet
 				end
 				self.NextMoveOrHideOnDamageByEnemyT = CurTime() + math.random(self.NextMoveOrHideOnDamageByEnemy1,self.NextMoveOrHideOnDamageByEnemy2)
-			elseif !self:IsMoving() then
+			elseif !self:IsMoving() && (!IsValid(wep) or (IsValid(wep) && !wep.IsMeleeWeapon)) then
 				self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
 				self.NextMoveOrHideOnDamageByEnemyT = CurTime() + math.random(self.NextMoveOrHideOnDamageByEnemy1,self.NextMoveOrHideOnDamageByEnemy2)
 			end
@@ -4018,7 +4109,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 			v:CustomOnAllyDeath(self)
 			v:PlaySoundSystem("AllyDeath")
 			
-			if self.AlertFriendsOnDeath == true && noalert == true && !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath == true && it != self.AlertFriendsOnDeathLimit && self:GetPos():Distance(v:GetPos()) < self.AlertFriendsOnDeathDistance then
+			if self.AlertFriendsOnDeath == true && noalert == true && !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath == true && it != self.AlertFriendsOnDeathLimit && self:GetPos():Distance(v:GetPos()) < self.AlertFriendsOnDeathDistance && (!IsValid(v:GetActiveWeapon()) or (IsValid(v:GetActiveWeapon() && !(v:GetActiveWeapon().IsMeleeWeapon)))) then
 				it = it + 1
 				v:FaceCertainEntity(self,false)
 				v:VJ_ACT_PLAYACTIVITY(VJ_PICK(v.AnimTbl_AlertFriendsOnDeath),false,0,false)
