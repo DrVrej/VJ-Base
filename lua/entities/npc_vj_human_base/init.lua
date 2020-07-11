@@ -2070,7 +2070,7 @@ function ENT:DoMedicCode_Reset()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoMedicCode()
-	if self.IsMedicSNPC == false then return end
+	if self.IsMedicSNPC == false or self.NoWeapon_UseScaredBehavior_Active == true then return end
 	if self.Medic_IsHealingAlly == false then
 		if CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled == true then return end
 		for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
@@ -2993,7 +2993,7 @@ end
 function ENT:SelectSchedule(iNPCState)
 	if self.VJ_IsBeingControlled == true then return end
 	self:CustomOnSchedule()
-	if self.DisableSelectSchedule == true then return end
+	if self.DisableSelectSchedule == true or self.Dead == true then return end
 	
 	if !IsValid(self:GetEnemy()) then -- Idle Behavior --
 		if self.ThrowingGrenade == false then
@@ -3018,11 +3018,12 @@ function ENT:SelectSchedule(iNPCState)
 				if self.FollowingPlayer == false then
 					if self:Visible(ene) then
 						self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
+						return
 					else
 						self:DoIdleAnimation(2)
 					end
 				end
-			else -- No scared, return back to normal
+			else -- Not scared, return back to normal
 				self.NoWeapon_UseScaredBehavior_Active = false
 			end
 			
