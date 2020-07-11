@@ -2637,7 +2637,7 @@ end
 function ENT:SelectSchedule(iNPCState)
 	if self.VJ_IsBeingControlled == true then return end
 	self:CustomOnSchedule()
-	if self.DisableSelectSchedule == true then return end
+	if self.DisableSelectSchedule == true or self.Dead == true then return end
 	
 	local ene = self:GetEnemy()
 	if IsValid(ene) && (ene:GetPos():Distance(self:GetPos()) > self.SightDistance) then -- If the enemy is out of reach, then reset the enemy!
