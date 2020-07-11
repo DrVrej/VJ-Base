@@ -333,7 +333,7 @@ ENT.WeaponReloadAnimationDelay = 0 -- It will wait certain amount of time before
 	-- The items that are stored in self.WeaponInventory:
 		-- Primary - Default weapon
 		-- AntiArmor - Current enemy is an armored enemy (Usually vehicle) or a boss
-		-- Melee - Current enemy is (very close and the NPC is out of ammo) OR (in regular melee attack distance) + must have more than 25% health
+		-- Melee - Current enemy is (very close and the NPC is out of ammo) OR (in regular melee attack distance) + NPC must have more than 25% health
 ENT.WeaponInventory_AntiArmor = false -- If true, the NPC will spawn with one of the given weapons (Will only be given the weapon if it already has another!)
 ENT.WeaponInventory_AntiArmorList = {} -- It will randomly be given one of these weapons
 ENT.WeaponInventory_Melee = false -- If true, the NPC will spawn with one of the given weapons (Will only be given the weapon if it already has another!)
@@ -3151,6 +3151,7 @@ function ENT:SelectSchedule(iNPCState)
 									if CurTime() > self.NextMeleeWeaponAttackT && VJ_AnimationExists(self, resultanim) == true /*&& VJ_IsCurrentAnimation(self, resultanim) == false*/ then
 										local animlength = VJ_GetSequenceDuration(self, resultanim)
 										wep.NPC_NextPrimaryFire = animlength -- Make melee weapons dynamically change the next primary fire
+										VJ_EmitSound(self, wep.NPC_BeforeFireSound, wep.NPC_BeforeFireSoundLevel, math.Rand(wep.NPC_BeforeFireSoundPitch.a, wep.NPC_BeforeFireSoundPitch.b))
 										self.NextMeleeWeaponAttackT = CurTime() + animlength
 										self.CurrentWeaponAnimation = resultanim
 										self:VJ_ACT_PLAYACTIVITY(resultanim, true, false, true)
@@ -3175,6 +3176,7 @@ function ENT:SelectSchedule(iNPCState)
 											resultanim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponAttack))
 										end
 										if VJ_AnimationExists(self, resultanim) == true && VJ_IsCurrentAnimation(self, resultanim) == false then
+											VJ_EmitSound(self, wep.NPC_BeforeFireSound, wep.NPC_BeforeFireSoundLevel, math.Rand(wep.NPC_BeforeFireSoundPitch.a, wep.NPC_BeforeFireSoundPitch.b))
 											self.CurrentWeaponAnimation = resultanim
 											self:VJ_ACT_PLAYACTIVITY(resultanim, false, 0, true)
 											self.DoingWeaponAttack = true

@@ -56,6 +56,11 @@ SWEP.NPC_FiringDistanceMax = 100000 -- Maximum firing distance | Clamped at the 
 SWEP.NPC_HasReloadSound = true -- Should it play a sound when the base detects the SNPC playing a reload animation?
 SWEP.NPC_ReloadSound = {} -- Sounds it plays when the base detects the SNPC playing a reload animation
 SWEP.NPC_ReloadSoundLevel = 60 -- How far does the sound go?
+	-- ====== Before Fire Sound Variables ====== --
+	-- NOTE: This only works with VJ Human SNPCs!
+SWEP.NPC_BeforeFireSound = {} -- Plays a sound before the firing code is ran, usually in the beginning of the animation
+SWEP.NPC_BeforeFireSoundLevel = 70 -- How far does the sound go?
+SWEP.NPC_BeforeFireSoundPitch = VJ_Set(90,100) -- How much time until the secondary fire can be used again?
 	-- ====== Extra Firing Sound Variables ====== --
 SWEP.NPC_ExtraFireSound = {} -- Plays an extra sound after it fires (Example: Bolt action sound)
 SWEP.NPC_ExtraFireSoundTime = 0.4 -- How much time until it plays the sound (After Firing)?
@@ -168,6 +173,8 @@ function SWEP:CustomOnReload() end
 function SWEP:CustomOnPrimaryAttack_BeforeShoot() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_AfterShoot() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnPrimaryAttack_MeleeHit(argent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BulletCallback(attacker,tr,dmginfo) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -525,6 +532,7 @@ function SWEP:PrimaryAttack(UseAlt)
 						v:ViewPunch(Angle(math.random(-1,1)*10, math.random(-1,1)*10, math.random(-1,1)*10))
 					end
 					VJ_DestroyCombineTurret(owner, v)
+					self:CustomOnPrimaryAttack_MeleeHit(v)
 					hitentity = true
 				end
 			end

@@ -12,7 +12,6 @@ SWEP.MadeForNPCsOnly = true -- Is this weapon meant to be for NPCs only?
 SWEP.NPC_NextPrimaryFire = 1 -- Next time it can use primary fire
 SWEP.NPC_TimeUntilFire = 0.5 -- How much time until the bullet/projectile is fired?
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.ViewModel = "models/weapons/c_crowbar.mdl"
 SWEP.WorldModel = "models/weapons/w_crowbar.mdl"
 SWEP.HoldType = "melee"
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
