@@ -2472,7 +2472,7 @@ function ENT:Think()
 					elseif self.VJ_IsBeingControlled == false then
 						local chance = self.ThrowGrenadeChance
 						local finalc = math.random(1,chance)
-						if chance != 1 && chance != 2 && chance != 3 && (ene.IsVJBaseSNPC_Tank or !self:Visible(ene)) then -- Shede misd meg gela!
+						if chance != 1 && chance != 2 && chance != 3 && (ene.IsVJBaseSNPC_Tank or !self:Visible(ene)) then -- Shede mishd meg gela!
 							finalc = math.random(1,math.floor(chance / 2))
 						end
 						if finalc == 1 && self.LatestEnemyDistance < self.GrenadeAttackThrowDistance && self.LatestEnemyDistance > self.GrenadeAttackThrowDistanceClose then
@@ -2752,7 +2752,7 @@ function ENT:ThrowGrenadeCode(CustomEnt, NoOwner)
 		self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, 0.2)
 		self.PlayingAttackAnimation = true
 		timer.Create("timer_act_playingattack"..self:EntIndex(), self.CurrentAttackAnimationDuration, 1, function() self.PlayingAttackAnimation = false end)
-		self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation, self.GrenadeAttackAnimationStopAttacks, self:DecideAnimationLength(self.CurrentAttackAnimation,self.GrenadeAttackAnimationStopAttacksTime), true, self.GrenadeAttackAnimationDelay, {PlayBackRateCalculated=true})
+		self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation, self.GrenadeAttackAnimationStopAttacks, self:DecideAnimationLength(self.CurrentAttackAnimation, self.GrenadeAttackAnimationStopAttacksTime), true, self.GrenadeAttackAnimationDelay, {PlayBackRateCalculated=true})
 	end
 
 	if IsValid(CustomEnt) then -- Custom nernagner gamal nernagner vor yete bidi nede
@@ -2856,7 +2856,7 @@ function ENT:CheckForGrenades()
 	for _,v in pairs(ents.FindInSphere(self:GetPos(), self.RunFromGrenadeDistance)) do
 		local allyGren = false -- Don't throw back if it's an ally grenade
 		if self.EntitiesToRunFrom[v:GetClass()] && self:Visible(v) then
-			if IsValid(v:GetOwner()) && v:GetOwner().IsVJBaseSNPC == true && self:Disposition(v:GetOwner()) == D_LI then
+			if IsValid(v:GetOwner()) && v:GetOwner().IsVJBaseSNPC == true && ((self:GetClass() == v:GetOwner():GetClass()) or (self:Disposition(v:GetOwner()) == D_LI)) then
 				allyGren = true
 			end
 			if allyGren == false then
@@ -2982,7 +2982,7 @@ function ENT:IsAbleToShootWeapon(CheckDistance, CheckDistanceOnly, EnemyDistance
 			return false
 		end
 	end
-	if IsValid(self:GetActiveWeapon()) && self.ThrowingGrenade == false && self.vACT_StopAttacks == false && (self:GetActiveWeapon().IsMeleeWeapon) or (self.IsReloadingWeapon == false && self.MeleeAttacking == false && self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) > self.MeleeAttackDistance) then
+	if IsValid(self:GetActiveWeapon()) && self.ThrowingGrenade == false && self:BusyWithActivity() == false && ((self:GetActiveWeapon().IsMeleeWeapon) or (self.IsReloadingWeapon == false && self.MeleeAttacking == false && self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) > self.MeleeAttackDistance)) then
 		havechecks = true
 		if CheckDistance == false then return true end
 	end
