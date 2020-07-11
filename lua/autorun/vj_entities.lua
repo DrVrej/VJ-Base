@@ -193,7 +193,7 @@ function VJ_CreateSound(argent,sound,soundlevel,soundpitch,stoplatestsound,sound
 	return soundid
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_EmitSound(argent,sound,soundlevel,soundpitch,volume,channel)
+function VJ_EmitSound(argent, sound, soundlevel, soundpitch, volume, channel)
 	local sd = VJ_PICK(sound)
 	if sd == false then return end
 	argent:EmitSound(sd,soundlevel,soundpitch,volume,channel)
