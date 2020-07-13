@@ -1863,7 +1863,7 @@ function ENT:Think()
 			end
 		end
 		local blockingEnt = self:GetBlockingEntity()
-		if self.CanOpenDoors and IsValid(blockingEnt) && (blockingEnt:GetClass() == "func_door" or blockingEnt:GetClass() == "func_door_rotating") && (blockingEnt:HasSpawnFlags(256) or blockingEnt:HasSpawnFlags(1024)) && !blockingEnt:HasSpawnFlags(512) then
+		if self.CanOpenDoors && IsValid(blockingEnt) && (blockingEnt:GetClass() == "func_door" or blockingEnt:GetClass() == "func_door_rotating") && (blockingEnt:HasSpawnFlags(256) or blockingEnt:HasSpawnFlags(1024)) && !blockingEnt:HasSpawnFlags(512) then
 			//self:SetSaveValue("m_flMoveWaitFinished", 1)
 			blockingEnt:Fire("Open")
 		end
