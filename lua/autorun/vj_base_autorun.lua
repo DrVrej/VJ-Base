@@ -85,33 +85,49 @@ net.Receive("VJSay", function(len, pl)
 	end
 end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Outdated GMod Version Check ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+if SERVER && !isfunction(FindMetaTable("NPC").SetIdealYawAndUpdate) then
+	timer.Simple(1, function()
+		if !VJ_WARN_GModOutdated then
+			VJ_WARN_GModOutdated = true
+			timer.Create("VJ_WARN_GModOutdated", 2, 0, function()
+				PrintMessage(HUD_PRINTTALK, "--- Outdated version of Garry's Mod detected! ---")
+				PrintMessage(HUD_PRINTTALK, "Opt out of the Chromium branch!")
+			end)
+		end
+	end)
+end
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ SLV Base Check ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if (SLVBase) then
-	timer.Simple(1,function()
-		if not VJCONFLICT then
+	timer.Simple(1, function()
+		if !VJ_WARN_SLVBase then
 			if (CLIENT) then
 				chat.AddText(Color(255,100,0),"Confliction Detected!",
 				Color(0,255,0)," VJ Base ",
 				Color(0,200,200),"is being overridden by another addon!")
 				chat.AddText(Color(0,200,200),"Incompatible Addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
 
-				VJCONFLICT = vgui.Create("DFrame")
-				VJCONFLICT:SetTitle("ERROR!")
-				VJCONFLICT:SetSize(790,560)
-				VJCONFLICT:SetPos((ScrW()-VJCONFLICT:GetWide())/2,(ScrH()-VJCONFLICT:GetTall())/2)
-				VJCONFLICT:MakePopup()
-				VJCONFLICT.Paint = function()
-					draw.RoundedBox(8,0,0,VJCONFLICT:GetWide(),VJCONFLICT:GetTall(),Color(200,0,0,150))
+				VJ_WARN_SLVBase = vgui.Create("DFrame")
+				VJ_WARN_SLVBase:SetTitle("ERROR!")
+				VJ_WARN_SLVBase:SetSize(790,560)
+				VJ_WARN_SLVBase:SetPos((ScrW()-VJ_WARN_SLVBase:GetWide())/2, (ScrH()-VJ_WARN_SLVBase:GetTall())/2)
+				VJ_WARN_SLVBase:MakePopup()
+				VJ_WARN_SLVBase.Paint = function()
+					draw.RoundedBox(8, 0, 0, VJ_WARN_SLVBase:GetWide(), VJ_WARN_SLVBase:GetTall(), Color(200,0,0,150))
 				end
 
-				local VJURL = vgui.Create("DHTML",VJCONFLICT)
-				VJURL:SetPos(VJCONFLICT:GetWide()*0.005, VJCONFLICT:GetTall()*0.03)
+				local VJURL = vgui.Create("DHTML", VJ_WARN_SLVBase)
+				VJURL:SetPos(VJ_WARN_SLVBase:GetWide()*0.005, VJ_WARN_SLVBase:GetTall()*0.03)
 				VJURL:Dock(FILL)
 				VJURL:SetAllowLua(true)
 				VJURL:OpenURL("https://sites.google.com/site/vrejgaming/vjbaseconflict")
 			elseif (SERVER) then
-				timer.Create("VJBASEMissing",5,0,function() print("VJ Base is being overridden by another addon! Incompatible Addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108") end)
+				timer.Create("VJ_WARN_SLVBase", 5, 0, function()
+					print("VJ Base is being overridden by another addon! Incompatible Addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
+				end)
 			end
 		end
 	end)
