@@ -13,7 +13,7 @@
 --------------------------------------------------*/
 if (CLIENT) then print("Loading VJ Base (Client)...") else print("Loading VJ Base (Server)...") end
 
-VJBASE_VERSION = "2.12.4"
+VJBASE_VERSION = "2.12.5"
 VJBASE_GETNAME = "VJ Base"
 
 -- Shared --
