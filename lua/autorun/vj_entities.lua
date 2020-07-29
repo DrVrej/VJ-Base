@@ -936,9 +936,18 @@ local function VJ_NPCPLY_DEATH(npc, attacker, inflictor)
 		attacker:DoEntityRelationshipCheck()
 	end
 end
-local function VJ_PLY_DEATH(victim, inflictor, attacker) VJ_NPCPLY_DEATH(victim, attacker, inflictor) end -- Arguments are flipped between the hooks for some reason...
 hook.Add("OnNPCKilled", "VJ_OnNPCKilled", VJ_NPCPLY_DEATH)
-hook.Add("PlayerDeath", "VJ_PlayerDeath", VJ_PLY_DEATH)
+hook.Add("PlayerDeath", "VJ_PlayerDeath", function(victim, inflictor, attacker)
+	VJ_NPCPLY_DEATH(victim, attacker, inflictor) -- Arguments are flipped between the hooks for some reason...
+	
+	-- Let allied SNPCs know that the player died
+	for _,v in ipairs(ents.FindInSphere(victim:GetPos(), 400)) do
+		if v.IsVJBaseSNPC == true && v:Disposition(victim) == D_LI then
+			v:CustomOnAllyDeath(victim)
+			v:PlaySoundSystem("AllyDeath")
+		end
+	end
+end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 VJ_Corpses = {}
 hook.Add("VJ_CreateSNPCCorpse", "VJ_CreateSNPCCorpse", function(corpse, owner)
