@@ -3737,6 +3737,13 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		self.Corpse:Activate()
 		self.Corpse:SetColor(self:GetColor())
 		self.Corpse:SetMaterial(self:GetMaterial())
+		if corpsemodel_custom == false then -- Take care of sub materials
+			for x = 0, #self:GetMaterials() do
+				if self:GetSubMaterial(x) != "" then
+					self.Corpse:SetSubMaterial(x, self:GetSubMaterial(x))
+				end
+			end
+		end
 		//self.Corpse:SetName("self.Corpse" .. self:EntIndex())
 		//self.Corpse:SetModelScale(self:GetModelScale())
 		local fadetype = "kill"
