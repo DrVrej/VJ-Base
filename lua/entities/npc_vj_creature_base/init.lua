@@ -1192,7 +1192,7 @@ function ENT:OnChangeActivity(newAct)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name,vACT_StopActivities,vACT_StopActivitiesTime,vACT_FaceEnemy,vACT_DelayAnim,vACT_AdvancedFeatures,vACT_CustomCode)
+function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name, vACT_StopActivities, vACT_StopActivitiesTime, vACT_FaceEnemy, vACT_DelayAnim, vACT_AdvancedFeatures, vACT_CustomCode)
 	vACT_Name = VJ_PICK(vACT_Name)
 	if vACT_Name == false then return end
 	
