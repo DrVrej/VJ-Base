@@ -84,7 +84,7 @@ function SWEP:CustomOnPrimaryAttackEffects()
 	ParticleEffectAttach("smoke_exhaust_01a", PATTACH_POINT_FOLLOW, self, 2)
 	ParticleEffectAttach("smoke_exhaust_01a", PATTACH_POINT_FOLLOW, self, 2)
 	ParticleEffectAttach("smoke_exhaust_01a", PATTACH_POINT_FOLLOW, self, 2)
-	timer.Simple(4,function() if IsValid(self) then self:StopParticles() end end)
+	timer.Simple(4, function() if IsValid(self) then self:StopParticles() end end)
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

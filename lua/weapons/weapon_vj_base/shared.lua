@@ -170,7 +170,7 @@ function SWEP:CustomOnNPC_ServerThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnReload() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttack_BeforeShoot() end
+function SWEP:CustomOnPrimaryAttack_BeforeShoot() end -- Return true to not run rest of the firing code
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_AfterShoot() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -488,7 +488,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	if isnpc && owner.VJ_IsBeingControlled == false && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return end
 	if self.IsMeleeWeapon == false && ((isply && self.Primary.AllowFireInWater == false && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then owner:EmitSound(VJ_PICK(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) return end
 	if (!self:CanPrimaryAttack()) then return end
-	self:CustomOnPrimaryAttack_BeforeShoot()
+	if self:CustomOnPrimaryAttack_BeforeShoot() == true then return end
 	
 	if isnpc && owner.IsVJBaseSNPC == true then
 		timer.Simple(self.NPC_ExtraFireSoundTime, function()
