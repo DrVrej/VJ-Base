@@ -240,6 +240,7 @@ ENT.DeathCorpseSkin = -1 -- Used to override the death skin | -1 = Use the skin 
 ENT.DeathCorpseSetBodyGroup = true -- Should it get the models bodygroups and set it to the corpse? When set to false, it uses the model's default bodygroups
 ENT.DeathCorpseBodyGroup = VJ_Set(-1,-1) -- #1 = the category of the first bodygroup | #2 = the value of the second bodygroup | Set -1 for #1 to let the base decide the corpse's bodygroup
 ENT.DeathCorpseAlwaysCollide = false -- Should the corpse always collide?
+ENT.DeathCorpseSubMaterials = nil -- Apply a table of indexes that correspond to a sub material index, this will cause the base to copy the NPC's sub material to the corpse.
 ENT.FadeCorpse = false -- Fades the ragdoll on death
 ENT.FadeCorpseTime = 10 -- How much time until the ragdoll fades | Unit = Seconds
 ENT.SetCorpseOnFire = false -- Sets the corpse on fire when the SNPC dies
@@ -568,8 +569,8 @@ ENT.SoundTrackChance = 1
 ENT.NextSoundTime_Breath_BaseDecide = true -- Let the base decide the next sound time, if it can't it will use the numbers below
 ENT.NextSoundTime_Breath1 = 1
 ENT.NextSoundTime_Breath2 = 1
-ENT.NextSoundTime_Idle1 = 4
-ENT.NextSoundTime_Idle2 = 11
+ENT.NextSoundTime_Idle1 = 2//4
+ENT.NextSoundTime_Idle2 = 2//11
 ENT.NextSoundTime_Investigate1 = 5
 ENT.NextSoundTime_Investigate2 = 5
 ENT.NextSoundTime_LostEnemy1 = 5
@@ -3737,12 +3738,18 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		self.Corpse:Activate()
 		self.Corpse:SetColor(self:GetColor())
 		self.Corpse:SetMaterial(self:GetMaterial())
-		if corpsemodel_custom == false then -- Take care of sub materials
-			for x = 0, #self:GetMaterials() do
+		if corpsemodel_custom == false && self.DeathCorpseSubMaterials != nil then -- Take care of sub materials
+			for _, x in ipairs(self.DeathCorpseSubMaterials) do
 				if self:GetSubMaterial(x) != "" then
 					self.Corpse:SetSubMaterial(x, self:GetSubMaterial(x))
 				end
 			end
+			 -- This causes lag, not a very good way to do it.
+			/*for x = 0, #self:GetMaterials() do
+				if self:GetSubMaterial(x) != "" then
+					self.Corpse:SetSubMaterial(x, self:GetSubMaterial(x))
+				end
+			end*/
 		end
 		//self.Corpse:SetName("self.Corpse" .. self:EntIndex())
 		//self.Corpse:SetModelScale(self:GetModelScale())
