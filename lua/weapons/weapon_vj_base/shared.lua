@@ -435,7 +435,7 @@ function SWEP:NPCShoot_Primary(ShootPos, ShootDir)
 	-- Secondary Fire
 	if self.NPC_HasSecondaryFire == true && self.NPC_SecondaryFirePerforming == false && CurTime() > self.NPC_SecondaryFireNextT && owner.CanUseSecondaryOnWeaponAttack == true && owner:GetEnemy():GetPos():Distance(owner:GetPos()) <= self.NPC_SecondaryFireDistance then
 		if math.random(1, self.NPC_SecondaryFireChance) == 1 then
-			owner:VJ_ACT_PLAYACTIVITY(owner.AnimTbl_WeaponAttackSecondary,true,false,true,0)
+			owner:VJ_ACT_PLAYACTIVITY(owner.AnimTbl_WeaponAttackSecondary, true, false, true, 0)
 			self.NPC_SecondaryFirePerforming = true
 			timer.Simple(owner.WeaponAttackSecondaryTimeUntilFire,function()
 				if IsValid(self) && IsValid(owner) && IsValid(owner:GetEnemy()) && self:NPCAbleToShoot(true) == true && CurTime() > self.NPC_SecondaryFireNextT then
