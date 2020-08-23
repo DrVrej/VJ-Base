@@ -13,7 +13,7 @@ TOOL.ClientConVar["health"] = "100"
 TOOL.ClientConVar["godmode"] = 0
 TOOL.ClientConVar["healthregen"] = 0
 TOOL.ClientConVar["healthregen_amt"] = 4
-TOOL.ClientConVar["healthregen_delay"] = 8
+TOOL.ClientConVar["healthregen_delay"] = 5
 
 -- Just to make it easier to reset everything to default
 local DefaultConVars = {}
@@ -42,6 +42,16 @@ if (CLIENT) then
 			end
 		end
 		Panel:AddPanel(reset)
+		
+		local tutorial = vgui.Create("DButton")
+		tutorial:SetFont("DermaDefaultBold")
+		tutorial:SetText("#tool.vjstool.menu.tutorialvideo")
+		tutorial:SetSize(150, 20)
+		tutorial:SetColor(Color(0,0,255,255))
+		tutorial.DoClick = function()
+			gui.OpenURL("http://www.youtube.com/watch?v=SnuQU8Sc4cg")
+		end
+		Panel:AddPanel(tutorial)
 		
 		Panel:AddControl("Label", {Text = "#tool.vjstool_healthmodifier.adminonly"})
 		Panel:AddControl("Slider", {Label = "#tool.vjstool_healthmodifier.sliderhealth", min = 0, max = 10000, Command = "vjstool_healthmodifier_health"})

@@ -734,6 +734,8 @@ function ENT:CustomOn_PoseParameterLookingCode(pitch,yaw,roll) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnSchedule() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnChangeActivity(newAct) end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ExpressionFinished(strExp) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnPlayCreateSound(SoundData,SoundFile) end
@@ -1187,6 +1189,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnChangeActivity(newAct)
 	//print(newAct)
+	self:CustomOnChangeActivity(newAct)
 	if newAct == ACT_TURN_LEFT or newAct == ACT_TURN_RIGHT then
 		self.NextIdleStandTime = CurTime() + VJ_GetSequenceDuration(self, self:GetSequenceName(self:GetSequence()))
 		//self.NextIdleStandTime = CurTime() + 1.2

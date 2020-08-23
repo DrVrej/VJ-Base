@@ -19,7 +19,7 @@ end)
 concommand.Add("vj_cleanup_snpcscorpse",function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		local i = 0
-		for k, v in pairs(ents.GetAll()) do
+		for _, v in pairs(ents.GetAll()) do
 			if v.IsVJBaseCorpse == true or v.IsVJBase_Gib == true or v:GetClass() == "obj_vj_gib_*" then
 				undo.ReplaceEntity(v,nil)
 				v:Remove()
@@ -41,7 +41,7 @@ end)
 concommand.Add("vj_cleanup_snpcs",function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		local i = 0
-		for k, v in pairs(ents.GetAll()) do
+		for _, v in pairs(ents.GetAll()) do
 			if v:IsNPC() && v:IsValid() && v.IsVJBaseSNPC == true then
 				// if v:ValidEntity() then
 				undo.ReplaceEntity(v,nil)
@@ -58,7 +58,7 @@ end)
 concommand.Add("vj_cleanup_s_npcs", function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		local i = 0
-		for k, v in pairs(ents.GetAll()) do
+		for _, v in pairs(ents.GetAll()) do
 			if v:IsNPC() /* v:ValidEntity() */then
 				undo.ReplaceEntity(v,nil)
 				v:Remove()
@@ -73,7 +73,7 @@ end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 concommand.Add("vj_cleanup_decals", function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
-		for k, v in pairs(player.GetAll()) do
+		for _, v in pairs(player.GetAll()) do
 			v:ConCommand("r_cleardecals")
 		end
 		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Removed All Decals\", NOTIFY_CLEANUP, 5)") end
@@ -100,7 +100,7 @@ end)
 concommand.Add("vj_cleanup_vjgibs", function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		local i = 0
-		for k, v in pairs(ents.GetAll()) do
+		for _, v in pairs(ents.GetAll()) do
 			if v.IsVJBase_Gib == true or v:GetClass() == "obj_vj_gib" then
 				undo.ReplaceEntity(v,nil)
 				v:Remove()
@@ -115,7 +115,7 @@ end)
 concommand.Add("vj_cleanup_props", function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		local i = 0
-		for k, v in pairs(ents.FindByClass("prop_physics")) do
+		for _, v in pairs(ents.FindByClass("prop_physics")) do
 			if v:GetParent() == NULL or (IsValid(v:GetParent()) && v:GetParent():Health() <= 0 && (v:GetParent():IsNPC() or v:GetParent():IsPlayer())) then
 				undo.ReplaceEntity(v,nil)
 				v:Remove()
@@ -130,7 +130,7 @@ end)
 concommand.Add("vj_cleanup_groundweapons", function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		local i = 0
-		for k, v in pairs(ents.GetAll()) do
+		for _, v in pairs(ents.GetAll()) do
 			if v:IsValid() && v:IsWeapon() && v:GetOwner() == NULL then
 				undo.ReplaceEntity(v,nil)
 				v:Remove()
@@ -145,7 +145,7 @@ end)
 concommand.Add("vj_cleanup_spawners", function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		local i = 0
-		for k, v in pairs(ents.GetAll()) do
+		for _, v in pairs(ents.GetAll()) do
 			if v.IsVJBaseSpawner == true then
 				undo.ReplaceEntity(v,nil)
 				v:Remove()
@@ -188,7 +188,7 @@ if (CLIENT) then
 		bugr:SetText("#vjbase.menu.helpsupport.reportbug")
 		bugr:SetSize(150, 35)
 		bugr:SetColor(Color(231, 76, 60, 255))
-		bugr.DoClick = function(bugr)
+		bugr.DoClick = function()
 			gui.OpenURL("http://steamcommunity.com/groups/vrejgaming/discussions/2/")
 		end
 		Panel:AddPanel(bugr)
@@ -198,7 +198,7 @@ if (CLIENT) then
 		suggest:SetText("#vjbase.menu.helpsupport.suggestion")
 		suggest:SetSize(150, 20)
 		suggest:SetColor(Color(211, 84, 0, 200))
-		suggest.DoClick = function(suggest)
+		suggest.DoClick = function()
 			gui.OpenURL("http://steamcommunity.com/groups/vrejgaming/discussions/1/")
 		end
 		Panel:AddPanel(suggest)
@@ -213,7 +213,7 @@ if (CLIENT) then
 		discordl:SetText("#vjbase.menu.helpsupport.discord")
 		discordl:SetSize(150, 25)
 		discordl:SetColor(Color(39, 174, 96, 255))
-		discordl.DoClick = function(discordl)
+		discordl.DoClick = function()
 			gui.OpenURL("https://discord.gg/zwQjrdG")
 		end
 		Panel:AddPanel(discordl)
@@ -223,7 +223,7 @@ if (CLIENT) then
 		steaml:SetText("#vjbase.menu.helpsupport.steam")
 		steaml:SetSize(150, 25)
 		steaml:SetColor(Color(39, 174, 96, 255))
-		steaml.DoClick = function(steaml)
+		steaml.DoClick = function()
 			gui.OpenURL("http://steamcommunity.com/groups/vrejgaming")
 		end
 		Panel:AddPanel(steaml)
@@ -233,7 +233,7 @@ if (CLIENT) then
 		ytl:SetText("#vjbase.menu.helpsupport.youtube")
 		ytl:SetSize(150, 25)
 		ytl:SetColor(Color(39, 174, 96, 255))
-		ytl.DoClick = function(ytl)
+		ytl.DoClick = function()
 			gui.OpenURL("http://www.youtube.com/user/gmod95")
 		end
 		Panel:AddPanel(ytl)
@@ -243,7 +243,7 @@ if (CLIENT) then
 		tweetl:SetText("#vjbase.menu.helpsupport.twitter")
 		tweetl:SetSize(150, 25)
 		tweetl:SetColor(Color(39, 174, 96, 255))
-		tweetl.DoClick = function(tweetl)
+		tweetl.DoClick = function()
 			gui.OpenURL("http://twitter.com/vrejgaming")
 		end
 		Panel:AddPanel(tweetl)
@@ -255,7 +255,7 @@ if (CLIENT) then
 		donate:SetText("#vjbase.menu.helpsupport.patreon")
 		donate:SetSize(150, 30)
 		donate:SetColor(Color(52, 152, 219, 255))
-		donate.DoClick = function(donate)
+		donate.DoClick = function()
 			gui.OpenURL("https://www.patreon.com/drvrej")
 		end
 		Panel:AddPanel(donate)
