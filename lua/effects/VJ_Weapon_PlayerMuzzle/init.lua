@@ -5,24 +5,26 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
 function EFFECT:Init(data)
-	if !IsValid(data:GetEntity()) then return end
+	local ent = data:GetEntity()
+	if !IsValid(ent) then return end
+	local owner = ent:GetOwner()
+	if !IsValid(owner) then return end
+	local muzEnt = ((owner != LocalPlayer()) or owner:ShouldDrawLocalPlayer()) && ent or owner:GetViewModel()
+			--  (if the owner isn't the local player OR the owner is in third person, then use world model) OR (Use the owner's viewmodel)
+	ParticleEffectAttach(VJ_PICK(ent.PrimaryEffects_MuzzleParticles), PATTACH_POINT, muzEnt, data:GetAttachment())
+
+	-- Muzzle Flash
+/*
 	self.Pos = self:GetTracerShootPos(data:GetOrigin(),data:GetEntity(),data:GetAttachment())
 	local Emitter = ParticleEmitter(self.Pos)
 	if Emitter == nil then return end
-
-	LocalPlayerMagnitude = 0
+	
+	local LocalPlayerMagnitude = 0
 	if IsValid(data:GetEntity()) && IsValid(data:GetEntity():GetOwner()) && data:GetEntity():GetOwner():IsPlayer() && data:GetEntity().Owner == LocalPlayer() then
 		LocalPlayerMagnitude = data:GetMagnitude() else
 		LocalPlayerMagnitude = 0
 	end
-
-	//local effectdata = EffectData()
-	//effectdata:SetEntity(self.Weapon)
-	//effectdata:SetOrigin(self.Pos)
-	//effectdata:SetNormal( Vector(0,0,0) )
-	//util.Effect("RifleShellEject",effectdata,true,true)
-
-	-- Muzzle Flash
+	
 	if GetConVarNumber("vj_wep_nomuszzleflash") == 0 && IsValid(data:GetEntity()) then
 	for i = 1,3 do //4
 		local EffectCode = Emitter:Add("effects/muzzleflash"..math.random(1,4),self.Pos + LocalPlayerMagnitude * data:GetNormal())
@@ -90,23 +92,6 @@ function EFFECT:Init(data)
 		end
 	end
 
-	-- Small Smoke
-	/*for i = 1,4 do
-		local EffectCode = Emitter:Add("particle/particle_smokegrenade",self.Pos)
-		EffectCode:SetVelocity(Vector(math.random(-30,30),math.random(-30,30),math.random(20,30)))
-		EffectCode:SetAirResistance(200)
-		EffectCode:SetDieTime(math.Rand(0.5,1)) -- How much time until it dies
-		EffectCode:SetStartAlpha(math.Rand(100,150)) -- Transparency
-		EffectCode:SetStartSize(math.Rand(3,4)) -- Size of the effect
-		EffectCode:SetEndSize(math.Rand(6,8)) -- Size of the effect at the end (The effect slowly trasnsforms to this size)
-		EffectCode:SetRoll(math.Rand(480,540))
-		EffectCode:SetRollDelta(math.Rand(-1,1)) -- How fast it rolls
-		EffectCode:SetColor(255,255,255) -- The color of the effect
-		//EffectCode:SetGravity(Vector(0,0,100)) -- The Gravity
-	end*/
-		//local EffectCode = Emitter:Add("effects/muzzleflash"..math.random(1,4),self.Pos + LocalPlayerMagnitude * data:GetNormal())
-		//EffectCode:SetVelocity(data:GetNormal() + 1.1 * data:GetEntity():GetOwner():GetVelocity())
-
 	if GetConVarNumber("vj_wep_nomuszzleflash") == 0 && IsValid(data:GetEntity()) then
   	if IsValid(data:GetEntity():GetOwner()) then
 	 if data:GetEntity():GetOwner():IsPlayer() then
@@ -129,7 +114,25 @@ function EFFECT:Init(data)
 	 end
 	end
   end
+Emitter:Finish()*/
 
+	-- Small Smoke
+	/*for i = 1,4 do
+		local EffectCode = Emitter:Add("particle/particle_smokegrenade",self.Pos)
+		EffectCode:SetVelocity(Vector(math.random(-30,30),math.random(-30,30),math.random(20,30)))
+		EffectCode:SetAirResistance(200)
+		EffectCode:SetDieTime(math.Rand(0.5,1)) -- How much time until it dies
+		EffectCode:SetStartAlpha(math.Rand(100,150)) -- Transparency
+		EffectCode:SetStartSize(math.Rand(3,4)) -- Size of the effect
+		EffectCode:SetEndSize(math.Rand(6,8)) -- Size of the effect at the end (The effect slowly trasnsforms to this size)
+		EffectCode:SetRoll(math.Rand(480,540))
+		EffectCode:SetRollDelta(math.Rand(-1,1)) -- How fast it rolls
+		EffectCode:SetColor(255,255,255) -- The color of the effect
+		//EffectCode:SetGravity(Vector(0,0,100)) -- The Gravity
+	end*/
+		//local EffectCode = Emitter:Add("effects/muzzleflash"..math.random(1,4),self.Pos + LocalPlayerMagnitude * data:GetNormal())
+		//EffectCode:SetVelocity(data:GetNormal() + 1.1 * data:GetEntity():GetOwner():GetVelocity())
+		
   /*
     		local EffectCode = Emitter:Add("effects/muzzleflare_01",self.Pos + LocalPlayerMagnitude * data:GetNormal())
 		EffectCode:SetVelocity(data:GetNormal() + 1.1 * data:GetEntity():GetOwner():GetVelocity())
@@ -168,7 +171,6 @@ function EFFECT:Init(data)
 		//EffectCode:SetGravity(Vector(0,0,math.random(-30,-10))) -- The Gravity
 		EffectCode:SetAirResistance(300)
   */
-	Emitter:Finish()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function EFFECT:Think()

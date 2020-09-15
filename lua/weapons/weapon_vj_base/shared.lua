@@ -100,7 +100,8 @@ SWEP.HasReloadSound = false -- Does it have a reload sound? Remember even if thi
 SWEP.ReloadSound = {}
 SWEP.AnimTbl_Reload = {ACT_VM_RELOAD}
 SWEP.Reload_TimeUntilAmmoIsSet = 1 -- Time until ammo is set to the weapon
-SWEP.Reload_TimeUntilFinished = 2 -- How much time until the player can play idle animation, shoot, etc.
+	-- To let the base automatically detect the animation duration, set this to false:
+SWEP.Reload_TimeUntilFinished = false -- How much time until the player can play another animation (idle, firing etc.)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Dry Fire Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -488,29 +489,30 @@ function SWEP:PrimaryAttack(UseAlt)
 	
 	if self.Reloading == true then return end
 	if isnpc && owner.VJ_IsBeingControlled == false && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return end
-	if self.IsMeleeWeapon == false && ((isply && self.Primary.AllowFireInWater == false && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then owner:EmitSound(VJ_PICK(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) return end
+	if SERVER && self.IsMeleeWeapon == false && ((isply && self.Primary.AllowFireInWater == false && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then owner:EmitSound(VJ_PICK(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) return end
 	if (!self:CanPrimaryAttack()) then return end
 	if self:CustomOnPrimaryAttack_BeforeShoot() == true then return end
 	
 	if isnpc && owner.IsVJBaseSNPC == true then
 		timer.Simple(self.NPC_ExtraFireSoundTime, function()
 			if IsValid(self) && IsValid(owner) then
-				VJ_EmitSound(owner,self.NPC_ExtraFireSound,self.NPC_ExtraFireSoundLevel,math.Rand(self.NPC_ExtraFireSoundPitch.a, self.NPC_ExtraFireSoundPitch.b))
+				VJ_EmitSound(owner, self.NPC_ExtraFireSound, self.NPC_ExtraFireSoundLevel, math.Rand(self.NPC_ExtraFireSoundPitch.a, self.NPC_ExtraFireSoundPitch.b))
 			end
 		end)
 	end
+	if SERVER then
 	local firesd = VJ_PICK(self.Primary.Sound)
 	if firesd != false then
-		self:EmitSound(firesd, 80, math.random(90,100))
-		//sound.Play(firesd,self:GetPos(),80,math.random(90,100))
+		sound.Play(firesd, owner:GetPos(), 80, math.random(90, 100), 1)
+		//self:EmitSound(firesd, 80, math.random(90,100))
 	end
 	if self.Primary.HasDistantSound == true then
 		local farsd = VJ_PICK(self.Primary.DistantSound)
 		if farsd != false then
-			sound.Play(farsd,self:GetPos(),self.Primary.DistantSoundLevel,math.random(self.Primary.DistantSoundPitch1,self.Primary.DistantSoundPitch2),self.Primary.DistantSoundVolume)
+			sound.Play(farsd, owner:GetPos(), self.Primary.DistantSoundLevel, math.random(self.Primary.DistantSoundPitch1, self.Primary.DistantSoundPitch2), self.Primary.DistantSoundVolume)
 		end
 	end
-	
+	end
 	if owner.IsVJBaseSNPC_Human == true && owner.DisableWeaponFiringGesture != true then
 		local anim = owner:TranslateToWeaponAnim(VJ_PICK(owner.AnimTbl_WeaponAttackFiringGesture))
 		owner:VJ_ACT_PLAYACTIVITY(anim, false, false, false, 0, {AlwaysUseGesture=true})
@@ -644,6 +646,7 @@ function SWEP:PrimaryAttackEffects()
 		if self.PrimaryEffects_MuzzleFlash == true then
 			local muzzleattach = self.PrimaryEffects_MuzzleAttachment
 			if isnumber(muzzleattach) == false then muzzleattach = self:LookupAttachment(muzzleattach) end
+			-- ONLY for players
 			if owner:IsPlayer() && owner:GetViewModel() != nil then
 				local vjeffectmuz = EffectData()
 				vjeffectmuz:SetOrigin(owner:GetShootPos())
@@ -651,7 +654,7 @@ function SWEP:PrimaryAttackEffects()
 				vjeffectmuz:SetStart(owner:GetShootPos())
 				vjeffectmuz:SetNormal(owner:GetAimVector())
 				vjeffectmuz:SetAttachment(muzzleattach)
-				util.Effect("VJ_Weapon_RifleMuzzle1",vjeffectmuz)
+				util.Effect("VJ_Weapon_PlayerMuzzle", vjeffectmuz)
 			else
 				if self.PrimaryEffects_MuzzleParticlesAsOne == true then
 					for _,v in pairs(self.PrimaryEffects_MuzzleParticles) do
@@ -714,20 +717,31 @@ function SWEP:Think()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Reload()
-	if !IsValid(self) or !IsValid(self:GetOwner()) or !self:GetOwner():Alive() or !self:GetOwner():IsPlayer() or self:GetOwner():GetAmmoCount(self.Primary.Ammo) == 0 or !self:GetOwner():KeyDown(IN_RELOAD) or self.Reloading == true then return end
-	local smallerthanthis = self.Primary.ClipSize - 1
-	if self:Clip1() <= smallerthanthis then
-		local setcorrectnum = self.Primary.ClipSize - self:Clip1()
-		local test = setcorrectnum + self:Clip1()
+	if !IsValid(self) then return end
+	local owner = self:GetOwner()
+	if !IsValid(owner) or !owner:IsPlayer() or !owner:Alive() or owner:GetAmmoCount(self.Primary.Ammo) == 0 or !owner:KeyDown(IN_RELOAD) or self.Reloading == true then return end
+	if self:Clip1() < self.Primary.ClipSize then
 		self.Reloading = true
 		self:CustomOnReload()
-		if self.HasReloadSound == true then self:GetOwner():EmitSound(VJ_PICK(self.ReloadSound),50,math.random(90,100)) end
-		if self:GetOwner():IsPlayer() then
-			self:SendWeaponAnim(VJ_PICK(self.AnimTbl_Reload)) //self:SendWeaponAnim(VJ_PICK(self.AnimTbl_Reload))
-			self:GetOwner():SetAnimation(PLAYER_RELOAD)
-			timer.Simple(self.Reload_TimeUntilAmmoIsSet,function() if IsValid(self) then self:GetOwner():RemoveAmmo(setcorrectnum,self.Primary.Ammo) self:SetClip1(test) end end)
-			timer.Simple(self.Reload_TimeUntilFinished,function() if IsValid(self) then self.Reloading = false self:DoIdleAnimation() end end)
-		end
+		if SERVER && self.HasReloadSound == true then owner:EmitSound(VJ_PICK(self.ReloadSound), 50, math.random(90, 100)) end
+		-- Handle clip
+		timer.Simple(self.Reload_TimeUntilAmmoIsSet, function()
+			if IsValid(self) then
+				local ammoUsed = math.Clamp(self.Primary.ClipSize - self:Clip1(), 0, owner:GetAmmoCount(self:GetPrimaryAmmoType())) -- Amount of ammo that it will use (Take from the reserve)
+				owner:RemoveAmmo(ammoUsed, self.Primary.Ammo)
+				self:SetClip1(ammoUsed + self:Clip1())
+			end
+		end)
+		-- Handle animation
+		local anim = VJ_PICK(self.AnimTbl_Reload)
+		self:SendWeaponAnim(anim)
+		owner:SetAnimation(PLAYER_RELOAD)
+		timer.Simple((self.Reload_TimeUntilFinished == false && VJ_GetSequenceDuration(owner:GetViewModel(), anim)) or self.Reload_TimeUntilFinished, function()
+			if IsValid(self) then
+				self.Reloading = false
+				self:DoIdleAnimation()
+			end
+		end)
 		return true
 	end
 end

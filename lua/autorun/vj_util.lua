@@ -6,11 +6,13 @@
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 
-function util.VJ_SphereDamage(vAttacker,vInflictor,vPosition,vDamageRadius,vDamage,vDamageType,vBlockCertainEntities,vUseRealisticRadius,Tbl_Features,CustomCode)
+function util.VJ_SphereDamage(vAttacker, vInflictor, vPosition, vDamageRadius, vDamage, vDamageType, vBlockCertainEntities, vUseRealisticRadius, Tbl_Features, CustomCode)
 	vPosition = vPosition or vAttacker:GetPos()
 	vDamageRadius = vDamageRadius or 150
 	vDamage = vDamage or 15
 	vDamageType = vDamageType or DMG_BLAST
+	vBlockCertainEntities = vBlockCertainEntities or true
+	vUseRealisticRadius = vUseRealisticRadius or true
 	local vTbl_Features = Tbl_Features or {}
 		local vTbl_DisableVisibilityCheck = vTbl_Features.DisableVisibilityCheck or false -- Should it disable the visibility check? | true = Disables the visibility check
 		local vTbl_Force = vTbl_Features.Force or false -- The general force | false = Don't use any force
@@ -21,26 +23,21 @@ function util.VJ_SphereDamage(vAttacker,vInflictor,vPosition,vDamageRadius,vDama
 		local vTbl_DirectionPos = vTbl_Features.DirectionPos or vAttacker:GetForward() -- The position it starts the cone degree from
 	local Finaldmg = vDamage
 	local Foundents = {}
-	local Findents = nil
-	if vTbl_UseCone == true then
-		Findents = VJ_FindInCone(vPosition,vTbl_DirectionPos,vDamageRadius,vTbl_UseConeDegree,{AllEntities=true})
-	else
-		Findents = ents.FindInSphere(vPosition,vDamageRadius)
-	end
-	if (!Findents) then return end
+	local Findents = (vTbl_UseCone == true and VJ_FindInCone(vPosition, vTbl_DirectionPos, vDamageRadius, vTbl_UseConeDegree, {AllEntities=true})) or ents.FindInSphere(vPosition, vDamageRadius)
+	if (!Findents) then return false end
 	for _,v in pairs(Findents) do
-		if (vAttacker.VJ_IsBeingControlled == true && vAttacker.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
-		if v:EntIndex() == vAttacker:EntIndex() && vTbl_DamageAttacker == false then continue end
+		if (vAttacker.VJ_IsBeingControlled == true && vAttacker.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end -- Don't damage controller bullseye and player
+		if v:EntIndex() == vAttacker:EntIndex() && vTbl_DamageAttacker == false then continue end -- If it can't self hit, then skip
 		local vtoself = v:NearestPoint(vPosition) -- From the enemy position to the given position
-		if vUseRealisticRadius == true then
-			Finaldmg = math.Clamp(Finaldmg*((vDamageRadius-vPosition:Distance(vtoself))+150)/vDamageRadius, vDamage/2, Finaldmg) -- Decrease damage from the nearest point all the way to the enemy point then clamp it!
+		if vUseRealisticRadius == true then -- Decrease damage from the nearest point all the way to the enemy point then clamp it!
+			Finaldmg = math.Clamp(Finaldmg * ((vDamageRadius - vPosition:Distance(vtoself)) + 150) / vDamageRadius, vDamage / 2, Finaldmg)
 		end
 		
 		local function DoDamageCode(v2)
 			if (CustomCode) then CustomCode(v) end
-			Foundents[#Foundents+1] = v
+			Foundents[#Foundents + 1] = v
 			if (v2:GetClass() == "npc_strider" or v2:GetClass() == "npc_combinedropship" or v2:GetClass() == "npc_combinegunship" or v2:GetClass() == "npc_helicopter") then
-				v2:TakeDamage(Finaldmg,vAttacker,vInflictor)
+				v2:TakeDamage(Finaldmg, vAttacker, vInflictor)
 			else
 				local doactualdmg = DamageInfo()
 				doactualdmg:SetDamage(Finaldmg)
@@ -54,7 +51,7 @@ function util.VJ_SphereDamage(vAttacker,vInflictor,vPosition,vDamageRadius,vDama
 					if VJ_IsProp(v) == true or v:GetClass() == "prop_ragdoll" then
 						local phys = v:GetPhysicsObject()
 						if IsValid(phys) then
-							if upforce == false then upforce = force/9.4 end
+							if upforce == false then upforce = force / 9.4 end
 							//v:SetVelocity(v:GetUp()*100000)
 							if v:GetClass() == "prop_ragdoll" then force = force * 1.5 end
 							phys:ApplyForceCenter(((v:GetPos()+v:OBBCenter()+v:GetUp()*upforce)-vPosition)*force) //+vAttacker:GetForward()*vForcePropPhysics
