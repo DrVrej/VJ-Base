@@ -87,7 +87,7 @@ ENT.Passive_NextRunOnDamageTime = VJ_Set(6,7) -- How much until it can run the c
 ENT.HasOnPlayerSight = false -- Should do something when it sees the enemy? Example: Play a sound
 ENT.OnPlayerSightDistance = 200 -- How close should the player be until it runs the code?
 ENT.OnPlayerSightDispositionLevel = 1 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
-ENT.OnPlayerSightOnlyOnce = true --If true, it will only run the code once | Sets self.HasOnPlayerSight to false once it runs!
+ENT.OnPlayerSightOnlyOnce = true -- If true, it will only run the code once | Sets self.HasOnPlayerSight to false once it runs!
 ENT.OnPlayerSightNextTime1 = 15 -- How much time should it pass until it runs the code again? | First number in math.random
 ENT.OnPlayerSightNextTime2 = 20 -- How much time should it pass until it runs the code again? | Second number in math.random
 	-- ====== Call For Help Variables ====== --

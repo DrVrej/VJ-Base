@@ -8,7 +8,7 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Console Commands ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-concommand.Add("vj_cleanup_all",function(ply)
+concommand.Add("vj_cleanup_all", function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		game.CleanUpMap()
 		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Cleaned Up Everything!\", NOTIFY_CLEANUP, 5)") end
@@ -16,7 +16,7 @@ concommand.Add("vj_cleanup_all",function(ply)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-concommand.Add("vj_cleanup_snpcscorpse",function(ply)
+concommand.Add("vj_cleanup_snpcscorpse", function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		local i = 0
 		for _, v in pairs(ents.GetAll()) do
@@ -38,7 +38,7 @@ concommand.Add("vj_cleanup_snpcscorpse",function(ply)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-concommand.Add("vj_cleanup_snpcs",function(ply)
+concommand.Add("vj_cleanup_snpcs", function(ply)
 	if ply:IsAdmin() or ply:IsSuperAdmin() then
 		local i = 0
 		for _, v in pairs(ents.GetAll()) do
