@@ -2526,10 +2526,10 @@ function ENT:RangeAttackCode()
 			end
 			projectile:SetAngles((self:GetEnemy():GetPos() - projectile:GetPos()):Angle())
 			self:CustomRangeAttackCode_BeforeProjectileSpawn(projectile)
-			projectile:Spawn()
-			projectile:Activate()
 			projectile:SetOwner(self)
 			projectile:SetPhysicsAttacker(self)
+			projectile:Spawn()
+			projectile:Activate()
 			//constraint.NoCollide(self,projectile,0,0)
 			local phys = projectile:GetPhysicsObject()
 			if IsValid(phys) then
