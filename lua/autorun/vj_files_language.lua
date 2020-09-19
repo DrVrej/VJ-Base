@@ -284,6 +284,8 @@ if (CLIENT) then
 		add("vjbase.menu.snpc.consettings.bind.leaporgrenade", "Leap / Grenade Attack")
 		add("vjbase.menu.snpc.consettings.bind.reloadweapon", "Reload Weapon")
 		add("vjbase.menu.snpc.consettings.bind.togglebullseye", "Toggle Bullseye Tracking")
+		add("vjbase.menu.snpc.consettings.bind.cameramode", "Change Camera Mode")
+		add("vjbase.menu.snpc.consettings.bind.camerazoom", "Zoom In & Out")
 		add("vjbase.menu.snpc.consettings.bind.cameraup", "Move Camera Up")
 		add("vjbase.menu.snpc.consettings.bind.cameradown", "Move Camera Down")
 		add("vjbase.menu.snpc.consettings.bind.cameraforward", "Move Camera Forward")

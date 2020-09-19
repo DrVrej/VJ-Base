@@ -41,6 +41,13 @@ ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
 ENT.CanTurnWhileStationary = true -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
 ENT.Stationary_UseNoneMoveType = false -- Technical variable, use this if there is any issues with the SNPC's position, though it does have its downsides, so use it only when needed
 ENT.MaxJumpLegalDistance = VJ_Set(120,150) -- The max distance the NPC can jump (Usually from one node to another) | ( UP, DOWN )
+	-- ====== Controller Data ====== --
+ENT.VJC_Data = {
+	CameraMode = 1, -- Sets the default camera mode | 1 = Third Person, 2 = First Person
+	ThirdP_Offset = Vector(0, 0, 0), -- The offset for the controller when the camera is in third person
+	FirstP_Bone = "ValveBiped.Bip01_Head1", -- If left empty, the base will attempt to calculate a position for first person
+	FirstP_Offset = Vector(0, 0, 5), -- The offset for the controller when the camera is in first person
+}
 	-- ====== Miscellaneous Variables ====== --
 ENT.HasEntitiesToNoCollide = true -- If set to false, it won't run the EntitiesToNoCollide code
 ENT.EntitiesToNoCollide = {} -- Entities to not collide with when HasEntitiesToNoCollide is set to true
@@ -2332,7 +2339,7 @@ function ENT:Think()
 		if IsValid(self.CurrentWeaponEntity) then
 			self.Weapon_TimeSinceLastShot = self.Weapon_TimeSinceLastShot + 0.1
 			-- Weapon Inventory
-			if /*self.IsReloadingWeapon == false &&*/ self:BusyWithActivity() == false then
+			if /*self.IsReloadingWeapon == false &&*/ !self.VJ_IsBeingControlled && self:BusyWithActivity() == false then
 				if IsValid(ene) then
 					if IsValid(self.WeaponInventory.Melee) && ((self.LatestEnemyDistance < self.MeleeAttackDistance) or (self.LatestEnemyDistance < 300 && self.CurrentWeaponEntity:Clip1() <= 0)) && (self:Health() > self:GetMaxHealth() * 0.25) && self.CurrentWeaponEntity != self.WeaponInventory.Melee then
 						self.IsReloadingWeapon = false -- Since the reloading can be cut off, reset it back to false, or else it can mess up its behavior!
