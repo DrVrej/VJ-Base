@@ -130,6 +130,8 @@ ConvarList["vj_npc_printtakingcover"] = 0 -- Prints whether the SNPC is taking c
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 VJ.AddClientConVar("vj_npc_cont_hud", 1, "Display HUD") -- Display HUD (When controlling)
 VJ.AddClientConVar("vj_npc_cont_zoomdist", 5, "Zoom distance") -- The distance that the zoom moves
+VJ.AddClientConVar("vj_npc_cont_cam_zoomspeed", 10, "Camera Zoom Speed") -- How fast the camera zooms in & out
+VJ.AddClientConVar("vj_npc_cont_cam_speed", 6, "Camera Speed") -- How fast the camera moves (lerping)
 VJ.AddClientConVar("vj_npc_cont_devents", 0, "Display developer entities") -- Display developer entities
 ---------------------------------------------------------------------------------------------------------------------------
 for k, v in pairs(ConvarList) do
