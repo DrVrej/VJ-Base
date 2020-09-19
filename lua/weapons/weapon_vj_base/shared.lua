@@ -405,12 +405,12 @@ function SWEP:NPCAbleToShoot(CheckSec)
 					end
 					return false
 				else
-					if (owner.VJ_IsBeingControlled == true or IsValid(owner:GetEnemy())) then
+					if IsValid(owner:GetEnemy()) && ((!owner.VJ_IsBeingControlled) or (owner.VJ_IsBeingControlled && owner.VJ_TheController:KeyDown(IN_ATTACK2))) then
 						return true
 					end
 				end
 			else
-				if (owner.VJ_IsBeingControlled == true or IsValid(owner:GetEnemy())) then
+				if IsValid(owner:GetEnemy()) && ((!owner.VJ_IsBeingControlled) or (owner.VJ_IsBeingControlled && owner.VJ_TheController:KeyDown(IN_ATTACK2))) then
 					return true
 				end
 			end

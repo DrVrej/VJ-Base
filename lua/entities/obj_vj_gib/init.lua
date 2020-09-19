@@ -19,9 +19,8 @@ ENT.CollideSoundPitch2 = 100
 ENT.IsVJBaseCorpse = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
-	//self:SetModel("models/spitball_medium.mdl")
 	self:PhysicsInit(MOVETYPE_VPHYSICS)
-	self:SetMoveType(MOVETYPE_VPHYSICS) -- Use MOVETYPE_NONE for testing
+	self:SetMoveType(MOVETYPE_VPHYSICS) -- Use MOVETYPE_NONE for testing, makes the entity freeze!
 	self:SetSolid(MOVETYPE_VPHYSICS)
 	if GetConVarNumber("vj_npc_gibcollidable") == 0 then self:SetCollisionGroup(1) end
 
@@ -37,7 +36,7 @@ function ENT:Initialize()
 	-- Misc
 	self:SetUpInitializeBloodType()
 	if GetConVarNumber("vj_npc_fadegibs") == 1 then
-		timer.Simple(GetConVarNumber("vj_npc_fadegibstime"),function() if IsValid(self) then self:Remove() end end)
+		timer.Simple(GetConVarNumber("vj_npc_fadegibstime"), function() SafeRemoveEntity(self) end)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -92,14 +91,14 @@ function ENT:PhysicsCollide(data, phys)
 	end
 	
 	if GetConVarNumber("vj_npc_nogibdecals") == 0 && velocityspeed > 18 && !data.Entity && math.random(1, self.Collide_DecalChance) == 1 then
-		self:SetLocalPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the entity is too close to the ground
+		self:SetLocalPos(Vector(self:GetPos().x, self:GetPos().y, self:GetPos().z + 4)) -- Because the entity is too close to the ground
 		local tr = util.TraceLine({
 			start = self:GetPos(),
-			endpos = self:GetPos() - (data.HitNormal * -30),
+			endpos = self:GetPos() - (data.HitNormal*-30),
 			filter = self //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
 		})
 		if self.Collide_Decal != "" then
-			util.Decal(self.Collide_Decal,tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
+			util.Decal(self.Collide_Decal, tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
 			//util.Decal(self.Collide_Decal,start,endpos)
 		end
 	end

@@ -214,11 +214,11 @@ local function VJ_SNPC_DEVSETTINGS(Panel) -- Developer Settings
 	Panel:AddControl("Button", {Label = "#vjbase.menu.snpc.devsettings.cachedmodels", Command = "listmodels"})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local function VJ_SNPC_NPCONTROLLERSETTINGS(Panel) -- NPC Controller Settings
+local function VJ_SNPC_CONTROLLERSETTINGS(Panel) -- NPC Controller Settings
 	Panel:AddControl("Label", {Text = "#vjbase.menu.snpc.consettings.label1"})
 	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_cont_hud 1\n vj_npc_cont_zoomdist 5\n vj_npc_cont_devents 0"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.consettings.displayhud", Command = "vj_npc_cont_hud"})
-	Panel:AddControl("Slider",{Label = "#vjbase.menu.snpc.consettings.zoomdistance",min = 5,max = 300,Command = "vj_npc_cont_zoomdist"})
+	Panel:AddControl("Slider",{Label = "#vjbase.menu.snpc.consettings.zoomdistance", min = 5, max = 300, Command = "vj_npc_cont_zoomdist"})
 	Panel:ControlHelp("#vjbase.menu.snpc.consettings.label2")
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.consettings.displaydev", Command = "vj_npc_cont_devents"})
 	
@@ -226,7 +226,7 @@ local function VJ_SNPC_NPCONTROLLERSETTINGS(Panel) -- NPC Controller Settings
 	
 	local ControlList = vgui.Create("DListView")
 	ControlList:SetTooltip(false)
-	ControlList:SetSize(100, 260) -- Size
+	ControlList:SetSize(100, 300) -- Size
 	ControlList:SetMultiSelect(false)
 	ControlList:AddColumn("#vjbase.menu.snpc.consettings.bind.header1") -- Add column
 	ControlList:AddColumn("#vjbase.menu.snpc.consettings.bind.header2") -- Add column
@@ -237,10 +237,12 @@ local function VJ_SNPC_NPCONTROLLERSETTINGS(Panel) -- NPC Controller Settings
 		ControlList:AddLine("JUMP", "#vjbase.menu.snpc.consettings.bind.leaporgrenade")
 		ControlList:AddLine("RELOAD", "#vjbase.menu.snpc.consettings.bind.reloadweapon")
 		ControlList:AddLine("T", "#vjbase.menu.snpc.consettings.bind.togglebullseye")
-		ControlList:AddLine("RUN + UP ARROW", "#vjbase.menu.snpc.consettings.bind.cameraup")
-		ControlList:AddLine("RUN + Down ARROW", "#vjbase.menu.snpc.consettings.bind.cameradown")
+		ControlList:AddLine("V", "#vjbase.menu.snpc.consettings.bind.cameramode")
+		ControlList:AddLine("MOUSE WHEEL", "#vjbase.menu.snpc.consettings.bind.camerazoom")
 		ControlList:AddLine("UP ARROW", "#vjbase.menu.snpc.consettings.bind.cameraforward")
-		ControlList:AddLine("Down ARROW", "#vjbase.menu.snpc.consettings.bind.camerabackward")
+		ControlList:AddLine("UP ARROW + RUN", "#vjbase.menu.snpc.consettings.bind.cameraup")
+		ControlList:AddLine("DOWN ARROW", "#vjbase.menu.snpc.consettings.bind.camerabackward")
+		ControlList:AddLine("DOWN ARROW + RUN", "#vjbase.menu.snpc.consettings.bind.cameradown")
 		ControlList:AddLine("LEFT ARROW", "#vjbase.menu.snpc.consettings.bind.cameraleft")
 		ControlList:AddLine("RIGHT ARROW", "#vjbase.menu.snpc.consettings.bind.cameraright")
 		ControlList:AddLine("BACKSPACE", "#vjbase.menu.snpc.consettings.bind.resetzoom")
@@ -255,5 +257,5 @@ hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_SNPC", function()
 	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "SNPC Settings", "#vjbase.menu.snpc.settings", "", "", VJ_SNPC_SETTINGS, {})
 	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "SNPC Sound Settings", "#vjbase.menu.snpc.sdsettings", "", "", VJ_SNPC_SOUNDSETTINGS, {})
 	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "SNPC Developer Settings", "#vjbase.menu.snpc.devsettings", "", "", VJ_SNPC_DEVSETTINGS, {})
-	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "NPC Controller Settings", "#vjbase.menu.snpc.consettings", "", "", VJ_SNPC_NPCONTROLLERSETTINGS, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "NPC Controller Settings", "#vjbase.menu.snpc.consettings", "", "", VJ_SNPC_CONTROLLERSETTINGS, {})
 end)

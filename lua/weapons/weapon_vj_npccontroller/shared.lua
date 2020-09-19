@@ -80,7 +80,7 @@ function SWEP:PrimaryAttack()
 			self:GetOwner():ChatPrint("NOTE: VJ NPC controller is mainly made for VJ Base SNPCs!")
 		end
 		local SpawnControllerObject = ents.Create("obj_vj_npccontroller")
-		SpawnControllerObject.TheController = self:GetOwner()
+		SpawnControllerObject.VJCE_Player = self:GetOwner()
 		SpawnControllerObject:SetControlledNPC(tr.Entity)
 		SpawnControllerObject:Spawn()
 		//SpawnControllerObject:Activate()

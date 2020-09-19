@@ -7,7 +7,7 @@ ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Purpose 		= "Just a testing NPC."
 ENT.Instructions 	= "Don't change anything."
-ENT.Category		= "VJ Bases"
+ENT.Category		= "VJ Base"
 
 ENT.Spawnable = false
 ENT.AdminOnly = false
