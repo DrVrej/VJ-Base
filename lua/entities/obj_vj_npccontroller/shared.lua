@@ -52,7 +52,7 @@ if (CLIENT) then
 		end
 		
 		-- Lerp the position and the angle
-		local lerpSpeed = 6
+		local lerpSpeed = ply:GetInfoNum("vj_npc_cont_cam_speed", 6)
 		viewLerpVec = (ply.VJC_Camera_Mode == 2 and pos) or LerpVector(FrameTime()*lerpSpeed, viewLerpVec, pos)
         viewLerpAng = LerpAngle(FrameTime()*lerpSpeed, viewLerpAng, ply:EyeAngles())
 		
@@ -77,9 +77,9 @@ if (CLIENT) then
 		if (bind == "invprev" or bind == "invnext") && ply.IsControlingNPC && IsValid(ply.VJCE_Camera) then
 			ply.VJCE_Camera.Zoom = ply.VJCE_Camera.Zoom or 90
 			if bind == "invprev" then
-				ply.VJCE_Camera.Zoom = math.Clamp(ply.VJCE_Camera.Zoom - 10, 0, 500)
+				ply.VJCE_Camera.Zoom = math.Clamp(ply.VJCE_Camera.Zoom - ply:GetInfoNum("vj_npc_cont_cam_zoomspeed", 10), 0, 500)
 			else
-				ply.VJCE_Camera.Zoom = math.Clamp(ply.VJCE_Camera.Zoom + 10, 0, 500)
+				ply.VJCE_Camera.Zoom = math.Clamp(ply.VJCE_Camera.Zoom + ply:GetInfoNum("vj_npc_cont_cam_zoomspeed", 10), 0, 500)
 			end
 		end
 	end)

@@ -399,7 +399,7 @@ function ENT:StartMovement(Dir, Rot)
 			CalculateWallToNPC = CalculateWallToNPC - CalculateDownDistance
 		end
 		FinalPos = Vector((self.VJCE_NPC:GetPos()+PlyAimVec*CalculateWallToNPC).x, (self.VJCE_NPC:GetPos()+PlyAimVec*CalculateWallToNPC).y, forwardtr.HitPos.z)
-		if self.VJCE_Player:GetInfoNum("vj_npc_cont_devents",0) == 1 then
+		if self.VJCE_Player:GetInfoNum("vj_npc_cont_devents", 0) == 1 then
 			VJ_CreateTestObject(downtr.HitPos, self:GetAngles(), Color(255,0,255)) -- Down trace position
 			VJ_CreateTestObject(FinalPos, self:GetAngles(), Color(0,255,0)) -- Final move position
 		end
