@@ -6,7 +6,6 @@
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 include('autorun/vj_controls.lua')
-
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Spawn Menu Creation ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -341,22 +340,8 @@ local Entity_MetaTable = FindMetaTable("Entity")
 function NPC_MetaTable:VJ_Controller_InitialMessage(ply)
 	if !IsValid(ply) then return end
 	if self.IsVJBaseSNPC == true then
-		if self.IsVJBaseSNPC_Creature then
-			ply:ChatPrint("=-=-=-= Default Controls (May differ between NPCs!) =-=-=-=")
-			ply:ChatPrint("MOUSE1: Melee Attack | MOUSE2: Range Attack")
-			ply:ChatPrint("JUMP: Leap Attack")
-			ply:ChatPrint("=-=-=-= Custom Controls (Written by the developers) =-=-=-=")
-		elseif self.IsVJBaseSNPC_Human == true then
-			ply:ChatPrint("=-=-=-= Default Controls (May differ between NPCs!) =-=-=-=")
-			ply:ChatPrint("MOUSE1: Melee Attack | MOUSE2: Weapon Attack")
-			ply:ChatPrint("JUMP: Grenade Attack | RELOAD: Reload Weapon")
-			ply:ChatPrint("=-=-=-= Custom Controls (Written by the developers) =-=-=-=")
-		//else
-			-- None...
-		end
+		ply:ChatPrint("For controls, check \"Controller Settings\" under \"DrVrej\" tab")
 		self:Controller_IntMsg(ply)
-	//else
-		-- None...
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

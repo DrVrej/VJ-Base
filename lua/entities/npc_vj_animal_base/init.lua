@@ -474,7 +474,7 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse) end
 function ENT:CustomOnRemove() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Controller_IntMsg(ply)
-	ply:ChatPrint("None specified...") -- Remove this line!
+	//ply:ChatPrint("CTRL + MOUSE2: Rocket Attack") -- Example
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
@@ -1002,7 +1002,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJFriendlyCode(argent)
 	if self.HasAllies == false or GetConVarNumber("vj_npc_vjfriendly") == 0 then return false end
-	argent:AddEntityRelationship(self,D_LI,99)
+	argent:AddEntityRelationship(self, D_LI, 99)
 	self:AddEntityRelationship(argent,D_LI,99)
 	return true
 end
@@ -1011,7 +1011,7 @@ function ENT:CombineFriendlyCode(argent)
 	if self.HasAllies == false then return end
 	if self.NPCTbl_Combine[argent:GetClass()] then
 	//if VJ_HasValue(self.NPCTbl_Combine,argent:GetClass()) then
-		argent:AddEntityRelationship(self,D_LI,99)
+		argent:AddEntityRelationship(self, D_LI, 99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true
 	end
@@ -1021,7 +1021,7 @@ function ENT:ZombieFriendlyCode(argent)
 	if self.HasAllies == false then return end
 	if self.NPCTbl_Zombies[argent:GetClass()] then
 	//if VJ_HasValue(self.NPCTbl_Zombies,argent:GetClass()) then
-		argent:AddEntityRelationship(self,D_LI,99)
+		argent:AddEntityRelationship(self, D_LI, 99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true
 	end
@@ -1031,7 +1031,7 @@ function ENT:AntlionFriendlyCode(argent)
 	if self.HasAllies == false then return end
 	if self.NPCTbl_Antlions[argent:GetClass()] then
 	//if VJ_HasValue(self.NPCTbl_Antlions,argent:GetClass()) then
-		argent:AddEntityRelationship(self,D_LI,99)
+		argent:AddEntityRelationship(self, D_LI, 99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true
 	end
@@ -1041,7 +1041,7 @@ function ENT:XenFriendlyCode(argent)
 	if self.HasAllies == false then return end
 	if self.NPCTbl_Xen[argent:GetClass()] then
 	//if VJ_HasValue(self.NPCTbl_Xen,argent:GetClass()) then
-		argent:AddEntityRelationship(self,D_LI,99)
+		argent:AddEntityRelationship(self, D_LI, 99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true
 	end
@@ -1051,7 +1051,7 @@ function ENT:PlayerAllies(argent)
 	if self.HasAllies == false then return end
 	if self.NPCTbl_Resistance[argent:GetClass()] then
 	//if VJ_HasValue(self.NPCTbl_Resistance,argent:GetClass()) then
-		argent:AddEntityRelationship(self,D_LI,99)
+		argent:AddEntityRelationship(self, D_LI, 99)
 		self:AddEntityRelationship(argent,D_LI,99)
 		return true
 	end

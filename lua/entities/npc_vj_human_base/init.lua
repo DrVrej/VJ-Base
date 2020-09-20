@@ -860,7 +860,7 @@ function ENT:CustomOnRemove() end
 function ENT:Controller_Initialize(ply) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Controller_IntMsg(ply)
-	ply:ChatPrint("None specified...") -- Remove this line!
+	//ply:ChatPrint("CTRL + MOUSE2: Rocket Attack") -- Example
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1000,7 +1000,8 @@ local NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=t
 local NPCTbl_Zombies = {npc_fastzombie_torso=true,npc_zombine=true,npc_zombie_torso=true,npc_zombie=true,npc_poisonzombie=true,npc_headcrab_fast=true,npc_headcrab_black=true,npc_headcrab=true,npc_fastzombie=true,monster_zombie=true,monster_headcrab=true,monster_babycrab=true}
 local NPCTbl_Antlions = {npc_antlion=true,npc_antlionguard=true,npc_antlion_worker=true}
 local NPCTbl_Xen = {monster_bullchicken=true,monster_alien_grunt=true,monster_alien_slave=true,monster_alien_controller=true,monster_houndeye=true,monster_gargantua=true,monster_nihilanth=true}
-local vec_worigin = Vector(0,0,0)
+local vec_worigin = Vector(0, 0, 0)
+local ang_worigin = Angle(0, 0, 0)
 
 //util.AddNetworkString("vj_human_onthememusic")
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1608,9 +1609,9 @@ function ENT:DoChaseAnimation(OverrideChasing)
 	if OverrideChasing == false && (self.DisableChasingEnemy == true or self.IsGuard == true or self.RangeAttack_DisableChasingEnemy == true) then self:VJ_TASK_IDLE_STAND() return end
 	
 	-- If the enemy is not reachable
-	if (self:HasCondition(31) or self:IsUnreachable(self:GetEnemy())) && (IsValid(self:GetActiveWeapon()) == true && (!self:GetActiveWeapon().IsMeleeWeapon)) then
+	if (self:HasCondition(31) or self:IsUnreachable(ene)) && (IsValid(self:GetActiveWeapon()) == true && (!self:GetActiveWeapon().IsMeleeWeapon)) then
 		self:VJ_TASK_CHASE_ENEMY(true)
-		self:RememberUnreachable(self:GetEnemy(), 2)
+		self:RememberUnreachable(ene, 2)
 	else -- Is reachable, so chase the enemy!
 		self:VJ_TASK_CHASE_ENEMY(false)
 	end
@@ -3408,16 +3409,16 @@ function ENT:DoEntityRelationshipCheck()
 					for _,friclass in ipairs(self.VJ_NPC_Class) do
 						if friclass == "CLASS_PLAYER_ALLY" && self.PlayerFriendly == false then self.PlayerFriendly = true end
 						if (friclass == "CLASS_COMBINE" && NPCTbl_Combine[vClass]) or (friclass == "CLASS_ZOMBIE" && NPCTbl_Zombies[vClass]) or (friclass == "CLASS_ANTLION" && NPCTbl_Antlions[vClass]) or (friclass == "CLASS_XEN" && NPCTbl_Xen[vClass]) then
-							v:AddEntityRelationship(self,D_LI,99)
-							self:AddEntityRelationship(v,D_LI,99)
+							v:AddEntityRelationship(self, D_LI, 99)
+							self:AddEntityRelationship(v, D_LI, 99)
 							entisfri = true
 						end
 						if (v.VJ_NPC_Class /*&& friclass != "CLASS_PLAYER_ALLY"*/ && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
 							if friclass == "CLASS_PLAYER_ALLY" then
 								if self.FriendsWithAllPlayerAllies == true && v.FriendsWithAllPlayerAllies == true then
 									entisfri = true
-									if vNPC then v:AddEntityRelationship(self,D_LI,99) end
-									self:AddEntityRelationship(v,D_LI,99)
+									if vNPC then v:AddEntityRelationship(self, D_LI, 99) end
+									self:AddEntityRelationship(v, D_LI, 99)
 								end
 							else
 								entisfri = true
@@ -3425,8 +3426,8 @@ function ENT:DoEntityRelationshipCheck()
 									self.ResetedEnemy = true
 									self:ResetEnemy(false)
 								end
-								if vNPC then v:AddEntityRelationship(self,D_LI,99) end
-								self:AddEntityRelationship(v,D_LI,99)
+								if vNPC then v:AddEntityRelationship(self, D_LI, 99) end
+								self:AddEntityRelationship(v, D_LI, 99)
 							end
 						end
 					end
@@ -3435,30 +3436,30 @@ function ENT:DoEntityRelationshipCheck()
 						/*for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
 							if string.find(vClass, fritbl) then
 								entisfri = true
-								v:AddEntityRelationship(self,D_LI,99)
-								self:AddEntityRelationship(v,D_LI,99)
+								v:AddEntityRelationship(self, D_LI, 99)
+								self:AddEntityRelationship(v, D_LI, 99)
 							end
 						end
 						if VJ_HasValue(self.VJ_FriendlyNPCsSingle,vClass) then
 							entisfri = true
-							v:AddEntityRelationship(self,D_LI,99)
-							self:AddEntityRelationship(v,D_LI,99)
+							v:AddEntityRelationship(self, D_LI, 99)
+							self:AddEntityRelationship(v, D_LI, 99)
 						end*/
 						if self.PlayerFriendly == true then
 							if NPCTbl_Resistance[vClass] then
-								v:AddEntityRelationship(self,D_LI,99)
-								self:AddEntityRelationship(v,D_LI,99)
+								v:AddEntityRelationship(self, D_LI, 99)
+								self:AddEntityRelationship(v, D_LI, 99)
 								entisfri = true
 							end
 							if self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true then
 								entisfri = true
-								v:AddEntityRelationship(self,D_LI,99)
-								self:AddEntityRelationship(v,D_LI,99)
+								v:AddEntityRelationship(self, D_LI, 99)
+								self:AddEntityRelationship(v, D_LI, 99)
 							end
 						end
 						if self.VJFriendly == true && v.IsVJBaseSNPC == true then
-							v:AddEntityRelationship(self,D_LI,99)
-							self:AddEntityRelationship(v,D_LI,99)
+							v:AddEntityRelationship(self, D_LI, 99)
+							self:AddEntityRelationship(v, D_LI, 99)
 							entisfri = true
 						end
 					end
@@ -3468,14 +3469,14 @@ function ENT:DoEntityRelationshipCheck()
 					if (self.PlayerFriendly == true or entisfri == true/* or self:Disposition(v) == D_LI*/) then
 						if inEneTbl == false then
 							entisfri = true
-							self:AddEntityRelationship(v,D_LI,99)
+							self:AddEntityRelationship(v, D_LI, 99)
 							//DoPlayerSight()
 						else
 							entisfri = false
 						end
 					end
 					if (!self.IsVJBaseSNPC_Tank) && !IsValid(self:GetEnemy()) && entisfri == false then
-						if entisfri == false then self:AddEntityRelationship(v,D_NU,99) end
+						if entisfri == false then self:AddEntityRelationship(v, D_NU, 99) end
 						if v:Crouching() && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightdist = 5000 else sightdist = 2000 end end
 						if vDistanceToMy < (self.InvestigateSoundDistance * v.VJ_LastInvestigateSdLevel) && ((CurTime() - v.VJ_LastInvestigateSd) <= 1) then
 							if self.NextInvestigateSoundMove < CurTime() then
@@ -3506,7 +3507,7 @@ function ENT:DoEntityRelationshipCheck()
 			print(CurTime() - self:GetEnemyFirstTimeSeen(v))*/
 
 			if self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye != v then
-				//self:AddEntityRelationship(v,D_NU,99)
+				//self:AddEntityRelationship(v, D_NU, 99)
 				v = self.VJ_TheControllerBullseye
 				vPlayer = false
 			end
@@ -4086,6 +4087,8 @@ function ENT:SpawnBloodDecal(dmginfo,hitgroup)
 		if math.random(1,2) == 1 then util.Decal(VJ_PICK(self.CustomBlood_Decal), dmg_pos, d2_endpos + Vector(math.random(-120,120), math.random(-120,120),0),self) end
 	end
 end
+local vecZ30 = Vector(0, 0, 30)
+local vecZ1 = Vector(0, 0, 1)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodPool(dmginfo,hitgroup)
 	if !IsValid(self.Corpse) then return end
@@ -4095,18 +4098,19 @@ function ENT:SpawnBloodPool(dmginfo,hitgroup)
 	timer.Simple(2.2,function()
 		if IsValid(GetCorpse) then
 			local tr = util.TraceLine({
-				start = GetCorpse:GetPos()+GetCorpse:OBBCenter(),
-				endpos = GetCorpse:GetPos()+GetCorpse:OBBCenter()-Vector(0,0,30),
+				start = GetCorpse:GetPos() + GetCorpse:OBBCenter(),
+				endpos = GetCorpse:GetPos() + GetCorpse:OBBCenter() - vecZ30,
 				filter = GetCorpse, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
 				mask = CONTENTS_SOLID
 			})
 			-- (X,Y,Z) | (Ver, Var, Goghme)
-			if tr.HitWorld && (tr.HitNormal == Vector(0.0,0.0,1.0)) then // (tr.Fraction <= 0.405)
-				ParticleEffect(GetBloodPool,tr.HitPos,Angle(0,0,0),nil)
+			if tr.HitWorld && (tr.HitNormal == vecZ1) then // (tr.Fraction <= 0.405)
+				ParticleEffect(GetBloodPool, tr.HitPos, ang_worigin, nil)
 			end
 		end
 	end)
 end
+local vecZ500 = Vector(0, 0, 500)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PriorToKilled(dmginfo,hitgroup)
 	self:CustomOnInitialKilled(dmginfo,hitgroup)
@@ -4153,7 +4157,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 			self:SetLocalPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the NPC is too close to the ground
 			local tr = util.TraceLine({
 				start = self:GetPos(),
-				endpos = self:GetPos() - Vector(0, 0, 500),
+				endpos = self:GetPos() - vecZ500,
 				filter = self //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
 			})
 			util.Decal(pickdecal,tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
@@ -4509,13 +4513,13 @@ function ENT:DropWeaponOnDeathCode(dmginfo,hitgroup)
 	self:CustomOnDropWeapon(dmginfo,hitgroup)
 	
 	self.CurrentWeaponEntity = self:GetActiveWeapon()
-	local gunang = Angle(0,0,0)
+	local gunang = Angle(0, 0, 0)
 	local tbl1 = {weapon_ar2=true, weapon_vj_ar2=true, weapon_vj_blaster=true, weapon_pistol=true, weapon_vj_9mmpistol=true, weapon_vj_357=true, weapon_shotgun=true, weapon_vj_spas12=true, weapon_annabelle=true, weapon_rpg = true}
 	local tbl2 = {weapon_crowbar=true, weapon_stunstick=true}
 	if tbl1[self.CurrentWeaponEntity:GetClass()] == true then
-		gunang = Angle(0,180,0)
+		gunang = Angle(0, 180, 0)
 	elseif tbl2[self.CurrentWeaponEntity:GetClass()] == true then
-		gunang = Angle(90,0,0)
+		gunang = Angle(90, 0, 0)
 	end
 
 	local nohandattach = true
