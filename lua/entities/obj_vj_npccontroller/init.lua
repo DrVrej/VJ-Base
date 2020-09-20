@@ -35,7 +35,7 @@ function ENT:CustomOnRemove() end
 ENT.VJC_Data_Player = nil -- A hash table to hold all the values that need to be reset after the player stops controlling
 ENT.VJC_Data_NPC = nil -- A hash table to hold all the values that need to be reset after the NPC is uncontrolled
 ENT.VJC_Camera_Mode = 1 -- Current camera mode | 1 = Third, 2 = First
-ENT.VJC_Camera_CurZoom = Vector(0,0,0)
+ENT.VJC_Camera_CurZoom = Vector(0, 0, 0)
 ENT.VJC_Key_Last = BUTTON_CODE_NONE -- The last button the user pressed
 ENT.VJC_Key_LastTime = 0 -- Time since the user last pressed a key
 ENT.VJC_NPC_LastPos = Vector(0, 0, 0)
@@ -205,16 +205,16 @@ hook.Add("PlayerButtonDown", "vj_controller_PlayerButtonDown", function(ply, but
 		end
 		
 		-- Camera mode
-		if button == KEY_V then
+		if button == KEY_H then
 			cent.VJC_Camera_Mode = (cent.VJC_Camera_Mode == 1 and 2) or 1
 		end
 		
 		-- Zoom
 		local zoom = ply:GetInfoNum("vj_npc_cont_zoomdist", 5)
 		if button == KEY_LEFT then
-			cent.VJC_Camera_CurZoom = cent.VJC_Camera_CurZoom + Vector(0, zoom, 0)
-		elseif button == KEY_RIGHT then
 			cent.VJC_Camera_CurZoom = cent.VJC_Camera_CurZoom - Vector(0, zoom, 0)
+		elseif button == KEY_RIGHT then
+			cent.VJC_Camera_CurZoom = cent.VJC_Camera_CurZoom + Vector(0, zoom, 0)
 		elseif button == KEY_UP then
 			cent.VJC_Camera_CurZoom = cent.VJC_Camera_CurZoom + (ply:KeyDown(IN_SPEED) and Vector(0, 0, zoom) or Vector(zoom, 0, 0))
 		elseif button == KEY_DOWN then
@@ -302,7 +302,8 @@ function ENT:Think()
 			end
 		end
 		
-		if self.VJCE_NPC.Flinching == true then return end
+		if self.VJCE_NPC.Flinching == true or self.VJCE_NPC:GetActivity() == ACT_JUMP or self.VJCE_NPC:GetActivity() == ACT_GLIDE or self.VJCE_NPC:GetActivity() == ACT_LAND then return end
+		
 		-- Turning
 		if !self.VJCE_NPC:IsMoving() && self.VJCE_NPC.PlayingAttackAnimation == false && canTurn && self.VJCE_NPC.IsReloadingWeapon != true && CurTime() > self.VJCE_NPC.NextChaseTime && self.VJCE_NPC.IsVJBaseSNPC_Tank != true then
 			//self.VJCE_NPC:SetAngles(Angle(0,self.VJCE_Player:GetAimVector():Angle().y,0))
