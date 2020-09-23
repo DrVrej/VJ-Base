@@ -977,6 +977,7 @@ ENT.NextCallForHelpSoundT = 0
 ENT.LostEnemySoundT = 0
 ENT.NextDoAnyAttackT = 0
 ENT.NearestPointToEnemyDistance = 0
+ENT.JumpLegalLandingTime = 0
 ENT.ReachableEnemyCount = 0
 ENT.LatestEnemyDistance = 0
 ENT.HealthRegenerationDelayT = 0
@@ -993,7 +994,7 @@ ENT.EntitiesToRunFrom = {obj_spore=true,obj_vj_grenade=true,obj_grenade=true,obj
 ENT.EntitiesToThrowBack = {obj_spore=true,obj_vj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,obj_cpt_grenade=true,cw_grenade_thrown=true,cw_flash_thrown=true,cw_smoke_thrown=true,ent_hl1_grenade=true}
 ENT.DefaultGibDamageTypes = {DMG_ALWAYSGIB,DMG_ENERGYBEAM,DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SONIC}
 
--- Static values
+-- Localized static values
 local NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
 local NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true,monster_scientist=true,monster_barney=true}
 local NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack=true}
@@ -1002,6 +1003,18 @@ local NPCTbl_Antlions = {npc_antlion=true,npc_antlionguard=true,npc_antlion_work
 local NPCTbl_Xen = {monster_bullchicken=true,monster_alien_grunt=true,monster_alien_slave=true,monster_alien_controller=true,monster_houndeye=true,monster_gargantua=true,monster_nihilanth=true}
 local vec_worigin = Vector(0, 0, 0)
 local ang_worigin = Angle(0, 0, 0)
+
+local CurTime = CurTime
+local IsValid = IsValid
+local GetConVarNumber = GetConVarNumber
+local istable = istable
+local isstring = isstring
+local isnumber = isnumber
+local tonumber = tonumber
+local tostring = tostring
+local string_find = string.find
+local string_Replace = string.Replace
+local table_remove = table.remove
 
 //util.AddNetworkString("vj_human_onthememusic")
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1235,12 +1248,12 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name, vACT_StopActivities, vACT_StopActivi
 	local IsString = isstring(vACT_Name)
 	
 	-- Gesture handling
-	if string.find(vACT_Name, "vjges_") then -- Gesture string-fixing
+	if string_find(vACT_Name, "vjges_") then -- Gesture string-fixing
 		IsGesture = true
-		vACT_Name = string.Replace(vACT_Name, "vjges_", "") -- Delete the gesture prefix
-		if string.find(vACT_Name, "vjseq_") then -- If the 2nd prefix is a sequence, then this is a gesture-sequence
+		vACT_Name = string_Replace(vACT_Name, "vjges_", "") -- Delete the gesture prefix
+		if string_find(vACT_Name, "vjseq_") then -- If the 2nd prefix is a sequence, then this is a gesture-sequence
 			IsSequence = true
-			vACT_Name = string.Replace(vACT_Name, "vjseq_", "") -- Delete the second prefix
+			vACT_Name = string_Replace(vACT_Name, "vjseq_", "") -- Delete the second prefix
 		elseif self:LookupSequence(vACT_Name) == -1 then -- Check if it's a number by looking up the string. If it's not, then it will later be converted to an activity
 			vACT_Name = tonumber(vACT_Name)
 		end
@@ -1259,9 +1272,9 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name, vACT_StopActivities, vACT_StopActivi
 			vACT_Name = self:GetSequenceName(self:SelectWeightedSequence(vACT_Name))
 		end
 	elseif IsString then -- Sequence string-fixing
-		if string.find(vACT_Name, "vjseq_") then -- If the sequence prefix is given...
+		if string_find(vACT_Name, "vjseq_") then -- If the sequence prefix is given...
 			IsSequence = true
-			vACT_Name = string.Replace(vACT_Name, "vjseq_", "") -- Delete the sequence prefix
+			vACT_Name = string_Replace(vACT_Name, "vjseq_", "") -- Delete the sequence prefix
 		else -- If prefix isn't given then check if it can be converted to an activity or else just play it as a sequence
 			local checkanim = self:GetSequenceActivity(self:LookupSequence(vACT_Name))
 			if checkanim == nil or checkanim == -1 then
@@ -1373,135 +1386,135 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name, vACT_StopActivities, vACT_StopActivi
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_TASK_FACE_X(FaceType,CustomCode)
+function ENT:VJ_TASK_FACE_X(faceType, customFunc)
 	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
-	if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false or (self.IsVJBaseSNPC_Tank == true) then return end
-	FaceType = FaceType or "TASK_FACE_TARGET"
+	if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false) or (self.IsVJBaseSNPC_Tank == true) then return end
 	//self.NextIdleStandTime = CurTime() + 1.2
 	local vschedFaceX = ai_vj_schedule.New("vj_face_x")
-	vschedFaceX:EngTask(FaceType, 0)
-	if (CustomCode) then CustomCode(vschedFaceX) end
+	vschedFaceX:EngTask(faceType or "TASK_FACE_TARGET", 0)
+	if (customFunc) then customFunc(vschedFaceX) end
 	self:StartSchedule(vschedFaceX)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_TASK_GOTO_LASTPOS(MoveType,CustomCode)
-	MoveType = MoveType or "TASK_RUN_PATH"
+function ENT:VJ_TASK_GOTO_LASTPOS(moveType, customFunc)
 	local vsched = ai_vj_schedule.New("vj_goto_lastpos")
 	vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-	//vsched:EngTask(MoveType, 0)
+	//vsched:EngTask(moveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched.IsMovingTask = true
-	if MoveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
+	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
 	//self.CanDoSelectScheduleAgain = false
 	//vsched.RunCode_OnFinish = function()
 		//self.CanDoSelectScheduleAgain = true
 	//end
-	if (CustomCode) then CustomCode(vsched) end
+	if (customFunc) then customFunc(vsched) end
 	self:StartSchedule(vsched)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_TASK_GOTO_TARGET(MoveType,CustomCode)
-	MoveType = MoveType or "TASK_RUN_PATH"
+function ENT:VJ_TASK_GOTO_TARGET(moveType, customFunc)
 	local vsched = ai_vj_schedule.New("vj_goto_target")
 	vsched:EngTask("TASK_GET_PATH_TO_TARGET", 0)
-	//vsched:EngTask(MoveType, 0)
+	//vsched:EngTask(moveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched:EngTask("TASK_FACE_TARGET", 1)
 	vsched.IsMovingTask = true
-	if MoveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
-	if (CustomCode) then CustomCode(vsched) end
+	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
+	if (customFunc) then customFunc(vsched) end
 	self:StartSchedule(vsched)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_TASK_GOTO_PLAYER(MoveType,CustomCode)
-	MoveType = MoveType or "TASK_RUN_PATH"
+function ENT:VJ_TASK_GOTO_PLAYER(moveType, customFunc)
 	local vsched = ai_vj_schedule.New("vj_goto_player")
 	vsched:EngTask("TASK_GET_PATH_TO_PLAYER", 0)
-	//vsched:EngTask(MoveType, 0)
+	//vsched:EngTask(moveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched.IsMovingTask = true
-	if MoveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
-	if (CustomCode) then CustomCode(vsched) end
+	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
+	if (customFunc) then customFunc(vsched) end
 	self:StartSchedule(vsched)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_TASK_COVER_FROM_ENEMY(MoveType,CustomCode)
+function ENT:VJ_TASK_COVER_FROM_ENEMY(moveType, customFunc)
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AAMove_Wander(true) return end
-	MoveType = MoveType or "TASK_RUN_PATH"
+	moveType = moveType or "TASK_RUN_PATH"
 	local vsched = ai_vj_schedule.New("vj_cover_from_enemy")
 	vsched:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
-	//vsched:EngTask(MoveType, 0)
+	//vsched:EngTask(moveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched.IsMovingTask = true
-	if MoveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
+	if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
 	vsched.RunCode_OnFail = function()
 		local vschedFail = ai_vj_schedule.New("vj_cover_from_enemy_fail")
 		vschedFail:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 1)
 		vschedFail:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
-		//vschedFail:EngTask(MoveType, 0)
+		//vschedFail:EngTask(moveType, 0)
 		vschedFail:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 		vschedFail.IsMovingTask = true
-		if MoveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vschedFail.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vschedFail.IsMovingTask_Walk = true end
-		if (CustomCode) then CustomCode(vschedFail) end
+		if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vschedFail.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vschedFail.IsMovingTask_Walk = true end
+		if (customFunc) then customFunc(vschedFail) end
 		self:StartSchedule(vschedFail)
 	end
-	if (CustomCode) then CustomCode(vsched) end
+	if (customFunc) then customFunc(vsched) end
 	self:StartSchedule(vsched)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local task_idleWander = ai_vj_schedule.New("vj_idle_wander")
+	//task_idleWander:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 0)
+	//task_idleWander:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
+	task_idleWander:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 350)
+	//task_idleWander:EngTask("TASK_WALK_PATH", 0)
+	task_idleWander:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	task_idleWander.ResetOnFail = true
+	task_idleWander.CanBeInterrupted = true
+	task_idleWander.IsMovingTask = true
+	task_idleWander.IsMovingTask_Walk = true
+	
 function ENT:VJ_TASK_IDLE_WANDER()
 	self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk))
-	local vsched = ai_vj_schedule.New("vj_idle_wander")
 	//self:SetLastPosition(self:GetPos() + self:GetForward() * 300)
-	//vsched:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 0)
-	//vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-	vsched:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 350)
-	//vsched:EngTask("TASK_WALK_PATH", 0)
-	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	vsched.ResetOnFail = true
-	vsched.CanBeInterrupted = true
-	vsched.IsMovingTask = true
-	vsched.IsMovingTask_Walk = true
-	self:StartSchedule(vsched)
+	self:StartSchedule(task_idleWander)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local task_chaseEnemyLOS = ai_vj_schedule.New("vj_chase_enemy_los")
+	task_chaseEnemyLOS:EngTask("TASK_GET_PATH_TO_ENEMY_LOS", 0)
+	//task_chaseEnemyLOS:EngTask("TASK_RUN_PATH", 0)
+	task_chaseEnemyLOS:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	//task_chaseEnemyLOS:EngTask("TASK_FACE_ENEMY", 0)
+	//task_chaseEnemyLOS.ResetOnFail = true
+	task_chaseEnemyLOS.CanShootWhenMoving = true
+	task_chaseEnemyLOS.CanBeInterrupted = true
+	task_chaseEnemyLOS.IsMovingTask = true
+	task_chaseEnemyLOS.IsMovingTask_Run = true
+--
+local task_chaseEnemy = ai_vj_schedule.New("vj_chase_enemy")
+	task_chaseEnemy:EngTask("TASK_GET_PATH_TO_ENEMY", 0)
+	//task_chaseEnemy:EngTask("TASK_RUN_PATH", 0)
+	task_chaseEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	//task_chaseEnemy:EngTask("TASK_FACE_ENEMY", 0)
+	//task_chaseEnemy.ResetOnFail = true
+	task_chaseEnemy.CanShootWhenMoving = true
+	//task_chaseEnemy.StopScheduleIfNotMoving = true
+	task_chaseEnemy.CanBeInterrupted = true
+	task_chaseEnemy.IsMovingTask = true
+	task_chaseEnemy.IsMovingTask_Run = true
+--
+local varChaseEnemy = "vj_chase_enemy"
 function ENT:VJ_TASK_CHASE_ENEMY(UseLOSChase)
 	UseLOSChase = UseLOSChase or false
 	//if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
-	if (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) <= 12) && self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
-	if self:GetActivity() == ACT_JUMP or self:GetActivity() == ACT_GLIDE or self:GetActivity() == ACT_LAND or self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
+	if (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) <= 12) && self.CurrentSchedule != nil && self.CurrentSchedule.Name == varChaseEnemy then return end
+	if (CurTime() <= self.JumpLegalLandingTime && (self:GetActivity() == ACT_JUMP or self:GetActivity() == ACT_GLIDE or self:GetActivity() == ACT_LAND)) or self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
 	self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 	if UseLOSChase == true then
-		local vsched = ai_vj_schedule.New("vj_chase_enemy_los")
-		vsched:EngTask("TASK_GET_PATH_TO_ENEMY_LOS", 0)
-		//vsched:EngTask("TASK_RUN_PATH", 0)
-		vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-		//vsched:EngTask("TASK_FACE_ENEMY", 0)
-		//vsched.ResetOnFail = true
-		vsched.CanShootWhenMoving = true
-		vsched.CanBeInterrupted = true
-		vsched.IsMovingTask = true
-		vsched.IsMovingTask_Run = true
-		vsched.RunCode_OnFinish = function()
+		task_chaseEnemyLOS.RunCode_OnFinish = function()
 			if IsValid(self:GetEnemy()) then
 				self:RememberUnreachable(self:GetEnemy(), 0)
 				self:VJ_TASK_CHASE_ENEMY(false)
 			end
 		end
-		self:StartSchedule(vsched)
+		self:StartSchedule(task_chaseEnemyLOS)
 	else
-		local vsched = ai_vj_schedule.New("vj_chase_enemy")
-		vsched:EngTask("TASK_GET_PATH_TO_ENEMY", 0)
-		//vsched:EngTask("TASK_RUN_PATH", 0)
-		vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-		//vsched:EngTask("TASK_FACE_ENEMY", 0)
-		//vsched.ResetOnFail = true
-		vsched.CanShootWhenMoving = true
-		//vsched.StopScheduleIfNotMoving = true
-		vsched.CanBeInterrupted = true
-		vsched.IsMovingTask = true
-		vsched.IsMovingTask_Run = true
-		self:StartSchedule(vsched)
+		self:StartSchedule(task_chaseEnemy)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3340,8 +3353,8 @@ function ENT:DoRelationshipCheck(argent)
 	-- false = Tematsine pari e
 	-- "Neutral" = Tematsine ne keshe ne pari e
 	-- true == Tematsine tsnami e
-	local nt_bool, nt_str = self:VJ_HasNoTarget(argent)
-	if nt_str == "Bullseye" then return true end
+	local nt_bool, nt_be = self:VJ_HasNoTarget(argent)
+	if nt_be == 1 then return true end
 	if nt_bool == true or NPCTbl_Animals[argent:GetClass()] then return "Neutral" end
 	if self:GetClass() == argent:GetClass() then return false end
 	if argent:Health() > 0 && self:Disposition(argent) != D_LI then
@@ -3358,6 +3371,11 @@ function ENT:DoRelationshipCheck(argent)
 	end
 	return false
 end
+local varCPly = "CLASS_PLAYER_ALLY"
+local varCAnt = "CLASS_ANTLION"
+local varCCom = "CLASS_COMBINE"
+local varCXen = "CLASS_XEN"
+local varCZom = "CLASS_ZOMBIE"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoEntityRelationshipCheck()
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.Behavior == VJ_BEHAVIOR_PASSIVE*/ then return false end
@@ -3384,10 +3402,10 @@ function ENT:DoEntityRelationshipCheck()
 	while it <= #posenemies do
 		local v = posenemies[it]
 		if !IsValid(v) then
-			table.remove(posenemies,it)
+			table_remove(posenemies,it)
 		else
 			it = it + 1
-			//if !IsValid(v) then table.remove(self.CurrentPossibleEnemies,tonumber(v)) continue end
+			//if !IsValid(v) then table_remove(self.CurrentPossibleEnemies,tonumber(v)) continue end
 			//if !IsValid(v) then continue end
 			if self:VJ_HasNoTarget(v) == true then
 				if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
@@ -3395,7 +3413,7 @@ function ENT:DoEntityRelationshipCheck()
 				end
 				continue
 			end
-			//if v:Health() <= 0 then table.remove(self.CurrentPossibleEnemies,k) continue end
+			//if v:Health() <= 0 then table_remove(self.CurrentPossibleEnemies,k) continue end
 			local entisfri = false
 			local vPos = v:GetPos()
 			local vDistanceToMy = vPos:Distance(MyPos)
@@ -3407,14 +3425,14 @@ function ENT:DoEntityRelationshipCheck()
 				local inEneTbl = VJ_HasValue(self.VJ_AddCertainEntityAsEnemy,v)
 				if self.HasAllies == true && inEneTbl == false then
 					for _,friclass in ipairs(self.VJ_NPC_Class) do
-						if friclass == "CLASS_PLAYER_ALLY" && self.PlayerFriendly == false then self.PlayerFriendly = true end
-						if (friclass == "CLASS_COMBINE" && NPCTbl_Combine[vClass]) or (friclass == "CLASS_ZOMBIE" && NPCTbl_Zombies[vClass]) or (friclass == "CLASS_ANTLION" && NPCTbl_Antlions[vClass]) or (friclass == "CLASS_XEN" && NPCTbl_Xen[vClass]) then
+						if friclass == varCPly && self.PlayerFriendly == false then self.PlayerFriendly = true end
+						if (friclass == varCCom && NPCTbl_Combine[vClass]) or (friclass == varCZom && NPCTbl_Zombies[vClass]) or (friclass == varCAnt && NPCTbl_Antlions[vClass]) or (friclass == varCXen && NPCTbl_Xen[vClass]) then
 							v:AddEntityRelationship(self, D_LI, 99)
 							self:AddEntityRelationship(v, D_LI, 99)
 							entisfri = true
 						end
-						if (v.VJ_NPC_Class /*&& friclass != "CLASS_PLAYER_ALLY"*/ && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
-							if friclass == "CLASS_PLAYER_ALLY" then
+						if (v.VJ_NPC_Class /*&& friclass != varCPly*/ && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
+							if friclass == varCPly then
 								if self.FriendsWithAllPlayerAllies == true && v.FriendsWithAllPlayerAllies == true then
 									entisfri = true
 									if vNPC then v:AddEntityRelationship(self, D_LI, 99) end
@@ -3434,7 +3452,7 @@ function ENT:DoEntityRelationshipCheck()
 					if vNPC then
 						-- Deprecated system
 						/*for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
-							if string.find(vClass, fritbl) then
+							if string_find(vClass, fritbl) then
 								entisfri = true
 								v:AddEntityRelationship(self, D_LI, 99)
 								self:AddEntityRelationship(v, D_LI, 99)
@@ -4232,7 +4250,7 @@ function ENT:PlayGibOnDeathSounds(dmginfo,hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CreateGibEntity(Ent,Models,Tbl_Features,CustomCode)
+function ENT:CreateGibEntity(Ent,Models,Tbl_Features,customFunc)
 	// self:CreateGibEntity("prop_ragdoll","",{Pos=self:LocalToWorld(Vector(0,3,0)),Ang=self:GetAngles(),Vel=})
 	if self.AllowedToGib == false then return end
 	Ent = Ent or "prop_ragdoll"
@@ -4293,7 +4311,7 @@ function ENT:CreateGibEntity(Ent,Models,Tbl_Features,CustomCode)
 	if vTbl_RemoveOnCorpseDelete == true then//self.Corpse:DeleteOnRemove(extraent)
 		self.ExtraCorpsesToRemove_Transition[#self.ExtraCorpsesToRemove_Transition+1] = gib
 	end
-	if (CustomCode) then CustomCode(gib) end
+	if (customFunc) then customFunc(gib) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnKilled(dmginfo,hitgroup)
@@ -4453,7 +4471,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CreateExtraDeathCorpse(Ent,Models,Tbl_Features,CustomCode)
+function ENT:CreateExtraDeathCorpse(Ent,Models,Tbl_Features,customFunc)
 	-- Should only be ran after self.Corpse has been created!
 	if !IsValid(self.Corpse) then return end
 	local dmginfo = self.Corpse.DamageInfo
@@ -4494,7 +4512,7 @@ function ENT:CreateExtraDeathCorpse(Ent,Models,Tbl_Features,CustomCode)
 	if vTbl_RemoveOnCorpseDelete == true then//self.Corpse:DeleteOnRemove(extraent)
 		self.Corpse.ExtraCorpsesToRemove[#self.Corpse.ExtraCorpsesToRemove+1] = extraent
 	end
-	if (CustomCode) then CustomCode(extraent) end
+	if (customFunc) then customFunc(extraent) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
@@ -5164,9 +5182,9 @@ function ENT:ConvarsOnInit()
 	if GetConVarNumber("vj_npc_sd_nosounds") == 1 then self.HasSounds = false end
 	if GetConVarNumber("vj_npc_vjfriendly") == 1 then self.VJFriendly = true end
 	if GetConVarNumber("vj_npc_playerfriendly") == 1 then self.PlayerFriendly = true end
-	if GetConVarNumber("vj_npc_antlionfriendly") == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_ANTLION" end
-	if GetConVarNumber("vj_npc_combinefriendly") == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_COMBINE" end
-	if GetConVarNumber("vj_npc_zombiefriendly") == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_ZOMBIE" end
+	if GetConVarNumber("vj_npc_antlionfriendly") == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCAnt end
+	if GetConVarNumber("vj_npc_combinefriendly") == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCCom end
+	if GetConVarNumber("vj_npc_zombiefriendly") == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCZom end
 	if GetConVarNumber("vj_npc_noallies") == 1 then self.HasAllies = false self.PlayerFriendly = false end
 	if GetConVarNumber("vj_npc_nocorpses") == 1 then self.HasDeathRagdoll = false end
 	if GetConVarNumber("vj_npc_itemdrops") == 0 then self.HasItemDropsOnDeath = false end

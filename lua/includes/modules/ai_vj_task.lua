@@ -10,10 +10,6 @@ NOTES: A lot of the fix is from: https://github.com/garrynewman/garrysmod/pull/5
 if (CLIENT) then return end
 
 local setmetatable 		= setmetatable
-local tostring 			= tostring
-local table				= table
-local Msg				= Msg
-local Error				= Error
 
 local TaskList = {
 ["TASK_INVALID"] = 0,

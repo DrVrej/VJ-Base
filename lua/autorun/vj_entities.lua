@@ -6,6 +6,19 @@
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 include('autorun/vj_controls.lua')
+
+-- Localized static values
+local CurTime = CurTime
+local IsValid = IsValid
+local GetConVarNumber = GetConVarNumber
+local istable = istable
+local isstring = isstring
+local isnumber = isnumber
+local tonumber = tonumber
+local string_find = string.find
+local string_Replace = string.Replace
+local table_remove = table.remove
+
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Spawn Menu Creation ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -204,8 +217,8 @@ function VJ_AnimationExists(argent, actname)
 	if actname == nil or isbool(actname) then return false end
 	
 	-- Get rid of the gesture prefix
-	if string.find(actname, "vjges_") then
-		actname = string.Replace(actname, "vjges_", "")
+	if string_find(actname, "vjges_") then
+		actname = string_Replace(actname, "vjges_", "")
 		if argent:LookupSequence(actname) == -1 then
 			actname = tonumber(actname)
 		end
@@ -215,7 +228,7 @@ function VJ_AnimationExists(argent, actname)
 		if (argent:SelectWeightedSequence(actname) == -1 or argent:SelectWeightedSequence(actname) == 0) && (argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "Not Found!" or argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "No model!") then
 		return false end
 	elseif isstring(actname) then
-		if string.find(actname, "vjseq_") then actname = string.Replace(actname, "vjseq_", "") end
+		if string_find(actname, "vjseq_") then actname = string_Replace(actname, "vjseq_", "") end
 		if argent:LookupSequence(actname) == -1 then
 		return false end
 	end
@@ -226,8 +239,8 @@ function VJ_GetSequenceDuration(argent, actname)
 	if VJ_AnimationExists(argent, actname) == false then return 0 end -- Invalid animation, so 0
 	
 	-- Get rid of the gesture prefix
-	if string.find(actname, "vjges_") then
-		actname = string.Replace(actname, "vjges_", "")
+	if string_find(actname, "vjges_") then
+		actname = string_Replace(actname, "vjges_", "")
 		if argent:LookupSequence(actname) == -1 then
 			actname = tonumber(actname)
 		end
@@ -236,8 +249,8 @@ function VJ_GetSequenceDuration(argent, actname)
 	if isnumber(actname) then
 		return argent:SequenceDuration(argent:SelectWeightedSequence(actname))
 	elseif isstring(actname) then
-		if string.find(actname, "vjseq_") then
-			actname = string.Replace(actname, "vjseq_", "")
+		if string_find(actname, "vjseq_") then
+			actname = string_Replace(actname, "vjseq_", "")
 		end
 		return argent:SequenceDuration(argent:LookupSequence(actname))
 	end
@@ -246,9 +259,9 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_GetSequenceName(argent, actname)
 	if VJ_AnimationExists(argent, actname) == false then return 0 end -- Invalid animation, so 0
-	if string.find(actname, "vjges_") then actname = string.Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
+	if string_find(actname, "vjges_") then actname = string_Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
 	if isnumber(actname) then return argent:GetSequenceName(argent:SelectWeightedSequence(actname)) end
-	if isstring(actname) then if string.find(actname, "vjseq_") then actname = string.Replace(actname,"vjseq_","") end return argent:GetSequenceName(argent:LookupSequence(actname)) end
+	if isstring(actname) then if string_find(actname, "vjseq_") then actname = string_Replace(actname,"vjseq_","") end return argent:GetSequenceName(argent:LookupSequence(actname)) end
 	return nil
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -325,6 +338,20 @@ function VJ_CreateTestObject(pos, ang, color, rtime, mdl)
 	timer.Simple(rtime,function() if IsValid(obj) then obj:Remove() end end)
 	return obj
 end
+---------------------------------------------------------------------------------------------------------------------------------------------
+/* Do multiple test and compare the 2 results using this: https://calculla.com/columnar_addition_calculator
+	VJ_RunStressTest(1000, function()
+	end)
+*/
+function VJ_RunStressTest(count, func)
+	count = count or 1
+	local startTime = SysTime()
+    for _ = 1, count do
+		func()
+    end
+	local totalTime = SysTime() - startTime
+	print("Total: " .. string.format("%f", totalTime) .. " sec | Average: " .. string.format("%f", totalTime / count) .. " sec")
+end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC / Player Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -347,12 +374,12 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_HasNoTarget(argent)
 	if argent:GetClass() == "obj_vj_bullseye" && (argent.EnemyToIndividual == true) && (argent.EnemyToIndividualEnt == self) then
-		return false, "Bullseye"
+		return false, 1
 	end
 	if (argent.VJ_NoTarget == true) or (argent:IsFlagSet(FL_NOTARGET) == true) then
-		return true, ""
+		return true, 0
 	else
-		return false, ""
+		return false, 0
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -716,7 +743,7 @@ end*/
 	if not tbl then return end
 	if istable(tbl) then
 	for k, v in ipairs(tbl) do
-		if string.find(tostring(self.CurrentSound), v) then self.CurrentSound:Stop() end
+		if string_find(tostring(self.CurrentSound), v) then self.CurrentSound:Stop() end
 		end
 	end
 end*/
@@ -726,7 +753,7 @@ end*/
 	if not tbl then return false end
 	if istable(tbl) then
 	for k, v in ipairs(tbl) do
-		if string.find(tostring(self.CurrentSound), v) then
+		if string_find(tostring(self.CurrentSound), v) then
 		return true end
 		end
 	end
@@ -940,7 +967,7 @@ hook.Add("VJ_CreateSNPCCorpse", "VJ_CreateSNPCCorpse", function(corpse, owner)
 		-- Clear out all removed corpses from the table
 		for k, v in pairs(VJ_Corpses) do
 			if !IsValid(v) then
-				table.remove(VJ_Corpses, k)
+				table_remove(VJ_Corpses, k)
 			end
 		end
 		
@@ -951,7 +978,7 @@ hook.Add("VJ_CreateSNPCCorpse", "VJ_CreateSNPCCorpse", function(corpse, owner)
 		-- Check if we surpassed the limit!
 		if count > GetConVarNumber("vj_npc_globalcorpselimit") then
 			local GetTheFirstValue = table.GetFirstValue(VJ_Corpses)
-			table.remove(VJ_Corpses, table.GetFirstKey(VJ_Corpses))
+			table_remove(VJ_Corpses, table.GetFirstKey(VJ_Corpses))
 			if IsValid(GetTheFirstValue) then
 				GetTheFirstValue:Fire(GetTheFirstValue.FadeCorpseType, "", 0.5) -- Fade out
 				timer.Simple(1, function() if IsValid(GetTheFirstValue) then GetTheFirstValue:Remove() end end) -- Make sure it's removed
@@ -986,7 +1013,7 @@ cvars.AddChangeCallback("ai_ignoreplayers",function(convar_name, oldValue, newVa
 					if IsValid(x) && x:IsPlayer() then
 						v:AddEntityRelationship(x, D_NU, 10) -- Make the player neutral
 						if IsValid(v:GetEnemy()) && v:GetEnemy() == x then v:ResetEnemy() end -- Reset the NPC's enemy if it's a player
-						table.remove(posenemies, it) -- Remove the player from possible enemy table
+						table_remove(posenemies, it) -- Remove the player from possible enemy table
 					else
 						it = it + 1
 					end
@@ -1025,7 +1052,7 @@ if (CLIENT) then
 				if !IsValid(v.npc) then
 					v.channel:Stop()
 					v.channel = nil
-					table.remove(VJ_CL_MUSIC_CURRENT,k)
+					table_remove(VJ_CL_MUSIC_CURRENT,k)
 				end
 			end
 			if #VJ_CL_MUSIC_CURRENT <= 0 then
