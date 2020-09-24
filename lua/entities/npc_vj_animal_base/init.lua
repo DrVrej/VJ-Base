@@ -403,9 +403,9 @@ function ENT:CustomOnTouch(entity) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnCondition(iCondition) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnAcceptInput(key,activator,caller,data) end
+function ENT:CustomOnAcceptInput(key, activator, caller, data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnFollowPlayer(key,activator,caller,data) end
+function ENT:CustomOnFollowPlayer(key, activator, caller, data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPlayerSight(argent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -831,9 +831,9 @@ function ENT:Touch(entity)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AcceptInput(key,activator,caller,data)
-	self:CustomOnAcceptInput(key,activator,caller,data)
-	self:FollowPlayerCode(key,activator,caller,data)
+function ENT:AcceptInput(key, activator, caller, data)
+	self:CustomOnAcceptInput(key, activator, caller, data)
+	self:FollowPlayerCode(key, activator, caller, data)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnCondition(iCondition)
@@ -851,7 +851,7 @@ function ENT:FollowPlayerReset()
 	self.DisableChasingEnemy = self.FollowPlayer_ChaseValue
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:FollowPlayerCode(key,activator,caller,data)
+function ENT:FollowPlayerCode(key, activator, caller, data)
 	if self.FollowPlayer == false or GetConVarNumber("ai_disabled") == 1 or GetConVarNumber("ai_ignoreplayers") == 1 then return end
 	if key == self.FollowPlayerKey && activator:IsValid() && activator:Alive() && activator:IsPlayer() then
 		if self:Disposition(activator) == D_HT then
@@ -860,7 +860,7 @@ function ENT:FollowPlayerCode(key,activator,caller,data)
 			end
 			return
 		end
-		self:CustomOnFollowPlayer(key,activator,caller,data)
+		self:CustomOnFollowPlayer(key, activator, caller, data)
 		if self.FollowingPlayer == false then
 			//self:FaceCertainEntity(activator,false)
 			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then

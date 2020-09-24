@@ -56,7 +56,7 @@ function ENT:Initialize()
 	//self:SetColor(Color(255,0,0))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AcceptInput(key,activator,caller,data)
+function ENT:AcceptInput(key, activator, caller, data)
 	if !activator:IsPlayer() then return end
 	if self.Activated == false then
 		self.Activated = true

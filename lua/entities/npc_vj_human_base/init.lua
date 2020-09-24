@@ -725,11 +725,11 @@ function ENT:CustomOnTouch(entity) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnCondition(iCondition) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnAcceptInput(key,activator,caller,data) end
+function ENT:CustomOnAcceptInput(key, activator, caller, data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnHandleAnimEvent(ev,evTime,evCycle,evType,evOptions) end
+function ENT:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnFollowPlayer(key,activator,caller,data) end
+function ENT:CustomOnFollowPlayer(key, activator, caller, data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnIdleDialogue(argent, CanAnswer) return true end -- argent = An entity that it can talk to | CanAnswer = If the entity can answer back | Return false to not run the code!
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1011,12 +1011,10 @@ local istable = istable
 local isstring = isstring
 local isnumber = isnumber
 local tonumber = tonumber
-local tostring = tostring
 local string_find = string.find
 local string_Replace = string.Replace
 local table_remove = table.remove
 
-//util.AddNetworkString("vj_human_onthememusic")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:CustomOnPreInitialize()
@@ -1044,7 +1042,7 @@ function ENT:Initialize()
 	self.VJ_ScaleHitGroupDamage = 0
 	self.NextThrowGrenadeT = CurTime() + math.Rand(1, 5)
 	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.3, 6)
-	if self.UseTheSameGeneralSoundPitch == true then self.UseTheSameGeneralSoundPitch_PickedNumber = math.random(self.GeneralSoundPitch1,self.GeneralSoundPitch2) end
+	self.UseTheSameGeneralSoundPitch_PickedNumber = (self.UseTheSameGeneralSoundPitch and math.random(self.GeneralSoundPitch1, self.GeneralSoundPitch2)) or 0
 	if self.BloodColor == "" then -- Backwards Compatibility!
 		if self.BloodDecal == "Blood" then
 			self.BloodColor = "Red"
@@ -1154,24 +1152,21 @@ function ENT:DoChangeMovementType(SetType)
 		//if VJ_AnimationExists(self,ACT_CLIMB_UP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
 		if self.DisableWeapons == false then self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT)) end
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
-	end
-	if self.MovementType == VJ_MOVETYPE_AERIAL then
+	elseif self.MovementType == VJ_MOVETYPE_AERIAL then
 		self:SetMoveType(MOVETYPE_FLY)
 		self:CapabilitiesAdd(bit.bor(CAP_MOVE_FLY))
 		self:CapabilitiesRemove(CAP_MOVE_GROUND)
 		self:CapabilitiesRemove(CAP_MOVE_JUMP)
 		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
 		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
-	end
-	if self.MovementType == VJ_MOVETYPE_AQUATIC then
+	elseif self.MovementType == VJ_MOVETYPE_AQUATIC then
 		self:SetMoveType(MOVETYPE_FLY)
 		self:CapabilitiesAdd(bit.bor(CAP_MOVE_FLY))
 		self:CapabilitiesRemove(CAP_MOVE_GROUND)
 		self:CapabilitiesRemove(CAP_MOVE_JUMP)
 		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
 		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
-	end
-	if self.MovementType == VJ_MOVETYPE_STATIONARY then
+	elseif self.MovementType == VJ_MOVETYPE_STATIONARY then
 		if self.Stationary_UseNoneMoveType == true then
 			self:SetMoveType(MOVETYPE_NONE)
 		else
@@ -1182,8 +1177,7 @@ function ENT:DoChangeMovementType(SetType)
 		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
 		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
-	end
-	if self.MovementType == VJ_MOVETYPE_PHYSICS then
+	elseif self.MovementType == VJ_MOVETYPE_PHYSICS then
 		self:SetMoveType(MOVETYPE_VPHYSICS)
 		self:CapabilitiesRemove(CAP_MOVE_GROUND)
 		self:CapabilitiesRemove(CAP_MOVE_JUMP)
@@ -1572,24 +1566,24 @@ function ENT:VJ_TASK_IDLE_STAND()
 	//self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),finaltbl)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoIdleAnimation(IdleType)
+function ENT:DoIdleAnimation(iType)
 	if self.Dead == true or self.VJ_IsBeingControlled == true or self.PlayingAttackAnimation == true or (self.NextIdleTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
-	IdleType = IdleType or 0 -- 0 = Random | 1 = Wander | 2 = Idle Stand
+	iType = iType or 0 -- 0 = Random | 1 = Wander | 2 = Idle Stand
 	
-	if self.IdleAlwaysWander == true then IdleType = 1 end
+	if self.IdleAlwaysWander == true then iType = 1 end
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
 	if self.DisableWandering == true or self.IsGuard == true or self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsVJBaseSNPC_Tank == true or self.LastHiddenZone_CanWander == false or self.NextWanderTime > CurTime() or self.FollowingPlayer == true or self.Medic_IsHealingAlly == true then
-		IdleType = 2
+		iType = 2
 	end
 	
-	if IdleType == 0 then -- Random (Wander & Idle Stand)
+	if iType == 0 then -- Random (Wander & Idle Stand)
 		if math.random(1,3) == 1 then
 			self:VJ_TASK_IDLE_WANDER() else self:VJ_TASK_IDLE_STAND()
 		end
-	elseif IdleType == 1 then -- Wander
+	elseif iType == 1 then -- Wander
 		self:VJ_TASK_IDLE_WANDER()
-	elseif IdleType == 2 then -- Idle Stand
+	elseif iType == 2 then -- Idle Stand
 		self:VJ_TASK_IDLE_STAND()
 		return -- Don't set self.NextWanderTime below
 	end
@@ -1599,12 +1593,12 @@ function ENT:DoIdleAnimation(IdleType)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoChaseAnimation(OverrideChasing)
+function ENT:DoChaseAnimation(overrideChasing)
 	local ene = self:GetEnemy()
 	if self.Dead == true or self.VJ_IsBeingControlled == true or self.PlayingAttackAnimation == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.PlayingAttackAnimation == true && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
 	if self:VJ_GetNearestPointToEntityDistance(ene) < self.MeleeAttackDistance && ene:Visible(self) && (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then self:VJ_TASK_IDLE_STAND() return end
 	
-	OverrideChasing = OverrideChasing or false -- true = Chase no matter what
+	overrideChasing = overrideChasing or false -- true = Chase no matter what
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
 	if self.MovementType == VJ_MOVETYPE_STATIONARY or self.FollowingPlayer == true or self.Medic_IsHealingAlly == true then
@@ -1619,7 +1613,7 @@ function ENT:DoChaseAnimation(OverrideChasing)
 		return
 	end
 	
-	if OverrideChasing == false && (self.DisableChasingEnemy == true or self.IsGuard == true or self.RangeAttack_DisableChasingEnemy == true) then self:VJ_TASK_IDLE_STAND() return end
+	if overrideChasing == false && (self.DisableChasingEnemy == true or self.IsGuard == true or self.RangeAttack_DisableChasingEnemy == true) then self:VJ_TASK_IDLE_STAND() return end
 	
 	-- If the enemy is not reachable
 	if (self:HasCondition(31) or self:IsUnreachable(ene)) && (IsValid(self:GetActiveWeapon()) == true && (!self:GetActiveWeapon().IsMeleeWeapon)) then
@@ -1635,10 +1629,7 @@ function ENT:DoChaseAnimation(OverrideChasing)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:BusyWithActivity()
-	if self.vACT_StopAttacks == true or self.PlayingAttackAnimation == true then 
-		return true
-	end
-	return false
+	return self.vACT_StopAttacks == true or self.PlayingAttackAnimation == true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChangeWeapon(wep, invSwitch)
@@ -1959,9 +1950,8 @@ function ENT:TranslateToWeaponAnim(actname)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetWeaponState(state, time)
-	state = state or VJ_WEP_STATE_NONE
 	time = time or -1
-	self.Weapon_State = state
+	self.Weapon_State = state or VJ_WEP_STATE_NONE
 	if time >= 0 then
 		timer.Create("timer_weapon_state_reset"..self:EntIndex(), time, 1, function()
 			self:SetWeaponState()
@@ -1994,13 +1984,13 @@ function ENT:Touch(entity)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AcceptInput(key,activator,caller,data)
-	self:CustomOnAcceptInput(key,activator,caller,data)
-	self:FollowPlayerCode(key,activator,caller,data)
+function ENT:AcceptInput(key, activator, caller, data)
+	self:CustomOnAcceptInput(key, activator, caller, data)
+	self:FollowPlayerCode(key, activator, caller, data)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:HandleAnimEvent(ev,evTime,evCycle,evType,evOptions)
-	self:CustomOnHandleAnimEvent(ev,evTime,evCycle,evType,evOptions)
+function ENT:HandleAnimEvent(ev, evTime, evCycle, evType, evOptions)
+	self:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions)
 	/*
 	print("----------------------------")
 	print(ev)
@@ -2597,7 +2587,7 @@ function ENT:Think()
 				else -- If it's not event based...
 					timer.Create( "timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self:GetPlaybackRate(), self.MeleeAttackReps, function() self:MeleeAttackCode() end)
 					for _, tv in ipairs(self.MeleeAttackExtraTimers) do
-						self:DoAddExtraAttackTimers("timer_melee_start_"..math.Round(CurTime()) + math.random(1,99999999), tv, 1, "MeleeAttack")
+						self:DoAddExtraAttackTimers("timer_melee_start_"..math.Round(CurTime()) + math.random(1,99999999), tv, 1, 0)
 					end
 				end
 				self:CustomOnMeleeAttack_AfterStartTimer()
@@ -2652,16 +2642,27 @@ function ENT:Think()
 	return true
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CanDoCertainAttack(AttackName)
-	AttackName = AttackName or "MeleeAttack"
+function ENT:CanDoCertainAttack(atkName)
+	atkName = atkName or "MeleeAttack"
 	-- Attack Names: "MeleeAttack"
 	if self.NextDoAnyAttackT > CurTime() or self.FollowPlayer_GoingAfter == true or self.vACT_StopAttacks == true or self.Flinching == true or self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.VJ_IsBeingControlled == true*/ then return false end
 
-	if AttackName == "MeleeAttack" && self.IsAbleToMeleeAttack == true && self.MeleeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
+	if atkName == "MeleeAttack" && self.IsAbleToMeleeAttack == true && self.MeleeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
 		// if self.VJ_IsBeingControlled == true then if self.VJ_TheController:KeyDown(IN_ATTACK) then return true else return false end end
 		return true
 	end
 	return false
+end
+--------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:DoAddExtraAttackTimers(name, time, reps, attackType)
+	name = name or "timer_unknown"
+	attackType = attackType or print("VJ Base: No Attack Timer Function! "..self:GetName())
+	local function DoAttack()
+		if attackType == 0 then self:MeleeAttackCode() end
+	end
+	
+	self.TimersToRemove[#self.TimersToRemove + 1] = name
+	timer.Create(name..self:EntIndex(), time or 0.5, reps or 1, function() DoAttack() end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackCode()
@@ -2709,19 +2710,6 @@ function ENT:MeleeAttackCode()
 	end
 	self.AlreadyDoneFirstMeleeAttack = true
 end
---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoAddExtraAttackTimers(vName,vTime,vReps,vFunction)
-	vName = vName or "timer_unknown"
-	vTime = vTime or 0.5
-	vReps = vReps or 1
-	vFunction = vFunction or print("VJ Base: No Attack Timer Function! "..self:GetName())
-	local function DoAttack()
-		if vFunction == "MeleeAttack" then self:MeleeAttackCode() end
-	end
-	
-	self.TimersToRemove[#self.TimersToRemove+1] = vName
-	timer.Create(vName..self:EntIndex(), vTime, vReps, function() DoAttack() end)
-end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackCode_DoFinishTimers()
 	timer.Create("timer_melee_finished"..self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Melee,self.NextAnyAttackTime_Melee_DoRand,self.TimeUntilMeleeAttackDamage,self.CurrentAttackAnimationDuration), 1, function()
@@ -2731,22 +2719,6 @@ function ENT:MeleeAttackCode_DoFinishTimers()
 	timer.Create("timer_melee_finished_abletomelee"..self:EntIndex(), self:DecideAttackTimer(self.NextMeleeAttackTime,self.NextMeleeAttackTime_DoRand), 1, function()
 		self.IsAbleToMeleeAttack = true
 	end)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:StopAttacks(CheckTimers)
-	if self:Health() <= 0 then return end
-	if self.VJDEBUG_SNPC_ENABLED == true && GetConVarNumber("vj_npc_printstoppedattacks") == 1 then print(self:GetClass().." Stopped all Attacks!") end
-	
-	if CheckTimers == true && self.MeleeAttacking == true && self.AlreadyDoneFirstMeleeAttack == false then
-		self:MeleeAttackCode_DoFinishTimers()
-	end
-	
-	-- Melee
-	self.MeleeAttacking = false
-	self.AlreadyDoneMeleeAttackFirstHit = false
-	self.AlreadyDoneFirstMeleeAttack = false
-	
-	self:DoChaseAnimation()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ThrowGrenadeCode(CustomEnt, NoOwner)
@@ -2912,6 +2884,22 @@ function ENT:CheckForGrenades()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:StopAttacks(CheckTimers)
+	if self:Health() <= 0 then return end
+	if self.VJDEBUG_SNPC_ENABLED == true && GetConVarNumber("vj_npc_printstoppedattacks") == 1 then print(self:GetClass().." Stopped all Attacks!") end
+	
+	if CheckTimers == true && self.MeleeAttacking == true && self.AlreadyDoneFirstMeleeAttack == false then
+		self:MeleeAttackCode_DoFinishTimers()
+	end
+	
+	-- Melee
+	self.MeleeAttacking = false
+	self.AlreadyDoneMeleeAttackFirstHit = false
+	self.AlreadyDoneFirstMeleeAttack = false
+	
+	self:DoChaseAnimation()
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:WeaponAimPoseParameters(ResetPoses) self:DoPoseParameterLooking(ResetPoses) end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoPoseParameterLooking(ResetPoses)
@@ -3019,7 +3007,7 @@ function ENT:IsAbleToShootWeapon(CheckDistance, CheckDistanceOnly, EnemyDistance
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SelectSchedule(iNPCState)
+function ENT:SelectSchedule()
 	if self.VJ_IsBeingControlled == true then return end
 	self:CustomOnSchedule()
 	if self.DisableSelectSchedule == true or self.Dead == true then return end
@@ -3252,44 +3240,6 @@ function ENT:SelectSchedule(iNPCState)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DamageByPlayerCode(dmginfo,hitgroup)
-	if self.HasDamageByPlayer == true && CurTime() > self.NextDamageByPlayerT && GetConVarNumber("ai_disabled") == 0 then
-		local theattack = dmginfo:GetAttacker()
-		if theattack:IsPlayer() && self:Visible(theattack) then
-			if self.DamageByPlayerDispositionLevel == 1 && self:Disposition(theattack) != D_LI && self:Disposition(theattack) != D_NU then return end
-			if self.DamageByPlayerDispositionLevel == 2 && (self:Disposition(theattack) == D_LI or self:Disposition(theattack) == D_NU) then return end
-			self:CustomOnDamageByPlayer(dmginfo,hitgroup)
-			self:PlaySoundSystem("DamageByPlayer")
-			self.NextDamageByPlayerT = CurTime() + math.Rand(self.DamageByPlayerTime.a,self.DamageByPlayerTime.b)
-		end
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_ACT_RESETENEMY(RunToEnemyOnReset)
-	RunToEnemyOnReset = RunToEnemyOnReset or false
-	local vsched = ai_vj_schedule.New("vj_act_resetenemy")
-	if IsValid(self:GetEnemy()) then vsched:EngTask("TASK_FORGET", self:GetEnemy()) end
-	//vsched:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
-	self.NextWanderTime = CurTime() + math.Rand(3,5)
-	if self.IsGuard == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && RunToEnemyOnReset == true && CurTime() > self.LastHiddenZoneT && self.LastHiddenZone_CanWander == true && self.MeleeAttacking != true && self.RangeAttacking != true && self.LeapAttacking != true then
-		//ParticleEffect("explosion_turret_break", self.LatestEnemyPosition, Angle(0,0,0))
-		self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk))
-		vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-		//vsched:EngTask("TASK_WALK_PATH", 0)
-		vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-		vsched.ResetOnFail = true
-		vsched.CanShootWhenMoving = true
-		vsched.ConstantlyFaceEnemy = true
-		vsched.CanBeInterrupted = true
-		vsched.IsMovingTask = true
-		vsched.IsMovingTask_Walk = true
-		//self.NextIdleTime = CurTime() + 10
-	end
-	if vsched.TaskCount > 0 then
-		self:StartSchedule(vsched)
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 	if self.NextResetEnemyT > CurTime() or self.Dead == true then self.ResetedEnemy = false return false end
 	NoResetAlliesSeeEnemy = NoResetAlliesSeeEnemy or false
@@ -3316,6 +3266,7 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 		end
 	end
 	
+	self:CustomOnResetEnemy()
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVarNumber("vj_npc_printresetenemy") == 1 then print(self:GetName().." has reseted its enemy") end
 	if IsValid(self:GetEnemy()) then
 		if self.FollowingPlayer == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && self:GetEnemyLastKnownPos() != vec_worigin then
@@ -3331,8 +3282,27 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 	self.Alerted = false
 	self:SetEnemy(NULL)
 	//self:UpdateEnemyMemory(self,self:GetPos())
-	self:VJ_ACT_RESETENEMY(RunToEnemyOnReset)
-	self:CustomOnResetEnemy()
+	local vsched = ai_vj_schedule.New("vj_act_resetenemy")
+	if IsValid(self:GetEnemy()) then vsched:EngTask("TASK_FORGET", self:GetEnemy()) end
+	//vsched:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
+	self.NextWanderTime = CurTime() + math.Rand(3, 5)
+	if !self:BusyWithActivity() && self.IsGuard == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && RunToEnemyOnReset == true && CurTime() > self.LastHiddenZoneT && self.LastHiddenZone_CanWander == true then
+		//ParticleEffect("explosion_turret_break", self.LatestEnemyPosition, Angle(0,0,0))
+		self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk))
+		vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
+		//vsched:EngTask("TASK_WALK_PATH", 0)
+		vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+		vsched.ResetOnFail = true
+		vsched.CanShootWhenMoving = true
+		vsched.ConstantlyFaceEnemy = true
+		vsched.CanBeInterrupted = true
+		vsched.IsMovingTask = true
+		vsched.IsMovingTask_Walk = true
+		//self.NextIdleTime = CurTime() + 10
+	end
+	if vsched.TaskCount > 0 then
+		self:StartSchedule(vsched)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoAlert(argent)
@@ -3792,9 +3762,17 @@ function ENT:OnTakeDamage(dmginfo)
 
 	if self:Health() > 0 then
 		self:DoFlinch(dmginfo, hitgroup)
-		self:DamageByPlayerCode(dmginfo, hitgroup)
+		
+		-- Damage by Player
+			-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
+		if self.HasDamageByPlayer && DamageAttacker:IsPlayer() && CurTime() > self.NextDamageByPlayerT && GetConVarNumber("ai_disabled") == 0 && self:Visible(DamageAttacker) && (self.DamageByPlayerDispositionLevel == 0 or (self.DamageByPlayerDispositionLevel == 1 && (self:Disposition(DamageAttacker) == D_LI or self:Disposition(DamageAttacker) == D_NU)) or (self.DamageByPlayerDispositionLevel == 2 && self:Disposition(DamageAttacker) != D_LI && self:Disposition(DamageAttacker) != D_NU)) then
+			self:CustomOnDamageByPlayer(dmginfo, hitgroup)
+			self:PlaySoundSystem("DamageByPlayer")
+			self.NextDamageByPlayerT = CurTime() + math.Rand(self.DamageByPlayerTime.a, self.DamageByPlayerTime.b)
+		end
+		
 		self:PlaySoundSystem("Pain")
-
+		
 		if self.MoveOrHideOnDamageByEnemy == true && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && IsValid(self:GetEnemy()) && CurTime() > self.NextMoveOrHideOnDamageByEnemyT && self:EyePos():Distance(self:GetEnemy():EyePos()) < self.Weapon_FiringDistanceFar && IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.ThrowingGrenade == false && CurTime() > self.TakingCoverT && self:Visible(self:GetEnemy()) && self.VJ_IsBeingControlled == false && self.MeleeAttacking == false && self.IsReloadingWeapon == false then
 			local wep = self:GetActiveWeapon()
 			if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() +self:OBBCenter()),self:GetEnemy():EyePos()) == true && self.MoveOrHideOnDamageByEnemy_OnlyMove == false then			
@@ -4068,52 +4046,55 @@ function ENT:SetupBloodColor()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SpawnBloodParticles(dmginfo,hitgroup)
-	local p_name = VJ_PICK(self.CustomBlood_Particle)
-	if p_name == false then return end
+function ENT:SpawnBloodParticles(dmginfo, hitgroup)
+	local name = VJ_PICK(self.CustomBlood_Particle)
+	if name == false then return end
 	
-	local dmg_pos = dmginfo:GetDamagePosition()
-	if dmg_pos == vec_worigin then dmg_pos = self:GetPos() + self:OBBCenter() end
+	local pos = dmginfo:GetDamagePosition()
+	if pos == vec_worigin then pos = self:GetPos() + self:OBBCenter() end
 	
 	local spawnparticle = ents.Create("info_particle_system")
-	spawnparticle:SetKeyValue("effect_name",p_name)
-	spawnparticle:SetPos(dmg_pos)
+	spawnparticle:SetKeyValue("effect_name", name)
+	spawnparticle:SetPos(pos)
 	spawnparticle:Spawn()
 	spawnparticle:Activate()
-	spawnparticle:Fire("Start","",0)
-	spawnparticle:Fire("Kill","",0.1)
+	spawnparticle:Fire("Start")
+	spawnparticle:Fire("Kill", "", 0.1)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SpawnBloodDecal(dmginfo,hitgroup)
+function ENT:SpawnBloodDecal(dmginfo, hitgroup)
 	if VJ_PICK(self.CustomBlood_Decal) == false then return end
-	local dmg_force = dmginfo:GetDamageForce()
-	local dmg_pos = dmginfo:GetDamagePosition()
-	if dmg_pos == vec_worigin then dmg_pos = self:GetPos() + self:OBBCenter() end
+	local force = dmginfo:GetDamageForce()
+	local pos = dmginfo:GetDamagePosition()
+	if pos == vec_worigin then pos = self:GetPos() + self:OBBCenter() end
 	
-	-- Badi verayi ayroun-e
-	local tr = util.TraceLine({start = dmg_pos, endpos = dmg_pos + dmg_force:GetNormal() * math.Clamp(dmg_force:Length() * 10, 100, self.BloodDecalDistance), filter = self})
+	-- Badi ayroun
+	local tr = util.TraceLine({start = pos, endpos = pos + force:GetNormal() * math.Clamp(force:Length() * 10, 100, self.BloodDecalDistance), filter = self})
 	//if !tr.HitWorld then return end
-	util.Decal(VJ_PICK(self.CustomBlood_Decal), tr.HitPos+tr.HitNormal, tr.HitPos-tr.HitNormal, self)
+	local trNormalP = tr.HitPos + tr.HitNormal
+	local trNormalN = tr.HitPos - tr.HitNormal
+	util.Decal(VJ_PICK(self.CustomBlood_Decal), trNormalP, trNormalN, self)
 	for _ = 1, 2 do
-		if math.random(1,2) == 1 then util.Decal(VJ_PICK(self.CustomBlood_Decal), tr.HitPos + tr.HitNormal + Vector(math.random(-70,70), math.random(-70,70),0), tr.HitPos - tr.HitNormal, self) end
+		if math.random(1,2) == 1 then util.Decal(VJ_PICK(self.CustomBlood_Decal), trNormalP + Vector(math.random(-70,70), math.random(-70,70), 0), trNormalN, self) end
 	end
 	
-	-- Kedni verayi ayroun-e
+	-- Kedni ayroun
 	if math.random(1,2) == 1 then
-		local d2_endpos = dmg_pos + Vector(0, 0, -math.Clamp(dmg_force:Length() * 10, 100, self.BloodDecalDistance))
-		util.Decal(VJ_PICK(self.CustomBlood_Decal), dmg_pos, d2_endpos, self)
-		if math.random(1,2) == 1 then util.Decal(VJ_PICK(self.CustomBlood_Decal), dmg_pos, d2_endpos + Vector(math.random(-120,120), math.random(-120,120),0),self) end
+		local d2_endpos = pos + Vector(0, 0, -math.Clamp(force:Length() * 10, 100, self.BloodDecalDistance))
+		util.Decal(VJ_PICK(self.CustomBlood_Decal), pos, d2_endpos, self)
+		if math.random(1,2) == 1 then util.Decal(VJ_PICK(self.CustomBlood_Decal), pos, d2_endpos + Vector(math.random(-120,120), math.random(-120,120), 0), self) end
 	end
 end
+---------------------------------------------------------------------------------------------------------------------------------------------
 local vecZ30 = Vector(0, 0, 30)
 local vecZ1 = Vector(0, 0, 1)
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SpawnBloodPool(dmginfo,hitgroup)
+--
+function ENT:SpawnBloodPool(dmginfo, hitgroup)
 	if !IsValid(self.Corpse) then return end
 	local GetCorpse = self.Corpse
 	local GetBloodPool = VJ_PICK(self.CustomBlood_Pool)
 	if GetBloodPool == false then return end
-	timer.Simple(2.2,function()
+	timer.Simple(2.2, function()
 		if IsValid(GetCorpse) then
 			local tr = util.TraceLine({
 				start = GetCorpse:GetPos() + GetCorpse:OBBCenter(),
@@ -4128,8 +4109,9 @@ function ENT:SpawnBloodPool(dmginfo,hitgroup)
 		end
 	end)
 end
-local vecZ500 = Vector(0, 0, 500)
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local vecZ500 = Vector(0, 0, 500)
+--
 function ENT:PriorToKilled(dmginfo,hitgroup)
 	self:CustomOnInitialKilled(dmginfo,hitgroup)
 	if self.Medic_IsHealingAlly == true then self:DoMedicCode_Reset() end
@@ -4264,25 +4246,25 @@ function ENT:CreateGibEntity(Ent,Models,Tbl_Features,customFunc)
 		vTbl_BloodType = "Yellow"
 	end
 	vTbl_Features = Tbl_Features or {}
-	vTbl_Position = vTbl_Features.Pos or self:GetPos() +self:OBBCenter()
-	vTbl_Angle = vTbl_Features.Ang or Angle(math.Rand(-180,180),math.Rand(-180,180),math.Rand(-180,180)) //self:GetAngles()
-	vTbl_Velocity_NoDamageForce = vTbl_Features.Vel_NoDmgForce or false -- If set to true, it won't add the damage force to the given velocity
-	vTbl_Velocity = vTbl_Features.Vel or Vector(math.Rand(-100,100),math.Rand(-100,100),math.Rand(150,250)) -- Used to set the velocity | "UseDamageForce" = To use the damage's force only
-	if self.LatestDmgInfo != nil then
-		local dmgforce = self.LatestDmgInfo:GetDamageForce()/70
-		if vTbl_Velocity_NoDamageForce == false && vTbl_Features.Vel != "UseDamageForce" then
-			vTbl_Velocity = vTbl_Velocity + dmgforce
+		vTbl_Position = vTbl_Features.Pos or self:GetPos() +self:OBBCenter()
+		vTbl_Angle = vTbl_Features.Ang or Angle(math.Rand(-180,180),math.Rand(-180,180),math.Rand(-180,180)) //self:GetAngles()
+		vTbl_Velocity_NoDamageForce = vTbl_Features.Vel_NoDmgForce or false -- If set to true, it won't add the damage force to the given velocity
+		vTbl_Velocity = vTbl_Features.Vel or Vector(math.Rand(-100,100),math.Rand(-100,100),math.Rand(150,250)) -- Used to set the velocity | "UseDamageForce" = To use the damage's force only
+		if self.LatestDmgInfo != nil then
+			local dmgforce = self.LatestDmgInfo:GetDamageForce()/70
+			if vTbl_Velocity_NoDamageForce == false && vTbl_Features.Vel != "UseDamageForce" then
+				vTbl_Velocity = vTbl_Velocity + dmgforce
+			end
+			if vTbl_Features.Vel == "UseDamageForce" then
+				vTbl_Velocity = dmgforce
+			end
 		end
-		if vTbl_Features.Vel == "UseDamageForce" then
-			vTbl_Velocity = dmgforce
-		end
-	end
-	vTbl_AngleVelocity = vTbl_Features.AngVel or Vector(math.Rand(-200,200),math.Rand(-200,200),math.Rand(-200,200)) -- Angle velocity, how fast it rotates as it's flying
-	vTbl_BloodType = vTbl_Features.BloodType or vTbl_BloodType -- Certain entities such as the VJ Gib entity, you can use this to set its gib type
-	vTbl_BloodDecal = vTbl_Features.BloodDecal or "Default" -- The decal it spawns when it collides with something, leave empty to let the base decide
-	vTbl_CollideSound = vTbl_Features.CollideSound or "Default" -- The sound it plays when it collides with something, leave empty to let the base decide
-	vTbl_NoFade = vTbl_Features.NoFade or false -- Should it fade away and delete?
-	vTbl_RemoveOnCorpseDelete = vTbl_Features.RemoveOnCorpseDelete or false -- Should the entity get removed if the corpse is removed?
+		vTbl_AngleVelocity = vTbl_Features.AngVel or Vector(math.Rand(-200,200),math.Rand(-200,200),math.Rand(-200,200)) -- Angle velocity, how fast it rotates as it's flying
+		vTbl_BloodType = vTbl_Features.BloodType or vTbl_BloodType -- Certain entities such as the VJ Gib entity, you can use this to set its gib type
+		vTbl_BloodDecal = vTbl_Features.BloodDecal or "Default" -- The decal it spawns when it collides with something, leave empty to let the base decide
+		vTbl_CollideSound = vTbl_Features.CollideSound or "Default" -- The sound it plays when it collides with something, leave empty to let the base decide
+		vTbl_NoFade = vTbl_Features.NoFade or false -- Should it fade away and delete?
+		vTbl_RemoveOnCorpseDelete = vTbl_Features.RemoveOnCorpseDelete or false -- Should the entity get removed if the corpse is removed?
 	local gib = ents.Create(Ent)
 	gib:SetModel(Models)
 	gib:SetPos(vTbl_Position)
