@@ -987,8 +987,6 @@ ENT.SelectedDifficulty = 1
 ENT.ModelAnimationSet = 0
 ENT.AIState = 0
 ENT.Weapon_State = 0
-ENT.VJ_AddCertainEntityAsEnemy = {}
-ENT.VJ_AddCertainEntityAsFriendly = {}
 ENT.TimersToRemove = {"timer_weapon_state_reset","timer_state_reset","timer_act_seq_wait","timer_face_position","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_reload_end"}
 ENT.EntitiesToRunFrom = {obj_spore=true,obj_vj_grenade=true,obj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true,cw_flash_thrown=true,ent_hl1_grenade=true}
 ENT.EntitiesToThrowBack = {obj_spore=true,obj_vj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,obj_cpt_grenade=true,cw_grenade_thrown=true,cw_flash_thrown=true,cw_smoke_thrown=true,ent_hl1_grenade=true}
@@ -3363,16 +3361,18 @@ function ENT:DoEntityRelationshipCheck()
 	
 	self.ReachableEnemyCount = 0
 	//local distlist = {}
-	local closestdist = nil
-	local enemyseen = false
-	local MyPos = self:GetPos()
-	local sightdist = self.SightDistance
+	local eneSeen = false
+	local myPos = self:GetPos()
+	local nearestDist = nil
+	local sightDist = self.SightDistance
+	local mySAng = math.cos(math.rad(self.SightAngle))
 	local it = 1
 	//for k, v in ipairs(posenemies) do
+	//for it = 1, #posenemies do
 	while it <= #posenemies do
 		local v = posenemies[it]
 		if !IsValid(v) then
-			table_remove(posenemies,it)
+			table_remove(posenemies, it)
 		else
 			it = it + 1
 			//if !IsValid(v) then table_remove(self.CurrentPossibleEnemies,tonumber(v)) continue end
@@ -3384,25 +3384,25 @@ function ENT:DoEntityRelationshipCheck()
 				continue
 			end
 			//if v:Health() <= 0 then table_remove(self.CurrentPossibleEnemies,k) continue end
-			local entisfri = false
 			local vPos = v:GetPos()
-			local vDistanceToMy = vPos:Distance(MyPos)
-			if vDistanceToMy > sightdist then continue end
+			local vDistanceToMy = vPos:Distance(myPos)
+			if vDistanceToMy > sightDist then continue end
+			local entisfri = false
 			local vClass = v:GetClass()
 			local vNPC = v:IsNPC()
 			local vPlayer = v:IsPlayer()
 			if vClass != self:GetClass() && (vNPC or vPlayer) && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
-				local inEneTbl = VJ_HasValue(self.VJ_AddCertainEntityAsEnemy,v)
+				local inEneTbl = VJ_HasValue(self.VJ_AddCertainEntityAsEnemy, v)
 				if self.HasAllies == true && inEneTbl == false then
 					for _,friclass in ipairs(self.VJ_NPC_Class) do
-						if friclass == varCPly && self.PlayerFriendly == false then self.PlayerFriendly = true end
+						if friclass == varCPly && self.PlayerFriendly == false then self.PlayerFriendly = true end -- If player ally then set the PlayerFriendly to true
 						if (friclass == varCCom && NPCTbl_Combine[vClass]) or (friclass == varCZom && NPCTbl_Zombies[vClass]) or (friclass == varCAnt && NPCTbl_Antlions[vClass]) or (friclass == varCXen && NPCTbl_Xen[vClass]) then
 							v:AddEntityRelationship(self, D_LI, 99)
 							self:AddEntityRelationship(v, D_LI, 99)
 							entisfri = true
 						end
-						if (v.VJ_NPC_Class /*&& friclass != varCPly*/ && VJ_HasValue(v.VJ_NPC_Class,friclass)) or (entisfri == true) then
-							if friclass == varCPly then
+						if (v.VJ_NPC_Class && VJ_HasValue(v.VJ_NPC_Class, friclass)) or (entisfri == true) then
+							if friclass == varCPly then -- If we have the player ally class then check if we both of us are supposed to be friends
 								if self.FriendsWithAllPlayerAllies == true && v.FriendsWithAllPlayerAllies == true then
 									entisfri = true
 									if vNPC then v:AddEntityRelationship(self, D_LI, 99) end
@@ -3410,6 +3410,7 @@ function ENT:DoEntityRelationshipCheck()
 								end
 							else
 								entisfri = true
+								-- If I am enemy to it, then reset it!
 								if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
 									self.ResetedEnemy = true
 									self:ResetEnemy(false)
@@ -3419,7 +3420,7 @@ function ENT:DoEntityRelationshipCheck()
 							end
 						end
 					end
-					if vNPC then
+					if vNPC && !entisfri then
 						-- Deprecated system
 						/*for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
 							if string_find(vClass, fritbl) then
@@ -3433,17 +3434,11 @@ function ENT:DoEntityRelationshipCheck()
 							v:AddEntityRelationship(self, D_LI, 99)
 							self:AddEntityRelationship(v, D_LI, 99)
 						end*/
-						if self.PlayerFriendly == true then
-							if NPCTbl_Resistance[vClass] then
-								v:AddEntityRelationship(self, D_LI, 99)
-								self:AddEntityRelationship(v, D_LI, 99)
-								entisfri = true
-							end
-							if self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true then
-								entisfri = true
-								v:AddEntityRelationship(self, D_LI, 99)
-								self:AddEntityRelationship(v, D_LI, 99)
-							end
+						-- Mostly used for non-VJ friendly NPCs
+						if self.PlayerFriendly == true && ((NPCTbl_Resistance[vClass]) or (self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true)) then
+							v:AddEntityRelationship(self, D_LI, 99)
+							self:AddEntityRelationship(v, D_LI, 99)
+							entisfri = true
 						end
 						if self.VJFriendly == true && v.IsVJBaseSNPC == true then
 							v:AddEntityRelationship(self, D_LI, 99)
@@ -3452,7 +3447,7 @@ function ENT:DoEntityRelationshipCheck()
 						end
 					end
 				end
-				if entisfri == false && vNPC /*&& MyVisibleTov*/ && self.DisableMakingSelfEnemyToNPCs == false && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self,D_HT,99) end
+				if entisfri == false && vNPC /*&& MyVisibleTov*/ && self.DisableMakingSelfEnemyToNPCs == false && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self, D_HT, 99) end
 				if vPlayer then
 					if (self.PlayerFriendly == true or entisfri == true/* or self:Disposition(v) == D_LI*/) then
 						if inEneTbl == false then
@@ -3465,7 +3460,7 @@ function ENT:DoEntityRelationshipCheck()
 					end
 					if (!self.IsVJBaseSNPC_Tank) && !IsValid(self:GetEnemy()) && entisfri == false then
 						if entisfri == false then self:AddEntityRelationship(v, D_NU, 99) end
-						if v:Crouching() && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightdist = 5000 else sightdist = 2000 end end
+						if v:Crouching() && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightDist = 5000 else sightDist = 2000 end end
 						if vDistanceToMy < (self.InvestigateSoundDistance * v.VJ_LastInvestigateSdLevel) && ((CurTime() - v.VJ_LastInvestigateSd) <= 1) then
 							if self.NextInvestigateSoundMove < CurTime() then
 								if self:Visible(v) then
@@ -3480,7 +3475,7 @@ function ENT:DoEntityRelationshipCheck()
 								self:PlaySoundSystem("InvestigateSound")
 								self.NextInvestigateSoundMove = CurTime() + 2
 							end
-						elseif vDistanceToMy < 350 && v:FlashlightIsOn() == true && (v:GetForward():Dot((MyPos - vPos):GetNormalized()) > math.cos(math.rad(20))) then
+						elseif vDistanceToMy < 350 && v:FlashlightIsOn() == true && (v:GetForward():Dot((myPos - vPos):GetNormalized()) > math.cos(math.rad(20))) then
 							//			   Asiga hoser ^ (!v:Crouching() && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP && ((!v:KeyDown(IN_WALK) && (v:KeyDown(IN_FORWARD) or v:KeyDown(IN_BACK) or v:KeyDown(IN_MOVELEFT) or v:KeyDown(IN_MOVERIGHT))) or (v:KeyDown(IN_SPEED) or v:KeyDown(IN_JUMP)))) or
 							self:SetTarget(v)
 							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
@@ -3493,22 +3488,22 @@ function ENT:DoEntityRelationshipCheck()
 			print(self:HasEnemyMemory(v))
 			print(CurTime() - self:GetEnemyLastTimeSeen(v))
 			print(CurTime() - self:GetEnemyFirstTimeSeen(v))*/
-
+			-- We have to do this here so we make sure non-VJ NPCs can still target this SNPC!
 			if self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye != v then
 				//self:AddEntityRelationship(v, D_NU, 99)
 				v = self.VJ_TheControllerBullseye
 				vPlayer = false
 			end
 			local radiusoverride = 0
-			if self.DisableFindEnemy == false && ((self.Behavior == VJ_BEHAVIOR_NEUTRAL && self.Alerted == true) or self.Behavior != VJ_BEHAVIOR_NEUTRAL) && ((self.FindEnemy_CanSeeThroughWalls == true) or (self:Visible(v) && (vDistanceToMy < sightdist))) && ((self.FindEnemy_UseSphere == false && radiusoverride == 0 && (self:GetForward():Dot((vPos - MyPos):GetNormalized()) > math.cos(math.rad(self.SightAngle)))) or (self.FindEnemy_UseSphere == true or radiusoverride == 1)) then
+			if self.DisableFindEnemy == false && ((self.Behavior == VJ_BEHAVIOR_NEUTRAL && self.Alerted == true) or self.Behavior != VJ_BEHAVIOR_NEUTRAL) && ((self.FindEnemy_CanSeeThroughWalls == true) or (self:Visible(v) && (vDistanceToMy < sightDist))) && ((self.FindEnemy_UseSphere == false && radiusoverride == 0 && (self:GetForward():Dot((vPos - myPos):GetNormalized()) > mySAng)) or (self.FindEnemy_UseSphere == true or radiusoverride == 1)) then
 				local check = self:DoRelationshipCheck(v)
 				if check == true then -- Is enemy
-					enemyseen = true
+					eneSeen = true
 					self.ReachableEnemyCount = self.ReachableEnemyCount + 1
 					self:AddEntityRelationship(v, D_HT, 99)
 					-- If the detected enemy is closer than the previous enemy, the set this as the enemy!
-					if (closestdist == nil) or (vDistanceToMy < closestdist) then
-						closestdist = vDistanceToMy
+					if (nearestDist == nil) or (vDistanceToMy < nearestDist) then
+						nearestDist = vDistanceToMy
 						self:VJ_DoSetEnemy(v, true, true)
 					end
 				-- If the current enemy is a friendly player, then reset the enemy!
@@ -3568,7 +3563,7 @@ function ENT:DoEntityRelationshipCheck()
 		end
 		//return true
 	end
-	if enemyseen == true then return true else return false end
+	if eneSeen == true then return true else return false end
 	//return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

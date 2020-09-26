@@ -17,6 +17,7 @@ local isnumber = isnumber
 local tonumber = tonumber
 local string_find = string.find
 local string_Replace = string.Replace
+local string_StartWith = string.StartWith
 local table_remove = table.remove
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -340,10 +341,10 @@ function VJ_CreateTestObject(pos, ang, color, rtime, mdl)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /* Do multiple test and compare the 2 results using this: https://calculla.com/columnar_addition_calculator
-	VJ_RunStressTest(1000, function()
+	VJ_StressTest(1000, function()
 	end)
 */
-function VJ_RunStressTest(count, func)
+function VJ_StressTest(count, func)
 	count = count or 1
 	local startTime = SysTime()
     for _ = 1, count do
@@ -872,17 +873,14 @@ hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 		if SERVER && ent:IsPlayer() && data.SoundLevel >= 75 then
 			//print("---------------------------")
 			//PrintTable(data)
-			if string.StartWith(data.OriginalSoundName, "player/footsteps") && (ent:Crouching() or ent:KeyDown(IN_WALK)) then
-				// Pamenal mi ener
-			else
+			local quiet = (string_StartWith(data.OriginalSoundName, "player/footsteps") and (ent:Crouching() or ent:KeyDown(IN_WALK))) or false
+			if quiet == false then
 				ent.VJ_LastInvestigateSd = CurTime()
-				local volex = 0
-				if data.Volume <= 0.4 then volex = 15 end
-				ent.VJ_LastInvestigateSdLevel = (data.SoundLevel * data.Volume) + volex
+				ent.VJ_LastInvestigateSdLevel = (data.SoundLevel * data.Volume) + (((data.Volume <= 0.4) and 15) or 0)
 			end
 		end
 		
-		-- Disable the built-in shitty footsteps sounds for the human models
+		-- Disable the built-in shitty footstep sounds for the human models
 		if ent:IsNPC() && ent.IsVJBaseSNPC == true && (string.EndsWith(data.OriginalSoundName,"stepleft") or string.EndsWith(data.OriginalSoundName,"stepright")) then
 			return false
 		end
