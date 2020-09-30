@@ -1217,6 +1217,9 @@ function ENT:OnChangeActivity(newAct)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local varGes = "vjges_"
+local varSeq = "vjseq_"
+--
 function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name, vACT_StopActivities, vACT_StopActivitiesTime, vACT_FaceEnemy, vACT_DelayAnim, vACT_AdvancedFeatures, vACT_CustomCode)
 	vACT_Name = VJ_PICK(vACT_Name)
 	if vACT_Name == false then return end
@@ -1240,12 +1243,12 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name, vACT_StopActivities, vACT_StopActivi
 	local IsString = isstring(vACT_Name)
 	
 	-- Gesture handling
-	if string_find(vACT_Name, "vjges_") then -- Gesture string-fixing
+	if string_find(vACT_Name, varGes) then -- Gesture string-fixing
 		IsGesture = true
-		vACT_Name = string_Replace(vACT_Name, "vjges_", "") -- Delete the gesture prefix
-		if string_find(vACT_Name, "vjseq_") then -- If the 2nd prefix is a sequence, then this is a gesture-sequence
+		vACT_Name = string_Replace(vACT_Name, varGes, "") -- Delete the gesture prefix
+		if string_find(vACT_Name, varSeq) then -- If the 2nd prefix is a sequence, then this is a gesture-sequence
 			IsSequence = true
-			vACT_Name = string_Replace(vACT_Name, "vjseq_", "") -- Delete the second prefix
+			vACT_Name = string_Replace(vACT_Name, varSeq, "") -- Delete the second prefix
 		elseif self:LookupSequence(vACT_Name) == -1 then -- Check if it's a number by looking up the string. If it's not, then it will later be converted to an activity
 			vACT_Name = tonumber(vACT_Name)
 		end
@@ -1264,9 +1267,9 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name, vACT_StopActivities, vACT_StopActivi
 			vACT_Name = self:GetSequenceName(self:SelectWeightedSequence(vACT_Name))
 		end
 	elseif IsString then -- Sequence string-fixing
-		if string_find(vACT_Name, "vjseq_") then -- If the sequence prefix is given...
+		if string_find(vACT_Name, varSeq) then -- If the sequence prefix is given...
 			IsSequence = true
-			vACT_Name = string_Replace(vACT_Name, "vjseq_", "") -- Delete the sequence prefix
+			vACT_Name = string_Replace(vACT_Name, varSeq, "") -- Delete the sequence prefix
 		else -- If prefix isn't given then check if it can be converted to an activity or else just play it as a sequence
 			local checkanim = self:GetSequenceActivity(self:LookupSequence(vACT_Name))
 			if checkanim == nil or checkanim == -1 then
@@ -2248,10 +2251,10 @@ function ENT:Think()
 		end
 	end
 	
-	if self.DoingWeaponAttack == false then self.DoingWeaponAttack_Standing = false end
 	//print("------------------")
 	//print(self:GetActiveWeapon())
 	//PrintTable(self:GetWeapons())
+	if self.DoingWeaponAttack == false then self.DoingWeaponAttack_Standing = false end
 	if self.CurrentWeaponEntity != self:GetActiveWeapon() then self.CurrentWeaponEntity = self:DoChangeWeapon() end
 	
 	self:CustomOnThink()
@@ -2301,16 +2304,16 @@ function ENT:Think()
 			//print(self.FollowPlayer_Entity)
 			if IsValid(self.FollowPlayer_Entity) && self.FollowPlayer_Entity:Alive() && self:Disposition(self.FollowPlayer_Entity) == D_LI then 
 				if CurTime() > self.NextFollowPlayerT && self.AlreadyBeingHealedByMedic != true then
-					local DistanceToPly = self:GetPos():Distance(self.FollowPlayer_Entity:GetPos())
+					local distToPly = self:GetPos():Distance(self.FollowPlayer_Entity:GetPos())
 					local busy = self:BusyWithActivity()
 					self:SetTarget(self.FollowPlayer_Entity)
-					if DistanceToPly > self.FollowPlayerCloseDistance then -- If the player is far then move
+					if distToPly > self.FollowPlayerCloseDistance then -- If the player is far then move
 						-- If we are not very far and busy with another activity (ex: attacking) then don't move to the player yet!
-						if !(busy == true and (DistanceToPly < (self.FollowPlayerCloseDistance * 4))) && busy == false then
+						if !(busy == true and (distToPly < (self.FollowPlayerCloseDistance * 4))) && busy == false then
 							self.FollowPlayer_GoingAfter = true
 							self.FollowPlayer_DoneSelectSchedule = false
 							-- If player is close, then just walk towards it instead of running
-							local movetype = (DistanceToPly < 220 and "TASK_WALK_PATH") or "TASK_RUN_PATH"
+							local movetype = (distToPly < 220 and "TASK_WALK_PATH") or "TASK_RUN_PATH"
 							self:VJ_TASK_GOTO_TARGET(movetype, function(x)
 								x.CanShootWhenMoving = true
 								x.ConstantlyFaceEnemyVisible = (IsValid(self:GetActiveWeapon()) and true) or false
@@ -2554,9 +2557,9 @@ function ENT:Think()
 				self:DoWeaponAttackMovementCode()
 				self:DoPoseParameterLooking()
 
-				if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true then self:FaceCertainEntity(ene,true) end
-				if self.MeleeAttackAnimationFaceEnemy == true && self.Dead == false && timer.Exists("timer_melee_start"..self:EntIndex()) && timer.TimeLeft("timer_melee_start"..self:EntIndex()) > 0 then self:FaceCertainEntity(ene,true) end
-				if self.GrenadeAttackAnimationFaceEnemy == true && self.Dead == false && self.ThrowingGrenade == true && self:Visible(ene) == true then self:FaceCertainEntity(ene,true) end
+				if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true) or (self.MeleeAttackAnimationFaceEnemy == true && self.MeleeAttacking == true) or (self.GrenadeAttackAnimationFaceEnemy == true && self.Dead == false && self.ThrowingGrenade == true && self:Visible(ene) == true) then
+					self:FaceCertainEntity(ene, true)
+				end
 			end
 			self.ResetedEnemy = false
 			self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene)
@@ -2614,11 +2617,8 @@ function ENT:Think()
 			self.TimeSinceEnemyAcquired = 0
 			self.TimeSinceLastSeenEnemy = self.TimeSinceLastSeenEnemy + 0.1
 			if self.ResetedEnemy == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") self.ResetedEnemy = true self:ResetEnemy(true) end
-			/*if CurTime() > self.NextFindEnemyT then
-			if self.DisableFindEnemy == false then self:FindEnemy() end
-			self.NextFindEnemyT = CurTime() + self.NextFindEnemyTime end*/
-			//self.MeleeAttacking = false
 		end
+		
 		-- Guarding Position
 		if self.IsGuard == true && self.FollowingPlayer == false then
 			if self.GuardingPosition == nil then -- If it hasn't been set then set the guard position to its current position
