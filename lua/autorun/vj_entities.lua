@@ -492,25 +492,21 @@ function NPC_MetaTable:FaceCertainPosition(pos, time)
 	return setangs
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:FaceCertainEntity(argent, OnlyIfSeenEnemy, FaceEnemyTime, TurnSpeed)
+function NPC_MetaTable:FaceCertainEntity(argent, OnlyIfSeenEnemy, FaceEnemyTime)
 	if !IsValid(argent) or GetConVarNumber("ai_disabled") == 1 then return false end
 	if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false then return false end
 	FaceEnemyTime = FaceEnemyTime or 0
-	TurnSpeed = TurnSpeed or self.TurningSpeed
-	local LerpAng = self:GetAngles()
 	if OnlyIfSeenEnemy == true && IsValid(self:GetEnemy()) then
 		self.IsDoingFaceEnemy = true
 		timer.Create("timer_face_enemy"..self:EntIndex(), FaceEnemyTime, 1, function() self.IsDoingFaceEnemy = false end)
 		local setangs = self:VJ_ReturnAngle((argent:GetPos() - self:GetPos()):Angle())
-		LerpAng = LerpAngle(FrameTime() *TurnSpeed,LerpAng,setangs)
-		self:SetIdealYawAndUpdate(LerpAng.y)
-		self:SetAngles(Angle(LerpAng.p, self:GetAngles().y, LerpAng.r))
+		self:SetIdealYawAndUpdate(setangs.y)
+		self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
 		return setangs //SetLocalAngles
 	else
 		local setangs = self:VJ_ReturnAngle((argent:GetPos() - self:GetPos()):Angle())
-		LerpAng = LerpAngle(FrameTime() *TurnSpeed,LerpAng,setangs)
-		self:SetIdealYawAndUpdate(LerpAng.y)
-		self:SetAngles(Angle(LerpAng.p, self:GetAngles().y, LerpAng.r))
+		self:SetIdealYawAndUpdate(setangs.y)
+		self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
 		//self:SetIdealYawAndUpdate(setangs.y)
 		return setangs
 	end
