@@ -1045,7 +1045,66 @@ local tonumber = tonumber
 local string_find = string.find
 local string_Replace = string.Replace
 local table_remove = table.remove
+local varCPly = "CLASS_PLAYER_ALLY"
+local varCAnt = "CLASS_ANTLION"
+local varCCom = "CLASS_COMBINE"
+local varCXen = "CLASS_XEN"
+local varCZom = "CLASS_ZOMBIE"
 
+---------------------------------------------------------------------------------------------------------------------------------------------
+local function ConvarsOnInit(self)
+	--<>-- Convars that run on Initialize --<>--
+	if GetConVarNumber("vj_npc_usedevcommands") == 1 then self.VJDEBUG_SNPC_ENABLED = true end
+	self.NextProcessTime = GetConVarNumber("vj_npc_processtime")
+	if GetConVarNumber("vj_npc_sd_nosounds") == 1 then self.HasSounds = false end
+	if GetConVarNumber("vj_npc_vjfriendly") == 1 then self.VJFriendly = true end
+	if GetConVarNumber("vj_npc_playerfriendly") == 1 then self.PlayerFriendly = true end
+	if GetConVarNumber("vj_npc_antlionfriendly") == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCAnt end
+	if GetConVarNumber("vj_npc_combinefriendly") == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCCom end
+	if GetConVarNumber("vj_npc_zombiefriendly") == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCZom end
+	if GetConVarNumber("vj_npc_noallies") == 1 then self.HasAllies = false self.PlayerFriendly = false end
+	if GetConVarNumber("vj_npc_nocorpses") == 1 then self.HasDeathRagdoll = false end
+	if GetConVarNumber("vj_npc_itemdrops") == 0 then self.HasItemDropsOnDeath = false end
+	if GetConVarNumber("vj_npc_noproppush") == 1 then self.PushProps = false end
+	if GetConVarNumber("vj_npc_nopropattack") == 1 then self.AttackProps = false end
+	if GetConVarNumber("vj_npc_bleedenemyonmelee") == 1 then self.MeleeAttackBleedEnemy = false end
+	if GetConVarNumber("vj_npc_slowplayer") == 1 then self.SlowPlayerOnMeleeAttack = false end
+	if GetConVarNumber("vj_npc_nowandering") == 1 then self.DisableWandering = true end
+	if GetConVarNumber("vj_npc_nochasingenemy") == 1 then self.DisableChasingEnemy = true end
+	if GetConVarNumber("vj_npc_noflinching") == 1 then self.CanFlinch = false end
+	if GetConVarNumber("vj_npc_nomelee") == 1 then self.HasMeleeAttack = false end
+	if GetConVarNumber("vj_npc_norange") == 1 then self.HasRangeAttack = false end
+	if GetConVarNumber("vj_npc_noleap") == 1 then self.HasLeapAttack = false end
+	if GetConVarNumber("vj_npc_nobleed") == 1 then self.Bleeds = false end
+	if GetConVarNumber("vj_npc_godmodesnpc") == 1 then self.GodMode = true end
+	if GetConVarNumber("vj_npc_nobecomeenemytoply") == 1 then self.BecomeEnemyToPlayer = false end
+	if GetConVarNumber("vj_npc_nofollowplayer") == 1 then self.FollowPlayer = false end
+	if GetConVarNumber("vj_npc_nosnpcchat") == 1 then self.AllowPrintingInChat = false self.FollowPlayerChat = false end
+	if GetConVarNumber("vj_npc_nomedics") == 1 then self.IsMedicSNPC = false end
+	if GetConVarNumber("vj_npc_nogibdeathparticles") == 1 then self.HasGibDeathParticles = false end
+	if GetConVarNumber("vj_npc_nogib") == 1 then self.AllowedToGib = false self.HasGibOnDeath = false end
+	if GetConVarNumber("vj_npc_usegmoddecals") == 1 then self.BloodDecalUseGMod = true end
+	if GetConVarNumber("vj_npc_knowenemylocation") == 1 then self.FindEnemy_UseSphere = true self.FindEnemy_CanSeeThroughWalls = true end
+	if GetConVarNumber("vj_npc_sd_gibbing") == 1 then self.HasGibOnDeathSounds = false end
+	if GetConVarNumber("vj_npc_sd_soundtrack") == 1 then self.HasSoundTrack = false end
+	if GetConVarNumber("vj_npc_sd_footstep") == 1 then self.HasFootStepSound = false end
+	if GetConVarNumber("vj_npc_sd_idle") == 1 then self.HasIdleSounds = false end
+	if GetConVarNumber("vj_npc_sd_breath") == 1 then self.HasBreathSound = false end
+	if GetConVarNumber("vj_npc_sd_alert") == 1 then self.HasAlertSounds = false end
+	if GetConVarNumber("vj_npc_sd_meleeattack") == 1 then self.HasMeleeAttackSounds = false self.HasExtraMeleeAttackSounds = false end
+	if GetConVarNumber("vj_npc_sd_meleeattackmiss") == 1 then self.HasMeleeAttackMissSounds = false end
+	if GetConVarNumber("vj_npc_sd_slowplayer") == 1 then self.HasMeleeAttackSlowPlayerSound = false end
+	if GetConVarNumber("vj_npc_sd_rangeattack") == 1 then self.HasBeforeRangeAttackSound = false self.HasRangeAttackSound = false end
+	if GetConVarNumber("vj_npc_sd_leapattack") == 1 then self.HasBeforeLeapAttackSound = false self.HasLeapAttackJumpSound = false self.HasLeapAttackDamageSound = false self.HasLeapAttackDamageMissSound = false end
+	if GetConVarNumber("vj_npc_sd_pain") == 1 then self.HasPainSounds = false end
+	if GetConVarNumber("vj_npc_sd_death") == 1 then self.HasDeathSounds = false end
+	if GetConVarNumber("vj_npc_sd_followplayer") == 1 then self.HasFollowPlayerSounds_Follow = false self.HasFollowPlayerSounds_UnFollow = false end
+	if GetConVarNumber("vj_npc_sd_becomenemytoply") == 1 then self.HasBecomeEnemyToPlayerSounds = false end
+	if GetConVarNumber("vj_npc_sd_onplayersight") == 1 then self.HasOnPlayerSightSounds = false end
+	if GetConVarNumber("vj_npc_sd_medic") == 1 then self.HasMedicSounds_BeforeHeal = false self.HasMedicSounds_AfterHeal = false self.HasMedicSounds_ReceiveHeal = false end
+	if GetConVarNumber("vj_npc_sd_callforhelp") == 1 then self.HasCallForHelpSounds = false end
+	if GetConVarNumber("vj_npc_sd_onreceiveorder") == 1 then self.HasOnReceiveOrderSounds = false end
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:CustomOnPreInitialize()
@@ -1062,7 +1121,7 @@ function ENT:Initialize()
 	self:SetCollisionGroup(COLLISION_GROUP_NPC)
 	self:SetCustomCollisionCheck()
 	self:SetMaxYawSpeed(self.TurningSpeed)
-	self:ConvarsOnInit()
+	ConvarsOnInit(self)
 	self:DoChangeMovementType()
 	self.ExtraCorpsesToRemove_Transition = {}
 	self.VJ_AddCertainEntityAsEnemy = {}
@@ -2774,11 +2833,6 @@ function ENT:DoRelationshipCheck(argent)
 	end
 	return false
 end
-local varCPly = "CLASS_PLAYER_ALLY"
-local varCAnt = "CLASS_ANTLION"
-local varCCom = "CLASS_COMBINE"
-local varCXen = "CLASS_XEN"
-local varCZom = "CLASS_ZOMBIE"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoEntityRelationshipCheck()
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.Behavior == VJ_BEHAVIOR_PASSIVE*/ then return false end
@@ -4560,60 +4614,6 @@ function ENT:EntitiesToNoCollideCode(argent)
 			constraint.NoCollide(self,argent,0,0)
 		end
 	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:ConvarsOnInit()
-	--<>-- Convars that run on Initialize --<>--
-	if GetConVarNumber("vj_npc_usedevcommands") == 1 then self.VJDEBUG_SNPC_ENABLED = true end
-	self.NextProcessTime = GetConVarNumber("vj_npc_processtime")
-	if GetConVarNumber("vj_npc_sd_nosounds") == 1 then self.HasSounds = false end
-	if GetConVarNumber("vj_npc_vjfriendly") == 1 then self.VJFriendly = true end
-	if GetConVarNumber("vj_npc_playerfriendly") == 1 then self.PlayerFriendly = true end
-	if GetConVarNumber("vj_npc_antlionfriendly") == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCAnt end
-	if GetConVarNumber("vj_npc_combinefriendly") == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCCom end
-	if GetConVarNumber("vj_npc_zombiefriendly") == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCZom end
-	if GetConVarNumber("vj_npc_noallies") == 1 then self.HasAllies = false self.PlayerFriendly = false end
-	if GetConVarNumber("vj_npc_nocorpses") == 1 then self.HasDeathRagdoll = false end
-	if GetConVarNumber("vj_npc_itemdrops") == 0 then self.HasItemDropsOnDeath = false end
-	if GetConVarNumber("vj_npc_noproppush") == 1 then self.PushProps = false end
-	if GetConVarNumber("vj_npc_nopropattack") == 1 then self.AttackProps = false end
-	if GetConVarNumber("vj_npc_bleedenemyonmelee") == 1 then self.MeleeAttackBleedEnemy = false end
-	if GetConVarNumber("vj_npc_slowplayer") == 1 then self.SlowPlayerOnMeleeAttack = false end
-	if GetConVarNumber("vj_npc_nowandering") == 1 then self.DisableWandering = true end
-	if GetConVarNumber("vj_npc_nochasingenemy") == 1 then self.DisableChasingEnemy = true end
-	if GetConVarNumber("vj_npc_noflinching") == 1 then self.CanFlinch = false end
-	if GetConVarNumber("vj_npc_nomelee") == 1 then self.HasMeleeAttack = false end
-	if GetConVarNumber("vj_npc_norange") == 1 then self.HasRangeAttack = false end
-	if GetConVarNumber("vj_npc_noleap") == 1 then self.HasLeapAttack = false end
-	if GetConVarNumber("vj_npc_nobleed") == 1 then self.Bleeds = false end
-	if GetConVarNumber("vj_npc_godmodesnpc") == 1 then self.GodMode = true end
-	if GetConVarNumber("vj_npc_nobecomeenemytoply") == 1 then self.BecomeEnemyToPlayer = false end
-	if GetConVarNumber("vj_npc_nofollowplayer") == 1 then self.FollowPlayer = false end
-	if GetConVarNumber("vj_npc_nosnpcchat") == 1 then self.AllowPrintingInChat = false self.FollowPlayerChat = false end
-	if GetConVarNumber("vj_npc_nomedics") == 1 then self.IsMedicSNPC = false end
-	if GetConVarNumber("vj_npc_nogibdeathparticles") == 1 then self.HasGibDeathParticles = false end
-	if GetConVarNumber("vj_npc_nogib") == 1 then self.AllowedToGib = false self.HasGibOnDeath = false end
-	if GetConVarNumber("vj_npc_usegmoddecals") == 1 then self.BloodDecalUseGMod = true end
-	if GetConVarNumber("vj_npc_knowenemylocation") == 1 then self.FindEnemy_UseSphere = true self.FindEnemy_CanSeeThroughWalls = true end
-	if GetConVarNumber("vj_npc_sd_gibbing") == 1 then self.HasGibOnDeathSounds = false end
-	if GetConVarNumber("vj_npc_sd_soundtrack") == 1 then self.HasSoundTrack = false end
-	if GetConVarNumber("vj_npc_sd_footstep") == 1 then self.HasFootStepSound = false end
-	if GetConVarNumber("vj_npc_sd_idle") == 1 then self.HasIdleSounds = false end
-	if GetConVarNumber("vj_npc_sd_breath") == 1 then self.HasBreathSound = false end
-	if GetConVarNumber("vj_npc_sd_alert") == 1 then self.HasAlertSounds = false end
-	if GetConVarNumber("vj_npc_sd_meleeattack") == 1 then self.HasMeleeAttackSounds = false self.HasExtraMeleeAttackSounds = false end
-	if GetConVarNumber("vj_npc_sd_meleeattackmiss") == 1 then self.HasMeleeAttackMissSounds = false end
-	if GetConVarNumber("vj_npc_sd_slowplayer") == 1 then self.HasMeleeAttackSlowPlayerSound = false end
-	if GetConVarNumber("vj_npc_sd_rangeattack") == 1 then self.HasBeforeRangeAttackSound = false self.HasRangeAttackSound = false end
-	if GetConVarNumber("vj_npc_sd_leapattack") == 1 then self.HasBeforeLeapAttackSound = false self.HasLeapAttackJumpSound = false self.HasLeapAttackDamageSound = false self.HasLeapAttackDamageMissSound = false end
-	if GetConVarNumber("vj_npc_sd_pain") == 1 then self.HasPainSounds = false end
-	if GetConVarNumber("vj_npc_sd_death") == 1 then self.HasDeathSounds = false end
-	if GetConVarNumber("vj_npc_sd_followplayer") == 1 then self.HasFollowPlayerSounds_Follow = false self.HasFollowPlayerSounds_UnFollow = false end
-	if GetConVarNumber("vj_npc_sd_becomenemytoply") == 1 then self.HasBecomeEnemyToPlayerSounds = false end
-	if GetConVarNumber("vj_npc_sd_onplayersight") == 1 then self.HasOnPlayerSightSounds = false end
-	if GetConVarNumber("vj_npc_sd_medic") == 1 then self.HasMedicSounds_BeforeHeal = false self.HasMedicSounds_AfterHeal = false self.HasMedicSounds_ReceiveHeal = false end
-	if GetConVarNumber("vj_npc_sd_callforhelp") == 1 then self.HasCallForHelpSounds = false end
-	if GetConVarNumber("vj_npc_sd_onreceiveorder") == 1 then self.HasOnReceiveOrderSounds = false end
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
