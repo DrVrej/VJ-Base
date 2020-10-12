@@ -8,19 +8,20 @@ include("shared.lua")
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to make spawners.
 --------------------------------------------------*/
-ENT.IsVJBaseSpawner = true
 ENT.VJBaseSpawnerDisabled = false -- If set to true, it will stop spawning the entities
+ENT.OverrideDisableOnSpawn = false -- If set to true, the spawner will create entities on initialize even if it's disabled!
 ENT.SingleSpawner = false -- If set to true, it will spawn the entities once then remove itself
-	-- General ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Model = {""} -- The models it should spawn with | Picks a random one from the table
 ENT.EntitiesToSpawn = {
-	{EntityName = "NPC1",SpawnPosition = {vForward=0,vRight=0,vUp=0},Entities = {"npc_vj_name"}},
-	-- Extras: --
-	-- WeaponsList = {} (Use "default" to make it spawn the NPC with its default weapons)
+	{EntityName = "NPC1", SpawnPosition = {vForward=0, vRight=0, vUp=0}, Entities = {"npc_vj_name"}},
+	/* Extras:
+		- WeaponsList = {} (Use "default" to make it spawn the NPC with its default weapons)
+	*/
 }
 ENT.TimedSpawn_Time = 3 -- How much time until it spawns another SNPC?
 ENT.TimedSpawn_OnlyOne = true -- If it's true then it will only have one SNPC spawned at a time
 ENT.HasIdleSounds = true -- Does it have idle sounds?
+	-- Sounds ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.SoundTbl_Idle = {}
 ENT.IdleSoundChance = 1 -- How much chance to play the sound? 1 = always
 ENT.IdleSoundLevel = 80
@@ -40,7 +41,7 @@ ENT.AlreadyDoneVJBaseSpawnerDisabled = true
 ENT.NextIdleSoundT = 0
 ENT.NextTimedSpawnT = 0
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnEntitySpawn(EntityName,SpawnPosition,Entities,TheEntity) end
+function ENT:CustomOnEntitySpawn(EntityName, SpawnPosition, Entities, TheEntity) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize_BeforeNPCSpawn() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -59,7 +60,7 @@ function ENT:SpawnAnEntity(keys, values, initspawn)
 	local overridedisable = false
 	local hasweps = false
 	local wepslist = {}
-	if initspawn == true then overridedisable = true end
+	if initspawn == true && self.OverrideDisableOnSpawn then overridedisable = true end
 	if self.VJBaseSpawnerDisabled == true && overridedisable == false then return end
 	
 	local getthename = v.EntityName
@@ -95,7 +96,7 @@ function ENT:Initialize()
 	self.CurrentEntities = {}
 	self:CustomOnInitialize_BeforeNPCSpawn()
 	self.NumberOfEntitiesToSpawn =  table.Count(self.EntitiesToSpawn)
-	for k,v in ipairs(self.EntitiesToSpawn) do self:SpawnAnEntity(k,v,true) end
+	for k, v in ipairs(self.EntitiesToSpawn) do self:SpawnAnEntity(k, v, true) end
 	self:CustomOnInitialize_AfterNPCSpawn()
 end
 // lua_run for k,v in ipairs(ents.GetAll()) do if v.IsVJBaseSpawner == true then v.VJBaseSpawnerDisabled = false end end
@@ -114,10 +115,10 @@ function ENT:Think()
 	end*/
 	
 	if self.VJBaseSpawnerDisabled == false && self.SingleSpawner == false then
-		for k,v in ipairs(self.CurrentEntities) do
+		for k, v in ipairs(self.CurrentEntities) do
 			if !IsValid(v.TheEntity) && v.Dead == false /*&& v.NextTimedSpawnT < CurTime()*/ then
 				v.Dead = true
-				timer.Simple(self.TimedSpawn_Time,function() if IsValid(self) then /*table.remove(self.CurrentEntities,k)*/ self:SpawnAnEntity(k,v,false) end end)
+				timer.Simple(self.TimedSpawn_Time,function() if IsValid(self) then /*table.remove(self.CurrentEntities,k)*/ self:SpawnAnEntity(k, v, false) end end)
 			end
 		end
 	end
