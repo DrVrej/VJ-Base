@@ -1054,7 +1054,7 @@ local varCZom = "CLASS_ZOMBIE"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function ConvarsOnInit(self)
 	--<>-- Convars that run on Initialize --<>--
-	if GetConVarNumber("vj_npc_usedevcommands") == 1 then self.VJDEBUG_SNPC_ENABLED = true end
+	if GetConVarNumber("vj_npc_usedevcommands") == 1 then self.VJDEBUG_SNPC_ENABLED = true self.AA_EnableDebug = true end
 	self.NextProcessTime = GetConVarNumber("vj_npc_processtime")
 	if GetConVarNumber("vj_npc_sd_nosounds") == 1 then self.HasSounds = false end
 	if GetConVarNumber("vj_npc_vjfriendly") == 1 then self.VJFriendly = true end
@@ -1595,7 +1595,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 		if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
 			if /*self:GetSequence() == 0 or*/ self:BusyWithActivity() == true then return end
 			self:AAMove_Stop()
-			self:VJ_ACT_PLAYACTIVITY(finaltbl,false,0,false,0,{AlwaysUseSequence=true,SequenceDuration=false,SequenceInterruptible=true})
+			self:VJ_ACT_PLAYACTIVITY(finaltbl, false, 0, false, 0, {SequenceDuration=false, SequenceInterruptible=true}) // AlwaysUseSequence=true
 		end
 		if self.CurrentSchedule == nil then -- Yete ooresh pame chenergor
 			self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0) -- Asiga chi tenesne yerp vor nouyn animation-e enen ne yedev yedevi, ge sarin
@@ -1643,8 +1643,8 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChaseAnimation(overrideChasing)
 	local ene = self:GetEnemy()
-	if self.Dead == true or self.VJ_IsBeingControlled == true or self.PlayingAttackAnimation == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.PlayingAttackAnimation == true && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
-	if self:VJ_GetNearestPointToEntityDistance(ene) < self.MeleeAttackDistance && ene:Visible(self) && (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then self:AAMove_Stop() self:VJ_TASK_IDLE_STAND() return end
+	if self.Dead == true or self.VJ_IsBeingControlled == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.PlayingAttackAnimation == true && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
+	if self:VJ_GetNearestPointToEntityDistance(ene) < self.MeleeAttackDistance && ene:Visible(self) && (self:GetForward():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then self:AAMove_Stop() self:VJ_TASK_IDLE_STAND() return end -- Not melee attacking yet but it is in range, so stop moving!
 	
 	overrideChasing = overrideChasing or false -- true = Chase no matter what
 	
@@ -2140,7 +2140,13 @@ function ENT:Think()
 
 		--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 			-- Attack Timers --
-		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:SelectSchedule() end
+		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+			if IsValid(ene) && self.PlayingAttackAnimation == true && self:VJ_GetNearestPointToEntityDistance(ene) < self.MeleeAttackDistance then
+				self:AAMove_Stop()
+			else
+				self:SelectSchedule()
+			end
+		end
 		ene = self:GetEnemy()
 		if IsValid(ene) then
 			if self.Dead == false then
