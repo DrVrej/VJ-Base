@@ -335,9 +335,9 @@ function ENT:Think()
 			if gerta_for then
 				if self.VJCE_NPC.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 					if gerta_arak then
-						self.VJCE_NPC:AAMove_ChaseEnemy(true)
+						self.VJCE_NPC:AAMove_MoveToPos(self.VJCE_Bullseye, true, "Alert")
 					else
-						self.VJCE_NPC:AAMove_ChaseEnemy(true,true)
+						self.VJCE_NPC:AAMove_MoveToPos(self.VJCE_Bullseye, true, "Calm")
 					end
 				else
 					if gerta_lef then
