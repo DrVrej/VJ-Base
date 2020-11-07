@@ -229,10 +229,10 @@ ENT.NextMoveOrHideOnDamageByEnemy2 = 3.5 -- How much time until it moves or hide
 ENT.HasDeathRagdoll = true -- If set to false, it will not spawn the regular ragdoll of the SNPC
 ENT.DeathCorpseEntityClass = "UseDefaultBehavior" -- The entity class it creates | "UseDefaultBehavior" = Let the base automatically detect the type
 ENT.DeathCorpseModel = {} -- The corpse model that it will spawn when it dies | Leave empty to use the NPC's model | Put as many models as desired, the base will pick a random one.
+ENT.DeathCorpseCollisionType = COLLISION_GROUP_DEBRIS -- Collision type for the corpse | SNPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
 ENT.DeathCorpseSkin = -1 -- Used to override the death skin | -1 = Use the skin that the SNPC had before it died
 ENT.DeathCorpseSetBodyGroup = true -- Should it get the models bodygroups and set it to the corpse? When set to false, it uses the model's default bodygroups
 ENT.DeathCorpseBodyGroup = VJ_Set(-1,-1) -- #1 = the category of the first bodygroup | #2 = the value of the second bodygroup | Set -1 for #1 to let the base decide the corpse's bodygroup
-ENT.DeathCorpseAlwaysCollide = false -- Should the corpse always collide?
 ENT.DeathCorpseSubMaterials = nil -- Apply a table of indexes that correspond to a sub material index, this will cause the base to copy the NPC's sub material to the corpse.
 ENT.FadeCorpse = false -- Fades the ragdoll on death
 ENT.FadeCorpseTime = 10 -- How much time until the ragdoll fades | Unit = Seconds
@@ -1074,6 +1074,22 @@ local function ConvarsOnInit(self)
 	if GetConVarNumber("vj_npc_sd_suppressing") == 1 then self.HasSuppressingSounds = false end
 	if GetConVarNumber("vj_npc_sd_callforhelp") == 1 then self.HasCallForHelpSounds = false end
 	if GetConVarNumber("vj_npc_sd_onreceiveorder") == 1 then self.HasOnReceiveOrderSounds = false end
+	local corpseCollision = GetConVarNumber("vj_npc_corpsecollision")
+	if corpseCollision != 0 && self.DeathCorpseCollisionType == COLLISION_GROUP_DEBRIS then
+		if corpseCollision == 1 then
+			self.DeathCorpseCollisionType = COLLISION_GROUP_NONE
+		elseif corpseCollision == 2 then
+			self.DeathCorpseCollisionType = COLLISION_GROUP_WORLD
+		elseif corpseCollision == 3 then
+			self.DeathCorpseCollisionType = COLLISION_GROUP_INTERACTIVE
+		elseif corpseCollision == 4 then
+			self.DeathCorpseCollisionType = COLLISION_GROUP_WEAPON
+		elseif corpseCollision == 5 then
+			self.DeathCorpseCollisionType = COLLISION_GROUP_PASSABLE_DOOR
+		elseif corpseCollision == 6 then
+			self.DeathCorpseCollisionType = COLLISION_GROUP_NONE
+		end
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
@@ -4413,10 +4429,17 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 			self:SpawnBloodPool(dmginfo,hitgroup)
 		end
 
-		-- Miscellaneous --
-		if GetConVarNumber("ai_serverragdolls") == 0 then self.Corpse:SetCollisionGroup(1) hook.Call("VJ_CreateSNPCCorpse",nil,self.Corpse,self) else undo.ReplaceEntity(self,self.Corpse) end
-		if self.DeathCorpseAlwaysCollide == true then self.Corpse:SetCollisionGroup(0) end
+		-- Collision --
+		self.Corpse:SetCollisionGroup(self.DeathCorpseCollisionType)
+		if GetConVarNumber("ai_serverragdolls") == 1 then
+			undo.ReplaceEntity(self, self.Corpse)
+		else -- Keep corpses is not enabled...
+			hook.Call("VJ_CreateSNPCCorpse", nil, self.Corpse, self)
+			if GetConVarNumber("vj_npc_undocorpse") == 1 then undo.ReplaceEntity(self, self.Corpse) end -- Undoable
+		end
+		cleanup.ReplaceEntity(self, self.Corpse) -- Delete on cleanup
 		
+		-- Miscellaneous --
 		if self.DeathCorpseSkin == -1 then
 			self.Corpse:SetSkin(self:GetSkin())
 		else
@@ -4432,8 +4455,6 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 			end
 		end
 		
-		cleanup.ReplaceEntity(self,self.Corpse) -- Delete on cleanup
-		if GetConVarNumber("vj_npc_undocorpse") == 1 then undo.ReplaceEntity(self,self.Corpse) end -- Undoable
 		if self.SetCorpseOnFire == true then self.Corpse:Ignite(math.Rand(8,10),0) end -- Set it on fire when it dies
 		if self:IsOnFire() then  -- If was on fire then...
 			self.Corpse:Ignite(math.Rand(8,10),0)
