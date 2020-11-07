@@ -58,6 +58,7 @@ ConvarList["vj_npc_playerfriendly"] = 0 -- Makes the SNPC Friendly to Players
 ConvarList["vj_npc_zombiefriendly"] = 0 -- Makes the SNPC Friendly to Zombies
 ConvarList["vj_npc_antlionfriendly"] = 0 -- Makes the SNPC Friendly to Antlion
 ConvarList["vj_npc_combinefriendly"] = 0 -- Makes the SNPC Friendly to Combine
+ConvarList["vj_npc_corpsecollision"] = 0 -- Collision type for the NPC's corpse
 ConvarList["vj_npc_corpsefade"] = 0 -- Make Corpses fade
 ConvarList["vj_npc_corpsefadetime"] = 10 -- Time until Corpses fade
 ConvarList["vj_npc_undocorpse"] = 0 -- Make corpses undoable

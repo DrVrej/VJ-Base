@@ -23,7 +23,8 @@ if (CLIENT) then
 		local camera = ply.VJCE_Camera -- Camera entity
 		local npc = ply.VJCE_NPC -- The NPC that's being controlled
 		if !IsValid(ply.VJCE_Camera) or !IsValid(ply.VJCE_NPC) then return end
-		
+		if IsValid(ply:GetViewEntity()) && ply:GetViewEntity():GetClass() == "gmod_cameraprop" then return end
+		  
 		local pos = origin -- The position that will be set
 		if ply.VJC_Camera_Mode == 2 then -- First person
 			local setPos = npc:EyePos() + npc:GetForward()*20
