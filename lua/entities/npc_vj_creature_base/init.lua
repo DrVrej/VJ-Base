@@ -573,25 +573,17 @@ ENT.DeathSoundChance = 1
 ENT.SoundTrackChance = 1
 	-- ====== Timer Variables ====== --
 	-- Randomized time between the two variables, x amount of time has to pass for the sound to play again | Counted in seconds
-ENT.NextSoundTime_Breath_BaseDecide = true -- Let the base decide the next sound time, if it can't it will use the numbers below
-ENT.NextSoundTime_Breath1 = 1
-ENT.NextSoundTime_Breath2 = 1
+ENT.NextSoundTime_Breath = true -- true = Base will decide the time | VJ_Set(1, 2) = Custom time
 ENT.NextSoundTime_Idle1 = 4
 ENT.NextSoundTime_Idle2 = 11
-ENT.NextSoundTime_Investigate1 = 5
-ENT.NextSoundTime_Investigate2 = 5
-ENT.NextSoundTime_LostEnemy1 = 5
-ENT.NextSoundTime_LostEnemy2 = 6
+ENT.NextSoundTime_Investigate = VJ_Set(5, 5)
+ENT.NextSoundTime_LostEnemy = VJ_Set(5, 6)
 ENT.NextSoundTime_Alert1 = 2
 ENT.NextSoundTime_Alert2 = 3
-ENT.NextSoundTime_OnKilledEnemy1 = 3
-ENT.NextSoundTime_OnKilledEnemy2 = 5
-ENT.NextSoundTime_AllyDeath1 = 3
-ENT.NextSoundTime_AllyDeath2 = 5
-ENT.NextSoundTime_Pain1 = 2
-ENT.NextSoundTime_Pain2 = 2
-ENT.NextSoundTime_DamageByPlayer1 = 2
-ENT.NextSoundTime_DamageByPlayer2 = 2.3
+ENT.NextSoundTime_OnKilledEnemy = VJ_Set(3, 5)
+ENT.NextSoundTime_AllyDeath = VJ_Set(3, 5)
+ENT.NextSoundTime_Pain = VJ_Set(2, 2)
+ENT.NextSoundTime_DamageByPlayer = VJ_Set(2, 2.3)
 	-- ====== Volume Variables ====== --
 	-- Number must be between 0 and 1
 	-- 0 = No sound, 1 = normal/loudest
@@ -1977,14 +1969,12 @@ function ENT:Think()
 	self:CustomOnThink()
 	
 	if self.Dead == false && self.HasBreathSound == true && self.HasSounds == true && CurTime() > self.NextBreathSoundT then
-		local brsd = VJ_PICK(self.SoundTbl_Breath)
-		local dur = math.Rand(self.NextSoundTime_Breath1, self.NextSoundTime_Breath2)
-		if brsd != false then
+		local sdtbl = VJ_PICK(self.SoundTbl_Breath)
+		local dur = 1
+		if sdtbl != false then
 			VJ_STOPSOUND(self.CurrentBreathSound)
-			if self.NextSoundTime_Breath_BaseDecide == true then
-				dur = SoundDuration(brsd)
-			end
-			self.CurrentBreathSound = VJ_CreateSound(self, brsd, self.BreathSoundLevel, self:VJ_DecideSoundPitch(self.BreathSoundPitch1, self.BreathSoundPitch2))
+			dur = (self.NextSoundTime_Breath == true and SoundDuration(sdtbl)) or math.Rand(self.NextSoundTime_Breath.a, self.NextSoundTime_Breath.b)
+			self.CurrentBreathSound = VJ_CreateSound(self, sdtbl, self.BreathSoundLevel, self:VJ_DecideSoundPitch(self.BreathSoundPitch1, self.BreathSoundPitch2))
 		end
 		self.NextBreathSoundT = CurTime() + dur
 	end
@@ -3629,8 +3619,8 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 			
 			if self.AlertFriendsOnDeath == true && noalert == true && !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath == true && it != self.AlertFriendsOnDeathLimit && self:GetPos():Distance(v:GetPos()) < self.AlertFriendsOnDeathDistance then
 				it = it + 1
-				v:FaceCertainEntity(self,false)
-				v:VJ_ACT_PLAYACTIVITY(VJ_PICK(v.AnimTbl_AlertFriendsOnDeath),false,0,false)
+				v:FaceCertainPosition(self:GetPos(), 1)
+				v:VJ_ACT_PLAYACTIVITY(VJ_PICK(v.AnimTbl_AlertFriendsOnDeath))
 				v.NextIdleTime = CurTime() + math.Rand(5,8)
 			end
 		end
@@ -4167,7 +4157,7 @@ function ENT:PlaySoundSystem(Set, CustomSd, Type)
 				self.NextIdleSoundT = self.NextIdleSoundT + 2
 				self.CurrentInvestigateSound = Type(self, sdtbl, self.InvestigateSoundLevel, self:VJ_DecideSoundPitch(self.InvestigateSoundPitch1, self.InvestigateSoundPitch2))
 			end
-			self.NextInvestigateSoundT = CurTime() + math.Rand(self.NextSoundTime_Investigate1, self.NextSoundTime_Investigate2)
+			self.NextInvestigateSoundT = CurTime() + math.Rand(self.NextSoundTime_Investigate.a, self.NextSoundTime_Investigate.b)
 		end
 		return
 	elseif Set == "LostEnemy" then
@@ -4179,7 +4169,7 @@ function ENT:PlaySoundSystem(Set, CustomSd, Type)
 				self.NextIdleSoundT = self.NextIdleSoundT + 2
 				self.CurrentLostEnemySound = Type(self, sdtbl, self.LostEnemySoundLevel, self:VJ_DecideSoundPitch(self.LostEnemySoundPitch1, self.LostEnemySoundPitch2))
 			end
-			self.LostEnemySoundT = CurTime() + math.Rand(self.NextSoundTime_LostEnemy1, self.NextSoundTime_LostEnemy2)
+			self.LostEnemySoundT = CurTime() + math.Rand(self.NextSoundTime_LostEnemy.a, self.NextSoundTime_LostEnemy.b)
 		end
 		return
 	elseif Set == "Alert" then
@@ -4230,7 +4220,7 @@ function ENT:PlaySoundSystem(Set, CustomSd, Type)
 				self.NextIdleSoundT = self.NextIdleSoundT + 2
 				self.CurrentOnKilledEnemySound = Type(self, sdtbl, self.OnKilledEnemySoundLevel, self:VJ_DecideSoundPitch(self.OnKilledEnemySoundPitch1, self.OnKilledEnemySoundPitch2))
 			end
-			self.OnKilledEnemySoundT = CurTime() + math.Rand(self.NextSoundTime_OnKilledEnemy1, self.NextSoundTime_OnKilledEnemy2)
+			self.OnKilledEnemySoundT = CurTime() + math.Rand(self.NextSoundTime_OnKilledEnemy.a, self.NextSoundTime_OnKilledEnemy.b)
 		end
 		return
 	elseif Set == "AllyDeath" then
@@ -4242,7 +4232,7 @@ function ENT:PlaySoundSystem(Set, CustomSd, Type)
 				self.NextIdleSoundT = self.NextIdleSoundT + 2
 				self.CurrentAllyDeathSound = Type(self, sdtbl, self.AllyDeathSoundLevel, self:VJ_DecideSoundPitch(self.AllyDeathSoundPitch1, self.AllyDeathSoundPitch2))
 			end
-			self.AllyDeathSoundT = CurTime() + math.Rand(self.NextSoundTime_AllyDeath1, self.NextSoundTime_AllyDeath2)
+			self.AllyDeathSoundT = CurTime() + math.Rand(self.NextSoundTime_AllyDeath.a, self.NextSoundTime_AllyDeath.b)
 		end
 		return
 	elseif Set == "Pain" then
@@ -4254,7 +4244,7 @@ function ENT:PlaySoundSystem(Set, CustomSd, Type)
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentPainSound = Type(self, sdtbl, self.PainSoundLevel, self:VJ_DecideSoundPitch(self.PainSoundPitch1, self.PainSoundPitch2))
 			end
-			self.PainSoundT = CurTime() + math.Rand(self.NextSoundTime_Pain1, self.NextSoundTime_Pain2)
+			self.PainSoundT = CurTime() + math.Rand(self.NextSoundTime_Pain.a, self.NextSoundTime_Pain.b)
 		end
 		return
 	elseif Set == "Impact" then
@@ -4277,7 +4267,7 @@ function ENT:PlaySoundSystem(Set, CustomSd, Type)
 				timer.Simple(0.05, function() if IsValid(self) then VJ_STOPSOUND(self.CurrentPainSound) end end)
 				self.CurrentDamageByPlayerSound = Type(self, sdtbl, self.DamageByPlayerSoundLevel, self:VJ_DecideSoundPitch(self.DamageByPlayerPitch1, self.DamageByPlayerPitch2))
 			end
-			self.NextDamageByPlayerSoundT = CurTime() + math.Rand(self.NextSoundTime_DamageByPlayer1, self.NextSoundTime_DamageByPlayer2)
+			self.NextDamageByPlayerSoundT = CurTime() + math.Rand(self.NextSoundTime_DamageByPlayer.a, self.NextSoundTime_DamageByPlayer.b)
 		end
 		return
 	elseif Set == "Death" then
