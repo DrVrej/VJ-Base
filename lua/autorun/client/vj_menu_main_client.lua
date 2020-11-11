@@ -93,7 +93,7 @@ local function VJ_MAINMENU_CLIENT(Panel)
 	vj_combo_box.OnSelect = function(data, index, text)
 		RunConsoleCommand("vj_language", vj_combo_box:GetOptionData(index))
 		chat.AddText(Color(255,215,0), "#vjbase.menu.clsettings.notify.lang", " ", Color(30,200,255), text)
-		timer.Simple(0.2,function() VJ_REFRESH_LANGUAGE(val) end) -- Bedke kichme espasenk minchevor command-e update ela
+		timer.Simple(0.2,function() VJ_REFRESH_LANGUAGE(val) RunConsoleCommand("spawnmenu_reload") end) -- Bedke kichme espasenk minchevor command-e update ela
 	end
 	Panel:AddPanel(vj_combo_box)
 	Panel:ControlHelp("* stands for unfinished translation!")
