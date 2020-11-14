@@ -582,7 +582,7 @@ ENT.NextSoundTime_Alert1 = 2
 ENT.NextSoundTime_Alert2 = 3
 ENT.NextSoundTime_OnKilledEnemy = VJ_Set(3, 5)
 ENT.NextSoundTime_AllyDeath = VJ_Set(3, 5)
-ENT.NextSoundTime_Pain = VJ_Set(2, 2)
+ENT.NextSoundTime_Pain = true -- true = Base will decide the time | VJ_Set(1, 2) = Custom time
 ENT.NextSoundTime_DamageByPlayer = VJ_Set(2, 2.3)
 	-- ====== Volume Variables ====== --
 	-- Number must be between 0 and 1
@@ -1151,7 +1151,7 @@ function ENT:Initialize()
 	self.StartHealth = self:Health()
 	self:CustomOnInitialize()
 	self:CustomInitialize() -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
-	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + 1) -- If self.NextWanderTime isn't given a value then wait at least 1 sec before wandering
+	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + (self.IdleAlwaysWander and 0 or 1)) -- If self.NextWanderTime isn't given a value THEN if self.IdleAlwaysWander isn't true, wait at least 1 sec before wandering
 	self.SightDistance = (GetConVarNumber("vj_npc_seedistance") > 0) and GetConVarNumber("vj_npc_seedistance") or self.SightDistance
 	timer.Simple(0.15, function()
 		if IsValid(self) then
@@ -4238,13 +4238,15 @@ function ENT:PlaySoundSystem(Set, CustomSd, Type)
 	elseif Set == "Pain" then
 		if self.HasPainSounds == true && CurTime() > self.PainSoundT then
 			local sdtbl = VJ_PICK(self.SoundTbl_Pain)
+			local sdDur = 2
 			if (math.random(1, self.PainSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 				if ctbl != false then sdtbl = ctbl end
 				VJ_STOPSOUND(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentPainSound = Type(self, sdtbl, self.PainSoundLevel, self:VJ_DecideSoundPitch(self.PainSoundPitch1, self.PainSoundPitch2))
+				sdDur = (SoundDuration(sdtbl) > 0 and SoundDuration(sdtbl)) or sdDur
 			end
-			self.PainSoundT = CurTime() + math.Rand(self.NextSoundTime_Pain.a, self.NextSoundTime_Pain.b)
+			self.PainSoundT = CurTime() + ((self.NextSoundTime_Pain == true and sdDur) or math.Rand(self.NextSoundTime_Pain.a, self.NextSoundTime_Pain.b))
 		end
 		return
 	elseif Set == "Impact" then
