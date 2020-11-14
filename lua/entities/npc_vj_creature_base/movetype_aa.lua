@@ -119,7 +119,6 @@ function ENT:AAMove_Wander(playAnim, NoFace)
 		self.AA_MoveLength_Wander = vel_len
 		self.NextIdleTime = vel_len
 	end
-	print("WANDER")
 	self:SetLocalVelocity(vel_set)
 	if Debug == true then ParticleEffect("vj_impact1_centaurspit", finalpos, Angle(0,0,0), self) end
 end
