@@ -2936,7 +2936,7 @@ function ENT:DoEntityRelationshipCheck()
 							self:AddEntityRelationship(v, D_LI, 99)
 						end*/
 						-- Mostly used for non-VJ friendly NPCs
-						if self.PlayerFriendly == true && ((NPCTbl_Resistance[vClass]) or (self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true)) then
+						if self.PlayerFriendly == true && (NPCTbl_Resistance[vClass] or (self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true)) then
 							v:AddEntityRelationship(self, D_LI, 99)
 							self:AddEntityRelationship(v, D_LI, 99)
 							entisfri = true
@@ -4293,6 +4293,36 @@ function ENT:PlaySoundSystem(Set, CustomSd, Type)
 			end
 		end
 		return
+	elseif Set == "MeleeAttack" then
+		if self.HasMeleeAttackSounds == true then
+			local sdtbl = VJ_PICK(self.SoundTbl_MeleeAttack)
+			if (math.random(1, self.MeleeAttackSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+				if ctbl != false then sdtbl = ctbl end
+				if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+				self.NextIdleSoundT_RegularChange = CurTime() + 1
+				self.CurrentMeleeAttackSound = Type(self, sdtbl, self.MeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.MeleeAttackSoundPitch1, self.MeleeAttackSoundPitch2))
+			end
+			if self.HasExtraMeleeAttackSounds == true then
+				sdtbl = VJ_PICK(self.SoundTbl_MeleeAttackExtra)
+				if sdtbl == false then sdtbl = VJ_PICK(DefaultSoundTbl_MeleeAttackExtra) end -- Default table
+				if (math.random(1, self.ExtraMeleeSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+					if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+					self.CurrentExtraMeleeAttackSound = VJ_EmitSound(self, sdtbl, self.ExtraMeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.ExtraMeleeSoundPitch1, self.ExtraMeleeSoundPitch2))
+				end
+			end
+		end
+		return
+	elseif Set == "MeleeAttackMiss" then
+		if self.HasMeleeAttackMissSounds == true then
+			local sdtbl = VJ_PICK(self.SoundTbl_MeleeAttackMiss)
+			if (math.random(1, self.MeleeAttackMissSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+				if ctbl != false then sdtbl = ctbl end
+				if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+				self.NextIdleSoundT_RegularChange = CurTime() + 1
+				self.CurrentMeleeAttackMissSound = Type(self, sdtbl, self.MeleeAttackMissSoundLevel, self:VJ_DecideSoundPitch(self.MeleeAttackMissSoundPitch1, self.MeleeAttackMissSoundPitch2))
+			end
+		end
+		return
 	elseif Set == "BeforeRangeAttack" then
 		if self.HasBeforeRangeAttackSound == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_BeforeRangeAttack)
@@ -4323,36 +4353,6 @@ function ENT:PlaySoundSystem(Set, CustomSd, Type)
 				if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentBeforeLeapAttackSound = Type(self, sdtbl, self.BeforeLeapAttackSoundLevel, self:VJ_DecideSoundPitch(self.BeforeLeapAttackSoundPitch1, self.BeforeLeapAttackSoundPitch2))
-			end
-		end
-		return
-	elseif Set == "MeleeAttack" then
-		if self.HasMeleeAttackSounds == true then
-			local sdtbl = VJ_PICK(self.SoundTbl_MeleeAttack)
-			if (math.random(1, self.MeleeAttackSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
-				if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				self.NextIdleSoundT_RegularChange = CurTime() + 1
-				self.CurrentMeleeAttackSound = Type(self, sdtbl, self.MeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.MeleeAttackSoundPitch1, self.MeleeAttackSoundPitch2))
-			end
-			if self.HasExtraMeleeAttackSounds == true then
-				sdtbl = VJ_PICK(self.SoundTbl_MeleeAttackExtra)
-				if sdtbl == false then sdtbl = VJ_PICK(DefaultSoundTbl_MeleeAttackExtra) end -- Default table
-				if (math.random(1, self.ExtraMeleeSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-					if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-					self.CurrentExtraMeleeAttackSound = VJ_EmitSound(self, sdtbl, self.ExtraMeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.ExtraMeleeSoundPitch1, self.ExtraMeleeSoundPitch2))
-				end
-			end
-		end
-		return
-	elseif Set == "MeleeAttackMiss" then
-		if self.HasMeleeAttackMissSounds == true then
-			local sdtbl = VJ_PICK(self.SoundTbl_MeleeAttackMiss)
-			if (math.random(1, self.MeleeAttackMissSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
-				if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-				self.NextIdleSoundT_RegularChange = CurTime() + 1
-				self.CurrentMeleeAttackMissSound = Type(self, sdtbl, self.MeleeAttackMissSoundLevel, self:VJ_DecideSoundPitch(self.MeleeAttackMissSoundPitch1, self.MeleeAttackMissSoundPitch2))
 			end
 		end
 		return
