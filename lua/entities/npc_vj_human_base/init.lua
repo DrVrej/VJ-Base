@@ -3495,7 +3495,7 @@ function ENT:DoEntityRelationshipCheck()
 							self:AddEntityRelationship(v, D_LI, 99)
 						end*/
 						-- Mostly used for non-VJ friendly NPCs
-						if self.PlayerFriendly == true && ((NPCTbl_Resistance[vClass]) or (self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true)) then
+						if self.PlayerFriendly == true && (NPCTbl_Resistance[vClass] or (self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true)) then
 							v:AddEntityRelationship(self, D_LI, 99)
 							self:AddEntityRelationship(v, D_LI, 99)
 							entisfri = true
@@ -4832,6 +4832,7 @@ function ENT:PlaySoundSystem(Set, CustomSd, Type)
 		return
 	elseif Set == "Pain" then
 		if self.HasPainSounds == true && CurTime() > self.PainSoundT then
+			local sdtbl = VJ_PICK(self.SoundTbl_Pain)
 			local sdDur = 2
 			if (math.random(1, self.PainSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 				if ctbl != false then sdtbl = ctbl end
