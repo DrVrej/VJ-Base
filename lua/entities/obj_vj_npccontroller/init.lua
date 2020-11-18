@@ -123,6 +123,7 @@ function ENT:SetControlledNPC(GetEntity)
 			ThirdP_Offset = Vector(0, 0, 0), -- The offset for the controller when the camera is in third person
 			FirstP_Bone = "ValveBiped.Bip01_Head1", -- If left empty, the base will attempt to calculate a position for first person
 			FirstP_Offset = Vector(0, 0, 5), -- The offset for the controller when the camera is in first person
+			FirstP_ShrinkBone = true, -- Should the bone shrink? Useful if the bone is obscuring the player's view
 		}
 	end
 	self.VJC_Camera_Mode = self.VJCE_NPC.VJC_Data.CameraMode -- Get the NPC's default camera mode
@@ -246,6 +247,7 @@ function ENT:SendDataToClient(reset)
 		bone = self.VJCE_NPC:LookupBone(self.VJCE_NPC.VJC_Data.FirstP_Bone) or -1
 	end
 	net.WriteInt(bone, 10)
+	net.WriteBool((reset != true and self.VJCE_NPC.VJC_Data.FirstP_ShrinkBone) or false)
 	net.Send(self.VJCE_Player)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -261,11 +263,11 @@ function ENT:Think()
 		-- HUD
 		local AttackTypes = {MeleeAttack=false, RangeAttack=false, LeapAttack=false, WeaponAttack=false, GrenadeAttack=false, Ammo="---"}
 		if self.VJCE_NPC.IsVJBaseSNPC == true then
-			if self.VJCE_NPC.HasMeleeAttack == true then AttackTypes["MeleeAttack"] = true end
-			if self.VJCE_NPC.HasRangeAttack == true then AttackTypes["RangeAttack"] = true end
-			if self.VJCE_NPC.HasLeapAttack == true then AttackTypes["LeapAttack"] = true end
+			if self.VJCE_NPC.HasMeleeAttack == true then AttackTypes["MeleeAttack"] = ((self.VJCE_NPC.IsAbleToMeleeAttack != true or self.VJCE_NPC.MeleeAttacking == true) and 2) or true end
+			if self.VJCE_NPC.HasRangeAttack == true then AttackTypes["RangeAttack"] = ((self.VJCE_NPC.IsAbleToRangeAttack != true or self.VJCE_NPC.RangeAttacking == true) and 2) or true end
+			if self.VJCE_NPC.HasLeapAttack == true then AttackTypes["LeapAttack"] = ((self.VJCE_NPC.IsAbleToLeapAttack != true or self.VJCE_NPC.LeapAttacking == true) and 2) or true end
 			if IsValid(self.VJCE_NPC:GetActiveWeapon()) then AttackTypes["WeaponAttack"] = true AttackTypes["Ammo"] = self.VJCE_NPC:GetActiveWeapon():Clip1() end
-			if self.VJCE_NPC.HasGrenadeAttack == true then AttackTypes["GrenadeAttack"] = true end
+			if self.VJCE_NPC.HasGrenadeAttack == true then AttackTypes["GrenadeAttack"] = (CurTime() <= self.VJCE_NPC.NextThrowGrenadeT and 2) or true end
 		end
 		net.Start("vj_controller_hud")
 		net.WriteBool(self.VJCE_Player:GetInfoNum("vj_npc_cont_hud", 1) == 1)
