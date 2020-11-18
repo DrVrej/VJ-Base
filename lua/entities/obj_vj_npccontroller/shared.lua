@@ -32,7 +32,9 @@ if (CLIENT) then
 			//camera:SetLocalPos(camera:GetLocalPos() + ply.VJC_TP_Offset) -- Help keep the camera stable
 			if ply.VJC_FP_Bone != -1 then -- If the bone does exist, then use the bone position
 				setPos = npc:GetBonePosition(ply.VJC_FP_Bone)
-				npc:ManipulateBoneScale(ply.VJC_FP_Bone, vec0) -- Bone manipulate to make it easier to see
+				if ply.VJC_FP_ShrinkBone then
+					npc:ManipulateBoneScale(ply.VJC_FP_Bone, vec0) -- Bone manipulate to make it easier to see
+				end
 			end
 			pos = setPos + (npc:GetForward()*offset.x + npc:GetRight()*offset.y + npc:GetUp()*offset.z)
 		else -- Third person
@@ -75,7 +77,7 @@ if (CLIENT) then
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	hook.Add("PlayerBindPress", "vj_controller_PlayerBindPress", function(ply, bind, pressed)
 		-- For scroll wheel zooming
-		if (bind == "invprev" or bind == "invnext") && ply.IsControlingNPC && IsValid(ply.VJCE_Camera) then
+		if (bind == "invprev" or bind == "invnext") && ply.IsControlingNPC && IsValid(ply.VJCE_Camera) && ply.VJC_Camera_Mode != 2 then
 			ply.VJCE_Camera.Zoom = ply.VJCE_Camera.Zoom or 90
 			if bind == "invprev" then
 				ply.VJCE_Camera.Zoom = math.Clamp(ply.VJCE_Camera.Zoom - ply:GetInfoNum("vj_npc_cont_cam_zoomspeed", 10), 0, 500)
@@ -101,9 +103,20 @@ if (CLIENT) then
 		ply.VJC_TP_Offset = net.ReadVector()
 		ply.VJC_FP_Offset = net.ReadVector()
 		ply.VJC_FP_Bone = net.ReadInt(10)
+		ply.VJC_FP_ShrinkBone = net.ReadBool()
 	end)
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	local lerp_hp = 0
+	local atk_col_red = Color(255, 60, 60, 255)
+	local atk_col_orange = Color(204, 123, 60, 255)
+	local atk_col_green = Color(60, 220, 60, 255)
+	local mat_icon_melee = Material("vj_base/hud_controller/melee.png")
+	local mat_icon_range = Material("vj_base/hud_controller/range.png")
+	local mat_icon_leap = Material("vj_base/hud_controller/leap.png")
+	local mat_icon_grenade = Material("vj_base/hud_controller/grenade.png")
+	local mat_icon_gun = Material("vj_base/hud_controller/gun.png")
+	local mat_icon_camera = Material("vj_base/hud_controller/camera.png")
+	local mat_icon_zoom = Material("vj_base/hud_controller/camera_zoom.png")
 	net.Receive("vj_controller_hud", function(len)
 		//print(len)
 		local enabled = net.ReadBool()
@@ -111,8 +124,9 @@ if (CLIENT) then
 		local hp = net.ReadFloat()
 		local name = net.ReadString()
 		local AtkTbl = net.ReadTable()
-		hook.Add("HUDPaint","VJ_Controller",function()
-			draw.RoundedBox(1, ScrW() / 2.25, ScrH()-120, 220, 80, Color(0, 0, 0, 150))
+		local ply = LocalPlayer()
+		hook.Add("HUDPaint", "vj_controller_HUD", function()
+			draw.RoundedBox(1, ScrW() / 2.25, ScrH()-120, 220, 100, Color(0, 0, 0, 150))
 			draw.SimpleText(name, "VJFont_Trebuchet24_SmallMedium", ScrW() / 2.21, ScrH()-115, Color(255,255,255,255), 0, 0)
 			
 			local hp_r = 255
@@ -133,39 +147,39 @@ if (CLIENT) then
 			draw.SimpleText(finalhp, "VJFont_Trebuchet24_SmallMedium", ScrW() / (2-move), ScrH()-94, Color(255,255,255,255), 0, 0)
 			
 			-- Attack Icons
-			local atk_col_red = Color(255, 60, 60, 255)
-			
-			local atk_col_melee = Color(255, 255, 255, 255)
-			if AtkTbl["MeleeAttack"] == false then atk_col_melee = atk_col_red end
-			surface.SetMaterial(Material("vj_base/hud_controller/claw.png"))
-			surface.SetDrawColor(atk_col_melee)
+			surface.SetMaterial(mat_icon_melee)
+			surface.SetDrawColor((AtkTbl["MeleeAttack"] == false and atk_col_red) or ((AtkTbl["MeleeAttack"] == 2 and atk_col_orange) or atk_col_green))
 			surface.DrawTexturedRect(ScrW() / 2.21, ScrH()-73, 28, 28)
 			
-			local atk_col_range = Color(255, 255, 255, 255)
-			if AtkTbl["RangeAttack"] == false then atk_col_range = atk_col_red end
-			surface.SetMaterial(Material("vj_base/hud_controller/proj.png"))
-			surface.SetDrawColor(atk_col_range)
+			surface.SetMaterial(mat_icon_range)
+			surface.SetDrawColor((AtkTbl["RangeAttack"] == false and atk_col_red) or ((AtkTbl["RangeAttack"] == 2 and atk_col_orange) or atk_col_green))
 			surface.DrawTexturedRect(ScrW() / 2.14, ScrH()-73, 28, 28)
 			
-			local atk_col_leap = Color(255, 255, 255, 255)
-			if AtkTbl["LeapAttack"] == false then atk_col_leap = atk_col_red end
-			surface.SetMaterial(Material("vj_base/hud_controller/leap.png"))
-			surface.SetDrawColor(atk_col_leap)
+			surface.SetMaterial(mat_icon_leap)
+			surface.SetDrawColor((AtkTbl["LeapAttack"] == false and atk_col_red) or ((AtkTbl["LeapAttack"] == 2 and atk_col_orange) or atk_col_green))
 			surface.DrawTexturedRect(ScrW() / 2.065, ScrH()-73, 28, 28)
 			
-			local atk_col_grenade = Color(255, 255, 255, 255)
-			if AtkTbl["GrenadeAttack"] == false then atk_col_grenade = atk_col_red end
-			surface.SetMaterial(Material("vj_base/hud_controller/grenade.png"))
-			surface.SetDrawColor(atk_col_grenade)
+			surface.SetMaterial(mat_icon_grenade)
+			surface.SetDrawColor((AtkTbl["GrenadeAttack"] == false and atk_col_red) or ((AtkTbl["GrenadeAttack"] == 2 and atk_col_orange) or atk_col_green))
 			surface.DrawTexturedRect(ScrW() / 2.005, ScrH()-73, 28, 28)
 			
-			local atk_col_gun = Color(255, 255, 255, 255)
-			if AtkTbl["WeaponAttack"] == false then atk_col_gun = atk_col_red end
-			surface.SetMaterial(Material("vj_base/hud_controller/gun.png"))
-			surface.SetDrawColor(atk_col_gun)
+			surface.SetMaterial(mat_icon_gun)
+			surface.SetDrawColor((AtkTbl["WeaponAttack"] != true and atk_col_red) or atk_col_green)
 			surface.DrawTexturedRect(ScrW() / 1.94, ScrH()-73, 28, 28) // 1.865
-			draw.SimpleText(AtkTbl["Ammo"], "VJFont_Trebuchet24_Medium", ScrW() / 1.885, ScrH()-70, atk_col_gun, 0, 0)
+			draw.SimpleText(AtkTbl["Ammo"], "VJFont_Trebuchet24_Medium", ScrW() / 1.885, ScrH()-70, (AtkTbl["WeaponAttack"] != true and atk_col_red) or ((AtkTbl["Ammo"] <= 0 and atk_col_orange) or atk_col_green), 0, 0)
+			
+			-- Camera
+			surface.SetMaterial(mat_icon_camera)
+			surface.SetDrawColor(Color(255, 255, 255, 255))
+			surface.DrawTexturedRect(ScrW() / 2.21, ScrH()-45, 22, 22)
+			draw.SimpleText((ply.VJC_Camera_Mode == 1 and "Third") or "First", "VJFont_Trebuchet24_SmallMedium", ScrW() / 2.155, ScrH()-43, Color(255, 255, 255, 255), 0, 0) // VJFont_Trebuchet24_SmallMedium
+			
+			-- Zoom Camera
+			surface.SetMaterial(mat_icon_zoom)
+			surface.SetDrawColor(Color(255, 255, 255, 255))
+			surface.DrawTexturedRect(ScrW() / 2.065, ScrH()-45, 22, 22)
+			draw.SimpleText(ply.VJCE_Camera.Zoom, "VJFont_Trebuchet24_Medium", ScrW() / 2.005, ScrH()-45, Color(255, 255, 255, 255), 0, 0) // VJFont_Trebuchet24_SmallMedium
 		end)
-		if enabled != true then hook.Remove("HUDPaint", "VJ_Controller") end
+		if enabled != true then hook.Remove("HUDPaint", "vj_controller_HUD") end
 	end)
 end

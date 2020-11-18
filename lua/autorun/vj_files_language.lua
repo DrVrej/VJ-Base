@@ -301,7 +301,7 @@ if (CLIENT) then
 		add("vjbase.menu.snpc.consettings.bind.camerabackward", "Move Camera Backward")
 		add("vjbase.menu.snpc.consettings.bind.cameraleft", "Move Camera Left")
 		add("vjbase.menu.snpc.consettings.bind.cameraright", "Move Camera Right")
-		add("vjbase.menu.snpc.consettings.bind.resetzoom", "Reset Zoom")
+		add("vjbase.menu.snpc.consettings.bind.resetzoom", "Reset Camera Position")
 		
 		-- Weapon Client Settings
 		add("vjbase.menu.clweapon", "Client Settings")
