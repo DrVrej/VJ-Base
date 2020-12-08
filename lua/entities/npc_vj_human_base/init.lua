@@ -2055,7 +2055,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AcceptInput(key, activator, caller, data)
 	self:CustomOnAcceptInput(key, activator, caller, data)
-	self:FollowPlayerCode(key, activator, caller, data)
+	if key == self.FollowPlayerKey then self:FollowPlayerCode(key, activator, caller, data) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:HandleAnimEvent(ev, evTime, evCycle, evType, evOptions)
@@ -2081,7 +2081,11 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:FollowPlayerReset()
 	if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
-		self.FollowPlayer_Entity:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.")
+		if self.Dead == true then
+			self.FollowPlayer_Entity:PrintMessage(HUD_PRINTTALK, self:GetName().." has been killed.")
+		else
+			self.FollowPlayer_Entity:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.")
+		end
 	end
 	self.FollowingPlayer = false
 	self.FollowPlayer_GoingAfter = false
@@ -2089,9 +2093,9 @@ function ENT:FollowPlayerReset()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:FollowPlayerCode(key, activator, caller, data)
-	if self.FollowPlayer == false or GetConVarNumber("ai_disabled") == 1 or GetConVarNumber("ai_ignoreplayers") == 1 then return end
+	if self.Dead == true or self.FollowPlayer == false or GetConVarNumber("ai_disabled") == 1 or GetConVarNumber("ai_ignoreplayers") == 1 then return end
 	
-	if key == self.FollowPlayerKey && activator:IsValid() && activator:IsPlayer() && activator:Alive() then
+	if IsValid(activator) && activator:IsPlayer() && activator:Alive() then
 		if self:Disposition(activator) == D_HT then -- If it's an enemy
 			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
 				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is hostile to you, therefore it won't follow you.")
@@ -4224,6 +4228,7 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 	local DamageAttacker = dmginfo:GetAttacker()
 	if DamageAttacker:GetClass() == "npc_barnacle" then self.HasDeathRagdoll = false end -- Don't make a corpse if it's killed by a barnacle!
 	self.Dead = true
+	if self.FollowingPlayer == true then self:FollowPlayerReset() end
 	self:RemoveAttackTimers()
 	self.MeleeAttacking = false
 	self.HasMeleeAttack = false

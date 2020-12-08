@@ -21,7 +21,7 @@ concommand.Add("vj_cleanup_snpcscorpse", function(ply)
 		local i = 0
 		for _, v in pairs(ents.GetAll()) do
 			if v.IsVJBaseCorpse == true or v.IsVJBase_Gib == true or v:GetClass() == "obj_vj_gib_*" then
-				undo.ReplaceEntity(v,nil)
+				undo.ReplaceEntity(v, NULL)
 				v:Remove()
 				i = i + 1
 				/*local cleandatsnpc = ents.GetAll()
@@ -44,12 +44,12 @@ concommand.Add("vj_cleanup_snpcs", function(ply)
 		for _, v in pairs(ents.GetAll()) do
 			if v:IsNPC() && v:IsValid() && v.IsVJBaseSNPC == true then
 				// if v:ValidEntity() then
-				undo.ReplaceEntity(v,nil)
+				undo.ReplaceEntity(v, NULL)
 				v:Remove()
 				i = i + 1
 			end
 		end
-		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Removed "..i.." SNPCs\", NOTIFY_CLEANUP, 5)") end
+		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Removed "..i.." VJ SNPCs\", NOTIFY_CLEANUP, 5)") end
 		ply:EmitSound("buttons/button15.wav")
 		//ply:ChatPrint("Removed "..i.." SNPCs")
 	end
@@ -60,12 +60,12 @@ concommand.Add("vj_cleanup_s_npcs", function(ply)
 		local i = 0
 		for _, v in pairs(ents.GetAll()) do
 			if v:IsNPC() /* v:ValidEntity() */then
-				undo.ReplaceEntity(v,nil)
+				undo.ReplaceEntity(v, NULL)
 				v:Remove()
 				i = i + 1
 			end
 		end
-		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Removed "..i.." (S)NPCs\", NOTIFY_CLEANUP, 5)") end
+		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Removed "..i.." NPCs\", NOTIFY_CLEANUP, 5)") end
 		ply:EmitSound("buttons/button15.wav")
 		//ply:ChatPrint("Removed "..i.." SNPCs")
 	end
@@ -102,7 +102,7 @@ concommand.Add("vj_cleanup_vjgibs", function(ply)
 		local i = 0
 		for _, v in pairs(ents.GetAll()) do
 			if v.IsVJBase_Gib == true or v:GetClass() == "obj_vj_gib" then
-				undo.ReplaceEntity(v,nil)
+				undo.ReplaceEntity(v, NULL)
 				v:Remove()
 				i = i + 1
 			end
@@ -117,7 +117,7 @@ concommand.Add("vj_cleanup_props", function(ply)
 		local i = 0
 		for _, v in pairs(ents.FindByClass("prop_physics")) do
 			if v:GetParent() == NULL or (IsValid(v:GetParent()) && v:GetParent():Health() <= 0 && (v:GetParent():IsNPC() or v:GetParent():IsPlayer())) then
-				undo.ReplaceEntity(v,nil)
+				undo.ReplaceEntity(v, NULL)
 				v:Remove()
 				i = i + 1
 			end
@@ -132,7 +132,7 @@ concommand.Add("vj_cleanup_groundweapons", function(ply)
 		local i = 0
 		for _, v in pairs(ents.GetAll()) do
 			if v:IsValid() && v:IsWeapon() && v:GetOwner() == NULL then
-				undo.ReplaceEntity(v,nil)
+				undo.ReplaceEntity(v, NULL)
 				v:Remove()
 				i = i + 1
 			end
@@ -147,7 +147,7 @@ concommand.Add("vj_cleanup_spawners", function(ply)
 		local i = 0
 		for _, v in pairs(ents.GetAll()) do
 			if v.IsVJBaseSpawner == true then
-				undo.ReplaceEntity(v,nil)
+				undo.ReplaceEntity(v, NULL)
 				v:Remove()
 				i = i + 1
 			end

@@ -70,7 +70,7 @@ if (CLIENT) then
 			origin = viewLerpVec,
 			angles = viewLerpAng,
 			fov = fov,
-			drawviewer = false //(ply.VJC_Camera_Mode == 2 and true) or false
+			drawviewer = false, //(ply.VJC_Camera_Mode == 2 and true) or false
 		}
 		return view
 	end)
