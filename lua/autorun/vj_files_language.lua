@@ -67,7 +67,7 @@ if (CLIENT) then
 		add("vjbase.menu.cleanup.everything", "Clean Up Everything")
 		add("vjbase.menu.cleanup.stopsounds", "Stop all Sounds")
 		add("vjbase.menu.cleanup.remove.vjnpcs", "Remove all VJ SNPCs")
-		add("vjbase.menu.cleanup.remove.npcs", "Remove all (S)NPCs")
+		add("vjbase.menu.cleanup.remove.npcs", "Remove all NPCs")
 		add("vjbase.menu.cleanup.remove.spawners", "Remove all Spawners")
 		add("vjbase.menu.cleanup.remove.corpses", "Remove all Corpses")
 		add("vjbase.menu.cleanup.remove.vjgibs", "Remove all VJ Gibs")
