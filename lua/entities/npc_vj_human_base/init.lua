@@ -2262,7 +2262,6 @@ function ENT:DoConstantlyFaceEnemyCode()
 	end
 	return false
 end
-//ENT.TurningLerp = nil
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	/* Variable Notes:

@@ -209,7 +209,7 @@ end
 function VJ_EmitSound(argent, sound, soundlevel, soundpitch, volume, channel)
 	local sd = VJ_PICK(sound)
 	if sd == false then return end
-	argent:EmitSound(sd,soundlevel,soundpitch,volume,channel)
+	argent:EmitSound(sd, soundlevel, soundpitch, volume, channel)
 	argent.LastPlayedVJSound = sd
 	if argent.IsVJBaseSNPC == true then argent:OnPlayEmitSound(sd) end
 end
