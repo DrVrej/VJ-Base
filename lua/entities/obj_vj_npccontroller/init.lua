@@ -7,7 +7,7 @@ include('shared.lua')
 --------------------------------------------------*/
 ENT.VJC_Player_CanExit = true -- Can the player exit the controller?
 ENT.VJC_Player_CanRespawn = true -- If false, the player will die when the NPC dies!
-ENT.VJC_CrosshairTracking = false -- Activates bullseye tracking (Will not turn to the move location!)
+ENT.VJC_BullseyeTracking = false -- Activates bullseye tracking (Will not turn to the move location!)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -45,7 +45,7 @@ ENT.VJC_Removed = false
 /* Important entities:
 	- self.VJCE_Camera		The camera object
 	- self.VJCE_Player		The player that's controlling
-	- self.VJCE_Bullseye		The bullseye entity used for the NPC to target
+	- self.VJCE_Bullseye	The bullseye entity used for the NPC to target
 	- self.VJCE_NPC			The NPC that's being controlled
 */
 
@@ -61,6 +61,7 @@ function ENT:Initialize()
 	self:CustomOnInitialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local color0000 = Color(0, 0, 0, 0)
 function ENT:StartControlling()
 	-- Set up the camera entity
 	self.VJCE_Camera = ents.Create("prop_dynamic")
@@ -69,7 +70,7 @@ function ENT:StartControlling()
 	self.VJCE_Camera:SetParent(self.VJCE_NPC)
 	self.VJCE_Camera:SetRenderMode(RENDERMODE_NONE)
 	self.VJCE_Camera:Spawn()
-	self.VJCE_Camera:SetColor(Color(0,0,0,0))
+	self.VJCE_Camera:SetColor(color0000)
 	self.VJCE_Camera:SetNoDraw(false)
 	self.VJCE_Camera:DrawShadow(false)
 	self:DeleteOnRemove(self.VJCE_Camera)
@@ -110,7 +111,7 @@ function ENT:SetControlledNPC(GetEntity)
 	self.VJCE_Bullseye:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
 	self.VJCE_Bullseye.EnemyToIndividual = true
 	self.VJCE_Bullseye.EnemyToIndividualEnt = GetEntity
-	self.VJCE_Bullseye:SetColor(Color(0,0,0,0))
+	self.VJCE_Bullseye:SetColor(color0000)
 	self.VJCE_Bullseye:SetNoDraw(false)
 	self.VJCE_Bullseye:DrawShadow(false)
 	self:DeleteOnRemove(self.VJCE_Bullseye)
@@ -202,7 +203,7 @@ hook.Add("PlayerButtonDown", "vj_controller_PlayerButtonDown", function(ply, but
 		
 		-- Tracking
 		if button == KEY_T then
-			cent:DoCrosshairTracking()
+			cent:ToggleBullseyeTracking()
 		end
 		
 		-- Camera mode
@@ -227,8 +228,10 @@ hook.Add("PlayerButtonDown", "vj_controller_PlayerButtonDown", function(ply, but
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
+-- Sadly no other way, this is the most reliable way to sync the position from client to server in time
+	-- Also avoids garbage positions that output from other methods
 net.Receive("vj_controller_cldata", function(len, ply)
-	-- Set the position to the controller's bullseye
+	-- Set the controller's bullseye position if the player is controlling an NPC AND controller entity exists AND Bullseye exists --> Protect against spam ?
 	if ply.IsControlingNPC == true && IsValid(ply.VJ_TheControllerEntity) && IsValid(ply.VJ_TheControllerEntity.VJCE_Bullseye) then
 		ply.VJ_TheControllerEntity.VJCE_Bullseye:SetPos(net.ReadVector())
 	end
@@ -284,7 +287,7 @@ function ENT:Think()
 			self.VJCE_Bullseye:SetPos(tr_ply.HitPos)
 		end*/
 		local pos_beye = self.VJCE_Bullseye:GetPos()
-		if self.VJCE_Player:GetInfoNum("vj_npc_cont_devents",0) == 1 then
+		if self.VJCE_Player:GetInfoNum("vj_npc_cont_devents", 0) == 1 then
 			VJ_CreateTestObject(self.VJCE_Player:GetPos(), self:GetAngles(), Color(0,109,160))
 			VJ_CreateTestObject(self.VJCE_Camera:GetPos(), self:GetAngles(), Color(255,200,260))
 			VJ_CreateTestObject(pos_beye, self:GetAngles(), Color(255,0,0)) -- Bullseye's position
@@ -389,7 +392,7 @@ function ENT:StartMovement(Dir, Rot)
 	//self.VJCE_NPC:GetSequenceGroundSpeed(self.VJCE_NPC:SelectWeightedSequence(self.VJCE_NPC:GetActivity()))
 	//Vector(math.abs(npcvel.x),math.abs(npcvel.y),math.abs(npcvel.z))
 	local CalculateWallToNPC = NPCPos:Distance(forwardtr.HitPos) - (self.VJCE_NPC:OBBMaxs().x * 2)
-	if self.VJCE_Player:GetInfoNum("vj_npc_cont_devents",0) == 1 then
+	if self.VJCE_Player:GetInfoNum("vj_npc_cont_devents", 0) == 1 then
 		VJ_CreateTestObject(NPCPos, self:GetAngles(), Color(0,255,255)) -- NPC's calculated position
 		VJ_CreateTestObject(forwardtr.HitPos, self:GetAngles(), Color(255,255,0)) -- forward trace position
 	end
@@ -416,7 +419,7 @@ function ENT:StartMovement(Dir, Rot)
 					x.ConstantlyFaceEnemy = true
 					x.CanShootWhenMoving = true
 				else
-					if self.VJC_CrosshairTracking == true then
+					if self.VJC_BullseyeTracking == true then
 						x.ConstantlyFaceEnemy = true
 					else
 						x:EngTask("TASK_FACE_LASTPOSITION", 0)
@@ -427,13 +430,13 @@ function ENT:StartMovement(Dir, Rot)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoCrosshairTracking()
-	if self.VJC_CrosshairTracking == false then
+function ENT:ToggleBullseyeTracking()
+	if self.VJC_BullseyeTracking == false then
 		self.VJCE_Player:ChatPrint("Bullseye tracking activated!")
-		self.VJC_CrosshairTracking = true
+		self.VJC_BullseyeTracking = true
 	else
 		self.VJCE_Player:ChatPrint("Bullseye tracking deactivated!")
-		self.VJC_CrosshairTracking = false
+		self.VJC_BullseyeTracking = false
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

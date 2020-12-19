@@ -78,7 +78,7 @@ if (CLIENT) then
 	hook.Add("PlayerBindPress", "vj_controller_PlayerBindPress", function(ply, bind, pressed)
 		-- For scroll wheel zooming
 		if (bind == "invprev" or bind == "invnext") && ply.IsControlingNPC && IsValid(ply.VJCE_Camera) && ply.VJC_Camera_Mode != 2 then
-			ply.VJCE_Camera.Zoom = ply.VJCE_Camera.Zoom or 90
+			ply.VJCE_Camera.Zoom = ply.VJCE_Camera.Zoom or 100
 			if bind == "invprev" then
 				ply.VJCE_Camera.Zoom = math.Clamp(ply.VJCE_Camera.Zoom - ply:GetInfoNum("vj_npc_cont_cam_zoomspeed", 10), 0, 500)
 			else
@@ -93,7 +93,7 @@ if (CLIENT) then
 		local ply = LocalPlayer()
 		ply.IsControlingNPC = net.ReadBool()
 		ply.VJCE_Camera = ents.GetByIndex(net.ReadUInt(14))
-		ply.VJCE_Camera.Zoom = ply.VJCE_Camera.Zoom or 90
+		ply.VJCE_Camera.Zoom = ply.VJCE_Camera.Zoom or 100
 		-- If the controller has stopped then reset the NPC's bone manipulation!
 		if ply.IsControlingNPC == false && IsValid(ply.VJCE_NPC) && ply.VJC_FP_Bone != -1 then
 			ply.VJCE_NPC:ManipulateBoneScale(ply.VJC_FP_Bone, vec1)
@@ -164,7 +164,7 @@ if (CLIENT) then
 			surface.DrawTexturedRect(ScrW() / 2.005, ScrH()-73, 28, 28)
 			
 			surface.SetMaterial(mat_icon_gun)
-			surface.SetDrawColor((AtkTbl["WeaponAttack"] != true and atk_col_red) or atk_col_green)
+			surface.SetDrawColor((AtkTbl["WeaponAttack"] != true and atk_col_red) or ((AtkTbl["Ammo"] <= 0 and atk_col_orange) or atk_col_green))
 			surface.DrawTexturedRect(ScrW() / 1.94, ScrH()-73, 28, 28) // 1.865
 			draw.SimpleText(AtkTbl["Ammo"], "VJFont_Trebuchet24_Medium", ScrW() / 1.885, ScrH()-70, (AtkTbl["WeaponAttack"] != true and atk_col_red) or ((AtkTbl["Ammo"] <= 0 and atk_col_orange) or atk_col_green), 0, 0)
 			

@@ -2108,7 +2108,7 @@ function ENT:Think()
 				end
 
 				-- Stop chasing at certain distance
-				if self.NoChaseAfterCertainRange == true && ((self.NoChaseAfterCertainRange_Type == "OnlyRange" && self.HasRangeAttack == true) or (self.NoChaseAfterCertainRange_Type == "Regular")) then
+				if self.VJ_IsBeingControlled != true && self.NoChaseAfterCertainRange == true && ((self.NoChaseAfterCertainRange_Type == "OnlyRange" && self.HasRangeAttack == true) or (self.NoChaseAfterCertainRange_Type == "Regular")) then
 					local fardist = self.NoChaseAfterCertainRange_FarDistance
 					local closedist = self.NoChaseAfterCertainRange_CloseDistance
 					if fardist == "UseRangeDistance" then fardist = self.RangeDistance end
