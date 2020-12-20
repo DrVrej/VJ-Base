@@ -3333,6 +3333,7 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 		end
 	end
 	
+	self.Alerted = false
 	self:CustomOnResetEnemy()
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVarNumber("vj_npc_printresetenemy") == 1 then print(self:GetName().." has reseted its enemy") end
 	if IsValid(self:GetEnemy()) then
@@ -3346,7 +3347,6 @@ function ENT:ResetEnemy(NoResetAlliesSeeEnemy)
 		self:AddEntityRelationship(self:GetEnemy(), 4, 10)
 	end
 	
-	self.Alerted = false
 	self:SetEnemy(NULL)
 	//self:UpdateEnemyMemory(self,self:GetPos())
 	local vsched = ai_vj_schedule.New("vj_act_resetenemy")
