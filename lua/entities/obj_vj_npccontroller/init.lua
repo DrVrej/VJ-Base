@@ -310,7 +310,7 @@ function ENT:Think()
 		if self.VJCE_NPC.Flinching == true or self.VJCE_NPC:GetActivity() == ACT_JUMP or self.VJCE_NPC:GetActivity() == ACT_GLIDE or self.VJCE_NPC:GetActivity() == ACT_LAND then return end
 		
 		-- Turning
-		if !self.VJCE_NPC:IsMoving() && self.VJCE_NPC.PlayingAttackAnimation == false && canTurn && self.VJCE_NPC.IsReloadingWeapon != true && CurTime() > self.VJCE_NPC.NextChaseTime && self.VJCE_NPC.IsVJBaseSNPC_Tank != true then
+		if !self.VJCE_NPC:IsMoving() && self.VJCE_NPC.PlayingAttackAnimation == false && canTurn && self.VJCE_NPC.IsReloadingWeapon != true && CurTime() > self.VJCE_NPC.NextChaseTime && self.VJCE_NPC.IsVJBaseSNPC_Tank != true && self.VJCE_NPC.MovementType != VJ_MOVETYPE_PHYSICS then
 			//self.VJCE_NPC:SetAngles(Angle(0,self.VJCE_Player:GetAimVector():Angle().y,0))
 			local angdif = math.abs(math.AngleDifference(self.VJCE_Player:EyeAngles().y, self.VJC_NPC_LastIdleAngle))
 			self.VJC_NPC_LastIdleAngle = self.VJCE_NPC:EyeAngles().y //tr_ply.HitPos
