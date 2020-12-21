@@ -973,6 +973,7 @@ ENT.LatestEnemyDistance = 0
 ENT.HealthRegenerationDelayT = 0
 ENT.LatestVisibleEnemyPosition = Vector(0,0,0)
 ENT.GuardingPosition = nil
+ENT.GuardingFacePosition = nil
 ENT.SelectedDifficulty = 1
 ENT.ModelAnimationSet = 0
 ENT.AIState = 0
@@ -2126,6 +2127,7 @@ function ENT:FollowPlayerCode(key, activator, caller, data)
 				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is now following you.")
 			end
 			self.GuardingPosition = nil -- Reset the guarding position
+			self.GuardingFacePosition = nil
 			self.FollowPlayer_Entity = activator
 			self.FollowingPlayer = true
 			self:PlaySoundSystem("FollowPlayer")
@@ -2692,13 +2694,23 @@ function ENT:Think()
 		if self.IsGuard == true && self.FollowingPlayer == false then
 			if self.GuardingPosition == nil then -- If it hasn't been set then set the guard position to its current position
 				self.GuardingPosition = self:GetPos()
+				self.GuardingFacePosition = self:GetPos() + self:GetForward()*51
 			end
 			 -- If it's far from the guarding position, then go there!
 			if !self:IsMoving() && self:BusyWithActivity() == false then
 				local dist = self:GetPos():Distance(self.GuardingPosition) -- Distance to the guard position
 				if dist > 50 then
 					self:SetLastPosition(self.GuardingPosition)
-					self:VJ_TASK_GOTO_LASTPOS(dist <= 800 and "TASK_WALK_PATH" or "TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+					self:VJ_TASK_GOTO_LASTPOS(dist <= 800 and "TASK_WALK_PATH" or "TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true
+						x.RunCode_OnFinish = function()
+							timer.Simple(0.1, function()
+								if IsValid(self) && !self:IsMoving() && self:BusyWithActivity() == false then
+									self:SetLastPosition(self.GuardingFacePosition)
+									self:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
+								end
+							end)
+						end
+					end)
 				end
 			end
 		end
