@@ -1671,7 +1671,7 @@ function ENT:DoChaseAnimation(overrideChasing)
 	overrideChasing = overrideChasing or false -- true = Chase no matter what
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
-	if self.MovementType == VJ_MOVETYPE_STATIONARY or self.FollowingPlayer == true or self.Medic_IsHealingAlly == true then
+	if self.MovementType == VJ_MOVETYPE_STATIONARY or self.FollowingPlayer == true or self.Medic_IsHealingAlly == true or self:GetState() == VJ_STATE_ONLY_ANIMATION then
 		self:VJ_TASK_IDLE_STAND()
 		return
 	end
@@ -2703,8 +2703,8 @@ function ENT:Think()
 					self:SetLastPosition(self.GuardingPosition)
 					self:VJ_TASK_GOTO_LASTPOS(dist <= 800 and "TASK_WALK_PATH" or "TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true
 						x.RunCode_OnFinish = function()
-							timer.Simple(0.1, function()
-								if IsValid(self) && !self:IsMoving() && self:BusyWithActivity() == false then
+							timer.Simple(0.01, function()
+								if IsValid(self) && !self:IsMoving() && self:BusyWithActivity() == false && self.GuardingFacePosition != nil then
 									self:SetLastPosition(self.GuardingFacePosition)
 									self:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
 								end
@@ -3085,6 +3085,7 @@ function ENT:IsAbleToShootWeapon(CheckDistance, CheckDistanceOnly, EnemyDistance
 	if CheckDistanceOnly == false && havedist == true && havechecks == true then return true end
 	return false
 end
+ENT.NextWeaponAttackT_Base = 0 -- This is handled by the base, used to avoid running shoot animation twice
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule()
 	if self.VJ_IsBeingControlled == true then return end
@@ -3239,8 +3240,10 @@ function ENT:SelectSchedule()
 									self.WeaponUseEnemyEyePos = false -- Make the bullet direction go towards the center of the enemy rather then its head
 								end
 							end
-							
-							if dontattack == false && CurTime() > self.NextWeaponAttackT /*&& self.DoingWeaponAttack == false*/ then
+							print("-------")
+							print(self:GetActivity())
+							print(self:GetSequenceName(self:GetSequence()))
+							if dontattack == false && CurTime() > self.NextWeaponAttackT && CurTime() > self.NextWeaponAttackT_Base /*&& self.DoingWeaponAttack == false*/ then
 								if (wep.IsMeleeWeapon) then -- Melee Only
 									self:CustomOnWeaponAttack()
 									local resultanim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponAttack))
@@ -3255,6 +3258,7 @@ function ENT:SelectSchedule()
 								else -- Regular weapons
 									-- If the current animation is already a firing animation, then imply just tell the base It's already firing and don't restart the animation
 									if VJ_IsCurrentAnimation(self, self:TranslateToWeaponAnim(self.CurrentWeaponAnimation)) == true then
+										print("Just ignore")
 										self.DoingWeaponAttack = true
 										self.DoingWeaponAttack_Standing = true
 									-- If the current activity isn't the last weapon animation and it's not a transition, then continue
@@ -3274,6 +3278,8 @@ function ENT:SelectSchedule()
 										if VJ_AnimationExists(self, resultanim) == true && VJ_IsCurrentAnimation(self, resultanim) == false then
 											VJ_EmitSound(self, wep.NPC_BeforeFireSound, wep.NPC_BeforeFireSoundLevel, math.Rand(wep.NPC_BeforeFireSoundPitch.a, wep.NPC_BeforeFireSoundPitch.b))
 											self.CurrentWeaponAnimation = resultanim
+											print("CHANGE FIRE ANIM!")
+											self.NextWeaponAttackT_Base = CurTime() + 0.2
 											self:VJ_ACT_PLAYACTIVITY(resultanim, false, 0, true)
 											self.DoingWeaponAttack = true
 											self.DoingWeaponAttack_Standing = true
