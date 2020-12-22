@@ -1659,7 +1659,7 @@ function ENT:DoChaseAnimation(overrideChasing)
 	overrideChasing = overrideChasing or false -- true = Chase no matter what
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
-	if self.MovementType == VJ_MOVETYPE_STATIONARY or self.FollowingPlayer == true or self.Medic_IsHealingAlly == true then
+	if self.MovementType == VJ_MOVETYPE_STATIONARY or self.FollowingPlayer == true or self.Medic_IsHealingAlly == true or self:GetState() == VJ_STATE_ONLY_ANIMATION then
 		self:VJ_TASK_IDLE_STAND()
 		return
 	end
@@ -2308,8 +2308,8 @@ function ENT:Think()
 					self:SetLastPosition(self.GuardingPosition)
 					self:VJ_TASK_GOTO_LASTPOS(dist <= 800 and "TASK_WALK_PATH" or "TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true
 						x.RunCode_OnFinish = function()
-							timer.Simple(0.1, function()
-								if IsValid(self) && !self:IsMoving() && self:BusyWithActivity() == false then
+							timer.Simple(0.01, function()
+								if IsValid(self) && !self:IsMoving() && self:BusyWithActivity() == false && self.GuardingFacePosition != nil then
 									self:SetLastPosition(self.GuardingFacePosition)
 									self:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
 								end

@@ -224,12 +224,13 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_SNPC_CONTROLLERSETTINGS(Panel) -- NPC Controller Settings
 	Panel:AddControl("Label", {Text = "#vjbase.menu.snpc.consettings.label1"})
-	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_cont_hud 1\n vj_npc_cont_zoomdist 5\n vj_npc_cont_devents 0\n vj_npc_cont_cam_speed 6\n vj_npc_cont_cam_zoomspeed 10"})
+	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_cont_hud 1\n vj_npc_cont_zoomdist 5\n vj_npc_cont_devents 0\n vj_npc_cont_cam_speed 6\n vj_npc_cont_cam_zoomspeed 10\n vj_npc_cont_diewithnpc 0"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.consettings.displayhud", Command = "vj_npc_cont_hud"})
 	Panel:AddControl("Slider", {Label = "#vjbase.menu.snpc.consettings.camzoomdistance", min = 5, max = 300, Command = "vj_npc_cont_zoomdist"})
 	Panel:AddControl("Slider", {Label = "#vjbase.menu.snpc.consettings.camzoomspeed", min = 1, max = 200, Command = "vj_npc_cont_cam_zoomspeed"})
 	Panel:AddControl("Slider", {Label = "#vjbase.menu.snpc.consettings.camspeed", min = 1, max = 180, Command = "vj_npc_cont_cam_speed"})
 	Panel:ControlHelp("#vjbase.menu.snpc.consettings.label2")
+	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.consettings.diewithnpc", Command = "vj_npc_cont_diewithnpc"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.consettings.displaydev", Command = "vj_npc_cont_devents"})
 	
 	Panel:AddControl("Label", {Text = "#vjbase.menu.snpc.consettings.label3"})

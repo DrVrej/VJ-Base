@@ -134,6 +134,7 @@ VJ.AddClientConVar("vj_npc_cont_zoomdist", 5, "Zoom distance") -- The distance t
 VJ.AddClientConVar("vj_npc_cont_cam_zoomspeed", 10, "Camera Zoom Speed") -- How fast the camera zooms in & out
 VJ.AddClientConVar("vj_npc_cont_cam_speed", 6, "Camera Speed") -- How fast the camera moves (lerping)
 VJ.AddClientConVar("vj_npc_cont_devents", 0, "Display developer entities") -- Display developer entities
+VJ.AddClientConVar("vj_npc_cont_diewithnpc", 0, "Controller Dies With The NPC (Requires respawn!)") -- Controller Dies With The NPC (Requires respawn!)
 ---------------------------------------------------------------------------------------------------------------------------
 for k, v in pairs(ConvarList) do
 	if !ConVarExists(k) then CreateConVar(k, v, {FCVAR_ARCHIVE}) end

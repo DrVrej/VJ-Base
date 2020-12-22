@@ -392,7 +392,10 @@ function SWEP:NPCAbleToShoot(CheckSec)
 		if (owner.IsVJBaseSNPC_Human == true && IsValid(owner:GetEnemy()) && owner:IsAbleToShootWeapon(true, true) == false) or (self.NPC_StandingOnly == true && owner:IsMoving()) then
 			return false
 		end
-		if owner:GetActivity() != nil && ((owner.IsVJBaseSNPC_Human == true && ((owner.CurrentWeaponAnimation == owner:GetActivity()) or (owner:GetActivity() == owner:TranslateToWeaponAnim(owner.CurrentWeaponAnimation)) or (owner.DoingWeaponAttack_Standing == false && owner.DoingWeaponAttack == true))) or (!owner.IsVJBaseSNPC_Human)) then
+		// (owner.CurrentWeaponAnimation == owner:GetSequenceActivity(owner:GetSequence()))
+		//print(owner:GetActivity())
+		//print(owner:GetSequenceName(owner:GetSequence()))
+		if owner:GetActivity() != nil && ((owner.IsVJBaseSNPC_Human == true && (/*(owner.CurrentWeaponAnimation == owner:GetSequenceActivity(owner:GetSequence())) or*/ (owner.CurrentWeaponAnimation == owner:GetActivity()) or (owner:GetActivity() == owner:TranslateToWeaponAnim(owner.CurrentWeaponAnimation)) or (owner.DoingWeaponAttack_Standing == false && owner.DoingWeaponAttack == true))) or (!owner.IsVJBaseSNPC_Human)) then
 			if (owner.IsVJBaseSNPC_Human) then
 				if owner.AllowWeaponReloading == true && self:Clip1() <= 0 then -- No ammo!
 					if owner.VJ_IsBeingControlled == true then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER,"Press R to reload!") end

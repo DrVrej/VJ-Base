@@ -98,6 +98,7 @@ function ENT:StartControlling()
 		[4] = (IsValid(self.VJCE_Player:GetActiveWeapon()) and self.VJCE_Player:GetActiveWeapon():GetClass()) or "",
 	}
 	self.VJCE_Player:StripWeapons()
+	if self.VJCE_Player:GetInfoNum("vj_npc_cont_diewithnpc", 0) == 1 then self.VJC_Player_CanRespawn =false end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetControlledNPC(GetEntity)
@@ -198,7 +199,7 @@ hook.Add("PlayerButtonDown", "vj_controller_PlayerButtonDown", function(ply, but
 		
 		-- Stop Controlling
 		if cent.VJC_Player_CanExit == true and button == KEY_END then
-			cent:StopControlling()
+			cent:StopControlling(true)
 		end
 		
 		-- Tracking
@@ -440,14 +441,15 @@ function ENT:ToggleBullseyeTracking()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:StopControlling()
+function ENT:StopControlling(endKey)
 	//if !IsValid(self.VJCE_Player) then return self:Remove() end
+	endKey = endKey or false
 	self:CustomOnStopControlling()
 
 	if IsValid(self.VJCE_Player) then
 		self.VJCE_Player:UnSpectate()
 		self.VJCE_Player:KillSilent() -- If we don't, we will get bugs like no being able to pick up weapons when walking over them.
-		if self.VJC_Player_CanRespawn == true then
+		if self.VJC_Player_CanRespawn == true or endKey == true then
 			self.VJCE_Player:Spawn()
 			self.VJCE_Player:SetHealth(self.VJC_Data_Player[1])
 			self.VJCE_Player:SetArmor(self.VJC_Data_Player[2])
