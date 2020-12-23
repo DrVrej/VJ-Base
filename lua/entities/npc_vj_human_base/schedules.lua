@@ -98,7 +98,7 @@ function ENT:StartSchedule(schedule)
 	// lua_run PrintTable(Entity(1):GetEyeTrace().Entity.CurrentSchedule)
 	//PrintTable(schedule)
 	//if schedule.Name != "vj_chase_enemy" then PrintTable(schedule) end
-	self:DoRunCode_OnFinish(self.CurrentSchedule) -- Yete arten schedule garne, verchatsoor
+	if self.Dead == false then self:DoRunCode_OnFinish(self.CurrentSchedule) end -- Yete arten schedule garne, verchatsoor
 	self.CurrentSchedule = schedule
 	self.CurrentTaskID = 1
 	self.GetNumberOfTasks = tonumber(schedule:NumTasks()) -- Or else nil
