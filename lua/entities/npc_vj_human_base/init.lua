@@ -82,8 +82,7 @@ ENT.HasOnPlayerSight = false -- Should do something when it sees the enemy? Exam
 ENT.OnPlayerSightDistance = 200 -- How close should the player be until it runs the code?
 ENT.OnPlayerSightDispositionLevel = 1 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 ENT.OnPlayerSightOnlyOnce = true -- If true, it will only run the code once | Sets self.HasOnPlayerSight to false once it runs!
-ENT.OnPlayerSightNextTime1 = 15 -- How much time should it pass until it runs the code again? | First number in math.random
-ENT.OnPlayerSightNextTime2 = 20 -- How much time should it pass until it runs the code again? | Second number in math.random
+ENT.OnPlayerSightNextTime = VJ_Set(15, 20) -- How much time should it pass until it runs the code again?
 	-- ====== Call For Help Variables ====== --
 ENT.CallForHelp = true -- Does the SNPC call for help?
 ENT.CallForHelpDistance = 2000 -- -- How far away the SNPC's call for help goes | Counted in World Units
@@ -105,8 +104,7 @@ ENT.Medic_TimeUntilHeal = false -- Time until the ally receives health | Set to 
 ENT.Medic_CheckDistance = 600 -- How far does it check for allies that are hurt? | World units
 ENT.Medic_HealDistance = 100 -- How close does it have to be until it stops moving and heals its ally?
 ENT.Medic_HealthAmount = 25 -- How health does it give?
-ENT.Medic_NextHealTime1 = 10 -- How much time until it can give health to an ally again | First number in the math.random
-ENT.Medic_NextHealTime2 = 15 -- How much time until it can give health to an ally again | Second number in the math.random
+ENT.Medic_NextHealTime = VJ_Set(10, 15) -- How much time until it can give health to an ally again
 ENT.Medic_SpawnPropOnHeal = true -- Should it spawn a prop, such as small health vial at a attachment when healing an ally?
 ENT.Medic_SpawnPropOnHealModel = "models/healthvial.mdl" -- The model that it spawns
 ENT.Medic_SpawnPropOnHealAttachment = "anim_attachment_LH" -- The attachment it spawns on
@@ -2127,7 +2125,7 @@ function ENT:DoMedicCode_Reset()
 	self:CustomOnMedic_OnReset()
 	if IsValid(self.Medic_CurrentEntToHeal) then self.Medic_CurrentEntToHeal.AlreadyBeingHealedByMedic = false end
 	if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
-	self.Medic_NextHealT = CurTime() + math.Rand(self.Medic_NextHealTime1, self.Medic_NextHealTime2)
+	self.Medic_NextHealT = CurTime() + math.Rand(self.Medic_NextHealTime.a, self.Medic_NextHealTime.b)
 	self.Medic_IsHealingAlly = false
 	self.AlreadyDoneMedicThinkCode = false
 	self.Medic_CurrentEntToHeal = NULL
@@ -3130,7 +3128,7 @@ function ENT:SelectSchedule()
 								self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_LostWeaponSight, false, 0, true)
 							end
 							self.NextChaseTime = CurTime() + math.Rand(self.WaitForEnemyToComeOutTime.a, self.WaitForEnemyToComeOutTime.b)
-						elseif self.DisableChasingEnemy == false && self.IsReloadingWeapon == false && CurTime() > self.LastHiddenZoneT then
+						elseif /*self.DisableChasingEnemy == false &&*/ self.IsReloadingWeapon == false && CurTime() > self.LastHiddenZoneT then
 						-- Go after the enemy!
 							self.DoingWeaponAttack = false
 							self.DoingWeaponAttack_Standing = false
@@ -3600,7 +3598,7 @@ function ENT:DoEntityRelationshipCheck()
 						if self.OnPlayerSightOnlyOnce == true then -- If it's only suppose to play it once then turn the system off
 							self.HasOnPlayerSight = false
 						else
-							self.OnPlayerSightNextT = CurTime() + math.Rand(self.OnPlayerSightNextTime1, self.OnPlayerSightNextTime2)
+							self.OnPlayerSightNextT = CurTime() + math.Rand(self.OnPlayerSightNextTime.a, self.OnPlayerSightNextTime.b)
 						end
 					end
 				end
