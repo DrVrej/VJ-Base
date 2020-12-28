@@ -143,6 +143,9 @@ ENT.ConstantlyFaceEnemy_IfVisible = true -- Should it only face the enemy if it'
 ENT.ConstantlyFaceEnemy_IfAttacking = false -- Should it face the enemy when attacking?
 ENT.ConstantlyFaceEnemy_Postures = "Both" -- "Both" = Moving or standing | "Moving" = Only when moving | "Standing" = Only when standing
 ENT.ConstantlyFaceEnemyDistance = 2500 -- How close does it have to be until it starts to face the enemy?
+	-- ====== Combat Face Enemy Variables ====== --
+	-- Mostly used by base tasks
+ENT.CombatFaceEnemy = true -- If enemy is exists and is visible
 	-- ====== Pose Parameter Variables ====== --
 ENT.HasPoseParameterLooking = true -- Does it look at its enemy using poseparameters?
 ENT.PoseParameterLooking_CanReset = true -- Should it reset its pose parameters if there is no enemies?
@@ -2045,7 +2048,7 @@ function ENT:Think()
 		if self.Dead == false then
 			if IsValid(ene) then
 				self:DoConstantlyFaceEnemyCode()
-				if self.IsDoingFaceEnemy == true or (self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene)))) then
+				if self.IsDoingFaceEnemy == true or (self.CombatFaceEnemy == true && self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene)))) then
 					local setangs = self:VJ_ReturnAngle((ene:GetPos() - self:GetPos()):Angle())
 					self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
 					self:SetIdealYawAndUpdate(setangs.y)
