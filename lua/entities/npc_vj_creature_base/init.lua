@@ -2296,7 +2296,7 @@ end
 function ENT:CanDoCertainAttack(atkName)
 	atkName = atkName or "MeleeAttack"
 	-- Attack Names: "MeleeAttack" || "RangeAttack" || "LeapAttack"
-	if self.NextDoAnyAttackT > CurTime() or self.FollowPlayer_GoingAfter == true or self.vACT_StopAttacks == true or self.Flinching == true or self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.VJ_IsBeingControlled == true*/ then return false end
+	if self.NextDoAnyAttackT > CurTime() or self.FollowPlayer_GoingAfter == true or self.vACT_StopAttacks == true or self.Flinching == true or self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or self:GetState() == VJ_STATE_ONLY_ANIMATION_NOATTACK /*or self.VJ_IsBeingControlled == true*/ then return false end
 
 	if atkName == "MeleeAttack" && self.IsAbleToMeleeAttack == true && self.MeleeAttacking == false && self.LeapAttacking == false && self.RangeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
 		// if self.VJ_IsBeingControlled == true then if self.VJ_TheController:KeyDown(IN_ATTACK) then return true else return false end end
@@ -3633,10 +3633,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 			util.Decal(pickdecal,tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
 		end
 	end
-
-	local DamageInflictor = dmginfo:GetInflictor()
-	local DamageAttacker = dmginfo:GetAttacker()
-	if DamageAttacker:GetClass() == "npc_barnacle" then self.HasDeathRagdoll = false end -- Don't make a corpse if it's killed by a barnacle!
+	
 	self.Dead = true
 	if self.FollowingPlayer == true then self:FollowPlayerReset() end
 	self:RemoveAttackTimers()
@@ -3646,8 +3643,15 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	self.HasRangeAttack = false
 	self.HasMeleeAttack = false
 	self:StopAllCommonSounds()
-	if GetConVarNumber("vj_npc_showhudonkilled") == 1 then gamemode.Call("OnNPCKilled",self,DamageAttacker,DamageInflictor,dmginfo) end
-	if GetConVarNumber("vj_npc_addfrags") == 1 && DamageAttacker:IsPlayer() then DamageAttacker:AddFrags(1) end
+	local DamageInflictor = dmginfo:GetInflictor()
+	local DamageAttacker = dmginfo:GetAttacker()
+	if IsValid(DamageAttacker) then
+		if DamageAttacker:GetClass() == "npc_barnacle" then self.HasDeathRagdoll = false end -- Don't make a corpse if it's killed by a barnacle!
+		if GetConVarNumber("vj_npc_addfrags") == 1 && DamageAttacker:IsPlayer() then DamageAttacker:AddFrags(1) end
+		if IsValid(DamageInflictor) && GetConVarNumber("vj_npc_showhudonkilled") == 1 then
+			gamemode.Call("OnNPCKilled", self, DamageAttacker, DamageInflictor, dmginfo)
+		end
+	end
 	self:CustomOnPriorToKilled(dmginfo,hitgroup)
 	self:SetCollisionGroup(1)
 	self:RunGibOnDeathCode(dmginfo,hitgroup)

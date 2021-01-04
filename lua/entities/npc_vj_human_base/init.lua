@@ -2693,7 +2693,7 @@ end
 function ENT:CanDoCertainAttack(atkName)
 	atkName = atkName or "MeleeAttack"
 	-- Attack Names: "MeleeAttack"
-	if self.NextDoAnyAttackT > CurTime() or self.FollowPlayer_GoingAfter == true or self.vACT_StopAttacks == true or self.Flinching == true or self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.VJ_IsBeingControlled == true*/ then return false end
+	if self.NextDoAnyAttackT > CurTime() or self.FollowPlayer_GoingAfter == true or self.vACT_StopAttacks == true or self.Flinching == true or self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or self:GetState() == VJ_STATE_ONLY_ANIMATION_NOATTACK /*or self.VJ_IsBeingControlled == true*/ then return false end
 
 	if atkName == "MeleeAttack" && self.IsAbleToMeleeAttack == true && self.MeleeAttacking == false /*&& self.VJ_PlayingSequence == false*/ then
 		// if self.VJ_IsBeingControlled == true then if self.VJ_TheController:KeyDown(IN_ATTACK) then return true else return false end end
@@ -3116,7 +3116,7 @@ function ENT:SelectSchedule()
 				end
 			end
 			
-			if dontshoot == false && self:IsAbleToShootWeapon(false, false, enedist_eye) == true then
+			if dontshoot == false && self:IsAbleToShootWeapon(false, false, enedist_eye) == true && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK then
 				if enedist_eye > self.Weapon_FiringDistanceFar or CurTime() < self.NextWeaponAttackT then -- Enemy to far away or not allowed to fire a weapon
 					self:DoChaseAnimation()
 					self.AllowToDo_WaitForEnemyToComeOut = false
@@ -4205,18 +4205,22 @@ function ENT:PriorToKilled(dmginfo,hitgroup)
 			util.Decal(pickdecal,tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
 		end
 	end
-
-	local DamageInflictor = dmginfo:GetInflictor()
-	local DamageAttacker = dmginfo:GetAttacker()
-	if DamageAttacker:GetClass() == "npc_barnacle" then self.HasDeathRagdoll = false end -- Don't make a corpse if it's killed by a barnacle!
+	
 	self.Dead = true
 	if self.FollowingPlayer == true then self:FollowPlayerReset() end
 	self:RemoveAttackTimers()
 	self.MeleeAttacking = false
 	self.HasMeleeAttack = false
 	self:StopAllCommonSounds()
-	if GetConVarNumber("vj_npc_showhudonkilled") == 1 then gamemode.Call("OnNPCKilled",self,DamageAttacker,DamageInflictor,dmginfo) end
-	if GetConVarNumber("vj_npc_addfrags") == 1 && DamageAttacker:IsPlayer() then DamageAttacker:AddFrags(1) end
+	local DamageInflictor = dmginfo:GetInflictor()
+	local DamageAttacker = dmginfo:GetAttacker()
+	if IsValid(DamageAttacker) then
+		if DamageAttacker:GetClass() == "npc_barnacle" then self.HasDeathRagdoll = false end -- Don't make a corpse if it's killed by a barnacle!
+		if GetConVarNumber("vj_npc_addfrags") == 1 && DamageAttacker:IsPlayer() then DamageAttacker:AddFrags(1) end
+		if IsValid(DamageInflictor) && GetConVarNumber("vj_npc_showhudonkilled") == 1 then
+			gamemode.Call("OnNPCKilled", self, DamageAttacker, DamageInflictor, dmginfo)
+		end
+	end
 	self:CustomOnPriorToKilled(dmginfo,hitgroup)
 	self:SetCollisionGroup(1)
 	self:RunGibOnDeathCode(dmginfo,hitgroup)
