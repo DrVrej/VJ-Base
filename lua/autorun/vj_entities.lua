@@ -41,7 +41,7 @@ VJ.AddCategoryInfo("Zombies", {Icon = "vj_base/icons/zombies.png"})
 
 	-- ====== NPCs ====== --
 local vCat = "VJ Base"
-VJ.AddNPC("VJ Test NPC","sent_vj_test",vCat)
+VJ.AddNPC("VJ Test NPC","sent_vj_test",vCat,true)
 VJ.AddNPC("Mortar Synth","npc_vj_mortarsynth",vCat)
 
 	-- ====== Entities ====== --

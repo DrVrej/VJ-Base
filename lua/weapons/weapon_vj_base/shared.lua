@@ -224,6 +224,7 @@ function SWEP:CustomOnRemove() end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.RenderGroup = RENDERGROUP_OPAQUE
 
+SWEP.Secondary.Ammo = "none" -- Tells the game that this weapon doesn't have a secondary attack
 SWEP.Reloading = false
 SWEP.InitHasIdleAnimation = false
 SWEP.Primary.DefaultClip = 0
@@ -550,7 +551,7 @@ function SWEP:PrimaryAttack(UseAlt)
 				self:EmitSound(meleesd, 70, math.random(90,100))
 			end
 		else
-			owner:CustomOnMeleeAttack_Miss()
+			if owner.IsVJBaseSNPC == true then owner:CustomOnMeleeAttack_Miss() end
 			local meleesd = VJ_PICK(self.MeleeWeaponSound_Miss)
 			if meleesd != false then
 				self:EmitSound(meleesd, 70, math.random(90,100))
@@ -623,8 +624,12 @@ function SWEP:PrimaryAttack(UseAlt)
 	timer.Simple(self.NextIdle_PrimaryAttack, function() if IsValid(self) then self:DoIdleAnimation() end end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:SecondaryAttack()
+function SWEP:CanSecondaryAttack()
 	return false -- No secondary attack
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:SecondaryAttack()
+	if (!self:CanSecondaryAttack()) then return end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:DoIdleAnimation()
