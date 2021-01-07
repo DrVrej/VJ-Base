@@ -698,9 +698,9 @@ function ENT:CustomOnEntityRelationshipCheck(argent, entisfri, entdist) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnChangeMovementType(SetType) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnIsJumpLegal(startPos,apex,endPos) end -- Return nothing to let base decide, return true to make it jump, return false to disallow jumping
+function ENT:CustomOnIsJumpLegal(startPos, apex, endPos) end -- Return nothing to let base decide, return true to make it jump, return false to disallow jumping
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOn_PoseParameterLookingCode(pitch,yaw,roll) end
+function ENT:CustomOn_PoseParameterLookingCode(pitch, yaw, roll) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnSchedule() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -779,11 +779,11 @@ function ENT:SetMeleeAttackDamagePosition()
 	return self:GetPos() + self:GetForward() -- Override this to use a different position
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMeleeAttack_AfterChecks(TheHitEntity) return false end -- return true to disable the attack and move onto the next entity!
+function ENT:CustomOnMeleeAttack_AfterChecks(hitEnt) return false end -- return true to disable the attack and move onto the next entity!
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMeleeAttack_BleedEnemy(TheHitEntity) end
+function ENT:CustomOnMeleeAttack_BleedEnemy(hitEnt) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMeleeAttack_SlowPlayer(TheHitEntity) end
+function ENT:CustomOnMeleeAttack_SlowPlayer(hitEnt) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_Miss() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -797,13 +797,13 @@ function ENT:CustomOnRangeAttack_AfterStartTimer(seed) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomRangeAttackCode() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomRangeAttackCode_BeforeProjectileSpawn(TheProjectile) end -- This is ran before Spawn() is called
+function ENT:CustomRangeAttackCode_BeforeProjectileSpawn(projectile) end -- This is ran before Spawn() is called
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomRangeAttackCode_AfterProjectileSpawn(TheProjectile) end -- Called after Spawn()
+function ENT:CustomRangeAttackCode_AfterProjectileSpawn(projectile) end -- Called after Spawn()
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RangeAttackCode_OverrideProjectilePos(TheProjectile) return 0 end -- return other value then 0 to override the projectile's position
+function ENT:RangeAttackCode_OverrideProjectilePos(projectile) return 0 end -- return other value then 0 to override the projectile's position
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RangeAttackCode_GetShootPos(TheProjectile) return (self:GetEnemy():GetPos() - self:LocalToWorld(Vector(0,0,0)))*2 + self:GetUp()*1 end
+function ENT:RangeAttackCode_GetShootPos(projectile) return (self:GetEnemy():GetPos() - self:LocalToWorld(Vector(0,0,0)))*2 + self:GetUp()*1 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MultipleLeapAttacks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -817,7 +817,7 @@ function ENT:CustomOnLeapAttack_AfterStartTimer(seed) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnLeapAttack_BeforeChecks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnLeapAttack_AfterChecks(TheHitEntity) end
+function ENT:CustomOnLeapAttack_AfterChecks(hitEnt) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnLeapAttack_Miss() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1224,12 +1224,12 @@ function ENT:DoChangeMovementType(SetType)
 	self:CustomOnChangeMovementType(SetType)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:IsJumpLegal(startPos,apex,endPos)
+function ENT:IsJumpLegal(startPos, apex, endPos)
 	/*print("---------------------")
 	print(startPos)
 	print(apex)
 	print(endPos)*/
-	local result = self:CustomOnIsJumpLegal(startPos,apex,endPos)
+	local result = self:CustomOnIsJumpLegal(startPos, apex, endPos)
 	if result != nil then if result == true then self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190) end return result end
 	local dist_apex = startPos:Distance(apex)
 	local dist_end = startPos:Distance(endPos)

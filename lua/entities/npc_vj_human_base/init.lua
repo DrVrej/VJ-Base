@@ -666,7 +666,7 @@ function ENT:CustomOnEntityRelationshipCheck(argent, entisfri, entdist) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnChangeMovementType(SetType) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnIsJumpLegal(startPos,apex,endPos) end -- Return nothing to let base decide, return true to make it jump, return false to disallow jumping
+function ENT:CustomOnIsJumpLegal(startPos, apex, endPos) end -- Return nothing to let base decide, return true to make it jump, return false to disallow jumping
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnSetupWeaponHoldTypeAnims(htype) return false end -- return true to disable the base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1234,12 +1234,12 @@ function ENT:DoChangeMovementType(SetType)
 	self:CustomOnChangeMovementType(SetType)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:IsJumpLegal(startPos,apex,endPos)
+function ENT:IsJumpLegal(startPos, apex, endPos)
 	/*print("---------------------")
 	print(startPos)
 	print(apex)
 	print(endPos)*/
-	local result = self:CustomOnIsJumpLegal(startPos,apex,endPos)
+	local result = self:CustomOnIsJumpLegal(startPos, apex, endPos)
 	if result != nil then if result == true then self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190) end return result end
 	local dist_apex = startPos:Distance(apex)
 	local dist_end = startPos:Distance(endPos)
