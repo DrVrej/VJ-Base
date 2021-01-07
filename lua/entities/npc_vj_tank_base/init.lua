@@ -75,7 +75,7 @@ ENT.Tank_SoundTbl_RunOver = {}
 
 ENT.Tank_DefaultSoundTbl_DrivingEngine = {"vj_mili_tank/tankdriving1.wav"}
 ENT.Tank_DefaultSoundTbl_Track = {"vj_mili_tank/tanktrack1.wav"}
-ENT.Tank_DefaultSoundTbl_RunOver = {"vj_gib/bones_snapping.wav","vj_gib/bones_snapping2.wav","vj_gib/bones_snapping3.wav"}
+ENT.Tank_DefaultSoundTbl_RunOver = {"vj_gib/bones_snapping1.wav","vj_gib/bones_snapping2.wav","vj_gib/bones_snapping3.wav"}
 
 //util.AddNetworkString("vj_tank_base_spawneffects")
 //util.AddNetworkString("vj_tank_base_moveeffects")
