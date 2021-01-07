@@ -3,7 +3,7 @@ AddCSLuaFile("shared.lua")
 include("shared.lua")
 /*--------------------------------------------------
 	=============== VJ Prop Animatable Entity ===============
-	*** Copyright (c) 2012-2020 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to make simple props and animate them, since prop_dynamic doesn't work properly in Garry's Mod...
@@ -22,7 +22,7 @@ function ENT:Think()
 end
 /*--------------------------------------------------
 	=============== VJ Prop Animatable Entity ===============
-	*** Copyright (c) 2012-2020 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to make simple props and animate them, since prop_dynamic doesn't work properly in Garry's Mod...

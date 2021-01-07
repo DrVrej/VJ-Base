@@ -6,7 +6,7 @@ include("schedules.lua")
 include("movetype_aa.lua")
 /*--------------------------------------------------
 	=============== Creature SNPC Base ===============
-	*** Copyright (c) 2012-2020 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 	INFO: Used as a base for creature SNPCs.
@@ -694,9 +694,9 @@ function ENT:CustomOnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink_AIEnabled() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnEntityRelationshipCheck(argent, entisfri, entdist) end
+function ENT:CustomOnEntityRelationshipCheck(argent, entFri, entDist) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnChangeMovementType(SetType) end
+function ENT:CustomOnChangeMovementType(movType) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnIsJumpLegal(startPos, apex, endPos) end -- Return nothing to let base decide, return true to make it jump, return false to disallow jumping
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -708,15 +708,15 @@ function ENT:CustomOnChangeActivity(newAct) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ExpressionFinished(strExp) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnPlayCreateSound(SoundData,SoundFile) end
+function ENT:OnPlayCreateSound(sdData, sdFile) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnPlayEmitSound(SoundData) end
+function ENT:OnPlayEmitSound(sdFile) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnFireBullet(ent,data) end
+function ENT:OnFireBullet(ent, data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnTouch(entity) end
+function ENT:CustomOnTouch(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnCondition(iCondition) end
+function ENT:CustomOnCondition(cond) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnAcceptInput(key, activator, caller, data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -724,7 +724,7 @@ function ENT:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnFollowPlayer(key, activator, caller, data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnIdleDialogue(argent, CanAnswer) return true end -- argent = An entity that it can talk to | CanAnswer = If the entity can answer back | Return false to not run the code!
+function ENT:CustomOnIdleDialogue(argent, canAnswer) return true end -- argent = An entity that it can talk to | canAnswer = If the entity can answer back | Return false to not run the code!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnIdleDialogueAnswer(argent) end -- argent = The entity that just talked to this NPC
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -821,27 +821,27 @@ function ENT:CustomOnLeapAttack_AfterChecks(hitEnt) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnLeapAttack_Miss() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnDoKilledEnemy(argent,attacker,inflictor) end
+function ENT:CustomOnDoKilledEnemy(argent, attacker, inflictor) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo,hitgroup) end
+function ENT:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnTakeDamage_BeforeDamage(dmginfo,hitgroup) end
+function ENT:CustomOnTakeDamage_BeforeDamage(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnTakeDamage_AfterDamage(dmginfo,hitgroup) end
+function ENT:CustomOnTakeDamage_AfterDamage(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnTakeDamage_OnBleed(dmginfo,hitgroup) end
+function ENT:CustomOnTakeDamage_OnBleed(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnFlinch_BeforeFlinch(dmginfo,hitgroup) end -- Return false to disallow the flinch from playing
+function ENT:CustomOnFlinch_BeforeFlinch(dmginfo, hitgroup) end -- Return false to disallow the flinch from playing
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnFlinch_AfterFlinch(dmginfo,hitgroup) end
+function ENT:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnDamageByPlayer(dmginfo,hitgroup) end
+function ENT:CustomOnDamageByPlayer(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomWhenBecomingEnemyTowardsPlayer(dmginfo,hitgroup) end
+function ENT:CustomWhenBecomingEnemyTowardsPlayer(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnSetEnemyOnDamage(dmginfo,hitgroup) end
+function ENT:CustomOnSetEnemyOnDamage(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SetUpGibesOnDeath(dmginfo,hitgroup)
+function ENT:SetUpGibesOnDeath(dmginfo, hitgroup)
 	return false -- Return to true if it gibbed!
 	/*--------------------------------------
 		-- Extra Features --
@@ -859,23 +859,23 @@ function ENT:SetUpGibesOnDeath(dmginfo,hitgroup)
 	--------------------------------------*/
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomGibOnDeathSounds(dmginfo,hitgroup) return true end -- returning false will make the default gibbing sounds not play
+function ENT:CustomGibOnDeathSounds(dmginfo, hitgroup) return true end -- returning false will make the default gibbing sounds not play
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnAllyDeath(argent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnInitialKilled(dmginfo,hitgroup) end -- Ran the moment the NPC dies!
+function ENT:CustomOnInitialKilled(dmginfo, hitgroup) end -- Ran the moment the NPC dies!
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnPriorToKilled(dmginfo,hitgroup) end
+function ENT:CustomOnPriorToKilled(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomDeathAnimationCode(dmginfo,hitgroup) end
+function ENT:CustomDeathAnimationCode(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnKilled(dmginfo,hitgroup) end
+function ENT:CustomOnKilled(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomRareDropsOnDeathCode(dmginfo,hitgroup) end
+function ENT:CustomRareDropsOnDeathCode(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnDeath_BeforeCorpseSpawned(dmginfo,hitgroup) end
+function ENT:CustomOnDeath_BeforeCorpseSpawned(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse) end
+function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1179,9 +1179,9 @@ function ENT:SetInitializeCapabilities()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoChangeMovementType(SetType)
-	SetType = SetType or "None"
-	if SetType != "None" then self.MovementType = SetType end
+function ENT:DoChangeMovementType(movType)
+	movType = movType or -1
+	if movType != -1 then self.MovementType = movType end
 	if self.MovementType == VJ_MOVETYPE_GROUND then
 		self:SetMoveType(MOVETYPE_STEP)
 		self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND))
@@ -1221,7 +1221,7 @@ function ENT:DoChangeMovementType(SetType)
 		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
 	end
-	self:CustomOnChangeMovementType(SetType)
+	self:CustomOnChangeMovementType(movType)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IsJumpLegal(startPos, apex, endPos)
@@ -1711,12 +1711,12 @@ function ENT:HandleAnimEvent(ev, evTime, evCycle, evType, evOptions)
 	*/
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnCondition(iCondition)
-	self:CustomOnCondition(iCondition)
-	//if iCondition == 36 then print("sched done!") end
-	//if iCondition != 15 && iCondition != 60 then
-	//if iCondition != 1 then
-		//print(self," Condition: ",iCondition," - ",self:ConditionName(iCondition))
+function ENT:OnCondition(cond)
+	self:CustomOnCondition(cond)
+	//if cond == 36 then print("sched done!") end
+	//if cond != 15 && cond != 60 then
+	//if cond != 1 then
+		//print(self," Condition: ",cond," - ",self:ConditionName(cond))
 	//end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2471,15 +2471,15 @@ function ENT:MeleeAttackCode(isPropAttack, attackDist, CustomEnt)
 	self.AlreadyDoneFirstMeleeAttack = true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_DoSlowPlayer(argent,WalkSpeed,RunSpeed,SlowTime,SoundData,ExtraFeatures,customFunc)
+function ENT:VJ_DoSlowPlayer(argent,WalkSpeed,RunSpeed,SlowTime,sdData,ExtraFeatures,customFunc)
 	WalkSpeed = WalkSpeed or 50
 	RunSpeed = RunSpeed or 50
 	SlowTime = SlowTime or 5
-	SoundData = SoundData or {}
-		local vSD_PlaySound = SoundData.PlaySound or false -- Should it play a sound?
-		local vSD_SoundTable = SoundData.SoundTable or {} -- Sounds it should play (Picks randomly)
-		local vSD_SoundLevel = SoundData.SoundLevel or 100 -- How loud should the sound play?
-		local vSD_FadeOutTime = SoundData.FadeOutTime or 1 -- How long until it the sound fully fades out?
+	sdData = sdData or {}
+		local vSD_PlaySound = sdData.PlaySound or false -- Should it play a sound?
+		local vSD_SoundTable = sdData.SoundTable or {} -- Sounds it should play (Picks randomly)
+		local vSD_SoundLevel = sdData.SoundLevel or 100 -- How loud should the sound play?
+		local vSD_FadeOutTime = sdData.FadeOutTime or 1 -- How long until it the sound fully fades out?
 	ExtraFeatures = ExtraFeatures or {}
 		vEF_NoInterrupt = ExtraFeatures.NoInterrupt or false -- If set to true, the player's speed won't change by another instance of this code
 	local walkspeed_before = argent:GetWalkSpeed()
@@ -2886,7 +2886,7 @@ function ENT:DoEntityRelationshipCheck()
 			local vPos = v:GetPos()
 			local vDistanceToMy = vPos:Distance(myPos)
 			if vDistanceToMy > sightDist then continue end
-			local entisfri = false
+			local entFri = false
 			local vClass = v:GetClass()
 			local vNPC = v:IsNPC()
 			local vPlayer = v:IsPlayer()
@@ -2898,17 +2898,17 @@ function ENT:DoEntityRelationshipCheck()
 						if (friclass == varCCom && NPCTbl_Combine[vClass]) or (friclass == varCZom && NPCTbl_Zombies[vClass]) or (friclass == varCAnt && NPCTbl_Antlions[vClass]) or (friclass == varCXen && NPCTbl_Xen[vClass]) then
 							v:AddEntityRelationship(self, D_LI, 99)
 							self:AddEntityRelationship(v, D_LI, 99)
-							entisfri = true
+							entFri = true
 						end
-						if (v.VJ_NPC_Class && VJ_HasValue(v.VJ_NPC_Class, friclass)) or (entisfri == true) then
+						if (v.VJ_NPC_Class && VJ_HasValue(v.VJ_NPC_Class, friclass)) or (entFri == true) then
 							if friclass == varCPly then -- If we have the player ally class then check if we both of us are supposed to be friends
 								if self.FriendsWithAllPlayerAllies == true && v.FriendsWithAllPlayerAllies == true then
-									entisfri = true
+									entFri = true
 									if vNPC then v:AddEntityRelationship(self, D_LI, 99) end
 									self:AddEntityRelationship(v, D_LI, 99)
 								end
 							else
-								entisfri = true
+								entFri = true
 								-- If I am enemy to it, then reset it!
 								if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
 									self.ResetedEnemy = true
@@ -2919,17 +2919,17 @@ function ENT:DoEntityRelationshipCheck()
 							end
 						end
 					end
-					if vNPC && !entisfri then
+					if vNPC && !entFri then
 						-- Deprecated system
 						/*for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
 							if string_find(vClass, fritbl) then
-								entisfri = true
+								entFri = true
 								v:AddEntityRelationship(self, D_LI, 99)
 								self:AddEntityRelationship(v, D_LI, 99)
 							end
 						end
 						if VJ_HasValue(self.VJ_FriendlyNPCsSingle,vClass) then
-							entisfri = true
+							entFri = true
 							v:AddEntityRelationship(self, D_LI, 99)
 							self:AddEntityRelationship(v, D_LI, 99)
 						end*/
@@ -2937,28 +2937,28 @@ function ENT:DoEntityRelationshipCheck()
 						if self.PlayerFriendly == true && (NPCTbl_Resistance[vClass] or (self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true)) then
 							v:AddEntityRelationship(self, D_LI, 99)
 							self:AddEntityRelationship(v, D_LI, 99)
-							entisfri = true
+							entFri = true
 						end
 						if self.VJFriendly == true && v.IsVJBaseSNPC == true then
 							v:AddEntityRelationship(self, D_LI, 99)
 							self:AddEntityRelationship(v, D_LI, 99)
-							entisfri = true
+							entFri = true
 						end
 					end
 				end
-				if entisfri == false && vNPC /*&& MyVisibleTov*/ && self.DisableMakingSelfEnemyToNPCs == false && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self, D_HT, 99) end
+				if entFri == false && vNPC /*&& MyVisibleTov*/ && self.DisableMakingSelfEnemyToNPCs == false && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self, D_HT, 99) end
 				if vPlayer then
-					if (self.PlayerFriendly == true or entisfri == true/* or self:Disposition(v) == D_LI*/) then
+					if (self.PlayerFriendly == true or entFri == true/* or self:Disposition(v) == D_LI*/) then
 						if inEneTbl == false then
-							entisfri = true
+							entFri = true
 							self:AddEntityRelationship(v, D_LI, 99)
 							//DoPlayerSight()
 						else
-							entisfri = false
+							entFri = false
 						end
 					end
-					if (!self.IsVJBaseSNPC_Tank) && !IsValid(self:GetEnemy()) && entisfri == false then
-						if entisfri == false then self:AddEntityRelationship(v, D_NU, 99) end
+					if (!self.IsVJBaseSNPC_Tank) && !IsValid(self:GetEnemy()) && entFri == false then
+						if entFri == false then self:AddEntityRelationship(v, D_NU, 99) end
 						if v:Crouching() && v:GetMoveType() != MOVETYPE_NOCLIP then if self.VJ_IsHugeMonster == true then sightDist = 5000 else sightDist = 2000 end end
 						if vDistanceToMy < (self.InvestigateSoundDistance * v.VJ_LastInvestigateSdLevel) && ((CurTime() - v.VJ_LastInvestigateSd) <= 1) then
 							if self.NextInvestigateSoundMove < CurTime() then
@@ -3012,7 +3012,7 @@ function ENT:DoEntityRelationshipCheck()
 				end
 			end
 			if vPlayer then
-				if entisfri == true && self.MoveOutOfFriendlyPlayersWay == true && self.IsGuard == false && !self:IsMoving() && CurTime() > self.TakingCoverT && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && self:BusyWithActivity() == false then
+				if entFri == true && self.MoveOutOfFriendlyPlayersWay == true && self.IsGuard == false && !self:IsMoving() && CurTime() > self.TakingCoverT && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && self:BusyWithActivity() == false then
 					local dist = 20
 					if self.FollowingPlayer == true then dist = 10 end
 					if /*self:Disposition(v) == D_LI &&*/ (self:VJ_GetNearestPointToEntityDistance(v) < dist) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
@@ -3058,7 +3058,7 @@ function ENT:DoEntityRelationshipCheck()
 					end
 				end
 			end
-			self:CustomOnEntityRelationshipCheck(v, entisfri, vDistanceToMy)
+			self:CustomOnEntityRelationshipCheck(v, entFri, vDistanceToMy)
 		end
 		//return true
 	end
@@ -3174,7 +3174,7 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoKilledEnemy(argent,attacker,inflictor)
+function ENT:DoKilledEnemy(argent, attacker, inflictor)
 	if !IsValid(argent) then return end
 	-- If it can only do it if there is no enemies left then check --> (If there no valid enemy) OR (The number of enemies is 1 or less)
 	if (self.OnlyDoKillEnemyWhenClear == false) or (self.OnlyDoKillEnemyWhenClear == true && (!IsValid(self:GetEnemy()) or (self.ReachableEnemyCount <= 1))) then
@@ -3190,7 +3190,7 @@ function ENT:OnTakeDamage(dmginfo)
 	local DamageType = dmginfo:GetDamageType()
 	local hitgroup = self.VJ_ScaleHitGroupDamage
 	if IsValid(DamageInflictor) && DamageInflictor:GetClass() == "prop_ragdoll" && DamageInflictor:GetVelocity():Length() <= 100 then return end
-	self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo,hitgroup)
+	self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo, hitgroup)
 	if self:IsOnFire() && self:WaterLevel() == 2 then self:Extinguish() end -- If we are in water, then extinguish the fire
 
 	-- If it should always take damage from huge monsters, then skip immunity checks!
@@ -3216,16 +3216,16 @@ function ENT:OnTakeDamage(dmginfo)
 	::skip_immunity::
 	local function DoBleed()
 		if self.Bleeds == true then
-			self:CustomOnTakeDamage_OnBleed(dmginfo,hitgroup)
+			self:CustomOnTakeDamage_OnBleed(dmginfo, hitgroup)
 			-- Spawn the blood particle only if it's not caused by the default fire entity [Causes the damage position to be at Vector(0,0,0)]
-			if self.HasBloodParticle == true && ((!self:IsOnFire()) or (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() != "entityflame" && DamageAttacker:GetClass() != "entityflame")) then self:SpawnBloodParticles(dmginfo,hitgroup) end
-			if self.HasBloodDecal == true then self:SpawnBloodDecal(dmginfo,hitgroup) end
+			if self.HasBloodParticle == true && ((!self:IsOnFire()) or (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() != "entityflame" && DamageAttacker:GetClass() != "entityflame")) then self:SpawnBloodParticles(dmginfo, hitgroup) end
+			if self.HasBloodDecal == true then self:SpawnBloodDecal(dmginfo, hitgroup) end
 			self:PlaySoundSystem("Impact", nil, VJ_EmitSound)
 		end
 	end
 	if self.Dead == true then DoBleed() return end -- If dead then just bleed but take no damage
 	
-	self:CustomOnTakeDamage_BeforeDamage(dmginfo,hitgroup)
+	self:CustomOnTakeDamage_BeforeDamage(dmginfo, hitgroup)
 	if dmginfo:GetDamage() <= 0 then return end -- Only take damage if it's above 0!
 	self.LatestDmgInfo = dmginfo
 	self:SetHealth(self:Health() - dmginfo:GetDamage())
@@ -3233,7 +3233,7 @@ function ENT:OnTakeDamage(dmginfo)
 	if self.HasHealthRegeneration == true && self.HealthRegenerationResetOnDmg == true then
 		self.HealthRegenerationDelayT = CurTime() + (math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b) * 1.5)
 	end
-	self:CustomOnTakeDamage_AfterDamage(dmginfo,hitgroup)
+	self:CustomOnTakeDamage_AfterDamage(dmginfo, hitgroup)
 	DoBleed()
 
 	-- Make passive NPCs run and their allies as well
@@ -3307,7 +3307,7 @@ function ENT:OnTakeDamage(dmginfo)
 			end
 			if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
 				if self:Disposition(DamageAttacker) != D_HT then
-					self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo,hitgroup)
+					self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo, hitgroup)
 					if self.FollowingPlayer == true && self.FollowPlayer_Entity == DamageAttacker then self:FollowPlayerReset() end
 					self.VJ_AddCertainEntityAsEnemy[#self.VJ_AddCertainEntityAsEnemy+1] = DamageAttacker
 					self:AddEntityRelationship(DamageAttacker,D_HT,99)
@@ -3340,7 +3340,7 @@ function ENT:OnTakeDamage(dmginfo)
 			if (!Targets) then return end
 			for _,v in pairs(Targets) do
 				if CurTime() > self.NextSetEnemyOnDamageT && self:Visible(v) && self:DoRelationshipCheck(v) == true then
-					self:CustomOnSetEnemyOnDamage(dmginfo,hitgroup)
+					self:CustomOnSetEnemyOnDamage(dmginfo, hitgroup)
 					self.NextCallForHelpT = CurTime() + 1
 					self:VJ_DoSetEnemy(v,true)
 					self:DoChaseAnimation()
@@ -3374,7 +3374,7 @@ function ENT:OnTakeDamage(dmginfo)
 			dissolve:SetDamageType(DMG_DISSOLVE)
 			self:TakeDamageInfo(dissolve)
 		end
-		self:PriorToKilled(dmginfo,hitgroup)
+		self:PriorToKilled(dmginfo, hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3575,15 +3575,15 @@ local vecZ1 = Vector(0, 0, 1)
 --
 function ENT:SpawnBloodPool(dmginfo, hitgroup)
 	if !IsValid(self.Corpse) then return end
-	local GetCorpse = self.Corpse
+	local corpseEnt = self.Corpse
 	local GetBloodPool = VJ_PICK(self.CustomBlood_Pool)
 	if GetBloodPool == false then return end
 	timer.Simple(2.2, function()
-		if IsValid(GetCorpse) then
+		if IsValid(corpseEnt) then
 			local tr = util.TraceLine({
-				start = GetCorpse:GetPos() + GetCorpse:OBBCenter(),
-				endpos = GetCorpse:GetPos() + GetCorpse:OBBCenter() - vecZ30,
-				filter = GetCorpse, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
+				start = corpseEnt:GetPos() + corpseEnt:OBBCenter(),
+				endpos = corpseEnt:GetPos() + corpseEnt:OBBCenter() - vecZ30,
+				filter = corpseEnt, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
 				mask = CONTENTS_SOLID
 			})
 			-- (X,Y,Z) | (Ver, Var, Goghme)
@@ -3597,7 +3597,7 @@ end
 local vecZ500 = Vector(0, 0, 500)
 --
 function ENT:PriorToKilled(dmginfo, hitgroup)
-	self:CustomOnInitialKilled(dmginfo,hitgroup)
+	self:CustomOnInitialKilled(dmginfo, hitgroup)
 	if self.Medic_IsHealingAlly == true then self:DoMedicCode_Reset() end
 	
 	local checkdist = 800 -- Nayir vormeg tive amenan medzen e, adiga ere vor poon tive ela
@@ -3627,9 +3627,9 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	local function DoKilled()
 		if IsValid(self) then
 			if self.WaitBeforeDeathTime == 0 then
-				self:OnKilled(dmginfo,hitgroup)
+				self:OnKilled(dmginfo, hitgroup)
 			else
-				timer.Simple(self.WaitBeforeDeathTime,function() if IsValid(self) then self:OnKilled(dmginfo,hitgroup) end end)
+				timer.Simple(self.WaitBeforeDeathTime,function() if IsValid(self) then self:OnKilled(dmginfo, hitgroup) end end)
 			end
 		end
 	end
@@ -3666,9 +3666,9 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 			gamemode.Call("OnNPCKilled", self, DamageAttacker, DamageInflictor, dmginfo)
 		end
 	end
-	self:CustomOnPriorToKilled(dmginfo,hitgroup)
+	self:CustomOnPriorToKilled(dmginfo, hitgroup)
 	self:SetCollisionGroup(1)
-	self:RunGibOnDeathCode(dmginfo,hitgroup)
+	self:RunGibOnDeathCode(dmginfo, hitgroup)
 	self:PlaySoundSystem("Death")
 	self:AAMove_Stop()
 	if self.HasDeathAnimation != true then DoKilled() return end
@@ -3678,7 +3678,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 			local randanim = math.random(1,self.DeathAnimationChance)
 			if randanim != 1 then DoKilled() return end
 			if randanim == 1 then
-				self:CustomDeathAnimationCode(dmginfo,hitgroup)
+				self:CustomDeathAnimationCode(dmginfo, hitgroup)
 				local pickanim = VJ_PICK(self.AnimTbl_Death)
 				local seltime = self:DecideAnimationLength(pickanim,self.DeathAnimationTime) - self.DeathAnimationDecreaseLengthAmount
 				self:RemoveAllGestures()
@@ -3692,7 +3692,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RunGibOnDeathCode(dmginfo,hitgroup,Tbl_Features)
+function ENT:RunGibOnDeathCode(dmginfo, hitgroup,Tbl_Features)
 	if self.AllowedToGib == false or self.HasGibOnDeath == false or self.HasBeenGibbedOnDeath == true then return end
 	vTbl_Features = Tbl_Features or {}
 	local DamageType = dmginfo:GetDamageType()
@@ -3702,20 +3702,20 @@ function ENT:RunGibOnDeathCode(dmginfo,hitgroup,Tbl_Features)
 	if VJ_HasValue(dmgtbl,"UseDefault") then usedefault = true end
 	if usedefault == false && (#dmgtbl <= 0 or VJ_HasValue(dmgtbl,"All")) then dmgtblempty = true end
 	if (dmgtblempty == true) or (usedefault == true && VJ_HasValue(self.DefaultGibDamageTypes,DamageType)) or (usedefault == false && VJ_HasValue(dmgtbl,DamageType)) then
-		local setupgib, setupgib_extra = self:SetUpGibesOnDeath(dmginfo,hitgroup)
+		local setupgib, setupgib_extra = self:SetUpGibesOnDeath(dmginfo, hitgroup)
 		if setupgib_extra == nil then setupgib_extra = {} end
 		if setupgib == true then
 			if setupgib_extra.AllowCorpse != true then self.HasDeathRagdoll = false end
 			if setupgib_extra.DeathAnim != true then self.HasDeathAnimation = false end
 			self.HasBeenGibbedOnDeath = true
-			self:PlayGibOnDeathSounds(dmginfo,hitgroup)
+			self:PlayGibOnDeathSounds(dmginfo, hitgroup)
 		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PlayGibOnDeathSounds(dmginfo,hitgroup)
+function ENT:PlayGibOnDeathSounds(dmginfo, hitgroup)
 	if self.HasGibOnDeathSounds == false then return end
-	local custom = self:CustomGibOnDeathSounds(dmginfo,hitgroup)
+	local custom = self:CustomGibOnDeathSounds(dmginfo, hitgroup)
 	if custom == true then
 		VJ_EmitSound(self,"vj_gib/default_gib_splat.wav",90,math.random(80,100))
 		VJ_EmitSound(self,"vj_gib/gibbing1.wav",90,math.random(80,100))
@@ -3788,20 +3788,20 @@ function ENT:CreateGibEntity(Ent,Models,Tbl_Features,customFunc)
 	if (customFunc) then customFunc(gib) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnKilled(dmginfo,hitgroup)
+function ENT:OnKilled(dmginfo, hitgroup)
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVarNumber("vj_npc_printdied") == 1 then print(self:GetClass().." Died!") end
-	self:CustomOnKilled(dmginfo,hitgroup)
-	self:RunItemDropsOnDeathCode(dmginfo,hitgroup) -- Item drops on death
+	self:CustomOnKilled(dmginfo, hitgroup)
+	self:RunItemDropsOnDeathCode(dmginfo, hitgroup) -- Item drops on death
 	if self.HasDeathNotice == true then PrintMessage(self.DeathNoticePosition, self.DeathNoticeWriting) end -- Death notice on death
 	self:ClearEnemyMemory()
 	self:ClearSchedule()
 	//self:SetNPCState(NPC_STATE_DEAD)
-	self:CreateDeathCorpse(dmginfo,hitgroup)
+	self:CreateDeathCorpse(dmginfo, hitgroup)
 	self:Remove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CreateDeathCorpse(dmginfo,hitgroup)
-	self:CustomOnDeath_BeforeCorpseSpawned(dmginfo,hitgroup)
+function ENT:CreateDeathCorpse(dmginfo, hitgroup)
+	self:CustomOnDeath_BeforeCorpseSpawned(dmginfo, hitgroup)
 	if self.HasDeathRagdoll == true then
 		local corpsemodel = self:GetModel()
 		local corpsemodel_custom = VJ_PICK(self.DeathCorpseModel)
@@ -3849,17 +3849,17 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		self.Corpse.ExtraCorpsesToRemove = self.ExtraCorpsesToRemove_Transition
 
 		if self.Bleeds == true && self.HasBloodPool == true && GetConVarNumber("vj_npc_nobloodpool") == 0 then
-			self:SpawnBloodPool(dmginfo,hitgroup)
+			self:SpawnBloodPool(dmginfo, hitgroup)
 		end
 		/*if self.Bleeds == true && self.HasBloodDecal == true then
-			local GetCorpse = self.Corpse
+			local corpseEnt = self.Corpse
 			local pickdecal = self.CustomBlood_Decal
 			timer.Simple(7,function()
-				if IsValid(GetCorpse) then
+				if IsValid(corpseEnt) then
 					local tr = util.TraceLine({
-						start = GetCorpse:GetPos()+GetCorpse:OBBCenter(),
-						endpos = GetCorpse:GetPos()+GetCorpse:OBBCenter()-Vector(0,0,100),
-						filter = GetCorpse, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
+						start = corpseEnt:GetPos()+corpseEnt:OBBCenter(),
+						endpos = corpseEnt:GetPos()+corpseEnt:OBBCenter()-Vector(0,0,100),
+						filter = corpseEnt, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
 						//mask = CONTENTS_SOLID
 					})
 					util.Decal(VJ_PICK(pickdecal),tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
@@ -3947,7 +3947,7 @@ function ENT:CreateDeathCorpse(dmginfo,hitgroup)
 		
 		if self.FadeCorpse == true then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",self.FadeCorpseTime) end
 		if GetConVarNumber("vj_npc_corpsefade") == 1 then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",GetConVarNumber("vj_npc_corpsefadetime")) end
-		self:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,self.Corpse)
+		self:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup,self.Corpse)
 		self.Corpse:CallOnRemove("vj_"..self.Corpse:EntIndex(),function(ent,exttbl)
 			for _,v in ipairs(exttbl) do
 				if IsValid(v) then
@@ -4020,10 +4020,10 @@ function ENT:OnRemove()
 	self:StopParticles()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RunItemDropsOnDeathCode(dmginfo,hitgroup)
+function ENT:RunItemDropsOnDeathCode(dmginfo, hitgroup)
 	if self.HasItemDropsOnDeath == false then return end
 	if math.random(1,self.ItemDropsOnDeathChance) == 1 then
-		self:CustomRareDropsOnDeathCode(dmginfo,hitgroup)
+		self:CustomRareDropsOnDeathCode(dmginfo, hitgroup)
 		local entlist = VJ_PICK(self.ItemDropsOnDeath_EntityList)
 		if entlist != false then
 			local randdrop = ents.Create(entlist)
@@ -4774,7 +4774,7 @@ end*/
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*--------------------------------------------------
 	=============== Creature SNPC Base ===============
-	*** Copyright (c) 2012-2020 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 	INFO: Used to make creature SNPCs

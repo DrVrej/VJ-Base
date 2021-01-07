@@ -2,7 +2,7 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 AddCSLuaFile("shared.lua")
 include('shared.lua')
 /*-----------------------------------------------
-	*** Copyright (c) 2012-2020 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
@@ -106,13 +106,13 @@ function ENT:GetNearDeathSparkPositions()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnPriorToKilled(dmginfo,hitgroup) return true end -- Return false to disable the default base code
+function ENT:Tank_CustomOnPriorToKilled(dmginfo, hitgroup) return true end -- Return false to disable the default base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse) return true end -- Return false to disable the default base code
+function ENT:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) return true end -- Return false to disable the default base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnDeath_AfterDeathSoldierSpawned(dmginfo,hitgroup,SoldierCorpse) end
+function ENT:Tank_CustomOnDeath_AfterDeathSoldierSpawned(dmginfo, hitgroup,SoldierCorpse) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnDeath_AfterCorpseSpawned_Effects(dmginfo,hitgroup,GetCorpse) return true end -- Return false to disable the default base code
+function ENT:Tank_CustomOnDeath_AfterCorpseSpawned_Effects(dmginfo, hitgroup, corpseEnt) return true end -- Return false to disable the default base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSpawnEffects()
 	/* Example:
@@ -179,10 +179,10 @@ function ENT:CustomOnInitialize()
 	self:DeleteOnRemove(self.ActualLight1)*/
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnTouch(entity)
+function ENT:CustomOnTouch(ent)
 	if GetConVarNumber("ai_disabled") == 1 then return end
 	if self.Tank_Status == 0 then
-		self:Tank_RunOver(entity)
+		self:Tank_RunOver(ent)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -357,7 +357,7 @@ function ENT:CustomOnSchedule()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnTakeDamage_BeforeDamage(dmginfo,hitgroup)
+function ENT:CustomOnTakeDamage_BeforeDamage(dmginfo, hitgroup)
 	local dmgtype = dmginfo:GetDamageType()
 	if (dmgtype == DMG_SLASH or dmgtype == DMG_GENERIC or dmgtype == DMG_CLUB) then
 		if dmginfo:GetDamage() >= 30 && dmginfo:GetAttacker().VJ_IsHugeMonster != true then
@@ -368,13 +368,13 @@ function ENT:CustomOnTakeDamage_BeforeDamage(dmginfo,hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnPriorToKilled(dmginfo,hitgroup)
+function ENT:CustomOnPriorToKilled(dmginfo, hitgroup)
 	if IsValid(self.Gunner) then
 		self.Gunner.Dead = true
 		if self:IsOnFire() then self.Gunner:Ignite(math.Rand(8,10),0) end
 	end
 	
-	if self:Tank_CustomOnPriorToKilled(dmginfo,hitgroup) == true then
+	if self:Tank_CustomOnPriorToKilled(dmginfo, hitgroup) == true then
 		for i=0,1,0.5 do
 			timer.Simple(i,function()
 				if IsValid(self) then
@@ -398,20 +398,20 @@ function ENT:CustomOnPriorToKilled(dmginfo,hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
+function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
 	if IsValid(self.Gunner) then -- Spawn the gunner
-		local gunnercorpse = self.Gunner:CreateDeathCorpse(dmginfo,hitgroup)
-		if IsValid(gunnercorpse) then GetCorpse.ExtraCorpsesToRemove[#GetCorpse.ExtraCorpsesToRemove+1] = gunnercorpse end
+		local gunnercorpse = self.Gunner:CreateDeathCorpse(dmginfo, hitgroup)
+		if IsValid(gunnercorpse) then corpseEnt.ExtraCorpsesToRemove[#corpseEnt.ExtraCorpsesToRemove+1] = gunnercorpse end
 	end
 	
-	if self:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse) == true then
+	if self:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) == true then
 		util.BlastDamage(self, self, self:GetPos(), 400, 40)
 		util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
 	
 		-- Spawn the death soldier
 		local smdl = VJ_PICK(self.Tank_DeathSoldierModels)
 		if smdl != false && math.random(1,self.Tank_DeathSoldierChance) == 1 then
-			self:CreateExtraDeathCorpse("prop_ragdoll",smdl,{Pos=self:GetPos()+self:GetUp()*90+self:GetRight()*-30,Vel=Vector(math.Rand(-600,600), math.Rand(-600,600),500)},function(extraent) extraent:Ignite(math.Rand(8,10),0); extraent:SetColor(Color(90,90,90)); self:Tank_CustomOnDeath_AfterDeathSoldierSpawned(dmginfo,hitgroup,extraent) end)
+			self:CreateExtraDeathCorpse("prop_ragdoll",smdl,{Pos=self:GetPos()+self:GetUp()*90+self:GetRight()*-30,Vel=Vector(math.Rand(-600,600), math.Rand(-600,600),500)},function(extraent) extraent:Ignite(math.Rand(8,10),0); extraent:SetColor(Color(90,90,90)); self:Tank_CustomOnDeath_AfterDeathSoldierSpawned(dmginfo, hitgroup,extraent) end)
 		end
 
 		self:SetPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the NPC is too close to the ground
@@ -422,16 +422,16 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
 		})
 		util.Decal(VJ_PICK(self.Tank_DeathDecal), tr.HitPos+tr.HitNormal, tr.HitPos-tr.HitNormal)
 
-		if self.HasGibDeathParticles == true && self:Tank_CustomOnDeath_AfterCorpseSpawned_Effects(dmginfo,hitgroup,GetCorpse) == true then
+		if self.HasGibDeathParticles == true && self:Tank_CustomOnDeath_AfterCorpseSpawned_Effects(dmginfo, hitgroup, corpseEnt) == true then
 			//self.FireEffect = ents.Create( "env_fire_trail" )
 			//self.FireEffect:SetPos(self:GetPos()+self:GetUp()*70)
 			//self.FireEffect:Spawn()
-			//self.FireEffect:SetParent(GetCorpse)
-			//ParticleEffectAttach("smoke_large_01b",PATTACH_ABSORIGIN_FOLLOW,GetCorpse,0)
+			//self.FireEffect:SetParent(corpseEnt)
+			//ParticleEffectAttach("smoke_large_01b",PATTACH_ABSORIGIN_FOLLOW,corpseEnt,0)
 			ParticleEffect("vj_explosion3",self:GetPos(),Angle(0,0,0),nil)
 			ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*-130,Angle(0,0,0),nil)
 			ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*130,Angle(0,0,0),nil)
-			ParticleEffectAttach("smoke_burning_engine_01",PATTACH_ABSORIGIN_FOLLOW,GetCorpse,0)
+			ParticleEffectAttach("smoke_burning_engine_01",PATTACH_ABSORIGIN_FOLLOW,corpseEnt,0)
 			
 			local explosioneffect = EffectData()
 			explosioneffect:SetOrigin(self:GetPos())
@@ -477,7 +477,7 @@ function ENT:Tank_Sound_RunOver()
 	self.Tank_NextRunOverSoundT = CurTime() + 0.2
 end
 /*-----------------------------------------------
-	*** Copyright (c) 2012-2020 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/

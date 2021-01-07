@@ -1,7 +1,7 @@
 AddCSLuaFile("shared.lua")
 include('shared.lua')
 /*-----------------------------------------------
-	*** Copyright (c) 2012-2020 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
@@ -76,7 +76,7 @@ function ENT:Tank_CustomOnThink() return true end -- Return false to disable the
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_CustomOnShellFire(Shell) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse) end
+function ENT:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSpawnEffects()
 	/* Example:
@@ -326,10 +326,10 @@ function ENT:Tank_FireShell()
 	self.FiringShell = false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse)
-	if self:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo,hitgroup,GetCorpse) == true then
-		GetCorpse:GetPhysicsObject():AddVelocity(Vector(math.Rand(-200,200), math.Rand(-200,200),math.Rand(200,400)))
-		GetCorpse:GetPhysicsObject():AddAngleVelocity(Vector(math.Rand(-100,100),math.Rand(-100,100),math.Rand(-100,100)))
+function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
+	if self:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) == true then
+		corpseEnt:GetPhysicsObject():AddVelocity(Vector(math.Rand(-200,200), math.Rand(-200,200),math.Rand(200,400)))
+		corpseEnt:GetPhysicsObject():AddAngleVelocity(Vector(math.Rand(-100,100),math.Rand(-100,100),math.Rand(-100,100)))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -363,7 +363,7 @@ function ENT:Tank_Sound_FireShell()
 	VJ_EmitSound(self,sdtbl,500,100)
 end
 /*-----------------------------------------------
-	*** Copyright (c) 2012-2020 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/

@@ -3,7 +3,7 @@ include("shared.lua")
 //require('sound_vj_track')
 /*--------------------------------------------------
 	=============== Human SNPC Base ===============
-	*** Copyright (c) 2012-2020 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used to make human SNPCs
