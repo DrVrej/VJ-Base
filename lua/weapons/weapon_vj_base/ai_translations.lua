@@ -1,7 +1,7 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 
 -- !!! USED ONLY FOR HL2 NPCS, NOT VJ NPCS !!!
-function SWEP:SetupWeaponHoldTypeForAI(htype)
+function SWEP:SetupWeaponHoldTypeForAI(hType)
 	if self:GetOwner().IsVJBaseSNPC_Human == true then return end
 	
 	-- Yete NPC-en Rebel-e, ere vor medz zenki animation-ere kordzadze yerp vor ge kalegor
@@ -16,7 +16,7 @@ function SWEP:SetupWeaponHoldTypeForAI(htype)
 	local rifleOverride = false
 	local medzZenk_Genal = ACT_IDLE_SMG1
 	local medzZenk_Kalel = ACT_WALK_RIFLE
-	if self.NPC_AnimationSet == "Combine" && (htype == "pistol" or htype == "revolver") then
+	if self.NPC_AnimationSet == "Combine" && (hType == "pistol" or hType == "revolver") then
 		rifleOverride = true
 		medzZenk_Genal = VJ_SequenceToActivity(self:GetOwner(),"idle_unarmed")
 		medzZenk_Kalel = VJ_SequenceToActivity(self:GetOwner(),"walkunarmed_all")
@@ -32,13 +32,13 @@ function SWEP:SetupWeaponHoldTypeForAI(htype)
 	end
 	
 	self.ActivityTranslateAI = {}
-	if rifleOverride == true or htype == "ar2" or htype == "smg" then
-		if htype == "ar2" or rifleOverride == true then
+	if rifleOverride == true or hType == "ar2" or hType == "smg" then
+		if hType == "ar2" or rifleOverride == true then
 			self.ActivityTranslateAI[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_AR2
 			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_AR2
 			self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] 				= ACT_RANGE_AIM_AR2_LOW
 			self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_AR2_LOW
-		elseif htype == "smg" then
+		elseif hType == "smg" then
 			self.ActivityTranslateAI[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_SMG1
 			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SMG1
 			self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] 				= ACT_RANGE_AIM_SMG1_LOW
@@ -76,7 +76,7 @@ function SWEP:SetupWeaponHoldTypeForAI(htype)
 		self.ActivityTranslateAI[ACT_RUN_AIM_RELAXED] 				= ACT_RUN_RIFLE_RELAXED
 		self.ActivityTranslateAI[ACT_RUN_AIM_STIMULATED] 			= ACT_RUN_AIM_RIFLE_STIMULATED
 		self.ActivityTranslateAI[ACT_RUN_AIM_AGITATED] 				= ACT_RUN_AIM_RIFLE
-	elseif htype == "crossbow" or htype == "shotgun" then
+	elseif hType == "crossbow" or hType == "shotgun" then
 		self.ActivityTranslateAI[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_SHOTGUN				-- ****
 		self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SHOTGUN
 		self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] 				= ACT_RANGE_AIM_AR2_LOW
@@ -116,7 +116,7 @@ function SWEP:SetupWeaponHoldTypeForAI(htype)
 		self.ActivityTranslateAI[ACT_RUN_AIM_RELAXED] 				= ACT_RUN_AIM_SHOTGUN
 		self.ActivityTranslateAI[ACT_RUN_AIM_STIMULATED] 			= ACT_RUN_AIM_SHOTGUN
 		self.ActivityTranslateAI[ACT_RUN_AIM_AGITATED] 				= ACT_RUN_AIM_SHOTGUN
-	elseif htype == "rpg" then
+	elseif hType == "rpg" then
 		self.ActivityTranslateAI[ACT_RANGE_ATTACK1] 				= ACT_CROUCHIDLE
 		self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SMG1
 		self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] 				= ACT_RANGE_AIM_SMG1_LOW

@@ -1,6 +1,6 @@
 require("ai_vj_schedule")
 /*-----------------------------------------------
-	*** Copyright (c) 2012-2020 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
@@ -158,9 +158,9 @@ function ENT:RunEngineTask(iTaskID,TaskData) end
 function ENT:StartEngineSchedule(scheduleID) self:ScheduleFinished() self.bDoingEngineSchedule = true end
 function ENT:EngineScheduleFinish() self.bDoingEngineSchedule = nil end
 function ENT:DoingEngineSchedule() return self.bDoingEngineSchedule end
-function ENT:OnCondition(iCondition) end
+function ENT:OnCondition(cond) end
 /*-----------------------------------------------
-	*** Copyright (c) 2012-2020 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
