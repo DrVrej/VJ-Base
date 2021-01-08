@@ -1,0 +1,3 @@
+~ VJ Base Dummy Addon ~
+Version: January 8, 2021
+Information: https://github.com/DrVrej/VJ-Base/wiki
