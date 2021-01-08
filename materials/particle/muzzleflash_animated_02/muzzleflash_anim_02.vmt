@@ -1,8 +1,0 @@
-SpriteCard
-{
-$basetexture "particle/muzzleflash_animated_02/muzzleflash_anim_02"
-$additive 1
-$addself 3
-$overbrightfactor 1.5
-$DEPTHBLEND 1
-}

@@ -1,9 +1,0 @@
-"VertexLitGeneric"
-{
-	"$baseTexture" "models\gibs/GibsetXen"
-	"$halflambert" 1
-	"$surfaceprop" "alienflesh"
-	"$nocull" 1
-	"$bumpmap" "models\Gibs/Gibset_N"
-	"$model" "1"
-}
