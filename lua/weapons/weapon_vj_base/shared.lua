@@ -60,16 +60,16 @@ SWEP.NPC_ReloadSoundLevel = 60 -- How far does the sound go?
 	-- NOTE: This only works with VJ Human SNPCs!
 SWEP.NPC_BeforeFireSound = {} -- Plays a sound before the firing code is ran, usually in the beginning of the animation
 SWEP.NPC_BeforeFireSoundLevel = 70 -- How far does the sound go?
-SWEP.NPC_BeforeFireSoundPitch = VJ_Set(90,100) -- How much time until the secondary fire can be used again?
+SWEP.NPC_BeforeFireSoundPitch = VJ_Set(90, 100) -- How much time until the secondary fire can be used again?
 	-- ====== Extra Firing Sound Variables ====== --
 SWEP.NPC_ExtraFireSound = {} -- Plays an extra sound after it fires (Example: Bolt action sound)
 SWEP.NPC_ExtraFireSoundTime = 0.4 -- How much time until it plays the sound (After Firing)?
 SWEP.NPC_ExtraFireSoundLevel = 70 -- How far does the sound go?
-SWEP.NPC_ExtraFireSoundPitch = VJ_Set(90,100) -- How much time until the secondary fire can be used again?
+SWEP.NPC_ExtraFireSoundPitch = VJ_Set(90, 100) -- How much time until the secondary fire can be used again?
 	-- ====== Secondary Fire Variables ====== --
 SWEP.NPC_HasSecondaryFire = false -- Can the weapon have a secondary fire?
 SWEP.NPC_SecondaryFireChance = 3 -- Chance that the secondary fire is used | 1 = always
-SWEP.NPC_SecondaryFireNext = VJ_Set(12,15) -- How much time until the secondary fire can be used again?
+SWEP.NPC_SecondaryFireNext = VJ_Set(12, 15) -- How much time until the secondary fire can be used again?
 SWEP.NPC_SecondaryFireDistance = 1000 -- How close does the owner's enemy have to be for it to fire?
 SWEP.NPC_HasSecondaryFireSound = true -- Can the secondary fire sound be played?
 SWEP.NPC_SecondaryFireSound = {} -- The sound it plays when the secondary fire is used
@@ -109,8 +109,7 @@ SWEP.Reload_TimeUntilFinished = false -- How much time until the player can play
 SWEP.HasDryFireSound = true -- Should it play a sound when it's out of ammo?
 SWEP.DryFireSound = {} -- The sound that it plays when the weapon is out of ammo
 SWEP.DryFireSoundLevel = 50 -- Dry fire sound level
-SWEP.DryFireSoundPitch1 = 90 -- Dry fire sound pitch 1
-SWEP.DryFireSoundPitch2 = 100 -- Dry fire sound pitch 2
+SWEP.DryFireSoundPitch = VJ_Set(90, 100) -- Dry fire sound pitch
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Primary Fire Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -136,8 +135,7 @@ SWEP.Primary.Sound = {}
 SWEP.Primary.DistantSound = {}
 SWEP.Primary.HasDistantSound = true -- Does it have a distant sound when the gun is shot?
 SWEP.Primary.DistantSoundLevel = 140 -- Distant sound level
-SWEP.Primary.DistantSoundPitch1	= 90 -- Distant sound pitch 1
-SWEP.Primary.DistantSoundPitch2	= 110 -- Distant sound pitch 2
+SWEP.Primary.DistantSoundPitch	= VJ_Set(90, 110) -- Distant sound pitch
 SWEP.Primary.DistantSoundVolume	= 1 -- Distant sound volume
 	-- ====== Effect Variables ====== --
 SWEP.PrimaryEffects_MuzzleFlash = true
@@ -163,7 +161,7 @@ SWEP.MeleeWeaponSound_Miss = {"weapons/iceaxe/iceaxe_swing1.wav"} -- Sound it pl
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnEquip(NewOwner) end
+function SWEP:CustomOnEquip(newOwner) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -175,15 +173,15 @@ function SWEP:CustomOnPrimaryAttack_BeforeShoot() end -- Return true to not run 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_AfterShoot() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttack_MeleeHit(argent) end
+function SWEP:CustomOnPrimaryAttack_MeleeHit(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttack_BulletCallback(attacker,tr,dmginfo) end
+function SWEP:CustomOnPrimaryAttack_BulletCallback(attacker, tr, dmginfo) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttackEffects() return true end -- Return false to disable the base effects
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_SecondaryFire()
 	/* An example:
-	local pos = self:GetNWVector("VJ_CurBulletPos")
+	local pos = self:GetNW2Vector("VJ_CurBulletPos")
 	local proj = ents.Create("prop_combine_ball")
 	proj:SetPos(pos)
 	proj:SetAngles(self:GetOwner():GetAngles())
@@ -202,7 +200,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomBulletSpawnPosition() return false end -- Return a position to override the bullet spawn position
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnFireAnimationEvent(pos,ang,event,options) return false end
+function SWEP:CustomOnFireAnimationEvent(pos, ang, event, options) return false end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnDrawWorldModel() return true end -- Return false to not draw the world model | This is client side only!
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -233,13 +231,24 @@ SWEP.NPC_NextPrimaryFireT = 0
 SWEP.NPC_AnimationSet = "Custom"
 SWEP.NPC_SecondaryFireNextT = 0
 SWEP.NPC_SecondaryFirePerforming = false
+
+
+-- [Backwards Compatibility!]
+	-- Basically if someone is retrieving "VJ_CurBulletPos" using NW, it will convert it to NW2 otherwise it just runs the regular code
+local entMETA = FindMetaTable("Entity")
+local wepMETA = FindMetaTable("Weapon")
+local old_GetNWVector = entMETA.GetNWVector
+function wepMETA:GetNWVector(name, default)
+	if name == "VJ_CurBulletPos" then return self:GetNW2Vector("VJ_CurBulletPos", default)
+	else return old_GetNWVector(self, name, default) end
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:GetCapabilities()
 	return bit.bor(CAP_WEAPON_RANGE_ATTACK1,CAP_INNATE_RANGE_ATTACK1)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Initialize()
-	self:SetNWVector("VJ_CurBulletPos", self:GetPos())
+	self:SetNW2Vector("VJ_CurBulletPos", self:GetPos())
 	self:SetHoldType(self.HoldType)
 	if self.HasIdleAnimation == true then self.InitHasIdleAnimation = true end
 	self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
@@ -253,42 +262,42 @@ function SWEP:Initialize()
 	self:SetDefaultValues(self.HoldType)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:Equip(NewOwner)
+function SWEP:Equip(newOwner)
 	self:SetClip1(self.Primary.ClipSize)
-	if NewOwner:IsPlayer() then
+	if newOwner:IsPlayer() then
 		if self.Primary.PickUpAmmoAmount == "Default" then
-			NewOwner:GiveAmmo(self.Primary.ClipSize*2,self.Primary.Ammo)
+			newOwner:GiveAmmo(self.Primary.ClipSize*2,self.Primary.Ammo)
 		elseif isnumber(self.Primary.PickUpAmmoAmount) then
-			NewOwner:GiveAmmo(self.Primary.PickUpAmmoAmount,self.Primary.Ammo)
+			newOwner:GiveAmmo(self.Primary.PickUpAmmoAmount,self.Primary.Ammo)
 		end
-		//NewOwner:RemoveAmmo(self.Primary.DefaultClip,self.Primary.Ammo)
+		//newOwner:RemoveAmmo(self.Primary.DefaultClip,self.Primary.Ammo)
 		if self.MadeForNPCsOnly == true then
-			NewOwner:PrintMessage(HUD_PRINTTALK,self.PrintName.." removed! It's made for NPCs only!")
+			newOwner:PrintMessage(HUD_PRINTTALK,self.PrintName.." removed! It's made for NPCs only!")
 			self:Remove()
 		end
-	elseif NewOwner:IsNPC() then
-		if VJ_AnimationExists(NewOwner,ACT_WALK_AIM_PISTOL) == true && VJ_AnimationExists(NewOwner,ACT_RUN_AIM_PISTOL) == true && VJ_AnimationExists(NewOwner,ACT_POLICE_HARASS1) == true then
+	elseif newOwner:IsNPC() then
+		if VJ_AnimationExists(newOwner,ACT_WALK_AIM_PISTOL) == true && VJ_AnimationExists(newOwner,ACT_RUN_AIM_PISTOL) == true && VJ_AnimationExists(newOwner,ACT_POLICE_HARASS1) == true then
 			self.NPC_AnimationSet = "Metrocop"
-		elseif VJ_AnimationExists(NewOwner,"cheer1") == true && VJ_AnimationExists(NewOwner,"wave_smg1") == true && VJ_AnimationExists(NewOwner,ACT_BUSY_SIT_GROUND) == true then
+		elseif VJ_AnimationExists(newOwner,"cheer1") == true && VJ_AnimationExists(newOwner,"wave_smg1") == true && VJ_AnimationExists(newOwner,ACT_BUSY_SIT_GROUND) == true then
 			self.NPC_AnimationSet = "Rebel"
-		elseif VJ_AnimationExists(NewOwner,"signal_takecover") == true && VJ_AnimationExists(NewOwner,"grenthrow") == true && VJ_AnimationExists(NewOwner,"bugbait_hit") == true then
+		elseif VJ_AnimationExists(newOwner,"signal_takecover") == true && VJ_AnimationExists(newOwner,"grenthrow") == true && VJ_AnimationExists(newOwner,"bugbait_hit") == true then
 			self.NPC_AnimationSet = "Combine"
 		end
 
-		if NewOwner:GetClass() == "npc_citizen" then NewOwner:Fire("DisableWeaponPickup") end -- If it's a citizen, disable them picking up weapons from the ground
-		NewOwner:SetKeyValue("spawnflags","256") -- Long Visibility Shooting since HL2 NPCs are blind
+		if newOwner:GetClass() == "npc_citizen" then newOwner:Fire("DisableWeaponPickup") end -- If it's a citizen, disable them picking up weapons from the ground
+		newOwner:SetKeyValue("spawnflags","256") -- Long Visibility Shooting since HL2 NPCs are blind
 		hook.Add("Think", self, self.NPC_ServerNextFire)
 		
-		if NewOwner.IsVJBaseSNPC && NewOwner.IsVJBaseSNPC_Human == true then
-			NewOwner.Weapon_OriginalFiringDistanceFar = NewOwner.Weapon_OriginalFiringDistanceFar or NewOwner.Weapon_FiringDistanceFar
+		if newOwner.IsVJBaseSNPC && newOwner.IsVJBaseSNPC_Human == true then
+			newOwner.Weapon_OriginalFiringDistanceFar = newOwner.Weapon_OriginalFiringDistanceFar or newOwner.Weapon_FiringDistanceFar
 			if self.IsMeleeWeapon == true then
-				NewOwner.Weapon_FiringDistanceFar = self.MeleeWeaponDistance
+				newOwner.Weapon_FiringDistanceFar = self.MeleeWeaponDistance
 			else
-				NewOwner.Weapon_FiringDistanceFar = math.Clamp(NewOwner.Weapon_OriginalFiringDistanceFar * self.NPC_FiringDistanceScale, NewOwner.Weapon_FiringDistanceClose, self.NPC_FiringDistanceMax)
+				newOwner.Weapon_FiringDistanceFar = math.Clamp(newOwner.Weapon_OriginalFiringDistanceFar * self.NPC_FiringDistanceScale, newOwner.Weapon_FiringDistanceClose, self.NPC_FiringDistanceMax)
 			end
 		end
 	end
-	self:CustomOnEquip(NewOwner)
+	self:CustomOnEquip(newOwner)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:SetDefaultValues(curtype, force)
@@ -359,7 +368,7 @@ function SWEP:NPC_ServerNextFire()
 	if self.IsMeleeWeapon == false then
 		local pos = self:DecideBulletPosition()
 		if pos != nil then
-			self:SetNWVector("VJ_CurBulletPos", pos)
+			self:SetNW2Vector("VJ_CurBulletPos", pos)
 		end
 	end
 	
@@ -367,7 +376,7 @@ function SWEP:NPC_ServerNextFire()
 	
 	//print("------------------")
 	//VJ_CreateTestObject(self:DecideBulletPosition(),self:GetAngles(),Color(255,0,255),1)
-	//VJ_CreateTestObject(self:GetNWVector("VJ_CurBulletPos"),self:GetAngles(),Color(0,0,255),1)
+	//VJ_CreateTestObject(self:GetNW2Vector("VJ_CurBulletPos"),self:GetAngles(),Color(0,0,255),1)
 
 	self:RunWorldModelThink()
 	self:CustomOnThink()
@@ -402,7 +411,7 @@ function SWEP:NPCAbleToShoot(CheckSec)
 					if owner.VJ_IsBeingControlled == true then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER,"Press R to reload!") end
 					if self.IsMeleeWeapon == false && self.HasDryFireSound == true && CurTime() > self.NextNPCDrySoundT then
 						local sdtbl = VJ_PICK(self.DryFireSound)
-						if sdtbl != false then owner:EmitSound(sdtbl, 80, math.random(self.DryFireSoundPitch1, self.DryFireSoundPitch2)) end
+						if sdtbl != false then owner:EmitSound(sdtbl, 80, math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b)) end
 						if self.NPC_NextPrimaryFire != false then
 							self.NextNPCDrySoundT = CurTime() + self.NPC_NextPrimaryFire
 						end
@@ -444,7 +453,7 @@ function SWEP:NPCShoot_Primary(ShootPos, ShootDir)
 		if math.random(1, self.NPC_SecondaryFireChance) == 1 then
 			owner:VJ_ACT_PLAYACTIVITY(owner.AnimTbl_WeaponAttackSecondary, true, false, true, 0)
 			self.NPC_SecondaryFirePerforming = true
-			timer.Simple(owner.WeaponAttackSecondaryTimeUntilFire,function()
+			timer.Simple(owner.WeaponAttackSecondaryTimeUntilFire, function()
 				if IsValid(self) && IsValid(owner) && IsValid(owner:GetEnemy()) && self:NPCAbleToShoot(true) == true && CurTime() > self.NPC_SecondaryFireNextT then
 					self.NPC_SecondaryFirePerforming = false
 					self:NPC_SecondaryFire()
@@ -493,7 +502,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	
 	if self.Reloading == true then return end
 	if isnpc && owner.VJ_IsBeingControlled == false && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return end
-	if SERVER && self.IsMeleeWeapon == false && ((isply && self.Primary.AllowFireInWater == false && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then owner:EmitSound(VJ_PICK(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch1,self.DryFireSoundPitch2)) return end
+	if SERVER && self.IsMeleeWeapon == false && ((isply && self.Primary.AllowFireInWater == false && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then owner:EmitSound(VJ_PICK(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b)) return end
 	if (!self:CanPrimaryAttack()) then return end
 	if self:CustomOnPrimaryAttack_BeforeShoot() == true then return end
 	
@@ -513,7 +522,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	if self.Primary.HasDistantSound == true then
 		local farsd = VJ_PICK(self.Primary.DistantSound)
 		if farsd != false then
-			sound.Play(farsd, owner:GetPos(), self.Primary.DistantSoundLevel, math.random(self.Primary.DistantSoundPitch1, self.Primary.DistantSoundPitch2), self.Primary.DistantSoundVolume)
+			sound.Play(farsd, owner:GetPos(), self.Primary.DistantSoundLevel, math.random(self.Primary.DistantSoundPitch.a, self.Primary.DistantSoundPitch.b), self.Primary.DistantSoundVolume)
 		end
 	end
 	end
@@ -570,7 +579,7 @@ function SWEP:PrimaryAttack(UseAlt)
 				-- Spawn Position
 				local spawnpos = owner:GetShootPos()
 				if isnpc then
-					spawnpos = self:GetNWVector("VJ_CurBulletPos")
+					spawnpos = self:GetNW2Vector("VJ_CurBulletPos")
 				end
 				//print(spawnpos)
 				//VJ_CreateTestObject(spawnpos,self:GetAngles(),Color(0,0,255))
@@ -578,7 +587,7 @@ function SWEP:PrimaryAttack(UseAlt)
 				
 				-- Callback
 				bullet.Callback = function(attacker, tr, dmginfo)
-					self:CustomOnPrimaryAttack_BulletCallback(attacker,tr,dmginfo)
+					self:CustomOnPrimaryAttack_BulletCallback(attacker, tr, dmginfo)
 					/*local laserhit = EffectData()
 					laserhit:SetOrigin(tr.HitPos)
 					laserhit:SetNormal(tr.HitNormal)
@@ -680,7 +689,7 @@ function SWEP:PrimaryAttackEffects()
 			local FireLight1 = ents.Create("light_dynamic")
 			FireLight1:SetKeyValue("brightness", self.PrimaryEffects_DynamicLightBrightness)
 			FireLight1:SetKeyValue("distance", self.PrimaryEffects_DynamicLightDistance)
-			if owner:IsPlayer() then FireLight1:SetLocalPos(owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else FireLight1:SetLocalPos(self:GetNWVector("VJ_CurBulletPos")) end
+			if owner:IsPlayer() then FireLight1:SetLocalPos(owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else FireLight1:SetLocalPos(self:GetNW2Vector("VJ_CurBulletPos")) end
 			FireLight1:SetLocalAngles(self:GetAngles())
 			FireLight1:Fire("Color", self.PrimaryEffects_DynamicLightColor.r.." "..self.PrimaryEffects_DynamicLightColor.g.." "..self.PrimaryEffects_DynamicLightColor.b)
 			//FireLight1:SetParent(self)
@@ -704,8 +713,8 @@ function SWEP:PrimaryAttackEffects()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:FireAnimationEvent(pos,ang,event,options)
-	local getcustom = self:CustomOnFireAnimationEvent(pos,ang,event,options)
+function SWEP:FireAnimationEvent(pos, ang, event, options)
+	local getcustom = self:CustomOnFireAnimationEvent(pos, ang, event, options)
 	if getcustom == true then return true end
 	
 	if event == 22 or event == 6001 then return true end
@@ -798,7 +807,7 @@ function SWEP:GetWeaponCustomPosition()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:RunWorldModelThink()
-	self:SetNWBool("VJ_WorldModel_Invisible", self.WorldModel_Invisible)
+	self:SetNW2Bool("VJ_WorldModel_Invisible", self.WorldModel_Invisible)
 	
 	if IsValid(self:GetOwner()) && self.WorldModel_UseCustomPosition == true then
 		local weppos = self:GetWeaponCustomPosition()
@@ -863,7 +872,7 @@ end
 		if IsValid(ent) then
 			ent.worldupdate = ent.worldupdate or 0
 			if ent.worldupdate <= CurTime() then
-				ent:SetNWVector("VJ_CurBulletPos",vec)
+				ent:SetNW2Vector("VJ_CurBulletPos",vec)
 				ent.worldupdate = CurTime() + 0.33
 			end
 		end
@@ -876,7 +885,7 @@ if (CLIENT) then
 		
 		local nodraw = false
 		if self:CustomOnDrawWorldModel() == false then nodraw = true end
-		if self:GetNWBool("VJ_WorldModel_Invisible") == true or self.WorldModel_Invisible == true then nodraw = true end
+		if self:GetNW2Bool("VJ_WorldModel_Invisible") == true or self.WorldModel_Invisible == true then nodraw = true end
 		
 		if self.WorldModel_NoShadow == true then
 			self:DrawShadow(false)

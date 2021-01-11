@@ -6,21 +6,21 @@
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 
-function util.VJ_SphereDamage(vAttacker, vInflictor, vPosition, vDamageRadius, vDamage, vDamageType, vBlockCertainEntities, vUseRealisticRadius, Tbl_Features, CustomCode)
+function util.VJ_SphereDamage(vAttacker, vInflictor, vPosition, vDamageRadius, vDamage, vDamageType, vBlockCertainEntities, vUseRealisticRadius, extraOptions, CustomCode)
 	vPosition = vPosition or vAttacker:GetPos()
 	vDamageRadius = vDamageRadius or 150
 	vDamage = vDamage or 15
 	vDamageType = vDamageType or DMG_BLAST
 	vBlockCertainEntities = vBlockCertainEntities or true
 	vUseRealisticRadius = vUseRealisticRadius or true
-	local vTbl_Features = Tbl_Features or {}
-		local vTbl_DisableVisibilityCheck = vTbl_Features.DisableVisibilityCheck or false -- Should it disable the visibility check? | true = Disables the visibility check
-		local vTbl_Force = vTbl_Features.Force or false -- The general force | false = Don't use any force
-		local vTbl_UpForce = vTbl_Features.UpForce or false -- How much up force should it have? | false = Use vTbl_Force
-		local vTbl_DamageAttacker = vTbl_Features.DamageAttacker or false -- Should it damage the attacker as well?
-		local vTbl_UseCone = vTbl_Features.UseCone or false -- Should it detect entities using a cone?
-		local vTbl_UseConeDegree = vTbl_Features.UseConeDegree or 90 -- The degrees it should use for the cone finding
-		local vTbl_DirectionPos = vTbl_Features.DirectionPos or vAttacker:GetForward() -- The position it starts the cone degree from
+	extraOptions = extraOptions or {}
+		local vTbl_DisableVisibilityCheck = extraOptions.DisableVisibilityCheck or false -- Should it disable the visibility check? | true = Disables the visibility check
+		local vTbl_Force = extraOptions.Force or false -- The general force | false = Don't use any force
+		local vTbl_UpForce = extraOptions.UpForce or false -- How much up force should it have? | false = Use vTbl_Force
+		local vTbl_DamageAttacker = extraOptions.DamageAttacker or false -- Should it damage the attacker as well?
+		local vTbl_UseCone = extraOptions.UseCone or false -- Should it detect entities using a cone?
+		local vTbl_UseConeDegree = extraOptions.UseConeDegree or 90 -- The degrees it should use for the cone finding
+		local vTbl_DirectionPos = extraOptions.DirectionPos or vAttacker:GetForward() -- The position it starts the cone degree from
 	local Finaldmg = vDamage
 	local Foundents = {}
 	local Findents = (vTbl_UseCone == true and VJ_FindInCone(vPosition, vTbl_DirectionPos, vDamageRadius, vTbl_UseConeDegree, {AllEntities=true})) or ents.FindInSphere(vPosition, vDamageRadius)

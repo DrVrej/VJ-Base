@@ -44,6 +44,6 @@ SWEP.DelayOnDeploy 				= 1 -- Time until it can shoot again after deploying the 
 SWEP.Reload_TimeUntilAmmoIsSet	= 1.8 -- Time until ammo is set to the weapon
 SWEP.Reload_TimeUntilFinished	= 3 -- How much time until the player can play idle animation, shoot, etc.
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnFireAnimationEvent(pos,ang,event,options)
+function SWEP:CustomOnFireAnimationEvent(pos, ang, event, options)
 	if event == 5001 then return true end  -- Asiga hose vor shtke gedervadz flash-e
 end

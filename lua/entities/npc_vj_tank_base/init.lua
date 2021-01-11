@@ -92,7 +92,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_CustomOnThink() return true end -- Return false to disable the default base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnRunOver(argent) end
+function ENT:Tank_CustomOnRunOver(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:GetNearDeathSparkPositions()
 	local randpos = math.random(1,7)
@@ -186,13 +186,13 @@ function ENT:CustomOnTouch(ent)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_RunOver(argent)
-	if (!IsValid(argent)) or (GetConVarNumber("vj_npc_nomelee") == 1 /*or self.HasMeleeAttack == false*/) or (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == argent) then return end
-	if self:Disposition(argent) == 1 && argent:Health() > 0 && (argent:IsNPC() && argent.VJ_IsHugeMonster != true && !self.TankTbl_DontRunOver[argent:GetClass()]) or (argent:IsPlayer() && self.PlayerFriendly == false && GetConVarNumber("ai_ignoreplayers") == 0 && argent:Alive() && self.Tank_IsMoving == true) then
-		self:Tank_CustomOnRunOver(argent)
-		argent:TakeDamage(self:VJ_GetDifficultyValue(8),self,self)
-		VJ_DestroyCombineTurret(self,argent)
-		argent:SetVelocity(argent:GetForward()*-200)
+function ENT:Tank_RunOver(ent)
+	if (!IsValid(ent)) or (GetConVarNumber("vj_npc_nomelee") == 1 /*or self.HasMeleeAttack == false*/) or (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == ent) then return end
+	if self:Disposition(ent) == 1 && ent:Health() > 0 && (ent:IsNPC() && ent.VJ_IsHugeMonster != true && !self.TankTbl_DontRunOver[ent:GetClass()]) or (ent:IsPlayer() && self.PlayerFriendly == false && GetConVarNumber("ai_ignoreplayers") == 0 && ent:Alive() && self.Tank_IsMoving == true) then
+		self:Tank_CustomOnRunOver(ent)
+		ent:TakeDamage(self:VJ_GetDifficultyValue(8),self,self)
+		VJ_DestroyCombineTurret(self,ent)
+		ent:SetVelocity(ent:GetForward()*-200)
 		self:Tank_Sound_RunOver()
 	end
 end
