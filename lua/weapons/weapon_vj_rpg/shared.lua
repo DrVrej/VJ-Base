@@ -61,7 +61,7 @@ function SWEP:CustomOnPrimaryAttack_BeforeShoot()
 	local proj = ents.Create("obj_vj_tank_shell")
 	local ply_Ang = self:GetOwner():GetAimVector():Angle()
 	local ply_Pos = self:GetOwner():GetShootPos() + ply_Ang:Forward()*-20 + ply_Ang:Up()*-9 + ply_Ang:Right()*10
-	if self:GetOwner():IsPlayer() then proj:SetPos(ply_Pos) else proj:SetPos(self:GetNWVector("VJ_CurBulletPos")) end
+	if self:GetOwner():IsPlayer() then proj:SetPos(ply_Pos) else proj:SetPos(self:GetNW2Vector("VJ_CurBulletPos")) end
 	if self:GetOwner():IsPlayer() then proj:SetAngles(ply_Ang) else proj:SetAngles(self:GetOwner():GetAngles()) end
 	proj:SetOwner(self:GetOwner())
 	proj:Activate()
@@ -72,7 +72,7 @@ function SWEP:CustomOnPrimaryAttack_BeforeShoot()
 		if self:GetOwner():IsPlayer() then
 			phys:SetVelocity(self:GetOwner():GetAimVector() * 2500)
 		else
-			phys:SetVelocity(self:GetOwner():CalculateProjectile("Line", self:GetNWVector("VJ_CurBulletPos"), self:GetOwner():GetEnemy():GetPos() + self:GetOwner():GetEnemy():OBBCenter(), 2500))
+			phys:SetVelocity(self:GetOwner():CalculateProjectile("Line", self:GetNW2Vector("VJ_CurBulletPos"), self:GetOwner():GetEnemy():GetPos() + self:GetOwner():GetEnemy():OBBCenter(), 2500))
 		end
 	end
 	

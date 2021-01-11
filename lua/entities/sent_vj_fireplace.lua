@@ -29,7 +29,7 @@ if (CLIENT) then
 	
 	function ENT:Think()
 		if CurTime() > self.NextActivationCheckT then
-			if self:GetNWBool("VJ_FirePlace_Activated") == true then
+			if self:GetNW2Bool("VJ_FirePlace_Activated") == true then
 				if self.DoneFireParticles == false then
 					self.DoneFireParticles = true
 					ParticleEffectAttach("env_fire_tiny_smoke",PATTACH_ABSORIGIN_FOLLOW,self,0)
@@ -63,7 +63,7 @@ ENT.FirePlaceOn = false
 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
-	self:SetNWBool("VJ_FirePlace_Activated", false)
+	self:SetNW2Bool("VJ_FirePlace_Activated", false)
 	self:SetModel("models/vj_props/fireplace.mdl")
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_NONE)
@@ -82,14 +82,14 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Use(activator, caller)
 	if self.FirePlaceOn == false then
-		self:SetNWBool("VJ_FirePlace_Activated", true)
+		self:SetNW2Bool("VJ_FirePlace_Activated", true)
 		self.FirePlaceOn = true
 		self:EmitSound(Sound("ambient/fire/mtov_flame2.wav"),60,100)
 		self.firesd = CreateSound(self,"ambient/fire/fire_small_loop1.wav") self.firesd:SetSoundLevel(60)
 		self.firesd:PlayEx(1,100)
 		activator:PrintMessage(HUD_PRINTTALK, "You turned on the fireplace.") 
 	else
-		self:SetNWBool("VJ_FirePlace_Activated", false)
+		self:SetNW2Bool("VJ_FirePlace_Activated", false)
 		self.FirePlaceOn = false
 		self:StopParticles()
 		VJ_STOPSOUND(self.firesd)

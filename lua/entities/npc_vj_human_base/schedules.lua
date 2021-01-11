@@ -10,9 +10,9 @@ function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 	//self:SetArrivalActivity(ACT_COWER)
 	//self:SetArrivalSpeed(1000)
 	if self:IsRunningBehavior() or self:DoingEngineSchedule() then return true end
-	if (!self.CurrentSchedule or (self.CurrentSchedule != nil && ((self:IsMoving() && self.CurrentSchedule.CanBeInterrupted == true) or (!self:IsMoving())))) && ((self.VJ_PlayingSequence == false) or (self.VJ_PlayingSequence == true && self.VJ_IsPlayingInterruptSequence == true)) then self:SelectSchedule() end
+	if (!self.CurrentSchedule or (self.CurrentSchedule != nil && ((self:IsMoving() && self.CurrentSchedule.CanBeInterrupted == true) or (!self:IsMoving())))) && ((self.VJ_PlayingSequence == false) or (self.VJ_PlayingSequence == true && self.VJ_PlayingInterruptSequence == true)) then self:SelectSchedule() end
 	if (self.CurrentSchedule) then self:DoSchedule(self.CurrentSchedule) end
-	if self.VJ_PlayingSequence == false && self.VJ_IsPlayingInterruptSequence == false then self:MaintainActivity() end
+	if self.VJ_PlayingSequence == false && self.VJ_PlayingInterruptSequence == false then self:MaintainActivity() end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoRunCode_OnFail(schedule)

@@ -103,11 +103,11 @@ if (SERVER) then
 	util.AddNetworkString("vj_music_run")
 	
 	require("ai_vj_schedule")
-	local getsched = ai_vj_schedule.New -- Prevent stack overflow
+	local getSched = ai_vj_schedule.New
 	function ai_vj_schedule.New(name)
-		local actualsched = getsched(name)
-		actualsched.Name = name
-		return actualsched
+		local actualSched = getSched(name)
+		actualSched.Name = name
+		return actualSched
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -135,17 +135,17 @@ end
 		return false
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_STOPSOUND(vsoundname)
-	if vsoundname then vsoundname:Stop() end
+function VJ_STOPSOUND(sdName)
+	if sdName then sdName:Stop() end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_Set(a, b) -- A set of 2 numbers: a, b
 	return {a = a, b = b}
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_HasValue(tbl,val)
+function VJ_HasValue(tbl, val)
 	if !istable(tbl) then return false end
-	for x=1, #tbl do
+	for x = 1, #tbl do
 		if tbl[x] == val then
 			return true
 		end
@@ -153,182 +153,172 @@ function VJ_HasValue(tbl,val)
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_RoundToMultiple(number, multiple) -- Credits to Bizzclaw for pointing me to the right direction!
-	if math.Round(number / multiple) == number / multiple then
-		return number
+function VJ_RoundToMultiple(num, multiple) -- Credits to Bizzclaw for pointing me to the right direction!
+	if math.Round(num / multiple) == num / multiple then
+		return num
 	else
-		return math.Round(number / multiple) * multiple
+		return math.Round(num / multiple) * multiple
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_Color2Byte(color)
-	return bit.lshift(math.floor(color.r*7/255),5)+bit.lshift(math.floor(color.g*7/255),2)+math.floor(color.b*3/255)
+	return bit.lshift(math.floor(color.r*7/255), 5) + bit.lshift(math.floor(color.g*7/255), 2) + math.floor(color.b*3/255)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_Color8Bit2Color(bits)
-	return Color(bit.rshift(bits,5)*255/7,bit.band(bit.rshift(bits,2),0x07)*255/7,bit.band(bits,0x03)*255/3)
+	return Color(bit.rshift(bits,5)*255/7, bit.band(bit.rshift(bits,2), 0x07)*255/7, bit.band(bits,0x03)*255/3)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_FindInCone(Position, Direction, Distance, Degrees, Tbl_Features)
-	local vTbl_Features = Tbl_Features or {}
-		local vTbl_AllEntities = vTbl_Features.AllEntities or false -- Should it detect all types of entities? | False = NPCs and Players only!
-	local EntitiesFound = ents.FindInSphere(Position,Distance)
+function VJ_FindInCone(pos, dir, dist, deg, extraOptions)
+	extraOptions = extraOptions or {}
+		local vTbl_AllEntities = extraOptions.AllEntities or false -- Should it detect all types of entities? | False = NPCs and Players only!
+	local EntitiesFound = ents.FindInSphere(pos, dist)
 	local Foundents = {}
-	local CosineDegrees = math.cos(math.rad(Degrees))
+	local CosineDegrees = math.cos(math.rad(deg))
 	for _,v in pairs(EntitiesFound) do
-	if ((vTbl_AllEntities == true) or (vTbl_AllEntities == false && (v:IsNPC() or v:IsPlayer()))) && (Direction:Dot((v:GetPos() -Position):GetNormalized()) > CosineDegrees) then
+	if ((vTbl_AllEntities == true) or (vTbl_AllEntities == false && (v:IsNPC() or v:IsPlayer()))) && (dir:Dot((v:GetPos() -Position):GetNormalized()) > CosineDegrees) then
 			Foundents[#Foundents+1] = v
 		end
 	end
 	return Foundents
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_CreateSound(argent,sound,soundlevel,soundpitch,stoplatestsound,sounddsp)
-	if not sound then return end
-	if istable(sound) then
-		if #sound < 1 then return end -- If the table is empty then end it
-		sound = sound[math.random(1,#sound)]
+function VJ_CreateSound(ent, sd, sdLevel, sdPitch, customFunc)
+	if not sd then return end
+	if istable(sd) then
+		if #sd < 1 then return end -- If the table is empty then end it
+		sd = sd[math.random(1, #sd)]
 	end
-	/*if stoplatestsound == true then -- If stopsounds is true, then the current sound
-		//if argent.CurrentSound then argent.CurrentSound:Stop() end
-		if soundid then
-			soundid:Stop()
-			soundid = nil
-		end
-	end*/
-	//print(sound)
-	soundid = CreateSound(argent, sound)
-	soundid:SetSoundLevel(soundlevel or 75)
-	soundid:PlayEx(1,soundpitch or 100)
-	if sounddsp then -- For modulation, like helmets(?)
-		soundid:SetDSP(sounddsp)
-	end
-	argent.LastPlayedVJSound = soundid
-	if argent.IsVJBaseSNPC == true then argent:OnPlayCreateSound(soundid,sound) end
-	return soundid
+	local sdID = CreateSound(ent, sd)
+	sdID:SetSoundLevel(sdLevel or 75)
+	if (customFunc) then customFunc(sdID) end
+	sdID:PlayEx(1, sdPitch or 100)
+	ent.LastPlayedVJSound = sdID
+	if ent.IsVJBaseSNPC == true then ent:OnPlayCreateSound(sdID, sd) end
+	return sdID
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_EmitSound(argent, sound, soundlevel, soundpitch, volume, channel)
-	local sd = VJ_PICK(sound)
-	if sd == false then return end
-	argent:EmitSound(sd, soundlevel, soundpitch, volume, channel)
-	argent.LastPlayedVJSound = sd
-	if argent.IsVJBaseSNPC == true then argent:OnPlayEmitSound(sd) end
+function VJ_EmitSound(ent, sd, sdLevel, sdPitch, sdVolume, sdChannel)
+	local sdID = VJ_PICK(sd)
+	if sdID == false then return end
+	ent:EmitSound(sdID, sdLevel, sdPitch, sdVolume, sdChannel)
+	ent.LastPlayedVJSound = sdID
+	if ent.IsVJBaseSNPC == true then ent:OnPlayEmitSound(sdID) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_AnimationExists(argent, actname)
-	if actname == nil or isbool(actname) then return false end
+function VJ_AnimationExists(ent, anim)
+	if anim == nil or isbool(anim) then return false end
 	
 	-- Get rid of the gesture prefix
-	if string_find(actname, "vjges_") then
-		actname = string_Replace(actname, "vjges_", "")
-		if argent:LookupSequence(actname) == -1 then
-			actname = tonumber(actname)
+	if string_find(anim, "vjges_") then
+		anim = string_Replace(anim, "vjges_", "")
+		if ent:LookupSequence(anim) == -1 then
+			anim = tonumber(anim)
 		end
 	end
 	
-	if isnumber(actname) then
-		if (argent:SelectWeightedSequence(actname) == -1 or argent:SelectWeightedSequence(actname) == 0) && (argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "Not Found!" or argent:GetSequenceName(argent:SelectWeightedSequence(actname)) == "No model!") then
+	if isnumber(anim) then -- Activity
+		if (ent:SelectWeightedSequence(anim) == -1 or ent:SelectWeightedSequence(anim) == 0) && (ent:GetSequenceName(ent:SelectWeightedSequence(anim)) == "Not Found!" or ent:GetSequenceName(ent:SelectWeightedSequence(anim)) == "No model!") then
 		return false end
-	elseif isstring(actname) then
-		if string_find(actname, "vjseq_") then actname = string_Replace(actname, "vjseq_", "") end
-		if argent:LookupSequence(actname) == -1 then
+	elseif isstring(anim) then -- Sequence
+		if string_find(anim, "vjseq_") then anim = string_Replace(anim, "vjseq_", "") end
+		if ent:LookupSequence(anim) == -1 then
 		return false end
 	end
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_GetSequenceDuration(argent, actname)
-	if VJ_AnimationExists(argent, actname) == false then return 0 end -- Invalid animation, so 0
+function VJ_GetSequenceDuration(ent, anim)
+	if VJ_AnimationExists(ent, anim) == false then return 0 end -- Invalid animation, so 0
 	
 	-- Get rid of the gesture prefix
-	if string_find(actname, "vjges_") then
-		actname = string_Replace(actname, "vjges_", "")
-		if argent:LookupSequence(actname) == -1 then
-			actname = tonumber(actname)
+	if string_find(anim, "vjges_") then
+		anim = string_Replace(anim, "vjges_", "")
+		if ent:LookupSequence(anim) == -1 then
+			anim = tonumber(anim)
 		end
 	end
 	
-	if isnumber(actname) then
-		return argent:SequenceDuration(argent:SelectWeightedSequence(actname))
-	elseif isstring(actname) then
-		if string_find(actname, "vjseq_") then
-			actname = string_Replace(actname, "vjseq_", "")
+	if isnumber(anim) then -- Activity
+		return ent:SequenceDuration(ent:SelectWeightedSequence(anim))
+	elseif isstring(anim) then -- Sequence
+		if string_find(anim, "vjseq_") then
+			anim = string_Replace(anim, "vjseq_", "")
 		end
-		return argent:SequenceDuration(argent:LookupSequence(actname))
+		return ent:SequenceDuration(ent:LookupSequence(anim))
 	end
 	return 0
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_GetSequenceName(argent, actname)
-	if VJ_AnimationExists(argent, actname) == false then return 0 end -- Invalid animation, so 0
-	if string_find(actname, "vjges_") then actname = string_Replace(actname,"vjges_","") if argent:LookupSequence(actname) == -1 then actname = tonumber(actname) end end
-	if isnumber(actname) then return argent:GetSequenceName(argent:SelectWeightedSequence(actname)) end
-	if isstring(actname) then if string_find(actname, "vjseq_") then actname = string_Replace(actname,"vjseq_","") end return argent:GetSequenceName(argent:LookupSequence(actname)) end
+function VJ_GetSequenceName(ent, anim)
+	if VJ_AnimationExists(ent, anim) == false then return 0 end -- Invalid animation, so 0
+	if string_find(anim, "vjges_") then anim = string_Replace(anim,"vjges_","") if ent:LookupSequence(anim) == -1 then anim = tonumber(anim) end end
+	if isnumber(anim) then return ent:GetSequenceName(ent:SelectWeightedSequence(anim)) end
+	if isstring(anim) then if string_find(anim, "vjseq_") then anim = string_Replace(anim,"vjseq_","") end return ent:GetSequenceName(ent:LookupSequence(anim)) end
 	return nil
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_SequenceToActivity(argent, seq)
-	if isstring(seq) then
-		local checkanim = argent:GetSequenceActivity(argent:LookupSequence(seq))
+function VJ_SequenceToActivity(ent, anim)
+	if isstring(anim) then -- Sequence
+		local checkanim = ent:GetSequenceActivity(ent:LookupSequence(anim))
 		if checkanim == nil or checkanim == -1 then
 			return false
 		else
 			return checkanim
 		end
-	elseif isnumber(seq) then
-		return seq
+	elseif isnumber(anim) then -- If it's a number, then it's already an activity!
+		return anim
 	else
 		return false
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_IsCurrentAnimation(argent, actname)
-	actname = actname or {}
-	if istable(actname) then
-		if #actname < 1 then return false end -- If the table is empty then end it
+function VJ_IsCurrentAnimation(ent, anim)
+	anim = anim or {}
+	if istable(anim) then
+		if #anim < 1 then return false end -- If the table is empty then end it
 	else
-		actname = {actname}
+		anim = {anim}
 	end
 
-	for _,v in ipairs(actname) do
-		if isnumber(v) && v != -1 then v = argent:GetSequenceName(argent:SelectWeightedSequence(v)) end -- Translate activity to sequence
-		if v == argent:GetSequenceName(argent:GetSequence()) then
+	for _,v in ipairs(anim) do
+		if isnumber(v) && v != -1 then v = ent:GetSequenceName(ent:SelectWeightedSequence(v)) end -- Translate activity to sequence
+		if v == ent:GetSequenceName(ent:GetSequence()) then
 			return true
 		end
 	end
-	//if actname == argent:GetSequenceName(argent:GetSequence()) then return true end
+	//if anim == ent:GetSequenceName(ent:GetSequence()) then return true end
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_IsProp(argent)
-	if argent:GetClass() == "prop_physics" or argent:GetClass() == "prop_physics_multiplayer" or argent:GetClass() == "prop_physics_respawnable" then return true end
+function VJ_IsProp(ent)
+	if ent:GetClass() == "prop_physics" or ent:GetClass() == "prop_physics_multiplayer" or ent:GetClass() == "prop_physics_respawnable" then return true end
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_IsAlive(argent)
-	if argent.Dead == true then return false end
-	return argent:Health() > 0
+function VJ_IsAlive(ent)
+	if ent.Dead == true then return false end
+	return ent:Health() > 0
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_DestroyCombineTurret(selfent, argent)
-	if argent:GetClass() == "npc_turret_floor" && !argent.VJ_TurretDestroyed then
-		argent:Fire("selfdestruct", "", 0)
-		local phys = argent:GetPhysicsObject()
+function VJ_DestroyCombineTurret(selfEnt, ent)
+	if ent:GetClass() == "npc_turret_floor" && !ent.VJ_TurretDestroyed then
+		ent:Fire("selfdestruct", "", 0)
+		local phys = ent:GetPhysicsObject()
 		if IsValid(phys) then
 			phys:EnableMotion(true)
-			phys:ApplyForceCenter(selfent:GetForward()*10000)
+			phys:ApplyForceCenter(selfEnt:GetForward()*10000)
 		end
-		argent.VJ_TurretDestroyed = true
+		ent.VJ_TurretDestroyed = true
 		return true
 	end
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_CreateTestObject(pos, ang, color, rtime, mdl)
+function VJ_CreateTestObject(pos, ang, color, time, mdl)
 	ang = ang or Angle(0,0,0)
 	color = color or Color(255,0,0)
-	rtime = rtime or 3
+	time = time or 3
 	mdl = mdl or "models/hunter/blocks/cube025x025x025.mdl"
 	
 	local obj = ents.Create("prop_dynamic")
@@ -338,7 +328,7 @@ function VJ_CreateTestObject(pos, ang, color, rtime, mdl)
 	obj:SetColor(color)
 	obj:Spawn()
 	obj:Activate()
-	timer.Simple(rtime,function() if IsValid(obj) then obj:Remove() end end)
+	timer.Simple(time, function() if IsValid(obj) then obj:Remove() end end)
 	return obj
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -375,18 +365,18 @@ function NPC_MetaTable:VJ_Controller_InitialMessage(ply)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_HasNoTarget(argent)
-	if argent:GetClass() == "obj_vj_bullseye" && (argent.EnemyToIndividual == true) && (argent.EnemyToIndividualEnt == self) then
+function NPC_MetaTable:VJ_HasNoTarget(ent)
+	if ent:GetClass() == "obj_vj_bullseye" && (ent.EnemyToIndividual == true) && (ent.EnemyToIndividualEnt == self) then
 		return false, 1
 	end
-	if (argent.VJ_NoTarget == true) or (argent:IsFlagSet(FL_NOTARGET) == true) then
+	if (ent.VJ_NoTarget == true) or (ent:IsFlagSet(FL_NOTARGET) == true) then
 		return true, 0
 	else
 		return false, 0
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_DecideSoundPitch(Pitch1, Pitch2)
+function NPC_MetaTable:VJ_DecideSoundPitch(pitch1, pitch2)
 	//if pitch1 == nil then return end
 	local getpitch1 = self.GeneralSoundPitch1
 	local getpitch2 = self.GeneralSoundPitch2
@@ -395,68 +385,70 @@ function NPC_MetaTable:VJ_DecideSoundPitch(Pitch1, Pitch2)
 		getpitch1 = picknum
 		getpitch2 = picknum
 	end
-	if Pitch1 != false && isnumber(Pitch1) then getpitch1 = Pitch1 end
-	if Pitch2 != false && isnumber(Pitch2) then getpitch2 = Pitch2 end
+	if pitch1 != false && isnumber(pitch1) then getpitch1 = pitch1 end
+	if pitch2 != false && isnumber(pitch2) then getpitch2 = pitch2 end
 	return math.random(getpitch1, getpitch2)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:DecideAnimationLength(Anim, Val, Decrease)
-	Decrease = Decrease or 0
-	if isbool(Anim) then return 0 end
+-- override = Used internally by the base, overrides the result and returns Val instead (Useful for variables that allow "false" to let the base decide the time)
+function NPC_MetaTable:DecideAnimationLength(anim, override, decrease)
+	if isbool(anim) then return 0 end
 	
-	local result = 0
-	-- Val = Used internally by the base, overrides the result and returns Val is instead
-	if Val == false then
-		result = VJ_GetSequenceDuration(self, Anim) - Decrease
-	elseif isnumber(Val) then
-		result = Val
+	if override == false then -- Base decides
+		return (VJ_GetSequenceDuration(self, anim) - (decrease or 0)) / self:GetPlaybackRate()
+	elseif isnumber(override) then -- User decides
+		return override / self:GetPlaybackRate()
+	else
+		return 0
 	end
-	return result / self:GetPlaybackRate()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:DecideAttackTimer(Timer1, Timer2, UntilDamage, AnimDuration)
-	local result = Timer1
-	-- AnimDuration has already calculated the playback rate!
-	if Timer1 == false then -- Let the base decide..
-		if UntilDamage == false then -- Event-based
-			result = AnimDuration
+-- timer2 = Use for randomization, leave to "false" to just use timer1
+-- untilDamage = Used for timer-based attacks, decreases timer1
+-- animDur = Used when timer1 is set to "false", it over takes timer1
+function NPC_MetaTable:DecideAttackTimer(timer1, timer2, untilDamage, animDur)
+	local result = timer1
+	-- animDur has already calculated the playback rate!
+	if timer1 == false then -- Let the base decide..
+		if untilDamage == false then -- Event-based
+			result = animDur
 		else -- Timer-based
-			result = AnimDuration - (UntilDamage / self:GetPlaybackRate())
+			result = animDur - (untilDamage / self:GetPlaybackRate())
 		end
-	else -- If a specific number has been put then make sure to calculate it playback rate
+	else -- If a specific number has been put then make sure to calculate its playback rate
 		result = result / self:GetPlaybackRate()
 	end
 	
 	-- If a 2nd value is given (Used for randomization), calculate its playback rate as well and then get a random value between it and the result
-	if isnumber(Timer2) then
-		result = math.Rand(result, Timer2 / self:GetPlaybackRate())
+	if isnumber(timer2) then
+		result = math.Rand(result, timer2 / self:GetPlaybackRate())
 	end
 	
-	return result --/ self:GetPlaybackRate()
+	return result // / self:GetPlaybackRate() -- No need, playback is already calculated above
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_PlaySequence(SequenceID, PlayBackRate, Wait, WaitTime, Interruptible)
-	if !SequenceID then return end
-	if Interruptible == true then
+function NPC_MetaTable:VJ_PlaySequence(seq, playbackRate, wait, waitTime, interruptible)
+	if !seq then return end
+	if interruptible == true then
 		self.VJ_PlayingSequence = false
-		self.VJ_IsPlayingInterruptSequence = true
+		self.VJ_PlayingInterruptSequence = true
 	else
 		self.VJ_PlayingSequence = true
-		self.VJ_IsPlayingInterruptSequence = false
+		self.VJ_PlayingInterruptSequence = false
 	end
 	
 	self:ClearSchedule()
 	self:StopMoving()
-	self:ResetSequence(self:LookupSequence(VJ_PICK(SequenceID)))
+	self:ResetSequence(self:LookupSequence(VJ_PICK(seq)))
 	self:ResetSequenceInfo()
 	self:SetCycle(0) -- Start from the beginning
-	if isnumber(PlayBackRate) then
-		self.AnimationPlaybackRate = PlayBackRate
-		self:SetPlaybackRate(PlayBackRate)
+	if isnumber(playbackRate) then
+		self.AnimationPlaybackRate = playbackRate
+		self:SetPlaybackRate(playbackRate)
 	end
-	if Wait == true then
-		timer.Create("timer_act_seq_wait"..self:EntIndex(), WaitTime, 1, function()
-			self.VJ_IsPlayingInterruptSequence = false
+	if wait == true then
+		timer.Create("timer_act_seq_wait"..self:EntIndex(), waitTime, 1, function()
+			self.VJ_PlayingInterruptSequence = false
 			self.VJ_PlayingSequence = false
 			//self.vACT_StopAttacks = false
 		end)
@@ -494,19 +486,19 @@ function NPC_MetaTable:FaceCertainPosition(pos, time)
 	return setangs
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:FaceCertainEntity(argent, OnlyIfSeenEnemy, FaceEnemyTime)
-	if !IsValid(argent) or GetConVarNumber("ai_disabled") == 1 then return false end
-	if self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false then return false end
-	FaceEnemyTime = FaceEnemyTime or 0
-	if OnlyIfSeenEnemy == true && IsValid(self:GetEnemy()) then
+-- onlyEnemy = Will only face the entity if it's an enemy
+-- faceEnemyTime = How long should it face the enemy?
+function NPC_MetaTable:FaceCertainEntity(ent, onlyEnemy, faceEnemyTime)
+	if !IsValid(ent) or GetConVarNumber("ai_disabled") == 1 or (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false) then return false end
+	if onlyEnemy == true && IsValid(self:GetEnemy()) then
 		self.IsDoingFaceEnemy = true
-		timer.Create("timer_face_enemy"..self:EntIndex(), FaceEnemyTime, 1, function() self.IsDoingFaceEnemy = false end)
-		local setangs = self:VJ_ReturnAngle((argent:GetPos() - self:GetPos()):Angle())
+		timer.Create("timer_face_enemy"..self:EntIndex(), faceEnemyTime or 0, 1, function() self.IsDoingFaceEnemy = false end)
+		local setangs = self:VJ_ReturnAngle((ent:GetPos() - self:GetPos()):Angle())
 		self:SetIdealYawAndUpdate(setangs.y)
 		self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
 		return setangs //SetLocalAngles
 	else
-		local setangs = self:VJ_ReturnAngle((argent:GetPos() - self:GetPos()):Angle())
+		local setangs = self:VJ_ReturnAngle((ent:GetPos() - self:GetPos()):Angle())
 		self:SetIdealYawAndUpdate(setangs.y)
 		self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
 		//self:SetIdealYawAndUpdate(setangs.y)
@@ -515,24 +507,24 @@ function NPC_MetaTable:FaceCertainEntity(argent, OnlyIfSeenEnemy, FaceEnemyTime)
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_GetNearestPointToVector(pos, SameZ)
-	SameZ = SameZ or false -- Should the Z of the pos be the same as the NPC's?
+function NPC_MetaTable:VJ_GetNearestPointToVector(pos, sameZ)
+	sameZ = sameZ or false -- Should the Z of the pos be the same as the NPC's?
 	local NearestPositions = {MyPosition=Vector(0,0,0), PointPosition=Vector(0,0,0)}
 	local Pos_Point, Pos_Self = pos, self:NearestPoint(pos +self:OBBCenter())
 	Pos_Point.z, Pos_Self.z = pos.z, self:GetPos().z
-	if SameZ == true then Pos_Point.z = self:GetPos().z end
+	if sameZ == true then Pos_Point.z = self:GetPos().z end
 	NearestPositions.MyPosition = Pos_Self
 	NearestPositions.PointPosition = Pos_Point
 	return NearestPositions
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_GetNearestPointToEntity(argent, SameZ)
-	if !IsValid(argent) then return end
-	SameZ = SameZ or false -- Should the Z of the pos be the same as the NPC's?
+function NPC_MetaTable:VJ_GetNearestPointToEntity(ent, sameZ)
+	if !IsValid(ent) then return end
+	sameZ = sameZ or false -- Should the Z of the pos be the same as the NPC's?
 	local NearestPositions = {MyPosition=Vector(0,0,0), EnemyPosition=Vector(0,0,0)}
-	local Pos_Enemy, Pos_Self = argent:NearestPoint(self:SetNearestPointToEntityPosition() + argent:OBBCenter()), self:NearestPoint(argent:GetPos() + self:OBBCenter())
-	Pos_Enemy.z, Pos_Self.z = argent:GetPos().z, self:SetNearestPointToEntityPosition().z
-	if SameZ == true then
+	local Pos_Enemy, Pos_Self = ent:NearestPoint(self:SetNearestPointToEntityPosition() + ent:OBBCenter()), self:NearestPoint(ent:GetPos() + self:OBBCenter())
+	Pos_Enemy.z, Pos_Self.z = ent:GetPos().z, self:SetNearestPointToEntityPosition().z
+	if sameZ == true then
 		Pos_Enemy = Vector(Pos_Enemy.x,Pos_Enemy.y,self:SetNearestPointToEntityPosition().z)
 		Pos_Self = Vector(Pos_Self.x,Pos_Self.y,self:SetNearestPointToEntityPosition().z)
 	end
@@ -542,29 +534,29 @@ function NPC_MetaTable:VJ_GetNearestPointToEntity(argent, SameZ)
 	return NearestPositions
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_GetNearestPointToEntityDistance(argent,OnlySelfGetPos)
-	if !IsValid(argent) then return end
-	OnlySelfGetPos = OnlySelfGetPos or false -- Should it only do its self position for the local entity?
-	local Pos_Enemy = argent:NearestPoint(self:SetNearestPointToEntityPosition() + argent:OBBCenter())
-	local Pos_Self = self:NearestPoint(argent:GetPos() + self:OBBCenter())
-	if OnlySelfGetPos == true then Pos_Self = self:SetNearestPointToEntityPosition() end
-	Pos_Enemy.z, Pos_Self.z = argent:GetPos().z, self:SetNearestPointToEntityPosition().z
+function NPC_MetaTable:VJ_GetNearestPointToEntityDistance(ent, onlySelfGetPos)
+	if !IsValid(ent) then return end
+	onlySelfGetPos = onlySelfGetPos or false -- Should it only do its self position for the local entity?
+	local Pos_Enemy = ent:NearestPoint(self:SetNearestPointToEntityPosition() + ent:OBBCenter())
+	local Pos_Self = self:NearestPoint(ent:GetPos() + self:OBBCenter())
+	if onlySelfGetPos == true then Pos_Self = self:SetNearestPointToEntityPosition() end
+	Pos_Enemy.z, Pos_Self.z = ent:GetPos().z, self:SetNearestPointToEntityPosition().z
 	//local Pos_Distance = Pos_Enemy:Distance(Pos_Self)
 	return Pos_Enemy:Distance(Pos_Self) // math.Distance(Pos_Enemy.x,Pos_Enemy.y,Pos_Self.x,Pos_Self.y)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,Tbl_Features)
+function NPC_MetaTable:VJ_ForwardIsHidingZone(startPos, endPos, acceptWorld, extraOptions)
 	if !IsValid(self:GetEnemy()) then return false, {} end
-	StartPos = StartPos or self:NearestPoint(self:GetPos() + self:OBBCenter())
-	EndPos = EndPos or self:GetEnemy():EyePos()
-	AcceptWorld = AcceptWorld or false
-	local vTbl_Features = Tbl_Features or {}
-		local vTbl_SetLastHiddenTime = vTbl_Features.SetLastHiddenTime or false -- Should it set the last hidden time? (Mostly used for humans)
-		local vTbl_SpawnTestCube = vTbl_Features.SpawnTestCube or false -- Should it spawn a cube where the trace hit?
+	startPos = startPos or self:NearestPoint(self:GetPos() + self:OBBCenter())
+	endPos = endPos or self:GetEnemy():EyePos()
+	acceptWorld = acceptWorld or false
+	extraOptions = extraOptions or {}
+		local vTbl_SetLastHiddenTime = extraOptions.SetLastHiddenTime or false -- Should it set the last hidden time? (Mostly used for humans)
+		local vTbl_SpawnTestCube = extraOptions.SpawnTestCube or false -- Should it spawn a cube where the trace hit?
 	local hitent = false
 	tr = util.TraceLine({
-		start = StartPos,
-		endpos = EndPos,
+		start = startPos,
+		endpos = endPos,
 		filter = self
 	})
 	//print("--------------------------------------------")
@@ -591,24 +583,24 @@ function NPC_MetaTable:VJ_ForwardIsHidingZone(StartPos,EndPos,AcceptWorld,Tbl_Fe
 	end
 
 	if hitent == true then if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = 0 end return false, tr end
-	if EndPos:Distance(tr.HitPos) <= 10 then if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = 0 end return false, tr end
+	if endPos:Distance(tr.HitPos) <= 10 then if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = 0 end return false, tr end
 	if tr.HitWorld == true && self:GetPos():Distance(tr.HitPos) < 200 then if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = CurTime() + 20 end return true, tr end
-	if /*tr.Entity == NULL or tr.Entity:IsNPC() or tr.Entity:IsPlayer() or*/ tr.Entity == self:GetEnemy() or (AcceptWorld == false && tr.HitWorld == true) then
+	if /*tr.Entity == NULL or tr.Entity:IsNPC() or tr.Entity:IsPlayer() or*/ tr.Entity == self:GetEnemy() or (acceptWorld == false && tr.HitWorld == true) then
 	if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = 0 end return false, tr else if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = CurTime() + 20 end return true, tr end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_CheckAllFourSides(CheckDistance)
-	CheckDistance = CheckDistance or 200
+function NPC_MetaTable:VJ_CheckAllFourSides(checkDist)
+	checkDist = checkDist or 200
 	local result = {Forward=false, Backward=false, Right=false, Left=false}
 	local i = 0
 	for _, v in ipairs({self:GetForward(), -self:GetForward(), self:GetRight(), -self:GetRight()}) do
 		i = i + 1
 		tr = util.TraceLine({
 			start = self:GetPos() + self:OBBCenter(),
-			endpos = self:GetPos() + self:OBBCenter() + v*CheckDistance,
+			endpos = self:GetPos() + self:OBBCenter() + v*checkDist,
 			filter = self
 		})
-		if self:GetPos():Distance(tr.HitPos) >= CheckDistance then
+		if self:GetPos():Distance(tr.HitPos) >= checkDist then
 			if i == 1 then result.Forward = true end
 			if i == 2 then result.Backward = true end
 			if i == 3 then result.Right = true end
@@ -618,16 +610,16 @@ function NPC_MetaTable:VJ_CheckAllFourSides(CheckDistance)
 	return result
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_DoSetEnemy(argent, stopMoving, doMinorIfActiveEnemy)
-	if !IsValid(argent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or argent:Health() <= 0 or (argent:IsPlayer() && (!argent:Alive() or GetConVarNumber("ai_ignoreplayers") == 1)) then return end
+function NPC_MetaTable:VJ_DoSetEnemy(ent, stopMoving, doMinorIfActiveEnemy)
+	if !IsValid(ent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or ent:Health() <= 0 or (ent:IsPlayer() && (!ent:Alive() or GetConVarNumber("ai_ignoreplayers") == 1)) then return end
 	stopMoving = stopMoving or false -- Will not run if doMinorIfActiveEnemy passes!
 	doMinorIfActiveEnemy = doMinorIfActiveEnemy or false -- It will run a much quicker set enemy without resetting everything (Only if it has an active enemy!)
-	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == argent then self:DoMedicCode_Reset() end
+	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == ent then self:DoMedicCode_Reset() end
 	self.TimeSinceLastSeenEnemy = 0
-	self:AddEntityRelationship(argent, D_HT, 99)
-	self:UpdateEnemyMemory(argent, argent:GetPos())
-	if doMinorIfActiveEnemy == true && IsValid(self:GetEnemy()) then self:SetEnemy(argent) return end -- End it here if it's a minor set enemy
-	self:SetEnemy(argent)
+	self:AddEntityRelationship(ent, D_HT, 99)
+	self:UpdateEnemyMemory(ent, ent:GetPos())
+	if doMinorIfActiveEnemy == true && IsValid(self:GetEnemy()) then self:SetEnemy(ent) return end -- End it here if it's a minor set enemy
+	self:SetEnemy(ent)
 	self.TimeSinceEnemyAcquired = CurTime()
 	self.NextResetEnemyT = CurTime() + 0.5 //2
 	if stopMoving == true then
@@ -635,30 +627,30 @@ function NPC_MetaTable:VJ_DoSetEnemy(argent, stopMoving, doMinorIfActiveEnemy)
 		self:StopMoving()
 	end
 	if self.Alerted == false then
-		self.LatestEnemyDistance = self:GetPos():Distance(argent:GetPos())
-		self:DoAlert(argent)
+		self.LatestEnemyDistance = self:GetPos():Distance(ent:GetPos())
+		self:DoAlert(ent)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Entity_MetaTable:CalculateProjectile(Type, StartPos, EndPos, Vel)
-	if Type == "Line" then -- Suggested to disable gravity!
-		return ((EndPos - StartPos):GetNormal()) * Vel
-	elseif Type == "Curve" then
+function Entity_MetaTable:CalculateProjectile(projType, startPos, endPos, projVel)
+	if projType == "Line" then -- Suggested to disable gravity!
+		return ((endPos - startPos):GetNormal()) * projVel
+	elseif projType == "Curve" then
 		-- Oknoutyoun: https://gamedev.stackexchange.com/questions/53552/how-can-i-find-a-projectiles-launch-angle
 		-- Negar: https://wikimedia.org/api/rest_v1/media/math/render/svg/4db61cb4c3140b763d9480e51f90050967288397
-		local result = Vector(EndPos.x - StartPos.x, EndPos.y - StartPos.y, 0) -- Verchnagan deghe
+		local result = Vector(endPos.x - startPos.x, endPos.y - startPos.y, 0) -- Verchnagan deghe
 		local pos_x = result:Length()
-		local pos_y = EndPos.z - StartPos.z
+		local pos_y = endPos.z - startPos.z
 		local grav = physenv.GetGravity():Length()
-		local sqrtcalc1 = (Vel * Vel * Vel * Vel)
-		local sqrtcalc2 = grav * ((grav * (pos_x * pos_x)) + (2 * pos_y * (Vel * Vel)))
+		local sqrtcalc1 = (projVel * projVel * projVel * projVel)
+		local sqrtcalc2 = grav * ((grav * (pos_x * pos_x)) + (2 * pos_y * (projVel * projVel)))
 		local calcsum = sqrtcalc1 - sqrtcalc2 -- Yergou tevere aveltsour
 		if calcsum < 0 then -- Yete teve nevas e, ooremen sharnage
 			calcsum = math.abs(calcsum)
 		end
 		local angsqrt =  math.sqrt(calcsum)
-		local angpos = math.atan(((Vel * Vel) + angsqrt) / (grav * pos_x))
-		local angneg = math.atan(((Vel * Vel) - angsqrt) / (grav * pos_x))
+		local angpos = math.atan(((projVel * projVel) + angsqrt) / (grav * pos_x))
+		local angneg = math.atan(((projVel * projVel) - angsqrt) / (grav * pos_x))
 		local pitch = 1
 		if angpos > angneg then
 			pitch = angneg -- Yete asiga angpos enes ne, aveli veregele
@@ -666,7 +658,7 @@ function Entity_MetaTable:CalculateProjectile(Type, StartPos, EndPos, Vel)
 			pitch = angpos
 		end
 		result.z = math.tan(pitch) * pos_x
-		return result:GetNormal() * Vel
+		return result:GetNormal() * projVel
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -711,12 +703,12 @@ function NPC_MetaTable:VJ_GetDifficultyValue(int)
 	return int
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_SetSchedule(scheduleid)
+function NPC_MetaTable:VJ_SetSchedule(schedID)
 	if self.VJ_PlayingSequence == true then return end
-	self.VJ_IsPlayingInterruptSequence = false
+	self.VJ_PlayingInterruptSequence = false
 	//if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then return end
-	//print(self:GetName().." - "..scheduleid)
-	self:SetSchedule(scheduleid)
+	//print(self:GetName().." - "..schedID)
+	self:SetSchedule(schedID)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
  -- !!!!! Deprecated Function !!!!! --
@@ -1035,7 +1027,7 @@ if (CLIENT) then
 		//local sdfadet = net.ReadFloat()
 		//local entindex = ent:EntIndex()
 		//print(ent)
-		sound.PlayFile("sound/"..VJ_PICK(sdtbl),"noplay",function(soundchannel,errorID,errorName)
+		sound.PlayFile("sound/"..VJ_PICK(sdtbl), "noplay", function(soundchannel, errorID, errorName)
 			if IsValid(soundchannel) then
 				if #VJ_CL_MUSIC_CURRENT <= 0 then soundchannel:Play() end
 				soundchannel:EnableLooping(true)

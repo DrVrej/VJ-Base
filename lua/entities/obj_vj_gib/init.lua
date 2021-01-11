@@ -8,13 +8,12 @@ include("shared.lua")
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 INFO: Used as a base for gibs
 --------------------------------------------------*/
-ENT.BloodType = "Red"
+ENT.BloodType = "Red" -- Uses the same values as a VJ NPC
 ENT.Collide_Decal = "Default"
 ENT.Collide_DecalChance = 3
 ENT.CollideSound = "Default" -- Make it a table to use custom sounds!
 ENT.CollideSoundLevel = 60
-ENT.CollideSoundPitch1 = 80
-ENT.CollideSoundPitch2 = 100
+ENT.CollideSoundPitch = VJ_Set(90, 100)
 
 ENT.IsVJBaseCorpse = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -28,21 +27,18 @@ function ENT:Initialize()
 	local phys = self:GetPhysicsObject()
 	if IsValid(phys) then
 		phys:Wake()
-		//phys:EnableGravity(false)
-		//phys:EnableDrag(false)
-		//phys:SetBuoyancyRatio(0)
 	end
 
 	-- Misc
-	self:SetUpInitializeBloodType()
-	if GetConVarNumber("vj_npc_fadegibs") == 1 then
-		timer.Simple(GetConVarNumber("vj_npc_fadegibstime"), function() SafeRemoveEntity(self) end)
-	end
+	self:SetUpBloodType()
+	if GetConVarNumber("vj_npc_sd_gibbing") == 1 then self.CollideSound = "" end
+	if GetConVarNumber("vj_npc_nogibdecals") == 1 then self.Collide_Decal = "" end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SetUpInitializeBloodType()
+local defCollideSds = {"physics/flesh/flesh_squishy_impact_hard1.wav","physics/flesh/flesh_squishy_impact_hard2.wav","physics/flesh/flesh_squishy_impact_hard3.wav","physics/flesh/flesh_squishy_impact_hard4.wav"}
+function ENT:SetUpBloodType()
 	if self.CollideSound == "Default" then
-		self.CollideSound = {"physics/flesh/flesh_squishy_impact_hard1.wav","physics/flesh/flesh_squishy_impact_hard2.wav","physics/flesh/flesh_squishy_impact_hard3.wav","physics/flesh/flesh_squishy_impact_hard4.wav"}
+		self.CollideSound = defCollideSds
 	end
 	
 	if self.Collide_Decal == "Default" then
@@ -67,40 +63,23 @@ function ENT:SetUpInitializeBloodType()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Think()
-    //if self:GetPhysicsObject():GetVelocity():Length() < 10 then
-        //self:GetPhysicsObject():SetVelocity(Vector(0,0,0))
-   //end
-	//print(self.BloodType)
-	/*if self:IsValid() then
-		self.idlesoundc = CreateSound(self, self.IdleSound1)
-		self.idlesoundc:Play()
-
-		ParticleEffectAttach("antlion_spit", PATTACH_ABSORIGIN_FOLLOW, self, 0)
-	end*/
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, phys)
 	-- Effects
-	local velocityspeed = phys:GetVelocity():Length()
-	local pickcollidesd = VJ_PICK(self.CollideSound)
-	if GetConVarNumber("vj_npc_sd_gibbing") == 0 && pickcollidesd != false && velocityspeed > 18 then
-		self.collidesd = CreateSound(self,pickcollidesd)
-		self.collidesd:SetSoundLevel(self.CollideSoundLevel)
-		self.collidesd:PlayEx(1,math.random(self.CollideSoundPitch1,self.CollideSoundPitch2))
+	local velSpeed = phys:GetVelocity():Length()
+	local randCollideSd = VJ_PICK(self.CollideSound)
+	if randCollideSd != false && velSpeed > 18 then
+		self:EmitSound(randCollideSd, self.CollideSoundLevel, math.random(self.CollideSoundPitch.a, self.CollideSoundPitch.b))
 	end
 	
-	if GetConVarNumber("vj_npc_nogibdecals") == 0 && velocityspeed > 18 && !data.Entity && math.random(1, self.Collide_DecalChance) == 1 then
+	if self.Collide_Decal != "" && velSpeed > 18 && !data.Entity && math.random(1, self.Collide_DecalChance) == 1 then
 		self:SetLocalPos(Vector(self:GetPos().x, self:GetPos().y, self:GetPos().z + 4)) -- Because the entity is too close to the ground
 		local tr = util.TraceLine({
 			start = self:GetPos(),
 			endpos = self:GetPos() - (data.HitNormal*-30),
-			filter = self //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
+			filter = self
 		})
-		if self.Collide_Decal != "" then
-			util.Decal(self.Collide_Decal, tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
-			//util.Decal(self.Collide_Decal,start,endpos)
-		end
+		util.Decal(self.Collide_Decal, tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
+		//util.Decal(self.Collide_Decal,start,endpos)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
