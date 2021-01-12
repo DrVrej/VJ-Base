@@ -272,7 +272,7 @@ VJ.AddParticle("particles/vj_rpgtrails1.pcf",{
 	"vj_rpg1_smoke",
 })
 VJ.AddParticle("particles/vj_rpgtrails2.pcf",{
-	"vj_rpg2_fulltail",
+	"vj_rpg2_fulltrail",
 	"vj_rpg2_smoke1",
 	"vj_rpg2_smoke2",
 	"vj_rpg2_fire",

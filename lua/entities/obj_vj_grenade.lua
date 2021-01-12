@@ -82,14 +82,18 @@ function ENT:CustomOnPhysicsCollide(data,phys)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local defAngle = Angle(0, 0, 0)
+--
 function ENT:DeathEffects()
+	ParticleEffect("vj_explosion1", self:GetPos(), defAngle, nil)
+	
 	local effectdata = EffectData()
 	effectdata:SetOrigin(self:GetPos())
 	//effectdata:SetScale( 500 )
-	util.Effect( "HelicopterMegaBomb", effectdata )
-	util.Effect( "ThumperDust", effectdata )
+	//util.Effect( "HelicopterMegaBomb", effectdata )
+	//util.Effect( "ThumperDust", effectdata )
 	util.Effect( "Explosion", effectdata )
-	util.Effect( "VJ_Small_Explosion1", effectdata )
+	//util.Effect( "VJ_Small_Explosion1", effectdata )
 
 	self.ExplosionLight1 = ents.Create("light_dynamic")
 	self.ExplosionLight1:SetKeyValue("brightness", "4")
