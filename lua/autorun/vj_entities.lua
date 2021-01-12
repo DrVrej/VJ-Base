@@ -874,14 +874,15 @@ hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 			end
 		end
 		
-		-- Disable the built-in shitty footstep sounds for the human models
-		if ent:IsNPC() && ent.IsVJBaseSNPC == true && (string.EndsWith(data.OriginalSoundName,"stepleft") or string.EndsWith(data.OriginalSoundName,"stepright")) then
-			return false
+		-- Disable the built-in footstep sounds for the player footstep sound for VJ NPCs unless specified otherwise
+			-- Plays only on client-side, making it useless to play material-specific
+		if ent:IsNPC() && ent.IsVJBaseSNPC == true && (string.EndsWith(data.OriginalSoundName, "stepleft") or string.EndsWith(data.OriginalSoundName, "stepright")) then
+			return ent:MatFootStepQCEvent(data)
 		end
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("EntityFireBullets","VJ_NPC_FIREBULLET", function(ent, data)
+hook.Add("EntityFireBullets", "VJ_NPC_FIREBULLET", function(ent, data)
 	if IsValid(ent) && !ent:IsPlayer() && ent.IsVJBaseSNPC == true then
 		local ret = nil
 		local wep = ent:GetActiveWeapon()

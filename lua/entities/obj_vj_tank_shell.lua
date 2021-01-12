@@ -23,7 +23,7 @@ if (CLIENT) then
 	killicon.Add("#"..LangName,"HUD/killicons/default",Color(255,80,0,255))
 
 	function ENT:Think()
-		if self:IsValid() then
+		/*if self:IsValid() then
 			self.Emitter = ParticleEmitter(self:GetPos())
 			self.SmokeEffect1 = self.Emitter:Add("particles/flamelet2",self:GetPos() +self:GetForward()*-7)
 			self.SmokeEffect1:SetVelocity(self:GetForward() *math.Rand(0, -50) +Vector(math.Rand(5, -5), math.Rand(5, -5), math.Rand(5, -5)) +self:GetVelocity())
@@ -35,7 +35,7 @@ if (CLIENT) then
 			self.SmokeEffect1:SetRoll(math.Rand(-0.2,0.2))
 			self.SmokeEffect1:SetAirResistance(200)
 			self.Emitter:Finish()
-		end
+		end*/
 	end
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -59,8 +59,9 @@ ENT.SoundTbl_OnCollide = {"ambient/explosions/explode_8.wav"}
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize()
 	//util.SpriteTrail(self, 0, Color(90,90,90,255), false, 10, 1, 3, 1/(15+1)*0.5, "trails/smoke.vmt")
-	ParticleEffectAttach("vj_rpg1_smoke", PATTACH_ABSORIGIN_FOLLOW, self, 0)
-	ParticleEffectAttach("vj_rpg2_smoke2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
+	ParticleEffectAttach("vj_rpg1_fulltrail", PATTACH_ABSORIGIN_FOLLOW, self, 0)
+	ParticleEffectAttach("vj_rpg2_fulltrail", PATTACH_ABSORIGIN_FOLLOW, self, 0)
+	//ParticleEffectAttach("vj_rpg2_smoke2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 	//ParticleEffectAttach("rocket_smoke", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 	//ParticleEffectAttach("smoke_burning_engine_01", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 	
@@ -77,14 +78,18 @@ function ENT:CustomOnInitialize()
 	self:DeleteOnRemove(self.StartLight1)*/
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local defAngle = Angle(0, 0, 0)
+--
 function ENT:DeathEffects(data,phys)
+	ParticleEffect("vj_explosion3", self:GetPos(), defAngle, nil)
+	
 	local effectdata = EffectData()
 	effectdata:SetOrigin(data.HitPos)
 	//effectdata:SetScale( 500 )
-	util.Effect( "HelicopterMegaBomb", effectdata )
-	util.Effect( "ThumperDust", effectdata )
+	//util.Effect( "HelicopterMegaBomb", effectdata )
+	//util.Effect( "ThumperDust", effectdata )
 	util.Effect( "Explosion", effectdata )
-	util.Effect( "VJ_Small_Explosion1", effectdata )
+	//util.Effect( "VJ_Small_Explosion1", effectdata )
 
 	self.ExplosionLight1 = ents.Create("light_dynamic")
 	self.ExplosionLight1:SetKeyValue("brightness", "4")

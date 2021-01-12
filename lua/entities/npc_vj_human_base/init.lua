@@ -2264,14 +2264,14 @@ function ENT:Think()
 	*/
 	//print("---------------------")
 	//PrintTable(self:GetSaveTable())
-	//print(self:GetInternalVariable("m_flNextDecisionTime"))
+	//print(self:GetInternalVariable("m_lifeState"))
 	//self:SetSaveValue("m_flGroundChangeTime", 0)
 	
 	self:SetCondition(1) -- Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case sv_pvsskipanimation isn't disabled!
 	
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
 	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
-	if self:GetVelocity():Length() <= 0 && self.MovementType == VJ_MOVETYPE_GROUND /*&& CurSched.IsMovingTask == true*/ then self:DropToFloor() end
+	if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 /*&& CurSched.IsMovingTask == true*/ then self:DropToFloor() end
 
 	local CurSched = self.CurrentSchedule
 	if CurSched != nil then
@@ -2293,14 +2293,16 @@ function ENT:Think()
 			//self:SetCondition(35)
 			//self:StopMoving()
 		end
-		if self:HasCondition(35) && CurSched.AlreadyRanCode_OnFail == false && self:DoRunCode_OnFail(CurSched) == true then
-			self:ClearCondition(35)
-		end
-		if CurSched.ResetOnFail == true && self:HasCondition(35) == true then
-			self:StopMoving()
-			//self:SelectSchedule()
-			self:ClearCondition(35)
-			//print("VJ Base: Task Failed Condition Identified! "..self:GetName())
+		if self:HasCondition(35) then
+			if CurSched.AlreadyRanCode_OnFail == false && self:DoRunCode_OnFail(CurSched) == true then
+				self:ClearCondition(35)
+			end
+			if CurSched.ResetOnFail == true then
+				self:StopMoving()
+				//self:SelectSchedule()
+				self:ClearCondition(35)
+				//print("VJ Base: Task Failed Condition Identified! "..self:GetName())
+			end
 		end
 	end
 	
@@ -5131,7 +5133,7 @@ function ENT:FootStepSoundCode(CustomTbl)
 			VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch.a,self.FootStepPitch.b))
 			if self.HasWorldShakeOnMove == true then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude, self.WorldShakeOnMoveFrequency, self.WorldShakeOnMoveDuration, self.WorldShakeOnMoveRadius) end
 			return
-		elseif self:IsMoving() && CurTime() > self.FootStepT then
+		elseif self:IsMoving() && CurTime() > self.FootStepT && self:GetInternalVariable("m_flMoveWaitFinished") <= 0 then
 			self:CustomOnFootStepSound()
 			local soundtbl = self.SoundTbl_FootStep
 			if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
