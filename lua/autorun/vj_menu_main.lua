@@ -5,181 +5,75 @@
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Console Commands ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-concommand.Add("vj_cleanup_all", function(ply)
-	if ply:IsAdmin() or ply:IsSuperAdmin() then
-		game.CleanUpMap()
-		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Cleaned Up Everything!\", NOTIFY_CLEANUP, 5)") end
-		ply:EmitSound("buttons/button15.wav")
-	end
-end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-concommand.Add("vj_cleanup_snpcscorpse", function(ply)
-	if ply:IsAdmin() or ply:IsSuperAdmin() then
+if SERVER then
+	local cTypes = {
+		vjnpcs = "VJ NPCs",
+		npcs = "NPCs",
+		spawners = "Spawners",
+		corpses = "Corpses",
+		vjgibs = "Gibs",
+		groundweapons = "Ground Weapons",
+		props = "Props",
+		decals = "Removed All Decals",
+		allweapons = "Removed All Your Weapons",
+		allammo = "Removed All Your Ammo",
+	}
+	concommand.Add("vj_cleanup", function(ply, cmd, args)
+		if IsValid(ply) && !ply:IsAdmin() then return end
+		local cType = args[1]
 		local i = 0
-		for _, v in pairs(ents.GetAll()) do
-			if v.IsVJBaseCorpse == true or v.IsVJBase_Gib == true or v:GetClass() == "obj_vj_gib_*" then
-				undo.ReplaceEntity(v, NULL)
-				v:Remove()
-				i = i + 1
-				/*local cleandatsnpc = ents.GetAll()
-				for _, x in pairs(cleandatsnpc) do
-					if v:IsNPC() && v:IsValid() && v.IsVJBaseSNPC == true then
-					x.VJCorpseDeleted = true
-					//if x:IsValid() then x.Corpse = ents.Create(x.DeathCorpseEntityClass)
-					end
-				end*/
+		if !cType then -- Not type given, so it means its a clean up all!
+			game.CleanUpMap()
+		elseif cType == "decals" then
+			for _, v in pairs(player.GetAll()) do
+				v:ConCommand("r_cleardecals")
+			end
+		elseif IsValid(ply) && cType == "allweapons" then
+			ply:StripWeapons()
+		elseif IsValid(ply) && cType == "allammo" then
+			ply:RemoveAllAmmo()
+		else
+			for _, v in pairs(ents.GetAll()) do
+				if (v:IsNPC() && (cType == "npcs" or (cType == "vjnpcs" && v.IsVJBaseSNPC == true))) or (cType == "spawners" && v.IsVJBaseSpawner == true) or (cType == "corpses" && (v.IsVJBaseCorpse == true or v.IsVJBase_Gib == true)) or (cType == "vjgibs" && v.IsVJBase_Gib == true) or (cType == "groundweapons" && v:IsWeapon() && v:GetOwner() == NULL) or (cType == "props" && v:GetClass() == "prop_physics" && (v:GetParent() == NULL or (IsValid(v:GetParent()) && v:GetParent():Health() <= 0 && (v:GetParent():IsNPC() or v:GetParent():IsPlayer())))) then
+					//undo.ReplaceEntity(v, NULL)
+					v:Remove()
+					i = i + 1
+				end
 			end
 		end
-		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Removed "..i.." Corpses\", NOTIFY_CLEANUP, 5)") end
-		ply:EmitSound("buttons/button15.wav")
-	end
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
-concommand.Add("vj_cleanup_snpcs", function(ply)
-	if ply:IsAdmin() or ply:IsSuperAdmin() then
-		local i = 0
-		for _, v in pairs(ents.GetAll()) do
-			if v:IsNPC() && v:IsValid() && v.IsVJBaseSNPC == true then
-				// if v:ValidEntity() then
-				undo.ReplaceEntity(v, NULL)
-				v:Remove()
-				i = i + 1
+		if IsValid(ply) then
+			if !cType then
+				ply:SendLua("GAMEMODE:AddNotify(\"Cleaned Up Everything!\", NOTIFY_CLEANUP, 5)")
+			elseif cType == "decals" or cType == "allweapons" or cType == "allammo" then
+				ply:SendLua("GAMEMODE:AddNotify(\""..cTypes[cType].."\", NOTIFY_CLEANUP, 5)")
+			else
+				ply:SendLua("GAMEMODE:AddNotify(\"Removed "..i.." "..cTypes[cType].."\", NOTIFY_CLEANUP, 5)")
 			end
+			ply:EmitSound("buttons/button15.wav")
 		end
-		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Removed "..i.." VJ SNPCs\", NOTIFY_CLEANUP, 5)") end
-		ply:EmitSound("buttons/button15.wav")
-		//ply:ChatPrint("Removed "..i.." SNPCs")
-	end
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
-concommand.Add("vj_cleanup_s_npcs", function(ply)
-	if ply:IsAdmin() or ply:IsSuperAdmin() then
-		local i = 0
-		for _, v in pairs(ents.GetAll()) do
-			if v:IsNPC() /* v:ValidEntity() */then
-				undo.ReplaceEntity(v, NULL)
-				v:Remove()
-				i = i + 1
-			end
-		end
-		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Removed "..i.." NPCs\", NOTIFY_CLEANUP, 5)") end
-		ply:EmitSound("buttons/button15.wav")
-		//ply:ChatPrint("Removed "..i.." SNPCs")
-	end
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
-concommand.Add("vj_cleanup_decals", function(ply)
-	if ply:IsAdmin() or ply:IsSuperAdmin() then
-		for _, v in pairs(player.GetAll()) do
-			v:ConCommand("r_cleardecals")
-		end
-		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Removed All Decals\", NOTIFY_CLEANUP, 5)") end
-		ply:EmitSound("buttons/button15.wav")
-	end
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
-concommand.Add("vj_cleanup_playerammo", function(ply)
-	if ply:IsAdmin() or ply:IsSuperAdmin() then
-		ply:RemoveAllAmmo()
-		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Removed All Your Ammo\", NOTIFY_CLEANUP, 5)") end
-		ply:EmitSound("buttons/button15.wav")
-	end
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
-concommand.Add("vj_cleanup_playerweapon", function(ply)
-	if ply:IsAdmin() or ply:IsSuperAdmin() then
-		ply:StripWeapons()
-		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Removed All Your Weapons\", NOTIFY_CLEANUP, 5)") end
-		ply:EmitSound("buttons/button15.wav")
-	end
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
-concommand.Add("vj_cleanup_vjgibs", function(ply)
-	if ply:IsAdmin() or ply:IsSuperAdmin() then
-		local i = 0
-		for _, v in pairs(ents.GetAll()) do
-			if v.IsVJBase_Gib == true or v:GetClass() == "obj_vj_gib" then
-				undo.ReplaceEntity(v, NULL)
-				v:Remove()
-				i = i + 1
-			end
-		end
-		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Removed "..i.." Gibs\", NOTIFY_CLEANUP, 5)") end
-		ply:EmitSound("buttons/button15.wav")
-	end
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
-concommand.Add("vj_cleanup_props", function(ply)
-	if ply:IsAdmin() or ply:IsSuperAdmin() then
-		local i = 0
-		for _, v in pairs(ents.FindByClass("prop_physics")) do
-			if v:GetParent() == NULL or (IsValid(v:GetParent()) && v:GetParent():Health() <= 0 && (v:GetParent():IsNPC() or v:GetParent():IsPlayer())) then
-				undo.ReplaceEntity(v, NULL)
-				v:Remove()
-				i = i + 1
-			end
-		end
-		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Removed "..i.." Props\", NOTIFY_CLEANUP, 5)") end
-		ply:EmitSound("buttons/button15.wav")
-	end
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
-concommand.Add("vj_cleanup_groundweapons", function(ply)
-	if ply:IsAdmin() or ply:IsSuperAdmin() then
-		local i = 0
-		for _, v in pairs(ents.GetAll()) do
-			if v:IsValid() && v:IsWeapon() && v:GetOwner() == NULL then
-				undo.ReplaceEntity(v, NULL)
-				v:Remove()
-				i = i + 1
-			end
-		end
-		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Removed "..i.." Ground Weapons\", NOTIFY_CLEANUP, 5)") end
-		ply:EmitSound("buttons/button15.wav")
-	end
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
-concommand.Add("vj_cleanup_spawners", function(ply)
-	if ply:IsAdmin() or ply:IsSuperAdmin() then
-		local i = 0
-		for _, v in pairs(ents.GetAll()) do
-			if v.IsVJBaseSpawner == true then
-				undo.ReplaceEntity(v, NULL)
-				v:Remove()
-				i = i + 1
-			end
-		end
-		if (SERVER) then ply:SendLua("GAMEMODE:AddNotify(\"Removed "..i.." Spawners\", NOTIFY_CLEANUP, 5)") end
-		ply:EmitSound("buttons/button15.wav")
-	end
-end)
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Main Menu ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
+	end, nil, "", {FCVAR_DONTRECORD})
+else
 	local function VJ_MAINMENU_CLEANUP(Panel)
-		if !game.SinglePlayer() && (!LocalPlayer():IsAdmin() or !LocalPlayer():IsSuperAdmin()) then
+		if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
 			Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
 			Panel:ControlHelp("#vjbase.menu.general.admin.only")
 			return
 		end
 		Panel:ControlHelp(" ") -- Spacer
 		Panel:ControlHelp("#vjbase.menu.general.admin.only")
-		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.everything", Command = "vj_cleanup_all"})
-		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.stopsounds", Command = "stopsound"})
-		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.vjnpcs", Command = "vj_cleanup_snpcs"})
-		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.npcs", Command = "vj_cleanup_s_npcs"})
-		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.spawners", Command = "vj_cleanup_spawners"})
-		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.corpses", Command = "vj_cleanup_snpcscorpse"})
-		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.vjgibs", Command = "vj_cleanup_vjgibs"})
-		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.groundweapons", Command = "vj_cleanup_groundweapons"})
-		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.props", Command = "vj_cleanup_props"})
-		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.decals", Command = "vj_cleanup_decals"})
-		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.allweapons", Command = "vj_cleanup_playerweapon"})
-		Panel:AddControl("Button", {Label = "#vjbase.menu.cleanup.remove.allammo", Command = "vj_cleanup_playerammo"})
+		Panel:Button("#vjbase.menu.cleanup.all", "vj_cleanup")
+		Panel:Button("#vjbase.menu.cleanup.stopsounds", "stopsound")
+		Panel:Button("#vjbase.menu.cleanup.remove.vjnpcs", "vj_cleanup", "vjnpcs")
+		Panel:Button("#vjbase.menu.cleanup.remove.npcs", "vj_cleanup", "npcs")
+		Panel:Button("#vjbase.menu.cleanup.remove.spawners", "vj_cleanup", "spawners")
+		Panel:Button("#vjbase.menu.cleanup.remove.corpses", "vj_cleanup", "corpses")
+		Panel:Button("#vjbase.menu.cleanup.remove.vjgibs", "vj_cleanup", "vjgibs")
+		Panel:Button("#vjbase.menu.cleanup.remove.groundweapons", "vj_cleanup", "groundweapons")
+		Panel:Button("#vjbase.menu.cleanup.remove.props", "vj_cleanup", "props")
+		Panel:Button("#vjbase.menu.cleanup.remove.decals", "vj_cleanup", "decals")
+		Panel:Button("#vjbase.menu.cleanup.remove.allweapons", "vj_cleanup", "allweapons")
+		Panel:Button("#vjbase.menu.cleanup.remove.allammo", "vj_cleanup", "allammo")
 	end
 	----=================================----
 	local function VJ_MAINMENU_MISC(Panel)
@@ -269,7 +163,7 @@ if (CLIENT) then
 	end
 	----=================================----
 	local function VJ_MAINMENU_ADMINSERVER(Panel)
-		if !game.SinglePlayer() && (!LocalPlayer():IsAdmin() or !LocalPlayer():IsSuperAdmin()) then
+		if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
 			Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
 			Panel:ControlHelp("#vjbase.menu.general.admin.only")
 			return

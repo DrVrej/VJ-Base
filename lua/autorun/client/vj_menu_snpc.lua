@@ -8,7 +8,7 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 include('autorun/client/vj_menu_plugins.lua')
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_SNPC_OPTIONS(Panel) -- Options
-	if !game.SinglePlayer() && (!LocalPlayer():IsAdmin() or !LocalPlayer():IsSuperAdmin()) then
+	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
 		Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
 		Panel:ControlHelp("#vjbase.menu.general.admin.only")
 		return
@@ -91,7 +91,7 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_SNPC_SETTINGS(Panel) -- Settings
-	if !game.SinglePlayer() && (!LocalPlayer():IsAdmin() or !LocalPlayer():IsSuperAdmin()) then
+	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
 		Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
 		Panel:ControlHelp("#vjbase.menu.general.admin.only")
 		return
@@ -150,7 +150,7 @@ local function VJ_SNPC_SETTINGS(Panel) -- Settings
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_SNPC_SOUNDSETTINGS(Panel) -- Sound Settings
-	if !game.SinglePlayer() && (!LocalPlayer():IsAdmin() or !LocalPlayer():IsSuperAdmin()) then
+	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
 		Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
 		Panel:ControlHelp("#vjbase.menu.general.admin.only")
 		return
@@ -195,7 +195,7 @@ local function VJ_SNPC_SOUNDSETTINGS(Panel) -- Sound Settings
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_SNPC_DEVSETTINGS(Panel) -- Developer Settings
-	if !game.SinglePlayer() && (!LocalPlayer():IsAdmin() or !LocalPlayer():IsSuperAdmin()) then
+	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
 		Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
 		Panel:ControlHelp("#vjbase.menu.general.admin.only")
 		return
@@ -220,6 +220,23 @@ local function VJ_SNPC_DEVSETTINGS(Panel) -- Developer Settings
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.devsettings.printammo", Command = "vj_npc_printammo"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.devsettings.printaccuracy", Command = "vj_npc_printaccuracy"})
 	Panel:AddControl("Button", {Label = "#vjbase.menu.snpc.devsettings.cachedmodels", Command = "listmodels"})
+	local numofnpcs = vgui.Create("DButton")
+	numofnpcs:SetText("#vjbase.menu.snpc.devsettings.numofnpcs")
+	numofnpcs.DoClick = function(x)
+		local i = 0
+		for _, v in ipairs(ents.GetAll()) do
+			if v:IsNPC() then
+				i = i + 1
+			end
+		end
+		LocalPlayer():ChatPrint("Number of NPCs: "..i)
+	end
+	Panel:AddPanel(numofnpcs)
+	Panel:AddControl("Button", {Label = "#vjbase.menu.snpc.devsettings.reloadsounds", Command = "snd_restart"})
+	Panel:AddControl("Button", {Label = "#vjbase.menu.snpc.devsettings.reloadmaterials", Command = "mat_reloadallmaterials"})
+	Panel:AddControl("Button", {Label = "#vjbase.menu.snpc.devsettings.reloadtextures", Command = "mat_reloadtextures"})
+	Panel:AddControl("Button", {Label = "#vjbase.menu.snpc.devsettings.reloadmodels", Command = "r_flushlod"})
+	Panel:AddControl("Button", {Label = "#vjbase.menu.snpc.devsettings.reloadspawnmenu", Command = "spawnmenu_reload"})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_SNPC_CONTROLLERSETTINGS(Panel) -- NPC Controller Settings

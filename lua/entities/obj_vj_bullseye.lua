@@ -29,6 +29,7 @@ if !SERVER then return end
 //ENT.VJBULLSEYE_TheAttacker = nil
 //ENT.Alreadydoneit = false
 ENT.SolidMovementType = "Dynamic"
+ENT.UseActivationSystem = false -- Mostly used for the Bullseye tool, allows you to activate/deactivate the bullseye
 ENT.Activated = true
 ENT.UserStatusColors = true
 ENT.EnemyToIndividual = false
@@ -78,7 +79,7 @@ function ENT:Think()
 			self.EnemyToIndividualEnt:VJ_DoSetEnemy(self,false,false)
 			self.EnemyToIndividualEnt:SetEnemy(self)
 		end
-	else
+	elseif self.UseActivationSystem == true then
 		if self.Activated == false then
 			self.VJ_NoTarget = true
 			if self.UserStatusColors == true then self:SetColor(Color(255,0,0)) end
