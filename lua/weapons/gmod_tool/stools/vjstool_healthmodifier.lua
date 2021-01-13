@@ -74,7 +74,7 @@ function TOOL:LeftClick(tr)
 		local trent = tr.Entity
 		local canheal = true
 		if (trent:Health() != 0 or (trent:IsNPC() or trent:IsPlayer())) then
-			if (trent:IsPlayer() && (!Ply:IsAdmin() && !Ply:IsSuperAdmin())) then
+			if trent:IsPlayer() && !Ply:IsAdmin() then
 				canheal = false
 			end
 			if canheal == true then
@@ -101,7 +101,7 @@ function TOOL:RightClick(tr)
 		local trent = tr.Entity
 		local canheal = true
 		if (trent:Health() != 0 or (trent:IsNPC() or trent:IsPlayer())) then
-			if (trent:IsPlayer() && (!Ply:IsAdmin() && !Ply:IsSuperAdmin())) then
+			if trent:IsPlayer() && !Ply:IsAdmin() then
 				canheal = false
 			end
 			if canheal == true then
@@ -129,7 +129,7 @@ function TOOL:Reload(tr)
 		local trent = tr.Entity
 		local canheal = true
 		if (trent:Health() != 0 or (trent:IsNPC() or trent:IsPlayer())) then
-			if (trent:IsPlayer() && (!Ply:IsAdmin() && !Ply:IsSuperAdmin())) then
+			if trent:IsPlayer() && !Ply:IsAdmin() then
 				canheal = false
 			end
 			if canheal == true then

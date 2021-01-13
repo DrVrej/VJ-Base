@@ -52,7 +52,7 @@ usermessage.Hook("vj_testentity_onmenuopen",function()
 	button2:SetPos(10, 130)
 	button2:SetSize(100, 50)
 	button2.DoClick = function()
-		if LocalPlayer():IsAdmin() or LocalPlayer():IsSuperAdmin() then RunConsoleCommand("god") end
+		if LocalPlayer():IsAdmin() then RunConsoleCommand("god") end
 	end
 	
 	local button3 = vgui.Create("DButton", Frame)
@@ -60,7 +60,7 @@ usermessage.Hook("vj_testentity_onmenuopen",function()
 	button3:SetPos(120, 130)
 	button3:SetSize(100, 50)
 	button3.DoClick = function()
-		if LocalPlayer():IsAdmin() or LocalPlayer():IsSuperAdmin() then RunConsoleCommand("buddha") end
+		if LocalPlayer():IsAdmin() then RunConsoleCommand("buddha") end
 	end
 	
 	local button4 = vgui.Create("DButton", Frame)
@@ -68,7 +68,7 @@ usermessage.Hook("vj_testentity_onmenuopen",function()
 	button4:SetPos(230, 130)
 	button4:SetSize(100, 50)
 	button4.DoClick = function()
-		if LocalPlayer():IsAdmin() or LocalPlayer():IsSuperAdmin() then RunConsoleCommand("firstperson") end
+		if LocalPlayer():IsAdmin() then RunConsoleCommand("firstperson") end
 	end
 	
 	local button5 = vgui.Create("DButton", Frame)
@@ -76,7 +76,7 @@ usermessage.Hook("vj_testentity_onmenuopen",function()
 	button5:SetPos(340, 130)
 	button5:SetSize(100, 50)
 	button5.DoClick = function()
-		if LocalPlayer():IsAdmin() or LocalPlayer():IsSuperAdmin() then RunConsoleCommand("thirdperson") end
+		if LocalPlayer():IsAdmin() then RunConsoleCommand("thirdperson") end
 	end
 	
 	if LocalPlayer():SteamID() == "STEAM_0:0:22688298" then

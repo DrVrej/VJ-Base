@@ -11,53 +11,33 @@ local function VJ_INFORMATION(Panel)
 	local client = LocalPlayer() -- Local Player
 	Panel:AddControl("Label", {Text = "About VJ Base:"})
 	Panel:ControlHelp("VJ Base is made by DrVrej. The main purpose of this base is for the sake of simplicity. It provides many types of bases including a very advanced artificial intelligent NPC base.")
-	
-	//Panel:ControlHelp("==============================")
-	
+	--
+	--
 	Panel:AddControl("Label", {Text = "User Information:"})
-	
-	Panel:ControlHelp("Date - "..os.date("%m %d, 20%y"))
-	Panel:ControlHelp("Country - "..system.GetCountry())
-	Panel:ControlHelp("Steam Name - "..client:Nick()) -- Steam Name
-	Panel:ControlHelp("Steam ID - "..client:SteamID()) -- Steam ID
-	local ga = "Game"
-	if game.SinglePlayer() then -- SMP or SSP
-		Panel:ControlHelp(ga.." - SinglePlayer")
-	else
-		Panel:ControlHelp(ga.." - Multiplayer")
-	end
-	Panel:ControlHelp("Gamemode - "..gmod.GetGamemode().Name)
-	Panel:ControlHelp("Map - "..game.GetMap())
-	Panel:ControlHelp("VJ Base Version - "..VJBASE_VERSION)
-	Panel:ControlHelp("Number of VJ Plugins - "..VJBASE_TOTALPLUGINS)
-	Panel:ControlHelp("Selected VJ Language - "..GetConVar("vj_language"):GetString())
-	
-	-- Check the Operation System
-	local ops = "Operating System"
-	if system.IsWindows() then Panel:ControlHelp(ops.." - Windows")
-	elseif system.IsOSX() then Panel:ControlHelp(ops.." - OSX")
-	elseif system.IsLinux() then Panel:ControlHelp(ops.." - Linux") end
-	Panel:ControlHelp("Screen Resolution - "..ScrW().."x"..ScrH()) -- Player's Resolution
-	Panel:ControlHelp("")
-	
-	-- Check Mounted Games
-	Panel:ControlHelp("Half Life 1 Source Mounted - "..tostring(IsMounted( "hl1")))
-	Panel:ControlHelp("Half Life 2 Episode 1 Mounted - "..tostring(IsMounted( "episodic")))
-	Panel:ControlHelp("Half Life 2 Episode 2 Mounted - "..tostring(IsMounted( "ep2")))
-	Panel:ControlHelp("Counter Strike Source Mounted - "..tostring(IsMounted( "cstrike")))
-	
-	//Panel:ControlHelp("==============================")
-	
+	Panel:ControlHelp("Date - "..os.date("%b %d, %Y - %I:%M %p")) -- Date
+	Panel:ControlHelp("Name - "..client:Nick().." ("..client:SteamID()..")") -- Name + Steam ID
+	Panel:ControlHelp("Session - "..(game.SinglePlayer() and "SinglePlayer" or "Multiplayer")..", "..gmod.GetGamemode().Name.." ("..game.GetMap()..")") -- Game Session
+	Panel:ControlHelp("VJ Base - "..VJBASE_VERSION..", "..VJBASE_TOTALPLUGINS.." plugins, "..GetConVar("vj_language"):GetString()) -- VJ Base Information
+	Panel:ControlHelp("System - "..(system.IsLinux() and "Linux" or (system.IsOSX() and "OSX" or "Windows")).." ("..ScrW().."x"..ScrH()..")") // system.IsWindows() -- System
+	--
+	--
+	Panel:AddControl("Label", {Text = "Mounted Games:"})
+	Panel:ControlHelp("HL1S - "..tostring(IsMounted("hl1")))
+	Panel:ControlHelp("HL2 - "..tostring(IsMounted("hl2")))
+	Panel:ControlHelp("HL2Ep1 - "..tostring(IsMounted("episodic")))
+	Panel:ControlHelp("HL2Ep2 - "..tostring(IsMounted("ep2")))
+	Panel:ControlHelp("CSS - "..tostring(IsMounted("cstrike")))
+	Panel:ControlHelp("DoD - "..tostring(IsMounted("dod")))
+	Panel:ControlHelp("TF2 - "..tostring(IsMounted("tf")))
+	--
+	--
 	Panel:AddControl("Label", {Text = "Command Information:"})
-	Panel:ControlHelp("--- All Commands Start with 'vj_' ---")
-	Panel:ControlHelp("")
 	Panel:ControlHelp("SNPC Configurations - 'vj_npc_*'")
 	Panel:ControlHelp("Weapons - 'vj_wep_*'")
 	Panel:ControlHelp("HUD - 'vj_hud_*'")
 	Panel:ControlHelp("Crosshair - 'vj_hud_ch_*'")
-	
-	//Panel:ControlHelp("==============================")
-	
+	--
+	--
 	Panel:AddControl("Label", {Text = "Credits:"})
 	Panel:ControlHelp("DrVrej(Me) - Everything, from coding to fixing models and materials to sound editing")
 	Panel:ControlHelp("Black Mesa Source - Original non-edited gib models, blood pool texture, and glock 17 model")
@@ -67,9 +47,8 @@ local function VJ_INFORMATION(Panel)
 	Panel:ControlHelp("Oteek - Bloodpool textures + testing")
 	Panel:ControlHelp("China-Mandem - Original K-3 Model")
 	
-	
 	Panel:ControlHelp("")
-	Panel:ControlHelp("==============================")
+	Panel:ControlHelp("============================")
 	
 	Panel:ControlHelp("Copyright (c) "..os.date("20%y").." by DrVrej, All rights reserved.")
 	Panel:ControlHelp("No parts of this base or any of its contents may be reproduced, copied, modified or adapted, without the prior written consent of the author, unless otherwise indicated for stand-alone materials.")

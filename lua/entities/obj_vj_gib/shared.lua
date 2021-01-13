@@ -11,6 +11,8 @@ ENT.Category		= "VJ Base"
 ENT.Spawnable		= false
 ENT.AdminSpawnable	= false
 
+ENT.IsVJBase_Gib = true
+
 if (CLIENT) then
 	function ENT:Draw() self:DrawModel() end
 end
