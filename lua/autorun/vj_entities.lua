@@ -872,11 +872,9 @@ hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 				ent.VJ_LastInvestigateSd = CurTime()
 				ent.VJ_LastInvestigateSdLevel = (data.SoundLevel * data.Volume) + (((data.Volume <= 0.4) and 15) or 0)
 			end
-		end
-		
 		-- Disable the built-in footstep sounds for the player footstep sound for VJ NPCs unless specified otherwise
 			-- Plays only on client-side, making it useless to play material-specific
-		if ent:IsNPC() && ent.IsVJBaseSNPC == true && (string.EndsWith(data.OriginalSoundName, "stepleft") or string.EndsWith(data.OriginalSoundName, "stepright")) then
+		elseif ent:IsNPC() && ent.IsVJBaseSNPC == true && (string.EndsWith(data.OriginalSoundName, "stepleft") or string.EndsWith(data.OriginalSoundName, "stepright")) then
 			return ent:MatFootStepQCEvent(data)
 		end
 	end

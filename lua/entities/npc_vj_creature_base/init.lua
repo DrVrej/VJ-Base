@@ -399,12 +399,13 @@ ENT.LeapAttackDamageType = DMG_SLASH -- Type of Damage
 	-- ====== Animation Variables ====== --
 ENT.AnimTbl_LeapAttack = {ACT_SPECIAL_ATTACK1} -- Melee Attack Animations
 ENT.LeapAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
-ENT.LeapAttackAnimationFaceEnemy = false -- Should it face the enemy while playing the leap attack animation?
+ENT.LeapAttackAnimationFaceEnemy = 2 -- true = Face the enemy the entire time! | 2 = Face the enemy UNTIL it jumps! | false = Don't face the enemy AT ALL!
 ENT.LeapAttackAnimationDecreaseLengthAmount = 0 -- This will decrease the time until starts chasing again. Use it to fix animation pauses until it chases the enemy.
 	-- ====== Distance Variables ====== --
 ENT.LeapDistance = 500 -- The distance of the leap, for example if it is set to 500, when the SNPC is 500 Unit away, it will jump
 ENT.LeapToMeleeDistance = 200 -- How close does it have to be until it uses melee?
 ENT.LeapAttackDamageDistance = 100 -- How far does the damage go?
+ENT.LeapAttackAngleRadius = 60 -- What is the attack angle radius? | 100 = In front of the SNPC | 180 = All around the SNPC
 	-- ====== Timer Variables ====== --
 	-- To use event-based attacks, set this to false:
 ENT.TimeUntilLeapAttackDamage = 0.2 -- How much time until it runs the leap damage code?
@@ -423,7 +424,6 @@ ENT.LeapAttackVelocityUp = 200 -- How much upward force should it apply?
 ENT.LeapAttackVelocityRight = 0 -- How much right force should it apply?
 	-- ====== Control Variables ====== --
 ENT.DisableLeapAttackAnimation = false -- if true, it will disable the animation code
-ENT.LeapAttackUseCustomVelocity = false -- Should it disable the default velocity system?
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Sound Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -810,11 +810,11 @@ function ENT:MultipleLeapAttacks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomAttackCheck_LeapAttack() return true end -- Not returning true will not let the leap attack code run!
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnLeapAttackVelocityCode() end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnLeapAttack_BeforeStartTimer(seed) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnLeapAttack_AfterStartTimer(seed) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnLeapAttackVelocityCode() end -- Return true here to override the default velocity code
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnLeapAttack_BeforeChecks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -931,6 +931,7 @@ ENT.AlreadyDoneFirstLeapAttack = false
 ENT.VJ_IsBeingControlled_Tool = false
 ENT.LastHiddenZone_CanWander = true
 ENT.DoneLastHiddenZone_CanWander = false
+ENT.AlreadyDoneLeapAttackJump = false
 ENT.FollowPlayer_Entity = NULL
 ENT.VJ_TheController = NULL
 ENT.VJ_TheControllerEntity = NULL
@@ -2099,7 +2100,7 @@ function ENT:Think()
 					if (self.LatestEnemyDistance < fardist) && (self.LatestEnemyDistance > closedist) && ene:Visible(self) /*&& self:CanDoCertainAttack("RangeAttack") == true*/ then
 						self.RangeAttack_DisableChasingEnemy = true
 						if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then self:StopMoving() end
-						if self.MovementType == VJ_MOVETYPE_GROUND && !self:IsMoving() then self:FaceCertainEntity(self:GetEnemy()) end
+						if self.MovementType == VJ_MOVETYPE_GROUND && !self:IsMoving() && self:OnGround() then self:FaceCertainEntity(self:GetEnemy()) end
 						if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && CurTime() > self.AA_MoveLength_Wander /*&& ((self.AA_CurrentMoveAnimationType != "Calm") or (self.AA_CurrentMoveAnimationType == "Calm" && self:GetVelocity():Length() > 0))*/ then self:AAMove_Wander(true,false) /*self:AAMove_Stop()*/ end
 					else
 						self.RangeAttack_DisableChasingEnemy = false
@@ -2143,7 +2144,7 @@ function ENT:Think()
 			ene = self:GetEnemy()
 			if IsValid(ene) then
 				self:DoPoseParameterLooking()
-				if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true) or (self.MeleeAttackAnimationFaceEnemy == true && self.MeleeAttack_DoingPropAttack == false && self.MeleeAttacking == true) or (self.RangeAttackAnimationFaceEnemy == true && self.RangeAttacking == true) or (self.LeapAttackAnimationFaceEnemy == true && self.LeapAttacking == true) then
+				if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true) or (self.MeleeAttackAnimationFaceEnemy == true && self.MeleeAttack_DoingPropAttack == false && self.MeleeAttacking == true) or (self.RangeAttackAnimationFaceEnemy == true && self.RangeAttacking == true) or ((self.LeapAttackAnimationFaceEnemy == true or (self.LeapAttackAnimationFaceEnemy == 2 && !self.AlreadyDoneLeapAttackJump)) && self.LeapAttacking == true) then
 					self:FaceCertainEntity(ene, true)
 				end
 				self.ResetedEnemy = false
@@ -2241,14 +2242,14 @@ function ENT:Think()
 				-- Leap Attack --------------------------------------------------------------------------------------------------------------------------------------------
 				if self.HasLeapAttack == true && self:CanDoCertainAttack("LeapAttack") == true then
 					self:MultipleLeapAttacks()
-					if self:CustomAttackCheck_LeapAttack() == true && ((self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_JUMP)) or (self.VJ_IsBeingControlled == false && (self:IsOnGround() && self.LatestEnemyDistance < self.LeapDistance) && (self.LatestEnemyDistance > self.LeapToMeleeDistance))) then
+					if self:CustomAttackCheck_LeapAttack() == true && ((self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_JUMP)) or (self.VJ_IsBeingControlled == false && (self:IsOnGround() && self.LatestEnemyDistance < self.LeapDistance) && (self.LatestEnemyDistance > self.LeapToMeleeDistance) && (self:GetSightDirection():Dot((ene:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.LeapAttackAngleRadius))))) then
 						local seed = CurTime(); self.CurAttackSeed = seed
 						self.LeapAttacking = true
 						self.IsAbleToLeapAttack = false
 						self.AlreadyDoneLeapAttackFirstHit = false
 						self.AlreadyDoneFirstLeapAttack = false
+						self.AlreadyDoneLeapAttackJump = false
 						self.JumpLegalLandingTime = 0
-						self:FaceCertainEntity(ene, true)
 						self:CustomOnLeapAttack_BeforeStartTimer(seed)
 						self:PlaySoundSystem("BeforeRangeAttack")
 						timer.Create( "timer_leap_start_jump"..self:EntIndex(), self.TimeUntilLeapAttackVelocity / self:GetPlaybackRate(), 1, function() self:LeapAttackVelocityCode() end)
@@ -2257,7 +2258,7 @@ function ENT:Think()
 							self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, self.LeapAttackAnimationDecreaseLengthAmount)
 							self.PlayingAttackAnimation = true
 							timer.Create("timer_act_playingattack"..self:EntIndex(), self.CurrentAttackAnimationDuration, 1, function() self.PlayingAttackAnimation = false end)
-							self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.LeapAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
+							self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation, false, 0, false, self.LeapAttackAnimationDelay, {SequenceDuration=self.CurrentAttackAnimationDuration})
 						end
 						if self.TimeUntilLeapAttackDamage == false then
 							self:LeapAttackCode_DoFinishTimers()
@@ -2639,12 +2640,13 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:LeapAttackVelocityCode()
 	if !IsValid(self:GetEnemy()) then return end
-	self:CustomOnLeapAttackVelocityCode()
-	self:PlaySoundSystem("LeapAttackJump")
 	self:SetGroundEntity(NULL)
-	if self.LeapAttackUseCustomVelocity == true then return end
-	if self.LeapAttackAnimationFaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(),true) end
-	self:SetLocalVelocity(((self:GetEnemy():GetPos() + self:GetEnemy():OBBCenter()) - (self:GetPos() + self:OBBCenter())):GetNormal()*400 + self:GetForward()*self.LeapAttackVelocityForward + self:GetUp()*self.LeapAttackVelocityUp + self:GetRight()*self.LeapAttackVelocityRight)
+	if self.LeapAttackAnimationFaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(), true) end
+	self.AlreadyDoneLeapAttackJump = true
+	if self:CustomOnLeapAttackVelocityCode() != true then
+		self:SetLocalVelocity(((self:GetEnemy():GetPos() + self:GetEnemy():OBBCenter()) - (self:GetPos() + self:OBBCenter())):GetNormal()*400 + self:GetForward()*self.LeapAttackVelocityForward + self:GetUp()*self.LeapAttackVelocityUp + self:GetRight()*self.LeapAttackVelocityRight)
+	end 
+	self:PlaySoundSystem("LeapAttackJump")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAttacks(checkTimers)
@@ -2669,6 +2671,7 @@ function ENT:StopAttacks(checkTimers)
 	self.LeapAttacking = false
 	self.AlreadyDoneLeapAttackFirstHit = false
 	self.AlreadyDoneFirstLeapAttack = false
+	self.AlreadyDoneLeapAttackJump = false
 
 	self:DoChaseAnimation()
 end
