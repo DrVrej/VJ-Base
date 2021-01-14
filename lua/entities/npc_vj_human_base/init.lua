@@ -2244,7 +2244,22 @@ function ENT:DoConstantlyFaceEnemyCode()
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+/*function ENT:OnMovementFailed()
+	print("Movement failed!")
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OnMovementComplete()
+	print("Movement completed!")
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OnActiveWeaponChanged(old, new)
+	print(old, new)
+end*/
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
+	//print("-----------------")
+	//print(self:GetIdealActivity())
+	//print(self:GetActivity())
 	/* Variable Notes:
 		m_flMoveWaitFinished = Current move and wait time, used for things like when opening doors and have to stop for a second
 		m_hOpeningDoor = The door entity it's opening
@@ -3744,12 +3759,12 @@ function ENT:DoKilledEnemy(ent, attacker, inflictor)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTakeDamage(dmginfo)
-	if self.GodMode == true or dmginfo:GetDamage() <= 0 then return end
+	if self.GodMode == true or dmginfo:GetDamage() <= 0 then return 0 end
 	local DamageInflictor = dmginfo:GetInflictor()
 	local DamageAttacker = dmginfo:GetAttacker()
 	local DamageType = dmginfo:GetDamageType()
 	local hitgroup = self.VJ_ScaleHitGroupDamage
-	if IsValid(DamageInflictor) && DamageInflictor:GetClass() == "prop_ragdoll" && DamageInflictor:GetVelocity():Length() <= 100 then return end
+	if IsValid(DamageInflictor) && DamageInflictor:GetClass() == "prop_ragdoll" && DamageInflictor:GetVelocity():Length() <= 100 then return 0 end
 	self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo, hitgroup)
 	if self:IsOnFire() && self:WaterLevel() == 2 then self:Extinguish() end -- If we are in water, then extinguish the fire
 	
@@ -3757,19 +3772,19 @@ function ENT:OnTakeDamage(dmginfo)
 	if self.GetDamageFromIsHugeMonster == true && DamageAttacker.VJ_IsHugeMonster == true then
 		goto skip_immunity
 	end
-	if VJ_HasValue(self.ImmuneDamagesTable, DamageType) then return end
-	if self.AllowIgnition == false && self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() == "entityflame" && DamageAttacker:GetClass() == "entityflame" then self:Extinguish() return end
-	if self.Immune_Fire == true && (DamageType == DMG_BURN or DamageType == DMG_SLOWBURN or (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() == "entityflame" && DamageAttacker:GetClass() == "entityflame")) then return end
-	if (self.Immune_AcidPoisonRadiation == true && (DamageType == DMG_ACID or DamageType == DMG_RADIATION or DamageType == DMG_POISON or DamageType == DMG_NERVEGAS or DamageType == DMG_PARALYZE)) or (self.Immune_Bullet == true && (dmginfo:IsBulletDamage() or DamageType == DMG_AIRBOAT or DamageType == DMG_BUCKSHOT)) or (self.Immune_Blast == true && (DamageType == DMG_BLAST or DamageType == DMG_BLAST_SURFACE)) or (self.Immune_Dissolve == true && DamageType == DMG_DISSOLVE) or (self.Immune_Electricity == true && (DamageType == DMG_SHOCK or DamageType == DMG_ENERGYBEAM or DamageType == DMG_PHYSGUN)) or (self.Immune_Melee == true && (DamageType == DMG_CLUB or DamageType == DMG_SLASH)) or (self.Immune_Physics == true && DamageType == DMG_CRUSH) or (self.Immune_Sonic == true && DamageType == DMG_SONIC) then return end
+	if VJ_HasValue(self.ImmuneDamagesTable, DamageType) then return 0 end
+	if self.AllowIgnition == false && self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() == "entityflame" && DamageAttacker:GetClass() == "entityflame" then self:Extinguish() return 0 end
+	if self.Immune_Fire == true && (DamageType == DMG_BURN or DamageType == DMG_SLOWBURN or (self:IsOnFire() && IsValid(DamageInflictor) && IsValid(DamageAttacker) && DamageInflictor:GetClass() == "entityflame" && DamageAttacker:GetClass() == "entityflame")) then return 0 end
+	if (self.Immune_AcidPoisonRadiation == true && (DamageType == DMG_ACID or DamageType == DMG_RADIATION or DamageType == DMG_POISON or DamageType == DMG_NERVEGAS or DamageType == DMG_PARALYZE)) or (self.Immune_Bullet == true && (dmginfo:IsBulletDamage() or DamageType == DMG_AIRBOAT or DamageType == DMG_BUCKSHOT)) or (self.Immune_Blast == true && (DamageType == DMG_BLAST or DamageType == DMG_BLAST_SURFACE)) or (self.Immune_Dissolve == true && DamageType == DMG_DISSOLVE) or (self.Immune_Electricity == true && (DamageType == DMG_SHOCK or DamageType == DMG_ENERGYBEAM or DamageType == DMG_PHYSGUN)) or (self.Immune_Melee == true && (DamageType == DMG_CLUB or DamageType == DMG_SLASH)) or (self.Immune_Physics == true && DamageType == DMG_CRUSH) or (self.Immune_Sonic == true && DamageType == DMG_SONIC) then return 0 end
 	if (IsValid(DamageInflictor) && DamageInflictor:GetClass() == "prop_combine_ball") or (IsValid(DamageAttacker) && DamageAttacker:GetClass() == "prop_combine_ball") then
-		if self.Immune_Dissolve == true then return end
+		if self.Immune_Dissolve == true then return 0 end
 		-- Make sure combine ball does reasonable damage and doesn't spam it!
 		if CurTime() > self.NextCanGetCombineBallDamageT then
 			dmginfo:SetDamage(math.random(400,500))
 			dmginfo:SetDamageType(DMG_DISSOLVE)
 			self.NextCanGetCombineBallDamageT = CurTime() + 0.2
 		else
-			return
+			return 0
 		end
 	end
 
@@ -3783,10 +3798,10 @@ function ENT:OnTakeDamage(dmginfo)
 			self:PlaySoundSystem("Impact", nil, VJ_EmitSound)
 		end
 	end
-	if self.Dead == true then DoBleed() return end -- If dead then just bleed but take no damage
+	if self.Dead == true then DoBleed() return 0 end -- If dead then just bleed but take no damage
 	
 	self:CustomOnTakeDamage_BeforeDamage(dmginfo, hitgroup)
-	if dmginfo:GetDamage() <= 0 then return end -- Only take damage if it's above 0!
+	if dmginfo:GetDamage() <= 0 then return 0 end -- Only take damage if it's above 0!
 	self.LatestDmgInfo = dmginfo
 	self:SetHealth(self:Health() - dmginfo:GetDamage())
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVarNumber("vj_npc_printondamage") == 1 then print(self:GetClass().." Got Damaged! | Amount = "..dmginfo:GetDamage()) end
@@ -3904,7 +3919,6 @@ function ENT:OnTakeDamage(dmginfo)
 				sightdist = math.Clamp(sightdist,2000,self.SightDistance)
 			end
 			local Targets = ents.FindInSphere(self:GetPos(),sightdist)
-			if (!Targets) then return end
 			for _,v in pairs(Targets) do
 				if CurTime() > self.NextSetEnemyOnDamageT && self:Visible(v) && self:DoRelationshipCheck(v) == true then
 					self:CustomOnSetEnemyOnDamage(dmginfo, hitgroup)
@@ -3943,6 +3957,7 @@ function ENT:OnTakeDamage(dmginfo)
 		end
 		self:PriorToKilled(dmginfo, hitgroup)
 	end
+	return 1
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoFlinch(dmginfo, hitgroup)
