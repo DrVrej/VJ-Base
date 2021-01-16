@@ -574,11 +574,9 @@ function NPC_MetaTable:VJ_ForwardIsHidingZone(startPos, endPos, acceptWorld, ext
 		timer.Simple(3,function() if IsValid(cube) then cube:Remove() end end)
 	end
 
-	for _,v in ipairs(ents.FindInSphere(tr.HitPos,5)) do
-		//if vTbl_SpawnTestCube == true then print(v) end
+	for _,v in ipairs(ents.FindInSphere(tr.HitPos, 5)) do
 		if v == self:GetEnemy() or self:Disposition(v) == 1 or self:Disposition(v) == 2 then
 			hitent = true
-			//if vTbl_SpawnTestCube == true then print("it hit") end
 		end
 	end
 
