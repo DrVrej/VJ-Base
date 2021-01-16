@@ -874,7 +874,6 @@ ENT.FollowPlayer_DoneSelectSchedule = false
 ENT.VJ_IsBeingControlled_Tool = false
 ENT.WeaponUseEnemyEyePos = false
 ENT.LastHiddenZone_CanWander = true
-ENT.DoneLastHiddenZone_CanWander = false
 ENT.AlreadyDoneMeleeAttackFirstHit = false
 ENT.NoWeapon_UseScaredBehavior_Active = false
 ENT.FollowPlayer_Entity = NULL
@@ -2286,7 +2285,7 @@ function ENT:Think()
 	
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
 	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
-	if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 /*&& CurSched.IsMovingTask == true*/ then self:DropToFloor() end
+	if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) /*&& CurSched.IsMovingTask == true*/ then self:DropToFloor() end
 
 	local CurSched = self.CurrentSchedule
 	if CurSched != nil then
@@ -2340,7 +2339,7 @@ function ENT:Think()
 		self.NextBreathSoundT = CurTime() + dur
 	end
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
-	if GetConVarNumber("ai_disabled") == 0 && self:GetState() != VJ_STATE_FREEZE then
+	if GetConVarNumber("ai_disabled") == 0 && self:GetState() != VJ_STATE_FREEZE && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
 		if self.VJDEBUG_SNPC_ENABLED == true then
 			if GetConVarNumber("vj_npc_printcurenemy") == 1 then print(self:GetClass().."'s Enemy: ",self:GetEnemy()," Alerted? ",self.Alerted) end
 			if GetConVarNumber("vj_npc_printtakingcover") == 1 then if CurTime() > self.TakingCoverT == true then print(self:GetClass().." Is Not Taking Cover") else print(self:GetClass().." Is Taking Cover ("..self.TakingCoverT-CurTime()..")") end end
@@ -2602,7 +2601,6 @@ function ENT:Think()
 				-- Attack Timers --
 			ene = self:GetEnemy()
 			if IsValid(ene) then
-				self.DoneLastHiddenZone_CanWander = false
 				if !IsValid(self:GetActiveWeapon()) && self.NoWeapon_UseScaredBehavior == true && self.VJ_IsBeingControlled == false then
 					local anim = VJ_PICK(self.AnimTbl_ScaredBehaviorMovement)
 					if anim != false then
@@ -2669,15 +2667,6 @@ function ENT:Think()
 				
 				if self:GetArrivalActivity() == self.CurrentWeaponAnimation then
 					self:SetArrivalActivity(self.CurrentAnim_IdleStand)
-				end
-				
-				if self.DoneLastHiddenZone_CanWander == false then
-					self.DoneLastHiddenZone_CanWander = true
-					if CurTime() > self.LastHiddenZoneT then
-						self.LastHiddenZone_CanWander = true
-					else
-						self.LastHiddenZone_CanWander = false
-					end
 				end
 				
 				self.TimeSinceEnemyAcquired = 0
@@ -3356,13 +3345,16 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		self:AddEntityRelationship(self:GetEnemy(), 4, 10)
 	end
 	
+	self.LastHiddenZone_CanWander = CurTime() > self.LastHiddenZoneT and true or false
+	self.LastHiddenZoneT = 0
+	
 	self:SetEnemy(NULL)
 	//self:UpdateEnemyMemory(self,self:GetPos())
 	local vsched = ai_vj_schedule.New("vj_act_resetenemy")
 	if IsValid(self:GetEnemy()) then vsched:EngTask("TASK_FORGET", self:GetEnemy()) end
 	//vsched:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
 	self.NextWanderTime = CurTime() + math.Rand(3, 5)
-	if !self:BusyWithActivity() && self.IsGuard == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && RunToEnemyOnReset == true && CurTime() > self.LastHiddenZoneT && self.LastHiddenZone_CanWander == true then
+	if !self:BusyWithActivity() && self.IsGuard == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && RunToEnemyOnReset == true && self.LastHiddenZone_CanWander == true then
 		//ParticleEffect("explosion_turret_break", self.LatestEnemyPosition, Angle(0,0,0))
 		self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk))
 		vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)

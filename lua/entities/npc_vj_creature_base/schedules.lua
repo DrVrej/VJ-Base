@@ -5,7 +5,7 @@ require("ai_vj_schedule")
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
 function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
-	if self:GetState() == VJ_STATE_FREEZE then self:MaintainActivity() return end
+	if self:GetState() == VJ_STATE_FREEZE or self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then self:MaintainActivity() return end
 	//print("Running the RunAI")
 	//self:SetArrivalActivity(ACT_COWER)
 	//self:SetArrivalSpeed(1000)
@@ -31,7 +31,7 @@ function ENT:SetState(state, time)
 	state = state or VJ_STATE_NONE
 	time = time or -1
 	self.AIState = state
-	if state == VJ_STATE_FREEZE then -- Reset the tasks
+	if state == VJ_STATE_FREEZE or self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then -- Reset the tasks
 		self:TaskComplete()
 		self:VJ_TASK_IDLE_STAND()
 	end
@@ -86,6 +86,7 @@ function ENT:StartSchedule(schedule)
 			self:DoRunCode_OnFail(schedule)
 			return
 		end
+		self.LastHiddenZoneT = 0
 	end
 	if schedule.IsMovingTask_Run == nil then schedule.IsMovingTask_Run = false end
 	if schedule.IsMovingTask_Walk == nil then schedule.IsMovingTask_Walk = false end
