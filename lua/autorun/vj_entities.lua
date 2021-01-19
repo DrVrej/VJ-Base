@@ -115,7 +115,7 @@ function VJ_PICK(tbl)
 	if not tbl then return false end -- Yete table pame choone meche, veratartsour false!
 	if istable(tbl) then
 		if #tbl < 1 then return false end -- Yete table barabe (meg en aveli kich), getsoor!
-		tbl = tbl[math.random(1,#tbl)]
+		tbl = tbl[math.random(1, #tbl)]
 		return tbl
 	else
 		return tbl -- Yete table che, veratartsour abranke
@@ -862,7 +862,7 @@ hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 		//PrintTable(data)
 		
 		-- Investigate System
-		if SERVER && ent:IsPlayer() && data.SoundLevel >= 75 then
+		if SERVER && (ent:IsPlayer() or ent:IsNPC()) && data.SoundLevel >= 75 then
 			//print("---------------------------")
 			//PrintTable(data)
 			local quiet = (string_StartWith(data.OriginalSoundName, "player/footsteps") and (ent:Crouching() or ent:KeyDown(IN_WALK))) or false
