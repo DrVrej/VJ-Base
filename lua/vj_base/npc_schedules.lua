@@ -4,6 +4,97 @@ require("ai_vj_schedule")
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:VJ_TASK_FACE_X(faceType, customFunc)
+	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
+	if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false) or (self.IsVJBaseSNPC_Tank == true) then return end
+	//self.NextIdleStandTime = CurTime() + 1.2
+	local vschedFaceX = ai_vj_schedule.New("vj_face_x")
+	vschedFaceX:EngTask(faceType or "TASK_FACE_TARGET", 0)
+	if (customFunc) then customFunc(vschedFaceX) end
+	self:StartSchedule(vschedFaceX)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:VJ_TASK_GOTO_LASTPOS(moveType, customFunc)
+	local vsched = ai_vj_schedule.New("vj_goto_lastpos")
+	vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
+	//vsched:EngTask(moveType, 0)
+	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	vsched.IsMovingTask = true
+	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
+	//self.CanDoSelectScheduleAgain = false
+	//vsched.RunCode_OnFinish = function()
+		//self.CanDoSelectScheduleAgain = true
+	//end
+	if (customFunc) then customFunc(vsched) end
+	self:StartSchedule(vsched)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:VJ_TASK_GOTO_TARGET(moveType, customFunc)
+	local vsched = ai_vj_schedule.New("vj_goto_target")
+	vsched:EngTask("TASK_GET_PATH_TO_TARGET", 0)
+	//vsched:EngTask(moveType, 0)
+	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	vsched:EngTask("TASK_FACE_TARGET", 1)
+	vsched.IsMovingTask = true
+	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
+	if (customFunc) then customFunc(vsched) end
+	self:StartSchedule(vsched)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:VJ_TASK_GOTO_PLAYER(moveType, customFunc)
+	local vsched = ai_vj_schedule.New("vj_goto_player")
+	vsched:EngTask("TASK_GET_PATH_TO_PLAYER", 0)
+	//vsched:EngTask(moveType, 0)
+	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	vsched.IsMovingTask = true
+	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
+	if (customFunc) then customFunc(vsched) end
+	self:StartSchedule(vsched)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:VJ_TASK_COVER_FROM_ENEMY(moveType, customFunc)
+	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander(true) return end
+	moveType = moveType or "TASK_RUN_PATH"
+	local vsched = ai_vj_schedule.New("vj_cover_from_enemy")
+	vsched:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
+	//vsched:EngTask(moveType, 0)
+	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	vsched.IsMovingTask = true
+	if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
+	vsched.RunCode_OnFail = function()
+		local vschedFail = ai_vj_schedule.New("vj_cover_from_enemy_fail")
+		vschedFail:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 1)
+		vschedFail:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
+		//vschedFail:EngTask(moveType, 0)
+		vschedFail:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+		vschedFail.IsMovingTask = true
+		if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vschedFail.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vschedFail.IsMovingTask_Walk = true end
+		if (customFunc) then customFunc(vschedFail) end
+		self:StartSchedule(vschedFail)
+	end
+	if (customFunc) then customFunc(vsched) end
+	self:StartSchedule(vsched)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+local task_idleWander = ai_vj_schedule.New("vj_idle_wander")
+	//task_idleWander:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 0)
+	//task_idleWander:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
+	task_idleWander:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 350)
+	//task_idleWander:EngTask("TASK_WALK_PATH", 0)
+	task_idleWander:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	task_idleWander.ResetOnFail = true
+	task_idleWander.CanBeInterrupted = true
+	task_idleWander.IsMovingTask = true
+	task_idleWander.IsMovingTask_Walk = true
+	
+function ENT:VJ_TASK_IDLE_WANDER()
+	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander(true) return end
+	self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk))
+	//self:SetLastPosition(self:GetPos() + self:GetForward() * 300)
+	self:StartSchedule(task_idleWander)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 	if self:GetState() == VJ_STATE_FREEZE or self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then self:MaintainActivity() return end
 	//print("Running the RunAI")
@@ -27,28 +118,8 @@ function ENT:DoRunCode_OnFinish(schedule)
 	if schedule.RunCode_OnFinish != nil then schedule.AlreadyRanCode_OnFinish = true schedule.RunCode_OnFinish() return true end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SetState(state, time)
-	state = state or VJ_STATE_NONE
-	time = time or -1
-	self.AIState = state
-	if state == VJ_STATE_FREEZE or self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then -- Reset the tasks
-		self:TaskComplete()
-		self:VJ_TASK_IDLE_STAND()
-	end
-	if time >= 0 then
-		timer.Create("timer_state_reset"..self:EntIndex(), time, 1, function()
-			self:SetState()
-		end)
-	else
-		timer.Remove("timer_state_reset"..self:EntIndex())
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:GetState()
-	return self.AIState
-end
 local tr_addvec = Vector(0,0,2)
----------------------------------------------------------------------------------------------------------------------------------------------
+--
 function ENT:StartSchedule(schedule)
 	if (self:GetState() == VJ_STATE_ONLY_ANIMATION or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self:GetState() == VJ_STATE_ONLY_ANIMATION_NOATTACK) && schedule.IsPlayActivity != true then return end
 	if (IsValid(self:GetInternalVariable("m_hOpeningDoor")) or self:GetInternalVariable("m_flMoveWaitFinished") > 0) && self.CurrentSchedule != nil && schedule.Name == self.CurrentSchedule.Name then return end -- If it's the same task and it's opening a door, then DONT CONTINUE
@@ -159,7 +230,6 @@ function ENT:RunEngineTask(iTaskID,TaskData) end
 function ENT:StartEngineSchedule(scheduleID) self:ScheduleFinished() self.bDoingEngineSchedule = true end
 function ENT:EngineScheduleFinish() self.bDoingEngineSchedule = nil end
 function ENT:DoingEngineSchedule() return self.bDoingEngineSchedule end
-function ENT:OnCondition(cond) end
 /*-----------------------------------------------
 	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
