@@ -1383,7 +1383,7 @@ local task_chaseEnemyLOS = ai_vj_schedule.New("vj_chase_enemy_los")
 	task_chaseEnemyLOS.CanShootWhenMoving = true
 	task_chaseEnemyLOS.CanBeInterrupted = true
 	task_chaseEnemyLOS.IsMovingTask = true
-	task_chaseEnemyLOS.IsMovingTask_Run = true
+	task_chaseEnemyLOS.MoveType = 1
 --
 local task_chaseEnemy = ai_vj_schedule.New("vj_chase_enemy")
 	task_chaseEnemy:EngTask("TASK_GET_PATH_TO_ENEMY", 0)
@@ -1395,7 +1395,7 @@ local task_chaseEnemy = ai_vj_schedule.New("vj_chase_enemy")
 	//task_chaseEnemy.StopScheduleIfNotMoving = true
 	task_chaseEnemy.CanBeInterrupted = true
 	task_chaseEnemy.IsMovingTask = true
-	task_chaseEnemy.IsMovingTask_Run = true
+	task_chaseEnemy.MoveType = 1
 --
 local varChaseEnemy = "vj_chase_enemy"
 function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase)
@@ -1559,10 +1559,9 @@ function ENT:Think()
 	local CurSched = self.CurrentSchedule
 	if CurSched != nil then
 		if self:IsMoving() then
-			if CurSched.IsMovingTask_Walk == true && !VJ_HasValue(self.AnimTbl_Walk,self:GetMovementActivity()) then
+			if CurSched.MoveType == 0 && !VJ_HasValue(self.AnimTbl_Walk,self:GetMovementActivity()) then
 				self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk))
-			end
-			if CurSched.IsMovingTask_Run == true && !VJ_HasValue(self.AnimTbl_Run,self:GetMovementActivity()) then
+			elseif CurSched.MoveType == 1 && !VJ_HasValue(self.AnimTbl_Run,self:GetMovementActivity()) then
 				self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 			end
 		end
@@ -2440,7 +2439,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		vsched.ConstantlyFaceEnemy = true
 		vsched.CanBeInterrupted = true
 		vsched.IsMovingTask = true
-		vsched.IsMovingTask_Walk = true
+		vsched.MoveType = 0
 		//self.NextIdleTime = CurTime() + 10
 	end
 	if vsched.TaskCount > 0 then
@@ -3272,13 +3271,13 @@ function ENT:FootStepSoundCode(CustomTbl)
 			if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 			if VJ_PICK(soundtbl) != false then
 				local CurSched = self.CurrentSchedule
-				if self.DisableFootStepOnRun == false && ((VJ_HasValue(self.AnimTbl_Run,self:GetMovementActivity())) or (CurSched != nil  && CurSched.IsMovingTask_Run == true)) /*(VJ_HasValue(VJ_RunActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomRunActivites,self:GetMovementActivity()))*/ then
+				if self.DisableFootStepOnRun == false && ((VJ_HasValue(self.AnimTbl_Run,self:GetMovementActivity())) or (CurSched != nil  && CurSched.MoveType == 1)) /*(VJ_HasValue(VJ_RunActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomRunActivites,self:GetMovementActivity()))*/ then
 					self:CustomOnFootStepSound_Run()
 					VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch.a,self.FootStepPitch.b))
 					if self.HasWorldShakeOnMove == true && self.DisableWorldShakeOnMoveWhileRunning == false then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude, self.WorldShakeOnMoveFrequency, self.WorldShakeOnMoveDuration, self.WorldShakeOnMoveRadius) end
 					self.FootStepT = CurTime() + self.FootStepTimeRun
 					return
-				elseif self.DisableFootStepOnWalk == false && (VJ_HasValue(self.AnimTbl_Walk,self:GetMovementActivity()) or (CurSched != nil  && CurSched.IsMovingTask_Walk == true)) /*(VJ_HasValue(VJ_WalkActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomWalkActivites,self:GetMovementActivity()))*/ then
+				elseif self.DisableFootStepOnWalk == false && (VJ_HasValue(self.AnimTbl_Walk,self:GetMovementActivity()) or (CurSched != nil  && CurSched.MoveType == 0)) /*(VJ_HasValue(VJ_WalkActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomWalkActivites,self:GetMovementActivity()))*/ then
 					self:CustomOnFootStepSound_Walk()
 					VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch.a,self.FootStepPitch.b))
 					if self.HasWorldShakeOnMove == true && self.DisableWorldShakeOnMoveWhileWalking == false then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude, self.WorldShakeOnMoveFrequency, self.WorldShakeOnMoveDuration, self.WorldShakeOnMoveRadius) end
