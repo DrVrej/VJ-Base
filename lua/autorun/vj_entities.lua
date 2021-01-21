@@ -19,6 +19,7 @@ local string_find = string.find
 local string_Replace = string.Replace
 local string_StartWith = string.StartWith
 local table_remove = table.remove
+local defAng = Angle(0, 0, 0)
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Spawn Menu Creation ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -291,8 +292,10 @@ function VJ_IsCurrentAnimation(ent, anim)
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local props = {prop_physics=true, prop_physics_multiplayer=true, prop_physics_respawnable=true}
+--
 function VJ_IsProp(ent)
-	if ent:GetClass() == "prop_physics" or ent:GetClass() == "prop_physics_multiplayer" or ent:GetClass() == "prop_physics_respawnable" then return true end
+	if props[ent:GetClass()] then return true end
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -302,33 +305,29 @@ function VJ_IsAlive(ent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_DestroyCombineTurret(selfEnt, ent)
-	if ent:GetClass() == "npc_turret_floor" && !ent.VJ_TurretDestroyed then
-		ent:Fire("selfdestruct", "", 0)
+	if ent:GetClass() == "npc_turret_floor" then
+		ent:Fire("selfdestruct")
+		ent:SetHealth(0)
 		local phys = ent:GetPhysicsObject()
 		if IsValid(phys) then
 			phys:EnableMotion(true)
 			phys:ApplyForceCenter(selfEnt:GetForward()*10000)
 		end
-		ent.VJ_TurretDestroyed = true
 		return true
 	end
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+-- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
 function VJ_CreateTestObject(pos, ang, color, time, mdl)
-	ang = ang or Angle(0,0,0)
-	color = color or Color(255,0,0)
-	time = time or 3
-	mdl = mdl or "models/hunter/blocks/cube025x025x025.mdl"
-	
 	local obj = ents.Create("prop_dynamic")
-	obj:SetModel(mdl)
+	obj:SetModel(mdl or "models/hunter/blocks/cube025x025x025.mdl")
 	obj:SetPos(pos)
-	obj:SetAngles(ang)
-	obj:SetColor(color)
+	obj:SetAngles(ang or defAng)
+	obj:SetColor(color or Color(255, 0, 0))
 	obj:Spawn()
 	obj:Activate()
-	timer.Simple(time, function() if IsValid(obj) then obj:Remove() end end)
+	timer.Simple(time or 3, function() if IsValid(obj) then obj:Remove() end end)
 	return obj
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -359,8 +358,8 @@ local Entity_MetaTable = FindMetaTable("Entity")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_Controller_InitialMessage(ply)
 	if !IsValid(ply) then return end
+	ply:ChatPrint("For controls, check \"Controller Settings\" under \"DrVrej\" tab")
 	if self.IsVJBaseSNPC == true then
-		ply:ChatPrint("For controls, check \"Controller Settings\" under \"DrVrej\" tab")
 		self:Controller_IntMsg(ply)
 	end
 end
@@ -376,20 +375,6 @@ function NPC_MetaTable:VJ_HasNoTarget(ent)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_DecideSoundPitch(pitch1, pitch2)
-	//if pitch1 == nil then return end
-	local getpitch1 = self.GeneralSoundPitch1
-	local getpitch2 = self.GeneralSoundPitch2
-	local picknum = self.UseTheSameGeneralSoundPitch_PickedNumber
-	if self.UseTheSameGeneralSoundPitch == true && picknum != 0 then
-		getpitch1 = picknum
-		getpitch2 = picknum
-	end
-	if pitch1 != false && isnumber(pitch1) then getpitch1 = pitch1 end
-	if pitch2 != false && isnumber(pitch2) then getpitch2 = pitch2 end
-	return math.random(getpitch1, getpitch2)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 -- override = Used internally by the base, overrides the result and returns Val instead (Useful for variables that allow "false" to let the base decide the time)
 function NPC_MetaTable:DecideAnimationLength(anim, override, decrease)
 	if isbool(anim) then return 0 end
@@ -401,110 +386,6 @@ function NPC_MetaTable:DecideAnimationLength(anim, override, decrease)
 	else
 		return 0
 	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
--- timer2 = Use for randomization, leave to "false" to just use timer1
--- untilDamage = Used for timer-based attacks, decreases timer1
--- animDur = Used when timer1 is set to "false", it over takes timer1
-function NPC_MetaTable:DecideAttackTimer(timer1, timer2, untilDamage, animDur)
-	local result = timer1
-	-- animDur has already calculated the playback rate!
-	if timer1 == false then -- Let the base decide..
-		if untilDamage == false then -- Event-based
-			result = animDur
-		else -- Timer-based
-			result = animDur - (untilDamage / self:GetPlaybackRate())
-		end
-	else -- If a specific number has been put then make sure to calculate its playback rate
-		result = result / self:GetPlaybackRate()
-	end
-	
-	-- If a 2nd value is given (Used for randomization), calculate its playback rate as well and then get a random value between it and the result
-	if isnumber(timer2) then
-		result = math.Rand(result, timer2 / self:GetPlaybackRate())
-	end
-	
-	return result // / self:GetPlaybackRate() -- No need, playback is already calculated above
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_PlaySequence(seq, playbackRate, wait, waitTime, interruptible)
-	if !seq then return end
-	if interruptible == true then
-		self.VJ_PlayingSequence = false
-		self.VJ_PlayingInterruptSequence = true
-	else
-		self.VJ_PlayingSequence = true
-		self.VJ_PlayingInterruptSequence = false
-	end
-	
-	self:ClearSchedule()
-	self:StopMoving()
-	self:ResetSequence(self:LookupSequence(VJ_PICK(seq)))
-	self:ResetSequenceInfo()
-	self:SetCycle(0) -- Start from the beginning
-	if isnumber(playbackRate) then
-		self.AnimationPlaybackRate = playbackRate
-		self:SetPlaybackRate(playbackRate)
-	end
-	if wait == true then
-		timer.Create("timer_act_seq_wait"..self:EntIndex(), waitTime, 1, function()
-			self.VJ_PlayingInterruptSequence = false
-			self.VJ_PlayingSequence = false
-			//self.vACT_StopAttacks = false
-		end)
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_GetAllPoseParameters(prt)
-	local result = {}
-	prt = prt or false
-	for i = 0, self:GetNumPoseParameters() - 1 do
-		local min, max = self:GetPoseParameterRange(i)
-		if prt == true then
-			print(self:GetPoseParameterName(i)..' '..min.." / "..max)
-		end
-		table.insert(result,self:GetPoseParameterName(i))
-	end
-	return result
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_ReturnAngle(ang)
-	if self.TurningUseAllAxis == true then
-		return Angle(ang.x, ang.y, ang.z)
-	end
-	return Angle(0, ang.y, 0)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:FaceCertainPosition(pos, time)
-	pos = pos or Vector(0,0,0)
-	time = time or 0
-	local setangs = Angle(0,(pos - self:GetPos()):Angle().y,0)
-	self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
-	self:SetIdealYawAndUpdate(setangs.y, speed)
-	self.IsDoingFacePosition = setangs
-	timer.Create("timer_face_position"..self:EntIndex(), time, 1, function() self.IsDoingFacePosition = false end)
-	return setangs
-end
----------------------------------------------------------------------------------------------------------------------------------------------
--- onlyEnemy = Will only face the entity if it's an enemy
--- faceEnemyTime = How long should it face the enemy?
-function NPC_MetaTable:FaceCertainEntity(ent, onlyEnemy, faceEnemyTime)
-	if !IsValid(ent) or GetConVarNumber("ai_disabled") == 1 or (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false) then return false end
-	if onlyEnemy == true && IsValid(self:GetEnemy()) then
-		self.IsDoingFaceEnemy = true
-		timer.Create("timer_face_enemy"..self:EntIndex(), faceEnemyTime or 0, 1, function() self.IsDoingFaceEnemy = false end)
-		local setangs = self:VJ_ReturnAngle((ent:GetPos() - self:GetPos()):Angle())
-		self:SetIdealYawAndUpdate(setangs.y)
-		self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
-		return setangs //SetLocalAngles
-	else
-		local setangs = self:VJ_ReturnAngle((ent:GetPos() - self:GetPos()):Angle())
-		self:SetIdealYawAndUpdate(setangs.y)
-		self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
-		//self:SetIdealYawAndUpdate(setangs.y)
-		return setangs
-	end
-	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetNearestPointToVector(pos, sameZ)
@@ -545,91 +426,6 @@ function NPC_MetaTable:VJ_GetNearestPointToEntityDistance(ent, onlySelfGetPos)
 	return Pos_Enemy:Distance(Pos_Self) // math.Distance(Pos_Enemy.x,Pos_Enemy.y,Pos_Self.x,Pos_Self.y)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_ForwardIsHidingZone(startPos, endPos, acceptWorld, extraOptions)
-	if !IsValid(self:GetEnemy()) then return false, {} end
-	startPos = startPos or self:NearestPoint(self:GetPos() + self:OBBCenter())
-	endPos = endPos or self:GetEnemy():EyePos()
-	acceptWorld = acceptWorld or false
-	extraOptions = extraOptions or {}
-		local vTbl_SetLastHiddenTime = extraOptions.SetLastHiddenTime or false -- Should it set the last hidden time? (Mostly used for humans)
-		local vTbl_SpawnTestCube = extraOptions.SpawnTestCube or false -- Should it spawn a cube where the trace hit?
-	local hitent = false
-	tr = util.TraceLine({
-		start = startPos,
-		endpos = endPos,
-		filter = self
-	})
-	//print("--------------------------------------------")
-	//print(tr.Entity)
-	//PrintTable(tr)
-	if vTbl_SpawnTestCube == true then
-		-- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
-		local cube = ents.Create("prop_dynamic")
-		cube:SetModel("models/hunter/blocks/cube025x025x025.mdl")
-		cube:SetPos(tr.HitPos)
-		cube:SetAngles(self:GetAngles())
-		cube:SetColor(Color(255,0,0))
-		cube:Spawn()
-		cube:Activate()
-		timer.Simple(3,function() if IsValid(cube) then cube:Remove() end end)
-	end
-
-	for _,v in ipairs(ents.FindInSphere(tr.HitPos, 5)) do
-		if v == self:GetEnemy() or self:Disposition(v) == 1 or self:Disposition(v) == 2 then
-			hitent = true
-		end
-	end
-
-	if hitent == true then if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = 0 end return false, tr end
-	if endPos:Distance(tr.HitPos) <= 10 then if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = 0 end return false, tr end
-	if tr.HitWorld == true && self:GetPos():Distance(tr.HitPos) < 200 then if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = CurTime() + 20 end return true, tr end
-	if /*tr.Entity == NULL or tr.Entity:IsNPC() or tr.Entity:IsPlayer() or*/ tr.Entity == self:GetEnemy() or (acceptWorld == false && tr.HitWorld == true) then
-	if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = 0 end return false, tr else if vTbl_SetLastHiddenTime == true then self.LastHiddenZoneT = CurTime() + 20 end return true, tr end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_CheckAllFourSides(checkDist)
-	checkDist = checkDist or 200
-	local result = {Forward=false, Backward=false, Right=false, Left=false}
-	local i = 0
-	for _, v in ipairs({self:GetForward(), -self:GetForward(), self:GetRight(), -self:GetRight()}) do
-		i = i + 1
-		tr = util.TraceLine({
-			start = self:GetPos() + self:OBBCenter(),
-			endpos = self:GetPos() + self:OBBCenter() + v*checkDist,
-			filter = self
-		})
-		if self:GetPos():Distance(tr.HitPos) >= checkDist then
-			if i == 1 then result.Forward = true end
-			if i == 2 then result.Backward = true end
-			if i == 3 then result.Right = true end
-			if i == 4 then result.Left = true  end
-		end
-	end
-	return result
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_DoSetEnemy(ent, stopMoving, doMinorIfActiveEnemy)
-	if !IsValid(ent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or ent:Health() <= 0 or (ent:IsPlayer() && (!ent:Alive() or GetConVarNumber("ai_ignoreplayers") == 1)) then return end
-	stopMoving = stopMoving or false -- Will not run if doMinorIfActiveEnemy passes!
-	doMinorIfActiveEnemy = doMinorIfActiveEnemy or false -- It will run a much quicker set enemy without resetting everything (Only if it has an active enemy!)
-	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == ent then self:DoMedicCode_Reset() end
-	self.TimeSinceLastSeenEnemy = 0
-	self:AddEntityRelationship(ent, D_HT, 99)
-	self:UpdateEnemyMemory(ent, ent:GetPos())
-	if doMinorIfActiveEnemy == true && IsValid(self:GetEnemy()) then self:SetEnemy(ent) return end -- End it here if it's a minor set enemy
-	self:SetEnemy(ent)
-	self.TimeSinceEnemyAcquired = CurTime()
-	self.NextResetEnemyT = CurTime() + 0.5 //2
-	if stopMoving == true then
-		self:ClearGoal()
-		self:StopMoving()
-	end
-	if self.Alerted == false then
-		self.LatestEnemyDistance = self:GetPos():Distance(ent:GetPos())
-		self:DoAlert(ent)
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function Entity_MetaTable:CalculateProjectile(projType, startPos, endPos, projVel)
 	if projType == "Line" then -- Suggested to disable gravity!
 		return ((endPos - startPos):GetNormal()) * projVel
@@ -660,22 +456,6 @@ function Entity_MetaTable:CalculateProjectile(projType, startPos, endPos, projVe
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:DoFormation_Diamond(ent, it, spacing)
-	it = it or 0
-	spacing = spacing or 50
-	if it == 0 then
-		ent:SetLastPosition(self:GetPos() + self:GetForward()*spacing + self:GetRight()*spacing)
-	elseif it == 1 then
-		ent:SetLastPosition(self:GetPos() + self:GetForward()*-spacing + self:GetRight()*spacing)
-	elseif it == 2 then
-		ent:SetLastPosition(self:GetPos() + self:GetForward()*spacing + self:GetRight()*-spacing)
-	elseif it == 3 then
-		ent:SetLastPosition(self:GetPos() + self:GetForward()*-spacing + self:GetRight()*-spacing)
-	else
-		ent:SetLastPosition(self:GetPos() + self:GetForward()*(spacing + (3 * it)) + self:GetRight()*(spacing + (3 * it)))
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetDifficultyValue(int)
 	if self.SelectedDifficulty == -3 then
 		return math.Clamp(int - (int * 0.99),1,int)
@@ -699,14 +479,6 @@ function NPC_MetaTable:VJ_GetDifficultyValue(int)
 		return int + (int * 5.0)
 	end
 	return int
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_SetSchedule(schedID)
-	if self.VJ_PlayingSequence == true then return end
-	self.VJ_PlayingInterruptSequence = false
-	//if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then return end
-	//print(self:GetName().." - "..schedID)
-	self:SetSchedule(schedID)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
  -- !!!!! Deprecated Function !!!!! --

@@ -27,11 +27,15 @@ function ENT:MatFootStepQCEvent(data)
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-/*if (CLIENT) then
-	local Name = "rrrrrrrrrrrrrrrrrr"
-	local LangName = "rrrrrrrrrrrrrrrrrr"
-	language.Add(LangName, Name)
-	killicon.Add(LangName,"HUD/killicons/default",Color(255,80,0,255))
-	language.Add("#"..LangName, Name)
-	killicon.Add("#"..LangName,"HUD/killicons/default",Color(255,80,0,255))
-end*/
+if CLIENT then
+	//ENT.RenderGroup = RENDERGROUP_BOTH
+	function ENT:Initialize() end
+	function ENT:Draw() self:DrawModel() self:CustomOnDraw() end
+	function ENT:DrawTranslucent() self:Draw() end
+	function ENT:BuildBonePositions(NumBones,NumPhysBones) end
+	function ENT:SetRagdollBones(bIn) self.m_bRagdollSetup = bIn end
+	function ENT:DoRagdollBone(PhysBoneNum,BoneNum) /*self:SetBonePosition(BoneNum,Pos,Angle)*/ end
+	//function ENT:CalcAbsolutePosition(pos, ang) end
+	-- Custom functions ---------------------------------------------------------------------------------------------------------------------------------------------
+	function ENT:CustomOnDraw() end
+end
