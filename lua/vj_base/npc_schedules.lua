@@ -21,7 +21,7 @@ function ENT:VJ_TASK_GOTO_LASTPOS(moveType, customFunc)
 	//vsched:EngTask(moveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched.IsMovingTask = true
-	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
+	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
 	//self.CanDoSelectScheduleAgain = false
 	//vsched.RunCode_OnFinish = function()
 		//self.CanDoSelectScheduleAgain = true
@@ -37,7 +37,7 @@ function ENT:VJ_TASK_GOTO_TARGET(moveType, customFunc)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched:EngTask("TASK_FACE_TARGET", 1)
 	vsched.IsMovingTask = true
-	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
+	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
 	if (customFunc) then customFunc(vsched) end
 	self:StartSchedule(vsched)
 end
@@ -48,7 +48,7 @@ function ENT:VJ_TASK_GOTO_PLAYER(moveType, customFunc)
 	//vsched:EngTask(moveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched.IsMovingTask = true
-	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
+	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
 	if (customFunc) then customFunc(vsched) end
 	self:StartSchedule(vsched)
 end
@@ -61,7 +61,7 @@ function ENT:VJ_TASK_COVER_FROM_ENEMY(moveType, customFunc)
 	//vsched:EngTask(moveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched.IsMovingTask = true
-	if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.IsMovingTask_Walk = true end
+	if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
 	vsched.RunCode_OnFail = function()
 		local vschedFail = ai_vj_schedule.New("vj_cover_from_enemy_fail")
 		vschedFail:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 1)
@@ -69,7 +69,7 @@ function ENT:VJ_TASK_COVER_FROM_ENEMY(moveType, customFunc)
 		//vschedFail:EngTask(moveType, 0)
 		vschedFail:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 		vschedFail.IsMovingTask = true
-		if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vschedFail.IsMovingTask_Run = true else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vschedFail.IsMovingTask_Walk = true end
+		if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vschedFail.MoveType = 1 else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vschedFail.MoveType = 0 end
 		if (customFunc) then customFunc(vschedFail) end
 		self:StartSchedule(vschedFail)
 	end
@@ -86,7 +86,7 @@ local task_idleWander = ai_vj_schedule.New("vj_idle_wander")
 	task_idleWander.ResetOnFail = true
 	task_idleWander.CanBeInterrupted = true
 	task_idleWander.IsMovingTask = true
-	task_idleWander.IsMovingTask_Walk = true
+	task_idleWander.MoveType = 0
 	
 function ENT:VJ_TASK_IDLE_WANDER()
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander(true) return end
@@ -100,6 +100,7 @@ function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 	//print("Running the RunAI")
 	//self:SetArrivalActivity(ACT_COWER)
 	//self:SetArrivalSpeed(1000)
+	print(self:IsRunningBehavior())
 	if self:IsRunningBehavior() or self:DoingEngineSchedule() then return true end
 	if (!self.CurrentSchedule or (self.CurrentSchedule != nil && ((self:IsMoving() && self.CurrentSchedule.CanBeInterrupted == true) or (!self:IsMoving())))) && ((self.VJ_PlayingSequence == false) or (self.VJ_PlayingSequence == true && self.VJ_PlayingInterruptSequence == true)) then self:SelectSchedule() end
 	if (self.CurrentSchedule) then self:DoSchedule(self.CurrentSchedule) end
@@ -107,44 +108,44 @@ function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoRunCode_OnFail(schedule)
-	if schedule == nil then return false end
-	if schedule.AlreadyRanCode_OnFail == true then return false end
+	if schedule == nil or schedule.AlreadyRanCode_OnFail == true then return false end
 	if schedule.RunCode_OnFail != nil then schedule.AlreadyRanCode_OnFail = true schedule.RunCode_OnFail() return true end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoRunCode_OnFinish(schedule)
-	if schedule == nil then return false end
-	if schedule.AlreadyRanCode_OnFinish == true then return false end
+	if schedule == nil or schedule.AlreadyRanCode_OnFinish == true then return false end
 	if schedule.RunCode_OnFinish != nil then schedule.AlreadyRanCode_OnFinish = true schedule.RunCode_OnFinish() return true end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local tr_addvec = Vector(0,0,2)
 --
 function ENT:StartSchedule(schedule)
+	if self.MovementType == VJ_MOVETYPE_STATIONARY && schedule.IsMovingTask == true then return end -- It's stationary therefore should not move!
 	if (self:GetState() == VJ_STATE_ONLY_ANIMATION or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self:GetState() == VJ_STATE_ONLY_ANIMATION_NOATTACK) && schedule.IsPlayActivity != true then return end
-	if (IsValid(self:GetInternalVariable("m_hOpeningDoor")) or self:GetInternalVariable("m_flMoveWaitFinished") > 0) && self.CurrentSchedule != nil && schedule.Name == self.CurrentSchedule.Name then return end -- If it's the same task and it's opening a door, then DONT CONTINUE
+	if (IsValid(self:GetInternalVariable("m_hOpeningDoor")) or self:GetInternalVariable("m_flMoveWaitFinished") > 0) && self.CurrentSchedule != nil && schedule.Name == self.CurrentSchedule.Name then return end -- If it's the same task and it's opening a door, then DO NOT continue
 	self:ClearCondition(35)
 	if (!schedule.RunCode_OnFail) then schedule.RunCode_OnFail = nil end -- Code that will run ONLY when it fails!
 	if (!schedule.RunCode_OnFinish) then schedule.RunCode_OnFinish = nil end -- Code that will run once the task finished (Will run even if failed)
-	if (!schedule.ResetOnFail) then schedule.ResetOnFail = false end
+	if (!schedule.ResetOnFail) then schedule.ResetOnFail = false end -- Makes the NPC stop moving
 	if (!schedule.StopScheduleIfNotMoving) then schedule.StopScheduleIfNotMoving = false end -- Will stop from certain entities, such as other NPCs
 	if (!schedule.StopScheduleIfNotMoving_Any) then schedule.StopScheduleIfNotMoving_Any = false end -- Will stop from any blocking entity!
 	if (!schedule.CanBeInterrupted) then schedule.CanBeInterrupted = false end
 	if (!schedule.ConstantlyFaceEnemy) then schedule.ConstantlyFaceEnemy = false end -- Constantly face the enemy while doing this task
 	if (!schedule.ConstantlyFaceEnemyVisible) then schedule.ConstantlyFaceEnemyVisible = false end
 	if (!schedule.CanShootWhenMoving) then schedule.CanShootWhenMoving = false end -- Is it able to fire when moving?
-	if self.MovementType == VJ_MOVETYPE_STATIONARY && schedule.IsMovingTask == true then
-		return
-	end
 	for _,v in ipairs(schedule.Tasks) do
 		if schedule.IsMovingTask == true then break end
-		if v.TaskName == "TASK_RUN_PATH" or v.TaskName == "TASK_RUN_PATH_FLEE" or v.TaskName == "TASK_RUN_PATH_TIMED" or v.TaskName == "TASK_RUN_PATH_FOR_UNITS" or v.TaskName == "TASK_RUN_PATH_WITHIN_DIST" then schedule.IsMovingTask = true schedule.IsMovingTask_Run = true break end
-		if v.TaskName == "TASK_WALK_PATH" or v.TaskName == "TASK_WALK_PATH_TIMED" or v.TaskName == "TASK_WALK_PATH_WITHIN_DIST" or v.TaskName == "TASK_WALK_PATH_FOR_UNITS" then schedule.IsMovingTask = true schedule.IsMovingTask_Walk = true break end
-		schedule.IsMovingTask = false
-		schedule.IsMovingTask_Run = false
-		schedule.IsMovingTask_Walk = false
+		if v.TaskName == "TASK_RUN_PATH" or v.TaskName == "TASK_RUN_PATH_FLEE" or v.TaskName == "TASK_RUN_PATH_TIMED" or v.TaskName == "TASK_RUN_PATH_FOR_UNITS" or v.TaskName == "TASK_RUN_PATH_WITHIN_DIST" then
+			schedule.IsMovingTask = 1
+		elseif v.TaskName == "TASK_WALK_PATH" or v.TaskName == "TASK_WALK_PATH_TIMED" or v.TaskName == "TASK_WALK_PATH_WITHIN_DIST" or v.TaskName == "TASK_WALK_PATH_FOR_UNITS" then
+			schedule.IsMovingTask = 0
+		else
+			schedule.IsMovingTask = false
+			schedule.MoveType = false
+		end
 	end
 	if schedule.IsMovingTask == nil then schedule.IsMovingTask = false end
+	if schedule.MoveType == nil then schedule.MoveType = false end
 	if schedule.IsMovingTask == true then
 		local tr = util.TraceHull({
 			start = self:GetPos(),
@@ -153,16 +154,14 @@ function ENT:StartSchedule(schedule)
 			maxs = self:OBBMaxs() + tr_addvec,
 			filter = self
 		})
-		if IsValid(tr.Entity) && tr.Entity:IsNPC() && !VJ_HasValue(self.EntitiesToNoCollide,tr.Entity:GetClass()) then
+		if IsValid(tr.Entity) && tr.Entity:IsNPC() && !VJ_HasValue(self.EntitiesToNoCollide, tr.Entity:GetClass()) then
 			self:DoRunCode_OnFail(schedule)
 			return
 		end
 		self.LastHiddenZoneT = 0
 	end
-	if schedule.IsMovingTask_Run == nil then schedule.IsMovingTask_Run = false end
-	if schedule.IsMovingTask_Walk == nil then schedule.IsMovingTask_Walk = false end
 	if schedule.CanShootWhenMoving == true && self.CurrentWeaponAnimation != nil && IsValid(self:GetEnemy()) then
-		self:DoWeaponAttackMovementCode(true, (schedule.IsMovingTask_Walk and 1) or 0) -- Send 1 if the current task is walking!
+		self:DoWeaponAttackMovementCode(true, (schedule.MoveType == 0 and 1) or 0) -- Send 1 if the current task is walking!
 		self:SetArrivalActivity(self.CurrentWeaponAnimation)
 	end
 	schedule.AlreadyRanCode_OnFail = false
@@ -185,9 +184,9 @@ end
 function ENT:ScheduleFinished(schedule)
 	schedule = schedule or self.CurrentSchedule
 	self:DoRunCode_OnFinish(schedule)
-	self.CurrentSchedule 	= nil
-	self.CurrentTask 		= nil
-	self.CurrentTaskID 		= nil
+	self.CurrentSchedule = nil
+	self.CurrentTask = nil
+	self.CurrentTaskID = nil
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetTask(task)
@@ -202,17 +201,14 @@ function ENT:NextTask(schedule)
 	//print(self.CurrentTaskID)
 	if !schedule or !self then return end
 	if self.GetNumberOfTasks == nil then //1
-	print("WARNING: VJ BASE ANIMATION SYSTEM IS BROKEN!") end
-	//self:ScheduleFinished(schedule)
-	//return end
-	//if self.CurrentTaskID > 3 then return end -- if CurrentTaskID more than 3, should we tell then game not to run it? Still have to figure it out
+		print("VJ Base Schedules: Number of tasks is nil!")
+	end
 	//print("Running NextTask")
-	self.CurrentTaskID = self.CurrentTaskID +1
-	//if self.CurrentTaskID != nil then
+	self.CurrentTaskID = self.CurrentTaskID + 1
 	if (self.CurrentTaskID > self.GetNumberOfTasks) then
 		self:ScheduleFinished(schedule)
 		return
-	end //end
+	end
 	self:SetTask(schedule:GetTask(self.CurrentTaskID))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -1002,7 +1002,7 @@ function ENT:DoEntityRelationshipCheck()
 						//vsched.CanShootWhenMoving = true
 						//vsched.ConstantlyFaceEnemy = true
 						vsched.IsMovingTask = true
-						vsched.IsMovingTask_Run = true
+						vsched.MoveType = 1
 						self:StartSchedule(vsched)
 						self.TakingCoverT = CurTime() + 0.2
 					end

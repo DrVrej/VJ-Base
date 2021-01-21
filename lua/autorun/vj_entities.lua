@@ -585,21 +585,24 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 	end*/
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local ignoreEnts = {monster_gman=true, npc_grenade_frag=true, bullseye_strider_focus=true, npc_bullseye=true, npc_enemyfinder=true, hornet=true}
+--
 hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(entity)
 	if CLIENT or !entity:IsNPC() then return end
-	if entity:GetClass() != "monster_gman" && entity:GetClass() != "npc_grenade_frag" && entity:GetClass() != "bullseye_strider_focus" && entity:GetClass() != "npc_bullseye" && entity:GetClass() != "npc_enemyfinder" && entity:GetClass() != "hornet" then
+	if !ignoreEnts[entity:GetClass()] then
 		timer.Simple(0.1, function() -- Make sure the SNPC is initialized properly
 			if IsValid(entity) then
 				if entity.IsVJBaseSNPC == true && entity.CurrentPossibleEnemies == nil then entity.CurrentPossibleEnemies = {} end
 				local EntsTbl = ents.GetAll()
 				local count = 1
+				local cvSeePlys = GetConVarNumber("ai_ignoreplayers") == 0
 				for x = 1, #EntsTbl do
 					local v = EntsTbl[x]
 					if v:IsNPC() or v:IsPlayer() then
 						-- Add enemies to the created entity (if it's a VJ Base SNPC)
 						if entity.IsVJBaseSNPC == true then
 							entity:EntitiesToNoCollideCode(v)
-							if (v:IsNPC() && (v:GetClass() != entity:GetClass() && entity:GetClass() != "monster_gman" && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 /*&& v:Alive()*/) then
+							if (v:IsNPC() && (v:GetClass() != entity:GetClass() && !ignoreEnts[entity:GetClass()] && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && cvSeePlys /*&& v:Alive()*/) then
 								entity.CurrentPossibleEnemies[count] = v
 								count = count + 1
 							end
