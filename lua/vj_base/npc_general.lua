@@ -398,7 +398,7 @@ function ENT:VJ_ForwardIsHidingZone(startPos, endPos, acceptWorld, extraOptions)
 	extraOptions = extraOptions or {}
 		local setLastHiddenTime = extraOptions.SetLastHiddenTime or false
 	local hitEnt = false
-	tr = util.TraceLine({
+	local tr = util.TraceLine({
 		start = startPos,
 		endpos = endPos,
 		filter = self
@@ -449,7 +449,7 @@ function ENT:VJ_CheckAllFourSides(checkDist)
 	local myPos = self:GetPos() + self:OBBCenter()
 	for _, v in ipairs({self:GetForward(), -self:GetForward(), self:GetRight(), -self:GetRight()}) do
 		i = i + 1
-		tr = util.TraceLine({
+		local tr = util.TraceLine({
 			start = myPos,
 			endpos = myPos + v*checkDist,
 			filter = self
