@@ -97,6 +97,7 @@ VJ_STATE_ONLY_ANIMATION_CONSTANT = 101 -- Same as VJ_STATE_ONLY_ANIMATION but wi
 VJ_STATE_ONLY_ANIMATION_NOATTACK = 102 -- Same as VJ_STATE_ONLY_ANIMATION but with the addition that attacks will also not be performed by the NPC!
 
 VJ_WEP_STATE_NONE = 0 -- No state is set
+VJ_WEP_STATE_HOLSTERED = 1 -- Weapon is holstered
 VJ_WEP_STATE_ANTI_ARMOR = 20 -- It's currently using its anti-armor weapon
 VJ_WEP_STATE_MELEE = 21 -- It's currently using its melee weapon
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -641,7 +642,7 @@ hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 			//print("---------------------------")
 			//PrintTable(data)
 			local quiet = (string_StartWith(data.OriginalSoundName, "player/footsteps") and (ent:Crouching() or ent:KeyDown(IN_WALK))) or false
-			if quiet == false then
+			if quiet == false && ent.Dead != true then
 				ent.VJ_LastInvestigateSd = CurTime()
 				ent.VJ_LastInvestigateSdLevel = (data.SoundLevel * data.Volume) + (((data.Volume <= 0.4) and 15) or 0)
 			end
