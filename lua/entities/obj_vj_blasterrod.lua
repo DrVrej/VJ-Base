@@ -79,18 +79,6 @@ function ENT:DeathEffects(data,phys)
 	effectdata:SetOrigin(data.HitPos)
 	//effectdata:SetMagnitude(500)
 	util.Effect("StunstickImpact", effectdata)
-
-	/*self.ExplosionLight1 = ents.Create("light_dynamic")
-	self.ExplosionLight1:SetKeyValue("brightness", "1")
-	self.ExplosionLight1:SetKeyValue("distance", "100")
-	self.ExplosionLight1:SetLocalPos(data.HitPos)
-	self.ExplosionLight1:SetLocalAngles(self:GetAngles())
-	self.ExplosionLight1:Fire("Color", "255 0 0")
-	self.ExplosionLight1:SetParent(self)
-	self.ExplosionLight1:Spawn()
-	self.ExplosionLight1:Activate()
-	self.ExplosionLight1:Fire("TurnOn", "", 0)
-	self:DeleteOnRemove(self.ExplosionLight1)*/
 end
 /*-----------------------------------------------
 	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***

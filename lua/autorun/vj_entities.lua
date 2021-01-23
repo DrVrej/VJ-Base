@@ -173,16 +173,15 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_FindInCone(pos, dir, dist, deg, extraOptions)
 	extraOptions = extraOptions or {}
-		local vTbl_AllEntities = extraOptions.AllEntities or false -- Should it detect all types of entities? | False = NPCs and Players only!
-	local EntitiesFound = ents.FindInSphere(pos, dist)
-	local Foundents = {}
-	local CosineDegrees = math.cos(math.rad(deg))
-	for _,v in pairs(EntitiesFound) do
-	if ((vTbl_AllEntities == true) or (vTbl_AllEntities == false && (v:IsNPC() or v:IsPlayer()))) && (dir:Dot((v:GetPos() -Position):GetNormalized()) > CosineDegrees) then
-			Foundents[#Foundents+1] = v
+		local allEntities = extraOptions.AllEntities or false -- Should it detect all types of entities? | False = NPCs and Players only!
+	local foundEnts = {}
+	local cosDeg = math.cos(math.rad(deg))
+	for _,v in pairs(ents.FindInSphere(pos, dist)) do
+		if ((allEntities == true) or (allEntities == false && (v:IsNPC() or v:IsPlayer()))) && (dir:Dot((v:GetPos() - pos):GetNormalized()) > cosDeg) then
+			foundEnts[#foundEnts + 1] = v
 		end
 	end
-	return Foundents
+	return foundEnts
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_CreateSound(ent, sd, sdLevel, sdPitch, customFunc)

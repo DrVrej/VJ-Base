@@ -39,13 +39,13 @@ function ENT:SetInitializeCapabilities()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule()
-	self:VJ_SetSchedule(SCHED_IDLE_WANDER)
+	self:SetSchedule(SCHED_IDLE_WANDER)
 	local MyNearbyTargets = ents.FindInSphere(self:GetPos(),150)
 	if (!MyNearbyTargets) then return end
 	for _,v in pairs(MyNearbyTargets) do
 		if v:IsPlayer() then
-			self:VJ_SetSchedule(SCHED_IDLE_STAND)
-			self:VJ_SetSchedule(SCHED_TARGET_FACE)
+			self:SetSchedule(SCHED_IDLE_STAND)
+			self:SetSchedule(SCHED_TARGET_FACE)
 		end
 	end
 end
@@ -55,8 +55,8 @@ function ENT:OnTakeDamage()
 		self:EmitSound("vo/npc/male01/pain0"..math.random(1,9)..".wav")
 		self.PainSoundT = CurTime() + 1
 	end
-	//self:VJ_SetSchedule(SCHED_COWER)
-	self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
+	//self:SetSchedule(SCHED_COWER)
+	self:SetSchedule(SCHED_RUN_FROM_ENEMY)
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -67,8 +67,8 @@ function ENT:AcceptInput(key, activator, caller)
 		umsg.Start("vj_testentity_onmenuopen", activator)
 		umsg.End()
 		self:EmitSound("vo/npc/male01/hi0"..math.random(1,2)..".wav")
-		self:VJ_SetSchedule(SCHED_IDLE_STAND)
-		self:VJ_SetSchedule(SCHED_TARGET_FACE)
+		self:SetSchedule(SCHED_IDLE_STAND)
+		self:SetSchedule(SCHED_TARGET_FACE)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

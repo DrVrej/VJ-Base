@@ -802,7 +802,7 @@ function ENT:DoAlert(ent)
 		if self.AlertSounds_OnlyOnce == true then
 			self.HasAlertSounds = false
 		end
-		self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert1,self.NextSoundTime_Alert2)
+		self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert.a, self.NextSoundTime_Alert.b)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

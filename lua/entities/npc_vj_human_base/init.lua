@@ -238,7 +238,7 @@ ENT.DeathCorpseSubMaterials = nil -- Apply a table of indexes that correspond to
 ENT.FadeCorpse = false -- Fades the ragdoll on death
 ENT.FadeCorpseTime = 10 -- How much time until the ragdoll fades | Unit = Seconds
 ENT.SetCorpseOnFire = false -- Sets the corpse on fire when the SNPC dies
-ENT.UsesBoneAngle = true -- This can be used to stop the corpse glitching or flying on death
+ENT.DeathCorpseBoneAngles = true -- This can be used to stop the corpse glitching or flying on death
 ENT.UsesDamageForceOnDeath = true -- Disables the damage force on death | Useful for SNPCs with Death Animations
 ENT.WaitBeforeDeathTime = 0 -- Time until the SNPC spawns its corpse and gets removed
 	-- ====== Death Animation Variables ====== --
@@ -549,8 +549,7 @@ ENT.NextSoundTime_Idle1 = 8
 ENT.NextSoundTime_Idle2 = 25
 ENT.NextSoundTime_Investigate = VJ_Set(5, 5)
 ENT.NextSoundTime_LostEnemy = VJ_Set(5, 6)
-ENT.NextSoundTime_Alert1 = 2
-ENT.NextSoundTime_Alert2 = 3
+ENT.NextSoundTime_Alert = VJ_Set(2, 3)
 ENT.NextSoundTime_OnGrenadeSight = VJ_Set(3, 3)
 ENT.NextSoundTime_Suppressing = VJ_Set(7, 15)
 ENT.NextSoundTime_WeaponReload = VJ_Set(3, 5)
@@ -628,8 +627,7 @@ ENT.CallForHelpSoundPitch = VJ_Set(false, false)
 ENT.BecomeEnemyToPlayerPitch = VJ_Set(false, false)
 ENT.BeforeMeleeAttackSoundPitch = VJ_Set(false, false)
 ENT.MeleeAttackSoundPitch = VJ_Set(95, 100)
-ENT.ExtraMeleeSoundPitch1 = 80
-ENT.ExtraMeleeSoundPitch2 = 100
+ENT.ExtraMeleeSoundPitch = VJ_Set(80, 100)
 ENT.MeleeAttackMissSoundPitch = VJ_Set(90, 100)
 ENT.SuppressingPitch = VJ_Set(false, false)
 ENT.WeaponReloadSoundPitch = VJ_Set(false, false)
@@ -3440,7 +3438,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 				local childphys_bonepos, childphys_boneang = self:GetBonePosition(self.Corpse:TranslatePhysBoneToBone(bonelim))
 				if (childphys_bonepos) then
 					//if math.Round(math.abs(childphys_boneang.r)) != 90 then -- Fixes ragdolls rotating, no longer needed!    --->    sv_pvsskipanimation 0
-						if self.UsesBoneAngle == true then childphys:SetAngles(childphys_boneang) end
+						if self.DeathCorpseBoneAngles == true then childphys:SetAngles(childphys_boneang) end
 						childphys:SetPos(childphys_bonepos)
 					//end
 					if self.Corpse:GetName() == "vj_dissolve_corpse" then
@@ -3521,10 +3519,6 @@ function ENT:DropWeaponOnDeathCode(dmginfo, hitgroup)
 	
 	self:CustomOnDropWeapon_AfterWeaponSpawned(dmginfo, hitgroup,self.TheDroppedWeapon)
 end
---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AlertSoundCode(CustomTbl, Type) self:PlaySoundSystem("Alert", CustomTbl, Type) end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DeathSoundCode(CustomTbl, Type) self:PlaySoundSystem("Death", CustomTbl, Type) end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	if self.HasSounds == false or sdSet == nil then return end
@@ -3661,7 +3655,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT = CurTime() + ((((SoundDuration(sdtbl) > 0) and SoundDuration(sdtbl)) or 2) + 1)
 				self.NextSuppressingSoundT = CurTime() + 4
-				self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert1, self.NextSoundTime_Alert2)
+				self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert.a, self.NextSoundTime_Alert.b)
 				self.CurrentAlertSound = sdType(self, sdtbl, self.AlertSoundLevel, self:VJ_DecideSoundPitch(self.AlertSoundPitch.a, self.AlertSoundPitch.b))
 			end
 		end
@@ -3815,7 +3809,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 				sdtbl = VJ_PICK(self.SoundTbl_MeleeAttackExtra)
 				if (math.random(1, self.ExtraMeleeSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
 					if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
-					self.CurrentExtraMeleeAttackSound = VJ_EmitSound(self, sdtbl, self.ExtraMeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.ExtraMeleeSoundPitch1, self.ExtraMeleeSoundPitch2))
+					self.CurrentExtraMeleeAttackSound = VJ_EmitSound(self, sdtbl, self.ExtraMeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.ExtraMeleeSoundPitch.a, self.ExtraMeleeSoundPitch.b))
 				end
 			end
 		end
