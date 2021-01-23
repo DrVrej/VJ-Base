@@ -91,11 +91,11 @@ function VJWelcomeCode()
     local ra = "<"
 	local la = ">"
     local dashes = ""
-	for _ = 1,29 do dashes = dashes.."-" end
+	for _ = 1,28 do dashes = dashes.."-" end
     
     chat.AddText(Color(255,215,0),"|"..dashes..la, Color(0,255,255), " "..VJBASE_GETNAME.." ", Color(30,200,255), VJBASE_VERSION.." ", Color(255,215,0), ra..dashes.."|")
-    chat.AddText(Color(255,215,0),"|- ", Color(255,255,0),"NOTICE! ", Color(255,255,255), "To configure ", Color(0,255,255), VJBASE_GETNAME.." ", Color(255,255,255), " click on ", Color(0,255,255), "DrVrej", Color(255,255,255)," in the spawn menu! ", Color(255,215,0),"-|")
-    chat.AddText(Color(255,215,0),"|"..dashes..la, Color(30,200,255), " "..amt, Color(0,255,255), " VJ Plugins ", Color(255,215,0), ra..dashes.."|")
+    chat.AddText(Color(255,215,0),"|- ", Color(255,255,0),"NOTICE! ", Color(255,255,255), "To configure ", Color(0,255,255), VJBASE_GETNAME.." ", Color(255,255,255), "click on ", Color(0,255,255), "DrVrej", Color(255,255,255)," in the spawn menu! ", Color(255,215,0),"-|")
+    //chat.AddText(Color(255,215,0),"|"..dashes..la, Color(30,200,255), " "..amt, Color(0,255,255), " VJ Plugins ", Color(255,215,0), ra..dashes.."|")
 
 	//chat.AddText(Color(255,255,0),"-=-=-=-=-=-=-=- ", Color(0,200,200), VJBASE_GETNAME.." - "..VJBASE_VERSION, Color(0,255,0), " ("..VJBASE_TOTALPLUGINS.." VJ Addons)",Color(255,255,0)," -=-=-=-=-=-=-=-")
 	//chat.AddText(Color(255,150,0),"NOTICE: ", Color(0,255,0),"To configure ", Color(0,200,200),VJBASE_GETNAME..", ", Color(0,255,0),"click on 'DrVrej' in the spawnmenu.")

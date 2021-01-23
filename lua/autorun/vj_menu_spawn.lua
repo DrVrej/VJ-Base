@@ -1,5 +1,5 @@
 /*--------------------------------------------------
-	=============== VJ Controls ===============
+	=============== VJ Spawn Menu ===============
 	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
@@ -97,7 +97,7 @@ if (CLIENT) then
 					spawnmenu.CreateContentIcon("npc",roottree.PropPanel,t)
 				end
 			elseif vjTreeName == "Weapons" then
-				for k, ent in SortedPairsByMemberValue(v, "PrintName") do
+				for _, ent in SortedPairsByMemberValue(v, "PrintName") do
 					local t = { 
 						nicename	= ent.PrintName or ent.ClassName,
 						spawnname	= ent.ClassName,
@@ -108,7 +108,7 @@ if (CLIENT) then
 					spawnmenu.CreateContentIcon(ent.ScriptedEntityType or "weapon", roottree.PropPanel, t)
 				end
 			elseif vjTreeName == "Entities" then
-				for k, ent in SortedPairsByMemberValue(v, "PrintName") do
+				for _, ent in SortedPairsByMemberValue(v, "PrintName") do
 					local t = { 
 						nicename	= ent.PrintName or ent.ClassName,
 						spawnname	= ent.ClassName,
@@ -153,9 +153,9 @@ if (CLIENT) then
 		
 		local ToolList = spawnmenu.GetTools()
 		if (ToolList) then
-			for nk, nv in pairs(ToolList) do
+			for _, nv in pairs(ToolList) do
 				if nv.Name == "DrVrej" then
-					for nk2, nv2 in pairs(nv.Items) do
+					for _, nv2 in pairs(nv.Items) do
 						if nv2.ItemName == "Tools" then
 							//local node = tooltree:AddNode("Default", "icon16/bullet_wrench.png")
 							local CatPropPanel = vgui.Create("ContentContainer", pnlContent)
@@ -163,7 +163,7 @@ if (CLIENT) then
 							local Header = vgui.Create("ContentHeader", tooltree.PropPanel)
 							Header:SetText("Tools")
 							tooltree.PropPanel:Add(Header)
-							for nk3, nv3 in pairs(nv2) do
+							for _, nv3 in pairs(nv2) do
 								if !istable(nv3) then continue end
 									local t = { 
 										nicename	= nv3.Text,
@@ -204,7 +204,7 @@ if (CLIENT) then
 		searchList("VJBASE_SPAWNABLE_ENTITIES", "entity")
 		// searchList("VJBASE_SPAWNABLE_VEHICLES", "vehicle") -- vehicle (Not yet lol)
 
-		for k, v in pairs(entities) do
+		for _, v in pairs(entities) do
 			local name = v.PrintName
 			local name_c = v.ClassName
 			if (!name && !name_c) then continue end
@@ -315,7 +315,12 @@ local function VJSPAWN_NPCINTERNAL(Player, Position, Normal, Class, Equipment, S
 	-- This NPC has a special skin we want to define
 	if ( NPCData.Skin ) then NPC:SetSkin( NPCData.Skin ) end
 	
-	if ( NPCData.Skin ) then for i = 0,18 do self.Corpse:SetBodygroup(i,self:GetBodygroup(i)) end end
+	-- Body groups
+	if (NPCData.BodyGroups) then
+		for k, v in pairs(NPCData.BodyGroups) do
+			NPC:SetBodygroup(k, v)
+		end
+	end
 
 	-- Check if this is a valid entity from the list, or the user is trying to fool us.
 	local valid = false
