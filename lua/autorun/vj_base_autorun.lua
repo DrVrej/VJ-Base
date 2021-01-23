@@ -11,24 +11,23 @@
 	  ████    █████      ██████  ██   ██ ███████ ███████
 
 --------------------------------------------------*/
-if (CLIENT) then print("Loading VJ Base (Client)...") else print("Loading VJ Base (Server)...") end
+if CLIENT then print("Loading VJ Base (Client)...") else print("Loading VJ Base (Server)...") end
 
 VJBASE_VERSION = "2.14.0"
 VJBASE_GETNAME = "VJ Base"
 
 -- Shared --
-include("autorun/vj_menu_spawn.lua")
+include("vj_base/globals.lua")
+include("autorun/vj_menu_spawninfo.lua")
 AddCSLuaFile("autorun/vj_base_autorun.lua")
 AddCSLuaFile("autorun/vj_controls.lua")
 AddCSLuaFile("autorun/vj_entities.lua")
-AddCSLuaFile("autorun/vj_entities_cmds.lua")
+AddCSLuaFile("autorun/vj_convars.lua")
 AddCSLuaFile("autorun/vj_files.lua")
 AddCSLuaFile("autorun/vj_files_language.lua")
 AddCSLuaFile("autorun/vj_files_particles.lua")
 AddCSLuaFile("autorun/vj_menu_main.lua")
 AddCSLuaFile("autorun/vj_menu_properties.lua")
-AddCSLuaFile("autorun/vj_util.lua")
-AddCSLuaFile("autorun/vj_weapons.lua")
 
 -- Client --
 AddCSLuaFile("autorun/client/vj_menu_main_client.lua")
@@ -133,4 +132,4 @@ if (SLVBase) then
 	end)
 end
 
-if (CLIENT) then print("VJ Base client files initialized!") else print("VJ Base server files initialized!") end
+if CLIENT then print("VJ Base client files initialized!") else print("VJ Base server files initialized!") end

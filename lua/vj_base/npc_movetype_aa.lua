@@ -168,6 +168,7 @@ function ENT:AA_MoveTo(ent, playAnim, moveType, extraOptions)
 		end
 		//self:SetAngles(self:GetFaceAngle((vel_set):Angle()))
 		self:SetLocalVelocity(vel_set)
+		local vel_len;
 		if chaseEnemy == true then
 			vel_len = CurTime() + (dist_selfhit / vel_set:Length())
 		else

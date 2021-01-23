@@ -995,21 +995,17 @@ ENT.DefaultGibDamageTypes = {DMG_ALWAYSGIB,DMG_ENERGYBEAM,DMG_BLAST,DMG_VEHICLE,
 
 -- Localized static values
 local defPos = Vector(0, 0, 0)
-local defAng = Angle(0, 0, 0)
 
 local CurTime = CurTime
 local IsValid = IsValid
 local GetConVarNumber = GetConVarNumber
-local istable = istable
 local isstring = isstring
 local isnumber = isnumber
 local tonumber = tonumber
 local string_find = string.find
 local string_Replace = string.Replace
-local varCPly = "CLASS_PLAYER_ALLY"
 local varCAnt = "CLASS_ANTLION"
 local varCCom = "CLASS_COMBINE"
-local varCXen = "CLASS_XEN"
 local varCZom = "CLASS_ZOMBIE"
 
 ---------------------------------------------------------------------------------------------------------------------------------------------

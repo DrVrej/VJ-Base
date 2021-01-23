@@ -1,5 +1,5 @@
 /*--------------------------------------------------
-	=============== Entity Stuff ===============
+	=============== Global Functions & Variables ===============
 	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
@@ -20,62 +20,6 @@ local string_Replace = string.Replace
 local string_StartWith = string.StartWith
 local table_remove = table.remove
 local defAng = Angle(0, 0, 0)
-
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Spawn Menu Creation ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	-- ====== Category Information (Many are for popular categories used in both official and unofficial addons ====== --
-	-- Steam\appcache\librarycache
-VJ.AddCategoryInfo("Alien Swarm", {Icon = "vj_base/icons/alienswarm.png"})
-VJ.AddCategoryInfo("Black Mesa", {Icon = "vj_base/icons/blackmesa.png"})
-VJ.AddCategoryInfo("Cry Of Fear", {Icon = "vj_base/icons/cryoffear.png"})
-VJ.AddCategoryInfo("Dark Messiah", {Icon = "vj_base/icons/darkmessiah.png"})
-VJ.AddCategoryInfo("E.Y.E Divine Cybermancy", {Icon = "vj_base/icons/eyedc.png"})
-VJ.AddCategoryInfo("Fallout", {Icon = "vj_base/icons/fallout.png"})
-VJ.AddCategoryInfo("Killing Floor 1", {Icon = "vj_base/icons/kf1.png"})
-VJ.AddCategoryInfo("Left 4 Dead", {Icon = "vj_base/icons/l4d.png"})
-VJ.AddCategoryInfo("Mass Effect 3", {Icon = "vj_base/icons/masseffect3.png"})
-VJ.AddCategoryInfo("Military", {Icon = "vj_base/icons/mil1.png"})
-VJ.AddCategoryInfo("No More Room In Hell", {Icon = "vj_base/icons/nmrih.png"})
-VJ.AddCategoryInfo("Star Wars", {Icon = "vj_base/icons/starwars.png"})
-VJ.AddCategoryInfo("Zombies", {Icon = "vj_base/icons/zombies.png"})
-
-	-- ====== NPCs ====== --
-local vCat = "VJ Base"
-VJ.AddNPC("VJ Test NPC","sent_vj_test",vCat,true)
-VJ.AddNPC("Mortar Synth","npc_vj_mortarsynth",vCat)
-
-	-- ====== Entities ====== --
-VJ.AddEntity("Admin Health Kit","sent_vj_adminhealthkit","DrVrej",true,0,true,vCat)
-VJ.AddEntity("Player Spawnpoint","sent_vj_ply_spawnpoint","DrVrej",true,0,true,vCat)
-VJ.AddEntity("Fireplace","sent_vj_fireplace","DrVrej",false,0,true,vCat)
-VJ.AddEntity("Wooden Board","sent_vj_board","DrVrej",false,0,true,vCat)
-VJ.AddEntity("Grenade","obj_vj_grenade","DrVrej",false,0,true,vCat)
-VJ.AddEntity("Flare Round","obj_vj_flareround","DrVrej",false,0,true,vCat)
-VJ.AddEntity("Flag","prop_vj_flag","DrVrej",false,0,true,vCat)
-//VJ.AddEntity("HL2 Grenade","npc_grenade_frag","DrVrej",false,50,true,vCat)
-//VJ.AddEntity("Supply Box","item_dynamic_resupply","DrVrej",false,0,true,vCat)
-//VJ.AddEntity("Supply Crate","item_ammo_crate","DrVrej",false,0,true,vCat)
-
-	-- ====== NPC Weapons ====== --
-//VJ.AddNPCWeapon("VJ_Package","weapon_citizenpackage")
-//VJ.AddNPCWeapon("VJ_Suitcase","weapon_citizensuitcase")
-VJ.AddNPCWeapon("VJ_AK-47","weapon_vj_ak47")
-VJ.AddNPCWeapon("VJ_M4A1","weapon_vj_m16a1")
-VJ.AddNPCWeapon("VJ_Glock17","weapon_vj_glock17")
-VJ.AddNPCWeapon("VJ_MP40","weapon_vj_mp40")
-VJ.AddNPCWeapon("VJ_Blaster","weapon_vj_blaster")
-VJ.AddNPCWeapon("VJ_AR2","weapon_vj_ar2")
-VJ.AddNPCWeapon("VJ_SMG1","weapon_vj_smg1")
-VJ.AddNPCWeapon("VJ_9mmPistol","weapon_vj_9mmpistol")
-VJ.AddNPCWeapon("VJ_SPAS-12","weapon_vj_spas12")
-VJ.AddNPCWeapon("VJ_357","weapon_vj_357")
-VJ.AddNPCWeapon("VJ_FlareGun","weapon_vj_flaregun")
-VJ.AddNPCWeapon("VJ_RPG","weapon_vj_rpg")
-VJ.AddNPCWeapon("VJ_K-3","weapon_vj_k3")
-VJ.AddNPCWeapon("VJ_Crossbow","weapon_vj_crossbow")
-VJ.AddNPCWeapon("VJ_SSG-08","weapon_vj_ssg08")
-VJ.AddNPCWeapon("VJ_Crowbar","weapon_vj_crowbar")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Global Functions & Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -124,7 +68,7 @@ function VJ_PICK(tbl)
 	end
 	return false
 end
--- Backwards compatibility, don't use!
+-- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 	function VJ_PICKRANDOMTABLE(tbl)
 		if not tbl then return false end -- Yete table pame choone meche, veratartsour false!
 		if istable(tbl) then
@@ -480,50 +424,6 @@ function NPC_MetaTable:VJ_GetDifficultyValue(int)
 	end
 	return int
 end
----------------------------------------------------------------------------------------------------------------------------------------------
- -- !!!!! Deprecated Function !!!!! --
-/*function NPC_MetaTable:VJ_GetCurrentSchedule()
-	for s = 0, LAST_SHARED_SCHEDULE-1 do
-		if (self:IsCurrentSchedule(s)) then return s end
-	end
-	return 0
-end*/
----------------------------------------------------------------------------------------------------------------------------------------------
- -- !!!!! Deprecated Function !!!!! --
-/*function NPC_MetaTable:VJ_IsCurrentSchedule(idcheck)
-	if istable(idcheck) == true then
-		for k,v in ipairs(idcheck) do
-			if self:IsCurrentSchedule(v) == true then
-				return true
-			end
-		end
-	else
-		if self:IsCurrentSchedule(idcheck) == true then return true end
-	end
-	return false
-end*/
----------------------------------------------------------------------------------------------------------------------------------------------
- -- !!!!! Deprecated Function !!!!! --
-/*function NPC_MetaTable:VJ_StopSoundTable(tbl)
-	if not tbl then return end
-	if istable(tbl) then
-	for k, v in ipairs(tbl) do
-		if string_find(tostring(self.CurrentSound), v) then self.CurrentSound:Stop() end
-		end
-	end
-end*/
----------------------------------------------------------------------------------------------------------------------------------------------
- -- !!!!! Deprecated Function | Broken! !!!!! --
-/*function NPC_MetaTable:VJ_IsPlayingSoundFromTable(tbl) -- Get whether if a sound is playing from a certain table
-	if not tbl then return false end
-	if istable(tbl) then
-	for k, v in ipairs(tbl) do
-		if string_find(tostring(self.CurrentSound), v) then
-		return true end
-		end
-	end
-	return false
-end*/
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Hooks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -750,6 +650,35 @@ hook.Add("VJ_CreateSNPCCorpse", "VJ_CreateSNPCCorpse", function(corpse, owner)
 		end
 	end
 end)
+---------------------------------------------------------------------------------------------------------------------------------------------
+hook.Add("PlayerCanPickupWeapon","VJ_PLAYER_CANPICKUPWEAPON",function(ply,wep)
+	//print(wep:GetWeaponWorldModel())
+	if ply.VJ_CanBePickedUpWithOutUse == true && ply.VJ_CanBePickedUpWithOutUse_Class == wep:GetClass() then
+		if wep.IsVJBaseWeapon == true && !ply:HasWeapon(wep:GetClass()) then
+			ply.VJ_CanBePickedUpWithOutUse = false
+			ply.VJ_CanBePickedUpWithOutUse_Class = nil
+			return true
+		else
+			ply.VJ_CanBePickedUpWithOutUse = false
+			ply.VJ_CanBePickedUpWithOutUse_Class = nil
+		end
+	end
+	if wep.IsVJBaseWeapon == true then
+		//if wep.VJ_CanBePickedUpWithOutUse == true then return true end
+		if GetConVarNumber("vj_npc_plypickupdropwep") == 0 then return false end
+		if ply:KeyPressed(IN_USE) && (ply:GetEyeTrace().Entity == wep) then
+		return true else return false end
+	end
+end)
+---------------------------------------------------------------------------------------------------------------------------------------------
+hook.Add("PlayerGiveSWEP","VJ_PLAYER_GIVESWEP",function(ply,class,swep)
+	//if swep.IsVJBaseWeapon == true then
+		ply.VJ_CanBePickedUpWithOutUse = true
+		ply.VJ_CanBePickedUpWithOutUse_Class = class
+		timer.Simple(0.1,function() if IsValid(ply) then ply.VJ_CanBePickedUpWithOutUse = false ply.VJ_CanBePickedUpWithOutUse_Class = nil end end)
+		//PrintTable(swep)
+	//end
+end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Convar Callbacks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -837,3 +766,116 @@ end
 	require("sound_vj_track")
 	sound_vj_track.Add("VJ_SpiderQueenThemeMusic","vj_dm_spidermonster/Dark Messiah - Avatar of the Spider Goddess.wav",161)
 end*/
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Utility Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function util.VJ_SphereDamage(vAttacker, vInflictor, vPosition, vDamageRadius, vDamage, vDamageType, vBlockCertainEntities, vUseRealisticRadius, extraOptions, customFunc)
+	vPosition = vPosition or vAttacker:GetPos()
+	vDamageRadius = vDamageRadius or 150
+	vDamage = vDamage or 15
+	vBlockCertainEntities = vBlockCertainEntities or true
+	vUseRealisticRadius = vUseRealisticRadius or true
+	extraOptions = extraOptions or {}
+		local vTbl_DisableVisibilityCheck = extraOptions.DisableVisibilityCheck or false -- Should it disable the visibility check? | true = Disables the visibility check
+		local vTbl_Force = extraOptions.Force or false -- The general force | false = Don't use any force
+		local vTbl_UpForce = extraOptions.UpForce or false -- How much up force should it have? | false = Use vTbl_Force
+		local vTbl_DamageAttacker = extraOptions.DamageAttacker or false -- Should it damage the attacker as well?
+		local vTbl_UseCone = extraOptions.UseCone or false -- Should it detect entities using a cone?
+		local vTbl_UseConeDegree = extraOptions.UseConeDegree or 90 -- The degrees it should use for the cone finding
+		local vTbl_DirectionPos = extraOptions.DirectionPos or vAttacker:GetForward() -- The position it starts the cone degree from
+	local Finaldmg = vDamage
+	local Foundents = {}
+	local Findents = (vTbl_UseCone == true and VJ_FindInCone(vPosition, vTbl_DirectionPos, vDamageRadius, vTbl_UseConeDegree, {AllEntities=true})) or ents.FindInSphere(vPosition, vDamageRadius)
+	if (!Findents) then return false end
+	for _,v in pairs(Findents) do
+		if (vAttacker.VJ_IsBeingControlled == true && vAttacker.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end -- Don't damage controller bullseye and player
+		if v:EntIndex() == vAttacker:EntIndex() && vTbl_DamageAttacker == false then continue end -- If it can't self hit, then skip
+		local vtoself = v:NearestPoint(vPosition) -- From the enemy position to the given position
+		if vUseRealisticRadius == true then -- Decrease damage from the nearest point all the way to the enemy point then clamp it!
+			Finaldmg = math.Clamp(Finaldmg * ((vDamageRadius - vPosition:Distance(vtoself)) + 150) / vDamageRadius, vDamage / 2, Finaldmg)
+		end
+		
+		local function DoDamageCode(v2)
+			if (customFunc) then customFunc(v) end
+			Foundents[#Foundents + 1] = v
+			if (v2:GetClass() == "npc_strider" or v2:GetClass() == "npc_combinedropship" or v2:GetClass() == "npc_combinegunship" or v2:GetClass() == "npc_helicopter") then
+				v2:TakeDamage(Finaldmg, vAttacker, vInflictor)
+			else
+				local doactualdmg = DamageInfo()
+				doactualdmg:SetDamage(Finaldmg)
+				doactualdmg:SetAttacker(vAttacker)
+				doactualdmg:SetInflictor(vInflictor)
+				doactualdmg:SetDamageType(vDamageType or DMG_BLAST)
+				doactualdmg:SetDamagePosition(vtoself)
+				if vTbl_Force != false then
+					local force = vTbl_Force
+					local upforce = vTbl_UpForce
+					if VJ_IsProp(v) == true or v:GetClass() == "prop_ragdoll" then
+						local phys = v:GetPhysicsObject()
+						if IsValid(phys) then
+							if upforce == false then upforce = force / 9.4 end
+							//v:SetVelocity(v:GetUp()*100000)
+							if v:GetClass() == "prop_ragdoll" then force = force * 1.5 end
+							phys:ApplyForceCenter(((v:GetPos()+v:OBBCenter()+v:GetUp()*upforce)-vPosition)*force) //+vAttacker:GetForward()*vForcePropPhysics
+						end
+					else
+						force = force*1.2
+						if upforce == false then upforce = force end
+						doactualdmg:SetDamageForce(((v:GetPos()+v:OBBCenter()+v:GetUp()*upforce)-vPosition)*force)
+					end
+				end
+				v2:TakeDamageInfo(doactualdmg)
+				VJ_DestroyCombineTurret(vAttacker,v2)
+			end
+		end
+		
+		if (vTbl_DisableVisibilityCheck == false && (v:VisibleVec(vPosition) or v:Visible(vAttacker))) or (vTbl_DisableVisibilityCheck == true) then
+			if vBlockCertainEntities == true then
+				if (v:IsNPC() && (v:Disposition(vAttacker) != D_LI) && v:Health() > 0 && (v != vAttacker) && (v:GetClass() != vAttacker:GetClass())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 && v:Alive() && v:Health() > 0 && v.VJ_NoTarget != true) then
+					//if ((v:IsNPC() && v:Disposition(vAttacker) == 1 or v:Disposition(vAttacker) == 2) or (v:IsPlayer() && v:Alive())) && (v != vAttacker) && (v:GetClass() != vAttacker:GetClass()) then -- entity check
+					DoDamageCode(v)
+				elseif !v:IsNPC() && !v:IsPlayer() then
+					DoDamageCode(v)
+				end
+			else
+				DoDamageCode(v)
+			end
+		end
+	end
+	return Foundents
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function util.VJ_GetWeaponPos(GetClassEntity)
+	if GetClassEntity:GetActiveWeapon() == NULL then return false end
+	local wep = GetClassEntity:GetActiveWeapon()
+	local getmuzzle;
+	if (wep:IsValid()) then
+		for i = 1, #wep:GetAttachments() do
+			if wep:GetAttachments()[i].name == "muzzle" then
+				getmuzzle = "muzzle" break
+			elseif wep:GetAttachments()[i].name == "muzzleA" then
+				getmuzzle = "muzzleA" break
+			elseif wep:GetAttachments()[i].name == "muzzle_flash" then
+				getmuzzle = "muzzle_flash" break
+			elseif wep:GetAttachments()[i].name == "muzzle_flash1" then
+				getmuzzle = "muzzle_flash1" break
+			elseif wep:GetAttachments()[i].name == "muzzle_flash2" then
+				getmuzzle = "muzzle_flash2" break
+			elseif wep:GetAttachments()[i].name == "ValveBiped.muzzle" then
+				getmuzzle = "ValveBiped.muzzle" break
+			else 
+				getmuzzle = false
+			end
+		end
+		if (getmuzzle == false) or getmuzzle == nil then
+			if GetClassEntity:LookupBone("ValveBiped.Bip01_R_Hand") != nil then
+				return GetClassEntity:GetBonePosition(GetClassEntity:LookupBone("ValveBiped.Bip01_R_Hand"))
+			else
+				print("WARNING: "..GetClassEntity:GetName().."'s weapon doesn't have a proper attachment or bone!")
+				return GetClassEntity:EyePos()
+			end
+		end
+		//print("It has a proper attachment.")
+		return wep:GetAttachment(wep:LookupAttachment(getmuzzle)).Pos //+ GetClassEntity:GetUp()*-45
+	end
+end
