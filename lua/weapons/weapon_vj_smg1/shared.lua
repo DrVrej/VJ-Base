@@ -41,18 +41,3 @@ SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle anim
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound				= true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
 SWEP.ReloadSound				= {"weapons/smg1/smg1_reload.wav"}
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:NPC_SecondaryFire()
-	local pos = self:GetNW2Vector("VJ_CurBulletPos")
-	local proj = ents.Create("obj_vj_grenade_rifle")
-	proj:SetPos(pos)
-	proj:SetAngles(self:GetOwner():GetAngles())
-	proj:SetOwner(self:GetOwner())
-	proj:Spawn()
-	proj:Activate()
-	local phys = proj:GetPhysicsObject()
-	if IsValid(phys) then
-		phys:Wake()
-		phys:SetVelocity(self:GetOwner():CalculateProjectile("Curve", pos, self:GetOwner():GetEnemy():GetPos() + self:GetOwner():GetEnemy():OBBCenter(), 1000))
-	end
-end
