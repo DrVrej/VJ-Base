@@ -68,6 +68,7 @@ SWEP.NPC_ExtraFireSoundLevel = 70 -- How far does the sound go?
 SWEP.NPC_ExtraFireSoundPitch = VJ_Set(90, 100) -- How much time until the secondary fire can be used again?
 	-- ====== Secondary Fire Variables ====== --
 SWEP.NPC_HasSecondaryFire = false -- Can the weapon have a secondary fire?
+SWEP.NPC_SecondaryFireEnt = "obj_vj_grenade_rifle" -- The entity to fire, this only applies if self:NPC_SecondaryFire() has NOT been overridden!
 SWEP.NPC_SecondaryFireChance = 3 -- Chance that the secondary fire is used | 1 = always
 SWEP.NPC_SecondaryFireNext = VJ_Set(12, 15) -- How much time until the secondary fire can be used again?
 SWEP.NPC_SecondaryFireDistance = 1000 -- How close does the owner's enemy have to be for it to fire?
@@ -180,22 +181,20 @@ function SWEP:CustomOnPrimaryAttack_BulletCallback(attacker, tr, dmginfo) end
 function SWEP:CustomOnPrimaryAttackEffects() return true end -- Return false to disable the base effects
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_SecondaryFire()
-	/* An example:
+	-- Override this function if you want to make your own secondary attack!
+	local owner = self:GetOwner()
 	local pos = self:GetNW2Vector("VJ_CurBulletPos")
-	local proj = ents.Create("prop_combine_ball")
+	local proj = ents.Create(self.NPC_SecondaryFireEnt)
 	proj:SetPos(pos)
-	proj:SetAngles(self:GetOwner():GetAngles())
-	proj:SetOwner(self)
+	proj:SetAngles(owner:GetAngles())
+	proj:SetOwner(owner)
 	proj:Spawn()
 	proj:Activate()
-	proj:Fire("Explode","",4)
 	local phys = proj:GetPhysicsObject()
 	if IsValid(phys) then
 		phys:Wake()
-		phys:SetVelocity(self:GetOwner():CalculateProjectile("Line", pos, self:GetOwner():GetEnemy():GetPos() + self:GetOwner():GetEnemy():OBBCenter(), 2000))
+		phys:SetVelocity(owner:CalculateProjectile("Curve", pos, owner.LatestVisibleEnemyPosition, 1000))
 	end
-	VJ_EmitSound(self:GetOwner(),"weapons/ar2/npc_ar2_altfire.wav",90) // "weapons/cguard/charging.wav"
-	*/
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomBulletSpawnPosition() return false end -- Return a position to override the bullet spawn position
