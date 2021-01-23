@@ -51,7 +51,6 @@ ENT.RadiusDamageForce = 90 -- Put the force amount it should apply | false = Don
 ENT.ShakeWorldOnDeath = true -- Should the world shake when the projectile hits something?
 ENT.ShakeWorldOnDeathAmplitude = 16 -- How much the screen will shake | From 1 to 16, 1 = really low 16 = really high
 ENT.ShakeWorldOnDeathRadius = 3000 -- How far the screen shake goes, in world units
-ENT.ShakeWorldOnDeathtDuration = 1 -- How long the screen shake will last, in seconds
 ENT.ShakeWorldOnDeathFrequency = 200 -- The frequency
 ENT.DecalTbl_DeathDecals = {"Scorch"}
 ENT.SoundTbl_Idle = {"weapons/rpg/rocket1.wav"}
@@ -91,17 +90,17 @@ function ENT:DeathEffects(data,phys)
 	util.Effect( "Explosion", effectdata )
 	//util.Effect( "VJ_Small_Explosion1", effectdata )
 
-	self.ExplosionLight1 = ents.Create("light_dynamic")
-	self.ExplosionLight1:SetKeyValue("brightness", "4")
-	self.ExplosionLight1:SetKeyValue("distance", "300")
-	self.ExplosionLight1:SetLocalPos(data.HitPos)
-	self.ExplosionLight1:SetLocalAngles(self:GetAngles())
-	self.ExplosionLight1:Fire("Color", "255 150 0")
-	self.ExplosionLight1:SetParent(self)
-	self.ExplosionLight1:Spawn()
-	self.ExplosionLight1:Activate()
-	self.ExplosionLight1:Fire("TurnOn", "", 0)
-	self:DeleteOnRemove(self.ExplosionLight1)
+	local expLight = ents.Create("light_dynamic")
+	expLight:SetKeyValue("brightness", "4")
+	expLight:SetKeyValue("distance", "300")
+	expLight:SetLocalPos(data.HitPos)
+	expLight:SetLocalAngles(self:GetAngles())
+	expLight:Fire("Color", "255 150 0")
+	expLight:SetParent(self)
+	expLight:Spawn()
+	expLight:Activate()
+	expLight:Fire("TurnOn", "", 0)
+	self:DeleteOnRemove(expLight)
 end
 /*-----------------------------------------------
 	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***

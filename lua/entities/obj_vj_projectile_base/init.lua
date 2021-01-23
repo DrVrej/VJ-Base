@@ -29,7 +29,7 @@ ENT.NextCollideWithoutRemove = VJ_Set(1,1) -- Time until it can run the code aga
 ENT.ShakeWorldOnDeath = false -- Should the world shake when the projectile hits something?
 ENT.ShakeWorldOnDeathAmplitude = 16 -- How much the screen will shake | From 1 to 16, 1 = really low 16 = really high
 ENT.ShakeWorldOnDeathRadius = 3000 -- How far the screen shake goes, in world units
-ENT.ShakeWorldOnDeathtDuration = 1 -- How long the screen shake will last, in seconds
+ENT.ShakeWorldOnDeathDuration = 1 -- How long the screen shake will last, in seconds
 ENT.ShakeWorldOnDeathFrequency = 200 -- The frequency
 	-- ====== Radius Damage Variables ====== --
 ENT.DoesRadiusDamage = false -- Should it do a blast damage when it hits something?
@@ -229,7 +229,7 @@ function ENT:PhysicsCollide(data,phys)
 					self.AlreadyPaintedDeathDecal = true 
 					util.Decal(VJ_PICK(self.DecalTbl_DeathDecals), data.HitPos +data.HitNormal, data.HitPos -data.HitNormal)
 				end
-				if self.ShakeWorldOnDeath == true then util.ScreenShake(data.HitPos, self.ShakeWorldOnDeathAmplitude, self.ShakeWorldOnDeathFrequency, self.ShakeWorldOnDeathtDuration, self.ShakeWorldOnDeathRadius) end
+				if self.ShakeWorldOnDeath == true then util.ScreenShake(data.HitPos, self.ShakeWorldOnDeathAmplitude, self.ShakeWorldOnDeathFrequency, self.ShakeWorldOnDeathDuration, self.ShakeWorldOnDeathRadius) end
 				self:OnCollideSoundCode()
 			end
 			self:SetDeathVariablesTrue(data,phys,true)
