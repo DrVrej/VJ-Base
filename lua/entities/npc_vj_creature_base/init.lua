@@ -251,7 +251,7 @@ ENT.DeathCorpseSubMaterials = nil -- Apply a table of indexes that correspond to
 ENT.FadeCorpse = false -- Fades the ragdoll on death
 ENT.FadeCorpseTime = 10 -- How much time until the ragdoll fades | Unit = Seconds
 ENT.SetCorpseOnFire = false -- Sets the corpse on fire when the SNPC dies
-ENT.DeathCorpseBoneAngles = true -- This can be used to stop the corpse glitching or flying on death
+ENT.DeathCorpseSetBoneAngles = true -- This can be used to stop the corpse glitching or flying on death
 ENT.UsesDamageForceOnDeath = true -- Disables the damage force on death | Useful for SNPCs with Death Animations
 ENT.WaitBeforeDeathTime = 0 -- Time until the SNPC spawns its corpse and gets removed
 	-- ====== Death Animation Variables ====== --
@@ -2859,7 +2859,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 				local childphys_bonepos, childphys_boneang = self:GetBonePosition(self.Corpse:TranslatePhysBoneToBone(bonelim))
 				if (childphys_bonepos) then
 					//if math.Round(math.abs(childphys_boneang.r)) != 90 then -- Fixes ragdolls rotating, no longer needed!    --->    sv_pvsskipanimation 0
-						if self.DeathCorpseBoneAngles == true then childphys:SetAngles(childphys_boneang) end
+						if self.DeathCorpseSetBoneAngles == true then childphys:SetAngles(childphys_boneang) end
 						childphys:SetPos(childphys_bonepos)
 					//end
 					if self.Corpse:GetName() == "vj_dissolve_corpse" then
