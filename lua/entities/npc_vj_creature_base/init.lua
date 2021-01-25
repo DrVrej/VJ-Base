@@ -575,8 +575,7 @@ ENT.SoundTrackChance = 1
 	-- ====== Timer Variables ====== --
 	-- Randomized time between the two variables, x amount of time has to pass for the sound to play again | Counted in seconds
 ENT.NextSoundTime_Breath = true -- true = Base will decide the time | VJ_Set(1, 2) = Custom time
-ENT.NextSoundTime_Idle1 = 4
-ENT.NextSoundTime_Idle2 = 11
+ENT.NextSoundTime_Idle = VJ_Set(4, 11)
 ENT.NextSoundTime_Investigate = VJ_Set(5, 5)
 ENT.NextSoundTime_LostEnemy = VJ_Set(5, 6)
 ENT.NextSoundTime_Alert = VJ_Set(2, 3)

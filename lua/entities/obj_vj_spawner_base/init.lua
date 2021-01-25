@@ -25,15 +25,12 @@ ENT.HasIdleSounds = true -- Does it have idle sounds?
 ENT.SoundTbl_Idle = {}
 ENT.IdleSoundChance = 1 -- How much chance to play the sound? 1 = always
 ENT.IdleSoundLevel = 80
-ENT.IdleSoundPitch1 = 80
-ENT.IdleSoundPitch2 = 100
-ENT.NextSoundTime_Idle1 = 0.2
-ENT.NextSoundTime_Idle2 = 0.5
+ENT.IdleSoundPitch = VJ_Set(80, 100)
+ENT.NextSoundTime_Idle = VJ_Set(0.2, 0.5)
 ENT.SoundTbl_SpawnEntity = {}
 ENT.SpawnEntitySoundChance = 1 -- How much chance to play the sound? 1 = always
 ENT.SpawnEntitySoundLevel = 80
-ENT.SpawnEntitySoundPitch1 = 80
-ENT.SpawnEntitySoundPitch2 = 100
+ENT.SpawnEntitySoundPitch = VJ_Set(80, 100)
 	-- Independent Variables ---------------------------------------------------------------------------------------------------------------------------------------------
 -- These should be left as they are
 ENT.Dead = false
@@ -128,11 +125,10 @@ end
 function ENT:IdleSoundCode()
 	if self.HasIdleSounds == false then return end
 	if CurTime() > self.NextIdleSoundT then
-		local randomidlesound = math.random(1,self.IdleSoundChance)
-		if randomidlesound == 1 /*&& self:VJ_IsPlayingSoundFromTable(self.SoundTbl_Idle) == false*/ then
-			self.CurrentIdleSound = VJ_CreateSound(self,self.SoundTbl_Idle,self.IdleSoundLevel,math.random(self.IdleSoundPitch1,self.IdleSoundPitch2))
+		if math.random(1, self.IdleSoundChance) == 1 then
+			self.CurrentIdleSound = VJ_CreateSound(self, self.SoundTbl_Idle, self.IdleSoundLevel, math.random(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
 		end
-		self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle1,self.NextSoundTime_Idle2)
+		self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle.a, self.NextSoundTime_Idle.b)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -140,7 +136,7 @@ function ENT:SpawnEntitySoundCode()
 	if self.HasIdleSounds == false then return end
 	local randomidlesound = math.random(1,self.SpawnEntitySoundChance)
 	if randomidlesound == 1 /*&& self:VJ_IsPlayingSoundFromTable(self.SoundTbl_Idle) == false*/ then
-		self.CurrentSpawnEntitySound = VJ_CreateSound(self,self.SoundTbl_SpawnEntity,self.SpawnEntitySoundLevel,math.random(self.SpawnEntitySoundPitch1,self.SpawnEntitySoundPitch2))
+		self.CurrentSpawnEntitySound = VJ_CreateSound(self, self.SoundTbl_SpawnEntity, self.SpawnEntitySoundLevel, math.random(self.SpawnEntitySoundPitch.a, self.SpawnEntitySoundPitch.b))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
