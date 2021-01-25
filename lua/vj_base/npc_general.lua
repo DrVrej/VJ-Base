@@ -932,6 +932,7 @@ function ENT:DoEntityRelationshipCheck()
 							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 						end
 					end
+					//print(v.VJ_LastInvestigateSdLevel)
 					if v.VJ_LastInvestigateSdLevel && vDistanceToMy < (self.InvestigateSoundDistance * v.VJ_LastInvestigateSdLevel) && ((CurTime() - v.VJ_LastInvestigateSd) <= 1) && self.NextInvestigateSoundMove < CurTime() then
 						if self:Visible(v) then
 							self:StopMoving()
@@ -1479,7 +1480,7 @@ function ENT:IdleSoundCode(CustomTbl,Type)
 			end
 		end
 		if setT == true then
-			self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle1,self.NextSoundTime_Idle2)
+			self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle.a, self.NextSoundTime_Idle.b)
 		end
 	end
 end

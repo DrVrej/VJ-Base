@@ -70,8 +70,7 @@ ENT.IdleSoundChance = 1
 ENT.OnCollideSoundChance = 1
 ENT.OnRemoveSoundChance = 1
 	-- ====== Timer Variables ====== --
-ENT.NextSoundTime_Idle1 = 0.2
-ENT.NextSoundTime_Idle2 = 0.5
+ENT.NextSoundTime_Idle = VJ_Set(0.2, 0.5)
 	-- ====== Sound Level Variables ====== --
 	-- The proper number are usually range from 0 to 180, though it can go as high as 511
 	-- More Information: https://developer.valvesoftware.com/wiki/Soundscripts#SoundLevel_Flags
@@ -80,14 +79,10 @@ ENT.IdleSoundLevel = 80
 ENT.OnCollideSoundLevel = 80
 ENT.OnRemoveSoundLevel = 90
 	-- ====== Sound Pitch Variables ====== --
-ENT.StartupSoundPitch1 = 90
-ENT.StartupSoundPitch2 = 100
-ENT.IdleSoundPitch1 = 90
-ENT.IdleSoundPitch2 = 100
-ENT.OnCollideSoundPitch1 = 90
-ENT.OnCollideSoundPitch2 = 100
-ENT.OnRemoveSoundPitch1 = 90
-ENT.OnRemoveSoundPitch2 = 100
+ENT.StartupSoundPitch = VJ_Set(90, 100)
+ENT.IdleSoundPitch = VJ_Set(90, 100)
+ENT.OnCollideSoundPitch = VJ_Set(90, 100)
+ENT.OnRemoveSoundPitch = VJ_Set(90, 100)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -151,6 +146,7 @@ function ENT:Initialize()
 	end
 	
 	if self.HasStartupSounds == true then self:StartupSoundCode() end
+	if self.IdleSoundPitch1 then self.IdleSoundPitch = VJ_Set(self.IdleSoundPitch1, self.IdleSoundPitch2) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	
 	self:CustomOnInitialize()
 end
@@ -278,38 +274,32 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartupSoundCode()
 	if self.HasIdleSounds == false then return end
-	if CurTime() > self.NextIdleSoundT then
-		local randomstartupsound = math.random(1,self.StartupSoundChance)
-		if randomstartupsound == 1 then
-			self.CurrentStartupSound = VJ_CreateSound(self,self.SoundTbl_Startup,self.StartupSoundLevel,math.random(self.StartupSoundPitch1,self.StartupSoundPitch2))
-		end
+	if CurTime() > self.NextIdleSoundT && math.random(1, self.StartupSoundChance) == 1 then
+		self.CurrentStartupSound = VJ_CreateSound(self, self.SoundTbl_Startup, self.StartupSoundLevel, math.random(self.StartupSoundPitch.a, self.StartupSoundPitch.b))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IdleSoundCode()
 	if self.HasIdleSounds == false then return end
 	if CurTime() > self.NextIdleSoundT then
-		local randomidlesound = math.random(1,self.IdleSoundChance)
-		if randomidlesound == 1 /*&& self:VJ_IsPlayingSoundFromTable(self.SoundTbl_Idle) == false*/ then
-			self.CurrentIdleSound = VJ_CreateSound(self,self.SoundTbl_Idle,self.IdleSoundLevel,math.random(self.IdleSoundPitch1,self.IdleSoundPitch2))
+		if math.random(1, self.IdleSoundChance) == 1 then
+			self.CurrentIdleSound = VJ_CreateSound(self, self.SoundTbl_Idle, self.IdleSoundLevel, math.random(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
 		end
-		self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle1,self.NextSoundTime_Idle2)
+		self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle.a ,self.NextSoundTime_Idle.b)
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnCollideSoundCode()
 	if self.HasOnCollideSounds == false then return end
-	local randomdeathsound = math.random(1,self.OnCollideSoundChance)
-	if randomdeathsound == 1 then
-		self.CurrentDeathSound = VJ_CreateSound(self,self.SoundTbl_OnCollide,self.OnCollideSoundLevel,math.random(self.OnCollideSoundPitch1,self.OnCollideSoundPitch2))
+	if math.random(1, self.OnCollideSoundChance) == 1 then
+		self.CurrentDeathSound = VJ_CreateSound(self, self.SoundTbl_OnCollide, self.OnCollideSoundLevel, math.random(self.OnCollideSoundPitch.a, self.OnCollideSoundPitch.b))
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemoveSoundCode()
 	if self.HasOnRemoveSounds == false then return end
-	local randomdeathsound = math.random(1,self.OnRemoveSoundChance)
-	if randomdeathsound == 1 then
-		self.CurrentDeathSound = VJ_CreateSound(self,self.SoundTbl_OnRemove,self.OnRemoveSoundLevel,math.random(self.OnRemoveSoundPitch1,self.OnRemoveSoundPitch2))
+	if math.random(1, self.OnRemoveSoundChance) == 1 then
+		self.CurrentDeathSound = VJ_CreateSound(self, self.SoundTbl_OnRemove, self.OnRemoveSoundLevel, math.random(self.OnRemoveSoundPitch.a, self.OnRemoveSoundPitch.b))
 	end
 end
 /*--------------------------------------------------
