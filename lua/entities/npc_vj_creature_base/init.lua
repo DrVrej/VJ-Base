@@ -129,7 +129,7 @@ ENT.FollowPlayerKey = "Use" -- The key that the player presses to make the SNPC 
 ENT.FollowPlayerCloseDistance = 150 -- If the SNPC is that close to the player then stand still until the player goes farther away
 ENT.NextFollowPlayerTime = 0.5 -- Time until it runs to the player again
 	-- ====== Movement & Idle Variables ====== --
-ENT.AnimTbl_IdleStand = {ACT_IDLE} -- The idle animation when AI is enabled
+ENT.AnimTbl_IdleStand = nil -- The idle animation table when AI is enabled | DEFAULT: {ACT_IDLE}
 ENT.AnimTbl_Walk = {ACT_WALK} -- Set the walking animations | Put multiple to let the base pick a random animation when it moves
 ENT.AnimTbl_Run = {ACT_RUN} -- Set the running animations | Put multiple to let the base pick a random animation when it moves
 ENT.IdleAlwaysWander = false -- If set to true, it will make the SNPC always wander when idling
@@ -1078,7 +1078,10 @@ local function ConvarsOnInit(self)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local defIdleTbl = {ACT_IDLE}
+--
 function ENT:Initialize()
+	if self.AnimTbl_IdleStand == nil then self.AnimTbl_IdleStand = defIdleTbl end
 	self:CustomOnPreInitialize()
 	self:SetSpawnEffect(false)
 	self:SetRenderMode(RENDERMODE_NORMAL) // RENDERMODE_TRANSALPHA
@@ -1412,6 +1415,8 @@ function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local table_remove = table.remove
+--
 function ENT:VJ_TASK_IDLE_STAND()
 	if self:IsMoving() or (self.NextIdleTime > CurTime()) /*or self.CurrentSchedule != nil*/ then return end
 	//if (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_idle_stand") or (self.CurrentAnim_CustomIdle != 0 && VJ_IsCurrentAnimation(self,self.CurrentAnim_CustomIdle) == true) then return end
@@ -1425,24 +1430,43 @@ function ENT:VJ_TASK_IDLE_STAND()
 	vschedIdleStand.CanBeInterrupted = true
 	self:StartSchedule(vschedIdleStand)*/
 	
-	local animtbl = self.AnimTbl_IdleStand
-	local hasanim = false
-	for _,v in pairs(animtbl) do -- Amen animation-nere ara
-		v = VJ_SequenceToActivity(self,v) -- Nayir yete animation e sequence e, activity tartsoor
-		if v != false && hasanim == false && self.CurrentAnim_IdleStand == v then -- Yete animation-e IdleStand table-en meche che, ooremen sharnage!
-			hasanim = true
+	local idleAnimTbl = self.AnimTbl_IdleStand
+	local sameAnimFound = false -- If true then it one of the animations in the table is the same as the current!
+	//local numOfAnims = 0 -- Number of valid animations found
+	for k, v in pairs(idleAnimTbl) do
+		v = VJ_SequenceToActivity(self, v) -- Translate any sequence to activity
+		if v != false then -- Its a valid activity
+			//numOfAnims = numOfAnims + 1
+			idleAnimTbl[k] = v -- In case it was a sequence, override it with the translated activity number
+			-- Check if its the current idle animation...
+			if sameAnimFound == false && self.CurrentAnim_IdleStand == v then
+				sameAnimFound = true
+				//break
+			end
+		else -- Get rid of any animations that aren't valid!
+			table_remove(idleAnimTbl, k)
 		end
 	end
-	-- Yete IdleStand table-e meg en aveli e, sharnage!
-	if #animtbl > 1 && hasanim == true && self.NextIdleStandTime > CurTime() then
+	//PrintTable(idleAnimTbl)
+	-- If there is more than 1 animation in the table AND one of the animations is the current animation AND time hasn't expired, then return!
+	/*if #idleAnimTbl > 1 && sameAnimFound == true && self.NextIdleStandTime > CurTime() then
 		return
+	end*/
+	
+	local finaltbl = VJ_PICK(idleAnimTbl)
+	
+	-- If no animation was found, then use ACT_IDLE
+	if finaltbl == false then
+		finaltbl = ACT_IDLE
+		//sameAnimFound = true
 	end
-	local finaltbl = VJ_PICK(animtbl)
-	if finaltbl == false then finaltbl = ACT_IDLE hasanim = true end -- Yete animation-me chi kedav, ter barz animation e
-	finaltbl = VJ_SequenceToActivity(self,finaltbl)
-	if finaltbl == false then return false end -- Vesdah yegher vor minag tevov animation-er e gernan antsnel!
-	self.CurrentAnim_IdleStand = finaltbl
-	if (hasanim == true && CurTime() > self.NextIdleStandTime) then
+	
+	-- If sequence and it has no activity, then don't continue!
+	//finaltbl = VJ_SequenceToActivity(self,finaltbl)
+	//if finaltbl == false then return false end
+	
+	if (!sameAnimFound /*or (sameAnimFound && numOfAnims == 1 && CurTime() > self.NextIdleStandTime)*/) or (CurTime() > self.NextIdleStandTime) then
+		self.CurrentAnim_IdleStand = finaltbl
 		if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
 			if /*self:GetSequence() == 0 or*/ self:BusyWithActivity() == true then return end
 			self:AA_StopMoving()
@@ -1450,19 +1474,20 @@ function ENT:VJ_TASK_IDLE_STAND()
 		end
 		if self.CurrentSchedule == nil then -- Yete ooresh pame chenergor
 			self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0) -- Asiga chi tenesne yerp vor nouyn animation-e enen ne yedev yedevi, ge sarin
+			//self:SetIdealActivity(ACT_RESET)
 		end
-		self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),finaltbl)
-		timer.Simple(0.1,function() -- 0.1 hedvargyan espase minchevor khaghe pokhe animation e
-			if IsValid(self) then
+		//self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),finaltbl) -- Old system
+		self:SetIdealActivity(finaltbl)
+		timer.Simple(0.01, function() -- So we can make sure the engine has enough time to set the animation
+			if IsValid(self) && self.NextIdleStandTime != 0 then
 				local curseq = self:GetSequence()
 				if VJ_SequenceToActivity(self,self:GetSequenceName(curseq)) == finaltbl then -- Nayir yete himagva animation e nooynene
-					self.NextIdleStandTime = CurTime() + ((self:SequenceDuration(curseq) - 0.15) / self:GetPlaybackRate()) -- Yete nooynene ooremen jamanage tir animation-en yergarootyan chap!
+					self.NextIdleStandTime = CurTime() + ((self:SequenceDuration(curseq) - 0.01) / self:GetPlaybackRate()) -- Yete nooynene ooremen jamanage tir animation-en yergarootyan chap!
 				end
 			end
 		end)
-		self.NextIdleStandTime = CurTime() + 0.15 //self:SequenceDuration(self:SelectWeightedSequence(finaltbl))
+		self.NextIdleStandTime = CurTime() + 0.15 -- This is temp, timer above overrides it
 	end
-	//self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),finaltbl)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoIdleAnimation(iType)
@@ -1540,10 +1565,6 @@ function ENT:Think()
 	//self:SetPoseParameter("move_yaw",180)
 	
 	// if self:IsUnreachable(self:GetEnemy()) && enemy noclipping then...
-
-	//if self.AA_TargetPos.x == self:GetPos().x then
-		-- to be coded..
-	//end
 	
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
 	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
@@ -1560,10 +1581,10 @@ function ENT:Think()
 		end
 		local blockingEnt = self:GetBlockingEntity()
 		-- No longer needed as the engine now does detects and opens the doors
-		if self.CanOpenDoors && IsValid(blockingEnt) && (blockingEnt:GetClass() == "func_door" or blockingEnt:GetClass() == "func_door_rotating") && (blockingEnt:HasSpawnFlags(256) or blockingEnt:HasSpawnFlags(1024)) && !blockingEnt:HasSpawnFlags(512) then
-			//self:SetSaveValue("m_flMoveWaitFinished", 1)
-			blockingEnt:Fire("Open")
-		end
+		//if self.CanOpenDoors && IsValid(blockingEnt) && (blockingEnt:GetClass() == "func_door" or blockingEnt:GetClass() == "func_door_rotating") && (blockingEnt:HasSpawnFlags(256) or blockingEnt:HasSpawnFlags(1024)) && !blockingEnt:HasSpawnFlags(512) then
+			//self:SetSaveValue("m_flMoveWaitFinished", 1) -- Doesn't work
+			//blockingEnt:Fire("Open")
+		//end
 		if (CurSched.StopScheduleIfNotMoving == true or CurSched.StopScheduleIfNotMoving_Any == true) && (!self:IsMoving() or (IsValid(blockingEnt) && (blockingEnt:IsNPC() or CurSched.StopScheduleIfNotMoving_Any == true))) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
 			self:ScheduleFinished(CurSched)
 			//self:SetCondition(35)
