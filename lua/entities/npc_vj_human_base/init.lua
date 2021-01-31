@@ -1611,9 +1611,9 @@ function ENT:SetupWeaponHoldTypeAnims(hType)
 	end
 	
 	self.WeaponAnimTranslations = {}
+	self.NextIdleStandTime = 0
 	if self:CustomOnSetupWeaponHoldTypeAnims(hType) == true then return end
 	
-	self.NextIdleStandTime = 0
 	if self.ModelAnimationSet == 1 then -- Combine =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 		-- Use rifle animations with minor edits if it's holding a handgun
 		local rifle_idle = ACT_IDLE_SMG1
