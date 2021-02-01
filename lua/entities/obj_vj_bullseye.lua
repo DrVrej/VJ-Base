@@ -53,6 +53,7 @@ function ENT:Initialize()
 		self:SetSolid(SOLID_VPHYSICS)
 	end
 	self:SetUseType(SIMPLE_USE)
+	self:SetMaxHealth(999999)
 	self:SetHealth(999999) -- So SNPCs won't think it's dead
 	//self:SetColor(Color(255,0,0))
 end
@@ -76,7 +77,9 @@ function ENT:Think()
 		if IsValid(self.EnemyToIndividualEnt) && self.EnemyToIndividualEnt:IsNPC() then
 			self.EnemyToIndividualEnt:AddEntityRelationship(self,D_HT,99)
 			self:AddEntityRelationship(self.EnemyToIndividualEnt,D_HT,99)
-			self.EnemyToIndividualEnt:VJ_DoSetEnemy(self,false,false)
+			if self.EnemyToIndividualEnt.IsVJBaseSNPC then
+				self.EnemyToIndividualEnt:VJ_DoSetEnemy(self,false,false)
+			end
 			self.EnemyToIndividualEnt:SetEnemy(self)
 		end
 	elseif self.UseActivationSystem == true then
@@ -95,6 +98,10 @@ function ENT:Think()
 		self:AddEntityRelationship(self.VJBULLSEYE_TheAttacker,D_HT,99)
 		self.VJBULLSEYE_TheAttacker:VJ_DoSetEnemy(self)
 	end*/
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OnTakeDamage(dmginfo)
+	return 0 -- Take no damage
 end
 /*--------------------------------------------------
 	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***

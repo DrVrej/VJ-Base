@@ -1355,9 +1355,12 @@ function ENT:VJ_ACT_PLAYACTIVITY(vACT_Name, vACT_StopActivities, vACT_StopActivi
 					self.VJ_PlayingSequence = false
 					if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 						vsched:EngTask("TASK_SET_ACTIVITY", vACT_Name) -- To avoid AutoMovement stopping the velocity
-					elseif vACT_FaceEnemy == true then
-						vsched:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY", vACT_Name)
+					//elseif vACT_FaceEnemy == true then
+						//vsched:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY", vACT_Name)
 					else
+						if vACT_FaceEnemy == true then
+							self:FaceCertainEntity(self:GetEnemy(), true, (vACT_StopActivities and vACT_StopActivitiesTime) or self:DecideAnimationLength(vACT_Name, false))
+						end
 						vsched:EngTask("TASK_PLAY_SEQUENCE", vACT_Name)
 					end
 				end
