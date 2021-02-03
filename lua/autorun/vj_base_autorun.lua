@@ -17,12 +17,10 @@ VJBASE_VERSION = "2.14.1"
 VJBASE_GETNAME = "VJ Base"
 
 -- Shared --
-AddCSLuaFile("autorun/vj_globals.lua")
-include("autorun/vj_globals.lua")
 AddCSLuaFile("autorun/vj_menu_spawninfo.lua")
 AddCSLuaFile("autorun/vj_base_autorun.lua")
 AddCSLuaFile("autorun/vj_controls.lua")
-AddCSLuaFile("autorun/vj_entities.lua")
+AddCSLuaFile("autorun/vj_globals.lua")
 AddCSLuaFile("autorun/vj_convars.lua")
 AddCSLuaFile("autorun/vj_files.lua")
 AddCSLuaFile("autorun/vj_files_language.lua")

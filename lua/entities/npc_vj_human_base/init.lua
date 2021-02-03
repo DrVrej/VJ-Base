@@ -1938,9 +1938,9 @@ function ENT:Think()
 	*/
 	//print("---------------------")
 	//PrintTable(self:GetSaveTable())
-	//print(self:GetInternalVariable("m_lifeState"))
-	//self:SetSaveValue("m_flGroundChangeTime", 0)
-	
+	//print(self:GetInternalVariable("m_hOpeningDoor"))
+	//print(self:GetInternalVariable("m_flMoveWaitFinished") - CurTime())
+	//self:SetSaveValue("m_flMoveWaitFinished", CurTime() + 2)
 	self:SetCondition(1) -- Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case sv_pvsskipanimation isn't disabled!
 	
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
@@ -1959,7 +1959,6 @@ function ENT:Think()
 		local blockingEnt = self:GetBlockingEntity()
 		-- No longer needed as the engine now does detects and opens the doors
 		//if self.CanOpenDoors && IsValid(blockingEnt) && (blockingEnt:GetClass() == "func_door" or blockingEnt:GetClass() == "func_door_rotating") && (blockingEnt:HasSpawnFlags(256) or blockingEnt:HasSpawnFlags(1024)) && !blockingEnt:HasSpawnFlags(512) then
-			//self:SetSaveValue("m_flMoveWaitFinished", 1) -- Doesn't work
 			//blockingEnt:Fire("Open")
 		//end
 		if (CurSched.StopScheduleIfNotMoving == true or CurSched.StopScheduleIfNotMoving_Any == true) && (!self:IsMoving() or (IsValid(blockingEnt) && (blockingEnt:IsNPC() or CurSched.StopScheduleIfNotMoving_Any == true))) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
