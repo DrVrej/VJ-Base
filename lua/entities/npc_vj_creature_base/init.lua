@@ -1585,7 +1585,6 @@ function ENT:Think()
 		local blockingEnt = self:GetBlockingEntity()
 		-- No longer needed as the engine now does detects and opens the doors
 		//if self.CanOpenDoors && IsValid(blockingEnt) && (blockingEnt:GetClass() == "func_door" or blockingEnt:GetClass() == "func_door_rotating") && (blockingEnt:HasSpawnFlags(256) or blockingEnt:HasSpawnFlags(1024)) && !blockingEnt:HasSpawnFlags(512) then
-			//self:SetSaveValue("m_flMoveWaitFinished", 1) -- Doesn't work
 			//blockingEnt:Fire("Open")
 		//end
 		if (CurSched.StopScheduleIfNotMoving == true or CurSched.StopScheduleIfNotMoving_Any == true) && (!self:IsMoving() or (IsValid(blockingEnt) && (blockingEnt:IsNPC() or CurSched.StopScheduleIfNotMoving_Any == true))) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
