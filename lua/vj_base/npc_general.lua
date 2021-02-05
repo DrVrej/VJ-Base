@@ -1534,7 +1534,7 @@ function ENT:RunGibOnDeathCode(dmginfo, hitgroup, extraOptions)
 	local useDefault = false
 	if VJ_HasValue(dmgTbl,"UseDefault") then useDefault = true end
 	if useDefault == false && (#dmgTbl <= 0 or VJ_HasValue(dmgTbl,"All")) then dmgAny = true end
-	if (dmgAny == true) or (useDefault == true && VJ_HasValue(self.DefaultGibDamageTypes,dmgType)) or (useDefault == false && VJ_HasValue(dmgTbl,dmgType)) then
+	if dmgAny or (useDefault == true && self.DefGibOnDeathDMGTypes[dmgType]) or (useDefault == false && VJ_HasValue(dmgTbl,dmgType)) then
 		local setupgib, setupgib_extra = self:SetUpGibesOnDeath(dmginfo, hitgroup)
 		if setupgib_extra == nil then setupgib_extra = {} end
 		if setupgib == true then

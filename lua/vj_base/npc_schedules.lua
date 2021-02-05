@@ -137,6 +137,8 @@ function ENT:OnMovementComplete()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local tr_addvec = Vector(0, 0, 2)
+local tasksRun = {TASK_RUN_PATH=true, TASK_RUN_PATH_FLEE=true, TASK_RUN_PATH_TIMED=true, TASK_RUN_PATH_FOR_UNITS=true, TASK_RUN_PATH_WITHIN_DIST=true}
+local tasksWalk = {TASK_WALK_PATH=true, TASK_WALK_PATH_TIMED=true, TASK_WALK_PATH_FOR_UNITS=true, TASK_WALK_PATH_WITHIN_DIST=true}
 --
 function ENT:StartSchedule(schedule)
 	if self.MovementType == VJ_MOVETYPE_STATIONARY && schedule.IsMovingTask == true then return end -- It's stationary therefore should not move!
@@ -152,15 +154,20 @@ function ENT:StartSchedule(schedule)
 	if (!schedule.ConstantlyFaceEnemy) then schedule.ConstantlyFaceEnemy = false end -- Constantly face the enemy while doing this task
 	if (!schedule.ConstantlyFaceEnemyVisible) then schedule.ConstantlyFaceEnemyVisible = false end
 	if (!schedule.CanShootWhenMoving) then schedule.CanShootWhenMoving = false end -- Is it able to fire when moving?
-	for _,v in ipairs(schedule.Tasks) do
-		if schedule.IsMovingTask == true then break end
-		if v.TaskName == "TASK_RUN_PATH" or v.TaskName == "TASK_RUN_PATH_FLEE" or v.TaskName == "TASK_RUN_PATH_TIMED" or v.TaskName == "TASK_RUN_PATH_FOR_UNITS" or v.TaskName == "TASK_RUN_PATH_WITHIN_DIST" then
-			schedule.IsMovingTask = 1
-		elseif v.TaskName == "TASK_WALK_PATH" or v.TaskName == "TASK_WALK_PATH_TIMED" or v.TaskName == "TASK_WALK_PATH_WITHIN_DIST" or v.TaskName == "TASK_WALK_PATH_FOR_UNITS" then
-			schedule.IsMovingTask = 0
-		else
-			schedule.IsMovingTask = false
-			schedule.MoveType = false
+	if !schedule.IsMovingTask then
+		for _,v in ipairs(schedule.Tasks) do
+			if tasksRun[v.TaskName] then
+				schedule.IsMovingTask = true
+				schedule.MoveType = 1
+				break
+			elseif tasksWalk[v.TaskName] then
+				schedule.IsMovingTask = true
+				schedule.MoveType = 0
+				break
+			else
+				schedule.IsMovingTask = false
+				schedule.MoveType = false
+			end
 		end
 	end
 	if schedule.IsMovingTask == nil then schedule.IsMovingTask = false end
