@@ -116,7 +116,27 @@ function ENT:DoRunCode_OnFinish(schedule)
 	if schedule.RunCode_OnFinish != nil then schedule.AlreadyRanCode_OnFinish = true schedule.RunCode_OnFinish() return true end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local tr_addvec = Vector(0,0,2)
+function ENT:OnMovementFailed()
+	//print("Movement failed!")
+	local curSchedule = self.CurrentSchedule
+	if curSchedule != nil then
+		if self:DoRunCode_OnFail(curSchedule) == true then
+			self:ClearCondition(35)
+		end
+		if curSchedule.ResetOnFail == true then
+			self:ClearCondition(35)
+			self:StopMoving()
+			//self:SelectSchedule()
+			//print("VJ Base: Task Failed Condition Identified! "..self:GetName())
+		end
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OnMovementComplete()
+	//print("Movement completed!")
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+local tr_addvec = Vector(0, 0, 2)
 --
 function ENT:StartSchedule(schedule)
 	if self.MovementType == VJ_MOVETYPE_STATIONARY && schedule.IsMovingTask == true then return end -- It's stationary therefore should not move!

@@ -21,7 +21,7 @@ function ENT:Initialize()
 	self:PhysicsInit(MOVETYPE_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS) -- Use MOVETYPE_NONE for testing, makes the entity freeze!
 	self:SetSolid(MOVETYPE_VPHYSICS)
-	if GetConVarNumber("vj_npc_gibcollidable") == 0 then self:SetCollisionGroup(1) end
+	if GetConVar("vj_npc_gibcollidable"):GetInt() == 0 then self:SetCollisionGroup(1) end
 
 	-- Physics Functions
 	local phys = self:GetPhysicsObject()
@@ -31,8 +31,8 @@ function ENT:Initialize()
 
 	-- Misc
 	self:SetUpBloodType()
-	if GetConVarNumber("vj_npc_sd_gibbing") == 1 then self.CollideSound = "" end
-	if GetConVarNumber("vj_npc_nogibdecals") == 1 then self.Collide_Decal = "" end
+	if GetConVar("vj_npc_sd_gibbing"):GetInt() == 1 then self.CollideSound = "" end
+	if GetConVar("vj_npc_nogibdecals"):GetInt() == 1 then self.Collide_Decal = "" end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defCollideSds = {"physics/flesh/flesh_squishy_impact_hard1.wav","physics/flesh/flesh_squishy_impact_hard2.wav","physics/flesh/flesh_squishy_impact_hard3.wav","physics/flesh/flesh_squishy_impact_hard4.wav"}

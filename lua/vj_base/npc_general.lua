@@ -30,7 +30,7 @@ local defPos = Vector(0, 0, 0)
 local defAng = Angle(0, 0, 0)
 local CurTime = CurTime
 local IsValid = IsValid
-local GetConVarNumber = GetConVarNumber
+local GetConVar = GetConVar
 local istable = istable
 //local isstring = isstring
 local isnumber = isnumber
@@ -173,16 +173,16 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 	gib:Activate()
 	gib.IsVJBase_Gib = true
 	gib.RemoveOnCorpseDelete = removeOnCorpseDelete
-	if GetConVarNumber("vj_npc_gibcollidable") == 0 then gib:SetCollisionGroup(1) end
+	if GetConVar("vj_npc_gibcollidable"):GetInt() == 0 then gib:SetCollisionGroup(1) end
 	local phys = gib:GetPhysicsObject()
 	if IsValid(phys) then
 		phys:AddVelocity(vel)
 		phys:AddAngleVelocity(extraOptions.AngVel or Vector(math.Rand(-200, 200), math.Rand(-200, 200), math.Rand(-200, 200)))
 	end
-	if extraOptions.NoFade != true && GetConVarNumber("vj_npc_fadegibs") == 1 then
-		if gib:GetClass() == "obj_vj_gib" then timer.Simple(GetConVarNumber("vj_npc_fadegibstime"), function() SafeRemoveEntity(gib) end)
-		elseif gib:GetClass() == "prop_ragdoll" then gib:Fire("FadeAndRemove", "", GetConVarNumber("vj_npc_fadegibstime"))
-		elseif gib:GetClass() == "prop_physics" then gib:Fire("kill", "", GetConVarNumber("vj_npc_fadegibstime")) end
+	if extraOptions.NoFade != true && GetConVar("vj_npc_fadegibs"):GetInt() == 1 then
+		if gib:GetClass() == "obj_vj_gib" then timer.Simple(GetConVar("vj_npc_fadegibstime"):GetInt(), function() SafeRemoveEntity(gib) end)
+		elseif gib:GetClass() == "prop_ragdoll" then gib:Fire("FadeAndRemove", "", GetConVar("vj_npc_fadegibstime"):GetInt())
+		elseif gib:GetClass() == "prop_physics" then gib:Fire("kill", "", GetConVar("vj_npc_fadegibstime"):GetInt()) end
 	end
 	if removeOnCorpseDelete == true then //self.Corpse:DeleteOnRemove(extraent)
 		self.ExtraCorpsesToRemove_Transition[#self.ExtraCorpsesToRemove_Transition + 1] = gib
@@ -244,7 +244,7 @@ function ENT:DoRelationshipCheck(ent)
 	if nt_bool == true or NPCTbl_Animals[ent:GetClass()] then return "Neutral" end
 	if self:GetClass() == ent:GetClass() then return false end
 	if ent:Health() > 0 && self:Disposition(ent) != D_LI then
-		if ent:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 1 then return "Neutral" end
+		if ent:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 1 then return "Neutral" end
 		if VJ_HasValue(self.VJ_AddCertainEntityAsFriendly,ent) then return false end
 		if VJ_HasValue(self.VJ_AddCertainEntityAsEnemy,ent) then return true end
 		if (ent:IsNPC() && !ent.FriendlyToVJSNPCs && ((ent:Disposition(self) == D_HT) or (ent:Disposition(self) == D_NU && ent.VJ_IsBeingControlled == true))) or (ent:IsPlayer() && self.PlayerFriendly == false && ent:Alive()) then
@@ -331,7 +331,7 @@ end
 		- false, if it didn't face the enemy
 -----------------------------------------------------------]]
 function ENT:FaceCertainEntity(ent, onlyEnemy, faceEnemyTime)
-	if !IsValid(ent) or GetConVarNumber("ai_disabled") == 1 or (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false) then return false end
+	if !IsValid(ent) or GetConVar("ai_disabled"):GetInt() == 1 or (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false) then return false end
 	if onlyEnemy == true && IsValid(self:GetEnemy()) then
 		self.IsDoingFaceEnemy = true
 		timer.Create("timer_face_enemy"..self:EntIndex(), faceEnemyTime or 0, 1, function() self.IsDoingFaceEnemy = false end)
@@ -471,7 +471,7 @@ end
 		- doQuickIfActiveEnemy = Runs a quicker set enemy without resetting everything, it must have a active enemy! | DEFAULT = false
 -----------------------------------------------------------]]
 function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
-	if !IsValid(ent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or ent:Health() <= 0 or (ent:IsPlayer() && (!ent:Alive() or GetConVarNumber("ai_ignoreplayers") == 1)) then return end
+	if !IsValid(ent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or ent:Health() <= 0 or (ent:IsPlayer() && (!ent:Alive() or GetConVar("ai_ignoreplayers"):GetInt() == 1)) then return end
 	stopMoving = stopMoving or false -- Will not run if doQuickIfActiveEnemy passes!
 	doQuickIfActiveEnemy = doQuickIfActiveEnemy or false -- It will run a much quicker set enemy without resetting everything (Only if it has an active enemy!)
 	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == ent then self:DoMedicCode_Reset() end
@@ -556,14 +556,14 @@ function ENT:OnCondition(cond)
 	//if cond == 36 then print("sched done!") end
 	//if cond != 15 && cond != 60 then
 	//if cond != 1 then
-		//print(self," Condition: ",cond," - ",self:ConditionName(cond))
+		//print(self, " Condition: ", cond, " - ", self:ConditionName(cond))
 	//end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
-	if self.VJDEBUG_SNPC_ENABLED == true && GetConVarNumber("vj_npc_printontouch") == 1 then print(self:GetClass().." Has Touched "..entity:GetClass()) end
+	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printontouch"):GetInt() == 1 then print(self:GetClass().." Has Touched "..entity:GetClass()) end
 	self:CustomOnTouch(entity)
-	if GetConVarNumber("ai_disabled") == 1 or self.VJ_IsBeingControlled == true then return end
+	if GetConVar("ai_disabled"):GetInt() == 1 or self.VJ_IsBeingControlled == true then return end
 	
 	-- If it's a passive SNPC...
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
@@ -572,7 +572,7 @@ function ENT:Touch(entity)
 			self:PlaySoundSystem("Alert")
 			self.Passive_NextRunOnTouchT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
 		end
-	elseif self.DisableTouchFindEnemy == false && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && (entity:IsNPC() or entity:IsPlayer()) && self:DoRelationshipCheck(entity) != false then
+	elseif self.DisableTouchFindEnemy == false && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && (entity:IsNPC() or (entity:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:DoRelationshipCheck(entity) != false then
 		self:StopMoving()
 		self:SetTarget(entity)
 		self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
@@ -593,7 +593,7 @@ function ENT:FollowPlayerReset()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:FollowPlayerCode(key, activator, caller, data)
-	if self.Dead == true or self.FollowPlayer == false or GetConVarNumber("ai_disabled") == 1 or GetConVarNumber("ai_ignoreplayers") == 1 then return end
+	if self.Dead == true or self.FollowPlayer == false or GetConVar("ai_disabled"):GetInt() == 1 or GetConVar("ai_ignoreplayers"):GetInt() == 1 then return end
 	
 	if IsValid(activator) && activator:IsPlayer() && activator:Alive() then
 		if self:Disposition(activator) == D_HT then -- If it's an enemy
@@ -668,7 +668,7 @@ function ENT:DoMedicCode()
 		if CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled == true then return end
 		for _,v in pairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
 			if v.IsVJBaseSNPC != true && !v:IsPlayer() then continue end -- If it's not a VJ Base SNPC or a player, then move on
-			if v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic != true && (!v.IsVJBaseSNPC_Tank) && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0)) && self:DoRelationshipCheck(v) == false then
+			if v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic != true && (!v.IsVJBaseSNPC_Tank) && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:DoRelationshipCheck(v) == false then
 				self.Medic_CurrentEntToHeal = v
 				self.Medic_IsHealingAlly = true
 				self.AlreadyDoneMedicThinkCode = false
@@ -808,13 +808,13 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoEntityRelationshipCheck()
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.Behavior == VJ_BEHAVIOR_PASSIVE*/ then return false end
-	local posenemies = self.CurrentPossibleEnemies
-	if posenemies == nil then return false end
+	local posEnemies = self.CurrentPossibleEnemies
+	if posEnemies == nil then return false end
 	//if CurTime() > self.NextHardEntityCheckT then
 		//self.CurrentPossibleEnemies = self:DoHardEntityCheck()
 	//self.NextHardEntityCheckT = CurTime() + math.random(self.NextHardEntityCheck1,self.NextHardEntityCheck2) end
 	//print(self:GetName().."'s Enemies:")
-	//PrintTable(posenemies)
+	//PrintTable(posEnemies)
 
 	/*if table.Count(self.CurrentPossibleEnemies) == 0 && CurTime() > self.NextHardEntityCheckT then
 		self.CurrentPossibleEnemies = self:DoHardEntityCheck()
@@ -827,13 +827,14 @@ function ENT:DoEntityRelationshipCheck()
 	local nearestDist = nil
 	local mySDir = self:GetSightDirection()
 	local mySAng = math.cos(math.rad(self.SightAngle))
+	local plyControlled = self.VJ_IsBeingControlled
 	local it = 1
-	//for k, v in ipairs(posenemies) do
-	//for it = 1, #posenemies do
-	while it <= #posenemies do
-		local v = posenemies[it]
+	//for k, v in ipairs(posEnemies) do
+	//for it = 1, #posEnemies do
+	while it <= #posEnemies do
+		local v = posEnemies[it]
 		if !IsValid(v) then
-			table_remove(posenemies, it)
+			table_remove(posEnemies, it)
 		else
 			it = it + 1
 			//if !IsValid(v) then table_remove(self.CurrentPossibleEnemies,tonumber(v)) continue end
@@ -853,7 +854,7 @@ function ENT:DoEntityRelationshipCheck()
 			local vClass = v:GetClass()
 			local vNPC = v:IsNPC()
 			local vPlayer = v:IsPlayer()
-			if vClass != self:GetClass() && (vNPC or vPlayer) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
+			if vClass != self:GetClass() && (vPlayer or (vNPC && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
 				local inEneTbl = VJ_HasValue(self.VJ_AddCertainEntityAsEnemy, v)
 				if self.HasAllies == true && inEneTbl == false then
 					for _,friclass in ipairs(self.VJ_NPC_Class) do
@@ -882,34 +883,14 @@ function ENT:DoEntityRelationshipCheck()
 							end
 						end
 					end
-					if vNPC && !entFri then
-						-- Deprecated system
-						/*for _,fritbl in ipairs(self.VJ_FriendlyNPCsGroup) do
-							if string_find(vClass, fritbl) then
-								entFri = true
-								v:AddEntityRelationship(self, D_LI, 99)
-								self:AddEntityRelationship(v, D_LI, 99)
-							end
-						end
-						if VJ_HasValue(self.VJ_FriendlyNPCsSingle,vClass) then
-							entFri = true
-							v:AddEntityRelationship(self, D_LI, 99)
-							self:AddEntityRelationship(v, D_LI, 99)
-						end*/
-						-- Mostly used for non-VJ friendly NPCs
-						if self.PlayerFriendly == true && (NPCTbl_Resistance[vClass] or (self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true)) then
-							v:AddEntityRelationship(self, D_LI, 99)
-							self:AddEntityRelationship(v, D_LI, 99)
-							entFri = true
-						end
-						if self.VJFriendly == true && v.IsVJBaseSNPC == true then
-							v:AddEntityRelationship(self, D_LI, 99)
-							self:AddEntityRelationship(v, D_LI, 99)
-							entFri = true
-						end
+					-- Handle self.VJFriendly AND HL2 Resistance + self.FriendsWithAllPlayerAllies
+					if vNPC && !entFri && ((self.VJFriendly == true && v.IsVJBaseSNPC == true) or (self.PlayerFriendly == true && (NPCTbl_Resistance[vClass] or (self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true)))) then
+						v:AddEntityRelationship(self, D_LI, 99)
+						self:AddEntityRelationship(v, D_LI, 99)
+						entFri = true
 					end
 				end
-				if entFri == false && vNPC /*&& MyVisibleTov*/ && self.DisableMakingSelfEnemyToNPCs == false && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self, D_HT, 99) end
+				if !entFri && vNPC /*&& MyVisibleTov*/ && !self.DisableMakingSelfEnemyToNPCs && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self, D_HT, 99) end
 				if vPlayer && (self.PlayerFriendly == true or entFri == true) then
 					if inEneTbl == false then
 						entFri = true
@@ -953,14 +934,14 @@ function ENT:DoEntityRelationshipCheck()
 			print(self:HasEnemyMemory(v))
 			print(CurTime() - self:GetEnemyLastTimeSeen(v))
 			print(CurTime() - self:GetEnemyFirstTimeSeen(v))*/
-			-- We have to do this here so we make sure non-VJ NPCs can still target this SNPC!
-			if self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye != v then
+			-- We have to do this here so we make sure non-VJ NPCs can still target this NPC, even if it's being controlled!
+			if plyControlled && self.VJ_TheControllerBullseye != v then
 				//self:AddEntityRelationship(v, D_NU, 99)
 				v = self.VJ_TheControllerBullseye
 				vPlayer = false
 			end
-			local radiusoverride = 0
-			if self.DisableFindEnemy == false && ((self.Behavior == VJ_BEHAVIOR_NEUTRAL && self.Alerted == true) or self.Behavior != VJ_BEHAVIOR_NEUTRAL) && ((self.FindEnemy_CanSeeThroughWalls == true) or (self:Visible(v) && (vDistanceToMy < sightDist))) && ((self.FindEnemy_UseSphere == false && radiusoverride == 0 && (mySDir:Dot((vPos - myPos):GetNormalized()) > mySAng)) or (self.FindEnemy_UseSphere == true or radiusoverride == 1)) then
+			-- Check in order: Can find enemy + Neutral or not + Is visible + In sight
+			if self.DisableFindEnemy == false && (self.Behavior != VJ_BEHAVIOR_NEUTRAL or self.Alerted) && (self.FindEnemy_CanSeeThroughWalls or self:Visible(v)) && (self.FindEnemy_UseSphere or (mySDir:Dot((vPos - myPos):GetNormalized()) > mySAng)) then
 				local check = self:DoRelationshipCheck(v)
 				if check == true then -- Is enemy
 					eneSeen = true
@@ -978,7 +959,7 @@ function ENT:DoEntityRelationshipCheck()
 				end
 			end
 			if vPlayer then
-				if entFri == true && self.MoveOutOfFriendlyPlayersWay == true && self.IsGuard == false && !self:IsMoving() && CurTime() > self.TakingCoverT && self.VJ_IsBeingControlled == false && (!self.IsVJBaseSNPC_Tank) && self:BusyWithActivity() == false then
+				if entFri == true && self.MoveOutOfFriendlyPlayersWay == true && self.IsGuard == false && !self:IsMoving() && CurTime() > self.TakingCoverT && !plyControlled && (!self.IsVJBaseSNPC_Tank) && self:BusyWithActivity() == false then
 					local dist = 20
 					if self.FollowingPlayer == true then dist = 10 end
 					if /*self:Disposition(v) == D_LI &&*/ (self:VJ_GetNearestPointToEntityDistance(v) < dist) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
@@ -1010,7 +991,7 @@ function ENT:DoEntityRelationshipCheck()
 				end
 				
 				-- HasOnPlayerSight system, used to do certain actions when it sees the player
-				if self.HasOnPlayerSight == true && v:Alive() &&(CurTime() > self.OnPlayerSightNextT) && (v:GetPos():Distance(self:GetPos()) < self.OnPlayerSightDistance) && self:Visible(v) && (self:GetSightDirection():Dot((v:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) then
+				if self.HasOnPlayerSight == true && v:Alive() &&(CurTime() > self.OnPlayerSightNextT) && (vDistanceToMy < self.OnPlayerSightDistance) && self:Visible(v) && (self:GetSightDirection():Dot((v:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) then
 					-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 					local disp = self.OnPlayerSightDispositionLevel
 					if (disp == 0) or (disp == 1 && (self:Disposition(v) == D_LI or self:Disposition(v) == D_NU)) or (disp == 2 && self:Disposition(v) != D_LI) then
@@ -1502,7 +1483,7 @@ function ENT:IdleDialogueSoundCodeTest()
 	return ret, false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:IdleDialogueAnswerSoundCode(CustomTbl,Type)
+function ENT:IdleDialogueAnswerSoundCode(CustomTbl, Type)
 	if self.Dead == true or self.HasSounds == false or self.HasIdleDialogueAnswerSounds == false then return 0 end
 	Type = Type or VJ_CreateSound
 	local ctbl = VJ_PICK(CustomTbl)
@@ -1640,7 +1621,7 @@ function ENT:DoHardEntityCheck(CustomTbl)
 		if !EntsTbl[x]:IsNPC() && !EntsTbl[x]:IsPlayer() then continue end
 		local v = EntsTbl[x]
 		self:EntitiesToNoCollideCode(v)
-		if (v:IsNPC() && v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) && v:Health() > 0) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0) then
+		if (v:IsNPC() && v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) && v:Health() > 0) or (v:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0) then
 			EntsFinal[count] = v
 			count = count + 1
 		end
@@ -1671,12 +1652,12 @@ local EnemyTargets = VJ_FindInCone(self:GetPos(),self:GetForward(),self.SightDis
 if (!EnemyTargets) then return end
 //table.Add(EnemyTargets)
 for k,v in pairs(EnemyTargets) do
-	//if (v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag") && v:IsNPC() or (v:IsPlayer() && self.PlayerFriendly == false && GetConVarNumber("ai_ignoreplayers") == 0) && self:Visible(v) then
+	//if (v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag") && v:IsNPC() or (v:IsPlayer() && self.PlayerFriendly == false && GetConVar("ai_ignoreplayers"):GetInt() == 0) && self:Visible(v) then
 	//if self.CombineFriendly == true then if VJ_HasValue(NPCTbl_Combine,v:GetClass()) then return end end
 	//if self.ZombieFriendly == true then if VJ_HasValue(NPCTbl_Zombies,v:GetClass()) then return end end
 	//if self.AntlionFriendly == true then if VJ_HasValue(NPCTbl_Antlions,v:GetClass()) then return end end
 	//if self.PlayerFriendly == true then if VJ_HasValue(NPCTbl_Resistance,v:GetClass()) then return end end
-	//if GetConVarNumber("vj_npc_vjfriendly") == 1 then
+	//if GetConVar("vj_npc_vjfriendly"):GetInt() == 1 then
 	//local frivj = ents.FindByClass("npc_vj_*") table.Add(frivj) for _, x in pairs(frivj) do return end end
 	//local vjanimalfriendly = ents.FindByClass("npc_vjanimal_*") table.Add(vjanimalfriendly) for _, x in pairs(vjanimalfriendly) do return end
 	//self:AddEntityRelationship( v, D_HT, 99 )
@@ -1745,8 +1726,8 @@ end*/
 end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*function ENT:ThemeMusicCode()
-if GetConVarNumber("vj_npc_sd_nosounds") == 0 then
-if GetConVarNumber("vj_npc_sd_soundtrack") == 0 then
+if GetConVar("vj_npc_sd_nosounds"):GetInt() == 0 then
+if GetConVar("vj_npc_sd_soundtrack"):GetInt() == 0 then
 	self.thememusicsd = CreateSound( player.GetByID( 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,71,72,73,74,75,76,77,78,79,80,81,82,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100 ), self.Theme )
 	self.thememusicsd:Play();
 	self.thememusicsd:Stop();
