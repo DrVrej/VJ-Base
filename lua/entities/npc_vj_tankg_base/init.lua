@@ -124,7 +124,7 @@ end
 function ENT:CustomOnThink()
 	if self:Tank_CustomOnThink() == true then
 		//if !self:GetParent() then self:Remove() end
-		if GetConVarNumber("vj_npc_noidleparticle") == 1 then return end
+		if GetConVar("vj_npc_noidleparticle"):GetInt() == 1 then return end
 		timer.Simple(0.1,function()
 			if IsValid(self) && self.Dead == false then
 				self:StartSpawnEffects()
@@ -169,7 +169,7 @@ function ENT:CustomOnThink_AIEnabled()
 				self.Tank_GunnerIsTurning = false
 				self.FiringShell = true
 				self.Tank_FacingTarget = true
-				if self:Visible(self:GetEnemy()) && GetConVarNumber("vj_npc_norange") == 0 then
+				if self:Visible(self:GetEnemy()) && GetConVar("vj_npc_norange"):GetInt() == 0 then
 					self:Tank_PrepareShell() 
 				end
 			elseif Angle_Diffuse > self.Tank_AngleDiffuseGeneralNumber then
@@ -242,7 +242,7 @@ function ENT:Tank_PrepareShell()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_FireShell()
-	if (self.Dead == true) or (GetConVarNumber("ai_disabled") == 1) or (self.Tank_ProperHeightShoot == false) or (!IsValid(self:GetEnemy())) then return end // self.Tank_FacingTarget != true
+	if (self.Dead == true) or (GetConVar("ai_disabled"):GetInt() == 1) or (self.Tank_ProperHeightShoot == false) or (!IsValid(self:GetEnemy())) then return end // self.Tank_FacingTarget != true
 	if self:Visible(self:GetEnemy()) then
 		self:Tank_Sound_FireShell()
 		

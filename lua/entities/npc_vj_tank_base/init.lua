@@ -180,15 +180,15 @@ function ENT:CustomOnInitialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnTouch(ent)
-	if GetConVarNumber("ai_disabled") == 1 then return end
+	if GetConVar("ai_disabled"):GetInt() == 1 then return end
 	if self.Tank_Status == 0 then
 		self:Tank_RunOver(ent)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_RunOver(ent)
-	if (!IsValid(ent)) or (GetConVarNumber("vj_npc_nomelee") == 1 /*or self.HasMeleeAttack == false*/) or (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == ent) then return end
-	if self:Disposition(ent) == 1 && ent:Health() > 0 && (ent:IsNPC() && ent.VJ_IsHugeMonster != true && !self.TankTbl_DontRunOver[ent:GetClass()]) or (ent:IsPlayer() && self.PlayerFriendly == false && GetConVarNumber("ai_ignoreplayers") == 0 && ent:Alive() && self.Tank_IsMoving == true) then
+	if (!IsValid(ent)) or (GetConVar("vj_npc_nomelee"):GetInt() == 1 /*or self.HasMeleeAttack == false*/) or (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == ent) then return end
+	if self:Disposition(ent) == 1 && ent:Health() > 0 && (ent:IsNPC() && ent.VJ_IsHugeMonster != true && !self.TankTbl_DontRunOver[ent:GetClass()]) or (ent:IsPlayer() && self.PlayerFriendly == false && GetConVar("ai_ignoreplayers"):GetInt() == 0 && ent:Alive() && self.Tank_IsMoving == true) then
 		self:Tank_CustomOnRunOver(ent)
 		ent:TakeDamage(self:VJ_GetDifficultyValue(8),self,self)
 		VJ_DestroyCombineTurret(self,ent)
@@ -206,7 +206,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink()
 	if self:Tank_CustomOnThink() == true then
-		if GetConVarNumber("vj_npc_noidleparticle") == 1 then return end
+		if GetConVar("vj_npc_noidleparticle"):GetInt() == 1 then return end
 		timer.Simple(0.1,function()
 			if IsValid(self) && self.Dead == false then
 				self:StartSpawnEffects()

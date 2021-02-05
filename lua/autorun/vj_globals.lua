@@ -10,7 +10,7 @@ include('autorun/vj_controls.lua')
 -- Localized static values
 local CurTime = CurTime
 local IsValid = IsValid
-local GetConVarNumber = GetConVarNumber
+local GetConVar = GetConVar
 local istable = istable
 local isstring = isstring
 local isnumber = isnumber
@@ -464,7 +464,7 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 	if IsValid(ply) then
 		ply.VJ_LastInvestigateSd = 0
 		ply.VJ_LastInvestigateSdLevel = 0
-		if GetConVarNumber("ai_ignoreplayers") == 0 then
+		if GetConVar("ai_ignoreplayers"):GetInt() == 0 then
 			local EntsTbl = ents.GetAll()
 			for x = 1, #EntsTbl do
 				local v = EntsTbl[x]
@@ -495,7 +495,7 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(entity)
 				if entity.IsVJBaseSNPC == true && entity.CurrentPossibleEnemies == nil then entity.CurrentPossibleEnemies = {} end
 				local EntsTbl = ents.GetAll()
 				local count = 1
-				local cvSeePlys = GetConVarNumber("ai_ignoreplayers") == 0
+				local cvSeePlys = GetConVar("ai_ignoreplayers"):GetInt() == 0
 				for x = 1, #EntsTbl do
 					local v = EntsTbl[x]
 					if v:IsNPC() or v:IsPlayer() then
@@ -638,7 +638,7 @@ hook.Add("VJ_CreateSNPCCorpse", "VJ_CreateSNPCCorpse", function(corpse, owner)
 		count = count + 1 -- Since we added one above
 		
 		-- Check if we surpassed the limit!
-		if count > GetConVarNumber("vj_npc_globalcorpselimit") then
+		if count > GetConVar("vj_npc_globalcorpselimit"):GetInt() then
 			local GetTheFirstValue = table.GetFirstValue(VJ_Corpses)
 			table_remove(VJ_Corpses, table.GetFirstKey(VJ_Corpses))
 			if IsValid(GetTheFirstValue) then
@@ -663,7 +663,7 @@ hook.Add("PlayerCanPickupWeapon","VJ_PLAYER_CANPICKUPWEAPON",function(ply,wep)
 	end
 	if wep.IsVJBaseWeapon == true then
 		//if wep.VJ_CanBePickedUpWithOutUse == true then return true end
-		if GetConVarNumber("vj_npc_plypickupdropwep") == 0 then return false end
+		if GetConVar("vj_npc_plypickupdropwep"):GetInt() == 0 then return false end
 		if ply:KeyPressed(IN_USE) && (ply:GetEyeTrace().Entity == wep) then
 		return true else return false end
 	end
@@ -829,7 +829,7 @@ function util.VJ_SphereDamage(vAttacker, vInflictor, vPosition, vDamageRadius, v
 		
 		if (vTbl_DisableVisibilityCheck == false && (v:VisibleVec(vPosition) or v:Visible(vAttacker))) or (vTbl_DisableVisibilityCheck == true) then
 			if vBlockCertainEntities == true then
-				if (v:IsNPC() && (v:Disposition(vAttacker) != D_LI) && v:Health() > 0 && (v != vAttacker) && (v:GetClass() != vAttacker:GetClass())) or (v:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 && v:Alive() && v:Health() > 0 && v.VJ_NoTarget != true) then
+				if (v:IsNPC() && (v:Disposition(vAttacker) != D_LI) && v:Health() > 0 && (v != vAttacker) && (v:GetClass() != vAttacker:GetClass())) or (v:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0 && v:Alive() && v:Health() > 0 && v.VJ_NoTarget != true) then
 					//if ((v:IsNPC() && v:Disposition(vAttacker) == 1 or v:Disposition(vAttacker) == 2) or (v:IsPlayer() && v:Alive())) && (v != vAttacker) && (v:GetClass() != vAttacker:GetClass()) then -- entity check
 					DoDamageCode(v)
 				elseif !v:IsNPC() && !v:IsPlayer() then

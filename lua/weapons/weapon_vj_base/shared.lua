@@ -536,7 +536,7 @@ function SWEP:PrimaryAttack(UseAlt)
 		if FindEnts != nil then
 			for _,v in pairs(FindEnts) do
 				if (owner.VJ_IsBeingControlled == true && owner.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
-				if (owner:IsPlayer() && v:EntIndex() != owner:EntIndex()) or (owner:IsNPC() && (v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVarNumber("ai_ignoreplayers") == 0)) && (owner:Disposition(v) != D_LI) && (v != owner) && (v:GetClass() != owner:GetClass()) or (v:GetClass() == "prop_physics") or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" && (owner:GetForward():Dot((v:GetPos() -owner:GetPos()):GetNormalized()) > math.cos(math.rad(owner.MeleeAttackDamageAngleRadius)))) then
+				if (owner:IsPlayer() && v:EntIndex() != owner:EntIndex()) or (owner:IsNPC() && (v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && (owner:Disposition(v) != D_LI) && (v != owner) && (v:GetClass() != owner:GetClass()) or (v:GetClass() == "prop_physics") or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" && (owner:GetForward():Dot((v:GetPos() -owner:GetPos()):GetNormalized()) > math.cos(math.rad(owner.MeleeAttackDamageAngleRadius)))) then
 					local dmginfo = DamageInfo()
 					dmginfo:SetDamage(owner:IsNPC() and owner:VJ_GetDifficultyValue(self.Primary.Damage) or self.Primary.Damage)
 					if v:IsNPC() or v:IsPlayer() then dmginfo:SetDamageForce(owner:GetForward() * ((dmginfo:GetDamage() + 100) * 70)) end
@@ -616,7 +616,7 @@ function SWEP:PrimaryAttack(UseAlt)
 		elseif isnpc && owner.IsVJBaseSNPC == true then -- Make sure the VJ SNPC recognizes that it lost a ammunition, even though it was a custom bullet code
 			self:SetClip1(self:Clip1() - 1)
 		end
-		if GetConVarNumber("vj_wep_nomuszzleflash") == 0 then owner:MuzzleFlash() end
+		if GetConVar("vj_wep_nomuszzleflash"):GetInt() == 0 then owner:MuzzleFlash() end
 	end
 	
 	self:PrimaryAttackEffects()
@@ -658,7 +658,7 @@ function SWEP:PrimaryAttackEffects()
 	vjeffectmuz:SetAttachment(1)
 	util.Effect("VJ_Weapon_RifleMuzzle1",vjeffectmuz)*/
 
-	if GetConVarNumber("vj_wep_nomuszzleflash") == 0 then
+	if GetConVar("vj_wep_nomuszzleflash"):GetInt() == 0 then
 		if self.PrimaryEffects_MuzzleFlash == true then
 			local muzzleattach = self.PrimaryEffects_MuzzleAttachment
 			if isnumber(muzzleattach) == false then muzzleattach = self:LookupAttachment(muzzleattach) end
@@ -684,7 +684,7 @@ function SWEP:PrimaryAttackEffects()
 			end
 		end
 		
-		if SERVER && self.PrimaryEffects_SpawnDynamicLight == true && GetConVarNumber("vj_wep_nomuszzleflash_dynamiclight") == 0 then
+		if SERVER && self.PrimaryEffects_SpawnDynamicLight == true && GetConVar("vj_wep_nomuszzleflash_dynamiclight"):GetInt() == 0 then
 			local FireLight1 = ents.Create("light_dynamic")
 			FireLight1:SetKeyValue("brightness", self.PrimaryEffects_DynamicLightBrightness)
 			FireLight1:SetKeyValue("distance", self.PrimaryEffects_DynamicLightDistance)
@@ -700,7 +700,7 @@ function SWEP:PrimaryAttackEffects()
 		end
 	end
 
-	if self.PrimaryEffects_SpawnShells == true && !owner:IsPlayer() && GetConVarNumber("vj_wep_nobulletshells") == 0 then
+	if self.PrimaryEffects_SpawnShells == true && !owner:IsPlayer() && GetConVar("vj_wep_nobulletshells"):GetInt() == 0 then
 		local shellattach = self.PrimaryEffects_ShellAttachment
 		if isnumber(shellattach) == false then shellattach = self:LookupAttachment(shellattach) end
 		local vjeffect = EffectData()
@@ -718,11 +718,11 @@ function SWEP:FireAnimationEvent(pos, ang, event, options)
 	
 	if event == 22 or event == 6001 then return true end
 	
-	if GetConVarNumber("vj_wep_nomuszzleflash") == 1 && event == 21 or event == 22 or event == 5001 or event == 5003 then
+	if GetConVar("vj_wep_nomuszzleflash"):GetInt() == 1 && event == 21 or event == 22 or event == 5001 or event == 5003 then
 		return true
 	end
 
-	if GetConVarNumber("vj_wep_nobulletshells") == 1 && event == 20 or event == 6001 then
+	if GetConVar("vj_wep_nobulletshells"):GetInt() == 1 && event == 20 or event == 6001 then
 		return true
 	end
 end

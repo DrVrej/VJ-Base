@@ -189,7 +189,7 @@ function ENT:DoDamageCode(data,phys)
 		hitent = data.HitEntity
 		//if hitent:IsNPC() or hitent:IsPlayer() then
 		if self:GetOwner() != NULL then
-			if (VJ_IsProp(hitent)) or (hitent:IsNPC() && (hitent:Disposition(self:GetOwner()) == 1 or hitent:Disposition(self:GetOwner()) == 2) && hitent:Health() > 0 && (hitent != self:GetOwner()) && (hitent:GetClass() != self:GetOwner():GetClass())) or (hitent:IsPlayer() && GetConVarNumber("ai_ignoreplayers") == 0 && hitent:Alive() && hitent:Health() > 0) then
+			if (VJ_IsProp(hitent)) or (hitent:IsNPC() && (hitent:Disposition(self:GetOwner()) == 1 or hitent:Disposition(self:GetOwner()) == 2) && hitent:Health() > 0 && (hitent != self:GetOwner()) && (hitent:GetClass() != self:GetOwner():GetClass())) or (hitent:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0 && hitent:Alive() && hitent:Health() > 0) then
 				local damagecode = DamageInfo()
 				damagecode:SetDamage(self.DirectDamage)
 				damagecode:SetDamageType(self.DirectDamageType)
