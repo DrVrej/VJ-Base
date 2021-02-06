@@ -261,6 +261,52 @@ function VJ_DestroyCombineTurret(selfEnt, ent)
 	end
 	return false
 end
+--------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Applies speed effect to the given NPC/Player, if another speed effect is already applied, it will skip!
+		- ent = The entity to apply the speed modification
+		- speed = The speed, 1.0 is the normal speed
+		- setTime = How long should this be in effect? | DEFAULT = 1
+	Returns
+		- false, effect did NOT apply
+		- true, effect applied
+-----------------------------------------------------------]]
+function VJ_ApplySpeedEffect(ent, speed, setTime)
+    ent.VJ_SpeedEffectT = ent.VJ_SpeedEffectT or 0
+    if ent.VJ_SpeedEffectT < CurTime() then
+        ent.VJ_SpeedEffectT = CurTime() + (setTime or 1)
+		local orgPlayback = ent:GetPlaybackRate()
+		local plyOrgWalk, plyOrgRun;
+		if ent:IsPlayer() then
+			plyOrgWalk = ent:GetWalkSpeed()
+			plyOrgRun = ent:GetRunSpeed()
+		end
+        local hookName = "VJ_SpeedEffect" .. ent:EntIndex()
+        hook.Add("Think", hookName, function()
+            if !IsValid(ent) then
+                hook.Remove("Think", hookName)
+                return
+			elseif (ent.VJ_SpeedEffectT < CurTime()) or (ent:Health() <= 0) then
+                hook.Remove("Think", hookName)
+				if ent.IsVJBaseSNPC then ent.AnimationPlaybackRate = orgPlayback end
+				ent:SetPlaybackRate(orgPlayback)
+				if ent:IsPlayer() then
+					ent:SetWalkSpeed(plyOrgWalk)
+					ent:SetRunSpeed(plyOrgRun)
+				end
+                return
+            end
+			if ent.IsVJBaseSNPC then ent.AnimationPlaybackRate = speed end
+			ent:SetPlaybackRate(speed)
+            if ent:IsPlayer() then
+                ent:SetWalkSpeed(plyOrgWalk * speed)
+                ent:SetRunSpeed(plyOrgRun * speed)
+            end
+        end)
+		return true
+    end
+	return false
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
 function VJ_CreateTestObject(pos, ang, color, time, mdl)
