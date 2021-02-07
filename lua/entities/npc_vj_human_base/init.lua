@@ -103,6 +103,7 @@ ENT.Medic_TimeUntilHeal = false -- Time until the ally receives health | Set to 
 ENT.Medic_CheckDistance = 600 -- How far does it check for allies that are hurt? | World units
 ENT.Medic_HealDistance = 100 -- How close does it have to be until it stops moving and heals its ally?
 ENT.Medic_HealthAmount = 25 -- How health does it give?
+ENT.Medic_DisableSetHealth = false -- If set to true, it won't set health to the ally & it won't clear its decals, allowing to custom code it
 ENT.Medic_NextHealTime = VJ_Set(10, 15) -- How much time until it can give health to an ally again
 ENT.Medic_SpawnPropOnHeal = true -- Should it spawn a prop, such as small health vial at a attachment when healing an ally?
 ENT.Medic_SpawnPropOnHealModel = "models/healthvial.mdl" -- The model that it spawns
@@ -687,7 +688,7 @@ function ENT:CustomOnIdleDialogueAnswer(ent) end -- ent = The entity that just t
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMedic_BeforeHeal() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMedic_OnHeal() end
+function ENT:CustomOnMedic_OnHeal(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMedic_OnReset() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3293,24 +3294,21 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	self:RunGibOnDeathCode(dmginfo, hitgroup)
 	self:PlaySoundSystem("Death")
 	//self:AA_StopMoving()
-	if self.HasDeathAnimation != true then DoKilled() return end
 	if self.HasDeathAnimation == true then
-		if GetConVar("vj_npc_nodeathanimation"):GetInt() == 1 or GetConVar("ai_disabled"):GetInt() == 1 or ((dmginfo:GetDamageType() == DMG_DISSOLVE) or (IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball")) then DoKilled() return end
-		if dmginfo:GetDamageType() != DMG_DISSOLVE then
-			local randanim = math.random(1,self.DeathAnimationChance)
-			if randanim != 1 then DoKilled() return end
-			if randanim == 1 then
-				self:CustomDeathAnimationCode(dmginfo, hitgroup)
-				local pickanim = VJ_PICK(self.AnimTbl_Death)
-				local seltime = self:DecideAnimationLength(pickanim,self.DeathAnimationTime) - self.DeathAnimationDecreaseLengthAmount
-				self:RemoveAllGestures()
-				self:VJ_ACT_PLAYACTIVITY(pickanim, true, seltime, false, 0, {PlayBackRateCalculated=true})
-				self.DeathAnimationCodeRan = true
-				timer.Simple(seltime,DoKilled)
-			end
+		if IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball" then DoKilled() return end
+		if GetConVar("vj_npc_nodeathanimation"):GetInt() == 0 && GetConVar("ai_disabled"):GetInt() == 0 && dmginfo:GetDamageType() != DMG_DISSOLVE && math.random(1, self.DeathAnimationChance) == 1 then
+			self:RemoveAllGestures()
+			self:CustomDeathAnimationCode(dmginfo, hitgroup)
+			local pickanim = VJ_PICK(self.AnimTbl_Death)
+			local animTime = self:DecideAnimationLength(pickanim, self.DeathAnimationTime) - self.DeathAnimationDecreaseLengthAmount
+			self:VJ_ACT_PLAYACTIVITY(pickanim, true, animTime, false, 0, {PlayBackRateCalculated=true})
+			self.DeathAnimationCodeRan = true
+			timer.Simple(animTime, DoKilled)
 		else
 			DoKilled()
 		end
+	else
+		DoKilled()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
