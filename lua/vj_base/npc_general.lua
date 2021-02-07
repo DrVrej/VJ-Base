@@ -681,7 +681,7 @@ function ENT:DoMedicCode()
 		end
 	elseif self.AlreadyDoneMedicThinkCode == false then
 		if !IsValid(self.Medic_CurrentEntToHeal) or VJ_IsAlive(self.Medic_CurrentEntToHeal) != true or (self.Medic_CurrentEntToHeal:Health() > self.Medic_CurrentEntToHeal:GetMaxHealth() * 0.75) then self:DoMedicCode_Reset() return end
-		if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then -- Are we in healing distance?
+		if self:Visible(self.Medic_CurrentEntToHeal) && self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then -- Are we in healing distance?
 			self.AlreadyDoneMedicThinkCode = true
 			self:CustomOnMedic_BeforeHeal()
 			self:PlaySoundSystem("MedicBeforeHeal")
@@ -725,14 +725,16 @@ function ENT:DoMedicCode()
 						self:DoMedicCode_Reset()
 					else -- If it exists...
 						if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then -- Are we still in healing distance?
-							self:CustomOnMedic_OnHeal()
+							self:CustomOnMedic_OnHeal(self.Medic_CurrentEntToHeal)
 							self:PlaySoundSystem("MedicOnHeal")
 							if self.Medic_CurrentEntToHeal.IsVJBaseSNPC == true then
 								self.Medic_CurrentEntToHeal:PlaySoundSystem("MedicReceiveHeal")
 							end
-							self.Medic_CurrentEntToHeal:RemoveAllDecals()
-							local fricurhp = self.Medic_CurrentEntToHeal:Health()
-							self.Medic_CurrentEntToHeal:SetHealth(math.Clamp(fricurhp + self.Medic_HealthAmount, fricurhp, self.Medic_CurrentEntToHeal:GetMaxHealth()))
+							if !self.Medic_DisableSetHealth then
+								self.Medic_CurrentEntToHeal:RemoveAllDecals()
+								local fricurhp = self.Medic_CurrentEntToHeal:Health()
+								self.Medic_CurrentEntToHeal:SetHealth(math.Clamp(fricurhp + self.Medic_HealthAmount, fricurhp, self.Medic_CurrentEntToHeal:GetMaxHealth()))
+							end
 							self:DoMedicCode_Reset()
 						else -- If we are no longer in healing distance, go after the ally again
 							self.AlreadyDoneMedicThinkCode = false

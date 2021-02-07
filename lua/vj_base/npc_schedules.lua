@@ -31,6 +31,10 @@ function ENT:VJ_TASK_GOTO_LASTPOS(moveType, customFunc)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_GOTO_TARGET(moveType, customFunc)
+	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+		self:AA_MoveTo(self:GetTarget(), true, (moveType == "TASK_RUN_PATH" and "Alert") or "Calm")
+		return
+	end
 	local vsched = ai_vj_schedule.New("vj_goto_target")
 	vsched:EngTask("TASK_GET_PATH_TO_TARGET", 0)
 	//vsched:EngTask(moveType, 0)
@@ -43,6 +47,10 @@ function ENT:VJ_TASK_GOTO_TARGET(moveType, customFunc)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_GOTO_PLAYER(moveType, customFunc)
+	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+		self:AA_MoveTo(self:GetTarget(), true, (moveType == "TASK_RUN_PATH" and "Alert") or "Calm")
+		return
+	end
 	local vsched = ai_vj_schedule.New("vj_goto_player")
 	vsched:EngTask("TASK_GET_PATH_TO_PLAYER", 0)
 	//vsched:EngTask(moveType, 0)
