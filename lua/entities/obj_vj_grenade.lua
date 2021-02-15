@@ -70,8 +70,8 @@ function ENT:CustomOnTakeDamage(dmginfo)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPhysicsCollide(data,phys)
-	getvelocity = phys:GetVelocity()
-	velocityspeed = getvelocity:Length()
+	local getvelocity = phys:GetVelocity()
+	local velocityspeed = getvelocity:Length()
 	//print(velocityspeed)
 	if velocityspeed > 500 then -- Or else it will go flying!
 		phys:SetVelocity(getvelocity * 0.9)
@@ -110,9 +110,10 @@ function ENT:DeathEffects()
 
 	self:SetLocalPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the entity is too close to the ground
 	local tr = util.TraceLine({
-	start = self:GetPos(),
-	endpos = self:GetPos() - Vector(0, 0, 100),
-	filter = self })
+		start = self:GetPos(),
+		endpos = self:GetPos() - Vector(0, 0, 100),
+		filter = self
+	})
 	util.Decal(VJ_PICK(self.DecalTbl_DeathDecals),tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
 	
 	self:DoDamageCode()
