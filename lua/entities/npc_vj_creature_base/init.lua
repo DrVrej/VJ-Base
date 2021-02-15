@@ -1545,15 +1545,17 @@ function ENT:DoChaseAnimation(alwaysChase)
 	if alwaysChase == false && (self.DisableChasingEnemy == true or self.IsGuard == true or self.RangeAttack_DisableChasingEnemy == true) then self:VJ_TASK_IDLE_STAND() return end
 	
 	-- If the enemy is not reachable then wander around
-	if self:IsUnreachable(ene) == true && (self.HasRangeAttack == true or math.random(1, 30) == 1) then
+	if self:IsUnreachable(ene) == true then
 		self:RememberUnreachable(ene, 2)
 		if self.HasRangeAttack == true then -- Ranged NPCs
 			self:VJ_TASK_CHASE_ENEMY(true)
-		else -- Non-range NPCs
+		elseif math.random(1, 30) == 1 then
 			if !self:IsMoving() then
 				self.NextWanderTime = 0
 			end
 			self:DoIdleAnimation(1)
+		else
+			self:VJ_TASK_IDLE_STAND()
 		end
 	else -- Is reachable, so chase the enemy!
 		self:VJ_TASK_CHASE_ENEMY()
