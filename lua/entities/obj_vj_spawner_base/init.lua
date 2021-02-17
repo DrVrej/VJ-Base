@@ -24,7 +24,7 @@ ENT.EntitiesToSpawn = {}
 		- Entities = {"npc_name"} -- This defines the table of entities it spawns randomly
 		- WeaponsList = {"weapon_name"} -- Use "default" to make it spawn the NPC with its default weapons
 */
-ENT.TimedSpawn_Time = 1//3 -- How much time until it spawns another SNPC?
+ENT.TimedSpawn_Time = 3 -- How much time until it spawns another SNPC?
 ENT.TimedSpawn_OnlyOne = true -- If it's true then it will only have one SNPC spawned at a time
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Sound Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
