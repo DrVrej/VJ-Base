@@ -2,124 +2,157 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 AddCSLuaFile("shared.lua")
 include("shared.lua")
 /*--------------------------------------------------
-	=============== Spawner Base ===============
 	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-INFO: Used to make spawners.
 --------------------------------------------------*/
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.VJBaseSpawnerDisabled = false -- If set to true, it will stop spawning the entities
 ENT.OverrideDisableOnSpawn = false -- If set to true, the spawner will create entities on initialize even if it's disabled!
 ENT.SingleSpawner = false -- If set to true, it will spawn the entities once then remove itself
-ENT.Model = {""} -- The models it should spawn with | Picks a random one from the table
-ENT.EntitiesToSpawn = {
-	{EntityName = "NPC1", SpawnPosition = {vForward=0, vRight=0, vUp=0}, Entities = {"npc_vj_name"}},
-	/* Extras:
-		- WeaponsList = {} (Use "default" to make it spawn the NPC with its default weapons)
-	*/
-}
-ENT.TimedSpawn_Time = 3 -- How much time until it spawns another SNPC?
+ENT.Model = {} -- The models it should spawn with | Picks a random one from the table
+ENT.EntitiesToSpawn = {}
+/*	Example (2 NPCs):
+		ENT.EntitiesToSpawn = {
+			{SpawnPosition = {vForward=0, vRight=0, vUp=0}, Entities = {"npc_name1"}},
+			{SpawnPosition = {vForward=0, vRight=0, vUp=0}, Entities = {"npc_name1", "npc_name2"}},
+		}
+	Options:
+		- SpawnPosition = {vForward=0, vRight=0, vUp=0} -- This defines the spawn position of the entity
+		- Entities = {"npc_name"} -- This defines the table of entities it spawns randomly
+		- WeaponsList = {"weapon_name"} -- Use "default" to make it spawn the NPC with its default weapons
+*/
+ENT.TimedSpawn_Time = 1//3 -- How much time until it spawns another SNPC?
 ENT.TimedSpawn_OnlyOne = true -- If it's true then it will only have one SNPC spawned at a time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Sound Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Idle
 ENT.HasIdleSounds = true -- Does it have idle sounds?
-	-- Sounds ---------------------------------------------------------------------------------------------------------------------------------------------
 ENT.SoundTbl_Idle = {}
 ENT.IdleSoundChance = 1 -- How much chance to play the sound? 1 = always
 ENT.IdleSoundLevel = 80
 ENT.IdleSoundPitch = VJ_Set(80, 100)
 ENT.NextSoundTime_Idle = VJ_Set(0.2, 0.5)
+-- On Entity Spawn
+ENT.HasSpawnEntitySound = true -- Does it play a sound on entity spawn?
 ENT.SoundTbl_SpawnEntity = {}
 ENT.SpawnEntitySoundChance = 1 -- How much chance to play the sound? 1 = always
 ENT.SpawnEntitySoundLevel = 80
 ENT.SpawnEntitySoundPitch = VJ_Set(80, 100)
-	-- Independent Variables ---------------------------------------------------------------------------------------------------------------------------------------------
--- These should be left as they are
-ENT.Dead = false
-ENT.AlreadyDoneVJBaseSpawnerDisabled = true
-ENT.NextIdleSoundT = 0
-ENT.NextTimedSpawnT = 0
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-- Use the functions below to customize certain parts of the base or to add new custom systems
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnEntitySpawn(EntityName, SpawnPosition, Entities, TheEntity) end
+function ENT:CustomOnEntitySpawn(ent, spawnKey, spawnTbl, initSpawn) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnInitialize_BeforeNPCSpawn() end
+function ENT:CustomOnInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize_AfterNPCSpawn() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnThink_BeforeAliveChecks() end
+function ENT:CustomOnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink_AfterAliveChecks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove() end
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ ///// WARNING: Don't touch anything below this line! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ENT.Dead = false
+ENT.NextIdleSoundT = 0
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SpawnAnEntity(keys, values, initspawn)
-	local k = keys
-	local v = values
-	initspawn = initspawn or false
-	local overridedisable = false
-	local hasweps = false
-	local wepslist = {}
-	if initspawn == true && self.OverrideDisableOnSpawn then overridedisable = true end
-	if self.VJBaseSpawnerDisabled == true && overridedisable == false then return end
+function ENT:SpawnAnEntity(spawnKey, spawnTbl, initSpawn)
+	local initOverrideDisable = (initSpawn == true && self.OverrideDisableOnSpawn)
+	if self.VJBaseSpawnerDisabled == true && initOverrideDisable == false then return end
 	
-	local getthename = v.EntityName
-	local spawnpos = v.SpawnPosition
-	getthename = ents.Create(VJ_PICK(v.Entities))
-	getthename:SetPos(self:GetPos() +self:GetForward()*spawnpos.vForward +self:GetRight()*spawnpos.vRight +self:GetUp()*spawnpos.vUp)
-	getthename:SetAngles(self:GetAngles())
-	getthename:Spawn()
-	getthename:Activate()
-	if v.WeaponsList != nil && VJ_PICK(v.WeaponsList) != false && VJ_PICK(v.WeaponsList) != NULL && VJ_PICK(v.WeaponsList) != "None" && VJ_PICK(v.WeaponsList) != "none" then hasweps = true wepslist = v.WeaponsList end
-	if hasweps == true then
-		local randwep = VJ_PICK(v.WeaponsList) -- Kharen zenkme zad e
-		if randwep == "default" then
-			getthename:Give(VJ_PICK(list.Get("NPC")[getthename:GetClass()].Weapons))
+	local spawnPos = spawnTbl.SpawnPosition
+	local spawnEnts = spawnTbl.Entities
+	local spawnWepPicked = VJ_PICK(spawnTbl.WeaponsList)
+	local ent = ents.Create(VJ_PICK(spawnEnts))
+	ent:SetPos(self:GetPos() + self:GetForward()*spawnPos.vForward + self:GetRight()*spawnPos.vRight + self:GetUp()*spawnPos.vUp)
+	ent:SetAngles(self:GetAngles())
+	ent:Spawn()
+	ent:Activate()
+	if spawnWepPicked != false && string.lower(spawnWepPicked) != "none" then
+		if string.lower(spawnWepPicked) == "default" then
+			ent:Give(VJ_PICK(list.Get("NPC")[ent:GetClass()].Weapons))
 		else
-			getthename:Give(randwep)
+			ent:Give(spawnWepPicked)
 		end
 	end
-	if initspawn == false then table.remove(self.CurrentEntities,k) end
-	table.insert(self.CurrentEntities,k,{EntityName=v.EntityName,SpawnPosition=v.SpawnPosition,Entities=v.Entities,TheEntity=getthename,WeaponsList=wepslist,Dead=false/*NextTimedSpawnT=CurTime()+self.TimedSpawn_Time*/})
+	
+	self.CurrentEntities[spawnKey] = {SpawnPosition=spawnPos, Entities=spawnEnts, WeaponsList=spawnTbl.WeaponsList, Ent=ent, Dead=false}
+	//table_remove(self.CurrentEntities, spawnKey) 
+	//table.insert(self.CurrentEntities, spawnKey, {SpawnPosition=spawnPos, Entities=spawnEnts, WeaponsList=wepList, Ent=ent, Dead=false})
+	self:CustomOnEntitySpawn(ent, spawnKey, spawnTbl, initSpawn)
 	self:SpawnEntitySoundCode()
-	if self.VJBaseSpawnerDisabled == true && overridedisable == true then getthename:Remove() return end
-	self:CustomOnEntitySpawn(v.EntityName,v.SpawnPosition,v.Entities,TheEntity)
-	timer.Simple(0.1,function() if IsValid(self) && self.SingleSpawner == true then self:DoSingleSpawnerRemove() end end)
+	timer.Simple(0.1, function() if IsValid(self) && self.SingleSpawner == true then self:DoSingleSpawnerRemove() end end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
-	if self:GetModel() == "models/error.mdl" then
-	self:SetModel(VJ_PICK(self.Model)) end
-	self:DrawShadow(false)
-	self:SetNoDraw(true)
-	self:SetNotSolid(true)
+	self:CustomOnInitialize()
+	self:CustomOnInitialize_BeforeNPCSpawn() -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	if self:GetModel() == "models/error.mdl" then -- No model was detected
+		local mdls = VJ_PICK(self.Model)
+		if mdls && mdl !="models/props_junk/popcan01a.mdl" then
+			self:SetModel(mdls)
+		else -- No models found in self.Model
+			self:DrawShadow(false)
+			self:SetNoDraw(true)
+			self:SetNotSolid(true)
+		end
+	end
 	self.CurrentEntities = {}
-	self:CustomOnInitialize_BeforeNPCSpawn()
-	self.NumberOfEntitiesToSpawn =  table.Count(self.EntitiesToSpawn)
-	for k, v in ipairs(self.EntitiesToSpawn) do self:SpawnAnEntity(k, v, true) end
+	for spawnKey, spawnTbl in ipairs(self.EntitiesToSpawn) do
+		self:SpawnAnEntity(spawnKey, spawnTbl, true)
+	end
 	self:CustomOnInitialize_AfterNPCSpawn()
 end
-// lua_run for k,v in ipairs(ents.GetAll()) do if v.IsVJBaseSpawner == true then v.VJBaseSpawnerDisabled = false end end
+function ENT:CustomOnInitialize_BeforeNPCSpawn() end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
+// lua_run for spawnKey,spawnTbl in ipairs(ents.GetAll()) do if spawnTbl.IsVJBaseSpawner == true then spawnTbl.VJBaseSpawnerDisabled = false end end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-	if self.Dead == true then VJ_STOPSOUND(self.CurrentIdleSound) return end
-	if self.VJBaseSpawnerDisabled == true then self.AlreadyDoneVJBaseSpawnerDisabled = false end
-	//PrintTable(self.CurrentEntities)
 	//print("-----------------------------------------------------------")
-	self:CustomOnThink_BeforeAliveChecks()
+	//PrintTable(self.CurrentEntities)
+	self:CustomOnThink()
 	self:IdleSoundCode()
 	
-	/*if self.VJBaseSpawnerDisabled == false && self.AlreadyDoneVJBaseSpawnerDisabled == false && table.Count(self.CurrentEntities) < self.NumberOfEntitiesToSpawn then
-		self.AlreadyDoneVJBaseSpawnerDisabled = true
-		for k,v in ipairs(self.EntitiesToSpawn) do self:SpawnAnEntity(k,v) end
-	end*/
-	
+	-- If it's a continuous spawner then make sure to respawn any entity that has been removed
 	if self.VJBaseSpawnerDisabled == false && self.SingleSpawner == false then
-		for k, v in ipairs(self.CurrentEntities) do
-			if !IsValid(v.TheEntity) && v.Dead == false /*&& v.NextTimedSpawnT < CurTime()*/ then
-				v.Dead = true
-				timer.Simple(self.TimedSpawn_Time,function() if IsValid(self) then /*table.remove(self.CurrentEntities,k)*/ self:SpawnAnEntity(k, v, false) end end)
+		for spawnKey, spawnTbl in ipairs(self.CurrentEntities) do
+			-- If entity is removed AND we are NOT already respawning it, then respawn!
+			if !IsValid(spawnTbl.Ent) && spawnTbl.Dead == false then
+				spawnTbl.Dead = true -- To make sure we do NOT respawn it more than once!
+				timer.Simple(self.TimedSpawn_Time, function()
+					if IsValid(self) then
+						self:SpawnAnEntity(spawnKey, spawnTbl, false)
+					end
+				end)
 			end
 		end
 	end
 	self:CustomOnThink_AfterAliveChecks()
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:DoSingleSpawnerRemove()
+	for _, spawnTbl in ipairs(self.CurrentEntities) do
+		if IsValid(spawnTbl.Ent) && self:GetCreator() != nil then
+			undo.Create(spawnTbl.Ent:GetName())
+			undo.AddEntity(spawnTbl.Ent)
+			undo.SetPlayer(self:GetCreator())
+			undo.Finish()
+		end
+	end
+	self.Dead = true
+	VJ_STOPSOUND(self.CurrentIdleSound)
+	self:Remove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IdleSoundCode()
@@ -133,43 +166,23 @@ function ENT:IdleSoundCode()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnEntitySoundCode()
-	if self.HasIdleSounds == false then return end
-	local randomidlesound = math.random(1,self.SpawnEntitySoundChance)
-	if randomidlesound == 1 /*&& self:VJ_IsPlayingSoundFromTable(self.SoundTbl_Idle) == false*/ then
+	if self.HasSpawnEntitySound == false then return end
+	if math.random(1, self.SpawnEntitySoundChance) then
 		self.CurrentSpawnEntitySound = VJ_CreateSound(self, self.SoundTbl_SpawnEntity, self.SpawnEntitySoundLevel, math.random(self.SpawnEntitySoundPitch.a, self.SpawnEntitySoundPitch.b))
 	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoSingleSpawnerRemove()
-	for _, v in ipairs(self.CurrentEntities) do
-		if IsValid(v.TheEntity) && self:GetCreator() != nil then
-			//cleanup.ReplaceEntity(self,v.TheEntity)
-			//undo.ReplaceEntity(self,v.TheEntity)
-			undo.Create(v.TheEntity:GetName())
-			undo.AddEntity(v.TheEntity)
-			undo.SetPlayer(self:GetCreator())
-			undo.Finish()
-		end
-	end
-	self.Dead = true
-	VJ_STOPSOUND(self.CurrentIdleSound)
-	self:Remove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
 	self:CustomOnRemove()
 	self.Dead = true
 	VJ_STOPSOUND(self.CurrentIdleSound)
+	
+	-- If it's a continuous spawner then remove all the spawned entities!
 	if self.SingleSpawner == false && self.CurrentEntities != nil then
-		for _, v in ipairs(self.CurrentEntities) do
-			if IsValid(v.TheEntity) && v.TheEntity then v.TheEntity:Remove() end
+		for _, spawnTbl in ipairs(self.CurrentEntities) do
+			if IsValid(spawnTbl.Ent) then
+				spawnTbl.Ent:Remove()
+			end
 		end
 	end
 end
-/*--------------------------------------------------
-	=============== Spawner Base ===============
-	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
-	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
-	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-INFO: Used to make spawners.
---------------------------------------------------*/
