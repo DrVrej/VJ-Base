@@ -209,7 +209,7 @@ if (CLIENT) then
 		local spawnposright = GetConVarString("vjstool_npcspawner_spawnpos_right")
 		local spawnposup = GetConVarString("vjstool_npcspawner_spawnpos_up")
 		local spawnequip = string.lower(GetConVarString("vjstool_npcspawner_weaponequip"))
-		table.insert(VJ_NPCSPAWNER_TblCurrentValues,{EntityName=spawnentname,Entities=spawnent,SpawnPosition={vForward=spawnposfor,vRight=spawnposright,vUp=spawnposup},WeaponsList=spawnequip})
+		table.insert(VJ_NPCSPAWNER_TblCurrentValues,{EntityName=spawnentname, Entities=spawnent, SpawnPosition={vForward=spawnposfor,vRight=spawnposright,vUp=spawnposup}, WeaponsList=spawnequip})
 		GetPanel = controlpanel.Get("vjstool_npcspawner")
 		GetPanel:ClearControls()
 		DoBuildCPanel_Spawner(GetPanel)
@@ -240,6 +240,7 @@ else -- If SERVER
 	util.AddNetworkString("vj_npcspawner_cl_create")
 	util.AddNetworkString("vj_npcspawner_sv_create")
 ---------------------------------------------------------------------------------------------------------------------------------------------
+	local spawnSounds = {"garrysmod/save_load1.wav","garrysmod/save_load2.wav","garrysmod/save_load3.wav","garrysmod/save_load4.wav"}
 	net.Receive("vj_npcspawner_sv_create", function(len, ply)
 		local wep = ply:GetActiveWeapon()
 		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcspawner" then
@@ -262,11 +263,11 @@ else -- If SERVER
 			spawner:SetAngles(angs)
 			for _,v in pairs(svgetlines) do
 				//if v.IsVJBaseSpawner == true then ply:ChatPrint("Can't be spawned because it's a spawner") end
-				table.insert(spawner.EntitiesToSpawn,{EntityName = "NPC"..math.random(1,99999999),SpawnPosition = {vForward=v.SpawnPosition.x,vRight=v.SpawnPosition.y,vUp=v.SpawnPosition.z},Entities = {v.Entities},WeaponsList={v.WeaponsList}})
+				table.insert(spawner.EntitiesToSpawn,{SpawnPosition={vForward=v.SpawnPosition.x,vRight=v.SpawnPosition.y,vUp=v.SpawnPosition.z}, Entities={v.Entities}, WeaponsList={v.WeaponsList}})
 			end
 			//spawner.EntitiesToSpawn = {entitiestospawntbl}
 			if convartbl.vjstool_npcspawner_playsound == 1 then
-				spawner.SoundTbl_SpawnEntity = {"garrysmod/save_load1.wav","garrysmod/save_load2.wav","garrysmod/save_load3.wav","garrysmod/save_load4.wav"}
+				spawner.SoundTbl_SpawnEntity = spawnSounds
 			end
 			spawner.TimedSpawn_Time = convartbl.vjstool_npcspawner_nextspawntime //GetConVarNumber("vjstool_npcspawner_nextspawntime")
 			if svgettype == "RightClick" then spawner.SingleSpawner = true end
