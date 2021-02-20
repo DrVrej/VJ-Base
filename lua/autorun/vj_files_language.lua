@@ -31,7 +31,7 @@ include('autorun/vj_controls.lua')
 
 VJ.AddClientConVar("vj_language", "english", "Display developer entities") -- The current VJ Base Language
 
-if (CLIENT) then
+if CLIENT then
 	local function add(name, str) -- Aveli tirountsnelou hamar e
 		language.Add(name, str)
 	end

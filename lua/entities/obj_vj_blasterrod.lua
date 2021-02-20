@@ -14,7 +14,7 @@ ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Information		= "Projectiles for my addons"
 ENT.Category		= "Projectiles"
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
+if CLIENT then
 	local Name = "Blaster Rod"
 	local LangName = "obj_vj_blasterrod"
 	language.Add(LangName, Name)

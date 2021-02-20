@@ -8,7 +8,7 @@ SWEP.Purpose					= "This weapon is made for Players and NPCs"
 SWEP.Instructions				= "Controls are like a regular weapon."
 SWEP.Category					= "VJ Base"
 	-- Client Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
+if CLIENT then
 SWEP.Slot						= 4 -- Which weapon slot you want your SWEP to be in? (1 2 3 4 5 6) 
 SWEP.SlotPos					= 4 -- Which part of that slot do you want the SWEP to be in? (1 2 3 4 5 6)
 SWEP.UseHands					= true
@@ -57,7 +57,7 @@ SWEP.NextIdle_Deploy			= 0.5 -- How much time until it plays the idle animation 
 SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle animation after attacking(Primary)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BeforeShoot()
-	if (CLIENT) then return end
+	if CLIENT then return end
 	local proj = ents.Create("obj_vj_tank_shell")
 	local ply_Ang = self:GetOwner():GetAimVector():Angle()
 	local ply_Pos = self:GetOwner():GetShootPos() + ply_Ang:Forward()*-20 + ply_Ang:Up()*-9 + ply_Ang:Right()*10

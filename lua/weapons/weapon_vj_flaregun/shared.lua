@@ -8,7 +8,7 @@ SWEP.Purpose					= "This weapon is made for Players and NPCs"
 SWEP.Instructions				= "Controls are like a regular weapon."
 SWEP.Category					= "VJ Base"
 	-- Client Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
+if CLIENT then
 SWEP.Slot						= 1 -- Which weapon slot you want your SWEP to be in? (1 2 3 4 5 6) 
 SWEP.SlotPos					= 1 -- Which part of that slot do you want the SWEP to be in? (1 2 3 4 5 6)
 SWEP.SwayScale 					= 4 -- Default is 1, The scale of the viewmodel sway
@@ -47,7 +47,7 @@ SWEP.NextIdle_Deploy			= 0.5 -- How much time until it plays the idle animation 
 SWEP.NextIdle_PrimaryAttack		= 0.5 -- How much time until it plays the idle animation after attacking(Primary)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BeforeShoot()
-	if (CLIENT) then return end
+	if CLIENT then return end
 	local proj = ents.Create("obj_vj_flareround")
 	local ply_Ang = self:GetOwner():GetAimVector():Angle()
 	local ply_Pos = self:GetOwner():GetShootPos()

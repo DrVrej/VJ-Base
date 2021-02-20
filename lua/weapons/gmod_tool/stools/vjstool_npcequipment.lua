@@ -17,7 +17,7 @@ for k,v in pairs(TOOL.ClientConVar) do
 	DefaultConVars["vjstool_npcequipment_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
+if CLIENT then
 	local function DoBuildCPanel_VJ_NPCEquipment(Panel)
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
@@ -95,7 +95,7 @@ if (CLIENT) then
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 	if !tr.Entity:IsNPC() then return end
 	if IsValid(tr.Entity:GetActiveWeapon()) then tr.Entity:GetActiveWeapon():Remove() end
 	tr.Entity:Give(GetConVarString("vjstool_npcequipment_weaponclass"))
@@ -103,12 +103,12 @@ function TOOL:LeftClick(tr)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:RightClick(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 	if !tr.Entity:IsNPC() then return end
 	if IsValid(tr.Entity:GetActiveWeapon()) then tr.Entity:GetActiveWeapon():Remove() end
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:Reload(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 end

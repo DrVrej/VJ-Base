@@ -10,7 +10,7 @@ ENT.Category		= "VJ Base"
 ENT.Spawnable 		= false
 ENT.AdminSpawnable 	= false
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
+if CLIENT then
 	function ENT:Draw() end
 	
 	local vec0 = Vector(0, 0, 0)

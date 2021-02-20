@@ -14,7 +14,7 @@ ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Information		= "Projectiles for my addons"
 ENT.Category		= "Projectiles"
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
+if CLIENT then
 	local Name = "Tank Shell"
 	local LangName = "obj_vj_tank_shell"
 	language.Add(LangName, Name)

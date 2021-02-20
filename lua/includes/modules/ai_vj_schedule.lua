@@ -6,7 +6,7 @@
 INFO: This is mostly Garry's code, except I improved and organized.
 NOTES: This is server side only!
 --------------------------------------------------*/
-if (CLIENT) then return end
+if CLIENT then return end
 
 print("VJ Base A.I. module initialized!")
 

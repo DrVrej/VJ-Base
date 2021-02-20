@@ -18,7 +18,7 @@ ENT.Category		= "VJ Base"
 ENT.Spawnable = true
 ENT.AdminOnly = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
+if CLIENT then
 	ENT.NextActivationCheckT = 0
 	ENT.NextFireLightT = 0
 	ENT.DoneFireParticles = false

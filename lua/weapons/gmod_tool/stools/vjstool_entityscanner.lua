@@ -13,7 +13,7 @@ for k,v in pairs(TOOL.ClientConVar) do
 	DefaultConVars["vjstool_entityscanner_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
+if CLIENT then
 	local function DoBuildCPanel_EntityScanner(Panel)
 		Panel:AddControl("Label", {Text = "#tool.vjstool_entityscanner.label"})
 	end
@@ -24,7 +24,7 @@ if (CLIENT) then
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 	if !IsValid(tr.Entity) then return false end
 	local Ent = tr.Entity
 	local Phys = Ent:GetPhysicsObject()
@@ -46,11 +46,11 @@ function TOOL:LeftClick(tr)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:RightClick(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:Reload(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 	return false
 end

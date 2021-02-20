@@ -18,7 +18,7 @@ for k,v in pairs(TOOL.ClientConVar) do
 	DefaultConVars["vjstool_bullseye_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
+if CLIENT then
 	local function DoBuildCPanel_VJ_BullseyeSpawner(Panel)
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
@@ -79,7 +79,7 @@ if (CLIENT) then
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 		local spawner = ents.Create("obj_vj_bullseye")
 		spawner:SetPos(tr.HitPos)
 		spawner:SetModel(GetConVarString("vjstool_bullseye_modeldirectory"))
@@ -97,9 +97,9 @@ function TOOL:LeftClick(tr)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:RightClick(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:Reload(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 end

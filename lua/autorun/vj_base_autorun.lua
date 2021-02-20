@@ -42,10 +42,10 @@ AddCSLuaFile("includes/modules/ai_vj_task.lua")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Main Hooks / Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-if (SERVER) then
+if SERVER then
 	util.AddNetworkString("VJWelcome")
 	util.AddNetworkString("VJSay")
-elseif (CLIENT) then
+elseif CLIENT then
 	hook.Add("AddToolMenuTabs", "VJ_CREATETOOLTAB", function()
 		spawnmenu.AddToolTab("DrVrej", "DrVrej", "vj_base/icons/vrejgaming.png") // "icon16/plugin.png"
 		spawnmenu.AddToolCategory("DrVrej", "Main Menu", "#vjbase.menu.tabs.mainmenu")
@@ -102,7 +102,7 @@ end
 if (SLVBase) then
 	timer.Simple(1, function()
 		if !VJ_WARN_SLVBase then
-			if (CLIENT) then
+			if CLIENT then
 				chat.AddText(Color(255,100,0),"Confliction Detected!",
 				Color(0,255,0)," VJ Base ",
 				Color(0,200,200),"is being overridden by another addon!")
@@ -122,7 +122,7 @@ if (SLVBase) then
 				VJURL:Dock(FILL)
 				VJURL:SetAllowLua(true)
 				VJURL:OpenURL("https://sites.google.com/site/vrejgaming/vjbaseconflict")
-			elseif (SERVER) then
+			elseif SERVER then
 				timer.Create("VJ_WARN_SLVBase", 5, 0, function()
 					print("VJ Base is being overridden by another addon! Incompatible Addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
 				end)

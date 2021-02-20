@@ -20,7 +20,7 @@ end
 function ENT:PhysicsUpdate(physobj)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-/*if (CLIENT) then
+/*if CLIENT then
   local Name = "rrrrrrrrrrrrrrrrrr"
   local LangName = "rrrrrrrrrrrrrrrrrr"
   language.Add(LangName, Name)

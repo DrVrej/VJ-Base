@@ -17,7 +17,7 @@ ENT.Category		= "VJ Base"
 ENT.Spawnable = true
 ENT.AdminOnly = false
 
-if (CLIENT) then
+if CLIENT then
 	local Name = "Grenade"
 	local LangName = "obj_vj_grenade"
 	language.Add(LangName, Name)
