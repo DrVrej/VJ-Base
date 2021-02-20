@@ -15,7 +15,7 @@ for k,v in pairs(TOOL.ClientConVar) do
 	DefaultConVars["vjstool_npcmover_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
+if CLIENT then
 	local function DoBuildCPanel_Mover(Panel)
 		VJ_MOVE_TblCurrentValues = VJ_MOVE_TblCurrentValues or {}
 		VJ_MOVE_TblCurrentLines = VJ_MOVE_TblCurrentLines or {}
@@ -243,7 +243,7 @@ else -- If SERVER
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 	if !tr.Entity:IsNPC() then return end
 	net.Start("vj_npcmover_cl_create")
 	net.WriteEntity(tr.Entity)
@@ -257,7 +257,7 @@ function TOOL:LeftClick(tr)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:RightClick(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 	net.Start("vj_npcmover_cl_startmove")
 	net.WriteBit(1)
 	net.WriteVector(tr.HitPos)
@@ -266,7 +266,7 @@ function TOOL:RightClick(tr)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:Reload(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 	net.Start("vj_npcmover_cl_startmove")
 	net.WriteBit(0)
 	net.WriteVector(tr.HitPos)
@@ -275,7 +275,7 @@ function TOOL:Reload(tr)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:Holster()
-	/*if (CLIENT) then return end
+	/*if CLIENT then return end
 	self.TblCurrentNPCs = self.TblCurrentNPCs or {}
 	for k,v in pairs(self.TblCurrentNPCs) do
 		self:RemoveNPC(v)

@@ -9,20 +9,26 @@ include("shared.lua")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ENT.SingleSpawner = false -- If set to true, it will spawn the entities once then remove itself
 ENT.VJBaseSpawnerDisabled = false -- If set to true, it will stop spawning the entities
 ENT.OverrideDisableOnSpawn = false -- If set to true, the spawner will create entities on initialize even if it's disabled!
-ENT.SingleSpawner = false -- If set to true, it will spawn the entities once then remove itself
 ENT.Model = {} -- The models it should spawn with | Picks a random one from the table
 ENT.EntitiesToSpawn = {}
-/*	Example (2 NPCs):
+/*	Example (3 NPCs):
 		ENT.EntitiesToSpawn = {
-			{SpawnPosition = {vForward=0, vRight=0, vUp=0}, Entities = {"npc_name1"}},
-			{SpawnPosition = {vForward=0, vRight=0, vUp=0}, Entities = {"npc_name1", "npc_name2"}},
+			{SpawnPosition = {vForward=0, vRight=0, vUp=0}, Entities = {"npc_name_one"}},
+			{SpawnPosition = {vForward=0, vRight=0, vUp=0}, Entities = {"npc_name_one:1", "npc_name_two:5"}},
+			{SpawnPosition = {vForward=0, vRight=0, vUp=0}, Entities = {"npc_name_three", "npc_name_one:1", "npc_name_two:5"}},
 		}
 	Options:
-		- SpawnPosition = {vForward=0, vRight=0, vUp=0} -- This defines the spawn position of the entity
-		- Entities = {"npc_name"} -- This defines the table of entities it spawns randomly
-		- WeaponsList = {"weapon_name"} -- Use "default" to make it spawn the NPC with its default weapons
+		Entities = {} -- The table of entities it spawns randomly, REQUIRED!
+			- ":" = Add at the end to apply a chance, it starts from 1
+				- ":1" = Spawn always or leave it empty
+				- WARNING: If no entity is left empty or set to ":1", during randomization, the base will spawn the last NPC it checks!
+		SpawnPosition = {vForward=0, vRight=0, vUp=0} -- The spawn position of the entity, it's based on the spawner's position, OPTIONAL | DEFAULT: Origin of the spawner
+		SpawnAngle = Angle(0, 0, 0) -- The spawn angle, it's based on the spawner's angle, OPTIONAL | DEFAULT: Spawners current angle
+		WeaponsList = {} -- The list of weapons it spawns with randomly, OPTIONAL | DEFAULT: Empty table
+			- "default" = Spawns the NPC with its default weapons list from the spawn menu
 */
 ENT.TimedSpawn_Time = 3 -- How much time until it spawns another SNPC?
 ENT.TimedSpawn_OnlyOne = true -- If it's true then it will only have one SNPC spawned at a time
@@ -47,6 +53,13 @@ ENT.SpawnEntitySoundPitch = VJ_Set(80, 100)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- Use the functions below to customize certain parts of the base or to add new custom systems
 ---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Called when an entity spawns.
+		- ent = The entity it spawned
+		- spawnKey = The key or the position in the table of the current entity it spawned
+		- spawnTbl = Table of information for the entity it spawned including class names, spawn position, weapons, etc.
+		- initSpawn = Was this an initial spawn? Used by the base during initialization
+-----------------------------------------------------------]]
 function ENT:CustomOnEntitySpawn(ent, spawnKey, spawnTbl, initSpawn) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize() end
@@ -67,28 +80,59 @@ function ENT:CustomOnRemove() end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Dead = false
 ENT.NextIdleSoundT = 0
+
+local string_explode = string.Explode
+local defSpawnPos = {vForward=0, vRight=0, vUp=0}
+local defAng = Angle(0, 0, 0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Spawns an entity from the given information, recommended to not manually call this function!
+		- spawnKey = The key or the position in the table of the current entity to spawn
+		- spawnTbl = Table of information for the entity to spawn including class names, spawn position, weapons, etc.
+		- initSpawn = Is this a initial spawn? Used by the base during initialization | DEFAULT: false
+-----------------------------------------------------------]]
 function ENT:SpawnAnEntity(spawnKey, spawnTbl, initSpawn)
 	local initOverrideDisable = (initSpawn == true && self.OverrideDisableOnSpawn)
 	if self.VJBaseSpawnerDisabled == true && initOverrideDisable == false then return end
 	
-	local spawnPos = spawnTbl.SpawnPosition
+	local spawnPos = spawnTbl.SpawnPosition or defSpawnPos
+	local spawnAng = spawnTbl.SpawnAngle
 	local spawnEnts = spawnTbl.Entities
 	local spawnWepPicked = VJ_PICK(spawnTbl.WeaponsList)
-	local ent = ents.Create(VJ_PICK(spawnEnts))
-	ent:SetPos(self:GetPos() + self:GetForward()*spawnPos.vForward + self:GetRight()*spawnPos.vRight + self:GetUp()*spawnPos.vUp)
-	ent:SetAngles(self:GetAngles())
+	local entPicked; -- The entity that we will spawn
+	local entsNum = #spawnEnts -- The number of entities
+	local i = 0 -- If this number equals entsNum, then its the last entity
+	for _, v in RandomPairs(spawnEnts) do
+		i = i + 1
+		local strExp = string_explode(":", v) -- Separates the entity class and the number after ":"
+		//PrintTable(strExp)
+		if strExp[2] then
+			if i == entsNum then -- If we are the last entity, then just spawn it anyway
+				entPicked = strExp[1]
+				break
+			elseif math.random(1, strExp[2]) == 1 then
+				entPicked = strExp[1]
+				break
+			end
+		else -- String does NOT contain ":", so just pick this
+			entPicked = v
+			break
+		end
+	end
+	local ent = ents.Create(entPicked)
+	ent:SetPos(self:GetPos() + self:GetForward()*(spawnPos.vForward or 0) + self:GetRight()*(spawnPos.vRight or 0) + self:GetUp()*(spawnPos.vUp or 0))
+	ent:SetAngles((spawnAng or defAng) + self:GetAngles())
 	ent:Spawn()
 	ent:Activate()
 	if spawnWepPicked != false && string.lower(spawnWepPicked) != "none" then
-		if string.lower(spawnWepPicked) == "default" then
+		if string.lower(spawnWepPicked) == "default" then -- Default weapon from the spawn menu
 			ent:Give(VJ_PICK(list.Get("NPC")[ent:GetClass()].Weapons))
 		else
 			ent:Give(spawnWepPicked)
 		end
 	end
 	
-	self.CurrentEntities[spawnKey] = {SpawnPosition=spawnPos, Entities=spawnEnts, WeaponsList=spawnTbl.WeaponsList, Ent=ent, Dead=false}
+	self.CurrentEntities[spawnKey] = {Entities=spawnEnts, SpawnPosition=spawnPos, SpawnAngle=spawnAng, WeaponsList=spawnTbl.WeaponsList, Ent=ent, Dead=false}
 	//table_remove(self.CurrentEntities, spawnKey) 
 	//table.insert(self.CurrentEntities, spawnKey, {SpawnPosition=spawnPos, Entities=spawnEnts, WeaponsList=wepList, Ent=ent, Dead=false})
 	self:CustomOnEntitySpawn(ent, spawnKey, spawnTbl, initSpawn)
@@ -141,20 +185,6 @@ function ENT:Think()
 	self:CustomOnThink_AfterAliveChecks()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoSingleSpawnerRemove()
-	for _, spawnTbl in ipairs(self.CurrentEntities) do
-		if IsValid(spawnTbl.Ent) && self:GetCreator() != nil then
-			undo.Create(spawnTbl.Ent:GetName())
-			undo.AddEntity(spawnTbl.Ent)
-			undo.SetPlayer(self:GetCreator())
-			undo.Finish()
-		end
-	end
-	self.Dead = true
-	VJ_STOPSOUND(self.CurrentIdleSound)
-	self:Remove()
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IdleSoundCode()
 	if self.HasIdleSounds == false then return end
 	if CurTime() > self.NextIdleSoundT then
@@ -170,6 +200,23 @@ function ENT:SpawnEntitySoundCode()
 	if math.random(1, self.SpawnEntitySoundChance) then
 		self.CurrentSpawnEntitySound = VJ_CreateSound(self, self.SoundTbl_SpawnEntity, self.SpawnEntitySoundLevel, math.random(self.SpawnEntitySoundPitch.a, self.SpawnEntitySoundPitch.b))
 	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:DoSingleSpawnerRemove()
+	if self.Dead == true then return end
+	if IsValid(self:GetCreator()) then
+		for _, spawnTbl in pairs(self.CurrentEntities) do
+			if IsValid(spawnTbl.Ent) then
+				undo.Create(spawnTbl.Ent:GetName())
+				undo.AddEntity(spawnTbl.Ent)
+				undo.SetPlayer(self:GetCreator())
+				undo.Finish()
+			end
+		end
+	end
+	self.Dead = true
+	VJ_STOPSOUND(self.CurrentIdleSound)
+	self:Remove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()

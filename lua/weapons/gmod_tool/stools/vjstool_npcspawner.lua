@@ -25,7 +25,7 @@ for k,v in pairs(TOOL.ClientConVar) do
 	DefaultConVars["vjstool_npcspawner_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
+if CLIENT then
 	local function DoBuildCPanel_Spawner(Panel)
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
@@ -290,7 +290,7 @@ else -- If SERVER
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 	net.Start("vj_npcspawner_cl_create")
 	net.WriteVector(tr.HitPos)
 	net.WriteString("LeftClick")
@@ -299,7 +299,7 @@ function TOOL:LeftClick(tr)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:RightClick(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 	net.Start("vj_npcspawner_cl_create")
 	net.WriteVector(tr.HitPos)
 	net.WriteString("RightClick")
@@ -308,5 +308,5 @@ function TOOL:RightClick(tr)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:Reload(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 end

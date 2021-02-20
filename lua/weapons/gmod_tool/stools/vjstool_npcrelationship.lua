@@ -18,7 +18,7 @@ for k,v in pairs(TOOL.ClientConVar) do
 	DefaultConVars["vjstool_npcrelationship_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
+if CLIENT then
 	local function DoBuildCPanel_Relationship(Panel)
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
@@ -214,7 +214,7 @@ else
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 	local ent = tr.Entity
 	if IsValid(ent) && ent:IsPlayer() or ent:IsNPC() then
 		local entname = ent:GetName()
@@ -230,7 +230,7 @@ function TOOL:LeftClick(tr)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:RightClick(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 	local ent = tr.Entity
 	if IsValid(ent) && ent:IsPlayer() or ent:IsNPC() then
 		//local hasclasstbl = false
@@ -264,7 +264,7 @@ function TOOL:RightClick(tr)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:Reload(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 	net.Start("vj_npcrelationship_cl_leftclick")
 	net.WriteEntity(self:GetOwner())
 	net.WriteString("Me")

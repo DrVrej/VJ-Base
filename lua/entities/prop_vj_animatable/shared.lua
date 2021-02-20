@@ -14,7 +14,7 @@ ENT.AdminOnly = false
 ENT.AutomaticFrameAdvance = true
 //ENT.RenderGroup = RENDERGROUP_BOTH
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
+if CLIENT then
 	function ENT:Draw()
 		self:DrawModel()
 	end

@@ -7,7 +7,7 @@ INFO: This is mostly Garry's code, except I improved and organized.
 NOTES: This is server side only!
 NOTES: A lot of the fix is from: https://github.com/garrynewman/garrysmod/pull/524
 --------------------------------------------------*/
-if (CLIENT) then return end
+if CLIENT then return end
 
 local setmetatable 		= setmetatable
 

@@ -28,7 +28,7 @@ SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_SpawnShells = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BeforeShoot()
-	if (CLIENT) then return end
+	if CLIENT then return end
 	local bolt = ents.Create("obj_vj_crossbowbolt")
 	local spawnpos = self:GetNW2Vector("VJ_CurBulletPos")
 	bolt:SetPos(spawnpos)

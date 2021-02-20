@@ -8,7 +8,7 @@ SWEP.Purpose					= "This weapon is made to control NPCs. Mostly VJ SNPCs"
 SWEP.Instructions				= "Press Fire to control the NPC you are looking at."
 SWEP.Category					= "VJ Base"
 	-- Client Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
+if CLIENT then
 SWEP.Slot						= 5 -- Which weapon slot you want your SWEP to be in? (1 2 3 4 5 6) 
 SWEP.SlotPos					= 7 -- Which part of that slot do you want the SWEP to be in? (1 2 3 4 5 6)
 SWEP.SwayScale 					= 1 -- Default is 1, The scale of the viewmodel sway
@@ -20,7 +20,7 @@ SWEP.BounceWeaponIcon 			= true -- Should the icon bounce in the weapon selectio
 SWEP.RenderGroup 				= RENDERGROUP_OPAQUE
 end
 	-- Server Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-if (SERVER) then
+if SERVER then
 SWEP.Weight						= 30 -- Decides whether we should switch from/to this
 SWEP.AutoSwitchTo				= false -- Auto switch to this weapon when it's picked up
 SWEP.AutoSwitchFrom				= false -- Auto switch weapon when the owner picks up a better weapon

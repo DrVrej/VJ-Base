@@ -31,7 +31,7 @@ VJ = {
 		if (nFunc) then nFunc(NPC) end
 		list.Set("NPC", NPC.Class, NPC)
 		list.Set("VJBASE_SPAWNABLE_NPC", NPC.Class, NPC)
-		if (CLIENT) then
+		if CLIENT then
 			language.Add(NPC.Class, NPC.Name)
 			killicon.Add(NPC.Class,"HUD/killicons/default",Color(255,80,0,255))
 			language.Add("#"..NPC.Class, NPC.Name)
@@ -44,7 +44,7 @@ VJ = {
 		if (nhFunc) then nhFunc(NPCH) end
 		list.Set("NPC", NPCH.Class, NPCH)
 		list.Set("VJBASE_SPAWNABLE_NPC", NPCH.Class, NPCH)
-		if (CLIENT) then
+		if CLIENT then
 			language.Add(NPCH.Class, NPCH.Name)
 			killicon.Add(NPCH.Class,"HUD/killicons/default",Color(255,80,0,255))
 			language.Add("#"..NPCH.Class, NPCH.Name)
@@ -94,7 +94,7 @@ VJ = {
 }
 
 /*
-if (CLIENT) then
+if CLIENT then
 local gmod_npcweapon = CreateConVar("gmod_npcweapon","",{FCVAR_ARCHIVE})
 spawnmenu.AddContentType( "vjbase_npc", function( container, obj )
 	if ( !obj.material ) then return end

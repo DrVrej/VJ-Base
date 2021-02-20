@@ -7,9 +7,9 @@ INFO: Thanks to Orion for creating the original code
 --------------------------------------------------*/
 //AddCSLuaFile()
 module("sound_vj_track",package.seeall)
-//if (SERVER) then return end
+//if SERVER then return end
 //print("The Module is running!")
-//if (CLIENT) then
+//if CLIENT then
 local MetatableMusic = {}
 MetatableMusic.__index = MetatableMusic
 MUSIC_CHANNEL_INDEX = {[1] = {CurTrack = NULL, CurTrackName = "!"}}

@@ -252,7 +252,7 @@ function SWEP:Initialize()
 	if self.HasIdleAnimation == true then self.InitHasIdleAnimation = true end
 	self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
 	self:CustomOnInitialize()
-	if (SERVER) then
+	if SERVER then
 		//self:SetWeaponHoldType(self.HoldType)
 		self:SetNPCMinBurst(10)
 		self:SetNPCMaxBurst(20)
@@ -862,7 +862,7 @@ function SWEP:DecideBulletPosition()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-/*if (SERVER) then
+/*if SERVER then
 	util.AddNetworkString("vj_weapon_curbulletpos") -- No longer needed, disabling sv_pvsskipanimation fixes it!
 	
 	net.Receive("vj_weapon_curbulletpos", function(len,pl)
@@ -878,7 +878,7 @@ end
 	end)
 end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
+if CLIENT then
 	function SWEP:DrawWorldModel()
 		if !IsValid(self) then return end
 		

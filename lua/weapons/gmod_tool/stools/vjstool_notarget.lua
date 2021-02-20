@@ -14,7 +14,7 @@ for k,v in pairs(TOOL.ClientConVar) do
 	DefaultConVars["vjstool_notarget_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if (CLIENT) then
+if CLIENT then
 	local function DoBuildCPanel_NoTarget(Panel)
 		Panel:AddControl("Label", {Text = "#tool.vjstool_notarget.label"})
 	end
@@ -25,7 +25,7 @@ if (CLIENT) then
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:LeftClick(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 	local Ply = self:GetOwner()
 	if Ply:IsFlagSet(FL_NOTARGET) != true then
 		Ply:ChatPrint("Set no target to yourself: ON")
@@ -41,7 +41,7 @@ function TOOL:LeftClick(tr)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:RightClick(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 	if !IsValid(tr.Entity) then return false end
 	local Ply = self:GetOwner()
 	local Ent = tr.Entity
@@ -74,6 +74,6 @@ function TOOL:RightClick(tr)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function TOOL:Reload(tr)
-	if (CLIENT) then return true end
+	if CLIENT then return true end
 	return false
 end
