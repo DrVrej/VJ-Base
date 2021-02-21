@@ -938,7 +938,6 @@ ENT.NextCallForHelpSoundT = 0
 ENT.LostEnemySoundT = 0
 ENT.NextDoAnyAttackT = 0
 ENT.NearestPointToEnemyDistance = 0
-ENT.JumpLegalLandingTime = 0
 ENT.ReachableEnemyCount = 0
 ENT.LatestEnemyDistance = 0
 ENT.HealthRegenerationDelayT = 0
@@ -1417,8 +1416,9 @@ function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase)
 	doLOSChase = doLOSChase or false
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_ChaseEnemy(true) return end
 	//if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
+	if self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
+	//if (CurTime() <= self.JumpLegalLandingTime && (self:GetActivity() == ACT_JUMP or self:GetActivity() == ACT_GLIDE or self:GetActivity() == ACT_LAND)) or self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
 	if (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) <= 12) && self.CurrentSchedule != nil && self.CurrentSchedule.Name == varChaseEnemy then return end
-	if (CurTime() <= self.JumpLegalLandingTime && (self:GetActivity() == ACT_JUMP or self:GetActivity() == ACT_GLIDE or self:GetActivity() == ACT_LAND)) or self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
 	self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 	if doLOSChase == true then
 		task_chaseEnemyLOS.RunCode_OnFinish = function()
@@ -1490,12 +1490,12 @@ function ENT:VJ_TASK_IDLE_STAND()
 			self:AA_StopMoving()
 			self:VJ_ACT_PLAYACTIVITY(finaltbl, false, 0, false, 0, {SequenceDuration=false, SequenceInterruptible=true}) // AlwaysUseSequence=true
 		end
-		if self.CurrentSchedule == nil then -- Yete ooresh pame chenergor
-			self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0) -- Asiga chi tenesne yerp vor nouyn animation-e enen ne yedev yedevi, ge sarin
+		/*if self.CurrentSchedule == nil then -- If it's not doing a schedule then reset the activity to make sure it's not already playing the same idle activity!
+			self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0)
 			//self:SetIdealActivity(ACT_RESET)
-		end
+		end*/
 		//self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),finaltbl) -- Old system
-		self:SetIdealActivity(finaltbl)
+		self:ResetIdealActivity(finaltbl)
 		timer.Simple(0.01, function() -- So we can make sure the engine has enough time to set the animation
 			if IsValid(self) && self.NextIdleStandTime != 0 then
 				local curseq = self:GetSequence()

@@ -509,7 +509,12 @@ function ENT:IsJumpLegal(startPos, apex, endPos)
 	print(apex)
 	print(endPos)*/
 	local result = self:CustomOnIsJumpLegal(startPos, apex, endPos)
-	if result != nil then if result == true then self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190) end return result end
+	if result != nil then
+		/*if result == true then
+			self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190)
+		end*/
+		return result
+	end
 	local dist_apex = startPos:Distance(apex)
 	local dist_end = startPos:Distance(endPos)
 	local maxdist = self.MaxJumpLegalDistance.a -- Var gam Ver | Arachin tive varva hamar ter
@@ -521,7 +526,7 @@ function ENT:IsJumpLegal(startPos, apex, endPos)
 	print("End Pos: "..dist_end)*/
 	if dist_apex > maxdist then return nil end
 	if dist_end > maxdist then return nil end
-	self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190)
+	//self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190)
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
