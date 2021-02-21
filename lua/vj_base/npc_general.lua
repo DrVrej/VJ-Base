@@ -572,10 +572,10 @@ function ENT:Touch(entity)
 	
 	-- If it's a passive SNPC...
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
-		if self.Passive_RunOnTouch == true && CurTime() > self.Passive_NextRunOnTouchT && entity.Behavior != VJ_BEHAVIOR_PASSIVE && entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:DoRelationshipCheck(entity) != false && (entity:IsNPC() or entity:IsPlayer()) then
+		if self.Passive_RunOnTouch == true && CurTime() > self.TakingCoverT && entity.Behavior != VJ_BEHAVIOR_PASSIVE && entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:DoRelationshipCheck(entity) != false && (entity:IsNPC() or entity:IsPlayer()) then
 			self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
 			self:PlaySoundSystem("Alert")
-			self.Passive_NextRunOnTouchT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
+			self.TakingCoverT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
 		end
 	elseif self.DisableTouchFindEnemy == false && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && (entity:IsNPC() or (entity:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:DoRelationshipCheck(entity) != false then
 		self:StopMoving()
@@ -798,6 +798,18 @@ function ENT:VJ_PlaySequence(seq, playbackRate, wait, waitTime, interruptible)
 		end)
 	end
 end
+--------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Creates more timers for an attack | Note: it calculates playback rate!
+		- name = The name of the timer, ent index is concatenated at the end | DEFAULT: "timer_unknown"
+		- time = How long until the timer expires | DEFAULT: 0.5
+		- func = The function to run when timer expires
+-----------------------------------------------------------]]
+function ENT:DoAddExtraAttackTimers(name, time, func)
+	name = name or "timer_unknown"
+	self.TimersToRemove[#self.TimersToRemove + 1] = name
+	timer.Create(name..self:EntIndex(), (time or 0.5) / self:GetPlaybackRate(), 1, func)
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoAlert(ent)
 	if !IsValid(self:GetEnemy()) or self.Alerted == true then return end
@@ -882,7 +894,7 @@ function ENT:DoEntityRelationshipCheck()
 								entFri = true
 								-- If I am enemy to it, then reset it!
 								if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
-									self.ResetedEnemy = true
+									self.EnemyReset = true
 									self:ResetEnemy(false)
 								end
 								if vNPC then v:AddEntityRelationship(self, D_LI, 99) end
@@ -961,7 +973,7 @@ function ENT:DoEntityRelationshipCheck()
 					end
 				-- If the current enemy is a friendly player, then reset the enemy!
 				elseif check == false && vPlayer && IsValid(self:GetEnemy()) && self:GetEnemy() == v then
-					self.ResetedEnemy = true
+					self.EnemyReset = true
 					self:ResetEnemy(false)
 				end
 			end
@@ -1670,7 +1682,7 @@ for k,v in pairs(EnemyTargets) do
 	//self:AddEntityRelationship( v, D_HT, 99 )
 	//if !v:IsPlayer() then if self:Visible(v) then v:AddEntityRelationship( self, D_HT, 99 ) end end
 	if self:DoRelationshipCheck(v) == true && self:Visible(v) then
-	self.ResetedEnemy = true
+	self.EnemyReset = true
 	self:AddEntityRelationship(v,D_HT,99)
 	if !IsValid(self:GetEnemy()) then
 		self:SetEnemy(v) //self:GetClosestInTable(EnemyTargets)
@@ -1692,7 +1704,7 @@ if (!EnemyTargets) then return end
 table.Add(EnemyTargets)
 for k,v in pairs(EnemyTargets) do
 	if self:DoRelationshipCheck(v) == true && self:Visible(v) then
-	self.ResetedEnemy = true
+	self.EnemyReset = true
 	if !IsValid(self:GetEnemy()) then
 		self:SetEnemy(v)
 		self.MyEnemy = v
