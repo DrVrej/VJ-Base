@@ -14,8 +14,6 @@ ENT.Collide_DecalChance = 3
 ENT.CollideSound = "Default" -- Make it a table to use custom sounds!
 ENT.CollideSoundLevel = 60
 ENT.CollideSoundPitch = VJ_Set(90, 100)
-
-ENT.IsVJBaseCorpse = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:PhysicsInit(MOVETYPE_VPHYSICS)
@@ -30,34 +28,35 @@ function ENT:Initialize()
 	end
 
 	-- Misc
-	self:SetUpBloodType()
+	self:InitialSetup()
 	if GetConVar("vj_npc_sd_gibbing"):GetInt() == 1 then self.CollideSound = "" end
 	if GetConVar("vj_npc_nogibdecals"):GetInt() == 1 then self.Collide_Decal = "" end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defCollideSds = {"physics/flesh/flesh_squishy_impact_hard1.wav","physics/flesh/flesh_squishy_impact_hard2.wav","physics/flesh/flesh_squishy_impact_hard3.wav","physics/flesh/flesh_squishy_impact_hard4.wav"}
-function ENT:SetUpBloodType()
+--
+function ENT:InitialSetup()
 	if self.CollideSound == "Default" then
 		self.CollideSound = defCollideSds
 	end
 	
 	if self.Collide_Decal == "Default" then
-		local bloodtype = self.BloodType
-		if bloodtype == "Red" then
+		local bloodType = self.BloodType
+		if bloodType == "Red" then
 			self.Collide_Decal = "VJ_Blood_Red"
-		elseif bloodtype == "Yellow" then
+		elseif bloodType == "Yellow" then
 			self.Collide_Decal = "VJ_Blood_Yellow"
-		elseif bloodtype == "Green" then
+		elseif bloodType == "Green" then
 			self.Collide_Decal = "VJ_Blood_Green"
-		elseif bloodtype == "Orange" then
+		elseif bloodType == "Orange" then
 			self.Collide_Decal = "VJ_Blood_Orange"
-		elseif bloodtype == "Blue" then
+		elseif bloodType == "Blue" then
 			self.Collide_Decal = "VJ_Blood_Blue"
-		elseif bloodtype == "Purple" then
+		elseif bloodType == "Purple" then
 			self.Collide_Decal = "VJ_Blood_Purple"
-		elseif bloodtype == "White" then
+		elseif bloodType == "White" then
 			self.Collide_Decal = "VJ_Blood_White"
-		elseif bloodtype == "Oil" then
+		elseif bloodType == "Oil" then
 			self.Collide_Decal = "VJ_Blood_Oil"
 		end
 	end

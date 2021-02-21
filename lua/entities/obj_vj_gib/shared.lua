@@ -12,6 +12,7 @@ ENT.Spawnable		= false
 ENT.AdminSpawnable	= false
 
 ENT.IsVJBase_Gib = true
+ENT.IsVJBaseCorpse = true
 
 if CLIENT then
 	function ENT:Draw() self:DrawModel() end

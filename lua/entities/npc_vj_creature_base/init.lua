@@ -897,7 +897,7 @@ ENT.Flinching = false
 ENT.vACT_StopAttacks = false
 ENT.FollowingPlayer = false
 ENT.FollowPlayer_GoingAfter = false
-ENT.ResetedEnemy = true
+ENT.EnemyReset = true
 ENT.VJ_IsBeingControlled = false
 ENT.VJ_PlayingSequence = false
 ENT.VJ_IsPlayingSoundTrack = false
@@ -969,8 +969,6 @@ ENT.UseTheSameGeneralSoundPitch_PickedNumber = 0
 ENT.OnKilledEnemySoundT = 0
 ENT.LastHiddenZoneT = 0
 ENT.NextIdleStandTime = 0
-ENT.Passive_NextRunOnTouchT = 0
-ENT.Passive_NextRunOnDamageT = 0
 ENT.NextWanderTime = 0
 ENT.TakingCoverT = 0
 ENT.NextInvestigateSoundMove = 0
@@ -1477,6 +1475,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 			self:AA_StopMoving()
 			self:VJ_ACT_PLAYACTIVITY(finaltbl, false, 0, false, 0, {SequenceDuration=false, SequenceInterruptible=true}) // AlwaysUseSequence=true
 		end
+		-- Old system
 		/*if self.CurrentSchedule == nil then -- If it's not doing a schedule then reset the activity to make sure it's not already playing the same idle activity!
 			self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0)
 			//self:SetIdealActivity(ACT_RESET)
@@ -1721,7 +1720,7 @@ function ENT:Think()
 					self:SetIdealYawAndUpdate(setangs.y)
 				end
 				-- Set the enemy variables
-				self.ResetedEnemy = false
+				self.EnemyReset = false
 				self:UpdateEnemyMemory(ene, ene:GetPos())
 				self.LatestEnemyDistance = self:GetPos():Distance(ene:GetPos())
 				if (self:GetSightDirection():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (self.LatestEnemyDistance < self.SightDistance) then
@@ -1772,17 +1771,17 @@ function ENT:Think()
 				self.NextProcessT = CurTime() + self.NextProcessTime
 			end
 
-			if self.ResetedEnemy == false then
+			if self.EnemyReset == false then
 				-- Reset enemy if it doesn't exist or it's dead
 				if (!IsValid(self:GetEnemy())) or (IsValid(self:GetEnemy()) && self:GetEnemy():Health() <= 0) then
-					self.ResetedEnemy = true
+					self.EnemyReset = true
 					self:ResetEnemy(true)
 				end
 
 				-- Reset enemy if it has been unseen for a while
 				if self.LastSeenEnemyTime > self.LastSeenEnemyTimeUntilReset && (!self.IsVJBaseSNPC_Tank) then
 					self:PlaySoundSystem("LostEnemy")
-					self.ResetedEnemy = true
+					self.EnemyReset = true
 					self:ResetEnemy(true)
 				end
 			end
@@ -1802,7 +1801,7 @@ function ENT:Think()
 				if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true) or (self.MeleeAttackAnimationFaceEnemy == true && self.MeleeAttack_DoingPropAttack == false && self.MeleeAttacking == true) or (self.RangeAttackAnimationFaceEnemy == true && self.RangeAttacking == true) or ((self.LeapAttackAnimationFaceEnemy == true or (self.LeapAttackAnimationFaceEnemy == 2 && !self.AlreadyDoneLeapAttackJump)) && self.LeapAttacking == true) then
 					self:FaceCertainEntity(ene, true)
 				end
-				self.ResetedEnemy = false
+				self.EnemyReset = false
 				self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene)
 
 				self:CustomAttack() -- Custom attack
@@ -1933,7 +1932,7 @@ function ENT:Think()
 				end
 				self.TimeSinceEnemyAcquired = 0
 				self.TimeSinceLastSeenEnemy = self.TimeSinceLastSeenEnemy + 0.1
-				if self.ResetedEnemy == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") self.ResetedEnemy = true self:ResetEnemy(true) end
+				if self.EnemyReset == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") self.EnemyReset = true self:ResetEnemy(true) end
 			end
 			
 			-- Guarding Position
@@ -1984,47 +1983,37 @@ function ENT:CanDoCertainAttack(atkName)
 	return false
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoAddExtraAttackTimers(name, time, func)
-	name = name or "timer_unknown"
-	
-	self.TimersToRemove[#self.TimersToRemove + 1] = name
-	timer.Create(name..self:EntIndex(), (time or 0.5) / self:GetPlaybackRate(), 1, func)
-end
---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoPropVisibiltyCheckForPushAttackProps(CheckEnt)
-	if CheckEnt == NULL or CheckEnt == nil then return end
+function ENT:DoPropVisibility(propEnt)
 	local tr = util.TraceLine({
 		start = self:GetPos(),
-		endpos = CheckEnt:GetPos() + CheckEnt:GetUp()*10,
+		endpos = propEnt:GetPos() + propEnt:GetUp()*10,
 		filter = self
 	})
-	//print(tr.Entity)
-	// VJ_CreateTestObject(tr.HitPos)
-
-	if tr.Entity == NULL or tr.HitWorld == true or tr.HitSky == true then
-	return false else return true end
+	return IsValid(tr.Entity) && !tr.HitWorld && !tr.HitSky
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PushOrAttackPropsCode(CustomEnts, CustomMeleeDistance)
+local propColBlacklist = {[COLLISION_GROUP_DEBRIS]=true, [COLLISION_GROUP_DEBRIS_TRIGGER]=true, [COLLISION_GROUP_DISSOLVING]=true, [COLLISION_GROUP_IN_VEHICLE]=true, [COLLISION_GROUP_WORLD]=true}
+local IsProp = VJ_IsProp
+--
+function ENT:PushOrAttackPropsCode(customEnts, customMeleeDistance)
 	if self.PushProps == false && self.AttackProps == false then return end
-	local isprop = VJ_IsProp
-	for _,v in pairs(CustomEnts or ents.FindInSphere(self:SetMeleeAttackDamagePosition(), CustomMeleeDistance or math.Clamp(self.MeleeAttackDamageDistance - 30, self.MeleeAttackDistance, self.MeleeAttackDamageDistance))) do
+	for _,v in pairs(customEnts or ents.FindInSphere(self:SetMeleeAttackDamagePosition(), customMeleeDistance or math.Clamp(self.MeleeAttackDamageDistance - 30, self.MeleeAttackDistance, self.MeleeAttackDamageDistance))) do
 		local isEnt = (self.EntitiesToDestroyClass[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) and true or false -- Whether or not it's a prop or an entity to attack
 		if v:GetClass() == "prop_door_rotating" && v:Health() <= 0 then isEnt = false end -- If it's a door and it has no health, then don't attack it!
-		if isprop(v) == true or isEnt == true then --If it's a prop or a entity then atttack
-			//print(self:DoPropVisibiltyCheckForPushAttackProps(v))
+		if IsProp(v) == true or isEnt == true then --If it's a prop or a entity then atttack
+			//print(self:DoPropVisibility(v))
 			local phys = v:GetPhysicsObject()
-			-- Serpevadz abrankner: self:VJ_GetNearestPointToEntityDistance(v) < (CustomMeleeDistance) && self:Visible(v)
-			if IsValid(phys) && self:DoPropVisibiltyCheckForPushAttackProps(v) && (self:GetSightDirection():Dot((v:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius / 1.3))) && v:GetCollisionGroup() != COLLISION_GROUP_DEBRIS && v:GetCollisionGroup() != COLLISION_GROUP_DEBRIS_TRIGGER && v:GetCollisionGroup() != COLLISION_GROUP_DISSOLVING && v:GetCollisionGroup() != COLLISION_GROUP_IN_VEHICLE then
+			-- Serpevadz abrankner: self:VJ_GetNearestPointToEntityDistance(v) < (customMeleeDistance) && self:Visible(v)
+			if IsValid(phys) && !propColBlacklist[v:GetCollisionGroup()] && self:DoPropVisibility(v) && (self:GetSightDirection():Dot((v:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius / 1.3))) then
 				if isEnt == true then return true end -- Since it's an entity, no need to check for size etc.
-				-- Attack if the prop has health higher than 0
+				-- Attacking: Make sure it has health
 				if self.AttackProps == true && v:Health() > 0 then
 					return true
 				end
-				-- Push the prop if it's not a small object and if the NPC is appropriately sized to push the object
+				-- Pushing: Make sure it's not a small object and the NPC is appropriately sized to push the object
 				if self.PushProps == true && phys:GetMass() > 4 && phys:GetSurfaceArea() > 800 then
-					local selfphys = self:GetPhysicsObject()
-					if IsValid(selfphys) && (selfphys:GetSurfaceArea() * self.PropAP_MaxSize) >= phys:GetSurfaceArea() then
+					local selfPhys = self:GetPhysicsObject()
+					if IsValid(selfPhys) && (selfPhys:GetSurfaceArea() * self.PropAP_MaxSize) >= phys:GetSurfaceArea() then
 						return true
 					end
 				end
@@ -2393,7 +2382,7 @@ function ENT:SelectSchedule()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetEnemy(checkAlliesEnemy)
-	if self.NextResetEnemyT > CurTime() or self.Dead == true then self.ResetedEnemy = false return false end
+	if self.NextResetEnemyT > CurTime() or self.Dead == true then self.EnemyReset = false return false end
 	checkAlliesEnemy = checkAlliesEnemy or false
 	local RunToEnemyOnReset = false
 	if checkAlliesEnemy == true then
@@ -2402,7 +2391,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 			for _,v in pairs(checkallies) do
 				if IsValid(v:GetEnemy()) && v.LastSeenEnemyTime < self.LastSeenEnemyTimeUntilReset && VJ_IsAlive(v:GetEnemy()) == true && self:VJ_HasNoTarget(v:GetEnemy()) == false && self:GetPos():Distance(v:GetEnemy():GetPos()) <= self.SightDistance then
 					self:VJ_DoSetEnemy(v:GetEnemy(),true)
-					self.ResetedEnemy = false
+					self.EnemyReset = false
 					return false
 				end
 			end
@@ -2413,7 +2402,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 			//self:VJ_DoSetEnemy(v, false, true)
 			self:DoEntityRelationshipCheck() -- Select a new enemy
 			self.NextProcessT = CurTime() + self.NextProcessTime
-			self.ResetedEnemy = false
+			self.EnemyReset = false
 			return false
 		end
 	end
@@ -2512,7 +2501,7 @@ function ENT:OnTakeDamage(dmginfo)
 	DoBleed()
 
 	-- Make passive NPCs run and their allies as well
-	if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && CurTime() > self.Passive_NextRunOnDamageT then
+	if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && CurTime() > self.TakingCoverT then
 		if self.Passive_RunOnDamage == true && self:Health() > 0 then -- Don't run if not allowed or dead
 			self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
 		end
@@ -2520,13 +2509,13 @@ function ENT:OnTakeDamage(dmginfo)
 			local allies = self:Allies_Check(self.Passive_AlliesRunOnDamageDistance)
 			if allies != nil then
 				for _,v in pairs(allies) do
-					v.Passive_NextRunOnDamageT = CurTime() + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
+					v.TakingCoverT = CurTime() + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
 					v:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
 					v:PlaySoundSystem("Alert")
 				end
 			end
 		end
-		self.Passive_NextRunOnDamageT = CurTime() + math.Rand(self.Passive_NextRunOnDamageTime.a, self.Passive_NextRunOnDamageTime.b)
+		self.TakingCoverT = CurTime() + math.Rand(self.Passive_NextRunOnDamageTime.a, self.Passive_NextRunOnDamageTime.b)
 	end
 
 	if self:Health() > 0 then
@@ -2764,30 +2753,30 @@ end
 function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 	self:CustomOnDeath_BeforeCorpseSpawned(dmginfo, hitgroup)
 	if self.HasDeathRagdoll == true then
-		local corpsemodel = self:GetModel()
-		local corpsemodel_custom = VJ_PICK(self.DeathCorpseModel)
-		if corpsemodel_custom != false then corpsemodel = corpsemodel_custom end
-		local corpsetype = "prop_physics"
+		local corpseMdl = self:GetModel()
+		local corpseMdlCustom = VJ_PICK(self.DeathCorpseModel)
+		if corpseMdlCustom != false then corpseMdl = corpseMdlCustom end
+		local corpseType = "prop_physics"
 		if self.DeathCorpseEntityClass == "UseDefaultBehavior" then
-			if util.IsValidRagdoll(corpsemodel) == true then
-				corpsetype = "prop_ragdoll"
-			elseif util.IsValidProp(corpsemodel) == false or util.IsValidModel(corpsemodel) == false then
+			if util.IsValidRagdoll(corpseMdl) == true then
+				corpseType = "prop_ragdoll"
+			elseif util.IsValidProp(corpseMdl) == false or util.IsValidModel(corpseMdl) == false then
 				if IsValid(self.TheDroppedWeapon) then self.TheDroppedWeapon:Remove() end
 				return false
 			end
 		else
-			corpsetype = self.DeathCorpseEntityClass
+			corpseType = self.DeathCorpseEntityClass
 		end
 		//if self.VJCorpseDeleted == true then
-		self.Corpse = ents.Create(corpsetype) //end
-		self.Corpse:SetModel(corpsemodel)
+		self.Corpse = ents.Create(corpseType) //end
+		self.Corpse:SetModel(corpseMdl)
 		self.Corpse:SetPos(self:GetPos())
 		self.Corpse:SetAngles(self:GetAngles())
 		self.Corpse:Spawn()
 		self.Corpse:Activate()
 		self.Corpse:SetColor(self:GetColor())
 		self.Corpse:SetMaterial(self:GetMaterial())
-		if corpsemodel_custom == false && self.DeathCorpseSubMaterials != nil then -- Take care of sub materials
+		if corpseMdlCustom == false && self.DeathCorpseSubMaterials != nil then -- Take care of sub materials
 			for _, x in ipairs(self.DeathCorpseSubMaterials) do
 				if self:GetSubMaterial(x) != "" then
 					self.Corpse:SetSubMaterial(x, self:GetSubMaterial(x))
@@ -2802,9 +2791,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		end
 		//self.Corpse:SetName("self.Corpse" .. self:EntIndex())
 		//self.Corpse:SetModelScale(self:GetModelScale())
-		local fadetype = "kill"
-		if self.Corpse:GetClass() == "prop_ragdoll" then fadetype = "FadeAndRemove" end
-		self.Corpse.FadeCorpseType = fadetype
+		self.Corpse.FadeCorpseType = (self.Corpse:GetClass() == "prop_ragdoll" and "FadeAndRemove") or "kill"
 		self.Corpse.IsVJBaseCorpse = true
 		self.Corpse.DamageInfo = dmginfo
 		self.Corpse.ExtraCorpsesToRemove = self.ExtraCorpsesToRemove_Transition
@@ -2824,11 +2811,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		cleanup.ReplaceEntity(self, self.Corpse) -- Delete on cleanup
 		
 		-- Miscellaneous --
-		if self.DeathCorpseSkin == -1 then
-			self.Corpse:SetSkin(self:GetSkin())
-		else
-			self.Corpse:SetSkin(self.DeathCorpseSkin)
-		end
+		self.Corpse:SetSkin((self.DeathCorpseSkin == -1 and self:GetSkin()) or self.DeathCorpseSkin)
 		
 		if self.DeathCorpseSetBodyGroup == true then -- Yete asega true-e, ooremen gerna bodygroup tenel
 			for i = 0,18 do -- 18 = Bodygroup limit
@@ -2839,11 +2822,12 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			end
 		end
 		
-		if self.SetCorpseOnFire == true then self.Corpse:Ignite(math.Rand(8,10),0) end -- Set it on fire when it dies
-		if self:IsOnFire() then  -- If was on fire then...
-			self.Corpse:Ignite(math.Rand(8,10),0)
-			self.Corpse:SetColor(Color(90,90,90))
+		if self:IsOnFire() then -- If was on fire then...
+			self.Corpse:Ignite(math.Rand(8, 10), 0)
+			self.Corpse:SetColor(Color(90, 90, 90))
 			//self.Corpse:SetMaterial("models/props_foliage/tree_deciduous_01a_trunk")
+		elseif self.SetCorpseOnFire == true then -- Set it on fire when it dies
+			self.Corpse:Ignite(math.Rand(8, 10), 0)
 		end
 		//gamemode.Call("CreateEntityRagdoll",self,self.Corpse)
 

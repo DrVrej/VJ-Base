@@ -840,7 +840,7 @@ ENT.vACT_StopAttacks = false
 ENT.FollowingPlayer = false
 ENT.FollowPlayer_GoingAfter = false
 ENT.ThrowingGrenade = false
-ENT.ResetedEnemy = true
+ENT.EnemyReset = true
 ENT.VJ_IsBeingControlled = false
 ENT.VJ_PlayingSequence = false
 ENT.VJ_IsPlayingSoundTrack = false
@@ -928,8 +928,6 @@ ENT.OnKilledEnemySoundT = 0
 ENT.LastHiddenZoneT = 0
 ENT.NextIdleStandTime = 0
 ENT.NextMoveOnGunCoveredT = 0
-ENT.Passive_NextRunOnTouchT = 0
-ENT.Passive_NextRunOnDamageT = 0
 ENT.NextWanderTime = 0
 ENT.Weapon_DoingCrouchAttackT = 0
 ENT.NextInvestigateSoundMove = 0
@@ -1490,6 +1488,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 			self:AA_StopMoving()
 			self:VJ_ACT_PLAYACTIVITY(finaltbl, false, 0, false, 0, {SequenceDuration=false, SequenceInterruptible=true}) // AlwaysUseSequence=true
 		end
+		-- Old system
 		/*if self.CurrentSchedule == nil then -- If it's not doing a schedule then reset the activity to make sure it's not already playing the same idle activity!
 			self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0)
 			//self:SetIdealActivity(ACT_RESET)
@@ -1858,10 +1857,10 @@ end
 function ENT:DoChangeWeapon(wep, invSwitch)
 	wep = wep or nil -- The weapon to give or setup | Setting it nil will only setup the current active weapon
 	invSwitch = invSwitch or false -- If true, it will not delete the previous weapon!
-	local curwep = self:GetActiveWeapon()
+	local curWep = self:GetActiveWeapon()
 	
-	if self.DisableWeapons == true && IsValid(curwep) then -- Not suppose to have a weapon!
-		curwep:Remove()
+	if self.DisableWeapons == true && IsValid(curWep) then -- Not suppose to have a weapon!
+		curWep:Remove()
 		return NULL
 	end
 	
@@ -1869,24 +1868,24 @@ function ENT:DoChangeWeapon(wep, invSwitch)
 		if invSwitch == true then
 			self:SelectWeapon(wep)
 			VJ_EmitSound(self, {"physics/metal/weapon_impact_soft1.wav","physics/metal/weapon_impact_soft2.wav","physics/metal/weapon_impact_soft3.wav"}, 70)
-			curwep = wep
+			curWep = wep
 		else
-			if IsValid(curwep) && self:GetWeaponState() != VJ_WEP_STATE_ANTI_ARMOR && self:GetWeaponState() != VJ_WEP_STATE_MELEE then
-				curwep:Remove()
+			if IsValid(curWep) && self:GetWeaponState() != VJ_WEP_STATE_ANTI_ARMOR && self:GetWeaponState() != VJ_WEP_STATE_MELEE then
+				curWep:Remove()
 			end
-			curwep = self:Give(wep)
-			self.WeaponInventory.Primary = curwep
+			curWep = self:Give(wep)
+			self.WeaponInventory.Primary = curWep
 		end
 	end
 	
-	if IsValid(curwep) then -- If we are given a new weapon or switching weapon, then do all of the necessary set up
+	if IsValid(curWep) then -- If we are given a new weapon or switching weapon, then do all of the necessary set up
 		self.CurrentWeaponAnimation = -1
-		if invSwitch == true && curwep.IsVJBaseWeapon == true then curwep:Equip(self) end
-		self:SetupWeaponHoldTypeAnims(curwep:GetHoldType())
-		self:CustomOnDoChangeWeapon(curwep, self.CurrentWeaponEntity, invSwitch)
-		self.CurrentWeaponEntity = curwep
+		if invSwitch == true && curWep.IsVJBaseWeapon == true then curWep:Equip(self) end
+		self:SetupWeaponHoldTypeAnims(curWep:GetHoldType())
+		self:CustomOnDoChangeWeapon(curWep, self.CurrentWeaponEntity, invSwitch)
+		self.CurrentWeaponEntity = curWep
 	end
-	return curwep
+	return curWep
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetWeaponState(state, time)
@@ -2170,7 +2169,7 @@ function ENT:Think()
 					self:SetIdealYawAndUpdate(setangs.y)
 				end
 				-- Set the enemy variables
-				self.ResetedEnemy = false
+				self.EnemyReset = false
 				self:UpdateEnemyMemory(ene, ene:GetPos())
 				self.LatestEnemyDistance = self:GetPos():Distance(ene:GetPos())
 				if (self:GetSightDirection():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) && (self.LatestEnemyDistance < self.SightDistance) then
@@ -2229,17 +2228,17 @@ function ENT:Think()
 				self.NextProcessT = CurTime() + self.NextProcessTime
 			end
 
-			if self.ResetedEnemy == false then
+			if self.EnemyReset == false then
 				-- Reset enemy if it doesn't exist or it's dead
 				if (!IsValid(self:GetEnemy())) or (IsValid(self:GetEnemy()) && self:GetEnemy():Health() <= 0) then
-					self.ResetedEnemy = true
+					self.EnemyReset = true
 					self:ResetEnemy(true)
 				end
 
 				-- Reset enemy if it has been unseen for a while
 				if self.LastSeenEnemyTime > self.LastSeenEnemyTimeUntilReset && (!self.IsVJBaseSNPC_Tank) then
 					self:PlaySoundSystem("LostEnemy")
-					self.ResetedEnemy = true
+					self.EnemyReset = true
 					self:ResetEnemy(true)
 				end
 			end
@@ -2276,7 +2275,7 @@ function ENT:Think()
 				if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true) or (self.MeleeAttackAnimationFaceEnemy == true && self.MeleeAttacking == true) or (self.GrenadeAttackAnimationFaceEnemy == true && self.ThrowingGrenade == true && self:Visible(ene) == true) then
 					self:FaceCertainEntity(ene, true)
 				end
-				self.ResetedEnemy = false
+				self.EnemyReset = false
 				self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene)
 
 				-- Melee Attack --------------------------------------------------------------------------------------------------------------------------------------------
@@ -2323,7 +2322,7 @@ function ENT:Think()
 				
 				self.TimeSinceEnemyAcquired = 0
 				self.TimeSinceLastSeenEnemy = self.TimeSinceLastSeenEnemy + 0.1
-				if self.ResetedEnemy == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") self.ResetedEnemy = true self:ResetEnemy(true) end
+				if self.EnemyReset == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") self.EnemyReset = true self:ResetEnemy(true) end
 			end
 			
 			-- Guarding Position
@@ -2368,13 +2367,6 @@ function ENT:CanDoCertainAttack(atkName)
 		return true
 	end
 	return false
-end
---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoAddExtraAttackTimers(name, time, func)
-	name = name or "timer_unknown"
-	
-	self.TimersToRemove[#self.TimersToRemove + 1] = name
-	timer.Create(name..self:EntIndex(), (time or 0.5) / self:GetPlaybackRate(), 1, func)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackCode()
@@ -2656,14 +2648,14 @@ function ENT:DoPoseParameterLooking(resetPoses)
 	self.DidWeaponAttackAimParameter = true
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoWeaponAttackMovementCode(override, type)
+function ENT:DoWeaponAttackMovementCode(override, moveType)
 	override = override or false -- Overrides some of the checks, only used for the internal task system!
-	type = type or 0 -- This is used alone with override. | 0 = Run, 1 = Walk
+	moveType = moveType or 0 -- This is used with override | 0 = Run, 1 = Walk
 	if (self.CurrentWeaponEntity.IsMeleeWeapon) then
 		self.DoingWeaponAttack = false
 	elseif self.HasShootWhileMoving == true then
 		if self:Visible(self:GetEnemy()) && self:IsAbleToShootWeapon(true, false) == true && ((self:IsMoving() && (self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true)) or (override == true)) then
-			if (override == true && type == 0) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 1) then
+			if (override == true && moveType == 0) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 1) then
 				local anim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_ShootWhileMovingRun))
 				if VJ_AnimationExists(self,anim) == true then
 					self.DoingWeaponAttack = true
@@ -2672,7 +2664,7 @@ function ENT:DoWeaponAttackMovementCode(override, type)
 					self:SetMovementActivity(anim)
 					self:SetArrivalActivity(self.CurrentWeaponAnimation)
 				end
-			elseif (override == true && type == 1) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 0) then
+			elseif (override == true && moveType == 1) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 0) then
 				local anim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_ShootWhileMovingWalk))
 				if VJ_AnimationExists(self,anim) == true then
 					self.DoingWeaponAttack = true
@@ -2950,7 +2942,7 @@ function ENT:SelectSchedule()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetEnemy(checkAlliesEnemy)
-	if self.NextResetEnemyT > CurTime() or self.Dead == true then self.ResetedEnemy = false return false end
+	if self.NextResetEnemyT > CurTime() or self.Dead == true then self.EnemyReset = false return false end
 	checkAlliesEnemy = checkAlliesEnemy or false
 	local RunToEnemyOnReset = false
 	if checkAlliesEnemy == true then
@@ -2959,7 +2951,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 			for _,v in pairs(checkallies) do
 				if IsValid(v:GetEnemy()) && v.LastSeenEnemyTime < self.LastSeenEnemyTimeUntilReset && VJ_IsAlive(v:GetEnemy()) == true && self:VJ_HasNoTarget(v:GetEnemy()) == false && self:GetPos():Distance(v:GetEnemy():GetPos()) <= self.SightDistance then
 					self:VJ_DoSetEnemy(v:GetEnemy(),true)
-					self.ResetedEnemy = false
+					self.EnemyReset = false
 					return false
 				end
 			end
@@ -2970,7 +2962,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 			//self:VJ_DoSetEnemy(v, false, true)
 			self:DoEntityRelationshipCheck() -- Select a new enemy
 			self.NextProcessT = CurTime() + self.NextProcessTime
-			self.ResetedEnemy = false
+			self.EnemyReset = false
 			return false
 		end
 	end
@@ -3072,7 +3064,7 @@ function ENT:OnTakeDamage(dmginfo)
 	DoBleed()
 
 	-- Make passive NPCs run and their allies as well
-	if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && CurTime() > self.Passive_NextRunOnDamageT then
+	if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && CurTime() > self.TakingCoverT then
 		if self.Passive_RunOnDamage == true && self:Health() > 0 then -- Don't run if not allowed or dead
 			self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
 		end
@@ -3080,13 +3072,13 @@ function ENT:OnTakeDamage(dmginfo)
 			local allies = self:Allies_Check(self.Passive_AlliesRunOnDamageDistance)
 			if allies != nil then
 				for _,v in pairs(allies) do
-					v.Passive_NextRunOnDamageT = CurTime() + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
+					v.TakingCoverT = CurTime() + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
 					v:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
 					v:PlaySoundSystem("Alert")
 				end
 			end
 		end
-		self.Passive_NextRunOnDamageT = CurTime() + math.Rand(self.Passive_NextRunOnDamageTime.a, self.Passive_NextRunOnDamageTime.b)
+		self.TakingCoverT = CurTime() + math.Rand(self.Passive_NextRunOnDamageTime.a, self.Passive_NextRunOnDamageTime.b)
 	end
 
 	if self:Health() > 0 then
@@ -3328,30 +3320,30 @@ end
 function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 	self:CustomOnDeath_BeforeCorpseSpawned(dmginfo, hitgroup)
 	if self.HasDeathRagdoll == true then
-		local corpsemodel = self:GetModel()
-		local corpsemodel_custom = VJ_PICK(self.DeathCorpseModel)
-		if corpsemodel_custom != false then corpsemodel = corpsemodel_custom end
-		local corpsetype = "prop_physics"
+		local corpseMdl = self:GetModel()
+		local corpseMdlCustom = VJ_PICK(self.DeathCorpseModel)
+		if corpseMdlCustom != false then corpseMdl = corpseMdlCustom end
+		local corpseType = "prop_physics"
 		if self.DeathCorpseEntityClass == "UseDefaultBehavior" then
-			if util.IsValidRagdoll(corpsemodel) == true then
-				corpsetype = "prop_ragdoll"
-			elseif util.IsValidProp(corpsemodel) == false or util.IsValidModel(corpsemodel) == false then
+			if util.IsValidRagdoll(corpseMdl) == true then
+				corpseType = "prop_ragdoll"
+			elseif util.IsValidProp(corpseMdl) == false or util.IsValidModel(corpseMdl) == false then
 				if IsValid(self.TheDroppedWeapon) then self.TheDroppedWeapon:Remove() end
 				return false
 			end
 		else
-			corpsetype = self.DeathCorpseEntityClass
+			corpseType = self.DeathCorpseEntityClass
 		end
 		//if self.VJCorpseDeleted == true then
-		self.Corpse = ents.Create(corpsetype) //end
-		self.Corpse:SetModel(corpsemodel)
+		self.Corpse = ents.Create(corpseType) //end
+		self.Corpse:SetModel(corpseMdl)
 		self.Corpse:SetPos(self:GetPos())
 		self.Corpse:SetAngles(self:GetAngles())
 		self.Corpse:Spawn()
 		self.Corpse:Activate()
 		self.Corpse:SetColor(self:GetColor())
 		self.Corpse:SetMaterial(self:GetMaterial())
-		if corpsemodel_custom == false && self.DeathCorpseSubMaterials != nil then -- Take care of sub materials
+		if corpseMdlCustom == false && self.DeathCorpseSubMaterials != nil then -- Take care of sub materials
 			for _, x in ipairs(self.DeathCorpseSubMaterials) do
 				if self:GetSubMaterial(x) != "" then
 					self.Corpse:SetSubMaterial(x, self:GetSubMaterial(x))
@@ -3366,9 +3358,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		end
 		//self.Corpse:SetName("self.Corpse" .. self:EntIndex())
 		//self.Corpse:SetModelScale(self:GetModelScale())
-		local fadetype = "kill"
-		if self.Corpse:GetClass() == "prop_ragdoll" then fadetype = "FadeAndRemove" end
-		self.Corpse.FadeCorpseType = fadetype
+		self.Corpse.FadeCorpseType = (self.Corpse:GetClass() == "prop_ragdoll" and "FadeAndRemove") or "kill"
 		self.Corpse.IsVJBaseCorpse = true
 		self.Corpse.DamageInfo = dmginfo
 		self.Corpse.ExtraCorpsesToRemove = self.ExtraCorpsesToRemove_Transition
@@ -3388,11 +3378,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		cleanup.ReplaceEntity(self, self.Corpse) -- Delete on cleanup
 		
 		-- Miscellaneous --
-		if self.DeathCorpseSkin == -1 then
-			self.Corpse:SetSkin(self:GetSkin())
-		else
-			self.Corpse:SetSkin(self.DeathCorpseSkin)
-		end
+		self.Corpse:SetSkin((self.DeathCorpseSkin == -1 and self:GetSkin()) or self.DeathCorpseSkin)
 		
 		if self.DeathCorpseSetBodyGroup == true then -- Yete asega true-e, ooremen gerna bodygroup tenel
 			for i = 0,18 do -- 18 = Bodygroup limit
@@ -3403,11 +3389,12 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			end
 		end
 		
-		if self.SetCorpseOnFire == true then self.Corpse:Ignite(math.Rand(8,10),0) end -- Set it on fire when it dies
-		if self:IsOnFire() then  -- If was on fire then...
-			self.Corpse:Ignite(math.Rand(8,10),0)
-			self.Corpse:SetColor(Color(90,90,90))
+		if self:IsOnFire() then -- If was on fire then...
+			self.Corpse:Ignite(math.Rand(8, 10), 0)
+			self.Corpse:SetColor(Color(90, 90, 90))
 			//self.Corpse:SetMaterial("models/props_foliage/tree_deciduous_01a_trunk")
+		elseif self.SetCorpseOnFire == true then -- Set it on fire when it dies
+			self.Corpse:Ignite(math.Rand(8, 10), 0)
 		end
 		//gamemode.Call("CreateEntityRagdoll",self,self.Corpse)
 
