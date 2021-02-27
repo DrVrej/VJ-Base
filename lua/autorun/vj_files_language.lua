@@ -45,6 +45,12 @@ if CLIENT then
 		-- General Base (Used everywhere)
 		// add("vjbase.general.print.runningvj", "Notice: This server is running VJ Base.") -- DO NOT TRANSLATE.
 		
+		-- Spawn Menu
+		add("vjbase.spawn.menu.npc.disablethinking", "AI Disable Thinking")
+		add("vjbase.spawn.menu.npc.ignoreplayers", "AI Ignore Players")
+		add("vjbase.spawn.menu.npc.keepcorpses", "NPC Corpses Collide/Keep")
+		add("vjbase.spawn.menu.npc.guard", "NPCs Spawn as Guards")
+		
 		-- General Menu (Used everywhere)
 		add("vjbase.menu.general.default", "Default")
 		add("vjbase.menu.general.admin.only", "Notice: Only admins can use this menu.")

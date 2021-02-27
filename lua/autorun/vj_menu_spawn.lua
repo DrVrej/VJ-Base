@@ -237,8 +237,72 @@ if CLIENT then
 		ctrl:CallPopulateHook("PopulateVJBaseWeapons")
 		ctrl:CallPopulateHook("PopulateVJBaseEntities")
 		ctrl:CallPopulateHook("PopulateVJBaseTools")
+		
+		local sidebar = ctrl.ContentNavBar
+		sidebar.Options = vgui.Create( "VJ_SpawnmenuNPCSidebarToolbox", sidebar )
+	
 		return ctrl
 	end, "vj_base/icons/vrejgaming.png", 60, "All VJ Base entities are located here!") // icon16/plugin.png
+	
+	--[-------------------------------------------------------]--
+	-- Based on GMod's SpawnmenuNPCSidebarToolbox but with some changes
+	local PANEL = {}
+	Derma_Hook(PANEL, "Paint", "Paint", "Tree")
+	PANEL.m_bBackground = true -- Hack for above
+
+	function PANEL:AddCheckbox(text, cvar)
+		local DermaCheckbox = self:Add("DCheckBoxLabel", self)
+		DermaCheckbox:Dock(TOP)
+		DermaCheckbox:SetText(text)
+		DermaCheckbox:SetDark(true)
+		DermaCheckbox:SetConVar(cvar)
+		DermaCheckbox:SizeToContents()
+		DermaCheckbox:DockMargin(0, 5, 0, 0)
+	end
+
+	function PANEL:Init()
+		self:SetOpenSize(150)
+		self:DockPadding(15, 10, 15, 10)
+
+		self:AddCheckbox("#vjbase.spawn.menu.npc.disablethinking", "ai_disabled")
+		self:AddCheckbox("#vjbase.spawn.menu.npc.ignoreplayers", "ai_ignoreplayers")
+		self:AddCheckbox("#vjbase.spawn.menu.npc.keepcorpses", "ai_serverragdolls")
+		self:AddCheckbox("#vjbase.spawn.menu.npc.guard", "vj_npc_spawn_guard")
+		
+		local label = vgui.Create("DLabel", self)
+		label:Dock(TOP)
+		label:DockMargin(0, 5, 0, 0)
+		label:SetDark(true)
+		label:SetText("#menubar.npcs.weapon")
+
+		local DComboBox = vgui.Create( "DComboBox", self )
+		DComboBox:Dock( TOP )
+		DComboBox:DockMargin(0, 0, 0, 0)
+		DComboBox:SetConVar("gmod_npcweapon")
+		DComboBox:SetSortItems(false)
+
+		DComboBox:AddChoice("#menubar.npcs.defaultweapon", "")
+		DComboBox:AddChoice("#menubar.npcs.noweapon", "none")
+		DComboBox:AddSpacer()
+
+		-- Sort the items by name, also has the benefit of deduplication
+		local weaponsForSort = {}
+		for _, v in pairs(list.Get("VJBASE_SPAWNABLE_NPC_WEAPON")) do
+			weaponsForSort[language.GetPhrase( v.title )] = v.class
+		end
+		
+		-- Now actually add the weapons to the choices
+		for title, class in SortedPairs(weaponsForSort) do
+			DComboBox:AddChoice(title, class)
+		end
+		
+		function DComboBox:OnSelect(index, value)
+			self:ConVarChanged(self.Data[index])
+		end
+
+		self:Open()
+	end
+	vgui.Register("VJ_SpawnmenuNPCSidebarToolbox", PANEL, "DDrawer")
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Spawn Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
