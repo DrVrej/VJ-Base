@@ -55,6 +55,7 @@ VJ = {
 	AddNPCWeapon = function(nwName,nwClass)
 		local NPCW = {title = nwName, class = nwClass}
 		list.Set("NPCUsableWeapons", NPCW.class, NPCW)
+		list.Set("VJBASE_SPAWNABLE_NPC_WEAPON", NPCW.class, NPCW)
 	end,
 		-- Weapon ----------------------------------------------------------------------------------------------------
 	AddWeapon = function(wName,wClass,wAdmin,vCat,wFunc)

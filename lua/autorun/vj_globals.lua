@@ -205,11 +205,11 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_SequenceToActivity(ent, anim)
 	if isstring(anim) then -- Sequence
-		local checkanim = ent:GetSequenceActivity(ent:LookupSequence(anim))
-		if checkanim == nil or checkanim == -1 then
+		local result = ent:GetSequenceActivity(ent:LookupSequence(anim))
+		if result == nil or result == -1 then
 			return false
 		else
-			return checkanim
+			return result
 		end
 	elseif isnumber(anim) then -- If it's a number, then it's already an activity!
 		return anim
