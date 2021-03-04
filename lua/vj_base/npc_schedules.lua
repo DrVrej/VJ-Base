@@ -110,7 +110,8 @@ function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 	//self:SetArrivalSpeed(1000)
 	if self:IsRunningBehavior() or self:DoingEngineSchedule() then return true end
 	-- Apply walk frames to sequences
-	if self.VJ_PlayingSequence && !self:IsMoving() && !self:IsSequenceFinished() && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then
+	//print(self:GetSequenceMoveDist(self:GetSequence()))
+	if self.VJ_PlayingSequence && self:GetSequenceMoveDist(self:GetSequence()) > 0 && !self:IsMoving() && !self:IsSequenceFinished() && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then
 		self:AutoMovement(self:GetAnimTimeInterval())
 	end
 	self:RunAIMoveJump()
