@@ -1375,7 +1375,6 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 			self:ClearSchedule()
 			self:ClearGoal()
 			if isSequence == false then -- Only if activity
-				self:ResetSequenceInfo()
 				//self:SetActivity(ACT_RESET)
 				self.VJ_PlayingSequence = false
 				if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
@@ -1386,6 +1385,11 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				else
 					if faceEnemy == true then
 						self:FaceCertainEntity(self:GetEnemy(), true, (stopActivities and stopActivitiesTime) or self:DecideAnimationLength(animation, false))
+					end
+					-- This fixes: Animation NOT applying walk frames if the previous animation was the same
+					if self:GetActivity() == animation then
+						self:ResetSequenceInfo()
+						self:SetSaveValue("sequence", 0)
 					end
 					vsched:EngTask("TASK_PLAY_SEQUENCE", animation)
 					//self:ResetIdealActivity(animation)
