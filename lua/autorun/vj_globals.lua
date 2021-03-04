@@ -6,7 +6,6 @@
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 include('autorun/vj_controls.lua')
-
 -- Localized static values
 local CurTime = CurTime
 local IsValid = IsValid
@@ -923,3 +922,31 @@ function util.VJ_GetWeaponPos(GetClassEntity)
 		return wep:GetAttachment(wep:LookupAttachment(getmuzzle)).Pos //+ GetClassEntity:GetUp()*-45
 	end
 end
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Working test but no uses at the moment
+/*
+local metaNPC = FindMetaTable("NPC")
+local metaVJ = {}
+local function __index(self, key)
+	local val = metaVJ[key]
+	if val != nil then return val end
+	//if ( key == "Example1" ) then return self.Example2 end
+	return metaNPC.__index(self, key)
+end
+
+function metaVJ:GetIdealMoveSpeed(example)
+	if example == true then
+		return 1000
+	else
+		return metaNPC.GetIdealMoveSpeed(self)
+	end
+end
+
+hook.Add("OnEntityCreated", "vjmetatabletest", function(ent)
+	if scripted_ents.IsBasedOn(ent:GetClass(), "npc_vj_creature_base") or scripted_ents.IsBasedOn(ent:GetClass(), "npc_vj_human_base") then
+		local mt = table.Merge({}, debug.getmetatable(ent))
+		mt.__index = __index
+		debug.setmetatable(ent, mt)
+	end
+end)
+*/

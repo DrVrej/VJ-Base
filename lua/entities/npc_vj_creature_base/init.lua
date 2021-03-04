@@ -1057,6 +1057,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_sd_medic"):GetInt() == 1 then self.HasMedicSounds_BeforeHeal = false self.HasMedicSounds_AfterHeal = false self.HasMedicSounds_ReceiveHeal = false end
 	if GetConVar("vj_npc_sd_callforhelp"):GetInt() == 1 then self.HasCallForHelpSounds = false end
 	if GetConVar("vj_npc_sd_onreceiveorder"):GetInt() == 1 then self.HasOnReceiveOrderSounds = false end
+	if GetConVar("vj_npc_creatureopendoor"):GetInt() == 0 then self.CanOpenDoors = false end
 	local corpseCollision = GetConVar("vj_npc_corpsecollision"):GetInt()
 	if corpseCollision != 0 && self.DeathCorpseCollisionType == COLLISION_GROUP_DEBRIS then
 		if corpseCollision == 1 then
@@ -1157,7 +1158,7 @@ function ENT:SetInitializeCapabilities()
 	self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK))
 	//self:CapabilitiesAdd(bit.bor(CAP_ANIMATEDFACE)) -- Breaks some SNPCs, avoid using it!
 	self:CapabilitiesAdd(bit.bor(CAP_TURN_HEAD))
-	if GetConVar("vj_npc_creatureopendoor"):GetInt() == 1 && self.CanOpenDoors == true then
+	if self.CanOpenDoors == true then
 		self:CapabilitiesAdd(bit.bor(CAP_OPEN_DOORS))
 		self:CapabilitiesAdd(bit.bor(CAP_AUTO_DOORS))
 		self:CapabilitiesAdd(bit.bor(CAP_USE))
@@ -1367,7 +1368,8 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				//self:SetActivity(ACT_RESET)
 				self.VJ_PlayingSequence = false
 				if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
-					vsched:EngTask("TASK_SET_ACTIVITY", animation) -- To avoid AutoMovement stopping the velocity
+					self:ResetIdealActivity(animation)
+					//vsched:EngTask("TASK_SET_ACTIVITY", animation) -- To avoid AutoMovement stopping the velocity
 				//elseif faceEnemy == true then
 					//vsched:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY", animation)
 				else
@@ -1446,6 +1448,7 @@ local table_remove = table.remove
 --
 function ENT:VJ_TASK_IDLE_STAND()
 	if self:IsMoving() or (self.NextIdleTime > CurTime()) or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end // self.CurrentSchedule != nil
+	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:BusyWithActivity() then return end
 	//if (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_idle_stand") or (self.CurrentAnim_CustomIdle != 0 && VJ_IsCurrentAnimation(self,self.CurrentAnim_CustomIdle) == true) then return end
 	//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
 	//if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_StopMoving() return end
@@ -1480,37 +1483,39 @@ function ENT:VJ_TASK_IDLE_STAND()
 		return
 	end*/
 	
-	local finaltbl = VJ_PICK(idleAnimTbl)
+	local pickedAnim = VJ_PICK(idleAnimTbl)
 	
 	-- If no animation was found, then use ACT_IDLE
-	if finaltbl == false then
-		finaltbl = ACT_IDLE
+	if pickedAnim == false then
+		pickedAnim = ACT_IDLE
 		//sameAnimFound = true
 	end
 	self:AutoMovement(self:GetAnimTimeInterval())
 	
 	-- If sequence and it has no activity, then don't continue!
-	//finaltbl = VJ_SequenceToActivity(self,finaltbl)
-	//if finaltbl == false then return false end
+	//pickedAnim = VJ_SequenceToActivity(self,pickedAnim)
+	//if pickedAnim == false then return false end
 	
 	if (!sameAnimFound /*or (sameAnimFound && numOfAnims == 1 && CurTime() > self.NextIdleStandTime)*/) or (CurTime() > self.NextIdleStandTime) then
-		self.CurrentAnim_IdleStand = finaltbl
-		if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
-			if /*self:GetSequence() == 0 or*/ self:BusyWithActivity() == true then return end
-			self:AA_StopMoving()
-			self:VJ_ACT_PLAYACTIVITY(finaltbl, false, 0, false, 0, {SequenceDuration=false, SequenceInterruptible=true}) // AlwaysUseSequence=true
-		end
+		self.CurrentAnim_IdleStand = pickedAnim
 		-- Old system
-		/*if self.CurrentSchedule == nil then -- If it's not doing a schedule then reset the activity to make sure it's not already playing the same idle activity!
+		/*if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
+			if self:BusyWithActivity() == true then return end // self:GetSequence() == 0
+			self:AA_StopMoving()
+			self:VJ_ACT_PLAYACTIVITY(pickedAnim, false, 0, false, 0, {SequenceDuration=false, SequenceInterruptible=true}) // AlwaysUseSequence=true
+		end
+		if self.CurrentSchedule == nil then -- If it's not doing a schedule then reset the activity to make sure it's not already playing the same idle activity!
 			self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0)
 			//self:SetIdealActivity(ACT_RESET)
 		end*/
-		//self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),finaltbl) -- Old system
-		self:ResetIdealActivity(finaltbl)
+		//self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),pickedAnim)
+		self.VJ_PlayingSequence = false
+		self.VJ_PlayingInterruptSequence = false
+		self:ResetIdealActivity(pickedAnim)
 		timer.Simple(0.01, function() -- So we can make sure the engine has enough time to set the animation
 			if IsValid(self) && self.NextIdleStandTime != 0 then
 				local curseq = self:GetSequence()
-				if VJ_SequenceToActivity(self,self:GetSequenceName(curseq)) == finaltbl then -- Nayir yete himagva animation e nooynene
+				if VJ_SequenceToActivity(self,self:GetSequenceName(curseq)) == pickedAnim then -- Nayir yete himagva animation e nooynene
 					self.NextIdleStandTime = CurTime() + ((self:SequenceDuration(curseq) - 0.01) / self:GetPlaybackRate()) -- Yete nooynene ooremen jamanage tir animation-en yergarootyan chap!
 				end
 			end
