@@ -122,9 +122,8 @@ cvarList_Ent["vj_npc_printresetenemy"] = 0 -- Prints something when the SNPC has
 cvarList_Ent["vj_npc_printlastseenenemy"] = 0 -- Prints the 'LastSeenEnemy' time
 cvarList_Ent["vj_npc_printcurenemy"] = 0 -- Prints the current enemy
 	-- ====== Human Options ====== --
-cvarList_Ent["vj_npc_printammo"] = 0 -- Prints amount of ammo in the console
-cvarList_Ent["vj_npc_printweapon"] = 0 -- Prints the weapon its using
-cvarList_Ent["vj_npc_printaccuracy"] = 0 -- Prints how accurate the SNPC is with weapons
+cvarList_Ent["vj_npc_dev_printwepinfo"] = 0 -- Prints weapon-related information
+
 cvarList_Ent["vj_npc_printtakingcover"] = 0 -- Prints whether the SNPC is taking cover or not
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC Controller Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -135,6 +134,10 @@ VJ.AddClientConVar("vj_npc_cont_cam_zoomspeed", 10, "Camera Zoom Speed") -- How 
 VJ.AddClientConVar("vj_npc_cont_cam_speed", 6, "Camera Speed") -- How fast the camera moves (lerping)
 VJ.AddClientConVar("vj_npc_cont_devents", 0, "Display developer entities") -- Display developer entities
 VJ.AddClientConVar("vj_npc_cont_diewithnpc", 0, "Controller Dies With The NPC (Requires respawn!)") -- Controller Dies With The NPC (Requires respawn!)
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ NPC Client Menu Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+VJ.AddClientConVar("vj_npc_spawn_guard", 0, "Spawn all VJ NPCs with guarding enabled") -- Spawns all the NPCs with guarding enabled
 ---------------------------------------------------------------------------------------------------------------------------
 for k, v in pairs(cvarList_Ent) do
 	if !ConVarExists(k) then CreateConVar(k, v, {FCVAR_ARCHIVE}) end

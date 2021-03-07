@@ -17,8 +17,7 @@ ENT.AA_CurrentTurnAng = false
 local defPos = Vector(0, 0, 0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AA_StopMoving()
-	if self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then return end
-	if self:GetVelocity():Length() > 0 then
+	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then
 		self:SetLocalVelocity(defPos)
 	end
 end
@@ -267,14 +266,14 @@ function ENT:AA_ChaseEnemy(playAnim, moveType)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AA_MoveAnimation()
-	if self:GetSequence() != self.CurrentAnim_AAMovement && self:BusyWithActivity() == false /*&& self:GetActivity() == ACT_IDLE*/ && CurTime() > self.AA_NextMovementAnimation then
-		local animtbl = {}
+	if self:GetSequence() != self.CurrentAnim_AAMovement && self:BusyWithActivity() == false && CurTime() > self.AA_NextMovementAnimation then
+		local animTbl = {}
 		if self.AA_CurrentMoveAnimationType == "Calm" then
-			animtbl = (self.MovementType == VJ_MOVETYPE_AQUATIC and self.Aquatic_AnimTbl_Calm) or self.Aerial_AnimTbl_Calm
+			animTbl = (self.MovementType == VJ_MOVETYPE_AQUATIC and self.Aquatic_AnimTbl_Calm) or self.Aerial_AnimTbl_Calm
 		elseif self.AA_CurrentMoveAnimationType == "Alert" then
-			animtbl = (self.MovementType == VJ_MOVETYPE_AQUATIC and self.Aquatic_AnimTbl_Alerted) or self.Aerial_AnimTbl_Alerted
+			animTbl = (self.MovementType == VJ_MOVETYPE_AQUATIC and self.Aquatic_AnimTbl_Alerted) or self.Aerial_AnimTbl_Alerted
 		end
-		local pickedAnim = VJ_PICK(animtbl)
+		local pickedAnim = VJ_PICK(animTbl)
 		if type(pickedAnim) == "number" then pickedAnim = self:GetSequenceName(self:SelectWeightedSequence(pickedAnim)) end
 		self.CurrentAnim_AAMovement = VJ_GetSequenceName(self, pickedAnim)
 		self:VJ_ACT_PLAYACTIVITY(pickedAnim, false, 0, false, 0, {AlwaysUseSequence=true, SequenceDuration=false, SequenceInterruptible=true})

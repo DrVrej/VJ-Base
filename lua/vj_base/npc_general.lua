@@ -127,6 +127,7 @@ local gib_mdlASmall = {"models/gibs/xenians/sgib_01.mdl","models/gibs/xenians/sg
 local gib_mdlABig = {"models/gibs/xenians/mgib_01.mdl","models/gibs/xenians/mgib_02.mdl","models/gibs/xenians/mgib_03.mdl","models/gibs/xenians/mgib_04.mdl","models/gibs/xenians/mgib_05.mdl","models/gibs/xenians/mgib_06.mdl","models/gibs/xenians/mgib_07.mdl"}
 local gib_mdlHSmall = {"models/gibs/humans/sgib_01.mdl","models/gibs/humans/sgib_02.mdl","models/gibs/humans/sgib_03.mdl"}
 local gib_mdlHBig = {"models/gibs/humans/mgib_01.mdl","models/gibs/humans/mgib_02.mdl","models/gibs/humans/mgib_03.mdl","models/gibs/humans/mgib_04.mdl","models/gibs/humans/mgib_05.mdl","models/gibs/humans/mgib_06.mdl","models/gibs/humans/mgib_07.mdl"}
+--
 function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 	// self:CreateGibEntity("prop_ragdoll", "", {Pos=self:LocalToWorld(Vector(0,3,0)), Ang=self:GetAngles(), Vel=})
 	if self.AllowedToGib == false then return end
@@ -197,7 +198,7 @@ end
 		- true, Busy
 -----------------------------------------------------------]]
 function ENT:BusyWithActivity()
-	return self.vACT_StopAttacks == true or self.PlayingAttackAnimation == true
+	return self.vACT_StopAttacks == true or self.PlayingAttackAnimation == true or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -491,6 +492,18 @@ function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 		self:DoAlert(ent)
 	end
 end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Forces the NPC to jump
+		- vel = Velocity for the jump
+	EX: Force the NPC to jump to the location of another entity:
+		self:ForceMoveJump((activator:GetPos() - self:GetPos()):GetNormal()*200 + Vector(0, 0, 300))
+-----------------------------------------------------------]]
+function ENT:ForceMoveJump(vel)
+	self.NextIdleStandTime = 0
+	self:SetNavType(NAV_JUMP)
+	self:MoveJumpStart(vel)
+end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*
  ######   ######## ##    ## ######## ########     ###    ##          ######## ##     ## ##    ##  ######  ######## ####  #######  ##    ##  ######
@@ -771,7 +784,7 @@ function ENT:DoConstantlyFaceEnemyCode()
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_PlaySequence(seq, playbackRate, wait, waitTime, interruptible)
+function ENT:VJ_PlaySequence(seq, playbackRate, reset, resetTime, interruptible)
 	if !seq then return end
 	if interruptible == true then
 		self.VJ_PlayingSequence = false
@@ -790,8 +803,8 @@ function ENT:VJ_PlaySequence(seq, playbackRate, wait, waitTime, interruptible)
 		self.AnimationPlaybackRate = playbackRate
 		self:SetPlaybackRate(playbackRate)
 	end
-	if wait == true then
-		timer.Create("timer_act_seq_wait"..self:EntIndex(), waitTime, 1, function()
+	if reset == true then
+		timer.Create("timer_act_seqreset"..self:EntIndex(), resetTime, 1, function()
 			self.VJ_PlayingInterruptSequence = false
 			self.VJ_PlayingSequence = false
 			//self.vACT_StopAttacks = false
