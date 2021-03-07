@@ -2034,9 +2034,7 @@ function ENT:Think()
 			if GetConVar("vj_npc_printtakingcover"):GetInt() == 1 then if CurTime() > self.TakingCoverT == true then print(self:GetClass().." Is Not Taking Cover") else print(self:GetClass().." Is Taking Cover ("..self.TakingCoverT-CurTime()..")") end end
 			if GetConVar("vj_npc_printlastseenenemy"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, self.LastSeenEnemyTime.." ("..self:GetName()..")") end
 			if IsValid(self:GetActiveWeapon()) then
-				if GetConVar("vj_npc_printaccuracy"):GetInt() == 1 then print(self:GetClass().."'s Accuracy (Weapon Spread, Proficiency) = "..self.WeaponSpread.." | "..self:GetCurrentWeaponProficiency()) end
-				if GetConVar("vj_npc_printammo"):GetInt() == 1 then print(self:GetClass().."'s Ammo = VJ Ammo: "..self.CurrentWeaponEntity:Clip1().."/"..self.CurrentWeaponEntity:GetMaxClip1()) end
-				if GetConVar("vj_npc_printweapon"):GetInt() == 1 then print(self:GetClass().."'s", self.CurrentWeaponEntity) end
+				if GetConVar("vj_npc_dev_printwepinfo"):GetInt() == 1 then print(self:GetName().." -->", self.CurrentWeaponEntity, "Ammo: "..self.CurrentWeaponEntity:Clip1().."/"..self.CurrentWeaponEntity:GetMaxClip1().." | Accuracy: "..self.WeaponSpread) end
 			end
 		end
 		
@@ -2723,26 +2721,26 @@ function ENT:IsAbleToShootWeapon(checkDistance, checkDistanceOnly, enemyDist)
 	checkDistanceOnly = checkDistanceOnly or false -- Should it only check the above statement?
 	enemyDist = enemyDist or self:EyePos():Distance(self:GetEnemy():EyePos()) -- Distance used for checkDistance
 	if self:CustomOnIsAbleToShootWeapon() == false then return end
-	local havedist = false
-	local havechecks = false
+	local hasDist = false
+	local hasChecks = false
 	
 	if self:GetWeaponState() == VJ_WEP_STATE_HOLSTERED then return false end
 	if self.VJ_IsBeingControlled == true then checkDistance = false checkDistanceOnly = false end
 	if checkDistance == true && CurTime() > self.NextWeaponAttackT && enemyDist < self.Weapon_FiringDistanceFar && ((enemyDist > self.Weapon_FiringDistanceClose) or self.CurrentWeaponEntity.IsMeleeWeapon) then
-		havedist = true
+		hasDist = true
 	end
 	if checkDistanceOnly == true then
-		if havedist == true then
+		if hasDist == true then
 			return true
 		else
 			return false
 		end
 	end
 	if IsValid(self:GetActiveWeapon()) && self.ThrowingGrenade == false && self:BusyWithActivity() == false && ((self:GetActiveWeapon().IsMeleeWeapon) or (self.IsReloadingWeapon == false && self.MeleeAttacking == false && self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) > self.MeleeAttackDistance)) then
-		havechecks = true
+		hasChecks = true
 		if checkDistance == false then return true end
 	end
-	if checkDistanceOnly == false && havedist == true && havechecks == true then return true end
+	if checkDistanceOnly == false && hasDist == true && hasChecks == true then return true end
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2900,18 +2898,20 @@ function ENT:SelectSchedule()
 							end
 							
 							if dontattack == false && CurTime() > self.NextWeaponAttackT && CurTime() > self.NextWeaponAttackT_Base /*&& self.DoingWeaponAttack == false*/ then
-								if (wep.IsMeleeWeapon) then -- Melee Only
+								-- Melee weapons
+								if (wep.IsMeleeWeapon) then
 									self:CustomOnWeaponAttack()
-									local resultanim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponAttack))
-									if CurTime() > self.NextMeleeWeaponAttackT && VJ_AnimationExists(self, resultanim) == true /*&& VJ_IsCurrentAnimation(self, resultanim) == false*/ then
-										local animlength = VJ_GetSequenceDuration(self, resultanim)
-										wep.NPC_NextPrimaryFire = animlength -- Make melee weapons dynamically change the next primary fire
+									local finalAnim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponAttack))
+									if CurTime() > self.NextMeleeWeaponAttackT && VJ_AnimationExists(self, finalAnim) == true /*&& VJ_IsCurrentAnimation(self, finalAnim) == false*/ then
+										local animDur = VJ_GetSequenceDuration(self, finalAnim)
+										wep.NPC_NextPrimaryFire = animDur -- Make melee weapons dynamically change the next primary fire
 										VJ_EmitSound(self, wep.NPC_BeforeFireSound, wep.NPC_BeforeFireSoundLevel, math.Rand(wep.NPC_BeforeFireSoundPitch.a, wep.NPC_BeforeFireSoundPitch.b))
-										self.NextMeleeWeaponAttackT = CurTime() + animlength
-										self.CurrentWeaponAnimation = resultanim
-										self:VJ_ACT_PLAYACTIVITY(resultanim, true, false, true)
+										self.NextMeleeWeaponAttackT = CurTime() + animDur
+										self.CurrentWeaponAnimation = finalAnim
+										self:VJ_ACT_PLAYACTIVITY(finalAnim, true, false, true)
 									end
-								else -- Regular weapons
+								-- Normal weapons
+								else
 									-- If the current animation is already a firing animation, then imply just tell the base It's already firing and don't restart the animation
 									if VJ_IsCurrentAnimation(self, self:TranslateToWeaponAnim(self.CurrentWeaponAnimation)) == true then
 										self.DoingWeaponAttack = true
@@ -2922,19 +2922,19 @@ function ENT:SelectSchedule()
 										self.WaitingForEnemyToComeOut = false
 										self.Weapon_TimeSinceLastShot = 0
 										//self.NextMoveRandomlyWhenShootingT = CurTime() + 2
-										local resultanim;
+										local finalAnim;
 										local anim_crouch = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponAttackCrouch))
 										if self.CanCrouchOnWeaponAttack == true && covered_npc == false && covered_wep == false && enedist_eye > 500 && VJ_AnimationExists(self, anim_crouch) == true && ((math.random(1, self.CanCrouchOnWeaponAttackChance) == 1) or (CurTime() <= self.Weapon_DoingCrouchAttackT)) && self:VJ_ForwardIsHidingZone(wep:GetNW2Vector("VJ_CurBulletPos") + self:GetUp()*-18, enepos_eye, false) == false then
-											resultanim = anim_crouch
+											finalAnim = anim_crouch
 											self.Weapon_DoingCrouchAttackT = CurTime() + 2 -- Asiga bedke vor vestah elank yed votgi cheler hemen
 										else -- Not crouching
-											resultanim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponAttack))
+											finalAnim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponAttack))
 										end
-										if VJ_AnimationExists(self, resultanim) == true && VJ_IsCurrentAnimation(self, resultanim) == false then
+										if VJ_AnimationExists(self, finalAnim) == true && VJ_IsCurrentAnimation(self, finalAnim) == false then
 											VJ_EmitSound(self, wep.NPC_BeforeFireSound, wep.NPC_BeforeFireSoundLevel, math.Rand(wep.NPC_BeforeFireSoundPitch.a, wep.NPC_BeforeFireSoundPitch.b))
-											self.CurrentWeaponAnimation = resultanim
+											self.CurrentWeaponAnimation = finalAnim
 											self.NextWeaponAttackT_Base = CurTime() + 0.2
-											self:VJ_ACT_PLAYACTIVITY(resultanim, false, 0, true)
+											self:VJ_ACT_PLAYACTIVITY(finalAnim, false, 0, true)
 											self.DoingWeaponAttack = true
 											self.DoingWeaponAttack_Standing = true
 										end
@@ -2984,9 +2984,9 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 	checkAlliesEnemy = checkAlliesEnemy or false
 	local RunToEnemyOnReset = false
 	if checkAlliesEnemy == true then
-		local checkallies = self:Allies_Check(1000)
-		if checkallies != nil then
-			for _,v in pairs(checkallies) do
+		local getAllies = self:Allies_Check(1000)
+		if getAllies != nil then
+			for _,v in pairs(getAllies) do
 				if IsValid(v:GetEnemy()) && v.LastSeenEnemyTime < self.LastSeenEnemyTimeUntilReset && VJ_IsAlive(v:GetEnemy()) == true && self:VJ_HasNoTarget(v:GetEnemy()) == false && self:GetPos():Distance(v:GetEnemy():GetPos()) <= self.SightDistance then
 					self:VJ_DoSetEnemy(v:GetEnemy(),true)
 					self.EnemyReset = false

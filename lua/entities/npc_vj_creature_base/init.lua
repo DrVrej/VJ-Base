@@ -1863,13 +1863,13 @@ function ENT:Think()
 				-- Melee Attack --------------------------------------------------------------------------------------------------------------------------------------------
 				if self.HasMeleeAttack == true && self:CanDoCertainAttack("MeleeAttack") == true then
 					self:MultipleMeleeAttacks()
-					local attacktype = 0 -- 0 = No attack | 1 = Normal attack | 2 = Prop attack
+					local atkType = 0 -- 0 = No attack | 1 = Normal attack | 2 = Prop attack
 					if (self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (self.VJ_IsBeingControlled == false && self.NearestPointToEnemyDistance < self.MeleeAttackDistance && ene:Visible(self)) then
-						attacktype = 1
+						atkType = 1
 					elseif self:PushOrAttackPropsCode() == true && self.MeleeAttack_NoProps == false then
-						attacktype = 2
+						atkType = 2
 					end
-					if self:CustomAttackCheck_MeleeAttack() == true && ((self.VJ_IsBeingControlled == true && attacktype == 1) or (self.VJ_IsBeingControlled == false && attacktype != 0 && (self:GetSightDirection():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))))) then
+					if self:CustomAttackCheck_MeleeAttack() == true && ((self.VJ_IsBeingControlled == true && atkType == 1) or (self.VJ_IsBeingControlled == false && atkType != 0 && (self:GetSightDirection():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))))) then
 						local seed = CurTime(); self.CurAttackSeed = seed
 						self.MeleeAttacking = true
 						self.IsAbleToMeleeAttack = false
@@ -1877,7 +1877,7 @@ function ENT:Think()
 						self.AlreadyDoneFirstMeleeAttack = false
 						self.RangeAttacking = false
 						self.NextAlertSoundT = CurTime() + 0.4
-						if attacktype == 2 then
+						if atkType == 2 then
 							self.MeleeAttack_DoingPropAttack = true
 						else
 							self:FaceCertainEntity(ene, true)
@@ -1898,14 +1898,14 @@ function ENT:Think()
 							self:MeleeAttackCode_DoFinishTimers()
 						else -- If it's not event based...
 							timer.Create("timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self:GetPlaybackRate(), self.MeleeAttackReps, function() if self.CurAttackSeed == seed then
-									if attacktype == 2 then
+									if atkType == 2 then
 										self:MeleeAttackCode(true)
 									else
 										self:MeleeAttackCode()
 									end
 							end end)
 							for k, t in pairs(self.MeleeAttackExtraTimers or {}) do
-								self:DoAddExtraAttackTimers("timer_melee_start_"..CurTime() + k, t, function() if self.CurAttackSeed == seed then if attacktype == 2 then
+								self:DoAddExtraAttackTimers("timer_melee_start_"..CurTime() + k, t, function() if self.CurAttackSeed == seed then if atkType == 2 then
 										self:MeleeAttackCode(true)
 									else
 										self:MeleeAttackCode()
@@ -2440,9 +2440,9 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 	checkAlliesEnemy = checkAlliesEnemy or false
 	local RunToEnemyOnReset = false
 	if checkAlliesEnemy == true then
-		local checkallies = self:Allies_Check(1000)
-		if checkallies != nil then
-			for _,v in pairs(checkallies) do
+		local getAllies = self:Allies_Check(1000)
+		if getAllies != nil then
+			for _,v in pairs(getAllies) do
 				if IsValid(v:GetEnemy()) && v.LastSeenEnemyTime < self.LastSeenEnemyTimeUntilReset && VJ_IsAlive(v:GetEnemy()) == true && self:VJ_HasNoTarget(v:GetEnemy()) == false && self:GetPos():Distance(v:GetEnemy():GetPos()) <= self.SightDistance then
 					self:VJ_DoSetEnemy(v:GetEnemy(),true)
 					self.EnemyReset = false

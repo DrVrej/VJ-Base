@@ -122,9 +122,8 @@ cvarList_Ent["vj_npc_printresetenemy"] = 0 -- Prints something when the SNPC has
 cvarList_Ent["vj_npc_printlastseenenemy"] = 0 -- Prints the 'LastSeenEnemy' time
 cvarList_Ent["vj_npc_printcurenemy"] = 0 -- Prints the current enemy
 	-- ====== Human Options ====== --
-cvarList_Ent["vj_npc_printammo"] = 0 -- Prints amount of ammo in the console
-cvarList_Ent["vj_npc_printweapon"] = 0 -- Prints the weapon its using
-cvarList_Ent["vj_npc_printaccuracy"] = 0 -- Prints how accurate the SNPC is with weapons
+cvarList_Ent["vj_npc_dev_printwepinfo"] = 0 -- Prints weapon-related information
+
 cvarList_Ent["vj_npc_printtakingcover"] = 0 -- Prints whether the SNPC is taking cover or not
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC Controller Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
