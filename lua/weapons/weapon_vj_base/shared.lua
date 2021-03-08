@@ -650,79 +650,81 @@ function SWEP:PrimaryAttackEffects()
 	if self:CustomOnPrimaryAttackEffects() != true or self.IsMeleeWeapon == true then return end
 	local owner = self:GetOwner()
 	
-	/*local vjeffectmuz = EffectData()
-	vjeffectmuz:SetOrigin(owner:GetShootPos())
-	vjeffectmuz:SetEntity(self)
-	vjeffectmuz:SetStart(owner:GetShootPos())
-	vjeffectmuz:SetNormal(owner:GetAimVector())
-	vjeffectmuz:SetAttachment(1)
-	util.Effect("VJ_Weapon_RifleMuzzle1",vjeffectmuz)*/
-
+	/*local muzzleFlashEffect = EffectData()
+	muzzleFlashEffect:SetOrigin(owner:GetShootPos())
+	muzzleFlashEffect:SetEntity(self)
+	muzzleFlashEffect:SetStart(owner:GetShootPos())
+	muzzleFlashEffect:SetNormal(owner:GetAimVector())
+	muzzleFlashEffect:SetAttachment(1)
+	util.Effect("VJ_Weapon_RifleMuzzle1",muzzleFlashEffect)*/
+	
 	if GetConVar("vj_wep_nomuszzleflash"):GetInt() == 0 then
+		-- MUZZLE FLASH
 		if self.PrimaryEffects_MuzzleFlash == true then
-			local muzzleattach = self.PrimaryEffects_MuzzleAttachment
-			if isnumber(muzzleattach) == false then muzzleattach = self:LookupAttachment(muzzleattach) end
-			-- ONLY for players
+			local muzzleAttach = self.PrimaryEffects_MuzzleAttachment
+			if !isnumber(muzzleAttach) then muzzleAttach = self:LookupAttachment(muzzleAttach) end
+			-- Players
 			if owner:IsPlayer() && owner:GetViewModel() != nil then
-				local vjeffectmuz = EffectData()
-				vjeffectmuz:SetOrigin(owner:GetShootPos())
-				vjeffectmuz:SetEntity(self)
-				vjeffectmuz:SetStart(owner:GetShootPos())
-				vjeffectmuz:SetNormal(owner:GetAimVector())
-				vjeffectmuz:SetAttachment(muzzleattach)
-				util.Effect("VJ_Weapon_PlayerMuzzle", vjeffectmuz)
-			else
-				if self.PrimaryEffects_MuzzleParticlesAsOne == true then
+				local muzzleFlashEffect = EffectData()
+				muzzleFlashEffect:SetOrigin(owner:GetShootPos())
+				muzzleFlashEffect:SetEntity(self)
+				muzzleFlashEffect:SetStart(owner:GetShootPos())
+				muzzleFlashEffect:SetNormal(owner:GetAimVector())
+				muzzleFlashEffect:SetAttachment(muzzleAttach)
+				util.Effect("VJ_Weapon_PlayerMuzzle", muzzleFlashEffect)
+			else -- NPCs
+				if self.PrimaryEffects_MuzzleParticlesAsOne == true then -- Combine all of the particles in the table!
 					for _,v in pairs(self.PrimaryEffects_MuzzleParticles) do
 						if !istable(v) then
-							ParticleEffectAttach(v,PATTACH_POINT_FOLLOW,self,muzzleattach)
+							ParticleEffectAttach(v, PATTACH_POINT_FOLLOW, self, muzzleAttach)
 						end
 					end
 				else
-					ParticleEffectAttach(VJ_PICK(self.PrimaryEffects_MuzzleParticles),PATTACH_POINT_FOLLOW,self,muzzleattach)
+					ParticleEffectAttach(VJ_PICK(self.PrimaryEffects_MuzzleParticles), PATTACH_POINT_FOLLOW, self, muzzleAttach)
 				end
 			end
 		end
 		
+		-- MUZZLE LIGHT
 		if SERVER && self.PrimaryEffects_SpawnDynamicLight == true && GetConVar("vj_wep_nomuszzleflash_dynamiclight"):GetInt() == 0 then
-			local FireLight1 = ents.Create("light_dynamic")
-			FireLight1:SetKeyValue("brightness", self.PrimaryEffects_DynamicLightBrightness)
-			FireLight1:SetKeyValue("distance", self.PrimaryEffects_DynamicLightDistance)
-			if owner:IsPlayer() then FireLight1:SetLocalPos(owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else FireLight1:SetLocalPos(self:GetNW2Vector("VJ_CurBulletPos")) end
-			FireLight1:SetLocalAngles(self:GetAngles())
-			FireLight1:Fire("Color", self.PrimaryEffects_DynamicLightColor.r.." "..self.PrimaryEffects_DynamicLightColor.g.." "..self.PrimaryEffects_DynamicLightColor.b)
-			//FireLight1:SetParent(self)
-			FireLight1:Spawn()
-			FireLight1:Activate()
-			FireLight1:Fire("TurnOn","",0)
-			FireLight1:Fire("Kill","",0.07)
-			self:DeleteOnRemove(FireLight1)
+			local muzzleLight = ents.Create("light_dynamic")
+			muzzleLight:SetKeyValue("brightness", self.PrimaryEffects_DynamicLightBrightness)
+			muzzleLight:SetKeyValue("distance", self.PrimaryEffects_DynamicLightDistance)
+			if owner:IsPlayer() then muzzleLight:SetLocalPos(owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else muzzleLight:SetLocalPos(self:GetNW2Vector("VJ_CurBulletPos")) end
+			muzzleLight:SetLocalAngles(self:GetAngles())
+			muzzleLight:Fire("Color", self.PrimaryEffects_DynamicLightColor.r.." "..self.PrimaryEffects_DynamicLightColor.g.." "..self.PrimaryEffects_DynamicLightColor.b)
+			//muzzleLight:SetParent(self)
+			muzzleLight:Spawn()
+			muzzleLight:Activate()
+			muzzleLight:Fire("TurnOn", "", 0)
+			muzzleLight:Fire("Kill", "", 0.07)
+			self:DeleteOnRemove(muzzleLight)
 		end
 	end
 
-	if self.PrimaryEffects_SpawnShells == true && !owner:IsPlayer() && GetConVar("vj_wep_nobulletshells"):GetInt() == 0 then
-		local shellattach = self.PrimaryEffects_ShellAttachment
-		if isnumber(shellattach) == false then shellattach = self:LookupAttachment(shellattach) end
-		local vjeffect = EffectData()
-		vjeffect:SetEntity(self)
-		vjeffect:SetOrigin(owner:GetShootPos())
-		vjeffect:SetNormal(owner:GetAimVector())
-		vjeffect:SetAttachment(shellattach)
-		util.Effect(self.PrimaryEffects_ShellType,vjeffect)
+	-- SHELL CASING
+	if !owner:IsPlayer() && self.PrimaryEffects_SpawnShells == true && GetConVar("vj_wep_nobulletshells"):GetInt() == 0 then
+		local shellAttach = self.PrimaryEffects_ShellAttachment
+		if !isnumber(shellAttach) then shellAttach = self:LookupAttachment(shellAttach) end
+		local shellEffect = EffectData()
+		shellEffect:SetEntity(self)
+		shellEffect:SetOrigin(owner:GetShootPos())
+		shellEffect:SetNormal(owner:GetAimVector())
+		shellEffect:SetAttachment(shellAttach)
+		util.Effect(self.PrimaryEffects_ShellType, shellEffect)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:FireAnimationEvent(pos, ang, event, options)
-	local getcustom = self:CustomOnFireAnimationEvent(pos, ang, event, options)
-	if getcustom == true then return true end
+	if self:CustomOnFireAnimationEvent(pos, ang, event, options) == true then return true end
 	
-	if event == 22 or event == 6001 then return true end
+	if (event == 22 or event == 6001) then return true end
 	
-	if GetConVar("vj_wep_nomuszzleflash"):GetInt() == 1 && event == 21 or event == 22 or event == 5001 or event == 5003 then
+	if GetConVar("vj_wep_nomuszzleflash"):GetInt() == 1 && (event == 21 or event == 22 or event == 5001 or event == 5003) then
 		return true
 	end
 
-	if GetConVar("vj_wep_nobulletshells"):GetInt() == 1 && event == 20 or event == 6001 then
+	if GetConVar("vj_wep_nobulletshells"):GetInt() == 1 && event == 20 then
 		return true
 	end
 end

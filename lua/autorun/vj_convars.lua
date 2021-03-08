@@ -113,7 +113,7 @@ cvarList_Ent["vj_npc_sd_suppressing"] = 0 -- Disable suppressing callout sounds
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Developer Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-cvarList_Ent["vj_npc_usedevcommands"] = 0 -- Should it use Dev Commands?
+cvarList_Ent["vj_npc_usedevcommands"] = 0 -- Should it use Dev Commands? (Required to make the dev option below work!)
 cvarList_Ent["vj_npc_printdied"] = 0 -- Prints Died when the SNPC dies
 cvarList_Ent["vj_npc_printondamage"] = 0 -- Prints when the SNPC gets damaged
 cvarList_Ent["vj_npc_printontouch"] = 0 -- Prints when something touches the SNPC
@@ -121,10 +121,9 @@ cvarList_Ent["vj_npc_printstoppedattacks"] = 0 -- Prints when the SNPC stops its
 cvarList_Ent["vj_npc_printresetenemy"] = 0 -- Prints something when the SNPC has rested its enemy
 cvarList_Ent["vj_npc_printlastseenenemy"] = 0 -- Prints the 'LastSeenEnemy' time
 cvarList_Ent["vj_npc_printcurenemy"] = 0 -- Prints the current enemy
+cvarList_Ent["vj_npc_printtakingcover"] = 0 -- Prints whether the SNPC is taking cover or not
 	-- ====== Human Options ====== --
 cvarList_Ent["vj_npc_dev_printwepinfo"] = 0 -- Prints weapon-related information
-
-cvarList_Ent["vj_npc_printtakingcover"] = 0 -- Prints whether the SNPC is taking cover or not
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC Controller Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
