@@ -927,6 +927,7 @@ ENT.AlreadyDoneFirstLeapAttack = false
 ENT.VJ_IsBeingControlled_Tool = false
 ENT.LastHiddenZone_CanWander = true
 ENT.AlreadyDoneLeapAttackJump = false
+ENT.CurIdleStandMove = false
 ENT.FollowPlayer_Entity = NULL
 ENT.VJ_TheController = NULL
 ENT.VJ_TheControllerEntity = NULL
@@ -1494,7 +1495,6 @@ function ENT:VJ_TASK_IDLE_STAND()
 		pickedAnim = ACT_IDLE
 		//sameAnimFound = true
 	end
-	self:AutoMovement(self:GetAnimTimeInterval())
 	
 	-- If sequence and it has no activity, then don't continue!
 	//pickedAnim = VJ_SequenceToActivity(self,pickedAnim)
@@ -1502,6 +1502,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 	
 	if (!sameAnimFound /*or (sameAnimFound && numOfAnims == 1 && CurTime() > self.NextIdleStandTime)*/) or (CurTime() > self.NextIdleStandTime) then
 		self.CurrentAnim_IdleStand = pickedAnim
+		self.CurIdleStandMove = false
 		-- Old system
 		/*if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
 			if self:BusyWithActivity() == true then return end // self:GetSequence() == 0
@@ -1518,13 +1519,16 @@ function ENT:VJ_TASK_IDLE_STAND()
 		self:ResetIdealActivity(pickedAnim)
 		timer.Simple(0.01, function() -- So we can make sure the engine has enough time to set the animation
 			if IsValid(self) && self.NextIdleStandTime != 0 then
-				local curseq = self:GetSequence()
-				if VJ_SequenceToActivity(self,self:GetSequenceName(curseq)) == pickedAnim then -- Nayir yete himagva animation e nooynene
-					self.NextIdleStandTime = CurTime() + ((self:SequenceDuration(curseq) - 0.01) / self:GetPlaybackRate()) -- Yete nooynene ooremen jamanage tir animation-en yergarootyan chap!
+				local getSeq = self:GetSequence()
+				self.CurIdleStandMove = self:GetSequenceMoveDist(getSeq) > 0
+				if VJ_SequenceToActivity(self,self:GetSequenceName(getSeq)) == pickedAnim then -- Nayir yete himagva animation e nooynene
+					self.NextIdleStandTime = CurTime() + ((self:SequenceDuration(getSeq) - 0.01) / self:GetPlaybackRate()) -- Yete nooynene ooremen jamanage tir animation-en yergarootyan chap!
 				end
 			end
 		end)
 		self.NextIdleStandTime = CurTime() + 0.15 -- This is temp, timer above overrides it
+	elseif self.CurIdleStandMove && !self:IsSequenceFinished() then
+		self:AutoMovement(self:GetAnimTimeInterval())
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
