@@ -317,6 +317,7 @@ function ENT:FaceCertainPosition(pos, time)
 	local setangs = Angle(0, ((pos or defPos) - self:GetPos()):Angle().y, 0)
 	self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
 	self:SetIdealYawAndUpdate(setangs.y, speed)
+	//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
 	self.IsDoingFacePosition = setangs
 	timer.Create("timer_face_position"..self:EntIndex(), time or 0, 1, function() self.IsDoingFacePosition = false end)
 	return setangs
@@ -339,11 +340,13 @@ function ENT:FaceCertainEntity(ent, onlyEnemy, faceEnemyTime)
 		local setangs = self:GetFaceAngle((ent:GetPos() - self:GetPos()):Angle())
 		self:SetIdealYawAndUpdate(setangs.y)
 		self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
+		//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
 		return setangs //SetLocalAngles
 	else
 		local setangs = self:GetFaceAngle((ent:GetPos() - self:GetPos()):Angle())
 		self:SetIdealYawAndUpdate(setangs.y)
 		self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
+		//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
 		//self:SetIdealYawAndUpdate(setangs.y)
 		return setangs
 	end

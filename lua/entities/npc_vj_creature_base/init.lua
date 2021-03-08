@@ -1679,7 +1679,6 @@ function ENT:Think()
 	if GetConVar("ai_disabled"):GetInt() == 0 && self:GetState() != VJ_STATE_FREEZE && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
 		if self.VJDEBUG_SNPC_ENABLED == true then
 			if GetConVar("vj_npc_printcurenemy"):GetInt() == 1 then print(self:GetClass().."'s Enemy: ",self:GetEnemy()," Alerted? ",self.Alerted) end
-			if GetConVar("vj_npc_printalerted"):GetInt() == 1 then if self.Alerted == true then print(self:GetClass().." Is Alerted!") else print(self:GetClass().." Is Not Alerted!") end end
 			if GetConVar("vj_npc_printtakingcover"):GetInt() == 1 then if CurTime() > self.TakingCoverT == true then print(self:GetClass().." Is Not Taking Cover") else print(self:GetClass().." Is Taking Cover ("..self.TakingCoverT-CurTime()..")") end end
 			if GetConVar("vj_npc_printlastseenenemy"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, self.LastSeenEnemyTime.." ("..self:GetName()..")") end
 		end
@@ -1827,11 +1826,11 @@ function ENT:Think()
 
 			if self.EnemyReset == false then
 				-- Reset enemy if it doesn't exist or it's dead
-				if (!IsValid(self:GetEnemy())) or (IsValid(self:GetEnemy()) && self:GetEnemy():Health() <= 0) then
+				ene = self:GetEnemy()
+				if (!IsValid(ene)) or (IsValid(ene) && ene:Health() <= 0) then
 					self.EnemyReset = true
 					self:ResetEnemy(true)
 				end
-
 				-- Reset enemy if it has been unseen for a while
 				if self.LastSeenEnemyTime > self.LastSeenEnemyTimeUntilReset && (!self.IsVJBaseSNPC_Tank) then
 					self:PlaySoundSystem("LostEnemy")

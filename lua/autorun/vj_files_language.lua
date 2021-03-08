@@ -232,7 +232,7 @@ if CLIENT then
 		
 		add("vjbase.menu.snpc.sdsettings", "Sound Settings")
 		add("vjbase.menu.snpc.sdsettings.toggleallsounds", "Disable All Sounds")
-		add("vjbase.menu.snpc.sdsettings.togglesoundtrack", "Disable Sound Tracks")
+		add("vjbase.menu.snpc.sdsettings.togglesoundtrack", "Disable Sound Tracks / Music")
 		add("vjbase.menu.snpc.sdsettings.toggleidle", "Disable Idle Sounds")
 		add("vjbase.menu.snpc.sdsettings.togglebreathing", "Disable Breathing Sounds")
 		add("vjbase.menu.snpc.sdsettings.togglefootsteps", "Disable Footstep Sounds")
