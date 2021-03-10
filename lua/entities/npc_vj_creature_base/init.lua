@@ -2687,7 +2687,7 @@ function ENT:OnTakeDamage(dmginfo)
 
 	if self:Health() <= 0 && self.Dead == false then
 		self:RemoveEFlags(EFL_NO_DISSOLVE)
-		if (dmginfo:GetDamageType() == DMG_DISSOLVE) or (IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball") then
+		if (dmginfo:IsDamageType(DMG_DISSOLVE)) or (IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball") then
 			local dissolve = DamageInfo()
 			dissolve:SetDamage(self:Health())
 			dissolve:SetAttacker(dmgAttacker)
@@ -2779,7 +2779,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	self:AA_StopMoving()
 	if self.HasDeathAnimation == true && !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) then
 		if IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball" then DoKilled() return end
-		if GetConVar("vj_npc_nodeathanimation"):GetInt() == 0 && GetConVar("ai_disabled"):GetInt() == 0 && dmginfo:GetDamageType() != DMG_DISSOLVE && math.random(1, self.DeathAnimationChance) == 1 then
+		if GetConVar("vj_npc_nodeathanimation"):GetInt() == 0 && GetConVar("ai_disabled"):GetInt() == 0 && !dmginfo:IsDamageType(DMG_DISSOLVE) && math.random(1, self.DeathAnimationChance) == 1 then
 			self:RemoveAllGestures()
 			self:CustomDeathAnimationCode(dmginfo, hitgroup)
 			local pickanim = VJ_PICK(self.AnimTbl_Death)
@@ -2889,7 +2889,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		//gamemode.Call("CreateEntityRagdoll",self,self.Corpse)
 
 		-- Dissolve --
-		if (dmginfo:GetDamageType() == DMG_DISSOLVE) or (IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() == "prop_combine_ball") then
+		if (dmginfo:IsDamageType(DMG_DISSOLVE)) or (IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() == "prop_combine_ball") then
 			self.Corpse:SetName("vj_dissolve_corpse")
 			local dissolver = ents.Create("env_entity_dissolver")
 			dissolver:SetPos(self.Corpse:GetPos())

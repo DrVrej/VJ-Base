@@ -957,6 +957,7 @@ ENT.DefaultGibOnDeathDamageTypes = {[DMG_ALWAYSGIB]=true,[DMG_ENERGYBEAM]=true,[
 
 -- Localized static values
 local defPos = Vector(0, 0, 0)
+local defAng = Angle(0, 0, 0)
 
 local CurTime = CurTime
 local IsValid = IsValid
@@ -3240,7 +3241,7 @@ function ENT:OnTakeDamage(dmginfo)
 	
 	if self:Health() <= 0 && self.Dead == false then
 		self:RemoveEFlags(EFL_NO_DISSOLVE)
-		if (dmginfo:GetDamageType() == DMG_DISSOLVE) or (IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball") then
+		if (dmginfo:IsDamageType(DMG_DISSOLVE)) or (IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball") then
 			local dissolve = DamageInfo()
 			dissolve:SetDamage(self:Health())
 			dissolve:SetAttacker(dmgAttacker)
@@ -3328,7 +3329,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	//self:AA_StopMoving()
 	if self.HasDeathAnimation == true && !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) then
 		if IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball" then DoKilled() return end
-		if GetConVar("vj_npc_nodeathanimation"):GetInt() == 0 && GetConVar("ai_disabled"):GetInt() == 0 && dmginfo:GetDamageType() != DMG_DISSOLVE && math.random(1, self.DeathAnimationChance) == 1 then
+		if GetConVar("vj_npc_nodeathanimation"):GetInt() == 0 && GetConVar("ai_disabled"):GetInt() == 0 && !dmginfo:IsDamageType(DMG_DISSOLVE) && math.random(1, self.DeathAnimationChance) == 1 then
 			self:RemoveAllGestures()
 			self:CustomDeathAnimationCode(dmginfo, hitgroup)
 			local pickanim = VJ_PICK(self.AnimTbl_Death)
@@ -3439,7 +3440,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		//gamemode.Call("CreateEntityRagdoll",self,self.Corpse)
 
 		-- Dissolve --
-		if (dmginfo:GetDamageType() == DMG_DISSOLVE) or (IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() == "prop_combine_ball") then
+		if (dmginfo:IsDamageType(DMG_DISSOLVE)) or (IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() == "prop_combine_ball") then
 			self.Corpse:SetName("vj_dissolve_corpse")
 			local dissolver = ents.Create("env_entity_dissolver")
 			dissolver:SetPos(self.Corpse:GetPos())
@@ -3501,38 +3502,42 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local wepDropTbl1 = {weapon_ar2=true, weapon_vj_ar2=true, weapon_vj_blaster=true, weapon_pistol=true, weapon_vj_9mmpistol=true, weapon_vj_357=true, weapon_shotgun=true, weapon_vj_spas12=true, weapon_annabelle=true, weapon_rpg = true}
+local wepDropTbl2 = {weapon_crowbar=true, weapon_stunstick=true}
+local wepAng180y = Angle(0, 180, 0)
+local wepAng90x = Angle(90, 0, 0)
+--
 function ENT:DropWeaponOnDeathCode(dmginfo, hitgroup)
-	if self.DropWeaponOnDeath != true or !IsValid(self:GetActiveWeapon()) /*or dmginfo:GetDamageType() == DMG_DISSOLVE*/ then return end
+	if self.DropWeaponOnDeath != true or !IsValid(self:GetActiveWeapon()) /*or dmginfo:IsDamageType(DMG_DISSOLVE)*/ then return end
 	
 	self:CustomOnDropWeapon(dmginfo, hitgroup)
 	
 	self.CurrentWeaponEntity = self:GetActiveWeapon()
-	local gunang = Angle(0, 0, 0)
-	local tbl1 = {weapon_ar2=true, weapon_vj_ar2=true, weapon_vj_blaster=true, weapon_pistol=true, weapon_vj_9mmpistol=true, weapon_vj_357=true, weapon_shotgun=true, weapon_vj_spas12=true, weapon_annabelle=true, weapon_rpg = true}
-	local tbl2 = {weapon_crowbar=true, weapon_stunstick=true}
-	if tbl1[self.CurrentWeaponEntity:GetClass()] == true then
-		gunang = Angle(0, 180, 0)
-	elseif tbl2[self.CurrentWeaponEntity:GetClass()] == true then
-		gunang = Angle(90, 0, 0)
+	local gunang = defAng
+	if wepDropTbl1[self.CurrentWeaponEntity:GetClass()] == true then
+		gunang = wepAng180y
+	elseif wepDropTbl2[self.CurrentWeaponEntity:GetClass()] == true then
+		gunang = wepAng90x
 	end
 
-	local nohandattach = true
+	local getAttach = false
 	if self.CurrentWeaponEntity.WorldModel_UseCustomPosition != true then
 		for _,v in ipairs(self:GetAttachments()) do
 			if v.name == self.DropWeaponOnDeathAttachment then
-				nohandattach = false
+				getAttach = self:GetAttachment(self:LookupAttachment(self.DropWeaponOnDeathAttachment))
+				break
 			end
 		end
 	end
 
 	self.TheDroppedWeapon = ents.Create(self.CurrentWeaponEntity:GetClass())
-	if nohandattach == false then
-		self.TheDroppedWeapon:SetPos(self:GetAttachment(self:LookupAttachment(self.DropWeaponOnDeathAttachment)).Pos)
+	if getAttach != false then
+		self.TheDroppedWeapon:SetPos(getAttach.Pos)
 	else
 		self.TheDroppedWeapon:SetPos(self.CurrentWeaponEntity:GetPos())
 	end
-	if nohandattach == false then
-		self.TheDroppedWeapon:SetAngles(self:GetAttachment(self:LookupAttachment(self.DropWeaponOnDeathAttachment)).Ang + gunang)
+	if getAttach != false then
+		self.TheDroppedWeapon:SetAngles(getAttach.Ang + gunang)
 	else
 		self.TheDroppedWeapon:SetAngles(self.CurrentWeaponEntity:GetAngles() + gunang)
 	end
@@ -3540,11 +3545,14 @@ function ENT:DropWeaponOnDeathCode(dmginfo, hitgroup)
 	self.TheDroppedWeapon:Activate()
 	local phys = self.TheDroppedWeapon:GetPhysicsObject()
 	if ((IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() == "prop_combine_ball") or (!IsValid(dmginfo:GetInflictor()))) && IsValid(phys) then
+		phys:EnableGravity(false)
+		phys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
+	else
 		phys:SetMass(60)
 		phys:ApplyForceCenter(dmginfo:GetDamageForce())
 	end
 	
-	self:CustomOnDropWeapon_AfterWeaponSpawned(dmginfo, hitgroup,self.TheDroppedWeapon)
+	self:CustomOnDropWeapon_AfterWeaponSpawned(dmginfo, hitgroup, self.TheDroppedWeapon)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlaySoundSystem(sdSet, customSd, sdType)
