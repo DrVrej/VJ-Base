@@ -3326,7 +3326,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	self:RunGibOnDeathCode(dmginfo, hitgroup)
 	self:PlaySoundSystem("Death")
 	//self:AA_StopMoving()
-	if self.HasDeathAnimation == true then
+	if self.HasDeathAnimation == true && !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) then
 		if IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball" then DoKilled() return end
 		if GetConVar("vj_npc_nodeathanimation"):GetInt() == 0 && GetConVar("ai_disabled"):GetInt() == 0 && dmginfo:GetDamageType() != DMG_DISSOLVE && math.random(1, self.DeathAnimationChance) == 1 then
 			self:RemoveAllGestures()
@@ -3347,13 +3347,13 @@ end
 function ENT:OnKilled(dmginfo, hitgroup)
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printdied"):GetInt() == 1 then print(self:GetClass().." Died!") end
 	self:CustomOnKilled(dmginfo, hitgroup)
-	self:DropWeaponOnDeathCode(dmginfo, hitgroup)
+	if !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) then self:DropWeaponOnDeathCode(dmginfo, hitgroup) end
 	self:RunItemDropsOnDeathCode(dmginfo, hitgroup) -- Item drops on death
 	if self.HasDeathNotice == true then PrintMessage(self.DeathNoticePosition, self.DeathNoticeWriting) end -- Death notice on death
 	self:ClearEnemyMemory()
 	self:ClearSchedule()
 	//self:SetNPCState(NPC_STATE_DEAD)
-	self:CreateDeathCorpse(dmginfo, hitgroup)
+	if !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) then self:CreateDeathCorpse(dmginfo, hitgroup) end
 	self:Remove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

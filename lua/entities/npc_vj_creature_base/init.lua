@@ -2777,7 +2777,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	self:RunGibOnDeathCode(dmginfo, hitgroup)
 	self:PlaySoundSystem("Death")
 	self:AA_StopMoving()
-	if self.HasDeathAnimation == true then
+	if self.HasDeathAnimation == true && !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) then
 		if IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball" then DoKilled() return end
 		if GetConVar("vj_npc_nodeathanimation"):GetInt() == 0 && GetConVar("ai_disabled"):GetInt() == 0 && dmginfo:GetDamageType() != DMG_DISSOLVE && math.random(1, self.DeathAnimationChance) == 1 then
 			self:RemoveAllGestures()
@@ -2803,7 +2803,7 @@ function ENT:OnKilled(dmginfo, hitgroup)
 	self:ClearEnemyMemory()
 	self:ClearSchedule()
 	//self:SetNPCState(NPC_STATE_DEAD)
-	self:CreateDeathCorpse(dmginfo, hitgroup)
+	if !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) then self:CreateDeathCorpse(dmginfo, hitgroup) end
 	self:Remove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
