@@ -78,8 +78,8 @@ ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE -- The behavior of the SNPC
 	-- VJ_BEHAVIOR_PASSIVE = Doesn't attack, but can attacked by others || VJ_BEHAVIOR_PASSIVE_NATURE = Doesn't attack and is allied with everyone
 ENT.IsGuard = false -- If set to false, it will attempt to stick to its current position at all times
 ENT.MoveOutOfFriendlyPlayersWay = true -- Should the SNPC move out of the way when a friendly player comes close to it?
-ENT.BecomeEnemyToPlayer = false -- Should the friendly SNPC become enemy towards the player if it's damaged by a player?
-ENT.BecomeEnemyToPlayerLevel = 2 -- How many times does the player have to hit the SNPC for it to become enemy?
+ENT.BecomeEnemyToPlayer = false -- Should the friendly SNPC become enemy towards the player if it's damaged by it or it witnesses another ally killed by it
+ENT.BecomeEnemyToPlayerLevel = 2 -- Any time the player does something bad, the NPC's anger level raises by 1, if it surpasses this, it will become enemy!
 	-- ====== Old Variables (Can still be used, but it's recommended not to use them) ====== --
 ENT.PlayerFriendly = false -- Makes the SNPC friendly to the player and HL2 Resistance
 	-- ====== Passive Behavior Variables ====== --
@@ -2622,10 +2622,8 @@ function ENT:OnTakeDamage(dmginfo)
 			mdlBolt:Activate()
 		end*/
 
-		if self.BecomeEnemyToPlayer == true && self.VJ_IsBeingControlled == false && dmgAttacker:IsPlayer() && GetConVar("ai_disabled"):GetInt() == 0 && GetConVar("ai_ignoreplayers"):GetInt() == 0 && (self:Disposition(dmgAttacker) == D_LI or self:Disposition(dmgAttacker) == D_NU) then
-			if self.AngerLevelTowardsPlayer <= self.BecomeEnemyToPlayerLevel then
-				self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1
-			end
+		if self.BecomeEnemyToPlayer == true && self.VJ_IsBeingControlled == false && dmgAttacker:IsPlayer() && GetConVar("ai_disabled"):GetInt() == 0 && GetConVar("ai_ignoreplayers"):GetInt() == 0 && self:Disposition(dmgAttacker) == D_LI then
+			self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1
 			if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
 				if self:Disposition(dmgAttacker) != D_HT then
 					self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo, hitgroup)
@@ -2704,27 +2702,46 @@ local vecZ500 = Vector(0, 0, 500)
 function ENT:PriorToKilled(dmginfo, hitgroup)
 	self:CustomOnInitialKilled(dmginfo, hitgroup)
 	if self.Medic_IsHealingAlly == true then self:DoMedicCode_Reset() end
+	local dmgInflictor = dmginfo:GetInflictor()
+	local dmgAttacker = dmginfo:GetAttacker()
 	
-	local checkdist = 800 -- Nayir vormeg tive amenan medzen e, adiga ere vor poon tive ela
-	if self.BringFriendsOnDeathDistance > 800 then checkdist = self.BringFriendsOnDeathDistance end
-	if self.AlertFriendsOnDeathDistance > 800 then checkdist = self.AlertFriendsOnDeathDistance end
-	local allies = self:Allies_Check(checkdist)
+	local allies = self:Allies_Check(math.max(800, self.BringFriendsOnDeathDistance, self.AlertFriendsOnDeathDistance))
 	if allies != nil then
-		local noalert = true -- Don't run the AlertFriendsOnDeath if we have BringFriendsOnDeath enabled!
+		local noAlert = true -- Don't run the AlertFriendsOnDeath if we have BringFriendsOnDeath enabled!
 		if self.BringFriendsOnDeath == true then
-			self:Allies_Bring("Random",self.BringFriendsOnDeathDistance,allies,self.BringFriendsOnDeathLimit,true)
-			noalert = false
+			self:Allies_Bring("Random", self.BringFriendsOnDeathDistance, allies, self.BringFriendsOnDeathLimit, true)
+			noAlert = false
 		end
-		local it = 0
+		local doBecomeEnemyToPlayer = (self.BecomeEnemyToPlayer == true && dmgAttacker:IsPlayer() && GetConVar("ai_disabled"):GetInt() == 0 && GetConVar("ai_ignoreplayers"):GetInt() == 0) or false
+		local it = 0 -- Number of allies that have been alerted
 		for _,v in pairs(allies) do
 			v:CustomOnAllyDeath(self)
 			v:PlaySoundSystem("AllyDeath")
 			
-			if self.AlertFriendsOnDeath == true && noalert == true && !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath == true && it != self.AlertFriendsOnDeathLimit && self:GetPos():Distance(v:GetPos()) < self.AlertFriendsOnDeathDistance then
+			-- AlertFriendsOnDeath
+			if noAlert == true && self.AlertFriendsOnDeath == true && !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath == true && it != self.AlertFriendsOnDeathLimit && self:GetPos():Distance(v:GetPos()) < self.AlertFriendsOnDeathDistance then
 				it = it + 1
 				v:FaceCertainPosition(self:GetPos(), 1)
 				v:VJ_ACT_PLAYACTIVITY(VJ_PICK(v.AnimTbl_AlertFriendsOnDeath))
-				v.NextIdleTime = CurTime() + math.Rand(5,8)
+				v.NextIdleTime = CurTime() + math.Rand(5, 8)
+			end
+			
+			-- BecomeEnemyToPlayer
+			if doBecomeEnemyToPlayer && v.BecomeEnemyToPlayer == true && v:Disposition(dmgAttacker) == D_LI then
+				v.AngerLevelTowardsPlayer = v.AngerLevelTowardsPlayer + 1
+				if v.AngerLevelTowardsPlayer > v.BecomeEnemyToPlayerLevel then
+					if v:Disposition(dmgAttacker) != D_HT then
+						v:CustomWhenBecomingEnemyTowardsPlayer(dmginfo, hitgroup)
+						if v.FollowingPlayer == true && v.FollowPlayer_Entity == dmgAttacker then v:FollowPlayerReset() end
+						v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy+1] = dmgAttacker
+						v:AddEntityRelationship(dmgAttacker,D_HT,99)
+						if v.AllowPrintingInChat == true then
+							dmgAttacker:PrintMessage(HUD_PRINTTALK, v:GetName().." no longer likes you.")
+						end
+						v:PlaySoundSystem("BecomeEnemyToPlayer")
+					end
+					v.Alerted = true
+				end
 			end
 		end
 	end
@@ -2763,8 +2780,6 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	self.HasRangeAttack = false
 	self.HasLeapAttack = false
 	self:StopAllCommonSounds()
-	local dmgInflictor = dmginfo:GetInflictor()
-	local dmgAttacker = dmginfo:GetAttacker()
 	if IsValid(dmgAttacker) then
 		if dmgAttacker:GetClass() == "npc_barnacle" then self.HasDeathRagdoll = false end -- Don't make a corpse if it's killed by a barnacle!
 		if GetConVar("vj_npc_addfrags"):GetInt() == 1 && dmgAttacker:IsPlayer() then dmgAttacker:AddFrags(1) end
@@ -2801,7 +2816,7 @@ function ENT:OnKilled(dmginfo, hitgroup)
 	self:RunItemDropsOnDeathCode(dmginfo, hitgroup) -- Item drops on death
 	if self.HasDeathNotice == true then PrintMessage(self.DeathNoticePosition, self.DeathNoticeWriting) end -- Death notice on death
 	self:ClearEnemyMemory()
-	self:ClearSchedule()
+	//self:ClearSchedule()
 	//self:SetNPCState(NPC_STATE_DEAD)
 	if !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) then self:CreateDeathCorpse(dmginfo, hitgroup) end
 	self:Remove()
