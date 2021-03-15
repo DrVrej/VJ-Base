@@ -151,8 +151,8 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 	end
 	extraOptions = extraOptions or {}
 		local vel = extraOptions.Vel or Vector(math.Rand(-100, 100), math.Rand(-100, 100), math.Rand(150, 250))
-		if self.LatestDmgInfo != nil then
-			local dmgForce = self.LatestDmgInfo:GetDamageForce() / 70
+		if self.SavedDmgInfo then
+			local dmgForce = self.SavedDmgInfo.force / 70
 			if extraOptions.Vel_ApplyDmgForce != false && extraOptions.Vel != "UseDamageForce" then -- Use both damage force AND given velocity
 				vel = vel + dmgForce
 			elseif extraOptions.Vel == "UseDamageForce" then -- Use damage force
@@ -1356,13 +1356,13 @@ function ENT:SpawnBloodParticles(dmginfo, hitgroup)
 	local pos = dmginfo:GetDamagePosition()
 	if pos == defPos then pos = self:GetPos() + self:OBBCenter() end
 	
-	local spawnparticle = ents.Create("info_particle_system")
-	spawnparticle:SetKeyValue("effect_name", name)
-	spawnparticle:SetPos(pos)
-	spawnparticle:Spawn()
-	spawnparticle:Activate()
-	spawnparticle:Fire("Start")
-	spawnparticle:Fire("Kill", "", 0.1)
+	local particle = ents.Create("info_particle_system")
+	particle:SetKeyValue("effect_name", name)
+	particle:SetPos(pos)
+	particle:Spawn()
+	particle:Activate()
+	particle:Fire("Start")
+	particle:Fire("Kill", "", 0.1)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodDecal(dmginfo, hitgroup)
@@ -1395,8 +1395,8 @@ local vecZ1 = Vector(0, 0, 1)
 function ENT:SpawnBloodPool(dmginfo, hitgroup)
 	if !IsValid(self.Corpse) then return end
 	local corpseEnt = self.Corpse
-	local GetBloodPool = VJ_PICK(self.CustomBlood_Pool)
-	if GetBloodPool == false then return end
+	local getBloodPool = VJ_PICK(self.CustomBlood_Pool)
+	if getBloodPool == false then return end
 	timer.Simple(2.2, function()
 		if IsValid(corpseEnt) then
 			local tr = util.TraceLine({
@@ -1407,7 +1407,7 @@ function ENT:SpawnBloodPool(dmginfo, hitgroup)
 			})
 			-- (X,Y,Z) | (Ver, Var, Goghme)
 			if tr.HitWorld && (tr.HitNormal == vecZ1) then // (tr.Fraction <= 0.405)
-				ParticleEffect(GetBloodPool, tr.HitPos, defAng, nil)
+				ParticleEffect(getBloodPool, tr.HitPos, defAng, nil)
 			end
 		end
 	end)
@@ -1418,21 +1418,21 @@ function ENT:IdleSoundCode(CustomTbl,Type)
 	if (self.NextIdleSoundT_RegularChange < CurTime()) && (CurTime() > self.NextIdleSoundT) then
 		Type = Type or VJ_CreateSound
 		
-		local hasenemy = false -- Ayo yete teshnami ouni
+		local hasEnemy = false -- Ayo yete teshnami ouni
 		if IsValid(self:GetEnemy()) then
-			hasenemy = true
+			hasEnemy = true
 			-- Yete CombatIdle tsayn chouni YEV gerna barz tsayn hanel, ere vor barz tsayn han e
 			if VJ_PICK(self.SoundTbl_CombatIdle) == false && self.IdleSounds_NoRegularIdleOnAlerted == false then
-				hasenemy = false
+				hasEnemy = false
 			end
 		end
 		
-		local ctbl = VJ_PICK(CustomTbl)
+		local cTbl = VJ_PICK(CustomTbl)
 		local setT = true
-		if hasenemy == true then
+		if hasEnemy == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_CombatIdle)
-			if (math.random(1,self.CombatIdleSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1,self.CombatIdleSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self.CurrentIdleSound = Type(self,sdtbl,self.CombatIdleSoundLevel,self:VJ_DecideSoundPitch(self.CombatIdleSoundPitch.a,self.CombatIdleSoundPitch.b))
 			end
 		else
@@ -1440,8 +1440,8 @@ function ENT:IdleSoundCode(CustomTbl,Type)
 			local sdtbl2 = VJ_PICK(self.SoundTbl_IdleDialogue)
 			local sdrand = math.random(1,self.IdleSoundChance)
 			local function RegularIdle()
-				if (sdrand == 1 && sdtbl != false) or (ctbl != false) then
-					if ctbl != false then sdtbl = ctbl end
+				if (sdrand == 1 && sdtbl != false) or (cTbl != false) then
+					if cTbl != false then sdtbl = cTbl end
 					self.CurrentIdleSound = Type(self, sdtbl, self.IdleSoundLevel, self:VJ_DecideSoundPitch(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
 				end
 			end
@@ -1521,10 +1521,10 @@ end
 function ENT:IdleDialogueAnswerSoundCode(CustomTbl, Type)
 	if self.Dead == true or self.HasSounds == false or self.HasIdleDialogueAnswerSounds == false then return 0 end
 	Type = Type or VJ_CreateSound
-	local ctbl = VJ_PICK(CustomTbl)
+	local cTbl = VJ_PICK(CustomTbl)
 	local sdtbl = VJ_PICK(self.SoundTbl_IdleDialogueAnswer)
-	if (math.random(1,self.IdleDialogueAnswerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-		if ctbl != false then sdtbl = ctbl end
+	if (math.random(1,self.IdleDialogueAnswerSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+		if cTbl != false then sdtbl = cTbl end
 		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2,3)
 		self.CurrentIdleDialogueAnswerSound = Type(self,sdtbl,self.IdleDialogueAnswerSoundLevel,self:VJ_DecideSoundPitch(self.IdleDialogueAnswerSoundPitch.a,self.IdleDialogueAnswerSoundPitch.b))
