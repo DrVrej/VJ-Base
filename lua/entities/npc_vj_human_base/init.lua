@@ -879,7 +879,6 @@ ENT.Medic_CurrentEntToHeal = NULL
 ENT.Medic_SpawnedProp = NULL
 ENT.CurrentWeaponEntity = NULL
 ENT.LastPlayedVJSound = nil
-ENT.LatestDmgInfo = nil
 ENT.NextFollowPlayerT = 0
 ENT.AngerLevelTowardsPlayer = 0
 ENT.NextBreathSoundT = 0
@@ -954,6 +953,7 @@ ENT.EntitiesToRunFrom = {obj_spore=true,obj_vj_grenade=true,obj_grenade=true,obj
 ENT.EntitiesToThrowBack = {obj_spore=true,obj_vj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,obj_cpt_grenade=true,cw_grenade_thrown=true,cw_flash_thrown=true,cw_smoke_thrown=true,ent_hl1_grenade=true}
 ENT.DefaultGibDamageTypes = {DMG_ALWAYSGIB,DMG_ENERGYBEAM,DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SONIC} -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 ENT.DefaultGibOnDeathDamageTypes = {[DMG_ALWAYSGIB]=true,[DMG_ENERGYBEAM]=true,[DMG_BLAST]=true,[DMG_VEHICLE]=true,[DMG_CRUSH]=true,[DMG_DIRECT]=true,[DMG_DISSOLVE]=true,[DMG_AIRBOAT]=true,[DMG_SLOWBURN]=true,[DMG_PHYSGUN]=true,[DMG_PLASMA]=true,[DMG_SONIC]=true}
+//ENT.SavedDmgInfo = {} -- Set later
 
 -- Localized static values
 local defPos = Vector(0, 0, 0)
@@ -1979,14 +1979,14 @@ function ENT:Think()
 	
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
 	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
-	if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) /*&& CurSched.IsMovingTask == true*/ then self:DropToFloor() end
+	if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) /*&& curSched.IsMovingTask == true*/ then self:DropToFloor() end
 
-	local CurSched = self.CurrentSchedule
-	if CurSched != nil then
+	local curSched = self.CurrentSchedule
+	if curSched != nil then
 		if self:IsMoving() then
-			if CurSched.MoveType == 0 && !VJ_HasValue(self.AnimTbl_Walk,self:GetMovementActivity()) then
+			if curSched.MoveType == 0 && !VJ_HasValue(self.AnimTbl_Walk,self:GetMovementActivity()) then
 				self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk))
-			elseif CurSched.MoveType == 1 && !VJ_HasValue(self.AnimTbl_Run,self:GetMovementActivity()) then
+			elseif curSched.MoveType == 1 && !VJ_HasValue(self.AnimTbl_Run,self:GetMovementActivity()) then
 				self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 			end
 		end
@@ -1995,17 +1995,17 @@ function ENT:Think()
 		//if self.CanOpenDoors && IsValid(blockingEnt) && (blockingEnt:GetClass() == "func_door" or blockingEnt:GetClass() == "func_door_rotating") && (blockingEnt:HasSpawnFlags(256) or blockingEnt:HasSpawnFlags(1024)) && !blockingEnt:HasSpawnFlags(512) then
 			//blockingEnt:Fire("Open")
 		//end
-		if (CurSched.StopScheduleIfNotMoving == true or CurSched.StopScheduleIfNotMoving_Any == true) && (!self:IsMoving() or (IsValid(blockingEnt) && (blockingEnt:IsNPC() or CurSched.StopScheduleIfNotMoving_Any == true))) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
-			self:ScheduleFinished(CurSched)
+		if (curSched.StopScheduleIfNotMoving == true or curSched.StopScheduleIfNotMoving_Any == true) && (!self:IsMoving() or (IsValid(blockingEnt) && (blockingEnt:IsNPC() or curSched.StopScheduleIfNotMoving_Any == true))) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
+			self:ScheduleFinished(curSched)
 			//self:SetCondition(35)
 			//self:StopMoving()
 		end
 		-- No longer needed, self:OnMovementFailed() now handles it
 		/*if self:HasCondition(35) then
-			if CurSched.AlreadyRanCode_OnFail == false && self:DoRunCode_OnFail(CurSched) == true then
+			if curSched.AlreadyRanCode_OnFail == false && self:DoRunCode_OnFail(curSched) == true then
 				self:ClearCondition(35)
 			end
-			if CurSched.ResetOnFail == true then
+			if curSched.ResetOnFail == true then
 				self:StopMoving()
 				//self:SelectSchedule()
 				self:ClearCondition(35)
@@ -3095,7 +3095,20 @@ function ENT:OnTakeDamage(dmginfo)
 	
 	self:CustomOnTakeDamage_BeforeDamage(dmginfo, hitgroup)
 	if dmginfo:GetDamage() <= 0 then return 0 end -- Only take damage if it's above 0!
-	self.LatestDmgInfo = dmginfo
+	-- Why? Because GMod resets/randomizes dmginfo after a tick...
+	self.SavedDmgInfo = {
+		dmginfo = dmginfo, -- The actual CTakeDamageInfo object | WARNING: Can be corrupted after a tick, recommended not to use this!
+		attacker = dmginfo:GetAttacker(),
+		inflictor = dmginfo:GetInflictor(),
+		amount = dmginfo:GetDamage(),
+		pos = dmginfo:GetDamagePosition(),
+		type = dmginfo:GetDamageType(),
+		force = dmginfo:GetDamageForce(),
+		ammoType = dmginfo:GetAmmoType(),
+		hitgroup = hitgroup,
+		isBullet = dmginfo:IsBulletDamage(),
+		isExp = dmginfo:IsExplosionDamage(),
+	}
 	self:SetHealth(self:Health() - dmginfo:GetDamage())
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printondamage"):GetInt() == 1 then print(self:GetClass().." Got Damaged! | Amount = "..dmginfo:GetDamage()) end
 	if self.HasHealthRegeneration == true && self.HealthRegenerationResetOnDmg == true then
@@ -3299,13 +3312,17 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 			end
 		end
 	end
-
+	
 	local function DoKilled()
 		if IsValid(self) then
 			if self.WaitBeforeDeathTime == 0 then
 				self:OnKilled(dmginfo, hitgroup)
 			else
-				timer.Simple(self.WaitBeforeDeathTime,function() if IsValid(self) then self:OnKilled(dmginfo, hitgroup) end end)
+				timer.Simple(self.WaitBeforeDeathTime, function()
+					if IsValid(self) then
+						self:OnKilled(dmginfo, hitgroup)
+					end
+				end)
 			end
 		end
 	end
@@ -3363,17 +3380,35 @@ end
 function ENT:OnKilled(dmginfo, hitgroup)
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printdied"):GetInt() == 1 then print(self:GetClass().." Died!") end
 	self:CustomOnKilled(dmginfo, hitgroup)
-	if !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) then self:DropWeaponOnDeathCode(dmginfo, hitgroup) end
+	if bit.band(self.SavedDmgInfo.type, DMG_REMOVENORAGDOLL) == 0 then self:DropWeaponOnDeathCode(dmginfo, hitgroup) end
 	self:RunItemDropsOnDeathCode(dmginfo, hitgroup) -- Item drops on death
 	if self.HasDeathNotice == true then PrintMessage(self.DeathNoticePosition, self.DeathNoticeWriting) end -- Death notice on death
 	self:ClearEnemyMemory()
 	//self:ClearSchedule()
 	//self:SetNPCState(NPC_STATE_DEAD)
-	if !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) then self:CreateDeathCorpse(dmginfo, hitgroup) end
+	if bit.band(self.SavedDmgInfo.type, DMG_REMOVENORAGDOLL) == 0 then self:CreateDeathCorpse(dmginfo, hitgroup) end
 	self:Remove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CreateDeathCorpse(dmginfo, hitgroup)
+	-- In case it was not set
+		-- NOTE: dmginfo at this point can be incorrect/corrupted, but its better than leaving the self.SavedDmgInfo empty!
+	if !self.SavedDmgInfo then
+		self.SavedDmgInfo = {
+			dmginfo = dmginfo, -- The actual CTakeDamageInfo object | WARNING: Can be corrupted after a tick, recommended not to use this!
+			attacker = dmginfo:GetAttacker(),
+			inflictor = dmginfo:GetInflictor(),
+			amount = dmginfo:GetDamage(),
+			pos = dmginfo:GetDamagePosition(),
+			type = dmginfo:GetDamageType(),
+			force = dmginfo:GetDamageForce(),
+			ammoType = dmginfo:GetAmmoType(),
+			hitgroup = hitgroup,
+			isBullet = dmginfo:IsBulletDamage(),
+			isExp = dmginfo:IsExplosionDamage(),
+		}
+	end
+	
 	self:CustomOnDeath_BeforeCorpseSpawned(dmginfo, hitgroup)
 	if self.HasDeathRagdoll == true then
 		local corpseMdl = self:GetModel()
@@ -3422,7 +3457,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		if self.Bleeds == true && self.HasBloodPool == true && GetConVar("vj_npc_nobloodpool"):GetInt() == 0 then
 			self:SpawnBloodPool(dmginfo, hitgroup)
 		end
-
+		
 		-- Collision --
 		self.Corpse:SetCollisionGroup(self.DeathCorpseCollisionType)
 		if GetConVar("ai_serverragdolls"):GetInt() == 1 then
@@ -3455,7 +3490,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		//gamemode.Call("CreateEntityRagdoll",self,self.Corpse)
 
 		-- Dissolve --
-		if (dmginfo:IsDamageType(DMG_DISSOLVE)) or (IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() == "prop_combine_ball") then
+		if (bit.band(self.SavedDmgInfo.type, DMG_DISSOLVE) != 0) or (IsValid(self.SavedDmgInfo.inflictor) && self.SavedDmgInfo.inflictor:GetClass() == "prop_combine_ball") then
 			self.Corpse:SetName("vj_dissolve_corpse")
 			local dissolver = ents.Create("env_entity_dissolver")
 			dissolver:SetPos(self.Corpse:GetPos())
@@ -3474,7 +3509,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		end
 
 		-- Bone and Angle --
-		local dmgforce = dmginfo:GetDamageForce()
+		local dmgforce = self.SavedDmgInfo.force
 		for bonelim = 0, self.Corpse:GetPhysicsObjectCount() - 1 do -- 128 = Bone Limit
 			local childphys = self.Corpse:GetPhysicsObjectNum(bonelim)
 			if IsValid(childphys) then
@@ -3497,7 +3532,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		if IsValid(self.TheDroppedWeapon) then self.Corpse.ExtraCorpsesToRemove[#self.Corpse.ExtraCorpsesToRemove+1] = self.TheDroppedWeapon end
 		if self.FadeCorpse == true then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",self.FadeCorpseTime) end
 		if GetConVar("vj_npc_corpsefade"):GetInt() == 1 then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",GetConVar("vj_npc_corpsefadetime"):GetInt()) end
-		self:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup,self.Corpse)
+		self:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, self.Corpse)
 		self.Corpse:CallOnRemove("vj_"..self.Corpse:EntIndex(),function(ent,exttbl)
 			for _,v in ipairs(exttbl) do
 				if IsValid(v) then
@@ -3559,34 +3594,35 @@ function ENT:DropWeaponOnDeathCode(dmginfo, hitgroup)
 	self.TheDroppedWeapon:Spawn()
 	self.TheDroppedWeapon:Activate()
 	local phys = self.TheDroppedWeapon:GetPhysicsObject()
-	if ((IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor():GetClass() == "prop_combine_ball") or (!IsValid(dmginfo:GetInflictor()))) && IsValid(phys) then
-		phys:EnableGravity(false)
-		phys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
-	else
-		phys:SetMass(60)
-		phys:ApplyForceCenter(dmginfo:GetDamageForce())
+	if IsValid(phys) then
+		if (bit.band(self.SavedDmgInfo.type, DMG_DISSOLVE) != 0) or (IsValid(self.SavedDmgInfo.inflictor) && self.SavedDmgInfo.inflictor:GetClass() == "prop_combine_ball") then
+			phys:EnableGravity(false)
+			phys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
+		else
+			phys:SetMass(60)
+			phys:ApplyForceCenter(self.SavedDmgInfo.force)
+		end
 	end
-	
 	self:CustomOnDropWeapon_AfterWeaponSpawned(dmginfo, hitgroup, self.TheDroppedWeapon)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	if self.HasSounds == false or sdSet == nil then return end
 	sdType = sdType or VJ_CreateSound
-	local ctbl = VJ_PICK(customSd)
+	local cTbl = VJ_PICK(customSd)
 	
 	if sdSet == "GeneralSpeech" then -- Used to just play general speech sounds (Custom by developers)
-		if ctbl != false then
+		if cTbl != false then
 			self:StopAllCommonSpeechSounds()
-			self.NextIdleSoundT_RegularChange = CurTime() + ((((SoundDuration(ctbl) > 0) and SoundDuration(ctbl)) or 2) + 1)
-			self.CurrentGeneralSpeechSound = sdType(self, ctbl, 80, self:VJ_DecideSoundPitch(self.GeneralSoundPitch1, self.GeneralSoundPitch2))
+			self.NextIdleSoundT_RegularChange = CurTime() + ((((SoundDuration(cTbl) > 0) and SoundDuration(cTbl)) or 2) + 1)
+			self.CurrentGeneralSpeechSound = sdType(self, cTbl, 80, self:VJ_DecideSoundPitch(self.GeneralSoundPitch1, self.GeneralSoundPitch2))
 		end
 		return
 	elseif sdSet == "FollowPlayer" then
 		if self.HasFollowPlayerSounds_Follow == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_FollowPlayer)
-			if (math.random(1, self.FollowPlayerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.FollowPlayerSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 				self.CurrentFollowPlayerSound = sdType(self, sdtbl, self.FollowPlayerSoundLevel, self:VJ_DecideSoundPitch(self.FollowPlayerPitch.a, self.FollowPlayerPitch.b))
@@ -3596,8 +3632,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "UnFollowPlayer" then
 		if self.HasFollowPlayerSounds_UnFollow == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_UnFollowPlayer)
-			if (math.random(1, self.UnFollowPlayerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.UnFollowPlayerSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 				self.CurrentUnFollowPlayerSound = sdType(self, sdtbl, self.UnFollowPlayerSoundLevel, self:VJ_DecideSoundPitch(self.UnFollowPlayerPitch.a, self.UnFollowPlayerPitch.b))
@@ -3607,8 +3643,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "OnReceiveOrder" then
 		if self.HasOnReceiveOrderSounds == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_OnReceiveOrder)
-			if (math.random(1, self.OnReceiveOrderSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.OnReceiveOrderSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT = self.NextIdleSoundT + 2
 				self.NextAlertSoundT = CurTime() + 2
@@ -3619,8 +3655,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "MoveOutOfPlayersWay" then
 		if self.HasMoveOutOfPlayersWaySounds == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_MoveOutOfPlayersWay)
-			if (math.random(1, self.MoveOutOfPlayersWaySoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.MoveOutOfPlayersWaySoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 				self.CurrentMoveOutOfPlayersWaySound = sdType(self, sdtbl, self.MoveOutOfPlayersWaySoundLevel, self:VJ_DecideSoundPitch(self.MoveOutOfPlayersWaySoundPitch.a, self.MoveOutOfPlayersWaySoundPitch.b))
@@ -3630,8 +3666,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "MedicBeforeHeal" then
 		if self.HasMedicSounds_BeforeHeal == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_MedicBeforeHeal)
-			if (math.random(1, self.MedicBeforeHealSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.MedicBeforeHealSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 				self.CurrentMedicBeforeHealSound = sdType(self, sdtbl, self.BeforeHealSoundLevel, self:VJ_DecideSoundPitch(self.BeforeHealSoundPitch.a, self.BeforeHealSoundPitch.b))
@@ -3642,8 +3678,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 		if self.HasMedicSounds_AfterHeal == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_MedicAfterHeal)
 			if sdtbl == false then sdtbl = VJ_PICK(DefaultSoundTbl_MedicAfterHeal) end -- Default table
-			if (math.random(1, self.MedicAfterHealSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.MedicAfterHealSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 				self.CurrentMedicAfterHealSound = sdType(self, sdtbl, self.AfterHealSoundLevel, self:VJ_DecideSoundPitch(self.AfterHealSoundPitch.a, self.AfterHealSoundPitch.b))
@@ -3653,8 +3689,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "MedicReceiveHeal" then
 		if self.HasMedicSounds_ReceiveHeal == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_MedicReceiveHeal)
-			if (math.random(1, self.MedicReceiveHealSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.MedicReceiveHealSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 				self.CurrentMedicReceiveHealSound = sdType(self, sdtbl, self.MedicReceiveHealSoundLevel, self:VJ_DecideSoundPitch(self.MedicReceiveHealSoundPitch.a, self.MedicReceiveHealSoundPitch.b))
@@ -3664,8 +3700,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "OnPlayerSight" then
 		if self.HasOnPlayerSightSounds == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_OnPlayerSight)
-			if (math.random(1, self.OnPlayerSightSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.OnPlayerSightSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 				self.NextAlertSoundT = CurTime() + math.random(1,2)
@@ -3676,8 +3712,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "InvestigateSound" then
 		if self.HasInvestigateSounds == true && CurTime() > self.NextInvestigateSoundT then
 			local sdtbl = VJ_PICK(self.SoundTbl_Investigate)
-			if (math.random(1, self.InvestigateSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.InvestigateSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT = self.NextIdleSoundT + 2
 				self.CurrentInvestigateSound = sdType(self, sdtbl, self.InvestigateSoundLevel, self:VJ_DecideSoundPitch(self.InvestigateSoundPitch.a, self.InvestigateSoundPitch.b))
@@ -3688,8 +3724,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "LostEnemy" then
 		if self.HasLostEnemySounds == true && CurTime() > self.LostEnemySoundT then
 			local sdtbl = VJ_PICK(self.SoundTbl_LostEnemy)
-			if (math.random(1, self.LostEnemySoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.LostEnemySoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT = self.NextIdleSoundT + 2
 				self.CurrentLostEnemySound = sdType(self, sdtbl, self.LostEnemySoundLevel, self:VJ_DecideSoundPitch(self.LostEnemySoundPitch.a, self.LostEnemySoundPitch.b))
@@ -3700,8 +3736,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "Alert" then
 		if self.HasAlertSounds == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_Alert)
-			if (math.random(1, self.AlertSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.AlertSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT = CurTime() + ((((SoundDuration(sdtbl) > 0) and SoundDuration(sdtbl)) or 2) + 1)
 				self.NextSuppressingSoundT = CurTime() + 4
@@ -3713,8 +3749,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "CallForHelp" then
 		if self.HasCallForHelpSounds == true && CurTime() > self.NextCallForHelpSoundT then
 			local sdtbl = VJ_PICK(self.SoundTbl_CallForHelp)
-			if (math.random(1, self.CallForHelpSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.CallForHelpSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT = self.NextIdleSoundT + 2
 				self.NextSuppressingSoundT = CurTime() + math.random(2.5, 4)
@@ -3726,8 +3762,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "BecomeEnemyToPlayer" then
 		if self.HasBecomeEnemyToPlayerSounds == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_BecomeEnemyToPlayer)
-			if (math.random(1, self.BecomeEnemyToPlayerChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.BecomeEnemyToPlayerChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				timer.Simple(0.05,function() if IsValid(self) then VJ_STOPSOUND(self.CurrentPainSound) end end)
 				//timer.Simple(1.3,function() if IsValid(self) then VJ_STOPSOUND(self.CurrentAlertSound) end end)
@@ -3742,8 +3778,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "OnKilledEnemy" then
 		if self.HasOnKilledEnemySound == true && CurTime() > self.OnKilledEnemySoundT then
 			local sdtbl = VJ_PICK(self.SoundTbl_OnKilledEnemy)
-			if (math.random(1, self.OnKilledEnemySoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.OnKilledEnemySoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT = self.NextIdleSoundT + 2
 				self.CurrentOnKilledEnemySound = sdType(self, sdtbl, self.OnKilledEnemySoundLevel, self:VJ_DecideSoundPitch(self.OnKilledEnemySoundPitch.a, self.OnKilledEnemySoundPitch.b))
@@ -3754,8 +3790,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "AllyDeath" then
 		if self.HasOnKilledEnemySound == true && CurTime() > self.AllyDeathSoundT then
 			local sdtbl = VJ_PICK(self.SoundTbl_AllyDeath)
-			if (math.random(1, self.AllyDeathSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.AllyDeathSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT = self.NextIdleSoundT + 2
 				self.CurrentAllyDeathSound = sdType(self, sdtbl, self.AllyDeathSoundLevel, self:VJ_DecideSoundPitch(self.AllyDeathSoundPitch.a, self.AllyDeathSoundPitch.b))
@@ -3767,8 +3803,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 		if self.HasPainSounds == true && CurTime() > self.PainSoundT then
 			local sdtbl = VJ_PICK(self.SoundTbl_Pain)
 			local sdDur = 2
-			if (math.random(1, self.PainSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.PainSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				VJ_STOPSOUND(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentPainSound = sdType(self, sdtbl, self.PainSoundLevel, self:VJ_DecideSoundPitch(self.PainSoundPitch1, self.PainSoundPitch2))
@@ -3781,8 +3817,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 		if self.HasImpactSounds == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_Impact)
 			if sdtbl == false then sdtbl = VJ_PICK(DefaultSoundTbl_Impact) end -- Default table
-			if (math.random(1, self.ImpactSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.ImpactSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self.CurrentImpactSound = sdType(self, sdtbl, self.ImpactSoundLevel, self:VJ_DecideSoundPitch(self.ImpactSoundPitch.a, self.ImpactSoundPitch.b))
 			end
 		end
@@ -3790,8 +3826,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "DamageByPlayer" then
 		if self.HasDamageByPlayerSounds == true && CurTime() > self.NextDamageByPlayerSoundT then
 			local sdtbl = VJ_PICK(self.SoundTbl_DamageByPlayer)
-			if (math.random(1, self.DamageByPlayerSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.DamageByPlayerSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				timer.Simple(0.05, function() if IsValid(self) then VJ_STOPSOUND(self.CurrentPainSound) end end)
@@ -3803,8 +3839,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "Death" then
 		if self.HasDeathSounds == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_Death)
-			if (math.random(1, self.DeathSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.DeathSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self.CurrentDeathSound = sdType(self, sdtbl, self.DeathSoundLevel, self:VJ_DecideSoundPitch(self.DeathSoundPitch1, self.DeathSoundPitch2))
 			end
 		end
@@ -3813,8 +3849,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "Suppressing" then
 		if self.HasSuppressingSounds == true && CurTime() > self.NextSuppressingSoundT then
 			local sdtbl = VJ_PICK(self.SoundTbl_Suppressing)
-			if (math.random(1, self.SuppressingSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.SuppressingSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT_RegularChange = CurTime() + 2
 				self.CurrentSuppressingSound = sdType(self, sdtbl, self.SuppressingSoundLevel, self:VJ_DecideSoundPitch(self.SuppressingPitch.a, self.SuppressingPitch.b))
@@ -3825,8 +3861,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "WeaponReload" then
 		if self.HasWeaponReloadSounds == true && CurTime() > self.NextWeaponReloadSoundT then
 			local sdtbl = VJ_PICK(self.SoundTbl_WeaponReload)
-			if (math.random(1, self.WeaponReloadSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.WeaponReloadSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 				self.CurrentWeaponReloadSound = sdType(self, sdtbl, self.WeaponReloadSoundLevel, self:VJ_DecideSoundPitch(self.WeaponReloadSoundPitch.a, self.WeaponReloadSoundPitch.b))
@@ -3837,8 +3873,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "BeforeMeleeAttack" then
 		if self.HasMeleeAttackSounds == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_BeforeMeleeAttack)
-			if (math.random(1, self.BeforeMeleeAttackSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.BeforeMeleeAttackSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentBeforeMeleeAttackSound = sdType(self, sdtbl, self.BeforeMeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.BeforeMeleeAttackSoundPitch.a, self.BeforeMeleeAttackSoundPitch.b))
@@ -3849,15 +3885,15 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 		if self.HasMeleeAttackSounds == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_MeleeAttack)
 			if sdtbl == false then sdtbl = VJ_PICK(self.DefaultSoundTbl_MeleeAttack) end -- Default table
-			if (math.random(1, self.MeleeAttackSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.MeleeAttackSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentMeleeAttackSound = sdType(self, sdtbl, self.MeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.MeleeAttackSoundPitch.a, self.MeleeAttackSoundPitch.b))
 			end
 			if self.HasExtraMeleeAttackSounds == true then
 				sdtbl = VJ_PICK(self.SoundTbl_MeleeAttackExtra)
-				if (math.random(1, self.ExtraMeleeSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
+				if (math.random(1, self.ExtraMeleeSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 					if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 					self.CurrentExtraMeleeAttackSound = VJ_EmitSound(self, sdtbl, self.ExtraMeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.ExtraMeleeSoundPitch.a, self.ExtraMeleeSoundPitch.b))
 				end
@@ -3868,8 +3904,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 		if self.HasMeleeAttackMissSounds == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_MeleeAttackMiss)
 			if sdtbl == false then sdtbl = VJ_PICK(DefaultSoundTbl_MeleeAttackMiss) end -- Default table
-			if (math.random(1, self.MeleeAttackMissSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.MeleeAttackMissSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				VJ_STOPSOUND(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentMeleeAttackMissSound = sdType(self, sdtbl, self.MeleeAttackMissSoundLevel, self:VJ_DecideSoundPitch(self.MeleeAttackMissSoundPitch.a, self.MeleeAttackMissSoundPitch.b))
@@ -3879,8 +3915,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "GrenadeAttack" then
 		if self.HasGrenadeAttackSounds == true && CurTime() > self.NextGrenadeAttackSoundT then
 			local sdtbl = VJ_PICK(self.SoundTbl_GrenadeAttack)
-			if (math.random(1, self.GrenadeAttackSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.GrenadeAttackSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				if self.IdleSounds_PlayOnAttacks == false then self:StopAllCommonSpeechSounds() end -- Don't stop idle sounds if we aren't suppose to
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 				self.CurrentGrenadeAttackSound = sdType(self, sdtbl, self.GrenadeAttackSoundLevel, self:VJ_DecideSoundPitch(self.GrenadeAttackSoundPitch.a, self.GrenadeAttackSoundPitch.b))
@@ -3890,8 +3926,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	elseif sdSet == "OnGrenadeSight" then
 		if self.HasOnGrenadeSightSounds == true && CurTime() > self.NextOnGrenadeSightSoundT then
 			local sdtbl = VJ_PICK(self.SoundTbl_OnGrenadeSight)
-			if (math.random(1, self.OnGrenadeSightSoundChance) == 1 && sdtbl != false) or (ctbl != false) then
-				if ctbl != false then sdtbl = ctbl end
+			if (math.random(1, self.OnGrenadeSightSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
 				self.CurrentOnGrenadeSightSound = sdType(self, sdtbl, self.OnGrenadeSightSoundLevel, self:VJ_DecideSoundPitch(self.OnGrenadeSightSoundPitch.a, self.OnGrenadeSightSoundPitch.b))
@@ -3918,14 +3954,14 @@ function ENT:FootStepSoundCode(CustomTbl)
 			local soundtbl = self.SoundTbl_FootStep
 			if CustomTbl != nil && #CustomTbl != 0 then soundtbl = CustomTbl end
 			if VJ_PICK(soundtbl) == false then soundtbl = DefaultSoundTbl_FootStep end
-			local CurSched = self.CurrentSchedule
-			if self.DisableFootStepOnRun == false && ((VJ_HasValue(self.AnimTbl_Run,self:GetMovementActivity())) or (CurSched != nil  && CurSched.MoveType == 1)) /*(VJ_HasValue(VJ_RunActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomRunActivites,self:GetMovementActivity()))*/ then
+			local curSched = self.CurrentSchedule
+			if self.DisableFootStepOnRun == false && ((VJ_HasValue(self.AnimTbl_Run,self:GetMovementActivity())) or (curSched != nil  && curSched.MoveType == 1)) /*(VJ_HasValue(VJ_RunActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomRunActivites,self:GetMovementActivity()))*/ then
 				self:CustomOnFootStepSound_Run()
 				VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch.a,self.FootStepPitch.b))
 				if self.HasWorldShakeOnMove == true && self.DisableWorldShakeOnMoveWhileRunning == false then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude, self.WorldShakeOnMoveFrequency, self.WorldShakeOnMoveDuration, self.WorldShakeOnMoveRadius) end
 				self.FootStepT = CurTime() + self.FootStepTimeRun
 				return
-			elseif self.DisableFootStepOnWalk == false && (VJ_HasValue(self.AnimTbl_Walk,self:GetMovementActivity()) or (CurSched != nil  && CurSched.MoveType == 0)) /*(VJ_HasValue(VJ_WalkActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomWalkActivites,self:GetMovementActivity()))*/ then
+			elseif self.DisableFootStepOnWalk == false && (VJ_HasValue(self.AnimTbl_Walk,self:GetMovementActivity()) or (curSched != nil  && curSched.MoveType == 0)) /*(VJ_HasValue(VJ_WalkActivites,self:GetMovementActivity()) or VJ_HasValue(self.CustomWalkActivites,self:GetMovementActivity()))*/ then
 				self:CustomOnFootStepSound_Walk()
 				VJ_EmitSound(self,soundtbl,self.FootStepSoundLevel,self:VJ_DecideSoundPitch(self.FootStepPitch.a,self.FootStepPitch.b))
 				if self.HasWorldShakeOnMove == true && self.DisableWorldShakeOnMoveWhileWalking == false then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude, self.WorldShakeOnMoveFrequency, self.WorldShakeOnMoveDuration, self.WorldShakeOnMoveRadius) end

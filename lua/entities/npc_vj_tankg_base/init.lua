@@ -206,8 +206,7 @@ function ENT:CustomOnSchedule()
 		//self:FindEnemySphere()
 	else
 		self.Tank_ResetedEnemy = false
-		local EnemyPos = self:GetEnemy():GetPos()
-		local EnemyPosToSelf = self:GetPos():Distance(EnemyPos)
+		local EnemyPosToSelf = self:GetPos():Distance(self:GetEnemy():GetPos())
 		if self:GetParent().VJ_IsBeingControlled == true then
 			self.Tank_Status = 0
 		elseif self:GetParent().VJ_IsBeingControlled == false then
@@ -328,8 +327,8 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
 	if self:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) == true then
-		corpseEnt:GetPhysicsObject():AddVelocity(Vector(math.Rand(-200,200), math.Rand(-200,200),math.Rand(200,400)))
-		corpseEnt:GetPhysicsObject():AddAngleVelocity(Vector(math.Rand(-100,100),math.Rand(-100,100),math.Rand(-100,100)))
+		corpseEnt:GetPhysicsObject():AddVelocity(Vector(math.Rand(-200,200), math.Rand(-200,200), math.Rand(200,400)))
+		corpseEnt:GetPhysicsObject():AddAngleVelocity(Vector(math.Rand(-100,100), math.Rand(-100,100), math.Rand(-100,100)))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

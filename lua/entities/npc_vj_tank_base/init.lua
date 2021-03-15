@@ -142,12 +142,14 @@ ENT.Tank_Status = 1
 ENT.Tank_NextLowHealthSparkT = 0
 ENT.Tank_NextRunOverSoundT = 0
 ENT.TankTbl_DontRunOver = {npc_antlionguard=true,npc_turret_ceiling=true,monster_gargantua=true,monster_bigmomma=true,monster_nihilanth=true,npc_strider=true,npc_combine_camera=true,npc_helicopter=true,npc_combinegunship=true,npc_combinedropship=true,npc_rollermine=true}
+
+local defAng = Angle(0, 0, 0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize()
 	self:CustomInitialize_CustomTank()
 	self:PhysicsInit(SOLID_BBOX) // SOLID_VPHYSICS
 	self:SetSolid(SOLID_VPHYSICS)
-	self:SetAngles(self:GetAngles() + Angle(0,self.Tank_SpawningAngle,0))
+	self:SetAngles(self:GetAngles() + Angle(0, self.Tank_SpawningAngle, 0))
 	//self:SetPos(self:GetPos()+Vector(0,0,90))
 	self:SetCollisionBounds(Vector(self.Tank_CollisionBoundSize, self.Tank_CollisionBoundSize, self.Tank_CollisionBoundUp), Vector(-self.Tank_CollisionBoundSize, -self.Tank_CollisionBoundSize, self.Tank_CollisionBoundDown))
 
@@ -249,9 +251,11 @@ function ENT:CustomOnThink()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local vec80z = Vector(0, 0, 80)
+--
 function ENT:CustomOnThink_AIEnabled()
 	if self.Dead == true then return end
-	//timer.Simple(0.1, function() if self.Dead == false then ParticleEffect("smoke_exhaust_01",self:LocalToWorld(Vector(150,30,30)),Angle(0,0,0),self) end end)
+	//timer.Simple(0.1, function() if self.Dead == false then ParticleEffect("smoke_exhaust_01",self:LocalToWorld(Vector(150,30,30)),defAng,self) end end)
 	//timer.Simple(0.2, function() if self.Dead == false then self:StopParticles() end end)
 	for _, v in pairs(ents.FindInSphere(self:GetPos(),100)) do
 		self:Tank_RunOver(v)
@@ -289,7 +293,7 @@ function ENT:CustomOnThink_AIEnabled()
 				-- Change the turning speed(Tank_TurningSpeed) to their opposite quotation(+ to -)
 			local phys = self:GetPhysicsObject()
 			if IsValid(phys) then
-				local Angle_Enemy = (self:GetEnemy():GetPos() - self:GetPos() +Vector(0,0,80)):Angle()
+				local Angle_Enemy = (self:GetEnemy():GetPos() - self:GetPos() + vec80z):Angle()
 				local Angle_Current = self:GetAngles()
 				local Angle_Diffuse = self:AngleDiffuse(Angle_Enemy.y,Angle_Current.y+self.Tank_AngleDiffuseNumber)
 				local Heigh_Ratio = (self:GetEnemy():GetPos().z - self:GetPos().z ) / self:GetPos():Distance(Vector(self:GetEnemy():GetPos().x,self:GetEnemy():GetPos().y,self:GetPos().z))
@@ -337,8 +341,7 @@ function ENT:CustomOnSchedule()
 			self:ResetEnemy()
 		end
 	else
-		local EnemyPos = self:GetEnemy():GetPos()
-		local EnemyPosToSelf = self:GetPos():Distance(EnemyPos)
+		local EnemyPosToSelf = self:GetPos():Distance(self:GetEnemy():GetPos())
 		if self.VJ_IsBeingControlled == true then
 			if self.VJ_TheController:KeyDown(IN_FORWARD) then
 				self.Tank_Status = 0
@@ -358,10 +361,9 @@ function ENT:CustomOnSchedule()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnTakeDamage_BeforeDamage(dmginfo, hitgroup)
-	local dmgtype = dmginfo:GetDamageType()
-	if (dmgtype == DMG_SLASH or dmgtype == DMG_GENERIC or dmgtype == DMG_CLUB) then
-		if dmginfo:GetDamage() >= 30 && dmginfo:GetAttacker().VJ_IsHugeMonster != true then
-			dmginfo:SetDamage(dmginfo:GetDamage()/2)
+	if dmginfo:IsDamageType(DMG_SLASH) or dmginfo:IsDamageType(DMG_GENERIC) or dmginfo:IsDamageType(DMG_CLUB) then
+		if dmginfo:GetDamage() >= 30 && !dmginfo:GetAttacker().VJ_IsHugeMonster then
+			dmginfo:SetDamage(dmginfo:GetDamage() / 2)
 		else
 			dmginfo:SetDamage(0)
 		end
@@ -381,7 +383,7 @@ function ENT:CustomOnPriorToKilled(dmginfo, hitgroup)
 					VJ_EmitSound(self,"vj_mili_tank/tank_death2.wav",100,100)
 					util.BlastDamage(self,self,self:GetPos(),200,40)
 					util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
-					if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2",self:GetPos(),Angle(0,0,0),nil) end
+					if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2",self:GetPos(),defAng,nil) end
 				end
 			end)
 		end
@@ -392,16 +394,19 @@ function ENT:CustomOnPriorToKilled(dmginfo, hitgroup)
 				VJ_EmitSound(self,"vj_mili_tank/tank_death3.wav",100,100)
 				util.BlastDamage(self,self,self:GetPos(),200,40)
 				util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
-				if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2",self:GetPos(),Angle(0,0,0),nil) end
+				if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2",self:GetPos(),defAng,nil) end
 			end
 		end)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local vec500z = Vector(0, 0, 500)
+--
 function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
 	if IsValid(self.Gunner) then -- Spawn the gunner
-		local gunnercorpse = self.Gunner:CreateDeathCorpse(dmginfo, hitgroup)
-		if IsValid(gunnercorpse) then corpseEnt.ExtraCorpsesToRemove[#corpseEnt.ExtraCorpsesToRemove+1] = gunnercorpse end
+		self.Gunner.SavedDmgInfo = self.SavedDmgInfo
+		local gunCorpse = self.Gunner:CreateDeathCorpse(dmginfo, hitgroup)
+		if IsValid(gunCorpse) then corpseEnt.ExtraCorpsesToRemove[#corpseEnt.ExtraCorpsesToRemove+1] = gunCorpse end
 	end
 	
 	if self:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) == true then
@@ -417,7 +422,7 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
 		self:SetPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the NPC is too close to the ground
 		local tr = util.TraceLine({
 			start = self:GetPos(),
-			endpos = self:GetPos() - Vector(0, 0, 500),
+			endpos = self:GetPos() - vec500z,
 			filter = self
 		})
 		util.Decal(VJ_PICK(self.Tank_DeathDecal), tr.HitPos+tr.HitNormal, tr.HitPos-tr.HitNormal)
@@ -428,9 +433,9 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
 			//self.FireEffect:Spawn()
 			//self.FireEffect:SetParent(corpseEnt)
 			//ParticleEffectAttach("smoke_large_01b",PATTACH_ABSORIGIN_FOLLOW,corpseEnt,0)
-			ParticleEffect("vj_explosion3",self:GetPos(),Angle(0,0,0),nil)
-			ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*-130,Angle(0,0,0),nil)
-			ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*130,Angle(0,0,0),nil)
+			ParticleEffect("vj_explosion3",self:GetPos(),defAng,nil)
+			ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*-130,defAng,nil)
+			ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*130,defAng,nil)
 			ParticleEffectAttach("smoke_burning_engine_01",PATTACH_ABSORIGIN_FOLLOW,corpseEnt,0)
 			
 			local explosioneffect = EffectData()
