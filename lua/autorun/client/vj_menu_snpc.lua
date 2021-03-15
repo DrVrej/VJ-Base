@@ -16,7 +16,7 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 	
 	Panel:ControlHelp("#vjbase.menu.general.admin.only")
 	Panel:AddControl("Label", {Text = "#vjbase.menu.general.snpc.warnfuture"})
-	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_godmodesnpc 0\nvj_npc_playerfriendly 0\nvj_npc_zombiefriendly 0\nvj_npc_antlionfriendly 0\nvj_npc_combinefriendly 0\nvj_npc_corpsefade 0\nvj_npc_corpsefadetime 10\nvj_npc_undocorpse 0\nvj_npc_allhealth 0\nvj_npc_fadegibs 1\nvj_npc_fadegibstime 30\nvj_npc_gibcollidable 0\nvj_npc_addfrags 1\nvj_npc_showhudonkilled 1\nvj_npc_dropweapon 1\nvj_npc_itemdrops 1\nvj_npc_creatureopendoor 1\nvj_npc_vjfriendly 0\nvj_npc_globalcorpselimit 32\nvj_npc_seedistance 0\nvj_npc_processtime 1\nvj_npc_usegmoddecals 0\nvj_npc_knowenemylocation 0\nvj_npc_plypickupdropwep 1\nvj_npc_difficulty 0\nvj_npc_human_canjump 1\nvj_npc_corpsecollision 0"})
+	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_godmodesnpc 0\nvj_npc_playerfriendly 0\nvj_npc_zombiefriendly 0\nvj_npc_antlionfriendly 0\nvj_npc_combinefriendly 0\nvj_npc_corpsefade 0\nvj_npc_corpsefadetime 10\nvj_npc_undocorpse 0\nvj_npc_allhealth 0\nvj_npc_fadegibs 1\nvj_npc_fadegibstime 30\nvj_npc_gibcollidable 0\nvj_npc_addfrags 1\nvj_npc_dropweapon 1\nvj_npc_itemdrops 1\nvj_npc_creatureopendoor 1\nvj_npc_vjfriendly 0\nvj_npc_globalcorpselimit 32\nvj_npc_seedistance 0\nvj_npc_processtime 1\nvj_npc_usegmoddecals 0\nvj_npc_knowenemylocation 0\nvj_npc_plypickupdropwep 1\nvj_npc_difficulty 0\nvj_npc_human_canjump 1\nvj_npc_corpsecollision 0"})
 	local vj_difficulty = {Options = {}, CVars = {}, Label = "#vjbase.menu.snpc.options.difficulty.header", MenuButton = "0"}
 		vj_difficulty.Options["#vjbase.menu.snpc.options.difficulty.neanderthal"] = {vj_npc_difficulty = "-3"}
 		vj_difficulty.Options["#vjbase.menu.snpc.options.difficulty.childs_play"] = {vj_npc_difficulty = "-2"}
@@ -82,7 +82,6 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.options.togglegmoddecals", Command = "vj_npc_usegmoddecals"})
 	Panel:ControlHelp("#vjbase.menu.snpc.options.label11")
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.options.toggleitemdrops", Command = "vj_npc_itemdrops"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.options.toggleshowhudonkilled", Command = "vj_npc_showhudonkilled"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.options.toggleaddfrags", Command = "vj_npc_addfrags"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.options.togglecreatureopendoor", Command = "vj_npc_creatureopendoor"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.options.togglehumansdropweapon", Command = "vj_npc_dropweapon"})

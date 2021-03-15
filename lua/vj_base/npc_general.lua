@@ -73,7 +73,6 @@ function ENT:CreateExtraDeathCorpse(class, models, extraOptions, customFunc)
 	if !IsValid(self.Corpse) then return end
 	local dmginfo = self.Corpse.DamageInfo
 	if dmginfo == nil then return end
-	local dmgforce = dmginfo:GetDamageForce()
 	class = class or "prop_ragdoll"
 	extraOptions = extraOptions or {}
 	local ent = ents.Create(class)
@@ -89,7 +88,13 @@ function ENT:CreateExtraDeathCorpse(class, models, extraOptions, customFunc)
 		ent:Ignite(math.Rand(8,10),0)
 		ent:SetColor(Color(90,90,90))
 	end
-	if extraOptions.HasVel != false then ent:GetPhysicsObject():AddVelocity(extraOptions.Vel or dmgforce / 40) end
+	if extraOptions.HasVel != false then
+		local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
+		if self.DeathAnimationCodeRan then
+			dmgForce = self:GetMoveVelocity() == defPos and self:GetGroundSpeedVelocity() or self:GetMoveVelocity()
+		end
+		ent:GetPhysicsObject():AddVelocity(extraOptions.Vel or dmgForce)
+	end
 	if extraOptions.ShouldFade == true then
 		local fadeTime = extraOptions.ShouldFadeTime or 0 
 		if ent:GetClass() == "prop_ragdoll" then
@@ -506,6 +511,18 @@ function ENT:ForceMoveJump(vel)
 	self.NextIdleStandTime = 0
 	self:SetNavType(NAV_JUMP)
 	self:MoveJumpStart(vel)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Checks if the given damage type(s) contains 1 or more of the default gibbing damage types
+		- dmgType = The damage type(s) to check for
+			EX: dmginfo:GetDamageType()
+	Returns
+		- true, At least 1 damage type is included
+		- false, NO damage type is included
+-----------------------------------------------------------]]
+function ENT:IsDefaultGibDamageType(dmgType)
+	return bit.band(dmgType, DMG_ALWAYSGIB) != 0 or bit.band(dmgType, DMG_ENERGYBEAM) != 0 or bit.band(dmgType, DMG_BLAST) != 0 or bit.band(dmgType, DMG_VEHICLE) != 0 or bit.band(dmgType, DMG_CRUSH) != 0 or bit.band(dmgType, DMG_DIRECT) != 0 or bit.band(dmgType, DMG_DISSOLVE) != 0 or bit.band(dmgType, DMG_AIRBOAT) != 0 or bit.band(dmgType, DMG_SLOWBURN) != 0 or bit.band(dmgType, DMG_PHYSGUN) != 0 or bit.band(dmgType, DMG_PLASMA) != 0 or bit.band(dmgType, DMG_SONIC) != 0
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*
@@ -1194,6 +1211,14 @@ function ENT:DoKilledEnemy(ent, attacker, inflictor)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local function FlinchDamageTypeCheck(checkTbl, dmgType)
+	for k = 1, #checkTbl do
+		if bit.band(dmgType, checkTbl[k]) != 0 then
+			return true
+		end
+	end
+end
+--
 function ENT:DoFlinch(dmginfo, hitgroup)
 	if self.CanFlinch == 0 or self.Flinching == true or self.TakingCoverT > CurTime() or self.NextFlinchT > CurTime() or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
 
@@ -1211,8 +1236,8 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 		self:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup)
 		self.NextFlinchT = CurTime() + self.NextFlinchTime
 	end
-
-	if math.random(1, self.FlinchChance) == 1 && ((self.CanFlinch == 1) or (self.CanFlinch == 2 && VJ_HasValue(self.FlinchDamageTypes, dmginfo:GetDamageType()))) then
+	
+	if math.random(1, self.FlinchChance) == 1 && ((self.CanFlinch == 1) or (self.CanFlinch == 2 && FlinchDamageTypeCheck(self.FlinchDamageTypes, dmginfo:GetDamageType()))) then
 		if self:CustomOnFlinch_BeforeFlinch(dmginfo, hitgroup) == false then return end
 		if self.HasHitGroupFlinching == true then -- Hitgroup flinching
 			local HitGroupFound = false
@@ -1231,10 +1256,8 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 		end
 	end
 end
-/*
-	self.CurrentChoosenBlood_Particle, self.CurrentChoosenBlood_Decal, self.CurrentChoosenBlood_Pool = {}
-*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
+-- self.CurrentChoosenBlood_Particle, self.CurrentChoosenBlood_Decal, self.CurrentChoosenBlood_Pool = {}
 function ENT:SetupBloodColor()
 	local Type = self.BloodColor
 	if Type == "" then return end
@@ -1565,18 +1588,18 @@ function ENT:RunGibOnDeathCode(dmginfo, hitgroup, extraOptions)
 	extraOptions = extraOptions or {}
 	local dmgTbl = extraOptions.CustomDmgTbl or self.GibOnDeathDamagesTable
 	local dmgType = dmginfo:GetDamageType()
-	local dmgAny = false
-	local useDefault = false
-	if VJ_HasValue(dmgTbl,"UseDefault") then useDefault = true end
-	if useDefault == false && (#dmgTbl <= 0 or VJ_HasValue(dmgTbl,"All")) then dmgAny = true end
-	if dmgAny or (useDefault == true && self.DefaultGibOnDeathDamageTypes[dmgType]) or (useDefault == false && VJ_HasValue(dmgTbl,dmgType)) then
-		local setupgib, setupgib_extra = self:SetUpGibesOnDeath(dmginfo, hitgroup)
-		if setupgib_extra == nil then setupgib_extra = {} end
-		if setupgib == true then
-			if setupgib_extra.AllowCorpse != true then self.HasDeathRagdoll = false end
-			if setupgib_extra.DeathAnim != true then self.HasDeathAnimation = false end
-			self.HasBeenGibbedOnDeath = true
-			self:PlayGibOnDeathSounds(dmginfo, hitgroup)
+	for k = 1, #dmgTbl do
+		local v = dmgTbl[k]
+		if (v == "All") or (v == "UseDefault" && self:IsDefaultGibDamageType(dmgType)) or (v != "UseDefault" && bit.band(dmgType, v) != 0) then
+			local setupgib, setupgib_extra = self:SetUpGibesOnDeath(dmginfo, hitgroup)
+			if setupgib_extra == nil then setupgib_extra = {} end
+			if setupgib == true then
+				if setupgib_extra.AllowCorpse != true then self.HasDeathRagdoll = false end
+				if setupgib_extra.DeathAnim != true then self.HasDeathAnimation = false end
+				self.HasBeenGibbedOnDeath = true
+				self:PlayGibOnDeathSounds(dmginfo, hitgroup)
+			end
+			break
 		end
 	end
 end
@@ -1612,19 +1635,23 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RunItemDropsOnDeathCode(dmginfo, hitgroup)
 	if self.HasItemDropsOnDeath == false then return end
-	if math.random(1,self.ItemDropsOnDeathChance) == 1 then
+	if math.random(1, self.ItemDropsOnDeathChance) == 1 then
 		self:CustomRareDropsOnDeathCode(dmginfo, hitgroup)
-		local entlist = VJ_PICK(self.ItemDropsOnDeath_EntityList)
-		if entlist != false then
-			local randdrop = ents.Create(entlist)
-			randdrop:SetPos(self:GetPos() + self:OBBCenter())
-			randdrop:SetAngles(self:GetAngles())
-			randdrop:Spawn()
-			randdrop:Activate()
-			local phys = randdrop:GetPhysicsObject()
+		local pickedEnt = VJ_PICK(self.ItemDropsOnDeath_EntityList)
+		if pickedEnt != false then
+			local ent = ents.Create(pickedEnt)
+			ent:SetPos(self:GetPos() + self:OBBCenter())
+			ent:SetAngles(self:GetAngles())
+			ent:Spawn()
+			ent:Activate()
+			local phys = ent:GetPhysicsObject()
 			if IsValid(phys) then
-				phys:SetMass(60)
-				phys:ApplyForceCenter(dmginfo:GetDamageForce())
+				local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
+				if self.DeathAnimationCodeRan then
+					dmgForce = self:GetMoveVelocity() == defPos and self:GetGroundSpeedVelocity() or self:GetMoveVelocity()
+				end
+				phys:SetMass(1)
+				phys:ApplyForceCenter(dmgForce)
 			end
 		end
 	end

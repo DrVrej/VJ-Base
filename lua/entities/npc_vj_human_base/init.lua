@@ -952,7 +952,7 @@ ENT.TimersToRemove = {"timer_weapon_state_reset","timer_state_reset","timer_act_
 ENT.EntitiesToRunFrom = {obj_spore=true,obj_vj_grenade=true,obj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true,cw_flash_thrown=true,ent_hl1_grenade=true}
 ENT.EntitiesToThrowBack = {obj_spore=true,obj_vj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,obj_cpt_grenade=true,cw_grenade_thrown=true,cw_flash_thrown=true,cw_smoke_thrown=true,ent_hl1_grenade=true}
 ENT.DefaultGibDamageTypes = {DMG_ALWAYSGIB,DMG_ENERGYBEAM,DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SONIC} -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
-ENT.DefaultGibOnDeathDamageTypes = {[DMG_ALWAYSGIB]=true,[DMG_ENERGYBEAM]=true,[DMG_BLAST]=true,[DMG_VEHICLE]=true,[DMG_CRUSH]=true,[DMG_DIRECT]=true,[DMG_DISSOLVE]=true,[DMG_AIRBOAT]=true,[DMG_SLOWBURN]=true,[DMG_PHYSGUN]=true,[DMG_PLASMA]=true,[DMG_SONIC]=true}
+//ENT.DefaultGibOnDeathDamageTypes = {[DMG_ALWAYSGIB]=true,[DMG_ENERGYBEAM]=true,[DMG_BLAST]=true,[DMG_VEHICLE]=true,[DMG_CRUSH]=true,[DMG_DIRECT]=true,[DMG_DISSOLVE]=true,[DMG_AIRBOAT]=true,[DMG_SLOWBURN]=true,[DMG_PHYSGUN]=true,[DMG_PLASMA]=true,[DMG_SONIC]=true}
 //ENT.SavedDmgInfo = {} -- Set later
 
 -- Localized static values
@@ -3106,8 +3106,6 @@ function ENT:OnTakeDamage(dmginfo)
 		force = dmginfo:GetDamageForce(),
 		ammoType = dmginfo:GetAmmoType(),
 		hitgroup = hitgroup,
-		isBullet = dmginfo:IsBulletDamage(),
-		isExp = dmginfo:IsExplosionDamage(),
 	}
 	self:SetHealth(self:Health() - dmginfo:GetDamage())
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printondamage"):GetInt() == 1 then print(self:GetClass().." Got Damaged! | Amount = "..dmginfo:GetDamage()) end
@@ -3350,7 +3348,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	if IsValid(dmgAttacker) then
 		if dmgAttacker:GetClass() == "npc_barnacle" then self.HasDeathRagdoll = false end -- Don't make a corpse if it's killed by a barnacle!
 		if GetConVar("vj_npc_addfrags"):GetInt() == 1 && dmgAttacker:IsPlayer() then dmgAttacker:AddFrags(1) end
-		if IsValid(dmgInflictor) && GetConVar("vj_npc_showhudonkilled"):GetInt() == 1 then
+		if IsValid(dmgInflictor) then
 			gamemode.Call("OnNPCKilled", self, dmgAttacker, dmgInflictor, dmginfo)
 		end
 	end
@@ -3380,13 +3378,12 @@ end
 function ENT:OnKilled(dmginfo, hitgroup)
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printdied"):GetInt() == 1 then print(self:GetClass().." Died!") end
 	self:CustomOnKilled(dmginfo, hitgroup)
-	if bit.band(self.SavedDmgInfo.type, DMG_REMOVENORAGDOLL) == 0 then self:DropWeaponOnDeathCode(dmginfo, hitgroup) end
 	self:RunItemDropsOnDeathCode(dmginfo, hitgroup) -- Item drops on death
 	if self.HasDeathNotice == true then PrintMessage(self.DeathNoticePosition, self.DeathNoticeWriting) end -- Death notice on death
 	self:ClearEnemyMemory()
 	//self:ClearSchedule()
 	//self:SetNPCState(NPC_STATE_DEAD)
-	if bit.band(self.SavedDmgInfo.type, DMG_REMOVENORAGDOLL) == 0 then self:CreateDeathCorpse(dmginfo, hitgroup) end
+	if bit.band(self.SavedDmgInfo.type, DMG_REMOVENORAGDOLL) == 0 then self:DropWeaponOnDeathCode(dmginfo, hitgroup) self:CreateDeathCorpse(dmginfo, hitgroup) end
 	self:Remove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3404,8 +3401,6 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			force = dmginfo:GetDamageForce(),
 			ammoType = dmginfo:GetAmmoType(),
 			hitgroup = hitgroup,
-			isBullet = dmginfo:IsBulletDamage(),
-			isExp = dmginfo:IsExplosionDamage(),
 		}
 	end
 	
@@ -3507,13 +3502,16 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			dissolver:Fire("Kill","",0.1)
 			//dissolver:Remove()
 		end
-
+		
 		-- Bone and Angle --
-		local dmgforce = self.SavedDmgInfo.force
-		for bonelim = 0, self.Corpse:GetPhysicsObjectCount() - 1 do -- 128 = Bone Limit
-			local childphys = self.Corpse:GetPhysicsObjectNum(bonelim)
+		local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
+		if self.DeathAnimationCodeRan then
+			dmgForce = self:GetMoveVelocity() == defPos and self:GetGroundSpeedVelocity() or self:GetMoveVelocity()
+		end
+		for boneLimit = 0, self.Corpse:GetPhysicsObjectCount() - 1 do -- 128 = Bone Limit
+			local childphys = self.Corpse:GetPhysicsObjectNum(boneLimit)
 			if IsValid(childphys) then
-				local childphys_bonepos, childphys_boneang = self:GetBonePosition(self.Corpse:TranslatePhysBoneToBone(bonelim))
+				local childphys_bonepos, childphys_boneang = self:GetBonePosition(self.Corpse:TranslatePhysBoneToBone(boneLimit))
 				if (childphys_bonepos) then
 					//if math.Round(math.abs(childphys_boneang.r)) != 90 then -- Fixes ragdolls rotating, no longer needed!    --->    sv_pvsskipanimation 0
 						if self.DeathCorpseSetBoneAngles == true then childphys:SetAngles(childphys_boneang) end
@@ -3523,7 +3521,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 						childphys:EnableGravity(false)
 						childphys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
 					else
-						if self.UsesDamageForceOnDeath == true && self.DeathAnimationCodeRan == false then childphys:SetVelocity(dmgforce /40) end
+						if self.UsesDamageForceOnDeath == true /*&& self.DeathAnimationCodeRan == false*/ then childphys:SetVelocity(dmgForce) end
 					end
 				end
 			end
@@ -3562,6 +3560,7 @@ function ENT:DropWeaponOnDeathCode(dmginfo, hitgroup)
 	
 	self:CustomOnDropWeapon(dmginfo, hitgroup)
 	
+	-- Rotate the weapon for certain guns
 	self.CurrentWeaponEntity = self:GetActiveWeapon()
 	local gunang = defAng
 	if wepDropTbl1[self.CurrentWeaponEntity:GetClass()] == true then
@@ -3570,8 +3569,8 @@ function ENT:DropWeaponOnDeathCode(dmginfo, hitgroup)
 		gunang = wepAng90x
 	end
 
-	local getAttach = false
-	if self.CurrentWeaponEntity.WorldModel_UseCustomPosition != true then
+	local getAttach = false -- true = Found an attachment on the NPC's model
+	if !self.CurrentWeaponEntity.WorldModel_UseCustomPosition then
 		for _,v in ipairs(self:GetAttachments()) do
 			if v.name == self.DropWeaponOnDeathAttachment then
 				getAttach = self:GetAttachment(self:LookupAttachment(self.DropWeaponOnDeathAttachment))
@@ -3599,8 +3598,12 @@ function ENT:DropWeaponOnDeathCode(dmginfo, hitgroup)
 			phys:EnableGravity(false)
 			phys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
 		else
-			phys:SetMass(60)
-			phys:ApplyForceCenter(self.SavedDmgInfo.force)
+			local dmgforce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
+			if self.DeathAnimationCodeRan then
+				dmgforce = self:GetMoveVelocity() == defPos and self:GetGroundSpeedVelocity() or self:GetMoveVelocity()
+			end
+			phys:SetMass(1)
+			phys:ApplyForceCenter(dmgforce)
 		end
 	end
 	self:CustomOnDropWeapon_AfterWeaponSpawned(dmginfo, hitgroup, self.TheDroppedWeapon)

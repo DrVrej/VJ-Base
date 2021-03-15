@@ -67,7 +67,6 @@ cvarList_Ent["vj_npc_gibcollidable"] = 0 -- Collidable Gibs?
 cvarList_Ent["vj_npc_fadegibs"] = 1 -- Should Gibs Fade or not?
 cvarList_Ent["vj_npc_fadegibstime"] = 30 -- Gib Fade Time
 cvarList_Ent["vj_npc_addfrags"] = 1 -- Disable frags(points) being added to player's scoreboard
-cvarList_Ent["vj_npc_showhudonkilled"] = 1 -- Show HUD display when the SNPC dies
 cvarList_Ent["vj_npc_itemdrops"] = 1 -- item drops on death?
 cvarList_Ent["vj_npc_seedistance"] = 0 -- How far can the SNPCs see? 0 = The distance that the SNPC uses
 cvarList_Ent["vj_npc_globalcorpselimit"] = 32 -- What is the limit for SNPC corpses on the ground? (When Keep Corpses is off)
