@@ -989,7 +989,7 @@ ENT.AIState = 0
 ENT.TimersToRemove = {"timer_state_reset","timer_act_seqreset","timer_face_position","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap"}
 ENT.EntitiesToDestroyClass = {func_breakable=true,func_physbox=true,prop_door_rotating=true} // func_breakable_surf
 ENT.DefaultGibDamageTypes = {DMG_ALWAYSGIB,DMG_ENERGYBEAM,DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DIRECT,DMG_DISSOLVE,DMG_AIRBOAT,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SONIC} -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
-ENT.DefaultGibOnDeathDamageTypes = {[DMG_ALWAYSGIB]=true,[DMG_ENERGYBEAM]=true,[DMG_BLAST]=true,[DMG_VEHICLE]=true,[DMG_CRUSH]=true,[DMG_DIRECT]=true,[DMG_DISSOLVE]=true,[DMG_AIRBOAT]=true,[DMG_SLOWBURN]=true,[DMG_PHYSGUN]=true,[DMG_PLASMA]=true,[DMG_SONIC]=true}
+//ENT.DefaultGibOnDeathDamageTypes = {[DMG_ALWAYSGIB]=true,[DMG_ENERGYBEAM]=true,[DMG_BLAST]=true,[DMG_VEHICLE]=true,[DMG_CRUSH]=true,[DMG_DIRECT]=true,[DMG_DISSOLVE]=true,[DMG_AIRBOAT]=true,[DMG_SLOWBURN]=true,[DMG_PHYSGUN]=true,[DMG_PLASMA]=true,[DMG_SONIC]=true}
 //ENT.SavedDmgInfo = {} -- Set later
 
 -- Localized static values
@@ -2559,8 +2559,6 @@ function ENT:OnTakeDamage(dmginfo)
 		force = dmginfo:GetDamageForce(),
 		ammoType = dmginfo:GetAmmoType(),
 		hitgroup = hitgroup,
-		isBullet = dmginfo:IsBulletDamage(),
-		isExp = dmginfo:IsExplosionDamage(),
 	}
 	self:SetHealth(self:Health() - dmginfo:GetDamage())
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printondamage"):GetInt() == 1 then print(self:GetClass().." Got Damaged! | Amount = "..dmginfo:GetDamage()) end
@@ -2800,7 +2798,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	if IsValid(dmgAttacker) then
 		if dmgAttacker:GetClass() == "npc_barnacle" then self.HasDeathRagdoll = false end -- Don't make a corpse if it's killed by a barnacle!
 		if GetConVar("vj_npc_addfrags"):GetInt() == 1 && dmgAttacker:IsPlayer() then dmgAttacker:AddFrags(1) end
-		if IsValid(dmgInflictor) && GetConVar("vj_npc_showhudonkilled"):GetInt() == 1 then
+		if IsValid(dmgInflictor) then
 			gamemode.Call("OnNPCKilled", self, dmgAttacker, dmgInflictor, dmginfo)
 		end
 	end
@@ -2853,8 +2851,6 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			force = dmginfo:GetDamageForce(),
 			ammoType = dmginfo:GetAmmoType(),
 			hitgroup = hitgroup,
-			isBullet = dmginfo:IsBulletDamage(),
-			isExp = dmginfo:IsExplosionDamage(),
 		}
 	end
 	
@@ -2957,11 +2953,14 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		end
 		
 		-- Bone and Angle --		
-		local dmgforce = self.SavedDmgInfo.force
-		for bonelim = 0, self.Corpse:GetPhysicsObjectCount() - 1 do -- 128 = Bone Limit
-			local childphys = self.Corpse:GetPhysicsObjectNum(bonelim)
+		local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
+		if self.DeathAnimationCodeRan then
+			dmgForce = self:GetMoveVelocity() == defPos and self:GetGroundSpeedVelocity() or self:GetMoveVelocity()
+		end
+		for boneLimit = 0, self.Corpse:GetPhysicsObjectCount() - 1 do -- 128 = Bone Limit
+			local childphys = self.Corpse:GetPhysicsObjectNum(boneLimit)
 			if IsValid(childphys) then
-				local childphys_bonepos, childphys_boneang = self:GetBonePosition(self.Corpse:TranslatePhysBoneToBone(bonelim))
+				local childphys_bonepos, childphys_boneang = self:GetBonePosition(self.Corpse:TranslatePhysBoneToBone(boneLimit))
 				if (childphys_bonepos) then
 					//if math.Round(math.abs(childphys_boneang.r)) != 90 then -- Fixes ragdolls rotating, no longer needed!    --->    sv_pvsskipanimation 0
 						if self.DeathCorpseSetBoneAngles == true then childphys:SetAngles(childphys_boneang) end
@@ -2971,7 +2970,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 						childphys:EnableGravity(false)
 						childphys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
 					else
-						if self.UsesDamageForceOnDeath == true && self.DeathAnimationCodeRan == false then childphys:SetVelocity(dmgforce /40) end
+						if self.UsesDamageForceOnDeath == true /*&& self.DeathAnimationCodeRan == false*/ then childphys:SetVelocity(dmgForce) end
 					end
 				end
 			end
