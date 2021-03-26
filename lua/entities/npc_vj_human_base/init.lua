@@ -1525,6 +1525,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 			//self:SetIdealActivity(ACT_RESET)
 		end*/
 		//self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),pickedAnim)
+		self:AA_StopMoving()
 		self.VJ_PlayingSequence = false
 		self.VJ_PlayingInterruptSequence = false
 		self:ResetIdealActivity(pickedAnim)
@@ -2090,7 +2091,7 @@ function ENT:Think()
 				self:FollowPlayerReset()
 			end
 		end
-
+		
 		//print(self:GetPathTimeToGoal())
 		//print(self:GetPathDistanceToGoal())
 		
@@ -3504,8 +3505,11 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		end
 		
 		-- Bone and Angle --
+		-- If it's a bullet, it will use localized velocity on each bone depending on how far away the bone is from the dmg position
+		local useLocalVel = (bit.band(self.SavedDmgInfo.type, DMG_BULLET) != 0 and self.SavedDmgInfo.pos != defPos) or false
 		local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
 		if self.DeathAnimationCodeRan then
+			useLocalVel = false
 			dmgForce = self:GetMoveVelocity() == defPos and self:GetGroundSpeedVelocity() or self:GetMoveVelocity()
 		end
 		for boneLimit = 0, self.Corpse:GetPhysicsObjectCount() - 1 do -- 128 = Bone Limit
@@ -3521,7 +3525,9 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 						childphys:EnableGravity(false)
 						childphys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
 					else
-						if self.UsesDamageForceOnDeath == true /*&& self.DeathAnimationCodeRan == false*/ then childphys:SetVelocity(dmgForce) end
+						if self.UsesDamageForceOnDeath == true /*&& self.DeathAnimationCodeRan == false*/ then
+							childphys:SetVelocity(dmgForce / math.max(1, (useLocalVel and childphys_bonepos:Distance(self.SavedDmgInfo.pos)/12) or 1))
+						end
 					end
 				end
 			end

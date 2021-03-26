@@ -1514,6 +1514,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 			//self:SetIdealActivity(ACT_RESET)
 		end*/
 		//self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),pickedAnim)
+		self:AA_StopMoving()
 		self.VJ_PlayingSequence = false
 		self.VJ_PlayingInterruptSequence = false
 		self:ResetIdealActivity(pickedAnim)
@@ -1754,7 +1755,7 @@ function ENT:Think()
 		local ene = self:GetEnemy()
 		
 		-- Used for AA SNPCs
-		if self.AA_CurrentTurnAng != false then
+		if self.AA_CurrentTurnAng then
 			local setangs = self.AA_CurrentTurnAng
 			self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
 			self:SetIdealYawAndUpdate(setangs.y)
@@ -1801,23 +1802,24 @@ function ENT:Think()
 					self:Allies_CallHelp(self.CallForHelpDistance)
 					self.NextCallForHelpT = CurTime() + self.NextCallForHelpTime
 				end
-
+				
 				-- Stop chasing at certain distance
-				if self.VJ_IsBeingControlled != true && self.NoChaseAfterCertainRange == true && ((self.NoChaseAfterCertainRange_Type == "OnlyRange" && self.HasRangeAttack == true) or (self.NoChaseAfterCertainRange_Type == "Regular")) then
-					local fardist = self.NoChaseAfterCertainRange_FarDistance
-					local closedist = self.NoChaseAfterCertainRange_CloseDistance
-					if fardist == "UseRangeDistance" then fardist = self.RangeDistance end
-					if closedist == "UseRangeDistance" then closedist = self.RangeToMeleeDistance end
-					if (self.LatestEnemyDistance < fardist) && (self.LatestEnemyDistance > closedist) && ene:Visible(self) /*&& self:CanDoCertainAttack("RangeAttack") == true*/ then
+				if self.NoChaseAfterCertainRange == true && self.VJ_IsBeingControlled != true && ((self.NoChaseAfterCertainRange_Type == "OnlyRange" && self.HasRangeAttack == true) or (self.NoChaseAfterCertainRange_Type == "Regular")) then
+					local eneDist = self.LatestEnemyDistance
+					local farDist = self.NoChaseAfterCertainRange_FarDistance
+					local closeDist = self.NoChaseAfterCertainRange_CloseDistance
+					if farDist == "UseRangeDistance" then farDist = self.RangeDistance end
+					if closeDist == "UseRangeDistance" then closeDist = self.RangeToMeleeDistance end
+					if (eneDist < farDist) && (eneDist > closeDist) && ene:Visible(self) /*&& self:CanDoCertainAttack("RangeAttack") == true*/ then
+						local moveType = self.MovementType
+						curSched = self.CurrentSchedule -- Already defined
 						self.RangeAttack_DisableChasingEnemy = true
-						if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then self:StopMoving() end
-						if self.MovementType == VJ_MOVETYPE_GROUND && !self:IsMoving() && self:OnGround() then self:FaceCertainEntity(self:GetEnemy()) end
-						if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && CurTime() > self.AA_MoveLength_Wander /*&& ((self.AA_CurrentMoveAnimationType != "Calm") or (self.AA_CurrentMoveAnimationType == "Calm" && self:GetVelocity():Length() > 0))*/ then self:AA_IdleWander(true, self.ConstantlyFaceEnemy) /*self:AA_StopMoving()*/ end
+						if curSched != nil && curSched.Name == "vj_chase_enemy" then self:StopMoving() end
+						if moveType == VJ_MOVETYPE_GROUND && !self:IsMoving() && self:OnGround() then self:FaceCertainEntity(self:GetEnemy()) end
+						if (moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC) && CurTime() > self.AA_MoveLength_Wander /*&& ((self.AA_CurrentMoveAnimationType != "Calm") or (self.AA_CurrentMoveAnimationType == "Calm" && self:GetVelocity():Length() > 0))*/ then self:AA_IdleWander(true, self.ConstantlyFaceEnemy) /*self:AA_StopMoving()*/ end
 					else
 						self.RangeAttack_DisableChasingEnemy = false
 						if self.CurrentSchedule != nil && self.CurrentSchedule.Name != "vj_chase_enemy" then self:DoChaseAnimation() end
-						//if GetConVar("vj_npc_nochasingenemy"):GetInt() == 0 then self.DisableChasingEnemy = true end else
-						//if GetConVar("vj_npc_nochasingenemy"):GetInt() == 0 then self.DisableChasingEnemy = false end
 					end
 				end
 			end
@@ -2952,9 +2954,12 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			//dissolver:Remove()
 		end
 		
-		-- Bone and Angle --		
+		-- Bone and Angle --
+		-- If it's a bullet, it will use localized velocity on each bone depending on how far away the bone is from the dmg position
+		local useLocalVel = (bit.band(self.SavedDmgInfo.type, DMG_BULLET) != 0 and self.SavedDmgInfo.pos != defPos) or false
 		local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
 		if self.DeathAnimationCodeRan then
+			useLocalVel = false
 			dmgForce = self:GetMoveVelocity() == defPos and self:GetGroundSpeedVelocity() or self:GetMoveVelocity()
 		end
 		for boneLimit = 0, self.Corpse:GetPhysicsObjectCount() - 1 do -- 128 = Bone Limit
@@ -2970,7 +2975,9 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 						childphys:EnableGravity(false)
 						childphys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
 					else
-						if self.UsesDamageForceOnDeath == true /*&& self.DeathAnimationCodeRan == false*/ then childphys:SetVelocity(dmgForce) end
+						if self.UsesDamageForceOnDeath == true /*&& self.DeathAnimationCodeRan == false*/ then
+							childphys:SetVelocity(dmgForce / math.max(1, (useLocalVel and childphys_bonepos:Distance(self.SavedDmgInfo.pos)/12) or 1))
+						end
 					end
 				end
 			end

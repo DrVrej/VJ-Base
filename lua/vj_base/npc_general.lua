@@ -909,15 +909,15 @@ function ENT:DoEntityRelationshipCheck()
 			if vClass != self:GetClass() && (vPlayer or (vNPC && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
 				local inEneTbl = VJ_HasValue(self.VJ_AddCertainEntityAsEnemy, v)
 				if self.HasAllies == true && inEneTbl == false then
-					for _,friclass in ipairs(self.VJ_NPC_Class) do
-						if friclass == varCPly && self.PlayerFriendly == false then self.PlayerFriendly = true end -- If player ally then set the PlayerFriendly to true
-						if (friclass == varCCom && NPCTbl_Combine[vClass]) or (friclass == varCZom && NPCTbl_Zombies[vClass]) or (friclass == varCAnt && NPCTbl_Antlions[vClass]) or (friclass == varCXen && NPCTbl_Xen[vClass]) then
+					for _,friClass in ipairs(self.VJ_NPC_Class) do
+						if friClass == varCPly && self.PlayerFriendly == false then self.PlayerFriendly = true end -- If player ally then set the PlayerFriendly to true
+						if (friClass == varCCom && NPCTbl_Combine[vClass]) or (friClass == varCZom && NPCTbl_Zombies[vClass]) or (friClass == varCAnt && NPCTbl_Antlions[vClass]) or (friClass == varCXen && NPCTbl_Xen[vClass]) then
 							v:AddEntityRelationship(self, D_LI, 99)
 							self:AddEntityRelationship(v, D_LI, 99)
 							entFri = true
 						end
-						if (v.VJ_NPC_Class && VJ_HasValue(v.VJ_NPC_Class, friclass)) or (entFri == true) then
-							if friclass == varCPly then -- If we have the player ally class then check if we both of us are supposed to be friends
+						if (v.VJ_NPC_Class && VJ_HasValue(v.VJ_NPC_Class, friClass)) or (entFri == true) then
+							if friClass == varCPly then -- If we have the player ally class then check if we both of us are supposed to be friends
 								if self.FriendsWithAllPlayerAllies == true && v.FriendsWithAllPlayerAllies == true then
 									entFri = true
 									if vNPC then v:AddEntityRelationship(self, D_LI, 99) end
@@ -1226,13 +1226,13 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 		self.Flinching = true
 		self:StopAttacks(true)
 		self.PlayingAttackAnimation = false
-		local animtbl = self.AnimTbl_Flinch
-		if HitBoxInfo != nil then animtbl = HitBoxInfo.Animation end
-		local anim = VJ_PICK(animtbl)
-		local animdur = self:DecideAnimationLength(anim, false, self.FlinchAnimationDecreaseLengthAmount)
-		if self.NextMoveAfterFlinchTime != "LetBaseDecide" && self.NextMoveAfterFlinchTime != false then animdur = self.NextMoveAfterFlinchTime end -- "LetBaseDecide" = Backwards compatibility
-		self:VJ_ACT_PLAYACTIVITY(anim, true, animdur, false, 0, {SequenceDuration=animdur, PlayBackRateCalculated=true})
-		timer.Create("timer_act_flinching"..self:EntIndex(), animdur, 1, function() self.Flinching = false end)
+		local animTbl = self.AnimTbl_Flinch
+		if HitBoxInfo != nil then animTbl = HitBoxInfo.Animation end
+		local anim = VJ_PICK(animTbl)
+		local animDur = self:DecideAnimationLength(anim, false, self.FlinchAnimationDecreaseLengthAmount)
+		if self.NextMoveAfterFlinchTime != "LetBaseDecide" && self.NextMoveAfterFlinchTime != false then animDur = self.NextMoveAfterFlinchTime end -- "LetBaseDecide" = Backwards compatibility
+		self:VJ_ACT_PLAYACTIVITY(anim, true, animDur, false, 0, {SequenceDuration=animDur, PlayBackRateCalculated=true})
+		timer.Create("timer_act_flinching"..self:EntIndex(), animDur, 1, function() self.Flinching = false end)
 		self:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup)
 		self.NextFlinchT = CurTime() + self.NextFlinchTime
 	end
