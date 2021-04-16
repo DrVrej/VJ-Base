@@ -213,6 +213,7 @@ function ENT:StartSchedule(schedule)
 			return
 		end
 		self.LastHiddenZoneT = 0
+		self.CurAnimationSeed = 0
 	end
 	if schedule.CanShootWhenMoving == true && self.CurrentWeaponAnimation != nil && IsValid(self:GetEnemy()) then
 		self:DoWeaponAttackMovementCode(true, (schedule.MoveType == 0 and 1) or 0) -- Send 1 if the current task is walking!

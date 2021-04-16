@@ -103,7 +103,6 @@ ENT.Medic_TimeUntilHeal = false -- Time until the ally receives health | Set to 
 ENT.Medic_CheckDistance = 600 -- How far does it check for allies that are hurt? | World units
 ENT.Medic_HealDistance = 100 -- How close does it have to be until it stops moving and heals its ally?
 ENT.Medic_HealthAmount = 25 -- How health does it give?
-ENT.Medic_DisableSetHealth = false -- If set to true, it won't set health to the ally & it won't clear its decals, allowing to custom code it
 ENT.Medic_NextHealTime = VJ_Set(10, 15) -- How much time until it can give health to an ally again
 ENT.Medic_SpawnPropOnHeal = true -- Should it spawn a prop, such as small health vial at a attachment when healing an ally?
 ENT.Medic_SpawnPropOnHealModel = "models/healthvial.mdl" -- The model that it spawns
@@ -688,7 +687,7 @@ function ENT:CustomOnIdleDialogueAnswer(ent) end -- ent = The entity that just t
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMedic_BeforeHeal() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMedic_OnHeal(ent) end
+function ENT:CustomOnMedic_OnHeal(ent) return true end -- Return false to NOT update its ally's health and NOT clear its decals, allowing to custom code it
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMedic_OnReset() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -941,6 +940,7 @@ ENT.LatestEnemyDistance = 0
 ENT.HealthRegenerationDelayT = 0
 ENT.NextWeaponAttackT_Base = 0 -- This is handled by the base, used to avoid running shoot animation twice
 ENT.CurAttackSeed = 0
+ENT.CurAnimationSeed = 0
 ENT.LatestVisibleEnemyPosition = Vector(0, 0, 0)
 ENT.GuardingPosition = nil
 ENT.GuardingFacePosition = nil
@@ -1233,6 +1233,9 @@ end
 		- faceEnemy = Should it constantly face the enemy while playing this animation? | DEFAULT: false
 		- animDelay = Delays the animation by the given number | DEFAULT: 0
 		- extraOptions = Table that holds extra options to modify parts of the code
+			- OnFinish(interrupted, anim) = A function that runs when the animation finishes | DEFAULT: nil
+				- interrupted = Was the animation cut off? Basically something else stopped it before the animation fully completed
+				- anim = The animation it played, it can be a string or an activity enumeration
 			- AlwaysUseSequence = The base will force attempt to play this animation as a sequence regardless of the other options | DEFAULT: false
 			- AlwaysUseGesture = The base will force attempt to play this animation as a gesture regardless of the other options | DEFAULT: false
 			- SequenceInterruptible = Can this sequence be interrupted? | DEFAULT: false
@@ -1240,7 +1243,7 @@ end
 				- WARNING: Recommended to not change this option, it's mostly used internally by the base!
 			- PlayBackRate = How fast should the animation play? | DEFAULT: self.AnimationPlaybackRate
 			- PlayBackRateCalculated = If the playback rate is already calculated in the stopActivitiesTime, then set this to true! | DEFAULT: false
-		- customFunc = TDO: NOT FINISHED
+		- customFunc() = TODO: NOT FINISHED
 	Returns
 		Nothing at the moment
 -----------------------------------------------------------]]
@@ -1311,6 +1314,8 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 		end
 	end
 	
+	-- Seed the current animation, used for animation delaying & on complete check
+	local seed = CurTime(); self.CurAnimationSeed = seed
 	local function PlayAct()
 		if stopActivities == true then
 			if stopActivitiesTime == false then -- false = Let the base calculate the time
@@ -1329,6 +1334,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				timer.Create("timer_act_stopattacks"..self:EntIndex(), stopActivitiesTime, 1, function() self.vACT_StopAttacks = false end)
 			end
 		end
+		self.CurAnimationSeed = seed -- We need to set it again because self:StopAttacks() above will reset it when it calls to chase enemy!
 		
 		local vsched = ai_vj_schedule.New("vj_act_"..animation)
 		if (customFunc) then customFunc(vsched, animation) end
@@ -1401,12 +1407,21 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 			vsched.IsPlayActivity = true
 			self:StartSchedule(vsched)
 		end
+		
+		-- If it has a OnFinish function, then set the timer to run it when it finishes!
+		if (extraOptions.OnFinish) then
+			timer.Simple((stopActivities and stopActivitiesTime) or self:DecideAnimationLength(animation, false), function()
+				if IsValid(self) && !self.Dead then
+					extraOptions.OnFinish(self.CurAnimationSeed != seed, animation)
+				end
+			end)
+		end
 	end
 	
 	-- For delay system
 	if animDelay > 0 then
 		timer.Simple(animDelay, function()
-			if IsValid(self) then
+			if IsValid(self) && self.CurAnimationSeed == seed then
 				PlayAct()
 			end
 		end)
@@ -1526,6 +1541,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 		end*/
 		//self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),pickedAnim)
 		self:AA_StopMoving()
+		self.CurAnimationSeed = 0
 		self.VJ_PlayingSequence = false
 		self.VJ_PlayingInterruptSequence = false
 		self:ResetIdealActivity(pickedAnim)
@@ -2194,9 +2210,9 @@ function ENT:Think()
 
 		-- Turn to the current face position
 		if self.IsDoingFacePosition != false then
-			local setangs = self.IsDoingFacePosition
-			self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
-			self:SetIdealYawAndUpdate(setangs.y)
+			local setAngs = self.IsDoingFacePosition
+			self:SetAngles(Angle(setAngs.p, self:GetAngles().y, setAngs.r))
+			self:SetIdealYawAndUpdate(setAngs.y)
 		end
 		
 		if self.Dead == false then
@@ -2204,9 +2220,9 @@ function ENT:Think()
 				if self.DoingWeaponAttack == true then self:PlaySoundSystem("Suppressing") end
 				self:DoConstantlyFaceEnemyCode()
 				if self.IsDoingFaceEnemy == true or (self.CombatFaceEnemy == true && self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene)))) then
-					local setangs = self:GetFaceAngle((ene:GetPos() - self:GetPos()):Angle())
-					self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
-					self:SetIdealYawAndUpdate(setangs.y)
+					local setAngs = self:GetFaceAngle((ene:GetPos() - self:GetPos()):Angle())
+					self:SetAngles(Angle(setAngs.p, self:GetAngles().y, setAngs.r))
+					self:SetIdealYawAndUpdate(setAngs.y)
 				end
 				-- Set the enemy variables
 				self.EnemyReset = false
@@ -3604,12 +3620,12 @@ function ENT:DropWeaponOnDeathCode(dmginfo, hitgroup)
 			phys:EnableGravity(false)
 			phys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
 		else
-			local dmgforce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
+			local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
 			if self.DeathAnimationCodeRan then
-				dmgforce = self:GetMoveVelocity() == defPos and self:GetGroundSpeedVelocity() or self:GetMoveVelocity()
+				dmgForce = self:GetMoveVelocity() == defPos and self:GetGroundSpeedVelocity() or self:GetMoveVelocity()
 			end
 			phys:SetMass(1)
-			phys:ApplyForceCenter(dmgforce)
+			phys:ApplyForceCenter(dmgForce)
 		end
 	end
 	self:CustomOnDropWeapon_AfterWeaponSpawned(dmginfo, hitgroup, self.TheDroppedWeapon)
