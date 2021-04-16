@@ -207,6 +207,16 @@ function ENT:BusyWithActivity()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
+	Unlike self:BusyWithActivity(), this looks for more advanced behaviors like following player or moving to heal an ally
+	Returns
+		- false, NOT busy
+		- true, Busy
+-----------------------------------------------------------]]
+function ENT:IsBusyWithBehavior()
+	return self.FollowPlayer_GoingAfter == true or self.Medic_IsHealingAlly == true
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
 	Sets the state of the NPC, states are prefixed with VJ_STATE_*
 		- state = The state it should set it to | DEFAULT = VJ_STATE_NONE
 		- time = How long should the state apply before it's reset to VJ_STATE_NONE?  | DEFAULT = -1
@@ -763,15 +773,14 @@ function ENT:DoMedicCode()
 						self:DoMedicCode_Reset()
 					else -- If it exists...
 						if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then -- Are we still in healing distance?
-							self:CustomOnMedic_OnHeal(self.Medic_CurrentEntToHeal)
+							if self:CustomOnMedic_OnHeal(self.Medic_CurrentEntToHeal) != false then
+								self.Medic_CurrentEntToHeal:RemoveAllDecals()
+								local friCurHP = self.Medic_CurrentEntToHeal:Health()
+								self.Medic_CurrentEntToHeal:SetHealth(math.Clamp(friCurHP + self.Medic_HealthAmount, friCurHP, self.Medic_CurrentEntToHeal:GetMaxHealth()))
+							end
 							self:PlaySoundSystem("MedicOnHeal")
 							if self.Medic_CurrentEntToHeal.IsVJBaseSNPC == true then
 								self.Medic_CurrentEntToHeal:PlaySoundSystem("MedicReceiveHeal")
-							end
-							if !self.Medic_DisableSetHealth then
-								self.Medic_CurrentEntToHeal:RemoveAllDecals()
-								local fricurhp = self.Medic_CurrentEntToHeal:Health()
-								self.Medic_CurrentEntToHeal:SetHealth(math.Clamp(fricurhp + self.Medic_HealthAmount, fricurhp, self.Medic_CurrentEntToHeal:GetMaxHealth()))
 							end
 							self:DoMedicCode_Reset()
 						else -- If we are no longer in healing distance, go after the ally again
@@ -782,7 +791,7 @@ function ENT:DoMedicCode()
 					end
 				end
 			end)
-		else -- If we aren't in healing distance, then go after the ally
+		elseif !self:BusyWithActivity() then -- If we aren't in healing distance, then go after the ally
 			self.NextIdleTime = CurTime() + 4
 			self.NextChaseTime = CurTime() + 4
 			self:SetTarget(self.Medic_CurrentEntToHeal)
