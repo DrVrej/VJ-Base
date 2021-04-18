@@ -64,7 +64,7 @@ hook.Add("PlayerInitialSpawn", "VJBaseSpawn", function(ply, transition)
 		net.Send(ply)
 	end)
 	
-	if (ply:SteamID() == "STEAM_0:0:22688298") then
+	if !game.SinglePlayer() && ply:SteamID() == "STEAM_0:0:22688298" then
 		PrintMessage(HUD_PRINTTALK,"DrVrej Has Joined The Game!")
 		PrintMessage(HUD_PRINTCENTER,"DrVrej Has Joined The Game!")
 		local sd = CreateSound(game.GetWorld(),"vj_illuminati/Illuminati Confirmed.mp3")
@@ -85,7 +85,7 @@ end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Outdated GMod Version Check ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-if SERVER && !isfunction(FindMetaTable("NPC").SetIdealYawAndUpdate) then
+if SERVER && !isfunction(FindMetaTable("NPC").AutoMovement) then
 	timer.Simple(1, function()
 		if !VJ_WARN_GModOutdated then
 			VJ_WARN_GModOutdated = true
