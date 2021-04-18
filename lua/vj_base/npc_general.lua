@@ -531,8 +531,10 @@ end
 		- true, At least 1 damage type is included
 		- false, NO damage type is included
 -----------------------------------------------------------]]
+// - DMG_DIRECT = Disabled because fire uses it!
+// - DMG_ALWAYSGIB = Make sure damage is NOT a bullet because GMod sets DMG_ALWAYSGIB randomly for certain bullets (Maybe if the damage is high?)
 function ENT:IsDefaultGibDamageType(dmgType)
-	return bit.band(dmgType, DMG_ALWAYSGIB) != 0 or bit.band(dmgType, DMG_ENERGYBEAM) != 0 or bit.band(dmgType, DMG_BLAST) != 0 or bit.band(dmgType, DMG_VEHICLE) != 0 or bit.band(dmgType, DMG_CRUSH) != 0 or bit.band(dmgType, DMG_DIRECT) != 0 or bit.band(dmgType, DMG_DISSOLVE) != 0 or bit.band(dmgType, DMG_AIRBOAT) != 0 or bit.band(dmgType, DMG_SLOWBURN) != 0 or bit.band(dmgType, DMG_PHYSGUN) != 0 or bit.band(dmgType, DMG_PLASMA) != 0 or bit.band(dmgType, DMG_SONIC) != 0
+	return (bit.band(dmgType, DMG_ALWAYSGIB) != 0 && bit.band(dmgType, DMG_BULLET) == 0) or bit.band(dmgType, DMG_ENERGYBEAM) != 0 or bit.band(dmgType, DMG_BLAST) != 0 or bit.band(dmgType, DMG_VEHICLE) != 0 or bit.band(dmgType, DMG_CRUSH) != 0 or bit.band(dmgType, DMG_DISSOLVE) != 0 or bit.band(dmgType, DMG_SLOWBURN) != 0 or bit.band(dmgType, DMG_PHYSGUN) != 0 or bit.band(dmgType, DMG_PLASMA) != 0 or bit.band(dmgType, DMG_SONIC) != 0
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*
@@ -1599,7 +1601,7 @@ function ENT:RunGibOnDeathCode(dmginfo, hitgroup, extraOptions)
 	local dmgType = dmginfo:GetDamageType()
 	for k = 1, #dmgTbl do
 		local v = dmgTbl[k]
-		if (v == "All") or (v == "UseDefault" && self:IsDefaultGibDamageType(dmgType)) or (v != "UseDefault" && bit.band(dmgType, v) != 0) then
+		if (v == "All") or (v == "UseDefault" && self:IsDefaultGibDamageType(dmgType) && bit.band(dmgType, DMG_NEVERGIB) == 0) or (v != "UseDefault" && bit.band(dmgType, v) != 0) then
 			local setupgib, setupgib_extra = self:SetUpGibesOnDeath(dmginfo, hitgroup)
 			if setupgib_extra == nil then setupgib_extra = {} end
 			if setupgib == true then
