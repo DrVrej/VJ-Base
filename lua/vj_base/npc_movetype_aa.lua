@@ -92,7 +92,7 @@ function ENT:AA_MoveTo(ent, playAnim, moveType, extraOptions)
 	local enepos;
 	-- If the enemy is a bit above water, try to go for its GetPos, which is usually at its feet
 	if self.MovementType == VJ_MOVETYPE_AQUATIC && ent:WaterLevel() < 3 then
-		enepos = ent:GetPos() + ent:GetForward()*vAd_PosForward + ent:GetUp()*vAd_PosUp + ent:GetRight()*vAd_PosRight
+		enepos = ent:GetPos() + ent:GetForward()*addPos.x + ent:GetRight()*addPos.y + ent:GetUp()*addPos.z
 	else
 		enepos = (ent:GetPos() + ent:OBBCenter()) + ent:GetForward()*addPos.x + ent:GetRight()*addPos.y + ent:GetUp()*addPos.z
 	end
