@@ -433,7 +433,7 @@ function SWEP:NPCAbleToShoot(CheckSec)
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:NPCShoot_Primary(ShootPos, ShootDir)
+function SWEP:NPCShoot_Primary()
 	//self:SetClip1(self:Clip1() - 1)
 	//if CurTime() > self.NPC_NextPrimaryFireT then
 	//self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
