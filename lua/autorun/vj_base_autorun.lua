@@ -50,9 +50,9 @@ elseif CLIENT then
 		spawnmenu.AddToolTab("DrVrej", "DrVrej", "vj_base/icons/vrejgaming.png") // "icon16/plugin.png"
 		spawnmenu.AddToolCategory("DrVrej", "Main Menu", "#vjbase.menu.tabs.mainmenu")
 		spawnmenu.AddToolCategory("DrVrej", "SNPCs", "#vjbase.menu.tabs.settings.snpc")
-		spawnmenu.AddToolCategory("DrVrej", "Weapons", "#vjbase.menu.tabs.settings.weapon")
+		spawnmenu.AddToolCategory("DrVrej", "#spawnmenu.category.weapons", "#vjbase.menu.tabs.settings.weapon")
 		spawnmenu.AddToolCategory("DrVrej", "HUDs", "#vjbase.menu.tabs.settings.hud")
-		spawnmenu.AddToolCategory("DrVrej", "Tools", "#vjbase.menu.tabs.tools")
+		spawnmenu.AddToolCategory("DrVrej", "#spawnmenu.tools_tab", "#vjbase.menu.tabs.tools")
 		spawnmenu.AddToolCategory("DrVrej", "SNPC Configures", "#vjbase.menu.tabs.configures.snpc")
 	end)
 end
@@ -65,8 +65,8 @@ hook.Add("PlayerInitialSpawn", "VJBaseSpawn", function(ply, transition)
 	end)
 	
 	if !game.SinglePlayer() && ply:SteamID() == "STEAM_0:0:22688298" then
-		PrintMessage(HUD_PRINTTALK,"DrVrej Has Joined The Game!")
-		PrintMessage(HUD_PRINTCENTER,"DrVrej Has Joined The Game!")
+		PrintMessage(HUD_PRINTTALK,"#vjchat.drvrej_has_joined_the_game")
+		PrintMessage(HUD_PRINTCENTER,"#vjchat.drvrej_has_joined_the_game")
 		local sd = CreateSound(game.GetWorld(),"vj_illuminati/Illuminati Confirmed.mp3")
 		sd:SetSoundLevel(0)
 		sd:Play()
@@ -76,7 +76,7 @@ end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 net.Receive("VJSay", function(len, pl)
 	if pl:IsPlayer() && pl:SteamID() == "STEAM_0:0:22688298" then
-		PrintMessage(HUD_PRINTTALK, "DrVrej is in the server!")
+		PrintMessage(HUD_PRINTTALK, "#vjchat.drvrej_is_in_the_server")
 		local sd = CreateSound(game.GetWorld(), "vj_illuminati/Illuminati Confirmed.mp3")
 		sd:SetSoundLevel(0)
 		sd:Play()
@@ -90,8 +90,8 @@ if SERVER && !isfunction(FindMetaTable("NPC").AutoMovement) then
 		if !VJ_WARN_GModOutdated then
 			VJ_WARN_GModOutdated = true
 			timer.Create("VJ_WARN_GModOutdated", 2, 0, function()
-				PrintMessage(HUD_PRINTTALK, "--- Outdated version of Garry's Mod detected! ---")
-				PrintMessage(HUD_PRINTTALK, "Opt out of the Chromium branch!")
+				PrintMessage(HUD_PRINTTALK, "#vjchat.error_outdated_version_of_garrysmod_detected")
+				PrintMessage(HUD_PRINTTALK, "#vjchat.error_opt_ouf_of_the_chromium_branch")
 			end)
 		end
 	end)

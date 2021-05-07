@@ -133,7 +133,7 @@ spawnmenu.AddContentType( "vjbase_npc", function( container, obj )
 end)
 -------------------------------------------------------------------------------------------------------------------------
 hook.Add("PopulateVJBaseWeapons","AddVJBaseSpawnMenu_weapon",function(pnlContent,tree,node)
-	local weapontree = tree:AddNode("Weapons", "icon16/gun.png")
+	local weapontree = tree:AddNode("#spawnmenu.category.weapons", "icon16/gun.png")
 	local Weapons = list.Get("VJBASE_SPAWNABLE_WEAPON")  -- Get a list of available Weapons
 	local WeaponCatagory = {}
 	for k, weapon in pairs( Weapons ) do
@@ -172,7 +172,7 @@ hook.Add("PopulateVJBaseWeapons","AddVJBaseSpawnMenu_weapon",function(pnlContent
 end)
 -------------------------------------------------------------------------------------------------------------------------
 hook.Add("PopulateVJBaseEntities","AddVJBaseSpawnMenu_Entity",function(pnlContent,tree,node)
-	local entitytree = tree:AddNode("Entities", "icon16/bricks.png")
+	local entitytree = tree:AddNode("#spawnmenu.category.entities", "icon16/bricks.png")
 	local EntitiesCategories = {}
 	local EntitiesList = list.Get("VJBASE_SPAWNABLE_ENTITIES") -- Get a list of available Entities
 	if (EntitiesList) then

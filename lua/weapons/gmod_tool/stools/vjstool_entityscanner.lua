@@ -1,6 +1,6 @@
 TOOL.Name = "#tool.vjstool_entityscanner.name"
 TOOL.Tab = "DrVrej"
-TOOL.Category = "Tools"
+TOOL.Category = "#spawnmenu.tools_tab"
 TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
 
 TOOL.Information = {
@@ -37,8 +37,8 @@ function TOOL:LeftClick(tr)
 		PrintMessage(HUD_PRINTCONSOLE,"VELOCITY: Vector("..Phys:GetVelocity().x..", "..Phys:GetVelocity().y..", "..Phys:GetVelocity().z..") ||| X = "..Phys:GetVelocity().x.." , Y = "..Phys:GetVelocity().y.." , Z = "..Phys:GetVelocity().z.." ||| Length = "..Phys:GetVelocity():Length())
 		PrintMessage(HUD_PRINTCONSOLE,"PHYSICS: Mass = "..Phys:GetMass().." ||| Surface Area = "..Phys:GetSurfaceArea().." ||| Volume = "..Phys:GetVolume())
 	else
-		PrintMessage(HUD_PRINTCONSOLE,"VELOCITY: Can't display this information! Reason: Model doesn't have proper physics!")
-		PrintMessage(HUD_PRINTCONSOLE,"PHYSICS: Can't display this information! Reason: Model doesn't have proper physics!")
+		PrintMessage(HUD_PRINTCONSOLE,"#vjchat.print.velocity.error")
+		PrintMessage(HUD_PRINTCONSOLE,"#vjchat.print.physics.error")
 	end
 	PrintMessage(HUD_PRINTCONSOLE,"COLOR: Color("..Ent:GetColor().r..", "..Ent:GetColor().g..", "..Ent:GetColor().b..", "..Ent:GetColor().a..") ||| Red = "..Ent:GetColor().r.." , Green = "..Ent:GetColor().g.." , Blue = "..Ent:GetColor().b.." , Alpha = "..Ent:GetColor().a)
 	PrintMessage(HUD_PRINTCONSOLE,"-----------------------------------------------------------------------------------------------")

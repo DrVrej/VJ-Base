@@ -1,7 +1,7 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 //SWEP.Base 						= "weapon_vj_base"
-SWEP.PrintName					= "VJ NPC Controller"
+SWEP.PrintName					= "#wn.vjname.vj_npccntrl"
 SWEP.Author 					= "DrVrej"
 SWEP.Contact					= "http://steamcommunity.com/groups/vrejgaming"
 SWEP.Purpose					= "This weapon is made to control NPCs. Mostly VJ SNPCs"
@@ -54,30 +54,30 @@ function SWEP:PrimaryAttack()
 	local tr =  util.TraceLine(util.GetPlayerTrace(self:GetOwner()))
 	if tr.Entity && IsValid(tr.Entity) then
 		if tr.Entity:IsPlayer() then
-			self:GetOwner():ChatPrint("That's a player dumbass.")
+			self:GetOwner():ChatPrint("#vj_npc_controller.error.player")
 			return
 		elseif tr.Entity:GetClass() == "prop_ragdoll" then
-			self:GetOwner():ChatPrint("You are about to become that corpse.")
+			self:GetOwner():ChatPrint("#vj_npc_controller.error.ragdoll")
 			return
 		elseif tr.Entity:GetClass() == "prop_physics" then
-			self:GetOwner():ChatPrint("Uninstall your game. Now.")
+			self:GetOwner():ChatPrint("#vj_npc_controller.error.physics")
 			return
 		elseif !tr.Entity:IsNPC() then
-			self:GetOwner():ChatPrint("This isn't an NPC, therefore you can't control it.")
+			self:GetOwner():ChatPrint("#vj_npc_controller.error.no_npc")
 			return
 		elseif tr.Entity:IsNPC() && tr.Entity:Health() <= 0 then
-			self:GetOwner():ChatPrint("This NPC's health is 0 or below, therefore you can't control.")
+			self:GetOwner():ChatPrint("#vj_npc_controller.error.dead_npc")
 			return
 		//elseif tr.Entity.IsVJBaseSNPC_Tank == true then
 			//tr.Entity = tr.Entity.Gunner
-			//self:GetOwner():ChatPrint("Tank are not controllable yet, sorry!")
+			//self:GetOwner():ChatPrint("#vj_npc_controller.error.tank")
 			//return
 		elseif tr.Entity.VJ_IsBeingControlled == true then
-			self:GetOwner():ChatPrint("You can't control this NPC, it's already being controlled by someone else.")
+			self:GetOwner():ChatPrint("#vj_npc_controller.error.controlled_by_a_player")
 			return
 		end
 		if (!tr.Entity.IsVJBaseSNPC) then
-			self:GetOwner():ChatPrint("NOTE: VJ NPC controller is mainly made for VJ Base SNPCs!")
+			self:GetOwner():ChatPrint("#vj_npc_controller.note")
 		end
 		local SpawnControllerObject = ents.Create("obj_vj_npccontroller")
 		SpawnControllerObject.VJCE_Player = self:GetOwner()

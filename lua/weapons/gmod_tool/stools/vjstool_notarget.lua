@@ -1,6 +1,6 @@
 TOOL.Name = "#tool.vjstool_notarget.name"
 TOOL.Tab = "DrVrej"
-TOOL.Category = "Tools"
+TOOL.Category = "#spawnmenu.tools_tab"
 TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
 
 TOOL.Information = {
@@ -28,12 +28,12 @@ function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	local Ply = self:GetOwner()
 	if Ply:IsFlagSet(FL_NOTARGET) != true then
-		Ply:ChatPrint("Set no target to yourself: ON")
+		Ply:ChatPrint("#vjchat.set_no_target_to_yourself_on")
 		Ply:SetNoTarget(true)
 		Ply.VJ_NoTarget = true
 		return true
 	else
-		Ply:ChatPrint("Set no target to yourself: OFF")
+		Ply:ChatPrint("#vjchat.set_no_target_to_yourself_off")
 		Ply:SetNoTarget(false)
 		Ply.VJ_NoTarget = false
 		return true

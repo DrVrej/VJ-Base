@@ -1,6 +1,6 @@
 TOOL.Name = "#tool.vjstool_npcspawner.name"
 TOOL.Tab = "DrVrej"
-TOOL.Category = "Tools"
+TOOL.Category = "#spawnmenu.tools_tab"
 TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
 
 TOOL.Information = {
@@ -249,7 +249,7 @@ else -- If SERVER
 			local svgetlines = net.ReadType()
 			local svgettype = net.ReadString()
 			if !IsValid(ply) then return false end
-			if table.Count(svgetlines) <= 0 then ply:ChatPrint("Nothing to spawn!") return false end
+			if table.Count(svgetlines) <= 0 then ply:ChatPrint("#vjchat.nothing_to_spawn") return false end
 			local spawner = ents.Create("obj_vj_spawner_base")
 			spawner.EntitiesToSpawn = {}
 			spawner:SetPos(svpos)
@@ -262,7 +262,7 @@ else -- If SERVER
 			end
 			spawner:SetAngles(angs)
 			for _,v in pairs(svgetlines) do
-				//if v.IsVJBaseSpawner == true then ply:ChatPrint("Can't be spawned because it's a spawner") end
+				//if v.IsVJBaseSpawner == true then ply:ChatPrint("#vjchat.cant_be_spawned_because_its_a_spawner") end
 				table.insert(spawner.EntitiesToSpawn,{SpawnPosition={vForward=v.SpawnPosition.x,vRight=v.SpawnPosition.y,vUp=v.SpawnPosition.z}, Entities={v.Entities}, WeaponsList={v.WeaponsList}})
 			end
 			//spawner.EntitiesToSpawn = {entitiestospawntbl}

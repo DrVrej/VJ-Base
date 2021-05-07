@@ -62,11 +62,11 @@ function ENT:AcceptInput(key, activator, caller, data)
 	if !activator:IsPlayer() then return end
 	if self.Activated == false then
 		self.Activated = true
-		activator:PrintMessage(HUD_PRINTTALK, "Activated NPC Bullseye.")
+		activator:PrintMessage(HUD_PRINTTALK, "#npc.vjchat.bulleye_activated")
 		self:EmitSound(Sound("buttons/button6.wav"),70,100)
 	elseif self.Activated == true then
 		self.Activated = false
-		activator:PrintMessage(HUD_PRINTTALK, "Deactivated NPC Bullseye.")
+		activator:PrintMessage(HUD_PRINTTALK, "#npc.vjchat.bulleye_deactivated")
 		self:EmitSound(Sound("buttons/button5.wav"),70,100)
 	end
 end

@@ -1,6 +1,6 @@
 TOOL.Name = "#tool.vjstool_npcrelationship.name"
 TOOL.Tab = "DrVrej"
-TOOL.Category = "Tools"
+TOOL.Category = "#spawnmenu.tools_tab"
 TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
 
 TOOL.Information = {

@@ -172,7 +172,7 @@ if CLIENT then
 			surface.SetMaterial(mat_icon_camera)
 			surface.SetDrawColor(Color(255, 255, 255, 255))
 			surface.DrawTexturedRect(ScrW() / 2.21, ScrH()-45, 22, 22)
-			draw.SimpleText((ply.VJC_Camera_Mode == 1 and "Third") or "First", "VJFont_Trebuchet24_SmallMedium", ScrW() / 2.155, ScrH()-43, Color(255, 255, 255, 255), 0, 0) // VJFont_Trebuchet24_SmallMedium
+			draw.SimpleText((ply.VJC_Camera_Mode == 1 and "#vj_npc_controller.hud.third_person") or "#vj_npc_controller.hud.first_person", "VJFont_Trebuchet24_SmallMedium", ScrW() / 2.155, ScrH()-43, Color(255, 255, 255, 255), 0, 0) // VJFont_Trebuchet24_SmallMedium
 			
 			-- Zoom Camera
 			surface.SetMaterial(mat_icon_zoom)

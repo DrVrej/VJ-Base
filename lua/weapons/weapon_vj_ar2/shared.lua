@@ -1,7 +1,7 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Base 						= "weapon_vj_base"
-SWEP.PrintName					= "AR2"
+SWEP.PrintName					= "#weapon.vjname.ar2"
 SWEP.Author 					= "DrVrej"
 SWEP.Contact					= "http://steamcommunity.com/groups/vrejgaming"
 SWEP.Purpose					= "This weapon is made for Players and NPCs"

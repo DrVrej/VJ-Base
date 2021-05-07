@@ -407,7 +407,7 @@ function SWEP:NPCAbleToShoot(CheckSec)
 		if owner:GetActivity() != nil && ((owner.IsVJBaseSNPC_Human == true && (/*(owner.CurrentWeaponAnimation == owner:GetSequenceActivity(owner:GetSequence())) or*/ (owner.CurrentWeaponAnimation == owner:GetActivity()) or (owner:GetActivity() == owner:TranslateToWeaponAnim(owner.CurrentWeaponAnimation)) or (owner.DoingWeaponAttack_Standing == false && owner.DoingWeaponAttack == true))) or (!owner.IsVJBaseSNPC_Human)) then
 			if (owner.IsVJBaseSNPC_Human) then
 				if owner.AllowWeaponReloading == true && self:Clip1() <= 0 then -- No ammo!
-					if owner.VJ_IsBeingControlled == true then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER,"Press R to reload!") end
+					if owner.VJ_IsBeingControlled == true then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER,"#vj_npc_controller.hud.press_x_to_reload") end
 					if self.IsMeleeWeapon == false && self.HasDryFireSound == true && CurTime() > self.NextNPCDrySoundT then
 						local sdtbl = VJ_PICK(self.DryFireSound)
 						if sdtbl != false then owner:EmitSound(sdtbl, 80, math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b)) end

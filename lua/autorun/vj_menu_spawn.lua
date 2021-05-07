@@ -58,7 +58,7 @@ if CLIENT then
 		local Categories = {}
 		for k, v in pairs(EntList) do
 			local Category = v.Category or "Uncategorized"
-			if Category == "VJ Base" then Category = "Default" end
+			if Category == "VJ Base" then Category = "#vjbase.menu.tabs.default" end
 			local Tab = Categories[Category] or {}
 			Tab[k] = v
 			Categories[Category] = Tab
@@ -69,7 +69,7 @@ if CLIENT then
 			if list.HasEntry("VJBASE_CATEGORY_INFO", CategoryName) then
 				icon = CatInfoList[CategoryName].icon
 			end
-			if CategoryName == "Default" then
+			if CategoryName == "#vjbase.menu.tabs.default" then
 				icon = "vj_base/icons/vjbase.png"
 			end
 			local node = roottree:AddNode(CategoryName, icon)
@@ -96,7 +96,7 @@ if CLIENT then
 					spawnmenu.CreateContentIcon("npc",CatPropPanel,t)
 					spawnmenu.CreateContentIcon("npc",roottree.PropPanel,t)
 				end
-			elseif vjTreeName == "Weapons" then
+			elseif vjTreeName == "#spawnmenu.category.weapons" then
 				for _, ent in SortedPairsByMemberValue(v, "PrintName") do
 					local t = { 
 						nicename	= ent.PrintName or ent.ClassName,
@@ -107,7 +107,7 @@ if CLIENT then
 					spawnmenu.CreateContentIcon(ent.ScriptedEntityType or "weapon", CatPropPanel, t)
 					spawnmenu.CreateContentIcon(ent.ScriptedEntityType or "weapon", roottree.PropPanel, t)
 				end
-			elseif vjTreeName == "Entities" then
+			elseif vjTreeName == "#spawnmenu.category.entities" then
 				for _, ent in SortedPairsByMemberValue(v, "PrintName") do
 					local t = { 
 						nicename	= ent.PrintName or ent.ClassName,
@@ -134,15 +134,15 @@ if CLIENT then
 	end)
 	--[-------------------------------------------------------]--
 	hook.Add("PopulateVJBaseWeapons","AddVJBaseSpawnMenu_Weapon", function(pnlContent, tree, node)
-		VJ_PopulateTrees(pnlContent, tree, node, "Weapons", "icon16/gun.png", "VJBASE_SPAWNABLE_WEAPON")
+		VJ_PopulateTrees(pnlContent, tree, node, "#spawnmenu.category.weapons", "icon16/gun.png", "VJBASE_SPAWNABLE_WEAPON")
 	end)
 	--[-------------------------------------------------------]--
 	hook.Add("PopulateVJBaseEntities","AddVJBaseSpawnMenu_Entity",function(pnlContent,tree,node)
-		VJ_PopulateTrees(pnlContent, tree, node, "Entities", "icon16/bricks.png", "VJBASE_SPAWNABLE_ENTITIES")
+		VJ_PopulateTrees(pnlContent, tree, node, "#spawnmenu.category.entities", "icon16/bricks.png", "VJBASE_SPAWNABLE_ENTITIES")
 	end)
 	--[-------------------------------------------------------]--
 	hook.Add("PopulateVJBaseTools","AddVJBaseSpawnMenu_Tool",function(pnlContent,tree,node)
-		local tooltree = tree:AddNode("Tools", "icon16/bullet_wrench.png")
+		local tooltree = tree:AddNode("#spawnmenu.tools_tab", "icon16/bullet_wrench.png")
 		tooltree.PropPanel = vgui.Create("ContentContainer", pnlContent)
 		tooltree.PropPanel:SetVisible(false)
 		tooltree.PropPanel:SetTriggerSpawnlistChange(false)
@@ -156,12 +156,12 @@ if CLIENT then
 			for _, nv in pairs(ToolList) do
 				if nv.Name == "DrVrej" then
 					for _, nv2 in pairs(nv.Items) do
-						if nv2.ItemName == "Tools" then
-							//local node = tooltree:AddNode("Default", "icon16/bullet_wrench.png")
+						if nv2.ItemName == "#spawnmenu.tools_tab" then
+							//local node = tooltree:AddNode("#vjbase.menu.tabs.default", "icon16/bullet_wrench.png")
 							local CatPropPanel = vgui.Create("ContentContainer", pnlContent)
 							CatPropPanel:SetVisible(false)
 							local Header = vgui.Create("ContentHeader", tooltree.PropPanel)
-							Header:SetText("Tools")
+							Header:SetText("#spawnmenu.tools_tab")
 							tooltree.PropPanel:Add(Header)
 							for _, nv3 in pairs(nv2) do
 								if !istable(nv3) then continue end

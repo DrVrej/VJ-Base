@@ -32,7 +32,7 @@ if CLIENT then
 		local frame = vgui.Create("DFrame")
 		frame:SetSize(600, 300)
 		frame:SetPos(ScrW()*0.5, ScrH()*0.5)
-		frame:SetTitle('VJ Test Menu')
+		frame:SetTitle('#vj_test_npc_menu_title')
 		//frame:SetBackgroundBlur(true)
 		frame:SetSizable(true)
 		frame:SetDeleteOnClose(false)
@@ -44,7 +44,7 @@ if CLIENT then
 		label_wel:SizeToContents()
 		
 		local button_kill = vgui.Create("DButton", frame)
-		button_kill:SetText("Kill Yourself")
+		button_kill:SetText("#vj_test_npc_menu_suicide")
 		button_kill:SetPos(10, 50)
 		button_kill:SetSize(100, 50)
 		button_kill.DoClick = function()
@@ -54,11 +54,11 @@ if CLIENT then
 		
 		local label_admin = vgui.Create("DLabel", frame)
 		label_admin:SetPos(10, 110)
-		label_admin:SetText("NOTE: Only admins can use these buttons! Most of this commands require 'sv_cheats' to be 1")
+		label_admin:SetText("#vj_test_npc_menu_admin_note")
 		label_admin:SizeToContents()
 		
 		local button_god = vgui.Create("DButton", frame)
-		button_god:SetText("Toggle God Mode")
+		button_god:SetText("#vj_test_npc_menu_god_mode")
 		button_god:SetPos(10, 130)
 		button_god:SetSize(100, 50)
 		button_god.DoClick = function()
@@ -66,7 +66,7 @@ if CLIENT then
 		end
 		
 		local button_buddha = vgui.Create("DButton", frame)
-		button_buddha:SetText("Toggle Buddha")
+		button_buddha:SetText("#vj_test_npc_menu_buddha")
 		button_buddha:SetPos(120, 130)
 		button_buddha:SetSize(100, 50)
 		button_buddha.DoClick = function()
@@ -74,7 +74,7 @@ if CLIENT then
 		end
 		
 		local button_fp = vgui.Create("DButton", frame)
-		button_fp:SetText("Firstperson")
+		button_fp:SetText("#vj_test_npc_menu_fp")
 		button_fp:SetPos(230, 130)
 		button_fp:SetSize(100, 50)
 		button_fp.DoClick = function()
@@ -82,7 +82,7 @@ if CLIENT then
 		end
 		
 		local button_tp = vgui.Create("DButton", frame)
-		button_tp:SetText("Thirdperson")
+		button_tp:SetText("#vj_test_npc_menu_tp")
 		button_tp:SetPos(340, 130)
 		button_tp:SetSize(100, 50)
 		button_tp.DoClick = function()
@@ -91,7 +91,7 @@ if CLIENT then
 		
 		if LocalPlayer():SteamID() == "STEAM_0:0:22688298" then
 			local button_vj = vgui.Create("DButton", frame)
-			button_vj:SetText("Illuminati")
+			button_vj:SetText("#vj_test_npc_menu_illuminati")
 			button_vj:SetPos(10, 170)
 			button_vj:SetSize(50, 30)
 			button_vj.DoClick = function()
@@ -101,7 +101,7 @@ if CLIENT then
 			end
 			
 			local button_sd = vgui.Create("DButton", frame)
-			button_sd:SetText("THIRSTY")
+			button_sd:SetText("#vj_test_npc_menu_thirsty")
 			button_sd:SetPos(120, 170 )
 			button_sd:SetSize(50, 30)
 			button_sd.DoClick = function()

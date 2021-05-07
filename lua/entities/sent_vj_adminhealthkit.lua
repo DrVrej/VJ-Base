@@ -58,7 +58,7 @@ function ENT:Use(activator, caller)
 	if activator:IsPlayer() then
 		self:EmitSound(Sound("items/smallmedkit1.wav"),70,100)
 		activator:SetHealth(activator:Health() +1000000)
-		activator:PrintMessage(HUD_PRINTTALK, "You have picked up 1,000,000 health!")
+		activator:PrintMessage(HUD_PRINTTALK, "#entity.vjfeature.admin_health_kit_message")
 		self:Remove()
 	end
 end

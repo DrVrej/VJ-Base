@@ -56,7 +56,7 @@ if SERVER then
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_PICK(tbl)
+function VJ_PICK(tbl) -- Needs to be edited a bit to use whole line as phrase
 	if not tbl then return false end -- Yete table pame choone meche, veratartsour false!
 	if istable(tbl) then
 		if #tbl < 1 then return false end -- Yete table barabe (meg en aveli kich), getsoor!
@@ -347,7 +347,7 @@ local Entity_MetaTable = FindMetaTable("Entity")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_Controller_InitialMessage(ply)
 	if !IsValid(ply) then return end
-	ply:ChatPrint("For controls, check \"Controller Settings\" under \"DrVrej\" tab")
+	ply:ChatPrint("#npc.vjchat.controls_help")
 	if self.IsVJBaseSNPC == true then
 		self:Controller_IntMsg(ply)
 	end

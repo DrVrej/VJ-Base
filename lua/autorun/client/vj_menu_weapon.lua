@@ -19,5 +19,5 @@ local function VJ_WEAPON_CLIENTSETTINGS(Panel) -- Client Settings
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_WEAPON", function()
-	spawnmenu.AddToolMenuOption("DrVrej", "Weapons", "Weapon Client Settings", "#vjbase.menu.clweapon", "", "", VJ_WEAPON_CLIENTSETTINGS, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "#spawnmenu.category.weapons", "Weapon Client Settings", "#vjbase.menu.clweapon", "", "", VJ_WEAPON_CLIENTSETTINGS, {})
 end)

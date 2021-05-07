@@ -50,12 +50,12 @@ function ENT:Use(activator, caller)
 			self.Active = false
 			self:EmitSound(Sound("hl1/fvox/deactivated.wav"),70,100)
 			self:SetColor(Color(255,0,0))
-			activator:PrintMessage(HUD_PRINTTALK, "Deactivated this spawnpoint!")
+			activator:PrintMessage(HUD_PRINTTALK, "#entity.vjfeature.player_spawnpoint_deactivated")
 		else
 			self.Active = true
 			self:EmitSound(Sound("hl1/fvox/activated.wav"),70,100)
 			self:SetColor(Color(0,255,0))
-			activator:PrintMessage(HUD_PRINTTALK, "Activated this spawnpoint!")
+			activator:PrintMessage(HUD_PRINTTALK, "#entity.vjfeature.player_spawnpoint_activated")
 		end
 	end
 end
