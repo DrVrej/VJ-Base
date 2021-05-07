@@ -20,7 +20,7 @@ function EFFECT:Init(data)
 		EffectCode:SetRoll(math.Rand(480,540))
 		EffectCode:SetRollDelta(math.Rand(-0.2,0.2)) -- How fast it rolls
 		EffectCode:SetColor(80,60,20) -- The color of the effect
-		EffectCode:SetGravity(Vector(0,0,0)) -- The Gravity
+		EffectCode:SetGravity(Vector(0, 0, 0)) -- The Gravity
 		EffectCode:SetAirResistance(15)
 	end
 	Emitter:Finish()

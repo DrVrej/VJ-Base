@@ -349,7 +349,7 @@ function NPC_MetaTable:VJ_Controller_InitialMessage(ply)
 	if !IsValid(ply) then return end
 	ply:ChatPrint("#npc.vjchat.controls_help")
 	if self.IsVJBaseSNPC == true then
-		self:Controller_IntMsg(ply)
+		self:Controller_IntMsg(ply, controlEnt)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -379,7 +379,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetNearestPointToVector(pos, sameZ)
 	sameZ = sameZ or false -- Should the Z of the pos be the same as the NPC's?
-	local NearestPositions = {MyPosition=Vector(0,0,0), PointPosition=Vector(0,0,0)}
+	local NearestPositions = {MyPosition=Vector(0, 0, 0), PointPosition=Vector(0, 0, 0)}
 	local Pos_Point, Pos_Self = pos, self:NearestPoint(pos +self:OBBCenter())
 	Pos_Point.z, Pos_Self.z = pos.z, self:GetPos().z
 	if sameZ == true then Pos_Point.z = self:GetPos().z end
@@ -391,7 +391,7 @@ end
 function NPC_MetaTable:VJ_GetNearestPointToEntity(ent, sameZ)
 	if !IsValid(ent) then return end
 	sameZ = sameZ or false -- Should the Z of the pos be the same as the NPC's?
-	local NearestPositions = {MyPosition=Vector(0,0,0), EnemyPosition=Vector(0,0,0)}
+	local NearestPositions = {MyPosition=Vector(0, 0, 0), EnemyPosition=Vector(0, 0, 0)}
 	local Pos_Enemy, Pos_Self = ent:NearestPoint(self:SetNearestPointToEntityPosition() + ent:OBBCenter()), self:NearestPoint(ent:GetPos() + self:OBBCenter())
 	Pos_Enemy.z, Pos_Self.z = ent:GetPos().z, self:SetNearestPointToEntityPosition().z
 	if sameZ == true then

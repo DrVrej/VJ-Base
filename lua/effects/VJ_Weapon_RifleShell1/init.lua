@@ -10,7 +10,7 @@ function EFFECT:Init(data)
 	local effectdata = EffectData()
 	//effectdata:SetEntity(self.Weapon)
 	effectdata:SetOrigin(self.Pos)
-	effectdata:SetNormal(Vector(0,0,0))
+	effectdata:SetNormal(Vector(0, 0, 0))
 	util.Effect("RifleShellEject",effectdata,true,true)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -136,9 +136,9 @@ function ENT:SetControlledNPC(GetEntity)
 	self.VJCE_NPC.VJ_TheControllerBullseye = self.VJCE_Bullseye
 	self.VJCE_NPC:SetEnemy(NULL)
 	self.VJCE_NPC.Enemy = NULL
-	self.VJCE_NPC:VJ_Controller_InitialMessage(self.VJCE_Player)
+	self.VJCE_NPC:VJ_Controller_InitialMessage(self.VJCE_Player, self)
 	if self.VJCE_NPC.IsVJBaseSNPC == true then
-		self.VJCE_NPC:Controller_Initialize(self.VJCE_Player)
+		self.VJCE_NPC:Controller_Initialize(self.VJCE_Player, self)
 		if IsValid(self.VJCE_NPC:GetEnemy()) then
 			self.VJCE_NPC:AddEntityRelationship(self.VJCE_NPC:GetEnemy(), D_NU, 99)
 			self.VJCE_NPC:GetEnemy():AddEntityRelationship(self.VJCE_NPC, D_NU, 99)

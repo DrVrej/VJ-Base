@@ -207,13 +207,23 @@ function ENT:BusyWithActivity()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Unlike self:BusyWithActivity(), this looks for more advanced behaviors like following player or moving to heal an ally
+	Checks if the NPC is busy with advanced behaviors like following player or moving to heal an ally
 	Returns
 		- false, NOT busy
 		- true, Busy
 -----------------------------------------------------------]]
 function ENT:IsBusyWithBehavior()
 	return self.FollowPlayer_GoingAfter == true or self.Medic_IsHealingAlly == true
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Checks if the NPC is busy with an animation or activity AND if it's busy with an advanced behavior
+	Returns
+		- false, NOT busy
+		- true, Busy
+-----------------------------------------------------------]]
+function ENT:IsBusy()
+	return self:BusyWithActivity() or self:IsBusyWithBehavior() 
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
