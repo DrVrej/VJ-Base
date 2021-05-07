@@ -50,9 +50,9 @@ elseif CLIENT then
 		spawnmenu.AddToolTab("DrVrej", "DrVrej", "vj_base/icons/vrejgaming.png") // "icon16/plugin.png"
 		spawnmenu.AddToolCategory("DrVrej", "Main Menu", "#vjbase.menu.tabs.mainmenu")
 		spawnmenu.AddToolCategory("DrVrej", "SNPCs", "#vjbase.menu.tabs.settings.snpc")
-		spawnmenu.AddToolCategory("DrVrej", "#spawnmenu.category.weapons", "#vjbase.menu.tabs.settings.weapon")
+		spawnmenu.AddToolCategory("DrVrej", "Weapons", "#vjbase.menu.tabs.settings.weapon")
 		spawnmenu.AddToolCategory("DrVrej", "HUDs", "#vjbase.menu.tabs.settings.hud")
-		spawnmenu.AddToolCategory("DrVrej", "#spawnmenu.tools_tab", "#vjbase.menu.tabs.tools")
+		spawnmenu.AddToolCategory("DrVrej", "Tools", "#vjbase.menu.tabs.tools")
 		spawnmenu.AddToolCategory("DrVrej", "SNPC Configures", "#vjbase.menu.tabs.configures.snpc")
 	end)
 end
