@@ -234,7 +234,7 @@ function ENT:CustomOnThink()
 
 			/*local effectdata = EffectData()
 			effectdata:SetOrigin(self:GetPos() +self:GetUp()*60 +self:GetForward()*100)
-			effectdata:SetNormal(Vector(0,0,0))
+			effectdata:SetNormal(Vector(0, 0, 0))
 			effectdata:SetMagnitude(5)
 			effectdata:SetScale(0.1)
 			effectdata:SetRadius(10)

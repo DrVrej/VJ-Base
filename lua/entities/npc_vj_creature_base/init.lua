@@ -799,7 +799,7 @@ function ENT:CustomRangeAttackCode_AfterProjectileSpawn(projectile) end -- Calle
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttackCode_OverrideProjectilePos(projectile) return 0 end -- return other value then 0 to override the projectile's position
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RangeAttackCode_GetShootPos(projectile) return (self:GetEnemy():GetPos() - self:LocalToWorld(Vector(0,0,0)))*2 + self:GetUp()*1 end
+function ENT:RangeAttackCode_GetShootPos(projectile) return (self:GetEnemy():GetPos() - self:LocalToWorld(Vector(0, 0, 0)))*2 + self:GetUp()*1 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MultipleLeapAttacks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -875,9 +875,9 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Controller_Initialize(ply) end
+function ENT:Controller_Initialize(ply, controlEnt) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Controller_IntMsg(ply)
+function ENT:Controller_IntMsg(ply, controlEnt)
 	//ply:ChatPrint("CTRL + MOUSE2: Rocket Attack") -- Example
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -981,7 +981,7 @@ ENT.LatestEnemyDistance = 0
 ENT.HealthRegenerationDelayT = 0
 ENT.CurAttackSeed = 0
 ENT.CurAnimationSeed = 0
-ENT.LatestVisibleEnemyPosition = Vector(0,0,0)
+ENT.LatestVisibleEnemyPosition = Vector(0, 0, 0)
 ENT.GuardingPosition = nil
 ENT.GuardingFacePosition = nil
 ENT.SelectedDifficulty = 1
@@ -2337,7 +2337,7 @@ function ENT:LeapDamageCode()
 		self:PlaySoundSystem("LeapAttackDamageMiss", nil, VJ_EmitSound)
 	else
 		self:PlaySoundSystem("LeapAttackDamage")
-		if self.StopLeapAttackAfterFirstHit == true then self.AlreadyDoneLeapAttackFirstHit = true /*self:SetLocalVelocity(Vector(0,0,0))*/ end
+		if self.StopLeapAttackAfterFirstHit == true then self.AlreadyDoneLeapAttackFirstHit = true /*self:SetLocalVelocity(Vector(0, 0, 0))*/ end
 	end
 	if self.AlreadyDoneFirstLeapAttack == false && self.TimeUntilLeapAttackDamage != false then
 		self:LeapAttackCode_DoFinishTimers()
@@ -2556,7 +2556,7 @@ function ENT:OnTakeDamage(dmginfo)
 	local function DoBleed()
 		if self.Bleeds == true then
 			self:CustomOnTakeDamage_OnBleed(dmginfo, hitgroup)
-			-- Spawn the blood particle only if it's not caused by the default fire entity [Causes the damage position to be at Vector(0,0,0)]
+			-- Spawn the blood particle only if it's not caused by the default fire entity [Causes the damage position to be at Vector(0, 0, 0)]
 			if self.HasBloodParticle == true && ((!self:IsOnFire()) or (self:IsOnFire() && IsValid(dmgInflictor) && IsValid(dmgAttacker) && dmgInflictor:GetClass() != "entityflame" && dmgAttacker:GetClass() != "entityflame")) then self:SpawnBloodParticles(dmginfo, hitgroup) end
 			if self.HasBloodDecal == true then self:SpawnBloodDecal(dmginfo, hitgroup) end
 			self:PlaySoundSystem("Impact", nil, VJ_EmitSound)
@@ -2626,7 +2626,7 @@ function ENT:OnTakeDamage(dmginfo)
 				local pickanim = VJ_PICK(self.CallForBackUpOnDamageAnimation)
 				if VJ_AnimationExists(self,pickanim) == true && self.DisableCallForBackUpOnDamageAnimation == false then
 					self:VJ_ACT_PLAYACTIVITY(pickanim,true,self:DecideAnimationLength(pickanim,self.CallForBackUpOnDamageAnimationTime),true, 0, {PlayBackRateCalculated=true})
-				else
+				elseif !self:BusyWithActivity() then
 					self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
 					//self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
 					/*local vschedHide = ai_vj_schedule.New("vj_hide_callbackupondamage")
