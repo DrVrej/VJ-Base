@@ -34,6 +34,9 @@ ENT.Activated = true
 ENT.UserStatusColors = true
 ENT.EnemyToIndividual = false
 ENT.EnemyToIndividualEnt = NULL
+
+local sdActivated = Sound("hl1/fvox/activated.wav")
+local sdDeactivated = Sound("hl1/fvox/deactivated.wav")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	//self:SetModel("models/hunter/plates/plate.mdl")
@@ -62,12 +65,12 @@ function ENT:AcceptInput(key, activator, caller, data)
 	if !activator:IsPlayer() then return end
 	if self.Activated == false then
 		self.Activated = true
-		activator:PrintMessage(HUD_PRINTTALK, "Activated NPC Bullseye.")
-		self:EmitSound(Sound("buttons/button6.wav"),70,100)
+		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.bullseye.activated")
+		self:EmitSound(sdActivated, 70, 100)
 	elseif self.Activated == true then
 		self.Activated = false
-		activator:PrintMessage(HUD_PRINTTALK, "Deactivated NPC Bullseye.")
-		self:EmitSound(Sound("buttons/button5.wav"),70,100)
+		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.bullseye.deactivated")
+		self:EmitSound(sdDeactivated, 70, 100)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

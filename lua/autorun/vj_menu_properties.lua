@@ -9,8 +9,8 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 AddCSLuaFile()
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("CanProperty","VJ_PLY_CAN_PROPERTY",function(ply,property,ent)
-	if GetConVar("vj_npc_admin_properties"):GetInt() == 1 && !ply:IsAdmin() && property == "vj_npc_properties" then ply:ChatPrint("These options are restricted to Admin only!") return false end
+hook.Add("CanProperty", "VJ_PLY_CAN_PROPERTY", function(ply, property, ent)
+	if GetConVar("vj_npc_admin_properties"):GetInt() == 1 && !ply:IsAdmin() && property == "vj_npc_properties" then ply:ChatPrint("#vjbase.menuproperties.print.adminonly") return false end
 end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ SNPC Controlling ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
