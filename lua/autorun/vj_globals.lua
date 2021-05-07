@@ -347,7 +347,7 @@ local Entity_MetaTable = FindMetaTable("Entity")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_Controller_InitialMessage(ply)
 	if !IsValid(ply) then return end
-	ply:ChatPrint("For controls, check \"Controller Settings\" under \"DrVrej\" tab")
+	ply:ChatPrint("#vjbase.print.npccontroller.entrance")
 	if self.IsVJBaseSNPC == true then
 		self:Controller_IntMsg(ply, controlEnt)
 	end
