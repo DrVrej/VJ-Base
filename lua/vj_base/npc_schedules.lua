@@ -245,9 +245,9 @@ function ENT:ScheduleFinished(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetTask(task)
-	self.CurrentTask 	= task
-	self.bTaskComplete 	= false
-	self.TaskStartTime 	= CurTime()
+	self.CurrentTask = task
+	self.bTaskComplete = false
+	self.TaskStartTime = CurTime()
 	self:StartTask(self.CurrentTask)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

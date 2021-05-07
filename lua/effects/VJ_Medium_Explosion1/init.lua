@@ -11,7 +11,7 @@ function EFFECT:Init(data)
 	
 	/*local effectdata = EffectData()
 	effectdata:SetOrigin( self.Pos )
-	effectdata:SetNormal( Vector(0,0,0) )
+	effectdata:SetNormal( Vector(0, 0, 0) )
 	effectdata:SetMagnitude( 2.6 )
 	effectdata:SetScale( 2.6 )
 	effectdata:SetRadius( 93 )
@@ -42,7 +42,7 @@ function EFFECT:Init(data)
 		EffectCode:SetRoll(math.Rand(480,540))
 		EffectCode:SetRollDelta(0) -- How fast it rolls
 		EffectCode:SetColor(100,100,100) -- The color of the effect
-		EffectCode:SetGravity(Vector(0,0,0)) -- The Gravity
+		EffectCode:SetGravity(Vector(0, 0, 0)) -- The Gravity
 		EffectCode:SetAirResistance(15)
 	end
 
