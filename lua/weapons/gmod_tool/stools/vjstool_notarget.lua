@@ -28,12 +28,12 @@ function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	local Ply = self:GetOwner()
 	if Ply:IsFlagSet(FL_NOTARGET) != true then
-		Ply:ChatPrint("#vjchat.set_no_target_to_yourself_on")
+		Ply:ChatPrint("#tool.vjstool_notarget.print.yourselfon")
 		Ply:SetNoTarget(true)
 		Ply.VJ_NoTarget = true
 		return true
 	else
-		Ply:ChatPrint("#vjchat.set_no_target_to_yourself_off")
+		Ply:ChatPrint("#tool.vjstool_notarget.print.yourselfoff")
 		Ply:SetNoTarget(false)
 		Ply.VJ_NoTarget = false
 		return true

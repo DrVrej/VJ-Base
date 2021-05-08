@@ -19,17 +19,17 @@ ENT.Spawnable = true
 ENT.AdminOnly = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
+	local textColor = Color(0, 255, 0, 255)
+	
 	function ENT:Draw()
 		self:DrawModel()
-
-		local ledcolor = Color(0,255,0,255)
-		local Position = self:GetPos() + self:GetForward()*7 + self:GetUp()*6 + self:GetRight()*2
-		local Angles = self:GetAngles()
-		Angles:RotateAroundAxis(Angles:Right(), Vector(90, 90, 90).x)
-		Angles:RotateAroundAxis(Angles:Up(), Vector(90, 90, 90).y)
-		Angles:RotateAroundAxis(Angles:Forward(), Vector(90, 90, 90).z)
-		cam.Start3D2D(Position, Angles, 0.07)
-		draw.SimpleText("Admin Health Kit", "DermaLarge", 31, -22, ledcolor, 1, 1)
+		
+		local angs = self:GetAngles()
+		angs:RotateAroundAxis(angs:Right(), Vector(90, 90, 90).x)
+		angs:RotateAroundAxis(angs:Up(), Vector(90, 90, 90).y)
+		angs:RotateAroundAxis(angs:Forward(), Vector(90, 90, 90).z)
+		cam.Start3D2D(self:GetPos() + self:GetForward()*7 + self:GetUp()*6 + self:GetRight()*2, angs, 0.07)
+		draw.SimpleText("Admin Health Kit", "DermaLarge", 31, -22, textColor, 1, 1)
 		cam.End3D2D()
 	end
 end
@@ -56,9 +56,9 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Use(activator, caller)
 	if activator:IsPlayer() then
-		self:EmitSound(Sound("items/smallmedkit1.wav"),70,100)
-		activator:SetHealth(activator:Health() +1000000)
-		activator:PrintMessage(HUD_PRINTTALK, "#entity.vjfeature.admin_health_kit_message")
+		self:EmitSound(Sound("items/smallmedkit1.wav"), 70, 100)
+		activator:SetHealth(activator:Health() + 1000000)
+		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.adminhealth.pickup")
 		self:Remove()
 	end
 end

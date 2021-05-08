@@ -84,16 +84,17 @@ function ENT:Use(activator, caller)
 	if self.FirePlaceOn == false then
 		self:SetNW2Bool("VJ_FirePlace_Activated", true)
 		self.FirePlaceOn = true
-		self:EmitSound(Sound("ambient/fire/mtov_flame2.wav"),60,100)
-		self.firesd = CreateSound(self,"ambient/fire/fire_small_loop1.wav") self.firesd:SetSoundLevel(60)
+		self:EmitSound(Sound("ambient/fire/mtov_flame2.wav"), 60, 100)
+		self.firesd = CreateSound(self, "ambient/fire/fire_small_loop1.wav")
+		self.firesd:SetSoundLevel(60)
 		self.firesd:PlayEx(1,100)
-		activator:PrintMessage(HUD_PRINTTALK, "#entity.vjfeature.fireplace_turnedon") 
+		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.fireplace.activated") 
 	else
 		self:SetNW2Bool("VJ_FirePlace_Activated", false)
 		self.FirePlaceOn = false
 		self:StopParticles()
 		VJ_STOPSOUND(self.firesd)
-		activator:PrintMessage(HUD_PRINTTALK, "#entity.vjfeature.fireplace_turnedoff")
+		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.fireplace.deactivated")
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

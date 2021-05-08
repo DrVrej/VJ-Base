@@ -433,10 +433,10 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ToggleBullseyeTracking()
 	if self.VJC_BullseyeTracking == false then
-		self.VJCE_Player:ChatPrint("#npc.vjchat.bulleye_tracking_activated")
+		self.VJCE_Player:ChatPrint("#vjbase.print.npccontroller.tracking.activated")
 		self.VJC_BullseyeTracking = true
 	else
-		self.VJCE_Player:ChatPrint("#npc.vjchat.bulleye_tracking_deactivated")
+		self.VJCE_Player:ChatPrint("#vjbase.print.npccontroller.tracking.deactivated")
 		self.VJC_BullseyeTracking = false
 	end
 end

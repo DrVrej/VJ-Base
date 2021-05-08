@@ -41,8 +41,6 @@ if CLIENT then
 		
 		-- DEFAULT (English) LIST | Copy & paste any of the lines below to your preferred language to translate it.
 		add("vjbase.menugeneral.default", "Default") -- DO NOT TRANSLATE. (Deprecated)
-		
-		-- General Base (Used everywhere)
 		// add("vjbase.general.print.runningvj", "Notice: This server is running VJ Base.") -- DO NOT TRANSLATE.
 		
 		-- Spawn Menu
@@ -346,6 +344,7 @@ if CLIENT then
 		add("vjbase.menuproperties.slay", "Slay")
 		add("vjbase.menuproperties.gib", "Gib (If Valid)")
 		add("vjbase.menuproperties.devmode", "Toggle Developer Mode")
+		add("vjbase.menuproperties.print.adminonly", "These options are restricted to Admin only!")
 		
 		-- Tools
 		add("tool.vjstool.menu.tutorialvideo", "Tutorial Video")
@@ -384,6 +383,8 @@ if CLIENT then
 		add("tool.vjstool_notarget.left", "Toggle no target to yourself")
 		add("tool.vjstool_notarget.right", "Toggle no target to an NPC or player")
 		add("tool.vjstool_notarget.label", "When a no target is enabled on an entity, NPCs will not target it!")
+		add("tool.vjstool_notarget.print.yourselfon", "Set no target to yourself: ON")
+		add("tool.vjstool_notarget.print.yourselfoff", "Set no target to yourself: OFF")
 		
 		add("tool.vjstool_npcequipment.name", "NPC Equipment")
 		add("tool.vjstool_npcequipment.desc", "Modifies an NPC's equipment")
@@ -447,7 +448,7 @@ if CLIENT then
 		add("tool.vjstool_npcspawner.popup.header3", "Category")
 		add("tool.vjstool_npcspawner.title1", "Double click to select an NPC.")
 		add("tool.vjstool_npcspawner.title2", "Double click to select a weapon.")
-		
+
 		-- Entity Features (chat messages, menus, etc...)
 		add("entity.vjfeature.admin_health_kit_message", "You have picked up 1,000,000 health!")
 		add("entity.vjfeature.fireplace_turnedon", "You turned on the fireplace.")
@@ -513,6 +514,25 @@ if CLIENT then
 		add("vjchat.error_opt_ouf_of_the_chromium_branch", "Opt out of the Chromium branch!")
 		add("vjchat.print.velocity.error", "VELOCITY: Can't display this information! Reason: Model doesn't have proper physics!")
 		add("vjchat.print.physics.error", "PHYSICS: Can't display this information! Reason: Model doesn't have proper physics!")
+
+		add("tool.vjstool_npcspawner.print.nothingspawn", "Nothing to spawn!")
+		
+		-- Miscellaneous (Prints)
+		add("vjbase.print.bullseye.activated", "Activated NPC Bullseye.")
+		add("vjbase.print.bullseye.deactivated", "Deactivated NPC Bullseye.")
+		
+		add("vjbase.print.npccontroller.entrance", "For controls, check \"Controller Settings\" under \"DrVrej\" tab")
+		add("vjbase.print.npccontroller.tracking.activated", "Bullseye tracking activated!")
+		add("vjbase.print.npccontroller.tracking.deactivated", "Bullseye tracking deactivated!")
+		
+		add("vjbase.print.adminhealth.pickup", "You have picked up 1,000,000 health!")
+		
+		add("vjbase.print.fireplace.activated", "You turned on the fireplace.")
+		add("vjbase.print.fireplace.deactivated", "You turned off the fireplace.")
+		
+		add("vjbase.print.plyspawnpoint.activated", "Activated this spawnpoint!")
+		add("vjbase.print.plyspawnpoint.deactivated", "Deactivated this spawnpoint!")
+
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -524,20 +544,21 @@ if CLIENT then
 		if conv == "armenian" then
 			
 		elseif conv == "russian" then ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		    -- Spawn Menu
-		    add("vjbase.spawn.menu.npc.disablethinking", "Выключить ИИ")
-	       	add("vjbase.spawn.menu.npc.ignoreplayers", "ИИ игнорирует игроков")
-		    add("vjbase.spawn.menu.npc.keepcorpses", "Оставлять/столкновения трупы(ов) NPC")
-	     	add("vjbase.spawn.menu.npc.guard", "Создавать NPC в качестве телохранителя")
+			-- Spawn Menu
 
-			-- General Menu (Used everywhere)
+		  add("vjbase.spawn.menu.npc.disablethinking", "Выключить ИИ")
+	    add("vjbase.spawn.menu.npc.ignoreplayers", "ИИ игнорирует игроков")
+		  add("vjbase.spawn.menu.npc.keepcorpses", "Оставлять/столкновения трупы(ов) NPC")
+	    add("vjbase.spawn.menu.npc.guard", "Создавать NPC в качестве телохранителя")
+			
+			 -- General Menu (Used everywhere)
 			add("vjbase.menu.general.default", "По умолчанию")
 			add("vjbase.menu.general.admin.only", "Примечание: только администраторы могут использовать это меню.")
 			add("vjbase.menu.general.admin.not", "Вы не являетесь администратором!")
 			add("vjbase.menu.general.reset.everything", "Сбросить всё")
 			add("vjbase.menu.general.snpc.warnfuture", "Предупреждение: будут затронуты только будущие созданные NPC!")
 			add("vjbase.menu.general.snpc.creaturesettings", "Настройки создания:")
-			add("vjbase.menu.general.snpc.humansettings", "Человеческие установки:")
+			add("vjbase.menu.general.snpc.humansettings", "Настройки людей:")
 			
 			-- Menu Tabs
 			add("vjbase.menu.tabs.mainmenu", "Главное меню")
@@ -546,7 +567,7 @@ if CLIENT then
 			add("vjbase.menu.tabs.settings.hud", "Настройки интерфейса")
 			add("vjbase.menu.tabs.tools", "Инструменты")
 			add("vjbase.menu.tabs.configures.snpc", "Конфигурации SNPC")
-		    add("vjbase.menu.tabs.default", "По молчанию")
+		  add("vjbase.menu.tabs.default", "По молчанию")
 			
 			-- Main Menu
 			add("vjbase.menu.cleanup", "Очистка")
@@ -628,13 +649,13 @@ if CLIENT then
 			add("vjbase.menu.snpc.options.togglefriendlyvj", "Дружелюбный VJ Base")
 			add("vjbase.menu.snpc.options.label2", "Все VJ SNPCs будут союзниками!")
 			add("vjbase.menu.snpc.options.label3", "Опции трупов, расчленения и здоровья:")
-		    add("vjbase.menu.snpc.options.collision.header", "Столкн-ние трупов:")
-		    add("vjbase.menu.snpc.options.collision.default", "По умолчанию | Исключение: Игроки, NPC, Оружие, Рэгдоллы")
-		    add("vjbase.menu.snpc.options.collision.everything", "Без исключений | Все!")
-		    add("vjbase.menu.snpc.options.collision.onlyworld", "Только мир")
-		    add("vjbase.menu.snpc.options.collision.excludedebris", "Исключение: Трупы, обломки")
-		    add("vjbase.menu.snpc.options.collision.excludeplynpcs", "Исключение: Игроки, NPC")
-		    add("vjbase.menu.snpc.options.collision.excludeply", "Исключение: Игроки")
+		  add("vjbase.menu.snpc.options.collision.header", "Столкн-ние трупов:")
+		  add("vjbase.menu.snpc.options.collision.default", "По умолчанию | Исключение: Игроки, NPC, Оружие, Рэгдоллы")
+		  add("vjbase.menu.snpc.options.collision.everything", "Без исключений | Все!")
+		  add("vjbase.menu.snpc.options.collision.onlyworld", "Только мир")
+		  add("vjbase.menu.snpc.options.collision.excludedebris", "Исключение: Трупы, обломки")
+		  add("vjbase.menu.snpc.options.collision.excludeplynpcs", "Исключение: Игроки, NPC")
+		  add("vjbase.menu.snpc.options.collision.excludeply", "Исключение: Игроки")
 			add("vjbase.menu.snpc.options.corpselimit", "Лимит трупов")
 			add("vjbase.menu.snpc.options.label4", "Лимит трупов, когда 'Оставлять трупы' выключено")
 			add("vjbase.menu.snpc.options.toggleundocorpses", "Трупы можно отменить (клавиша undo)")
@@ -756,11 +777,11 @@ if CLIENT then
 			add("vjbase.menu.snpc.devsettings.printweaponinfo", "Вывод информации, связанной с оружием(Консоль)")
 			add("vjbase.menu.snpc.devsettings.cachedmodels", "Кэшированные модели (Консоль)")
 			add("vjbase.menu.snpc.devsettings.numofnpcs", "Количество NPC (Чат)")
-		    add("vjbase.menu.snpc.devsettings.reloadsounds", "Перезагрузить звуки")
-		    add("vjbase.menu.snpc.devsettings.reloadmaterials", "Перезагрузить материалы (VMT)")
-		    add("vjbase.menu.snpc.devsettings.reloadtextures", "Перезагрузить текстуры (VTF)")
-		    add("vjbase.menu.snpc.devsettings.reloadmodels", "Перезагрузить модели")
-		    add("vjbase.menu.snpc.devsettings.reloadspawnmenu", "Перезагрузить меню создания")
+		  add("vjbase.menu.snpc.devsettings.reloadsounds", "Перезагрузить звуки")
+		  add("vjbase.menu.snpc.devsettings.reloadmaterials", "Перезагрузить материалы (VMT)")
+		  add("vjbase.menu.snpc.devsettings.reloadtextures", "Перезагрузить текстуры (VTF)")
+		  add("vjbase.menu.snpc.devsettings.reloadmodels", "Перезагрузить модели")
+		  add("vjbase.menu.snpc.devsettings.reloadspawnmenu", "Перезагрузить меню создания")
 			
 			add("vjbase.menu.snpc.consettings", "Настройки контроллера")
 			add("vjbase.menu.snpc.consettings.label1", "Обратите внимание : это настройки только на стороне клиента!")
@@ -768,7 +789,7 @@ if CLIENT then
 			add("vjbase.menu.snpc.consettings.displayhud", "Отображать интерфейс")
 			add("vjbase.menu.snpc.consettings.camzoomdistance", "Дист-ция приближения камеры")
 			add("vjbase.menu.snpc.consettings.camspeed", "Скорость камеры")
-		    add("vjbase.menu.snpc.consettings.camzoomspeed", "Скор-сть приближения камеры")
+		  add("vjbase.menu.snpc.consettings.camzoomspeed", "Скор-сть приближения камеры")
 			add("vjbase.menu.snpc.consettings.diewithnpc", "Контроллер погибает вместе с NPC (После возрождения!)")
 			add("vjbase.menu.snpc.consettings.displaydev", "Отображение энтити разработчика")
 			add("vjbase.menu.snpc.consettings.label3", "Привязка клавиш:")
@@ -784,7 +805,7 @@ if CLIENT then
 			add("vjbase.menu.snpc.consettings.bind.reloadweapon", "Перезарядка")
 			add("vjbase.menu.snpc.consettings.bind.togglebullseye", "Отслеж-ние зоны прицеливания")
 			add("vjbase.menu.snpc.consettings.bind.cameramode", "Сменить режим камеры")
-		    add("vjbase.menu.snpc.consettings.bind.camerazoom", "Приблизить и отдалить")
+		  add("vjbase.menu.snpc.consettings.bind.camerazoom", "Приблизить и отдалить")
 			add("vjbase.menu.snpc.consettings.bind.cameraup", "Сдвинуть камеру вверх")
 			add("vjbase.menu.snpc.consettings.bind.cameradown", "Сдвинуть камеру вниз")
 			add("vjbase.menu.snpc.consettings.bind.cameraforward", "Сдвинуть камеру вперёд")
@@ -794,16 +815,16 @@ if CLIENT then
 			add("vjbase.menu.snpc.consettings.bind.resetzoom", "Сбросить позицию камеры")
 
 			add("vjbase.menu.snpc.consettings.bind.key.fire1", "ВЫСТРЕЛ1")
-		    add("vjbase.menu.snpc.consettings.bind.key.fire2", "ВЫСТРЕЛ2")
-	    	add("vjbase.menu.snpc.consettings.bind.key.jump", "ПРЫЖОК")
-	    	add("vjbase.menu.snpc.consettings.bind.key.reload", "ПЕРЕЗАРЯДКА")
-	    	add("vjbase.menu.snpc.consettings.bind.key.mouse_wheel", "КОЛЁСИКО МЫШИ")
-	    	add("vjbase.menu.snpc.consettings.bind.key.up_arrow", "СТРЕЛКА ВВЕРХ")
-	    	add("vjbase.menu.snpc.consettings.bind.key.up_arrow.run", "СТРЕЛКА ВВЕРХ + БЕГ")
-	    	add("vjbase.menu.snpc.consettings.bind.key.down.arrow", "СТРЕЛКА ВНИЗ")
-		    add("vjbase.menu.snpc.consettings.bind.key.down.arrow.run", "СТРЕЛКА ВНИЗ + БЕГ")
-	    	add("vjbase.menu.snpc.consettings.bind.key.left.arrow", "СТРЕЛКА ВЛЕВО")
-	     	add("vjbase.menu.snpc.consettings.bind.key.right.arrow", "СТРЕЛКА ВПРАВО")
+		  add("vjbase.menu.snpc.consettings.bind.key.fire2", "ВЫСТРЕЛ2")
+	    add("vjbase.menu.snpc.consettings.bind.key.jump", "ПРЫЖОК")
+	    add("vjbase.menu.snpc.consettings.bind.key.reload", "ПЕРЕЗАРЯДКА")
+	    add("vjbase.menu.snpc.consettings.bind.key.mouse_wheel", "КОЛЁСИКО МЫШИ")
+	    add("vjbase.menu.snpc.consettings.bind.key.up_arrow", "СТРЕЛКА ВВЕРХ")
+	    add("vjbase.menu.snpc.consettings.bind.key.up_arrow.run", "СТРЕЛКА ВВЕРХ + БЕГ")
+	    add("vjbase.menu.snpc.consettings.bind.key.down.arrow", "СТРЕЛКА ВНИЗ")
+		  add("vjbase.menu.snpc.consettings.bind.key.down.arrow.run", "СТРЕЛКА ВНИЗ + БЕГ")
+	    add("vjbase.menu.snpc.consettings.bind.key.left.arrow", "СТРЕЛКА ВЛЕВО")
+	    add("vjbase.menu.snpc.consettings.bind.key.right.arrow", "СТРЕЛКА ВПРАВО")
 			
 			-- Weapon Client Settings
 			add("vjbase.menu.clweapon", "Настройки клиента")
@@ -825,6 +846,7 @@ if CLIENT then
 			add("vjbase.menuproperties.slay", "Убить")
 			add("vjbase.menuproperties.gib", "Разорвать в ошмётки (Если допустимо)")
 			add("vjbase.menuproperties.devmode", "Переключить на режим разработчика")
+			add("vjbase.menuproperties.print.adminonly", "Эти опции доступны только администратору!")
 			
 			-- Tools
 			add("tool.vjstool.menu.tutorialvideo", "Обучающее видео")
@@ -854,15 +876,17 @@ if CLIENT then
 			add("tool.vjstool_healthmodifier.sliderhealth", "Здоровье")
 			add("tool.vjstool_healthmodifier.label1", "Следующие пункты предназначены только для VJ Base SNPC:")
 			add("tool.vjstool_healthmodifier.togglegodmode", "Неуязвимость (Непобедимый)")
-	    	add("tool.vjstool_healthmodifier.togglehealthregen", "Включить регенерацию здоровья")
-	    	add("tool.vjstool_healthmodifier.sliderhealthregenamt", "Здоровья при реген.")
-		    add("tool.vjstool_healthmodifier.sliderhealthregendelay", "Задержка реген.")
+	    add("tool.vjstool_healthmodifier.togglehealthregen", "Включить регенерацию здоровья")
+	    add("tool.vjstool_healthmodifier.sliderhealthregenamt", "Здоровья при реген.")
+		  add("tool.vjstool_healthmodifier.sliderhealthregendelay", "Задержка реген.")
 			
 			add("tool.vjstool_notarget.name", "Режим 'Вне цели'")
 			add("tool.vjstool_notarget.desc", "Режим 'Вне цели' приведёт к тому, что все NPC не увидят определенного игрока или NPC")
 			add("tool.vjstool_notarget.left", "Щёлкните левой кнопкой мыши, чтобы переключить режим 'Вне цели' для себя")
 			add("tool.vjstool_notarget.right", "Щёлкните правой кнопкой мыши, чтобы переключить режим 'Вне цели' на текущего игрока или NPC")
 			add("tool.vjstool_notarget.label", "Если на объекте включена функция 'Вне цели', то NPC не будут её атаковать!")
+			add("tool.vjstool_notarget.print.yourselfon", "Включено игнорирование NPC для себя")
+			add("tool.vjstool_notarget.print.yourselfoff", "Отключено игнорирование NPC для себя")
 			
 			add("tool.vjstool_npcequipment.name", "Снаряжение NPC")
 			add("tool.vjstool_npcequipment.desc", "Меняет снаряжение NPC")
@@ -927,72 +951,89 @@ if CLIENT then
 			add("tool.vjstool_npcspawner.title1", "Дважды щёлкните, чтобы выбрать NPC.")
 			add("tool.vjstool_npcspawner.title2", "Дважды щёлкните, чтобы выбрать оружие.")
 		
-	    	-- Entity Features (chat messages, menus, etc...)
-		    add("entity.vjfeature.admin_health_kit_message", "Вы подобрали 1,000,000 единиц здоровья!")
+		  add("entity.vjfeature.admin_health_kit_message", "Вы подобрали 1,000,000 единиц здоровья!")
 			add("entity.vjfeature.fireplace_turnedon", "Вы разожгли костёр.")
-		    add("entity.vjfeature.fireplace_turnedoff", "Вы потушили костёр.")
-	     	add("entity.vjfeature.player_spawnpoint_activated", "Точка возрождения активирована!")
-	     	add("entity.vjfeature.player_spawnpoint_deactivated", "Точка возрождения деактивирована!")
+		  add("entity.vjfeature.fireplace_turnedoff", "Вы потушили костёр.")
+	    add("entity.vjfeature.player_spawnpoint_activated", "Точка возрождения активирована!")
+	    add("entity.vjfeature.player_spawnpoint_deactivated", "Точка возрождения деактивирована!")
+ 
+	    -- Weapon Names (Spawn Menu)
+	    add("wn.vjname.357.mag", "Магнум .357") -- (for devs) Short printname id to make it show on weapon selector
+	    add("wn.vjname.9mm.pistol", "Пистолет 9 мм")
+	    add("weapon.vjname.ak_47", "АК-47")
+	    add("weapon.vjname.ar2", "AR2")
+	    add("weapon.vjname.blaster", "Бластер")
+	    add("wn.vjname.flare_gun", "Сигнальный пистолет")
+	    add("wn.vjname.glock_17", "Glock 17")
+	    add("weapon.vjname.m4a1", "M4A1")
+	    add("weapon.vjname.m16a1", "M16A1")
+		  add("weapon.vjname.mp_40", "MP 40")
+	    add("weapon.vjname.rpg", "РПГ")
+	    add("weapon.vjname.smg1", "SMG1")
+	    add("weapon.vjname.spas_12", "SPAS-12")
+	    add("wn.vjname.vj_npccntrl", "Контроллер VJ NPC")
 		
-	     	-- Weapon Names (Spawn Menu)
-	    	add("wn.vjname.357.mag", "Магнум .357") -- (for devs) Short printname id to make it show on weapon selector
-	    	add("wn.vjname.9mm.pistol", "Пистолет 9 мм")
-	    	add("weapon.vjname.ak_47", "АК-47")
-	    	add("weapon.vjname.ar2", "AR2")
-	    	add("weapon.vjname.blaster", "Бластер")
-	    	add("wn.vjname.flare_gun", "Сигнальный пистолет")
-	    	add("wn.vjname.glock_17", "Glock 17")
-	    	add("weapon.vjname.m4a1", "M4A1")
-	    	add("weapon.vjname.m16a1", "M16A1")
-		    add("weapon.vjname.mp_40", "MP 40")
-	      	add("weapon.vjname.rpg", "РПГ")
-	       	add("weapon.vjname.smg1", "SMG1")
-	    	add("weapon.vjname.spas_12", "SPAS-12")
-	    	add("wn.vjname.vj_npccntrl", "Контроллер VJ NPC")
+	    -- VJ NPC Controller
+	    add("vj_npc_controller.error.player", "Это игрок, тупица.")
+	    add("vj_npc_controller.error.ragdoll", "Вы скоро станете этим трупом.")
+	    add("vj_npc_controller.error.physics", "Удалите свою игру. Сейчас же.")
+	    add("vj_npc_controller.error.no_npc", "Это не NPC, поэтому вы не можете управлять им.")
+	    add("vj_npc_controller.error.dead_npc", "Здоровье этого NPC равно 0 или ниже, поэтому вы не можете им управлять.")
+	    add("vj_npc_controller.error.tank", "Танк пока не управляем, извините!")
+	    add("vj_npc_controller.error.controlled_by_a_player", "Вы не можете управлять этим NPC, им уже управляет кто-то другой.")
+	    add("vj_npc_controller.note", "ПРИМЕЧАНИЕ: Контроллер VJ NPC в основном создан для VJ Base SNPC!")
+	    add("vj_npc_controller.hud.press_x_to_reload", "Нажмите R для перезарядки!")
+	    add("vj_npc_controller.hud.third_person", "Third")
+	    add("vj_npc_controller.hud.first_person", "First")
 		
-	    	-- VJ NPC Controller
-	    	add("vj_npc_controller.error.player", "Это игрок, тупица.")
-	    	add("vj_npc_controller.error.ragdoll", "Вы скоро станете этим трупом.")
-	     	add("vj_npc_controller.error.physics", "Удалите свою игру. Сейчас же.")
-	     	add("vj_npc_controller.error.no_npc", "Это не NPC, поэтому вы не можете управлять им.")
-	     	add("vj_npc_controller.error.dead_npc", "Здоровье этого NPC равно 0 или ниже, поэтому вы не можете им управлять.")
-	    	add("vj_npc_controller.error.tank", "Танк пока не управляем, извините!")
-	     	add("vj_npc_controller.error.controlled_by_a_player", "Вы не можете управлять этим NPC, им уже управляет кто-то другой.")
-	      	add("vj_npc_controller.note", "ПРИМЕЧАНИЕ: Контроллер VJ NPC в основном создан для VJ Base SNPC!")
-	    	add("vj_npc_controller.hud.press_x_to_reload", "Нажмите R для перезарядки!")
-	     	add("vj_npc_controller.hud.third_person", "Third")
-	     	add("vj_npc_controller.hud.first_person", "First")
+	    -- VJ Test NPC Menu
+	    add("vj_test_npc_menu_title", "Тестовое меню VJ")
+	    add("vj_test_npc_menu_suicide", "Убить себя")
+	    add("vj_test_npc_menu_admin_note", "ПРИМЕЧАНИЕ: Только администраторы могут использовать кнопки ниже! Большинство из этих команд требуют, чтобы 'sv_cheats' был установлен на 1")
+	    add("vj_test_npc_menu_god_mode", "Режим бога")
+	    add("vj_test_npc_menu_buddha", "Будда")
+	    add("vj_test_npc_menu_fp", "От первого лица")
+	    add("vj_test_npc_menu_tp", "От третьего лица")
+	    add("vj_test_npc_menu_illuminati", "Иллюминати")
+	    add("vj_test_npc_menu_thirsty", "ЖАЖДА")
 		
-	     	-- VJ Test NPC Menu
-	      	add("vj_test_npc_menu_title", "Тестовое меню VJ")
-	     	add("vj_test_npc_menu_suicide", "Убить себя")
-	     	add("vj_test_npc_menu_admin_note", "ПРИМЕЧАНИЕ: Только администраторы могут использовать кнопки ниже! Большинство из этих команд требуют, чтобы 'sv_cheats' был установлен на 1")
-	    	add("vj_test_npc_menu_god_mode", "Режим бога")
-	     	add("vj_test_npc_menu_buddha", "Будда")
-	     	add("vj_test_npc_menu_fp", "От первого лица")
-	     	add("vj_test_npc_menu_tp", "От третьего лица")
-	     	add("vj_test_npc_menu_illuminati", "Иллюминати")
-	     	add("vj_test_npc_menu_thirsty", "ЖАЖДА")
-		
-	     	-- NPC Chat Messages
-	    	add("npc.vjchat.bulleye_activated", "Активирована зона прицеливания NPC.")
-	     	add("npc.vjchat.bulleye_deactivated", "Деактивирована зона прицеливания NPC.")
-	     	add("npc.vjchat.bulleye_tracking_activated", "Активировано отслеживание зоны прицеливания!")
-	     	add("npc.vjchat.bulleye_tracking_deactivated", "Деактивировано отслеживание зоны прицеливания!")
-	     	add("npc.vjchat.controls_help", "Для управления проверьте \"Настройки контроллера\" в вкладке \"DrVrej\"")
+	    -- NPC Chat Messages
+	    add("npc.vjchat.bulleye_activated", "Активирована зона прицеливания NPC.")
+	    add("npc.vjchat.bulleye_deactivated", "Деактивирована зона прицеливания NPC.")
+	    add("npc.vjchat.bulleye_tracking_activated", "Активировано отслеживание зоны прицеливания!")
+	    add("npc.vjchat.bulleye_tracking_deactivated", "Деактивировано отслеживание зоны прицеливания!")
+	    add("npc.vjchat.controls_help", "Для управления проверьте \"Настройки контроллера\" в вкладке \"DrVrej\"")
 
-	    	add("vjchat.these_options_are_admins_only", "Эти опции доступны только администратору!")
-	    	add("vjchat.set_no_target_to_yourself_on", "Включено игнорирование NPC для себя")
-	     	add("vjchat.set_no_target_to_yourself_off", "Отключено игнорирование NPC для себя")
-	    	add("vjchat.nothing_to_spawn", "Нечего создать!")
-	      	add("vjchat.cant_be_spawned_because_its_a_spawner", "Не может быть создан, потому что это спавнер")
-	     	add("vjchat.drvrej_has_joined_the_game", "DrVrej присоединяется к игре!")
-	     	add("vjchat.drvrej_is_in_the_server", "DrVrej на сервере!")
-	    	add("vjchat.error_outdated_version_of_garrysmod_detected", "--- Обнаружена устаревшая версия Garry's Mod! ---")
-	    	add("vjchat.error_opt_ouf_of_the_chromium_branch", "Откажитесь от участия в бета версии Chromium branch!")
-	    	add("vjchat.print.velocity.error", "СКОРОСТЬ: Невозможно отобразить эту информацию! Причина: Модель не имеет надлежащей физики!")
-	    	add("vjchat.print.physics.error", "ФИЗИКА: Невозможно отобразить эту информацию! Причина: Модель не имеет надлежащей физики!")
+	    add("vjchat.these_options_are_admins_only", "Эти опции доступны только администратору!")
+	    add("vjchat.set_no_target_to_yourself_on", "Включено игнорирование NPC для себя")
+	    add("vjchat.set_no_target_to_yourself_off", "Отключено игнорирование NPC для себя")
+	    add("vjchat.nothing_to_spawn", "Нечего создать!")
+	    add("vjchat.cant_be_spawned_because_its_a_spawner", "Не может быть создан, потому что это спавнер")
+	    add("vjchat.drvrej_has_joined_the_game", "DrVrej присоединяется к игре!")
+	    add("vjchat.drvrej_is_in_the_server", "DrVrej на сервере!")
+	    add("vjchat.error_outdated_version_of_garrysmod_detected", "--- Обнаружена устаревшая версия Garry's Mod! ---")
+	    add("vjchat.error_opt_ouf_of_the_chromium_branch", "Откажитесь от участия в бета версии Chromium branch!")
+	    add("vjchat.print.velocity.error", "СКОРОСТЬ: Невозможно отобразить эту информацию! Причина: Модель не имеет надлежащей физики!")
+	    add("vjchat.print.physics.error", "ФИЗИКА: Невозможно отобразить эту информацию! Причина: Модель не имеет надлежащей физики!")
+
+			add("tool.vjstool_npcspawner.print.nothingspawn", "Нечего создать!")
 			
+			-- Miscellaneous (Prints)
+			add("vjbase.print.bullseye.activated", "Активирована зона прицеливания NPC.")
+			add("vjbase.print.bullseye.deactivated", "Деактивирована зона прицеливания NPC.")
+			
+			add("vjbase.print.npccontroller.entrance", "Для управления проверьте \"Настройки контроллера\" в вкладке \"DrVrej\"")
+			add("vjbase.print.npccontroller.tracking.activated", "Активировано отслеживание зоны прицеливания!")
+			add("vjbase.print.npccontroller.tracking.deactivated", "Деактивировано отслеживание зоны прицеливания!")
+			
+			add("vjbase.print.adminhealth.pickup", "Вы подобрали 1,000,000 единиц здоровья!")
+		
+			add("vjbase.print.fireplace.activated", "Вы разожгли костёр.")
+			add("vjbase.print.fireplace.deactivated", "Вы потушили костёр.")
+
+			
+			add("vjbase.print.plyspawnpoint.activated", "Точка возрождения активирована!")
+			add("vjbase.print.plyspawnpoint.deactivated", "Точка возрождения деактивирована!")
 		elseif conv == "german" then ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 			
 		elseif conv == "french" then ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1288,7 +1329,7 @@ if CLIENT then
 			add("tool.vjstool_healthmodifier.adminonly", "Tik administratoriai gali keisti sveikatą arba gydyti kitus žaidėjus.")
 			add("tool.vjstool_healthmodifier.sliderhealth", "Sveikata")
 			add("tool.vjstool_healthmodifier.togglegodmode", "Nemirtingumas")
-			add("tool.vjstool_healthmodifier.label", "Šiuo metu veikia tik ant „VJ Base“ veikėjų")
+			add("tool.vjstool_healthmodifier.label1", "Šiuo metu veikia tik ant „VJ Base“ veikėjų")
 			
 			add("tool.vjstool_notarget.name", "Nematomumas")
 			add("tool.vjstool_notarget.desc", "Nustatant nematomumą, visi veikėjai negalės „matyti“ tam tikro objekto")

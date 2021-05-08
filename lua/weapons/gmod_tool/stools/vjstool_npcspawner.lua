@@ -249,7 +249,7 @@ else -- If SERVER
 			local svgetlines = net.ReadType()
 			local svgettype = net.ReadString()
 			if !IsValid(ply) then return false end
-			if table.Count(svgetlines) <= 0 then ply:ChatPrint("#vjchat.nothing_to_spawn") return false end
+			if table.Count(svgetlines) <= 0 then ply:ChatPrint("#tool.vjstool_npcspawner.print.nothingspawn") return false end
 			local spawner = ents.Create("obj_vj_spawner_base")
 			spawner.EntitiesToSpawn = {}
 			spawner:SetPos(svpos)
