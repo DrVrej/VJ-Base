@@ -8,7 +8,7 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 
 ENT.Base 			= "base_gmodentity"
 ENT.Type 			= "anim"
-ENT.PrintName 		= "FirePlace"
+ENT.PrintName 		= "Fireplace"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Purpose 		= "Gives a warm feeling, especially in snowy maps."

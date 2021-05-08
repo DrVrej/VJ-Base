@@ -22,10 +22,10 @@ VJ.AddCategoryInfo("Fallout", {Icon = "vj_base/icons/fallout.png"})
 VJ.AddCategoryInfo("Killing Floor 1", {Icon = "vj_base/icons/kf1.png"})
 VJ.AddCategoryInfo("Left 4 Dead", {Icon = "vj_base/icons/l4d.png"})
 VJ.AddCategoryInfo("Mass Effect 3", {Icon = "vj_base/icons/masseffect3.png"})
-VJ.AddCategoryInfo("#vjbase.menu.tabs.military", {Icon = "vj_base/icons/mil1.png"})
+VJ.AddCategoryInfo("Military", {Icon = "vj_base/icons/mil1.png"})
 VJ.AddCategoryInfo("No More Room In Hell", {Icon = "vj_base/icons/nmrih.png"})
 VJ.AddCategoryInfo("Star Wars", {Icon = "vj_base/icons/starwars.png"})
-VJ.AddCategoryInfo("#vjbase.menu.tabs.zombies", {Icon = "vj_base/icons/zombies.png"})
+VJ.AddCategoryInfo("Zombies", {Icon = "vj_base/icons/zombies.png"})
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPCs ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ VJ.AddNPC("Mortar Synth","npc_vj_mortarsynth",vCat)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 VJ.AddEntity("Admin Health Kit","sent_vj_adminhealthkit","DrVrej",true,0,true,vCat)
 VJ.AddEntity("Player Spawnpoint","sent_vj_ply_spawnpoint","DrVrej",true,0,true,vCat)
-VJ.AddEntity("FirePlace","sent_vj_fireplace","DrVrej",false,0,true,vCat)
+VJ.AddEntity("Fireplace","sent_vj_fireplace","DrVrej",false,0,true,vCat)
 VJ.AddEntity("Wooden Board","sent_vj_board","DrVrej",false,0,true,vCat)
 VJ.AddEntity("Grenade","obj_vj_grenade","DrVrej",false,0,true,vCat)
 VJ.AddEntity("Flare Round","obj_vj_flareround","DrVrej",false,0,true,vCat)

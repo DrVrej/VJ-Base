@@ -67,8 +67,6 @@ if CLIENT then
 		add("vjbase.menu.tabs.settings.hud", "HUD Settings")
 		add("vjbase.menu.tabs.tools", "Tools")
 		add("vjbase.menu.tabs.configures.snpc", "SNPC Configures")
-		add("vjbase.menu.tabs.military", "Military")
-		add("vjbase.menu.tabs.zombies", "Zombies")
 		add("vjbase.menu.tabs.default", "Default")
 		
 		-- Main Menu
@@ -548,8 +546,6 @@ if CLIENT then
 			add("vjbase.menu.tabs.settings.hud", "Настройки интерфейса")
 			add("vjbase.menu.tabs.tools", "Инструменты")
 			add("vjbase.menu.tabs.configures.snpc", "Конфигурации SNPC")
-		    add("vjbase.menu.tabs.military", "Военные")
-		    add("vjbase.menu.tabs.zombies", "Зомби")
 		    add("vjbase.menu.tabs.default", "По молчанию")
 			
 			-- Main Menu
