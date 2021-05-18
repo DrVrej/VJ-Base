@@ -366,7 +366,7 @@ ENT.AnimTbl_ScaredBehaviorMovement = {} -- The movement animation it will play |
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasGrenadeAttack = false -- Should the SNPC have a grenade attack?
 ENT.GrenadeAttackEntity = "obj_vj_grenade" -- The entity that the SNPC throws | Half Life 2 Grenade: "npc_grenade_frag"
-ENT.GrenadeAttackModel = "models/vj_weapons/w_grenade.mdl" -- The model for the grenade entity
+ENT.GrenadeAttackModel = {} -- Picks a random model from this table to override the model of the grenade
 	-- ====== Animation Variables ====== --
 ENT.AnimTbl_GrenadeAttack = {"grenThrow"} -- Grenade Attack Animations
 ENT.GrenadeAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
@@ -831,7 +831,6 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.MeleeAttacking = false
-ENT.HasSeenGrenade = false
 ENT.Alerted = false
 ENT.Dead = false
 ENT.Flinching = false
@@ -878,6 +877,7 @@ ENT.Medic_CurrentEntToHeal = NULL
 ENT.Medic_SpawnedProp = NULL
 ENT.CurrentWeaponEntity = NULL
 ENT.LastPlayedVJSound = nil
+ENT.NextGrenadeDetectionT = 0
 ENT.NextFollowPlayerT = 0
 ENT.AngerLevelTowardsPlayer = 0
 ENT.NextBreathSoundT = 0
@@ -2488,7 +2488,7 @@ function ENT:ThrowGrenadeCode(customEnt, noOwner)
 	//if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() + self:OBBCenter()),self:GetEnemy():EyePos()) == true then return end
 	noOwner = noOwner or false
 	local getIsCustom = false
-	local gerModel = self.GrenadeAttackModel
+	local gerModel = VJ_PICK(self.GrenadeAttackModel)
 	local gerClass = self.GrenadeAttackEntity
 	local gerFussTime = self.GrenadeAttackFussTime
 	
@@ -2560,7 +2560,7 @@ function ENT:ThrowGrenadeCode(customEnt, noOwner)
 
 	timer.Simple(self.TimeUntilGrenadeIsReleased, function()
 		if getIsCustom == true && !IsValid(customEnt) then return end
-		if IsValid(customEnt) then customEnt.VJHumanTossingAway = false customEnt:Remove() end
+		if IsValid(customEnt) then customEnt.VJ_IsPickedUpDanger = false customEnt:Remove() end
 		if IsValid(self) && self.Dead == false /*&& IsValid(self:GetEnemy())*/ then -- Yete SNPC ter artoon e...
 			local greTargetPos = self:GetPos() + self:GetForward()*200
 			if IsValid(self:GetEnemy()) then
@@ -2582,7 +2582,7 @@ function ENT:ThrowGrenadeCode(customEnt, noOwner)
 			if noOwner == false then gent:SetOwner(self) end
 			gent:SetPos(getSpawnPos)
 			gent:SetAngles(getSpawnAngle)
-			gent:SetModel(Model(gerModel))
+			if gerModel then gent:SetModel(Model(gerModel)) end
 			local getThrowVel = self:CustomOnGrenadeAttack_ThrowVelocity(gent, greTargetPos, getSpawnPos)
 			-- Set the timers for all the different grenade entities
 				if gerClass == "obj_vj_grenade" then
@@ -2615,32 +2615,33 @@ function ENT:ThrowGrenadeCode(customEnt, noOwner)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CheckForGrenades()
-	if self.CanDetectGrenades == false or self.ThrowingGrenade == true or self.HasSeenGrenade == true or self.VJ_IsBeingControlled == true then return end
+	if self.CanDetectGrenades == false or self.ThrowingGrenade == true or self.NextGrenadeDetectionT > CurTime() or self.VJ_IsBeingControlled == true then return end
 	for _,v in pairs(ents.FindInSphere(self:GetPos(), self.RunFromGrenadeDistance)) do
-		local allyGren = false -- Don't throw back if it's an ally grenade
-		if self.EntitiesToRunFrom[v:GetClass()] && self:Visible(v) then
+		local friGren = false -- Don't throw back if it's an ally's grenade
+		if (self.EntitiesToRunFrom[v:GetClass()] or v.VJ_IsDetectableDanger) && self:Visible(v) then
 			if IsValid(v:GetOwner()) && v:GetOwner().IsVJBaseSNPC == true && ((self:GetClass() == v:GetOwner():GetClass()) or (self:Disposition(v:GetOwner()) == D_LI)) then
-				allyGren = true
+				friGren = true
 			end
-			if allyGren == false then
+			if friGren == false then
 				self:PlaySoundSystem("OnGrenadeSight")
-				self.HasSeenGrenade = true
+				self.NextGrenadeDetectionT = CurTime() + 4
 				self.TakingCoverT = CurTime() + 4
 				-- If has the ability to throw it back, then throw the grenade!
-				if v.VJHumanNoPickup != true && v.VJHumanTossingAway != true && self.CanThrowBackDetectedGrenades == true && self.HasGrenadeAttack == true && v:GetVelocity():Length() < 400 && self:VJ_GetNearestPointToEntityDistance(v) < 100 && self.EntitiesToThrowBack[v:GetClass()] then
+				if self.CanThrowBackDetectedGrenades == true && v.VJ_DisablePickupableDanger != true && v.VJ_IsPickedUpDanger != true && self.HasGrenadeAttack == true && v:GetVelocity():Length() < 400 && self:VJ_GetNearestPointToEntityDistance(v) < 100 && (self.EntitiesToThrowBack[v:GetClass()] or v.VJ_IsPickupableDanger) then
 					self.NextGrenadeAttackSoundT = CurTime() + 3
 					self:ThrowGrenadeCode(v, true)
-					v.VJHumanTossingAway = true
+					v.VJ_IsPickedUpDanger = true
 					//v:Remove()
+					return
 				end
 				self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH", function(x)
 					x.CanShootWhenMoving = true
 					x.ConstantlyFaceEnemy = true
-					x.RunCode_OnFinish = function()
-						self.HasSeenGrenade = false
-					end
+					/*x.RunCode_OnFinish = function()
+						self.NextGrenadeDetectionT = false
+					end*/
 				end)
-				break;
+				return
 			end
 		end
 	end

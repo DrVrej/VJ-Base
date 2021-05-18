@@ -17,6 +17,9 @@ ENT.Category		= "VJ Base"
 ENT.Spawnable = true
 ENT.AdminOnly = false
 
+ENT.VJ_IsDetectableDanger = true
+ENT.VJ_IsPickupableDanger = true
+
 if CLIENT then
 	local Name = "Grenade"
 	local LangName = "obj_vj_grenade"
@@ -70,36 +73,40 @@ function ENT:CustomOnTakeDamage(dmginfo)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPhysicsCollide(data,phys)
-	local getvelocity = phys:GetVelocity()
-	local velocityspeed = getvelocity:Length()
-	//print(velocityspeed)
-	if velocityspeed > 500 then -- Or else it will go flying!
-		phys:SetVelocity(getvelocity * 0.9)
+	local getVel = phys:GetVelocity()
+	local curVelSpeed = getVel:Length()
+	//print(curVelSpeed)
+	if curVelSpeed > 500 then -- Or else it will go flying!
+		phys:SetVelocity(getVel * 0.9)
 	end
 	
-	if velocityspeed > 100 then -- If the grenade is going faster than 100, then play the touch sound
+	if curVelSpeed > 100 then -- If the grenade is going faster than 100, then play the touch sound
 		self:OnCollideSoundCode()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defAngle = Angle(0, 0, 0)
+local vecZ4 = Vector(0, 0, 4)
+local vezZ100 = Vector(0, 0, 100)
 --
 function ENT:DeathEffects()
+	local selfPos = self:GetPos()
+	
 	ParticleEffect("vj_explosion1", self:GetPos(), defAngle, nil)
 	
 	local effectdata = EffectData()
 	effectdata:SetOrigin(self:GetPos())
-	//effectdata:SetScale( 500 )
-	//util.Effect( "HelicopterMegaBomb", effectdata )
-	//util.Effect( "ThumperDust", effectdata )
-	util.Effect( "Explosion", effectdata )
-	//util.Effect( "VJ_Small_Explosion1", effectdata )
+	//effectdata:SetScale(500)
+	//util.Effect("HelicopterMegaBomb", effectdata)
+	//util.Effect("ThumperDust", effectdata)
+	util.Effect("Explosion", effectdata)
+	//util.Effect("VJ_Small_Explosion1", effectdata)
 
 	local expLight = ents.Create("light_dynamic")
 	expLight:SetKeyValue("brightness", "4")
 	expLight:SetKeyValue("distance", "300")
-	expLight:SetLocalPos(self:GetPos())
-	expLight:SetLocalAngles( self:GetAngles() )
+	expLight:SetLocalPos(selfPos)
+	expLight:SetLocalAngles(self:GetAngles())
 	expLight:Fire("Color", "255 150 0")
 	expLight:SetParent(self)
 	expLight:Spawn()
@@ -108,16 +115,16 @@ function ENT:DeathEffects()
 	self:DeleteOnRemove(expLight)
 	util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
 
-	self:SetLocalPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the entity is too close to the ground
+	self:SetLocalPos(selfPos + vecZ4) -- Because the entity is too close to the ground
 	local tr = util.TraceLine({
 		start = self:GetPos(),
-		endpos = self:GetPos() - Vector(0, 0, 100),
+		endpos = self:GetPos() - vezZ100,
 		filter = self
 	})
-	util.Decal(VJ_PICK(self.DecalTbl_DeathDecals),tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
+	util.Decal(VJ_PICK(self.DecalTbl_DeathDecals), tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
 	
 	self:DoDamageCode()
-	self:SetDeathVariablesTrue(nil,nil,false)
+	self:SetDeathVariablesTrue(nil, nil, false)
 	self:Remove()
 end
 /*-----------------------------------------------

@@ -87,6 +87,8 @@ ENT.OnRemoveSoundPitch = VJ_Set(90, 100)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- Use the functions below to customize certain parts of the base or to add new custom systems
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnPreInitialize() end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitializeBeforePhys() /* Example: self:PhysicsInitSphere(1, "metal_bouncy") */ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomPhysicsObjectOnInitialize(phys)
@@ -125,6 +127,7 @@ ENT.NextCollideWithoutRemoveT = 0
 ENT.ParentsEnemy = nil
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
+	self:CustomOnPreInitialize()
 	if self:GetModel() == "models/error.mdl" then self:SetModel(VJ_PICK(self.Model)) end
 	self:PhysicsInit(self.PhysicsInitType)
 	self:SetMoveType(self.MoveType)
@@ -170,7 +173,7 @@ function ENT:DoDamageCode(data, phys)
 		local DamageAttacker = true
 		local AttackEnt = self:GetOwner()
 		if self:GetOwner():IsPlayer() == true then DoEntCheck = false DamageAttacker = true end
-		if self.VJHumanTossingAway == true && IsValid(self:GetParent()) && self:GetParent():IsNPC() then gethitpos = self:GetParent():GetPos() end
+		if self.VJ_IsPickedUpDanger == true && IsValid(self:GetParent()) && self:GetParent():IsNPC() then gethitpos = self:GetParent():GetPos() end
 		if self:GetOwner() == NULL then AttackEnt = self DoEntCheck = false end
 		//util.VJ_SphereDamage(AttackEnt,AttackEnt,gethitpos,self.RadiusDamageRadius,self.RadiusDamage,self.RadiusDamageType,DoEntCheck,self.RadiusDamageUseRealisticRadius,self.RadiusDamageForce,self.RadiusDamageForceTowardsRagdolls,self.RadiusDamageForceTowardsPhysics)
 		hitEnt = util.VJ_SphereDamage(AttackEnt,AttackEnt,gethitpos,self.RadiusDamageRadius,self.RadiusDamage,self.RadiusDamageType,DoEntCheck,self.RadiusDamageUseRealisticRadius,{DisableVisibilityCheck=self.RadiusDamageDisableVisibilityCheck,Force=self.RadiusDamageForce,UpForce=self.RadiusDamageForce_Up,DamageAttacker=DamageAttacker})
