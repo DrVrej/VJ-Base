@@ -298,7 +298,7 @@ function ENT:Think()
 		local canTurn = true
 
 		-- Weapon attack
-		if IsValid(self.VJCE_NPC:GetActiveWeapon()) && self.VJCE_NPC.IsVJBaseSNPC == true && self.VJCE_NPC.IsVJBaseSNPC_Human == true && !self.VJCE_NPC:IsMoving() && self.VJCE_NPC:GetActiveWeapon().IsVJBaseWeapon == true && self.VJCE_Player:KeyDown(IN_ATTACK2) && self.VJCE_NPC.IsReloadingWeapon == false && self.VJCE_NPC.MeleeAttacking == false && self.VJCE_NPC.ThrowingGrenade == false && self.VJCE_NPC.vACT_StopAttacks == false then
+		if IsValid(self.VJCE_NPC:GetActiveWeapon()) && self.VJCE_NPC.IsVJBaseSNPC == true && self.VJCE_NPC.IsVJBaseSNPC_Human == true && !self.VJCE_NPC:IsMoving() && self.VJCE_NPC:GetActiveWeapon().IsVJBaseWeapon == true && self.VJCE_Player:KeyDown(IN_ATTACK2) && self.VJCE_NPC.IsReloadingWeapon == false && self.VJCE_NPC.MeleeAttacking == false && self.VJCE_NPC.ThrowingGrenade == false && self.VJCE_NPC.vACT_StopAttacks == false && self.VJCE_NPC:GetWeaponState() != VJ_WEP_STATE_HOLSTERED then
 			//self.VJCE_NPC:SetAngles(Angle(0,math.ApproachAngle(self.VJCE_NPC:GetAngles().y,self.VJCE_Player:GetAimVector():Angle().y,100),0))
 			self.VJCE_NPC:FaceCertainPosition(pos_beye, 0.2)
 			canTurn = false
