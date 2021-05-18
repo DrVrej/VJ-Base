@@ -19,7 +19,11 @@ function ENT:CustomOnSetControlledNPC() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+-- Different from self:CustomOnKeyBindPressed(), this uses: https://wiki.facepunch.com/gmod/Enums/KEY
 function ENT:CustomOnKeyPressed(key) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Different from self:CustomOnKeyPressed(), this uses: https://wiki.facepunch.com/gmod/Enums/IN
+function ENT:CustomOnKeyBindPressed(key) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnStopControlling() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -226,6 +230,13 @@ hook.Add("PlayerButtonDown", "vj_controller_PlayerButtonDown", function(ply, but
 		if button == KEY_BACKSPACE then
 			cent.VJC_Camera_CurZoom = vecr
 		end
+	end
+end)
+hook.Add("KeyPress", "vj_controller_KeyPress", function(ply, key)
+	//print(key)
+	if ply.IsControlingNPC == true && IsValid(ply.VJ_TheControllerEntity) then
+		local cent = ply.VJ_TheControllerEntity
+		cent:CustomOnKeyBindPressed(key)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
