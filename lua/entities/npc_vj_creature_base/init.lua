@@ -2471,9 +2471,9 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 				end
 			end
 		end
-		local curenes = self.ReachableEnemyCount //self.CurrentReachableEnemies
+		local curEnemies = self.ReachableEnemyCount //self.CurrentReachableEnemies
 		-- If the current number of reachable enemies is higher then 1, then don't reset
-		if (IsValid(self:GetEnemy()) && (curenes - 1) >= 1) or (!IsValid(self:GetEnemy()) && curenes >= 1) then
+		if (IsValid(self:GetEnemy()) && (curEnemies - 1) >= 1) or (!IsValid(self:GetEnemy()) && curEnemies >= 1) then
 			//self:VJ_DoSetEnemy(v, false, true)
 			self:DoEntityRelationshipCheck() -- Select a new enemy
 			self.NextProcessT = CurTime() + self.NextProcessTime
