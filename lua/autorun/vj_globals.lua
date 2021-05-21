@@ -33,11 +33,11 @@ VJ_BEHAVIOR_NEUTRAL = 2
 VJ_BEHAVIOR_PASSIVE = 3
 VJ_BEHAVIOR_PASSIVE_NATURE = 4
 
-VJ_STATE_NONE = 0 -- No state is set
-VJ_STATE_FREEZE = 1 -- AI Completely freezes
-VJ_STATE_ONLY_ANIMATION = 100 -- It will only play animation tasks. Movements, turning and other tasks will not play!
-VJ_STATE_ONLY_ANIMATION_CONSTANT = 101 -- Same as VJ_STATE_ONLY_ANIMATION but with the addition that idle animation will not play!
-VJ_STATE_ONLY_ANIMATION_NOATTACK = 102 -- Same as VJ_STATE_ONLY_ANIMATION but with the addition that attacks will also not be performed by the NPC!
+VJ_STATE_NONE = 0 -- No state is set, this is the default value
+VJ_STATE_FREEZE = 1 -- AI Completely freezes, basically applies Disable AI on the NPC (Including relationship system!)
+VJ_STATE_ONLY_ANIMATION = 100 -- Only plays animation tasks, attacks. Disables: Movements, turning and other non-animation tasks!
+VJ_STATE_ONLY_ANIMATION_CONSTANT = 101 -- Same as VJ_STATE_ONLY_ANIMATION + Idle animation will not play!
+VJ_STATE_ONLY_ANIMATION_NOATTACK = 102 -- Same as VJ_STATE_ONLY_ANIMATION + Attacks will be disabled
 
 VJ_WEP_STATE_NONE = 0 -- No state is set
 VJ_WEP_STATE_HOLSTERED = 1 -- Weapon is holstered

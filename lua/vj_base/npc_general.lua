@@ -37,6 +37,7 @@ local isnumber = isnumber
 //local tonumber = tonumber
 //local string_find = string.find
 //local string_Replace = string.Replace
+local string_sub = string.sub
 local table_remove = table.remove
 local varCPly = "CLASS_PLAYER_ALLY"
 local varCAnt = "CLASS_ANTLION"
@@ -379,6 +380,15 @@ function ENT:FaceCertainEntity(ent, onlyEnemy, faceEnemyTime)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
+	Gets the position set usually by the function self:SetLastPosition(vec)
+	Returns
+		- Vector, the last position
+-----------------------------------------------------------]]
+function ENT:GetLastPosition()
+	return self:GetInternalVariable("m_vecLastPosition")
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
 	Performs a group formation
 		- formType = Type of formation it should do
 			- Types: "Diamond"
@@ -467,27 +477,54 @@ end
 --[[---------------------------------------------------------
 	Checks all 4 sides around the NPC
 		- checkDist = How far should each trace go? | DEFAULT = 200
+		- returnPos = Instead of returning a table of sides, it will return a table of actual positions | DEFAULT: false
+			- Use this whenever possible as it is much more optimized to utilize!
+		- sides = Use this to disable checking certain positions by setting the 1 to 0, "Forward-Backward-Right-Left" | DEFAULT = "1111"
 	Returns
-		- Table dictionary, includes 4 values, if true then that side isn't blocked!
-			- Values: Forward, Backward, Right, Left
+		- returnPos = true
+			- Table of positions (4 max)
+		- returnPos = false
+			- Table dictionary, includes 4 values, if true then that side isn't blocked!
+				- Values: Forward, Backward, Right, Left
 -----------------------------------------------------------]]
-function ENT:VJ_CheckAllFourSides(checkDist)
+local str1111 = "1111"
+local str1 = "1"
+--
+function ENT:VJ_CheckAllFourSides(checkDist, returnPos, sides)
 	checkDist = checkDist or 200
-	local result = {Forward=false, Backward=false, Right=false, Left=false}
+	sides = sides or str1111
+	local result = returnPos == true and {} or {Forward=false, Backward=false, Right=false, Left=false}
 	local i = 0
-	local myPos = self:GetPos() + self:OBBCenter()
-	for _, v in ipairs({self:GetForward(), -self:GetForward(), self:GetRight(), -self:GetRight()}) do
+	local myPos = self:GetPos()
+	local myPosCentered = self:GetPos() + self:OBBCenter()
+	local positions = {
+		string_sub(sides, 1, 1) == str1 and self:GetForward() or 0, 
+		string_sub(sides, 2, 2) == str1 and -self:GetForward() or 0,
+		string_sub(sides, 3, 3) == str1 and self:GetRight() or 0,
+		string_sub(sides, 4, 4) == str1 and -self:GetRight() or 0
+	}
+	for _, v in pairs(positions) do
 		i = i + 1
+		if v == 0 then continue end -- If 0 then we have the tag to skip this!
 		local tr = util.TraceLine({
-			start = myPos,
-			endpos = myPos + v*checkDist,
+			start = myPosCentered,
+			endpos = myPosCentered + v*checkDist,
 			filter = self
 		})
-		if self:GetPos():Distance(tr.HitPos) >= checkDist then
-			if i == 1 then result.Forward = true end
-			if i == 2 then result.Backward = true end
-			if i == 3 then result.Right = true end
-			if i == 4 then result.Left = true  end
+		local hitPos = tr.HitPos
+		if self:GetPos():Distance(hitPos) >= checkDist then
+			if returnPos == true then
+				hitPos.z = myPos.z -- Reset it to self:GetPos() z-axis
+				result[#result + 1] = hitPos
+			elseif i == 1 then
+				result.Forward = true
+			elseif i == 2 then
+				result.Backward = true
+			elseif i == 3 then
+				result.Right = true
+			elseif i == 4 then
+				result.Left = true
+			end
 		end
 	end
 	return result
