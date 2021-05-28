@@ -220,12 +220,13 @@ else -- If SERVER
 				type_task = "TASK_RUN_PATH"
 				type_sched = SCHED_FORCED_GO_RUN
 			end
-			for _,v in ipairs(sventtable) do
+			for k, v in ipairs(sventtable) do
 				if IsValid(v) then -- Move the NPC if it's valid!
 					v:StopMoving()
 					v:SetLastPosition(svvector)
-					if v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Creature == true or v.IsVJBaseSNPC_Human == true) then
-						v:VJ_TASK_GOTO_LASTPOS(type_task, function(x) 
+					if v.IsVJBaseSNPC == true then
+						if k == 1 or math.random(1, 5) == 1 then v:PlaySoundSystem("OnReceiveOrder") end
+						v:VJ_TASK_GOTO_LASTPOS(type_task, function(x)
 							if IsValid(v:GetEnemy()) && v:Visible(v:GetEnemy()) then
 								x:EngTask("TASK_FACE_ENEMY", 0) 
 								x.CanShootWhenMoving = true 
