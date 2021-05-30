@@ -19,12 +19,3 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsUpdate(physobj)
 end
----------------------------------------------------------------------------------------------------------------------------------------------
-/*if CLIENT then
-  local Name = "rrrrrrrrrrrrrrrrrr"
-  local LangName = "rrrrrrrrrrrrrrrrrr"
-  language.Add(LangName, Name)
-  killicon.Add(LangName,"HUD/killicons/default",Color(255,80,0,255))
-  language.Add("#"..LangName, Name)
-  killicon.Add("#"..LangName,"HUD/killicons/default",Color(255,80,0,255))
-end*/

@@ -48,19 +48,17 @@ ENT.GeneralSoundPitch2 = 100
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Tank Base Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ENT.Tank_GunnerENT = "npc_vj_tankg_base" -- The SNPC that will be the gunner (The head of the tank)
-ENT.Tank_SpawningAngle = 180
-ENT.Tank_AngleDiffuseNumber = 180
-ENT.Tank_UseGetRightForSpeed = false -- Should it use GetRight instead of GetForward when driving?
+ENT.Tank_GunnerENT = "" -- The SNPC that will be the gunner (The head of the tank)
+ENT.Tank_AngleDiffuseNumber = 180 -- Used if the forward direction of the y-axis isn't correct on the model
 	-- ====== Sight Variables ====== --
-ENT.Tank_SeeClose = 500 -- If the enemy is closer than this number, than move!
-ENT.Tank_SeeFar = 4000 -- If the enemy is higher than this number, than move!
-ENT.Tank_SeeLimit = 6000 -- How far can it see?
-	-- ====== Tank Movement Variables ====== --
-ENT.Tank_TurningSpeed = 1.5 -- Turning Speed
-ENT.Tank_ForwardSpead = 70 -- Forward speed
-ENT.Tank_MoveAwaySpeed = -70 -- Move away speed
+ENT.Tank_SeeClose = 1000 -- If the enemy is closer than this number, than move by either running over them or moving away for the gunner to fire
+ENT.Tank_SeeFar = 6000 -- If the enemy is higher than this number, than move towards the enemy
+ENT.Tank_DistRanOver = 500 -- If the enemy is within self.Tank_SeeClose & this number & not high up, then run over them!
+	-- ====== Movement Variables ====== --
+ENT.Tank_TurningSpeed = 1.5 -- How fast the chassis moves as it's driving
+ENT.Tank_DrivingSpeed = 100 -- How fast the tank drives
 	-- ====== Collision Variables ====== --
+	-- Used when the NPC is spawned
 ENT.Tank_CollisionBoundSize = 90
 ENT.Tank_CollisionBoundUp = 100
 ENT.Tank_CollisionBoundDown = -10
@@ -110,7 +108,7 @@ function ENT:Tank_CustomOnPriorToKilled(dmginfo, hitgroup) return true end -- Re
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) return true end -- Return false to disable the default base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnDeath_AfterDeathSoldierSpawned(dmginfo, hitgroup,SoldierCorpse) end
+function ENT:Tank_CustomOnDeath_AfterDeathSoldierSpawned(dmginfo, hitgroup, soldierCorpse) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_CustomOnDeath_AfterCorpseSpawned_Effects(dmginfo, hitgroup, corpseEnt) return true end -- Return false to disable the default base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -136,12 +134,11 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ENT.Tank_ResetedEnemy = false
 ENT.Tank_IsMoving = false
 ENT.Tank_Status = 1
 ENT.Tank_NextLowHealthSparkT = 0
 ENT.Tank_NextRunOverSoundT = 0
-ENT.TankTbl_DontRunOver = {npc_antlionguard=true,npc_turret_ceiling=true,monster_gargantua=true,monster_bigmomma=true,monster_nihilanth=true,npc_strider=true,npc_combine_camera=true,npc_helicopter=true,npc_combinegunship=true,npc_combinedropship=true,npc_rollermine=true}
+local runoverException = {npc_antlionguard=true,npc_turret_ceiling=true,monster_gargantua=true,monster_bigmomma=true,monster_nihilanth=true,npc_strider=true,npc_combine_camera=true,npc_helicopter=true,npc_combinegunship=true,npc_combinedropship=true,npc_rollermine=true}
 
 local defAng = Angle(0, 0, 0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -149,7 +146,7 @@ function ENT:CustomOnInitialize()
 	self:CustomInitialize_CustomTank()
 	self:PhysicsInit(SOLID_BBOX) // SOLID_VPHYSICS
 	self:SetSolid(SOLID_VPHYSICS)
-	self:SetAngles(self:GetAngles() + Angle(0, self.Tank_SpawningAngle, 0))
+	self:SetAngles(self:GetAngles() + Angle(0, -self.Tank_AngleDiffuseNumber, 0))
 	//self:SetPos(self:GetPos()+Vector(0,0,90))
 	self:SetCollisionBounds(Vector(self.Tank_CollisionBoundSize, self.Tank_CollisionBoundSize, self.Tank_CollisionBoundUp), Vector(-self.Tank_CollisionBoundSize, -self.Tank_CollisionBoundSize, self.Tank_CollisionBoundDown))
 
@@ -158,27 +155,15 @@ function ENT:CustomOnInitialize()
 		phys:Wake()
 		phys:SetMass(30000)
 	end
-
+	
+	-- Create the gunner NPC
 	self.Gunner = ents.Create(self.Tank_GunnerENT)
-	self.Gunner:Spawn()
-	self.Gunner:SetPos(self:Tank_GunnerSpawnPosition())
-	self.Gunner:SetAngles(self:GetAngles())
-	self.Gunner:SetParent(self)
-
-	/*local angrypapir = Vector(-100, -25, 50)
-	self.ActualLight1 = ents.Create("env_projectedtexture")
-	self.ActualLight1:SetLocalPos( self:GetPos() + (self:GetForward() * angrypapir.x ) + ( self:GetRight() * angrypapir.y ) + ( self:GetUp() * angrypapir.z ) )
-	self.ActualLight1:SetLocalAngles( self:GetAngles() +Angle(0,180,0) )
-	self.ActualLight1:SetParent( self )
-	self.ActualLight1:SetKeyValue( "enableshadows", 1 )
-	self.ActualLight1:SetKeyValue( "LightWorld", 1 )
-	self.ActualLight1:SetKeyValue( "farz", 1000 )
-	self.ActualLight1:SetKeyValue( "nearz", 1 )
-	self.ActualLight1:SetKeyValue( "lightfov", 50 )
-	self.ActualLight1:SetKeyValue( "lightcolor", "255 255 255" )
-	self.ActualLight1:Spawn()
-	self.ActualLight1:Input( "SpotlightTexture", NULL, NULL, "effects/flashlight001" )
-	self:DeleteOnRemove(self.ActualLight1)*/
+	if IsValid(self.Gunner) then
+		self.Gunner:SetPos(self:Tank_GunnerSpawnPosition())
+		self.Gunner:SetAngles(self:GetAngles())
+		self.Gunner:Spawn()
+		self.Gunner:SetParent(self)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnTouch(ent)
@@ -190,12 +175,12 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_RunOver(ent)
 	if (!IsValid(ent)) or (GetConVar("vj_npc_nomelee"):GetInt() == 1 /*or self.HasMeleeAttack == false*/) or (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == ent) then return end
-	if self:Disposition(ent) == 1 && ent:Health() > 0 && (ent:IsNPC() && ent.VJ_IsHugeMonster != true && !self.TankTbl_DontRunOver[ent:GetClass()]) or (ent:IsPlayer() && self.PlayerFriendly == false && GetConVar("ai_ignoreplayers"):GetInt() == 0 && ent:Alive() && self.Tank_IsMoving == true) then
+	if self:Disposition(ent) == 1 && ent:Health() > 0 && self.Tank_IsMoving == true && (ent:IsNPC() && ent.VJ_IsHugeMonster != true && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && self.PlayerFriendly == false && GetConVar("ai_ignoreplayers"):GetInt() == 0) then
 		self:Tank_CustomOnRunOver(ent)
-		ent:TakeDamage(self:VJ_GetDifficultyValue(8),self,self)
+		self:Tank_Sound_RunOver()
+		ent:TakeDamage(self:VJ_GetDifficultyValue(8), self, self)
 		VJ_DestroyCombineTurret(self,ent)
 		ent:SetVelocity(ent:GetForward()*-200)
-		self:Tank_Sound_RunOver()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -209,7 +194,7 @@ end
 function ENT:CustomOnThink()
 	if self:Tank_CustomOnThink() == true then
 		if GetConVar("vj_npc_noidleparticle"):GetInt() == 1 then return end
-		timer.Simple(0.1,function()
+		timer.Simple(0.1, function()
 			if IsValid(self) && self.Dead == false then
 				self:StartSpawnEffects()
 			end
@@ -239,7 +224,7 @@ function ENT:CustomOnThink()
 			effectdata:SetScale(0.1)
 			effectdata:SetRadius(10)
 			util.Effect("Sparks",effectdata)*/
-			self.Tank_NextLowHealthSparkT = CurTime() + math.random(4,6)
+			self.Tank_NextLowHealthSparkT = CurTime() + math.random(4, 6)
 		end
 
 		/*if self:Health() <= 150 then
@@ -257,7 +242,7 @@ function ENT:CustomOnThink_AIEnabled()
 	if self.Dead == true then return end
 	//timer.Simple(0.1, function() if self.Dead == false then ParticleEffect("smoke_exhaust_01",self:LocalToWorld(Vector(150,30,30)),defAng,self) end end)
 	//timer.Simple(0.2, function() if self.Dead == false then self:StopParticles() end end)
-	for _, v in pairs(ents.FindInSphere(self:GetPos(),100)) do
+	for _, v in pairs(ents.FindInSphere(self:GetPos(), 100)) do
 		self:Tank_RunOver(v)
 	end
 
@@ -269,62 +254,49 @@ function ENT:CustomOnThink_AIEnabled()
 			self:Tank_Sound_Moving()
 			self:StartMoveEffects()
 		else -- Not moving
-			VJ_STOPSOUND(self.tank_movingsd)
-			VJ_STOPSOUND(self.tank_tracksd)
+			VJ_STOPSOUND(self.CurrentTankMovingSound)
+			VJ_STOPSOUND(self.CurrentTankTrackSound)
 			self.Tank_IsMoving = false
 		end
 	end
 	if (!tr.Hit) then -- Not moving
-		VJ_STOPSOUND(self.tank_movingsd)
-		VJ_STOPSOUND(self.tank_tracksd)
+		VJ_STOPSOUND(self.CurrentTankMovingSound)
+		VJ_STOPSOUND(self.CurrentTankTrackSound)
 		self.Tank_IsMoving = false
 	end
 
 	self:CustomOnSchedule()
-
+	
 	if self.Tank_Status == 0 && tr.Hit then
-		if !IsValid(self:GetEnemy()) then
-			self.Tank_Status = 1
-		else
-			//print((self:GetEnemy():GetPos() -self:GetPos() +Vector(0,0,80)):Angle())
-			-- To make it go opposite:
-				-- Change the +15 to -15 and -15 to 15
-				-- Change the forwad spead(Tank_ForwardSpead) to their opposite quotation(+ to -)
-				-- Change the turning speed(Tank_TurningSpeed) to their opposite quotation(+ to -)
+		local ene = self:GetEnemy()
+		if IsValid(ene) then
 			local phys = self:GetPhysicsObject()
 			if IsValid(phys) then
-				local Angle_Enemy = (self:GetEnemy():GetPos() - self:GetPos() + vec80z):Angle()
-				local Angle_Current = self:GetAngles()
-				local Angle_Diffuse = self:AngleDiffuse(Angle_Enemy.y,Angle_Current.y+self.Tank_AngleDiffuseNumber)
-				local Heigh_Ratio = (self:GetEnemy():GetPos().z - self:GetPos().z ) / self:GetPos():Distance(Vector(self:GetEnemy():GetPos().x,self:GetEnemy():GetPos().y,self:GetPos().z))
-
-				if Heigh_Ratio < 0.15 then -- If it is that high than move away from it
-					-- To help the gunner shoot
-					if self.Tank_UseGetRightForSpeed == true then
-					phys:SetVelocity(self:GetRight():GetNormal()*self.Tank_MoveAwaySpeed) else
-					phys:SetVelocity(self:GetForward():GetNormal()*self.Tank_MoveAwaySpeed) end
-					if Angle_Diffuse > 15 then
-						self:SetLocalAngles( self:GetLocalAngles() + Angle(0,self.Tank_TurningSpeed,0))
+				local angEne = (ene:GetPos() - self:GetPos() + vec80z):Angle()
+				local angDiffuse = self:AngleDiffuse(angEne.y, self:GetAngles().y + self.Tank_AngleDiffuseNumber)
+				local heightRatio = (ene:GetPos().z - self:GetPos().z) / self:GetPos():Distance(Vector(ene:GetPos().x, ene:GetPos().y, self:GetPos().z))
+				-- If the enemy's height isn't very high AND the enemy is ( within run over distance OR far away), then move towards the enemy!
+				-- OR
+				-- If the enemy is very high up, then move away from it to help the gunner fire!
+				if (heightRatio < 0.15 && ((self.LatestEnemyDistance < self.Tank_DistRanOver) or (self.LatestEnemyDistance > self.Tank_SeeFar))) or (heightRatio > 0.15) then
+					if angDiffuse > 15 then
+						self:SetLocalAngles(self:GetLocalAngles() + Angle(0, self.Tank_TurningSpeed, 0))
 						phys:SetAngles(self:GetAngles())
-					elseif Angle_Diffuse < -15 then
-						self:SetLocalAngles( self:GetLocalAngles() + Angle(0,-self.Tank_TurningSpeed,0))
+					elseif angDiffuse < -15 then
+						self:SetLocalAngles(self:GetLocalAngles() + Angle(0, -self.Tank_TurningSpeed, 0))
 						phys:SetAngles(self:GetAngles())
 					end
-				//if self:GetEnemy().VJ_IsHugeMonster == false then
-				elseif math.abs(Heigh_Ratio) > 1 && math.abs(Heigh_Ratio) < 0.6 then -- If it is that high than move toward it
-					-- Run over
-					if self.Tank_UseGetRightForSpeed == true then
-					phys:SetVelocity(self:GetRight():GetNormal()*self.Tank_MoveAwaySpeed) else
-					phys:SetVelocity(self:GetForward():GetNormal()*self.Tank_MoveAwaySpeed) end
-					if Angle_Diffuse > 15 then
-						self:SetLocalAngles( self:GetLocalAngles() + Angle(0,self.Tank_TurningSpeed,0))
-						phys:SetAngles(self:GetAngles())
-					elseif Angle_Diffuse < -15 then
-						self:SetLocalAngles( self:GetLocalAngles() + Angle(0,-self.Tank_TurningSpeed,0))
-						phys:SetAngles(self:GetAngles())
+					local moveVel = self:GetForward()
+					moveVel:Rotate(Angle(0, self.Tank_AngleDiffuseNumber, 0))
+					if heightRatio > 0.15 then -- Move away!
+						phys:SetVelocity(moveVel:GetNormal()*-self.Tank_DrivingSpeed)
+					else -- Move towards!
+						phys:SetVelocity(moveVel:GetNormal()*self.Tank_DrivingSpeed)
 					end
 				end
 			end
+		else
+			self.Tank_Status = 1
 		end
 	end
 end
@@ -335,23 +307,15 @@ function ENT:CustomOnSchedule()
 	self:IdleSoundCode()
 	self:DoIdleAnimation()
 	
-	if !IsValid(self:GetEnemy()) then
-		if self.Tank_ResetedEnemy == false then
-			self.Tank_ResetedEnemy = true
-			self:ResetEnemy()
-		end
-	else
-		local EnemyPosToSelf = self:GetPos():Distance(self:GetEnemy():GetPos())
+	if IsValid(self:GetEnemy()) then
 		if self.VJ_IsBeingControlled == true then
 			if self.VJ_TheController:KeyDown(IN_FORWARD) then
 				self.Tank_Status = 0
 			else
 				self.Tank_Status = 1
 			end
-		elseif self.VJ_IsBeingControlled == false then
-			if EnemyPosToSelf > self.Tank_SeeLimit then -- If larger than this number than, move
-				self.Tank_Status = 0
-			elseif EnemyPosToSelf < self.Tank_SeeFar && EnemyPosToSelf > self.Tank_SeeClose then -- If between this two numbers, stay still
+		else
+			if self.LatestEnemyDistance < self.Tank_SeeFar && self.LatestEnemyDistance > self.Tank_SeeClose then -- If between this two numbers, stay still
 				self.Tank_Status = 1
 			else
 				self.Tank_Status = 0
@@ -373,87 +337,100 @@ end
 function ENT:CustomOnPriorToKilled(dmginfo, hitgroup)
 	if IsValid(self.Gunner) then
 		self.Gunner.Dead = true
-		if self:IsOnFire() then self.Gunner:Ignite(math.Rand(8,10),0) end
+		if self:IsOnFire() then self.Gunner:Ignite(math.Rand(8, 10), 0) end
 	end
 	
 	if self:Tank_CustomOnPriorToKilled(dmginfo, hitgroup) == true then
-		for i=0,1,0.5 do
-			timer.Simple(i,function()
+		for i=0, 1, 0.5 do
+			timer.Simple(i, function()
 				if IsValid(self) then
-					VJ_EmitSound(self,"vj_mili_tank/tank_death2.wav",100,100)
-					util.BlastDamage(self,self,self:GetPos(),200,40)
-					util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
-					if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2",self:GetPos(),defAng,nil) end
+					local myPos = self:GetPos()
+					VJ_EmitSound(self, "vj_mili_tank/tank_death2.wav", 100, 100)
+					util.BlastDamage(self, self, myPos, 200, 40)
+					util.ScreenShake(myPos, 100, 200, 1, 2500)
+					if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2", myPos, defAng) end
 				end
 			end)
 		end
 		
-		timer.Simple(1.5,function()
+		timer.Simple(1.5, function()
 			if IsValid(self) then
-				VJ_EmitSound(self,"vj_mili_tank/tank_death2.wav",100,100)
-				VJ_EmitSound(self,"vj_mili_tank/tank_death3.wav",100,100)
-				util.BlastDamage(self,self,self:GetPos(),200,40)
-				util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
-				if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2",self:GetPos(),defAng,nil) end
+				local myPos = self:GetPos()
+				VJ_EmitSound(self,"vj_mili_tank/tank_death2.wav", 100, 100)
+				VJ_EmitSound(self,"vj_mili_tank/tank_death3.wav", 100, 100)
+				util.BlastDamage(self, self, myPos, 200, 40)
+				util.ScreenShake(myPos, 100, 200, 1, 2500)
+				if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2", myPos, defAng) end
 			end
 		end)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local vec500z = Vector(0, 0, 500)
+local colorGray = Color(90, 90, 90)
 --
 function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
-	if IsValid(self.Gunner) then -- Spawn the gunner
+	-- Spawn the gunner corpse
+	if IsValid(self.Gunner) then
 		self.Gunner.SavedDmgInfo = self.SavedDmgInfo
 		local gunCorpse = self.Gunner:CreateDeathCorpse(dmginfo, hitgroup)
 		if IsValid(gunCorpse) then corpseEnt.ExtraCorpsesToRemove[#corpseEnt.ExtraCorpsesToRemove+1] = gunCorpse end
 	end
 	
 	if self:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) == true then
-		util.BlastDamage(self, self, self:GetPos(), 400, 40)
-		util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
+		local myPos = self:GetPos()
+		
+		util.BlastDamage(self, self, myPos, 400, 40)
+		util.ScreenShake(myPos, 100, 200, 1, 2500)
 	
-		-- Spawn the death soldier
-		local smdl = VJ_PICK(self.Tank_DeathSoldierModels)
-		if smdl != false && math.random(1,self.Tank_DeathSoldierChance) == 1 then
-			self:CreateExtraDeathCorpse("prop_ragdoll",smdl,{Pos=self:GetPos()+self:GetUp()*90+self:GetRight()*-30,Vel=Vector(math.Rand(-600,600), math.Rand(-600,600),500)},function(extraent) extraent:Ignite(math.Rand(8,10),0); extraent:SetColor(Color(90,90,90)); self:Tank_CustomOnDeath_AfterDeathSoldierSpawned(dmginfo, hitgroup,extraent) end)
+		-- Spawn the death soldier corpse
+		if math.random(1, self.Tank_DeathSoldierChance) == 1 then
+			local soldierMDL = VJ_PICK(self.Tank_DeathSoldierModels)
+			if soldierMDL != false then
+				self:CreateExtraDeathCorpse("prop_ragdoll", soldierMDL, {Pos=myPos + self:GetUp()*90 + self:GetRight()*-30, Vel=Vector(math.Rand(-600, 600), math.Rand(-600, 600), 500)}, function(extraent)
+					extraent:Ignite(math.Rand(8, 10), 0)
+					extraent:SetColor(colorGray)
+					self:Tank_CustomOnDeath_AfterDeathSoldierSpawned(dmginfo, hitgroup, extraent)
+				end)
+			end
 		end
 
-		self:SetPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the NPC is too close to the ground
+		self:SetPos(Vector(myPos.x, myPos.y, myPos.z + 4)) -- Because the NPC is too close to the ground
+		myPos = self:GetPos()
 		local tr = util.TraceLine({
-			start = self:GetPos(),
-			endpos = self:GetPos() - vec500z,
+			start = myPos,
+			endpos = myPos - vec500z,
 			filter = self
 		})
 		util.Decal(VJ_PICK(self.Tank_DeathDecal), tr.HitPos+tr.HitNormal, tr.HitPos-tr.HitNormal)
 
 		if self.HasGibDeathParticles == true && self:Tank_CustomOnDeath_AfterCorpseSpawned_Effects(dmginfo, hitgroup, corpseEnt) == true then
 			//self.FireEffect = ents.Create( "env_fire_trail" )
-			//self.FireEffect:SetPos(self:GetPos()+self:GetUp()*70)
+			//self.FireEffect:SetPos(myPos+self:GetUp()*70)
 			//self.FireEffect:Spawn()
 			//self.FireEffect:SetParent(corpseEnt)
 			//ParticleEffectAttach("smoke_large_01b",PATTACH_ABSORIGIN_FOLLOW,corpseEnt,0)
-			ParticleEffect("vj_explosion3",self:GetPos(),defAng,nil)
-			ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*-130,defAng,nil)
-			ParticleEffect("vj_explosion2",self:GetPos() +self:GetForward()*130,defAng,nil)
-			ParticleEffectAttach("smoke_burning_engine_01",PATTACH_ABSORIGIN_FOLLOW,corpseEnt,0)
+			ParticleEffect("vj_explosion3", myPos, defAng)
+			ParticleEffect("vj_explosion2", myPos + self:GetForward()*-130, defAng)
+			ParticleEffect("vj_explosion2", myPos + self:GetForward()*130, defAng)
+			ParticleEffectAttach("smoke_burning_engine_01", PATTACH_ABSORIGIN_FOLLOW, corpseEnt, 0)
 			
-			local explosioneffect = EffectData()
-			explosioneffect:SetOrigin(self:GetPos())
-			util.Effect("VJ_Medium_Explosion1",explosioneffect)
-			util.Effect("Explosion", explosioneffect)
+			local effectExp = EffectData()
+			effectExp:SetOrigin(myPos)
+			util.Effect("VJ_Medium_Explosion1", effectExp)
+			util.Effect("Explosion", effectExp)
 			
-			local dusteffect = EffectData()
-			dusteffect:SetOrigin(self:GetPos())
-			dusteffect:SetScale(800)
-			util.Effect("ThumperDust",dusteffect)
+			local effectDust = EffectData()
+			effectDust:SetOrigin(myPos)
+			effectDust:SetScale(800)
+			util.Effect("ThumperDust", effectDust)
 		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove()
-	VJ_STOPSOUND(self.tank_movingsd)
-	VJ_STOPSOUND(self.tank_tracksd)
+	VJ_STOPSOUND(self.CurrentTankMovingSound)
+	VJ_STOPSOUND(self.CurrentTankTrackSound)
 	if IsValid(self.Gunner) then
 		self.Gunner:Remove()
 	end
@@ -464,13 +441,13 @@ function ENT:Tank_Sound_Moving()
 	
 	local sdtbl1 = VJ_PICK(self.Tank_SoundTbl_DrivingEngine)
 	if sdtbl1 == false then sdtbl1 = VJ_PICK(self.Tank_DefaultSoundTbl_DrivingEngine) end -- Default table
-	self.tank_movingsd = VJ_CreateSound(self,sdtbl1,80,100)
-	self.Tank_NextRunOverSoundT = CurTime() + 0.2
+	self.CurrentTankMovingSound = VJ_CreateSound(self, sdtbl1, 80, 100)
+	//self.Tank_NextRunOverSoundT = CurTime() + 0.2
 	
 	local sdtbl2 = VJ_PICK(self.Tank_SoundTbl_Track)
 	if sdtbl2 == false then sdtbl2 = VJ_PICK(self.Tank_DefaultSoundTbl_Track) end -- Default table
-	self.tank_tracksd = VJ_CreateSound(self,sdtbl2,70,100)
-	self.Tank_NextRunOverSoundT = CurTime() + 0.2
+	self.CurrentTankTrackSound = VJ_CreateSound(self, sdtbl2, 70, 100)
+	//self.Tank_NextRunOverSoundT = CurTime() + 0.2
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_Sound_RunOver()
@@ -478,7 +455,7 @@ function ENT:Tank_Sound_RunOver()
 	
 	local sdtbl = VJ_PICK(self.Tank_SoundTbl_RunOver)
 	if sdtbl == false then sdtbl = VJ_PICK(self.Tank_DefaultSoundTbl_RunOver) end -- Default table
-	self:EmitSound(sdtbl,80,math.random(80,100))
+	self:EmitSound(sdtbl, 80, math.random(80, 100))
 	self.Tank_NextRunOverSoundT = CurTime() + 0.2
 end
 /*-----------------------------------------------
