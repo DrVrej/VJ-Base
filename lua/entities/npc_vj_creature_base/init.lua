@@ -1459,7 +1459,7 @@ function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase)
 		end
 		self:StartSchedule(task_chaseEnemyLOS)
 	else
-		task_chaseEnemy.RunCode_OnFail = function() self:VJ_TASK_IDLE_STAND() end
+		task_chaseEnemy.RunCode_OnFail = function() if IsValid(self) then self:VJ_TASK_IDLE_STAND() end end
 		self:StartSchedule(task_chaseEnemy)
 	end
 end
