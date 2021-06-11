@@ -203,11 +203,17 @@ else
 			local allynum = net.ReadFloat()
 			if #classtbl > 0 then
 				ent.VJ_NPC_Class = classtbl
-				if ent.IsVJBaseSNPC == true && allynum == 1 && table.HasValue(classtbl,"CLASS_PLAYER_ALLY") then
-					ent.FriendsWithAllPlayerAllies = true
+				if ent.IsVJBaseSNPC == true then
+					if table.HasValue(classtbl,"CLASS_PLAYER_ALLY") then
+						if allynum == 1 then ent.FriendsWithAllPlayerAllies = true end
+						ent.PlayerFriendly = true
+					else
+						ent.PlayerFriendly = false
+					end
 				end
 			else
 				ent.VJ_NPC_Class = {nil}
+				ent.PlayerFriendly = false
 			end
 		end
 	end)
