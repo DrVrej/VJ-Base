@@ -57,11 +57,11 @@ else
 	local function VJ_MAINMENU_CLEANUP(Panel)
 		if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
 			Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
-			Panel:ControlHelp("#vjbase.menu.general.admin.only")
+			Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 			return
 		end
 		Panel:ControlHelp(" ") -- Spacer
-		Panel:ControlHelp("#vjbase.menu.general.admin.only")
+		Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 		Panel:Button("#vjbase.menu.cleanup.all", "vj_cleanup")
 		Panel:Button("#vjbase.menu.cleanup.stopsounds", "stopsound")
 		Panel:Button("#vjbase.menu.cleanup.remove.vjnpcs", "vj_cleanup", "vjnpcs")
@@ -165,7 +165,7 @@ else
 	local function VJ_MAINMENU_ADMINSERVER(Panel)
 		if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
 			Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
-			Panel:ControlHelp("#vjbase.menu.general.admin.only")
+			Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 			return
 		end
 		Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.only"})

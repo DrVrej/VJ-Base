@@ -10,11 +10,11 @@ include('autorun/client/vj_menu_plugins.lua')
 local function VJ_SNPC_OPTIONS(Panel) -- Options
 	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
 		Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
-		Panel:ControlHelp("#vjbase.menu.general.admin.only")
+		Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 		return
 	end
 	
-	Panel:ControlHelp("#vjbase.menu.general.admin.only")
+	Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 	Panel:AddControl("Label", {Text = "#vjbase.menu.general.snpc.warnfuture"})
 	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_godmodesnpc 0\nvj_npc_playerfriendly 0\nvj_npc_zombiefriendly 0\nvj_npc_antlionfriendly 0\nvj_npc_combinefriendly 0\nvj_npc_corpsefade 0\nvj_npc_corpsefadetime 10\nvj_npc_undocorpse 0\nvj_npc_allhealth 0\nvj_npc_fadegibs 1\nvj_npc_fadegibstime 30\nvj_npc_gibcollidable 0\nvj_npc_addfrags 1\nvj_npc_dropweapon 1\nvj_npc_itemdrops 1\nvj_npc_creatureopendoor 1\nvj_npc_vjfriendly 0\nvj_npc_globalcorpselimit 32\nvj_npc_seedistance 0\nvj_npc_processtime 1\nvj_npc_usegmoddecals 0\nvj_npc_knowenemylocation 0\nvj_npc_plypickupdropwep 1\nvj_npc_difficulty 0\nvj_npc_human_canjump 1\nvj_npc_corpsecollision 0"})
 	local vj_difficulty = {Options = {}, CVars = {}, Label = "#vjbase.menu.snpc.options.difficulty.header", MenuButton = "0"}
@@ -92,11 +92,11 @@ end
 local function VJ_SNPC_SETTINGS(Panel) -- Settings
 	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
 		Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
-		Panel:ControlHelp("#vjbase.menu.general.admin.only")
+		Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 		return
 	end
 
-	Panel:ControlHelp("#vjbase.menu.general.admin.only")
+	Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 	Panel:AddControl("Label", {Text = "#vjbase.menu.general.snpc.warnfuture"})
 	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_nocorpses 0\nvj_npc_nobleed 0\nvj_npc_nomelee 0\nvj_npc_norange 0\nvj_npc_noleap 0\nvj_npc_noflinching 0\nvj_npc_noallies 0\nvj_npc_noweapon 0\nvj_npc_nowandering 0\nvj_npc_nogib 0\nvj_npc_nodeathanimation 0\nvj_npc_noscarednade 0\nvj_npc_animal_runontouch 0\nvj_npc_animal_runonhit 0\nvj_npc_slowplayer 0\nvj_npc_bleedenemyonmelee 0\nvj_npc_noproppush 0\nvj_npc_nopropattack 0\nvj_npc_nogibdeathparticles 0\nvj_npc_noidleparticle 0\nvj_npc_nogibdecals 0\nvj_npc_noreload 0\nvj_npc_nobecomeenemytoply 0\nvj_npc_nofollowplayer 0\nvj_npc_nothrowgrenade 0\nvj_npc_nobloodpool 0\nvj_npc_nochasingenemy 0\nvj_npc_nosnpcchat 0\nvj_npc_nomedics 0\nvj_npc_nomeleedmgdsp 0"})
 	
@@ -151,11 +151,11 @@ end
 local function VJ_SNPC_SOUNDSETTINGS(Panel) -- Sound Settings
 	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
 		Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
-		Panel:ControlHelp("#vjbase.menu.general.admin.only")
+		Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 		return
 	end
 	
-	Panel:ControlHelp("#vjbase.menu.general.admin.only")
+	Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 	Panel:AddControl("Label", {Text = "#vjbase.menu.general.snpc.warnfuture"})
 	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_sd_nosounds 0\n vj_npc_sd_idle 0\n vj_npc_sd_alert 0\n vj_npc_sd_pain 0\n vj_npc_sd_death 0\n vj_npc_sd_footstep 0\n vj_npc_sd_soundtrack 0\n vj_npc_sd_meleeattack 0\n vj_npc_sd_meleeattackmiss 0\n vj_npc_sd_rangeattack 0\n vj_npc_sd_leapattack 0\n vj_npc_sd_ongrenadesight 0\n vj_npc_sd_onplayersight 0\n vj_npc_sd_damagebyplayer 0\n vj_npc_sd_slowplayer 0\n vj_npc_sd_gibbing 0\n vj_npc_sd_breath 0\n vj_npc_sd_followplayer 0\n vj_npc_sd_becomenemytoply 0\n vj_npc_sd_medic 0\n vj_npc_sd_reload 0\n vj_npc_sd_grenadeattack 0\n vj_npc_sd_suppressing 0\n vj_npc_sd_callforhelp 0\n vj_npc_sd_onreceiveorder 0"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.sdsettings.toggleallsounds", Command = "vj_npc_sd_nosounds"})
@@ -196,11 +196,11 @@ end
 local function VJ_SNPC_DEVSETTINGS(Panel) -- Developer Settings
 	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
 		Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
-		Panel:ControlHelp("#vjbase.menu.general.admin.only")
+		Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 		return
 	end
 	
-	Panel:ControlHelp("#vjbase.menu.general.admin.only")
+	Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 	Panel:AddControl("Label", {Text = "#vjbase.menu.snpc.devsettings.label1"})
 	Panel:AddControl("Label", {Text = "#vjbase.menu.snpc.devsettings.label2"})
 	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_dev_printwepinfo 0\n vj_npc_printdied 0\n vj_npc_printondamage 0\n vj_npc_printontouch 0\n vj_npc_printstoppedattacks 0\n vj_npc_printtakingcover 0\n vj_npc_printresetenemy 0\n vj_npc_printlastseenenemy 0\n vj_npc_usedevcommands 0\n vj_npc_printcurenemy 0"})
