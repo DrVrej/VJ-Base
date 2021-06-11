@@ -69,6 +69,8 @@ local varCZom = "CLASS_ZOMBIE"
 			- RemoveOnCorpseDelete = Should the entity get removed if the corpse is removed? | DEFAULT = true
 		- customFunc(gib) = Use this to edit the entity which is given as parameter "gib"
 -----------------------------------------------------------]]
+local colorGrey = Color(90, 90, 90)
+--
 function ENT:CreateExtraDeathCorpse(class, models, extraOptions, customFunc)
 	-- Should only be ran after self.Corpse has been created!
 	if !IsValid(self.Corpse) then return end
@@ -87,7 +89,7 @@ function ENT:CreateExtraDeathCorpse(class, models, extraOptions, customFunc)
 	ent:SetCollisionGroup(self.DeathCorpseCollisionType)
 	if self.Corpse:IsOnFire() then
 		ent:Ignite(math.Rand(8,10),0)
-		ent:SetColor(Color(90,90,90))
+		ent:SetColor(colorGrey)
 	end
 	if extraOptions.HasVel != false then
 		local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
@@ -1206,14 +1208,14 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 				it = it + 1
 				-- Formation
 				if formType == "Random" then
-					local randpos = math.random(1, 4)
-					if randpos == 1 then
+					local randPos = math.random(1, 4)
+					if randPos == 1 then
 						v:SetLastPosition(self:GetPos() + self:GetRight()*math.random(20, 50))
-					elseif randpos == 2 then
+					elseif randPos == 2 then
 						v:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-20, -50))
-					elseif randpos == 3 then
+					elseif randPos == 3 then
 						v:SetLastPosition(self:GetPos() + self:GetForward()*math.random(20, 50))
-					elseif randpos == 4 then
+					elseif randPos == 4 then
 						v:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-20, -50))
 					end
 				elseif formType == "Diamond" then

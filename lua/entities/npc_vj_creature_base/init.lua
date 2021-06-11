@@ -281,10 +281,6 @@ ENT.AlertFriendsOnDeath = false -- Should the SNPCs allies get alerted when it d
 ENT.AlertFriendsOnDeathDistance = 800 -- How far away does the signal go? | Counted in World Units
 ENT.AlertFriendsOnDeathLimit = 50 -- How many people should it alert?
 ENT.AnimTbl_AlertFriendsOnDeath = {ACT_RANGE_ATTACK1} -- Animations it plays when an ally dies that also has AlertFriendsOnDeath set to true
-	-- ====== Miscellaneous Variables ====== --
-ENT.HasDeathNotice = false -- Set to true if you want it show a message after it dies
-ENT.DeathNoticePosition = HUD_PRINTCENTER -- Were you want the message to show. Examples: HUD_PRINTCENTER, HUD_PRINTCONSOLE, HUD_PRINTTALK
-ENT.DeathNoticeWriting = "Example: Spider Queen Has Been Defeated!" -- Message that will appear
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Melee Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1452,14 +1448,15 @@ function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase)
 	self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 	if doLOSChase == true then
 		task_chaseEnemyLOS.RunCode_OnFinish = function()
-			if IsValid(self:GetEnemy()) then
-				self:RememberUnreachable(self:GetEnemy(), 0)
+			local ene = self:GetEnemy()
+			if IsValid(ene) then
+				self:RememberUnreachable(ene, 0)
 				self:VJ_TASK_CHASE_ENEMY(false)
 			end
 		end
 		self:StartSchedule(task_chaseEnemyLOS)
 	else
-		task_chaseEnemy.RunCode_OnFail = function() if IsValid(self) then self:VJ_TASK_IDLE_STAND() end end
+		task_chaseEnemy.RunCode_OnFail = function() self:VJ_TASK_IDLE_STAND() end
 		self:StartSchedule(task_chaseEnemy)
 	end
 end
@@ -2727,6 +2724,7 @@ function ENT:OnTakeDamage(dmginfo)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local vecZ500 = Vector(0, 0, 500)
+local vecZ4 = Vector(0, 0, 4)
 --
 function ENT:PriorToKilled(dmginfo, hitgroup)
 	self:CustomOnInitialKilled(dmginfo, hitgroup)
@@ -2788,18 +2786,19 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 			end
 		end
 	end
-
+	
 	-- Blood decal on the ground
 	if self.Bleeds == true && self.HasBloodDecal == true then
-		local pickdecal = VJ_PICK(self.CustomBlood_Decal)
-		if pickdecal != false then
-			self:SetLocalPos(Vector(self:GetPos().x,self:GetPos().y,self:GetPos().z +4)) -- Because the NPC is too close to the ground
+		local bloodDecal = VJ_PICK(self.CustomBlood_Decal)
+		if bloodDecal != false then
+			local decalPos = self:GetPos() + vecZ4
+			self:SetLocalPos(decalPos) -- NPC is too close to the ground, we need to move it up a bit
 			local tr = util.TraceLine({
-				start = self:GetPos(),
-				endpos = self:GetPos() - vecZ500,
-				filter = self //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
+				start = decalPos,
+				endpos = decalPos - vecZ500,
+				filter = self
 			})
-			util.Decal(pickdecal,tr.HitPos+tr.HitNormal,tr.HitPos-tr.HitNormal)
+			util.Decal(bloodDecal, tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
 		end
 	end
 	
@@ -2847,7 +2846,6 @@ function ENT:OnKilled(dmginfo, hitgroup)
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printdied"):GetInt() == 1 then print(self:GetClass().." Died!") end
 	self:CustomOnKilled(dmginfo, hitgroup)
 	self:RunItemDropsOnDeathCode(dmginfo, hitgroup) -- Item drops on death
-	if self.HasDeathNotice == true then PrintMessage(self.DeathNoticePosition, self.DeathNoticeWriting) end -- Death notice on death
 	self:ClearEnemyMemory()
 	//self:ClearSchedule()
 	//self:SetNPCState(NPC_STATE_DEAD)
@@ -2855,6 +2853,8 @@ function ENT:OnKilled(dmginfo, hitgroup)
 	self:Remove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local colorGrey = Color(90, 90, 90)
+--
 function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 	-- In case it was not set
 		-- NOTE: dmginfo at this point can be incorrect/corrupted, but its better than leaving the self.SavedDmgInfo empty!
@@ -2944,7 +2944,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		
 		if self:IsOnFire() then -- If was on fire then...
 			self.Corpse:Ignite(math.Rand(8, 10), 0)
-			self.Corpse:SetColor(Color(90, 90, 90))
+			self.Corpse:SetColor(colorGrey)
 			//self.Corpse:SetMaterial("models/props_foliage/tree_deciduous_01a_trunk")
 		elseif self.SetCorpseOnFire == true then -- Set it on fire when it dies
 			self.Corpse:Ignite(math.Rand(8, 10), 0)
@@ -2966,7 +2966,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 				self.TheDroppedWeapon:SetName("vj_dissolve_weapon")
 				dissolver:Fire("Dissolve","vj_dissolve_weapon")
 			end
-			dissolver:Fire("Kill","",0.1)
+			dissolver:Fire("Kill", "", 0.1)
 			//dissolver:Remove()
 		end
 		
