@@ -108,7 +108,9 @@ function ENT:CustomOnPhysicsCollide(data, phys) end -- Return false to disable t
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnCollideWithoutRemove(data, phys) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnDoDamage(data, phys,hitEnt) end
+function ENT:CustomOnDoDamage(data, phys, hitEnt) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnDoDamage_Direct(data, phys, hitEnt) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DeathEffects(data, phys) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -184,6 +186,7 @@ function ENT:DoDamageCode(data, phys)
 		//if hitEnt:IsNPC() or hitEnt:IsPlayer() then
 		if self:GetOwner() != NULL then
 			if (VJ_IsProp(hitEnt)) or (hitEnt:IsNPC() && (hitEnt:Disposition(self:GetOwner()) == 1 or hitEnt:Disposition(self:GetOwner()) == 2) && hitEnt:Health() > 0 && (hitEnt != self:GetOwner()) && (hitEnt:GetClass() != self:GetOwner():GetClass())) or (hitEnt:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0 && hitEnt:Alive() && hitEnt:Health() > 0) then
+				self:CustomOnDoDamage_Direct(data, phys, hitEnt)
 				local damagecode = DamageInfo()
 				damagecode:SetDamage(self.DirectDamage)
 				damagecode:SetDamageType(self.DirectDamageType)
@@ -191,9 +194,10 @@ function ENT:DoDamageCode(data, phys)
 				damagecode:SetAttacker(self:GetOwner())
 				damagecode:SetDamagePosition(data.HitPos)
 				hitEnt:TakeDamageInfo(damagecode, self)
-				VJ_DestroyCombineTurret(self:GetOwner(),hitEnt)
+				VJ_DestroyCombineTurret(self:GetOwner(), hitEnt)
 			end
 		else
+			self:CustomOnDoDamage_Direct(data, phys, hitEnt)
 			local damagecode = DamageInfo()
 			damagecode:SetDamage(self.DirectDamage)
 			damagecode:SetDamageType(self.DirectDamageType)
@@ -201,10 +205,10 @@ function ENT:DoDamageCode(data, phys)
 			damagecode:SetInflictor(self)
 			damagecode:SetDamagePosition(data.HitPos)
 			hitEnt:TakeDamageInfo(damagecode, self)
-			VJ_DestroyCombineTurret(self,hitEnt)
+			VJ_DestroyCombineTurret(self, hitEnt)
 		end
 	end
-	self:CustomOnDoDamage(data, phys,hitEnt)
+	self:CustomOnDoDamage(data, phys, hitEnt)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, phys)

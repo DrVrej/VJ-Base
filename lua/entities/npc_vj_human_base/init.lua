@@ -255,11 +255,11 @@ ENT.GibOnDeathDamagesTable = {"UseDefault"} -- Damages that it gibs from | "UseD
 ENT.HasGibOnDeathSounds = true -- Does it have gib sounds? | Mostly used for the settings menu
 ENT.HasGibDeathParticles = true -- Does it spawn particles on death or when it gibs? | Mostly used for the settings menu
 	-- ====== Item Drops On Death Variables ====== --
-ENT.DropWeaponOnDeath = true -- Should it drop its weapon on death?
-ENT.DropWeaponOnDeathAttachment = "anim_attachment_RH" -- Which attachment should it use for the weapon's position
 ENT.HasItemDropsOnDeath = true -- Should it drop items on death?
 ENT.ItemDropsOnDeathChance = 14 -- If set to 1, it will always drop it
-ENT.ItemDropsOnDeath_EntityList = {"weapon_frag","item_healthvial"} -- List of items it will randomly pick from | Leave it empty to drop nothing or to make your own dropping code (Using CustomOn...)
+ENT.ItemDropsOnDeath_EntityList = {"weapon_frag", "item_healthvial"} -- List of items it will randomly pick from | Leave it empty to drop nothing or to make your own dropping code (Using CustomOn...)
+ENT.DropWeaponOnDeath = true -- Should it drop its weapon on death?
+ENT.DropWeaponOnDeathAttachment = "anim_attachment_RH" -- Which attachment should it use for the weapon's position
 	-- ====== Ally Reaction On Death Variables ====== --
 	-- Default: Creature base uses BringFriends and Human base uses AlertFriends
 	-- BringFriendsOnDeath takes priority over AlertFriendsOnDeath!
@@ -337,7 +337,7 @@ ENT.WeaponReloadAnimationDelay = 0 -- It will wait certain amount of time before
 	-- Weapons are given on spawn and the NPC will only switch to those if the requirements are met
 	-- The items that are stored in self.WeaponInventory:
 		-- Primary - Default weapon
-		-- AntiArmor - Current enemy is an armored enemy (Usually vehicle) or a boss
+		-- AntiArmor - Current enemy is an armored enemy tank/vehicle or a boss
 		-- Melee - Current enemy is (very close and the NPC is out of ammo) OR (in regular melee attack distance) + NPC must have more than 25% health
 ENT.WeaponInventory_AntiArmor = false -- If true, the NPC will spawn with one of the given weapons (Will only be given the weapon if it already has another!)
 ENT.WeaponInventory_AntiArmorList = {} -- It will randomly be given one of these weapons
@@ -349,7 +349,7 @@ ENT.NextMoveRandomlyWhenShootingTime1 = 3 -- How much time until it can move ran
 ENT.NextMoveRandomlyWhenShootingTime2 = 6 -- How much time until it can move randomly when shooting? | Second number in math.random
 	-- ====== Wait For Enemy To Come Out Variables ====== --
 ENT.WaitForEnemyToComeOut = true -- Should it wait for the enemy to come out from hiding?
-ENT.WaitForEnemyToComeOutTime = VJ_Set(3,5) -- How much time should it wait until it starts chasing the enemy?
+ENT.WaitForEnemyToComeOutTime = VJ_Set(3, 5) -- How much time should it wait until it starts chasing the enemy?
 ENT.WaitForEnemyToComeOutDistance = 100 -- If it's this close to the enemy, it won't do it
 ENT.HasLostWeaponSightAnimation = false -- Set to true if you would like the SNPC to play a different animation when it has lost sight of the enemy and can't fire at it
 ENT.AnimTbl_LostWeaponSight = {ACT_IDLE_ANGRY} -- The animations that it will play if the variable above is set to true
@@ -363,6 +363,7 @@ ENT.AnimTbl_ScaredBehaviorMovement = {} -- The movement animation it will play |
 ENT.HasGrenadeAttack = false -- Should the SNPC have a grenade attack?
 ENT.GrenadeAttackEntity = "obj_vj_grenade" -- The entity that the SNPC throws | Half Life 2 Grenade: "npc_grenade_frag"
 ENT.GrenadeAttackModel = {} -- Picks a random model from this table to override the model of the grenade
+ENT.GrenadeAttackAttachment = "anim_attachment_LH" -- The attachment that the grenade will spawn at | false = Custom position
 	-- ====== Animation Variables ====== --
 ENT.AnimTbl_GrenadeAttack = {"grenThrow"} -- Grenade Attack Animations
 ENT.GrenadeAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
@@ -378,8 +379,6 @@ ENT.GrenadeAttackAnimationStopAttacks = true -- Should it stop attacks for a cer
 	-- To let the base automatically detect the attack duration, set this to false:
 ENT.GrenadeAttackAnimationStopAttacksTime = false -- How long should it stop attacks?
 ENT.GrenadeAttackFussTime = 3 -- Time until the grenade explodes
-	-- ====== Projectile Spawn & Velocity Variables ====== --
-ENT.GrenadeAttackAttachment = "anim_attachment_LH" -- The attachment that the grenade will spawn at | false = Custom position
 	-- ====== Grenade Detection & Throwing Back Variables ====== --
 ENT.CanDetectGrenades = true -- Set to false to disable the SNPC from running away from grenades
 ENT.RunFromGrenadeDistance = 400 -- If the entity is this close to the it, then run!
