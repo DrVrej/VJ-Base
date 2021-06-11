@@ -79,7 +79,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defAngle = Angle(0, 0, 0)
 --
-function ENT:DeathEffects(data,phys)
+function ENT:DeathEffects(data, phys)
 	ParticleEffect("vj_explosion3", self:GetPos(), defAngle, nil)
 	
 	local effectdata = EffectData()

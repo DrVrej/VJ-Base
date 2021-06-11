@@ -136,12 +136,12 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoRunCode_OnFail(schedule)
 	if schedule == nil or schedule.AlreadyRanCode_OnFail == true then return false end
-	if schedule.RunCode_OnFail != nil then schedule.AlreadyRanCode_OnFail = true schedule.RunCode_OnFail() return true end
+	if schedule.RunCode_OnFail != nil && IsValid(self) then schedule.AlreadyRanCode_OnFail = true schedule.RunCode_OnFail() return true end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoRunCode_OnFinish(schedule)
 	if schedule == nil or schedule.AlreadyRanCode_OnFinish == true then return false end
-	if schedule.RunCode_OnFinish != nil then schedule.AlreadyRanCode_OnFinish = true schedule.RunCode_OnFinish() return true end
+	if schedule.RunCode_OnFinish != nil && IsValid(self) then schedule.AlreadyRanCode_OnFinish = true schedule.RunCode_OnFinish() return true end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnMovementFailed()

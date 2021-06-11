@@ -45,7 +45,7 @@ function ENT:CustomPhysicsObjectOnInitialize(phys)
 	phys:SetBuoyancyRatio(0)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnPhysicsCollide(data,phys)
+function ENT:CustomOnPhysicsCollide(data, phys)
 	if IsValid(data.HitEntity) then
 		self.SoundTbl_OnCollide = {"weapons/crossbow/hitbod1.wav","weapons/crossbow/hitbod2.wav"} // weapons/crossbow/bolt_skewer1.wav
 		if data.HitEntity:IsNPC() && data.HitEntity:GetHullType() == HULL_TINY then

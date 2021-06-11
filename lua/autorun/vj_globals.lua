@@ -18,6 +18,7 @@ local string_find = string.find
 local string_Replace = string.Replace
 local string_StartWith = string.StartWith
 local table_remove = table.remove
+local math_clamp = math.Clamp
 local defAng = Angle(0, 0, 0)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Global Functions & Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -447,9 +448,9 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetDifficultyValue(int)
 	if self.SelectedDifficulty == -3 then
-		return math.Clamp(int - (int * 0.99),1,int)
+		return math_clamp(int - (int * 0.99), 1, int)
 	elseif self.SelectedDifficulty == -2 then
-		return math.Clamp(int - (int * 0.75),1,int)
+		return math_clamp(int - (int * 0.75), 1, int)
 	elseif self.SelectedDifficulty == -1 then
 		return int / 2
 	elseif self.SelectedDifficulty == 0 then -- Normal
@@ -597,23 +598,22 @@ hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("EntityFireBullets", "VJ_NPC_FIREBULLET", function(ent, data)
-	if IsValid(ent) && !ent:IsPlayer() && ent.IsVJBaseSNPC == true then
-		local ret = nil
+	if IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC == true then
 		local wep = ent:GetActiveWeapon()
 		local ene = ent:GetEnemy()
 		if IsValid(wep) && IsValid(ene) then
-			-- Bullet spawn
-			//data.Src = util.VJ_GetWeaponPos(ent) -- Not needed, done inside the weapon base instead
-			if wep.IsVJBaseWeapon != true then
+			if wep.IsVJBaseWeapon then
+				-- Ammo counter for VJ weapons
+				wep:SetClip1(wep:Clip1() - 1)
+				//ent.Weapon_TimeSinceLastShot = 0 -- We don't want to change this here!
+			else
+				-- Bullet spawn for non-VJ weapons
 				data.Src = util.VJ_GetWeaponPos(ent)
 			end
 			
 			-- Bullet spread
 			// ent:GetPos():Distance(ent.VJ_TheController:GetEyeTrace().HitPos) -- Was used when NPC was being controlled
-			local fSpread = (ent:GetPos():Distance(ene:GetPos()) / 28) * ent.WeaponSpread
-			if wep.IsVJBaseWeapon == true then -- Apply the VJ Base weapon spread
-				fSpread = fSpread * wep.NPC_CustomSpread
-			end
+			local fSpread = (ent:GetPos():Distance(ene:GetPos()) / 28) * ent.WeaponSpread * (wep.NPC_CustomSpread or 1)
 			data.Spread = Vector(fSpread, fSpread, 0)
 			
 			-- Bullet direction
@@ -624,18 +624,9 @@ hook.Add("EntityFireBullets", "VJ_NPC_FIREBULLET", function(ent, data)
 				data.Dir = (ene:GetPos() + ene:OBBCenter()) -  data.Src
 			end
 			//ent.WeaponUseEnemyEyePos = false
-			
-			-- Ammo counter
-			if wep.IsVJBaseWeapon == true then
-				wep:SetClip1(wep:Clip1() - 1)
-			end
-			//ent.Weapon_TimeSinceLastShot = 0 -- We don't want to change this here!
-			ret = true
+			return true
 		end
-		if ent.IsVJBaseSNPC == true then
-			ent:OnFireBullet(ent, data)
-		end
-		if ret == true then return true end
+		ent:OnFireBullet(ent, data)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -644,7 +635,8 @@ hook.Add("ScaleNPCDamage", "VJ_ScaleHitGroupHook", function(npc, hitgroup, dmgin
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("EntityTakeDamage", "VJ_EntityTakeDamage", function(target, dmginfo)
-	if IsValid(target) && IsValid(dmginfo:GetAttacker()) && target.IsVJBaseSNPC == true && dmginfo:GetAttacker():IsNPC() && dmginfo:IsBulletDamage() && dmginfo:GetAttacker():Disposition(target) != 1 && (dmginfo:GetAttacker():GetClass() == target:GetClass() or target:Disposition(dmginfo:GetAttacker()) == 3 /*or target:Disposition(dmginfo:GetAttacker()) == 4*/) then
+	local attacker = dmginfo:GetAttacker()
+	if IsValid(target) && IsValid(attacker) && target.IsVJBaseSNPC == true && attacker:IsNPC() && dmginfo:IsBulletDamage() && attacker:Disposition(target) != D_HT && (attacker:GetClass() == target:GetClass() or target:Disposition(attacker) == D_LI /*or target:Disposition(attacker) == 4*/) then
 		dmginfo:SetDamage(0)
 	end
 end)
@@ -669,6 +661,7 @@ hook.Add("PlayerDeath", "VJ_PlayerDeath", function(victim, inflictor, attacker)
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 VJ_Corpses = {}
+--
 hook.Add("VJ_CreateSNPCCorpse", "VJ_CreateSNPCCorpse", function(corpse, owner)
 	if IsValid(corpse) && corpse.IsVJBaseCorpse == true then
 		-- Clear out all removed corpses from the table
@@ -678,17 +671,15 @@ hook.Add("VJ_CreateSNPCCorpse", "VJ_CreateSNPCCorpse", function(corpse, owner)
 			end
 		end
 		
-		local count = #VJ_Corpses
-		VJ_Corpses[count + 1] = corpse
-		count = count + 1 -- Since we added one above
+		local count = #VJ_Corpses + 1
+		VJ_Corpses[count] = corpse
 		
 		-- Check if we surpassed the limit!
 		if count > GetConVar("vj_npc_globalcorpselimit"):GetInt() then
-			local GetTheFirstValue = table.GetFirstValue(VJ_Corpses)
-			table_remove(VJ_Corpses, table.GetFirstKey(VJ_Corpses))
-			if IsValid(GetTheFirstValue) then
-				GetTheFirstValue:Fire(GetTheFirstValue.FadeCorpseType, "", 0.5) -- Fade out
-				timer.Simple(1, function() if IsValid(GetTheFirstValue) then GetTheFirstValue:Remove() end end) -- Make sure it's removed
+			local oldestCorpse = table_remove(VJ_Corpses, 1)
+			if IsValid(oldestCorpse) then
+				oldestCorpse:Fire(oldestCorpse.FadeCorpseType, "", 0) -- Fade out
+				timer.Simple(1, function() if IsValid(oldestCorpse) then oldestCorpse:Remove() end end) -- Make sure it's removed
 			end
 		end
 	end
@@ -812,80 +803,93 @@ end*/
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Utility Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-function util.VJ_SphereDamage(vAttacker, vInflictor, vPosition, vDamageRadius, vDamage, vDamageType, vBlockCertainEntities, vUseRealisticRadius, extraOptions, customFunc)
-	vPosition = vPosition or vAttacker:GetPos()
-	vDamageRadius = vDamageRadius or 150
-	vDamage = vDamage or 15
-	vBlockCertainEntities = vBlockCertainEntities or true
-	vUseRealisticRadius = vUseRealisticRadius or true
+--[[---------------------------------------------------------
+	Customizable function that deals radius damage with the given properties
+		- attacker = The entity that is dealing the damage | REQUIRED
+		- inflictor = The entity that is inflicting the damage | REQUIRED
+		- startPos = Start position of the radius | DEFAULT = attacker:GetPos()
+		- dmgRadius = How far the damage radius goes | DEFAULT = 150
+		- dmgMax = Maximum amount of damage it deals to an entity | DEFAULT = 15
+		- dmgType = The damage type | DEFAULT = DMG_BLAST
+		- ignoreInnocents = Should it ignore NPCs/Players that are friendly OR have no-target on (Including ignore players) | DEFAULT = true
+		- realisticRadius = Should it use a realistic radius? Entities farther away receive less damage and force | DEFAULT = true
+		- extraOptions = Table that holds extra options to modify parts of the code
+			- DisableVisibilityCheck = Should it disable the visibility check? | DEFAULT = false
+			- Force = The force to apply when damage is applied | DEFAULT = false
+			- UpForce = Optional setting for extraOptions.Force that override the up force | DEFAULT = extraOptions.Force
+			- DamageAttacker = Should it damage the attacker as well? | DEFAULT = false
+			- UseConeDegree = If set to a number, it will use a cone-based radius | DEFAULT = nil
+			- UseConeDirection = The direction (position) the cone goes to | DEFAULT = attacker:GetForward()
+		- customFunc(gib) = Use this to edit the entity which is given as parameter "gib"
+	Returns
+		- table, the entities it damaged (Can be empty!)
+-----------------------------------------------------------]]
+local specialDmgEnts = {npc_strider=true, npc_combinedropship=true, npc_combinegunship=true, npc_helicopter=true}
+--
+function util.VJ_SphereDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, dmgType, ignoreInnocents, realisticRadius, extraOptions, customFunc)
+	startPos = startPos or attacker:GetPos()
+	dmgRadius = dmgRadius or 150
+	dmgMax = dmgMax or 15
 	extraOptions = extraOptions or {}
-		local vTbl_DisableVisibilityCheck = extraOptions.DisableVisibilityCheck or false -- Should it disable the visibility check? | true = Disables the visibility check
-		local vTbl_Force = extraOptions.Force or false -- The general force | false = Don't use any force
-		local vTbl_UpForce = extraOptions.UpForce or false -- How much up force should it have? | false = Use vTbl_Force
-		local vTbl_DamageAttacker = extraOptions.DamageAttacker or false -- Should it damage the attacker as well?
-		local vTbl_UseCone = extraOptions.UseCone or false -- Should it detect entities using a cone?
-		local vTbl_UseConeDegree = extraOptions.UseConeDegree or 90 -- The degrees it should use for the cone finding
-		local vTbl_DirectionPos = extraOptions.DirectionPos or vAttacker:GetForward() -- The position it starts the cone degree from
-	local Finaldmg = vDamage
-	local Foundents = {}
-	local Findents = (vTbl_UseCone == true and VJ_FindInCone(vPosition, vTbl_DirectionPos, vDamageRadius, vTbl_UseConeDegree, {AllEntities=true})) or ents.FindInSphere(vPosition, vDamageRadius)
-	if (!Findents) then return false end
-	for _,v in pairs(Findents) do
-		if (vAttacker.VJ_IsBeingControlled == true && vAttacker.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end -- Don't damage controller bullseye and player
-		if v:EntIndex() == vAttacker:EntIndex() && vTbl_DamageAttacker == false then continue end -- If it can't self hit, then skip
-		local vtoself = v:NearestPoint(vPosition) -- From the enemy position to the given position
-		if vUseRealisticRadius == true then -- Decrease damage from the nearest point all the way to the enemy point then clamp it!
-			Finaldmg = math.Clamp(Finaldmg * ((vDamageRadius - vPosition:Distance(vtoself)) + 150) / vDamageRadius, vDamage / 2, Finaldmg)
+		local disableVisibilityCheck = extraOptions.DisableVisibilityCheck or false
+		local baseForce = extraOptions.Force or false
+	local dmgFinal = dmgMax
+	local hitEnts = {}
+	for _,v in pairs((isnumber(extraOptions.UseConeDegree) and VJ_FindInCone(startPos, extraOptions.UseConeDirection or attacker:GetForward(), dmgRadius, extraOptions.UseConeDegree or 90, {AllEntities=true})) or ents.FindInSphere(startPos, dmgRadius)) do
+		if (attacker.VJ_IsBeingControlled == true && attacker.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end -- Don't damage controller bullseye and player
+		local nearestPos = v:NearestPoint(startPos) -- From the enemy position to the given position
+		if realisticRadius != false then -- Decrease damage from the nearest point all the way to the enemy point then clamp it!
+			dmgFinal = math_clamp(dmgFinal * ((dmgRadius - startPos:Distance(nearestPos)) + 150) / dmgRadius, dmgMax / 2, dmgFinal)
 		end
 		
-		local function DoDamageCode(v2)
-			if (customFunc) then customFunc(v) end
-			Foundents[#Foundents + 1] = v
-			if (v2:GetClass() == "npc_strider" or v2:GetClass() == "npc_combinedropship" or v2:GetClass() == "npc_combinegunship" or v2:GetClass() == "npc_helicopter") then
-				v2:TakeDamage(Finaldmg, vAttacker, vInflictor)
-			else
-				local doactualdmg = DamageInfo()
-				doactualdmg:SetDamage(Finaldmg)
-				doactualdmg:SetAttacker(vAttacker)
-				doactualdmg:SetInflictor(vInflictor)
-				doactualdmg:SetDamageType(vDamageType or DMG_BLAST)
-				doactualdmg:SetDamagePosition(vtoself)
-				if vTbl_Force != false then
-					local force = vTbl_Force
-					local upforce = vTbl_UpForce
-					if VJ_IsProp(v) == true or v:GetClass() == "prop_ragdoll" then
-						local phys = v:GetPhysicsObject()
-						if IsValid(phys) then
-							if upforce == false then upforce = force / 9.4 end
-							//v:SetVelocity(v:GetUp()*100000)
-							if v:GetClass() == "prop_ragdoll" then force = force * 1.5 end
-							phys:ApplyForceCenter(((v:GetPos()+v:OBBCenter()+v:GetUp()*upforce)-vPosition)*force) //+vAttacker:GetForward()*vForcePropPhysics
+		if (disableVisibilityCheck == false && (v:VisibleVec(startPos) or v:Visible(attacker))) or (disableVisibilityCheck == true) then
+			local function DoDamageCode()
+				if (customFunc) then customFunc(v) end
+				hitEnts[#hitEnts + 1] = v
+				if specialDmgEnts[v:GetClass()] then
+					v:TakeDamage(dmgFinal, attacker, inflictor)
+				else
+					local dmgInfo = DamageInfo()
+					dmgInfo:SetDamage(dmgFinal)
+					dmgInfo:SetAttacker(attacker)
+					dmgInfo:SetInflictor(inflictor)
+					dmgInfo:SetDamageType(dmgType or DMG_BLAST)
+					dmgInfo:SetDamagePosition(nearestPos)
+					if baseForce != false then
+						local force = baseForce
+						local forceUp = extraOptions.UpForce or false
+						if VJ_IsProp(v) or v:GetClass() == "prop_ragdoll" then
+							local phys = v:GetPhysicsObject()
+							if IsValid(phys) then
+								if forceUp == false then forceUp = force / 9.4 end
+								//v:SetVelocity(v:GetUp()*100000)
+								if v:GetClass() == "prop_ragdoll" then force = force * 1.5 end
+								phys:ApplyForceCenter(((v:GetPos() + v:OBBCenter() + v:GetUp() * forceUp) - startPos) * force) //+attacker:GetForward()*vForcePropPhysics
+							end
+						else
+							force = force * 1.2
+							if forceUp == false then forceUp = force end
+							dmgInfo:SetDamageForce(((v:GetPos() + v:OBBCenter() + v:GetUp() * forceUp) - startPos) * force)
 						end
-					else
-						force = force*1.2
-						if upforce == false then upforce = force end
-						doactualdmg:SetDamageForce(((v:GetPos()+v:OBBCenter()+v:GetUp()*upforce)-vPosition)*force)
 					end
+					v:TakeDamageInfo(dmgInfo)
+					VJ_DestroyCombineTurret(attacker, v)
 				end
-				v2:TakeDamageInfo(doactualdmg)
-				VJ_DestroyCombineTurret(vAttacker,v2)
 			end
-		end
-		
-		if (vTbl_DisableVisibilityCheck == false && (v:VisibleVec(vPosition) or v:Visible(vAttacker))) or (vTbl_DisableVisibilityCheck == true) then
-			if vBlockCertainEntities == true then
-				if (v:IsNPC() && (v:Disposition(vAttacker) != D_LI) && v:Health() > 0 && (v != vAttacker) && (v:GetClass() != vAttacker:GetClass())) or (v:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0 && v:Alive() && v:Health() > 0 && v.VJ_NoTarget != true) then
-					//if ((v:IsNPC() && v:Disposition(vAttacker) == 1 or v:Disposition(vAttacker) == 2) or (v:IsPlayer() && v:Alive())) && (v != vAttacker) && (v:GetClass() != vAttacker:GetClass()) then -- entity check
-					DoDamageCode(v)
-				elseif !v:IsNPC() && !v:IsPlayer() then
-					DoDamageCode(v)
-				end
-			else
-				DoDamageCode(v)
+			
+			-- Self
+			if v:EntIndex() == attacker:EntIndex() then
+				if extraOptions.DamageAttacker then DoDamageCode() end -- If it can't self hit, then skip
+			-- NPCs / Players
+			elseif (ignoreInnocents == false) or (v:IsNPC() && v:Disposition(attacker) != D_LI && v:Health() > 0 && (v:GetClass() != attacker:GetClass())) or (v:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0 && v:Alive() && !v:IsFlagSet(FL_NOTARGET)) then
+				DoDamageCode()
+			-- Other types of entities
+			elseif !v:IsNPC() && !v:IsPlayer() then
+				DoDamageCode()
 			end
 		end
 	end
-	return Foundents
+	return hitEnts
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function util.VJ_GetWeaponPos(GetClassEntity)

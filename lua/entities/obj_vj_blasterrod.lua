@@ -74,7 +74,7 @@ function ENT:CustomOnInitialize()
 	self:DeleteOnRemove(self.StartLight1)*/
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DeathEffects(data,phys)
+function ENT:DeathEffects(data, phys)
 	local effectdata = EffectData()
 	effectdata:SetOrigin(data.HitPos)
 	//effectdata:SetMagnitude(500)
