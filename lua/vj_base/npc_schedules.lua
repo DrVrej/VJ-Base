@@ -16,6 +16,10 @@ function ENT:VJ_TASK_FACE_X(faceType, customFunc)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_GOTO_LASTPOS(moveType, customFunc)
+	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+		self:AA_MoveTo(self:GetLastPosition(), true, (moveType == "TASK_RUN_PATH" and "Alert") or "Calm")
+		return
+	end
 	local vsched = ai_vj_schedule.New("vj_goto_lastpos")
 	vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
 	//vsched:EngTask(moveType, 0)
@@ -62,7 +66,7 @@ function ENT:VJ_TASK_GOTO_PLAYER(moveType, customFunc)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_COVER_FROM_ENEMY(moveType, customFunc)
-	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander(true) return end
+	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
 	moveType = moveType or "TASK_RUN_PATH"
 	local vsched = ai_vj_schedule.New("vj_cover_from_enemy")
 	vsched:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
@@ -97,7 +101,7 @@ local task_idleWander = ai_vj_schedule.New("vj_idle_wander")
 	task_idleWander.MoveType = 0
 	
 function ENT:VJ_TASK_IDLE_WANDER()
-	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander(true) return end
+	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
 	self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk))
 	//self:SetLastPosition(self:GetPos() + self:GetForward() * 300)
 	self:StartSchedule(task_idleWander)

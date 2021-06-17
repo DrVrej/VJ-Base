@@ -342,13 +342,14 @@ end
 		- Angle, the angle it's going to face
 -----------------------------------------------------------]]
 function ENT:FaceCertainPosition(pos, time)
-	local setangs = Angle(0, ((pos or defPos) - self:GetPos()):Angle().y, 0)
-	self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
-	self:SetIdealYawAndUpdate(setangs.y, speed)
+	local setAngs = self:GetFaceAngle(((pos or defPos) - self:GetPos()):Angle()) // Angle(0, ((pos or defPos) - self:GetPos()):Angle().y, 0)
+	//self:SetAngles(Angle(setAngs.p, self:GetAngles().y, setAngs.r))
+	if self.TurningUseAllAxis == true then self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, self:GetAngles(), Angle(setAngs.p, self:GetAngles().y, setAngs.r))) end
+	self:SetIdealYawAndUpdate(setAngs.y, speed)
 	//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
-	self.IsDoingFacePosition = setangs
+	self.IsDoingFacePosition = setAngs
 	timer.Create("timer_face_position"..self:EntIndex(), time or 0, 1, function() self.IsDoingFacePosition = false end)
-	return setangs
+	return setAngs
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -365,18 +366,20 @@ function ENT:FaceCertainEntity(ent, onlyEnemy, faceEnemyTime)
 	if onlyEnemy == true && IsValid(self:GetEnemy()) then
 		self.IsDoingFaceEnemy = true
 		timer.Create("timer_face_enemy"..self:EntIndex(), faceEnemyTime or 0, 1, function() self.IsDoingFaceEnemy = false end)
-		local setangs = self:GetFaceAngle((ent:GetPos() - self:GetPos()):Angle())
-		self:SetIdealYawAndUpdate(setangs.y)
-		self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
+		local setAngs = self:GetFaceAngle((ent:GetPos() - self:GetPos()):Angle())
+		self:SetIdealYawAndUpdate(setAngs.y)
+		//self:SetAngles(Angle(setAngs.p, self:GetAngles().y, setAngs.r))
+		if self.TurningUseAllAxis == true then self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, self:GetAngles(), Angle(setAngs.p, self:GetAngles().y, setAngs.r))) end
 		//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
-		return setangs //SetLocalAngles
+		return setAngs //SetLocalAngles
 	else
-		local setangs = self:GetFaceAngle((ent:GetPos() - self:GetPos()):Angle())
-		self:SetIdealYawAndUpdate(setangs.y)
-		self:SetAngles(Angle(setangs.p, self:GetAngles().y, setangs.r))
+		local setAngs = self:GetFaceAngle((ent:GetPos() - self:GetPos()):Angle())
+		self:SetIdealYawAndUpdate(setAngs.y)
+		//self:SetAngles(Angle(setAngs.p, self:GetAngles().y, setAngs.r))
+		if self.TurningUseAllAxis == true then self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, self:GetAngles(), Angle(setAngs.p, self:GetAngles().y, setAngs.r))) end
 		//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
-		//self:SetIdealYawAndUpdate(setangs.y)
-		return setangs
+		//self:SetIdealYawAndUpdate(setAngs.y)
+		return setAngs
 	end
 	return false
 end
@@ -1248,7 +1251,11 @@ function ENT:DecideAttackTimer(timer1, timer2, untilDamage, animDur)
 		if untilDamage == false then -- Event-based
 			result = animDur
 		else -- Timer-based
-			result = animDur - (untilDamage / self:GetPlaybackRate())
+			if animDur <= 0 then -- If it's 0 or less, then this attack probably did NOT play an animation, so don't use animDur!
+				result = untilDamage / self:GetPlaybackRate()
+			else
+				result = animDur - (untilDamage / self:GetPlaybackRate())
+			end
 		end
 	else -- If a specific number has been put then make sure to calculate its playback rate
 		result = result / self:GetPlaybackRate()
@@ -1282,12 +1289,12 @@ end
 function ENT:DoFlinch(dmginfo, hitgroup)
 	if self.CanFlinch == 0 or self.Flinching == true or self.TakingCoverT > CurTime() or self.NextFlinchT > CurTime() or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
 
-	local function RunFlinchCode(HitBoxInfo)
+	local function RunFlinchCode(HitgroupInfo)
 		self.Flinching = true
 		self:StopAttacks(true)
 		self.PlayingAttackAnimation = false
 		local animTbl = self.AnimTbl_Flinch
-		if HitBoxInfo != nil then animTbl = HitBoxInfo.Animation end
+		if HitgroupInfo != nil then animTbl = HitgroupInfo.Animation end
 		local anim = VJ_PICK(animTbl)
 		local animDur = self:DecideAnimationLength(anim, false, self.FlinchAnimationDecreaseLengthAmount)
 		if self.NextMoveAfterFlinchTime != "LetBaseDecide" && self.NextMoveAfterFlinchTime != false then animDur = self.NextMoveAfterFlinchTime end -- "LetBaseDecide" = Backwards compatibility
@@ -1299,19 +1306,26 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 	
 	if math.random(1, self.FlinchChance) == 1 && ((self.CanFlinch == 1) or (self.CanFlinch == 2 && FlinchDamageTypeCheck(self.FlinchDamageTypes, dmginfo:GetDamageType()))) then
 		if self:CustomOnFlinch_BeforeFlinch(dmginfo, hitgroup) == false then return end
-		if self.HasHitGroupFlinching == true then -- Hitgroup flinching
-			local HitGroupFound = false
-			-- Search through the hitgroup tables
-			for _, v in ipairs(self.HitGroupFlinching_Values) do
-				if VJ_HasValue(v.HitGroup, hitgroup) then
-					HitGroupFound = true
-					RunFlinchCode(v)
+		
+		local hitgroupTbl = self.HitGroupFlinching_Values
+		-- Hitgroup flinching
+		if istable(hitgroupTbl) then
+			for _, v in ipairs(hitgroupTbl) do
+				hitgroups = v.HitGroup
+				-- Sub-table of hitgroups
+				for hitgroupX = 1, #hitgroups do
+					if hitgroups[hitgroupX] == hitgroup then
+						HitGroupFound = true
+						RunFlinchCode(v)
+						return
+					end
 				end
 			end
-			if HitGroupFound == false && self.HitGroupFlinching_DefaultWhenNotHit == true then
+			if self.HitGroupFlinching_DefaultWhenNotHit == true then
 				RunFlinchCode(nil)
 			end
-		else -- Non-hitgroup
+		-- Non-hitgroup flinching
+		else
 			RunFlinchCode(nil)
 		end
 	end
