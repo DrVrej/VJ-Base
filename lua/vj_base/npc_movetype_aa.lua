@@ -7,266 +7,348 @@
 -- AERIAL & AQUATIC BASE --
 // MOVETYPE_FLY | MOVETYPE_FLYGRAVITY
 ENT.CurrentAnim_AAMovement = nil
-ENT.AA_NextMovementAnimation = 0
-ENT.AA_CanPlayMoveAnimation = false
-ENT.AA_CurrentMoveAnimationType = "Calm"
-ENT.AA_MoveLength_Wander = 0
-ENT.AA_MoveLength_Chase = 0
-ENT.AA_CurrentTurnAng = false
+ENT.AA_NextMovementAnimTime = 0
+ENT.AA_CurrentMoveAnimationType = "Calm" -- "Calm" | "Alert"
+ENT.AA_CurrentMoveMaxSpeed = 0
+ENT.AA_CurrentMoveTime = 0
+ENT.AA_CurrentMoveType = 0 -- 0 = Undefined | 1 = Wander | 2 = Regular Move-to | 3 = Chase Enemy Move-to
+ENT.AA_CurrentMovePos = nil
+ENT.AA_CurrentMovePosDir = nil
+ENT.AA_CurrentMoveDist = -1 -- Used to make sure we are making progress, in case something blocks its path
+ENT.AA_LastChasePos = nil
+ENT.AA_DoingLastChasePos = false
 
 local defPos = Vector(0, 0, 0)
+local defAng = Angle(0, 0, 0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Stops the current NPC, similar to ground NPCs calling self:StopMoving()
+-----------------------------------------------------------]]
 function ENT:AA_StopMoving()
-	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then
+	if self:GetVelocity():Length() > 0 then
+		self.AA_CurrentMoveMaxSpeed = 0
+		self.AA_CurrentMoveTime = 0
+		self.AA_CurrentMoveType = 0
+		self.AA_CurrentMovePos = nil
+		self.AA_CurrentMovePosDir = nil
+		self.AA_CurrentMoveDist = -1
 		self:SetLocalVelocity(defPos)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AA_MoveTo(ent, playAnim, moveType, extraOptions)
-	if self.Dead == true or !IsValid(ent) then return end
-	playAnim = playAnim or false
+--[[---------------------------------------------------------
+	Moves to the provided destination (If it can)
+		- dest = The destination to move to, it can be an entity or a vector
+		- playAnim = Should it play movement animation? | DEFAULT: true
+		- moveType = Type of movement animation it should do | DEFAULT: "Calm"
+		- extraOptions = Table that holds extra options to modify parts of the code
+			- AddPos = Position that will be added to the given destination | DEFAULT: Vector(0, 0, 0)
+			- FaceDest = Should it face the destination? | DEFAULT: true
+			- FaceDestTarget = If the destination is an entity, it will face the entity instead of the move position | DEFAULT: false
+			- IgnoreGround = If true, it will not do any ground checks | DEFAULT: false
+-----------------------------------------------------------]]
+local vecStart = Vector(0, 0, 30)
+local vecEnd = Vector(0, 0, 40)
+--
+function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
+	local destVec = isvector(dest) and dest
+	if self.Dead or (!destVec && !IsValid(dest)) then return end
 	moveType = moveType or "Calm" -- "Calm" | "Alert"
 	extraOptions = extraOptions or {}
-		local chaseEnemy = extraOptions.ChaseEnemy or false -- Used internally by ChaseEnemy, enables code that's used only for that
 		local addPos = extraOptions.AddPos or defPos -- This will be added to the given entity's position
+		local chaseEnemy = extraOptions.ChaseEnemy or false -- Used internally by ChaseEnemy, enables code that's used only for that
 	local moveSpeed = (moveType == "Calm" and self.Aerial_FlyingSpeed_Calm) or self.Aerial_FlyingSpeed_Alerted
 	local debug = self.AA_EnableDebug
+	local myPos = self:GetPos()
+	
+	-- Initial checks for aquatic NPCs
 	if self.MovementType == VJ_MOVETYPE_AQUATIC then
 		moveSpeed = (moveType == "Calm" and self.Aquatic_SwimmingSpeed_Calm) or self.Aquatic_SwimmingSpeed_Alerted
 		if debug == true then
 			print("----------------")
 			print("My WaterLevel: "..self:WaterLevel())
-			print("ent WaterLevel: "..ent:WaterLevel())
+			if !destVec then print("dest WaterLevel: "..dest:WaterLevel()) end
 		end
-		-- Yete chouri e YEV leman marmine chourin mech-e che, ere vor gena yev kharen kal e
-		if self:WaterLevel() <= 2 && self:GetVelocity():Length() > 0 then return end
-		if self:WaterLevel() <= 1 && self:GetVelocity():Length() > 0 then self:AA_IdleWander(true,true) return end
-		if ent:WaterLevel() == 0 then self:DoIdleAnimation(1) return end -- Yete teshnamin chouren tours e, getsour
-		if ent:WaterLevel() <= 1 then -- Yete 0-en ver e, ere vor nayi yete gerna teshanmi-in gerna hasnil
-			local trene = util.TraceLine({
-				start = ent:GetPos() + self:OBBCenter(),
-				endpos = (ent:GetPos() + self:OBBCenter()) + ent:GetUp()*-20,
+		-- NPC not fully in water, so forget the destination, instead wander OR go deeper into the war
+		if self:WaterLevel() <= 2 then self:DoIdleAnimation(1) return end
+		-- If the destination is a vector then make sure it's in the water
+		if destVec then
+			local tr_aquatic = util.TraceLine({
+				start = myPos,
+				endpos = destVec,
 				filter = self,
-				mins = self:OBBMins(),
-				maxs = self:OBBMaxs()
+				mask = MASK_WATER
 			})
-			//PrintTable(trene)
-			//VJ_CreateTestObject(trene.HitPos,self:GetAngles(),Color(0,255,0),5)
-			if trene.Hit == true then return end
+			if !tr_aquatic.Hit then self:DoIdleAnimation(1) return end
+			//print(tr_aquatic.Hit)
+			//VJ_CreateTestObject(tr_aquatic.HitPos, self:GetAngles(), Color(255,255,0), 5)
+		-- If the destination is not a vector, then make sure it's reachable
+		else
+			if dest:WaterLevel() <= 1 then
+				-- Destination not in water, so forget the destination, instead wander OR go deeper into the war
+				if dest:WaterLevel() == 0 then self:DoIdleAnimation(1) return end
+				local trene = util.TraceLine({
+					start = dest:GetPos() + self:OBBCenter(),
+					endpos = (dest:GetPos() + self:OBBCenter()) + dest:GetUp()*-20,
+					filter = self
+				})
+				//PrintTable(trene)
+				//print(trene.Hit)
+				//VJ_CreateTestObject(trene.HitPos, self:GetAngles(), Color(0,255,0), 5)
+				if trene.Hit == true then return end
+				//if IsValid(trene.Entity) && trene.Entity == dest then return end
+			end
 		end
 	end
 	
-	if chaseEnemy == true then
-		self:FaceCertainEntity(ent, true)
-	end
-	
-	if playAnim == true then
-		self.AA_CanPlayMoveAnimation = true
-		self.AA_CurrentMoveAnimationType = moveType
-	else
-		self.AA_CanPlayMoveAnimation = false
-	end
-	
-	-- Main Calculations
-	local vel_for = 1
-	local vel_stop = false
-	local nearpos = self:VJ_GetNearestPointToEntity(ent)
-	local startpos = nearpos.MyPosition // self:GetPos()
-	local endpos = nearpos.EnemyPosition // ent:GetPos()+ent:OBBCenter()
+	-- Movement Calculations
+	// local nearpos = self:VJ_GetNearestPointToEntity(dest)
+	local startPos = myPos + self:OBBCenter() + vecStart // nearpos.MyPosition
+	local endPos = destVec or dest:GetPos() + dest:OBBCenter() + vecEnd // nearpos.EnemyPosition
 	local tr = util.TraceHull({
-		start = startpos,
-		endpos = endpos,
-		filter = self,
+		start = startPos,
+		endpos = endPos,
+		filter = {self, dest},
 		mins = self:OBBMins(),
 		maxs = self:OBBMaxs()
 	})
-	local tr_hitpos = tr.HitPos
-	local dist_selfhit = startpos:Distance(tr_hitpos)
-	if debug == true then util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam",tr.StartPos,tr_hitpos,false,self:EntIndex(),0) end //vortigaunt_beam
-	if dist_selfhit <= 16 && tr.HitWorld == true then
-		if debug == true then print("AA: Forward Blocked! [CHASE]") end
-		vel_for = 1
-		//vel_for = -200
-		//vel_stop = true
-	end
-	local enepos;
-	-- If the enemy is a bit above water, try to go for its GetPos, which is usually at its feet
-	if self.MovementType == VJ_MOVETYPE_AQUATIC && ent:WaterLevel() < 3 then
-		enepos = ent:GetPos() + ent:GetForward()*addPos.x + ent:GetRight()*addPos.y + ent:GetUp()*addPos.z
-	else
-		enepos = (ent:GetPos() + ent:OBBCenter()) + ent:GetForward()*addPos.x + ent:GetRight()*addPos.y + ent:GetUp()*addPos.z
+	local trHitPos = tr.HitPos
+	local groundLimited = false -- If true, it limited the ground because it was too close
+	-- Preform ground check if:
+		-- It's an aerial NPC AND it is not ignoring ground
+		-- It's NOT a chase enemy OR it is but the NPC doesn't have a melee attack
+	if self.MovementType == VJ_MOVETYPE_AERIAL && extraOptions.IgnoreGround != true && ((!chaseEnemy) or (chaseEnemy && !self.HasMeleeAttack)) then
+		local tr_check1 = util.TraceLine({start = startPos, endpos = startPos + Vector(0, 0, -self.AA_GroundLimit), filter = {self, dest}})
+		local tr_check2 = util.TraceLine({start = trHitPos, endpos = trHitPos + Vector(0, 0, -self.AA_GroundLimit), filter = {self, dest}})
+		if debug == true then
+			print("checking...")
+			VJ_CreateTestObject(startPos, self:GetAngles(), Color(145,255,0), 5)
+			VJ_CreateTestObject(tr_check1.HitPos, self:GetAngles(), Color(0,183,255), 5)
+		end
+		-- If it hit the world, then we are too close to the ground, replace "tr" with a new position!
+		if tr_check1.Hit == true or (tr_check2.Hit == true && !tr_check2.Entity:IsNPC()) then
+			if debug == true then print("Ground Hit!", tr_check1.HitPos:Distance(startPos)) end
+			groundLimited = true
+			endPos.z = (tr_check1.Hit and myPos.z or endPos.z) + self.AA_GroundLimit
+			tr = util.TraceHull({
+				start = startPos,
+				endpos = endPos,
+				filter = {self, dest},
+				mins = self:OBBMins(),
+				maxs = self:OBBMaxs()
+			})
+			trHitPos = tr.HitPos
+		end
 	end
 	
-	-- X Calculations
-		-- Coming soon!
+	if !destVec then
+		-- If world is hit then our hitbox can't fully fit through the path to the destination
+		if tr.HitWorld then
+			if debug == true then print("hitworld") end
+			-- If we are already going to the last destination...
+			if self.AA_DoingLastChasePos then
+				-- Its movement is finished, therefore it's not moving there anymore!
+				if self.AA_CurrentMoveTime < CurTime() then
+					self.AA_DoingLastChasePos = false
+					self.AA_LastChasePos = nil
+				-- It's moving there, don't interrupt!
+				else
+					return
+				end
+			-- If we have a last destination then move there!
+			elseif self.AA_LastChasePos != nil then
+				if debug == true then VJ_CreateTestObject(self.AA_LastChasePos, self:GetAngles(), Color(0,68,255), 5) end
+				self.AA_DoingLastChasePos = true
+				tr = util.TraceHull({
+					start = startPos,
+					endpos = self.AA_LastChasePos,
+					filter = {self, dest},
+					mins = self:OBBMins(),
+					maxs = self:OBBMaxs()
+				})
+			end
+		else
+			self.AA_DoingLastChasePos = false
+			self.AA_LastChasePos = trHitPos
+		end
+	end
+	trHitPos = tr.HitPos
+	local trDistStart = startPos:Distance(trHitPos)
+	if debug == true then
+		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam", tr.StartPos, trHitPos, false, self:EntIndex(), 0)//vortigaunt_beam
+		VJ_CreateTestObject(trHitPos, self:GetAngles(), Color(212,0,255), 5)
+	end
+	
+	local finalPos = trHitPos
+	if trDistStart <= 16 && tr.HitWorld == true then
+		if debug == true then print("AA: Forward Blocked! [MOVE-TO]") end
+		finalPos = endPos
+		-- Make sure the trace actually went somewhere...
+		if tr.Fraction > 0 then
+			self.AA_LastChasePos = endPos
+		end
+	end
+	if destVec then
+		finalPos = finalPos + addPos
+	-- If the enemy is a bit above water, try to go for its GetPos, which is usually at its feet
+	elseif self.MovementType == VJ_MOVETYPE_AQUATIC && dest:WaterLevel() < 3 then
+		finalPos = dest:GetPos() + dest:GetForward()*addPos.x + dest:GetRight()*addPos.y + dest:GetUp()*addPos.z
+	else
+		finalPos = finalPos + dest:GetForward()*addPos.x + dest:GetRight()*addPos.y + dest:GetUp()*addPos.z
+	end
+	if debug == true then ParticleEffect("vj_impact1_centaurspit", finalPos, defAng, self) end
 	
 	-- Z Calculations
-	local vel_up = moveSpeed
-	local dist_selfhit_z = enepos.z - startpos.z -- Get the distance between the hit position and the start position
-	if dist_selfhit_z > 0 then -- Yete 0-en ver e, ere vor 20-en minchev sahmani tive hasni
-		if debug == true then print("AA: GOING UP [CHASE]") end
-		vel_up = math.Clamp(dist_selfhit_z, 20, moveSpeed)
-	elseif dist_selfhit_z < 0 then -- Yete 0-en var e, ere vor nevaz 20-en minchev nevaz sahmani tive hasni
-		if debug == true then print("AA: GOING DOWN [CHASE]") end
-		vel_up = -math.Clamp(math.abs(dist_selfhit_z), 20, moveSpeed)
-	else
-		vel_up = 0
+	local velUp = 0
+	local distZFinal = finalPos.z - startPos.z -- Distance between the hit position and the start position
+	if !groundLimited then
+		if distZFinal > 5 then -- Up
+			if debug == true then print("AA: GOING UP [MOVE-TO]") end
+			velUp = math.Clamp(distZFinal, 20, moveSpeed)
+		elseif distZFinal < 5 then -- Down
+			if debug == true then print("AA: GOING DOWN [MOVE-TO]") end
+			velUp = -math.Clamp(math.abs(distZFinal), 20, moveSpeed)
+		end
 	end
 	
-	-- Make it slow down when the approaching the position
-	//if dist_selfhit < 100 then
-		//moveSpeed = math.Clamp(dist_selfhit, 100, moveSpeed)
-	//end
+	self.AA_CurrentMoveMaxSpeed = moveSpeed
+	if self.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime()*2, self:GetVelocity():Length(), moveSpeed) end
 	
-	-- Deprecated z-calculation code
-	/*
-	local getenemyz = "None"
-	local z_self = (self:GetPos()+self:OBBCenter()).z
-	local tr_up_startpos = self:GetPos()+self:OBBCenter()
-	//local tr_up = util.TraceLine({start = tr_up_startpos,endpos = self:GetPos()+self:OBBCenter()+self:GetUp()*300,filter = self})
-	local tr_down_startpos = self:GetPos()+self:OBBCenter()
-	local tr_down = util.TraceLine({start = tr_up_startpos,endpos = self:GetPos()+self:OBBCenter()+self:GetUp()*-300,filter = self})
-	//print("UP - ",tr_up_startpos:Distance(tr_up.HitPos))*/
-	/*if enepos.z >= z_self then
-		if math.abs(enepos.z - z_self) >= 10 then
-			if debug == true then print("AA: UP [CHASE]") end
-			getenemyz = "Up"
-			//vel_up = 100
-		end
-	elseif enepos.z <= z_self then
-		if math.abs(z_self - enepos.z) >= 10 then
-			if debug == true then print("AA: DOWN [CHASE]") end
-			getenemyz = "Down"
-			//vel_up = -moveSpeed
-		end
-	end*/
-	/*if getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
-		if debug == true then print("AA: GOING UP [CHASE]") end
-		vel_up = moveSpeed //100
-	elseif getenemyz == "Up" && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
-		if debug == true then print("AA: GOING DOWN [CHASE]") end
-		vel_up = -moveSpeed //-100
-	end
-	*/
-	
-	-- Other old code
-	/*if tr_up_startpos:Distance(tr_up.HitPos) <= 100 && tr_down_startpos:Distance(tr_down.HitPos) >= 100 then
-		print("DOWN - ",tr_up_startpos:Distance(tr_up.HitPos))
-		vel_up = -100
-	end*/
-
 	-- Set the velocity
-	if vel_stop == false then
-		if chaseEnemy == true then vel_up = vel_up + 30 end -- To make it not the hug the ground when chasing a humanoid
-		local vel_set = (enepos - (self:GetPos() + self:OBBCenter())):GetNormal()*moveSpeed + self:GetUp()*vel_up + self:GetForward()*vel_for
-		//local vel_set_yaw = vel_set:Angle().y
-		if chaseEnemy == true then
-			self.AA_CurrentTurnAng = false
+	local velPos = (finalPos - startPos):GetNormal()*moveSpeed + self:GetUp()*velUp + self:GetForward()
+	local velTime = finalPos:Distance(startPos) / velPos:Length()
+	local velTimeCur = CurTime() + velTime
+	if velTimeCur == velTimeCur then -- Check for NaN
+		self.AA_CurrentMoveTime = velTimeCur
+		//self.NextIdleTime = velTimeCur
+	end
+	if extraOptions.FaceDest != false then
+		if extraOptions.FaceDestTarget == true then
+			self:FaceCertainEntity(dest, chaseEnemy and true or false, velTime)
 		else
-			self.AA_CurrentTurnAng = self:GetFaceAngle(self:GetFaceAngle((vel_set):Angle()))
+			self:FaceCertainPosition(finalPos, velTime)
 		end
-		//self:SetAngles(self:GetFaceAngle((vel_set):Angle()))
-		self:SetLocalVelocity(vel_set)
-		local vel_len;
-		if chaseEnemy == true then
-			vel_len = CurTime() + (dist_selfhit / vel_set:Length())
-		else
-			vel_len = CurTime() + (tr.HitPos:Distance(startpos) / vel_set:Length())
-		end
-		self.AA_MoveLength_Wander = 0
-		if vel_len == vel_len then -- Check for NaN
-			self.AA_MoveLength_Chase = vel_len
-			self.NextIdleTime = vel_len
-		end
-		if debug == true then ParticleEffect("vj_impact1_centaurspit", enepos, Angle(0,0,0), self) end
+		//self.AA_CurrentTurnAng = chaseEnemy and false or self:GetFaceAngle(self:GetFaceAngle((velPos):Angle()))
+	end
+	self.AA_CurrentMoveType = chaseEnemy and 3 or 2
+	self.AA_CurrentMovePos = finalPos
+	self.AA_CurrentMovePosDir = finalPos - startPos
+	self.AA_CurrentMoveDist = -1
+	self:SetLocalVelocity(velPos)
+	
+	-- Animations
+	if playAnim != false then
+		self.CurrentAnim_AAMovement = self.CurrentAnim_AAMovement
+		self.AA_CurrentMoveAnimationType = moveType
 	else
-		self:AA_StopMoving()
+		self.CurrentAnim_AAMovement = false
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AA_IdleWander(playAnim, noFace)
-	local moveSpeed = self.Aerial_FlyingSpeed_Calm
-	local forceDown = forceDown or false
+--[[---------------------------------------------------------
+	Makes the NPC wander, if it's aquatic then it will move deeper into water if it finds it necessary
+		- playAnim = Should it play movement animation? | DEFAULT: true
+		- moveType = Type of movement animation it should do | DEFAULT: "Calm"
+		- extraOptions = Table that holds extra options to modify parts of the code
+			- FaceDest = Should it face the destination? | DEFAULT: true
+			- IgnoreGround = If true, it will not do any ground checks | DEFAULT: false
+-----------------------------------------------------------]]
+function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
+	moveType = moveType or "Calm" -- "Calm" | "Alert"
+	local moveSpeed = (moveType == "Calm" and self.Aerial_FlyingSpeed_Calm) or self.Aerial_FlyingSpeed_Alerted
+	local moveDown = false -- Used by aquatic NPCs only, forces them to move down
 	if self.MovementType == VJ_MOVETYPE_AQUATIC then
+		-- If NOT Completely submerged
 		if self:WaterLevel() < 3 then
 			self:AA_StopMoving()
-			forceDown = true
+			moveDown = true
 			if self:WaterLevel() == 0 then
 				return
 			end
 		end
-		moveSpeed = self.Aquatic_SwimmingSpeed_Calm
+		moveSpeed = (moveType == "Calm" and self.Aquatic_SwimmingSpeed_Calm) or self.Aquatic_SwimmingSpeed_Alerted
 	end
 	
 	local debug = self.AA_EnableDebug
-	playAnim = playAnim or false
-	noFace = noFace or false
-
-	if playAnim == true then
-		self.AA_CanPlayMoveAnimation = true
-		self.AA_CurrentMoveAnimationType = "Calm"
-	else
-		self.AA_CanPlayMoveAnimation = false
+	extraOptions = extraOptions or {}
+	
+	-- Movement Calculations
+	local myPos = self:GetPos()
+	local myMaxs = self:OBBMaxs():Length()
+	local minDist = math.random(self.AA_MinWanderDist, self.AA_MinWanderDist + 150)
+	local tr_endpos = myPos + self:GetForward()*((myMaxs + minDist)*(math.random(1, 2) == 1 and -1 or 1)) + self:GetRight()*((myMaxs + minDist)*(math.random(1, 2) == 1 and -1 or 1)) + self:GetUp()*((myMaxs + minDist)*(math.random(1, 2) == 1 and -1 or 1))
+	if moveDown == true then
+		tr_endpos = myPos + self:GetUp()*((myMaxs + math.random(100, 150))*-1)
 	end
-	//if noFace == false then self:SetLocalAngularVelocity(Angle(0,math.random(0,360),0)) end
-	local x_neg = 1
-	local y_neg = 1
-	local z_neg = 1
-	if math.random(1,2) == 1 then x_neg = -1 end
-	if math.random(1,2) == 1 then y_neg = -1 end
-	if math.random(1,2) == 1 then z_neg = -1 end
-	local tr_startpos = self:GetPos()
-	local tr_endpos = tr_startpos + self:GetForward()*((self:OBBMaxs().x + math.random(100,200))*x_neg) + self:GetRight()*((self:OBBMaxs().y + math.random(100,200))*y_neg) + self:GetUp()*((self:OBBMaxs().z + math.random(100,200))*z_neg)
-	if forceDown == true then
-		tr_endpos = tr_startpos + self:GetUp()*((self:OBBMaxs().z + math.random(100,150))*-1)
-	end
-	/*local tr_for = math.random(-300,300)
-	local tr_up = math.random(-300,300)
-	local tr_right = math.random(-300,300)
-	local tr = util.TraceLine({start = tr_startpos, endpos = tr_startpos+self:GetForward()*tr_for+self:GetRight()*tr_up+self:GetUp()*tr_right, filter = self})*/
-	local tr = util.TraceLine({start = tr_startpos, endpos = tr_endpos, filter = self})
-	local finalpos = tr.HitPos
+	local tr = util.TraceLine({start = myPos, endpos = tr_endpos, filter = self})
+	local finalPos = tr.HitPos
 	//PrintTable(tr)
-	if forceDown == false && self.MovementType == VJ_MOVETYPE_AERIAL then -- Yete ches estibergor vor var yerta YEV loghatsough SNPC che, sharnage...
-		local tr_check = util.TraceLine({start = finalpos, endpos = finalpos + Vector(0, 0, -100), filter = self})
-		if tr_check.HitWorld == true then -- Yete askharin zargav, ere vor shad var chishne
-			finalpos = finalpos + self:GetUp()*(100 - tr_check.HitPos:Distance(finalpos))
+	-- If we aren't being forced to move down, then make sure we limit how close we get to the ground!
+	if extraOptions.IgnoreGround != true && !moveDown && self.MovementType == VJ_MOVETYPE_AERIAL then
+		local tr_check = util.TraceLine({start = finalPos, endpos = finalPos + Vector(0, 0, -self.AA_GroundLimit), filter = self})
+		if debug == true then
+			print("checking...")
+			VJ_CreateTestObject(finalPos, self:GetAngles(), Color(255,255,255), 5)
+			VJ_CreateTestObject(tr_check.HitPos, self:GetAngles(), Color(255,0,255), 5)
+		end
+		-- If it hit the world, then we are too close to the ground, replace "tr" with a new position!
+		if tr_check.HitWorld == true then
+			if debug == true then print("Ground Hit!", tr_check.HitPos:Distance(finalPos)) end
+			tr_endpos.z = myPos.z + self.AA_GroundLimit
+			tr = util.TraceLine({start = myPos, endpos = tr_endpos, filter = self})
+			finalPos = tr.HitPos
 		end
 	end
-	//self.AA_TargetPos = finalpos
 	
-	-- Angle time test (PHYSICS)
-	/*local test1 = math.AngleDifference(tr.StartPos:Angle().y, self:GetFaceAngle((finalpos-tr.StartPos):Angle()).y)
-	local test2 = (math.rad(test1) / math.rad(self:GetFaceAngle((finalpos-tr.StartPos):Angle()).y)) * 20
-	self.yep = CurTime() + math.abs(test2)
-	self.yep2 = self:GetFaceAngle((finalpos-tr.StartPos):Angle())*/
-	
-	if noFace == false then self.AA_CurrentTurnAng = self:GetFaceAngle((finalpos-tr.StartPos):Angle()) end //self:SetLocalAngularVelocity(self:GetFaceAngle((finalpos-tr.StartPos):Angle())) end
 	if debug == true then
-		VJ_CreateTestObject(finalpos, self:GetAngles(), Color(0,255,255), 5)
-		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam", tr.StartPos, finalpos, false, self:EntIndex(), 0)
+		VJ_CreateTestObject(finalPos, self:GetAngles(), Color(0,255,255), 5)
+		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam", tr.StartPos, finalPos, false, self:EntIndex(), 0)
+		ParticleEffect("vj_impact1_centaurspit", finalPos, defAng, self)
 	end
-
+	
+	self.AA_CurrentMoveMaxSpeed = moveSpeed
+	if self.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime()*2, self:GetVelocity():Length(), moveSpeed) end
+	
 	-- Set the velocity
-	//local myvel = self:GetVelocity()
-	local vel_set = (finalpos-self:GetPos()):GetNormal()*moveSpeed
-	local vel_len = CurTime() + (finalpos:Distance(tr_startpos) / vel_set:Length())
-	self.AA_MoveLength_Chase = 0
-	if vel_len == vel_len then -- Check for NaN
-		self.AA_MoveLength_Wander = vel_len
-		self.NextIdleTime = vel_len
+	local velPos = (finalPos - myPos):GetNormal()*moveSpeed
+	local velTime = finalPos:Distance(myPos) / velPos:Length()
+	local velTimeCur = CurTime() + velTime
+	if velTimeCur == velTimeCur then -- Check for NaN
+		self.AA_CurrentMoveTime = velTimeCur
+		//self.NextIdleTime = velTimeCur
 	end
-	self:SetLocalVelocity(vel_set)
-	if debug == true then ParticleEffect("vj_impact1_centaurspit", finalpos, Angle(0,0,0), self) end
+	if extraOptions.FaceDest != false then
+		self:FaceCertainPosition(finalPos, velTime)
+		//self.AA_CurrentTurnAng = self:GetFaceAngle((finalPos - tr.StartPos):Angle())
+		//self:SetLocalAngularVelocity(self:GetFaceAngle((finalPos-tr.StartPos):Angle()))
+	end
+	self.AA_CurrentMoveType = 1
+	self.AA_CurrentMovePos = finalPos
+	self.AA_CurrentMovePosDir = finalPos - myPos
+	self.AA_CurrentMoveDist = -1
+	self:SetLocalVelocity(velPos)
+	
+	-- Animations
+	if playAnim != false then
+		self.CurrentAnim_AAMovement = self.CurrentAnim_AAMovement
+		self.AA_CurrentMoveAnimationType = moveType
+	else
+		self.CurrentAnim_AAMovement = false
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Makes the NPC chase its current enemy (If it has one)
+		- playAnim = Should it play movement animation? | DEFAULT: true
+		- moveType = Type of movement animation it should do | DEFAULT: "Alert"
+-----------------------------------------------------------]]
 function ENT:AA_ChaseEnemy(playAnim, moveType)
 	if self.Dead == true or (self.NextChaseTime > CurTime()) or !IsValid(self:GetEnemy()) then return end
-	self:AA_MoveTo(self:GetEnemy(), playAnim or false, moveType or "Alert", {ChaseEnemy=true})
+	self:AA_MoveTo(self:GetEnemy(), playAnim != false, moveType or "Alert", {FaceDestTarget=true, ChaseEnemy=true})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AA_MoveAnimation()
-	if self:GetSequence() != self.CurrentAnim_AAMovement && self:BusyWithActivity() == false && CurTime() > self.AA_NextMovementAnimation then
+	if self:GetSequence() != self.CurrentAnim_AAMovement && self:BusyWithActivity() == false && CurTime() > self.AA_NextMovementAnimTime then
 		local animTbl = {}
 		if self.AA_CurrentMoveAnimationType == "Calm" then
 			animTbl = (self.MovementType == VJ_MOVETYPE_AQUATIC and self.Aquatic_AnimTbl_Calm) or self.Aerial_AnimTbl_Calm
@@ -277,6 +359,6 @@ function ENT:AA_MoveAnimation()
 		if type(pickedAnim) == "number" then pickedAnim = self:GetSequenceName(self:SelectWeightedSequence(pickedAnim)) end
 		self.CurrentAnim_AAMovement = VJ_GetSequenceName(self, pickedAnim)
 		self:VJ_ACT_PLAYACTIVITY(pickedAnim, false, 0, false, 0, {AlwaysUseSequence=true, SequenceDuration=false, SequenceInterruptible=true})
-		self.AA_NextMovementAnimation = CurTime() + self:DecideAnimationLength(self.CurrentAnim_AAMovement, false)
+		self.AA_NextMovementAnimTime = CurTime() + self:DecideAnimationLength(self.CurrentAnim_AAMovement, false)
 	end
 end

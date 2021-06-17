@@ -37,22 +37,28 @@ ENT.AnimationPlaybackRate = 1 -- Controls the playback rate of all the animation
 	-- ====== Movement Variables ====== --
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
-ENT.CanTurnWhileStationary = true -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
-ENT.Stationary_UseNoneMoveType = false -- Technical variable, use this if there is any issues with the SNPC's position, though it does have its downsides, so use it only when needed
 ENT.MaxJumpLegalDistance = VJ_Set(400, 550) -- The max distance the NPC can jump (Usually from one node to another) | ( UP, DOWN )
-	-- Aerial Move type Variables:
+	-- Stationary Move Type Variables:
+ENT.CanTurnWhileStationary = true -- If true, the NPC will be able to turn while it's stationary
+ENT.Stationary_UseNoneMoveType = false -- Technical variable, used if there is any issues with the NPC's position (It has its downsides, use only when needed!)
+	-- Aerial Move Type Variables:
 ENT.Aerial_FlyingSpeed_Calm = 80 -- The speed it should fly with, when it's wandering, moving slowly, etc. | Basically walking compared to ground SNPCs
 ENT.Aerial_FlyingSpeed_Alerted = 200 -- The speed it should fly with, when it's chasing an enemy, moving away quickly, etc. | Basically running compared to ground SNPCs
 ENT.Aerial_AnimTbl_Calm = {} -- Animations it plays when it's wandering around while idle
 ENT.Aerial_AnimTbl_Alerted = {} -- Animations it plays when it's moving while alerted
-	-- Aquatic Move type Variables:
+	-- Aquatic Move Type Variables:
 ENT.Aquatic_SwimmingSpeed_Calm = 80 -- The speed it should swim with, when it's wandering, moving slowly, etc. | Basically walking compared to ground SNPCs
 ENT.Aquatic_SwimmingSpeed_Alerted = 200 -- The speed it should swim with, when it's chasing an enemy, moving away quickly, etc. | Basically running compared to ground SNPCs
 ENT.Aquatic_AnimTbl_Calm = {} -- Animations it plays when it's wandering around while idle
 ENT.Aquatic_AnimTbl_Alerted = {} -- Animations it plays when it's moving while alerted
-	-- Aerial & Aquatic Variables:
-ENT.AA_EnableDebug = false -- Used for testing aerial and aquatic SNPCs
-ENT.AA_ConstantlyMove = false -- Used for aerial and aquatic SNPCs, makes them constantly move
+	-- Aerial & Aquatic Move Type Variables:
+ENT.AA_GroundLimit = 100 -- If the NPC's distance from itself to the ground is less than this, it will attempt to move up
+ENT.AA_MinWanderDist = 150 -- Minimum distance that the NPC should go to when wandering
+ENT.AA_MoveAccelerate = 5 -- The NPC will gradually speed up to the max movement speed as it moves towards its destination | Calculation = FrameTime * x
+	-- 0 = Constant max speed | 1 = Increase very slowly | 50 = Increase very quickly
+ENT.AA_MoveDecelerate = 5 -- The NPC will slow down as it approaches its destination | Calculation = MaxSpeed / x
+	-- 1 = Constant max speed | 2 = Slow down slightly | 5 = Slow down normally | 50 = Slow down extremely slow
+ENT.AA_EnableDebug = false -- Technical variable, used for testing and debugging aerial or aquatic NPCs
 	-- ====== Controller Data ====== --
 ENT.VJC_Data = {
 	CameraMode = 1, -- Sets the default camera mode | 1 = Third Person, 2 = First Person
@@ -151,7 +157,7 @@ ENT.PoseParameterLooking_InvertPitch = false -- Inverts the pitch poseparameters
 ENT.PoseParameterLooking_InvertYaw = false -- Inverts the yaw poseparameters (Y)
 ENT.PoseParameterLooking_InvertRoll = false -- Inverts the roll poseparameters (Z)
 ENT.PoseParameterLooking_TurningSpeed = 10 -- How fast does the parameter turn?
-ENT.PoseParameterLooking_Names = {pitch={},yaw={},roll={}} -- Custom pose parameters to use, can put as many as needed
+ENT.PoseParameterLooking_Names = {pitch={}, yaw={}, roll={}} -- Custom pose parameters to use, can put as many as needed
 	-- ====== Sound Detection Variables ====== --
 ENT.InvestigateSoundDistance = 9 -- How far away can the SNPC hear sounds? | This number is timed by the calculated volume of the detectable sound.
 	-- ====== No Chase After Certain Distance Variables ====== --
@@ -211,15 +217,14 @@ ENT.AllowIgnition = true -- Can this SNPC be set on fire?
 	-- ====== Flinching Variables ====== --
 ENT.CanFlinch = 0 -- 0 = Don't flinch | 1 = Flinch at any damage | 2 = Flinch only from certain damages
 ENT.FlinchDamageTypes = {DMG_BLAST} -- If it uses damage-based flinching, which types of damages should it flinch from?
-ENT.FlinchChance = 16 -- Chance of it flinching from 1 to x | 1 will make it always flinch
+ENT.FlinchChance = 1//16 -- Chance of it flinching from 1 to x | 1 will make it always flinch
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.NextMoveAfterFlinchTime = false -- How much time until it can move, attack, etc.
 ENT.NextFlinchTime = 5 -- How much time until it can flinch again?
 ENT.AnimTbl_Flinch = {ACT_FLINCH_PHYSICS} -- If it uses normal based animation, use this
 ENT.FlinchAnimationDecreaseLengthAmount = 0 -- This will decrease the time it can move, attack, etc. | Use it to fix animation pauses after it finished the flinch animation
-ENT.HasHitGroupFlinching = false -- It will flinch when hit in certain hitgroups | It can also have certain animations to play in certain hitgroups
 ENT.HitGroupFlinching_DefaultWhenNotHit = true -- If it uses hitgroup flinching, should it do the regular flinch if it doesn't hit any of the specified hitgroups?
-ENT.HitGroupFlinching_Values = {/* EXAMPLES: {HitGroup = {HITGROUP_LEFTLEG}, Animation = {ACT_FLINCH_LEFTLEG}}, {HitGroup = {HITGROUP_RIGHTLEG}, Animation = {ACT_FLINCH_RIGHTLEG}} */}
+ENT.HitGroupFlinching_Values = nil -- EXAMPLES: {{HitGroup = {HITGROUP_HEAD}, Animation = {ACT_FLINCH_HEAD}}, {HitGroup = {HITGROUP_LEFTARM}, Animation = {ACT_FLINCH_LEFTARM}}, {HitGroup = {HITGROUP_RIGHTARM}, Animation = {ACT_FLINCH_RIGHTARM}}, {HitGroup = {HITGROUP_LEFTLEG}, Animation = {ACT_FLINCH_LEFTLEG}}, {HitGroup = {HITGROUP_RIGHTLEG}, Animation = {ACT_FLINCH_RIGHTLEG}}}
 	-- ====== Damage By Player Variables ====== --
 ENT.HasDamageByPlayer = true -- Should the SNPC do something when it's hit by a player? Example: Play a sound or animation
 ENT.DamageByPlayerDispositionLevel = 1 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
@@ -250,7 +255,6 @@ ENT.DeathCorpseBodyGroup = VJ_Set(-1,-1) -- #1 = the category of the first bodyg
 ENT.DeathCorpseSubMaterials = nil -- Apply a table of indexes that correspond to a sub material index, this will cause the base to copy the NPC's sub material to the corpse.
 ENT.FadeCorpse = false -- Fades the ragdoll on death
 ENT.FadeCorpseTime = 10 -- How much time until the ragdoll fades | Unit = Seconds
-ENT.SetCorpseOnFire = false -- Sets the corpse on fire when the SNPC dies
 ENT.DeathCorpseSetBoneAngles = true -- This can be used to stop the corpse glitching or flying on death
 ENT.UsesDamageForceOnDeath = true -- Disables the damage force on death | Useful for SNPCs with Death Animations
 ENT.WaitBeforeDeathTime = 0 -- Time until the SNPC spawns its corpse and gets removed
@@ -348,8 +352,6 @@ ENT.MeleeAttackDSPSoundUseDamage = true -- Limits it to only past certain damage
 ENT.MeleeAttackDSPSoundUseDamageAmount = 60 -- Any damage that is greater than or equal to this number will cause the DSP effect to apply
 	-- ====== Miscellaneous Variables ====== --
 ENT.MeleeAttack_NoProps = false -- If set to true, it won't attack or push any props (Mostly used with multiple melee attacks)
-ENT.MeleeAttackSetEnemyOnFire = false -- Sets the enemy on fire when it does the melee attack
-ENT.MeleeAttackSetEnemyOnFireTime = 6 -- For how long should the enemy be set on fire || Counted in seconds
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Range Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -769,9 +771,9 @@ function ENT:SetMeleeAttackDamagePosition()
 	return self:GetPos() + self:GetForward() -- Override this to use a different position
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMeleeAttack_AfterChecks(hitEnt) return false end -- return true to disable the attack and move onto the next entity!
+function ENT:CustomOnMeleeAttack_AfterChecks(hitEnt, isProp) return false end -- return true to disable the attack and move onto the next entity!
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMeleeAttack_BleedEnemy(hitEnt) end
+function ENT:CustomOnMeleeAttack_BleedEnemy(hitEnt) end -- Runs if the self.MeleeAttackBleedEnemy code runs
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_SlowPlayer(hitEnt) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1098,13 +1100,6 @@ function ENT:Initialize()
 	self.VJ_ScaleHitGroupDamage = 0
 	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.3, 6)
 	self.UseTheSameGeneralSoundPitch_PickedNumber = (self.UseTheSameGeneralSoundPitch and math.random(self.GeneralSoundPitch1, self.GeneralSoundPitch2)) or 0
-	if self.BloodColor == "" then -- Backwards Compatibility!
-		if self.BloodDecal == "Blood" then
-			self.BloodColor = "Red"
-		elseif self.BloodDecal == "YellowBlood" then
-			self.BloodColor = "Yellow"
-		end
-	end
 	self:SetupBloodColor()
 	if self.DisableInitializeCapabilities == false then self:SetInitializeCapabilities() end
 	self:SetHealth((GetConVar("vj_npc_allhealth"):GetInt() > 0) and GetConVar("vj_npc_allhealth"):GetInt() or self:VJ_GetDifficultyValue(self.StartHealth))
@@ -1164,26 +1159,26 @@ function ENT:DoChangeMovementType(movType)
 	movType = movType or -1
 	if movType != -1 then self.MovementType = movType end
 	if self.MovementType == VJ_MOVETYPE_GROUND then
+		self:RemoveFlags(FL_FLY)
+		self:SetNavType(NAV_GROUND)
 		self:SetMoveType(MOVETYPE_STEP)
+		self:CapabilitiesRemove(CAP_MOVE_FLY)
 		self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND))
 		if VJ_AnimationExists(self,ACT_JUMP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_JUMP)) end
 		if VJ_AnimationExists(self,ACT_CLIMB_UP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
-		self:CapabilitiesRemove(CAP_MOVE_FLY)
-	elseif self.MovementType == VJ_MOVETYPE_AERIAL then
-		self:SetMoveType(MOVETYPE_FLY)
-		self:CapabilitiesAdd(bit.bor(CAP_MOVE_FLY))
+	elseif self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+		self:SetGroundEntity(NULL)
+		self:AddFlags(FL_FLY)
+		self:SetNavType(NAV_FLY)
+		self:SetMoveType(MOVETYPE_STEP) // MOVETYPE_FLY, causes issues like Lerp functions not being smooth
 		self:CapabilitiesRemove(CAP_MOVE_GROUND)
 		self:CapabilitiesRemove(CAP_MOVE_JUMP)
 		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
 		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
-	elseif self.MovementType == VJ_MOVETYPE_AQUATIC then
-		self:SetMoveType(MOVETYPE_FLY)
 		self:CapabilitiesAdd(bit.bor(CAP_MOVE_FLY))
-		self:CapabilitiesRemove(CAP_MOVE_GROUND)
-		self:CapabilitiesRemove(CAP_MOVE_JUMP)
-		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
-		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
 	elseif self.MovementType == VJ_MOVETYPE_STATIONARY then
+		self:RemoveFlags(FL_FLY)
+		self:SetNavType(NAV_NONE)
 		if self.Stationary_UseNoneMoveType == true then
 			self:SetMoveType(MOVETYPE_NONE)
 		else
@@ -1195,6 +1190,8 @@ function ENT:DoChangeMovementType(movType)
 		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
 	elseif self.MovementType == VJ_MOVETYPE_PHYSICS then
+		self:RemoveFlags(FL_FLY)
+		self:SetNavType(NAV_NONE)
 		self:SetMoveType(MOVETYPE_VPHYSICS)
 		self:CapabilitiesRemove(CAP_MOVE_GROUND)
 		self:CapabilitiesRemove(CAP_MOVE_JUMP)
@@ -1438,7 +1435,7 @@ local task_chaseEnemy = ai_vj_schedule.New("vj_chase_enemy")
 local varChaseEnemy = "vj_chase_enemy"
 function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase)
 	doLOSChase = doLOSChase or false
-	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_ChaseEnemy(true) return end
+	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_ChaseEnemy() return end
 	//if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
 	if self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
 	//if (CurTime() <= self.JumpLegalLandingTime && (self:GetActivity() == ACT_JUMP or self:GetActivity() == ACT_GLIDE or self:GetActivity() == ACT_LAND)) or self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
@@ -1462,7 +1459,7 @@ end
 local table_remove = table.remove
 --
 function ENT:VJ_TASK_IDLE_STAND()
-	if self:IsMoving() or (self.NextIdleTime > CurTime()) or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end // self.CurrentSchedule != nil
+	if self:IsMoving() or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end // self.CurrentSchedule != nil
 	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:BusyWithActivity() then return end
 	//if (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_idle_stand") or (self.CurrentAnim_CustomIdle != 0 && VJ_IsCurrentAnimation(self,self.CurrentAnim_CustomIdle) == true) then return end
 	//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
@@ -1524,7 +1521,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 			//self:SetIdealActivity(ACT_RESET)
 		end*/
 		//self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),pickedAnim)
-		self:AA_StopMoving()
+		if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then self:AA_StopMoving() end
 		self.CurAnimationSeed = 0
 		self.VJ_PlayingSequence = false
 		self.VJ_PlayingInterruptSequence = false
@@ -1545,7 +1542,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoIdleAnimation(iType)
-	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead == true or self.VJ_IsBeingControlled == true or self.PlayingAttackAnimation == true or (self.NextIdleTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
+	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead == true or self.VJ_IsBeingControlled == true or self.PlayingAttackAnimation == true or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
 	iType = iType or 0 -- 0 = Random | 1 = Wander | 2 = Idle Stand
 	
 	if self.IdleAlwaysWander == true then iType = 1 end
@@ -1556,7 +1553,7 @@ function ENT:DoIdleAnimation(iType)
 	end
 	
 	if iType == 0 then -- Random (Wander & Idle Stand)
-		if math.random(1,3) == 1 then
+		if math.random(1, 3) == 1 then
 			self:VJ_TASK_IDLE_WANDER() else self:VJ_TASK_IDLE_STAND()
 		end
 	elseif iType == 1 then -- Wander
@@ -1566,15 +1563,13 @@ function ENT:DoIdleAnimation(iType)
 		return -- Don't set self.NextWanderTime below
 	end
 	
-	if self.AA_ConstantlyMove != true then
-		self.NextWanderTime = CurTime() + math.Rand(3,6) // self.NextIdleTime
-	end
+	self.NextWanderTime = CurTime() + math.Rand(3, 6) // self.NextIdleTime
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChaseAnimation(alwaysChase)
 	local ene = self:GetEnemy()
 	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead == true or self.VJ_IsBeingControlled == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.PlayingAttackAnimation == true && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
-	if self:VJ_GetNearestPointToEntityDistance(ene) < self.MeleeAttackDistance && ene:Visible(self) && (self:GetSightDirection():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then self:AA_StopMoving() self:VJ_TASK_IDLE_STAND() return end -- Not melee attacking yet but it is in range, so stop moving!
+	if self:VJ_GetNearestPointToEntityDistance(ene) < self.MeleeAttackDistance && ene:Visible(self) && (self:GetSightDirection():Dot((ene:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackAngleRadius))) then if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then self:AA_StopMoving() end self:VJ_TASK_IDLE_STAND() return end -- Not melee attacking yet but it is in range, so stop moving!
 	
 	alwaysChase = alwaysChase or false -- true = Chase no matter what
 	
@@ -1716,12 +1711,41 @@ function ENT:Think()
 		
 		-- For AA move types
 		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
-			-- Yete chouri e YEV leman marmine chourin mech-e che, ere vor gena yev kharen kal e
-			if self.MovementType == VJ_MOVETYPE_AQUATIC && self:WaterLevel() <= 2 && self:GetVelocity():Length() > 0 then
-				self:AA_IdleWander(true, true)
-			end
-			if self.AA_CanPlayMoveAnimation == true && self:GetVelocity():Length() > 0 then
-				self:AA_MoveAnimation()
+			local myVelLen = self:GetVelocity():Length()
+			if myVelLen > 0 then
+				if self.AA_CurrentMovePos then
+					local dist = self.AA_CurrentMovePos:Distance(self:GetPos())
+					-- Make sure we are making progress so we don't get stuck in a infinite movement!
+					if self.AA_CurrentMoveDist == -1 or self.AA_CurrentMoveDist >= dist then
+						self.AA_CurrentMoveDist = dist
+						local moveSpeed = self.AA_CurrentMoveMaxSpeed;
+						-- Only decelerate if the distance is smaller than the max speed!
+						if self.AA_MoveDecelerate > 1 && dist < moveSpeed then
+							moveSpeed = math.Clamp(dist, self.AA_CurrentMoveMaxSpeed / self.AA_MoveDecelerate, moveSpeed)
+						elseif self.AA_MoveAccelerate > 0 then
+							moveSpeed = Lerp(FrameTime()*self.AA_MoveAccelerate, myVelLen, moveSpeed)
+						end
+						local velPos = self.AA_CurrentMovePosDir:GetNormal()*moveSpeed
+						local velTimeCur = CurTime() + (dist / velPos:Length())
+						if velTimeCur == velTimeCur then -- Check for NaN
+							self.AA_CurrentMoveTime = velTimeCur
+						end
+						self:SetLocalVelocity(velPos)
+					-- We are NOT making any progress, stop the movement
+					else
+						self:AA_StopMoving()
+					end
+				end
+				-- Is aquatic and is NOT completely in water then attempt to go down!
+				if self.MovementType == VJ_MOVETYPE_AQUATIC && self:WaterLevel() <= 2 then
+					self:AA_IdleWander()
+				end
+				if self.CurrentAnim_AAMovement != false then
+					self:AA_MoveAnimation()
+				end
+			-- Not moving, reset its move time!
+			else
+				self.AA_CurrentMoveTime = 0
 			end
 		end
 		
@@ -1766,17 +1790,17 @@ function ENT:Think()
 		local ene = self:GetEnemy()
 		
 		-- Used for AA SNPCs
-		if self.AA_CurrentTurnAng then
+		/*if self.AA_CurrentTurnAng then
 			local setAngs = self.AA_CurrentTurnAng
 			self:SetAngles(Angle(setAngs.p, self:GetAngles().y, setAngs.r))
 			self:SetIdealYawAndUpdate(setAngs.y)
 			//self:SetAngles(Angle(math.ApproachAngle(self:GetAngles().p, self.AA_CurrentTurnAng.p, self.TurningSpeed),math.ApproachAngle(self:GetAngles().y, self.AA_CurrentTurnAng.y, self.TurningSpeed),math.ApproachAngle(self:GetAngles().r, self.AA_CurrentTurnAng.r, self.TurningSpeed)))
-		end
+		end*/
 
 		-- Turn to the current face position
 		if self.IsDoingFacePosition != false then
 			local setAngs = self.IsDoingFacePosition
-			self:SetAngles(Angle(setAngs.p, self:GetAngles().y, setAngs.r))
+			if self.TurningUseAllAxis == true then self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, self:GetAngles(), Angle(setAngs.p, self:GetAngles().y, setAngs.r))) end
 			self:SetIdealYawAndUpdate(setAngs.y)
 		end
 		
@@ -1785,7 +1809,7 @@ function ENT:Think()
 				self:DoConstantlyFaceEnemyCode()
 				if self.IsDoingFaceEnemy == true or (self.CombatFaceEnemy == true && self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene)))) then
 					local setAngs = self:GetFaceAngle((ene:GetPos() - self:GetPos()):Angle())
-					self:SetAngles(Angle(setAngs.p, self:GetAngles().y, setAngs.r))
+					if self.TurningUseAllAxis == true then self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, self:GetAngles(), Angle(setAngs.p, self:GetAngles().y, setAngs.r))) end
 					self:SetIdealYawAndUpdate(setAngs.y)
 				end
 				-- Set the enemy variables
@@ -1827,7 +1851,10 @@ function ENT:Think()
 						self.RangeAttack_DisableChasingEnemy = true
 						if curSched != nil && curSched.Name == "vj_chase_enemy" then self:StopMoving() end
 						if moveType == VJ_MOVETYPE_GROUND && !self:IsMoving() && self:OnGround() then self:FaceCertainEntity(self:GetEnemy()) end
-						if (moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC) && CurTime() > self.AA_MoveLength_Wander /*&& ((self.AA_CurrentMoveAnimationType != "Calm") or (self.AA_CurrentMoveAnimationType == "Calm" && self:GetVelocity():Length() > 0))*/ then self:AA_IdleWander(true, self.ConstantlyFaceEnemy) /*self:AA_StopMoving()*/ end
+						if (moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC) then
+							if self.AA_CurrentMoveType == 3 then self:AA_StopMoving() end -- Interrupt enemy chasing because we are in range!
+							if CurTime() > self.AA_CurrentMoveTime then self:AA_IdleWander(true, "Calm", {FaceDest = !self.ConstantlyFaceEnemy}) /*self:AA_StopMoving()*/ end -- Only face the position if self.ConstantlyFaceEnemy is false!
+						end
 					else
 						self.RangeAttack_DisableChasingEnemy = false
 						if self.CurrentSchedule != nil && self.CurrentSchedule.Name != "vj_chase_enemy" then self:DoChaseAnimation() end
@@ -2031,7 +2058,7 @@ function ENT:Think()
 			end
 		end
 	else -- AI Not enabled
-		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_StopMoving() end
+		if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then self:AA_StopMoving() end
 	end
 	self:NextThink(CurTime() + (0.069696968793869 + FrameTime()))
 	return true
@@ -2108,8 +2135,8 @@ function ENT:MeleeAttackCode(isPropAttack, attackDist, customEnt)
 		if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end -- If controlled and v is the bullseye OR it's a player controlling then don't damage!
 		if v != self && v:GetClass() != self:GetClass() && (((v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:Disposition(v) != D_LI) or VJ_IsProp(v) == true or v:GetClass() == "func_breakable_surf" or self.EntitiesToDestroyClass[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math.cos(math.rad(self.MeleeAttackDamageAngleRadius)) then
 			if isPropAttack == true && (v:IsPlayer() or v:IsNPC()) && self:VJ_GetNearestPointToEntityDistance(v) > self.MeleeAttackDistance then continue end //if (self:GetPos():Distance(v:GetPos()) <= self:VJ_GetNearestPointToEntityDistance(v) && self:VJ_GetNearestPointToEntityDistance(v) <= self.MeleeAttackDistance) == false then
-			if self:CustomOnMeleeAttack_AfterChecks(v) == true then continue end
 			local vProp = VJ_IsProp(v)
+			if self:CustomOnMeleeAttack_AfterChecks(v, vProp) == true then continue end
 			-- Remove prop constraints and push it (If possbile)
 			if vProp == true then
 				local phys = v:GetPhysicsObject()
@@ -2142,7 +2169,6 @@ function ENT:MeleeAttackCode(isPropAttack, attackDist, customEnt)
 				applyDmg:SetAttacker(self)
 				v:TakeDamageInfo(applyDmg, self)
 			end
-			if self.MeleeAttackSetEnemyOnFire == true then v:Ignite(self.MeleeAttackSetEnemyOnFireTime) end
 			-- Bleed Enemy
 			if self.MeleeAttackBleedEnemy == true && math.random(1, self.MeleeAttackBleedEnemyChance) == 1 && ((v:IsNPC() && (!VJ_IsHugeMonster)) or v:IsPlayer()) then
 				self:CustomOnMeleeAttack_BleedEnemy(v)
@@ -2821,7 +2847,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	self:SetCollisionGroup(1)
 	self:RunGibOnDeathCode(dmginfo, hitgroup)
 	self:PlaySoundSystem("Death")
-	self:AA_StopMoving()
+	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then self:AA_StopMoving() end
 	if self.HasDeathAnimation == true && !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) then
 		if IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball" then DoKilled() return end
 		if GetConVar("vj_npc_nodeathanimation"):GetInt() == 0 && GetConVar("ai_disabled"):GetInt() == 0 && !dmginfo:IsDamageType(DMG_DISSOLVE) && math.random(1, self.DeathAnimationChance) == 1 then
@@ -2944,8 +2970,6 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			self.Corpse:Ignite(math.Rand(8, 10), 0)
 			self.Corpse:SetColor(colorGrey)
 			//self.Corpse:SetMaterial("models/props_foliage/tree_deciduous_01a_trunk")
-		elseif self.SetCorpseOnFire == true then -- Set it on fire when it dies
-			self.Corpse:Ignite(math.Rand(8, 10), 0)
 		end
 		//gamemode.Call("CreateEntityRagdoll",self,self.Corpse)
 		
