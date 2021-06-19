@@ -224,8 +224,25 @@ ENT.MoveOrHideOnDamageByEnemy_HideTime = VJ_Set(3,4) -- How long should it hide?
 ENT.NextMoveOrHideOnDamageByEnemy1 = 3 -- How much time until it moves or hides on damage by enemy? | The first # in math.random
 ENT.NextMoveOrHideOnDamageByEnemy2 = 3.5 -- How much time until it moves or hides on damage by enemy? | The second # in math.random
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Killed & Corpse Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Death & Corpse Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-- ====== Ally Reaction On Death Variables ====== --
+	-- Default: Creature base uses BringFriends and Human base uses AlertFriends
+	-- BringFriendsOnDeath takes priority over AlertFriendsOnDeath!
+ENT.BringFriendsOnDeath = false -- Should the SNPC's friends come to its position before it dies?
+ENT.BringFriendsOnDeathDistance = 800 -- How far away does the signal go? | Counted in World Units
+ENT.BringFriendsOnDeathLimit = 3 -- How many people should it call? | 0 = Unlimited
+ENT.AlertFriendsOnDeath = true -- Should the SNPCs allies get alerted when it dies? | Its allies will also need to have this variable set to true!
+ENT.AlertFriendsOnDeathDistance = 800 -- How far away does the signal go? | Counted in World Units
+ENT.AlertFriendsOnDeathLimit = 50 -- How many people should it alert?
+ENT.AnimTbl_AlertFriendsOnDeath = {ACT_RANGE_ATTACK1} -- Animations it plays when an ally dies that also has AlertFriendsOnDeath set to true
+-- ====== Death Animation Variables ====== --
+ENT.HasDeathAnimation = false -- Does it play an animation when it dies?
+ENT.AnimTbl_Death = {} -- Death Animations
+	-- To let the base automatically detect the animation duration, set this to false:
+ENT.DeathAnimationTime = false -- Time until the SNPC spawns its corpse and gets removed
+ENT.DeathAnimationChance = 1 -- Put 1 if you want it to play the animation all the time
+ENT.DeathAnimationDecreaseLengthAmount = 0 -- This will decrease the time until it turns into a corpse
 	-- ====== Corpse Variables ====== --
 ENT.HasDeathRagdoll = true -- If set to false, it will not spawn the regular ragdoll of the SNPC
 ENT.DeathCorpseEntityClass = "UseDefaultBehavior" -- The entity class it creates | "UseDefaultBehavior" = Let the base automatically detect the type
@@ -233,20 +250,13 @@ ENT.DeathCorpseModel = {} -- The corpse model that it will spawn when it dies | 
 ENT.DeathCorpseCollisionType = COLLISION_GROUP_DEBRIS -- Collision type for the corpse | SNPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
 ENT.DeathCorpseSkin = -1 -- Used to override the death skin | -1 = Use the skin that the SNPC had before it died
 ENT.DeathCorpseSetBodyGroup = true -- Should it get the models bodygroups and set it to the corpse? When set to false, it uses the model's default bodygroups
-ENT.DeathCorpseBodyGroup = VJ_Set(-1,-1) -- #1 = the category of the first bodygroup | #2 = the value of the second bodygroup | Set -1 for #1 to let the base decide the corpse's bodygroup
+ENT.DeathCorpseBodyGroup = VJ_Set(-1, -1) -- #1 = the category of the first bodygroup | #2 = the value of the second bodygroup | Set -1 for #1 to let the base decide the corpse's bodygroup
 ENT.DeathCorpseSubMaterials = nil -- Apply a table of indexes that correspond to a sub material index, this will cause the base to copy the NPC's sub material to the corpse.
-ENT.FadeCorpse = false -- Fades the ragdoll on death
-ENT.FadeCorpseTime = 10 -- How much time until the ragdoll fades | Unit = Seconds
+ENT.DeathCorpseFade = false -- Fades the ragdoll on death
+ENT.DeathCorpseFadeTime = 10 -- How much time until the ragdoll fades | Unit = Seconds
 ENT.DeathCorpseSetBoneAngles = true -- This can be used to stop the corpse glitching or flying on death
-ENT.UsesDamageForceOnDeath = true -- Disables the damage force on death | Useful for SNPCs with Death Animations
+ENT.DeathCorpseApplyForce = true -- If false, force will not be applied to the corpse
 ENT.WaitBeforeDeathTime = 0 -- Time until the SNPC spawns its corpse and gets removed
-	-- ====== Death Animation Variables ====== --
-ENT.HasDeathAnimation = false -- Does it play an animation when it dies?
-ENT.AnimTbl_Death = {} -- Death Animations
-	-- To let the base automatically detect the animation duration, set this to false:
-ENT.DeathAnimationTime = false -- Time until the SNPC spawns its corpse and gets removed
-ENT.DeathAnimationChance = 1 -- Put 1 if you want it to play the animation all the time
-ENT.DeathAnimationDecreaseLengthAmount = 0 -- This will decrease the time until it turns into a corpse
 	-- ====== Dismemberment/Gib Variables ====== --
 ENT.AllowedToGib = true -- Is it allowed to gib in general? This can be on death or when shot in a certain place
 ENT.HasGibOnDeath = true -- Is it allowed to gib on death?
@@ -259,16 +269,6 @@ ENT.ItemDropsOnDeathChance = 14 -- If set to 1, it will always drop it
 ENT.ItemDropsOnDeath_EntityList = {"weapon_frag", "item_healthvial"} -- List of items it will randomly pick from | Leave it empty to drop nothing or to make your own dropping code (Using CustomOn...)
 ENT.DropWeaponOnDeath = true -- Should it drop its weapon on death?
 ENT.DropWeaponOnDeathAttachment = "anim_attachment_RH" -- Which attachment should it use for the weapon's position
-	-- ====== Ally Reaction On Death Variables ====== --
-	-- Default: Creature base uses BringFriends and Human base uses AlertFriends
-	-- BringFriendsOnDeath takes priority over AlertFriendsOnDeath!
-ENT.BringFriendsOnDeath = false -- Should the SNPC's friends come to its position before it dies?
-ENT.BringFriendsOnDeathDistance = 800 -- How far away does the signal go? | Counted in World Units
-ENT.BringFriendsOnDeathLimit = 3 -- How many people should it call? | 0 = Unlimited
-ENT.AlertFriendsOnDeath = true -- Should the SNPCs allies get alerted when it dies? | Its allies will also need to have this variable set to true!
-ENT.AlertFriendsOnDeathDistance = 800 -- How far away does the signal go? | Counted in World Units
-ENT.AlertFriendsOnDeathLimit = 50 -- How many people should it alert?
-ENT.AnimTbl_AlertFriendsOnDeath = {ACT_RANGE_ATTACK1} -- Animations it plays when an ally dies that also has AlertFriendsOnDeath set to true
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Melee Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -3528,7 +3528,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 						childphys:EnableGravity(false)
 						childphys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
 					else
-						if self.UsesDamageForceOnDeath == true /*&& self.DeathAnimationCodeRan == false*/ then
+						if self.DeathCorpseApplyForce == true /*&& self.DeathAnimationCodeRan == false*/ then
 							childphys:SetVelocity(dmgForce / math.max(1, (useLocalVel and childphys_bonepos:Distance(self.SavedDmgInfo.pos)/12) or 1))
 						end
 					end
@@ -3537,7 +3537,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		end
 	
 		if IsValid(self.TheDroppedWeapon) then self.Corpse.ExtraCorpsesToRemove[#self.Corpse.ExtraCorpsesToRemove+1] = self.TheDroppedWeapon end
-		if self.FadeCorpse == true then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",self.FadeCorpseTime) end
+		if self.DeathCorpseFade == true then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",self.DeathCorpseFadeTime) end
 		if GetConVar("vj_npc_corpsefade"):GetInt() == 1 then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",GetConVar("vj_npc_corpsefadetime"):GetInt()) end
 		self:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, self.Corpse)
 		self.Corpse:CallOnRemove("vj_"..self.Corpse:EntIndex(),function(ent,exttbl)
