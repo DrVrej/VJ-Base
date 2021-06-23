@@ -531,7 +531,7 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 	end*/
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local ignoreEnts = {monster_gman=true, npc_grenade_frag=true, bullseye_strider_focus=true, npc_bullseye=true, npc_enemyfinder=true, hornet=true}
+local ignoreEnts = {monster_furniture=true, monster_gman=true, npc_grenade_frag=true, bullseye_strider_focus=true, npc_bullseye=true, npc_enemyfinder=true, hornet=true}
 --
 hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(entity)
 	if CLIENT or !entity:IsNPC() then return end

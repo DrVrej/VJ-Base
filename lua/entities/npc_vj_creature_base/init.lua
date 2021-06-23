@@ -2305,7 +2305,9 @@ function ENT:RangeAttackCode()
 			local phys = projectile:GetPhysicsObject()
 			if IsValid(phys) then
 				phys:Wake()
-				phys:SetVelocity(self:RangeAttackCode_GetShootPos(projectile)) //ApplyForceCenter
+				local vel = self:RangeAttackCode_GetShootPos(projectile)
+				phys:SetVelocity(vel) //ApplyForceCenter
+				projectile:SetAngles(vel:GetNormal():Angle())
 			end
 			self:CustomRangeAttackCode_AfterProjectileSpawn(projectile)
 		end

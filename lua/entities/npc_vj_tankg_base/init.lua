@@ -80,7 +80,9 @@ ENT.Tank_DefaultSoundTbl_FireShell = {"vj_mili_tank/tank_fire1.wav","vj_mili_tan
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomInitialize_CustomTank() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnThink() return true end -- Return false to disable the default base code
+function ENT:Tank_CustomOnThink() return true end -- Return false to disable think code (Its just the StartSpawnEffects)
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Tank_CustomOnThink_AIEnabled() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_CustomOnReloadShell() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -210,6 +212,7 @@ end
 function ENT:CustomOnThink_AIEnabled()
 	if self.Dead == true then return end
 	self:SetEnemy(self:GetParent():GetEnemy())
+	self:Tank_CustomOnThink_AIEnabled()
 
 	if self.Tank_GunnerIsTurning == true then self:Tank_Sound_Moving() else VJ_STOPSOUND(self.CurrentTankMovingSound) end
 	self:CustomOnSchedule()

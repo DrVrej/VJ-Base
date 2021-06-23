@@ -226,7 +226,7 @@ end
 		- true, Busy
 -----------------------------------------------------------]]
 function ENT:IsBusy()
-	return self:BusyWithActivity() or self:IsBusyWithBehavior() 
+	return self:BusyWithActivity() or self:IsBusyWithBehavior()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
