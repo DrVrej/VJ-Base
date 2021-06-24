@@ -531,7 +531,7 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 	end*/
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local ignoreEnts = {monster_furniture=true, monster_gman=true, npc_grenade_frag=true, bullseye_strider_focus=true, npc_bullseye=true, npc_enemyfinder=true, hornet=true}
+local ignoreEnts = {monster_furniture=true, npc_furniture=true, monster_gman=true, npc_grenade_frag=true, bullseye_strider_focus=true, npc_bullseye=true, npc_enemyfinder=true, hornet=true}
 --
 hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(entity)
 	if CLIENT or !entity:IsNPC() then return end
@@ -544,11 +544,11 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(entity)
 				local cvSeePlys = GetConVar("ai_ignoreplayers"):GetInt() == 0
 				for x = 1, #EntsTbl do
 					local v = EntsTbl[x]
-					if v:IsNPC() or v:IsPlayer() then
+					if (v:IsNPC() or v:IsPlayer()) && !ignoreEnts[v:GetClass()] then
 						-- Add enemies to the created entity (if it's a VJ Base SNPC)
 						if entity.IsVJBaseSNPC == true then
 							entity:EntitiesToNoCollideCode(v)
-							if (v:IsNPC() && (v:GetClass() != entity:GetClass() && !ignoreEnts[entity:GetClass()] && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && cvSeePlys /*&& v:Alive()*/) then
+							if (v:IsNPC() && (v:GetClass() != entity:GetClass() && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && cvSeePlys /*&& v:Alive()*/) then
 								entity.CurrentPossibleEnemies[count] = v
 								count = count + 1
 							end
