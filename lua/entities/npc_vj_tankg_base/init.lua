@@ -334,7 +334,6 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove()
-	VJ_STOPSOUND(self.CurrentTankFiringSound)
 	VJ_STOPSOUND(self.CurrentTankMovingSound)
 	timer.Destroy("timer_shell_attack" .. self:EntIndex())
 end
@@ -352,7 +351,8 @@ function ENT:Tank_Sound_ReloadShell()
 	
 	local sdTbl = VJ_PICK(self.Tank_SoundTbl_ReloadShell)
 	if sdTbl == false then sdTbl = VJ_PICK(self.Tank_DefaultSoundTbl_ReloadShell) end -- Default table
-	self.CurrentTankFiringSound = VJ_CreateSound(self, sdTbl, self.Tank_ReloadShellSoundLevel, math.random(self.Tank_ReloadShellSoundPitch.a, self.Tank_ReloadShellSoundPitch.b))
+	//self.CurrentTankFiringSound = VJ_CreateSound(self, sdTbl, self.Tank_ReloadShellSoundLevel, math.random(self.Tank_ReloadShellSoundPitch.a, self.Tank_ReloadShellSoundPitch.b))
+	VJ_EmitSound(self, sdTbl, self.Tank_ReloadShellSoundLevel, math.random(self.Tank_ReloadShellSoundPitch.a, self.Tank_ReloadShellSoundPitch.b))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_Sound_FireShell()
