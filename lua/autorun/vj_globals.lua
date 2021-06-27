@@ -601,6 +601,7 @@ hook.Add("EntityFireBullets", "VJ_NPC_FIREBULLET", function(ent, data)
 	if IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC == true then
 		local wep = ent:GetActiveWeapon()
 		local ene = ent:GetEnemy()
+		local edited = false
 		if IsValid(wep) && IsValid(ene) then
 			if wep.IsVJBaseWeapon then
 				-- Ammo counter for VJ weapons
@@ -624,9 +625,10 @@ hook.Add("EntityFireBullets", "VJ_NPC_FIREBULLET", function(ent, data)
 				data.Dir = (ene:GetPos() + ene:OBBCenter()) -  data.Src
 			end
 			//ent.WeaponUseEnemyEyePos = false
-			return true
+			edited = true
 		end
 		ent:OnFireBullet(ent, data)
+		if edited then return true end
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
