@@ -7,12 +7,6 @@ TOOL.Information = {
 	{name = "left"},
 	{name = "right"},
 }
-
--- Just to make it easier to reset everything to default
-local DefaultConVars = {}
-for k,v in pairs(TOOL.ClientConVar) do
-	DefaultConVars["vjstool_notarget_"..k] = v
-end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	local function DoBuildCPanel_NoTarget(Panel)
@@ -29,13 +23,11 @@ function TOOL:LeftClick(tr)
 	local Ply = self:GetOwner()
 	if Ply:IsFlagSet(FL_NOTARGET) != true then
 		Ply:ChatPrint("#tool.vjstool_notarget.print.yourselfon")
-		Ply:SetNoTarget(true)
-		Ply.VJ_NoTarget = true
+		Ply:AddFlags(FL_NOTARGET)
 		return true
 	else
 		Ply:ChatPrint("#tool.vjstool_notarget.print.yourselfoff")
-		Ply:SetNoTarget(false)
-		Ply.VJ_NoTarget = false
+		Ply:RemoveFlags(FL_NOTARGET)
 		return true
 	end
 end
@@ -46,30 +38,15 @@ function TOOL:RightClick(tr)
 	local Ply = self:GetOwner()
 	local Ent = tr.Entity
 	
-	if Ent:IsPlayer() then
-		if Ent:IsFlagSet(FL_NOTARGET) != true then
-			Ply:ChatPrint("Set no target to "..Ent:Nick()..": ON")
-			Ent:SetNoTarget(true)
-			Ent.VJ_NoTarget = true
-			return true
-		else
-			Ply:ChatPrint("Set no target to "..Ent:Nick()..": OFF")
-			Ent:SetNoTarget(false)
-			Ent.VJ_NoTarget = false
-			return true
-		end
-	end
-	
-	if Ent:IsNPC() then
-		if Ent.VJ_NoTarget != true then
-			Ply:ChatPrint("Set no target to "..Ent:GetClass()..": ON")
-			Ent.VJ_NoTarget = true
-			return true
-		else
-			Ply:ChatPrint("Set no target to "..Ent:GetClass()..": OFF")
-			Ent.VJ_NoTarget = false
-			return true
-		end
+	local name = Ent:IsPlayer() and Ent:Nick() or Ent:GetClass()
+	if Ent:IsFlagSet(FL_NOTARGET) != true then
+		Ply:ChatPrint("Set no target to "..name..": ON")
+		Ent:AddFlags(FL_NOTARGET)
+		return true
+	else
+		Ply:ChatPrint("Set no target to "..name..": OFF")
+		Ent:RemoveFlags(FL_NOTARGET)
+		return true
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

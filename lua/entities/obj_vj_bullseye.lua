@@ -76,7 +76,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	if self.EnemyToIndividual == true then
-		self.VJ_NoTarget = true
+		self:AddFlags(FL_NOTARGET)
 		if IsValid(self.EnemyToIndividualEnt) && self.EnemyToIndividualEnt:IsNPC() then
 			self.EnemyToIndividualEnt:AddEntityRelationship(self,D_HT,99)
 			self:AddEntityRelationship(self.EnemyToIndividualEnt,D_HT,99)
@@ -87,10 +87,10 @@ function ENT:Think()
 		end
 	elseif self.UseActivationSystem == true then
 		if self.Activated == false then
-			self.VJ_NoTarget = true
+			self:AddFlags(FL_NOTARGET)
 			if self.UserStatusColors == true then self:SetColor(Color(255,0,0)) end
 		elseif self.Activated == true then
-			self.VJ_NoTarget = false
+			self:RemoveFlags(FL_NOTARGET)
 			if self.UserStatusColors == true then self:SetColor(Color(0,255,0)) end
 		end
 	end
@@ -106,8 +106,3 @@ end
 function ENT:OnTakeDamage(dmginfo)
 	return 0 -- Take no damage
 end
-/*--------------------------------------------------
-	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
-	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
-	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
---------------------------------------------------*/
