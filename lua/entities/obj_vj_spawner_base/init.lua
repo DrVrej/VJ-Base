@@ -124,7 +124,7 @@ function ENT:SpawnAnEntity(spawnKey, spawnTbl, initSpawn)
 	ent:SetAngles((spawnAng or defAng) + self:GetAngles())
 	ent:Spawn()
 	ent:Activate()
-	if spawnWepPicked != false && string.lower(spawnWepPicked) != "none" then
+	if ent:IsNPC() && spawnWepPicked != false && string.lower(spawnWepPicked) != "none" then
 		if string.lower(spawnWepPicked) == "default" then -- Default weapon from the spawn menu
 			ent:Give(VJ_PICK(list.Get("NPC")[ent:GetClass()].Weapons))
 		else

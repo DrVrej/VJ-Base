@@ -632,10 +632,6 @@ hook.Add("EntityFireBullets", "VJ_NPC_FIREBULLET", function(ent, data)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("ScaleNPCDamage", "VJ_ScaleHitGroupHook", function(npc, hitgroup, dmginfo)
-	npc.VJ_ScaleHitGroupDamage = hitgroup
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("EntityTakeDamage", "VJ_EntityTakeDamage", function(target, dmginfo)
 	local attacker = dmginfo:GetAttacker()
 	if IsValid(target) && IsValid(attacker) && target.IsVJBaseSNPC == true && attacker:IsNPC() && dmginfo:IsBulletDamage() && attacker:Disposition(target) != D_HT && (attacker:GetClass() == target:GetClass() or target:Disposition(attacker) == D_LI /*or target:Disposition(attacker) == 4*/) then
