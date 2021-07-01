@@ -1052,7 +1052,7 @@ function ENT:Initialize()
 	if self.HullSizeNormal == true then self:SetHullSizeNormal() end
 	if self.HasSetSolid == true then self:SetSolid(SOLID_BBOX) end // SOLID_OBB
 	self:SetCollisionGroup(COLLISION_GROUP_NPC)
-	self:SetCustomCollisionCheck()
+	//self:SetCustomCollisionCheck() -- Used for the hook GM:ShouldCollide, not reliable!
 	self:SetMaxYawSpeed(self.TurningSpeed)
 	ConvarsOnInit(self)
 	self:DoChangeMovementType()
@@ -1062,7 +1062,6 @@ function ENT:Initialize()
 	self.CurrentPossibleEnemies = {}
 	self.WeaponAnimTranslations = {}
 	self.WeaponInventory = {}
-	self.VJ_ScaleHitGroupDamage = 0
 	self.NextThrowGrenadeT = CurTime() + math.Rand(1, 5)
 	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.3, 6)
 	self.UseTheSameGeneralSoundPitch_PickedNumber = (self.UseTheSameGeneralSoundPitch and math.random(self.GeneralSoundPitch1, self.GeneralSoundPitch2)) or 0
@@ -3059,7 +3058,7 @@ function ENT:OnTakeDamage(dmginfo)
 	local dmgInflictor = dmginfo:GetInflictor()
 	local dmgAttacker = dmginfo:GetAttacker()
 	local dmgType = dmginfo:GetDamageType()
-	local hitgroup = self.VJ_ScaleHitGroupDamage
+	local hitgroup = self:GetLastDamageHitGroup()
 	if IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_ragdoll" && dmgInflictor:GetVelocity():Length() <= 100 then return 0 end
 	self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo, hitgroup)
 	if self:IsOnFire() && self:WaterLevel() == 2 then self:Extinguish() end -- If we are in water, then extinguish the fire

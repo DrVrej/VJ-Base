@@ -588,6 +588,15 @@ end
 function ENT:IsDefaultGibDamageType(dmgType)
 	return (bit.band(dmgType, DMG_ALWAYSGIB) != 0 && bit.band(dmgType, DMG_BULLET) == 0) or bit.band(dmgType, DMG_ENERGYBEAM) != 0 or bit.band(dmgType, DMG_BLAST) != 0 or bit.band(dmgType, DMG_VEHICLE) != 0 or bit.band(dmgType, DMG_CRUSH) != 0 or bit.band(dmgType, DMG_DISSOLVE) != 0 or bit.band(dmgType, DMG_SLOWBURN) != 0 or bit.band(dmgType, DMG_PHYSGUN) != 0 or bit.band(dmgType, DMG_PLASMA) != 0 or bit.band(dmgType, DMG_SONIC) != 0
 end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	The last damage hit group that the NPC received
+	Returns
+		- number, the hit group
+-----------------------------------------------------------]]
+function  ENT:GetLastDamageHitGroup()
+	return self:GetInternalVariable("m_LastHitGroup")
+end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*
  ######   ######## ##    ## ######## ########     ###    ##          ######## ##     ## ##    ##  ######  ######## ####  #######  ##    ##  ######
@@ -636,9 +645,44 @@ function ENT:OnChangeActivity(newAct)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:KeyValue(key, value)
+	//print(self, key, value)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+local defIdleTbl = {ACT_IDLE}
+--
+// lua_run PrintTable(Entity(1):GetEyeTrace().Entity:GetTable())
+function ENT:OnRestore()
+	//print("RELOAD:", self)
+	self:StopMoving()
+	self:ResetMoveCalc()
+	if !istable(self.AnimTbl_IdleStand) then self.AnimTbl_IdleStand = defIdleTbl end -- Resets to nil for some reason...
+	-- Reset the current schedule because often times GMod attempts to run it before AI task modules have loaded!
+	if self.CurrentSchedule then
+		self.CurrentSchedule = nil
+		self.CurrentTask = nil
+		self.CurrentTaskID = nil
+	end
+	-- Readd the weapon think hook because the transition / save does NOT do it!
+	local wep = self:GetActiveWeapon()
+	if IsValid(wep) then
+		hook.Add("Think", wep, wep.NPC_ServerNextFire)
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AcceptInput(key, activator, caller, data)
+	//print(self, key, activator, caller, data)
 	self:CustomOnAcceptInput(key, activator, caller, data)
-	if key == self.FollowPlayerKey then self:FollowPlayerCode(key, activator, caller, data) end
+	if key == self.FollowPlayerKey then
+		self:FollowPlayerCode(key, activator, caller, data)
+	elseif key == "StartScripting" then
+		self:SetState(VJ_STATE_FREEZE)
+	elseif key == "StopScripting" then
+		self:SetState(VJ_STATE_NONE)
+	elseif key == "SetHealth" then
+		self:SetHealth(data)
+		self:SetMaxHealth(data)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:HandleAnimEvent(ev, evTime, evCycle, evType, evOptions)
