@@ -223,8 +223,8 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 		//self.NextIdleTime = velTimeCur
 	end
 	if extraOptions.FaceDest != false then
-		if extraOptions.FaceDestTarget == true then
-			self:FaceCertainEntity(dest, chaseEnemy and true or false, velTime)
+		if extraOptions.FaceDestTarget == true && ((chaseEnemy && self.CombatFaceEnemy) or (!chaseEnemy)) then
+			self:FaceCertainEntity(dest, chaseEnemy, velTime)
 		else
 			self:FaceCertainPosition(finalPos, velTime)
 		end

@@ -87,8 +87,8 @@ end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if SERVER && !isfunction(FindMetaTable("NPC").AutoMovement) then
 	timer.Simple(1, function()
-		if !VJ_WARN_GModOutdated then
-			VJ_WARN_GModOutdated = true
+		if !VJBASE_GMOD_OUTDATED then
+			VJBASE_GMOD_OUTDATED = true
 			timer.Create("VJ_WARN_GModOutdated", 2, 0, function()
 				PrintMessage(HUD_PRINTTALK, "--- Outdated version of Garry's Mod detected! ---")
 				PrintMessage(HUD_PRINTTALK, "Opt out of the Chromium branch!")
