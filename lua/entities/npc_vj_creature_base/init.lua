@@ -2549,7 +2549,7 @@ function ENT:OnTakeDamage(dmginfo)
 	local dmgInflictor = dmginfo:GetInflictor()
 	local dmgAttacker = dmginfo:GetAttacker()
 	local dmgType = dmginfo:GetDamageType()
-	local hitgroup = self:GetLastDamageHitGroup()
+	local hitgroup = self:GetLastDamageHitGroup() 
 	if IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_ragdoll" && dmgInflictor:GetVelocity():Length() <= 100 then return 0 end
 	self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo, hitgroup)
 	if self:IsOnFire() && self:WaterLevel() == 2 then self:Extinguish() end -- If we are in water, then extinguish the fire
@@ -2586,7 +2586,25 @@ function ENT:OnTakeDamage(dmginfo)
 	end
 	if self.Dead == true then DoBleed() return 0 end -- If dead then just bleed but take no damage
 	
-	self:CustomOnTakeDamage_BeforeDamage(dmginfo, hitgroup)
+	self:CustomOnTakeDamage_BeforeDamage(dmginfo, hitgroup) 
+	if dmginfo:GetDamage() >= 1 then self:SetCondition(17) end -- COND_LIGHT_DAMAGE 
+	if dmginfo:GetDamage() >= 20 then self:SetCondition(18) end -- COND_HEAVY_DAMAGE 
+	local dmgcount = self:GetSaveTable().m_iDamageCount 
+	local sumdamage = self:GetSaveTable().m_flSumDamage 
+	self:SetSaveValue("m_iDamageCount",dmgcount + 1) 
+	if self:GetSaveTable().m_flLastDamageTime > -1 then 
+		sumdamage = sumdamage + dmginfo:GetDamage() -- sum of all dmg in 1 sec 
+	else 
+		sumdamage = dmginfo:GetDamage() -- recount 
+	end 
+	self:SetSaveValue("m_flSumDamage",sumdamage) 
+	self:SetSaveValue("m_flLastDamageTime",0) 
+	if IsValid(dmginfo:GetAttacker()) then 
+		self:TriggerOutput("OnDamaged",dmginfo:GetAttacker()) 
+		if dmginfo:GetAttacker():IsPlayer() then self:SetSaveValue("m_flLastPlayerDamageTime",0) end 
+	else self:TriggerOutput("OnDamaged") 
+	end 
+	if sumdamage > self:GetMaxHealth()*0.3 then self:SetCondition(20) end -- COND_REPEATED_DAMAGE 
 	if dmginfo:GetDamage() <= 0 then return 0 end -- Only take damage if it's above 0!
 	-- Why? Because GMod resets/randomizes dmginfo after a tick...
 	self.SavedDmgInfo = {
@@ -2600,7 +2618,14 @@ function ENT:OnTakeDamage(dmginfo)
 		ammoType = dmginfo:GetAmmoType(),
 		hitgroup = hitgroup,
 	}
-	self:SetHealth(self:Health() - dmginfo:GetDamage())
+	self:SetHealth(self:Health() - dmginfo:GetDamage()) 
+	if self:Health() < (self:GetMaxHealth() * 0.5) then 
+		if IsValid(dmginfo:GetAttacker()) then 
+			self:TriggerOutput("OnHalfHealth",dmginfo:GetAttacker()) 
+		else 
+			self:TriggerOutput("OnHalfHealth") 
+		end 
+	end 
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printondamage"):GetInt() == 1 then print(self:GetClass().." Got Damaged! | Amount = "..dmginfo:GetDamage()) end
 	if self.HasHealthRegeneration == true && self.HealthRegenerationResetOnDmg == true then
 		self.HealthRegenerationDelayT = CurTime() + (math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b) * 1.5)
@@ -2871,7 +2896,15 @@ function ENT:OnKilled(dmginfo, hitgroup)
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printdied"):GetInt() == 1 then print(self:GetClass().." Died!") end
 	self:CustomOnKilled(dmginfo, hitgroup)
 	self:RunItemDropsOnDeathCode(dmginfo, hitgroup) -- Item drops on death
-	self:ClearEnemyMemory()
+	self:ClearEnemyMemory() 
+	if IsValid(dmginfo:GetAttacker()) then 
+		self:TriggerOutput("OnDeath",dmginfo:GetAttacker()) 
+		dmginfo:GetAttacker():Fire("KilledNPC","",0.3,self,self) -- this allows player companions (npc_citizen) to respond to kill 
+		if isfunction(dmginfo:GetAttacker().SetCondition) then 
+			dmginfo:GetAttacker():SetCondition(30) -- calls COND_ENEMY_DEAD rather than COND_ENEMY_WENT_NULL 
+		end 
+	else self:TriggerOutput("OnDeath") -- for i/o events 
+	end 
 	//self:ClearSchedule()
 	//self:SetNPCState(NPC_STATE_DEAD)
 	if bit.band(self.SavedDmgInfo.type, DMG_REMOVENORAGDOLL) == 0 then self:CreateDeathCorpse(dmginfo, hitgroup) end
