@@ -683,7 +683,7 @@ hook.Add("VJ_CreateSNPCCorpse", "VJ_CreateSNPCCorpse", function(corpse, owner)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("PlayerCanPickupWeapon","VJ_PLAYER_CANPICKUPWEAPON",function(ply,wep)
+hook.Add("PlayerCanPickupWeapon", "VJ_PLAYER_CANPICKUPWEAPON", function(ply, wep)
 	//print(wep:GetWeaponWorldModel())
 	if ply.VJ_CanBePickedUpWithOutUse == true && ply.VJ_CanBePickedUpWithOutUse_Class == wep:GetClass() then
 		if wep.IsVJBaseWeapon == true && !ply:HasWeapon(wep:GetClass()) then
@@ -703,7 +703,7 @@ hook.Add("PlayerCanPickupWeapon","VJ_PLAYER_CANPICKUPWEAPON",function(ply,wep)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("PlayerGiveSWEP","VJ_PLAYER_GIVESWEP",function(ply,class,swep)
+hook.Add("PlayerGiveSWEP", "VJ_PLAYER_GIVESWEP", function(ply, class, swep)
 	//if swep.IsVJBaseWeapon == true then
 		ply.VJ_CanBePickedUpWithOutUse = true
 		ply.VJ_CanBePickedUpWithOutUse_Class = class
