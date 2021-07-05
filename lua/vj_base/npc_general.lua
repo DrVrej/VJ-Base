@@ -564,7 +564,7 @@ function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Forces the NPC to jump
+	Forces the NPC to jump.
 		- vel = Velocity for the jump
 	EX: Force the NPC to jump to the location of another entity:
 		self:ForceMoveJump((activator:GetPos() - self:GetPos()):GetNormal()*200 + Vector(0, 0, 300))
@@ -576,7 +576,7 @@ function ENT:ForceMoveJump(vel)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Checks if the given damage type(s) contains 1 or more of the default gibbing damage types
+	Checks if the given damage type(s) contains 1 or more of the default gibbing damage types.
 		- dmgType = The damage type(s) to check for
 			EX: dmginfo:GetDamageType()
 	Returns
@@ -590,12 +590,30 @@ function ENT:IsDefaultGibDamageType(dmgType)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	The last damage hit group that the NPC received
+	The last damage hit group that the NPC received.
 	Returns
 		- number, the hit group
 -----------------------------------------------------------]]
 function  ENT:GetLastDamageHitGroup()
 	return self:GetInternalVariable("m_LastHitGroup")
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Time since the NPC has been damaged (Used CurTime!)
+	Returns
+		- number, time
+-----------------------------------------------------------]]
+function  ENT:GetLastDamageTime()
+	return self:GetInternalVariable("m_flLastDamageTime")
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Number of times NPC has been damaged. Useful for tracking 1-shot kills.
+	Returns
+		- number, the damage count
+-----------------------------------------------------------]]
+function  ENT:GetTotalDamageCount()
+	return self:GetInternalVariable("m_iDamageCount")
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*
