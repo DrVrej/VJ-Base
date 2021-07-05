@@ -2607,6 +2607,16 @@ function ENT:OnTakeDamage(dmginfo)
 	end
 	self:CustomOnTakeDamage_AfterDamage(dmginfo, hitgroup)
 	DoBleed()
+	
+	self:SetSaveValue("m_iDamageCount", self:GetSaveTable().m_iDamageCount + 1)
+	self:SetSaveValue("m_flLastDamageTime", CurTime())
+	
+	-- I/O events, from: https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/sp/src/game/server/ai_basenpc.cpp#L764
+	if IsValid(dmgAttacker) then
+		self:TriggerOutput("OnDamaged", dmgAttacker)
+	else
+		self:TriggerOutput("OnDamaged", self)
+	end
 
 	-- Make passive NPCs run and their allies as well
 	if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && CurTime() > self.TakingCoverT then
@@ -2849,6 +2859,15 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	self:RunGibOnDeathCode(dmginfo, hitgroup)
 	self:PlaySoundSystem("Death")
 	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then self:AA_StopMoving() end
+	
+	-- I/O events, from: https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/mp/src/game/server/basecombatcharacter.cpp#L1582
+	if IsValid(dmgAttacker) then -- Someone else killed me
+		self:TriggerOutput("OnDeath", dmgAttacker)
+		dmgAttacker:Fire("KilledNPC", "", 0, self, self) -- Allows player companions (npc_citizen) to respond to kill
+	else
+		self:TriggerOutput("OnDeath", self)
+	end
+	
 	if self.HasDeathAnimation == true && !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) then
 		if IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball" then DoKilled() return end
 		if GetConVar("vj_npc_nodeathanimation"):GetInt() == 0 && GetConVar("ai_disabled"):GetInt() == 0 && !dmginfo:IsDamageType(DMG_DISSOLVE) && math.random(1, self.DeathAnimationChance) == 1 then
