@@ -34,17 +34,14 @@ ENT.SoundTbl_MeleeAttackMiss = {"npc/zombie/claw_miss1.wav","npc/zombie/claw_mis
 ENT.SoundTbl_Pain = {"npc/scanner/scanner_pain1.wav","npc/scanner/scanner_pain2.wav"}
 ENT.SoundTbl_Death = {"npc/waste_scanner/grenade_fire.wav"}
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local spawnPos = Vector(0, 0, 10)
+--
 function ENT:CustomOnInitialize()
-	// self:SetCollisionBounds(Vector(20, 20, 250), Vector(-20, -20, 0))
 	self:SetCollisionBounds(Vector(33, 33, 26), Vector(-33, -33, -30))
+	self:SetPos(self:GetPos() + spawnPos)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPriorToKilled(dmginfo, hitgroup)
 	ParticleEffect("explosion_turret_break",self:GetPos(),Angle(0,0,0),nil)
 	util.BlastDamage(self,self,self:GetPos(),80,20)
 end
-/*-----------------------------------------------
-	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
-	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
-	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
------------------------------------------------*/

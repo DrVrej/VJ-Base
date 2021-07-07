@@ -458,8 +458,3 @@ function ENT:Tank_Sound_RunOver()
 	self:EmitSound(sdtbl, 80, math.random(80, 100))
 	self.Tank_NextRunOverSoundT = CurTime() + 0.2
 end
-/*-----------------------------------------------
-	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
-	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
-	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
------------------------------------------------*/

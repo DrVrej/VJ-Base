@@ -351,11 +351,7 @@ function ENT:Think()
 			
 			if gerta_for then
 				if self.VJCE_NPC.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
-					if gerta_arak then
-						self.VJCE_NPC:AA_MoveTo(self.VJCE_Bullseye, true, "Alert")
-					else
-						self.VJCE_NPC:AA_MoveTo(self.VJCE_Bullseye, true, "Calm")
-					end
+					self.VJCE_NPC:AA_MoveTo(self.VJCE_Bullseye, true, gerta_arak and "Alert" or "Calm", {IgnoreGround=true})
 				else
 					if gerta_lef then
 						self:StartMovement(self.VJCE_Player:GetAimVector(), Angle(0,45,0))
