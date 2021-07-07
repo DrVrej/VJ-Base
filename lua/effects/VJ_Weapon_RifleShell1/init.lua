@@ -5,13 +5,11 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
 function EFFECT:Init(data)
-	if !IsValid(data:GetEntity()) then return end
-	self.Pos = self:GetTracerShootPos(data:GetOrigin(),data:GetEntity(),data:GetAttachment())
-	local effectdata = EffectData()
-	//effectdata:SetEntity(self.Weapon)
-	effectdata:SetOrigin(self.Pos)
-	effectdata:SetNormal(Vector(0, 0, 0))
-	util.Effect("RifleShellEject",effectdata,true,true)
+	local ent = data:GetEntity()
+	if !IsValid(ent) then return end
+	local effectData = EffectData()
+	effectData:SetOrigin(self:GetTracerShootPos(data:GetOrigin(), ent, data:GetAttachment()))
+	util.Effect("RifleShellEject", effectData, true, true)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function EFFECT:Think()
@@ -20,8 +18,3 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function EFFECT:Render()
 end
-/*--------------------------------------------------
-	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
-	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
-	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
---------------------------------------------------*/

@@ -18,7 +18,7 @@ ENT.Immune_Dissolve = true -- Immune to Dissolving | Example: Combine Ball
 ENT.Immune_AcidPoisonRadiation = true -- Immune to Acid, Poison and Radiation
 ENT.Immune_Bullet = true -- Immune to Bullets
 ENT.Immune_Physics = true -- Immune to Physics
-ENT.ImmuneDamagesTable = {DMG_BULLET,DMG_BUCKSHOT,DMG_PHYSGUN} -- You can set Specific types of damages for the SNPC to be immune to
+ENT.ImmuneDamagesTable = {DMG_PHYSGUN} -- You can set Specific types of damages for the SNPC to be immune to
 ENT.FindEnemy_UseSphere = true -- Should the SNPC be able to see all around him? (360) | Objects and walls can still block its sight!
 ENT.GetDamageFromIsHugeMonster = true -- Should it get damaged no matter what by SNPCs that are tagged as VJ_IsHugeMonster?
 ENT.DeathCorpseCollisionType = COLLISION_GROUP_NONE -- Collision type for the corpse | SNPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
@@ -217,13 +217,13 @@ function ENT:CustomOnThink()
 			self.Spark1:Fire("kill", "", 0.1)
 			self:DeleteOnRemove(self.Spark1)
 
-			/*local effectdata = EffectData()
-			effectdata:SetOrigin(self:GetPos() +self:GetUp()*60 +self:GetForward()*100)
-			effectdata:SetNormal(Vector(0, 0, 0))
-			effectdata:SetMagnitude(5)
-			effectdata:SetScale(0.1)
-			effectdata:SetRadius(10)
-			util.Effect("Sparks",effectdata)*/
+			/*local effectData = EffectData()
+			effectData:SetOrigin(self:GetPos() +self:GetUp()*60 +self:GetForward()*100)
+			effectData:SetNormal(Vector(0, 0, 0))
+			effectData:SetMagnitude(5)
+			effectData:SetScale(0.1)
+			effectData:SetRadius(10)
+			util.Effect("Sparks",effectData)*/
 			self.Tank_NextLowHealthSparkT = CurTime() + math.random(4, 6)
 		end
 

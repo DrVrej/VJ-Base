@@ -75,10 +75,10 @@ function ENT:CustomOnInitialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DeathEffects(data, phys)
-	local effectdata = EffectData()
-	effectdata:SetOrigin(data.HitPos)
-	//effectdata:SetMagnitude(500)
-	util.Effect("StunstickImpact", effectdata)
+	local effectData = EffectData()
+	effectData:SetOrigin(data.HitPos)
+	//effectData:SetMagnitude(500)
+	util.Effect("StunstickImpact", effectData)
 end
 /*-----------------------------------------------
 	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
