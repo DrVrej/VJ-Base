@@ -362,8 +362,3 @@ function ENT:Tank_Sound_FireShell()
 	if sdTbl == false then sdTbl = VJ_PICK(self.Tank_DefaultSoundTbl_FireShell) end -- Default table
 	VJ_EmitSound(self, sdTbl, 500, 100)
 end
-/*-----------------------------------------------
-	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
-	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
-	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
------------------------------------------------*/

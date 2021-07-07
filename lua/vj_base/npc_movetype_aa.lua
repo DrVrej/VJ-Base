@@ -199,7 +199,8 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	if debug == true then ParticleEffect("vj_impact1_centaurspit", finalPos, defAng, self) end
 	
 	-- Z Calculations
-	local velUp = 0
+	-- BUG: Causes the NPC to go up / down VERY quickly!
+	/*local velUp = 0
 	local distZFinal = finalPos.z - startPos.z -- Distance between the hit position and the start position
 	if !groundLimited then
 		if distZFinal > 5 then -- Up
@@ -209,13 +210,13 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 			if debug == true then print("AA: GOING DOWN [MOVE-TO]") end
 			velUp = -math.Clamp(math.abs(distZFinal), 20, moveSpeed)
 		end
-	end
+	end*/
 	
 	self.AA_CurrentMoveMaxSpeed = moveSpeed
 	if self.AA_MoveAccelerate > 0 then moveSpeed = Lerp(FrameTime()*2, self:GetVelocity():Length(), moveSpeed) end
 	
 	-- Set the velocity
-	local velPos = (finalPos - startPos):GetNormal()*moveSpeed + self:GetUp()*velUp + self:GetForward()
+	local velPos = (finalPos - startPos):GetNormal()*moveSpeed //+ self:GetUp()*velUp + self:GetForward()
 	local velTime = finalPos:Distance(startPos) / velPos:Length()
 	local velTimeCur = CurTime() + velTime
 	if velTimeCur == velTimeCur then -- Check for NaN
