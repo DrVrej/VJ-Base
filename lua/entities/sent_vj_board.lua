@@ -65,18 +65,12 @@ function ENT:OnTakeDamage(dmginfo)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoDeath()
-	local effectdata = EffectData()
-	effectdata:SetOrigin(self:GetPos())
-	//effectdata:SetScale( 500 )
-	util.Effect("VJ_Small_Dust1", effectdata)
+	local effectData = EffectData()
+	effectData:SetOrigin(self:GetPos())
+	util.Effect("VJ_Small_Dust1", effectData)
 	self:Remove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
 	self:StopParticles()
 end
-/*--------------------------------------------------
-	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
-	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
-	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
---------------------------------------------------*/

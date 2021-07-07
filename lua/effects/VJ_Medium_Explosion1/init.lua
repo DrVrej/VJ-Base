@@ -9,13 +9,13 @@ function EFFECT:Init(data)
 	local Emitter = ParticleEmitter(self.Pos)
 	if Emitter == nil then return end
 	
-	/*local effectdata = EffectData()
-	effectdata:SetOrigin( self.Pos )
-	effectdata:SetNormal( Vector(0, 0, 0) )
-	effectdata:SetMagnitude( 2.6 )
-	effectdata:SetScale( 2.6 )
-	effectdata:SetRadius( 93 )
-	util.Effect( "Sparks", effectdata, true, true )*/
+	/*local effectData = EffectData()
+	effectData:SetOrigin( self.Pos )
+	effectData:SetNormal( Vector(0, 0, 0) )
+	effectData:SetMagnitude( 2.6 )
+	effectData:SetScale( 2.6 )
+	effectData:SetRadius( 93 )
+	util.Effect( "Sparks", effectData, true, true )*/
 	
 	-- Fire
 	for i=1,8 do
@@ -68,8 +68,3 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function EFFECT:Render()
 end
-/*--------------------------------------------------
-	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
-	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
-	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
---------------------------------------------------*/

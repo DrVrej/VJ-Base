@@ -10,7 +10,7 @@ function EFFECT:Init(data)
 	if Emitter == nil then return end
 	
 	-- Fire
-	for i=1,3 do
+	for _ = 1, 3 do
 		local EffectCode = Emitter:Add("particles/flamelet1",self.Pos)
 		EffectCode:SetVelocity(Vector(math.random(-30,30),math.random(-30,30),math.random(30,40)))
 		EffectCode:SetDieTime(math.Rand(0.4,0.6)) -- How much time until it dies
@@ -24,7 +24,7 @@ function EFFECT:Init(data)
 	end
 
 	-- Smoke screen
-	for i = 1,5 do
+	for _ = 1, 5 do
 		local EffectCode = Emitter:Add("particles/smokey",self.Pos)
 		EffectCode:SetVelocity(Vector(math.random(-40,40),math.random(-40,40),math.random(5,15)))
 		EffectCode:SetDieTime(math.Rand(7,9)) -- How much time until it dies
@@ -39,7 +39,7 @@ function EFFECT:Init(data)
 	end
 
 	-- Cloud of smoke that goes up
-	for i = 1,5 do
+	for _ = 1, 5 do
 		local EffectCode = Emitter:Add("particles/smokey",self.Pos)
 		EffectCode:SetVelocity(Vector(math.random(-60,70),math.random(-60,70),math.random(70,100)))
 		EffectCode:SetDieTime(math.Rand(3,4)) -- How much time until it dies
@@ -60,8 +60,3 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function EFFECT:Render()
 end
-/*--------------------------------------------------
-	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
-	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
-	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
---------------------------------------------------*/

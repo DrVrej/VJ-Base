@@ -34,13 +34,13 @@ function EFFECT:Think()
 	if (CurTime() > self.DieTime) then -- If it's dead then...
 		util.Decal("fadingscorch", self.EndPos + self.Dir:GetNormalized(), self.EndPos - self.Dir:GetNormalized())
 
-		local effectdata = EffectData()
-		effectdata:SetOrigin(self.EndPos + self.Dir:GetNormalized() * -2)
-		effectdata:SetNormal(self.Dir:GetNormalized() * -3)
-		effectdata:SetMagnitude(0.1)
-		effectdata:SetScale(0.8)
-		effectdata:SetRadius(5)
-		util.Effect("Sparks", effectdata)
+		local effectData = EffectData()
+		effectData:SetOrigin(self.EndPos + self.Dir:GetNormalized() * -2)
+		effectData:SetNormal(self.Dir:GetNormalized() * -3)
+		effectData:SetMagnitude(0.1)
+		effectData:SetScale(0.8)
+		effectData:SetRadius(5)
+		util.Effect("Sparks", effectData)
 		return false
 	end
 	return true
@@ -57,8 +57,3 @@ function EFFECT:Render()
 		5 + sinWave * 35, 1, 0, Color(255, 0, 0, 255)
 	)
 end
-/*--------------------------------------------------
-	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
-	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
-	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
---------------------------------------------------*/
