@@ -113,7 +113,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 		maxs = self:OBBMaxs()
 	})
 	local trHitPos = tr.HitPos
-	local groundLimited = false -- If true, it limited the ground because it was too close
+	//local groundLimited = false -- If true, it limited the ground because it was too close
 	-- Preform ground check if:
 		-- It's an aerial NPC AND it is not ignoring ground
 		-- It's NOT a chase enemy OR it is but the NPC doesn't have a melee attack
@@ -128,7 +128,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 		-- If it hit the world, then we are too close to the ground, replace "tr" with a new position!
 		if tr_check1.Hit == true or (tr_check2.Hit == true && !tr_check2.Entity:IsNPC()) then
 			if debug == true then print("Ground Hit!", tr_check1.HitPos:Distance(startPos)) end
-			groundLimited = true
+			//groundLimited = true
 			endPos.z = (tr_check1.Hit and myPos.z or endPos.z) + self.AA_GroundLimit
 			tr = util.TraceHull({
 				start = startPos,
