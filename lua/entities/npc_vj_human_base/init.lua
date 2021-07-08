@@ -112,8 +112,6 @@ ENT.Medic_CanBeHealed = true -- If set to false, this SNPC can't be healed!
 	-- ====== Follow Player Variables ====== --
 	-- Will only follow a player that's friendly to it!
 ENT.FollowPlayer = true -- Should the SNPC follow the player when the player presses a certain key?
-ENT.FollowPlayerChat = true -- Should the SNPCs say things like "Blank stopped following you" | self.AllowPrintingInChat overrides this variable!
-ENT.FollowPlayerKey = "Use" -- The key that the player presses to make the SNPC follow them
 ENT.FollowPlayerCloseDistance = 150 -- If the SNPC is that close to the player then stand still until the player goes farther away
 ENT.NextFollowPlayerTime = 0.5 -- Time until it runs to the player again
 	-- ====== Movement & Idle Variables ====== --
@@ -618,12 +616,10 @@ ENT.GrenadeAttackSoundPitch = VJ_Set(false, false)
 ENT.OnGrenadeSightSoundPitch = VJ_Set(false, false)
 ENT.OnKilledEnemySoundPitch = VJ_Set(false, false)
 ENT.AllyDeathSoundPitch = VJ_Set(false, false)
-ENT.PainSoundPitch1 = false
-ENT.PainSoundPitch2 = false
+ENT.PainSoundPitch = VJ_Set(false, false)
 ENT.ImpactSoundPitch = VJ_Set(80, 100)
 ENT.DamageByPlayerPitch = VJ_Set(false, false)
-ENT.DeathSoundPitch1 = false
-ENT.DeathSoundPitch2 = false
+ENT.DeathSoundPitch = VJ_Set(false, false)
 	-- ====== Playback Rate Variables ====== --
 	-- Decides how fast the sound should play
 	-- Examples: 1 = normal, 2 = twice the normal speed, 0.5 = half the normal speed
@@ -986,7 +982,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_noreload"):GetInt() == 1 then self.AllowWeaponReloading = false end
 	if GetConVar("vj_npc_nobecomeenemytoply"):GetInt() == 1 then self.BecomeEnemyToPlayer = false end
 	if GetConVar("vj_npc_nofollowplayer"):GetInt() == 1 then self.FollowPlayer = false end
-	if GetConVar("vj_npc_nosnpcchat"):GetInt() == 1 then self.AllowPrintingInChat = false self.FollowPlayerChat = false end
+	if GetConVar("vj_npc_nosnpcchat"):GetInt() == 1 then self.AllowPrintingInChat = false end
 	if GetConVar("vj_npc_noweapon"):GetInt() == 1 then self.DisableWeapons = true end
 	//if GetConVar("vj_npc_noforeverammo"):GetInt() == 1 then self.Weapon_UnlimitedAmmo = false end
 	if GetConVar("vj_npc_nothrowgrenade"):GetInt() == 1 then self.HasGrenadeAttack = false end
@@ -3847,7 +3843,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 				if cTbl != false then sdtbl = cTbl end
 				VJ_STOPSOUND(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
-				self.CurrentPainSound = sdType(self, sdtbl, self.PainSoundLevel, self:VJ_DecideSoundPitch(self.PainSoundPitch1, self.PainSoundPitch2))
+				self.CurrentPainSound = sdType(self, sdtbl, self.PainSoundLevel, self:VJ_DecideSoundPitch(self.PainSoundPitch.a, self.PainSoundPitch.b))
 				sdDur = (SoundDuration(sdtbl) > 0 and SoundDuration(sdtbl)) or sdDur
 			end
 			self.PainSoundT = CurTime() + ((self.NextSoundTime_Pain == true and sdDur) or math.Rand(self.NextSoundTime_Pain.a, self.NextSoundTime_Pain.b))
@@ -3881,7 +3877,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			local sdtbl = VJ_PICK(self.SoundTbl_Death)
 			if (math.random(1, self.DeathSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
-				self.CurrentDeathSound = sdType(self, sdtbl, self.DeathSoundLevel, self:VJ_DecideSoundPitch(self.DeathSoundPitch1, self.DeathSoundPitch2))
+				self.CurrentDeathSound = sdType(self, sdtbl, self.DeathSoundLevel, self:VJ_DecideSoundPitch(self.DeathSoundPitch.a, self.DeathSoundPitch.b))
 			end
 		end
 		return

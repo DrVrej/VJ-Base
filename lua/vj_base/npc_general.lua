@@ -691,7 +691,7 @@ end
 function ENT:AcceptInput(key, activator, caller, data)
 	//print(self, key, activator, caller, data)
 	self:CustomOnAcceptInput(key, activator, caller, data)
-	if key == self.FollowPlayerKey then
+	if key == "Use" then
 		self:FollowPlayerCode(key, activator, caller, data)
 	elseif key == "StartScripting" then
 		self:SetState(VJ_STATE_FREEZE)
@@ -744,7 +744,7 @@ function ENT:Touch(entity)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:FollowPlayerReset()
-	if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
+	if self.AllowPrintingInChat == true then
 		if self.Dead == true then
 			self.FollowPlayer_Entity:PrintMessage(HUD_PRINTTALK, self:GetName().." has been killed.")
 		else
@@ -761,17 +761,17 @@ function ENT:FollowPlayerCode(key, activator, caller, data)
 	
 	if IsValid(activator) && activator:IsPlayer() && activator:Alive() then
 		if self:Disposition(activator) == D_HT then -- If it's an enemy
-			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
+			if self.AllowPrintingInChat == true then
 				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is hostile to you, therefore it won't follow you.")
 			end
 			return
 		elseif self:Disposition(activator) == D_NU then -- If it's neutral
-			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
+			if self.AllowPrintingInChat == true then
 				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is neutral to you, therefore it won't follow you.")
 			end
 			return
 		elseif self.FollowingPlayer == true && activator != self.FollowPlayer_Entity then -- Already following a player
-			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
+			if self.AllowPrintingInChat == true then
 				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is already following another player, therefore it won't follow you.")
 			end
 			return
@@ -779,14 +779,14 @@ function ENT:FollowPlayerCode(key, activator, caller, data)
 		
 		self:CustomOnFollowPlayer(key, activator, caller, data)
 		if self.MovementType == VJ_MOVETYPE_STATIONARY or self.MovementType == VJ_MOVETYPE_PHYSICS then
-			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
+			if self.AllowPrintingInChat == true then
 				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is currently stationary, therefore it's unable follow you.")
 			end
 			return
 		end
 		
 		if self.FollowingPlayer == false then
-			if self.AllowPrintingInChat == true && self.FollowPlayerChat == true then
+			if self.AllowPrintingInChat == true then
 				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is now following you.")
 			end
 			self.GuardingPosition = nil -- Reset the guarding position
