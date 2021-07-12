@@ -744,7 +744,7 @@ function ENT:Touch(entity)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:FollowPlayerReset()
-	if self.AllowPrintingInChat == true then
+	if self.AllowPrintingInChat == true && IsValid(self.FollowPlayer_Entity) then
 		if self.Dead == true then
 			self.FollowPlayer_Entity:PrintMessage(HUD_PRINTTALK, self:GetName().." has been killed.")
 		else
