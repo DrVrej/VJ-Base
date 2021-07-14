@@ -2735,7 +2735,7 @@ function ENT:IsAbleToShootWeapon(checkDistance, checkDistanceOnly, enemyDist)
 	local hasDist = false
 	local hasChecks = false
 	
-	if self:GetWeaponState() == VJ_WEP_STATE_HOLSTERED then return false end
+	if self:GetWeaponState() == VJ_WEP_STATE_HOLSTERED or self.vACT_StopAttacks then return false end
 	if self.VJ_IsBeingControlled == true then checkDistance = false checkDistanceOnly = false end
 	if checkDistance == true && CurTime() > self.NextWeaponAttackT && enemyDist < self.Weapon_FiringDistanceFar && ((enemyDist > self.Weapon_FiringDistanceClose) or self.CurrentWeaponEntity.IsMeleeWeapon) then
 		hasDist = true
@@ -3174,6 +3174,7 @@ function ENT:OnTakeDamage(dmginfo)
 					self:VJ_ACT_PLAYACTIVITY(anim, false, hidet, false, 0, {SequenceDuration=hidet}) -- Don't set stopActivities because we want it to shoot if the enemy is suddenly visible!
 					self.NextChaseTime = CurTime() + hidet
 					self.TakingCoverT = CurTime() + hidet
+					self.DoingWeaponAttack = false
 				end
 				self.NextMoveOrHideOnDamageByEnemyT = CurTime() + math.random(self.NextMoveOrHideOnDamageByEnemy1,self.NextMoveOrHideOnDamageByEnemy2)
 			elseif !self:IsMoving() && (!IsValid(wep) or (IsValid(wep) && !wep.IsMeleeWeapon)) then

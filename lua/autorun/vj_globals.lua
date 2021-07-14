@@ -17,6 +17,7 @@ local tonumber = tonumber
 local string_find = string.find
 local string_Replace = string.Replace
 local string_StartWith = string.StartWith
+local string_lower = string.lower
 local table_remove = table.remove
 local math_clamp = math.Clamp
 local defAng = Angle(0, 0, 0)
@@ -226,14 +227,24 @@ function VJ_IsCurrentAnimation(ent, anim)
 		anim = {anim}
 	end
 
-	for _,v in ipairs(anim) do
+	for _, v in ipairs(anim) do
 		if isnumber(v) && v != -1 then v = ent:GetSequenceName(ent:SelectWeightedSequence(v)) end -- Translate activity to sequence
-		if v == ent:GetSequenceName(ent:GetSequence()) then
+		if string_lower(v) == string_lower(ent:GetSequenceName(ent:GetSequence())) then
 			return true
 		end
 	end
 	//if anim == ent:GetSequenceName(ent:GetSequence()) then return true end
 	return false
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function VJ_RemoveAnimExtensions(ent, anim)
+	if string_find(anim, "vjseq_") then
+		anim = string_Replace(anim, "vjseq_", "")
+	end
+	if string_find(anim, "vjges_") then
+		anim = string_Replace(anim, "vjges_", "")
+	end
+	return anim
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local props = {prop_physics=true, prop_physics_multiplayer=true, prop_physics_respawnable=true}

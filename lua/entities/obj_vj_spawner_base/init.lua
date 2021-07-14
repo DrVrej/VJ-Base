@@ -126,7 +126,10 @@ function ENT:SpawnAnEntity(spawnKey, spawnTbl, initSpawn)
 	ent:Activate()
 	if ent:IsNPC() && spawnWepPicked != false && string.lower(spawnWepPicked) != "none" then
 		if string.lower(spawnWepPicked) == "default" then -- Default weapon from the spawn menu
-			ent:Give(VJ_PICK(list.Get("NPC")[ent:GetClass()].Weapons))
+			local getDefWep = VJ_PICK(list.Get("NPC")[ent:GetClass()].Weapons)
+			if getDefWep then
+				ent:Give(getDefWep)
+			end
 		else
 			ent:Give(spawnWepPicked)
 		end

@@ -395,15 +395,14 @@ function SWEP:NPC_ServerNextFire()
 	if self.NPC_NextPrimaryFire != false && self:NPCAbleToShoot() == true then FireCode() end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:NPCAbleToShoot(onlySecondary)
-	onlySecondary = onlySecondary or false -- Make it only check conditions that secondary fire needs
+function SWEP:NPCAbleToShoot()
 	local owner = self:GetOwner()
 	if IsValid(owner) && owner:IsNPC() then
 		local ene = owner:GetEnemy()
 		if (owner.IsVJBaseSNPC_Human && IsValid(ene) && owner:IsAbleToShootWeapon(true, true) == false) or (self.NPC_StandingOnly == true && owner:IsMoving()) then
 			return false
 		end
-		if owner:GetActivity() != nil && ((owner.IsVJBaseSNPC_Human == true && (/*(owner.CurrentWeaponAnimation == owner:GetSequenceActivity(owner:GetSequence())) or*/ (owner.CurrentWeaponAnimation == owner:GetActivity()) or (owner:GetActivity() == owner:TranslateToWeaponAnim(owner.CurrentWeaponAnimation)) or (owner.DoingWeaponAttack_Standing == false && owner.DoingWeaponAttack == true))) or (!owner.IsVJBaseSNPC_Human)) then
+		if owner:GetActivity() != nil && ((owner.IsVJBaseSNPC_Human == true && owner.DoingWeaponAttack == true && (/*(owner.CurrentWeaponAnimation == owner:GetSequenceActivity(owner:GetSequence())) or*/ (owner.CurrentWeaponAnimation == owner:GetActivity()) or (owner:GetActivity() == owner:TranslateToWeaponAnim(owner.CurrentWeaponAnimation)) or (!owner.DoingWeaponAttack_Standing))) or (!owner.IsVJBaseSNPC_Human)) then
 			-- For VJ Humans only, ammo check
 			if owner.IsVJBaseSNPC_Human && owner.AllowWeaponReloading == true && self:Clip1() <= 0 then -- No ammo!
 				if owner.VJ_IsBeingControlled == true then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER, "Press R to reload!") end
@@ -419,8 +418,6 @@ function SWEP:NPCAbleToShoot(onlySecondary)
 			if IsValid(ene) && ((!owner.VJ_IsBeingControlled) or (owner.VJ_IsBeingControlled && owner.VJ_TheController:KeyDown(IN_ATTACK2))) then
 				return true
 			end
-		elseif onlySecondary == true then
-			return true
 		end
 	end
 	return false
@@ -439,20 +436,24 @@ function SWEP:NPCShoot_Primary()
 	end
 	
 	-- Secondary Fire
-	if self.NPC_HasSecondaryFire == true && self.NPC_SecondaryFirePerforming == false && CurTime() > self.NPC_SecondaryFireNextT && owner.CanUseSecondaryOnWeaponAttack == true && ene:GetPos():Distance(owner:GetPos()) <= self.NPC_SecondaryFireDistance then
+	if self.NPC_HasSecondaryFire == true && owner.CanUseSecondaryOnWeaponAttack && !self.NPC_SecondaryFirePerforming && CurTime() > self.NPC_SecondaryFireNextT && ene:GetPos():Distance(owner:GetPos()) <= self.NPC_SecondaryFireDistance then
 		if math.random(1, self.NPC_SecondaryFireChance) == 1 then
-			owner:VJ_ACT_PLAYACTIVITY(owner.AnimTbl_WeaponAttackSecondary, true, false, true, 0)
+			local secAnim = VJ_PICK(owner.AnimTbl_WeaponAttackSecondary)
+			owner:VJ_ACT_PLAYACTIVITY(secAnim, true, false, true)
 			self.NPC_SecondaryFirePerforming = true
 			timer.Simple(owner.WeaponAttackSecondaryTimeUntilFire, function()
-				if IsValid(self) && IsValid(owner) && IsValid(owner:GetEnemy()) && self:NPCAbleToShoot(true) == true && CurTime() > self.NPC_SecondaryFireNextT then
+				if IsValid(self) then
 					self.NPC_SecondaryFirePerforming = false
-					self:NPC_SecondaryFire()
-					if self.NPC_HasSecondaryFireSound == true then VJ_EmitSound(owner, self.NPC_SecondaryFireSound, self.NPC_SecondaryFireSoundLevel) end
-					if self.NPC_SecondaryFireNext != false then -- Support for animation events
-						self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
+					if IsValid(owner) && IsValid(owner:GetEnemy()) && CurTime() > self.NPC_SecondaryFireNextT && VJ_IsCurrentAnimation(owner, VJ_RemoveAnimExtensions(self, secAnim)) then
+						self:NPC_SecondaryFire()
+						if self.NPC_HasSecondaryFireSound == true then VJ_EmitSound(owner, self.NPC_SecondaryFireSound, self.NPC_SecondaryFireSoundLevel) end
+						if self.NPC_SecondaryFireNext != false then -- Support for animation events
+							self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
+						end
 					end
 				end
 			end)
+			return
 		else
 			self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
 		end
