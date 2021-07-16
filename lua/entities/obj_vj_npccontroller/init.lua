@@ -316,6 +316,8 @@ function ENT:Think()
 			if VJ_IsCurrentAnimation(self.VJCE_NPC, self.VJCE_NPC:TranslateToWeaponAnim(self.VJCE_NPC.CurrentWeaponAnimation)) == false && VJ_IsCurrentAnimation(self.VJCE_NPC, self.VJCE_NPC.AnimTbl_WeaponAttack) == false then
 				self.VJCE_NPC.CurrentWeaponAnimation = VJ_PICK(self.VJCE_NPC.AnimTbl_WeaponAttack)
 				self.VJCE_NPC:VJ_ACT_PLAYACTIVITY(self.VJCE_NPC.CurrentWeaponAnimation, false, 2, false)
+				self.VJCE_NPC.DoingWeaponAttack = true
+				self.VJCE_NPC.DoingWeaponAttack_Standing = true
 			end
 		end
 		
