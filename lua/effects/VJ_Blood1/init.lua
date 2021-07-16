@@ -12,7 +12,7 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 
 	-- Code Implementation --
 	local blcolor = Color(130, 19, 10)
-	bloodeffect:SetColor(VJ_Color2Byte(Color(r, g, b)))
+	effectBlood:SetColor(VJ_Color2Byte(Color(r, g, b)))
 -------------------------------------- */
 function EFFECT:Init(data)
 	local origin = data:GetOrigin()
