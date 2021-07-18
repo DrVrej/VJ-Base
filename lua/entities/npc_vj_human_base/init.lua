@@ -2962,14 +2962,16 @@ function ENT:SelectSchedule()
 								end
 							end
 							-- Move randomly when shooting
-							if cover_npc == false && self.IsGuard != true && self.FollowingPlayer == false && self.MoveRandomlyWhenShooting == true && (!wep.IsMeleeWeapon) && (!wep.NPC_StandingOnly) && self.DoingWeaponAttack == true && self.DoingWeaponAttack_Standing == true && CurTime() > self.NextMoveRandomlyWhenShootingT && (CurTime() - self.TimeSinceEnemyAcquired) > 2 && (eneDist_Eye < (self.Weapon_FiringDistanceFar / 1.25)) && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered),enePos_Eye) == false && self:CustomOnMoveRandomlyWhenShooting() != false then
-								local moveCheck = VJ_PICK(self:VJ_CheckAllFourSides(math.random(150, 400), true, "0111"))
-								if moveCheck then
-									self:StopMoving()
-									self:SetLastPosition(moveCheck)
-									self:VJ_TASK_GOTO_LASTPOS(VJ_PICK({"TASK_RUN_PATH", "TASK_WALK_PATH"}), function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+							if cover_npc == false && self.IsGuard != true && self.FollowingPlayer == false && self.MoveRandomlyWhenShooting == true && (!wep.IsMeleeWeapon) && (!wep.NPC_StandingOnly) && self.DoingWeaponAttack == true && self.DoingWeaponAttack_Standing == true && CurTime() > self.NextMoveRandomlyWhenShootingT && (CurTime() - self.TimeSinceEnemyAcquired) > 2 && (eneDist_Eye < (self.Weapon_FiringDistanceFar / 1.25)) && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered),enePos_Eye) == false then
+								if self:CustomOnMoveRandomlyWhenShooting() != false then
+									local moveCheck = VJ_PICK(self:VJ_CheckAllFourSides(math.random(150, 400), true, "0111"))
+									if moveCheck then
+										self:StopMoving()
+										self:SetLastPosition(moveCheck)
+										self:VJ_TASK_GOTO_LASTPOS(VJ_PICK({"TASK_RUN_PATH", "TASK_WALK_PATH"}), function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+									end
 								end
-								self.NextMoveRandomlyWhenShootingT = CurTime() + math.Rand(self.NextMoveRandomlyWhenShootingTime1,self.NextMoveRandomlyWhenShootingTime2)
+								self.NextMoveRandomlyWhenShootingT = CurTime() + math.Rand(self.NextMoveRandomlyWhenShootingTime1, self.NextMoveRandomlyWhenShootingTime2)
 							end
 						else -- None VJ Base weapons
 							self:FaceCertainEntity(ene, true)
