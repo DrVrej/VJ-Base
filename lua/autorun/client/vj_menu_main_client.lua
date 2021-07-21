@@ -72,11 +72,13 @@ local function VJ_MAINMENU_CLIENT(Panel)
 	vj_combo_box:AddChoice("Português (Brasileiro) *", "portuguese_br", false, "flags16/br.png")
 	vj_combo_box.OnSelect = function(data, index, text)
 		RunConsoleCommand("vj_language", vj_combo_box:GetOptionData(index))
-		chat.AddText(Color(255,215,0), "#vjbase.menu.clsettings.notify.lang", " ", Color(30,200,255), text)
-		timer.Simple(0.2,function() VJ_REFRESH_LANGUAGE(val) RunConsoleCommand("spawnmenu_reload") end) -- Bedke kichme espasenk minchevor command-e update ela
+		chat.AddText(Color(255, 215, 0), "#vjbase.menu.clsettings.notify.lang", " ", Color(30, 200, 255), text)
+		timer.Simple(0.2, function() VJ_REFRESH_LANGUAGE(val) RunConsoleCommand("spawnmenu_reload") end) -- Bedke kichme espasenk minchevor command-e update ela
 	end
 	Panel:AddPanel(vj_combo_box)
 	Panel:ControlHelp("* stands for unfinished translation!")
+	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.clsettings.lang.auto", Command = "vj_language_auto"})
+	Panel:ControlHelp("#vjbase.menu.clsettings.lang.auto.label")
 end
 ----=================================----
 hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_INFORMATION", function()

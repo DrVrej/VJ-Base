@@ -146,8 +146,6 @@ end
 local cvarList_Wep = {}
 cvarList_Wep["vj_wep_nomuszzleflash"] = 0 -- Should weapons make a muzzle flash?
 cvarList_Wep["vj_wep_nomuszzleflash_dynamiclight"] = 0 -- Should weapons make a dynamic light when being fired?
-cvarList_Wep["vj_wep_nomuszzlesmoke"] = 0 -- Should weapons make a muzzle smoke?
-cvarList_Wep["vj_wep_nomuzzleheatwave"] = 0 -- Should weapons make a muzzle heat wave?
 cvarList_Wep["vj_wep_nobulletshells"] = 0 -- Should weapons drop bullet shells?
 for k, v in pairs(cvarList_Wep) do
 	if !ConVarExists(k) then CreateClientConVar(k, v, true, false) end
