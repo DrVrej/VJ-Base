@@ -2699,7 +2699,7 @@ function ENT:DoWeaponAttackMovementCode(override, moveType)
 	override = override or false -- Overrides some of the checks, only used for the internal task system!
 	moveType = moveType or 0 -- This is used with override | 0 = Run, 1 = Walk
 	if (self.CurrentWeaponEntity.IsMeleeWeapon) then
-		self.DoingWeaponAttack = false
+		self.DoingWeaponAttack = true
 	elseif self.HasShootWhileMoving == true then
 		if self:Visible(self:GetEnemy()) && self:IsAbleToShootWeapon(true, false) == true && ((self:IsMoving() && (self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true)) or (override == true)) then
 			if (override == true && moveType == 0) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 1) then
@@ -2918,7 +2918,8 @@ function ENT:SelectSchedule()
 										VJ_EmitSound(self, wep.NPC_BeforeFireSound, wep.NPC_BeforeFireSoundLevel, math.Rand(wep.NPC_BeforeFireSoundPitch.a, wep.NPC_BeforeFireSoundPitch.b))
 										self.NextMeleeWeaponAttackT = CurTime() + animDur
 										self.CurrentWeaponAnimation = finalAnim
-										self:VJ_ACT_PLAYACTIVITY(finalAnim, true, false, true)
+										self:VJ_ACT_PLAYACTIVITY(finalAnim, false, false, true)
+										self.DoingWeaponAttack = true
 									end
 								-- Normal ranged weapons
 								else
