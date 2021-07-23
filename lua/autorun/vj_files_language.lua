@@ -1401,7 +1401,9 @@ if CLIENT then
 			add("vjbase.menu.clsettings.label", "使用此菜单来自定义你的客户端设置，服务器无法更改这里的设置！")
 			add("vjbase.menu.clsettings.labellang", "选择语言...")
 			add("vjbase.menu.clsettings.notify.lang", "VJ Base 的语言设置为：")
-			
+			add("vjbase.menu.clsettings.lang.auto", "自动设置语言")
+			add("vjbase.menu.clsettings.lang.auto.label", "如果 VJ Base 设置为 GMod 不支持的语言，则忽略")
+
 			add("vjbase.menu.info", "信息")
 			
 			add("vjbase.menu.plugins", "已安装的插件")
