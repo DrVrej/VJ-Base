@@ -41,6 +41,11 @@ if SERVER then
 					i = i + 1
 				end
 			end
+			-- Clean up client side corpses
+			-- DOES NOT WORK, FUNCTION IS BROKEN!
+			//if cType == "corpses" then
+				//game.RemoveRagdolls()
+			//end
 		end
 		if IsValid(ply) then
 			if !cType then
