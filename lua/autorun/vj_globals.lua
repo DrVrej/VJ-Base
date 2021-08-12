@@ -625,7 +625,7 @@ hook.Add("EntityFireBullets", "VJ_NPC_FIREBULLET", function(ent, data)
 			
 			-- Bullet spread
 			// ent:GetPos():Distance(ent.VJ_TheController:GetEyeTrace().HitPos) -- Was used when NPC was being controlled
-			local fSpread = (ent:GetPos():Distance(ene:GetPos()) / 28) * ent.WeaponSpread * (wep.NPC_CustomSpread or 1)
+			local fSpread = (ent:GetPos():Distance(ene:GetPos()) / 28) * (ent.WeaponSpread or 1) * (wep.NPC_CustomSpread or 1)
 			data.Spread = Vector(fSpread, fSpread, 0)
 			
 			-- Bullet direction
