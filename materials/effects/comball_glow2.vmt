@@ -1,0 +1,17 @@
+"UnlitGeneric"
+{
+	"$basetexture" "vj_base/effects/comball_glow2"
+	"$additive" 1
+	"$translucent" 1
+	"$vertexcolor" 1
+	"$model" "1"
+	"Proxies"
+	{
+		"AnimatedTexture" // AnimatedOffsetTexture
+		{
+			"animatedtexturevar" "$basetexture"
+			"animatedtextureframenumvar" "$frame"
+			"animatedtextureframerate" 25
+		}
+	}
+}
