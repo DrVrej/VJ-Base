@@ -15,8 +15,8 @@ SWEP.UseHands					= true
 end
 	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.NPC_HasSecondaryFire = true -- Can the weapon have a secondary fire?
--- SWEP.NPC_SecondaryFireSound = {"weapons/cguard/charging.wav"} -- The sound it plays when the secondary fire is used (THIS NEEDS TO PLAY BEFORE IT FIRES!)
 SWEP.NPC_SecondaryFireEnt = "obj_vj_combineball"
+SWEP.NPC_SecondaryFireDistance = 3000 -- How close does the owner's enemy have to be for it to fire?
 SWEP.NPC_NextPrimaryFire 		= 0.9 -- Next time it can use primary fire
 SWEP.NPC_TimeUntilFire	 		= 0.1 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_TimeUntilFireExtraTimers = {0.1,0.2,0.3,0.4,0.5,0.6} -- Extra timers, which will make the gun fire again! | The seconds are counted after the self.NPC_TimeUntilFire!
@@ -50,8 +50,11 @@ SWEP.AnimTbl_Idle				= {ACT_VM_IDLE}
 SWEP.NextIdle_Deploy			= 0.5 -- How much time until it plays the idle animation after the weapon gets deployed
 SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle animation after attacking(Primary)
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:NPC_SecondaryFire_BeforeTimer(eneEnt, fireTime)
+	VJ_EmitSound(self, "weapons/cguard/charging.wav", 70)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_SecondaryFire()
-	-- Override this function if you want to make your own secondary attack!
 	local owner = self:GetOwner()
 	local pos = self:GetNW2Vector("VJ_CurBulletPos")
 	local proj = ents.Create(self.NPC_SecondaryFireEnt)
@@ -63,6 +66,6 @@ function SWEP:NPC_SecondaryFire()
 	local phys = proj:GetPhysicsObject()
 	if IsValid(phys) then
 		phys:Wake()
-		phys:SetVelocity(owner:CalculateProjectile("Line", pos, owner.LatestVisibleEnemyPosition, 1000))
+		phys:SetVelocity(owner:CalculateProjectile("Line", pos, owner.LatestVisibleEnemyPosition, 2000))
 	end
 end
