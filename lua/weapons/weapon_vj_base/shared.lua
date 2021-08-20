@@ -180,6 +180,8 @@ function SWEP:CustomOnPrimaryAttack_BulletCallback(attacker, tr, dmginfo) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttackEffects() return true end -- Return false to disable the base effects
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:NPC_SecondaryFire_BeforeTimer(eneEnt, fireTime) end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_SecondaryFire()
 	-- Override this function if you want to make your own secondary attack!
 	local owner = self:GetOwner()
@@ -441,6 +443,7 @@ function SWEP:NPCShoot_Primary()
 			local secAnim = VJ_PICK(owner.AnimTbl_WeaponAttackSecondary)
 			owner:VJ_ACT_PLAYACTIVITY(secAnim, true, false, true)
 			self.NPC_SecondaryFirePerforming = true
+			self:NPC_SecondaryFire_BeforeTimer(ene, owner.WeaponAttackSecondaryTimeUntilFire)
 			timer.Simple(owner.WeaponAttackSecondaryTimeUntilFire, function()
 				if IsValid(self) then
 					self.NPC_SecondaryFirePerforming = false
