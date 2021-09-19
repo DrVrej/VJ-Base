@@ -67,6 +67,72 @@ if CLIENT then
 		add("vjbase.menugeneral.default", "Default") -- DO NOT TRANSLATE. (Deprecated)
 		// add("vjbase.general.print.runningvj", "Notice: This server is running VJ Base.") -- DO NOT TRANSLATE.
 		
+		-- VJ HUD Settings
+		add("vjhud.settings.reset.everything", "Reset Everything")
+		add("vjhud.settings.menu", "Client Settings")
+		add("vjhud.settings.gmod.hud", "Garry's Mod HUD:")
+		add("vjhud.settings.disable.gmod.hud", "Disable Garry's Mod HUD")
+		add("vjhud.settings.disable.gmod.crosshair", "Disable Garry's Mod Crosshair")
+		add("vjhud.settings.hud", "HUD:")
+		add("vjhud.settings.enable.vj.hud", "Enable VJ HUD")
+		add("vjhud.settings.enable.health.and.suit", "Enable Health and Suit")
+		add("vjhud.settings.enable.ammunition.counter", "Enable Ammunition Counter")
+		add("vjhud.settings.enable.local.player.information", "Enable Local Player Information")
+		add("vjhud.settings.enable.compass", "Enable Compass")
+		add("vjhud.settings.enable.trace.information", "Enable Trace Information")
+		add("vjhud.settings.enable.proximity.scanner", "Enable Proximity Scanner")
+		add("vjhud.settings.enable.ammunition.counter.in.vehicle", "Enable Ammunition Counter in Vehicle")
+		add("vjhud.settings.limited.trace.information", "Limited Trace Information")
+		add("vjhud.settings.limited.trace.information.desc", "Will only display for NPCs & Players")
+		add("vjhud.settings.use.metric.instead.of.imperial", "Use Metric instead of Imperial")
+		add("vjhud.settings.crosshair", "Crosshair:")
+		add("vjhud.settings.enable.crosshair", "Enable Crosshair")
+		add("vjhud.settings.enable.crosshair.in.vehicle", "Enable Crosshair While in Vehicle")
+		add("vjhud.settings.crosshair.material", "Crosshair Material:")
+		add("vjhud.settings.crosshair.material.arrow", "Arrow (Two, Default)")
+		add("vjhud.settings.crosshair.material.dot", "Dot")
+		add("vjhud.settings.crosshair.material.dot.small", "Dot (Five, Small)")
+		add("vjhud.settings.crosshair.material.dot.large", "Dot (Five, Large)")
+		add("vjhud.settings.crosshair.material.dot.sniper", "Dot (Five, Sniper)")
+		add("vjhud.settings.crosshair.material.dot.four", "Dot (Four)")
+		add("vjhud.settings.crosshair.material.dot.circle", "Circle")
+		add("vjhud.settings.crosshair.material.dot.circle.dashed", "Circle (Dashed)")
+		add("vjhud.settings.crosshair.material.line", "Line (Four, Angled)")
+		add("vjhud.settings.crosshair.color", "Crosshair Color:")
+		add("vjhud.settings.crosshair.size", "Crosshair Size")
+		add("vjhud.settings.crosshair.opacity", "Crosshair Opacity")
+		
+		-- VJ HUD
+		add("vjhud.user.dead", "USER DEAD")
+		add("vjhud.god.mode.enabled", "God Mode Enabled!")
+		add("vjhud.low.health", "WARNING: Low Health!")
+		add("vjhud.death.imminent", "WARNING: Death Imminent!")
+		add("vjhud.suit", "SUIT")
+		add("vjhud.admin.yes", "Admin: Yes")
+		add("vjhud.admin.no", "Admin: No")
+		add("vjhud.cheats.on", "Cheats: On")
+		add("vjhud.cheats.off", "Cheats: Off")
+		add("vjhud.npc.ai.on", "NPC AI: On")
+		add("vjhud.npc.ai.off", "NPC AI: Off")
+		add("vjhud.ignoreply.on", "IgnorePly: On")
+		add("vjhud.ignoreply.off", "IgnorePly: Off")
+		add("vjhud.cropses.on", "Cropses: On")
+		add("vjhud.cropses.off", "Cropses: Off")
+		add("vjhud.npc.relationship.hostile", "Hostile")
+		add("vjhud.npc.relationship.frightened", "Frightened")
+		add("vjhud.npc.relationship.friendly", "Friendly")
+		add("vjhud.npc.relationship.neutral", "Neutral")
+			
+		-- VJ HUD Directions
+		add("vjhud.directions.N", "N")
+		add("vjhud.directions.S", "S")
+		add("vjhud.directions.W", "W")
+		add("vjhud.directions.E", "E")
+		add("vjhud.directions.NW", "NW")
+		add("vjhud.directions.SW", "SW")
+		add("vjhud.directions.NE", "NE")
+		add("vjhud.directions.SE", "SE")
+		
 		-- Spawn Menu
 		add("vjbase.spawn.menu.npc.disablethinking", "AI Disable Thinking")
 		add("vjbase.spawn.menu.npc.ignoreplayers", "AI Ignore Players")
@@ -1332,13 +1398,81 @@ if CLIENT then
 			add("vjbase.menu.plugins.changelog", "Registro de Cambios")
 			add("vjbase.menu.plugins.makeaddon", "¿Quieres hacer un addon? ¡Haz Click Aquí! (Link En Inglés)")
 		elseif conv == "schinese" then ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-			-- Spawn Menu
+			
+			-- VJ HUD 设置
+			add("vjhud.settings.reset.everything", "重置全部")
+			add("vjhud.settings.menu", "客户端设置")
+			add("vjhud.settings.gmod.hud", "Garry's Mod HUD：")
+			add("vjhud.settings.disable.gmod.hud", "禁用 Garry's Mod HUD")
+			add("vjhud.settings.disable.gmod.crosshair", "禁用 Garry's Mod 准心")
+			add("vjhud.settings.hud", "HUD：")
+			add("vjhud.settings.enable.vj.hud", "启用 VJ HUD")
+			add("vjhud.settings.enable.health.and.suit", "显示生命值和防护衣")
+			add("vjhud.settings.enable.ammunition.counter", "显示弹药")
+			add("vjhud.settings.enable.local.player.information", "显示本地玩家信息")
+			add("vjhud.settings.enable.compass", "显示指南针")
+			add("vjhud.settings.enable.trace.information", "显示准心信息")
+			add("vjhud.settings.enable.proximity.scanner", "启用近距离探测器")
+			add("vjhud.settings.enable.ammunition.counter.in.vehicle", "在载具中时显示弹药")
+			add("vjhud.settings.limited.trace.information", "部分准心信息")
+			add("vjhud.settings.limited.trace.information.desc", "仅会显示 NPC 和玩家的信息")
+			add("vjhud.settings.use.metric.instead.of.imperial", "使用公制而不是英制")
+			add("vjhud.settings.crosshair", "准心：")
+			add("vjhud.settings.enable.crosshair", "显示准心")
+			add("vjhud.settings.enable.crosshair.in.vehicle", "在载具中时显示准心")
+			add("vjhud.settings.crosshair.material", "准心材质：")
+			add("vjhud.settings.crosshair.material.arrow", "箭头（两个，默认）")
+			add("vjhud.settings.crosshair.material.dot", "点")
+			add("vjhud.settings.crosshair.material.dot.small", "点（五个，小型）")
+			add("vjhud.settings.crosshair.material.dot.large", "点（五个，大型）")
+			add("vjhud.settings.crosshair.material.dot.sniper", "点（五个，狙击型）")
+			add("vjhud.settings.crosshair.material.dot.four", "点（四个）")
+			add("vjhud.settings.crosshair.material.dot.circle", "圆环")
+			add("vjhud.settings.crosshair.material.dot.circle.dashed", "圆环（虚线）")
+			add("vjhud.settings.crosshair.material.line", "线段（四条，X 型）")
+			add("vjhud.settings.crosshair.color", "准心颜色：")
+			add("vjhud.settings.crosshair.size", "准心大小")
+			add("vjhud.settings.crosshair.opacity", "准心不透明度")
+		
+			-- VJ HUD
+			add("vjhud.user.dead", "使用者死亡")
+			add("vjhud.god.mode.enabled", "无敌模式已开启！")
+			add("vjhud.low.health", "警告：低生命值！")
+			add("vjhud.death.imminent", "警告：濒临死亡！")
+			add("vjhud.suit", "防护衣")
+			add("vjhud.admin.yes", "管理员：是")
+			add("vjhud.admin.no", "管理员：否")
+			add("vjhud.cheats.on", "作弊：开启")
+			add("vjhud.cheats.off", "作弊：关闭")
+			add("vjhud.npc.ai.on", "NPC AI：开启")
+			add("vjhud.npc.ai.off", "NPC AI：关闭")
+			add("vjhud.ignoreply.on", "无视玩家：开启")
+			add("vjhud.ignoreply.off", "无视玩家：关闭")
+			add("vjhud.cropses.on", "保留尸体：开启")
+			add("vjhud.cropses.off", "保留尸体：关闭")
+			add("vjhud.npc.relationship.hostile", "敌对")
+			add("vjhud.npc.relationship.frightened", "胆怯")
+			add("vjhud.npc.relationship.friendly", "友好")
+			add("vjhud.npc.relationship.neutral", "中立")
+
+			-- VJ HUD 方位
+			add("vjhud.directions.N", "北")
+			add("vjhud.directions.S", "南")
+			add("vjhud.directions.W", "西")
+			add("vjhud.directions.E", "东")
+			add("vjhud.directions.NW", "西北")
+			add("vjhud.directions.SW", "西南")
+			add("vjhud.directions.NE", "东北")
+			add("vjhud.directions.SE", "东南")
+		
+			
+			-- 生成菜单
 			add("vjbase.spawn.menu.npc.disablethinking", "AI 停止思考")
 			add("vjbase.spawn.menu.npc.ignoreplayers", "AI 无视玩家")
 			add("vjbase.spawn.menu.npc.keepcorpses", "NPC 尸体碰撞/保留")
 			add("vjbase.spawn.menu.npc.guard", "NPC 作为守卫生成")
 			
-			-- General Menu (Used everywhere)
+			-- 常规菜单（随处使用）
 			add("vjbase.menu.general.default", "默认")
 			add("vjbase.menu.general.admin.only", "注意：只有管理员可以使用此菜单。")
 			add("vjbase.menu.general.admin.not", "你不是管理员！")
@@ -1347,7 +1481,7 @@ if CLIENT then
 			add("vjbase.menu.general.snpc.creaturesettings", "生物设置：")
 			add("vjbase.menu.general.snpc.humansettings", "人类设置：")
 			
-			-- Menu Tabs
+			-- 菜单标签
 			add("vjbase.menu.tabs.mainmenu", "主菜单")
 			add("vjbase.menu.tabs.settings.snpc", "SNPC 设置")
 			add("vjbase.menu.tabs.settings.weapon", "武器设置")
@@ -1355,7 +1489,7 @@ if CLIENT then
 			add("vjbase.menu.tabs.tools", "工具")
 			add("vjbase.menu.tabs.configures.snpc", "SNPC 配置")
 			
-			-- Main Menu
+			-- 主菜单
 			add("vjbase.menu.cleanup", "清除")
 			add("vjbase.menu.cleanup.all", "清除全部")
 			add("vjbase.menu.cleanup.stopsounds", "停止所有音效")
@@ -1602,7 +1736,7 @@ if CLIENT then
 			add("vjbase.menu.snpc.consettings.bind.cameraright", "视角向右")
 			add("vjbase.menu.snpc.consettings.bind.resetzoom", "恢复视角位置")
 			
-			-- Weapon Client Settings
+			-- 武器客户端设置
 			add("vjbase.menu.clweapon", "客户端设置")
 			add("vjbase.menu.clweapon.notice", "注意：这些设置是客户端设置，这意味着它不会被其他人更改！")
 			add("vjbase.menu.clweapon.togglemuzzle", "禁用枪口火焰")
@@ -1610,7 +1744,7 @@ if CLIENT then
 			add("vjbase.menu.clweapon.togglemuzzle.label", "禁用枪口火焰的同时也会禁用此选项")
 			add("vjbase.menu.clweapon.togglemuzzlebulletshells", "禁用弹壳")
 			
-			-- NPC Properties (C Menu)
+			-- NPC 属性（C 键菜单）
 			add("vjbase.menuproperties.control", "操控")
 			add("vjbase.menuproperties.guard", "开始/停止守卫")
 			add("vjbase.menuproperties.wander", "开始/停止游荡")
@@ -1622,7 +1756,7 @@ if CLIENT then
 			add("vjbase.menuproperties.devmode", "打开/关闭开发者模式")
 			add("vjbase.menuproperties.print.adminonly", "这些选项仅限于管理员！")
 			
-			-- Tools
+			-- 工具
 			add("tool.vjstool.menu.tutorialvideo", "教程视频")
 			add("tool.vjstool.menu.label.recommendation", "建议仅对 VJ Base 的 SNPC 使用此工具。")
 			
@@ -1726,7 +1860,7 @@ if CLIENT then
 			add("tool.vjstool_npcspawner.title2", "双击来选择一个武器。")
 			add("tool.vjstool_npcspawner.print.nothingspawn", "没有要生成的东西！")
 			
-			-- Miscellaneous (Prints)
+			-- 杂项（聊天框输出）
 			add("vjbase.print.bullseye.activated", "已激活 NPC 靶子。")
 			add("vjbase.print.bullseye.deactivated", "已禁用 NPC 靶子。")
 			
