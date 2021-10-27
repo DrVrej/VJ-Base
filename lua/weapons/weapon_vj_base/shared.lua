@@ -336,9 +336,10 @@ function SWEP:SetDefaultValues(hType, overrideSds)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:TranslateActivity(act)
-	if (self:GetOwner():IsNPC()) then
-		if self:GetOwner().IsVJBaseSNPC_Human == true then
-			local wepT = self:GetOwner().WeaponAnimTranslations[act]
+	local owner = self:GetOwner()
+	if (owner:IsNPC()) then
+		if owner.IsVJBaseSNPC_Human == true then
+			local wepT = owner.WeaponAnimTranslations[act]
 			if (wepT) then
 				if istable(wepT) then
 					return VJ_PICK(wepT)
@@ -384,17 +385,16 @@ function SWEP:NPC_ServerNextFire()
 	self:RunWorldModelThink()
 	self:CustomOnThink()
 	self:CustomOnNPC_ServerThink()
-
-	local function FireCode()
+	
+	if self.NPC_NextPrimaryFire != false && self:NPCAbleToShoot() == true then
 		self:NPCShoot_Primary() -- Panpoushde zarg
 		hook.Remove("Think", self)
 		//print(self.NPC_NextPrimaryFire)
 		local nxt = self.NPC_NextPrimaryFire
 		if nxt > 0.15 then nxt = 0.15 end -- Yete nxt aveli medz e 0.15, ere vor 0.15 ela
-		timer.Simple(nxt, function() hook.Add("Think", self, self.NPC_ServerNextFire) end)
+		timer.Simple(nxt, function() if IsValid(self) then hook.Add("Think", self, self.NPC_ServerNextFire) end end)
 		//self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
 	end
-	if self.NPC_NextPrimaryFire != false && self:NPCAbleToShoot() == true then FireCode() end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPCAbleToShoot()
