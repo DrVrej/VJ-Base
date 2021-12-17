@@ -111,7 +111,7 @@ if (SLVBase) then
 
 				local frame = vgui.Create("DFrame")
 				frame:SetSize(600, 200)
-				frame:SetPos(ScrW()*0.35, ScrH()*0.35)
+				frame:SetPos((ScrW() - frame:GetWide()) / 2, (ScrH() - frame:GetTall()) / 2)
 				frame:SetTitle("VJ Base Error: Confliction Detected!")
 				frame:SetBackgroundBlur(true)
 				frame:MakePopup()
