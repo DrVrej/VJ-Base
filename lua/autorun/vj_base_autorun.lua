@@ -13,7 +13,7 @@
 --------------------------------------------------*/
 if CLIENT then print("Loading VJ Base (Client)...") else print("Loading VJ Base (Server)...") end
 
-VJBASE_VERSION = "2.15.2"
+VJBASE_VERSION = "2.15.3"
 VJBASE_GETNAME = "VJ Base"
 
 -- Shared --
@@ -101,29 +101,54 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if (SLVBase) then
 	timer.Simple(1, function()
-		if !VJ_WARN_SLVBase then
+		if !VJBASE_ERROR_CONFLICT then
+			VJBASE_ERROR_CONFLICT = true
 			if CLIENT then
 				chat.AddText(Color(255,100,0),"Confliction Detected!",
 				Color(0,255,0)," VJ Base ",
-				Color(0,200,200),"is being overridden by another addon!")
+				Color(255,255,255),"is being overridden by another addon!")
 				chat.AddText(Color(0,200,200),"Incompatible Addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
 
-				VJ_WARN_SLVBase = vgui.Create("DFrame")
-				VJ_WARN_SLVBase:SetTitle("ERROR!")
-				VJ_WARN_SLVBase:SetSize(790,560)
-				VJ_WARN_SLVBase:SetPos((ScrW()-VJ_WARN_SLVBase:GetWide())/2, (ScrH()-VJ_WARN_SLVBase:GetTall())/2)
-				VJ_WARN_SLVBase:MakePopup()
-				VJ_WARN_SLVBase.Paint = function()
-					draw.RoundedBox(8, 0, 0, VJ_WARN_SLVBase:GetWide(), VJ_WARN_SLVBase:GetTall(), Color(200,0,0,150))
+				local frame = vgui.Create("DFrame")
+				frame:SetSize(600, 200)
+				frame:SetPos(ScrW()*0.35, ScrH()*0.35)
+				frame:SetTitle("VJ Base Error: Confliction Detected!")
+				frame:SetBackgroundBlur(true)
+				frame:MakePopup()
+	
+				local labelTitle = vgui.Create("DLabel", frame)
+				labelTitle:SetPos(130, 30)
+				labelTitle:SetText("CONFLICTION DETECTED!")
+				labelTitle:SetFont("VJFont_Trebuchet24_Large")
+				labelTitle:SetTextColor(Color(255,128,128))
+				labelTitle:SizeToContents()
+				
+				local label1 = vgui.Create("DLabel", frame)
+				label1:SetPos(70, 70)
+				label1:SetText("VJ Base is being overridden by another addon!")
+				label1:SetFont("VJFont_Trebuchet24_Medium")
+				label1:SizeToContents()
+				
+				local label2 = vgui.Create("DLabel", frame)
+				label2:SetPos(10, 100)
+				label2:SetText("You have an addon installed that is overriding something in VJ Base. Uninstall the conflicting addon, and then restart your\n game to fix it. Click the link below to view all known incompatible addons. If you find any addons that are conflicting with\n                    VJ Base, be sure to leave a comment in the collection with a link to the incompatible addon!")
+				label2:SizeToContents()
+				
+				local link = vgui.Create("DLabelURL", frame)
+				link:SetSize(300, 20)
+				link:SetPos(180, 140)
+				link:SetText("Incompatible_addons_(Steam_Workshop_Collection)")
+				link:SetURL("http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
+				
+				local buttonClose = vgui.Create("DButton", frame)
+				buttonClose:SetText("CLOSE")
+				buttonClose:SetPos(260, 160)
+				buttonClose:SetSize(80, 35)
+				buttonClose.DoClick = function()
+					frame:Close()
 				end
-
-				local VJURL = vgui.Create("DHTML", VJ_WARN_SLVBase)
-				VJURL:SetPos(VJ_WARN_SLVBase:GetWide()*0.005, VJ_WARN_SLVBase:GetTall()*0.03)
-				VJURL:Dock(FILL)
-				VJURL:SetAllowLua(true)
-				VJURL:OpenURL("https://sites.google.com/site/vrejgaming/vjbaseconflict")
 			elseif SERVER then
-				timer.Create("VJ_WARN_SLVBase", 5, 0, function()
+				timer.Create("VJBASE_ERROR_CONFLICT", 5, 0, function()
 					print("VJ Base is being overridden by another addon! Incompatible Addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
 				end)
 			end
