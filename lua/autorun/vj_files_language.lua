@@ -149,7 +149,7 @@ if CLIENT then
 		add("vjbase.menu.plugins.header2", "Type")
 		add("vjbase.menu.plugins.notfound", "No Plugins Found.")
 		add("vjbase.menu.plugins.changelog", "Changelog")
-		add("vjbase.menu.plugins.makeaddon", "Want to make an addon? Click Here!")
+		add("vjbase.menu.plugins.makeaddon", "Want to make an addon?")
 		
 		-- SNPC Menus
 		add("vjbase.menu.snpc.options", "Options")
@@ -567,7 +567,7 @@ if CLIENT then
 			add("vjbase.menu.plugins.header2", "Тип")
 			add("vjbase.menu.plugins.notfound", "Плагины не найдены.")
 			add("vjbase.menu.plugins.changelog", "Список изменений")
-			add("vjbase.menu.plugins.makeaddon", "Хотите создать дополнение? Нажмите сюда!")
+			add("vjbase.menu.plugins.makeaddon", "Хотите создать дополнение?")
 			
 			-- SNPC Menus
 			add("vjbase.menu.snpc.options", "Опции")
@@ -972,7 +972,7 @@ if CLIENT then
 			add("vjbase.menu.plugins.header2", "Tipas")
 			add("vjbase.menu.plugins.notfound", "Nerasta jokių priedų.")
 			add("vjbase.menu.plugins.changelog", "Pakeitimų sąrašas")
-			add("vjbase.menu.plugins.makeaddon", "Norite sukurti priedą? Spūstelėkite čia!")
+			add("vjbase.menu.plugins.makeaddon", "Norite sukurti priedą?")
 			
 			-- SNPC Menus
 			add("vjbase.menu.snpc.options", "Pasirenkami parametrai")
@@ -1330,7 +1330,7 @@ if CLIENT then
 			add("vjbase.menu.plugins.header2", "Tipo")
 			add("vjbase.menu.plugins.notfound", "No Se Encontraron Plugins.")
 			add("vjbase.menu.plugins.changelog", "Registro de Cambios")
-			add("vjbase.menu.plugins.makeaddon", "¿Quieres hacer un addon? ¡Haz Click Aquí! (Link En Inglés)")
+			add("vjbase.menu.plugins.makeaddon", "¿Quieres hacer un addon?")
 		elseif conv == "schinese" then ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 			-- Spawn Menu
 			add("vjbase.spawn.menu.npc.disablethinking", "AI 停止思考")
@@ -1414,7 +1414,7 @@ if CLIENT then
 			add("vjbase.menu.plugins.header2", "类型")
 			add("vjbase.menu.plugins.notfound", "未发现插件。")
 			add("vjbase.menu.plugins.changelog", "更新日志")
-			add("vjbase.menu.plugins.makeaddon", "想要制作一个模组？点这里！")
+			add("vjbase.menu.plugins.makeaddon", "想要制作一个模组？")
 			
 			-- SNPC Menus
 			add("vjbase.menu.snpc.options", "选项")

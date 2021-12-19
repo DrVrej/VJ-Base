@@ -20,7 +20,7 @@ function VJ_PLUGINS(Panel)
 	CheckList:SetSize(100, 300) -- Size
 	CheckList:SetMultiSelect(false)
 	CheckList:AddColumn("#vjbase.menu.plugins.header1") -- Add column
-	CheckList:AddColumn("#vjbase.menu.plugins.header2") -- Add column
+	CheckList:AddColumn("#vjbase.menu.plugins.header2"):SetFixedWidth(50) -- Add column
 	//Panel:SetName("Test") -- Renames the blue label
 	if VJBASE_PLUGINS != nil then
 		for _,v in SortedPairsByMemberValue(VJBASE_PLUGINS,"Name") do
@@ -41,8 +41,9 @@ function VJ_PLUGINS(Panel)
 	local changelog = vgui.Create("DButton")
 	changelog:SetFont("TargetID")
 	changelog:SetText("#vjbase.menu.plugins.changelog")
-	changelog:SetSize(150,25)
-	changelog:SetColor(Color(39, 174, 96, 255))
+	changelog:SetSize(150, 25)
+	changelog:SetColor(Color(0, 102, 0))
+	changelog:SetFont("VJFont_Trebuchet24_SmallMedium")
 	changelog.DoClick = function(x)
 		gui.OpenURL("http://steamcommunity.com/sharedfiles/filedetails/changelog/131759821")
 	end
@@ -52,8 +53,9 @@ function VJ_PLUGINS(Panel)
 	local github = vgui.Create("DButton")
 	github:SetFont("TargetID")
 	github:SetText("#vjbase.menu.plugins.makeaddon")
-	github:SetSize(150,25)
-	github:SetColor(Color(52, 152, 219, 255))
+	github:SetSize(150, 25)
+	github:SetColor(Color(0, 0, 102))
+	github:SetFont("VJFont_Trebuchet24_SmallMedium")
 	github.DoClick = function(x)
 		gui.OpenURL("https://github.com/DrVrej/VJ-Base/wiki")
 	end
@@ -63,9 +65,10 @@ function VJ_PLUGINS(Panel)
 	if (LocalPlayer():SteamID() == "STEAM_0:0:22688298") then
 		local lennyface = vgui.Create("DButton")
 		lennyface:SetFont("TargetID")
-		lennyface:SetText("I AM HERE")
+		lennyface:SetText("HELLO")
 		lennyface:SetSize(150, 25)
-		lennyface:SetColor(Color(52, 152, 219, 255))
+		lennyface:SetColor(Color(0, 0, 102))
+		lennyface:SetFont("VJFont_Trebuchet24_SmallMedium")
 		lennyface.DoClick = function(x)
 			net.Start("VJSay")
 			net.SendToServer()

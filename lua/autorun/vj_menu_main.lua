@@ -86,7 +86,8 @@ else
 		bugr:SetFont("CloseCaption_Bold")
 		bugr:SetText("#vjbase.menu.helpsupport.reportbug")
 		bugr:SetSize(150, 35)
-		bugr:SetColor(Color(231, 76, 60, 255))
+		bugr:SetColor(Color(231, 76, 60))
+		bugr:SetFont("VJFont_Trebuchet24_SmallMedium")
 		bugr.DoClick = function()
 			gui.OpenURL("http://steamcommunity.com/groups/vrejgaming/discussions/2/")
 		end
@@ -96,7 +97,8 @@ else
 		suggest:SetFont("DermaDefaultBold")
 		suggest:SetText("#vjbase.menu.helpsupport.suggestion")
 		suggest:SetSize(150, 20)
-		suggest:SetColor(Color(211, 84, 0, 200))
+		suggest:SetColor(Color(211, 84, 0))
+		suggest:SetFont("VJFont_Trebuchet24_SmallMedium")
 		suggest.DoClick = function()
 			gui.OpenURL("http://steamcommunity.com/groups/vrejgaming/discussions/1/")
 		end
@@ -111,7 +113,8 @@ else
 		discordl:SetFont("TargetID")
 		discordl:SetText("#vjbase.menu.helpsupport.discord")
 		discordl:SetSize(150, 25)
-		discordl:SetColor(Color(39, 174, 96, 255))
+		discordl:SetColor(Color(0, 102, 0))
+		discordl:SetFont("VJFont_Trebuchet24_SmallMedium")
 		discordl.DoClick = function()
 			gui.OpenURL("https://discord.gg/zwQjrdG")
 		end
@@ -121,7 +124,8 @@ else
 		steaml:SetFont("TargetID")
 		steaml:SetText("#vjbase.menu.helpsupport.steam")
 		steaml:SetSize(150, 25)
-		steaml:SetColor(Color(39, 174, 96, 255))
+		steaml:SetColor(Color(0, 102, 0))
+		steaml:SetFont("VJFont_Trebuchet24_SmallMedium")
 		steaml.DoClick = function()
 			gui.OpenURL("http://steamcommunity.com/groups/vrejgaming")
 		end
@@ -131,7 +135,8 @@ else
 		ytl:SetFont("TargetID")
 		ytl:SetText("#vjbase.menu.helpsupport.youtube")
 		ytl:SetSize(150, 25)
-		ytl:SetColor(Color(39, 174, 96, 255))
+		ytl:SetColor(Color(0, 102, 0))
+		ytl:SetFont("VJFont_Trebuchet24_SmallMedium")
 		ytl.DoClick = function()
 			gui.OpenURL("http://www.youtube.com/user/gmod95")
 		end
@@ -141,7 +146,8 @@ else
 		tweetl:SetFont("TargetID")
 		tweetl:SetText("#vjbase.menu.helpsupport.twitter")
 		tweetl:SetSize(150, 25)
-		tweetl:SetColor(Color(39, 174, 96, 255))
+		tweetl:SetColor(Color(0, 102, 0))
+		tweetl:SetFont("VJFont_Trebuchet24_SmallMedium")
 		tweetl.DoClick = function()
 			gui.OpenURL("http://twitter.com/vrejgaming")
 		end
@@ -153,7 +159,8 @@ else
 		donate:SetFont("TargetID")
 		donate:SetText("#vjbase.menu.helpsupport.patreon")
 		donate:SetSize(150, 30)
-		donate:SetColor(Color(52, 152, 219, 255))
+		donate:SetColor(Color(0, 0, 102))
+		donate:SetFont("VJFont_Trebuchet24_SmallMedium")
 		donate.DoClick = function()
 			gui.OpenURL("https://www.patreon.com/drvrej")
 		end
