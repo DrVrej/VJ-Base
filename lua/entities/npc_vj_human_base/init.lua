@@ -1983,9 +1983,9 @@ function ENT:Think()
 	local curSched = self.CurrentSchedule
 	if curSched != nil then
 		if self:IsMoving() then
-			if curSched.MoveType == 0 && !VJ_HasValue(self.AnimTbl_Walk,self:GetMovementActivity()) then
+			if curSched.MoveType == 0 && !VJ_HasValue(self.AnimTbl_Walk, self:GetMovementActivity()) then
 				self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk))
-			elseif curSched.MoveType == 1 && !VJ_HasValue(self.AnimTbl_Run,self:GetMovementActivity()) then
+			elseif curSched.MoveType == 1 && !VJ_HasValue(self.AnimTbl_Run, self:GetMovementActivity()) then
 				self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 			end
 		end
