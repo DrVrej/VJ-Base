@@ -392,7 +392,14 @@ function SWEP:NPC_ServerNextFire()
 		//print(self.NPC_NextPrimaryFire)
 		local nxt = self.NPC_NextPrimaryFire
 		if nxt > 0.15 then nxt = 0.15 end -- Yete nxt aveli medz e 0.15, ere vor 0.15 ela
-		timer.Simple(nxt, function() if IsValid(self) then hook.Add("Think", self, self.NPC_ServerNextFire) end end)
+		timer.Simple(nxt, function()
+			-- Had to add "isfunction" check because after GMod devs applied this: https://github.com/Facepunch/garrysmod/pull/1344
+			-- It will VERY rarely think self.NPC_ServerNextFire is nil, why? No one knows, the error never appeared for me, but it has appeared 1-2 for some people.
+			-- I would rather have a function that fails silently then fail 1 in 9999 times without actual reason, so does this check avoid it? (I don't know...)
+			if IsValid(self) && isfunction(self.self.NPC_ServerNextFire) then
+				hook.Add("Think", self, self.self.NPC_ServerNextFire)
+			end
+		end)
 		//self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
 	end
 end
