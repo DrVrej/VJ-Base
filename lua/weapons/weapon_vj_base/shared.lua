@@ -396,8 +396,8 @@ function SWEP:NPC_ServerNextFire()
 			-- Had to add "isfunction" check because after GMod devs applied this: https://github.com/Facepunch/garrysmod/pull/1344
 			-- It will VERY rarely think self.NPC_ServerNextFire is nil, why? No one knows, the error never appeared for me, but it has appeared 1-2 for some people.
 			-- I would rather have a function that fails silently then fail 1 in 9999 times without actual reason, so does this check avoid it? (I don't know...)
-			if IsValid(self) && isfunction(self.self.NPC_ServerNextFire) then
-				hook.Add("Think", self, self.self.NPC_ServerNextFire)
+			if IsValid(self) && isfunction(self.NPC_ServerNextFire) then
+				hook.Add("Think", self, self.NPC_ServerNextFire)
 			end
 		end)
 		//self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
