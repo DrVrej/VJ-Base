@@ -346,7 +346,7 @@ function SWEP:TranslateActivity(act)
 				end
 				return wepT
 			end
-		elseif (self.ActivityTranslateAI[act]) then -- For non-VJ NPCs
+		elseif (self.ActivityTranslateAI[act]) then -- For non-VJ Human NPCs
 			return self.ActivityTranslateAI[act]
 		end
 		return -1
@@ -395,9 +395,13 @@ function SWEP:NPC_ServerNextFire()
 		timer.Simple(nxt, function()
 			-- Had to add "isfunction" check because after GMod devs applied this: https://github.com/Facepunch/garrysmod/pull/1344
 			-- It will VERY rarely think self.NPC_ServerNextFire is nil, why? No one knows, the error never appeared for me, but it has appeared 1-2 for some people.
-			-- I would rather have a function that fails silently then fail 1 in 9999 times without actual reason, so does this check avoid it? (I don't know...)
-			if IsValid(self) && isfunction(self.NPC_ServerNextFire) then
-				hook.Add("Think", self, self.NPC_ServerNextFire)
+			-- I would rather have a function that fails silently then fail 1 in 999,999 times without actual reason, so does this check avoid it? (I don't know...)
+			if IsValid(self) then
+				hook.Add("Think", self, function()
+					if isfunction(self.NPC_ServerNextFire) then
+						self:NPC_ServerNextFire()
+					end
+				end)
 			end
 		end)
 		//self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
@@ -532,8 +536,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	
 	-- Firing Gesture
 	if owner.IsVJBaseSNPC_Human == true && owner.DisableWeaponFiringGesture != true then
-		local anim = owner:TranslateToWeaponAnim(VJ_PICK(owner.AnimTbl_WeaponAttackFiringGesture))
-		owner:VJ_ACT_PLAYACTIVITY(anim, false, false, false, 0, {AlwaysUseGesture=true})
+		owner:VJ_ACT_PLAYACTIVITY(owner:TranslateToWeaponAnim(VJ_PICK(owner.AnimTbl_WeaponAttackFiringGesture)), false, false, false, 0, {AlwaysUseGesture=true})
 	end
 	
 	-- MELEE WEAPON
@@ -833,29 +836,30 @@ function SWEP:DecideBulletPosition()
 	end
 	
 	-- Nothing found, try to find a common attachment
-	local commonAttach = false;
-	for i = 1, #self:GetAttachments() do
-		if self:GetAttachments()[i].name == "muzzle" then
+	local commonAttach = nil;
+	local attachments = self:GetAttachments()
+	for i = 1, #attachments do
+		if attachments[i].name == "muzzle" then
 			commonAttach = "muzzle"; break
-		elseif self:GetAttachments()[i].name == "muzzleA" then
+		elseif attachments[i].name == "muzzleA" then
 			commonAttach = "muzzleA"; break
-		elseif self:GetAttachments()[i].name == "muzzle_flash" then
+		elseif attachments[i].name == "muzzle_flash" then
 			commonAttach = "muzzle_flash"; break
-		elseif self:GetAttachments()[i].name == "muzzle_flash1" then
+		elseif attachments[i].name == "muzzle_flash1" then
 			commonAttach = "muzzle_flash1"; break
-		elseif self:GetAttachments()[i].name == "muzzle_flash2" then
+		elseif attachments[i].name == "muzzle_flash2" then
 			commonAttach = "muzzle_flash2"; break
-		elseif self:GetAttachments()[i].name == "ValveBiped.muzzle" then
+		elseif attachments[i].name == "ValveBiped.muzzle" then
 			commonAttach = "ValveBiped.muzzle"; break
 		end
 	end
 	
 	-- Not even a common attachment was found! Try to find a common bone!
-	if commonAttach == false or commonAttach == nil then
+	if !commonAttach then
 		if owner:LookupBone("ValveBiped.Bip01_R_Hand") != nil then
 			return owner:GetBonePosition(owner:LookupBone("ValveBiped.Bip01_R_Hand"))
 		else -- Everything else has failed, post a warning and use eye position
-			print("WARNING: "..self:GetClass().." doesn't have a proper attachment or bone for bullet spawn!")
+			print("WARNING: "..self:GetClass().." doesn't have a proper attachment or bone for bullet spawn! Using EyePos!")
 			return owner:EyePos()
 		end
 	-- Common attachment found!

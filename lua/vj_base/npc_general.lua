@@ -1685,8 +1685,8 @@ function ENT:IdleDialogueAnswerSoundCode(CustomTbl, Type)
 	if (math.random(1,self.IdleDialogueAnswerSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 		if cTbl != false then sdtbl = cTbl end
 		self:StopAllCommonSpeechSounds()
-		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2,3)
-		self.CurrentIdleDialogueAnswerSound = Type(self,sdtbl,self.IdleDialogueAnswerSoundLevel,self:VJ_DecideSoundPitch(self.IdleDialogueAnswerSoundPitch.a,self.IdleDialogueAnswerSoundPitch.b))
+		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2, 3)
+		self.CurrentIdleDialogueAnswerSound = Type(self, sdtbl, self.IdleDialogueAnswerSoundLevel, self:VJ_DecideSoundPitch(self.IdleDialogueAnswerSoundPitch.a, self.IdleDialogueAnswerSoundPitch.b))
 		return SoundDuration(sdtbl) -- Return the duration of the sound, which will be used to make the other SNPC stand still
 	else
 		return 0
@@ -1704,9 +1704,9 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:EntitiesToNoCollideCode(ent)
 	if self.HasEntitiesToNoCollide != true or !istable(self.EntitiesToNoCollide) or !IsValid(ent) then return end
-	for x=1, #self.EntitiesToNoCollide do
+	for x = 1, #self.EntitiesToNoCollide do
 		if self.EntitiesToNoCollide[x] == ent:GetClass() then
-			constraint.NoCollide(self,ent,0,0)
+			constraint.NoCollide(self, ent, 0, 0)
 		end
 	end
 end
