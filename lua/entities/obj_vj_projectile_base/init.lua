@@ -126,7 +126,6 @@ ENT.AlreadyPaintedDeathDecal = false
 ENT.Dead = false
 ENT.NextIdleSoundT = 0
 ENT.NextCollideWithoutRemoveT = 0
-ENT.ParentsEnemy = nil
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:CustomOnPreInitialize()
@@ -153,7 +152,6 @@ function ENT:Think()
 	if self.Dead == true then VJ_STOPSOUND(self.CurrentIdleSound) return end
 	
 	//self:SetAngles(self:GetVelocity():GetNormal():Angle())
-	if IsValid(self:GetOwner()) && self:GetOwner():IsNPC() then self.ParentsEnemy = self:GetOwner():GetEnemy() end
 	
 	self:CustomOnThink()
 	self:IdleSoundCode()
@@ -164,37 +162,24 @@ function ENT:OnTakeDamage(dmginfo)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoDamageCode(data, phys)
-	local gethitpos = self:GetPos()
+	local owner = self:GetOwner()
 	local hitEnt = NULL
-	if data != nil then
-		gethitpos = data.HitPos
-	end
-	
-	if self.DoesRadiusDamage == true then
-		local DoEntCheck = true
-		local DamageAttacker = false
-		local AttackEnt = self:GetOwner()
-		if self:GetOwner():IsPlayer() == true then DoEntCheck = false; DamageAttacker = true end
-		if self.VJ_IsPickedUpDanger == true && IsValid(self:GetParent()) && self:GetParent():IsNPC() then gethitpos = self:GetParent():GetPos() end
-		if self:GetOwner() == NULL then AttackEnt = self; DoEntCheck = false end
-		//util.VJ_SphereDamage(AttackEnt,AttackEnt,gethitpos,self.RadiusDamageRadius,self.RadiusDamage,self.RadiusDamageType,DoEntCheck,self.RadiusDamageUseRealisticRadius,self.RadiusDamageForce,self.RadiusDamageForceTowardsRagdolls,self.RadiusDamageForceTowardsPhysics)
-		hitEnt = util.VJ_SphereDamage(AttackEnt,AttackEnt,gethitpos,self.RadiusDamageRadius,self.RadiusDamage,self.RadiusDamageType,DoEntCheck,self.RadiusDamageUseRealisticRadius,{DisableVisibilityCheck=self.RadiusDamageDisableVisibilityCheck,Force=self.RadiusDamageForce,UpForce=self.RadiusDamageForce_Up,DamageAttacker=DamageAttacker})
-	end
+	local dmgPos = (data != nil and data.HitPos) or self:GetPos()
 	
 	if self.DoesDirectDamage == true then
 		hitEnt = data.HitEntity
 		//if hitEnt:IsNPC() or hitEnt:IsPlayer() then
-		if self:GetOwner() != NULL then
-			if (VJ_IsProp(hitEnt)) or (hitEnt:IsNPC() && (hitEnt:Disposition(self:GetOwner()) == 1 or hitEnt:Disposition(self:GetOwner()) == 2) && hitEnt:Health() > 0 && (hitEnt != self:GetOwner()) && (hitEnt:GetClass() != self:GetOwner():GetClass())) or (hitEnt:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0 && hitEnt:Alive() && hitEnt:Health() > 0) then
+		if IsValid(owner) then
+			if (VJ_IsProp(hitEnt)) or (hitEnt:IsNPC() && (hitEnt:Disposition(owner) == D_HT or hitEnt:Disposition(owner) == D_FR) && hitEnt:Health() > 0 && (hitEnt != owner) && (hitEnt:GetClass() != owner:GetClass())) or (hitEnt:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0 && hitEnt:Alive() && hitEnt:Health() > 0) then
 				self:CustomOnDoDamage_Direct(data, phys, hitEnt)
 				local damagecode = DamageInfo()
 				damagecode:SetDamage(self.DirectDamage)
 				damagecode:SetDamageType(self.DirectDamageType)
-				damagecode:SetAttacker(self:GetOwner())
-				damagecode:SetAttacker(self:GetOwner())
-				damagecode:SetDamagePosition(data.HitPos)
+				damagecode:SetAttacker(owner)
+				damagecode:SetInflictor(owner)
+				damagecode:SetDamagePosition(dmgPos)
 				hitEnt:TakeDamageInfo(damagecode, self)
-				VJ_DestroyCombineTurret(self:GetOwner(), hitEnt)
+				VJ_DestroyCombineTurret(owner, hitEnt)
 			end
 		else
 			self:CustomOnDoDamage_Direct(data, phys, hitEnt)
@@ -203,11 +188,24 @@ function ENT:DoDamageCode(data, phys)
 			damagecode:SetDamageType(self.DirectDamageType)
 			damagecode:SetAttacker(self)
 			damagecode:SetInflictor(self)
-			damagecode:SetDamagePosition(data.HitPos)
+			damagecode:SetDamagePosition(dmgPos)
 			hitEnt:TakeDamageInfo(damagecode, self)
 			VJ_DestroyCombineTurret(self, hitEnt)
 		end
 	end
+	
+	if self.DoesRadiusDamage == true then
+		local DoEntCheck = false
+		local attackEnt = owner
+		if IsValid(owner) then
+			DoEntCheck = !owner:IsPlayer()
+		else
+			attackEnt = self
+		end
+		if self.VJ_IsPickedUpDanger == true && IsValid(self:GetParent()) && self:GetParent():IsNPC() then dmgPos = self:GetParent():GetPos() end -- If the projectile is picked up (Such as a grenade picked up by human SNPC), then the damage position is the parent's position
+		hitEnt = util.VJ_SphereDamage(attackEnt, attackEnt, dmgPos, self.RadiusDamageRadius, self.RadiusDamage, self.RadiusDamageType, DoEntCheck, self.RadiusDamageUseRealisticRadius, {DisableVisibilityCheck=self.RadiusDamageDisableVisibilityCheck, Force=self.RadiusDamageForce, UpForce=self.RadiusDamageForce_Up, DamageAttacker=owner:IsPlayer()})
+	end
+	
 	self:CustomOnDoDamage(data, phys, hitEnt)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -293,9 +291,3 @@ function ENT:OnRemoveSoundCode()
 		self.CurrentDeathSound = VJ_CreateSound(self, self.SoundTbl_OnRemove, self.OnRemoveSoundLevel, math.random(self.OnRemoveSoundPitch.a, self.OnRemoveSoundPitch.b))
 	end
 end
-/*--------------------------------------------------
-	=============== Projectile Base ===============
-	*** Copyright (c) 2012-2021 by DrVrej, All rights reserved. ***
-	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
-	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
---------------------------------------------------*/
