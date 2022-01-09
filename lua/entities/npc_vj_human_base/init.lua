@@ -65,6 +65,7 @@ ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE -- The behavior of the SNPC
 	-- VJ_BEHAVIOR_AGGRESSIVE = Default behavior, attacks enemies || VJ_BEHAVIOR_NEUTRAL = Neutral to everything, unless provoked
 	-- VJ_BEHAVIOR_PASSIVE = Doesn't attack, but can attacked by others || VJ_BEHAVIOR_PASSIVE_NATURE = Doesn't attack and is allied with everyone
 ENT.IsGuard = false -- If set to false, it will attempt to stick to its current position at all times
+ENT.AlertedToIdleTime = VJ_Set(4, 6) -- How much time until it calms down after the enemy has been killed/disappeared | Sets self.Alerted to false after the timer expires
 ENT.MoveOutOfFriendlyPlayersWay = true -- Should the SNPC move out of the way when a friendly player comes close to it?
 ENT.BecomeEnemyToPlayer = false -- Should the friendly SNPC become enemy towards the player if it's damaged by it or it witnesses another ally killed by it
 ENT.BecomeEnemyToPlayerLevel = 2 -- Any time the player does something bad, the NPC's anger level raises by 1, if it surpasses this, it will become enemy!
@@ -129,7 +130,7 @@ ENT.ConstantlyFaceEnemy_Postures = "Both" -- "Both" = Moving or standing | "Movi
 ENT.ConstantlyFaceEnemyDistance = 2500 -- How close does it have to be until it starts to face the enemy?
 	-- ====== Combat Face Enemy Variables ====== --
 	-- Mostly used by base tasks
-ENT.CombatFaceEnemy = true -- If enemy is exists and is visible
+ENT.CombatFaceEnemy = true -- If enemy exists and is visible
 	-- ====== Pose Parameter Variables ====== --
 ENT.HasPoseParameterLooking = true -- Does it look at its enemy using poseparameters?
 ENT.PoseParameterLooking_CanReset = true -- Should it reset its pose parameters if there is no enemies?
@@ -937,7 +938,7 @@ ENT.SelectedDifficulty = 1
 ENT.ModelAnimationSet = 0
 ENT.AIState = 0
 ENT.Weapon_State = 0
-ENT.TimersToRemove = {"timer_weapon_state_reset","timer_state_reset","timer_act_seqreset","timer_face_position","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_reload_end"}
+ENT.TimersToRemove = {"timer_weapon_state_reset","timer_state_reset","timer_act_seqreset","timer_face_position","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_reload_end","timer_alerted_reset"}
 ENT.EntitiesToRunFrom = {obj_spore=true,obj_vj_grenade=true,obj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true,cw_flash_thrown=true,ent_hl1_grenade=true}
 ENT.EntitiesToThrowBack = {obj_spore=true,obj_vj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,obj_cpt_grenade=true,cw_grenade_thrown=true,cw_flash_thrown=true,cw_smoke_thrown=true,ent_hl1_grenade=true}
 ENT.DefaultGibDamageTypes = {DMG_ALWAYSGIB,DMG_ENERGYBEAM,DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DISSOLVE,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SONIC} -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -1475,7 +1476,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 	vschedIdleStand.CanBeInterrupted = true
 	self:StartSchedule(vschedIdleStand)*/
 	
-	local idleAnimTbl = self.NoWeapon_UseScaredBehavior_Active == true and self.AnimTbl_ScaredBehaviorStand or self.AnimTbl_IdleStand
+	local idleAnimTbl = self.NoWeapon_UseScaredBehavior_Active == true and self.AnimTbl_ScaredBehaviorStand or ((self.Alerted && self:GetWeaponState() != VJ_WEP_STATE_HOLSTERED) and self.AnimTbl_WeaponAim or self.AnimTbl_IdleStand)
 	local sameAnimFound = false -- If true then it one of the animations in the table is the same as the current!
 	//local numOfAnims = 0 -- Number of valid animations found
 	for k, v in pairs(idleAnimTbl) do
@@ -1882,10 +1883,7 @@ function ENT:TranslateToWeaponAnim(act)
 	if translate == nil then -- If no animation found, then just return the given activity
 		return act
 	else -- Found an animation!
-		if istable(translate) then
-			return VJ_PICK(translate)
-		end
-		return translate
+		return VJ_PICK(translate)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1954,6 +1952,7 @@ end
 	m_flLastEventCheck = Cycle index of when events were last checked
 	m_flGroundSpeed = Computed linear movement rate for current sequence
 	m_flOriginalYaw = This is the direction facing when the level designer placed the NPC in the level.
+	m_spawnEquipment = Class name of the weapon it spawned with, stays even when weapon is removed or another weapon from its inventory is used!
 	
 	-- Following is just used for the face and eye looking:
 	m_hLookTarget = The entity it's looking at 
@@ -1961,7 +1960,6 @@ end
 	m_flEyeIntegRate = How fast the eyes move
 	m_viewtarget = Returns the position the NPC's eye pupils are looking at (Can be used to set it as well)
 	m_flBlinktime = Time until it blinks again (Can be used to set it as well)
-	m_spawnEquipment = Class name of the weapon it spawned with, stays even when weapon is removed or another weapon from its inventory is used!
 	
 	self:SetLocalVelocity(self:GetMoveVelocity() * 1.5)
 */
@@ -3020,7 +3018,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		end
 	end
 	
-	self.Alerted = false
+	timer.Create("timer_alerted_reset"..self:EntIndex(), math.Rand(self.AlertedToIdleTime.a, self.AlertedToIdleTime.b), 1, function() if !IsValid(self:GetEnemy()) then self.Alerted = false end end)
 	self:CustomOnResetEnemy()
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printresetenemy"):GetInt() == 1 then print(self:GetName().." has reseted its enemy") end
 	if IsValid(self:GetEnemy()) then
