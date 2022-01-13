@@ -988,6 +988,7 @@ ENT.DefaultGibDamageTypes = {DMG_ALWAYSGIB,DMG_ENERGYBEAM,DMG_BLAST,DMG_VEHICLE,
 -- Localized static values
 local defPos = Vector(0, 0, 0)
 
+local IsProp = VJ_IsProp
 local CurTime = CurTime
 local IsValid = IsValid
 local GetConVar = GetConVar
@@ -2086,7 +2087,6 @@ function ENT:DoPropVisibility(propEnt)
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
 local propColBlacklist = {[COLLISION_GROUP_DEBRIS]=true, [COLLISION_GROUP_DEBRIS_TRIGGER]=true, [COLLISION_GROUP_DISSOLVING]=true, [COLLISION_GROUP_IN_VEHICLE]=true, [COLLISION_GROUP_WORLD]=true}
-local IsProp = VJ_IsProp
 --
 function ENT:PushOrAttackPropsCode(customEnts, customMeleeDistance)
 	if self.PushProps == false && self.AttackProps == false then return end
@@ -2129,9 +2129,9 @@ function ENT:MeleeAttackCode(isPropAttack, attackDist, customEnt)
 	local hitRegistered = false
 	for _,v in pairs(ents.FindInSphere(self:SetMeleeAttackDamagePosition(), attackDist)) do
 		if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end -- If controlled and v is the bullseye OR it's a player controlling then don't damage!
-		if v != self && v:GetClass() != self:GetClass() && (((v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:Disposition(v) != D_LI) or VJ_IsProp(v) == true or v:GetClass() == "func_breakable_surf" or self.EntitiesToDestroyClass[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math.cos(math.rad(self.MeleeAttackDamageAngleRadius)) then
+		if v != self && v:GetClass() != self:GetClass() && (((v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:Disposition(v) != D_LI) or IsProp(v) == true or v:GetClass() == "func_breakable_surf" or self.EntitiesToDestroyClass[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math.cos(math.rad(self.MeleeAttackDamageAngleRadius)) then
 			if isPropAttack == true && (v:IsPlayer() or v:IsNPC()) && self:VJ_GetNearestPointToEntityDistance(v) > self.MeleeAttackDistance then continue end //if (self:GetPos():Distance(v:GetPos()) <= self:VJ_GetNearestPointToEntityDistance(v) && self:VJ_GetNearestPointToEntityDistance(v) <= self.MeleeAttackDistance) == false then
-			local vProp = VJ_IsProp(v)
+			local vProp = IsProp(v)
 			if self:CustomOnMeleeAttack_AfterChecks(v, vProp) == true then continue end
 			-- Remove prop constraints and push it (If possbile)
 			if vProp == true then
@@ -2335,7 +2335,7 @@ function ENT:LeapDamageCode()
 	if FindEnts != nil then
 		for _,v in pairs(FindEnts) do
 			if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
-			if (v:IsNPC() or (v:IsPlayer() && v:Alive()) && GetConVar("ai_ignoreplayers"):GetInt() == 0) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or VJ_IsProp(v) == true or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" then
+			if (v:IsNPC() or (v:IsPlayer() && v:Alive()) && GetConVar("ai_ignoreplayers"):GetInt() == 0) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or IsProp(v) == true or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" then
 				self:CustomOnLeapAttack_AfterChecks(v)
 				local leapdmg = DamageInfo()
 				leapdmg:SetDamage(self:VJ_GetDifficultyValue(self.LeapAttackDamage))

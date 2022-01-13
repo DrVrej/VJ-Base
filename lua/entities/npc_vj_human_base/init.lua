@@ -952,7 +952,6 @@ local defAng = Angle(0, 0, 0)
 local CurTime = CurTime
 local IsValid = IsValid
 local GetConVar = GetConVar
-local istable = istable
 local isstring = isstring
 local isnumber = isnumber
 local tonumber = tonumber
