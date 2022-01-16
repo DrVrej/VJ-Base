@@ -309,7 +309,7 @@ ENT.Weapon_FiringDistanceClose = 10 -- How close until it stops shooting
 ENT.HasWeaponBackAway = true -- Should the SNPC back away if the enemy is close?
 ENT.WeaponBackAway_Distance = 150 -- When the enemy is this close, the SNPC will back away | 0 = Never back away
 	-- ====== Standing-Firing Variables ====== --
-ENT.AnimTbl_WeaponAim = {ACT_IDLE_ANGRY} -- Animations played when the NPC is aiming | EX: Gun is out of ammo OR waiting for the enemy to peak
+ENT.AnimTbl_WeaponAim = nil -- Animations played when the NPC is supposed to raise/aim its weapon | EX: Gun is out of ammo, combat idle, etc.| DEFAULT: {ACT_IDLE_ANGRY}
 ENT.AnimTbl_WeaponAttack = {ACT_RANGE_ATTACK1} -- Animation played when the SNPC does weapon attack
 ENT.CanCrouchOnWeaponAttack = true -- Can it crouch while shooting?
 ENT.AnimTbl_WeaponAttackCrouch = {ACT_RANGE_ATTACK1_LOW} -- Animation played when the SNPC does weapon attack while crouching | For VJ Weapons
@@ -353,8 +353,8 @@ ENT.WaitForEnemyToComeOutDistance = 100 -- If it's this close to the enemy, it w
 ENT.HasLostWeaponSightAnimation = false -- Set to true if you would like the SNPC to play a different animation when it has lost sight of the enemy and can't fire at it
 	-- ====== Scared Behavior Variables ====== --
 ENT.NoWeapon_UseScaredBehavior = true -- Should it use the scared behavior when it sees an enemy and doesn't have a weapon?
-ENT.AnimTbl_ScaredBehaviorStand = {ACT_COWER} -- The animation it will when it's just standing still | Replaces the idle stand animation
-ENT.AnimTbl_ScaredBehaviorMovement = {} -- The movement animation it will play | Leave empty for the base to decide the animation
+ENT.AnimTbl_ScaredBehaviorStand = nil -- Animations it will play while scared and standing | Replaces the idle stand animation | DEFAULT: {ACT_COWER}
+ENT.AnimTbl_ScaredBehaviorMovement = {} -- Animations it will play while scared and moving | Leave empty for the base to decide the animation
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Grenade Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1034,9 +1034,13 @@ local function ConvarsOnInit(self)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defIdleTbl = {ACT_IDLE}
+local defWeaponAimTbl = {ACT_IDLE_ANGRY}
+local defScaredStandTbl = {ACT_COWER}
 --
 function ENT:Initialize()
 	if self.AnimTbl_IdleStand == nil then self.AnimTbl_IdleStand = defIdleTbl end
+	if self.AnimTbl_WeaponAim == nil then self.AnimTbl_WeaponAim = defWeaponAimTbl end
+	if self.AnimTbl_ScaredBehaviorStand == nil then self.AnimTbl_ScaredBehaviorStand = defScaredStandTbl end
 	self:CustomOnPreInitialize()
 	self:SetSpawnEffect(false)
 	self:SetRenderMode(RENDERMODE_NORMAL) // RENDERMODE_TRANSALPHA
