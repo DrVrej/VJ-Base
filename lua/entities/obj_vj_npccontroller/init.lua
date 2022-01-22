@@ -263,6 +263,8 @@ function ENT:SendDataToClient(reset)
 	end
 	net.WriteInt(bone, 10)
 	net.WriteBool((reset != true and self.VJCE_NPC.VJC_Data.FirstP_ShrinkBone) or false)
+	net.WriteBool((reset != true and self.VJCE_NPC.VJC_Data.FirstP_UseBoneAng) or false)
+	net.WriteInt((reset != true and self.VJCE_NPC.VJC_Data.FirstP_BoneAngAdjust) or 0, 14)
 	net.Send(self.VJCE_Player)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
