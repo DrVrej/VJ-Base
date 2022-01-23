@@ -391,6 +391,7 @@ function ENT:Think()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartMovement(Dir, Rot)
+	if self.VJCE_NPC:GetState() != VJ_STATE_NONE then return end
 	local DontMove = false
 	local PlyAimVec = Dir
 	PlyAimVec.z = 0
