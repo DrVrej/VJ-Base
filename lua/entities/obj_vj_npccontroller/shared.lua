@@ -24,14 +24,18 @@ if CLIENT then
 		local npc = ply.VJCE_NPC -- The NPC that's being controlled
 		if !IsValid(ply.VJCE_Camera) or !IsValid(ply.VJCE_NPC) then return end
 		if IsValid(ply:GetViewEntity()) && ply:GetViewEntity():GetClass() == "gmod_cameraprop" then return end
-		  
+
 		local pos = origin -- The position that will be set
+		local ang = ply:EyeAngles()
 		if ply.VJC_Camera_Mode == 2 then -- First person
 			local setPos = npc:EyePos() + npc:GetForward()*20
 			local offset = ply.VJC_FP_Offset
 			//camera:SetLocalPos(camera:GetLocalPos() + ply.VJC_TP_Offset) -- Help keep the camera stable
 			if ply.VJC_FP_Bone != -1 then -- If the bone does exist, then use the bone position
 				setPos = npc:GetBonePosition(ply.VJC_FP_Bone)
+				if ply.VJC_FP_UseBoneAng then
+					ang[3] = select(2,npc:GetBonePosition(ply.VJC_FP_Bone))[3] +ply.VJC_FP_BoneAngAdjust -- For some reason you can't use setPos which is literally right there...
+				end
 				if ply.VJC_FP_ShrinkBone then
 					npc:ManipulateBoneScale(ply.VJC_FP_Bone, vec0) -- Bone manipulate to make it easier to see
 				end
@@ -57,7 +61,7 @@ if CLIENT then
 		-- Lerp the position and the angle
 		local lerpSpeed = ply:GetInfoNum("vj_npc_cont_cam_speed", 6)
 		viewLerpVec = (ply.VJC_Camera_Mode == 2 and pos) or LerpVector(FrameTime()*lerpSpeed, viewLerpVec, pos)
-        viewLerpAng = LerpAngle(FrameTime()*lerpSpeed, viewLerpAng, ply:EyeAngles())
+        viewLerpAng = LerpAngle(FrameTime()*lerpSpeed, viewLerpAng, ang)
 		
 		-- Send the player's hit position to the controller entity
 		local tr = util.TraceLine({start = viewLerpVec, endpos = viewLerpVec + viewLerpAng:Forward()*32768, filter = {ply, camera, npc}})
@@ -104,6 +108,8 @@ if CLIENT then
 		ply.VJC_FP_Offset = net.ReadVector()
 		ply.VJC_FP_Bone = net.ReadInt(10)
 		ply.VJC_FP_ShrinkBone = net.ReadBool()
+		ply.VJC_FP_UseBoneAng = net.ReadBool() or false
+		ply.VJC_FP_BoneAngAdjust = net.ReadInt(14) or 0
 	end)
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	local lerp_hp = 0
