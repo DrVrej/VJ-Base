@@ -328,6 +328,7 @@ if CLIENT then
 		add("vjbase.menu.snpc.consettings.bind.reloadweapon", "Reload Weapon")
 		add("vjbase.menu.snpc.consettings.bind.togglebullseye", "Toggle Bullseye Tracking")
 		add("vjbase.menu.snpc.consettings.bind.cameramode", "Change Camera Mode")
+		add("vjbase.menu.snpc.consettings.bind.movementjump", "Toggle Movement Jumping")
 		add("vjbase.menu.snpc.consettings.bind.camerazoom", "Zoom In & Out")
 		add("vjbase.menu.snpc.consettings.bind.cameraup", "Move Camera Up")
 		add("vjbase.menu.snpc.consettings.bind.cameradown", "Move Camera Down")
@@ -468,6 +469,8 @@ if CLIENT then
 		add("vjbase.print.npccontroller.entrance", "For controls, check \"Controller Settings\" under \"DrVrej\" tab")
 		add("vjbase.print.npccontroller.tracking.activated", "Bullseye tracking activated!")
 		add("vjbase.print.npccontroller.tracking.deactivated", "Bullseye tracking deactivated!")
+		add("vjbase.print.npccontroller.movementjump.enable", "Movement Jumping enabled!")
+		add("vjbase.print.npccontroller.movementjump.disable", "Movement Jumping disabled!")
 		
 		add("vjbase.print.adminhealth.pickup", "You have picked up 1,000,000 health!")
 		

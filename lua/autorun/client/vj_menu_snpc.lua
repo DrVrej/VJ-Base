@@ -250,7 +250,7 @@ local function VJ_SNPC_CONTROLLERSETTINGS(Panel) -- NPC Controller Settings
 	
 	local ControlList = vgui.Create("DListView")
 	ControlList:SetTooltip(false)
-	ControlList:SetSize(100, 300) -- Size
+	ControlList:SetSize(100, 320) -- Size
 	ControlList:SetMultiSelect(false)
 	ControlList:AddColumn("#vjbase.menu.snpc.consettings.bind.header1") -- Add column
 	ControlList:AddColumn("#vjbase.menu.snpc.consettings.bind.header2") -- Add column
@@ -262,6 +262,7 @@ local function VJ_SNPC_CONTROLLERSETTINGS(Panel) -- NPC Controller Settings
 		ControlList:AddLine("RELOAD", "#vjbase.menu.snpc.consettings.bind.reloadweapon")
 		ControlList:AddLine("T", "#vjbase.menu.snpc.consettings.bind.togglebullseye")
 		ControlList:AddLine("H", "#vjbase.menu.snpc.consettings.bind.cameramode")
+		ControlList:AddLine("J", "#vjbase.menu.snpc.consettings.bind.movementjump")
 		ControlList:AddLine("MOUSE WHEEL", "#vjbase.menu.snpc.consettings.bind.camerazoom")
 		ControlList:AddLine("UP ARROW", "#vjbase.menu.snpc.consettings.bind.cameraforward")
 		ControlList:AddLine("UP ARROW + RUN", "#vjbase.menu.snpc.consettings.bind.cameraup")
