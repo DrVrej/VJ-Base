@@ -35,7 +35,7 @@ if CLIENT then
 				local bonePos, boneAng = npc:GetBonePosition(ply.VJC_FP_Bone)
 				setPos = bonePos
 				if ply.VJC_FP_CameraBoneAng > 0 then
-					ang[3] = select(2, boneAng)[ply.VJC_FP_CameraBoneAng] + ply.VJC_FP_CameraBoneAng_Offset -- For some reason you can't use setPos which is literally right there...
+					ang[3] = boneAng[ply.VJC_FP_CameraBoneAng] + ply.VJC_FP_CameraBoneAng_Offset
 				end
 				if ply.VJC_FP_ShrinkBone then
 					npc:ManipulateBoneScale(ply.VJC_FP_Bone, vec0) -- Bone manipulate to make it easier to see
