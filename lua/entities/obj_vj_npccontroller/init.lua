@@ -216,6 +216,11 @@ hook.Add("PlayerButtonDown", "vj_controller_PlayerButtonDown", function(ply, but
 			cent.VJC_Camera_Mode = (cent.VJC_Camera_Mode == 1 and 2) or 1
 		end
 		
+		-- Allow movement jumping
+		if button == KEY_J then
+			cent:ToggleMovementJumping()
+		end
+		
 		-- Zoom
 		local zoom = ply:GetInfoNum("vj_npc_cont_zoomdist", 5)
 		if button == KEY_LEFT then
@@ -444,12 +449,22 @@ function ENT:StartMovement(Dir, Rot)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ToggleBullseyeTracking()
-	if self.VJC_BullseyeTracking == false then
+	if !self.VJC_BullseyeTracking then
 		self.VJCE_Player:ChatPrint("#vjbase.print.npccontroller.tracking.activated")
 		self.VJC_BullseyeTracking = true
 	else
 		self.VJCE_Player:ChatPrint("#vjbase.print.npccontroller.tracking.deactivated")
 		self.VJC_BullseyeTracking = false
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:ToggleMovementJumping()
+	if !self.VJCE_NPC.AllowMovementJumping then
+		self.VJCE_Player:ChatPrint("#vjbase.print.npccontroller.movementjump.enable")
+		self.VJCE_NPC.AllowMovementJumping = true
+	else
+		self.VJCE_Player:ChatPrint("#vjbase.print.npccontroller.movementjump.disable")
+		self.VJCE_NPC.AllowMovementJumping = false
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -632,6 +632,7 @@ function ENT:IsJumpLegal(startPos, apex, endPos)
 	print(startPos)
 	print(apex)
 	print(endPos)*/
+	if !self.AllowMovementJumping then return false end
 	local result = self:CustomOnIsJumpLegal(startPos, apex, endPos)
 	if result != nil then
 		/*if result == true then

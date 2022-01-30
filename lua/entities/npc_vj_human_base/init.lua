@@ -37,6 +37,9 @@ ENT.AnimationPlaybackRate = 1 -- Controls the playback rate of all the animation
 	-- ====== Movement Variables ====== --
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
+	-- Jumping Variables:
+	-- Requires "CAP_MOVE_JUMP" | Applied automatically by the base if "ACT_JUMP" is valid on the NPC's model
+ENT.AllowMovementJumping = true -- Should the NPC be allowed to jump from one node to another?
 ENT.MaxJumpLegalDistance = VJ_Set(120, 150) -- The max distance the NPC can jump (Usually from one node to another) | ( UP, DOWN )
 	-- Stationary Move Type Variables:
 ENT.CanTurnWhileStationary = true -- If true, the NPC will be able to turn while it's stationary
