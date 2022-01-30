@@ -32,9 +32,10 @@ if CLIENT then
 			local offset = ply.VJC_FP_Offset
 			//camera:SetLocalPos(camera:GetLocalPos() + ply.VJC_TP_Offset) -- Help keep the camera stable
 			if ply.VJC_FP_Bone != -1 then -- If the bone does exist, then use the bone position
-				setPos = npc:GetBonePosition(ply.VJC_FP_Bone)
-				if ply.VJC_FP_UseBoneAng then
-					ang[3] = select(2,npc:GetBonePosition(ply.VJC_FP_Bone))[3] +ply.VJC_FP_BoneAngAdjust -- For some reason you can't use setPos which is literally right there...
+				local bonePos, boneAng = npc:GetBonePosition(ply.VJC_FP_Bone)
+				setPos = bonePos
+				if ply.VJC_FP_CameraBoneAng > 0 then
+					ang[3] = select(2, boneAng)[ply.VJC_FP_CameraBoneAng] + ply.VJC_FP_CameraBoneAng_Offset -- For some reason you can't use setPos which is literally right there...
 				end
 				if ply.VJC_FP_ShrinkBone then
 					npc:ManipulateBoneScale(ply.VJC_FP_Bone, vec0) -- Bone manipulate to make it easier to see
@@ -108,8 +109,8 @@ if CLIENT then
 		ply.VJC_FP_Offset = net.ReadVector()
 		ply.VJC_FP_Bone = net.ReadInt(10)
 		ply.VJC_FP_ShrinkBone = net.ReadBool()
-		ply.VJC_FP_UseBoneAng = net.ReadBool() or false
-		ply.VJC_FP_BoneAngAdjust = net.ReadInt(14) or 0
+		ply.VJC_FP_CameraBoneAng = net.ReadUInt(2) or 0
+		ply.VJC_FP_CameraBoneAng_Offset = net.ReadInt(10) or 0
 	end)
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	local lerp_hp = 0
