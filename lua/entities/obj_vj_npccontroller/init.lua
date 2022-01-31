@@ -7,6 +7,7 @@ include('shared.lua')
 --------------------------------------------------*/
 ENT.VJC_Player_CanExit = true -- Can the player exit the controller?
 ENT.VJC_Player_CanRespawn = true -- If false, the player will die when the NPC dies!
+ENT.VJC_Player_DrawHUD = true -- Should the controller HUD be displayed?
 ENT.VJC_BullseyeTracking = false -- Activates bullseye tracking (Will not turn to the move location!)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -56,6 +57,8 @@ ENT.VJC_Removed = false
 util.AddNetworkString("vj_controller_data")
 util.AddNetworkString("vj_controller_cldata")
 util.AddNetworkString("vj_controller_hud")
+
+local vecDef = Vector(0, 0, 0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetModel("models/props_junk/watermelon01_chunk02c.mdl")
@@ -66,6 +69,7 @@ function ENT:Initialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local color0000 = Color(0, 0, 0, 0)
+--
 function ENT:StartControlling()
 	-- Set up the camera entity
 	self.VJCE_Camera = ents.Create("prop_dynamic")
@@ -191,7 +195,6 @@ function ENT:SetControlledNPC(GetEntity)
 	end)
 	self:CustomOnSetControlledNPC()
 end
-local vecr = Vector(0, 0, 0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerButtonDown", "vj_controller_PlayerButtonDown", function(ply, button)
 	//print(button)
@@ -233,7 +236,7 @@ hook.Add("PlayerButtonDown", "vj_controller_PlayerButtonDown", function(ply, but
 			cent.VJC_Camera_CurZoom = cent.VJC_Camera_CurZoom - (ply:KeyDown(IN_SPEED) and Vector(0, 0, zoom) or Vector(zoom, 0, 0))
 		end
 		if button == KEY_BACKSPACE then
-			cent.VJC_Camera_CurZoom = vecr
+			cent.VJC_Camera_CurZoom = vecDef
 		end
 	end
 end)
@@ -260,8 +263,8 @@ function ENT:SendDataToClient(reset)
 	net.WriteUInt((reset == true and nil) or self.VJCE_Camera:EntIndex(), 14)
 	net.WriteUInt((reset == true and nil) or self.VJCE_NPC:EntIndex(), 14)
 	net.WriteUInt((reset == true and 1) or self.VJC_Camera_Mode, 2)
-	net.WriteVector((reset == true and vecr) or (self.VJCE_NPC.VJC_Data.ThirdP_Offset + self.VJC_Camera_CurZoom))
-	net.WriteVector((reset == true and vecr) or self.VJCE_NPC.VJC_Data.FirstP_Offset)
+	net.WriteVector((reset == true and vecDef) or (self.VJCE_NPC.VJC_Data.ThirdP_Offset + self.VJC_Camera_CurZoom))
+	net.WriteVector((reset == true and vecDef) or self.VJCE_NPC.VJC_Data.FirstP_Offset)
 	local bone = -1
 	if reset != true then
 		bone = self.VJCE_NPC:LookupBone(self.VJCE_NPC.VJC_Data.FirstP_Bone) or -1
@@ -273,13 +276,15 @@ function ENT:SendDataToClient(reset)
 	net.Send(self.VJCE_Player)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local vecZ20 = Vector(0, 0, 20)
+--
 function ENT:Think()
 	if (!self.VJCE_Camera:IsValid()) then self:StopControlling() return end
 	if !IsValid(self.VJCE_Player) /*or self.VJCE_Player:KeyDown(IN_USE)*/ or self.VJCE_Player:Health() <= 0 or (!self.VJCE_Player.IsControlingNPC) or !IsValid(self.VJCE_NPC) or (self.VJCE_NPC:Health() <= 0) then self:StopControlling() return end
 	if self.VJCE_Player.IsControlingNPC != true then return end
 	if self.VJCE_Player.IsControlingNPC && IsValid(self.VJCE_NPC) then
 		self.VJC_NPC_LastPos = self.VJCE_NPC:GetPos()
-		self.VJCE_Player:SetPos(self.VJC_NPC_LastPos + Vector(0, 0, 20)) -- Set the player's location
+		self.VJCE_Player:SetPos(self.VJC_NPC_LastPos + vecZ20) -- Set the player's location
 		self:SendDataToClient()
 		
 		-- HUD
@@ -291,13 +296,15 @@ function ENT:Think()
 			if IsValid(self.VJCE_NPC:GetActiveWeapon()) then AttackTypes["WeaponAttack"] = true AttackTypes["Ammo"] = self.VJCE_NPC:GetActiveWeapon():Clip1() end
 			if self.VJCE_NPC.HasGrenadeAttack == true then AttackTypes["GrenadeAttack"] = (CurTime() <= self.VJCE_NPC.NextThrowGrenadeT and 2) or true end
 		end
-		net.Start("vj_controller_hud")
-		net.WriteBool(self.VJCE_Player:GetInfoNum("vj_npc_cont_hud", 1) == 1)
-		net.WriteFloat(self.VJCE_NPC:GetMaxHealth())
-		net.WriteFloat(self.VJCE_NPC:Health())
-		net.WriteString(self.VJCE_NPC:GetName())
-		net.WriteTable(AttackTypes)
-		net.Send(self.VJCE_Player)
+		if self.VJC_Player_DrawHUD then
+			net.Start("vj_controller_hud")
+			net.WriteBool(self.VJCE_Player:GetInfoNum("vj_npc_cont_hud", 1) == 1)
+			net.WriteFloat(self.VJCE_NPC:GetMaxHealth())
+			net.WriteFloat(self.VJCE_NPC:Health())
+			net.WriteString(self.VJCE_NPC:GetName())
+			net.WriteTable(AttackTypes)
+			net.Send(self.VJCE_Player)
+		end
 		
 		if #self.VJCE_Player:GetWeapons() > 0 then self.VJCE_Player:StripWeapons() end
 		-- Depreciated, the hit position is now sent by the net message
@@ -486,7 +493,7 @@ function ENT:StopControlling(endKey)
 			self.VJCE_Player:SelectWeapon(self.VJC_Data_Player[4])
 		end
 		if IsValid(self.VJCE_NPC) then
-			self.VJCE_Player:SetPos(self.VJCE_NPC:GetPos() + self.VJCE_NPC:OBBMaxs() + Vector(0, 0, 20))
+			self.VJCE_Player:SetPos(self.VJCE_NPC:GetPos() + self.VJCE_NPC:OBBMaxs() + vecZ20)
 		else
 			self.VJCE_Player:SetPos(self.VJC_NPC_LastPos)
 		end
