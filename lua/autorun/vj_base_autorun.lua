@@ -65,9 +65,9 @@ hook.Add("PlayerInitialSpawn", "VJBaseSpawn", function(ply, transition)
 	end)
 	
 	if !game.SinglePlayer() && ply:SteamID() == "STEAM_0:0:22688298" then
-		PrintMessage(HUD_PRINTTALK,"DrVrej Has Joined The Game!")
-		PrintMessage(HUD_PRINTCENTER,"DrVrej Has Joined The Game!")
-		local sd = CreateSound(game.GetWorld(),"vj_illuminati/Illuminati Confirmed.mp3")
+		PrintMessage(HUD_PRINTTALK, "DrVrej Has Joined The Game!")
+		PrintMessage(HUD_PRINTCENTER, "DrVrej Has Joined The Game!")
+		local sd = CreateSound(game.GetWorld(), "vj_illuminati/Illuminati Confirmed.mp3")
 		sd:SetSoundLevel(0)
 		sd:Play()
 		timer.Simple(10, function() if sd then sd:Stop() end end)
@@ -91,7 +91,7 @@ if SERVER && !isfunction(FindMetaTable("NPC").AutoMovement) then
 			VJBASE_GMOD_OUTDATED = true
 			timer.Create("VJ_WARN_GModOutdated", 2, 0, function()
 				PrintMessage(HUD_PRINTTALK, "--- Outdated version of Garry's Mod detected! ---")
-				PrintMessage(HUD_PRINTTALK, "Opt out of the Chromium branch!")
+				PrintMessage(HUD_PRINTTALK, "Either the game is pirated or it's on Chromium branch!")
 			end)
 		end
 	end)

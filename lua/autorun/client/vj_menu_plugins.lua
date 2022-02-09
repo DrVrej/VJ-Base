@@ -49,7 +49,7 @@ function VJ_PLUGINS(Panel)
 	end
 	Panel:AddPanel(changelog)
 	
-	-- Github
+	-- Github Wiki
 	local github = vgui.Create("DButton")
 	github:SetFont("TargetID")
 	github:SetText("#vjbase.menu.plugins.makeaddon")
@@ -60,6 +60,18 @@ function VJ_PLUGINS(Panel)
 		gui.OpenURL("https://github.com/DrVrej/VJ-Base/wiki")
 	end
 	Panel:AddPanel(github)
+	
+	-- Tutorial Video
+	local tutorialVid = vgui.Create("DButton")
+	tutorialVid:SetFont("TargetID")
+	tutorialVid:SetText("#tool.vjstool.menu.tutorialvideo")
+	tutorialVid:SetSize(150, 25)
+	tutorialVid:SetColor(Color(0, 0, 102))
+	tutorialVid:SetFont("VJFont_Trebuchet24_SmallMedium")
+	tutorialVid.DoClick = function(x)
+		gui.OpenURL("https://www.youtube.com/watch?v=dGoqEpFZ5_M")
+	end
+	Panel:AddPanel(tutorialVid)
 	
 	-- *insert lenny face*
 	if (LocalPlayer():SteamID() == "STEAM_0:0:22688298") then

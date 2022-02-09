@@ -106,6 +106,7 @@ if CLIENT then
 		add("vjbase.menu.cleanup.remove.allammo", "Remove all of your Ammo")
 		
 		add("vjbase.menu.helpsupport", "Contact and Support")
+		add("vjbase.menu.helpsupport.incompatibleaddons", "Incompatible Addons")
 		add("vjbase.menu.helpsupport.reportbug", "Report a Bug")
 		add("vjbase.menu.helpsupport.suggestion", "Suggest Something")
 		add("vjbase.menu.helpsupport.discord", "Join me on Discord!")

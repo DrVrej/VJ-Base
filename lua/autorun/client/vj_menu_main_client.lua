@@ -51,7 +51,7 @@ local function VJ_INFORMATION(Panel)
 	Panel:ControlHelp("============================")
 	
 	Panel:ControlHelp("Copyright (c) "..os.date("20%y").." by DrVrej, All rights reserved.")
-	Panel:ControlHelp("No parts of this base or any of its contents may be reproduced, copied, modified or adapted, without the prior written consent of the author, unless otherwise indicated for stand-alone materials.")
+	Panel:ControlHelp("No parts of the code may be reproduced, copied, modified or adapted, without the prior written consent of the author.")
 end
 ----=================================----
 local function VJ_MAINMENU_CLIENT(Panel)
