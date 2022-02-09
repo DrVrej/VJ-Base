@@ -82,6 +82,17 @@ else
 	end
 	----=================================----
 	local function VJ_MAINMENU_MISC(Panel)
+		local incomp = vgui.Create("DButton") -- Incompatible Addons
+		incomp:SetFont("CloseCaption_Bold")
+		incomp:SetText("#vjbase.menu.helpsupport.incompatibleaddons")
+		incomp:SetSize(150, 35)
+		incomp:SetColor(Color(231, 76, 60))
+		incomp:SetFont("VJFont_Trebuchet24_SmallMedium")
+		incomp.DoClick = function()
+			gui.OpenURL("https://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
+		end
+		Panel:AddPanel(incomp)
+		
 		local bugr = vgui.Create("DButton") -- Bug Report
 		bugr:SetFont("CloseCaption_Bold")
 		bugr:SetText("#vjbase.menu.helpsupport.reportbug")
