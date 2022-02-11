@@ -443,7 +443,7 @@ function SWEP:NPCShoot_Primary()
 	if !owner.VJ_IsBeingControlled && (!IsValid(ene) or (!owner:Visible(ene))) then return end
 	if owner.IsVJBaseSNPC == true then
 		//owner.Weapon_TimeSinceLastShot = 0
-		owner.NextWeaponAttackAimPoseParametersReset = CurTime() + 1
+		//owner.NextWeaponAttackAimPoseParametersReset = CurTime() + 1
 		owner:DoPoseParameterLooking()
 		//if owner.IsVJBaseSNPC == true then owner.Weapon_TimeSinceLastShot = 0 end
 	end

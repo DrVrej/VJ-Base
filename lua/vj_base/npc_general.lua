@@ -644,13 +644,12 @@ function ENT:IsJumpLegal(startPos, apex, endPos)
 	local dist_end = startPos:Distance(endPos)
 	local maxdist = self.MaxJumpLegalDistance.a -- Var gam Ver | Arachin tive varva hamar ter
 	-- Aravel = Ver, Nevaz = Var
-	if endPos.z - startPos.z <= 0 then maxdist = self.MaxJumpLegalDistance.b end -- Ver bidi tsadke
+	if (endPos.z - startPos.z) <= 0 then maxdist = self.MaxJumpLegalDistance.b end -- Ver bidi tsadke
 	/*print("---------------------")
 	print(endPos.z - startPos.z)
 	print("Apex: "..dist_apex)
 	print("End Pos: "..dist_end)*/
-	if dist_apex > maxdist then return nil end
-	if dist_end > maxdist then return nil end
+	if (dist_apex > maxdist) or (dist_end > maxdist) then return false end
 	//self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190)
 	return true
 end
