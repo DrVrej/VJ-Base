@@ -2790,7 +2790,7 @@ function ENT:SelectSchedule()
 			-- Check for weapon validity
 			if !IsValid(wep) then
 				-- Scared behavior system
-				if self.NoWeapon_UseScaredBehavior == true && CurTime() > self.NextChaseTime then
+				if self.NoWeapon_UseScaredBehavior == true && !self:IsBusy() && CurTime() > self.NextChaseTime then
 					self.NoWeapon_UseScaredBehavior_Active = true -- Tells the idle system to use the scared behavior animation
 					if self.FollowingPlayer == false && self:Visible(ene) then
 						self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
@@ -3004,6 +3004,8 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 	if self.NextResetEnemyT > CurTime() or self.Dead == true then self.EnemyReset = false return false end
 	checkAlliesEnemy = checkAlliesEnemy or false
 	local RunToEnemyOnReset = false
+	local ene = self:GetEnemy()
+	local eneValid = IsValid(ene)
 	if checkAlliesEnemy == true then
 		local getAllies = self:Allies_Check(1000)
 		if getAllies != nil then
@@ -3017,7 +3019,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		end
 		local curEnemies = self.ReachableEnemyCount //self.CurrentReachableEnemies
 		-- If the current number of reachable enemies is higher then 1, then don't reset
-		if (IsValid(self:GetEnemy()) && (curEnemies - 1) >= 1) or (!IsValid(self:GetEnemy()) && curEnemies >= 1) then
+		if (eneValid && (curEnemies - 1) >= 1) or (!eneValid && curEnemies >= 1) then
 			//self:VJ_DoSetEnemy(v, false, true)
 			self:DoEntityRelationshipCheck() -- Select a new enemy
 			self.NextProcessT = CurTime() + self.NextProcessTime
@@ -3029,15 +3031,15 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 	timer.Create("timer_alerted_reset"..self:EntIndex(), math.Rand(self.AlertedToIdleTime.a, self.AlertedToIdleTime.b), 1, function() if !IsValid(self:GetEnemy()) then self.Alerted = false end end)
 	self:CustomOnResetEnemy()
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printresetenemy"):GetInt() == 1 then print(self:GetName().." has reseted its enemy") end
-	if IsValid(self:GetEnemy()) then
+	if eneValid then
 		if self.FollowingPlayer == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && self:GetEnemyLastKnownPos() != defPos then
 			self:SetLastPosition(self:GetEnemyLastKnownPos())
 			RunToEnemyOnReset = true
 		end
 
-		self:MarkEnemyAsEluded(self:GetEnemy())
-		//self:ClearEnemyMemory(self:GetEnemy()) // Completely resets the enemy memory
-		self:AddEntityRelationship(self:GetEnemy(), 4, 10)
+		self:MarkEnemyAsEluded(ene)
+		//self:ClearEnemyMemory(ene) // Completely resets the enemy memory
+		self:AddEntityRelationship(ene, 4, 10)
 	end
 	
 	self.LastHiddenZone_CanWander = CurTime() > self.LastHiddenZoneT and true or false
@@ -3047,10 +3049,16 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 	self:ClearEnemyMemory()
 	//self:UpdateEnemyMemory(self,self:GetPos())
 	local vsched = ai_vj_schedule.New("vj_act_resetenemy")
-	if IsValid(self:GetEnemy()) then vsched:EngTask("TASK_FORGET", self:GetEnemy()) end
+	if IsValid(self:GetEnemy()) then vsched:EngTask("TASK_FORGET", self:GetEnemy()) end -- Don't apply localized versions for this! (ene & eneValid)
 	//vsched:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
 	self.NextWanderTime = CurTime() + math.Rand(3, 5)
-	if !self:BusyWithActivity() && self.IsGuard == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && RunToEnemyOnReset == true && self.LastHiddenZone_CanWander == true && !self.NoWeapon_UseScaredBehavior_Active then
+	-- This is needed for the human base because when taking cover from enemy, the AI can get stuck in a loop (EX: When self.NoWeapon_UseScaredBehavior_Active is true!)
+	local curSched = self.CurrentSchedule
+	if (curSched != nil && (curSched.Name == "vj_cover_from_enemy" or curSched.Name == "vj_cover_from_enemy_fail")) then
+		self:StopMoving()
+	end
+	--
+	if !self:IsBusy() && self.IsGuard == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && RunToEnemyOnReset == true && self.LastHiddenZone_CanWander == true && !self.NoWeapon_UseScaredBehavior_Active then
 		//ParticleEffect("explosion_turret_break", self.LatestEnemyPosition, Angle(0,0,0))
 		self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk))
 		vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
