@@ -40,7 +40,7 @@ ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
 	-- Jumping Variables:
 	-- Requires "CAP_MOVE_JUMP" | Applied automatically by the base if "ACT_JUMP" is valid on the NPC's model
 ENT.AllowMovementJumping = true -- Should the NPC be allowed to jump from one node to another?
-ENT.MaxJumpLegalDistance = VJ_Set(120, 150) -- The max distance the NPC can jump (Usually from one node to another) | ( UP, DOWN )
+ENT.MaxJumpLegalDistance = VJ_Set(150, 280) -- The max distance the NPC can jump (Usually from one node to another) | ( UP, DOWN )
 	-- Stationary Move Type Variables:
 ENT.CanTurnWhileStationary = true -- If true, the NPC will be able to turn while it's stationary
 ENT.Stationary_UseNoneMoveType = false -- Technical variable, used if there is any issues with the NPC's position (It has its downsides, use only when needed!)
@@ -901,7 +901,6 @@ ENT.NextChaseTime = 0
 ENT.OnPlayerSightNextT = 0
 ENT.NextDamageByPlayerT = 0
 ENT.NextDamageByPlayerSoundT = 0
-ENT.NextWeaponAttackAimPoseParametersReset = 0
 ENT.NextWeaponReloadSoundT = 0
 ENT.TimeSinceLastSeenEnemy = 0
 ENT.TimeSinceEnemyAcquired = 0
@@ -2133,7 +2132,7 @@ function ENT:Think()
 		end
 		
 		-- Weapon Reloading
-		if self.Dead == false && !self:BusyWithActivity() && self.AllowWeaponReloading == true && self.IsReloadingWeapon == false && (IsValid(self.CurrentWeaponEntity) && (!self.CurrentWeaponEntity.IsMeleeWeapon)) && self.FollowPlayer_GoingAfter == false && self.ThrowingGrenade == false && self.MeleeAttacking == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && self:GetWeaponState() != VJ_WEP_STATE_HOLSTERED then
+		if self.Dead == false && !self:BusyWithActivity() && self.AllowWeaponReloading == true && self.IsReloadingWeapon == false && (IsValid(self.CurrentWeaponEntity) && (!self.CurrentWeaponEntity.IsMeleeWeapon)) && self.ThrowingGrenade == false && self.MeleeAttacking == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && self:GetWeaponState() != VJ_WEP_STATE_HOLSTERED then
 			local teshnami = IsValid(ene) -- Teshnami ooni, gam voch?
 			if (self.VJ_IsBeingControlled == false && ((teshnami == false && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1() && self.TimeSinceLastSeenEnemy > math.random(3,8) && !self:IsMoving()) or (teshnami == true && self.CurrentWeaponEntity:Clip1() <= 0))) or (self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_RELOAD) && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1()) then
 				self.DoingWeaponAttack = false
@@ -2355,7 +2354,7 @@ function ENT:Think()
 			else -- No Enemy
 				self.DoingWeaponAttack = false
 				self.DoingWeaponAttack_Standing = false
-				if CurTime() > self.NextWeaponAttackAimPoseParametersReset && self.DidWeaponAttackAimParameter == true && self.DoingWeaponAttack == false && self.VJ_IsBeingControlled == false then
+				if !self.Alerted && self.DidWeaponAttackAimParameter == true && self.DoingWeaponAttack == false && self.VJ_IsBeingControlled == false then
 					self:ClearPoseParameters()
 					self.DidWeaponAttackAimParameter = false
 				end
@@ -2865,6 +2864,7 @@ function ENT:SelectSchedule()
 									local moveCheck = VJ_PICK(self:VJ_CheckAllFourSides(50, true, "0011"))
 									if moveCheck then
 										self:StopMoving()
+										if self.IsGuard then self.GuardingPosition = moveCheck end -- Set the guard position to this new position that avoids friendly fire
 										self:SetLastPosition(moveCheck)
 										self.NextChaseTime = CurTime() + 1
 										self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH", function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
@@ -2874,7 +2874,7 @@ function ENT:SelectSchedule()
 								-- If the NPC is behind cover...
 								if cover_npc == true then
 									self.WeaponUseEnemyEyePos = true -- Make the bullet direction go towards the head of the enemy
-									-- Behind cover and is taking cover, don't fire!
+									-- Behind cover and I am taking cover, don't fire!
 									if CurTime() < self.TakingCoverT then
 										noAttack = true
 									elseif CurTime() > self.NextMoveOnGunCoveredT && ((cover_npc_tr.HitPos:Distance(myPos) > 150 && cover_npc_isObj == true) or (cover_wep == true && !cover_wep_ent:IsNPC() && !cover_wep_ent:IsPlayer())) then
@@ -2887,7 +2887,8 @@ function ENT:SelectSchedule()
 											nearestPos = self:VJ_GetNearestPointToVector(cover_npc_tr.HitPos, true)
 											enePos = nearestPos.PointPosition - self:GetForward()*15
 										end
-										if nearestPos.MyPosition:Distance(enePos) <= 1000 then
+										if nearestPos.MyPosition:Distance(enePos) <= (self.IsGuard and 60 or 1000) then
+											if self.IsGuard then self.GuardingPosition = enePos end -- Set the guard position to this new position that provides cover
 											self:SetLastPosition(enePos)
 											//VJ_CreateTestObject(enePos, self:GetAngles(), Color(0,255,255))
 											local vsched = ai_vj_schedule.New("vj_goto_cover")
@@ -2969,7 +2970,7 @@ function ENT:SelectSchedule()
 								end
 							end
 							-- Move randomly when shooting
-							if cover_npc == false && self.IsGuard != true && self.FollowingPlayer == false && self.MoveRandomlyWhenShooting == true && (!wep.IsMeleeWeapon) && (!wep.NPC_StandingOnly) && self.DoingWeaponAttack == true && self.DoingWeaponAttack_Standing == true && CurTime() > self.NextMoveRandomlyWhenShootingT && (CurTime() - self.TimeSinceEnemyAcquired) > 2 && (eneDist_Eye < (self.Weapon_FiringDistanceFar / 1.25)) && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered),enePos_Eye) == false then
+							if cover_npc == false && !self.IsGuard && self.FollowingPlayer == false && self.MoveRandomlyWhenShooting == true && (!wep.IsMeleeWeapon) && (!wep.NPC_StandingOnly) && self.DoingWeaponAttack == true && self.DoingWeaponAttack_Standing == true && CurTime() > self.NextMoveRandomlyWhenShootingT && (CurTime() - self.TimeSinceEnemyAcquired) > 2 && (eneDist_Eye < (self.Weapon_FiringDistanceFar / 1.25)) && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered),enePos_Eye) == false then
 								if self:CustomOnMoveRandomlyWhenShooting() != false then
 									local moveCheck = VJ_PICK(self:VJ_CheckAllFourSides(math.random(150, 400), true, "0111"))
 									if moveCheck then
