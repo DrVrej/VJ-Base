@@ -659,8 +659,7 @@ ENT.MeleeAttackSoundPitch = VJ_Set(false, false)
 ENT.ExtraMeleeSoundPitch = VJ_Set(80, 100)
 ENT.MeleeAttackMissSoundPitch = VJ_Set(90, 100)
 ENT.BeforeRangeAttackPitch = VJ_Set(false, false)
-ENT.RangeAttackPitch1 = false
-ENT.RangeAttackPitch2 = false
+ENT.RangeAttackPitch = VJ_Set(false, false)
 ENT.BeforeLeapAttackSoundPitch = VJ_Set(false, false)
 ENT.LeapAttackJumpSoundPitch = VJ_Set(false, false)
 ENT.LeapAttackDamageSoundPitch = VJ_Set(false, false)
@@ -986,7 +985,6 @@ ENT.SelectedDifficulty = 1
 ENT.AIState = 0
 ENT.TimersToRemove = {"timer_state_reset","timer_act_seqreset","timer_face_position","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap","timer_alerted_reset"}
 ENT.EntitiesToDestroyClass = {func_breakable=true,func_physbox=true,prop_door_rotating=true} // func_breakable_surf
-ENT.DefaultGibDamageTypes = {DMG_ALWAYSGIB,DMG_ENERGYBEAM,DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DISSOLVE,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SONIC} -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 //ENT.DefaultGibOnDeathDamageTypes = {[DMG_ALWAYSGIB]=true,[DMG_ENERGYBEAM]=true,[DMG_BLAST]=true,[DMG_VEHICLE]=true,[DMG_CRUSH]=true,[DMG_DISSOLVE]=true,[DMG_SLOWBURN]=true,[DMG_PHYSGUN]=true,[DMG_PLASMA]=true,[DMG_SONIC]=true}
 //ENT.SavedDmgInfo = {} -- Set later
 
@@ -1140,11 +1138,7 @@ function ENT:Initialize()
 	end)
 	duplicator.RegisterEntityClass(self:GetClass(), VJSPAWN_SNPC_DUPE, "Class", "Equipment", "SpawnFlags", "Data")
 end
----------------------------------------------------------------------------------------------------------------------------------------------
--- !!!!!!!!!!!!!! DO NOT USE THESE FUNCTIONS OR VARIABLES !!!!!!!!!!!!!! [Backwards Compatibility!]
--- Most of these will most likely be removed in the future!
-ENT.DeathSkin = 0
-function ENT:CustomInitialize() end
+function ENT:CustomInitialize() end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetInitializeCapabilities()
 	self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK))
@@ -3065,8 +3059,6 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RangeAttackSoundCode(CustomTbl, Type) self:PlaySoundSystem("RangeAttack", CustomTbl, Type) end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	if self.HasSounds == false or sdSet == nil then return end
 	sdType = sdType or VJ_CreateSound
@@ -3363,7 +3355,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 				if cTbl != false then sdtbl = cTbl end
 				if self.IdleSounds_PlayOnAttacks == false then VJ_STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
-				self.CurrentRangeAttackSound = sdType(self, sdtbl, self.RangeAttackSoundLevel, self:VJ_DecideSoundPitch(self.RangeAttackPitch1, self.RangeAttackPitch2))
+				self.CurrentRangeAttackSound = sdType(self, sdtbl, self.RangeAttackSoundLevel, self:VJ_DecideSoundPitch(self.RangeAttackPitch.a, self.RangeAttackPitch.b))
 			end
 		end
 		return

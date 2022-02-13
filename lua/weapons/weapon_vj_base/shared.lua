@@ -234,7 +234,7 @@ SWEP.NPC_SecondaryFireNextT = 0
 SWEP.NPC_SecondaryFirePerforming = false
 
 
--- [Backwards Compatibility!]
+-- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	-- Basically if someone is retrieving "VJ_CurBulletPos" using NW, it will convert it to NW2 otherwise it just runs the regular code
 local entMETA = FindMetaTable("Entity")
 local wepMETA = FindMetaTable("Weapon")
@@ -243,6 +243,7 @@ function wepMETA:GetNWVector(name, default)
 	if name == "VJ_CurBulletPos" then return self:GetNW2Vector("VJ_CurBulletPos", default)
 	else return old_GetNWVector(self, name, default) end
 end
+
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:GetCapabilities()
 	return bit.bor(CAP_WEAPON_RANGE_ATTACK1,CAP_INNATE_RANGE_ATTACK1)
