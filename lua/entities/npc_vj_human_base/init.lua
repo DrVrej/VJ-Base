@@ -945,7 +945,6 @@ ENT.Weapon_State = 0
 ENT.TimersToRemove = {"timer_weapon_state_reset","timer_state_reset","timer_act_seqreset","timer_face_position","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_reload_end","timer_alerted_reset"}
 ENT.EntitiesToRunFrom = {obj_spore=true,obj_vj_grenade=true,obj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true,cw_flash_thrown=true,ent_hl1_grenade=true}
 ENT.EntitiesToThrowBack = {obj_spore=true,obj_vj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,obj_cpt_grenade=true,cw_grenade_thrown=true,cw_flash_thrown=true,cw_smoke_thrown=true,ent_hl1_grenade=true}
-ENT.DefaultGibDamageTypes = {DMG_ALWAYSGIB,DMG_ENERGYBEAM,DMG_BLAST,DMG_VEHICLE,DMG_CRUSH,DMG_DISSOLVE,DMG_SLOWBURN,DMG_PHYSGUN,DMG_PLASMA,DMG_SONIC} -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 //ENT.DefaultGibOnDeathDamageTypes = {[DMG_ALWAYSGIB]=true,[DMG_ENERGYBEAM]=true,[DMG_BLAST]=true,[DMG_VEHICLE]=true,[DMG_CRUSH]=true,[DMG_DISSOLVE]=true,[DMG_SLOWBURN]=true,[DMG_PHYSGUN]=true,[DMG_PLASMA]=true,[DMG_SONIC]=true}
 //ENT.SavedDmgInfo = {} -- Set later
 
@@ -2154,18 +2153,22 @@ function ENT:Think()
 						end
 						return false -- The given animation was invalid!
 					end
-					if self.VJ_IsBeingControlled == true then -- When being controlled
+					-- When being controlled by a player
+					if self.VJ_IsBeingControlled == true then
 						self.IsReloadingWeapon = true
 						DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
-					else -- Not being controlled...
+					-- Not being controlled by a player...
+					else
+						-- NPC is hidden, so attempt to crouch reload
 						if teshnami == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos()+self:OBBCenter()),ene:EyePos(),false,{SetLastHiddenTime=true}) == true then -- Behvedadz
-							local ranim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReloadBehindCover)) -- Get the animation or if it has a translation, then get the tanslated animation
+							local ranim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReloadBehindCover)) -- Get the animation or if it has a translation, then get the translated animation
 							-- if ranim isn't a valid animation, then just play the regular standing-up animation
 							ranim = (VJ_AnimationExists(self, ranim) == true and DoReloadAnimation(ranim) or DoReloadAnimation(VJ_PICK(self.AnimTbl_WeaponReload)))
-						else -- Yete bahvedadz che...
-							if self.IsGuard == true or self.FollowingPlayer == true or self.VJ_IsBeingControlled_Tool == true or teshnami == false or self.MovementType == VJ_MOVETYPE_STATIONARY then -- Getsadz letsenel togh ene (Mi vazer!)
+						else -- NPC is NOT hidden...
+							-- Under certain situations, simply do standing reload without running to a hiding spot
+							if self.IsGuard == true or self.FollowingPlayer == true or self.VJ_IsBeingControlled_Tool == true or teshnami == false or self.MovementType == VJ_MOVETYPE_STATIONARY or self.LatestEnemyDistance < 650 then
 								DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
-							else -- Togh vaz e
+							else -- If all is good, then run to a hiding spot and then reload!
 								self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 								local vsched = ai_vj_schedule.New("vj_weapon_reload")
 								vsched:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
@@ -2174,11 +2177,11 @@ function ENT:Think()
 								vsched.IsMovingTask = true
 								vsched.MoveType = 1
 								vsched.RunCode_OnFinish = function()
-									-- Yete teshnamin modig e, zenke mi letsener!
+									-- If the current situation isn't favorable, then abandon the current reload, and try again!
 									if (self.MeleeAttacking == true) or (IsValid(self:GetEnemy()) && self.HasWeaponBackAway == true && (self:GetPos():Distance(self:GetEnemy():GetPos()) <= self.WeaponBackAway_Distance)) then
 										self.IsReloadingWeapon = false
 										timer.Remove("timer_reload_end"..self:EntIndex()) -- Remove the timer to make sure it doesn't set reloading to false at a random time (later on)
-									else
+									else -- Our hiding spot is good, so reload!
 										DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
 										self:CustomOnWeaponReload_AfterRanToCover()
 									end

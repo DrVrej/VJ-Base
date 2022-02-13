@@ -1358,8 +1358,7 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 		local animTbl = self.AnimTbl_Flinch
 		if HitgroupInfo != nil then animTbl = HitgroupInfo.Animation end
 		local anim = VJ_PICK(animTbl)
-		local animDur = self:DecideAnimationLength(anim, false, self.FlinchAnimationDecreaseLengthAmount)
-		if self.NextMoveAfterFlinchTime != "LetBaseDecide" && self.NextMoveAfterFlinchTime != false then animDur = self.NextMoveAfterFlinchTime end -- "LetBaseDecide" = Backwards compatibility
+		local animDur = self.NextMoveAfterFlinchTime == false and self:DecideAnimationLength(anim, false, self.FlinchAnimationDecreaseLengthAmount) or self.NextMoveAfterFlinchTime
 		self:VJ_ACT_PLAYACTIVITY(anim, true, animDur, false, 0, {SequenceDuration=animDur, PlayBackRateCalculated=true})
 		timer.Create("timer_act_flinching"..self:EntIndex(), animDur, 1, function() self.Flinching = false end)
 		self:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup)
