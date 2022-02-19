@@ -809,7 +809,9 @@ function SWEP:GetWeaponCustomPosition(owner)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:RunWorldModelThink()
-	self:SetNW2Bool("VJ_WorldModel_Invisible", self.WorldModel_Invisible)
+	if self:GetNW2Bool("VJ_WorldModel_Invisible") != self.WorldModel_Invisible then
+		self:SetNW2Bool("VJ_WorldModel_Invisible", self.WorldModel_Invisible)
+	end
 	
 	local owner = self:GetOwner()
 	if IsValid(owner) && self.WorldModel_UseCustomPosition == true then
