@@ -98,7 +98,7 @@ local function VJ_SNPC_SETTINGS(Panel) -- Settings
 
 	Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 	Panel:AddControl("Label", {Text = "#vjbase.menu.general.snpc.warnfuture"})
-	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_nocorpses 0\nvj_npc_nobleed 0\nvj_npc_nomelee 0\nvj_npc_norange 0\nvj_npc_noleap 0\nvj_npc_noflinching 0\nvj_npc_noallies 0\nvj_npc_noweapon 0\nvj_npc_nowandering 0\nvj_npc_nogib 0\nvj_npc_nodeathanimation 0\nvj_npc_noscarednade 0\nvj_npc_animal_runontouch 0\nvj_npc_animal_runonhit 0\nvj_npc_slowplayer 0\nvj_npc_bleedenemyonmelee 0\nvj_npc_noproppush 0\nvj_npc_nopropattack 0\nvj_npc_nogibdeathparticles 0\nvj_npc_noidleparticle 0\nvj_npc_nogibdecals 0\nvj_npc_noreload 0\nvj_npc_nobecomeenemytoply 0\nvj_npc_nofollowplayer 0\nvj_npc_nothrowgrenade 0\nvj_npc_nobloodpool 0\nvj_npc_nochasingenemy 0\nvj_npc_nosnpcchat 0\nvj_npc_nomedics 0\nvj_npc_nomeleedmgdsp 0"})
+	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_nocorpses 0\nvj_npc_nobleed 0\nvj_npc_nomelee 0\nvj_npc_norange 0\nvj_npc_noleap 0\nvj_npc_noflinching 0\nvj_npc_noallies 0\nvj_npc_noweapon 0\nvj_npc_nowandering 0\nvj_npc_nogib 0\nvj_npc_nodeathanimation 0\nvj_npc_nodangerdetection 0\nvj_npc_animal_runontouch 0\nvj_npc_animal_runonhit 0\nvj_npc_slowplayer 0\nvj_npc_bleedenemyonmelee 0\nvj_npc_noproppush 0\nvj_npc_nopropattack 0\nvj_npc_nogibdeathparticles 0\nvj_npc_noidleparticle 0\nvj_npc_nogibdecals 0\nvj_npc_noreload 0\nvj_npc_nobecomeenemytoply 0\nvj_npc_nofollowplayer 0\nvj_npc_nothrowgrenade 0\nvj_npc_nobloodpool 0\nvj_npc_nochasingenemy 0\nvj_npc_nosnpcchat 0\nvj_npc_nomedics 0\nvj_npc_nomeleedmgdsp 0"})
 	
 	Panel:AddControl("Label", {Text = "#vjbase.menu.snpc.settings.label1"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.settings.togglewandering", Command = "vj_npc_nowandering"})
@@ -111,7 +111,7 @@ local function VJ_SNPC_SETTINGS(Panel) -- Settings
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.settings.togglebecomeenemytoply", Command = "vj_npc_nobecomeenemytoply"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.settings.toggleproppush", Command = "vj_npc_noproppush"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.settings.togglepropattack", Command = "vj_npc_nopropattack"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.settings.togglescarednade", Command = "vj_npc_noscarednade"})
+	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.settings.toggledangersight", Command = "vj_npc_nodangerdetection"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.settings.togglereloading", Command = "vj_npc_noreload"})
 	
 	Panel:AddControl("Label", {Text = "#vjbase.menu.snpc.settings.label4"})
@@ -157,7 +157,7 @@ local function VJ_SNPC_SOUNDSETTINGS(Panel) -- Sound Settings
 	
 	Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 	Panel:AddControl("Label", {Text = "#vjbase.menu.general.snpc.warnfuture"})
-	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_sd_nosounds 0\n vj_npc_sd_idle 0\n vj_npc_sd_alert 0\n vj_npc_sd_pain 0\n vj_npc_sd_death 0\n vj_npc_sd_footstep 0\n vj_npc_sd_soundtrack 0\n vj_npc_sd_meleeattack 0\n vj_npc_sd_meleeattackmiss 0\n vj_npc_sd_rangeattack 0\n vj_npc_sd_leapattack 0\n vj_npc_sd_ongrenadesight 0\n vj_npc_sd_onplayersight 0\n vj_npc_sd_damagebyplayer 0\n vj_npc_sd_slowplayer 0\n vj_npc_sd_gibbing 0\n vj_npc_sd_breath 0\n vj_npc_sd_followplayer 0\n vj_npc_sd_becomenemytoply 0\n vj_npc_sd_medic 0\n vj_npc_sd_reload 0\n vj_npc_sd_grenadeattack 0\n vj_npc_sd_suppressing 0\n vj_npc_sd_callforhelp 0\n vj_npc_sd_onreceiveorder 0"})
+	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_sd_nosounds 0\n vj_npc_sd_idle 0\n vj_npc_sd_alert 0\n vj_npc_sd_pain 0\n vj_npc_sd_death 0\n vj_npc_sd_footstep 0\n vj_npc_sd_soundtrack 0\n vj_npc_sd_meleeattack 0\n vj_npc_sd_meleeattackmiss 0\n vj_npc_sd_rangeattack 0\n vj_npc_sd_leapattack 0\n vj_npc_sd_ondangersight 0\n vj_npc_sd_onplayersight 0\n vj_npc_sd_damagebyplayer 0\n vj_npc_sd_slowplayer 0\n vj_npc_sd_gibbing 0\n vj_npc_sd_breath 0\n vj_npc_sd_followplayer 0\n vj_npc_sd_becomenemytoply 0\n vj_npc_sd_medic 0\n vj_npc_sd_reload 0\n vj_npc_sd_grenadeattack 0\n vj_npc_sd_suppressing 0\n vj_npc_sd_callforhelp 0\n vj_npc_sd_onreceiveorder 0"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.sdsettings.toggleallsounds", Command = "vj_npc_sd_nosounds"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.sdsettings.togglesoundtrack", Command = "vj_npc_sd_soundtrack"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.sdsettings.toggleidle", Command = "vj_npc_sd_idle"})
@@ -188,7 +188,7 @@ local function VJ_SNPC_SOUNDSETTINGS(Panel) -- Sound Settings
 	
 	Panel:AddControl("Label", {Text = "#vjbase.menu.general.snpc.humansettings"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.sdsettings.togglegrenade", Command = "vj_npc_sd_grenadeattack"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.sdsettings.togglegrenadesight", Command = "vj_npc_sd_ongrenadesight"})
+	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.sdsettings.toggledangersight", Command = "vj_npc_sd_ondangersight"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.sdsettings.togglesuppressing", Command = "vj_npc_sd_suppressing"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.sdsettings.togglereload", Command = "vj_npc_sd_reload"})
 end

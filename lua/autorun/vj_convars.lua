@@ -42,7 +42,7 @@ cvarList_Ent["vj_npc_nopropattack"] = 0 -- Disable SNPCs attacking props
 cvarList_Ent["vj_npc_nomeleedmgdsp"] = 0 -- Disables the melee attack DSP effect on heavy damages
 	-- ====== Human Settings ====== --
 cvarList_Ent["vj_npc_noweapon"] = 0 -- No Weapon - Human
-cvarList_Ent["vj_npc_noscarednade"] = 0 -- Disable running from grenades
+cvarList_Ent["vj_npc_nodangerdetection"] = 0 -- Disable running from grenades/dangers
 cvarList_Ent["vj_npc_noreload"] = 0 -- Disable reloading
 cvarList_Ent["vj_npc_nothrowgrenade"] = 0 -- Disable humans SNPCs throwing grenades
 	-- ====== Animal Settings ====== --
@@ -105,7 +105,7 @@ cvarList_Ent["vj_npc_sd_rangeattack"] = 0 -- Disable Range Attack Sounds
 cvarList_Ent["vj_npc_sd_leapattack"] = 0 -- Disable Leap Attack Sounds
 cvarList_Ent["vj_npc_sd_slowplayer"] = 0 -- Disables Slow Player Melee sounds
 	-- ====== Human Sound Settings ====== --
-cvarList_Ent["vj_npc_sd_ongrenadesight"] = 0 -- Disable on grenade sight Sounds
+cvarList_Ent["vj_npc_sd_ondangersight"] = 0 -- Disable on grenade / danger sight Sounds
 cvarList_Ent["vj_npc_sd_reload"] = 0 -- Disable medic sounds
 cvarList_Ent["vj_npc_sd_grenadeattack"] = 0 -- Disable grenade attack sounds
 cvarList_Ent["vj_npc_sd_suppressing"] = 0 -- Disable suppressing callout sounds
