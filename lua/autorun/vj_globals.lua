@@ -595,7 +595,7 @@ hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 		if SERVER && (ent:IsPlayer() or ent:IsNPC()) && data.SoundLevel >= 75 then
 			//print("---------------------------")
 			//PrintTable(data)
-			local quiet = (string_StartWith(data.OriginalSoundName, "player/footsteps") and (ent:Crouching() or ent:KeyDown(IN_WALK))) or false
+			local quiet = (string_StartWith(data.OriginalSoundName, "player/footsteps") and (ent:IsPlayer() && (ent:Crouching() or ent:KeyDown(IN_WALK)))) or false
 			if quiet != true && ent.Dead != true then
 				ent.VJ_LastInvestigateSd = CurTime()
 				ent.VJ_LastInvestigateSdLevel = (data.SoundLevel * data.Volume) + (((data.Volume <= 0.4) and 15) or 0)

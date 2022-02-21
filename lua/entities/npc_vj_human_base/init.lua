@@ -21,7 +21,7 @@ ENT.VJ_IsHugeMonster = false -- Is this a huge monster?
 ENT.StartHealth = 50 -- The starting health of the NPC
 ENT.HasHealthRegeneration = false -- Can the SNPC regenerate its health?
 ENT.HealthRegenerationAmount = 4 -- How much should the health increase after every delay?
-ENT.HealthRegenerationDelay = VJ_Set(2,4) -- How much time until the health increases
+ENT.HealthRegenerationDelay = VJ_Set(2, 4) -- How much time until the health increases
 ENT.HealthRegenerationResetOnDmg = true -- Should the delay reset when it receives damage?
 	-- ====== Collision / Hitbox Variables ====== --
 ENT.HullType = HULL_HUMAN
@@ -78,11 +78,11 @@ ENT.BecomeEnemyToPlayerLevel = 2 -- Any time the player does something bad, the 
 ENT.PlayerFriendly = false -- Makes the SNPC friendly to the player and HL2 Resistance
 	-- ====== Passive Behavior Variables ====== --
 ENT.Passive_RunOnTouch = true -- Should it run away and make a alert sound when something collides with it?
-ENT.Passive_NextRunOnTouchTime = VJ_Set(3,4) -- How much until it can run away again when something collides with it?
+ENT.Passive_NextRunOnTouchTime = VJ_Set(3, 4) -- How much until it can run away again when something collides with it?
 ENT.Passive_RunOnDamage = true -- Should it run when it's damaged? | This doesn't impact how self.Passive_AlliesRunOnDamage works
 ENT.Passive_AlliesRunOnDamage = true -- Should its allies (other passive SNPCs) also run when it's damaged?
 ENT.Passive_AlliesRunOnDamageDistance = 800 -- Any allies within this distance will run when it's damaged
-ENT.Passive_NextRunOnDamageTime = VJ_Set(6,7) -- How much until it can run the code again?
+ENT.Passive_NextRunOnDamageTime = VJ_Set(6, 7) -- How much until it can run the code again?
 	-- ====== On Player Sight Variables ====== --
 ENT.HasOnPlayerSight = false -- Should do something when it sees the enemy? Example: Play a sound
 ENT.OnPlayerSightDistance = 200 -- How close should the player be until it runs the code?
@@ -208,7 +208,7 @@ ENT.HitGroupFlinching_Values = nil -- EXAMPLES: {{HitGroup = {HITGROUP_HEAD}, An
 	-- ====== Damage By Player Variables ====== --
 ENT.HasDamageByPlayer = true -- Should the SNPC do something when it's hit by a player? Example: Play a sound or animation
 ENT.DamageByPlayerDispositionLevel = 1 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
-ENT.DamageByPlayerTime = VJ_Set(2,2) -- How much time until it can run the Damage By Player code?
+ENT.DamageByPlayerTime = VJ_Set(2, 2) -- How much time until it can run the Damage By Player code?
 	-- ====== Run Away On Unknown Damage Variables ====== --
 ENT.RunAwayOnUnknownDamage = true -- Should run away on damage
 ENT.NextRunAwayOnDamageTime = 5 -- Until next run after being shot when not alerted
@@ -219,12 +219,12 @@ ENT.CallForBackUpOnDamageLimit = 4 -- How many people should it call? | 0 = Unli
 ENT.CallForBackUpOnDamageAnimation = {ACT_SIGNAL_GROUP} -- Animation used if the SNPC does the CallForBackUpOnDamage function
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.CallForBackUpOnDamageAnimationTime = false -- How much time until it can use activities
-ENT.NextCallForBackUpOnDamageTime = VJ_Set(9,11) -- Next time it use the CallForBackUpOnDamage function
+ENT.NextCallForBackUpOnDamageTime = VJ_Set(9, 11) -- Next time it use the CallForBackUpOnDamage function
 ENT.DisableCallForBackUpOnDamageAnimation = false -- Disables the animation when the CallForBackUpOnDamage function is called
 	-- ====== Move Or Hide On Damage Variables ====== --
 ENT.MoveOrHideOnDamageByEnemy = true -- Should the SNPC move or hide when being damaged by an enemy?
 ENT.MoveOrHideOnDamageByEnemy_OnlyMove = false -- Should it only move and not hide?
-ENT.MoveOrHideOnDamageByEnemy_HideTime = VJ_Set(3,4) -- How long should it hide?
+ENT.MoveOrHideOnDamageByEnemy_HideTime = VJ_Set(3, 4) -- How long should it hide?
 ENT.NextMoveOrHideOnDamageByEnemy1 = 3 -- How much time until it moves or hides on damage by enemy? | The first # in math.random
 ENT.NextMoveOrHideOnDamageByEnemy2 = 3.5 -- How much time until it moves or hides on damage by enemy? | The second # in math.random
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -382,11 +382,15 @@ ENT.GrenadeAttackAnimationStopAttacks = true -- Should it stop attacks for a cer
 	-- To let the base automatically detect the attack duration, set this to false:
 ENT.GrenadeAttackAnimationStopAttacksTime = false -- How long should it stop attacks?
 ENT.GrenadeAttackFussTime = 3 -- Time until the grenade explodes
-	-- ====== Grenade Detection & Throwing Back Variables ====== --
-ENT.CanDetectGrenades = true -- Set to false to disable the SNPC from running away from grenades
-ENT.RunFromGrenadeDistance = 400 -- If the entity is this close to the it, then run!
-	-- NOTE: The ability to throw grenades back only work if the SNPC can detect grenades AND has a grenade attack!
-ENT.CanThrowBackDetectedGrenades = true -- Should it try to pick up the detected grenade and throw it back to the enemy?
+	-- ====== Danger Detection & Grenade Throw Back Variables ====== --
+	-- EXAMPLES: Props that are one fire, especially objects like barrels that are about to explode, Combine mine that is triggered and about to explode, The location that the Antlion Worker's spit is going to hit, Combine Flechette that is about to explode,
+	-- Antlion Guard that is charging towards the NPC, Player that is driving a vehicle at high speed towards the NPC, Manhack that has opened its blades, Rollermine that is about to self-destruct, Combine Helicopter that is about to drop bombs or is firing a turret near the NPC,
+	-- Combine Gunship's is about to fire its belly cannon near the NPC, Turret impact locations fired by Combine Gunships, or Combine Dropships, or Striders, The location that a Combine Dropship is going to deploy soldiers, Strider is moving on top of the NPC,
+	-- The location that the Combine or HECU mortar is going to hit, SMG1 grenades that are flying close by, A Combine soldier that is rappelling on top of the NPC, Stalker's laser impact location, Combine APC that is driving towards the NPC
+ENT.CanDetectDangers = true -- Should the NPC detect dangers?
+ENT.GrenadeDetectionDistance = 400 -- The max grenade detection distance
+ENT.CanThrowBackDetectedGrenades = true -- Should it pick up the detected grenade and throw it away or to the enemy?
+	-- NOTE: Can only throw grenades away if it has a grenade attack AND can detect dangers
 	-- ====== Control Variables ====== --
 ENT.DisableGrenadeAttackAnimation = false -- if true, it will disable the animation code when doing grenade attack
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -441,6 +445,7 @@ ENT.HasExtraMeleeAttackSounds = false -- Set to true to use the extra melee atta
 ENT.HasMeleeAttackMissSounds = true -- If set to false, it won't play the melee attack miss sound
 ENT.HasGrenadeAttackSounds = true -- If set to false, it won't play any sound when doing grenade attack
 ENT.HasOnGrenadeSightSounds = true -- If set to false, it won't play any sounds when it sees a grenade
+ENT.HasOnDangerSightSounds = true -- If set to false, it won't play any sounds when it detects a danger
 ENT.HasOnKilledEnemySound = true -- Should it play a sound when it kills an enemy?
 ENT.HasAllyDeathSound = true -- Should it paly a sound when an ally dies?
 ENT.HasPainSounds = true -- If set to false, it won't play the pain sounds
@@ -477,6 +482,7 @@ ENT.SoundTbl_MeleeAttackExtra = {}
 ENT.SoundTbl_MeleeAttackMiss = {}
 ENT.SoundTbl_GrenadeAttack = {}
 ENT.SoundTbl_OnGrenadeSight = {}
+ENT.SoundTbl_OnDangerSight = {}
 ENT.SoundTbl_OnKilledEnemy = {}
 ENT.SoundTbl_AllyDeath = {}
 ENT.SoundTbl_Pain = {}
@@ -521,6 +527,7 @@ ENT.ExtraMeleeSoundChance = 1
 ENT.MeleeAttackMissSoundChance = 1
 ENT.GrenadeAttackSoundChance = 1
 ENT.OnGrenadeSightSoundChance = 1
+ENT.OnDangerSightSoundChance = 1
 ENT.SuppressingSoundChance = 2
 ENT.WeaponReloadSoundChance = 1
 ENT.OnKilledEnemySoundChance = 1
@@ -538,6 +545,7 @@ ENT.NextSoundTime_Investigate = VJ_Set(5, 5)
 ENT.NextSoundTime_LostEnemy = VJ_Set(5, 6)
 ENT.NextSoundTime_Alert = VJ_Set(2, 3)
 ENT.NextSoundTime_OnGrenadeSight = VJ_Set(3, 3)
+ENT.NextSoundTime_OnDangerSight = VJ_Set(3, 3)
 ENT.NextSoundTime_Suppressing = VJ_Set(7, 15)
 ENT.NextSoundTime_WeaponReload = VJ_Set(3, 5)
 ENT.NextSoundTime_OnKilledEnemy = VJ_Set(3, 5)
@@ -578,6 +586,7 @@ ENT.SuppressingSoundLevel = 80
 ENT.WeaponReloadSoundLevel = 80
 ENT.GrenadeAttackSoundLevel = 80
 ENT.OnGrenadeSightSoundLevel = 80
+ENT.OnDangerSightSoundLevel = 80
 ENT.OnKilledEnemySoundLevel = 80
 ENT.AllyDeathSoundLevel = 80
 ENT.PainSoundLevel = 80
@@ -620,6 +629,7 @@ ENT.SuppressingPitch = VJ_Set(false, false)
 ENT.WeaponReloadSoundPitch = VJ_Set(false, false)
 ENT.GrenadeAttackSoundPitch = VJ_Set(false, false)
 ENT.OnGrenadeSightSoundPitch = VJ_Set(false, false)
+ENT.OnDangerSightSoundPitch = VJ_Set(false, false)
 ENT.OnKilledEnemySoundPitch = VJ_Set(false, false)
 ENT.AllyDeathSoundPitch = VJ_Set(false, false)
 ENT.PainSoundPitch = VJ_Set(false, false)
@@ -872,7 +882,7 @@ ENT.Medic_CurrentEntToHeal = NULL
 ENT.Medic_SpawnedProp = NULL
 ENT.CurrentWeaponEntity = NULL
 ENT.LastPlayedVJSound = nil
-ENT.NextGrenadeDetectionT = 0
+ENT.NextDangerDetectionT = 0
 ENT.NextFollowPlayerT = 0
 ENT.AngerLevelTowardsPlayer = 0
 ENT.NextBreathSoundT = 0
@@ -889,6 +899,7 @@ ENT.NextProcessT = 0
 ENT.NextThrowGrenadeT = 0
 ENT.NextCallForBackUpOnDamageT = 0
 ENT.NextOnGrenadeSightSoundT = 0
+ENT.NextOnDangerSightSoundT = 0
 ENT.NextMoveOrHideOnDamageByEnemyT = 0
 ENT.NextAlertSoundT = 0
 ENT.LastSeenEnemyTime = 0
@@ -958,6 +969,7 @@ local GetConVar = GetConVar
 local isstring = isstring
 local isnumber = isnumber
 local tonumber = tonumber
+local getSdHint = sound.GetLoudestSoundHint
 local varCAnt = "CLASS_ANTLION"
 local varCCom = "CLASS_COMBINE"
 local varCZom = "CLASS_ZOMBIE"
@@ -990,7 +1002,7 @@ local function ConvarsOnInit(self)
 	//if GetConVar("vj_npc_noforeverammo"):GetInt() == 1 then self.Weapon_UnlimitedAmmo = false end
 	if GetConVar("vj_npc_nothrowgrenade"):GetInt() == 1 then self.HasGrenadeAttack = false end
 	//if GetConVar("vj_npc_nouseregulator"):GetInt() == 1 then self.DisableUSE_SHOT_REGULATOR = true end
-	if GetConVar("vj_npc_noscarednade"):GetInt() == 1 then self.CanDetectGrenades = false end
+	if GetConVar("vj_npc_nodangerdetection"):GetInt() == 1 then self.CanDetectDangers = false end
 	if GetConVar("vj_npc_dropweapon"):GetInt() == 0 then self.DropWeaponOnDeath = false end
 	if GetConVar("vj_npc_nomedics"):GetInt() == 1 then self.IsMedicSNPC = false end
 	if GetConVar("vj_npc_nogibdeathparticles"):GetInt() == 1 then self.HasGibDeathParticles = false end
@@ -1003,7 +1015,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_sd_idle"):GetInt() == 1 then self.HasIdleSounds = false end
 	if GetConVar("vj_npc_sd_breath"):GetInt() == 1 then self.HasBreathSound = false end
 	if GetConVar("vj_npc_sd_alert"):GetInt() == 1 then self.HasAlertSounds = false end
-	if GetConVar("vj_npc_sd_ongrenadesight"):GetInt() == 1 then self.HasOnGrenadeSightSounds = false end
+	if GetConVar("vj_npc_sd_ondangersight"):GetInt() == 1 then self.HasOnGrenadeSightSounds = false self.HasOnDangerSightSounds = false end
 	if GetConVar("vj_npc_sd_meleeattack"):GetInt() == 1 then self.HasMeleeAttackSounds = false self.HasExtraMeleeAttackSounds = false end
 	if GetConVar("vj_npc_sd_meleeattackmiss"):GetInt() == 1 then self.HasMeleeAttackMissSounds = false end
 	if GetConVar("vj_npc_sd_pain"):GetInt() == 1 then self.HasPainSounds = false end
@@ -1968,9 +1980,18 @@ end
 	m_flBlinktime = Time until it blinks again (Can be used to set it as well)
 	
 	self:SetLocalVelocity(self:GetMoveVelocity() * 1.5)
+	
+	-- To test sound hints:
+	local test = getSdHint(bit.bor(SOUND_DANGER, SOUND_CONTEXT_PLAYER_VEHICLE), self:GetPos())
+	if istable(test) then
+		print("---------------------")
+		print(test.origin:Distance(self:GetPos()))
+		PrintTable(test)
+	end
 */
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
+	//PrintTable(self:GetAnimInfo(self:GetActivity()))
 	//self:MoveStop()
 	//self:ResetMoveCalc()
 	//print("---------------------")
@@ -2003,18 +2024,18 @@ function ENT:Think()
 			//self:SetCondition(35)
 			//self:StopMoving()
 		end
-		-- No longer needed, self:OnMovementFailed() now handles it
-		/*if self:HasCondition(35) then
-			if curSched.AlreadyRanCode_OnFail == false && self:DoRunCode_OnFail(curSched) == true then
+		-- self:OnMovementFailed() handles some of them, but we do still need this for non-movement failures (EX: Finding cover area)
+		if self:HasCondition(35) then
+			//print("VJ Base: Task Failed Condition Identified! "..self:GetName())
+			if self:DoRunCode_OnFail(curSched) == true then
 				self:ClearCondition(35)
 			end
 			if curSched.ResetOnFail == true then
+				self:ClearCondition(35)
 				self:StopMoving()
 				//self:SelectSchedule()
-				self:ClearCondition(35)
-				//print("VJ Base: Task Failed Condition Identified! "..self:GetName())
 			end
-		end*/
+		end
 	end
 	
 	//print("------------------")
@@ -2269,7 +2290,7 @@ function ENT:Think()
 
 			if CurTime() > self.NextProcessT then
 				self:DoEntityRelationshipCheck()
-				self:CheckForGrenades()
+				self:CheckForDangers()
 				self:DoMedicCode()
 				self.NextProcessT = CurTime() + self.NextProcessTime
 			end
@@ -2612,17 +2633,24 @@ function ENT:ThrowGrenadeCode(customEnt, noOwner)
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CheckForGrenades()
-	if self.CanDetectGrenades == false or self.ThrowingGrenade == true or self.NextGrenadeDetectionT > CurTime() or self.VJ_IsBeingControlled == true then return end
-	for _,v in pairs(ents.FindInSphere(self:GetPos(), self.RunFromGrenadeDistance)) do
+local sdBitSource = bit.bor(SOUND_DANGER, SOUND_CONTEXT_REACT_TO_SOURCE)
+local sdBitCombine = bit.bor(SOUND_DANGER, SOUND_CONTEXT_EXCLUDE_COMBINE)
+local sdBitPlyVehicle = bit.bor(SOUND_DANGER, SOUND_CONTEXT_PLAYER_VEHICLE)
+local sdBitMortar = bit.bor(SOUND_DANGER, SOUND_CONTEXT_MORTAR)
+-- 
+function ENT:CheckForDangers()
+	if !self.CanDetectDangers or self.ThrowingGrenade or self.NextDangerDetectionT > CurTime() or self.VJ_IsBeingControlled then return end
+	local myPos = self:GetPos()
+	for _,v in pairs(ents.FindInSphere(myPos, self.GrenadeDetectionDistance)) do
 		local friGren = false -- Don't throw back if it's an ally's grenade
 		if (self.EntitiesToRunFrom[v:GetClass()] or v.VJ_IsDetectableDanger) && self:Visible(v) then
-			if IsValid(v:GetOwner()) && v:GetOwner().IsVJBaseSNPC == true && ((self:GetClass() == v:GetOwner():GetClass()) or (self:Disposition(v:GetOwner()) == D_LI)) then
+			local vOwner = v:GetOwner()
+			if IsValid(vOwner) && vOwner.IsVJBaseSNPC == true && ((self:GetClass() == vOwner:GetClass()) or (self:Disposition(vOwner) == D_LI)) then
 				friGren = true
 			end
 			if friGren == false then
 				self:PlaySoundSystem("OnGrenadeSight")
-				self.NextGrenadeDetectionT = CurTime() + 4
+				self.NextDangerDetectionT = CurTime() + 4
 				self.TakingCoverT = CurTime() + 4
 				-- If has the ability to throw it back, then throw the grenade!
 				if self.CanThrowBackDetectedGrenades == true && v.VJ_DisablePickupableDanger != true && v.VJ_IsPickedUpDanger != true && self.HasGrenadeAttack == true && v:GetVelocity():Length() < 400 && self:VJ_GetNearestPointToEntityDistance(v) < 100 && (self.EntitiesToThrowBack[v:GetClass()] or v.VJ_IsPickupableDanger) then
@@ -2636,12 +2664,29 @@ function ENT:CheckForGrenades()
 					x.CanShootWhenMoving = true
 					x.ConstantlyFaceEnemy = true
 					/*x.RunCode_OnFinish = function()
-						self.NextGrenadeDetectionT = false
+						self.NextDangerDetectionT = false
 					end*/
 				end)
 				return
 			end
 		end
+	end
+	-- What some of the specific types are for:
+		-- bit.bor(SOUND_DANGER, SOUND_CONTEXT_EXCLUDE_COMBINE) ---> Flechette impact position, Strider foot impact position
+		-- bit.bor(SOUND_DANGER, SOUND_CONTEXT_REACT_TO_SOURCE) ---> Combine dropship impact position, Combine gunship turret impact position, Strider minigun impact position
+		-- bit.bor(SOUND_DANGER, SOUND_CONTEXT_PLAYER_VEHICLE) ---> Player driving a vehicle
+		-- bit.bor(SOUND_DANGER, SOUND_CONTEXT_MORTAR) ---> Combine mortars impact position
+	-- More info about sound hints: https://github.com/DrVrej/VJ-Base/wiki/Developer-Notes#sound-hints
+	local sdHintDanger = getSdHint(SOUND_DANGER, myPos) or getSdHint(sdBitSource, myPos) or getSdHint(sdBitCombine, myPos) or getSdHint(sdBitPlyVehicle, myPos) or getSdHint(sdBitMortar, myPos)
+	if sdHintDanger then
+		self:PlaySoundSystem("OnDangerSight")
+		self.NextDangerDetectionT = CurTime() + 4
+		self.TakingCoverT = CurTime() + 4
+		self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH", function(x)
+			x.CanShootWhenMoving = true
+			x.ConstantlyFaceEnemy = true
+		end)
+		return
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3682,7 +3727,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.FollowPlayerSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentFollowPlayerSound = sdType(self, sdtbl, self.FollowPlayerSoundLevel, self:VJ_DecideSoundPitch(self.FollowPlayerPitch.a, self.FollowPlayerPitch.b))
 			end
 		end
@@ -3693,7 +3738,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.UnFollowPlayerSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentUnFollowPlayerSound = sdType(self, sdtbl, self.UnFollowPlayerSoundLevel, self:VJ_DecideSoundPitch(self.UnFollowPlayerPitch.a, self.UnFollowPlayerPitch.b))
 			end
 		end
@@ -3716,7 +3761,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.MoveOutOfPlayersWaySoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentMoveOutOfPlayersWaySound = sdType(self, sdtbl, self.MoveOutOfPlayersWaySoundLevel, self:VJ_DecideSoundPitch(self.MoveOutOfPlayersWaySoundPitch.a, self.MoveOutOfPlayersWaySoundPitch.b))
 			end
 		end
@@ -3727,7 +3772,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.MedicBeforeHealSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentMedicBeforeHealSound = sdType(self, sdtbl, self.BeforeHealSoundLevel, self:VJ_DecideSoundPitch(self.BeforeHealSoundPitch.a, self.BeforeHealSoundPitch.b))
 			end
 		end
@@ -3739,7 +3784,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.MedicAfterHealSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentMedicAfterHealSound = sdType(self, sdtbl, self.AfterHealSoundLevel, self:VJ_DecideSoundPitch(self.AfterHealSoundPitch.a, self.AfterHealSoundPitch.b))
 			end
 		end
@@ -3750,7 +3795,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.MedicReceiveHealSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentMedicReceiveHealSound = sdType(self, sdtbl, self.MedicReceiveHealSoundLevel, self:VJ_DecideSoundPitch(self.MedicReceiveHealSoundPitch.a, self.MedicReceiveHealSoundPitch.b))
 			end
 		end
@@ -3761,7 +3806,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.OnPlayerSightSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.NextAlertSoundT = CurTime() + math.random(1,2)
 				self.CurrentOnPlayerSightSound = sdType(self, sdtbl, self.OnPlayerSightSoundLevel, self:VJ_DecideSoundPitch(self.OnPlayerSightSoundPitch.a, self.OnPlayerSightSoundPitch.b))
 			end
@@ -3922,7 +3967,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.WeaponReloadSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentWeaponReloadSound = sdType(self, sdtbl, self.WeaponReloadSoundLevel, self:VJ_DecideSoundPitch(self.WeaponReloadSoundPitch.a, self.WeaponReloadSoundPitch.b))
 			end
 			self.NextWeaponReloadSoundT = CurTime() + math.Rand(self.NextSoundTime_WeaponReload.a, self.NextSoundTime_WeaponReload.b)
@@ -3976,7 +4021,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.GrenadeAttackSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				if self.IdleSounds_PlayOnAttacks == false then self:StopAllCommonSpeechSounds() end -- Don't stop idle sounds if we aren't suppose to
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentGrenadeAttackSound = sdType(self, sdtbl, self.GrenadeAttackSoundLevel, self:VJ_DecideSoundPitch(self.GrenadeAttackSoundPitch.a, self.GrenadeAttackSoundPitch.b))
 			end
 		end
@@ -3987,10 +4032,22 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.OnGrenadeSightSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentOnGrenadeSightSound = sdType(self, sdtbl, self.OnGrenadeSightSoundLevel, self:VJ_DecideSoundPitch(self.OnGrenadeSightSoundPitch.a, self.OnGrenadeSightSoundPitch.b))
 			end
 			self.NextOnGrenadeSightSoundT = CurTime() + math.Rand(self.NextSoundTime_OnGrenadeSight.a, self.NextSoundTime_OnGrenadeSight.b)
+		end
+		return
+	elseif sdSet == "OnDangerSight" then
+		if self.HasOnDangerSightSounds == true && CurTime() > self.NextOnDangerSightSoundT then
+			local sdtbl = VJ_PICK(self.SoundTbl_OnDangerSight)
+			if (math.random(1, self.OnDangerSightSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
+				if cTbl != false then sdtbl = cTbl end
+				self:StopAllCommonSpeechSounds()
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
+				self.CurrentOnDangerSightSound = sdType(self, sdtbl, self.OnDangerSightSoundLevel, self:VJ_DecideSoundPitch(self.OnDangerSightSoundPitch.a, self.OnDangerSightSoundPitch.b))
+			end
+			self.NextOnDangerSightSoundT = CurTime() + math.Rand(self.NextSoundTime_OnDangerSight.a, self.NextSoundTime_OnDangerSight.b)
 		end
 		return
 	end
@@ -4044,6 +4101,7 @@ function ENT:StopAllCommonSpeechSounds()
 	VJ_STOPSOUND(self.CurrentOnPlayerSightSound)
 	VJ_STOPSOUND(self.CurrentDamageByPlayerSound)
 	VJ_STOPSOUND(self.CurrentOnGrenadeSightSound)
+	VJ_STOPSOUND(self.CurrentOnDangerSightSound)
 	VJ_STOPSOUND(self.CurrentWeaponReloadSound)
 	VJ_STOPSOUND(self.CurrentMedicBeforeHealSound)
 	VJ_STOPSOUND(self.CurrentMedicAfterHealSound)
@@ -4075,6 +4133,7 @@ function ENT:StopAllCommonSounds()
 	VJ_STOPSOUND(self.CurrentDamageByPlayerSound)
 	VJ_STOPSOUND(self.CurrentGrenadeAttackSound)
 	VJ_STOPSOUND(self.CurrentOnGrenadeSightSound)
+	VJ_STOPSOUND(self.CurrentOnDangerSightSound)
 	VJ_STOPSOUND(self.CurrentSuppressingSound)
 	VJ_STOPSOUND(self.CurrentWeaponReloadSound)
 	VJ_STOPSOUND(self.CurrentMedicBeforeHealSound)

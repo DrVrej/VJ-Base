@@ -21,7 +21,7 @@ ENT.VJ_IsHugeMonster = false -- Is this a huge monster?
 ENT.StartHealth = 50 -- The starting health of the NPC
 ENT.HasHealthRegeneration = false -- Can the SNPC regenerate its health?
 ENT.HealthRegenerationAmount = 4 -- How much should the health increase after every delay?
-ENT.HealthRegenerationDelay = VJ_Set(2,4) -- How much time until the health increases
+ENT.HealthRegenerationDelay = VJ_Set(2, 4) -- How much time until the health increases
 ENT.HealthRegenerationResetOnDmg = true -- Should the delay reset when it receives damage?
 	-- ====== Collision / Hitbox Variables ====== --
 ENT.HullType = HULL_HUMAN
@@ -96,11 +96,11 @@ ENT.BecomeEnemyToPlayerLevel = 2 -- Any time the player does something bad, the 
 ENT.PlayerFriendly = false -- Makes the SNPC friendly to the player and HL2 Resistance
 	-- ====== Passive Behavior Variables ====== --
 ENT.Passive_RunOnTouch = true -- Should it run away and make a alert sound when something collides with it?
-ENT.Passive_NextRunOnTouchTime = VJ_Set(3,4) -- How much until it can run away again when something collides with it?
+ENT.Passive_NextRunOnTouchTime = VJ_Set(3, 4) -- How much until it can run away again when something collides with it?
 ENT.Passive_RunOnDamage = true -- Should it run when it's damaged? | This doesn't impact how self.Passive_AlliesRunOnDamage works
 ENT.Passive_AlliesRunOnDamage = true -- Should its allies (other passive SNPCs) also run when it's damaged?
 ENT.Passive_AlliesRunOnDamageDistance = 800 -- Any allies within this distance will run when it's damaged
-ENT.Passive_NextRunOnDamageTime = VJ_Set(6,7) -- How much until it can run the code again?
+ENT.Passive_NextRunOnDamageTime = VJ_Set(6, 7) -- How much until it can run the code again?
 	-- ====== On Player Sight Variables ====== --
 ENT.HasOnPlayerSight = false -- Should do something when it sees the enemy? Example: Play a sound
 ENT.OnPlayerSightDistance = 200 -- How close should the player be until it runs the code?
@@ -232,7 +232,7 @@ ENT.HitGroupFlinching_Values = nil -- EXAMPLES: {{HitGroup = {HITGROUP_HEAD}, An
 	-- ====== Damage By Player Variables ====== --
 ENT.HasDamageByPlayer = true -- Should the SNPC do something when it's hit by a player? Example: Play a sound or animation
 ENT.DamageByPlayerDispositionLevel = 1 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
-ENT.DamageByPlayerTime = VJ_Set(2,2) -- How much time until it can run the Damage By Player code?
+ENT.DamageByPlayerTime = VJ_Set(2, 2) -- How much time until it can run the Damage By Player code?
 	-- ====== Run Away On Unknown Damage Variables ====== --
 ENT.RunAwayOnUnknownDamage = true -- Should run away on damage
 ENT.NextRunAwayOnDamageTime = 5 -- Until next run after being shot when not alerted
@@ -243,7 +243,7 @@ ENT.CallForBackUpOnDamageLimit = 4 -- How many people should it call? | 0 = Unli
 ENT.CallForBackUpOnDamageAnimation = {} -- Animation used if the SNPC does the CallForBackUpOnDamage function
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.CallForBackUpOnDamageAnimationTime = false -- How much time until it can use activities
-ENT.NextCallForBackUpOnDamageTime = VJ_Set(9,11) -- Next time it use the CallForBackUpOnDamage function
+ENT.NextCallForBackUpOnDamageTime = VJ_Set(9, 11) -- Next time it use the CallForBackUpOnDamage function
 ENT.DisableCallForBackUpOnDamageAnimation = false -- Disables the animation when the CallForBackUpOnDamage function is called
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Death & Corpse Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1656,18 +1656,18 @@ function ENT:Think()
 			//self:SetCondition(35)
 			//self:StopMoving()
 		end
-		-- No longer needed, self:OnMovementFailed() now handles it
-		/*if self:HasCondition(35) then
-			if curSched.AlreadyRanCode_OnFail == false && self:DoRunCode_OnFail(curSched) == true then
+		-- self:OnMovementFailed() handles some of them, but we do still need this for non-movement failures (EX: Finding cover area)
+		if self:HasCondition(35) then
+			//print("VJ Base: Task Failed Condition Identified! "..self:GetName())
+			if self:DoRunCode_OnFail(curSched) == true then
 				self:ClearCondition(35)
 			end
 			if curSched.ResetOnFail == true then
+				self:ClearCondition(35)
 				self:StopMoving()
 				//self:SelectSchedule()
-				self:ClearCondition(35)
-				//print("VJ Base: Task Failed Condition Identified! "..self:GetName())
 			end
-		end*/
+		end
 	end
 	
 	self:CustomOnThink()
@@ -3077,7 +3077,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.FollowPlayerSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentFollowPlayerSound = sdType(self, sdtbl, self.FollowPlayerSoundLevel, self:VJ_DecideSoundPitch(self.FollowPlayerPitch.a, self.FollowPlayerPitch.b))
 			end
 		end
@@ -3088,7 +3088,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.UnFollowPlayerSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentUnFollowPlayerSound = sdType(self, sdtbl, self.UnFollowPlayerSoundLevel, self:VJ_DecideSoundPitch(self.UnFollowPlayerPitch.a, self.UnFollowPlayerPitch.b))
 			end
 		end
@@ -3111,7 +3111,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.MoveOutOfPlayersWaySoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentMoveOutOfPlayersWaySound = sdType(self, sdtbl, self.MoveOutOfPlayersWaySoundLevel, self:VJ_DecideSoundPitch(self.MoveOutOfPlayersWaySoundPitch.a, self.MoveOutOfPlayersWaySoundPitch.b))
 			end
 		end
@@ -3122,7 +3122,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.MedicBeforeHealSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentMedicBeforeHealSound = sdType(self, sdtbl, self.BeforeHealSoundLevel, self:VJ_DecideSoundPitch(self.BeforeHealSoundPitch.a, self.BeforeHealSoundPitch.b))
 			end
 		end
@@ -3134,7 +3134,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.MedicAfterHealSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentMedicAfterHealSound = sdType(self, sdtbl, self.AfterHealSoundLevel, self:VJ_DecideSoundPitch(self.AfterHealSoundPitch.a, self.AfterHealSoundPitch.b))
 			end
 		end
@@ -3145,7 +3145,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.MedicReceiveHealSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentMedicReceiveHealSound = sdType(self, sdtbl, self.MedicReceiveHealSoundLevel, self:VJ_DecideSoundPitch(self.MedicReceiveHealSoundPitch.a, self.MedicReceiveHealSoundPitch.b))
 			end
 		end
@@ -3156,7 +3156,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.OnPlayerSightSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3,4)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.NextAlertSoundT = CurTime() + math.random(1,2)
 				self.CurrentOnPlayerSightSound = sdType(self, sdtbl, self.OnPlayerSightSoundLevel, self:VJ_DecideSoundPitch(self.OnPlayerSightSoundPitch.a, self.OnPlayerSightSoundPitch.b))
 			end

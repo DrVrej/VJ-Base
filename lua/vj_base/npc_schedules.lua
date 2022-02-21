@@ -75,8 +75,9 @@ function ENT:VJ_TASK_COVER_FROM_ENEMY(moveType, customFunc)
 	vsched.IsMovingTask = true
 	if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
 	vsched.RunCode_OnFail = function()
+		//print("Cover from enemy failed!")
 		local vschedFail = ai_vj_schedule.New("vj_cover_from_enemy_fail")
-		vschedFail:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 1)
+		vschedFail:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
 		vschedFail:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
 		//vschedFail:EngTask(moveType, 0)
 		vschedFail:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
@@ -149,7 +150,7 @@ function ENT:DoRunCode_OnFinish(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnMovementFailed()
-	//print("Movement failed!")
+	//print("VJ Base: Movement Failed! "..self:GetName())
 	local curSchedule = self.CurrentSchedule
 	if curSchedule != nil then
 		if self:DoRunCode_OnFail(curSchedule) == true then
@@ -159,7 +160,6 @@ function ENT:OnMovementFailed()
 			self:ClearCondition(35)
 			self:StopMoving()
 			//self:SelectSchedule()
-			//print("VJ Base: Task Failed Condition Identified! "..self:GetName())
 		end
 	end
 end
@@ -179,7 +179,7 @@ function ENT:StartSchedule(schedule)
 	self:ClearCondition(35)
 	if (!schedule.RunCode_OnFail) then schedule.RunCode_OnFail = nil end -- Code that will run ONLY when it fails!
 	if (!schedule.RunCode_OnFinish) then schedule.RunCode_OnFinish = nil end -- Code that will run once the task finished (Will run even if failed)
-	if (!schedule.ResetOnFail) then schedule.ResetOnFail = false end -- Makes the NPC stop moving
+	if (!schedule.ResetOnFail) then schedule.ResetOnFail = false end -- Makes the NPC stop moving if it fails
 	if (!schedule.StopScheduleIfNotMoving) then schedule.StopScheduleIfNotMoving = false end -- Will stop from certain entities, such as other NPCs
 	if (!schedule.StopScheduleIfNotMoving_Any) then schedule.StopScheduleIfNotMoving_Any = false end -- Will stop from any blocking entity!
 	if (!schedule.CanBeInterrupted) then schedule.CanBeInterrupted = false end

@@ -163,7 +163,7 @@ function ENT:SetControlledNPC(GetEntity)
 			[7] = self.VJCE_NPC.CallForBackUpOnDamage,
 			[8] = self.VJCE_NPC.BringFriendsOnDeath,
 			[9] = self.VJCE_NPC.FollowPlayer,
-			[10] = self.VJCE_NPC.CanDetectGrenades,
+			[10] = self.VJCE_NPC.CanDetectDangers,
 			[11] = self.VJCE_NPC.Passive_RunOnTouch,
 			[12] = self.VJCE_NPC.Passive_RunOnDamage,
 			[13] = self.VJCE_NPC.IsGuard,
@@ -177,7 +177,7 @@ function ENT:SetControlledNPC(GetEntity)
 		self.VJCE_NPC.CallForBackUpOnDamage = false
 		self.VJCE_NPC.BringFriendsOnDeath = false
 		self.VJCE_NPC.FollowPlayer = false
-		self.VJCE_NPC.CanDetectGrenades = false
+		self.VJCE_NPC.CanDetectDangers = false
 		self.VJCE_NPC.Passive_RunOnTouch = false
 		self.VJCE_NPC.Passive_RunOnDamage = false
 		self.VJCE_NPC.IsGuard = false
@@ -529,7 +529,7 @@ function ENT:StopControlling(endKey)
 			self.VJCE_NPC.CallForBackUpOnDamage = self.VJC_Data_NPC[7]
 			self.VJCE_NPC.BringFriendsOnDeath = self.VJC_Data_NPC[8]
 			self.VJCE_NPC.FollowPlayer = self.VJC_Data_NPC[9]
-			self.VJCE_NPC.CanDetectGrenades = self.VJC_Data_NPC[10]
+			self.VJCE_NPC.CanDetectDangers = self.VJC_Data_NPC[10]
 			self.VJCE_NPC.Passive_RunOnTouch = self.VJC_Data_NPC[11]
 			self.VJCE_NPC.Passive_RunOnDamage = self.VJC_Data_NPC[12]
 			self.VJCE_NPC.IsGuard = self.VJC_Data_NPC[13]

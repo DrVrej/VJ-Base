@@ -39,6 +39,7 @@ local isnumber = isnumber
 //local string_Replace = string.Replace
 local string_sub = string.sub
 local table_remove = table.remove
+local bAND = bit.band
 local varCPly = "CLASS_PLAYER_ALLY"
 local varCAnt = "CLASS_ANTLION"
 local varCCom = "CLASS_COMBINE"
@@ -586,7 +587,7 @@ end
 // - DMG_DIRECT = Disabled because fire uses it!
 // - DMG_ALWAYSGIB = Make sure damage is NOT a bullet because GMod sets DMG_ALWAYSGIB randomly for certain bullets (Maybe if the damage is high?)
 function ENT:IsDefaultGibDamageType(dmgType)
-	return (bit.band(dmgType, DMG_ALWAYSGIB) != 0 && bit.band(dmgType, DMG_BULLET) == 0) or bit.band(dmgType, DMG_ENERGYBEAM) != 0 or bit.band(dmgType, DMG_BLAST) != 0 or bit.band(dmgType, DMG_VEHICLE) != 0 or bit.band(dmgType, DMG_CRUSH) != 0 or bit.band(dmgType, DMG_DISSOLVE) != 0 or bit.band(dmgType, DMG_SLOWBURN) != 0 or bit.band(dmgType, DMG_PHYSGUN) != 0 or bit.band(dmgType, DMG_PLASMA) != 0 or bit.band(dmgType, DMG_SONIC) != 0
+	return (bAND(dmgType, DMG_ALWAYSGIB) != 0 && bAND(dmgType, DMG_BULLET) == 0) or bAND(dmgType, DMG_ENERGYBEAM) != 0 or bAND(dmgType, DMG_BLAST) != 0 or bAND(dmgType, DMG_VEHICLE) != 0 or bAND(dmgType, DMG_CRUSH) != 0 or bAND(dmgType, DMG_DISSOLVE) != 0 or bAND(dmgType, DMG_SLOWBURN) != 0 or bAND(dmgType, DMG_PHYSGUN) != 0 or bAND(dmgType, DMG_PLASMA) != 0 or bAND(dmgType, DMG_SONIC) != 0
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1005,6 +1006,11 @@ function ENT:DoEntityRelationshipCheck()
 	local mySDir = self:GetSightDirection()
 	local mySAng = math.cos(math.rad(self.SightAngle))
 	local plyControlled = self.VJ_IsBeingControlled
+	local sdHintBullet = sound.GetLoudestSoundHint(SOUND_BULLET_IMPACT, myPos)
+	local sdHintBulletOwner = nil;
+	if sdHintBullet then
+		sdHintBulletOwner = sdHintBullet.owner
+	end
 	local it = 1
 	//for k, v in ipairs(posEnemies) do
 	//for it = 1, #posEnemies do
@@ -1080,7 +1086,7 @@ function ENT:DoEntityRelationshipCheck()
 				-- Investigation detection systems, including sound, movement and flashlight
 				if (!self.IsVJBaseSNPC_Tank) && !IsValid(self:GetEnemy()) && entFri == false then
 					if vPlayer then
-						if entFri == false then self:AddEntityRelationship(v, D_NU, 99) end
+						self:AddEntityRelationship(v, D_NU, 99) -- Make the player neutral since it's not supposed to be a friend
 						if v:Crouching() && v:GetMoveType() != MOVETYPE_NOCLIP then
 							sightDist = self.VJ_IsHugeMonster == true and 5000 or 2000
 						end
@@ -1090,19 +1096,29 @@ function ENT:DoEntityRelationshipCheck()
 							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 						end
 					end
-					//print(v.VJ_LastInvestigateSdLevel)
-					if v.VJ_LastInvestigateSdLevel && vDistanceToMy < (self.InvestigateSoundDistance * v.VJ_LastInvestigateSdLevel) && ((CurTime() - v.VJ_LastInvestigateSd) <= 1) && self.NextInvestigateSoundMove < CurTime() then
-						if self:Visible(v) then
+					if self.NextInvestigateSoundMove < CurTime() then
+						-- When a sound is detected
+						if v.VJ_LastInvestigateSdLevel && vDistanceToMy < (self.InvestigateSoundDistance * v.VJ_LastInvestigateSdLevel) && ((CurTime() - v.VJ_LastInvestigateSd) <= 1) then
+							if self:Visible(v) then
+								self:StopMoving()
+								self:SetTarget(v)
+								self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+							elseif self.FollowingPlayer == false then
+								self:SetLastPosition(vPos)
+								self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
+							end
+							self:CustomOnInvestigate(v)
+							self:PlaySoundSystem("InvestigateSound")
+							self.NextInvestigateSoundMove = CurTime() + 2
+						-- When a bullet hit is detected
+						elseif IsValid(sdHintBulletOwner) && sdHintBulletOwner == v then
 							self:StopMoving()
-							self:SetTarget(v)
-							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-						elseif self.FollowingPlayer == false then
-							self:SetLastPosition(vPos)
-							self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
+							self:SetLastPosition(sdHintBullet.origin)
+							self:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
+							self:CustomOnInvestigate(v)
+							self:PlaySoundSystem("InvestigateSound")
+							self.NextInvestigateSoundMove = CurTime() + 0.3 -- Shorter delay because many bullets could hit
 						end
-						self:CustomOnInvestigate(v)
-						self:PlaySoundSystem("InvestigateSound")
-						self.NextInvestigateSoundMove = CurTime() + 2
 					end
 				end
 			end
@@ -1342,7 +1358,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function FlinchDamageTypeCheck(checkTbl, dmgType)
 	for k = 1, #checkTbl do
-		if bit.band(dmgType, checkTbl[k]) != 0 then
+		if bAND(dmgType, checkTbl[k]) != 0 then
 			return true
 		end
 	end
@@ -1725,7 +1741,7 @@ function ENT:RunGibOnDeathCode(dmginfo, hitgroup, extraOptions)
 	local dmgType = dmginfo:GetDamageType()
 	for k = 1, #dmgTbl do
 		local v = dmgTbl[k]
-		if (v == "All") or (v == "UseDefault" && self:IsDefaultGibDamageType(dmgType) && bit.band(dmgType, DMG_NEVERGIB) == 0) or (v != "UseDefault" && bit.band(dmgType, v) != 0) then
+		if (v == "All") or (v == "UseDefault" && self:IsDefaultGibDamageType(dmgType) && bAND(dmgType, DMG_NEVERGIB) == 0) or (v != "UseDefault" && bAND(dmgType, v) != 0) then
 			local setupgib, setupgib_extra = self:SetUpGibesOnDeath(dmginfo, hitgroup)
 			if setupgib_extra == nil then setupgib_extra = {} end
 			if setupgib == true then
