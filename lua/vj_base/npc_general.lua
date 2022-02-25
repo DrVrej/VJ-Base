@@ -40,6 +40,8 @@ local isnumber = isnumber
 local string_sub = string.sub
 local table_remove = table.remove
 local bAND = bit.band
+local math_rad = math.rad
+local math_cos = math.cos
 local varCPly = "CLASS_PLAYER_ALLY"
 local varCAnt = "CLASS_ANTLION"
 local varCCom = "CLASS_COMBINE"
@@ -487,9 +489,9 @@ end
 			- Use this whenever possible as it is much more optimized to utilize!
 		- sides = Use this to disable checking certain positions by setting the 1 to 0, "Forward-Backward-Right-Left" | DEFAULT = "1111"
 	Returns
-		- returnPos = true
+		- When returnPos is true:
 			- Table of positions (4 max)
-		- returnPos = false
+		- When returnPos is false:
 			- Table dictionary, includes 4 values, if true then that side isn't blocked!
 				- Values: Forward, Backward, Right, Left
 -----------------------------------------------------------]]
@@ -502,12 +504,14 @@ function ENT:VJ_CheckAllFourSides(checkDist, returnPos, sides)
 	local result = returnPos == true and {} or {Forward=false, Backward=false, Right=false, Left=false}
 	local i = 0
 	local myPos = self:GetPos()
-	local myPosCentered = self:GetPos() + self:OBBCenter()
-	local positions = {
-		string_sub(sides, 1, 1) == str1 and self:GetForward() or 0, 
-		string_sub(sides, 2, 2) == str1 and -self:GetForward() or 0,
-		string_sub(sides, 3, 3) == str1 and self:GetRight() or 0,
-		string_sub(sides, 4, 4) == str1 and -self:GetRight() or 0
+	local myPosCentered = myPos + self:OBBCenter()
+	local myForward = self:GetForward()
+	local myRight = self:GetRight()
+	local positions = { -- Set the positions that we need to check
+		string_sub(sides, 1, 1) == str1 and myForward or 0,
+		string_sub(sides, 2, 2) == str1 and -myForward or 0,
+		string_sub(sides, 3, 3) == str1 and myRight or 0,
+		string_sub(sides, 4, 4) == str1 and -myRight or 0
 	}
 	for _, v in pairs(positions) do
 		i = i + 1
@@ -518,7 +522,7 @@ function ENT:VJ_CheckAllFourSides(checkDist, returnPos, sides)
 			filter = self
 		})
 		local hitPos = tr.HitPos
-		if self:GetPos():Distance(hitPos) >= checkDist then
+		if myPos:Distance(hitPos) >= checkDist then
 			if returnPos == true then
 				hitPos.z = myPos.z -- Reset it to self:GetPos() z-axis
 				result[#result + 1] = hitPos
@@ -732,7 +736,7 @@ function ENT:Touch(entity)
 	
 	-- If it's a passive SNPC...
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
-		if self.Passive_RunOnTouch == true && CurTime() > self.TakingCoverT && entity.Behavior != VJ_BEHAVIOR_PASSIVE && entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:DoRelationshipCheck(entity) != false && (entity:IsNPC() or entity:IsPlayer()) then
+		if self.Passive_RunOnTouch == true && (entity:IsNPC() or entity:IsPlayer()) && CurTime() > self.TakingCoverT && entity.Behavior != VJ_BEHAVIOR_PASSIVE && entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:DoRelationshipCheck(entity) != false then
 			self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
 			self:PlaySoundSystem("Alert")
 			self.TakingCoverT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
@@ -917,12 +921,16 @@ function ENT:DoMedicCode()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoConstantlyFaceEnemyCode()
-	if self.VJ_IsBeingControlled == true or self.ConstantlyFaceEnemy != true then return false end
-	if self:GetEnemy():GetPos():Distance(self:GetPos()) < self.ConstantlyFaceEnemyDistance then
-		if self.ConstantlyFaceEnemy_IfVisible == true && !self:Visible(self:GetEnemy()) then return false end -- Only face if the enemy is visible!
-		if self.ConstantlyFaceEnemy_IfAttacking == false && (self.MeleeAttacking == true or self.LeapAttacking == true or self.RangeAttacking == true or self.ThrowingGrenade == true) then return false end
-		if (self.ConstantlyFaceEnemy_Postures == "Both") or (self.ConstantlyFaceEnemy_Postures == "Moving" && self:IsMoving()) or (self.ConstantlyFaceEnemy_Postures == "Standing" && !self:IsMoving()) then
+function ENT:DoConstantlyFaceEnemy()
+	if self.VJ_IsBeingControlled then return false end
+	if self.LatestEnemyDistance < self.ConstantlyFaceEnemyDistance then
+		-- Only face if the enemy is visible ?
+		if self.ConstantlyFaceEnemy_IfVisible && !self:Visible(self:GetEnemy()) then
+			return false
+		-- Do NOT face if attacking ?
+		elseif self.ConstantlyFaceEnemy_IfAttacking == false && (self.MeleeAttacking == true or self.LeapAttacking == true or self.RangeAttacking == true or self.ThrowingGrenade == true) then
+			return false
+		elseif (self.ConstantlyFaceEnemy_Postures == "Both") or (self.ConstantlyFaceEnemy_Postures == "Moving" && self:IsMoving()) or (self.ConstantlyFaceEnemy_Postures == "Standing" && !self:IsMoving()) then
 			self:FaceCertainEntity(self:GetEnemy())
 			return true
 		end
@@ -1004,7 +1012,7 @@ function ENT:DoEntityRelationshipCheck()
 	local myPos = self:GetPos()
 	local nearestDist = nil
 	local mySDir = self:GetSightDirection()
-	local mySAng = math.cos(math.rad(self.SightAngle))
+	local mySAng = math_cos(math_rad(self.SightAngle))
 	local plyControlled = self.VJ_IsBeingControlled
 	local sdHintBullet = sound.GetLoudestSoundHint(SOUND_BULLET_IMPACT, myPos)
 	local sdHintBulletOwner = nil;
@@ -1090,7 +1098,7 @@ function ENT:DoEntityRelationshipCheck()
 						if v:Crouching() && v:GetMoveType() != MOVETYPE_NOCLIP then
 							sightDist = self.VJ_IsHugeMonster == true and 5000 or 2000
 						end
-						if vDistanceToMy < 350 && v:FlashlightIsOn() == true && (v:GetForward():Dot((myPos - vPos):GetNormalized()) > math.cos(math.rad(20))) then
+						if vDistanceToMy < 350 && v:FlashlightIsOn() == true && (v:GetForward():Dot((myPos - vPos):GetNormalized()) > math_cos(math_rad(20))) then
 							//			   Asiga hoser ^ (!v:Crouching() && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP && ((!v:KeyDown(IN_WALK) && (v:KeyDown(IN_FORWARD) or v:KeyDown(IN_BACK) or v:KeyDown(IN_MOVELEFT) or v:KeyDown(IN_MOVERIGHT))) or (v:KeyDown(IN_SPEED) or v:KeyDown(IN_JUMP)))) or
 							self:SetTarget(v)
 							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
@@ -1158,7 +1166,7 @@ function ENT:DoEntityRelationshipCheck()
 					if /*self:Disposition(v) == D_LI &&*/ (self:VJ_GetNearestPointToEntityDistance(v) < dist) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
 						self.NextFollowPlayerT = CurTime() + 2
 						self:PlaySoundSystem("MoveOutOfPlayersWay")
-						//self:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-50,-50))
+						//self:SetLastPosition(myPos + self:GetRight()*math.random(-50,-50))
 						self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 						local vsched = ai_vj_schedule.New("vj_move_away")
 						vsched:EngTask("TASK_MOVE_AWAY_PATH", 120)
@@ -1184,7 +1192,7 @@ function ENT:DoEntityRelationshipCheck()
 				end
 				
 				-- HasOnPlayerSight system, used to do certain actions when it sees the player
-				if self.HasOnPlayerSight == true && v:Alive() &&(CurTime() > self.OnPlayerSightNextT) && (vDistanceToMy < self.OnPlayerSightDistance) && self:Visible(v) && (self:GetSightDirection():Dot((v:GetPos() - self:GetPos()):GetNormalized()) > math.cos(math.rad(self.SightAngle))) then
+				if self.HasOnPlayerSight == true && v:Alive() &&(CurTime() > self.OnPlayerSightNextT) && (vDistanceToMy < self.OnPlayerSightDistance) && self:Visible(v) && (mySDir:Dot((v:GetPos() - myPos):GetNormalized()) > mySAng) then
 					-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 					local disp = self.OnPlayerSightDispositionLevel
 					if (disp == 0) or (disp == 1 && (self:Disposition(v) == D_LI or self:Disposition(v) == D_NU)) or (disp == 2 && self:Disposition(v) != D_LI) then
@@ -1709,11 +1717,12 @@ function ENT:IdleDialogueAnswerSoundCode(CustomTbl, Type)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RemoveAttackTimers()
+	local myIndex = self:EntIndex()
 	for _,v in ipairs(self.TimersToRemove) do
-		timer.Remove(v..self:EntIndex())
+		timer.Remove(v .. myIndex)
 	end
 	for _,v in ipairs(self.AttackTimersCustom) do
-		timer.Remove(v..self:EntIndex())
+		timer.Remove(v .. myIndex)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
