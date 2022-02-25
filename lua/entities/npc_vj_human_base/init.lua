@@ -722,7 +722,7 @@ function ENT:GetSightDirection()
 	return self:GetForward() -- Make sure to return a direction!
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SetNearestPointToEntityPosition()
+function ENT:GetDynamicOrigin()
 	return self:GetPos() + self:GetForward() -- Override this to use a different position
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1156,6 +1156,7 @@ function ENT:Initialize()
 	end
 end
 function ENT:CustomInitialize() end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
+function ENT:SetNearestPointToEntityPosition() self:GetDynamicOrigin() end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetInitializeCapabilities()
 	self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK))
@@ -1905,6 +1906,8 @@ function ENT:TranslateToWeaponAnim(act)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local sdWepSwitch = {"physics/metal/weapon_impact_soft1.wav","physics/metal/weapon_impact_soft2.wav","physics/metal/weapon_impact_soft3.wav"}
+--
 function ENT:DoChangeWeapon(wep, invSwitch)
 	wep = wep or nil -- The weapon to give or setup | Setting it nil will only setup the current active weapon
 	invSwitch = invSwitch or false -- If true, it will not delete the previous weapon!
@@ -1918,7 +1921,7 @@ function ENT:DoChangeWeapon(wep, invSwitch)
 	if wep != nil then -- Only remove and actually give the weapon if the function is given a weapon class to set
 		if invSwitch == true then
 			self:SelectWeapon(wep)
-			VJ_EmitSound(self, {"physics/metal/weapon_impact_soft1.wav","physics/metal/weapon_impact_soft2.wav","physics/metal/weapon_impact_soft3.wav"}, 70)
+			VJ_EmitSound(self, sdWepSwitch, 70)
 			curWep = wep
 		else
 			if IsValid(curWep) && self:GetWeaponState() != VJ_WEP_STATE_ANTI_ARMOR && self:GetWeaponState() != VJ_WEP_STATE_MELEE then
@@ -2229,7 +2232,7 @@ function ENT:Think()
 		if self.Dead == false then
 			if IsValid(ene) then
 				if self.DoingWeaponAttack == true then self:PlaySoundSystem("Suppressing") end
-				self:DoConstantlyFaceEnemyCode()
+				if self.ConstantlyFaceEnemy then thenself:DoConstantlyFaceEnemy() end
 				if self.IsDoingFaceEnemy == true or (self.CombatFaceEnemy == true && self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene)))) then
 					local setAngs = self:GetFaceAngle((ene:GetPos() - self:GetPos()):Angle())
 					if self.TurningUseAllAxis == true then self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, self:GetAngles(), Angle(setAngs.p, self:GetAngles().y, setAngs.r))) end
@@ -2553,8 +2556,7 @@ function ENT:ThrowGrenadeCode(customEnt, noOwner)
 	end
 
 	if !IsValid(self:GetEnemy()) then
-		local test = self:VJ_CheckAllFourSides(200, true)
-		local sideCheck = VJ_PICK(test)
+		local sideCheck = VJ_PICK(self:VJ_CheckAllFourSides(200, true))
 		if sideCheck then
 			self:FaceCertainPosition(sideCheck, self.CurrentAttackAnimationDuration or 1.5)
 			doit = true
@@ -2800,7 +2802,7 @@ function ENT:IsAbleToShootWeapon(checkDistance, checkDistanceOnly, enemyDist)
 			return false
 		end
 	end
-	if IsValid(self:GetActiveWeapon()) && self.ThrowingGrenade == false && self:BusyWithActivity() == false && ((self:GetActiveWeapon().IsMeleeWeapon) or (self.IsReloadingWeapon == false && self.MeleeAttacking == false && self:VJ_GetNearestPointToEntityDistance(self:GetEnemy()) > self.MeleeAttackDistance)) then
+	if IsValid(self:GetActiveWeapon()) && self.ThrowingGrenade == false && self:BusyWithActivity() == false && ((self:GetActiveWeapon().IsMeleeWeapon) or (self.IsReloadingWeapon == false && self.MeleeAttacking == false && self.NearestPointToEnemyDistance > self.MeleeAttackDistance)) then
 		hasChecks = true
 		if checkDistance == false then return true end
 	end
@@ -2929,13 +2931,12 @@ function ENT:SelectSchedule()
 										local nearestPos;
 										local enePos;
 										if IsValid(cover_npc_ent) then
-											nearestPos = self:VJ_GetNearestPointToEntity(cover_npc_ent, true)
-											enePos = nearestPos.EnemyPosition - self:GetForward()*15
+											nearestPos, nearestEnePos = self:VJ_GetNearestPointToEntity(cover_npc_ent, true)
 										else
-											nearestPos = self:VJ_GetNearestPointToVector(cover_npc_tr.HitPos, true)
-											enePos = nearestPos.PointPosition - self:GetForward()*15
+											nearestPos, nearestEnePos = self:VJ_GetNearestPointToVector(cover_npc_tr.HitPos, true)
 										end
-										if nearestPos.MyPosition:Distance(enePos) <= (self.IsGuard and 60 or 1000) then
+										enePos = nearestEnePos - self:GetForward()*15
+										if nearestPos:Distance(enePos) <= (self.IsGuard and 60 or 1000) then
 											if self.IsGuard then self.GuardingPosition = enePos end -- Set the guard position to this new position that provides cover
 											self:SetLastPosition(enePos)
 											//VJ_CreateTestObject(enePos, self:GetAngles(), Color(0,255,255))
@@ -3059,8 +3060,9 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		local getAllies = self:Allies_Check(1000)
 		if getAllies != nil then
 			for _,v in pairs(getAllies) do
-				if IsValid(v:GetEnemy()) && v.LastSeenEnemyTime < self.LastSeenEnemyTimeUntilReset && VJ_IsAlive(v:GetEnemy()) == true && self:VJ_HasNoTarget(v:GetEnemy()) == false && self:GetPos():Distance(v:GetEnemy():GetPos()) <= self.SightDistance then
-					self:VJ_DoSetEnemy(v:GetEnemy(), true)
+				local allyEne = v:GetEnemy()
+				if IsValid(allyEne) && v.LastSeenEnemyTime < self.LastSeenEnemyTimeUntilReset && VJ_IsAlive(allyEne) == true && self:VJ_HasNoTarget(allyEne) == false && self:GetPos():Distance(allyEne:GetPos()) <= self.SightDistance then
+					self:VJ_DoSetEnemy(allyEne, true)
 					self.EnemyReset = false
 					return false
 				end

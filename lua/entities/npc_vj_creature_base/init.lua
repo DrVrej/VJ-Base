@@ -752,7 +752,7 @@ function ENT:GetSightDirection()
 	return self:GetForward() -- Make sure to return a direction!
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SetNearestPointToEntityPosition()
+function ENT:GetDynamicOrigin()
 	return self:GetPos() + self:GetForward() -- Override this to use a different position
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1139,6 +1139,7 @@ function ENT:Initialize()
 	duplicator.RegisterEntityClass(self:GetClass(), VJSPAWN_SNPC_DUPE, "Class", "Equipment", "SpawnFlags", "Data")
 end
 function ENT:CustomInitialize() end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
+function ENT:SetNearestPointToEntityPosition() self:GetDynamicOrigin() end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetInitializeCapabilities()
 	self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK))
@@ -1802,7 +1803,7 @@ function ENT:Think()
 		
 		if self.Dead == false then
 			if IsValid(ene) then
-				self:DoConstantlyFaceEnemyCode()
+				if self.ConstantlyFaceEnemy then thenself:DoConstantlyFaceEnemy() end
 				if self.IsDoingFaceEnemy == true or (self.CombatFaceEnemy == true && self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene)))) then
 					local setAngs = self:GetFaceAngle((ene:GetPos() - self:GetPos()):Angle())
 					if self.TurningUseAllAxis == true then self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, self:GetAngles(), Angle(setAngs.p, self:GetAngles().y, setAngs.r))) end
@@ -2484,8 +2485,9 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		local getAllies = self:Allies_Check(1000)
 		if getAllies != nil then
 			for _,v in pairs(getAllies) do
-				if IsValid(v:GetEnemy()) && v.LastSeenEnemyTime < self.LastSeenEnemyTimeUntilReset && VJ_IsAlive(v:GetEnemy()) == true && self:VJ_HasNoTarget(v:GetEnemy()) == false && self:GetPos():Distance(v:GetEnemy():GetPos()) <= self.SightDistance then
-					self:VJ_DoSetEnemy(v:GetEnemy(), true)
+				local allyEne = v:GetEnemy()
+				if IsValid(allyEne) && v.LastSeenEnemyTime < self.LastSeenEnemyTimeUntilReset && VJ_IsAlive(allyEne) == true && self:VJ_HasNoTarget(allyEne) == false && self:GetPos():Distance(allyEne:GetPos()) <= self.SightDistance then
+					self:VJ_DoSetEnemy(allyEne, true)
 					self.EnemyReset = false
 					return false
 				end

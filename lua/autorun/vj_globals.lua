@@ -10,6 +10,7 @@ include('autorun/vj_controls.lua')
 local CurTime = CurTime
 local IsValid = IsValid
 local GetConVar = GetConVar
+local CreateSound = CreateSound
 local istable = istable
 local isstring = isstring
 local isnumber = isnumber
@@ -20,6 +21,12 @@ local string_StartWith = string.StartWith
 local string_lower = string.lower
 local table_remove = table.remove
 local math_clamp = math.Clamp
+local math_random = math.random
+local math_round = math.Round
+local math_floor = math.floor
+local bAND = bit.band
+local bShiftL = bit.lshift
+local bShiftR = bit.rshift
 local defAng = Angle(0, 0, 0)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Global Functions & Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -62,7 +69,7 @@ function VJ_PICK(tbl)
 	if not tbl then return false end -- Yete table pame choone meche, veratartsour false!
 	if istable(tbl) then
 		if #tbl < 1 then return false end -- Yete table barabe (meg en aveli kich), getsoor!
-		tbl = tbl[math.random(1, #tbl)]
+		tbl = tbl[math_random(1, #tbl)]
 		return tbl
 	else
 		return tbl -- Yete table che, veratartsour abranke
@@ -74,7 +81,7 @@ end
 		if not tbl then return false end -- Yete table pame choone meche, veratartsour false!
 		if istable(tbl) then
 			if #tbl < 1 then return false end -- Yete table barabe (meg en aveli kich), getsoor!
-			tbl = tbl[math.random(1,#tbl)]
+			tbl = tbl[math_random(1,#tbl)]
 			return tbl
 		else
 			return tbl -- Yete table che, veratartsour abranke
@@ -101,19 +108,19 @@ function VJ_HasValue(tbl, val)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_RoundToMultiple(num, multiple) -- Credits to Bizzclaw for pointing me to the right direction!
-	if math.Round(num / multiple) == num / multiple then
+	if math_round(num / multiple) == num / multiple then
 		return num
 	else
-		return math.Round(num / multiple) * multiple
+		return math_round(num / multiple) * multiple
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_Color2Byte(color)
-	return bit.lshift(math.floor(color.r*7/255), 5) + bit.lshift(math.floor(color.g*7/255), 2) + math.floor(color.b*3/255)
+	return bShiftL(math_floor(color.r*7/255), 5) + bShiftL(math_floor(color.g*7/255), 2) + math_floor(color.b*3/255)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_Color8Bit2Color(bits)
-	return Color(bit.rshift(bits,5)*255/7, bit.band(bit.rshift(bits,2), 0x07)*255/7, bit.band(bits,0x03)*255/3)
+	return Color(bShiftR(bits,5)*255/7, bAND(bShiftR(bits,2), 0x07)*255/7, bAND(bits,0x03)*255/3)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_FindInCone(pos, dir, dist, deg, extraOptions)
@@ -133,7 +140,7 @@ function VJ_CreateSound(ent, sd, sdLevel, sdPitch, customFunc)
 	if not sd then return end
 	if istable(sd) then
 		if #sd < 1 then return end -- If the table is empty then end it
-		sd = sd[math.random(1, #sd)]
+		sd = sd[math_random(1, #sd)]
 	end
 	local sdID = CreateSound(ent, sd)
 	sdID:SetSoundLevel(sdLevel or 75)
@@ -250,13 +257,11 @@ end
 local props = {prop_physics=true, prop_physics_multiplayer=true, prop_physics_respawnable=true}
 --
 function VJ_IsProp(ent)
-	if props[ent:GetClass()] then return true end
-	return false
+	return props[ent:GetClass()] == true -- Without == check, it would return nil on false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_IsAlive(ent)
-	if ent.Dead == true then return false end
-	return ent:Health() > 0
+	return ent:Health() > 0 && !ent.Dead
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_DestroyCombineTurret(selfEnt, ent)
@@ -390,41 +395,33 @@ function NPC_MetaTable:DecideAnimationLength(anim, override, decrease)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetNearestPointToVector(pos, sameZ)
-	sameZ = sameZ or false -- Should the Z of the pos be the same as the NPC's?
-	local NearestPositions = {MyPosition=Vector(0, 0, 0), PointPosition=Vector(0, 0, 0)}
-	local Pos_Point, Pos_Self = pos, self:NearestPoint(pos +self:OBBCenter())
-	Pos_Point.z, Pos_Self.z = pos.z, self:GetPos().z
-	if sameZ == true then Pos_Point.z = self:GetPos().z end
-	NearestPositions.MyPosition = Pos_Self
-	NearestPositions.PointPosition = Pos_Point
-	return NearestPositions
+	-- sameZ = Should the Z of the result pos (resPos) be the same as my Z ?
+	local myZ = self:GetPos().z
+	local resMe = self:NearestPoint(pos + self:OBBCenter())
+	resMe.z = myZ
+	local resPos = pos
+	resPos.z = sameZ and myZ or pos.z
+	return resMe, resPos
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_GetNearestPointToEntity(ent, sameZ)
-	if !IsValid(ent) then return end
-	sameZ = sameZ or false -- Should the Z of the pos be the same as the NPC's?
-	local NearestPositions = {MyPosition=Vector(0, 0, 0), EnemyPosition=Vector(0, 0, 0)}
-	local Pos_Enemy, Pos_Self = ent:NearestPoint(self:SetNearestPointToEntityPosition() + ent:OBBCenter()), self:NearestPoint(ent:GetPos() + self:OBBCenter())
-	Pos_Enemy.z, Pos_Self.z = ent:GetPos().z, self:SetNearestPointToEntityPosition().z
-	if sameZ == true then
-		Pos_Enemy = Vector(Pos_Enemy.x,Pos_Enemy.y,self:SetNearestPointToEntityPosition().z)
-		Pos_Self = Vector(Pos_Self.x,Pos_Self.y,self:SetNearestPointToEntityPosition().z)
-	end
-	NearestPositions.MyPosition = Pos_Self
-	NearestPositions.EnemyPosition = Pos_Enemy
-	//local Pos_Distance = Pos_Enemy:Distance(Pos_Self)
-	return NearestPositions
+	-- sameZ = Should the Z of the other entity's result pos (resEnt) be the same as my Z ?
+	local myNearPoint = self:GetDynamicOrigin()
+	local resMe = self:NearestPoint(ent:GetPos() + self:OBBCenter())
+	resMe.z = myNearPoint.z
+	local resEnt = ent:NearestPoint(myNearPoint + ent:OBBCenter())
+	resEnt.z = sameZ and myNearPoint.z or ent:GetPos().z
+	return resMe, resEnt
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_GetNearestPointToEntityDistance(ent, onlySelfGetPos)
-	if !IsValid(ent) then return end
-	onlySelfGetPos = onlySelfGetPos or false -- Should it only do its self position for the local entity?
-	local Pos_Enemy = ent:NearestPoint(self:SetNearestPointToEntityPosition() + ent:OBBCenter())
-	local Pos_Self = self:NearestPoint(ent:GetPos() + self:OBBCenter())
-	if onlySelfGetPos == true then Pos_Self = self:SetNearestPointToEntityPosition() end
-	Pos_Enemy.z, Pos_Self.z = ent:GetPos().z, self:SetNearestPointToEntityPosition().z
-	//local Pos_Distance = Pos_Enemy:Distance(Pos_Self)
-	return Pos_Enemy:Distance(Pos_Self) // math.Distance(Pos_Enemy.x,Pos_Enemy.y,Pos_Self.x,Pos_Self.y)
+function NPC_MetaTable:VJ_GetNearestPointToEntityDistance(ent)
+	local entPos = ent:GetPos()
+	local myNearPoint = self:GetDynamicOrigin()
+	local resMe = self:NearestPoint(entPos + self:OBBCenter())
+	resMe.z = myNearPoint.z
+	local resEnt = ent:NearestPoint(myNearPoint + ent:OBBCenter())
+	resEnt.z = entPos.z
+	return resEnt:Distance(resMe)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Entity_MetaTable:CalculateProjectile(projType, startPos, endPos, projVel)
