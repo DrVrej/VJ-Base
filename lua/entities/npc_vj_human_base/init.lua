@@ -2077,8 +2077,10 @@ function ENT:Think()
 		
 		if self.DisableFootStepSoundTimer == false then self:FootStepSoundCode() end
 		
+		-- Health Regeneration System
 		if self.HasHealthRegeneration == true && self.Dead == false && CurTime() > self.HealthRegenerationDelayT then
-			self:SetHealth(math.Clamp(self:Health() + self.HealthRegenerationAmount, self:Health(), self:GetMaxHealth()))
+			local myHP = self:Health()
+			self:SetHealth(math.Clamp(myHP + self.HealthRegenerationAmount, myHP, self:GetMaxHealth()))
 			self.HealthRegenerationDelayT = CurTime() + math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b)
 		end
 		
@@ -2122,12 +2124,14 @@ function ENT:Think()
 		//print(self:GetPathDistanceToGoal())
 		
 		local ene = self:GetEnemy()
+		
 		if self.DoingWeaponAttack == true then self:CapabilitiesRemove(CAP_TURN_HEAD) else self:CapabilitiesAdd(bit.bor(CAP_TURN_HEAD)) end -- Fixes their heads breaking
 		//print("MAX CLIP: ", self.CurrentWeaponEntity:GetMaxClip1())
 		//print("CLIP: ", self.CurrentWeaponEntity:Clip1())
 		if IsValid(self.CurrentWeaponEntity) then
 			self.Weapon_TimeSinceLastShot = self.Weapon_TimeSinceLastShot + 0.1
-			-- Weapon Inventory
+			
+			-- Weapon Inventory System
 			if /*self.IsReloadingWeapon == false &&*/ !self.VJ_IsBeingControlled && self:BusyWithActivity() == false then
 				if IsValid(ene) then
 					if IsValid(self.WeaponInventory.Melee) && ((self.LatestEnemyDistance < self.MeleeAttackDistance) or (self.LatestEnemyDistance < 300 && self.CurrentWeaponEntity:Clip1() <= 0)) && (self:Health() > self:GetMaxHealth() * 0.25) && self.CurrentWeaponEntity != self.WeaponInventory.Melee then
@@ -2153,74 +2157,6 @@ function ENT:Think()
 				end
 			end
 		end
-		
-		-- Weapon Reloading
-		if self.Dead == false && !self:BusyWithActivity() && self.AllowWeaponReloading == true && self.IsReloadingWeapon == false && (IsValid(self.CurrentWeaponEntity) && (!self.CurrentWeaponEntity.IsMeleeWeapon)) && self.ThrowingGrenade == false && self.MeleeAttacking == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && self:GetWeaponState() != VJ_WEP_STATE_HOLSTERED then
-			local teshnami = IsValid(ene) -- Teshnami ooni, gam voch?
-			if (self.VJ_IsBeingControlled == false && ((teshnami == false && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1() && self.TimeSinceLastSeenEnemy > math.random(3,8) && !self:IsMoving()) or (teshnami == true && self.CurrentWeaponEntity:Clip1() <= 0))) or (self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_RELOAD) && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1()) then
-				self.DoingWeaponAttack = false
-				self.DoingWeaponAttack_Standing = false
-				if self.VJ_IsBeingControlled == false then self.IsReloadingWeapon = true end
-				self.NextChaseTime = CurTime() + 2
-				if teshnami == true then self:PlaySoundSystem("WeaponReload") end -- tsayn han e minag yete teshnami ga!
-				self:CustomOnWeaponReload()
-				if self.DisableWeaponReloadAnimation == false then
-					local function DoReloadAnimation(anim)
-						if self.CurrentWeaponEntity.IsVJBaseWeapon == true then self.CurrentWeaponEntity:NPC_Reload() end
-						if VJ_AnimationExists(self, anim) == true then -- Only if the given animation actually exists!
-							local dur = self:DecideAnimationLength(anim, false, self.WeaponReloadAnimationDecreaseLengthAmount)
-							local wep = self.CurrentWeaponEntity
-							timer.Create("timer_reload_end"..self:EntIndex(), dur, 1, function() if IsValid(self) && IsValid(wep) then self.IsReloadingWeapon = false wep:SetClip1(wep:GetMaxClip1()) end end)
-							self:VJ_ACT_PLAYACTIVITY(anim, true, dur, self.WeaponReloadAnimationFaceEnemy, self.WeaponReloadAnimationDelay, {SequenceDuration=dur, PlayBackRateCalculated=true})
-							self.AllowToDo_WaitForEnemyToComeOut = false
-							return true -- We have successfully ran the animation!
-						end
-						return false -- The given animation was invalid!
-					end
-					-- When being controlled by a player
-					if self.VJ_IsBeingControlled == true then
-						self.IsReloadingWeapon = true
-						DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
-					-- Not being controlled by a player...
-					else
-						-- NPC is hidden, so attempt to crouch reload
-						if teshnami == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos()+self:OBBCenter()),ene:EyePos(),false,{SetLastHiddenTime=true}) == true then -- Behvedadz
-							local ranim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReloadBehindCover)) -- Get the animation or if it has a translation, then get the translated animation
-							-- if ranim isn't a valid animation, then just play the regular standing-up animation
-							ranim = (VJ_AnimationExists(self, ranim) == true and DoReloadAnimation(ranim) or DoReloadAnimation(VJ_PICK(self.AnimTbl_WeaponReload)))
-						else -- NPC is NOT hidden...
-							-- Under certain situations, simply do standing reload without running to a hiding spot
-							if self.IsGuard == true or self.FollowingPlayer == true or self.VJ_IsBeingControlled_Tool == true or teshnami == false or self.MovementType == VJ_MOVETYPE_STATIONARY or self.LatestEnemyDistance < 650 then
-								DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
-							else -- If all is good, then run to a hiding spot and then reload!
-								self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
-								local vsched = ai_vj_schedule.New("vj_weapon_reload")
-								vsched:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
-								vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-								vsched.StopScheduleIfNotMoving = true
-								vsched.IsMovingTask = true
-								vsched.MoveType = 1
-								vsched.RunCode_OnFinish = function()
-									-- If the current situation isn't favorable, then abandon the current reload, and try again!
-									if (self.MeleeAttacking == true) or (IsValid(self:GetEnemy()) && self.HasWeaponBackAway == true && (self:GetPos():Distance(self:GetEnemy():GetPos()) <= self.WeaponBackAway_Distance)) then
-										self.IsReloadingWeapon = false
-										timer.Remove("timer_reload_end"..self:EntIndex()) -- Remove the timer to make sure it doesn't set reloading to false at a random time (later on)
-									else -- Our hiding spot is good, so reload!
-										DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
-										self:CustomOnWeaponReload_AfterRanToCover()
-									end
-								end
-								self:StartSchedule(vsched)
-							end
-						end
-					end
-				else
-					self.CurrentWeaponEntity:SetClip1(self.CurrentWeaponEntity:GetMaxClip1())
-					self.IsReloadingWeapon = false
-					self.CurrentWeaponEntity:NPC_Reload()
-				end
-			end
-		end
 
 		-- Turn to the current face position
 		if self.IsDoingFacePosition != false then
@@ -2230,9 +2166,77 @@ function ENT:Think()
 		end
 		
 		if self.Dead == false then
+			-- Weapon Reloading
+			if !self:BusyWithActivity() && self.AllowWeaponReloading == true && !self.IsReloadingWeapon && (IsValid(self.CurrentWeaponEntity) && (!self.CurrentWeaponEntity.IsMeleeWeapon)) && self.ThrowingGrenade == false && self.MeleeAttacking == false && self.VJ_PlayingSequence == false && self:GetWeaponState() != VJ_WEP_STATE_HOLSTERED then
+				local teshnami = IsValid(ene) -- Teshnami ooni, gam voch?
+				if (self.VJ_IsBeingControlled == false && ((teshnami == false && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1() && self.TimeSinceLastSeenEnemy > math.random(3,8) && !self:IsMoving()) or (teshnami == true && self.CurrentWeaponEntity:Clip1() <= 0))) or (self.VJ_IsBeingControlled == true && self.VJ_TheController:KeyDown(IN_RELOAD) && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1()) then
+					self.DoingWeaponAttack = false
+					self.DoingWeaponAttack_Standing = false
+					if self.VJ_IsBeingControlled == false then self.IsReloadingWeapon = true end
+					self.NextChaseTime = CurTime() + 2
+					if teshnami == true then self:PlaySoundSystem("WeaponReload") end -- tsayn han e minag yete teshnami ga!
+					self:CustomOnWeaponReload()
+					if self.DisableWeaponReloadAnimation == false then
+						local function DoReloadAnimation(anim)
+							if self.CurrentWeaponEntity.IsVJBaseWeapon == true then self.CurrentWeaponEntity:NPC_Reload() end
+							if VJ_AnimationExists(self, anim) == true then -- Only if the given animation actually exists!
+								local dur = self:DecideAnimationLength(anim, false, self.WeaponReloadAnimationDecreaseLengthAmount)
+								local wep = self.CurrentWeaponEntity
+								timer.Create("timer_reload_end"..self:EntIndex(), dur, 1, function() if IsValid(self) && IsValid(wep) then self.IsReloadingWeapon = false wep:SetClip1(wep:GetMaxClip1()) end end)
+								self:VJ_ACT_PLAYACTIVITY(anim, true, dur, self.WeaponReloadAnimationFaceEnemy, self.WeaponReloadAnimationDelay, {SequenceDuration=dur, PlayBackRateCalculated=true})
+								self.AllowToDo_WaitForEnemyToComeOut = false
+								return true -- We have successfully ran the animation!
+							end
+							return false -- The given animation was invalid!
+						end
+						-- When being controlled by a player
+						if self.VJ_IsBeingControlled == true then
+							self.IsReloadingWeapon = true
+							DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
+						-- Not being controlled by a player...
+						else
+							-- NPC is hidden, so attempt to crouch reload
+							if teshnami == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos()+self:OBBCenter()),ene:EyePos(),false,{SetLastHiddenTime=true}) == true then -- Behvedadz
+								local ranim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReloadBehindCover)) -- Get the animation or if it has a translation, then get the translated animation
+								-- if ranim isn't a valid animation, then just play the regular standing-up animation
+								ranim = (VJ_AnimationExists(self, ranim) == true and DoReloadAnimation(ranim) or DoReloadAnimation(VJ_PICK(self.AnimTbl_WeaponReload)))
+							else -- NPC is NOT hidden...
+								-- Under certain situations, simply do standing reload without running to a hiding spot
+								if self.IsGuard == true or self.FollowingPlayer == true or self.VJ_IsBeingControlled_Tool == true or teshnami == false or self.MovementType == VJ_MOVETYPE_STATIONARY or self.LatestEnemyDistance < 650 then
+									DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
+								else -- If all is good, then run to a hiding spot and then reload!
+									self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
+									local vsched = ai_vj_schedule.New("vj_weapon_reload")
+									vsched:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
+									vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+									vsched.StopScheduleIfNotMoving = true
+									vsched.IsMovingTask = true
+									vsched.MoveType = 1
+									vsched.RunCode_OnFinish = function()
+										-- If the current situation isn't favorable, then abandon the current reload, and try again!
+										if (self.MeleeAttacking == true) or (IsValid(self:GetEnemy()) && self.HasWeaponBackAway == true && (self:GetPos():Distance(self:GetEnemy():GetPos()) <= self.WeaponBackAway_Distance)) then
+											self.IsReloadingWeapon = false
+											timer.Remove("timer_reload_end"..self:EntIndex()) -- Remove the timer to make sure it doesn't set reloading to false at a random time (later on)
+										else -- Our hiding spot is good, so reload!
+											DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
+											self:CustomOnWeaponReload_AfterRanToCover()
+										end
+									end
+									self:StartSchedule(vsched)
+								end
+							end
+						end
+					else
+						self.CurrentWeaponEntity:SetClip1(self.CurrentWeaponEntity:GetMaxClip1())
+						self.IsReloadingWeapon = false
+						self.CurrentWeaponEntity:NPC_Reload()
+					end
+				end
+			end
+		
 			if IsValid(ene) then
 				if self.DoingWeaponAttack == true then self:PlaySoundSystem("Suppressing") end
-				if self.ConstantlyFaceEnemy then thenself:DoConstantlyFaceEnemy() end
+				if self.ConstantlyFaceEnemy then self:DoConstantlyFaceEnemy() end
 				if self.IsDoingFaceEnemy == true or (self.CombatFaceEnemy == true && self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene)))) then
 					local setAngs = self:GetFaceAngle((ene:GetPos() - self:GetPos()):Angle())
 					if self.TurningUseAllAxis == true then self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, self:GetAngles(), Angle(setAngs.p, self:GetAngles().y, setAngs.r))) end

@@ -1701,8 +1701,10 @@ function ENT:Think()
 		self:IdleSoundCode()
 		if self.DisableFootStepSoundTimer == false then self:FootStepSoundCode() end
 		
+		-- Health Regeneration System
 		if self.HasHealthRegeneration == true && self.Dead == false && CurTime() > self.HealthRegenerationDelayT then
-			self:SetHealth(math.Clamp(self:Health() + self.HealthRegenerationAmount, self:Health(), self:GetMaxHealth()))
+			local myHP = self:Health()
+			self:SetHealth(math.Clamp(myHP + self.HealthRegenerationAmount, myHP, self:GetMaxHealth()))
 			self.HealthRegenerationDelayT = CurTime() + math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b)
 		end
 		
@@ -1781,12 +1783,10 @@ function ENT:Think()
 				self:FollowPlayerReset()
 			end
 		end
-
-		//print(self:GetPathTimeToGoal())
-		//print(self:GetPathDistanceToGoal())
+		
 		local ene = self:GetEnemy()
 		
-		-- Used for AA SNPCs
+		-- Used for AA SNPCs (Deprecated)
 		/*if self.AA_CurrentTurnAng then
 			local setAngs = self.AA_CurrentTurnAng
 			self:SetAngles(Angle(setAngs.p, self:GetAngles().y, setAngs.r))
@@ -1803,7 +1803,7 @@ function ENT:Think()
 		
 		if self.Dead == false then
 			if IsValid(ene) then
-				if self.ConstantlyFaceEnemy then thenself:DoConstantlyFaceEnemy() end
+				if self.ConstantlyFaceEnemy then self:DoConstantlyFaceEnemy() end
 				if self.IsDoingFaceEnemy == true or (self.CombatFaceEnemy == true && self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self:Visible(ene)))) then
 					local setAngs = self:GetFaceAngle((ene:GetPos() - self:GetPos()):Angle())
 					if self.TurningUseAllAxis == true then self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, self:GetAngles(), Angle(setAngs.p, self:GetAngles().y, setAngs.r))) end
