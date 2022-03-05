@@ -143,7 +143,6 @@ function ENT:SetControlledNPC(GetEntity)
 	self.VJCE_NPC.VJ_TheControllerEntity = self
 	self.VJCE_NPC.VJ_TheControllerBullseye = self.VJCE_Bullseye
 	self.VJCE_NPC:SetEnemy(NULL)
-	self.VJCE_NPC.Enemy = NULL
 	self.VJCE_NPC:VJ_Controller_InitialMessage(self.VJCE_Player, self)
 	if self.VJCE_NPC.IsVJBaseSNPC == true then
 		self.VJCE_NPC:Controller_Initialize(self.VJCE_Player, self)
@@ -290,9 +289,9 @@ function ENT:Think()
 		-- HUD
 		local AttackTypes = {MeleeAttack=false, RangeAttack=false, LeapAttack=false, WeaponAttack=false, GrenadeAttack=false, Ammo="---"}
 		if self.VJCE_NPC.IsVJBaseSNPC == true then
-			if self.VJCE_NPC.HasMeleeAttack == true then AttackTypes["MeleeAttack"] = ((self.VJCE_NPC.IsAbleToMeleeAttack != true or self.VJCE_NPC.MeleeAttacking == true) and 2) or true end
-			if self.VJCE_NPC.HasRangeAttack == true then AttackTypes["RangeAttack"] = ((self.VJCE_NPC.IsAbleToRangeAttack != true or self.VJCE_NPC.RangeAttacking == true) and 2) or true end
-			if self.VJCE_NPC.HasLeapAttack == true then AttackTypes["LeapAttack"] = ((self.VJCE_NPC.IsAbleToLeapAttack != true or self.VJCE_NPC.LeapAttacking == true) and 2) or true end
+			if self.VJCE_NPC.HasMeleeAttack == true then AttackTypes["MeleeAttack"] = ((self.VJCE_NPC.IsAbleToMeleeAttack != true or self.VJCE_NPC.AttackType == VJ_ATTACK_MELEE) and 2) or true end
+			if self.VJCE_NPC.HasRangeAttack == true then AttackTypes["RangeAttack"] = ((self.VJCE_NPC.IsAbleToRangeAttack != true or self.VJCE_NPC.AttackType == VJ_ATTACK_RANGE) and 2) or true end
+			if self.VJCE_NPC.HasLeapAttack == true then AttackTypes["LeapAttack"] = ((self.VJCE_NPC.IsAbleToLeapAttack != true or self.VJCE_NPC.AttackType == VJ_ATTACK_LEAP) and 2) or true end
 			if IsValid(self.VJCE_NPC:GetActiveWeapon()) then AttackTypes["WeaponAttack"] = true AttackTypes["Ammo"] = self.VJCE_NPC:GetActiveWeapon():Clip1() end
 			if self.VJCE_NPC.HasGrenadeAttack == true then AttackTypes["GrenadeAttack"] = (CurTime() <= self.VJCE_NPC.NextThrowGrenadeT and 2) or true end
 		end
@@ -323,7 +322,7 @@ function ENT:Think()
 		local canTurn = true
 
 		-- Weapon attack
-		if IsValid(self.VJCE_NPC:GetActiveWeapon()) && self.VJCE_NPC.IsVJBaseSNPC == true && self.VJCE_NPC.IsVJBaseSNPC_Human == true && !self.VJCE_NPC:IsMoving() && self.VJCE_NPC:GetActiveWeapon().IsVJBaseWeapon == true && self.VJCE_Player:KeyDown(IN_ATTACK2) && self.VJCE_NPC.IsReloadingWeapon == false && self.VJCE_NPC.MeleeAttacking == false && self.VJCE_NPC.ThrowingGrenade == false && self.VJCE_NPC.vACT_StopAttacks == false && self.VJCE_NPC:GetWeaponState() != VJ_WEP_STATE_HOLSTERED then
+		if IsValid(self.VJCE_NPC:GetActiveWeapon()) && self.VJCE_NPC.IsVJBaseSNPC == true && self.VJCE_NPC.IsVJBaseSNPC_Human == true && !self.VJCE_NPC:IsMoving() && self.VJCE_NPC:GetActiveWeapon().IsVJBaseWeapon == true && self.VJCE_Player:KeyDown(IN_ATTACK2) && !self.VJCE_NPC.IsReloadingWeapon && self.VJCE_NPC.AttackType == VJ_ATTACK_NONE && self.VJCE_NPC.vACT_StopAttacks == false && self.VJCE_NPC:GetWeaponState() != VJ_WEP_STATE_HOLSTERED then
 			//self.VJCE_NPC:SetAngles(Angle(0,math.ApproachAngle(self.VJCE_NPC:GetAngles().y,self.VJCE_Player:GetAimVector():Angle().y,100),0))
 			self.VJCE_NPC:FaceCertainPosition(pos_beye, 0.2)
 			canTurn = false

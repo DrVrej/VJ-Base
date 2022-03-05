@@ -554,7 +554,7 @@ function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 	self.TimeSinceLastSeenEnemy = 0
 	self:AddEntityRelationship(ent, D_HT, 99)
 	self:UpdateEnemyMemory(ent, ent:GetPos())
-	if doQuickIfActiveEnemy == true && IsValid(self:GetEnemy()) then self:SetEnemy(ent) return end -- End it here if it's a minor set enemy
+	if doQuickIfActiveEnemy == true && IsValid(self:GetEnemy()) then self:SetEnemy(ent) self:SetNPCState(NPC_STATE_COMBAT) return end -- End it here if it's a minor set enemy
 	self:SetEnemy(ent)
 	self.TimeSinceEnemyAcquired = CurTime()
 	self.NextResetEnemyT = CurTime() + 0.5 //2
@@ -566,6 +566,7 @@ function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 		self.LatestEnemyDistance = self:GetPos():Distance(ent:GetPos())
 		self:DoAlert(ent)
 	end
+	self:SetNPCState(NPC_STATE_COMBAT)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -928,7 +929,7 @@ function ENT:DoConstantlyFaceEnemy()
 		if self.ConstantlyFaceEnemy_IfVisible && !self:Visible(self:GetEnemy()) then
 			return false
 		-- Do NOT face if attacking ?
-		elseif self.ConstantlyFaceEnemy_IfAttacking == false && (self.MeleeAttacking == true or self.LeapAttacking == true or self.RangeAttacking == true or self.ThrowingGrenade == true) then
+		elseif self.ConstantlyFaceEnemy_IfAttacking == false && self.AttackType != VJ_ATTACK_NONE then
 			return false
 		elseif (self.ConstantlyFaceEnemy_Postures == "Both") or (self.ConstantlyFaceEnemy_Postures == "Moving" && self:IsMoving()) or (self.ConstantlyFaceEnemy_Postures == "Standing" && !self:IsMoving()) then
 			self:FaceCertainEntity(self:GetEnemy())
@@ -981,6 +982,7 @@ end
 function ENT:DoAlert(ent)
 	if !IsValid(self:GetEnemy()) or self.Alerted == true then return end
 	self.Alerted = true
+	self:SetNPCState(NPC_STATE_ALERT)
 	self.LastSeenEnemyTime = 0
 	self:CustomOnAlert(ent)
 	if CurTime() > self.NextAlertSoundT then
@@ -1215,7 +1217,7 @@ function ENT:DoEntityRelationshipCheck()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Allies_CallHelp(dist)
-	if self.CallForHelp == false or self.ThrowingGrenade == true then return false end
+	if !self.CallForHelp or self.AttackType == VJ_ATTACK_GRENADE then return false end
 	local entsTbl = ents.FindInSphere(self:GetPos(), dist)
 	if (!entsTbl) then return false end
 	for _,v in pairs(entsTbl) do
