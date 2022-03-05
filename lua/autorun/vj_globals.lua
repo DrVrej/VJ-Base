@@ -31,27 +31,39 @@ local defAng = Angle(0, 0, 0)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Global Functions & Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- NPC Movement types, information is located inside the NPC bases...
 VJ_MOVETYPE_GROUND = 1
 VJ_MOVETYPE_AERIAL = 2
 VJ_MOVETYPE_AQUATIC = 3
 VJ_MOVETYPE_STATIONARY = 4
 VJ_MOVETYPE_PHYSICS = 5
 
+-- NPC behavior types, information is located inside the NPC bases...
 VJ_BEHAVIOR_AGGRESSIVE = 1
 VJ_BEHAVIOR_NEUTRAL = 2
 VJ_BEHAVIOR_PASSIVE = 3
 VJ_BEHAVIOR_PASSIVE_NATURE = 4
 
+-- NPC AI states
 VJ_STATE_NONE = 0 -- No state is set, this is the default value
 VJ_STATE_FREEZE = 1 -- AI Completely freezes, basically applies Disable AI on the NPC (Including relationship system!)
 VJ_STATE_ONLY_ANIMATION = 100 -- Only plays animation tasks, attacks. Disables: Movements, turning and other non-animation tasks!
 VJ_STATE_ONLY_ANIMATION_CONSTANT = 101 -- Same as VJ_STATE_ONLY_ANIMATION + Idle animation will not play!
 VJ_STATE_ONLY_ANIMATION_NOATTACK = 102 -- Same as VJ_STATE_ONLY_ANIMATION + Attacks will be disabled
 
-VJ_WEP_STATE_NONE = 0 -- No state is set
+-- NPC weapon states for the human base
+VJ_WEP_STATE_NONE = 0 -- No state is set, this is the default value
 VJ_WEP_STATE_HOLSTERED = 1 -- Weapon is holstered
 VJ_WEP_STATE_ANTI_ARMOR = 20 -- It's currently using its anti-armor weapon
 VJ_WEP_STATE_MELEE = 21 -- It's currently using its melee weapon
+
+-- NPC attacking states
+VJ_ATTACK_NONE = 0 -- No state is set
+VJ_ATTACK_CUSTOM = 1 -- Custom attack (Used by developers to make custom attacks)
+VJ_ATTACK_MELEE = 2 -- Melee attack
+VJ_ATTACK_RANGE = 3 -- Ranged attack
+VJ_ATTACK_LEAP = 4 -- Leap attack
+VJ_ATTACK_GRENADE = 5 -- Grenade attack
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if SERVER then
 	util.AddNetworkString("vj_music_run")
@@ -614,7 +626,7 @@ hook.Add("EntityFireBullets", "VJ_NPC_FIREBULLET", function(ent, data)
 			if wep.IsVJBaseWeapon then
 				-- Ammo counter for VJ weapons
 				wep:SetClip1(wep:Clip1() - 1)
-				//ent.Weapon_TimeSinceLastShot = 0 -- We don't want to change this here!
+				//ent.Weapon_TimeSinceLastShot = CurTime() -- We don't want to change this here!
 			else
 				-- Bullet spawn for non-VJ weapons
 				data.Src = util.VJ_GetWeaponPos(ent)

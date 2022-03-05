@@ -443,10 +443,9 @@ function SWEP:NPCShoot_Primary()
 	local ene = owner:GetEnemy()
 	if !owner.VJ_IsBeingControlled && (!IsValid(ene) or (!owner:Visible(ene))) then return end
 	if owner.IsVJBaseSNPC == true then
-		//owner.Weapon_TimeSinceLastShot = 0
+		//owner.Weapon_TimeSinceLastShot = CurTime()
 		//owner.NextWeaponAttackAimPoseParametersReset = CurTime() + 1
 		owner:DoPoseParameterLooking()
-		//if owner.IsVJBaseSNPC == true then owner.Weapon_TimeSinceLastShot = 0 end
 	end
 	
 	-- Secondary Fire
@@ -484,7 +483,7 @@ function SWEP:NPCShoot_Primary()
 					timer.Simple(tv, function() if IsValid(self) && IsValid(owner) && self:NPCAbleToShoot() == true then self:PrimaryAttack() end end)
 				end
 			end
-			if owner.IsVJBaseSNPC == true then owner.Weapon_TimeSinceLastShot = 0 end
+			if owner.IsVJBaseSNPC == true then owner.Weapon_TimeSinceLastShot = CurTime() end
 		end
 	end)
 end
