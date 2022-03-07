@@ -554,7 +554,11 @@ function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 	self.TimeSinceLastSeenEnemy = 0
 	self:AddEntityRelationship(ent, D_HT, 99)
 	self:UpdateEnemyMemory(ent, ent:GetPos())
-	if doQuickIfActiveEnemy == true && IsValid(self:GetEnemy()) then self:SetEnemy(ent) self:SetNPCState(NPC_STATE_COMBAT) return end -- End it here if it's a minor set enemy
+	if doQuickIfActiveEnemy == true && IsValid(self:GetEnemy()) then
+		self:SetEnemy(ent)
+		//self:SetNPCState(NPC_STATE_COMBAT)
+		return -- End it here if it's a minor set enemy
+	end
 	self:SetEnemy(ent)
 	self.TimeSinceEnemyAcquired = CurTime()
 	self.NextResetEnemyT = CurTime() + 0.5 //2
@@ -566,7 +570,7 @@ function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 		self.LatestEnemyDistance = self:GetPos():Distance(ent:GetPos())
 		self:DoAlert(ent)
 	end
-	self:SetNPCState(NPC_STATE_COMBAT)
+	//self:SetNPCState(NPC_STATE_COMBAT)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -726,7 +730,7 @@ function ENT:OnCondition(cond)
 	//if cond == 36 then print("sched done!") end
 	//if cond != 15 && cond != 60 then
 	//if cond != 1 then
-		//print(self, " Condition: ", cond, " - ", self:ConditionName(cond))
+		print(self, " Condition: ", cond, " - ", self:ConditionName(cond))
 	//end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -926,7 +930,7 @@ function ENT:DoConstantlyFaceEnemy()
 	if self.VJ_IsBeingControlled then return false end
 	if self.LatestEnemyDistance < self.ConstantlyFaceEnemyDistance then
 		-- Only face if the enemy is visible ?
-		if self.ConstantlyFaceEnemy_IfVisible && !self:Visible(self:GetEnemy()) then
+		if self.ConstantlyFaceEnemy_IfVisible && !self.LastEnemyVisible then
 			return false
 		-- Do NOT face if attacking ?
 		elseif self.ConstantlyFaceEnemy_IfAttacking == false && self.AttackType != VJ_ATTACK_NONE then
@@ -982,7 +986,7 @@ end
 function ENT:DoAlert(ent)
 	if !IsValid(self:GetEnemy()) or self.Alerted == true then return end
 	self.Alerted = true
-	self:SetNPCState(NPC_STATE_ALERT)
+	//self:SetNPCState(NPC_STATE_ALERT)
 	self.LastSeenEnemyTime = 0
 	self:CustomOnAlert(ent)
 	if CurTime() > self.NextAlertSoundT then
