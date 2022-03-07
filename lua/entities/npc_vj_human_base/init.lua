@@ -15,8 +15,7 @@ AccessorFunc(ENT, "m_fMaxYawSpeed", "MaxYawSpeed", FORCE_NUMBER)
 ------ Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Model = {} -- The game will pick a random model from the table when the SNPC is spawned | Add as many as you want
-ENT.VJ_IsHugeMonster = false -- Is this a huge monster?
-	-- This is mostly used for massive or boss SNPCs, it affects certain part of the SNPC, for example the SNPC won't receive any knock back
+ENT.VJ_IsHugeMonster = false -- This is mostly used for massive or boss SNPCs, it affects certain part of the SNPC, for example the SNPC won't receive any knock back
 	-- ====== Health ====== --
 ENT.StartHealth = 50 -- The starting health of the NPC
 ENT.HasHealthRegeneration = false -- Can the SNPC regenerate its health?
@@ -872,6 +871,7 @@ ENT.AlreadyDoneMeleeAttackFirstHit = false
 ENT.NoWeapon_UseScaredBehavior_Active = false
 ENT.CurIdleStandMove = false
 ENT.CurrentWeaponAnimationIsAim = false
+ENT.LastEnemyVisible = false
 ENT.FollowPlayer_Entity = NULL
 ENT.VJ_TheController = NULL
 ENT.VJ_TheControllerEntity = NULL
@@ -938,14 +938,14 @@ ENT.NextCallForHelpSoundT = 0
 ENT.LostEnemySoundT = 0
 ENT.NextDoAnyAttackT = 0
 ENT.NearestPointToEnemyDistance = 0
-ENT.LatestEnemySightDiff = 0
+ENT.LastEnemySightDiff = 0
 ENT.ReachableEnemyCount = 0
 ENT.LatestEnemyDistance = 0
 ENT.HealthRegenerationDelayT = 0
 ENT.NextWeaponAttackT_Base = 0 -- This is handled by the base, used to avoid running shoot animation twice
 ENT.CurAttackSeed = 0
 ENT.CurAnimationSeed = 0
-ENT.LatestVisibleEnemyPosition = Vector(0, 0, 0)
+ENT.LastEnemyVisiblePos = Vector(0, 0, 0)
 ENT.GuardingPosition = nil
 ENT.GuardingFacePosition = nil
 ENT.SelectedDifficulty = 1
@@ -1101,7 +1101,7 @@ function ENT:Initialize()
 	self.SightDistance = (GetConVar("vj_npc_seedistance"):GetInt() > 0) and GetConVar("vj_npc_seedistance"):GetInt() or self.SightDistance
 	timer.Simple(0.15, function()
 		if IsValid(self) then
-			if self:GetNPCState() <= NPC_STATE_NONE then self:SetNPCState(NPC_STATE_IDLE) end
+			//if self:GetNPCState() <= NPC_STATE_NONE then self:SetNPCState(NPC_STATE_IDLE) end -- Unfortunately it breaks parts of the AI such as turning Yaw
 			if IsValid(self:GetCreator()) && self:GetCreator():GetInfoNum("vj_npc_spawn_guard", 0) == 1 then self.IsGuard = true end
 			self:StartSoundTrack()
 
@@ -1603,7 +1603,7 @@ end
 function ENT:DoChaseAnimation(alwaysChase)
 	local ene = self:GetEnemy()
 	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead == true or self.VJ_IsBeingControlled == true or self.PlayingAttackAnimation == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.PlayingAttackAnimation == true && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
-	if self:VJ_GetNearestPointToEntityDistance(ene) < self.MeleeAttackDistance && self:Visible(ene) && (self.LatestEnemySightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))) then self:VJ_TASK_IDLE_STAND() return end -- Not melee attacking yet but it is in range, so stop moving!
+	if self:VJ_GetNearestPointToEntityDistance(ene) < self.MeleeAttackDistance && self.LastEnemyVisible && (self.LastEnemySightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))) then self:VJ_TASK_IDLE_STAND() return end -- Not melee attacking yet but it is in range, so stop moving!
 	
 	alwaysChase = alwaysChase or false -- true = Chase no matter what
 	
@@ -1984,6 +1984,12 @@ end
 	m_flGroundSpeed = Computed linear movement rate for current sequence
 	m_flOriginalYaw = This is the direction facing when the level designer placed the NPC in the level.
 	m_spawnEquipment = Class name of the weapon it spawned with, stays even when weapon is removed or another weapon from its inventory is used!
+	m_takedamage = Defines how it can take damage
+		#define	DAMAGE_NO				0
+		#define DAMAGE_EVENTS_ONLY		1		// Call damage functions, but don't modify health
+		#define	DAMAGE_YES				2
+		#define	DAMAGE_AIM				3
+	m_nWaterType = Type of water the entity is in --> 1 = water, 2 = slime
 	
 	-- Following is just used for the face and eye looking:
 	m_hLookTarget = The entity it's looking at 
@@ -1992,6 +1998,7 @@ end
 	m_viewtarget = Returns the position the NPC's eye pupils are looking at (Can be used to set it as well)
 	m_flBlinktime = Time until it blinks again (Can be used to set it as well)
 	
+	-- Change movement speed:
 	self:SetLocalVelocity(self:GetMoveVelocity() * 1.5)
 	
 	-- To test sound hints:
@@ -2059,7 +2066,9 @@ function ENT:Think()
 	
 	self:CustomOnThink()
 	
-	if self.Dead == false && self.HasBreathSound == true && self.HasSounds == true && CurTime() > self.NextBreathSoundT then
+	local curTime = CurTime()
+	
+	if !self.Dead && self.HasBreathSound && self.HasSounds && curTime > self.NextBreathSoundT then
 		local sdtbl = VJ_PICK(self.SoundTbl_Breath)
 		local dur = 1
 		if sdtbl != false then
@@ -2067,13 +2076,13 @@ function ENT:Think()
 			dur = (self.NextSoundTime_Breath == true and SoundDuration(sdtbl)) or math.Rand(self.NextSoundTime_Breath.a, self.NextSoundTime_Breath.b)
 			self.CurrentBreathSound = VJ_CreateSound(self, sdtbl, self.BreathSoundLevel, self:VJ_DecideSoundPitch(self.BreathSoundPitch.a, self.BreathSoundPitch.b))
 		end
-		self.NextBreathSoundT = CurTime() + dur
+		self.NextBreathSoundT = curTime + dur
 	end
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	if GetConVar("ai_disabled"):GetInt() == 0 && self:GetState() != VJ_STATE_FREEZE && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
 		if self.VJDEBUG_SNPC_ENABLED == true then
 			if GetConVar("vj_npc_printcurenemy"):GetInt() == 1 then print(self:GetClass().."'s Enemy: ",self:GetEnemy()," Alerted? ",self.Alerted) end
-			if GetConVar("vj_npc_printtakingcover"):GetInt() == 1 then if CurTime() > self.TakingCoverT == true then print(self:GetClass().." Is Not Taking Cover") else print(self:GetClass().." Is Taking Cover ("..self.TakingCoverT-CurTime()..")") end end
+			if GetConVar("vj_npc_printtakingcover"):GetInt() == 1 then if curTime > self.TakingCoverT == true then print(self:GetClass().." Is Not Taking Cover") else print(self:GetClass().." Is Taking Cover ("..self.TakingCoverT-curTime..")") end end
 			if GetConVar("vj_npc_printlastseenenemy"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, self.LastSeenEnemyTime.." ("..self:GetName()..")") end
 			if IsValid(self.CurrentWeaponEntity) && GetConVar("vj_npc_dev_printwepinfo"):GetInt() == 1 then print(self:GetName().." -->", self.CurrentWeaponEntity, "Ammo: "..self.CurrentWeaponEntity:Clip1().."/"..self.CurrentWeaponEntity:GetMaxClip1().." | Accuracy: "..self.WeaponSpread) end
 		end
@@ -2087,19 +2096,12 @@ function ENT:Think()
 		
 		if self.DisableFootStepSoundTimer == false then self:FootStepSoundCode() end
 		
-		-- Health Regeneration System
-		if self.HasHealthRegeneration == true && self.Dead == false && CurTime() > self.HealthRegenerationDelayT then
-			local myHP = self:Health()
-			self:SetHealth(math_clamp(myHP + self.HealthRegenerationAmount, myHP, self:GetMaxHealth()))
-			self.HealthRegenerationDelayT = CurTime() + math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b)
-		end
-		
 		-- Player Following
 		if self.FollowingPlayer == true then
 			//print(self:GetTarget())
 			//print(self.FollowPlayer_Entity)
 			if IsValid(self.FollowPlayer_Entity) && self.FollowPlayer_Entity:Alive() && self:Disposition(self.FollowPlayer_Entity) == D_LI then
-				if CurTime() > self.NextFollowPlayerT && self.AlreadyBeingHealedByMedic != true then
+				if curTime > self.NextFollowPlayerT && !self.AlreadyBeingHealedByMedic then
 					local distToPly = self:GetPos():Distance(self.FollowPlayer_Entity:GetPos())
 					local busy = self:BusyWithActivity()
 					self:SetTarget(self.FollowPlayer_Entity)
@@ -2123,7 +2125,7 @@ function ENT:Think()
 						self.FollowPlayer_GoingAfter = false
 						self.FollowPlayer_DoneSelectSchedule = true
 					end
-					self.NextFollowPlayerT = CurTime() + self.NextFollowPlayerTime
+					self.NextFollowPlayerT = curTime + self.NextFollowPlayerTime
 				end
 			else
 				self:FollowPlayerReset()
@@ -2142,16 +2144,23 @@ function ENT:Think()
 		
 		/*VJ_CreateTestObject(self:GetEnemyLastSeenPos())
 		print(self:HasEnemyMemory())
-		print(self:GetEnemyLastTimeSeen() - CurTime())
-		print(self:GetEnemyFirstTimeSeen() - CurTime())*/
+		print(self:GetEnemyLastTimeSeen() - curTime)
+		print(self:GetEnemyFirstTimeSeen() - curTime)*/
 			
 		if self.Dead == false then
+			-- Health Regeneration System
+			if self.HasHealthRegeneration == true && curTime > self.HealthRegenerationDelayT then
+				local myHP = self:Health()
+				self:SetHealth(math_clamp(myHP + self.HealthRegenerationAmount, myHP, self:GetMaxHealth()))
+				self.HealthRegenerationDelayT = curTime + math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b)
+			end
+			
 			-- Run the heavy processes
-			if CurTime() > self.NextProcessT then
+			if curTime > self.NextProcessT then
 				self:DoEntityRelationshipCheck()
 				self:CheckForDangers()
 				self:DoMedicCode()
-				self.NextProcessT = CurTime() + self.NextProcessTime
+				self.NextProcessT = curTime + self.NextProcessTime
 			end
 			
 			local plyControlled = self.VJ_IsBeingControlled
@@ -2206,114 +2215,115 @@ function ENT:Think()
 				end
 			
 				-- Weapon Reloading
-				if !self:BusyWithActivity() && self.AllowWeaponReloading == true && !self.IsReloadingWeapon && (!self.CurrentWeaponEntity.IsMeleeWeapon) && self.AttackType == VJ_ATTACK_NONE && self.VJ_PlayingSequence == false && self:GetWeaponState() != VJ_WEP_STATE_HOLSTERED then
-					if (plyControlled == false && ((eneValid == false && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1() && self.TimeSinceLastSeenEnemy > math.random(3,8) && !self:IsMoving()) or (eneValid == true && self.CurrentWeaponEntity:Clip1() <= 0))) or (plyControlled == true && self.VJ_TheController:KeyDown(IN_RELOAD) && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1()) then
-						self.DoingWeaponAttack = false
-						self.DoingWeaponAttack_Standing = false
-						if plyControlled == false then self.IsReloadingWeapon = true end
-						self.NextChaseTime = CurTime() + 2
-						if eneValid == true then self:PlaySoundSystem("WeaponReload") end -- tsayn han e minag yete teshnami ga!
-						self:CustomOnWeaponReload()
-						if self.DisableWeaponReloadAnimation == false then
-							local function DoReloadAnimation(anim)
-								if self.CurrentWeaponEntity.IsVJBaseWeapon == true then self.CurrentWeaponEntity:NPC_Reload() end
-								if VJ_AnimationExists(self, anim) == true then -- Only if the given animation actually exists!
-									local dur = self:DecideAnimationLength(anim, false, self.WeaponReloadAnimationDecreaseLengthAmount)
-									local wep = self.CurrentWeaponEntity
-									timer.Create("timer_reload_end"..self:EntIndex(), dur, 1, function() if IsValid(self) && IsValid(wep) then self.IsReloadingWeapon = false wep:SetClip1(wep:GetMaxClip1()) end end)
-									self:VJ_ACT_PLAYACTIVITY(anim, true, dur, self.WeaponReloadAnimationFaceEnemy, self.WeaponReloadAnimationDelay, {SequenceDuration=dur, PlayBackRateCalculated=true})
-									self.AllowToDo_WaitForEnemyToComeOut = false
-									return true -- We have successfully ran the animation!
-								end
-								return false -- The given animation was invalid!
+				if self.AllowWeaponReloading && !self:BusyWithActivity() && !self.IsReloadingWeapon && (!self.CurrentWeaponEntity.IsMeleeWeapon) && self.AttackType == VJ_ATTACK_NONE && self.VJ_PlayingSequence == false && self:GetWeaponState() != VJ_WEP_STATE_HOLSTERED && ((!plyControlled && ((!eneValid && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1() && self.TimeSinceLastSeenEnemy > math.random(3, 8) && !self:IsMoving()) or (eneValid && self.CurrentWeaponEntity:Clip1() <= 0))) or (plyControlled && self.VJ_TheController:KeyDown(IN_RELOAD) && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1())) then
+					self.DoingWeaponAttack = false
+					self.DoingWeaponAttack_Standing = false
+					if !plyControlled then self.IsReloadingWeapon = true end
+					self.NextChaseTime = curTime + 2
+					if eneValid == true then self:PlaySoundSystem("WeaponReload") end -- tsayn han e minag yete teshnami ga!
+					self:CustomOnWeaponReload()
+					if self.DisableWeaponReloadAnimation == false then
+						local function DoReloadAnimation(anim)
+							if self.CurrentWeaponEntity.IsVJBaseWeapon == true then self.CurrentWeaponEntity:NPC_Reload() end
+							if VJ_AnimationExists(self, anim) == true then -- Only if the given animation actually exists!
+								local dur = self:DecideAnimationLength(anim, false, self.WeaponReloadAnimationDecreaseLengthAmount)
+								local wep = self.CurrentWeaponEntity
+								timer.Create("timer_reload_end"..self:EntIndex(), dur, 1, function() if IsValid(self) && IsValid(wep) then self.IsReloadingWeapon = false wep:SetClip1(wep:GetMaxClip1()) end end)
+								self:VJ_ACT_PLAYACTIVITY(anim, true, dur, self.WeaponReloadAnimationFaceEnemy, self.WeaponReloadAnimationDelay, {SequenceDuration=dur, PlayBackRateCalculated=true})
+								self.AllowToDo_WaitForEnemyToComeOut = false
+								return true -- We have successfully ran the animation!
 							end
-							-- When being controlled by a player
-							if plyControlled == true then
-								self.IsReloadingWeapon = true
-								DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
-							-- Not being controlled by a player...
-							else
-								-- NPC is hidden, so attempt to crouch reload
-								if eneValid == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPos+self:OBBCenter()),ene:EyePos(),false,{SetLastHiddenTime=true}) == true then -- Behvedadz
-									local ranim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReloadBehindCover)) -- Get the animation or if it has a translation, then get the translated animation
-									-- if ranim isn't a valid animation, then just play the regular standing-up animation
-									ranim = (VJ_AnimationExists(self, ranim) == true and DoReloadAnimation(ranim) or DoReloadAnimation(VJ_PICK(self.AnimTbl_WeaponReload)))
-								else -- NPC is NOT hidden...
-									-- Under certain situations, simply do standing reload without running to a hiding spot
-									if self.IsGuard == true or self.FollowingPlayer == true or self.VJ_IsBeingControlled_Tool == true or eneValid == false or self.MovementType == VJ_MOVETYPE_STATIONARY or self.LatestEnemyDistance < 650 then
-										DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
-									else -- If all is good, then run to a hiding spot and then reload!
-										self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
-										local vsched = ai_vj_schedule.New("vj_weapon_reload")
-										vsched:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
-										vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-										vsched.StopScheduleIfNotMoving = true
-										vsched.IsMovingTask = true
-										vsched.MoveType = 1
-										vsched.RunCode_OnFinish = function()
-											-- If the current situation isn't favorable, then abandon the current reload, and try again!
-											if (self.AttackType != VJ_ATTACK_NONE) or (IsValid(self:GetEnemy()) && self.HasWeaponBackAway == true && (self:GetPos():Distance(self:GetEnemy():GetPos()) <= self.WeaponBackAway_Distance)) then
-												self.IsReloadingWeapon = false
-												timer.Remove("timer_reload_end"..self:EntIndex()) -- Remove the timer to make sure it doesn't set reloading to false at a random time (later on)
-											else -- Our hiding spot is good, so reload!
-												DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
-												self:CustomOnWeaponReload_AfterRanToCover()
-											end
-										end
-										self:StartSchedule(vsched)
-									end
-								end
-							end
-						else
-							self.CurrentWeaponEntity:SetClip1(self.CurrentWeaponEntity:GetMaxClip1())
-							self.IsReloadingWeapon = false
-							self.CurrentWeaponEntity:NPC_Reload()
+							return false -- The given animation was invalid!
 						end
+						-- When being controlled by a player
+						if plyControlled == true then
+							self.IsReloadingWeapon = true
+							DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
+						-- Not being controlled by a player...
+						else
+							-- NPC is hidden, so attempt to crouch reload
+							if eneValid == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPos+self:OBBCenter()),ene:EyePos(),false,{SetLastHiddenTime=true}) == true then -- Behvedadz
+								local ranim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReloadBehindCover)) -- Get the animation or if it has a translation, then get the translated animation
+								-- if ranim isn't a valid animation, then just play the regular standing-up animation
+								ranim = (VJ_AnimationExists(self, ranim) == true and DoReloadAnimation(ranim) or DoReloadAnimation(VJ_PICK(self.AnimTbl_WeaponReload)))
+							else -- NPC is NOT hidden...
+								-- Under certain situations, simply do standing reload without running to a hiding spot
+								if self.IsGuard == true or self.FollowingPlayer == true or self.VJ_IsBeingControlled_Tool == true or eneValid == false or self.MovementType == VJ_MOVETYPE_STATIONARY or self.LatestEnemyDistance < 650 then
+									DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
+								else -- If all is good, then run to a hiding spot and then reload!
+									self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
+									local vsched = ai_vj_schedule.New("vj_weapon_reload")
+									vsched:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
+									vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+									vsched.StopScheduleIfNotMoving = true
+									vsched.IsMovingTask = true
+									vsched.MoveType = 1
+									vsched.RunCode_OnFinish = function()
+										-- If the current situation isn't favorable, then abandon the current reload, and try again!
+										if (self.AttackType != VJ_ATTACK_NONE) or (IsValid(self:GetEnemy()) && self.HasWeaponBackAway == true && (self:GetPos():Distance(self:GetEnemy():GetPos()) <= self.WeaponBackAway_Distance)) then
+											self.IsReloadingWeapon = false
+											timer.Remove("timer_reload_end"..self:EntIndex()) -- Remove the timer to make sure it doesn't set reloading to false at a random time (later on)
+										else -- Our hiding spot is good, so reload!
+											DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
+											self:CustomOnWeaponReload_AfterRanToCover()
+										end
+									end
+									self:StartSchedule(vsched)
+								end
+							end
+						end
+					else
+						self.IsReloadingWeapon = false
+						self.CurrentWeaponEntity:SetClip1(self.CurrentWeaponEntity:GetMaxClip1())
+						self.CurrentWeaponEntity:NPC_Reload()
 					end
 				end
 			end
 		
 			if eneValid then
 				local enePos = ene:GetPos()
-				local eneVisible = self:Visible(ene)
+				if self.DoingWeaponAttack then self:PlaySoundSystem("Suppressing") end
+				
+				-- Set latest enemy information
+				self:UpdateEnemyMemory(ene, enePos)
+				self.EnemyReset = false
+				self.LastEnemyVisible = plyControlled and self:VisibleVec(enePos) or self:Visible(ene) -- Need to use VisibleVec when controlled because "Visible" will return false randomly
+				self.LastEnemySightDiff = self:GetSightDirection():Dot((enePos - myPos):GetNormalized())
+				self.LatestEnemyDistance = myPos:Distance(enePos)
+				self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene)
+				if (self.LastEnemySightDiff > math_cos(math_rad(self.SightAngle))) && (self.LatestEnemyDistance < self.SightDistance) && self.LastEnemyVisible then
+					self.LastSeenEnemyTime = 0
+					self.LastEnemyVisiblePos = enePos
+				else
+					self.LastSeenEnemyTime = self.LastSeenEnemyTime + ((self.LatestEnemyDistance < 4000 and 0.1) or 0.5)
+				end
+				
+				-- Turning / Facing Enemy
 				if self.ConstantlyFaceEnemy then self:DoConstantlyFaceEnemy() end
-				if self.IsDoingFaceEnemy == true or (self.CombatFaceEnemy == true && self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && eneVisible))) then
+				if self.IsDoingFaceEnemy == true or (self.CombatFaceEnemy == true && self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self.LastEnemyVisible))) then
 					local setAngs = self:GetFaceAngle((enePos - myPos):Angle())
 					if self.TurningUseAllAxis == true then self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, self:GetAngles(), Angle(setAngs.p, self:GetAngles().y, setAngs.r))) end
 					self:SetIdealYawAndUpdate(setAngs.y)
 				end
-				if self.DoingWeaponAttack then self:PlaySoundSystem("Suppressing") end
-				-- Set latest enemy information
-				self:UpdateEnemyMemory(ene, enePos)
-				self.EnemyReset = false
-				self.LatestEnemySightDiff = self:GetSightDirection():Dot((enePos - myPos):GetNormalized())
-				self.LatestEnemyDistance = myPos:Distance(enePos)
-				self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene)
-				if (self.LatestEnemySightDiff > math_cos(math_rad(self.SightAngle))) && (self.LatestEnemyDistance < self.SightDistance) && eneVisible then
-					self.LastSeenEnemyTime = 0
-					self.LatestVisibleEnemyPosition = enePos
-				else
-					self.LastSeenEnemyTime = self.LastSeenEnemyTime + ((self.LatestEnemyDistance < 4000 and 0.1) or 0.5)
-				end
 
 				-- Call for help
-				if self.AttackType != VJ_ATTACK_GRENADE && self.CallForHelp == true && CurTime() > self.NextCallForHelpT then
+				if self.AttackType != VJ_ATTACK_GRENADE && self.CallForHelp == true && curTime > self.NextCallForHelpT then
 					self:Allies_CallHelp(self.CallForHelpDistance)
-					self.NextCallForHelpT = CurTime() + self.NextCallForHelpTime
+					self.NextCallForHelpT = curTime + self.NextCallForHelpTime
 				end
 				
 				-- Grenade attack
-				if self.HasGrenadeAttack && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && !self.IsReloadingWeapon && !self:BusyWithActivity() && CurTime() > self.NextThrowGrenadeT && CurTime() > self.TakingCoverT then
+				if self.HasGrenadeAttack && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && !self.IsReloadingWeapon && !self:BusyWithActivity() && curTime > self.NextThrowGrenadeT && curTime > self.TakingCoverT then
 					if plyControlled && self.VJ_TheController:KeyDown(IN_JUMP) then
 						self:ThrowGrenadeCode()
-						self.NextThrowGrenadeT = CurTime() + math.random(self.NextThrowGrenadeTime.a, self.NextThrowGrenadeTime.b)
+						self.NextThrowGrenadeT = curTime + math.random(self.NextThrowGrenadeTime.a, self.NextThrowGrenadeTime.b)
 					elseif !plyControlled then
 						local chance = self.ThrowGrenadeChance
 						-- If chance is above 4, then half it by 2 if the enemy is a tank OR not visible
-						if math.random(1, (chance > 3 && (ene.IsVJBaseSNPC_Tank or !eneVisible) and math.floor(chance / 2)) or chance) == 1 && self.LatestEnemyDistance < self.GrenadeAttackThrowDistance && self.LatestEnemyDistance > self.GrenadeAttackThrowDistanceClose then
+						if math.random(1, (chance > 3 && (ene.IsVJBaseSNPC_Tank or !self.LastEnemyVisible) and math.floor(chance / 2)) or chance) == 1 && self.LatestEnemyDistance < self.GrenadeAttackThrowDistance && self.LatestEnemyDistance > self.GrenadeAttackThrowDistanceClose then
 							self:ThrowGrenadeCode()
 						end
-						self.NextThrowGrenadeT = CurTime() + math.random(self.NextThrowGrenadeTime.a, self.NextThrowGrenadeTime.b)
+						self.NextThrowGrenadeT = curTime + math.random(self.NextThrowGrenadeTime.a, self.NextThrowGrenadeTime.b)
 					end
 				end
 				
@@ -2332,7 +2342,7 @@ function ENT:Think()
 					//self:SetArrivalActivity(VJ_PICK(self.AnimTbl_ScaredBehaviorStand)) -- Already done by self.CurrentAnim_IdleStand
 				end
 				
-				if !eneVisible then
+				if !self.LastEnemyVisible then
 					self.DoingWeaponAttack = false
 					self.DoingWeaponAttack_Standing = false
 				end
@@ -2341,16 +2351,16 @@ function ENT:Think()
 				self:DoPoseParameterLooking()
 				
 				-- Face enemy for stationary types OR attacks
-				if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true) or (self.MeleeAttackAnimationFaceEnemy == true && self.AttackType == VJ_ATTACK_MELEE) or (self.GrenadeAttackAnimationFaceEnemy == true && self.AttackType == VJ_ATTACK_GRENADE && eneVisible == true) then
+				if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true) or (self.MeleeAttackAnimationFaceEnemy == true && self.AttackType == VJ_ATTACK_MELEE) or (self.GrenadeAttackAnimationFaceEnemy == true && self.AttackType == VJ_ATTACK_GRENADE && self.LastEnemyVisible == true) then
 					self:FaceCertainEntity(ene, true)
 				end
 				
-				if !self.vACT_StopAttacks && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && CurTime() > self.NextDoAnyAttackT then
-					self:CustomAttack(ene, eneVisible) -- Custom attack
+				if !self.vACT_StopAttacks && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && curTime > self.NextDoAnyAttackT then
+					self:CustomAttack(ene, self.LastEnemyVisible) -- Custom attack
 				
 					-- Melee Attack
-					if self.HasMeleeAttack == true && !self.vACT_StopAttacks && !self.Flinching && !self.FollowPlayer_GoingAfter && self.AttackType == VJ_ATTACK_NONE && self.IsAbleToMeleeAttack && (!IsValid(self.CurrentWeaponEntity) or (IsValid(self.CurrentWeaponEntity) && (!self.CurrentWeaponEntity.IsMeleeWeapon))) && ((plyControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (plyControlled == false && (self.NearestPointToEnemyDistance < self.MeleeAttackDistance && eneVisible) && (self.LatestEnemySightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))))) then
-						local seed = CurTime(); self.CurAttackSeed = seed
+					if self.HasMeleeAttack == true && !self.vACT_StopAttacks && !self.Flinching && !self.FollowPlayer_GoingAfter && self.AttackType == VJ_ATTACK_NONE && self.IsAbleToMeleeAttack && (!IsValid(self.CurrentWeaponEntity) or (IsValid(self.CurrentWeaponEntity) && (!self.CurrentWeaponEntity.IsMeleeWeapon))) && ((plyControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (plyControlled == false && (self.NearestPointToEnemyDistance < self.MeleeAttackDistance && self.LastEnemyVisible) && (self.LastEnemySightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))))) then
+						local seed = curTime; self.CurAttackSeed = seed
 						self.AttackType = VJ_ATTACK_MELEE
 						self.MeleeAttacking = true
 						self.IsAbleToMeleeAttack = false
@@ -2359,7 +2369,7 @@ function ENT:Think()
 						self:FaceCertainEntity(ene, true)
 						self:CustomOnMeleeAttack_BeforeStartTimer(seed)
 						timer.Simple(self.BeforeMeleeAttackSounds_WaitTime, function() if IsValid(self) then self:PlaySoundSystem("BeforeMeleeAttack") end end)
-						self.NextAlertSoundT = CurTime() + 0.4
+						self.NextAlertSoundT = curTime + 0.4
 						if self.DisableMeleeAttackAnimation == false then
 							self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_MeleeAttack)
 							self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, self.MeleeAttackAnimationDecreaseLengthAmount)
@@ -2374,7 +2384,7 @@ function ENT:Think()
 						else -- If it's not event based...
 							timer.Create("timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self:GetPlaybackRate(), self.MeleeAttackReps, function() if self.CurAttackSeed == seed then self:MeleeAttackCode() end end)
 							for k, t in pairs(self.MeleeAttackExtraTimers or {}) do
-								self:DoAddExtraAttackTimers("timer_melee_start"..CurTime() + k, t, function() if self.CurAttackSeed == seed then self:MeleeAttackCode() end end)
+								self:DoAddExtraAttackTimers("timer_melee_start"..curTime + k, t, function() if self.CurAttackSeed == seed then self:MeleeAttackCode() end end)
 							end
 						end
 						self:CustomOnMeleeAttack_AfterStartTimer(seed)
@@ -2425,7 +2435,7 @@ function ENT:Think()
 	else -- AI Not enabled
 		self.DoingWeaponAttack = false
 	end
-	self:NextThink(CurTime() + (0.069696968793869 + FrameTime()))
+	self:NextThink(curTime + (0.069696968793869 + FrameTime()))
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2496,9 +2506,9 @@ function ENT:ThrowGrenadeCode(customEnt, noOwner)
 	local gerClass = self.GrenadeAttackEntity
 	local gerFussTime = self.GrenadeAttackFussTime
 	
-	if IsValid(self:GetEnemy()) && !self:Visible(self:GetEnemy()) then
-		if self:VisibleVec(self.LatestVisibleEnemyPosition) && self:GetEnemy():GetPos():Distance(self.LatestVisibleEnemyPosition) <= 600 then
-			self:FaceCertainPosition(self.LatestVisibleEnemyPosition)
+	if IsValid(self:GetEnemy()) && !self.LastEnemyVisible then
+		if self:VisibleVec(self.LastEnemyVisiblePos) && self:GetEnemy():GetPos():Distance(self.LastEnemyVisiblePos) <= 600 then
+			self:FaceCertainPosition(self.LastEnemyVisiblePos)
 		else
 			return
 		end
@@ -2574,8 +2584,8 @@ function ENT:ThrowGrenadeCode(customEnt, noOwner)
 	
 			local greTargetPos = self:GetPos() + self:GetForward()*200
 			if IsValid(self:GetEnemy()) then
-				if !self:Visible(self:GetEnemy()) && self:VisibleVec(self.LatestVisibleEnemyPosition) && self:GetEnemy():GetPos():Distance(self.LatestVisibleEnemyPosition) <= 600 then
-					greTargetPos = self.LatestVisibleEnemyPosition
+				if !self.LastEnemyVisible && self:VisibleVec(self.LastEnemyVisiblePos) && self:GetEnemy():GetPos():Distance(self.LastEnemyVisiblePos) <= 600 then
+					greTargetPos = self.LastEnemyVisiblePos
 					self:FaceCertainPosition(greTargetPos, self.CurrentAttackAnimationDuration - self.TimeUntilGrenadeIsReleased)
 				else
 					greTargetPos = self:GetEnemy():GetPos()
@@ -2749,7 +2759,7 @@ function ENT:DoWeaponAttackMovementCode(override, moveType)
 	if (self.CurrentWeaponEntity.IsMeleeWeapon) then
 		self.DoingWeaponAttack = true
 	elseif self.HasShootWhileMoving == true then
-		if self:Visible(self:GetEnemy()) && self:IsAbleToShootWeapon(true, false) == true && ((self:IsMoving() && (self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true)) or (override == true)) then
+		if self.LastEnemyVisible && self:IsAbleToShootWeapon(true, false) == true && ((self:IsMoving() && (self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true)) or (override == true)) then
 			if (override == true && moveType == 0) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 1) then
 				local anim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_ShootWhileMovingRun))
 				if VJ_AnimationExists(self,anim) == true then
@@ -2834,7 +2844,7 @@ function ENT:SelectSchedule()
 				-- Scared behavior system
 				if self.NoWeapon_UseScaredBehavior == true && !self:IsBusy() && CurTime() > self.NextChaseTime then
 					self.NoWeapon_UseScaredBehavior_Active = true -- Tells the idle system to use the scared behavior animation
-					if self.FollowingPlayer == false && self:Visible(ene) then
+					if self.FollowingPlayer == false && self.LastEnemyVisible then
 						self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
 						return
 					end
@@ -2870,7 +2880,7 @@ function ENT:SelectSchedule()
 				elseif self:IsAbleToShootWeapon(true, true, eneDist_Eye) == true then
 					//self:VJ_ForwardIsHidingZone(self:EyePos(), enePos_Eye, true, {Debug=true})
 					-- If I can't see the enemy then either wait for it or charge at the enemy
-					if self:VJ_ForwardIsHidingZone(self:EyePos(), enePos_Eye, true) == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered) + self:GetUp()*30, enePos_Eye + self:GetUp()*30, true) /*or self:VJ_ForwardIsHidingZone(util.VJ_GetWeaponPos(self),enePos_Eye) == true*/ /*or (!self:Visible(ene))*/ then
+					if self:VJ_ForwardIsHidingZone(self:EyePos(), enePos_Eye, true) == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered) + self:GetUp()*30, enePos_Eye + self:GetUp()*30, true) /*or self:VJ_ForwardIsHidingZone(util.VJ_GetWeaponPos(self),enePos_Eye) == true*/ /*or (!self.LastEnemyVisible)*/ then
 						-- Wait for the enemy to come out
 						if self.WaitForEnemyToComeOut && !self.WaitingForEnemyToComeOut && (!wep.IsMeleeWeapon) && self.AllowToDo_WaitForEnemyToComeOut && !self.IsReloadingWeapon && ((CurTime() - self.Weapon_TimeSinceLastShot) <= 4.5) && (eneDist_Eye > self.WaitForEnemyToComeOutDistance) then
 							self.WaitingForEnemyToComeOut = true
@@ -3072,8 +3082,8 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		end
 	end
 	
-	self:SetNPCState(NPC_STATE_ALERT)
-	timer.Create("timer_alerted_reset"..self:EntIndex(), math.Rand(self.AlertedToIdleTime.a, self.AlertedToIdleTime.b), 1, function() if !IsValid(self:GetEnemy()) then self.Alerted = false self:SetNPCState(NPC_STATE_IDLE) end end)
+	//self:SetNPCState(NPC_STATE_ALERT)
+	timer.Create("timer_alerted_reset"..self:EntIndex(), math.Rand(self.AlertedToIdleTime.a, self.AlertedToIdleTime.b), 1, function() if !IsValid(self:GetEnemy()) then self.Alerted = false end end) // self:SetNPCState(NPC_STATE_IDLE)
 	self:CustomOnResetEnemy()
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printresetenemy"):GetInt() == 1 then print(self:GetName().." has reseted its enemy") end
 	if eneValid then
@@ -3226,7 +3236,7 @@ function ENT:OnTakeDamage(dmginfo)
 		
 		self:PlaySoundSystem("Pain")
 		
-		if self.MoveOrHideOnDamageByEnemy == true && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && IsValid(self:GetEnemy()) && CurTime() > self.NextMoveOrHideOnDamageByEnemyT && self:EyePos():Distance(self:GetEnemy():EyePos()) < self.Weapon_FiringDistanceFar && IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.AttackType == VJ_ATTACK_NONE && CurTime() > self.TakingCoverT && self:Visible(self:GetEnemy()) && self.VJ_IsBeingControlled == false && self.IsReloadingWeapon == false then
+		if self.MoveOrHideOnDamageByEnemy == true && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && IsValid(self:GetEnemy()) && CurTime() > self.NextMoveOrHideOnDamageByEnemyT && self:EyePos():Distance(self:GetEnemy():EyePos()) < self.Weapon_FiringDistanceFar && IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.AttackType == VJ_ATTACK_NONE && CurTime() > self.TakingCoverT && self.LastEnemyVisible && self.VJ_IsBeingControlled == false && self.IsReloadingWeapon == false then
 			local wep = self:GetActiveWeapon()
 			if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() + self:OBBCenter()),self:GetEnemy():EyePos()) == true && self.MoveOrHideOnDamageByEnemy_OnlyMove == false then			
 				//self:VJ_ACT_TAKE_COVER(self.AnimTbl_MoveOrHideOnDamageByEnemy,false,math.Rand(self.MoveOrHideOnDamageByEnemy_HideTime.a, self.MoveOrHideOnDamageByEnemy_HideTime.b),false)
@@ -3288,7 +3298,7 @@ function ENT:OnTakeDamage(dmginfo)
 					self:PlaySoundSystem("BecomeEnemyToPlayer")
 				end
 				self.Alerted = true
-				self:SetNPCState(NPC_STATE_ALERT)
+				//self:SetNPCState(NPC_STATE_ALERT)
 			end
 		end
 

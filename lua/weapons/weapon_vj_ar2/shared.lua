@@ -66,6 +66,6 @@ function SWEP:NPC_SecondaryFire()
 	local phys = proj:GetPhysicsObject()
 	if IsValid(phys) then
 		phys:Wake()
-		phys:SetVelocity(owner:CalculateProjectile("Line", pos, owner.LatestVisibleEnemyPosition, 2000))
+		phys:SetVelocity(owner:CalculateProjectile("Line", pos, owner.LastEnemyVisiblePos, 2000))
 	end
 end
