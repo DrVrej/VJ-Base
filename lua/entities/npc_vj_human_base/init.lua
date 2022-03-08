@@ -904,7 +904,6 @@ ENT.LastEnemyVisibleTime = 0
 ENT.LastEnemyTime = 0
 ENT.TimeSinceEnemyAcquired = 0
 ENT.NextCallForHelpAnimationT = 0
-ENT.NextResetEnemyT = 0
 ENT.CurrentAttackAnimation = 0
 ENT.CurrentAttackAnimationDuration = 0
 ENT.NextIdleTime = 0
@@ -3051,7 +3050,7 @@ function ENT:SelectSchedule()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetEnemy(checkAlliesEnemy)
-	if self.NextResetEnemyT > CurTime() or self.Dead == true then self.EnemyReset = false return false end
+	if /*self.NextResetEnemyT > CurTime() or*/ self.Dead == true then self.EnemyReset = false return false end
 	checkAlliesEnemy = checkAlliesEnemy or false
 	local RunToEnemyOnReset = false
 	local ene = self:GetEnemy()
