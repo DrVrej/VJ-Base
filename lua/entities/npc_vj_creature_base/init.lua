@@ -181,7 +181,7 @@ ENT.DisableSelectSchedule = false -- Disables Schedule code, Custom Schedule can
 ENT.DisableTakeDamageFindEnemy = false -- Disable the SNPC finding the enemy when being damaged
 ENT.DisableTouchFindEnemy = false -- Disable the SNPC finding the enemy when being touched
 ENT.DisableMakingSelfEnemyToNPCs = false -- Disables the "AddEntityRelationship" that runs in think
-ENT.LastSeenEnemyTimeUntilReset = 15 -- Time until it resets its enemy if its current enemy is not visible
+ENT.TimeUntilEnemyLost = 15 -- Time until it resets its enemy if the enemy is not visible
 ENT.NextProcessTime = 1 -- Time until it runs the essential part of the AI, which can be performance heavy!
 	-- ====== Miscellaneous Variables ====== --
 ENT.DisableInitializeCapabilities = false -- If enabled, all of the Capabilities will be disabled, allowing you to add your own
@@ -942,7 +942,9 @@ ENT.NextProcessT = 0
 ENT.NextCallForHelpT = 0
 ENT.NextCallForBackUpOnDamageT = 0
 ENT.NextAlertSoundT = 0
-ENT.LastSeenEnemyTime = 0
+ENT.LastEnemyVisibleTime = 0
+ENT.LastEnemyTime = 0
+ENT.TimeSinceEnemyAcquired = 0
 ENT.NextCallForHelpAnimationT = 0
 ENT.NextResetEnemyT = 0
 ENT.CurrentAttackAnimation = 0
@@ -952,8 +954,6 @@ ENT.NextChaseTime = 0
 ENT.OnPlayerSightNextT = 0
 ENT.NextDamageByPlayerT = 0
 ENT.NextDamageByPlayerSoundT = 0
-ENT.TimeSinceLastSeenEnemy = 0
-ENT.TimeSinceEnemyAcquired = 0
 ENT.Medic_NextHealT = 0
 ENT.CurrentAnim_IdleStand = 0
 ENT.NextFlinchT = 0
@@ -1700,7 +1700,7 @@ function ENT:Think()
 		if self.VJDEBUG_SNPC_ENABLED == true then
 			if GetConVar("vj_npc_printcurenemy"):GetInt() == 1 then print(self:GetClass().."'s Enemy: ",self:GetEnemy()," Alerted? ",self.Alerted) end
 			if GetConVar("vj_npc_printtakingcover"):GetInt() == 1 then if curTime > self.TakingCoverT == true then print(self:GetClass().." Is Not Taking Cover") else print(self:GetClass().." Is Taking Cover ("..self.TakingCoverT-curTime..")") end end
-			if GetConVar("vj_npc_printlastseenenemy"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, self.LastSeenEnemyTime.." ("..self:GetName()..")") end
+			if GetConVar("vj_npc_printlastseenenemy"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - self.LastEnemyVisibleTime).." ("..self:GetName()..")") end
 		end
 		
 		self:SetPlaybackRate(self.AnimationPlaybackRate)
@@ -1832,7 +1832,7 @@ function ENT:Think()
 					eneValid = IsValid(ene)
 				end
 				-- Reset enemy if it has been unseen for a while
-				if self.LastSeenEnemyTime > self.LastSeenEnemyTimeUntilReset && (!self.IsVJBaseSNPC_Tank) then
+				if (curTime - self.LastEnemyVisibleTime) > self.TimeUntilEnemyLost && (!self.IsVJBaseSNPC_Tank) then
 					self:PlaySoundSystem("LostEnemy")
 					self.EnemyReset = true
 					self:ResetEnemy(true)
@@ -1852,10 +1852,8 @@ function ENT:Think()
 				self.LatestEnemyDistance = myPos:Distance(enePos)
 				self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene)
 				if (self.LastEnemySightDiff > math_cos(math_rad(self.SightAngle))) && (self.LatestEnemyDistance < self.SightDistance) && self.LastEnemyVisible then
-					self.LastSeenEnemyTime = 0
+					self.LastEnemyVisibleTime = curTime
 					self.LastEnemyVisiblePos = enePos
-				else
-					self.LastSeenEnemyTime = self.LastSeenEnemyTime + 0.1
 				end
 				
 				-- Turning / Facing Enemy
@@ -2036,7 +2034,6 @@ function ENT:Think()
 					//self:ClearPoseParameters()
 				end
 				self.TimeSinceEnemyAcquired = 0
-				self.TimeSinceLastSeenEnemy = self.TimeSinceLastSeenEnemy + 0.1
 				if self.EnemyReset == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") self.EnemyReset = true self:ResetEnemy(true) end
 			end
 			
@@ -2489,7 +2486,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		if getAllies != nil then
 			for _,v in pairs(getAllies) do
 				local allyEne = v:GetEnemy()
-				if IsValid(allyEne) && v.LastSeenEnemyTime < self.LastSeenEnemyTimeUntilReset && VJ_IsAlive(allyEne) == true && self:VJ_HasNoTarget(allyEne) == false && self:GetPos():Distance(allyEne:GetPos()) <= self.SightDistance then
+				if IsValid(allyEne) && (CurTime() - v.LastEnemyVisibleTime) < self.TimeUntilEnemyLost && VJ_IsAlive(allyEne) && !self:VJ_HasNoTarget(allyEne) && self:GetPos():Distance(allyEne:GetPos()) <= self.SightDistance then
 					self:VJ_DoSetEnemy(allyEne, true)
 					self.EnemyReset = false
 					return false
@@ -2620,128 +2617,133 @@ function ENT:OnTakeDamage(dmginfo)
 	else
 		self:TriggerOutput("OnDamaged", self)
 	end
+	
+	local stillAlive = self:Health() > 0
+	if stillAlive then self:PlaySoundSystem("Pain") end
 
-	-- Make passive NPCs run and their allies as well
-	if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && CurTime() > self.TakingCoverT then
-		if self.Passive_RunOnDamage == true && self:Health() > 0 then -- Don't run if not allowed or dead
-			self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
-		end
-		if self.Passive_AlliesRunOnDamage == true then -- Make passive allies run
-			local allies = self:Allies_Check(self.Passive_AlliesRunOnDamageDistance)
-			if allies != nil then
-				for _,v in pairs(allies) do
-					v.TakingCoverT = CurTime() + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
-					v:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
-					v:PlaySoundSystem("Alert")
-				end
+	if GetConVar("ai_disabled"):GetInt() == 0 && self:GetState() != VJ_STATE_FREEZE then
+		-- Make passive NPCs run and their allies as well
+		if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && CurTime() > self.TakingCoverT then
+			if self.Passive_RunOnDamage == true && stillAlive then -- Don't run if not allowed or dead
+				self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
 			end
-		end
-		self.TakingCoverT = CurTime() + math.Rand(self.Passive_NextRunOnDamageTime.a, self.Passive_NextRunOnDamageTime.b)
-	end
-
-	if self:Health() > 0 then
-		self:DoFlinch(dmginfo, hitgroup)
-		
-		-- Damage by Player
-			-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
-		if self.HasDamageByPlayer && dmgAttacker:IsPlayer() && CurTime() > self.NextDamageByPlayerT && GetConVar("ai_disabled"):GetInt() == 0 && self:Visible(dmgAttacker) && (self.DamageByPlayerDispositionLevel == 0 or (self.DamageByPlayerDispositionLevel == 1 && (self:Disposition(dmgAttacker) == D_LI or self:Disposition(dmgAttacker) == D_NU)) or (self.DamageByPlayerDispositionLevel == 2 && self:Disposition(dmgAttacker) != D_LI && self:Disposition(dmgAttacker) != D_NU)) then
-			self:CustomOnDamageByPlayer(dmginfo, hitgroup)
-			self:PlaySoundSystem("DamageByPlayer")
-			self.NextDamageByPlayerT = CurTime() + math.Rand(self.DamageByPlayerTime.a, self.DamageByPlayerTime.b)
-		end
-		
-		self:PlaySoundSystem("Pain")
-
-		if self.CallForBackUpOnDamage == true && CurTime() > self.NextCallForBackUpOnDamageT && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && ((!IsValid(dmgInflictor)) or (IsValid(dmgInflictor) && dmgInflictor:GetClass() != "entityflame")) && IsValid(dmgAttacker) && dmgAttacker:GetClass() != "entityflame" then
-			local allies = self:Allies_Check(self.CallForBackUpOnDamageDistance)
-			if allies != nil then
-				self:Allies_Bring("Random",self.CallForBackUpOnDamageDistance,allies,self.CallForBackUpOnDamageLimit)
-				self:ClearSchedule()
-				self.NextFlinchT = CurTime() + 1
-				local pickanim = VJ_PICK(self.CallForBackUpOnDamageAnimation)
-				if VJ_AnimationExists(self,pickanim) == true && self.DisableCallForBackUpOnDamageAnimation == false then
-					self:VJ_ACT_PLAYACTIVITY(pickanim,true,self:DecideAnimationLength(pickanim,self.CallForBackUpOnDamageAnimationTime),true, 0, {PlayBackRateCalculated=true})
-				elseif !self:BusyWithActivity() then
-					self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
-					//self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
-					/*local vschedHide = ai_vj_schedule.New("vj_hide_callbackupondamage")
-					vschedHide:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
-					vschedHide:EngTask("TASK_RUN_PATH", 0)
-					vschedHide:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-					vschedHide.ResetOnFail = true
-					self:StartSchedule(vschedHide)*/
-				end
-				self.NextCallForBackUpOnDamageT = CurTime() + math.Rand(self.NextCallForBackUpOnDamageTime.a, self.NextCallForBackUpOnDamageTime.b)
-			end
-		end
-		
-		/*if dmgInflictor:GetClass() == "crossbow_bolt" then
-			print("test")
-			local mdlBolt = ents.Create("prop_dynamic_override")
-			mdlBolt:SetPos(dmginfo:GetDamagePosition())
-			mdlBolt:SetAngles(dmgAttacker:GetAngles())
-			mdlBolt:SetModel("models/crossbow_bolt.mdl")
-			mdlBolt:SetParent(self)
-			mdlBolt:Spawn()
-			mdlBolt:Activate()
-		end*/
-
-		if self.BecomeEnemyToPlayer == true && self.VJ_IsBeingControlled == false && dmgAttacker:IsPlayer() && GetConVar("ai_disabled"):GetInt() == 0 && GetConVar("ai_ignoreplayers"):GetInt() == 0 && self:Disposition(dmgAttacker) == D_LI then
-			self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1
-			if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
-				if self:Disposition(dmgAttacker) != D_HT then
-					self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo, hitgroup)
-					if self.FollowingPlayer == true && self.FollowPlayer_Entity == dmgAttacker then self:FollowPlayerReset() end
-					self.VJ_AddCertainEntityAsEnemy[#self.VJ_AddCertainEntityAsEnemy+1] = dmgAttacker
-					self:AddEntityRelationship(dmgAttacker,D_HT,99)
-					self.TakingCoverT = CurTime() + 2
-					if !IsValid(self:GetEnemy()) then
-						self:StopMoving()
-						self:SetTarget(dmgAttacker)
-						self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+			if self.Passive_AlliesRunOnDamage == true then -- Make passive allies run
+				local allies = self:Allies_Check(self.Passive_AlliesRunOnDamageDistance)
+				if allies != nil then
+					for _,v in pairs(allies) do
+						v.TakingCoverT = CurTime() + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
+						v:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
+						v:PlaySoundSystem("Alert")
 					end
-					if self.AllowPrintingInChat == true then
-						dmgAttacker:PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.")
-					end
-					self:PlaySoundSystem("BecomeEnemyToPlayer")
 				end
-				self.Alerted = true
-				//self:SetNPCState(NPC_STATE_ALERT)
 			end
+			self.TakingCoverT = CurTime() + math.Rand(self.Passive_NextRunOnDamageTime.a, self.Passive_NextRunOnDamageTime.b)
 		end
 
-		if self.DisableTakeDamageFindEnemy == false && self:BusyWithActivity() == false && !IsValid(self:GetEnemy()) && CurTime() > self.TakingCoverT && self.VJ_IsBeingControlled == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& self.Alerted == false*/ && GetConVar("ai_disabled"):GetInt() == 0 then
-			local sightdist = self.SightDistance / 2 -- Gesvadz tive
-			-- Yete gesvadz tive hazaren aveli kich e, ere vor chi ges e tive...
-			-- Yete tive 2000 - 4000 mechene, ere vor mishd 2000 ela...
-			-- Yete 4000 aveli e, ere vor gesvadz tive kordzadz e
-			if sightdist <= 1000 then
-				sightdist = self.SightDistance
-			else
-				sightdist = math_clamp(sightdist,2000,self.SightDistance)
+		if stillAlive then
+			self:DoFlinch(dmginfo, hitgroup)
+			
+			-- Damage by Player
+				-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
+			if self.HasDamageByPlayer && dmgAttacker:IsPlayer() && CurTime() > self.NextDamageByPlayerT && self:Visible(dmgAttacker) && (self.DamageByPlayerDispositionLevel == 0 or (self.DamageByPlayerDispositionLevel == 1 && (self:Disposition(dmgAttacker) == D_LI or self:Disposition(dmgAttacker) == D_NU)) or (self.DamageByPlayerDispositionLevel == 2 && self:Disposition(dmgAttacker) != D_LI && self:Disposition(dmgAttacker) != D_NU)) then
+				self:CustomOnDamageByPlayer(dmginfo, hitgroup)
+				self:PlaySoundSystem("DamageByPlayer")
+				self.NextDamageByPlayerT = CurTime() + math.Rand(self.DamageByPlayerTime.a, self.DamageByPlayerTime.b)
 			end
-			local Targets = ents.FindInSphere(self:GetPos(),sightdist)
-			for _,v in pairs(Targets) do
-				if CurTime() > self.NextSetEnemyOnDamageT && self:Visible(v) && self:DoRelationshipCheck(v) == true then
-					self:CustomOnSetEnemyOnDamage(dmginfo, hitgroup)
-					self.NextCallForHelpT = CurTime() + 1
-					self:VJ_DoSetEnemy(v,true)
-					self:DoChaseAnimation()
-					self.NextSetEnemyOnDamageT = CurTime() + 1
-				else
-					//self:Allies_CallHelp(self.CallForHelpDistance)
-					if CurTime() > self.NextRunAwayOnDamageT then
-						if self.FollowingPlayer == false && self.RunAwayOnUnknownDamage == true && self.MovementType != VJ_MOVETYPE_STATIONARY then
-							self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
-							//self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
-							/*local vschedHide = ai_vj_schedule.New("vj_hide_unknowndamage")
-							vschedHide:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
-							vschedHide:EngTask("TASK_RUN_PATH", 0)
-							vschedHide:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-							vschedHide.ResetOnFail = true
-							self:StartSchedule(vschedHide)*/
+			
+			self:PlaySoundSystem("Pain")
+
+			if self.CallForBackUpOnDamage == true && CurTime() > self.NextCallForBackUpOnDamageT && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && ((!IsValid(dmgInflictor)) or (IsValid(dmgInflictor) && dmgInflictor:GetClass() != "entityflame")) && IsValid(dmgAttacker) && dmgAttacker:GetClass() != "entityflame" then
+				local allies = self:Allies_Check(self.CallForBackUpOnDamageDistance)
+				if allies != nil then
+					self:Allies_Bring("Random",self.CallForBackUpOnDamageDistance,allies,self.CallForBackUpOnDamageLimit)
+					self:ClearSchedule()
+					self.NextFlinchT = CurTime() + 1
+					local pickanim = VJ_PICK(self.CallForBackUpOnDamageAnimation)
+					if VJ_AnimationExists(self,pickanim) == true && self.DisableCallForBackUpOnDamageAnimation == false then
+						self:VJ_ACT_PLAYACTIVITY(pickanim,true,self:DecideAnimationLength(pickanim,self.CallForBackUpOnDamageAnimationTime),true, 0, {PlayBackRateCalculated=true})
+					elseif !self:BusyWithActivity() then
+						self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+						//self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
+						/*local vschedHide = ai_vj_schedule.New("vj_hide_callbackupondamage")
+						vschedHide:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
+						vschedHide:EngTask("TASK_RUN_PATH", 0)
+						vschedHide:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+						vschedHide.ResetOnFail = true
+						self:StartSchedule(vschedHide)*/
+					end
+					self.NextCallForBackUpOnDamageT = CurTime() + math.Rand(self.NextCallForBackUpOnDamageTime.a, self.NextCallForBackUpOnDamageTime.b)
+				end
+			end
+			
+			/*if dmgInflictor:GetClass() == "crossbow_bolt" then
+				print("test")
+				local mdlBolt = ents.Create("prop_dynamic_override")
+				mdlBolt:SetPos(dmginfo:GetDamagePosition())
+				mdlBolt:SetAngles(dmgAttacker:GetAngles())
+				mdlBolt:SetModel("models/crossbow_bolt.mdl")
+				mdlBolt:SetParent(self)
+				mdlBolt:Spawn()
+				mdlBolt:Activate()
+			end*/
+
+			if self.BecomeEnemyToPlayer == true && self.VJ_IsBeingControlled == false && dmgAttacker:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0 && self:Disposition(dmgAttacker) == D_LI then
+				self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1
+				if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
+					if self:Disposition(dmgAttacker) != D_HT then
+						self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo, hitgroup)
+						if self.FollowingPlayer == true && self.FollowPlayer_Entity == dmgAttacker then self:FollowPlayerReset() end
+						self.VJ_AddCertainEntityAsEnemy[#self.VJ_AddCertainEntityAsEnemy+1] = dmgAttacker
+						self:AddEntityRelationship(dmgAttacker,D_HT,99)
+						self.TakingCoverT = CurTime() + 2
+						if !IsValid(self:GetEnemy()) then
+							self:StopMoving()
+							self:SetTarget(dmgAttacker)
+							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 						end
-						self.NextRunAwayOnDamageT = CurTime() + self.NextRunAwayOnDamageTime
+						if self.AllowPrintingInChat == true then
+							dmgAttacker:PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.")
+						end
+						self:PlaySoundSystem("BecomeEnemyToPlayer")
+					end
+					self.Alerted = true
+					//self:SetNPCState(NPC_STATE_ALERT)
+				end
+			end
+
+			if self.DisableTakeDamageFindEnemy == false && self:BusyWithActivity() == false && !IsValid(self:GetEnemy()) && CurTime() > self.TakingCoverT && self.VJ_IsBeingControlled == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& self.Alerted == false*/ then
+				local sightdist = self.SightDistance / 2 -- Gesvadz tive
+				-- Yete gesvadz tive hazaren aveli kich e, ere vor chi ges e tive...
+				-- Yete tive 2000 - 4000 mechene, ere vor mishd 2000 ela...
+				-- Yete 4000 aveli e, ere vor gesvadz tive kordzadz e
+				if sightdist <= 1000 then
+					sightdist = self.SightDistance
+				else
+					sightdist = math_clamp(sightdist,2000,self.SightDistance)
+				end
+				local Targets = ents.FindInSphere(self:GetPos(),sightdist)
+				for _,v in pairs(Targets) do
+					if CurTime() > self.NextSetEnemyOnDamageT && self:Visible(v) && self:DoRelationshipCheck(v) == true then
+						self:CustomOnSetEnemyOnDamage(dmginfo, hitgroup)
+						self.NextCallForHelpT = CurTime() + 1
+						self:VJ_DoSetEnemy(v,true)
+						self:DoChaseAnimation()
+						self.NextSetEnemyOnDamageT = CurTime() + 1
+					else
+						//self:Allies_CallHelp(self.CallForHelpDistance)
+						if CurTime() > self.NextRunAwayOnDamageT then
+							if self.FollowingPlayer == false && self.RunAwayOnUnknownDamage == true && self.MovementType != VJ_MOVETYPE_STATIONARY then
+								self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+								//self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
+								/*local vschedHide = ai_vj_schedule.New("vj_hide_unknowndamage")
+								vschedHide:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
+								vschedHide:EngTask("TASK_RUN_PATH", 0)
+								vschedHide:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+								vschedHide.ResetOnFail = true
+								self:StartSchedule(vschedHide)*/
+							end
+							self.NextRunAwayOnDamageT = CurTime() + self.NextRunAwayOnDamageTime
+						end
 					end
 				end
 			end
