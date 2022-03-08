@@ -561,7 +561,7 @@ function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 	end
 	self:SetEnemy(ent)
 	self.TimeSinceEnemyAcquired = CurTime()
-	self.NextResetEnemyT = CurTime() + 0.5 //2
+	//self.NextResetEnemyT = CurTime() + 0.5 //2
 	if stopMoving == true then
 		self:ClearGoal()
 		self:StopMoving()
