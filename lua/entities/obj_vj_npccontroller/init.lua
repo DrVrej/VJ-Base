@@ -402,8 +402,74 @@ function ENT:Think()
 	self:NextThink(CurTime() + (0.069696968793869 + FrameTime()))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local useNewMovement = true -- Set this to true to test out the CH Base movement code. Obviously this is a bit messy, because I copy/pasted it and replaced some stuff to work with VJ Base. Feel free to change what you need.
+-- One thing I noticed that's good to see the comparison, is NPCs walking near dynamic props. VJ Movement just stops completely if trying to walk up to them. CH Movement allows you to walk all the way up to it before stopping
+-- Also, you really should optimize the controller. I don't think you touched it during your optimization episode lol, because this thing is lacking heavily in optimizations imo
 function ENT:StartMovement(Dir, Rot)
 	if self.VJCE_NPC:GetState() != VJ_STATE_NONE then return end
+
+	if useNewMovement then
+		local ent = self.VJCE_Player
+		local npc = self.VJCE_NPC
+		local startPos = ent:GetPos() +Vector(0,0,10) -- This is referenced later
+		local movePos = startPos
+		local moveAmount = math.Clamp(npc:GetSequenceGroundSpeed(npc:GetSequence()),50,5000) -- Get the maximum movement distance, honestly you should clamp it at 450 (which is what I do), tho increasing the number would allow bigger NPCs to navigate better so I made it 5,000
+		local center = npc:GetPos() +npc:OBBCenter() -- Gets called multiple times, so localize it
+		local defFilter = {npc,ent,self} -- Same here
+		local DontMove = true
+
+		local tr = util.TraceLine({start=center,endpos=center +npc:GetForward() *moveAmount,filter=defFilter,mask=MASK_SHOT})
+		if tr.Hit then -- If we hit something, get an offset number from the hit position and apply it later for the final position
+			moveAmount = npc:GetPos():Distance(tr.HitPos) -15
+		end
+		if ent:KeyDown(IN_FORWARD) then
+			movePos = movePos +ent:GetForward() *moveAmount +Vector(0,0,15)
+			DontMove = false
+		end
+		if ent:KeyDown(IN_MOVELEFT) then
+			movePos = movePos +ent:GetRight() *-moveAmount +Vector(0,0,15)
+			DontMove = false
+		end
+		if ent:KeyDown(IN_MOVERIGHT) then
+			movePos = movePos +ent:GetRight() *moveAmount +Vector(0,0,15)
+			DontMove = false
+		end
+		if ent:KeyDown(IN_BACK) then
+			movePos = movePos +ent:GetForward() *-moveAmount +Vector(0,0,15)
+			DontMove = false
+		end
+
+		local tr = util.TraceHull({ -- Let's see if the NPC's body can even fit in the space we're trying to move to, if not then let's offset it from the hit position
+			start = startPos,
+			endpos = movePos,
+			filter = defFilter,
+			mins = npc:OBBMins() /2,
+			maxs = npc:OBBMaxs() /2
+		})
+		if tr.Hit then
+			movePos = tr.HitPos -tr.Normal *20
+		end
+
+		if !DontMove then -- Then here's your default VJ code from below. I went ahead and optimized it
+			npc:SetLastPosition(movePos)
+			local movetype = "TASK_WALK_PATH"
+			if (ent:KeyDown(IN_SPEED)) then movetype = "TASK_RUN_PATH" end
+			npc:VJ_TASK_GOTO_LASTPOS(movetype,function(x)
+				if ent:KeyDown(IN_ATTACK2) && npc.IsVJBaseSNPC_Human == true then
+					x.ConstantlyFaceEnemy = true
+					x.CanShootWhenMoving = true
+				else
+					if self.VJC_BullseyeTracking == true then
+						x.ConstantlyFaceEnemy = true
+					else
+						x:EngTask("TASK_FACE_LASTPOSITION", 0)
+					end
+				end
+			end)
+		end
+		return
+	end
+
 	local DontMove = false
 	local PlyAimVec = Dir
 	PlyAimVec.z = 0
