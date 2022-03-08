@@ -551,7 +551,7 @@ function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 	stopMoving = stopMoving or false -- Will not run if doQuickIfActiveEnemy passes!
 	doQuickIfActiveEnemy = doQuickIfActiveEnemy or false -- It will run a much quicker set enemy without resetting everything (Only if it has an active enemy!)
 	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == ent then self:DoMedicCode_Reset() end
-	self.TimeSinceLastSeenEnemy = 0
+	self.LastEnemyTime = CurTime()
 	self:AddEntityRelationship(ent, D_HT, 99)
 	self:UpdateEnemyMemory(ent, ent:GetPos())
 	if doQuickIfActiveEnemy == true && IsValid(self:GetEnemy()) then
@@ -730,7 +730,7 @@ function ENT:OnCondition(cond)
 	//if cond == 36 then print("sched done!") end
 	//if cond != 15 && cond != 60 then
 	//if cond != 1 then
-		print(self, " Condition: ", cond, " - ", self:ConditionName(cond))
+		//print(self, " Condition: ", cond, " - ", self:ConditionName(cond))
 	//end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -987,7 +987,7 @@ function ENT:DoAlert(ent)
 	if !IsValid(self:GetEnemy()) or self.Alerted == true then return end
 	self.Alerted = true
 	//self:SetNPCState(NPC_STATE_ALERT)
-	self.LastSeenEnemyTime = 0
+	self.LastEnemyVisibleTime = CurTime()
 	self:CustomOnAlert(ent)
 	if CurTime() > self.NextAlertSoundT then
 		self:PlaySoundSystem("Alert")
