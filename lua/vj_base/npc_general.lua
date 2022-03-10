@@ -550,7 +550,7 @@ function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 	if !IsValid(ent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or ent:Health() <= 0 or (ent:IsPlayer() && (!ent:Alive() or GetConVar("ai_ignoreplayers"):GetInt() == 1)) then return end
 	stopMoving = stopMoving or false -- Will not run if doQuickIfActiveEnemy passes!
 	doQuickIfActiveEnemy = doQuickIfActiveEnemy or false -- It will run a much quicker set enemy without resetting everything (Only if it has an active enemy!)
-	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == ent then self:DoMedicCode_Reset() end
+	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == ent then self:DoMedicReset() end
 	self.LastEnemyTime = CurTime()
 	self:AddEntityRelationship(ent, D_HT, 99)
 	self:UpdateEnemyMemory(ent, ent:GetPos())
@@ -826,7 +826,7 @@ function ENT:FollowPlayerCode(key, activator, caller, data)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoMedicCode_Reset()
+function ENT:DoMedicReset()
 	self:CustomOnMedic_OnReset()
 	if IsValid(self.Medic_CurrentEntToHeal) then self.Medic_CurrentEntToHeal.AlreadyBeingHealedByMedic = false end
 	if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
@@ -836,7 +836,7 @@ function ENT:DoMedicCode_Reset()
 	self.Medic_CurrentEntToHeal = NULL
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoMedicCode()
+function ENT:DoMedicCheck()
 	if self.IsMedicSNPC == false or self.NoWeapon_UseScaredBehavior_Active == true then return end
 	if self.Medic_IsHealingAlly == false then
 		if CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled == true then return end
@@ -854,7 +854,7 @@ function ENT:DoMedicCode()
 			end
 		end
 	elseif self.AlreadyDoneMedicThinkCode == false then
-		if !IsValid(self.Medic_CurrentEntToHeal) or VJ_IsAlive(self.Medic_CurrentEntToHeal) != true or (self.Medic_CurrentEntToHeal:Health() > self.Medic_CurrentEntToHeal:GetMaxHealth() * 0.75) then self:DoMedicCode_Reset() return end
+		if !IsValid(self.Medic_CurrentEntToHeal) or VJ_IsAlive(self.Medic_CurrentEntToHeal) != true or (self.Medic_CurrentEntToHeal:Health() > self.Medic_CurrentEntToHeal:GetMaxHealth() * 0.75) then self:DoMedicReset() return end
 		if self:Visible(self.Medic_CurrentEntToHeal) && self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then -- Are we in healing distance?
 			self.AlreadyDoneMedicThinkCode = true
 			self:CustomOnMedic_BeforeHeal()
@@ -896,7 +896,7 @@ function ENT:DoMedicCode()
 			timer.Simple(self:DecideAnimationLength(anim, self.Medic_TimeUntilHeal, 0), function()
 				if IsValid(self) then
 					if !IsValid(self.Medic_CurrentEntToHeal) then -- Ally doesn't exist anymore, reset
-						self:DoMedicCode_Reset()
+						self:DoMedicReset()
 					else -- If it exists...
 						if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then -- Are we still in healing distance?
 							if self:CustomOnMedic_OnHeal(self.Medic_CurrentEntToHeal) != false then
@@ -908,7 +908,7 @@ function ENT:DoMedicCode()
 							if self.Medic_CurrentEntToHeal.IsVJBaseSNPC == true then
 								self.Medic_CurrentEntToHeal:PlaySoundSystem("MedicReceiveHeal")
 							end
-							self:DoMedicCode_Reset()
+							self:DoMedicReset()
 						else -- If we are no longer in healing distance, go after the ally again
 							self.AlreadyDoneMedicThinkCode = false
 							if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
@@ -1827,7 +1827,7 @@ function ENT:OnRemove()
 	self:CustomOnRemove()
 	self.Dead = true
 	
-	if self.Medic_IsHealingAlly == true then self:DoMedicCode_Reset() end
+	if self.Medic_IsHealingAlly == true then self:DoMedicReset() end
 	self:StopAllCommonSounds()
 	self:RemoveAttackTimers()
 	self:StopParticles()

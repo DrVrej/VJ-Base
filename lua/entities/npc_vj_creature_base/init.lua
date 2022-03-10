@@ -898,8 +898,6 @@ ENT.Medic_IsHealingAlly = false
 ENT.AlreadyDoneMedicThinkCode = false
 ENT.AlreadyBeingHealedByMedic = false
 ENT.VJFriendly = false
-ENT.AlreadyDoneMeleeAttackFirstHit = false
-ENT.AlreadyDoneLeapAttackFirstHit = false
 ENT.IsAbleToMeleeAttack = true
 ENT.IsAbleToRangeAttack = true
 ENT.IsAbleToLeapAttack = true
@@ -907,16 +905,13 @@ ENT.RangeAttack_DisableChasingEnemy = false
 ENT.IsDoingFaceEnemy = false
 ENT.IsDoingFacePosition = false
 ENT.VJ_PlayingInterruptSequence = false
-ENT.AlreadyDoneFirstMeleeAttack = false
 ENT.CanDoSelectScheduleAgain = true
 ENT.HasBeenGibbedOnDeath = false
 ENT.DeathAnimationCodeRan = false
 ENT.FollowPlayer_DoneSelectSchedule = false
-ENT.AlreadyDoneRangeAttackFirstProjectile = false
-ENT.AlreadyDoneFirstLeapAttack = false
 ENT.VJ_IsBeingControlled_Tool = false
 ENT.LastHiddenZone_CanWander = true
-ENT.AlreadyDoneLeapAttackJump = false
+ENT.LeapAttackHasJumped = false
 ENT.CurIdleStandMove = false
 ENT.LastEnemyVisible = false
 ENT.PropAP_IsVisible = false
@@ -981,6 +976,7 @@ ENT.GuardingFacePosition = nil
 ENT.SelectedDifficulty = 1
 ENT.AIState = VJ_STATE_NONE
 ENT.AttackType = VJ_ATTACK_NONE
+ENT.AttackStatus = VJ_ATTACK_STATUS_NONE
 ENT.TimersToRemove = {"timer_state_reset","timer_act_seqreset","timer_face_position","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap","timer_alerted_reset"}
 ENT.EntitiesToDestroyClass = {func_breakable=true,func_physbox=true,prop_door_rotating=true} // func_breakable_surf
 //ENT.DefaultGibOnDeathDamageTypes = {[DMG_ALWAYSGIB]=true,[DMG_ENERGYBEAM]=true,[DMG_BLAST]=true,[DMG_VEHICLE]=true,[DMG_CRUSH]=true,[DMG_DISSOLVE]=true,[DMG_SLOWBURN]=true,[DMG_PHYSGUN]=true,[DMG_PLASMA]=true,[DMG_SONIC]=true}
@@ -1815,7 +1811,7 @@ function ENT:Think()
 			-- Run the heavy processes
 			if curTime > self.NextProcessT then
 				self:DoEntityRelationshipCheck()
-				self:DoMedicCode()
+				self:DoMedicCheck()
 				self.NextProcessT = curTime + self.NextProcessTime
 			end
 
@@ -1895,7 +1891,7 @@ function ENT:Think()
 				self:DoPoseParameterLooking()
 				
 				-- Face enemy for stationary types OR attacks
-				if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true) or (self.MeleeAttackAnimationFaceEnemy == true && self.MeleeAttack_DoingPropAttack == false && self.AttackType == VJ_ATTACK_MELEE) or (self.RangeAttackAnimationFaceEnemy == true && self.AttackType == VJ_ATTACK_RANGE) or ((self.LeapAttackAnimationFaceEnemy == true or (self.LeapAttackAnimationFaceEnemy == 2 && !self.AlreadyDoneLeapAttackJump)) && self.AttackType == VJ_ATTACK_LEAP) then
+				if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true) or (self.MeleeAttackAnimationFaceEnemy == true && self.MeleeAttack_DoingPropAttack == false && self.AttackType == VJ_ATTACK_MELEE) or (self.RangeAttackAnimationFaceEnemy == true && self.AttackType == VJ_ATTACK_RANGE) or ((self.LeapAttackAnimationFaceEnemy == true or (self.LeapAttackAnimationFaceEnemy == 2 && !self.LeapAttackHasJumped)) && self.AttackType == VJ_ATTACK_LEAP) then
 					self:FaceCertainEntity(ene, true)
 				end
 				
@@ -1921,10 +1917,9 @@ function ENT:Think()
 							if self:CustomAttackCheck_MeleeAttack() == true && ((plyControlled == true && atkType == 1) or (plyControlled == false && atkType != 0 && (self.LastEnemySightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))))) then
 								local seed = curTime; self.CurAttackSeed = seed
 								self.AttackType = VJ_ATTACK_MELEE
+								self.AttackStatus = VJ_ATTACK_STATUS_STARTED
 								self.MeleeAttacking = true
 								self.IsAbleToMeleeAttack = false
-								self.AlreadyDoneMeleeAttackFirstHit = false
-								self.AlreadyDoneFirstMeleeAttack = false
 								self.RangeAttacking = false
 								self.NextAlertSoundT = curTime + 0.4
 								if atkType == 2 then
@@ -1973,9 +1968,9 @@ function ENT:Think()
 							if self:CustomAttackCheck_RangeAttack() == true && ((plyControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK2)) or (plyControlled == false && (self.LatestEnemyDistance < self.RangeDistance) && (self.LatestEnemyDistance > self.RangeToMeleeDistance) && (self.LastEnemySightDiff > math_cos(math_rad(self.RangeAttackAngleRadius))))) then
 								local seed = curTime; self.CurAttackSeed = seed
 								self.AttackType = VJ_ATTACK_RANGE
+								self.AttackStatus = VJ_ATTACK_STATUS_STARTED
 								self.RangeAttacking = true
 								self.IsAbleToRangeAttack = false
-								self.AlreadyDoneRangeAttackFirstProjectile = false
 								if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
 								self:CustomOnRangeAttack_BeforeStartTimer(seed)
 								self:PlaySoundSystem("BeforeRangeAttack")
@@ -2004,15 +1999,14 @@ function ENT:Think()
 							if self:CustomAttackCheck_LeapAttack() == true && ((plyControlled == true && self.VJ_TheController:KeyDown(IN_JUMP)) or (plyControlled == false && (self:IsOnGround() && self.LatestEnemyDistance < self.LeapDistance) && (self.LatestEnemyDistance > self.LeapToMeleeDistance) && (self.LastEnemySightDiff > math_cos(math_rad(self.LeapAttackAngleRadius))))) then
 								local seed = curTime; self.CurAttackSeed = seed
 								self.AttackType = VJ_ATTACK_LEAP
+								self.AttackStatus = VJ_ATTACK_STATUS_STARTED
 								self.LeapAttacking = true
 								self.IsAbleToLeapAttack = false
-								self.AlreadyDoneLeapAttackFirstHit = false
-								self.AlreadyDoneFirstLeapAttack = false
-								self.AlreadyDoneLeapAttackJump = false
+								self.LeapAttackHasJumped = false
 								//self.JumpLegalLandingTime = 0
 								self:CustomOnLeapAttack_BeforeStartTimer(seed)
 								self:PlaySoundSystem("BeforeRangeAttack")
-								timer.Create( "timer_leap_start_jump"..self:EntIndex(), self.TimeUntilLeapAttackVelocity / self:GetPlaybackRate(), 1, function() self:LeapAttackVelocityCode() end)
+								timer.Create("timer_leap_start_jump"..self:EntIndex(), self.TimeUntilLeapAttackVelocity / self:GetPlaybackRate(), 1, function() self:LeapAttackVelocityCode() end)
 								if self.DisableLeapAttackAnimation == false then
 									self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_LeapAttack)
 									self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, self.LeapAttackAnimationDecreaseLengthAmount)
@@ -2023,7 +2017,7 @@ function ENT:Think()
 								if self.TimeUntilLeapAttackDamage == false then
 									self:LeapAttackCode_DoFinishTimers()
 								else -- If it's not event based...
-									timer.Create( "timer_leap_start"..self:EntIndex(), self.TimeUntilLeapAttackDamage / self:GetPlaybackRate(), self.LeapAttackReps, function() if self.CurAttackSeed == seed then self:LeapDamageCode() end end)
+									timer.Create("timer_leap_start"..self:EntIndex(), self.TimeUntilLeapAttackDamage / self:GetPlaybackRate(), self.LeapAttackReps, function() if self.CurAttackSeed == seed then self:LeapDamageCode() end end)
 									for k, t in pairs(self.LeapAttackExtraTimers or {}) do
 										self:DoAddExtraAttackTimers("timer_leap_start_"..curTime + k, t, function() if self.CurAttackSeed == seed then self:LeapDamageCode() end end)
 									end
@@ -2121,7 +2115,7 @@ function ENT:DoPropAPCheck(customEnts, customMeleeDistance)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackCode(isPropAttack, attackDist, customEnt)
-	if self.Dead == true or self.vACT_StopAttacks == true or self.Flinching == true or (self.StopMeleeAttackAfterFirstHit == true && self.AlreadyDoneMeleeAttackFirstHit == true) then return end
+	if self.Dead == true or self.vACT_StopAttacks == true or self.Flinching == true or (self.StopMeleeAttackAfterFirstHit && self.AttackStatus == VJ_ATTACK_STATUS_EXECUTED_HIT) then return end
 	isPropAttack = isPropAttack or self.MeleeAttack_DoingPropAttack -- Is this a prop attack?
 	attackDist = attackDist or self.MeleeAttackDamageDistance -- How far should the attack go?
 	local curEnemy = customEnt or self:GetEnemy()
@@ -2200,19 +2194,20 @@ function ENT:MeleeAttackCode(isPropAttack, attackDist, customEnt)
 			end
 		end
 	end
+	if self.AttackStatus < VJ_ATTACK_STATUS_EXECUTED then
+		self.AttackStatus = VJ_ATTACK_STATUS_EXECUTED
+		if self.TimeUntilMeleeAttackDamage != false then
+			self:MeleeAttackCode_DoFinishTimers()
+		end
+	end
 	if hitRegistered == true then
 		self:PlaySoundSystem("MeleeAttack")
-		if self.StopMeleeAttackAfterFirstHit == true then self.AlreadyDoneMeleeAttackFirstHit = true /*self:StopMoving()*/ end
+		self.AttackStatus = VJ_ATTACK_STATUS_EXECUTED_HIT
 	else
 		self:CustomOnMeleeAttack_Miss()
 		if self.MeleeAttackWorldShakeOnMiss == true then util.ScreenShake(myPos,self.MeleeAttackWorldShakeOnMissAmplitude,self.MeleeAttackWorldShakeOnMissFrequency,self.MeleeAttackWorldShakeOnMissDuration,self.MeleeAttackWorldShakeOnMissRadius) end
 		self:PlaySoundSystem("MeleeAttackMiss", {}, VJ_EmitSound)
 	end
-	//if self.VJ_IsBeingControlled == false && self.MeleeAttackAnimationFaceEnemy == true then self:FaceCertainEntity(curEnemy,true) end
-	if self.AlreadyDoneFirstMeleeAttack == false && self.TimeUntilMeleeAttackDamage != false then
-		self:MeleeAttackCode_DoFinishTimers()
-	end
-	self.AlreadyDoneFirstMeleeAttack = true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_DoSlowPlayer(ent, WalkSpeed, RunSpeed, SlowTime, sdData, ExtraFeatures, customFunc)
@@ -2313,10 +2308,12 @@ function ENT:RangeAttackCode()
 			self:CustomRangeAttackCode_AfterProjectileSpawn(projectile)
 		end
 	end
-	if self.AlreadyDoneRangeAttackFirstProjectile == false && self.TimeUntilRangeAttackProjectileRelease != false then
-		self:RangeAttackCode_DoFinishTimers()
+	if self.AttackStatus < VJ_ATTACK_STATUS_EXECUTED then
+		self.AttackStatus = VJ_ATTACK_STATUS_EXECUTED
+		if self.TimeUntilRangeAttackProjectileRelease != false then
+			self:RangeAttackCode_DoFinishTimers()
+		end
 	end
-	self.AlreadyDoneRangeAttackFirstProjectile = true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttackCode_DoFinishTimers(skipStopAttacks)
@@ -2332,8 +2329,7 @@ function ENT:RangeAttackCode_DoFinishTimers(skipStopAttacks)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:LeapDamageCode()
-	if self.Dead == true or self.vACT_StopAttacks == true or self.Flinching == true then return end
-	if self.StopLeapAttackAfterFirstHit == true && self.AlreadyDoneLeapAttackFirstHit == true then return end
+	if self.Dead == true or self.vACT_StopAttacks == true or self.Flinching == true or (self.StopLeapAttackAfterFirstHit && self.AttackStatus == VJ_ATTACK_STATUS_EXECUTED_HIT) then return end
 	self:CustomOnLeapAttack_BeforeChecks()
 	local hitRegistered = false
 	local FindEnts = ents.FindInSphere(self:GetPos(),self.LeapAttackDamageDistance)
@@ -2356,17 +2352,19 @@ function ENT:LeapDamageCode()
 			end
 		end
 	end
- 	if hitRegistered == false then
+	if self.AttackStatus < VJ_ATTACK_STATUS_EXECUTED then
+		self.AttackStatus = VJ_ATTACK_STATUS_EXECUTED
+		if self.TimeUntilLeapAttackDamage != false then
+			self:LeapAttackCode_DoFinishTimers()
+		end
+	end
+	if hitRegistered == true then
+		self:PlaySoundSystem("LeapAttackDamage")
+		self.AttackStatus = VJ_ATTACK_STATUS_EXECUTED_HIT
+	else
 		self:CustomOnLeapAttack_Miss()
 		self:PlaySoundSystem("LeapAttackDamageMiss", nil, VJ_EmitSound)
-	else
-		self:PlaySoundSystem("LeapAttackDamage")
-		if self.StopLeapAttackAfterFirstHit == true then self.AlreadyDoneLeapAttackFirstHit = true /*self:SetLocalVelocity(Vector(0, 0, 0))*/ end
 	end
-	if self.AlreadyDoneFirstLeapAttack == false && self.TimeUntilLeapAttackDamage != false then
-		self:LeapAttackCode_DoFinishTimers()
-	end
-	self.AlreadyDoneFirstLeapAttack = true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:LeapAttackCode_DoFinishTimers(skipStopAttacks)
@@ -2382,12 +2380,13 @@ function ENT:LeapAttackCode_DoFinishTimers(skipStopAttacks)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:LeapAttackVelocityCode()
-	if !IsValid(self:GetEnemy()) then return end
+	local ene = self:GetEnemy()
+	if !IsValid(ene) then return end
 	self:SetGroundEntity(NULL)
-	if self.LeapAttackAnimationFaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(), true) end
-	self.AlreadyDoneLeapAttackJump = true
+	if self.LeapAttackAnimationFaceEnemy == true then self:FaceCertainEntity(ene, true) end
+	self.LeapAttackHasJumped = true
 	if self:CustomOnLeapAttackVelocityCode() != true then
-		self:SetLocalVelocity(((self:GetEnemy():GetPos() + self:GetEnemy():OBBCenter()) - (self:GetPos() + self:OBBCenter())):GetNormal()*400 + self:GetForward()*self.LeapAttackVelocityForward + self:GetUp()*self.LeapAttackVelocityUp + self:GetRight()*self.LeapAttackVelocityRight)
+		self:SetLocalVelocity(((ene:GetPos() + ene:OBBCenter()) - (self:GetPos() + self:OBBCenter())):GetNormal()*400 + self:GetForward()*self.LeapAttackVelocityForward + self:GetUp()*self.LeapAttackVelocityUp + self:GetRight()*self.LeapAttackVelocityRight)
 	end 
 	self:PlaySoundSystem("LeapAttackJump")
 end
@@ -2396,26 +2395,20 @@ function ENT:StopAttacks(checkTimers)
 	if self:Health() <= 0 then return end
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printstoppedattacks"):GetInt() == 1 then print(self:GetClass().." Stopped all Attacks!") end
 	
-	if checkTimers == true then
-		if self.AttackType == VJ_ATTACK_MELEE && self.AlreadyDoneFirstMeleeAttack == false then self:MeleeAttackCode_DoFinishTimers(true) end
-		if self.AttackType == VJ_ATTACK_RANGE && self.AlreadyDoneRangeAttackFirstProjectile == false then self:RangeAttackCode_DoFinishTimers(true) end
-		if self.AttackType == VJ_ATTACK_LEAP && self.AlreadyDoneFirstLeapAttack == false then self:LeapAttackCode_DoFinishTimers(true) end
+	if checkTimers == true && self.AttackStatus < VJ_ATTACK_STATUS_EXECUTED then
+		if self.AttackType == VJ_ATTACK_MELEE then self:MeleeAttackCode_DoFinishTimers(true) end
+		if self.AttackType == VJ_ATTACK_RANGE then self:RangeAttackCode_DoFinishTimers(true) end
+		if self.AttackType == VJ_ATTACK_LEAP then self:LeapAttackCode_DoFinishTimers(true) end
 	end
 	
 	self.AttackType = VJ_ATTACK_NONE
+	self.AttackStatus = VJ_ATTACK_STATUS_DONE
 	self.CurAttackSeed = 0
-	-- Melee
+	
 	self.MeleeAttacking = false
-	self.AlreadyDoneMeleeAttackFirstHit = false
-	self.AlreadyDoneFirstMeleeAttack = false
-	-- Range
 	self.RangeAttacking = false
-	self.AlreadyDoneRangeAttackFirstProjectile = false
-	-- Leap
 	self.LeapAttacking = false
-	self.AlreadyDoneLeapAttackFirstHit = false
-	self.AlreadyDoneFirstLeapAttack = false
-	self.AlreadyDoneLeapAttackJump = false
+	self.LeapAttackHasJumped = false
 
 	self:DoChaseAnimation()
 end
@@ -2773,7 +2766,7 @@ local vecZ4 = Vector(0, 0, 4)
 --
 function ENT:PriorToKilled(dmginfo, hitgroup)
 	self:CustomOnInitialKilled(dmginfo, hitgroup)
-	if self.Medic_IsHealingAlly == true then self:DoMedicCode_Reset() end
+	if self.Medic_IsHealingAlly == true then self:DoMedicReset() end
 	local dmgInflictor = dmginfo:GetInflictor()
 	local dmgAttacker = dmginfo:GetAttacker()
 	
