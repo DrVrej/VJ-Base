@@ -858,7 +858,6 @@ ENT.IsDoingFaceEnemy = false
 ENT.IsDoingFacePosition = false
 ENT.VJ_PlayingInterruptSequence = false
 ENT.IsAbleToMeleeAttack = true
-ENT.AlreadyDoneFirstMeleeAttack = false
 ENT.CanDoSelectScheduleAgain = true
 ENT.AllowToDo_WaitForEnemyToComeOut = true
 ENT.HasBeenGibbedOnDeath = false
@@ -867,7 +866,6 @@ ENT.FollowPlayer_DoneSelectSchedule = false
 ENT.VJ_IsBeingControlled_Tool = false
 ENT.WeaponUseEnemyEyePos = false
 ENT.LastHiddenZone_CanWander = true
-ENT.AlreadyDoneMeleeAttackFirstHit = false
 ENT.NoWeapon_UseScaredBehavior_Active = false
 ENT.CurIdleStandMove = false
 ENT.CurrentWeaponAnimationIsAim = false
@@ -951,6 +949,7 @@ ENT.SelectedDifficulty = 1
 ENT.ModelAnimationSet = 0
 ENT.AIState = VJ_STATE_NONE
 ENT.AttackType = VJ_ATTACK_NONE
+ENT.AttackStatus = VJ_ATTACK_STATUS_NONE
 ENT.Weapon_State = VJ_WEP_STATE_NONE
 ENT.TimersToRemove = {"timer_weapon_state_reset","timer_state_reset","timer_act_seqreset","timer_face_position","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_reload_end","timer_alerted_reset"}
 ENT.EntitiesToRunFrom = {obj_spore=true,obj_vj_grenade=true,obj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true,cw_flash_thrown=true,ent_hl1_grenade=true}
@@ -2159,7 +2158,7 @@ function ENT:Think()
 			if curTime > self.NextProcessT then
 				self:DoEntityRelationshipCheck()
 				self:CheckForDangers()
-				self:DoMedicCode()
+				self:DoMedicCheck()
 				self.NextProcessT = curTime + self.NextProcessTime
 			end
 			
@@ -2360,10 +2359,9 @@ function ENT:Think()
 					if self.HasMeleeAttack == true && !self.vACT_StopAttacks && !self.Flinching && !self.FollowPlayer_GoingAfter && self.AttackType == VJ_ATTACK_NONE && self.IsAbleToMeleeAttack && (!IsValid(self.CurrentWeaponEntity) or (IsValid(self.CurrentWeaponEntity) && (!self.CurrentWeaponEntity.IsMeleeWeapon))) && ((plyControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (plyControlled == false && (self.NearestPointToEnemyDistance < self.MeleeAttackDistance && self.LastEnemyVisible) && (self.LastEnemySightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))))) then
 						local seed = curTime; self.CurAttackSeed = seed
 						self.AttackType = VJ_ATTACK_MELEE
+						self.AttackStatus = VJ_ATTACK_STATUS_STARTED
 						self.MeleeAttacking = true
 						self.IsAbleToMeleeAttack = false
-						self.AlreadyDoneMeleeAttackFirstHit = false
-						self.AlreadyDoneFirstMeleeAttack = false
 						self:FaceCertainEntity(ene, true)
 						self:CustomOnMeleeAttack_BeforeStartTimer(seed)
 						timer.Simple(self.BeforeMeleeAttackSounds_WaitTime, function() if IsValid(self) then self:PlaySoundSystem("BeforeMeleeAttack") end end)
@@ -2437,12 +2435,11 @@ function ENT:Think()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackCode()
-	if self.Dead == true or self.vACT_StopAttacks == true or self.Flinching == true or self.AttackType == VJ_ATTACK_GRENADE then return end
-	if self.StopMeleeAttackAfterFirstHit == true && self.AlreadyDoneMeleeAttackFirstHit == true then return end
+	if self.Dead == true or self.vACT_StopAttacks == true or self.Flinching == true or self.AttackType == VJ_ATTACK_GRENADE or (self.StopMeleeAttackAfterFirstHit && self.AttackStatus == VJ_ATTACK_STATUS_EXECUTED_HIT) then return end
 	if /*self.VJ_IsBeingControlled == false &&*/ self.MeleeAttackAnimationFaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(),true) end
 	//self.MeleeAttacking = true
 	local FindEnts = ents.FindInSphere(self:GetMeleeAttackDamageOrigin(),self.MeleeAttackDamageDistance)
-	local hitentity = false
+	local hitRegistered = false
 	local HasHitNonPropEnt = false
 	if FindEnts != nil then
 		for _,v in pairs(FindEnts) do
@@ -2461,25 +2458,27 @@ function ENT:MeleeAttackCode()
 				if v:GetClass() != "prop_physics" then HasHitNonPropEnt = true end
 				if v:GetClass() == "prop_physics" && HasHitNonPropEnt == false then
 					//if VJ_HasValue(self.EntitiesToDestoryModel,v:GetModel()) or VJ_HasValue(self.EntitiesToPushModel,v:GetModel()) then
-					//hitentity = true else hitentity = false end
-					hitentity = false
+					//hitRegistered = true else hitRegistered = false end
+					hitRegistered = false
 				else
-					hitentity = true
+					hitRegistered = true
 				end
 			end
 		end
 	end
-	if hitentity == true then
+	if self.AttackStatus < VJ_ATTACK_STATUS_EXECUTED then
+		self.AttackStatus = VJ_ATTACK_STATUS_EXECUTED
+		if self.TimeUntilMeleeAttackDamage != false then
+			self:MeleeAttackCode_DoFinishTimers()
+		end
+	end
+	if hitRegistered == true then
 		self:PlaySoundSystem("MeleeAttack")
-		if self.StopMeleeAttackAfterFirstHit == true then self.AlreadyDoneMeleeAttackFirstHit = true /*self:StopMoving()*/ end
+		self.AttackStatus = VJ_ATTACK_STATUS_EXECUTED_HIT
 	else
 		self:CustomOnMeleeAttack_Miss()
 		self:PlaySoundSystem("MeleeAttackMiss", {}, VJ_EmitSound)
 	end
-	if self.AlreadyDoneFirstMeleeAttack == false && self.TimeUntilMeleeAttackDamage != false then
-		self:MeleeAttackCode_DoFinishTimers()
-	end
-	self.AlreadyDoneFirstMeleeAttack = true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackCode_DoFinishTimers(skipStopAttacks)
@@ -2697,16 +2696,15 @@ function ENT:StopAttacks(checkTimers)
 	if self:Health() <= 0 then return end
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printstoppedattacks"):GetInt() == 1 then print(self:GetClass().." Stopped all Attacks!") end
 	
-	if checkTimers == true && self.AttackType == VJ_ATTACK_MELEE && self.AlreadyDoneFirstMeleeAttack == false then
+	if checkTimers == true && self.AttackType == VJ_ATTACK_MELEE && self.AttackStatus < VJ_ATTACK_STATUS_EXECUTED then
 		self:MeleeAttackCode_DoFinishTimers(true)
 	end
 	
 	self.AttackType = VJ_ATTACK_NONE
+	self.AttackStatus = VJ_ATTACK_STATUS_DONE
 	self.CurAttackSeed = 0
-	-- Melee
+	
 	self.MeleeAttacking = false
-	self.AlreadyDoneMeleeAttackFirstHit = false
-	self.AlreadyDoneFirstMeleeAttack = false
 	
 	self:DoChaseAnimation()
 end
@@ -3361,7 +3359,7 @@ local vecZ4 = Vector(0, 0, 4)
 --
 function ENT:PriorToKilled(dmginfo, hitgroup)
 	self:CustomOnInitialKilled(dmginfo, hitgroup)
-	if self.Medic_IsHealingAlly == true then self:DoMedicCode_Reset() end
+	if self.Medic_IsHealingAlly == true then self:DoMedicReset() end
 	local dmgInflictor = dmginfo:GetInflictor()
 	local dmgAttacker = dmginfo:GetAttacker()
 	
