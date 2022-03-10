@@ -727,7 +727,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomAttack(ene, eneVisible) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SetMeleeAttackDamagePosition()
+function ENT:GetMeleeAttackDamageOrigin()
 	return self:GetPos() + self:GetForward() -- Override this to use a different position
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1165,6 +1165,7 @@ ENT.MeleeAttacking = false
 ENT.ThrowingGrenade = false
 function ENT:CustomInitialize() end
 function ENT:SetNearestPointToEntityPosition() self:GetDynamicOrigin() end
+function ENT:SetMeleeAttackDamagePosition() self:GetMeleeAttackDamageOrigin() end
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetInitializeCapabilities()
@@ -2440,7 +2441,7 @@ function ENT:MeleeAttackCode()
 	if self.StopMeleeAttackAfterFirstHit == true && self.AlreadyDoneMeleeAttackFirstHit == true then return end
 	if /*self.VJ_IsBeingControlled == false &&*/ self.MeleeAttackAnimationFaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(),true) end
 	//self.MeleeAttacking = true
-	local FindEnts = ents.FindInSphere(self:SetMeleeAttackDamagePosition(),self.MeleeAttackDamageDistance)
+	local FindEnts = ents.FindInSphere(self:GetMeleeAttackDamageOrigin(),self.MeleeAttackDamageDistance)
 	local hitentity = false
 	local HasHitNonPropEnt = false
 	if FindEnts != nil then

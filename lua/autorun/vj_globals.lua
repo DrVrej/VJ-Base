@@ -534,7 +534,7 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 			local EntsTbl = ents.GetAll()
 			for x = 1, #EntsTbl do
 				local v = EntsTbl[x]
-				if v:IsNPC() && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
+				if v:IsNPC() && v.IsVJBaseSNPC == true then
 					v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = ply
 				end
 			end
@@ -555,26 +555,28 @@ local ignoreEnts = {monster_generic=true, monster_furniture=true, npc_furniture=
 --
 hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(entity)
 	if CLIENT or !entity:IsNPC() then return end
-	if !ignoreEnts[entity:GetClass()] then
+	local myClass = entity:GetClass()
+	if !ignoreEnts[myClass] then
 		timer.Simple(0.1, function() -- Make sure the SNPC is initialized properly
 			if IsValid(entity) then
 				if entity.IsVJBaseSNPC == true && entity.CurrentPossibleEnemies == nil then entity.CurrentPossibleEnemies = {} end
 				local EntsTbl = ents.GetAll()
 				local count = 1
 				local cvSeePlys = GetConVar("ai_ignoreplayers"):GetInt() == 0
+				local isPossibleEnemy = ((entity:IsNPC() && entity:Health() > 0 && (entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) or (entity:IsPlayer()))
 				for x = 1, #EntsTbl do
 					local v = EntsTbl[x]
 					if (v:IsNPC() or v:IsPlayer()) && !ignoreEnts[v:GetClass()] then
 						-- Add enemies to the created entity (if it's a VJ Base SNPC)
 						if entity.IsVJBaseSNPC == true then
 							entity:EntitiesToNoCollideCode(v)
-							if (v:IsNPC() && (v:GetClass() != entity:GetClass() && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && cvSeePlys /*&& v:Alive()*/) then
+							if (v:IsNPC() && (v:GetClass() != myClass && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && cvSeePlys /*&& v:Alive()*/) then
 								entity.CurrentPossibleEnemies[count] = v
 								count = count + 1
 							end
 						end
 						-- Add the created entity to the list of possible enemies of VJ Base SNPCs
-						if v != entity && entity:GetClass() != v:GetClass() && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) && (entity:IsNPC() && entity:Health() > 0 && (entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) or (entity:IsPlayer()) then
+						if v != entity && myClass != v:GetClass() && v.IsVJBaseSNPC == true && isPossibleEnemy then
 							v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = entity //v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
 						end
 					end
@@ -660,7 +662,7 @@ hook.Add("EntityTakeDamage", "VJ_EntityTakeDamage", function(target, dmginfo)
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_NPCPLY_DEATH(npc, attacker, inflictor)
-	if attacker.IsVJBaseSNPC == true && (attacker.IsVJBaseSNPC_Human == true or attacker.IsVJBaseSNPC_Creature == true) then
+	if attacker.IsVJBaseSNPC == true then
 		attacker:DoKilledEnemy(npc, attacker, inflictor)
 		attacker:DoEntityRelationshipCheck()
 	end
@@ -727,7 +729,7 @@ hook.Add("PlayerGiveSWEP", "VJ_PLAYER_GIVESWEP", function(ply, class, swep)
 	//if swep.IsVJBaseWeapon == true then
 		ply.VJ_CanBePickedUpWithOutUse = true
 		ply.VJ_CanBePickedUpWithOutUse_Class = class
-		timer.Simple(0.1,function() if IsValid(ply) then ply.VJ_CanBePickedUpWithOutUse = false ply.VJ_CanBePickedUpWithOutUse_Class = nil end end)
+		timer.Simple(0.1, function() if IsValid(ply) then ply.VJ_CanBePickedUpWithOutUse = false ply.VJ_CanBePickedUpWithOutUse_Class = nil end end)
 		//PrintTable(swep)
 	//end
 end)
@@ -740,7 +742,7 @@ cvars.AddChangeCallback("ai_ignoreplayers", function(convar_name, oldValue, newV
 		local getall = ents.GetAll()
 		for x = 1, #getall do
 			local v = getall[x]
-			if v:IsNPC() && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
+			if v:IsNPC() && v.IsVJBaseSNPC == true then
 				for _, ply in pairs(getplys) do
 					v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = ply
 				end
