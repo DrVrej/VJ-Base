@@ -353,8 +353,6 @@ ENT.MeleeAttackWorldShakeOnMissFrequency = 100 -- Just leave it to 100
 ENT.MeleeAttackDSPSoundType = 32 -- DSP type | false = Disables the system completely
 ENT.MeleeAttackDSPSoundUseDamage = true -- true = Only apply the DSP effect past certain damage| false = Always apply the DSP effect!
 ENT.MeleeAttackDSPSoundUseDamageAmount = 60 -- Any damage that is greater than or equal to this number will cause the DSP effect to apply
-	-- ====== Miscellaneous Variables ====== --
-ENT.MeleeAttack_NoProps = false -- If set to true, it won't attack or push any props (Mostly used with multiple melee attacks)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Range Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -767,7 +765,7 @@ function ENT:CustomOnMeleeAttack_AfterStartTimer(seed) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_BeforeChecks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SetMeleeAttackDamagePosition()
+function ENT:GetMeleeAttackDamageOrigin()
 	return self:GetPos() + self:GetForward() -- Override this to use a different position
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -921,6 +919,7 @@ ENT.LastHiddenZone_CanWander = true
 ENT.AlreadyDoneLeapAttackJump = false
 ENT.CurIdleStandMove = false
 ENT.LastEnemyVisible = false
+ENT.PropAP_IsVisible = false
 ENT.FollowPlayer_Entity = NULL
 ENT.VJ_TheController = NULL
 ENT.VJ_TheControllerEntity = NULL
@@ -939,6 +938,7 @@ ENT.NextSetEnemyOnDamageT = 0
 ENT.NextRunAwayOnDamageT = 0
 ENT.NextIdleSoundT = 0
 ENT.NextProcessT = 0
+ENT.NextPropAPCheckT = 0
 ENT.NextCallForHelpT = 0
 ENT.NextCallForBackUpOnDamageT = 0
 ENT.NextAlertSoundT = 0
@@ -1148,6 +1148,7 @@ ENT.RangeAttacking = false
 ENT.LeapAttacking = false
 function ENT:CustomInitialize() end
 function ENT:SetNearestPointToEntityPosition() self:GetDynamicOrigin() end
+function ENT:SetMeleeAttackDamagePosition() self:GetMeleeAttackDamageOrigin() end
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetInitializeCapabilities()
@@ -1905,11 +1906,16 @@ function ENT:Think()
 					if !self.Flinching && !self.FollowPlayer_GoingAfter && self.AttackType == VJ_ATTACK_NONE then
 						-- Melee Attack
 						if self.HasMeleeAttack == true && self.IsAbleToMeleeAttack then
+							-- Check for possible props that we can attack/push
+							if curTime > self.NextPropAPCheckT then
+								self.PropAP_IsVisible = self:DoPropAPCheck()
+								self.NextPropAPCheckT = curTime + 0.5
+							end
 							self:MultipleMeleeAttacks()
 							local atkType = 0 -- 0 = No attack | 1 = Normal attack | 2 = Prop attack
 							if (plyControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (plyControlled == false && self.NearestPointToEnemyDistance < self.MeleeAttackDistance && self.LastEnemyVisible) then
 								atkType = 1
-							elseif self:PushOrAttackPropsCode() == true && self.MeleeAttack_NoProps == false then
+							elseif self.PropAP_IsVisible then -- Check for props to attack/push
 								atkType = 2
 							end
 							if self:CustomAttackCheck_MeleeAttack() == true && ((plyControlled == true && atkType == 1) or (plyControlled == false && atkType != 0 && (self.LastEnemySightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))))) then
@@ -2076,37 +2082,36 @@ function ENT:Think()
 	return true
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoPropVisibility(propEnt)
-	local tr = util.TraceLine({
-		start = self:GetPos(),
-		endpos = propEnt:GetPos() + propEnt:GetUp()*10,
-		filter = self
-	})
-	return IsValid(tr.Entity) && !tr.HitWorld && !tr.HitSky
-end
---------------------------------------------------------------------------------------------------------------------------------------------
 local propColBlacklist = {[COLLISION_GROUP_DEBRIS]=true, [COLLISION_GROUP_DEBRIS_TRIGGER]=true, [COLLISION_GROUP_DISSOLVING]=true, [COLLISION_GROUP_IN_VEHICLE]=true, [COLLISION_GROUP_WORLD]=true}
 --
-function ENT:PushOrAttackPropsCode(customEnts, customMeleeDistance)
-	if self.PushProps == false && self.AttackProps == false then return end
-	for _,v in pairs(customEnts or ents.FindInSphere(self:SetMeleeAttackDamagePosition(), customMeleeDistance or math_clamp(self.MeleeAttackDamageDistance - 30, self.MeleeAttackDistance, self.MeleeAttackDamageDistance))) do
-		local isEnt = (self.EntitiesToDestroyClass[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) and true or false -- Whether or not it's a prop or an entity to attack
-		if v:GetClass() == "prop_door_rotating" && v:Health() <= 0 then isEnt = false end -- If it's a door and it has no health, then don't attack it!
-		if IsProp(v) == true or isEnt == true then --If it's a prop or a entity then atttack
-			//print(self:DoPropVisibility(v))
+function ENT:DoPropAPCheck(customEnts, customMeleeDistance)
+	if !self.PushProps && !self.AttackProps then return false end
+	local myPos = self:GetPos()
+	for _,v in pairs(customEnts or ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), customMeleeDistance or math_clamp(self.MeleeAttackDamageDistance - 30, self.MeleeAttackDistance, self.MeleeAttackDamageDistance))) do
+		local verifiedEnt = ((self.EntitiesToDestroyClass[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) and true) or false -- Whether or not it's a prop or an entity to attack
+		if v:GetClass() == "prop_door_rotating" && v:Health() <= 0 then verifiedEnt = false end -- If it's a door and it has no health, then don't attack it!
+		if IsProp(v) or verifiedEnt then --If it's a prop or a entity then attack
 			local phys = v:GetPhysicsObject()
 			-- Serpevadz abrankner: self:VJ_GetNearestPointToEntityDistance(v) < (customMeleeDistance) && self:Visible(v)
-			if IsValid(phys) && !propColBlacklist[v:GetCollisionGroup()] && self:DoPropVisibility(v) && (self:GetSightDirection():Dot((v:GetPos() - self:GetPos()):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius / 1.3))) then
-				if isEnt == true then return true end -- Since it's an entity, no need to check for size etc.
-				-- Attacking: Make sure it has health
-				if self.AttackProps == true && v:Health() > 0 then
-					return true
-				end
-				-- Pushing: Make sure it's not a small object and the NPC is appropriately sized to push the object
-				if self.PushProps == true && phys:GetMass() > 4 && phys:GetSurfaceArea() > 800 then
-					local selfPhys = self:GetPhysicsObject()
-					if IsValid(selfPhys) && (selfPhys:GetSurfaceArea() * self.PropAP_MaxSize) >= phys:GetSurfaceArea() then
+			if IsValid(phys) && !propColBlacklist[v:GetCollisionGroup()] then
+				local vPos = v:GetPos()
+				local tr = util.TraceLine({
+					start = myPos,
+					endpos = vPos + v:GetUp()*10,
+					filter = self
+				})
+				if (IsValid(tr.Entity) && !tr.HitWorld && !tr.HitSky) && (self:GetSightDirection():Dot((vPos - myPos):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius / 1.3))) then
+					if verifiedEnt then return true end -- Since it's an entity, no need to check for size etc.
+					-- Attacking: Make sure it has health
+					if self.AttackProps == true && v:Health() > 0 then
 						return true
+					end
+					-- Pushing: Make sure it's not a small object and the NPC is appropriately sized to push the object
+					if self.PushProps == true && phys:GetMass() > 4 && phys:GetSurfaceArea() > 800 then
+						local selfPhys = self:GetPhysicsObject()
+						if IsValid(selfPhys) && (selfPhys:GetSurfaceArea() * self.PropAP_MaxSize) >= phys:GetSurfaceArea() then
+							return true
+						end
 					end
 				end
 			end
@@ -2126,16 +2131,16 @@ function ENT:MeleeAttackCode(isPropAttack, attackDist, customEnt)
 	if self.DisableDefaultMeleeAttackCode == true then return end
 	local myPos = self:GetPos()
 	local hitRegistered = false
-	for _,v in pairs(ents.FindInSphere(self:SetMeleeAttackDamagePosition(), attackDist)) do
+	for _,v in pairs(ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), attackDist)) do
 		if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end -- If controlled and v is the bullseye OR it's a player controlling then don't damage!
 		if v != self && v:GetClass() != self:GetClass() && (((v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:Disposition(v) != D_LI) or IsProp(v) == true or v:GetClass() == "func_breakable_surf" or self.EntitiesToDestroyClass[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
 			if isPropAttack == true && (v:IsPlayer() or v:IsNPC()) && self:VJ_GetNearestPointToEntityDistance(v) > self.MeleeAttackDistance then continue end //if (self:GetPos():Distance(v:GetPos()) <= self:VJ_GetNearestPointToEntityDistance(v) && self:VJ_GetNearestPointToEntityDistance(v) <= self.MeleeAttackDistance) == false then
 			local vProp = IsProp(v)
 			if self:CustomOnMeleeAttack_AfterChecks(v, vProp) == true then continue end
-			-- Remove prop constraints and push it (If possbile)
+			-- Remove prop constraints and push it (If possible)
 			if vProp == true then
 				local phys = v:GetPhysicsObject()
-				if IsValid(phys) && self:PushOrAttackPropsCode({v}, attackDist) then
+				if IsValid(phys) && self:DoPropAPCheck({v}, attackDist) then
 					hitRegistered = true
 					phys:EnableMotion(true)
 					//phys:EnableGravity(true)
