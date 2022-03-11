@@ -344,12 +344,13 @@ function VJ_ApplySpeedEffect(ent, speed, setTime)
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Makes the entitiy in question utilize it's ragdoll for its' collision rather than the normal collision. Note that the collision bounds can still be set, however they won't be used for actual collision, only as data.
+	Makes the entity utilize its ragdoll for collisions rather than the normal box collision.
+		Note: Collision bounds should still be set, otherwise certain position functions will not work correctly!
 		- ent = The entity to apply the ragdoll collision
 		- mdl = The model to override and use for the collision. By default it should be nil unless you're trying stuff
 	Returns
-		- false, bone follower as not created
-		- Entity, the bone follower that was created
+		- false, bone follower as NOT created
+		- Entity, the bone follower entity that was created
 -----------------------------------------------------------]]
 local boneFollowerClass = "phys_bone_follower"
 --
@@ -358,9 +359,9 @@ function VJ_CreateBoneFollower(ent, mdl)
 	local ragdoll = mdl or ent:GetModel()
 	if !util.IsValidRagdoll(ragdoll) then return false end
 
-	ent:SetCustomCollisionCheck(true)
+	ent:SetCustomCollisionCheck(true) -- Required for the "ShouldCollide" hook!
 	
-	local boneFollower = ents.Create("sent_vj_bonefollower")
+	local boneFollower = ents.Create("obj_vj_bonefollower")
 	boneFollower:SetModel(ragdoll)
 	boneFollower:SetPos(ent:GetPos())
 	boneFollower:SetAngles(ent:GetAngles())
@@ -369,17 +370,15 @@ function VJ_CreateBoneFollower(ent, mdl)
 	boneFollower:Spawn()
 	boneFollower:SetOwner(ent)
 	ent:DeleteOnRemove(boneFollower)
-	ent.BoneFollowerEntity = boneFollower
-	PrintTable(boneFollower:GetSaveTable(true))
-	timer.Simple(0.1,function() print("A",boneFollower:GetInternalVariable("m_BoneFollowerManager")) end)
+	ent.VJ_BoneFollowerEntity = boneFollower
 
 	local hookName = "VJ_BoneFollower_DisableCollisions_" .. boneFollower:EntIndex()
-	hook.Add("ShouldCollide",hookName,function(ent1,ent2)
+	hook.Add("ShouldCollide", hookName, function(ent1, ent2)
 		if !IsValid(boneFollower) or !IsValid(ent) then
-			hook.Remove("ShouldCollide",hookName)
+			hook.Remove("ShouldCollide", hookName)
 			return true
 		end
-		if ent1 == ent && ent2:GetClass() == boneFollowerClass or ent2 == ent && ent1:GetClass() == boneFollowerClass then
+		if (ent1 == ent && ent2:GetClass() == boneFollowerClass) or (ent2 == ent && ent1:GetClass() == boneFollowerClass) then
 			return false
 		end
 		return true

@@ -3199,7 +3199,9 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.AlertSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT = CurTime() + ((((SoundDuration(sdtbl) > 0) and SoundDuration(sdtbl)) or 2) + 1)
+				local dur = CurTime() + ((((SoundDuration(sdtbl) > 0) and SoundDuration(sdtbl)) or 2) + 1)
+				self.NextIdleSoundT = dur
+				self.PainSoundT = dur
 				self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert.a, self.NextSoundTime_Alert.b)
 				self.CurrentAlertSound = sdType(self, sdtbl, self.AlertSoundLevel, self:VJ_DecideSoundPitch(self.AlertSoundPitch.a, self.AlertSoundPitch.b))
 			end
@@ -3225,9 +3227,11 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 				self:StopAllCommonSpeechSounds()
 				timer.Simple(0.05,function() if IsValid(self) then VJ_STOPSOUND(self.CurrentPainSound) end end)
 				timer.Simple(1.3,function() if IsValid(self) then VJ_STOPSOUND(self.CurrentAlertSound) end end)
-				self.NextAlertSoundT = CurTime() + 1
+				local dur = CurTime() + ((((SoundDuration(sdtbl) > 0) and SoundDuration(sdtbl)) or 2) + 1)
+				self.PainSoundT = dur
+				self.NextAlertSoundT = dur
 				self.NextInvestigateSoundT = CurTime() + 2
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(2,3)
+				self.NextIdleSoundT_RegularChange = CurTime() + math.random(2, 3)
 				self.CurrentBecomeEnemyToPlayerSound = sdType(self, sdtbl, self.BecomeEnemyToPlayerSoundLevel, self:VJ_DecideSoundPitch(self.BecomeEnemyToPlayerPitch.a, self.BecomeEnemyToPlayerPitch.b))
 			end
 		end
@@ -3262,6 +3266,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			local sdDur = 2
 			if (math.random(1, self.PainSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
+				self:StopAllCommonSpeechSounds()
 				VJ_STOPSOUND(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentPainSound = sdType(self, sdtbl, self.PainSoundLevel, self:VJ_DecideSoundPitch(self.PainSoundPitch.a, self.PainSoundPitch.b))
@@ -3286,7 +3291,9 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.DamageByPlayerSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self:StopAllCommonSpeechSounds()
-				self.NextIdleSoundT_RegularChange = CurTime() + 1
+				local dur = CurTime() + ((((SoundDuration(sdtbl) > 0) and SoundDuration(sdtbl)) or 2) + 1)
+				self.PainSoundT = dur
+				self.NextIdleSoundT_RegularChange = CurTime() + dur
 				timer.Simple(0.05, function() if IsValid(self) then VJ_STOPSOUND(self.CurrentPainSound) end end)
 				self.CurrentDamageByPlayerSound = sdType(self, sdtbl, self.DamageByPlayerSoundLevel, self:VJ_DecideSoundPitch(self.DamageByPlayerPitch.a, self.DamageByPlayerPitch.b))
 			end
