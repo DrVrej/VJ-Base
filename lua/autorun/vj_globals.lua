@@ -342,6 +342,48 @@ function VJ_ApplySpeedEffect(ent, speed, setTime)
     end
 	return false
 end
+--------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Makes the entitiy in question utilize it's ragdoll for its' collision rather than the normal collision. Note that the collision bounds can still be set, however they won't be used for actual collision, only as data.
+		- ent = The entity to apply the ragdoll collision
+		- mdl = The model to override and use for the collision. By default it should be nil unless you're trying stuff
+	Returns
+		- false, bone follower as not created
+		- Entity, the bone follower that was created
+-----------------------------------------------------------]]
+local boneFollowerClass = "phys_bone_follower"
+--
+function VJ_CreateBoneFollower(ent, mdl)
+	if !IsValid(ent) then return false end
+	local ragdoll = mdl or ent:GetModel()
+	if !util.IsValidRagdoll(ragdoll) then return false end
+
+	ent:SetCustomCollisionCheck(true)
+	
+	local boneFollower = ents.Create("sent_vj_bonefollower")
+	boneFollower:SetModel(ragdoll)
+	boneFollower:SetPos(ent:GetPos())
+	boneFollower:SetAngles(ent:GetAngles())
+	boneFollower:SetParent(ent)
+	boneFollower:AddEffects(EF_BONEMERGE)
+	boneFollower:Spawn()
+	boneFollower:SetOwner(ent)
+	ent:DeleteOnRemove(boneFollower)
+
+	local hookName = "VJ_BoneFollower_DisableCollisions_" .. boneFollower:EntIndex()
+	hook.Add("ShouldCollide",hookName,function(ent1,ent2)
+		if !IsValid(boneFollower) or !IsValid(ent) then
+			hook.Remove("ShouldCollide",hookName)
+			return true
+		end
+		if ent1 == ent && ent2:GetClass() == boneFollowerClass or ent2 == ent && ent1:GetClass() == boneFollowerClass then
+			return false
+		end
+		return true
+	end)
+
+	return boneFollower
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- Run in Console: lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end
 function VJ_CreateTestObject(pos, ang, color, time, mdl)
