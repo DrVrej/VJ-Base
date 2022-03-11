@@ -1,3 +1,4 @@
+AddCSLuaFile()
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 
 ENT.Base 			= "base_anim"
@@ -13,16 +14,21 @@ ENT.Spawnable = false
 ENT.AdminOnly = false
 ENT.AutomaticFrameAdvance = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Draw()
-	-- self:DrawModel()
+if CLIENT then
+	function ENT:Draw()
+		-- self:DrawModel()
+	end
+---------------------------------------------------------------------------------------------------------------------------------------------
+	function ENT:Initialize()
+		local ent = self:GetParent()
+		if IsValid(ent) then -- For some reason doesn't work?
+			ent:SetIK(false) -- Until we can find a way to prevent IK chains from detecting the bone followers, we will have to disable IK on the parent.
+		end
+	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DrawTranslucent()
-	-- self:Draw()
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-if CLIENT then return end
----------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+if !SERVER then return end
+
 function ENT:CustomOnInitialize() end -- In case you need to change anything
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()

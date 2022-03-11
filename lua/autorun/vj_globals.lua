@@ -369,6 +369,9 @@ function VJ_CreateBoneFollower(ent, mdl)
 	boneFollower:Spawn()
 	boneFollower:SetOwner(ent)
 	ent:DeleteOnRemove(boneFollower)
+	ent.BoneFollowerEntity = boneFollower
+	PrintTable(boneFollower:GetSaveTable(true))
+	timer.Simple(0.1,function() print("A",boneFollower:GetInternalVariable("m_BoneFollowerManager")) end)
 
 	local hookName = "VJ_BoneFollower_DisableCollisions_" .. boneFollower:EntIndex()
 	hook.Add("ShouldCollide",hookName,function(ent1,ent2)
