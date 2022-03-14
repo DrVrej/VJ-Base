@@ -85,7 +85,7 @@ ENT.VJ_NPC_Class = {} -- NPCs with the same class with be allied to each other
 ENT.FriendsWithAllPlayerAllies = false -- Should this SNPC be friends with all other player allies that are running on VJ Base?
 ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE -- The behavior of the SNPC
 	-- VJ_BEHAVIOR_AGGRESSIVE = Default behavior, attacks enemies || VJ_BEHAVIOR_NEUTRAL = Neutral to everything, unless provoked
-	-- VJ_BEHAVIOR_PASSIVE = Doesn't attack, but can attacked by others || VJ_BEHAVIOR_PASSIVE_NATURE = Doesn't attack and is allied with everyone
+	-- VJ_BEHAVIOR_PASSIVE = Doesn't attack, but can be attacked by others || VJ_BEHAVIOR_PASSIVE_NATURE = Doesn't attack and is allied with everyone
 ENT.IsGuard = false -- If set to false, it will attempt to stick to its current position at all times
 ENT.AlertedToIdleTime = VJ_Set(4, 6) -- How much time until it calms down after the enemy has been killed/disappeared | Sets self.Alerted to false after the timer expires
 ENT.MoveOutOfFriendlyPlayersWay = true -- Should the SNPC move out of the way when a friendly player comes close to it?
@@ -421,6 +421,7 @@ ENT.LeapAttackVelocityUp = 200 -- How much upward force should it apply?
 ENT.LeapAttackVelocityRight = 0 -- How much right force should it apply?
 	-- ====== Control Variables ====== --
 ENT.DisableLeapAttackAnimation = false -- if true, it will disable the animation code
+ENT.DisableDefaultLeapAttackDamageCode = false -- Disables the default leap attack damage code
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Sound Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2158,7 +2159,7 @@ function ENT:MeleeAttackCode(isPropAttack, attackDist, customEnt)
 				applyDmg:SetDamage(self:VJ_GetDifficultyValue(self.MeleeAttackDamage))
 				applyDmg:SetDamageType(self.MeleeAttackDamageType)
 				//applyDmg:SetDamagePosition(self:VJ_GetNearestPointToEntity(v).MyPosition)
-				if v:IsNPC() or v:IsPlayer() then applyDmg:SetDamageForce(self:GetForward()*((applyDmg:GetDamage()+100)*70)) end
+				if v:IsNPC() or v:IsPlayer() then applyDmg:SetDamageForce(self:GetForward() * ((applyDmg:GetDamage() + 100) * 70)) end
 				applyDmg:SetInflictor(self)
 				applyDmg:SetAttacker(self)
 				v:TakeDamageInfo(applyDmg, self)
@@ -2338,15 +2339,18 @@ function ENT:LeapDamageCode()
 			if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
 			if (v:IsNPC() or (v:IsPlayer() && v:Alive()) && GetConVar("ai_ignoreplayers"):GetInt() == 0) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or IsProp(v) == true or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" then
 				self:CustomOnLeapAttack_AfterChecks(v)
-				local leapdmg = DamageInfo()
-				leapdmg:SetDamage(self:VJ_GetDifficultyValue(self.LeapAttackDamage))
-				leapdmg:SetInflictor(self)
-				leapdmg:SetDamageType(self.LeapAttackDamageType)
-				leapdmg:SetAttacker(self)
-				if v:IsNPC() or v:IsPlayer() then leapdmg:SetDamageForce(self:GetForward()*((leapdmg:GetDamage()+100)*70)) end
-				v:TakeDamageInfo(leapdmg, self)
+				-- Damage
+				if self.DisableDefaultLeapAttackDamageCode == false then
+					local leapdmg = DamageInfo()
+					leapdmg:SetDamage(self:VJ_GetDifficultyValue(self.LeapAttackDamage))
+					leapdmg:SetInflictor(self)
+					leapdmg:SetDamageType(self.LeapAttackDamageType)
+					leapdmg:SetAttacker(self)
+					if v:IsNPC() or v:IsPlayer() then leapdmg:SetDamageForce(self:GetForward() * ((leapdmg:GetDamage() + 100) * 70)) end
+					v:TakeDamageInfo(leapdmg, self)
+				end
 				if v:IsPlayer() then
-					v:ViewPunch(Angle(math.random(-1,1)*self.LeapAttackDamage,math.random(-1,1)*self.LeapAttackDamage,math.random(-1,1)*self.LeapAttackDamage))
+					v:ViewPunch(Angle(math.random(-1,1 ) * self.LeapAttackDamage, math.random(-1, 1) * self.LeapAttackDamage,math.random(-1, 1) * self.LeapAttackDamage))
 				end
 				hitRegistered = true
 			end
@@ -2421,7 +2425,7 @@ function ENT:DoPoseParameterLooking(resetPoses)
 	local p_enemy = 0 -- Pitch
 	local y_enemy = 0 -- Yaw
 	local r_enemy = 0 -- Roll
-	if IsValid(ent) && resetPoses == false then
+	if IsValid(ent) && !resetPoses then
 		local enemy_pos = (self.VJ_IsBeingControlled == true and self.VJ_TheControllerBullseye:GetPos()) or ent:GetPos() + ent:OBBCenter()
 		local self_ang = self:GetAngles()
 		local enemy_ang = (enemy_pos - (self:GetPos() + self:OBBCenter())):Angle()
@@ -2431,7 +2435,7 @@ function ENT:DoPoseParameterLooking(resetPoses)
 		if self.PoseParameterLooking_InvertYaw == true then y_enemy = -y_enemy end
 		r_enemy = math_angDif(enemy_ang.z, self_ang.z)
 		if self.PoseParameterLooking_InvertRoll == true then r_enemy = -r_enemy end
-	elseif self.PoseParameterLooking_CanReset == false then -- Should it reset its pose parameters if there is no enemies?
+	elseif !self.PoseParameterLooking_CanReset then -- Should it reset its pose parameters if there is no enemies?
 		return
 	end
 	

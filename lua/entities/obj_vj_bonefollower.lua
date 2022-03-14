@@ -52,7 +52,7 @@ function ENT:Initialize()
             return
         end
         if ent:GetClass() == "phys_bone_follower" then
-            table.insert(self.BoneFollowers,ent)
+            table.insert(self.BoneFollowers, ent)
         end
     end)
     hook.Add("PhysgunPickup", hookName, function(ply,ent)

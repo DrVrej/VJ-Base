@@ -67,7 +67,7 @@ ENT.VJ_NPC_Class = {} -- NPCs with the same class with be allied to each other
 ENT.FriendsWithAllPlayerAllies = false -- Should this SNPC be friends with all other player allies that are running on VJ Base?
 ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE -- The behavior of the SNPC
 	-- VJ_BEHAVIOR_AGGRESSIVE = Default behavior, attacks enemies || VJ_BEHAVIOR_NEUTRAL = Neutral to everything, unless provoked
-	-- VJ_BEHAVIOR_PASSIVE = Doesn't attack, but can attacked by others || VJ_BEHAVIOR_PASSIVE_NATURE = Doesn't attack and is allied with everyone
+	-- VJ_BEHAVIOR_PASSIVE = Doesn't attack, but can be attacked by others || VJ_BEHAVIOR_PASSIVE_NATURE = Doesn't attack and is allied with everyone
 ENT.IsGuard = false -- If set to false, it will attempt to stick to its current position at all times
 ENT.AlertedToIdleTime = VJ_Set(4, 6) -- How much time until it calms down after the enemy has been killed/disappeared | Sets self.Alerted to false after the timer expires
 ENT.MoveOutOfFriendlyPlayersWay = true -- Should the SNPC move out of the way when a friendly player comes close to it?
@@ -853,7 +853,6 @@ ENT.Medic_IsHealingAlly = false
 ENT.AlreadyDoneMedicThinkCode = false
 ENT.AlreadyBeingHealedByMedic = false
 ENT.VJFriendly = false
-ENT.IsReloadingWeapon = false
 ENT.IsDoingFaceEnemy = false
 ENT.IsDoingFacePosition = false
 ENT.VJ_PlayingInterruptSequence = false
@@ -950,7 +949,8 @@ ENT.ModelAnimationSet = 0
 ENT.AIState = VJ_STATE_NONE
 ENT.AttackType = VJ_ATTACK_NONE
 ENT.AttackStatus = VJ_ATTACK_STATUS_NONE
-ENT.Weapon_State = VJ_WEP_STATE_NONE
+ENT.WeaponState = VJ_WEP_STATE_READY
+ENT.WeaponInventoryStatus = VJ_WEP_INVENTORY_NONE
 ENT.TimersToRemove = {"timer_weapon_state_reset","timer_state_reset","timer_act_seqreset","timer_face_position","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_reload_end","timer_alerted_reset"}
 ENT.EntitiesToRunFrom = {obj_spore=true,obj_vj_grenade=true,obj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true,cw_flash_thrown=true,ent_hl1_grenade=true}
 ENT.EntitiesToThrowBack = {obj_spore=true,obj_vj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,obj_cpt_grenade=true,cw_grenade_thrown=true,cw_flash_thrown=true,cw_smoke_thrown=true,ent_hl1_grenade=true}
@@ -1922,18 +1922,20 @@ function ENT:DoChangeWeapon(wep, invSwitch)
 	invSwitch = invSwitch or false -- If true, it will not delete the previous weapon!
 	local curWep = self:GetActiveWeapon()
 	
-	if self.DisableWeapons == true && IsValid(curWep) then -- Not suppose to have a weapon!
+	-- If not supposed to have a weapon, then return!
+	if self.DisableWeapons && IsValid(curWep) then
 		curWep:Remove()
 		return NULL
 	end
 	
-	if wep != nil then -- Only remove and actually give the weapon if the function is given a weapon class to set
-		if invSwitch == true then
+	-- Only remove and actually give the weapon if the function is given a weapon class to set
+	if wep != nil then
+		if invSwitch then
 			self:SelectWeapon(wep)
 			VJ_EmitSound(self, sdWepSwitch, 70)
 			curWep = wep
 		else
-			if IsValid(curWep) && self:GetWeaponState() != VJ_WEP_STATE_ANTI_ARMOR && self:GetWeaponState() != VJ_WEP_STATE_MELEE then
+			if IsValid(curWep) && self.WeaponInventoryStatus <= VJ_WEP_INVENTORY_PRIMARY then
 				curWep:Remove()
 			end
 			curWep = self:Give(wep)
@@ -1941,19 +1943,33 @@ function ENT:DoChangeWeapon(wep, invSwitch)
 		end
 	end
 	
-	if IsValid(curWep) then -- If we are given a new weapon or switching weapon, then do all of the necessary set up
+	-- If we are given a new weapon or switching weapon, then do all of the necessary set up
+	if IsValid(curWep) then
 		self.CurrentWeaponAnimation = -1
-		if invSwitch == true && curWep.IsVJBaseWeapon == true then curWep:Equip(self) end
+		self:SetWeaponState() -- Reset the weapon state because we do NOT want previous weapon's state to be used!
+		if invSwitch then
+			if curWep.IsVJBaseWeapon then curWep:Equip(self) end
+		else -- If we are not switching weapons, then we know curWep is the primary weapon
+			self.WeaponInventoryStatus = VJ_WEP_INVENTORY_PRIMARY
+			-- If this is completely new weapon, then set the weapon inventory's primary to this weapon
+			local curPrimary = self.WeaponInventory.Primary
+			if curWep != self.WeaponInventory.Primary then
+				if IsValid(curPrimary) then curPrimary:Remove() end -- Remove the old primary weapon
+				self.WeaponInventory.Primary = curWep
+			end
+		end
 		self:SetupWeaponHoldTypeAnims(curWep:GetHoldType())
 		self:CustomOnDoChangeWeapon(curWep, self.CurrentWeaponEntity, invSwitch)
 		self.CurrentWeaponEntity = curWep
+	else
+		self.WeaponInventoryStatus = VJ_WEP_INVENTORY_NONE
 	end
 	return curWep
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetWeaponState(state, time)
 	time = time or -1
-	self.Weapon_State = state or VJ_WEP_STATE_NONE
+	self.WeaponState = state or VJ_WEP_STATE_READY
 	if time >= 0 then
 		timer.Create("timer_weapon_state_reset"..self:EntIndex(), time, 1, function()
 			self:SetWeaponState()
@@ -1964,7 +1980,7 @@ function ENT:SetWeaponState(state, time)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:GetWeaponState()
-	return self.Weapon_State
+	return self.WeaponState
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 //function ENT:OnActiveWeaponChanged(old, new) print(old, new) end
@@ -2191,60 +2207,67 @@ function ENT:Think()
 				if !plyControlled && !self:BusyWithActivity() then // self.IsReloadingWeapon == false
 					if eneValid then
 						if IsValid(self.WeaponInventory.Melee) && ((self.LatestEnemyDistance < self.MeleeAttackDistance) or (self.LatestEnemyDistance < 300 && self.CurrentWeaponEntity:Clip1() <= 0)) && (self:Health() > self:GetMaxHealth() * 0.25) && self.CurrentWeaponEntity != self.WeaponInventory.Melee then
-							self.IsReloadingWeapon = false -- Since the reloading can be cut off, reset it back to false, or else it can mess up its behavior!
-							timer.Remove("timer_reload_end"..self:EntIndex())
-							self:SetWeaponState(VJ_WEP_STATE_MELEE)
+							if self:GetWeaponState() == VJ_WEP_STATE_RELOADING then self:SetWeaponState() end -- Since the reloading can be cut off, reset it back to false, or else it can mess up its behavior!
+							//timer.Remove("timer_reload_end"..self:EntIndex()) -- No longer needed
+							self.WeaponInventoryStatus = VJ_WEP_INVENTORY_MELEE
 							self:DoChangeWeapon(self.WeaponInventory.Melee, true)
-						elseif self.IsReloadingWeapon == false && IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank == true or ene.VJ_IsHugeMonster == true) && self.CurrentWeaponEntity != self.WeaponInventory.AntiArmor then
-							self:SetWeaponState(VJ_WEP_STATE_ANTI_ARMOR)
+						elseif self:GetWeaponState() != VJ_WEP_STATE_RELOADING && IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank == true or ene.VJ_IsHugeMonster == true) && self.CurrentWeaponEntity != self.WeaponInventory.AntiArmor then
+							self.WeaponInventoryStatus = VJ_WEP_INVENTORY_ANTI_ARMOR
 							self:DoChangeWeapon(self.WeaponInventory.AntiArmor, true)
 						end
 					end
-					if self.IsReloadingWeapon == false then
+					if self:GetWeaponState() != VJ_WEP_STATE_RELOADING then
 						-- Reset weapon status from melee to primary
-						if self:GetWeaponState() == VJ_WEP_STATE_MELEE && (!eneValid or (eneValid && self.LatestEnemyDistance >= 300)) then
-							self:SetWeaponState(VJ_WEP_STATE_NONE)
+						if self.WeaponInventoryStatus == VJ_WEP_INVENTORY_MELEE && (!eneValid or (eneValid && self.LatestEnemyDistance >= 300)) then
+							self.WeaponInventoryStatus = VJ_WEP_INVENTORY_PRIMARY
 							self:DoChangeWeapon(self.WeaponInventory.Primary, true)
 						-- Reset weapon status from anti-armor to primary
-						elseif self:GetWeaponState() == VJ_WEP_STATE_ANTI_ARMOR && (!eneValid or (eneValid && ene.IsVJBaseSNPC_Tank != true && ene.VJ_IsHugeMonster != true)) then
-							self:SetWeaponState(VJ_WEP_STATE_NONE)
+						elseif self.WeaponInventoryStatus == VJ_WEP_INVENTORY_ANTI_ARMOR && (!eneValid or (eneValid && ene.IsVJBaseSNPC_Tank != true && ene.VJ_IsHugeMonster != true)) then
+							self.WeaponInventoryStatus = VJ_WEP_INVENTORY_PRIMARY
 							self:DoChangeWeapon(self.WeaponInventory.Primary, true)
 						end
 					end
 				end
-			
+				
 				-- Weapon Reloading
-				if self.AllowWeaponReloading && !self:BusyWithActivity() && !self.IsReloadingWeapon && (!self.CurrentWeaponEntity.IsMeleeWeapon) && self.AttackType == VJ_ATTACK_NONE && self.VJ_PlayingSequence == false && self:GetWeaponState() != VJ_WEP_STATE_HOLSTERED && ((!plyControlled && ((!eneValid && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1() && (curTime - self.LastEnemyTime) > math.random(3, 8) && !self:IsMoving()) or (eneValid && self.CurrentWeaponEntity:Clip1() <= 0))) or (plyControlled && self.VJ_TheController:KeyDown(IN_RELOAD) && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1())) then
+				if self.AllowWeaponReloading && !self:BusyWithActivity() && self:GetWeaponState() == VJ_WEP_STATE_READY && (!self.CurrentWeaponEntity.IsMeleeWeapon) && self.AttackType == VJ_ATTACK_NONE && self.VJ_PlayingSequence == false && ((!plyControlled && ((!eneValid && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1() && (curTime - self.LastEnemyTime) > math.random(3, 8) && !self:IsMoving()) or (eneValid && self.CurrentWeaponEntity:Clip1() <= 0))) or (plyControlled && self.VJ_TheController:KeyDown(IN_RELOAD) && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1())) then
 					self.DoingWeaponAttack = false
 					self.DoingWeaponAttack_Standing = false
-					if !plyControlled then self.IsReloadingWeapon = true end
+					if !plyControlled then self:SetWeaponState(VJ_WEP_STATE_RELOADING) end
 					self.NextChaseTime = curTime + 2
 					if eneValid == true then self:PlaySoundSystem("WeaponReload") end -- tsayn han e minag yete teshnami ga!
 					self:CustomOnWeaponReload()
 					if self.DisableWeaponReloadAnimation == false then
 						local function DoReloadAnimation(anim)
-							if self.CurrentWeaponEntity.IsVJBaseWeapon == true then self.CurrentWeaponEntity:NPC_Reload() end
-							if VJ_AnimationExists(self, anim) == true then -- Only if the given animation actually exists!
+							if VJ_AnimationExists(self, anim) then -- Only if the given animation actually exists!
 								local dur = self:DecideAnimationLength(anim, false, self.WeaponReloadAnimationDecreaseLengthAmount)
 								local wep = self.CurrentWeaponEntity
-								timer.Create("timer_reload_end"..self:EntIndex(), dur, 1, function() if IsValid(self) && IsValid(wep) then self.IsReloadingWeapon = false wep:SetClip1(wep:GetMaxClip1()) end end)
+								if wep.IsVJBaseWeapon == true then wep:NPC_Reload() end
+								timer.Create("timer_reload_end"..self:EntIndex(), dur, 1, function()
+									if IsValid(self) && IsValid(wep) && self:GetWeaponState() == VJ_WEP_STATE_RELOADING then
+										wep:SetClip1(wep:GetMaxClip1())
+										if wep.IsVJBaseWeapon == true then wep:CustomOnReload_Finish() end
+										self:SetWeaponState()
+									end
+								end)
 								self:VJ_ACT_PLAYACTIVITY(anim, true, dur, self.WeaponReloadAnimationFaceEnemy, self.WeaponReloadAnimationDelay, {SequenceDuration=dur, PlayBackRateCalculated=true})
 								self.AllowToDo_WaitForEnemyToComeOut = false
 								return true -- We have successfully ran the animation!
 							end
 							return false -- The given animation was invalid!
 						end
-						-- When being controlled by a player
+						-- Controlled by a player...
 						if plyControlled == true then
-							self.IsReloadingWeapon = true
+							self:SetWeaponState(VJ_WEP_STATE_RELOADING)
 							DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
-						-- Not being controlled by a player...
+						-- NOT controlled by a player...
 						else
 							-- NPC is hidden, so attempt to crouch reload
-							if eneValid == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPos+self:OBBCenter()),ene:EyePos(),false,{SetLastHiddenTime=true}) == true then -- Behvedadz
-								local ranim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReloadBehindCover)) -- Get the animation or if it has a translation, then get the translated animation
-								-- if ranim isn't a valid animation, then just play the regular standing-up animation
-								ranim = (VJ_AnimationExists(self, ranim) == true and DoReloadAnimation(ranim) or DoReloadAnimation(VJ_PICK(self.AnimTbl_WeaponReload)))
+							if eneValid == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPos + self:OBBCenter()), ene:EyePos(), false, {SetLastHiddenTime=true}) == true then -- Behvedadz
+								-- if It does NOT have a cover reload animation, then just play the regular standing reload animation
+								if !DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReloadBehindCover))) then
+									DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
+								end
 							else -- NPC is NOT hidden...
 								-- Under certain situations, simply do standing reload without running to a hiding spot
 								if self.IsGuard == true or self.FollowingPlayer == true or self.VJ_IsBeingControlled_Tool == true or eneValid == false or self.MovementType == VJ_MOVETYPE_STATIONARY or self.LatestEnemyDistance < 650 then
@@ -2258,21 +2281,23 @@ function ENT:Think()
 									vsched.IsMovingTask = true
 									vsched.MoveType = 1
 									vsched.RunCode_OnFinish = function()
-										-- If the current situation isn't favorable, then abandon the current reload, and try again!
-										if (self.AttackType != VJ_ATTACK_NONE) or (IsValid(self:GetEnemy()) && self.HasWeaponBackAway == true && (self:GetPos():Distance(self:GetEnemy():GetPos()) <= self.WeaponBackAway_Distance)) then
-											self.IsReloadingWeapon = false
-											timer.Remove("timer_reload_end"..self:EntIndex()) -- Remove the timer to make sure it doesn't set reloading to false at a random time (later on)
-										else -- Our hiding spot is good, so reload!
-											DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
-											self:CustomOnWeaponReload_AfterRanToCover()
+										if self:GetWeaponState() == VJ_WEP_STATE_RELOADING then
+											-- If the current situation isn't favorable, then abandon the current reload, and try again!
+											if (self.AttackType != VJ_ATTACK_NONE) or (IsValid(self:GetEnemy()) && self.HasWeaponBackAway == true && (self:GetPos():Distance(self:GetEnemy():GetPos()) <= self.WeaponBackAway_Distance)) then
+												self:SetWeaponState()
+												//timer.Remove("timer_reload_end"..self:EntIndex()) -- Remove the timer to make sure it doesn't set reloading to false at a random time (later on)
+											else -- Our hiding spot is good, so reload!
+												DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
+												self:CustomOnWeaponReload_AfterRanToCover()
+											end
 										end
 									end
 									self:StartSchedule(vsched)
 								end
 							end
 						end
-					else
-						self.IsReloadingWeapon = false
+					else -- If the reload animation is disabled
+						if self:GetWeaponState() == VJ_WEP_STATE_RELOADING then self:SetWeaponState() end
 						self.CurrentWeaponEntity:SetClip1(self.CurrentWeaponEntity:GetMaxClip1())
 						self.CurrentWeaponEntity:NPC_Reload()
 					end
@@ -2310,7 +2335,7 @@ function ENT:Think()
 				end
 				
 				-- Grenade attack
-				if self.HasGrenadeAttack && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && !self.IsReloadingWeapon && !self:BusyWithActivity() && curTime > self.NextThrowGrenadeT && curTime > self.TakingCoverT then
+				if self.HasGrenadeAttack && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && self:GetWeaponState() != VJ_WEP_STATE_RELOADING && !self:BusyWithActivity() && curTime > self.NextThrowGrenadeT && curTime > self.TakingCoverT then
 					if plyControlled && self.VJ_TheController:KeyDown(IN_JUMP) then
 						self:ThrowGrenadeCode()
 						self.NextThrowGrenadeT = curTime + math.random(self.NextThrowGrenadeTime.a, self.NextThrowGrenadeTime.b)
@@ -2719,7 +2744,7 @@ function ENT:DoPoseParameterLooking(resetPoses)
 	local p_enemy = 0 -- Pitch
 	local y_enemy = 0 -- Yaw
 	local r_enemy = 0 -- Roll
-	if IsValid(ent) && resetPoses == false then
+	if IsValid(ent) && !resetPoses then
 		local enemy_pos = (self.VJ_IsBeingControlled == true and self.VJ_TheControllerBullseye:GetPos()) or ent:GetPos() + ent:OBBCenter()
 		local self_ang = self:GetAngles()
 		local enemy_ang = (enemy_pos - (self:GetPos() + self:OBBCenter())):Angle()
@@ -2729,7 +2754,7 @@ function ENT:DoPoseParameterLooking(resetPoses)
 		if self.PoseParameterLooking_InvertYaw == true then y_enemy = -y_enemy end
 		r_enemy = math_angDif(enemy_ang.z, self_ang.z)
 		if self.PoseParameterLooking_InvertRoll == true then r_enemy = -r_enemy end
-	elseif self.PoseParameterLooking_CanReset == false then -- Should it reset its pose parameters if there is no enemies?
+	elseif !self.PoseParameterLooking_CanReset then -- Should it reset its pose parameters if there is no enemies?
 		return
 	end
 	
@@ -2800,7 +2825,7 @@ function ENT:IsAbleToShootWeapon(checkDistance, checkDistanceOnly, enemyDist)
 			return false
 		end
 	end
-	if IsValid(self:GetActiveWeapon()) && self.AttackType != VJ_ATTACK_GRENADE && self:BusyWithActivity() == false && ((self:GetActiveWeapon().IsMeleeWeapon) or (self.IsReloadingWeapon == false && self.AttackType != VJ_ATTACK_MELEE && self.NearestPointToEnemyDistance > self.MeleeAttackDistance)) then
+	if IsValid(self:GetActiveWeapon()) && self.AttackType != VJ_ATTACK_GRENADE && self:BusyWithActivity() == false && ((self:GetActiveWeapon().IsMeleeWeapon) or (self:GetWeaponState() != VJ_WEP_STATE_RELOADING && self.AttackType != VJ_ATTACK_MELEE && self.NearestPointToEnemyDistance > self.MeleeAttackDistance)) then
 		hasChecks = true
 		if checkDistance == false then return true end
 	end
@@ -2859,7 +2884,7 @@ function ENT:SelectSchedule()
 				local moveCheck = VJ_PICK(self:VJ_CheckAllFourSides(200, true, "0111"))
 				if moveCheck then
 					self:SetLastPosition(moveCheck)
-					self.IsReloadingWeapon = false
+					if self:GetWeaponState() == VJ_WEP_STATE_RELOADING then self:SetWeaponState() end
 					self.TakingCoverT = CurTime() + 2
 					canAttack = false
 					self:VJ_TASK_GOTO_LASTPOS("TASK_RUN_PATH", function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
@@ -2876,18 +2901,20 @@ function ENT:SelectSchedule()
 					//self:VJ_ForwardIsHidingZone(self:EyePos(), enePos_Eye, true, {Debug=true})
 					-- If I can't see the enemy then either wait for it or charge at the enemy
 					if self:VJ_ForwardIsHidingZone(self:EyePos(), enePos_Eye, true) == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered) + self:GetUp()*30, enePos_Eye + self:GetUp()*30, true) /*or self:VJ_ForwardIsHidingZone(util.VJ_GetWeaponPos(self),enePos_Eye) == true*/ /*or (!self.LastEnemyVisible)*/ then
-						-- Wait for the enemy to come out
-						if self.WaitForEnemyToComeOut && !self.WaitingForEnemyToComeOut && (!wep.IsMeleeWeapon) && self.AllowToDo_WaitForEnemyToComeOut && !self.IsReloadingWeapon && ((CurTime() - self.Weapon_TimeSinceLastShot) <= 4.5) && (eneDist_Eye > self.WaitForEnemyToComeOutDistance) then
-							self.WaitingForEnemyToComeOut = true
-							if self.HasLostWeaponSightAnimation == true then
-								self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_WeaponAim, false, 0, true)
+						if self:GetWeaponState() != VJ_WEP_STATE_RELOADING then
+							-- Wait for the enemy to come out
+							if self.WaitForEnemyToComeOut && !self.WaitingForEnemyToComeOut && (!wep.IsMeleeWeapon) && self.AllowToDo_WaitForEnemyToComeOut && ((CurTime() - self.Weapon_TimeSinceLastShot) <= 4.5) && (eneDist_Eye > self.WaitForEnemyToComeOutDistance) then
+								self.WaitingForEnemyToComeOut = true
+								if self.HasLostWeaponSightAnimation == true then
+									self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_WeaponAim, false, 0, true)
+								end
+								self.NextChaseTime = CurTime() + math.Rand(self.WaitForEnemyToComeOutTime.a, self.WaitForEnemyToComeOutTime.b)
+							-- If I am not supposed to wait for the enemy, then go after the enemy!
+							elseif /*self.DisableChasingEnemy == false &&*/ CurTime() > self.LastHiddenZoneT then
+								self.DoingWeaponAttack = false
+								self.DoingWeaponAttack_Standing = false
+								self:DoChaseAnimation()
 							end
-							self.NextChaseTime = CurTime() + math.Rand(self.WaitForEnemyToComeOutTime.a, self.WaitForEnemyToComeOutTime.b)
-						-- If I am not supposed to wait for the enemy, then go after the enemy!
-						elseif /*self.DisableChasingEnemy == false &&*/ self.IsReloadingWeapon == false && CurTime() > self.LastHiddenZoneT then
-							self.DoingWeaponAttack = false
-							self.DoingWeaponAttack_Standing = false
-							self:DoChaseAnimation()
 						end
 					else -- I can see the enemy...
 						self.AllowToDo_WaitForEnemyToComeOut = true
@@ -3235,7 +3262,7 @@ function ENT:OnTakeDamage(dmginfo)
 			
 			self:PlaySoundSystem("Pain")
 			
-			if self.MoveOrHideOnDamageByEnemy == true && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && IsValid(self:GetEnemy()) && CurTime() > self.NextMoveOrHideOnDamageByEnemyT && self:EyePos():Distance(self:GetEnemy():EyePos()) < self.Weapon_FiringDistanceFar && IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.AttackType == VJ_ATTACK_NONE && CurTime() > self.TakingCoverT && self.LastEnemyVisible && self.VJ_IsBeingControlled == false && self.IsReloadingWeapon == false then
+			if self.MoveOrHideOnDamageByEnemy == true && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && IsValid(self:GetEnemy()) && CurTime() > self.NextMoveOrHideOnDamageByEnemyT && self:EyePos():Distance(self:GetEnemy():EyePos()) < self.Weapon_FiringDistanceFar && IsValid(self:GetEnemy()) && self.FollowingPlayer == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.AttackType == VJ_ATTACK_NONE && CurTime() > self.TakingCoverT && self.LastEnemyVisible && self.VJ_IsBeingControlled == false && self:GetWeaponState() != VJ_WEP_STATE_RELOADING then
 				local wep = self:GetActiveWeapon()
 				if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() + self:OBBCenter()),self:GetEnemy():EyePos()) == true && self.MoveOrHideOnDamageByEnemy_OnlyMove == false then			
 					//self:VJ_ACT_TAKE_COVER(self.AnimTbl_MoveOrHideOnDamageByEnemy,false,math.Rand(self.MoveOrHideOnDamageByEnemy_HideTime.a, self.MoveOrHideOnDamageByEnemy_HideTime.b),false)
