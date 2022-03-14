@@ -31,7 +31,7 @@ local defAng = Angle(0, 0, 0)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Global Functions & Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- NPC Movement types, information is located inside the NPC bases...
+-- NPC movement types, information is located inside the NPC bases...
 VJ_MOVETYPE_GROUND = 1
 VJ_MOVETYPE_AERIAL = 2
 VJ_MOVETYPE_AQUATIC = 3
@@ -51,12 +51,6 @@ VJ_STATE_ONLY_ANIMATION = 100 -- Only plays animation tasks, attacks. Disables: 
 VJ_STATE_ONLY_ANIMATION_CONSTANT = 101 -- Same as VJ_STATE_ONLY_ANIMATION + Idle animation will not play!
 VJ_STATE_ONLY_ANIMATION_NOATTACK = 102 -- Same as VJ_STATE_ONLY_ANIMATION + Attacks will be disabled
 
--- NPC weapon states for the human base
-VJ_WEP_STATE_NONE = 0 -- No state is set (Default)
-VJ_WEP_STATE_HOLSTERED = 1 -- Weapon is holstered
-VJ_WEP_STATE_ANTI_ARMOR = 20 -- It's currently using its anti-armor weapon
-VJ_WEP_STATE_MELEE = 21 -- It's currently using its melee weapon
-
 -- NPC attack type
 VJ_ATTACK_NONE = 0 -- No state is set (Default)
 VJ_ATTACK_CUSTOM = 1 -- Custom attack (Used by developers to make custom attacks)
@@ -71,6 +65,18 @@ VJ_ATTACK_STATUS_DONE = 1 -- The current attack has been executed completely and
 VJ_ATTACK_STATUS_STARTED = 2 -- The current attack has started and is expected to execute soon
 VJ_ATTACK_STATUS_EXECUTED = 10 -- The current attack has been executed at least once
 VJ_ATTACK_STATUS_EXECUTED_HIT = 11 -- The current attack has been executed at least once AND hit an entity at least once (Melee & Leap attacks)
+
+-- NPC weapon states for the human base
+VJ_WEP_STATE_READY = 0 -- No state is set (Default)
+VJ_WEP_STATE_HOLSTERED = 1 -- Weapon is holstered
+VJ_WEP_STATE_RELOADING = 2 -- Weapon is reloading
+
+-- NPC weapon inventory status
+VJ_WEP_INVENTORY_NONE = 0 -- It's currently using no weapon (Default)
+VJ_WEP_INVENTORY_PRIMARY = 1 -- It's currently using its primary weapon
+VJ_WEP_INVENTORY_SECONDARY = 2 -- It's currently using its secondary weapon
+VJ_WEP_INVENTORY_MELEE = 3 -- It's currently using its melee weapon
+VJ_WEP_INVENTORY_ANTI_ARMOR = 4 -- It's currently using its anti-armor weapon
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if SERVER then
 	util.AddNetworkString("vj_music_run")
