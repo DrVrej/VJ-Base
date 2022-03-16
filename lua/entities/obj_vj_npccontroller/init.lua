@@ -337,7 +337,7 @@ function ENT:Think()
 		if self.VJCE_NPC.Flinching == true or (((self.VJCE_NPC.CurrentSchedule && self.VJCE_NPC.CurrentSchedule.IsPlayActivity != true) or self.VJCE_NPC.CurrentSchedule == nil) && self.VJCE_NPC:GetNavType() == NAV_JUMP) then return end
 		
 		-- Turning
-		if !self.VJCE_NPC:IsMoving() && self.VJCE_NPC.PlayingAttackAnimation == false && canTurn && self.VJCE_NPC:GetWeaponState() != VJ_WEP_STATE_RELOADING && CurTime() > self.VJCE_NPC.NextChaseTime && self.VJCE_NPC.IsVJBaseSNPC_Tank != true && self.VJCE_NPC.MovementType != VJ_MOVETYPE_PHYSICS then
+		if !self.VJCE_NPC:IsMoving() && self.VJCE_NPC.PlayingAttackAnimation == false && canTurn && CurTime() > self.VJCE_NPC.NextChaseTime && self.VJCE_NPC.IsVJBaseSNPC_Tank != true && self.VJCE_NPC.MovementType != VJ_MOVETYPE_PHYSICS && ((self.VJCE_NPC.IsVJBaseSNPC_Human && self.VJCE_NPC:GetWeaponState() != VJ_WEP_STATE_RELOADING) or (!self.VJCE_NPC.IsVJBaseSNPC_Human)) then
 			//self.VJCE_NPC:SetAngles(Angle(0,self.VJCE_Player:GetAimVector():Angle().y,0))
 			local angdif = math.abs(math.AngleDifference(self.VJCE_Player:EyeAngles().y, self.VJC_NPC_LastIdleAngle))
 			self.VJC_NPC_LastIdleAngle = self.VJCE_NPC:EyeAngles().y //tr_ply.HitPos
