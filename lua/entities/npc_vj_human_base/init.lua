@@ -277,6 +277,8 @@ ENT.DropWeaponOnDeathAttachment = "anim_attachment_RH" -- Which attachment shoul
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasMeleeAttack = true -- Should the SNPC have a melee attack?
 ENT.MeleeAttackDamage = 10
+ENT.MeleeAttackDamageType = DMG_CLUB -- Type of Damage
+ENT.HasMeleeAttackKnockBack = true -- Should knockback be applied on melee hit? | Use self:MeleeAttackKnockbackVelocity() to edit the velocity
 	-- ====== Animation Variables ====== --
 ENT.AnimTbl_MeleeAttack = {ACT_MELEE_ATTACK1} -- Melee Attack Animations
 ENT.MeleeAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
@@ -301,6 +303,8 @@ ENT.MeleeAttackExtraTimers = nil -- Extra melee attack timers, EX: {1, 1.4} | it
 ENT.StopMeleeAttackAfterFirstHit = false -- Should it stop the melee attack from running rest of timers when it hits an enemy?
 	-- ====== Control Variables ====== --
 ENT.DisableMeleeAttackAnimation = false -- if true, it will disable the animation code
+ENT.DisableDefaultMeleeAttackCode = false -- When set to true, it will completely disable the melee attack code
+ENT.DisableDefaultMeleeAttackDamageCode = false -- Disables the default melee attack damage code
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Weapon Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -727,15 +731,23 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomAttack(ene, eneVisible) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnMeleeAttack_BeforeStartTimer(seed) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnMeleeAttack_AfterStartTimer(seed) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnMeleeAttack_BeforeChecks() end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:GetMeleeAttackDamageOrigin()
 	return self:GetPos() + self:GetForward() -- Override this to use a different position
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnMeleeAttack_AfterChecks(hitEnt, isProp) return false end -- return true to disable the attack and move onto the next entity!
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:MeleeAttackKnockbackVelocity(hitEnt)
+	return self:GetForward()*math.random(100, 140) + self:GetUp()*10
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_Miss() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMeleeAttack_BeforeStartTimer(seed) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMeleeAttack_AfterStartTimer(seed) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnIsAbleToShootWeapon()
 	return true -- Set this to false to disallow shooting
@@ -958,9 +970,12 @@ ENT.EntitiesToThrowBack = {obj_spore=true,obj_vj_grenade=true,obj_handgrenade=tr
 //ENT.SavedDmgInfo = {} -- Set later
 
 -- Localized static values
+local destructibleEnts = {func_breakable=true, func_physbox=true, prop_door_rotating=true} // func_breakable_surf
+
 local defPos = Vector(0, 0, 0)
 local defAng = Angle(0, 0, 0)
 
+local IsProp = VJ_IsProp
 local CurTime = CurTime
 local IsValid = IsValid
 local GetConVar = GetConVar
@@ -2459,35 +2474,42 @@ function ENT:Think()
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MeleeAttackCode()
-	if self.Dead == true or self.vACT_StopAttacks == true or self.Flinching == true or self.AttackType == VJ_ATTACK_GRENADE or (self.StopMeleeAttackAfterFirstHit && self.AttackStatus == VJ_ATTACK_STATUS_EXECUTED_HIT) then return end
-	if /*self.VJ_IsBeingControlled == false &&*/ self.MeleeAttackAnimationFaceEnemy == true then self:FaceCertainEntity(self:GetEnemy(),true) end
+function ENT:MeleeAttackCode(customEnt)
+	if self.Dead or self.vACT_StopAttacks or self.Flinching or self.AttackType == VJ_ATTACK_GRENADE or (self.StopMeleeAttackAfterFirstHit && self.AttackStatus == VJ_ATTACK_STATUS_EXECUTED_HIT) then return end
+	local curEnemy = customEnt or self:GetEnemy()
+	if self.MeleeAttackAnimationFaceEnemy then self:FaceCertainEntity(curEnemy, true) end
 	//self.MeleeAttacking = true
-	local FindEnts = ents.FindInSphere(self:GetMeleeAttackDamageOrigin(),self.MeleeAttackDamageDistance)
+	self:CustomOnMeleeAttack_BeforeChecks()
+	if self.DisableDefaultMeleeAttackCode then return end
+	local myPos = self:GetPos()
 	local hitRegistered = false
-	local HasHitNonPropEnt = false
-	if FindEnts != nil then
-		for _,v in pairs(FindEnts) do
-			if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
-			if (v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or (v:GetClass() == "prop_physics") or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" && (self:GetSightDirection():Dot((v:GetPos() - self:GetPos()):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius))) then
-				local doactualdmg = DamageInfo()
-				doactualdmg:SetDamage(self:VJ_GetDifficultyValue(self.MeleeAttackDamage))
-				if v:IsNPC() or v:IsPlayer() then doactualdmg:SetDamageForce(self:GetForward()*((doactualdmg:GetDamage()+100)*70)) end
-				doactualdmg:SetInflictor(self)
-				doactualdmg:SetAttacker(self)
-				v:TakeDamageInfo(doactualdmg, self)
-				if v:IsPlayer() then
-					v:ViewPunch(Angle(math.random(-1,1)*10,math.random(-1,1)*10,math.random(-1,1)*10))
-				end
-				VJ_DestroyCombineTurret(self,v)
-				if v:GetClass() != "prop_physics" then HasHitNonPropEnt = true end
-				if v:GetClass() == "prop_physics" && HasHitNonPropEnt == false then
-					//if VJ_HasValue(self.EntitiesToDestoryModel,v:GetModel()) or VJ_HasValue(self.EntitiesToPushModel,v:GetModel()) then
-					//hitRegistered = true else hitRegistered = false end
-					hitRegistered = false
-				else
-					hitRegistered = true
-				end
+	for _,v in pairs(ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), self.MeleeAttackDamageDistance)) do
+		if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end -- If controlled and v is the bullseye OR it's a player controlling then don't damage!
+		if v != self && v:GetClass() != self:GetClass() && (((v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:Disposition(v) != D_LI) or IsProp(v) == true or v:GetClass() == "func_breakable_surf" or destructibleEnts[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
+			local vProp = IsProp(v)
+			if self:CustomOnMeleeAttack_AfterChecks(v, vProp) == true then continue end
+			-- Knockback
+			if self.HasMeleeAttackKnockBack && v.MovementType != VJ_MOVETYPE_STATIONARY && (!v.VJ_IsHugeMonster or v.IsVJBaseSNPC_Tank) then
+				v:SetGroundEntity(NULL)
+				v:SetVelocity(self:MeleeAttackKnockbackVelocity(v))
+			end
+			-- Apply actual damage
+			if !self.DisableDefaultMeleeAttackDamageCode then
+				local applyDmg = DamageInfo()
+				applyDmg:SetDamage(self:VJ_GetDifficultyValue(self.MeleeAttackDamage))
+				applyDmg:SetDamageType(self.MeleeAttackDamageType)
+				//applyDmg:SetDamagePosition(self:VJ_GetNearestPointToEntity(v).MyPosition)
+				if v:IsNPC() or v:IsPlayer() then applyDmg:SetDamageForce(self:GetForward() * ((applyDmg:GetDamage() + 100) * 70)) end
+				applyDmg:SetInflictor(self)
+				applyDmg:SetAttacker(self)
+				v:TakeDamageInfo(applyDmg, self)
+			end
+			if v:IsPlayer() then
+				v:ViewPunch(Angle(math.random(-1, 1) * self.MeleeAttackDamage, math.random(-1, 1) * self.MeleeAttackDamage, math.random(-1, 1) * self.MeleeAttackDamage))
+			end
+			VJ_DestroyCombineTurret(self,v)
+			if !vProp then -- Only for non-props...
+				hitRegistered = true
 			end
 		end
 	end
