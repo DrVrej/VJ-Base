@@ -45,7 +45,7 @@ function VJ_PLUGINS(Panel)
 	changelog:SetColor(Color(0, 102, 0))
 	changelog:SetFont("VJFont_Trebuchet24_SmallMedium")
 	changelog.DoClick = function(x)
-		gui.OpenURL("http://steamcommunity.com/sharedfiles/filedetails/changelog/131759821")
+		gui.OpenURL("https://github.com/DrVrej/VJ-Base/releases")
 	end
 	Panel:AddPanel(changelog)
 	

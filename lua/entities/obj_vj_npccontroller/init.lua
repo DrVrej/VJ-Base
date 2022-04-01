@@ -48,9 +48,9 @@ ENT.VJC_NPC_LastIdleAngle = 0
 ENT.VJC_Removed = false
 
 /* Important entities:
+	- self.VJCE_Bullseye	The bullseye entity used for the NPC to target
 	- self.VJCE_Camera		The camera object
 	- self.VJCE_Player		The player that's controlling
-	- self.VJCE_Bullseye	The bullseye entity used for the NPC to target
 	- self.VJCE_NPC			The NPC that's being controlled
 */
 
@@ -118,8 +118,7 @@ function ENT:SetControlledNPC(GetEntity)
 	self.VJCE_Bullseye:SetRenderMode(RENDERMODE_NONE)
 	self.VJCE_Bullseye:Spawn()
 	self.VJCE_Bullseye:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
-	self.VJCE_Bullseye.EnemyToIndividual = true
-	self.VJCE_Bullseye.EnemyToIndividualEnt = GetEntity
+	self.VJCE_Bullseye.VJ_AlwaysEnemyToEnt = GetEntity
 	self.VJCE_Bullseye:SetColor(color0000)
 	self.VJCE_Bullseye:SetNoDraw(false)
 	self.VJCE_Bullseye:DrawShadow(false)

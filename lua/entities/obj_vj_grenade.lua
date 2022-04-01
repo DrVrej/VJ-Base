@@ -17,7 +17,7 @@ ENT.Category		= "VJ Base"
 ENT.Spawnable = true
 ENT.AdminOnly = false
 
-ENT.VJ_IsDetectableDanger = true
+ENT.VJ_IsDetectableGrenade = true
 ENT.VJ_IsPickupableDanger = true
 
 if CLIENT then

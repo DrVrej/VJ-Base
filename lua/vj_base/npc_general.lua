@@ -267,21 +267,18 @@ end
 		- ent = The entity to check its relation with
 	Returns
 		- false, Entity is friendly
-		- "Neutral", Entity is neutral, 
+		- "Neutral", Entity is neutral
 		- true, Entity is hostile
 -----------------------------------------------------------]]
 function ENT:DoRelationshipCheck(ent)
-	local nt_bool, nt_be = self:VJ_HasNoTarget(ent)
-	if nt_be == 1 then return true end
-	if nt_bool == true or NPCTbl_Animals[ent:GetClass()] then return "Neutral" end
+	if ent.VJ_AlwaysEnemyToEnt == self then return true end -- Always enemy to me (Used by the bullseye under certain circumstances)
+	if ent:IsFlagSet(FL_NOTARGET) or ent.VJ_NoTarget or NPCTbl_Animals[ent:GetClass()] then return "Neutral" end
 	if self:GetClass() == ent:GetClass() then return false end
 	if ent:Health() > 0 && self:Disposition(ent) != D_LI then
 		if ent:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 1 then return "Neutral" end
-		if VJ_HasValue(self.VJ_AddCertainEntityAsFriendly,ent) then return false end
-		if VJ_HasValue(self.VJ_AddCertainEntityAsEnemy,ent) then return true end
+		if VJ_HasValue(self.VJ_AddCertainEntityAsFriendly, ent) then return false end
+		if VJ_HasValue(self.VJ_AddCertainEntityAsEnemy, ent) then return true end
 		if (ent:IsNPC() && !ent.FriendlyToVJSNPCs && ((ent:Disposition(self) == D_HT) or (ent:Disposition(self) == D_NU && ent.VJ_IsBeingControlled == true))) or (ent:IsPlayer() && self.PlayerFriendly == false && ent:Alive()) then
-			//if ent.VJ_NoTarget == false then
-			//if (ent.VJ_NoTarget) then if ent.VJ_NoTarget == false then continue end end
 			return true
 		else
 			return "Neutral"
@@ -1036,7 +1033,7 @@ function ENT:DoEntityRelationshipCheck()
 			it = it + 1
 			//if !IsValid(v) then table_remove(self.CurrentPossibleEnemies,tonumber(v)) continue end
 			//if !IsValid(v) then continue end
-			if self:VJ_HasNoTarget(v) == true then
+			if (v:IsFlagSet(FL_NOTARGET) or v.VJ_NoTarget) && (v.VJ_AlwaysEnemyToEnt != self) then
 				if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
 					self:ResetEnemy(false)
 				end
