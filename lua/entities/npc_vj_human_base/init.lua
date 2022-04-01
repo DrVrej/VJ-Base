@@ -385,13 +385,13 @@ ENT.GrenadeAttackAnimationStopAttacks = true -- Should it stop attacks for a cer
 	-- To let the base automatically detect the attack duration, set this to false:
 ENT.GrenadeAttackAnimationStopAttacksTime = false -- How long should it stop attacks?
 ENT.GrenadeAttackFussTime = 3 -- Time until the grenade explodes
-	-- ====== Danger Detection & Grenade Throw Back Variables ====== --
+	-- ====== Danger & Grenade Detection Variables ====== --
 	-- EXAMPLES: Props that are one fire, especially objects like barrels that are about to explode, Combine mine that is triggered and about to explode, The location that the Antlion Worker's spit is going to hit, Combine Flechette that is about to explode,
 	-- Antlion Guard that is charging towards the NPC, Player that is driving a vehicle at high speed towards the NPC, Manhack that has opened its blades, Rollermine that is about to self-destruct, Combine Helicopter that is about to drop bombs or is firing a turret near the NPC,
 	-- Combine Gunship's is about to fire its belly cannon near the NPC, Turret impact locations fired by Combine Gunships, or Combine Dropships, or Striders, The location that a Combine Dropship is going to deploy soldiers, Strider is moving on top of the NPC,
 	-- The location that the Combine or HECU mortar is going to hit, SMG1 grenades that are flying close by, A Combine soldier that is rappelling on top of the NPC, Stalker's laser impact location, Combine APC that is driving towards the NPC
-ENT.CanDetectDangers = true -- Should the NPC detect dangers?
-ENT.GrenadeDetectionDistance = 400 -- The max grenade detection distance
+ENT.CanDetectDangers = true -- Should the NPC detect dangers? | This includes grenades!
+ENT.DangerDetectionDistance = 400 -- Max danger detection distance | WARNING: Most of the non-grenade dangers ignore this max value, this
 ENT.CanThrowBackDetectedGrenades = true -- Should it pick up the detected grenade and throw it away or to the enemy?
 	-- NOTE: Can only throw grenades away if it has a grenade attack AND can detect dangers
 	-- ====== Control Variables ====== --
@@ -710,6 +710,17 @@ function ENT:CustomOnWorldShakeOnMove() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnDoChangeWeapon(newWeapon, oldWeapon, invSwitch) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local getSdHint = sound.GetLoudestSoundHint
+local sdBitSource = bit.bor(SOUND_DANGER, SOUND_CONTEXT_REACT_TO_SOURCE) ---> Combine dropship impact position, Combine gunship turret impact position, Strider minigun impact position
+local sdBitCombine = bit.bor(SOUND_DANGER, SOUND_CONTEXT_EXCLUDE_COMBINE) ---> Flechette impact position, Strider foot impact position
+local sdBitPlyVehicle = bit.bor(SOUND_DANGER, SOUND_CONTEXT_PLAYER_VEHICLE) ---> Player driving a vehicle
+local sdBitMortar = bit.bor(SOUND_DANGER, SOUND_CONTEXT_MORTAR) ---> Combine mortars impact position
+-- More info about sound hints: https://github.com/DrVrej/VJ-Base/wiki/Developer-Notes#sound-hints
+function ENT:GetPossibleDangers()
+	local myPos = self:GetPos()
+	return getSdHint(SOUND_DANGER, myPos) or getSdHint(sdBitSource, myPos) or getSdHint(sdBitCombine, myPos) or getSdHint(sdBitPlyVehicle, myPos) or getSdHint(sdBitMortar, myPos)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInvestigate(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnResetEnemy() end
@@ -964,8 +975,6 @@ ENT.AttackStatus = VJ_ATTACK_STATUS_NONE
 ENT.WeaponState = VJ_WEP_STATE_READY
 ENT.WeaponInventoryStatus = VJ_WEP_INVENTORY_NONE
 ENT.TimersToRemove = {"timer_weapon_state_reset","timer_state_reset","timer_act_seqreset","timer_face_position","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_reload_end","timer_alerted_reset"}
-ENT.EntitiesToRunFrom = {obj_spore=true,obj_vj_grenade=true,obj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true,cw_flash_thrown=true,ent_hl1_grenade=true}
-ENT.EntitiesToThrowBack = {obj_spore=true,obj_vj_grenade=true,obj_handgrenade=true,npc_grenade_frag=true,obj_cpt_grenade=true,cw_grenade_thrown=true,cw_flash_thrown=true,cw_smoke_thrown=true,ent_hl1_grenade=true}
 //ENT.DefaultGibOnDeathDamageTypes = {[DMG_ALWAYSGIB]=true,[DMG_ENERGYBEAM]=true,[DMG_BLAST]=true,[DMG_VEHICLE]=true,[DMG_CRUSH]=true,[DMG_DISSOLVE]=true,[DMG_SLOWBURN]=true,[DMG_PHYSGUN]=true,[DMG_PLASMA]=true,[DMG_SONIC]=true}
 //ENT.SavedDmgInfo = {} -- Set later
 
@@ -987,7 +996,6 @@ local math_rad = math.rad
 local math_cos = math.cos
 local math_angApproach = math.ApproachAngle
 local math_angDif = math.AngleDifference
-local getSdHint = sound.GetLoudestSoundHint
 local varCAnt = "CLASS_ANTLION"
 local varCCom = "CLASS_COMBINE"
 local varCZom = "CLASS_ZOMBIE"
@@ -2682,27 +2690,19 @@ function ENT:ThrowGrenadeCode(customEnt, noOwner)
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local sdBitSource = bit.bor(SOUND_DANGER, SOUND_CONTEXT_REACT_TO_SOURCE)
-local sdBitCombine = bit.bor(SOUND_DANGER, SOUND_CONTEXT_EXCLUDE_COMBINE)
-local sdBitPlyVehicle = bit.bor(SOUND_DANGER, SOUND_CONTEXT_PLAYER_VEHICLE)
-local sdBitMortar = bit.bor(SOUND_DANGER, SOUND_CONTEXT_MORTAR)
--- 
 function ENT:CheckForDangers()
 	if !self.CanDetectDangers or self.AttackType == VJ_ATTACK_GRENADE or self.NextDangerDetectionT > CurTime() or self.VJ_IsBeingControlled then return end
-	local myPos = self:GetPos()
-	for _,v in pairs(ents.FindInSphere(myPos, self.GrenadeDetectionDistance)) do
-		local friGren = false -- Don't throw back if it's an ally's grenade
-		if (self.EntitiesToRunFrom[v:GetClass()] or v.VJ_IsDetectableDanger) && self:Visible(v) then
+	local regDangerDetected = false -- A regular non-grenade danger has been found (This is done to make sure grenades take priority over other dangers!)
+	for _,v in pairs(ents.FindInSphere(self:GetPos(), self.DangerDetectionDistance)) do
+		if (v.VJ_IsDetectableDanger or v.VJ_IsDetectableGrenade) && self:Visible(v) then
 			local vOwner = v:GetOwner()
-			if IsValid(vOwner) && vOwner.IsVJBaseSNPC == true && ((self:GetClass() == vOwner:GetClass()) or (self:Disposition(vOwner) == D_LI)) then
-				friGren = true
-			end
-			if friGren == false then
+			if !(IsValid(vOwner) && vOwner.IsVJBaseSNPC && ((self:GetClass() == vOwner:GetClass()) or (self:Disposition(vOwner) == D_LI))) then
+				if v.VJ_IsDetectableDanger then regDangerDetected = true continue end -- If it's a regular danger then just skip it for now
 				self:PlaySoundSystem("OnGrenadeSight")
 				self.NextDangerDetectionT = CurTime() + 4
 				self.TakingCoverT = CurTime() + 4
 				-- If has the ability to throw it back, then throw the grenade!
-				if self.CanThrowBackDetectedGrenades == true && v.VJ_DisablePickupableDanger != true && v.VJ_IsPickedUpDanger != true && self.HasGrenadeAttack == true && v:GetVelocity():Length() < 400 && self:VJ_GetNearestPointToEntityDistance(v) < 100 && (self.EntitiesToThrowBack[v:GetClass()] or v.VJ_IsPickupableDanger) then
+				if self.CanThrowBackDetectedGrenades && self.HasGrenadeAttack && v.VJ_IsPickupableDanger && !v.VJ_IsPickedUpDanger && v:GetVelocity():Length() < 400 && self:VJ_GetNearestPointToEntityDistance(v) < 100 then
 					self.NextGrenadeAttackSoundT = CurTime() + 3
 					self:ThrowGrenadeCode(v, true)
 					v.VJ_IsPickedUpDanger = true
@@ -2712,22 +2712,12 @@ function ENT:CheckForDangers()
 				self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH", function(x)
 					x.CanShootWhenMoving = true
 					x.ConstantlyFaceEnemy = true
-					/*x.RunCode_OnFinish = function()
-						self.NextDangerDetectionT = false
-					end*/
 				end)
 				return
 			end
 		end
 	end
-	-- What some of the specific types are for:
-		-- bit.bor(SOUND_DANGER, SOUND_CONTEXT_EXCLUDE_COMBINE) ---> Flechette impact position, Strider foot impact position
-		-- bit.bor(SOUND_DANGER, SOUND_CONTEXT_REACT_TO_SOURCE) ---> Combine dropship impact position, Combine gunship turret impact position, Strider minigun impact position
-		-- bit.bor(SOUND_DANGER, SOUND_CONTEXT_PLAYER_VEHICLE) ---> Player driving a vehicle
-		-- bit.bor(SOUND_DANGER, SOUND_CONTEXT_MORTAR) ---> Combine mortars impact position
-	-- More info about sound hints: https://github.com/DrVrej/VJ-Base/wiki/Developer-Notes#sound-hints
-	local sdHintDanger = getSdHint(SOUND_DANGER, myPos) or getSdHint(sdBitSource, myPos) or getSdHint(sdBitCombine, myPos) or getSdHint(sdBitPlyVehicle, myPos) or getSdHint(sdBitMortar, myPos)
-	if sdHintDanger then
+	if regDangerDetected or self:GetPossibleDangers() then
 		self:PlaySoundSystem("OnDangerSight")
 		self.NextDangerDetectionT = CurTime() + 4
 		self.TakingCoverT = CurTime() + 4
@@ -3108,7 +3098,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		if getAllies != nil then
 			for _,v in pairs(getAllies) do
 				local allyEne = v:GetEnemy()
-				if IsValid(allyEne) && (CurTime() - v.LastEnemyVisibleTime) < self.TimeUntilEnemyLost && VJ_IsAlive(allyEne) && !self:VJ_HasNoTarget(allyEne) && self:GetPos():Distance(allyEne:GetPos()) <= self.SightDistance then
+				if IsValid(allyEne) && (CurTime() - v.LastEnemyVisibleTime) < self.TimeUntilEnemyLost && VJ_IsAlive(allyEne) && self:DoRelationshipCheck(allyEne) && self:GetPos():Distance(allyEne:GetPos()) <= self.SightDistance then
 					self:VJ_DoSetEnemy(allyEne, true)
 					self.EnemyReset = false
 					return false

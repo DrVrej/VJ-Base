@@ -32,8 +32,7 @@ ENT.SolidMovementType = "Dynamic"
 ENT.UseActivationSystem = false -- Mostly used for the Bullseye tool, allows you to activate/deactivate the bullseye
 ENT.Activated = true
 ENT.UserStatusColors = true
-ENT.EnemyToIndividual = false
-ENT.EnemyToIndividualEnt = NULL
+ENT.VJ_AlwaysEnemyToEnt = false
 
 local sdActivated = Sound("hl1/fvox/activated.wav")
 local sdDeactivated = Sound("hl1/fvox/deactivated.wav")
@@ -75,15 +74,15 @@ function ENT:AcceptInput(key, activator, caller, data)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-	if self.EnemyToIndividual == true then
+	if self.VJ_AlwaysEnemyToEnt != false then
 		self:AddFlags(FL_NOTARGET)
-		if IsValid(self.EnemyToIndividualEnt) && self.EnemyToIndividualEnt:IsNPC() then
-			self.EnemyToIndividualEnt:AddEntityRelationship(self,D_HT,99)
-			self:AddEntityRelationship(self.EnemyToIndividualEnt,D_HT,99)
-			if self.EnemyToIndividualEnt.IsVJBaseSNPC then
-				self.EnemyToIndividualEnt:VJ_DoSetEnemy(self,false,false)
+		if IsValid(self.VJ_AlwaysEnemyToEnt) && self.VJ_AlwaysEnemyToEnt:IsNPC() then
+			self.VJ_AlwaysEnemyToEnt:AddEntityRelationship(self, D_HT, 99)
+			self:AddEntityRelationship(self.VJ_AlwaysEnemyToEnt, D_HT, 99)
+			if self.VJ_AlwaysEnemyToEnt.IsVJBaseSNPC then
+				self.VJ_AlwaysEnemyToEnt:VJ_DoSetEnemy(self, false, false)
 			end
-			self.EnemyToIndividualEnt:SetEnemy(self)
+			self.VJ_AlwaysEnemyToEnt:SetEnemy(self)
 		end
 	elseif self.UseActivationSystem == true then
 		if self.Activated == false then

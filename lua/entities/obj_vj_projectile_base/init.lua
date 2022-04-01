@@ -217,8 +217,8 @@ function ENT:PhysicsCollide(data, phys)
 			self.Dead = true
 			self:DoDamageCode(data, phys)
 			self:OnCollideSoundCode()
-			if self.PaintDecalOnDeath == true && VJ_PICK(self.DecalTbl_DeathDecals) != false && self.AlreadyPaintedDeathDecal == false then 
-				self.AlreadyPaintedDeathDecal = true 
+			if self.PaintDecalOnDeath == true && VJ_PICK(self.DecalTbl_DeathDecals) != false && self.AlreadyPaintedDeathDecal == false then
+				self.AlreadyPaintedDeathDecal = true
 				util.Decal(VJ_PICK(self.DecalTbl_DeathDecals), data.HitPos + data.HitNormal, data.HitPos - data.HitNormal)
 			end
 			if self.ShakeWorldOnDeath == true then util.ScreenShake(data.HitPos, self.ShakeWorldOnDeathAmplitude, self.ShakeWorldOnDeathFrequency, self.ShakeWorldOnDeathDuration, self.ShakeWorldOnDeathRadius) end
