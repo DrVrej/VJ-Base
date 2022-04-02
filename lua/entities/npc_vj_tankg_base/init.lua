@@ -283,6 +283,10 @@ function ENT:Tank_PrepareShell()
 		self:Tank_CustomOnReloadShell()
 		self:Tank_Sound_ReloadShell()
 		self.Tank_Shell_Status = 1
+		local ene = self:GetEnemy()
+		if (!ene:IsNPC()) or (ene:IsNPC() && ene:GetEnemy() == self:GetParent()) then -- Don't run away when you don't even know that the tank exists!
+			sound.EmitHint(SOUND_DANGER, ene:GetPos() + ene:OBBCenter(), 80, self.Tank_Shell_TimeUntilFire, self)
+		end
 		timer.Create("timer_shell_attack"..self:EntIndex(), self.Tank_Shell_TimeUntilFire, 1, function()
 			self.Tank_Shell_Status = 2
 			self:Tank_FireShell()
