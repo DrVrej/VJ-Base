@@ -105,7 +105,7 @@ function ENT:OnBounce(data, phys)
 	local closestDist = 1024
 	local target = NULL
 	for _, v in pairs(ents.FindInSphere(myPos, 1024)) do
-		if (!v:IsNPC() && !v:IsPlayer()) then continue end
+		if (!(v:IsNPC() or v:IsNextBot()) && !v:IsPlayer()) then continue end
 		if !owner:DoRelationshipCheck(v) then continue end
 		local dist = v:GetPos():Distance(myPos)
 		if dist < closestDist && dist > 20 then
@@ -150,7 +150,7 @@ function ENT:CustomOnPhysicsCollide(data, phys)
 		VJ_DestroyCombineTurret(self, hitEnt)
 	end
 
-	if (hitEnt:IsNPC() or hitEnt:IsPlayer()) then return end
+	if ((hitEnt:IsNPC() or hitEnt:IsNextBot()) or hitEnt:IsPlayer()) then return end
 	
 	self:OnBounce(data,phys)
 

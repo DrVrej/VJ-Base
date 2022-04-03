@@ -126,7 +126,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 			VJ_CreateTestObject(tr_check1.HitPos, self:GetAngles(), Color(0,183,255), 5)
 		end
 		-- If it hit the world, then we are too close to the ground, replace "tr" with a new position!
-		if tr_check1.Hit == true or (tr_check2.Hit == true && !tr_check2.Entity:IsNPC()) then
+		if tr_check1.Hit == true or (tr_check2.Hit == true && !(tr_check2.Entity:IsNPC() or tr_check2.Entity:IsNextBot())) then
 			if debug == true then print("Ground Hit!", tr_check1.HitPos:Distance(startPos)) end
 			//groundLimited = true
 			endPos.z = (tr_check1.Hit and myPos.z or endPos.z) + self.AA_GroundLimit

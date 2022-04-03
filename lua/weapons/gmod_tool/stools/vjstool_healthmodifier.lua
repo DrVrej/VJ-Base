@@ -73,14 +73,14 @@ function TOOL:LeftClick(tr)
 		local Ply = self:GetOwner()
 		local trent = tr.Entity
 		local canheal = true
-		if (trent:Health() != 0 or (trent:IsNPC() or trent:IsPlayer())) then
+		if (trent:Health() != 0 or ((trent:IsNPC() or trent:IsNextBot()) or trent:IsPlayer())) then
 			if trent:IsPlayer() && !Ply:IsAdmin() then
 				canheal = false
 			end
 			if canheal == true then
 				trent:SetHealth(self:GetClientNumber("health"))
 				Ply:ChatPrint("Set "..trent:GetClass().."'s health to "..self:GetClientNumber("health"))
-				if trent:IsNPC() then
+				if (trent:IsNPC() or trent:IsNextBot()) then
 					if self:GetClientNumber("godmode") == 1 then trent.GodMode = true else trent.GodMode = false end
 					if trent.IsVJBaseSNPC == true && self:GetClientNumber("healthregen") == 1 then
 						trent.HasHealthRegeneration = true
@@ -100,7 +100,7 @@ function TOOL:RightClick(tr)
 		local Ply = self:GetOwner()
 		local trent = tr.Entity
 		local canheal = true
-		if (trent:Health() != 0 or (trent:IsNPC() or trent:IsPlayer())) then
+		if (trent:Health() != 0 or ((trent:IsNPC() or trent:IsNextBot()) or trent:IsPlayer())) then
 			if trent:IsPlayer() && !Ply:IsAdmin() then
 				canheal = false
 			end
@@ -108,7 +108,7 @@ function TOOL:RightClick(tr)
 				trent:SetHealth(self:GetClientNumber("health"))
 				trent:SetMaxHealth(self:GetClientNumber("health"))
 				Ply:ChatPrint("Set "..trent:GetClass().."'s health and max health to "..self:GetClientNumber("health"))
-				if trent:IsNPC() then
+				if (trent:IsNPC() or trent:IsNextBot()) then
 					if self:GetClientNumber("godmode") == 1 then trent.GodMode = true else trent.GodMode = false end
 					if trent.IsVJBaseSNPC == true && self:GetClientNumber("healthregen") == 1 then
 						trent.HasHealthRegeneration = true
@@ -128,7 +128,7 @@ function TOOL:Reload(tr)
 		local Ply = self:GetOwner()
 		local trent = tr.Entity
 		local canheal = true
-		if (trent:Health() != 0 or (trent:IsNPC() or trent:IsPlayer())) then
+		if (trent:Health() != 0 or ((trent:IsNPC() or trent:IsNextBot()) or trent:IsPlayer())) then
 			if trent:IsPlayer() && !Ply:IsAdmin() then
 				canheal = false
 			end

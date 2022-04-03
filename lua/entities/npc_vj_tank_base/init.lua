@@ -175,7 +175,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_RunOver(ent)
 	if (!IsValid(ent)) or (GetConVar("vj_npc_nomelee"):GetInt() == 1 /*or self.HasMeleeAttack == false*/) or (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == ent) then return end
-	if self:Disposition(ent) == 1 && ent:Health() > 0 && self.Tank_IsMoving == true && (ent:IsNPC() && ent.VJ_IsHugeMonster != true && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && self.PlayerFriendly == false && GetConVar("ai_ignoreplayers"):GetInt() == 0) then
+	if self:Disposition(ent) == 1 && ent:Health() > 0 && self.Tank_IsMoving == true && ((ent:IsNPC() or ent:IsNextBot()) && ent.VJ_IsHugeMonster != true && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && self.PlayerFriendly == false && GetConVar("ai_ignoreplayers"):GetInt() == 0) then
 		self:Tank_CustomOnRunOver(ent)
 		self:Tank_Sound_RunOver()
 		ent:TakeDamage(self:VJ_GetDifficultyValue(8), self, self)

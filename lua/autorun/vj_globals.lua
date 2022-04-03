@@ -129,7 +129,7 @@ function VJ_FindInCone(pos, dir, dist, deg, extraOptions)
 	local foundEnts = {}
 	local cosDeg = math.cos(math.rad(deg))
 	for _,v in pairs(ents.FindInSphere(pos, dist)) do
-		if ((allEntities == true) or (allEntities == false && (v:IsNPC() or v:IsPlayer()))) && (dir:Dot((v:GetPos() - pos):GetNormalized()) > cosDeg) then
+		if ((allEntities == true) or (allEntities == false && ((v:IsNPC() or v:IsNextBot()) or v:IsPlayer()))) && (dir:Dot((v:GetPos() - pos):GetNormalized()) > cosDeg) then
 			foundEnts[#foundEnts + 1] = v
 		end
 	end
@@ -564,7 +564,7 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 			local EntsTbl = ents.GetAll()
 			for x = 1, #EntsTbl do
 				local v = EntsTbl[x]
-				if v:IsNPC() && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
+				if (v:IsNPC() or v:IsNextBot()) && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
 					v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = ply
 				end
 			end
@@ -584,7 +584,7 @@ end)
 local ignoreEnts = {monster_generic=true, monster_furniture=true, npc_furniture=true, monster_gman=true, npc_grenade_frag=true, bullseye_strider_focus=true, npc_bullseye=true, npc_enemyfinder=true, hornet=true}
 --
 hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(entity)
-	if CLIENT or !entity:IsNPC() then return end
+	if CLIENT or !(entity:IsNPC() or entity:IsNextBot()) then return end
 	if !ignoreEnts[entity:GetClass()] then
 		timer.Simple(0.1, function() -- Make sure the SNPC is initialized properly
 			if IsValid(entity) then
@@ -594,17 +594,17 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(entity)
 				local cvSeePlys = GetConVar("ai_ignoreplayers"):GetInt() == 0
 				for x = 1, #EntsTbl do
 					local v = EntsTbl[x]
-					if (v:IsNPC() or v:IsPlayer()) && !ignoreEnts[v:GetClass()] then
+					if ((v:IsNPC() or v:IsNextBot()) or v:IsPlayer()) && !ignoreEnts[v:GetClass()] then
 						-- Add enemies to the created entity (if it's a VJ Base SNPC)
 						if entity.IsVJBaseSNPC == true then
 							entity:EntitiesToNoCollideCode(v)
-							if (v:IsNPC() && (v:GetClass() != entity:GetClass() && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && cvSeePlys /*&& v:Alive()*/) then
+							if ((v:IsNPC() or v:IsNextBot()) && (v:GetClass() != entity:GetClass() && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && cvSeePlys /*&& v:Alive()*/) then
 								entity.CurrentPossibleEnemies[count] = v
 								count = count + 1
 							end
 						end
 						-- Add the created entity to the list of possible enemies of VJ Base SNPCs
-						if v != entity && entity:GetClass() != v:GetClass() && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) && (entity:IsNPC() && entity:Health() > 0 && (entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) or (entity:IsPlayer()) then
+						if v != entity && entity:GetClass() != v:GetClass() && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) && ((entity:IsNPC() or entity:IsNextBot()) && entity:Health() > 0 && (entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) or (entity:IsPlayer()) then
 							v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = entity //v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
 						end
 					end
@@ -631,7 +631,7 @@ hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 	local ent = data.Entity
 	if IsValid(ent) then
 		-- Investigate System
-		if SERVER && (ent:IsPlayer() or ent:IsNPC()) && data.SoundLevel >= 75 then
+		if SERVER && (ent:IsPlayer() or (ent:IsNPC() or ent:IsNextBot())) && data.SoundLevel >= 75 then
 			//print("---------------------------")
 			//PrintTable(data)
 			local quiet = (string_StartWith(data.OriginalSoundName, "player/footsteps") and (ent:IsPlayer() && (ent:Crouching() or ent:KeyDown(IN_WALK)))) or false
@@ -641,14 +641,14 @@ hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 			end
 		-- Disable the built-in footstep sounds for the player footstep sound for VJ NPCs unless specified otherwise
 			-- Plays only on client-side, making it useless to play material-specific
-		elseif ent:IsNPC() && ent.IsVJBaseSNPC == true && (string.EndsWith(data.OriginalSoundName, "stepleft") or string.EndsWith(data.OriginalSoundName, "stepright")) then
+		elseif (ent:IsNPC() or ent:IsNextBot()) && ent.IsVJBaseSNPC == true && (string.EndsWith(data.OriginalSoundName, "stepleft") or string.EndsWith(data.OriginalSoundName, "stepright")) then
 			return ent:MatFootStepQCEvent(data)
 		end
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("EntityFireBullets", "VJ_NPC_FIREBULLET", function(ent, data)
-	if IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC == true then
+	if IsValid(ent) && (ent:IsNPC() or ent:IsNextBot()) && ent.IsVJBaseSNPC == true then
 		local wep = ent:GetActiveWeapon()
 		local ene = ent:GetEnemy()
 		local edited = false
@@ -684,7 +684,7 @@ end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("EntityTakeDamage", "VJ_EntityTakeDamage", function(target, dmginfo)
 	local attacker = dmginfo:GetAttacker()
-	if IsValid(target) && IsValid(attacker) && target.IsVJBaseSNPC == true && attacker:IsNPC() && dmginfo:IsBulletDamage() && attacker:Disposition(target) != D_HT && (attacker:GetClass() == target:GetClass() or target:Disposition(attacker) == D_LI /*or target:Disposition(attacker) == 4*/) then
+	if IsValid(target) && IsValid(attacker) && target.IsVJBaseSNPC == true && (attacker:IsNPC() or attacker:IsNextBot()) && dmginfo:IsBulletDamage() && attacker:Disposition(target) != D_HT && (attacker:GetClass() == target:GetClass() or target:Disposition(attacker) == D_LI /*or target:Disposition(attacker) == 4*/) then
 		dmginfo:SetDamage(0)
 	end
 end)
@@ -770,7 +770,7 @@ cvars.AddChangeCallback("ai_ignoreplayers", function(convar_name, oldValue, newV
 		local getall = ents.GetAll()
 		for x = 1, #getall do
 			local v = getall[x]
-			if v:IsNPC() && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
+			if (v:IsNPC() or v:IsNextBot()) && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
 				for _, ply in pairs(getplys) do
 					v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = ply
 				end

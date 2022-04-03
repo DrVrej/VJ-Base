@@ -48,7 +48,7 @@ end
 function ENT:CustomOnPhysicsCollide(data, phys)
 	if IsValid(data.HitEntity) then
 		self.SoundTbl_OnCollide = {"weapons/crossbow/hitbod1.wav","weapons/crossbow/hitbod2.wav"} // weapons/crossbow/bolt_skewer1.wav
-		if data.HitEntity:IsNPC() && data.HitEntity:GetHullType() == HULL_TINY then
+		if (data.HitEntity:IsNPC() or data.HitEntity:IsNextBot()) && data.HitEntity:GetHullType() == HULL_TINY then
 			data.HitEntity:Ignite(3)
 		end
 	else

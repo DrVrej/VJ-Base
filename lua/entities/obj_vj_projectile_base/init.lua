@@ -168,9 +168,9 @@ function ENT:DoDamageCode(data, phys)
 	
 	if self.DoesDirectDamage == true then
 		hitEnt = data.HitEntity
-		//if hitEnt:IsNPC() or hitEnt:IsPlayer() then
+		//if (hitEnt:IsNPC() or hitEnt:IsNextBot()) or hitEnt:IsPlayer() then
 		if IsValid(owner) then
-			if (VJ_IsProp(hitEnt)) or (hitEnt:IsNPC() && (hitEnt:Disposition(owner) == D_HT or hitEnt:Disposition(owner) == D_FR) && hitEnt:Health() > 0 && (hitEnt != owner) && (hitEnt:GetClass() != owner:GetClass())) or (hitEnt:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0 && hitEnt:Alive() && hitEnt:Health() > 0) then
+			if (VJ_IsProp(hitEnt)) or ((hitEnt:IsNPC() or hitEnt:IsNextBot()) && (hitEnt:Disposition(owner) == D_HT or hitEnt:Disposition(owner) == D_FR) && hitEnt:Health() > 0 && (hitEnt != owner) && (hitEnt:GetClass() != owner:GetClass())) or (hitEnt:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0 && hitEnt:Alive() && hitEnt:Health() > 0) then
 				self:CustomOnDoDamage_Direct(data, phys, hitEnt)
 				local damagecode = DamageInfo()
 				damagecode:SetDamage(self.DirectDamage)

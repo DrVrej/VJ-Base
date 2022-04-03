@@ -2022,7 +2022,7 @@ function ENT:Think()
 		//if self.CanOpenDoors && IsValid(blockingEnt) && (blockingEnt:GetClass() == "func_door" or blockingEnt:GetClass() == "func_door_rotating") && (blockingEnt:HasSpawnFlags(256) or blockingEnt:HasSpawnFlags(1024)) && !blockingEnt:HasSpawnFlags(512) then
 			//blockingEnt:Fire("Open")
 		//end
-		if (curSched.StopScheduleIfNotMoving == true or curSched.StopScheduleIfNotMoving_Any == true) && (!self:IsMoving() or (IsValid(blockingEnt) && (blockingEnt:IsNPC() or curSched.StopScheduleIfNotMoving_Any == true))) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
+		if (curSched.StopScheduleIfNotMoving == true or curSched.StopScheduleIfNotMoving_Any == true) && (!self:IsMoving() or (IsValid(blockingEnt) && ((blockingEnt:IsNPC() or blockingEnt:IsNextBot()) or curSched.StopScheduleIfNotMoving_Any == true))) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
 			self:ScheduleFinished(curSched)
 			//self:SetCondition(35)
 			//self:StopMoving()
@@ -2454,10 +2454,10 @@ function ENT:MeleeAttackCode()
 	if FindEnts != nil then
 		for _,v in pairs(FindEnts) do
 			if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
-			if (v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or (v:GetClass() == "prop_physics") or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" && (self:GetSightDirection():Dot((v:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackDamageAngleRadius))) then
+			if ((v:IsNPC() or v:IsNextBot()) or (v:IsPlayer() && v:Alive() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or (v:GetClass() == "prop_physics") or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" && (self:GetSightDirection():Dot((v:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackDamageAngleRadius))) then
 				local doactualdmg = DamageInfo()
 				doactualdmg:SetDamage(self:VJ_GetDifficultyValue(self.MeleeAttackDamage))
-				if v:IsNPC() or v:IsPlayer() then doactualdmg:SetDamageForce(self:GetForward()*((doactualdmg:GetDamage()+100)*70)) end
+				if (v:IsNPC() or v:IsNextBot()) or v:IsPlayer() then doactualdmg:SetDamageForce(self:GetForward()*((doactualdmg:GetDamage()+100)*70)) end
 				doactualdmg:SetInflictor(self)
 				doactualdmg:SetAttacker(self)
 				v:TakeDamageInfo(doactualdmg, self)
@@ -2909,12 +2909,12 @@ function ENT:SelectSchedule()
 							//print("Is covered? ", cover_npc)
 							//print("Is gun covered? ", cover_wep)
 							local cover_npc_isObj = true -- The covered entity is NOT an NPC / Player
-							if cover_npc == false or (IsValid(cover_npc_ent) and (cover_npc_ent:IsNPC() or cover_npc_ent:IsPlayer())) then
+							if cover_npc == false or (IsValid(cover_npc_ent) and ((cover_npc_ent:IsNPC() or cover_npc_ent:IsNextBot()) or cover_npc_ent:IsPlayer())) then
 								cover_npc_isObj = false
 							end
 							if !wep.IsMeleeWeapon then
 								-- If friendly in line of fire, then move!
-								if !cover_npc_isObj && self.DoingWeaponAttack_Standing == true && CurTime() > self.TakingCoverT && IsValid(cover_wep_ent) && cover_wep_ent:IsNPC() && cover_wep_ent != self && (self:Disposition(cover_wep_ent) == D_LI or self:Disposition(cover_wep_ent) == D_NU) && cover_wep_tr.HitPos:Distance(cover_wep_tr.StartPos) <= 3000 then
+								if !cover_npc_isObj && self.DoingWeaponAttack_Standing == true && CurTime() > self.TakingCoverT && IsValid(cover_wep_ent) && (cover_wep_ent:IsNPC() or cover_wep_ent:IsNextBot()) && cover_wep_ent != self && (self:Disposition(cover_wep_ent) == D_LI or self:Disposition(cover_wep_ent) == D_NU) && cover_wep_tr.HitPos:Distance(cover_wep_tr.StartPos) <= 3000 then
 									local moveCheck = VJ_PICK(self:VJ_CheckAllFourSides(50, true, "0011"))
 									if moveCheck then
 										self:StopMoving()
@@ -2931,7 +2931,7 @@ function ENT:SelectSchedule()
 									-- Behind cover and I am taking cover, don't fire!
 									if CurTime() < self.TakingCoverT then
 										noAttack = true
-									elseif CurTime() > self.NextMoveOnGunCoveredT && ((cover_npc_tr.HitPos:Distance(myPos) > 150 && cover_npc_isObj == true) or (cover_wep == true && !cover_wep_ent:IsNPC() && !cover_wep_ent:IsPlayer())) then
+									elseif CurTime() > self.NextMoveOnGunCoveredT && ((cover_npc_tr.HitPos:Distance(myPos) > 150 && cover_npc_isObj == true) or (cover_wep == true && !(cover_wep_ent:IsNPC() or cover_wep_ent:IsNextBot()) && !cover_wep_ent:IsPlayer())) then
 										local nearestPos;
 										local enePos;
 										if IsValid(cover_npc_ent) then

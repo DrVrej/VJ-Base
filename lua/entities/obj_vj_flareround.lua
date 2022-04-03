@@ -114,7 +114,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, physobj)
 	local hitEnt = data.HitEntity
-	if IsValid(hitEnt) && (hitEnt:IsNPC() or hitEnt:IsPlayer()) then
+	if IsValid(hitEnt) && ((hitEnt:IsNPC() or hitEnt:IsNextBot()) or hitEnt:IsPlayer()) then
 		//hitEnt:Ignite(1)
 		local dmg = DamageInfo()
 		dmg:SetDamage(math.random(4, 8))

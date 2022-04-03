@@ -103,7 +103,7 @@ function ENT:OnTakeDamage(dmginfo)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
-	if (IsValid(entity) && entity:GetPos():Distance(self:GetPos()) <= 38 && self.FirePlaceOn == true) && (entity:IsNPC() or entity:IsPlayer()) then
+	if (IsValid(entity) && entity:GetPos():Distance(self:GetPos()) <= 38 && self.FirePlaceOn == true) && ((entity:IsNPC() or entity:IsNextBot()) or entity:IsPlayer()) then
 		entity:Ignite(math.Rand(3,5))
 	end
 end

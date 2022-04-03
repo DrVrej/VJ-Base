@@ -77,7 +77,7 @@ end
 function ENT:Think()
 	if self.EnemyToIndividual == true then
 		self:AddFlags(FL_NOTARGET)
-		if IsValid(self.EnemyToIndividualEnt) && self.EnemyToIndividualEnt:IsNPC() then
+		if IsValid(self.EnemyToIndividualEnt) && (self.EnemyToIndividualEnt:IsNPC() or self.EnemyToIndividualEnt:IsNextBot()) then
 			self.EnemyToIndividualEnt:AddEntityRelationship(self,D_HT,99)
 			self:AddEntityRelationship(self.EnemyToIndividualEnt,D_HT,99)
 			if self.EnemyToIndividualEnt.IsVJBaseSNPC then
