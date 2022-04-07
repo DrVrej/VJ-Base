@@ -263,7 +263,7 @@ function ENT:GetState()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Checks the relationship with the given entity. Use with caution, it can cause reduce performance!
+	Checks the relationship with the given entity. Use with caution, it can reduce performance!
 		- ent = The entity to check its relation with
 	Returns
 		- false, Entity is friendly
@@ -278,7 +278,7 @@ function ENT:DoRelationshipCheck(ent)
 		if ent:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 1 then return "Neutral" end
 		if VJ_HasValue(self.VJ_AddCertainEntityAsFriendly, ent) then return false end
 		if VJ_HasValue(self.VJ_AddCertainEntityAsEnemy, ent) then return true end
-		if (ent:IsNPC() && !ent.FriendlyToVJSNPCs && ((ent:Disposition(self) == D_HT) or (ent:Disposition(self) == D_NU && ent.VJ_IsBeingControlled == true))) or (ent:IsPlayer() && self.PlayerFriendly == false && ent:Alive()) then
+		if (ent:IsNPC() && ((ent:Disposition(self) == D_HT) or (ent:Disposition(self) == D_NU && ent.VJ_IsBeingControlled == true))) or (ent:IsPlayer() && self.PlayerFriendly == false && ent:Alive()) then
 			return true
 		else
 			return "Neutral"

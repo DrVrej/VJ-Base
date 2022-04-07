@@ -2690,6 +2690,24 @@ function ENT:ThrowGrenadeCode(customEnt, noOwner)
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+3 types of danger detections:
+- ent.VJ_IsDetectableGrenade
+	- Detected as a grenade
+	- Distance based on self.DangerDetectionDistance
+	- Ignores grenades from allies
+	- BEST USE: Grenade type of entities
+- ent.VJ_IsDetectableDanger
+	- Detected as a danger
+	- Distance based on self.DangerDetectionDistance
+	- Ignores dangers from allies
+	- BEST USE: Entities that should NOT scare the owner's allies, commonly used for projectiles
+- sound.EmitHint
+	- Detected as a danger
+	- Distance based on the sound hint's volume/distance
+	- Does NOT ignore, is detected by everyone that catches the hint, including allies
+	- BEST USE: Sounds that should scare the owner's allies
+-----------------------------------------------------------]]
 function ENT:CheckForDangers()
 	if !self.CanDetectDangers or self.AttackType == VJ_ATTACK_GRENADE or self.NextDangerDetectionT > CurTime() or self.VJ_IsBeingControlled then return end
 	local regDangerDetected = false -- A regular non-grenade danger has been found (This is done to make sure grenades take priority over other dangers!)
