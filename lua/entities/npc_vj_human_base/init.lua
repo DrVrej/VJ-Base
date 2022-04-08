@@ -161,7 +161,6 @@ ENT.TimeUntilEnemyLost = 15 -- Time until it resets its enemy if the enemy is no
 ENT.NextProcessTime = 1 -- Time until it runs the essential part of the AI, which can be performance heavy!
 	-- ====== Miscellaneous Variables ====== --
 ENT.DisableInitializeCapabilities = false -- If enabled, all of the Capabilities will be disabled, allowing you to add your own
-ENT.AttackTimersCustom = {}
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Damaged / Injured Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1107,7 +1106,7 @@ function ENT:Initialize()
 	self.NextThrowGrenadeT = CurTime() + math.Rand(1, 5)
 	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.3, 6)
 	self.UseTheSameGeneralSoundPitch_PickedNumber = (self.UseTheSameGeneralSoundPitch and math.random(self.GeneralSoundPitch1, self.GeneralSoundPitch2)) or 0
-	self:SetupBloodColor()
+	self:SetupBloodColor(self.BloodColor)
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
 		self.DisableWeapons = true
 		self.Weapon_NoSpawnMenu = true
@@ -1186,8 +1185,8 @@ end
 ENT.MeleeAttacking = false
 ENT.ThrowingGrenade = false
 function ENT:CustomInitialize() end
-function ENT:SetNearestPointToEntityPosition() self:GetDynamicOrigin() end
-function ENT:SetMeleeAttackDamagePosition() self:GetMeleeAttackDamageOrigin() end
+function ENT:SetNearestPointToEntityPosition() return self:GetDynamicOrigin() end
+function ENT:SetMeleeAttackDamagePosition() return self:GetMeleeAttackDamageOrigin() end
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetInitializeCapabilities()
@@ -2892,12 +2891,17 @@ function ENT:SelectSchedule()
 			-- Check for weapon validity
 			if !IsValid(wep) then
 				-- Scared behavior system
-				if self.NoWeapon_UseScaredBehavior == true && !self:IsBusy() && CurTime() > self.NextChaseTime then
-					self.NoWeapon_UseScaredBehavior_Active = true -- Tells the idle system to use the scared behavior animation
-					if self.FollowingPlayer == false && self.LastEnemyVisible then
-						self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
-						return
+				if self.NoWeapon_UseScaredBehavior then
+					if !self:IsBusy() && CurTime() > self.NextChaseTime then
+						self.NoWeapon_UseScaredBehavior_Active = true -- Tells the idle system to use the scared behavior animation
+						if self.FollowingPlayer == false && self.LastEnemyVisible then
+							self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
+							return
+						end
 					end
+				elseif self.HasMeleeAttack then -- If it doesn't do scared behavior, then make it chase the enemy if it can melee!
+					self:DoChaseAnimation()
+					return
 				end
 				self:DoIdleAnimation(2)
 				return
@@ -3492,7 +3496,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	
 	self.Dead = true
 	if self.FollowingPlayer == true then self:FollowPlayerReset() end
-	self:RemoveAttackTimers()
+	self:RemoveTimers()
 	self.AttackType = VJ_ATTACK_NONE
 	self.MeleeAttacking = false
 	self.HasMeleeAttack = false

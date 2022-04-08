@@ -1053,6 +1053,7 @@ function ENT:DoEntityRelationshipCheck()
 				if self.HasAllies == true && inEneTbl == false then
 					for _,friClass in ipairs(self.VJ_NPC_Class) do
 						if friClass == varCPly && self.PlayerFriendly == false then self.PlayerFriendly = true end -- If player ally then set the PlayerFriendly to true
+						-- Handle common class types
 						if (friClass == varCCom && NPCTbl_Combine[vClass]) or (friClass == varCZom && NPCTbl_Zombies[vClass]) or (friClass == varCAnt && NPCTbl_Antlions[vClass]) or (friClass == varCXen && NPCTbl_Xen[vClass]) then
 							v:AddEntityRelationship(self, D_LI, 99)
 							self:AddEntityRelationship(v, D_LI, 99)
@@ -1193,7 +1194,6 @@ function ENT:DoEntityRelationshipCheck()
 						self.TakingCoverT = CurTime() + 0.2
 					end
 				end
-				
 				-- HasOnPlayerSight system, used to do certain actions when it sees the player
 				if self.HasOnPlayerSight == true && v:Alive() &&(CurTime() > self.OnPlayerSightNextT) && (vDistanceToMy < self.OnPlayerSightDistance) && self:Visible(v) && (mySDir:Dot((v:GetPos() - myPos):GetNormalized()) > mySAng) then
 					-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
@@ -1419,20 +1419,24 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
--- self.CurrentChoosenBlood_Particle, self.CurrentChoosenBlood_Decal, self.CurrentChoosenBlood_Pool = {}
-function ENT:SetupBloodColor()
-	local Type = self.BloodColor
-	if Type == "" then return end
-	if Type == "Red" then
-		if VJ_PICK(self.CustomBlood_Particle) == false then self.CustomBlood_Particle = {"blood_impact_red_01"} end // vj_impact1_red
-		if VJ_PICK(self.CustomBlood_Decal) == false then
+--[[---------------------------------------------------------
+	Sets the blood color including damage particle, decal and blood pool
+		- blColor = The blood color to set it to
+-----------------------------------------------------------]]
+-- self.CurrentChoosenBlood_Particle, self.CurrentChoosenBlood_Decal, self.CurrentChoosenBlood_Pool
+function ENT:SetupBloodColor(blColor)
+	blColor = blColor or ""
+	if blColor == "" then return end -- If it's empty then return
+	if blColor == "Red" then
+		if !VJ_PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"blood_impact_red_01"} end // vj_impact1_red
+		if !VJ_PICK(self.CustomBlood_Decal) then
 			if self.BloodDecalUseGMod == true then
 				self.CustomBlood_Decal = {"Blood"}
 			else
 				self.CustomBlood_Decal = {"VJ_Blood_Red"}
 			end
 		end
-		if VJ_PICK(self.CustomBlood_Pool) == false then
+		if !VJ_PICK(self.CustomBlood_Pool) then
 			if self.BloodPoolSize == "Small" then
 				self.CustomBlood_Pool = {"vj_bleedout_red_small"}
 			elseif self.BloodPoolSize == "Tiny" then
@@ -1441,16 +1445,16 @@ function ENT:SetupBloodColor()
 				self.CustomBlood_Pool = {"vj_bleedout_red"}
 			end
 		end
-	elseif Type == "Yellow" then
-		if VJ_PICK(self.CustomBlood_Particle) == false then self.CustomBlood_Particle = {"blood_impact_yellow_01"} end // vj_impact1_yellow
-		if VJ_PICK(self.CustomBlood_Decal) == false then
+	elseif blColor == "Yellow" then
+		if !VJ_PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"blood_impact_yellow_01"} end // vj_impact1_yellow
+		if !VJ_PICK(self.CustomBlood_Decal) then
 			if self.BloodDecalUseGMod == true then
 				self.CustomBlood_Decal = {"YellowBlood"}
 			else
 				self.CustomBlood_Decal = {"VJ_Blood_Yellow"}
 			end
 		end
-		if VJ_PICK(self.CustomBlood_Pool) == false then
+		if !VJ_PICK(self.CustomBlood_Pool) then
 			if self.BloodPoolSize == "Small" then
 				self.CustomBlood_Pool = {"vj_bleedout_yellow_small"}
 			elseif self.BloodPoolSize == "Tiny" then
@@ -1459,10 +1463,10 @@ function ENT:SetupBloodColor()
 				self.CustomBlood_Pool = {"vj_bleedout_yellow"}
 			end
 		end
-	elseif Type == "Green" then
-		if VJ_PICK(self.CustomBlood_Particle) == false then self.CustomBlood_Particle = {"vj_impact1_green"} end
-		if VJ_PICK(self.CustomBlood_Decal) == false then self.CustomBlood_Decal = {"VJ_Blood_Green"} end
-		if VJ_PICK(self.CustomBlood_Pool) == false then
+	elseif blColor == "Green" then
+		if !VJ_PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_green"} end
+		if !VJ_PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Green"} end
+		if !VJ_PICK(self.CustomBlood_Pool) then
 			if self.BloodPoolSize == "Small" then
 				self.CustomBlood_Pool = {"vj_bleedout_green_small"}
 			elseif self.BloodPoolSize == "Tiny" then
@@ -1471,10 +1475,10 @@ function ENT:SetupBloodColor()
 				self.CustomBlood_Pool = {"vj_bleedout_green"}
 			end
 		end
-	elseif Type == "Orange" then
-		if VJ_PICK(self.CustomBlood_Particle) == false then self.CustomBlood_Particle = {"vj_impact1_orange"} end
-		if VJ_PICK(self.CustomBlood_Decal) == false then self.CustomBlood_Decal = {"VJ_Blood_Orange"} end
-		if VJ_PICK(self.CustomBlood_Pool) == false then
+	elseif blColor == "Orange" then
+		if !VJ_PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_orange"} end
+		if !VJ_PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Orange"} end
+		if !VJ_PICK(self.CustomBlood_Pool) then
 			if self.BloodPoolSize == "Small" then
 				self.CustomBlood_Pool = {"vj_bleedout_orange_small"}
 			elseif self.BloodPoolSize == "Tiny" then
@@ -1483,10 +1487,10 @@ function ENT:SetupBloodColor()
 				self.CustomBlood_Pool = {"vj_bleedout_orange"}
 			end
 		end
-	elseif Type == "Blue" then
-		if VJ_PICK(self.CustomBlood_Particle) == false then self.CustomBlood_Particle = {"vj_impact1_blue"} end
-		if VJ_PICK(self.CustomBlood_Decal) == false then self.CustomBlood_Decal = {"VJ_Blood_Blue"} end
-		if VJ_PICK(self.CustomBlood_Pool) == false then
+	elseif blColor == "Blue" then
+		if !VJ_PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_blue"} end
+		if !VJ_PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Blue"} end
+		if !VJ_PICK(self.CustomBlood_Pool) then
 			if self.BloodPoolSize == "Small" then
 				self.CustomBlood_Pool = {"vj_bleedout_blue_small"}
 			elseif self.BloodPoolSize == "Tiny" then
@@ -1495,10 +1499,10 @@ function ENT:SetupBloodColor()
 				self.CustomBlood_Pool = {"vj_bleedout_blue"}
 			end
 		end
-	elseif Type == "Purple" then
-		if VJ_PICK(self.CustomBlood_Particle) == false then self.CustomBlood_Particle = {"vj_impact1_purple"} end
-		if VJ_PICK(self.CustomBlood_Decal) == false then self.CustomBlood_Decal = {"VJ_Blood_Purple"} end
-		if VJ_PICK(self.CustomBlood_Pool) == false then
+	elseif blColor == "Purple" then
+		if !VJ_PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_purple"} end
+		if !VJ_PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Purple"} end
+		if !VJ_PICK(self.CustomBlood_Pool) then
 			if self.BloodPoolSize == "Small" then
 				self.CustomBlood_Pool = {"vj_bleedout_purple_small"}
 			elseif self.BloodPoolSize == "Tiny" then
@@ -1507,10 +1511,10 @@ function ENT:SetupBloodColor()
 				self.CustomBlood_Pool = {"vj_bleedout_purple"}
 			end
 		end
-	elseif Type == "White" then
-		if VJ_PICK(self.CustomBlood_Particle) == false then self.CustomBlood_Particle = {"vj_impact1_white"} end
-		if VJ_PICK(self.CustomBlood_Decal) == false then self.CustomBlood_Decal = {"VJ_Blood_White"} end
-		if VJ_PICK(self.CustomBlood_Pool) == false then
+	elseif blColor == "White" then
+		if !VJ_PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_white"} end
+		if !VJ_PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_White"} end
+		if !VJ_PICK(self.CustomBlood_Pool) then
 			if self.BloodPoolSize == "Small" then
 				self.CustomBlood_Pool = {"vj_bleedout_white_small"}
 			elseif self.BloodPoolSize == "Tiny" then
@@ -1519,10 +1523,10 @@ function ENT:SetupBloodColor()
 				self.CustomBlood_Pool = {"vj_bleedout_white"}
 			end
 		end
-	elseif Type == "Oil" then
-		if VJ_PICK(self.CustomBlood_Particle) == false then self.CustomBlood_Particle = {"vj_impact1_black"} end
-		if VJ_PICK(self.CustomBlood_Decal) == false then self.CustomBlood_Decal = {"VJ_Blood_Oil"} end
-		if VJ_PICK(self.CustomBlood_Pool) == false then
+	elseif blColor == "Oil" then
+		if !VJ_PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_black"} end
+		if !VJ_PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Oil"} end
+		if !VJ_PICK(self.CustomBlood_Pool) then
 			if self.BloodPoolSize == "Small" then
 				self.CustomBlood_Pool = {"vj_bleedout_oil_small"}
 			elseif self.BloodPoolSize == "Tiny" then
@@ -1563,14 +1567,14 @@ function ENT:SpawnBloodDecal(dmginfo, hitgroup)
 	local trNormalN = tr.HitPos - tr.HitNormal
 	util.Decal(VJ_PICK(self.CustomBlood_Decal), trNormalP, trNormalN, self)
 	for _ = 1, 2 do
-		if math.random(1,2) == 1 then util.Decal(VJ_PICK(self.CustomBlood_Decal), trNormalP + Vector(math.random(-70,70), math.random(-70,70), 0), trNormalN, self) end
+		if math.random(1, 2) == 1 then util.Decal(VJ_PICK(self.CustomBlood_Decal), trNormalP + Vector(math.random(-70,70), math.random(-70,70), 0), trNormalN, self) end
 	end
 	
 	-- Kedni ayroun
 	if math.random(1,2) == 1 then
 		local d2_endpos = pos + Vector(0, 0, -math.Clamp(force:Length() * 10, 100, self.BloodDecalDistance))
 		util.Decal(VJ_PICK(self.CustomBlood_Decal), pos, d2_endpos, self)
-		if math.random(1,2) == 1 then util.Decal(VJ_PICK(self.CustomBlood_Decal), pos, d2_endpos + Vector(math.random(-120,120), math.random(-120,120), 0), self) end
+		if math.random(1, 2) == 1 then util.Decal(VJ_PICK(self.CustomBlood_Decal), pos, d2_endpos + Vector(math.random(-120,120), math.random(-120,120), 0), self) end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1584,13 +1588,13 @@ function ENT:SpawnBloodPool(dmginfo, hitgroup)
 	if getBloodPool == false then return end
 	timer.Simple(2.2, function()
 		if IsValid(corpseEnt) then
+			local pos = corpseEnt:GetPos() + corpseEnt:OBBCenter()
 			local tr = util.TraceLine({
-				start = corpseEnt:GetPos() + corpseEnt:OBBCenter(),
-				endpos = corpseEnt:GetPos() + corpseEnt:OBBCenter() - vecZ30,
+				start = pos,
+				endpos = pos - vecZ30,
 				filter = corpseEnt, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
 				mask = CONTENTS_SOLID
 			})
-			-- (X,Y,Z) | (Ver, Var, Goghme)
 			if tr.HitWorld && (tr.HitNormal == vecZ1) then // (tr.Fraction <= 0.405)
 				ParticleEffect(getBloodPool, tr.HitPos, defAng, nil)
 			end
@@ -1598,7 +1602,7 @@ function ENT:SpawnBloodPool(dmginfo, hitgroup)
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:IdleSoundCode(CustomTbl,Type)
+function ENT:IdleSoundCode(CustomTbl, Type)
 	if self.HasSounds == false or self.HasIdleSounds == false or self.Dead == true then return end
 	if (self.NextIdleSoundT_RegularChange < CurTime()) && (CurTime() > self.NextIdleSoundT) then
 		Type = Type or VJ_CreateSound
@@ -1719,13 +1723,15 @@ function ENT:IdleDialogueAnswerSoundCode(CustomTbl, Type)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RemoveAttackTimers()
+function ENT:RemoveTimers()
 	local myIndex = self:EntIndex()
 	for _,v in ipairs(self.TimersToRemove) do
 		timer.Remove(v .. myIndex)
 	end
-	for _,v in ipairs(self.AttackTimersCustom) do
-		timer.Remove(v .. myIndex)
+	if self.AttackTimersCustom then -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
+		for _,v in ipairs(self.AttackTimersCustom) do
+			timer.Remove(v .. myIndex)
+		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1823,10 +1829,9 @@ end
 function ENT:OnRemove()
 	self:CustomOnRemove()
 	self.Dead = true
-	
 	if self.Medic_IsHealingAlly == true then self:DoMedicReset() end
+	self:RemoveTimers()
 	self:StopAllCommonSounds()
-	self:RemoveAttackTimers()
 	self:StopParticles()
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
