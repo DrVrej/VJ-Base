@@ -185,7 +185,6 @@ ENT.TimeUntilEnemyLost = 15 -- Time until it resets its enemy if the enemy is no
 ENT.NextProcessTime = 1 -- Time until it runs the essential part of the AI, which can be performance heavy!
 	-- ====== Miscellaneous Variables ====== --
 ENT.DisableInitializeCapabilities = false -- If enabled, all of the Capabilities will be disabled, allowing you to add your own
-ENT.AttackTimersCustom = {}
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Damaged / Injured Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1088,7 +1087,7 @@ function ENT:Initialize()
 	self.CurrentPossibleEnemies = {}
 	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.3, 6)
 	self.UseTheSameGeneralSoundPitch_PickedNumber = (self.UseTheSameGeneralSoundPitch and math.random(self.GeneralSoundPitch1, self.GeneralSoundPitch2)) or 0
-	self:SetupBloodColor()
+	self:SetupBloodColor(self.BloodColor)
 	if self.DisableInitializeCapabilities == false then self:SetInitializeCapabilities() end
 	self:SetHealth((GetConVar("vj_npc_allhealth"):GetInt() > 0) and GetConVar("vj_npc_allhealth"):GetInt() or self:VJ_GetDifficultyValue(self.StartHealth))
 	self.StartHealth = self:Health()
@@ -1132,8 +1131,8 @@ ENT.MeleeAttacking = false
 ENT.RangeAttacking = false
 ENT.LeapAttacking = false
 function ENT:CustomInitialize() end
-function ENT:SetNearestPointToEntityPosition() self:GetDynamicOrigin() end
-function ENT:SetMeleeAttackDamagePosition() self:GetMeleeAttackDamageOrigin() end
+function ENT:SetNearestPointToEntityPosition() return self:GetDynamicOrigin() end
+function ENT:SetMeleeAttackDamagePosition() return self:GetMeleeAttackDamageOrigin() end
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetInitializeCapabilities()
@@ -2840,7 +2839,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	
 	self.Dead = true
 	if self.FollowingPlayer == true then self:FollowPlayerReset() end
-	self:RemoveAttackTimers()
+	self:RemoveTimers()
 	self.AttackType = VJ_ATTACK_NONE
 	self.MeleeAttacking = false
 	self.RangeAttacking = false
