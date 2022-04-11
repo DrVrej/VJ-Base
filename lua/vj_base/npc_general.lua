@@ -219,7 +219,7 @@ end
 		- true, Busy
 -----------------------------------------------------------]]
 function ENT:IsBusyWithBehavior()
-	return self.FollowPlayer_GoingAfter == true or self.Medic_IsHealingAlly == true
+	return self.FollowData.Moving == true or self.Medic_IsHealingAlly == true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -699,7 +699,9 @@ function ENT:AcceptInput(key, activator, caller, data)
 	//print(self, key, activator, caller, data)
 	self:CustomOnAcceptInput(key, activator, caller, data)
 	if key == "Use" then
-		self:FollowPlayerCode(key, activator, caller, data)
+		if self.FollowPlayer then
+			self:Follow(activator, true)
+		end
 	elseif key == "StartScripting" then
 		self:SetState(VJ_STATE_FREEZE)
 	elseif key == "StopScripting" then
@@ -743,84 +745,109 @@ function ENT:Touch(entity)
 			self:PlaySoundSystem("Alert")
 			self.TakingCoverT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
 		end
-	elseif self.DisableTouchFindEnemy == false && !IsValid(self:GetEnemy()) && self.FollowingPlayer == false && (entity:IsNPC() or (entity:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:DoRelationshipCheck(entity) != false then
+	elseif self.DisableTouchFindEnemy == false && !IsValid(self:GetEnemy()) && self.IsFollowing == false && (entity:IsNPC() or (entity:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:DoRelationshipCheck(entity) != false then
 		self:StopMoving()
 		self:SetTarget(entity)
 		self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:FollowPlayerReset()
-	if self.AllowPrintingInChat == true && IsValid(self.FollowPlayer_Entity) then
+--[[---------------------------------------------------------
+	Resets the following system
+-----------------------------------------------------------]]
+function ENT:DoFollowReset()
+	local followData = self.FollowData
+	local followEnt = followData.Ent
+	if IsValid(followEnt) && followEnt:IsPlayer() && self.AllowPrintingInChat then
 		if self.Dead == true then
-			self.FollowPlayer_Entity:PrintMessage(HUD_PRINTTALK, self:GetName().." has been killed.")
+			followEnt:PrintMessage(HUD_PRINTTALK, self:GetName().." has been killed.")
 		else
-			self.FollowPlayer_Entity:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.")
+			followEnt:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.")
 		end
 	end
+	self.IsFollowing = false
 	self.FollowingPlayer = false
-	self.FollowPlayer_GoingAfter = false
-	self.FollowPlayer_Entity = NULL
+	followData.Ent = NULL -- Need to recall it here because localized can't update the table
+	followData.MinDist = 0
+	followData.Moving = false
+	followData.StopAct = false
+	followData.IsLiving = false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:FollowPlayerCode(key, activator, caller, data)
-	if self.Dead == true or self.FollowPlayer == false or GetConVar("ai_disabled"):GetInt() == 1 or GetConVar("ai_ignoreplayers"):GetInt() == 1 then return end
+--[[---------------------------------------------------------
+	Attempts to start following an entity, if it's already following another entity, it will return false!
+		- ent = Entity to follow
+		- stopIfFollowing = If true, it will stop following if it's already following the same entity
+	Returns
+		- true, successfully started following the entity
+		- false, failed or stopped following the entity
+-----------------------------------------------------------]]
+function ENT:Follow(ent, stopIfFollowing)
+	if !IsValid(ent) or self.Dead == true or GetConVar("ai_disabled"):GetInt() == 1 then return false end
 	
-	if IsValid(activator) && activator:IsPlayer() && activator:Alive() then
-		if self:Disposition(activator) == D_HT then -- If it's an enemy
-			if self.AllowPrintingInChat == true then
-				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is hostile to you, therefore it won't follow you.")
+	local isPly = ent:IsPlayer()
+	local isLiving = isPly or ent:IsNPC() -- Is it a living entity?
+	if VJ_IsAlive(ent) && ((isPly && GetConVar("ai_ignoreplayers"):GetInt() == 0) or (!isPly)) then
+		local followData = self.FollowData
+		-- Refusal messages
+		if isLiving && self:Disposition(ent) == D_HT then -- If it's an enemy
+			if isPly && self.AllowPrintingInChat then
+				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is hostile to you, therefore it won't follow you.")
 			end
-			return
-		elseif self:Disposition(activator) == D_NU then -- If it's neutral
-			if self.AllowPrintingInChat == true then
-				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is neutral to you, therefore it won't follow you.")
+			return false
+		elseif isLiving && self:Disposition(ent) == D_NU then -- If it's neutral
+			if isPly && self.AllowPrintingInChat then
+				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is neutral to you, therefore it won't follow you.")
 			end
-			return
-		elseif self.FollowingPlayer == true && activator != self.FollowPlayer_Entity then -- Already following a player
-			if self.AllowPrintingInChat == true then
-				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is already following another player, therefore it won't follow you.")
+			return false
+		elseif self.IsFollowing == true && ent != followData.Ent then -- Already following another entity
+			if isPly && self.AllowPrintingInChat then
+				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is already following another entity, therefore it won't follow you.")
 			end
-			return
+			return false
+		elseif self.MovementType == VJ_MOVETYPE_STATIONARY or self.MovementType == VJ_MOVETYPE_PHYSICS then
+			if isPly && self.AllowPrintingInChat then
+				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is currently stationary, therefore it's unable follow you.")
+			end
+			return false
 		end
 		
-		self:CustomOnFollowPlayer(key, activator, caller, data)
-		if self.MovementType == VJ_MOVETYPE_STATIONARY or self.MovementType == VJ_MOVETYPE_PHYSICS then
-			if self.AllowPrintingInChat == true then
-				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is currently stationary, therefore it's unable follow you.")
+		if !self.IsFollowing then
+			if isPly then
+				if self.AllowPrintingInChat then
+					ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is now following you.")
+				end
+				self.GuardingPosition = nil -- Reset the guarding position
+				self.GuardingFacePosition = nil
+				self.FollowingPlayer = true
+				self:PlaySoundSystem("FollowPlayer")
 			end
-			return
-		end
-		
-		if self.FollowingPlayer == false then
-			if self.AllowPrintingInChat == true then
-				activator:PrintMessage(HUD_PRINTTALK, self:GetName().." is now following you.")
-			end
-			self.GuardingPosition = nil -- Reset the guarding position
-			self.GuardingFacePosition = nil
-			self.FollowPlayer_Entity = activator
-			self.FollowingPlayer = true
-			self:PlaySoundSystem("FollowPlayer")
-			self:SetTarget(activator)
-			if self:BusyWithActivity() == false then -- Face the player and then walk or run to it
+			followData.Ent = ent
+			followData.MinDist = self.FollowMinDistance + (self:OBBMaxs().y * 3)
+			followData.IsLiving = isLiving
+			self.IsFollowing = true
+			self:SetTarget(ent)
+			if !self:BusyWithActivity() then -- Face the entity and then move to it
 				self:StopMoving()
 				self:VJ_TASK_FACE_X("TASK_FACE_TARGET", function(x)
 					x.RunCode_OnFinish = function()
-						local movet = ((self:GetPos():Distance(self.FollowPlayer_Entity:GetPos()) < 220) and "TASK_WALK_PATH") or "TASK_RUN_PATH"
-						self:VJ_TASK_GOTO_TARGET(movet, function(y) y.CanShootWhenMoving = true y.ConstantlyFaceEnemy = true end) 
+						self:VJ_TASK_GOTO_TARGET(((self:GetPos():Distance(followData.Ent:GetPos()) < 220) and "TASK_WALK_PATH") or "TASK_RUN_PATH", function(y) y.CanShootWhenMoving = true y.ConstantlyFaceEnemy = true end)
 					end
 				end)
 			end
-		else -- Unfollow the player
-			self:PlaySoundSystem("UnFollowPlayer")
+			if isPly then self:CustomOnFollowPlayer(ent) end
+			return true
+		elseif stopIfFollowing then -- Unfollow the entity
+			if isPly then self:PlaySoundSystem("UnFollowPlayer") end
 			self:StopMoving()
 			self.NextWanderTime = CurTime() + 2
-			if self:BusyWithActivity() == false then
+			if !self:BusyWithActivity() then
 				self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 			end
-			self:FollowPlayerReset()
+			self:DoFollowReset()
 		end
 	end
+	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoMedicReset()
@@ -1115,7 +1142,7 @@ function ENT:DoEntityRelationshipCheck()
 								self:StopMoving()
 								self:SetTarget(v)
 								self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-							elseif self.FollowingPlayer == false then
+							elseif self.IsFollowing == false then
 								self:SetLastPosition(vPos)
 								self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
 							end
@@ -1168,7 +1195,7 @@ function ENT:DoEntityRelationshipCheck()
 					local dist = 20
 					if self.FollowingPlayer == true then dist = 10 end
 					if /*self:Disposition(v) == D_LI &&*/ (self:VJ_GetNearestPointToEntityDistance(v) < dist) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
-						self.NextFollowPlayerT = CurTime() + 2
+						self.NextFollowUpdateT = CurTime() + 2
 						self:PlaySoundSystem("MoveOutOfPlayersWay")
 						//self:SetLastPosition(myPos + self:GetRight()*math.random(-50,-50))
 						self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
@@ -1222,7 +1249,7 @@ function ENT:Allies_CallHelp(dist)
 	local entsTbl = ents.FindInSphere(self:GetPos(), dist)
 	if (!entsTbl) then return false end
 	for _,v in pairs(entsTbl) do
-		if v:IsNPC() && v != self && v.IsVJBaseSNPC == true && VJ_IsAlive(v) == true && (v:GetClass() == self:GetClass() or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& v.FollowingPlayer == false*/ && v.VJ_IsBeingControlled == false && (!v.IsVJBaseSNPC_Tank) && v.CallForHelp == true then
+		if v:IsNPC() && v != self && v.IsVJBaseSNPC == true && VJ_IsAlive(v) == true && (v:GetClass() == self:GetClass() or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& v.IsFollowing == false*/ && v.VJ_IsBeingControlled == false && (!v.IsVJBaseSNPC_Tank) && v.CallForHelp == true then
 			local ene = self:GetEnemy()
 			if IsValid(ene) then
 				if v:GetPos():Distance(ene:GetPos()) > v.SightDistance then continue end -- Enemy to far away for ally, discontinue!
@@ -1292,7 +1319,7 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 	if (!entsTbl) then return false end
 	local it = 0
 	for _, v in pairs(entsTbl) do
-		if VJ_IsAlive(v) == true && v:IsNPC() && v != self && (v:GetClass() == self:GetClass() or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && v.FollowingPlayer == false && v.VJ_IsBeingControlled == false && !v.IsGuard && (!v.IsVJBaseSNPC_Tank) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
+		if VJ_IsAlive(v) == true && v:IsNPC() && v != self && (v:GetClass() == self:GetClass() or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && v.IsFollowing == false && v.VJ_IsBeingControlled == false && !v.IsGuard && (!v.IsVJBaseSNPC_Tank) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
 			if onlyVis == true && !v:Visible(self) then continue end
 			if !IsValid(v:GetEnemy()) && self:GetPos():Distance(v:GetPos()) < dist then
 				self.NextWanderTime = CurTime() + 8

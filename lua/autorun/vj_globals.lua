@@ -843,7 +843,7 @@ cvars.AddChangeCallback("ai_ignoreplayers", function(convar_name, oldValue, newV
 	else
 		for _, v in pairs(ents.GetAll()) do
 			if v.IsVJBaseSNPC == true then
-				if v.FollowingPlayer == true then v:FollowPlayerReset() end -- Reset if it's following the player
+				if v.FollowingPlayer == true then v:DoFollowReset() end -- Reset the NPC's follow system if it's following a player
 				//v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
 				local posenemies = v.CurrentPossibleEnemies
 				local it = 1
