@@ -463,6 +463,14 @@ if CLIENT then
 		add("tool.vjstool_npcspawner.title2", "Double click to select a weapon.")
 		add("tool.vjstool_npcspawner.print.nothingspawn", "Nothing to spawn!")
 		
+		add("tool.vjstool_npcfollower.name", "NPC Follower")
+		add("tool.vjstool_npcfollower.desc", "Select an NPC and make it follow an entity")
+		add("tool.vjstool_npcfollower.left", "Select an NPC")
+		add("tool.vjstool_npcfollower.right", "Make the selected NPC follow an entity")
+		add("tool.vjstool_npcfollower.reload", "Unfollow any entity an NPC is following")
+		add("tool.vjstool_npcfollower.print.noselection", "No NPC selected!")
+		add("tool.vjstool_npcfollower.print.reset", "Unfollowed any entity it was following!")
+		
 		-- Miscellaneous (Prints)
 		add("vjbase.print.bullseye.activated", "Activated NPC Bullseye.")
 		add("vjbase.print.bullseye.deactivated", "Deactivated NPC Bullseye.")
