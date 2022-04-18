@@ -551,9 +551,9 @@ function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 	self.LastEnemyTime = CurTime()
 	self:AddEntityRelationship(ent, D_HT, 99)
 	self:UpdateEnemyMemory(ent, ent:GetPos())
+	self:SetNPCState(NPC_STATE_COMBAT)
 	if doQuickIfActiveEnemy == true && IsValid(self:GetEnemy()) then
 		self:SetEnemy(ent)
-		//self:SetNPCState(NPC_STATE_COMBAT)
 		return -- End it here if it's a minor set enemy
 	end
 	self:SetEnemy(ent)
@@ -567,7 +567,16 @@ function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 		self.LatestEnemyDistance = self:GetPos():Distance(ent:GetPos())
 		self:DoAlert(ent)
 	end
-	//self:SetNPCState(NPC_STATE_COMBAT)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Sets the NPC's sight distance
+		- dist = The new sight distance to set
+-----------------------------------------------------------]]
+function ENT:SetSightDistance(dist)
+	self:Fire("SetMaxLookDistance", dist) -- For Source sensing distance
+	self:SetSaveValue("m_flDistTooFar", dist) -- For Source attack/weapon distance
+	self.SightDistance = dist -- For VJ Base
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -725,6 +734,7 @@ function ENT:HandleAnimEvent(ev, evTime, evCycle, evType, evOptions)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnCondition(cond)
+	print(self, " Condition: ", cond, " - ", self:ConditionName(cond))
 	self:CustomOnCondition(cond)
 	//if cond == 36 then print("sched done!") end
 	//if cond != 15 && cond != 60 then
@@ -753,9 +763,9 @@ function ENT:Touch(entity)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Resets the following system
+	Resets and stops following the current entity (If it's following any)
 -----------------------------------------------------------]]
-function ENT:DoFollowReset()
+function ENT:FollowReset()
 	local followData = self.FollowData
 	local followEnt = followData.Ent
 	if IsValid(followEnt) && followEnt:IsPlayer() && self.AllowPrintingInChat then
@@ -783,21 +793,16 @@ end
 		- false, failed or stopped following the entity
 -----------------------------------------------------------]]
 function ENT:Follow(ent, stopIfFollowing)
-	if !IsValid(ent) or self.Dead == true or GetConVar("ai_disabled"):GetInt() == 1 then return false end
+	if !IsValid(ent) or self.Dead == true or GetConVar("ai_disabled"):GetInt() == 1 or self == ent then return false end
 	
 	local isPly = ent:IsPlayer()
 	local isLiving = isPly or ent:IsNPC() -- Is it a living entity?
 	if VJ_IsAlive(ent) && ((isPly && GetConVar("ai_ignoreplayers"):GetInt() == 0) or (!isPly)) then
 		local followData = self.FollowData
 		-- Refusal messages
-		if isLiving && self:Disposition(ent) == D_HT then -- If it's an enemy
+		if isLiving && self:GetClass() != ent:GetClass() && (self:Disposition(ent) == D_HT or self:Disposition(ent) == D_NU) then -- Check for enemy/neutral
 			if isPly && self.AllowPrintingInChat then
-				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is hostile to you, therefore it won't follow you.")
-			end
-			return false
-		elseif isLiving && self:Disposition(ent) == D_NU then -- If it's neutral
-			if isPly && self.AllowPrintingInChat then
-				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is neutral to you, therefore it won't follow you.")
+				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." isn't friendly to you, therefore it won't follow you.")
 			end
 			return false
 		elseif self.IsFollowing == true && ent != followData.Ent then -- Already following another entity
@@ -831,7 +836,9 @@ function ENT:Follow(ent, stopIfFollowing)
 				self:StopMoving()
 				self:VJ_TASK_FACE_X("TASK_FACE_TARGET", function(x)
 					x.RunCode_OnFinish = function()
-						self:VJ_TASK_GOTO_TARGET(((self:GetPos():Distance(followData.Ent:GetPos()) < 220) and "TASK_WALK_PATH") or "TASK_RUN_PATH", function(y) y.CanShootWhenMoving = true y.ConstantlyFaceEnemy = true end)
+						if IsValid(self.FollowData.Ent) then
+							self:VJ_TASK_GOTO_TARGET(((self:GetPos():Distance(self.FollowData.Ent:GetPos()) < (followData.MinDist * 1.5)) and "TASK_WALK_PATH") or "TASK_RUN_PATH", function(y) y.CanShootWhenMoving = true y.ConstantlyFaceEnemy = true end)
+						end
 					end
 				end)
 			end
@@ -844,7 +851,7 @@ function ENT:Follow(ent, stopIfFollowing)
 			if !self:BusyWithActivity() then
 				self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 			end
-			self:DoFollowReset()
+			self:FollowReset()
 		end
 	end
 	return false
@@ -1010,7 +1017,7 @@ end
 function ENT:DoAlert(ent)
 	if !IsValid(self:GetEnemy()) or self.Alerted == true then return end
 	self.Alerted = true
-	//self:SetNPCState(NPC_STATE_ALERT)
+	self:SetNPCState(NPC_STATE_ALERT)
 	self.LastEnemyVisibleTime = CurTime()
 	self:CustomOnAlert(ent)
 	if CurTime() > self.NextAlertSoundT then
@@ -1060,7 +1067,7 @@ function ENT:DoEntityRelationshipCheck()
 			it = it + 1
 			//if !IsValid(v) then table_remove(self.CurrentPossibleEnemies,tonumber(v)) continue end
 			//if !IsValid(v) then continue end
-			if (v:IsFlagSet(FL_NOTARGET) or v.VJ_NoTarget) && (v.VJ_AlwaysEnemyToEnt != self) then
+			if v:IsFlagSet(FL_NOTARGET) or v.VJ_NoTarget or (v.VJ_AlwaysEnemyToEnt && v.VJ_AlwaysEnemyToEnt != self) then
 				if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
 					self:ResetEnemy(false)
 				end

@@ -75,7 +75,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	if self.VJ_AlwaysEnemyToEnt != false then
-		self:AddFlags(FL_NOTARGET)
+		//self:AddFlags(FL_NOTARGET) -- If NPC state is set, Source engine will automatically set m_hEnemy to NULL, so avoid putting this here!
 		if IsValid(self.VJ_AlwaysEnemyToEnt) && self.VJ_AlwaysEnemyToEnt:IsNPC() then
 			self.VJ_AlwaysEnemyToEnt:AddEntityRelationship(self, D_HT, 99)
 			self:AddEntityRelationship(self.VJ_AlwaysEnemyToEnt, D_HT, 99)

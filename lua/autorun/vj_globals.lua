@@ -77,6 +77,79 @@ VJ_WEP_INVENTORY_PRIMARY = 1 -- It's currently using its primary weapon
 VJ_WEP_INVENTORY_SECONDARY = 2 -- It's currently using its secondary weapon
 VJ_WEP_INVENTORY_MELEE = 3 -- It's currently using its melee weapon
 VJ_WEP_INVENTORY_ANTI_ARMOR = 4 -- It's currently using its anti-armor weapon
+
+-- Source NPC condition definitions because they are not defined in GMod for some reason ??
+COND_BEHIND_ENEMY = 29
+COND_BETTER_WEAPON_AVAILABLE = 46
+COND_CAN_MELEE_ATTACK1 = 23
+COND_CAN_MELEE_ATTACK2 = 24
+COND_CAN_RANGE_ATTACK1 = 21
+COND_CAN_RANGE_ATTACK2 = 22
+COND_ENEMY_DEAD = 30
+COND_ENEMY_FACING_ME = 28
+COND_ENEMY_OCCLUDED = 13
+COND_ENEMY_TOO_FAR = 27
+COND_ENEMY_UNREACHABLE = 31
+COND_ENEMY_WENT_NULL = 12
+COND_FLOATING_OFF_GROUND = 61
+COND_GIVE_WAY = 48
+COND_HAVE_ENEMY_LOS = 15
+COND_HAVE_TARGET_LOS = 16
+COND_HEALTH_ITEM_AVAILABLE = 47
+COND_HEAR_BUGBAIT = 52
+COND_HEAR_BULLET_IMPACT = 56
+COND_HEAR_COMBAT = 53
+COND_HEAR_DANGER = 50
+COND_HEAR_MOVE_AWAY = 58
+COND_HEAR_PHYSICS_DANGER = 57
+COND_HEAR_PLAYER = 55
+COND_HEAR_SPOOKY = 59
+COND_HEAR_THUMPER = 51
+COND_HEAR_WORLD = 54
+COND_HEAVY_DAMAGE = 18
+COND_IDLE_INTERRUPT = 2
+COND_IN_PVS = 1
+COND_LIGHT_DAMAGE = 17
+COND_LOST_ENEMY = 11
+COND_LOST_PLAYER = 33
+COND_LOW_PRIMARY_AMMO = 3
+COND_MOBBED_BY_ENEMIES = 62
+COND_NEW_ENEMY = 26
+COND_NO_CUSTOM_INTERRUPTS = 70
+COND_NO_HEAR_DANGER = 60
+COND_NO_PRIMARY_AMMO = 4
+COND_NO_SECONDARY_AMMO = 5
+COND_NO_WEAPON = 6
+COND_NONE = 0
+COND_NOT_FACING_ATTACK = 40
+COND_NPC_FREEZE = 67
+COND_NPC_UNFREEZE = 68
+COND_PHYSICS_DAMAGE = 19
+COND_PLAYER_ADDED_TO_SQUAD = 64
+COND_PLAYER_PUSHING = 66
+COND_PLAYER_REMOVED_FROM_SQUAD = 65
+COND_PROVOKED = 25
+COND_RECEIVED_ORDERS = 63
+COND_REPEATED_DAMAGE = 20
+COND_SCHEDULE_DONE = 36
+COND_SEE_DISLIKE = 9
+COND_SEE_ENEMY = 10
+COND_SEE_FEAR = 8
+COND_SEE_HATE = 7
+COND_SEE_NEMESIS = 34
+COND_SEE_PLAYER = 32
+COND_SMELL = 37
+COND_TALKER_RESPOND_TO_QUESTION = 69
+COND_TARGET_OCCLUDED = 14
+COND_TASK_FAILED = 35
+COND_TOO_CLOSE_TO_ATTACK = 38
+COND_TOO_FAR_TO_ATTACK = 39
+COND_WAY_CLEAR = 49
+COND_WEAPON_BLOCKED_BY_FRIEND = 42
+COND_WEAPON_HAS_LOS = 41
+COND_WEAPON_PLAYER_IN_SPREAD = 43
+COND_WEAPON_PLAYER_NEAR_TARGET = 44
+COND_WEAPON_SIGHT_OCCLUDED = 45
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if SERVER then
 	util.AddNetworkString("vj_music_run")
@@ -662,6 +735,25 @@ if SERVER then
 			end)
 		end*/
 	end)
+	
+	/*
+	-- Retrieving outputs from NPCs or other entities | Outputs: https://developer.valvesoftware.com/wiki/Base.fgd/Garry%27s_Mod
+	local triggerLua = ents.Create("lua_run")
+	triggerLua:SetName("triggerhook")
+	triggerLua:Spawn()
+	
+	hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
+		if ent:IsNPC() && ent.IsVJBaseSNPC == true then
+			-- Format: <output name> <targetname>:<inputname>:<parameter>:<delay>:<max times to fire, -1 means infinite>
+			self:Fire("AddOutput", "OnIgnite triggerhook:RunPassedCode:hook.Run( 'OnOutput' ):0:-1")
+		end
+	end)
+
+	hook.Add("OnOutput", "OnOutput", function()
+		local activator, caller = ACTIVATOR, CALLER
+		print(activator, caller)
+	end )
+	*/
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
@@ -843,7 +935,7 @@ cvars.AddChangeCallback("ai_ignoreplayers", function(convar_name, oldValue, newV
 	else
 		for _, v in pairs(ents.GetAll()) do
 			if v.IsVJBaseSNPC == true then
-				if v.FollowingPlayer == true then v:DoFollowReset() end -- Reset the NPC's follow system if it's following a player
+				if v.FollowingPlayer == true then v:FollowReset() end -- Reset the NPC's follow system if it's following a player
 				//v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
 				local posenemies = v.CurrentPossibleEnemies
 				local it = 1

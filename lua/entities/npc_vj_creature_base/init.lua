@@ -28,7 +28,7 @@ ENT.HasHull = true -- Set to false to disable HULL
 ENT.HullSizeNormal = true -- set to false to cancel out the self:SetHullSizeNormal()
 ENT.HasSetSolid = true -- set to false to disable SetSolid
 	-- ====== Sight & Speed Variables ====== --
-ENT.SightDistance = 10000 -- How far it can see
+ENT.SightDistance = 10000 -- How far it can see | Remember to call "self:SetSightDistance(dist)" if you want to set a new value after initialize!
 ENT.SightAngle = 80 -- The sight angle | Example: 180 would make the it see all around it | Measured in degrees and then converted to radians
 ENT.TurningSpeed = 20 -- How fast it can turn
 ENT.TurningUseAllAxis = false -- If set to true, angles will not be restricted to y-axis, it will change all axes (plural axis)
@@ -1096,7 +1096,8 @@ function ENT:Initialize()
 	self.SightDistance = (GetConVar("vj_npc_seedistance"):GetInt() > 0) and GetConVar("vj_npc_seedistance"):GetInt() or self.SightDistance
 	timer.Simple(0.15, function()
 		if IsValid(self) then
-			//if self:GetNPCState() <= NPC_STATE_NONE then self:SetNPCState(NPC_STATE_IDLE) end -- Unfortunately it breaks parts of the AI such as turning Yaw
+			self:SetSightDistance(self.SightDistance)
+			if self:GetNPCState() <= NPC_STATE_NONE then self:SetNPCState(NPC_STATE_IDLE) end
 			if IsValid(self:GetCreator()) && self:GetCreator():GetInfoNum("vj_npc_spawn_guard", 0) == 1 then self.IsGuard = true end
 			self:StartSoundTrack()
 			
@@ -1425,6 +1426,7 @@ local task_chaseEnemy = ai_vj_schedule.New("vj_chase_enemy")
 local varChaseEnemy = "vj_chase_enemy"
 function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase)
 	doLOSChase = doLOSChase or false
+	self:ClearCondition(COND_ENEMY_UNREACHABLE)
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_ChaseEnemy() return end
 	//if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
 	if self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
@@ -1435,7 +1437,7 @@ function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase)
 		task_chaseEnemyLOS.RunCode_OnFinish = function()
 			local ene = self:GetEnemy()
 			if IsValid(ene) then
-				self:RememberUnreachable(ene, 0)
+				//self:RememberUnreachable(ene, 0)
 				self:VJ_TASK_CHASE_ENEMY(false)
 			end
 		end
@@ -1580,14 +1582,12 @@ function ENT:DoChaseAnimation(alwaysChase)
 	
 	-- If the enemy is not reachable then wander around
 	if self:IsUnreachable(ene) == true then
-		self:RememberUnreachable(ene, 2)
 		if self.HasRangeAttack == true then -- Ranged NPCs
 			self:VJ_TASK_CHASE_ENEMY(true)
-		elseif math.random(1, 30) == 1 then
-			if !self:IsMoving() then
-				self.NextWanderTime = 0
-			end
+		elseif math.random(1, 30) == 1 && !self:IsMoving() then
+			self.NextWanderTime = 0
 			self:DoIdleAnimation(1)
+			self:RememberUnreachable(ene, 4)
 		else
 			self:VJ_TASK_IDLE_STAND()
 		end
@@ -1647,17 +1647,17 @@ function ENT:Think()
 		//end
 		if (curSched.StopScheduleIfNotMoving == true or curSched.StopScheduleIfNotMoving_Any == true) && (!self:IsMoving() or (IsValid(blockingEnt) && (blockingEnt:IsNPC() or curSched.StopScheduleIfNotMoving_Any == true))) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
 			self:ScheduleFinished(curSched)
-			//self:SetCondition(35)
+			//self:SetCondition(COND_TASK_FAILED)
 			//self:StopMoving()
 		end
 		-- self:OnMovementFailed() handles some of them, but we do still need this for non-movement failures (EX: Finding cover area)
-		if self:HasCondition(35) then
+		if self:HasCondition(COND_TASK_FAILED) then
 			//print("VJ Base: Task Failed Condition Identified! "..self:GetName())
 			if self:DoRunCode_OnFail(curSched) == true then
-				self:ClearCondition(35)
+				self:ClearCondition(COND_TASK_FAILED)
 			end
 			if curSched.ResetOnFail == true then
-				self:ClearCondition(35)
+				self:ClearCondition(COND_TASK_FAILED)
 				self:StopMoving()
 				//self:SelectSchedule()
 			end
@@ -1744,7 +1744,7 @@ function ENT:Think()
 			local followEnt = followData.Ent
 			local followIsLiving = followData.IsLiving
 			//print(self:GetTarget())
-			if IsValid(followEnt) && (!followIsLiving or (followIsLiving && self:Disposition(followEnt) == D_LI && VJ_IsAlive(followEnt))) then
+			if IsValid(followEnt) && (!followIsLiving or (followIsLiving && (self:Disposition(followEnt) == D_LI or self:GetClass() == followEnt:GetClass()) && VJ_IsAlive(followEnt))) then
 				if curTime > self.NextFollowUpdateT && !self.AlreadyBeingHealedByMedic then
 					local distToPly = self:GetPos():Distance(followEnt:GetPos())
 					local busy = self:BusyWithActivity()
@@ -1760,7 +1760,7 @@ function ENT:Think()
 								followData.StopAct = true
 							end
 							-- If we are close then walk otherwise run
-							self:VJ_TASK_GOTO_TARGET((distToPly < 220 and "TASK_WALK_PATH") or "TASK_RUN_PATH", function(x)
+							self:VJ_TASK_GOTO_TARGET((distToPly < (followData.MinDist * 1.5) and "TASK_WALK_PATH") or "TASK_RUN_PATH", function(x)
 								x.CanShootWhenMoving = true
 								x.ConstantlyFaceEnemyVisible = (IsValid(self:GetActiveWeapon()) and true) or false
 							end)
@@ -1775,7 +1775,7 @@ function ENT:Think()
 					self.NextFollowUpdateT = curTime + self.NextFollowUpdateTime
 				end
 			else
-				self:DoFollowReset()
+				self:FollowReset()
 			end
 		end
 		
@@ -2504,8 +2504,8 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		end
 	end
 	
-	//self:SetNPCState(NPC_STATE_ALERT)
-	timer.Create("timer_alerted_reset"..self:EntIndex(), math.Rand(self.AlertedToIdleTime.a, self.AlertedToIdleTime.b), 1, function() if !IsValid(self:GetEnemy()) then self.Alerted = false end end) // self:SetNPCState(NPC_STATE_IDLE)
+	self:SetNPCState(NPC_STATE_ALERT)
+	timer.Create("timer_alerted_reset"..self:EntIndex(), math.Rand(self.AlertedToIdleTime.a, self.AlertedToIdleTime.b), 1, function() if !IsValid(self:GetEnemy()) then self.Alerted = false self:SetNPCState(NPC_STATE_IDLE) end end)
 	self:CustomOnResetEnemy()
 	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printresetenemy"):GetInt() == 1 then print(self:GetName().." has reseted its enemy") end
 	if eneValid then
@@ -2519,16 +2519,20 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		self:AddEntityRelationship(ene, 4, 10)
 	end
 	
-	self:SetEnemy(NULL)
-	self:ClearEnemyMemory()
+	-- Clear memory of the enemy if it's not a player AND it's dead
+	if eneValid && !ene:IsPlayer() && !VJ_IsAlive(ene) then
+		//print("Clear memory", ene)
+		self:ClearEnemyMemory(ene)
+	end
 	//self:UpdateEnemyMemory(self,self:GetPos())
-	local vsched = ai_vj_schedule.New("vj_act_resetenemy")
-	if IsValid(self:GetEnemy()) then vsched:EngTask("TASK_FORGET", self:GetEnemy()) end -- Don't apply localized versions for this! (ene & eneValid)
+	//local vsched = ai_vj_schedule.New("vj_act_resetenemy")
+	//if eneValid then vsched:EngTask("TASK_FORGET", ene) end
 	//vsched:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
 	self.NextWanderTime = CurTime() + math.Rand(3, 5)
-	if !self:IsBusy() && self.IsGuard == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && RunToEnemyOnReset == true && self.LastHiddenZone_CanWander == true then
+	if !self:IsBusy() && !self.IsGuard && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && RunToEnemyOnReset == true && self.LastHiddenZone_CanWander == true then
 		//ParticleEffect("explosion_turret_break", self.LatestEnemyPosition, Angle(0,0,0))
 		self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk))
+		local vsched = ai_vj_schedule.New("vj_act_resetenemy")
 		vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
 		//vsched:EngTask("TASK_WALK_PATH", 0)
 		vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
@@ -2539,10 +2543,12 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		vsched.IsMovingTask = true
 		vsched.MoveType = 0
 		//self.NextIdleTime = CurTime() + 10
-	end
-	if vsched.TaskCount > 0 then
 		self:StartSchedule(vsched)
 	end
+	//if vsched.TaskCount > 0 then
+		//self:StartSchedule(vsched)
+	//end
+	self:SetEnemy(NULL)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTakeDamage(dmginfo)
@@ -2614,6 +2620,7 @@ function ENT:OnTakeDamage(dmginfo)
 	-- I/O events, from: https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/sp/src/game/server/ai_basenpc.cpp#L764
 	if IsValid(dmgAttacker) then
 		self:TriggerOutput("OnDamaged", dmgAttacker)
+		self:MarkTookDamageFromEnemy(dmgAttacker)
 	else
 		self:TriggerOutput("OnDamaged", self)
 	end
@@ -2692,7 +2699,7 @@ function ENT:OnTakeDamage(dmginfo)
 				if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
 					if self:Disposition(dmgAttacker) != D_HT then
 						self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo, hitgroup)
-						if self.IsFollowing == true && self.FollowData.Ent == dmgAttacker then self:DoFollowReset() end
+						if self.IsFollowing == true && self.FollowData.Ent == dmgAttacker then self:FollowReset() end
 						self.VJ_AddCertainEntityAsEnemy[#self.VJ_AddCertainEntityAsEnemy+1] = dmgAttacker
 						self:AddEntityRelationship(dmgAttacker,D_HT,99)
 						self.TakingCoverT = CurTime() + 2
@@ -2707,7 +2714,7 @@ function ENT:OnTakeDamage(dmginfo)
 						self:PlaySoundSystem("BecomeEnemyToPlayer")
 					end
 					self.Alerted = true
-					//self:SetNPCState(NPC_STATE_ALERT)
+					self:SetNPCState(NPC_STATE_ALERT)
 				end
 			end
 
@@ -2800,7 +2807,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 				if v.AngerLevelTowardsPlayer > v.BecomeEnemyToPlayerLevel then
 					if v:Disposition(dmgAttacker) != D_HT then
 						v:CustomWhenBecomingEnemyTowardsPlayer(dmginfo, hitgroup)
-						if v.IsFollowing == true && v.FollowData.Ent == dmgAttacker then v:DoFollowReset() end
+						if v.IsFollowing == true && v.FollowData.Ent == dmgAttacker then v:FollowReset() end
 						v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy+1] = dmgAttacker
 						v:AddEntityRelationship(dmgAttacker,D_HT,99)
 						if v.AllowPrintingInChat == true then
@@ -2844,7 +2851,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	end
 	
 	self.Dead = true
-	if self.IsFollowing == true then self:DoFollowReset() end
+	if self.IsFollowing == true then self:FollowReset() end
 	self:RemoveTimers()
 	self.AttackType = VJ_ATTACK_NONE
 	self.MeleeAttacking = false
