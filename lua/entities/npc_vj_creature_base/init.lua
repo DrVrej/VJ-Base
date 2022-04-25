@@ -2552,13 +2552,13 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTakeDamage(dmginfo)
-	if self.GodMode == true or dmginfo:GetDamage() <= 0 then return 0 end
 	local dmgInflictor = dmginfo:GetInflictor()
 	local dmgAttacker = dmginfo:GetAttacker()
 	local dmgType = dmginfo:GetDamageType()
 	local hitgroup = self:GetLastDamageHitGroup()
 	if IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_ragdoll" && dmgInflictor:GetVelocity():Length() <= 100 then return 0 end
 	self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo, hitgroup)
+	if self.GodMode == true or dmginfo:GetDamage() <= 0 then return 0 end
 	if self:IsOnFire() && self:WaterLevel() == 2 then self:Extinguish() end -- If we are in water, then extinguish the fire
 
 	-- If it should always take damage from huge monsters, then skip immunity checks!
@@ -2632,14 +2632,14 @@ function ENT:OnTakeDamage(dmginfo)
 		-- Make passive NPCs run and their allies as well
 		if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && CurTime() > self.TakingCoverT then
 			if self.Passive_RunOnDamage == true && stillAlive then -- Don't run if not allowed or dead
-				self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
+				self:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
 			end
 			if self.Passive_AlliesRunOnDamage == true then -- Make passive allies run
 				local allies = self:Allies_Check(self.Passive_AlliesRunOnDamageDistance)
 				if allies != nil then
 					for _,v in pairs(allies) do
 						v.TakingCoverT = CurTime() + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
-						v:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
+						v:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
 						v:PlaySoundSystem("Alert")
 					end
 				end
@@ -2670,7 +2670,7 @@ function ENT:OnTakeDamage(dmginfo)
 					if VJ_AnimationExists(self,pickanim) == true && self.DisableCallForBackUpOnDamageAnimation == false then
 						self:VJ_ACT_PLAYACTIVITY(pickanim,true,self:DecideAnimationLength(pickanim,self.CallForBackUpOnDamageAnimationTime),true, 0, {PlayBackRateCalculated=true})
 					elseif !self:BusyWithActivity() then
-						self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+						self:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
 						//self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
 						/*local vschedHide = ai_vj_schedule.New("vj_hide_callbackupondamage")
 						vschedHide:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
@@ -2740,7 +2740,7 @@ function ENT:OnTakeDamage(dmginfo)
 						//self:Allies_CallHelp(self.CallForHelpDistance)
 						if CurTime() > self.NextRunAwayOnDamageT then
 							if self.IsFollowing == false && self.RunAwayOnUnknownDamage == true && self.MovementType != VJ_MOVETYPE_STATIONARY then
-								self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+								self:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH",function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
 								//self:VJ_SetSchedule(SCHED_RUN_FROM_ENEMY)
 								/*local vschedHide = ai_vj_schedule.New("vj_hide_unknowndamage")
 								vschedHide:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
@@ -2983,7 +2983,8 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		if GetConVar("ai_serverragdolls"):GetInt() == 1 then
 			undo.ReplaceEntity(self, self.Corpse)
 		else -- Keep corpses is not enabled...
-			hook.Call("VJ_CreateSNPCCorpse", nil, self.Corpse, self)
+			VJ_AddCorpse(self.Corpse)
+			//hook.Call("VJ_CreateSNPCCorpse", nil, self.Corpse, self)
 			if GetConVar("vj_npc_undocorpse"):GetInt() == 1 then undo.ReplaceEntity(self, self.Corpse) end -- Undoable
 		end
 		cleanup.ReplaceEntity(self, self.Corpse) -- Delete on cleanup
@@ -3054,6 +3055,8 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 				end
 			end
 		end
+		
+		VJ_AddStinkyCorpse(self.Corpse, true)
 		
 		if self.DeathCorpseFade == true then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",self.DeathCorpseFadeTime) end
 		if GetConVar("vj_npc_corpsefade"):GetInt() == 1 then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",GetConVar("vj_npc_corpsefadetime"):GetInt()) end

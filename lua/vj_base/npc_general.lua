@@ -435,44 +435,41 @@ end
 			- Table, trace result
 -----------------------------------------------------------]]
 function ENT:VJ_ForwardIsHidingZone(startPos, endPos, acceptWorld, extraOptions)
-	if !IsValid(self:GetEnemy()) then return false, {} end
+	local ene = self:GetEnemy()
+	if !IsValid(ene) then return false, {} end
 	startPos = startPos or self:GetPos() + self:OBBCenter()
-	endPos = endPos or self:GetEnemy():EyePos()
+	endPos = endPos or ene:EyePos()
 	acceptWorld = acceptWorld or false
 	extraOptions = extraOptions or {}
 		local setLastHiddenTime = extraOptions.SetLastHiddenTime or false
-	local hitEnt = false
 	local tr = util.TraceLine({
 		start = startPos,
 		endpos = endPos,
 		filter = self
 	})
+	local hitPos = tr.HitPos
+	local hitEnt = tr.Entity
 	if extraOptions.Debug == true then
 		print("--------------------------------------------")
 		PrintTable(tr)
-		VJ_CreateTestObject(tr.HitPos)
+		VJ_CreateTestObject(hitPos)
 	end
 	-- Sometimes the trace isn't 100%, a tiny find in sphere check fixes this issue...
-	for _,v in pairs(ents.FindInSphere(tr.HitPos, 5)) do
-		if v == self:GetEnemy() or self:Disposition(v) == 1 or self:Disposition(v) == 2 then
-			hitEnt = true
+	local sphereInvalidate = false
+	for _,v in pairs(ents.FindInSphere(hitPos, 5)) do
+		if v == ene or v:IsNPC() or v:IsPlayer() then
+			sphereInvalidate = true
 		end
 	end
 	
-	-- Not a hiding zone, it hit an enemy NPC OR it's far from the hit position
-	if hitEnt == true or endPos:Distance(tr.HitPos) <= 10 then
+	-- Not a hiding zone: (Sphere found an enemy/NPC/Player) OR (Trace ent is an enemy/NPC/Player) OR (End pos is far from the hit position) OR (World is NOT accepted as a hiding zone)
+	if sphereInvalidate or (IsValid(hitEnt) && (hitEnt == ene or hitEnt:IsNPC() or hitEnt:IsPlayer())) or endPos:Distance(hitPos) <= 10 or (acceptWorld == false && tr.HitWorld == true) then
 		if setLastHiddenTime == true then self.LastHiddenZoneT = 0 end
 		return false, tr
-	-- Hiding zone detected, it hit world and it's close
-	elseif tr.HitWorld == true && self:GetPos():Distance(tr.HitPos) < 200 then
-		if setLastHiddenTime == true then self.LastHiddenZoneT = 20 end
+	-- Hiding zone: It hit world AND it's close
+	elseif tr.HitWorld == true && self:GetPos():Distance(hitPos) < 200 then
+		if setLastHiddenTime == true then self.LastHiddenZoneT = CurTime() + 20 end
 		return true, tr
-	end
-
-	-- More in depth look...
-	if tr.Entity == self:GetEnemy() or (acceptWorld == false && tr.HitWorld == true) then
-		if setLastHiddenTime == true then self.LastHiddenZoneT = 0 end
-		return false, tr
 	else -- Hidden!
 		if setLastHiddenTime == true then self.LastHiddenZoneT = CurTime() + 20 end
 		return true, tr
@@ -736,11 +733,6 @@ end
 function ENT:OnCondition(cond)
 	print(self, " Condition: ", cond, " - ", self:ConditionName(cond))
 	self:CustomOnCondition(cond)
-	//if cond == 36 then print("sched done!") end
-	//if cond != 15 && cond != 60 then
-	//if cond != 1 then
-		//print(self, " Condition: ", cond, " - ", self:ConditionName(cond))
-	//end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
@@ -751,7 +743,7 @@ function ENT:Touch(entity)
 	-- If it's a passive SNPC...
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
 		if self.Passive_RunOnTouch == true && (entity:IsNPC() or entity:IsPlayer()) && CurTime() > self.TakingCoverT && entity.Behavior != VJ_BEHAVIOR_PASSIVE && entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:DoRelationshipCheck(entity) != false then
-			self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
+			self:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
 			self:PlaySoundSystem("Alert")
 			self.TakingCoverT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
 		end
@@ -1349,7 +1341,7 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 				end
 				-- Move type
 				if v.IsVJBaseSNPC_Human == true && !IsValid(v:GetActiveWeapon()) then
-					v:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
+					v:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
 				else
 					v:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH", function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
 				end

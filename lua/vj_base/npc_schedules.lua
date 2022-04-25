@@ -69,7 +69,7 @@ function ENT:VJ_TASK_COVER_FROM_ENEMY(moveType, customFunc)
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
 	moveType = moveType or "TASK_RUN_PATH"
 	local vsched = ai_vj_schedule.New("vj_cover_from_enemy")
-	vsched:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
+	vsched:EngTask("TASK_FIND_COVER_FROM_ORIGIN", 0)
 	//vsched:EngTask(moveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched.IsMovingTask = true
@@ -77,6 +77,30 @@ function ENT:VJ_TASK_COVER_FROM_ENEMY(moveType, customFunc)
 	vsched.RunCode_OnFail = function()
 		//print("Cover from enemy failed!")
 		local vschedFail = ai_vj_schedule.New("vj_cover_from_enemy_fail")
+		vschedFail:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
+		vschedFail:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
+		//vschedFail:EngTask(moveType, 0)
+		vschedFail:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+		vschedFail.IsMovingTask = true
+		if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vschedFail.MoveType = 1 else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vschedFail.MoveType = 0 end
+		if (customFunc) then customFunc(vschedFail) end
+		self:StartSchedule(vschedFail)
+	end
+	if (customFunc) then customFunc(vsched) end
+	self:StartSchedule(vsched)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:VJ_TASK_COVER_FROM_ORIGIN(moveType, customFunc)
+	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
+	moveType = moveType or "TASK_RUN_PATH"
+	local vsched = ai_vj_schedule.New("vj_cover_from_origin")
+	vsched:EngTask("TASK_FIND_COVER_FROM_ORIGIN", 0)
+	//vsched:EngTask(moveType, 0)
+	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	vsched.IsMovingTask = true
+	if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
+	vsched.RunCode_OnFail = function()
+		local vschedFail = ai_vj_schedule.New("vj_cover_from_origin_fail")
 		vschedFail:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
 		vschedFail:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
 		//vschedFail:EngTask(moveType, 0)
