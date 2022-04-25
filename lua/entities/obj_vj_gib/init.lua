@@ -2,11 +2,9 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 AddCSLuaFile("shared.lua")
 include("shared.lua")
 /*--------------------------------------------------
-	=============== Gib Base ===============
 	*** Copyright (c) 2012-2022 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-INFO: Used as a base for gibs
 --------------------------------------------------*/
 ENT.BloodType = "Red" -- Uses the same values as a VJ NPC
 ENT.Collide_Decal = "Default"
@@ -14,6 +12,11 @@ ENT.Collide_DecalChance = 3
 ENT.CollideSound = "Default" -- Make it a table to use custom sounds!
 ENT.CollideSoundLevel = 60
 ENT.CollideSoundPitch = VJ_Set(90, 100)
+ENT.IsStinky = false -- Is this a disgusting stinky gib??
+
+ENT.NextStinkyTime = 0
+
+local stinkyMatTypes = {alienflesh=true, antlion=true, armorflesh=true, bloodyflesh=true, flesh=true, zombieflesh=true, player=true}
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:PhysicsInit(MOVETYPE_VPHYSICS)
@@ -22,9 +25,14 @@ function ENT:Initialize()
 	if GetConVar("vj_npc_gibcollidable"):GetInt() == 0 then self:SetCollisionGroup(1) end
 
 	-- Physics Functions
-	local phys = self:GetPhysicsObject()
-	if IsValid(phys) then
-		phys:Wake()
+	local physObj = self:GetPhysicsObject()
+	if IsValid(physObj) then
+		physObj:Wake()
+		
+		-- Stinky system
+		if stinkyMatTypes[physObj:GetMaterial()] then
+			self.IsStinky = true
+		end
 	end
 
 	-- Misc
@@ -62,6 +70,14 @@ function ENT:InitialSetup()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Think()
+	-- Stinky gib! yuck!
+	if self.IsStinky && self.NextStinkyTime < CurTime() then
+		sound.EmitHint(SOUND_MEAT, self:GetPos(), 500, 2, self)
+		self.NextStinkyTime = CurTime() + 2
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, phys)
 	-- Effects
 	local velSpeed = phys:GetVelocity():Length()
@@ -83,5 +99,5 @@ function ENT:PhysicsCollide(data, phys)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTakeDamage(dmginfo)
-	self:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce()*0.1)
+	self:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce() * 0.1)
 end

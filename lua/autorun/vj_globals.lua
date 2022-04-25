@@ -27,6 +27,7 @@ local math_floor = math.floor
 local bAND = bit.band
 local bShiftL = bit.lshift
 local bShiftR = bit.rshift
+local sdEmitHint = sound.EmitHint
 local defAng = Angle(0, 0, 0)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Global Functions & Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -864,31 +865,6 @@ hook.Add("PlayerDeath", "VJ_PlayerDeath", function(victim, inflictor, attacker)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-VJ_Corpses = {}
---
-hook.Add("VJ_CreateSNPCCorpse", "VJ_CreateSNPCCorpse", function(corpse, owner)
-	if IsValid(corpse) && corpse.IsVJBaseCorpse == true then
-		-- Clear out all removed corpses from the table
-		for k, v in pairs(VJ_Corpses) do
-			if !IsValid(v) then
-				table_remove(VJ_Corpses, k)
-			end
-		end
-		
-		local count = #VJ_Corpses + 1
-		VJ_Corpses[count] = corpse
-		
-		-- Check if we surpassed the limit!
-		if count > GetConVar("vj_npc_globalcorpselimit"):GetInt() then
-			local oldestCorpse = table_remove(VJ_Corpses, 1)
-			if IsValid(oldestCorpse) then
-				oldestCorpse:Fire(oldestCorpse.FadeCorpseType, "", 0) -- Fade out
-				timer.Simple(1, function() if IsValid(oldestCorpse) then oldestCorpse:Remove() end end) -- Make sure it's removed
-			end
-		end
-	end
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerCanPickupWeapon", "VJ_PLAYER_CANPICKUPWEAPON", function(ply, wep)
 	//print(wep:GetWeaponWorldModel())
 	if ply.VJ_CanBePickedUpWithOutUse == true && ply.VJ_CanBePickedUpWithOutUse_Class == wep:GetClass() then
@@ -917,6 +893,69 @@ hook.Add("PlayerGiveSWEP", "VJ_PLAYER_GIVESWEP", function(ply, class, swep)
 		//PrintTable(swep)
 	//end
 end)
+---------------------------------------------------------------------------------------------------------------------------------------------
+if SERVER then
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Corpse System ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+VJ_Corpses = {}
+VJ_Corpses_Stinky = {}
+--
+function VJ_Corpse_StartThink()
+	timer.Create("vj_corpse_stink_think", 0.3, 0, function()
+		for k, ent in pairs(VJ_Corpses_Stinky) do
+			if IsValid(ent) then
+				sdEmitHint(SOUND_CARCASS, ent:GetPos(), 500, 2, ent)
+			else -- No longer valid, remove it from the list
+				table_remove(VJ_Corpses_Stinky, k)
+				if #VJ_Corpses_Stinky == 0 then -- If this is the last stinky corpse then destroy the timer!
+					timer.Remove("vj_corpse_stink_think")
+				end
+			end
+		end
+	end)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+local stinkyMatTypes = {alienflesh=true, antlion=true, armorflesh=true, bloodyflesh=true, flesh=true, zombieflesh=true, player=true}
+--
+function VJ_AddStinkyCorpse(corpse, checkMat)
+	-- Clear out all removed corpses from the table
+	for k, v in pairs(VJ_Corpses_Stinky) do
+		if !IsValid(v) then
+			table_remove(VJ_Corpses_Stinky, k)
+		end
+	end
+	local physObj = corpse:GetPhysicsObject()
+	if (!checkMat) or (IsValid(physObj) && stinkyMatTypes[physObj:GetMaterial()]) then
+		-- types: https://developer.valvesoftware.com/wiki/Material_surface_properties
+		VJ_Corpses_Stinky[#VJ_Corpses_Stinky + 1] = corpse -- Add to the table
+		if !timer.Exists("vj_corpse_stink_think") then VJ_Corpse_StartThink() end -- Start the stinky timer if it doesn't exist
+		return true
+	end
+	return false
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function VJ_AddCorpse(corpse)
+	-- Clear out all removed corpses from the table
+	for k, v in pairs(VJ_Corpses) do
+		if !IsValid(v) then
+			table_remove(VJ_Corpses, k)
+		end
+	end
+	
+	local count = #VJ_Corpses + 1
+	VJ_Corpses[count] = corpse
+	
+	-- Check if we surpassed the limit!
+	if count > GetConVar("vj_npc_globalcorpselimit"):GetInt() then
+		local oldestCorpse = table_remove(VJ_Corpses, 1)
+		if IsValid(oldestCorpse) then
+			oldestCorpse:Fire(oldestCorpse.FadeCorpseType, "", 0) -- Fade out
+			timer.Simple(1, function() if IsValid(oldestCorpse) then oldestCorpse:Remove() end end) -- Make sure it's removed
+		end
+	end
+end
+end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Convar Callbacks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
