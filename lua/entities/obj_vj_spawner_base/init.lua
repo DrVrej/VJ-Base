@@ -29,6 +29,8 @@ ENT.EntitiesToSpawn = {}
 		SpawnAngle = Angle(0, 0, 0) -- The spawn angle, it's based on the spawner's angle, OPTIONAL | DEFAULT: Spawners current angle
 		WeaponsList = {} -- The list of weapons it spawns with randomly, OPTIONAL | DEFAULT: Empty table
 			- "default" = Spawns the NPC with its default weapons list from the spawn menu
+		NPC_Class = "" or {} -- Overrides the NPC's relation class with the given string or table | DEFAULT: ""
+		FriToPlyAllies = false or true -- If set to true, the NPC will be allied with the player, must have NPC class "CLASS_PLAYER_ALLY" | DEFAULT: false
 */
 ENT.TimedSpawn_Time = 3 -- How much time until it spawns another SNPC?
 ENT.TimedSpawn_OnlyOne = true -- If it's true then it will only have one SNPC spawned at a time
@@ -98,8 +100,8 @@ function ENT:SpawnAnEntity(spawnKey, spawnTbl, initSpawn)
 	local spawnPos = spawnTbl.SpawnPosition or defSpawnPos
 	local spawnAng = spawnTbl.SpawnAngle
 	local spawnEnts = spawnTbl.Entities
-	local spawnClass = spawnTbl.NPC_Class or "false"
-	local spawnPlyAlly = spawnTbl.PlayerAlly or "0"
+	local spawnNPCClass = spawnTbl.NPC_Class or ""
+	local spawnFriToPlyAllies = spawnTbl.FriToPlyAllies or false
 	local spawnWepPicked = VJ_PICK(spawnTbl.WeaponsList)
 	local entPicked; -- The entity that we will spawn
 	local entsNum = #spawnEnts -- The number of entities
@@ -126,10 +128,12 @@ function ENT:SpawnAnEntity(spawnKey, spawnTbl, initSpawn)
 	ent:SetAngles((spawnAng or defAng) + self:GetAngles())
 	ent:Spawn()
 	ent:Activate()
-	if spawnClass != "false" then
-		ent.VJ_NPC_Class = istable(spawnClass) && spawnClass or {spawnClass}
+	if spawnNPCClass != "" then
+		ent.VJ_NPC_Class = istable(spawnNPCClass) && spawnNPCClass or {spawnNPCClass}
 	end
-	ent.FriendsWithAllPlayerAllies = tobool(spawnPlyAlly)
+	if spawnFriToPlyAllies then
+		ent.FriendsWithAllPlayerAllies = true
+	end
 	if ent:IsNPC() && spawnWepPicked != false && string.lower(spawnWepPicked) != "none" then
 		if string.lower(spawnWepPicked) == "default" then -- Default weapon from the spawn menu
 			local getDefWep = VJ_PICK(list.Get("NPC")[ent:GetClass()].Weapons)
@@ -141,7 +145,7 @@ function ENT:SpawnAnEntity(spawnKey, spawnTbl, initSpawn)
 		end
 	end
 	
-	self.CurrentEntities[spawnKey] = {Entities=spawnEnts, SpawnPosition=spawnPos, SpawnAngle=spawnAng, WeaponsList=spawnTbl.WeaponsList, NPC_Class=spawnClass, PlayerAlly=spawnPlyAlly, Ent=ent, Dead=false}
+	self.CurrentEntities[spawnKey] = {Entities=spawnEnts, SpawnPosition=spawnPos, SpawnAngle=spawnAng, WeaponsList=spawnTbl.WeaponsList, NPC_Class=spawnNPCClass, FriToPlyAllies=spawnFriToPlyAllies, Ent=ent, Dead=false}
 	//table_remove(self.CurrentEntities, spawnKey) 
 	//table.insert(self.CurrentEntities, spawnKey, {SpawnPosition=spawnPos, Entities=spawnEnts, WeaponsList=wepList, Ent=ent, Dead=false})
 	self:CustomOnEntitySpawn(ent, spawnKey, spawnTbl, initSpawn)

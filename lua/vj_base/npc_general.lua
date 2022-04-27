@@ -6,7 +6,7 @@
 	///// NOTES \\\\\
 	- This file contains functions and variables shared between all the NPC bases.
 	- There are useful functions that are commonly called when making custom code in an NPC. (Custom-Friendly Functions)
-	- There are also functions that should not called in a custom code. (General Functions)
+	- There are also functions that should be called with caution in a custom code. (General Functions)
 --------------------------------------------------*/
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*
@@ -200,6 +200,28 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 		self.ExtraCorpsesToRemove_Transition[#self.ExtraCorpsesToRemove_Transition + 1] = gib
 	end
 	if (customFunc) then customFunc(gib) end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[
+More info about sound hints: https://github.com/DrVrej/VJ-Base/wiki/Developer-Notes#sound-hints
+-- Condition --					-- Sound bit --								-- Suggested Use --
+COND_HEAR_DANGER				SOUND_DANGER								Danger
+COND_HEAR_PHYSICS_DANGER		SOUND_PHYSICS_DANGER						Danger
+COND_HEAR_MOVE_AWAY				SOUND_MOVE_AWAY								Danger
+COND_HEAR_COMBAT				SOUND_COMBAT								Interest
+COND_HEAR_WORLD					SOUND_WORLD									Interest
+COND_HEAR_BULLET_IMPACT			SOUND_BULLET_IMPACT							Interest
+COND_HEAR_PLAYER				SOUND_PLAYER								Interest
+COND_SMELL						SOUND_CARCASS/SOUND_MEAT/SOUND_GARBAGE		Smell
+COND_HEAR_THUMPER				SOUND_THUMPER								Special case
+COND_HEAR_BUGBAIT				SOUND_BUGBAIT								Special case
+COND_NO_HEAR_DANGER				none										No danger detected
+COND_HEAR_SPOOKY 				none										Not possible in GMod due to the missing SOUNDENT_CHANNEL_SPOOKY_NOISE
+--]]
+local sdInterests = bit.bor(SOUND_COMBAT, SOUND_DANGER, SOUND_BULLET_IMPACT, SOUND_PHYSICS_DANGER, SOUND_MOVE_AWAY, SOUND_PLAYER_VEHICLE, SOUND_PLAYER, SOUND_WORLD, SOUND_CARCASS, SOUND_MEAT, SOUND_GARBAGE)
+--
+function ENT:GetSoundInterests()
+	return sdInterests
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -627,6 +649,36 @@ end
 -----------------------------------------------------------]]
 function  ENT:GetTotalDamageCount()
 	return self:GetInternalVariable("m_iDamageCount")
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:VJ_GetNearestPointToVector(pos, sameZ)
+	-- sameZ = Should the Z of the result pos (resPos) be the same as my Z ?
+	local myZ = self:GetPos().z
+	local resMe = self:NearestPoint(pos + self:OBBCenter())
+	resMe.z = myZ
+	local resPos = pos
+	resPos.z = sameZ and myZ or pos.z
+	return resMe, resPos
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:VJ_GetNearestPointToEntity(ent, sameZ)
+	-- sameZ = Should the Z of the other entity's result pos (resEnt) be the same as my Z ?
+	local myNearPoint = self:GetDynamicOrigin()
+	local resMe = self:NearestPoint(ent:GetPos() + self:OBBCenter())
+	resMe.z = myNearPoint.z
+	local resEnt = ent:NearestPoint(myNearPoint + ent:OBBCenter())
+	resEnt.z = sameZ and myNearPoint.z or ent:GetPos().z
+	return resMe, resEnt
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:VJ_GetNearestPointToEntityDistance(ent)
+	local entPos = ent:GetPos()
+	local myNearPoint = self:GetDynamicOrigin()
+	local resMe = self:NearestPoint(entPos + self:OBBCenter())
+	resMe.z = myNearPoint.z
+	local resEnt = ent:NearestPoint(myNearPoint + ent:OBBCenter())
+	resEnt.z = entPos.z
+	return resEnt:Distance(resMe)
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*

@@ -1010,6 +1010,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_godmodesnpc"):GetInt() == 1 then self.GodMode = true end
 	if GetConVar("vj_npc_noreload"):GetInt() == 1 then self.AllowWeaponReloading = false end
 	if GetConVar("vj_npc_nobecomeenemytoply"):GetInt() == 1 then self.BecomeEnemyToPlayer = false end
+	if GetConVar("vj_npc_nocallhelp"):GetInt() == 1 then self.CallForHelp = false end
 	if GetConVar("vj_npc_nofollowplayer"):GetInt() == 1 then self.FollowPlayer = false end
 	if GetConVar("vj_npc_nosnpcchat"):GetInt() == 1 then self.AllowPrintingInChat = false end
 	if GetConVar("vj_npc_noweapon"):GetInt() == 1 then self.DisableWeapons = true end
@@ -2272,6 +2273,10 @@ function ENT:Think()
 								end)
 								self:VJ_ACT_PLAYACTIVITY(anim, true, dur, self.WeaponReloadAnimationFaceEnemy, self.WeaponReloadAnimationDelay, {SequenceDuration=dur, PlayBackRateCalculated=true})
 								self.AllowToDo_WaitForEnemyToComeOut = false
+								-- If NOT controlled by a player AND is a gesture make it stop moving so it doesn't run after the enemy right away
+								if !plyControlled && string.find(anim, "vjges_") then
+									self:StopMoving()
+								end
 								return true -- We have successfully ran the animation!
 							end
 							return false -- The given animation was invalid!
@@ -2700,21 +2705,6 @@ function ENT:GetPossibleDangers()
 	return getSdHint(SOUND_DANGER, myPos) or getSdHint(sdBitSource, myPos) or getSdHint(sdBitCombine, myPos) or getSdHint(sdBitPlyVehicle, myPos) or getSdHint(sdBitMortar, myPos)
 end
 */
---------------------
-local sdInterests = bit.bor(SOUND_COMBAT, SOUND_DANGER, SOUND_BULLET_IMPACT, SOUND_PHYSICS_DANGER, SOUND_MOVE_AWAY, SOUND_PLAYER_VEHICLE, SOUND_PLAYER, SOUND_MEAT, SOUND_CARCASS, SOUND_GARBAGE)
--- More info about sound hints: https://github.com/DrVrej/VJ-Base/wiki/Developer-Notes#sound-hints
-function ENT:GetSoundInterests()
-	return sdInterests
-end
--- For dangers: COND_HEAR_DANGER, COND_HEAR_PHYSICS_DANGER, COND_HEAR_MOVE_AWAY
--- For interest: COND_HEAR_COMBAT, COND_HEAR_BULLET_IMPACT, COND_HEAR_PLAYER
--- For smell: COND_SMELL
-/* Remaining:
-	COND_HEAR_THUMPER,
-	COND_HEAR_BUGBAIT,
-	COND_HEAR_WORLD,
-	COND_HEAR_SPOOKY,				// Zombies make this when Alyx is in darkness mode
-*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 3 types of danger detections:
@@ -3107,7 +3097,7 @@ function ENT:SelectSchedule()
 								end
 							end
 							-- Move randomly when shooting
-							if cover_npc == false && !self.IsGuard && self.IsFollowing == false && self.MoveRandomlyWhenShooting == true && (!wep.IsMeleeWeapon) && (!wep.NPC_StandingOnly) && self.DoingWeaponAttack == true && self.DoingWeaponAttack_Standing == true && CurTime() > self.NextMoveRandomlyWhenShootingT && (CurTime() - self.TimeSinceEnemyAcquired) > 2 && (eneDist_Eye < (self.Weapon_FiringDistanceFar / 1.25)) && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered),enePos_Eye) == false then
+							if self.MoveRandomlyWhenShooting && cover_npc == false && !self.IsGuard && !self.IsFollowing && (!wep.IsMeleeWeapon) && (!wep.NPC_StandingOnly) && self.DoingWeaponAttack && self.DoingWeaponAttack_Standing && CurTime() > self.NextMoveRandomlyWhenShootingT && (CurTime() - self.TimeSinceEnemyAcquired) > 2 && (eneDist_Eye < (self.Weapon_FiringDistanceFar / 1.25)) && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered), enePos_Eye) == false then
 								if self:CustomOnMoveRandomlyWhenShooting() != false then
 									local moveCheck = VJ_PICK(self:VJ_CheckAllFourSides(math.random(150, 400), true, "0111"))
 									if moveCheck then
@@ -3732,7 +3722,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			end
 		end
 		
-		VJ_AddStinkyCorpse(self.Corpse, true)
+		VJ_AddStinkyEnt(self.Corpse, true)
 	
 		if IsValid(self.TheDroppedWeapon) then self.Corpse.ExtraCorpsesToRemove[#self.Corpse.ExtraCorpsesToRemove+1] = self.TheDroppedWeapon end
 		if self.DeathCorpseFade == true then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",self.DeathCorpseFadeTime) end

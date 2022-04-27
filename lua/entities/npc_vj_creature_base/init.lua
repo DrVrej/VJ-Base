@@ -1015,6 +1015,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_nobleed"):GetInt() == 1 then self.Bleeds = false end
 	if GetConVar("vj_npc_godmodesnpc"):GetInt() == 1 then self.GodMode = true end
 	if GetConVar("vj_npc_nobecomeenemytoply"):GetInt() == 1 then self.BecomeEnemyToPlayer = false end
+	if GetConVar("vj_npc_nocallhelp"):GetInt() == 1 then self.CallForHelp = false end
 	if GetConVar("vj_npc_nofollowplayer"):GetInt() == 1 then self.FollowPlayer = false end
 	if GetConVar("vj_npc_nosnpcchat"):GetInt() == 1 then self.AllowPrintingInChat = false end
 	if GetConVar("vj_npc_nomedics"):GetInt() == 1 then self.IsMedicSNPC = false end
@@ -3056,7 +3057,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			end
 		end
 		
-		VJ_AddStinkyCorpse(self.Corpse, true)
+		VJ_AddStinkyEnt(self.Corpse, true)
 		
 		if self.DeathCorpseFade == true then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",self.DeathCorpseFadeTime) end
 		if GetConVar("vj_npc_corpsefade"):GetInt() == 1 then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",GetConVar("vj_npc_corpsefadetime"):GetInt()) end

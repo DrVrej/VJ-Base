@@ -12,8 +12,8 @@ TOOL.ClientConVar["playsound"] = 1
 TOOL.ClientConVar["nextspawntime"] = 1
 TOOL.ClientConVar["spawnent"] = "None"
 TOOL.ClientConVar["spawnentname"] = "Unknown"
-TOOL.ClientConVar["spawnclass"] = "false"
-TOOL.ClientConVar["allytoplyallies"] = 1
+TOOL.ClientConVar["spawnnpclass"] = ""
+TOOL.ClientConVar["fritoplyallies"] = 1
 TOOL.ClientConVar["spawnpos_forward"] = 0
 TOOL.ClientConVar["spawnpos_right"] = 0
 TOOL.ClientConVar["spawnpos_up"] = 0
@@ -36,7 +36,8 @@ if CLIENT then
 		reset:SetColor(Color(0,0,0,255))
 		reset.DoClick = function()
 			for k,v in pairs(DefaultConVars) do
-				if v == "" then
+				-- Ignore "vjstool_npcspawner_spawnnpclass" because we don't want it set to "None", we need it to stay ""
+				if v == "" && k != "vjstool_npcspawner_spawnnpclass" then
 				LocalPlayer():ConCommand(k.." ".."None")
 			else
 				LocalPlayer():ConCommand(k.." "..v) end
@@ -77,8 +78,9 @@ if CLIENT then
 			selectwep:SetText(language.GetPhrase("#tool.vjstool_npcspawner.selectweapon")..": "..GetConVarString("vjstool_npcspawner_weaponequipname").." ["..GetConVarString("vjstool_npcspawner_weaponequip").."]")
 			selectwep.OnGetFocus = function() LocalPlayer():ConCommand("vj_npcspawner_openwepselect") end
 		Panel:AddItem(selectwep)
-		Panel:AddControl("TextBox",{Label = "Class Override",WaitForEnter = false,Command = "vjstool_npcspawner_spawnclass"})
-		Panel:AddControl("CheckBox",{Label = "Friendly To Player Allies",Command = "vjstool_npcspawner_allytoplyallies"})
+		Panel:AddControl("TextBox",{Label = "#tool.vjstool_npcspawner.spawnnpclass",WaitForEnter = false,Command = "vjstool_npcspawner_spawnnpclass"})
+		Panel:AddControl("CheckBox",{Label = "#tool.vjstool_npcspawner.fritoplyallies",Command = "vjstool_npcspawner_fritoplyallies"})
+		Panel:ControlHelp("#tool.vjstool_npcspawner.label.fritoplyallies")
 		Panel:AddControl("Button",{Label = "#tool.vjstool_npcspawner.button.updatelist",Command = "vj_npcspawner_updatelist"})
 		Panel:ControlHelp("#tool.vjstool_npcspawner.label1")
 		local CheckList = vgui.Create("DListView")
@@ -94,14 +96,14 @@ if CLIENT then
 				CheckList:RemoveLine(lineID)
 				table.Empty(VJ_NPCSPAWNER_TblCurrentLinesUsable)
 				for _,vLine in pairs(VJ_NPCSPAWNER_TblCurrentLines) do
-					table.insert(VJ_NPCSPAWNER_TblCurrentLinesUsable,{Entities=vLine:GetValue(4),SpawnPosition=vLine:GetValue(2),WeaponsList=vLine:GetValue(3),EntityName=vLine:GetValue(1),RelationshipData=vLine:GetValue(5)})
+					table.insert(VJ_NPCSPAWNER_TblCurrentLinesUsable,{Entities=vLine:GetValue(4),SpawnPosition=vLine:GetValue(2),WeaponsList=vLine:GetValue(3),EntityName=vLine:GetValue(1),Relationship=vLine:GetValue(5)})
 				end
 			end
 		Panel:AddItem(CheckList)
 		for k,v in pairs(VJ_NPCSPAWNER_TblCurrentValues) do
 			if v.Entities == "" or v.Entities == "none" or v.Entities == {} then table.remove(VJ_NPCSPAWNER_TblCurrentValues,k) continue end
 			if v.Entities != "" && v.Entities != "none" && v.Entities != {} then
-				CheckList:AddLine(v.EntityName,Vector(v.SpawnPosition.vForward,v.SpawnPosition.vRight,v.SpawnPosition.vUp),v.WeaponsList,v.Entities,v.RelationshipData)
+				CheckList:AddLine(v.EntityName,Vector(v.SpawnPosition.vForward,v.SpawnPosition.vRight,v.SpawnPosition.vUp),v.WeaponsList,v.Entities,v.Relationship)
 				//CheckList:AddLine(v.Entities,"x:"..v.SpawnPosition.vForward.." y:"..v.SpawnPosition.vRight.." z:"..v.SpawnPosition.vUp)
 			end
 		end
@@ -112,7 +114,7 @@ if CLIENT then
 		VJ_NPCSPAWNER_TblCurrentLines = CheckList:GetLines()
 		table.Empty(VJ_NPCSPAWNER_TblCurrentLinesUsable)
 		for _,vLine in pairs(VJ_NPCSPAWNER_TblCurrentLines) do
-			table.insert(VJ_NPCSPAWNER_TblCurrentLinesUsable,{Entities=vLine:GetValue(4),SpawnPosition=vLine:GetValue(2),WeaponsList=vLine:GetValue(3),EntityName=vLine:GetValue(1),RelationshipData=vLine:GetValue(5)})
+			table.insert(VJ_NPCSPAWNER_TblCurrentLinesUsable,{Entities=vLine:GetValue(4),SpawnPosition=vLine:GetValue(2),WeaponsList=vLine:GetValue(3),EntityName=vLine:GetValue(1),Relationship=vLine:GetValue(5)})
 		end
 		Panel:AddControl("Label", {Text = language.GetPhrase("#tool.vjstool_npcspawner.label2")..":"})
 		Panel:AddControl("Checkbox", {Label = "#tool.vjstool_npcspawner.toggle.spawnsound", Command = "vjstool_npcspawner_playsound"})
@@ -212,10 +214,10 @@ if CLIENT then
 		local spawnposfor = GetConVarString("vjstool_npcspawner_spawnpos_forward")
 		local spawnposright = GetConVarString("vjstool_npcspawner_spawnpos_right")
 		local spawnposup = GetConVarString("vjstool_npcspawner_spawnpos_up")
-		local spawnclass = GetConVarString("vjstool_npcspawner_spawnclass")
-		local spawnally = GetConVarString("vjstool_npcspawner_allytoplyallies")
+		local spawnnpclass = GetConVarString("vjstool_npcspawner_spawnnpclass")
+		local spawnfritoplyallies = GetConVarString("vjstool_npcspawner_fritoplyallies")
 		local spawnequip = string.lower(GetConVarString("vjstool_npcspawner_weaponequip"))
-		table.insert(VJ_NPCSPAWNER_TblCurrentValues,{EntityName=spawnentname, Entities=spawnent, SpawnPosition={vForward=spawnposfor,vRight=spawnposright,vUp=spawnposup}, WeaponsList=spawnequip, RelationshipData={Class = spawnclass, PlayerAlly = spawnally}})
+		table.insert(VJ_NPCSPAWNER_TblCurrentValues,{EntityName=spawnentname, Entities=spawnent, SpawnPosition={vForward=spawnposfor,vRight=spawnposright,vUp=spawnposup}, WeaponsList=spawnequip, Relationship={Class = spawnnpclass, FriToPlyAllies = spawnfritoplyallies}})
 		GetPanel = controlpanel.Get("vjstool_npcspawner")
 		GetPanel:ClearControls()
 		DoBuildCPanel_Spawner(GetPanel)
@@ -247,6 +249,7 @@ else -- If SERVER
 	util.AddNetworkString("vj_npcspawner_sv_create")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	local spawnSounds = {"garrysmod/save_load1.wav","garrysmod/save_load2.wav","garrysmod/save_load3.wav","garrysmod/save_load4.wav"}
+	--
 	net.Receive("vj_npcspawner_sv_create", function(len, ply)
 		local wep = ply:GetActiveWeapon()
 		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcspawner" then
@@ -269,7 +272,7 @@ else -- If SERVER
 			spawner:SetAngles(angs)
 			for _,v in pairs(svgetlines) do
 				//if v.IsVJBaseSpawner == true then ply:ChatPrint("Can't be spawned because it's a spawner") end
-				table.insert(spawner.EntitiesToSpawn,{SpawnPosition={vForward=v.SpawnPosition.x,vRight=v.SpawnPosition.y,vUp=v.SpawnPosition.z}, Entities={v.Entities}, WeaponsList={v.WeaponsList}, NPC_Class = v.RelationshipData.Class, PlayerAlly = v.RelationshipData.PlayerAlly})
+				table.insert(spawner.EntitiesToSpawn,{SpawnPosition={vForward=v.SpawnPosition.x,vRight=v.SpawnPosition.y,vUp=v.SpawnPosition.z}, Entities={v.Entities}, WeaponsList={v.WeaponsList}, NPC_Class = v.Relationship.Class, FriToPlyAllies = tobool(v.Relationship.FriToPlyAllies)})
 			end
 			//spawner.EntitiesToSpawn = {entitiestospawntbl}
 			if convartbl.vjstool_npcspawner_playsound == 1 then

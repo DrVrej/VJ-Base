@@ -531,36 +531,6 @@ function NPC_MetaTable:DecideAnimationLength(anim, override, decrease)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_GetNearestPointToVector(pos, sameZ)
-	-- sameZ = Should the Z of the result pos (resPos) be the same as my Z ?
-	local myZ = self:GetPos().z
-	local resMe = self:NearestPoint(pos + self:OBBCenter())
-	resMe.z = myZ
-	local resPos = pos
-	resPos.z = sameZ and myZ or pos.z
-	return resMe, resPos
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_GetNearestPointToEntity(ent, sameZ)
-	-- sameZ = Should the Z of the other entity's result pos (resEnt) be the same as my Z ?
-	local myNearPoint = self:GetDynamicOrigin()
-	local resMe = self:NearestPoint(ent:GetPos() + self:OBBCenter())
-	resMe.z = myNearPoint.z
-	local resEnt = ent:NearestPoint(myNearPoint + ent:OBBCenter())
-	resEnt.z = sameZ and myNearPoint.z or ent:GetPos().z
-	return resMe, resEnt
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_GetNearestPointToEntityDistance(ent)
-	local entPos = ent:GetPos()
-	local myNearPoint = self:GetDynamicOrigin()
-	local resMe = self:NearestPoint(entPos + self:OBBCenter())
-	resMe.z = myNearPoint.z
-	local resEnt = ent:NearestPoint(myNearPoint + ent:OBBCenter())
-	resEnt.z = entPos.z
-	return resEnt:Distance(resMe)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function Entity_MetaTable:CalculateProjectile(projType, startPos, endPos, projVel)
 	if projType == "Line" then -- Suggested to disable gravity!
 		return ((endPos - startPos):GetNormal()) * projVel
@@ -896,20 +866,20 @@ end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if SERVER then
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Corpse System ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Corpse & Stink System ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 VJ_Corpses = {}
-VJ_Corpses_Stinky = {}
+VJ_StinkyEnts = {}
 --
-function VJ_Corpse_StartThink()
-	timer.Create("vj_corpse_stink_think", 0.3, 0, function()
-		for k, ent in pairs(VJ_Corpses_Stinky) do
+local function VJ_Stink_StartThink()
+	timer.Create("vj_stink_think", 0.3, 0, function()
+		for k, ent in pairs(VJ_StinkyEnts) do
 			if IsValid(ent) then
 				sdEmitHint(SOUND_CARCASS, ent:GetPos(), 500, 2, ent)
 			else -- No longer valid, remove it from the list
-				table_remove(VJ_Corpses_Stinky, k)
-				if #VJ_Corpses_Stinky == 0 then -- If this is the last stinky corpse then destroy the timer!
-					timer.Remove("vj_corpse_stink_think")
+				table_remove(VJ_StinkyEnts, k)
+				if #VJ_StinkyEnts == 0 then -- If this is the last stinky ent then destroy the timer!
+					timer.Remove("vj_stink_think")
 				end
 			end
 		end
@@ -918,18 +888,18 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local stinkyMatTypes = {alienflesh=true, antlion=true, armorflesh=true, bloodyflesh=true, flesh=true, zombieflesh=true, player=true}
 --
-function VJ_AddStinkyCorpse(corpse, checkMat)
-	-- Clear out all removed corpses from the table
-	for k, v in pairs(VJ_Corpses_Stinky) do
+function VJ_AddStinkyEnt(ent, checkMat)
+	-- Clear out all removed ents from the table
+	for k, v in pairs(VJ_StinkyEnts) do
 		if !IsValid(v) then
-			table_remove(VJ_Corpses_Stinky, k)
+			table_remove(VJ_StinkyEnts, k)
 		end
 	end
-	local physObj = corpse:GetPhysicsObject()
+	local physObj = ent:GetPhysicsObject()
 	if (!checkMat) or (IsValid(physObj) && stinkyMatTypes[physObj:GetMaterial()]) then
 		-- types: https://developer.valvesoftware.com/wiki/Material_surface_properties
-		VJ_Corpses_Stinky[#VJ_Corpses_Stinky + 1] = corpse -- Add to the table
-		if !timer.Exists("vj_corpse_stink_think") then VJ_Corpse_StartThink() end -- Start the stinky timer if it doesn't exist
+		VJ_StinkyEnts[#VJ_StinkyEnts + 1] = ent -- Add to the table
+		if !timer.Exists("vj_stink_think") then VJ_Stink_StartThink() end -- Start the stinky timer if it doesn't exist
 		return true
 	end
 	return false
