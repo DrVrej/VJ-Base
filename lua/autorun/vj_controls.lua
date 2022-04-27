@@ -9,6 +9,7 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ VJ Spawnmenu Controls ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+local killIconColor = Color(255, 80, 0, 255)
 VJ = {
 		-- Addon Property ----------------------------------------------------------------------------------------------------
 	/*AddAddon = function(addonname,addontype)
@@ -33,9 +34,9 @@ VJ = {
 		list.Set("VJBASE_SPAWNABLE_NPC", NPC.Class, NPC)
 		if CLIENT then
 			language.Add(NPC.Class, NPC.Name)
-			killicon.Add(NPC.Class,"HUD/killicons/default",Color(255,80,0,255))
+			killicon.Add(NPC.Class,"HUD/killicons/default",killIconColor)
 			language.Add("#"..NPC.Class, NPC.Name)
-			killicon.Add("#"..NPC.Class,"HUD/killicons/default",Color(255,80,0,255))
+			killicon.Add("#"..NPC.Class,"HUD/killicons/default",killIconColor)
 		end
 	end,
 		-- Human NPC ----------------------------------------------------------------------------------------------------
@@ -46,9 +47,9 @@ VJ = {
 		list.Set("VJBASE_SPAWNABLE_NPC", NPCH.Class, NPCH)
 		if CLIENT then
 			language.Add(NPCH.Class, NPCH.Name)
-			killicon.Add(NPCH.Class,"HUD/killicons/default",Color(255,80,0,255))
+			killicon.Add(NPCH.Class,"HUD/killicons/default",killIconColor)
 			language.Add("#"..NPCH.Class, NPCH.Name)
-			killicon.Add("#"..NPCH.Class,"HUD/killicons/default",Color(255,80,0,255))
+			killicon.Add("#"..NPCH.Class,"HUD/killicons/default",killIconColor)
 		end
 	end,
 		-- NPC Weapon ----------------------------------------------------------------------------------------------------
