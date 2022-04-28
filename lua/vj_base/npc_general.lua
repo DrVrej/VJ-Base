@@ -359,49 +359,62 @@ end
 --[[---------------------------------------------------------
 	Makes the NPC face a certain position
 		- pos = Position to face
-		- time = How long should it face that position? | DEFAULT = 0
+		- faceTime = How long should it face that position? | DEFAULT = 0
 	Returns
 		- Angle, the angle it's going to face
 -----------------------------------------------------------]]
-function ENT:FaceCertainPosition(pos, time)
-	local setAngs = self:GetFaceAngle(((pos or defPos) - self:GetPos()):Angle()) // Angle(0, ((pos or defPos) - self:GetPos()):Angle().y, 0)
-	//self:SetAngles(Angle(setAngs.p, self:GetAngles().y, setAngs.r))
-	if self.TurningUseAllAxis == true then self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, self:GetAngles(), Angle(setAngs.p, self:GetAngles().y, setAngs.r))) end
-	self:SetIdealYawAndUpdate(setAngs.y, speed)
+function ENT:FaceCertainPosition(pos, faceTime)
+	local faceAng = self:GetFaceAngle(((pos or defPos) - self:GetPos()):Angle())
+	if self.TurningUseAllAxis == true then
+		local myAngs = self:GetAngles()
+		self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAngs, Angle(faceAng.p, myAngs.y, faceAng.r)))
+	end
+	self:SetIdealYawAndUpdate(faceAng.y)
 	//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
-	self.IsDoingFacePosition = setAngs
-	timer.Create("timer_face_position"..self:EntIndex(), time or 0, 1, function() self.IsDoingFacePosition = false end)
-	return setAngs
+	self.FacingStatus = VJ_FACING_POSITION
+	self.FacingData = faceAng
+	timer.Create("timer_facing_end"..self:EntIndex(), faceTime or 0, 1, function() self.FacingStatus = VJ_FACING_NONE; self.FacingData = nil end)
+	return faceAng
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Makes the NPC face a certain entity
 		- ent = Entity to face
-		- onlyEnemy = Will only face if the entity is an enemy
-		- faceEnemyTime = How long should it face the enemy? | DEFAULT = 0
+		- faceCurEnemy = Should this be registered as enemy facing and constantly switch to the current enemy during its face time? | DEFAULT = true
+		- faceTime = How long should it face the entity? | DEFAULT = 0
 	Returns
 		- Angle, the angle it's going to face
-		- false, if it didn't face the enemy
+		- false, if it didn't face the entity
 -----------------------------------------------------------]]
-function ENT:FaceCertainEntity(ent, onlyEnemy, faceEnemyTime)
-	if !IsValid(ent) or GetConVar("ai_disabled"):GetInt() == 1 or (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false) then return false end
-	if onlyEnemy == true && IsValid(self:GetEnemy()) then
-		self.IsDoingFaceEnemy = true
-		timer.Create("timer_face_enemy"..self:EntIndex(), faceEnemyTime or 0, 1, function() self.IsDoingFaceEnemy = false end)
-		local setAngs = self:GetFaceAngle((ent:GetPos() - self:GetPos()):Angle())
-		self:SetIdealYawAndUpdate(setAngs.y)
-		//self:SetAngles(Angle(setAngs.p, self:GetAngles().y, setAngs.r))
-		if self.TurningUseAllAxis == true then self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, self:GetAngles(), Angle(setAngs.p, self:GetAngles().y, setAngs.r))) end
-		//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
-		return setAngs //SetLocalAngles
+function ENT:FaceCertainEntity(ent, faceCurEnemy, faceTime)
+	if !IsValid(ent) or GetConVar("ai_disabled"):GetInt() == 1 or (self.MovementType == VJ_MOVETYPE_STATIONARY && !self.CanTurnWhileStationary) then return false end
+	if faceCurEnemy then
+		if IsValid(self:GetEnemy()) then -- Make sure to only do it if it even has an enemy
+			local faceAng = self:GetFaceAngle((ent:GetPos() - self:GetPos()):Angle())
+			if self.TurningUseAllAxis == true then
+				local myAngs = self:GetAngles()
+				self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAngs, Angle(faceAng.p, myAngs.y, faceAng.r)))
+			end
+			self:SetIdealYawAndUpdate(faceAng.y)
+			//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
+			self.FacingStatus = VJ_FACING_ENEMY
+			self.FacingData = ent
+			timer.Create("timer_facing_end"..self:EntIndex(), faceTime or 0, 1, function() self.FacingStatus = VJ_FACING_NONE; self.FacingData = nil end)
+			return faceAng
+		end
+		return false
 	else
-		local setAngs = self:GetFaceAngle((ent:GetPos() - self:GetPos()):Angle())
-		self:SetIdealYawAndUpdate(setAngs.y)
-		//self:SetAngles(Angle(setAngs.p, self:GetAngles().y, setAngs.r))
-		if self.TurningUseAllAxis == true then self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, self:GetAngles(), Angle(setAngs.p, self:GetAngles().y, setAngs.r))) end
+		local faceAng = self:GetFaceAngle((ent:GetPos() - self:GetPos()):Angle())
+		if self.TurningUseAllAxis == true then
+			local myAngs = self:GetAngles()
+			self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAngs, Angle(faceAng.p, myAngs.y, faceAng.r)))
+		end
+		self:SetIdealYawAndUpdate(faceAng.y)
 		//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
-		//self:SetIdealYawAndUpdate(setAngs.y)
-		return setAngs
+		self.FacingStatus = VJ_FACING_ENTITY
+		self.FacingData = ent
+		timer.Create("timer_facing_end"..self:EntIndex(), faceTime or 0, 1, function() self.FacingStatus = VJ_FACING_NONE; self.FacingData = nil end)
+		return faceAng
 	end
 	return false
 end
@@ -783,7 +796,7 @@ function ENT:HandleAnimEvent(ev, evTime, evCycle, evType, evOptions)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnCondition(cond)
-	print(self, " Condition: ", cond, " - ", self:ConditionName(cond))
+	//print(self, " Condition: ", cond, " - ", self:ConditionName(cond))
 	self:CustomOnCondition(cond)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -953,10 +966,12 @@ function ENT:DoMedicCheck()
 			end
 			
 			local anim = VJ_PICK(self.AnimTbl_Medic_GiveHealth)
-			self:FaceCertainEntity(self.Medic_CurrentEntToHeal, false)
+			local timeUntilHeal = self:DecideAnimationLength(anim, self.Medic_TimeUntilHeal, 0)
 			if self.Medic_DisableAnimation != true then
 				self:VJ_ACT_PLAYACTIVITY(anim, true, false, false)
 			end
+			
+			self:FaceCertainEntity(self.Medic_CurrentEntToHeal, false, timeUntilHeal)
 			
 			-- Make the ally turn and look at me
 			local noturn = (self.Medic_CurrentEntToHeal.MovementType == VJ_MOVETYPE_STATIONARY and self.Medic_CurrentEntToHeal.CanTurnWhileStationary == false) or false
@@ -968,7 +983,7 @@ function ENT:DoMedicCheck()
 				self.Medic_CurrentEntToHeal:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 			end
 			
-			timer.Simple(self:DecideAnimationLength(anim, self.Medic_TimeUntilHeal, 0), function()
+			timer.Simple(timeUntilHeal, function()
 				if IsValid(self) then
 					if !IsValid(self.Medic_CurrentEntToHeal) then -- Ally doesn't exist anymore, reset
 						self:DoMedicReset()

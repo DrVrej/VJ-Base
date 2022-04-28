@@ -12,10 +12,10 @@ include("shared.lua")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Model = {""} -- The models it should spawn with | Picks a random one from the table
 ENT.PhysicsInitType = SOLID_VPHYSICS
-ENT.MoveType = MOVETYPE_VPHYSICS -- Move type, recommended to keep it as it is
-ENT.MoveCollideType = MOVECOLLIDE_FLY_BOUNCE -- Move type | Some examples: MOVECOLLIDE_FLY_BOUNCE, MOVECOLLIDE_FLY_SLIDE
-ENT.CollisionGroupType = COLLISION_GROUP_PROJECTILE -- Collision type, recommended to keep it as it is
-ENT.SolidType = SOLID_CUSTOM -- Solid type, recommended to keep it as it is
+ENT.MoveType = MOVETYPE_VPHYSICS
+ENT.MoveCollideType = MOVECOLLIDE_FLY_BOUNCE
+ENT.CollisionGroupType = COLLISION_GROUP_PROJECTILE
+ENT.SolidType = SOLID_CUSTOM
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Collision / Damage Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

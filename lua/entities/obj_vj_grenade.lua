@@ -32,9 +32,9 @@ end
 if !SERVER then return end
 
 ENT.Model = {"models/vj_weapons/w_grenade.mdl"} -- The models it should spawn with | Picks a random one from the table
-ENT.MoveCollideType = nil -- Move type | Some examples: MOVECOLLIDE_FLY_BOUNCE, MOVECOLLIDE_FLY_SLIDE
-ENT.CollisionGroupType = nil -- Collision type, recommended to keep it as it is
-ENT.SolidType = SOLID_VPHYSICS -- Solid type, recommended to keep it as it is
+ENT.MoveCollideType = nil
+ENT.CollisionGroupType = nil
+ENT.SolidType = SOLID_VPHYSICS
 ENT.RemoveOnHit = false -- Should it remove itself when it touches something? | It will run the hit sound, place a decal, etc.
 ENT.DoesRadiusDamage = true -- Should it do a blast damage when it hits something?
 ENT.RadiusDamageRadius = 250 -- How far the damage go? The farther away it's from its enemy, the less damage it will do | Counted in world units

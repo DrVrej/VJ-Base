@@ -32,7 +32,7 @@ end
 if !SERVER then return end
 
 ENT.Model = {"models/effects/combineball.mdl"} -- The models it should spawn with | Picks a random one from the table
-ENT.MoveCollideType = MOVECOLLIDE_FLY_BOUNCE -- Move type | Some examples: MOVECOLLIDE_FLY_BOUNCE, MOVECOLLIDE_FLY_SLIDE
+ENT.MoveCollideType = MOVECOLLIDE_FLY_BOUNCE
 ENT.RemoveOnHit = false -- Should it remove itself when it touches something? | It will run the hit sound, place a decal, etc.
 ENT.DoesDirectDamage = false -- Should it do a direct damage when it hits something?
 ENT.DirectDamage = 200 -- How much damage should it do when it hits something
