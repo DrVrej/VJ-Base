@@ -73,11 +73,17 @@ VJ_WEP_STATE_HOLSTERED = 1 -- Weapon is holstered
 VJ_WEP_STATE_RELOADING = 2 -- Weapon is reloading
 
 -- NPC weapon inventory status
-VJ_WEP_INVENTORY_NONE = 0 -- It's currently using no weapon (Default)
-VJ_WEP_INVENTORY_PRIMARY = 1 -- It's currently using its primary weapon
-VJ_WEP_INVENTORY_SECONDARY = 2 -- It's currently using its secondary weapon
-VJ_WEP_INVENTORY_MELEE = 3 -- It's currently using its melee weapon
-VJ_WEP_INVENTORY_ANTI_ARMOR = 4 -- It's currently using its anti-armor weapon
+VJ_WEP_INVENTORY_NONE = 0 -- Currently using no weapon (Default)
+VJ_WEP_INVENTORY_PRIMARY = 1 -- Currently using its primary weapon
+VJ_WEP_INVENTORY_SECONDARY = 2 -- Currently using its secondary weapon
+VJ_WEP_INVENTORY_MELEE = 3 -- Currently using its melee weapon
+VJ_WEP_INVENTORY_ANTI_ARMOR = 4 -- Currently using its anti-armor weapon
+
+-- NPC facing status
+VJ_FACING_NONE = 0 -- No status is set (Default)
+VJ_FACING_ENEMY = 1 -- Currently attempting to face the enemy
+VJ_FACING_ENTITY = 2 -- Currently attempting to face a specific entity
+VJ_FACING_POSITION = 3 -- Currently attempting to face a specific position
 
 -- Source NPC condition definitions because they are not defined in GMod for some reason ??
 COND_BEHIND_ENEMY = 29

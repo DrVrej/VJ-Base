@@ -865,11 +865,8 @@ ENT.Medic_IsHealingAlly = false
 ENT.AlreadyDoneMedicThinkCode = false
 ENT.AlreadyBeingHealedByMedic = false
 ENT.VJFriendly = false
-ENT.IsDoingFaceEnemy = false
-ENT.IsDoingFacePosition = false
 ENT.VJ_PlayingInterruptSequence = false
 ENT.IsAbleToMeleeAttack = true
-ENT.CanDoSelectScheduleAgain = true
 ENT.AllowToDo_WaitForEnemyToComeOut = true
 ENT.HasBeenGibbedOnDeath = false
 ENT.DeathAnimationCodeRan = false
@@ -961,7 +958,9 @@ ENT.AttackType = VJ_ATTACK_NONE
 ENT.AttackStatus = VJ_ATTACK_STATUS_NONE
 ENT.WeaponState = VJ_WEP_STATE_READY
 ENT.WeaponInventoryStatus = VJ_WEP_INVENTORY_NONE
-ENT.TimersToRemove = {"timer_weapon_state_reset","timer_state_reset","timer_act_seqreset","timer_face_position","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_reload_end","timer_alerted_reset"}
+ENT.FacingStatus = VJ_FACING_NONE
+ENT.FacingData = nil
+ENT.TimersToRemove = {"timer_weapon_state_reset","timer_state_reset","timer_act_seqreset","timer_facing_end","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_reload_end","timer_alerted_reset"}
 ENT.FollowData = {Ent = NULL, MinDist = 0, Moving = false, StopAct = false}
 //ENT.DefaultGibOnDeathDamageTypes = {[DMG_ALWAYSGIB]=true,[DMG_ENERGYBEAM]=true,[DMG_BLAST]=true,[DMG_VEHICLE]=true,[DMG_CRUSH]=true,[DMG_DISSOLVE]=true,[DMG_SLOWBURN]=true,[DMG_PHYSGUN]=true,[DMG_PLASMA]=true,[DMG_SONIC]=true}
 //ENT.SavedDmgInfo = {} -- Set later
@@ -1633,7 +1632,7 @@ function ENT:DoChaseAnimation(alwaysChase)
 		return
 	end
 	
-	if alwaysChase == false && (self.DisableChasingEnemy == true or self.IsGuard == true or self.RangeAttack_DisableChasingEnemy == true) then self:VJ_TASK_IDLE_STAND() return end
+	if alwaysChase == false && (self.DisableChasingEnemy == true or self.IsGuard == true) then self:VJ_TASK_IDLE_STAND() return end
 	
 	-- If the enemy is not reachable
 	if (self:HasCondition(COND_ENEMY_UNREACHABLE) or self:IsUnreachable(ene)) && (IsValid(self:GetActiveWeapon()) == true && (!self:GetActiveWeapon().IsMeleeWeapon)) then
@@ -2171,11 +2170,24 @@ function ENT:Think()
 		//print("MAX CLIP: ", self.CurrentWeaponEntity:GetMaxClip1())
 		//print("CLIP: ", self.CurrentWeaponEntity:Clip1())
 
-		-- Turn to the current face position
-		if self.IsDoingFacePosition != false then
-			local setAngs = self.IsDoingFacePosition
-			if self.TurningUseAllAxis == true then self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, self:GetAngles(), Angle(setAngs.p, self:GetAngles().y, setAngs.r))) end
-			self:SetIdealYawAndUpdate(setAngs.y)
+		-- Turn to the current face position or entity
+		if self.FacingStatus == VJ_FACING_POSITION then
+			local faceAng = self.FacingData
+			if self.TurningUseAllAxis == true then
+				local myAngs = self:GetAngles()
+				self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAngs, Angle(faceAng.p, myAngs.y, faceAng.r)))
+			end
+			self:SetIdealYawAndUpdate(faceAng.y)
+		elseif self.FacingStatus == VJ_FACING_ENTITY then
+			local faceEnt = self.FacingData
+			if IsValid(faceEnt) then
+				local faceAng = self:GetFaceAngle((faceEnt:GetPos() - self:GetPos()):Angle())
+				if self.TurningUseAllAxis == true then
+					local myAngs = self:GetAngles()
+					self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAngs, Angle(faceAng.p, myAngs.y, faceAng.r)))
+				end
+				self:SetIdealYawAndUpdate(faceAng.y)
+			end
 		end
 		
 		/*VJ_CreateTestObject(self:GetEnemyLastSeenPos())
@@ -2347,10 +2359,13 @@ function ENT:Think()
 				
 				-- Turning / Facing Enemy
 				if self.ConstantlyFaceEnemy then self:DoConstantlyFaceEnemy() end
-				if self.IsDoingFaceEnemy == true or (self.CombatFaceEnemy == true && self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self.LastEnemyVisible))) then
-					local setAngs = self:GetFaceAngle((enePos - myPos):Angle())
-					if self.TurningUseAllAxis == true then self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, self:GetAngles(), Angle(setAngs.p, self:GetAngles().y, setAngs.r))) end
-					self:SetIdealYawAndUpdate(setAngs.y)
+				if self.FacingStatus == VJ_FACING_ENEMY or (self.CombatFaceEnemy == true && self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self.LastEnemyVisible))) then
+					local faceAng = self:GetFaceAngle((enePos - myPos):Angle())
+					if self.TurningUseAllAxis == true then
+						local myAngs = self:GetAngles()
+						self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAngs, Angle(faceAng.p, myAngs.y, faceAng.r)))
+					end
+					self:SetIdealYawAndUpdate(faceAng.y)
 				end
 
 				-- Call for help

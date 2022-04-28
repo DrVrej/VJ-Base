@@ -888,11 +888,7 @@ ENT.VJFriendly = false
 ENT.IsAbleToMeleeAttack = true
 ENT.IsAbleToRangeAttack = true
 ENT.IsAbleToLeapAttack = true
-ENT.RangeAttack_DisableChasingEnemy = false
-ENT.IsDoingFaceEnemy = false
-ENT.IsDoingFacePosition = false
 ENT.VJ_PlayingInterruptSequence = false
-ENT.CanDoSelectScheduleAgain = true
 ENT.HasBeenGibbedOnDeath = false
 ENT.DeathAnimationCodeRan = false
 ENT.VJ_IsBeingControlled_Tool = false
@@ -962,7 +958,9 @@ ENT.SelectedDifficulty = 1
 ENT.AIState = VJ_STATE_NONE
 ENT.AttackType = VJ_ATTACK_NONE
 ENT.AttackStatus = VJ_ATTACK_STATUS_NONE
-ENT.TimersToRemove = {"timer_state_reset","timer_act_seqreset","timer_face_position","timer_face_enemy","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap","timer_alerted_reset"}
+ENT.FacingStatus = VJ_FACING_NONE
+ENT.FacingData = nil
+ENT.TimersToRemove = {"timer_state_reset","timer_act_seqreset","timer_facing_end","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap","timer_alerted_reset"}
 ENT.FollowData = {Ent = NULL, MinDist = 0, Moving = false, StopAct = false, IsLiving = false}
 //ENT.DefaultGibOnDeathDamageTypes = {[DMG_ALWAYSGIB]=true,[DMG_ENERGYBEAM]=true,[DMG_BLAST]=true,[DMG_VEHICLE]=true,[DMG_CRUSH]=true,[DMG_DISSOLVE]=true,[DMG_SLOWBURN]=true,[DMG_PHYSGUN]=true,[DMG_PLASMA]=true,[DMG_SONIC]=true}
 //ENT.SavedDmgInfo = {} -- Set later
@@ -1579,7 +1577,7 @@ function ENT:DoChaseAnimation(alwaysChase)
 		return
 	end
 	
-	if alwaysChase == false && (self.DisableChasingEnemy == true or self.IsGuard == true or self.RangeAttack_DisableChasingEnemy == true) then self:VJ_TASK_IDLE_STAND() return end
+	if alwaysChase == false && (self.DisableChasingEnemy == true or self.IsGuard == true) then self:VJ_TASK_IDLE_STAND() return end
 	
 	-- If the enemy is not reachable then wander around
 	if self:IsUnreachable(ene) == true then
@@ -1788,11 +1786,24 @@ function ENT:Think()
 			//self:SetAngles(Angle(math_angApproach(self:GetAngles().p, self.AA_CurrentTurnAng.p, self.TurningSpeed),math_angApproach(self:GetAngles().y, self.AA_CurrentTurnAng.y, self.TurningSpeed),math_angApproach(self:GetAngles().r, self.AA_CurrentTurnAng.r, self.TurningSpeed)))
 		end*/
 
-		-- Turn to the current face position
-		if self.IsDoingFacePosition != false then
-			local setAngs = self.IsDoingFacePosition
-			if self.TurningUseAllAxis == true then self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, self:GetAngles(), Angle(setAngs.p, self:GetAngles().y, setAngs.r))) end
-			self:SetIdealYawAndUpdate(setAngs.y)
+		-- Turn to the current face position or entity
+		if self.FacingStatus == VJ_FACING_POSITION then
+			local faceAng = self.FacingData
+			if self.TurningUseAllAxis == true then
+				local myAngs = self:GetAngles()
+				self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAngs, Angle(faceAng.p, myAngs.y, faceAng.r)))
+			end
+			self:SetIdealYawAndUpdate(faceAng.y)
+		elseif self.FacingStatus == VJ_FACING_ENTITY then
+			local faceEnt = self.FacingData
+			if IsValid(faceEnt) then
+				local faceAng = self:GetFaceAngle((faceEnt:GetPos() - self:GetPos()):Angle())
+				if self.TurningUseAllAxis == true then
+					local myAngs = self:GetAngles()
+					self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAngs, Angle(faceAng.p, myAngs.y, faceAng.r)))
+				end
+				self:SetIdealYawAndUpdate(faceAng.y)
+			end
 		end
 		
 		if self.Dead == false then
@@ -1849,10 +1860,13 @@ function ENT:Think()
 				
 				-- Turning / Facing Enemy
 				if self.ConstantlyFaceEnemy then self:DoConstantlyFaceEnemy() end
-				if self.IsDoingFaceEnemy == true or (self.CombatFaceEnemy == true && self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self.LastEnemyVisible))) then
-					local setAngs = self:GetFaceAngle((enePos - myPos):Angle())
-					if self.TurningUseAllAxis == true then self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, self:GetAngles(), Angle(setAngs.p, self:GetAngles().y, setAngs.r))) end
-					self:SetIdealYawAndUpdate(setAngs.y)
+				if self.FacingStatus == VJ_FACING_ENEMY or (self.CombatFaceEnemy == true && self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self.LastEnemyVisible))) then
+					local faceAng = self:GetFaceAngle((enePos - myPos):Angle())
+					if self.TurningUseAllAxis == true then
+						local myAngs = self:GetAngles()
+						self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAngs, Angle(faceAng.p, myAngs.y, faceAng.r)))
+					end
+					self:SetIdealYawAndUpdate(faceAng.y)
 				end
 
 				-- Call for help
@@ -1862,15 +1876,18 @@ function ENT:Think()
 				end
 				
 				-- Stop chasing at certain distance
-				if self.NoChaseAfterCertainRange == true && !plyControlled && ((self.NoChaseAfterCertainRange_Type == "OnlyRange" && self.HasRangeAttack == true) or (self.NoChaseAfterCertainRange_Type == "Regular")) then
+				if self.NoChaseAfterCertainRange && !plyControlled && ((self.NoChaseAfterCertainRange_Type == "OnlyRange" && self.HasRangeAttack) or (self.NoChaseAfterCertainRange_Type == "Regular")) && self.LastEnemyVisible then
 					local farDist = self.NoChaseAfterCertainRange_FarDistance
 					local closeDist = self.NoChaseAfterCertainRange_CloseDistance
 					if farDist == "UseRangeDistance" then farDist = self.RangeDistance end
 					if closeDist == "UseRangeDistance" then closeDist = self.RangeToMeleeDistance end
-					if (self.LatestEnemyDistance < farDist) && (self.LatestEnemyDistance > closeDist) && self.LastEnemyVisible then
+					if (self.LatestEnemyDistance < farDist) && (self.LatestEnemyDistance > closeDist) then
+						-- If the self.NextChaseTime is about to expire, then give it 0.5 delay so it does NOT chase!
+						if (self.NextChaseTime - curTime) < 0.1 then
+							self.NextChaseTime = curTime + 0.5
+						end
 						local moveType = self.MovementType
 						curSched = self.CurrentSchedule -- Already defined
-						self.RangeAttack_DisableChasingEnemy = true
 						if curSched != nil && curSched.Name == "vj_chase_enemy" then self:StopMoving() end -- Interrupt enemy chasing because we are in range!
 						if moveType == VJ_MOVETYPE_GROUND && !self:IsMoving() && self:OnGround() then self:FaceCertainEntity(ene) end
 						if (moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC) then
@@ -1878,7 +1895,6 @@ function ENT:Think()
 							if curTime > self.AA_CurrentMoveTime then self:AA_IdleWander(true, "Calm", {FaceDest = !self.ConstantlyFaceEnemy}) /*self:AA_StopMoving()*/ end -- Only face the position if self.ConstantlyFaceEnemy is false!
 						end
 					else
-						self.RangeAttack_DisableChasingEnemy = false
 						if self.CurrentSchedule != nil && self.CurrentSchedule.Name != "vj_chase_enemy" then self:DoChaseAnimation() end
 					end
 				end
