@@ -1138,8 +1138,8 @@ function ENT:Initialize()
 			end
 		end
 	end)
-	duplicator.RegisterEntityClass(self:GetClass(), VJSPAWN_SNPC_DUPE, "Class", "Equipment", "SpawnFlags", "Data")
-	if self.DisableWeapons == false then
+	duplicator.RegisterEntityClass(self:GetClass(), VJ.CreateDupe_NPC, "Class", "Equipment", "SpawnFlags", "Data")
+	if !self.DisableWeapons then
 		timer.Simple(0.1, function()
 			if IsValid(self) then
 				local wep = self:GetActiveWeapon()
@@ -2454,7 +2454,7 @@ function ENT:Think()
 			else -- No Enemy
 				self.DoingWeaponAttack = false
 				self.DoingWeaponAttack_Standing = false
-				if !self.Alerted && self.DidWeaponAttackAimParameter == true && self.DoingWeaponAttack == false && plyControlled == false then
+				if !self.Alerted && self.DidWeaponAttackAimParameter == true && plyControlled == false then
 					self:ClearPoseParameters()
 					self.DidWeaponAttackAimParameter = false
 				end

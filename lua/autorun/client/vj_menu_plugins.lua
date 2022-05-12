@@ -6,13 +6,13 @@
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 
-if VJBASE_PLUGINS != nil then VJBASE_TOTALPLUGINS = table.Count(VJBASE_PLUGINS) else VJBASE_TOTALPLUGINS = 0 end
-//PrintTable(VJBASE_PLUGINS)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_PLUGINS(Panel)
+local function VJ_PLUGINS(Panel)
+	local numPlugins = #VJ.Plugins
+	
 	Panel:AddControl("Label", {Text = "#vjbase.menu.plugins.label"})
 	Panel:ControlHelp(language.GetPhrase("#vjbase.menu.plugins.version").." "..VJBASE_VERSION) -- Main Number / Version / Patches
-	Panel:ControlHelp(language.GetPhrase("#vjbase.menu.plugins.totalplugins").." "..VJBASE_TOTALPLUGINS)
+	Panel:ControlHelp(language.GetPhrase("#vjbase.menu.plugins.totalplugins").." "..numPlugins)
 	
 	local CheckList = vgui.Create("DListView")
 	CheckList:SetTooltip(false)
@@ -22,18 +22,18 @@ function VJ_PLUGINS(Panel)
 	CheckList:AddColumn("#vjbase.menu.plugins.header1") -- Add column
 	CheckList:AddColumn("#vjbase.menu.plugins.header2"):SetFixedWidth(50) -- Add column
 	//Panel:SetName("Test") -- Renames the blue label
-	if VJBASE_PLUGINS != nil then
-		for _,v in SortedPairsByMemberValue(VJBASE_PLUGINS,"Name") do
-			CheckList:AddLine(v.Name,v.Type)
+	if VJ.Plugins != nil then
+		for _,v in SortedPairsByMemberValue(VJ.Plugins, "Name") do
+			CheckList:AddLine(v.Name, v.Type)
 		end
 	else
-		CheckList:AddLine("#vjbase.menu.plugins.notfound","")
+		CheckList:AddLine("#vjbase.menu.plugins.notfound", "")
 	end
 	CheckList.OnRowSelected = function()
 		surface.PlaySound(Sound("vj_illuminati/Illuminati Confirmed.mp3"))
-		chat.AddText(Color(255,255,0),"-=-=-=-=-=-=-=-=- ", Color(255,100,0),VJBASE_GETNAME, Color(255,255,0)," -=-=-=-=-=-=-=-=-")
+		chat.AddText(Color(255,255,0),"-=-=-=-=-=-=-=-=- ", Color(255,100,0), "VJ Base", Color(255,255,0)," -=-=-=-=-=-=-=-=-")
 		chat.AddText(Color(0,255,0), language.GetPhrase("#vjbase.menu.plugins.version").." "..VJBASE_VERSION)
-		chat.AddText(Color(0,255,0), language.GetPhrase("#vjbase.menu.plugins.totalplugins").." "..VJBASE_TOTALPLUGINS)
+		chat.AddText(Color(0,255,0), language.GetPhrase("#vjbase.menu.plugins.totalplugins").." "..numPlugins)
 	end
 	Panel:AddItem(CheckList)
 	
@@ -82,7 +82,7 @@ function VJ_PLUGINS(Panel)
 		lennyface:SetColor(Color(0, 0, 102))
 		lennyface:SetFont("VJFont_Trebuchet24_SmallMedium")
 		lennyface.DoClick = function(x)
-			net.Start("VJSay")
+			net.Start("vj_meme")
 			net.SendToServer()
 		end
 		Panel:AddPanel(lennyface)
@@ -93,33 +93,25 @@ hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_INSTALLATIONS", function()
 	spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Installed Plugins", "#vjbase.menu.plugins", "", "", VJ_PLUGINS)
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJWelcomeCode()
+local function doWelcomeMsg()
 	print("Notice: This server is running VJ Base.")
 
-	-- Yete inen ver e, ere vor 0 ten e
-	local amt = VJBASE_TOTALPLUGINS
+	local amt = #VJ.Plugins
     if amt <= 9 then
 		amt = "0"..tostring(amt)
 	else
 		amt = tostring(amt)
 	end
-    local ra = "<"
-	local la = ">"
-    local dashes = ""
-	for _ = 1,28 do dashes = dashes.."-" end
-    
-    chat.AddText(Color(255,215,0),"|"..dashes..la, Color(0,255,255), " "..VJBASE_GETNAME.." ", Color(30,200,255), VJBASE_VERSION.." ", Color(255,215,0), ra..dashes.."|")
-    chat.AddText(Color(255,215,0),"|- ", Color(255,255,0),"NOTICE! ", Color(255,255,255), "To configure ", Color(0,255,255), VJBASE_GETNAME.." ", Color(255,255,255), "click on ", Color(0,255,255), "DrVrej", Color(255,255,255)," in the spawn menu! ", Color(255,215,0),"-|")
-    //chat.AddText(Color(255,215,0),"|"..dashes..la, Color(30,200,255), " "..amt, Color(0,255,255), " VJ Plugins ", Color(255,215,0), ra..dashes.."|")
-
-	//chat.AddText(Color(255,255,0),"-=-=-=-=-=-=-=- ", Color(0,200,200), VJBASE_GETNAME.." - "..VJBASE_VERSION, Color(0,255,0), " ("..VJBASE_TOTALPLUGINS.." VJ Addons)",Color(255,255,0)," -=-=-=-=-=-=-=-")
-	//chat.AddText(Color(255,150,0),"NOTICE: ", Color(0,255,0),"To configure ", Color(0,200,200),VJBASE_GETNAME..", ", Color(0,255,0),"click on 'DrVrej' in the spawnmenu.")
-	//chat.AddText(Color(255,255,0),"-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+    local dashes = "----------------------------"
+	
+    chat.AddText(Color(255,215,0),"|"..dashes..">", Color(0,255,255), " VJ Base ", Color(30,200,255), VJBASE_VERSION.." ", Color(255,215,0), "<"..dashes.."|")
+    chat.AddText(Color(255,215,0),"|- ", Color(255,255,0),"NOTICE! ", Color(255,255,255), "To configure ", Color(0,255,255), "VJ Base ", Color(255,255,255), "click on ", Color(0,255,255), "DrVrej", Color(255,255,255)," in the spawn menu! ", Color(255,215,0),"-|")
+    //chat.AddText(Color(255,215,0),"|"..dashes..">", Color(30,200,255), " "..amt, Color(0,255,255), " VJ Plugins ", Color(255,215,0), "<"..dashes.."|")
 end
-concommand.Add("vj_welcome", VJWelcomeCode)
-net.Receive("VJWelcome", VJWelcomeCode)
+concommand.Add("vj_welcome_msg", doWelcomeMsg)
+net.Receive("vj_welcome_msg", doWelcomeMsg)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 concommand.Add("vj_iamhere", function(ply,cmd,args)
-	net.Start("VJSay")
+	net.Start("vj_meme")
 	net.SendToServer()
 end)

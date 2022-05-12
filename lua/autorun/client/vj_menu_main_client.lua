@@ -17,7 +17,7 @@ local function VJ_INFORMATION(Panel)
 	Panel:ControlHelp("Date - "..os.date("%b %d, %Y - %I:%M %p")) -- Date
 	Panel:ControlHelp("Name - "..client:Nick().." ("..client:SteamID()..")") -- Name + Steam ID
 	Panel:ControlHelp("Session - "..(game.SinglePlayer() and "SinglePlayer" or "Multiplayer")..", "..gmod.GetGamemode().Name.." ("..game.GetMap()..")") -- Game Session
-	Panel:ControlHelp("VJ Base - "..VJBASE_VERSION..", "..VJBASE_TOTALPLUGINS.." plugins, "..GetConVar("vj_language"):GetString()) -- VJ Base Information
+	Panel:ControlHelp("VJ Base - "..VJBASE_VERSION..", "..#VJ.Plugins.." plugins, "..GetConVar("vj_language"):GetString()) -- VJ Base Information
 	Panel:ControlHelp("System - "..(system.IsLinux() and "Linux" or (system.IsOSX() and "OSX" or "Windows")).." ("..ScrW().."x"..ScrH()..")") // system.IsWindows() -- System
 	--
 	--
@@ -63,7 +63,7 @@ local function VJ_MAINMENU_CLIENT(Panel)
 	vj_combo_box:SetValue("#vjbase.menu.clsettings.labellang")
 	vj_combo_box:AddChoice("English", "english", false, "flags16/us.png")
 	vj_combo_box:AddChoice("简体中文", "schinese", false, "flags16/cn.png")
-	vj_combo_box:AddChoice("Հայերեն *", "armenian", false, "flags16/am.png")
+	vj_combo_box:AddChoice("ՀայերԷն *", "armenian", false, "flags16/am.png")
 	vj_combo_box:AddChoice("Русский", "russian", false, "flags16/ru.png")
 	vj_combo_box:AddChoice("Deutsche *", "german", false, "flags16/de.png")
 	vj_combo_box:AddChoice("Français *", "french", false, "flags16/fr.png")
