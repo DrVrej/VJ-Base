@@ -307,15 +307,15 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Spawn Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-local function VJSPAWN_NPCINTERNAL(Player, Position, Normal, Class, Equipment, SpawnFlagsSaved)
+local function CreateInternal_NPC(Player, Position, Normal, Class, Equipment, SpawnFlagsSaved)
 	if CLIENT then return end
-	print("Running VJ Base SNPC Internal...")
+	print("Running VJ Base NPC duplicator internal...")
 	local NPCList = list.Get("NPC") //VJBASE_SPAWNABLE_NPC
 	local NPCData = NPCList[Class]
-	if NPCList[Class] == nil then print("VJ Base SNPC Internal canceled an NPC from spawning, because it's not listed in the NPC menu.") return end
-	PrintTable(NPCList[Class])
-	//if !IsValid(NPCData) then print("VJ Base SNPC Internal was unable to spawn the SNPC, it didn't find any NPC Data to use") return end
-	print("VJ Base SNPC Internal is spawning: "..NPCData.Class)
+	if NPCData == nil then print("ERROR! VJ Base NPC duplicator internal failed, NPC not listed in the NPC menu!") return end
+	//PrintTable(NPCData)
+	//if !IsValid(NPCData) then print("VJ Base NPC Internal was unable to spawn the NPC, it didn't find any NPC Data to use") return end
+	print("VJ Base NPC duplicator internal creating: " .. NPCData.Name .. " ( ".. NPCData.Class .. " ) --> ".. NPCData.Category)
 
 	-- Don't let them spawn this entity if it isn't in our NPC Spawn list.
 	/*if (!NPCData) then 
@@ -342,7 +342,7 @@ local function VJSPAWN_NPCINTERNAL(Player, Position, Normal, Class, Equipment, S
 
 	-- Create NPC
 	local NPC = ents.Create(NPCData.Class)
-	if (!IsValid(NPC)) then return print("VJ Base SNPC Internal was unable to spawn the SNPC, the class didn't exist!") end
+	if (!IsValid(NPC)) then print("ERROR! VJ Base NPC duplicator internal failed, NPC class does not exist!") return end
 	NPC:SetPos(Position)
 	
 	-- Rotate to face player (expected behavior)
@@ -402,71 +402,24 @@ local function VJSPAWN_NPCINTERNAL(Player, Position, Normal, Class, Equipment, S
 	NPC:Activate()
 	
 	if ( bDropToFloor && !NPCData.OnCeiling ) then NPC:DropToFloor() end
-	print("VJ Base SNPC Internal successfully created the SNPC.")
+	print("VJ Base NPC duplicator internal successfully created the NPC!")
 	return NPC
 end
 -------------------------------------------------------------------------------------------------------------------------
-/*
-function VJSPAWN_NPC( player, NPCClassName, WeaponName, tr )
-	if CLIENT then return end
-	//if ( !NPCClassName ) then return end
-	-- Give the gamemode an opportunity to deny spawning
-	print(player)
-	//print(NPCClassName)
-	//print(WeaponName)
-	//if ( !gamemode.Call( "PlayerSpawnNPC", player, NPCClassName, WeaponName ) ) then return end
-	if ( !tr ) then
-		local vStart = player:GetShootPos()
-		local vForward = player:GetAimVector()
-		local trace = {}
-			trace.start = vStart
-			trace.endpos = vStart + vForward * 2048
-			trace.filter = player
-		tr = util.TraceLine( trace )
-	end
-	
-	-- Create the NPC is you can.
-	local SpawnedNPC = VJSPAWN_NPCINTERNAL(player, tr.HitPos, tr.HitNormal, NPCClassName, WeaponName)
-	//if ( !IsValid( SpawnedNPC ) ) then return end
+if !VJ then VJ = {} end -- If VJ isn't initialized, initialize it!
+--
+local vecZ1 = Vector(0, 0, 1)
+--
+VJ.CreateDupe_NPC = function(ply, class, equipment, spawnflags, data) -- Based on the GMod NPCs, had to recreate it here because it's not a global function
+	//PrintTable(data)
+	if IsValid(ply) && !gamemode.Call("PlayerSpawnNPC", ply, class, equipment) then return end -- Don't create if this player isn't allowed to spawn NPCs!
 
-	-- Give the gamemode an opportunity to do whatever
-	if ( IsValid( player ) ) then gamemode.Call("PlayerSpawnedNPC", player, SpawnedNPC) end
-	
-	-- See if we can find a nice name for this NPC..
-	local NPCList = list.Get( "VJBASE_SPAWNABLE_NPC" )
-	local NiceName = nil
-	if ( NPCList[ NPCClassName ] ) then 
-		NiceName = NPCList[ NPCClassName ].Name
-	end
-	print("VJ Base SNPC successfully spawned the SNPC.")
-	-- Add to undo list
-	undo.Create("NPC")
-		undo.SetPlayer( player )
-		undo.AddEntity( SpawnedNPC )
-		if ( NiceName ) then
-			undo.SetCustomUndoText( "Undone "..NiceName )
-		end
-	undo.Finish( "NPC ("..tostring(NPCClassName)..")" )
-	
-	-- And cleanup
-	player:AddCleanup( "npcs", SpawnedNPC )
-	player:SendLua( "achievements.SpawnedNPC()" )
-	print("VJ Base successfully created the SNPC.")
-	//end
-end
-concommand.Add("vjbase_spawnnpc", function(ply,cmd,args) VJSPAWN_NPC(ply,args[1],args[2]) end)
-*/
--------------------------------------------------------------------------------------------------------------------------
-function VJSPAWN_SNPC_DUPE(ply, class, equipment, spawnflags, data) -- Based on the GMod NPCs, had to recreate it here because it's not a global function
-	PrintTable(data)
-	if (!gamemode.Call("PlayerSpawnNPC", ply, class, equipment)) then return end -- Don't create if this player isn't allowed to spawn NPCs!
-
-	local normal = Vector(0, 0, 1)
+	local normal = vecZ1
 	local NPCList = list.Get("NPC")
 	local NPCData = NPCList[class]
 	if (NPCData && NPCData.OnCeiling) then normal = Vector(0, 0, -1) end
 
-	local ent = VJSPAWN_NPCINTERNAL(ply, data.Pos, normal, class, equipment, spawnflags)
+	local ent = CreateInternal_NPC(ply, data.Pos, normal, class, equipment, spawnflags)
 	if (IsValid(ent)) then
 		local pos = ent:GetPos() -- Prevents the NPCs from falling through the floor
 		duplicator.DoGeneric(ent, data) -- Applies generic every-day entity stuff for ent from table data (wiki)

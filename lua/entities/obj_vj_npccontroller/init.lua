@@ -321,15 +321,22 @@ function ENT:Think()
 		local canTurn = true
 
 		-- Weapon attack
-		if IsValid(self.VJCE_NPC:GetActiveWeapon()) && self.VJCE_NPC.IsVJBaseSNPC == true && self.VJCE_NPC.IsVJBaseSNPC_Human == true && !self.VJCE_NPC:IsMoving() && self.VJCE_NPC:GetActiveWeapon().IsVJBaseWeapon == true && self.VJCE_Player:KeyDown(IN_ATTACK2) && self.VJCE_NPC.AttackType == VJ_ATTACK_NONE && self.VJCE_NPC.vACT_StopAttacks == false && self.VJCE_NPC:GetWeaponState() == VJ_WEP_STATE_READY then
-			//self.VJCE_NPC:SetAngles(Angle(0,math.ApproachAngle(self.VJCE_NPC:GetAngles().y,self.VJCE_Player:GetAimVector():Angle().y,100),0))
-			self.VJCE_NPC:FaceCertainPosition(pos_beye, 0.2)
-			canTurn = false
-			if VJ_IsCurrentAnimation(self.VJCE_NPC, self.VJCE_NPC:TranslateToWeaponAnim(self.VJCE_NPC.CurrentWeaponAnimation)) == false && VJ_IsCurrentAnimation(self.VJCE_NPC, self.VJCE_NPC.AnimTbl_WeaponAttack) == false then
-				self.VJCE_NPC.CurrentWeaponAnimation = VJ_PICK(self.VJCE_NPC.AnimTbl_WeaponAttack)
-				self.VJCE_NPC:VJ_ACT_PLAYACTIVITY(self.VJCE_NPC.CurrentWeaponAnimation, false, 2, false)
-				self.VJCE_NPC.DoingWeaponAttack = true
-				self.VJCE_NPC.DoingWeaponAttack_Standing = true
+		if self.VJCE_NPC.IsVJBaseSNPC_Human == true then
+			if IsValid(self.VJCE_NPC:GetActiveWeapon()) && !self.VJCE_NPC:IsMoving() && self.VJCE_NPC:GetActiveWeapon().IsVJBaseWeapon == true && self.VJCE_Player:KeyDown(IN_ATTACK2) && self.VJCE_NPC.AttackType == VJ_ATTACK_NONE && self.VJCE_NPC.vACT_StopAttacks == false && self.VJCE_NPC:GetWeaponState() == VJ_WEP_STATE_READY then
+				//self.VJCE_NPC:SetAngles(Angle(0,math.ApproachAngle(self.VJCE_NPC:GetAngles().y,self.VJCE_Player:GetAimVector():Angle().y,100),0))
+				self.VJCE_NPC:FaceCertainPosition(pos_beye, 0.2)
+				canTurn = false
+				if VJ_IsCurrentAnimation(self.VJCE_NPC, self.VJCE_NPC:TranslateToWeaponAnim(self.VJCE_NPC.CurrentWeaponAnimation)) == false && VJ_IsCurrentAnimation(self.VJCE_NPC, self.VJCE_NPC.AnimTbl_WeaponAttack) == false then
+					self.VJCE_NPC:CustomOnWeaponAttack()
+					self.VJCE_NPC.CurrentWeaponAnimation = VJ_PICK(self.VJCE_NPC.AnimTbl_WeaponAttack)
+					self.VJCE_NPC:VJ_ACT_PLAYACTIVITY(self.VJCE_NPC.CurrentWeaponAnimation, false, 2, false)
+					self.VJCE_NPC.DoingWeaponAttack = true
+					self.VJCE_NPC.DoingWeaponAttack_Standing = true
+				end
+			end
+			if !self.VJCE_Player:KeyDown(IN_ATTACK2) then
+				self.VJCE_NPC.DoingWeaponAttack = false
+				self.VJCE_NPC.DoingWeaponAttack_Standing = false
 			end
 		end
 		
