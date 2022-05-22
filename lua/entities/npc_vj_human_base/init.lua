@@ -968,7 +968,6 @@ local GetConVar = GetConVar
 local isstring = isstring
 local isnumber = isnumber
 local tonumber = tonumber
-local vec0 = Vector(0,0,0)
 local math_clamp = math.Clamp
 local math_rad = math.rad
 local math_cos = math.cos
@@ -1645,7 +1644,7 @@ function ENT:SetupWeaponHoldTypeAnims(hType)
 	elseif VJ_AnimationExists(self, "coverlow_r") == true && VJ_AnimationExists(self, "wave_smg1") == true && VJ_AnimationExists(self, ACT_BUSY_SIT_GROUND) == true then
 		self.ModelAnimationSet = 3 -- Rebel
 	elseif VJ_AnimationExists(self, "gmod_breath_layer") == true then
-		self.ModelAnimationSet = 4 -- Rebel
+		self.ModelAnimationSet = 4 -- Player
 	end
 	
 	self.WeaponAnimTranslations = {}
@@ -2442,11 +2441,11 @@ function ENT:Think()
 			self:SetArrivalActivity(self.CurrentAnim_IdleStand)
 		end
 
-		if self.MovementType == VJ_MOVETYPE_GROUND && self.UsePlayerModelMovement == true then
-			local MoveDir = self:GetMoveDirection(true)
-			if MoveDir != vec0 then
-				self:SetPoseParameter("move_x", MoveDir.x)
-				self:SetPoseParameter("move_y", MoveDir.y)
+		if self.UsePlayerModelMovement == true && self.MovementType == VJ_MOVETYPE_GROUND then
+			local moveDir = self:GetMoveDirection(true)
+			if moveDir != defPos then
+				self:SetPoseParameter("move_x", moveDir.x)
+				self:SetPoseParameter("move_y", moveDir.y)
 				if curSched != nil && !curSched.ConstantlyFaceEnemy then
 					self:FaceCertainPosition(self:GetCurWaypointPos())
 				end
