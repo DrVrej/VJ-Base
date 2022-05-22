@@ -110,8 +110,7 @@ function ENT:StartControlling()
 	plyEnt:StripWeapons()
 	if plyEnt:GetInfoNum("vj_npc_cont_diewithnpc", 0) == 1 then self.VJC_Player_CanRespawn = false end
 
-	hook.Add("PlayerButtonDown", self, function(ply, button)
-		//print(button)
+	hook.Add("PlayerButtonDown", self, function(self, ply, button)
 		if ply.IsControlingNPC == true && IsValid(ply.VJ_TheControllerEntity) then
 			local cent = ply.VJ_TheControllerEntity
 			cent.VJC_Key_Last = button
@@ -155,7 +154,7 @@ function ENT:StartControlling()
 		end
 	end)
 
-	hook.Add("KeyPress", self, function(ply, key)
+	hook.Add("KeyPress", self, function(self, ply, key)
 		//print(key)
 		if ply.IsControlingNPC == true && IsValid(ply.VJ_TheControllerEntity) then
 			local cent = ply.VJ_TheControllerEntity
@@ -166,21 +165,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetControlledNPC(GetEntity)
 	-- Set the bullseye entity values
-<<<<<<< Updated upstream
-	self.VJCE_Bullseye = ents.Create("obj_vj_bullseye")
-	self.VJCE_Bullseye:SetPos(GetEntity:GetPos() + GetEntity:GetForward()*100 + GetEntity:GetUp()*50)//Vector(GetEntity:OBBMaxs().x +20,0,GetEntity:OBBMaxs().z +20))
-	self.VJCE_Bullseye:SetModel("models/hunter/blocks/cube025x025x025.mdl")
-	//self.VJCE_Bullseye:SetParent(GetEntity)
-	self.VJCE_Bullseye:SetRenderMode(RENDERMODE_NONE)
-	self.VJCE_Bullseye:Spawn()
-	self.VJCE_Bullseye:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
-	self.VJCE_Bullseye.EnemyToIndividual = true
-	self.VJCE_Bullseye.EnemyToIndividualEnt = GetEntity
-	self.VJCE_Bullseye:SetColor(color0000)
-	self.VJCE_Bullseye:SetNoDraw(false)
-	self.VJCE_Bullseye:DrawShadow(false)
-	self:DeleteOnRemove(self.VJCE_Bullseye)
-=======
+
 	local bullseyeEnt = ents.Create("obj_vj_bullseye")
 	bullseyeEnt:SetPos(GetEntity:GetPos() + GetEntity:GetForward()*100 + GetEntity:GetUp()*50)//Vector(GetEntity:OBBMaxs().x +20,0,GetEntity:OBBMaxs().z +20))
 	bullseyeEnt:SetModel("models/hunter/blocks/cube025x025x025.mdl")
@@ -194,7 +179,6 @@ function ENT:SetControlledNPC(GetEntity)
 	bullseyeEnt:DrawShadow(false)
 	self:DeleteOnRemove(bullseyeEnt)
 	self.VJCE_Bullseye = bullseyeEnt
->>>>>>> Stashed changes
 
 	-- Set the NPC values
 	if !GetEntity.VJC_Data then
@@ -301,9 +285,8 @@ function ENT:SendDataToClient(reset)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local vecZ20 = Vector(0, 0, 20)
-local curtime = CurTime()
-local frametime = FrameTime()
-local AttackTypes = {MeleeAttack=false, RangeAttack=false, LeapAttack=false, WeaponAttack=false, GrenadeAttack=false, Ammo="---"}
+local curTime = CurTime()
+local defAttackTypes = {MeleeAttack=false, RangeAttack=false, LeapAttack=false, WeaponAttack=false, GrenadeAttack=false, Ammo="---"}
 --
 function ENT:Think()
 	local ply = self.VJCE_Player
@@ -319,6 +302,7 @@ function ENT:Think()
 		self:SendDataToClient()
 		
 		-- HUD
+		local AttackTypes = defAttackTypes -- Optimization?
 		if npc.IsVJBaseSNPC == true then
 			if npc.HasMeleeAttack == true then AttackTypes["MeleeAttack"] = ((npc.IsAbleToMeleeAttack != true or npc.AttackType == VJ_ATTACK_MELEE) and 2) or true end
 			if npc.HasRangeAttack == true then AttackTypes["RangeAttack"] = ((npc.IsAbleToRangeAttack != true or npc.AttackType == VJ_ATTACK_RANGE) and 2) or true end
@@ -354,38 +338,27 @@ function ENT:Think()
 		local canTurn = true
 
 		-- Weapon attack
-<<<<<<< Updated upstream
-		if IsValid(self.VJCE_NPC:GetActiveWeapon()) && self.VJCE_NPC.IsVJBaseSNPC == true && self.VJCE_NPC.IsVJBaseSNPC_Human == true && !self.VJCE_NPC:IsMoving() && self.VJCE_NPC:GetActiveWeapon().IsVJBaseWeapon == true && self.VJCE_Player:KeyDown(IN_ATTACK2) && !self.VJCE_NPC.IsReloadingWeapon && self.VJCE_NPC.AttackType == VJ_ATTACK_NONE && self.VJCE_NPC.vACT_StopAttacks == false && self.VJCE_NPC:GetWeaponState() != VJ_WEP_STATE_HOLSTERED then
-			//self.VJCE_NPC:SetAngles(Angle(0,math.ApproachAngle(self.VJCE_NPC:GetAngles().y,self.VJCE_Player:GetAimVector():Angle().y,100),0))
-			self.VJCE_NPC:FaceCertainPosition(pos_beye, 0.2)
-=======
-		if IsValid(npcWeapon) && npc.IsVJBaseSNPC == true && npc.IsVJBaseSNPC_Human == true && !npc:IsMoving() && npcWeapon.IsVJBaseWeapon == true && ply:KeyDown(IN_ATTACK2) && npc.AttackType == VJ_ATTACK_NONE && npc.vACT_StopAttacks == false && npc:GetWeaponState() == VJ_WEP_STATE_READY then
-			//npc:SetAngles(Angle(0,math.ApproachAngle(npc:GetAngles().y,ply:GetAimVector():Angle().y,100),0))
-			npc:FaceCertainPosition(pos_beye, 0.2)
->>>>>>> Stashed changes
-			canTurn = false
-			if VJ_IsCurrentAnimation(npc, npc:TranslateToWeaponAnim(npc.CurrentWeaponAnimation)) == false && VJ_IsCurrentAnimation(npc, npc.AnimTbl_WeaponAttack) == false then
-				npc.CurrentWeaponAnimation = VJ_PICK(npc.AnimTbl_WeaponAttack)
-				npc:VJ_ACT_PLAYACTIVITY(npc.CurrentWeaponAnimation, false, 2, false)
-				npc.DoingWeaponAttack = true
-				npc.DoingWeaponAttack_Standing = true
+		if npc.IsVJBaseSNPC_Human == true then
+			if IsValid(npcWeapon) && !npc:IsMoving() && npcWeapon.IsVJBaseWeapon == true && ply:KeyDown(IN_ATTACK2) && npc.AttackType == VJ_ATTACK_NONE && npc.vACT_StopAttacks == false && npc:GetWeaponState() == VJ_WEP_STATE_READY then
+				//npc:SetAngles(Angle(0,math.ApproachAngle(npc:GetAngles().y,ply:GetAimVector():Angle().y,100),0))
+				npc:FaceCertainPosition(pos_beye, 0.2)
+				canTurn = false
+				if VJ_IsCurrentAnimation(npc, npc:TranslateToWeaponAnim(npc.CurrentWeaponAnimation)) == false && VJ_IsCurrentAnimation(npc, npc.AnimTbl_WeaponAttack) == false then
+					npc.CurrentWeaponAnimation = VJ_PICK(npc.AnimTbl_WeaponAttack)
+					npc:VJ_ACT_PLAYACTIVITY(npc.CurrentWeaponAnimation, false, 2, false)
+					npc.DoingWeaponAttack = true
+					npc.DoingWeaponAttack_Standing = true
+				end
+			end
+			if !ply:KeyDown(IN_ATTACK2) then
+				npc.DoingWeaponAttack = false
+				npc.DoingWeaponAttack_Standing = false
 			end
 		end
 		
 		if npc.Flinching == true or (((npc.CurrentSchedule && npc.CurrentSchedule.IsPlayActivity != true) or npc.CurrentSchedule == nil) && npc:GetNavType() == NAV_JUMP) then return end
 		
 		-- Turning
-<<<<<<< Updated upstream
-		if !self.VJCE_NPC:IsMoving() && self.VJCE_NPC.PlayingAttackAnimation == false && canTurn && self.VJCE_NPC.IsReloadingWeapon != true && CurTime() > self.VJCE_NPC.NextChaseTime && self.VJCE_NPC.IsVJBaseSNPC_Tank != true && self.VJCE_NPC.MovementType != VJ_MOVETYPE_PHYSICS then
-			//self.VJCE_NPC:SetAngles(Angle(0,self.VJCE_Player:GetAimVector():Angle().y,0))
-			local angdif = math.abs(math.AngleDifference(self.VJCE_Player:EyeAngles().y, self.VJC_NPC_LastIdleAngle))
-			self.VJC_NPC_LastIdleAngle = self.VJCE_NPC:EyeAngles().y //tr_ply.HitPos
-			self.VJCE_NPC:VJ_TASK_IDLE_STAND()
-			if ((self.VJCE_NPC.MovementType != VJ_MOVETYPE_STATIONARY) or (self.VJCE_NPC.MovementType == VJ_MOVETYPE_STATIONARY && self.VJCE_NPC.CanTurnWhileStationary == true)) then
-				if (VJ_AnimationExists(self.VJCE_NPC, ACT_TURN_LEFT) == false && VJ_AnimationExists(self.VJCE_NPC, ACT_TURN_RIGHT) == false) or (angdif <= 50 && self.VJCE_NPC:GetActivity() != ACT_TURN_LEFT && self.VJCE_NPC:GetActivity() != ACT_TURN_RIGHT) then
-					//self.VJCE_NPC:VJ_TASK_IDLE_STAND()
-					self.VJCE_NPC:FaceCertainPosition(pos_beye, 0.1)
-=======
 		if !npc:IsMoving() && npc.PlayingAttackAnimation == false && canTurn && CurTime() > npc.NextChaseTime && npc.IsVJBaseSNPC_Tank != true && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ_WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
 			//npc:SetAngles(Angle(0,ply:GetAimVector():Angle().y,0))
 			local angdif = math.abs(math.AngleDifference(ply:EyeAngles().y, self.VJC_NPC_LastIdleAngle))
@@ -395,7 +368,6 @@ function ENT:Think()
 				if (VJ_AnimationExists(npc, ACT_TURN_LEFT) == false && VJ_AnimationExists(npc, ACT_TURN_RIGHT) == false) or (angdif <= 50 && npc:GetActivity() != ACT_TURN_LEFT && npc:GetActivity() != ACT_TURN_RIGHT) then
 					//npc:VJ_TASK_IDLE_STAND()
 					npc:FaceCertainPosition(pos_beye, 0.1)
->>>>>>> Stashed changes
 				else
 					self.NextIdleStandTime = 0
 					npc:SetLastPosition(pos_beye) // ply:GetEyeTrace().HitPos
@@ -449,7 +421,7 @@ function ENT:Think()
 			end*/
 		end
 	end
-	self:NextThink(curtime + (0.069696968793869 + frametime))
+	self:NextThink(curTime + (0.069696968793869 + FrameTime()))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartMovement(Dir, Rot)

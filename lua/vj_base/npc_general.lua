@@ -313,7 +313,7 @@ function ENT:VJ_DecideSoundPitch(pitch1, pitch2)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Gets all the pose the parameters of the NPC and returns it.
+	Gets the forward vector that the NPC is moving towards and returns it
 		- ignoreZ = Ignores the Z axis of the direction during calulations | DEFAULT = false
 	Returns
 		- Vector, the direction the NPC is moving towards
