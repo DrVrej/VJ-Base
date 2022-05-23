@@ -144,6 +144,7 @@ ENT.AnimTbl_Run = {ACT_RUN} -- Set the running animations | Put multiple to let 
 ENT.IdleAlwaysWander = false -- If set to true, it will make the SNPC always wander when idling
 ENT.DisableWandering = false -- Disables wandering when the SNPC is idle
 ENT.DisableChasingEnemy = false -- Disables the SNPC chasing the enemy
+ENT.UsePlayerModelMovement = false -- If set to true, it will allow the SNPC to use player model's properly by calculating the direction it needs to go to and setting the appropriate values
 	-- ====== Constantly Face Enemy Variables ====== --
 ENT.ConstantlyFaceEnemy = false -- Should it face the enemy constantly?
 ENT.ConstantlyFaceEnemy_IfVisible = true -- Should it only face the enemy if it's visible?
@@ -1154,7 +1155,7 @@ function ENT:DoChangeMovementType(movType)
 		self:SetMoveType(MOVETYPE_STEP)
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
 		self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND))
-		if VJ_AnimationExists(self,ACT_JUMP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_JUMP)) end
+		if VJ_AnimationExists(self,ACT_JUMP) == true or self.UsePlayerModelMovement == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_JUMP)) end
 		if VJ_AnimationExists(self,ACT_CLIMB_UP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
 	elseif self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 		self:SetGroundEntity(NULL)
@@ -1688,6 +1689,17 @@ function ENT:Think()
 		self:SetPlaybackRate(self.AnimationPlaybackRate)
 		if self:GetArrivalActivity() == -1 then
 			self:SetArrivalActivity(self.CurrentAnim_IdleStand)
+		end
+
+		if self.UsePlayerModelMovement == true && self.MovementType == VJ_MOVETYPE_GROUND then
+			local moveDir = self:GetMoveDirection(true)
+			if moveDir != defPos then
+				self:SetPoseParameter("move_x", moveDir.x)
+				self:SetPoseParameter("move_y", moveDir.y)
+				if curSched != nil && !curSched.ConstantlyFaceEnemy then
+					self:FaceCertainPosition(self:GetCurWaypointPos())
+				end
+			end
 		end
 		
 		self:CustomOnThink_AIEnabled()

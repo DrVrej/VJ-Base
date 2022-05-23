@@ -24,10 +24,11 @@ if CLIENT then
 		local npc = ply.VJCE_NPC -- The NPC that's being controlled
 		if !IsValid(ply.VJCE_Camera) or !IsValid(ply.VJCE_NPC) then return end
 		if IsValid(ply:GetViewEntity()) && ply:GetViewEntity():GetClass() == "gmod_cameraprop" then return end
+		local cameraMode = ply.VJC_Camera_Mode
 
 		local pos = origin -- The position that will be set
 		local ang = ply:EyeAngles()
-		if ply.VJC_Camera_Mode == 2 then -- First person
+		if cameraMode == 2 then -- First person
 			local setPos = npc:EyePos() + npc:GetForward()*20
 			local offset = ply.VJC_FP_Offset
 			//camera:SetLocalPos(camera:GetLocalPos() + ply.VJC_TP_Offset) -- Help keep the camera stable
@@ -58,10 +59,19 @@ if CLIENT then
 			})
 			pos = tr.HitPos + tr.HitNormal*2
 		end
+
+		if npc.Controller_CalcView then -- Allows custom calcview overrides
+			local data = npc:Controller_CalcView(ply, pos, ang, fov, origin, angles, cameraMode)
+			if data then
+				pos = data.origin or pos
+				ang = data.angles or ang
+				fov = data.fov or fov
+			end
+		end
 		
 		-- Lerp the position and the angle
 		local lerpSpeed = ply:GetInfoNum("vj_npc_cont_cam_speed", 6)
-		viewLerpVec = (ply.VJC_Camera_Mode == 2 and pos) or LerpVector(FrameTime()*lerpSpeed, viewLerpVec, pos)
+		viewLerpVec = (cameraMode == 2 and pos) or LerpVector(FrameTime()*lerpSpeed, viewLerpVec, pos)
         viewLerpAng = LerpAngle(FrameTime()*lerpSpeed, viewLerpAng, ang)
 		
 		-- Send the player's hit position to the controller entity
@@ -75,7 +85,7 @@ if CLIENT then
 			origin = viewLerpVec,
 			angles = viewLerpAng,
 			fov = fov,
-			drawviewer = false, //(ply.VJC_Camera_Mode == 2 and true) or false
+			drawviewer = false, //(cameraMode == 2 and true) or false
 		}
 		return view
 	end)
