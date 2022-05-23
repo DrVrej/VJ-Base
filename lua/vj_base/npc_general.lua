@@ -318,10 +318,8 @@ end
 	Returns
 		- Vector, the direction the NPC is moving towards
 -----------------------------------------------------------]]
-local vec0 = Vector(0,0,0)
---
 function ENT:GetMoveDirection(ignoreZ)
-	if !self:IsMoving() then return vec0 end
+	if !self:IsMoving() then return defPos end
 	local waypoint = self:GetCurWaypointPos() or self:GetPos()
 	local dir = (waypoint - self:GetPos())
 	if ignoreZ then dir.z = 0 end
