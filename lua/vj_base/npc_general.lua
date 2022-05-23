@@ -332,6 +332,21 @@ function ENT:VJ_DecideSoundPitch(pitch1, pitch2)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
+	Gets the forward vector that the NPC is moving towards and returns it
+		- ignoreZ = Ignores the Z axis of the direction during calulations | DEFAULT = false
+	Returns
+		- Vector, the direction the NPC is moving towards
+-----------------------------------------------------------]]
+function ENT:GetMoveDirection(ignoreZ)
+	if !self:IsMoving() then return defPos end
+	local waypoint = self:GetCurWaypointPos() or self:GetPos()
+	local dir = (waypoint - self:GetPos())
+	if ignoreZ then dir.z = 0 end
+
+	return (self:GetAngles() - dir:Angle()):Forward()
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
 	Gets all the pose the parameters of the NPC and returns it.
 		- prt = Prints the pose parameters
 	Returns
