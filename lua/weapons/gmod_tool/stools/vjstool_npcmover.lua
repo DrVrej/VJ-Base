@@ -228,8 +228,8 @@ else -- If SERVER
 						if k == 1 or math.random(1, 5) == 1 then v:PlaySoundSystem("OnReceiveOrder") end
 						v:VJ_TASK_GOTO_LASTPOS(type_task, function(x)
 							if IsValid(v:GetEnemy()) && v:Visible(v:GetEnemy()) then
-								x:EngTask("TASK_FACE_ENEMY", 0) 
-								x.CanShootWhenMoving = true 
+								x:EngTask("TASK_FACE_ENEMY", 0)
+								x.CanShootWhenMoving = true
 								x.ConstantlyFaceEnemy = true
 							end
 						end)

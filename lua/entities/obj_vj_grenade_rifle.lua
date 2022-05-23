@@ -17,6 +17,8 @@ ENT.Category		= "VJ Base"
 ENT.Spawnable = false
 ENT.AdminOnly = false
 
+ENT.VJ_IsDetectableDanger = true
+
 if CLIENT then
 	local Name = "Rifle Grenade"
 	local LangName = "obj_vj_grenade_rifle"

@@ -9,90 +9,89 @@ if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ VJ Spawnmenu Controls ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-VJ = {
-		-- Addon Property ----------------------------------------------------------------------------------------------------
-	/*AddAddon = function(addonname,addontype)
-		local AddonProperty = { Name = addonname, Type = addontype }
-		list.Set( "VJBASE_ADDONPROPERTIES", addonname, AddonProperty )
-	end,*/
-	AddAddonProperty = function(aAddonName,aAddonType)
-		if VJBASE_PLUGINS == nil then VJBASE_PLUGINS = {} end
-		table.insert(VJBASE_PLUGINS, {Name = aAddonName, Type = aAddonType})
-	end,
-		-- Regular NPC ----------------------------------------------------------------------------------------------------
-	AddCategoryInfo = function(acName, acFeatures)
-		list.Set("VJBASE_CATEGORY_INFO", acName, {
-			icon = acFeatures.Icon or "icon16/monkey.png",
-		})
-	end,
-		-- Regular NPC ----------------------------------------------------------------------------------------------------
-	AddNPC = function(nName,nClass,vCat,nAdmin,nFunc)
-		local NPC = {Name = nName, Class = nClass, Category = vCat, AdminOnly = nAdmin}
-		if (nFunc) then nFunc(NPC) end
-		list.Set("NPC", NPC.Class, NPC)
-		list.Set("VJBASE_SPAWNABLE_NPC", NPC.Class, NPC)
-		if CLIENT then
-			language.Add(NPC.Class, NPC.Name)
-			killicon.Add(NPC.Class,"HUD/killicons/default",Color(255,80,0,255))
-			language.Add("#"..NPC.Class, NPC.Name)
-			killicon.Add("#"..NPC.Class,"HUD/killicons/default",Color(255,80,0,255))
-		end
-	end,
-		-- Human NPC ----------------------------------------------------------------------------------------------------
-	AddNPC_HUMAN = function(nhName,nhClass,nhWeapons,vCat,nhAdmin,nhFunc)
-		local NPCH = {Name = nhName, Class = nhClass, Weapons = nhWeapons, Category = vCat, AdminOnly = nhAdmin}
-		if (nhFunc) then nhFunc(NPCH) end
-		list.Set("NPC", NPCH.Class, NPCH)
-		list.Set("VJBASE_SPAWNABLE_NPC", NPCH.Class, NPCH)
-		if CLIENT then
-			language.Add(NPCH.Class, NPCH.Name)
-			killicon.Add(NPCH.Class,"HUD/killicons/default",Color(255,80,0,255))
-			language.Add("#"..NPCH.Class, NPCH.Name)
-			killicon.Add("#"..NPCH.Class,"HUD/killicons/default",Color(255,80,0,255))
-		end
-	end,
-		-- NPC Weapon ----------------------------------------------------------------------------------------------------
-	AddNPCWeapon = function(nwName,nwClass)
-		local NPCW = {title = nwName, class = nwClass}
-		list.Set("NPCUsableWeapons", NPCW.class, NPCW)
-		list.Set("VJBASE_SPAWNABLE_NPC_WEAPON", NPCW.class, NPCW)
-	end,
-		-- Weapon ----------------------------------------------------------------------------------------------------
-	AddWeapon = function(wName,wClass,wAdmin,vCat,wFunc)
-		local Weapon = {ClassName = wClass, PrintName = wName, Category = vCat, AdminOnly = wAdmin, Spawnable = true}
-		if (wFunc) then wFunc(Weapon) end
-		list.Set("Weapon", wClass, Weapon)
-		list.Set("VJBASE_SPAWNABLE_WEAPON", wClass, Weapon)
-		duplicator.Allow(wClass)
-	end,
-		-- Entity ----------------------------------------------------------------------------------------------------
-	AddEntity = function(eName,eClass,eAuthor,eAdmin,eOffSet,eDropToFloor,vCat,eFunc)
-		local Ent = {PrintName = eName, ClassName = eClass, Author = eAuthor, AdminOnly = eAdmin, NormalOffset = eOffSet, DropToFloor = eDropToFloor, Category = vCat, Spawnable = true}
-		if (eFunc) then eFunc(Ent) end
-		list.Set("SpawnableEntities", eClass, Ent)
-		list.Set("VJBASE_SPAWNABLE_ENTITIES", eClass, Ent)
-		duplicator.Allow(eClass)
-	end,
-		-- Particle ----------------------------------------------------------------------------------------------------
-	AddParticle = function(pFileName,pParticleList)
-		game.AddParticles(pFileName)
-		for _,v in ipairs(pParticleList) do PrecacheParticleSystem(v) end
-	end,
-		-- ConVar ----------------------------------------------------------------------------------------------------
-	AddConVar = function(cName,cValue,cFlags)
-		if !ConVarExists(cName) then
-			cFlags = cFlags or {FCVAR_NONE}
-			CreateConVar(cName,cValue,cFlags)
-		end
-	end,
-		-- Client ConVar ----------------------------------------------------------------------------------------------------
-	AddClientConVar = function(cName,cValue,cHelpText)
-		if !ConVarExists(cName) then
-			cHelpText = cHelpText or ""
-			CreateClientConVar(cName,cValue,true,true,cHelpText)
-		end
-	end,
-}
+local killIconColor = Color(255, 80, 0, 255)
+
+if !VJ then VJ = {} end -- If VJ isn't initialized, initialize it!
+
+-- Variables ----------------------------------------------------------------------------------------------------
+if !VJ.Plugins then VJ.Plugins = {} end
+-- Addon Property ----------------------------------------------------------------------------------------------------
+VJ.AddAddonProperty = function(aAddonName, aAddonType)
+	table.insert(VJ.Plugins, {Name = aAddonName, Type = aAddonType})
+end
+-- Regular NPC ----------------------------------------------------------------------------------------------------
+VJ.AddCategoryInfo = function(acName, acFeatures)
+	list.Set("VJBASE_CATEGORY_INFO", acName, {
+		icon = acFeatures.Icon or "icon16/monkey.png",
+	})
+end
+-- Regular NPC ----------------------------------------------------------------------------------------------------
+VJ.AddNPC = function(nName,nClass,vCat,nAdmin,nFunc)
+	local NPC = {Name = nName, Class = nClass, Category = vCat, AdminOnly = nAdmin}
+	if (nFunc) then nFunc(NPC) end
+	list.Set("NPC", NPC.Class, NPC)
+	list.Set("VJBASE_SPAWNABLE_NPC", NPC.Class, NPC)
+	if CLIENT then
+		language.Add(NPC.Class, NPC.Name)
+		killicon.Add(NPC.Class,"HUD/killicons/default",killIconColor)
+		language.Add("#"..NPC.Class, NPC.Name)
+		killicon.Add("#"..NPC.Class,"HUD/killicons/default",killIconColor)
+	end
+end
+-- Human NPC ----------------------------------------------------------------------------------------------------
+VJ.AddNPC_HUMAN = function(nhName,nhClass,nhWeapons,vCat,nhAdmin,nhFunc)
+	local NPCH = {Name = nhName, Class = nhClass, Weapons = nhWeapons, Category = vCat, AdminOnly = nhAdmin}
+	if (nhFunc) then nhFunc(NPCH) end
+	list.Set("NPC", NPCH.Class, NPCH)
+	list.Set("VJBASE_SPAWNABLE_NPC", NPCH.Class, NPCH)
+	if CLIENT then
+		language.Add(NPCH.Class, NPCH.Name)
+		killicon.Add(NPCH.Class,"HUD/killicons/default",killIconColor)
+		language.Add("#"..NPCH.Class, NPCH.Name)
+		killicon.Add("#"..NPCH.Class,"HUD/killicons/default",killIconColor)
+	end
+end
+-- NPC Weapon ----------------------------------------------------------------------------------------------------
+VJ.AddNPCWeapon = function(nwName,nwClass)
+	local NPCW = {title = nwName, class = nwClass}
+	list.Set("NPCUsableWeapons", NPCW.class, NPCW)
+	list.Set("VJBASE_SPAWNABLE_NPC_WEAPON", NPCW.class, NPCW)
+end
+-- Weapon ----------------------------------------------------------------------------------------------------
+VJ.AddWeapon = function(wName,wClass,wAdmin,vCat,wFunc)
+	local Weapon = {ClassName = wClass, PrintName = wName, Category = vCat, AdminOnly = wAdmin, Spawnable = true}
+	if (wFunc) then wFunc(Weapon) end
+	list.Set("Weapon", wClass, Weapon)
+	list.Set("VJBASE_SPAWNABLE_WEAPON", wClass, Weapon)
+	duplicator.Allow(wClass)
+end
+-- Entity ----------------------------------------------------------------------------------------------------
+VJ.AddEntity = function(eName,eClass,eAuthor,eAdmin,eOffSet,eDropToFloor,vCat,eFunc)
+	local Ent = {PrintName = eName, ClassName = eClass, Author = eAuthor, AdminOnly = eAdmin, NormalOffset = eOffSet, DropToFloor = eDropToFloor, Category = vCat, Spawnable = true}
+	if (eFunc) then eFunc(Ent) end
+	list.Set("SpawnableEntities", eClass, Ent)
+	list.Set("VJBASE_SPAWNABLE_ENTITIES", eClass, Ent)
+	duplicator.Allow(eClass)
+end
+-- Particle ----------------------------------------------------------------------------------------------------
+VJ.AddParticle = function(pFileName,pParticleList)
+	game.AddParticles(pFileName)
+	for _,v in ipairs(pParticleList) do PrecacheParticleSystem(v) end
+end
+-- ConVar ----------------------------------------------------------------------------------------------------
+VJ.AddConVar = function(cName,cValue,cFlags)
+	if !ConVarExists(cName) then
+		cFlags = cFlags or {FCVAR_NONE}
+		CreateConVar(cName,cValue,cFlags)
+	end
+end
+-- Client ConVar ----------------------------------------------------------------------------------------------------
+VJ.AddClientConVar = function(cName,cValue,cHelpText)
+	if !ConVarExists(cName) then
+		cHelpText = cHelpText or ""
+		CreateClientConVar(cName,cValue,true,true,cHelpText)
+	end
+end
 
 /*
 if CLIENT then
