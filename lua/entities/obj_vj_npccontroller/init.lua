@@ -54,11 +54,9 @@ ENT.VJC_Removed = false
 	- self.VJCE_NPC			The NPC that's being controlled
 */
 
-if SERVER then
-	util.AddNetworkString("vj_controller_data")
-	util.AddNetworkString("vj_controller_cldata")
-	util.AddNetworkString("vj_controller_hud")
-end
+util.AddNetworkString("vj_controller_data")
+util.AddNetworkString("vj_controller_cldata")
+util.AddNetworkString("vj_controller_hud")
 
 local vecDef = Vector(0, 0, 0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -285,7 +283,6 @@ function ENT:SendDataToClient(reset)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local vecZ20 = Vector(0, 0, 20)
-local curTime = CurTime()
 local defAttackTypes = {MeleeAttack=false, RangeAttack=false, LeapAttack=false, WeaponAttack=false, GrenadeAttack=false, Ammo="---"}
 --
 function ENT:Think()
@@ -296,6 +293,7 @@ function ENT:Think()
 	if !IsValid(ply) /*or ply:KeyDown(IN_USE)*/ or ply:Health() <= 0 or (!ply.IsControlingNPC) or !IsValid(npc) or (npc:Health() <= 0) then self:StopControlling() return end
 	if ply.IsControlingNPC != true then return end
 	if ply.IsControlingNPC && IsValid(npc) then
+		local curTime = CurTime()
 		local npcWeapon = npc:GetActiveWeapon()
 		self.VJC_NPC_LastPos = npc:GetPos()
 		ply:SetPos(self.VJC_NPC_LastPos + vecZ20) -- Set the player's location
@@ -308,7 +306,7 @@ function ENT:Think()
 			if npc.HasRangeAttack == true then AttackTypes["RangeAttack"] = ((npc.IsAbleToRangeAttack != true or npc.AttackType == VJ_ATTACK_RANGE) and 2) or true end
 			if npc.HasLeapAttack == true then AttackTypes["LeapAttack"] = ((npc.IsAbleToLeapAttack != true or npc.AttackType == VJ_ATTACK_LEAP) and 2) or true end
 			if IsValid(npcWeapon) then AttackTypes["WeaponAttack"] = true AttackTypes["Ammo"] = npcWeapon:Clip1() end
-			if npc.HasGrenadeAttack == true then AttackTypes["GrenadeAttack"] = (CurTime() <= npc.NextThrowGrenadeT and 2) or true end
+			if npc.HasGrenadeAttack == true then AttackTypes["GrenadeAttack"] = (curTime <= npc.NextThrowGrenadeT and 2) or true end
 		end
 		if self.VJC_Player_DrawHUD then
 			net.Start("vj_controller_hud")
@@ -344,6 +342,7 @@ function ENT:Think()
 				npc:FaceCertainPosition(pos_beye, 0.2)
 				canTurn = false
 				if VJ_IsCurrentAnimation(npc, npc:TranslateToWeaponAnim(npc.CurrentWeaponAnimation)) == false && VJ_IsCurrentAnimation(npc, npc.AnimTbl_WeaponAttack) == false then
+					npc:CustomOnWeaponAttack()
 					npc.CurrentWeaponAnimation = VJ_PICK(npc.AnimTbl_WeaponAttack)
 					npc:VJ_ACT_PLAYACTIVITY(npc.CurrentWeaponAnimation, false, 2, false)
 					npc.DoingWeaponAttack = true
@@ -359,7 +358,7 @@ function ENT:Think()
 		if npc.Flinching == true or (((npc.CurrentSchedule && npc.CurrentSchedule.IsPlayActivity != true) or npc.CurrentSchedule == nil) && npc:GetNavType() == NAV_JUMP) then return end
 		
 		-- Turning
-		if !npc:IsMoving() && npc.PlayingAttackAnimation == false && canTurn && CurTime() > npc.NextChaseTime && npc.IsVJBaseSNPC_Tank != true && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ_WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
+		if !npc:IsMoving() && npc.PlayingAttackAnimation == false && canTurn && curTime > npc.NextChaseTime && npc.IsVJBaseSNPC_Tank != true && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ_WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
 			//npc:SetAngles(Angle(0,ply:GetAimVector():Angle().y,0))
 			local angdif = math.abs(math.AngleDifference(ply:EyeAngles().y, self.VJC_NPC_LastIdleAngle))
 			self.VJC_NPC_LastIdleAngle = npc:EyeAngles().y //tr_ply.HitPos
@@ -379,7 +378,7 @@ function ENT:Think()
 		end
 		
 		-- Movement
-		if npc.MovementType != VJ_MOVETYPE_STATIONARY && npc.PlayingAttackAnimation == false && CurTime() > npc.NextChaseTime && npc.IsVJBaseSNPC_Tank != true then
+		if npc.MovementType != VJ_MOVETYPE_STATIONARY && npc.PlayingAttackAnimation == false && curTime > npc.NextChaseTime && npc.IsVJBaseSNPC_Tank != true then
 			local gerta_for = ply:KeyDown(IN_FORWARD)
 			local gerta_bac = ply:KeyDown(IN_BACK)
 			local gerta_lef = ply:KeyDown(IN_MOVELEFT)
@@ -438,8 +437,7 @@ function ENT:StartMovement(Dir, Rot)
 	local NPCPos = NPCOrigin + npc:GetUp()*CenterToPos
 	local groundSpeed = math.Clamp(npc:GetSequenceGroundSpeed(npc:GetSequence()), 300, 9999)
 	local defaultFilter = {npc,ply,self}
-	local TargetPos = NPCPos + PlyAimVec*groundSpeed
-	local forwardtr = util.TraceLine({start = NPCPos, endpos = TargetPos, filter = defaultFilter})
+	local forwardtr = util.TraceLine({start = NPCPos, endpos = NPCPos + PlyAimVec * groundSpeed, filter = defaultFilter})
 	local forwardDist = NPCPos:Distance(forwardtr.HitPos)
 	local CalculateWallToNPC = forwardDist - (npc:OBBMaxs().y) -- Use Y instead of X because X is left/right whereas Y is forward/backward
 
