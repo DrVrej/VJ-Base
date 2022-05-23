@@ -58,21 +58,22 @@ SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle anim
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BeforeShoot()
 	if CLIENT then return end
+	local owner = self:GetOwner()
 	local proj = ents.Create("obj_vj_tank_shell")
-	local ply_Ang = self:GetOwner():GetAimVector():Angle()
-	local ply_Pos = self:GetOwner():GetShootPos() + ply_Ang:Forward()*-20 + ply_Ang:Up()*-9 + ply_Ang:Right()*10
-	if self:GetOwner():IsPlayer() then proj:SetPos(ply_Pos) else proj:SetPos(self:GetNW2Vector("VJ_CurBulletPos")) end
-	if self:GetOwner():IsPlayer() then proj:SetAngles(ply_Ang) else proj:SetAngles(self:GetOwner():GetAngles()) end
-	proj:SetOwner(self:GetOwner())
+	local ply_Ang = owner:GetAimVector():Angle()
+	local ply_Pos = owner:GetShootPos() + ply_Ang:Forward()*-20 + ply_Ang:Up()*-9 + ply_Ang:Right()*10
+	if owner:IsPlayer() then proj:SetPos(ply_Pos) else proj:SetPos(self:GetNW2Vector("VJ_CurBulletPos")) end
+	if owner:IsPlayer() then proj:SetAngles(ply_Ang) else proj:SetAngles(owner:GetAngles()) end
+	proj:SetOwner(owner)
 	proj:Activate()
 	proj:Spawn()
 	
 	local phys = proj:GetPhysicsObject()
 	if IsValid(phys) then
-		if self:GetOwner():IsPlayer() then
-			phys:SetVelocity(self:GetOwner():GetAimVector() * 2500)
+		if owner:IsPlayer() then
+			phys:SetVelocity(owner:GetAimVector() * 2500)
 		else
-			phys:SetVelocity(self:GetOwner():CalculateProjectile("Line", self:GetNW2Vector("VJ_CurBulletPos"), self:GetOwner():GetEnemy():GetPos() + self:GetOwner():GetEnemy():OBBCenter(), 2500))
+			phys:SetVelocity(owner:CalculateProjectile("Line", self:GetNW2Vector("VJ_CurBulletPos"), owner:GetEnemy():GetPos() + owner:GetEnemy():OBBCenter(), 2500))
 		end
 	end
 	
@@ -88,10 +89,6 @@ function SWEP:CustomOnPrimaryAttackEffects()
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnReload()
-	timer.Simple(0.8, function()
-		if IsValid(self) then
-			self:SetBodygroup(1, 0)
-		end
-	end)
+function SWEP:CustomOnReload_Finish()
+	self:SetBodygroup(1, 0)
 end

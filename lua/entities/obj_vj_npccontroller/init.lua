@@ -48,9 +48,9 @@ ENT.VJC_NPC_LastIdleAngle = 0
 ENT.VJC_Removed = false
 
 /* Important entities:
+	- self.VJCE_Bullseye	The bullseye entity used for the NPC to target
 	- self.VJCE_Camera		The camera object
 	- self.VJCE_Player		The player that's controlling
-	- self.VJCE_Bullseye	The bullseye entity used for the NPC to target
 	- self.VJCE_NPC			The NPC that's being controlled
 */
 
@@ -163,7 +163,6 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetControlledNPC(GetEntity)
 	-- Set the bullseye entity values
-
 	local bullseyeEnt = ents.Create("obj_vj_bullseye")
 	bullseyeEnt:SetPos(GetEntity:GetPos() + GetEntity:GetForward()*100 + GetEntity:GetUp()*50)//Vector(GetEntity:OBBMaxs().x +20,0,GetEntity:OBBMaxs().z +20))
 	bullseyeEnt:SetModel("models/hunter/blocks/cube025x025x025.mdl")

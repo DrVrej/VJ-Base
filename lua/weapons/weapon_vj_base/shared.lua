@@ -170,6 +170,10 @@ function SWEP:CustomOnNPC_ServerThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnReload() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+-- Unlike CustomOnReload(), this is called AFTER the reload animation has finished
+-- This only works for players and VJ Humans!
+function SWEP:CustomOnReload_Finish() end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BeforeShoot() end -- Return true to not run rest of the firing code
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_AfterShoot() end
@@ -209,8 +213,6 @@ function SWEP:CustomOnDeploy() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnIdle() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnReload() end
----------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnHolster(newWep) return true end -- Return false to disallow the weapon from switching
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnRemove() end
@@ -232,6 +234,7 @@ SWEP.NPC_NextPrimaryFireT = 0
 SWEP.NPC_AnimationSet = "Custom"
 SWEP.NPC_SecondaryFireNextT = 0
 SWEP.NPC_SecondaryFirePerforming = false
+SWEP.LastOwner = NULL
 
 
 -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -265,16 +268,19 @@ function SWEP:Initialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Equip(newOwner)
-	self:SetClip1(self.Primary.ClipSize)
+	-- Do NOT set the clip if this is simply a weapon switch (Specifically for VJ NPCs)
+	if self.LastOwner == NULL then
+		self:SetClip1(self.Primary.ClipSize)
+	end
 	if newOwner:IsPlayer() then
 		if self.Primary.PickUpAmmoAmount == "Default" then
-			newOwner:GiveAmmo(self.Primary.ClipSize*2,self.Primary.Ammo)
+			newOwner:GiveAmmo(self.Primary.ClipSize * 2, self.Primary.Ammo)
 		elseif isnumber(self.Primary.PickUpAmmoAmount) then
-			newOwner:GiveAmmo(self.Primary.PickUpAmmoAmount,self.Primary.Ammo)
+			newOwner:GiveAmmo(self.Primary.PickUpAmmoAmount, self.Primary.Ammo)
 		end
 		//newOwner:RemoveAmmo(self.Primary.DefaultClip,self.Primary.Ammo)
 		if self.MadeForNPCsOnly == true then
-			newOwner:PrintMessage(HUD_PRINTTALK,self.PrintName.." removed! It's made for NPCs only!")
+			newOwner:PrintMessage(HUD_PRINTTALK, self.PrintName.." removed! It's made for NPCs only!")
 			self:Remove()
 		end
 	elseif newOwner:IsNPC() then
@@ -287,7 +293,7 @@ function SWEP:Equip(newOwner)
 		end
 
 		if newOwner:GetClass() == "npc_citizen" then newOwner:Fire("DisableWeaponPickup") end -- If it's a citizen, disable them picking up weapons from the ground
-		newOwner:SetKeyValue("spawnflags","256") -- Long Visibility Shooting since HL2 NPCs are blind
+		newOwner:SetKeyValue("spawnflags", "256") -- Long Visibility Shooting since HL2 NPCs are blind
 		hook.Add("Think", self, self.NPC_ServerNextFire)
 		
 		if newOwner.IsVJBaseSNPC && newOwner.IsVJBaseSNPC_Human == true then
@@ -300,6 +306,7 @@ function SWEP:Equip(newOwner)
 		end
 	end
 	self:CustomOnEquip(newOwner)
+	self.LastOwner = newOwner
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:SetDefaultValues(hType, overrideSds)
@@ -748,6 +755,7 @@ function SWEP:Reload()
 				local ammoUsed = math.Clamp(self.Primary.ClipSize - self:Clip1(), 0, owner:GetAmmoCount(self:GetPrimaryAmmoType())) -- Amount of ammo that it will use (Take from the reserve)
 				owner:RemoveAmmo(ammoUsed, self.Primary.Ammo)
 				self:SetClip1(ammoUsed + self:Clip1())
+				self:CustomOnReload_Finish()
 			end
 		end)
 		-- Handle animation

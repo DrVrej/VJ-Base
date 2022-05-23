@@ -12,10 +12,10 @@ include("shared.lua")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Model = {""} -- The models it should spawn with | Picks a random one from the table
 ENT.PhysicsInitType = SOLID_VPHYSICS
-ENT.MoveType = MOVETYPE_VPHYSICS -- Move type, recommended to keep it as it is
-ENT.MoveCollideType = MOVECOLLIDE_FLY_BOUNCE -- Move type | Some examples: MOVECOLLIDE_FLY_BOUNCE, MOVECOLLIDE_FLY_SLIDE
-ENT.CollisionGroupType = COLLISION_GROUP_PROJECTILE -- Collision type, recommended to keep it as it is
-ENT.SolidType = SOLID_CUSTOM -- Solid type, recommended to keep it as it is
+ENT.MoveType = MOVETYPE_VPHYSICS
+ENT.MoveCollideType = MOVECOLLIDE_FLY_BOUNCE
+ENT.CollisionGroupType = COLLISION_GROUP_PROJECTILE
+ENT.SolidType = SOLID_CUSTOM
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Collision / Damage Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -176,7 +176,7 @@ function ENT:DoDamageCode(data, phys)
 				damagecode:SetDamage(self.DirectDamage)
 				damagecode:SetDamageType(self.DirectDamageType)
 				damagecode:SetAttacker(owner)
-				damagecode:SetInflictor(owner)
+				damagecode:SetInflictor(self)
 				damagecode:SetDamagePosition(dmgPos)
 				hitEnt:TakeDamageInfo(damagecode, self)
 				VJ_DestroyCombineTurret(owner, hitEnt)
@@ -217,8 +217,8 @@ function ENT:PhysicsCollide(data, phys)
 			self.Dead = true
 			self:DoDamageCode(data, phys)
 			self:OnCollideSoundCode()
-			if self.PaintDecalOnDeath == true && VJ_PICK(self.DecalTbl_DeathDecals) != false && self.AlreadyPaintedDeathDecal == false then 
-				self.AlreadyPaintedDeathDecal = true 
+			if self.PaintDecalOnDeath == true && VJ_PICK(self.DecalTbl_DeathDecals) != false && self.AlreadyPaintedDeathDecal == false then
+				self.AlreadyPaintedDeathDecal = true
 				util.Decal(VJ_PICK(self.DecalTbl_DeathDecals), data.HitPos + data.HitNormal, data.HitPos - data.HitNormal)
 			end
 			if self.ShakeWorldOnDeath == true then util.ScreenShake(data.HitPos, self.ShakeWorldOnDeathAmplitude, self.ShakeWorldOnDeathFrequency, self.ShakeWorldOnDeathDuration, self.ShakeWorldOnDeathRadius) end

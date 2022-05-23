@@ -14,7 +14,6 @@
 if CLIENT then print("Loading VJ Base (Client)...") else print("Loading VJ Base (Server)...") end
 
 VJBASE_VERSION = "2.16.0"
-VJBASE_GETNAME = "VJ Base"
 
 -- Shared --
 AddCSLuaFile("autorun/vj_menu_spawninfo.lua")
@@ -43,8 +42,8 @@ AddCSLuaFile("includes/modules/ai_vj_task.lua")
 ------ Main Hooks / Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if SERVER then
-	util.AddNetworkString("VJWelcome")
-	util.AddNetworkString("VJSay")
+	util.AddNetworkString("vj_welcome_msg")
+	util.AddNetworkString("vj_meme")
 elseif CLIENT then
 	hook.Add("AddToolMenuTabs", "VJ_CREATETOOLTAB", function()
 		spawnmenu.AddToolTab("DrVrej", "DrVrej", "vj_base/icons/vrejgaming.png") // "icon16/plugin.png"
@@ -60,7 +59,7 @@ end
 hook.Add("PlayerInitialSpawn", "VJBaseSpawn", function(ply, transition)
 	-- Simple message for the users
 	timer.Simple(1, function()
-		net.Start("VJWelcome")
+		net.Start("vj_welcome_msg")
 		net.Send(ply)
 	end)
 	
@@ -74,7 +73,7 @@ hook.Add("PlayerInitialSpawn", "VJBaseSpawn", function(ply, transition)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-net.Receive("VJSay", function(len, pl)
+net.Receive("vj_meme", function(len, pl)
 	if pl:IsPlayer() && pl:SteamID() == "STEAM_0:0:22688298" then
 		PrintMessage(HUD_PRINTTALK, "DrVrej is in the server!")
 		local sd = CreateSound(game.GetWorld(), "vj_illuminati/Illuminati Confirmed.mp3")
