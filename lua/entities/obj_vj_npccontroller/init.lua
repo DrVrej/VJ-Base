@@ -291,8 +291,8 @@ function ENT:Think()
 	if (!camera:IsValid()) then self:StopControlling() return end
 	if !IsValid(ply) /*or ply:KeyDown(IN_USE)*/ or ply:Health() <= 0 or (!ply.IsControlingNPC) or !IsValid(npc) or (npc:Health() <= 0) then self:StopControlling() return end
 	if ply.IsControlingNPC != true then return end
+	local curTime = CurTime()
 	if ply.IsControlingNPC && IsValid(npc) then
-		local curTime = CurTime()
 		local npcWeapon = npc:GetActiveWeapon()
 		self.VJC_NPC_LastPos = npc:GetPos()
 		ply:SetPos(self.VJC_NPC_LastPos + vecZ20) -- Set the player's location
