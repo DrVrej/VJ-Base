@@ -1255,6 +1255,7 @@ end
 				- This behavior can be overridden by AlwaysUseSequence & AlwaysUseGesture options
 		- stopActivities = If true, it will stop activities such as idle, chasing, attacking, etc. for a given amount of time | DEFAULT: false
 		- stopActivitiesTime = How long it will stop the activities such as idle, chasing, attacking, etc. | DEFAULT: 0
+			- false = Base calculates the time (recommended)
 		- faceEnemy = Should it constantly face the enemy while playing this animation? | DEFAULT: false
 		- animDelay = Delays the animation by the given number | DEFAULT: 0
 		- extraOptions = Table that holds extra options to modify parts of the code
