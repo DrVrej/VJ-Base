@@ -85,6 +85,14 @@ VJ_FACING_ENEMY = 1 -- Currently attempting to face the enemy
 VJ_FACING_ENTITY = 2 -- Currently attempting to face a specific entity
 VJ_FACING_POSITION = 3 -- Currently attempting to face a specific position
 
+-- NPC model animation set
+VJ_MODEL_ANIMSET_NONE = 0 -- No model animation set detected (Default)
+VJ_MODEL_ANIMSET_COMBINE = 1 -- Current model's animation set is combine
+VJ_MODEL_ANIMSET_METROCOP = 2 -- Current model's animation set is metrocop
+VJ_MODEL_ANIMSET_REBEL = 3 -- Current model's animation set is citizen / rebel
+VJ_MODEL_ANIMSET_PLAYER = 4 -- Current model's animation set is player
+VJ_MODEL_ANIMSET_CUSTOM = 10 -- Use this when defining a custom model set
+
 -- Source NPC condition definitions because they are not defined in GMod for some reason ??
 COND_BEHIND_ENEMY = 29
 COND_BETTER_WEAPON_AVAILABLE = 46

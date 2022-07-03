@@ -953,7 +953,7 @@ ENT.LastEnemyVisiblePos = Vector(0, 0, 0)
 ENT.GuardingPosition = nil
 ENT.GuardingFacePosition = nil
 ENT.SelectedDifficulty = 1
-ENT.ModelAnimationSet = 0
+ENT.ModelAnimationSet = VJ_MODEL_ANIMSET_NONE
 ENT.AIState = VJ_STATE_NONE
 ENT.AttackType = VJ_ATTACK_NONE
 ENT.AttackStatus = VJ_ATTACK_STATUS_NONE
@@ -1652,20 +1652,20 @@ end
 function ENT:SetupWeaponHoldTypeAnims(hType)
 	-- Decide what type of animation set it uses
 	if VJ_AnimationExists(self, "signal_takecover") == true && VJ_AnimationExists(self, "grenthrow") == true && VJ_AnimationExists(self, "bugbait_hit") == true then
-		self.ModelAnimationSet = 1 -- Combine
+		self.ModelAnimationSet = VJ_MODEL_ANIMSET_COMBINE -- Combine
 	elseif VJ_AnimationExists(self, ACT_WALK_AIM_PISTOL) == true && VJ_AnimationExists(self, ACT_RUN_AIM_PISTOL) == true && VJ_AnimationExists(self, ACT_POLICE_HARASS1) == true then
-		self.ModelAnimationSet = 2 -- Metrocop
+		self.ModelAnimationSet = VJ_MODEL_ANIMSET_METROCOP -- Metrocop
 	elseif VJ_AnimationExists(self, "coverlow_r") == true && VJ_AnimationExists(self, "wave_smg1") == true && VJ_AnimationExists(self, ACT_BUSY_SIT_GROUND) == true then
-		self.ModelAnimationSet = 3 -- Rebel
+		self.ModelAnimationSet = VJ_MODEL_ANIMSET_REBEL -- Rebel
 	elseif VJ_AnimationExists(self, "gmod_breath_layer") == true then
-		self.ModelAnimationSet = 4 -- Player
+		self.ModelAnimationSet = VJ_MODEL_ANIMSET_PLAYER -- Player
 	end
 	
 	self.WeaponAnimTranslations = {}
 	self.NextIdleStandTime = 0
 	if self:CustomOnSetupWeaponHoldTypeAnims(hType) == true then return end
 	
-	if self.ModelAnimationSet == 1 then -- Combine =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
+	if self.ModelAnimationSet == VJ_MODEL_ANIMSET_COMBINE then -- Combine =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 		-- Use rifle animations with minor edits if it's holding a handgun
 		local rifle_idle = ACT_IDLE_SMG1
 		local rifle_walk = VJ_PICK({ACT_WALK_RIFLE, VJ_SequenceToActivity(self, "walkeasy_all")})
@@ -1733,7 +1733,7 @@ function ENT:SetupWeaponHoldTypeAnims(hType)
 			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
 			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
 		end
-	elseif self.ModelAnimationSet == 2 then -- Metrocop =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
+	elseif self.ModelAnimationSet == VJ_MODEL_ANIMSET_METROCOP then -- Metrocop =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 		-- Do not translate crouch walking and also make the crouch running a walking one instead
 		self.WeaponAnimTranslations[ACT_RUN_CROUCH] 						= ACT_WALK_CROUCH
 		
@@ -1797,7 +1797,7 @@ function ENT:SetupWeaponHoldTypeAnims(hType)
 			//self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE -- No need to translate
 			//self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE -- Not used for melee
 		end
-	elseif self.ModelAnimationSet == 3 then -- Rebel =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
+	elseif self.ModelAnimationSet == VJ_MODEL_ANIMSET_REBEL then -- Rebel =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 		local isFemale = VJ_AnimationExists(self, ACT_IDLE_ANGRY_PISTOL)
 		
 		-- handguns use a different set!
@@ -1920,7 +1920,7 @@ function ENT:SetupWeaponHoldTypeAnims(hType)
 			//self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE -- No need to translate
 			//self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE -- Not used for melee
 		end
-	elseif self.ModelAnimationSet == 4 then -- Player =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
+	elseif self.ModelAnimationSet == VJ_MODEL_ANIMSET_PLAYER then -- Player =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 		if hType == "ar2" then
 			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_HL2MP_IDLE_AR2
 			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_AR2
@@ -3546,7 +3546,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 
 		self:MarkEnemyAsEluded(ene)
 		//self:ClearEnemyMemory(ene) // Completely resets the enemy memory
-		self:AddEntityRelationship(ene, 4, 10)
+		self:AddEntityRelationship(ene, D_NU, 10)
 	end
 	
 	self.LastHiddenZone_CanWander = CurTime() > self.LastHiddenZoneT and true or false
@@ -3747,7 +3747,7 @@ function ENT:OnTakeDamage(dmginfo)
 						self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo, hitgroup)
 						if self.IsFollowing == true && self.FollowData.Ent == dmgAttacker then self:FollowReset() end
 						self.VJ_AddCertainEntityAsEnemy[#self.VJ_AddCertainEntityAsEnemy+1] = dmgAttacker
-						self:AddEntityRelationship(dmgAttacker,D_HT,99)
+						self:AddEntityRelationship(dmgAttacker,D_HT,2)
 						self.TakingCoverT = CurTime() + 2
 						if !IsValid(self:GetEnemy()) then
 							self:StopMoving()
@@ -3855,7 +3855,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 						v:CustomWhenBecomingEnemyTowardsPlayer(dmginfo, hitgroup)
 						if v.IsFollowing == true && v.FollowData.Ent == dmgAttacker then v:FollowReset() end
 						v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy+1] = dmgAttacker
-						v:AddEntityRelationship(dmgAttacker,D_HT,99)
+						v:AddEntityRelationship(dmgAttacker,D_HT,2)
 						if v.AllowPrintingInChat == true then
 							dmgAttacker:PrintMessage(HUD_PRINTTALK, v:GetName().." no longer likes you.")
 						end

@@ -2546,7 +2546,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		
 		self:MarkEnemyAsEluded(ene)
 		//self:ClearEnemyMemory(ene) // Completely resets the enemy memory
-		self:AddEntityRelationship(ene, 4, 10)
+		self:AddEntityRelationship(ene, D_NU, 10)
 	end
 	
 	-- Clear memory of the enemy if it's not a player AND it's dead
@@ -2731,7 +2731,7 @@ function ENT:OnTakeDamage(dmginfo)
 						self:CustomWhenBecomingEnemyTowardsPlayer(dmginfo, hitgroup)
 						if self.IsFollowing == true && self.FollowData.Ent == dmgAttacker then self:FollowReset() end
 						self.VJ_AddCertainEntityAsEnemy[#self.VJ_AddCertainEntityAsEnemy+1] = dmgAttacker
-						self:AddEntityRelationship(dmgAttacker,D_HT,99)
+						self:AddEntityRelationship(dmgAttacker,D_HT,2)
 						self.TakingCoverT = CurTime() + 2
 						if !IsValid(self:GetEnemy()) then
 							self:StopMoving()
@@ -2839,7 +2839,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 						v:CustomWhenBecomingEnemyTowardsPlayer(dmginfo, hitgroup)
 						if v.IsFollowing == true && v.FollowData.Ent == dmgAttacker then v:FollowReset() end
 						v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy+1] = dmgAttacker
-						v:AddEntityRelationship(dmgAttacker,D_HT,99)
+						v:AddEntityRelationship(dmgAttacker,D_HT,2)
 						if v.AllowPrintingInChat == true then
 							dmgAttacker:PrintMessage(HUD_PRINTTALK, v:GetName().." no longer likes you.")
 						end
