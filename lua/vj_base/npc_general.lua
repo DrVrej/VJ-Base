@@ -333,7 +333,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Gets the forward vector that the NPC is moving towards and returns it
-		- ignoreZ = Ignores the Z axis of the direction during calulations | DEFAULT = false
+		- ignoreZ = Ignores the Z axis of the direction during calculations | DEFAULT = false
 	Returns
 		- Vector, the direction the NPC is moving towards
 -----------------------------------------------------------]]
@@ -342,7 +342,6 @@ function ENT:GetMoveDirection(ignoreZ)
 	local waypoint = self:GetCurWaypointPos() or self:GetPos()
 	local dir = (waypoint - self:GetPos())
 	if ignoreZ then dir.z = 0 end
-
 	return (self:GetAngles() - dir:Angle()):Forward()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -596,7 +595,7 @@ function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 	doQuickIfActiveEnemy = doQuickIfActiveEnemy or false -- It will run a much quicker set enemy without resetting everything (Only if it has an active enemy!)
 	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == ent then self:DoMedicReset() end
 	self.LastEnemyTime = CurTime()
-	self:AddEntityRelationship(ent, D_HT, 99)
+	self:AddEntityRelationship(ent, D_HT, 0)
 	self:UpdateEnemyMemory(ent, ent:GetPos())
 	self:SetNPCState(NPC_STATE_COMBAT)
 	if doQuickIfActiveEnemy == true && IsValid(self:GetEnemy()) then
@@ -1163,16 +1162,16 @@ function ENT:DoEntityRelationshipCheck()
 						if friClass == varCPly && self.PlayerFriendly == false then self.PlayerFriendly = true end -- If player ally then set the PlayerFriendly to true
 						-- Handle common class types
 						if (friClass == varCCom && NPCTbl_Combine[vClass]) or (friClass == varCZom && NPCTbl_Zombies[vClass]) or (friClass == varCAnt && NPCTbl_Antlions[vClass]) or (friClass == varCXen && NPCTbl_Xen[vClass]) then
-							v:AddEntityRelationship(self, D_LI, 99)
-							self:AddEntityRelationship(v, D_LI, 99)
+							v:AddEntityRelationship(self, D_LI, 0)
+							self:AddEntityRelationship(v, D_LI, 0)
 							entFri = true
 						end
 						if (v.VJ_NPC_Class && VJ_HasValue(v.VJ_NPC_Class, friClass)) or (entFri == true) then
 							if friClass == varCPly then -- If we have the player ally class then check if we both of us are supposed to be friends
 								if self.FriendsWithAllPlayerAllies == true && v.FriendsWithAllPlayerAllies == true then
 									entFri = true
-									if vNPC then v:AddEntityRelationship(self, D_LI, 99) end
-									self:AddEntityRelationship(v, D_LI, 99)
+									if vNPC then v:AddEntityRelationship(self, D_LI, 0) end
+									self:AddEntityRelationship(v, D_LI, 0)
 								end
 							else
 								entFri = true
@@ -1181,23 +1180,23 @@ function ENT:DoEntityRelationshipCheck()
 									self.EnemyReset = true
 									self:ResetEnemy(false)
 								end
-								if vNPC then v:AddEntityRelationship(self, D_LI, 99) end
-								self:AddEntityRelationship(v, D_LI, 99)
+								if vNPC then v:AddEntityRelationship(self, D_LI, 0) end
+								self:AddEntityRelationship(v, D_LI, 0)
 							end
 						end
 					end
 					-- Handle self.VJFriendly AND HL2 Resistance + self.FriendsWithAllPlayerAllies
 					if vNPC && !entFri && ((self.VJFriendly == true && v.IsVJBaseSNPC == true) or (self.PlayerFriendly == true && (NPCTbl_Resistance[vClass] or (self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true)))) then
-						v:AddEntityRelationship(self, D_LI, 99)
-						self:AddEntityRelationship(v, D_LI, 99)
+						v:AddEntityRelationship(self, D_LI, 0)
+						self:AddEntityRelationship(v, D_LI, 0)
 						entFri = true
 					end
 				end
-				if !entFri && vNPC /*&& MyVisibleTov*/ && !self.DisableMakingSelfEnemyToNPCs && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self, D_HT, 99) end
+				if !entFri && vNPC /*&& MyVisibleTov*/ && !self.DisableMakingSelfEnemyToNPCs && (v.VJ_IsBeingControlled != true) then v:AddEntityRelationship(self, D_HT, 0) end
 				if vPlayer && (self.PlayerFriendly == true or entFri == true) then
 					if inEneTbl == false then
 						entFri = true
-						self:AddEntityRelationship(v, D_LI, 99)
+						self:AddEntityRelationship(v, D_LI, 0)
 						//DoPlayerSight()
 					else
 						entFri = false
@@ -1206,7 +1205,7 @@ function ENT:DoEntityRelationshipCheck()
 				-- Investigation detection systems, including sound, movement and flashlight
 				if (!self.IsVJBaseSNPC_Tank) && !IsValid(self:GetEnemy()) && entFri == false then
 					if vPlayer then
-						self:AddEntityRelationship(v, D_NU, 99) -- Make the player neutral since it's not supposed to be a friend
+						self:AddEntityRelationship(v, D_NU, 0) -- Make the player neutral since it's not supposed to be a friend
 						if v:Crouching() && v:GetMoveType() != MOVETYPE_NOCLIP then
 							sightDist = self.VJ_IsHugeMonster == true and 5000 or 2000
 						end
@@ -1249,7 +1248,7 @@ function ENT:DoEntityRelationshipCheck()
 			print(CurTime() - self:GetEnemyFirstTimeSeen(v))*/
 			-- We have to do this here so we make sure non-VJ NPCs can still target this NPC, even if it's being controlled!
 			if plyControlled && self.VJ_TheControllerBullseye != v then
-				//self:AddEntityRelationship(v, D_NU, 99)
+				//self:AddEntityRelationship(v, D_NU, 0)
 				v = self.VJ_TheControllerBullseye
 				vPlayer = false
 			end
@@ -1259,7 +1258,7 @@ function ENT:DoEntityRelationshipCheck()
 				if check == true then -- Is enemy
 					eneSeen = true
 					self.ReachableEnemyCount = self.ReachableEnemyCount + 1
-					self:AddEntityRelationship(v, D_HT, 99)
+					self:AddEntityRelationship(v, D_HT, 0)
 					-- If the detected enemy is closer than the previous enemy, the set this as the enemy!
 					if (nearestDist == nil) or (vDistanceToMy < nearestDist) then
 						nearestDist = vDistanceToMy

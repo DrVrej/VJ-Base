@@ -46,7 +46,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnKilled()
 	local pos = self:GetPos()
-	local pitch = math.random(95,105)
+	local pitch = math.random(95, 105)
 	local function deathSound(time, snd)
 		timer.Simple(time, function()
 			sound.Play(snd, pos, 65, pitch)

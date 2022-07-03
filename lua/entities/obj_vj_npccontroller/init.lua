@@ -108,7 +108,7 @@ function ENT:StartControlling()
 	plyEnt:StripWeapons()
 	if plyEnt:GetInfoNum("vj_npc_cont_diewithnpc", 0) == 1 then self.VJC_Player_CanRespawn = false end
 
-	hook.Add("PlayerButtonDown", self, function(self, ply, button)
+	hook.Add("PlayerButtonDown", self, function(ent, ply, button)
 		if ply.IsControlingNPC == true && IsValid(ply.VJ_TheControllerEntity) then
 			local cent = ply.VJ_TheControllerEntity
 			cent.VJC_Key_Last = button
@@ -152,7 +152,7 @@ function ENT:StartControlling()
 		end
 	end)
 
-	hook.Add("KeyPress", self, function(self, ply, key)
+	hook.Add("KeyPress", self, function(ent, ply, key)
 		//print(key)
 		if ply.IsControlingNPC == true && IsValid(ply.VJ_TheControllerEntity) then
 			local cent = ply.VJ_TheControllerEntity
@@ -200,8 +200,8 @@ function ENT:SetControlledNPC(GetEntity)
 		GetEntity:Controller_Initialize(plyEnt, self)
 		local EntityEnemy = GetEntity:GetEnemy()
 		if IsValid(EntityEnemy) then
-			GetEntity:AddEntityRelationship(EntityEnemy, D_NU, 99)
-			EntityEnemy:AddEntityRelationship(GetEntity, D_NU, 99)
+			GetEntity:AddEntityRelationship(EntityEnemy, D_NU, 10)
+			EntityEnemy:AddEntityRelationship(GetEntity, D_NU, 10)
 			GetEntity:ResetEnemy(false)
 			GetEntity:SetEnemy(bullseyeEnt)
 		end
