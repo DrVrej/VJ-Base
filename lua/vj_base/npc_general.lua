@@ -620,9 +620,11 @@ end
 		- dist = The new sight distance to set
 -----------------------------------------------------------]]
 function ENT:SetSightDistance(dist)
-	self:Fire("SetMaxLookDistance", dist) -- For Source sensing distance
-	self:SetSaveValue("m_flDistTooFar", dist) -- For Source attack/weapon distance
+	//self:Fire("SetMaxLookDistance", dist) -- For Source sensing distance (OLD)
+	self:SetMaxLookDistance(dist) -- For Source sight & sensing distance
+	self:SetSaveValue("m_flDistTooFar", dist) -- For certain Source attack, weapon, and condition distances
 	self.SightDistance = dist -- For VJ Base
+	//print(self:GetInternalVariable("m_flDistTooFar"), self:GetMaxLookDistance())
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1149,7 +1151,7 @@ function ENT:DoEntityRelationshipCheck()
 			//if v:Health() <= 0 then table_remove(self.CurrentPossibleEnemies,k) continue end
 			local vPos = v:GetPos()
 			local vDistanceToMy = vPos:Distance(myPos)
-			local sightDist = self.SightDistance
+			local sightDist = self:GetMaxLookDistance()
 			if vDistanceToMy > sightDist then continue end
 			local entFri = false
 			local vClass = v:GetClass()

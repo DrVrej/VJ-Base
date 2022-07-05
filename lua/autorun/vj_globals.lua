@@ -1161,9 +1161,26 @@ end
 
 hook.Add("OnEntityCreated", "vjmetatabletest", function(ent)
 	if scripted_ents.IsBasedOn(ent:GetClass(), "npc_vj_creature_base") or scripted_ents.IsBasedOn(ent:GetClass(), "npc_vj_human_base") then
-		local mt = table.Merge({}, debug.getmetatable(ent))
+		local mt = table.Merge({}, debug.getmetatable(ent)) -- Create a new table to avoid overflow!
 		mt.__index = __index
 		debug.setmetatable(ent, mt)
 	end
 end)
+*/
+
+-- Version for individual NPCs (Tests show loss of performance, avoid)
+/*
+local metaOrg = debug.getmetatable(self)
+local metaVJ = {}
+local function newIndex(ent, key)
+	local val = metaVJ[key]
+	if val != nil then return val end
+	return metaOrg.__index(ent, key)
+end
+function metaVJ:SetMaxLookDistance(dist)
+	metaOrg.SetMaxLookDistance(self, dist)
+end
+local mt = table.Merge({}, metaOrg) -- Create a new table to avoid overflow!
+mt.__index = newIndex
+debug.setmetatable(self, mt)
 */

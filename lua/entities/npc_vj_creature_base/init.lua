@@ -1444,7 +1444,7 @@ function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase)
 		end
 		self:StartSchedule(task_chaseEnemyLOS)
 	else
-		task_chaseEnemy.RunCode_OnFail = function() self:VJ_TASK_IDLE_STAND() end
+		task_chaseEnemy.RunCode_OnFail = function() if self.VJ_TASK_IDLE_STAND then self:VJ_TASK_IDLE_STAND() end end
 		self:StartSchedule(task_chaseEnemy)
 	end
 end
@@ -1866,7 +1866,7 @@ function ENT:Think()
 				self.LastEnemySightDiff = self:GetSightDirection():Dot((enePos - myPos):GetNormalized())
 				self.LatestEnemyDistance = myPos:Distance(enePos)
 				self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene)
-				if (self.LastEnemySightDiff > math_cos(math_rad(self.SightAngle))) && (self.LatestEnemyDistance < self.SightDistance) && self.LastEnemyVisible then
+				if (self.LastEnemySightDiff > math_cos(math_rad(self.SightAngle))) && (self.LatestEnemyDistance < self:GetMaxLookDistance()) && self.LastEnemyVisible then
 					self.LastEnemyVisibleTime = curTime
 					self.LastEnemyVisiblePos = enePos
 				end
@@ -2488,7 +2488,7 @@ function ENT:SelectSchedule()
 	if self.DisableSelectSchedule == true or self.Dead == true then return end
 	
 	local ene = self:GetEnemy()
-	if IsValid(ene) && (self.LatestEnemyDistance > self.SightDistance) then -- If the enemy is out of reach, then reset the enemy!
+	if IsValid(ene) && (self.LatestEnemyDistance > self:GetMaxLookDistance()) then -- If the enemy is out of reach, then reset the enemy!
 		self.TakingCoverT = 0
 		self:DoIdleAnimation()
 		self:ResetEnemy()
@@ -2516,7 +2516,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		if getAllies != nil then
 			for _,v in pairs(getAllies) do
 				local allyEne = v:GetEnemy()
-				if IsValid(allyEne) && (CurTime() - v.LastEnemyVisibleTime) < self.TimeUntilEnemyLost && VJ_IsAlive(allyEne) && self:DoRelationshipCheck(allyEne) && self:GetPos():Distance(allyEne:GetPos()) <= self.SightDistance then
+				if IsValid(allyEne) && (CurTime() - v.LastEnemyVisibleTime) < self.TimeUntilEnemyLost && VJ_IsAlive(allyEne) && self:DoRelationshipCheck(allyEne) && self:GetPos():Distance(allyEne:GetPos()) <= self:GetMaxLookDistance() then
 					self:VJ_DoSetEnemy(allyEne, true)
 					self.EnemyReset = false
 					return false
@@ -2749,14 +2749,14 @@ function ENT:OnTakeDamage(dmginfo)
 			end
 
 			if self.DisableTakeDamageFindEnemy == false && self:BusyWithActivity() == false && !IsValid(self:GetEnemy()) && CurTime() > self.TakingCoverT && self.VJ_IsBeingControlled == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& self.Alerted == false*/ then
-				local sightdist = self.SightDistance / 2 -- Gesvadz tive
+				local sightdist = self:GetMaxLookDistance() / 2 -- Gesvadz tive
 				-- Yete gesvadz tive hazaren aveli kich e, ere vor chi ges e tive...
 				-- Yete tive 2000 - 4000 mechene, ere vor mishd 2000 ela...
 				-- Yete 4000 aveli e, ere vor gesvadz tive kordzadz e
 				if sightdist <= 1000 then
-					sightdist = self.SightDistance
+					sightdist = self:GetMaxLookDistance()
 				else
-					sightdist = math_clamp(sightdist,2000,self.SightDistance)
+					sightdist = math_clamp(sightdist,2000,self:GetMaxLookDistance())
 				end
 				local Targets = ents.FindInSphere(self:GetPos(),sightdist)
 				for _,v in pairs(Targets) do

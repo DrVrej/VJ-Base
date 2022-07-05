@@ -2714,7 +2714,7 @@ function ENT:Think()
 				self.LastEnemySightDiff = self:GetSightDirection():Dot((enePos - myPos):GetNormalized())
 				self.LatestEnemyDistance = myPos:Distance(enePos)
 				self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene)
-				if (self.LastEnemySightDiff > math_cos(math_rad(self.SightAngle))) && (self.LatestEnemyDistance < self.SightDistance) && self.LastEnemyVisible then
+				if (self.LastEnemySightDiff > math_cos(math_rad(self.SightAngle))) && (self.LatestEnemyDistance < self:GetMaxLookDistance()) && self.LastEnemyVisible then
 					self.LastEnemyVisibleTime = curTime
 					self.LastEnemyVisiblePos = enePos
 				end
@@ -3279,7 +3279,7 @@ function ENT:SelectSchedule()
 		local myPos = self:GetPos()
 		
 		-- If the enemy is in sight then continue
-		if self.LatestEnemyDistance < self.SightDistance then
+		if self.LatestEnemyDistance < self:GetMaxLookDistance() then
 			self:IdleSoundCode()
 			
 			-- Check for weapon validity
@@ -3516,7 +3516,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		if getAllies != nil then
 			for _,v in pairs(getAllies) do
 				local allyEne = v:GetEnemy()
-				if IsValid(allyEne) && (CurTime() - v.LastEnemyVisibleTime) < self.TimeUntilEnemyLost && VJ_IsAlive(allyEne) && self:DoRelationshipCheck(allyEne) && self:GetPos():Distance(allyEne:GetPos()) <= self.SightDistance then
+				if IsValid(allyEne) && (CurTime() - v.LastEnemyVisibleTime) < self.TimeUntilEnemyLost && VJ_IsAlive(allyEne) && self:DoRelationshipCheck(allyEne) && self:GetPos():Distance(allyEne:GetPos()) <= self:GetMaxLookDistance() then
 					self:VJ_DoSetEnemy(allyEne, true)
 					self.EnemyReset = false
 					return false
@@ -3765,14 +3765,14 @@ function ENT:OnTakeDamage(dmginfo)
 			end
 
 			if self.DisableTakeDamageFindEnemy == false && self:BusyWithActivity() == false && !IsValid(self:GetEnemy()) && CurTime() > self.TakingCoverT && self.VJ_IsBeingControlled == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& self.Alerted == false*/ then
-				local sightdist = self.SightDistance / 2 -- Gesvadz tive
+				local sightdist = self:GetMaxLookDistance() / 2 -- Gesvadz tive
 				-- Yete gesvadz tive hazaren aveli kich e, ere vor chi ges e tive...
 				-- Yete tive 2000 - 4000 mechene, ere vor mishd 2000 ela...
 				-- Yete 4000 aveli e, ere vor gesvadz tive kordzadz e
 				if sightdist <= 1000 then
-					sightdist = self.SightDistance
+					sightdist = self:GetMaxLookDistance()
 				else
-					sightdist = math_clamp(sightdist,2000,self.SightDistance)
+					sightdist = math_clamp(sightdist,2000,self:GetMaxLookDistance())
 				end
 				local Targets = ents.FindInSphere(self:GetPos(),sightdist)
 				for _,v in pairs(Targets) do
