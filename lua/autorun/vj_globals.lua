@@ -518,11 +518,9 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC / Player Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+local Entity_MetaTable = FindMetaTable("Entity")
 local NPC_MetaTable = FindMetaTable("NPC")
 //local Player_MetaTable = FindMetaTable("Player")
-local Entity_MetaTable = FindMetaTable("Entity")
-
-//NPC_MetaTable.VJ_NPC_Class = {}
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_Controller_InitialMessage(ply)
 	if !IsValid(ply) then return end
@@ -604,6 +602,47 @@ function NPC_MetaTable:VJ_GetDifficultyValue(int)
 	return int -- Normal
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Tags ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+/*
+-- Variables that are used by VJ Base as tags --
+[Variable]							[Description]
+VJ_IsBeingControlled				NPC that is being controlled by the VJ NPC Controller
+VJ_IsBeingControlled_Tool			NPC that is being controlled by the VJ NPC Mover Tool
+VJ_AddEntityToSNPCAttackList		Entity that should be attacked by Creature NPCs if it's in the way
+VJ_IsDetectableDanger				Entity that should be detected as danger by human NPCs
+VJ_IsDetectableGrenade				Entity that should be detected as a grenade danger by human NPCs
+VJ_IsPickupableDanger				Entity that CAN be picked up by human NPCs (Ex: Grenades)
+VJ_IsPickedUpDanger					Entity that is currently picked up by a human NPC and most likely throwing it away (Ex: Grenades)
+VJ_LastInvestigateSd				Last time this NPC/Player has made a sound that should be investigated by enemy NPCs
+VJ_LastInvestigateSdLevel			The sound level of the above variable
+VJ_IsHugeMonster					NPC that is considered to be very large or a boss
+*/
+
+-- Variable:		self.VJTags
+-- Access: 			self.VJTags[VJ_TAG_X]
+-- Remove: 			self.VJTags[VJ_TAG_X] = nil
+-- Add: 			self:VJTags_Add(VJ_TAG_X, VJ_TAG_Y, ...)
+
+-- Enums
+VJ_TAG_HEALING = 1 -- Ent is healing (either itself or by another ent)
+VJ_TAG_SD_PLAYING_MUSIC = 10 -- Ent is playing a sound track
+VJ_TAG_HEADCRAB = 20
+VJ_TAG_POLICE = 21
+VJ_TAG_CIVILIAN = 22
+VJ_TAG_TURRET = 23
+VJ_TAG_VEHICLE = 24
+VJ_TAG_AIRCRAFT = 25
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+function Entity_MetaTable:VJTags_Add(...)
+	if !self.VJTags then self.VJTags = {} end
+	//PrintTable({...})
+	for _, tag in pairs({...}) do
+		self.VJTags[tag] = true
+	end
+end
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Hooks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("Initialize", "VJ_Initialize", function()
@@ -641,6 +680,7 @@ end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 	if IsValid(ply) then
+		ply.VJTags = {}
 		ply.VJ_LastInvestigateSd = 0
 		ply.VJ_LastInvestigateSdLevel = 0
 		if GetConVar("ai_ignoreplayers"):GetInt() == 0 then
@@ -671,11 +711,16 @@ if SERVER then
 	--
 	hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 		local myClass = ent:GetClass()
+		ent.VJTags = {}
 		if ent:IsNPC() then
 			if !ignoreEnts[myClass] then
-				timer.Simple(0.1, function() -- Make sure the SNPC is initialized properly
+				local isVJ = ent.IsVJBaseSNPC
+				if isVJ then
+					ent.NextProcessT = CurTime() + 0.15
+				end
+				timer.Simple(0.1, function() -- Make sure the NPC is initialized properly
 					if IsValid(ent) then
-						if ent.IsVJBaseSNPC == true && ent.CurrentPossibleEnemies == nil then ent.CurrentPossibleEnemies = {} end
+						if isVJ == true && ent.CurrentPossibleEnemies == nil then ent.CurrentPossibleEnemies = {} end
 						local EntsTbl = ents.GetAll()
 						local count = 1
 						local cvSeePlys = GetConVar("ai_ignoreplayers"):GetInt() == 0
@@ -684,7 +729,7 @@ if SERVER then
 							local v = EntsTbl[x]
 							if (v:IsNPC() or v:IsPlayer()) && !ignoreEnts[v:GetClass()] then
 								-- Add enemies to the created entity (if it's a VJ Base SNPC)
-								if ent.IsVJBaseSNPC == true then
+								if isVJ == true then
 									ent:EntitiesToNoCollideCode(v)
 									if (v:IsNPC() && (v:GetClass() != myClass && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && cvSeePlys /*&& v:Alive()*/) then
 										ent.CurrentPossibleEnemies[count] = v
@@ -1117,26 +1162,6 @@ function util.VJ_SphereDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 	end
 	return hitEnts
 end
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Tag Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-/*
--- Variables that are used by VJ Base as tags --
-
-[Variable]							[Description]
-VJ_IsBeingControlled				NPC that is being controlled by the VJ NPC Controller
-VJ_IsBeingControlled_Tool			NPC that is being controlled by the VJ NPC Mover Tool
-VJ_AddEntityToSNPCAttackList		Entity that should be attacked by Creature NPCs if it's in the way
-VJ_IsDetectableDanger				Entity that should be detected as danger by human NPCs
-VJ_IsDetectableGrenade				Entity that should be detected as a grenade danger by human NPCs
-VJ_IsPickupableDanger				Entity that CAN be picked up by human NPCs (Ex: Grenades)
-VJ_IsPickedUpDanger					Entity that is currently picked up by a human NPC and most likely throwing it away (Ex: Grenades)
-VJ_LastInvestigateSd				Last time this NPC/Player has made a sound that should be investigated by enemy NPCs
-VJ_LastInvestigateSdLevel			The sound level of the above variable
-VJ_IsHugeMonster					NPC that is considered to be very large or a boss
-VJ_IsPlayingSoundTrack				NPC that is playing a VJ sound track
-
-*/
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Tests ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

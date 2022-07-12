@@ -36,6 +36,7 @@ ENT.AnimationPlaybackRate = 1 -- Controls the playback rate of all the animation
 	-- ====== Movement Variables ====== --
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
+ENT.UsePlayerModelMovement = false -- If true, it will allow the NPC to use player models properly by calculating the direction it needs to go to and setting the appropriate values
 	-- Jumping Variables:
 	-- Requires "CAP_MOVE_JUMP" | Applied automatically by the base if "ACT_JUMP" is valid on the NPC's model
 ENT.AllowMovementJumping = true -- Should the NPC be allowed to jump from one node to another?
@@ -144,7 +145,6 @@ ENT.AnimTbl_Run = {ACT_RUN} -- Set the running animations | Put multiple to let 
 ENT.IdleAlwaysWander = false -- If set to true, it will make the SNPC always wander when idling
 ENT.DisableWandering = false -- Disables wandering when the SNPC is idle
 ENT.DisableChasingEnemy = false -- Disables the SNPC chasing the enemy
-ENT.UsePlayerModelMovement = false -- If set to true, it will allow the SNPC to use player model's properly by calculating the direction it needs to go to and setting the appropriate values
 	-- ====== Constantly Face Enemy Variables ====== --
 ENT.ConstantlyFaceEnemy = false -- Should it face the enemy constantly?
 ENT.ConstantlyFaceEnemy_IfVisible = true -- Should it only face the enemy if it's visible?
@@ -162,8 +162,10 @@ ENT.PoseParameterLooking_InvertYaw = false -- Inverts the yaw poseparameters (Y)
 ENT.PoseParameterLooking_InvertRoll = false -- Inverts the roll poseparameters (Z)
 ENT.PoseParameterLooking_TurningSpeed = 10 -- How fast does the parameter turn?
 ENT.PoseParameterLooking_Names = {pitch={}, yaw={}, roll={}} -- Custom pose parameters to use, can put as many as needed
-	-- ====== Sound Detection Variables ====== --
-ENT.InvestigateSoundDistance = 9 -- How far away can the SNPC hear sounds? | This number is timed by the calculated volume of the detectable sound.
+	-- ====== Investigation Variables ====== --
+	-- Showcase: https://www.youtube.com/watch?v=cCqoqSDFyC4
+ENT.CanInvestigate = true -- Can it detect and investigate possible enemy disturbances? | EX: Sounds, movement and flashlight
+ENT.InvestigateSoundDistance = 9 -- How far can the NPC hear sounds? | This number is multiplied by the calculated volume of the detectable sound
 	-- ====== No Chase After Certain Distance Variables ====== --
 ENT.NoChaseAfterCertainRange = false -- Should the SNPC not be able to chase when it's between number x and y?
 ENT.NoChaseAfterCertainRange_FarDistance = 2000 -- How far until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
@@ -878,13 +880,11 @@ ENT.FollowingPlayer = false
 ENT.EnemyReset = true
 ENT.VJ_IsBeingControlled = false
 ENT.VJ_PlayingSequence = false
-ENT.VJ_IsPlayingSoundTrack = false
 ENT.PlayingAttackAnimation = false
 ENT.VJDEBUG_SNPC_ENABLED = false
 ENT.MeleeAttack_DoingPropAttack = false
 ENT.Medic_IsHealingAlly = false
 ENT.AlreadyDoneMedicThinkCode = false
-ENT.AlreadyBeingHealedByMedic = false
 ENT.VJFriendly = false
 ENT.IsAbleToMeleeAttack = true
 ENT.IsAbleToRangeAttack = true
@@ -940,7 +940,7 @@ ENT.LastHiddenZoneT = 0
 ENT.NextIdleStandTime = 0
 ENT.NextWanderTime = 0
 ENT.TakingCoverT = 0
-ENT.NextInvestigateSoundMove = 0
+ENT.NextInvestigationMove = 0
 ENT.NextInvestigateSoundT = 0
 ENT.NextCallForHelpSoundT = 0
 ENT.LostEnemySoundT = 0
@@ -1137,7 +1137,7 @@ function ENT:SetMeleeAttackDamagePosition() return self:GetMeleeAttackDamageOrig
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetInitializeCapabilities()
 	self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK))
-	//self:CapabilitiesAdd(bit.bor(CAP_ANIMATEDFACE)) -- Breaks some SNPCs, avoid using it!
+	//self:CapabilitiesAdd(bit.bor(CAP_ANIMATEDFACE)) -- Breaks some NPCs because during high velocity, the model tilts (EX: leap attacks)
 	self:CapabilitiesAdd(bit.bor(CAP_TURN_HEAD))
 	if self.CanOpenDoors == true then
 		self:CapabilitiesAdd(bit.bor(CAP_OPEN_DOORS))
@@ -1757,7 +1757,7 @@ function ENT:Think()
 			local followIsLiving = followData.IsLiving
 			//print(self:GetTarget())
 			if IsValid(followEnt) && (!followIsLiving or (followIsLiving && (self:Disposition(followEnt) == D_LI or self:GetClass() == followEnt:GetClass()) && VJ_IsAlive(followEnt))) then
-				if curTime > self.NextFollowUpdateT && !self.AlreadyBeingHealedByMedic then
+				if curTime > self.NextFollowUpdateT && !self.VJTags[VJ_TAG_HEALING] then
 					local distToPly = self:GetPos():Distance(followEnt:GetPos())
 					local busy = self:BusyWithActivity()
 					self:SetTarget(followEnt)

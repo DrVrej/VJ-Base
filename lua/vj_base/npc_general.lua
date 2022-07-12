@@ -932,7 +932,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoMedicReset()
 	self:CustomOnMedic_OnReset()
-	if IsValid(self.Medic_CurrentEntToHeal) then self.Medic_CurrentEntToHeal.AlreadyBeingHealedByMedic = false end
+	if IsValid(self.Medic_CurrentEntToHeal) then self.Medic_CurrentEntToHeal.VJTags[VJ_TAG_HEALING] = nil end
 	if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
 	self.Medic_NextHealT = CurTime() + math.Rand(self.Medic_NextHealTime.a, self.Medic_NextHealTime.b)
 	self.Medic_IsHealingAlly = false
@@ -946,11 +946,11 @@ function ENT:DoMedicCheck()
 		if CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled == true then return end
 		for _,v in pairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
 			if v.IsVJBaseSNPC != true && !v:IsPlayer() then continue end -- If it's not a VJ Base SNPC or a player, then move on
-			if v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic != true && (!v.IsVJBaseSNPC_Tank) && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:DoRelationshipCheck(v) == false then
+			if v:EntIndex() != self:EntIndex() && !v.VJTags[VJ_TAG_HEALING] && !v.VJTags[VJ_TAG_VEHICLE] && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:DoRelationshipCheck(v) == false then
 				self.Medic_CurrentEntToHeal = v
 				self.Medic_IsHealingAlly = true
 				self.AlreadyDoneMedicThinkCode = false
-				v.AlreadyBeingHealedByMedic = true
+				v:VJTags_Add(VJ_TAG_HEALING)
 				self:StopMoving()
 				self:SetTarget(v)
 				self:VJ_TASK_GOTO_TARGET()
@@ -1104,6 +1104,8 @@ function ENT:DoAlert(ent)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local cosRad20 = math_cos(math_rad(20))
+--
 function ENT:DoEntityRelationshipCheck()
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.Behavior == VJ_BEHAVIOR_PASSIVE*/ then return false end
 	local posEnemies = self.CurrentPossibleEnemies
@@ -1124,7 +1126,8 @@ function ENT:DoEntityRelationshipCheck()
 	local myPos = self:GetPos()
 	local nearestDist = nil
 	local mySDir = self:GetSightDirection()
-	local mySAng = math_cos(math_rad(self.SightAngle))
+	local mySightDist = self:GetMaxLookDistance()
+	local mySightAng = math_cos(math_rad(self.SightAngle))
 	local plyControlled = self.VJ_IsBeingControlled
 	local sdHintBullet = sound.GetLoudestSoundHint(SOUND_BULLET_IMPACT, myPos)
 	local sdHintBulletOwner = nil;
@@ -1151,8 +1154,7 @@ function ENT:DoEntityRelationshipCheck()
 			//if v:Health() <= 0 then table_remove(self.CurrentPossibleEnemies,k) continue end
 			local vPos = v:GetPos()
 			local vDistanceToMy = vPos:Distance(myPos)
-			local sightDist = self:GetMaxLookDistance()
-			if vDistanceToMy > sightDist then continue end
+			if vDistanceToMy > mySightDist then continue end
 			local entFri = false
 			local vClass = v:GetClass()
 			local vNPC = v:IsNPC()
@@ -1205,32 +1207,28 @@ function ENT:DoEntityRelationshipCheck()
 					end
 				end
 				-- Investigation detection systems, including sound, movement and flashlight
-				if (!self.IsVJBaseSNPC_Tank) && !IsValid(self:GetEnemy()) && entFri == false then
+				if !IsValid(self:GetEnemy()) && !entFri then
 					if vPlayer then
 						self:AddEntityRelationship(v, D_NU, 0) -- Make the player neutral since it's not supposed to be a friend
-						if v:Crouching() && v:GetMoveType() != MOVETYPE_NOCLIP then
-							sightDist = self.VJ_IsHugeMonster == true and 5000 or 2000
-						end
-						if vDistanceToMy < 350 && v:FlashlightIsOn() == true && (v:GetForward():Dot((myPos - vPos):GetNormalized()) > math_cos(math_rad(20))) then
-							//			   Asiga hoser ^ (!v:Crouching() && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP && ((!v:KeyDown(IN_WALK) && (v:KeyDown(IN_FORWARD) or v:KeyDown(IN_BACK) or v:KeyDown(IN_MOVELEFT) or v:KeyDown(IN_MOVERIGHT))) or (v:KeyDown(IN_SPEED) or v:KeyDown(IN_JUMP)))) or
-							self:SetTarget(v)
-							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-						end
+						//if v:Crouching() && v:GetMoveType() != MOVETYPE_NOCLIP then -- Old and broken
+							//mySightDist = self.VJ_IsHugeMonster == true and 5000 or 2000
+						//end
 					end
-					if self.NextInvestigateSoundMove < CurTime() then
+					if self.CanInvestigate && self.NextInvestigationMove < CurTime() then
 						-- When a sound is detected
 						if v.VJ_LastInvestigateSdLevel && vDistanceToMy < (self.InvestigateSoundDistance * v.VJ_LastInvestigateSdLevel) && ((CurTime() - v.VJ_LastInvestigateSd) <= 1) then
 							if self:Visible(v) then
 								self:StopMoving()
 								self:SetTarget(v)
 								self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+								self.NextInvestigationMove = CurTime() + 0.3 -- Short delay, since it's only turning
 							elseif self.IsFollowing == false then
 								self:SetLastPosition(vPos)
 								self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
+								self.NextInvestigationMove = CurTime() + 2 -- Long delay, so it doesn't spam movement
 							end
 							self:CustomOnInvestigate(v)
 							self:PlaySoundSystem("InvestigateSound")
-							self.NextInvestigateSoundMove = CurTime() + 2
 						-- When a bullet hit is detected
 						elseif IsValid(sdHintBulletOwner) && sdHintBulletOwner == v then
 							self:StopMoving()
@@ -1238,7 +1236,14 @@ function ENT:DoEntityRelationshipCheck()
 							self:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
 							self:CustomOnInvestigate(v)
 							self:PlaySoundSystem("InvestigateSound")
-							self.NextInvestigateSoundMove = CurTime() + 0.3 -- Shorter delay because many bullets could hit
+							self.NextInvestigationMove = CurTime() + 0.3 -- Short delay because many bullets could hit
+						-- PLAYER ONLY: Flashlight shining on the NPC
+						elseif vPlayer && vDistanceToMy < 350 && v:FlashlightIsOn() && (v:GetForward():Dot((myPos - vPos):GetNormalized()) > cosRad20) then
+							//			   Asiga hoser ^ (!v:Crouching() && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP && ((!v:KeyDown(IN_WALK) && (v:KeyDown(IN_FORWARD) or v:KeyDown(IN_BACK) or v:KeyDown(IN_MOVELEFT) or v:KeyDown(IN_MOVERIGHT))) or (v:KeyDown(IN_SPEED) or v:KeyDown(IN_JUMP)))) or
+							self:StopMoving()
+							self:SetTarget(v)
+							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+							self.NextInvestigationMove = CurTime() + 0.1 -- Short delay, since it's only turning
 						end
 					end
 				end
@@ -1255,7 +1260,7 @@ function ENT:DoEntityRelationshipCheck()
 				vPlayer = false
 			end
 			-- Check in order: Can find enemy + Neutral or not + Is visible + In sight
-			if self.DisableFindEnemy == false && (self.Behavior != VJ_BEHAVIOR_NEUTRAL or self.Alerted) && (self.FindEnemy_CanSeeThroughWalls or self:Visible(v)) && (self.FindEnemy_UseSphere or (mySDir:Dot((vPos - myPos):GetNormalized()) > mySAng)) then
+			if self.DisableFindEnemy == false && (self.Behavior != VJ_BEHAVIOR_NEUTRAL or self.Alerted) && (self.FindEnemy_CanSeeThroughWalls or self:Visible(v)) && (self.FindEnemy_UseSphere or (mySDir:Dot((vPos - myPos):GetNormalized()) > mySightAng)) then
 				local check = self:DoRelationshipCheck(v)
 				if check == true then -- Is enemy
 					eneSeen = true
@@ -1273,9 +1278,9 @@ function ENT:DoEntityRelationshipCheck()
 				end
 			end
 			if vPlayer then
-				if entFri == true && self.MoveOutOfFriendlyPlayersWay == true && self.IsGuard == false && !self:IsMoving() && CurTime() > self.TakingCoverT && !plyControlled && (!self.IsVJBaseSNPC_Tank) && self:BusyWithActivity() == false then
-					local dist = 20
-					if self.FollowingPlayer == true then dist = 10 end
+				-- MoveOutOfFriendlyPlayersWay system
+				if entFri && self.MoveOutOfFriendlyPlayersWay && !self.IsGuard && !self:IsMoving() && CurTime() > self.TakingCoverT && !plyControlled && !self:BusyWithActivity() then
+					local dist = self.FollowingPlayer and 10 or 20
 					if /*self:Disposition(v) == D_LI &&*/ (self:VJ_GetNearestPointToEntityDistance(v) < dist) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
 						self.NextFollowUpdateT = CurTime() + 2
 						self:PlaySoundSystem("MoveOutOfPlayersWay")
@@ -1304,7 +1309,7 @@ function ENT:DoEntityRelationshipCheck()
 					end
 				end
 				-- HasOnPlayerSight system, used to do certain actions when it sees the player
-				if self.HasOnPlayerSight == true && v:Alive() &&(CurTime() > self.OnPlayerSightNextT) && (vDistanceToMy < self.OnPlayerSightDistance) && self:Visible(v) && (mySDir:Dot((v:GetPos() - myPos):GetNormalized()) > mySAng) then
+				if self.HasOnPlayerSight == true && v:Alive() &&(CurTime() > self.OnPlayerSightNextT) && (vDistanceToMy < self.OnPlayerSightDistance) && self:Visible(v) && (mySDir:Dot((v:GetPos() - myPos):GetNormalized()) > mySightAng) then
 					-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 					local disp = self.OnPlayerSightDispositionLevel
 					if (disp == 0) or (disp == 1 && (self:Disposition(v) == D_LI or self:Disposition(v) == D_NU)) or (disp == 2 && self:Disposition(v) != D_LI) then
@@ -1330,8 +1335,9 @@ function ENT:Allies_CallHelp(dist)
 	if !self.CallForHelp or self.AttackType == VJ_ATTACK_GRENADE then return false end
 	local entsTbl = ents.FindInSphere(self:GetPos(), dist)
 	if (!entsTbl) then return false end
+	local myClass = self:GetClass()
 	for _,v in pairs(entsTbl) do
-		if v:IsNPC() && v != self && v.IsVJBaseSNPC == true && VJ_IsAlive(v) == true && (v:GetClass() == self:GetClass() or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& v.IsFollowing == false*/ && v.VJ_IsBeingControlled == false && (!v.IsVJBaseSNPC_Tank) && v.CallForHelp == true then
+		if v:IsNPC() && v != self && v.IsVJBaseSNPC && VJ_IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& v.IsFollowing == false*/ && !v.VJ_IsBeingControlled && (!v.IsVJBaseSNPC_Tank) && v.CallForHelp then
 			local ene = self:GetEnemy()
 			if IsValid(ene) then
 				if v:GetPos():Distance(ene:GetPos()) > v.SightDistance then continue end -- Enemy to far away for ally, discontinue!
@@ -1399,9 +1405,10 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 	limit = limit or 3 -- Setting to 0 will automatically become 1
 	onlyVis = onlyVis or false -- Check only entities that are visible
 	if (!entsTbl) then return false end
+	local myClass = self:GetClass()
 	local it = 0
 	for _, v in pairs(entsTbl) do
-		if VJ_IsAlive(v) == true && v:IsNPC() && v != self && (v:GetClass() == self:GetClass() or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && v.IsFollowing == false && v.VJ_IsBeingControlled == false && !v.IsGuard && (!v.IsVJBaseSNPC_Tank) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
+		if VJ_IsAlive(v) == true && v:IsNPC() && v != self && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && v.IsFollowing == false && v.VJ_IsBeingControlled == false && !v.IsGuard && (!v.IsVJBaseSNPC_Tank) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
 			if onlyVis == true && !v:Visible(self) then continue end
 			if !IsValid(v:GetEnemy()) && self:GetPos():Distance(v:GetPos()) < dist then
 				self.NextWanderTime = CurTime() + 8
@@ -1900,7 +1907,7 @@ end
 function ENT:StartSoundTrack()
 	if self.HasSounds == false or self.HasSoundTrack == false then return end
 	if math.random(1, self.SoundTrackChance) == 1 then
-		self.VJ_IsPlayingSoundTrack = true
+		self:VJTags_Add(VJ_TAG_SD_PLAYING_MUSIC)
 		net.Start("vj_music_run")
 		net.WriteEntity(self)
 		net.WriteTable(self.SoundTbl_SoundTrack)
