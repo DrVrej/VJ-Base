@@ -36,6 +36,7 @@ ENT.AnimationPlaybackRate = 1 -- Controls the playback rate of all the animation
 	-- ====== Movement Variables ====== --
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
+ENT.UsePlayerModelMovement = false -- If true, it will allow the NPC to use player models properly by calculating the direction it needs to go to and setting the appropriate values
 	-- Jumping Variables:
 	-- Requires "CAP_MOVE_JUMP" | Applied automatically by the base if "ACT_JUMP" is valid on the NPC's model
 ENT.AllowMovementJumping = true -- Should the NPC be allowed to jump from one node to another?
@@ -126,7 +127,6 @@ ENT.AnimTbl_Run = {ACT_RUN} -- Set the running animations | Put multiple to let 
 ENT.IdleAlwaysWander = false -- If set to true, it will make the SNPC always wander when idling
 ENT.DisableWandering = false -- Disables wandering when the SNPC is idle
 ENT.DisableChasingEnemy = false -- Disables the SNPC chasing the enemy
-ENT.UsePlayerModelMovement = false -- If set to true, it will allow the SNPC to use player model's properly by calculating the direction it needs to go to and setting the appropriate values
 	-- ====== Constantly Face Enemy Variables ====== --
 ENT.ConstantlyFaceEnemy = false -- Should it face the enemy constantly?
 ENT.ConstantlyFaceEnemy_IfVisible = true -- Should it only face the enemy if it's visible?
@@ -144,8 +144,20 @@ ENT.PoseParameterLooking_InvertYaw = false -- Inverts the yaw poseparameters (Y)
 ENT.PoseParameterLooking_InvertRoll = false -- Inverts the roll poseparameters (Z)
 ENT.PoseParameterLooking_TurningSpeed = 10 -- How fast does the parameter turn?
 ENT.PoseParameterLooking_Names = {pitch={}, yaw={}, roll={}} -- Custom pose parameters to use, can put as many as needed
-	-- ====== Sound Detection Variables ====== --
-ENT.InvestigateSoundDistance = 9 -- How far away can the SNPC hear sounds? | This number is timed by the calculated volume of the detectable sound.
+	-- ====== Investigation Variables ====== --
+	-- Showcase: https://www.youtube.com/watch?v=cCqoqSDFyC4
+ENT.CanInvestigate = true -- Can it detect and investigate possible enemy disturbances? | EX: Sounds, movement and flashlight
+ENT.InvestigateSoundDistance = 9 -- How far can the NPC hear sounds? | This number is multiplied by the calculated volume of the detectable sound
+	-- ====== Danger & Grenade Detection Variables ====== --
+	-- Showcase: https://www.youtube.com/watch?v=XuaMWPTe6rA
+	-- EXAMPLES: Props that are one fire, especially objects like barrels that are about to explode, Combine mine that is triggered and about to explode, The location that the Antlion Worker's spit is going to hit, Combine Flechette that is about to explode,
+	-- Antlion Guard that is charging towards the NPC, Player that is driving a vehicle at high speed towards the NPC, Manhack that has opened its blades, Rollermine that is about to self-destruct, Combine Helicopter that is about to drop bombs or is firing a turret near the NPC,
+	-- Combine Gunship's is about to fire its belly cannon near the NPC, Turret impact locations fired by Combine Gunships, or Combine Dropships, or Striders, The location that a Combine Dropship is going to deploy soldiers, Strider is moving on top of the NPC,
+	-- The location that the Combine or HECU mortar is going to hit, SMG1 grenades that are flying close by, A Combine soldier that is rappelling on top of the NPC, Stalker's laser impact location, Combine APC that is driving towards the NPC
+ENT.CanDetectDangers = true -- Should the NPC detect dangers? | This includes grenades!
+ENT.DangerDetectionDistance = 400 -- Max danger detection distance | WARNING: Most of the non-grenade dangers ignore this max value
+ENT.CanThrowBackDetectedGrenades = true -- Should it pick up the detected grenade and throw it away or to the enemy?
+	-- NOTE: Can only throw grenades away if it has a grenade attack AND can detect dangers
 	-- ====== Taking Cover Variables ====== --
 ENT.AnimTbl_TakingCover = {ACT_COVER_LOW} -- The animation it plays when hiding in a covered position
 ENT.AnimTbl_MoveToCover = {ACT_RUN_CROUCH} -- The animation it plays when moving to a covered position
@@ -385,16 +397,6 @@ ENT.GrenadeAttackAnimationStopAttacks = true -- Should it stop attacks for a cer
 	-- To let the base automatically detect the attack duration, set this to false:
 ENT.GrenadeAttackAnimationStopAttacksTime = false -- How long should it stop attacks?
 ENT.GrenadeAttackFussTime = 3 -- Time until the grenade explodes
-	-- ====== Danger & Grenade Detection Variables ====== --
-	-- Showcase: https://www.youtube.com/watch?v=XuaMWPTe6rA
-	-- EXAMPLES: Props that are one fire, especially objects like barrels that are about to explode, Combine mine that is triggered and about to explode, The location that the Antlion Worker's spit is going to hit, Combine Flechette that is about to explode,
-	-- Antlion Guard that is charging towards the NPC, Player that is driving a vehicle at high speed towards the NPC, Manhack that has opened its blades, Rollermine that is about to self-destruct, Combine Helicopter that is about to drop bombs or is firing a turret near the NPC,
-	-- Combine Gunship's is about to fire its belly cannon near the NPC, Turret impact locations fired by Combine Gunships, or Combine Dropships, or Striders, The location that a Combine Dropship is going to deploy soldiers, Strider is moving on top of the NPC,
-	-- The location that the Combine or HECU mortar is going to hit, SMG1 grenades that are flying close by, A Combine soldier that is rappelling on top of the NPC, Stalker's laser impact location, Combine APC that is driving towards the NPC
-ENT.CanDetectDangers = true -- Should the NPC detect dangers? | This includes grenades!
-ENT.DangerDetectionDistance = 400 -- Max danger detection distance | WARNING: Most of the non-grenade dangers ignore this max value, this
-ENT.CanThrowBackDetectedGrenades = true -- Should it pick up the detected grenade and throw it away or to the enemy?
-	-- NOTE: Can only throw grenades away if it has a grenade attack AND can detect dangers
 	-- ====== Control Variables ====== --
 ENT.DisableGrenadeAttackAnimation = false -- if true, it will disable the animation code when doing grenade attack
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -855,7 +857,6 @@ ENT.FollowingPlayer = false
 ENT.EnemyReset = true
 ENT.VJ_IsBeingControlled = false
 ENT.VJ_PlayingSequence = false
-ENT.VJ_IsPlayingSoundTrack = false
 ENT.PlayingAttackAnimation = false
 ENT.DoingWeaponAttack = false
 ENT.DoingWeaponAttack_Standing = false
@@ -864,7 +865,6 @@ ENT.VJDEBUG_SNPC_ENABLED = false
 ENT.DidWeaponAttackAimParameter = false
 ENT.Medic_IsHealingAlly = false
 ENT.AlreadyDoneMedicThinkCode = false
-ENT.AlreadyBeingHealedByMedic = false
 ENT.VJFriendly = false
 ENT.VJ_PlayingInterruptSequence = false
 ENT.IsAbleToMeleeAttack = true
@@ -936,7 +936,7 @@ ENT.NextIdleStandTime = 0
 ENT.NextMoveOnGunCoveredT = 0
 ENT.NextWanderTime = 0
 ENT.Weapon_DoingCrouchAttackT = 0
-ENT.NextInvestigateSoundMove = 0
+ENT.NextInvestigationMove = 0
 ENT.NextInvestigateSoundT = 0
 ENT.NextCallForHelpSoundT = 0
 ENT.LostEnemySoundT = 0
@@ -1014,9 +1014,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_nofollowplayer"):GetInt() == 1 then self.FollowPlayer = false end
 	if GetConVar("vj_npc_nosnpcchat"):GetInt() == 1 then self.AllowPrintingInChat = false end
 	if GetConVar("vj_npc_noweapon"):GetInt() == 1 then self.DisableWeapons = true end
-	//if GetConVar("vj_npc_noforeverammo"):GetInt() == 1 then self.Weapon_UnlimitedAmmo = false end
 	if GetConVar("vj_npc_nothrowgrenade"):GetInt() == 1 then self.HasGrenadeAttack = false end
-	//if GetConVar("vj_npc_nouseregulator"):GetInt() == 1 then self.DisableUSE_SHOT_REGULATOR = true end
 	if GetConVar("vj_npc_nodangerdetection"):GetInt() == 1 then self.CanDetectDangers = false end
 	if GetConVar("vj_npc_dropweapon"):GetInt() == 0 then self.DropWeaponOnDeath = false end
 	if GetConVar("vj_npc_nomedics"):GetInt() == 1 then self.IsMedicSNPC = false end
@@ -2371,7 +2369,7 @@ end
 	m_nWaterType = Type of water the entity is in --> 1 = water, 2 = slime
 	
 	-- Following is just used for the face and eye looking:
-	m_hLookTarget = The entity it's looking at 
+	m_hLookTarget = The entity it's looking at
 	m_flNextRandomLookTime = Next time it can look at something (Can be used to set it as well)
 	m_flEyeIntegRate = How fast the eyes move
 	m_viewtarget = Returns the position the NPC's eye pupils are looking at (Can be used to set it as well)
@@ -2395,7 +2393,7 @@ function ENT:Think()
 	//self:ResetMoveCalc()
 	//print("---------------------")
 	//PrintTable(self:GetSaveTable())
-	//print(self:GetInternalVariable("m_hOpeningDoor"))
+	//print(self:GetInternalVariable("m_flFieldOfView"))
 	//print(self:GetInternalVariable("m_flMoveWaitFinished") - CurTime())
 	//self:SetSaveValue("m_flMoveWaitFinished", CurTime() + 2)
 	self:SetCondition(1) -- Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case sv_pvsskipanimation isn't disabled!
@@ -2495,7 +2493,7 @@ function ENT:Think()
 			local followIsLiving = followData.IsLiving
 			//print(self:GetTarget())
 			if IsValid(followEnt) && (!followIsLiving or (followIsLiving && (self:Disposition(followEnt) == D_LI or self:GetClass() == followEnt:GetClass()) && VJ_IsAlive(followEnt))) then
-				if curTime > self.NextFollowUpdateT && !self.AlreadyBeingHealedByMedic then
+				if curTime > self.NextFollowUpdateT && !self.VJTags[VJ_TAG_HEALING] then
 					local distToPly = self:GetPos():Distance(followEnt:GetPos())
 					local busy = self:BusyWithActivity()
 					self:SetTarget(followEnt)
@@ -3462,7 +3460,7 @@ function ENT:SelectSchedule()
 												finalAnim = self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponAttack))
 											end
 										end
-										if VJ_AnimationExists(self, finalAnim) == true && VJ_IsCurrentAnimation(self, finalAnim) == false then
+										if VJ_AnimationExists(self, finalAnim) == true && ((VJ_IsCurrentAnimation(self, finalAnim) == false) or (!self.DoingWeaponAttack)) then
 											VJ_EmitSound(self, wep.NPC_BeforeFireSound, wep.NPC_BeforeFireSoundLevel, math.Rand(wep.NPC_BeforeFireSoundPitch.a, wep.NPC_BeforeFireSoundPitch.b))
 											self.CurrentWeaponAnimation = finalAnim
 											self.NextWeaponAttackT_Base = CurTime() + 0.2
