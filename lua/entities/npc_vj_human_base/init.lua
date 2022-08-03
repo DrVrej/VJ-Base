@@ -3515,7 +3515,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 			for _,v in pairs(getAllies) do
 				local allyEne = v:GetEnemy()
 				if IsValid(allyEne) && (CurTime() - v.LastEnemyVisibleTime) < self.TimeUntilEnemyLost && VJ_IsAlive(allyEne) && self:DoRelationshipCheck(allyEne) && self:GetPos():Distance(allyEne:GetPos()) <= self:GetMaxLookDistance() then
-					self:VJ_DoSetEnemy(allyEne, true)
+					self:VJ_DoSetEnemy(allyEne, false)
 					self.EnemyReset = false
 					return false
 				end
