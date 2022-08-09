@@ -473,13 +473,8 @@ function VJ_CreateBoneFollower(ent, mdl)
 	boneFollower:SetOwner(ent)
 	ent:DeleteOnRemove(boneFollower)
 	ent.VJ_BoneFollowerEntity = boneFollower
-
-	local hookName = "VJ_BoneFollower_DisableCollisions_" .. boneFollower:EntIndex()
-	hook.Add("ShouldCollide", hookName, function(ent1, ent2)
-		if !IsValid(boneFollower) or !IsValid(ent) then
-			hook.Remove("ShouldCollide", hookName)
-			return true
-		end
+	
+	hook.Add("ShouldCollide", boneFollower, function(boneFollower, ent1, ent2)
 		if (ent1 == ent && ent2:GetClass() == boneFollowerClass) or (ent2 == ent && ent1:GetClass() == boneFollowerClass) then
 			return false
 		end

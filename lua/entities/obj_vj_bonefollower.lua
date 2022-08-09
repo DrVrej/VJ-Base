@@ -18,9 +18,15 @@ ENT.Category		= "VJ Base"
 ENT.Spawnable = false
 ENT.AdminOnly = false
 ENT.AutomaticFrameAdvance = true
+
+ENT.VJ_BoneFollower = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	function ENT:Draw()
+		//self:DrawModel()
+	end
+---------------------------------------------------------------------------------------------------------------------------------------------
+	function ENT:DrawTranslucent()
 		//self:DrawModel()
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -39,42 +45,45 @@ function ENT:CustomOnInitialize() end -- In case you need to change anything
 function ENT:Initialize()
     self:SetSolid(SOLID_NONE)
     self:AddFlags(FL_NOTARGET)
-    self:AddEFlags(EFL_DONTBLOCKLOS)
+    self:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
     self:SetCustomCollisionCheck(true)
+    self:AddEFlags(EFL_DONTBLOCKLOS)
 
     self:CustomOnInitialize()
     self.BoneFollowers = {}
 
-    local hookName = "VJ_BoneFollower_" .. self:EntIndex()
-    hook.Add("OnEntityCreated", hookName, function(ent)
-        if !IsValid(self) then
-            hook.Remove("OnEntityCreated", hookName)
-            return
-        end
+    hook.Add("OnEntityCreated", self, function(self,ent)
         if ent:GetClass() == "phys_bone_follower" then
             table.insert(self.BoneFollowers, ent)
         end
     end)
-    hook.Add("PhysgunPickup", hookName, function(ply,ent)
-        if !IsValid(self) then
-            hook.Remove("PhysgunPickup", hookName)
-            return
-        end
+    hook.Add("PhysgunPickup", self, function(self,ply,ent)
         if ent:GetClass() == "phys_bone_follower" or ent == self then
             return false
         end
     end)
 
-    timer.Simple(0.1,function()
+    timer.Simple(0.1, function()
         if IsValid(self) then
             self:CreateBoneFollowers()
             self.SetToRemove = true
-            //PrintTable(self.BoneFollowers)
             for _,v in pairs(self.BoneFollowers) do
+                v.VJ_BoneFollower = true
+                v:SetCollisionGroup(COLLISION_GROUP_NONE)
+                v:SetCustomCollisionCheck(true)
                 v:AddEFlags(EFL_DONTBLOCKLOS)
+                self:DeleteOnRemove(v)
             end
         end
     end)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OnTakeDamage(dmginfo)
+	-- Make its owner entity (usually an NPC) take damage as if it was its own body
+    local owner = self:GetOwner()
+    if IsValid(owner) then
+        owner:TakeDamageInfo(dmginfo)
+    end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
@@ -82,11 +91,11 @@ function ENT:Think()
     self:NextThink(CurTime() + (0.069696968793869 + FrameTime()))
     if self.SetToRemove then
         self.SetToRemove = false
-        hook.Remove("OnEntityCreated", "VJ_BoneFollower_" .. self:EntIndex())
+        hook.Remove("OnEntityCreated", self)
     end
     return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Remove()
+function ENT:OnRemove()
 	self:DestroyBoneFollowers()
 end
