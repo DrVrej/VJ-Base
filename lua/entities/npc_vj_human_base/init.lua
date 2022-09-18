@@ -117,9 +117,9 @@ ENT.Medic_SpawnPropOnHealAttachment = "anim_attachment_LH" -- The attachment it 
 ENT.Medic_CanBeHealed = true -- If set to false, this SNPC can't be healed!
 	-- ====== Follow System Variables ====== --
 	-- Associated variables: self.FollowData, self.IsFollowing
-	ENT.FollowMinDistance = 150 -- Minimum distance the NPC should come to the player | The base automatically adds the NPC's size to this variable to account for different sizes!
-	ENT.NextFollowUpdateTime = 0.5 -- Time until it checks if it should move to the player again | Lower number = More performance loss
-	ENT.FollowPlayer = true -- Should the NPC follow the player when the player presses a certain key? | Restrictions: Player has to be friendly and the NPC's move type cannot be stationary!
+ENT.FollowMinDistance = 150 -- Minimum distance the NPC should come to the player | The base automatically adds the NPC's size to this variable to account for different sizes!
+ENT.NextFollowUpdateTime = 0.5 -- Time until it checks if it should move to the player again | Lower number = More performance loss
+ENT.FollowPlayer = true -- Should the NPC follow the player when the player presses a certain key? | Restrictions: Player has to be friendly and the NPC's move type cannot be stationary!
 	-- ====== Movement & Idle Variables ====== --
 ENT.AnimTbl_IdleStand = nil -- The idle animation table when AI is enabled | DEFAULT: {ACT_IDLE}
 ENT.AnimTbl_Walk = {ACT_WALK} -- Set the walking animations | Put multiple to let the base pick a random animation when it moves
@@ -1274,14 +1274,15 @@ end
 			- PlayBackRateCalculated = If the playback rate is already calculated in the stopActivitiesTime, then set this to true! | DEFAULT: false
 		- customFunc() = TODO: NOT FINISHED
 	Returns
-		Nothing at the moment
+		- Number, Accurate animation play time after taking everything in account
+				- WARNING: If "animDelay" parameter is used, result may be inaccurate!
 -----------------------------------------------------------]]
 local varGes = "vjges_"
 local varSeq = "vjseq_"
 --
 function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, faceEnemy, animDelay, extraOptions, customFunc)
 	animation = VJ_PICK(animation)
-	if animation == false then return end
+	if animation == false then return 0 end
 	
 	stopActivities = stopActivities or false
 	if stopActivitiesTime == nil then -- If user didn't put anything, then default it to 0
@@ -1337,20 +1338,23 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 	if VJ_AnimationExists(self, animation) == false then
 		if !isString && IsValid(self:GetActiveWeapon()) then -- If it's an activity and has a valid weapon then check for weapon translation
 			-- If it returns the same activity as animation, then there isn't even a translation for it so don't play any animation =(
-			if self:GetActiveWeapon().IsVJBaseWeapon && self:TranslateToWeaponAnim(animation) == animation then return end
+			if self:GetActiveWeapon().IsVJBaseWeapon && self:TranslateToWeaponAnim(animation) == animation then return 0 end
 		else
-			return -- No animation =(
+			return 0 -- No animation =(
 		end
 	end
 	
 	-- Seed the current animation, used for animation delaying & on complete check
 	local seed = CurTime(); self.CurAnimationSeed = seed
 	local function PlayAct()
+		local animTime = self:DecideAnimationLength(animation, false)
+		
 		if stopActivities == true then
 			if stopActivitiesTime == false then -- false = Let the base calculate the time
-				stopActivitiesTime = self:DecideAnimationLength(animation, false)
+				stopActivitiesTime = animTime
 			elseif !extraOptions.PlayBackRateCalculated then -- Make sure not to calculate the playback rate when it already has!
 				stopActivitiesTime = stopActivitiesTime / self:GetPlaybackRate()
+				animTime = stopActivitiesTime
 			end
 			
 			self:StopAttacks(true)
@@ -1421,7 +1425,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 					//vsched:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY", animation)
 				else
 					if faceEnemy == true then
-						self:FaceCertainEntity(self:GetEnemy(), true, (stopActivities and stopActivitiesTime) or self:DecideAnimationLength(animation, false))
+						self:FaceCertainEntity(self:GetEnemy(), true, animTime)
 					end
 					-- This fixes: Animation NOT applying walk frames if the previous animation was the same
 					if self:GetActivity() == animation then
@@ -1439,12 +1443,13 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 		
 		-- If it has a OnFinish function, then set the timer to run it when it finishes!
 		if (extraOptions.OnFinish) then
-			timer.Simple((stopActivities and stopActivitiesTime) or self:DecideAnimationLength(animation, false), function()
+			timer.Simple(animTime, function()
 				if IsValid(self) && !self.Dead then
 					extraOptions.OnFinish(self.CurAnimationSeed != seed, animation)
 				end
 			end)
 		end
+		return animTime
 	end
 	
 	-- For delay system
@@ -1454,8 +1459,9 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				PlayAct()
 			end
 		end)
+		return animDelay + self:DecideAnimationLength(animation, false) -- Approximation, this may be inaccurate!
 	else
-		PlayAct()
+		return PlayAct()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1604,7 +1610,7 @@ function ENT:DoIdleAnimation(iType)
 	end
 	
 	if iType == 0 then -- Random (Wander & Idle Stand)
-		if math.random(1,3) == 1 then
+		if math.random(1, 3) == 1 then
 			self:VJ_TASK_IDLE_WANDER() else self:VJ_TASK_IDLE_STAND()
 		end
 	elseif iType == 1 then -- Wander
@@ -1614,7 +1620,7 @@ function ENT:DoIdleAnimation(iType)
 		return -- Don't set self.NextWanderTime below
 	end
 	
-	self.NextWanderTime = CurTime() + math.Rand(3,6) // self.NextIdleTime
+	self.NextWanderTime = CurTime() + math.Rand(3, 6) // self.NextIdleTime
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChaseAnimation(alwaysChase)
@@ -2489,7 +2495,7 @@ function ENT:Think()
 		
 		if self.DisableFootStepSoundTimer == false then self:FootStepSoundCode() end
 		
-		-- Update following system's data
+		-- Update follow system's data
 		//print("------------------")
 		//PrintTable(self.FollowData)
 		if self.IsFollowing == true then
@@ -2819,7 +2825,7 @@ function ENT:Think()
 			else -- No Enemy
 				self.DoingWeaponAttack = false
 				self.DoingWeaponAttack_Standing = false
-				if !self.Alerted && self.DidWeaponAttackAimParameter == true && plyControlled == false then
+				if !self.Alerted && self.DidWeaponAttackAimParameter && !plyControlled then
 					self:ClearPoseParameters()
 					self.DidWeaponAttackAimParameter = false
 				end
@@ -3806,6 +3812,12 @@ function ENT:OnTakeDamage(dmginfo)
 		end
 	end
 	
+	-- If eating, stop!
+	if self.CanEat && self.VJTags[VJ_TAG_EATING] then
+		self.EatingData.NextCheck = CurTime() + 15
+		self:EatingReset("Injured")
+	end
+	
 	if self:Health() <= 0 && self.Dead == false then
 		self:RemoveEFlags(EFL_NO_DISSOLVE)
 		if (dmginfo:IsDamageType(DMG_DISSOLVE)) or (IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball") then
@@ -4019,6 +4031,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		self.Corpse.IsVJBaseCorpse = true
 		self.Corpse.DamageInfo = dmginfo
 		self.Corpse.ExtraCorpsesToRemove = self.ExtraCorpsesToRemove_Transition
+		self.Corpse.BloodData = {Color = self.BloodColor, Particle = self.CustomBlood_Particle, Decal = self.CustomBlood_Decal}
 
 		if self.Bleeds == true && self.HasBloodPool == true && GetConVar("vj_npc_nobloodpool"):GetInt() == 0 then
 			self:SpawnBloodPool(dmginfo, hitgroup)
@@ -4081,9 +4094,11 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			useLocalVel = false
 			dmgForce = self:GetMoveVelocity() == defPos and self:GetGroundSpeedVelocity() or self:GetMoveVelocity()
 		end
+		local totalSurface = 0
 		for boneLimit = 0, self.Corpse:GetPhysicsObjectCount() - 1 do -- 128 = Bone Limit
 			local childphys = self.Corpse:GetPhysicsObjectNum(boneLimit)
 			if IsValid(childphys) then
+				totalSurface = totalSurface + childphys:GetSurfaceArea()
 				local childphys_bonepos, childphys_boneang = self:GetBonePosition(self.Corpse:TranslatePhysBoneToBone(boneLimit))
 				if (childphys_bonepos) then
 					//if math.Round(math.abs(childphys_boneang.r)) != 90 then -- Fixes ragdolls rotating, no longer needed!    --->    sv_pvsskipanimation 0
@@ -4102,6 +4117,11 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			end
 		end
 		
+		if self.Corpse:Health() <= 0 then
+			local hpCalc = totalSurface / 60 // self.Corpse:OBBMaxs():Distance(self.Corpse:OBBMins())
+			self.Corpse:SetMaxHealth(hpCalc)
+			self.Corpse:SetHealth(hpCalc)
+		end
 		VJ_AddStinkyEnt(self.Corpse, true)
 	
 		if IsValid(self.TheDroppedWeapon) then self.Corpse.ExtraCorpsesToRemove[#self.Corpse.ExtraCorpsesToRemove+1] = self.TheDroppedWeapon end

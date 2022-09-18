@@ -474,7 +474,7 @@ function VJ_CreateBoneFollower(ent, mdl)
 	ent:DeleteOnRemove(boneFollower)
 	ent.VJ_BoneFollowerEntity = boneFollower
 	
-	hook.Add("ShouldCollide", boneFollower, function(boneFollower, ent1, ent2)
+	hook.Add("ShouldCollide", boneFollower, function(self, ent1, ent2)
 		if (ent1 == ent && ent2:GetClass() == boneFollowerClass) or (ent2 == ent && ent1:GetClass() == boneFollowerClass) then
 			return false
 		end
@@ -621,6 +621,8 @@ VJ_IsHugeMonster					NPC that is considered to be very large or a boss
 
 -- Enums
 VJ_TAG_HEALING = 1 -- Ent is healing (either itself or by another ent)
+VJ_TAG_EATING = 2 -- Ent is eating something (Ex: a corpse)
+VJ_TAG_BEING_EATEN = 3 -- Ent is being eaten by something
 VJ_TAG_SD_PLAYING_MUSIC = 10 -- Ent is playing a sound track
 VJ_TAG_HEADCRAB = 20
 VJ_TAG_POLICE = 21
@@ -922,63 +924,77 @@ if SERVER then
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Corpse & Stink System ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-VJ_Corpses = {}
-VJ_StinkyEnts = {}
---
-local function VJ_Stink_StartThink()
-	timer.Create("vj_stink_think", 0.3, 0, function()
-		for k, ent in pairs(VJ_StinkyEnts) do
-			if IsValid(ent) then
-				sdEmitHint(SOUND_CARCASS, ent:GetPos(), 500, 2, ent)
-			else -- No longer valid, remove it from the list
-				table_remove(VJ_StinkyEnts, k)
-				if #VJ_StinkyEnts == 0 then -- If this is the last stinky ent then destroy the timer!
-					timer.Remove("vj_stink_think")
+	VJ_Corpses = {}
+	VJ_StinkyEnts = {}
+	--
+	local function VJ_Stink_StartThink()
+		timer.Create("vj_stink_think", 0.3, 0, function()
+			for k, ent in pairs(VJ_StinkyEnts) do
+				if IsValid(ent) then
+					sdEmitHint(SOUND_CARCASS, ent:GetPos(), 400, 2, ent)
+				else -- No longer valid, remove it from the list
+					table_remove(VJ_StinkyEnts, k)
+					if #VJ_StinkyEnts == 0 then -- If this is the last stinky ent then destroy the timer!
+						timer.Remove("vj_stink_think")
+					end
 				end
 			end
+		end)
+	end
+	---------------------------------------------------------------------------------------------------------------------------------------------
+	local stinkyMatTypes = {alienflesh=true, antlion=true, armorflesh=true, bloodyflesh=true, flesh=true, zombieflesh=true, player=true}
+	-- Material types: https://developer.valvesoftware.com/wiki/Material_surface_properties
+	--
+	--[[---------------------------------------------------------
+		Adds an entity to the stinky entity list and makes it produce a stink
+			- ent = The entity to add to the list
+			- checkMat = Should it check the entity's material type?
+		Returns
+			- false, Entity NOT added to stinky the list
+			- true, Entity added to the stinky list
+	-----------------------------------------------------------]]
+	function VJ_AddStinkyEnt(ent, checkMat)
+		local physObj = ent:GetPhysicsObject()
+		-- Clear out all removed ents from the table
+		for k, v in pairs(VJ_StinkyEnts) do
+			if !IsValid(v) then
+				table_remove(VJ_StinkyEnts, k)
+			end
 		end
-	end)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-local stinkyMatTypes = {alienflesh=true, antlion=true, armorflesh=true, bloodyflesh=true, flesh=true, zombieflesh=true, player=true}
---
-function VJ_AddStinkyEnt(ent, checkMat)
-	-- Clear out all removed ents from the table
-	for k, v in pairs(VJ_StinkyEnts) do
-		if !IsValid(v) then
-			table_remove(VJ_StinkyEnts, k)
+		-- Add the entity to the stinky list (if possible)
+		if (!checkMat) or (IsValid(physObj) && stinkyMatTypes[physObj:GetMaterial()]) then
+			VJ_StinkyEnts[#VJ_StinkyEnts + 1] = ent -- Add entity to the table
+			if !timer.Exists("vj_stink_think") then VJ_Stink_StartThink() end -- Start the stinky timer if it does NOT exist
+			return true
+		end
+		return false
+	end
+	---------------------------------------------------------------------------------------------------------------------------------------------
+	--[[---------------------------------------------------------
+		Adds an entity to the VJ corpse list (Entities here respect all VJ rules including corpse limit!)
+			- ent = The entity to add to the corpse list
+	-----------------------------------------------------------]]
+	function VJ_AddCorpse(ent)
+		-- Clear out all removed corpses from the table
+		for k, v in pairs(VJ_Corpses) do
+			if !IsValid(v) then
+				table_remove(VJ_Corpses, k)
+			end
+		end
+		
+		local count = #VJ_Corpses + 1
+		VJ_Corpses[count] = ent
+		
+		-- Check if we surpassed the limit, if we did, remove the oldest corpse
+		if count > GetConVar("vj_npc_globalcorpselimit"):GetInt() then
+			local oldestCorpse = table_remove(VJ_Corpses, 1)
+			if IsValid(oldestCorpse) then
+				local fadeType = oldestCorpse.FadeCorpseType
+				if fadeType then oldestCorpse:Fire(fadeType, "", 0) end -- Fade out
+				timer.Simple(1, function() if IsValid(oldestCorpse) then oldestCorpse:Remove() end end) -- Make sure it's removed
+			end
 		end
 	end
-	local physObj = ent:GetPhysicsObject()
-	if (!checkMat) or (IsValid(physObj) && stinkyMatTypes[physObj:GetMaterial()]) then
-		-- types: https://developer.valvesoftware.com/wiki/Material_surface_properties
-		VJ_StinkyEnts[#VJ_StinkyEnts + 1] = ent -- Add to the table
-		if !timer.Exists("vj_stink_think") then VJ_Stink_StartThink() end -- Start the stinky timer if it doesn't exist
-		return true
-	end
-	return false
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_AddCorpse(corpse)
-	-- Clear out all removed corpses from the table
-	for k, v in pairs(VJ_Corpses) do
-		if !IsValid(v) then
-			table_remove(VJ_Corpses, k)
-		end
-	end
-	
-	local count = #VJ_Corpses + 1
-	VJ_Corpses[count] = corpse
-	
-	-- Check if we surpassed the limit!
-	if count > GetConVar("vj_npc_globalcorpselimit"):GetInt() then
-		local oldestCorpse = table_remove(VJ_Corpses, 1)
-		if IsValid(oldestCorpse) then
-			oldestCorpse:Fire(oldestCorpse.FadeCorpseType, "", 0) -- Fade out
-			timer.Simple(1, function() if IsValid(oldestCorpse) then oldestCorpse:Remove() end end) -- Make sure it's removed
-		end
-	end
-end
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Convar Callbacks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
