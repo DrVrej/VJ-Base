@@ -166,6 +166,8 @@ ENT.PoseParameterLooking_Names = {pitch={}, yaw={}, roll={}} -- Custom pose para
 	-- Showcase: https://www.youtube.com/watch?v=cCqoqSDFyC4
 ENT.CanInvestigate = true -- Can it detect and investigate possible enemy disturbances? | EX: Sounds, movement and flashlight
 ENT.InvestigateSoundDistance = 9 -- How far can the NPC hear sounds? | This number is multiplied by the calculated volume of the detectable sound
+	-- ====== Eating Variables ====== --
+ENT.CanEat = true -- Should it search and eat organic stuff when idle?
 	-- ====== No Chase After Certain Distance Variables ====== --
 ENT.NoChaseAfterCertainRange = false -- Should the SNPC not be able to chase when it's between number x and y?
 ENT.NoChaseAfterCertainRange_FarDistance = 2000 -- How far until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
@@ -966,6 +968,7 @@ ENT.FacingStatus = VJ_FACING_NONE
 ENT.FacingData = nil
 ENT.TimersToRemove = {"timer_state_reset","timer_act_seqreset","timer_facing_end","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap","timer_alerted_reset"}
 ENT.FollowData = {Ent = NULL, MinDist = 0, Moving = false, StopAct = false, IsLiving = false}
+ENT.EatingData = nil
 //ENT.DefaultGibOnDeathDamageTypes = {[DMG_ALWAYSGIB]=true,[DMG_ENERGYBEAM]=true,[DMG_BLAST]=true,[DMG_VEHICLE]=true,[DMG_CRUSH]=true,[DMG_DISSOLVE]=true,[DMG_SLOWBURN]=true,[DMG_PHYSGUN]=true,[DMG_PLASMA]=true,[DMG_SONIC]=true}
 //ENT.SavedDmgInfo = {} -- Set later
 
@@ -1224,14 +1227,15 @@ end
 			- PlayBackRateCalculated = If the playback rate is already calculated in the stopActivitiesTime, then set this to true! | DEFAULT: false
 		- customFunc() = TODO: NOT FINISHED
 	Returns
-		Nothing at the moment
+		- Number, Accurate animation play time after taking everything in account
+				- WARNING: If "animDelay" parameter is used, result may be inaccurate!
 -----------------------------------------------------------]]
 local varGes = "vjges_"
 local varSeq = "vjseq_"
 --
 function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, faceEnemy, animDelay, extraOptions, customFunc)
 	animation = VJ_PICK(animation)
-	if animation == false then return end
+	if animation == false then return 0 end
 	
 	stopActivities = stopActivities or false
 	if stopActivitiesTime == nil then -- If user didn't put anything, then default it to 0
@@ -1288,20 +1292,23 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 		return -- This isn't a human SNPC, no need to check for weapon translation
 		/*if !isString && IsValid(self:GetActiveWeapon()) then -- If it's an activity and has a valid weapon then check for weapon translation
 			-- If it returns the same activity as animation, then there isn't even a translation for it so don't play any animation =(
-			if self:GetActiveWeapon().IsVJBaseWeapon && self:TranslateToWeaponAnim(animation) == animation then return end
+			if self:GetActiveWeapon().IsVJBaseWeapon && self:TranslateToWeaponAnim(animation) == animation then return 0 end
 		else
-			return -- No animation =(
+			return 0 -- No animation =(
 		end*/
 	end
 	
 	-- Seed the current animation, used for animation delaying & on complete check
 	local seed = CurTime(); self.CurAnimationSeed = seed
 	local function PlayAct()
+		local animTime = self:DecideAnimationLength(animation, false)
+		
 		if stopActivities == true then
 			if stopActivitiesTime == false then -- false = Let the base calculate the time
-				stopActivitiesTime = self:DecideAnimationLength(animation, false)
+				stopActivitiesTime = animTime
 			elseif !extraOptions.PlayBackRateCalculated then -- Make sure not to calculate the playback rate when it already has!
 				stopActivitiesTime = stopActivitiesTime / self:GetPlaybackRate()
+				animTime = stopActivitiesTime
 			end
 			
 			self:StopAttacks(true)
@@ -1368,7 +1375,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 					//vsched:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY", animation)
 				else
 					if faceEnemy == true then
-						self:FaceCertainEntity(self:GetEnemy(), true, (stopActivities and stopActivitiesTime) or self:DecideAnimationLength(animation, false))
+						self:FaceCertainEntity(self:GetEnemy(), true, animTime)
 					end
 					-- This fixes: Animation NOT applying walk frames if the previous animation was the same
 					if self:GetActivity() == animation then
@@ -1386,12 +1393,13 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 		
 		-- If it has a OnFinish function, then set the timer to run it when it finishes!
 		if (extraOptions.OnFinish) then
-			timer.Simple((stopActivities and stopActivitiesTime) or self:DecideAnimationLength(animation, false), function()
+			timer.Simple(animTime, function()
 				if IsValid(self) && !self.Dead then
 					extraOptions.OnFinish(self.CurAnimationSeed != seed, animation)
 				end
 			end)
 		end
+		return animTime
 	end
 	
 	-- For delay system
@@ -1401,8 +1409,9 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				PlayAct()
 			end
 		end)
+		return animDelay + self:DecideAnimationLength(animation, false) -- Approximation, this may be inaccurate!
 	else
-		PlayAct()
+		return PlayAct()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1753,7 +1762,7 @@ function ENT:Think()
 			end
 		end
 		
-		-- Update following system's data
+		-- Update follow system's data
 		//print("------------------")
 		//PrintTable(self.FollowData)
 		if self.IsFollowing == true then
@@ -1861,6 +1870,85 @@ function ENT:Think()
 				end
 			end
 			
+			-- Eating system
+			if self.CanEat && !plyControlled then
+				local eatingData = self.EatingData
+				if !eatingData then -- Eating data has NOT been initialized, so initialize it!
+					self.EatingData = {Ent = NULL, NextCheck = 0, AnimStatus = 0, OldIdleTbl = nil}
+					eatingData = self.EatingData
+				end
+				if eneValid or self.Alerted then
+					if self.VJTags[VJ_TAG_EATING] then
+						eatingData.NextCheck = curTime + 15
+						self:EatingReset("Enemy")
+					end
+				elseif curTime > eatingData.NextCheck then
+					if self.VJTags[VJ_TAG_EATING] then
+						local food = eatingData.Ent
+						if !IsValid(food) then -- Food no longer exists, reset!
+							eatingData.NextCheck = curTime + 10
+							self:EatingReset("Unspecified")
+						elseif !self:IsMoving() then
+							local foodDist = myPos:Distance(food:GetPos())
+							if foodDist > 400 then -- Food too far away, reset!
+								eatingData.NextCheck = curTime + 10
+								self:EatingReset("Unspecified")
+							elseif myPos:Distance(food:GetPos()) > 50 then -- Food moved a bit, go to new location
+								if self:IsBusy() then -- Something else has come up, stop eating completely!
+									eatingData.NextCheck = curTime + 15
+									self:EatingReset("Unspecified")
+								else
+									if eatingData.AnimStatus != 0 then -- We need to play get up anim first!
+										eatingData.AnimStatus = 0
+										self:SetIdleAnimation(eatingData.OldIdleTbl, true) -- Reset the idle animation table in case it changed!
+										eatingData.NextCheck = curTime + (self:CustomOnEat("StopEating", "HaltOnly") or 1)
+									else
+										self.NextWanderTime = CurTime() + math.Rand(3, 5)
+										self:SetState(VJ_STATE_NONE)
+										self:SetTarget(food)
+										self:VJ_TASK_GOTO_TARGET("TASK_WALK_PATH")
+										eatingData.NextCheck = curTime + 1
+									end
+								end
+							else -- No changes, continue eating
+								self:FaceCertainEntity(food, false, 1)
+								self:SetState(VJ_STATE_ONLY_ANIMATION_NOATTACK)
+								if eatingData.AnimStatus != 0 then -- We are already prepared, so eat!
+									eatingData.AnimStatus = 2
+									eatingData.NextCheck = curTime + self:CustomOnEat("Eat")
+									if food:Health() <= 0 then -- Finished eating!
+										eatingData.NextCheck = curTime + 30
+										self:EatingReset("Devoured")
+										food:TakeDamage(100, self, self) -- For entities that react to dmg, Ex: HLR corpses
+										food:Remove()
+									end
+								else -- We need to first prepare before eating! (Ex: Crouch-down animation
+									eatingData.AnimStatus = 1
+									eatingData.NextCheck = curTime + (self:CustomOnEat("BeginEating") or 1)
+								end
+							end
+						end
+					elseif self:HasCondition(COND_SMELL) && !self:IsMoving() && !self:IsBusy() then
+						local hint = sound.GetLoudestSoundHint(SOUND_CARCASS, myPos)
+						if hint then
+							local food = hint.owner
+							if IsValid(food) && !food.VJTags[VJ_TAG_BEING_EATEN] && self:CustomOnEat("CheckFood", hint) then
+								//PrintTable(hint)
+								self:VJTags_Add(VJ_TAG_EATING)
+								food:VJTags_Add(VJ_TAG_BEING_EATEN)
+								self.EatingData.OldIdleTbl = self.AnimTbl_IdleStand -- Save the current idle anim table in case we gonna change it while eating!
+								eatingData.Ent = food
+								self:CustomOnEat("StartBehavior")
+								self:SetState(VJ_STATE_ONLY_ANIMATION_NOATTACK)
+								self.NextWanderTime = CurTime() + math.Rand(3, 5)
+							end
+						end
+					else -- No food was found OR its not eating
+						//eatingData.NextCheck = curTime + 5
+					end
+				end
+			end
+		
 			if eneValid then
 				local enePos = ene:GetPos()
 				
@@ -2057,7 +2145,7 @@ function ENT:Think()
 					end
 				end
 			else -- No enemy
-				if plyControlled == false then
+				if !plyControlled then
 					self:DoPoseParameterLooking(true)
 					//self:ClearPoseParameters()
 				end
@@ -2791,7 +2879,13 @@ function ENT:OnTakeDamage(dmginfo)
 			end
 		end
 	end
-
+	
+	-- If eating, stop!
+	if self.CanEat && self.VJTags[VJ_TAG_EATING] then
+		self.EatingData.NextCheck = CurTime() + 15
+		self:EatingReset("Injured")
+	end
+	
 	if self:Health() <= 0 && self.Dead == false then
 		self:RemoveEFlags(EFL_NO_DISSOLVE)
 		if (dmginfo:IsDamageType(DMG_DISSOLVE)) or (IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball") then
@@ -3008,6 +3102,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		self.Corpse.IsVJBaseCorpse = true
 		self.Corpse.DamageInfo = dmginfo
 		self.Corpse.ExtraCorpsesToRemove = self.ExtraCorpsesToRemove_Transition
+		self.Corpse.BloodData = {Color = self.BloodColor, Particle = self.CustomBlood_Particle, Decal = self.CustomBlood_Decal}
 
 		if self.Bleeds == true && self.HasBloodPool == true && GetConVar("vj_npc_nobloodpool"):GetInt() == 0 then
 			self:SpawnBloodPool(dmginfo, hitgroup)
@@ -3070,9 +3165,11 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			useLocalVel = false
 			dmgForce = self:GetMoveVelocity() == defPos and self:GetGroundSpeedVelocity() or self:GetMoveVelocity()
 		end
+		local totalSurface = 0
 		for boneLimit = 0, self.Corpse:GetPhysicsObjectCount() - 1 do -- 128 = Bone Limit
 			local childphys = self.Corpse:GetPhysicsObjectNum(boneLimit)
 			if IsValid(childphys) then
+				totalSurface = totalSurface + childphys:GetSurfaceArea()
 				local childphys_bonepos, childphys_boneang = self:GetBonePosition(self.Corpse:TranslatePhysBoneToBone(boneLimit))
 				if (childphys_bonepos) then
 					//if math.Round(math.abs(childphys_boneang.r)) != 90 then -- Fixes ragdolls rotating, no longer needed!    --->    sv_pvsskipanimation 0
@@ -3091,6 +3188,11 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			end
 		end
 		
+		if self.Corpse:Health() <= 0 then
+			local hpCalc = totalSurface / 60 // self.Corpse:OBBMaxs():Distance(self.Corpse:OBBMins())
+			self.Corpse:SetMaxHealth(hpCalc)
+			self.Corpse:SetHealth(hpCalc)
+		end
 		VJ_AddStinkyEnt(self.Corpse, true)
 		
 		if self.DeathCorpseFade == true then self.Corpse:Fire(self.Corpse.FadeCorpseType,"",self.DeathCorpseFadeTime) end

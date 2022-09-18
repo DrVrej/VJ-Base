@@ -131,7 +131,7 @@ function ENT:Initialize()
 	self:SetMoveCollide(self.MoveCollideType)
 	self:SetCollisionGroup(self.CollisionGroupType)
 	self:SetSolid(self.SolidType)
-	self:SetTrigger(true)
+	//self:SetTrigger(true)
 	self:SetUseType(SIMPLE_USE)
 	
 	self:CustomOnInitializeBeforePhys()
@@ -219,7 +219,7 @@ function ENT:PhysicsCollide(data, phys)
 				self.AlreadyPaintedDeathDecal = true
 				util.Decal(VJ_PICK(self.DecalTbl_DeathDecals), data.HitPos + data.HitNormal, data.HitPos - data.HitNormal)
 			end
-			if self.ShakeWorldOnDeath == true then util.ScreenShake(data.HitPos, 16, 200, 1, self.ShakeWorldOnDeathRadius or 3000) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
+			if self.ShakeWorldOnDeath == true then util.ScreenShake(data.HitPos, self.ShakeWorldOnDeathAmplitude or 16, self.ShakeWorldOnDeathFrequency or 200, self.ShakeWorldOnDeathDuration or 1, self.ShakeWorldOnDeathRadius or 3000) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 			self:SetDeathVariablesTrue(data, phys, true)
 			if self.DelayedRemove > 0 then
 				self:SetNoDraw(true)

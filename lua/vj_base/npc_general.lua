@@ -42,6 +42,7 @@ local table_remove = table.remove
 local bAND = bit.band
 local math_rad = math.rad
 local math_cos = math.cos
+local math_clamp = math.Clamp
 local varCPly = "CLASS_PLAYER_ALLY"
 local varCAnt = "CLASS_ANTLION"
 local varCCom = "CLASS_COMBINE"
@@ -225,13 +226,99 @@ function ENT:GetSoundInterests()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
+	Reset and stop the eating behavior
+		- statusInfo = Status info to pass to "CustomOnEat" (info types defined in that function)
+-----------------------------------------------------------]]
+function ENT:EatingReset(resetType)
+	local eatingData = self.EatingData
+	self:SetState(VJ_STATE_NONE)
+	self:CustomOnEat("StopEating", resetType)
+	self.VJTags[VJ_TAG_EATING] = nil
+	self:SetIdleAnimation(eatingData.OldIdleTbl, true) -- Reset the idle animation table in case it changed!
+	if IsValid(eatingData.Ent) then
+		eatingData.Ent.VJTags[VJ_TAG_BEING_EATEN] = nil
+	end
+	self.EatingData = {Ent = NULL, NextCheck = eatingData.NextCheck, AnimStatus = 0, OldIdleTbl = nil}
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Called every time a change occurs in the eating system
+		- status = The change that occurred, possible changes:
+			- "CheckFood"		= Possible food found, check if it's good
+			- "StartBehavior"	= Food found, start the eating behavior
+			- "BeginEating"		= Food location reached
+			- "Eat"				= Actively eating food
+			- "StopEating"		= Food may have moved, removed, or finished
+		- statusInfo = Some status may have extra info, possible infos:
+			- "CheckFood": SoundHintData table, more info: https://wiki.facepunch.com/gmod/Structures/SoundHintData
+			- "StopEating":
+				- "HaltOnly"	= This is ONLY a halt, not complete reset!		| Recommendation: Play normal get up anim
+				- "Unspecified"	= Ex: Food suddenly removed or moved far away	| Recommendation: Play normal get up anim
+				- "Devoured"	= Has completely devoured the food!				| Recommendation: Play normal get up anim and play a sound
+				- "Enemy"		= Has been alerted or detected an enemy			| Recommendation: Play scared get up anim
+				- "Injured"		= Has been injured by something					| Recommendation: Play scared get up anim
+				- "Dead"		= Has died, usually called in "OnRemove"		| Recommendation: Do NOT play any!
+	Returns
+		- Boolean, ONLY used for "CheckFood", returning true will tell the base the possible food is valid
+		- Number, Delay to add before moving to another status, useful to make sure animations aren't cut off!
+-----------------------------------------------------------]]
+function ENT:CustomOnEat(status, statusInfo)
+	print("Eating Status: ", status, statusInfo)
+	if status == "CheckFood" then
+		return true
+	elseif status == "BeginEating" then
+		self:SetIdleAnimation({ACT_GESTURE_RANGE_ATTACK1}, true)
+		return self:VJ_ACT_PLAYACTIVITY(ACT_ARM, true, false)
+	elseif status == "Eat" then
+		VJ_EmitSound(self, "barnacle/bcl_chew"..math.random(1, 3)..".wav", 55)
+		-- Health changes
+		local food = self.EatingData.Ent
+		food:SetHealth(food:Health() - 15) -- Decrease corpse health
+		self:SetHealth(math_clamp(self:Health() + 15, self:Health(), self:GetMaxHealth())) -- Give health to the NPC
+		-- Blood effects
+		local bloodData = food.BloodData
+		if bloodData then
+			local bloodPos = food:GetPos() + food:OBBCenter()
+			local bloodParticle = VJ_PICK(bloodData.Particle)
+			if bloodParticle then
+				ParticleEffect(bloodParticle, bloodPos, self:GetAngles())
+			end
+			local bloodDecal = VJ_PICK(bloodData.Decal)
+			if bloodDecal then
+				local tr = util.TraceLine({start = bloodPos, endpos = bloodPos + food:GetUp()*-50, filter = food})
+				util.Decal(bloodDecal, tr.HitPos + tr.HitNormal + Vector(math.random(-45, 45), math.random(-45, 45), 0), tr.HitPos - tr.HitNormal, food)
+			end
+		end
+		return 2 -- Eat every this seconds
+	elseif status == "StopEating" then
+		if statusInfo != "Dead" then -- Do NOT play anim while dead
+			return self:VJ_ACT_PLAYACTIVITY(ACT_DISARM, true, false)
+		end
+	end
+	return 0
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Sets the NPC's idle animation table
+		- anims = Table with animation(s)
+		- reset = Should it reset the idle animation?
+-----------------------------------------------------------]]
+function ENT:SetIdleAnimation(anims, reset)
+	self.AnimTbl_IdleStand = anims
+	if reset then
+		self.CurrentAnim_IdleStand = -1
+		//self.NextIdleStandTime = 0
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
 	Checks if the NPC is playing an animation that shouldn't be interrupted OR is playing an attack!
 	Returns
 		- false, NOT busy
 		- true, Busy
 -----------------------------------------------------------]]
 function ENT:BusyWithActivity()
-	return self.vACT_StopAttacks == true or self.PlayingAttackAnimation == true or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB
+	return self.vACT_StopAttacks or self.PlayingAttackAnimation or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -241,7 +328,7 @@ end
 		- true, Busy
 -----------------------------------------------------------]]
 function ENT:IsBusyWithBehavior()
-	return self.FollowData.Moving == true or self.Medic_IsHealingAlly == true
+	return self.FollowData.Moving or self.Medic_IsHealingAlly
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1008,7 +1095,7 @@ function ENT:DoMedicCheck()
 							if self:CustomOnMedic_OnHeal(self.Medic_CurrentEntToHeal) != false then
 								self.Medic_CurrentEntToHeal:RemoveAllDecals()
 								local friCurHP = self.Medic_CurrentEntToHeal:Health()
-								self.Medic_CurrentEntToHeal:SetHealth(math.Clamp(friCurHP + self.Medic_HealthAmount, friCurHP, self.Medic_CurrentEntToHeal:GetMaxHealth()))
+								self.Medic_CurrentEntToHeal:SetHealth(math_clamp(friCurHP + self.Medic_HealthAmount, friCurHP, self.Medic_CurrentEntToHeal:GetMaxHealth()))
 							end
 							self:PlaySoundSystem("MedicOnHeal")
 							if self.Medic_CurrentEntToHeal.IsVJBaseSNPC == true then
@@ -1677,7 +1764,7 @@ function ENT:SpawnBloodDecal(dmginfo, hitgroup)
 	if pos == defPos then pos = self:GetPos() + self:OBBCenter() end
 	
 	-- Badi ayroun
-	local tr = util.TraceLine({start = pos, endpos = pos + force:GetNormal() * math.Clamp(force:Length() * 10, 100, self.BloodDecalDistance), filter = self})
+	local tr = util.TraceLine({start = pos, endpos = pos + force:GetNormal() * math_clamp(force:Length() * 10, 100, self.BloodDecalDistance), filter = self})
 	//if !tr.HitWorld then return end
 	local trNormalP = tr.HitPos + tr.HitNormal
 	local trNormalN = tr.HitPos - tr.HitNormal
@@ -1688,7 +1775,7 @@ function ENT:SpawnBloodDecal(dmginfo, hitgroup)
 	
 	-- Kedni ayroun
 	if math.random(1,2) == 1 then
-		local d2_endpos = pos + Vector(0, 0, -math.Clamp(force:Length() * 10, 100, self.BloodDecalDistance))
+		local d2_endpos = pos + Vector(0, 0, - math_clamp(force:Length() * 10, 100, self.BloodDecalDistance))
 		util.Decal(VJ_PICK(self.CustomBlood_Decal), pos, d2_endpos, self)
 		if math.random(1, 2) == 1 then util.Decal(VJ_PICK(self.CustomBlood_Decal), pos, d2_endpos + Vector(math.random(-120,120), math.random(-120,120), 0), self) end
 	end
@@ -1946,6 +2033,7 @@ function ENT:OnRemove()
 	self:CustomOnRemove()
 	self.Dead = true
 	if self.Medic_IsHealingAlly == true then self:DoMedicReset() end
+	if self.VJTags[VJ_TAG_EATING] then self:EatingReset("Dead") end
 	self:RemoveTimers()
 	self:StopAllCommonSounds()
 	self:StopParticles()

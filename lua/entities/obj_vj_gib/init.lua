@@ -73,7 +73,7 @@ end
 function ENT:Think()
 	-- Stinky gib! yuck!
 	if self.IsStinky && self.NextStinkyTime < CurTime() then
-		sound.EmitHint(SOUND_MEAT, self:GetPos(), 500, 2, self)
+		sound.EmitHint(SOUND_MEAT, self:GetPos(), 400, 2, self)
 		self.NextStinkyTime = CurTime() + 2
 	end
 end
