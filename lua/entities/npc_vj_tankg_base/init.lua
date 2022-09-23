@@ -33,6 +33,7 @@ ENT.DisableFindEnemy = true -- Disables FindEnemy code, friendly code still work
 ENT.BringFriendsOnDeath = false -- Should the SNPC's friends come to its position before it dies?
 ENT.CallForBackUpOnDamage = false -- Should the SNPC call for help when damaged? (Only happens if the SNPC hasn't seen a enemy)
 ENT.MoveOrHideOnDamageByEnemy = false -- Should the SNPC move or hide when being damaged by an enemy?
+ENT.MoveOutOfFriendlyPlayersWay = false -- Should the SNPC move out of the way when a friendly player comes close to it?
 ENT.CallForHelp = false -- Does the SNPC call for help?
 ENT.HasPainSounds = false -- If set to false, it won't play the pain sounds
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -189,6 +190,7 @@ ENT.Tank_Shell_NextFireT = 0
 ENT.Tank_TurningLerp = nil
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize()
+	self:VJTags_Add(VJ_TAG_VEHICLE)
 	self:CustomInitialize_CustomTank()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

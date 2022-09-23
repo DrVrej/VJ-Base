@@ -15,7 +15,7 @@ ENT.PhysicsInitType = SOLID_VPHYSICS
 ENT.MoveType = MOVETYPE_VPHYSICS
 ENT.MoveCollideType = MOVECOLLIDE_FLY_BOUNCE
 ENT.CollisionGroupType = COLLISION_GROUP_PROJECTILE
-ENT.SolidType = SOLID_CUSTOM
+ENT.SolidType = SOLID_VPHYSICS
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Collision / Damage Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -23,13 +23,7 @@ ENT.RemoveOnHit = true -- Should it remove itself when it touches something? | I
 ENT.PaintDecalOnCollide = true -- Should it paint decals when it collides with something? | Use this only when using a projectile that doesn't get removed when it collides with something
 ENT.DecalTbl_OnCollideDecals = {} -- Decals that paint when the projectile collides with something | It picks a random one from this table
 ENT.CollideCodeWithoutRemoving = false -- If RemoveOnHit is set to false, you can still make the projectile deal damage, place a decal, etc.
-ENT.NextCollideWithoutRemove = VJ_Set(1,1) -- Time until it can run the code again
-	-- ====== Shake World On Death Variables ====== --
-ENT.ShakeWorldOnDeath = false -- Should the world shake when the projectile hits something?
-ENT.ShakeWorldOnDeathAmplitude = 16 -- How much the screen will shake | From 1 to 16, 1 = really low 16 = really high
-ENT.ShakeWorldOnDeathRadius = 3000 -- How far the screen shake goes, in world units
-ENT.ShakeWorldOnDeathDuration = 1 -- How long the screen shake will last, in seconds
-ENT.ShakeWorldOnDeathFrequency = 200 -- The frequency
+ENT.NextCollideWithoutRemove = VJ_Set(1, 1) -- Time until it can run the code again
 	-- ====== Radius Damage Variables ====== --
 ENT.DoesRadiusDamage = false -- Should it do a blast damage when it hits something?
 ENT.RadiusDamageRadius = 250 -- How far the damage go? The farther away it's from its enemy, the less damage it will do | Counted in world units
@@ -126,6 +120,8 @@ ENT.AlreadyPaintedDeathDecal = false
 ENT.Dead = false
 ENT.NextIdleSoundT = 0
 ENT.NextCollideWithoutRemoveT = 0
+
+local defVec = Vector(0, 0, 0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:CustomOnPreInitialize()
@@ -135,6 +131,8 @@ function ENT:Initialize()
 	self:SetMoveCollide(self.MoveCollideType)
 	self:SetCollisionGroup(self.CollisionGroupType)
 	self:SetSolid(self.SolidType)
+	//self:SetTrigger(true)
+	self:SetUseType(SIMPLE_USE)
 	
 	self:CustomOnInitializeBeforePhys()
 	local phys = self:GetPhysicsObject()
@@ -221,13 +219,13 @@ function ENT:PhysicsCollide(data, phys)
 				self.AlreadyPaintedDeathDecal = true
 				util.Decal(VJ_PICK(self.DecalTbl_DeathDecals), data.HitPos + data.HitNormal, data.HitPos - data.HitNormal)
 			end
-			if self.ShakeWorldOnDeath == true then util.ScreenShake(data.HitPos, self.ShakeWorldOnDeathAmplitude, self.ShakeWorldOnDeathFrequency, self.ShakeWorldOnDeathDuration, self.ShakeWorldOnDeathRadius) end
+			if self.ShakeWorldOnDeath == true then util.ScreenShake(data.HitPos, self.ShakeWorldOnDeathAmplitude or 16, self.ShakeWorldOnDeathFrequency or 200, self.ShakeWorldOnDeathDuration or 1, self.ShakeWorldOnDeathRadius or 3000) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 			self:SetDeathVariablesTrue(data, phys, true)
 			if self.DelayedRemove > 0 then
 				self:SetNoDraw(true)
 				self:SetMoveType(MOVETYPE_NONE)
 				self:AddSolidFlags(FSOLID_NOT_SOLID)
-				self:SetLocalVelocity(Vector())
+				self:SetLocalVelocity(defVec)
 				SafeRemoveEntityDelayed(self, self.DelayedRemove)
 				self:OnRemove()
 			else
@@ -254,11 +252,11 @@ function ENT:OnRemove()
 	self:CustomOnRemove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SetDeathVariablesTrue(data, phys, RunDeathEffects)
+function ENT:SetDeathVariablesTrue(data, phys, runDeathEffects)
 	self.Dead = true
 	self:StopParticles()
 	VJ_STOPSOUND(self.CurrentIdleSound)
-	if RunDeathEffects == true then self:DeathEffects(data, phys or self:GetPhysicsObject()) end
+	if runDeathEffects == true then self:DeathEffects(data, phys or self:GetPhysicsObject()) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartupSoundCode()

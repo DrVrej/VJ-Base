@@ -133,6 +133,9 @@ SWEP.Primary.Ammo = "SMG1" -- Ammo type
 SWEP.AnimTbl_PrimaryFire = {ACT_VM_PRIMARYATTACK}
 	-- ====== Sound Variables ====== --
 SWEP.Primary.Sound = {}
+SWEP.Primary.SoundLevel = 80
+SWEP.Primary.SoundPitch	= VJ_Set(90, 100)
+SWEP.Primary.SoundVolume = 1
 SWEP.Primary.DistantSound = {}
 SWEP.Primary.HasDistantSound = true -- Does it have a distant sound when the gun is shot?
 SWEP.Primary.DistantSoundLevel = 140 -- Distant sound level
@@ -530,7 +533,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	if SERVER then
 		local fireSd = VJ_PICK(self.Primary.Sound)
 		if fireSd != false then
-			sound.Play(fireSd, owner:GetPos(), 80, math.random(90, 100), 1)
+			sound.Play(fireSd, owner:GetPos(), self.Primary.SoundLevel, math.random(self.Primary.SoundPitch.a, self.Primary.SoundPitch.b), self.Primary.SoundVolume)
 			//self:EmitSound(fireSd, 80, math.random(90,100))
 		end
 		if self.Primary.HasDistantSound == true then
