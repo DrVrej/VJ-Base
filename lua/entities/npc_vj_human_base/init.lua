@@ -342,14 +342,14 @@ ENT.AnimTbl_WeaponAttackSecondary = {"shootAR2alt"} -- Animations played when th
 ENT.WeaponAttackSecondaryTimeUntilFire = 0.9 -- The weapon uses this integer to set the time until the firing code is ran
 	-- ====== Moving-Firing Variables ====== --
 ENT.HasShootWhileMoving = true -- Can it shoot while moving?
-ENT.AnimTbl_ShootWhileMovingRun = {ACT_RUN_AIM} -- Animations it will play when shooting while running | NOTE: Weapon may translate the animation that they see fit!
-ENT.AnimTbl_ShootWhileMovingWalk = {ACT_WALK_AIM} -- Animations it will play when shooting while walking | NOTE: Weapon may translate the animation that they see fit!
+ENT.AnimTbl_ShootWhileMovingRun = {ACT_RUN_AIM} -- Animations it will play when shooting while running
+ENT.AnimTbl_ShootWhileMovingWalk = {ACT_WALK_AIM} -- Animations it will play when shooting while walking
 	-- ====== Reloading Variables ====== --
-ENT.AllowWeaponReloading = true -- If false, the SNPC will no longer reload
+ENT.AllowWeaponReloading = true -- If false, the NPC will not reload
 ENT.DisableWeaponReloadAnimation = false -- if true, it will disable the animation code when reloading
-ENT.AnimTbl_WeaponReload = {ACT_RELOAD} -- Animations that play when the SNPC reloads
-ENT.AnimTbl_WeaponReloadBehindCover = {ACT_RELOAD_LOW} -- Animations that it plays when the SNPC reloads, but behind cover
-ENT.HasFindCoverOnWeaponReload = true -- Should it find cover when trying to reload?
+ENT.AnimTbl_WeaponReload = {ACT_RELOAD} -- Animations that play when the NPC reloads
+ENT.AnimTbl_WeaponReloadBehindCover = {ACT_RELOAD_LOW} -- Animations that play when the NPC reloads, but behind cover
+ENT.WeaponReload_FindCover = true -- Should it first find cover before reloading?
 ENT.WeaponReloadAnimationFaceEnemy = true -- Should it face the enemy while playing the weapon reload animation?
 ENT.WeaponReloadAnimationDecreaseLengthAmount = 0 -- This will decrease the time until it starts moving or attack again. Use it to fix animation pauses until it chases the enemy.
 ENT.WeaponReloadAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
@@ -2684,7 +2684,7 @@ function ENT:Think()
 								if self.IsGuard == true or self.IsFollowing == true or self.VJ_IsBeingControlled_Tool == true or eneValid == false or self.MovementType == VJ_MOVETYPE_STATIONARY or self.LatestEnemyDistance < 650 then
 									DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
 								else -- If all is good, then run to a hiding spot and then reload!
-									if self.HasFindCoverOnWeaponReload == true then
+									if self.WeaponReload_FindCover == true then
 										self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
 										local vsched = ai_vj_schedule.New("vj_weapon_reload")
 										vsched:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
