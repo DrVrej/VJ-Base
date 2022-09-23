@@ -702,6 +702,8 @@ function ENT:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnFollowPlayer(ply) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnUnFollowPlayer(ply) end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnIdleDialogue(ent, canAnswer) return true end -- ent = An entity that it can talk to | canAnswer = If the entity can answer back | Return false to not run the code!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnIdleDialogueAnswer(ent) end -- ent = The entity that just talked to this NPC
