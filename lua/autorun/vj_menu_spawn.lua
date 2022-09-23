@@ -119,7 +119,7 @@ if CLIENT then
 					spawnmenu.CreateContentIcon(ent.ScriptedEntityType or "entity", roottree.PropPanel, t)
 				end
 			end
-			function node:DoClick()	
+			function node:DoClick()
 				pnlContent:SwitchPanel(CatPropPanel)
 			end
 		end

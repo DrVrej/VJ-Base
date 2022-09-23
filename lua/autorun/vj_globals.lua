@@ -85,6 +85,14 @@ VJ_FACING_ENEMY = 1 -- Currently attempting to face the enemy
 VJ_FACING_ENTITY = 2 -- Currently attempting to face a specific entity
 VJ_FACING_POSITION = 3 -- Currently attempting to face a specific position
 
+-- NPC model animation set
+VJ_MODEL_ANIMSET_NONE = 0 -- No model animation set detected (Default)
+VJ_MODEL_ANIMSET_COMBINE = 1 -- Current model's animation set is combine
+VJ_MODEL_ANIMSET_METROCOP = 2 -- Current model's animation set is metrocop
+VJ_MODEL_ANIMSET_REBEL = 3 -- Current model's animation set is citizen / rebel
+VJ_MODEL_ANIMSET_PLAYER = 4 -- Current model's animation set is player
+VJ_MODEL_ANIMSET_CUSTOM = 10 -- Use this when defining a custom model set
+
 -- Source NPC condition definitions because they are not defined in GMod for some reason ??
 COND_BEHIND_ENEMY = 29
 COND_BETTER_WEAPON_AVAILABLE = 46
@@ -465,13 +473,8 @@ function VJ_CreateBoneFollower(ent, mdl)
 	boneFollower:SetOwner(ent)
 	ent:DeleteOnRemove(boneFollower)
 	ent.VJ_BoneFollowerEntity = boneFollower
-
-	local hookName = "VJ_BoneFollower_DisableCollisions_" .. boneFollower:EntIndex()
-	hook.Add("ShouldCollide", hookName, function(ent1, ent2)
-		if !IsValid(boneFollower) or !IsValid(ent) then
-			hook.Remove("ShouldCollide", hookName)
-			return true
-		end
+	
+	hook.Add("ShouldCollide", boneFollower, function(self, ent1, ent2)
 		if (ent1 == ent && ent2:GetClass() == boneFollowerClass) or (ent2 == ent && ent1:GetClass() == boneFollowerClass) then
 			return false
 		end
@@ -510,11 +513,9 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC / Player Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+local Entity_MetaTable = FindMetaTable("Entity")
 local NPC_MetaTable = FindMetaTable("NPC")
 //local Player_MetaTable = FindMetaTable("Player")
-local Entity_MetaTable = FindMetaTable("Entity")
-
-//NPC_MetaTable.VJ_NPC_Class = {}
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function NPC_MetaTable:VJ_Controller_InitialMessage(ply)
 	if !IsValid(ply) then return end
@@ -596,6 +597,49 @@ function NPC_MetaTable:VJ_GetDifficultyValue(int)
 	return int -- Normal
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Tags ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+/*
+-- Variables that are used by VJ Base as tags --
+[Variable]							[Description]
+VJ_IsBeingControlled				NPC that is being controlled by the VJ NPC Controller
+VJ_IsBeingControlled_Tool			NPC that is being controlled by the VJ NPC Mover Tool
+VJ_AddEntityToSNPCAttackList		Entity that should be attacked by Creature NPCs if it's in the way
+VJ_IsDetectableDanger				Entity that should be detected as danger by human NPCs
+VJ_IsDetectableGrenade				Entity that should be detected as a grenade danger by human NPCs
+VJ_IsPickupableDanger				Entity that CAN be picked up by human NPCs (Ex: Grenades)
+VJ_IsPickedUpDanger					Entity that is currently picked up by a human NPC and most likely throwing it away (Ex: Grenades)
+VJ_LastInvestigateSd				Last time this NPC/Player has made a sound that should be investigated by enemy NPCs
+VJ_LastInvestigateSdLevel			The sound level of the above variable
+VJ_IsHugeMonster					NPC that is considered to be very large or a boss
+*/
+
+-- Variable:		self.VJTags
+-- Access: 			self.VJTags[VJ_TAG_X]
+-- Remove: 			self.VJTags[VJ_TAG_X] = nil
+-- Add: 			self:VJTags_Add(VJ_TAG_X, VJ_TAG_Y, ...)
+
+-- Enums
+VJ_TAG_HEALING = 1 -- Ent is healing (either itself or by another ent)
+VJ_TAG_EATING = 2 -- Ent is eating something (Ex: a corpse)
+VJ_TAG_BEING_EATEN = 3 -- Ent is being eaten by something
+VJ_TAG_SD_PLAYING_MUSIC = 10 -- Ent is playing a sound track
+VJ_TAG_HEADCRAB = 20
+VJ_TAG_POLICE = 21
+VJ_TAG_CIVILIAN = 22
+VJ_TAG_TURRET = 23
+VJ_TAG_VEHICLE = 24
+VJ_TAG_AIRCRAFT = 25
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+function Entity_MetaTable:VJTags_Add(...)
+	if !self.VJTags then self.VJTags = {} end
+	//PrintTable({...})
+	for _, tag in pairs({...}) do
+		self.VJTags[tag] = true
+	end
+end
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Hooks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("Initialize", "VJ_Initialize", function()
@@ -633,6 +677,7 @@ end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 	if IsValid(ply) then
+		ply.VJTags = {}
 		ply.VJ_LastInvestigateSd = 0
 		ply.VJ_LastInvestigateSdLevel = 0
 		if GetConVar("ai_ignoreplayers"):GetInt() == 0 then
@@ -663,11 +708,16 @@ if SERVER then
 	--
 	hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 		local myClass = ent:GetClass()
+		ent.VJTags = {}
 		if ent:IsNPC() then
 			if !ignoreEnts[myClass] then
-				timer.Simple(0.1, function() -- Make sure the SNPC is initialized properly
+				local isVJ = ent.IsVJBaseSNPC
+				if isVJ then
+					ent.NextProcessT = CurTime() + 0.15
+				end
+				timer.Simple(0.1, function() -- Make sure the NPC is initialized properly
 					if IsValid(ent) then
-						if ent.IsVJBaseSNPC == true && ent.CurrentPossibleEnemies == nil then ent.CurrentPossibleEnemies = {} end
+						if isVJ == true && ent.CurrentPossibleEnemies == nil then ent.CurrentPossibleEnemies = {} end
 						local EntsTbl = ents.GetAll()
 						local count = 1
 						local cvSeePlys = GetConVar("ai_ignoreplayers"):GetInt() == 0
@@ -676,7 +726,7 @@ if SERVER then
 							local v = EntsTbl[x]
 							if (v:IsNPC() or v:IsPlayer()) && !ignoreEnts[v:GetClass()] then
 								-- Add enemies to the created entity (if it's a VJ Base SNPC)
-								if ent.IsVJBaseSNPC == true then
+								if isVJ == true then
 									ent:EntitiesToNoCollideCode(v)
 									if (v:IsNPC() && (v:GetClass() != myClass && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && cvSeePlys /*&& v:Alive()*/) then
 										ent.CurrentPossibleEnemies[count] = v
@@ -874,63 +924,77 @@ if SERVER then
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Corpse & Stink System ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-VJ_Corpses = {}
-VJ_StinkyEnts = {}
---
-local function VJ_Stink_StartThink()
-	timer.Create("vj_stink_think", 0.3, 0, function()
-		for k, ent in pairs(VJ_StinkyEnts) do
-			if IsValid(ent) then
-				sdEmitHint(SOUND_CARCASS, ent:GetPos(), 500, 2, ent)
-			else -- No longer valid, remove it from the list
-				table_remove(VJ_StinkyEnts, k)
-				if #VJ_StinkyEnts == 0 then -- If this is the last stinky ent then destroy the timer!
-					timer.Remove("vj_stink_think")
+	VJ_Corpses = {}
+	VJ_StinkyEnts = {}
+	--
+	local function VJ_Stink_StartThink()
+		timer.Create("vj_stink_think", 0.3, 0, function()
+			for k, ent in pairs(VJ_StinkyEnts) do
+				if IsValid(ent) then
+					sdEmitHint(SOUND_CARCASS, ent:GetPos(), 400, 2, ent)
+				else -- No longer valid, remove it from the list
+					table_remove(VJ_StinkyEnts, k)
+					if #VJ_StinkyEnts == 0 then -- If this is the last stinky ent then destroy the timer!
+						timer.Remove("vj_stink_think")
+					end
 				end
 			end
+		end)
+	end
+	---------------------------------------------------------------------------------------------------------------------------------------------
+	local stinkyMatTypes = {alienflesh=true, antlion=true, armorflesh=true, bloodyflesh=true, flesh=true, zombieflesh=true, player=true}
+	-- Material types: https://developer.valvesoftware.com/wiki/Material_surface_properties
+	--
+	--[[---------------------------------------------------------
+		Adds an entity to the stinky entity list and makes it produce a stink
+			- ent = The entity to add to the list
+			- checkMat = Should it check the entity's material type?
+		Returns
+			- false, Entity NOT added to stinky the list
+			- true, Entity added to the stinky list
+	-----------------------------------------------------------]]
+	function VJ_AddStinkyEnt(ent, checkMat)
+		local physObj = ent:GetPhysicsObject()
+		-- Clear out all removed ents from the table
+		for k, v in pairs(VJ_StinkyEnts) do
+			if !IsValid(v) then
+				table_remove(VJ_StinkyEnts, k)
+			end
 		end
-	end)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-local stinkyMatTypes = {alienflesh=true, antlion=true, armorflesh=true, bloodyflesh=true, flesh=true, zombieflesh=true, player=true}
---
-function VJ_AddStinkyEnt(ent, checkMat)
-	-- Clear out all removed ents from the table
-	for k, v in pairs(VJ_StinkyEnts) do
-		if !IsValid(v) then
-			table_remove(VJ_StinkyEnts, k)
+		-- Add the entity to the stinky list (if possible)
+		if (!checkMat) or (IsValid(physObj) && stinkyMatTypes[physObj:GetMaterial()]) then
+			VJ_StinkyEnts[#VJ_StinkyEnts + 1] = ent -- Add entity to the table
+			if !timer.Exists("vj_stink_think") then VJ_Stink_StartThink() end -- Start the stinky timer if it does NOT exist
+			return true
+		end
+		return false
+	end
+	---------------------------------------------------------------------------------------------------------------------------------------------
+	--[[---------------------------------------------------------
+		Adds an entity to the VJ corpse list (Entities here respect all VJ rules including corpse limit!)
+			- ent = The entity to add to the corpse list
+	-----------------------------------------------------------]]
+	function VJ_AddCorpse(ent)
+		-- Clear out all removed corpses from the table
+		for k, v in pairs(VJ_Corpses) do
+			if !IsValid(v) then
+				table_remove(VJ_Corpses, k)
+			end
+		end
+		
+		local count = #VJ_Corpses + 1
+		VJ_Corpses[count] = ent
+		
+		-- Check if we surpassed the limit, if we did, remove the oldest corpse
+		if count > GetConVar("vj_npc_globalcorpselimit"):GetInt() then
+			local oldestCorpse = table_remove(VJ_Corpses, 1)
+			if IsValid(oldestCorpse) then
+				local fadeType = oldestCorpse.FadeCorpseType
+				if fadeType then oldestCorpse:Fire(fadeType, "", 0) end -- Fade out
+				timer.Simple(1, function() if IsValid(oldestCorpse) then oldestCorpse:Remove() end end) -- Make sure it's removed
+			end
 		end
 	end
-	local physObj = ent:GetPhysicsObject()
-	if (!checkMat) or (IsValid(physObj) && stinkyMatTypes[physObj:GetMaterial()]) then
-		-- types: https://developer.valvesoftware.com/wiki/Material_surface_properties
-		VJ_StinkyEnts[#VJ_StinkyEnts + 1] = ent -- Add to the table
-		if !timer.Exists("vj_stink_think") then VJ_Stink_StartThink() end -- Start the stinky timer if it doesn't exist
-		return true
-	end
-	return false
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_AddCorpse(corpse)
-	-- Clear out all removed corpses from the table
-	for k, v in pairs(VJ_Corpses) do
-		if !IsValid(v) then
-			table_remove(VJ_Corpses, k)
-		end
-	end
-	
-	local count = #VJ_Corpses + 1
-	VJ_Corpses[count] = corpse
-	
-	-- Check if we surpassed the limit!
-	if count > GetConVar("vj_npc_globalcorpselimit"):GetInt() then
-		local oldestCorpse = table_remove(VJ_Corpses, 1)
-		if IsValid(oldestCorpse) then
-			oldestCorpse:Fire(oldestCorpse.FadeCorpseType, "", 0) -- Fade out
-			timer.Simple(1, function() if IsValid(oldestCorpse) then oldestCorpse:Remove() end end) -- Make sure it's removed
-		end
-	end
-end
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Convar Callbacks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1110,26 +1174,6 @@ function util.VJ_SphereDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 	return hitEnts
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Tag Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-/*
--- Variables that are used by VJ Base as tags --
-
-[Variable]							[Description]
-VJ_IsBeingControlled				NPC that is being controlled by the VJ NPC Controller
-VJ_IsBeingControlled_Tool			NPC that is being controlled by the VJ NPC Mover Tool
-VJ_AddEntityToSNPCAttackList		Entity that should be attacked by Creature NPCs if it's in the way
-VJ_IsDetectableDanger				Entity that should be detected as danger by human NPCs
-VJ_IsDetectableGrenade				Entity that should be detected as a grenade danger by human NPCs
-VJ_IsPickupableDanger				Entity that CAN be picked up by human NPCs (Ex: Grenades)
-VJ_IsPickedUpDanger					Entity that is currently picked up by a human NPC and most likely throwing it away (Ex: Grenades)
-VJ_LastInvestigateSd				Last time this NPC/Player has made a sound that should be investigated by enemy NPCs
-VJ_LastInvestigateSdLevel			The sound level of the above variable
-VJ_IsHugeMonster					NPC that is considered to be very large or a boss
-VJ_IsPlayingSoundTrack				NPC that is playing a VJ sound track
-
-*/
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Tests ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Working test but no uses at the moment
@@ -1153,9 +1197,26 @@ end
 
 hook.Add("OnEntityCreated", "vjmetatabletest", function(ent)
 	if scripted_ents.IsBasedOn(ent:GetClass(), "npc_vj_creature_base") or scripted_ents.IsBasedOn(ent:GetClass(), "npc_vj_human_base") then
-		local mt = table.Merge({}, debug.getmetatable(ent))
+		local mt = table.Merge({}, debug.getmetatable(ent)) -- Create a new table to avoid overflow!
 		mt.__index = __index
 		debug.setmetatable(ent, mt)
 	end
 end)
+*/
+
+-- Version for individual NPCs (Tests show loss of performance, avoid)
+/*
+local metaOrg = debug.getmetatable(self)
+local metaVJ = {}
+local function newIndex(ent, key)
+	local val = metaVJ[key]
+	if val != nil then return val end
+	return metaOrg.__index(ent, key)
+end
+function metaVJ:SetMaxLookDistance(dist)
+	metaOrg.SetMaxLookDistance(self, dist)
+end
+local mt = table.Merge({}, metaOrg) -- Create a new table to avoid overflow!
+mt.__index = newIndex
+debug.setmetatable(self, mt)
 */
