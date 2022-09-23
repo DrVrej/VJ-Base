@@ -1005,7 +1005,10 @@ function ENT:Follow(ent, stopIfFollowing)
 			if isPly then self:CustomOnFollowPlayer(ent) end
 			return true
 		elseif stopIfFollowing then -- Unfollow the entity
-			if isPly then self:PlaySoundSystem("UnFollowPlayer") end
+			if isPly then
+				self:PlaySoundSystem("UnFollowPlayer")
+				self:CustomOnUnFollowPlayer(ent)
+			end
 			self:StopMoving()
 			self.NextWanderTime = CurTime() + 2
 			if !self:BusyWithActivity() then

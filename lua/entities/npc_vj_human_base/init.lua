@@ -349,6 +349,7 @@ ENT.AllowWeaponReloading = true -- If false, the SNPC will no longer reload
 ENT.DisableWeaponReloadAnimation = false -- if true, it will disable the animation code when reloading
 ENT.AnimTbl_WeaponReload = {ACT_RELOAD} -- Animations that play when the SNPC reloads
 ENT.AnimTbl_WeaponReloadBehindCover = {ACT_RELOAD_LOW} -- Animations that it plays when the SNPC reloads, but behind cover
+ENT.HasFindCoverOnWeaponReload = true -- Should it find cover when trying to reload?
 ENT.WeaponReloadAnimationFaceEnemy = true -- Should it face the enemy while playing the weapon reload animation?
 ENT.WeaponReloadAnimationDecreaseLengthAmount = 0 -- This will decrease the time until it starts moving or attack again. Use it to fix animation pauses until it chases the enemy.
 ENT.WeaponReloadAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
@@ -693,6 +694,8 @@ function ENT:CustomOnAcceptInput(key, activator, caller, data) end
 function ENT:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnFollowPlayer(ply) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:CustomOnUnFollowPlayer(ply) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnIdleDialogue(ent, canAnswer) return true end -- ent = An entity that it can talk to | canAnswer = If the entity can answer back | Return false to not run the code!
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2681,26 +2684,30 @@ function ENT:Think()
 								if self.IsGuard == true or self.IsFollowing == true or self.VJ_IsBeingControlled_Tool == true or eneValid == false or self.MovementType == VJ_MOVETYPE_STATIONARY or self.LatestEnemyDistance < 650 then
 									DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
 								else -- If all is good, then run to a hiding spot and then reload!
-									self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
-									local vsched = ai_vj_schedule.New("vj_weapon_reload")
-									vsched:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
-									vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-									vsched.StopScheduleIfNotMoving = true
-									vsched.IsMovingTask = true
-									vsched.MoveType = 1
-									vsched.RunCode_OnFinish = function()
-										if self:GetWeaponState() == VJ_WEP_STATE_RELOADING then
-											-- If the current situation isn't favorable, then abandon the current reload, and try again!
-											if (self.AttackType != VJ_ATTACK_NONE) or (IsValid(self:GetEnemy()) && self.HasWeaponBackAway == true && (self:GetPos():Distance(self:GetEnemy():GetPos()) <= self.WeaponBackAway_Distance)) then
-												self:SetWeaponState()
-												//timer.Remove("timer_reload_end"..self:EntIndex()) -- Remove the timer to make sure it doesn't set reloading to false at a random time (later on)
-											else -- Our hiding spot is good, so reload!
-												DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
-												self:CustomOnWeaponReload_AfterRanToCover()
+									if self.HasFindCoverOnWeaponReload == true then
+										self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
+										local vsched = ai_vj_schedule.New("vj_weapon_reload")
+										vsched:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
+										vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+										vsched.StopScheduleIfNotMoving = true
+										vsched.IsMovingTask = true
+										vsched.MoveType = 1
+										vsched.RunCode_OnFinish = function()
+											if self:GetWeaponState() == VJ_WEP_STATE_RELOADING then
+												-- If the current situation isn't favorable, then abandon the current reload, and try again!
+												if (self.AttackType != VJ_ATTACK_NONE) or (IsValid(self:GetEnemy()) && self.HasWeaponBackAway == true && (self:GetPos():Distance(self:GetEnemy():GetPos()) <= self.WeaponBackAway_Distance)) then
+													self:SetWeaponState()
+													//timer.Remove("timer_reload_end"..self:EntIndex()) -- Remove the timer to make sure it doesn't set reloading to false at a random time (later on)
+												else -- Our hiding spot is good, so reload!
+													DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
+													self:CustomOnWeaponReload_AfterRanToCover()
+												end
 											end
 										end
+										self:StartSchedule(vsched)
+									else
+										DoReloadAnimation(self:TranslateToWeaponAnim(VJ_PICK(self.AnimTbl_WeaponReload)))
 									end
-									self:StartSchedule(vsched)
 								end
 							end
 						end
