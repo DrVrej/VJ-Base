@@ -1024,7 +1024,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_nodangerdetection"):GetInt() == 1 then self.CanDetectDangers = false end
 	if GetConVar("vj_npc_dropweapon"):GetInt() == 0 then self.DropWeaponOnDeath = false end
 	if GetConVar("vj_npc_nomedics"):GetInt() == 1 then self.IsMedicSNPC = false end
-	if GetConVar("vj_npc_nogibdeathparticles"):GetInt() == 1 then self.HasGibDeathParticles = false end
+	if GetConVar("vj_npc_novfx_gibdeath"):GetInt() == 1 then self.HasGibDeathParticles = false end
 	if GetConVar("vj_npc_nogib"):GetInt() == 1 then self.AllowedToGib = false self.HasGibOnDeath = false end
 	if GetConVar("vj_npc_usegmoddecals"):GetInt() == 1 then self.BloodDecalUseGMod = true end
 	if GetConVar("vj_npc_knowenemylocation"):GetInt() == 1 then self.FindEnemy_UseSphere = true self.FindEnemy_CanSeeThroughWalls = true end

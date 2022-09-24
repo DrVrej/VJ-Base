@@ -143,7 +143,7 @@ local gib_mdlHBig = {"models/gibs/humans/mgib_01.mdl","models/gibs/humans/mgib_0
 function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 	// self:CreateGibEntity("prop_ragdoll", "", {Pos=self:LocalToWorld(Vector(0,3,0)), Ang=self:GetAngles(), Vel=})
 	if self.AllowedToGib == false then return end
-	local bloodType = "Red"
+	local bloodType = false
 	class = class or "obj_vj_gib"
 	if models == "UseAlien_Small" then
 		models =  VJ_PICK(gib_mdlASmall)
@@ -153,8 +153,10 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 		bloodType = "Yellow"
 	elseif models == "UseHuman_Small" then
 		models =  VJ_PICK(gib_mdlHSmall)
+		bloodType = "Red"
 	elseif models == "UseHuman_Big" then
 		models =  VJ_PICK(gib_mdlHBig)
+		bloodType = "Red"
 	else -- Custom models
 		models = VJ_PICK(models)
 		if VJ_HasValue(gib_mdlAAll, models) then
@@ -171,7 +173,7 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 				vel = dmgForce
 			end
 		end
-		bloodType = extraOptions.BloodType or bloodType -- Certain entities such as the VJ Gib entity, you can use this to set its gib type
+		bloodType = (extraOptions.BloodType or bloodType or self.BloodColor) -- Certain entities such as the VJ Gib entity, you can use this to set its gib type
 		local removeOnCorpseDelete = extraOptions.RemoveOnCorpseDelete or false -- Should the entity get removed if the corpse is removed?
 	local gib = ents.Create(class)
 	gib:SetModel(models)
@@ -181,6 +183,7 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 		gib.BloodType = bloodType
 		gib.Collide_Decal = extraOptions.BloodDecal or "Default"
 		gib.CollideSound = extraOptions.CollideSound or "Default"
+		//gib.BloodData = {Color = bloodType, Particle = self.CustomBlood_Particle, Decal = self.Collide_Decal} -- For eating system
 	end
 	gib:Spawn()
 	gib:Activate()
@@ -239,6 +242,7 @@ function ENT:EatingReset(resetType)
 		eatingData.Ent.VJTags[VJ_TAG_BEING_EATEN] = nil
 	end
 	self.EatingData = {Ent = NULL, NextCheck = eatingData.NextCheck, AnimStatus = 0, OldIdleTbl = nil}
+	-- AnimStatus: "None" = Not prepared (Probably moving to food location) | "Prepared" = Prepared (Ex: Played crouch down anim) | "Eating" = Prepared and is actively eating
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -262,6 +266,8 @@ end
 		- Boolean, ONLY used for "CheckFood", returning true will tell the base the possible food is valid
 		- Number, Delay to add before moving to another status, useful to make sure animations aren't cut off!
 -----------------------------------------------------------]]
+local vecZ50 = Vector(0, 0, -50)
+--
 function ENT:CustomOnEat(status, statusInfo)
 	print("Eating Status: ", status, statusInfo)
 	if status == "CheckFood" then
@@ -273,8 +279,10 @@ function ENT:CustomOnEat(status, statusInfo)
 		VJ_EmitSound(self, "barnacle/bcl_chew"..math.random(1, 3)..".wav", 55)
 		-- Health changes
 		local food = self.EatingData.Ent
-		food:SetHealth(food:Health() - 15) -- Decrease corpse health
-		self:SetHealth(math_clamp(self:Health() + 15, self:Health(), self:GetMaxHealth())) -- Give health to the NPC
+		local damage = 15 -- How much damage food will receive
+		local foodHP = food:Health() -- Food's health
+		self:SetHealth(math.Clamp(self:Health() + ((damage > foodHP and foodHP) or damage), self:Health(), self:GetMaxHealth())) -- Give health to the NPC
+		food:SetHealth(foodHP - damage) -- Decrease corpse health
 		-- Blood effects
 		local bloodData = food.BloodData
 		if bloodData then
@@ -285,13 +293,13 @@ function ENT:CustomOnEat(status, statusInfo)
 			end
 			local bloodDecal = VJ_PICK(bloodData.Decal)
 			if bloodDecal then
-				local tr = util.TraceLine({start = bloodPos, endpos = bloodPos + food:GetUp()*-50, filter = food})
+				local tr = util.TraceLine({start = bloodPos, endpos = bloodPos + vecZ50, filter = food})
 				util.Decal(bloodDecal, tr.HitPos + tr.HitNormal + Vector(math.random(-45, 45), math.random(-45, 45), 0), tr.HitPos - tr.HitNormal, food)
 			end
 		end
 		return 2 -- Eat every this seconds
 	elseif status == "StopEating" then
-		if statusInfo != "Dead" then -- Do NOT play anim while dead
+		if statusInfo != "Dead" && self.EatingData.AnimStatus != "None" then -- Do NOT play anim while dead or has NOT prepared to eat
 			return self:VJ_ACT_PLAYACTIVITY(ACT_DISARM, true, false)
 		end
 	end
