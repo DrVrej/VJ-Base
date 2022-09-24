@@ -167,7 +167,7 @@ ENT.PoseParameterLooking_Names = {pitch={}, yaw={}, roll={}} -- Custom pose para
 ENT.CanInvestigate = true -- Can it detect and investigate possible enemy disturbances? | EX: Sounds, movement and flashlight
 ENT.InvestigateSoundDistance = 9 -- How far can the NPC hear sounds? | This number is multiplied by the calculated volume of the detectable sound
 	-- ====== Eating Variables ====== --
-ENT.CanEat = true -- Should it search and eat organic stuff when idle?
+ENT.CanEat = false -- Should it search and eat organic stuff when idle?
 	-- ====== No Chase After Certain Distance Variables ====== --
 ENT.NoChaseAfterCertainRange = false -- Should the SNPC not be able to chase when it's between number x and y?
 ENT.NoChaseAfterCertainRange_FarDistance = 2000 -- How far until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
@@ -1026,7 +1026,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_nofollowplayer"):GetInt() == 1 then self.FollowPlayer = false end
 	if GetConVar("vj_npc_nosnpcchat"):GetInt() == 1 then self.AllowPrintingInChat = false end
 	if GetConVar("vj_npc_nomedics"):GetInt() == 1 then self.IsMedicSNPC = false end
-	if GetConVar("vj_npc_nogibdeathparticles"):GetInt() == 1 then self.HasGibDeathParticles = false end
+	if GetConVar("vj_npc_novfx_gibdeath"):GetInt() == 1 then self.HasGibDeathParticles = false end
 	if GetConVar("vj_npc_nogib"):GetInt() == 1 then self.AllowedToGib = false self.HasGibOnDeath = false end
 	if GetConVar("vj_npc_usegmoddecals"):GetInt() == 1 then self.BloodDecalUseGMod = true end
 	if GetConVar("vj_npc_knowenemylocation"):GetInt() == 1 then self.FindEnemy_UseSphere = true self.FindEnemy_CanSeeThroughWalls = true end
@@ -1876,7 +1876,7 @@ function ENT:Think()
 			if self.CanEat && !plyControlled then
 				local eatingData = self.EatingData
 				if !eatingData then -- Eating data has NOT been initialized, so initialize it!
-					self.EatingData = {Ent = NULL, NextCheck = 0, AnimStatus = 0, OldIdleTbl = nil}
+					self.EatingData = {Ent = NULL, NextCheck = 0, AnimStatus = "None", OldIdleTbl = nil}
 					eatingData = self.EatingData
 				end
 				if eneValid or self.Alerted then
@@ -1891,32 +1891,34 @@ function ENT:Think()
 							eatingData.NextCheck = curTime + 10
 							self:EatingReset("Unspecified")
 						elseif !self:IsMoving() then
-							local foodDist = myPos:Distance(food:GetPos())
+							local foodDist = self:VJ_GetNearestPointToEntityDistance(food) // myPos:Distance(food:GetPos())
 							if foodDist > 400 then -- Food too far away, reset!
 								eatingData.NextCheck = curTime + 10
 								self:EatingReset("Unspecified")
-							elseif myPos:Distance(food:GetPos()) > 50 then -- Food moved a bit, go to new location
+							elseif foodDist > 30 then -- Food moved a bit, go to new location
 								if self:IsBusy() then -- Something else has come up, stop eating completely!
 									eatingData.NextCheck = curTime + 15
 									self:EatingReset("Unspecified")
 								else
-									if eatingData.AnimStatus != 0 then -- We need to play get up anim first!
-										eatingData.AnimStatus = 0
+									if eatingData.AnimStatus != "None" then -- We need to play get up anim first!
+										eatingData.AnimStatus = "None"
 										self:SetIdleAnimation(eatingData.OldIdleTbl, true) -- Reset the idle animation table in case it changed!
 										eatingData.NextCheck = curTime + (self:CustomOnEat("StopEating", "HaltOnly") or 1)
 									else
 										self.NextWanderTime = CurTime() + math.Rand(3, 5)
 										self:SetState(VJ_STATE_NONE)
-										self:SetTarget(food)
-										self:VJ_TASK_GOTO_TARGET("TASK_WALK_PATH")
+										self:SetLastPosition(select(2,self:VJ_GetNearestPointToEntity(food)))
+										self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
+										//self:SetTarget(food)
+										//self:VJ_TASK_GOTO_TARGET("TASK_WALK_PATH")
 										eatingData.NextCheck = curTime + 1
 									end
 								end
 							else -- No changes, continue eating
 								self:FaceCertainEntity(food, false, 1)
 								self:SetState(VJ_STATE_ONLY_ANIMATION_NOATTACK)
-								if eatingData.AnimStatus != 0 then -- We are already prepared, so eat!
-									eatingData.AnimStatus = 2
+								if eatingData.AnimStatus != "None" then -- We are already prepared, so eat!
+									eatingData.AnimStatus = "Eating"
 									eatingData.NextCheck = curTime + self:CustomOnEat("Eat")
 									if food:Health() <= 0 then -- Finished eating!
 										eatingData.NextCheck = curTime + 30
@@ -1925,13 +1927,13 @@ function ENT:Think()
 										food:Remove()
 									end
 								else -- We need to first prepare before eating! (Ex: Crouch-down animation
-									eatingData.AnimStatus = 1
+									eatingData.AnimStatus = "Prepared"
 									eatingData.NextCheck = curTime + (self:CustomOnEat("BeginEating") or 1)
 								end
 							end
 						end
 					elseif self:HasCondition(COND_SMELL) && !self:IsMoving() && !self:IsBusy() then
-						local hint = sound.GetLoudestSoundHint(SOUND_CARCASS, myPos)
+						local hint = sound.GetLoudestSoundHint(SOUND_CARCASS, myPos) // GetBestSoundHint = Do NOT use, completely broken!
 						if hint then
 							local food = hint.owner
 							if IsValid(food) && !food.VJTags[VJ_TAG_BEING_EATEN] && self:CustomOnEat("CheckFood", hint) then

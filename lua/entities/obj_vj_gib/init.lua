@@ -34,11 +34,24 @@ function ENT:Initialize()
 			self.IsStinky = true
 		end
 	end
+	
+	local hp = self:OBBMaxs():Distance(self:OBBMins())
+	self:SetMaxHealth(hp)
+	self:SetHealth(hp)
 
-	-- Misc
+	-- Setup
 	self:InitialSetup()
+	
+	-- Used to correct the blood data (Ex: Eating system uses this!)
+	local bloodData = self.BloodData
+	if bloodData then
+		bloodData.Decal = self.Collide_Decal
+	else
+		self.BloodData = {Decal = self.Collide_Decal}
+	end
+	
 	if GetConVar("vj_npc_sd_gibbing"):GetInt() == 1 then self.CollideSound = "" end
-	if GetConVar("vj_npc_nogibdecals"):GetInt() == 1 then self.Collide_Decal = "" end
+	if GetConVar("vj_npc_novfx_gibdeath"):GetInt() == 1 then self.Collide_Decal = "" end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defCollideSds = {"physics/flesh/flesh_squishy_impact_hard1.wav","physics/flesh/flesh_squishy_impact_hard2.wav","physics/flesh/flesh_squishy_impact_hard3.wav","physics/flesh/flesh_squishy_impact_hard4.wav"}
@@ -73,7 +86,7 @@ end
 function ENT:Think()
 	-- Stinky gib! yuck!
 	if self.IsStinky && self.NextStinkyTime < CurTime() then
-		sound.EmitHint(SOUND_MEAT, self:GetPos(), 400, 2, self)
+		sound.EmitHint(SOUND_CARCASS, self:GetPos(), 400, 2, self) // SOUND_MEAT = Do NOT use this because we would need to call "GetLoudestSoundHint" twice for each sound type!
 		self.NextStinkyTime = CurTime() + 2
 	end
 end

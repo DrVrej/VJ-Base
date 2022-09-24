@@ -98,7 +98,7 @@ local function VJ_SNPC_SETTINGS(Panel) -- Settings
 
 	Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 	Panel:AddControl("Label", {Text = "#vjbase.menu.general.snpc.warnfuture"})
-	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_nocorpses 0\nvj_npc_nobleed 0\nvj_npc_nomelee 0\nvj_npc_norange 0\nvj_npc_noleap 0\nvj_npc_noflinching 0\nvj_npc_noallies 0\nvj_npc_noweapon 0\nvj_npc_nowandering 0\nvj_npc_nogib 0\nvj_npc_nodeathanimation 0\nvj_npc_nodangerdetection 0\nvj_npc_animal_runontouch 0\nvj_npc_animal_runonhit 0\nvj_npc_slowplayer 0\nvj_npc_bleedenemyonmelee 0\nvj_npc_noproppush 0\nvj_npc_nopropattack 0\nvj_npc_nogibdeathparticles 0\nvj_npc_noidleparticle 0\nvj_npc_nogibdecals 0\nvj_npc_noreload 0\nvj_npc_nobecomeenemytoply 0\nvj_npc_nofollowplayer 0\nvj_npc_nothrowgrenade 0\nvj_npc_nobloodpool 0\nvj_npc_nochasingenemy 0\nvj_npc_nosnpcchat 0\nvj_npc_nomedics 0\nvj_npc_nomeleedmgdsp 0\nvj_npc_nocallhelp 0"})
+	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_nocorpses 0\nvj_npc_nobleed 0\nvj_npc_nomelee 0\nvj_npc_norange 0\nvj_npc_noleap 0\nvj_npc_noflinching 0\nvj_npc_noallies 0\nvj_npc_noweapon 0\nvj_npc_nowandering 0\nvj_npc_nogib 0\nvj_npc_nodeathanimation 0\nvj_npc_nodangerdetection 0\nvj_npc_animal_runontouch 0\nvj_npc_animal_runonhit 0\nvj_npc_slowplayer 0\nvj_npc_bleedenemyonmelee 0\nvj_npc_noproppush 0\nvj_npc_nopropattack 0\nvj_npc_novfx_gibdeath 0\nvj_npc_noidleparticle 0\nvj_npc_noreload 0\nvj_npc_nobecomeenemytoply 0\nvj_npc_nofollowplayer 0\nvj_npc_nothrowgrenade 0\nvj_npc_nobloodpool 0\nvj_npc_nochasingenemy 0\nvj_npc_nosnpcchat 0\nvj_npc_nomedics 0\nvj_npc_nomeleedmgdsp 0\nvj_npc_nocallhelp 0"})
 	
 	Panel:AddControl("Label", {Text = "#vjbase.menu.snpc.settings.label1"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.settings.togglewandering", Command = "vj_npc_nowandering"})
@@ -139,8 +139,7 @@ local function VJ_SNPC_SETTINGS(Panel) -- Settings
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.settings.togglebloodpool", Command = "vj_npc_nobloodpool"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.settings.togglegib", Command = "vj_npc_nogib"})
 	Panel:ControlHelp("#vjbase.menu.snpc.settings.label11")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.settings.togglegibdecals", Command = "vj_npc_nogibdecals"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.settings.togglegibdeathparticles", Command = "vj_npc_nogibdeathparticles"})
+	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.settings.togglegibdeathvfx", Command = "vj_npc_novfx_gibdeath"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.settings.toggledeathanim", Command = "vj_npc_nodeathanimation"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.settings.togglecorpses", Command = "vj_npc_nocorpses"})
 	
