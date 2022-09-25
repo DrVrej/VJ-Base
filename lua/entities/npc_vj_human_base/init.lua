@@ -2452,7 +2452,7 @@ function ENT:MeleeAttackCode()
 	local hitentity = false
 	local HasHitNonPropEnt = false
 	if FindEnts != nil then
-		for _,v in pairs(FindEnts) do
+		for _,v in ipairs(FindEnts) do
 			if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
 			if (v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or (v:GetClass() == "prop_physics") or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" && (self:GetSightDirection():Dot((v:GetPos() -self:GetPos()):GetNormalized()) > math.cos(math.rad(self.MeleeAttackDamageAngleRadius))) then
 				local doactualdmg = DamageInfo()
@@ -2647,7 +2647,7 @@ local sdBitMortar = bit.bor(SOUND_DANGER, SOUND_CONTEXT_MORTAR)
 function ENT:CheckForDangers()
 	if !self.CanDetectDangers or self.ThrowingGrenade or self.NextDangerDetectionT > CurTime() or self.VJ_IsBeingControlled then return end
 	local myPos = self:GetPos()
-	for _,v in pairs(ents.FindInSphere(myPos, self.GrenadeDetectionDistance)) do
+	for _,v in ipairs(ents.FindInSphere(myPos, self.GrenadeDetectionDistance)) do
 		local friGren = false -- Don't throw back if it's an ally's grenade
 		if (self.EntitiesToRunFrom[v:GetClass()] or v.VJ_IsDetectableDanger) && self:Visible(v) then
 			local vOwner = v:GetOwner()
@@ -3312,7 +3312,7 @@ function ENT:OnTakeDamage(dmginfo)
 				sightdist = math.Clamp(sightdist,2000,self.SightDistance)
 			end
 			local Targets = ents.FindInSphere(self:GetPos(),sightdist)
-			for _,v in pairs(Targets) do
+			for _,v in ipairs(Targets) do
 				if CurTime() > self.NextSetEnemyOnDamageT && self:Visible(v) && self:DoRelationshipCheck(v) == true then
 					self:CustomOnSetEnemyOnDamage(dmginfo, hitgroup)
 					self.NextCallForHelpT = CurTime() + 1
