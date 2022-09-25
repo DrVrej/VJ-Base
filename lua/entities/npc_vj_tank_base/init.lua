@@ -242,7 +242,7 @@ function ENT:CustomOnThink_AIEnabled()
 	if self.Dead == true then return end
 	//timer.Simple(0.1, function() if self.Dead == false then ParticleEffect("smoke_exhaust_01",self:LocalToWorld(Vector(150,30,30)),defAng,self) end end)
 	//timer.Simple(0.2, function() if self.Dead == false then self:StopParticles() end end)
-	for _, v in pairs(ents.FindInSphere(self:GetPos(), 100)) do
+	for _, v in ipairs(ents.FindInSphere(self:GetPos(), 100)) do
 		self:Tank_RunOver(v)
 	end
 
