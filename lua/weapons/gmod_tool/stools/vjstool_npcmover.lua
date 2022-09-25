@@ -87,7 +87,7 @@ if CLIENT then
 		unselectall:SetColor(Color(0,0,0,255))
 		unselectall.DoClick = function()
 			local brah = VJ_MOVE_TblCurrentValues
-			if table.Count(brah) > 0 then
+			if not table.IsEmpty(brah) then
 				chat.AddText(Color(255,100,0), "#tool.vjstool_npcmover.print.unselectedall")
 			else
 				chat.AddText(Color(0,255,0), "#tool.vjstool_npcmover.print.unselectedall.error")
