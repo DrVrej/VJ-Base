@@ -104,7 +104,7 @@ function ENT:OnBounce(data, phys)
 	if !IsValid(owner) then return end
 	local closestDist = 1024
 	local target = NULL
-	for _, v in pairs(ents.FindInSphere(myPos, 1024)) do
+	for _, v in ipairs(ents.FindInSphere(myPos, 1024)) do
 		if (!v:IsNPC() && !v:IsPlayer()) then continue end
 		if !owner:DoRelationshipCheck(v) then continue end
 		local dist = v:GetPos():Distance(myPos)
