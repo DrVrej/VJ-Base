@@ -26,7 +26,7 @@ end
 function ENT:SelectSchedule()
 	local nearbyEnts = ents.FindInSphere(self:GetPos(),150)
 	if (!nearbyEnts) then return end
-	for _,v in pairs(nearbyEnts) do
+	for _,v in ipairs(nearbyEnts) do
 		if v:IsPlayer() && v:Alive() then
 			self:SetSchedule(SCHED_IDLE_STAND)
 			self:SetSchedule(SCHED_TARGET_FACE)
