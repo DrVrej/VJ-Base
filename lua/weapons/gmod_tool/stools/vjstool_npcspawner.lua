@@ -249,7 +249,7 @@ else -- If SERVER
 			local svgetlines = net.ReadType()
 			local svgettype = net.ReadString()
 			if !IsValid(ply) then return false end
-			if table.Count(svgetlines) <= 0 then ply:ChatPrint("#tool.vjstool_npcspawner.print.nothingspawn") return false end
+			if table.IsEmpty(svgetlines) then ply:ChatPrint("#tool.vjstool_npcspawner.print.nothingspawn") return false end
 			local spawner = ents.Create("obj_vj_spawner_base")
 			spawner.EntitiesToSpawn = {}
 			spawner:SetPos(svpos)
@@ -282,7 +282,7 @@ else -- If SERVER
 				if IsValid(vpv.TheEntity) && vpv.TheEntity.IsVJBaseSpawner == true && vpv.TheEntity.SingleSpawner == true then
 					vpv.TheEntity:SetCreator(ply)
 					table.remove(spawner.CurrentEntities,vpk)
-					if table.Count(spawner.CurrentEntities) <= 0 then spawner:Remove() end
+					if table.IsEmpty(spawner.CurrentEntities) then spawner:Remove() end
 				end
 			end
 		end
