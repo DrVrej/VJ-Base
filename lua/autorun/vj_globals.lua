@@ -128,7 +128,7 @@ function VJ_FindInCone(pos, dir, dist, deg, extraOptions)
 		local allEntities = extraOptions.AllEntities or false -- Should it detect all types of entities? | False = NPCs and Players only!
 	local foundEnts = {}
 	local cosDeg = math.cos(math.rad(deg))
-	for _,v in pairs(ents.FindInSphere(pos, dist)) do
+	for _,v in ipairs(ents.FindInSphere(pos, dist)) do
 		if ((allEntities == true) or (allEntities == false && (v:IsNPC() or v:IsPlayer()))) && (dir:Dot((v:GetPos() - pos):GetNormalized()) > cosDeg) then
 			foundEnts[#foundEnts + 1] = v
 		end
@@ -771,13 +771,13 @@ cvars.AddChangeCallback("ai_ignoreplayers", function(convar_name, oldValue, newV
 		for x = 1, #getall do
 			local v = getall[x]
 			if v:IsNPC() && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
-				for _, ply in pairs(getplys) do
+				for _, ply in ipairs(getplys) do
 					v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = ply
 				end
 			end
 		end
 	else
-		for _, v in pairs(ents.GetAll()) do
+		for _, v in ipairs(ents.GetAll()) do
 			if v.IsVJBaseSNPC == true then
 				if v.FollowingPlayer == true then v:FollowPlayerReset() end -- Reset if it's following the player
 				//v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
