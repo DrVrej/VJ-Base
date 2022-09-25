@@ -96,7 +96,7 @@ function ENT:StartControlling()
 	self.VJCE_Player:DrawViewModel(false)
 	self.VJCE_Player:DrawWorldModel(false)
 	local weps = {}
-	for _, v in pairs(self.VJCE_Player:GetWeapons()) do
+	for _, v in ipairs(self.VJCE_Player:GetWeapons()) do
 		weps[#weps+1] = v:GetClass()
 	end
 	self.VJC_Data_Player = {
