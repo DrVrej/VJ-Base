@@ -456,7 +456,7 @@ function ENT:VJ_ForwardIsHidingZone(startPos, endPos, acceptWorld, extraOptions)
 		VJ_CreateTestObject(tr.HitPos)
 	end
 	-- Sometimes the trace isn't 100%, a tiny find in sphere check fixes this issue...
-	for _,v in pairs(ents.FindInSphere(tr.HitPos, 5)) do
+	for _,v in ipairs(ents.FindInSphere(tr.HitPos, 5)) do
 		if v == self:GetEnemy() or self:Disposition(v) == 1 or self:Disposition(v) == 2 then
 			hitEnt = true
 		end
@@ -835,7 +835,7 @@ function ENT:DoMedicCode()
 	if self.IsMedicSNPC == false or self.NoWeapon_UseScaredBehavior_Active == true then return end
 	if self.Medic_IsHealingAlly == false then
 		if CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled == true then return end
-		for _,v in pairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
+		for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
 			if v.IsVJBaseSNPC != true && !v:IsPlayer() then continue end -- If it's not a VJ Base SNPC or a player, then move on
 			if v:EntIndex() != self:EntIndex() && v.AlreadyBeingHealedByMedic != true && (!v.IsVJBaseSNPC_Tank) && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:DoRelationshipCheck(v) == false then
 				self.Medic_CurrentEntToHeal = v
@@ -1218,7 +1218,7 @@ function ENT:Allies_CallHelp(dist)
 	if self.CallForHelp == false or self.ThrowingGrenade == true then return false end
 	local entsTbl = ents.FindInSphere(self:GetPos(), dist)
 	if (!entsTbl) then return false end
-	for _,v in pairs(entsTbl) do
+	for _,v in ipairs(entsTbl) do
 		if v:IsNPC() && v != self && v.IsVJBaseSNPC == true && VJ_IsAlive(v) == true && (v:GetClass() == self:GetClass() or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& v.FollowingPlayer == false*/ && v.VJ_IsBeingControlled == false && (!v.IsVJBaseSNPC_Tank) && v.CallForHelp == true then
 			local ene = self:GetEnemy()
 			if IsValid(ene) then
@@ -1260,7 +1260,7 @@ function ENT:Allies_Check(dist)
 	if (!entsTbl) then return end
 	local FoundAlliesTbl = {}
 	local it = 0
-	for _, v in pairs(entsTbl) do
+	for _, v in ipairs(entsTbl) do
 		if VJ_IsAlive(v) == true && v:IsNPC() && v != self && (v:GetClass() == self:GetClass() or (v:Disposition(self) == D_LI or v.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
 			if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
 				if v.Behavior == VJ_BEHAVIOR_PASSIVE or v.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
@@ -1288,7 +1288,7 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 	onlyVis = onlyVis or false -- Check only entities that are visible
 	if (!entsTbl) then return false end
 	local it = 0
-	for _, v in pairs(entsTbl) do
+	for _, v in ipairs(entsTbl) do
 		if VJ_IsAlive(v) == true && v:IsNPC() && v != self && (v:GetClass() == self:GetClass() or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && v.FollowingPlayer == false && v.VJ_IsBeingControlled == false && !v.IsGuard && (!v.IsVJBaseSNPC_Tank) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
 			if onlyVis == true && !v:Visible(self) then continue end
 			if !IsValid(v:GetEnemy()) && self:GetPos():Distance(v:GetPos()) < dist then
