@@ -434,8 +434,8 @@ end
 -----------------------------------------------------------]]
 function ENT:GetMoveDirection(ignoreZ)
 	if !self:IsMoving() then return defPos end
-	local waypoint = self:GetCurWaypointPos() or self:GetPos()
-	local dir = (waypoint - self:GetPos())
+	local myPos = self:GetPos()
+	local dir = ((self:GetCurWaypointPos() or myPos) - myPos)
 	if ignoreZ then dir.z = 0 end
 	return (self:GetAngles() - dir:Angle()):Forward()
 end
@@ -1473,7 +1473,7 @@ end
 function ENT:Allies_Check(dist)
 	dist = dist or 800 -- How far can it check for allies
 	local entsTbl = ents.FindInSphere(self:GetPos(), dist)
-	if (!entsTbl) then return end
+	if (!entsTbl) then return false end
 	local FoundAlliesTbl = {}
 	local it = 0
 	for _, v in pairs(entsTbl) do
@@ -1492,7 +1492,7 @@ function ENT:Allies_Check(dist)
 	if it > 0 then
 		return FoundAlliesTbl
 	else
-		return nil
+		return false
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

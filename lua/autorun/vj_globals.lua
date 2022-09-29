@@ -285,11 +285,11 @@ function VJ_AnimationExists(ent, anim)
 	
 	if isnumber(anim) then -- Activity
 		if (ent:SelectWeightedSequence(anim) == -1 or ent:SelectWeightedSequence(anim) == 0) && (ent:GetSequenceName(ent:SelectWeightedSequence(anim)) == "Not Found!" or ent:GetSequenceName(ent:SelectWeightedSequence(anim)) == "No model!") then
-		return false end
+			return false
+		end
 	elseif isstring(anim) then -- Sequence
 		if string_find(anim, "vjseq_") then anim = string_Replace(anim, "vjseq_", "") end
-		if ent:LookupSequence(anim) == -1 then
-		return false end
+		if ent:LookupSequence(anim) == -1 then return false end
 	end
 	return true
 end
@@ -648,11 +648,7 @@ end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PhysgunPickup", "VJ_PhysgunPickup", function(ply, ent)
 	if ent:GetClass() == "sent_vj_ply_spawnpoint" then
-		if ply:IsAdmin() then
-			return true
-		else
-			return false
-		end
+		return ply:IsAdmin()
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -734,7 +730,7 @@ if SERVER then
 									end
 								end
 								-- Add the created entity to the list of possible enemies of VJ Base SNPCs
-								if v != ent && myClass != v:GetClass() && v.IsVJBaseSNPC == true && isPossibleEnemy then
+								if isPossibleEnemy && myClass != v:GetClass() && v.IsVJBaseSNPC then
 									v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = ent //v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
 								end
 							end
@@ -867,7 +863,7 @@ end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("EntityTakeDamage", "VJ_EntityTakeDamage", function(target, dmginfo)
 	local attacker = dmginfo:GetAttacker()
-	if IsValid(target) && IsValid(attacker) && target.IsVJBaseSNPC == true && attacker:IsNPC() && dmginfo:IsBulletDamage() && attacker:Disposition(target) != D_HT && (attacker:GetClass() == target:GetClass() or target:Disposition(attacker) == D_LI /*or target:Disposition(attacker) == 4*/) then
+	if IsValid(target) && IsValid(attacker) && target.IsVJBaseSNPC && attacker:IsNPC() && dmginfo:IsBulletDamage() && attacker:Disposition(target) != D_HT && (attacker:GetClass() == target:GetClass() or target:Disposition(attacker) == D_LI /*or target:Disposition(attacker) == 4*/) then
 		dmginfo:SetDamage(0)
 	end
 end)
@@ -892,38 +888,28 @@ hook.Add("PlayerDeath", "VJ_PlayerDeath", function(victim, inflictor, attacker)
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerCanPickupWeapon", "VJ_PLAYER_CANPICKUPWEAPON", function(ply, wep)
-	//print(wep:GetWeaponWorldModel())
-	if ply.VJ_CanBePickedUpWithOutUse == true && ply.VJ_CanBePickedUpWithOutUse_Class == wep:GetClass() then
-		if wep.IsVJBaseWeapon == true && !ply:HasWeapon(wep:GetClass()) then
-			ply.VJ_CanBePickedUpWithOutUse = false
-			ply.VJ_CanBePickedUpWithOutUse_Class = nil
+	if wep.IsVJBaseWeapon then
+		if ply.VJ_CurPickupWithoutUse == wep:GetClass() && !ply:HasWeapon(wep:GetClass()) then
+			ply.VJ_CurPickupWithoutUse = nil
 			return true
-		else
-			ply.VJ_CanBePickedUpWithOutUse = false
-			ply.VJ_CanBePickedUpWithOutUse_Class = nil
 		end
-	end
-	if wep.IsVJBaseWeapon == true then
-		//if wep.VJ_CanBePickedUpWithOutUse == true then return true end
-		if GetConVar("vj_npc_plypickupdropwep"):GetInt() == 0 then return false end
-		if ply:KeyPressed(IN_USE) && (ply:GetEyeTrace().Entity == wep) then
-		return true else return false end
+		//if wep.VJ_CurPickupWithoutUse then return true end
+		return GetConVar("vj_npc_plypickupdropwep"):GetInt() == 1 && ply:KeyPressed(IN_USE) && ply:GetEyeTrace().Entity == wep
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerGiveSWEP", "VJ_PLAYER_GIVESWEP", function(ply, class, swep)
+	//PrintTable(swep)
 	//if swep.IsVJBaseWeapon == true then
-		ply.VJ_CanBePickedUpWithOutUse = true
-		ply.VJ_CanBePickedUpWithOutUse_Class = class
-		timer.Simple(0.1, function() if IsValid(ply) then ply.VJ_CanBePickedUpWithOutUse = false ply.VJ_CanBePickedUpWithOutUse_Class = nil end end)
-		//PrintTable(swep)
+		ply.VJ_CurPickupWithoutUse = class
+		timer.Simple(0.1, function() if IsValid(ply) then ply.VJ_CurPickupWithoutUse = nil end end)
 	//end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if SERVER then
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Corpse & Stink System ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+if SERVER then
 	VJ_Corpses = {}
 	VJ_StinkyEnts = {}
 	--
@@ -1000,30 +986,30 @@ end
 ------ Convar Callbacks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 cvars.AddChangeCallback("ai_ignoreplayers", function(convar_name, oldValue, newValue)
-	if tonumber(newValue) == 0 then
-		local getplys = player.GetAll()
-		local getall = ents.GetAll()
-		for x = 1, #getall do
-			local v = getall[x]
-			if v:IsNPC() && v.IsVJBaseSNPC == true then
-				for _, ply in pairs(getplys) do
-					v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = ply
+	if tonumber(newValue) == 0 then -- Turn off ignore players
+		local getPlys = player.GetAll()
+		local getAll = ents.GetAll()
+		for x = 1, #getAll do
+			local v = getAll[x]
+			if v:IsNPC() && v.IsVJBaseSNPC then
+				for _, ply in pairs(getPlys) do
+					v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies + 1] = ply
 				end
 			end
 		end
-	else
+	else -- Turn on ignore players
 		for _, v in pairs(ents.GetAll()) do
-			if v.IsVJBaseSNPC == true then
+			if v.IsVJBaseSNPC then
 				if v.FollowingPlayer == true then v:FollowReset() end -- Reset the NPC's follow system if it's following a player
 				//v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
-				local posenemies = v.CurrentPossibleEnemies
+				local posEnemies = v.CurrentPossibleEnemies
 				local it = 1
-				while it <= #posenemies do
-					local x = posenemies[it]
+				while it <= #posEnemies do
+					local x = posEnemies[it]
 					if IsValid(x) && x:IsPlayer() then
 						v:AddEntityRelationship(x, D_NU, 10) -- Make the player neutral
 						if IsValid(v:GetEnemy()) && v:GetEnemy() == x then v:ResetEnemy() end -- Reset the NPC's enemy if it's a player
-						table_remove(posenemies, it) -- Remove the player from possible enemy table
+						table_remove(posEnemies, it) -- Remove the player from possible enemy table
 					else
 						it = it + 1
 					end
@@ -1117,7 +1103,7 @@ function util.VJ_SphereDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 		local baseForce = extraOptions.Force or false
 	local dmgFinal = dmgMax
 	local hitEnts = {}
-	for _,v in pairs((isnumber(extraOptions.UseConeDegree) and VJ_FindInCone(startPos, extraOptions.UseConeDirection or attacker:GetForward(), dmgRadius, extraOptions.UseConeDegree or 90, {AllEntities=true})) or ents.FindInSphere(startPos, dmgRadius)) do
+	for _, v in pairs((isnumber(extraOptions.UseConeDegree) and VJ_FindInCone(startPos, extraOptions.UseConeDirection or attacker:GetForward(), dmgRadius, extraOptions.UseConeDegree or 90, {AllEntities=true})) or ents.FindInSphere(startPos, dmgRadius)) do
 		if (attacker.VJ_IsBeingControlled == true && attacker.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end -- Don't damage controller bullseye and player
 		local nearestPos = v:NearestPoint(startPos) -- From the enemy position to the given position
 		if realisticRadius != false then -- Decrease damage from the nearest point all the way to the enemy point then clamp it!
