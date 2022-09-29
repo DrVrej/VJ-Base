@@ -739,7 +739,7 @@ function SWEP:FireAnimationEvent(pos, ang, event, options)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:Think()
+function SWEP:Think() -- NOTE: Works only in players hands. does NOT work in NPCs hands!
 	self:RunWorldModelThink()
 	self:CustomOnThink()
 end
