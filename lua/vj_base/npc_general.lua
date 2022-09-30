@@ -238,8 +238,18 @@ function ENT:EatingReset(resetType)
 	self:CustomOnEat("StopEating", resetType)
 	self.VJTags[VJ_TAG_EATING] = nil
 	self:SetIdleAnimation(eatingData.OldIdleTbl, true) -- Reset the idle animation table in case it changed!
-	if IsValid(eatingData.Ent) then
-		eatingData.Ent.VJTags[VJ_TAG_BEING_EATEN] = nil
+	local food = eatingData.Ent
+	if IsValid(food) then
+		local foodData = food.FoodData
+		-- if we are the last person eating, then reset the food data!
+		if foodData.NumConsumers <= 1 then
+			food.VJTags[VJ_TAG_BEING_EATEN] = nil
+			foodData.NumConsumers = 0
+			foodData.SizeRemaining = foodData.Size
+		else
+			foodData.NumConsumers = foodData.NumConsumers - 1
+			foodData.SizeRemaining = foodData.SizeRemaining + self:OBBMaxs():Distance(self:OBBMins())
+		end
 	end
 	self.EatingData = {Ent = NULL, NextCheck = eatingData.NextCheck, AnimStatus = 0, OldIdleTbl = nil}
 	-- AnimStatus: "None" = Not prepared (Probably moving to food location) | "Prepared" = Prepared (Ex: Played crouch down anim) | "Eating" = Prepared and is actively eating
@@ -269,7 +279,8 @@ end
 local vecZ50 = Vector(0, 0, -50)
 --
 function ENT:CustomOnEat(status, statusInfo)
-	print("Eating Status: ", status, statusInfo)
+	-- The following code is a ideal example based on Half-Life 1 Zombie
+	//print(self, "Eating Status: ", status, statusInfo)
 	if status == "CheckFood" then
 		return true
 	elseif status == "BeginEating" then

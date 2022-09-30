@@ -167,7 +167,7 @@ ENT.PoseParameterLooking_Names = {pitch={}, yaw={}, roll={}} -- Custom pose para
 ENT.CanInvestigate = true -- Can it detect and investigate possible enemy disturbances? | EX: Sounds, movement and flashlight
 ENT.InvestigateSoundDistance = 9 -- How far can the NPC hear sounds? | This number is multiplied by the calculated volume of the detectable sound
 	-- ====== Eating Variables ====== --
-ENT.CanEat = false -- Should it search and eat organic stuff when idle?
+ENT.CanEat = true -- Should it search and eat organic stuff when idle?
 	-- ====== No Chase After Certain Distance Variables ====== --
 ENT.NoChaseAfterCertainRange = false -- Should the SNPC not be able to chase when it's between number x and y?
 ENT.NoChaseAfterCertainRange_FarDistance = 2000 -- How far until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
@@ -1904,7 +1904,7 @@ function ENT:Think()
 									else
 										self.NextWanderTime = CurTime() + math.Rand(3, 5)
 										self:SetState(VJ_STATE_NONE)
-										self:SetLastPosition(select(2,self:VJ_GetNearestPointToEntity(food)))
+										self:SetLastPosition(select(2, self:VJ_GetNearestPointToEntity(food)))
 										self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
 										//self:SetTarget(food)
 										//self:VJ_TASK_GOTO_TARGET("TASK_WALK_PATH")
@@ -1933,19 +1933,33 @@ function ENT:Think()
 						local hint = sound.GetLoudestSoundHint(SOUND_CARCASS, myPos) // GetBestSoundHint = Do NOT use, completely broken!
 						if hint then
 							local food = hint.owner
-							if IsValid(food) && !food.VJTags[VJ_TAG_BEING_EATEN] && self:CustomOnEat("CheckFood", hint) then
-								//PrintTable(hint)
-								self:VJTags_Add(VJ_TAG_EATING)
-								food:VJTags_Add(VJ_TAG_BEING_EATEN)
-								self.EatingData.OldIdleTbl = self.AnimTbl_IdleStand -- Save the current idle anim table in case we gonna change it while eating!
-								eatingData.Ent = food
-								self:CustomOnEat("StartBehavior")
-								self:SetState(VJ_STATE_ONLY_ANIMATION_NOATTACK)
-								self.NextWanderTime = CurTime() + math.Rand(3, 5)
+							if IsValid(food) /*&& !food.VJTags[VJ_TAG_BEING_EATEN]*/ then
+								if !food.FoodData then
+									local size = food:OBBMaxs():Distance(food:OBBMins()) * 2
+									food.FoodData = {
+										NumConsumers = 0,
+										Size = size,
+										SizeRemaining = size,
+									}
+								end
+								//print("food", food, self)
+								if food.FoodData.SizeRemaining > 0 && self:CustomOnEat("CheckFood", hint) then
+									local foodData = food.FoodData
+									foodData.NumConsumers = foodData.NumConsumers + 1
+									foodData.SizeRemaining = foodData.SizeRemaining - self:OBBMaxs():Distance(self:OBBMins())
+									//PrintTable(hint)
+									self:VJTags_Add(VJ_TAG_EATING)
+									food:VJTags_Add(VJ_TAG_BEING_EATEN)
+									self.EatingData.OldIdleTbl = self.AnimTbl_IdleStand -- Save the current idle anim table in case we gonna change it while eating!
+									eatingData.Ent = food
+									self:CustomOnEat("StartBehavior")
+									self:SetState(VJ_STATE_ONLY_ANIMATION_NOATTACK)
+									self.NextWanderTime = CurTime() + math.Rand(3, 5)
+								end
 							end
 						end
 					else -- No food was found OR it's not eating
-						eatingData.NextCheck = curTime + 5
+						//eatingData.NextCheck = curTime + 5
 					end
 				end
 			end
