@@ -167,7 +167,7 @@ ENT.PoseParameterLooking_Names = {pitch={}, yaw={}, roll={}} -- Custom pose para
 ENT.CanInvestigate = true -- Can it detect and investigate possible enemy disturbances? | EX: Sounds, movement and flashlight
 ENT.InvestigateSoundDistance = 9 -- How far can the NPC hear sounds? | This number is multiplied by the calculated volume of the detectable sound
 	-- ====== Eating Variables ====== --
-ENT.CanEat = true -- Should it search and eat organic stuff when idle?
+ENT.CanEat = false -- Should it search and eat organic stuff when idle?
 	-- ====== No Chase After Certain Distance Variables ====== --
 ENT.NoChaseAfterCertainRange = false -- Should the SNPC not be able to chase when it's between number x and y?
 ENT.NoChaseAfterCertainRange_FarDistance = 2000 -- How far until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
