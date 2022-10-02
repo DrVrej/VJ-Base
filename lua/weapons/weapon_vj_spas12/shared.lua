@@ -39,6 +39,7 @@ SWEP.Primary.DistantSound = {"vj_weapons/hl2_shotgun/shotgun_single_dist.wav"}
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellAttachment = 2
 SWEP.PrimaryEffects_ShellType = "VJ_Weapon_ShotgunShell1"
+SWEP.Secondary.Automatic		= true -- Is it automatic?
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound = true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
 SWEP.ReloadSound = {"weapons/shotgun/shotgun_reload1.wav","weapons/shotgun/shotgun_reload2.wav","weapons/shotgun/shotgun_reload3.wav"}
@@ -57,4 +58,67 @@ function SWEP:CustomOnPrimaryAttack_AfterShoot()
 			self:SendWeaponAnim(ACT_SHOTGUN_PUMP)
 		end
 	end)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:SecondaryAttack()
+	if self:Clip1() > 1 then
+		self.Primary.Delay = 1
+		self.Primary.Cone = 20
+		self.Primary.NumberOfShots = 14
+		self.Primary.TakeAmmo = 2
+		self.NextIdle_PrimaryAttack = 1
+		self.AnimTbl_PrimaryFire = {ACT_VM_SECONDARYATTACK}
+	end
+	self:SetNextSecondaryFire(CurTime() + self.Primary.Delay)
+	self:PrimaryAttack()
+	self.Primary.Delay = 0.8
+	self.Primary.Cone = 12
+	self.Primary.NumberOfShots = 7
+	self.Primary.TakeAmmo = 1
+	self.NextIdle_PrimaryAttack = 0.8
+	self.AnimTbl_PrimaryFire = {ACT_VM_PRIMARYATTACK}
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnThink()
+	local owner = self:GetOwner()
+	if self.Reloading then
+		if self:Clip1() < self.Primary.ClipSize && owner:GetAmmoCount(self.Primary.Ammo) > 0 then
+			if CurTime() > self.NextReloadAnimT then
+				local animT = VJ_GetSequenceDuration(owner:GetViewModel(), ACT_VM_RELOAD)
+				self.NextReloadAnimT = CurTime() + animT
+
+				self:SendWeaponAnim(ACT_VM_RELOAD)
+				owner:SetAnimation(PLAYER_RELOAD)
+				timer.Simple(animT * 0.5,function()
+					if IsValid(self) && IsValid(owner) && owner:GetActiveWeapon() == self && self.Reloading && self:Clip1() < self.Primary.ClipSize && owner:GetAmmoCount(self.Primary.Ammo) > 0 then
+						self:SetClip1(self:Clip1() + 1)
+						owner:RemoveAmmo(1, self.Primary.Ammo)
+					end
+				end)
+
+				if SERVER && self.HasReloadSound == true then
+					owner:EmitSound(VJ_PICK(self.ReloadSound), 50, math.random(90, 100))
+				end
+			end
+		elseif self:Clip1() == self.Primary.ClipSize or owner:GetAmmoCount(self.Primary.Ammo) == 0 then
+			self:CustomOnReload_Finish()
+			self.Reloading = false
+			self:DoIdleAnimation()
+		end
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:Reload() -- Please add a custom reload function for overriding the way it reloads the clip <3
+	if !IsValid(self) then return end
+	local owner = self:GetOwner()
+	if !IsValid(owner) or !owner:IsPlayer() or !owner:Alive() or owner:GetAmmoCount(self.Primary.Ammo) == 0 or !owner:KeyDown(IN_RELOAD) or self.Reloading == true then return end
+	if self:Clip1() < self.Primary.ClipSize then
+		self.Reloading = true
+
+		self.NextReloadAnimT = 0
+
+		self:CustomOnReload()
+
+		return true
+	end
 end
