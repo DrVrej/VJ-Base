@@ -39,6 +39,7 @@ SWEP.Primary.DistantSound		= {"vj_weapons/glock_17/glock17_single_dist.wav"}
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellAttachment = "ejectbrass"
 SWEP.PrimaryEffects_ShellType = "VJ_Weapon_PistolShell1"
+SWEP.Secondary.Automatic		= true -- Is it automatic?
 	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.DelayOnDeploy 				= 0.4 -- Time until it can shoot again after deploying the weapon
 SWEP.AnimTbl_Deploy				= {ACT_VM_IDLE_TO_LOWERED}
@@ -52,3 +53,12 @@ SWEP.HasIdleAnimation			= true -- Does it have a idle animation?
 SWEP.AnimTbl_Idle				= {ACT_VM_IDLE}
 SWEP.NextIdle_Deploy			= 0.5 -- How much time until it plays the idle animation after the weapon gets deployed
 SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle animation after attacking(Primary)
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:SecondaryAttack()
+	self.Primary.Delay = 0.175
+	self.Primary.Cone = 20
+	self:SetNextSecondaryFire(CurTime() + self.Primary.Delay)
+	self:PrimaryAttack()
+	self.Primary.Delay = 0.25
+	self.Primary.Cone = 5
+end
