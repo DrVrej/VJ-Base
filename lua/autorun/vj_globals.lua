@@ -525,6 +525,29 @@ function NPC_MetaTable:VJ_Controller_InitialMessage(ply)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local AddEntityRelationship = NPC_MetaTable.AddEntityRelationship
+function NPC_MetaTable:AddEntityRelationship(...)
+	local args = {...}
+	local ent = args[1]
+	local disp = args[2]
+
+	self.StoredDispositions = self.StoredDispositions or {}
+	self.StoredDispositions[ent] = disp
+	return AddEntityRelationship(self,...)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+local Disposition = NPC_MetaTable.Disposition
+function NPC_MetaTable:Disposition(...)
+	local args = {...}
+	local ent = args[1]
+
+	self.StoredDispositions = self.StoredDispositions or {}
+	if IsValid(ent) && self:GetModel() == ent:GetModel() then
+		return self.StoredDispositions[ent] or D_ER
+	end
+	return Disposition(self,...)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 -- override = Used internally by the base, overrides the result and returns Val instead (Useful for variables that allow "false" to let the base decide the time)
 function NPC_MetaTable:DecideAnimationLength(anim, override, decrease)
 	if isbool(anim) then return 0 end
