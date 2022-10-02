@@ -73,25 +73,14 @@ function ENT:CustomOnInitialize()
 	self:DrawShadow(false)
 	self:ResetSequence("idle")
 	self:SetCoreType(false)
-	VJ_CreateSound(self, "weapons/irifle/irifle_fire2.wav", 85)
 
 	util.SpriteTrail(self, 0, colorWhite, true, 15, 0, 0.1, 1 / 6 * 0.5, "sprites/combineball_trail_black_1.vmt")
 
-	local hookName = "VJ_CombineBall_" .. self:EntIndex() .. "_PickedUp"
-	hook.Add("GravGunOnPickedUp", hookName, function(ply,ent)
-		if !IsValid(self) then
-			hook.Remove("GravGunOnPickedUp", hookName)
-			return
-		end
+	hook.Add("GravGunOnPickedUp", self, function(self, ply, ent)
 		self:SetCoreType(true)
 	end)
 
-	hookName = "VJ_CombineBall_" .. self:EntIndex() .. "_Dropped"
-	hook.Add("GravGunOnDropped", hookName, function(ply,ent)
-		if !IsValid(self) then
-			hook.Remove("GravGunOnDropped", hookName)
-			return
-		end
+	hook.Add("GravGunOnDropped", self, function(ply, ent)
 		self:SetCoreType(false)
 	end)
 end
@@ -101,14 +90,15 @@ function ENT:OnBounce(data, phys)
 	local owner = self:GetOwner()
 	local newVel = phys:GetVelocity():GetNormal()
 	local lastVel = math.max(newVel:Length(), math.max(data.OurOldVelocity:Length(), data.Speed)) -- Get the last velocity and speed
-	phys:SetVelocity(newVel * lastVel * 0.95)
+	-- phys:SetVelocity(newVel * lastVel * 0.985) -- Sometimes this could get the combine ball stuck in certain brushes, disabling it just because it looks better without it tbh
 
 	if !IsValid(owner) then return end
 	local closestDist = 1024
 	local target = NULL
 	for _, v in pairs(ents.FindInSphere(myPos, 1024)) do
+		if v == owner then continue end
 		if (!v:IsNPC() && !v:IsPlayer()) then continue end
-		if !owner:DoRelationshipCheck(v) then continue end
+		if owner:IsNPC() && !owner:DoRelationshipCheck(v) then continue end
 		local dist = v:GetPos():Distance(myPos)
 		if dist < closestDist && dist > 20 then
 			closestDist = dist
@@ -119,7 +109,7 @@ function ENT:OnBounce(data, phys)
 	if IsValid(target) then
 		local targetPos = target:GetPos() + target:OBBCenter()
 		local norm = (targetPos - myPos):GetNormalized()
-		if self:GetForward():DotProduct(norm) < 0.95 then
+		if self:GetForward():DotProduct(norm) < 0.75 then -- Lowered the visual range from 0.95, too accurate
 			phys:SetVelocity(norm * lastVel)
 		end
 	end
@@ -129,7 +119,7 @@ function ENT:CustomOnPhysicsCollide(data, phys)
 	local owner = self:GetOwner()
 	local hitEnt = data.HitEntity
 	if IsValid(owner) then
-		if (VJ_IsProp(hitEnt)) or (owner:DoRelationshipCheck(hitEnt) && (hitEnt != owner)) then
+		if (VJ_IsProp(hitEnt)) or (owner:IsNPC() && owner:DoRelationshipCheck(hitEnt) && (hitEnt != owner) or true) then
 			self:CustomOnDoDamage_Direct(data, phys, hitEnt)
 			local dmgInfo = DamageInfo()
 			dmgInfo:SetDamage(self.DirectDamage)
