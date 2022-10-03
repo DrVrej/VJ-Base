@@ -39,18 +39,10 @@ SWEP.PrimaryEffects_MuzzleParticlesAsOne = true -- If set to true, the base will
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_SpawnShells = false
 SWEP.PrimaryEffects_DynamicLightColor = Color(255, 0, 0)
-	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.DelayOnDeploy 				= 0.2 -- Time until it can shoot again after deploying the weapon
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound				= true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
 SWEP.ReloadSound				= {"vj_weapons/blaster/blaster_reload.wav"}
 SWEP.Reload_TimeUntilAmmoIsSet	= 0.8 -- Time until ammo is set to the weapon
-SWEP.Reload_TimeUntilFinished	= 1.8 -- How much time until the player can play idle animation, shoot, etc.
-	-- Idle Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.HasIdleAnimation			= true -- Does it have a idle animation?
-SWEP.AnimTbl_Idle				= {ACT_VM_IDLE}
-SWEP.NextIdle_Deploy			= 0.5 -- How much time until it plays the idle animation after the weapon gets deployed
-SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle animation after attacking(Primary)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*function SWEP:CustomOnPrimaryAttack_BeforeShoot()
 	if CLIENT then return end

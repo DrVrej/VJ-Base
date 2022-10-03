@@ -87,22 +87,24 @@ SWEP.AutoSwitchFrom = false -- Auto switch weapon when the owner picks up a bett
 SWEP.DrawWeaponInfoBox = true -- Should the information box show in the weapon selection menu?
 SWEP.BounceWeaponIcon = true -- Should the icon bounce in the weapon selection menu?
 	-- ====== Deployment Variables ====== --
-SWEP.DelayOnDeploy = 1 -- Time until it can shoot again after deploying the weapon
 SWEP.AnimTbl_Deploy = {ACT_VM_DRAW}
 SWEP.HasDeploySound = true -- Does the weapon have a deploy sound?
 SWEP.DeploySound = {} -- Sound played when the weapon is deployed
 	-- ====== Idle Variables ====== --
-SWEP.HasIdleAnimation = false -- Does it have a idle animation?
+SWEP.HasIdleAnimation = true -- Does it have a idle animation?
 SWEP.AnimTbl_Idle = {ACT_VM_IDLE}
-SWEP.NextIdle_Deploy = 0.5 -- How much time until it plays the idle animation after the weapon gets deployed
-SWEP.NextIdle_PrimaryAttack = 0.1 -- How much time until it plays the idle animation after attacking(Primary)
 	-- ====== Reload Variables ====== --
 SWEP.HasReloadSound = false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
 SWEP.ReloadSound = {}
 SWEP.AnimTbl_Reload = {ACT_VM_RELOAD}
 SWEP.Reload_TimeUntilAmmoIsSet = 1 -- Time until ammo is set to the weapon
+	-- ====== Secondary Fire Variables ====== --
+SWEP.Secondary.Automatic = false -- Is it automatic?
+SWEP.Secondary.Ammo = "none" -- Ammo type
+SWEP.Secondary.TakeAmmo = 1 -- How much ammo should it take on each shot?
 	-- To let the base automatically detect the animation duration, set this to false:
-SWEP.Reload_TimeUntilFinished = false -- How much time until the player can play another animation (idle, firing etc.)
+SWEP.Secondary.Delay = false -- Time until it can shoot again
+SWEP.AnimTbl_SecondaryFire = {ACT_VM_SECONDARYATTACK}
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Dry Fire Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -175,7 +177,7 @@ function SWEP:CustomOnReload() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- Unlike CustomOnReload(), this is called AFTER the reload animation has finished
 -- This only works for players and VJ Humans!
-function SWEP:CustomOnReload_Finish() end
+function SWEP:CustomOnReload_Finish() return true end -- Return false to to override base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BeforeShoot() end -- Return true to not run rest of the firing code
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -206,6 +208,8 @@ function SWEP:NPC_SecondaryFire()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnSecondaryAttack() return true end -- Players only! | Return false to override base code
+---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomBulletSpawnPosition() return false end -- Return a position to override the bullet spawn position
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnFireAnimationEvent(pos, ang, event, options) return false end
@@ -228,8 +232,9 @@ function SWEP:CustomOnRemove() end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.RenderGroup = RENDERGROUP_OPAQUE
 
-SWEP.Secondary.Ammo = "none" -- Tells the game that this weapon doesn't have a secondary attack
 SWEP.Reloading = false
+SWEP.NextReloadT = 0
+SWEP.NextIdleT = 0
 SWEP.InitHasIdleAnimation = false
 SWEP.Primary.DefaultClip = 0
 SWEP.NextNPCDrySoundT = 0
@@ -287,6 +292,7 @@ function SWEP:Equip(newOwner)
 			self:Remove()
 		end
 	elseif newOwner:IsNPC() then
+		-- For default HL2 NPCs
 		if VJ_AnimationExists(newOwner,ACT_WALK_AIM_PISTOL) == true && VJ_AnimationExists(newOwner,ACT_RUN_AIM_PISTOL) == true && VJ_AnimationExists(newOwner,ACT_POLICE_HARASS1) == true then
 			self.NPC_AnimationSet = "Metrocop"
 		elseif VJ_AnimationExists(newOwner,"cheer1") == true && VJ_AnimationExists(newOwner,"wave_smg1") == true && VJ_AnimationExists(newOwner,ACT_BUSY_SIT_GROUND) == true then
@@ -515,7 +521,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	local isNPC = owner:IsNPC()
 	local isPly = owner:IsPlayer()
 	
-	if self.Reloading == true then return end
+	if self.Reloading or self:GetNextSecondaryFire() > CurTime() then return end
 	if isNPC && owner.VJ_IsBeingControlled == false && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return end
 	if SERVER && self.IsMeleeWeapon == false && ((isPly && self.Primary.AllowFireInWater == false && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then owner:EmitSound(VJ_PICK(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b)) return end
 	if (!self:CanPrimaryAttack()) then return end
@@ -632,28 +638,50 @@ function SWEP:PrimaryAttack(UseAlt)
 	self:PrimaryAttackEffects()
 	if isPly then
 		//self:ShootEffects("ToolTracer") -- Deprecated
-		self:SendWeaponAnim(VJ_PICK(self.AnimTbl_PrimaryFire))
-		owner:SetAnimation(PLAYER_ATTACK1)
 		owner:ViewPunch(Angle(-self.Primary.Recoil, 0, 0))
 		self:TakePrimaryAmmo(self.Primary.TakeAmmo)
+		owner:SetAnimation(PLAYER_ATTACK1)
+		local anim = VJ_PICK(self.AnimTbl_PrimaryFire)
+		local animTime = VJ_GetSequenceDuration(owner:GetViewModel(), anim)
+		self:SendWeaponAnim(anim)
+		self.NextIdleT = CurTime() + animTime
+		self.NextReloadT = CurTime() + animTime
 	end
 	self:CustomOnPrimaryAttack_AfterShoot()
 	//self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
-	timer.Simple(self.NextIdle_PrimaryAttack, function() if IsValid(self) then self:DoIdleAnimation() end end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CanSecondaryAttack()
-	return false -- No secondary attack
+	return self:Clip2() > 0 && self:GetNextSecondaryFire() < CurTime() && self.Secondary.Ammo != "none"
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:SecondaryAttack()
-	if (!self:CanSecondaryAttack()) then return end
+	if !self:CanSecondaryAttack() or self.Reloading then return end
+	if self:CustomOnSecondaryAttack() == false then return end
+	
+	local owner = self:GetOwner()
+	self:TakePrimaryAmmo(self.Secondary.TakeAmmo)
+	owner:SetAnimation(PLAYER_ATTACK1)
+	local anim = VJ_PICK(self.AnimTbl_SecondaryFire)
+	local animTime = VJ_GetSequenceDuration(owner:GetViewModel(), anim)
+	self:SendWeaponAnim(anim)
+	self.NextIdleT = CurTime() + animTime
+	self.NextReloadT = CurTime() + animTime
+	
+	self:SetNextSecondaryFire(CurTime() + (self.Secondary.Delay == false and animTime or self.Secondary.Delay))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:DoIdleAnimation()
-	if self.HasIdleAnimation == false or self.Reloading == true then return end
+	if !self.HasIdleAnimation or CurTime() < self.NextIdleT then return end
 	self:CustomOnIdle()
-	self:SendWeaponAnim(VJ_PICK(self.AnimTbl_Idle))
+	local owner = self:GetOwner()
+	if IsValid(owner) then
+		owner:SetAnimation(PLAYER_IDLE)
+		local anim = VJ_PICK(self.AnimTbl_Idle)
+		local animTime = VJ_GetSequenceDuration(owner:GetViewModel(), anim)
+		self:SendWeaponAnim(anim)
+		self.NextIdleT = CurTime() + animTime
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttackEffects()
@@ -742,33 +770,37 @@ end
 function SWEP:Think() -- NOTE: Works only in players hands. does NOT work in NPCs hands!
 	self:RunWorldModelThink()
 	self:CustomOnThink()
+	if SERVER then
+		self:DoIdleAnimation()
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Reload()
 	if !IsValid(self) then return end
 	local owner = self:GetOwner()
-	if !IsValid(owner) or !owner:IsPlayer() or !owner:Alive() or owner:GetAmmoCount(self.Primary.Ammo) == 0 or !owner:KeyDown(IN_RELOAD) or self.Reloading == true then return end
+	if !IsValid(owner) or !owner:IsPlayer() or !owner:Alive() or owner:GetAmmoCount(self.Primary.Ammo) == 0 or self.Reloading or CurTime() < self.NextReloadT then return end // or !owner:KeyDown(IN_RELOAD)
 	if self:Clip1() < self.Primary.ClipSize then
 		self.Reloading = true
 		self:CustomOnReload()
 		if SERVER && self.HasReloadSound == true then owner:EmitSound(VJ_PICK(self.ReloadSound), 50, math.random(90, 100)) end
 		-- Handle clip
 		timer.Simple(self.Reload_TimeUntilAmmoIsSet, function()
-			if IsValid(self) then
+			if IsValid(self) && self:CustomOnReload_Finish() != false then
 				local ammoUsed = math.Clamp(self.Primary.ClipSize - self:Clip1(), 0, owner:GetAmmoCount(self:GetPrimaryAmmoType())) -- Amount of ammo that it will use (Take from the reserve)
 				owner:RemoveAmmo(ammoUsed, self.Primary.Ammo)
-				self:SetClip1(ammoUsed + self:Clip1())
+				self:SetClip1(self:Clip1() + ammoUsed)
 				self:CustomOnReload_Finish()
 			end
 		end)
 		-- Handle animation
-		local anim = VJ_PICK(self.AnimTbl_Reload)
-		self:SendWeaponAnim(anim)
 		owner:SetAnimation(PLAYER_RELOAD)
-		timer.Simple((self.Reload_TimeUntilFinished == false && VJ_GetSequenceDuration(owner:GetViewModel(), anim)) or self.Reload_TimeUntilFinished, function()
+		local anim = VJ_PICK(self.AnimTbl_Reload)
+		local animTime = VJ_GetSequenceDuration(owner:GetViewModel(), anim)
+		self:SendWeaponAnim(anim)
+		self.NextIdleT = CurTime() + animTime
+		timer.Simple(animTime, function()
 			if IsValid(self) then
 				self.Reloading = false
-				self:DoIdleAnimation()
 			end
 		end)
 		return true
@@ -777,13 +809,20 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Deploy()
 	if self.InitHasIdleAnimation == true then self.HasIdleAnimation = true end
-	if self:GetOwner():IsPlayer() then
+	local owner = self:GetOwner()
+	if owner:IsPlayer() then
 		self:CustomOnDeploy()
-		self:SendWeaponAnim(VJ_PICK(self.AnimTbl_Deploy))
 		if self.HasDeploySound == true then self:EmitSound(VJ_PICK(self.DeploySound),50,math.random(90,100)) end
-		self:SetNextPrimaryFire(CurTime() + self.DelayOnDeploy)
+		
+		local curTime = CurTime()
+		local anim = VJ_PICK(self.AnimTbl_Deploy)
+		local animTime = VJ_GetSequenceDuration(owner:GetViewModel(), anim)
+		self:SendWeaponAnim(anim)
+		self:SetNextPrimaryFire(curTime + animTime)
+		self:SetNextSecondaryFire(curTime + animTime)
+		self.NextIdleT = curTime + animTime
+		self.NextReloadT = curTime + animTime
 	end
-	timer.Simple(self.NextIdle_Deploy,function() if IsValid(self) then self:DoIdleAnimation() end end)
 	return true -- Or else the player won't be able to get the weapon!
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

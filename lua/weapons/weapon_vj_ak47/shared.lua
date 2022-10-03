@@ -38,11 +38,8 @@ SWEP.Primary.DistantSound		= {"vj_weapons/ak47/ak47_single_dist.wav"}
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellAttachment = 2
 SWEP.PrimaryEffects_ShellType = "VJ_Weapon_RifleShell1"
-	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.DelayOnDeploy 				= 1 -- Time until it can shoot again after deploying the weapon
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Reload_TimeUntilAmmoIsSet	= 1.8 -- Time until ammo is set to the weapon
-SWEP.Reload_TimeUntilFinished	= 2.2 -- How much time until the player can play idle animation, shoot, etc.
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnFireAnimationEvent(pos, ang, event, options)
 	if event == 5001 then return true end -- Asiga hose vor shtke gedervadz flash-e

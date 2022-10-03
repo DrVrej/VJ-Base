@@ -524,6 +524,7 @@ function NPC_MetaTable:VJ_Controller_InitialMessage(ply)
 		self:Controller_IntMsg(ply, controlEnt)
 	end
 end
+/* Disabled for now until further testing (especially performance-wise)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local AddEntityRelationship = NPC_MetaTable.AddEntityRelationship
 function NPC_MetaTable:AddEntityRelationship(...)
@@ -547,6 +548,7 @@ function NPC_MetaTable:Disposition(...)
 	end
 	return Disposition(self,...)
 end
+*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- override = Used internally by the base, overrides the result and returns Val instead (Useful for variables that allow "false" to let the base decide the time)
 function NPC_MetaTable:DecideAnimationLength(anim, override, decrease)

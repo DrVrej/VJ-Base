@@ -39,19 +39,14 @@ SWEP.Primary.DistantSound		= {"^weapons/ar1/ar1_dist1.wav","^weapons/ar1/ar1_dis
 SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_full_blue"}
 SWEP.PrimaryEffects_SpawnShells = false
 SWEP.PrimaryEffects_DynamicLightColor = Color(0, 31, 225)
+	-- ====== Secondary Fire Variables ====== --
+SWEP.Secondary.Ammo = "AR2AltFire" -- Ammo type
 
 SWEP.DryFireSound = {"weapons/ar2/ar2_empty.wav"}
-SWEP.Secondary.Ammo = "AR2AltFire"
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound				= false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
 SWEP.ReloadSound				= "weapons/ar2/ar2_reload.wav"
 SWEP.Reload_TimeUntilAmmoIsSet	= 0.8 -- Time until ammo is set to the weapon
-SWEP.Reload_TimeUntilFinished	= 1.8 -- How much time until the player can play idle animation, shoot, etc.
-	-- Idle Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.HasIdleAnimation			= true -- Does it have a idle animation?
-SWEP.AnimTbl_Idle				= {ACT_VM_IDLE}
-SWEP.NextIdle_Deploy			= 0.5 -- How much time until it plays the idle animation after the weapon gets deployed
-SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle animation after attacking(Primary)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_SecondaryFire_BeforeTimer(eneEnt, fireTime)
 	VJ_EmitSound(self, "weapons/cguard/charging.wav", 70)
@@ -75,39 +70,25 @@ function SWEP:NPC_SecondaryFire()
 	VJ_CreateSound(self, "weapons/irifle/irifle_fire2.wav", 90)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttack_BeforeShoot()
-	if self:GetNextSecondaryFire() > CurTime() then -- In the middle of secondary fire
-		return true
-	end
-	return false
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CanSecondaryAttack()
-	return self:Clip2() > 0 && self:GetNextSecondaryFire() < CurTime()
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:SecondaryAttack()
-	if (!self:CanSecondaryAttack()) then return end
-
-	if self.Reloading == true then return end
-
+function SWEP:CustomOnSecondaryAttack()
 	local owner = self:GetOwner()
 	local vm = owner:GetViewModel()
 	local fidgetTime = VJ_GetSequenceDuration(vm, ACT_VM_FIDGET)
 	local fireTime = VJ_GetSequenceDuration(vm, ACT_VM_SECONDARYATTACK)
-	self:SetNextSecondaryFire(CurTime() + (fidgetTime + fireTime))
-	self.Reloading = true -- Compatibiliy as VJ Base has no custom reload check
-
+	local totalTime = fidgetTime + fireTime
+	local curTime = CurTime()
+	self:SetNextSecondaryFire(curTime + totalTime)
+	self.NextIdleT = curTime + totalTime
+	self.NextReloadT = curTime + totalTime
 	self:SendWeaponAnim(ACT_VM_FIDGET)
 	VJ_CreateSound(self, "weapons/cguard/charging.wav", 85)
+	
 	timer.Simple(fidgetTime, function()
 		if IsValid(self) && IsValid(owner) && owner:GetActiveWeapon() == self then
-			self:SendWeaponAnim(ACT_VM_SECONDARYATTACK)
 			VJ_CreateSound(self, "weapons/irifle/irifle_fire2.wav", 90)
 
-			local pos = owner:GetShootPos()
 			local proj = ents.Create(self.NPC_SecondaryFireEnt)
-			proj:SetPos(pos)
+			proj:SetPos(owner:GetShootPos())
 			proj:SetAngles(owner:GetAimVector():Angle())
 			proj:SetOwner(owner)
 			proj:Spawn()
@@ -118,17 +99,11 @@ function SWEP:SecondaryAttack()
 				phys:SetVelocity(owner:GetAimVector() * 2000)
 			end
 
-			owner:SetAnimation(PLAYER_ATTACK1)
 			owner:ViewPunch(Angle(-self.Primary.Recoil *3, 0, 0))
+			owner:SetAnimation(PLAYER_ATTACK1)
+			self:SendWeaponAnim(ACT_VM_SECONDARYATTACK)
 			self:TakeSecondaryAmmo(1)
 		end
 	end)
-
-	timer.Simple(fidgetTime + fireTime, function()
-		if IsValid(self) then
-			self.Reloading = false -- Compatibiliy as VJ Base has no custom reload check
-			self:SetClip2(self:Ammo2())
-			self:DoIdleAnimation()
-		end
-	end)
+	return false
 end
