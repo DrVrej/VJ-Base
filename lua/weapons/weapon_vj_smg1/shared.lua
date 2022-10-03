@@ -33,44 +33,20 @@ SWEP.Primary.DistantSound		= {"Weapon_SMG1.NPC_Single"}
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellAttachment = 2
 SWEP.PrimaryEffects_ShellType = "VJ_Weapon_PistolShell1"
-	-- Idle Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.HasIdleAnimation			= true -- Does it have a idle animation?
-SWEP.AnimTbl_Idle				= {ACT_VM_IDLE}
-SWEP.NextIdle_Deploy			= 0.5 -- How much time until it plays the idle animation after the weapon gets deployed
-SWEP.NextIdle_PrimaryAttack		= 0.1 -- How much time until it plays the idle animation after attacking(Primary)
+	-- ====== Secondary Fire Variables ====== --
+SWEP.Secondary.Automatic = true -- Is it automatic?
+SWEP.Secondary.Ammo = "SMG1_Grenade" -- Ammo type
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.HasReloadSound				= true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
-SWEP.ReloadSound				= {"weapons/smg1/smg1_reload.wav"}
-
-SWEP.Secondary.Ammo = "SMG1_Grenade"
+SWEP.HasReloadSound = true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
+SWEP.ReloadSound = {"weapons/smg1/smg1_reload.wav"}
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttack_BeforeShoot()
-	if self:GetNextSecondaryFire() > CurTime() then -- In the middle of secondary fire
-		return true
-	end
-	return false
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CanSecondaryAttack()
-	return self:Clip2() > 0 && self:GetNextSecondaryFire() < CurTime()
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:SecondaryAttack()
-	if (!self:CanSecondaryAttack()) then return end
-
-	if self.Reloading == true then return end
-
+function SWEP:CustomOnSecondaryAttack()
 	local owner = self:GetOwner()
-	local fireTime = VJ_GetSequenceDuration(owner:GetViewModel(), ACT_VM_SECONDARYATTACK)
-	self:SetNextSecondaryFire(CurTime() + fireTime)
-	self.Reloading = true -- Compatibiliy as VJ Base has no custom reload check
-
-	self:SendWeaponAnim(ACT_VM_SECONDARYATTACK)
+	owner:ViewPunch(Angle(-self.Primary.Recoil *3, 0, 0))
 	VJ_EmitSound(self, "weapons/ar2/ar2_altfire.wav", 85)
 
-	local pos = owner:GetShootPos()
 	local proj = ents.Create(self.NPC_SecondaryFireEnt)
-	proj:SetPos(pos)
+	proj:SetPos(owner:GetShootPos())
 	proj:SetAngles(owner:GetAimVector():Angle())
 	proj:SetOwner(owner)
 	proj:Spawn()
@@ -80,16 +56,5 @@ function SWEP:SecondaryAttack()
 		phys:Wake()
 		phys:SetVelocity(owner:GetAimVector() * 2000)
 	end
-
-	owner:SetAnimation(PLAYER_ATTACK1)
-	owner:ViewPunch(Angle(-self.Primary.Recoil *3, 0, 0))
-	self:TakeSecondaryAmmo(1)
-
-	timer.Simple(fireTime, function()
-		if IsValid(self) then
-			self.Reloading = false -- Compatibiliy as VJ Base has no custom reload check
-			self:SetClip2(self:Ammo2())
-			self:DoIdleAnimation()
-		end
-	end)
+	return true
 end

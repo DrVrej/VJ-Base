@@ -38,14 +38,6 @@ SWEP.Primary.DistantSound		= {"weapons/357/357_fire2.wav"}
 SWEP.Primary.DistantSoundVolume	= 0.7 -- Distant sound volume
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_SpawnShells = false
-	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.DelayOnDeploy 				= 0.6 -- Time until it can shoot again after deploying the weapon
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound				= false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
 SWEP.Reload_TimeUntilAmmoIsSet	= 2.7 -- Time until ammo is set to the weapon
-SWEP.Reload_TimeUntilFinished	= 3.5 -- How much time until the player can play idle animation, shoot, etc.
-	-- Idle Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.HasIdleAnimation			= true -- Does it have a idle animation?
-SWEP.AnimTbl_Idle				= {ACT_VM_IDLE}
-SWEP.NextIdle_Deploy			= 0.5 -- How much time until it plays the idle animation after the weapon gets deployed
-SWEP.NextIdle_PrimaryAttack		= 0.5 -- How much time until it plays the idle animation after attacking(Primary)
