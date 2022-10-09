@@ -1020,6 +1020,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_godmodesnpc"):GetInt() == 1 then self.GodMode = true end
 	if GetConVar("vj_npc_nobecomeenemytoply"):GetInt() == 1 then self.BecomeEnemyToPlayer = false end
 	if GetConVar("vj_npc_nocallhelp"):GetInt() == 1 then self.CallForHelp = false end
+	if GetConVar("vj_npc_noeating"):GetInt() == 1 then self.CanEat = false end
 	if GetConVar("vj_npc_nofollowplayer"):GetInt() == 1 then self.FollowPlayer = false end
 	if GetConVar("vj_npc_nosnpcchat"):GetInt() == 1 then self.AllowPrintingInChat = false end
 	if GetConVar("vj_npc_nomedics"):GetInt() == 1 then self.IsMedicSNPC = false end
@@ -1959,7 +1960,7 @@ function ENT:Think()
 							end
 						end
 					else -- No food was found OR it's not eating
-						//eatingData.NextCheck = curTime + 5
+						eatingData.NextCheck = curTime + 3
 					end
 				end
 			end

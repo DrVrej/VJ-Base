@@ -282,7 +282,7 @@ function ENT:CustomOnEat(status, statusInfo)
 	-- The following code is a ideal example based on Half-Life 1 Zombie
 	//print(self, "Eating Status: ", status, statusInfo)
 	if status == "CheckFood" then
-		return true
+		return true //statusInfo.owner.BloodData && statusInfo.owner.BloodData.Color == "Red"
 	elseif status == "BeginEating" then
 		self:SetIdleAnimation({ACT_GESTURE_RANGE_ATTACK1}, true)
 		return self:VJ_ACT_PLAYACTIVITY(ACT_ARM, true, false)
@@ -304,7 +304,7 @@ function ENT:CustomOnEat(status, statusInfo)
 			end
 			local bloodDecal = VJ_PICK(bloodData.Decal)
 			if bloodDecal then
-				local tr = util.TraceLine({start = bloodPos, endpos = bloodPos + vecZ50, filter = food})
+				local tr = util.TraceLine({start = bloodPos, endpos = bloodPos + vecZ50, filter = {food, self}})
 				util.Decal(bloodDecal, tr.HitPos + tr.HitNormal + Vector(math.random(-45, 45), math.random(-45, 45), 0), tr.HitPos - tr.HitNormal, food)
 			end
 		end
