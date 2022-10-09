@@ -32,6 +32,7 @@ cvarList["vj_npc_nobloodpool"] = 0 -- Disables the blood pools spawned on death
 cvarList["vj_npc_nochasingenemy"] = 0 -- Disables the NPCs chasing the enemy
 cvarList["vj_npc_nosnpcchat"] = 0 -- Disables the NPCs printing things like "Scientist is now following you"
 cvarList["vj_npc_nomedics"] = 0 -- Disables medic NPCs
+cvarList["vj_npc_noeating"] = 0 -- Disable NPCs eating things like corpses or gibs
 	-- ====== Creature Settings ====== --
 cvarList["vj_npc_norange"] = 0 -- Disables range attacks
 cvarList["vj_npc_noleap"] = 0 -- Disables leap attacks
@@ -65,7 +66,7 @@ cvarList["vj_npc_undocorpse"] = 0 -- Make corpses undoable
 cvarList["vj_npc_allhealth"] = 0 -- Health Changer
 cvarList["vj_npc_gibcollidable"] = 0 -- Collidable Gibs?
 cvarList["vj_npc_fadegibs"] = 1 -- Should Gibs Fade or not?
-cvarList["vj_npc_fadegibstime"] = 30 -- Gib Fade Time
+cvarList["vj_npc_fadegibstime"] = 90 -- Gib Fade Time
 cvarList["vj_npc_addfrags"] = 1 -- Disable frags(points) being added to player's scoreboard
 cvarList["vj_npc_itemdrops"] = 1 -- item drops on death?
 cvarList["vj_npc_seedistance"] = 0 -- How far can the NPCs see? 0 = The distance that the NPC uses

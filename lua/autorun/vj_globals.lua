@@ -940,9 +940,9 @@ if SERVER then
 	--
 	local function VJ_Stink_StartThink()
 		timer.Create("vj_stink_think", 0.3, 0, function()
-			for k, ent in pairs(VJ_StinkyEnts) do
+			for k, ent in RandomPairs(VJ_StinkyEnts) do
 				if IsValid(ent) then
-					sdEmitHint(SOUND_CARCASS, ent:GetPos(), 400, 2, ent)
+					sdEmitHint(SOUND_CARCASS, ent:GetPos(), 400, 0.15, ent)
 				else -- No longer valid, remove it from the list
 					table_remove(VJ_StinkyEnts, k)
 					if #VJ_StinkyEnts == 0 then -- If this is the last stinky ent then destroy the timer!

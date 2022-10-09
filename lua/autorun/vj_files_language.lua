@@ -225,6 +225,7 @@ if CLIENT then
 		add("vjbase.menu.snpc.settings.togglepropattack", "Disable Prop Attacking (Creatures)")
 		add("vjbase.menu.snpc.settings.toggledangersight", "Disable Detecting Dangers & Grenades (Humans)")
 		add("vjbase.menu.snpc.settings.togglereloading", "Disable Weapon Reloading")
+		add("vjbase.menu.snpc.settings.toggleeating", "Disable Eating (EX: Corpses or gibs)")
 		add("vjbase.menu.snpc.settings.label4", "Attack Settings:")
 		add("vjbase.menu.snpc.settings.togglemelee", "Disable Melee Attacks")
 		add("vjbase.menu.snpc.settings.togglerange", "Disable Range Attacks")

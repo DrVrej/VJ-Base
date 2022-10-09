@@ -86,7 +86,7 @@ end
 function ENT:Think()
 	-- Stinky gib! yuck!
 	if self.IsStinky && self.NextStinkyTime < CurTime() then
-		sound.EmitHint(SOUND_CARCASS, self:GetPos(), 400, 2, self) // SOUND_MEAT = Do NOT use this because we would need to call "GetLoudestSoundHint" twice for each sound type!
+		sound.EmitHint(SOUND_CARCASS, self:GetPos(), 400, 0.15, self) // SOUND_MEAT = Do NOT use this because we would need to call "GetLoudestSoundHint" twice for each sound type!
 		self.NextStinkyTime = CurTime() + 2
 	end
 end
