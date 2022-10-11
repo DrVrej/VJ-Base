@@ -251,7 +251,7 @@ function ENT:EatingReset(resetType)
 			foodData.SizeRemaining = foodData.SizeRemaining + self:OBBMaxs():Distance(self:OBBMins())
 		end
 	end
-	self.EatingData = {Ent = NULL, NextCheck = eatingData.NextCheck, AnimStatus = 0, OldIdleTbl = nil}
+	self.EatingData = {Ent = NULL, NextCheck = eatingData.NextCheck, AnimStatus = "None", OldIdleTbl = nil}
 	-- AnimStatus: "None" = Not prepared (Probably moving to food location) | "Prepared" = Prepared (Ex: Played crouch down anim) | "Eating" = Prepared and is actively eating
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -347,7 +347,7 @@ end
 		- true, Busy
 -----------------------------------------------------------]]
 function ENT:IsBusyWithBehavior()
-	return self.FollowData.Moving or self.Medic_IsHealingAlly
+	return self.FollowData.Moving or self.Medic_Status
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -923,7 +923,7 @@ function ENT:OnCondition(cond)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
-	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printontouch"):GetInt() == 1 then print(self:GetClass().." Has Touched "..entity:GetClass()) end
+	if self.VJ_DEBUG == true && GetConVar("vj_npc_printontouch"):GetInt() == 1 then print(self:GetClass().." Has Touched "..entity:GetClass()) end
 	self:CustomOnTouch(entity)
 	if GetConVar("ai_disabled"):GetInt() == 1 or self.VJ_IsBeingControlled == true then return end
 	
@@ -1044,21 +1044,19 @@ function ENT:DoMedicReset()
 	if IsValid(self.Medic_CurrentEntToHeal) then self.Medic_CurrentEntToHeal.VJTags[VJ_TAG_HEALING] = nil end
 	if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
 	self.Medic_NextHealT = CurTime() + math.Rand(self.Medic_NextHealTime.a, self.Medic_NextHealTime.b)
-	self.Medic_IsHealingAlly = false
-	self.AlreadyDoneMedicThinkCode = false
+	self.Medic_Status = false
 	self.Medic_CurrentEntToHeal = NULL
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoMedicCheck()
-	if self.IsMedicSNPC == false or self.NoWeapon_UseScaredBehavior_Active == true then return end
-	if self.Medic_IsHealingAlly == false then
+	if !self.IsMedicSNPC or self.NoWeapon_UseScaredBehavior_Active then return end
+	if !self.Medic_Status then -- Not healing anyone, so check around for allies
 		if CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled == true then return end
 		for _,v in pairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
 			if v.IsVJBaseSNPC != true && !v:IsPlayer() then continue end -- If it's not a VJ Base SNPC or a player, then move on
 			if v:EntIndex() != self:EntIndex() && !v.VJTags[VJ_TAG_HEALING] && !v.VJTags[VJ_TAG_VEHICLE] && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:DoRelationshipCheck(v) == false then
 				self.Medic_CurrentEntToHeal = v
-				self.Medic_IsHealingAlly = true
-				self.AlreadyDoneMedicThinkCode = false
+				self.Medic_Status = "Active"
 				v:VJTags_Add(VJ_TAG_HEALING)
 				self:StopMoving()
 				self:SetTarget(v)
@@ -1066,10 +1064,10 @@ function ENT:DoMedicCheck()
 				return
 			end
 		end
-	elseif self.AlreadyDoneMedicThinkCode == false then
+	elseif self.Medic_Status != "Healing" then
 		if !IsValid(self.Medic_CurrentEntToHeal) or VJ_IsAlive(self.Medic_CurrentEntToHeal) != true or (self.Medic_CurrentEntToHeal:Health() > self.Medic_CurrentEntToHeal:GetMaxHealth() * 0.75) then self:DoMedicReset() return end
 		if self:Visible(self.Medic_CurrentEntToHeal) && self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then -- Are we in healing distance?
-			self.AlreadyDoneMedicThinkCode = true
+			self.Medic_Status = "Healing"
 			self:CustomOnMedic_BeforeHeal()
 			self:PlaySoundSystem("MedicBeforeHeal")
 			
@@ -1125,7 +1123,7 @@ function ENT:DoMedicCheck()
 							end
 							self:DoMedicReset()
 						else -- If we are no longer in healing distance, go after the ally again
-							self.AlreadyDoneMedicThinkCode = false
+							self.Medic_Status = "Active"
 							if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
 							self:CustomOnMedic_OnReset()
 						end
@@ -2054,7 +2052,7 @@ end
 function ENT:OnRemove()
 	self:CustomOnRemove()
 	self.Dead = true
-	if self.Medic_IsHealingAlly == true then self:DoMedicReset() end
+	if self.Medic_Status then self:DoMedicReset() end
 	if self.VJTags[VJ_TAG_EATING] then self:EatingReset("Dead") end
 	self:RemoveTimers()
 	self:StopAllCommonSounds()

@@ -81,12 +81,12 @@ local function VJ_SNPC_OPTIONS(Panel) -- Options
 	Panel:AddControl("Label", {Text = "#vjbase.menu.snpc.options.label10"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.options.togglegmoddecals", Command = "vj_npc_usegmoddecals"})
 	Panel:ControlHelp("#vjbase.menu.snpc.options.label11")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.options.toggleitemdrops", Command = "vj_npc_itemdrops"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.options.toggleaddfrags", Command = "vj_npc_addfrags"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.options.togglecreatureopendoor", Command = "vj_npc_creatureopendoor"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.options.togglehumansdropweapon", Command = "vj_npc_dropweapon"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.options.togglehumanscanjump", Command = "vj_npc_human_canjump"})
+	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.options.toggleitemdrops", Command = "vj_npc_itemdrops"})
+	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.options.togglehumansdropweapon", Command = "vj_npc_dropweapon"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.options.toggleplydroppedweapons", Command = "vj_npc_plypickupdropwep"})
+	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.options.toggleaddfrags", Command = "vj_npc_addfrags"})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_SNPC_SETTINGS(Panel) -- Settings
@@ -217,18 +217,19 @@ local function VJ_SNPC_DEVSETTINGS(Panel) -- Developer Settings
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.devsettings.printtouch", Command = "vj_npc_printontouch"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.devsettings.printweaponinfo", Command = "vj_npc_dev_printwepinfo"})
 	Panel:AddControl("Button", {Label = "#vjbase.menu.snpc.devsettings.cachedmodels", Command = "listmodels"})
-	local numofnpcs = vgui.Create("DButton")
-	numofnpcs:SetText("#vjbase.menu.snpc.devsettings.numofnpcs")
-	numofnpcs.DoClick = function(x)
-		local i = 0
-		for _, v in ipairs(ents.GetAll()) do
-			if v:IsNPC() then
-				i = i + 1
+	local npcCount = vgui.Create("DButton")
+		npcCount:SetText("#vjbase.menu.snpc.devsettings.numofnpcs")
+		npcCount.DoClick = function(x)
+			local i = 0
+			for _, v in ipairs(ents.GetAll()) do
+				if v:IsNPC() then
+					i = i + 1
+				end
 			end
+			LocalPlayer():ChatPrint("Number of NPCs: "..i)
 		end
-		LocalPlayer():ChatPrint("Number of NPCs: "..i)
-	end
-	Panel:AddPanel(numofnpcs)
+	Panel:AddPanel(npcCount)
+	Panel:AddControl("Label", {Text = "#vjbase.menu.snpc.devsettings.label4"})
 	Panel:AddControl("Button", {Label = "#vjbase.menu.snpc.devsettings.reloadsounds", Command = "snd_restart"})
 	Panel:AddControl("Button", {Label = "#vjbase.menu.snpc.devsettings.reloadmaterials", Command = "mat_reloadallmaterials"})
 	Panel:AddControl("Button", {Label = "#vjbase.menu.snpc.devsettings.reloadtextures", Command = "mat_reloadtextures"})
@@ -250,31 +251,31 @@ local function VJ_SNPC_CONTROLLERSETTINGS(Panel) -- NPC Controller Settings
 	Panel:AddControl("Label", {Text = "#vjbase.menu.snpc.consettings.label3"})
 	
 	local ControlList = vgui.Create("DListView")
-	ControlList:SetTooltip(false)
-	ControlList:SetSize(100, 320) -- Size
-	ControlList:SetMultiSelect(false)
-	ControlList:AddColumn("#vjbase.menu.snpc.consettings.bind.header1") -- Add column
-	ControlList:AddColumn("#vjbase.menu.snpc.consettings.bind.header2") -- Add column
-		ControlList:AddLine("W A S D", "#vjbase.menu.snpc.consettings.bind.movement")
-		ControlList:AddLine("END", "#vjbase.menu.snpc.consettings.bind.exitcontrol")
-		ControlList:AddLine("FIRE1", "#vjbase.menu.snpc.consettings.bind.meleeattack")
-		ControlList:AddLine("FIRE2", "#vjbase.menu.snpc.consettings.bind.rangeattack")
-		ControlList:AddLine("JUMP", "#vjbase.menu.snpc.consettings.bind.leaporgrenade")
-		ControlList:AddLine("RELOAD", "#vjbase.menu.snpc.consettings.bind.reloadweapon")
-		ControlList:AddLine("T", "#vjbase.menu.snpc.consettings.bind.togglebullseye")
-		ControlList:AddLine("H", "#vjbase.menu.snpc.consettings.bind.cameramode")
-		ControlList:AddLine("J", "#vjbase.menu.snpc.consettings.bind.movementjump")
-		ControlList:AddLine("MOUSE WHEEL", "#vjbase.menu.snpc.consettings.bind.camerazoom")
-		ControlList:AddLine("UP ARROW", "#vjbase.menu.snpc.consettings.bind.cameraforward")
-		ControlList:AddLine("UP ARROW + RUN", "#vjbase.menu.snpc.consettings.bind.cameraup")
-		ControlList:AddLine("DOWN ARROW", "#vjbase.menu.snpc.consettings.bind.camerabackward")
-		ControlList:AddLine("DOWN ARROW + RUN", "#vjbase.menu.snpc.consettings.bind.cameradown")
-		ControlList:AddLine("LEFT ARROW", "#vjbase.menu.snpc.consettings.bind.cameraleft")
-		ControlList:AddLine("RIGHT ARROW", "#vjbase.menu.snpc.consettings.bind.cameraright")
-		ControlList:AddLine("BACKSPACE", "#vjbase.menu.snpc.consettings.bind.resetzoom")
-	ControlList.OnRowSelected = function(panel, rowIndex, row)
-		chat.AddText(Color(0,255,0), language.GetPhrase("#vjbase.menu.snpc.consettings.bind.clickmsg1").." ", Color(255,255,0), row:GetValue(1), Color(0,255,0), " | "..language.GetPhrase("#vjbase.menu.snpc.consettings.bind.clickmsg2").." ", Color(255,255,0), row:GetValue(2))
-	end
+		ControlList:SetTooltip(false)
+		ControlList:SetSize(100, 320)
+		ControlList:SetMultiSelect(false)
+		ControlList:AddColumn("#vjbase.menu.snpc.consettings.bind.header1") -- Add column
+		ControlList:AddColumn("#vjbase.menu.snpc.consettings.bind.header2") -- Add column
+			ControlList:AddLine("W A S D", "#vjbase.menu.snpc.consettings.bind.movement")
+			ControlList:AddLine("END", "#vjbase.menu.snpc.consettings.bind.exitcontrol")
+			ControlList:AddLine("FIRE1", "#vjbase.menu.snpc.consettings.bind.meleeattack")
+			ControlList:AddLine("FIRE2", "#vjbase.menu.snpc.consettings.bind.rangeattack")
+			ControlList:AddLine("JUMP", "#vjbase.menu.snpc.consettings.bind.leaporgrenade")
+			ControlList:AddLine("RELOAD", "#vjbase.menu.snpc.consettings.bind.reloadweapon")
+			ControlList:AddLine("T", "#vjbase.menu.snpc.consettings.bind.togglebullseye")
+			ControlList:AddLine("H", "#vjbase.menu.snpc.consettings.bind.cameramode")
+			ControlList:AddLine("J", "#vjbase.menu.snpc.consettings.bind.movementjump")
+			ControlList:AddLine("MOUSE WHEEL", "#vjbase.menu.snpc.consettings.bind.camerazoom")
+			ControlList:AddLine("UP ARROW", "#vjbase.menu.snpc.consettings.bind.cameraforward")
+			ControlList:AddLine("UP ARROW + RUN", "#vjbase.menu.snpc.consettings.bind.cameraup")
+			ControlList:AddLine("DOWN ARROW", "#vjbase.menu.snpc.consettings.bind.camerabackward")
+			ControlList:AddLine("DOWN ARROW + RUN", "#vjbase.menu.snpc.consettings.bind.cameradown")
+			ControlList:AddLine("LEFT ARROW", "#vjbase.menu.snpc.consettings.bind.cameraleft")
+			ControlList:AddLine("RIGHT ARROW", "#vjbase.menu.snpc.consettings.bind.cameraright")
+			ControlList:AddLine("BACKSPACE", "#vjbase.menu.snpc.consettings.bind.resetzoom")
+		ControlList.OnRowSelected = function(panel, rowIndex, row)
+			chat.AddText(Color(0,255,0), language.GetPhrase("#vjbase.menu.snpc.consettings.bind.clickmsg1").." ", Color(255,255,0), row:GetValue(1), Color(0,255,0), " | "..language.GetPhrase("#vjbase.menu.snpc.consettings.bind.clickmsg2").." ", Color(255,255,0), row:GetValue(2))
+		end
 	Panel:AddItem(ControlList)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -58,7 +58,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 		local addPos = extraOptions.AddPos or defPos -- This will be added to the given entity's position
 		local chaseEnemy = extraOptions.ChaseEnemy or false -- Used internally by ChaseEnemy, enables code that's used only for that
 	local moveSpeed = (moveType == "Calm" and self.Aerial_FlyingSpeed_Calm) or self.Aerial_FlyingSpeed_Alerted
-	local debug = self.AA_EnableDebug
+	local debug = self.VJ_DEBUG
 	local myPos = self:GetPos()
 	
 	-- Initial checks for aquatic NPCs
@@ -270,7 +270,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 		moveSpeed = (moveType == "Calm" and self.Aquatic_SwimmingSpeed_Calm) or self.Aquatic_SwimmingSpeed_Alerted
 	end
 	
-	local debug = self.AA_EnableDebug
+	local debug = self.VJ_DEBUG
 	extraOptions = extraOptions or {}
 	
 	-- Movement Calculations

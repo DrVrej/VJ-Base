@@ -250,7 +250,7 @@ function ENT:StartSchedule(schedule)
 	schedule.AlreadyRanCode_OnFail = false
 	schedule.AlreadyRanCode_OnFinish = false
 	// lua_run PrintTable(Entity(1):GetEyeTrace().Entity.CurrentSchedule)
-	//if self.VJDEBUG_SNPC_ENABLED == true then PrintTable(schedule) end
+	//if self.VJ_DEBUG == true then PrintTable(schedule) end
 	//if schedule.Name != "vj_chase_enemy" then PrintTable(schedule) end
 	if self.Dead == false then self:DoRunCode_OnFinish(self.CurrentSchedule) end -- Yete arten schedule garne, verchatsoor
 	self.CurrentSchedule = schedule
