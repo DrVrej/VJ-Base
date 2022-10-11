@@ -841,8 +841,8 @@ function SWEP:EquipAmmo(ply)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnRemove()
-	self:CustomOnRemove()
 	self:StopParticles()
+	self:CustomOnRemove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:GetWeaponCustomPosition(owner)

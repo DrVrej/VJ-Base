@@ -866,10 +866,9 @@ ENT.PlayingAttackAnimation = false
 ENT.DoingWeaponAttack = false
 ENT.DoingWeaponAttack_Standing = false
 ENT.WaitingForEnemyToComeOut = false
-ENT.VJDEBUG_SNPC_ENABLED = false
+ENT.VJ_DEBUG = false
 ENT.DidWeaponAttackAimParameter = false
-ENT.Medic_IsHealingAlly = false
-ENT.AlreadyDoneMedicThinkCode = false
+ENT.Medic_Status = false -- false = Not active | "Active" = Attempting to heal ally (Going after etc.) | "Healing" = Has reached ally and is healing it
 ENT.VJFriendly = false
 ENT.VJ_PlayingInterruptSequence = false
 ENT.IsAbleToMeleeAttack = true
@@ -994,7 +993,7 @@ local varCZom = "CLASS_ZOMBIE"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function ConvarsOnInit(self)
 	--<>-- Convars that run on Initialize --<>--
-	if GetConVar("vj_npc_usedevcommands"):GetInt() == 1 then self.VJDEBUG_SNPC_ENABLED = true end
+	if GetConVar("vj_npc_usedevcommands"):GetInt() == 1 then self.VJ_DEBUG = true end
 	self.NextProcessTime = GetConVar("vj_npc_processtime"):GetInt()
 	if GetConVar("vj_npc_sd_nosounds"):GetInt() == 1 then self.HasSounds = false end
 	if GetConVar("vj_npc_vjfriendly"):GetInt() == 1 then self.VJFriendly = true end
@@ -1606,7 +1605,7 @@ function ENT:DoIdleAnimation(iType)
 	if self.IdleAlwaysWander == true then iType = 1 end
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
-	if self.DisableWandering == true or self.IsGuard == true or self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsVJBaseSNPC_Tank == true or self.LastHiddenZone_CanWander == false or self.NextWanderTime > CurTime() or self.IsFollowing == true or self.Medic_IsHealingAlly == true then
+	if self.DisableWandering == true or self.IsGuard == true or self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsVJBaseSNPC_Tank == true or self.LastHiddenZone_CanWander == false or self.NextWanderTime > CurTime() or self.IsFollowing == true or self.Medic_Status then
 		iType = 2
 	end
 	
@@ -1632,7 +1631,7 @@ function ENT:DoChaseAnimation(alwaysChase)
 	alwaysChase = alwaysChase or false -- true = Chase no matter what
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
-	if self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsFollowing == true or self.Medic_IsHealingAlly == true or self:GetState() == VJ_STATE_ONLY_ANIMATION then
+	if self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsFollowing == true or self.Medic_Status or self:GetState() == VJ_STATE_ONLY_ANIMATION then
 		self:VJ_TASK_IDLE_STAND()
 		return
 	end
@@ -2469,7 +2468,7 @@ function ENT:Think()
 	end
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	if GetConVar("ai_disabled"):GetInt() == 0 && self:GetState() != VJ_STATE_FREEZE && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
-		if self.VJDEBUG_SNPC_ENABLED == true then
+		if self.VJ_DEBUG == true then
 			if GetConVar("vj_npc_printcurenemy"):GetInt() == 1 then print(self:GetClass().."'s Enemy: ",self:GetEnemy()," Alerted? ",self.Alerted) end
 			if GetConVar("vj_npc_printtakingcover"):GetInt() == 1 then if curTime > self.TakingCoverT == true then print(self:GetClass().." Is Not Taking Cover") else print(self:GetClass().." Is Taking Cover ("..self.TakingCoverT-curTime..")") end end
 			if GetConVar("vj_npc_printlastseenenemy"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - self.LastEnemyVisibleTime).." ("..self:GetName()..")") end
@@ -3156,7 +3155,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAttacks(checkTimers)
 	if self:Health() <= 0 then return end
-	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printstoppedattacks"):GetInt() == 1 then print(self:GetClass().." Stopped all Attacks!") end
+	if self.VJ_DEBUG == true && GetConVar("vj_npc_printstoppedattacks"):GetInt() == 1 then print(self:GetClass().." Stopped all Attacks!") end
 	
 	if checkTimers == true && self.AttackType == VJ_ATTACK_MELEE && self.AttackStatus < VJ_ATTACK_STATUS_EXECUTED then
 		self:MeleeAttackCode_DoFinishTimers(true)
@@ -3551,7 +3550,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 	self:SetNPCState(NPC_STATE_ALERT)
 	timer.Create("timer_alerted_reset"..self:EntIndex(), math.Rand(self.AlertedToIdleTime.a, self.AlertedToIdleTime.b), 1, function() if !IsValid(self:GetEnemy()) then self.Alerted = false self:SetNPCState(NPC_STATE_IDLE) end end)
 	self:CustomOnResetEnemy()
-	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printresetenemy"):GetInt() == 1 then print(self:GetName().." has reseted its enemy") end
+	if self.VJ_DEBUG == true && GetConVar("vj_npc_printresetenemy"):GetInt() == 1 then print(self:GetName().." has reseted its enemy") end
 	if eneValid then
 		if self.IsFollowing == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && self:GetEnemyLastKnownPos() != defPos then
 			self:SetLastPosition(self:GetEnemyLastKnownPos())
@@ -3662,7 +3661,7 @@ function ENT:OnTakeDamage(dmginfo)
 		hitgroup = hitgroup,
 	}
 	self:SetHealth(self:Health() - dmginfo:GetDamage())
-	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printondamage"):GetInt() == 1 then print(self:GetClass().." Got Damaged! | Amount = "..dmginfo:GetDamage()) end
+	if self.VJ_DEBUG == true && GetConVar("vj_npc_printondamage"):GetInt() == 1 then print(self:GetClass().." Got Damaged! | Amount = "..dmginfo:GetDamage()) end
 	if self.HasHealthRegeneration == true && self.HealthRegenerationResetOnDmg == true then
 		self.HealthRegenerationDelayT = curTime + (math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b) * 1.5)
 	end
@@ -3823,7 +3822,7 @@ local vecZ4 = Vector(0, 0, 4)
 --
 function ENT:PriorToKilled(dmginfo, hitgroup)
 	self:CustomOnInitialKilled(dmginfo, hitgroup)
-	if self.Medic_IsHealingAlly == true then self:DoMedicReset() end
+	if self.Medic_Status then self:DoMedicReset() end
 	local dmgInflictor = dmginfo:GetInflictor()
 	local dmgAttacker = dmginfo:GetAttacker()
 	
@@ -3944,7 +3943,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnKilled(dmginfo, hitgroup)
-	if self.VJDEBUG_SNPC_ENABLED == true && GetConVar("vj_npc_printdied"):GetInt() == 1 then print(self:GetClass().." Died!") end
+	if self.VJ_DEBUG == true && GetConVar("vj_npc_printdied"):GetInt() == 1 then print(self:GetClass().." Died!") end
 	self:CustomOnKilled(dmginfo, hitgroup)
 	self:RunItemDropsOnDeathCode(dmginfo, hitgroup) -- Item drops on death
 	self:ClearEnemyMemory()

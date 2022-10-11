@@ -326,14 +326,12 @@ properties.Add("vj_pr_npc_devmode",{
 	Receive = function(self, length, ply) -- The action to perform upon using the property (Serverside)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
-		if ent.VJDEBUG_SNPC_ENABLED == true then
+		if ent.VJ_DEBUG == true then
 			ply:ChatPrint("Disabled Developer Mode for "..ent:GetName()..".")
-			ent.VJDEBUG_SNPC_ENABLED = false
-			ent.AA_EnableDebug = false
+			ent.VJ_DEBUG = false
 		else
 			ply:ChatPrint("Enabled Developer Mode for "..ent:GetName()..". Navigate to the SNPC developer menu to toggle items you want.")
-			ent.VJDEBUG_SNPC_ENABLED = true
-			ent.AA_EnableDebug = true
+			ent.VJ_DEBUG = true
 		end
 	end
 })
