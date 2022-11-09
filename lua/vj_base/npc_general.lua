@@ -1156,6 +1156,52 @@ function ENT:DoConstantlyFaceEnemy()
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:HandleControllerMovement(cont, ply, bullseyePos)
+	if self.MovementType != VJ_MOVETYPE_STATIONARY && self.PlayingAttackAnimation == false && CurTime() > self.NextChaseTime && self.IsVJBaseSNPC_Tank != true then
+		local gerta_for = ply:KeyDown(IN_FORWARD)
+		local gerta_bac = ply:KeyDown(IN_BACK)
+		local gerta_lef = ply:KeyDown(IN_MOVELEFT)
+		local gerta_rig = ply:KeyDown(IN_MOVERIGHT)
+		local gerta_arak = ply:KeyDown(IN_SPEED)
+		local aimVector = ply:GetAimVector()
+		
+		if gerta_for then
+			if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+				self:AA_MoveTo(cont.VJCE_Bullseye, true, gerta_arak and "Alert" or "Calm", {IgnoreGround=true})
+			else
+				if gerta_lef then
+					cont:StartMovement(aimVector, Angle(0,45,0))
+				elseif gerta_rig then
+					cont:StartMovement(aimVector, Angle(0,-45,0))
+				else
+					cont:StartMovement(aimVector, Angle(0,0,0))
+				end
+			end
+		elseif gerta_bac then
+			if gerta_lef then
+				cont:StartMovement(aimVector*-1, Angle(0,-45,0))
+			elseif gerta_rig then
+				cont:StartMovement(aimVector*-1, Angle(0,45,0))
+			else
+				cont:StartMovement(aimVector*-1, Angle(0,0,0))
+			end
+		elseif gerta_lef then
+			cont:StartMovement(aimVector, Angle(0,90,0))
+		elseif gerta_rig then
+			cont:StartMovement(aimVector, Angle(0,-90,0))
+		else
+			self:StopMoving()
+			if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+				self:AA_StopMoving()
+			end
+		end
+		/*if (ply:KeyDown(IN_USE)) then
+			self:StopMoving()
+			cont:StopControlling()
+		end*/
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_PlaySequence(seq, playbackRate, reset, resetTime, interruptible)
 	if !seq then return end
 	if interruptible == true then
