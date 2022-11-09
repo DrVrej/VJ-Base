@@ -377,47 +377,7 @@ function ENT:Think()
 		end
 		
 		-- Movement
-		if npc.MovementType != VJ_MOVETYPE_STATIONARY && npc.PlayingAttackAnimation == false && curTime > npc.NextChaseTime && npc.IsVJBaseSNPC_Tank != true then
-			local gerta_for = ply:KeyDown(IN_FORWARD)
-			local gerta_bac = ply:KeyDown(IN_BACK)
-			local gerta_lef = ply:KeyDown(IN_MOVELEFT)
-			local gerta_rig = ply:KeyDown(IN_MOVERIGHT)
-			local gerta_arak = ply:KeyDown(IN_SPEED)
-			local aimVector = ply:GetAimVector()
-			
-			if gerta_for then
-				if npc.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
-					npc:AA_MoveTo(self.VJCE_Bullseye, true, gerta_arak and "Alert" or "Calm", {IgnoreGround=true})
-				else
-					if gerta_lef then
-						self:StartMovement(aimVector, Angle(0,45,0))
-					elseif gerta_rig then
-						self:StartMovement(aimVector, Angle(0,-45,0))
-					else
-						self:StartMovement(aimVector, Angle(0,0,0))
-					end
-				end
-			elseif gerta_bac then
-				if gerta_lef then
-					self:StartMovement(aimVector*-1, Angle(0,-45,0))
-				elseif gerta_rig then
-					self:StartMovement(aimVector*-1, Angle(0,45,0))
-				else
-					self:StartMovement(aimVector*-1, Angle(0,0,0))
-				end
-			elseif gerta_lef then
-				self:StartMovement(aimVector, Angle(0,90,0))
-			elseif gerta_rig then
-				self:StartMovement(aimVector, Angle(0,-90,0))
-			else
-				npc:StopMoving()
-				if npc.MovementType == VJ_MOVETYPE_AERIAL or npc.MovementType == VJ_MOVETYPE_AQUATIC then npc:AA_StopMoving() end
-			end
-			/*if (ply:KeyDown(IN_USE)) then
-				npc:StopMoving()
-				self:StopControlling()
-			end*/
-		end
+		npc:HandleControllerMovement(self, ply, pos_beye)
 	end
 	self:NextThink(curTime + (0.069696968793869 + FrameTime()))
 end

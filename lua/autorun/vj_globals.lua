@@ -255,6 +255,9 @@ function VJ_CreateSound(ent, sd, sdLevel, sdPitch, customFunc)
 		if #sd < 1 then return end -- If the table is empty then end it
 		sd = sd[math_random(1, #sd)]
 	end
+	if ent.BeforePlayCreateSound then
+		sd = ent:BeforePlayCreateSound(sd) -- Will allow people to alter sounds before they are played, since altering sounds through EntityEmitSound does not follow the logic stated on the wiki; instead of altering the sound it creates an entirely new one so stored CSoundPatch entities in VJ Base won't be altered and break
+	end
 	local sdID = CreateSound(ent, sd)
 	sdID:SetSoundLevel(sdLevel or 75)
 	if (customFunc) then customFunc(sdID) end
