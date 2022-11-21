@@ -925,7 +925,7 @@ end
 function ENT:Touch(entity)
 	if self.VJ_DEBUG == true && GetConVar("vj_npc_printontouch"):GetInt() == 1 then print(self:GetClass().." Has Touched "..entity:GetClass()) end
 	self:CustomOnTouch(entity)
-	if GetConVar("ai_disabled"):GetInt() == 1 or self.VJ_IsBeingControlled == true then return end
+	if GetConVar("ai_disabled"):GetInt() == 1 or self.VJ_IsBeingControlled then return end
 	
 	-- If it's a passive SNPC...
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
@@ -1156,49 +1156,48 @@ function ENT:DoConstantlyFaceEnemy()
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:HandleControllerMovement(cont, ply, bullseyePos)
-	if self.MovementType != VJ_MOVETYPE_STATIONARY && self.PlayingAttackAnimation == false && CurTime() > self.NextChaseTime && self.IsVJBaseSNPC_Tank != true then
-		local gerta_for = ply:KeyDown(IN_FORWARD)
-		local gerta_bac = ply:KeyDown(IN_BACK)
+local angY45 = Angle(0, 45, 0)
+local angYN45 = Angle(0, -45, 0)
+local angY90 = Angle(0, 90, 0)
+local angYN90 = Angle(0, -90, 0)
+--
+function ENT:Controller_Movement(cont, ply, bullseyePos)
+	if self.MovementType != VJ_MOVETYPE_STATIONARY then
 		local gerta_lef = ply:KeyDown(IN_MOVELEFT)
 		local gerta_rig = ply:KeyDown(IN_MOVERIGHT)
 		local gerta_arak = ply:KeyDown(IN_SPEED)
 		local aimVector = ply:GetAimVector()
 		
-		if gerta_for then
+		if ply:KeyDown(IN_FORWARD) then
 			if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 				self:AA_MoveTo(cont.VJCE_Bullseye, true, gerta_arak and "Alert" or "Calm", {IgnoreGround=true})
 			else
 				if gerta_lef then
-					cont:StartMovement(aimVector, Angle(0,45,0))
+					cont:StartMovement(aimVector, angY45)
 				elseif gerta_rig then
-					cont:StartMovement(aimVector, Angle(0,-45,0))
+					cont:StartMovement(aimVector, angYN45)
 				else
-					cont:StartMovement(aimVector, Angle(0,0,0))
+					cont:StartMovement(aimVector, defAng)
 				end
 			end
-		elseif gerta_bac then
+		elseif ply:KeyDown(IN_BACK) then
 			if gerta_lef then
-				cont:StartMovement(aimVector*-1, Angle(0,-45,0))
+				cont:StartMovement(aimVector*-1, angYN45)
 			elseif gerta_rig then
-				cont:StartMovement(aimVector*-1, Angle(0,45,0))
+				cont:StartMovement(aimVector*-1, angY45)
 			else
-				cont:StartMovement(aimVector*-1, Angle(0,0,0))
+				cont:StartMovement(aimVector*-1, defAng)
 			end
 		elseif gerta_lef then
-			cont:StartMovement(aimVector, Angle(0,90,0))
+			cont:StartMovement(aimVector, angY90)
 		elseif gerta_rig then
-			cont:StartMovement(aimVector, Angle(0,-90,0))
+			cont:StartMovement(aimVector, angYN90)
 		else
 			self:StopMoving()
 			if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 				self:AA_StopMoving()
 			end
 		end
-		/*if (ply:KeyDown(IN_USE)) then
-			self:StopMoving()
-			cont:StopControlling()
-		end*/
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1342,8 +1341,8 @@ function ENT:DoEntityRelationshipCheck()
 							end
 						end
 					end
-					-- Handle self.VJFriendly AND HL2 Resistance + self.FriendsWithAllPlayerAllies
-					if vNPC && !entFri && ((self.VJFriendly == true && v.IsVJBaseSNPC == true) or (self.PlayerFriendly == true && (NPCTbl_Resistance[vClass] or (self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true)))) then
+					-- Handle self.VJ Friendly AND HL2 Resistance + self.FriendsWithAllPlayerAllies
+					if vNPC && !entFri && ((self.VJTags[VJ_TAG_VJ_FRIENDLY] && v.IsVJBaseSNPC == true) or (self.PlayerFriendly == true && (NPCTbl_Resistance[vClass] or (self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true)))) then
 						v:AddEntityRelationship(self, D_LI, 0)
 						self:AddEntityRelationship(v, D_LI, 0)
 						entFri = true

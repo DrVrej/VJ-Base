@@ -61,7 +61,7 @@ ENT.AA_MoveAccelerate = 5 -- The NPC will gradually speed up to the max movement
 	-- 0 = Constant max speed | 1 = Increase very slowly | 50 = Increase very quickly
 ENT.AA_MoveDecelerate = 5 -- The NPC will slow down as it approaches its destination | Calculation = MaxSpeed / x
 	-- 1 = Constant max speed | 2 = Slow down slightly | 5 = Slow down normally | 50 = Slow down extremely slow
-	-- ====== Controller Data ====== --
+	-- ====== NPC Controller Data ====== --
 ENT.VJC_Data = {
 	CameraMode = 1, -- Sets the default camera mode | 1 = Third Person, 2 = First Person
 	ThirdP_Offset = Vector(0, 0, 0), -- The offset for the controller when the camera is in third person
@@ -691,9 +691,14 @@ function ENT:CustomOnChangeActivity(newAct) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ExpressionFinished(strExp) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnPlayCreateSound(sdData, sdFile) end
+-- Uncomment to use | Called whenever VJ_CreateSound or VJ_EmitSound is called | return a new file path to replace the one that is about to play
+-- function ENT:OnCreateSound(sdFile) return "example/sound.wav" end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnPlayEmitSound(sdFile) end
+-- Uncomment to use | Called whenever a sound starts playing through VJ_CreateSound
+-- function ENT:OnPlayCreateSound(sdData, sdFile) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Uncomment to use | Called whenever a sound starts playing through VJ_EmitSound
+-- function ENT:OnPlayEmitSound(sdFile) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnFireBullet(ent, data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -889,7 +894,6 @@ ENT.PlayingAttackAnimation = false
 ENT.VJ_DEBUG = false
 ENT.MeleeAttack_DoingPropAttack = false
 ENT.Medic_Status = false -- false = Not active | "Active" = Attempting to heal ally (Going after etc.) | "Healing" = Has reached ally and is healing it
-ENT.VJFriendly = false
 ENT.IsAbleToMeleeAttack = true
 ENT.IsAbleToRangeAttack = true
 ENT.IsAbleToLeapAttack = true
@@ -996,7 +1000,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_usedevcommands"):GetInt() == 1 then self.VJ_DEBUG = true end
 	self.NextProcessTime = GetConVar("vj_npc_processtime"):GetInt()
 	if GetConVar("vj_npc_sd_nosounds"):GetInt() == 1 then self.HasSounds = false end
-	if GetConVar("vj_npc_vjfriendly"):GetInt() == 1 then self.VJFriendly = true end
+	if GetConVar("vj_npc_vjfriendly"):GetInt() == 1 then self:VJTags_Add(VJ_TAG_VJ_FRIENDLY) end
 	if GetConVar("vj_npc_playerfriendly"):GetInt() == 1 then self.PlayerFriendly = true end
 	if GetConVar("vj_npc_antlionfriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCAnt end
 	if GetConVar("vj_npc_combinefriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCCom end
