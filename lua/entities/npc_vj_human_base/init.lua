@@ -44,7 +44,7 @@ ENT.MaxJumpLegalDistance = VJ_Set(150, 280) -- The max distance the NPC can jump
 	-- Stationary Move Type Variables:
 ENT.CanTurnWhileStationary = true -- If true, the NPC will be able to turn while it's stationary
 ENT.Stationary_UseNoneMoveType = false -- Technical variable, used if there is any issues with the NPC's position (It has its downsides, use only when needed!)
-	-- ====== Controller Data ====== --
+	-- ====== NPC Controller Data ====== --
 ENT.VJC_Data = {
 	CameraMode = 1, -- Sets the default camera mode | 1 = Third Person, 2 = First Person
 	ThirdP_Offset = Vector(0, 0, 0), -- The offset for the controller when the camera is in third person
@@ -678,9 +678,14 @@ function ENT:CustomOnChangeActivity(newAct) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ExpressionFinished(strExp) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnPlayCreateSound(sdData, sdFile) end
+-- Uncomment to use | Called whenever "VJ_CreateSound" or "VJ_EmitSound" is called | return a new file path to replace the one that is about to play
+-- function ENT:OnCreateSound(sdFile) return "example/sound.wav" end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnPlayEmitSound(sdFile) end
+-- Uncomment to use | Called whenever a sound starts playing through "VJ_CreateSound"
+-- function ENT:OnPlayCreateSound(sdData, sdFile) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Uncomment to use | Called whenever a sound starts playing through "VJ_EmitSound"
+-- function ENT:OnPlayEmitSound(sdFile) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnFireBullet(ent, data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -869,7 +874,6 @@ ENT.WaitingForEnemyToComeOut = false
 ENT.VJ_DEBUG = false
 ENT.DidWeaponAttackAimParameter = false
 ENT.Medic_Status = false -- false = Not active | "Active" = Attempting to heal ally (Going after etc.) | "Healing" = Has reached ally and is healing it
-ENT.VJFriendly = false
 ENT.VJ_PlayingInterruptSequence = false
 ENT.IsAbleToMeleeAttack = true
 ENT.AllowToDo_WaitForEnemyToComeOut = true
@@ -996,7 +1000,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_usedevcommands"):GetInt() == 1 then self.VJ_DEBUG = true end
 	self.NextProcessTime = GetConVar("vj_npc_processtime"):GetInt()
 	if GetConVar("vj_npc_sd_nosounds"):GetInt() == 1 then self.HasSounds = false end
-	if GetConVar("vj_npc_vjfriendly"):GetInt() == 1 then self.VJFriendly = true end
+	if GetConVar("vj_npc_vjfriendly"):GetInt() == 1 then self:VJTags_Add(VJ_TAG_VJ_FRIENDLY) end
 	if GetConVar("vj_npc_playerfriendly"):GetInt() == 1 then self.PlayerFriendly = true end
 	if GetConVar("vj_npc_antlionfriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCAnt end
 	if GetConVar("vj_npc_combinefriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCCom end

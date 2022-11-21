@@ -249,30 +249,38 @@ function VJ_FindInCone(pos, dir, dist, deg, extraOptions)
 	return foundEnts
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_CreateSound(ent, sd, sdLevel, sdPitch, customFunc)
-	if not sd then return end
-	if istable(sd) then
-		if #sd < 1 then return end -- If the table is empty then end it
-		sd = sd[math_random(1, #sd)]
+function VJ_CreateSound(ent, sdFile, sdLevel, sdPitch, customFunc)
+	if not sdFile then return end
+	if istable(sdFile) then
+		if #sdFile < 1 then return end -- If the table is empty then end it
+		sdFile = sdFile[math_random(1, #sdFile)]
 	end
-	if ent.BeforePlayCreateSound then
-		sd = ent:BeforePlayCreateSound(sd) -- Will allow people to alter sounds before they are played, since altering sounds through EntityEmitSound does not follow the logic stated on the wiki; instead of altering the sound it creates an entirely new one so stored CSoundPatch entities in VJ Base won't be altered and break
+	if ent.OnCreateSound then -- Will allow people to alter sounds before they are played
+		sdFile = ent:OnCreateSound(sdFile)
 	end
-	local sdID = CreateSound(ent, sd)
+	local sdID = CreateSound(ent, sdFile)
 	sdID:SetSoundLevel(sdLevel or 75)
 	if (customFunc) then customFunc(sdID) end
 	sdID:PlayEx(1, sdPitch or 100)
 	ent.LastPlayedVJSound = sdID
-	if ent.IsVJBaseSNPC == true then ent:OnPlayCreateSound(sdID, sd) end
+	if ent.OnPlayCreateSound then
+		ent:OnPlayCreateSound(sdID, sdFile)
+	end
 	return sdID
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function VJ_EmitSound(ent, sd, sdLevel, sdPitch, sdVolume, sdChannel)
-	local sdID = VJ_PICK(sd)
-	if sdID == false then return end
-	ent:EmitSound(sdID, sdLevel, sdPitch, sdVolume, sdChannel)
-	ent.LastPlayedVJSound = sdID
-	if ent.IsVJBaseSNPC == true then ent:OnPlayEmitSound(sdID) end
+function VJ_EmitSound(ent, sdFile, sdLevel, sdPitch, sdVolume, sdChannel)
+	if not sdFile then return end
+	if istable(sdFile) then
+		if #sdFile < 1 then return end -- If the table is empty then end it
+		sdFile = sdFile[math_random(1, #sdFile)]
+	end
+	if ent.OnCreateSound then -- Will allow people to alter sounds before they are played
+		sdFile = ent:OnCreateSound(sdFile)
+	end
+	ent:EmitSound(sdFile, sdLevel, sdPitch, sdVolume, sdChannel)
+	ent.LastPlayedVJSound = sdFile
+	if ent.OnPlayEmitSound then ent:OnPlayEmitSound(sdFile) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_AnimationExists(ent, anim)
@@ -651,7 +659,10 @@ VJ_IsHugeMonster					NPC that is considered to be very large or a boss
 VJ_TAG_HEALING = 1 -- Ent is healing (either itself or by another ent)
 VJ_TAG_EATING = 2 -- Ent is eating something (Ex: a corpse)
 VJ_TAG_BEING_EATEN = 3 -- Ent is being eaten by something
+VJ_TAG_VJ_FRIENDLY = 4 -- Friendly to VJ NPCs
+
 VJ_TAG_SD_PLAYING_MUSIC = 10 -- Ent is playing a sound track
+
 VJ_TAG_HEADCRAB = 20
 VJ_TAG_POLICE = 21
 VJ_TAG_CIVILIAN = 22

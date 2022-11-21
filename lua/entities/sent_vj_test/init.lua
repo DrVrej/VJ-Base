@@ -12,7 +12,8 @@ util.AddNetworkString("vj_testentity_onmenuopen")
 util.AddNetworkString("vj_testentity_runtextsd")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
-	self:SetModel("models/humans/group01/male_0"..math.random(1,9)..".mdl")
+	self:SetModel("models/humans/group01/male_0" .. math.random(1, 9) .. ".mdl")
+	self:SetSpawnEffect(false)
 	self:SetHullType(HULL_HUMAN)
 	self:SetHullSizeNormal()
 	self:SetNPCState(NPC_STATE_SCRIPT)
@@ -24,7 +25,7 @@ function ENT:Initialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule()
-	local nearbyEnts = ents.FindInSphere(self:GetPos(),150)
+	local nearbyEnts = ents.FindInSphere(self:GetPos(), 150)
 	if (!nearbyEnts) then return end
 	for _,v in pairs(nearbyEnts) do
 		if v:IsPlayer() && v:Alive() then

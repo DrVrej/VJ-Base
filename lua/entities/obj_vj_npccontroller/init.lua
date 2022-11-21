@@ -323,11 +323,11 @@ function ENT:Think()
 		if IsValid(self.VJCE_Bullseye) then
 			self.VJCE_Bullseye:SetPos(tr_ply.HitPos)
 		end*/
-		local pos_beye = self.VJCE_Bullseye:GetPos()
+		local bullseyePos = self.VJCE_Bullseye:GetPos()
 		if ply:GetInfoNum("vj_npc_cont_devents", 0) == 1 then
 			VJ_CreateTestObject(ply:GetPos(), self:GetAngles(), Color(0,109,160))
 			VJ_CreateTestObject(camera:GetPos(), self:GetAngles(), Color(255,200,260))
-			VJ_CreateTestObject(pos_beye, self:GetAngles(), Color(255,0,0)) -- Bullseye's position
+			VJ_CreateTestObject(bullseyePos, self:GetAngles(), Color(255,0,0)) -- Bullseye's position
 		end
 		
 		self:CustomOnThink()
@@ -338,7 +338,7 @@ function ENT:Think()
 		if npc.IsVJBaseSNPC_Human == true then
 			if IsValid(npcWeapon) && !npc:IsMoving() && npcWeapon.IsVJBaseWeapon == true && ply:KeyDown(IN_ATTACK2) && npc.AttackType == VJ_ATTACK_NONE && npc.vACT_StopAttacks == false && npc:GetWeaponState() == VJ_WEP_STATE_READY then
 				//npc:SetAngles(Angle(0,math.ApproachAngle(npc:GetAngles().y,ply:GetAimVector():Angle().y,100),0))
-				npc:FaceCertainPosition(pos_beye, 0.2)
+				npc:FaceCertainPosition(bullseyePos, 0.2)
 				canTurn = false
 				if VJ_IsCurrentAnimation(npc, npc:TranslateToWeaponAnim(npc.CurrentWeaponAnimation)) == false && VJ_IsCurrentAnimation(npc, npc.AnimTbl_WeaponAttack) == false then
 					npc:CustomOnWeaponAttack()
@@ -356,28 +356,35 @@ function ENT:Think()
 		
 		if npc.Flinching == true or (((npc.CurrentSchedule && npc.CurrentSchedule.IsPlayActivity != true) or npc.CurrentSchedule == nil) && npc:GetNavType() == NAV_JUMP) then return end
 		
-		-- Turning
-		if !npc:IsMoving() && npc.PlayingAttackAnimation == false && canTurn && curTime > npc.NextChaseTime && npc.IsVJBaseSNPC_Tank != true && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ_WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
-			//npc:SetAngles(Angle(0,ply:GetAimVector():Angle().y,0))
-			local angdif = math.abs(math.AngleDifference(ply:EyeAngles().y, self.VJC_NPC_LastIdleAngle))
-			self.VJC_NPC_LastIdleAngle = npc:EyeAngles().y //tr_ply.HitPos
-			npc:VJ_TASK_IDLE_STAND()
-			if ((npc.MovementType != VJ_MOVETYPE_STATIONARY) or (npc.MovementType == VJ_MOVETYPE_STATIONARY && npc.CanTurnWhileStationary == true)) then
-				if (VJ_AnimationExists(npc, ACT_TURN_LEFT) == false && VJ_AnimationExists(npc, ACT_TURN_RIGHT) == false) or (angdif <= 50 && npc:GetActivity() != ACT_TURN_LEFT && npc:GetActivity() != ACT_TURN_RIGHT) then
-					//npc:VJ_TASK_IDLE_STAND()
-					npc:FaceCertainPosition(pos_beye, 0.1)
-				else
-					self.NextIdleStandTime = 0
-					npc:SetLastPosition(pos_beye) // ply:GetEyeTrace().HitPos
-					npc:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
+		if !npc.PlayingAttackAnimation && curTime > npc.NextChaseTime && npc.IsVJBaseSNPC_Tank != true then
+			-- Turning
+			if !npc:IsMoving() && canTurn && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ_WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
+				//npc:SetAngles(Angle(0,ply:GetAimVector():Angle().y,0))
+				local angdif = math.abs(math.AngleDifference(ply:EyeAngles().y, self.VJC_NPC_LastIdleAngle))
+				self.VJC_NPC_LastIdleAngle = npc:EyeAngles().y //tr_ply.HitPos
+				npc:VJ_TASK_IDLE_STAND()
+				if ((npc.MovementType != VJ_MOVETYPE_STATIONARY) or (npc.MovementType == VJ_MOVETYPE_STATIONARY && npc.CanTurnWhileStationary == true)) then
+					if (VJ_AnimationExists(npc, ACT_TURN_LEFT) == false && VJ_AnimationExists(npc, ACT_TURN_RIGHT) == false) or (angdif <= 50 && npc:GetActivity() != ACT_TURN_LEFT && npc:GetActivity() != ACT_TURN_RIGHT) then
+						//npc:VJ_TASK_IDLE_STAND()
+						npc:FaceCertainPosition(bullseyePos, 0.1)
+					else
+						self.NextIdleStandTime = 0
+						npc:SetLastPosition(bullseyePos) // ply:GetEyeTrace().HitPos
+						npc:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
+					end
 				end
+				//self.TestLerp = npc:GetAngles().y
+				//npc:SetAngles(Angle(0,Lerp(100*FrameTime(),self.TestLerp,ply:GetAimVector():Angle().y),0))
 			end
-			//self.TestLerp = npc:GetAngles().y
-			//npc:SetAngles(Angle(0,Lerp(100*FrameTime(),self.TestLerp,ply:GetAimVector():Angle().y),0))
+			
+			-- Movement
+			npc:Controller_Movement(self, ply, bullseyePos)
+			
+			//if (ply:KeyDown(IN_USE)) then
+				//npc:StopMoving()
+				//self:StopControlling()
+			//end
 		end
-		
-		-- Movement
-		npc:HandleControllerMovement(self, ply, pos_beye)
 	end
 	self:NextThink(curTime + (0.069696968793869 + FrameTime()))
 end
