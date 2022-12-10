@@ -324,7 +324,7 @@ local function VJSPAWN_NPCINTERNAL(Player, Position, Normal, Class, Equipment, S
 		end
 	return end*/
 
-		local isValidPly = IsValid(Player)
+	local isValidPly = IsValid(Player)
 
 	if ( NPCData.AdminOnly && isValidPly && !Player:IsAdmin() ) then return end
 
