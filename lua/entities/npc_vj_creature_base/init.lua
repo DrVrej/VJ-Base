@@ -887,7 +887,6 @@ ENT.Flinching = false
 ENT.vACT_StopAttacks = false
 ENT.IsFollowing = false
 ENT.FollowingPlayer = false
-ENT.EnemyReset = true
 ENT.VJ_IsBeingControlled = false
 ENT.VJ_PlayingSequence = false
 ENT.PlayingAttackAnimation = false
@@ -904,7 +903,6 @@ ENT.VJ_IsBeingControlled_Tool = false
 ENT.LastHiddenZone_CanWander = true
 ENT.LeapAttackHasJumped = false
 ENT.CurIdleStandMove = false
-ENT.LastEnemyVisible = false
 ENT.PropAP_IsVisible = false
 ENT.VJ_TheController = NULL
 ENT.VJ_TheControllerEntity = NULL
@@ -925,9 +923,6 @@ ENT.NextPropAPCheckT = 0
 ENT.NextCallForHelpT = 0
 ENT.NextCallForBackUpOnDamageT = 0
 ENT.NextAlertSoundT = 0
-ENT.LastEnemyVisibleTime = 0
-ENT.LastEnemyTime = 0
-ENT.TimeSinceEnemyAcquired = 0
 ENT.NextCallForHelpAnimationT = 0
 ENT.CurrentAttackAnimation = 0
 ENT.CurrentAttackAnimationDuration = 0
@@ -952,13 +947,10 @@ ENT.NextCallForHelpSoundT = 0
 ENT.LostEnemySoundT = 0
 ENT.NextDoAnyAttackT = 0
 ENT.NearestPointToEnemyDistance = 0
-ENT.LastEnemySightDiff = 0
-ENT.ReachableEnemyCount = 0
 ENT.LatestEnemyDistance = 0
 ENT.HealthRegenerationDelayT = 0
 ENT.CurAttackSeed = 0
 ENT.CurAnimationSeed = 0
-ENT.LastEnemyVisiblePos = Vector(0, 0, 0)
 ENT.GuardingPosition = nil
 ENT.GuardingFacePosition = nil
 ENT.SelectedDifficulty = 1
@@ -969,6 +961,16 @@ ENT.FacingStatus = VJ_FACING_NONE
 ENT.FacingData = nil
 ENT.TimersToRemove = {"timer_state_reset","timer_act_seqreset","timer_facing_end","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap","timer_alerted_reset"}
 ENT.FollowData = {Ent = NULL, MinDist = 0, Moving = false, StopAct = false, IsLiving = false}
+ENT.EnemyData = {
+	TimeSet = 0, -- Last time an enemy was set | Updated whenever "VJ_DoSetEnemy" is ran successfully
+	TimeSinceAcquired = 0, -- Time since it acquired an enemy (Switching enemies does NOT reset this!)
+	IsVisible = false, -- Is the enemy visible? | Updated every "Think" run!
+	LastVisibleTime = 0, -- Last time it saw the current enemy
+	LastVisiblePos = Vector(0, 0, 0), -- Last visible position of the current enemy
+	VisibleCount = 0, -- Number of visible enemies
+	SightDiff = 0, -- Difference between enemy's position and NPC's sight direction | Examples: Determine if the enemy is within the NPC's sight angle or melee attack radius
+	Reset = true, -- Enemy has reset | Mostly a backend function
+}
 ENT.EatingData = nil
 //ENT.DefaultGibOnDeathDamageTypes = {[DMG_ALWAYSGIB]=true,[DMG_ENERGYBEAM]=true,[DMG_BLAST]=true,[DMG_VEHICLE]=true,[DMG_CRUSH]=true,[DMG_DISSOLVE]=true,[DMG_SLOWBURN]=true,[DMG_PHYSGUN]=true,[DMG_PLASMA]=true,[DMG_SONIC]=true}
 //ENT.SavedDmgInfo = {} -- Set later
@@ -1578,7 +1580,7 @@ end
 function ENT:DoChaseAnimation(alwaysChase)
 	local ene = self:GetEnemy()
 	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead == true or self.VJ_IsBeingControlled == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.PlayingAttackAnimation == true && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
-	if self:VJ_GetNearestPointToEntityDistance(ene) < self.MeleeAttackDistance && self.LastEnemyVisible && (self.LastEnemySightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))) then if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then self:AA_StopMoving() end self:VJ_TASK_IDLE_STAND() return end -- Not melee attacking yet but it is in range, so stop moving!
+	if self:VJ_GetNearestPointToEntityDistance(ene) < self.MeleeAttackDistance && self.EnemyData.IsVisible && (self.EnemyData.SightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))) then if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then self:AA_StopMoving() end self:VJ_TASK_IDLE_STAND() return end -- Not melee attacking yet but it is in range, so stop moving!
 	
 	alwaysChase = alwaysChase or false -- true = Chase no matter what
 	
@@ -1700,8 +1702,10 @@ function ENT:Think()
 		if self.VJ_DEBUG == true then
 			if GetConVar("vj_npc_printcurenemy"):GetInt() == 1 then print(self:GetClass().."'s Enemy: ",self:GetEnemy()," Alerted? ",self.Alerted) end
 			if GetConVar("vj_npc_printtakingcover"):GetInt() == 1 then if curTime > self.TakingCoverT == true then print(self:GetClass().." Is Not Taking Cover") else print(self:GetClass().." Is Taking Cover ("..self.TakingCoverT-curTime..")") end end
-			if GetConVar("vj_npc_printlastseenenemy"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - self.LastEnemyVisibleTime).." ("..self:GetName()..")") end
+			if GetConVar("vj_npc_printlastseenenemy"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - self.EnemyData.LastVisibleTime).." ("..self:GetName()..")") end
 		end
+		
+		local eneData = self.EnemyData
 		
 		self:SetPlaybackRate(self.AnimationPlaybackRate)
 		if self:GetArrivalActivity() == -1 then
@@ -1854,18 +1858,18 @@ function ENT:Think()
 			local myPos = self:GetPos()
 			local ene = self:GetEnemy()
 			local eneValid = IsValid(ene)
-			if self.EnemyReset == false then
+			if eneData.Reset == false then
 				-- Reset enemy if it doesn't exist or it's dead
 				if (!eneValid) or (eneValid && ene:Health() <= 0) then
-					self.EnemyReset = true
+					eneData.Reset = true
 					self:ResetEnemy(true)
 					ene = self:GetEnemy()
 					eneValid = IsValid(ene)
 				end
 				-- Reset enemy if it has been unseen for a while
-				if (curTime - self.LastEnemyVisibleTime) > self.TimeUntilEnemyLost && (!self.IsVJBaseSNPC_Tank) then
+				if (curTime - eneData.LastVisibleTime) > self.TimeUntilEnemyLost && (!self.IsVJBaseSNPC_Tank) then
 					self:PlaySoundSystem("LostEnemy")
-					self.EnemyReset = true
+					eneData.Reset = true
 					self:ResetEnemy(true)
 					ene = self:GetEnemy()
 					eneValid = IsValid(ene)
@@ -1973,19 +1977,19 @@ function ENT:Think()
 				
 				-- Set latest enemy information
 				self:UpdateEnemyMemory(ene, enePos)
-				self.EnemyReset = false
-				self.LastEnemyVisible = plyControlled and self:VisibleVec(enePos) or self:Visible(ene) -- Need to use VisibleVec when controlled because "Visible" will return false randomly
-				self.LastEnemySightDiff = self:GetSightDirection():Dot((enePos - myPos):GetNormalized())
+				eneData.Reset = false
+				eneData.IsVisible = plyControlled and self:VisibleVec(enePos) or self:Visible(ene) -- Need to use VisibleVec when controlled because "Visible" will return false randomly
+				eneData.SightDiff = self:GetSightDirection():Dot((enePos - myPos):GetNormalized())
 				self.LatestEnemyDistance = myPos:Distance(enePos)
 				self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene)
-				if (self.LastEnemySightDiff > math_cos(math_rad(self.SightAngle))) && (self.LatestEnemyDistance < self:GetMaxLookDistance()) && self.LastEnemyVisible then
-					self.LastEnemyVisibleTime = curTime
-					self.LastEnemyVisiblePos = enePos
+				if (eneData.SightDiff > math_cos(math_rad(self.SightAngle))) && (self.LatestEnemyDistance < self:GetMaxLookDistance()) && eneData.IsVisible then
+					eneData.LastVisibleTime = curTime
+					eneData.LastVisiblePos = enePos
 				end
 				
 				-- Turning / Facing Enemy
 				if self.ConstantlyFaceEnemy then self:DoConstantlyFaceEnemy() end
-				if self.FacingStatus == VJ_FACING_ENEMY or (self.CombatFaceEnemy == true && self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && self.LastEnemyVisible))) then
+				if self.FacingStatus == VJ_FACING_ENEMY or (self.CombatFaceEnemy == true && self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && eneData.IsVisible))) then
 					local faceAng = self:GetFaceAngle((enePos - myPos):Angle())
 					if self.TurningUseAllAxis == true then
 						local myAngs = self:GetAngles()
@@ -2001,7 +2005,7 @@ function ENT:Think()
 				end
 				
 				-- Stop chasing at certain distance
-				if self.NoChaseAfterCertainRange && !plyControlled && ((self.NoChaseAfterCertainRange_Type == "OnlyRange" && self.HasRangeAttack) or (self.NoChaseAfterCertainRange_Type == "Regular")) && self.LastEnemyVisible then
+				if self.NoChaseAfterCertainRange && !plyControlled && ((self.NoChaseAfterCertainRange_Type == "OnlyRange" && self.HasRangeAttack) or (self.NoChaseAfterCertainRange_Type == "Regular")) && eneData.IsVisible then
 					local farDist = self.NoChaseAfterCertainRange_FarDistance
 					local closeDist = self.NoChaseAfterCertainRange_CloseDistance
 					if farDist == "UseRangeDistance" then farDist = self.RangeDistance end
@@ -2033,7 +2037,7 @@ function ENT:Think()
 				
 				-- Attacks
 				if !self.vACT_StopAttacks && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && curTime > self.NextDoAnyAttackT then
-					self:CustomAttack(ene, self.LastEnemyVisible) -- Custom attack
+					self:CustomAttack(ene, eneData.IsVisible) -- Custom attack
 					
 					if !self.Flinching && !self.FollowData.StopAct && self.AttackType == VJ_ATTACK_NONE then
 						-- Melee Attack
@@ -2045,12 +2049,12 @@ function ENT:Think()
 							end
 							self:MultipleMeleeAttacks()
 							local atkType = 0 -- 0 = No attack | 1 = Normal attack | 2 = Prop attack
-							if (plyControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (plyControlled == false && self.NearestPointToEnemyDistance < self.MeleeAttackDistance && self.LastEnemyVisible) then
+							if (plyControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (plyControlled == false && self.NearestPointToEnemyDistance < self.MeleeAttackDistance && eneData.IsVisible) then
 								atkType = 1
 							elseif self.PropAP_IsVisible then -- Check for props to attack/push
 								atkType = 2
 							end
-							if self:CustomAttackCheck_MeleeAttack() == true && ((plyControlled == true && atkType == 1) or (plyControlled == false && atkType != 0 && (self.LastEnemySightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))))) then
+							if self:CustomAttackCheck_MeleeAttack() == true && ((plyControlled == true && atkType == 1) or (plyControlled == false && atkType != 0 && (eneData.SightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))))) then
 								local seed = curTime; self.CurAttackSeed = seed
 								self.AttackType = VJ_ATTACK_MELEE
 								self.AttackStatus = VJ_ATTACK_STATUS_STARTED
@@ -2099,9 +2103,9 @@ function ENT:Think()
 						end
 
 						-- Range Attack
-						if self.HasRangeAttack == true && self.IsAbleToRangeAttack && self.LastEnemyVisible then
+						if self.HasRangeAttack == true && self.IsAbleToRangeAttack && eneData.IsVisible then
 							self:MultipleRangeAttacks()
-							if self:CustomAttackCheck_RangeAttack() == true && ((plyControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK2)) or (plyControlled == false && (self.LatestEnemyDistance < self.RangeDistance) && (self.LatestEnemyDistance > self.RangeToMeleeDistance) && (self.LastEnemySightDiff > math_cos(math_rad(self.RangeAttackAngleRadius))))) then
+							if self:CustomAttackCheck_RangeAttack() == true && ((plyControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK2)) or (plyControlled == false && (self.LatestEnemyDistance < self.RangeDistance) && (self.LatestEnemyDistance > self.RangeToMeleeDistance) && (eneData.SightDiff > math_cos(math_rad(self.RangeAttackAngleRadius))))) then
 								local seed = curTime; self.CurAttackSeed = seed
 								self.AttackType = VJ_ATTACK_RANGE
 								self.AttackStatus = VJ_ATTACK_STATUS_STARTED
@@ -2130,9 +2134,9 @@ function ENT:Think()
 						end
 
 						-- Leap Attack
-						if self.HasLeapAttack == true && self.IsAbleToLeapAttack && self.LastEnemyVisible then
+						if self.HasLeapAttack == true && self.IsAbleToLeapAttack && eneData.IsVisible then
 							self:MultipleLeapAttacks()
-							if self:CustomAttackCheck_LeapAttack() == true && ((plyControlled == true && self.VJ_TheController:KeyDown(IN_JUMP)) or (plyControlled == false && (self:IsOnGround() && self.LatestEnemyDistance < self.LeapDistance) && (self.LatestEnemyDistance > self.LeapToMeleeDistance) && (self.LastEnemySightDiff > math_cos(math_rad(self.LeapAttackAngleRadius))))) then
+							if self:CustomAttackCheck_LeapAttack() == true && ((plyControlled == true && self.VJ_TheController:KeyDown(IN_JUMP)) or (plyControlled == false && (self:IsOnGround() && self.LatestEnemyDistance < self.LeapDistance) && (self.LatestEnemyDistance > self.LeapToMeleeDistance) && (eneData.SightDiff > math_cos(math_rad(self.LeapAttackAngleRadius))))) then
 								local seed = curTime; self.CurAttackSeed = seed
 								self.AttackType = VJ_ATTACK_LEAP
 								self.AttackStatus = VJ_ATTACK_STATUS_STARTED
@@ -2168,8 +2172,8 @@ function ENT:Think()
 					self:DoPoseParameterLooking(true)
 					//self:ClearPoseParameters()
 				end
-				self.TimeSinceEnemyAcquired = 0
-				if self.EnemyReset == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") self.EnemyReset = true self:ResetEnemy(true) end
+				eneData.TimeSinceAcquired = 0
+				if eneData.Reset == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") eneData.Reset = true self:ResetEnemy(true) end
 			end
 			
 			if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
@@ -2618,30 +2622,31 @@ function ENT:SelectSchedule()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetEnemy(checkAlliesEnemy)
-	if /*self.NextResetEnemyT > CurTime() or*/ self.Dead == true then self.EnemyReset = false return false end
+	if /*self.NextResetEnemyT > CurTime() or*/ self.Dead == true then self.EnemyData.Reset = false return false end
 	checkAlliesEnemy = checkAlliesEnemy or false
 	local moveToEnemy = false
 	local ene = self:GetEnemy()
 	local eneValid = IsValid(ene)
 	if checkAlliesEnemy == true then
+		local eneData = self.EnemyData
 		local getAllies = self:Allies_Check(1000)
 		if getAllies != false then
 			for _,v in pairs(getAllies) do
 				local allyEne = v:GetEnemy()
-				if IsValid(allyEne) && (CurTime() - v.LastEnemyVisibleTime) < self.TimeUntilEnemyLost && VJ_IsAlive(allyEne) && self:DoRelationshipCheck(allyEne) && self:GetPos():Distance(allyEne:GetPos()) <= self:GetMaxLookDistance() then
+				if IsValid(allyEne) && (CurTime() - v.EnemyData.LastVisibleTime) < self.TimeUntilEnemyLost && VJ_IsAlive(allyEne) && self:DoRelationshipCheck(allyEne) && self:GetPos():Distance(allyEne:GetPos()) <= self:GetMaxLookDistance() then
 					self:VJ_DoSetEnemy(allyEne, false)
-					self.EnemyReset = false
+					eneData.Reset = false
 					return false
 				end
 			end
 		end
-		local curEnemies = self.ReachableEnemyCount //self.CurrentReachableEnemies
+		local curEnemies = eneData.VisibleCount //self.CurrentReachableEnemies
 		-- If the current number of reachable enemies is higher then 1, then don't reset
 		if (eneValid && (curEnemies - 1) >= 1) or (!eneValid && curEnemies >= 1) then
 			//self:VJ_DoSetEnemy(v, false, true)
 			self:DoEntityRelationshipCheck() -- Select a new enemy
 			self.NextProcessT = CurTime() + self.NextProcessTime
-			self.EnemyReset = false
+			eneData.Reset = false
 			return false
 		end
 	end
@@ -2852,7 +2857,7 @@ function ENT:OnTakeDamage(dmginfo)
 				sightDist = math_clamp(sightDist / 2, sightDist <= 1000 and sightDist or 1000, sightDist)
 				-- IF normal sight dist is less than 1000 then change nothing, OR ELSE use half the distance with 1000 as minimum
 				for _, v in ipairs(ents.FindInSphere(self:GetPos(), sightDist)) do
-					if (curTime - self.LastEnemyTime) > 2 && self:Visible(v) && self:DoRelationshipCheck(v) == true then
+					if (curTime - self.EnemyData.TimeSet) > 2 && self:Visible(v) && self:DoRelationshipCheck(v) == true then
 						self:CustomOnSetEnemyOnDamage(dmginfo, hitgroup)
 						self.NextCallForHelpT = curTime + 1
 						self:VJ_DoSetEnemy(v, true)

@@ -700,7 +700,8 @@ function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 	stopMoving = stopMoving or false -- Will not run if doQuickIfActiveEnemy passes!
 	doQuickIfActiveEnemy = doQuickIfActiveEnemy or false -- It will run a much quicker set enemy without resetting everything (Only if it has an active enemy!)
 	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == ent then self:DoMedicReset() end
-	self.LastEnemyTime = CurTime()
+	local eneData = self.EnemyData
+	eneData.TimeSet = CurTime()
 	self:AddEntityRelationship(ent, D_HT, 0)
 	self:UpdateEnemyMemory(ent, ent:GetPos())
 	self:SetNPCState(NPC_STATE_COMBAT)
@@ -709,7 +710,7 @@ function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 		return -- End it here if it's a minor set enemy
 	end
 	self:SetEnemy(ent)
-	self.TimeSinceEnemyAcquired = CurTime()
+	eneData.TimeSinceAcquired = CurTime()
 	//self.NextResetEnemyT = CurTime() + 0.5 //2
 	if stopMoving == true then
 		self:ClearGoal()
@@ -1143,7 +1144,7 @@ function ENT:DoConstantlyFaceEnemy()
 	if self.VJ_IsBeingControlled then return false end
 	if self.LatestEnemyDistance < self.ConstantlyFaceEnemyDistance then
 		-- Only face if the enemy is visible ?
-		if self.ConstantlyFaceEnemy_IfVisible && !self.LastEnemyVisible then
+		if self.ConstantlyFaceEnemy_IfVisible && !self.EnemyData.IsVisible then
 			return false
 		-- Do NOT face if attacking ?
 		elseif self.ConstantlyFaceEnemy_IfAttacking == false && self.AttackType != VJ_ATTACK_NONE then
@@ -1245,7 +1246,7 @@ function ENT:DoAlert(ent)
 	if !IsValid(self:GetEnemy()) or self.Alerted == true then return end
 	self.Alerted = true
 	self:SetNPCState(NPC_STATE_ALERT)
-	self.LastEnemyVisibleTime = CurTime()
+	self.EnemyData.LastVisibleTime = CurTime()
 	self:CustomOnAlert(ent)
 	if CurTime() > self.NextAlertSoundT then
 		self:PlaySoundSystem("Alert")
@@ -1272,7 +1273,8 @@ function ENT:DoEntityRelationshipCheck()
 		self.CurrentPossibleEnemies = self:DoHardEntityCheck()
 	self.NextHardEntityCheckT = CurTime() + math.random(50,70) end*/
 	
-	self.ReachableEnemyCount = 0
+	local eneData = self.EnemyData
+	eneData.VisibleCount = 0
 	//local distlist = {}
 	local eneSeen = false
 	local myPos = self:GetPos()
@@ -1333,7 +1335,7 @@ function ENT:DoEntityRelationshipCheck()
 								entFri = true
 								-- If I am enemy to it, then reset it!
 								if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
-									self.EnemyReset = true
+									eneData.Reset = true
 									self:ResetEnemy(false)
 								end
 								if vNPC then v:AddEntityRelationship(self, D_LI, 0) end
@@ -1416,7 +1418,7 @@ function ENT:DoEntityRelationshipCheck()
 				local check = self:DoRelationshipCheck(v)
 				if check == true then -- Is enemy
 					eneSeen = true
-					self.ReachableEnemyCount = self.ReachableEnemyCount + 1
+					eneData.VisibleCount = eneData.VisibleCount + 1
 					self:AddEntityRelationship(v, D_HT, 0)
 					-- If the detected enemy is closer than the previous enemy, the set this as the enemy!
 					if (nearestDist == nil) or (vDistanceToMy < nearestDist) then
@@ -1425,7 +1427,7 @@ function ENT:DoEntityRelationshipCheck()
 					end
 				-- If the current enemy is a friendly player, then reset the enemy!
 				elseif check == false && vPlayer && IsValid(self:GetEnemy()) && self:GetEnemy() == v then
-					self.EnemyReset = true
+					eneData.Reset = true
 					self:ResetEnemy(false)
 				end
 			end
@@ -1629,7 +1631,7 @@ end
 function ENT:DoKilledEnemy(ent, attacker, inflictor)
 	if !IsValid(ent) then return end
 	-- If it can only do it if there is no enemies left then check --> (If there no valid enemy) OR (The number of enemies is 1 or less)
-	if (self.OnlyDoKillEnemyWhenClear == false) or (self.OnlyDoKillEnemyWhenClear == true && (!IsValid(self:GetEnemy()) or (self.ReachableEnemyCount <= 1))) then
+	if (self.OnlyDoKillEnemyWhenClear == false) or (self.OnlyDoKillEnemyWhenClear == true && (!IsValid(self:GetEnemy()) or (self.EnemyData.VisibleCount <= 1))) then
 		self:CustomOnDoKilledEnemy(ent, attacker, inflictor)
 		self:PlaySoundSystem("OnKilledEnemy")
 	end
