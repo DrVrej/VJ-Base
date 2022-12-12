@@ -323,7 +323,10 @@ local function CreateInternal_NPC(Player, Position, Normal, Class, Equipment, Sp
 			Player:SendLua("Derma_Message(\"Hey, stop trying to spawn it, your not allowed to!\")")
 		end
 	return end*/
-	if (NPCData.AdminOnly && !Player:IsAdmin()) then return end
+
+	local isValidPly = IsValid(Player)
+
+	if ( NPCData.AdminOnly && isValidPly && !Player:IsAdmin() ) then return end
 
 	local bDropToFloor = false
 	if ( NPCData.OnCeiling && Vector( 0, 0, -1 ):Dot( Normal ) < 0.95 ) then -- This NPC has to be spawned on a ceiling (Barnacle)
@@ -347,7 +350,7 @@ local function CreateInternal_NPC(Player, Position, Normal, Class, Equipment, Sp
 	
 	-- Rotate to face player (expected behavior)
 	local Angles = Angle( 0, 0, 0 )
-		if ( IsValid( Player ) ) then
+		if ( isValidPly ) then
 			Angles = Player:GetAngles()
 		end
 		Angles.pitch = 0
