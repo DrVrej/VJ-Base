@@ -3171,7 +3171,8 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			dmgForce = self:GetMoveVelocity() == defPos and self:GetGroundSpeedVelocity() or self:GetMoveVelocity()
 		end
 		local totalSurface = 0
-		for boneLimit = 0, self.Corpse:GetPhysicsObjectCount() - 1 do -- 128 = Bone Limit
+		local physCount = self.Corpse:GetPhysicsObjectCount()
+		for boneLimit = 0, physCount - 1 do -- 128 = Bone Limit
 			local childphys = self.Corpse:GetPhysicsObjectNum(boneLimit)
 			if IsValid(childphys) then
 				totalSurface = totalSurface + childphys:GetSurfaceArea()
@@ -3187,6 +3188,15 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 					else
 						if self.DeathCorpseApplyForce == true /*&& self.DeathAnimationCodeRan == false*/ then
 							childphys:SetVelocity(dmgForce / math.max(1, (useLocalVel and childphys_bonepos:Distance(self.SavedDmgInfo.pos)/12) or 1))
+						end
+					end
+				elseif physCount == 1 then -- If it's only 1, then it's likely a regular physics model with no bones
+					if self.Corpse:GetName() == "vj_dissolve_corpse" then
+						childphys:EnableGravity(false)
+						childphys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
+					else
+						if self.DeathCorpseApplyForce == true /*&& self.DeathAnimationCodeRan == false*/ then
+							childphys:SetVelocity(dmgForce / math.max(1, (useLocalVel and self.Corpse:GetPos():Distance(self.SavedDmgInfo.pos)/12) or 1))
 						end
 					end
 				end
