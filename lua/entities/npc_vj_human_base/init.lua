@@ -1083,7 +1083,9 @@ function ENT:Initialize()
 	self:SetRenderMode(RENDERMODE_NORMAL) // RENDERMODE_TRANSALPHA
 	self:AddEFlags(EFL_NO_DISSOLVE)
 	self:SetUseType(SIMPLE_USE)
-	self:SetName((self.PrintName == "" and list.Get("NPC")[self:GetClass()].Name) or self.PrintName)
+	if self:GetName() == "" then
+		self:SetName((self.PrintName == "" and list.Get("NPC")[self:GetClass()].Name) or self.PrintName)
+	end
 	self.SelectedDifficulty = GetConVar("vj_npc_difficulty"):GetInt()
 	if VJ_PICK(self.Model) != false then self:SetModel(VJ_PICK(self.Model)) end
 	if self.HasHull == true then self:SetHullType(self.HullType) end
