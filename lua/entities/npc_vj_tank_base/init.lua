@@ -140,6 +140,7 @@ local runoverException = {npc_antlionguard=true,npc_turret_ceiling=true,monster_
 local defAng = Angle(0, 0, 0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize()
+	self.DeathAnimationCodeRan = true -- So corpse doesn't fly away on death (Take this out if not using death explosion sequence)
 	self:VJTags_Add(VJ_TAG_VEHICLE)
 	self:CustomInitialize_CustomTank()
 	self:PhysicsInit(SOLID_BBOX) // SOLID_VPHYSICS

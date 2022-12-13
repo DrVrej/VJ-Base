@@ -190,6 +190,7 @@ ENT.Tank_Shell_NextFireT = 0
 ENT.Tank_TurningLerp = nil
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize()
+	self.DeathAnimationCodeRan = true -- So corpse doesn't fly away on death (Take this out if not using death explosion sequence)
 	self:VJTags_Add(VJ_TAG_VEHICLE)
 	self:CustomInitialize_CustomTank()
 end
