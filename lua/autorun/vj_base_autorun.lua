@@ -66,7 +66,7 @@ hook.Add("PlayerInitialSpawn", "VJBaseSpawn", function(ply, transition)
 	if !game.SinglePlayer() && ply:SteamID() == "STEAM_0:0:22688298" then
 		PrintMessage(HUD_PRINTTALK, "DrVrej Has Joined The Game!")
 		PrintMessage(HUD_PRINTCENTER, "DrVrej Has Joined The Game!")
-		local sd = CreateSound(game.GetWorld(), "vj_illuminati/Illuminati Confirmed.mp3")
+		local sd = CreateSound(game.GetWorld(), "vj_misc/illuminati_confirmed.mp3")
 		sd:SetSoundLevel(0)
 		sd:Play()
 		timer.Simple(10, function() if sd then sd:Stop() end end)
@@ -76,7 +76,7 @@ end)
 net.Receive("vj_meme", function(len, pl)
 	if pl:IsPlayer() && pl:SteamID() == "STEAM_0:0:22688298" then
 		PrintMessage(HUD_PRINTTALK, "DrVrej is in the server!")
-		local sd = CreateSound(game.GetWorld(), "vj_illuminati/Illuminati Confirmed.mp3")
+		local sd = CreateSound(game.GetWorld(), "vj_misc/illuminati_confirmed.mp3")
 		sd:SetSoundLevel(0)
 		sd:Play()
 	end

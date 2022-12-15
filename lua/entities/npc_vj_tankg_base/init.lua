@@ -68,9 +68,9 @@ ENT.Tank_ReloadShellSoundPitch = VJ_Set(100, 100)
 --
 ENT.Tank_SoundTbl_FireShell = {}
 
-ENT.Tank_DefaultSoundTbl_Turning = {"vj_mili_tank/tank_gunnermove2_x.wav"}
+ENT.Tank_DefaultSoundTbl_Turning = {"vj_vehicles/armored/gun_move2_long.wav"}
 ENT.Tank_DefaultSoundTbl_ReloadShell = {"vehicles/tank_readyfire1.wav"}
-ENT.Tank_DefaultSoundTbl_FireShell = {"vj_mili_tank/tank_fire1.wav","vj_mili_tank/tank_fire2.wav","vj_mili_tank/tank_fire3.wav","vj_mili_tank/tank_fire4.wav"}
+ENT.Tank_DefaultSoundTbl_FireShell = {"vj_vehicles/armored/gun_main_fire1.wav","vj_vehicles/armored/gun_main_fire2.wav","vj_vehicles/armored/gun_main_fire3.wav","vj_vehicles/armored/gun_main_fire4.wav"}
 
 //util.AddNetworkString("vj_tankg_base_spawneffects")
 //util.AddNetworkString("vj_tankg_base_shooteffects")

@@ -1,7 +1,0 @@
-"UnlitGeneric"
-{
-	"$basetexture" "vgui/entities/sent_vj_test"
-	"$nolod" 1
-	"$vertexalpha" 1
-	"$vertexcolor" 1
-}

@@ -70,7 +70,7 @@ if CLIENT then
 				icon = CatInfoList[CategoryName].icon
 			end
 			if CategoryName == "Default" then
-				icon = "vj_base/icons/vjbase.png"
+				icon = "vj_base/icons/vrejgaming.png"
 			end
 			local node = roottree:AddNode(CategoryName, icon)
 			local CatPropPanel = vgui.Create("ContentContainer", pnlContent)

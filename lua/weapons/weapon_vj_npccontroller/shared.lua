@@ -1,6 +1,6 @@
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-//SWEP.Base 						= "weapon_vj_base"
+SWEP.Base 						= "weapon_vj_base"
 SWEP.PrintName					= "VJ NPC Controller"
 SWEP.Author 					= "DrVrej"
 SWEP.Contact					= "http://steamcommunity.com/groups/vrejgaming"
@@ -26,12 +26,15 @@ SWEP.AutoSwitchTo				= false -- Auto switch to this weapon when it's picked up
 SWEP.AutoSwitchFrom				= false -- Auto switch weapon when the owner picks up a better weapon
 end
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.ViewModel					= "models/vj_weapons/v_glock.mdl"
-SWEP.WorldModel					= "models/vj_weapons/w_glock.mdl"
+SWEP.ViewModel					= "models/vj_weapons/c_controller.mdl"
+SWEP.WorldModel					= "models/gibs/humans/brain_gib.mdl"
 SWEP.HoldType 					= "pistol"
 SWEP.Spawnable					= true
 SWEP.AdminSpawnable				= false
+SWEP.UseHands = true -- Should this weapon use Garry's Mod hands? (The model must support it!)
 	-- Primary/Secondary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
+SWEP.Primary.Sound = {"physics/flesh/flesh_squishy_impact_hard1.wav","physics/flesh/flesh_squishy_impact_hard2.wav","physics/flesh/flesh_squishy_impact_hard3.wav","physics/flesh/flesh_squishy_impact_hard4.wav"} -- Sound played when the weapon is deployed
+SWEP.Primary.SoundPitch	= VJ_Set(140, 140)
 SWEP.Primary.ClipSize 			= -1
 SWEP.Primary.DefaultClip		= -1
 SWEP.Primary.Automatic 			= false
@@ -40,53 +43,72 @@ SWEP.Secondary.ClipSize 		= -1
 SWEP.Secondary.DefaultClip 		= -1
 SWEP.Secondary.Automatic 		= false
 SWEP.Secondary.Ammo 			= "none"
+
+SWEP.WorldModel_UseCustomPosition = true -- Should the gun use custom position? This can be used to fix guns that are in the crotch
+SWEP.WorldModel_CustomPositionAngle = Vector(0, 0, 0)
+SWEP.WorldModel_CustomPositionOrigin = Vector(0, 4, -1)
+SWEP.WorldModel_CustomPositionBone = "ValveBiped.Bip01_R_Hand" -- The bone it will use as the main point (Owner's bone)
+SWEP.WorldModel_Invisible = false -- Should the world model be invisible?
+SWEP.WorldModel_NoShadow = false -- Should the world model have a shadow?
+
+SWEP.DeploySound = {"physics/flesh/flesh_squishy_impact_hard1.wav","physics/flesh/flesh_squishy_impact_hard2.wav","physics/flesh/flesh_squishy_impact_hard3.wav","physics/flesh/flesh_squishy_impact_hard4.wav"} -- Sound played when the weapon is deployed
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Initialize()
 	self:SetWeaponHoldType(self.HoldType)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttack()
-	if CLIENT or self:GetOwner():IsNPC() then return end
-	local tracedata = {}
-	tracedata.start = self:GetOwner():EyePos()
-	tracedata.endpos = self:GetOwner():EyePos() + self:GetOwner():GetAimVector()*32768
-	tracedata.filter = {self:GetOwner()}
-	local tr =  util.TraceLine(util.GetPlayerTrace(self:GetOwner()))
+	local owner = self:GetOwner()
+	if CLIENT or owner:IsNPC() then return end
+	
+	owner:SetAnimation(PLAYER_ATTACK1)
+	local anim = ACT_VM_SECONDARYATTACK
+	local animTime = VJ_GetSequenceDuration(owner:GetViewModel(), anim)
+	self:SendWeaponAnim(anim)
+	self.NextIdleT = CurTime() + animTime
+	self.NextReloadT = CurTime() + animTime
+	self:SetNextPrimaryFire(CurTime() + animTime)
+	
+	local fireSd = VJ_PICK(self.Primary.Sound)
+	if fireSd != false then
+		sound.Play(fireSd, owner:GetPos(), self.Primary.SoundLevel, math.random(self.Primary.SoundPitch.a, self.Primary.SoundPitch.b), self.Primary.SoundVolume)
+	end
+	
+	local tr =  util.TraceLine(util.GetPlayerTrace(owner))
 	if tr.Entity && IsValid(tr.Entity) then
 		if tr.Entity:IsPlayer() then
-			self:GetOwner():ChatPrint("That's a player dumbass.")
+			owner:ChatPrint("That's a player dumbass.")
 			return
 		elseif tr.Entity:GetClass() == "prop_ragdoll" then
-			self:GetOwner():ChatPrint("You are about to become that corpse.")
+			owner:ChatPrint("You are about to become that corpse.")
 			return
 		elseif tr.Entity:GetClass() == "prop_physics" then
-			self:GetOwner():ChatPrint("Uninstall your game. Now.")
+			owner:ChatPrint("Uninstall your game. Now.")
 			return
 		elseif !tr.Entity:IsNPC() then
-			self:GetOwner():ChatPrint("This isn't an NPC, therefore you can't control it.")
+			owner:ChatPrint("This isn't an NPC, therefore you can't control it.")
 			return
 		elseif tr.Entity:IsNPC() && tr.Entity:Health() <= 0 then
-			self:GetOwner():ChatPrint("This NPC's health is 0 or below, therefore you can't control.")
+			owner:ChatPrint("This NPC's health is 0 or below, therefore you can't control.")
 			return
 		//elseif tr.Entity.IsVJBaseSNPC_Tank == true then
 			//tr.Entity = tr.Entity.Gunner
-			//self:GetOwner():ChatPrint("Tank are not controllable yet, sorry!")
+			//owner:ChatPrint("Tank are not controllable yet, sorry!")
 			//return
 		elseif tr.Entity.VJ_IsBeingControlled == true then
-			self:GetOwner():ChatPrint("You can't control this NPC, it's already being controlled by someone else.")
+			owner:ChatPrint("You can't control this NPC, it's already being controlled by someone else.")
 			return
 		end
 		if (!tr.Entity.IsVJBaseSNPC) then
-			self:GetOwner():ChatPrint("NOTE: VJ NPC controller is mainly made for VJ Base SNPCs!")
+			owner:ChatPrint("NOTE: VJ NPC controller is mainly made for VJ Base SNPCs!")
 		end
 		local SpawnControllerObject = ents.Create("obj_vj_npccontroller")
-		SpawnControllerObject.VJCE_Player = self:GetOwner()
+		SpawnControllerObject.VJCE_Player = owner
 		SpawnControllerObject:SetControlledNPC(tr.Entity)
 		SpawnControllerObject:Spawn()
 		//SpawnControllerObject:Activate()
 		SpawnControllerObject:StartControlling()
 	end
-	self:SetNextPrimaryFire(CurTime() + 0.5)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:SecondaryAttack() return false end
