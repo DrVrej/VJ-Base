@@ -35,8 +35,8 @@ ENT.CallForHelp = false -- Does the SNPC call for help?
 ENT.HasPainSounds = false -- If set to false, it won't play the pain sounds
 	-- ====== Sound File Paths ====== --
 -- Leave blank if you don't want any sounds to play
-ENT.SoundTbl_Breath = {"vj_mili_tank/tankidle1.wav"}
-ENT.SoundTbl_Death = {"vj_mili_tank/tank_death1.wav"}
+ENT.SoundTbl_Breath = {"vj_vehicles/armored/engine_idle1.wav"}
+ENT.SoundTbl_Death = {"vj_fire/explosion1.wav"}
 
 ENT.AlertSoundLevel = 70
 ENT.IdleSoundLevel = 70
@@ -72,8 +72,8 @@ ENT.Tank_SoundTbl_DrivingEngine = {}
 ENT.Tank_SoundTbl_Track = {}
 ENT.Tank_SoundTbl_RunOver = {}
 
-ENT.Tank_DefaultSoundTbl_DrivingEngine = {"vj_mili_tank/tankdriving1.wav"}
-ENT.Tank_DefaultSoundTbl_Track = {"vj_mili_tank/tanktrack1.wav"}
+ENT.Tank_DefaultSoundTbl_DrivingEngine = {"vj_vehicles/armored/engine_drive1.wav"}
+ENT.Tank_DefaultSoundTbl_Track = {"vj_vehicles/armored/tracks1.wav"}
 ENT.Tank_DefaultSoundTbl_RunOver = {"vj_gib/bones_snapping1.wav","vj_gib/bones_snapping2.wav","vj_gib/bones_snapping3.wav"}
 
 //util.AddNetworkString("vj_tank_base_spawneffects")
@@ -344,7 +344,7 @@ function ENT:CustomOnPriorToKilled(dmginfo, hitgroup)
 			timer.Simple(i, function()
 				if IsValid(self) then
 					local myPos = self:GetPos()
-					VJ_EmitSound(self, "vj_mili_tank/tank_death2.wav", 100, 100)
+					VJ_EmitSound(self, "vj_fire/explosion2.wav", 100, 100)
 					util.BlastDamage(self, self, myPos, 200, 40)
 					util.ScreenShake(myPos, 100, 200, 1, 2500)
 					if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2", myPos, defAng) end
@@ -355,8 +355,8 @@ function ENT:CustomOnPriorToKilled(dmginfo, hitgroup)
 		timer.Simple(1.5, function()
 			if IsValid(self) then
 				local myPos = self:GetPos()
-				VJ_EmitSound(self,"vj_mili_tank/tank_death2.wav", 100, 100)
-				VJ_EmitSound(self,"vj_mili_tank/tank_death3.wav", 100, 100)
+				VJ_EmitSound(self,"vj_fire/explosion2.wav", 100, 100)
+				VJ_EmitSound(self,"vj_fire/explosion3.wav", 100, 100)
 				util.BlastDamage(self, self, myPos, 200, 40)
 				util.ScreenShake(myPos, 100, 200, 1, 2500)
 				if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2", myPos, defAng) end

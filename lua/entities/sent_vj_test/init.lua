@@ -50,7 +50,7 @@ function ENT:AcceptInput(key, activator, caller)
 	if key == "Use" && activator:IsPlayer() && activator:IsValid() && activator:Alive() then
 		net.Start("vj_testentity_onmenuopen")
 		net.Send(activator)
-		self:EmitSound("vj_illuminati/Illuminati Confirmed.mp3", 75)
+		self:EmitSound("vj_misc/illuminati_confirmed.mp3", 75)
 		self:EmitSound("vo/npc/male01/hi0"..math.random(1,2)..".wav")
 		self:SetTarget(activator)
 		self:SetSchedule(SCHED_IDLE_STAND)
@@ -62,7 +62,7 @@ net.Receive("vj_testentity_runtextsd", function(len, ply)
 	local msgType = net.ReadBool()
 	if (ply:IsPlayer() && ply:SteamID() == "STEAM_0:0:22688298") or (game.SinglePlayer() == true) then
 		msg = (msgType == true and "Are you thirsty?") or "DrVrej is in this server, be aware!"
-		sdFile = (msgType == true and "vj_illuminati/areyouthristy.wav") or "vj_illuminati/Illuminati Confirmed.mp3"
+		sdFile = (msgType == true and "vj_misc/areyouthristy.wav") or "vj_misc/illuminati_confirmed.mp3"
 		PrintMessage(HUD_PRINTTALK, msg)
 		PrintMessage(HUD_PRINTCENTER, msg)
 		local filter = RecipientFilter()
