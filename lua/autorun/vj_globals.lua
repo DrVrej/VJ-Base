@@ -241,7 +241,7 @@ function VJ_FindInCone(pos, dir, dist, deg, extraOptions)
 		local allEntities = extraOptions.AllEntities or false -- Should it detect all types of entities? | False = NPCs and Players only!
 	local foundEnts = {}
 	local cosDeg = math.cos(math.rad(deg))
-	for _,v in pairs(ents.FindInSphere(pos, dist)) do
+	for _,v in ipairs(ents.FindInSphere(pos, dist)) do
 		if ((allEntities == true) or (allEntities == false && (v:IsNPC() or v:IsPlayer()))) && (dir:Dot((v:GetPos() - pos):GetNormalized()) > cosDeg) then
 			foundEnts[#foundEnts + 1] = v
 		end
@@ -674,7 +674,7 @@ VJ_TAG_AIRCRAFT = 25
 function Entity_MetaTable:VJTags_Add(...)
 	if !self.VJTags then self.VJTags = {} end
 	//PrintTable({...})
-	for _, tag in pairs({...}) do
+	for _, tag in ipairs({...}) do
 		self.VJTags[tag] = true
 	end
 end
@@ -788,7 +788,7 @@ if SERVER then
 			timer.Simple(0.15,function()
 				if IsValid(ent) then
 					local getall = ents.GetAll()
-					for k,v in pairs(getall) do
+					for k,v in ipairs(getall) do
 						if IsValid(v) && v != ent && v.IsVJBaseSNPC == true && (v.IsVJBaseSNPC_Human == true or v.IsVJBaseSNPC_Creature == true) then
 							v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
 						end
@@ -981,7 +981,7 @@ if SERVER then
 	function VJ_AddStinkyEnt(ent, checkMat)
 		local physObj = ent:GetPhysicsObject()
 		-- Clear out all removed ents from the table
-		for k, v in pairs(VJ_StinkyEnts) do
+		for k, v in ipairs(VJ_StinkyEnts) do
 			if !IsValid(v) then
 				table_remove(VJ_StinkyEnts, k)
 			end
@@ -1001,7 +1001,7 @@ if SERVER then
 	-----------------------------------------------------------]]
 	function VJ_AddCorpse(ent)
 		-- Clear out all removed corpses from the table
-		for k, v in pairs(VJ_Corpses) do
+		for k, v in ipairs(VJ_Corpses) do
 			if !IsValid(v) then
 				table_remove(VJ_Corpses, k)
 			end
@@ -1031,13 +1031,13 @@ cvars.AddChangeCallback("ai_ignoreplayers", function(convar_name, oldValue, newV
 		for x = 1, #getAll do
 			local v = getAll[x]
 			if v:IsNPC() && v.IsVJBaseSNPC then
-				for _, ply in pairs(getPlys) do
+				for _, ply in ipairs(getPlys) do
 					v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies + 1] = ply
 				end
 			end
 		end
 	else -- Turn on ignore players
-		for _, v in pairs(ents.GetAll()) do
+		for _, v in ipairs(ents.GetAll()) do
 			if v.IsVJBaseSNPC then
 				if v.FollowingPlayer == true then v:FollowReset() end -- Reset the NPC's follow system if it's following a player
 				//v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
@@ -1127,7 +1127,7 @@ end*/
 			- DamageAttacker = Should it damage the attacker as well? | DEFAULT = false
 			- UseConeDegree = If set to a number, it will use a cone-based radius | DEFAULT = nil
 			- UseConeDirection = The direction (position) the cone goes to | DEFAULT = attacker:GetForward()
-		- customFunc(gib) = Use this to edit the entity which is given as parameter "gib"
+		- customFunc(ent) = Use this to edit the entity which is given as parameter "ent"
 	Returns
 		- table, the entities it damaged (Can be empty!)
 -----------------------------------------------------------]]
@@ -1142,7 +1142,7 @@ function util.VJ_SphereDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 		local baseForce = extraOptions.Force or false
 	local dmgFinal = dmgMax
 	local hitEnts = {}
-	for _, v in pairs((isnumber(extraOptions.UseConeDegree) and VJ_FindInCone(startPos, extraOptions.UseConeDirection or attacker:GetForward(), dmgRadius, extraOptions.UseConeDegree or 90, {AllEntities=true})) or ents.FindInSphere(startPos, dmgRadius)) do
+	for _, v in ipairs((isnumber(extraOptions.UseConeDegree) and VJ_FindInCone(startPos, extraOptions.UseConeDirection or attacker:GetForward(), dmgRadius, extraOptions.UseConeDegree or 90, {AllEntities=true})) or ents.FindInSphere(startPos, dmgRadius)) do
 		if (attacker.VJ_IsBeingControlled == true && attacker.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end -- Don't damage controller bullseye and player
 		local nearestPos = v:NearestPoint(startPos) -- From the enemy position to the given position
 		if realisticRadius != false then -- Decrease damage from the nearest point all the way to the enemy point then clamp it!

@@ -611,7 +611,7 @@ function ENT:VJ_ForwardIsHidingZone(startPos, endPos, acceptWorld, extraOptions)
 	end
 	-- Sometimes the trace isn't 100%, a tiny find in sphere check fixes this issue...
 	local sphereInvalidate = false
-	for _,v in pairs(ents.FindInSphere(hitPos, 5)) do
+	for _,v in ipairs(ents.FindInSphere(hitPos, 5)) do
 		if v == ene or v:IsNPC() or v:IsPlayer() then
 			sphereInvalidate = true
 		end
@@ -662,7 +662,7 @@ function ENT:VJ_CheckAllFourSides(checkDist, returnPos, sides)
 		string_sub(sides, 3, 3) == str1 and myRight or 0,
 		string_sub(sides, 4, 4) == str1 and -myRight or 0
 	}
-	for _, v in pairs(positions) do
+	for _, v in ipairs(positions) do
 		i = i + 1
 		if v == 0 then continue end -- If 0 then we have the tag to skip this!
 		local tr = util.TraceLine({
@@ -1053,7 +1053,7 @@ function ENT:DoMedicCheck()
 	if !self.IsMedicSNPC or self.NoWeapon_UseScaredBehavior_Active then return end
 	if !self.Medic_Status then -- Not healing anyone, so check around for allies
 		if CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled == true then return end
-		for _,v in pairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
+		for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
 			if v.IsVJBaseSNPC != true && !v:IsPlayer() then continue end -- If it's not a VJ Base SNPC or a player, then move on
 			if v:EntIndex() != self:EntIndex() && !v.VJTags[VJ_TAG_HEALING] && !v.VJTags[VJ_TAG_VEHICLE] && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:DoRelationshipCheck(v) == false then
 				self.Medic_CurrentEntToHeal = v
@@ -1490,7 +1490,7 @@ function ENT:Allies_CallHelp(dist)
 	local entsTbl = ents.FindInSphere(self:GetPos(), dist)
 	if (!entsTbl) then return false end
 	local myClass = self:GetClass()
-	for _,v in pairs(entsTbl) do
+	for _,v in ipairs(entsTbl) do
 		if v:IsNPC() && v != self && v.IsVJBaseSNPC && VJ_IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& v.IsFollowing == false*/ && !v.VJ_IsBeingControlled && (!v.IsVJBaseSNPC_Tank) && v.CallForHelp then
 			local ene = self:GetEnemy()
 			if IsValid(ene) then
@@ -1532,7 +1532,7 @@ function ENT:Allies_Check(dist)
 	if (!entsTbl) then return false end
 	local FoundAlliesTbl = {}
 	local it = 0
-	for _, v in pairs(entsTbl) do
+	for _, v in ipairs(entsTbl) do
 		if VJ_IsAlive(v) == true && v:IsNPC() && v != self && (v:GetClass() == self:GetClass() or (v:Disposition(self) == D_LI or v.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
 			if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
 				if v.Behavior == VJ_BEHAVIOR_PASSIVE or v.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
@@ -1561,7 +1561,7 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 	if (!entsTbl) then return false end
 	local myClass = self:GetClass()
 	local it = 0
-	for _, v in pairs(entsTbl) do
+	for _, v in ipairs(entsTbl) do
 		if VJ_IsAlive(v) == true && v:IsNPC() && v != self && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && v.IsFollowing == false && v.VJ_IsBeingControlled == false && !v.IsGuard && (!v.IsVJBaseSNPC_Tank) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
 			if onlyVis == true && !v:Visible(self) then continue end
 			if !IsValid(v:GetEnemy()) && self:GetPos():Distance(v:GetPos()) < dist then
@@ -2134,7 +2134,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*
 function ENT:NoCollide_CombineBall()
-	for k, v in pairs (ents.GetAll()) do
+	for k, v in ipairs(ents.GetAll()) do
 		if v:GetClass() == "prop_combine_ball" then
 			constraint.NoCollide(self, v, 0, 0)
 		end
@@ -2152,15 +2152,15 @@ local EnemyTargets = VJ_FindInCone(self:GetPos(),self:GetForward(),self.SightDis
 //local LocalTargetTable = {}
 if (!EnemyTargets) then return end
 //table.Add(EnemyTargets)
-for k,v in pairs(EnemyTargets) do
+for k,v in ipairs(EnemyTargets) do
 	//if (v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag") && v:IsNPC() or (v:IsPlayer() && self.PlayerFriendly == false && GetConVar("ai_ignoreplayers"):GetInt() == 0) && self:Visible(v) then
 	//if self.CombineFriendly == true then if VJ_HasValue(NPCTbl_Combine,v:GetClass()) then return end end
 	//if self.ZombieFriendly == true then if VJ_HasValue(NPCTbl_Zombies,v:GetClass()) then return end end
 	//if self.AntlionFriendly == true then if VJ_HasValue(NPCTbl_Antlions,v:GetClass()) then return end end
 	//if self.PlayerFriendly == true then if VJ_HasValue(NPCTbl_Resistance,v:GetClass()) then return end end
 	//if GetConVar("vj_npc_vjfriendly"):GetInt() == 1 then
-	//local frivj = ents.FindByClass("npc_vj_*") table.Add(frivj) for _, x in pairs(frivj) do return end end
-	//local vjanimalfriendly = ents.FindByClass("npc_vjanimal_*") table.Add(vjanimalfriendly) for _, x in pairs(vjanimalfriendly) do return end
+	//local frivj = ents.FindByClass("npc_vj_*") table.Add(frivj) for _, x in ipairs(frivj) do return end end
+	//local vjanimalfriendly = ents.FindByClass("npc_vjanimal_*") table.Add(vjanimalfriendly) for _, x in ipairs(vjanimalfriendly) do return end
 	//self:AddEntityRelationship( v, D_HT, 99 )
 	//if !v:IsPlayer() then if self:Visible(v) then v:AddEntityRelationship( self, D_HT, 99 ) end end
 	if self:DoRelationshipCheck(v) == true && self:Visible(v) then
@@ -2184,7 +2184,7 @@ end*/
 local EnemyTargets = ents.FindInSphere(self:GetPos(),self.SightDistance)
 if (!EnemyTargets) then return end
 table.Add(EnemyTargets)
-for k,v in pairs(EnemyTargets) do
+for k,v in ipairs(EnemyTargets) do
 	if self:DoRelationshipCheck(v) == true && self:Visible(v) then
 	self.EnemyReset = true
 	if !IsValid(self:GetEnemy()) then
@@ -2243,9 +2243,9 @@ end*/
 	if self.HasAllies == false then return end
 
 	local friendslist = {"", "", "", "", "", ""} -- List
-	for _,x in pairs( friendslist ) do
+	for _,x in ipairs( friendslist ) do
 	local hl_friendlys = ents.FindByClass( x )
-	for _,x in pairs( hl_friendlys ) do
+	for _,x in ipairs( hl_friendlys ) do
 	if entity == x then
 	return D_LI
 	end
@@ -2254,14 +2254,14 @@ end*/
 
 	local groupone = ents.FindByClass("npc_vj_example_*") -- Group
 	table.Add(groupone)
-	for _, x in pairs(groupone) do
+	for _, x in ipairs(groupone) do
 	if entity == x then
 	return D_LI
 	end
  end
 
 	local groupone = ents.FindByClass("npc_vj_example") -- Single
-	for _, x in pairs(groupone) do
+	for _, x in ipairs(groupone) do
 	if entity == x then
 	return D_LI
 	end

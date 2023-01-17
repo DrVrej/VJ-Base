@@ -1488,7 +1488,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 	local idleAnimTbl = self.AnimTbl_IdleStand
 	local sameAnimFound = false -- If true then it one of the animations in the table is the same as the current!
 	//local numOfAnims = 0 -- Number of valid animations found
-	for k, v in pairs(idleAnimTbl) do
+	for k, v in ipairs(idleAnimTbl) do
 		v = VJ_SequenceToActivity(self, v) -- Translate any sequence to activity
 		if v != false then -- Its a valid activity
 			//numOfAnims = numOfAnims + 1
@@ -2091,13 +2091,15 @@ function ENT:Think()
 												self:MeleeAttackCode()
 											end
 									end end)
-									for k, t in pairs(self.MeleeAttackExtraTimers or {}) do
-										self:DoAddExtraAttackTimers("timer_melee_start_"..curTime + k, t, function() if self.CurAttackSeed == seed then if atkType == 2 then
-												self:MeleeAttackCode(true)
-											else
-												self:MeleeAttackCode()
-											end
-										end end)
+									if self.MeleeAttackExtraTimers then
+										for k, t in ipairs(self.MeleeAttackExtraTimers) do
+											self:DoAddExtraAttackTimers("timer_melee_start_"..curTime + k, t, function() if self.CurAttackSeed == seed then if atkType == 2 then
+													self:MeleeAttackCode(true)
+												else
+													self:MeleeAttackCode()
+												end
+											end end)
+										end
 									end
 								end
 								self:CustomOnMeleeAttack_AfterStartTimer(seed)
@@ -2127,8 +2129,10 @@ function ENT:Think()
 									self:RangeAttackCode_DoFinishTimers()
 								else -- If it's not event based...
 									timer.Create("timer_range_start"..self:EntIndex(), self.TimeUntilRangeAttackProjectileRelease / self:GetPlaybackRate(), self.RangeAttackReps, function() if self.CurAttackSeed == seed then self:RangeAttackCode() end end)
-									for k, t in pairs(self.RangeAttackExtraTimers or {}) do
-										self:DoAddExtraAttackTimers("timer_range_start_"..curTime + k, t, function() if self.CurAttackSeed == seed then self:RangeAttackCode() end end)
+									if self.RangeAttackExtraTimers then
+										for k, t in ipairs(self.RangeAttackExtraTimers) do
+											self:DoAddExtraAttackTimers("timer_range_start_"..curTime + k, t, function() if self.CurAttackSeed == seed then self:RangeAttackCode() end end)
+										end
 									end
 								end
 								self:CustomOnRangeAttack_AfterStartTimer(seed)
@@ -2160,8 +2164,10 @@ function ENT:Think()
 									self:LeapAttackCode_DoFinishTimers()
 								else -- If it's not event based...
 									timer.Create("timer_leap_start"..self:EntIndex(), self.TimeUntilLeapAttackDamage / self:GetPlaybackRate(), self.LeapAttackReps, function() if self.CurAttackSeed == seed then self:LeapDamageCode() end end)
-									for k, t in pairs(self.LeapAttackExtraTimers or {}) do
-										self:DoAddExtraAttackTimers("timer_leap_start_"..curTime + k, t, function() if self.CurAttackSeed == seed then self:LeapDamageCode() end end)
+									if self.LeapAttackExtraTimers then
+										for k, t in ipairs(self.LeapAttackExtraTimers) do
+											self:DoAddExtraAttackTimers("timer_leap_start_"..curTime + k, t, function() if self.CurAttackSeed == seed then self:LeapDamageCode() end end)
+										end
 									end
 								end
 								self:CustomOnLeapAttack_AfterStartTimer(seed)
@@ -2223,7 +2229,7 @@ local propColBlacklist = {[COLLISION_GROUP_DEBRIS]=true, [COLLISION_GROUP_DEBRIS
 function ENT:DoPropAPCheck(customEnts, customMeleeDistance)
 	if !self.PushProps && !self.AttackProps then return false end
 	local myPos = self:GetPos()
-	for _,v in pairs(customEnts or ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), customMeleeDistance or math_clamp(self.MeleeAttackDamageDistance - 30, self.MeleeAttackDistance, self.MeleeAttackDamageDistance))) do
+	for _, v in ipairs(customEnts or ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), customMeleeDistance or math_clamp(self.MeleeAttackDamageDistance - 30, self.MeleeAttackDistance, self.MeleeAttackDamageDistance))) do
 		local verifiedEnt = ((destructibleEnts[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) and true) or false -- Whether or not it's a prop or an entity to attack
 		if v:GetClass() == "prop_door_rotating" && v:Health() <= 0 then verifiedEnt = false end -- If it's a door and it has no health, then don't attack it!
 		if IsProp(v) or verifiedEnt then --If it's a prop or a entity then attack
@@ -2267,7 +2273,7 @@ function ENT:MeleeAttackCode(isPropAttack, attackDist, customEnt)
 	if self.DisableDefaultMeleeAttackCode then return end
 	local myPos = self:GetPos()
 	local hitRegistered = false
-	for _,v in pairs(ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), attackDist)) do
+	for _, v in ipairs(ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), attackDist)) do
 		if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end -- If controlled and v is the bullseye OR it's a player controlling then don't damage!
 		if v != self && v:GetClass() != self:GetClass() && (((v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:Disposition(v) != D_LI) or IsProp(v) == true or v:GetClass() == "func_breakable_surf" or destructibleEnts[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
 			if isPropAttack == true && (v:IsPlayer() or v:IsNPC()) && self:VJ_GetNearestPointToEntityDistance(v) > self.MeleeAttackDistance then continue end //if (self:GetPos():Distance(v:GetPos()) <= self:VJ_GetNearestPointToEntityDistance(v) && self:VJ_GetNearestPointToEntityDistance(v) <= self.MeleeAttackDistance) == false then
@@ -2480,27 +2486,24 @@ function ENT:LeapDamageCode()
 	if self.Dead == true or self.vACT_StopAttacks == true or self.Flinching == true or (self.StopLeapAttackAfterFirstHit && self.AttackStatus == VJ_ATTACK_STATUS_EXECUTED_HIT) then return end
 	self:CustomOnLeapAttack_BeforeChecks()
 	local hitRegistered = false
-	local FindEnts = ents.FindInSphere(self:GetPos(),self.LeapAttackDamageDistance)
-	if FindEnts != nil then
-		for _,v in pairs(FindEnts) do
-			if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
-			if (v:IsNPC() or (v:IsPlayer() && v:Alive()) && GetConVar("ai_ignoreplayers"):GetInt() == 0) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or IsProp(v) == true or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" then
-				self:CustomOnLeapAttack_AfterChecks(v)
-				-- Damage
-				if self.DisableDefaultLeapAttackDamageCode == false then
-					local leapdmg = DamageInfo()
-					leapdmg:SetDamage(self:VJ_GetDifficultyValue(self.LeapAttackDamage))
-					leapdmg:SetInflictor(self)
-					leapdmg:SetDamageType(self.LeapAttackDamageType)
-					leapdmg:SetAttacker(self)
-					if v:IsNPC() or v:IsPlayer() then leapdmg:SetDamageForce(self:GetForward() * ((leapdmg:GetDamage() + 100) * 70)) end
-					v:TakeDamageInfo(leapdmg, self)
-				end
-				if v:IsPlayer() then
-					v:ViewPunch(Angle(math.random(-1,1 ) * self.LeapAttackDamage, math.random(-1, 1) * self.LeapAttackDamage,math.random(-1, 1) * self.LeapAttackDamage))
-				end
-				hitRegistered = true
+	for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.LeapAttackDamageDistance)) do
+		if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
+		if (v:IsNPC() or (v:IsPlayer() && v:Alive()) && GetConVar("ai_ignoreplayers"):GetInt() == 0) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or IsProp(v) == true or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" then
+			self:CustomOnLeapAttack_AfterChecks(v)
+			-- Damage
+			if self.DisableDefaultLeapAttackDamageCode == false then
+				local leapdmg = DamageInfo()
+				leapdmg:SetDamage(self:VJ_GetDifficultyValue(self.LeapAttackDamage))
+				leapdmg:SetInflictor(self)
+				leapdmg:SetDamageType(self.LeapAttackDamageType)
+				leapdmg:SetAttacker(self)
+				if v:IsNPC() or v:IsPlayer() then leapdmg:SetDamageForce(self:GetForward() * ((leapdmg:GetDamage() + 100) * 70)) end
+				v:TakeDamageInfo(leapdmg, self)
 			end
+			if v:IsPlayer() then
+				v:ViewPunch(Angle(math.random(-1,1 ) * self.LeapAttackDamage, math.random(-1, 1) * self.LeapAttackDamage,math.random(-1, 1) * self.LeapAttackDamage))
+			end
+			hitRegistered = true
 		end
 	end
 	if self.AttackStatus < VJ_ATTACK_STATUS_EXECUTED then
@@ -2633,7 +2636,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		local eneData = self.EnemyData
 		local getAllies = self:Allies_Check(1000)
 		if getAllies != false then
-			for _,v in pairs(getAllies) do
+			for _, v in ipairs(getAllies) do
 				local allyEne = v:GetEnemy()
 				if IsValid(allyEne) && (CurTime() - v.EnemyData.LastVisibleTime) < self.TimeUntilEnemyLost && VJ_IsAlive(allyEne) && self:DoRelationshipCheck(allyEne) && self:GetPos():Distance(allyEne:GetPos()) <= self:GetMaxLookDistance() then
 					self:VJ_DoSetEnemy(allyEne, false)
@@ -2788,7 +2791,7 @@ function ENT:OnTakeDamage(dmginfo)
 			if self.Passive_AlliesRunOnDamage then -- Make passive allies run too!
 				local allies = self:Allies_Check(self.Passive_AlliesRunOnDamageDistance)
 				if allies != false then
-					for _, v in pairs(allies) do
+					for _, v in ipairs(allies) do
 						v.TakingCoverT = curTime + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
 						v:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
 						v:PlaySoundSystem("Alert")
@@ -2925,7 +2928,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 		end
 		local doBecomeEnemyToPlayer = (self.BecomeEnemyToPlayer == true && dmgAttacker:IsPlayer() && GetConVar("ai_disabled"):GetInt() == 0 && GetConVar("ai_ignoreplayers"):GetInt() == 0) or false
 		local it = 0 -- Number of allies that have been alerted
-		for _,v in pairs(allies) do
+		for _, v in ipairs(allies) do
 			v:CustomOnAllyDeath(self)
 			v:PlaySoundSystem("AllyDeath")
 			

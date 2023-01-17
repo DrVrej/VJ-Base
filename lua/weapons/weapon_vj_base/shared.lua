@@ -558,7 +558,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	-- MELEE WEAPON
 	if self.IsMeleeWeapon == true then
 		local meleeHitEnt = false
-		for _,v in pairs(ents.FindInSphere(owner:GetPos(), self.MeleeWeaponDistance)) do
+		for _,v in ipairs(ents.FindInSphere(owner:GetPos(), self.MeleeWeaponDistance)) do
 			if (owner.VJ_IsBeingControlled == true && owner.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end
 			if (isPly && v:EntIndex() != owner:EntIndex()) or (isNPC && (v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && (owner:Disposition(v) != D_LI) && (v != owner) && (v:GetClass() != owner:GetClass()) or (v:GetClass() == "prop_physics") or v:GetClass() == "func_breakable_surf" or v:GetClass() == "func_breakable" && (owner:GetForward():Dot((v:GetPos() -owner:GetPos()):GetNormalized()) > math.cos(math.rad(owner.MeleeAttackDamageAngleRadius)))) then
 				local dmginfo = DamageInfo()
@@ -712,7 +712,7 @@ function SWEP:PrimaryAttackEffects()
 				util.Effect("VJ_Weapon_PlayerMuzzle", muzzleFlashEffect)
 			else -- NPCs
 				if self.PrimaryEffects_MuzzleParticlesAsOne == true then -- Combine all of the particles in the table!
-					for _,v in pairs(self.PrimaryEffects_MuzzleParticles) do
+					for _, v in ipairs(self.PrimaryEffects_MuzzleParticles) do
 						if !istable(v) then
 							ParticleEffectAttach(v, PATTACH_POINT_FOLLOW, self, muzzleAttach)
 						end

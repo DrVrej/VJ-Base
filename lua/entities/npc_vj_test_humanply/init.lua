@@ -58,7 +58,9 @@ ENT.SoundTbl_UnFollowPlayer = {"common/wpn_denyselect.wav"}
 ENT.SoundTbl_Death = {"player/pl_pain5.wav","player/pl_pain6.wav","player/pl_pain7.wav"}
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPreInitialize()
-    for _,v in pairs(player_manager.AllValidModels()) do
+	-- Set all the player models into the model variable
+	-- WARNING: Do NOT use "ipairs", this is NOT a sequential table!
+    for _, v in pairs(player_manager.AllValidModels()) do
 		self.Model[#self.Model + 1] = v
     end
 end

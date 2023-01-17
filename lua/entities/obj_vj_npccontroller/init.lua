@@ -96,7 +96,7 @@ function ENT:StartControlling()
 	plyEnt:DrawViewModel(false)
 	plyEnt:DrawWorldModel(false)
 	local weps = {}
-	for _, v in pairs(plyEnt:GetWeapons()) do
+	for _, v in ipairs(plyEnt:GetWeapons()) do
 		weps[#weps+1] = v:GetClass()
 	end
 	self.VJC_Data_Player = {
@@ -479,7 +479,7 @@ function ENT:StopControlling(endKey)
 			ply:Spawn()
 			ply:SetHealth(plyData[1])
 			ply:SetArmor(plyData[2])
-			for _, v in pairs(plyData[3]) do
+			for _, v in ipairs(plyData[3]) do
 				ply:Give(v)
 			end
 			ply:SelectWeapon(plyData[4])
