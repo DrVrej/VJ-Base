@@ -24,7 +24,7 @@ ENT.EntitiesToSpawn = {}
 		Entities = {} -- The table of entities it spawns randomly, REQUIRED!
 			- ":" = Add at the end to apply a chance, it starts from 1
 				- ":1" = Spawn always or leave it empty
-				- WARNING: If no entity is left empty or set to ":1", during randomization, the base will spawn the last NPC it checks!
+				- WARNING: If no entity is left empty or set to ":1" then during randomization, the base will spawn the last NPC it checks if no other passes!
 		SpawnPosition = {vForward=0, vRight=0, vUp=0} -- The spawn position of the entity, it's based on the spawner's position, OPTIONAL | DEFAULT: Origin of the spawner
 		SpawnAngle = Angle(0, 0, 0) -- The spawn angle, it's based on the spawner's angle, OPTIONAL | DEFAULT: Spawners current angle
 		WeaponsList = {} -- The list of weapons it spawns with randomly, OPTIONAL | DEFAULT: Empty table
@@ -218,7 +218,7 @@ end
 function ENT:DoSingleSpawnerRemove()
 	if self.Dead == true then return end
 	if IsValid(self:GetCreator()) then
-		for _, spawnTbl in pairs(self.CurrentEntities) do
+		for _, spawnTbl in ipairs(self.CurrentEntities) do
 			if IsValid(spawnTbl.Ent) then
 				undo.Create(spawnTbl.Ent:GetName())
 				undo.AddEntity(spawnTbl.Ent)

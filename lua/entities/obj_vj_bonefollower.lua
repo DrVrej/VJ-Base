@@ -67,7 +67,7 @@ function ENT:Initialize()
         if IsValid(self) then
             self:CreateBoneFollowers()
             self.SetToRemove = true
-            for _,v in pairs(self.BoneFollowers) do
+            for _, v in ipairs(self.BoneFollowers) do
                 v.VJ_BoneFollower = true
                 v:SetCollisionGroup(COLLISION_GROUP_NONE)
                 v:SetCustomCollisionCheck(true)

@@ -1539,7 +1539,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 	local idleAnimTbl = self.NoWeapon_UseScaredBehavior_Active == true and self.AnimTbl_ScaredBehaviorStand or ((self.Alerted && self:GetWeaponState() != VJ_WEP_STATE_HOLSTERED && IsValid(self:GetActiveWeapon())) and self.AnimTbl_WeaponAim or self.AnimTbl_IdleStand)
 	local sameAnimFound = false -- If true then it one of the animations in the table is the same as the current!
 	//local numOfAnims = 0 -- Number of valid animations found
-	for k, v in pairs(idleAnimTbl) do
+	for k, v in ipairs(idleAnimTbl) do
 		v = VJ_SequenceToActivity(self, v) -- Translate any sequence to activity
 		if v != false then -- Its a valid activity
 			//numOfAnims = numOfAnims + 1
@@ -2829,8 +2829,10 @@ function ENT:Think()
 							self:MeleeAttackCode_DoFinishTimers()
 						else -- If it's not event based...
 							timer.Create("timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self:GetPlaybackRate(), self.MeleeAttackReps, function() if self.CurAttackSeed == seed then self:MeleeAttackCode() end end)
-							for k, t in pairs(self.MeleeAttackExtraTimers or {}) do
-								self:DoAddExtraAttackTimers("timer_melee_start"..curTime + k, t, function() if self.CurAttackSeed == seed then self:MeleeAttackCode() end end)
+							if self.MeleeAttackExtraTimers then
+								for k, t in ipairs(self.MeleeAttackExtraTimers) do
+									self:DoAddExtraAttackTimers("timer_melee_start"..curTime + k, t, function() if self.CurAttackSeed == seed then self:MeleeAttackCode() end end)
+								end
 							end
 						end
 						self:CustomOnMeleeAttack_AfterStartTimer(seed)
@@ -2893,7 +2895,7 @@ function ENT:MeleeAttackCode(customEnt)
 	if self.DisableDefaultMeleeAttackCode then return end
 	local myPos = self:GetPos()
 	local hitRegistered = false
-	for _,v in pairs(ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), self.MeleeAttackDamageDistance)) do
+	for _, v in ipairs(ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), self.MeleeAttackDamageDistance)) do
 		if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end -- If controlled and v is the bullseye OR it's a player controlling then don't damage!
 		if v != self && v:GetClass() != self:GetClass() && (((v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:Disposition(v) != D_LI) or IsProp(v) == true or v:GetClass() == "func_breakable_surf" or destructibleEnts[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
 			local vProp = IsProp(v)
@@ -3129,7 +3131,7 @@ end
 function ENT:CheckForDangers()
 	if !self.CanDetectDangers or self.AttackType == VJ_ATTACK_GRENADE or self.NextDangerDetectionT > CurTime() or self.VJ_IsBeingControlled then return end
 	local regDangerDetected = false -- A regular non-grenade danger has been found (This is done to make sure grenades take priority over other dangers!)
-	for _,v in pairs(ents.FindInSphere(self:GetPos(), self.DangerDetectionDistance)) do
+	for _, v in ipairs(ents.FindInSphere(self:GetPos(), self.DangerDetectionDistance)) do
 		if (v.VJ_IsDetectableDanger or v.VJ_IsDetectableGrenade) && self:Visible(v) then
 			local vOwner = v:GetOwner()
 			if !(IsValid(vOwner) && vOwner.IsVJBaseSNPC && ((self:GetClass() == vOwner:GetClass()) or (self:Disposition(vOwner) == D_LI))) then
@@ -3540,7 +3542,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		local eneData = self.EnemyData
 		local getAllies = self:Allies_Check(1000)
 		if getAllies != false then
-			for _,v in pairs(getAllies) do
+			for _, v in ipairs(getAllies) do
 				local allyEne = v:GetEnemy()
 				if IsValid(allyEne) && (CurTime() - v.EnemyData.LastVisibleTime) < self.TimeUntilEnemyLost && VJ_IsAlive(allyEne) && self:DoRelationshipCheck(allyEne) && self:GetPos():Distance(allyEne:GetPos()) <= self:GetMaxLookDistance() then
 					self:VJ_DoSetEnemy(allyEne, false)
@@ -3703,7 +3705,7 @@ function ENT:OnTakeDamage(dmginfo)
 			if self.Passive_AlliesRunOnDamage then -- Make passive allies run too!
 				local allies = self:Allies_Check(self.Passive_AlliesRunOnDamageDistance)
 				if allies != false then
-					for _, v in pairs(allies) do
+					for _, v in ipairs(allies) do
 						v.TakingCoverT = curTime + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
 						v:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
 						v:PlaySoundSystem("Alert")
@@ -3848,7 +3850,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 		end
 		local doBecomeEnemyToPlayer = (self.BecomeEnemyToPlayer == true && dmgAttacker:IsPlayer() && GetConVar("ai_disabled"):GetInt() == 0 && GetConVar("ai_ignoreplayers"):GetInt() == 0) or false
 		local it = 0 -- Number of allies that have been alerted
-		for _,v in pairs(allies) do
+		for _, v in ipairs(allies) do
 			v:CustomOnAllyDeath(self)
 			v:PlaySoundSystem("AllyDeath")
 			
