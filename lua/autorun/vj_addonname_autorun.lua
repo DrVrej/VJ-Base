@@ -15,30 +15,36 @@ if VJExists == true then
 	
 	VJ.AddNPC("Dummy SNPC", "npc_vj_dum_dummy", vCat) -- Adds a NPC to the spawnmenu
 		-- Parameters:
-			-- First is the name, second is the class name
+			-- First is the name
+			-- Second is the class name
 			-- Third is the category that it should be in
 			-- Fourth is optional, which is a boolean that defines whether or not it's an admin-only entity
-	VJ.AddNPC_HUMAN("Dummy Human SNPC", "npc_vj_dum_dummy", {"weapon_vj_dummy"}, vCat) -- Adds a NPC to the spawnmenu but with a list of weapons it spawns with
+	VJ.AddNPC_HUMAN("Dummy Human SNPC", "npc_vj_dum_dummy", {"weapon_vj_dummy"}, vCat) -- Adds a NPC to the spawnmenu but with a list of default weapons it spawns with
 		-- Parameters:
-			-- First is the name, second is the class name
+			-- First is the name
+			-- Second is the class name
 			-- Third is a table of weapon, the base will pick a random one from the table and give it to the SNPC when "Default Weapon" is selected
 			-- Fourth is the category that it should be in
 			-- Fifth is optional, which is a boolean that defines whether or not it's an admin-only entity
-	VJ.AddWeapon("Dummy Weapon", "weapon_vj_dummy", false, vCat) -- Adds a weapon to the spawnmenu
+	VJ.AddWeapon("Dummy Weapon", "weapon_vj_dummy", false, vCat) -- Adds a player weapon to the spawnmenu
 		-- Parameters:
-			-- First is the name, second is the class name
+			-- First is the name
+			-- Second is the class name
 			-- Third is a boolean that defines whether or not it's an admin-only entity
-			-- And the last parameter is the category that it should be in
+			-- Fourth is the category that it should be in
 	VJ.AddNPCWeapon("VJ_Dummy", "weapon_vj_dummy") -- Adds a weapon to the NPC weapon list
 		-- Parameters:
-			-- First is the name, second is the class name
+			-- First is the name
+			-- Second is the class name
 	VJ.AddEntity("Dummy Kit", "sent_vj_dummykit", "Author Name", false, 0, true, vCat) -- Adds an entity to the spawnmenu
 		-- Parameters: 
-			-- First is the name, second is the class name and the third is its class name	
+			-- First is the name
+			-- Second is the class name
+			-- Third is the author name	
 			-- Fourth is a boolean that defines whether or not it's an admin-only entity
 			-- Fifth is an integer that defines the offset of the entity (When it spawns)
 			-- Sixth is a boolean that defines whether or not it should drop to the floor when it spawns
-			-- And the last parameter is the category that it should be in
+			-- Seventh is the category that it should be in
 
 	-- Particles --
 	VJ.AddParticle("particles/example_particle.pcf",{
@@ -50,8 +56,7 @@ if VJExists == true then
 	util.PrecacheModel("models/example_model.mdl")
 	
 	-- ConVars --
-	VJ.AddConVar("vj_dum_dummy_h",100) -- Example 1
-	VJ.AddConVar("vj_dum_dummy_d",20) -- Example 2
+	VJ.AddConVar("vj_example_convarname", 100)
 	
 	*/  -- Comment box end
 	
