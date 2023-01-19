@@ -29,7 +29,7 @@ end
 if !SERVER then return end
 
 ENT.Model = {"models/props_debris/wood_board05a.mdl"}
-ENT.StartHealth = 10
+ENT.StartHealth = 50
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	if self:GetModel() == "models/error.mdl" then
@@ -39,6 +39,7 @@ function ENT:Initialize()
 	self:SetSolid(SOLID_VPHYSICS)
 	//self:SetCollisionGroup(COLLISION_GROUP_NONE)
 	self:SetUseType(SIMPLE_USE)
+	self:SetMaxHealth(self.StartHealth)
 	self:SetHealth(self.StartHealth)
 	
 	local phys = self:GetPhysicsObject()
@@ -51,15 +52,14 @@ function ENT:PhysicsCollide(data, physobj)
 	//self:EmitSound("physics/cardboard/cardboard_box_impact_soft"..math.random(1,5)..".wav")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Think()
-	
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Use(activator, caller)
-
+	if IsValid(activator) && activator:IsPlayer() then
+		activator:PickupObject(self)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTakeDamage(dmginfo)
+	self:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce() * 0.05)
 	self:SetHealth(self:Health() - dmginfo:GetDamage())
 	if self:Health() <= 0 then self:DoDeath() end
 end
@@ -69,8 +69,4 @@ function ENT:DoDeath()
 	effectData:SetOrigin(self:GetPos())
 	util.Effect("VJ_Small_Dust1", effectData)
 	self:Remove()
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnRemove()
-	self:StopParticles()
 end

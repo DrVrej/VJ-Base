@@ -167,11 +167,6 @@ VJ.AddParticle("particles/weapon_fx.pcf",{
 	"Weapon_Combine_Ion_Cannon_Intake",
 	"Weapon_Combine_Ion_Cannon_Intake_b",
 })
-VJ.AddParticle("particles/aurora.pcf",{
-	"aurora_01",
-	"aurora_02",
-	"aurora_02b",
-})
 VJ.AddParticle("particles/aurora_sphere2.pcf",{
 	"aurora_shockwave",
 	"aurora_shockwave_debris",
@@ -182,16 +177,6 @@ VJ.AddParticle("particles/aurora_sphere2.pcf",{
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Black Mesa Source ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-VJ.AddParticle("particles/grenade_hornet.pcf",{
-	"grenade_hornet_bloop",
-	"grenade_hornet_detonate",
-	"grenade_hornet_detonate_chucks",
-	"grenade_hornet_flash",
-	"grenade_hornet_glow",
-	"grenade_hornet_trail",
-	"grenade_hornet_trail_glow",
-	"hornet_trail",
-})
 VJ.AddParticle("particles/vj_bms_turret.pcf",{
 	"vj_bms_turret_full",
 	"vj_bms_turret_muzzle_core",
