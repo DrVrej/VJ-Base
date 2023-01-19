@@ -55,6 +55,7 @@ if CLIENT then
 		local EntList = list.Get(vjList)
 		local CatInfoList = list.Get("VJBASE_CATEGORY_INFO")
 		
+		-- Categorize them
 		local Categories = {}
 		for k, v in pairs(EntList) do
 			local Category = v.Category or "Uncategorized"
@@ -64,14 +65,17 @@ if CLIENT then
 			Categories[Category] = Tab
 		end
 		
+		-- Create an icon for each one and put them on the panel
 		for CategoryName, v in SortedPairs(Categories) do
-			local icon = vjIcon
+			
+			-- Category icon
+			local icon = vjIcon -- Make the default icon the category icon
 			if list.HasEntry("VJBASE_CATEGORY_INFO", CategoryName) then
 				icon = CatInfoList[CategoryName].icon
-			end
-			if CategoryName == "Default" then
+			elseif CategoryName == "Default" then
 				icon = "vj_base/icons/vrejgaming.png"
 			end
+			
 			local node = roottree:AddNode(CategoryName, icon)
 			local CatPropPanel = vgui.Create("ContentContainer", pnlContent)
 			CatPropPanel:SetVisible(false)
@@ -85,7 +89,7 @@ if CLIENT then
 			CatPropPanel:Add(catHeader)
 			
 			if vjTreeName == "SNPCs" then
-				for name, ent in SortedPairsByMemberValue(v,"Name") do
+				for name, ent in SortedPairsByMemberValue(v, "Name") do
 					local t = {
 						nicename	= ent.Name or name,
 						spawnname	= name,
@@ -93,8 +97,8 @@ if CLIENT then
 						weapon		= ent.Weapons,
 						admin		= ent.AdminOnly
 					}
-					spawnmenu.CreateContentIcon("npc",CatPropPanel,t)
-					spawnmenu.CreateContentIcon("npc",roottree.PropPanel,t)
+					spawnmenu.CreateContentIcon("npc", CatPropPanel, t)
+					spawnmenu.CreateContentIcon("npc", roottree.PropPanel, t)
 				end
 			elseif vjTreeName == "Weapons" then
 				for _, ent in SortedPairsByMemberValue(v, "PrintName") do
@@ -285,19 +289,23 @@ if CLIENT then
 		DComboBox:AddChoice("#menubar.npcs.noweapon", "none")
 		DComboBox:AddSpacer()
 
-		-- Sort the items by name, also has the benefit of deduplication
-		local weaponsForSort = {}
-		for _, v in pairs(list.Get("VJBASE_SPAWNABLE_NPC_WEAPON")) do
-			weaponsForSort[language.GetPhrase( v.title )] = v.class
+			-- Sort the items by name, and group by category
+		local groupedWeps = {}
+		for _, v in pairs( list.Get( "VJBASE_SPAWNABLE_NPC_WEAPON" ) ) do
+			local cat = (v.category or ""):lower()
+			groupedWeps[ cat ] = groupedWeps[ cat ] or {}
+			groupedWeps[ cat ][ v.class ] = language.GetPhrase( v.title )
 		end
-		
-		-- Now actually add the weapons to the choices
-		for title, class in SortedPairs(weaponsForSort) do
-			DComboBox:AddChoice(title, class)
+
+		for _, items in SortedPairs( groupedWeps ) do
+			DComboBox:AddSpacer()
+			for class, title in SortedPairsByValue( items ) do
+				DComboBox:AddChoice( title, class )
+			end
 		end
-		
-		function DComboBox:OnSelect(index, value)
-			self:ConVarChanged(self.Data[index])
+
+		function DComboBox:OnSelect( index, value )
+			self:ConVarChanged( self.Data[ index ] )
 		end
 
 		self:Open()

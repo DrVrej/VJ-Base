@@ -15,81 +15,156 @@ if !VJ then VJ = {} end -- If VJ isn't initialized, initialize it!
 
 -- Variables ----------------------------------------------------------------------------------------------------
 if !VJ.Plugins then VJ.Plugins = {} end
--- Addon Property ----------------------------------------------------------------------------------------------------
-VJ.AddAddonProperty = function(aAddonName, aAddonType)
-	table.insert(VJ.Plugins, {Name = aAddonName, Type = aAddonType})
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Registers the addon to the VJ plugin list
+		- name = Addon name
+		- type = Type of addon | EX: NPC, Weapon, etc.
+-----------------------------------------------------------]]
+VJ.AddAddonProperty = function(name, type)
+	table.insert(VJ.Plugins, {Name = name, Type = type})
 end
--- Regular NPC ----------------------------------------------------------------------------------------------------
-VJ.AddCategoryInfo = function(acName, acFeatures)
-	list.Set("VJBASE_CATEGORY_INFO", acName, {
-		icon = acFeatures.Icon or "icon16/monkey.png",
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Registers spawn menu category information
+		- name = Category name
+		- options = Table that holds all possible options
+			- Icon = Category icon
+-----------------------------------------------------------]]
+VJ.AddCategoryInfo = function(category, options)
+	list.Set("VJBASE_CATEGORY_INFO", category, {
+		icon = options.Icon or "icon16/monkey.png",
 	})
 end
--- Regular NPC ----------------------------------------------------------------------------------------------------
-VJ.AddNPC = function(nName,nClass,vCat,nAdmin,nFunc)
-	local NPC = {Name = nName, Class = nClass, Category = vCat, AdminOnly = nAdmin}
-	if (nFunc) then nFunc(NPC) end
-	list.Set("NPC", NPC.Class, NPC)
-	list.Set("VJBASE_SPAWNABLE_NPC", NPC.Class, NPC)
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Adds an NPC to the spawn menu
+		- name = NPC's name
+		- class = NPC's class
+		- category = The spawn menu category it should be in
+		- adminOnly = Is this an admin only NPC?
+		- customFunc(property) = Used to apply more options (Located in GMod's source code) | EX: OnCeiling, Offset, etc.
+-----------------------------------------------------------]]
+VJ.AddNPC = function(name, class, category, adminOnly, customFunc)
+	local property = {Name = name, Class = class, Category = category, AdminOnly = adminOnly}
+	if (customFunc) then customFunc(property) end
+	list.Set("NPC", class, property)
+	list.Set("VJBASE_SPAWNABLE_NPC", class, property)
 	if CLIENT then
-		language.Add(NPC.Class, NPC.Name)
-		killicon.Add(NPC.Class,"HUD/killicons/default",killIconColor)
-		language.Add("#"..NPC.Class, NPC.Name)
-		killicon.Add("#"..NPC.Class,"HUD/killicons/default",killIconColor)
+		language.Add(class, name)
+		killicon.Add(class, "HUD/killicons/default", killIconColor)
+		language.Add("#" .. class, name)
+		killicon.Add("#" .. class, "HUD/killicons/default", killIconColor)
 	end
 end
--- Human NPC ----------------------------------------------------------------------------------------------------
-VJ.AddNPC_HUMAN = function(nhName,nhClass,nhWeapons,vCat,nhAdmin,nhFunc)
-	local NPCH = {Name = nhName, Class = nhClass, Weapons = nhWeapons, Category = vCat, AdminOnly = nhAdmin}
-	if (nhFunc) then nhFunc(NPCH) end
-	list.Set("NPC", NPCH.Class, NPCH)
-	list.Set("VJBASE_SPAWNABLE_NPC", NPCH.Class, NPCH)
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Adds a human NPC to the spawn menu
+		- name = NPC's name
+		- class = NPC's class
+		- weapons = Default weapon list for this NPC
+		- category = The spawn menu category it should be in
+		- adminOnly = Is this an admin only NPC?
+		- customFunc(property) = Used to apply more options (Located in GMod's source code) | EX: OnCeiling, Offset, etc.
+-----------------------------------------------------------]]
+VJ.AddNPC_HUMAN = function(name, class, weapons, category, adminOnly, customFunc)
+	local property = {Name = name, Class = class, Weapons = weapons, Category = category, AdminOnly = adminOnly}
+	if (customFunc) then customFunc(property) end
+	list.Set("NPC", class, property)
+	list.Set("VJBASE_SPAWNABLE_NPC", class, property)
 	if CLIENT then
-		language.Add(NPCH.Class, NPCH.Name)
-		killicon.Add(NPCH.Class,"HUD/killicons/default",killIconColor)
-		language.Add("#"..NPCH.Class, NPCH.Name)
-		killicon.Add("#"..NPCH.Class,"HUD/killicons/default",killIconColor)
+		language.Add(class, name)
+		killicon.Add(class, "HUD/killicons/default", killIconColor)
+		language.Add("#" .. class, name)
+		killicon.Add("#" .. class, "HUD/killicons/default", killIconColor)
 	end
 end
--- NPC Weapon ----------------------------------------------------------------------------------------------------
-VJ.AddNPCWeapon = function(nwName,nwClass)
-	local NPCW = {title = nwName, class = nwClass}
-	list.Set("NPCUsableWeapons", NPCW.class, NPCW)
-	list.Set("VJBASE_SPAWNABLE_NPC_WEAPON", NPCW.class, NPCW)
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Adds a weapon to the NPC weapon override list
+		- name = Weapon's name
+		- class = Weapon's class
+		- category = The category group it should be in
+-----------------------------------------------------------]]
+VJ.AddNPCWeapon = function(name, class, category)
+	local property = {title = name, class = class, category = category or "VJ Base"}
+	list.Add("NPCUsableWeapons", property)
+	list.Add("VJBASE_SPAWNABLE_NPC_WEAPON", property)
 end
--- Weapon ----------------------------------------------------------------------------------------------------
-VJ.AddWeapon = function(wName,wClass,wAdmin,vCat,wFunc)
-	local Weapon = {ClassName = wClass, PrintName = wName, Category = vCat, AdminOnly = wAdmin, Spawnable = true}
-	if (wFunc) then wFunc(Weapon) end
-	list.Set("Weapon", wClass, Weapon)
-	list.Set("VJBASE_SPAWNABLE_WEAPON", wClass, Weapon)
-	duplicator.Allow(wClass)
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Adds a weapon to the weapon spawn list
+		- name = Weapon's name
+		- class = Weapon's class
+		- adminOnly = Is this an admin only weapon?
+		- category = The spawn menu category it should be in
+		- customFunc(property) = Used to apply more options (Located in GMod's source code)
+-----------------------------------------------------------]]
+VJ.AddWeapon = function(name, class, adminOnly, category, customFunc)
+	local property = {PrintName = name, ClassName = class, Category = category, AdminOnly = adminOnly, Spawnable = true}
+	if (customFunc) then customFunc(property) end
+	list.Set("Weapon", class, property)
+	list.Set("VJBASE_SPAWNABLE_WEAPON", class, property)
+	duplicator.Allow(class)
 end
--- Entity ----------------------------------------------------------------------------------------------------
-VJ.AddEntity = function(eName,eClass,eAuthor,eAdmin,eOffSet,eDropToFloor,vCat,eFunc)
-	local Ent = {PrintName = eName, ClassName = eClass, Author = eAuthor, AdminOnly = eAdmin, NormalOffset = eOffSet, DropToFloor = eDropToFloor, Category = vCat, Spawnable = true}
-	if (eFunc) then eFunc(Ent) end
-	list.Set("SpawnableEntities", eClass, Ent)
-	list.Set("VJBASE_SPAWNABLE_ENTITIES", eClass, Ent)
-	duplicator.Allow(eClass)
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Adds an entity to the weapon spawn list
+		- name = Entity's name
+		- class = Entity's class
+		- author = Author's name
+		- adminOnly = Is this an admin only entity?
+		- offset = Spawn offset
+		- dropToFloor = Should it drop to the floor on spawn?
+		- category = The spawn menu category it should be in
+		- customFunc(property) = Used to apply more options (Located in GMod's source code)
+-----------------------------------------------------------]]
+VJ.AddEntity = function(name, class, author, adminOnly, offset, dropToFloor, category, customFunc)
+	local Ent = {PrintName = name, ClassName = class, Author = author, AdminOnly = adminOnly, NormalOffset = offset, DropToFloor = dropToFloor, Category = category, Spawnable = true}
+	if (customFunc) then customFunc(Ent) end
+	list.Set("SpawnableEntities", class, Ent)
+	list.Set("VJBASE_SPAWNABLE_ENTITIES", class, Ent)
+	duplicator.Allow(class)
 end
--- Particle ----------------------------------------------------------------------------------------------------
-VJ.AddParticle = function(pFileName,pParticleList)
-	game.AddParticles(pFileName)
-	for _,v in ipairs(pParticleList) do PrecacheParticleSystem(v) end
-end
--- ConVar ----------------------------------------------------------------------------------------------------
-VJ.AddConVar = function(cName,cValue,cFlags)
-	if !ConVarExists(cName) then
-		cFlags = cFlags or {FCVAR_NONE}
-		CreateConVar(cName,cValue,cFlags)
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Adds and registers a particle file
+		- fileName = Addon name | EX: "particles/explosion.pcf"
+		- particleList = List of particles to precache from the given particle file
+-----------------------------------------------------------]]
+VJ.AddParticle = function(fileName, particleList)
+	game.AddParticles(fileName)
+	for _, name in ipairs(particleList) do
+		PrecacheParticleSystem(name)
 	end
 end
--- Client ConVar ----------------------------------------------------------------------------------------------------
-VJ.AddClientConVar = function(cName,cValue,cHelpText)
-	if !ConVarExists(cName) then
-		cHelpText = cHelpText or ""
-		CreateClientConVar(cName,cValue,true,true,cHelpText)
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Registers a ConVar
+		- name = Convar name
+		- defValue = Default value
+		- flags = Convar's flags | Can be a bitflag or a table | Flag List: https://wiki.facepunch.com/gmod/Enums/FCVAR
+		- helpText = Help text to display in the console
+		- min = If set, the ConVar cannot be changed to a number lower than this value
+		- max = If set, the ConVar cannot be changed to a number higher than this value
+-----------------------------------------------------------]]
+VJ.AddConVar = function(name, defValue, flags, helpText, min, max)
+	if !ConVarExists(name) then
+		CreateConVar(name, defValue, flags or FCVAR_NONE, helpText or "", min, max)
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Registers a client ConVar
+		- name = ConVar name
+		- defValue = Default value
+		- helpText = Help text to display in the console
+		- min = If set, the ConVar cannot be changed to a number lower than this value
+		- max = If set, the ConVar cannot be changed to a number higher than this value
+-----------------------------------------------------------]]
+VJ.AddClientConVar = function(name, defValue, helpText, min, max)
+	if !ConVarExists(name) then
+		CreateClientConVar(name, defValue, true, true, helpText or "", min, max)
 	end
 end
 
