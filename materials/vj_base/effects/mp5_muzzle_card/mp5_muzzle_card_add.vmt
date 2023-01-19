@@ -1,6 +1,6 @@
 "SpriteCard"
 {
-	$basetexture "effects/mp5_muzzle_card/mp5_muzzle_card"
+	$basetexture "vj_base/effects/mp5_muzzle_card/mp5_muzzle_card"
 	$additive 1
 	$addself 3
 	$overbrightfactor 1.5

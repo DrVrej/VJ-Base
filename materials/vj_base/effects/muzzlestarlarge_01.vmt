@@ -1,6 +1,6 @@
 "UnlitGeneric"
 {
-	"$basetexture"	"effects/muzzlestarlarge_01"
+	"$basetexture"	"vj_base/effects/muzzlestarlarge_01"
 	"$surfaceprop"	"no_decal"
 	"$additive"	1
 	"$vertexcolor"	1
