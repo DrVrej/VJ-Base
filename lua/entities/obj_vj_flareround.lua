@@ -46,8 +46,8 @@ function ENT:Initialize()
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:SetSolid(SOLID_VPHYSICS)
-	self:SetOwner(self:GetOwner())
 	self:SetColor(colorRed)
+	self:SetUseType(SIMPLE_USE)
 
 	-- Physics Functions
 	local phys = self:GetPhysicsObject()
@@ -110,6 +110,12 @@ function ENT:Initialize()
 			end
 		end
 	end)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Use(activator, caller)
+	if IsValid(activator) && activator:IsPlayer() then
+		activator:PickupObject(self)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, physobj)
