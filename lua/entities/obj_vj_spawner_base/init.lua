@@ -216,7 +216,7 @@ function ENT:SpawnEntitySoundCode()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoSingleSpawnerRemove()
-	if self.Dead == true then return end
+	if self.Dead then return end
 	if IsValid(self:GetCreator()) then
 		for _, spawnTbl in ipairs(self.CurrentEntities) do
 			if IsValid(spawnTbl.Ent) then

@@ -1417,7 +1417,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 			self.DoingWeaponAttack_Standing = false
 			
 			//self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0) //vsched:EngTask("TASK_RESET_ACTIVITY", 0)
-			//if self.Dead == true then vsched:EngTask("TASK_STOP_MOVING", 0) end
+			//if self.Dead then vsched:EngTask("TASK_STOP_MOVING", 0) end
 			//self:FrameAdvance(0)
 			self:TaskComplete()
 			self:StopMoving()
@@ -1606,24 +1606,24 @@ function ENT:VJ_TASK_IDLE_STAND()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoIdleAnimation(iType)
-	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead == true or self.VJ_IsBeingControlled == true or self.PlayingAttackAnimation == true or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
-	iType = iType or 0 -- 0 = Random | 1 = Wander | 2 = Idle Stand
+function ENT:DoIdleAnimation(idleType)
+	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead or self.VJ_IsBeingControlled or self.PlayingAttackAnimation == true or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
+	idleType = idleType or 0 -- 0 = Random | 1 = Wander | 2 = Idle Stand
 	
-	if self.IdleAlwaysWander == true then iType = 1 end
+	if self.IdleAlwaysWander == true then idleType = 1 end
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
 	if self.DisableWandering == true or self.IsGuard == true or self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsVJBaseSNPC_Tank == true or self.LastHiddenZone_CanWander == false or self.NextWanderTime > CurTime() or self.IsFollowing == true or self.Medic_Status then
-		iType = 2
+		idleType = 2
 	end
 	
-	if iType == 0 then -- Random (Wander & Idle Stand)
+	if idleType == 0 then -- Random (Wander & Idle Stand)
 		if math.random(1, 3) == 1 then
 			self:VJ_TASK_IDLE_WANDER() else self:VJ_TASK_IDLE_STAND()
 		end
-	elseif iType == 1 then -- Wander
+	elseif idleType == 1 then -- Wander
 		self:VJ_TASK_IDLE_WANDER()
-	elseif iType == 2 then -- Idle Stand
+	elseif idleType == 2 then -- Idle Stand
 		self:VJ_TASK_IDLE_STAND()
 		return -- Don't set self.NextWanderTime below
 	end
@@ -1633,7 +1633,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChaseAnimation(alwaysChase)
 	local ene = self:GetEnemy()
-	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead == true or self.VJ_IsBeingControlled == true or self.PlayingAttackAnimation == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.PlayingAttackAnimation == true && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
+	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead or self.VJ_IsBeingControlled or self.PlayingAttackAnimation == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.PlayingAttackAnimation == true && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
 	if self:VJ_GetNearestPointToEntityDistance(ene) < self.MeleeAttackDistance && self.EnemyData.IsVisible && (self.EnemyData.SightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))) then self:VJ_TASK_IDLE_STAND() return end -- Not melee attacking yet but it is in range, so stop moving!
 	
 	alwaysChase = alwaysChase or false -- true = Chase no matter what
@@ -2364,6 +2364,20 @@ function ENT:GetWeaponState()
 	return self.WeaponState
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local finishAttack = {
+	[VJ_ATTACK_MELEE] = function(self, skipStopAttacks)
+		if skipStopAttacks != true then
+			timer.Create("timer_melee_finished"..self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Melee, self.NextAnyAttackTime_Melee_DoRand, self.TimeUntilMeleeAttackDamage, self.CurrentAttackAnimationDuration), 1, function()
+				self:StopAttacks()
+				self:DoChaseAnimation()
+			end)
+		end
+		timer.Create("timer_melee_finished_abletomelee"..self:EntIndex(), self:DecideAttackTimer(self.NextMeleeAttackTime, self.NextMeleeAttackTime_DoRand), 1, function()
+			self.IsAbleToMeleeAttack = true
+		end)
+	end
+}
+---------------------------------------------------------------------------------------------------------------------------------------------
 //function ENT:OnActiveWeaponChanged(old, new) print(old, new) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /* Variable Notes:
@@ -2576,7 +2590,7 @@ function ENT:Think()
 		print(curTime - self:GetEnemyLastTimeSeen())
 		print(curTime - self:GetEnemyFirstTimeSeen())*/
 			
-		if self.Dead == false then
+		if !self.Dead then
 			-- Health Regeneration System
 			if self.HasHealthRegeneration == true && curTime > self.HealthRegenerationDelayT then
 				local myHP = self:Health()
@@ -2826,7 +2840,7 @@ function ENT:Think()
 							self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.MeleeAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
 						end
 						if self.TimeUntilMeleeAttackDamage == false then
-							self:MeleeAttackCode_DoFinishTimers()
+							finishAttack[VJ_ATTACK_MELEE](self)
 						else -- If it's not event based...
 							timer.Create("timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self:GetPlaybackRate(), self.MeleeAttackReps, function() if self.CurAttackSeed == seed then self:MeleeAttackCode() end end)
 							if self.MeleeAttackExtraTimers then
@@ -2896,8 +2910,8 @@ function ENT:MeleeAttackCode(customEnt)
 	local myPos = self:GetPos()
 	local hitRegistered = false
 	for _, v in ipairs(ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), self.MeleeAttackDamageDistance)) do
-		if (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end -- If controlled and v is the bullseye OR it's a player controlling then don't damage!
-		if v != self && v:GetClass() != self:GetClass() && (((v:IsNPC() or (v:IsPlayer() && v:Alive() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:Disposition(v) != D_LI) or IsProp(v) == true or v:GetClass() == "func_breakable_surf" or destructibleEnts[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
+		if (self.VJ_IsBeingControlled && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end -- If controlled and v is the bullseye OR it's a player controlling then don't damage!
+		if v != self && v:GetClass() != self:GetClass() && (((v:IsNPC() or (v:IsPlayer() && v:Alive() && !VJ_CVAR_IGNOREPLAYERS)) && self:Disposition(v) != D_LI) or IsProp(v) == true or v:GetClass() == "func_breakable_surf" or destructibleEnts[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
 			local vProp = IsProp(v)
 			if self:CustomOnMeleeAttack_AfterChecks(v, vProp) == true then continue end
 			-- Knockback
@@ -2928,7 +2942,7 @@ function ENT:MeleeAttackCode(customEnt)
 	if self.AttackStatus < VJ_ATTACK_STATUS_EXECUTED then
 		self.AttackStatus = VJ_ATTACK_STATUS_EXECUTED
 		if self.TimeUntilMeleeAttackDamage != false then
-			self:MeleeAttackCode_DoFinishTimers()
+			finishAttack[VJ_ATTACK_MELEE](self)
 		end
 	end
 	if hitRegistered == true then
@@ -2940,20 +2954,8 @@ function ENT:MeleeAttackCode(customEnt)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MeleeAttackCode_DoFinishTimers(skipStopAttacks)
-	if skipStopAttacks != true then
-		timer.Create("timer_melee_finished"..self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Melee,self.NextAnyAttackTime_Melee_DoRand,self.TimeUntilMeleeAttackDamage,self.CurrentAttackAnimationDuration), 1, function()
-			self:StopAttacks()
-			self:DoChaseAnimation()
-		end)
-	end
-	timer.Create("timer_melee_finished_abletomelee"..self:EntIndex(), self:DecideAttackTimer(self.NextMeleeAttackTime,self.NextMeleeAttackTime_DoRand), 1, function()
-		self.IsAbleToMeleeAttack = true
-	end)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ThrowGrenadeCode(customEnt, noOwner)
-	if self.Dead == true or self.Flinching == true or self.AttackType == VJ_ATTACK_MELEE /*or (IsValid(self:GetEnemy()) && !self:Visible(self:GetEnemy()))*/ then return end
+	if self.Dead or self.Flinching == true or self.AttackType == VJ_ATTACK_MELEE /*or (IsValid(self:GetEnemy()) && !self:Visible(self:GetEnemy()))*/ then return end
 	//if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() + self:OBBCenter()),self:GetEnemy():EyePos()) == true then return end
 	noOwner = noOwner or false
 	local getIsCustom = false
@@ -3027,7 +3029,7 @@ function ENT:ThrowGrenadeCode(customEnt, noOwner)
 	timer.Simple(self.TimeUntilGrenadeIsReleased, function()
 		if getIsCustom == true && !IsValid(customEnt) then return end
 		if IsValid(customEnt) then customEnt.VJ_IsPickedUpDanger = false customEnt:Remove() end
-		if IsValid(self) && self.Dead == false /*&& IsValid(self:GetEnemy())*/ then -- Yete SNPC ter artoon e...
+		if IsValid(self) && !self.Dead /*&& IsValid(self:GetEnemy())*/ then -- Yete SNPC ter artoon e...
 			local getSpawnPos = self.GrenadeAttackAttachment
 			local getSpawnAngle;
 			if getSpawnPos == false then
@@ -3172,7 +3174,7 @@ function ENT:StopAttacks(checkTimers)
 	if self.VJ_DEBUG == true && GetConVar("vj_npc_printstoppedattacks"):GetInt() == 1 then print(self:GetClass().." Stopped all Attacks!") end
 	
 	if checkTimers == true && self.AttackType == VJ_ATTACK_MELEE && self.AttackStatus < VJ_ATTACK_STATUS_EXECUTED then
-		self:MeleeAttackCode_DoFinishTimers(true)
+		finishAttack[VJ_ATTACK_MELEE](self, true)
 	end
 	
 	self.AttackType = VJ_ATTACK_NONE
@@ -3190,12 +3192,12 @@ function ENT:DoPoseParameterLooking(resetPoses)
 	if (self.HasPoseParameterLooking == false) or (self.VJ_IsBeingControlled == false && self.DoingWeaponAttack == false) then return end
 	resetPoses = resetPoses or false
 	//self:GetPoseParameters(true)
-	local ent = (self.VJ_IsBeingControlled == true and self.VJ_TheController) or self:GetEnemy()
+	local ent = (self.VJ_IsBeingControlled and self.VJ_TheController) or self:GetEnemy()
 	local p_enemy = 0 -- Pitch
 	local y_enemy = 0 -- Yaw
 	local r_enemy = 0 -- Roll
 	if IsValid(ent) && !resetPoses then
-		local enemy_pos = (self.VJ_IsBeingControlled == true and self.VJ_TheControllerBullseye:GetPos()) or ent:GetPos() + ent:OBBCenter()
+		local enemy_pos = (self.VJ_IsBeingControlled and self.VJ_TheControllerBullseye:GetPos()) or ent:GetPos() + ent:OBBCenter()
 		local self_ang = self:GetAngles()
 		local enemy_ang = (enemy_pos - (self:GetPos() + self:OBBCenter())):Angle()
 		p_enemy = math_angDif(enemy_ang.p, self_ang.p)
@@ -3264,7 +3266,7 @@ function ENT:IsAbleToShootWeapon(checkDistance, checkDistanceOnly, enemyDist)
 	local hasChecks = false
 	
 	if self:GetWeaponState() == VJ_WEP_STATE_HOLSTERED or self.vACT_StopAttacks then return false end
-	if self.VJ_IsBeingControlled == true then checkDistance = false checkDistanceOnly = false end
+	if self.VJ_IsBeingControlled then checkDistance = false checkDistanceOnly = false end
 	if checkDistance == true && CurTime() > self.NextWeaponAttackT && enemyDist < self.Weapon_FiringDistanceFar && ((enemyDist > self.Weapon_FiringDistanceClose) or self.CurrentWeaponEntity.IsMeleeWeapon) then
 		hasDist = true
 	end
@@ -3284,9 +3286,9 @@ function ENT:IsAbleToShootWeapon(checkDistance, checkDistanceOnly, enemyDist)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule()
-	if self.VJ_IsBeingControlled == true then return end
+	if self.VJ_IsBeingControlled then return end
 	self:CustomOnSchedule()
-	if self.DisableSelectSchedule == true or self.Dead == true then return end
+	if self.DisableSelectSchedule == true or self.Dead then return end
 	
 	local ene = self:GetEnemy()
 	
@@ -3533,7 +3535,7 @@ function ENT:SelectSchedule()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetEnemy(checkAlliesEnemy)
-	if /*self.NextResetEnemyT > CurTime() or*/ self.Dead == true then self.EnemyData.Reset = false return false end
+	if /*self.NextResetEnemyT > CurTime() or*/ self.Dead then self.EnemyData.Reset = false return false end
 	checkAlliesEnemy = checkAlliesEnemy or false
 	local moveToEnemy = false
 	local ene = self:GetEnemy()
@@ -3659,7 +3661,7 @@ function ENT:OnTakeDamage(dmginfo)
 			self:PlaySoundSystem("Impact", nil, VJ_EmitSound)
 		end
 	end
-	if self.Dead == true then DoBleed() return 0 end -- If dead then just bleed but take no damage
+	if self.Dead then DoBleed() return 0 end -- If dead then just bleed but take no damage
 	
 	self:CustomOnTakeDamage_BeforeDamage(dmginfo, hitgroup)
 	if dmginfo:GetDamage() <= 0 then return 0 end -- Only take damage if it's above 0!
@@ -3818,7 +3820,7 @@ function ENT:OnTakeDamage(dmginfo)
 		self:EatingReset("Injured")
 	end
 	
-	if self:Health() <= 0 && self.Dead == false then
+	if self:Health() <= 0 && !self.Dead then
 		self:RemoveEFlags(EFL_NO_DISSOLVE)
 		if (dmginfo:IsDamageType(DMG_DISSOLVE)) or (IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball") then
 			local dissolve = DamageInfo()
@@ -3848,7 +3850,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 			self:Allies_Bring("Diamond", self.BringFriendsOnDeathDistance, allies, self.BringFriendsOnDeathLimit, true)
 			noAlert = false
 		end
-		local doBecomeEnemyToPlayer = (self.BecomeEnemyToPlayer == true && dmgAttacker:IsPlayer() && GetConVar("ai_disabled"):GetInt() == 0 && GetConVar("ai_ignoreplayers"):GetInt() == 0) or false
+		local doBecomeEnemyToPlayer = (self.BecomeEnemyToPlayer == true && dmgAttacker:IsPlayer() && GetConVar("ai_disabled"):GetInt() == 0 && !VJ_CVAR_IGNOREPLAYERS) or false
 		local it = 0 -- Number of allies that have been alerted
 		for _, v in ipairs(allies) do
 			v:CustomOnAllyDeath(self)

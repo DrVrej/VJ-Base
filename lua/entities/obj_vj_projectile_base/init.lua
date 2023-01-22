@@ -147,7 +147,7 @@ function ENT:Initialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-	if self.Dead == true then VJ_STOPSOUND(self.CurrentIdleSound) return end
+	if self.Dead then VJ_STOPSOUND(self.CurrentIdleSound) return end
 	
 	//self:SetAngles(self:GetVelocity():GetNormal():Angle())
 	
@@ -168,7 +168,7 @@ function ENT:DoDamageCode(data, phys)
 		hitEnt = data.HitEntity
 		//if hitEnt:IsNPC() or hitEnt:IsPlayer() then
 		if IsValid(owner) then
-			if (VJ_IsProp(hitEnt)) or (hitEnt:IsNPC() && (hitEnt:Disposition(owner) == D_HT or hitEnt:Disposition(owner) == D_FR) && hitEnt:Health() > 0 && (hitEnt != owner) && (hitEnt:GetClass() != owner:GetClass())) or (hitEnt:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0 && hitEnt:Alive() && hitEnt:Health() > 0) then
+			if (VJ_IsProp(hitEnt)) or (hitEnt:IsNPC() && (hitEnt:Disposition(owner) == D_HT or hitEnt:Disposition(owner) == D_FR) && hitEnt:Health() > 0 && (hitEnt != owner) && (hitEnt:GetClass() != owner:GetClass())) or (hitEnt:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS && hitEnt:Alive() && hitEnt:Health() > 0) then
 				self:CustomOnDoDamage_Direct(data, phys, hitEnt)
 				local damagecode = DamageInfo()
 				damagecode:SetDamage(self.DirectDamage)
@@ -208,7 +208,7 @@ function ENT:DoDamageCode(data, phys)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, phys)
-	if self.Dead == true then return end
+	if self.Dead then return end
 	//self.Dead = true
 	if self:CustomOnPhysicsCollide(data, phys) != false then
 		if self.RemoveOnHit == true then
