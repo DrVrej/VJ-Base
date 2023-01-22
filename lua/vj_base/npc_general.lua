@@ -403,10 +403,12 @@ function ENT:DoRelationshipCheck(ent)
 	if ent:IsFlagSet(FL_NOTARGET) or ent.VJ_NoTarget or NPCTbl_Animals[ent:GetClass()] then return "Neutral" end
 	if self:GetClass() == ent:GetClass() then return false end
 	if ent:Health() > 0 && self:Disposition(ent) != D_LI then
-		if ent:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 1 then return "Neutral" end
+		local isPly = ent:IsPlayer()
+		if isPly && VJ_CVAR_IGNOREPLAYERS then return "Neutral" end
 		if VJ_HasValue(self.VJ_AddCertainEntityAsFriendly, ent) then return false end
 		if VJ_HasValue(self.VJ_AddCertainEntityAsEnemy, ent) then return true end
-		if (ent:IsNPC() && ((ent:Disposition(self) == D_HT) or (ent:Disposition(self) == D_NU && ent.VJ_IsBeingControlled == true))) or (ent:IsPlayer() && self.PlayerFriendly == false && ent:Alive()) then
+		local entDisp = ent.Disposition and ent:Disposition(self)
+		if (ent:IsNPC() && ((entDisp == D_HT) or (entDisp == D_NU && ent.VJ_IsBeingControlled))) or (isPly && self.PlayerFriendly == false && ent:Alive()) then
 			return true
 		else
 			return "Neutral"
@@ -696,7 +698,7 @@ end
 		- doQuickIfActiveEnemy = Runs a quicker set enemy without resetting everything, it must have a active enemy! | DEFAULT = false
 -----------------------------------------------------------]]
 function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
-	if !IsValid(ent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or ent:Health() <= 0 or (ent:IsPlayer() && (!ent:Alive() or GetConVar("ai_ignoreplayers"):GetInt() == 1)) then return end
+	if !IsValid(ent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or ent:Health() <= 0 or (ent:IsPlayer() && (!ent:Alive() or VJ_CVAR_IGNOREPLAYERS)) then return end
 	stopMoving = stopMoving or false -- Will not run if doQuickIfActiveEnemy passes!
 	doQuickIfActiveEnemy = doQuickIfActiveEnemy or false -- It will run a much quicker set enemy without resetting everything (Only if it has an active enemy!)
 	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == ent then self:DoMedicReset() end
@@ -935,7 +937,7 @@ function ENT:Touch(entity)
 			self:PlaySoundSystem("Alert")
 			self.TakingCoverT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
 		end
-	elseif self.DisableTouchFindEnemy == false && !IsValid(self:GetEnemy()) && self.IsFollowing == false && (entity:IsNPC() or (entity:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:DoRelationshipCheck(entity) != false then
+	elseif self.DisableTouchFindEnemy == false && !IsValid(self:GetEnemy()) && self.IsFollowing == false && (entity:IsNPC() or (entity:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:DoRelationshipCheck(entity) != false then
 		self:StopMoving()
 		self:SetTarget(entity)
 		self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
@@ -949,7 +951,7 @@ function ENT:FollowReset()
 	local followData = self.FollowData
 	local followEnt = followData.Ent
 	if IsValid(followEnt) && followEnt:IsPlayer() && self.AllowPrintingInChat then
-		if self.Dead == true then
+		if self.Dead then
 			followEnt:PrintMessage(HUD_PRINTTALK, self:GetName().." has been killed.")
 		else
 			followEnt:PrintMessage(HUD_PRINTTALK, self:GetName().." is no longer following you.")
@@ -973,11 +975,11 @@ end
 		- false, failed or stopped following the entity
 -----------------------------------------------------------]]
 function ENT:Follow(ent, stopIfFollowing)
-	if !IsValid(ent) or self.Dead == true or GetConVar("ai_disabled"):GetInt() == 1 or self == ent then return false end
+	if !IsValid(ent) or self.Dead or GetConVar("ai_disabled"):GetInt() == 1 or self == ent then return false end
 	
 	local isPly = ent:IsPlayer()
 	local isLiving = isPly or ent:IsNPC() -- Is it a living entity?
-	if VJ_IsAlive(ent) && ((isPly && GetConVar("ai_ignoreplayers"):GetInt() == 0) or (!isPly)) then
+	if VJ_IsAlive(ent) && ((isPly && !VJ_CVAR_IGNOREPLAYERS) or (!isPly)) then
 		local followData = self.FollowData
 		-- Refusal messages
 		if isLiving && self:GetClass() != ent:GetClass() && (self:Disposition(ent) == D_HT or self:Disposition(ent) == D_NU) then -- Check for enemy/neutral
@@ -1052,10 +1054,10 @@ end
 function ENT:DoMedicCheck()
 	if !self.IsMedicSNPC or self.NoWeapon_UseScaredBehavior_Active then return end
 	if !self.Medic_Status then -- Not healing anyone, so check around for allies
-		if CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled == true then return end
+		if CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled then return end
 		for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
 			if v.IsVJBaseSNPC != true && !v:IsPlayer() then continue end -- If it's not a VJ Base SNPC or a player, then move on
-			if v:EntIndex() != self:EntIndex() && !v.VJTags[VJ_TAG_HEALING] && !v.VJTags[VJ_TAG_VEHICLE] && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0)) && self:DoRelationshipCheck(v) == false then
+			if v:EntIndex() != self:EntIndex() && !v.VJTags[VJ_TAG_HEALING] && !v.VJTags[VJ_TAG_VEHICLE] && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:DoRelationshipCheck(v) == false then
 				self.Medic_CurrentEntToHeal = v
 				self.Medic_Status = "Active"
 				v:VJTags_Add(VJ_TAG_HEALING)
@@ -1873,7 +1875,7 @@ function ENT:SpawnBloodPool(dmginfo, hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IdleSoundCode(CustomTbl, Type)
-	if self.HasSounds == false or self.HasIdleSounds == false or self.Dead == true then return end
+	if self.HasSounds == false or self.HasIdleSounds == false or self.Dead then return end
 	if (self.NextIdleSoundT_RegularChange < CurTime()) && (CurTime() > self.NextIdleSoundT) then
 		Type = Type or VJ_CreateSound
 		
@@ -1978,7 +1980,7 @@ function ENT:IdleDialogueSoundCodeTest()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IdleDialogueAnswerSoundCode(CustomTbl, Type)
-	if self.Dead == true or self.HasSounds == false or self.HasIdleDialogueAnswerSounds == false then return 0 end
+	if self.Dead or self.HasSounds == false or self.HasIdleDialogueAnswerSounds == false then return 0 end
 	Type = Type or VJ_CreateSound
 	local cTbl = VJ_PICK(CustomTbl)
 	local sdtbl = VJ_PICK(self.SoundTbl_IdleDialogueAnswer)
@@ -2122,7 +2124,7 @@ function ENT:DoHardEntityCheck(CustomTbl)
 		if !EntsTbl[x]:IsNPC() && !EntsTbl[x]:IsPlayer() then continue end
 		local v = EntsTbl[x]
 		self:EntitiesToNoCollideCode(v)
-		if (v:IsNPC() && v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) && v:Health() > 0) or (v:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0) then
+		if (v:IsNPC() && v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) && v:Health() > 0) or (v:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) then
 			EntsFinal[count] = v
 			count = count + 1
 		end
@@ -2153,7 +2155,7 @@ local EnemyTargets = VJ_FindInCone(self:GetPos(),self:GetForward(),self.SightDis
 if (!EnemyTargets) then return end
 //table.Add(EnemyTargets)
 for k,v in ipairs(EnemyTargets) do
-	//if (v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag") && v:IsNPC() or (v:IsPlayer() && self.PlayerFriendly == false && GetConVar("ai_ignoreplayers"):GetInt() == 0) && self:Visible(v) then
+	//if (v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag") && v:IsNPC() or (v:IsPlayer() && self.PlayerFriendly == false && !VJ_CVAR_IGNOREPLAYERS) && self:Visible(v) then
 	//if self.CombineFriendly == true then if VJ_HasValue(NPCTbl_Combine,v:GetClass()) then return end end
 	//if self.ZombieFriendly == true then if VJ_HasValue(NPCTbl_Zombies,v:GetClass()) then return end end
 	//if self.AntlionFriendly == true then if VJ_HasValue(NPCTbl_Antlions,v:GetClass()) then return end end
@@ -2200,7 +2202,7 @@ end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*function ENT:VJ_EyeTrace(GetUpNum)
 	GetUpNum = GetUpNum or 50
-	if IsValid(self:GetEnemy()) && self.Dead == false then
+	if IsValid(self:GetEnemy()) && !self.Dead then
 		local tr = util.TraceLine({
 			start = self:NearestPoint(self:GetEnemy():GetPos() +self:GetEnemy():OBBCenter() +self:GetUp()*GetUpNum),
 			endpos = self:GetEnemy():GetPos() +self:GetEnemy():OBBCenter(),

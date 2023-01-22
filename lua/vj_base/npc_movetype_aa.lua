@@ -344,7 +344,7 @@ end
 		- moveType = Type of movement animation it should do | DEFAULT: "Alert"
 -----------------------------------------------------------]]
 function ENT:AA_ChaseEnemy(playAnim, moveType)
-	if self.Dead == true or (self.NextChaseTime > CurTime()) or !IsValid(self:GetEnemy()) then return end
+	if self.Dead or (self.NextChaseTime > CurTime()) or !IsValid(self:GetEnemy()) then return end
 	self:AA_MoveTo(self:GetEnemy(), playAnim != false, moveType or "Alert", {FaceDestTarget=true, ChaseEnemy=true})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

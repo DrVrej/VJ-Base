@@ -173,8 +173,8 @@ function ENT:CustomOnTouch(ent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_RunOver(ent)
-	if (!IsValid(ent)) or (GetConVar("vj_npc_nomelee"):GetInt() == 1 /*or self.HasMeleeAttack == false*/) or (self.VJ_IsBeingControlled == true && self.VJ_TheControllerBullseye == ent) then return end
-	if self:Disposition(ent) == 1 && ent:Health() > 0 && self.Tank_IsMoving == true && (ent:IsNPC() && ent.VJ_IsHugeMonster != true && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && self.PlayerFriendly == false && GetConVar("ai_ignoreplayers"):GetInt() == 0) then
+	if (!IsValid(ent)) or (GetConVar("vj_npc_nomelee"):GetInt() == 1 /*or self.HasMeleeAttack == false*/) or (self.VJ_IsBeingControlled && self.VJ_TheControllerBullseye == ent) then return end
+	if self:Disposition(ent) == 1 && ent:Health() > 0 && self.Tank_IsMoving == true && (ent:IsNPC() && ent.VJ_IsHugeMonster != true && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && self.PlayerFriendly == false && !VJ_CVAR_IGNOREPLAYERS) then
 		self:Tank_CustomOnRunOver(ent)
 		self:Tank_Sound_RunOver()
 		ent:TakeDamage(self:VJ_GetDifficultyValue(8), self, self)
@@ -194,7 +194,7 @@ function ENT:CustomOnThink()
 	if self:Tank_CustomOnThink() == true then
 		if GetConVar("vj_npc_noidleparticle"):GetInt() == 1 then return end
 		timer.Simple(0.1, function()
-			if IsValid(self) && self.Dead == false then
+			if IsValid(self) && !self.Dead then
 				self:StartSpawnEffects()
 			end
 		end)
@@ -238,9 +238,9 @@ end
 local vec80z = Vector(0, 0, 80)
 --
 function ENT:CustomOnThink_AIEnabled()
-	if self.Dead == true then return end
-	//timer.Simple(0.1, function() if self.Dead == false then ParticleEffect("smoke_exhaust_01",self:LocalToWorld(Vector(150,30,30)),defAng,self) end end)
-	//timer.Simple(0.2, function() if self.Dead == false then self:StopParticles() end end)
+	if self.Dead then return end
+	//timer.Simple(0.1, function() if !self.Dead then ParticleEffect("smoke_exhaust_01",self:LocalToWorld(Vector(150,30,30)),defAng,self) end end)
+	//timer.Simple(0.2, function() if !self.Dead then self:StopParticles() end end)
 	for _, v in ipairs(ents.FindInSphere(self:GetPos(), 100)) do
 		self:Tank_RunOver(v)
 	end
@@ -301,13 +301,13 @@ function ENT:CustomOnThink_AIEnabled()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnSchedule()
-	if self:Health() <= 0 or self.Dead == true then return end
+	if self:Health() <= 0 or self.Dead then return end
 
 	self:IdleSoundCode()
 	self:DoIdleAnimation()
 	
 	if IsValid(self:GetEnemy()) then
-		if self.VJ_IsBeingControlled == true then
+		if self.VJ_IsBeingControlled then
 			if self.VJ_TheController:KeyDown(IN_FORWARD) then
 				self.Tank_Status = 0
 			else

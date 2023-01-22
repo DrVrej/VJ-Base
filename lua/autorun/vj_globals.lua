@@ -32,6 +32,8 @@ local defAng = Angle(0, 0, 0)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Global Functions & Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+VJ_CVAR_IGNOREPLAYERS = GetConVar("ai_ignoreplayers"):GetInt()
+
 -- NPC movement types, information is located inside the NPC bases...
 VJ_MOVETYPE_GROUND = 1
 VJ_MOVETYPE_AERIAL = 2
@@ -715,7 +717,7 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 		ply.VJTags = {}
 		ply.VJ_LastInvestigateSd = 0
 		ply.VJ_LastInvestigateSdLevel = 0
-		if GetConVar("ai_ignoreplayers"):GetInt() == 0 then
+		if !VJ_CVAR_IGNOREPLAYERS then
 			local EntsTbl = ents.GetAll()
 			for x = 1, #EntsTbl do
 				local v = EntsTbl[x]
@@ -755,7 +757,7 @@ if SERVER then
 						if isVJ == true && ent.CurrentPossibleEnemies == nil then ent.CurrentPossibleEnemies = {} end
 						local EntsTbl = ents.GetAll()
 						local count = 1
-						local cvSeePlys = GetConVar("ai_ignoreplayers"):GetInt() == 0
+						local cvSeePlys = !VJ_CVAR_IGNOREPLAYERS
 						local isPossibleEnemy = ((ent:IsNPC() && ent:Health() > 0 && (ent.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) or (ent:IsPlayer()))
 						for x = 1, #EntsTbl do
 							local v = EntsTbl[x]
@@ -1026,6 +1028,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 cvars.AddChangeCallback("ai_ignoreplayers", function(convar_name, oldValue, newValue)
 	if tonumber(newValue) == 0 then -- Turn off ignore players
+		VJ_CVAR_IGNOREPLAYERS = false
 		local getPlys = player.GetAll()
 		local getAll = ents.GetAll()
 		for x = 1, #getAll do
@@ -1037,6 +1040,7 @@ cvars.AddChangeCallback("ai_ignoreplayers", function(convar_name, oldValue, newV
 			end
 		end
 	else -- Turn on ignore players
+		VJ_CVAR_IGNOREPLAYERS = true
 		for _, v in ipairs(ents.GetAll()) do
 			if v.IsVJBaseSNPC then
 				if v.FollowingPlayer == true then v:FollowReset() end -- Reset the NPC's follow system if it's following a player
@@ -1188,7 +1192,7 @@ function util.VJ_SphereDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 			if v:EntIndex() == attacker:EntIndex() then
 				if extraOptions.DamageAttacker then DoDamageCode() end -- If it can't self hit, then skip
 			-- NPCs / Players
-			elseif (ignoreInnocents == false) or (v:IsNPC() && v:Disposition(attacker) != D_LI && v:Health() > 0 && (v:GetClass() != attacker:GetClass())) or (v:IsPlayer() && GetConVar("ai_ignoreplayers"):GetInt() == 0 && v:Alive() && !v:IsFlagSet(FL_NOTARGET)) then
+			elseif (ignoreInnocents == false) or (v:IsNPC() && v:Disposition(attacker) != D_LI && v:Health() > 0 && (v:GetClass() != attacker:GetClass())) or (v:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS && v:Alive() && !v:IsFlagSet(FL_NOTARGET)) then
 				DoDamageCode()
 			-- Other types of entities
 			elseif !v:IsNPC() && !v:IsPlayer() then
