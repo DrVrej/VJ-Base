@@ -113,7 +113,7 @@ function ENT:Tank_ShellFireEffects()
 	local iClientEffect = 0
 	for _ = 1, 40 do
 		iClientEffect = iClientEffect + 0.1
-		timer.Simple(iClientEffect, function() if !self.Dead then self:StartShootEffects() end end)
+		timer.Simple(iClientEffect, function() if IsValid(self) && !self.Dead then self:StartShootEffects() end end)
 	end
 	
 	local smokeAngle = Angle(myAng.x, -myAng.y, myAng.z)

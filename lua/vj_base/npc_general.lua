@@ -1855,9 +1855,9 @@ local vecZ1 = Vector(0, 0, 1)
 --
 function ENT:SpawnBloodPool(dmginfo, hitgroup)
 	if !IsValid(self.Corpse) then return end
-	local corpseEnt = self.Corpse
 	local getBloodPool = VJ_PICK(self.CustomBlood_Pool)
 	if getBloodPool == false then return end
+	local corpseEnt = self.Corpse
 	timer.Simple(2.2, function()
 		if IsValid(corpseEnt) then
 			local pos = corpseEnt:GetPos() + corpseEnt:OBBCenter()
@@ -1874,80 +1874,75 @@ function ENT:SpawnBloodPool(dmginfo, hitgroup)
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:IdleSoundCode(CustomTbl, Type)
-	if self.HasSounds == false or self.HasIdleSounds == false or self.Dead then return end
+function ENT:IdleSoundCode(customSd, sdType)
+	if !self.HasSounds or !self.HasIdleSounds or self.Dead then return end
 	if (self.NextIdleSoundT_RegularChange < CurTime()) && (CurTime() > self.NextIdleSoundT) then
-		Type = Type or VJ_CreateSound
+		sdType = sdType or VJ_CreateSound
 		
-		local hasEnemy = false -- Ayo yete teshnami ouni
-		if IsValid(self:GetEnemy()) then
-			hasEnemy = true
-			-- Yete CombatIdle tsayn chouni YEV gerna barz tsayn hanel, ere vor barz tsayn han e
-			if VJ_PICK(self.SoundTbl_CombatIdle) == false && self.IdleSounds_NoRegularIdleOnAlerted == false then
-				hasEnemy = false
-			end
+		local hasEnemy = IsValid(self:GetEnemy()) -- Ayo yete teshnami ouni
+		-- Yete CombatIdle tsayn chouni YEV gerna barz tsayn hanel, ere vor barz tsayn han e
+		if hasEnemy && VJ_PICK(self.SoundTbl_CombatIdle) == false && !self.IdleSounds_NoRegularIdleOnAlerted then
+			hasEnemy = false
 		end
 		
-		local cTbl = VJ_PICK(CustomTbl)
-		local setT = true
+		local cTbl = VJ_PICK(customSd)
+		local setTimer = true
 		if hasEnemy == true then
 			local sdtbl = VJ_PICK(self.SoundTbl_CombatIdle)
 			if (math.random(1,self.CombatIdleSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
-				self.CurrentIdleSound = Type(self,sdtbl,self.CombatIdleSoundLevel,self:VJ_DecideSoundPitch(self.CombatIdleSoundPitch.a,self.CombatIdleSoundPitch.b))
+				self.CurrentIdleSound = sdType(self, sdtbl, self.CombatIdleSoundLevel, self:VJ_DecideSoundPitch(self.CombatIdleSoundPitch.a, self.CombatIdleSoundPitch.b))
 			end
 		else
 			local sdtbl = VJ_PICK(self.SoundTbl_Idle)
 			local sdtbl2 = VJ_PICK(self.SoundTbl_IdleDialogue)
-			local sdrand = math.random(1,self.IdleSoundChance)
+			local sdrand = math.random(1, self.IdleSoundChance)
 			local function RegularIdle()
 				if (sdrand == 1 && sdtbl != false) or (cTbl != false) then
 					if cTbl != false then sdtbl = cTbl end
-					self.CurrentIdleSound = Type(self, sdtbl, self.IdleSoundLevel, self:VJ_DecideSoundPitch(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
+					self.CurrentIdleSound = sdType(self, sdtbl, self.IdleSoundLevel, self:VJ_DecideSoundPitch(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
 				end
 			end
-			if sdtbl2 != false && sdrand == 1 && self.HasIdleDialogueSounds == true && math.random(1,2) == 1 then
-				local testent, testvj = self:IdleDialogueSoundCodeTest()
-				if testent != false then
-					if self:CustomOnIdleDialogue(testent, testvj) == false then
-						RegularIdle()
-					else
-						self.CurrentIdleSound = Type(self, sdtbl2, self.IdleDialogueSoundLevel, self:VJ_DecideSoundPitch(self.IdleDialogueSoundPitch.a, self.IdleDialogueSoundPitch.b))
-						if testvj == true then -- If we have a VJ SNPC
-							local dur = SoundDuration(sdtbl2)
-							if dur == 0 then dur = 3 end -- Since some file types don't return a duration =(
-							
-							setT = false
-							self.NextIdleSoundT = CurTime() + (dur + 0.5)
-							self.NextWanderTime = CurTime() + (dur + 0.5)
-							testent.NextIdleSoundT = CurTime() + (dur + 0.5)
-							testent.NextWanderTime = CurTime() + (dur + 0.5)
-							
-							if self.IdleDialogueCanTurn == true then
-								self:StopMoving()
-								self:SetTarget(testent)
-								self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-							end
-							if testent.IdleDialogueCanTurn == true then
-								testent:StopMoving()
-								testent:SetTarget(self)
-								testent:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-							end
-							
-							-- For the other SNPC to answer back:
-							timer.Simple(dur + 0.3, function()
-								if IsValid(self) && IsValid(testent) then
-									testent:CustomOnIdleDialogueAnswer(self)
-									local response = testent:IdleDialogueAnswerSoundCode()
-									if response > 0 then -- If the ally responded, then make sure both SNPCs stand still & don't play another idle sound until the whole conversation is finished!
-										self.NextIdleSoundT = CurTime() + (response + 0.5)
-										self.NextWanderTime = CurTime() + (response + 1)
-										testent.NextIdleSoundT = CurTime() + (response + 0.5)
-										testent.NextWanderTime = CurTime() + (response + 1)
-									end
-								end
-							end)
+			if sdtbl2 != false && sdrand == 1 && self.HasIdleDialogueSounds == true && math.random(1, 2) == 1 then
+				local foundEnt, canAnswer = self:IdleDialogueFindEnt()
+				if foundEnt != false then
+					self.CurrentIdleSound = sdType(self, sdtbl2, self.IdleDialogueSoundLevel, self:VJ_DecideSoundPitch(self.IdleDialogueSoundPitch.a, self.IdleDialogueSoundPitch.b))
+					if canAnswer == true then -- If we have a VJ NPC that can answer
+						local dur = SoundDuration(sdtbl2)
+						if dur == 0 then dur = 3 end -- Since some file types don't return a proper duration =(
+						local talkTime = CurTime() + (dur + 0.5)
+						setTimer = false
+						self.NextIdleSoundT = talkTime
+						self.NextWanderTime = talkTime
+						foundEnt.NextIdleSoundT = talkTime
+						foundEnt.NextWanderTime = talkTime
+						
+						self:CustomOnIdleDialogue(foundEnt, "Speak", talkTime)
+						
+						-- Stop moving and look at each other
+						if self.IdleDialogueCanTurn == true then
+							self:StopMoving()
+							self:SetTarget(foundEnt)
+							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 						end
+						if foundEnt.IdleDialogueCanTurn == true then
+							foundEnt:StopMoving()
+							foundEnt:SetTarget(self)
+							foundEnt:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+						end
+						
+						-- For the other SNPC to answer back:
+						timer.Simple(dur + 0.3, function()
+							if IsValid(self) && IsValid(foundEnt) && !foundEnt:CustomOnIdleDialogue(self, "Answer") then
+								local response = foundEnt:IdleDialogueAnswerSoundCode()
+								if response > 0 then -- If the ally responded, then make sure both SNPCs stand still & don't play another idle sound until the whole conversation is finished!
+									self.NextIdleSoundT = CurTime() + (response + 0.5)
+									self.NextWanderTime = CurTime() + (response + 1)
+									foundEnt.NextIdleSoundT = CurTime() + (response + 0.5)
+									foundEnt.NextWanderTime = CurTime() + (response + 1)
+								end
+							end
+						end)
 					end
 				else
 					RegularIdle()
@@ -1956,39 +1951,44 @@ function ENT:IdleSoundCode(CustomTbl, Type)
 				RegularIdle()
 			end
 		end
-		if setT == true then
+		if setTimer == true then
 			self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle.a, self.NextSoundTime_Idle.b)
 		end
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:IdleDialogueSoundCodeTest()
+function ENT:IdleDialogueFindEnt()
 	-- Don't break the loop unless we hit a VJ SNPC
 	-- If no VJ SNPC is hit, then just simply return the last checked friendly player or NPC
-	local ret = false
+	local returnEnt = false
 	for _, v in ipairs(ents.FindInSphere(self:GetPos(), self.IdleDialogueDistance)) do
-		if v:IsPlayer() && self:DoRelationshipCheck(v) == false then
-			ret = v
+		if v:IsPlayer() then
+			if self:DoRelationshipCheck(v) == false && !self:CustomOnIdleDialogue(v, "CheckEnt", false) then
+				returnEnt = v
+			end
 		elseif v != self && ((self:GetClass() == v:GetClass()) or (v:IsNPC() && self:DoRelationshipCheck(v) == false)) && self:Visible(v) then
-			ret = v
-			if v.IsVJBaseSNPC == true && v.Dead == false && VJ_PICK(v.SoundTbl_IdleDialogueAnswer) != false then
-				return v, true -- Yete VJ NPC e, ere vor function-e gena
+			local canAnswer = (v.IsVJBaseSNPC and VJ_PICK(v.SoundTbl_IdleDialogueAnswer)) or false
+			if !self:CustomOnIdleDialogue(v, "CheckEnt", canAnswer) then
+				returnEnt = v
+				if v.IsVJBaseSNPC && !v.Dead && canAnswer then -- VJ NPC hit!
+					return v, true
+				end
 			end
 		end
 	end
-	return ret, false
+	return returnEnt, false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:IdleDialogueAnswerSoundCode(CustomTbl, Type)
+function ENT:IdleDialogueAnswerSoundCode(customSd, sdType)
 	if self.Dead or self.HasSounds == false or self.HasIdleDialogueAnswerSounds == false then return 0 end
-	Type = Type or VJ_CreateSound
-	local cTbl = VJ_PICK(CustomTbl)
+	sdType = sdType or VJ_CreateSound
+	local cTbl = VJ_PICK(customSd)
 	local sdtbl = VJ_PICK(self.SoundTbl_IdleDialogueAnswer)
 	if (math.random(1,self.IdleDialogueAnswerSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 		if cTbl != false then sdtbl = cTbl end
 		self:StopAllCommonSpeechSounds()
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2, 3)
-		self.CurrentIdleDialogueAnswerSound = Type(self, sdtbl, self.IdleDialogueAnswerSoundLevel, self:VJ_DecideSoundPitch(self.IdleDialogueAnswerSoundPitch.a, self.IdleDialogueAnswerSoundPitch.b))
+		self.CurrentIdleDialogueAnswerSound = sdType(self, sdtbl, self.IdleDialogueAnswerSoundLevel, self:VJ_DecideSoundPitch(self.IdleDialogueAnswerSoundPitch.a, self.IdleDialogueAnswerSoundPitch.b))
 		return SoundDuration(sdtbl) -- Return the duration of the sound, which will be used to make the other SNPC stand still
 	else
 		return 0
@@ -2008,20 +2008,12 @@ function ENT:RemoveTimers()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:EntitiesToNoCollideCode(ent)
-	if self.HasEntitiesToNoCollide != true or !istable(self.EntitiesToNoCollide) or !IsValid(ent) then return end
-	for x = 1, #self.EntitiesToNoCollide do
-		if self.EntitiesToNoCollide[x] == ent:GetClass() then
+	if !self.HasEntitiesToNoCollide or !istable(self.EntitiesToNoCollide) or !IsValid(ent) then return end
+	for i = 1, #self.EntitiesToNoCollide do
+		if self.EntitiesToNoCollide[i] == ent:GetClass() then
 			constraint.NoCollide(self, ent, 0, 0)
 		end
 	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_SetSchedule(schedID)
-	if self.VJ_PlayingSequence == true then return end
-	self.VJ_PlayingInterruptSequence = false
-	//if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then return end
-	//print(self:GetName().." - "..schedID)
-	self:SetSchedule(schedID)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RunGibOnDeathCode(dmginfo, hitgroup, extraOptions)
@@ -2058,6 +2050,14 @@ function ENT:PlayGibOnDeathSounds(dmginfo, hitgroup)
 		VJ_EmitSound(self, gib_sd3, 90, math.random(80, 100))
 		VJ_EmitSound(self, gib_sd4, 90, math.random(80, 100))
 	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:VJ_SetSchedule(schedID)
+	if self.VJ_PlayingSequence == true then return end
+	self.VJ_PlayingInterruptSequence = false
+	//if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then return end
+	//print(self:GetName().." - "..schedID)
+	self:SetSchedule(schedID)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSoundTrack()
