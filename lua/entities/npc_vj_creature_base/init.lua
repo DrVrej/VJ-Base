@@ -714,9 +714,20 @@ function ENT:CustomOnFollowPlayer(ply) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnUnFollowPlayer(ply) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnIdleDialogue(ent, canAnswer) return true end -- ent = An entity that it can talk to | canAnswer = If the entity can answer back | Return false to not run the code!
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnIdleDialogueAnswer(ent) end -- ent = The entity that just talked to this NPC
+--[[---------------------------------------------------------
+	Called every time a change occurs in the eating system
+		- ent = The entity that it is checking OR speaking with
+		- status = The change that occurred, possible changes:
+			- "CheckEnt"	= Possible friendly entity found, should we speak to it? | return anything other than nil or "false" to skip and not speak to this entity!
+			- "Speak"		= Everything passed, start speaking
+			- "Answer"		= Another entity has spoken to me, answer back! | return anything other than nil or "false" to not play an answer back dialogue!
+		- statusInfo = Some status may have extra info, possible infos:
+			- For "CheckEnt"	= Boolean value, whether or not the entity can answer back
+			- For "Speak"		= Duration of our sentence
+	Returns
+		- ONLY used for "CheckEnt" & "Answer" | Check above for what each status return does
+-----------------------------------------------------------]]
+function ENT:CustomOnIdleDialogue(ent, status, statusInfo) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMedic_BeforeHeal() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
