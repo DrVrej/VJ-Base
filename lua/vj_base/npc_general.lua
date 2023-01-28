@@ -391,31 +391,32 @@ function ENT:GetState()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Checks the relationship with the given entity. Use with caution, it can reduce performance!
+	Checks the relationship with the given entity | Use with caution, it can reduce performance!
 		- ent = The entity to check its relation with
 	Returns
-		- false, Entity is friendly
-		- "Neutral", Entity is neutral
-		- true, Entity is hostile
+		- Disposition value, list: https://wiki.facepunch.com/gmod/Enums/D
 -----------------------------------------------------------]]
-function ENT:DoRelationshipCheck(ent)
-	if ent.VJ_AlwaysEnemyToEnt == self then return true end -- Always enemy to me (Used by the bullseye under certain circumstances)
-	if ent:IsFlagSet(FL_NOTARGET) or ent.VJ_NoTarget or NPCTbl_Animals[ent:GetClass()] then return "Neutral" end
-	if self:GetClass() == ent:GetClass() then return false end
+function ENT:CheckRelationship(ent)
+	if ent.VJ_AlwaysEnemyToEnt == self then return D_HT end -- Always enemy to me (Used by the bullseye under certain circumstances)
+	if ent:IsFlagSet(FL_NOTARGET) or ent.VJ_NoTarget or NPCTbl_Animals[ent:GetClass()] then return D_NU end
+	if self:GetClass() == ent:GetClass() then return D_LI end
 	if ent:Health() > 0 && self:Disposition(ent) != D_LI then
 		local isPly = ent:IsPlayer()
-		if isPly && VJ_CVAR_IGNOREPLAYERS then return "Neutral" end
-		if VJ_HasValue(self.VJ_AddCertainEntityAsFriendly, ent) then return false end
-		if VJ_HasValue(self.VJ_AddCertainEntityAsEnemy, ent) then return true end
+		if isPly && VJ_CVAR_IGNOREPLAYERS then return D_NU end
+		if VJ_HasValue(self.VJ_AddCertainEntityAsFriendly, ent) then return D_LI end
+		if VJ_HasValue(self.VJ_AddCertainEntityAsEnemy, ent) then return D_HT end
 		local entDisp = ent.Disposition and ent:Disposition(self)
 		if (ent:IsNPC() && ((entDisp == D_HT) or (entDisp == D_NU && ent.VJ_IsBeingControlled))) or (isPly && self.PlayerFriendly == false && ent:Alive()) then
-			return true
+			return D_HT
 		else
-			return "Neutral"
+			return D_NU
 		end
 	end
-	return false
+	return D_LI
 end
+-- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
+local dispToVal = {[D_LI] = false, [D_HT] = true, [D_NU] = "Neutral"}
+function ENT:DoRelationshipCheck(ent) return dispToVal[self:CheckRelationship(ent)] end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Helps you decide the pitch for the NPC, very useful for speech-type of sounds!
@@ -932,12 +933,12 @@ function ENT:Touch(entity)
 	
 	-- If it's a passive SNPC...
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
-		if self.Passive_RunOnTouch == true && (entity:IsNPC() or entity:IsPlayer()) && CurTime() > self.TakingCoverT && entity.Behavior != VJ_BEHAVIOR_PASSIVE && entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:DoRelationshipCheck(entity) != false then
+		if self.Passive_RunOnTouch == true && (entity:IsNPC() or entity:IsPlayer()) && CurTime() > self.TakingCoverT && entity.Behavior != VJ_BEHAVIOR_PASSIVE && entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:CheckRelationship(entity) != D_LI then
 			self:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
 			self:PlaySoundSystem("Alert")
 			self.TakingCoverT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
 		end
-	elseif self.DisableTouchFindEnemy == false && !IsValid(self:GetEnemy()) && self.IsFollowing == false && (entity:IsNPC() or (entity:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:DoRelationshipCheck(entity) != false then
+	elseif self.DisableTouchFindEnemy == false && !IsValid(self:GetEnemy()) && self.IsFollowing == false && (entity:IsNPC() or (entity:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:CheckRelationship(entity) != D_LI then
 		self:StopMoving()
 		self:SetTarget(entity)
 		self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
@@ -1057,7 +1058,7 @@ function ENT:DoMedicCheck()
 		if CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled then return end
 		for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
 			if v.IsVJBaseSNPC != true && !v:IsPlayer() then continue end -- If it's not a VJ Base SNPC or a player, then move on
-			if v:EntIndex() != self:EntIndex() && !v.VJTags[VJ_TAG_HEALING] && !v.VJTags[VJ_TAG_VEHICLE] && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:DoRelationshipCheck(v) == false then
+			if v:EntIndex() != self:EntIndex() && !v.VJTags[VJ_TAG_HEALING] && !v.VJTags[VJ_TAG_VEHICLE] && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:CheckRelationship(v) == D_LI then
 				self.Medic_CurrentEntToHeal = v
 				self.Medic_Status = "Active"
 				v:VJTags_Add(VJ_TAG_HEALING)
@@ -1261,7 +1262,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local cosRad20 = math_cos(math_rad(20))
 --
-function ENT:DoEntityRelationshipCheck()
+function ENT:SetupRelationships()
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.Behavior == VJ_BEHAVIOR_PASSIVE*/ then return false end
 	local posEnemies = self.CurrentPossibleEnemies
 	if posEnemies == nil then return false end
@@ -1417,8 +1418,8 @@ function ENT:DoEntityRelationshipCheck()
 			end
 			-- Check in order: Can find enemy + Neutral or not + Is visible + In sight
 			if self.DisableFindEnemy == false && (self.Behavior != VJ_BEHAVIOR_NEUTRAL or self.Alerted) && (self.FindEnemy_CanSeeThroughWalls or self:Visible(v)) && (self.FindEnemy_UseSphere or (mySDir:Dot((vPos - myPos):GetNormalized()) > mySightAng)) then
-				local check = self:DoRelationshipCheck(v)
-				if check == true then -- Is enemy
+				local check = self:CheckRelationship(v)
+				if check == D_HT then -- Is enemy
 					eneSeen = true
 					eneData.VisibleCount = eneData.VisibleCount + 1
 					self:AddEntityRelationship(v, D_HT, 0)
@@ -1428,7 +1429,7 @@ function ENT:DoEntityRelationshipCheck()
 						self:VJ_DoSetEnemy(v, true, true)
 					end
 				-- If the current enemy is a friendly player, then reset the enemy!
-				elseif check == false && vPlayer && IsValid(self:GetEnemy()) && self:GetEnemy() == v then
+				elseif check == D_LI && vPlayer && IsValid(self:GetEnemy()) && self:GetEnemy() == v then
 					eneData.Reset = true
 					self:ResetEnemy(false)
 				end
@@ -1479,7 +1480,7 @@ function ENT:DoEntityRelationshipCheck()
 					end
 				end
 			end
-			self:CustomOnEntityRelationshipCheck(v, entFri, vDistanceToMy)
+			self:CustomOnSetupRelationships(v, entFri, vDistanceToMy)
 		end
 		//return true
 	end
@@ -1497,7 +1498,7 @@ function ENT:Allies_CallHelp(dist)
 			local ene = self:GetEnemy()
 			if IsValid(ene) then
 				if v:GetPos():Distance(ene:GetPos()) > v.SightDistance then continue end -- Enemy to far away for ally, discontinue!
-				//if v:DoRelationshipCheck(ene) == true then
+				//if v:CheckRelationship(ene) == D_HT then
 				if !IsValid(v:GetEnemy()) && ((!ene:IsPlayer() && v:Disposition(ene) != D_LI) or (ene:IsPlayer())) then
 					if v.IsGuard == true && !v:Visible(ene) then continue end -- If it's guarding and enemy is not visible, then don't call!
 					self:CustomOnCallForHelp(v)
@@ -1963,10 +1964,10 @@ function ENT:IdleDialogueFindEnt()
 	local returnEnt = false
 	for _, v in ipairs(ents.FindInSphere(self:GetPos(), self.IdleDialogueDistance)) do
 		if v:IsPlayer() then
-			if self:DoRelationshipCheck(v) == false && !self:CustomOnIdleDialogue(v, "CheckEnt", false) then
+			if self:CheckRelationship(v) == D_LI && !self:CustomOnIdleDialogue(v, "CheckEnt", false) then
 				returnEnt = v
 			end
-		elseif v != self && ((self:GetClass() == v:GetClass()) or (v:IsNPC() && self:DoRelationshipCheck(v) == false)) && self:Visible(v) then
+		elseif v != self && ((self:GetClass() == v:GetClass()) or (v:IsNPC() && self:CheckRelationship(v) == D_LI)) && self:Visible(v) then
 			local canAnswer = (v.IsVJBaseSNPC and VJ_PICK(v.SoundTbl_IdleDialogueAnswer)) or false
 			if !self:CustomOnIdleDialogue(v, "CheckEnt", canAnswer) then
 				returnEnt = v

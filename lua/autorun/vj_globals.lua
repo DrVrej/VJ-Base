@@ -912,7 +912,7 @@ end)
 local function VJ_NPCPLY_DEATH(npc, attacker, inflictor)
 	if IsValid(attacker) && attacker.IsVJBaseSNPC == true then
 		attacker:DoKilledEnemy(npc, attacker, inflictor)
-		attacker:DoEntityRelationshipCheck()
+		attacker:SetupRelationships()
 	end
 end
 hook.Add("OnNPCKilled", "VJ_OnNPCKilled", VJ_NPCPLY_DEATH)
