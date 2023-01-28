@@ -677,7 +677,7 @@ function ENT:CustomOnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink_AIEnabled() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnEntityRelationshipCheck(ent, entFri, entDist) end
+function ENT:CustomOnSetupRelationships(ent, entFri, entDist) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnChangeMovementType(movType) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1895,7 +1895,7 @@ function ENT:Think()
 			
 			-- Run the heavy processes
 			if curTime > self.NextProcessT then
-				self:DoEntityRelationshipCheck()
+				self:SetupRelationships()
 				self:DoMedicCheck()
 				self.NextProcessT = curTime + self.NextProcessTime
 			end
@@ -2651,7 +2651,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		if getAllies != false then
 			for _, v in ipairs(getAllies) do
 				local allyEne = v:GetEnemy()
-				if IsValid(allyEne) && (CurTime() - v.EnemyData.LastVisibleTime) < self.TimeUntilEnemyLost && VJ_IsAlive(allyEne) && self:DoRelationshipCheck(allyEne) && self:GetPos():Distance(allyEne:GetPos()) <= self:GetMaxLookDistance() then
+				if IsValid(allyEne) && (CurTime() - v.EnemyData.LastVisibleTime) < self.TimeUntilEnemyLost && VJ_IsAlive(allyEne) && self:CheckRelationship(allyEne) == D_HT && self:GetPos():Distance(allyEne:GetPos()) <= self:GetMaxLookDistance() then
 					self:VJ_DoSetEnemy(allyEne, false)
 					eneData.Reset = false
 					return false
@@ -2662,7 +2662,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		-- If the current number of reachable enemies is higher then 1, then don't reset
 		if (eneValid && (curEnemies - 1) >= 1) or (!eneValid && curEnemies >= 1) then
 			//self:VJ_DoSetEnemy(v, false, true)
-			self:DoEntityRelationshipCheck() -- Select a new enemy
+			self:SetupRelationships() -- Select a new enemy
 			self.NextProcessT = CurTime() + self.NextProcessTime
 			eneData.Reset = false
 			return false
@@ -2844,7 +2844,7 @@ function ENT:OnTakeDamage(dmginfo)
 			end
 
 			-- Become enemy to a friendly player | RESULT: May become alerted
-			if self.BecomeEnemyToPlayer == true && self.VJ_IsBeingControlled == false && dmgAttacker:IsPlayer() && self:DoRelationshipCheck(dmgAttacker) == false then
+			if self.BecomeEnemyToPlayer == true && self.VJ_IsBeingControlled == false && dmgAttacker:IsPlayer() && self:CheckRelationship(dmgAttacker) == D_LI then
 				self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1
 				if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
 					if self:Disposition(dmgAttacker) != D_HT then
@@ -2875,7 +2875,7 @@ function ENT:OnTakeDamage(dmginfo)
 				sightDist = math_clamp(sightDist / 2, sightDist <= 1000 and sightDist or 1000, sightDist)
 				-- IF normal sight dist is less than 1000 then change nothing, OR ELSE use half the distance with 1000 as minimum
 				for _, v in ipairs(ents.FindInSphere(self:GetPos(), sightDist)) do
-					if (curTime - self.EnemyData.TimeSet) > 2 && self:Visible(v) && self:DoRelationshipCheck(v) == true then
+					if (curTime - self.EnemyData.TimeSet) > 2 && self:Visible(v) && self:CheckRelationship(v) == D_HT then
 						self:CustomOnSetEnemyOnDamage(dmginfo, hitgroup)
 						self.NextCallForHelpT = curTime + 1
 						self:VJ_DoSetEnemy(v, true)

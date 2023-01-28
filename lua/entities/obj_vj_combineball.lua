@@ -98,7 +98,7 @@ function ENT:OnBounce(data, phys)
 	for _, v in ipairs(ents.FindInSphere(myPos, 1024)) do
 		if v == owner then continue end
 		if (!v:IsNPC() && !v:IsPlayer()) then continue end
-		if owner:IsNPC() && !owner:DoRelationshipCheck(v) then continue end
+		if owner:IsNPC() && owner:CheckRelationship(v) == D_LI then continue end
 		local dist = v:GetPos():Distance(myPos)
 		if dist < closestDist && dist > 20 then
 			closestDist = dist
@@ -119,7 +119,7 @@ function ENT:CustomOnPhysicsCollide(data, phys)
 	local owner = self:GetOwner()
 	local hitEnt = data.HitEntity
 	if IsValid(owner) then
-		if (VJ_IsProp(hitEnt)) or (owner:IsNPC() && owner:DoRelationshipCheck(hitEnt) && (hitEnt != owner) or true) then
+		if (VJ_IsProp(hitEnt)) or (owner:IsNPC() && owner:CheckRelationship(hitEnt) == D_HT && (hitEnt != owner) or true) then
 			self:CustomOnDoDamage_Direct(data, phys, hitEnt)
 			local dmgInfo = DamageInfo()
 			dmgInfo:SetDamage(self.DirectDamage)
