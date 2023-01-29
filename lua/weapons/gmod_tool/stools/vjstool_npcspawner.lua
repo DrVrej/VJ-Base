@@ -37,10 +37,13 @@ if CLIENT then
 		reset.DoClick = function()
 			for k,v in pairs(DefaultConVars) do
 				-- Ignore "vjstool_npcspawner_spawnnpclass" because we don't want it set to "None", we need it to stay ""
-				if v == "" && k != "vjstool_npcspawner_spawnnpclass" then
-				LocalPlayer():ConCommand(k.." ".."None")
-			else
-				LocalPlayer():ConCommand(k.." "..v) end
+				if k == "vjstool_npcspawner_spawnnpclass" then
+					LocalPlayer():ConCommand("vjstool_npcspawner_spawnnpclass \"\"")
+				elseif v == "" then
+					LocalPlayer():ConCommand(k.." ".."None")
+				else
+					LocalPlayer():ConCommand(k.." "..v)
+				end
 				timer.Simple(0.05,function()
 					GetPanel = controlpanel.Get("vjstool_npcspawner")
 					GetPanel:ClearControls()
