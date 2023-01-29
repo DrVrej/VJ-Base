@@ -13,7 +13,7 @@
 --------------------------------------------------*/
 if CLIENT then print("Loading VJ Base (Client)...") else print("Loading VJ Base (Server)...") end
 
-VJBASE_VERSION = "2.16.0b"
+VJBASE_VERSION = "2.16.0c"
 
 -- Shared --
 AddCSLuaFile("autorun/vj_menu_spawninfo.lua")
