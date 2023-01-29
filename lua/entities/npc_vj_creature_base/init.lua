@@ -1103,7 +1103,9 @@ function ENT:Initialize()
 	self:SetMaxYawSpeed(self.TurningSpeed)
 	ConvarsOnInit(self)
 	self:DoChangeMovementType()
-	self:SetSurroundingBoundsType(BOUNDS_HITBOXES) // BOUNDS_COLLISION
+	if self.SetSurroundingBoundsType then -- !!!!!!!!!!!!!! Outdated GMod Compatibility! !!!!!!!!!!!!!!
+		self:SetSurroundingBoundsType(BOUNDS_HITBOXES) // BOUNDS_COLLISION
+	end
 	self.ExtraCorpsesToRemove_Transition = {}
 	self.VJ_AddCertainEntityAsEnemy = {}
 	self.VJ_AddCertainEntityAsFriendly = {}

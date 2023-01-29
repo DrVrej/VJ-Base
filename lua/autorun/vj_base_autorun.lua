@@ -13,7 +13,7 @@
 --------------------------------------------------*/
 if CLIENT then print("Loading VJ Base (Client)...") else print("Loading VJ Base (Server)...") end
 
-VJBASE_VERSION = "2.16.0"
+VJBASE_VERSION = "2.16.0b"
 
 -- Shared --
 AddCSLuaFile("autorun/vj_menu_spawninfo.lua")
@@ -84,13 +84,14 @@ end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Outdated GMod Version Check ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-if SERVER && !isfunction(FindMetaTable("NPC").AutoMovement) then
+if SERVER && !isfunction(FindMetaTable("NPC").SetSurroundingBoundsType) then
 	timer.Simple(1, function()
-		if !VJBASE_GMOD_OUTDATED then
-			VJBASE_GMOD_OUTDATED = true
-			timer.Create("VJ_WARN_GModOutdated", 2, 0, function()
+		if !VJBASE_ERROR_GAME_OUTDATED then
+			VJBASE_ERROR_GAME_OUTDATED = true
+			timer.Create("VJBASE_ERROR_GAME_OUTDATED", 2, 1, function()
 				PrintMessage(HUD_PRINTTALK, "--- Outdated version of Garry's Mod detected! ---")
-				PrintMessage(HUD_PRINTTALK, "Either the game is pirated or it's on Chromium branch!")
+				PrintMessage(HUD_PRINTTALK, "Major parts of VJ Base AI are now disabled! Expect errors & AI issues!")
+				PrintMessage(HUD_PRINTTALK, "REASON: Game is running on 64-bit or Chromium or is pirated!")
 			end)
 		end
 	end)
