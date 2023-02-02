@@ -292,7 +292,8 @@ function ENT:CustomOnEat(status, statusInfo)
 		local food = self.EatingData.Ent
 		local damage = 15 -- How much damage food will receive
 		local foodHP = food:Health() -- Food's health
-		self:SetHealth(math.Clamp(self:Health() + ((damage > foodHP and foodHP) or damage), self:Health(), self:GetMaxHealth())) -- Give health to the NPC
+		local myHP = self:Health() -- NPC's current health
+		self:SetHealth(math.Clamp(myHP + ((damage > foodHP and foodHP) or damage), myHP, self:GetMaxHealth() < myHP and myHP or self:GetMaxHealth())) -- Give health to the NPC
 		food:SetHealth(foodHP - damage) -- Decrease corpse health
 		-- Blood effects
 		local bloodData = food.BloodData

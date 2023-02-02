@@ -1323,7 +1323,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 		local animTime = self:DecideAnimationLength(animation, false)
 		
 		if stopActivities == true then
-			if stopActivitiesTime == false then -- false = Let the base calculate the time
+			if isbool(stopActivitiesTime) then -- false = Let the base calculate the time
 				stopActivitiesTime = animTime
 			elseif !extraOptions.PlayBackRateCalculated then -- Make sure not to calculate the playback rate when it already has!
 				stopActivitiesTime = stopActivitiesTime / self:GetPlaybackRate()
