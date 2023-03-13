@@ -17,7 +17,6 @@ ENT.Bleeds = false -- Does the SNPC bleed? (Blood decal, particle, etc.)
 ENT.Immune_Dissolve = true -- Immune to Dissolving | Example: Combine Ball
 ENT.Immune_AcidPoisonRadiation = true -- Immune to Acid, Poison and Radiation
 ENT.Immune_Bullet = true -- Immune to Bullets
-ENT.Immune_Physics = true -- Immune to Physics
 ENT.ImmuneDamagesTable = {DMG_PHYSGUN} -- You can set Specific types of damages for the SNPC to be immune to
 ENT.FindEnemy_UseSphere = true -- Should the SNPC be able to see all around him? (360) | Objects and walls can still block its sight!
 ENT.GetDamageFromIsHugeMonster = true -- Should it get damaged no matter what by SNPCs that are tagged as VJ_IsHugeMonster?
@@ -140,6 +139,7 @@ local runoverException = {npc_antlionguard=true,npc_turret_ceiling=true,monster_
 local defAng = Angle(0, 0, 0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize()
+	self:SetImpactEnergyScale(0) -- Take no physics damage
 	self.DeathAnimationCodeRan = true -- So corpse doesn't fly away on death (Take this out if not using death explosion sequence)
 	self:VJTags_Add(VJ_TAG_VEHICLE)
 	self:CustomInitialize_CustomTank()
