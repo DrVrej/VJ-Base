@@ -841,29 +841,44 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IsJumpLegal(startPos, apex, endPos)
-	/*print("---------------------")
-	print(startPos)
-	print(apex)
-	print(endPos)*/
-	if !self.AllowMovementJumping then return false end
+	/*if !self.AllowMovementJumping then return false end
 	local result = self:CustomOnIsJumpLegal(startPos, apex, endPos)
 	if result != nil then
-		/*if result == true then
-			self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190)
-		end*/
 		return result
 	end
 	local dist_apex = startPos:Distance(apex)
 	local dist_end = startPos:Distance(endPos)
-	local maxdist = self.MaxJumpLegalDistance.a -- Var gam Ver | Arachin tive varva hamar ter
+	local maxDist = self.MaxJumpLegalDistance.a -- Var gam Ver | Arachin tive varva hamar ter
 	-- Aravel = Ver, Nevaz = Var
-	if (endPos.z - startPos.z) <= 0 then maxdist = self.MaxJumpLegalDistance.b end -- Ver bidi tsadke
-	/*print("---------------------")
+	if (endPos.z - startPos.z) <= 0 then maxDist = self.MaxJumpLegalDistance.b end -- Ver bidi tsadke
+	print("---------------------")
 	print(endPos.z - startPos.z)
-	print("Apex: "..dist_apex)
-	print("End Pos: "..dist_end)*/
-	if (dist_apex > maxdist) or (dist_end > maxdist) then return false end
-	//self.JumpLegalLandingTime = CurTime() + (endPos:Distance(startPos) / 190)
+	print("Apex Dist: "..dist_apex)
+	print("End Pos: "..dist_end)
+	VJ_CreateTestObject(startPos, Angle(0,0,0), Color(0,255,0))
+	VJ_CreateTestObject(apex, Angle(0,0,0), Color(255,115,0))
+	VJ_CreateTestObject(endPos, Angle(0,0,0), Color(255,0,0))
+	if (dist_apex > maxDist) or (dist_end > maxDist) then return false end
+	return true*/
+	
+	if !self.AllowMovementJumping then return false end
+	local result = self:CustomOnIsJumpLegal(startPos, apex, endPos)
+	if result != nil then
+		return result
+	end
+	local jumpData = self.JumpVars
+	if ((endPos.z - startPos.z) > jumpData.MaxRise) or ((apex.z - startPos.z) > jumpData.MaxRise) or ((startPos.z - endPos.z) > jumpData.MaxDrop) or (startPos:Distance(endPos) > jumpData.MaxDistance) then
+		return false
+	end
+	local tr = util.TraceLine({
+		start = endPos,
+		endpos = endPos + Vector(0, 0, -100),
+	})
+	/*VJ_CreateTestObject(startPos, Angle(0,0,0), Color(0,255,0))
+	VJ_CreateTestObject(apex, Angle(0,0,0), Color(255,115,0))
+	VJ_CreateTestObject(endPos, Angle(0,0,0), Color(255,0,0))
+	VJ_CreateTestObject(tr.HitPos, Angle(0,0,0), Color(132,0,255))*/
+	if !tr.Hit then return false end
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
