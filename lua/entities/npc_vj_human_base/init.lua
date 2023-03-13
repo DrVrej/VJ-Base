@@ -37,12 +37,22 @@ ENT.AnimationPlaybackRate = 1 -- Controls the playback rate of all the animation
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How does the SNPC move?
 ENT.UsePlayerModelMovement = false -- If true, it will allow the NPC to use player models properly by calculating the direction it needs to go to and setting the appropriate values
-	-- Jumping Variables:
-	-- Requires "CAP_MOVE_JUMP" | Applied automatically by the base if "ACT_JUMP" is valid on the NPC's model
+	-- Movement: JUMP --
+	-- NOTE: Requires "CAP_MOVE_JUMP" capability
+	-- Applied automatically by the base if "ACT_JUMP" is valid on the NPC's model
 ENT.AllowMovementJumping = true -- Should the NPC be allowed to jump from one node to another?
-ENT.MaxJumpLegalDistance = VJ_Set(150, 280) -- The max distance the NPC can jump (Usually from one node to another) | ( UP, DOWN )
-	-- Stationary Move Type Variables:
-ENT.CanTurnWhileStationary = true -- If true, the NPC will be able to turn while it's stationary
+-- Example scenario:
+--      [A]       <- Apex
+--     /   \
+--    /     [S]   <- Start
+--  [E]           <- End
+ENT.JumpVars = {
+	MaxRise = 80, -- How high it can jump up ((S -> A) AND (S -> E))
+	MaxDrop = 192, -- How low it can jump down (E -> S)
+	MaxDistance = 250, -- Maximum distance between Start and End
+}
+	-- Movement: STATIONARY --
+ENT.CanTurnWhileStationary = true -- Can the NPC turn while it's stationary?
 ENT.Stationary_UseNoneMoveType = false -- Technical variable, used if there is any issues with the NPC's position (It has its downsides, use only when needed!)
 	-- ====== NPC Controller Data ====== --
 ENT.VJC_Data = {
@@ -1134,6 +1144,7 @@ function ENT:Initialize()
 	self.SightDistance = (GetConVar("vj_npc_seedistance"):GetInt() > 0) and GetConVar("vj_npc_seedistance"):GetInt() or self.SightDistance
 	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
 	if self.Immune_Physics then self:SetImpactEnergyScale(0) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	if self.MaxJumpLegalDistance then self.JumpVars.MaxRise = self.MaxJumpLegalDistance.a; self.JumpVars.MaxDrop = self.MaxJumpLegalDistance.b; end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	timer.Simple(0.15, function()
 		if IsValid(self) then
 			self:SetSightDistance(self.SightDistance)
