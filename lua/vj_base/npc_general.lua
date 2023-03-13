@@ -783,12 +783,20 @@ function  ENT:GetLastDamageTime()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Number of times NPC has been damaged. Useful for tracking 1-shot kills.
+	Number of times NPC has been damaged. Useful for tracking 1-shot kills
 	Returns
 		- number, the damage count
 -----------------------------------------------------------]]
 function  ENT:GetTotalDamageCount()
 	return self:GetInternalVariable("m_iDamageCount")
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Scale the amount of energy used to calculate damage this NPC takes due to physics
+		- EXAMPLES: 0 = Take no physics damage | 0.001 = Take extremely minimum damage (manhack level) | 0.1 = Take little damage | 999999999 = Instant death
+-----------------------------------------------------------]]
+function  ENT:SetImpactEnergyScale(scale)
+	self:SetSaveValue("m_impactEnergyScale", scale)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_GetNearestPointToVector(pos, sameZ)

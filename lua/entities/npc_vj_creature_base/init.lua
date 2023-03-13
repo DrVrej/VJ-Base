@@ -215,7 +215,6 @@ ENT.Immune_Dissolve = false -- Immune to dissolving | Example: Combine Ball
 ENT.Immune_Electricity = false -- Immune to electrical-type damages | Example: shock or laser
 ENT.Immune_Fire = false -- Immune to fire-type damages
 ENT.Immune_Melee = false -- Immune to melee-type damage | Example: Crowbar, slash damages
-ENT.Immune_Physics = false -- Immune to physics impacts, won't take damage from props
 ENT.Immune_Sonic = false -- Immune to sonic-type damages
 ENT.ImmuneDamagesTable = {} -- Makes the SNPC immune to specific type of damages | Takes DMG_ enumerations
 ENT.GetDamageFromIsHugeMonster = false -- Should it get damaged no matter what by SNPCs that are tagged as VJ_IsHugeMonster?
@@ -1082,6 +1081,7 @@ local function ConvarsOnInit(self)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defIdleTbl = {ACT_IDLE}
+local defShootVec = Vector(0, 0, 55)
 --
 function ENT:Initialize()
 	if self.AnimTbl_IdleStand == nil then self.AnimTbl_IdleStand = defIdleTbl end
@@ -1120,6 +1120,8 @@ function ENT:Initialize()
 	self:CustomInitialize() -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + (self.IdleAlwaysWander and 0 or 1)) -- If self.NextWanderTime isn't given a value THEN if self.IdleAlwaysWander isn't true, wait at least 1 sec before wandering
 	self.SightDistance = (GetConVar("vj_npc_seedistance"):GetInt() > 0) and GetConVar("vj_npc_seedistance"):GetInt() or self.SightDistance
+	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
+	if self.Immune_Physics then self:SetImpactEnergyScale(0) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	timer.Simple(0.15, function()
 		if IsValid(self) then
 			self:SetSightDistance(self.SightDistance)
@@ -2737,7 +2739,7 @@ function ENT:OnTakeDamage(dmginfo)
 	if VJ_HasValue(self.ImmuneDamagesTable, dmgType) then return 0 end
 	if self.AllowIgnition == false && isFireDmg then self:Extinguish() return 0 end
 	if self.Immune_Fire == true && (dmgType == DMG_BURN or dmgType == DMG_SLOWBURN or isFireDmg) then return 0 end
-	if (self.Immune_AcidPoisonRadiation == true && (dmgType == DMG_ACID or dmgType == DMG_RADIATION or dmgType == DMG_POISON or dmgType == DMG_NERVEGAS or dmgType == DMG_PARALYZE)) or (self.Immune_Bullet == true && (dmginfo:IsBulletDamage() or dmgType == DMG_BULLET or dmgType == DMG_AIRBOAT or dmgType == DMG_BUCKSHOT)) or (self.Immune_Blast == true && (dmgType == DMG_BLAST or dmgType == DMG_BLAST_SURFACE)) or (self.Immune_Dissolve == true && dmgType == DMG_DISSOLVE) or (self.Immune_Electricity == true && (dmgType == DMG_SHOCK or dmgType == DMG_ENERGYBEAM or dmgType == DMG_PHYSGUN)) or (self.Immune_Melee == true && (dmgType == DMG_CLUB or dmgType == DMG_SLASH)) or (self.Immune_Physics == true && dmgType == DMG_CRUSH) or (self.Immune_Sonic == true && dmgType == DMG_SONIC) then return 0 end
+	if (self.Immune_AcidPoisonRadiation == true && (dmgType == DMG_ACID or dmgType == DMG_RADIATION or dmgType == DMG_POISON or dmgType == DMG_NERVEGAS or dmgType == DMG_PARALYZE)) or (self.Immune_Bullet == true && (dmginfo:IsBulletDamage() or dmgType == DMG_BULLET or dmgType == DMG_AIRBOAT or dmgType == DMG_BUCKSHOT)) or (self.Immune_Blast == true && (dmgType == DMG_BLAST or dmgType == DMG_BLAST_SURFACE)) or (self.Immune_Dissolve == true && dmgType == DMG_DISSOLVE) or (self.Immune_Electricity == true && (dmgType == DMG_SHOCK or dmgType == DMG_ENERGYBEAM or dmgType == DMG_PHYSGUN)) or (self.Immune_Melee == true && (dmgType == DMG_CLUB or dmgType == DMG_SLASH)) or (self.Immune_Sonic == true && dmgType == DMG_SONIC) then return 0 end
 	if (IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball") or (IsValid(dmgAttacker) && dmgAttacker:GetClass() == "prop_combine_ball") then
 		if self.Immune_Dissolve == true then return 0 end
 		-- Make sure combine ball does reasonable damage and doesn't spam it!
