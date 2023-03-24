@@ -63,11 +63,12 @@ if CLIENT then
 		local lerpSpeed = ply:GetInfoNum("vj_npc_cont_cam_speed", 6)
 		if npc.Controller_CalcView then -- Allows custom calcview overrides
 			local data = npc:Controller_CalcView(ply, pos, ang, fov, origin, angles, cameraMode)
+			-- Return: table -> {pos, ang, fov, speed}
 			if data then
 				pos = data.origin or pos
 				ang = data.angles or ang
 				fov = data.fov or fov
-				lerpSpeed = (data.speed == false && 0 or data.speed) or lerpSpeed
+				lerpSpeed = data.speed or lerpSpeed
 			end
 		end
 
