@@ -7,7 +7,7 @@ NOTES: Some fixes are from: https://github.com/garrynewman/garrysmod/pull/524
 if CLIENT then return end
 
 local setmetatable = setmetatable
-local TaskList = {
+local taskList = {
 	["TASK_INVALID"] = 0,
 	["TASK_RESET_ACTIVITY"] = 1,
 	["TASK_WAIT"] = 2,
@@ -160,7 +160,7 @@ local TaskList = {
 	["TASK_PRE_SCRIPT"] = 149,
 }
 
-GetTaskList = function(name) return TaskList[name] or TaskList[0] end
+GetTaskList = function(name) return taskList[name] or taskList[0] end
 local GetTaskID = GetTaskList
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
