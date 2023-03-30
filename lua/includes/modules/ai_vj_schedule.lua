@@ -5,12 +5,11 @@
 --------------------------------------------------*/
 if CLIENT then return end
 
-print("VJ Base module: AI Schedules initialized!")
-
 require("ai_vj_task")
 local setmetatable = setmetatable
 local tostring = tostring
 local table = table
+local print = print
 local ai_vj_task 		= ai_vj_task
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -62,3 +61,5 @@ function New(debugName)
 	newSchedule:Init(debugName)
 	return newSchedule
 end
+
+print("VJ Base module: AI Schedules initialized!")
