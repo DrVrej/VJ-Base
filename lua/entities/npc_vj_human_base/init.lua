@@ -1442,7 +1442,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 			self.DoingWeaponAttack = false
 			self.DoingWeaponAttack_Standing = false
 			
-			//self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0) //vsched:EngTask("TASK_RESET_ACTIVITY", 0)
+			//self:StartEngineTask(ai.GetTaskID("TASK_RESET_ACTIVITY"), 0) //vsched:EngTask("TASK_RESET_ACTIVITY", 0)
 			//if self.Dead then vsched:EngTask("TASK_STOP_MOVING", 0) end
 			//self:FrameAdvance(0)
 			self:TaskComplete()
@@ -1607,10 +1607,10 @@ function ENT:VJ_TASK_IDLE_STAND()
 			self:VJ_ACT_PLAYACTIVITY(pickedAnim, false, 0, false, 0, {SequenceDuration=false, SequenceInterruptible=true}) // AlwaysUseSequence=true
 		end
 		if self.CurrentSchedule == nil then -- If it's not doing a schedule then reset the activity to make sure it's not already playing the same idle activity!
-			self:StartEngineTask(GetTaskList("TASK_RESET_ACTIVITY"), 0)
+			self:StartEngineTask(ai.GetTaskID("TASK_RESET_ACTIVITY"), 0)
 			//self:SetIdealActivity(ACT_RESET)
 		end*/
-		//self:StartEngineTask(GetTaskList("TASK_PLAY_SEQUENCE"),pickedAnim)
+		//self:StartEngineTask(ai.GetTaskID("TASK_PLAY_SEQUENCE"),pickedAnim)
 		if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then self:AA_StopMoving() end
 		self.CurAnimationSeed = 0
 		self.VJ_PlayingSequence = false
