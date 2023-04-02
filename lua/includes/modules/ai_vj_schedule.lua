@@ -10,7 +10,7 @@ local setmetatable = setmetatable
 local tostring = tostring
 local table = table
 local print = print
-local ai_vj_task 		= ai_vj_task
+local ai_vj_task = ai_vj_task
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Begin Metatable ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -28,23 +28,19 @@ end
 function Schedule:EngTask(taskName, taskData)
 	local NewTask = ai_vj_task.New()
 	NewTask:InitEngine(taskName, taskData)
-	table.insert(self.Tasks, NewTask)
-	self.TaskCount = self.TaskCount + 1
+	self.TaskCount = table.insert(self.Tasks, NewTask)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Schedule:AddTask(funcName, data)
 	local NewTask = ai_vj_task.New()
 	NewTask:InitFunctionName("TaskStart_"..funcName, "Task_"..funcName, data)
-	table.insert(self.Tasks, NewTask)
-	//print(self.TaskCount.." AddTask has ran!")
-	self.TaskCount = self.TaskCount + 1  -- Or else it will make an error saying NumTasks is a nil value
+	self.TaskCount = table.insert(self.Tasks, NewTask)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Schedule:AddTaskEx(startFunc, endFunc, data)
 	local NewTask = ai_vj_task.New()
 	NewTask:InitFunctionName(startFunc, endFunc, data)
-	table.insert(self.Tasks, NewTask)
-	self.TaskCount = self.TaskCount + 2  -- Or else it will make an error saying NumTasks is a nil value
+	self.TaskCount = table.insert(self.Tasks, NewTask)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Schedule:NumTasks()
@@ -62,4 +58,4 @@ function New(debugName)
 	return newSchedule
 end
 
-print("VJ Base module: AI Schedules initialized!")
+print("VJ Base AI Schedule module: Successfully initialized!")

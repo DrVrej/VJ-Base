@@ -255,7 +255,6 @@ function ENT:StartSchedule(schedule)
 	if !self.Dead then self:DoRunCode_OnFinish(self.CurrentSchedule) end -- Yete arten schedule garne, verchatsoor
 	self.CurrentSchedule = schedule
 	self.CurrentTaskID = 1
-	self.GetNumberOfTasks = tonumber(schedule:NumTasks()) -- Or else nil
 	self:SetTask(schedule:GetTask(1))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -280,15 +279,14 @@ function ENT:SetTask(task)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:NextTask(schedule)
-	//print(self.GetNumberOfTasks)
 	//print(self.CurrentTaskID)
 	if !schedule or !self then return end
-	if self.GetNumberOfTasks == nil then //1
+	if schedule:NumTasks() == nil then //1
 		print("VJ Base Schedules: Number of tasks is nil!")
 	end
 	//print("Running NextTask")
 	self.CurrentTaskID = self.CurrentTaskID + 1
-	if (self.CurrentTaskID > self.GetNumberOfTasks) then
+	if (self.CurrentTaskID > schedule:NumTasks()) then
 		self:ScheduleFinished(schedule)
 		return
 	end
