@@ -38,6 +38,6 @@ if CLIENT then
 	//function ENT:CalcAbsolutePosition(pos, ang) end
 	-- Custom functions ---------------------------------------------------------------------------------------------------------------------------------------------
 	function ENT:CustomOnDraw() end
-	-- function ENT:Controller_CalcView(ply, pos, ang, fov, origin, angles, cameraMode) end -- Uncomment to use this function!
-		-- Override the NPC Controller's view by returning a table that can take the following values: {pos, ang, fov, speed}
+	-- UNCOMMENT TO USE | Override the NPC Controller's view by returning a table that can take the following values: {pos, ang, fov, speed}
+	-- function ENT:Controller_CalcView(ply, pos, ang, fov, origin, angles, cameraMode) end
 end

@@ -394,53 +394,48 @@ function ENT:StartMovement(Dir, Rot)
 	local ply = self.VJCE_Player
 	if npc:GetState() != VJ_STATE_NONE then return end
 
-	local DontMove = false
-	local PlyAimVec = Dir
-	PlyAimVec.z = 0
-	PlyAimVec:Rotate(Rot)
-	local NPCOrigin = npc:GetPos()
-	local CenterToPos = npc:OBBCenter():Distance(npc:OBBMins()) + 20 // npc:OBBMaxs().z
-	local NPCPos = NPCOrigin + npc:GetUp()*CenterToPos
+	local DEBUG = ply:GetInfoNum("vj_npc_cont_devents", 0) == 1
+	local plyAimVec = Dir
+	plyAimVec.z = 0
+	plyAimVec:Rotate(Rot)
+	local selfPos = npc:GetPos()
+	local centerToPos = npc:OBBCenter():Distance(npc:OBBMins()) + 20 // npc:OBBMaxs().z
+	local NPCPos = selfPos + npc:GetUp()*centerToPos
 	local groundSpeed = math.Clamp(npc:GetSequenceGroundSpeed(npc:GetSequence()), 300, 9999)
-	local defaultFilter = {npc,ply,self}
-	local forwardtr = util.TraceLine({start = NPCPos, endpos = NPCPos + PlyAimVec * groundSpeed, filter = defaultFilter})
-	local forwardDist = NPCPos:Distance(forwardtr.HitPos)
-	local CalculateWallToNPC = forwardDist - (npc:OBBMaxs().y) -- Use Y instead of X because X is left/right whereas Y is forward/backward
-
-	if ply:GetInfoNum("vj_npc_cont_devents", 0) == 1 then
-		VJ_CreateTestObject(NPCPos, self:GetAngles(), Color(0,255,255)) -- NPC's calculated position
-		VJ_CreateTestObject(forwardtr.HitPos, self:GetAngles(), Color(255,255,0)) -- forward trace position
+	local defaultFilter = {self, npc, ply}
+	local forwardTr = util.TraceLine({start = NPCPos, endpos = NPCPos + plyAimVec * groundSpeed, filter = defaultFilter})
+	local forwardDist = NPCPos:Distance(forwardTr.HitPos)
+	local wallToSelf = forwardDist - (npc:OBBMaxs().y) -- Use Y instead of X because X is left/right whereas Y is forward/backward
+	if DEBUG then
+		VJ_CreateTestObject(NPCPos, self:GetAngles(), Color(0, 255, 255)) -- NPC's calculated position
+		VJ_CreateTestObject(forwardTr.HitPos, self:GetAngles(), Color(255, 255, 0)) -- forward trace position
 	end
 	if forwardDist >= 25 then
-		local FinalPos = Vector((NPCOrigin+PlyAimVec*CalculateWallToNPC).x,(NPCOrigin+PlyAimVec*CalculateWallToNPC).y,forwardtr.HitPos.z)
-		local downtr = util.TraceLine({start = FinalPos, endpos = FinalPos + self:GetUp()*-(200+CenterToPos), filter = defaultFilter})
-		local CalculateDownDistance = (FinalPos.z-CenterToPos) - downtr.HitPos.z
-		if CalculateDownDistance >= 150 then -- If the drop is this big, then don't move!
-			DontMove = true
-			CalculateWallToNPC = CalculateWallToNPC - CalculateDownDistance
+		local finalPos = Vector((selfPos + plyAimVec * wallToSelf).x, (selfPos + plyAimVec * wallToSelf).y, forwardTr.HitPos.z)
+		local downTr = util.TraceLine({start = finalPos, endpos = finalPos + self:GetUp()*-(200 + centerToPos), filter = defaultFilter})
+		local downDist = (finalPos.z - centerToPos) - downTr.HitPos.z
+		if downDist >= 150 then -- If the drop is this big, then don't move!
+			//wallToSelf = wallToSelf - downDist -- No need, we are returning anyway
+			return
 		end
-		FinalPos = Vector((NPCOrigin+PlyAimVec*CalculateWallToNPC).x, (NPCOrigin+PlyAimVec*CalculateWallToNPC).y, forwardtr.HitPos.z)
-		if ply:GetInfoNum("vj_npc_cont_devents", 0) == 1 then
-			VJ_CreateTestObject(downtr.HitPos, self:GetAngles(), Color(255,0,255)) -- Down trace position
-			VJ_CreateTestObject(FinalPos, self:GetAngles(), Color(0,255,0)) -- Final move position
+		finalPos = Vector((selfPos + plyAimVec * wallToSelf).x, (selfPos + plyAimVec * wallToSelf).y, forwardTr.HitPos.z)
+		if DEBUG then
+			VJ_CreateTestObject(downTr.HitPos, self:GetAngles(), Color(255, 0, 255)) -- Down trace position
+			VJ_CreateTestObject(finalPos, self:GetAngles(), Color(0, 255, 0)) -- Final move position
 		end
-		if DontMove == false then
-			npc:SetLastPosition(FinalPos)
-			local movetype = "TASK_WALK_PATH"
-			if (ply:KeyDown(IN_SPEED)) then movetype = "TASK_RUN_PATH" end
-			npc:VJ_TASK_GOTO_LASTPOS(movetype,function(x)
-				if ply:KeyDown(IN_ATTACK2) && npc.IsVJBaseSNPC_Human == true then
+		npc:SetLastPosition(finalPos)
+		npc:VJ_TASK_GOTO_LASTPOS(ply:KeyDown(IN_SPEED) and "TASK_RUN_PATH" or "TASK_WALK_PATH", function(x)
+			if ply:KeyDown(IN_ATTACK2) && npc.IsVJBaseSNPC_Human then
+				x.ConstantlyFaceEnemy = true
+				x.CanShootWhenMoving = true
+			else
+				if self.VJC_BullseyeTracking then
 					x.ConstantlyFaceEnemy = true
-					x.CanShootWhenMoving = true
 				else
-					if self.VJC_BullseyeTracking == true then
-						x.ConstantlyFaceEnemy = true
-					else
-						x:EngTask("TASK_FACE_LASTPOSITION", 0)
-					end
+					x:EngTask("TASK_FACE_LASTPOSITION", 0)
 				end
-			end)
-		end
+			end
+		end)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -535,7 +530,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
 	self:CustomOnRemove()
-	if self.VJC_Removed == false then
+	if !self.VJC_Removed then
 		self:StopControlling()
 	end
 	net.Start("vj_controller_hud")

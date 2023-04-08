@@ -947,7 +947,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnCondition(cond)
 	//print(self, " Condition: ", cond, " - ", self:ConditionName(cond))
-	self:CustomOnCondition(cond)
+	if self.CustomOnCondition then self:CustomOnCondition(cond) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
