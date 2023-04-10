@@ -356,7 +356,7 @@ function ENT:Think()
 		
 		if npc.Flinching == true or (((npc.CurrentSchedule && npc.CurrentSchedule.IsPlayActivity != true) or npc.CurrentSchedule == nil) && npc:GetNavType() == NAV_JUMP) then return end
 		
-		if !npc.PlayingAttackAnimation && curTime > npc.NextChaseTime && npc.IsVJBaseSNPC_Tank != true then
+		if npc.CurAttackAnimTime < CurTime() && curTime > npc.NextChaseTime && npc.IsVJBaseSNPC_Tank != true then
 			-- Turning
 			if !npc:IsMoving() && canTurn && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ_WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
 				//npc:SetAngles(Angle(0,ply:GetAimVector():Angle().y,0))
