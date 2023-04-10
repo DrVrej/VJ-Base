@@ -888,7 +888,6 @@ ENT.IsFollowing = false
 ENT.FollowingPlayer = false
 ENT.VJ_IsBeingControlled = false
 ENT.VJ_PlayingSequence = false
-ENT.PlayingAttackAnimation = false
 ENT.DoingWeaponAttack = false
 ENT.DoingWeaponAttack_Standing = false
 ENT.WaitingForEnemyToComeOut = false
@@ -934,6 +933,7 @@ ENT.NextAlertSoundT = 0
 ENT.NextCallForHelpAnimationT = 0
 ENT.CurrentAttackAnimation = 0
 ENT.CurrentAttackAnimationDuration = 0
+ENT.CurAttackAnimTime = 0
 ENT.NextIdleTime = 0
 ENT.NextChaseTime = 0
 ENT.OnPlayerSightNextT = 0
@@ -981,7 +981,7 @@ ENT.WeaponState = VJ_WEP_STATE_READY
 ENT.WeaponInventoryStatus = VJ_WEP_INVENTORY_NONE
 ENT.FacingStatus = VJ_FACING_NONE
 ENT.FacingData = nil
-ENT.TimersToRemove = {"timer_weapon_state_reset","timer_state_reset","timer_act_seqreset","timer_facing_end","timer_act_flinching","timer_act_playingattack","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_reload_end","timer_alerted_reset"}
+ENT.TimersToRemove = {"timer_weapon_state_reset","timer_state_reset","timer_act_seqreset","timer_facing_end","timer_act_flinching","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_reload_end","timer_alerted_reset"}
 ENT.FollowData = {Ent = NULL, MinDist = 0, Moving = false, StopAct = false}
 ENT.EnemyData = {
 	TimeSet = 0, -- Last time an enemy was set | Updated whenever "VJ_DoSetEnemy" is ran successfully
@@ -1635,7 +1635,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoIdleAnimation(idleType)
-	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead or self.VJ_IsBeingControlled or self.PlayingAttackAnimation == true or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
+	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead or self.VJ_IsBeingControlled or self.CurAttackAnimTime > CurTime() or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
 	idleType = idleType or 0 -- 0 = Random | 1 = Wander | 2 = Idle Stand
 	
 	if self.IdleAlwaysWander == true then idleType = 1 end
@@ -1661,7 +1661,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChaseAnimation(alwaysChase)
 	local ene = self:GetEnemy()
-	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead or self.VJ_IsBeingControlled or self.PlayingAttackAnimation == true or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.PlayingAttackAnimation == true && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
+	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead or self.VJ_IsBeingControlled or self.CurAttackAnimTime > CurTime() or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.CurAttackAnimTime > CurTime() && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
 	if self:VJ_GetNearestPointToEntityDistance(ene) < self.MeleeAttackDistance && self.EnemyData.IsVisible && (self.EnemyData.SightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))) then self:VJ_TASK_IDLE_STAND() return end -- Not melee attacking yet but it is in range, so stop moving!
 	
 	alwaysChase = alwaysChase or false -- true = Chase no matter what
@@ -2863,8 +2863,7 @@ function ENT:Think()
 							self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_MeleeAttack)
 							self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, self.MeleeAttackAnimationDecreaseLengthAmount)
 							if self.MeleeAttackAnimationAllowOtherTasks == false then -- Useful for gesture-based attacks
-								self.PlayingAttackAnimation = true
-								timer.Create("timer_act_playingattack"..self:EntIndex(), self.CurrentAttackAnimationDuration, 1, function() self.PlayingAttackAnimation = false end)
+								self.CurAttackAnimTime = curTime + self.CurrentAttackAnimationDuration
 							end
 							self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.MeleeAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
 						end
@@ -3004,8 +3003,7 @@ function ENT:ThrowGrenadeCode(customEnt, noOwner)
 	if self.DisableGrenadeAttackAnimation == false then
 		self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_GrenadeAttack)
 		self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, 0.2)
-		self.PlayingAttackAnimation = true
-		timer.Create("timer_act_playingattack"..self:EntIndex(), self.CurrentAttackAnimationDuration, 1, function() self.PlayingAttackAnimation = false end)
+		self.CurAttackAnimTime = curTime + self.CurrentAttackAnimationDuration
 		self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation, self.GrenadeAttackAnimationStopAttacks, self:DecideAnimationLength(self.CurrentAttackAnimation, self.GrenadeAttackAnimationStopAttacksTime), true, self.GrenadeAttackAnimationDelay, {PlayBackRateCalculated=true})
 	end
 
@@ -4255,7 +4253,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 	if sdSet == "GeneralSpeech" then -- Used to just play general speech sounds (Custom by developers)
 		if customTbl then
 			self:StopAllCommonSpeechSounds()
-			self.NextIdleSoundT_RegularChange = CurTime() + ((((SoundDurationcustomTbl > 0) and SoundDurationcustomTbl) or 2) + 1)
+			self.NextIdleSoundT_RegularChange = CurTime() + ((((SoundDuration(customTbl) > 0) and SoundDuration(customTbl)) or 2) + 1)
 			self.CurrentGeneralSpeechSound = sdType(self, customTbl, 80, self:VJ_DecideSoundPitch(self.GeneralSoundPitch1, self.GeneralSoundPitch2))
 		end
 		return

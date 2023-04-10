@@ -338,7 +338,7 @@ end
 		- true, Busy
 -----------------------------------------------------------]]
 function ENT:BusyWithActivity()
-	return self.vACT_StopAttacks or self.PlayingAttackAnimation or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB
+	return self.vACT_StopAttacks or self.CurAttackAnimTime > CurTime() or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1678,7 +1678,7 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 	local function RunFlinchCode(HitgroupInfo)
 		self.Flinching = true
 		self:StopAttacks(true)
-		self.PlayingAttackAnimation = false
+		self.CurAttackAnimTime = 0
 		local animTbl = self.AnimTbl_Flinch
 		if HitgroupInfo != nil then animTbl = HitgroupInfo.Animation end
 		local anim = VJ_PICK(animTbl)
