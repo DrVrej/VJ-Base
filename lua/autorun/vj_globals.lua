@@ -171,12 +171,13 @@ COND_WEAPON_SIGHT_OCCLUDED = 45
 if SERVER then
 	util.AddNetworkString("vj_music_run")
 	
-	require("ai_vj_schedule")
-	local getSched = ai_vj_schedule.New
-	function ai_vj_schedule.New(name)
-		local actualSched = getSched(name)
-		actualSched.Name = name
-		return actualSched
+	-- Initialize AI schedule & task system
+	require("vj_ai_schedule")
+	local orgFunc = vj_ai_schedule.New
+	function vj_ai_schedule.New(name)
+		local actualFunc = orgFunc(name)
+		actualFunc.Name = name
+		return actualFunc
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1108,8 +1109,8 @@ if CLIENT then
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*if CLIENT then
-	require("sound_vj_track")
-	sound_vj_track.Add("VJ_SpiderQueenThemeMusic","vj_dm_spidermonster/Dark Messiah - Avatar of the Spider Goddess.wav",161)
+	require("vj_sound_track")
+	vj_sound_track.Add("VJ_SpiderQueenThemeMusic","vj_dm_spidermonster/Dark Messiah - Avatar of the Spider Goddess.wav",161)
 end*/
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Utility Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

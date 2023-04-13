@@ -1,4 +1,4 @@
-require("ai_vj_schedule")
+require("vj_ai_schedule")
 /*-----------------------------------------------
 	*** Copyright (c) 2012-2023 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
@@ -9,7 +9,7 @@ function ENT:VJ_TASK_FACE_X(faceType, customFunc)
 	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
 	if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false) or (self.IsVJBaseSNPC_Tank == true) then return end
 	//self.NextIdleStandTime = CurTime() + 1.2
-	local vschedFaceX = ai_vj_schedule.New("vj_face_x")
+	local vschedFaceX = vj_ai_schedule.New("vj_face_x")
 	vschedFaceX:EngTask(faceType or "TASK_FACE_TARGET", 0)
 	if (customFunc) then customFunc(vschedFaceX) end
 	self:StartSchedule(vschedFaceX)
@@ -20,7 +20,7 @@ function ENT:VJ_TASK_GOTO_LASTPOS(moveType, customFunc)
 		self:AA_MoveTo(self:GetLastPosition(), true, (moveType == "TASK_RUN_PATH" and "Alert") or "Calm")
 		return
 	end
-	local vsched = ai_vj_schedule.New("vj_goto_lastpos")
+	local vsched = vj_ai_schedule.New("vj_goto_lastpos")
 	vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
 	//vsched:EngTask(moveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
@@ -39,7 +39,7 @@ function ENT:VJ_TASK_GOTO_TARGET(moveType, customFunc)
 		self:AA_MoveTo(self:GetTarget(), true, (moveType == "TASK_RUN_PATH" and "Alert") or "Calm")
 		return
 	end
-	local vsched = ai_vj_schedule.New("vj_goto_target")
+	local vsched = vj_ai_schedule.New("vj_goto_target")
 	vsched:EngTask("TASK_GET_PATH_TO_TARGET", 0)
 	//vsched:EngTask(moveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
@@ -55,7 +55,7 @@ function ENT:VJ_TASK_GOTO_PLAYER(moveType, customFunc)
 		self:AA_MoveTo(self:GetTarget(), true, (moveType == "TASK_RUN_PATH" and "Alert") or "Calm")
 		return
 	end
-	local vsched = ai_vj_schedule.New("vj_goto_player")
+	local vsched = vj_ai_schedule.New("vj_goto_player")
 	vsched:EngTask("TASK_GET_PATH_TO_PLAYER", 0)
 	//vsched:EngTask(moveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
@@ -68,7 +68,7 @@ end
 function ENT:VJ_TASK_COVER_FROM_ENEMY(moveType, customFunc)
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
 	moveType = moveType or "TASK_RUN_PATH"
-	local vsched = ai_vj_schedule.New("vj_cover_from_enemy")
+	local vsched = vj_ai_schedule.New("vj_cover_from_enemy")
 	vsched:EngTask("TASK_FIND_COVER_FROM_ORIGIN", 0)
 	//vsched:EngTask(moveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
@@ -76,7 +76,7 @@ function ENT:VJ_TASK_COVER_FROM_ENEMY(moveType, customFunc)
 	if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
 	vsched.RunCode_OnFail = function()
 		//print("Cover from enemy failed!")
-		local vschedFail = ai_vj_schedule.New("vj_cover_from_enemy_fail")
+		local vschedFail = vj_ai_schedule.New("vj_cover_from_enemy_fail")
 		vschedFail:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
 		vschedFail:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
 		//vschedFail:EngTask(moveType, 0)
@@ -93,14 +93,14 @@ end
 function ENT:VJ_TASK_COVER_FROM_ORIGIN(moveType, customFunc)
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
 	moveType = moveType or "TASK_RUN_PATH"
-	local vsched = ai_vj_schedule.New("vj_cover_from_origin")
+	local vsched = vj_ai_schedule.New("vj_cover_from_origin")
 	vsched:EngTask("TASK_FIND_COVER_FROM_ORIGIN", 0)
 	//vsched:EngTask(moveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched.IsMovingTask = true
 	if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
 	vsched.RunCode_OnFail = function()
-		local vschedFail = ai_vj_schedule.New("vj_cover_from_origin_fail")
+		local vschedFail = vj_ai_schedule.New("vj_cover_from_origin_fail")
 		vschedFail:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
 		vschedFail:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
 		//vschedFail:EngTask(moveType, 0)
@@ -114,7 +114,7 @@ function ENT:VJ_TASK_COVER_FROM_ORIGIN(moveType, customFunc)
 	self:StartSchedule(vsched)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local task_idleWander = ai_vj_schedule.New("vj_idle_wander")
+local task_idleWander = vj_ai_schedule.New("vj_idle_wander")
 	//task_idleWander:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 0)
 	//task_idleWander:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
 	task_idleWander:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 350)
