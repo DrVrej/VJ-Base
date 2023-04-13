@@ -1404,7 +1404,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 		end
 		self.CurAnimationSeed = seed -- We need to set it again because self:StopAttacks() above will reset it when it calls to chase enemy!
 		
-		local vsched = ai_vj_schedule.New("vj_act_"..animation)
+		local vsched = vj_ai_schedule.New("vj_act_"..animation)
 		if (customFunc) then customFunc(vsched, animation) end
 		
 		self.NextIdleStandTime = 0
@@ -1500,7 +1500,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local task_chaseEnemyLOS = ai_vj_schedule.New("vj_chase_enemy_los")
+local task_chaseEnemyLOS = vj_ai_schedule.New("vj_chase_enemy_los")
 	task_chaseEnemyLOS:EngTask("TASK_GET_PATH_TO_ENEMY_LOS", 0)
 	//task_chaseEnemyLOS:EngTask("TASK_RUN_PATH", 0)
 	task_chaseEnemyLOS:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
@@ -1511,7 +1511,7 @@ local task_chaseEnemyLOS = ai_vj_schedule.New("vj_chase_enemy_los")
 	task_chaseEnemyLOS.IsMovingTask = true
 	task_chaseEnemyLOS.MoveType = 1
 --
-local task_chaseEnemy = ai_vj_schedule.New("vj_chase_enemy")
+local task_chaseEnemy = vj_ai_schedule.New("vj_chase_enemy")
 	task_chaseEnemy:EngTask("TASK_GET_PATH_TO_ENEMY", 0)
 	//task_chaseEnemy:EngTask("TASK_RUN_PATH", 0)
 	task_chaseEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
@@ -1556,7 +1556,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 	//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
 	//if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_StopMoving() return end
 
-	/*local vschedIdleStand = ai_vj_schedule.New("vj_idle_stand")
+	/*local vschedIdleStand = vj_ai_schedule.New("vj_idle_stand")
 	//vschedIdleStand:EngTask("TASK_FACE_REASONABLE")
 	vschedIdleStand:EngTask("TASK_STOP_MOVING")
 	vschedIdleStand:EngTask("TASK_WAIT_INDEFINITE")
@@ -2735,7 +2735,7 @@ function ENT:Think()
 								else -- If all is good, then run to a hiding spot and then reload!
 									if self.WeaponReload_FindCover == true then
 										self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
-										local vsched = ai_vj_schedule.New("vj_weapon_reload")
+										local vsched = vj_ai_schedule.New("vj_weapon_reload")
 										vsched:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
 										vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 										vsched.StopScheduleIfNotMoving = true
@@ -3450,7 +3450,7 @@ function ENT:SelectSchedule()
 											if self.IsGuard then self.GuardingPosition = enePos end -- Set the guard position to this new position that provides cover
 											self:SetLastPosition(enePos)
 											//VJ_CreateTestObject(enePos, self:GetAngles(), Color(0,255,255))
-											local vsched = ai_vj_schedule.New("vj_goto_cover")
+											local vsched = vj_ai_schedule.New("vj_goto_cover")
 											vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
 											vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 											vsched.IsMovingTask = true
@@ -3614,7 +3614,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		self:ClearEnemyMemory(ene)
 	end
 	//self:UpdateEnemyMemory(self,self:GetPos())
-	//local vsched = ai_vj_schedule.New("vj_act_resetenemy")
+	//local vsched = vj_ai_schedule.New("vj_act_resetenemy")
 	//if eneValid then vsched:EngTask("TASK_FORGET", ene) end
 	//vsched:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
 	self.NextWanderTime = CurTime() + math.Rand(3, 5)
@@ -3626,7 +3626,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 	if !self:IsBusy() && !self.IsGuard && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && moveToEnemy == true && self.LastHiddenZone_CanWander == true && !self.NoWeapon_UseScaredBehavior_Active then
 		//ParticleEffect("explosion_turret_break", self.LatestEnemyPosition, Angle(0,0,0))
 		self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk))
-		local vsched = ai_vj_schedule.New("vj_act_resetenemy")
+		local vsched = vj_ai_schedule.New("vj_act_resetenemy")
 		vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
 		//vsched:EngTask("TASK_WALK_PATH", 0)
 		vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
