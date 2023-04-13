@@ -1118,7 +1118,6 @@ function ENT:Initialize()
 	if self.SetSurroundingBoundsType then -- !!!!!!!!!!!!!! Outdated GMod Compatibility! !!!!!!!!!!!!!!
 		self:SetSurroundingBoundsType(BOUNDS_HITBOXES) // BOUNDS_COLLISION
 	end
-	self.ExtraCorpsesToRemove_Transition = {}
 	self.VJ_AddCertainEntityAsEnemy = {}
 	self.VJ_AddCertainEntityAsFriendly = {}
 	self.CurrentPossibleEnemies = {}
@@ -3138,7 +3137,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		corpse.FadeCorpseType = (corpse:GetClass() == "prop_ragdoll" and "FadeAndRemove") or "kill"
 		corpse.IsVJBaseCorpse = true
 		corpse.DamageInfo = dmginfo
-		corpse.ExtraCorpsesToRemove = self.ExtraCorpsesToRemove_Transition
+		corpse.ChildEnts = self.DeathCorpse_ChildEnts or {}
 		corpse.BloodData = {Color = self.BloodColor, Particle = self.CustomBlood_Particle, Decal = self.CustomBlood_Decal}
 
 		if self.Bleeds == true && self.HasBloodPool == true && GetConVar("vj_npc_nobloodpool"):GetInt() == 0 then
@@ -3205,30 +3204,30 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		local totalSurface = 0
 		local physCount = corpse:GetPhysicsObjectCount()
 		for boneLimit = 0, physCount - 1 do -- 128 = Bone Limit
-			local childphys = corpse:GetPhysicsObjectNum(boneLimit)
-			if IsValid(childphys) then
-				totalSurface = totalSurface + childphys:GetSurfaceArea()
-				local childphys_bonepos, childphys_boneang = self:GetBonePosition(corpse:TranslatePhysBoneToBone(boneLimit))
-				if (childphys_bonepos) then
-					//if math.Round(math.abs(childphys_boneang.r)) != 90 then -- Fixes ragdolls rotating, no longer needed!    --->    sv_pvsskipanimation 0
-						if self.DeathCorpseSetBoneAngles == true then childphys:SetAngles(childphys_boneang) end
-						childphys:SetPos(childphys_bonepos)
+			local childPhysObj = corpse:GetPhysicsObjectNum(boneLimit)
+			if IsValid(childPhysObj) then
+				totalSurface = totalSurface + childPhysObj:GetSurfaceArea()
+				local childPhysObj_BonePos, childPhysObj_BoneAng = self:GetBonePosition(corpse:TranslatePhysBoneToBone(boneLimit))
+				if (childPhysObj_BonePos) then
+					//if math.Round(math.abs(childPhysObj_BoneAng.r)) != 90 then -- Fixes ragdolls rotating, no longer needed!    --->    sv_pvsskipanimation 0
+						if self.DeathCorpseSetBoneAngles == true then childPhysObj:SetAngles(childPhysObj_BoneAng) end
+						childPhysObj:SetPos(childPhysObj_BonePos)
 					//end
 					if corpse:GetName() == "vj_dissolve_corpse" then
-						childphys:EnableGravity(false)
-						childphys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
+						childPhysObj:EnableGravity(false)
+						childPhysObj:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
 					else
 						if self.DeathCorpseApplyForce == true /*&& self.DeathAnimationCodeRan == false*/ then
-							childphys:SetVelocity(dmgForce / math.max(1, (useLocalVel and childphys_bonepos:Distance(self.SavedDmgInfo.pos)/12) or 1))
+							childPhysObj:SetVelocity(dmgForce / math.max(1, (useLocalVel and childPhysObj_BonePos:Distance(self.SavedDmgInfo.pos)/12) or 1))
 						end
 					end
 				elseif physCount == 1 then -- If it's only 1, then it's likely a regular physics model with no bones
 					if corpse:GetName() == "vj_dissolve_corpse" then
-						childphys:EnableGravity(false)
-						childphys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
+						childPhysObj:EnableGravity(false)
+						childPhysObj:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
 					else
 						if self.DeathCorpseApplyForce == true /*&& self.DeathAnimationCodeRan == false*/ then
-							childphys:SetVelocity(dmgForce / math.max(1, (useLocalVel and corpse:GetPos():Distance(self.SavedDmgInfo.pos)/12) or 1))
+							childPhysObj:SetVelocity(dmgForce / math.max(1, (useLocalVel and corpse:GetPos():Distance(self.SavedDmgInfo.pos)/12) or 1))
 						end
 					end
 				end
@@ -3242,21 +3241,26 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		end
 		VJ_AddStinkyEnt(corpse, true)
 		
-		if self.DeathCorpseFade == true then corpse:Fire(corpse.FadeCorpseType,"",self.DeathCorpseFadeTime) end
-		if GetConVar("vj_npc_corpsefade"):GetInt() == 1 then corpse:Fire(corpse.FadeCorpseType,"",GetConVar("vj_npc_corpsefadetime"):GetInt()) end
+		if self.DeathCorpseFade == true then corpse:Fire(corpse.FadeCorpseType, "", self.DeathCorpseFadeTime) end
+		if GetConVar("vj_npc_corpsefade"):GetInt() == 1 then corpse:Fire(corpse.FadeCorpseType, "", GetConVar("vj_npc_corpsefadetime"):GetInt()) end
 		self:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpse)
-		corpse:CallOnRemove("vj_"..corpse:EntIndex(),function(ent,exttbl)
-			for _,v in ipairs(exttbl) do
-				if IsValid(v) then
-					if v:GetClass() == "prop_ragdoll" then v:Fire("FadeAndRemove","",0) else v:Fire("kill","",0) end
+		corpse:CallOnRemove("vj_" .. corpse:EntIndex(), function(ent, childPieces)
+			for _, child in ipairs(childPieces) do
+				if IsValid(child) then
+					if child:GetClass() == "prop_ragdoll" then -- Make ragdolls fade
+						child:Fire("FadeAndRemove", "", 0)
+					else
+						child:Fire("kill", "", 0)
+					end
 				end
 			end
-		end,corpse.ExtraCorpsesToRemove)
+		end, corpse.ChildEnts)
 		hook.Call("CreateEntityRagdoll", nil, self, corpse)
 		return corpse
 	else
-		for _,v in ipairs(self.ExtraCorpsesToRemove_Transition) do
-			if v.IsVJBase_Gib == true && v.RemoveOnCorpseDelete == true then
+		-- Remove child entities | No fade effects as it will look weird, remove it instantly!
+		if self.DeathCorpse_ChildEnts then
+			for _, v in ipairs(self.DeathCorpse_ChildEnts) do
 				v:Remove()
 			end
 		end
