@@ -110,8 +110,8 @@ function ENT:CreateExtraDeathCorpse(class, models, extraOptions, customFunc)
 			ent:Fire("kill", "", fadeTime)
 		end
 	end
-	if extraOptions.RemoveOnCorpseDelete != false then//self.Corpse:DeleteOnRemove(ent)
-		self.Corpse.ExtraCorpsesToRemove[#self.Corpse.ExtraCorpsesToRemove + 1] = ent
+	if extraOptions.RemoveOnCorpseDelete != false then //self.Corpse:DeleteOnRemove(ent)
+		self.Corpse.ChildEnts[#self.Corpse.ChildEnts + 1] = ent
 	end
 	if (customFunc) then customFunc(ent) end
 end
@@ -188,7 +188,6 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 	gib:Spawn()
 	gib:Activate()
 	gib.IsVJBase_Gib = true
-	gib.RemoveOnCorpseDelete = removeOnCorpseDelete
 	if GetConVar("vj_npc_gibcollidable"):GetInt() == 0 then gib:SetCollisionGroup(1) end
 	local phys = gib:GetPhysicsObject()
 	if IsValid(phys) then
@@ -201,7 +200,8 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 		elseif gib:GetClass() == "prop_physics" then gib:Fire("kill", "", GetConVar("vj_npc_fadegibstime"):GetInt()) end
 	end
 	if removeOnCorpseDelete == true then //self.Corpse:DeleteOnRemove(extraent)
-		self.ExtraCorpsesToRemove_Transition[#self.ExtraCorpsesToRemove_Transition + 1] = gib
+		if !self.DeathCorpse_ChildEnts then self.DeathCorpse_ChildEnts = {} end -- If it doesn't exist, then create it!
+		self.DeathCorpse_ChildEnts[#self.DeathCorpse_ChildEnts + 1] = gib
 	end
 	if (customFunc) then customFunc(gib) end
 end

@@ -373,7 +373,7 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
 	if IsValid(self.Gunner) then
 		self.Gunner.SavedDmgInfo = self.SavedDmgInfo
 		local gunCorpse = self.Gunner:CreateDeathCorpse(dmginfo, hitgroup)
-		if IsValid(gunCorpse) then corpseEnt.ExtraCorpsesToRemove[#corpseEnt.ExtraCorpsesToRemove+1] = gunCorpse end
+		if IsValid(gunCorpse) then corpseEnt.ChildEnts[#corpseEnt.ChildEnts+1] = gunCorpse end
 	end
 	
 	if self:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) == true then
