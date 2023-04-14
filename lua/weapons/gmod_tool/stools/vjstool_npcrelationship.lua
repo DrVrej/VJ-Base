@@ -32,7 +32,7 @@ if CLIENT then
 			else
 				LocalPlayer():ConCommand(k.." "..v) end
 				timer.Simple(0.05,function()
-					GetPanel = controlpanel.Get("vjstool_npcrelationship")
+					local GetPanel = controlpanel.Get("vjstool_npcrelationship")
 					GetPanel:ClearControls()
 					DoBuildCPanel_Relationship(GetPanel)
 				end)
@@ -83,7 +83,7 @@ if CLIENT then
 					chat.AddText(Color(0,255,0),"Added",Color(255,100,0)," "..val.." ",Color(0,255,0),"to the class list!")
 					table.insert(VJ_NPCRELATION_TblCurrentValues,val)
 					timer.Simple(0.05,function()
-						GetPanel = controlpanel.Get("vjstool_npcrelationship")
+						local GetPanel = controlpanel.Get("vjstool_npcrelationship")
 						GetPanel:ClearControls()
 						DoBuildCPanel_Relationship(GetPanel)
 					end)
@@ -164,7 +164,7 @@ if CLIENT then
 			//print(#classtbl)
 			VJ_NPCRELATION_TblCurrentValues = classtbl
 			timer.Simple(0.05,function()
-				GetPanel = controlpanel.Get("vjstool_npcrelationship")
+				local GetPanel = controlpanel.Get("vjstool_npcrelationship")
 				GetPanel:ClearControls()
 				DoBuildCPanel_Relationship(GetPanel)
 			end)

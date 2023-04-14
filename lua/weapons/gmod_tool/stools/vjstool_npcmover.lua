@@ -32,7 +32,7 @@ if CLIENT then
 			else
 				LocalPlayer():ConCommand(k.." "..v) end
 				timer.Simple(0.05,function()
-					GetPanel = controlpanel.Get("vjstool_npcmover")
+					local GetPanel = controlpanel.Get("vjstool_npcmover")
 					GetPanel:ClearControls()
 					DoBuildCPanel_Mover(GetPanel)
 				end)
@@ -123,7 +123,7 @@ if CLIENT then
 				table.insert(VJ_MOVE_TblCurrentValues,sventity)
 			end
 			-- Refresh the tool menu
-			GetPanel = controlpanel.Get("vjstool_npcmover")
+			local GetPanel = controlpanel.Get("vjstool_npcmover")
 			GetPanel:ClearControls()
 			DoBuildCPanel_Mover(GetPanel)
 			net.Start("vj_npcmover_sv_create")
@@ -145,7 +145,7 @@ if CLIENT then
 			for k,v in ipairs(VJ_MOVE_TblCurrentValues) do
 				if !IsValid(v) then -- Remove any NPCs that no longer exist!
 					table.remove(VJ_MOVE_TblCurrentValues,k)
-					GetPanel = controlpanel.Get("vjstool_npcmover")
+					local GetPanel = controlpanel.Get("vjstool_npcmover")
 					GetPanel:ClearControls()
 					DoBuildCPanel_Mover(GetPanel)
 				end
