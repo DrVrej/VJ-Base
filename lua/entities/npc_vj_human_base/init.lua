@@ -418,11 +418,6 @@ ENT.FootStepTimeRun = 0.5 -- Next foot step sound when it is running
 ENT.FootStepTimeWalk = 1 -- Next foot step sound when it is walking
 ENT.DisableFootStepOnRun = false -- It will not play the footstep sound when running
 ENT.DisableFootStepOnWalk = false -- It will not play the footstep sound when walking
-ENT.HasWorldShakeOnMove = false -- Should the world shake when it's moving?
-ENT.WorldShakeOnMoveAmplitude = 10 -- How much the screen will shake | From 1 to 16, 1 = really low 16 = really high
-ENT.WorldShakeOnMoveRadius = 1000 -- How far the screen shake goes, in world units
-ENT.WorldShakeOnMoveDuration = 0.4 -- How long the screen shake will last, in seconds
-ENT.WorldShakeOnMoveFrequency = 100 -- Just leave it to 100
 	-- ====== Idle Sound Variables ====== --
 ENT.IdleSounds_PlayOnAttacks = false -- It will be able to continue and play idle sounds when it performs an attack
 ENT.IdleSounds_NoRegularIdleOnAlerted = false -- if set to true, it will not play the regular idle sound table if the combat idle sound table is empty
@@ -2597,8 +2592,8 @@ function ENT:Think()
 		if self.FacingStatus == VJ_FACING_POSITION then
 			local faceAng = self.FacingData
 			if self.TurningUseAllAxis == true then
-				local myAngs = self:GetAngles()
-				self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAngs, Angle(faceAng.p, myAngs.y, faceAng.r)))
+				local myAng = self:GetAngles()
+				self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(faceAng.p, myAng.y, faceAng.r)))
 			end
 			self:SetIdealYawAndUpdate(faceAng.y)
 		elseif self.FacingStatus == VJ_FACING_ENTITY then
@@ -2606,8 +2601,8 @@ function ENT:Think()
 			if IsValid(faceEnt) then
 				local faceAng = self:GetFaceAngle((faceEnt:GetPos() - self:GetPos()):Angle())
 				if self.TurningUseAllAxis == true then
-					local myAngs = self:GetAngles()
-					self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAngs, Angle(faceAng.p, myAngs.y, faceAng.r)))
+					local myAng = self:GetAngles()
+					self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(faceAng.p, myAng.y, faceAng.r)))
 				end
 				self:SetIdealYawAndUpdate(faceAng.y)
 			end
@@ -2789,8 +2784,8 @@ function ENT:Think()
 				if self.FacingStatus == VJ_FACING_ENEMY or (self.CombatFaceEnemy == true && self.CurrentSchedule != nil && ((self.CurrentSchedule.ConstantlyFaceEnemy == true) or (self.CurrentSchedule.ConstantlyFaceEnemyVisible == true && eneData.IsVisible))) then
 					local faceAng = self:GetFaceAngle((enePos - myPos):Angle())
 					if self.TurningUseAllAxis == true then
-						local myAngs = self:GetAngles()
-						self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAngs, Angle(faceAng.p, myAngs.y, faceAng.r)))
+						local myAng = self:GetAngles()
+						self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(faceAng.p, myAng.y, faceAng.r)))
 					end
 					self:SetIdealYawAndUpdate(faceAng.y)
 				end
@@ -3002,7 +2997,7 @@ function ENT:ThrowGrenadeCode(customEnt, noOwner)
 	if self.DisableGrenadeAttackAnimation == false then
 		self.CurrentAttackAnimation = VJ_PICK(self.AnimTbl_GrenadeAttack)
 		self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, 0.2)
-		self.CurAttackAnimTime = curTime + self.CurrentAttackAnimationDuration
+		self.CurAttackAnimTime = CurTime() + self.CurrentAttackAnimationDuration
 		self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation, self.GrenadeAttackAnimationStopAttacks, self:DecideAnimationLength(self.CurrentAttackAnimation, self.GrenadeAttackAnimationStopAttacksTime), true, self.GrenadeAttackAnimationDelay, {PlayBackRateCalculated=true})
 	end
 
@@ -3043,7 +3038,6 @@ function ENT:ThrowGrenadeCode(customEnt, noOwner)
 		local sideCheck = VJ_PICK(self:VJ_CheckAllFourSides(200, true))
 		if sideCheck then
 			self:FaceCertainPosition(sideCheck, self.CurrentAttackAnimationDuration or 1.5)
-			doit = true
 		end
 	end
 
@@ -4610,7 +4604,7 @@ function ENT:FootStepSoundCode(customSd)
 			if !sdtbl then sdtbl = DefaultSoundTbl_FootStep end
 			VJ_EmitSound(self, sdtbl, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
 			if self.CustomOnFootStepSound then self:CustomOnFootStepSound("Event", sdtbl) end
-			if self.HasWorldShakeOnMove == true then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude, self.WorldShakeOnMoveFrequency, self.WorldShakeOnMoveDuration, self.WorldShakeOnMoveRadius) end
+			if self.HasWorldShakeOnMove then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000) end -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 			return
 		elseif self:IsMoving() && CurTime() > self.FootStepT && self:GetInternalVariable("m_flMoveWaitFinished") <= 0 then
 			local customTbl = VJ_PICK(customSd)
@@ -4621,13 +4615,13 @@ function ENT:FootStepSoundCode(customSd)
 			if !self.DisableFootStepOnRun && ((VJ_HasValue(self.AnimTbl_Run, self:GetMovementActivity())) or (curSched != nil && curSched.MoveType == 1)) then
 				VJ_EmitSound(self, sdtbl, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
 				if self.CustomOnFootStepSound then self:CustomOnFootStepSound("Run", sdtbl) end
-				if self.HasWorldShakeOnMove == true then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude, self.WorldShakeOnMoveFrequency, self.WorldShakeOnMoveDuration, self.WorldShakeOnMoveRadius) end
+				if self.HasWorldShakeOnMove then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000) end -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 				self.FootStepT = CurTime() + self.FootStepTimeRun
 				return
 			elseif !self.DisableFootStepOnWalk && (VJ_HasValue(self.AnimTbl_Walk, self:GetMovementActivity()) or (curSched != nil && curSched.MoveType == 0)) then
 				VJ_EmitSound(self, sdtbl, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
 				if self.CustomOnFootStepSound then self:CustomOnFootStepSound("Walk", sdtbl) end
-				if self.HasWorldShakeOnMove == true then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude, self.WorldShakeOnMoveFrequency, self.WorldShakeOnMoveDuration, self.WorldShakeOnMoveRadius) end
+				if self.HasWorldShakeOnMove then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000) end -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 				self.FootStepT = CurTime() + self.FootStepTimeWalk
 				return
 			end

@@ -59,8 +59,8 @@ end
 net.Receive("vj_testentity_runtextsd", function(len, ply)
 	local msgType = net.ReadBool()
 	if (ply:IsPlayer() && ply:SteamID() == "STEAM_0:0:22688298") or (game.SinglePlayer() == true) then
-		msg = (msgType == true and "Are you thirsty?") or "DrVrej is in this server, be aware!"
-		sdFile = (msgType == true and "vj_misc/areyouthristy.wav") or "vj_misc/illuminati_confirmed.mp3"
+		local msg = (msgType == true and "Are you thirsty?") or "DrVrej is in this server, be aware!"
+		local sdFile = (msgType == true and "vj_misc/areyouthristy.wav") or "vj_misc/illuminati_confirmed.mp3"
 		PrintMessage(HUD_PRINTTALK, msg)
 		PrintMessage(HUD_PRINTCENTER, msg)
 		local filter = RecipientFilter()
