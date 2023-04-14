@@ -996,11 +996,17 @@ end
 		- ent = Entity to follow
 		- stopIfFollowing = If true, it will stop following if it's already following the same entity
 	Returns
-		- true, successfully started following the entity
-		- false, failed or stopped following the entity
+		1 = Boolean
+			- true, successfully started following the entity
+			- false, failed or stopped following the entity
+		2 = Failure reason (If it failed)
+			0 = Unknown reason
+			1 = NPC is stationary and unable to follow
+			2 = NPC is already following another entity
+			3 = NPC is hostile or neutral the entity
 -----------------------------------------------------------]]
 function ENT:Follow(ent, stopIfFollowing)
-	if !IsValid(ent) or self.Dead or GetConVar("ai_disabled"):GetInt() == 1 or self == ent then return false end
+	if !IsValid(ent) or self.Dead or GetConVar("ai_disabled"):GetInt() == 1 or self == ent then return false, 0 end
 	
 	local isPly = ent:IsPlayer()
 	local isLiving = isPly or ent:IsNPC() -- Is it a living entity?
@@ -1011,17 +1017,17 @@ function ENT:Follow(ent, stopIfFollowing)
 			if isPly && self.AllowPrintingInChat then
 				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." isn't friendly to you, therefore it won't follow you.")
 			end
-			return false
+			return false, 3
 		elseif self.IsFollowing == true && ent != followData.Ent then -- Already following another entity
 			if isPly && self.AllowPrintingInChat then
 				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is already following another entity, therefore it won't follow you.")
 			end
-			return false
+			return false, 2
 		elseif self.MovementType == VJ_MOVETYPE_STATIONARY or self.MovementType == VJ_MOVETYPE_PHYSICS then
 			if isPly && self.AllowPrintingInChat then
 				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is currently stationary, therefore it's unable follow you.")
 			end
-			return false
+			return false, 1
 		end
 		
 		if !self.IsFollowing then
@@ -1050,7 +1056,7 @@ function ENT:Follow(ent, stopIfFollowing)
 				end)
 			end
 			if isPly then self:CustomOnFollowPlayer(ent) end
-			return true
+			return true, 0
 		elseif stopIfFollowing then -- Unfollow the entity
 			if isPly then
 				self:PlaySoundSystem("UnFollowPlayer")
@@ -1064,7 +1070,7 @@ function ENT:Follow(ent, stopIfFollowing)
 			self:FollowReset()
 		end
 	end
-	return false
+	return false, 0
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoMedicReset()
@@ -1696,11 +1702,10 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 		-- Hitgroup flinching
 		if istable(hitgroupTbl) then
 			for _, v in ipairs(hitgroupTbl) do
-				hitgroups = v.HitGroup
-				-- Sub-table of hitgroups
-				for hitgroupX = 1, #hitgroups do
-					if hitgroups[hitgroupX] == hitgroup then
-						HitGroupFound = true
+				local hitGroups = v.HitGroup
+				-- Sub-table of hitGroups
+				for hitgroupX = 1, #hitGroups do
+					if hitGroups[hitgroupX] == hitgroup then
 						RunFlinchCode(v)
 						return
 					end
