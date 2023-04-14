@@ -45,7 +45,7 @@ if CLIENT then
 					LocalPlayer():ConCommand(k.." "..v)
 				end
 				timer.Simple(0.05,function()
-					GetPanel = controlpanel.Get("vjstool_npcspawner")
+					local GetPanel = controlpanel.Get("vjstool_npcspawner")
 					GetPanel:ClearControls()
 					DoBuildCPanel_Spawner(GetPanel)
 				end)
@@ -153,19 +153,19 @@ if CLIENT then
 				LocalPlayer():ConCommand("vjstool_npcspawner_spawnent "..line:GetValue(2))
 				MenuFrame:Close()
 				timer.Simple(0.05,function()
-				GetPanel = controlpanel.Get("vjstool_npcspawner")
-				GetPanel:ClearControls()
-				DoBuildCPanel_Spawner(GetPanel)
+					local GetPanel = controlpanel.Get("vjstool_npcspawner")
+					GetPanel:ClearControls()
+					DoBuildCPanel_Spawner(GetPanel)
 				end)
 			end
 		//MenuFrame:AddItem(CheckList)
 		//CheckList:SizeToContents()
-		for _,v in pairs(list.Get("NPC")) do
-			getcat = v.Category
+		for _, v in pairs(list.Get("NPC")) do
+			local getcat = v.Category
 			if v.Category == "" then getcat = "Unknown" end
-			CheckList:AddLine(v.Name,v.Class,getcat)
+			CheckList:AddLine(v.Name, v.Class, getcat)
 		end
-		CheckList:SortByColumn(1,false)
+		CheckList:SortByColumn(1, false)
 	end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	concommand.Add("vj_npcspawner_openwepselect",function(ply,cmd,args)
@@ -196,9 +196,9 @@ if CLIENT then
 				LocalPlayer():ConCommand("vjstool_npcspawner_weaponequip "..line:GetValue(2))
 				MenuFrame:Close()
 				timer.Simple(0.05,function()
-				GetPanel = controlpanel.Get("vjstool_npcspawner")
-				GetPanel:ClearControls()
-				DoBuildCPanel_Spawner(GetPanel)
+					local GetPanel = controlpanel.Get("vjstool_npcspawner")
+					GetPanel:ClearControls()
+					DoBuildCPanel_Spawner(GetPanel)
 				end)
 			end
 		//MenuFrame:AddItem(CheckList)
@@ -221,7 +221,7 @@ if CLIENT then
 		local spawnfritoplyallies = GetConVarString("vjstool_npcspawner_fritoplyallies")
 		local spawnequip = string.lower(GetConVarString("vjstool_npcspawner_weaponequip"))
 		table.insert(VJ_NPCSPAWNER_TblCurrentValues,{EntityName=spawnentname, Entities=spawnent, SpawnPosition={vForward=spawnposfor,vRight=spawnposright,vUp=spawnposup}, WeaponsList=spawnequip, Relationship={Class = spawnnpclass, FriToPlyAllies = spawnfritoplyallies}})
-		GetPanel = controlpanel.Get("vjstool_npcspawner")
+		local GetPanel = controlpanel.Get("vjstool_npcspawner")
 		GetPanel:ClearControls()
 		DoBuildCPanel_Spawner(GetPanel)
 	end)

@@ -31,7 +31,7 @@ if CLIENT then
 			else
 				LocalPlayer():ConCommand(k.." "..v) end
 				timer.Simple(0.05,function()
-					GetPanel = controlpanel.Get("vjstool_npcequipment")
+					local GetPanel = controlpanel.Get("vjstool_npcequipment")
 					GetPanel:ClearControls()
 					DoBuildCPanel_VJ_NPCEquipment(GetPanel)
 				end)
@@ -79,8 +79,8 @@ if CLIENT then
 				LocalPlayer():ConCommand("vjstool_npcequipment_weaponname "..line:GetValue(1))
 				LocalPlayer():ConCommand("vjstool_npcequipment_weaponclass "..line:GetValue(2))
 				MenuFrame:Close()
-				timer.Simple(0.05,function()
-					GetPanel = controlpanel.Get("vjstool_npcequipment")
+				timer.Simple(0.05, function()
+					local GetPanel = controlpanel.Get("vjstool_npcequipment")
 					GetPanel:ClearControls()
 					DoBuildCPanel_VJ_NPCEquipment(GetPanel)
 				end)

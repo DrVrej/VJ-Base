@@ -22,7 +22,7 @@ for k,v in pairs(TOOL.ClientConVar) do
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	function DoBuildCPanel_VJ_HealthModifier(Panel)
+	local function DoBuildCPanel_VJ_HealthModifier(Panel)
 		local reset = vgui.Create("DButton")
 		reset:SetFont("DermaDefaultBold")
 		reset:SetText("#vjbase.menu.general.reset.everything")
@@ -35,7 +35,7 @@ if CLIENT then
 			else
 				LocalPlayer():ConCommand(k.." "..v) end
 				timer.Simple(0.05,function()
-					GetPanel = controlpanel.Get("vjstool_healthmodifier")
+					local GetPanel = controlpanel.Get("vjstool_healthmodifier")
 					GetPanel:ClearControls()
 					DoBuildCPanel_VJ_HealthModifier(GetPanel)
 				end)

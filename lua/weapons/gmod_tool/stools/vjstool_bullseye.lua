@@ -32,7 +32,7 @@ if CLIENT then
 			else
 				LocalPlayer():ConCommand(k.." "..v) end
 				timer.Simple(0.05,function()
-					GetPanel = controlpanel.Get("vjstool_bullseye")
+					local GetPanel = controlpanel.Get("vjstool_bullseye")
 					GetPanel:ClearControls()
 					DoBuildCPanel_VJ_BullseyeSpawner(GetPanel)
 				end)
