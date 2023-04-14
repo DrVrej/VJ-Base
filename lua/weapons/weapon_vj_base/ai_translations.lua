@@ -27,7 +27,7 @@ function SWEP:SetupWeaponHoldTypeForAI(hType)
 	local bonbakshen_Vazel = ACT_RUN_AIM_SHOTGUN
 	if self.NPC_AnimationSet == "Metrocop" or self.NPC_AnimationSet == "Rebel" then
 		bonbakshen_varichadz = ACT_RANGE_ATTACK_SMG1_LOW
-		bonbakshen_Kalel = ACT_WALK_AIM_RIFLE
+		//bonbakshen_Kalel = ACT_WALK_AIM_RIFLE
 		bonbakshen_Vazel = ACT_RUN_AIM_RIFLE
 	end
 	

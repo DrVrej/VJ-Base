@@ -6,12 +6,13 @@
 INFO: Thanks to Orion for creating the original code
 --------------------------------------------------*/
 //AddCSLuaFile()
-module("vj_sound_track",package.seeall)
+module("vj_sound_track", package.seeall)
 //if SERVER then return end
 //print("The Module is running!")
 //if CLIENT then
 local MetatableMusic = {}
 MetatableMusic.__index = MetatableMusic
+/*
 MUSIC_CHANNEL_INDEX = {[1] = {CurTrack = NULL, CurTrackName = "!"}}
 ---------------------------------------------------------------------------------------------------------------------------------------------
 AddChannel = function()
@@ -85,4 +86,5 @@ Duration = function(chn)
 	if GetCurrentTrackName(chn) == "!" then return end
 	return MetatableMusic[GetCurrentTrackName(chn)].Duration
  end
+ */
 //end
