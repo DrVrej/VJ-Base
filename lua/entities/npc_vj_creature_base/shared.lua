@@ -38,7 +38,7 @@ if CLIENT then
 	//function ENT:CalcAbsolutePosition(pos, ang) end
 	-- Custom functions ---------------------------------------------------------------------------------------------------------------------------------------------
 	function ENT:CustomOnDraw() end
-	-- function ENT:CustomOnCalcView(ply, origin, angles, fov, camera, cameraMode) return false end -- Return true, as well as a table of data to override the default camera calculations
+	function ENT:CustomOnCalcView(ply, origin, angles, fov, camera, cameraMode) return false end -- Return true, as well as a table of data to override the default camera calculations
 	/*
 		Example:
 		function ENT:CustomOnCalcView(ply, origin, angles, fov, camera, cameraMode)
