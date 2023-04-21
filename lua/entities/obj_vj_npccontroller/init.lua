@@ -9,6 +9,8 @@ ENT.VJC_Player_CanExit = true -- Can the player exit the controller?
 ENT.VJC_Player_CanRespawn = true -- If false, the player will die when the NPC dies!
 ENT.VJC_Player_DrawHUD = true -- Should the controller HUD be displayed?
 ENT.VJC_BullseyeTracking = false -- Activates bullseye tracking (Will not turn to the move location!)
+ENT.VJC_RefreshBullseyePosition = true -- While set to true, the bullseye entity's position will be refreshed every tick
+ENT.VJC_NPC_AllowTurning = true -- Should the NPC be allowed to while idle?
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -58,11 +60,13 @@ util.AddNetworkString("vj_controller_data")
 util.AddNetworkString("vj_controller_cldata")
 util.AddNetworkString("vj_controller_hud")
 
-local vecDef = Vector(0, 0, 0)
+local vecDef = vector_origin
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetMoveType(MOVETYPE_NONE)
 	self:SetSolid(SOLID_NONE)
+	self:SetRenderMode(RENDERMODE_NONE) -- Added to disable shadow drawing |
+	self:DrawShadow(false) --											  <-
 	self:CustomOnInitialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -104,6 +108,7 @@ function ENT:StartControlling()
 		[2] = plyEnt:Armor(),
 		[3] = weps,
 		[4] = (IsValid(plyEnt:GetActiveWeapon()) and plyEnt:GetActiveWeapon():GetClass()) or "",
+		[5] = plyEnt:HasGodMode() -- Allow player's to maintain their God mode status even after exiting the controller
 	}
 	plyEnt:StripWeapons()
 	if plyEnt:GetInfoNum("vj_npc_cont_diewithnpc", 0) == 1 then self.VJC_Player_CanRespawn = false end
@@ -179,7 +184,7 @@ function ENT:SetControlledNPC(GetEntity)
 
 	-- Set the NPC values
 	if !GetEntity.VJC_Data then
-		GetEntity.VJC_Data ={
+		GetEntity.VJC_Data = { -- Fixed a spacing issue
 			CameraMode = 1, -- Sets the default camera mode | 1 = Third Person, 2 = First Person
 			ThirdP_Offset = Vector(0, 0, 0), -- The offset for the controller when the camera is in third person
 			FirstP_Bone = "ValveBiped.Bip01_Head1", -- If left empty, the base will attempt to calculate a position for first person
@@ -253,7 +258,7 @@ end
 	-- Also avoids garbage positions that output from other methods
 net.Receive("vj_controller_cldata", function(len, ply)
 	-- Set the controller's bullseye position if the player is controlling an NPC AND controller entity exists AND Bullseye exists --> Protect against spam ?
-	if ply.IsControlingNPC == true && IsValid(ply.VJ_TheControllerEntity) && IsValid(ply.VJ_TheControllerEntity.VJCE_Bullseye) then
+	if ply.IsControlingNPC == true && IsValid(ply.VJ_TheControllerEntity) && ply.VJ_TheControllerEntity.VJC_RefreshBullseyePosition == true && IsValid(ply.VJ_TheControllerEntity.VJCE_Bullseye) then -- Added a var for toggling the bullseye positioning, this way if one wants to override it they can
 		ply.VJ_TheControllerEntity.VJCE_Bullseye:SetPos(net.ReadVector())
 	end
 end)
@@ -318,11 +323,7 @@ function ENT:Think()
 		end
 		
 		if #ply:GetWeapons() > 0 then ply:StripWeapons() end
-		-- Depreciated, the hit position is now sent by the net message
-		/*local tr_ply = util.TraceLine({start = ply:EyePos(), endpos = ply:EyePos() + (ply:GetAimVector() * 32768), filter = {ply,npc}})
-		if IsValid(self.VJCE_Bullseye) then
-			self.VJCE_Bullseye:SetPos(tr_ply.HitPos)
-		end*/
+
 		local bullseyePos = self.VJCE_Bullseye:GetPos()
 		if ply:GetInfoNum("vj_npc_cont_devents", 0) == 1 then
 			VJ_CreateTestObject(ply:GetPos(), self:GetAngles(), Color(0,109,160))
@@ -333,6 +334,9 @@ function ENT:Think()
 		self:CustomOnThink()
 
 		local canTurn = true
+		
+		-- Moved this above the weapon attack so that way you can't fire while doing the below. The NPC AI behaves this logic so the player should as well
+		if npc.Flinching == true or (((npc.CurrentSchedule && npc.CurrentSchedule.IsPlayActivity != true) or npc.CurrentSchedule == nil) && npc:GetNavType() == NAV_JUMP) then return end
 
 		-- Weapon attack
 		if npc.IsVJBaseSNPC_Human == true then
@@ -340,6 +344,7 @@ function ENT:Think()
 				//npc:SetAngles(Angle(0,math.ApproachAngle(npc:GetAngles().y,ply:GetAimVector():Angle().y,100),0))
 				npc:FaceCertainPosition(bullseyePos, 0.2)
 				canTurn = false
+				// Leaving this part here for you, I did some prints and it seems that my suspicion was correct in that the animations aren't being set, hence why they have trouble shooting
 				if VJ_IsCurrentAnimation(npc, npc:TranslateToWeaponAnim(npc.CurrentWeaponAnimation)) == false && VJ_IsCurrentAnimation(npc, npc.AnimTbl_WeaponAttack) == false then
 					npc:CustomOnWeaponAttack()
 					npc.CurrentWeaponAnimation = VJ_PICK(npc.AnimTbl_WeaponAttack)
@@ -354,8 +359,6 @@ function ENT:Think()
 			end
 		end
 		
-		if npc.Flinching == true or (((npc.CurrentSchedule && npc.CurrentSchedule.IsPlayActivity != true) or npc.CurrentSchedule == nil) && npc:GetNavType() == NAV_JUMP) then return end
-		
 		if npc.CurAttackAnimTime < CurTime() && curTime > npc.NextChaseTime && npc.IsVJBaseSNPC_Tank != true then
 			-- Turning
 			if !npc:IsMoving() && canTurn && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ_WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
@@ -363,7 +366,8 @@ function ENT:Think()
 				local angdif = math.abs(math.AngleDifference(ply:EyeAngles().y, self.VJC_NPC_LastIdleAngle))
 				self.VJC_NPC_LastIdleAngle = npc:EyeAngles().y //tr_ply.HitPos
 				npc:VJ_TASK_IDLE_STAND()
-				if ((npc.MovementType != VJ_MOVETYPE_STATIONARY) or (npc.MovementType == VJ_MOVETYPE_STATIONARY && npc.CanTurnWhileStationary == true)) then
+				-- Added a var to disallow turning while idle, allows freecam rotation
+				if self.VJC_NPC_AllowTurning == true && (((npc.MovementType != VJ_MOVETYPE_STATIONARY) or (npc.MovementType == VJ_MOVETYPE_STATIONARY && npc.CanTurnWhileStationary == true))) then
 					if (VJ_AnimationExists(npc, ACT_TURN_LEFT) == false && VJ_AnimationExists(npc, ACT_TURN_RIGHT) == false) or (angdif <= 50 && npc:GetActivity() != ACT_TURN_LEFT && npc:GetActivity() != ACT_TURN_RIGHT) then
 						//npc:VJ_TASK_IDLE_STAND()
 						npc:FaceCertainPosition(bullseyePos, 0.1)
@@ -478,6 +482,9 @@ function ENT:StopControlling(endKey)
 				ply:Give(v)
 			end
 			ply:SelectWeapon(plyData[4])
+			if plyData[5] == true then
+				ply:GodEnable()
+			end
 		end
 		if IsValid(npc) then
 			ply:SetPos(npc:GetPos() + npc:OBBMaxs() + vecZ20)

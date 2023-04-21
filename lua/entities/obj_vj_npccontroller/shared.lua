@@ -11,65 +11,64 @@ ENT.Spawnable 		= false
 ENT.AdminSpawnable 	= false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	function ENT:Draw() end
+	function ENT:Draw()
+		return false
+	end
 	
-	local vec0 = Vector(0, 0, 0)
+	local vec0 = vector_origin
 	local vec1 = Vector(1, 1, 1)
-	local viewLerpVec = Vector(0, 0, 0)
+	local viewLerpVec = vector_origin
 	local viewLerpAng = Angle(0, 0, 0)
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	hook.Add("CalcView", "VJ_MyCalcView", function(ply, origin, angles, fov)
 		if !ply.IsControlingNPC then return end
 		local camera = ply.VJCE_Camera -- Camera entity
 		local npc = ply.VJCE_NPC -- The NPC that's being controlled
-		if !IsValid(ply.VJCE_Camera) or !IsValid(ply.VJCE_NPC) then return end
+		if !IsValid(camera) or !IsValid(npc) then return end
 		if IsValid(ply:GetViewEntity()) && ply:GetViewEntity():GetClass() == "gmod_cameraprop" then return end
 		local cameraMode = ply.VJC_Camera_Mode
-
+		local useCustom, calcValues = npc:CustomOnCalcView(ply, origin, angles, fov, camera, cameraMode)
+		local lerpSpeed = ply:GetInfoNum("vj_npc_cont_cam_speed", 6)
+	
 		local pos = origin -- The position that will be set
 		local ang = ply:EyeAngles()
-		if cameraMode == 2 then -- First person
-			local setPos = npc:EyePos() + npc:GetForward()*20
-			local offset = ply.VJC_FP_Offset
-			//camera:SetLocalPos(camera:GetLocalPos() + ply.VJC_TP_Offset) -- Help keep the camera stable
-			if ply.VJC_FP_Bone != -1 then -- If the bone does exist, then use the bone position
-				local bonePos, boneAng = npc:GetBonePosition(ply.VJC_FP_Bone)
-				setPos = bonePos
-				if ply.VJC_FP_CameraBoneAng > 0 then
-					ang[3] = boneAng[ply.VJC_FP_CameraBoneAng] + ply.VJC_FP_CameraBoneAng_Offset
+		if useCustom != true then -- More direct control over the calc view, where as before we were limited to alterations of the below code
+			if cameraMode == 2 then -- First person
+				local setPos = npc:EyePos() + npc:GetForward()*20
+				local offset = ply.VJC_FP_Offset
+				//camera:SetLocalPos(camera:GetLocalPos() + ply.VJC_TP_Offset) -- Help keep the camera stable
+				if ply.VJC_FP_Bone != -1 then -- If the bone does exist, then use the bone position
+					local bonePos, boneAng = npc:GetBonePosition(ply.VJC_FP_Bone)
+					setPos = bonePos
+					if ply.VJC_FP_CameraBoneAng > 0 then
+						ang[3] = boneAng[ply.VJC_FP_CameraBoneAng] + ply.VJC_FP_CameraBoneAng_Offset
+					end
+					if ply.VJC_FP_ShrinkBone then
+						npc:ManipulateBoneScale(ply.VJC_FP_Bone, vec0) -- Bone manipulate to make it easier to see
+					end
 				end
-				if ply.VJC_FP_ShrinkBone then
-					npc:ManipulateBoneScale(ply.VJC_FP_Bone, vec0) -- Bone manipulate to make it easier to see
+				pos = setPos + (npc:GetForward()*offset.x + npc:GetRight()*offset.y + npc:GetUp()*offset.z)
+			else -- Third person
+				if ply.VJC_FP_Bone != -1 then -- Reset the NPC's bone manipulation!
+					ply.VJCE_NPC:ManipulateBoneScale(ply.VJC_FP_Bone, vec1)
 				end
+				local offset = ply.VJC_TP_Offset + Vector(0, 0, npc:OBBMaxs().z - npc:OBBMins().z) // + vectp
+				//camera:SetLocalPos(camera:GetLocalPos() + ply.VJC_TP_Offset) -- Help keep the camera stable
+				local tr = util.TraceHull({
+					start = npc:GetPos() + npc:OBBCenter(),
+					endpos = npc:GetPos() + npc:OBBCenter() + angles:Forward()*-camera.Zoom + (npc:GetForward()*offset.x + npc:GetRight()*offset.y + npc:GetUp()*offset.z),
+					filter = {ply, camera, npc},
+					mins = Vector(-5, -5, -5),
+					maxs = Vector(5, 5, 5),
+					mask = MASK_SHOT,
+				})
+				pos = tr.HitPos + tr.HitNormal*2
 			end
-			pos = setPos + (npc:GetForward()*offset.x + npc:GetRight()*offset.y + npc:GetUp()*offset.z)
-		else -- Third person
-			if ply.VJC_FP_Bone != -1 then -- Reset the NPC's bone manipulation!
-				ply.VJCE_NPC:ManipulateBoneScale(ply.VJC_FP_Bone, vec1)
-			end
-			local offset = ply.VJC_TP_Offset + Vector(0, 0, npc:OBBMaxs().z - npc:OBBMins().z) // + vectp
-			//camera:SetLocalPos(camera:GetLocalPos() + ply.VJC_TP_Offset) -- Help keep the camera stable
-			local tr = util.TraceHull({
-				start = npc:GetPos() + npc:OBBCenter(),
-				endpos = npc:GetPos() + npc:OBBCenter() + angles:Forward()*-camera.Zoom + (npc:GetForward()*offset.x + npc:GetRight()*offset.y + npc:GetUp()*offset.z),
-				filter = {ply, camera, npc},
-				mins = Vector(-5, -5, -5),
-				maxs = Vector(5, 5, 5),
-				mask = MASK_SHOT,
-			})
-			pos = tr.HitPos + tr.HitNormal*2
-		end
-
-		local lerpSpeed = ply:GetInfoNum("vj_npc_cont_cam_speed", 6)
-		if npc.Controller_CalcView then -- Allows custom calcview overrides
-			local data = npc:Controller_CalcView(ply, pos, ang, fov, origin, angles, cameraMode)
-			-- Return: table -> {pos, ang, fov, speed}
-			if data then
-				pos = data.origin or pos
-				ang = data.angles or ang
-				fov = data.fov or fov
-				lerpSpeed = data.speed or lerpSpeed
-			end
+		elseif useCustom == true && calcValues then
+			pos = calcValues.origin or origin
+			ang = calcValues.angles or angles
+			fov = calcValues.fov or fov
+			lerpSpeed = calcValues.speed or lerpSpeed
 		end
 
 		-- Lerp the position and the angle
