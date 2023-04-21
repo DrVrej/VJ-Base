@@ -184,7 +184,7 @@ function ENT:SetControlledNPC(GetEntity)
 
 	-- Set the NPC values
 	if !GetEntity.VJC_Data then
-		GetEntity.VJC_Data = { -- Fixed a spacing issue
+		GetEntity.VJC_Data = {
 			CameraMode = 1, -- Sets the default camera mode | 1 = Third Person, 2 = First Person
 			ThirdP_Offset = Vector(0, 0, 0), -- The offset for the controller when the camera is in third person
 			FirstP_Bone = "ValveBiped.Bip01_Head1", -- If left empty, the base will attempt to calculate a position for first person
