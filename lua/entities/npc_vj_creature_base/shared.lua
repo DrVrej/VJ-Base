@@ -29,15 +29,23 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	//ENT.RenderGroup = RENDERGROUP_BOTH
-	function ENT:Initialize() end
-	function ENT:Draw() self:DrawModel() self:CustomOnDraw() end
+	function ENT:Initialize()
+		if self.CustomOnDraw then -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
+			function self:Draw()
+				self:DrawModel()
+				self:CustomOnDraw()
+			end
+		end
+		self:CustomOnInitialize()
+	end
+	function ENT:Draw() self:DrawModel() end
 	function ENT:DrawTranslucent() self:Draw() end
-	function ENT:BuildBonePositions(NumBones,NumPhysBones) end
+	function ENT:BuildBonePositions(NumBones ,NumPhysBones) end
 	function ENT:SetRagdollBones(bIn) self.m_bRagdollSetup = bIn end
-	function ENT:DoRagdollBone(PhysBoneNum,BoneNum) /*self:SetBonePosition(BoneNum,Pos,Angle)*/ end
+	function ENT:DoRagdollBone(PhysBoneNum, BoneNum) end // self:SetBonePosition(BoneNum,Pos,Angle)
 	//function ENT:CalcAbsolutePosition(pos, ang) end
 	-- Custom functions ---------------------------------------------------------------------------------------------------------------------------------------------
-	function ENT:CustomOnDraw() end
+	function ENT:CustomOnInitialize() end
 	--[[---------------------------------------------------------
 		UNCOMMENT TO USE | Overrides the camera calculations for the NPC Controller
 			- ply = Player that is controlling the NPC
