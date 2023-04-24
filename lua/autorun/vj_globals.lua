@@ -179,6 +179,26 @@ if SERVER then
 		actualFunc.Name = name
 		return actualFunc
 	end
+	
+	-- Initialize AI Nodegraph system
+	require("vj_ai_nodegraph")
+	timer.Simple(1, function() -- To make sure world is initialized otherwise things like traces will return nil because worldspawn doesn't exist
+		vj_ai_nodegraph = vj_ai_nodegraph.New()
+		-- If it failed to read the nodegraph, wait and try again in case nodegraph file hasn't generated yet
+		if vj_ai_nodegraph:GetNodegraph().Version == -1 then
+			print("VJ Base AI Nodegraph: Nodegraph file couldn't be loaded, attempting again...")
+			timer.Simple(4, function()
+				print("VJ Base AI Nodegraph: Running second read attempt...")
+				vj_ai_nodegraph.Data = vj_ai_nodegraph:ReadNodegraph()
+				
+				if vj_ai_nodegraph:GetNodegraph().Version == -1 then
+					print("VJ Base AI Nodegraph: Second read attempt has also failed.")
+				else
+					print("VJ Base AI Nodegraph: Second read attempt successfully worked!")
+				end
+			end)
+		end
+	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_PICK(tbl)
@@ -192,18 +212,7 @@ function VJ_PICK(tbl)
 	end
 	return false
 end
--- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
-	function VJ_PICKRANDOMTABLE(tbl)
-		if not tbl then return false end -- Yete table pame choone meche, veratartsour false!
-		if istable(tbl) then
-			if #tbl < 1 then return false end -- Yete table barabe (meg en aveli kich), getsoor!
-			tbl = tbl[math_random(1,#tbl)]
-			return tbl
-		else
-			return tbl -- Yete table che, veratartsour abranke
-		end
-		return false
-	end
+function VJ_PICKRANDOMTABLE(tbl) VJ_PICK(tbl) end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_STOPSOUND(sdName)
 	if sdName then sdName:Stop() end

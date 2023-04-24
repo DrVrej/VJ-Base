@@ -34,6 +34,7 @@ AddCSLuaFile("autorun/client/vj_menu_snpc.lua")
 AddCSLuaFile("autorun/client/vj_menu_weapon.lua")
 
 -- Modules --
+AddCSLuaFile("includes/modules/vj_ai_nodegraph.lua")
 AddCSLuaFile("includes/modules/vj_ai_schedule.lua")
 AddCSLuaFile("includes/modules/vj_ai_task.lua")
 //AddCSLuaFile("includes/modules/vj_sound_track.lua")

@@ -155,7 +155,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:CustomOnInitialize()
-	self:CustomOnInitialize_BeforeNPCSpawn() -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	if self.CustomOnInitialize_BeforeNPCSpawn then self:CustomOnInitialize_BeforeNPCSpawn() end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	if self:GetModel() == "models/error.mdl" then -- No model was detected
 		local mdls = VJ_PICK(self.Model)
 		if mdls && mdl !="models/props_junk/popcan01a.mdl" then
@@ -172,7 +172,6 @@ function ENT:Initialize()
 	end
 	self:CustomOnInitialize_AfterNPCSpawn()
 end
-function ENT:CustomOnInitialize_BeforeNPCSpawn() end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 // lua_run for spawnKey,spawnTbl in ipairs(ents.GetAll()) do if spawnTbl.IsVJBaseSpawner == true then spawnTbl.VJBaseSpawnerDisabled = false end end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()

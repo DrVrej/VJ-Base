@@ -1135,7 +1135,7 @@ function ENT:Initialize()
 	self.StartHealth = self:Health()
 	//if self.HasSquad == true then self:Fire("setsquad", self.SquadName, 0) end
 	self:CustomOnInitialize()
-	self:CustomInitialize() -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
+	if self.CustomInitialize then self:CustomInitialize() end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + (self.IdleAlwaysWander and 0 or 1)) -- If self.NextWanderTime isn't given a value THEN if self.IdleAlwaysWander isn't true, wait at least 1 sec before wandering
 	self.SightDistance = (GetConVar("vj_npc_seedistance"):GetInt() > 0) and GetConVar("vj_npc_seedistance"):GetInt() or self.SightDistance
 	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
@@ -1208,7 +1208,6 @@ end
 -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 ENT.MeleeAttacking = false
 ENT.ThrowingGrenade = false
-function ENT:CustomInitialize() end
 function ENT:SetNearestPointToEntityPosition() return self:GetDynamicOrigin() end
 function ENT:SetMeleeAttackDamagePosition() return self:GetMeleeAttackDamageOrigin() end
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!
