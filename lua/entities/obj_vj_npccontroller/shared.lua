@@ -15,24 +15,31 @@ if CLIENT then
 		return false
 	end
 	
-	local vec0 = vector_origin
+	local vec0 = Vector(0, 0, 0)
 	local vec1 = Vector(1, 1, 1)
-	local viewLerpVec = vector_origin
+	local viewLerpVec = Vector(0, 0, 0)
 	local viewLerpAng = Angle(0, 0, 0)
 	---------------------------------------------------------------------------------------------------------------------------------------------
-	hook.Add("CalcView", "VJ_MyCalcView", function(ply, origin, angles, fov)
+	hook.Add("CalcView", "vj_controller_CalcView", function(ply, origin, angles, fov)
 		if !ply.IsControlingNPC then return end
 		local camera = ply.VJCE_Camera -- Camera entity
-		local npc = ply.VJCE_NPC -- The NPC that's being controlled
+		local npc = ply.VJCE_NPC -- NPC that is being controlled
 		if !IsValid(camera) or !IsValid(npc) then return end
 		if IsValid(ply:GetViewEntity()) && ply:GetViewEntity():GetClass() == "gmod_cameraprop" then return end
 		local cameraMode = ply.VJC_Camera_Mode
-		local useCustom, calcValues = npc:CustomOnCalcView(ply, origin, angles, fov, camera, cameraMode)
+		local customData = npc.CustomOnCalcView and npc:CustomOnCalcView(ply, origin, angles, fov, camera, cameraMode) or false
 		local lerpSpeed = ply:GetInfoNum("vj_npc_cont_cam_speed", 6)
 	
 		local pos = origin -- The position that will be set
 		local ang = ply:EyeAngles()
-		if useCustom != true then -- More direct control over the calc view, where as before we were limited to alterations of the below code
+		if customData then -- More direct control over the calc view, where as before we were limited to alterations of the below code
+			if istable(customData) then -- Make sure it is a table
+				pos = customData.origin or origin
+				ang = customData.angles or angles
+				fov = customData.fov or fov
+				lerpSpeed = customData.speed or lerpSpeed
+			end
+		else
 			if cameraMode == 2 then -- First person
 				local setPos = npc:EyePos() + npc:GetForward()*20
 				local offset = ply.VJC_FP_Offset
@@ -64,11 +71,6 @@ if CLIENT then
 				})
 				pos = tr.HitPos + tr.HitNormal*2
 			end
-		elseif useCustom == true && calcValues then
-			pos = calcValues.origin or origin
-			ang = calcValues.angles or angles
-			fov = calcValues.fov or fov
-			lerpSpeed = calcValues.speed or lerpSpeed
 		end
 
 		-- Lerp the position and the angle

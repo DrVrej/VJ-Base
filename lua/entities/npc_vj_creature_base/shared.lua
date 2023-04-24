@@ -38,17 +38,25 @@ if CLIENT then
 	//function ENT:CalcAbsolutePosition(pos, ang) end
 	-- Custom functions ---------------------------------------------------------------------------------------------------------------------------------------------
 	function ENT:CustomOnDraw() end
-	function ENT:CustomOnCalcView(ply, origin, angles, fov, camera, cameraMode) return false end -- Return true, as well as a table of data to override the default camera calculations
-	/*
-		Example:
-		function ENT:CustomOnCalcView(ply, origin, angles, fov, camera, cameraMode)
-			if cameraMode == 1 then -- We're in third-person, use our cool new view!
-				return true, {origin = origin - (angles:Forward() * 300)}
+	--[[---------------------------------------------------------
+		UNCOMMENT TO USE | Overrides the camera calculations for the NPC Controller
+			- ply = Player that is controlling the NPC
+			- origin = Current view position
+			- angles = Current view angles
+			- fov = Current field of view
+			- camera = Camera entity
+			- cameraMode = Camera mode | 1 = Third, 2 = First
+		Returns
+			- false or nothing = Run base code
+			- Table: Override base code, possible values --> {origin, ang, fov, speed}, "speed" = Camera lerp speed
+		Example Code:
+			Use a new cool view origin!
+			--
+			if cameraMode == 1 then -- Only if we are in third person
+				return {origin = origin - (angles:Forward() * 300)}
 			end
 			return false
-		end
-
-		Return table values are origin, angles, fov, speed
-		All table values are optional, but be careful as the default values that will be used instead are not good!
-	*/
+			--
+	-----------------------------------------------------------]]
+	-- function ENT:Controller_CalcView(ply, origin, angles, fov, camera, cameraMode) end
 end
