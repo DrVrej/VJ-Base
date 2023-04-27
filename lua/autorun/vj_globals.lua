@@ -6,6 +6,7 @@
 --------------------------------------------------*/
 if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 include('autorun/vj_controls.lua')
+
 -- Localized static values
 local CurTime = CurTime
 local IsValid = IsValid
@@ -167,39 +168,6 @@ COND_WEAPON_HAS_LOS = 41
 COND_WEAPON_PLAYER_IN_SPREAD = 43
 COND_WEAPON_PLAYER_NEAR_TARGET = 44
 COND_WEAPON_SIGHT_OCCLUDED = 45
----------------------------------------------------------------------------------------------------------------------------------------------
-if SERVER then
-	util.AddNetworkString("vj_music_run")
-	
-	-- Initialize AI schedule & task system
-	require("vj_ai_schedule")
-	local orgFunc = vj_ai_schedule.New
-	function vj_ai_schedule.New(name)
-		local actualFunc = orgFunc(name)
-		actualFunc.Name = name
-		return actualFunc
-	end
-	
-	-- Initialize AI Nodegraph system
-	require("vj_ai_nodegraph")
-	timer.Simple(1, function() -- To make sure world is initialized otherwise things like traces will return nil because worldspawn doesn't exist
-		vj_ai_nodegraph = vj_ai_nodegraph.New()
-		-- If it failed to read the nodegraph, wait and try again in case nodegraph file hasn't generated yet
-		if vj_ai_nodegraph:GetNodegraph().Version == -1 then
-			print("VJ Base AI Nodegraph: Nodegraph file couldn't be loaded, attempting again...")
-			timer.Simple(4, function()
-				print("VJ Base AI Nodegraph: Running second read attempt...")
-				vj_ai_nodegraph.Data = vj_ai_nodegraph:ReadNodegraph()
-				
-				if vj_ai_nodegraph:GetNodegraph().Version == -1 then
-					print("VJ Base AI Nodegraph: Second read attempt has also failed.")
-				else
-					print("VJ Base AI Nodegraph: Second read attempt successfully worked!")
-				end
-			end)
-		end
-	end)
-end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_PICK(tbl)
 	if not tbl then return false end -- Yete table pame choone meche, veratartsour false!
@@ -1074,7 +1042,9 @@ end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Net Messages ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-if CLIENT then
+if SERVER then
+	util.AddNetworkString("vj_music_run")
+elseif CLIENT then
 	net.Receive("vj_music_run",function(len)
 		VJ_MUSIC_QUEUE_LIST = VJ_MUSIC_QUEUE_LIST or {}
 		local ent = net.ReadEntity()

@@ -12,6 +12,14 @@ Nodegraph.__index 	= Nodegraph
 
 Nodegraph.Data = nil
 
+-- ENUMs
+Nodegraph.NODE_TYPE_ANY = 0
+Nodegraph.NODE_TYPE_DELETED = 1
+Nodegraph.NODE_TYPE_GROUND = 2
+Nodegraph.NODE_TYPE_AIR = 3
+Nodegraph.NODE_TYPE_CLIMB = 4
+Nodegraph.NODE_TYPE_WATER = 5
+---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Gets the map's nodegraph data and returns it as a Lua table with all the info! | WARNING: This is an internal function, causes major lag! AVOID CALLING!
 	Returns
@@ -22,13 +30,13 @@ Nodegraph.Data = nil
 	- https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_networkmanager.cpp#L475
 -----------------------------------------------------------]]
 local z32768 = Vector(0, 0, 32768)
+local AINET_VERSION_NUMBER = 37
+local NUM_HULLS = 10 -- NUM_HULLS is set to 10 for most maps tested
 --
 function Nodegraph:ReadNodegraph()
 	local FILE = file.Open("maps/graphs/" .. game.GetMap() .. ".ain", "rb", "GAME")
 	local nodegraphData = {Version = -1, NodeCount = 0, Nodes = {}, LinkCount = 0, Links = {}}
-	if !FILE then print("VJ Base AI Nodegraph: Nodegraph file couldn't be found!") return nodegraphData end -- File doesn't exist
-	local NUM_HULLS = 10 -- NUM_HULLS is set to 10 for most maps tested
-	local AINET_VERSION_NUMBER = 37
+	if !FILE then print("VJ Base AI Nodegraph module: Nodegraph file couldn't be found!") return nodegraphData end -- File doesn't exist
 
 	-- struct ain_header
 	if FILE:ReadLong() == AINET_VERSION_NUMBER then -- AI Net version
@@ -157,20 +165,12 @@ function Nodegraph:ReadNodegraph()
 	FILE:Close()
 	return nodegraphData
 end
-
--- ENUMs
-Nodegraph.NODE_TYPE_ANY = 0
-Nodegraph.NODE_TYPE_DELETED = 1
-Nodegraph.NODE_TYPE_GROUND = 2
-Nodegraph.NODE_TYPE_AIR = 3
-Nodegraph.NODE_TYPE_CLIMB = 4
-Nodegraph.NODE_TYPE_WATER = 5
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Initialize the Nodegraph object | WARNING: This is an internal function, avoid using!
 -----------------------------------------------------------]]
 function Nodegraph:Init()
-	print("VJ Base AI Nodegraph: Object created.")
+	print("VJ Base AI Nodegraph module: Object created.")
 	self.Data = self:ReadNodegraph()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -239,4 +239,4 @@ function New()
 	return newNodegraph
 end
 
-print("VJ Base AI Nodegraph: Successfully initialized!")
+print("VJ Base AI Nodegraph module: Successfully initialized!")

@@ -13,7 +13,7 @@
 --------------------------------------------------*/
 if CLIENT then print("Loading VJ Base (Client)...") else print("Loading VJ Base (Server)...") end
 
-VJBASE_VERSION = "2.16.1"
+VJBASE_VERSION = "2.17.0"
 
 -- Shared --
 AddCSLuaFile("autorun/vj_menu_spawninfo.lua")
@@ -45,6 +45,28 @@ AddCSLuaFile("includes/modules/vj_ai_task.lua")
 if SERVER then
 	util.AddNetworkString("vj_welcome_msg")
 	util.AddNetworkString("vj_meme")
+	
+	-- Initialize AI Schedule and Task systems
+	require("vj_ai_schedule")
+	
+	-- Initialize AI Nodegraph system
+	require("vj_ai_nodegraph")
+	timer.Simple(1, function() -- To make sure world is initialized otherwise things like traces will return nil because worldspawn doesn't exist
+		VJ_Nodegraph = vj_ai_nodegraph.New()
+		-- If it failed to read the nodegraph, wait and try again in case nodegraph file hasn't generated yet
+		if VJ_Nodegraph:GetNodegraph().Version == -1 then
+			print("VJ Base AI Nodegraph module: Failed to read nodegraph, attempting again...")
+			timer.Simple(4, function()
+				print("VJ Base AI Nodegraph module: Running second read attempt...")
+				VJ_Nodegraph.Data = VJ_Nodegraph:ReadNodegraph()
+				if VJ_Nodegraph:GetNodegraph().Version == -1 then
+					print("VJ Base AI Nodegraph module: Second read attempt was failure, aborting!")
+				else
+					print("VJ Base AI Nodegraph module: Second read attempt was successful!")
+				end
+			end)
+		end
+	end)
 elseif CLIENT then
 	hook.Add("AddToolMenuTabs", "VJ_CREATETOOLTAB", function()
 		spawnmenu.AddToolTab("DrVrej", "DrVrej", "vj_base/icons/vrejgaming.png") // "icon16/plugin.png"
@@ -91,7 +113,7 @@ if SERVER && !isfunction(FindMetaTable("Entity").SetSurroundingBoundsType) then
 			VJBASE_ERROR_GAME_OUTDATED = true
 			timer.Create("VJBASE_ERROR_GAME_OUTDATED", 2, 1, function()
 				PrintMessage(HUD_PRINTTALK, "--- Outdated version of Garry's Mod detected! ---")
-				PrintMessage(HUD_PRINTTALK, "Major parts of VJ Base AI are now disabled! Expect errors & AI issues!")
+				PrintMessage(HUD_PRINTTALK, "Parts of VJ Base are now disabled! Expect errors & AI issues!")
 				PrintMessage(HUD_PRINTTALK, "REASON: Game is running on 64-bit or Chromium or is pirated!")
 			end)
 		end

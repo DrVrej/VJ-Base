@@ -430,11 +430,11 @@ function ENT:DoRelationshipCheck(ent) return dispToVal[self:CheckRelationship(en
 function ENT:VJ_DecideSoundPitch(pitch1, pitch2)
 	local finalPitch1 = self.GeneralSoundPitch1
 	local finalPitch2 = self.GeneralSoundPitch2
-	local picknum = self.UseTheSameGeneralSoundPitch_PickedNumber
+	local pickedNum = self.UseTheSameGeneralSoundPitch_PickedNumber
 	-- If the NPC is set to use the same sound pitch all the time and it's not 0 then use that pitch
-	if self.UseTheSameGeneralSoundPitch == true && picknum != 0 then
-		finalPitch1 = picknum
-		finalPitch2 = picknum
+	if self.UseTheSameGeneralSoundPitch == true && pickedNum != 0 then
+		finalPitch1 = pickedNum
+		finalPitch2 = pickedNum
 	end
 	if pitch1 != false && isnumber(pitch1) then finalPitch1 = pitch1 end
 	if pitch2 != false && isnumber(pitch2) then finalPitch2 = pitch2 end
@@ -490,8 +490,8 @@ end
 function ENT:FaceCertainPosition(pos, faceTime)
 	local faceAng = self:GetFaceAngle(((pos or defPos) - self:GetPos()):Angle())
 	if self.TurningUseAllAxis == true then
-		local myAngs = self:GetAngles()
-		self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAngs, Angle(faceAng.p, myAngs.y, faceAng.r)))
+		local myAng = self:GetAngles()
+		self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(faceAng.p, myAng.y, faceAng.r)))
 	end
 	self:SetIdealYawAndUpdate(faceAng.y)
 	//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
@@ -516,8 +516,8 @@ function ENT:FaceCertainEntity(ent, faceCurEnemy, faceTime)
 		if IsValid(self:GetEnemy()) then -- Make sure to only do it if it even has an enemy
 			local faceAng = self:GetFaceAngle((ent:GetPos() - self:GetPos()):Angle())
 			if self.TurningUseAllAxis == true then
-				local myAngs = self:GetAngles()
-				self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAngs, Angle(faceAng.p, myAngs.y, faceAng.r)))
+				local myAng = self:GetAngles()
+				self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(faceAng.p, myAng.y, faceAng.r)))
 			end
 			self:SetIdealYawAndUpdate(faceAng.y)
 			//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
@@ -530,8 +530,8 @@ function ENT:FaceCertainEntity(ent, faceCurEnemy, faceTime)
 	else
 		local faceAng = self:GetFaceAngle((ent:GetPos() - self:GetPos()):Angle())
 		if self.TurningUseAllAxis == true then
-			local myAngs = self:GetAngles()
-			self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAngs, Angle(faceAng.p, myAngs.y, faceAng.r)))
+			local myAng = self:GetAngles()
+			self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(faceAng.p, myAng.y, faceAng.r)))
 		end
 		self:SetIdealYawAndUpdate(faceAng.y)
 		//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
@@ -1966,10 +1966,11 @@ function ENT:IdleSoundCode(customSd, sdType)
 							if IsValid(self) && IsValid(foundEnt) && !foundEnt:CustomOnIdleDialogue(self, "Answer") then
 								local response = foundEnt:IdleDialogueAnswerSoundCode()
 								if response > 0 then -- If the ally responded, then make sure both SNPCs stand still & don't play another idle sound until the whole conversation is finished!
-									self.NextIdleSoundT = CurTime() + (response + 0.5)
-									self.NextWanderTime = CurTime() + (response + 1)
-									foundEnt.NextIdleSoundT = CurTime() + (response + 0.5)
-									foundEnt.NextWanderTime = CurTime() + (response + 1)
+									local curTime = CurTime()
+									self.NextIdleSoundT = curTime + (response + 0.5)
+									self.NextWanderTime = curTime + (response + 1)
+									foundEnt.NextIdleSoundT = curTime + (response + 0.5)
+									foundEnt.NextWanderTime = curTime + (response + 1)
 								end
 							end
 						end)
@@ -2047,18 +2048,18 @@ function ENT:EntitiesToNoCollideCode(ent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RunGibOnDeathCode(dmginfo, hitgroup, extraOptions)
-	if self.AllowedToGib == false or self.HasGibOnDeath == false or self.HasBeenGibbedOnDeath == true then return end
+	if !self.AllowedToGib or !self.HasGibOnDeath or self.HasBeenGibbedOnDeath then return end
 	extraOptions = extraOptions or {}
 	local dmgTbl = extraOptions.CustomDmgTbl or self.GibOnDeathDamagesTable
 	local dmgType = dmginfo:GetDamageType()
 	for k = 1, #dmgTbl do
 		local v = dmgTbl[k]
 		if (v == "All") or (v == "UseDefault" && self:IsDefaultGibDamageType(dmgType) && bAND(dmgType, DMG_NEVERGIB) == 0) or (v != "UseDefault" && bAND(dmgType, v) != 0) then
-			local setupgib, setupgib_extra = self:SetUpGibesOnDeath(dmginfo, hitgroup)
-			if setupgib_extra == nil then setupgib_extra = {} end
-			if setupgib == true then
-				if setupgib_extra.AllowCorpse != true then self.HasDeathRagdoll = false end
-				if setupgib_extra.DeathAnim != true then self.HasDeathAnimation = false end
+			local setupGibs, setupGibsExtra = self:SetUpGibesOnDeath(dmginfo, hitgroup)
+			if setupGibsExtra == nil then setupGibsExtra = {} end
+			if setupGibs == true then
+				if setupGibsExtra.AllowCorpse != true then self.HasDeathRagdoll = false end
+				if setupGibsExtra.DeathAnim != true then self.HasDeathAnimation = false end
 				self.HasBeenGibbedOnDeath = true
 				self:PlayGibOnDeathSounds(dmginfo, hitgroup)
 			end
@@ -2095,11 +2096,11 @@ function ENT:StartSoundTrack()
 	if math.random(1, self.SoundTrackChance) == 1 then
 		self:VJTags_Add(VJ_TAG_SD_PLAYING_MUSIC)
 		net.Start("vj_music_run")
-		net.WriteEntity(self)
-		net.WriteTable(self.SoundTbl_SoundTrack)
-		net.WriteFloat(self.SoundTrackVolume)
-		net.WriteFloat(self.SoundTrackPlaybackRate)
-		//net.WriteFloat(self.SoundTrackFadeOutTime)
+			net.WriteEntity(self)
+			net.WriteTable(self.SoundTbl_SoundTrack)
+			net.WriteFloat(self.SoundTrackVolume)
+			net.WriteFloat(self.SoundTrackPlaybackRate)
+			//net.WriteFloat(self.SoundTrackFadeOutTime)
 		net.Broadcast()
 	end
 end
