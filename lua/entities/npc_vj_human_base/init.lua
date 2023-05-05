@@ -2544,7 +2544,7 @@ function ENT:Think()
 		-- Update follow system's data
 		//print("------------------")
 		//PrintTable(self.FollowData)
-		if self.IsFollowing == true then
+		if self.IsFollowing == true && self:GetNavType() != NAV_JUMP && self:GetNavType() != NAV_CLIMB then
 			local followData = self.FollowData
 			local followEnt = followData.Ent
 			local followIsLiving = followData.IsLiving
