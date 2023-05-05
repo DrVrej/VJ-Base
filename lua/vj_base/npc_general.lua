@@ -236,14 +236,14 @@ function ENT:EatingReset(resetType)
 	local eatingData = self.EatingData
 	self:SetState(VJ_STATE_NONE)
 	self:CustomOnEat("StopEating", resetType)
-	self.VJTags[VJ_TAG_EATING] = nil
+	self.VJTag_IsEating = false
 	self:SetIdleAnimation(eatingData.OldIdleTbl, true) -- Reset the idle animation table in case it changed!
 	local food = eatingData.Ent
 	if IsValid(food) then
 		local foodData = food.FoodData
 		-- if we are the last person eating, then reset the food data!
 		if foodData.NumConsumers <= 1 then
-			food.VJTags[VJ_TAG_BEING_EATEN] = nil
+			food.VJTag_IsBeingEaten = false
 			foodData.NumConsumers = 0
 			foodData.SizeRemaining = foodData.Size
 		else
@@ -1075,7 +1075,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoMedicReset()
 	self:CustomOnMedic_OnReset()
-	if IsValid(self.Medic_CurrentEntToHeal) then self.Medic_CurrentEntToHeal.VJTags[VJ_TAG_HEALING] = nil end
+	if IsValid(self.Medic_CurrentEntToHeal) then self.Medic_CurrentEntToHeal.VJTag_IsHealing = false end
 	if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
 	self.Medic_NextHealT = CurTime() + math.Rand(self.Medic_NextHealTime.a, self.Medic_NextHealTime.b)
 	self.Medic_Status = false
@@ -1088,10 +1088,10 @@ function ENT:DoMedicCheck()
 		if CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled then return end
 		for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
 			if v.IsVJBaseSNPC != true && !v:IsPlayer() then continue end -- If it's not a VJ Base SNPC or a player, then move on
-			if v:EntIndex() != self:EntIndex() && !v.VJTags[VJ_TAG_HEALING] && !v.VJTags[VJ_TAG_VEHICLE] && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:CheckRelationship(v) == D_LI then
+			if v:EntIndex() != self:EntIndex() && !v.VJTag_IsHealing && !v.VJTag_ID_Vehicle && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:CheckRelationship(v) == D_LI then
 				self.Medic_CurrentEntToHeal = v
 				self.Medic_Status = "Active"
-				v:VJTags_Add(VJ_TAG_HEALING)
+				v.VJTag_IsHealing = true
 				self:StopMoving()
 				self:SetTarget(v)
 				self:VJ_TASK_GOTO_TARGET()
@@ -1377,7 +1377,7 @@ function ENT:SetupRelationships()
 						end
 					end
 					-- Handle self.VJ Friendly AND HL2 Resistance + self.FriendsWithAllPlayerAllies
-					if vNPC && !entFri && ((self.VJTags[VJ_TAG_VJ_FRIENDLY] && v.IsVJBaseSNPC == true) or (self.PlayerFriendly == true && (NPCTbl_Resistance[vClass] or (self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true)))) then
+					if vNPC && !entFri && ((self.VJTag_IsBaseFriendly && v.IsVJBaseSNPC == true) or (self.PlayerFriendly == true && (NPCTbl_Resistance[vClass] or (self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true)))) then
 						v:AddEntityRelationship(self, D_LI, 0)
 						self:AddEntityRelationship(v, D_LI, 0)
 						entFri = true
@@ -2094,7 +2094,7 @@ end
 function ENT:StartSoundTrack()
 	if self.HasSounds == false or self.HasSoundTrack == false then return end
 	if math.random(1, self.SoundTrackChance) == 1 then
-		self:VJTags_Add(VJ_TAG_SD_PLAYING_MUSIC)
+		self.VJTag_SD_PlayingMusic = true
 		net.Start("vj_music_run")
 			net.WriteEntity(self)
 			net.WriteTable(self.SoundTbl_SoundTrack)
@@ -2133,7 +2133,7 @@ function ENT:OnRemove()
 	self:CustomOnRemove()
 	self.Dead = true
 	if self.Medic_Status then self:DoMedicReset() end
-	if self.VJTags[VJ_TAG_EATING] then self:EatingReset("Dead") end
+	if self.VJTag_IsEating then self:EatingReset("Dead") end
 	self:RemoveTimers()
 	self:StopAllCommonSounds()
 	self:StopParticles()
@@ -2141,7 +2141,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- ///// OBSOLETE FUNCTIONS | Recommended not to use! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ ///// OBSOLETE FUNCTIONS | Do not to use! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

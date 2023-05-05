@@ -1019,7 +1019,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_usedevcommands"):GetInt() == 1 then self.VJ_DEBUG = true end
 	self.NextProcessTime = GetConVar("vj_npc_processtime"):GetInt()
 	if GetConVar("vj_npc_sd_nosounds"):GetInt() == 1 then self.HasSounds = false end
-	if GetConVar("vj_npc_vjfriendly"):GetInt() == 1 then self:VJTags_Add(VJ_TAG_VJ_FRIENDLY) end
+	if GetConVar("vj_npc_vjfriendly"):GetInt() == 1 then self.VJTag_IsBaseFriendly = true end
 	if GetConVar("vj_npc_playerfriendly"):GetInt() == 1 then self.PlayerFriendly = true end
 	if GetConVar("vj_npc_antlionfriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCAnt end
 	if GetConVar("vj_npc_combinefriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCCom end
@@ -1833,7 +1833,7 @@ function ENT:Think()
 			local followIsLiving = followData.IsLiving
 			//print(self:GetTarget())
 			if IsValid(followEnt) && (!followIsLiving or (followIsLiving && (self:Disposition(followEnt) == D_LI or self:GetClass() == followEnt:GetClass()) && VJ_IsAlive(followEnt))) then
-				if curTime > self.NextFollowUpdateT && !self.VJTags[VJ_TAG_HEALING] then
+				if curTime > self.NextFollowUpdateT && !self.VJTag_IsHealing then
 					local distToPly = self:GetPos():Distance(followEnt:GetPos())
 					local busy = self:BusyWithActivity()
 					self:SetTarget(followEnt)
@@ -1941,12 +1941,12 @@ function ENT:Think()
 					eatingData = self.EatingData
 				end
 				if eneValid or self.Alerted then
-					if self.VJTags[VJ_TAG_EATING] then
+					if self.VJTag_IsEating then
 						eatingData.NextCheck = curTime + 15
 						self:EatingReset("Enemy")
 					end
 				elseif curTime > eatingData.NextCheck then
-					if self.VJTags[VJ_TAG_EATING] then
+					if self.VJTag_IsEating then
 						local food = eatingData.Ent
 						if !IsValid(food) then -- Food no longer exists, reset!
 							eatingData.NextCheck = curTime + 10
@@ -1997,7 +1997,7 @@ function ENT:Think()
 						local hint = sound.GetLoudestSoundHint(SOUND_CARCASS, myPos) // GetBestSoundHint = Do NOT use, completely broken!
 						if hint then
 							local food = hint.owner
-							if IsValid(food) /*&& !food.VJTags[VJ_TAG_BEING_EATEN]*/ then
+							if IsValid(food) /*&& !food.VJTag_IsBeingEaten*/ then
 								if !food.FoodData then
 									local size = food:OBBMaxs():Distance(food:OBBMins()) * 2
 									food.FoodData = {
@@ -2012,8 +2012,8 @@ function ENT:Think()
 									foodData.NumConsumers = foodData.NumConsumers + 1
 									foodData.SizeRemaining = foodData.SizeRemaining - self:OBBMaxs():Distance(self:OBBMins())
 									//PrintTable(hint)
-									self:VJTags_Add(VJ_TAG_EATING)
-									food:VJTags_Add(VJ_TAG_BEING_EATEN)
+									self.VJTag_IsEating = true
+									food.VJTag_IsBeingEaten = true
 									self.EatingData.OldIdleTbl = self.AnimTbl_IdleStand -- Save the current idle anim table in case we gonna change it while eating!
 									eatingData.Ent = food
 									self:CustomOnEat("StartBehavior")
@@ -2281,7 +2281,7 @@ function ENT:DoPropAPCheck(customEnts, customMeleeDistance)
 	if !self.PushProps && !self.AttackProps then return false end
 	local myPos = self:GetPos()
 	for _, v in ipairs(customEnts or ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), customMeleeDistance or math_clamp(self.MeleeAttackDamageDistance - 30, self.MeleeAttackDistance, self.MeleeAttackDamageDistance))) do
-		local verifiedEnt = ((destructibleEnts[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) and true) or false -- Whether or not it's a prop or an entity to attack
+		local verifiedEnt = ((destructibleEnts[v:GetClass()] or v.VJTag_ID_Prop == true) and true) or false -- Whether or not it's a prop or an entity to attack
 		if v:GetClass() == "prop_door_rotating" && v:Health() <= 0 then verifiedEnt = false end -- If it's a door and it has no health, then don't attack it!
 		if IsProp(v) or verifiedEnt then --If it's a prop or a entity then attack
 			local phys = v:GetPhysicsObject()
@@ -2326,7 +2326,7 @@ function ENT:MeleeAttackCode(isPropAttack, attackDist, customEnt)
 	local hitRegistered = false
 	for _, v in ipairs(ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), attackDist)) do
 		if (self.VJ_IsBeingControlled && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end -- If controlled and v is the bullseye OR it's a player controlling then don't damage!
-		if v != self && v:GetClass() != self:GetClass() && (((v:IsNPC() or (v:IsPlayer() && v:Alive() && !VJ_CVAR_IGNOREPLAYERS)) && self:Disposition(v) != D_LI) or IsProp(v) == true or v:GetClass() == "func_breakable_surf" or destructibleEnts[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
+		if v != self && v:GetClass() != self:GetClass() && (((v:IsNPC() or (v:IsPlayer() && v:Alive() && !VJ_CVAR_IGNOREPLAYERS)) && self:Disposition(v) != D_LI) or IsProp(v) == true or v:GetClass() == "func_breakable_surf" or destructibleEnts[v:GetClass()] or v.VJTag_ID_Prop == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
 			if isPropAttack == true && (v:IsPlayer() or v:IsNPC()) && self:VJ_GetNearestPointToEntityDistance(v) > self.MeleeAttackDistance then continue end //if (self:GetPos():Distance(v:GetPos()) <= self:VJ_GetNearestPointToEntityDistance(v) && self:VJ_GetNearestPointToEntityDistance(v) <= self.MeleeAttackDistance) == false then
 			local vProp = IsProp(v)
 			if self:CustomOnMeleeAttack_AfterChecks(v, vProp) == true then continue end
@@ -2911,7 +2911,7 @@ function ENT:OnTakeDamage(dmginfo)
 	end
 	
 	-- If eating, stop!
-	if self.CanEat && self.VJTags[VJ_TAG_EATING] then
+	if self.CanEat && self.VJTag_IsEating then
 		self.EatingData.NextCheck = curTime + 15
 		self:EatingReset("Injured")
 	end

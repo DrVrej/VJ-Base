@@ -200,7 +200,7 @@ function ENT:DoDamageCode(data, phys)
 		else
 			attackEnt = self
 		end
-		if self.VJ_IsPickedUpDanger == true && IsValid(self:GetParent()) && self:GetParent():IsNPC() then dmgPos = self:GetParent():GetPos() end -- If the projectile is picked up (Such as a grenade picked up by human SNPC), then the damage position is the parent's position
+		if self.VJTag_IsPickedUp == true && IsValid(self:GetParent()) && self:GetParent():IsNPC() then dmgPos = self:GetParent():GetPos() end -- If the projectile is picked up (Such as a grenade picked up by human SNPC), then the damage position is the parent's position
 		hitEnt = util.VJ_SphereDamage(attackEnt, attackEnt, dmgPos, self.RadiusDamageRadius, self.RadiusDamage, self.RadiusDamageType, DoEntCheck, self.RadiusDamageUseRealisticRadius, {DisableVisibilityCheck=self.RadiusDamageDisableVisibilityCheck, Force=self.RadiusDamageForce, UpForce=self.RadiusDamageForce_Up, DamageAttacker=owner:IsPlayer()})
 	end
 	

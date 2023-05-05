@@ -616,48 +616,32 @@ end
 ------ Tags ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*
--- Variables that are used by VJ Base as tags --
-[Variable]							[Description]
-VJ_IsBeingControlled				NPC that is being controlled by the VJ NPC Controller
-VJ_IsBeingControlled_Tool			NPC that is being controlled by the VJ NPC Mover Tool
-VJ_AddEntityToSNPCAttackList		Entity that should be attacked by Creature NPCs if it's in the way
-VJ_IsDetectableDanger				Entity that should be detected as danger by human NPCs
-VJ_IsDetectableGrenade				Entity that should be detected as a grenade danger by human NPCs
-VJ_IsPickupableDanger				Entity that CAN be picked up by human NPCs (Ex: Grenades)
-VJ_IsPickedUpDanger					Entity that is currently picked up by a human NPC and most likely throwing it away (Ex: Grenades)
-VJ_LastInvestigateSd				Last time this NPC/Player has made a sound that should be investigated by enemy NPCs
-VJ_LastInvestigateSdLevel			The sound level of the above variable
-VJ_IsHugeMonster					NPC that is considered to be very large or a boss
+[Variable]						[Description]
+VJ_IsHugeMonster				NPC that is considered to be very large or a boss
+VJ_IsBeingControlled			NPC that is being controlled by the VJ NPC Controller
+VJ_IsBeingControlled_Tool		NPC that is being controlled by the VJ NPC Mover Tool
+VJ_LastInvestigateSd			Last time this NPC/Player has made a sound that should be investigated by enemy NPCs
+VJ_LastInvestigateSdLevel		The sound level of the above variable
+
+VJTag_IsDanger					Entity that should be detected as danger by NPCs
+VJTag_IsPickupable				Entity can be picked up by NPCs (Ex: Grenades)
+VJTag_IsPickedUp				Entity that is currently picked up by an NPC and most likely throwing it away (Ex: Grenades)
+VJTag_IsHealing					Entity is healing (either itself or by another entity)
+VJTag_IsEating					Entity is eating something (Ex: a corpse)
+VJTag_IsBeingEaten				Entity is being eaten by something
+VJTag_IsBaseFriendly			Friendly to VJ NPCs
+
+VJTag_ID_Prop					Entity is considered a prop and can be attacked by NPCs
+VJTag_ID_Grenade				Entity is a grenade type and should be detected as a grenade danger by NPCs
+VJTag_ID_Headcrab
+VJTag_ID_Police
+VJTag_ID_Civilian
+VJTag_ID_Turret
+VJTag_ID_Vehicle
+VJTag_ID_Aircraft
+
+VJTag_SD_PlayingMusic			Entity is playing a sound track
 */
-
--- Variable:		self.VJTags
--- Access: 			self.VJTags[VJ_TAG_X]
--- Remove: 			self.VJTags[VJ_TAG_X] = nil
--- Add: 			self:VJTags_Add(VJ_TAG_X, VJ_TAG_Y, ...)
-
--- Enums
-VJ_TAG_HEALING = 1 -- Ent is healing (either itself or by another ent)
-VJ_TAG_EATING = 2 -- Ent is eating something (Ex: a corpse)
-VJ_TAG_BEING_EATEN = 3 -- Ent is being eaten by something
-VJ_TAG_VJ_FRIENDLY = 4 -- Friendly to VJ NPCs
-
-VJ_TAG_SD_PLAYING_MUSIC = 10 -- Ent is playing a sound track
-
-VJ_TAG_HEADCRAB = 20
-VJ_TAG_POLICE = 21
-VJ_TAG_CIVILIAN = 22
-VJ_TAG_TURRET = 23
-VJ_TAG_VEHICLE = 24
-VJ_TAG_AIRCRAFT = 25
-
----------------------------------------------------------------------------------------------------------------------------------------------
-function Entity_MetaTable:VJTags_Add(...)
-	if !self.VJTags then self.VJTags = {} end
-	//PrintTable({...})
-	for _, tag in ipairs({...}) do
-		self.VJTags[tag] = true
-	end
-end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Hooks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -758,9 +742,9 @@ if SERVER then
 				end)
 			end
 		elseif grenadeEnts[myClass] then
-			ent.VJ_IsDetectableGrenade = true
+			ent.VJTag_ID_Grenade = true
 			if grenadeThrowBackEnts[myClass] then
-				ent.VJ_IsPickupableDanger = true
+				ent.VJTag_IsPickupable = true
 			end
 		end
 		-- Old system
@@ -1183,8 +1167,39 @@ function util.VJ_SphereDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 	return hitEnts
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Tests ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ ///// OBSOLETE FUNCTIONS | Do not to use! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+/*
+VJ_TAG_HEALING = 1 -- Ent is healing (either itself or by another ent)
+VJ_TAG_EATING = 2 -- Ent is eating something (Ex: a corpse)
+VJ_TAG_BEING_EATEN = 3 -- Ent is being eaten by something
+VJ_TAG_VJ_FRIENDLY = 4 -- Friendly to VJ NPCs
+VJ_TAG_SD_PLAYING_MUSIC = 10 -- Ent is playing a sound track
+VJ_TAG_HEADCRAB = 20
+VJ_TAG_POLICE = 21
+VJ_TAG_CIVILIAN = 22
+VJ_TAG_TURRET = 23
+VJ_TAG_VEHICLE = 24
+VJ_TAG_AIRCRAFT = 25
+--
+-- Variable:		self.VJTags
+-- Access: 			self.VJTags[VJ_TAG_X]
+-- Remove: 			self.VJTags[VJ_TAG_X] = nil
+-- Add: 			self:VJTags_Add(VJ_TAG_X, VJ_TAG_Y, ...)
+--
+function Entity_MetaTable:VJTags_Add(...)
+	if !self.VJTags then self.VJTags = {} end
+	//PrintTable({...})
+	for _, tag in ipairs({...}) do
+		self.VJTags[tag] = true
+	end
+end
+*/
+---------------------------------------------------------------------------------------------------------------------------------------------
 -- Working test but no uses at the moment
 /*
 local metaNPC = FindMetaTable("NPC")
@@ -1212,7 +1227,7 @@ hook.Add("OnEntityCreated", "vjmetatabletest", function(ent)
 	end
 end)
 */
-
+---------------------------------------------------------------------------------------------------------------------------------------------
 -- Version for individual NPCs (Tests show loss of performance, avoid)
 /*
 local metaOrg = debug.getmetatable(self)

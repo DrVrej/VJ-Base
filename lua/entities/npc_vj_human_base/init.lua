@@ -1019,7 +1019,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_usedevcommands"):GetInt() == 1 then self.VJ_DEBUG = true end
 	self.NextProcessTime = GetConVar("vj_npc_processtime"):GetInt()
 	if GetConVar("vj_npc_sd_nosounds"):GetInt() == 1 then self.HasSounds = false end
-	if GetConVar("vj_npc_vjfriendly"):GetInt() == 1 then self:VJTags_Add(VJ_TAG_VJ_FRIENDLY) end
+	if GetConVar("vj_npc_vjfriendly"):GetInt() == 1 then self.VJTag_IsBaseFriendly = true end
 	if GetConVar("vj_npc_playerfriendly"):GetInt() == 1 then self.PlayerFriendly = true end
 	if GetConVar("vj_npc_antlionfriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCAnt end
 	if GetConVar("vj_npc_combinefriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCCom end
@@ -2550,7 +2550,7 @@ function ENT:Think()
 			local followIsLiving = followData.IsLiving
 			//print(self:GetTarget())
 			if IsValid(followEnt) && (!followIsLiving or (followIsLiving && (self:Disposition(followEnt) == D_LI or self:GetClass() == followEnt:GetClass()) && VJ_IsAlive(followEnt))) then
-				if curTime > self.NextFollowUpdateT && !self.VJTags[VJ_TAG_HEALING] then
+				if curTime > self.NextFollowUpdateT && !self.VJTag_IsHealing then
 					local distToPly = self:GetPos():Distance(followEnt:GetPos())
 					local busy = self:BusyWithActivity()
 					self:SetTarget(followEnt)
@@ -2932,7 +2932,7 @@ function ENT:MeleeAttackCode(customEnt)
 	local hitRegistered = false
 	for _, v in ipairs(ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), self.MeleeAttackDamageDistance)) do
 		if (self.VJ_IsBeingControlled && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.IsControlingNPC == true) then continue end -- If controlled and v is the bullseye OR it's a player controlling then don't damage!
-		if v != self && v:GetClass() != self:GetClass() && (((v:IsNPC() or (v:IsPlayer() && v:Alive() && !VJ_CVAR_IGNOREPLAYERS)) && self:Disposition(v) != D_LI) or IsProp(v) == true or v:GetClass() == "func_breakable_surf" or destructibleEnts[v:GetClass()] or v.VJ_AddEntityToSNPCAttackList == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
+		if v != self && v:GetClass() != self:GetClass() && (((v:IsNPC() or (v:IsPlayer() && v:Alive() && !VJ_CVAR_IGNOREPLAYERS)) && self:Disposition(v) != D_LI) or IsProp(v) == true or v:GetClass() == "func_breakable_surf" or destructibleEnts[v:GetClass()] or v.VJTag_ID_Prop == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
 			local vProp = IsProp(v)
 			if self:CustomOnMeleeAttack_AfterChecks(v, vProp) == true then continue end
 			-- Knockback
@@ -3047,7 +3047,7 @@ function ENT:ThrowGrenadeCode(customEnt, noOwner)
 
 	timer.Simple(self.TimeUntilGrenadeIsReleased, function()
 		if getIsCustom == true && !IsValid(customEnt) then return end
-		if IsValid(customEnt) then customEnt.VJ_IsPickedUpDanger = false customEnt:Remove() end
+		if IsValid(customEnt) then customEnt.VJTag_IsPickedUp = false customEnt:Remove() end
 		if IsValid(self) && !self.Dead /*&& IsValid(self:GetEnemy())*/ then -- Yete SNPC ter artoon e...
 			local getSpawnPos = self.GrenadeAttackAttachment
 			local getSpawnAngle;
@@ -3133,7 +3133,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 3 types of danger detections:
-- ent.VJ_IsDetectableGrenade
+- ent.VJTag_ID_Grenade
 	- Detected as a grenade
 	- Distance based on self.DangerDetectionDistance
 	- Ignores grenades from allies
@@ -3153,7 +3153,7 @@ function ENT:CheckForDangers()
 	if !self.CanDetectDangers or self.AttackType == VJ_ATTACK_GRENADE or self.NextDangerDetectionT > CurTime() or self.VJ_IsBeingControlled then return end
 	local regDangerDetected = false -- A regular non-grenade danger has been found (This is done to make sure grenades take priority over other dangers!)
 	for _, v in ipairs(ents.FindInSphere(self:GetPos(), self.DangerDetectionDistance)) do
-		if (v.VJ_IsDetectableDanger or v.VJ_IsDetectableGrenade) && self:Visible(v) then
+		if (v.VJ_IsDetectableDanger or v.VJTag_ID_Grenade) && self:Visible(v) then
 			local vOwner = v:GetOwner()
 			if !(IsValid(vOwner) && vOwner.IsVJBaseSNPC && ((self:GetClass() == vOwner:GetClass()) or (self:Disposition(vOwner) == D_LI))) then
 				if v.VJ_IsDetectableDanger then regDangerDetected = true continue end -- If it's a regular danger then just skip it for now
@@ -3161,10 +3161,10 @@ function ENT:CheckForDangers()
 				self.NextDangerDetectionT = CurTime() + 4
 				self.TakingCoverT = CurTime() + 4
 				-- If has the ability to throw it back, then throw the grenade!
-				if self.CanThrowBackDetectedGrenades && self.HasGrenadeAttack && v.VJ_IsPickupableDanger && !v.VJ_IsPickedUpDanger && v:GetVelocity():Length() < 400 && self:VJ_GetNearestPointToEntityDistance(v) < 100 then
+				if self.CanThrowBackDetectedGrenades && self.HasGrenadeAttack && v.VJTag_IsPickupable && !v.VJTag_IsPickedUp && v:GetVelocity():Length() < 400 && self:VJ_GetNearestPointToEntityDistance(v) < 100 then
 					self.NextGrenadeAttackSoundT = CurTime() + 3
 					self:ThrowGrenadeCode(v, true)
-					v.VJ_IsPickedUpDanger = true
+					v.VJTag_IsPickedUp = true
 					//v:Remove()
 					return
 				end
@@ -3834,7 +3834,7 @@ function ENT:OnTakeDamage(dmginfo)
 	end
 	
 	-- If eating, stop!
-	if self.CanEat && self.VJTags[VJ_TAG_EATING] then
+	if self.CanEat && self.VJTag_IsEating then
 		self.EatingData.NextCheck = curTime + 15
 		self:EatingReset("Injured")
 	end

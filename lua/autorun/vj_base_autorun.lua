@@ -51,7 +51,7 @@ if SERVER then
 	
 	-- Initialize AI Nodegraph system
 	require("vj_ai_nodegraph")
-	timer.Simple(1, function() -- To make sure world is initialized otherwise things like traces will return nil because worldspawn doesn't exist
+	timer.Simple(1, function() -- To make sure world is initialized otherwise things like traces will return nil because "worldspawn" doesn't exist
 		VJ_Nodegraph = vj_ai_nodegraph.New()
 		-- If it failed to read the nodegraph, wait and try again in case nodegraph file hasn't generated yet
 		if VJ_Nodegraph:GetNodegraph().Version == -1 then

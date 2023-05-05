@@ -18,7 +18,7 @@ ENT.Category		= "VJ Base"
 ENT.Spawnable = true
 ENT.AdminOnly = false
 
-ENT.VJ_AddEntityToSNPCAttackList = true
+ENT.VJTag_ID_Prop = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	function ENT:Draw()

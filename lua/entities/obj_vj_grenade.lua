@@ -17,8 +17,8 @@ ENT.Category		= "VJ Base"
 ENT.Spawnable = true
 ENT.AdminOnly = false
 
-ENT.VJ_IsDetectableGrenade = true
-ENT.VJ_IsPickupableDanger = true
+ENT.VJTag_ID_Grenade = true
+ENT.VJTag_IsPickupable = true
 
 if CLIENT then
 	local Name = "Grenade"
