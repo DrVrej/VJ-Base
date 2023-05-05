@@ -1,7 +1,7 @@
 ------------------ Addon Information ------------------
 local PublicAddonName = "The public addon name goes here, Example: Dummy SNPCs"
 local AddonName = "The addon name goes here, Example: Dummy"
-local AddonType = "The addon type(s) Example: SNPC"
+local AddonType = "The addon type(s) Example: NPC"
 local AutorunFile = "autorun/vj_as_autorun.lua"
 -------------------------------------------------------
 local VJExists = file.Exists("lua/autorun/vj_base_autorun.lua","GAME")
@@ -62,7 +62,7 @@ if VJExists == true then
 	
 -- !!!!!! DON'T TOUCH ANYTHING BELOW THIS !!!!!! -------------------------------------------------------------------------------------------------------------------------
 	AddCSLuaFile(AutorunFile)
-	VJ.AddAddonProperty(AddonName,AddonType)
+	VJ.AddAddonProperty(AddonName, AddonType)
 else
 	if CLIENT then
 		chat.AddText(Color(0, 200, 200), PublicAddonName,
