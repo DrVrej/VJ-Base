@@ -32,10 +32,11 @@ if VJExists == true then
 			-- Second is the class name
 			-- Third is a boolean that defines whether or not it's an admin-only entity
 			-- Fourth is the category that it should be in
-	VJ.AddNPCWeapon("VJ_Dummy", "weapon_vj_dummy") -- Adds a weapon to the NPC weapon list
+	VJ.AddNPCWeapon("VJ_Dummy", "weapon_vj_dummy", vCat) -- Adds a weapon to the NPC weapon list
 		-- Parameters:
 			-- First is the name
 			-- Second is the class name
+			-- Third is the category that it should be in
 	VJ.AddEntity("Dummy Kit", "sent_vj_dummykit", "Author Name", false, 0, true, vCat) -- Adds an entity to the spawnmenu
 		-- Parameters: 
 			-- First is the name
