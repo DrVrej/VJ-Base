@@ -17,8 +17,8 @@ ENT.Category		= "VJ Base"
 ENT.Spawnable = false
 ENT.AdminOnly = false
 
-ENT.VJTag_IsDanger = true
-
+ENT.VJTag_ID_Danger = true
+---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	local Name = "Rifle Grenade"
 	local LangName = "obj_vj_grenade_rifle"
@@ -38,7 +38,6 @@ ENT.RadiusDamageUseRealisticRadius = true -- Should the damage decrease the fart
 ENT.RadiusDamageType = DMG_BLAST -- Damage type
 ENT.RadiusDamageForce = 90 -- Put the force amount it should apply | false = Don't apply any force
 ENT.DecalTbl_DeathDecals = {"Scorch"} -- Decals that paint when the projectile dies | It picks a random one from this table
-ENT.SoundTbl_OnRemove = {""}
 ENT.OnRemoveSoundLevel = 100
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitializeBeforePhys()

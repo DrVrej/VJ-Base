@@ -617,13 +617,14 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*
 [Variable]						[Description]
-VJ_IsHugeMonster				NPC that is considered to be very large or a boss
+
+-- Miscellaneous tags
 VJ_IsBeingControlled			NPC that is being controlled by the VJ NPC Controller
 VJ_IsBeingControlled_Tool		NPC that is being controlled by the VJ NPC Mover Tool
 VJ_LastInvestigateSd			Last time this NPC/Player has made a sound that should be investigated by enemy NPCs
 VJ_LastInvestigateSdLevel		The sound level of the above variable
 
-VJTag_IsDanger					Entity that should be detected as danger by NPCs
+-- Activity & Behavior tags
 VJTag_IsPickupable				Entity can be picked up by NPCs (Ex: Grenades)
 VJTag_IsPickedUp				Entity that is currently picked up by an NPC and most likely throwing it away (Ex: Grenades)
 VJTag_IsHealing					Entity is healing (either itself or by another entity)
@@ -631,6 +632,20 @@ VJTag_IsEating					Entity is eating something (Ex: a corpse)
 VJTag_IsBeingEaten				Entity is being eaten by something
 VJTag_IsBaseFriendly			Friendly to VJ NPCs
 
+-- Base type tags
+IsVJBaseSNPC
+IsVJBaseSNPC_Creature
+IsVJBaseSNPC_Human
+IsVJBaseSNPC_Tank
+IsVJBaseWeapon
+IsVJBaseCorpse
+IsVJBaseCorpse_Gib
+IsVJBaseSpawner
+IsVJBaseBoneFollower
+
+-- Identifier tags
+VJ_IsHugeMonster				NPC is considered to be very large and/or a boss
+VJTag_ID_Danger					Entity that should be detected as danger by NPCs
 VJTag_ID_Prop					Entity is considered a prop and can be attacked by NPCs
 VJTag_ID_Grenade				Entity is a grenade type and should be detected as a grenade danger by NPCs
 VJTag_ID_Headcrab
@@ -640,6 +655,7 @@ VJTag_ID_Turret
 VJTag_ID_Vehicle
 VJTag_ID_Aircraft
 
+-- Sound tags
 VJTag_SD_PlayingMusic			Entity is playing a sound track
 */
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

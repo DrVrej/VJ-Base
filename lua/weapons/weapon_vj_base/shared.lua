@@ -243,21 +243,20 @@ SWEP.NPC_AnimationSet = "Custom"
 SWEP.NPC_SecondaryFireNextT = 0
 SWEP.NPC_SecondaryFirePerforming = false
 SWEP.LastOwner = NULL
-
-
+---------------------------------------------------------------------------------------------------------------------------------------------
 -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	-- Basically if someone is retrieving "VJ_CurBulletPos" using NW, it will convert it to NW2 otherwise it just runs the regular code
-local entMETA = FindMetaTable("Entity")
 local wepMETA = FindMetaTable("Weapon")
-local old_GetNWVector = entMETA.GetNWVector
+local old_GetNWVector = FindMetaTable("Entity").GetNWVector
 function wepMETA:GetNWVector(name, default)
-	if name == "VJ_CurBulletPos" then return self:GetNW2Vector("VJ_CurBulletPos", default)
-	else return old_GetNWVector(self, name, default) end
+	if name == "VJ_CurBulletPos" then
+		return self:GetNW2Vector("VJ_CurBulletPos", default)
+	end
+	return old_GetNWVector(self, name, default)
 end
-
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:GetCapabilities()
-	return bit.bor(CAP_WEAPON_RANGE_ATTACK1,CAP_INNATE_RANGE_ATTACK1)
+	return bit.bor(CAP_WEAPON_RANGE_ATTACK1, CAP_INNATE_RANGE_ATTACK1)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Initialize()
@@ -273,6 +272,7 @@ function SWEP:Initialize()
 		self:SetNPCFireRate(10)
 	end
 	self:SetDefaultValues(self.HoldType)
+	//self:SetKeyValue("spawnflags", bit.bor(SF_WEAPON_NO_PLAYER_PICKUP))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Equip(newOwner)

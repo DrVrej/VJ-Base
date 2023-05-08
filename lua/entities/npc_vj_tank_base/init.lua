@@ -75,8 +75,6 @@ ENT.Tank_DefaultSoundTbl_DrivingEngine = {"vj_vehicles/armored/engine_drive1.wav
 ENT.Tank_DefaultSoundTbl_Track = {"vj_vehicles/armored/tracks1.wav"}
 ENT.Tank_DefaultSoundTbl_RunOver = {"vj_gib/bones_snapping1.wav","vj_gib/bones_snapping2.wav","vj_gib/bones_snapping3.wav"}
 
-ENT.VJTag_ID_Vehicle = true
-
 //util.AddNetworkString("vj_tank_base_spawneffects")
 //util.AddNetworkString("vj_tank_base_moveeffects")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -12,7 +12,7 @@ ENT.PrintName		= "Crossbow Bolt"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Information		= "Projectiles for my addons"
-ENT.Category		= "Projectiles"
+ENT.Category		= "VJ Base"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	local Name = "Crossbow Bolt"

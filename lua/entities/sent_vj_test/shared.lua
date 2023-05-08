@@ -12,11 +12,11 @@ ENT.Category		= "VJ Base"
 ENT.Spawnable = false
 ENT.AdminOnly = false
 ENT.AutomaticFrameAdvance = true
-
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetAutomaticFrameAdvance(bUsingAnim)
 	self.AutomaticFrameAdvance = bUsingAnim
 end
-
+---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	function ENT:Draw() self:DrawModel() end
 	

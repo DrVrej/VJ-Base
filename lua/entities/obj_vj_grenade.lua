@@ -19,7 +19,7 @@ ENT.AdminOnly = false
 
 ENT.VJTag_ID_Grenade = true
 ENT.VJTag_IsPickupable = true
-
+---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	local Name = "Grenade"
 	local LangName = "obj_vj_grenade"

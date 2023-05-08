@@ -35,7 +35,7 @@ if SERVER then
 			ply:RemoveAllAmmo()
 		else
 			for _, v in ipairs(ents.GetAll()) do
-				if (v:IsNPC() && (cType == "npcs" or (cType == "vjnpcs" && v.IsVJBaseSNPC == true))) or (cType == "spawners" && v.IsVJBaseSpawner == true) or (cType == "corpses" && (v.IsVJBaseCorpse == true or v.IsVJBase_Gib == true)) or (cType == "vjgibs" && v.IsVJBase_Gib == true) or (cType == "groundweapons" && v:IsWeapon() && v:GetOwner() == NULL) or (cType == "props" && v:GetClass() == "prop_physics" && (v:GetParent() == NULL or (IsValid(v:GetParent()) && v:GetParent():Health() <= 0 && (v:GetParent():IsNPC() or v:GetParent():IsPlayer())))) then
+				if (v:IsNPC() && (cType == "npcs" or (cType == "vjnpcs" && v.IsVJBaseSNPC == true))) or (cType == "spawners" && v.IsVJBaseSpawner == true) or (cType == "corpses" && (v.IsVJBaseCorpse == true or v.IsVJBaseCorpse_Gib == true)) or (cType == "vjgibs" && v.IsVJBaseCorpse_Gib == true) or (cType == "groundweapons" && v:IsWeapon() && v:GetOwner() == NULL) or (cType == "props" && v:GetClass() == "prop_physics" && (v:GetParent() == NULL or (IsValid(v:GetParent()) && v:GetParent():Health() <= 0 && (v:GetParent():IsNPC() or v:GetParent():IsPlayer())))) then
 					//undo.ReplaceEntity(v, NULL)
 					v:Remove()
 					i = i + 1

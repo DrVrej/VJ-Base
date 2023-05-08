@@ -11,10 +11,10 @@ ENT.PrintName		= "Combine Ball"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Information		= "Projectiles for my addons"
-ENT.Category		= "Projectiles"
+ENT.Category		= "VJ Base"
 
-ENT.VJTag_IsDanger = true
-
+ENT.VJTag_ID_Danger = true
+---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	local Name = "Combine Ball"
 	local LangName = "obj_vj_combineball"
@@ -80,7 +80,7 @@ function ENT:CustomOnInitialize()
 		self:SetCoreType(true)
 	end)
 
-	hook.Add("GravGunOnDropped", self, function(ply, ent)
+	hook.Add("GravGunOnDropped", self, function(self, ply, ent)
 		self:SetCoreType(false)
 	end)
 end

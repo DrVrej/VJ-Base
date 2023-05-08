@@ -71,8 +71,6 @@ ENT.Tank_DefaultSoundTbl_Turning = {"vj_vehicles/armored/gun_move2_long.wav"}
 ENT.Tank_DefaultSoundTbl_ReloadShell = {"vehicles/tank_readyfire1.wav"}
 ENT.Tank_DefaultSoundTbl_FireShell = {"vj_vehicles/armored/gun_main_fire1.wav","vj_vehicles/armored/gun_main_fire2.wav","vj_vehicles/armored/gun_main_fire3.wav","vj_vehicles/armored/gun_main_fire4.wav"}
 
-ENT.VJTag_ID_Vehicle = true
-
 //util.AddNetworkString("vj_tankg_base_spawneffects")
 //util.AddNetworkString("vj_tankg_base_shooteffects")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
