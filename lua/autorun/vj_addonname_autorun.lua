@@ -2,9 +2,9 @@
 local PublicAddonName = "The public addon name goes here, Example: Dummy SNPCs"
 local AddonName = "The addon name goes here, Example: Dummy"
 local AddonType = "The addon type(s) Example: NPC"
-local AutorunFile = "autorun/vj_as_autorun.lua"
+local AutorunFile = "autorun/vj_addonname_autorun.lua"
 -------------------------------------------------------
-local VJExists = file.Exists("lua/autorun/vj_base_autorun.lua","GAME")
+local VJExists = file.Exists("lua/autorun/vj_base_autorun.lua", "GAME")
 if VJExists == true then
 	include('autorun/vj_controls.lua')
 
