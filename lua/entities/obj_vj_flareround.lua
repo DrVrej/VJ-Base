@@ -98,7 +98,7 @@ function ENT:Initialize()
 	-- Make it drop after in the air for a while
 	timer.Simple(2, function()
 		if IsValid(self) then
-			local phys = self:GetPhysicsObject()
+			phys = self:GetPhysicsObject()
 			if IsValid(phys) && phys:GetVelocity():Length() > 500 then
 				phys:SetMass(0.005)
 				timer.Simple(10, function()

@@ -2021,7 +2021,7 @@ function ENT:Think()
 								end
 							end
 						end
-					else -- No food was found OR it's not eating
+					//else -- No food was found OR it's not eating
 						//eatingData.NextCheck = curTime + 3
 					end
 				end

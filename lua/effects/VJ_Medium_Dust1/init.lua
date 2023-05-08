@@ -9,7 +9,7 @@ function EFFECT:Init(data)
 	if Emitter == nil then return end
 	
 	-- Cloud of smoke that goes up
-	for i = 1,20 do
+	for _ = 1, 20 do
 		local EffectCode = Emitter:Add("particles/smokey",self.Pos)
 		EffectCode:SetVelocity(Vector(math.random(-100,100),math.random(-100,100),math.random(50,60)))
 		EffectCode:SetDieTime(math.Rand(9,11)) -- How much time until it dies

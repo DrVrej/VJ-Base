@@ -13,7 +13,7 @@ function EFFECT:Init( data )
 	local att = data:GetAttachment()
 
 	if ( IsValid( ent ) && att > 0 ) then
-		if (ent.Owner == LocalPlayer() && !LocalPlayer():GetViewModel() != LocalPlayer()) then ent = ent.Owner:GetViewModel() end
+		if (ent.Owner == LocalPlayer() && LocalPlayer():GetViewModel() != LocalPlayer()) then ent = ent.Owner:GetViewModel() end
 		att = ent:GetAttachment(att)
 		if (att) then
 			self.StartPos = att.Pos
