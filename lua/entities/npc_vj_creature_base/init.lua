@@ -1,4 +1,3 @@
-if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 AddCSLuaFile("shared.lua")
 include("vj_base/npc_general.lua")
 include("vj_base/npc_schedules.lua")

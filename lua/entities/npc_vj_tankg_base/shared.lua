@@ -1,5 +1,3 @@
-if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
----------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Base 			= "npc_vj_creature_base"
 ENT.Type 			= "ai"
 ENT.PrintName 		= "VJ Tank Gunner Base"

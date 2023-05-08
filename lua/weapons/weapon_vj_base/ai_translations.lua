@@ -1,5 +1,3 @@
-if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
-
 -- !!! USED ONLY FOR HL2 NPCS, NOT VJ NPCS !!!
 function SWEP:SetupWeaponHoldTypeForAI(hType)
 	if self:GetOwner().IsVJBaseSNPC_Human == true then return end

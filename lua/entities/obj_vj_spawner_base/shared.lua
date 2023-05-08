@@ -1,5 +1,3 @@
-if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
----------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Base 			= "base_anim"
 ENT.Type 			= "anim"
 ENT.PrintName 		= "VJ Spawner Base"

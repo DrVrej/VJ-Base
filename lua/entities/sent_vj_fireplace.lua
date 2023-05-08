@@ -4,7 +4,6 @@
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
 AddCSLuaFile()
-if (!file.Exists("autorun/vj_base_autorun.lua","LUA")) then return end
 
 ENT.Base 			= "base_gmodentity"
 ENT.Type 			= "anim"
