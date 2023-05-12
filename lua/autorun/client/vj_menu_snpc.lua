@@ -279,9 +279,9 @@ local function VJ_SNPC_CONTROLLERSETTINGS(Panel) -- NPC Controller Settings
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_SNPC", function()
-	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "SNPC Options", "#vjbase.menu.snpc.options", "", "", VJ_SNPC_OPTIONS, {})
-	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "SNPC Settings", "#vjbase.menu.snpc.settings", "", "", VJ_SNPC_SETTINGS, {})
-	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "SNPC Sound Settings", "#vjbase.menu.snpc.sdsettings", "", "", VJ_SNPC_SOUNDSETTINGS, {})
-	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "SNPC Developer Settings", "#vjbase.menu.snpc.devsettings", "", "", VJ_SNPC_DEVSETTINGS, {})
-	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "NPC Controller Settings", "#vjbase.menu.snpc.consettings", "", "", VJ_SNPC_CONTROLLERSETTINGS, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "vj_menu_npc_options", "#vjbase.menu.snpc.options", "", "", VJ_SNPC_OPTIONS, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "vj_menu_npc_settings", "#vjbase.menu.snpc.settings", "", "", VJ_SNPC_SETTINGS, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "vj_menu_npc_sdsettings", "#vjbase.menu.snpc.sdsettings", "", "", VJ_SNPC_SOUNDSETTINGS, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "vj_menu_npc_devsettings", "#vjbase.menu.snpc.devsettings", "", "", VJ_SNPC_DEVSETTINGS, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "SNPCs", "vj_menu_npc_consettings", "#vjbase.menu.snpc.consettings", "", "", VJ_SNPC_CONTROLLERSETTINGS, {})
 end)

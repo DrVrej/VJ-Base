@@ -224,8 +224,8 @@ else
 	end
 	----=================================----
 	hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_MAIN", function()
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Clean Up", "#vjbase.menu.cleanup", "", "", VJ_MAINMENU_CLEANUP, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Contact and Support", "#vjbase.menu.helpsupport", "", "", VJ_MAINMENU_MISC, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Admin Server Settings", "#vjbase.menu.svsettings", "", "", VJ_MAINMENU_ADMINSERVER, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_cleanup", "#vjbase.menu.cleanup", "", "", VJ_MAINMENU_CLEANUP, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_helpsupport", "#vjbase.menu.helpsupport", "", "", VJ_MAINMENU_MISC, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_svsettings", "#vjbase.menu.svsettings", "", "", VJ_MAINMENU_ADMINSERVER, {})
 	end)
 end

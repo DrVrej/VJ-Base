@@ -141,15 +141,17 @@ if CLIENT then
 		
 		add("vjbase.menu.info", "Information")
 		
-		add("vjbase.menu.plugins", "Installed Plugins")
+		add("vjbase.menu.plugins", "Plugins")
 		add("vjbase.menu.plugins.label", "List of installed VJ Base plugins.")
 		add("vjbase.menu.plugins.version", "Version:")
 		add("vjbase.menu.plugins.totalplugins", "Total Plugins:")
 		add("vjbase.menu.plugins.header1", "Name")
 		add("vjbase.menu.plugins.header2", "Type")
-		add("vjbase.menu.plugins.notfound", "No Plugins Found.")
+		add("vjbase.menu.plugins.notfound", "No Plugins Found")
 		add("vjbase.menu.plugins.changelog", "Changelog")
 		add("vjbase.menu.plugins.makeaddon", "Want to make an addon?")
+		add("vjbase.menu.plugins.chat.pluginname", "Plugin Name:")
+		add("vjbase.menu.plugins.chat.plugintypes", "Plugin Types:")
 		
 		-- SNPC Menus
 		add("vjbase.menu.snpc.options", "Options")
@@ -341,12 +343,12 @@ if CLIENT then
 		add("vjbase.menu.snpc.consettings.bind.resetzoom", "Reset Camera Position")
 		
 		-- Weapon Client Settings
-		add("vjbase.menu.clweapon", "Client Settings")
-		add("vjbase.menu.clweapon.notice", "Notice: These settings are client, meaning it won't change for other people!")
-		add("vjbase.menu.clweapon.togglemuzzle", "Disable Muzzle Flash")
-		add("vjbase.menu.clweapon.togglemuzzlelight", "Disable Muzzle Flash Dynamic Light")
-		add("vjbase.menu.clweapon.togglemuzzle.label", "Disabling muzzle flash will also disable this")
-		add("vjbase.menu.clweapon.togglemuzzlebulletshells", "Disable Bullet Shells")
+		add("vjbase.menu.wep.clsettings", "Client Settings")
+		add("vjbase.menu.wep.clsettings.notice", "Notice: These settings are client, meaning it won't change for other people!")
+		add("vjbase.menu.wep.clsettings.togglemuzzle", "Disable Muzzle Flash")
+		add("vjbase.menu.wep.clsettings.togglemuzzlelight", "Disable Muzzle Flash Dynamic Light")
+		add("vjbase.menu.wep.clsettings.togglemuzzle.label", "Disabling muzzle flash will also disable this")
+		add("vjbase.menu.wep.clsettings.togglemuzzlebulletshells", "Disable Bullet Shells")
 		
 		-- NPC Properties (C Menu)
 		add("vjbase.menuproperties.control", "TAKE CONTROL")
@@ -585,7 +587,7 @@ if CLIENT then
 			add("vjbase.menu.plugins.totalplugins", "Всего плагинов:")
 			add("vjbase.menu.plugins.header1", "Название")
 			add("vjbase.menu.plugins.header2", "Тип")
-			add("vjbase.menu.plugins.notfound", "Плагины не найдены.")
+			add("vjbase.menu.plugins.notfound", "Плагины не найдены")
 			add("vjbase.menu.plugins.changelog", "Список изменений")
 			add("vjbase.menu.plugins.makeaddon", "Хотите создать дополнение?")
 			
@@ -779,12 +781,12 @@ if CLIENT then
 			add("vjbase.menu.snpc.consettings.bind.resetzoom", "Сбросить позицию камеры")
 			
 			-- Weapon Client Settings
-			add("vjbase.menu.clweapon", "Настройки клиента")
-			add("vjbase.menu.clweapon.notice", "Обратите внимание : эти настройки являются клиентскими, то есть они не изменятся для других людей!")
-			add("vjbase.menu.clweapon.togglemuzzle", "Отключить дульную вспышку")
-			add("vjbase.menu.clweapon.togglemuzzlelight", "Отключить динамический свет дульной вспышки")
-			add("vjbase.menu.clweapon.togglemuzzle.label", "Отключение дульной вспышки также отключит это")
-			add("vjbase.menu.clweapon.togglemuzzlebulletshells", "Отключить дымку от выстрелов")
+			add("vjbase.menu.wep.clsettings", "Настройки клиента")
+			add("vjbase.menu.wep.clsettings.notice", "Обратите внимание : эти настройки являются клиентскими, то есть они не изменятся для других людей!")
+			add("vjbase.menu.wep.clsettings.togglemuzzle", "Отключить дульную вспышку")
+			add("vjbase.menu.wep.clsettings.togglemuzzlelight", "Отключить динамический свет дульной вспышки")
+			add("vjbase.menu.wep.clsettings.togglemuzzle.label", "Отключение дульной вспышки также отключит это")
+			add("vjbase.menu.wep.clsettings.togglemuzzlebulletshells", "Отключить дымку от выстрелов")
 			
 			-- NPC Properties (C Menu)
 			add("vjbase.menuproperties.control", "Взять под контроль")
@@ -1012,7 +1014,7 @@ if CLIENT then
 			add("vjbase.menu.plugins.totalplugins", "Priedų skaičius:")
 			add("vjbase.menu.plugins.header1", "Pavadinimas")
 			add("vjbase.menu.plugins.header2", "Tipas")
-			add("vjbase.menu.plugins.notfound", "Nerasta jokių priedų.")
+			add("vjbase.menu.plugins.notfound", "Nerasta jokių priedų")
 			add("vjbase.menu.plugins.changelog", "Pakeitimų sąrašas")
 			add("vjbase.menu.plugins.makeaddon", "Norite sukurti priedą?")
 			
@@ -1182,12 +1184,12 @@ if CLIENT then
 			add("vjbase.menu.snpc.consettings.bind.resetzoom", "Atstatyti priartinimą")
 			
 			-- Weapon Client Settings
-			add("vjbase.menu.clweapon", "Kliento nustatymai")
-			add("vjbase.menu.clweapon.notice", "Pastaba: šie nustatymai yra klientų, reiškia, jie nesikeis kitiem žmonėm!")
-			add("vjbase.menu.clweapon.togglemuzzle", "Išjungti vamzdžio liepsną")
-			add("vjbase.menu.clweapon.togglemuzzlelight", "Išjungti vamzdžio liepsnos dinaminę šviesą")
-			add("vjbase.menu.clweapon.togglemuzzle.label", "Išjungiant vamzdžio liepsną taip pat išjungs ir susijusius nustatymus")
-			add("vjbase.menu.clweapon.togglemuzzlebulletshells", "Išjungti apvalkalines kulkas")
+			add("vjbase.menu.wep.clsettings", "Kliento nustatymai")
+			add("vjbase.menu.wep.clsettings.notice", "Pastaba: šie nustatymai yra klientų, reiškia, jie nesikeis kitiem žmonėm!")
+			add("vjbase.menu.wep.clsettings.togglemuzzle", "Išjungti vamzdžio liepsną")
+			add("vjbase.menu.wep.clsettings.togglemuzzlelight", "Išjungti vamzdžio liepsnos dinaminę šviesą")
+			add("vjbase.menu.wep.clsettings.togglemuzzle.label", "Išjungiant vamzdžio liepsną taip pat išjungs ir susijusius nustatymus")
+			add("vjbase.menu.wep.clsettings.togglemuzzlebulletshells", "Išjungti apvalkalines kulkas")
 			
 			-- NPC Properties (C Menu)
 			add("vjbase.menuproperties.control", "KONTROLIUOTI")
@@ -1368,7 +1370,7 @@ if CLIENT then
 			add("vjbase.menu.plugins.totalplugins", "Total de Plugins:")
 			add("vjbase.menu.plugins.header1", "Nombre")
 			add("vjbase.menu.plugins.header2", "Tipo")
-			add("vjbase.menu.plugins.notfound", "No Se Encontraron Plugins.")
+			add("vjbase.menu.plugins.notfound", "No Se Encontraron Plugins")
 			add("vjbase.menu.plugins.changelog", "Registro de Cambios")
 			add("vjbase.menu.plugins.makeaddon", "¿Quieres hacer un addon?")
 		elseif conv == "schinese" then ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1644,12 +1646,12 @@ if CLIENT then
 			add("vjbase.menu.snpc.consettings.bind.resetzoom", "恢复视角位置")
 			
 			-- Weapon Client Settings
-			add("vjbase.menu.clweapon", "客户端设置")
-			add("vjbase.menu.clweapon.notice", "注意：这些设置是客户端设置，这意味着它不会被其他人更改！")
-			add("vjbase.menu.clweapon.togglemuzzle", "禁用枪口火焰")
-			add("vjbase.menu.clweapon.togglemuzzlelight", "禁用枪口火焰动态光照")
-			add("vjbase.menu.clweapon.togglemuzzle.label", "禁用枪口火焰的同时也会禁用此选项")
-			add("vjbase.menu.clweapon.togglemuzzlebulletshells", "禁用弹壳")
+			add("vjbase.menu.wep.clsettings", "客户端设置")
+			add("vjbase.menu.wep.clsettings.notice", "注意：这些设置是客户端设置，这意味着它不会被其他人更改！")
+			add("vjbase.menu.wep.clsettings.togglemuzzle", "禁用枪口火焰")
+			add("vjbase.menu.wep.clsettings.togglemuzzlelight", "禁用枪口火焰动态光照")
+			add("vjbase.menu.wep.clsettings.togglemuzzle.label", "禁用枪口火焰的同时也会禁用此选项")
+			add("vjbase.menu.wep.clsettings.togglemuzzlebulletshells", "禁用弹壳")
 			
 			-- NPC Properties (C Menu)
 			add("vjbase.menuproperties.control", "操控")

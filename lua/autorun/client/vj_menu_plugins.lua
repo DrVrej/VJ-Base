@@ -4,8 +4,6 @@
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
-
----------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_PLUGINS(Panel)
 	local numPlugins = #VJ.Plugins
 	
@@ -28,11 +26,13 @@ local function VJ_PLUGINS(Panel)
 	else
 		CheckList:AddLine("#vjbase.menu.plugins.notfound", "")
 	end
-	CheckList.OnRowSelected = function()
-		surface.PlaySound(Sound("vj_misc/illuminati_confirmed.mp3"))
-		chat.AddText(Color(255,255,0),"-=-=-=-=-=-=-=-=- ", Color(255,100,0), "VJ Base", Color(255,255,0)," -=-=-=-=-=-=-=-=-")
-		chat.AddText(Color(0,255,0), language.GetPhrase("#vjbase.menu.plugins.version").." "..VJBASE_VERSION)
-		chat.AddText(Color(0,255,0), language.GetPhrase("#vjbase.menu.plugins.totalplugins").." "..numPlugins)
+	CheckList.OnRowSelected = function(panel, rowIndex, row)
+		//surface.PlaySound(Sound("vj_misc/illuminati_confirmed.mp3"))
+		//chat.AddText(Color(255,255,0),"-=-=-=-=-=-=-=-=- ", Color(255,100,0), "VJ Base", Color(255,255,0)," -=-=-=-=-=-=-=-=-")
+		//chat.AddText(Color(0,255,0), language.GetPhrase("#vjbase.menu.plugins.version").." "..VJBASE_VERSION)
+		//chat.AddText(Color(0,255,0), language.GetPhrase("#vjbase.menu.plugins.totalplugins").." "..numPlugins)
+		chat.AddText(Color(0,255,0), language.GetPhrase("#vjbase.menu.plugins.chat.pluginname").." "..row:GetValue(1))
+		chat.AddText(Color(0,255,0), language.GetPhrase("#vjbase.menu.plugins.chat.plugintypes").." "..row:GetValue(2))
 	end
 	Panel:AddItem(CheckList)
 	
@@ -89,7 +89,7 @@ local function VJ_PLUGINS(Panel)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_INSTALLATIONS", function()
-	spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Installed Plugins", "#vjbase.menu.plugins", "", "", VJ_PLUGINS)
+	spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_plugins", "#vjbase.menu.plugins", "", "", VJ_PLUGINS)
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function doWelcomeMsg()

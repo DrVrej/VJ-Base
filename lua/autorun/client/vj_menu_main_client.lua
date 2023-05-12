@@ -81,6 +81,6 @@ local function VJ_MAINMENU_CLIENT(Panel)
 end
 ----=================================----
 hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_INFORMATION", function()
-	spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Information", "#vjbase.menu.info", "", "", VJ_INFORMATION, {})
-	spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "Client Settings", "#vjbase.menu.clsettings", "", "", VJ_MAINMENU_CLIENT, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_info", "#vjbase.menu.info", "", "", VJ_INFORMATION, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_clsettings", "#vjbase.menu.clsettings", "", "", VJ_MAINMENU_CLIENT, {})
 end)

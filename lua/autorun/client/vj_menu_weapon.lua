@@ -7,14 +7,14 @@
 include('autorun/client/vj_menu_plugins.lua') 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_WEAPON_CLIENTSETTINGS(Panel) -- Client Settings
-	Panel:AddControl("Label", {Text = "#vjbase.menu.clweapon.notice"})
+	Panel:AddControl("Label", {Text = "#vjbase.menu.wep.clsettings.notice"})
 	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_wep_nomuszzleflash 0\n vj_wep_nobulletshells 0\n vj_wep_nomuszzleflash_dynamiclight 0"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.clweapon.togglemuzzle", Command = "vj_wep_nomuszzleflash"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.clweapon.togglemuzzlelight", Command = "vj_wep_nomuszzleflash_dynamiclight"})
-	Panel:ControlHelp("#vjbase.menu.clweapon.togglemuzzle.label")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.clweapon.togglemuzzlebulletshells", Command = "vj_wep_nobulletshells"})
+	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.wep.clsettings.togglemuzzle", Command = "vj_wep_nomuszzleflash"})
+	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.wep.clsettings.togglemuzzlelight", Command = "vj_wep_nomuszzleflash_dynamiclight"})
+	Panel:ControlHelp("#vjbase.menu.wep.clsettings.togglemuzzle.label")
+	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.wep.clsettings.togglemuzzlebulletshells", Command = "vj_wep_nobulletshells"})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_WEAPON", function()
-	spawnmenu.AddToolMenuOption("DrVrej", "Weapons", "Weapon Client Settings", "#vjbase.menu.clweapon", "", "", VJ_WEAPON_CLIENTSETTINGS, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "Weapons", "vj_menu_wep_clsettings", "#vjbase.menu.wep.clsettings", "", "", VJ_WEAPON_CLIENTSETTINGS, {})
 end)
