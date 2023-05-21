@@ -6,6 +6,21 @@
 --------------------------------------------------*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if SERVER then
+	concommand.Add("vj_dev_numnpcs", function(ply, cmd, args)
+		if IsValid(ply) && ply:IsAdmin() then
+			local i = 0
+			local iVJ = 0
+			for _, v in ipairs(ents.GetAll()) do
+				if v:IsNPC() then
+					i = i + 1
+					if v.IsVJBaseSNPC then
+						iVJ = iVJ + 1
+					end
+				end
+			end
+			ply:ChatPrint("Total NPCs: " .. i .. " | VJ NPCs: " .. iVJ)
+		end
+	end)
 	local cTypes = {
 		vjnpcs = "VJ NPCs",
 		npcs = "NPCs",

@@ -216,18 +216,7 @@ local function VJ_SNPC_DEVSETTINGS(Panel) -- Developer Settings
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.devsettings.printtouch", Command = "vj_npc_printontouch"})
 	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.snpc.devsettings.printweaponinfo", Command = "vj_npc_dev_printwepinfo"})
 	Panel:AddControl("Button", {Label = "#vjbase.menu.snpc.devsettings.cachedmodels", Command = "listmodels"})
-	local npcCount = vgui.Create("DButton")
-		npcCount:SetText("#vjbase.menu.snpc.devsettings.numofnpcs")
-		npcCount.DoClick = function(x)
-			local i = 0
-			for _, v in ipairs(ents.GetAll()) do
-				if v:IsNPC() then
-					i = i + 1
-				end
-			end
-			LocalPlayer():ChatPrint("Number of NPCs: "..i)
-		end
-	Panel:AddPanel(npcCount)
+	Panel:AddControl("Button", {Label = "#vjbase.menu.snpc.devsettings.numofnpcs", Command = "vj_dev_numnpcs"})
 	Panel:AddControl("Label", {Text = "#vjbase.menu.snpc.devsettings.label4"})
 	Panel:AddControl("Button", {Label = "#vjbase.menu.snpc.devsettings.reloadsounds", Command = "snd_restart"})
 	Panel:AddControl("Button", {Label = "#vjbase.menu.snpc.devsettings.reloadmaterials", Command = "mat_reloadallmaterials"})
