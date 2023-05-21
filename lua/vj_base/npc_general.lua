@@ -407,7 +407,7 @@ function ENT:CheckRelationship(ent)
 		if VJ_HasValue(self.VJ_AddCertainEntityAsFriendly, ent) then return D_LI end
 		if VJ_HasValue(self.VJ_AddCertainEntityAsEnemy, ent) then return D_HT end
 		local entDisp = ent.Disposition and ent:Disposition(self)
-		if (ent:IsNPC() && ((entDisp == D_HT) or (entDisp == D_NU && ent.VJ_IsBeingControlled))) or (isPly && self.PlayerFriendly == false && ent:Alive()) then
+		if (ent:IsNPC() && ((entDisp == D_HT) or (entDisp == D_NU && ent.VJ_IsBeingControlled))) or (isPly && !self.PlayerFriendly && ent:Alive()) then
 			return D_HT
 		else
 			return D_NU
@@ -724,18 +724,6 @@ function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 		self.LatestEnemyDistance = self:GetPos():Distance(ent:GetPos())
 		self:DoAlert(ent)
 	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
---[[---------------------------------------------------------
-	Sets the NPC's sight distance
-		- dist = The new sight distance to set
------------------------------------------------------------]]
-function ENT:SetSightDistance(dist)
-	//self:Fire("SetMaxLookDistance", dist) -- For Source sensing distance (OLD)
-	self:SetMaxLookDistance(dist) -- For Source sight & sensing distance
-	self:SetSaveValue("m_flDistTooFar", dist) -- For certain Source attack, weapon, and condition distances
-	self.SightDistance = dist -- For VJ Base
-	//print(self:GetInternalVariable("m_flDistTooFar"), self:GetMaxLookDistance())
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1527,7 +1515,7 @@ function ENT:Allies_CallHelp(dist)
 		if v:IsNPC() && v != self && v.IsVJBaseSNPC && VJ_IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& v.IsFollowing == false*/ && !v.VJ_IsBeingControlled && (!v.IsVJBaseSNPC_Tank) && v.CallForHelp then
 			local ene = self:GetEnemy()
 			if IsValid(ene) then
-				if v:GetPos():Distance(ene:GetPos()) > v.SightDistance then continue end -- Enemy to far away for ally, discontinue!
+				if v:GetPos():Distance(ene:GetPos()) > v:GetMaxLookDistance() then continue end -- Enemy to far away for ally, discontinue!
 				//if v:CheckRelationship(ene) == D_HT then
 				if !IsValid(v:GetEnemy()) && ((!ene:IsPlayer() && v:Disposition(ene) != D_LI) or (ene:IsPlayer())) then
 					if v.IsGuard == true && !v:Visible(ene) then continue end -- If it's guarding and enemy is not visible, then don't call!

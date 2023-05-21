@@ -21,6 +21,7 @@ if SERVER then
 			ply:ChatPrint("Total NPCs: " .. i .. " | VJ NPCs: " .. iVJ)
 		end
 	end)
+	--
 	local cTypes = {
 		vjnpcs = "VJ NPCs",
 		npcs = "NPCs",

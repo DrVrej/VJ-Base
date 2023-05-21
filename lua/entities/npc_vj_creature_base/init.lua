@@ -27,7 +27,7 @@ ENT.HasHull = true -- Set to false to disable HULL
 ENT.HullSizeNormal = true -- set to false to cancel out the self:SetHullSizeNormal()
 ENT.HasSetSolid = true -- set to false to disable SetSolid
 	-- ====== Sight & Speed Variables ====== --
-ENT.SightDistance = 10000 -- How far it can see | Remember to call "self:SetSightDistance(dist)" if you want to set a new value after initialize!
+ENT.SightDistance = 10000 -- How far it can see | This is just a starting value! | To retrieve: "self:GetMaxLookDistance()" | To change: "self:SetSightDistance(sight)"
 ENT.SightAngle = 80 -- The sight angle | Example: 180 would make the it see all around it | Measured in degrees and then converted to radians
 ENT.TurningSpeed = 20 -- How fast it can turn
 ENT.TurningUseAllAxis = false -- If set to true, angles will not be restricted to y-axis, it will change all axes (plural axis)
@@ -1130,7 +1130,7 @@ function ENT:Initialize()
 	if self.MaxJumpLegalDistance then self.JumpVars.MaxRise = self.MaxJumpLegalDistance.a; self.JumpVars.MaxDrop = self.MaxJumpLegalDistance.b; end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	timer.Simple(0.15, function()
 		if IsValid(self) then
-			self:SetSightDistance(self.SightDistance)
+			self:SetMaxLookDistance(self.SightDistance)
 			if self:GetNPCState() <= NPC_STATE_NONE then self:SetNPCState(NPC_STATE_IDLE) end
 			if IsValid(self:GetCreator()) && self:GetCreator():GetInfoNum("vj_npc_spawn_guard", 0) == 1 then self.IsGuard = true end
 			self:StartSoundTrack()

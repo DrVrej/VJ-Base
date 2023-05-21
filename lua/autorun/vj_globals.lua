@@ -503,11 +503,25 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC / Player Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-local Entity_MetaTable = FindMetaTable("Entity")
-local NPC_MetaTable = FindMetaTable("NPC")
+local metaEntity = FindMetaTable("Entity")
+local metaNPC = FindMetaTable("NPC")
 //local Player_MetaTable = FindMetaTable("Player")
+if !metaNPC.IsVJBaseEdited then
+	metaNPC.IsVJBaseEdited = true
+	---------------------------------------------------------------------------------------------------------------------------------------------
+	local orgSetMaxLookDistance = metaNPC.SetMaxLookDistance
+	--
+	function metaNPC:SetMaxLookDistance(dist)
+		//self:Fire("SetMaxLookDistance", dist) -- For Source sensing distance (OLD)
+		orgSetMaxLookDistance(self, dist)
+		//self:SetMaxLookDistance(dist) -- For Source sight & sensing distance
+		self:SetSaveValue("m_flDistTooFar", dist) -- For certain Source attack, weapon, and condition distances
+		self.SightDistance = dist -- For VJ Base
+		//print(self:GetInternalVariable("m_flDistTooFar"), self:GetMaxLookDistance())
+	end
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function NPC_MetaTable:VJ_Controller_InitialMessage(ply)
+function metaNPC:VJ_Controller_InitialMessage(ply)
 	if !IsValid(ply) then return end
 	ply:ChatPrint("#vjbase.print.npccontroller.entrance")
 	if self.IsVJBaseSNPC == true then
@@ -516,8 +530,8 @@ function NPC_MetaTable:VJ_Controller_InitialMessage(ply)
 end
 /* Disabled for now until further testing (especially performance-wise)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local AddEntityRelationship = NPC_MetaTable.AddEntityRelationship
-function NPC_MetaTable:AddEntityRelationship(...)
+local AddEntityRelationship = metaNPC.AddEntityRelationship
+function metaNPC:AddEntityRelationship(...)
 	local args = {...}
 	local ent = args[1]
 	local disp = args[2]
@@ -527,8 +541,8 @@ function NPC_MetaTable:AddEntityRelationship(...)
 	return AddEntityRelationship(self,...)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local Disposition = NPC_MetaTable.Disposition
-function NPC_MetaTable:Disposition(...)
+local Disposition = metaNPC.Disposition
+function metaNPC:Disposition(...)
 	local args = {...}
 	local ent = args[1]
 
@@ -541,7 +555,7 @@ end
 */
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- override = Used internally by the base, overrides the result and returns Val instead (Useful for variables that allow "false" to let the base decide the time)
-function NPC_MetaTable:DecideAnimationLength(anim, override, decrease)
+function metaNPC:DecideAnimationLength(anim, override, decrease)
 	if isbool(anim) then return 0 end
 	
 	if override == false then -- Base decides
@@ -553,7 +567,7 @@ function NPC_MetaTable:DecideAnimationLength(anim, override, decrease)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Entity_MetaTable:CalculateProjectile(projType, startPos, endPos, projVel)
+function metaEntity:CalculateProjectile(projType, startPos, endPos, projVel)
 	if projType == "Line" then -- Suggested to disable gravity!
 		return ((endPos - startPos):GetNormal()) * projVel
 	elseif projType == "Curve" then
@@ -589,7 +603,7 @@ end
 	Returns
 		- number, the scaled number
 -----------------------------------------------------------]]
-function NPC_MetaTable:VJ_GetDifficultyValue(int)
+function metaNPC:VJ_GetDifficultyValue(int)
 	if self.SelectedDifficulty == -3 then
 		return math_clamp(int - (int * 0.99), 1, int)
 	elseif self.SelectedDifficulty == -2 then
@@ -1206,7 +1220,7 @@ VJ_TAG_AIRCRAFT = 25
 -- Remove: 			self.VJTags[VJ_TAG_X] = nil
 -- Add: 			self:VJTags_Add(VJ_TAG_X, VJ_TAG_Y, ...)
 --
-function Entity_MetaTable:VJTags_Add(...)
+function metaEntity:VJTags_Add(...)
 	if !self.VJTags then self.VJTags = {} end
 	//PrintTable({...})
 	for _, tag in ipairs({...}) do
