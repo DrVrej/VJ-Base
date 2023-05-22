@@ -234,17 +234,13 @@ function VJ_CreateSound(ent, sdFile, sdLevel, sdPitch, customFunc)
 		if #sdFile < 1 then return end -- If the table is empty then end it
 		sdFile = sdFile[math_random(1, #sdFile)]
 	end
-	if ent.OnCreateSound then -- Will allow people to alter sounds before they are played
-		sdFile = ent:OnCreateSound(sdFile)
-	end
+	local funcCustom = ent.OnCreateSound; if funcCustom then sdFile = funcCustom(ent, sdFile) end -- Will allow people to alter sounds before they are played
 	local sdID = CreateSound(ent, sdFile)
 	sdID:SetSoundLevel(sdLevel or 75)
 	if (customFunc) then customFunc(sdID) end
 	sdID:PlayEx(1, sdPitch or 100)
 	ent.LastPlayedVJSound = sdID
-	if ent.OnPlayCreateSound then
-		ent:OnPlayCreateSound(sdID, sdFile)
-	end
+	local funcCustom2 = ent.OnPlayCreateSound; if funcCustom2 then funcCustom2(ent, sdID, sdFile) end
 	return sdID
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -254,12 +250,10 @@ function VJ_EmitSound(ent, sdFile, sdLevel, sdPitch, sdVolume, sdChannel)
 		if #sdFile < 1 then return end -- If the table is empty then end it
 		sdFile = sdFile[math_random(1, #sdFile)]
 	end
-	if ent.OnCreateSound then -- Will allow people to alter sounds before they are played
-		sdFile = ent:OnCreateSound(sdFile)
-	end
+	local funcCustom = ent.OnCreateSound; if funcCustom then sdFile = funcCustom(ent, sdFile) end -- Will allow people to alter sounds before they are played
 	ent:EmitSound(sdFile, sdLevel, sdPitch, sdVolume, sdChannel)
 	ent.LastPlayedVJSound = sdFile
-	if ent.OnPlayEmitSound then ent:OnPlayEmitSound(sdFile) end
+	local funcCustom2 = ent.OnPlayEmitSound; if funcCustom2 then funcCustom2(ent, sdFile) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ_AnimationExists(ent, anim)
@@ -888,7 +882,7 @@ hook.Add("EntityFireBullets", "VJ_NPC_FIREBULLET", function(ent, data)
 			//ent.WeaponUseEnemyEyePos = false
 			edited = true
 		end
-		ent:OnFireBullet(ent, data)
+		local funcCustom = ent.OnFireBullet; if funcCustom then funcCustom(ent, data) end
 		if edited then return true end
 	end
 end)

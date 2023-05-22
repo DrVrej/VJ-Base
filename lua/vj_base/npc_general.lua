@@ -872,7 +872,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnChangeActivity(newAct)
 	//print(newAct)
-	self:CustomOnChangeActivity(newAct)
+	local funcCustom = self.CustomOnChangeActivity; if funcCustom then funcCustom(self, newAct) end
 	if newAct == ACT_TURN_LEFT or newAct == ACT_TURN_RIGHT then
 		self.NextIdleStandTime = CurTime() + VJ_GetSequenceDuration(self, self:GetSequenceName(self:GetSequence()))
 		//self.NextIdleStandTime = CurTime() + 1.2
@@ -906,7 +906,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AcceptInput(key, activator, caller, data)
 	//print(self, key, activator, caller, data)
-	self:CustomOnAcceptInput(key, activator, caller, data)
+	local funcCustom = self.CustomOnAcceptInput; if funcCustom then funcCustom(self, key, activator, caller, data) end
 	if key == "Use" then
 		if self.FollowPlayer then
 			self:Follow(activator, true)
@@ -922,20 +922,8 @@ function ENT:AcceptInput(key, activator, caller, data)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:HandleAnimEvent(ev, evTime, evCycle, evType, evOptions)
-	self:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions)
-	/*
-	print("----------------------------")
-	print(ev)
-	print(evTime)
-	print(evCycle)
-	print(evType)
-	print(evOptions)
-	*/
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnCondition(cond)
-	//print(self, " Condition: ", cond, " - ", self:ConditionName(cond))
-	if self.CustomOnCondition then self:CustomOnCondition(cond) end
+	//print(ev, evTime, evCycle, evType, evOptions)
+	local funcCustom = self.CustomOnHandleAnimEvent; if funcCustom then funcCustom(self, ev, evTime, evCycle, evType, evOptions) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
@@ -1498,7 +1486,7 @@ function ENT:SetupRelationships()
 					end
 				end
 			end
-			self:CustomOnSetupRelationships(v, entFri, vDistanceToMy)
+			local funcCustom = self.CustomOnSetupRelationships; if funcCustom then funcCustom(self, v, entFri, vDistanceToMy) end
 		end
 		//return true
 	end

@@ -680,7 +680,8 @@ function ENT:CustomOnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink_AIEnabled() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnSetupRelationships(ent, entFri, entDist) end
+-- UNCOMMENT TO USE | Called at the end of every entity it checks every process time
+-- function ENT:CustomOnSetupRelationships(ent, entFri, entDist) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnChangeMovementType(movType) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -690,9 +691,11 @@ function ENT:CustomOn_PoseParameterLookingCode(pitch, yaw, roll) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnSchedule() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnChangeActivity(newAct) end
+-- UNCOMMENT TO USE
+-- function ENT:CustomOnChangeActivity(newAct) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:ExpressionFinished(strExp) end
+-- UNCOMMENT TO USE
+-- function ENT:ExpressionFinished(strExp) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Called whenever VJ_CreateSound or VJ_EmitSound is called | return a new file path to replace the one that is about to play
 -- function ENT:OnCreateSound(sdFile) return "example/sound.wav" end
@@ -703,16 +706,20 @@ function ENT:ExpressionFinished(strExp) end
 -- UNCOMMENT TO USE | Called whenever a sound starts playing through VJ_EmitSound
 -- function ENT:OnPlayEmitSound(sdFile) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnFireBullet(ent, data) end
+-- UNCOMMENT TO USE | Called every time "self:FireBullets" is called
+-- function ENT:OnFireBullet(data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnTouch(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OnCondition(cond)
+	//print(self, " Condition: ", cond, " - ", self:ConditionName(cond))
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE
--- function ENT:CustomOnCondition(cond) end
+-- function ENT:CustomOnAcceptInput(key, activator, caller, data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnAcceptInput(key, activator, caller, data) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions) end
+-- UNCOMMENT TO USE
+-- function ENT:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnFollowPlayer(ply) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -748,8 +755,6 @@ function ENT:CustomOnPlayerSight(ent) end
 -----------------------------------------------------------]]
 -- function ENT:CustomOnFootStepSound(moveType, sdFile) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnWorldShakeOnMove() end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInvestigate(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnResetEnemy() end
@@ -769,7 +774,8 @@ function ENT:GetDynamicOrigin()
 	return self:GetPos() + self:GetForward() -- Override this to use a different position
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomAttack(ene, eneVisible) end
+-- UNCOMMENT TO USE | Use this to create a completely new attack system!
+-- function ENT:CustomAttack(ene, eneVisible) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MultipleMeleeAttacks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2103,7 +2109,7 @@ function ENT:Think()
 				
 				-- Attacks
 				if !self.vACT_StopAttacks && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && curTime > self.NextDoAnyAttackT then
-					self:CustomAttack(ene, eneData.IsVisible) -- Custom attack
+					local funcCustomAtk = self.CustomAttack; if funcCustomAtk then funcCustomAtk(self, ene, eneData.IsVisible) end
 					
 					if !self.Flinching && !self.FollowData.StopAct && self.AttackType == VJ_ATTACK_NONE then
 						-- Melee Attack
@@ -3634,7 +3640,7 @@ function ENT:FootStepSoundCode(customSd)
 			if customTbl then sdtbl = customTbl end
 			if sdtbl then
 				VJ_EmitSound(self, sdtbl, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
-				if self.CustomOnFootStepSound then self:CustomOnFootStepSound("Event", sdtbl) end
+				local funcCustom = self.CustomOnFootStepSound; if funcCustom then funcCustom(self, "Event", sdtbl) end
 			end
 			if self.HasWorldShakeOnMove then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000) end -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 			return
@@ -3646,13 +3652,13 @@ function ENT:FootStepSoundCode(customSd)
 			local curSched = self.CurrentSchedule
 			if !self.DisableFootStepOnRun && ((VJ_HasValue(self.AnimTbl_Run, self:GetMovementActivity())) or (curSched != nil && curSched.MoveType == 1)) then
 				VJ_EmitSound(self, sdtbl, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
-				if self.CustomOnFootStepSound then self:CustomOnFootStepSound("Run", sdtbl) end
+				local funcCustom = self.CustomOnFootStepSound; if funcCustom then funcCustom(self, "Run", sdtbl) end
 				if self.HasWorldShakeOnMove then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000) end -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 				self.FootStepT = CurTime() + self.FootStepTimeRun
 				return
 			elseif !self.DisableFootStepOnWalk && (VJ_HasValue(self.AnimTbl_Walk, self:GetMovementActivity()) or (curSched != nil && curSched.MoveType == 0)) then
 				VJ_EmitSound(self, sdtbl, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
-				if self.CustomOnFootStepSound then self:CustomOnFootStepSound("Walk", sdtbl) end
+				local funcCustom = self.CustomOnFootStepSound; if funcCustom then funcCustom(self, "Walk", sdtbl) end
 				if self.HasWorldShakeOnMove then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000) end -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 				self.FootStepT = CurTime() + self.FootStepTimeWalk
 				return
