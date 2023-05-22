@@ -27,7 +27,7 @@ ENT.HasHull = true -- Set to false to disable HULL
 ENT.HullSizeNormal = true -- set to false to cancel out the self:SetHullSizeNormal()
 ENT.HasSetSolid = true -- set to false to disable SetSolid
 	-- ====== Sight & Speed Variables ====== --
-ENT.SightDistance = 10000 -- How far it can see | This is just a starting value! | To retrieve: "self:GetMaxLookDistance()" | To change: "self:SetSightDistance(sight)"
+ENT.SightDistance = 10000 -- How far it can see | This is just a starting value! | To retrieve: "self:GetMaxLookDistance()" | To change: "self:SetMaxLookDistance(sight)"
 ENT.SightAngle = 80 -- The sight angle | Example: 180 would make the it see all around it | Measured in degrees and then converted to radians
 ENT.TurningSpeed = 20 -- How fast it can turn
 ENT.TurningUseAllAxis = false -- If set to true, angles will not be restricted to y-axis, it will change all axes (plural axis)
@@ -1008,6 +1008,9 @@ local math_rad = math.rad
 local math_cos = math.cos
 local math_angApproach = math.ApproachAngle
 local math_angDif = math.AngleDifference
+local string_find = string.find
+local string_sub = string.sub
+local table_remove = table.remove
 local varCAnt = "CLASS_ANTLION"
 local varCCom = "CLASS_COMBINE"
 local varCZom = "CLASS_ZOMBIE"
@@ -1326,22 +1329,37 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 	
 	-- Handle "vjges_" and "vjseq_"
 	if isString then
-		local strExpGes = string.Explode(varGes, animation)
-		-- Gestures
-		if strExpGes[2] then -- If 2 exists, then vjges_ was found!
-			isGesture = true
-			animation = strExpGes[2]
-			-- If current name is -1 then it's probably han activity, so turn it into an activity | EX: "vjges_"..ACT_MELEE_ATTACK1
-			if self:LookupSequence(animation) == -1 then
-				animation = tonumber(animation)
-				isString = false
+		local finalString; -- Only define table if we need to!
+		local posCur = 1
+		for i = 1, #animation do
+			local posStartGes, posEndGes = string_find(animation, varGes, posCur) -- Check for "vjges_"
+			local posStartSeq, posEndSeq = string_find(animation, varSeq, posCur) -- Check for "vjges_"
+			if !posStartGes && !posStartSeq then -- No ges or seq was found, end the loop!
+				if finalString then
+					finalString[#finalString + 1] = string_sub(animation, posCur)
+				end
+				break
 			end
-		else -- Sequences
-			local strExpSeq = string.Explode(varSeq, animation)
-			if strExpSeq[2] then -- If 2 exists, then vjseq_ was found!
+			if !finalString then finalString = {} end -- Found a match, create table if needed
+			if posStartGes then
+				isGesture = true
+				finalString[i] = string_sub(animation, posCur, posStartGes - 1)
+				posCur = posEndGes + 1
+			end
+			if posStartSeq then
 				isSequence = true
-				animation = strExpSeq[2]
+				finalString[i] = string_sub(animation, posCur, posStartSeq - 1)
+				posCur = posEndSeq + 1
 			end
+		end
+		if finalString then
+			animation = table.concat(finalString)
+		end
+		-- If animation is -1 then it's probably an activity, so turn it into an activity
+		-- EX: "vjges_"..ACT_MELEE_ATTACK1
+		if isGesture && !isSequence &&self:LookupSequence(animation) == -1 then
+			animation = tonumber(animation)
+			isString = false
 		end
 	end
 	
@@ -1408,21 +1426,16 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 		self:SetPlaybackRate(finalPlayBackRate)
 		
 		if isGesture == true then
-			local gesture = false
-			if isstring(animation) then
-				gesture = self:AddGestureSequence(self:LookupSequence(animation))
-			else
-				gesture = self:AddGesture(animation)
+			-- Resets all gestures if it's not a sequence because activity gestures can bug out when played right after each other!
+			if !isSequence then
+				self:RemoveAllGestures()
 			end
-			if gesture != false then
-				//self:ClearSchedule()
-				//self:SetLayerBlendIn(1, 0)
-				//self:SetLayerBlendOut(1, 0)
+			local gesture = isSequence and self:AddGestureSequence(self:LookupSequence(animation)) or self:AddGesture(animation)
+			//print(gesture)
+			if gesture != -1 then
 				self:SetLayerPriority(gesture, 1) // 2
 				//self:SetLayerWeight(gesture, 1)
 				self:SetLayerPlaybackRate(gesture, finalPlayBackRate * 0.5)
-				//self:SetLayerDuration(gesture, 3)
-				//print(self:GetLayerDuration(gesture))
 			end
 		elseif isSequence == true then
 			local dur = (extraOptions.SequenceDuration or self:SequenceDuration(self:LookupSequence(animation))) / self.AnimationPlaybackRate
@@ -1540,8 +1553,6 @@ function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local table_remove = table.remove
---
 function ENT:VJ_TASK_IDLE_STAND()
 	if self:IsMoving() or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end // self.CurrentSchedule != nil
 	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:BusyWithActivity() then return end
@@ -1562,6 +1573,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 	for k, v in ipairs(idleAnimTbl) do
 		v = VJ_SequenceToActivity(self, v) -- Translate any sequence to activity
 		if v != false then -- Its a valid activity
+			v = self:TranslateToWeaponAnim(v) -- Translate to weapon act in case it needs to!
 			//numOfAnims = numOfAnims + 1
 			idleAnimTbl[k] = v -- In case it was a sequence, override it with the translated activity number
 			-- Check if its the current idle animation...
@@ -1614,9 +1626,8 @@ function ENT:VJ_TASK_IDLE_STAND()
 			if IsValid(self) && self.NextIdleStandTime != 0 then
 				local getSeq = self:GetSequence()
 				self.CurIdleStandMove = self:GetSequenceMoveDist(getSeq) > 0
-				local seqToAct = VJ_SequenceToActivity(self,self:GetSequenceName(getSeq))
-				if seqToAct == pickedAnim or (IsValid(self:GetActiveWeapon()) && seqToAct == self:TranslateToWeaponAnim(pickedAnim)) then -- Nayir yete himagva animation e nooynene
-					self.NextIdleStandTime = CurTime() + ((self:SequenceDuration(getSeq) - 0.15) / self:GetPlaybackRate()) -- Yete nooynene ooremen jamanage tir animation-en yergarootyan chap!
+				if VJ_SequenceToActivity(self, self:GetSequenceName(getSeq)) == pickedAnim then -- Nayir yete himagva animation e nooynene
+					self.NextIdleStandTime = CurTime() + ((self:SequenceDuration(getSeq) - 0.01) / self:GetPlaybackRate()) -- Yete nooynene ooremen jamanage tir animation-en yergarootyan chap!
 				end
 			end
 		end)
@@ -2702,7 +2713,7 @@ function ENT:Think()
 								self:VJ_ACT_PLAYACTIVITY(anim, true, dur, self.WeaponReloadAnimationFaceEnemy, self.WeaponReloadAnimationDelay, {SequenceDuration=dur, PlayBackRateCalculated=true})
 								self.AllowToDo_WaitForEnemyToComeOut = false
 								-- If NOT controlled by a player AND is a gesture make it stop moving so it doesn't run after the enemy right away
-								if !plyControlled && string.find(anim, "vjges_") then
+								if !plyControlled && string_find(anim, "vjges_") then
 									self:StopMoving()
 								end
 								return true -- We have successfully ran the animation!
