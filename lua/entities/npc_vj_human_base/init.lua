@@ -1574,14 +1574,16 @@ function ENT:VJ_TASK_IDLE_STAND()
 	self:StartSchedule(vschedIdleStand)*/
 	
 	local idleAnimTbl = self.NoWeapon_UseScaredBehavior_Active == true and self.AnimTbl_ScaredBehaviorStand or ((self.Alerted && self:GetWeaponState() != VJ_WEP_STATE_HOLSTERED && IsValid(self:GetActiveWeapon())) and self.AnimTbl_WeaponAim or self.AnimTbl_IdleStand)
+	local posIdlesTbl = {}
+	local posIdlesTblIndex = 1
 	local sameAnimFound = false -- If true then it one of the animations in the table is the same as the current!
-	//local numOfAnims = 0 -- Number of valid animations found
 	for k, v in ipairs(idleAnimTbl) do
 		v = VJ_SequenceToActivity(self, v) -- Translate any sequence to activity
 		if v != false then -- Its a valid activity
-			v = self:TranslateToWeaponAnim(v) -- Translate to weapon act in case it needs to!
-			//numOfAnims = numOfAnims + 1
-			idleAnimTbl[k] = v -- In case it was a sequence, override it with the translated activity number
+			v = VJ_PICK(self:TranslateToWeaponAnim(v)) -- Translate to weapon act in case it needs to!
+			//idleAnimTbl[k] = v -- In case it was a sequence, override it with the translated activity number
+			posIdlesTbl[posIdlesTblIndex] = v
+			posIdlesTblIndex = posIdlesTblIndex + 1
 			-- Check if its the current idle animation...
 			if sameAnimFound == false && self.CurrentAnim_IdleStand == v then
 				sameAnimFound = true
@@ -1597,13 +1599,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 		return
 	end*/
 	
-	local pickedAnim = VJ_PICK(idleAnimTbl)
-	
-	-- If no animation was found, then use ACT_IDLE
-	if pickedAnim == false then
-		pickedAnim = ACT_IDLE
-		//sameAnimFound = true
-	end
+	local pickedAnim = VJ_PICK(posIdlesTbl) or ACT_IDLE -- If no animation was found, then use ACT_IDLE
 	
 	-- If sequence and it has no activity, then don't continue!
 	//pickedAnim = VJ_SequenceToActivity(self,pickedAnim)
@@ -1774,7 +1770,7 @@ function ENT:SetupWeaponHoldTypeAnims(hType)
 			//self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SHOTGUN -- No need to translate
 			//self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW -- No need to translate
 			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_SHOTGUN_IDLE4
+			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_IDLE_SMG1
 			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SHOTGUN
 			
 			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_AIM_SHOTGUN
@@ -1939,9 +1935,9 @@ function ENT:SetupWeaponHoldTypeAnims(hType)
 			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_PISTOL_LOW
 			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= {"crouchidle_panicked4", "vjseq_crouchidlehide"}
 			self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_PISTOL
-			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= isFemale and ACT_RELOAD_SMG1_LOW or ACT_RELOAD_PISTOL_LOW -- Only males have covered pistol reload!
+			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= isFemale and ACT_RELOAD_SMG1_LOW or ACT_RELOAD_PISTOL_LOW -- Only males have covered pistol reload
 			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_IDLE_PISTOL
+			self.WeaponAnimTranslations[ACT_IDLE] 							= isFemale and ACT_IDLE_PISTOL or ACT_IDLE -- Only females have pistol idle animation
 			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= isFemale and ACT_IDLE_ANGRY_PISTOL or VJ_SequenceToActivity(self, "idle_ar2_aim") -- Only females have angry pistol animation
 			
 			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_PISTOL
@@ -1962,7 +1958,7 @@ function ENT:SetupWeaponHoldTypeAnims(hType)
 			//self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW -- Not used for melee
 			
 			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_IDLE
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_MELEE
+			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= isFemale and ACT_IDLE_ANGRY or ACT_IDLE_ANGRY_MELEE -- Only males have unique idle angry for melee weapons!
 			
 			//self.WeaponAnimTranslations[ACT_WALK] 						= ACT_WALK -- No need to translate
 			//self.WeaponAnimTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_RIFLE -- Not used for melee

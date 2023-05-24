@@ -1523,13 +1523,15 @@ function ENT:VJ_TASK_IDLE_STAND()
 	self:StartSchedule(vschedIdleStand)*/
 	
 	local idleAnimTbl = self.AnimTbl_IdleStand
+	local posIdlesTbl = {}
+	local posIdlesTblIndex = 1
 	local sameAnimFound = false -- If true then it one of the animations in the table is the same as the current!
-	//local numOfAnims = 0 -- Number of valid animations found
 	for k, v in ipairs(idleAnimTbl) do
 		v = VJ_SequenceToActivity(self, v) -- Translate any sequence to activity
 		if v != false then -- Its a valid activity
-			//numOfAnims = numOfAnims + 1
-			idleAnimTbl[k] = v -- In case it was a sequence, override it with the translated activity number
+			//idleAnimTbl[k] = v -- In case it was a sequence, override it with the translated activity number
+			posIdlesTbl[posIdlesTblIndex] = v
+			posIdlesTblIndex = posIdlesTblIndex + 1
 			-- Check if its the current idle animation...
 			if sameAnimFound == false && self.CurrentAnim_IdleStand == v then
 				sameAnimFound = true
@@ -1545,13 +1547,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 		return
 	end*/
 	
-	local pickedAnim = VJ_PICK(idleAnimTbl)
-	
-	-- If no animation was found, then use ACT_IDLE
-	if pickedAnim == false then
-		pickedAnim = ACT_IDLE
-		//sameAnimFound = true
-	end
+	local pickedAnim = VJ_PICK(posIdlesTbl) or ACT_IDLE -- If no animation was found, then use ACT_IDLE
 	
 	-- If sequence and it has no activity, then don't continue!
 	//pickedAnim = VJ_SequenceToActivity(self,pickedAnim)
