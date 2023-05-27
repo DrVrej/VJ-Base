@@ -1526,6 +1526,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 	local posIdlesTbl = {}
 	local posIdlesTblIndex = 1
 	local sameAnimFound = false -- If true then it one of the animations in the table is the same as the current!
+	local curAnim = self.CurrentAnim_IdleStand
 	for k, v in ipairs(idleAnimTbl) do
 		v = VJ_SequenceToActivity(self, v) -- Translate any sequence to activity
 		if v != false then -- Its a valid activity
@@ -1533,7 +1534,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 			posIdlesTbl[posIdlesTblIndex] = v
 			posIdlesTblIndex = posIdlesTblIndex + 1
 			-- Check if its the current idle animation...
-			if sameAnimFound == false && self.CurrentAnim_IdleStand == v then
+			if sameAnimFound == false && curAnim == v then
 				sameAnimFound = true
 				//break
 			end

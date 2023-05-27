@@ -1577,15 +1577,28 @@ function ENT:VJ_TASK_IDLE_STAND()
 	local posIdlesTbl = {}
 	local posIdlesTblIndex = 1
 	local sameAnimFound = false -- If true then it one of the animations in the table is the same as the current!
+	local curAnim = self.CurrentAnim_IdleStand
 	for k, v in ipairs(idleAnimTbl) do
 		v = VJ_SequenceToActivity(self, v) -- Translate any sequence to activity
 		if v != false then -- Its a valid activity
-			v = VJ_PICK(self:TranslateToWeaponAnim(v)) -- Translate to weapon act in case it needs to!
+			local wepAnim = self.WeaponAnimTranslations[v] -- Translate to weapon act in case it needs to!
+			if wepAnim then -- Translation found
+				v = VJ_PICK(wepAnim)
+				-- VERY UGLY: If it's a table, then check inside it to see if current idle anim is one of them
+				if curAnim != v && istable(wepAnim) then
+					for _, v2 in ipairs(wepAnim) do
+						if curAnim == v2 then
+							sameAnimFound = true
+							break
+						end
+					end
+				end
+			end
 			//idleAnimTbl[k] = v -- In case it was a sequence, override it with the translated activity number
 			posIdlesTbl[posIdlesTblIndex] = v
 			posIdlesTblIndex = posIdlesTblIndex + 1
 			-- Check if its the current idle animation...
-			if sameAnimFound == false && self.CurrentAnim_IdleStand == v then
+			if sameAnimFound == false && curAnim == v then
 				sameAnimFound = true
 				//break
 			end
