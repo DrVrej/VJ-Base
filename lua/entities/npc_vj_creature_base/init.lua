@@ -3192,8 +3192,8 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			dissolver:SetKeyValue("magnitude",100)
 			dissolver:SetKeyValue("dissolvetype",0)
 			dissolver:Fire("Dissolve","vj_dissolve_corpse")
-			if IsValid(self.TheDroppedWeapon) then
-				self.TheDroppedWeapon:SetName("vj_dissolve_weapon")
+			if IsValid(self.CurrentWeaponEntity) then
+				self.CurrentWeaponEntity:SetName("vj_dissolve_weapon")
 				dissolver:Fire("Dissolve","vj_dissolve_weapon")
 			end
 			dissolver:Fire("Kill", "", 0.1)

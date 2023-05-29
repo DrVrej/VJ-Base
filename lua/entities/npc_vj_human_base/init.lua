@@ -290,7 +290,6 @@ ENT.HasItemDropsOnDeath = true -- Should it drop items on death?
 ENT.ItemDropsOnDeathChance = 14 -- If set to 1, it will always drop it
 ENT.ItemDropsOnDeath_EntityList = {"weapon_frag", "item_healthvial"} -- List of items it will randomly pick from | Leave it empty to drop nothing or to make your own dropping code (Using CustomOn...)
 ENT.DropWeaponOnDeath = true -- Should it drop its weapon on death?
-ENT.DropWeaponOnDeathAttachment = "anim_attachment_RH" -- Which attachment should it use for the weapon's position
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Melee Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -4010,7 +4009,7 @@ function ENT:OnKilled(dmginfo, hitgroup)
 	self:ClearEnemyMemory()
 	//self:ClearSchedule()
 	//self:SetNPCState(NPC_STATE_DEAD)
-	if bit.band(self.SavedDmgInfo.type, DMG_REMOVENORAGDOLL) == 0 then self:DropWeaponOnDeathCode(dmginfo, hitgroup) self:CreateDeathCorpse(dmginfo, hitgroup) end
+	if bit.band(self.SavedDmgInfo.type, DMG_REMOVENORAGDOLL) == 0 then self:DoDropWeaponOnDeath(dmginfo, hitgroup) self:CreateDeathCorpse(dmginfo, hitgroup) end
 	self:Remove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -4043,7 +4042,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			if util.IsValidRagdoll(corpseMdl) == true then
 				corpseType = "prop_ragdoll"
 			elseif util.IsValidProp(corpseMdl) == false or util.IsValidModel(corpseMdl) == false then
-				if IsValid(self.TheDroppedWeapon) then self.TheDroppedWeapon:Remove() end
+				if IsValid(self.CurrentWeaponEntity) then self.CurrentWeaponEntity:Remove() end
 				return false
 			end
 		else
@@ -4124,8 +4123,8 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			dissolver:SetKeyValue("magnitude",100)
 			dissolver:SetKeyValue("dissolvetype",0)
 			dissolver:Fire("Dissolve","vj_dissolve_corpse")
-			if IsValid(self.TheDroppedWeapon) then
-				self.TheDroppedWeapon:SetName("vj_dissolve_weapon")
+			if IsValid(self.CurrentWeaponEntity) then
+				self.CurrentWeaponEntity:SetName("vj_dissolve_weapon")
 				dissolver:Fire("Dissolve","vj_dissolve_weapon")
 			end
 			dissolver:Fire("Kill", "", 0.1)
@@ -4180,7 +4179,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		end
 		VJ_AddStinkyEnt(corpse, true)
 	
-		if IsValid(self.TheDroppedWeapon) then corpse.ChildEnts[#corpse.ChildEnts+1] = self.TheDroppedWeapon end
+		if IsValid(self.CurrentWeaponEntity) then corpse.ChildEnts[#corpse.ChildEnts+1] = self.CurrentWeaponEntity end
 		if self.DeathCorpseFade == true then corpse:Fire(corpse.FadeCorpseType, "", self.DeathCorpseFadeTime) end
 		if GetConVar("vj_npc_corpsefade"):GetInt() == 1 then corpse:Fire(corpse.FadeCorpseType, "", GetConVar("vj_npc_corpsefadetime"):GetInt()) end
 		self:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpse)
@@ -4198,7 +4197,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		hook.Call("CreateEntityRagdoll", nil, self, corpse)
 		return corpse
 	else
-		if IsValid(self.TheDroppedWeapon) then self.TheDroppedWeapon:Remove() end -- Remove dropped weapon
+		if IsValid(self.CurrentWeaponEntity) then self.CurrentWeaponEntity:Remove() end -- Remove dropped weapon
 		-- Remove child entities | No fade effects as it will look weird, remove it instantly!
 		if self.DeathCorpse_ChildEnts then
 			for _, v in ipairs(self.DeathCorpse_ChildEnts) do
@@ -4208,53 +4207,25 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local wepDropTbl1 = {weapon_ar2=true, weapon_vj_ar2=true, weapon_vj_blaster=true, weapon_pistol=true, weapon_vj_9mmpistol=true, weapon_vj_357=true, weapon_shotgun=true, weapon_vj_spas12=true, weapon_annabelle=true, weapon_rpg = true}
-local wepDropTbl2 = {weapon_crowbar=true, weapon_stunstick=true}
-local wepAng180y = Angle(0, 180, 0)
-local wepAng90x = Angle(90, 0, 0)
---
-function ENT:DropWeaponOnDeathCode(dmginfo, hitgroup)
-	if self.DropWeaponOnDeath != true or !IsValid(self:GetActiveWeapon()) /*or dmginfo:IsDamageType(DMG_DISSOLVE)*/ then return end
+function ENT:DoDropWeaponOnDeath(dmginfo, hitgroup)
+	local activeWep = self:GetActiveWeapon()
+	if !self.DropWeaponOnDeath or !IsValid(activeWep) then return end
 	
 	self:CustomOnDropWeapon(dmginfo, hitgroup)
 	
-	-- Rotate the weapon for certain guns
-	self.CurrentWeaponEntity = self:GetActiveWeapon()
-	local gunang = defAng
-	if wepDropTbl1[self.CurrentWeaponEntity:GetClass()] == true then
-		gunang = wepAng180y
-	elseif wepDropTbl2[self.CurrentWeaponEntity:GetClass()] == true then
-		gunang = wepAng90x
+	-- Save its original pos & ang in case the weapon uses custom world model pos & ang
+	-- because doing DropWeapon will mess up its spawn pos and ang, example: K-3 will spawn floating above the NPC
+	local orgPos, orgAng = activeWep:GetPos(), activeWep:GetAngles()
+	self:DropWeapon(activeWep, nil, self:GetForward()) -- Override the velocity so it doesn't throw the weapon (default source behavior)
+	if activeWep.WorldModel_UseCustomPosition then
+		activeWep:SetPos(orgPos)
+		activeWep:SetAngles(orgAng)
 	end
-
-	local getAttach = false -- true = Found an attachment on the NPC's model
-	if !self.CurrentWeaponEntity.WorldModel_UseCustomPosition then
-		for _,v in ipairs(self:GetAttachments()) do
-			if v.name == self.DropWeaponOnDeathAttachment then
-				getAttach = self:GetAttachment(self:LookupAttachment(self.DropWeaponOnDeathAttachment))
-				break
-			end
-		end
-	end
-
-	self.TheDroppedWeapon = ents.Create(self.CurrentWeaponEntity:GetClass())
-	if getAttach != false then
-		self.TheDroppedWeapon:SetPos(getAttach.Pos)
-	else
-		self.TheDroppedWeapon:SetPos(self.CurrentWeaponEntity:GetPos())
-	end
-	if getAttach != false then
-		self.TheDroppedWeapon:SetAngles(getAttach.Ang + gunang)
-	else
-		self.TheDroppedWeapon:SetAngles(self.CurrentWeaponEntity:GetAngles() + gunang)
-	end
-	self.TheDroppedWeapon:Spawn()
-	self.TheDroppedWeapon:Activate()
-	local phys = self.TheDroppedWeapon:GetPhysicsObject()
+	local phys = activeWep:GetPhysicsObject()
 	if IsValid(phys) then
 		if (bit.band(self.SavedDmgInfo.type, DMG_DISSOLVE) != 0) or (IsValid(self.SavedDmgInfo.inflictor) && self.SavedDmgInfo.inflictor:GetClass() == "prop_combine_ball") then
 			phys:EnableGravity(false)
-			phys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
+			phys:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100, -100) + self:GetUp()*50)
 		else
 			local dmgForce = (self.SavedDmgInfo.force / 40) + self:GetMoveVelocity() + self:GetVelocity()
 			if self.DeathAnimationCodeRan then
@@ -4264,7 +4235,9 @@ function ENT:DropWeaponOnDeathCode(dmginfo, hitgroup)
 			phys:ApplyForceCenter(dmgForce)
 		end
 	end
-	self:CustomOnDropWeapon_AfterWeaponSpawned(dmginfo, hitgroup, self.TheDroppedWeapon)
+	self.CurrentWeaponEntity = activeWep
+	
+	self:CustomOnDropWeapon_AfterWeaponSpawned(dmginfo, hitgroup, activeWep)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlaySoundSystem(sdSet, customSd, sdType)
