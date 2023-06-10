@@ -25,6 +25,10 @@ function ENT:MatFootStepQCEvent(data)
 	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+//function ENT:FireAnimationEvent(pos, ang, event, name)
+	//print(pos, ang, event, name)
+//end
+---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	//ENT.RenderGroup = RENDERGROUP_BOTH
 	function ENT:Initialize()
