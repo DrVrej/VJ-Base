@@ -6,36 +6,36 @@ local VJExists = file.Exists("lua/autorun/vj_base_autorun.lua", "GAME")
 if VJExists == true then
 	include('autorun/vj_controls.lua')
 
-	local vCat = "VJ Dummy Category" -- Category, you can also set a category individually by replacing the vCat with a string value
+	local spawnCategory = "VJ Dummy Category" -- Category, you can also set a category individually by replacing the spawnCategory with a string value
 	
 	/* -- Comment box start
 	NOTE: The following code is commented out so the game doesn't run it! When copying one of the options below, make sure to put it outside of the comment box!
 	
-	VJ.AddNPC("Dummy SNPC", "npc_vj_dum_dummy", vCat) -- Adds a NPC to the spawnmenu
+	VJ.AddNPC("Dummy SNPC", "npc_vj_dum_dummy", spawnCategory) -- Adds a NPC to the spawnmenu
 		-- Parameters:
 			-- First is the name
 			-- Second is the class name
 			-- Third is the category that it should be in
 			-- Fourth is optional, which is a boolean that defines whether or not it's an admin-only entity
-	VJ.AddNPC_HUMAN("Dummy Human SNPC", "npc_vj_dum_dummy", {"weapon_vj_dummy"}, vCat) -- Adds a NPC to the spawnmenu but with a list of default weapons it spawns with
+	VJ.AddNPC_HUMAN("Dummy Human SNPC", "npc_vj_dum_dummy", {"weapon_vj_dummy"}, spawnCategory) -- Adds a NPC to the spawnmenu but with a list of default weapons it spawns with
 		-- Parameters:
 			-- First is the name
 			-- Second is the class name
 			-- Third is a table of weapon, the base will pick a random one from the table and give it to the SNPC when "Default Weapon" is selected
 			-- Fourth is the category that it should be in
 			-- Fifth is optional, which is a boolean that defines whether or not it's an admin-only entity
-	VJ.AddWeapon("Dummy Weapon", "weapon_vj_dummy", false, vCat) -- Adds a player weapon to the spawnmenu
+	VJ.AddWeapon("Dummy Weapon", "weapon_vj_dummy", false, spawnCategory) -- Adds a player weapon to the spawnmenu
 		-- Parameters:
 			-- First is the name
 			-- Second is the class name
 			-- Third is a boolean that defines whether or not it's an admin-only entity
 			-- Fourth is the category that it should be in
-	VJ.AddNPCWeapon("VJ_Dummy", "weapon_vj_dummy", vCat) -- Adds a weapon to the NPC weapon list
+	VJ.AddNPCWeapon("VJ_Dummy", "weapon_vj_dummy", spawnCategory) -- Adds a weapon to the NPC weapon list
 		-- Parameters:
 			-- First is the name
 			-- Second is the class name
 			-- Third is the category that it should be in
-	VJ.AddEntity("Dummy Kit", "sent_vj_dummykit", "Author Name", false, 0, true, vCat) -- Adds an entity to the spawnmenu
+	VJ.AddEntity("Dummy Kit", "sent_vj_dummykit", "Author Name", false, 0, true, spawnCategory) -- Adds an entity to the spawnmenu
 		-- Parameters: 
 			-- First is the name
 			-- Second is the class name
