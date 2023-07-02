@@ -750,7 +750,7 @@ function ENT:CustomOnDoChangeWeapon(newWeapon, oldWeapon, invSwitch) end
 		- data = Danger or grenade entity for types "NPC_DANGER_TYPE_ENTITY" and "NPC_DANGER_TYPE_GRENADE"
 			-- Currently empty for danger type "NPC_DANGER_TYPE_HINT"
 -----------------------------------------------------------]]
-function ENT:CustomOnDangerDetected(dangerType, data) print(dangerType, data) end
+-- function ENT:CustomOnDangerDetected(dangerType, data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInvestigate(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
