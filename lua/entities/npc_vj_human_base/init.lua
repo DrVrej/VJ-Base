@@ -744,6 +744,14 @@ function ENT:CustomOnPlayerSight(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnDoChangeWeapon(newWeapon, oldWeapon, invSwitch) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	UNCOMMENT TO USE | Called when the NPC detects a danger
+		- dangerType = Type of danger detected | Enum VJ.NPC_DANGER_TYPE_*
+		- data = Danger or grenade entity for types "NPC_DANGER_TYPE_ENTITY" and "NPC_DANGER_TYPE_GRENADE"
+			-- Currently empty for danger type "NPC_DANGER_TYPE_HINT"
+-----------------------------------------------------------]]
+function ENT:CustomOnDangerDetected(dangerType, data) print(dangerType, data) end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInvestigate(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnResetEnemy() end
@@ -3163,7 +3171,7 @@ end
 	- Distance based on self.DangerDetectionDistance
 	- Ignores grenades from allies
 	- BEST USE: Grenade type of entities
-- ent.VJ_IsDetectableDanger
+- ent.VJTag_ID_Danger
 	- Detected as a danger
 	- Distance based on self.DangerDetectionDistance
 	- Ignores dangers from allies
@@ -3177,20 +3185,21 @@ end
 function ENT:CheckForDangers()
 	if !self.CanDetectDangers or self.AttackType == VJ.ATTACK_TYPE_GRENADE or self.NextDangerDetectionT > CurTime() or self.VJ_IsBeingControlled then return end
 	local regDangerDetected = false -- A regular non-grenade danger has been found (This is done to make sure grenades take priority over other dangers!)
-	for _, v in ipairs(ents.FindInSphere(self:GetPos(), self.DangerDetectionDistance)) do
-		if (v.VJ_IsDetectableDanger or v.VJTag_ID_Grenade) && self:Visible(v) then
-			local vOwner = v:GetOwner()
+	for _, ent in ipairs(ents.FindInSphere(self:GetPos(), self.DangerDetectionDistance)) do
+		if (ent.VJTag_ID_Danger or ent.VJTag_ID_Grenade) && self:Visible(ent) then
+			local vOwner = ent:GetOwner()
 			if !(IsValid(vOwner) && vOwner.IsVJBaseSNPC && ((self:GetClass() == vOwner:GetClass()) or (self:Disposition(vOwner) == D_LI))) then
-				if v.VJ_IsDetectableDanger then regDangerDetected = true continue end -- If it's a regular danger then just skip it for now
+				if ent.VJTag_ID_Danger then regDangerDetected = ent continue end -- If it's a regular danger then just skip it for now
+				local funcCustom = self.CustomOnDangerDetected; if funcCustom then funcCustom(self, VJ.NPC_DANGER_TYPE_GRENADE, ent) end
 				self:PlaySoundSystem("OnGrenadeSight")
 				self.NextDangerDetectionT = CurTime() + 4
 				self.TakingCoverT = CurTime() + 4
 				-- If has the ability to throw it back, then throw the grenade!
-				if self.CanThrowBackDetectedGrenades && self.HasGrenadeAttack && v.VJTag_IsPickupable && !v.VJTag_IsPickedUp && v:GetVelocity():Length() < 400 && self:VJ_GetNearestPointToEntityDistance(v) < 100 then
+				if self.CanThrowBackDetectedGrenades && self.HasGrenadeAttack && ent.VJTag_IsPickupable && !ent.VJTag_IsPickedUp && ent:GetVelocity():Length() < 400 && self:VJ_GetNearestPointToEntityDistance(ent) < 100 then
 					self.NextGrenadeAttackSoundT = CurTime() + 3
-					self:ThrowGrenadeCode(v, true)
-					v.VJTag_IsPickedUp = true
-					//v:Remove()
+					self:ThrowGrenadeCode(ent, true)
+					ent.VJTag_IsPickedUp = true
+					//ent:Remove()
 					return
 				end
 				self:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH", function(x)
@@ -3202,6 +3211,14 @@ function ENT:CheckForDangers()
 		end
 	end
 	if regDangerDetected or self:HasCondition(COND_HEAR_DANGER) or self:HasCondition(COND_HEAR_PHYSICS_DANGER) or self:HasCondition(COND_HEAR_MOVE_AWAY) then
+		local funcCustom = self.CustomOnDangerDetected
+		if funcCustom then
+			if regDangerDetected then
+				funcCustom(self, VJ.NPC_DANGER_TYPE_ENTITY, regDangerDetected)
+			else
+				funcCustom(self, VJ.NPC_DANGER_TYPE_HINT, nil)
+			end
+		end
 		self:PlaySoundSystem("OnDangerSight")
 		self.NextDangerDetectionT = CurTime() + 4
 		self.TakingCoverT = CurTime() + 4

@@ -772,9 +772,9 @@ function SWEP:FireAnimationEvent(pos, ang, event, options)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Think() -- NOTE: Works only in players hands. does NOT work in NPCs hands!
-	self:RunWorldModelThink()
 	self:CustomOnThink()
 	if SERVER then
+		self:RunWorldModelThink()
 		self:DoIdleAnimation()
 	end
 end
@@ -816,7 +816,7 @@ function SWEP:Deploy()
 	local owner = self:GetOwner()
 	if owner:IsPlayer() then
 		self:CustomOnDeploy()
-		if self.HasDeploySound == true then self:EmitSound(VJ.PICK(self.DeploySound),50,math.random(90,100)) end
+		if self.HasDeploySound == true then self:EmitSound(VJ.PICK(self.DeploySound), 50, math.random(90, 100)) end
 		
 		local curTime = CurTime()
 		local anim = VJ.PICK(self.AnimTbl_Deploy)

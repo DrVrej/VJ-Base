@@ -27,6 +27,11 @@ VJ.NPC_FACING_ENEMY				= 1 -- Currently attempting to face the enemy
 VJ.NPC_FACING_ENTITY			= 2 -- Currently attempting to face a specific entity
 VJ.NPC_FACING_POSITION			= 3 -- Currently attempting to face a specific position
 
+-- Danger detected type (Used by human NPCs)
+VJ.NPC_DANGER_TYPE_ENTITY		= 1 -- Entity type of danger that could harm the NPC | Commonly produced by projectiles | Associated: "ent.VJTag_ID_Danger"
+VJ.NPC_DANGER_TYPE_GRENADE		= 2 -- Grenade type of danger that could harm the NPC | Associated: "ent.VJTag_ID_Grenade"
+VJ.NPC_DANGER_TYPE_HINT			= 3 -- Hint type of danger that could harm the NPC | Commonly used by sound hints | Associated: COND_HEAR_DANGER, COND_HEAR_PHYSICS_DANGER, COND_HEAR_MOVE_AWAY
+
 -- NPC weapon state
 VJ.NPC_WEP_STATE_READY			= 0 -- No state is set (Default)
 VJ.NPC_WEP_STATE_HOLSTERED		= 1 -- Weapon is holstered
@@ -80,8 +85,8 @@ IsVJBaseEdited					This entity's meta table has been edited by VJ Base
 
 -- Identifier tags
 VJ_IsHugeMonster				NPC is considered to be very large and/or a boss
-VJTag_ID_Danger					Entity that should be detected as danger by NPCs
-VJTag_ID_Prop					Entity is considered a prop and can be attacked by NPCs
+VJTag_ID_Prop					Entity is considered a prop and can be attacked/pushed by NPCs
+VJTag_ID_Danger					Entity is dangerous and should be detected as a regular danger by NPCs
 VJTag_ID_Grenade				Entity is a grenade type and should be detected as a grenade danger by NPCs
 VJTag_ID_Headcrab
 VJTag_ID_Police
