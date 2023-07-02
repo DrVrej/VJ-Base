@@ -10,7 +10,7 @@ ENT.Collide_Decal = "Default"
 ENT.Collide_DecalChance = 3
 ENT.CollideSound = "Default" -- Make it a table to use custom sounds!
 ENT.CollideSoundLevel = 60
-ENT.CollideSoundPitch = VJ_Set(90, 100)
+ENT.CollideSoundPitch = VJ.SET(90, 100)
 ENT.IsStinky = false -- Is this a disgusting stinky gib??
 
 ENT.NextStinkyTime = 0
@@ -93,7 +93,7 @@ end
 function ENT:PhysicsCollide(data, phys)
 	-- Effects
 	local velSpeed = phys:GetVelocity():Length()
-	local randCollideSd = VJ_PICK(self.CollideSound)
+	local randCollideSd = VJ.PICK(self.CollideSound)
 	if randCollideSd != false && velSpeed > 18 then
 		self:EmitSound(randCollideSd, self.CollideSoundLevel, math.random(self.CollideSoundPitch.a, self.CollideSoundPitch.b))
 	end

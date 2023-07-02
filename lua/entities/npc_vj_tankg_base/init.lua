@@ -58,12 +58,12 @@ ENT.Tank_Shell_ParticlePos = Vector(-205, 00, 72)
 ENT.HasReloadShellSound = true
 ENT.Tank_SoundTbl_Turning = {}
 ENT.Tank_TurningSoundLevel = 80
-ENT.Tank_TurningSoundPitch = VJ_Set(100, 100)
+ENT.Tank_TurningSoundPitch = VJ.SET(100, 100)
 --
 ENT.HasFireShellSound = true
 ENT.Tank_SoundTbl_ReloadShell = {}
 ENT.Tank_ReloadShellSoundLevel = 90
-ENT.Tank_ReloadShellSoundPitch = VJ_Set(100, 100)
+ENT.Tank_ReloadShellSoundPitch = VJ.SET(100, 100)
 --
 ENT.Tank_SoundTbl_FireShell = {}
 
@@ -216,7 +216,7 @@ function ENT:CustomOnThink_AIEnabled()
 	self:SetEnemy(self:GetParent():GetEnemy())
 	self:Tank_CustomOnThink_AIEnabled()
 
-	if self.Tank_GunnerIsTurning == true then self:Tank_Sound_Moving() else VJ_STOPSOUND(self.CurrentTankMovingSound) end
+	if self.Tank_GunnerIsTurning == true then self:Tank_Sound_Moving() else VJ.STOPSOUND(self.CurrentTankMovingSound) end
 	self:CustomOnSchedule()
 	
 	if self.Tank_Status == 0 then
@@ -340,31 +340,31 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove()
-	VJ_STOPSOUND(self.CurrentTankMovingSound)
+	VJ.STOPSOUND(self.CurrentTankMovingSound)
 	timer.Destroy("timer_shell_attack" .. self:EntIndex())
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_Sound_Moving()
 	if self.HasSounds == false or self.HasFootStepSound == false then return end
 	
-	local sdTbl = VJ_PICK(self.Tank_SoundTbl_Turning)
-	if sdTbl == false then sdTbl = VJ_PICK(self.Tank_DefaultSoundTbl_Turning) end -- Default table
-	self.CurrentTankMovingSound = VJ_CreateSound(self, sdTbl, self.Tank_TurningSoundLevel, math.random(self.Tank_TurningSoundPitch.a, self.Tank_TurningSoundPitch.b))
+	local sdTbl = VJ.PICK(self.Tank_SoundTbl_Turning)
+	if sdTbl == false then sdTbl = VJ.PICK(self.Tank_DefaultSoundTbl_Turning) end -- Default table
+	self.CurrentTankMovingSound = VJ.CreateSound(self, sdTbl, self.Tank_TurningSoundLevel, math.random(self.Tank_TurningSoundPitch.a, self.Tank_TurningSoundPitch.b))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_Sound_ReloadShell()
 	if self.HasSounds == false or self.HasReloadShellSound == false then return end
 	
-	local sdTbl = VJ_PICK(self.Tank_SoundTbl_ReloadShell)
-	if sdTbl == false then sdTbl = VJ_PICK(self.Tank_DefaultSoundTbl_ReloadShell) end -- Default table
-	//self.CurrentTankFiringSound = VJ_CreateSound(self, sdTbl, self.Tank_ReloadShellSoundLevel, math.random(self.Tank_ReloadShellSoundPitch.a, self.Tank_ReloadShellSoundPitch.b))
-	VJ_EmitSound(self, sdTbl, self.Tank_ReloadShellSoundLevel, math.random(self.Tank_ReloadShellSoundPitch.a, self.Tank_ReloadShellSoundPitch.b))
+	local sdTbl = VJ.PICK(self.Tank_SoundTbl_ReloadShell)
+	if sdTbl == false then sdTbl = VJ.PICK(self.Tank_DefaultSoundTbl_ReloadShell) end -- Default table
+	//self.CurrentTankFiringSound = VJ.CreateSound(self, sdTbl, self.Tank_ReloadShellSoundLevel, math.random(self.Tank_ReloadShellSoundPitch.a, self.Tank_ReloadShellSoundPitch.b))
+	VJ.EmitSound(self, sdTbl, self.Tank_ReloadShellSoundLevel, math.random(self.Tank_ReloadShellSoundPitch.a, self.Tank_ReloadShellSoundPitch.b))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_Sound_FireShell()
 	if self.HasSounds == false or self.HasFireShellSound == false then return end
 	
-	local sdTbl = VJ_PICK(self.Tank_SoundTbl_FireShell)
-	if sdTbl == false then sdTbl = VJ_PICK(self.Tank_DefaultSoundTbl_FireShell) end -- Default table
-	VJ_EmitSound(self, sdTbl, 500, 100)
+	local sdTbl = VJ.PICK(self.Tank_SoundTbl_FireShell)
+	if sdTbl == false then sdTbl = VJ.PICK(self.Tank_DefaultSoundTbl_FireShell) end -- Default table
+	VJ.EmitSound(self, sdTbl, 500, 100)
 end

@@ -41,14 +41,14 @@ ENT.HasIdleSounds = true -- Does it have idle sounds?
 ENT.SoundTbl_Idle = {}
 ENT.IdleSoundChance = 1 -- How much chance to play the sound? 1 = always
 ENT.IdleSoundLevel = 80
-ENT.IdleSoundPitch = VJ_Set(80, 100)
-ENT.NextSoundTime_Idle = VJ_Set(0.2, 0.5)
+ENT.IdleSoundPitch = VJ.SET(80, 100)
+ENT.NextSoundTime_Idle = VJ.SET(0.2, 0.5)
 -- On Entity Spawn
 ENT.HasSpawnEntitySound = true -- Does it play a sound on entity spawn?
 ENT.SoundTbl_SpawnEntity = {}
 ENT.SpawnEntitySoundChance = 1 -- How much chance to play the sound? 1 = always
 ENT.SpawnEntitySoundLevel = 80
-ENT.SpawnEntitySoundPitch = VJ_Set(80, 100)
+ENT.SpawnEntitySoundPitch = VJ.SET(80, 100)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -101,7 +101,7 @@ function ENT:SpawnAnEntity(spawnKey, spawnTbl, initSpawn)
 	local spawnEnts = spawnTbl.Entities
 	local spawnNPCClass = spawnTbl.NPC_Class or ""
 	local spawnFriToPlyAllies = spawnTbl.FriToPlyAllies or false
-	local spawnWepPicked = VJ_PICK(spawnTbl.WeaponsList)
+	local spawnWepPicked = VJ.PICK(spawnTbl.WeaponsList)
 	local entPicked; -- The entity that we will spawn
 	local entsNum = #spawnEnts -- The number of entities
 	local i = 0 -- If this number equals entsNum, then its the last entity
@@ -135,7 +135,7 @@ function ENT:SpawnAnEntity(spawnKey, spawnTbl, initSpawn)
 	end
 	if ent:IsNPC() && spawnWepPicked != false && string.lower(spawnWepPicked) != "none" then
 		if string.lower(spawnWepPicked) == "default" then -- Default weapon from the spawn menu
-			local getDefWep = VJ_PICK(list.Get("NPC")[ent:GetClass()].Weapons)
+			local getDefWep = VJ.PICK(list.Get("NPC")[ent:GetClass()].Weapons)
 			if getDefWep then
 				ent:Give(getDefWep)
 			end
@@ -156,7 +156,7 @@ function ENT:Initialize()
 	self:CustomOnInitialize()
 	if self.CustomOnInitialize_BeforeNPCSpawn then self:CustomOnInitialize_BeforeNPCSpawn() end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	if self:GetModel() == "models/error.mdl" then -- No model was detected
-		local mdls = VJ_PICK(self.Model)
+		local mdls = VJ.PICK(self.Model)
 		if mdls && mdl !="models/props_junk/popcan01a.mdl" then
 			self:SetModel(mdls)
 		else -- No models found in self.Model
@@ -200,7 +200,7 @@ function ENT:IdleSoundCode()
 	if self.HasIdleSounds == false then return end
 	if CurTime() > self.NextIdleSoundT then
 		if math.random(1, self.IdleSoundChance) == 1 then
-			self.CurrentIdleSound = VJ_CreateSound(self, self.SoundTbl_Idle, self.IdleSoundLevel, math.random(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
+			self.CurrentIdleSound = VJ.CreateSound(self, self.SoundTbl_Idle, self.IdleSoundLevel, math.random(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
 		end
 		self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle.a, self.NextSoundTime_Idle.b)
 	end
@@ -209,7 +209,7 @@ end
 function ENT:SpawnEntitySoundCode()
 	if self.HasSpawnEntitySound == false then return end
 	if math.random(1, self.SpawnEntitySoundChance) then
-		self.CurrentSpawnEntitySound = VJ_CreateSound(self, self.SoundTbl_SpawnEntity, self.SpawnEntitySoundLevel, math.random(self.SpawnEntitySoundPitch.a, self.SpawnEntitySoundPitch.b))
+		self.CurrentSpawnEntitySound = VJ.CreateSound(self, self.SoundTbl_SpawnEntity, self.SpawnEntitySoundLevel, math.random(self.SpawnEntitySoundPitch.a, self.SpawnEntitySoundPitch.b))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -226,14 +226,14 @@ function ENT:DoSingleSpawnerRemove()
 		end
 	end
 	self.Dead = true
-	VJ_STOPSOUND(self.CurrentIdleSound)
+	VJ.STOPSOUND(self.CurrentIdleSound)
 	self:Remove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
 	self:CustomOnRemove()
 	self.Dead = true
-	VJ_STOPSOUND(self.CurrentIdleSound)
+	VJ.STOPSOUND(self.CurrentIdleSound)
 	
 	-- If it's a continuous spawner then remove all the spawned entities!
 	if self.SingleSpawner == false && self.CurrentEntities != nil then

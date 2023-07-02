@@ -32,11 +32,7 @@ local CurTime = CurTime
 local IsValid = IsValid
 local GetConVar = GetConVar
 local istable = istable
-//local isstring = isstring
 local isnumber = isnumber
-//local tonumber = tonumber
-//local string_find = string.find
-//local string_Replace = string.Replace
 local string_sub = string.sub
 local table_remove = table.remove
 local bAND = bit.band
@@ -83,7 +79,7 @@ function ENT:CreateExtraDeathCorpse(class, models, extraOptions, customFunc)
 	class = class or "prop_ragdoll"
 	extraOptions = extraOptions or {}
 	local ent = ents.Create(class)
-	if models != "None" then ent:SetModel(VJ_PICK(models)) end
+	if models != "None" then ent:SetModel(VJ.PICK(models)) end
 	ent:SetPos(extraOptions.Pos or self:GetPos())
 	ent:SetAngles(extraOptions.Ang or self:GetAngles())
 	ent:Spawn()
@@ -146,20 +142,20 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 	local bloodType = false
 	class = class or "obj_vj_gib"
 	if models == "UseAlien_Small" then
-		models =  VJ_PICK(gib_mdlASmall)
+		models =  VJ.PICK(gib_mdlASmall)
 		bloodType = "Yellow"
 	elseif models == "UseAlien_Big" then
-		models =  VJ_PICK(gib_mdlABig)
+		models =  VJ.PICK(gib_mdlABig)
 		bloodType = "Yellow"
 	elseif models == "UseHuman_Small" then
-		models =  VJ_PICK(gib_mdlHSmall)
+		models =  VJ.PICK(gib_mdlHSmall)
 		bloodType = "Red"
 	elseif models == "UseHuman_Big" then
-		models =  VJ_PICK(gib_mdlHBig)
+		models =  VJ.PICK(gib_mdlHBig)
 		bloodType = "Red"
 	else -- Custom models
-		models = VJ_PICK(models)
-		if VJ_HasValue(gib_mdlAAll, models) then
+		models = VJ.PICK(models)
+		if VJ.HasValue(gib_mdlAAll, models) then
 			bloodType = "Yellow"
 		end
 	end
@@ -287,7 +283,7 @@ function ENT:CustomOnEat(status, statusInfo)
 		self:SetIdleAnimation({ACT_GESTURE_RANGE_ATTACK1}, true)
 		return self:VJ_ACT_PLAYACTIVITY(ACT_ARM, true, false)
 	elseif status == "Eat" then
-		VJ_EmitSound(self, "barnacle/bcl_chew"..math.random(1, 3)..".wav", 55)
+		VJ.EmitSound(self, "barnacle/bcl_chew"..math.random(1, 3)..".wav", 55)
 		-- Health changes
 		local food = self.EatingData.Ent
 		local damage = 15 -- How much damage food will receive
@@ -299,11 +295,11 @@ function ENT:CustomOnEat(status, statusInfo)
 		local bloodData = food.BloodData
 		if bloodData then
 			local bloodPos = food:GetPos() + food:OBBCenter()
-			local bloodParticle = VJ_PICK(bloodData.Particle)
+			local bloodParticle = VJ.PICK(bloodData.Particle)
 			if bloodParticle then
 				ParticleEffect(bloodParticle, bloodPos, self:GetAngles())
 			end
-			local bloodDecal = VJ_PICK(bloodData.Decal)
+			local bloodDecal = VJ.PICK(bloodData.Decal)
 			if bloodDecal then
 				local tr = util.TraceLine({start = bloodPos, endpos = bloodPos + vecZ50, filter = {food, self}})
 				util.Decal(bloodDecal, tr.HitPos + tr.HitNormal + Vector(math.random(-45, 45), math.random(-45, 45), 0), tr.HitPos - tr.HitNormal, food)
@@ -326,7 +322,7 @@ end
 function ENT:SetIdleAnimation(anims, reset)
 	self.AnimTbl_IdleStand = anims
 	if reset then
-		self.CurrentAnim_IdleStand = -1
+		self.CurrentIdleAnimation = -1
 		//self.NextIdleStandTime = 0
 	end
 end
@@ -404,8 +400,8 @@ function ENT:CheckRelationship(ent)
 	if ent:Health() > 0 && self:Disposition(ent) != D_LI then
 		local isPly = ent:IsPlayer()
 		if isPly && VJ_CVAR_IGNOREPLAYERS then return D_NU end
-		if VJ_HasValue(self.VJ_AddCertainEntityAsFriendly, ent) then return D_LI end
-		if VJ_HasValue(self.VJ_AddCertainEntityAsEnemy, ent) then return D_HT end
+		if VJ.HasValue(self.VJ_AddCertainEntityAsFriendly, ent) then return D_LI end
+		if VJ.HasValue(self.VJ_AddCertainEntityAsEnemy, ent) then return D_HT end
 		local entDisp = ent.Disposition and ent:Disposition(self)
 		if (ent:IsNPC() && ((entDisp == D_HT) or (entDisp == D_NU && ent.VJ_IsBeingControlled))) or (isPly && !self.PlayerFriendly && ent:Alive()) then
 			return D_HT
@@ -495,9 +491,9 @@ function ENT:FaceCertainPosition(pos, faceTime)
 	end
 	self:SetIdealYawAndUpdate(faceAng.y)
 	//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
-	self.FacingStatus = VJ_FACING_POSITION
+	self.FacingStatus = VJ.NPC_FACING_POSITION
 	self.FacingData = faceAng
-	timer.Create("timer_facing_end"..self:EntIndex(), faceTime or 0, 1, function() self.FacingStatus = VJ_FACING_NONE; self.FacingData = nil end)
+	timer.Create("timer_facing_end"..self:EntIndex(), faceTime or 0, 1, function() self.FacingStatus = VJ.NPC_FACING_NONE; self.FacingData = nil end)
 	return faceAng
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -521,9 +517,9 @@ function ENT:FaceCertainEntity(ent, faceCurEnemy, faceTime)
 			end
 			self:SetIdealYawAndUpdate(faceAng.y)
 			//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
-			self.FacingStatus = VJ_FACING_ENEMY
+			self.FacingStatus = VJ.NPC_FACING_ENEMY
 			self.FacingData = ent
-			timer.Create("timer_facing_end"..self:EntIndex(), faceTime or 0, 1, function() self.FacingStatus = VJ_FACING_NONE; self.FacingData = nil end)
+			timer.Create("timer_facing_end"..self:EntIndex(), faceTime or 0, 1, function() self.FacingStatus = VJ.NPC_FACING_NONE; self.FacingData = nil end)
 			return faceAng
 		end
 		return false
@@ -535,9 +531,9 @@ function ENT:FaceCertainEntity(ent, faceCurEnemy, faceTime)
 		end
 		self:SetIdealYawAndUpdate(faceAng.y)
 		//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
-		self.FacingStatus = VJ_FACING_ENTITY
+		self.FacingStatus = VJ.NPC_FACING_ENTITY
 		self.FacingData = ent
-		timer.Create("timer_facing_end"..self:EntIndex(), faceTime or 0, 1, function() self.FacingStatus = VJ_FACING_NONE; self.FacingData = nil end)
+		timer.Create("timer_facing_end"..self:EntIndex(), faceTime or 0, 1, function() self.FacingStatus = VJ.NPC_FACING_NONE; self.FacingData = nil end)
 		return faceAng
 	end
 	return false
@@ -611,7 +607,7 @@ function ENT:VJ_ForwardIsHidingZone(startPos, endPos, acceptWorld, extraOptions)
 	if extraOptions.Debug == true then
 		print("--------------------------------------------")
 		PrintTable(tr)
-		VJ_CreateTestObject(hitPos)
+		VJ.DEBUG_TempEnt(hitPos)
 	end
 	-- Sometimes the trace isn't 100%, a tiny find in sphere check fixes this issue...
 	local sphereInvalidate = false
@@ -816,6 +812,35 @@ function ENT:VJ_GetNearestPointToEntityDistance(ent)
 	resEnt.z = entPos.z
 	return resEnt:Distance(resMe)
 end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Takes the given number and returns a scaled number according to the difficulty that NPC is set to
+		- int = The number to scale
+	Returns
+		- number, the scaled number
+-----------------------------------------------------------]]
+function ENT:VJ_GetDifficultyValue(int)
+	if self.SelectedDifficulty == -3 then
+		return math_clamp(int - (int * 0.99), 1, int)
+	elseif self.SelectedDifficulty == -2 then
+		return math_clamp(int - (int * 0.75), 1, int)
+	elseif self.SelectedDifficulty == -1 then
+		return int / 2
+	elseif self.SelectedDifficulty == 1 then
+		return int + (int * 0.5)
+	elseif self.SelectedDifficulty == 2 then
+		return int * 2
+	elseif self.SelectedDifficulty == 3 then
+		return int + (int * 1.5)
+	elseif self.SelectedDifficulty == 4 then
+		return int + (int * 2.5)
+	elseif self.SelectedDifficulty == 5 then
+		return int + (int * 3.5)
+	elseif self.SelectedDifficulty == 6 then
+		return int + (int * 5.0)
+	end
+	return int -- Normal (default)
+end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*
  ######   ######## ##    ## ######## ########     ###    ##          ######## ##     ## ##    ##  ######  ######## ####  #######  ##    ##  ######
@@ -843,9 +868,9 @@ function ENT:IsJumpLegal(startPos, apex, endPos)
 	print(endPos.z - startPos.z)
 	print("Apex Dist: "..dist_apex)
 	print("End Pos: "..dist_end)
-	VJ_CreateTestObject(startPos, Angle(0,0,0), Color(0,255,0))
-	VJ_CreateTestObject(apex, Angle(0,0,0), Color(255,115,0))
-	VJ_CreateTestObject(endPos, Angle(0,0,0), Color(255,0,0))
+	VJ.DEBUG_TempEnt(startPos, Angle(0,0,0), Color(0,255,0))
+	VJ.DEBUG_TempEnt(apex, Angle(0,0,0), Color(255,115,0))
+	VJ.DEBUG_TempEnt(endPos, Angle(0,0,0), Color(255,0,0))
 	if (dist_apex > maxDist) or (dist_end > maxDist) then return false end
 	return true*/
 	
@@ -862,10 +887,10 @@ function ENT:IsJumpLegal(startPos, apex, endPos)
 		start = endPos,
 		endpos = endPos + Vector(0, 0, -100),
 	})
-	/*VJ_CreateTestObject(startPos, Angle(0,0,0), Color(0,255,0))
-	VJ_CreateTestObject(apex, Angle(0,0,0), Color(255,115,0))
-	VJ_CreateTestObject(endPos, Angle(0,0,0), Color(255,0,0))
-	VJ_CreateTestObject(tr.HitPos, Angle(0,0,0), Color(132,0,255))*/
+	/*VJ.DEBUG_TempEnt(startPos, Angle(0,0,0), Color(0,255,0))
+	VJ.DEBUG_TempEnt(apex, Angle(0,0,0), Color(255,115,0))
+	VJ.DEBUG_TempEnt(endPos, Angle(0,0,0), Color(255,0,0))
+	VJ.DEBUG_TempEnt(tr.HitPos, Angle(0,0,0), Color(132,0,255))*/
 	if !tr.Hit then return false end
 	return true
 end
@@ -874,7 +899,7 @@ function ENT:OnChangeActivity(newAct)
 	//print(newAct)
 	local funcCustom = self.CustomOnChangeActivity; if funcCustom then funcCustom(self, newAct) end
 	if newAct == ACT_TURN_LEFT or newAct == ACT_TURN_RIGHT then
-		self.NextIdleStandTime = CurTime() + VJ_GetSequenceDuration(self, self:GetSequenceName(self:GetSequence()))
+		self.NextIdleStandTime = CurTime() + VJ.AnimDuration(self, self:GetSequenceName(self:GetSequence()))
 		//self.NextIdleStandTime = CurTime() + 1.2
 	end
 end
@@ -986,7 +1011,7 @@ function ENT:Follow(ent, stopIfFollowing)
 	
 	local isPly = ent:IsPlayer()
 	local isLiving = isPly or ent:IsNPC() -- Is it a living entity?
-	if VJ_IsAlive(ent) && ((isPly && !VJ_CVAR_IGNOREPLAYERS) or (!isPly)) then
+	if VJ.IsAlive(ent) && ((isPly && !VJ_CVAR_IGNOREPLAYERS) or (!isPly)) then
 		local followData = self.FollowData
 		-- Refusal messages
 		if isLiving && self:GetClass() != ent:GetClass() && (self:Disposition(ent) == D_HT or self:Disposition(ent) == D_NU) then -- Check for enemy/neutral
@@ -1075,7 +1100,7 @@ function ENT:DoMedicCheck()
 			end
 		end
 	elseif self.Medic_Status != "Healing" then
-		if !IsValid(self.Medic_CurrentEntToHeal) or VJ_IsAlive(self.Medic_CurrentEntToHeal) != true or (self.Medic_CurrentEntToHeal:Health() > self.Medic_CurrentEntToHeal:GetMaxHealth() * 0.75) then self:DoMedicReset() return end
+		if !IsValid(self.Medic_CurrentEntToHeal) or VJ.IsAlive(self.Medic_CurrentEntToHeal) != true or (self.Medic_CurrentEntToHeal:Health() > self.Medic_CurrentEntToHeal:GetMaxHealth() * 0.75) then self:DoMedicReset() return end
 		if self:Visible(self.Medic_CurrentEntToHeal) && self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then -- Are we in healing distance?
 			self.Medic_Status = "Healing"
 			self:CustomOnMedic_BeforeHeal()
@@ -1098,7 +1123,7 @@ function ENT:DoMedicCheck()
 				self:DeleteOnRemove(self.Medic_SpawnedProp)
 			end
 			
-			local anim = VJ_PICK(self.AnimTbl_Medic_GiveHealth)
+			local anim = VJ.PICK(self.AnimTbl_Medic_GiveHealth)
 			local timeUntilHeal = self:DecideAnimationLength(anim, self.Medic_TimeUntilHeal, 0)
 			if self.Medic_DisableAnimation != true then
 				self:VJ_ACT_PLAYACTIVITY(anim, true, false, false)
@@ -1156,7 +1181,7 @@ function ENT:DoConstantlyFaceEnemy()
 		if self.ConstantlyFaceEnemy_IfVisible && !self.EnemyData.IsVisible then
 			return false
 		-- Do NOT face if attacking ?
-		elseif self.ConstantlyFaceEnemy_IfAttacking == false && self.AttackType != VJ_ATTACK_NONE then
+		elseif self.ConstantlyFaceEnemy_IfAttacking == false && self.AttackType != VJ.ATTACK_TYPE_NONE then
 			return false
 		elseif (self.ConstantlyFaceEnemy_Postures == "Both") or (self.ConstantlyFaceEnemy_Postures == "Moving" && self:IsMoving()) or (self.ConstantlyFaceEnemy_Postures == "Standing" && !self:IsMoving()) then
 			self:FaceCertainEntity(self:GetEnemy())
@@ -1223,7 +1248,7 @@ function ENT:VJ_PlaySequence(seq, playbackRate, reset, resetTime, interruptible)
 	
 	self:ClearSchedule()
 	self:StopMoving()
-	self:ResetSequence(self:LookupSequence(VJ_PICK(seq)))
+	self:ResetSequence(self:LookupSequence(VJ.PICK(seq)))
 	self:ResetSequenceInfo()
 	self:SetCycle(0) -- Start from the beginning
 	if isnumber(playbackRate) then
@@ -1323,7 +1348,7 @@ function ENT:SetupRelationships()
 			local vNPC = v:IsNPC()
 			local vPlayer = v:IsPlayer()
 			if vClass != self:GetClass() && (vPlayer or (vNPC && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
-				local inEneTbl = VJ_HasValue(self.VJ_AddCertainEntityAsEnemy, v)
+				local inEneTbl = VJ.HasValue(self.VJ_AddCertainEntityAsEnemy, v)
 				if self.HasAllies == true && inEneTbl == false then
 					for _,friClass in ipairs(self.VJ_NPC_Class) do
 						if friClass == varCPly && self.PlayerFriendly == false then self.PlayerFriendly = true end -- If player ally then set the PlayerFriendly to true
@@ -1333,7 +1358,7 @@ function ENT:SetupRelationships()
 							self:AddEntityRelationship(v, D_LI, 0)
 							entFri = true
 						end
-						if (v.VJ_NPC_Class && VJ_HasValue(v.VJ_NPC_Class, friClass)) or (entFri == true) then
+						if (v.VJ_NPC_Class && VJ.HasValue(v.VJ_NPC_Class, friClass)) or (entFri == true) then
 							if friClass == varCPly then -- If we have the player ally class then check if we both of us are supposed to be friends
 								if self.FriendsWithAllPlayerAllies == true && v.FriendsWithAllPlayerAllies == true then
 									entFri = true
@@ -1448,7 +1473,7 @@ function ENT:SetupRelationships()
 						self.NextFollowUpdateT = CurTime() + 2
 						self:PlaySoundSystem("MoveOutOfPlayersWay")
 						//self:SetLastPosition(myPos + self:GetRight()*math.random(-50,-50))
-						self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run))
+						self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run))
 						local vsched = vj_ai_schedule.New("vj_move_away")
 						vsched:EngTask("TASK_MOVE_AWAY_PATH", 120)
 						vsched:EngTask("TASK_RUN_PATH", 0)
@@ -1495,12 +1520,12 @@ function ENT:SetupRelationships()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Allies_CallHelp(dist)
-	if !self.CallForHelp or self.AttackType == VJ_ATTACK_GRENADE then return false end
+	if !self.CallForHelp or self.AttackType == VJ.ATTACK_TYPE_GRENADE then return false end
 	local entsTbl = ents.FindInSphere(self:GetPos(), dist)
 	if (!entsTbl) then return false end
 	local myClass = self:GetClass()
 	for _,v in ipairs(entsTbl) do
-		if v:IsNPC() && v != self && v.IsVJBaseSNPC && VJ_IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& v.IsFollowing == false*/ && !v.VJ_IsBeingControlled && (!v.IsVJBaseSNPC_Tank) && v.CallForHelp then
+		if v:IsNPC() && v != self && v.IsVJBaseSNPC && VJ.IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& v.IsFollowing == false*/ && !v.VJ_IsBeingControlled && (!v.IsVJBaseSNPC_Tank) && v.CallForHelp then
 			local ene = self:GetEnemy()
 			if IsValid(ene) then
 				if v:GetPos():Distance(ene:GetPos()) > v:GetMaxLookDistance() then continue end -- Enemy to far away for ally, discontinue!
@@ -1511,7 +1536,7 @@ function ENT:Allies_CallHelp(dist)
 					self:PlaySoundSystem("CallForHelp")
 					-- Play the animation
 					if self.HasCallForHelpAnimation == true && CurTime() > self.NextCallForHelpAnimationT then
-						local pickanim = VJ_PICK(self.AnimTbl_CallForHelp)
+						local pickanim = VJ.PICK(self.AnimTbl_CallForHelp)
 						self:VJ_ACT_PLAYACTIVITY(pickanim, self.CallForHelpStopAnimations, self:DecideAnimationLength(pickanim, self.CallForHelpStopAnimationsTime), self.CallForHelpAnimationFaceEnemy, self.CallForHelpAnimationDelay, {PlayBackRate=self.CallForHelpAnimationPlayBackRate, PlayBackRateCalculated=true})
 						self.NextCallForHelpAnimationT = CurTime() + self.NextCallForHelpAnimationTime
 					end
@@ -1542,7 +1567,7 @@ function ENT:Allies_Check(dist)
 	local FoundAlliesTbl = {}
 	local it = 0
 	for _, v in ipairs(entsTbl) do
-		if VJ_IsAlive(v) == true && v:IsNPC() && v != self && (v:GetClass() == self:GetClass() or (v:Disposition(self) == D_LI or v.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
+		if VJ.IsAlive(v) == true && v:IsNPC() && v != self && (v:GetClass() == self:GetClass() or (v:Disposition(self) == D_LI or v.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
 			if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
 				if v.Behavior == VJ_BEHAVIOR_PASSIVE or v.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
 					it = it + 1
@@ -1571,7 +1596,7 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 	local myClass = self:GetClass()
 	local it = 0
 	for _, v in ipairs(entsTbl) do
-		if VJ_IsAlive(v) == true && v:IsNPC() && v != self && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && v.IsFollowing == false && v.VJ_IsBeingControlled == false && !v.IsGuard && (!v.IsVJBaseSNPC_Tank) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
+		if VJ.IsAlive(v) == true && v:IsNPC() && v != self && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && v.IsFollowing == false && v.VJ_IsBeingControlled == false && !v.IsGuard && (!v.IsVJBaseSNPC_Tank) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
 			if onlyVis == true && !v:Visible(self) then continue end
 			if !IsValid(v:GetEnemy()) && self:GetPos():Distance(v:GetPos()) < dist then
 				self.NextWanderTime = CurTime() + 8
@@ -1663,7 +1688,7 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 		self.CurAttackAnimTime = 0
 		local animTbl = self.AnimTbl_Flinch
 		if HitgroupInfo != nil then animTbl = HitgroupInfo.Animation end
-		local anim = VJ_PICK(animTbl)
+		local anim = VJ.PICK(animTbl)
 		local animDur = self.NextMoveAfterFlinchTime == false and self:DecideAnimationLength(anim, false, self.FlinchAnimationDecreaseLengthAmount) or self.NextMoveAfterFlinchTime
 		self:VJ_ACT_PLAYACTIVITY(anim, true, animDur, false, 0, {SequenceDuration=animDur, PlayBackRateCalculated=true})
 		timer.Create("timer_act_flinching"..self:EntIndex(), animDur, 1, function() self.Flinching = false end)
@@ -1706,15 +1731,15 @@ function ENT:SetupBloodColor(blColor)
 	blColor = blColor or ""
 	if blColor == "" then return end -- If it's empty then return
 	if blColor == "Red" then
-		if !VJ_PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"blood_impact_red_01"} end // vj_impact1_red
-		if !VJ_PICK(self.CustomBlood_Decal) then
+		if !VJ.PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"blood_impact_red_01"} end // vj_impact1_red
+		if !VJ.PICK(self.CustomBlood_Decal) then
 			if self.BloodDecalUseGMod == true then
 				self.CustomBlood_Decal = {"Blood"}
 			else
 				self.CustomBlood_Decal = {"VJ_Blood_Red"}
 			end
 		end
-		if !VJ_PICK(self.CustomBlood_Pool) then
+		if !VJ.PICK(self.CustomBlood_Pool) then
 			if self.BloodPoolSize == "Small" then
 				self.CustomBlood_Pool = {"vj_bleedout_red_small"}
 			elseif self.BloodPoolSize == "Tiny" then
@@ -1724,15 +1749,15 @@ function ENT:SetupBloodColor(blColor)
 			end
 		end
 	elseif blColor == "Yellow" then
-		if !VJ_PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"blood_impact_yellow_01"} end // vj_impact1_yellow
-		if !VJ_PICK(self.CustomBlood_Decal) then
+		if !VJ.PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"blood_impact_yellow_01"} end // vj_impact1_yellow
+		if !VJ.PICK(self.CustomBlood_Decal) then
 			if self.BloodDecalUseGMod == true then
 				self.CustomBlood_Decal = {"YellowBlood"}
 			else
 				self.CustomBlood_Decal = {"VJ_Blood_Yellow"}
 			end
 		end
-		if !VJ_PICK(self.CustomBlood_Pool) then
+		if !VJ.PICK(self.CustomBlood_Pool) then
 			if self.BloodPoolSize == "Small" then
 				self.CustomBlood_Pool = {"vj_bleedout_yellow_small"}
 			elseif self.BloodPoolSize == "Tiny" then
@@ -1742,9 +1767,9 @@ function ENT:SetupBloodColor(blColor)
 			end
 		end
 	elseif blColor == "Green" then
-		if !VJ_PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_green"} end
-		if !VJ_PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Green"} end
-		if !VJ_PICK(self.CustomBlood_Pool) then
+		if !VJ.PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_green"} end
+		if !VJ.PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Green"} end
+		if !VJ.PICK(self.CustomBlood_Pool) then
 			if self.BloodPoolSize == "Small" then
 				self.CustomBlood_Pool = {"vj_bleedout_green_small"}
 			elseif self.BloodPoolSize == "Tiny" then
@@ -1754,9 +1779,9 @@ function ENT:SetupBloodColor(blColor)
 			end
 		end
 	elseif blColor == "Orange" then
-		if !VJ_PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_orange"} end
-		if !VJ_PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Orange"} end
-		if !VJ_PICK(self.CustomBlood_Pool) then
+		if !VJ.PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_orange"} end
+		if !VJ.PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Orange"} end
+		if !VJ.PICK(self.CustomBlood_Pool) then
 			if self.BloodPoolSize == "Small" then
 				self.CustomBlood_Pool = {"vj_bleedout_orange_small"}
 			elseif self.BloodPoolSize == "Tiny" then
@@ -1766,9 +1791,9 @@ function ENT:SetupBloodColor(blColor)
 			end
 		end
 	elseif blColor == "Blue" then
-		if !VJ_PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_blue"} end
-		if !VJ_PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Blue"} end
-		if !VJ_PICK(self.CustomBlood_Pool) then
+		if !VJ.PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_blue"} end
+		if !VJ.PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Blue"} end
+		if !VJ.PICK(self.CustomBlood_Pool) then
 			if self.BloodPoolSize == "Small" then
 				self.CustomBlood_Pool = {"vj_bleedout_blue_small"}
 			elseif self.BloodPoolSize == "Tiny" then
@@ -1778,9 +1803,9 @@ function ENT:SetupBloodColor(blColor)
 			end
 		end
 	elseif blColor == "Purple" then
-		if !VJ_PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_purple"} end
-		if !VJ_PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Purple"} end
-		if !VJ_PICK(self.CustomBlood_Pool) then
+		if !VJ.PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_purple"} end
+		if !VJ.PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Purple"} end
+		if !VJ.PICK(self.CustomBlood_Pool) then
 			if self.BloodPoolSize == "Small" then
 				self.CustomBlood_Pool = {"vj_bleedout_purple_small"}
 			elseif self.BloodPoolSize == "Tiny" then
@@ -1790,9 +1815,9 @@ function ENT:SetupBloodColor(blColor)
 			end
 		end
 	elseif blColor == "White" then
-		if !VJ_PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_white"} end
-		if !VJ_PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_White"} end
-		if !VJ_PICK(self.CustomBlood_Pool) then
+		if !VJ.PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_white"} end
+		if !VJ.PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_White"} end
+		if !VJ.PICK(self.CustomBlood_Pool) then
 			if self.BloodPoolSize == "Small" then
 				self.CustomBlood_Pool = {"vj_bleedout_white_small"}
 			elseif self.BloodPoolSize == "Tiny" then
@@ -1802,9 +1827,9 @@ function ENT:SetupBloodColor(blColor)
 			end
 		end
 	elseif blColor == "Oil" then
-		if !VJ_PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_black"} end
-		if !VJ_PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Oil"} end
-		if !VJ_PICK(self.CustomBlood_Pool) then
+		if !VJ.PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_black"} end
+		if !VJ.PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Oil"} end
+		if !VJ.PICK(self.CustomBlood_Pool) then
 			if self.BloodPoolSize == "Small" then
 				self.CustomBlood_Pool = {"vj_bleedout_oil_small"}
 			elseif self.BloodPoolSize == "Tiny" then
@@ -1817,7 +1842,7 @@ function ENT:SetupBloodColor(blColor)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodParticles(dmginfo, hitgroup)
-	local name = VJ_PICK(self.CustomBlood_Particle)
+	local name = VJ.PICK(self.CustomBlood_Particle)
 	if name == false then return end
 	
 	local pos = dmginfo:GetDamagePosition()
@@ -1833,7 +1858,7 @@ function ENT:SpawnBloodParticles(dmginfo, hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodDecal(dmginfo, hitgroup)
-	if VJ_PICK(self.CustomBlood_Decal) == false then return end
+	if VJ.PICK(self.CustomBlood_Decal) == false then return end
 	local force = dmginfo:GetDamageForce()
 	local pos = dmginfo:GetDamagePosition()
 	if pos == defPos then pos = self:GetPos() + self:OBBCenter() end
@@ -1843,16 +1868,16 @@ function ENT:SpawnBloodDecal(dmginfo, hitgroup)
 	//if !tr.HitWorld then return end
 	local trNormalP = tr.HitPos + tr.HitNormal
 	local trNormalN = tr.HitPos - tr.HitNormal
-	util.Decal(VJ_PICK(self.CustomBlood_Decal), trNormalP, trNormalN, self)
+	util.Decal(VJ.PICK(self.CustomBlood_Decal), trNormalP, trNormalN, self)
 	for _ = 1, 2 do
-		if math.random(1, 2) == 1 then util.Decal(VJ_PICK(self.CustomBlood_Decal), trNormalP + Vector(math.random(-70,70), math.random(-70,70), 0), trNormalN, self) end
+		if math.random(1, 2) == 1 then util.Decal(VJ.PICK(self.CustomBlood_Decal), trNormalP + Vector(math.random(-70,70), math.random(-70,70), 0), trNormalN, self) end
 	end
 	
 	-- Kedni ayroun
 	if math.random(1,2) == 1 then
 		local d2_endpos = pos + Vector(0, 0, - math_clamp(force:Length() * 10, 100, self.BloodDecalDistance))
-		util.Decal(VJ_PICK(self.CustomBlood_Decal), pos, d2_endpos, self)
-		if math.random(1, 2) == 1 then util.Decal(VJ_PICK(self.CustomBlood_Decal), pos, d2_endpos + Vector(math.random(-120,120), math.random(-120,120), 0), self) end
+		util.Decal(VJ.PICK(self.CustomBlood_Decal), pos, d2_endpos, self)
+		if math.random(1, 2) == 1 then util.Decal(VJ.PICK(self.CustomBlood_Decal), pos, d2_endpos + Vector(math.random(-120,120), math.random(-120,120), 0), self) end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1861,7 +1886,7 @@ local vecZ1 = Vector(0, 0, 1)
 --
 function ENT:SpawnBloodPool(dmginfo, hitgroup)
 	if !IsValid(self.Corpse) then return end
-	local getBloodPool = VJ_PICK(self.CustomBlood_Pool)
+	local getBloodPool = VJ.PICK(self.CustomBlood_Pool)
 	if getBloodPool == false then return end
 	local corpseEnt = self.Corpse
 	timer.Simple(2.2, function()
@@ -1883,25 +1908,25 @@ end
 function ENT:IdleSoundCode(customSd, sdType)
 	if !self.HasSounds or !self.HasIdleSounds or self.Dead then return end
 	if (self.NextIdleSoundT_RegularChange < CurTime()) && (CurTime() > self.NextIdleSoundT) then
-		sdType = sdType or VJ_CreateSound
+		sdType = sdType or VJ.CreateSound
 		
 		local hasEnemy = IsValid(self:GetEnemy()) -- Ayo yete teshnami ouni
 		-- Yete CombatIdle tsayn chouni YEV gerna barz tsayn hanel, ere vor barz tsayn han e
-		if hasEnemy && VJ_PICK(self.SoundTbl_CombatIdle) == false && !self.IdleSounds_NoRegularIdleOnAlerted then
+		if hasEnemy && VJ.PICK(self.SoundTbl_CombatIdle) == false && !self.IdleSounds_NoRegularIdleOnAlerted then
 			hasEnemy = false
 		end
 		
-		local cTbl = VJ_PICK(customSd)
+		local cTbl = VJ.PICK(customSd)
 		local setTimer = true
 		if hasEnemy == true then
-			local sdtbl = VJ_PICK(self.SoundTbl_CombatIdle)
+			local sdtbl = VJ.PICK(self.SoundTbl_CombatIdle)
 			if (math.random(1,self.CombatIdleSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 				if cTbl != false then sdtbl = cTbl end
 				self.CurrentIdleSound = sdType(self, sdtbl, self.CombatIdleSoundLevel, self:VJ_DecideSoundPitch(self.CombatIdleSoundPitch.a, self.CombatIdleSoundPitch.b))
 			end
 		else
-			local sdtbl = VJ_PICK(self.SoundTbl_Idle)
-			local sdtbl2 = VJ_PICK(self.SoundTbl_IdleDialogue)
+			local sdtbl = VJ.PICK(self.SoundTbl_Idle)
+			local sdtbl2 = VJ.PICK(self.SoundTbl_IdleDialogue)
 			local sdrand = math.random(1, self.IdleSoundChance)
 			local function RegularIdle()
 				if (sdrand == 1 && sdtbl != false) or (cTbl != false) then
@@ -1974,7 +1999,7 @@ function ENT:IdleDialogueFindEnt()
 				returnEnt = v
 			end
 		elseif v != self && ((self:GetClass() == v:GetClass()) or (v:IsNPC() && self:CheckRelationship(v) == D_LI)) && self:Visible(v) then
-			local canAnswer = (v.IsVJBaseSNPC and VJ_PICK(v.SoundTbl_IdleDialogueAnswer)) or false
+			local canAnswer = (v.IsVJBaseSNPC and VJ.PICK(v.SoundTbl_IdleDialogueAnswer)) or false
 			if !self:CustomOnIdleDialogue(v, "CheckEnt", canAnswer) then
 				returnEnt = v
 				if v.IsVJBaseSNPC && !v.Dead && canAnswer then -- VJ NPC hit!
@@ -1988,9 +2013,9 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IdleDialogueAnswerSoundCode(customSd, sdType)
 	if self.Dead or self.HasSounds == false or self.HasIdleDialogueAnswerSounds == false then return 0 end
-	sdType = sdType or VJ_CreateSound
-	local cTbl = VJ_PICK(customSd)
-	local sdtbl = VJ_PICK(self.SoundTbl_IdleDialogueAnswer)
+	sdType = sdType or VJ.CreateSound
+	local cTbl = VJ.PICK(customSd)
+	local sdtbl = VJ.PICK(self.SoundTbl_IdleDialogueAnswer)
 	if (math.random(1,self.IdleDialogueAnswerSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 		if cTbl != false then sdtbl = cTbl end
 		self:StopAllCommonSpeechSounds()
@@ -2052,10 +2077,10 @@ local gib_sd4 = "vj_gib/gibbing3.wav"
 function ENT:PlayGibOnDeathSounds(dmginfo, hitgroup)
 	if self.HasGibOnDeathSounds == false then return end
 	if self:CustomGibOnDeathSounds(dmginfo, hitgroup) == true then
-		VJ_EmitSound(self, gib_sd1, 90, math.random(80, 100))
-		VJ_EmitSound(self, gib_sd2, 90, math.random(80, 100))
-		VJ_EmitSound(self, gib_sd3, 90, math.random(80, 100))
-		VJ_EmitSound(self, gib_sd4, 90, math.random(80, 100))
+		VJ.EmitSound(self, gib_sd1, 90, math.random(80, 100))
+		VJ.EmitSound(self, gib_sd2, 90, math.random(80, 100))
+		VJ.EmitSound(self, gib_sd3, 90, math.random(80, 100))
+		VJ.EmitSound(self, gib_sd4, 90, math.random(80, 100))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2085,7 +2110,7 @@ function ENT:RunItemDropsOnDeathCode(dmginfo, hitgroup)
 	if self.HasItemDropsOnDeath == false then return end
 	if math.random(1, self.ItemDropsOnDeathChance) == 1 then
 		self:CustomRareDropsOnDeathCode(dmginfo, hitgroup)
-		local pickedEnt = VJ_PICK(self.ItemDropsOnDeath_EntityList)
+		local pickedEnt = VJ.PICK(self.ItemDropsOnDeath_EntityList)
 		if pickedEnt != false then
 			local ent = ents.Create(pickedEnt)
 			ent:SetPos(self:GetPos() + self:OBBCenter())
@@ -2157,16 +2182,16 @@ if self.FindEnemy_UseSphere == true then
 	self:FindEnemySphere()
 end
 //if self.UseConeForFindEnemy == false then return end -- NOTE: This function got crossed out because the option at the top got deleted!
-local EnemyTargets = VJ_FindInCone(self:GetPos(),self:GetForward(),self.SightDistance,self.SightAngle)
+local EnemyTargets = VJ.FindInCone(self:GetPos(),self:GetForward(),self.SightDistance,self.SightAngle)
 //local LocalTargetTable = {}
 if (!EnemyTargets) then return end
 //table.Add(EnemyTargets)
 for k,v in ipairs(EnemyTargets) do
 	//if (v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag") && v:IsNPC() or (v:IsPlayer() && self.PlayerFriendly == false && !VJ_CVAR_IGNOREPLAYERS) && self:Visible(v) then
-	//if self.CombineFriendly == true then if VJ_HasValue(NPCTbl_Combine,v:GetClass()) then return end end
-	//if self.ZombieFriendly == true then if VJ_HasValue(NPCTbl_Zombies,v:GetClass()) then return end end
-	//if self.AntlionFriendly == true then if VJ_HasValue(NPCTbl_Antlions,v:GetClass()) then return end end
-	//if self.PlayerFriendly == true then if VJ_HasValue(NPCTbl_Resistance,v:GetClass()) then return end end
+	//if self.CombineFriendly == true then if VJ.HasValue(NPCTbl_Combine,v:GetClass()) then return end end
+	//if self.ZombieFriendly == true then if VJ.HasValue(NPCTbl_Zombies,v:GetClass()) then return end end
+	//if self.AntlionFriendly == true then if VJ.HasValue(NPCTbl_Antlions,v:GetClass()) then return end end
+	//if self.PlayerFriendly == true then if VJ.HasValue(NPCTbl_Resistance,v:GetClass()) then return end end
 	//if GetConVar("vj_npc_vjfriendly"):GetInt() == 1 then
 	//local frivj = ents.FindByClass("npc_vj_*") table.Add(frivj) for _, x in ipairs(frivj) do return end end
 	//local vjanimalfriendly = ents.FindByClass("npc_vjanimal_*") table.Add(vjanimalfriendly) for _, x in ipairs(vjanimalfriendly) do return end

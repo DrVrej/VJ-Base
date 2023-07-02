@@ -51,7 +51,7 @@ function SWEP:CustomOnPrimaryAttack_AfterShoot()
 		timer.Simple(0.2, function()
 			if IsValid(self) && IsValid(owner) && owner:IsPlayer() then
 				self:EmitSound(Sound("weapons/shotgun/shotgun_cock.wav"), 80, 100)
-				local animTime = VJ_GetSequenceDuration(owner:GetViewModel(), ACT_SHOTGUN_PUMP)
+				local animTime = VJ.AnimDuration(owner:GetViewModel(), ACT_SHOTGUN_PUMP)
 				self:SendWeaponAnim(ACT_SHOTGUN_PUMP)
 				self.NextIdleT = CurTime() + animTime
 				self.NextReloadT = CurTime() + animTime

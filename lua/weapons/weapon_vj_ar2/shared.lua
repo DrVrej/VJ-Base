@@ -16,7 +16,7 @@ SWEP.NPC_HasSecondaryFire = true -- Can the weapon have a secondary fire?
 SWEP.NPC_SecondaryFireEnt = "obj_vj_combineball"
 SWEP.NPC_SecondaryFireDistance = 3000 -- How close does the owner's enemy have to be for it to fire?
 SWEP.NPC_SecondaryFireChance = 4 -- Chance that the secondary fire is used | 1 = always
-SWEP.NPC_SecondaryFireNext = VJ_Set(15, 20) -- How much time until the secondary fire can be used again?
+SWEP.NPC_SecondaryFireNext = VJ.SET(15, 20) -- How much time until the secondary fire can be used again?
 SWEP.NPC_NextPrimaryFire = 0.9 -- Next time it can use primary fire
 SWEP.NPC_TimeUntilFire = 0.1 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_TimeUntilFireExtraTimers = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6} -- Extra timers, which will make the gun fire again! | The seconds are counted after the self.NPC_TimeUntilFire!
@@ -49,7 +49,7 @@ SWEP.ReloadSound				= "weapons/ar2/ar2_reload.wav"
 SWEP.Reload_TimeUntilAmmoIsSet	= 0.8 -- Time until ammo is set to the weapon
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_SecondaryFire_BeforeTimer(eneEnt, fireTime)
-	VJ_EmitSound(self, "weapons/cguard/charging.wav", 70)
+	VJ.EmitSound(self, "weapons/cguard/charging.wav", 70)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_SecondaryFire()
@@ -67,25 +67,25 @@ function SWEP:NPC_SecondaryFire()
 		phys:SetVelocity(owner:CalculateProjectile("Line", pos, owner.EnemyData.LastVisiblePos, 2000))
 	end
 
-	VJ_CreateSound(self, "weapons/irifle/irifle_fire2.wav", 90)
+	VJ.CreateSound(self, "weapons/irifle/irifle_fire2.wav", 90)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnSecondaryAttack()
 	local owner = self:GetOwner()
 	local vm = owner:GetViewModel()
-	local fidgetTime = VJ_GetSequenceDuration(vm, ACT_VM_FIDGET)
-	local fireTime = VJ_GetSequenceDuration(vm, ACT_VM_SECONDARYATTACK)
+	local fidgetTime = VJ.AnimDuration(vm, ACT_VM_FIDGET)
+	local fireTime = VJ.AnimDuration(vm, ACT_VM_SECONDARYATTACK)
 	local totalTime = fidgetTime + fireTime
 	local curTime = CurTime()
 	self:SetNextSecondaryFire(curTime + totalTime)
 	self.NextIdleT = curTime + totalTime
 	self.NextReloadT = curTime + totalTime
 	self:SendWeaponAnim(ACT_VM_FIDGET)
-	VJ_CreateSound(self, "weapons/cguard/charging.wav", 85)
+	VJ.CreateSound(self, "weapons/cguard/charging.wav", 85)
 	
 	timer.Simple(fidgetTime, function()
 		if IsValid(self) && IsValid(owner) && owner:GetActiveWeapon() == self then
-			VJ_CreateSound(self, "weapons/irifle/irifle_fire2.wav", 90)
+			VJ.CreateSound(self, "weapons/irifle/irifle_fire2.wav", 90)
 
 			local proj = ents.Create(self.NPC_SecondaryFireEnt)
 			proj:SetPos(owner:GetShootPos())

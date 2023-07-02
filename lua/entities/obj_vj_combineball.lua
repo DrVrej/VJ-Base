@@ -42,7 +42,7 @@ ENT.DecalTbl_DeathDecals = {"Scorch"}
 ENT.SoundTbl_Idle = {"weapons/physcannon/energy_sing_loop4.wav"}
 ENT.SoundTbl_OnCollide = {"weapons/physcannon/energy_bounce1.wav","weapons/physcannon/energy_bounce2.wav"}
 
-ENT.IdleSoundPitch = VJ_Set(100, 100)
+ENT.IdleSoundPitch = VJ.SET(100, 100)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomPhysicsObjectOnInitialize(phys)
 	phys:Wake()
@@ -119,7 +119,7 @@ function ENT:CustomOnPhysicsCollide(data, phys)
 	local owner = self:GetOwner()
 	local hitEnt = data.HitEntity
 	if IsValid(owner) then
-		if (VJ_IsProp(hitEnt)) or (owner:IsNPC() && owner:CheckRelationship(hitEnt) == D_HT && (hitEnt != owner) or true) then
+		if (VJ.IsProp(hitEnt)) or (owner:IsNPC() && owner:CheckRelationship(hitEnt) == D_HT && (hitEnt != owner) or true) then
 			self:CustomOnDoDamage_Direct(data, phys, hitEnt)
 			local dmgInfo = DamageInfo()
 			dmgInfo:SetDamage(self.DirectDamage)
@@ -127,8 +127,8 @@ function ENT:CustomOnPhysicsCollide(data, phys)
 			dmgInfo:SetAttacker(owner)
 			dmgInfo:SetInflictor(self)
 			dmgInfo:SetDamagePosition(data.HitPos)
+			VJ.DamageSpecialEnts(owner, hitEnt, dmgInfo)
 			hitEnt:TakeDamageInfo(dmgInfo, self)
-			VJ_DestroyCombineTurret(owner, hitEnt)
 		end
 	else
 		self:CustomOnDoDamage_Direct(data, phys, hitEnt)
@@ -138,8 +138,8 @@ function ENT:CustomOnPhysicsCollide(data, phys)
 		dmgInfo:SetAttacker(self)
 		dmgInfo:SetInflictor(self)
 		dmgInfo:SetDamagePosition(data.HitPos)
+		VJ.DamageSpecialEnts(self, hitEnt, dmgInfo)
 		hitEnt:TakeDamageInfo(dmgInfo, self)
-		VJ_DestroyCombineTurret(self, hitEnt)
 	end
 
 	if (hitEnt:IsNPC() or hitEnt:IsPlayer()) then return end
@@ -166,7 +166,7 @@ end
 local sdHit = {"weapons/physcannon/energy_disintegrate4.wav", "weapons/physcannon/energy_disintegrate5.wav"}
 --
 function ENT:CustomOnDoDamage_Direct(data, phys, hitEnt)
-	VJ_CreateSound(hitEnt, VJ_PICK(sdHit), 80)
+	VJ.CreateSound(hitEnt, VJ.PICK(sdHit), 80)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local color1 = Color(255, 255, 225, 32)
@@ -181,9 +181,9 @@ function ENT:DeathEffects(data, phys)
 	effectData:SetOrigin(myPos)
 	util.Effect("cball_explode", effectData)
 
-	VJ_EmitSound(self, "weapons/physcannon/energy_sing_explosion2.wav", 150)
+	VJ.EmitSound(self, "weapons/physcannon/energy_sing_explosion2.wav", 150)
 	util.ScreenShake(myPos, 20, 150, 1, 1250)
-	util.VJ_SphereDamage(self, self, myPos, 400, 25, bit.bor(DMG_SONIC, DMG_BLAST), true, true, {DisableVisibilityCheck=true, Force=80})
+	VJ.ApplyRadiusDamage(self, self, myPos, 400, 25, bit.bor(DMG_SONIC, DMG_BLAST), true, true, {DisableVisibilityCheck=true, Force=80})
 
 	self:Remove()
 end

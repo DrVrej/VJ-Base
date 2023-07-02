@@ -1,18 +1,19 @@
 /*--------------------------------------------------
-	=============== Language Files ===============
 	*** Copyright (c) 2012-2023 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
 include('autorun/vj_controls.lua')
 
+if !VJ then VJ = {} end -- If VJ isn't initialized, initialize it!
+
 /*
-	How it works:
+	HOW IT WORKS:
 		* Looks for the current set language and translates all the strings that are given.
 		* If a string isn't translated, it will automatically default to English.
-		* When a updated while in a map, it will try to refresh some of the menus, but many menus requires a map restart!
+		* When updated while in a map, it will attempt to refresh some of the menus, but many menus requires a map restart!
 	
-	How to edit & contribute:
+	HOW TO CONTRIBUTE:
 		* Make any edits in any language you would like.
 		* If a line doesn't exist in your language, then copy & paste it from the default (English) list.
 		* Once you are done translating or editing, you can push the edited file on GitHub.
@@ -23,16 +24,16 @@ include('autorun/vj_controls.lua')
 	A: No worries! Just simply contact me (DrVrej) and I will set up the profile for your language!
 	
 	Q: Someone has already translated my language, how can I contribute now?
-	A: You can go over the translated lines and fix any errors. You can also compare it with the English version and make sure all lines are translated!
+	A: You can go over the translated lines and fix any errors. You can also compare it with the English version and make sure all lines are translated and updated!
 	
-	Thank you to all of your contributions everyone!
+	Thank you everyone that contributed!
 */
 
 VJ.AddClientConVar("vj_language", "english", "The current VJ Base Language") -- The current VJ Base Language
-VJ.AddClientConVar("vj_language_auto", 1, "Automatically Set Language")
+VJ.AddClientConVar("vj_language_auto", 1, "Automatically Set Language") -- Attempt to follow the language GMod itself is set to
 
 if CLIENT then
-	local function add(name, str) -- Aveli tirountsnelou hamar e
+	local function add(name, str)
 		language.Add(name, str)
 	end
 	
@@ -47,7 +48,7 @@ if CLIENT then
 		["zh-CN"] = "schinese"
 	}
 	
-	function VJ_REFRESH_LANGUAGE()
+	function VJ.RefreshLanguage()
 		local conv = GetConVar("vj_language"):GetString()
 		
 		-- Automatically set VJ Base to whatever GMod's language is set to
@@ -1843,5 +1844,5 @@ if CLIENT then
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
 		print("VJ Base Language Set To: "..conv)
 	end
-	VJ_REFRESH_LANGUAGE() -- Arachin ankam ganch e, garevor e asiga!
+	VJ.RefreshLanguage() -- Arachin ankam ganch e, garevor e asiga!
 end

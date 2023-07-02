@@ -66,7 +66,7 @@ function ENT:CustomOnPreInitialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize()
-	VJ_EmitSound(self, "player/pl_drown1.wav") -- Player connect sound
+	VJ.EmitSound(self, "player/pl_drown1.wav") -- Player connect sound
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:GetSightDirection()
@@ -77,7 +77,7 @@ end
 function ENT:CustomOnGrenadeAttack_OnThrow(grenEnt)
 	-- Custom grenade model and sounds
 	grenEnt.SoundTbl_Idle = {"weapons/grenade/tick1.wav"}
-	grenEnt.IdleSoundPitch = VJ_Set(100, 100)
+	grenEnt.IdleSoundPitch = VJ.SET(100, 100)
 	
 	local redGlow = ents.Create("env_sprite")
 	redGlow:SetKeyValue("model", "vj_base/sprites/vj_glow1.vmt")

@@ -10,7 +10,7 @@ function EFFECT:Init(data)
 	if !IsValid(owner) then return end
 	local muzEnt = ((owner != LocalPlayer()) or owner:ShouldDrawLocalPlayer()) && ent or owner:GetViewModel()
 			--  (if the owner isn't the local player OR the owner is in third person, then use world model) OR (Use the owner's viewmodel)
-	ParticleEffectAttach(VJ_PICK(ent.PrimaryEffects_MuzzleParticles), PATTACH_POINT, muzEnt, data:GetAttachment())
+	ParticleEffectAttach(VJ.PICK(ent.PrimaryEffects_MuzzleParticles), PATTACH_POINT, muzEnt, data:GetAttachment())
 
 	-- Muzzle Flash
 /*

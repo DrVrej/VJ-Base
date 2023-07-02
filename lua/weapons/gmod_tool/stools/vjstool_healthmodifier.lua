@@ -85,7 +85,7 @@ function TOOL:LeftClick(tr)
 					if trent.IsVJBaseSNPC == true && self:GetClientNumber("healthregen") == 1 then
 						trent.HasHealthRegeneration = true
 						trent.HealthRegenerationAmount = self:GetClientNumber("healthregen_amt")
-						trent.HealthRegenerationDelay = VJ_Set(self:GetClientNumber("healthregen_delay"), self:GetClientNumber("healthregen_delay"))
+						trent.HealthRegenerationDelay = VJ.SET(self:GetClientNumber("healthregen_delay"), self:GetClientNumber("healthregen_delay"))
 					end
 				end
 				return true
@@ -113,7 +113,7 @@ function TOOL:RightClick(tr)
 					if trent.IsVJBaseSNPC == true && self:GetClientNumber("healthregen") == 1 then
 						trent.HasHealthRegeneration = true
 						trent.HealthRegenerationAmount = self:GetClientNumber("healthregen_amt")
-						trent.HealthRegenerationDelay = VJ_Set(self:GetClientNumber("healthregen_delay"), self:GetClientNumber("healthregen_delay"))
+						trent.HealthRegenerationDelay = VJ.SET(self:GetClientNumber("healthregen_delay"), self:GetClientNumber("healthregen_delay"))
 					end
 				end
 				return true

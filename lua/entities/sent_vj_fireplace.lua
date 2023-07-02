@@ -74,7 +74,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	if self.FirePlaceOn == false then
-		VJ_STOPSOUND(self.firesd)
+		VJ.STOPSOUND(self.firesd)
 		self:StopParticles()
 	end
 end
@@ -92,7 +92,7 @@ function ENT:Use(activator, caller)
 		self:SetNW2Bool("VJ_FirePlace_Activated", false)
 		self.FirePlaceOn = false
 		self:StopParticles()
-		VJ_STOPSOUND(self.firesd)
+		VJ.STOPSOUND(self.firesd)
 		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.fireplace.deactivated")
 	end
 end
@@ -113,5 +113,5 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
 	self:StopParticles()
-	VJ_STOPSOUND(self.firesd)
+	VJ.STOPSOUND(self.firesd)
 end

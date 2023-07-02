@@ -41,7 +41,7 @@ SWEP.ReloadSound = {"weapons/smg1/smg1_reload.wav"}
 function SWEP:CustomOnSecondaryAttack()
 	local owner = self:GetOwner()
 	owner:ViewPunch(Angle(-self.Primary.Recoil *3, 0, 0))
-	VJ_EmitSound(self, "weapons/ar2/ar2_altfire.wav", 85)
+	VJ.EmitSound(self, "weapons/ar2/ar2_altfire.wav", 85)
 
 	local proj = ents.Create(self.NPC_SecondaryFireEnt)
 	proj:SetPos(owner:GetShootPos())

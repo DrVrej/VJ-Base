@@ -22,9 +22,9 @@ function ENT:CustomOnInitialize()
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:ResetSequence("Idle")
 	
-	self.WaveSound = VJ_CreateSound(self, "vj_misc/flag_loop.wav", 60)
+	self.WaveSound = VJ.CreateSound(self, "vj_misc/flag_loop.wav", 60)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
-	VJ_STOPSOUND(self.WaveSound)
+	VJ.STOPSOUND(self.WaveSound)
 end

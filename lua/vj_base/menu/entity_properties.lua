@@ -1,12 +1,8 @@
 /*--------------------------------------------------
-	=============== VJ Properties ===============
 	*** Copyright (c) 2012-2023 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
-
-AddCSLuaFile()
-
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("CanProperty", "VJ_PLY_CAN_PROPERTY", function(ply, property, ent)
 	if GetConVar("vj_npc_admin_properties"):GetInt() == 1 && !ply:IsAdmin() && property == "vj_npc_properties" then ply:ChatPrint("#vjbase.menuproperties.print.adminonly") return false end

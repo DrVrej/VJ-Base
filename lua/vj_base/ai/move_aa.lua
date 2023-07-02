@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- AERIAL & AQUATIC BASE --
 // MOVETYPE_FLY | MOVETYPE_FLYGRAVITY
-ENT.CurrentAnim_AAMovement = nil
+ENT.AA_CurrentMoveAnimation = false -- false = No animation set | -1 = Don't play an animation
 ENT.AA_NextMovementAnimTime = 0
 ENT.AA_CurrentMoveAnimationType = "Calm" -- "Calm" | "Alert"
 ENT.AA_CurrentMoveMaxSpeed = 0
@@ -81,7 +81,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 			})
 			if !tr_aquatic.Hit then self:DoIdleAnimation(1) return end
 			//print(tr_aquatic.Hit)
-			//VJ_CreateTestObject(tr_aquatic.HitPos, self:GetAngles(), Color(255,255,0), 5)
+			//VJ.DEBUG_TempEnt(tr_aquatic.HitPos, self:GetAngles(), Color(255,255,0), 5)
 		-- If the destination is not a vector, then make sure it's reachable
 		else
 			if dest:WaterLevel() <= 1 then
@@ -94,7 +94,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 				})
 				//PrintTable(trene)
 				//print(trene.Hit)
-				//VJ_CreateTestObject(trene.HitPos, self:GetAngles(), Color(0,255,0), 5)
+				//VJ.DEBUG_TempEnt(trene.HitPos, self:GetAngles(), Color(0,255,0), 5)
 				if trene.Hit == true then return end
 				//if IsValid(trene.Entity) && trene.Entity == dest then return end
 			end
@@ -122,8 +122,8 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 		local tr_check2 = util.TraceLine({start = trHitPos, endpos = trHitPos + Vector(0, 0, -self.AA_GroundLimit), filter = {self, dest}})
 		if debug == true then
 			print("checking...")
-			VJ_CreateTestObject(startPos, self:GetAngles(), Color(145,255,0), 5)
-			VJ_CreateTestObject(tr_check1.HitPos, self:GetAngles(), Color(0,183,255), 5)
+			VJ.DEBUG_TempEnt(startPos, self:GetAngles(), Color(145,255,0), 5)
+			VJ.DEBUG_TempEnt(tr_check1.HitPos, self:GetAngles(), Color(0,183,255), 5)
 		end
 		-- If it hit the world, then we are too close to the ground, replace "tr" with a new position!
 		if tr_check1.Hit == true or (tr_check2.Hit == true && !tr_check2.Entity:IsNPC()) then
@@ -157,7 +157,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 				end
 			-- If we have a last destination then move there!
 			elseif self.AA_LastChasePos != nil then
-				if debug == true then VJ_CreateTestObject(self.AA_LastChasePos, self:GetAngles(), Color(0,68,255), 5) end
+				if debug == true then VJ.DEBUG_TempEnt(self.AA_LastChasePos, self:GetAngles(), Color(0,68,255), 5) end
 				self.AA_DoingLastChasePos = true
 				tr = util.TraceHull({
 					start = startPos,
@@ -176,7 +176,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	local trDistStart = startPos:Distance(trHitPos)
 	if debug == true then
 		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam", tr.StartPos, trHitPos, false, self:EntIndex(), 0)//vortigaunt_beam
-		VJ_CreateTestObject(trHitPos, self:GetAngles(), Color(212,0,255), 5)
+		VJ.DEBUG_TempEnt(trHitPos, self:GetAngles(), Color(212,0,255), 5)
 	end
 	
 	local finalPos = trHitPos
@@ -239,10 +239,10 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	
 	-- Animations
 	if playAnim != false then
-		self.CurrentAnim_AAMovement = self.CurrentAnim_AAMovement
+		self.AA_CurrentMoveAnimation = false
 		self.AA_CurrentMoveAnimationType = moveType
 	else
-		self.CurrentAnim_AAMovement = false
+		self.AA_CurrentMoveAnimation = -1
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -289,8 +289,8 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 		local tr_check = util.TraceLine({start = finalPos, endpos = finalPos + Vector(0, 0, -self.AA_GroundLimit), filter = self})
 		if debug == true then
 			print("checking...")
-			VJ_CreateTestObject(finalPos, self:GetAngles(), Color(255,255,255), 5)
-			VJ_CreateTestObject(tr_check.HitPos, self:GetAngles(), Color(255,0,255), 5)
+			VJ.DEBUG_TempEnt(finalPos, self:GetAngles(), Color(255, 255, 255), 5)
+			VJ.DEBUG_TempEnt(tr_check.HitPos, self:GetAngles(), Color(255, 0, 255), 5)
 		end
 		-- If it hit the world, then we are too close to the ground, replace "tr" with a new position!
 		if tr_check.HitWorld == true then
@@ -302,7 +302,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 	end
 	
 	if debug == true then
-		VJ_CreateTestObject(finalPos, self:GetAngles(), Color(0,255,255), 5)
+		VJ.DEBUG_TempEnt(finalPos, self:GetAngles(), Color(0, 255, 255), 5)
 		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam", tr.StartPos, finalPos, false, self:EntIndex(), 0)
 		ParticleEffect("vj_impact1_centaurspit", finalPos, defAng, self)
 	end
@@ -331,10 +331,10 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 	
 	-- Animations
 	if playAnim != false then
-		self.CurrentAnim_AAMovement = self.CurrentAnim_AAMovement
+		self.AA_CurrentMoveAnimation = false
 		self.AA_CurrentMoveAnimationType = moveType
 	else
-		self.CurrentAnim_AAMovement = false
+		self.AA_CurrentMoveAnimation = -1
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -348,18 +348,19 @@ function ENT:AA_ChaseEnemy(playAnim, moveType)
 	self:AA_MoveTo(self:GetEnemy(), playAnim != false, moveType or "Alert", {FaceDestTarget=true, ChaseEnemy=true})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Internal function, handles the movement animations
+-----------------------------------------------------------]]
 function ENT:AA_MoveAnimation()
-	if self:GetSequence() != self.CurrentAnim_AAMovement && self:BusyWithActivity() == false && CurTime() > self.AA_NextMovementAnimTime then
+	if self:GetSequence() != self.AA_CurrentMoveAnimation && self:BusyWithActivity() == false && CurTime() > self.AA_NextMovementAnimTime then
 		local animTbl = {}
 		if self.AA_CurrentMoveAnimationType == "Calm" then
 			animTbl = (self.MovementType == VJ_MOVETYPE_AQUATIC and self.Aquatic_AnimTbl_Calm) or self.Aerial_AnimTbl_Calm
 		elseif self.AA_CurrentMoveAnimationType == "Alert" then
 			animTbl = (self.MovementType == VJ_MOVETYPE_AQUATIC and self.Aquatic_AnimTbl_Alerted) or self.Aerial_AnimTbl_Alerted
 		end
-		local pickedAnim = VJ_PICK(animTbl)
-		if type(pickedAnim) == "number" then pickedAnim = self:GetSequenceName(self:SelectWeightedSequence(pickedAnim)) end
-		self.CurrentAnim_AAMovement = VJ_GetSequenceName(self, pickedAnim)
-		self:VJ_ACT_PLAYACTIVITY(pickedAnim, false, 0, false, 0, {AlwaysUseSequence=true, SequenceDuration=false, SequenceInterruptible=true})
-		self.AA_NextMovementAnimTime = CurTime() + self:DecideAnimationLength(self.CurrentAnim_AAMovement, false)
+		local animDur, animName = self:VJ_ACT_PLAYACTIVITY(VJ.PICK(animTbl), false, 0, false, 0, {AlwaysUseSequence=true, SequenceDuration=false, SequenceInterruptible=true})
+		self.AA_CurrentMoveAnimation = animName
+		self.AA_NextMovementAnimTime = CurTime() + animDur
 	end
 end

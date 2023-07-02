@@ -1,23 +1,20 @@
 /*--------------------------------------------------
-	=============== Files ===============
 	*** Copyright (c) 2012-2023 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
-include('autorun/vj_controls.lua')
-
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Decals ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-game.AddDecal("VJ_AcidSlime1",{"vj_base/decals/vj_acidslime1","vj_base/decals/vj_acidslime2","vj_base/decals/vj_acidslime3","vj_base/decals/vj_acidslime4"})
-game.AddDecal("VJ_Blood_Red",{"vj_base/decals/blood/vj_redblood1","vj_base/decals/blood/vj_redblood2","vj_base/decals/blood/vj_redblood3","vj_base/decals/blood/vj_redblood4","vj_base/decals/blood/vj_redblood5","vj_base/decals/blood/vj_redblood6"})
-game.AddDecal("VJ_Blood_Yellow",{"vj_base/decals/blood/vj_yellowblood1","vj_base/decals/blood/vj_yellowblood2","vj_base/decals/blood/vj_yellowblood3","vj_base/decals/blood/vj_yellowblood4","vj_base/decals/blood/vj_yellowblood5","vj_base/decals/blood/vj_yellowblood6"})
-game.AddDecal("VJ_Blood_Green",{"vj_base/decals/blood/vj_greenblood1","vj_base/decals/blood/vj_greenblood2","vj_base/decals/blood/vj_greenblood3","vj_base/decals/blood/vj_greenblood4","vj_base/decals/blood/vj_greenblood5","vj_base/decals/blood/vj_greenblood6"})
-game.AddDecal("VJ_Blood_Orange",{"vj_base/decals/blood/vj_orangeblood1","vj_base/decals/blood/vj_orangeblood2","vj_base/decals/blood/vj_orangeblood3","vj_base/decals/blood/vj_orangeblood4","vj_base/decals/blood/vj_orangeblood5","vj_base/decals/blood/vj_orangeblood6"})
-game.AddDecal("VJ_Blood_Blue",{"vj_base/decals/blood/vj_blueblood1","vj_base/decals/blood/vj_blueblood2","vj_base/decals/blood/vj_blueblood3","vj_base/decals/blood/vj_blueblood4","vj_base/decals/blood/vj_blueblood5","vj_base/decals/blood/vj_blueblood6"})
-game.AddDecal("VJ_Blood_Purple",{"vj_base/decals/blood/vj_purpleblood1","vj_base/decals/blood/vj_purpleblood2","vj_base/decals/blood/vj_purpleblood3","vj_base/decals/blood/vj_purpleblood4","vj_base/decals/blood/vj_purpleblood5","vj_base/decals/blood/vj_purpleblood6"})
-game.AddDecal("VJ_Blood_White",{"vj_base/decals/blood/vj_whiteblood1","vj_base/decals/blood/vj_whiteblood2","vj_base/decals/blood/vj_whiteblood3","vj_base/decals/blood/vj_whiteblood4","vj_base/decals/blood/vj_whiteblood5","vj_base/decals/blood/vj_whiteblood6"})
-game.AddDecal("VJ_Blood_Oil",{"vj_base/decals/blood/vj_oilblood1","vj_base/decals/blood/vj_oilblood2","vj_base/decals/blood/vj_oilblood3","vj_base/decals/blood/vj_oilblood4","vj_base/decals/blood/vj_oilblood5","vj_base/decals/blood/vj_oilblood6"})
+game.AddDecal("VJ_AcidSlime1", {"vj_base/decals/vj_acidslime1", "vj_base/decals/vj_acidslime2", "vj_base/decals/vj_acidslime3", "vj_base/decals/vj_acidslime4"})
+game.AddDecal("VJ_Blood_Red", {"vj_base/decals/blood/vj_redblood1", "vj_base/decals/blood/vj_redblood2", "vj_base/decals/blood/vj_redblood3", "vj_base/decals/blood/vj_redblood4", "vj_base/decals/blood/vj_redblood5", "vj_base/decals/blood/vj_redblood6"})
+game.AddDecal("VJ_Blood_Yellow", {"vj_base/decals/blood/vj_yellowblood1", "vj_base/decals/blood/vj_yellowblood2", "vj_base/decals/blood/vj_yellowblood3", "vj_base/decals/blood/vj_yellowblood4", "vj_base/decals/blood/vj_yellowblood5", "vj_base/decals/blood/vj_yellowblood6"})
+game.AddDecal("VJ_Blood_Green", {"vj_base/decals/blood/vj_greenblood1", "vj_base/decals/blood/vj_greenblood2", "vj_base/decals/blood/vj_greenblood3", "vj_base/decals/blood/vj_greenblood4", "vj_base/decals/blood/vj_greenblood5", "vj_base/decals/blood/vj_greenblood6"})
+game.AddDecal("VJ_Blood_Orange", {"vj_base/decals/blood/vj_orangeblood1", "vj_base/decals/blood/vj_orangeblood2", "vj_base/decals/blood/vj_orangeblood3", "vj_base/decals/blood/vj_orangeblood4", "vj_base/decals/blood/vj_orangeblood5", "vj_base/decals/blood/vj_orangeblood6"})
+game.AddDecal("VJ_Blood_Blue", {"vj_base/decals/blood/vj_blueblood1", "vj_base/decals/blood/vj_blueblood2", "vj_base/decals/blood/vj_blueblood3", "vj_base/decals/blood/vj_blueblood4", "vj_base/decals/blood/vj_blueblood5", "vj_base/decals/blood/vj_blueblood6"})
+game.AddDecal("VJ_Blood_Purple", {"vj_base/decals/blood/vj_purpleblood1", "vj_base/decals/blood/vj_purpleblood2", "vj_base/decals/blood/vj_purpleblood3", "vj_base/decals/blood/vj_purpleblood4", "vj_base/decals/blood/vj_purpleblood5", "vj_base/decals/blood/vj_purpleblood6"})
+game.AddDecal("VJ_Blood_White", {"vj_base/decals/blood/vj_whiteblood1", "vj_base/decals/blood/vj_whiteblood2", "vj_base/decals/blood/vj_whiteblood3", "vj_base/decals/blood/vj_whiteblood4", "vj_base/decals/blood/vj_whiteblood5", "vj_base/decals/blood/vj_whiteblood6"})
+game.AddDecal("VJ_Blood_Oil", {"vj_base/decals/blood/vj_oilblood1", "vj_base/decals/blood/vj_oilblood2", "vj_base/decals/blood/vj_oilblood3", "vj_base/decals/blood/vj_oilblood4", "vj_base/decals/blood/vj_oilblood5", "vj_base/decals/blood/vj_oilblood6"})
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Model Precaching ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -57,7 +54,7 @@ util.PrecacheModel("models/spitball_small.mdl")
 ------ Fonts ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	surface.CreateFont( "VJFont_Trebuchet24_Large",{
+	surface.CreateFont("VJFont_Trebuchet24_Large", {
 		font = "Trebuchet24",
 		size = 34, -- Size
 		weight = 600, -- Boldness
@@ -66,7 +63,7 @@ if CLIENT then
 		italic = false, -- Is it Italic?
 	})
 
-	surface.CreateFont( "VJFont_Trebuchet24_MediumLarge",{
+	surface.CreateFont("VJFont_Trebuchet24_MediumLarge", {
 		font = "Trebuchet24",
 		size = 26, -- Size
 		weight = 600, -- Boldness
@@ -75,7 +72,7 @@ if CLIENT then
 		italic = false, -- Is it Italic?
 	})
 
-	surface.CreateFont( "VJFont_Trebuchet24_Medium",{
+	surface.CreateFont("VJFont_Trebuchet24_Medium", {
 		font = "Trebuchet24",
 		size = 24, -- Size
 		weight = 600, -- Boldness
@@ -84,7 +81,7 @@ if CLIENT then
 		italic = false, -- Is it Italic?
 	})
 
-	surface.CreateFont( "VJFont_Trebuchet24_SmallMedium",{
+	surface.CreateFont("VJFont_Trebuchet24_SmallMedium", {
 		font = "Trebuchet24",
 		size = 17, -- Size
 		weight = 600, -- Boldness
@@ -93,7 +90,7 @@ if CLIENT then
 		italic = false, -- Is it Italic?
 	})
 
-	surface.CreateFont( "VJFont_Trebuchet24_Small",{
+	surface.CreateFont("VJFont_Trebuchet24_Small", {
 		font = "Trebuchet24",
 		size = 16, -- Size
 		weight = 600, -- Boldness
@@ -102,7 +99,7 @@ if CLIENT then
 		italic = false, -- Is it Italic?
 	})
 
-	surface.CreateFont( "VJFont_Trebuchet24_Tiny",{
+	surface.CreateFont("VJFont_Trebuchet24_Tiny", {
 		font = "Trebuchet24",
 		size = 11, -- Size
 		weight = 600, -- Boldness
@@ -111,7 +108,7 @@ if CLIENT then
 		italic = false, -- Is it Italic?
 	})
 
-	surface.CreateFont( "VJFont_Trebuchet24_TinyItalic",{
+	surface.CreateFont("VJFont_Trebuchet24_TinyItalic", {
 		font = "Trebuchet24",
 		size = 11, -- Size
 		weight = 600, -- Boldness

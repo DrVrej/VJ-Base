@@ -176,7 +176,7 @@ function ENT:Tank_RunOver(ent)
 		self:Tank_CustomOnRunOver(ent)
 		self:Tank_Sound_RunOver()
 		ent:TakeDamage(self:VJ_GetDifficultyValue(8), self, self)
-		VJ_DestroyCombineTurret(self,ent)
+		VJ.DamageSpecialEnts(self, ent, nil)
 		ent:SetVelocity(ent:GetForward()*-200)
 	end
 end
@@ -251,14 +251,14 @@ function ENT:CustomOnThink_AIEnabled()
 			self:Tank_Sound_Moving()
 			self:StartMoveEffects()
 		else -- Not moving
-			VJ_STOPSOUND(self.CurrentTankMovingSound)
-			VJ_STOPSOUND(self.CurrentTankTrackSound)
+			VJ.STOPSOUND(self.CurrentTankMovingSound)
+			VJ.STOPSOUND(self.CurrentTankTrackSound)
 			self.Tank_IsMoving = false
 		end
 	end
 	if (!tr.Hit) then -- Not moving
-		VJ_STOPSOUND(self.CurrentTankMovingSound)
-		VJ_STOPSOUND(self.CurrentTankTrackSound)
+		VJ.STOPSOUND(self.CurrentTankMovingSound)
+		VJ.STOPSOUND(self.CurrentTankTrackSound)
 		self.Tank_IsMoving = false
 	end
 
@@ -342,7 +342,7 @@ function ENT:CustomOnPriorToKilled(dmginfo, hitgroup)
 			timer.Simple(i, function()
 				if IsValid(self) then
 					local myPos = self:GetPos()
-					VJ_EmitSound(self, "vj_fire/explosion2.wav", 100, 100)
+					VJ.EmitSound(self, "vj_fire/explosion2.wav", 100, 100)
 					util.BlastDamage(self, self, myPos, 200, 40)
 					util.ScreenShake(myPos, 100, 200, 1, 2500)
 					if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2", myPos, defAng) end
@@ -353,8 +353,8 @@ function ENT:CustomOnPriorToKilled(dmginfo, hitgroup)
 		timer.Simple(1.5, function()
 			if IsValid(self) then
 				local myPos = self:GetPos()
-				VJ_EmitSound(self,"vj_fire/explosion2.wav", 100, 100)
-				VJ_EmitSound(self,"vj_fire/explosion3.wav", 100, 100)
+				VJ.EmitSound(self,"vj_fire/explosion2.wav", 100, 100)
+				VJ.EmitSound(self,"vj_fire/explosion3.wav", 100, 100)
 				util.BlastDamage(self, self, myPos, 200, 40)
 				util.ScreenShake(myPos, 100, 200, 1, 2500)
 				if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2", myPos, defAng) end
@@ -382,7 +382,7 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
 	
 		-- Spawn the death soldier corpse
 		if math.random(1, self.Tank_DeathSoldierChance) == 1 then
-			local soldierMDL = VJ_PICK(self.Tank_DeathSoldierModels)
+			local soldierMDL = VJ.PICK(self.Tank_DeathSoldierModels)
 			if soldierMDL != false then
 				self:CreateExtraDeathCorpse("prop_ragdoll", soldierMDL, {Pos=myPos + self:GetUp()*90 + self:GetRight()*-30, Vel=Vector(math.Rand(-600, 600), math.Rand(-600, 600), 500)}, function(extraent)
 					extraent:Ignite(math.Rand(8, 10), 0)
@@ -399,7 +399,7 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
 			endpos = myPos - vec500z,
 			filter = self
 		})
-		util.Decal(VJ_PICK(self.Tank_DeathDecal), tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
+		util.Decal(VJ.PICK(self.Tank_DeathDecal), tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
 
 		if self.HasGibDeathParticles == true && self:Tank_CustomOnDeath_AfterCorpseSpawned_Effects(dmginfo, hitgroup, corpseEnt) == true then
 			//self.FireEffect = ents.Create( "env_fire_trail" )
@@ -426,8 +426,8 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove()
-	VJ_STOPSOUND(self.CurrentTankMovingSound)
-	VJ_STOPSOUND(self.CurrentTankTrackSound)
+	VJ.STOPSOUND(self.CurrentTankMovingSound)
+	VJ.STOPSOUND(self.CurrentTankTrackSound)
 	if IsValid(self.Gunner) then
 		self.Gunner:Remove()
 	end
@@ -436,22 +436,22 @@ end
 function ENT:Tank_Sound_Moving()
 	if self.HasSounds == false or self.HasFootStepSound == false then return end
 	
-	local sdtbl1 = VJ_PICK(self.Tank_SoundTbl_DrivingEngine)
-	if sdtbl1 == false then sdtbl1 = VJ_PICK(self.Tank_DefaultSoundTbl_DrivingEngine) end -- Default table
-	self.CurrentTankMovingSound = VJ_CreateSound(self, sdtbl1, 80, 100)
+	local sdtbl1 = VJ.PICK(self.Tank_SoundTbl_DrivingEngine)
+	if sdtbl1 == false then sdtbl1 = VJ.PICK(self.Tank_DefaultSoundTbl_DrivingEngine) end -- Default table
+	self.CurrentTankMovingSound = VJ.CreateSound(self, sdtbl1, 80, 100)
 	//self.Tank_NextRunOverSoundT = CurTime() + 0.2
 	
-	local sdtbl2 = VJ_PICK(self.Tank_SoundTbl_Track)
-	if sdtbl2 == false then sdtbl2 = VJ_PICK(self.Tank_DefaultSoundTbl_Track) end -- Default table
-	self.CurrentTankTrackSound = VJ_CreateSound(self, sdtbl2, 70, 100)
+	local sdtbl2 = VJ.PICK(self.Tank_SoundTbl_Track)
+	if sdtbl2 == false then sdtbl2 = VJ.PICK(self.Tank_DefaultSoundTbl_Track) end -- Default table
+	self.CurrentTankTrackSound = VJ.CreateSound(self, sdtbl2, 70, 100)
 	//self.Tank_NextRunOverSoundT = CurTime() + 0.2
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_Sound_RunOver()
 	if self.HasSounds == false or CurTime() < self.Tank_NextRunOverSoundT then return end
 	
-	local sdtbl = VJ_PICK(self.Tank_SoundTbl_RunOver)
-	if sdtbl == false then sdtbl = VJ_PICK(self.Tank_DefaultSoundTbl_RunOver) end -- Default table
+	local sdtbl = VJ.PICK(self.Tank_SoundTbl_RunOver)
+	if sdtbl == false then sdtbl = VJ.PICK(self.Tank_DefaultSoundTbl_RunOver) end -- Default table
 	self:EmitSound(sdtbl, 80, math.random(80, 100))
 	self.Tank_NextRunOverSoundT = CurTime() + 0.2
 end

@@ -44,7 +44,7 @@ end
 function SWEP:CustomOnReload()
 	timer.Simple(SoundDuration("weapons/crossbow/reload1.wav"), function()
 		if IsValid(self) && IsValid(self:GetOwner()) then
-			VJ_EmitSound(self:GetOwner(), {"weapons/crossbow/bolt_load1.wav","weapons/crossbow/bolt_load2.wav"}, self.NPC_ReloadSoundLevel)
+			VJ.EmitSound(self:GetOwner(), {"weapons/crossbow/bolt_load1.wav","weapons/crossbow/bolt_load2.wav"}, self.NPC_ReloadSoundLevel)
 		end
 	end)
 end

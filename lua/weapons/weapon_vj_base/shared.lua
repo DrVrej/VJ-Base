@@ -60,17 +60,17 @@ SWEP.NPC_ReloadSoundLevel = 60 -- How far does the sound go?
 	-- NOTE: This only works with VJ Human SNPCs!
 SWEP.NPC_BeforeFireSound = {} -- Plays a sound before the firing code is ran, usually in the beginning of the animation
 SWEP.NPC_BeforeFireSoundLevel = 70 -- How far does the sound go?
-SWEP.NPC_BeforeFireSoundPitch = VJ_Set(90, 100) -- How much time until the secondary fire can be used again?
+SWEP.NPC_BeforeFireSoundPitch = VJ.SET(90, 100) -- How much time until the secondary fire can be used again?
 	-- ====== Extra Firing Sound Variables ====== --
 SWEP.NPC_ExtraFireSound = {} -- Plays an extra sound after it fires (Example: Bolt action sound)
 SWEP.NPC_ExtraFireSoundTime = 0.4 -- How much time until it plays the sound (After Firing)?
 SWEP.NPC_ExtraFireSoundLevel = 70 -- How far does the sound go?
-SWEP.NPC_ExtraFireSoundPitch = VJ_Set(90, 100) -- How much time until the secondary fire can be used again?
+SWEP.NPC_ExtraFireSoundPitch = VJ.SET(90, 100) -- How much time until the secondary fire can be used again?
 	-- ====== Secondary Fire Variables ====== --
 SWEP.NPC_HasSecondaryFire = false -- Can the weapon have a secondary fire?
 SWEP.NPC_SecondaryFireEnt = "obj_vj_grenade_rifle" -- The entity to fire, this only applies if self:NPC_SecondaryFire() has NOT been overridden!
 SWEP.NPC_SecondaryFireChance = 3 -- Chance that the secondary fire is used | 1 = always
-SWEP.NPC_SecondaryFireNext = VJ_Set(12, 15) -- How much time until the secondary fire can be used again?
+SWEP.NPC_SecondaryFireNext = VJ.SET(12, 15) -- How much time until the secondary fire can be used again?
 SWEP.NPC_SecondaryFireDistance = 1000 -- How close does the owner's enemy have to be for it to fire?
 SWEP.NPC_HasSecondaryFireSound = true -- Can the secondary fire sound be played?
 SWEP.NPC_SecondaryFireSound = {} -- The sound it plays when the secondary fire is used
@@ -112,7 +112,7 @@ SWEP.AnimTbl_SecondaryFire = {ACT_VM_SECONDARYATTACK}
 SWEP.HasDryFireSound = true -- Should it play a sound when it's out of ammo?
 SWEP.DryFireSound = {} -- The sound that it plays when the weapon is out of ammo
 SWEP.DryFireSoundLevel = 50 -- Dry fire sound level
-SWEP.DryFireSoundPitch = VJ_Set(90, 100) -- Dry fire sound pitch
+SWEP.DryFireSoundPitch = VJ.SET(90, 100) -- Dry fire sound pitch
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Primary Fire Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -136,12 +136,12 @@ SWEP.AnimTbl_PrimaryFire = {ACT_VM_PRIMARYATTACK}
 	-- ====== Sound Variables ====== --
 SWEP.Primary.Sound = {}
 SWEP.Primary.SoundLevel = 80
-SWEP.Primary.SoundPitch	= VJ_Set(90, 100)
+SWEP.Primary.SoundPitch	= VJ.SET(90, 100)
 SWEP.Primary.SoundVolume = 1
 SWEP.Primary.DistantSound = {}
 SWEP.Primary.HasDistantSound = true -- Does it have a distant sound when the gun is shot?
 SWEP.Primary.DistantSoundLevel = 140 -- Distant sound level
-SWEP.Primary.DistantSoundPitch	= VJ_Set(90, 110) -- Distant sound pitch
+SWEP.Primary.DistantSoundPitch	= VJ.SET(90, 110) -- Distant sound pitch
 SWEP.Primary.DistantSoundVolume	= 1 -- Distant sound volume
 	-- ====== Effect Variables ====== --
 SWEP.PrimaryEffects_MuzzleFlash = true
@@ -241,7 +241,6 @@ SWEP.NextNPCDrySoundT = 0
 SWEP.NPC_NextPrimaryFireT = 0
 SWEP.NPC_AnimationSet = "Custom"
 SWEP.NPC_SecondaryFireNextT = 0
-SWEP.NPC_SecondaryFirePerforming = false
 SWEP.LastOwner = NULL
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -293,11 +292,11 @@ function SWEP:Equip(newOwner)
 		end
 	elseif newOwner:IsNPC() then
 		-- For default HL2 NPCs
-		if VJ_AnimationExists(newOwner,ACT_WALK_AIM_PISTOL) == true && VJ_AnimationExists(newOwner,ACT_RUN_AIM_PISTOL) == true && VJ_AnimationExists(newOwner,ACT_POLICE_HARASS1) == true then
+		if VJ.AnimExists(newOwner,ACT_WALK_AIM_PISTOL) == true && VJ.AnimExists(newOwner,ACT_RUN_AIM_PISTOL) == true && VJ.AnimExists(newOwner,ACT_POLICE_HARASS1) == true then
 			self.NPC_AnimationSet = "Metrocop"
-		elseif VJ_AnimationExists(newOwner,"cheer1") == true && VJ_AnimationExists(newOwner,"wave_smg1") == true && VJ_AnimationExists(newOwner,ACT_BUSY_SIT_GROUND) == true then
+		elseif VJ.AnimExists(newOwner,"cheer1") == true && VJ.AnimExists(newOwner,"wave_smg1") == true && VJ.AnimExists(newOwner,ACT_BUSY_SIT_GROUND) == true then
 			self.NPC_AnimationSet = "Rebel"
-		elseif VJ_AnimationExists(newOwner,"signal_takecover") == true && VJ_AnimationExists(newOwner,"grenthrow") == true && VJ_AnimationExists(newOwner,"bugbait_hit") == true then
+		elseif VJ.AnimExists(newOwner,"signal_takecover") == true && VJ.AnimExists(newOwner,"grenthrow") == true && VJ.AnimExists(newOwner,"bugbait_hit") == true then
 			self.NPC_AnimationSet = "Combine"
 		end
 
@@ -322,25 +321,25 @@ function SWEP:SetDefaultValues(hType, overrideSds)
 	hType = hType or "ar2"
 	overrideSds = overrideSds or false
 	if hType == "pistol" then
-		if VJ_PICK(self.DeploySound) == false or overrideSds == true then self.DeploySound = {"weapons/draw_pistol.wav"} end
-		if VJ_PICK(self.DryFireSound) == false or overrideSds == true then self.DryFireSound = {"vj_weapons/dryfire_pistol.wav"} end
-		if VJ_PICK(self.NPC_ReloadSound) == false or overrideSds == true then self.NPC_ReloadSound = {"vj_weapons/reload_pistol.wav"} end
+		if VJ.PICK(self.DeploySound) == false or overrideSds == true then self.DeploySound = {"weapons/draw_pistol.wav"} end
+		if VJ.PICK(self.DryFireSound) == false or overrideSds == true then self.DryFireSound = {"vj_weapons/dryfire_pistol.wav"} end
+		if VJ.PICK(self.NPC_ReloadSound) == false or overrideSds == true then self.NPC_ReloadSound = {"vj_weapons/reload_pistol.wav"} end
 	elseif hType == "revolver" then
-		if VJ_PICK(self.DeploySound) == false or overrideSds == true then self.DeploySound = {"weapons/draw_pistol.wav"} end
-		if VJ_PICK(self.DryFireSound) == false or overrideSds == true then self.DryFireSound = {"vj_weapons/dryfire_revolver.wav"} end
-		if VJ_PICK(self.NPC_ReloadSound) == false or overrideSds == true then self.NPC_ReloadSound = {"vj_weapons/reload_revolver.wav"} end
+		if VJ.PICK(self.DeploySound) == false or overrideSds == true then self.DeploySound = {"weapons/draw_pistol.wav"} end
+		if VJ.PICK(self.DryFireSound) == false or overrideSds == true then self.DryFireSound = {"vj_weapons/dryfire_revolver.wav"} end
+		if VJ.PICK(self.NPC_ReloadSound) == false or overrideSds == true then self.NPC_ReloadSound = {"vj_weapons/reload_revolver.wav"} end
 	elseif hType == "shotgun" or hType == "crossbow" then
-		if VJ_PICK(self.DeploySound) == false or overrideSds == true then self.DeploySound = {"weapons/draw_rifle.wav"} end
-		if VJ_PICK(self.DryFireSound) == false or overrideSds == true then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
-		if VJ_PICK(self.NPC_ReloadSound) == false or overrideSds == true then self.NPC_ReloadSound = {"vj_weapons/reload_shotgun.wav"} end
+		if VJ.PICK(self.DeploySound) == false or overrideSds == true then self.DeploySound = {"weapons/draw_rifle.wav"} end
+		if VJ.PICK(self.DryFireSound) == false or overrideSds == true then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
+		if VJ.PICK(self.NPC_ReloadSound) == false or overrideSds == true then self.NPC_ReloadSound = {"vj_weapons/reload_shotgun.wav"} end
 	elseif hType == "rpg" then
-		if VJ_PICK(self.DeploySound) == false or overrideSds == true then self.DeploySound = {"weapons/draw_rifle.wav"} end
-		if VJ_PICK(self.DryFireSound) == false or overrideSds == true then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
-		if VJ_PICK(self.NPC_ReloadSound) == false or overrideSds == true then self.NPC_ReloadSound = {"vj_weapons/reload_rpg.wav"} end
+		if VJ.PICK(self.DeploySound) == false or overrideSds == true then self.DeploySound = {"weapons/draw_rifle.wav"} end
+		if VJ.PICK(self.DryFireSound) == false or overrideSds == true then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
+		if VJ.PICK(self.NPC_ReloadSound) == false or overrideSds == true then self.NPC_ReloadSound = {"vj_weapons/reload_rpg.wav"} end
 	elseif hType == "smg" or hType == "ar2" then
-		if VJ_PICK(self.DeploySound) == false or overrideSds == true then self.DeploySound = {"weapons/draw_rifle.wav"} end
-		if VJ_PICK(self.DryFireSound) == false or overrideSds == true then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
-		if VJ_PICK(self.NPC_ReloadSound) == false or overrideSds == true then self.NPC_ReloadSound = {"vj_weapons/reload_rifle.wav"} end
+		if VJ.PICK(self.DeploySound) == false or overrideSds == true then self.DeploySound = {"weapons/draw_rifle.wav"} end
+		if VJ.PICK(self.DryFireSound) == false or overrideSds == true then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
+		if VJ.PICK(self.NPC_ReloadSound) == false or overrideSds == true then self.NPC_ReloadSound = {"vj_weapons/reload_rifle.wav"} end
 	elseif hType == "melee" or hType == "melee2" or hType == "knife" then
 		self.HasDryFireSound = false
 		self.NPC_HasReloadSound = false
@@ -359,7 +358,7 @@ function SWEP:TranslateActivity(act)
 			local wepT = owner.WeaponAnimTranslations[act]
 			if (wepT) then
 				if istable(wepT) then
-					return VJ_PICK(wepT)
+					return VJ.PICK(wepT)
 				end
 				return wepT
 			end
@@ -396,8 +395,8 @@ function SWEP:NPC_ServerNextFire()
 	if owner:GetActivity() == nil then return end
 	
 	//print("------------------")
-	//VJ_CreateTestObject(self:DecideBulletPosition(),self:GetAngles(),Color(255,0,255),1)
-	//VJ_CreateTestObject(self:GetNW2Vector("VJ_CurBulletPos"),self:GetAngles(),Color(0,0,255),1)
+	//VJ.DEBUG_TempEnt(self:DecideBulletPosition(),self:GetAngles(),Color(255,0,255),1)
+	//VJ.DEBUG_TempEnt(self:GetNW2Vector("VJ_CurBulletPos"),self:GetAngles(),Color(0,0,255),1)
 
 	self:RunWorldModelThink()
 	self:CustomOnThink()
@@ -437,7 +436,7 @@ function SWEP:NPCAbleToShoot()
 			if owner.IsVJBaseSNPC_Human && owner.AllowWeaponReloading == true && self:Clip1() <= 0 then -- No ammo!
 				if owner.VJ_IsBeingControlled == true then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER, "Press R to reload!") end
 				if self.IsMeleeWeapon == false && self.HasDryFireSound == true && CurTime() > self.NextNPCDrySoundT then
-					local sdtbl = VJ_PICK(self.DryFireSound)
+					local sdtbl = VJ.PICK(self.DryFireSound)
 					if sdtbl != false then owner:EmitSound(sdtbl, 80, math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b)) end
 					if self.NPC_NextPrimaryFire != false then
 						self.NextNPCDrySoundT = CurTime() + self.NPC_NextPrimaryFire
@@ -465,22 +464,17 @@ function SWEP:NPCShoot_Primary()
 	end
 	
 	-- Secondary Fire
-	if self.NPC_HasSecondaryFire == true && owner.CanUseSecondaryOnWeaponAttack && !self.NPC_SecondaryFirePerforming && CurTime() > self.NPC_SecondaryFireNextT && ene:GetPos():Distance(owner:GetPos()) <= self.NPC_SecondaryFireDistance then
+	if self.NPC_HasSecondaryFire && owner.CanUseSecondaryOnWeaponAttack && CurTime() > self.NPC_SecondaryFireNextT && ene:GetPos():Distance(owner:GetPos()) <= self.NPC_SecondaryFireDistance then
 		if math.random(1, self.NPC_SecondaryFireChance) == 1 then
-			local secAnim = VJ_PICK(owner.AnimTbl_WeaponAttackSecondary)
-			owner:VJ_ACT_PLAYACTIVITY(secAnim, true, false, true)
-			self.NPC_SecondaryFirePerforming = true
-			self:NPC_SecondaryFire_BeforeTimer(ene, owner.WeaponAttackSecondaryTimeUntilFire)
-			timer.Simple(owner.WeaponAttackSecondaryTimeUntilFire, function()
-				if IsValid(self) then
-					self.NPC_SecondaryFirePerforming = false
-					if IsValid(owner) && IsValid(owner:GetEnemy()) && CurTime() > self.NPC_SecondaryFireNextT && VJ_IsCurrentAnimation(owner, VJ_RemoveAnimExtensions(self, secAnim)) then
-						self:NPC_SecondaryFire()
-						if self.NPC_HasSecondaryFireSound == true then VJ_EmitSound(owner, self.NPC_SecondaryFireSound, self.NPC_SecondaryFireSoundLevel) end
-						if self.NPC_SecondaryFireNext != false then -- Support for animation events
-							self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
-						end
-					end
+			local actTime, actName = owner:VJ_ACT_PLAYACTIVITY(VJ.PICK(owner.AnimTbl_WeaponAttackSecondary), true, false, true)
+			local fireTime = (!actName and 0) or owner.WeaponAttackSecondaryTimeUntilFire or actTime
+				-- If no animation was found then fireTime is 0, otherwise if "WeaponAttackSecondaryTimeUntilFire" is false then use animation time
+			self:NPC_SecondaryFire_BeforeTimer(ene, fireTime)
+			timer.Simple(fireTime, function()
+				if IsValid(self) && IsValid(owner) && IsValid(owner:GetEnemy()) && CurTime() > self.NPC_SecondaryFireNextT && (!actName or (actName && VJ.IsCurrentAnimation(owner, actName))) then -- ONLY check for cur anim IF it even had one!
+					self:NPC_SecondaryFire()
+					if self.NPC_HasSecondaryFireSound == true then VJ.EmitSound(owner, self.NPC_SecondaryFireSound, self.NPC_SecondaryFireSoundLevel) end
+					self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
 				end
 			end)
 			return
@@ -508,7 +502,7 @@ function SWEP:NPC_Reload()
 	local owner = self:GetOwner()
 	owner.NextThrowGrenadeT = owner.NextThrowGrenadeT + 2
 	self:CustomOnReload()
-	if self.NPC_HasReloadSound == true then VJ_EmitSound(owner, self.NPC_ReloadSound, self.NPC_ReloadSoundLevel) end
+	if self.NPC_HasReloadSound == true then VJ.EmitSound(owner, self.NPC_ReloadSound, self.NPC_ReloadSoundLevel) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttack(UseAlt)
@@ -523,27 +517,27 @@ function SWEP:PrimaryAttack(UseAlt)
 	
 	if self.Reloading or self:GetNextSecondaryFire() > CurTime() then return end
 	if isNPC && owner.VJ_IsBeingControlled == false && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return end
-	if SERVER && self.IsMeleeWeapon == false && ((isPly && self.Primary.AllowFireInWater == false && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then owner:EmitSound(VJ_PICK(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b)) return end
+	if SERVER && self.IsMeleeWeapon == false && ((isPly && self.Primary.AllowFireInWater == false && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then owner:EmitSound(VJ.PICK(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b)) return end
 	if (!self:CanPrimaryAttack()) then return end
 	if self:CustomOnPrimaryAttack_BeforeShoot() == true then return end
 	
 	if isNPC && owner.IsVJBaseSNPC == true then
 		timer.Simple(self.NPC_ExtraFireSoundTime, function()
 			if IsValid(self) && IsValid(owner) then
-				VJ_EmitSound(owner, self.NPC_ExtraFireSound, self.NPC_ExtraFireSoundLevel, math.Rand(self.NPC_ExtraFireSoundPitch.a, self.NPC_ExtraFireSoundPitch.b))
+				VJ.EmitSound(owner, self.NPC_ExtraFireSound, self.NPC_ExtraFireSoundLevel, math.Rand(self.NPC_ExtraFireSoundPitch.a, self.NPC_ExtraFireSoundPitch.b))
 			end
 		end)
 	end
 	
 	-- Firing Sounds
 	if SERVER then
-		local fireSd = VJ_PICK(self.Primary.Sound)
+		local fireSd = VJ.PICK(self.Primary.Sound)
 		if fireSd != false then
 			sound.Play(fireSd, owner:GetPos(), self.Primary.SoundLevel, math.random(self.Primary.SoundPitch.a, self.Primary.SoundPitch.b), self.Primary.SoundVolume)
 			//self:EmitSound(fireSd, 80, math.random(90,100))
 		end
 		if self.Primary.HasDistantSound == true then
-			local fireFarSd = VJ_PICK(self.Primary.DistantSound)
+			local fireFarSd = VJ.PICK(self.Primary.DistantSound)
 			if fireFarSd != false then
 				sound.Play(fireFarSd, owner:GetPos(), self.Primary.DistantSoundLevel, math.random(self.Primary.DistantSoundPitch.a, self.Primary.DistantSoundPitch.b), self.Primary.DistantSoundVolume)
 			end
@@ -552,7 +546,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	
 	-- Firing Gesture
 	if owner.IsVJBaseSNPC_Human == true && owner.DisableWeaponFiringGesture != true then
-		owner:VJ_ACT_PLAYACTIVITY(owner:TranslateToWeaponAnim(VJ_PICK(owner.AnimTbl_WeaponAttackFiringGesture)), false, false, false, 0, {AlwaysUseGesture=true})
+		owner:VJ_ACT_PLAYACTIVITY(owner:TranslateToWeaponAnim(VJ.PICK(owner.AnimTbl_WeaponAttackFiringGesture)), false, false, false, 0, {AlwaysUseGesture=true})
 	end
 	
 	-- MELEE WEAPON
@@ -567,23 +561,23 @@ function SWEP:PrimaryAttack(UseAlt)
 				dmginfo:SetInflictor(owner)
 				dmginfo:SetAttacker(owner)
 				dmginfo:SetDamageType(DMG_CLUB)
+				VJ.DamageSpecialEnts(owner, v, dmginfo)
 				v:TakeDamageInfo(dmginfo, owner)
 				if v:IsPlayer() then
 					v:ViewPunch(Angle(math.random(-1, 1)*10, math.random(-1, 1)*10, math.random(-1, 1)*10))
 				end
-				VJ_DestroyCombineTurret(owner, v)
 				self:CustomOnPrimaryAttack_MeleeHit(v)
 				meleeHitEnt = true
 			end
 		end
 		if meleeHitEnt == true then
-			local meleeSd = VJ_PICK(self.MeleeWeaponSound_Hit)
+			local meleeSd = VJ.PICK(self.MeleeWeaponSound_Hit)
 			if meleeSd != false then
 				self:EmitSound(meleeSd, 70, math.random(90, 100))
 			end
 		else
 			if owner.IsVJBaseSNPC == true then owner:CustomOnMeleeAttack_Miss() end
-			local meleeSd = VJ_PICK(self.MeleeWeaponSound_Miss)
+			local meleeSd = VJ.PICK(self.MeleeWeaponSound_Miss)
 			if meleeSd != false then
 				self:EmitSound(meleeSd, 70, math.random(90, 100))
 			end
@@ -596,9 +590,36 @@ function SWEP:PrimaryAttack(UseAlt)
 				bullet.Tracer = self.Primary.Tracer
 				bullet.TracerName = self.Primary.TracerType
 				bullet.Force = self.Primary.Force
-				bullet.Dir = owner:GetAimVector()
 				bullet.AmmoType = self.Primary.Ammo
-				bullet.Src = isNPC and self:GetNW2Vector("VJ_CurBulletPos") or owner:GetShootPos() -- Spawn Position
+				
+				-- Bullet spawn position & spread & damage
+				if isPly then
+					bullet.Spread = Vector((self.Primary.Cone / 60) / 4, (self.Primary.Cone / 60) / 4, 0)
+					bullet.Src = owner:GetShootPos()
+					bullet.Dir = owner:GetAimVector()
+					local plyDmg = self.Primary.PlayerDamage
+					if plyDmg == "Same" then
+						bullet.Damage = self.Primary.Damage
+					elseif plyDmg == "Double" then
+						bullet.Damage = self.Primary.Damage * 2
+					elseif isnumber(plyDmg) then
+						bullet.Damage = plyDmg
+					end
+				else
+					local ene = owner:GetEnemy()
+					local spawnPos = self:GetNW2Vector("VJ_CurBulletPos")
+					// owner:GetPos():Distance(owner.VJ_TheController:GetEyeTrace().HitPos) -- Was used when NPC was being controlled
+					local fSpread = (owner:GetPos():Distance(ene:GetPos()) / 28) * (owner.WeaponSpread or 1) * (self.NPC_CustomSpread or 1)
+					bullet.Spread = Vector(fSpread, fSpread, 0)
+					bullet.Src = spawnPos
+					if owner.WeaponUseEnemyEyePos then
+						-- Take OBB Max's z and minus it with OBB Center's z to remove center to min, then divide the result to decrease the distance so its somewhere between Eye pos and OBB center
+						bullet.Dir = (ene:EyePos() - ene:GetUp()*((ene:OBBMaxs().z - ene:OBBCenter().z) / 2.5)) - spawnPos
+					else
+						bullet.Dir = (ene:GetPos() + ene:OBBCenter()) -  spawnPos
+					end
+					bullet.Damage = owner.IsVJBaseSNPC and owner:VJ_GetDifficultyValue(self.Primary.Damage) or self.Primary.Damage
+				end
 				
 				-- Callback
 				bullet.Callback = function(attacker, tr, dmginfo)
@@ -610,26 +631,9 @@ function SWEP:PrimaryAttack(UseAlt)
 					util.Effect("AR2Impact", laserhit)
 					tr.HitPos:Ignite(8,0)*/
 				end
-				
-				-- Damage
-				if isPly then
-					bullet.Spread = Vector((self.Primary.Cone / 60) / 4, (self.Primary.Cone / 60) / 4, 0)
-					if self.Primary.PlayerDamage == "Same" then
-						bullet.Damage = self.Primary.Damage
-					elseif self.Primary.PlayerDamage == "Double" then
-						bullet.Damage = self.Primary.Damage * 2
-					elseif isnumber(self.Primary.PlayerDamage) then
-						bullet.Damage = self.Primary.PlayerDamage
-					end
-				else
-					if owner.IsVJBaseSNPC == true then
-						bullet.Damage = owner:VJ_GetDifficultyValue(self.Primary.Damage)
-					else
-						bullet.Damage = self.Primary.Damage
-					end
-				end
 			owner:FireBullets(bullet)
-		elseif isNPC && owner.IsVJBaseSNPC == true then -- Make sure the VJ SNPC recognizes that it lost a ammunition, even though it was a custom bullet code
+		end
+		if isNPC && owner.IsVJBaseSNPC then
 			self:SetClip1(self:Clip1() - 1)
 		end
 		if GetConVar("vj_wep_nomuszzleflash"):GetInt() == 0 then owner:MuzzleFlash() end
@@ -641,8 +645,8 @@ function SWEP:PrimaryAttack(UseAlt)
 		owner:ViewPunch(Angle(-self.Primary.Recoil, 0, 0))
 		self:TakePrimaryAmmo(self.Primary.TakeAmmo)
 		owner:SetAnimation(PLAYER_ATTACK1)
-		local anim = VJ_PICK(self.AnimTbl_PrimaryFire)
-		local animTime = VJ_GetSequenceDuration(owner:GetViewModel(), anim)
+		local anim = VJ.PICK(self.AnimTbl_PrimaryFire)
+		local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
 		self:SendWeaponAnim(anim)
 		self.NextIdleT = CurTime() + animTime
 		self.NextReloadT = CurTime() + animTime
@@ -662,8 +666,8 @@ function SWEP:SecondaryAttack()
 	local owner = self:GetOwner()
 	self:TakePrimaryAmmo(self.Secondary.TakeAmmo)
 	owner:SetAnimation(PLAYER_ATTACK1)
-	local anim = VJ_PICK(self.AnimTbl_SecondaryFire)
-	local animTime = VJ_GetSequenceDuration(owner:GetViewModel(), anim)
+	local anim = VJ.PICK(self.AnimTbl_SecondaryFire)
+	local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
 	self:SendWeaponAnim(anim)
 	self.NextIdleT = CurTime() + animTime
 	self.NextReloadT = CurTime() + animTime
@@ -677,8 +681,8 @@ function SWEP:DoIdleAnimation()
 	local owner = self:GetOwner()
 	if IsValid(owner) then
 		owner:SetAnimation(PLAYER_IDLE)
-		local anim = VJ_PICK(self.AnimTbl_Idle)
-		local animTime = VJ_GetSequenceDuration(owner:GetViewModel(), anim)
+		local anim = VJ.PICK(self.AnimTbl_Idle)
+		local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
 		self:SendWeaponAnim(anim)
 		self.NextIdleT = CurTime() + animTime
 	end
@@ -718,7 +722,7 @@ function SWEP:PrimaryAttackEffects()
 						end
 					end
 				else
-					ParticleEffectAttach(VJ_PICK(self.PrimaryEffects_MuzzleParticles), PATTACH_POINT_FOLLOW, self, muzzleAttach)
+					ParticleEffectAttach(VJ.PICK(self.PrimaryEffects_MuzzleParticles), PATTACH_POINT_FOLLOW, self, muzzleAttach)
 				end
 			end
 		end
@@ -782,7 +786,7 @@ function SWEP:Reload()
 	if self:Clip1() < self.Primary.ClipSize then
 		self.Reloading = true
 		self:CustomOnReload()
-		if SERVER && self.HasReloadSound == true then owner:EmitSound(VJ_PICK(self.ReloadSound), 50, math.random(90, 100)) end
+		if SERVER && self.HasReloadSound == true then owner:EmitSound(VJ.PICK(self.ReloadSound), 50, math.random(90, 100)) end
 		-- Handle clip
 		timer.Simple(self.Reload_TimeUntilAmmoIsSet, function()
 			if IsValid(self) && self:CustomOnReload_Finish() != false then
@@ -794,8 +798,8 @@ function SWEP:Reload()
 		end)
 		-- Handle animation
 		owner:SetAnimation(PLAYER_RELOAD)
-		local anim = VJ_PICK(self.AnimTbl_Reload)
-		local animTime = VJ_GetSequenceDuration(owner:GetViewModel(), anim)
+		local anim = VJ.PICK(self.AnimTbl_Reload)
+		local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
 		self:SendWeaponAnim(anim)
 		self.NextIdleT = CurTime() + animTime
 		timer.Simple(animTime, function()
@@ -812,11 +816,11 @@ function SWEP:Deploy()
 	local owner = self:GetOwner()
 	if owner:IsPlayer() then
 		self:CustomOnDeploy()
-		if self.HasDeploySound == true then self:EmitSound(VJ_PICK(self.DeploySound),50,math.random(90,100)) end
+		if self.HasDeploySound == true then self:EmitSound(VJ.PICK(self.DeploySound),50,math.random(90,100)) end
 		
 		local curTime = CurTime()
-		local anim = VJ_PICK(self.AnimTbl_Deploy)
-		local animTime = VJ_GetSequenceDuration(owner:GetViewModel(), anim)
+		local anim = VJ.PICK(self.AnimTbl_Deploy)
+		local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
 		self:SendWeaponAnim(anim)
 		self:SetNextPrimaryFire(curTime + animTime)
 		self:SetNextSecondaryFire(curTime + animTime)

@@ -306,9 +306,9 @@ function ENT:Think()
 		-- HUD
 		local AttackTypes = defAttackTypes -- Optimization?
 		if npc.IsVJBaseSNPC == true then
-			if npc.HasMeleeAttack == true then AttackTypes["MeleeAttack"] = ((npc.IsAbleToMeleeAttack != true or npc.AttackType == VJ_ATTACK_MELEE) and 2) or true end
-			if npc.HasRangeAttack == true then AttackTypes["RangeAttack"] = ((npc.IsAbleToRangeAttack != true or npc.AttackType == VJ_ATTACK_RANGE) and 2) or true end
-			if npc.HasLeapAttack == true then AttackTypes["LeapAttack"] = ((npc.IsAbleToLeapAttack != true or npc.AttackType == VJ_ATTACK_LEAP) and 2) or true end
+			if npc.HasMeleeAttack == true then AttackTypes["MeleeAttack"] = ((npc.IsAbleToMeleeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_MELEE) and 2) or true end
+			if npc.HasRangeAttack == true then AttackTypes["RangeAttack"] = ((npc.IsAbleToRangeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_RANGE) and 2) or true end
+			if npc.HasLeapAttack == true then AttackTypes["LeapAttack"] = ((npc.IsAbleToLeapAttack != true or npc.AttackType == VJ.ATTACK_TYPE_LEAP) and 2) or true end
 			if IsValid(npcWeapon) then AttackTypes["WeaponAttack"] = true AttackTypes["Ammo"] = npcWeapon:Clip1() end
 			if npc.HasGrenadeAttack == true then AttackTypes["GrenadeAttack"] = (curTime <= npc.NextThrowGrenadeT and 2) or true end
 		end
@@ -326,9 +326,9 @@ function ENT:Think()
 
 		local bullseyePos = self.VJCE_Bullseye:GetPos()
 		if ply:GetInfoNum("vj_npc_cont_devents", 0) == 1 then
-			VJ_CreateTestObject(ply:GetPos(), self:GetAngles(), Color(0,109,160))
-			VJ_CreateTestObject(camera:GetPos(), self:GetAngles(), Color(255,200,260))
-			VJ_CreateTestObject(bullseyePos, self:GetAngles(), Color(255,0,0)) -- Bullseye's position
+			VJ.DEBUG_TempEnt(ply:GetPos(), self:GetAngles(), Color(0,109,160))
+			VJ.DEBUG_TempEnt(camera:GetPos(), self:GetAngles(), Color(255,200,260))
+			VJ.DEBUG_TempEnt(bullseyePos, self:GetAngles(), Color(255,0,0)) -- Bullseye's position
 		end
 		
 		self:CustomOnThink()
@@ -338,14 +338,14 @@ function ENT:Think()
 
 		-- Weapon attack
 		if npc.IsVJBaseSNPC_Human == true then
-			if IsValid(npcWeapon) && !npc:IsMoving() && npcWeapon.IsVJBaseWeapon == true && ply:KeyDown(IN_ATTACK2) && npc.AttackType == VJ_ATTACK_NONE && npc.vACT_StopAttacks == false && npc:GetWeaponState() == VJ_WEP_STATE_READY then
+			if IsValid(npcWeapon) && !npc:IsMoving() && npcWeapon.IsVJBaseWeapon == true && ply:KeyDown(IN_ATTACK2) && npc.AttackType == VJ.ATTACK_TYPE_NONE && npc.vACT_StopAttacks == false && npc:GetWeaponState() == VJ.NPC_WEP_STATE_READY then
 				//npc:SetAngles(Angle(0,math.ApproachAngle(npc:GetAngles().y,ply:GetAimVector():Angle().y,100),0))
 				npc:FaceCertainPosition(bullseyePos, 0.2)
 				canTurn = false
 				// Prints show that the animations aren't being set, hence why they have trouble shooting
-				if VJ_IsCurrentAnimation(npc, npc:TranslateToWeaponAnim(npc.CurrentWeaponAnimation)) == false && VJ_IsCurrentAnimation(npc, npc.AnimTbl_WeaponAttack) == false then
+				if VJ.IsCurrentAnimation(npc, npc:TranslateToWeaponAnim(npc.CurrentWeaponAnimation)) == false && VJ.IsCurrentAnimation(npc, npc.AnimTbl_WeaponAttack) == false then
 					npc:CustomOnWeaponAttack()
-					npc.CurrentWeaponAnimation = VJ_PICK(npc.AnimTbl_WeaponAttack)
+					npc.CurrentWeaponAnimation = VJ.PICK(npc.AnimTbl_WeaponAttack)
 					npc:VJ_ACT_PLAYACTIVITY(npc.CurrentWeaponAnimation, false, 2, false)
 					npc.DoingWeaponAttack = true
 					npc.DoingWeaponAttack_Standing = true
@@ -359,13 +359,13 @@ function ENT:Think()
 		
 		if npc.CurAttackAnimTime < CurTime() && curTime > npc.NextChaseTime && npc.IsVJBaseSNPC_Tank != true then
 			-- Turning
-			if !npc:IsMoving() && canTurn && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ_WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
+			if !npc:IsMoving() && canTurn && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
 				//npc:SetAngles(Angle(0,ply:GetAimVector():Angle().y,0))
 				local angdif = math.abs(math.AngleDifference(ply:EyeAngles().y, self.VJC_NPC_LastIdleAngle))
 				self.VJC_NPC_LastIdleAngle = npc:EyeAngles().y //tr_ply.HitPos
 				npc:VJ_TASK_IDLE_STAND()
 				if self.VJC_NPC_CanTurn == true && ((npc.MovementType != VJ_MOVETYPE_STATIONARY) or (npc.MovementType == VJ_MOVETYPE_STATIONARY && npc.CanTurnWhileStationary == true)) then
-					if (VJ_AnimationExists(npc, ACT_TURN_LEFT) == false && VJ_AnimationExists(npc, ACT_TURN_RIGHT) == false) or (angdif <= 50 && npc:GetActivity() != ACT_TURN_LEFT && npc:GetActivity() != ACT_TURN_RIGHT) then
+					if (VJ.AnimExists(npc, ACT_TURN_LEFT) == false && VJ.AnimExists(npc, ACT_TURN_RIGHT) == false) or (angdif <= 50 && npc:GetActivity() != ACT_TURN_LEFT && npc:GetActivity() != ACT_TURN_RIGHT) then
 						//npc:VJ_TASK_IDLE_STAND()
 						npc:FaceCertainPosition(bullseyePos, 0.1)
 					else
@@ -408,8 +408,8 @@ function ENT:StartMovement(Dir, Rot)
 	local forwardDist = NPCPos:Distance(forwardTr.HitPos)
 	local wallToSelf = forwardDist - (npc:OBBMaxs().y) -- Use Y instead of X because X is left/right whereas Y is forward/backward
 	if DEBUG then
-		VJ_CreateTestObject(NPCPos, self:GetAngles(), Color(0, 255, 255)) -- NPC's calculated position
-		VJ_CreateTestObject(forwardTr.HitPos, self:GetAngles(), Color(255, 255, 0)) -- forward trace position
+		VJ.DEBUG_TempEnt(NPCPos, self:GetAngles(), Color(0, 255, 255)) -- NPC's calculated position
+		VJ.DEBUG_TempEnt(forwardTr.HitPos, self:GetAngles(), Color(255, 255, 0)) -- forward trace position
 	end
 	if forwardDist >= 25 then
 		local finalPos = Vector((selfPos + plyAimVec * wallToSelf).x, (selfPos + plyAimVec * wallToSelf).y, forwardTr.HitPos.z)
@@ -421,8 +421,8 @@ function ENT:StartMovement(Dir, Rot)
 		end
 		finalPos = Vector((selfPos + plyAimVec * wallToSelf).x, (selfPos + plyAimVec * wallToSelf).y, forwardTr.HitPos.z)
 		if DEBUG then
-			VJ_CreateTestObject(downTr.HitPos, self:GetAngles(), Color(255, 0, 255)) -- Down trace position
-			VJ_CreateTestObject(finalPos, self:GetAngles(), Color(0, 255, 0)) -- Final move position
+			VJ.DEBUG_TempEnt(downTr.HitPos, self:GetAngles(), Color(255, 0, 255)) -- Down trace position
+			VJ.DEBUG_TempEnt(finalPos, self:GetAngles(), Color(0, 255, 0)) -- Final move position
 		end
 		npc:SetLastPosition(finalPos)
 		npc:VJ_TASK_GOTO_LASTPOS(ply:KeyDown(IN_SPEED) and "TASK_RUN_PATH" or "TASK_WALK_PATH", function(x)

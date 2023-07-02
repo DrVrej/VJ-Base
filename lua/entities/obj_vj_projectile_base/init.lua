@@ -22,7 +22,7 @@ ENT.RemoveOnHit = true -- Should it remove itself when it touches something? | I
 ENT.PaintDecalOnCollide = true -- Should it paint decals when it collides with something? | Use this only when using a projectile that doesn't get removed when it collides with something
 ENT.DecalTbl_OnCollideDecals = {} -- Decals that paint when the projectile collides with something | It picks a random one from this table
 ENT.CollideCodeWithoutRemoving = false -- If RemoveOnHit is set to false, you can still make the projectile deal damage, place a decal, etc.
-ENT.NextCollideWithoutRemove = VJ_Set(1, 1) -- Time until it can run the code again
+ENT.NextCollideWithoutRemove = VJ.SET(1, 1) -- Time until it can run the code again
 	-- ====== Radius Damage Variables ====== --
 ENT.DoesRadiusDamage = false -- Should it do a blast damage when it hits something?
 ENT.RadiusDamageRadius = 250 -- How far the damage go? The farther away it's from its enemy, the less damage it will do | Counted in world units
@@ -62,7 +62,7 @@ ENT.IdleSoundChance = 1
 ENT.OnCollideSoundChance = 1
 ENT.OnRemoveSoundChance = 1
 	-- ====== Timer Variables ====== --
-ENT.NextSoundTime_Idle = VJ_Set(0.2, 0.5)
+ENT.NextSoundTime_Idle = VJ.SET(0.2, 0.5)
 	-- ====== Sound Level Variables ====== --
 	-- The proper number are usually range from 0 to 180, though it can go as high as 511
 	-- More Information: https://developer.valvesoftware.com/wiki/Soundscripts#SoundLevel_Flags
@@ -71,10 +71,10 @@ ENT.IdleSoundLevel = 80
 ENT.OnCollideSoundLevel = 80
 ENT.OnRemoveSoundLevel = 90
 	-- ====== Sound Pitch Variables ====== --
-ENT.StartupSoundPitch = VJ_Set(90, 100)
-ENT.IdleSoundPitch = VJ_Set(90, 100)
-ENT.OnCollideSoundPitch = VJ_Set(90, 100)
-ENT.OnRemoveSoundPitch = VJ_Set(90, 100)
+ENT.StartupSoundPitch = VJ.SET(90, 100)
+ENT.IdleSoundPitch = VJ.SET(90, 100)
+ENT.OnCollideSoundPitch = VJ.SET(90, 100)
+ENT.OnRemoveSoundPitch = VJ.SET(90, 100)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -124,7 +124,7 @@ local defVec = Vector(0, 0, 0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:CustomOnPreInitialize()
-	if self:GetModel() == "models/error.mdl" then self:SetModel(VJ_PICK(self.Model)) end
+	if self:GetModel() == "models/error.mdl" then self:SetModel(VJ.PICK(self.Model)) end
 	self:PhysicsInit(self.PhysicsInitType)
 	self:SetMoveType(self.MoveType)
 	self:SetMoveCollide(self.MoveCollideType)
@@ -140,13 +140,13 @@ function ENT:Initialize()
 	end
 	
 	self:StartupSoundCode()
-	if self.IdleSoundPitch1 then self.IdleSoundPitch = VJ_Set(self.IdleSoundPitch1, self.IdleSoundPitch2) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	if self.IdleSoundPitch1 then self.IdleSoundPitch = VJ.SET(self.IdleSoundPitch1, self.IdleSoundPitch2) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	
 	self:CustomOnInitialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-	if self.Dead then VJ_STOPSOUND(self.CurrentIdleSound) return end
+	if self.Dead then VJ.STOPSOUND(self.CurrentIdleSound) return end
 	
 	//self:SetAngles(self:GetVelocity():GetNormal():Angle())
 	
@@ -167,7 +167,7 @@ function ENT:DoDamageCode(data, phys)
 		hitEnt = data.HitEntity
 		//if hitEnt:IsNPC() or hitEnt:IsPlayer() then
 		if IsValid(owner) then
-			if (VJ_IsProp(hitEnt)) or (hitEnt:IsNPC() && (hitEnt:Disposition(owner) == D_HT or hitEnt:Disposition(owner) == D_FR) && hitEnt:Health() > 0 && (hitEnt != owner) && (hitEnt:GetClass() != owner:GetClass())) or (hitEnt:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS && hitEnt:Alive() && hitEnt:Health() > 0) then
+			if (VJ.IsProp(hitEnt)) or (hitEnt:IsNPC() && (hitEnt:Disposition(owner) == D_HT or hitEnt:Disposition(owner) == D_FR) && hitEnt:Health() > 0 && (hitEnt != owner) && (hitEnt:GetClass() != owner:GetClass())) or (hitEnt:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS && hitEnt:Alive() && hitEnt:Health() > 0) then
 				self:CustomOnDoDamage_Direct(data, phys, hitEnt)
 				local dmgInfo = DamageInfo()
 				dmgInfo:SetDamage(self.DirectDamage)
@@ -175,8 +175,8 @@ function ENT:DoDamageCode(data, phys)
 				dmgInfo:SetAttacker(owner)
 				dmgInfo:SetInflictor(self)
 				dmgInfo:SetDamagePosition(dmgPos)
+				VJ.DamageSpecialEnts(owner, hitEnt, dmgInfo)
 				hitEnt:TakeDamageInfo(dmgInfo, self)
-				VJ_DestroyCombineTurret(owner, hitEnt)
 			end
 		else
 			self:CustomOnDoDamage_Direct(data, phys, hitEnt)
@@ -186,8 +186,8 @@ function ENT:DoDamageCode(data, phys)
 			dmgInfo:SetAttacker(self)
 			dmgInfo:SetInflictor(self)
 			dmgInfo:SetDamagePosition(dmgPos)
+			VJ.DamageSpecialEnts(self, hitEnt, dmgInfo)
 			hitEnt:TakeDamageInfo(dmgInfo, self)
-			VJ_DestroyCombineTurret(self, hitEnt)
 		end
 	end
 	
@@ -200,7 +200,7 @@ function ENT:DoDamageCode(data, phys)
 			attackEnt = self
 		end
 		if self.VJTag_IsPickedUp == true && IsValid(self:GetParent()) && self:GetParent():IsNPC() then dmgPos = self:GetParent():GetPos() end -- If the projectile is picked up (Such as a grenade picked up by human SNPC), then the damage position is the parent's position
-		hitEnt = util.VJ_SphereDamage(attackEnt, attackEnt, dmgPos, self.RadiusDamageRadius, self.RadiusDamage, self.RadiusDamageType, DoEntCheck, self.RadiusDamageUseRealisticRadius, {DisableVisibilityCheck=self.RadiusDamageDisableVisibilityCheck, Force=self.RadiusDamageForce, UpForce=self.RadiusDamageForce_Up, DamageAttacker=owner:IsPlayer()})
+		hitEnt = VJ.ApplyRadiusDamage(attackEnt, attackEnt, dmgPos, self.RadiusDamageRadius, self.RadiusDamage, self.RadiusDamageType, DoEntCheck, self.RadiusDamageUseRealisticRadius, {DisableVisibilityCheck=self.RadiusDamageDisableVisibilityCheck, Force=self.RadiusDamageForce, UpForce=self.RadiusDamageForce_Up, DamageAttacker=owner:IsPlayer()})
 	end
 	
 	self:CustomOnDoDamage(data, phys, hitEnt)
@@ -214,9 +214,9 @@ function ENT:PhysicsCollide(data, phys)
 			self.Dead = true
 			self:DoDamageCode(data, phys)
 			self:OnCollideSoundCode()
-			if self.PaintDecalOnDeath == true && VJ_PICK(self.DecalTbl_DeathDecals) != false && self.AlreadyPaintedDeathDecal == false then
+			if self.PaintDecalOnDeath == true && VJ.PICK(self.DecalTbl_DeathDecals) != false && self.AlreadyPaintedDeathDecal == false then
 				self.AlreadyPaintedDeathDecal = true
-				util.Decal(VJ_PICK(self.DecalTbl_DeathDecals), data.HitPos + data.HitNormal, data.HitPos - data.HitNormal)
+				util.Decal(VJ.PICK(self.DecalTbl_DeathDecals), data.HitPos + data.HitNormal, data.HitPos - data.HitNormal)
 			end
 			if self.ShakeWorldOnDeath == true then util.ScreenShake(data.HitPos, self.ShakeWorldOnDeathAmplitude or 16, self.ShakeWorldOnDeathFrequency or 200, self.ShakeWorldOnDeathDuration or 1, self.ShakeWorldOnDeathRadius or 3000) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 			self:SetDeathVariablesTrue(data, phys, true)
@@ -235,8 +235,8 @@ function ENT:PhysicsCollide(data, phys)
 		if self.CollideCodeWithoutRemoving == true && CurTime() > self.NextCollideWithoutRemoveT then
 			self:DoDamageCode(data, phys)
 			self:OnCollideSoundCode()
-			if self.PaintDecalOnCollide == true && VJ_PICK(self.DecalTbl_OnCollideDecals) != false && self.AlreadyPaintedDeathDecal == false then
-				util.Decal(VJ_PICK(self.DecalTbl_OnCollideDecals), data.HitPos + data.HitNormal, data.HitPos - data.HitNormal)
+			if self.PaintDecalOnCollide == true && VJ.PICK(self.DecalTbl_OnCollideDecals) != false && self.AlreadyPaintedDeathDecal == false then
+				util.Decal(VJ.PICK(self.DecalTbl_OnCollideDecals), data.HitPos + data.HitNormal, data.HitPos - data.HitNormal)
 			end
 			self:CustomOnCollideWithoutRemove(data, phys)
 			self.NextCollideWithoutRemoveT = CurTime() + math.Rand(self.NextCollideWithoutRemove.a, self.NextCollideWithoutRemove.b)
@@ -246,7 +246,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
 	self.Dead = true
-	VJ_STOPSOUND(self.CurrentIdleSound)
+	VJ.STOPSOUND(self.CurrentIdleSound)
 	self:OnRemoveSoundCode()
 	self:CustomOnRemove()
 end
@@ -254,14 +254,14 @@ end
 function ENT:SetDeathVariablesTrue(data, phys, runDeathEffects)
 	self.Dead = true
 	self:StopParticles()
-	VJ_STOPSOUND(self.CurrentIdleSound)
+	VJ.STOPSOUND(self.CurrentIdleSound)
 	if runDeathEffects == true then self:DeathEffects(data, phys or self:GetPhysicsObject()) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartupSoundCode()
 	if self.HasStartupSounds == false then return end
 	if CurTime() > self.NextIdleSoundT && math.random(1, self.StartupSoundChance) == 1 then
-		self.CurrentStartupSound = VJ_CreateSound(self, self.SoundTbl_Startup, self.StartupSoundLevel, math.random(self.StartupSoundPitch.a, self.StartupSoundPitch.b))
+		self.CurrentStartupSound = VJ.CreateSound(self, self.SoundTbl_Startup, self.StartupSoundLevel, math.random(self.StartupSoundPitch.a, self.StartupSoundPitch.b))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -269,7 +269,7 @@ function ENT:IdleSoundCode()
 	if self.HasIdleSounds == false then return end
 	if CurTime() > self.NextIdleSoundT then
 		if math.random(1, self.IdleSoundChance) == 1 then
-			self.CurrentIdleSound = VJ_CreateSound(self, self.SoundTbl_Idle, self.IdleSoundLevel, math.random(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
+			self.CurrentIdleSound = VJ.CreateSound(self, self.SoundTbl_Idle, self.IdleSoundLevel, math.random(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
 		end
 		self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle.a ,self.NextSoundTime_Idle.b)
 	end
@@ -278,13 +278,13 @@ end
 function ENT:OnCollideSoundCode()
 	if self.HasOnCollideSounds == false then return end
 	if math.random(1, self.OnCollideSoundChance) == 1 then
-		self.CurrentDeathSound = VJ_CreateSound(self, self.SoundTbl_OnCollide, self.OnCollideSoundLevel, math.random(self.OnCollideSoundPitch.a, self.OnCollideSoundPitch.b))
+		self.CurrentDeathSound = VJ.CreateSound(self, self.SoundTbl_OnCollide, self.OnCollideSoundLevel, math.random(self.OnCollideSoundPitch.a, self.OnCollideSoundPitch.b))
 	end
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemoveSoundCode()
 	if self.HasOnRemoveSounds == false then return end
 	if math.random(1, self.OnRemoveSoundChance) == 1 then
-		self.CurrentDeathSound = VJ_CreateSound(self, self.SoundTbl_OnRemove, self.OnRemoveSoundLevel, math.random(self.OnRemoveSoundPitch.a, self.OnRemoveSoundPitch.b))
+		self.CurrentDeathSound = VJ.CreateSound(self, self.SoundTbl_OnRemove, self.OnRemoveSoundLevel, math.random(self.OnRemoveSoundPitch.a, self.OnRemoveSoundPitch.b))
 	end
 end

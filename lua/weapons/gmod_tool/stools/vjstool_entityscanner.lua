@@ -32,7 +32,7 @@ function TOOL:LeftClick(tr)
 	PrintMessage(HUD_PRINTCONSOLE,"MODEL: File Path = "..Ent:GetModel().." ||| Skin = "..Ent:GetSkin())
 	PrintMessage(HUD_PRINTCONSOLE,"POSITION: Vector("..Ent:GetPos().x..", "..Ent:GetPos().y..", "..Ent:GetPos().z..") ||| X = "..Ent:GetPos().x.." , Y = "..Ent:GetPos().y.." , Z = "..Ent:GetPos().z)
 	PrintMessage(HUD_PRINTCONSOLE,"ANGLE: Angle("..Ent:GetAngles().p..", "..Ent:GetAngles().y..", "..Ent:GetAngles().r..") ||| Pitch = "..Ent:GetAngles().p.." , Yaw = "..Ent:GetAngles().y.." , Roll = "..Ent:GetAngles().r)
-	PrintMessage(HUD_PRINTCONSOLE,"SEQUENCE: ID = "..Ent:GetSequence().." ||| Name = "..Ent:GetSequenceName(Ent:GetSequence()).." ||| Duration = "..VJ_GetSequenceDuration(Ent,Ent:GetSequenceName(Ent:GetSequence())))
+	PrintMessage(HUD_PRINTCONSOLE,"SEQUENCE: ID = "..Ent:GetSequence().." ||| Name = "..Ent:GetSequenceName(Ent:GetSequence()).." ||| Duration = "..VJ.AnimDuration(Ent,Ent:GetSequenceName(Ent:GetSequence())))
 	if IsValid(Phys) then
 		PrintMessage(HUD_PRINTCONSOLE,"VELOCITY: Vector("..Phys:GetVelocity().x..", "..Phys:GetVelocity().y..", "..Phys:GetVelocity().z..") ||| X = "..Phys:GetVelocity().x.." , Y = "..Phys:GetVelocity().y.." , Z = "..Phys:GetVelocity().z.." ||| Length = "..Phys:GetVelocity():Length())
 		PrintMessage(HUD_PRINTCONSOLE,"PHYSICS: Mass = "..Phys:GetMass().." ||| Surface Area = "..Phys:GetSurfaceArea().." ||| Volume = "..Phys:GetVolume())

@@ -25,7 +25,7 @@ function ENT:VJ_TASK_GOTO_LASTPOS(moveType, customFunc)
 	//vsched:EngTask(moveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched.IsMovingTask = true
-	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
+	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
 	//self.CanDoSelectScheduleAgain = false
 	//vsched.RunCode_OnFinish = function()
 		//self.CanDoSelectScheduleAgain = true
@@ -45,7 +45,7 @@ function ENT:VJ_TASK_GOTO_TARGET(moveType, customFunc)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched:EngTask("TASK_FACE_TARGET", 1)
 	vsched.IsMovingTask = true
-	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
+	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
 	if (customFunc) then customFunc(vsched) end
 	self:StartSchedule(vsched)
 end
@@ -60,7 +60,7 @@ function ENT:VJ_TASK_GOTO_PLAYER(moveType, customFunc)
 	//vsched:EngTask(moveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched.IsMovingTask = true
-	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
+	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
 	if (customFunc) then customFunc(vsched) end
 	self:StartSchedule(vsched)
 end
@@ -73,7 +73,7 @@ function ENT:VJ_TASK_COVER_FROM_ENEMY(moveType, customFunc)
 	//vsched:EngTask(moveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched.IsMovingTask = true
-	if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
+	if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
 	vsched.RunCode_OnFail = function()
 		//print("Cover from enemy failed!")
 		local vschedFail = vj_ai_schedule.New("vj_cover_from_enemy_fail")
@@ -82,7 +82,7 @@ function ENT:VJ_TASK_COVER_FROM_ENEMY(moveType, customFunc)
 		//vschedFail:EngTask(moveType, 0)
 		vschedFail:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 		vschedFail.IsMovingTask = true
-		if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vschedFail.MoveType = 1 else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vschedFail.MoveType = 0 end
+		if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) vschedFail.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) vschedFail.MoveType = 0 end
 		if (customFunc) then customFunc(vschedFail) end
 		self:StartSchedule(vschedFail)
 	end
@@ -98,7 +98,7 @@ function ENT:VJ_TASK_COVER_FROM_ORIGIN(moveType, customFunc)
 	//vsched:EngTask(moveType, 0)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched.IsMovingTask = true
-	if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
+	if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
 	vsched.RunCode_OnFail = function()
 		local vschedFail = vj_ai_schedule.New("vj_cover_from_origin_fail")
 		vschedFail:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
@@ -106,7 +106,7 @@ function ENT:VJ_TASK_COVER_FROM_ORIGIN(moveType, customFunc)
 		//vschedFail:EngTask(moveType, 0)
 		vschedFail:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 		vschedFail.IsMovingTask = true
-		if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ_PICK(self.AnimTbl_Run)) vschedFail.MoveType = 1 else self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk)) vschedFail.MoveType = 0 end
+		if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) vschedFail.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) vschedFail.MoveType = 0 end
 		if (customFunc) then customFunc(vschedFail) end
 		self:StartSchedule(vschedFail)
 	end
@@ -127,7 +127,7 @@ local task_idleWander = vj_ai_schedule.New("vj_idle_wander")
 	
 function ENT:VJ_TASK_IDLE_WANDER()
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
-	self:SetMovementActivity(VJ_PICK(self.AnimTbl_Walk))
+	self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk))
 	//self:SetLastPosition(self:GetPos() + self:GetForward() * 300)
 	self:StartSchedule(task_idleWander)
 end
@@ -153,7 +153,7 @@ function ENT:RunAIMoveJump()
 	if self:GetNavType() != NAV_JUMP then return end
 	if self:OnGround() then
 		self:MoveJumpStop()
-		if VJ_AnimationExists(self, ACT_LAND) then
+		if VJ.AnimExists(self, ACT_LAND) then
 			self.NextIdleStandTime = CurTime() + self:SequenceDuration(self:GetSequence()) - 0.1
 		end
 		self:SetNavType(NAV_GROUND)
@@ -236,7 +236,7 @@ function ENT:StartSchedule(schedule)
 			maxs = self:OBBMaxs() + tr_addvec,
 			filter = self
 		})
-		if IsValid(tr.Entity) && tr.Entity:IsNPC() && !VJ_HasValue(self.EntitiesToNoCollide, tr.Entity:GetClass()) then
+		if IsValid(tr.Entity) && tr.Entity:IsNPC() && !VJ.HasValue(self.EntitiesToNoCollide, tr.Entity:GetClass()) then
 			self:DoRunCode_OnFail(schedule)
 			return
 		end

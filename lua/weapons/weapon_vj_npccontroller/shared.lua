@@ -32,7 +32,7 @@ SWEP.AdminSpawnable				= false
 SWEP.UseHands = true -- Should this weapon use Garry's Mod hands? (The model must support it!)
 	-- Primary/Secondary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Sound = {"physics/flesh/flesh_squishy_impact_hard1.wav","physics/flesh/flesh_squishy_impact_hard2.wav","physics/flesh/flesh_squishy_impact_hard3.wav","physics/flesh/flesh_squishy_impact_hard4.wav"} -- Sound played when the weapon is deployed
-SWEP.Primary.SoundPitch	= VJ_Set(140, 140)
+SWEP.Primary.SoundPitch	= VJ.SET(140, 140)
 SWEP.Primary.ClipSize 			= -1
 SWEP.Primary.DefaultClip		= -1
 SWEP.Primary.Automatic 			= false
@@ -61,13 +61,13 @@ function SWEP:PrimaryAttack()
 	
 	owner:SetAnimation(PLAYER_ATTACK1)
 	local anim = ACT_VM_SECONDARYATTACK
-	local animTime = VJ_GetSequenceDuration(owner:GetViewModel(), anim)
+	local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
 	self:SendWeaponAnim(anim)
 	self.NextIdleT = CurTime() + animTime
 	self.NextReloadT = CurTime() + animTime
 	self:SetNextPrimaryFire(CurTime() + animTime)
 	
-	local fireSd = VJ_PICK(self.Primary.Sound)
+	local fireSd = VJ.PICK(self.Primary.Sound)
 	if fireSd != false then
 		sound.Play(fireSd, owner:GetPos(), self.Primary.SoundLevel, math.random(self.Primary.SoundPitch.a, self.Primary.SoundPitch.b), self.Primary.SoundVolume)
 	end

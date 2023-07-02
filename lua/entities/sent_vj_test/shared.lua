@@ -38,7 +38,7 @@ if CLIENT then
 
 		local label_wel = vgui.Create("DLabel", frame)
 		label_wel:SetPos(10, 30)
-		label_wel:SetText(VJ_PICK(welMsgs))
+		label_wel:SetText(VJ.PICK(welMsgs))
 		label_wel:SizeToContents()
 		
 		local button_kill = vgui.Create("DButton", frame)

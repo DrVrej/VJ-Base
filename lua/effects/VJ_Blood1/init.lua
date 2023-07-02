@@ -11,12 +11,12 @@
 
 	-- Code Implementation --
 	local blcolor = Color(130, 19, 10)
-	effectBlood:SetColor(VJ_Color2Byte(Color(r, g, b)))
+	effectBlood:SetColor(VJ.Color2Byte(Color(r, g, b)))
 -------------------------------------- */
 function EFFECT:Init(data)
 	local origin = data:GetOrigin()
 	local scale = data:GetScale()
-	local color = VJ_Color8Bit2Color(data:GetColor())
+	local color = VJ.Color8Bit2Color(data:GetColor())
 	
 	self.Emitter = ParticleEmitter(origin)
 	for _ = 0,6 do
