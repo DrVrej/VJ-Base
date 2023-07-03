@@ -171,8 +171,6 @@ function SWEP:CustomOnEquip(newOwner) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnNPC_ServerThink() end
----------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnReload() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- Unlike CustomOnReload(), this is called AFTER the reload animation has finished
@@ -400,7 +398,6 @@ function SWEP:NPC_ServerNextFire()
 
 	self:RunWorldModelThink()
 	self:CustomOnThink()
-	self:CustomOnNPC_ServerThink()
 	
 	if self.NPC_NextPrimaryFire != false && self:NPCAbleToShoot() == true then
 		self:NPCShoot_Primary() -- Panpoushde zarg
