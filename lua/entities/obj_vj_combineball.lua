@@ -95,10 +95,9 @@ function ENT:OnBounce(data, phys)
 	if !IsValid(owner) then return end
 	local closestDist = 1024
 	local target = NULL
-	for _, v in ipairs(ents.FindInSphere(myPos, 1024)) do
-		if v == owner then continue end
-		if (!v:IsNPC() && !v:IsPlayer()) then continue end
-		if owner:IsNPC() && owner:CheckRelationship(v) == D_LI then continue end
+	for _, v in ipairs(ents.FindInSphere(myPos, closestDist)) do
+		if v == owner or (!v:IsNPC() && !v:IsPlayer()) then continue end
+		if owner:IsNPC() && owner:CheckRelationship(v) != D_HT then continue end
 		local dist = v:GetPos():Distance(myPos)
 		if dist < closestDist && dist > 20 then
 			closestDist = dist
@@ -107,8 +106,7 @@ function ENT:OnBounce(data, phys)
 	end
 	
 	if IsValid(target) then
-		local targetPos = target:GetPos() + target:OBBCenter()
-		local norm = (targetPos - myPos):GetNormalized()
+		local norm = ((target:GetPos() + target:OBBCenter()) - myPos):GetNormalized()
 		if self:GetForward():DotProduct(norm) < 0.75 then -- Lowered the visual range from 0.95, too accurate
 			phys:SetVelocity(norm * lastVel)
 		end
@@ -119,7 +117,7 @@ function ENT:CustomOnPhysicsCollide(data, phys)
 	local owner = self:GetOwner()
 	local hitEnt = data.HitEntity
 	if IsValid(owner) then
-		if (VJ.IsProp(hitEnt)) or (owner:IsNPC() && owner:CheckRelationship(hitEnt) == D_HT && (hitEnt != owner) or true) then
+		if (VJ.IsProp(hitEnt)) or (hitEnt:IsPlayer()) or (owner:IsNPC() && owner:CheckRelationship(hitEnt) == D_HT && hitEnt != owner) then
 			self:CustomOnDoDamage_Direct(data, phys, hitEnt)
 			local dmgInfo = DamageInfo()
 			dmgInfo:SetDamage(self.DirectDamage)
