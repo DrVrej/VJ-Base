@@ -667,7 +667,9 @@ ENT.SoundTrackPlaybackRate = 1
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	-- Use the functions below to customize certain parts of the base or to add new custom systems
+-- Use the functions below to customize parts of the base or to add new custom systems
+-- Some functions don't have a custom function because you can simply override the base function and call "self.BaseClass.FuncName" to run the base code as well
+-- 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPreInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -682,8 +684,6 @@ function ENT:CustomOnThink_AIEnabled() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Called at the end of every entity it checks every process time
 -- function ENT:CustomOnSetupRelationships(ent, entFri, entDist) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnChangeMovementType(movType) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnIsJumpLegal(startPos, apex, endPos) end -- Return nothing to let base decide, return true to make it jump, return false to disallow jumping
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -891,10 +891,8 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Controller_Initialize(ply, controlEnt) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Controller_IntMsg(ply, controlEnt)
-	//ply:ChatPrint("CTRL + MOUSE2: Rocket Attack") -- Example
+function ENT:Controller_Initialize(ply, controlEnt)
+	//ply:ChatPrint("CTRL + MOUSE2: Rocket Attack") -- Example key binding message
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1232,7 +1230,6 @@ function ENT:DoChangeMovementType(movType)
 		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
 		self:CapabilitiesRemove(CAP_MOVE_FLY)
 	end
-	self:CustomOnChangeMovementType(movType)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1753,20 +1750,21 @@ function ENT:Think()
 		end
 	end
 	
-	self:CustomOnThink()
-	
 	local curTime = CurTime()
 	
+	-- Breath sound system
 	if !self.Dead && self.HasBreathSound && self.HasSounds && curTime > self.NextBreathSoundT then
-		local sdtbl = VJ.PICK(self.SoundTbl_Breath)
+		local sdTbl = VJ.PICK(self.SoundTbl_Breath)
 		local dur = 1
-		if sdtbl then
+		if sdTbl then
 			VJ.STOPSOUND(self.CurrentBreathSound)
-			dur = (self.NextSoundTime_Breath == false and SoundDuration(sdtbl)) or math.Rand(self.NextSoundTime_Breath.a, self.NextSoundTime_Breath.b)
-			self.CurrentBreathSound = VJ.CreateSound(self, sdtbl, self.BreathSoundLevel, self:VJ_DecideSoundPitch(self.BreathSoundPitch.a, self.BreathSoundPitch.b))
+			dur = (self.NextSoundTime_Breath == false and SoundDuration(sdTbl)) or math.Rand(self.NextSoundTime_Breath.a, self.NextSoundTime_Breath.b)
+			self.CurrentBreathSound = VJ.CreateSound(self, sdTbl, self.BreathSoundLevel, self:VJ_DecideSoundPitch(self.BreathSoundPitch.a, self.BreathSoundPitch.b))
 		end
 		self.NextBreathSoundT = curTime + dur
 	end
+	
+	self:CustomOnThink()
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	if GetConVar("ai_disabled"):GetInt() == 0 && self:GetState() != VJ_STATE_FREEZE && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
 		if self.VJ_DEBUG == true then
@@ -3193,10 +3191,6 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			dissolver:SetKeyValue("magnitude",100)
 			dissolver:SetKeyValue("dissolvetype",0)
 			dissolver:Fire("Dissolve","vj_dissolve_corpse")
-			if IsValid(self.CurrentWeaponEntity) then
-				self.CurrentWeaponEntity:SetName("vj_dissolve_weapon")
-				dissolver:Fire("Dissolve","vj_dissolve_weapon")
-			end
 			dissolver:Fire("Kill", "", 0.1)
 			//dissolver:Remove()
 		end

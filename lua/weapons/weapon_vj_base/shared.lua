@@ -380,17 +380,16 @@ end
 function SWEP:NPC_ServerNextFire()
 	if CLIENT or !IsValid(self) then return end
 	local owner = self:GetOwner()
-	if !IsValid(owner) or !owner:IsNPC() then return end
-	if owner:GetActiveWeapon() != self then return end
+	if !IsValid(owner) or !owner:IsNPC() or owner:GetActiveWeapon() != self then return end
 	
-	if self.IsMeleeWeapon == false then
+	if !self.IsMeleeWeapon then
 		local pos = self:DecideBulletPosition()
 		if pos != nil then
 			self:SetNW2Vector("VJ_CurBulletPos", pos)
 		end
 	end
 	
-	if owner:GetActivity() == nil then return end
+	if !owner:GetActivity() then return end
 	
 	//print("------------------")
 	//VJ.DEBUG_TempEnt(self:DecideBulletPosition(),self:GetAngles(),Color(255,0,255),1)

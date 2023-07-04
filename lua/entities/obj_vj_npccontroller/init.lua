@@ -166,16 +166,16 @@ function ENT:StartControlling()
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SetControlledNPC(GetEntity)
+function ENT:SetControlledNPC(npcEnt)
 	-- Set the bullseye entity values
 	local bullseyeEnt = ents.Create("obj_vj_bullseye")
-	bullseyeEnt:SetPos(GetEntity:GetPos() + GetEntity:GetForward()*100 + GetEntity:GetUp()*50)//Vector(GetEntity:OBBMaxs().x +20,0,GetEntity:OBBMaxs().z +20))
+	bullseyeEnt:SetPos(npcEnt:GetPos() + npcEnt:GetForward()*100 + npcEnt:GetUp()*50)//Vector(npcEnt:OBBMaxs().x +20,0,npcEnt:OBBMaxs().z +20))
 	bullseyeEnt:SetModel("models/hunter/blocks/cube025x025x025.mdl")
-	//bullseyeEnt:SetParent(GetEntity)
+	//bullseyeEnt:SetParent(npcEnt)
 	bullseyeEnt:SetRenderMode(RENDERMODE_NONE)
 	bullseyeEnt:Spawn()
 	bullseyeEnt:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
-	bullseyeEnt.VJ_AlwaysEnemyToEnt = GetEntity
+	bullseyeEnt.VJ_AlwaysEnemyToEnt = npcEnt
 	bullseyeEnt:SetColor(color0000)
 	bullseyeEnt:SetNoDraw(false)
 	bullseyeEnt:DrawShadow(false)
@@ -183,8 +183,8 @@ function ENT:SetControlledNPC(GetEntity)
 	self.VJCE_Bullseye = bullseyeEnt
 
 	-- Set the NPC values
-	if !GetEntity.VJC_Data then
-		GetEntity.VJC_Data = {
+	if !npcEnt.VJC_Data then
+		npcEnt.VJC_Data = {
 			CameraMode = 1, -- Sets the default camera mode | 1 = Third Person, 2 = First Person
 			ThirdP_Offset = Vector(0, 0, 0), -- The offset for the controller when the camera is in third person
 			FirstP_Bone = "ValveBiped.Bip01_Head1", -- If left empty, the base will attempt to calculate a position for first person
@@ -193,58 +193,59 @@ function ENT:SetControlledNPC(GetEntity)
 		}
 	end
 	local plyEnt = self.VJCE_Player
-	self.VJC_Camera_Mode = GetEntity.VJC_Data.CameraMode -- Get the NPC's default camera mode
-	self.VJC_NPC_LastPos = GetEntity:GetPos()
-	GetEntity.VJ_IsBeingControlled = true
-	GetEntity.VJ_TheController = plyEnt
-	GetEntity.VJ_TheControllerEntity = self
-	GetEntity.VJ_TheControllerBullseye = bullseyeEnt
-	GetEntity:SetEnemy(NULL)
-	GetEntity:VJ_Controller_InitialMessage(plyEnt, self)
-	if GetEntity.IsVJBaseSNPC == true then
-		GetEntity:Controller_Initialize(plyEnt, self)
-		local EntityEnemy = GetEntity:GetEnemy()
+	self.VJC_Camera_Mode = npcEnt.VJC_Data.CameraMode -- Get the NPC's default camera mode
+	self.VJC_NPC_LastPos = npcEnt:GetPos()
+	npcEnt.VJ_IsBeingControlled = true
+	npcEnt.VJ_TheController = plyEnt
+	npcEnt.VJ_TheControllerEntity = self
+	npcEnt.VJ_TheControllerBullseye = bullseyeEnt
+	npcEnt:SetEnemy(NULL)
+	plyEnt:ChatPrint("#vjbase.print.npccontroller.entrance")
+	if npcEnt.IsVJBaseSNPC == true then
+		local funcCustom = npcEnt.Controller_IntMsg; if funcCustom then funcCustom(npcEnt, plyEnt, self) end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
+		npcEnt:Controller_Initialize(plyEnt, self)
+		local EntityEnemy = npcEnt:GetEnemy()
 		if IsValid(EntityEnemy) then
-			GetEntity:AddEntityRelationship(EntityEnemy, D_NU, 10)
-			EntityEnemy:AddEntityRelationship(GetEntity, D_NU, 10)
-			GetEntity:ResetEnemy(false)
-			GetEntity:SetEnemy(bullseyeEnt)
+			npcEnt:AddEntityRelationship(EntityEnemy, D_NU, 10)
+			EntityEnemy:AddEntityRelationship(npcEnt, D_NU, 10)
+			npcEnt:ResetEnemy(false)
+			npcEnt:SetEnemy(bullseyeEnt)
 		end
 		self.VJC_Data_NPC = {
-			[1] = GetEntity.DisableWandering,
-			[2] = GetEntity.DisableChasingEnemy,
-			[3] = GetEntity.DisableTakeDamageFindEnemy,
-			[4] = GetEntity.DisableTouchFindEnemy,
-			[5] = GetEntity.DisableSelectSchedule,
-			[6] = GetEntity.CallForHelp,
-			[7] = GetEntity.CallForBackUpOnDamage,
-			[8] = GetEntity.BringFriendsOnDeath,
-			[9] = GetEntity.FollowPlayer,
-			[10] = GetEntity.CanDetectDangers,
-			[11] = GetEntity.Passive_RunOnTouch,
-			[12] = GetEntity.Passive_RunOnDamage,
-			[13] = GetEntity.IsGuard,
+			[1] = npcEnt.DisableWandering,
+			[2] = npcEnt.DisableChasingEnemy,
+			[3] = npcEnt.DisableTakeDamageFindEnemy,
+			[4] = npcEnt.DisableTouchFindEnemy,
+			[5] = npcEnt.DisableSelectSchedule,
+			[6] = npcEnt.CallForHelp,
+			[7] = npcEnt.CallForBackUpOnDamage,
+			[8] = npcEnt.BringFriendsOnDeath,
+			[9] = npcEnt.FollowPlayer,
+			[10] = npcEnt.CanDetectDangers,
+			[11] = npcEnt.Passive_RunOnTouch,
+			[12] = npcEnt.Passive_RunOnDamage,
+			[13] = npcEnt.IsGuard,
 		}
-		GetEntity.DisableWandering = true
-		GetEntity.DisableChasingEnemy = true
-		GetEntity.DisableTakeDamageFindEnemy = true
-		GetEntity.DisableTouchFindEnemy = true
-		GetEntity.DisableSelectSchedule = true
-		GetEntity.CallForHelp = false
-		GetEntity.CallForBackUpOnDamage = false
-		GetEntity.BringFriendsOnDeath = false
-		GetEntity.FollowPlayer = false
-		GetEntity.CanDetectDangers = false
-		GetEntity.Passive_RunOnTouch = false
-		GetEntity.Passive_RunOnDamage = false
-		GetEntity.IsGuard = false
+		npcEnt.DisableWandering = true
+		npcEnt.DisableChasingEnemy = true
+		npcEnt.DisableTakeDamageFindEnemy = true
+		npcEnt.DisableTouchFindEnemy = true
+		npcEnt.DisableSelectSchedule = true
+		npcEnt.CallForHelp = false
+		npcEnt.CallForBackUpOnDamage = false
+		npcEnt.BringFriendsOnDeath = false
+		npcEnt.FollowPlayer = false
+		npcEnt.CanDetectDangers = false
+		npcEnt.Passive_RunOnTouch = false
+		npcEnt.Passive_RunOnDamage = false
+		npcEnt.IsGuard = false
 		
-		GetEntity.vACT_StopAttacks = true
-		GetEntity.NextThrowGrenadeT = 0
+		npcEnt.vACT_StopAttacks = true
+		npcEnt.NextThrowGrenadeT = 0
 	end
-	GetEntity:ClearSchedule()
-	GetEntity:StopMoving()
-	self.VJCE_NPC = GetEntity
+	npcEnt:ClearSchedule()
+	npcEnt:StopMoving()
+	self.VJCE_NPC = npcEnt
 	timer.Simple(0, function() -- This only needs to be 0 seconds because we just need a tick to pass
 		if IsValid(self) && IsValid(self.VJCE_NPC) then
 			self.VJCE_NPC.vACT_StopAttacks = false
