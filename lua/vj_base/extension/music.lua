@@ -3,6 +3,9 @@
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
+local IsValid = IsValid
+local table_remove = table.remove
+
 if SERVER then
 	util.AddNetworkString("vj_music_run")
 elseif CLIENT then
@@ -10,7 +13,7 @@ elseif CLIENT then
 	
 	VJ.Music_Queue = {}
 	
-	net.Receive("vj_music_run",function(len)
+	net.Receive("vj_music_run", function(len)
 		local ent = net.ReadEntity()
 		local sdTbl = net.ReadTable()
 		local sdVol = net.ReadFloat()
@@ -37,13 +40,15 @@ elseif CLIENT then
 					table_remove(VJ.Music_Queue, k)
 				end
 			end
+			-- No music exists, so stop the thinking
 			if #VJ.Music_Queue <= 0 then
 				timer.Remove("vj_music_think")
 				VJ.Music_Queue = {}
 			else
-				for _,v in pairs(VJ.Music_Queue) do
+				for _, v in pairs(VJ.Music_Queue) do
 					if IsValid(v.npc) && IsValid(v.channel) then
-						v.channel:Play() break
+						v.channel:Play()
+						break
 					end
 				end
 			end

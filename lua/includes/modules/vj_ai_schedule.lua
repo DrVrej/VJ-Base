@@ -19,8 +19,8 @@ module("vj_ai_schedule")
 local Schedule = {}
 Schedule.__index = Schedule
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Schedule:Init(debugName)
-	self.debugName = tostring(debugName)
+function Schedule:Init(Name)
+	self.Name = tostring(Name)
 	self.Tasks = {}
 	self.TaskCount = 0
 end
@@ -51,10 +51,10 @@ function Schedule:GetTask(num)
 	return self.Tasks[num]
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function New(debugName)
+function New(Name)
 	local newSchedule = {}
 	setmetatable(newSchedule, Schedule)
-	newSchedule:Init(debugName)
+	newSchedule:Init(Name)
 	return newSchedule
 end
 

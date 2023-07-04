@@ -526,7 +526,6 @@ local DefaultSoundTbl_Impact = {"vj_flesh/alien_flesh1.wav"}
 	-- ====== Fade Out Time Variables ====== --
 	-- Put to 0 if you want it to stop instantly
 ENT.MeleeAttackSlowPlayerSoundFadeOutTime = 1
-ENT.SoundTrackFadeOutTime = 2
 	-- ====== Sound Chance Variables ====== --
 	-- Higher number = less chance of playing | 1 = Always play
 ENT.IdleSoundChance = 2

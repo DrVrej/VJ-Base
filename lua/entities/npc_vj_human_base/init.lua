@@ -509,9 +509,6 @@ local DefaultSoundTbl_MeleeAttackMiss = {"npc/zombie/claw_miss1.wav","npc/zombie
 local DefaultSoundTbl_Impact = {"physics/flesh/flesh_impact_bullet1.wav","physics/flesh/flesh_impact_bullet2.wav","physics/flesh/flesh_impact_bullet3.wav","physics/flesh/flesh_impact_bullet4.wav","physics/flesh/flesh_impact_bullet5.wav"}
 ------ ///// WARNING: Don't change anything in this box! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	-- ====== Fade Out Time Variables ====== --
-	-- Put to 0 if you want it to stop instantly
-ENT.SoundTrackFadeOutTime = 2
 	-- ====== Sound Chance Variables ====== --
 	-- Higher number = less chance of playing | 1 = Always play
 ENT.IdleSoundChance = 3
