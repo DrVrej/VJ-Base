@@ -185,7 +185,7 @@ function SWEP:CustomOnPrimaryAttack_MeleeHit(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BulletCallback(attacker, tr, dmginfo) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttackEffects() return true end -- Return false to disable the base effects
+function SWEP:CustomOnPrimaryAttackEffects(owner) return true end -- Return false to disable the base effects
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_SecondaryFire_BeforeTimer(eneEnt, fireTime) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -635,7 +635,8 @@ function SWEP:PrimaryAttack(UseAlt)
 		if GetConVar("vj_wep_nomuszzleflash"):GetInt() == 0 then owner:MuzzleFlash() end
 	end
 	
-	self:PrimaryAttackEffects()
+	self:PrimaryAttackEffects(owner)
+	
 	if isPly then
 		//self:ShootEffects("ToolTracer") -- Deprecated
 		owner:ViewPunch(Angle(-self.Primary.Recoil, 0, 0))
@@ -684,9 +685,9 @@ function SWEP:DoIdleAnimation()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:PrimaryAttackEffects()
-	if self:CustomOnPrimaryAttackEffects() != true or self.IsMeleeWeapon == true then return end
-	local owner = self:GetOwner()
+function SWEP:PrimaryAttackEffects(owner)
+	if self:CustomOnPrimaryAttackEffects(owner) != true or self.IsMeleeWeapon == true then return end
+	owner = owner or self:GetOwner()
 	
 	/*local muzzleFlashEffect = EffectData()
 	muzzleFlashEffect:SetOrigin(owner:GetShootPos())
