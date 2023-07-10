@@ -54,31 +54,25 @@ function ENT:Initialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defCollideSds = {"physics/flesh/flesh_squishy_impact_hard1.wav","physics/flesh/flesh_squishy_impact_hard2.wav","physics/flesh/flesh_squishy_impact_hard3.wav","physics/flesh/flesh_squishy_impact_hard4.wav"}
+local defDecals = {
+	["Red"] = "VJ_Blood_Red",
+	["Yellow"] = "VJ_Blood_Yellow",
+	["Green"] = "VJ_Blood_Green",
+	["Orange"] = "VJ_Blood_Orange",
+	["Blue"] = "VJ_Blood_Blue",
+	["Purple"] = "VJ_Blood_Purple",
+	["White"] = "VJ_Blood_White",
+	["Oil"] = "VJ_Blood_Oil",
+}
+local strDefault = "Default"
 --
 function ENT:InitialSetup()
-	if self.CollideSound == "Default" then
+	if self.CollideSound == strDefault then
 		self.CollideSound = defCollideSds
 	end
 	
-	if self.Collide_Decal == "Default" then
-		local bloodType = self.BloodType
-		if bloodType == "Red" then
-			self.Collide_Decal = "VJ_Blood_Red"
-		elseif bloodType == "Yellow" then
-			self.Collide_Decal = "VJ_Blood_Yellow"
-		elseif bloodType == "Green" then
-			self.Collide_Decal = "VJ_Blood_Green"
-		elseif bloodType == "Orange" then
-			self.Collide_Decal = "VJ_Blood_Orange"
-		elseif bloodType == "Blue" then
-			self.Collide_Decal = "VJ_Blood_Blue"
-		elseif bloodType == "Purple" then
-			self.Collide_Decal = "VJ_Blood_Purple"
-		elseif bloodType == "White" then
-			self.Collide_Decal = "VJ_Blood_White"
-		elseif bloodType == "Oil" then
-			self.Collide_Decal = "VJ_Blood_Oil"
-		end
+	if self.Collide_Decal == strDefault then
+		self.Collide_Decal = defDecals[self.BloodType] or ""
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -97,16 +91,17 @@ function ENT:PhysicsCollide(data, phys)
 	if randCollideSd != false && velSpeed > 18 then
 		self:EmitSound(randCollideSd, self.CollideSoundLevel, math.random(self.CollideSoundPitch.a, self.CollideSoundPitch.b))
 	end
-	
+
 	if self.Collide_Decal != "" && velSpeed > 18 && !data.Entity && math.random(1, self.Collide_DecalChance) == 1 then
-		self:SetLocalPos(Vector(self:GetPos().x, self:GetPos().y, self:GetPos().z + 4)) -- Because the entity is too close to the ground
+		local myPos = self:GetPos()
+		self:SetLocalPos(myPos + self:GetUp() * 4) -- Because the entity is too close to the ground
 		local tr = util.TraceLine({
-			start = self:GetPos(),
-			endpos = self:GetPos() - (data.HitNormal*-30),
+			start = myPos,
+			endpos = myPos - (data.HitNormal * -30),
 			filter = self
 		})
 		util.Decal(self.Collide_Decal, tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
-		//util.Decal(self.Collide_Decal,start,endpos)
+		//util.Decal(self.Collide_Decal, start, endpos)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

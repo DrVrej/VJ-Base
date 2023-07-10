@@ -52,49 +52,54 @@ VJ.ANIM_SET_REBEL				= 3 -- Current model's animation set is citizen / rebel
 VJ.ANIM_SET_PLAYER				= 4 -- Current model's animation set is player
 VJ.ANIM_SET_CUSTOM				= 10 -- Use this when defining a custom model set
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Tags ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Tags / Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*
-[Variable]						[Description]
+[Variable]						[Type]		[Description]
 
--- Miscellaneous tags
-VJ_IsBeingControlled			NPC that is being controlled by the VJ NPC Controller
-VJ_IsBeingControlled_Tool		NPC that is being controlled by the VJ NPC Mover Tool
-VJ_LastInvestigateSd			Last time this NPC/Player has made a sound that should be investigated by enemy NPCs
-VJ_LastInvestigateSdLevel		The sound level of the above variable
+-- Activities & Behaviors
+VJTag_IsPickupable				bool		Entity can be picked up by NPCs (Ex: Grenades)
+VJTag_IsPickedUp				bool		Entity that is currently picked up by an NPC and most likely throwing it away (Ex: Grenades)
+VJTag_IsHealing					bool		Entity is healing (either itself or by another entity)
+VJTag_IsEating					bool		Entity is eating something (Ex: a corpse)
+VJTag_IsBeingEaten				bool		Entity is being eaten by something
+VJTag_IsBaseFriendly			bool		Friendly to VJ NPCs
 
--- Activity & Behavior tags
-VJTag_IsPickupable				Entity can be picked up by NPCs (Ex: Grenades)
-VJTag_IsPickedUp				Entity that is currently picked up by an NPC and most likely throwing it away (Ex: Grenades)
-VJTag_IsHealing					Entity is healing (either itself or by another entity)
-VJTag_IsEating					Entity is eating something (Ex: a corpse)
-VJTag_IsBeingEaten				Entity is being eaten by something
-VJTag_IsBaseFriendly			Friendly to VJ NPCs
+-- Base types
+IsVJBaseSNPC					bool
+IsVJBaseSNPC_Creature			bool
+IsVJBaseSNPC_Human				bool
+IsVJBaseSNPC_Tank				bool
+IsVJBaseWeapon					bool
+IsVJBaseCorpse					bool
+IsVJBaseCorpse_Gib				bool
+IsVJBaseSpawner					bool
+IsVJBaseBoneFollower			bool
+IsVJBaseEdited					bool		This entity's meta table has been edited by VJ Base
 
--- Base type tags
-IsVJBaseSNPC
-IsVJBaseSNPC_Creature
-IsVJBaseSNPC_Human
-IsVJBaseSNPC_Tank
-IsVJBaseWeapon
-IsVJBaseCorpse
-IsVJBaseCorpse_Gib
-IsVJBaseSpawner
-IsVJBaseBoneFollower
-IsVJBaseEdited					This entity's meta table has been edited by VJ Base
+-- Identifiers
+VJ_IsHugeMonster				bool		NPC is considered to be very large and/or a boss
+VJTag_ID_Prop					bool		Entity is considered a prop and can be attacked/pushed by NPCs
+VJTag_ID_Danger					bool		Entity is dangerous and should be detected as a regular danger by NPCs
+VJTag_ID_Grenade				bool		Entity is a grenade type and should be detected as a grenade danger by NPCs
+VJTag_ID_Headcrab				bool
+VJTag_ID_Police					bool
+VJTag_ID_Civilian				bool
+VJTag_ID_Turret					bool
+VJTag_ID_Vehicle				bool
+VJTag_ID_Aircraft				bool
 
--- Identifier tags
-VJ_IsHugeMonster				NPC is considered to be very large and/or a boss
-VJTag_ID_Prop					Entity is considered a prop and can be attacked/pushed by NPCs
-VJTag_ID_Danger					Entity is dangerous and should be detected as a regular danger by NPCs
-VJTag_ID_Grenade				Entity is a grenade type and should be detected as a grenade danger by NPCs
-VJTag_ID_Headcrab
-VJTag_ID_Police
-VJTag_ID_Civilian
-VJTag_ID_Turret
-VJTag_ID_Vehicle
-VJTag_ID_Aircraft
+-- Sounds
+VJTag_SD_PlayingMusic			bool		Entity is playing a sound track
 
--- Sound tags
-VJTag_SD_PlayingMusic			Entity is playing a sound track
+-- Controllers
+VJTag_IsControllingNPC			bool		Entity is controlling an NPC, usually using the NPC Controller | Mainly used for players
+VJ_IsBeingControlled			bool		Entity is being controlled by the NPC Controller
+VJ_IsBeingControlled_Tool		bool		Entity is being controlled by the NPC Mover tool
+VJ_TheController				entity		The player that's controlling this entity through the NPC Controller
+VJ_TheControllerEntity			entity		The controller entity
+
+-- Miscellaneous
+VJ_LastInvestigateSd			number		Last time this NPC/Player has made a sound that should be investigated by enemy NPCs
+VJ_LastInvestigateSdLevel		number		The sound level of the above variable
 */

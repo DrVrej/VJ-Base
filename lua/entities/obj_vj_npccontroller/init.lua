@@ -18,8 +18,6 @@ ENT.VJC_BullseyeTracking = false -- Activates bullseye tracking (Will not turn t
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnSetControlledNPC() end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- Different from self:CustomOnKeyBindPressed(), this uses: https://wiki.facepunch.com/gmod/Enums/KEY
@@ -28,9 +26,7 @@ function ENT:CustomOnKeyPressed(key) end
 -- Different from self:CustomOnKeyPressed(), this uses: https://wiki.facepunch.com/gmod/Enums/IN
 function ENT:CustomOnKeyBindPressed(key) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnStopControlling() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnRemove() end
+function ENT:CustomOnStopControlling(keyPressed) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -89,7 +85,7 @@ function ENT:StartControlling()
 	
 	-- Set up the player
 	local plyEnt = self.VJCE_Player
-	plyEnt.IsControlingNPC = true
+	plyEnt.VJTag_IsControllingNPC = true
 	plyEnt.VJ_TheControllerEntity = self
 	plyEnt:Spectate(OBS_MODE_CHASE)
 	plyEnt:SpectateEntity(camEnt)
@@ -114,7 +110,7 @@ function ENT:StartControlling()
 	if plyEnt:GetInfoNum("vj_npc_cont_diewithnpc", 0) == 1 then self.VJC_Player_CanRespawn = false end
 
 	hook.Add("PlayerButtonDown", self, function(ent, ply, button)
-		if ply.IsControlingNPC == true && IsValid(ply.VJ_TheControllerEntity) then
+		if ply.VJTag_IsControllingNPC == true && IsValid(ply.VJ_TheControllerEntity) then
 			local cent = ply.VJ_TheControllerEntity
 			cent.VJC_Key_Last = button
 			cent.VJC_Key_LastTime = CurTime()
@@ -159,7 +155,7 @@ function ENT:StartControlling()
 
 	hook.Add("KeyPress", self, function(ent, ply, key)
 		//print(key)
-		if ply.IsControlingNPC == true && IsValid(ply.VJ_TheControllerEntity) then
+		if ply.VJTag_IsControllingNPC == true && IsValid(ply.VJ_TheControllerEntity) then
 			local cent = ply.VJ_TheControllerEntity
 			cent:CustomOnKeyBindPressed(key)
 		end
@@ -252,14 +248,13 @@ function ENT:SetControlledNPC(npcEnt)
 			self.VJCE_NPC:SetEnemy(self.VJCE_Bullseye)
 		end
 	end)
-	self:CustomOnSetControlledNPC()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- Sadly no other way, this is the most reliable way to sync the position from client to server in time
 	-- Also avoids garbage positions that output from other methods
 net.Receive("vj_controller_cldata", function(len, ply)
 	-- Set the controller's bullseye position if the player is controlling an NPC AND controller entity exists AND Bullseye exists --> Protect against spam ?
-	if ply.IsControlingNPC == true && IsValid(ply.VJ_TheControllerEntity) && ply.VJ_TheControllerEntity.VJC_Bullseye_RefreshPos == true && IsValid(ply.VJ_TheControllerEntity.VJCE_Bullseye) then -- Added a var for toggling the bullseye positioning, this way if one wants to override it they can
+	if ply.VJTag_IsControllingNPC == true && IsValid(ply.VJ_TheControllerEntity) && ply.VJ_TheControllerEntity.VJC_Bullseye_RefreshPos == true && IsValid(ply.VJ_TheControllerEntity.VJCE_Bullseye) then -- Added a var for toggling the bullseye positioning, this way if one wants to override it they can
 		ply.VJ_TheControllerEntity.VJCE_Bullseye:SetPos(net.ReadVector())
 	end
 end)
@@ -270,7 +265,7 @@ function ENT:SendDataToClient(reset)
 	local npcData = npc.VJC_Data
 
 	net.Start("vj_controller_data")
-		net.WriteBool(ply.IsControlingNPC)
+		net.WriteBool(ply.VJTag_IsControllingNPC)
 		net.WriteUInt((reset == true and nil) or self.VJCE_Camera:EntIndex(), 14)
 		net.WriteUInt((reset == true and nil) or npc:EntIndex(), 14)
 		net.WriteUInt((reset == true and 1) or self.VJC_Camera_Mode, 2)
@@ -295,10 +290,10 @@ function ENT:Think()
 	local npc = self.VJCE_NPC
 	local camera = self.VJCE_Camera
 	if (!camera:IsValid()) then self:StopControlling() return end
-	if !IsValid(ply) /*or ply:KeyDown(IN_USE)*/ or ply:Health() <= 0 or (!ply.IsControlingNPC) or !IsValid(npc) or (npc:Health() <= 0) then self:StopControlling() return end
-	if ply.IsControlingNPC != true then return end
+	if !IsValid(ply) /*or ply:KeyDown(IN_USE)*/ or ply:Health() <= 0 or (!ply.VJTag_IsControllingNPC) or !IsValid(npc) or (npc:Health() <= 0) then self:StopControlling() return end
+	if ply.VJTag_IsControllingNPC != true then return end
 	local curTime = CurTime()
-	if ply.IsControlingNPC && IsValid(npc) then
+	if ply.VJTag_IsControllingNPC && IsValid(npc) then
 		local npcWeapon = npc:GetActiveWeapon()
 		self.VJC_NPC_LastPos = npc:GetPos()
 		ply:SetPos(self.VJC_NPC_LastPos + vecZ20) -- Set the player's location
@@ -461,10 +456,10 @@ function ENT:ToggleMovementJumping()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:StopControlling(endKey)
+function ENT:StopControlling(keyPressed)
 	//if !IsValid(self.VJCE_Player) then return self:Remove() end
-	endKey = endKey or false
-	self:CustomOnStopControlling()
+	keyPressed = keyPressed or false
+	self:CustomOnStopControlling(keyPressed)
 
 	local npc = self.VJCE_NPC
 	local ply = self.VJCE_Player
@@ -472,7 +467,7 @@ function ENT:StopControlling(endKey)
 		local plyData = self.VJC_Data_Player
 		ply:UnSpectate()
 		ply:KillSilent() -- If we don't, we will get bugs like no being able to pick up weapons when walking over them.
-		if self.VJC_Player_CanRespawn == true or endKey == true then
+		if self.VJC_Player_CanRespawn == true or keyPressed == true then
 			ply:Spawn()
 			ply:SetHealth(plyData.health)
 			ply:SetArmor(plyData.armor)
@@ -499,7 +494,7 @@ function ENT:StopControlling(endKey)
 		ply:DrawViewModel(true)
 		ply:DrawWorldModel(true)
 		//ply:SetMoveType(MOVETYPE_WALK)
-		ply.IsControlingNPC = false
+		ply.VJTag_IsControllingNPC = false
 		ply.VJ_TheControllerEntity = NULL
 		self:SendDataToClient(true)
 	end
@@ -534,7 +529,6 @@ function ENT:StopControlling(endKey)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
-	self:CustomOnRemove()
 	if !self.VJC_Removed then
 		self:StopControlling()
 	end

@@ -21,7 +21,7 @@ if CLIENT then
 	local viewLerpAng = Angle(0, 0, 0)
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	hook.Add("CalcView", "vj_controller_CalcView", function(ply, origin, angles, fov)
-		if !ply.IsControlingNPC then return end
+		if !ply.VJTag_IsControllingNPC then return end
 		local camera = ply.VJCE_Camera -- Camera entity
 		local npc = ply.VJCE_NPC -- NPC that is being controlled
 		if !IsValid(camera) or !IsValid(npc) then return end
@@ -95,7 +95,7 @@ if CLIENT then
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	hook.Add("PlayerBindPress", "vj_controller_PlayerBindPress", function(ply, bind, pressed)
 		-- For scroll wheel zooming
-		if (bind == "invprev" or bind == "invnext") && ply.IsControlingNPC && IsValid(ply.VJCE_Camera) && ply.VJC_Camera_Mode != 2 then
+		if (bind == "invprev" or bind == "invnext") && ply.VJTag_IsControllingNPC && IsValid(ply.VJCE_Camera) && ply.VJC_Camera_Mode != 2 then
 			ply.VJCE_Camera.Zoom = ply.VJCE_Camera.Zoom or 100
 			if bind == "invprev" then
 				ply.VJCE_Camera.Zoom = math.Clamp(ply.VJCE_Camera.Zoom - ply:GetInfoNum("vj_npc_cont_cam_zoomspeed", 10), 0, 500)
@@ -109,11 +109,11 @@ if CLIENT then
 		//print("Data Sent!")
 		//print(len)
 		local ply = LocalPlayer()
-		ply.IsControlingNPC = net.ReadBool()
+		ply.VJTag_IsControllingNPC = net.ReadBool()
 		ply.VJCE_Camera = ents.GetByIndex(net.ReadUInt(14))
 		ply.VJCE_Camera.Zoom = ply.VJCE_Camera.Zoom or 100
 		-- If the controller has stopped then reset the NPC's bone manipulation!
-		if ply.IsControlingNPC == false && IsValid(ply.VJCE_NPC) && ply.VJC_FP_Bone != -1 then
+		if ply.VJTag_IsControllingNPC == false && IsValid(ply.VJCE_NPC) && ply.VJC_FP_Bone != -1 then
 			ply.VJCE_NPC:ManipulateBoneScale(ply.VJC_FP_Bone, vec1)
 		end
 		ply.VJCE_NPC = ents.GetByIndex(net.ReadUInt(14))
