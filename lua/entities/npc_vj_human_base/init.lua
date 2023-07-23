@@ -1062,8 +1062,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_sd_breath"):GetInt() == 1 then self.HasBreathSound = false end
 	if GetConVar("vj_npc_sd_alert"):GetInt() == 1 then self.HasAlertSounds = false end
 	if GetConVar("vj_npc_sd_ondangersight"):GetInt() == 1 then self.HasOnGrenadeSightSounds = false self.HasOnDangerSightSounds = false end
-	if GetConVar("vj_npc_sd_meleeattack"):GetInt() == 1 then self.HasMeleeAttackSounds = false self.HasExtraMeleeAttackSounds = false end
-	if GetConVar("vj_npc_sd_meleeattackmiss"):GetInt() == 1 then self.HasMeleeAttackMissSounds = false end
+	if GetConVar("vj_npc_sd_meleeattack"):GetInt() == 1 then self.HasMeleeAttackSounds = false self.HasExtraMeleeAttackSounds = false self.HasMeleeAttackMissSounds = false end
 	if GetConVar("vj_npc_sd_pain"):GetInt() == 1 then self.HasPainSounds = false end
 	if GetConVar("vj_npc_sd_death"):GetInt() == 1 then self.HasDeathSounds = false end
 	if GetConVar("vj_npc_sd_followplayer"):GetInt() == 1 then self.HasFollowPlayerSounds_Follow = false self.HasFollowPlayerSounds_UnFollow = false end

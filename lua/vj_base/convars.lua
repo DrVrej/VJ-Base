@@ -90,7 +90,6 @@ cvarList["vj_npc_sd_pain"] = 0 -- Disable hurt Sounds
 cvarList["vj_npc_sd_death"] = 0 -- Disable death Sounds
 cvarList["vj_npc_sd_footstep"] = 0 -- Disable footstep sounds
 cvarList["vj_npc_sd_meleeattack"] = 0 -- If set to false, it won't play the melee attack sound
-cvarList["vj_npc_sd_meleeattackmiss"] = 0 -- Disable melee miss sounds
 cvarList["vj_npc_sd_gibbing"] = 0 -- Disable gibbing sounds
 cvarList["vj_npc_sd_followplayer"] = 0 -- Disable the sounds that play when the player makes the NPC follow/unfollow
 cvarList["vj_npc_sd_becomenemytoply"] = 0 -- Disable sounds that play when a friendly NPC become enemy to the player

@@ -1059,8 +1059,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_sd_idle"):GetInt() == 1 then self.HasIdleSounds = false end
 	if GetConVar("vj_npc_sd_breath"):GetInt() == 1 then self.HasBreathSound = false end
 	if GetConVar("vj_npc_sd_alert"):GetInt() == 1 then self.HasAlertSounds = false end
-	if GetConVar("vj_npc_sd_meleeattack"):GetInt() == 1 then self.HasMeleeAttackSounds = false self.HasExtraMeleeAttackSounds = false end
-	if GetConVar("vj_npc_sd_meleeattackmiss"):GetInt() == 1 then self.HasMeleeAttackMissSounds = false end
+	if GetConVar("vj_npc_sd_meleeattack"):GetInt() == 1 then self.HasMeleeAttackSounds = false self.HasExtraMeleeAttackSounds = false self.HasMeleeAttackMissSounds = false end
 	if GetConVar("vj_npc_sd_slowplayer"):GetInt() == 1 then self.HasMeleeAttackSlowPlayerSound = false end
 	if GetConVar("vj_npc_sd_rangeattack"):GetInt() == 1 then self.HasBeforeRangeAttackSound = false self.HasRangeAttackSound = false end
 	if GetConVar("vj_npc_sd_leapattack"):GetInt() == 1 then self.HasBeforeLeapAttackSound = false self.HasLeapAttackJumpSound = false self.HasLeapAttackDamageSound = false self.HasLeapAttackDamageMissSound = false end

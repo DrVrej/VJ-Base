@@ -1884,10 +1884,10 @@ local vecZ30 = Vector(0, 0, 30)
 local vecZ1 = Vector(0, 0, 1)
 --
 function ENT:SpawnBloodPool(dmginfo, hitgroup)
-	if !IsValid(self.Corpse) then return end
+	local corpseEnt = self.Corpse
+	if !IsValid(corpseEnt) then return end
 	local getBloodPool = VJ.PICK(self.CustomBlood_Pool)
 	if getBloodPool == false then return end
-	local corpseEnt = self.Corpse
 	timer.Simple(2.2, function()
 		if IsValid(corpseEnt) then
 			local pos = corpseEnt:GetPos() + corpseEnt:OBBCenter()

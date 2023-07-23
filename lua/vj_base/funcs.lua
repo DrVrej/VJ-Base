@@ -15,7 +15,6 @@ local isnumber = isnumber
 local tonumber = tonumber
 local string_find = string.find
 local string_Replace = string.Replace
-local math_random = math.random
 local math_round = math.Round
 local math_floor = math.floor
 local math_clamp = math.Clamp
@@ -28,18 +27,15 @@ local bShiftR = bit.rshift
 		- tbl = The table to pick randomly from
 	Returns
 		- false, Table is empty or value is non existent
-		- Value, the randomly picked value from the table (Can be anything)
+		- value, the randomly picked value from the table (Can be anything)
 -----------------------------------------------------------]]
 function VJ.PICK(tbl)
-	if not tbl then return false end -- Value is non-existent
 	if istable(tbl) then
-		if #tbl < 1 then return false end -- Table is empty
-		tbl = tbl[math_random(1, #tbl)]
-		return tbl
-	else
-		return tbl -- Not a table, so just return it
+		local len = #tbl
+		if len < 1 then return false end -- Table is empty
+		return tbl[math.random(1, len)]
 	end
-	return false
+	return tbl or false -- Not a table, so just return it
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -123,7 +119,7 @@ function VJ.CreateSound(ent, sdFile, sdLevel, sdPitch, customFunc)
 	if not sdFile then return end
 	if istable(sdFile) then
 		if #sdFile < 1 then return end -- If the table is empty then end it
-		sdFile = sdFile[math_random(1, #sdFile)]
+		sdFile = sdFile[math.random(1, #sdFile)]
 	end
 	local funcCustom = ent.OnCreateSound; if funcCustom then sdFile = funcCustom(ent, sdFile) end -- Will allow people to alter sounds before they are played
 	local sdID = CreateSound(ent, sdFile)
@@ -139,7 +135,7 @@ function VJ.EmitSound(ent, sdFile, sdLevel, sdPitch, sdVolume, sdChannel)
 	if not sdFile then return end
 	if istable(sdFile) then
 		if #sdFile < 1 then return end -- If the table is empty then end it
-		sdFile = sdFile[math_random(1, #sdFile)]
+		sdFile = sdFile[math.random(1, #sdFile)]
 	end
 	local funcCustom = ent.OnCreateSound; if funcCustom then sdFile = funcCustom(ent, sdFile) end -- Will allow people to alter sounds before they are played
 	ent:EmitSound(sdFile, sdLevel, sdPitch, sdVolume, sdChannel)
