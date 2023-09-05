@@ -332,6 +332,9 @@ ENT.Weapon_NoSpawnMenu = false -- If set to true, the NPC weapon setting in the 
 	-- ====== Distance Variables ====== --
 ENT.Weapon_FiringDistanceFar = 3000 -- How far away it can shoot
 ENT.Weapon_FiringDistanceClose = 10 -- How close until it stops shooting
+ENT.Weapon_AimTurnDiff = false -- Weapon aim turning threshold between 0 and 1 | self.HasPoseParameterLooking must be set to true!
+	-- EXAMPLES: 0.707106781187 = 45 degrees | 0.866025403784 = 30 degrees | 1 = 0 degrees, always turn!
+	-- false = Let base decide based on animation set and weapon hold type
 ENT.HasWeaponBackAway = true -- Should the SNPC back away if the enemy is close?
 ENT.WeaponBackAway_Distance = 150 -- When the enemy is this close, the SNPC will back away | 0 = Never back away
 	-- ====== Standing-Firing Variables ====== --
@@ -970,6 +973,7 @@ ENT.HealthRegenerationDelayT = 0
 ENT.NextWeaponAttackT_Base = 0 -- This is handled by the base, used to avoid running shoot animation twice
 ENT.CurAttackSeed = 0
 ENT.CurAnimationSeed = 0
+ENT.Weapon_AimTurnDiff_Def = 1 -- Default value to use when "self.Weapon_AimTurnDiff" false, this is calculated automatically depending on anim set and weapon hold type
 ENT.GuardingPosition = nil
 ENT.GuardingFacePosition = nil
 ENT.SelectedDifficulty = 1
@@ -1728,6 +1732,8 @@ function ENT:SetupWeaponHoldTypeAnims(hType)
 	if self:CustomOnSetupWeaponHoldTypeAnims(hType) == true then return end
 	
 	if self.ModelAnimationSet == VJ.ANIM_SET_COMBINE then -- Combine =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
+		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.71120220422745 end
+		
 		-- Use rifle animations with minor edits if it's holding a handgun
 		local rifle_idle = ACT_IDLE_SMG1
 		local rifle_walk = VJ.PICK({ACT_WALK_RIFLE, VJ.SequenceToActivity(self, "walkeasy_all")})
@@ -1796,6 +1802,8 @@ function ENT:SetupWeaponHoldTypeAnims(hType)
 			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
 		end
 	elseif self.ModelAnimationSet == VJ.ANIM_SET_METROCOP then -- Metrocop =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
+		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.71120220422745 end
+		
 		-- Do not translate crouch walking and also make the crouch running a walking one instead
 		self.WeaponAnimTranslations[ACT_RUN_CROUCH] 						= ACT_WALK_CROUCH
 		
@@ -1861,6 +1869,7 @@ function ENT:SetupWeaponHoldTypeAnims(hType)
 		end
 	elseif self.ModelAnimationSet == VJ.ANIM_SET_REBEL then -- Rebel =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 		local isFemale = VJ.AnimExists(self, ACT_IDLE_ANGRY_PISTOL)
+		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.78187280893326 end
 		
 		-- handguns use a different set!
 		self.WeaponAnimTranslations[ACT_COVER_LOW] 							= {ACT_COVER_LOW_RPG, ACT_COVER_LOW, "vjseq_coverlow_l", "vjseq_coverlow_r"}
@@ -1983,6 +1992,8 @@ function ENT:SetupWeaponHoldTypeAnims(hType)
 			//self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE -- Not used for melee
 		end
 	elseif self.ModelAnimationSet == VJ.ANIM_SET_PLAYER then -- Player =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
+		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.61155587434769	end
+		
 		if hType == "ar2" then
 			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_HL2MP_IDLE_AR2
 			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_AR2
@@ -2687,11 +2698,13 @@ function ENT:Think()
 				-- Weapon Inventory System
 				if !plyControlled && !self:BusyWithActivity() then // self.IsReloadingWeapon == false
 					if eneValid then
-						if IsValid(self.WeaponInventory.Melee) && ((self.LatestEnemyDistance < self.MeleeAttackDistance) or (self.LatestEnemyDistance < 300 && self.CurrentWeaponEntity:Clip1() <= 0)) && (self:Health() > self:GetMaxHealth() * 0.25) && self.CurrentWeaponEntity != self.WeaponInventory.Melee then
+						-- Switch to melee
+						if !self.IsGuard && IsValid(self.WeaponInventory.Melee) && ((self.LatestEnemyDistance < self.MeleeAttackDistance) or (self.LatestEnemyDistance < 300 && self.CurrentWeaponEntity:Clip1() <= 0)) && (self:Health() > self:GetMaxHealth() * 0.25) && self.CurrentWeaponEntity != self.WeaponInventory.Melee then
 							if self:GetWeaponState() == VJ.NPC_WEP_STATE_RELOADING then self:SetWeaponState() end -- Since the reloading can be cut off, reset it back to false, or else it can mess up its behavior!
 							//timer.Remove("timer_reload_end"..self:EntIndex()) -- No longer needed
 							self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_MELEE
 							self:DoChangeWeapon(self.WeaponInventory.Melee, true)
+						-- Switch to anti-armor
 						elseif self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING && IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank == true or ene.VJ_IsHugeMonster == true) && self.CurrentWeaponEntity != self.WeaponInventory.AntiArmor then
 							self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_ANTI_ARMOR
 							self:DoChangeWeapon(self.WeaponInventory.AntiArmor, true)
@@ -3248,7 +3261,7 @@ end
 function ENT:WeaponAimPoseParameters(resetPoses) self:DoPoseParameterLooking(resetPoses) end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoPoseParameterLooking(resetPoses)
-	if (self.HasPoseParameterLooking == false) or (self.VJ_IsBeingControlled == false && self.DoingWeaponAttack == false) then return end
+	if (!self.HasPoseParameterLooking) or (!self.VJ_IsBeingControlled && !self.DoingWeaponAttack && !self.EnemyData.IsVisible) then return end
 	resetPoses = resetPoses or false
 	//self:GetPoseParameters(true)
 	local ent = (self.VJ_IsBeingControlled and self.VJ_TheController) or self:GetEnemy()
@@ -3365,6 +3378,7 @@ function ENT:SelectSchedule()
 	else
 		local wep = self:GetActiveWeapon()
 		local myPos = self:GetPos()
+		local enePos = ene:GetPos()
 		
 		-- If the enemy is in sight then continue
 		if self.LatestEnemyDistance < self:GetMaxLookDistance() then
@@ -3437,7 +3451,21 @@ function ENT:SelectSchedule()
 					else -- I can see the enemy...
 						self.AllowToDo_WaitForEnemyToComeOut = true
 						if (wep.IsVJBaseWeapon) then -- VJ Base weapons
-							self:FaceCertainEntity(ene, true)
+							-- Do proper weapon aim turning, based on "FInAimCone" - https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/mp/src/game/server/ai_basenpc.cpp#L2584
+							if !self.HasPoseParameterLooking then -- Pose parameter looking is disabled then always face
+								self:FaceCertainEntity(ene, true)
+							else
+								local wepDif = self.Weapon_AimTurnDiff or self.Weapon_AimTurnDiff_Def
+								local los = enePos - myPos
+								los.z = 0
+								local facingDir = self:GetAngles():Forward() -- Do NOT use sight dir bec some NPCs use their eyes as the dir, it will trick the system to think the NPC is facing the enemy
+								facingDir.z = 0
+								local coneCalc = facingDir:Dot((los):GetNormalized())
+								if coneCalc < wepDif then
+									self:FaceCertainEntity(ene, true)
+									self:DoPoseParameterLooking(true) -- Reset pose parameters to help with turning snaps
+								end
+							end
 							local noAttack = false
 							// self:DoChaseAnimation()
 							-- if covered, try to move forward by calculating the distance between the prop and the NPC
@@ -3472,17 +3500,17 @@ function ENT:SelectSchedule()
 										noAttack = true
 									elseif CurTime() > self.NextMoveOnGunCoveredT && ((cover_npc_tr.HitPos:Distance(myPos) > 150 && cover_npc_isObj == true) or (cover_wep == true && !cover_wep_ent:IsNPC() && !cover_wep_ent:IsPlayer())) then
 										local nearestPos;
-										local enePos;
+										local nearestEnePos;
 										if IsValid(cover_npc_ent) then
 											nearestPos, nearestEnePos = self:VJ_GetNearestPointToEntity(cover_npc_ent, true)
 										else
 											nearestPos, nearestEnePos = self:VJ_GetNearestPointToVector(cover_npc_tr.HitPos, true)
 										end
-										enePos = nearestEnePos - self:GetForward()*15
-										if nearestPos:Distance(enePos) <= (self.IsGuard and 60 or 1000) then
-											if self.IsGuard then self.GuardingPosition = enePos end -- Set the guard position to this new position that provides cover
-											self:SetLastPosition(enePos)
-											//VJ.DEBUG_TempEnt(enePos, self:GetAngles(), Color(0,255,255))
+										nearestEnePos = nearestEnePos - self:GetForward()*15
+										if nearestPos:Distance(nearestEnePos) <= (self.IsGuard and 60 or 1000) then
+											if self.IsGuard then self.GuardingPosition = nearestEnePos end -- Set the guard position to this new position that provides cover
+											self:SetLastPosition(nearestEnePos)
+											//VJ.DEBUG_TempEnt(nearestEnePos, self:GetAngles(), Color(0,255,255))
 											local vsched = vj_ai_schedule.New("vj_goto_cover")
 											vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
 											vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
@@ -3589,7 +3617,7 @@ function ENT:SelectSchedule()
 		else -- Not in sight, reset the enemy
 			self:ResetEnemy(false)
 		end
-		self.LatestEnemyDistance = ene:GetPos():Distance(myPos)
+		self.LatestEnemyDistance = enePos:Distance(myPos)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

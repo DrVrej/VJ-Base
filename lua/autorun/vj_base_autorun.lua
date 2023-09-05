@@ -247,7 +247,7 @@ if SERVER then
 		VJ_Nodegraph = vj_ai_nodegraph.New()
 		-- If it failed to read the nodegraph, wait and try again in case nodegraph file hasn't generated yet
 		if VJ_Nodegraph:GetNodegraph().Version == -1 then
-			print("VJ Base AI Nodegraph module: Failed to read nodegraph, attempting again...")
+			print("VJ Base AI Nodegraph module: Failed to read nodegraph, will attempt again soon...")
 			timer.Simple(4, function()
 				print("VJ Base AI Nodegraph module: Running second read attempt...")
 				VJ_Nodegraph.Data = VJ_Nodegraph:ReadNodegraph()

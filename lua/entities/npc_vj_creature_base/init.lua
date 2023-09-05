@@ -2598,7 +2598,7 @@ function ENT:StopAttacks(checkTimers)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoPoseParameterLooking(resetPoses)
-	if self.HasPoseParameterLooking == false then return end
+	if !self.HasPoseParameterLooking then return end
 	resetPoses = resetPoses or false
 	//self:GetPoseParameters(true)
 	local ent = (self.VJ_IsBeingControlled and self.VJ_TheController) or self:GetEnemy()
