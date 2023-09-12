@@ -25,19 +25,19 @@ function Schedule:Init(Name)
 	self.TaskCount = 0
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Schedule:EngTask(taskName, taskData)
+function Schedule:EngTask(taskName, taskData) -- Set an engine defined task
 	local NewTask = vj_ai_task.New()
 	NewTask:InitEngine(taskName, taskData)
 	self.TaskCount = table.insert(self.Tasks, NewTask)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Schedule:AddTask(funcName, data)
+function Schedule:AddTask(funcName, data) -- Set a custom task with predefined prefixes for the functions
 	local NewTask = vj_ai_task.New()
-	NewTask:InitFunctionName("TaskStart_"..funcName, "Task_"..funcName, data)
+	NewTask:InitFunctionName("TASK_START_"..funcName, "TASK_"..funcName, data)
 	self.TaskCount = table.insert(self.Tasks, NewTask)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Schedule:AddTaskEx(startFunc, endFunc, data)
+function Schedule:AddTaskEx(startFunc, endFunc, data) -- Set a custom task with custom function names
 	local NewTask = vj_ai_task.New()
 	NewTask:InitFunctionName(startFunc, endFunc, data)
 	self.TaskCount = table.insert(self.Tasks, NewTask)

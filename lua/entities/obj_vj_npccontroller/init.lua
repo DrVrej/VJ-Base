@@ -330,7 +330,7 @@ function ENT:Think()
 		self:CustomOnThink()
 
 		local canTurn = true
-		if npc.Flinching == true or (((npc.CurrentSchedule && npc.CurrentSchedule.IsPlayActivity != true) or npc.CurrentSchedule == nil) && npc:GetNavType() == NAV_JUMP) then return end
+		if npc.Flinching == true or (((npc.CurrentSchedule && !npc.CurrentSchedule.IsPlayActivity) or npc.CurrentSchedule == nil) && npc:GetNavType() == NAV_JUMP) then return end
 
 		-- Weapon attack
 		if npc.IsVJBaseSNPC_Human == true then

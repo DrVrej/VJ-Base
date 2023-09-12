@@ -31,7 +31,7 @@ function Task:InitEngine(taskName, taskData) -- Creates an engine based task
 	self.Type = TYPE_ENGINE
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Task:InitFunctionName(startFunc, endFunc, taskData)
+function Task:InitFunctionName(startFunc, endFunc, taskData) -- Create a custom task
 	self.StartFunctionName = startFunc
 	self.FunctionName = endFunc
 	self.TaskData = taskData
