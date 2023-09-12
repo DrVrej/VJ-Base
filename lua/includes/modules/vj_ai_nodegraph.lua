@@ -184,6 +184,15 @@ function Nodegraph:GetNodegraph()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
+	Returns whether or not a nodegraph was found
+	Returns
+		- bool, true if a nodegraph exists
+-----------------------------------------------------------]]
+function Nodegraph:Exists()
+	return self.Data.NodeCount > 0
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
 	Get a node's data by its ID
 		- nodeID = The node ID to search for in the nodes table
 	Returns

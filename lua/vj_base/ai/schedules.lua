@@ -178,10 +178,10 @@ function ENT:OnMovementFailed()
 	local curSchedule = self.CurrentSchedule
 	if curSchedule != nil then
 		if self:DoRunCode_OnFail(curSchedule) == true then
-			self:ClearCondition(35)
+			self:ClearCondition(COND_TASK_FAILED)
 		end
 		if curSchedule.ResetOnFail == true then
-			self:ClearCondition(35)
+			self:ClearCondition(COND_TASK_FAILED)
 			self:StopMoving()
 			//self:SelectSchedule()
 		end
@@ -200,7 +200,7 @@ function ENT:StartSchedule(schedule)
 	if self.MovementType == VJ_MOVETYPE_STATIONARY && schedule.IsMovingTask == true then return end -- It's stationary therefore should not move!
 	if (self:GetState() == VJ_STATE_ONLY_ANIMATION or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self:GetState() == VJ_STATE_ONLY_ANIMATION_NOATTACK) && schedule.IsPlayActivity != true then return end
 	if (IsValid(self:GetInternalVariable("m_hOpeningDoor")) or self:GetInternalVariable("m_flMoveWaitFinished") > 0) && self.CurrentSchedule != nil && schedule.Name == self.CurrentSchedule.Name then return end -- If it's the same task and it's opening a door, then DO NOT continue
-	self:ClearCondition(35)
+	self:ClearCondition(COND_TASK_FAILED)
 	if (!schedule.RunCode_OnFail) then schedule.RunCode_OnFail = nil end -- Code that will run ONLY when it fails!
 	if (!schedule.RunCode_OnFinish) then schedule.RunCode_OnFinish = nil end -- Code that will run once the task finished (Will run even if failed)
 	if (!schedule.ResetOnFail) then schedule.ResetOnFail = false end -- Makes the NPC stop moving if it fails
