@@ -2436,35 +2436,7 @@ local finishAttack = {
 ---------------------------------------------------------------------------------------------------------------------------------------------
 //function ENT:OnActiveWeaponChanged(old, new) print(old, new) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-/* Variable Notes:
-	m_flMoveWaitFinished = Current move and wait time, used for things like when opening doors and have to stop for a second
-	m_hOpeningDoor = The door entity it's opening
-	m_vDefaultEyeOffset = The eye position, it's very close to self:EyePos()
-	m_flTimeEnemyAcquired = Every time setenemy is called (including NULL!)  -->  print(math.abs(self:GetInternalVariable("m_flTimeEnemyAcquired")))
-	m_flGroundChangeTime = Time since it touched the ground (Must be from high place)
-	m_bSequenceFinished = Is it playing a animation?
-	m_vecLean = How much it's leaning (ex: Drag around with physgun)
-	m_flAnimTime = Changes the self:GetAnimTimeInterval()
-	m_bIsMoving = Same as self:IsMoving()
-	m_flLastEventCheck = Cycle index of when events were last checked
-	m_flGroundSpeed = Computed linear movement rate for current sequence
-	m_flOriginalYaw = This is the direction facing when the level designer placed the NPC in the level.
-	m_spawnEquipment = Class name of the weapon it spawned with, stays even when weapon is removed or another weapon from its inventory is used!
-	m_takedamage = Defines how it can take damage
-		#define	DAMAGE_NO				0
-		#define DAMAGE_EVENTS_ONLY		1		// Call damage functions, but don't modify health
-		#define	DAMAGE_YES				2
-		#define	DAMAGE_AIM				3
-	m_nWaterType = Type of water the entity is in --> 1 = water, 2 = slime
-	m_HackedGunPos = Overrides the location of self:GetShootPos()
-	
-	-- Following is just used for the face and eye looking:
-	m_hLookTarget = The entity it's looking at
-	m_flNextRandomLookTime = Next time it can look at something (Can be used to set it as well)
-	m_flEyeIntegRate = How fast the eyes move
-	m_viewtarget = Returns the position the NPC's eye pupils are looking at (Can be used to set it as well)
-	m_flBlinktime = Time until it blinks again (Can be used to set it as well)
-	
+/*
 	-- Change movement speed:
 	self:SetLocalVelocity(self:GetMoveVelocity() * 1.5)
 	
@@ -3656,7 +3628,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 	self:CustomOnResetEnemy()
 	if self.VJ_DEBUG == true && GetConVar("vj_npc_printresetenemy"):GetInt() == 1 then print(self:GetName().." has reseted its enemy") end
 	if eneValid then
-		if self.IsFollowing == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && self:GetEnemyLastKnownPos() != defPos then
+		if self.IsFollowing == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && !self:Visible(ene) && self:GetEnemyLastKnownPos() != defPos then
 			self:SetLastPosition(self:GetEnemyLastKnownPos())
 			moveToEnemy = true
 		end
@@ -3684,7 +3656,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 	if (curSched != nil && (curSched.Name == "vj_cover_from_enemy" or curSched.Name == "vj_cover_from_enemy_fail")) then
 		self:StopMoving()
 	end
-	if !self:IsBusy() && !self.IsGuard && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && moveToEnemy == true && self.LastHiddenZone_CanWander == true && !self.NoWeapon_UseScaredBehavior_Active then
+	if moveToEnemy && !self:IsBusy() && !self.IsGuard && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && self.LastHiddenZone_CanWander == true && !self.NoWeapon_UseScaredBehavior_Active then
 		//ParticleEffect("explosion_turret_break", self.LatestEnemyPosition, Angle(0,0,0))
 		self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk))
 		local vsched = vj_ai_schedule.New("vj_act_resetenemy")
