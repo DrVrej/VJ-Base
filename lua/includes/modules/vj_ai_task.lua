@@ -9,6 +9,8 @@ if CLIENT then return end
 local setmetatable = setmetatable
 local print = print
 local ai = ai
+local TASKSTATUS_NEW = TASKSTATUS_NEW
+local TASKSTATUS_RUN_TASK = TASKSTATUS_RUN_TASK
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Begin Metatable ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -18,7 +20,7 @@ Task.__index = Task
 
 -- Type of task it is
 local TYPE_ENGINE = 1
-local TYPE_FNAME = 2
+local TYPE_CUSTOM = 2
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Task:Init()
 	self.Type = nil
@@ -31,44 +33,42 @@ function Task:InitEngine(taskName, taskData) -- Creates an engine based task
 	self.Type = TYPE_ENGINE
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Task:InitFunctionName(startFunc, endFunc, taskData) -- Create a custom task
+function Task:InitCustom(startFunc, endFunc, taskData) -- Create a custom task
 	self.StartFunctionName = startFunc
 	self.FunctionName = endFunc
 	self.TaskData = taskData
-	self.Type = TYPE_FNAME
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function Task:IsEngineType()
-	return self.Type == TYPE_ENGINE
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function Task:IsFNameType()
-	return self.Type == TYPE_FNAME
+	self.Type = TYPE_CUSTOM
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Task:Start(npc)
-	if (self:IsFNameType()) then self:Start_FName(npc) return end
+	if (self:IsCustomType()) then
+		if (!self.StartFunctionName) then return end
+		npc[self.StartFunctionName](npc, TASKSTATUS_NEW, self.TaskData)
+		return
+	end
 	if (self:IsEngineType()) then
 		if (!self.TaskID) then self.TaskID = ai.GetTaskID(self.TaskName) end
 		npc:StartEngineTask(self.TaskID, self.TaskData or 0)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Task:Start_FName(npc)
-	if (!self.StartFunctionName) then return end
-	npc[self.StartFunctionName](npc, self.TaskData)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function Task:Run(npc)
-	if (self:IsFNameType()) then self:Run_FName(npc) return end
+	if (self:IsCustomType()) then
+		if (!self.FunctionName) then return end
+		npc[self.FunctionName](npc, TASKSTATUS_RUN_TASK, self.TaskData)
+		return
+	end
 	if (self:IsEngineType()) then
 		npc:RunEngineTask(self.TaskID, self.TaskData or 0)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Task:Run_FName(npc)
-	if (!self.FunctionName) then return end
-	npc[self.FunctionName](npc,self.TaskData)
+function Task:IsEngineType()
+	return self.Type == TYPE_ENGINE
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function Task:IsCustomType()
+	return self.Type == TYPE_CUSTOM
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function New()

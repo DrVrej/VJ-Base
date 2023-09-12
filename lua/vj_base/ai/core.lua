@@ -1235,8 +1235,8 @@ function ENT:Controller_Movement(cont, ply, bullseyePos)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_PlaySequence(seq, playbackRate, reset, resetTime, interruptible)
-	if !seq then return end
+function ENT:VJ_PlaySequence(animation, playbackRate, useDuration, duration, interruptible)
+	if !animation then return false end
 	if interruptible == true then
 		self.VJ_PlayingSequence = false
 		self.VJ_PlayingInterruptSequence = true
@@ -1245,22 +1245,24 @@ function ENT:VJ_PlaySequence(seq, playbackRate, reset, resetTime, interruptible)
 		self.VJ_PlayingInterruptSequence = false
 	end
 	
+	local seqID = self:LookupSequence(VJ.PICK(animation))
 	self:ClearSchedule()
 	self:StopMoving()
-	self:ResetSequence(self:LookupSequence(VJ.PICK(seq)))
+	self:ResetSequence(seqID)
 	self:ResetSequenceInfo()
 	self:SetCycle(0) -- Start from the beginning
 	if isnumber(playbackRate) then
 		self.AnimationPlaybackRate = playbackRate
 		self:SetPlaybackRate(playbackRate)
 	end
-	if reset == true then
-		timer.Create("timer_act_seqreset"..self:EntIndex(), resetTime, 1, function()
-			self.VJ_PlayingInterruptSequence = false
+	if useDuration == true then
+		timer.Create("timer_act_seqreset"..self:EntIndex(), duration, 1, function()
 			self.VJ_PlayingSequence = false
+			self.VJ_PlayingInterruptSequence = false
 			//self.vACT_StopAttacks = false
 		end)
 	end
+	return seqID
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------

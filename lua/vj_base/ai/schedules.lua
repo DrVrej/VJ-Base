@@ -26,10 +26,6 @@ function ENT:VJ_TASK_GOTO_LASTPOS(moveType, customFunc)
 	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	vsched.IsMovingTask = true
 	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
-	//self.CanDoSelectScheduleAgain = false
-	//vsched.RunCode_OnFinish = function()
-		//self.CanDoSelectScheduleAgain = true
-	//end
 	if (customFunc) then customFunc(vsched) end
 	self:StartSchedule(vsched)
 end
@@ -264,8 +260,7 @@ function ENT:DoSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ScheduleFinished(schedule)
-	schedule = schedule or self.CurrentSchedule
-	self:DoRunCode_OnFinish(schedule)
+	self:DoRunCode_OnFinish(schedule or self.CurrentSchedule)
 	self.CurrentSchedule = nil
 	self.CurrentTask = nil
 	self.CurrentTaskID = nil
@@ -279,18 +274,13 @@ function ENT:SetTask(task)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:NextTask(schedule)
-	//print(self.CurrentTaskID)
-	if !schedule or !self then return end
-	if schedule:NumTasks() == nil then //1
-		print("VJ Base Schedules: Number of tasks is nil!")
-	end
 	//print("Running NextTask")
 	self.CurrentTaskID = self.CurrentTaskID + 1
-	if (self.CurrentTaskID > schedule:NumTasks()) then
+	if (self.CurrentTaskID > schedule:NumTasks()) then -- If this was the last task then finish up
 		self:ScheduleFinished(schedule)
 		return
 	end
-	self:SetTask(schedule:GetTask(self.CurrentTaskID))
+	self:SetTask(schedule:GetTask(self.CurrentTaskID)) -- Switch to the next task
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTaskComplete()
@@ -298,12 +288,13 @@ function ENT:OnTaskComplete()
 	self.bTaskComplete = true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:StartTask(task) if task == nil or !task or !self then return end task:Start(self) end
+function ENT:StartTask(task) if !task or !self then return end task:Start(self) end
 function ENT:RunTask(task) if !task or !self then return end task:Run(self) end
 function ENT:TaskTime() return CurTime() - self.TaskStartTime end
 function ENT:TaskFinished() return self.bTaskComplete end
-function ENT:StartEngineTask(iTaskID,TaskData) end
-function ENT:RunEngineTask(iTaskID,TaskData) end
+-- Engine tasks / schedules ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:StartEngineTask(iTaskID, TaskData) end
+function ENT:RunEngineTask(iTaskID, TaskData) end
 function ENT:StartEngineSchedule(scheduleID) self:ScheduleFinished() self.bDoingEngineSchedule = true end
 function ENT:EngineScheduleFinish() self.bDoingEngineSchedule = nil end
 function ENT:DoingEngineSchedule() return self.bDoingEngineSchedule end
