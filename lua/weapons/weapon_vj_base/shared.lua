@@ -127,9 +127,9 @@ SWEP.Primary.PickUpAmmoAmount = "Default" -- How much ammo should the player get
 SWEP.Primary.Recoil = 0.3 -- How much recoil does the player get?
 SWEP.Primary.Cone = 7 -- How accurate is the bullet? (Players)
 SWEP.Primary.Delay = 0.1 -- Time until it can shoot again
-SWEP.Primary.Tracer = 1
+SWEP.Primary.Tracer = 1 -- Show tracer for every x bullets
 SWEP.Primary.TracerType = "Tracer" -- Tracer type (Examples: AR2)
-SWEP.Primary.TakeAmmo = 1 -- How much ammo should it take on each shot?
+SWEP.Primary.TakeAmmo = 1 -- How much ammo should it take from the clip after each shot? | 0 = Unlimited clip
 SWEP.Primary.Automatic = true -- Is it automatic?
 SWEP.Primary.Ammo = "SMG1" -- Ammo type
 SWEP.AnimTbl_PrimaryFire = {ACT_VM_PRIMARYATTACK}
@@ -629,18 +629,16 @@ function SWEP:PrimaryAttack(UseAlt)
 				end
 			owner:FireBullets(bullet)
 		end
-		if isNPC && owner.IsVJBaseSNPC then
-			self:SetClip1(self:Clip1() - 1)
-		end
 		if GetConVar("vj_wep_nomuszzleflash"):GetInt() == 0 then owner:MuzzleFlash() end
 	end
+	
+	self:TakePrimaryAmmo(self.Primary.TakeAmmo)
 	
 	self:PrimaryAttackEffects(owner)
 	
 	if isPly then
 		//self:ShootEffects("ToolTracer") -- Deprecated
 		owner:ViewPunch(Angle(-self.Primary.Recoil, 0, 0))
-		self:TakePrimaryAmmo(self.Primary.TakeAmmo)
 		owner:SetAnimation(PLAYER_ATTACK1)
 		local anim = VJ.PICK(self.AnimTbl_PrimaryFire)
 		local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
