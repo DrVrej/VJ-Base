@@ -67,6 +67,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize()
 	VJ.EmitSound(self, "player/pl_drown1.wav") -- Player connect sound
+	self:SetSurroundingBoundsType(0)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:GetSightDirection()

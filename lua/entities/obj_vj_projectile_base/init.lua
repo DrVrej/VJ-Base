@@ -167,7 +167,7 @@ function ENT:DoDamageCode(data, phys)
 		hitEnt = data.HitEntity
 		//if hitEnt:IsNPC() or hitEnt:IsPlayer() then
 		if IsValid(owner) then
-			if (VJ.IsProp(hitEnt)) or (hitEnt:IsNPC() && (hitEnt:Disposition(owner) == D_HT or hitEnt:Disposition(owner) == D_FR) && hitEnt:Health() > 0 && (hitEnt != owner) && (hitEnt:GetClass() != owner:GetClass())) or (hitEnt:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS && hitEnt:Alive() && hitEnt:Health() > 0) then
+			if (VJ.IsProp(hitEnt)) or (hitEnt:IsNPC() && (hitEnt:Disposition(owner) == D_HT or hitEnt:Disposition(owner) == D_FR) && hitEnt:Health() > 0 && (hitEnt != owner) && (hitEnt:GetClass() != owner:GetClass())) or (hitEnt:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS && hitEnt:Alive() && hitEnt:Health() > 0) or (!hitEnt:IsNPC() && !hitEnt:IsPlayer() && (hitEnt:Health() != nil && hitEnt:Health() > 0)) then
 				self:CustomOnDoDamage_Direct(data, phys, hitEnt)
 				local dmgInfo = DamageInfo()
 				dmgInfo:SetDamage(self.DirectDamage)
