@@ -3071,14 +3071,8 @@ function ENT:ThrowGrenadeCode(customEnt, noOwner)
 				getSpawnPos = self:CustomOnGrenadeAttack_SpawnPosition()
 				getSpawnAngle = getSpawnPos:Angle()
 			else
-				local att = self:LookupAttachment(self.GrenadeAttackAttachment)
-				if att > 0 then
-					getSpawnPos = self:GetAttachment(att).Pos
-					getSpawnAngle = self:GetAttachment(att).Ang
-				else
-					getSpawnPos = self:GetShootPos()
-					getSpawnAngle = self:GetAngles()
-				end
+				getSpawnPos = self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos
+				getSpawnAngle = self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Ang
 			end
 	
 			local greTargetPos = self:GetPos() + self:GetForward()*200
