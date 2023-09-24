@@ -632,7 +632,9 @@ function SWEP:PrimaryAttack(UseAlt)
 		if GetConVar("vj_wep_nomuszzleflash"):GetInt() == 0 then owner:MuzzleFlash() end
 	end
 	
-	self:TakePrimaryAmmo(self.Primary.TakeAmmo)
+	if !self.IsMeleeWeapon then -- Melee weapons shouldn't consume ammo!
+		self:TakePrimaryAmmo(self.Primary.TakeAmmo)
+	end
 	
 	self:PrimaryAttackEffects(owner)
 	
