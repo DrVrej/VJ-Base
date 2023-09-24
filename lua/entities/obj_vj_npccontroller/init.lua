@@ -171,10 +171,11 @@ function ENT:SetControlledNPC(npcEnt)
 	bullseyeEnt:SetRenderMode(RENDERMODE_NONE)
 	bullseyeEnt:Spawn()
 	bullseyeEnt:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
-	bullseyeEnt.VJ_AlwaysEnemyToEnt = npcEnt
 	bullseyeEnt:SetColor(color0000)
 	bullseyeEnt:SetNoDraw(false)
 	bullseyeEnt:DrawShadow(false)
+	bullseyeEnt.VJ_AlwaysEnemyToEnt = npcEnt
+	bullseyeEnt.VJ_IsBeingControlled = true
 	self:DeleteOnRemove(bullseyeEnt)
 	self.VJCE_Bullseye = bullseyeEnt
 

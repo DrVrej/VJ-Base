@@ -160,14 +160,20 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoDamageCode(data, phys)
 	local owner = self:GetOwner()
-	local hitEnt = NULL
+	local ownerValid = IsValid(owner)
+	local dataEnt = data.HitEntity
+	local hitEnt = NULL -- Entity that has been damaged either by direct or radius damages
 	local dmgPos = (data != nil and data.HitPos) or self:GetPos()
+	if IsValid(dataEnt) && ((dataEnt.IsVJBaseBullseye && dataEnt.VJ_IsBeingControlled) or dataEnt.VJTag_IsControllingNPC) then return end -- Don't damage bulleyes used by the NPC controller OR entities that are controlling others (Usually players)
 	
 	if self.DoesDirectDamage == true then
-		hitEnt = data.HitEntity
-		//if hitEnt:IsNPC() or hitEnt:IsPlayer() then
-		if IsValid(owner) then
-			if (VJ.IsProp(hitEnt)) or (hitEnt:IsNPC() && (hitEnt:Disposition(owner) == D_HT or hitEnt:Disposition(owner) == D_FR) && hitEnt:Health() > 0 && (hitEnt != owner) && (hitEnt:GetClass() != owner:GetClass())) or (hitEnt:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS && hitEnt:Alive() && hitEnt:Health() > 0) or (!hitEnt:IsNPC() && !hitEnt:IsPlayer() && (hitEnt:Health() != nil && hitEnt:Health() > 0)) then
+		if ownerValid then
+			-- Accepts one of the 3 cases:
+			-- Entity is not NPC/player
+			-- Entity is NPC and not same class and (owner is a player OR not an ally NPC -- Players can still damage NPCs while NPCs can't damage other friendly NPCs)
+			-- Entity is player and alive and (owner is player OR (ignore players is off and no target is off) -- Players can still damage each other while NPCs can't when ignore players is on)
+			if IsValid(dataEnt) && ((!dataEnt:IsNPC() && !dataEnt:IsPlayer()) or (dataEnt:IsNPC() && dataEnt:GetClass() != owner:GetClass() && (owner:IsPlayer() or (owner:IsNPC() && owner:Disposition(dataEnt) != D_LI))) or (dataEnt:IsPlayer() && dataEnt:Alive() && (owner:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !dataEnt:IsFlagSet(FL_NOTARGET))))) then
+				hitEnt = dataEnt
 				self:CustomOnDoDamage_Direct(data, phys, hitEnt)
 				local dmgInfo = DamageInfo()
 				dmgInfo:SetDamage(self.DirectDamage)
@@ -179,6 +185,7 @@ function ENT:DoDamageCode(data, phys)
 				hitEnt:TakeDamageInfo(dmgInfo, self)
 			end
 		else
+			hitEnt = dataEnt
 			self:CustomOnDoDamage_Direct(data, phys, hitEnt)
 			local dmgInfo = DamageInfo()
 			dmgInfo:SetDamage(self.DirectDamage)
@@ -192,15 +199,15 @@ function ENT:DoDamageCode(data, phys)
 	end
 	
 	if self.DoesRadiusDamage == true then
-		local DoEntCheck = false
-		local attackEnt = owner
-		if IsValid(owner) then
-			DoEntCheck = !owner:IsPlayer()
-		else
-			attackEnt = self
+		local attackEnt = ownerValid and owner or self -- The entity that will be set as the attacker
+		-- If the projectile is picked up (Such as a grenade picked up by a human NPC), then the damage position is the parent's position
+		if self.VJTag_IsPickedUp == true then
+			local parent = self:GetParent()
+			if IsValid(parent) && parent:IsNPC() then
+				dmgPos = parent:GetPos()
+			end
 		end
-		if self.VJTag_IsPickedUp == true && IsValid(self:GetParent()) && self:GetParent():IsNPC() then dmgPos = self:GetParent():GetPos() end -- If the projectile is picked up (Such as a grenade picked up by human SNPC), then the damage position is the parent's position
-		hitEnt = VJ.ApplyRadiusDamage(attackEnt, attackEnt, dmgPos, self.RadiusDamageRadius, self.RadiusDamage, self.RadiusDamageType, DoEntCheck, self.RadiusDamageUseRealisticRadius, {DisableVisibilityCheck=self.RadiusDamageDisableVisibilityCheck, Force=self.RadiusDamageForce, UpForce=self.RadiusDamageForce_Up, DamageAttacker=owner:IsPlayer()})
+		hitEnt = VJ.ApplyRadiusDamage(attackEnt, attackEnt, dmgPos, self.RadiusDamageRadius, self.RadiusDamage, self.RadiusDamageType, ownerValid && !owner:IsPlayer(), self.RadiusDamageUseRealisticRadius, {DisableVisibilityCheck=self.RadiusDamageDisableVisibilityCheck, Force=self.RadiusDamageForce, UpForce=self.RadiusDamageForce_Up, DamageAttacker=owner:IsPlayer()})
 	end
 	
 	self:CustomOnDoDamage(data, phys, hitEnt)

@@ -85,7 +85,7 @@ function TOOL:LeftClick(tr)
 		spawner:SetModel(GetConVarString("vjstool_bullseye_modeldirectory"))
 		spawner.SolidMovementType = GetConVarString("vjstool_bullseye_type")
 		spawner.UseActivationSystem = true
-		spawner.UserStatusColors = GetConVar("vjstool_bullseye_usecolor"):GetBool()
+		spawner.ActivationSystemStatusColors = GetConVar("vjstool_bullseye_usecolor"):GetBool()
 		spawner.Activated = GetConVar("vjstool_bullseye_startactivate"):GetBool()
 		spawner:Spawn()
 		spawner:Activate()

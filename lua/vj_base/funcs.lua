@@ -354,7 +354,7 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 	local dmgFinal = dmgMax
 	local hitEnts = {}
 	for _, v in ipairs((isnumber(extraOptions.UseConeDegree) and VJ.FindInCone(startPos, extraOptions.UseConeDirection or attacker:GetForward(), dmgRadius, extraOptions.UseConeDegree or 90, {AllEntities=true})) or ents.FindInSphere(startPos, dmgRadius)) do
-		if (attacker.VJ_IsBeingControlled == true && attacker.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.VJTag_IsControllingNPC == true) then continue end -- Don't damage controller bullseye and player
+		if (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) or v.VJTag_IsControllingNPC then continue end -- Don't damage bulleyes used by the NPC controller OR entities that are controlling others (Usually players)
 		local nearestPos = v:NearestPoint(startPos) -- From the enemy position to the given position
 		if realisticRadius != false then -- Decrease damage from the nearest point all the way to the enemy point then clamp it!
 			dmgFinal = math_clamp(dmgFinal * ((dmgRadius - startPos:Distance(nearestPos)) + 150) / dmgRadius, dmgMax / 2, dmgFinal)
@@ -394,15 +394,11 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 					v:TakeDamageInfo(dmgInfo)
 				end
 			end
-			
 			-- Self
 			if v:EntIndex() == attacker:EntIndex() then
 				if extraOptions.DamageAttacker then DoDamageCode() end -- If it can't self hit, then skip
-			-- NPCs / Players
-			elseif (ignoreInnocents == false) or (v:IsNPC() && v:Disposition(attacker) != D_LI && v:Health() > 0 && (v:GetClass() != attacker:GetClass())) or (v:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS && v:Alive() && !v:IsFlagSet(FL_NOTARGET)) then
-				DoDamageCode()
-			-- Other types of entities
-			elseif !v:IsNPC() && !v:IsPlayer() then
+			-- Other entities
+			elseif (ignoreInnocents == false) or (!v:IsNPC() && !v:IsPlayer()) or (v:IsNPC() && v:GetClass() != attacker:GetClass() && v:Health() > 0 && (attacker:IsPlayer() or (attacker:IsNPC() && attacker:Disposition(v) != D_LI))) or (v:IsPlayer() && v:Alive() && (attacker:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !v:IsFlagSet(FL_NOTARGET)))) then
 				DoDamageCode()
 			end
 		end

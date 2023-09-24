@@ -67,7 +67,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize()
 	VJ.EmitSound(self, "player/pl_drown1.wav") -- Player connect sound
-	self:SetSurroundingBoundsType(0)
+	self:SetSurroundingBoundsType(BOUNDS_COLLISION) -- BOUNDS_HITBOXES breaks collision on NPCs at the expense of proper trace hitting, not needed for simple biped NPCs such as this one
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:GetSightDirection()

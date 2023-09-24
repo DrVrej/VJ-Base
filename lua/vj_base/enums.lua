@@ -75,6 +75,7 @@ IsVJBaseCorpse					bool
 IsVJBaseCorpse_Gib				bool
 IsVJBaseSpawner					bool
 IsVJBaseBoneFollower			bool
+IsVJBaseBullseye				bool
 IsVJBaseEdited					bool		This entity's meta table has been edited by VJ Base
 
 -- Identifiers
@@ -94,7 +95,7 @@ VJTag_SD_PlayingMusic			bool		Entity is playing a sound track
 
 -- Controllers
 VJTag_IsControllingNPC			bool		Entity is controlling an NPC, usually using the NPC Controller | Mainly used for players
-VJ_IsBeingControlled			bool		Entity is being controlled by the NPC Controller
+VJ_IsBeingControlled			bool		Entity is being controlled by the NPC Controller | Also applied to the bullseye entity!
 VJ_IsBeingControlled_Tool		bool		Entity is being controlled by the NPC Mover tool
 VJ_TheController				entity		The player that's controlling this entity through the NPC Controller
 VJ_TheControllerEntity			entity		The controller entity
