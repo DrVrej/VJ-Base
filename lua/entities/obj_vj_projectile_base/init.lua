@@ -162,7 +162,7 @@ function ENT:DoDamageCode(data, phys)
 	local owner = self:GetOwner()
 	local ownerValid = IsValid(owner)
 	local dataEnt = data and data.HitEntity
-	local hitEnt = NULL -- Entity that has been damaged either by direct or radius damages
+	local hitEnt = nil -- Entity that has been damaged either by direct or radius damages
 	local dmgPos = (data != nil and data.HitPos) or self:GetPos()
 	if IsValid(dataEnt) && ((dataEnt.IsVJBaseBullseye && dataEnt.VJ_IsBeingControlled) or dataEnt.VJTag_IsControllingNPC) then return end -- Don't damage bulleyes used by the NPC controller OR entities that are controlling others (Usually players)
 	
