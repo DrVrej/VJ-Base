@@ -16,7 +16,7 @@ ENT.Category		= "VJ Base"
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-function ENT:CustomOnInitialize()
+function ENT:Initialize()
 	self:SetModel("models/vj_props/armenian_flag01.mdl")
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
