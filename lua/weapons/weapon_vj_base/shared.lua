@@ -633,7 +633,11 @@ function SWEP:PrimaryAttack(UseAlt)
 	end
 	
 	if !self.IsMeleeWeapon then -- Melee weapons shouldn't consume ammo!
-		self:TakePrimaryAmmo(self.Primary.TakeAmmo)
+		if isPly then -- "TakePrimaryAmmo" calls "Ammo1" and "RemoveAmmo" which do NOT exist in NPCs!
+			self:TakePrimaryAmmo(self.Primary.TakeAmmo)
+		else
+			self:SetClip1(self:Clip1() - self.Primary.TakeAmmo)
+		end
 	end
 	
 	self:PrimaryAttackEffects(owner)
