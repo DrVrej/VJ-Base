@@ -309,7 +309,7 @@ ENT.MeleeAttackAngleRadius = 100 -- What is the attack angle radius? | 100 = In 
 ENT.MeleeAttackDamageDistance = 70 -- How far does the damage go?
 ENT.MeleeAttackDamageAngleRadius = 100 -- What is the damage angle radius? | 100 = In front of the SNPC | 180 = All around the SNPC
 	-- ====== Timer Variables ====== --
-	-- To use event-based attacks, set this to false:
+	-- Set this to false to make the attack event-based:
 ENT.TimeUntilMeleeAttackDamage = 0.5 -- This counted in seconds | This calculates the time until it hits something
 ENT.NextMeleeAttackTime = 0 -- How much time until it can use a melee attack?
 ENT.NextMeleeAttackTime_DoRand = false -- False = Don't use random time | Number = Picks a random number between the regular timer and this timer
@@ -389,25 +389,26 @@ ENT.AnimTbl_ScaredBehaviorMovement = {} -- Animations it will play while scared 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Grenade Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ENT.HasGrenadeAttack = false -- Should the SNPC have a grenade attack?
-ENT.GrenadeAttackEntity = "obj_vj_grenade" -- The entity that the SNPC throws | Half Life 2 Grenade: "npc_grenade_frag"
-ENT.GrenadeAttackModel = {} -- Picks a random model from this table to override the model of the grenade
-ENT.GrenadeAttackAttachment = "anim_attachment_LH" -- The attachment that the grenade will spawn at | false = Custom position
+ENT.HasGrenadeAttack = false -- Should the NPC have a grenade attack?
+ENT.GrenadeAttackEntity = "obj_vj_grenade" -- Entities that it can spawn when throwing a grenade | If set as a table, it picks a random entity | VJ: "obj_vj_grenade" | HL2: "npc_grenade_frag"
+ENT.GrenadeAttackModel = nil -- Overrides the model of the grenade | Can be nil, string, and table | Does NOT apply to picked up grenades and forced grenade attacks with custom entity
+ENT.GrenadeAttackAttachment = "anim_attachment_LH" -- The attachment that the grenade will be set to | -1 = Skip to use "self.GrenadeAttackBone" instead
+ENT.GrenadeAttackBone = "ValveBiped.Bip01_L_Finger1" -- The bone that the grenade will be set to | -1 = Skip to use fail safe instead
 	-- ====== Animation Variables ====== --
 ENT.AnimTbl_GrenadeAttack = {"grenThrow"} -- Grenade Attack Animations
 ENT.GrenadeAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 ENT.GrenadeAttackAnimationFaceEnemy = true -- Should it face the enemy while playing the grenade attack animation?
 	-- ====== Distance & Chance Variables ====== --
-ENT.NextThrowGrenadeTime = VJ.SET(10, 15) -- Time until it can throw a grenade again
 ENT.ThrowGrenadeChance = 4 -- Chance that it will throw the grenade | Set to 1 to throw all the time
 ENT.GrenadeAttackThrowDistance = 1500 -- How far it can throw grenades
 ENT.GrenadeAttackThrowDistanceClose = 400 -- How close until it stops throwing grenades
 	-- ====== Timer Variables ====== --
+	-- Set this to false to make the attack event-based:
 ENT.TimeUntilGrenadeIsReleased = 0.72 -- Time until the grenade is released
-ENT.GrenadeAttackAnimationStopAttacks = true -- Should it stop attacks for a certain amount of time?
+ENT.NextThrowGrenadeTime = VJ.SET(10, 15) -- Time until it can throw a grenade again
 	-- To let the base automatically detect the attack duration, set this to false:
-ENT.GrenadeAttackAnimationStopAttacksTime = false -- How long should it stop attacks?
-ENT.GrenadeAttackFussTime = 3 -- Time until the grenade explodes
+ENT.NextAnyAttackTime_Grenade = VJ.SET(false, false) -- How much time until it can use any attack again? | Counted in Seconds
+ENT.GrenadeAttackFuseTime = 3 -- The grenade's fuse start time right after the NPC throws it
 	-- ====== Control Variables ====== --
 ENT.DisableGrenadeAttackAnimation = false -- if true, it will disable the animation code when doing grenade attack
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -806,13 +807,39 @@ function ENT:CustomOnWeaponReload() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnWeaponReload_AfterRanToCover() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnGrenadeAttack_BeforeStartTimer() end 
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnGrenadeAttack_SpawnPosition() return self:GetPos() end -- if self.GrenadeAttackAttachment is set to false, it will use the returned position here!
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnGrenadeAttack_ThrowVelocity(grEnt, grTargetPos) return (grTargetPos - grEnt:GetPos()) + (self:GetUp()*200 + self:GetForward()*500 + self:GetRight()*math.Rand(-20, 20)) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnGrenadeAttack_OnThrow(grEnt) end
+--[[---------------------------------------------------------
+	Called for important changes or requests during a grenade attack
+		- status = Type of call:
+			- "Start"		= Before the start timer is ran			| Examples: Change grenade attack sounds, Make changes to "self.TimeUntilGrenadeIsReleased"
+			- "SpawnPos"	= When the spawn position is requested	| Examples: Override the spawn position if needed by returning a vector
+			- "Throw"		= When the grenade is being thrown 		| Examples: Throw velocity, apply changes to grenade entity, disallow throw velocity
+				- WARNING: Must return a vector otherwise velocity will NOT be applied!
+		- grenade = The actual grenade entity that is being thrown | NOTE: Only valid for "Throw" status
+		- customEnt = What entity it should throw, if any
+			- nil = Using the default grenade class set by "self.GrenadeAttackEntity"
+			- string = Using the given class name to override "self.GrenadeAttackEntity"
+			- entity = Use an existing entity to override "self.GrenadeAttackEntity" | Example: When the NPC is throwing back an enemy grenade
+		- landDir = Direction the grenade should land | Used by the base to align where the grenade is gonna land
+			- 0 = Use enemy's position
+			- 1 = Use enemy's last visible position
+			- Vector = Use given vector's position
+			- Anything else = Find a best random position
+		- landingPos = The position the grenade is aimed to land | NOTE: Only valid for "Throw" status
+	Returns
+		- Return value depends on the "status" parameter:
+			- "Start": nil
+			- "SpawnPos":
+				- nil, Do NOT override the spawn position
+				- vector, Override the spawn position
+			- "Throw":
+				- nil, Do NOT apply any velocity
+				- vector, The velocity to apply
+-----------------------------------------------------------]]
+function ENT:CustomOnGrenadeAttack(status, grenade, customEnt, landDir, landingPos)
+	if status == "Throw" then
+		return (landingPos - grenade:GetPos()) + (self:GetUp()*200 + self:GetForward()*500 + self:GetRight()*math.Rand(-20, 20))
+	end
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnDoKilledEnemy(ent, attacker, inflictor) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -891,14 +918,12 @@ ENT.vACT_StopAttacks = false
 ENT.IsFollowing = false
 ENT.FollowingPlayer = false
 ENT.VJ_IsBeingControlled = false
-ENT.VJ_PlayingSequence = false
 ENT.DoingWeaponAttack = false
 ENT.DoingWeaponAttack_Standing = false
 ENT.WaitingForEnemyToComeOut = false
 ENT.VJ_DEBUG = false
 ENT.DidWeaponAttackAimParameter = false
 ENT.Medic_Status = false -- false = Not active | "Active" = Attempting to heal ally (Going after etc.) | "Healing" = Has reached ally and is healing it
-ENT.VJ_PlayingInterruptSequence = false
 ENT.IsAbleToMeleeAttack = true
 ENT.AllowToDo_WaitForEnemyToComeOut = true
 ENT.HasBeenGibbedOnDeath = false
@@ -907,7 +932,6 @@ ENT.VJ_IsBeingControlled_Tool = false
 ENT.WeaponUseEnemyEyePos = false
 ENT.LastHiddenZone_CanWander = true
 ENT.NoWeapon_UseScaredBehavior_Active = false
-ENT.CurIdleStandMove = false
 ENT.CurrentWeaponAnimationIsAim = false
 ENT.VJ_TheController = NULL
 ENT.VJ_TheControllerEntity = NULL
@@ -934,9 +958,9 @@ ENT.NextOnDangerSightSoundT = 0
 ENT.NextMoveOrHideOnDamageByEnemyT = 0
 ENT.NextAlertSoundT = 0
 ENT.NextCallForHelpAnimationT = 0
-ENT.CurrentAttackAnimation = 0
+ENT.CurrentAttackAnimation = ACT_INVALID
 ENT.CurrentAttackAnimationDuration = 0
-ENT.CurAttackAnimTime = 0
+ENT.CurrentAttackAnimationTime = 0
 ENT.NextIdleTime = 0
 ENT.NextChaseTime = 0
 ENT.OnPlayerSightNextT = 0
@@ -985,17 +1009,17 @@ ENT.WeaponState = VJ.NPC_WEP_STATE_READY
 ENT.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_NONE
 ENT.FacingStatus = VJ.NPC_FACING_NONE
 ENT.FacingData = nil
-ENT.TimersToRemove = {"timer_weapon_state_reset","timer_state_reset","timer_act_seqreset","timer_facing_end","timer_act_flinching","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_reload_end","timer_alerted_reset"}
+ENT.TimersToRemove = {"timer_grenade_start","timer_grenade_finished_abletothrow","timer_grenade_finished","timer_weapon_state_reset","timer_state_reset","timer_facing_end","timer_act_flinching","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_reload_end","timer_alerted_reset"}
 ENT.FollowData = {Ent = NULL, MinDist = 0, Moving = false, StopAct = false}
 ENT.EnemyData = {
 	TimeSet = 0, -- Last time an enemy was set | Updated whenever "VJ_DoSetEnemy" is ran successfully
 	TimeSinceAcquired = 0, -- Time since it acquired an enemy (Switching enemies does NOT reset this!)
 	IsVisible = false, -- Is the enemy visible? | Updated every "Think" run!
-	LastVisibleTime = 0, -- Last time it saw the current enemy
-	LastVisiblePos = Vector(0, 0, 0), -- Last visible position of the current enemy
+	LastVisibleTime = 0, -- Last time it saw the enemy
+	LastVisiblePos = Vector(0, 0, 0), -- Last visible position of the enemy, based on "EyePos", for origin call "self:GetEnemyLastSeenPos()"
 	VisibleCount = 0, -- Number of visible enemies
 	SightDiff = 0, -- Difference between enemy's position and NPC's sight direction | Examples: Determine if the enemy is within the NPC's sight angle or melee attack radius
-	Reset = true, -- Enemy has reset | Mostly a backend function
+	Reset = true, -- Enemy has reset | Mostly a backend variable
 }
 //ENT.DefaultGibOnDeathDamageTypes = {[DMG_ALWAYSGIB]=true,[DMG_ENERGYBEAM]=true,[DMG_BLAST]=true,[DMG_VEHICLE]=true,[DMG_CRUSH]=true,[DMG_DISSOLVE]=true,[DMG_SLOWBURN]=true,[DMG_PHYSGUN]=true,[DMG_PLASMA]=true,[DMG_SONIC]=true}
 //ENT.SavedDmgInfo = {} -- Set later
@@ -1132,7 +1156,6 @@ function ENT:Initialize()
 	self.CurrentPossibleEnemies = {}
 	self.WeaponAnimTranslations = {}
 	self.WeaponInventory = {}
-	self.NextThrowGrenadeT = CurTime() + math.Rand(1, 5)
 	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.3, 6)
 	self.UseTheSameGeneralSoundPitch_PickedNumber = (self.UseTheSameGeneralSoundPitch and math.random(self.GeneralSoundPitch1, self.GeneralSoundPitch2)) or 0
 	self:SetupBloodColor(self.BloodColor)
@@ -1144,11 +1167,11 @@ function ENT:Initialize()
 	self:SetHealth((GetConVar("vj_npc_allhealth"):GetInt() > 0) and GetConVar("vj_npc_allhealth"):GetInt() or self:VJ_GetDifficultyValue(self.StartHealth))
 	self.StartHealth = self:Health()
 	//if self.HasSquad == true then self:Fire("setsquad", self.SquadName, 0) end
+	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
 	self:CustomOnInitialize()
 	if self.CustomInitialize then self:CustomInitialize() end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + (self.IdleAlwaysWander and 0 or 1)) -- If self.NextWanderTime isn't given a value THEN if self.IdleAlwaysWander isn't true, wait at least 1 sec before wandering
 	self.SightDistance = (GetConVar("vj_npc_seedistance"):GetInt() > 0) and GetConVar("vj_npc_seedistance"):GetInt() or self.SightDistance
-	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
 	if self.Immune_Physics then self:SetImpactEnergyScale(0) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	if self.MaxJumpLegalDistance then self.JumpVars.MaxRise = self.MaxJumpLegalDistance.a; self.JumpVars.MaxDrop = self.MaxJumpLegalDistance.b; end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	timer.Simple(0.15, function()
@@ -1305,24 +1328,22 @@ end
 				- anim = The animation it played, it can be a string or an activity enumeration
 			- AlwaysUseSequence = The base will force attempt to play this animation as a sequence regardless of the other options | DEFAULT: false
 			- AlwaysUseGesture = The base will force attempt to play this animation as a gesture regardless of the other options | DEFAULT: false
-			- SequenceInterruptible = Can this sequence be interrupted? | DEFAULT: false
-			- SequenceDuration = How long is the sequence? | DEFAULT: Base decides
-				- WARNING: Recommended to not change this option, it's mostly used internally by the base!
+				- NOTE: Combining "AlwaysUseSequence" and "AlwaysUseGesture" will force it to play a gesture-sequence
 			- PlayBackRate = How fast should the animation play? | DEFAULT: self.AnimationPlaybackRate
 			- PlayBackRateCalculated = If the playback rate is already calculated in the stopActivitiesTime, then set this to true! | DEFAULT: false
 		- customFunc() = TODO: NOT FINISHED
 	Returns
+		- Animation, this may be an activity number or a string depending on how the animation played
+			- ACT_INVALID = No animation was played or found
 		- Number, Accurate animation play time after taking everything in account
 			- WARNING: If "animDelay" parameter is used, result may be inaccurate!
-		- Animation, this may be an activity number or a string depending on how the animation played
-			- false = No animation was played or found
 -----------------------------------------------------------]]
 local varGes = "vjges_"
 local varSeq = "vjseq_"
 --
 function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, faceEnemy, animDelay, extraOptions, customFunc)
 	animation = VJ.PICK(animation)
-	if animation == false then return 0, false end
+	if animation == false then return ACT_INVALID, 0 end
 	
 	stopActivities = stopActivities or false
 	if stopActivitiesTime == nil then -- If user didn't put anything, then default it to 0
@@ -1372,9 +1393,9 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 		end
 	end
 	
-	if extraOptions.AlwaysUseGesture == true then isGesture = true end -- Must play a gesture
-	if extraOptions.AlwaysUseSequence == true then -- Must play a sequence
-		isGesture = false
+	if extraOptions.AlwaysUseGesture == true then isGesture = true end -- Must play as a gesture
+	if extraOptions.AlwaysUseSequence == true then -- Must play as a sequence
+		//isGesture = false -- Leave this alone to allow gesture-sequences to play even when "AlwaysUseSequence" is true!
 		isSequence = true
 		if isnumber(animation) then -- If it's an activity, then convert it to a string
 			animation = self:GetSequenceName(self:SelectWeightedSequence(animation))
@@ -1393,9 +1414,9 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 	if VJ.AnimExists(self, animation) == false then
 		if !isString && IsValid(self:GetActiveWeapon()) then -- If it's an activity and has a valid weapon then check for weapon translation
 			-- If it returns the same activity as animation, then there isn't even a translation for it so don't play any animation =(
-			if self:GetActiveWeapon().IsVJBaseWeapon && self:TranslateToWeaponAnim(animation) == animation then return 0, false end
+			if self:GetActiveWeapon().IsVJBaseWeapon && self:TranslateToWeaponAnim(animation) == animation then return ACT_INVALID, 0 end
 		else
-			return 0, false -- No animation =(
+			return ACT_INVALID, 0 -- No animation =(
 		end
 	end
 	
@@ -1424,20 +1445,16 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 		end
 		self.CurAnimationSeed = seed -- We need to set it again because self:StopAttacks() above will reset it when it calls to chase enemy!
 		
-		local vsched = vj_ai_schedule.New("vj_act_"..animation)
-		if (customFunc) then customFunc(vsched, animation) end
-		
 		self.NextIdleStandTime = 0
-		self.VJ_PlayingSequence = false
-		self.VJ_PlayingInterruptSequence = false
 		
 		self.AnimationPlaybackRate = finalPlayBackRate
 		self:SetPlaybackRate(finalPlayBackRate)
 		
 		if isGesture == true then
-			-- Resets all gestures if it's not a sequence because activity gestures can bug out when played right after each other!
-			if !isSequence then
-				self:RemoveAllGestures()
+			-- If it's an activity gesture AND it's already playing it, then remove it! Fixes same activity gestures bugging out when played right after each other!
+			if !isSequence && self:IsPlayingGesture(animation) then
+				self:RemoveGesture(animation)
+				//self:RemoveAllGestures() -- Disallows the ability to layer multiple gestures!
 			end
 			local gesture = isSequence and self:AddGestureSequence(self:LookupSequence(animation)) or self:AddGesture(animation)
 			//print(gesture)
@@ -1446,15 +1463,10 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				//self:SetLayerWeight(gesture, 1)
 				self:SetLayerPlaybackRate(gesture, finalPlayBackRate * 0.5)
 			end
-		elseif isSequence == true then
-			local dur = (extraOptions.SequenceDuration or self:SequenceDuration(self:LookupSequence(animation))) / self.AnimationPlaybackRate
-			if faceEnemy == true then
-				self:FaceCertainEntity(self:GetEnemy(), true, dur)
-			end
-			self:VJ_PlaySequence(animation, finalPlayBackRate, extraOptions.SequenceDuration != false, dur, extraOptions.SequenceInterruptible or false)
-		end
-		if isGesture == false then -- If it's sequence or activity
-			-- For humans, internally the base will set these variables back to true after this function if it's called by weapon attack animations!
+		else -- Sequences & Activities
+			local vsched = vj_ai_schedule.New("vj_act_"..animation)
+			
+			-- For humans NPCs, internally the base will set these variables back to true after this function if it's called by weapon attack animations!
 			self.DoingWeaponAttack = false
 			self.DoingWeaponAttack_Standing = false
 			
@@ -1465,29 +1477,58 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 			self:StopMoving()
 			self:ClearSchedule()
 			self:ClearGoal()
-			if isSequence == false then -- Only if activity
+			
+			if isSequence == true then
+				local seqID = self:LookupSequence(animation)
+				--
+				-- START: Experimental transition system for sequences
+				local transitionAnim = self:FindTransitionSequence(self:GetSequence(), seqID) -- Find the transition sequence
+				local transitionAnimTime = 0
+				if transitionAnim != -1 && seqID != transitionAnim then -- If it exists AND it's not the same as the animation
+					transitionAnimTime = self:SequenceDuration(transitionAnim) / self.AnimationPlaybackRate
+					vsched:AddTask("TASK_VJ_PLAY_SEQUENCE", {
+						animation = transitionAnim,
+						playbackRate = finalPlayBackRate,
+						duration = transitionAnimTime
+					})
+				end
+				-- END: Experimental transition system for sequences
+				--
+				vsched:AddTask("TASK_VJ_PLAY_SEQUENCE", {
+					animation = animation,
+					playbackRate = finalPlayBackRate,
+					duration = animTime
+				})
+				//self:VJ_PlaySequence(animation, finalPlayBackRate, extraOptions.SequenceDuration != false, dur)
+				animTime = animTime + transitionAnimTime -- Adjust the animation time in case we have a transition animation!
+			else -- Only if activity
 				//self:SetActivity(ACT_RESET)
-				self.VJ_PlayingSequence = false
-				if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+				vsched:AddTask("TASK_VJ_PLAY_ACTIVITY", {
+					animation = animation,
+					duration = animTime
+				})
+				-- Old engine task animation system
+				/*if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 					self:ResetIdealActivity(animation)
 					//vsched:EngTask("TASK_SET_ACTIVITY", animation) -- To avoid AutoMovement stopping the velocity
 				//elseif faceEnemy == true then
 					//vsched:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY", animation)
 				else
-					if faceEnemy == true then
-						self:FaceCertainEntity(self:GetEnemy(), true, animTime)
-					end
-					-- This fixes: Animation NOT applying walk frames if the previous animation was the same
+					-- Engine's default animation task
+					-- REQUIRED FOR TASK_PLAY_SEQUENCE: It fixes animations NOT applying walk frames if the previous animation was the same!
 					if self:GetActivity() == animation then
 						self:ResetSequenceInfo()
 						self:SetSaveValue("sequence", 0)
 					end
 					vsched:EngTask("TASK_PLAY_SEQUENCE", animation)
-					//self:ResetIdealActivity(animation)
-					//self:AutoMovement(self:GetAnimTimeInterval())
-				end
+				end*/
+			end
+			if faceEnemy == true then
+				self:FaceCertainEntity(self:GetEnemy(), true, animTime)
 			end
 			vsched.IsPlayActivity = true
+			vsched.CanBeInterrupted = !stopActivities
+			if (customFunc) then customFunc(vsched, animation) end
 			self:StartSchedule(vsched)
 		end
 		
@@ -1509,9 +1550,9 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				PlayAct()
 			end
 		end)
-		return animDelay + self:DecideAnimationLength(animation, false), animation -- Approximation, this may be inaccurate!
+		return animation, animDelay + self:DecideAnimationLength(animation, false) -- Approximation, this may be inaccurate!
 	else
-		return PlayAct(), animation
+		return animation, PlayAct()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1623,7 +1664,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 	
 	if (!sameAnimFound /*or (sameAnimFound && numOfAnims == 1 && CurTime() > self.NextIdleStandTime)*/) or (CurTime() > self.NextIdleStandTime) then
 		self.CurrentIdleAnimation = pickedAnim
-		self.CurIdleStandMove = false
+		//self.CurIdleStandMove = false
 		-- Old system
 		/*if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
 			if self:BusyWithActivity() == true then return end // self:GetSequence() == 0
@@ -1637,27 +1678,24 @@ function ENT:VJ_TASK_IDLE_STAND()
 		//self:StartEngineTask(ai.GetTaskID("TASK_PLAY_SEQUENCE"),pickedAnim)
 		if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then self:AA_StopMoving() end
 		self.CurAnimationSeed = 0
-		self.VJ_PlayingSequence = false
-		self.VJ_PlayingInterruptSequence = false
 		self:ResetIdealActivity(pickedAnim)
 		timer.Simple(0.01, function() -- So we can make sure the engine has enough time to set the animation
 			if IsValid(self) && self.NextIdleStandTime != 0 then
 				local getSeq = self:GetSequence()
-				self.CurIdleStandMove = self:GetSequenceMoveDist(getSeq) > 0
+				//self.CurIdleStandMove = self:GetSequenceMoveDist(getSeq) > 0
 				if VJ.SequenceToActivity(self, self:GetSequenceName(getSeq)) == pickedAnim then -- Nayir yete himagva animation e nooynene
 					self.NextIdleStandTime = CurTime() + ((self:SequenceDuration(getSeq) - 0.01) / self:GetPlaybackRate()) -- Yete nooynene ooremen jamanage tir animation-en yergarootyan chap!
 				end
 			end
 		end)
 		self.NextIdleStandTime = CurTime() + 0.15 -- This is temp, timer above overrides it
-	elseif self.CurIdleStandMove && !self:IsSequenceFinished() then
-		self:AutoMovement(self:GetAnimTimeInterval())
+	//elseif self.CurIdleStandMove && !self:IsSequenceFinished() then
+		//self:AutoMovement(self:GetAnimTimeInterval())
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoIdleAnimation(idleType)
-	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead or self.VJ_IsBeingControlled or self.CurAttackAnimTime > CurTime() or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
-	idleType = idleType or 0 -- 0 = Random | 1 = Wander | 2 = Idle Stand
+function ENT:DoIdleAnimation(idleType) -- idleType: nil = Random | 1 = Wander | 2 = Idle Stand
+	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead or self.VJ_IsBeingControlled or self.CurrentAttackAnimationTime > CurTime() or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
 	
 	if self.IdleAlwaysWander == true then idleType = 1 end
 	
@@ -1666,7 +1704,7 @@ function ENT:DoIdleAnimation(idleType)
 		idleType = 2
 	end
 	
-	if idleType == 0 then -- Random (Wander & Idle Stand)
+	if !idleType then -- Random (Wander & Idle Stand)
 		if math.random(1, 3) == 1 then
 			self:VJ_TASK_IDLE_WANDER() else self:VJ_TASK_IDLE_STAND()
 		end
@@ -1680,12 +1718,10 @@ function ENT:DoIdleAnimation(idleType)
 	self.NextWanderTime = CurTime() + math.Rand(3, 6) // self.NextIdleTime
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoChaseAnimation(alwaysChase)
+function ENT:DoChaseAnimation(alwaysChase) -- alwaysChase: true = Override to always make the NPC chase
 	local ene = self:GetEnemy()
-	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead or self.VJ_IsBeingControlled or self.CurAttackAnimTime > CurTime() or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.CurAttackAnimTime > CurTime() && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
+	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead or self.VJ_IsBeingControlled or self.CurrentAttackAnimationTime > CurTime() or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.CurrentAttackAnimationTime > CurTime() && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
 	if self:VJ_GetNearestPointToEntityDistance(ene) < self.MeleeAttackDistance && self.EnemyData.IsVisible && (self.EnemyData.SightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))) then self:VJ_TASK_IDLE_STAND() return end -- Not melee attacking yet but it is in range, so stop moving!
-	
-	alwaysChase = alwaysChase or false -- true = Chase no matter what
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
 	if self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsFollowing == true or self.Medic_Status or self:GetState() == VJ_STATE_ONLY_ANIMATION then
@@ -1700,7 +1736,7 @@ function ENT:DoChaseAnimation(alwaysChase)
 		return
 	end
 	
-	if alwaysChase == false && (self.DisableChasingEnemy == true or self.IsGuard == true) then self:VJ_TASK_IDLE_STAND() return end
+	if !alwaysChase && (self.DisableChasingEnemy == true or self.IsGuard == true) then self:VJ_TASK_IDLE_STAND() return end
 	
 	-- If the enemy is not reachable
 	if (self:HasCondition(COND_ENEMY_UNREACHABLE) or self:IsUnreachable(ene)) && (IsValid(self:GetActiveWeapon()) == true && (!self:GetActiveWeapon().IsMeleeWeapon)) then
@@ -2431,6 +2467,18 @@ local finishAttack = {
 		timer.Create("timer_melee_finished_abletomelee"..self:EntIndex(), self:DecideAttackTimer(self.NextMeleeAttackTime, self.NextMeleeAttackTime_DoRand), 1, function()
 			self.IsAbleToMeleeAttack = true
 		end)
+	end,
+	[VJ.ATTACK_TYPE_GRENADE] = function(self, skipStopAttacks)
+		if skipStopAttacks != true then
+			timer.Create("timer_grenade_finished"..self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Grenade.a, self.NextAnyAttackTime_Grenade.b, self.TimeUntilGrenadeIsReleased, self.CurrentAttackAnimationDuration), 1, function()
+				self:StopAttacks()
+				self:DoChaseAnimation()
+			end)
+		end
+		//timer.Create("timer_grenade_finished_abletothrow"..self:EntIndex(), self:DecideAttackTimer(self.NextThrowGrenadeTime.a, self.NextThrowGrenadeTime.b), 1, function()
+			//self.IsAbleToGrenadeAttack = true
+		//end)
+		self.NextThrowGrenadeT = CurTime() + self:DecideAttackTimer(self.NextThrowGrenadeTime.a, self.NextThrowGrenadeTime.b)
 	end
 }
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2458,11 +2506,12 @@ function ENT:Think()
 	//print(self:GetInternalVariable("m_flFieldOfView"))
 	//print(self:GetInternalVariable("m_flMoveWaitFinished") - CurTime())
 	//self:SetSaveValue("m_flMoveWaitFinished", CurTime() + 2)
-	self:SetCondition(1) -- Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case sv_pvsskipanimation isn't disabled!
 	
 	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
 	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
-	if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) /*&& curSched.IsMovingTask == true*/ then self:DropToFloor() end
+	
+	//self:SetCondition(1) -- Probably not needed as "sv_pvsskipanimation" handles it | Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case "sv_pvsskipanimation" isn't disabled!
+	//if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) /*&& curSched.IsMovingTask == true*/ then self:DropToFloor() end -- No need, already handled by the engine
 
 	local curSched = self.CurrentSchedule
 	if curSched != nil then
@@ -2696,7 +2745,7 @@ function ENT:Think()
 				end
 				
 				-- Weapon Reloading
-				if self.AllowWeaponReloading && !self:BusyWithActivity() && self:GetWeaponState() == VJ.NPC_WEP_STATE_READY && (!self.CurrentWeaponEntity.IsMeleeWeapon) && self.AttackType == VJ.ATTACK_TYPE_NONE && self.VJ_PlayingSequence == false && ((!plyControlled && ((!eneValid && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1() && (curTime - eneData.TimeSet) > math.random(3, 8) && !self:IsMoving()) or (eneValid && self.CurrentWeaponEntity:Clip1() <= 0))) or (plyControlled && self.VJ_TheController:KeyDown(IN_RELOAD) && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1())) then
+				if self.AllowWeaponReloading && !self:BusyWithActivity() && self:GetWeaponState() == VJ.NPC_WEP_STATE_READY && (!self.CurrentWeaponEntity.IsMeleeWeapon) && self.AttackType == VJ.ATTACK_TYPE_NONE && ((!plyControlled && ((!eneValid && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1() && (curTime - eneData.TimeSet) > math.random(3, 8) && !self:IsMoving()) or (eneValid && self.CurrentWeaponEntity:Clip1() <= 0))) or (plyControlled && self.VJ_TheController:KeyDown(IN_RELOAD) && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1())) then
 					self.DoingWeaponAttack = false
 					self.DoingWeaponAttack_Standing = false
 					if !plyControlled then self:SetWeaponState(VJ.NPC_WEP_STATE_RELOADING) end
@@ -2716,7 +2765,7 @@ function ENT:Think()
 										self:SetWeaponState()
 									end
 								end)
-								self:VJ_ACT_PLAYACTIVITY(anim, true, dur, self.WeaponReloadAnimationFaceEnemy, self.WeaponReloadAnimationDelay, {SequenceDuration=dur, PlayBackRateCalculated=true})
+								self:VJ_ACT_PLAYACTIVITY(anim, true, dur, self.WeaponReloadAnimationFaceEnemy, self.WeaponReloadAnimationDelay, {PlayBackRateCalculated=true})
 								self.AllowToDo_WaitForEnemyToComeOut = false
 								-- If NOT controlled by a player AND is a gesture make it stop moving so it doesn't run after the enemy right away
 								if !plyControlled && string_find(anim, "vjges_") then
@@ -2791,7 +2840,7 @@ function ENT:Think()
 				self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene)
 				if (eneData.SightDiff > math_cos(math_rad(self.SightAngle))) && (self.LatestEnemyDistance < self:GetMaxLookDistance()) && eneData.IsVisible then
 					eneData.LastVisibleTime = curTime
-					eneData.LastVisiblePos = enePos
+					eneData.LastVisiblePos = ene:EyePos() -- Use EyePos because "Visible" uses it to run the trace in the engine! | For origin, use "self:GetEnemyLastSeenPos()"
 				end
 				
 				-- Turning / Facing Enemy
@@ -2809,21 +2858,6 @@ function ENT:Think()
 				if self.AttackType != VJ.ATTACK_TYPE_GRENADE && self.CallForHelp == true && curTime > self.NextCallForHelpT then
 					self:Allies_CallHelp(self.CallForHelpDistance)
 					self.NextCallForHelpT = curTime + self.NextCallForHelpTime
-				end
-				
-				-- Grenade attack
-				if self.HasGrenadeAttack && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING && !self:BusyWithActivity() && curTime > self.NextThrowGrenadeT && curTime > self.TakingCoverT then
-					if plyControlled && self.VJ_TheController:KeyDown(IN_JUMP) then
-						self:ThrowGrenadeCode()
-						self.NextThrowGrenadeT = curTime + math.random(self.NextThrowGrenadeTime.a, self.NextThrowGrenadeTime.b)
-					elseif !plyControlled then
-						local chance = self.ThrowGrenadeChance
-						-- If chance is above 4, then half it by 2 if the enemy is a tank OR not visible
-						if math.random(1, (chance > 3 && (ene.IsVJBaseSNPC_Tank or !eneData.IsVisible) and math.floor(chance / 2)) or chance) == 1 && self.LatestEnemyDistance < self.GrenadeAttackThrowDistance && self.LatestEnemyDistance > self.GrenadeAttackThrowDistanceClose then
-							self:ThrowGrenadeCode()
-						end
-						self.NextThrowGrenadeT = curTime + math.random(self.NextThrowGrenadeTime.a, self.NextThrowGrenadeTime.b)
-					end
 				end
 				
 				-- Sets the scared behavior movement activity
@@ -2858,7 +2892,7 @@ function ENT:Think()
 					local funcCustomAtk = self.CustomAttack; if funcCustomAtk then funcCustomAtk(self, ene, eneData.IsVisible) end
 				
 					-- Melee Attack
-					if self.HasMeleeAttack == true && !self.vACT_StopAttacks && !self.Flinching && !self.FollowData.StopAct && self.AttackType == VJ.ATTACK_TYPE_NONE && self.IsAbleToMeleeAttack && (!IsValid(self.CurrentWeaponEntity) or (IsValid(self.CurrentWeaponEntity) && (!self.CurrentWeaponEntity.IsMeleeWeapon))) && ((plyControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (plyControlled == false && (self.NearestPointToEnemyDistance < self.MeleeAttackDistance && eneData.IsVisible) && (eneData.SightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))))) then
+					if self.HasMeleeAttack == true && self.IsAbleToMeleeAttack && !self.Flinching && !self.FollowData.StopAct && self.AttackType == VJ.ATTACK_TYPE_NONE && (!IsValid(self.CurrentWeaponEntity) or (IsValid(self.CurrentWeaponEntity) && (!self.CurrentWeaponEntity.IsMeleeWeapon))) && ((plyControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (plyControlled == false && (self.NearestPointToEnemyDistance < self.MeleeAttackDistance && eneData.IsVisible) && (eneData.SightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))))) then
 						local seed = curTime; self.CurAttackSeed = seed
 						self.AttackType = VJ.ATTACK_TYPE_MELEE
 						self.AttackState = VJ.ATTACK_STATE_STARTED
@@ -2869,12 +2903,14 @@ function ENT:Think()
 						timer.Simple(self.BeforeMeleeAttackSounds_WaitTime, function() if IsValid(self) then self:PlaySoundSystem("BeforeMeleeAttack") end end)
 						self.NextAlertSoundT = curTime + 0.4
 						if self.DisableMeleeAttackAnimation == false then
-							self.CurrentAttackAnimation = VJ.PICK(self.AnimTbl_MeleeAttack)
-							self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, self.MeleeAttackAnimationDecreaseLengthAmount)
-							if self.MeleeAttackAnimationAllowOtherTasks == false then -- Useful for gesture-based attacks
-								self.CurAttackAnimTime = curTime + self.CurrentAttackAnimationDuration
+							local anim, animDur = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_MeleeAttack, false, 0, false, self.MeleeAttackAnimationDelay)
+							if anim != ACT_INVALID then
+								self.CurrentAttackAnimation = anim
+								self.CurrentAttackAnimationDuration = animDur - (self.MeleeAttackAnimationDecreaseLengthAmount / self:GetPlaybackRate())
+								if self.MeleeAttackAnimationAllowOtherTasks == false then -- Useful for gesture-based attacks
+									self.CurrentAttackAnimationTime = curTime + self.CurrentAttackAnimationDuration
+								end
 							end
-							self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation,false,0,false,self.MeleeAttackAnimationDelay,{SequenceDuration=self.CurrentAttackAnimationDuration})
 						end
 						if self.TimeUntilMeleeAttackDamage == false then
 							finishAttack[VJ.ATTACK_TYPE_MELEE](self)
@@ -2887,6 +2923,21 @@ function ENT:Think()
 							end
 						end
 						self:CustomOnMeleeAttack_AfterStartTimer(seed)
+					end
+					
+					-- Grenade attack
+					if self.HasGrenadeAttack && self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING && !self:BusyWithActivity() && curTime > self.NextThrowGrenadeT && curTime > self.TakingCoverT then
+						if plyControlled && self.VJ_TheController:KeyDown(IN_JUMP) then
+							self:GrenadeAttack()
+							self.NextThrowGrenadeT = curTime + math.random(self.NextThrowGrenadeTime.a, self.NextThrowGrenadeTime.b)
+						elseif !plyControlled then
+							local chance = self.ThrowGrenadeChance
+							-- If chance is above 4, then half it by 2 if the enemy is a tank OR not visible
+							if math.random(1, (chance > 3 && (ene.IsVJBaseSNPC_Tank or !eneData.IsVisible) and math.floor(chance / 2)) or chance) == 1 && self.LatestEnemyDistance < self.GrenadeAttackThrowDistance && self.LatestEnemyDistance > self.GrenadeAttackThrowDistanceClose then
+								self:GrenadeAttack()
+							end
+							self.NextThrowGrenadeT = curTime + math.random(self.NextThrowGrenadeTime.a, self.NextThrowGrenadeTime.b)
+						end
 					end
 				end
 			else -- No Enemy
@@ -2990,149 +3041,271 @@ function ENT:MeleeAttackCode(customEnt)
 		self:PlaySoundSystem("MeleeAttackMiss", {}, VJ.EmitSound)
 	end
 end
+
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:ThrowGrenadeCode(customEnt, noOwner)
-	if self.Dead or self.Flinching == true or self.AttackType == VJ.ATTACK_TYPE_MELEE /*or (IsValid(self:GetEnemy()) && !self:Visible(self:GetEnemy()))*/ then return end
+--[[---------------------------------------------------------
+	Performs a grenade attack
+		- customEnt = What entity it should throw | DEFAULT: nil
+			- nil = Spawn the NPC's default grenade class usually set by "self.GrenadeAttackEntity"
+			- string = Spawn the given entity class as the grenade
+			- entity = Use the given entity as the grenade by changing its parent to the NPC and altering its position
+		- disableOwner = If set to true, the NPC will not be set as the owner of the grenade, allowing it to damage itself and its allies when applicable!
+	Returns
+		- false, Grenade attack was canceled
+-----------------------------------------------------------]]
+function ENT:GrenadeAttack(customEnt, disableOwner)
+	if self.Dead or self.Flinching or self.AttackType == VJ.ATTACK_TYPE_MELEE then return false end // (IsValid(self:GetEnemy()) && !self:Visible(self:GetEnemy()))
 	//if self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() + self:OBBCenter()),self:GetEnemy():EyePos()) == true then return end
-	noOwner = noOwner or false
-	local getIsCustom = false
-	local gerModel = VJ.PICK(self.GrenadeAttackModel)
-	local gerClass = self.GrenadeAttackEntity
-	local gerFussTime = self.GrenadeAttackFussTime
 	local eneData = self.EnemyData
-	
-	if IsValid(self:GetEnemy()) && !eneData.IsVisible then
-		if self:VisibleVec(eneData.LastVisiblePos) && self:GetEnemy():GetPos():Distance(eneData.LastVisiblePos) <= 600 then
-			self:FaceCertainPosition(eneData.LastVisiblePos)
-		else
-			return
+	local ene = self:GetEnemy()
+	local isLiveEnt = IsValid(customEnt)
+	local landDir = false -- 0 = Enemy's position | 1 = Enemy's last visible position | anything else = Best position
+	local seed = CurTime(); self.CurAttackSeed = seed
+
+	-- Handle possible destinations:
+		-- Enemy not valid --> Best position away from the NPC and allies
+		-- Enemy valid AND Enemy visible --> Enemy's position
+		-- Enemy valid AND Enemy not visible AND last seen position is visible --> Enemy's last visible position
+		-- Enemy valid AND Enemy not visible AND last seen position is not visible --> Cancel attack
+		-- Enemy valid AND Enemy not visible AND last seen position is not visible AND grenade is live throw back --> Best position away from the NPC and allies
+	if IsValid(ene) then
+		-- If enemy is visible then face them!
+		if eneData.IsVisible then
+			landDir = 0 -- If enemy is visible leave then do NOT face random pos, even if "self.GrenadeAttackAnimationFaceEnemy" is disabled!
+		else -- We have a hidden enemy...
+			-- Attempt to flush the enemy out of hiding
+			if self:VisibleVec(eneData.LastVisiblePos) && ene:GetPos():Distance(eneData.LastVisiblePos) <= self.GrenadeAttackThrowDistance then // self.GrenadeAttackThrowDistance
+				landDir = 1 -- We are going to face flush position, do NOT face random pos!
+			-- If can't flush the enemy, then face random open position ONLY if we are given a live entity, otherwise...
+			-- If live entity is NOT given and it's allowed to continue, it will cause the NPC to throw a grenade when both the enemy and its flush position are hidden!
+			elseif !isLiveEnt then
+				return false
+			end
 		end
 	end
 	
+	-- Handle animations
 	if self.DisableGrenadeAttackAnimation == false then
-		self.CurrentAttackAnimation = VJ.PICK(self.AnimTbl_GrenadeAttack)
-		self.CurrentAttackAnimationDuration = self:DecideAnimationLength(self.CurrentAttackAnimation, false, 0.2)
-		self.CurAttackAnimTime = CurTime() + self.CurrentAttackAnimationDuration
-		self:VJ_ACT_PLAYACTIVITY(self.CurrentAttackAnimation, self.GrenadeAttackAnimationStopAttacks, self:DecideAnimationLength(self.CurrentAttackAnimation, self.GrenadeAttackAnimationStopAttacksTime), true, self.GrenadeAttackAnimationDelay, {PlayBackRateCalculated=true})
-	end
-
-	if IsValid(customEnt) then -- Custom nernagner gamal nernagner vor yete bidi nede
-		local getSpawnPos = self.GrenadeAttackAttachment
-		local getSpawnAngle;
-		if getSpawnPos == false then
-			getSpawnPos = self:CustomOnGrenadeAttack_SpawnPosition()
-			getSpawnAngle = getSpawnPos:Angle()
-		else
-			getSpawnPos = self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos
-			getSpawnAngle = self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Ang
+		local anim, animDur = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_GrenadeAttack, false, 0, false, self.GrenadeAttackAnimationDelay)
+		if anim != ACT_INVALID then
+			self.CurrentAttackAnimation = anim
+			self.CurrentAttackAnimationDuration = animDur
+			self.CurrentAttackAnimationTime = CurTime() + self.CurrentAttackAnimationDuration
 		end
+	end
 	
-		getIsCustom = true
-		gerModel = customEnt:GetModel()
-		gerClass = customEnt:GetClass()
-		customEnt:SetMoveType(MOVETYPE_NONE)
-		customEnt:SetParent(self)
-		if self.GrenadeAttackAttachment == false then
-			customEnt:SetPos(getSpawnPos)
-		else
-			customEnt:Fire("SetParentAttachment", self.GrenadeAttackAttachment)
+	if landDir == 0 then -- Face enemy
+		if self.GrenadeAttackAnimationFaceEnemy then
+			self:FaceCertainEntity(curEnemy, true)
 		end
-		customEnt:SetAngles(getSpawnAngle)
-		if gerClass == "obj_vj_grenade" then
-			gerFussTime = math.abs(customEnt.FussTime - customEnt.TimeSinceSpawn)
-		elseif gerClass == "obj_handgrenade" or gerClass == "obj_spore" then
-			gerFussTime = 1
-		elseif gerClass == "npc_grenade_frag" or gerClass == "doom3_grenade" or gerClass == "fas2_thrown_m67" or gerClass == "cw_grenade_thrown" or gerClass == "cw_flash_thrown" or gerClass == "cw_smoke_thrown" then
-			gerFussTime = 1.5
-		elseif gerClass == "obj_cpt_grenade" then
-			gerFussTime = 2
+	elseif landDir == 1 then -- Face enemy's last visible pos
+		self:FaceCertainPosition(eneData.LastVisiblePos, self.CurrentAttackAnimationDuration or 1.5)
+	else -- Face best pos
+		local bestPos = VJ.PICK(self:VJ_CheckAllFourSides(200, true))
+		if bestPos then
+			landDir = bestPos -- Save the position so it can be used when it's thrown
+			self:FaceCertainPosition(bestPos, self.CurrentAttackAnimationDuration or 1.5)
 		end
 	end
-
-	if !IsValid(self:GetEnemy()) then
-		local sideCheck = VJ.PICK(self:VJ_CheckAllFourSides(200, true))
-		if sideCheck then
-			self:FaceCertainPosition(sideCheck, self.CurrentAttackAnimationDuration or 1.5)
+	
+	-- Handle situation where already spawned entity is given | EX: Grenade picked up by the NPC
+	if isLiveEnt then
+		customEnt.VJTag_IsPickedUp = true
+		customEnt.VJTag_PickedUpOrgMoveType = customEnt:GetMoveType()
+		-- Change the grenade's position so the NPC is actively holding it, in order with priority:
+			-- 1. CUSTOM 		If custom position is given then use that, otherwise...
+			-- 2. ATTACHMENT 	If a valid attachment is given then use that, otherwise...
+			-- 3. BONE 			If a valid bone is given then use that, otherwise...
+			-- 4. FAIL 			Use the NPC's shoot position (fail safe)
+		local customPos = self:CustomOnGrenadeAttack("SpawnPos", nil, customEnt, landDir, nil)
+		if !customPos then -- If no custom position is given...
+			local getAttach = self:LookupAttachment(self.GrenadeAttackAttachment)
+			if !getAttach or getAttach == 0 or getAttach == -1 then -- Attachment invalid, try bone...
+				local getBone = self:LookupBone(self.GrenadeAttackBone)
+				if getBone then -- Bone valid
+					local bonePos, boneAng = self:GetBonePosition(getBone)
+					customEnt:SetPos(bonePos)
+					customEnt:SetAngles(boneAng)
+					customEnt:FollowBone(self, getBone) -- Calls SetParent internally
+				else -- Fail safe! (All cases failed)
+					customEnt:SetPos(self:GetShootPos())
+					//customEnt:SetAngles(self:GetShootPos():Angle()) -- No need as this is a fail safe anyway
+					customEnt:SetParent(self)
+				end
+			else -- Attachment valid
+				local attachData = self:GetAttachment(getAttach)
+				customEnt:SetMoveType(MOVETYPE_NONE) -- Must set this for attachments to have any effect!
+				customEnt:SetParent(self, getAttach)
+				customEnt:SetPos(attachData.Pos)
+				customEnt:SetAngles(attachData.Ang)
+			end
+		else -- Custom position valid
+			customEnt:SetPos(customPos)
+			customEnt:SetAngles(customPos:Angle())
+			customEnt:SetParent(self)
 		end
 	end
 
 	self.AttackType = VJ.ATTACK_TYPE_GRENADE
+	self.AttackState = VJ.ATTACK_STATE_STARTED
 	self.ThrowingGrenade = true
-	self:CustomOnGrenadeAttack_BeforeStartTimer()
+	self:CustomOnGrenadeAttack("Start", nil, customEnt, landDir, nil)
 	self:PlaySoundSystem("GrenadeAttack")
-
-	timer.Simple(self.TimeUntilGrenadeIsReleased, function()
-		if getIsCustom == true && !IsValid(customEnt) then return end
-		if IsValid(customEnt) then customEnt.VJTag_IsPickedUp = false customEnt:Remove() end
-		if IsValid(self) && !self.Dead /*&& IsValid(self:GetEnemy())*/ then -- Yete SNPC ter artoon e...
-			local getSpawnPos = self.GrenadeAttackAttachment
-			local getSpawnAngle;
-			if getSpawnPos == false then
-				getSpawnPos = self:CustomOnGrenadeAttack_SpawnPosition()
-				getSpawnAngle = getSpawnPos:Angle()
-			else
-				getSpawnPos = self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Pos
-				getSpawnAngle = self:GetAttachment(self:LookupAttachment(self.GrenadeAttackAttachment)).Ang
-			end
 	
-			local greTargetPos = self:GetPos() + self:GetForward()*200
-			if IsValid(self:GetEnemy()) then
-				eneData = self.EnemyData
-				if !eneData.IsVisible && self:VisibleVec(eneData.LastVisiblePos) && self:GetEnemy():GetPos():Distance(eneData.LastVisiblePos) <= 600 then
-					greTargetPos = eneData.LastVisiblePos
-					self:FaceCertainPosition(greTargetPos, self.CurrentAttackAnimationDuration - self.TimeUntilGrenadeIsReleased)
-				else
-					greTargetPos = self:GetEnemy():GetPos()
-				end
-			else -- Yete teshnami chooni, nede amenan lav goghme
-				if !IsValid(self:GetEnemy()) then
-					local test = self:VJ_CheckAllFourSides(200, true)
-					local sideCheck = VJ.PICK(test)
-					if sideCheck then
-						greTargetPos = sideCheck
-						self:FaceCertainPosition(sideCheck, self.CurrentAttackAnimationDuration - self.TimeUntilGrenadeIsReleased)
-					end
-				end
-			end
-			local gent = ents.Create(gerClass)
-			if noOwner == false then gent:SetOwner(self) end
-			gent:SetPos(getSpawnPos)
-			gent:SetAngles(getSpawnAngle)
-			if gerModel then gent:SetModel(Model(gerModel)) end
-			local getThrowVel = self:CustomOnGrenadeAttack_ThrowVelocity(gent, greTargetPos, getSpawnPos)
-			-- Set the timers for all the different grenade entities
-				if gerClass == "obj_vj_grenade" then
-					gent.FussTime = gerFussTime
-				elseif gerClass == "obj_cpt_grenade" then
-					gent:SetTimer(gerFussTime)
-				elseif gerClass == "obj_spore" then
-					gent:SetGrenade(true)
-				elseif gerClass == "ent_hl1_grenade" then
-					gent:ShootTimed(customEnt, getThrowVel, gerFussTime)
-				elseif gerClass == "doom3_grenade" or gerClass == "obj_handgrenade" then
-					gent:SetExplodeDelay(gerFussTime)
-				elseif gerClass == "cw_grenade_thrown" or gerClass == "cw_flash_thrown" or gerClass == "cw_smoke_thrown" then
-					gent:SetOwner(self)
-					gent:Fuse(gerFussTime)
-				end
-			gent:Spawn()
-			gent:Activate()
-			if gerClass == "npc_grenade_frag" then gent:Input("SetTimer",self:GetOwner(),self:GetOwner(),gerFussTime) end
-			local phys = gent:GetPhysicsObject()
-			if IsValid(phys) then
-				phys:Wake()
-				phys:AddAngleVelocity(Vector(math.Rand(500, 500), math.Rand(500, 500), math.Rand(500, 500)))
-				phys:SetVelocity(getThrowVel)
-			end
-			self:CustomOnGrenadeAttack_OnThrow(gent)
+	local releaseTime = self.TimeUntilGrenadeIsReleased
+	if releaseTime == false then -- Call this right away for event-based attacks!
+		finishAttack[VJ.ATTACK_TYPE_GRENADE](self)
+	end
+	-- "timer_grenade_start" is still called on event-based attacks unlike other attacks because we need to retain the data (customEnt, disableOwner, landDir)...
+	-- ...But the timer will be based off of "timer_grenade_finished" to be used as a fail safe in case the animation is cut off!
+	-- Call "timer.Adjust("timer_grenade_start"..self:EntIndex(), 0)" in the event code to make it throw the grenade
+	timer.Create("timer_grenade_start"..self:EntIndex(), (releaseTime == false and timer.TimeLeft("timer_grenade_finished"..self:EntIndex())) or releaseTime / self:GetPlaybackRate(), 1, function()
+		if self.CurAttackSeed == seed then
+			if isLiveEnt && !IsValid(customEnt) then return end
+			self:GrenadeAttackThrow(customEnt, disableOwner, landDir)
 		end
-		if self.AttackType == VJ.ATTACK_TYPE_GRENADE then
-			self.AttackType = VJ.ATTACK_TYPE_NONE
-		end
-		self.ThrowingGrenade = false
 	end)
+	return true
 end
-
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Performs a grenade attack
+		- customEnt = What entity it should throw | DEFAULT: nil
+			- nil = Spawn the NPC's default grenade class usually set by "self.GrenadeAttackEntity"
+			- string = Spawn the given entity class as the grenade
+			- entity = Use the given entity as the grenade by changing its parent to the NPC and altering its position
+		- disableOwner = If set to true, the NPC will not be set as the owner of the grenade, allowing it to damage itself and its allies when applicable!
+		- landDir = Direction the grenade should land | Used by the base to align where the grenade is gonna land
+			- 0 = Use enemy's position
+			- 1 = Use enemy's last visible position
+			- Vector = Use given vector's position
+			- Anything else = Find a best random position
+	Returns
+		- false, Grenade attack was canceled
+		- Entity, The grenade that was thrown
+-----------------------------------------------------------]]
+function ENT:GrenadeAttackThrow(customEnt, disableOwner, landDir)
+	if self.Dead or self.vACT_StopAttacks or self.Flinching or self.AttackType == VJ.ATTACK_TYPE_MELEE then return false end
+	local grenade;
+	local isLiveEnt = IsValid(customEnt) -- Whether or not the given custom entity is live
+	local fuseTime = self.GrenadeAttackFuseTime
+	
+	-- Handle the grenade's spawn position and angle, in order with priority:
+		-- 1. CUSTOM 		If custom position is given then use that, otherwise...
+		-- 2. ATTACHMENT 	If a valid attachment is given then use that, otherwise...
+		-- 3. BONE 			If a valid bone is given then use that, otherwise...
+		-- 4. FAIL 			Use the NPC's shoot position (fail safe)
+	local spawnPos = self:CustomOnGrenadeAttack("SpawnPos", nil, customEnt, landDir, nil)
+	local spawnAng;
+	if !spawnPos then -- If no custom position is given...
+		local getAttach = self:LookupAttachment(self.GrenadeAttackAttachment)
+		if !getAttach or getAttach == 0 or getAttach == -1 then -- Attachment invalid, try bone...
+			local getBone = self:LookupBone(self.GrenadeAttackBone)
+			if getBone then -- Bone valid
+				spawnPos, spawnAng = self:GetBonePosition(getBone)
+			else -- Fail safe! (All cases failed)
+				spawnPos = self:GetShootPos()
+				spawnAng = self:GetAngles()
+			end
+		else -- Attachment valid
+			local attachData = self:GetAttachment(getAttach)
+			spawnPos = attachData.Pos
+			spawnAng = attachData.Ang
+		end
+	else -- Custom position valid
+		spawnAng = spawnPos:Angle()
+	end
+	
+	-- Handle NPC turning and grenade landing position
+	-- Do NOT set it to actually turn & face because it's pointless at this point since the grenade is already being released!
+	local landingPos = self:GetPos() + self:GetForward()*200
+	if landDir == 0 then -- Use enemy's position
+		landingPos = self:GetEnemyLastKnownPos()
+		//if self.GrenadeAttackAnimationFaceEnemy then self:FaceCertainEntity(curEnemy, true) end
+	elseif landDir == 1 then -- Use enemy's last visible position
+		local eneData = self.EnemyData
+		landingPos = eneData.LastVisiblePos
+		//self:FaceCertainPosition(eneData.LastVisiblePos, self.CurrentAttackAnimationDuration - self.TimeUntilGrenadeIsReleased)
+	elseif isvector(landDir) then -- Use given vector's position
+		landingPos = landDir
+	else -- Find a best random position
+		local bestPos = VJ.PICK(self:VJ_CheckAllFourSides(200, true))
+		if bestPos then
+			landingPos = bestPos
+			//self:FaceCertainPosition(bestPos, self.CurrentAttackAnimationDuration - self.TimeUntilGrenadeIsReleased)
+		end
+	end
+	
+	-- If its a live entity then clean it up and set it as the grenade...
+	-- Otherwise, create a new entity with the given custom entity name OR one of NPC's default grenades
+	if isLiveEnt then -- It's an existing entity
+		customEnt.VJTag_IsPickedUp = false -- Set this to false, as we are no longer holding it!
+		-- Clean up by removing the parent, move type, and follow bone effect
+		customEnt:SetParent(NULL)
+		if customEnt:GetMoveType() == MOVETYPE_NONE && customEnt.VJTag_PickedUpOrgMoveType then customEnt:SetMoveType(customEnt.VJTag_PickedUpOrgMoveType) end
+		customEnt:RemoveEffects(EF_FOLLOWBONE)
+		grenade = customEnt
+		//customEnt:Remove()
+	else
+		grenade = ents.Create(customEnt or VJ.PICK(self.GrenadeAttackEntity))
+		if !customEnt then -- Skip model override if function is called with a custom entity string
+			local setModel = VJ.PICK(self.GrenadeAttackModel)
+			if setModel then
+				grenade:SetModel(setModel)
+			end
+		end
+	end
+	
+	if !disableOwner then grenade:SetOwner(self) end
+	grenade:SetPos(spawnPos)
+	grenade:SetAngles(spawnAng)
+	
+	if !isLiveEnt then
+		-- Set the fuse timers for all the different grenade entities
+		local gerClass = grenade:GetClass()
+		if gerClass == "obj_vj_grenade" then
+			grenade.FuseTime = fuseTime
+		elseif gerClass == "npc_grenade_frag" then
+			grenade:Input("SetTimer", grenade:GetOwner(), grenade:GetOwner(), fuseTime)
+		elseif gerClass == "obj_cpt_grenade" then
+			grenade:SetTimer(fuseTime)
+		elseif gerClass == "obj_spore" then
+			grenade:SetGrenade(true)
+		elseif gerClass == "ent_hl1_grenade" then
+			grenade:ShootTimed(grenade:GetOwner(), defPos, fuseTime)
+		elseif gerClass == "doom3_grenade" or gerClass == "obj_handgrenade" then
+			grenade:SetExplodeDelay(fuseTime)
+		elseif gerClass == "cw_grenade_thrown" or gerClass == "cw_flash_thrown" or gerClass == "cw_smoke_thrown" then
+			grenade:SetOwner(self)
+			grenade:Fuse(fuseTime)
+		end
+		
+		-- Spawn the grenade
+		grenade:Spawn()
+		grenade:Activate()
+	end
+	
+	-- Handle throw velocity
+	local throwVel = self:CustomOnGrenadeAttack("Throw", grenade, customEnt, landDir, landingPos)
+	if throwVel then
+		local phys = grenade:GetPhysicsObject()
+		if IsValid(phys) then
+			phys:Wake()
+			phys:AddAngleVelocity(Vector(math.Rand(500, 500), math.Rand(500, 500), math.Rand(500, 500)))
+			phys:SetVelocity(throwVel)
+		else -- If we don't have a physics object, then attempt to set the entity's velocity directly
+			grenade:SetVelocity(throwVel)
+		end
+	end
+	
+	if self.AttackState < VJ.ATTACK_STATE_EXECUTED then
+		self.AttackState = VJ.ATTACK_STATE_EXECUTED
+		if self.TimeUntilGrenadeIsReleased != false then
+			finishAttack[VJ.ATTACK_TYPE_GRENADE](self)
+		end
+	end
+	return grenade
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /* Old system (Replaced by condition system)
 local getSdHint = sound.GetLoudestSoundHint
@@ -3178,13 +3351,11 @@ function ENT:CheckForDangers()
 				self.NextDangerDetectionT = CurTime() + 4
 				self.TakingCoverT = CurTime() + 4
 				-- If has the ability to throw it back, then throw the grenade!
-				if self.CanThrowBackDetectedGrenades && self.HasGrenadeAttack && ent.VJTag_IsPickupable && !ent.VJTag_IsPickedUp && ent:GetVelocity():Length() < 400 && self:VJ_GetNearestPointToEntityDistance(ent) < 100 then
+				if self.CanThrowBackDetectedGrenades && self.HasGrenadeAttack && ent.VJTag_IsPickupable && !ent.VJTag_IsPickedUp && ent:GetVelocity():Length() < 400 && self:VJ_GetNearestPointToEntityDistance(ent) < 100 && self:GrenadeAttack(ent, true) then
 					self.NextGrenadeAttackSoundT = CurTime() + 3
-					self:ThrowGrenadeCode(ent, true)
-					ent.VJTag_IsPickedUp = true
-					//ent:Remove()
 					return
 				end
+				-- Was not able to throw back the grenade, so take cover instead!
 				self:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH", function(x)
 					x.CanShootWhenMoving = true
 					x.ConstantlyFaceEnemy = true
@@ -3226,6 +3397,7 @@ function ENT:StopAttacks(checkTimers)
 	self.CurAttackSeed = 0
 	
 	self.MeleeAttacking = false
+	self.ThrowingGrenade = false
 	
 	self:DoChaseAnimation()
 end
@@ -3384,7 +3556,7 @@ function ENT:SelectSchedule()
 			local canAttack = true
 			
 			-- Back away from the enemy if it's to close
-			if self.HasWeaponBackAway == true && (!wep.IsMeleeWeapon) && self.LatestEnemyDistance <= self.WeaponBackAway_Distance && CurTime() > self.TakingCoverT && CurTime() > self.NextChaseTime && self.AttackType == VJ.ATTACK_TYPE_NONE && !self.IsFollowing && !self.VJ_PlayingSequence && ene.Behavior != VJ_BEHAVIOR_PASSIVE && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered), enePos_Eye) == false then
+			if self.HasWeaponBackAway == true && (!wep.IsMeleeWeapon) && self.LatestEnemyDistance <= self.WeaponBackAway_Distance && CurTime() > self.TakingCoverT && CurTime() > self.NextChaseTime && self.AttackType == VJ.ATTACK_TYPE_NONE && !self.IsFollowing && ene.Behavior != VJ_BEHAVIOR_PASSIVE && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered), enePos_Eye) == false then
 				local moveCheck = VJ.PICK(self:VJ_CheckAllFourSides(200, true, "0111"))
 				if moveCheck then
 					self:SetLastPosition(moveCheck)
@@ -3568,7 +3740,7 @@ function ENT:SelectSchedule()
 									if moveCheck then
 										self:StopMoving()
 										self:SetLastPosition(moveCheck)
-										self:VJ_TASK_GOTO_LASTPOS(VJ.PICK({"TASK_RUN_PATH", "TASK_WALK_PATH"}), function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+										self:VJ_TASK_GOTO_LASTPOS(math.random(1, 2) == 1 and "TASK_RUN_PATH" or "TASK_WALK_PATH", function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
 									end
 								end
 								self.NextMoveRandomlyWhenShootingT = CurTime() + math.Rand(self.NextMoveRandomlyWhenShootingTime1, self.NextMoveRandomlyWhenShootingTime2)
@@ -3581,7 +3753,7 @@ function ENT:SelectSchedule()
 							self:CustomOnWeaponAttack()
 							self.Weapon_TimeSinceLastShot = CurTime()
 							//wep:SetClip1(99999)
-							self:VJ_SetSchedule(SCHED_RANGE_ATTACK1)
+							self:SetSchedule(SCHED_RANGE_ATTACK1)
 						end
 					end
 				end
@@ -3628,11 +3800,10 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 	self:CustomOnResetEnemy()
 	if self.VJ_DEBUG == true && GetConVar("vj_npc_printresetenemy"):GetInt() == 1 then print(self:GetName().." has reseted its enemy") end
 	if eneValid then
-		if self.IsFollowing == false && self.VJ_PlayingSequence == false && (!self.IsVJBaseSNPC_Tank) && !self:Visible(ene) && self:GetEnemyLastKnownPos() != defPos then
+		if self.IsFollowing == false && (!self.IsVJBaseSNPC_Tank) && !self:Visible(ene) && self:GetEnemyLastKnownPos() != defPos then
 			self:SetLastPosition(self:GetEnemyLastKnownPos())
 			moveToEnemy = true
 		end
-
 		self:MarkEnemyAsEluded(ene)
 		//self:ClearEnemyMemory(ene) // Completely resets the enemy memory
 		self:AddEntityRelationship(ene, D_NU, 10)
@@ -3796,7 +3967,7 @@ function ENT:OnTakeDamage(dmginfo)
 					local anim = VJ.PICK(self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_TakingCover)))
 					if VJ.AnimExists(self, anim) == true then
 						local hideTime = math.Rand(self.MoveOrHideOnDamageByEnemy_HideTime.a, self.MoveOrHideOnDamageByEnemy_HideTime.b)
-						self:VJ_ACT_PLAYACTIVITY(anim, false, hideTime, false, 0, {SequenceDuration=hideTime}) -- Don't set stopActivities because we want it to shoot if an enemy is suddenly visible!
+						self:VJ_ACT_PLAYACTIVITY(anim, false, hideTime, false) -- Don't set stopActivities because we want it to shoot if an enemy is suddenly visible!
 						self.NextChaseTime = curTime + hideTime
 						self.TakingCoverT = curTime + hideTime
 						self.DoingWeaponAttack = false
@@ -4000,7 +4171,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 		self:TriggerOutput("OnDeath", self)
 	end
 	
-	if self.HasDeathAnimation == true && !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) then
+	if self.HasDeathAnimation == true && !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) && self:GetNavType() != NAV_CLIMB then
 		if IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball" then DoKilled() return end
 		if GetConVar("vj_npc_nodeathanimation"):GetInt() == 0 && GetConVar("ai_disabled"):GetInt() == 0 && !dmginfo:IsDamageType(DMG_DISSOLVE) && math.random(1, self.DeathAnimationChance) == 1 then
 			self:RemoveAllGestures()

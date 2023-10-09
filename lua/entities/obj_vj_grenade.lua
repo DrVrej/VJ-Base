@@ -45,8 +45,7 @@ ENT.DecalTbl_DeathDecals = {"Scorch"}
 ENT.SoundTbl_OnCollide = {"weapons/hegrenade/he_bounce-1.wav"}
 
 -- Custom
-ENT.FussTime = 3
-ENT.TimeSinceSpawn = 0
+ENT.FuseTime = 3
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomPhysicsObjectOnInitialize(phys)
 	phys:Wake()
@@ -55,19 +54,17 @@ function ENT:CustomPhysicsObjectOnInitialize(phys)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize()
-	//if self:GetOwner():IsValid() && (self:GetOwner().GrenadeAttackFussTime) then
-	//timer.Simple(self:GetOwner().GrenadeAttackFussTime,function() if IsValid(self) then self:DeathEffects() end end) else
-	timer.Simple(self.FussTime,function() if IsValid(self) then self:DeathEffects() end end)
-	//end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnThink()
-	self.TimeSinceSpawn = self.TimeSinceSpawn + 0.2
+	timer.Simple(self.FuseTime, function()
+		if IsValid(self) then
+			self:DeathEffects()
+		end
+	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnTakeDamage(dmginfo)
-	if IsValid(self:GetPhysicsObject()) then
-		self:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce() * 0.1)
+	local phys = self:GetPhysicsObject()
+	if IsValid(phys) then
+		phys:AddVelocity(dmginfo:GetDamageForce() * 0.1)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -60,6 +60,7 @@ VJ.ANIM_SET_CUSTOM				= 10 -- Use this when defining a custom model set
 -- Activities & Behaviors
 VJTag_IsPickupable				bool		Entity can be picked up by NPCs (Ex: Grenades)
 VJTag_IsPickedUp				bool		Entity that is currently picked up by an NPC and most likely throwing it away (Ex: Grenades)
+VJTag_PickedUpOrgMoveType		enum		Entity's original move type before being picked up, usually set alongside "VJTag_IsPickedUp"
 VJTag_IsHealing					bool		Entity is healing (either itself or by another entity)
 VJTag_IsEating					bool		Entity is eating something (Ex: a corpse)
 VJTag_IsBeingEaten				bool		Entity is being eaten by something

@@ -128,35 +128,87 @@ function ENT:VJ_TASK_IDLE_WANDER()
 	self:StartSchedule(task_idleWander)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
-	if self:GetState() == VJ_STATE_FREEZE or self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then self:MaintainActivity() return end
-	//print("Running the RunAI")
-	//self:SetArrivalActivity(ACT_COWER)
-	//self:SetArrivalSpeed(1000)
-	if self:IsRunningBehavior() or self:DoingEngineSchedule() then return true end
-	-- Apply walk frames to sequences
-	//print(self:GetSequenceMoveDist(self:GetSequence()))
-	if self.VJ_PlayingSequence && self:GetSequenceMoveDist(self:GetSequence()) > 0 && !self:IsMoving() && !self:IsSequenceFinished() && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then
-		self:AutoMovement(self:GetAnimTimeInterval())
+function ENT:TASK_VJ_PLAY_ACTIVITY(taskStatus, data)
+	if taskStatus == TASKSTATUS_NEW then
+		//print("TASK_VJ_PLAY_ACTIVITY: Start!", data.duration)
+		self:ResetIdealActivity(data.animation)
+		data.animEndTime = CurTime() + data.duration
+		//self:AutoMovement(self:GetAnimTimeInterval()) -- Causes extra walk frame to be applied, especially when switching from movement to animation
+	else
+		//self:AutoMovement(self:GetAnimTimeInterval())
+		if (CurTime() > data.animEndTime) or (self:IsSequenceFinished() && self:GetSequence() == self:GetInternalVariable("m_nIdealSequence")) then
+			//print("TASK_VJ_PLAY_ACTIVITY: Stop!")
+			self:TaskComplete()
+			return
+		end
+		//print("TASK_VJ_PLAY_ACTIVITY: Run!")
 	end
-	self:RunAIMoveJump()
-	if (!self.CurrentSchedule or (self.CurrentSchedule != nil && ((self:IsMoving() && self.CurrentSchedule.CanBeInterrupted == true) or (!self:IsMoving())))) && ((self.VJ_PlayingSequence == false) or (self.VJ_PlayingSequence == true && self.VJ_PlayingInterruptSequence == true)) then self:SelectSchedule() end
-	if (self.CurrentSchedule) then self:DoSchedule(self.CurrentSchedule) end
-	if self.VJ_PlayingSequence == false && self.VJ_PlayingInterruptSequence == false then self:MaintainActivity() end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RunAIMoveJump()
-	if self:GetNavType() != NAV_JUMP then return end
-	if self:OnGround() then
-		self:MoveJumpStop()
-		if VJ.AnimExists(self, ACT_LAND) then
-			self.NextIdleStandTime = CurTime() + self:SequenceDuration(self:GetSequence()) - 0.1
-		end
-		self:SetNavType(NAV_GROUND)
-		self:ClearGoal()
+function ENT:TASK_VJ_PLAY_SEQUENCE(taskStatus, data)
+	if taskStatus == TASKSTATUS_NEW then
+		//print("TASK_VJ_PLAY_SEQUENCE: Start!", data.duration)
+		data.seqID = self:VJ_PlaySequence(data.animation, data.playbackRate)
+		data.animEndTime = CurTime() + data.duration
 	else
-		self:MoveJumpExec()
+		if (CurTime() > data.animEndTime) or (self:IsSequenceFinished()) or (data.seqID != self:GetSequence()) then
+			//print("TASK_VJ_PLAY_SEQUENCE: Stop!")
+			self:TaskComplete()
+			return
+		end
+		//print("TASK_VJ_PLAY_SEQUENCE: Run!")
 	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
+	if self:GetState() == VJ_STATE_FREEZE or self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then self:MaintainActivity() return end
+	if self:IsRunningBehavior() or self:DoingEngineSchedule() then return true end -- true = Run "MaintainSchedule" in engine
+	//self:SetArrivalActivity(ACT_COWER)
+	//self:SetArrivalSpeed(1000)
+	
+	-- Maintain and handle jumping movements
+	if self:GetNavType() == NAV_JUMP then
+		if self:OnGround() then
+			self:MoveJumpStop()
+			if VJ.AnimExists(self, ACT_LAND) then
+				self.NextIdleStandTime = CurTime() + self:SequenceDuration(self:GetSequence()) - 0.1
+			end
+			self:SetNavType(NAV_GROUND)
+			self:ClearGoal()
+		else
+			self:MoveJumpExec()
+		end
+	end
+	
+	local curSched = self.CurrentSchedule
+	
+	-- Apply walk frames to both activities and sequences
+	-- Parts of it replicate TASK_PLAY_SEQUENCE - https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc_schedule.cpp#L3312
+	if !self:IsSequenceFinished() && !self:IsMoving() && ((self:GetSequence() == self:GetInternalVariable("m_nIdealSequence")) or (self:GetActivity() == ACT_DO_NOT_DISTURB)) && self:GetSequenceMoveDist(self:GetSequence()) > 0 && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then
+		self:AutoMovement(self:GetAnimTimeInterval())
+	end
+	
+	-- If we are currently running a schedule then run it otherwise call SelectSchedule to decide what to do next
+	if curSched then
+		self:DoSchedule(curSched)
+		if curSched.CanBeInterrupted or (self:IsScheduleFinished(curSched)) or (curSched.IsMovingTask && !self:IsMoving()) then
+			self:SelectSchedule()
+		end
+	else
+		self:SelectSchedule()
+	end
+	
+	//if !self.VJ_PlayingSequence then -- No longer needed for sequences as it is handled by ACT_DO_NOT_DISTURB
+	self:MaintainActivity()
+	//end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Called whenever a task fails
+		- failCode = 
+-----------------------------------------------------------]]
+function ENT:OnTaskFailed(failCode, failString)
+	//print("task failed:", failCode, failString)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoRunCode_OnFail(schedule)
@@ -194,9 +246,8 @@ local tasksWalk = {TASK_WALK_PATH=true, TASK_WALK_PATH_TIMED=true, TASK_WALK_PAT
 --
 function ENT:StartSchedule(schedule)
 	if self.MovementType == VJ_MOVETYPE_STATIONARY && schedule.IsMovingTask == true then return end -- It's stationary therefore should not move!
-	if (self:GetState() == VJ_STATE_ONLY_ANIMATION or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self:GetState() == VJ_STATE_ONLY_ANIMATION_NOATTACK) && schedule.IsPlayActivity != true then return end
+	if (self:GetState() == VJ_STATE_ONLY_ANIMATION or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self:GetState() == VJ_STATE_ONLY_ANIMATION_NOATTACK) && !schedule.IsPlayActivity then return end
 	if (IsValid(self:GetInternalVariable("m_hOpeningDoor")) or self:GetInternalVariable("m_flMoveWaitFinished") > 0) && self.CurrentSchedule != nil && schedule.Name == self.CurrentSchedule.Name then return end -- If it's the same task and it's opening a door, then DO NOT continue
-	self:ClearCondition(COND_TASK_FAILED)
 	if (!schedule.RunCode_OnFail) then schedule.RunCode_OnFail = nil end -- Code that will run ONLY when it fails!
 	if (!schedule.RunCode_OnFinish) then schedule.RunCode_OnFinish = nil end -- Code that will run once the task finished (Will run even if failed)
 	if (!schedule.ResetOnFail) then schedule.ResetOnFail = false end -- Makes the NPC stop moving if it fails
@@ -224,7 +275,13 @@ function ENT:StartSchedule(schedule)
 	end
 	if schedule.IsMovingTask == nil then schedule.IsMovingTask = false end
 	if schedule.MoveType == nil then schedule.MoveType = false end
-	if schedule.IsMovingTask == true then
+	-- This stops movements from running if another NPC is stuck in it
+	-- Pros:
+		-- Successfully reduces lag when many NPCs are stuck in each other
+	-- Cons:
+		-- When using "BOUNDS_HITBOXES" for "SetSurroundingBoundsType", NPCs often end up inside each other, and this check causes movements to not run (NPCs end up freezing)
+		-- Needed very rarely, not worth running a trace hull and table has value check for every movement task
+	/*if schedule.IsMovingTask == true then
 		local tr = util.TraceHull({
 			start = self:GetPos(),
 			endpos = self:GetPos(),
@@ -233,12 +290,13 @@ function ENT:StartSchedule(schedule)
 			filter = self
 		})
 		if IsValid(tr.Entity) && tr.Entity:IsNPC() && !VJ.HasValue(self.EntitiesToNoCollide, tr.Entity:GetClass()) then
+			print("STOP I AM STUCK")
 			self:DoRunCode_OnFail(schedule)
 			return
 		end
 		self.LastHiddenZoneT = 0
 		self.CurAnimationSeed = 0
-	end
+	end*/
 	if schedule.CanShootWhenMoving == true && self.CurrentWeaponAnimation != nil && IsValid(self:GetEnemy()) then
 		self:DoWeaponAttackMovementCode(true, (schedule.MoveType == 0 and 1) or 0) -- Send 1 if the current task is walking!
 		self:SetArrivalActivity(self.CurrentWeaponAnimation)
@@ -248,7 +306,8 @@ function ENT:StartSchedule(schedule)
 	// lua_run PrintTable(Entity(1):GetEyeTrace().Entity.CurrentSchedule)
 	//if self.VJ_DEBUG == true then PrintTable(schedule) end
 	//if schedule.Name != "vj_chase_enemy" then PrintTable(schedule) end
-	if !self.Dead then self:DoRunCode_OnFinish(self.CurrentSchedule) end -- Yete arten schedule garne, verchatsoor
+	if !self.Dead then self:DoRunCode_OnFinish(self.CurrentSchedule) end -- Yete arten schedule garne, verchatsoor // BUG: Possible error if self.CurrentSchedule not valid??? \\
+	self:ClearCondition(COND_TASK_FAILED)
 	self.CurrentSchedule = schedule
 	self.CurrentTaskID = 1
 	self:SetTask(schedule:GetTask(1))
@@ -268,7 +327,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetTask(task)
 	self.CurrentTask = task
-	self.bTaskComplete = false
+	self.CurrentTaskComplete = false
 	self.TaskStartTime = CurTime()
 	self:StartTask(self.CurrentTask)
 end
@@ -283,18 +342,39 @@ function ENT:NextTask(schedule)
 	self:SetTask(schedule:GetTask(self.CurrentTaskID)) -- Switch to the next task
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Called every time a task is completed before moving onto to the next task
+-----------------------------------------------------------]]
 function ENT:OnTaskComplete()
 	//self:DoRunCode_OnFinish(self.CurrentSchedule) -- Will break many movement tasks (Ex: Humans Taking cover to reload)
-	self.bTaskComplete = true
+	self.CurrentTaskComplete = true
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Whether or not the current task is finished
+	Returns
+		- boolean, true = task is finished
+-----------------------------------------------------------]]
+function ENT:TaskFinished()
+	return self.CurrentTaskComplete
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Whether or not the current schedule is fully finished | Used internally by the base
+		- schedule = The schedule to check for, should always be given "self.CurrentSchedule"!
+	Returns
+		- boolean, true = Schedule is finished
+-----------------------------------------------------------]]
+function ENT:IsScheduleFinished(schedule)
+	return self.CurrentTaskComplete && (!self.CurrentTaskID or self.CurrentTaskID >= schedule:NumTasks())
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartTask(task) if !task or !self then return end task:Start(self) end
 function ENT:RunTask(task) if !task or !self then return end task:Run(self) end
 function ENT:TaskTime() return CurTime() - self.TaskStartTime end
-function ENT:TaskFinished() return self.bTaskComplete end
 -- Engine tasks / schedules ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:StartEngineTask(iTaskID, TaskData) end
-function ENT:RunEngineTask(iTaskID, TaskData) end
+function ENT:StartEngineTask(iTaskID, taskData) end
+function ENT:RunEngineTask(iTaskID, taskData) end
 function ENT:StartEngineSchedule(scheduleID) self:ScheduleFinished() self.bDoingEngineSchedule = true end
 function ENT:EngineScheduleFinish() self.bDoingEngineSchedule = nil end
 function ENT:DoingEngineSchedule() return self.bDoingEngineSchedule end

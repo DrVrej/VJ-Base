@@ -227,10 +227,10 @@ end
 	Reset and stop the eating behavior
 		- statusInfo = Status info to pass to "CustomOnEat" (info types defined in that function)
 -----------------------------------------------------------]]
-function ENT:EatingReset(resetType)
+function ENT:EatingReset(statusInfo)
 	local eatingData = self.EatingData
 	self:SetState(VJ_STATE_NONE)
-	self:CustomOnEat("StopEating", resetType)
+	self:CustomOnEat("StopEating", statusInfo)
 	self.VJTag_IsEating = false
 	self:SetIdleAnimation(eatingData.OldIdleTbl, true) -- Reset the idle animation table in case it changed!
 	local food = eatingData.Ent
@@ -266,7 +266,7 @@ end
 				- "Devoured"	= Has completely devoured the food!				| Recommendation: Play normal get up anim and play a sound
 				- "Enemy"		= Has been alerted or detected an enemy			| Recommendation: Play scared get up anim
 				- "Injured"		= Has been injured by something					| Recommendation: Play scared get up anim
-				- "Dead"		= Has died, usually called in "OnRemove"		| Recommendation: Do NOT play any!
+				- "Dead"		= Has died, usually called in "OnRemove"		| Recommendation: Do NOT play any animation!
 	Returns
 		- Boolean, ONLY used for "CheckFood", returning true will tell the base the possible food is valid
 		- Number, Delay to add before moving to another status, useful to make sure animations aren't cut off!
@@ -328,12 +328,13 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Checks if the NPC is playing an animation that shouldn't be interrupted OR is playing an attack!
+	NAV_JUMP & NAV_CLIMB is based on "IsInterruptable()" from engine: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_navigator.h#L397
 	Returns
 		- false, NOT busy
 		- true, Busy
 -----------------------------------------------------------]]
 function ENT:BusyWithActivity()
-	return self.vACT_StopAttacks or self.CurAttackAnimTime > CurTime() or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB
+	return self.vACT_StopAttacks or self.CurrentAttackAnimationTime > CurTime() or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1235,19 +1236,15 @@ function ENT:Controller_Movement(cont, ply, bullseyePos)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_PlaySequence(animation, playbackRate, useDuration, duration, interruptible)
+function ENT:VJ_PlaySequence(animation, playbackRate)
 	if !animation then return false end
-	if interruptible == true then
-		self.VJ_PlayingSequence = false
-		self.VJ_PlayingInterruptSequence = true
-	else
-		self.VJ_PlayingSequence = true
-		self.VJ_PlayingInterruptSequence = false
-	end
+	//self.VJ_PlayingSequence = true -- No longer needed as it is handled by ACT_DO_NOT_DISTURB
 	
-	local seqID = self:LookupSequence(VJ.PICK(animation))
-	self:ClearSchedule()
-	self:StopMoving()
+	self:SetActivity(ACT_DO_NOT_DISTURB)
+		-- Keeps MaintainActivity from overriding sequences as seen here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L6331
+		-- If "m_IdealActivity" is set to ACT_DO_NOT_DISTURB, the engine will understand it's a sequence and will avoid messing with it, described here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/shared/ai_activity.h#L215
+		// self:SetIdealActivity(ACT_DO_NOT_DISTURB) -- Engine uses SetIdealActivity, but this resulted in self:GetActivity() returning wrong activity!
+	local seqID = isstring(animation) and self:LookupSequence(animation) or animation
 	self:ResetSequence(seqID)
 	self:ResetSequenceInfo()
 	self:SetCycle(0) -- Start from the beginning
@@ -1255,13 +1252,12 @@ function ENT:VJ_PlaySequence(animation, playbackRate, useDuration, duration, int
 		self.AnimationPlaybackRate = playbackRate
 		self:SetPlaybackRate(playbackRate)
 	end
-	if useDuration == true then
+	/*if useDuration == true then -- No longer needed as it is handled by ACT_DO_NOT_DISTURB
 		timer.Create("timer_act_seqreset"..self:EntIndex(), duration, 1, function()
 			self.VJ_PlayingSequence = false
-			self.VJ_PlayingInterruptSequence = false
 			//self.vACT_StopAttacks = false
 		end)
-	end
+	end*/
 	return seqID
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
@@ -1681,17 +1677,17 @@ local function FlinchDamageTypeCheck(checkTbl, dmgType)
 end
 --
 function ENT:DoFlinch(dmginfo, hitgroup)
-	if self.CanFlinch == 0 or self.Flinching == true or self.TakingCoverT > CurTime() or self.NextFlinchT > CurTime() or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
+	if self.CanFlinch == 0 or self.Flinching == true or self.TakingCoverT > CurTime() or self.NextFlinchT > CurTime() or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
 
 	local function RunFlinchCode(HitgroupInfo)
 		self.Flinching = true
 		self:StopAttacks(true)
-		self.CurAttackAnimTime = 0
+		self.CurrentAttackAnimationTime = 0
 		local animTbl = self.AnimTbl_Flinch
 		if HitgroupInfo != nil then animTbl = HitgroupInfo.Animation end
 		local anim = VJ.PICK(animTbl)
 		local animDur = self.NextMoveAfterFlinchTime == false and self:DecideAnimationLength(anim, false, self.FlinchAnimationDecreaseLengthAmount) or self.NextMoveAfterFlinchTime
-		self:VJ_ACT_PLAYACTIVITY(anim, true, animDur, false, 0, {SequenceDuration=animDur, PlayBackRateCalculated=true})
+		self:VJ_ACT_PLAYACTIVITY(anim, true, animDur, false, 0, {PlayBackRateCalculated=true})
 		timer.Create("timer_act_flinching"..self:EntIndex(), animDur, 1, function() self.Flinching = false end)
 		self:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup)
 		self.NextFlinchT = CurTime() + self.NextFlinchTime
@@ -2083,14 +2079,6 @@ function ENT:PlayGibOnDeathSounds(dmginfo, hitgroup)
 		VJ.EmitSound(self, gib_sd3, 90, math.random(80, 100))
 		VJ.EmitSound(self, gib_sd4, 90, math.random(80, 100))
 	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_SetSchedule(schedID)
-	if self.VJ_PlayingSequence == true then return end
-	self.VJ_PlayingInterruptSequence = false
-	//if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then return end
-	//print(self:GetName().." - "..schedID)
-	self:SetSchedule(schedID)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSoundTrack()

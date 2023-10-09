@@ -462,12 +462,12 @@ function SWEP:NPCShoot_Primary()
 	-- Secondary Fire
 	if self.NPC_HasSecondaryFire && owner.CanUseSecondaryOnWeaponAttack && CurTime() > self.NPC_SecondaryFireNextT && ene:GetPos():Distance(owner:GetPos()) <= self.NPC_SecondaryFireDistance then
 		if math.random(1, self.NPC_SecondaryFireChance) == 1 then
-			local actTime, actName = owner:VJ_ACT_PLAYACTIVITY(VJ.PICK(owner.AnimTbl_WeaponAttackSecondary), true, false, true)
-			local fireTime = (!actName and 0) or owner.WeaponAttackSecondaryTimeUntilFire or actTime
+			local anim, animDur = owner:VJ_ACT_PLAYACTIVITY(VJ.PICK(owner.AnimTbl_WeaponAttackSecondary), true, false, true)
+			local fireTime = (!anim and 0) or owner.WeaponAttackSecondaryTimeUntilFire or animDur
 				-- If no animation was found then fireTime is 0, otherwise if "WeaponAttackSecondaryTimeUntilFire" is false then use animation time
 			self:NPC_SecondaryFire_BeforeTimer(ene, fireTime)
 			timer.Simple(fireTime, function()
-				if IsValid(self) && IsValid(owner) && IsValid(owner:GetEnemy()) && CurTime() > self.NPC_SecondaryFireNextT && (!actName or (actName && VJ.IsCurrentAnimation(owner, actName))) then -- ONLY check for cur anim IF it even had one!
+				if IsValid(self) && IsValid(owner) && IsValid(owner:GetEnemy()) && CurTime() > self.NPC_SecondaryFireNextT && (!anim or (anim && VJ.IsCurrentAnimation(owner, anim))) then -- ONLY check for cur anim IF it even had one!
 					self:NPC_SecondaryFire()
 					if self.NPC_HasSecondaryFireSound == true then VJ.EmitSound(owner, self.NPC_SecondaryFireSound, self.NPC_SecondaryFireSoundLevel) end
 					self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)

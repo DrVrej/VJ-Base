@@ -359,8 +359,8 @@ function ENT:AA_MoveAnimation()
 		elseif self.AA_CurrentMoveAnimationType == "Alert" then
 			animTbl = (self.MovementType == VJ_MOVETYPE_AQUATIC and self.Aquatic_AnimTbl_Alerted) or self.Aerial_AnimTbl_Alerted
 		end
-		local animDur, animName = self:VJ_ACT_PLAYACTIVITY(VJ.PICK(animTbl), false, 0, false, 0, {AlwaysUseSequence=true, SequenceDuration=false, SequenceInterruptible=true})
-		self.AA_CurrentMoveAnimation = animName
+		local anim, animDur = self:VJ_ACT_PLAYACTIVITY(VJ.PICK(animTbl), false, 0, false, 0, {AlwaysUseSequence=true})
+		self.AA_CurrentMoveAnimation = anim
 		self.AA_NextMovementAnimTime = CurTime() + animDur
 	end
 end

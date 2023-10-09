@@ -24,8 +24,9 @@ function ENT:Initialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule()
-	for _, v in ipairs(ents.FindInSphere(self:GetPos(), 150)) do
+	for _, v in ipairs(ents.FindInSphere(self:GetPos(), 120)) do
 		if v:IsPlayer() && v:Alive() then
+			self:SetTarget(v)
 			self:SetSchedule(SCHED_IDLE_STAND)
 			self:SetSchedule(SCHED_TARGET_FACE)
 			return

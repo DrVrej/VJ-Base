@@ -26,21 +26,21 @@ function Schedule:Init(Name)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Schedule:EngTask(taskName, taskData) -- Set an engine defined task
-	local NewTask = vj_ai_task.New()
-	NewTask:InitEngine(taskName, taskData)
-	self.TaskCount = table.insert(self.Tasks, NewTask)
+	local newTask = vj_ai_task.New()
+	newTask:InitEngine(taskName, taskData)
+	self.TaskCount = table.insert(self.Tasks, newTask)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Schedule:AddTask(funcName, data) -- Set a custom task with predefined prefixes for the start and run functions
-	local NewTask = vj_ai_task.New()
-	NewTask:InitCustom("TASK_RUN_"..funcName, "TASK_RUN_"..funcName, data)
-	self.TaskCount = table.insert(self.Tasks, NewTask)
+function Schedule:AddTask(taskName, data) -- Set a custom task where the task name, start function, and run function are all named the same
+	local newTask = vj_ai_task.New()
+	newTask:InitCustom(taskName, taskName, taskName, data)
+	self.TaskCount = table.insert(self.Tasks, newTask)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Schedule:AddTaskEx(startFunc, endFunc, data) -- Set a custom task with custom start and run function names
-	local NewTask = vj_ai_task.New()
-	NewTask:InitCustom(startFunc, endFunc, data)
-	self.TaskCount = table.insert(self.Tasks, NewTask)
+function Schedule:AddTaskEx(taskName, startFunc, runFunc, data) -- Set a custom task with custom start and run function names
+	local newTask = vj_ai_task.New()
+	newTask:InitCustom(taskName, startFunc, runFunc, data)
+	self.TaskCount = table.insert(self.Tasks, newTask)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Schedule:NumTasks()

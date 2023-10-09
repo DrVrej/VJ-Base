@@ -34,7 +34,7 @@ ENT.TouchSoundv = 75
 ENT.Decal = "Scorch"
 ENT.AlreadyPaintedDeathDecal = false
 ENT.Dead = false
-ENT.FussTime = 10
+ENT.FuseTime = 10
 ENT.NextTouchSound = 0
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local colorRed = Color(255, 0, 0)

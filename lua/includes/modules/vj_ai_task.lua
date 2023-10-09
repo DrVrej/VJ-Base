@@ -18,32 +18,34 @@ module("vj_ai_task")
 local Task = {}
 Task.__index = Task
 
--- Type of task it is
+-- Types of tasks
 local TYPE_ENGINE = 1
 local TYPE_CUSTOM = 2
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Task:Init()
-	self.Type = nil
+	self.TaskType = nil
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Task:InitEngine(taskName, taskData) -- Creates an engine based task
 	self.TaskName = taskName
 	self.TaskID = nil
 	self.TaskData = taskData
-	self.Type = TYPE_ENGINE
+	self.TaskType = TYPE_ENGINE
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function Task:InitCustom(startFunc, endFunc, taskData) -- Create a custom task
-	self.StartFunctionName = startFunc
-	self.FunctionName = endFunc
+function Task:InitCustom(taskName, startFunc, endFunc, taskData) -- Create a custom task
+	self.TaskName = taskName
+	self.TaskFunc_Start = startFunc
+	self.TaskFunc_Run = endFunc
+	self.TaskID = nil -- Custom function do NOT have an ID!
 	self.TaskData = taskData
-	self.Type = TYPE_CUSTOM
+	self.TaskType = TYPE_CUSTOM
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Task:Start(npc)
 	if (self:IsCustomType()) then
-		if (!self.StartFunctionName) then return end
-		npc[self.StartFunctionName](npc, TASKSTATUS_NEW, self.TaskData)
+		if (!self.TaskFunc_Start) then return end
+		npc[self.TaskFunc_Start](npc, TASKSTATUS_NEW, self.TaskData)
 		return
 	end
 	if (self:IsEngineType()) then
@@ -54,8 +56,8 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Task:Run(npc)
 	if (self:IsCustomType()) then
-		if (!self.FunctionName) then return end
-		npc[self.FunctionName](npc, TASKSTATUS_RUN_TASK, self.TaskData)
+		if (!self.TaskFunc_Run) then return end
+		npc[self.TaskFunc_Run](npc, TASKSTATUS_RUN_TASK, self.TaskData)
 		return
 	end
 	if (self:IsEngineType()) then
@@ -64,11 +66,11 @@ function Task:Run(npc)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Task:IsEngineType()
-	return self.Type == TYPE_ENGINE
+	return self.TaskType == TYPE_ENGINE
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Task:IsCustomType()
-	return self.Type == TYPE_CUSTOM
+	return self.TaskType == TYPE_CUSTOM
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function New()
