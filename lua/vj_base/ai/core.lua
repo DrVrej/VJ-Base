@@ -897,7 +897,6 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnChangeActivity(newAct)
 	//print(newAct)
-	local funcCustom = self.CustomOnChangeActivity; if funcCustom then funcCustom(self, newAct) end
 	if newAct == ACT_TURN_LEFT or newAct == ACT_TURN_RIGHT then
 		self.NextIdleStandTime = CurTime() + VJ.AnimDuration(self, self:GetSequenceName(self:GetSequence()))
 		//self.NextIdleStandTime = CurTime() + 1.2

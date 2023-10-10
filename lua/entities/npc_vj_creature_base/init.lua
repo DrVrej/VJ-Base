@@ -691,13 +691,10 @@ function ENT:CustomOn_PoseParameterLookingCode(pitch, yaw, roll) end
 function ENT:CustomOnSchedule() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE
--- function ENT:CustomOnChangeActivity(newAct) end
----------------------------------------------------------------------------------------------------------------------------------------------
--- UNCOMMENT TO USE
 -- function ENT:ExpressionFinished(strExp) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Called whenever VJ.CreateSound or VJ.EmitSound is called | return a new file path to replace the one that is about to play
--- function ENT:OnCreateSound(sdFile) return "example/sound.wav" end
+-- function ENT:OnPlaySound(sdFile) return "example/sound.wav" end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Called whenever a sound starts playing through VJ.CreateSound
 -- function ENT:OnPlayCreateSound(sdData, sdFile) end

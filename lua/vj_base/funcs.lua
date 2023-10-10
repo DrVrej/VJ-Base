@@ -121,7 +121,7 @@ function VJ.CreateSound(ent, sdFile, sdLevel, sdPitch, customFunc)
 		if #sdFile < 1 then return end -- If the table is empty then end it
 		sdFile = sdFile[math.random(1, #sdFile)]
 	end
-	local funcCustom = ent.OnCreateSound; if funcCustom then sdFile = funcCustom(ent, sdFile) end -- Will allow people to alter sounds before they are played
+	local funcCustom = ent.OnPlaySound; if funcCustom then sdFile = funcCustom(ent, sdFile) end -- Will allow people to alter sounds before they are played
 	local sdID = CreateSound(ent, sdFile)
 	sdID:SetSoundLevel(sdLevel or 75)
 	if (customFunc) then customFunc(sdID) end
@@ -137,7 +137,7 @@ function VJ.EmitSound(ent, sdFile, sdLevel, sdPitch, sdVolume, sdChannel)
 		if #sdFile < 1 then return end -- If the table is empty then end it
 		sdFile = sdFile[math.random(1, #sdFile)]
 	end
-	local funcCustom = ent.OnCreateSound; if funcCustom then sdFile = funcCustom(ent, sdFile) end -- Will allow people to alter sounds before they are played
+	local funcCustom = ent.OnPlaySound; if funcCustom then sdFile = funcCustom(ent, sdFile) end -- Will allow people to alter sounds before they are played
 	ent:EmitSound(sdFile, sdLevel, sdPitch, sdVolume, sdChannel)
 	ent.LastPlayedVJSound = sdFile
 	local funcCustom2 = ent.OnPlayEmitSound; if funcCustom2 then funcCustom2(ent, sdFile) end

@@ -680,13 +680,10 @@ function ENT:CustomOnSetupWeaponHoldTypeAnims(hType) return false end -- return 
 function ENT:CustomOnSchedule() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE
--- function ENT:CustomOnChangeActivity(newAct) end
----------------------------------------------------------------------------------------------------------------------------------------------
--- UNCOMMENT TO USE
 -- function ENT:ExpressionFinished(strExp) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Called whenever "VJ.CreateSound" or "VJ.EmitSound" is called | return a new file path to replace the one that is about to play
--- function ENT:OnCreateSound(sdFile) return "example/sound.wav" end
+-- function ENT:OnPlaySound(sdFile) return "example/sound.wav" end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Called whenever a sound starts playing through "VJ.CreateSound"
 -- function ENT:OnPlayCreateSound(sdData, sdFile) end
@@ -748,10 +745,10 @@ function ENT:CustomOnDoChangeWeapon(newWeapon, oldWeapon, invSwitch) end
 --[[---------------------------------------------------------
 	UNCOMMENT TO USE | Called when the NPC detects a danger
 		- dangerType = Type of danger detected | Enum VJ.NPC_DANGER_TYPE_*
-		- data = Danger or grenade entity for types "NPC_DANGER_TYPE_ENTITY" and "NPC_DANGER_TYPE_GRENADE"
+		- data = Danger / grenade entity for types "NPC_DANGER_TYPE_ENTITY" and "NPC_DANGER_TYPE_GRENADE"
 			-- Currently empty for danger type "NPC_DANGER_TYPE_HINT"
 -----------------------------------------------------------]]
--- function ENT:CustomOnDangerDetected(dangerType, data) end
+-- function ENT:OnDangerDetected(dangerType, data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInvestigate(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -835,7 +832,7 @@ function ENT:CustomOnWeaponReload_AfterRanToCover() end
 				- nil, Do NOT apply any velocity
 				- vector, The velocity to apply
 -----------------------------------------------------------]]
-function ENT:CustomOnGrenadeAttack(status, grenade, customEnt, landDir, landingPos)
+function ENT:OnGrenadeAttack(status, grenade, customEnt, landDir, landingPos)
 	if status == "Throw" then
 		return (landingPos - grenade:GetPos()) + (self:GetUp()*200 + self:GetForward()*500 + self:GetRight()*math.Rand(-20, 20))
 	end
@@ -3118,7 +3115,7 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 			-- 2. ATTACHMENT 	If a valid attachment is given then use that, otherwise...
 			-- 3. BONE 			If a valid bone is given then use that, otherwise...
 			-- 4. FAIL 			Use the NPC's shoot position (fail safe)
-		local customPos = self:CustomOnGrenadeAttack("SpawnPos", nil, customEnt, landDir, nil)
+		local customPos = self:OnGrenadeAttack("SpawnPos", nil, customEnt, landDir, nil)
 		if !customPos then -- If no custom position is given...
 			local getAttach = self:LookupAttachment(self.GrenadeAttackAttachment)
 			if !getAttach or getAttach == 0 or getAttach == -1 then -- Attachment invalid, try bone...
@@ -3150,7 +3147,7 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 	self.AttackType = VJ.ATTACK_TYPE_GRENADE
 	self.AttackState = VJ.ATTACK_STATE_STARTED
 	self.ThrowingGrenade = true
-	self:CustomOnGrenadeAttack("Start", nil, customEnt, landDir, nil)
+	self:OnGrenadeAttack("Start", nil, customEnt, landDir, nil)
 	self:PlaySoundSystem("GrenadeAttack")
 	
 	local releaseTime = self.TimeUntilGrenadeIsReleased
@@ -3196,7 +3193,7 @@ function ENT:GrenadeAttackThrow(customEnt, disableOwner, landDir)
 		-- 2. ATTACHMENT 	If a valid attachment is given then use that, otherwise...
 		-- 3. BONE 			If a valid bone is given then use that, otherwise...
 		-- 4. FAIL 			Use the NPC's shoot position (fail safe)
-	local spawnPos = self:CustomOnGrenadeAttack("SpawnPos", nil, customEnt, landDir, nil)
+	local spawnPos = self:OnGrenadeAttack("SpawnPos", nil, customEnt, landDir, nil)
 	local spawnAng;
 	if !spawnPos then -- If no custom position is given...
 		local getAttach = self:LookupAttachment(self.GrenadeAttackAttachment)
@@ -3287,7 +3284,7 @@ function ENT:GrenadeAttackThrow(customEnt, disableOwner, landDir)
 	end
 	
 	-- Handle throw velocity
-	local throwVel = self:CustomOnGrenadeAttack("Throw", grenade, customEnt, landDir, landingPos)
+	local throwVel = self:OnGrenadeAttack("Throw", grenade, customEnt, landDir, landingPos)
 	if throwVel then
 		local phys = grenade:GetPhysicsObject()
 		if IsValid(phys) then
@@ -3347,7 +3344,7 @@ function ENT:CheckForDangers()
 			local vOwner = ent:GetOwner()
 			if !(IsValid(vOwner) && vOwner.IsVJBaseSNPC && ((self:GetClass() == vOwner:GetClass()) or (self:Disposition(vOwner) == D_LI))) then
 				if ent.VJTag_ID_Danger then regDangerDetected = ent continue end -- If it's a regular danger then just skip it for now
-				local funcCustom = self.CustomOnDangerDetected; if funcCustom then funcCustom(self, VJ.NPC_DANGER_TYPE_GRENADE, ent) end
+				local funcCustom = self.OnDangerDetected; if funcCustom then funcCustom(self, VJ.NPC_DANGER_TYPE_GRENADE, ent) end
 				self:PlaySoundSystem("OnGrenadeSight")
 				self.NextDangerDetectionT = CurTime() + 4
 				self.TakingCoverT = CurTime() + 4
@@ -3366,7 +3363,7 @@ function ENT:CheckForDangers()
 		end
 	end
 	if regDangerDetected or self:HasCondition(COND_HEAR_DANGER) or self:HasCondition(COND_HEAR_PHYSICS_DANGER) or self:HasCondition(COND_HEAR_MOVE_AWAY) then
-		local funcCustom = self.CustomOnDangerDetected
+		local funcCustom = self.OnDangerDetected
 		if funcCustom then
 			if regDangerDetected then
 				funcCustom(self, VJ.NPC_DANGER_TYPE_ENTITY, regDangerDetected)
