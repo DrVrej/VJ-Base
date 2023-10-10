@@ -240,7 +240,7 @@ function ENT:OnMovementComplete()
 	//print("Movement completed!")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local tr_addvec = Vector(0, 0, 2)
+//local tr_addvec = Vector(0, 0, 2)
 local tasksRun = {TASK_RUN_PATH=true, TASK_RUN_PATH_FLEE=true, TASK_RUN_PATH_TIMED=true, TASK_RUN_PATH_FOR_UNITS=true, TASK_RUN_PATH_WITHIN_DIST=true}
 local tasksWalk = {TASK_WALK_PATH=true, TASK_WALK_PATH_TIMED=true, TASK_WALK_PATH_FOR_UNITS=true, TASK_WALK_PATH_WITHIN_DIST=true}
 --

@@ -1044,6 +1044,7 @@ local math_angDif = math.AngleDifference
 local string_find = string.find
 local string_sub = string.sub
 local table_remove = table.remove
+local table_concat = table.concat
 local varCAnt = "CLASS_ANTLION"
 local varCCom = "CLASS_COMBINE"
 local varCZom = "CLASS_ZOMBIE"
@@ -1383,7 +1384,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 			end
 		end
 		if finalString then
-			animation = table.concat(finalString)
+			animation = table_concat(finalString)
 		end
 		-- If animation is -1 then it's probably an activity, so turn it into an activity
 		-- EX: "vjges_"..ACT_MELEE_ATTACK1
