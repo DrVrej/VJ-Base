@@ -43,16 +43,18 @@ function SWEP:CustomOnSecondaryAttack()
 	owner:ViewPunch(Angle(-self.Primary.Recoil *3, 0, 0))
 	VJ.EmitSound(self, "weapons/ar2/ar2_altfire.wav", 85)
 
-	local proj = ents.Create(self.NPC_SecondaryFireEnt)
-	proj:SetPos(owner:GetShootPos())
-	proj:SetAngles(owner:GetAimVector():Angle())
-	proj:SetOwner(owner)
-	proj:Spawn()
-	proj:Activate()
-	local phys = proj:GetPhysicsObject()
-	if IsValid(phys) then
-		phys:Wake()
-		phys:SetVelocity(owner:GetAimVector() * 2000)
+	if SERVER then
+		local proj = ents.Create(self.NPC_SecondaryFireEnt)
+		proj:SetPos(owner:GetShootPos())
+		proj:SetAngles(owner:GetAimVector():Angle())
+		proj:SetOwner(owner)
+		proj:Spawn()
+		proj:Activate()
+		local phys = proj:GetPhysicsObject()
+		if IsValid(phys) then
+			phys:Wake()
+			phys:SetVelocity(owner:GetAimVector() * 2000)
+		end
 	end
 	return true
 end

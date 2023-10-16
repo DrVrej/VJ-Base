@@ -21,37 +21,38 @@ if CLIENT then
 	ENT.NextActivationCheckT = 0
 	ENT.NextFireLightT = 0
 	ENT.DoneFireParticles = false
-	
+	---------------------------------------------------------------------------------------------------------------------------------------------
 	function ENT:Draw()
 		self:DrawModel()
 	end
-	
+	---------------------------------------------------------------------------------------------------------------------------------------------
 	function ENT:Think()
-		if CurTime() > self.NextActivationCheckT then
+		local curTime = CurTime()
+		if curTime > self.NextActivationCheckT then
 			if self:GetNW2Bool("VJ_FirePlace_Activated") == true then
-				if self.DoneFireParticles == false then
+				if !self.DoneFireParticles then
 					self.DoneFireParticles = true
-					ParticleEffectAttach("env_fire_tiny_smoke",PATTACH_ABSORIGIN_FOLLOW,self,0)
-					ParticleEffectAttach("env_embers_large",PATTACH_ABSORIGIN_FOLLOW,self,0)
+					ParticleEffectAttach("env_fire_tiny_smoke", PATTACH_ABSORIGIN_FOLLOW, self, 0)
+					ParticleEffectAttach("env_embers_large", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 				end
-				if CurTime() > self.NextFireLightT then
-					local FireLight1 = DynamicLight(self:EntIndex())
-					if (FireLight1) then
-						FireLight1.Pos = self:GetPos() +self:GetUp() * 15
-						FireLight1.R = 255
-						FireLight1.G = 100
-						FireLight1.B = 0
-						FireLight1.Brightness = 2
-						FireLight1.Size = 400
-						FireLight1.Decay = 400
-						FireLight1.DieTime = CurTime() + 1
+				if curTime > self.NextFireLightT then
+					local dynLight = DynamicLight(self:EntIndex())
+					if (dynLight) then
+						dynLight.Pos = self:GetPos() + self:GetUp() * 15
+						dynLight.R = 255
+						dynLight.G = 100
+						dynLight.B = 0
+						dynLight.Brightness = 2
+						dynLight.Size = 400
+						dynLight.Decay = 400
+						dynLight.DieTime = curTime + 1
 					end
-					self.NextFireLightT = CurTime() + 0.2
+					self.NextFireLightT = curTime + 0.2
 				end
 			else
 				self.DoneFireParticles = false
 			end
-			self.NextActivationCheckT = CurTime() + 0.1
+			self.NextActivationCheckT = curTime + 0.1
 		end
 	end
 end
@@ -59,7 +60,6 @@ end
 if !SERVER then return end
 
 ENT.FirePlaceOn = false
-
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetNW2Bool("VJ_FirePlace_Activated", false)
@@ -69,12 +69,12 @@ function ENT:Initialize()
 	self:SetSolid(SOLID_VPHYSICS)
 	self:SetUseType(SIMPLE_USE)
 	
-	self:SetCollisionBounds(Vector(25,25,25),Vector(-25,-25,1))
+	self:SetCollisionBounds(Vector(25, 25, 25), Vector(-25, -25, 1))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-	if self.FirePlaceOn == false then
-		VJ.STOPSOUND(self.firesd)
+	if !self.FirePlaceOn then
+		VJ.STOPSOUND(self.fireLoopSD)
 		self:StopParticles()
 	end
 end
@@ -83,35 +83,27 @@ function ENT:Use(activator, caller)
 	if self.FirePlaceOn == false then
 		self:SetNW2Bool("VJ_FirePlace_Activated", true)
 		self.FirePlaceOn = true
-		self:EmitSound(Sound("ambient/fire/mtov_flame2.wav"), 60, 100)
-		self.firesd = CreateSound(self, "ambient/fire/fire_small_loop1.wav")
-		self.firesd:SetSoundLevel(60)
-		self.firesd:PlayEx(1,100)
+		self:EmitSound("ambient/fire/mtov_flame2.wav", 60, 100)
+		self.fireLoopSD = CreateSound(self, "ambient/fire/fire_small_loop1.wav")
+		self.fireLoopSD:SetSoundLevel(60)
+		self.fireLoopSD:PlayEx(1,100)
 		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.fireplace.activated") 
 	else
 		self:SetNW2Bool("VJ_FirePlace_Activated", false)
 		self.FirePlaceOn = false
 		self:StopParticles()
-		VJ.STOPSOUND(self.firesd)
+		VJ.STOPSOUND(self.fireLoopSD)
 		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.fireplace.deactivated")
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnTakeDamage(dmginfo)
-	return false
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
-	if (IsValid(entity) && entity:GetPos():Distance(self:GetPos()) <= 38 && self.FirePlaceOn == true) && (entity:IsNPC() or entity:IsPlayer()) then
-		entity:Ignite(math.Rand(3,5))
+	if IsValid(entity) && entity:GetPos():Distance(self:GetPos()) <= 38 && self.FirePlaceOn && (entity:IsNPC() or entity:IsPlayer()) then
+		entity:Ignite(math.Rand(3, 5))
 	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PhysicsCollide(data, physobj)
-	//self:EmitSound("physics/cardboard/cardboard_box_impact_soft"..math.random(1,5)..".wav")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
 	self:StopParticles()
-	VJ.STOPSOUND(self.firesd)
+	VJ.STOPSOUND(self.fireLoopSD)
 end

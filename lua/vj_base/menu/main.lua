@@ -333,7 +333,7 @@ else
 			CheckList:AddLine("#vjbase.menu.plugins.notfound", "")
 		end
 		CheckList.OnRowSelected = function(panel, rowIndex, row)
-			//surface.PlaySound(Sound("vj_misc/illuminati_confirmed.mp3"))
+			//surface.PlaySound("vj_misc/illuminati_confirmed.mp3")
 			//chat.AddText(Color(255,255,0),"-=-=-=-=-=-=-=-=- ", Color(255,100,0), "VJ Base", Color(255,255,0)," -=-=-=-=-=-=-=-=-")
 			//chat.AddText(Color(0,255,0), language.GetPhrase("#vjbase.menu.plugins.version").." "..VJBASE_VERSION)
 			//chat.AddText(Color(0,255,0), language.GetPhrase("#vjbase.menu.plugins.totalplugins").." "..numPlugins)

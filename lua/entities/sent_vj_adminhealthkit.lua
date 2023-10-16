@@ -56,7 +56,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Use(activator, caller)
 	if activator:IsPlayer() then
-		self:EmitSound(Sound("items/smallmedkit1.wav"), 70, 100)
+		self:EmitSound("items/smallmedkit1.wav", 70, 100)
 		activator:SetHealth(activator:Health() + 1000000)
 		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.adminhealth.pickup")
 		self:Remove()
