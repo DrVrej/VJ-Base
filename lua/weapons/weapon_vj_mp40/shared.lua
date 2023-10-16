@@ -32,7 +32,7 @@ SWEP.Primary.Sound = {"vj_weapons/mp_40/mp40_single.wav"}
 SWEP.Primary.DistantSound = {"vj_weapons/mp_40/mp40_single_dist.wav"}
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellAttachment = 2
-SWEP.PrimaryEffects_ShellType = "VJ_Weapon_RifleShell1"
+SWEP.PrimaryEffects_ShellType = "RifleShellEject"
 	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasDeploySound = false -- Does the weapon have a deploy sound?
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------

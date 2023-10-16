@@ -150,7 +150,7 @@ SWEP.PrimaryEffects_MuzzleParticlesAsOne = false -- If set to true, the base wil
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_SpawnShells = true
 SWEP.PrimaryEffects_ShellAttachment = "shell"
-SWEP.PrimaryEffects_ShellType = "VJ_Weapon_RifleShell1" -- VJ_Weapon_RifleShell1 | VJ_Weapon_PistolShell1 | VJ_Weapon_ShotgunShell1
+SWEP.PrimaryEffects_ShellType = "RifleShellEject" -- Pistol = ShellEject | Rifle = RifleShellEject | Shotgun = ShotgunShellEject
 SWEP.PrimaryEffects_SpawnDynamicLight = true
 SWEP.PrimaryEffects_DynamicLightBrightness = 4
 SWEP.PrimaryEffects_DynamicLightDistance = 120
@@ -256,7 +256,10 @@ function SWEP:GetCapabilities()
 	return bit.bor(CAP_WEAPON_RANGE_ATTACK1, CAP_INNATE_RANGE_ATTACK1)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local oldShells = {VJ_Weapon_PistolShell1 = "ShellEject", VJ_Weapon_RifleShell1 = "RifleShellEject", VJ_Weapon_ShotgunShell1 = "ShotgunShellEject"}-- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
+--
 function SWEP:Initialize()
+	self.PrimaryEffects_ShellType = oldShells[self.PrimaryEffects_ShellType] or self.PrimaryEffects_ShellType -- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
 	self:SetNW2Vector("VJ_CurBulletPos", self:GetPos())
 	self:SetHoldType(self.HoldType)
 	if self.HasIdleAnimation == true then self.InitHasIdleAnimation = true end
@@ -693,14 +696,6 @@ function SWEP:PrimaryAttackEffects(owner)
 	if self:CustomOnPrimaryAttackEffects(owner) != true or self.IsMeleeWeapon == true then return end
 	owner = owner or self:GetOwner()
 	
-	/*local muzzleFlashEffect = EffectData()
-	muzzleFlashEffect:SetOrigin(owner:GetShootPos())
-	muzzleFlashEffect:SetEntity(self)
-	muzzleFlashEffect:SetStart(owner:GetShootPos())
-	muzzleFlashEffect:SetNormal(owner:GetAimVector())
-	muzzleFlashEffect:SetAttachment(1)
-	util.Effect("VJ_Weapon_RifleMuzzle1",muzzleFlashEffect)*/
-	
 	if GetConVar("vj_wep_nomuszzleflash"):GetInt() == 0 then
 		-- MUZZLE FLASH
 		if self.PrimaryEffects_MuzzleFlash == true then
@@ -718,9 +713,7 @@ function SWEP:PrimaryAttackEffects(owner)
 			else -- NPCs
 				if self.PrimaryEffects_MuzzleParticlesAsOne == true then -- Combine all of the particles in the table!
 					for _, v in ipairs(self.PrimaryEffects_MuzzleParticles) do
-						if !istable(v) then
-							ParticleEffectAttach(v, PATTACH_POINT_FOLLOW, self, muzzleAttach)
-						end
+						ParticleEffectAttach(v, PATTACH_POINT_FOLLOW, self, muzzleAttach)
 					end
 				else
 					ParticleEffectAttach(VJ.PICK(self.PrimaryEffects_MuzzleParticles), PATTACH_POINT_FOLLOW, self, muzzleAttach)
@@ -728,7 +721,7 @@ function SWEP:PrimaryAttackEffects(owner)
 			end
 		end
 		
-		-- MUZZLE LIGHT
+		-- MUZZLE DYNAMIC LIGHT
 		if SERVER && self.PrimaryEffects_SpawnDynamicLight == true && GetConVar("vj_wep_nomuszzleflash_dynamiclight"):GetInt() == 0 then
 			local muzzleLight = ents.Create("light_dynamic")
 			muzzleLight:SetKeyValue("brightness", self.PrimaryEffects_DynamicLightBrightness)
@@ -749,12 +742,12 @@ function SWEP:PrimaryAttackEffects(owner)
 	if !owner:IsPlayer() && self.PrimaryEffects_SpawnShells == true && GetConVar("vj_wep_nobulletshells"):GetInt() == 0 then
 		local shellAttach = self.PrimaryEffects_ShellAttachment
 		if !isnumber(shellAttach) then shellAttach = self:LookupAttachment(shellAttach) end
-		local shellEffect = EffectData()
-		shellEffect:SetEntity(self)
-		shellEffect:SetOrigin(owner:GetShootPos())
-		shellEffect:SetNormal(owner:GetAimVector())
-		shellEffect:SetAttachment(shellAttach)
-		util.Effect(self.PrimaryEffects_ShellType, shellEffect)
+		shellAttach = self:GetAttachment(shellAttach)
+		local effectData = EffectData()
+		effectData:SetEntity(self)
+		effectData:SetOrigin(shellAttach.Pos)
+		effectData:SetAngles(shellAttach.Ang)
+		util.Effect(self.PrimaryEffects_ShellType, effectData, true, true)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -36,7 +36,7 @@ SWEP.Primary.Sound = {"vj_weapons/glock_17/glock17_single.wav"}
 SWEP.Primary.DistantSound = {"vj_weapons/glock_17/glock17_single_dist.wav"}
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellAttachment = "ejectbrass"
-SWEP.PrimaryEffects_ShellType = "VJ_Weapon_PistolShell1"
+SWEP.PrimaryEffects_ShellType = "ShellEject"
 	-- ====== Secondary Fire Variables ====== --
 SWEP.Secondary.Automatic = true -- Is it automatic?
 SWEP.Secondary.Ammo = "Pistol" -- Ammo type

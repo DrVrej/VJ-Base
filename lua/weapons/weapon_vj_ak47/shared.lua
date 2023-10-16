@@ -35,7 +35,7 @@ SWEP.Primary.Sound				= {"vj_weapons/ak47/ak47_single.wav"}
 SWEP.Primary.DistantSound		= {"vj_weapons/ak47/ak47_single_dist.wav"}
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellAttachment = 2
-SWEP.PrimaryEffects_ShellType = "VJ_Weapon_RifleShell1"
+SWEP.PrimaryEffects_ShellType = "RifleShellEject"
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Reload_TimeUntilAmmoIsSet	= 1.8 -- Time until ammo is set to the weapon
 ---------------------------------------------------------------------------------------------------------------------------------------------

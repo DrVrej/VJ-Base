@@ -30,7 +30,7 @@ SWEP.Primary.Sound				= {"vj_weapons/hl2_smg1/smg1_single1.wav","vj_weapons/hl2_
 SWEP.Primary.DistantSound		= {"Weapon_SMG1.NPC_Single"}
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellAttachment = 2
-SWEP.PrimaryEffects_ShellType = "VJ_Weapon_PistolShell1"
+SWEP.PrimaryEffects_ShellType = "ShellEject"
 	-- ====== Secondary Fire Variables ====== --
 SWEP.Secondary.Automatic = true -- Is it automatic?
 SWEP.Secondary.Ammo = "SMG1_Grenade" -- Ammo type

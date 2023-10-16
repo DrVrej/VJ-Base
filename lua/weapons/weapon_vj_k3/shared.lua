@@ -22,4 +22,4 @@ SWEP.Primary.Sound				= {"vj_weapons/k3_armenian/k3_fire.wav"}
 SWEP.Primary.DistantSound		= {"vj_weapons/k3_armenian/k3_fire_dist.wav"}
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_ShellAttachment = 2
-SWEP.PrimaryEffects_ShellType = "VJ_Weapon_RifleShell1"
+SWEP.PrimaryEffects_ShellType = "RifleShellEject"

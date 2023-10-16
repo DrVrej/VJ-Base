@@ -32,7 +32,7 @@ SWEP.Primary.DistantSound		= {"Weapon_Pistol.NPC_Single"}
 SWEP.Primary.AllowFireInWater	= true -- If true, you will be able to use primary fire in water
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellAttachment = 2
-SWEP.PrimaryEffects_ShellType = "VJ_Weapon_PistolShell1"
+SWEP.PrimaryEffects_ShellType = "ShellEject"
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound				= true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
 SWEP.ReloadSound				= "weapons/pistol/pistol_reload1.wav"
