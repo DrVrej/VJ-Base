@@ -237,7 +237,7 @@ SWEP.InitHasIdleAnimation = false
 SWEP.Primary.DefaultClip = 0
 SWEP.NextNPCDrySoundT = 0
 SWEP.NPC_NextPrimaryFireT = 0
-SWEP.NPC_AnimationSet = "Custom"
+SWEP.NPC_AnimationSet = VJ.ANIM_SET_CUSTOM
 SWEP.NPC_SecondaryFireNextT = 0
 SWEP.LastOwner = NULL
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -294,11 +294,11 @@ function SWEP:Equip(newOwner)
 	elseif newOwner:IsNPC() then
 		-- For default HL2 NPCs
 		if VJ.AnimExists(newOwner,ACT_WALK_AIM_PISTOL) == true && VJ.AnimExists(newOwner,ACT_RUN_AIM_PISTOL) == true && VJ.AnimExists(newOwner,ACT_POLICE_HARASS1) == true then
-			self.NPC_AnimationSet = "Metrocop"
+			self.NPC_AnimationSet = VJ.ANIM_SET_METROCOP
 		elseif VJ.AnimExists(newOwner,"cheer1") == true && VJ.AnimExists(newOwner,"wave_smg1") == true && VJ.AnimExists(newOwner,ACT_BUSY_SIT_GROUND) == true then
-			self.NPC_AnimationSet = "Rebel"
+			self.NPC_AnimationSet = VJ.ANIM_SET_REBEL
 		elseif VJ.AnimExists(newOwner,"signal_takecover") == true && VJ.AnimExists(newOwner,"grenthrow") == true && VJ.AnimExists(newOwner,"bugbait_hit") == true then
-			self.NPC_AnimationSet = "Combine"
+			self.NPC_AnimationSet = VJ.ANIM_SET_COMBINE
 		end
 
 		if newOwner:GetClass() == "npc_citizen" then newOwner:Fire("DisableWeaponPickup") end -- If it's a citizen, disable them picking up weapons from the ground
@@ -318,37 +318,36 @@ function SWEP:Equip(newOwner)
 	self.LastOwner = newOwner
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:SetDefaultValues(hType, overrideSds)
-	hType = hType or "ar2"
-	overrideSds = overrideSds or false
-	if hType == "pistol" then
-		if VJ.PICK(self.DeploySound) == false or overrideSds == true then self.DeploySound = {"weapons/draw_pistol.wav"} end
-		if VJ.PICK(self.DryFireSound) == false or overrideSds == true then self.DryFireSound = {"vj_weapons/dryfire_pistol.wav"} end
-		if VJ.PICK(self.NPC_ReloadSound) == false or overrideSds == true then self.NPC_ReloadSound = {"vj_weapons/reload_pistol.wav"} end
-	elseif hType == "revolver" then
-		if VJ.PICK(self.DeploySound) == false or overrideSds == true then self.DeploySound = {"weapons/draw_pistol.wav"} end
-		if VJ.PICK(self.DryFireSound) == false or overrideSds == true then self.DryFireSound = {"vj_weapons/dryfire_revolver.wav"} end
-		if VJ.PICK(self.NPC_ReloadSound) == false or overrideSds == true then self.NPC_ReloadSound = {"vj_weapons/reload_revolver.wav"} end
-	elseif hType == "shotgun" or hType == "crossbow" then
-		if VJ.PICK(self.DeploySound) == false or overrideSds == true then self.DeploySound = {"weapons/draw_rifle.wav"} end
-		if VJ.PICK(self.DryFireSound) == false or overrideSds == true then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
-		if VJ.PICK(self.NPC_ReloadSound) == false or overrideSds == true then self.NPC_ReloadSound = {"vj_weapons/reload_shotgun.wav"} end
-	elseif hType == "rpg" then
-		if VJ.PICK(self.DeploySound) == false or overrideSds == true then self.DeploySound = {"weapons/draw_rifle.wav"} end
-		if VJ.PICK(self.DryFireSound) == false or overrideSds == true then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
-		if VJ.PICK(self.NPC_ReloadSound) == false or overrideSds == true then self.NPC_ReloadSound = {"vj_weapons/reload_rpg.wav"} end
-	elseif hType == "smg" or hType == "ar2" then
-		if VJ.PICK(self.DeploySound) == false or overrideSds == true then self.DeploySound = {"weapons/draw_rifle.wav"} end
-		if VJ.PICK(self.DryFireSound) == false or overrideSds == true then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
-		if VJ.PICK(self.NPC_ReloadSound) == false or overrideSds == true then self.NPC_ReloadSound = {"vj_weapons/reload_rifle.wav"} end
-	elseif hType == "melee" or hType == "melee2" or hType == "knife" then
+function SWEP:SetDefaultValues(holdType)
+	holdType = holdType or "ar2"
+	if holdType == "pistol" then
+		if VJ.PICK(self.DeploySound) == false then self.DeploySound = {"weapons/draw_pistol.wav"} end
+		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_pistol.wav"} end
+		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_pistol.wav"} end
+	elseif holdType == "revolver" then
+		if VJ.PICK(self.DeploySound) == false then self.DeploySound = {"weapons/draw_pistol.wav"} end
+		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_revolver.wav"} end
+		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_revolver.wav"} end
+	elseif holdType == "shotgun" or holdType == "crossbow" then
+		if VJ.PICK(self.DeploySound) == false then self.DeploySound = {"weapons/draw_rifle.wav"} end
+		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
+		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_shotgun.wav"} end
+	elseif holdType == "rpg" then
+		if VJ.PICK(self.DeploySound) == false then self.DeploySound = {"weapons/draw_rifle.wav"} end
+		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
+		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_rpg.wav"} end
+	elseif holdType == "smg" or holdType == "ar2" then
+		if VJ.PICK(self.DeploySound) == false then self.DeploySound = {"weapons/draw_rifle.wav"} end
+		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
+		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_rifle.wav"} end
+	elseif holdType == "melee" or holdType == "melee2" or holdType == "knife" then
+		self.DeploySound = {"weapons/draw_rifle.wav"}
 		self.HasDryFireSound = false
 		self.NPC_HasReloadSound = false
-		self.DeploySound = {"weapons/draw_rifle.wav"}
 	else
+		self.DeploySound = {"weapons/draw_rifle.wav"}
 		self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"}
 		self.NPC_ReloadSound = {"vj_weapons/reload_rifle.wav"}
-		self.DeploySound = {"weapons/draw_rifle.wav"}
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -381,7 +380,7 @@ function SWEP:CanBePickedUpByNPCs()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_ServerNextFire()
-	if CLIENT or !IsValid(self) then return end
+	if !IsValid(self) then return end
 	local owner = self:GetOwner()
 	if !IsValid(owner) or !owner:IsNPC() or owner:GetActiveWeapon() != self then return end
 	
@@ -395,6 +394,7 @@ function SWEP:NPC_ServerNextFire()
 	if !owner:GetActivity() then return end
 	
 	//print("------------------")
+	//print(CurTime())
 	//VJ.DEBUG_TempEnt(self:DecideBulletPosition(),self:GetAngles(),Color(255,0,255),1)
 	//VJ.DEBUG_TempEnt(self:GetNW2Vector("VJ_CurBulletPos"),self:GetAngles(),Color(0,0,255),1)
 
@@ -457,8 +457,6 @@ function SWEP:NPCShoot_Primary()
 	local ene = owner:GetEnemy()
 	if !owner.VJ_IsBeingControlled && (!IsValid(ene) or (!owner:Visible(ene))) then return end
 	if owner.IsVJBaseSNPC == true then
-		//owner.Weapon_TimeSinceLastShot = CurTime()
-		//owner.NextWeaponAttackAimPoseParametersReset = CurTime() + 1
 		owner:DoPoseParameterLooking()
 	end
 	
@@ -748,6 +746,9 @@ function SWEP:PrimaryAttackEffects(owner)
 		local shellAttach = self.PrimaryEffects_ShellAttachment
 		if !isnumber(shellAttach) then shellAttach = self:LookupAttachment(shellAttach) end
 		shellAttach = self:GetAttachment(shellAttach)
+		if !shellAttach then -- No attachment found, so just use some default pos & ang
+			shellAttach = {Pos = owner:GetShootPos(), Ang = self:GetAngles()}
+		end
 		local effectData = EffectData()
 		effectData:SetEntity(self)
 		effectData:SetOrigin(shellAttach.Pos)

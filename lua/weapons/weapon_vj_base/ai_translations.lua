@@ -5,7 +5,7 @@ function SWEP:SetupWeaponHoldTypeForAI(hType)
 	-- Yete NPC-en Rebel-e, ere vor medz zenki animation-ere kordzadze yerp vor ge kalegor
 	local bezdigZenk_Kalel = ACT_WALK_AIM_PISTOL
 	local bezdigZenk_Vazel = ACT_RUN_AIM_PISTOL
-	if self.NPC_AnimationSet == "Rebel" then
+	if self.NPC_AnimationSet == VJ.ANIM_SET_REBEL then
 		bezdigZenk_Kalel = ACT_WALK_AIM_RIFLE
 		bezdigZenk_Vazel = ACT_RUN_AIM_RIFLE
 	end
@@ -14,7 +14,7 @@ function SWEP:SetupWeaponHoldTypeForAI(hType)
 	local rifleOverride = false
 	local medzZenk_Genal = ACT_IDLE_SMG1
 	local medzZenk_Kalel = ACT_WALK_RIFLE
-	if self.NPC_AnimationSet == "Combine" && (hType == "pistol" or hType == "revolver") then
+	if self.NPC_AnimationSet == VJ.ANIM_SET_COMBINE && (hType == "pistol" or hType == "revolver") then
 		rifleOverride = true
 		medzZenk_Genal = VJ.SequenceToActivity(self:GetOwner(),"idle_unarmed")
 		medzZenk_Kalel = VJ.SequenceToActivity(self:GetOwner(),"walkunarmed_all")
@@ -23,7 +23,7 @@ function SWEP:SetupWeaponHoldTypeForAI(hType)
 	-- Yete NPC-en Metrocop-e gamal Rebel-e, ere vor medz zenki animation-ere kordzadze yerp vor ge kalegor
 	local bonbakshen_varichadz = ACT_RANGE_ATTACK_SHOTGUN_LOW
 	local bonbakshen_Vazel = ACT_RUN_AIM_SHOTGUN
-	if self.NPC_AnimationSet == "Metrocop" or self.NPC_AnimationSet == "Rebel" then
+	if self.NPC_AnimationSet == VJ.ANIM_SET_METROCOP or self.NPC_AnimationSet == VJ.ANIM_SET_REBEL then
 		bonbakshen_varichadz = ACT_RANGE_ATTACK_SMG1_LOW
 		//bonbakshen_Kalel = ACT_WALK_AIM_RIFLE
 		bonbakshen_Vazel = ACT_RUN_AIM_RIFLE
