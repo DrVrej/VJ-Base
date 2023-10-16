@@ -466,11 +466,11 @@ function SWEP:NPCShoot_Primary()
 	if self.NPC_HasSecondaryFire && owner.CanUseSecondaryOnWeaponAttack && CurTime() > self.NPC_SecondaryFireNextT && ene:GetPos():Distance(owner:GetPos()) <= self.NPC_SecondaryFireDistance then
 		if math.random(1, self.NPC_SecondaryFireChance) == 1 then
 			local anim, animDur = owner:VJ_ACT_PLAYACTIVITY(VJ.PICK(owner.AnimTbl_WeaponAttackSecondary), true, false, true)
-			local fireTime = (!anim and 0) or owner.WeaponAttackSecondaryTimeUntilFire or animDur
+			local fireTime = (anim == ACT_INVALID and 0) or owner.WeaponAttackSecondaryTimeUntilFire or animDur
 				-- If no animation was found then fireTime is 0, otherwise if "WeaponAttackSecondaryTimeUntilFire" is false then use animation time
 			self:NPC_SecondaryFire_BeforeTimer(ene, fireTime)
 			timer.Simple(fireTime, function()
-				if IsValid(self) && IsValid(owner) && IsValid(owner:GetEnemy()) && CurTime() > self.NPC_SecondaryFireNextT && (!anim or (anim && VJ.IsCurrentAnimation(owner, anim))) then -- ONLY check for cur anim IF it even had one!
+				if IsValid(self) && IsValid(owner) && IsValid(owner:GetEnemy()) && CurTime() > self.NPC_SecondaryFireNextT && (anim == ACT_INVALID or (anim && VJ.IsCurrentAnimation(owner, anim))) then -- ONLY check for cur anim IF it even had one!
 					self:NPC_SecondaryFire()
 					if self.NPC_HasSecondaryFireSound == true then VJ.EmitSound(owner, self.NPC_SecondaryFireSound, self.NPC_SecondaryFireSoundLevel) end
 					self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
@@ -516,7 +516,12 @@ function SWEP:PrimaryAttack(UseAlt)
 	
 	if self.Reloading or self:GetNextSecondaryFire() > CurTime() then return end
 	if isNPC && owner.VJ_IsBeingControlled == false && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return end
-	if SERVER && self.IsMeleeWeapon == false && ((isPly && self.Primary.AllowFireInWater == false && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then owner:EmitSound(VJ.PICK(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b)) return end
+	if self.IsMeleeWeapon == false && ((isPly && self.Primary.AllowFireInWater == false && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then
+		if SERVER then
+			owner:EmitSound(VJ.PICK(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b))
+		end
+		return
+	end
 	if (!self:CanPrimaryAttack()) then return end
 	if self:CustomOnPrimaryAttack_BeforeShoot() == true then return end
 	

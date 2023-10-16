@@ -618,10 +618,10 @@ function ENT:VJ_ForwardIsHidingZone(startPos, endPos, acceptWorld, extraOptions)
 	end
 	
 	-- Not a hiding zone: (Sphere found an enemy/NPC/Player) OR (Trace ent is an enemy/NPC/Player) OR (End pos is far from the hit position) OR (World is NOT accepted as a hiding zone)
-	if sphereInvalidate or (IsValid(hitEnt) && (hitEnt == ene or hitEnt:IsNPC() or hitEnt:IsPlayer())) or endPos:Distance(hitPos) <= 10 or (acceptWorld == false && tr.HitWorld == true) then
+	if sphereInvalidate or (IsValid(hitEnt) && (hitEnt == ene or hitEnt:IsNPC() or hitEnt:IsPlayer() or hitEnt:GetVelocity():LengthSqr() > 1000)) or endPos:Distance(hitPos) <= 10 or (acceptWorld == false && tr.HitWorld == true) then
 		if setLastHiddenTime == true then self.LastHiddenZoneT = 0 end
 		return false, tr
-	-- Hiding zone: It hit world AND it's close
+	-- Hiding zone: It hit world AND it's close, override "acceptWorld" option!
 	elseif tr.HitWorld == true && self:GetPos():Distance(hitPos) < 200 then
 		if setLastHiddenTime == true then self.LastHiddenZoneT = CurTime() + 20 end
 		return true, tr
