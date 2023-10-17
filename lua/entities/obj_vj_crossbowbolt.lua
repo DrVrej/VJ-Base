@@ -32,6 +32,8 @@ ENT.SoundTbl_Idle = {"weapons/fx/nearmiss/bulletltor03.wav"}
 ENT.SoundTbl_OnCollide = {"weapons/crossbow/hit1.wav"}
 
 ENT.IdleSoundLevel = 60
+
+local sdHitEnt = {"weapons/crossbow/hitbod1.wav", "weapons/crossbow/hitbod2.wav"} // weapons/crossbow/bolt_skewer1.wav
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitializeBeforePhys()
 	self:PhysicsInitSphere(1, "metal_bouncy")
@@ -46,7 +48,8 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPhysicsCollide(data, phys)
 	if IsValid(data.HitEntity) then
-		self.SoundTbl_OnCollide = {"weapons/crossbow/hitbod1.wav","weapons/crossbow/hitbod2.wav"} // weapons/crossbow/bolt_skewer1.wav
+		self.SoundTbl_OnCollide = sdHitEnt
+		-- Ignite small entities
 		if data.HitEntity:IsNPC() && data.HitEntity:GetHullType() == HULL_TINY then
 			data.HitEntity:Ignite(3)
 		end
