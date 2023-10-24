@@ -9,7 +9,9 @@ if VJExists == true then
 	local spawnCategory = "VJ Dummy Category" -- Category, you can also set a category individually by replacing the spawnCategory with a string value
 	
 	/* -- Comment box start
-	NOTE: The following code is commented out so the game doesn't run it! When copying one of the options below, make sure to put it outside of the comment box!
+	-- The following code is commented out so the game doesn't run it!
+	-- When copying one of the options below, make sure to put it outside of the comment box!
+	-- For more options / information navigate to the "lua/autorun/vj_controls.lua" file in VJ Base
 	
 	VJ.AddNPC("Dummy SNPC", "npc_vj_dum_dummy", spawnCategory) -- Adds a NPC to the spawnmenu
 		-- Parameters:
