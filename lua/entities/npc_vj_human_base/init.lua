@@ -224,10 +224,6 @@ ENT.AnimTbl_Flinch = {ACT_FLINCH_PHYSICS} -- If it uses normal based animation, 
 ENT.FlinchAnimationDecreaseLengthAmount = 0 -- This will decrease the time it can move, attack, etc. | Use it to fix animation pauses after it finished the flinch animation
 ENT.HitGroupFlinching_DefaultWhenNotHit = true -- If it uses hitgroup flinching, should it do the regular flinch if it doesn't hit any of the specified hitgroups?
 ENT.HitGroupFlinching_Values = nil -- EXAMPLES: {{HitGroup = {HITGROUP_HEAD}, Animation = {ACT_FLINCH_HEAD}}, {HitGroup = {HITGROUP_LEFTARM}, Animation = {ACT_FLINCH_LEFTARM}}, {HitGroup = {HITGROUP_RIGHTARM}, Animation = {ACT_FLINCH_RIGHTARM}}, {HitGroup = {HITGROUP_LEFTLEG}, Animation = {ACT_FLINCH_LEFTLEG}}, {HitGroup = {HITGROUP_RIGHTLEG}, Animation = {ACT_FLINCH_RIGHTLEG}}}
-	-- ====== Damage By Player Variables ====== --
-ENT.HasDamageByPlayer = true -- Should the SNPC do something when it's hit by a player? Example: Play a sound or animation
-ENT.DamageByPlayerDispositionLevel = 1 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
-ENT.DamageByPlayerTime = VJ.SET(2, 2) -- How much time until it can run the Damage By Player code?
 	-- ====== Call For Back On Damage Variables ====== --
 	-- NOTE: This AI component only runs when there is NO enemy detected!
 ENT.CallForBackUpOnDamage = true -- Should the NPC call for help when damaged?
@@ -434,6 +430,7 @@ ENT.IdleDialogueCanTurn = true -- If set to false, it won't turn when a dialogue
 ENT.AlertSounds_OnlyOnce = false -- After it plays it once, it will never play it again
 ENT.BeforeMeleeAttackSounds_WaitTime = 0 -- Time until it starts playing the Before Melee Attack sounds
 ENT.OnlyDoKillEnemyWhenClear = true -- If set to true, it will only play the OnKilledEnemy sound when there isn't any other enemies
+ENT.DamageByPlayerDispositionLevel = 1 -- At which disposition levels it should play the damage by player sounds | 0 = Always | 1 = ONLY when friendly to player | 2 = ONLY when enemy to player
 	-- ====== Main Control Variables ====== --
 ENT.HasFootStepSound = true -- Should the SNPC make a footstep sound when it's moving?
 ENT.HasBreathSound = true -- Should it make a breathing sound?
@@ -850,8 +847,6 @@ function ENT:CustomOnFlinch_BeforeFlinch(dmginfo, hitgroup) end -- Return false 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnDamageByPlayer(dmginfo, hitgroup) end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnBecomeEnemyToPlayer(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnSetEnemyOnDamage(dmginfo, hitgroup) end
@@ -959,7 +954,6 @@ ENT.CurrentAttackAnimationTime = 0
 ENT.NextIdleTime = 0
 ENT.NextChaseTime = 0
 ENT.OnPlayerSightNextT = 0
-ENT.NextDamageByPlayerT = 0
 ENT.NextDamageByPlayerSoundT = 0
 ENT.NextWeaponReloadSoundT = 0
 ENT.Medic_NextHealT = 0
@@ -3948,10 +3942,11 @@ function ENT:OnTakeDamage(dmginfo)
 			
 			-- React to damage by a player
 				-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
-			if self.HasDamageByPlayer && dmgAttacker:IsPlayer() && curTime > self.NextDamageByPlayerT && self:Visible(dmgAttacker) && (self.DamageByPlayerDispositionLevel == 0 or (self.DamageByPlayerDispositionLevel == 1 && (self:Disposition(dmgAttacker) == D_LI or self:Disposition(dmgAttacker) == D_NU)) or (self.DamageByPlayerDispositionLevel == 2 && self:Disposition(dmgAttacker) != D_HT)) then
-				self:CustomOnDamageByPlayer(dmginfo, hitgroup)
-				self:PlaySoundSystem("DamageByPlayer")
-				self.NextDamageByPlayerT = curTime + math.Rand(self.DamageByPlayerTime.a, self.DamageByPlayerTime.b)
+			if self.HasDamageByPlayerSounds && dmgAttacker:IsPlayer() && curTime > self.NextDamageByPlayerSoundT && self:Visible(dmgAttacker) then
+				local dispLvl = self.DamageByPlayerDispositionLevel
+				if (dispLvl == 0 or (dispLvl == 1 && self:Disposition(dmgAttacker) == D_LI) or (dispLvl == 2 && self:Disposition(dmgAttacker) != D_HT)) then
+					self:PlaySoundSystem("DamageByPlayer")
+				end
 			end
 			
 			self:PlaySoundSystem("Pain")
@@ -4644,19 +4639,20 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 		end
 		return
 	elseif sdSet == "DamageByPlayer" then
-		if self.HasDamageByPlayerSounds == true && CurTime() > self.NextDamageByPlayerSoundT then
+		//if self.HasDamageByPlayerSounds == true && CurTime() > self.NextDamageByPlayerSoundT then -- This is done in the call instead
 			local sdtbl = VJ.PICK(self.SoundTbl_DamageByPlayer)
+			local sdDur = 2
 			if (math.random(1, self.DamageByPlayerSoundChance) == 1 && sdtbl) or customTbl then
 				if customTbl then sdtbl = customTbl end
 				self:StopAllCommonSpeechSounds()
-				local dur = CurTime() + ((((SoundDuration(sdtbl) > 0) and SoundDuration(sdtbl)) or 2) + 1)
-				self.PainSoundT = dur
-				self.NextIdleSoundT_RegularChange = CurTime() + dur
+				sdDur = (SoundDuration(sdtbl) > 0 and SoundDuration(sdtbl)) or sdDur
+				self.PainSoundT = CurTime() + sdDur
+				self.NextIdleSoundT_RegularChange = CurTime() + sdDur
 				timer.Simple(0.05, function() if IsValid(self) then VJ.STOPSOUND(self.CurrentPainSound) end end)
 				self.CurrentDamageByPlayerSound = sdType(self, sdtbl, self.DamageByPlayerSoundLevel, self:VJ_DecideSoundPitch(self.DamageByPlayerPitch.a, self.DamageByPlayerPitch.b))
 			end
-			self.NextDamageByPlayerSoundT = CurTime() + math.Rand(self.NextSoundTime_DamageByPlayer.a, self.NextSoundTime_DamageByPlayer.b)
-		end
+			self.NextDamageByPlayerSoundT = CurTime() + ((self.NextSoundTime_DamageByPlayer == false and sdDur) or math.Rand(self.NextSoundTime_DamageByPlayer.a, self.NextSoundTime_DamageByPlayer.b))
+		//end
 		return
 	elseif sdSet == "Death" then
 		if self.HasDeathSounds == true then
