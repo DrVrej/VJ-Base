@@ -11,7 +11,7 @@
 
 --------------------------------------------------*/
 AddCSLuaFile()
-if CLIENT then print("Loading VJ Base (Client)...") else print("Loading VJ Base (Server)...") end
+if CLIENT then print("Loading VJ Base client files...") else print("Loading VJ Base server files...") end
 
 local GetConVar = GetConVar
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -306,7 +306,7 @@ if SERVER && !isfunction(FindMetaTable("Entity").SetSurroundingBoundsType) then
 			timer.Create("VJBASE_ERROR_GAME_OUTDATED", 2, 1, function()
 				PrintMessage(HUD_PRINTTALK, "--- Outdated version of Garry's Mod detected! ---")
 				PrintMessage(HUD_PRINTTALK, "Parts of VJ Base are now disabled! Expect errors & AI issues!")
-				PrintMessage(HUD_PRINTTALK, "REASON: Game is running on old 64-bit or Chromium or is pirated!")
+				PrintMessage(HUD_PRINTTALK, "REASON: Game is running on an old version or is pirated!")
 			end)
 		end
 	end)

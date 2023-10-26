@@ -152,7 +152,7 @@ if CLIENT then
 		add("vjbase.menu.plugins.changelog", "Changelog")
 		add("vjbase.menu.plugins.makeaddon", "Want to make an addon?")
 		add("vjbase.menu.plugins.chat.pluginname", "Plugin Name:")
-		add("vjbase.menu.plugins.chat.plugintypes", "Plugin Types:")
+		add("vjbase.menu.plugins.chat.plugintypes", "Plugin Type(s):")
 		
 		-- SNPC Menus
 		add("vjbase.menu.snpc.options", "Options")

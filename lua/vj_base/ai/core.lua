@@ -875,10 +875,6 @@ function ENT:IsJumpLegal(startPos, apex, endPos)
 	return true*/
 	
 	if !self.AllowMovementJumping then return false end
-	local result = self:CustomOnIsJumpLegal(startPos, apex, endPos)
-	if result != nil then
-		return result
-	end
 	local jumpData = self.JumpVars
 	if ((endPos.z - startPos.z) > jumpData.MaxRise) or ((apex.z - startPos.z) > jumpData.MaxRise) or ((startPos.z - endPos.z) > jumpData.MaxDrop) or (startPos:Distance(endPos) > jumpData.MaxDistance) then
 		return false

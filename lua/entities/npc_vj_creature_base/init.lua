@@ -684,8 +684,6 @@ function ENT:CustomOnThink_AIEnabled() end
 -- UNCOMMENT TO USE | Called at the end of every entity it checks every process time
 -- function ENT:CustomOnSetupRelationships(ent, entFri, entDist) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnIsJumpLegal(startPos, apex, endPos) end -- Return nothing to let base decide, return true to make it jump, return false to disallow jumping
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOn_PoseParameterLookingCode(pitch, yaw, roll) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnSchedule() end
