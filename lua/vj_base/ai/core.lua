@@ -1006,7 +1006,7 @@ function ENT:Follow(ent, stopIfFollowing)
 	
 	local isPly = ent:IsPlayer()
 	local isLiving = isPly or ent:IsNPC() -- Is it a living entity?
-	if VJ.IsAlive(ent) && ((isPly && !VJ_CVAR_IGNOREPLAYERS) or (!isPly)) then
+	if (!isLiving) or (VJ.IsAlive(ent) && ((isPly && !VJ_CVAR_IGNOREPLAYERS) or (!isPly))) then
 		local followData = self.FollowData
 		-- Refusal messages
 		if isLiving && self:GetClass() != ent:GetClass() && (self:Disposition(ent) == D_HT or self:Disposition(ent) == D_NU) then -- Check for enemy/neutral
@@ -1051,12 +1051,11 @@ function ENT:Follow(ent, stopIfFollowing)
 					end
 				end)
 			end
-			if isPly then self:CustomOnFollowPlayer(ent) end
+			self:OnFollow("Start", ent)
 			return true, 0
 		elseif stopIfFollowing then -- Unfollow the entity
 			if isPly then
 				self:PlaySoundSystem("UnFollowPlayer")
-				self:CustomOnUnFollowPlayer(ent)
 			end
 			self:StopMoving()
 			self.NextWanderTime = CurTime() + 2
@@ -1064,6 +1063,7 @@ function ENT:Follow(ent, stopIfFollowing)
 				self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 			end
 			self:FollowReset()
+			self:OnFollow("Stop", ent)
 		end
 	end
 	return false, 0

@@ -701,9 +701,14 @@ end
 -- UNCOMMENT TO USE
 -- function ENT:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnFollowPlayer(ply) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnUnFollowPlayer(ply) end
+--[[---------------------------------------------------------
+	Called whenever the NPC begins following or stops following an entity
+		- status = Type of call:
+			- "Start"	= NPC is now following the given entity
+			- "Stop"	= NPC is now unfollowing the given entity
+		- ent = The entity that the NPC is now following or unfollowing
+-----------------------------------------------------------]]
+function ENT:OnFollow(status, ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Called every time a change occurs in the eating system
@@ -1019,6 +1024,7 @@ local destructibleEnts = {func_breakable=true, func_physbox=true, prop_door_rota
 local defPos = Vector(0, 0, 0)
 
 local IsProp = VJ.IsProp
+local StopSound = VJ.STOPSOUND
 local CurTime = CurTime
 local IsValid = IsValid
 local GetConVar = GetConVar
@@ -1034,9 +1040,6 @@ local string_find = string.find
 local string_sub = string.sub
 local table_remove = table.remove
 local table_concat = table.concat
-local varCAnt = "CLASS_ANTLION"
-local varCCom = "CLASS_COMBINE"
-local varCZom = "CLASS_ZOMBIE"
 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function ConvarsOnInit(self)
@@ -1046,9 +1049,9 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_sd_nosounds"):GetInt() == 1 then self.HasSounds = false end
 	if GetConVar("vj_npc_vjfriendly"):GetInt() == 1 then self.VJTag_IsBaseFriendly = true end
 	if GetConVar("vj_npc_playerfriendly"):GetInt() == 1 then self.PlayerFriendly = true end
-	if GetConVar("vj_npc_antlionfriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCAnt end
-	if GetConVar("vj_npc_combinefriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCCom end
-	if GetConVar("vj_npc_zombiefriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = varCZom end
+	if GetConVar("vj_npc_antlionfriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_ANTLION" end
+	if GetConVar("vj_npc_combinefriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_COMBINE" end
+	if GetConVar("vj_npc_zombiefriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_ZOMBIE" end
 	if GetConVar("vj_npc_noallies"):GetInt() == 1 then self.HasAllies = false self.PlayerFriendly = false end
 	if GetConVar("vj_npc_nocorpses"):GetInt() == 1 then self.HasDeathRagdoll = false end
 	if GetConVar("vj_npc_itemdrops"):GetInt() == 0 then self.HasItemDropsOnDeath = false end
@@ -2554,7 +2557,7 @@ function ENT:Think()
 			local sdTbl = VJ.PICK(self.SoundTbl_Breath)
 			local dur = 1
 			if sdTbl then
-				VJ.STOPSOUND(self.CurrentBreathSound)
+				StopSound(self.CurrentBreathSound)
 				dur = (self.NextSoundTime_Breath == false and SoundDuration(sdTbl)) or math.Rand(self.NextSoundTime_Breath.a, self.NextSoundTime_Breath.b)
 				self.CurrentBreathSound = VJ.CreateSound(self, sdTbl, self.BreathSoundLevel, self:VJ_DecideSoundPitch(self.BreathSoundPitch.a, self.BreathSoundPitch.b))
 			end
@@ -4577,8 +4580,8 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.BecomeEnemyToPlayerChance) == 1 && sdtbl) or customTbl then
 				if customTbl then sdtbl = customTbl end
 				self:StopAllCommonSpeechSounds()
-				timer.Simple(0.05,function() if IsValid(self) then VJ.STOPSOUND(self.CurrentPainSound) end end)
-				//timer.Simple(1.3,function() if IsValid(self) then VJ.STOPSOUND(self.CurrentAlertSound) end end)
+				timer.Simple(0.05,function() if IsValid(self) then StopSound(self.CurrentPainSound) end end)
+				//timer.Simple(1.3,function() if IsValid(self) then StopSound(self.CurrentAlertSound) end end)
 				local dur = CurTime() + ((((SoundDuration(sdtbl) > 0) and SoundDuration(sdtbl)) or 2) + 1)
 				self.PainSoundT = dur
 				self.NextAlertSoundT = dur
@@ -4620,7 +4623,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if (math.random(1, self.PainSoundChance) == 1 && sdtbl) or customTbl then
 				if customTbl then sdtbl = customTbl end
 				self:StopAllCommonSpeechSounds()
-				VJ.STOPSOUND(self.CurrentIdleSound)
+				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentPainSound = sdType(self, sdtbl, self.PainSoundLevel, self:VJ_DecideSoundPitch(self.PainSoundPitch.a, self.PainSoundPitch.b))
 				sdDur = (SoundDuration(sdtbl) > 0 and SoundDuration(sdtbl)) or sdDur
@@ -4648,7 +4651,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 				sdDur = (SoundDuration(sdtbl) > 0 and SoundDuration(sdtbl)) or sdDur
 				self.PainSoundT = CurTime() + sdDur
 				self.NextIdleSoundT_RegularChange = CurTime() + sdDur
-				timer.Simple(0.05, function() if IsValid(self) then VJ.STOPSOUND(self.CurrentPainSound) end end)
+				timer.Simple(0.05, function() if IsValid(self) then StopSound(self.CurrentPainSound) end end)
 				self.CurrentDamageByPlayerSound = sdType(self, sdtbl, self.DamageByPlayerSoundLevel, self:VJ_DecideSoundPitch(self.DamageByPlayerPitch.a, self.DamageByPlayerPitch.b))
 			end
 			self.NextDamageByPlayerSoundT = CurTime() + ((self.NextSoundTime_DamageByPlayer == false and sdDur) or math.Rand(self.NextSoundTime_DamageByPlayer.a, self.NextSoundTime_DamageByPlayer.b))
@@ -4693,7 +4696,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			local sdtbl = VJ.PICK(self.SoundTbl_BeforeMeleeAttack)
 			if (math.random(1, self.BeforeMeleeAttackSoundChance) == 1 && sdtbl) or customTbl then
 				if customTbl then sdtbl = customTbl end
-				if self.IdleSounds_PlayOnAttacks == false then VJ.STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentBeforeMeleeAttackSound = sdType(self, sdtbl, self.BeforeMeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.BeforeMeleeAttackSoundPitch.a, self.BeforeMeleeAttackSoundPitch.b))
 			end
@@ -4705,14 +4708,14 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if sdtbl == false then sdtbl = VJ.PICK(self.DefaultSoundTbl_MeleeAttack) end -- Default table
 			if (math.random(1, self.MeleeAttackSoundChance) == 1 && sdtbl) or customTbl then
 				if customTbl then sdtbl = customTbl end
-				if self.IdleSounds_PlayOnAttacks == false then VJ.STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentMeleeAttackSound = sdType(self, sdtbl, self.MeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.MeleeAttackSoundPitch.a, self.MeleeAttackSoundPitch.b))
 			end
 			if self.HasExtraMeleeAttackSounds == true then
 				sdtbl = VJ.PICK(self.SoundTbl_MeleeAttackExtra)
 				if (math.random(1, self.ExtraMeleeSoundChance) == 1 && sdtbl) or customTbl then
-					if self.IdleSounds_PlayOnAttacks == false then VJ.STOPSOUND(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+					if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 					self.CurrentExtraMeleeAttackSound = VJ.EmitSound(self, sdtbl, self.ExtraMeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.ExtraMeleeSoundPitch.a, self.ExtraMeleeSoundPitch.b))
 				end
 			end
@@ -4724,7 +4727,7 @@ function ENT:PlaySoundSystem(sdSet, customSd, sdType)
 			if sdtbl == false then sdtbl = VJ.PICK(DefaultSoundTbl_MeleeAttackMiss) end -- Default table
 			if (math.random(1, self.MeleeAttackMissSoundChance) == 1 && sdtbl) or customTbl then
 				if customTbl then sdtbl = customTbl end
-				VJ.STOPSOUND(self.CurrentIdleSound)
+				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentMeleeAttackMissSound = sdType(self, sdtbl, self.MeleeAttackMissSoundLevel, self:VJ_DecideSoundPitch(self.MeleeAttackMissSoundPitch.a, self.MeleeAttackMissSoundPitch.b))
 			end
@@ -4804,61 +4807,61 @@ function ENT:FootStepSoundCode(customSd)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAllCommonSpeechSounds()
-	VJ.STOPSOUND(self.CurrentGeneralSpeechSound)
-	VJ.STOPSOUND(self.CurrentIdleSound)
-	VJ.STOPSOUND(self.CurrentIdleDialogueAnswerSound)
-	VJ.STOPSOUND(self.CurrentInvestigateSound)
-	VJ.STOPSOUND(self.CurrentLostEnemySound)
-	VJ.STOPSOUND(self.CurrentAlertSound)
-	VJ.STOPSOUND(self.CurrentFollowPlayerSound)
-	VJ.STOPSOUND(self.CurrentUnFollowPlayerSound)
-	VJ.STOPSOUND(self.CurrentMoveOutOfPlayersWaySound)
-	VJ.STOPSOUND(self.CurrentBecomeEnemyToPlayerSound)
-	VJ.STOPSOUND(self.CurrentOnPlayerSightSound)
-	VJ.STOPSOUND(self.CurrentDamageByPlayerSound)
-	VJ.STOPSOUND(self.CurrentOnGrenadeSightSound)
-	VJ.STOPSOUND(self.CurrentOnDangerSightSound)
-	VJ.STOPSOUND(self.CurrentWeaponReloadSound)
-	VJ.STOPSOUND(self.CurrentMedicBeforeHealSound)
-	VJ.STOPSOUND(self.CurrentMedicAfterHealSound)
-	VJ.STOPSOUND(self.CurrentMedicReceiveHealSound)
-	VJ.STOPSOUND(self.CurrentCallForHelpSound)
-	VJ.STOPSOUND(self.CurrentOnReceiveOrderSound)
-	VJ.STOPSOUND(self.CurrentOnKilledEnemySound)
-	VJ.STOPSOUND(self.CurrentAllyDeathSound)
+	StopSound(self.CurrentGeneralSpeechSound)
+	StopSound(self.CurrentIdleSound)
+	StopSound(self.CurrentIdleDialogueAnswerSound)
+	StopSound(self.CurrentInvestigateSound)
+	StopSound(self.CurrentLostEnemySound)
+	StopSound(self.CurrentAlertSound)
+	StopSound(self.CurrentFollowPlayerSound)
+	StopSound(self.CurrentUnFollowPlayerSound)
+	StopSound(self.CurrentMoveOutOfPlayersWaySound)
+	StopSound(self.CurrentBecomeEnemyToPlayerSound)
+	StopSound(self.CurrentOnPlayerSightSound)
+	StopSound(self.CurrentDamageByPlayerSound)
+	StopSound(self.CurrentOnGrenadeSightSound)
+	StopSound(self.CurrentOnDangerSightSound)
+	StopSound(self.CurrentWeaponReloadSound)
+	StopSound(self.CurrentMedicBeforeHealSound)
+	StopSound(self.CurrentMedicAfterHealSound)
+	StopSound(self.CurrentMedicReceiveHealSound)
+	StopSound(self.CurrentCallForHelpSound)
+	StopSound(self.CurrentOnReceiveOrderSound)
+	StopSound(self.CurrentOnKilledEnemySound)
+	StopSound(self.CurrentAllyDeathSound)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAllCommonSounds()
-	VJ.STOPSOUND(self.CurrentGeneralSpeechSound)
-	VJ.STOPSOUND(self.CurrentBreathSound)
-	VJ.STOPSOUND(self.CurrentIdleSound)
-	VJ.STOPSOUND(self.CurrentIdleDialogueAnswerSound)
-	VJ.STOPSOUND(self.CurrentInvestigateSound)
-	VJ.STOPSOUND(self.CurrentLostEnemySound)
-	VJ.STOPSOUND(self.CurrentAlertSound)
-	VJ.STOPSOUND(self.CurrentBeforeMeleeAttackSound)
-	//VJ.STOPSOUND(self.CurrentMeleeAttackSound)
-	//VJ.STOPSOUND(self.CurrentExtraMeleeAttackSound)
-	//VJ.STOPSOUND(self.CurrentMeleeAttackMissSound)
-	VJ.STOPSOUND(self.CurrentPainSound)
-	VJ.STOPSOUND(self.CurrentFollowPlayerSound)
-	VJ.STOPSOUND(self.CurrentUnFollowPlayerSound)
-	VJ.STOPSOUND(self.CurrentMoveOutOfPlayersWaySound)
-	VJ.STOPSOUND(self.CurrentBecomeEnemyToPlayerSound)
-	VJ.STOPSOUND(self.CurrentOnPlayerSightSound)
-	VJ.STOPSOUND(self.CurrentDamageByPlayerSound)
-	VJ.STOPSOUND(self.CurrentGrenadeAttackSound)
-	VJ.STOPSOUND(self.CurrentOnGrenadeSightSound)
-	VJ.STOPSOUND(self.CurrentOnDangerSightSound)
-	VJ.STOPSOUND(self.CurrentSuppressingSound)
-	VJ.STOPSOUND(self.CurrentWeaponReloadSound)
-	VJ.STOPSOUND(self.CurrentMedicBeforeHealSound)
-	VJ.STOPSOUND(self.CurrentMedicAfterHealSound)
-	VJ.STOPSOUND(self.CurrentMedicReceiveHealSound)
-	VJ.STOPSOUND(self.CurrentCallForHelpSound)
-	VJ.STOPSOUND(self.CurrentOnReceiveOrderSound)
-	VJ.STOPSOUND(self.CurrentOnKilledEnemySound)
-	VJ.STOPSOUND(self.CurrentAllyDeathSound)
+	StopSound(self.CurrentGeneralSpeechSound)
+	StopSound(self.CurrentBreathSound)
+	StopSound(self.CurrentIdleSound)
+	StopSound(self.CurrentIdleDialogueAnswerSound)
+	StopSound(self.CurrentInvestigateSound)
+	StopSound(self.CurrentLostEnemySound)
+	StopSound(self.CurrentAlertSound)
+	StopSound(self.CurrentBeforeMeleeAttackSound)
+	//StopSound(self.CurrentMeleeAttackSound)
+	//StopSound(self.CurrentExtraMeleeAttackSound)
+	//StopSound(self.CurrentMeleeAttackMissSound)
+	StopSound(self.CurrentPainSound)
+	StopSound(self.CurrentFollowPlayerSound)
+	StopSound(self.CurrentUnFollowPlayerSound)
+	StopSound(self.CurrentMoveOutOfPlayersWaySound)
+	StopSound(self.CurrentBecomeEnemyToPlayerSound)
+	StopSound(self.CurrentOnPlayerSightSound)
+	StopSound(self.CurrentDamageByPlayerSound)
+	StopSound(self.CurrentGrenadeAttackSound)
+	StopSound(self.CurrentOnGrenadeSightSound)
+	StopSound(self.CurrentOnDangerSightSound)
+	StopSound(self.CurrentSuppressingSound)
+	StopSound(self.CurrentWeaponReloadSound)
+	StopSound(self.CurrentMedicBeforeHealSound)
+	StopSound(self.CurrentMedicAfterHealSound)
+	StopSound(self.CurrentMedicReceiveHealSound)
+	StopSound(self.CurrentCallForHelpSound)
+	StopSound(self.CurrentOnReceiveOrderSound)
+	StopSound(self.CurrentOnKilledEnemySound)
+	StopSound(self.CurrentAllyDeathSound)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:GetAttackSpread(wep, target)

@@ -41,7 +41,7 @@ VJ_STATE_ONLY_ANIMATION = 100 -- Only plays animation tasks, attacks. Disables: 
 VJ_STATE_ONLY_ANIMATION_CONSTANT = 101 -- Same as VJ_STATE_ONLY_ANIMATION + Idle animation will not play!
 VJ_STATE_ONLY_ANIMATION_NOATTACK = 102 -- Same as VJ_STATE_ONLY_ANIMATION + Attacks will be disabled
 
--- Source NPC condition definitions because they are not defined in GMod for some reason ??
+-- These are finally defined in Garry's Mod itself, but unfortunately it requires an extra call, tests showed it's more optimized to call the ones below
 COND_BEHIND_ENEMY = 29
 COND_BETTER_WEAPON_AVAILABLE = 46
 COND_CAN_MELEE_ATTACK1 = 23
