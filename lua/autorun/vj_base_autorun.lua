@@ -172,6 +172,7 @@ AddCSLuaFile("includes/modules/vj_ai_task.lua")
 local spawnCategory = "VJ Base"
 	-- ====== Category Information (Many are for popular categories) ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- Game icons can be found in: "Steam\appcache\librarycache"
+VJ.AddCategoryInfo(spawnCategory, {Icon = "vj_base/icons/vrejgaming.png"})
 VJ.AddCategoryInfo("Alien Swarm", {Icon = "vj_base/icons/alienswarm.png"})
 VJ.AddCategoryInfo("Black Mesa", {Icon = "vj_base/icons/blackmesa.png"})
 VJ.AddCategoryInfo("Cry Of Fear", {Icon = "vj_base/icons/cryoffear.png"})

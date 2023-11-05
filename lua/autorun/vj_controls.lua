@@ -25,6 +25,9 @@ end
 			- Icon = Category icon
 -----------------------------------------------------------]]
 VJ.AddCategoryInfo = function(category, options)
+	if options.Icon then -- To support default GMod icon list
+		list.Set("ContentCategoryIcons", category, options.Icon)
+	end
 	list.Set("VJBASE_CATEGORY_INFO", category, {
 		icon = options.Icon or "icon16/monkey.png",
 	})

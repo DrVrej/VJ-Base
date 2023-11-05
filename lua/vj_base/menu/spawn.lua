@@ -8,37 +8,9 @@
 ------ Hooks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	hook.Add("PopulateVJBaseHome","AddVJBaseSpawnMenu_Home",function(pnlContent,tree,node)
-		local hometree = tree:AddNode("Home", "icon16/monkey.png")
-		hometree.PropPanel = vgui.Create("ContentContainer", pnlContent)
-		hometree.PropPanel:SetVisible(false)
-		hometree.PropPanel:SetTriggerSpawnlistChange(false)
-		//hometree.PropPanel:MoveToFront()
-		
-		function hometree:DoClick()
-			pnlContent:SwitchPanel(self.PropPanel)
-		end
-		
-		local Header1 = vgui.Create("DLabel")
-		Header1:SetPos(40, 40)
-		Header1:SetSize(200, 70)
-		Header1:SetTextColor(Color(255, 102, 0, 255))
-		Header1:SetText("Welcome to VJ Base!")
-		hometree.PropPanel:Add(Header1)
-		
-		local Text1 = vgui.Create("DLabel")
-		Header1:SetPos(80, 80)
-		Text1:SetSize(100, 35)
-		Text1:SetTextColor(Color(102, 204, 255, 255))
-		Text1:SetText("By: DrVrej")
-		hometree.PropPanel:Add(Text1)
-		
-		hometree:InternalDoClick()
-	end)
-	--[-------------------------------------------------------]--
 	local function VJ_PopulateTrees(pnlContent, tree, node, vjTreeName, vjIcon, vjList)
 		local roottree = tree:AddNode(vjTreeName, vjIcon)
-		if vjTreeName == "SNPCs" then
+		if vjTreeName == "NPCs" then
 			roottree:MoveToFront() -- Make this the main tree
 		end
 		roottree.PropPanel = vgui.Create("ContentContainer", pnlContent)
@@ -67,10 +39,10 @@ if CLIENT then
 			
 			-- Category icon
 			local icon = vjIcon -- Make the default icon the category icon
-			if list.HasEntry("VJBASE_CATEGORY_INFO", CategoryName) then
-				icon = CatInfoList[CategoryName].icon
-			elseif CategoryName == "Default" then
+			if CategoryName == "Default" then
 				icon = "vj_base/icons/vrejgaming.png"
+			elseif list.HasEntry("VJBASE_CATEGORY_INFO", CategoryName) then
+				icon = CatInfoList[CategoryName].icon
 			end
 			
 			local node = roottree:AddNode(CategoryName, icon)
@@ -85,7 +57,7 @@ if CLIENT then
 			catHeader:SetText(CategoryName)
 			CatPropPanel:Add(catHeader)
 			
-			if vjTreeName == "SNPCs" then
+			if vjTreeName == "NPCs" then
 				for name, ent in SortedPairsByMemberValue(v, "Name") do
 					local t = {
 						nicename	= ent.Name or name,
@@ -125,33 +97,54 @@ if CLIENT then
 			end
 		end
 		roottree:SetExpanded(true)
-		if vjTreeName == "SNPCs" then
+		if vjTreeName == "NPCs" then
 			roottree:InternalDoClick() -- Automatically select this folder when the menu first opens
 		end
 	end
 	--[-------------------------------------------------------]--
-	hook.Add("PopulateVJBaseNPC", "AddVJBaseSpawnMenu_NPC", function(pnlContent, tree, node)
-		VJ_PopulateTrees(pnlContent, tree, node, "SNPCs", "icon16/monkey.png", "VJBASE_SPAWNABLE_NPC")
+	/*
+	hook.Add("PopulateVJBaseHome", "AddVJBaseSpawnMenu_Home", function(pnlContent, tree, node)
+		local hometree = tree:AddNode("Home", "icon16/monkey.png")
+		hometree.PropPanel = vgui.Create("ContentContainer", pnlContent)
+		hometree.PropPanel:SetVisible(false)
+		hometree.PropPanel:SetTriggerSpawnlistChange(false)
+		//hometree.PropPanel:MoveToFront()
+		
+		function hometree:DoClick()
+			pnlContent:SwitchPanel(self.PropPanel)
+		end
+		
+		local Header1 = vgui.Create("DLabel")
+		Header1:SetPos(40, 40)
+		Header1:SetSize(200, 70)
+		Header1:SetTextColor(Color(255, 102, 0, 255))
+		Header1:SetText("Welcome to VJ Base!")
+		hometree.PropPanel:Add(Header1)
+		
+		local Text1 = vgui.Create("DLabel")
+		Header1:SetPos(80, 80)
+		Text1:SetSize(100, 35)
+		Text1:SetTextColor(Color(102, 204, 255, 255))
+		Text1:SetText("By: DrVrej")
+		hometree.PropPanel:Add(Text1)
+		
+		hometree:InternalDoClick()
 	end)
+	*/
 	--[-------------------------------------------------------]--
-	hook.Add("PopulateVJBaseWeapons","AddVJBaseSpawnMenu_Weapon", function(pnlContent, tree, node)
+	hook.Add("PopulateVJBaseMain", "PopulateVJBaseMain", function(pnlContent, tree, node)
+		VJ_PopulateTrees(pnlContent, tree, node, "NPCs", "icon16/monkey.png", "VJBASE_SPAWNABLE_NPC")
 		VJ_PopulateTrees(pnlContent, tree, node, "Weapons", "icon16/gun.png", "VJBASE_SPAWNABLE_WEAPON")
-	end)
-	--[-------------------------------------------------------]--
-	hook.Add("PopulateVJBaseEntities","AddVJBaseSpawnMenu_Entity",function(pnlContent,tree,node)
 		VJ_PopulateTrees(pnlContent, tree, node, "Entities", "icon16/bricks.png", "VJBASE_SPAWNABLE_ENTITIES")
-	end)
-	--[-------------------------------------------------------]--
-	hook.Add("PopulateVJBaseTools","AddVJBaseSpawnMenu_Tool",function(pnlContent,tree,node)
+		
+		-- START of tools category
 		local tooltree = tree:AddNode("Tools", "icon16/bullet_wrench.png")
 		tooltree.PropPanel = vgui.Create("ContentContainer", pnlContent)
 		tooltree.PropPanel:SetVisible(false)
 		tooltree.PropPanel:SetTriggerSpawnlistChange(false)
-
 		function tooltree:DoClick()
 			pnlContent:SwitchPanel(self.PropPanel)
 		end
-		
 		local ToolList = spawnmenu.GetTools()
 		if (ToolList) then
 			for _, nv in pairs(ToolList) do
@@ -184,10 +177,12 @@ if CLIENT then
 			end
 		end
 		tooltree:SetExpanded(true)
+		-- END of tools category
 	end)
 	
 	--[-------------------------------------------------------]--
-	-- Adds the searching functionality for the VJ Base spawn menu. Note: This algorithm is based on the base GMod algorithm.
+	-- Adds the searching functionality for the VJ Base spawn menu.
+	-- Note: This is based on the default GMod code.
 	search.AddProvider(function(str)
 		local results = {}
 		local entities = {}
@@ -230,14 +225,16 @@ if CLIENT then
 	end, "vjbase_npcs")
 
 	--[-------------------------------------------------------]--
+	-- Create the main spawn menu tab, set it to be placed after the default "Vehicles" tab
 	spawnmenu.AddCreationTab("VJ Base", function()
 		local ctrl = vgui.Create("SpawnmenuContentPanel")
-		ctrl:EnableSearch("vjbase_npcs", "PopulateVJBaseNPC")
+		ctrl:EnableSearch("vjbase_npcs", "PopulateVJBaseMain")
+		ctrl:CallPopulateHook("PopulateVJBaseMain")
 		//ctrl:CallPopulateHook("PopulateVJBaseHome")
-		ctrl:CallPopulateHook("PopulateVJBaseNPC")
-		ctrl:CallPopulateHook("PopulateVJBaseWeapons")
-		ctrl:CallPopulateHook("PopulateVJBaseEntities")
-		ctrl:CallPopulateHook("PopulateVJBaseTools")
+		//ctrl:CallPopulateHook("PopulateVJBaseNPC")
+		//ctrl:CallPopulateHook("PopulateVJBaseWeapons")
+		//ctrl:CallPopulateHook("PopulateVJBaseEntities")
+		//ctrl:CallPopulateHook("PopulateVJBaseTools")
 		
 		local sidebar = ctrl.ContentNavBar
 		sidebar.Options = vgui.Create( "VJ_SpawnmenuNPCSidebarToolbox", sidebar )
