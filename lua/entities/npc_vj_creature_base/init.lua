@@ -3172,8 +3172,8 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		corpse:SetSkin((self.DeathCorpseSkin == -1 and self:GetSkin()) or self.DeathCorpseSkin)
 		
 		if self.DeathCorpseSetBodyGroup == true then -- Yete asega true-e, ooremen gerna bodygroup tenel
-			for i = 0,18 do -- 18 = Bodygroup limit
-				corpse:SetBodygroup(i,self:GetBodygroup(i))
+			for i = 0, self:GetNumBodyGroups() do
+				corpse:SetBodygroup(i, self:GetBodygroup(i))
 			end
 			if self.DeathCorpseBodyGroup.a != -1 then -- Yete asiga nevaz meg chene, user-in teradz tevere kordzadze
 				corpse:SetBodygroup(self.DeathCorpseBodyGroup.a, self.DeathCorpseBodyGroup.b)

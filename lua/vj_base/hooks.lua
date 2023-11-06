@@ -57,81 +57,79 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if SERVER then
-	local NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true,monster_scientist=true,monster_barney=true}
-	
-	local ignoreEnts = {monster_generic=true, monster_furniture=true, npc_furniture=true, monster_gman=true, npc_grenade_frag=true, bullseye_strider_focus=true, npc_bullseye=true, npc_enemyfinder=true, hornet=true}
-	local grenadeEnts = {npc_grenade_frag=true,grenade_hand=true,obj_spore=true,obj_grenade=true,obj_handgrenade=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true,cw_flash_thrown=true,ent_hl1_grenade=true}
-	local grenadeThrowBackEnts = {npc_grenade_frag=true,obj_spore=true,obj_handgrenade=true,obj_cpt_grenade=true,cw_grenade_thrown=true,cw_flash_thrown=true,cw_smoke_thrown=true,ent_hl1_grenade=true}
-	--
-	hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
-		local entClass = ent:GetClass()
-		if ent:IsNPC() then
-			if !ignoreEnts[entClass] then
-				local isVJ = ent.IsVJBaseSNPC
-				if isVJ then
-					ent.NextProcessT = CurTime() + 0.15
-				else
-					-- Set the tags for default player allies
-					if NPCTbl_Resistance[entClass] then
-						ent.PlayerFriendly = true
-						ent.FriendsWithAllPlayerAllies = true
-					end
-				end
-				timer.Simple(0.1, function() -- Make sure the NPC is initialized properly
-					if IsValid(ent) then
-						if isVJ == true && ent.CurrentPossibleEnemies == nil then ent.CurrentPossibleEnemies = {} end
-						local entsTbl = ents.GetAll()
-						local count = 1
-						local cvSeePlys = !VJ_CVAR_IGNOREPLAYERS
-						local isPossibleEnemy = ((ent:IsNPC() && ent:Health() > 0 && (ent.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) or (ent:IsPlayer()))
-						for x = 1, #entsTbl do
-							local v = entsTbl[x]
-							if (v:IsNPC() or v:IsPlayer()) && !ignoreEnts[v:GetClass()] then
-								-- Add enemies to the created entity (if it's a VJ Base SNPC)
-								if isVJ == true then
-									ent:EntitiesToNoCollideCode(v)
-									if (v:IsNPC() && (v:GetClass() != entClass && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && cvSeePlys /*&& v:Alive()*/) then
-										ent.CurrentPossibleEnemies[count] = v
-										count = count + 1
-									end
-								end
-								-- Add the created entity to the list of possible enemies of VJ Base SNPCs
-								if isPossibleEnemy && entClass != v:GetClass() && v.IsVJBaseSNPC then
-									v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = ent //v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
-								end
+local NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true,monster_scientist=true,monster_barney=true}
+
+local ignoreEnts = {monster_generic=true, monster_furniture=true, npc_furniture=true, monster_gman=true, npc_grenade_frag=true, bullseye_strider_focus=true, npc_bullseye=true, npc_enemyfinder=true, hornet=true}
+local grenadeEnts = {npc_grenade_frag=true,grenade_hand=true,obj_spore=true,obj_grenade=true,obj_handgrenade=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true,cw_flash_thrown=true,ent_hl1_grenade=true}
+local grenadeThrowBackEnts = {npc_grenade_frag=true,obj_spore=true,obj_handgrenade=true,obj_cpt_grenade=true,cw_grenade_thrown=true,cw_flash_thrown=true,cw_smoke_thrown=true,ent_hl1_grenade=true}
+--
+hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
+	local entClass = ent:GetClass()
+	if SERVER && ent:IsNPC() && !ignoreEnts[entClass] then
+		local isVJ = ent.IsVJBaseSNPC
+		if isVJ then
+			ent.NextProcessT = CurTime() + 0.15
+		else
+			-- Set the tags for default player allies
+			if NPCTbl_Resistance[entClass] then
+				ent.PlayerFriendly = true
+				ent.FriendsWithAllPlayerAllies = true
+			end
+		end
+		timer.Simple(0.1, function() -- Make sure the NPC is initialized properly
+			if IsValid(ent) then
+				if isVJ == true && ent.CurrentPossibleEnemies == nil then ent.CurrentPossibleEnemies = {} end
+				local entsTbl = ents.GetAll()
+				local count = 1
+				local cvSeePlys = !VJ_CVAR_IGNOREPLAYERS
+				local isPossibleEnemy = ((ent:IsNPC() && ent:Health() > 0 && (ent.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) or (ent:IsPlayer()))
+				for x = 1, #entsTbl do
+					local v = entsTbl[x]
+					if (v:IsNPC() or v:IsPlayer()) && !ignoreEnts[v:GetClass()] then
+						-- Add enemies to the created entity (if it's a VJ Base SNPC)
+						if isVJ == true then
+							ent:EntitiesToNoCollideCode(v)
+							if (v:IsNPC() && (v:GetClass() != entClass && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && cvSeePlys /*&& v:Alive()*/) then
+								ent.CurrentPossibleEnemies[count] = v
+								count = count + 1
 							end
 						end
+						-- Add the created entity to the list of possible enemies of VJ Base SNPCs
+						if isPossibleEnemy && entClass != v:GetClass() && v.IsVJBaseSNPC then
+							v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = ent //v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
+						end
 					end
-				end)
+				end
 			end
-		elseif grenadeEnts[entClass] then
-			ent.VJTag_ID_Grenade = true
-			if grenadeThrowBackEnts[entClass] then
-				ent.VJTag_IsPickupable = true
-			end
+		end)
+	end
+	-- Make this portion run for server AND client to make sure the tags are shared!
+	if grenadeEnts[entClass] then
+		ent.VJTag_ID_Grenade = true
+		if grenadeThrowBackEnts[entClass] then
+			ent.VJTag_IsPickupable = true
 		end
-	end)
-	
-	/*
-	-- Retrieving outputs from NPCs or other entities | Outputs: https://developer.valvesoftware.com/wiki/Base.fgd/Garry%27s_Mod
-	local triggerLua = ents.Create("lua_run")
-	triggerLua:SetName("triggerhook")
-	triggerLua:Spawn()
-	
-	hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
-		if ent:IsNPC() && ent.IsVJBaseSNPC == true then
-			-- Format: <output name> <targetname>:<inputname>:<parameter>:<delay>:<max times to fire, -1 means infinite>
-			self:Fire("AddOutput", "OnIgnite triggerhook:RunPassedCode:hook.Run( 'OnOutput' ):0:-1")
-		end
-	end)
+	end
+end)
 
-	hook.Add("OnOutput", "OnOutput", function()
-		local activator, caller = ACTIVATOR, CALLER
-		print(activator, caller)
-	end )
-	*/
-end
+/*
+-- Retrieving outputs from NPCs or other entities | Outputs: https://developer.valvesoftware.com/wiki/Base.fgd/Garry%27s_Mod
+local triggerLua = ents.Create("lua_run")
+triggerLua:SetName("triggerhook")
+triggerLua:Spawn()
+
+hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
+	if ent:IsNPC() && ent.IsVJBaseSNPC == true then
+		-- Format: <output name> <targetname>:<inputname>:<parameter>:<delay>:<max times to fire, -1 means infinite>
+		self:Fire("AddOutput", "OnIgnite triggerhook:RunPassedCode:hook.Run( 'OnOutput' ):0:-1")
+	end
+end)
+
+hook.Add("OnOutput", "OnOutput", function()
+	local activator, caller = ACTIVATOR, CALLER
+	print(activator, caller)
+end )
+*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 	local ent = data.Entity
