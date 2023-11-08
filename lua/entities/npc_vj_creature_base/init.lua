@@ -207,12 +207,11 @@ ENT.Bleeds = true -- Does the SNPC bleed? (Blood decal, particle, etc.)
 ENT.BloodColor = "" -- The blood type, this will determine what it should use (decal, particle, etc.)
 	-- Types: "Red" || "Yellow" || "Green" || "Orange" || "Blue" || "Purple" || "White" || "Oil"
 ENT.HasBloodParticle = true -- Does it spawn a particle when damaged?
-ENT.CustomBlood_Particle = {} -- Particles to spawn when it's damaged
+ENT.CustomBlood_Particle = {} -- Particles to spawn when it's damaged | Leave empty for the base to decide
 ENT.HasBloodPool = true -- Does it have a blood pool?
-ENT.CustomBlood_Pool = {} -- Blood pool types after it dies
-ENT.BloodPoolSize = "Normal" -- What's the size of the blood pool? | Sizes: "Normal" || "Small" || "Tiny"
+ENT.CustomBlood_Pool = {} -- Blood pool types after it dies | Leave empty for the base to decide
 ENT.HasBloodDecal = true -- Does it spawn a decal when damaged?
-ENT.CustomBlood_Decal = {} -- Decals to spawn when it's damaged
+ENT.CustomBlood_Decal = {} -- Decals to spawn when it's damaged | Leave empty for the base to decide
 ENT.BloodDecalUseGMod = false -- Should use the current default decals defined by Garry's Mod? (This only applies for certain blood types only!)
 ENT.BloodDecalDistance = 150 -- How far the decal can spawn in world units
 	-- ====== Immunity Variables ====== --
@@ -685,7 +684,7 @@ function ENT:CustomOn_PoseParameterLookingCode(pitch, yaw, roll) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnSchedule() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
--- UNCOMMENT TO USE
+-- UNCOMMENT TO USE | Called from the engine
 -- function ENT:ExpressionFinished(strExp) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Called whenever VJ.CreateSound or VJ.EmitSound is called | return a new file path to replace the one that is about to play
@@ -702,9 +701,8 @@ function ENT:CustomOnSchedule() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnTouch(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnCondition(cond)
-	//print(self, " Condition: ", cond, " - ", self:ConditionName(cond))
-end
+-- UNCOMMENT TO USE | Called from the engine
+-- function ENT:OnCondition(cond) print(self, " Condition: ", cond, " - ", self:ConditionName(cond)) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE
 -- function ENT:CustomOnAcceptInput(key, activator, caller, data) end
@@ -1112,13 +1110,13 @@ function ENT:Initialize()
 	self.CurrentPossibleEnemies = {}
 	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.3, 6)
 	self.UseTheSameGeneralSoundPitch_PickedNumber = (self.UseTheSameGeneralSoundPitch and math.random(self.GeneralSoundPitch1, self.GeneralSoundPitch2)) or 0
-	self:SetupBloodColor(self.BloodColor)
 	if self.DisableInitializeCapabilities == false then self:SetInitializeCapabilities() end
 	self:SetHealth((GetConVar("vj_npc_allhealth"):GetInt() > 0) and GetConVar("vj_npc_allhealth"):GetInt() or self:VJ_GetDifficultyValue(self.StartHealth))
 	self.StartHealth = self:Health()
 	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
 	self:CustomOnInitialize()
 	if self.CustomInitialize then self:CustomInitialize() end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
+	self:SetupBloodColor(self.BloodColor) -- Run it after "CustomOnInitialize" so its collision bounds would be defined
 	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + (self.IdleAlwaysWander and 0 or 1)) -- If self.NextWanderTime isn't given a value THEN if self.IdleAlwaysWander isn't true, wait at least 1 sec before wandering
 	self.SightDistance = (GetConVar("vj_npc_seedistance"):GetInt() > 0) and GetConVar("vj_npc_seedistance"):GetInt() or self.SightDistance
 	if self.Immune_Physics then self:SetImpactEnergyScale(0) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]

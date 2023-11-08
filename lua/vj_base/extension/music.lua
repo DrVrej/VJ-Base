@@ -15,11 +15,11 @@ elseif CLIENT then
 	
 	net.Receive("vj_music_run", function(len)
 		local ent = net.ReadEntity()
-		local sdTbl = net.ReadTable()
+		local sdFile = net.ReadString()
 		local sdVol = net.ReadFloat()
 		local sdPlayback = net.ReadFloat()
 		-- Flags: "noplay" = Forces the sound not to play as soon as this function is called
-		sound.PlayFile("sound/" .. VJ.PICK(sdTbl), "noplay", function(sdChan, errorID, errorName)
+		sound.PlayFile("sound/" .. sdFile, "noplay", function(sdChan, errorID, errorName)
 			if IsValid(sdChan) then
 				if #VJ.Music_Queue <= 0 then sdChan:Play() end
 				sdChan:EnableLooping(true)

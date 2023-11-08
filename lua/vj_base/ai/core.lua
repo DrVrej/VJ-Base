@@ -1715,120 +1715,100 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Sets the blood color including damage particle, decal and blood pool
-		- blColor = The blood color to set it to
+	Sets the NPC's blood color (particle, decal, blood pool)
+		- blColor = The blood color to set it to | Must be a string, check the list below
 -----------------------------------------------------------]]
--- self.CurrentChoosenBlood_Particle, self.CurrentChoosenBlood_Decal, self.CurrentChoosenBlood_Pool
+local bloodNames = {
+	["Red"] = {
+		particle = "blood_impact_red_01", // vj_impact1_red
+		decal = "VJ_Blood_Red",
+		decal_gmod = "Blood",
+		pool = {
+			[0] = "vj_bleedout_red_tiny",
+			[1] = "vj_bleedout_red_small",
+			[2] = "vj_bleedout_red"
+		}
+	},
+	["Yellow"] = {
+		particle = "blood_impact_yellow_01", // vj_impact1_yellow
+		decal = "VJ_Blood_Yellow",
+		decal_gmod = "YellowBlood",
+		pool = {
+			[0] = "vj_bleedout_yellow_tiny",
+			[1] = "vj_bleedout_yellow_small",
+			[2] = "vj_bleedout_yellow"
+		}
+	},
+	["Green"] = {
+		particle = "vj_impact1_green",
+		decal = "VJ_Blood_Green",
+		pool = {
+			[0] = "vj_bleedout_green_tiny",
+			[1] = "vj_bleedout_green_small",
+			[2] = "vj_bleedout_green"
+		}
+	},
+	["Orange"] = {
+		particle = "vj_impact1_orange",
+		decal = "VJ_Blood_Orange",
+		pool = {
+			[0] = "vj_bleedout_orange_tiny",
+			[1] = "vj_bleedout_orange_small",
+			[2] = "vj_bleedout_orange"
+		}
+	},
+	["Blue"] = {
+		particle = "vj_impact1_blue",
+		decal = "VJ_Blood_Blue",
+		pool = {
+			[0] = "vj_bleedout_blue_tiny",
+			[1] = "vj_bleedout_blue_small",
+			[2] = "vj_bleedout_blue"
+		}
+	},
+	["Purple"] = {
+		particle = "vj_impact1_purple",
+		decal = "VJ_Blood_Purple",
+		pool = {
+			[0] = "vj_bleedout_purple_tiny",
+			[1] = "vj_bleedout_purple_small",
+			[2] = "vj_bleedout_purple"
+		}
+	},
+	["White"] = {
+		particle = "vj_impact1_white",
+		decal = "VJ_Blood_White",
+		pool = {
+			[0] = "vj_bleedout_white_tiny",
+			[1] = "vj_bleedout_white_small",
+			[2] = "vj_bleedout_white"
+		}
+	},
+	["Oil"] = {
+		particle = "vj_impact1_oil",
+		decal = "VJ_Blood_Oil",
+		pool = {
+			[0] = "vj_bleedout_oil_tiny",
+			[1] = "vj_bleedout_oil_small",
+			[2] = "vj_bleedout_oil"
+		}
+	},
+}
+--
 function ENT:SetupBloodColor(blColor)
-	blColor = blColor or ""
-	if blColor == "" then return end -- If it's empty then return
-	if blColor == "Red" then
-		if !VJ.PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"blood_impact_red_01"} end // vj_impact1_red
+	if !isstring(blColor) then return end -- Only strings allowed!
+	local npcSize = self:OBBMaxs():Distance(self:OBBMins())
+	npcSize = ((npcSize < 25 and 0) or npcSize < 50 and 1) or 2 -- 0 = tiny | 1 = small | 2 = normal
+	local blood = bloodNames[blColor]
+	if blood then
+		if !VJ.PICK(self.CustomBlood_Particle) then
+			self.CustomBlood_Particle = blood.particle
+		end
 		if !VJ.PICK(self.CustomBlood_Decal) then
-			if self.BloodDecalUseGMod == true then
-				self.CustomBlood_Decal = {"Blood"}
-			else
-				self.CustomBlood_Decal = {"VJ_Blood_Red"}
-			end
+			self.CustomBlood_Decal = self.BloodDecalUseGMod and blood.decal_gmod or blood.decal
 		end
 		if !VJ.PICK(self.CustomBlood_Pool) then
-			if self.BloodPoolSize == "Small" then
-				self.CustomBlood_Pool = {"vj_bleedout_red_small"}
-			elseif self.BloodPoolSize == "Tiny" then
-				self.CustomBlood_Pool = {"vj_bleedout_red_tiny"}
-			else
-				self.CustomBlood_Pool = {"vj_bleedout_red"}
-			end
-		end
-	elseif blColor == "Yellow" then
-		if !VJ.PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"blood_impact_yellow_01"} end // vj_impact1_yellow
-		if !VJ.PICK(self.CustomBlood_Decal) then
-			if self.BloodDecalUseGMod == true then
-				self.CustomBlood_Decal = {"YellowBlood"}
-			else
-				self.CustomBlood_Decal = {"VJ_Blood_Yellow"}
-			end
-		end
-		if !VJ.PICK(self.CustomBlood_Pool) then
-			if self.BloodPoolSize == "Small" then
-				self.CustomBlood_Pool = {"vj_bleedout_yellow_small"}
-			elseif self.BloodPoolSize == "Tiny" then
-				self.CustomBlood_Pool = {"vj_bleedout_yellow_tiny"}
-			else
-				self.CustomBlood_Pool = {"vj_bleedout_yellow"}
-			end
-		end
-	elseif blColor == "Green" then
-		if !VJ.PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_green"} end
-		if !VJ.PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Green"} end
-		if !VJ.PICK(self.CustomBlood_Pool) then
-			if self.BloodPoolSize == "Small" then
-				self.CustomBlood_Pool = {"vj_bleedout_green_small"}
-			elseif self.BloodPoolSize == "Tiny" then
-				self.CustomBlood_Pool = {"vj_bleedout_green_tiny"}
-			else
-				self.CustomBlood_Pool = {"vj_bleedout_green"}
-			end
-		end
-	elseif blColor == "Orange" then
-		if !VJ.PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_orange"} end
-		if !VJ.PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Orange"} end
-		if !VJ.PICK(self.CustomBlood_Pool) then
-			if self.BloodPoolSize == "Small" then
-				self.CustomBlood_Pool = {"vj_bleedout_orange_small"}
-			elseif self.BloodPoolSize == "Tiny" then
-				self.CustomBlood_Pool = {"vj_bleedout_orange_tiny"}
-			else
-				self.CustomBlood_Pool = {"vj_bleedout_orange"}
-			end
-		end
-	elseif blColor == "Blue" then
-		if !VJ.PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_blue"} end
-		if !VJ.PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Blue"} end
-		if !VJ.PICK(self.CustomBlood_Pool) then
-			if self.BloodPoolSize == "Small" then
-				self.CustomBlood_Pool = {"vj_bleedout_blue_small"}
-			elseif self.BloodPoolSize == "Tiny" then
-				self.CustomBlood_Pool = {"vj_bleedout_blue_tiny"}
-			else
-				self.CustomBlood_Pool = {"vj_bleedout_blue"}
-			end
-		end
-	elseif blColor == "Purple" then
-		if !VJ.PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_purple"} end
-		if !VJ.PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Purple"} end
-		if !VJ.PICK(self.CustomBlood_Pool) then
-			if self.BloodPoolSize == "Small" then
-				self.CustomBlood_Pool = {"vj_bleedout_purple_small"}
-			elseif self.BloodPoolSize == "Tiny" then
-				self.CustomBlood_Pool = {"vj_bleedout_purple_tiny"}
-			else
-				self.CustomBlood_Pool = {"vj_bleedout_purple"}
-			end
-		end
-	elseif blColor == "White" then
-		if !VJ.PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_white"} end
-		if !VJ.PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_White"} end
-		if !VJ.PICK(self.CustomBlood_Pool) then
-			if self.BloodPoolSize == "Small" then
-				self.CustomBlood_Pool = {"vj_bleedout_white_small"}
-			elseif self.BloodPoolSize == "Tiny" then
-				self.CustomBlood_Pool = {"vj_bleedout_white_tiny"}
-			else
-				self.CustomBlood_Pool = {"vj_bleedout_white"}
-			end
-		end
-	elseif blColor == "Oil" then
-		if !VJ.PICK(self.CustomBlood_Particle) then self.CustomBlood_Particle = {"vj_impact1_black"} end
-		if !VJ.PICK(self.CustomBlood_Decal) then self.CustomBlood_Decal = {"VJ_Blood_Oil"} end
-		if !VJ.PICK(self.CustomBlood_Pool) then
-			if self.BloodPoolSize == "Small" then
-				self.CustomBlood_Pool = {"vj_bleedout_oil_small"}
-			elseif self.BloodPoolSize == "Tiny" then
-				self.CustomBlood_Pool = {"vj_bleedout_oil_tiny"}
-			else
-				self.CustomBlood_Pool = {"vj_bleedout_oil"}
-			end
+			self.CustomBlood_Pool = blood.pool[npcSize]
 		end
 	end
 end
@@ -1862,14 +1842,14 @@ function ENT:SpawnBloodDecal(dmginfo, hitgroup)
 	local trNormalN = tr.HitPos - tr.HitNormal
 	util.Decal(VJ.PICK(self.CustomBlood_Decal), trNormalP, trNormalN, self)
 	for _ = 1, 2 do
-		if math.random(1, 2) == 1 then util.Decal(VJ.PICK(self.CustomBlood_Decal), trNormalP + Vector(math.random(-70,70), math.random(-70,70), 0), trNormalN, self) end
+		if math.random(1, 2) == 1 then util.Decal(VJ.PICK(self.CustomBlood_Decal), trNormalP + Vector(math.random(-70, 70), math.random(-70, 70), 0), trNormalN, self) end
 	end
 	
 	-- Kedni ayroun
-	if math.random(1,2) == 1 then
+	if math.random(1, 2) == 1 then
 		local d2_endpos = pos + Vector(0, 0, - math_clamp(force:Length() * 10, 100, self.BloodDecalDistance))
 		util.Decal(VJ.PICK(self.CustomBlood_Decal), pos, d2_endpos, self)
-		if math.random(1, 2) == 1 then util.Decal(VJ.PICK(self.CustomBlood_Decal), pos, d2_endpos + Vector(math.random(-120,120), math.random(-120,120), 0), self) end
+		if math.random(1, 2) == 1 then util.Decal(VJ.PICK(self.CustomBlood_Decal), pos, d2_endpos + Vector(math.random(-120, 120), math.random(-120, 120), 0), self) end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1880,21 +1860,22 @@ function ENT:SpawnBloodPool(dmginfo, hitgroup)
 	local corpseEnt = self.Corpse
 	if !IsValid(corpseEnt) then return end
 	local getBloodPool = VJ.PICK(self.CustomBlood_Pool)
-	if getBloodPool == false then return end
-	timer.Simple(2.2, function()
-		if IsValid(corpseEnt) then
-			local pos = corpseEnt:GetPos() + corpseEnt:OBBCenter()
-			local tr = util.TraceLine({
-				start = pos,
-				endpos = pos - vecZ30,
-				filter = corpseEnt, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
-				mask = CONTENTS_SOLID
-			})
-			if tr.HitWorld && (tr.HitNormal == vecZ1) then // (tr.Fraction <= 0.405)
-				ParticleEffect(getBloodPool, tr.HitPos, defAng, nil)
+	if getBloodPool then
+		timer.Simple(2.2, function()
+			if IsValid(corpseEnt) then
+				local pos = corpseEnt:GetPos() + corpseEnt:OBBCenter()
+				local tr = util.TraceLine({
+					start = pos,
+					endpos = pos - vecZ30,
+					filter = corpseEnt, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
+					mask = CONTENTS_SOLID
+				})
+				if tr.HitWorld && (tr.HitNormal == vecZ1) then // (tr.Fraction <= 0.405)
+					ParticleEffect(getBloodPool, tr.HitPos, defAng, nil)
+				end
 			end
-		end
-	end)
+		end)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IdleSoundCode(customSd, sdType)
@@ -2082,7 +2063,7 @@ function ENT:StartSoundTrack()
 		self.VJTag_SD_PlayingMusic = true
 		net.Start("vj_music_run")
 			net.WriteEntity(self)
-			net.WriteTable(self.SoundTbl_SoundTrack)
+			net.WriteString(VJ.PICK(self.SoundTbl_SoundTrack))
 			net.WriteFloat(self.SoundTrackVolume)
 			net.WriteFloat(self.SoundTrackPlaybackRate)
 			//net.WriteFloat(self.SoundTrackFadeOutTime)

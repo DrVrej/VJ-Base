@@ -192,12 +192,11 @@ ENT.Bleeds = true -- Does the SNPC bleed? (Blood decal, particle, etc.)
 ENT.BloodColor = "" -- The blood type, this will determine what it should use (decal, particle, etc.)
 	-- Types: "Red" || "Yellow" || "Green" || "Orange" || "Blue" || "Purple" || "White" || "Oil"
 ENT.HasBloodParticle = true -- Does it spawn a particle when damaged?
-ENT.CustomBlood_Particle = {} -- Particles to spawn when it's damaged
+ENT.CustomBlood_Particle = {} -- Particles to spawn when it's damaged | Leave empty for the base to decide
 ENT.HasBloodPool = true -- Does it have a blood pool?
-ENT.CustomBlood_Pool = {} -- Blood pool types after it dies
-ENT.BloodPoolSize = "Normal" -- What's the size of the blood pool? | Sizes: "Normal" || "Small" || "Tiny"
+ENT.CustomBlood_Pool = {} -- Blood pool types after it dies | Leave empty for the base to decide
 ENT.HasBloodDecal = true -- Does it spawn a decal when damaged?
-ENT.CustomBlood_Decal = {} -- Decals to spawn when it's damaged
+ENT.CustomBlood_Decal = {} -- Decals to spawn when it's damaged | Leave empty for the base to decide
 ENT.BloodDecalUseGMod = false -- Should use the current default decals defined by Garry's Mod? (This only applies for certain blood types only!)
 ENT.BloodDecalDistance = 150 -- How far the decal can spawn in world units
 	-- ====== Immunity Variables ====== --
@@ -357,7 +356,6 @@ ENT.AnimTbl_WeaponReload = {ACT_RELOAD} -- Animations that play when the NPC rel
 ENT.AnimTbl_WeaponReloadBehindCover = {ACT_RELOAD_LOW} -- Animations that play when the NPC reloads, but behind cover
 ENT.WeaponReload_FindCover = true -- Should it first find cover before reloading?
 ENT.WeaponReloadAnimationFaceEnemy = true -- Should it face the enemy while playing the weapon reload animation?
-ENT.WeaponReloadAnimationDecreaseLengthAmount = 0 -- This will decrease the time until it starts moving or attack again. Use it to fix animation pauses until it chases the enemy.
 ENT.WeaponReloadAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 	-- ====== Weapon Inventory Variables ====== --
 	-- Weapons are given on spawn and the NPC will only switch to those if the requirements are met
@@ -674,7 +672,7 @@ function ENT:CustomOnSetupWeaponHoldTypeAnims(hType) return false end -- return 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnSchedule() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
--- UNCOMMENT TO USE
+-- UNCOMMENT TO USE | Called from the engine
 -- function ENT:ExpressionFinished(strExp) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Called whenever "VJ.CreateSound" or "VJ.EmitSound" is called | return a new file path to replace the one that is about to play
@@ -691,9 +689,8 @@ function ENT:CustomOnSchedule() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnTouch(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnCondition(cond)
-	//print(self, " Condition: ", cond, " - ", self:ConditionName(cond))
-end
+-- UNCOMMENT TO USE | Called from the engine
+-- function ENT:OnCondition(cond) print(self, " Condition: ", cond, " - ", self:ConditionName(cond)) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE
 -- function ENT:CustomOnAcceptInput(key, activator, caller, data) end
@@ -1151,7 +1148,6 @@ function ENT:Initialize()
 	self.WeaponInventory = {}
 	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.3, 6)
 	self.UseTheSameGeneralSoundPitch_PickedNumber = (self.UseTheSameGeneralSoundPitch and math.random(self.GeneralSoundPitch1, self.GeneralSoundPitch2)) or 0
-	self:SetupBloodColor(self.BloodColor)
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
 		self.DisableWeapons = true
 		self.Weapon_NoSpawnMenu = true
@@ -1163,6 +1159,7 @@ function ENT:Initialize()
 	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
 	self:CustomOnInitialize()
 	if self.CustomInitialize then self:CustomInitialize() end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
+	self:SetupBloodColor(self.BloodColor) -- Run it after "CustomOnInitialize" so its collision bounds would be defined
 	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + (self.IdleAlwaysWander and 0 or 1)) -- If self.NextWanderTime isn't given a value THEN if self.IdleAlwaysWander isn't true, wait at least 1 sec before wandering
 	self.SightDistance = (GetConVar("vj_npc_seedistance"):GetInt() > 0) and GetConVar("vj_npc_seedistance"):GetInt() or self.SightDistance
 	if self.Immune_Physics then self:SetImpactEnergyScale(0) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -2746,25 +2743,24 @@ function ENT:Think()
 					if eneValid == true then self:PlaySoundSystem("WeaponReload") end -- tsayn han e minag yete teshnami ga!
 					self:CustomOnWeaponReload()
 					if self.DisableWeaponReloadAnimation == false then
-						local function DoReloadAnimation(anim)
-							if VJ.AnimExists(self, anim) then -- Only if the given animation actually exists!
-								local dur = self:DecideAnimationLength(anim, false, self.WeaponReloadAnimationDecreaseLengthAmount)
+						local function DoReloadAnimation(givenAnim)
+							local anim, animDur = self:VJ_ACT_PLAYACTIVITY(givenAnim, true, false, self.WeaponReloadAnimationFaceEnemy, self.WeaponReloadAnimationDelay)
+							if anim != ACT_INVALID then
 								local wep = self.CurrentWeaponEntity
 								if wep.IsVJBaseWeapon == true then wep:NPC_Reload() end
-								timer.Create("timer_reload_end"..self:EntIndex(), dur, 1, function()
+								timer.Create("timer_reload_end"..self:EntIndex(), animDur, 1, function()
 									if IsValid(self) && IsValid(wep) && self:GetWeaponState() == VJ.NPC_WEP_STATE_RELOADING then
 										wep:SetClip1(wep:GetMaxClip1())
 										if wep.IsVJBaseWeapon == true then wep:CustomOnReload_Finish() end
 										self:SetWeaponState()
 									end
 								end)
-								self:VJ_ACT_PLAYACTIVITY(anim, true, dur, self.WeaponReloadAnimationFaceEnemy, self.WeaponReloadAnimationDelay, {PlayBackRateCalculated=true})
 								self.AllowToDo_WaitForEnemyToComeOut = false
 								-- If NOT controlled by a player AND is a gesture make it stop moving so it doesn't run after the enemy right away
 								if !plyControlled && string_find(anim, "vjges_") then
 									self:StopMoving()
 								end
-								return true -- We have successfully ran the animation!
+								return true -- We have successfully ran the reload animation!
 							end
 							return false -- The given animation was invalid!
 						end

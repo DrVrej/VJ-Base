@@ -36,7 +36,7 @@ local vj_animdur = VJ.AnimDuration
 function metaNPC:DecideAnimationLength(anim, override, decrease)
 	if isbool(anim) then return 0 end
 	
-	if override == false then -- Base decides
+	if !override then -- Base decides
 		return (vj_animdur(self, anim) - (decrease or 0)) / self:GetPlaybackRate()
 	elseif isnumber(override) then -- User decides
 		return override / self:GetPlaybackRate()

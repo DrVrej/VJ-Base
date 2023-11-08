@@ -212,7 +212,7 @@ VJ.AddParticle("particles/vj_blood1.pcf",{
 	"vj_bleedout_yellow_tiny",
 })
 VJ.AddParticle("particles/vj_impact1.pcf",{
-	"vj_impact1_black",
+	"vj_impact1_oil",
 	"vj_impact1_blue",
 	"vj_impact1_green",
 	"vj_impact1_orange",
