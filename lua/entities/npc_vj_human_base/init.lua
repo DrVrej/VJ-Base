@@ -115,9 +115,10 @@ ENT.NextCallForHelpAnimationTime = 30 -- How much time until it can play the ani
 ENT.IsMedicSNPC = false -- Is this SNPC a medic? Does it heal other friendly friendly SNPCs, and players(If friendly)
 ENT.AnimTbl_Medic_GiveHealth = {ACT_SPECIAL_ATTACK1} -- Animations is plays when giving health to an ally
 ENT.Medic_DisableAnimation = false -- if true, it will disable the animation code
-ENT.Medic_TimeUntilHeal = false -- Time until the ally receives health | Set to false to let the base decide the time
+	-- To let the base automatically detect the animation duration, set this to false:
+ENT.Medic_TimeUntilHeal = false -- Time until the ally receives health
 ENT.Medic_CheckDistance = 600 -- How far does it check for allies that are hurt? | World units
-ENT.Medic_HealDistance = 100 -- How close does it have to be until it stops moving and heals its ally?
+ENT.Medic_HealDistance = 30 -- How close does it have to be until it stops moving and heals its ally?
 ENT.Medic_HealthAmount = 25 -- How health does it give?
 ENT.Medic_NextHealTime = VJ.SET(10, 15) -- How much time until it can give health to an ally again
 ENT.Medic_SpawnPropOnHeal = true -- Should it spawn a prop, such as small health vial at a attachment when healing an ally?
@@ -664,7 +665,7 @@ function ENT:CustomOnThink() end
 function ENT:CustomOnThink_AIEnabled() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Called at the end of every entity it checks every process time
--- function ENT:CustomOnSetupRelationships(ent, entFri, entDist) end
+-- function ENT:CustomOnMaintainRelationships(ent, entFri, entDist) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOn_PoseParameterLookingCode(pitch, yaw, roll) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2675,9 +2676,9 @@ function ENT:Think()
 			
 			-- Run the heavy processes
 			if curTime > self.NextProcessT then
-				self:SetupRelationships()
+				self:MaintainRelationships()
 				self:CheckForDangers()
-				self:DoMedicCheck()
+				self:MaintainMedicBehavior()
 				self.NextProcessT = curTime + self.NextProcessTime
 			end
 			
@@ -3777,7 +3778,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		-- If the current number of reachable enemies is higher then 1, then don't reset
 		if (eneValid && (curEnemies - 1) >= 1) or (!eneValid && curEnemies >= 1) then
 			//self:VJ_DoSetEnemy(v, false, true)
-			self:SetupRelationships() -- Select a new enemy
+			self:MaintainRelationships() -- Select a new enemy
 			self.NextProcessT = CurTime() + self.NextProcessTime
 			eneData.Reset = false
 			return false

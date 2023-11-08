@@ -1078,78 +1078,79 @@ function ENT:DoMedicReset()
 	self.Medic_CurrentEntToHeal = NULL
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoMedicCheck()
-	if !self.IsMedicSNPC or self.NoWeapon_UseScaredBehavior_Active then return end
+function ENT:MaintainMedicBehavior()
+	if !self.IsMedicSNPC or self.NoWeapon_UseScaredBehavior_Active then return end -- Do NOT heal if playing scared animations!
 	if !self.Medic_Status then -- Not healing anyone, so check around for allies
 		if CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled then return end
 		for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
-			if v.IsVJBaseSNPC != true && !v:IsPlayer() then continue end -- If it's not a VJ Base SNPC or a player, then move on
-			if v:EntIndex() != self:EntIndex() && !v.VJTag_IsHealing && !v.VJTag_ID_Vehicle && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:CheckRelationship(v) == D_LI then
+			-- Only allow VJ Base NPCs and players
+			if (v.IsVJBaseSNPC or v:IsPlayer()) && v != self && !v.VJTag_IsHealing && !v.VJTag_ID_Vehicle && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && !IsValid(v:GetEnemy())) or (v:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:CheckRelationship(v) == D_LI then
 				self.Medic_CurrentEntToHeal = v
 				self.Medic_Status = "Active"
 				v.VJTag_IsHealing = true
 				self:StopMoving()
-				self:SetTarget(v)
-				self:VJ_TASK_GOTO_TARGET()
+				self:MaintainMedicBehavior()
 				return
 			end
 		end
 	elseif self.Medic_Status != "Healing" then
-		if !IsValid(self.Medic_CurrentEntToHeal) or VJ.IsAlive(self.Medic_CurrentEntToHeal) != true or (self.Medic_CurrentEntToHeal:Health() > self.Medic_CurrentEntToHeal:GetMaxHealth() * 0.75) then self:DoMedicReset() return end
-		if self:Visible(self.Medic_CurrentEntToHeal) && self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then -- Are we in healing distance?
+		local ally = self.Medic_CurrentEntToHeal
+		if !IsValid(ally) or !VJ.IsAlive(ally) or (ally:Health() > ally:GetMaxHealth() * 0.75) then self:DoMedicReset() return end
+		if self:Visible(ally) && self:VJ_GetNearestPointToEntityDistance(ally) <= self.Medic_HealDistance then -- Are we in healing distance?
 			self.Medic_Status = "Healing"
 			self:CustomOnMedic_BeforeHeal()
 			self:PlaySoundSystem("MedicBeforeHeal")
 			
 			-- Spawn the prop
 			if self.Medic_SpawnPropOnHeal == true && self:LookupAttachment(self.Medic_SpawnPropOnHealAttachment) != 0 then
-				self.Medic_SpawnedProp = ents.Create("prop_physics")
-				self.Medic_SpawnedProp:SetModel(self.Medic_SpawnPropOnHealModel)
-				self.Medic_SpawnedProp:SetLocalPos(self:GetPos())
-				self.Medic_SpawnedProp:SetOwner(self)
-				self.Medic_SpawnedProp:SetParent(self)
-				self.Medic_SpawnedProp:Fire("SetParentAttachment", self.Medic_SpawnPropOnHealAttachment)
-				self.Medic_SpawnedProp:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
-				self.Medic_SpawnedProp:Spawn()
-				self.Medic_SpawnedProp:Activate()
-				self.Medic_SpawnedProp:SetSolid(SOLID_NONE)
-				//self.Medic_SpawnedProp:AddEffects(EF_BONEMERGE)
-				self.Medic_SpawnedProp:SetRenderMode(RENDERMODE_TRANSALPHA)
-				self:DeleteOnRemove(self.Medic_SpawnedProp)
+				prop = ents.Create("prop_physics")
+				prop:SetModel(self.Medic_SpawnPropOnHealModel)
+				prop:SetLocalPos(self:GetPos())
+				prop:SetOwner(self)
+				prop:SetParent(self)
+				prop:Fire("SetParentAttachment", self.Medic_SpawnPropOnHealAttachment)
+				prop:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
+				prop:Spawn()
+				prop:Activate()
+				prop:SetSolid(SOLID_NONE)
+				//prop:AddEffects(EF_BONEMERGE)
+				prop:SetRenderMode(RENDERMODE_TRANSALPHA)
+				self:DeleteOnRemove(prop)
+				self.Medic_SpawnedProp = prop
 			end
 			
-			local anim = VJ.PICK(self.AnimTbl_Medic_GiveHealth)
-			local timeUntilHeal = self:DecideAnimationLength(anim, self.Medic_TimeUntilHeal, 0)
-			if self.Medic_DisableAnimation != true then
-				self:VJ_ACT_PLAYACTIVITY(anim, true, false, false)
+			-- Handle the heal time and animation
+			local timeUntilHeal = self.Medic_TimeUntilHeal
+			if !self.Medic_DisableAnimation then
+				local _, animTime = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_Medic_GiveHealth, true, self.Medic_TimeUntilHeal or false)
+				timeUntilHeal = animTime
 			end
 			
-			self:FaceCertainEntity(self.Medic_CurrentEntToHeal, false, timeUntilHeal)
+			self:FaceCertainEntity(ally, false, timeUntilHeal)
 			
 			-- Make the ally turn and look at me
-			local noturn = (self.Medic_CurrentEntToHeal.MovementType == VJ_MOVETYPE_STATIONARY and self.Medic_CurrentEntToHeal.CanTurnWhileStationary == false) or false
-			if !self.Medic_CurrentEntToHeal:IsPlayer() && noturn == false then
+			if !ally:IsPlayer() && (ally.MovementType != VJ_MOVETYPE_STATIONARY or (ally.MovementType == VJ_MOVETYPE_STATIONARY && ally.CanTurnWhileStationary == false)) then
 				self.NextWanderTime = CurTime() + 2
 				self.NextChaseTime = CurTime() + 2
-				self.Medic_CurrentEntToHeal:StopMoving()
-				self.Medic_CurrentEntToHeal:SetTarget(self)
-				self.Medic_CurrentEntToHeal:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+				ally:StopMoving()
+				ally:SetTarget(self)
+				ally:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 			end
 			
 			timer.Simple(timeUntilHeal, function()
 				if IsValid(self) then
-					if !IsValid(self.Medic_CurrentEntToHeal) then -- Ally doesn't exist anymore, reset
+					if !IsValid(ally) then -- Ally doesn't exist anymore, reset
 						self:DoMedicReset()
 					else -- If it exists...
-						if self:GetPos():Distance(self.Medic_CurrentEntToHeal:GetPos()) <= self.Medic_HealDistance then -- Are we still in healing distance?
-							if self:CustomOnMedic_OnHeal(self.Medic_CurrentEntToHeal) != false then
-								self.Medic_CurrentEntToHeal:RemoveAllDecals()
-								local friCurHP = self.Medic_CurrentEntToHeal:Health()
-								self.Medic_CurrentEntToHeal:SetHealth(math_clamp(friCurHP + self.Medic_HealthAmount, friCurHP, self.Medic_CurrentEntToHeal:GetMaxHealth()))
+						if self:VJ_GetNearestPointToEntityDistance(ally) <= (self.Medic_HealDistance + 20) then -- Are we still in healing distance?
+							if self:CustomOnMedic_OnHeal(ally) != false then
+								local friCurHP = ally:Health()
+								ally:SetHealth(math_clamp(friCurHP + self.Medic_HealthAmount, friCurHP, ally:GetMaxHealth()))
+								ally:RemoveAllDecals()
 							end
 							self:PlaySoundSystem("MedicOnHeal")
-							if self.Medic_CurrentEntToHeal.IsVJBaseSNPC == true then
-								self.Medic_CurrentEntToHeal:PlaySoundSystem("MedicReceiveHeal")
+							if ally.IsVJBaseSNPC == true then
+								ally:PlaySoundSystem("MedicReceiveHeal")
 							end
 							self:DoMedicReset()
 						else -- If we are no longer in healing distance, go after the ally again
@@ -1163,7 +1164,7 @@ function ENT:DoMedicCheck()
 		elseif !self:BusyWithActivity() then -- If we aren't in healing distance, then go after the ally
 			self.NextIdleTime = CurTime() + 4
 			self.NextChaseTime = CurTime() + 4
-			self:SetTarget(self.Medic_CurrentEntToHeal)
+			self:SetTarget(ally)
 			self:VJ_TASK_GOTO_TARGET()
 		end
 	end
@@ -1285,7 +1286,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local cosRad20 = math_cos(math_rad(20))
 --
-function ENT:SetupRelationships()
+function ENT:MaintainRelationships()
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.Behavior == VJ_BEHAVIOR_PASSIVE*/ then return false end
 	local posEnemies = self.CurrentPossibleEnemies
 	if posEnemies == nil then return false end
@@ -1503,7 +1504,7 @@ function ENT:SetupRelationships()
 					end
 				end
 			end
-			local funcCustom = self.CustomOnSetupRelationships; if funcCustom then funcCustom(self, v, entFri, vDistanceToMy) end
+			local funcCustom = self.CustomOnMaintainRelationships; if funcCustom then funcCustom(self, v, entFri, vDistanceToMy) end
 		end
 		//return true
 	end
