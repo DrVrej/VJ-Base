@@ -670,8 +670,11 @@ ENT.SoundTrackPlaybackRate = 1
 function ENT:CustomOnPreInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize()
-	-- self:SetCollisionBounds(Vector(50, 50, 100), Vector(-50, -50, 0)) -- Collision bounds of the NPC | WARNING: All 4 Xs and Ys should be the same!
-	-- self:SetSurroundingBounds(Vector(-300, -300, 0), Vector(300, 300, 500)) -- Damage bounds of the NPC, doesn't effect collision or OBB | NOTE: Only set this if the base one is not good enough! | Use "cl_ent_absbox" to view the bounds
+	-- Collision bounds of the NPC | NOTE: All 4 Xs and Ys should be the same! | To view: "cl_ent_bbox"
+	-- self:SetCollisionBounds(Vector(50, 50, 100), Vector(-50, -50, 0))
+	
+	-- Damage bounds of the NPC | NOTE: All 4 Xs and Ys should be the same! | To view: "cl_ent_absbox"
+	--self:SetSurroundingBounds(Vector(-150, -150, 0), Vector(150, 150, 200))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink() end
@@ -1103,9 +1106,6 @@ function ENT:Initialize()
 	self:SetMaxYawSpeed(self.TurningSpeed)
 	ConvarsOnInit(self)
 	self:DoChangeMovementType()
-	if self.SetSurroundingBoundsType then -- !!!!!!!!!!!!!! Outdated GMod Compatibility! !!!!!!!!!!!!!!
-		self:SetSurroundingBoundsType(BOUNDS_HITBOXES) // BOUNDS_COLLISION
-	end
 	self.VJ_AddCertainEntityAsEnemy = {}
 	self.VJ_AddCertainEntityAsFriendly = {}
 	self.CurrentPossibleEnemies = {}
@@ -1117,7 +1117,13 @@ function ENT:Initialize()
 	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
 	self:CustomOnInitialize()
 	if self.CustomInitialize then self:CustomInitialize() end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
-	self:SetupBloodColor(self.BloodColor) -- Run it after "CustomOnInitialize" so its collision bounds would be defined
+	-- Auto compute damage bounds if the damage bounds == collision bounds then the developer has NOT changed it | Call after "CustomOnInitialize"
+	if self:GetSurroundingBounds() == self:WorldSpaceAABB() then
+		local collisionMin, collisionMax = self:GetCollisionBounds()
+		self:SetSurroundingBounds(Vector(collisionMin.x * 1.8, collisionMin.y * 1.8, collisionMin.z * 1.2), Vector(collisionMax.x * 1.8, collisionMax.y * 1.8, collisionMax.z * 1.2))
+	end
+	self:SetSurroundingBoundsType(BOUNDS_HITBOXES) -- AVOID! Has to constantly recompute the bounds! | Issues: Entities get stuck inside the NPC, movements failing, unable to grab the NPC with physgun
+	self:SetupBloodColor(self.BloodColor) -- Collision bounds dependent, call after "CustomOnInitialize"
 	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + (self.IdleAlwaysWander and 0 or 1)) -- If self.NextWanderTime isn't given a value THEN if self.IdleAlwaysWander isn't true, wait at least 1 sec before wandering
 	self.SightDistance = (GetConVar("vj_npc_seedistance"):GetInt() > 0) and GetConVar("vj_npc_seedistance"):GetInt() or self.SightDistance
 	if self.Immune_Physics then self:SetImpactEnergyScale(0) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]

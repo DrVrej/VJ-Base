@@ -159,7 +159,7 @@ end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("EntityTakeDamage", "VJ_EntityTakeDamage", function(target, dmginfo)
 	local attacker = dmginfo:GetAttacker()
-	if IsValid(target) && target.IsVJBaseSNPC && IsValid(attacker) && attacker:IsNPC() && dmginfo:IsBulletDamage() && attacker:Disposition(target) != D_HT && (attacker:GetClass() == target:GetClass() or target:Disposition(attacker) == D_LI /*or target:Disposition(attacker) == 4*/) then
+	if IsValid(target) && target.IsVJBaseSNPC && IsValid(attacker) && attacker:IsNPC() && dmginfo:IsBulletDamage() && attacker:Disposition(target) != D_HT && (attacker:GetClass() == target:GetClass() or target:Disposition(attacker) == D_LI) then
 		dmginfo:SetDamage(0)
 	end
 end)
