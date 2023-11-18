@@ -22,10 +22,13 @@ VJ.ATTACK_STATE_EXECUTED		= 10 -- The current attack has been executed at least 
 VJ.ATTACK_STATE_EXECUTED_HIT	= 11 -- The current attack has been executed at least once AND hit an entity at least once (Melee & Leap attacks)
 
 -- NPC facing status
-VJ.NPC_FACING_NONE				= 0 -- No status is set (Default)
-VJ.NPC_FACING_ENEMY				= 1 -- Currently attempting to face the enemy
-VJ.NPC_FACING_ENTITY			= 2 -- Currently attempting to face a specific entity
-VJ.NPC_FACING_POSITION			= 3 -- Currently attempting to face a specific position
+VJ.NPC_FACE_NONE				= 0 -- No status is set (Default)
+VJ.NPC_FACE_ENEMY				= 1 -- Currently attempting to face the enemy
+VJ.NPC_FACE_ENEMY_VISIBLE		= 2 -- Currently attempting to face the enemy
+VJ.NPC_FACE_ENTITY				= 3 -- Currently attempting to face a specific entity
+VJ.NPC_FACE_ENTITY_VISIBLE		= 4 -- Currently attempting to face a specific entity
+VJ.NPC_FACE_POSITION			= 5 -- Currently attempting to face a specific position
+VJ.NPC_FACE_POSITION_VISIBLE	= 6 -- Currently attempting to face a specific position
 
 -- Danger detected type (Used by human NPCs)
 VJ.NPC_DANGER_TYPE_ENTITY		= 1 -- Entity type of danger that could harm the NPC | Commonly produced by projectiles | Associated: "ent.VJTag_ID_Danger"

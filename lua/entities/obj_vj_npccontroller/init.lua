@@ -337,7 +337,7 @@ function ENT:Think()
 		if npc.IsVJBaseSNPC_Human == true then
 			if IsValid(npcWeapon) && !npc:IsMoving() && npcWeapon.IsVJBaseWeapon == true && ply:KeyDown(IN_ATTACK2) && npc.AttackType == VJ.ATTACK_TYPE_NONE && npc.vACT_StopAttacks == false && npc:GetWeaponState() == VJ.NPC_WEP_STATE_READY then
 				//npc:SetAngles(Angle(0,math.ApproachAngle(npc:GetAngles().y,ply:GetAimVector():Angle().y,100),0))
-				npc:FaceCertainPosition(bullseyePos, 0.2)
+				npc:SetTurnTarget(bullseyePos, 0.2)
 				canTurn = false
 				// Prints show that the animations aren't being set, hence why they have trouble shooting
 				if VJ.IsCurrentAnimation(npc, npc:TranslateToWeaponAnim(npc.CurrentWeaponAnimation)) == false && VJ.IsCurrentAnimation(npc, npc.AnimTbl_WeaponAttack) == false then
@@ -364,7 +364,7 @@ function ENT:Think()
 				if self.VJC_NPC_CanTurn == true && ((npc.MovementType != VJ_MOVETYPE_STATIONARY) or (npc.MovementType == VJ_MOVETYPE_STATIONARY && npc.CanTurnWhileStationary == true)) then
 					if (VJ.AnimExists(npc, ACT_TURN_LEFT) == false && VJ.AnimExists(npc, ACT_TURN_RIGHT) == false) or (angdif <= 50 && npc:GetActivity() != ACT_TURN_LEFT && npc:GetActivity() != ACT_TURN_RIGHT) then
 						//npc:VJ_TASK_IDLE_STAND()
-						npc:FaceCertainPosition(bullseyePos, 0.1)
+						npc:SetTurnTarget(bullseyePos, 0.1)
 					else
 						self.NextIdleStandTime = 0
 						npc:SetLastPosition(bullseyePos) // ply:GetEyeTrace().HitPos
@@ -424,11 +424,11 @@ function ENT:StartMovement(Dir, Rot)
 		npc:SetLastPosition(finalPos)
 		npc:VJ_TASK_GOTO_LASTPOS(ply:KeyDown(IN_SPEED) and "TASK_RUN_PATH" or "TASK_WALK_PATH", function(x)
 			if ply:KeyDown(IN_ATTACK2) && npc.IsVJBaseSNPC_Human then
-				x.ConstantlyFaceEnemy = true
+				x.FaceData = {Type = VJ.NPC_FACE_ENEMY}
 				x.CanShootWhenMoving = true
 			else
 				if self.VJC_BullseyeTracking then
-					x.ConstantlyFaceEnemy = true
+					x.FaceData = {Type = VJ.NPC_FACE_ENEMY}
 				else
 					x:EngTask("TASK_FACE_LASTPOSITION", 0)
 				end

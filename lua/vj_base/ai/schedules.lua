@@ -180,13 +180,13 @@ function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 		end
 	end
 	
-	local curSched = self.CurrentSchedule
-	
 	-- Apply walk frames to both activities and sequences
 	-- Parts of it replicate TASK_PLAY_SEQUENCE - https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc_schedule.cpp#L3312
 	if !self:IsSequenceFinished() && !self:IsMoving() && ((self:GetSequence() == self:GetInternalVariable("m_nIdealSequence")) or (self:GetActivity() == ACT_DO_NOT_DISTURB)) && self:GetSequenceMoveDist(self:GetSequence()) > 0 && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then
 		self:AutoMovement(self:GetAnimTimeInterval())
 	end
+	
+	local curSched = self.CurrentSchedule
 	
 	-- If we are currently running a schedule then run it otherwise call SelectSchedule to decide what to do next
 	if curSched then
@@ -216,11 +216,6 @@ function ENT:DoRunCode_OnFail(schedule)
 	if schedule.RunCode_OnFail != nil && IsValid(self) then schedule.AlreadyRanCode_OnFail = true schedule.RunCode_OnFail() return true end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoRunCode_OnFinish(schedule)
-	if schedule == nil or schedule.AlreadyRanCode_OnFinish == true then return false end
-	if schedule.RunCode_OnFinish != nil && IsValid(self) then schedule.AlreadyRanCode_OnFinish = true schedule.RunCode_OnFinish() return true end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnMovementFailed()
 	//print("VJ Base: Movement Failed! "..self:GetName())
 	local curSchedule = self.CurrentSchedule
@@ -240,22 +235,27 @@ function ENT:OnMovementComplete()
 	//print("Movement completed!")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-//local tr_addvec = Vector(0, 0, 2)
+-- lua_run PrintTable(Entity(1):GetEyeTrace().Entity.CurrentSchedule)
 local tasksRun = {TASK_RUN_PATH=true, TASK_RUN_PATH_FLEE=true, TASK_RUN_PATH_TIMED=true, TASK_RUN_PATH_FOR_UNITS=true, TASK_RUN_PATH_WITHIN_DIST=true}
 local tasksWalk = {TASK_WALK_PATH=true, TASK_WALK_PATH_TIMED=true, TASK_WALK_PATH_FOR_UNITS=true, TASK_WALK_PATH_WITHIN_DIST=true}
 --
 function ENT:StartSchedule(schedule)
 	if self.MovementType == VJ_MOVETYPE_STATIONARY && schedule.IsMovingTask == true then return end -- It's stationary therefore should not move!
 	if (self:GetState() == VJ_STATE_ONLY_ANIMATION or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self:GetState() == VJ_STATE_ONLY_ANIMATION_NOATTACK) && !schedule.IsPlayActivity then return end
-	if (IsValid(self:GetInternalVariable("m_hOpeningDoor")) or self:GetInternalVariable("m_flMoveWaitFinished") > 0) && self.CurrentSchedule != nil && schedule.Name == self.CurrentSchedule.Name then return end -- If it's the same task and it's opening a door, then DO NOT continue
+	local curSched = self.CurrentSchedule
+	if (IsValid(self:GetInternalVariable("m_hOpeningDoor")) or self:GetInternalVariable("m_flMoveWaitFinished") > 0) && curSched && schedule.Name == curSched.Name then return end -- If it's the same task and it's opening a door, then DO NOT continue
+	//print("StartSchedule:", schedule.Name)
+	-- Clean up any schedule it may have been doing
+	if curSched && !self.Dead then
+		self:ScheduleFinished(self.CurrentSchedule)
+	end
+	self:ClearCondition(COND_TASK_FAILED)
 	if (!schedule.RunCode_OnFail) then schedule.RunCode_OnFail = nil end -- Code that will run ONLY when it fails!
 	if (!schedule.RunCode_OnFinish) then schedule.RunCode_OnFinish = nil end -- Code that will run once the task finished (Will run even if failed)
 	if (!schedule.ResetOnFail) then schedule.ResetOnFail = false end -- Makes the NPC stop moving if it fails
 	if (!schedule.StopScheduleIfNotMoving) then schedule.StopScheduleIfNotMoving = false end -- Will stop from certain entities, such as other NPCs
 	if (!schedule.StopScheduleIfNotMoving_Any) then schedule.StopScheduleIfNotMoving_Any = false end -- Will stop from any blocking entity!
 	if (!schedule.CanBeInterrupted) then schedule.CanBeInterrupted = false end
-	if (!schedule.ConstantlyFaceEnemy) then schedule.ConstantlyFaceEnemy = false end -- Constantly face the enemy while doing this task
-	if (!schedule.ConstantlyFaceEnemyVisible) then schedule.ConstantlyFaceEnemyVisible = false end
 	if (!schedule.CanShootWhenMoving) then schedule.CanShootWhenMoving = false end -- Is it able to fire when moving?
 	if !schedule.IsMovingTask then
 		for _,v in ipairs(schedule.Tasks) do
@@ -282,15 +282,15 @@ function ENT:StartSchedule(schedule)
 		-- When using "BOUNDS_HITBOXES" for "SetSurroundingBoundsType", NPCs often end up inside each other, and this check causes movements to not run (NPCs end up freezing)
 		-- Needed very rarely, not worth running a trace hull and table has value check for every movement task
 	/*if schedule.IsMovingTask == true then
+		local tr_addVec = Vector(0, 0, 2)
 		local tr = util.TraceHull({
 			start = self:GetPos(),
 			endpos = self:GetPos(),
-			mins = self:OBBMins() + tr_addvec,
-			maxs = self:OBBMaxs() + tr_addvec,
+			mins = self:OBBMins() + tr_addVec,
+			maxs = self:OBBMaxs() + tr_addVec,
 			filter = self
 		})
 		if IsValid(tr.Entity) && tr.Entity:IsNPC() && !VJ.HasValue(self.EntitiesToNoCollide, tr.Entity:GetClass()) then
-			print("STOP I AM STUCK")
 			self:DoRunCode_OnFail(schedule)
 			return
 		end
@@ -301,13 +301,32 @@ function ENT:StartSchedule(schedule)
 		self:DoWeaponAttackMovementCode(true, (schedule.MoveType == 0 and 1) or 0) -- Send 1 if the current task is walking!
 		self:SetArrivalActivity(self.CurrentWeaponAnimation)
 	end
+	
+	-- Handle facing data sent by "FaceData"
+		-- Type = Type of facing it should do | Target = The vector/ent to face (Not required for enemy facing!)
+	local turnData = schedule.FaceData
+	if turnData then
+		local faceType = turnData.Type
+		if !self.CanTurnWhileMoving or !faceType then
+			turnData = nil
+		else
+			local turnTarget = turnData.Target
+			self:ResetTurnTarget()
+			self.TurnData.Type = faceType
+			self.TurnData.Target = isvector(turnTarget) and self:GetFaceAngle((turnTarget - self:GetPos()):Angle()) or turnTarget
+			self.TurnData.IsSchedule = true
+		end
+	end
+	
+	-- Conditions that the NPC will ignore as long as this schedule is active, these will reset after schedule is finished!
+	-- if you don't want it to reset on schedule finish then set & remove the conditions yourself outside of the schedule
+	if schedule.IgnoreConditions then
+		self:SetIgnoreConditions(schedule.IgnoreConditions)
+	end
+	
 	schedule.AlreadyRanCode_OnFail = false
 	schedule.AlreadyRanCode_OnFinish = false
-	// lua_run PrintTable(Entity(1):GetEyeTrace().Entity.CurrentSchedule)
 	//if self.VJ_DEBUG == true then PrintTable(schedule) end
-	//if schedule.Name != "vj_chase_enemy" then PrintTable(schedule) end
-	if !self.Dead then self:DoRunCode_OnFinish(self.CurrentSchedule) end -- Yete arten schedule garne, verchatsoor // BUG: Possible error if self.CurrentSchedule not valid??? \\
-	self:ClearCondition(COND_TASK_FAILED)
 	self.CurrentSchedule = schedule
 	self.CurrentTaskID = 1
 	self:SetTask(schedule:GetTask(1))
@@ -319,7 +338,21 @@ function ENT:DoSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ScheduleFinished(schedule)
-	self:DoRunCode_OnFinish(schedule or self.CurrentSchedule)
+	if schedule then
+		-- Handle "RunCode_OnFinish"
+		if !schedule.AlreadyRanCode_OnFinish && schedule.RunCode_OnFinish != nil then
+			schedule.AlreadyRanCode_OnFinish = true
+			schedule.RunCode_OnFinish()
+		end
+		-- Reset facing data if its based on a schedule!
+		if self.TurnData.IsSchedule then
+			self:ResetTurnTarget()
+		end
+		-- Clear ignored conditions from this schedule
+		if schedule.IgnoreConditions then
+			self:RemoveIgnoreConditions(schedule.IgnoreConditions)
+		end
+	end
 	self.CurrentSchedule = nil
 	self.CurrentTask = nil
 	self.CurrentTaskID = nil
@@ -346,7 +379,6 @@ end
 	Called every time a task is completed before moving onto to the next task
 -----------------------------------------------------------]]
 function ENT:OnTaskComplete()
-	//self:DoRunCode_OnFinish(self.CurrentSchedule) -- Will break many movement tasks (Ex: Humans Taking cover to reload)
 	self.CurrentTaskComplete = true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -16,7 +16,9 @@ local colorRed = Color(255, 0, 0)
 		- ang = Spawn angle | DEFAULT: 0, 0, 0
 		- color = Color of the entity | DEFAULT: 255, 0, 0
 		- time = How long until the entity is removed | DEFAULT: 3
-		- mdl = Model of the entity | DEFAULT: "models/hunter/blocks/cube025x025x025.mdl" (Small cube)
+		- mdl = Model of the entity | DEFAULT: Small cube
+			- Small cube: "models/hunter/blocks/cube025x025x025.mdl"
+			- Tiny cube: "models/hunter/plates/plate.mdl"
 	Returns
 		- Entity, the created test entity
 	Note: To quickly remove all of them run "lua_run for k,v in ipairs(ents.GetAll()) do if v:GetClass() == "prop_dynamic" then v:Remove() end end"

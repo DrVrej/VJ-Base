@@ -224,10 +224,10 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 		//self.NextIdleTime = velTimeCur
 	end
 	if extraOptions.FaceDest != false then
-		if extraOptions.FaceDestTarget == true && ((chaseEnemy && self.CombatFaceEnemy) or (!chaseEnemy)) then
-			self:FaceCertainEntity(dest, chaseEnemy, velTime)
+		if extraOptions.FaceDestTarget == true then
+			self:SetTurnTarget((chaseEnemy && self.CanTurnWhileMoving) and "Enemy" or dest, velTime)
 		else
-			self:FaceCertainPosition(finalPos, velTime)
+			self:SetTurnTarget(finalPos, velTime)
 		end
 		//self.AA_CurrentTurnAng = chaseEnemy and false or self:GetFaceAngle(self:GetFaceAngle((velPos):Angle()))
 	end
@@ -319,7 +319,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 		//self.NextIdleTime = velTimeCur
 	end
 	if extraOptions.FaceDest != false then
-		self:FaceCertainPosition(finalPos, velTime)
+		self:SetTurnTarget(finalPos, velTime)
 		//self.AA_CurrentTurnAng = self:GetFaceAngle((finalPos - tr.StartPos):Angle())
 		//self:SetLocalAngularVelocity(self:GetFaceAngle((finalPos-tr.StartPos):Angle()))
 	end

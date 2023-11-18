@@ -280,7 +280,7 @@ function ENT:CustomOnEat(status, statusInfo)
 		return true //statusInfo.owner.BloodData && statusInfo.owner.BloodData.Color == "Red"
 	elseif status == "BeginEating" then
 		self:SetIdleAnimation({ACT_GESTURE_RANGE_ATTACK1}, true)
-		return self:VJ_ACT_PLAYACTIVITY(ACT_ARM, true, false)
+		return select(2, self:VJ_ACT_PLAYACTIVITY(ACT_ARM, true, false))
 	elseif status == "Eat" then
 		VJ.EmitSound(self, "barnacle/bcl_chew"..math.random(1, 3)..".wav", 55)
 		-- Health changes
@@ -307,7 +307,7 @@ function ENT:CustomOnEat(status, statusInfo)
 		return 2 -- Eat every this seconds
 	elseif status == "StopEating" then
 		if statusInfo != "Dead" && self.EatingData.AnimStatus != "None" then -- Do NOT play anim while dead or has NOT prepared to eat
-			return self:VJ_ACT_PLAYACTIVITY(ACT_DISARM, true, false)
+			return select(2, self:VJ_ACT_PLAYACTIVITY(ACT_DISARM, true, false))
 		end
 	end
 	return 0
@@ -470,77 +470,110 @@ function ENT:GetPoseParameters(prt)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:GetFaceAngle(ang)
-	if self.TurningUseAllAxis == true then
-		return Angle(ang.x, ang.y, ang.z)
-	end
-	return Angle(0, ang.y, 0)
+	return self.TurningUseAllAxis and ang or Angle(0, ang.y, 0)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Makes the NPC face a certain position
-		- pos = Position to face
-		- faceTime = How long should it face that position? | DEFAULT = 0
-	Returns
-		- Angle, the angle it's going to face
+	Resets the current turn target
 -----------------------------------------------------------]]
-function ENT:FaceCertainPosition(pos, faceTime)
-	local faceAng = self:GetFaceAngle(((pos or defPos) - self:GetPos()):Angle())
-	if self.TurningUseAllAxis == true then
-		local myAng = self:GetAngles()
-		self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(faceAng.p, myAng.y, faceAng.r)))
-	end
-	self:SetIdealYawAndUpdate(faceAng.y)
-	//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
-	self.FacingStatus = VJ.NPC_FACING_POSITION
-	self.FacingData = faceAng
-	timer.Create("timer_facing_end"..self:EntIndex(), faceTime or 0, 1, function() self.FacingStatus = VJ.NPC_FACING_NONE; self.FacingData = nil end)
-	return faceAng
+function ENT:ResetTurnTarget()
+	self.TurnData.Type = VJ.NPC_FACE_NONE
+	self.TurnData.Target = nil
+	self.TurnData.StopOnFace = false
+	self.TurnData.IsSchedule = false
+	self.TurnData.LastYaw = 0
+	timer.Remove("timer_turning"..self:EntIndex())
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Makes the NPC face a certain entity
-		- ent = Entity to face
-		- faceCurEnemy = Should this be registered as enemy facing and constantly switch to the current enemy during its face time? | DEFAULT = true
-		- faceTime = How long should it face the entity? | DEFAULT = 0
+	Makes the NPC turn and face the given target
+		- target = The turn target | Valid inputs: Entity, Vector, "Enemy"
+		- faceTime = How long should it face the given target? | DEFAULT = 0 | -1 : face forever unless overridden, 0 : Only set it for a single frame!
+		- stopOnFace = If at any point the NPC ends up facing the target it will complete the facing! | DEFAULT: false
+			- This will also be triggered if something else (ex: movements) overrides the ideal yaw!
+			- If called on "Enemy" target and there is currently no active enemy, this will be triggered instantly!
+		- visibleOnly = Should it only face if the given target is visible? | DEFAULT: false
 	Returns
-		- Angle, the angle it's going to face
-		- false, if it didn't face the entity
+		- Angle, the final angle it's going to face
+		- false, turning failed
 -----------------------------------------------------------]]
-function ENT:FaceCertainEntity(ent, faceCurEnemy, faceTime)
-	if !IsValid(ent) or GetConVar("ai_disabled"):GetInt() == 1 or (self.MovementType == VJ_MOVETYPE_STATIONARY && !self.CanTurnWhileStationary) then return false end
-	if faceCurEnemy then
-		if IsValid(self:GetEnemy()) then -- Make sure to only do it if it even has an enemy
-			local faceAng = self:GetFaceAngle((ent:GetPos() - self:GetPos()):Angle())
+function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
+	if (self.MovementType == VJ_MOVETYPE_STATIONARY && !self.CanTurnWhileStationary) then return false end
+	local resultAng = false -- The final angle it's going to face
+	local updateTurn = true -- An override to disallow applying the angle now
+	-- Enemy facing
+	if target == "Enemy" then
+		//print("Face: ENEMY")
+		self:ResetTurnTarget()
+		local ene = self:GetEnemy()
+		-- If enemy is valid do normal facing otherwise return my angles because we didn't actually face an enemy
+		if IsValid(ene) then
+			resultAng = self:GetFaceAngle((ene:GetPos() - self:GetPos()):Angle())
+		else
+			resultAng = self:GetFaceAngle(self:GetAngles())
+			updateTurn = false
+		end
+		if faceTime != 0 then -- 0 = Face only this frame, so don't actually set turning data!
+			self.TurnData.Type = visibleOnly and VJ.NPC_FACE_ENEMY_VISIBLE or VJ.NPC_FACE_ENEMY
+		end
+	-- Vector facing
+	elseif isvector(target) then
+		//print("Face: VECTOR")
+		self:ResetTurnTarget()
+		resultAng = self:GetFaceAngle((target - self:GetPos()):Angle())
+		if faceTime != 0 then -- 0 = Face only this frame, so don't actually set turning data!
+			self.TurnData.Type = visibleOnly and VJ.NPC_FACE_POSITION_VISIBLE or VJ.NPC_FACE_POSITION
+			self.TurnData.Target = target
+		end
+	-- Entity facing
+	elseif IsValid(target) then
+		//print("Face: ENTITY")
+		self:ResetTurnTarget()
+		resultAng = self:GetFaceAngle((target:GetPos() - self:GetPos()):Angle())
+		if faceTime != 0 then -- 0 = Face only this frame, so don't actually set turning data!
+			self.TurnData.Type = visibleOnly and VJ.NPC_FACE_ENTITY_VISIBLE or VJ.NPC_FACE_ENTITY
+			self.TurnData.Target = target
+		end
+	end
+	if resultAng then
+		if updateTurn then
 			if self.TurningUseAllAxis == true then
 				local myAng = self:GetAngles()
-				self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(faceAng.p, myAng.y, faceAng.r)))
+				self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
 			end
-			self:SetIdealYawAndUpdate(faceAng.y)
+			self:SetIdealYawAndUpdate(resultAng.y)
 			//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
-			self.FacingStatus = VJ.NPC_FACING_ENEMY
-			self.FacingData = ent
-			timer.Create("timer_facing_end"..self:EntIndex(), faceTime or 0, 1, function() self.FacingStatus = VJ.NPC_FACING_NONE; self.FacingData = nil end)
-			return faceAng
+		else -- Only set it, do NOT update it!
+			self:SetIdealYaw(resultAng.y)
 		end
-		return false
-	else
-		local faceAng = self:GetFaceAngle((ent:GetPos() - self:GetPos()):Angle())
-		if self.TurningUseAllAxis == true then
-			local myAng = self:GetAngles()
-			self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(faceAng.p, myAng.y, faceAng.r)))
+		if faceTime != 0 then -- 0 = Face only this frame, so don't actually set turning data!
+			self.TurnData.StopOnFace = stopOnFace or false
+			self.TurnData.LastYaw = resultAng.y
+			if faceTime != -1 then -- -1 = Face forever and never reset unless overridden
+				timer.Create("timer_turning"..self:EntIndex(), faceTime or 0, 1, function()
+					self:ResetTurnTarget()
+				end)
+			end
 		end
-		self:SetIdealYawAndUpdate(faceAng.y)
-		//if self:IsSequenceFinished() then self:UpdateTurnActivity() end
-		self.FacingStatus = VJ.NPC_FACING_ENTITY
-		self.FacingData = ent
-		timer.Create("timer_facing_end"..self:EntIndex(), faceTime or 0, 1, function() self.FacingStatus = VJ.NPC_FACING_NONE; self.FacingData = nil end)
-		return faceAng
 	end
-	return false
+	return resultAng
+end
+-- !!!!!!!!!!!!!! DO NOT USE THESE FUNCTIONS !!!!!!!!!!!!!! [Backwards Compatibility!]
+function ENT:FaceCertainPosition(target, faceTime) return self:SetTurnTarget(target, faceTime, false, false) end
+function ENT:FaceCertainEntity(target, faceCurEnemy, faceTime) return self:SetTurnTarget(faceCurEnemy and "Enemy" or target, faceTime, false, false) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Based on: https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/game/server/ai_motor.cpp#L780
+function ENT:DeltaIdealYaw()
+    local    flCurrentYaw;
+    flCurrentYaw = (360 / 65536) * (math.floor(self:GetLocalAngles().y * (65536 / 360)) % 65535)
+    if flCurrentYaw == self:GetIdealYaw() then
+        return 0;
+    end
+    return math.AngleDifference(self:GetIdealYaw(), flCurrentYaw)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Gets the position set usually by the function self:SetLastPosition(vec)
+	Get the position set by the function "self:SetLastPosition(vec)""
 	Returns
 		- Vector, the last position
 -----------------------------------------------------------]]
@@ -957,11 +990,43 @@ function ENT:Touch(entity)
 			self:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
 			self:PlaySoundSystem("Alert")
 			self.TakingCoverT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
+			return
 		end
-	elseif self.DisableTouchFindEnemy == false && !IsValid(self:GetEnemy()) && self.IsFollowing == false && (entity:IsNPC() or (entity:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:CheckRelationship(entity) != D_LI then
+	elseif self.DisableTouchFindEnemy == false && !IsValid(self:GetEnemy()) && self.IsFollowing == false && (entity:IsNPC() or entity:IsPlayer()) && self:CheckRelationship(entity) != D_LI then
 		self:StopMoving()
 		self:SetTarget(entity)
 		self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+		return
+	end
+	
+	-- Handle "MoveOutOfFriendlyPlayersWay" system
+	if self.MoveOutOfFriendlyPlayersWay && !self.IsGuard then
+		-- entity is player
+		if entity:IsPlayer() then
+			if self:CheckRelationship(entity) == D_LI then
+				self:SetCondition(COND_PLAYER_PUSHING)
+				if !IsValid(self:GetTarget()) then -- Only set the target if it does NOT have one to not interfere with other behaviors!
+					self:SetTarget(entity)
+				end
+			end
+		-- entity is held by a player
+		elseif entity:IsPlayerHolding() then
+			local findPly = entity:GetOwner()
+			if !IsValid(findPly) then -- No owner found, try physics attacker
+				findPly = entity:GetPhysicsAttacker()
+				if !IsValid(findPly) then -- No physics attacker found, return it
+					findPly = false
+					return
+				end
+			end
+			-- Player was found, check if we are allied
+			if findPly && self:CheckRelationship(findPly) == D_LI then
+				self:SetCondition(COND_PLAYER_PUSHING)
+				if !IsValid(self:GetTarget()) then -- Only set the target if it does NOT have one to not interfere with other behaviors!
+					self:SetTarget(findPly)
+				end
+			end
+		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1046,7 +1111,7 @@ function ENT:Follow(ent, stopIfFollowing)
 				self:VJ_TASK_FACE_X("TASK_FACE_TARGET", function(x)
 					x.RunCode_OnFinish = function()
 						if IsValid(self.FollowData.Ent) then
-							self:VJ_TASK_GOTO_TARGET(((self:GetPos():Distance(self.FollowData.Ent:GetPos()) < (followData.MinDist * 1.5)) and "TASK_WALK_PATH") or "TASK_RUN_PATH", function(y) y.CanShootWhenMoving = true y.ConstantlyFaceEnemy = true end)
+							self:VJ_TASK_GOTO_TARGET(((self:GetPos():Distance(self.FollowData.Ent:GetPos()) < (followData.MinDist * 1.5)) and "TASK_WALK_PATH") or "TASK_RUN_PATH", function(y) y.CanShootWhenMoving = true y.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
 						end
 					end
 				end)
@@ -1126,7 +1191,7 @@ function ENT:MaintainMedicBehavior()
 				timeUntilHeal = animTime
 			end
 			
-			self:FaceCertainEntity(ally, false, timeUntilHeal)
+			self:SetTurnTarget(ally, timeUntilHeal)
 			
 			-- Make the ally turn and look at me
 			if !ally:IsPlayer() && (ally.MovementType != VJ_MOVETYPE_STATIONARY or (ally.MovementType == VJ_MOVETYPE_STATIONARY && ally.CanTurnWhileStationary == false)) then
@@ -1180,7 +1245,7 @@ function ENT:DoConstantlyFaceEnemy()
 		elseif self.ConstantlyFaceEnemy_IfAttacking == false && self.AttackType != VJ.ATTACK_TYPE_NONE then
 			return false
 		elseif (self.ConstantlyFaceEnemy_Postures == "Both") or (self.ConstantlyFaceEnemy_Postures == "Moving" && self:IsMoving()) or (self.ConstantlyFaceEnemy_Postures == "Standing" && !self:IsMoving()) then
-			self:FaceCertainEntity(self:GetEnemy())
+			self:SetTurnTarget("Enemy")
 			return true
 		end
 	end
@@ -1459,34 +1524,25 @@ function ENT:MaintainRelationships()
 				end
 			end
 			if vPlayer then
-				-- MoveOutOfFriendlyPlayersWay system
-				if entFri && self.MoveOutOfFriendlyPlayersWay && !self.IsGuard && !self:IsMoving() && CurTime() > self.TakingCoverT && !plyControlled && !self:BusyWithActivity() then
-					local dist = self.FollowingPlayer and 10 or 20
-					if /*self:Disposition(v) == D_LI &&*/ (self:VJ_GetNearestPointToEntityDistance(v) < dist) && v:GetVelocity():Length() > 0 && v:GetMoveType() != MOVETYPE_NOCLIP then
-						self.NextFollowUpdateT = CurTime() + 2
-						self:PlaySoundSystem("MoveOutOfPlayersWay")
-						//self:SetLastPosition(myPos + self:GetRight()*math.random(-50,-50))
-						self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run))
-						local vsched = vj_ai_schedule.New("vj_move_away")
-						vsched:EngTask("TASK_MOVE_AWAY_PATH", 120)
-						vsched:EngTask("TASK_RUN_PATH", 0)
-						vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-						/*vsched.RunCode_OnFinish = function()
-							timer.Simple(0.1,function()
-								if IsValid(self) then
-									self:SetTarget(v)
-									local vschedMoveAwayFail = vj_ai_schedule.New("vj_move_away_fail")
-									vschedMoveAwayFail:EngTask("TASK_FACE_TARGET", 0)
-									self:StartSchedule(vschedMoveAwayFail)
-								end
-							end)
-						end*/
-						//vsched.CanShootWhenMoving = true
-						//vsched.ConstantlyFaceEnemy = true
-						vsched.IsMovingTask = true
-						vsched.MoveType = 1
-						self:StartSchedule(vsched)
-						self.TakingCoverT = CurTime() + 0.2
+				-- MoveOutOfFriendlyPlayersWay system, Based on:
+					-- "CNPC_PlayerCompanion::PredictPlayerPush"	--> https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/hl2/npc_playercompanion.cpp#L548
+					-- "CAI_BaseNPC::TestPlayerPushing"				--> https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L12676
+				// && !self:BusyWithActivity()
+				if entFri && self.MoveOutOfFriendlyPlayersWay && !self.IsGuard && v:GetMoveType() != MOVETYPE_NOCLIP then
+					local plyVel = v:GetInternalVariable("m_vecSmoothedVelocity")
+					if plyVel:LengthSqr() >= 19600 then -- 140 * 140 = 19600
+						local delta = self:WorldSpaceCenter() - (v:WorldSpaceCenter() + plyVel * 0.4);
+						local myMaxs = self:OBBMaxs()
+						local myMins = self:OBBMins()
+						local zCalc = (myMaxs.z - myMins.z) * 0.5
+						local yCalc = myMaxs.y - myMins.y
+						-- (ply not under me) + (ply not very above me) + (ply is close to me)   |   All calculations depend on the NPC's collision size AND player's current speed
+						if delta.z < zCalc && (delta.z + zCalc + 150) > zCalc && delta:Length2DSqr() < ((yCalc * yCalc) * 1.999396) then -- 1.414 * 1.414 = 1.999396
+							self:SetCondition(COND_PLAYER_PUSHING)
+							if !IsValid(self:GetTarget()) then -- Only set the target if it does NOT have one to not interfere with other behaviors!
+								self:SetTarget(v)
+							end
+						end
 					end
 				end
 				-- HasOnPlayerSight system, used to do certain actions when it sees the player
@@ -1614,7 +1670,7 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 				if v.IsVJBaseSNPC_Human == true && !IsValid(v:GetActiveWeapon()) then
 					v:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
 				else
-					v:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH", function(x) x.CanShootWhenMoving = true x.ConstantlyFaceEnemy = true end)
+					v:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH", function(x) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
 				end
 			end
 			if limit != 0 && it >= limit then return true end -- Return true if it reached the limit
@@ -2006,7 +2062,7 @@ function ENT:RemoveTimers()
 	for _,v in ipairs(self.TimersToRemove) do
 		timer.Remove(v .. myIndex)
 	end
-	if self.AttackTimersCustom then -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
+	if self.AttackTimersCustom then -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 		for _,v in ipairs(self.AttackTimersCustom) do
 			timer.Remove(v .. myIndex)
 		end
