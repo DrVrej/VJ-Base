@@ -6,6 +6,7 @@
 
 -- Localized static values
 local isnumber = isnumber
+local vj_animdur = VJ.AnimDuration
 
 local metaEntity = FindMetaTable("Entity")
 local metaNPC = FindMetaTable("NPC")
@@ -17,32 +18,34 @@ if !metaNPC.IsVJBaseEdited then
 	metaNPC.IsVJBaseEdited = true
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	local orgSetMaxLookDistance = metaNPC.SetMaxLookDistance
-	--
+	-- Edit this function to make sure all 3 values are on par at all times!
 	function metaNPC:SetMaxLookDistance(dist)
-		//self:Fire("SetMaxLookDistance", dist) -- For Source sensing distance (OLD)
-		orgSetMaxLookDistance(self, dist)
-		//self:SetMaxLookDistance(dist) -- For Source sight & sensing distance
+		//self:Fire("SetMaxLookDistance", dist) -- Original "SetMaxLookDistance" handles it now (below)
+		orgSetMaxLookDistance(self, dist) -- For Source sight & sensing distance
 		self:SetSaveValue("m_flDistTooFar", dist) -- For certain Source attack, weapon, and condition distances
 		self.SightDistance = dist -- For VJ Base
-		//print(self:GetInternalVariable("m_flDistTooFar"), self:GetMaxLookDistance())
 	end
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Meta Additions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-local vj_animdur = VJ.AnimDuration
---
--- override = Used internally by the base, overrides the result and returns Val instead (Useful for variables that allow "false" to let the base decide the time)
-function metaNPC:DecideAnimationLength(anim, override, decrease)
-	if isbool(anim) then return 0 end
-	
-	if !override then -- Base decides
-		return (vj_animdur(self, anim) - (decrease or 0)) / self:GetPlaybackRate()
-	elseif isnumber(override) then -- User decides
-		return override / self:GetPlaybackRate()
-	else
-		return 0
+--[[---------------------------------------------------------
+	Helper function to get the movement velocity of various different entities (Useful to get the move speed of an entity!)
+	Returns
+		- Vector, the best movement velocity it found
+-----------------------------------------------------------]]
+function metaEntity:GetMovementVelocity()
+	-- NPCs
+	if self:IsNPC() then
+		-- Ground nav uses walk frames based move velocity, while all other nav types use pure velocity
+		if self:GetNavType() == NAV_GROUND then
+			return self:GetMoveVelocity()
+		end
+	-- Players
+	elseif self:IsPlayer() then
+		return self:GetInternalVariable("m_vecSmoothedVelocity")
 	end
+	return self:GetVelocity() -- If no overrides above then just return pure velocity
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function metaEntity:CalculateProjectile(projType, startPos, endPos, projVel)
@@ -72,6 +75,18 @@ function metaEntity:CalculateProjectile(projType, startPos, endPos, projVel)
 		end
 		result.z = math.tan(pitch) * pos_x
 		return result:GetNormal() * projVel
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- override = Used internally by the base, overrides the result and returns Val instead (Useful for variables that allow "false" to let the base decide the time)
+function metaNPC:DecideAnimationLength(anim, override, decrease)
+	if isbool(anim) then return 0 end
+	if !override then -- Base decides
+		return (vj_animdur(self, anim) - (decrease or 0)) / self:GetPlaybackRate()
+	elseif isnumber(override) then -- User decides
+		return override / self:GetPlaybackRate()
+	else
+		return 0
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
