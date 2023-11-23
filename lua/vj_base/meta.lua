@@ -48,9 +48,9 @@ function metaEntity:GetMovementVelocity()
 	return self:GetVelocity() -- If no overrides above then just return pure velocity
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function metaEntity:CalculateProjectile(projType, startPos, endPos, projVel)
+function metaEntity:CalculateProjectile(projType, startPos, endPos, speed)
 	if projType == "Line" then -- Suggested to disable gravity!
-		return ((endPos - startPos):GetNormal()) * projVel
+		return ((endPos - startPos):GetNormal()) * speed
 	elseif projType == "Curve" then
 		-- Oknoutyoun: https://gamedev.stackexchange.com/questions/53552/how-can-i-find-a-projectiles-launch-angle
 		-- Negar: https://wikimedia.org/api/rest_v1/media/math/render/svg/4db61cb4c3140b763d9480e51f90050967288397
@@ -58,15 +58,15 @@ function metaEntity:CalculateProjectile(projType, startPos, endPos, projVel)
 		local pos_x = result:Length()
 		local pos_y = endPos.z - startPos.z
 		local grav = physenv.GetGravity():Length()
-		local sqrtcalc1 = (projVel * projVel * projVel * projVel)
-		local sqrtcalc2 = grav * ((grav * (pos_x * pos_x)) + (2 * pos_y * (projVel * projVel)))
+		local sqrtcalc1 = (speed * speed * speed * speed)
+		local sqrtcalc2 = grav * ((grav * (pos_x * pos_x)) + (2 * pos_y * (speed * speed)))
 		local calcsum = sqrtcalc1 - sqrtcalc2 -- Yergou tevere aveltsour
 		if calcsum < 0 then -- Yete teve nevas e, ooremen sharnage
 			calcsum = math.abs(calcsum)
 		end
 		local angsqrt =  math.sqrt(calcsum)
-		local angpos = math.atan(((projVel * projVel) + angsqrt) / (grav * pos_x))
-		local angneg = math.atan(((projVel * projVel) - angsqrt) / (grav * pos_x))
+		local angpos = math.atan(((speed * speed) + angsqrt) / (grav * pos_x))
+		local angneg = math.atan(((speed * speed) - angsqrt) / (grav * pos_x))
 		local pitch = 1
 		if angpos > angneg then
 			pitch = angneg -- Yete asiga angpos enes ne, aveli veregele
@@ -74,7 +74,7 @@ function metaEntity:CalculateProjectile(projType, startPos, endPos, projVel)
 			pitch = angpos
 		end
 		result.z = math.tan(pitch) * pos_x
-		return result:GetNormal() * projVel
+		return result:GetNormal() * speed
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

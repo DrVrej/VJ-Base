@@ -184,7 +184,7 @@ ENT.Tank_FacingTarget = false -- Is it facing the enemy?
 ENT.Tank_Shell_Status = 0 -- 0 = Not reloaded or ready | 1 = Reloading | 2 = Reloaded & ready
 ENT.Tank_ProperHeightShoot = false -- Is the enemy position proper height for it to shoot?
 ENT.Tank_GunnerIsTurning = false
-ENT.Tank_Status = 0
+ENT.Tank_Status = 0 -- 0 = Can fire | 1 = Can NOT fire
 ENT.Tank_Shell_NextFireT = 0
 ENT.Tank_TurningLerp = nil
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -221,7 +221,7 @@ function ENT:CustomOnThink_AIEnabled()
 	
 	if self.Tank_Status == 0 then
 		local ene = self:GetEnemy()
-		if IsValid(ene) && self.LatestEnemyDistance < self.Tank_SeeFar then
+		if IsValid(ene) then
 			self.Tank_GunnerIsTurning = false
 			local angEne = (ene:GetPos() - self:GetPos()):Angle()
 			local angDiffuse = self:AngleDiffuse(angEne.y, self:GetAngles().y + self.Tank_AngleDiffuseNumber) -- Cannon looking direction
@@ -262,13 +262,16 @@ function ENT:CustomOnSchedule()
 	self:DoIdleAnimation()
 	
 	if IsValid(self:GetEnemy()) then
+		-- Can always fire when being controlled
 		if self:GetParent().VJ_IsBeingControlled == true then
 			self.Tank_Status = 0
 		else
-			if self.LatestEnemyDistance < self.Tank_SeeFar && self.LatestEnemyDistance > self.Tank_SeeClose then -- Between this two numbers than fire!
+			-- Between these 2 limits it can fire! --
+			if self.LatestEnemyDistance < self.Tank_SeeFar && self.LatestEnemyDistance > self.Tank_SeeClose then
 				self.Tank_Status = 0
+			-- Out of range, can't fire!
 			else
-				self.Tank_Status = 0
+				self.Tank_Status = 1
 			end
 		end
 	end
@@ -298,7 +301,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_FireShell()
 	local ene = self:GetEnemy()
-	if (GetConVar("ai_disabled"):GetInt() == 1) or (self.Dead) or (!self.Tank_ProperHeightShoot) or (!IsValid(ene)) or (!self.Tank_FacingTarget) then return end // self.Tank_FacingTarget != true
+	if (GetConVar("ai_disabled"):GetInt() == 1) or self.Dead or (!self.Tank_ProperHeightShoot) or (!IsValid(ene)) or (!self.Tank_FacingTarget) then return end // self.Tank_FacingTarget != true
 	if self:Visible(ene) then
 		self:Tank_Sound_FireShell()
 		self:Tank_ShellFireEffects()
@@ -334,8 +337,11 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
 	if self:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) == true then
-		corpseEnt:GetPhysicsObject():AddVelocity(Vector(math.Rand(-200, 200), math.Rand(-200, 200), math.Rand(200, 400)))
-		corpseEnt:GetPhysicsObject():AddAngleVelocity(Vector(math.Rand(-100, 100), math.Rand(-100, 100), math.Rand(-100, 100)))
+		local corpsePhys = corpseEnt:GetPhysicsObject()
+		if IsValid(corpsePhys) then
+			corpsePhys:AddVelocity(Vector(math.Rand(-200, 200), math.Rand(-200, 200), math.Rand(200, 400)))
+			corpsePhys:AddAngleVelocity(Vector(math.Rand(-100, 100), math.Rand(-100, 100), math.Rand(-100, 100)))
+		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -49,22 +49,28 @@ SWEP.ReloadSound				= "vj_weapons/reload_rpg.wav"
 function SWEP:CustomOnPrimaryAttack_BeforeShoot()
 	if CLIENT then return end
 	local owner = self:GetOwner()
-	local proj = ents.Create("obj_vj_tank_shell")
-	local ply_Ang = owner:GetAimVector():Angle()
-	local ply_Pos = owner:GetShootPos() + ply_Ang:Forward()*-20 + ply_Ang:Up()*-9 + ply_Ang:Right()*10
-	if owner:IsPlayer() then proj:SetPos(ply_Pos) else proj:SetPos(self:GetNW2Vector("VJ_CurBulletPos")) end
-	if owner:IsPlayer() then proj:SetAngles(ply_Ang) else proj:SetAngles(owner:GetAngles()) end
-	proj:SetOwner(owner)
-	proj:Activate()
-	proj:Spawn()
+	local projectile = ents.Create("obj_vj_tank_shell")
+	local spawnPos = self:GetNW2Vector("VJ_CurBulletPos")
+	if owner:IsPlayer() then
+		local plyAng = owner:GetAimVector():Angle()
+		projectile:SetPos(owner:GetShootPos() + plyAng:Forward()*-20 + plyAng:Up()*-9 + plyAng:Right()*10)
+	else
+		projectile:SetPos(spawnPos)
+	end
+	projectile:SetOwner(owner)
+	projectile:Activate()
+	projectile:Spawn()
 	
-	local phys = proj:GetPhysicsObject()
+	local phys = projectile:GetPhysicsObject()
 	if IsValid(phys) then
-		if owner:IsPlayer() then
+		if owner.IsVJBaseSNPC then
+			phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetAimPosition(owner:GetEnemy(), spawnPos, 1, 2500), 2500))
+		elseif owner:IsPlayer() then
 			phys:SetVelocity(owner:GetAimVector() * 2500)
 		else
-			phys:SetVelocity(owner:CalculateProjectile("Line", self:GetNW2Vector("VJ_CurBulletPos"), owner:GetEnemy():GetPos() + owner:GetEnemy():OBBCenter(), 2500))
+			phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetEnemy():GetPos() + owner:GetEnemy():OBBCenter(), 2500))
 		end
+		projectile:SetAngles(projectile:GetVelocity():GetNormal():Angle())
 	end
 	
 	self:SetBodygroup(1, 1)

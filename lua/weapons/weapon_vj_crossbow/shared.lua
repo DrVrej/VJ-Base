@@ -27,24 +27,30 @@ SWEP.PrimaryEffects_SpawnShells = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BeforeShoot()
 	if CLIENT then return end
-	local bolt = ents.Create("obj_vj_crossbowbolt")
-	local spawnpos = self:GetNW2Vector("VJ_CurBulletPos")
-	bolt:SetPos(spawnpos)
-	bolt:SetAngles(self:GetOwner():GetAngles())
-	bolt:SetOwner(self:GetOwner())
-	bolt:Activate()
-	bolt:Spawn()
+	local projectile = ents.Create("obj_vj_crossbowbolt")
+	local spawnPos = self:GetNW2Vector("VJ_CurBulletPos")
+	local owner = self:GetOwner()
+	projectile:SetPos(spawnPos)
+	projectile:SetOwner(owner)
+	projectile:Activate()
+	projectile:Spawn()
 	
-	local phys = bolt:GetPhysicsObject()
-	if IsValid(phys) then
-		phys:ApplyForceCenter(bolt:CalculateProjectile("Line", spawnpos, self:GetOwner():GetEnemy():GetPos() + self:GetOwner():GetEnemy():OBBCenter(), 4000) + Vector(math.Rand(-30,30), math.Rand(-30,30), math.Rand(-30,30)))
+	local phys = projectile:GetPhysicsObject()
+	if owner.IsVJBaseSNPC then
+		spawnPos = spawnPos + Vector(math.Rand(-30,30), math.Rand(-30,30), math.Rand(-30,30))
+		phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetAimPosition(owner:GetEnemy(), spawnPos, 1, 4000), 4000))
+	else
+		phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetEnemy():GetPos() + owner:GetEnemy():OBBCenter(), 4000))
 	end
+	projectile:SetAngles(projectile:GetVelocity():GetNormal():Angle())
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local sdLoadDone = {"weapons/crossbow/bolt_load1.wav", "weapons/crossbow/bolt_load2.wav"}
+--
 function SWEP:CustomOnReload()
 	timer.Simple(SoundDuration("weapons/crossbow/reload1.wav"), function()
 		if IsValid(self) && IsValid(self:GetOwner()) then
-			VJ.EmitSound(self:GetOwner(), {"weapons/crossbow/bolt_load1.wav","weapons/crossbow/bolt_load2.wav"}, self.NPC_ReloadSoundLevel)
+			VJ.EmitSound(self:GetOwner(), sdLoadDone, self.NPC_ReloadSoundLevel)
 		end
 	end)
 end

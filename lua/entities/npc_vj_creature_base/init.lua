@@ -811,7 +811,7 @@ function ENT:CustomRangeAttackCode_AfterProjectileSpawn(projectile) end -- Calle
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttackCode_OverrideProjectilePos(projectile) return 0 end -- return other value then 0 to override the projectile's position
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RangeAttackCode_GetShootPos(projectile) return (self:GetEnemy():GetPos() - self:LocalToWorld(Vector(0, 0, 0)))*2 + self:GetUp()*1 end
+function ENT:RangeAttackCode_GetShootPos(projectile) local projPos = projectile:GetPos() return self:CalculateProjectile("Line", projPos, self:GetAimPosition(self:GetEnemy(), projPos, 0.5, 1500), 1500) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MultipleLeapAttacks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -975,6 +975,7 @@ ENT.EnemyData = {
 	IsVisible = false, -- Is the enemy visible? | Updated every "Think" run!
 	LastVisibleTime = 0, -- Last time it saw the enemy
 	LastVisiblePos = Vector(0, 0, 0), -- Last visible position of the enemy, based on "EyePos", for origin call "self:GetEnemyLastSeenPos()"
+	LastVisiblePosReal = Vector(0, 0, 0), -- Last calculated visible position of the enemy, it's often wrong! | WARNING: Avoid using this, it's mostly used internally by the base!
 	VisibleCount = 0, -- Number of visible enemies
 	SightDiff = 0, -- Difference between enemy's position and NPC's sight direction | Examples: Determine if the enemy is within the NPC's sight angle or melee attack radius
 	Reset = true, -- Enemy has reset | Mostly a backend variable
@@ -1162,8 +1163,6 @@ end
 ENT.MeleeAttacking = false
 ENT.RangeAttacking = false
 ENT.LeapAttacking = false
-ENT.SetNearestPointToEntityPosition = ENT.GetDynamicOrigin
-ENT.SetMeleeAttackDamagePosition = ENT.GetMeleeAttackDamageOrigin
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetInitializeCapabilities()
@@ -2056,7 +2055,9 @@ function ENT:Think()
 				self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene)
 				if (eneData.SightDiff > math_cos(math_rad(self.SightAngle))) && (self.LatestEnemyDistance < self:GetMaxLookDistance()) && eneData.IsVisible then
 					eneData.LastVisibleTime = curTime
-					eneData.LastVisiblePos = ene:EyePos() -- Use EyePos because "Visible" uses it to run the trace in the engine! | For origin, use "self:GetEnemyLastSeenPos()"
+					-- Why 2 vars? Because the last "Visible" tick is usually not updated in time, causing the engine to give false positive, thinking the enemy IS visible
+					eneData.LastVisiblePos = eneData.LastVisiblePosReal
+					eneData.LastVisiblePosReal = ene:EyePos() -- Use EyePos because "Visible" uses it to run the trace in the engine! | For origin, use "self:GetEnemyLastSeenPos()"
 				end
 				
 				-- Turning / Facing Enemy
@@ -2628,37 +2629,37 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoPoseParameterLooking(resetPoses)
 	if !self.HasPoseParameterLooking then return end
-	resetPoses = resetPoses or false
 	//self:GetPoseParameters(true)
-	local ent = (self.VJ_IsBeingControlled and self.VJ_TheController) or self:GetEnemy()
-	local p_enemy = 0 -- Pitch
-	local y_enemy = 0 -- Yaw
-	local r_enemy = 0 -- Roll
-	if IsValid(ent) && !resetPoses then
-		local enemy_pos = (self.VJ_IsBeingControlled and self.VJ_TheControllerBullseye:GetPos()) or ent:GetPos() + ent:OBBCenter()
-		local self_ang = self:GetAngles()
-		local enemy_ang = (enemy_pos - (self:GetPos() + self:OBBCenter())):Angle()
-		p_enemy = math_angDif(enemy_ang.p, self_ang.p)
-		if self.PoseParameterLooking_InvertPitch == true then p_enemy = -p_enemy end
-		y_enemy = math_angDif(enemy_ang.y, self_ang.y)
-		if self.PoseParameterLooking_InvertYaw == true then y_enemy = -y_enemy end
-		r_enemy = math_angDif(enemy_ang.z, self_ang.z)
-		if self.PoseParameterLooking_InvertRoll == true then r_enemy = -r_enemy end
+	local ene = self:GetEnemy()
+	local newPitch = 0 -- Pitch
+	local newYaw = 0 -- Yaw
+	local newRoll = 0 -- Roll
+	if IsValid(ene) && !resetPoses then
+		local myEyePos = self:EyePos()
+		local myAng = self:GetAngles()
+		local enePos = self:GetAimPosition(ene, myEyePos)
+		local eneAng = (enePos - myEyePos):Angle()
+		newPitch = math_angDif(eneAng.p, myAng.p)
+		if self.PoseParameterLooking_InvertPitch == true then newPitch = -newPitch end
+		newYaw = math_angDif(eneAng.y, myAng.y)
+		if self.PoseParameterLooking_InvertYaw == true then newYaw = -newYaw end
+		newRoll = math_angDif(eneAng.z, myAng.z)
+		if self.PoseParameterLooking_InvertRoll == true then newRoll = -newRoll end
 	elseif !self.PoseParameterLooking_CanReset then -- Should it reset its pose parameters if there is no enemies?
 		return
 	end
 	
-	self:CustomOn_PoseParameterLookingCode(p_enemy, y_enemy, r_enemy)
+	self:CustomOn_PoseParameterLookingCode(newPitch, newYaw, newRoll)
 	
 	local names = self.PoseParameterLooking_Names
 	for x = 1, #names.pitch do
-		self:SetPoseParameter(names.pitch[x], math_angApproach(self:GetPoseParameter(names.pitch[x]), p_enemy, self.PoseParameterLooking_TurningSpeed))
+		self:SetPoseParameter(names.pitch[x], math_angApproach(self:GetPoseParameter(names.pitch[x]), newPitch, self.PoseParameterLooking_TurningSpeed))
 	end
 	for x = 1, #names.yaw do
-		self:SetPoseParameter(names.yaw[x], math_angApproach(self:GetPoseParameter(names.yaw[x]), y_enemy, self.PoseParameterLooking_TurningSpeed))
+		self:SetPoseParameter(names.yaw[x], math_angApproach(self:GetPoseParameter(names.yaw[x]), newYaw, self.PoseParameterLooking_TurningSpeed))
 	end
 	for x = 1, #names.roll do
-		self:SetPoseParameter(names.roll[x], math_angApproach(self:GetPoseParameter(names.roll[x]), r_enemy, self.PoseParameterLooking_TurningSpeed))
+		self:SetPoseParameter(names.roll[x], math_angApproach(self:GetPoseParameter(names.roll[x]), newRoll, self.PoseParameterLooking_TurningSpeed))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

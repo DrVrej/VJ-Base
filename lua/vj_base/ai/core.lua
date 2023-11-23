@@ -32,6 +32,7 @@ local IsValid = IsValid
 local GetConVar = GetConVar
 local istable = istable
 local isnumber = isnumber
+local isvector = isvector
 local string_sub = string.sub
 local table_remove = table.remove
 local bAND = bit.band
@@ -579,6 +580,83 @@ end
 -----------------------------------------------------------]]
 function ENT:GetLastPosition()
 	return self:GetInternalVariable("m_vecLastPosition")
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Get the aim position of the given entity for the NPC to aim at | EX: Position the NPC should fire at
+		- target = The entity to aim at
+		- aimOrigin = The starting point of the aim | EX: Muzzle of a gun the NPC is holding
+		- predictionRate = Predication rate | DEFAULT = 0
+			-- <= 0 : No prediction   |   0 < to > 1 : Closer to target   |   1 : Perfect prediction   |   1 < : Ahead of the prediction (will be very ahead/inaccurate)
+		- projectileSpeed = Used if prediction is being used, helps it properly calculate the predicted aim position | DEFAULT = 1
+	Returns
+		- Vector, the best aim position it found | Normalize this return to get the aim direction!
+-----------------------------------------------------------]]
+function ENT:GetAimPosition(target, aimOrigin, predictionRate, projectileSpeed)
+	local result;
+	if self:Visible(target) then
+		result = target:BodyTarget(aimOrigin)
+		if target:IsPlayer() then -- Decrease player's Z axis as it's placed very high by the engine
+			result.z = result.z - 15
+		end
+		if !self:VisibleVec(result) then
+			result = target:HeadTarget(aimOrigin)
+		end
+	else -- If not visible, use the last known position!
+		result = self.EnemyData.LastVisiblePos
+		predictionRate = 0 -- Enemy is not visible, do NOT predict!
+	end
+	if (predictionRate or 0) > 0 then -- If prediction is enabled
+		-- 1. Calculate the distance between the origin and enemy position
+		-- 2. Calculate the time it takes for the projectile to reach the enemy
+		-- 3. Calculate the predicted enemy position based on their current position and velocity
+		result = result + (target:GetMovementVelocity() * ((aimOrigin - result):Length() / (projectileSpeed or 1))) * predictionRate
+	end
+	return result
+end
+--[[---------------------------------------------------------
+	Calculate the aim spread of the NPC depending on the given factors (Useful for bullets!)
+		- target = When given, it will apply more modifiers based on the given entity (Assumes its an enemy!) | DEFAULT: NULL
+		- goalPos = Position we are trying to hit
+		- modifier = Final spread will be multiplied by this number | DEFAULT = 1 (no change)
+	Returns
+		- Number, the aim spread
+	Calculation
+		-- Target distance modifier
+		1. Get Distance from NPC to goal position
+		2. Multiply it by the max distance at which the bullet spread is at its max
+		3. Normalize it between the calculated value and 0.05 where 0 is bullseye and 0.05 is max inaccuracy from distance
+		--
+		-- Target movement modifier
+		4. Get the given target's movement speed (If target exists)
+		5. Multiply it by the move speed at which the bullet spread is at its max
+		6. Normalize it between the calculated value and 0.05 where 0 is bullseye and 0.05 is max inaccuracy from move speed
+		7. Add it to the spread result
+		--
+		-- Suppression modifier
+		8. Get the elapsed time since the NPC was last damaged based on "CurTime"
+		9. Divide it by the cooldown time, amount of time until this modifier no longer affects the spread
+		10. Normalize it between the calculated value and 1.5 as it should never go above 1.5!
+		11. Negate the calculated value and subtract it against 2.5
+			-> This will make sure it will return 1 if cooldown is over, otherwise it will cause the final spread result to be 0!
+		12. Multiply the spread result by the calculated value
+		--
+		-- Other modifiers
+		13. Multiply it by the owner's weapon accuracy (WeaponSpread)
+		14. Apply the modifier parameter, if any
+-----------------------------------------------------------]]
+-- To convert division to multiplication do (1 / division_number) | NOTE: Multiplication a bit faster!
+local aimMaxDist = 0.0000001 -- Distance at which the bullet spread is at its max (most inaccurate) | Equivalent = Dividing by 10000000
+local aimMaxMove = 0.0000001 -- Move speed at which the bullet spread is at its max (most inaccurate) | Equivalent = Dividing by 10000000
+local damageCooldown = 4 -- Cooldown time in seconds, amount of time until this modifier no longer affects the spread
+--
+function ENT:CalcAimSpread(target, goalPos, modifier)
+	local result = math.min(self:GetPos():DistToSqr(goalPos) * aimMaxDist, 0.05) -- Target distance modifier
+	if target then
+		result = result + math.min(target:GetMovementVelocity():LengthSqr() * aimMaxMove, 0.05) -- Target movement modifier
+		result = result * (2.5 - math.min((CurTime() - self:GetLastDamageTime()) / damageCooldown, 1.5)) -- Suppression modifier (Inverse effect over time)
+	end
+	return result * (self.WeaponSpread or 1) * modifier
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------

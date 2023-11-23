@@ -921,7 +921,6 @@ ENT.AllowToDo_WaitForEnemyToComeOut = true
 ENT.HasBeenGibbedOnDeath = false
 ENT.DeathAnimationCodeRan = false
 ENT.VJ_IsBeingControlled_Tool = false
-ENT.WeaponUseEnemyEyePos = false
 ENT.LastHiddenZone_CanWander = true
 ENT.NoWeapon_UseScaredBehavior_Active = false
 ENT.CurrentWeaponAnimationIsAim = false
@@ -1007,6 +1006,7 @@ ENT.EnemyData = {
 	IsVisible = false, -- Is the enemy visible? | Updated every "Think" run!
 	LastVisibleTime = 0, -- Last time it saw the enemy
 	LastVisiblePos = Vector(0, 0, 0), -- Last visible position of the enemy, based on "EyePos", for origin call "self:GetEnemyLastSeenPos()"
+	LastVisiblePosReal = Vector(0, 0, 0), -- Last calculated visible position of the enemy, it's often wrong! | WARNING: Avoid using this, it's mostly used internally by the base!
 	VisibleCount = 0, -- Number of visible enemies
 	SightDiff = 0, -- Difference between enemy's position and NPC's sight direction | Examples: Determine if the enemy is within the NPC's sight angle or melee attack radius
 	Reset = true, -- Enemy has reset | Mostly a backend variable
@@ -1151,7 +1151,7 @@ function ENT:Initialize()
 	if self.DisableInitializeCapabilities == false then self:SetInitializeCapabilities() end
 	self:SetHealth((GetConVar("vj_npc_allhealth"):GetInt() > 0) and GetConVar("vj_npc_allhealth"):GetInt() or self:VJ_GetDifficultyValue(self.StartHealth))
 	self.StartHealth = self:Health()
-	//if self.HasSquad == true then self:Fire("setsquad", self.SquadName, 0) end
+	//if self.HasSquad == true then self:Fire("setsquad", self.SquadName) end
 	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
 	self:CustomOnInitialize()
 	if self.CustomInitialize then self:CustomInitialize() end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -1233,8 +1233,6 @@ end
 -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 ENT.MeleeAttacking = false
 ENT.ThrowingGrenade = false
-ENT.SetNearestPointToEntityPosition = ENT.GetDynamicOrigin
-ENT.SetMeleeAttackDamagePosition = ENT.GetMeleeAttackDamageOrigin
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetInitializeCapabilities()
@@ -2832,7 +2830,9 @@ function ENT:Think()
 				self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene)
 				if (eneData.SightDiff > math_cos(math_rad(self.SightAngle))) && (self.LatestEnemyDistance < self:GetMaxLookDistance()) && eneData.IsVisible then
 					eneData.LastVisibleTime = curTime
-					eneData.LastVisiblePos = ene:EyePos() -- Use EyePos because "Visible" uses it to run the trace in the engine! | For origin, use "self:GetEnemyLastSeenPos()"
+					-- Why 2 vars? Because the last "Visible" tick is usually not updated in time, causing the engine to give false positive, thinking the enemy IS visible
+					eneData.LastVisiblePos = eneData.LastVisiblePosReal
+					eneData.LastVisiblePosReal = ene:EyePos() -- Use EyePos because "Visible" uses it to run the trace in the engine! | For origin, use "self:GetEnemyLastSeenPos()"
 				end
 				
 				-- Turning / Facing Enemy
@@ -3410,41 +3410,39 @@ function ENT:StopAttacks(checkTimers)
 	self:DoChaseAnimation()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:WeaponAimPoseParameters(resetPoses) self:DoPoseParameterLooking(resetPoses) end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoPoseParameterLooking(resetPoses)
 	if (!self.HasPoseParameterLooking) or (!self.VJ_IsBeingControlled && !self.DoingWeaponAttack && !self.EnemyData.IsVisible) then return end
-	resetPoses = resetPoses or false
 	//self:GetPoseParameters(true)
-	local ent = (self.VJ_IsBeingControlled and self.VJ_TheController) or self:GetEnemy()
-	local p_enemy = 0 -- Pitch
-	local y_enemy = 0 -- Yaw
-	local r_enemy = 0 -- Roll
-	if IsValid(ent) && !resetPoses then
-		local enemy_pos = (self.VJ_IsBeingControlled and self.VJ_TheControllerBullseye:GetPos()) or ent:GetPos() + ent:OBBCenter()
-		local self_ang = self:GetAngles()
-		local enemy_ang = (enemy_pos - (self:GetPos() + self:OBBCenter())):Angle()
-		p_enemy = math_angDif(enemy_ang.p, self_ang.p)
-		if self.PoseParameterLooking_InvertPitch == true then p_enemy = -p_enemy end
-		y_enemy = math_angDif(enemy_ang.y, self_ang.y)
-		if self.PoseParameterLooking_InvertYaw == true then y_enemy = -y_enemy end
-		r_enemy = math_angDif(enemy_ang.z, self_ang.z)
-		if self.PoseParameterLooking_InvertRoll == true then r_enemy = -r_enemy end
+	local ene = self:GetEnemy()
+	local newPitch = 0 -- Pitch
+	local newYaw = 0 -- Yaw
+	local newRoll = 0 -- Roll
+	if IsValid(ene) && !resetPoses then
+		local myEyePos = self:EyePos()
+		local myAng = self:GetAngles()
+		local enePos = self:GetAimPosition(ene, myEyePos)
+		local eneAng = (enePos - myEyePos):Angle()
+		newPitch = math_angDif(eneAng.p, myAng.p)
+		if self.PoseParameterLooking_InvertPitch == true then newPitch = -newPitch end
+		newYaw = math_angDif(eneAng.y, myAng.y)
+		if self.PoseParameterLooking_InvertYaw == true then newYaw = -newYaw end
+		newRoll = math_angDif(eneAng.z, myAng.z)
+		if self.PoseParameterLooking_InvertRoll == true then newRoll = -newRoll end
 	elseif !self.PoseParameterLooking_CanReset then -- Should it reset its pose parameters if there is no enemies?
 		return
 	end
 	
-	self:CustomOn_PoseParameterLookingCode(p_enemy, y_enemy, r_enemy)
+	self:CustomOn_PoseParameterLookingCode(newPitch, newYaw, newRoll)
 	
 	local names = self.PoseParameterLooking_Names
 	for x = 1, #names.pitch do
-		self:SetPoseParameter(names.pitch[x], math_angApproach(self:GetPoseParameter(names.pitch[x]), p_enemy, self.PoseParameterLooking_TurningSpeed))
+		self:SetPoseParameter(names.pitch[x], math_angApproach(self:GetPoseParameter(names.pitch[x]), newPitch, self.PoseParameterLooking_TurningSpeed))
 	end
 	for x = 1, #names.yaw do
-		self:SetPoseParameter(names.yaw[x], math_angApproach(self:GetPoseParameter(names.yaw[x]), y_enemy, self.PoseParameterLooking_TurningSpeed))
+		self:SetPoseParameter(names.yaw[x], math_angApproach(self:GetPoseParameter(names.yaw[x]), newYaw, self.PoseParameterLooking_TurningSpeed))
 	end
 	for x = 1, #names.roll do
-		self:SetPoseParameter(names.roll[x], math_angApproach(self:GetPoseParameter(names.roll[x]), r_enemy, self.PoseParameterLooking_TurningSpeed))
+		self:SetPoseParameter(names.roll[x], math_angApproach(self:GetPoseParameter(names.roll[x]), newRoll, self.PoseParameterLooking_TurningSpeed))
 	end
 	self.DidWeaponAttackAimParameter = true
 end
@@ -3524,9 +3522,10 @@ function ENT:SelectSchedule()
 	if self.DisableSelectSchedule == true or self.Dead then return end
 	
 	local ene = self:GetEnemy()
+	local eneValid = IsValid(self:GetEnemy())
 	
 	-- Idle Behavior --
-	if !IsValid(ene) then
+	if !eneValid then
 		self:IdleSoundCode()
 		if self.AttackType != VJ.ATTACK_TYPE_GRENADE then
 			self:DoIdleAnimation()
@@ -3652,9 +3651,8 @@ function ENT:SelectSchedule()
 										end
 									end
 									
-									-- If the NPC is behind cover...
+									-- NPC is behind cover...
 									if cover_npc == true then
-										self.WeaponUseEnemyEyePos = true -- Make the bullet direction go towards the head of the enemy
 										-- Behind cover and I am taking cover, don't fire!
 										if CurTime() < self.TakingCoverT then
 											noAttack = true
@@ -3689,8 +3687,7 @@ function ENT:SelectSchedule()
 											end
 											self.NextMoveOnGunCoveredT = CurTime() + 2
 										end
-									else -- NPC not covered
-										self.WeaponUseEnemyEyePos = false -- Make the bullet direction go towards the center of the enemy rather then its head
+									//else -- NPC is NOT behind cover
 									end
 								end
 								
@@ -3998,7 +3995,7 @@ function ENT:OnTakeDamage(dmginfo)
 			-- Move or hide when damaged by an enemy | RESULT: May play a hiding animation OR may move to take cover from enemy
 			if self.MoveOrHideOnDamageByEnemy && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && IsValid(self:GetEnemy()) && curTime > self.NextMoveOrHideOnDamageByEnemyT && !self.IsFollowing && self.AttackType == VJ.ATTACK_TYPE_NONE && curTime > self.TakingCoverT && self.EnemyData.IsVisible && self.VJ_IsBeingControlled == false && self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING && self:EyePos():Distance(self:GetEnemy():EyePos()) < self.Weapon_FiringDistanceFar then
 				local wep = self:GetActiveWeapon()
-				if !self.MoveOrHideOnDamageByEnemy_OnlyMove && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() + self:OBBCenter()) ,self:GetEnemy():EyePos()) == true then
+				if !self.MoveOrHideOnDamageByEnemy_OnlyMove && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() + self:OBBCenter()), self:GetEnemy():EyePos()) == true then
 					local anim = VJ.PICK(self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_TakingCover)))
 					if VJ.AnimExists(self, anim) == true then
 						local hideTime = math.Rand(self.MoveOrHideOnDamageByEnemy_HideTime.a, self.MoveOrHideOnDamageByEnemy_HideTime.b)

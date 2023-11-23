@@ -39,21 +39,27 @@ SWEP.PrimaryEffects_SpawnShells = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BeforeShoot()
 	if CLIENT then return end
-	local proj = ents.Create("obj_vj_flareround")
-	local ply_Ang = self:GetOwner():GetAimVector():Angle()
-	local ply_Pos = self:GetOwner():GetShootPos()
-	if self:GetOwner():IsPlayer() then proj:SetPos(ply_Pos) else proj:SetPos(self:GetNW2Vector("VJ_CurBulletPos")) end
-	if self:GetOwner():IsPlayer() then proj:SetAngles(ply_Ang) else proj:SetAngles(self:GetOwner():GetAngles()) end
-	proj:SetOwner(self:GetOwner())
-	proj:Activate()
-	proj:Spawn()
+	local owner = self:GetOwner()
+	local projectile = ents.Create("obj_vj_flareround")
+	local spawnPos = self:GetNW2Vector("VJ_CurBulletPos")
+	if owner:IsPlayer() then
+		projectile:SetPos(owner:GetShootPos())
+	else
+		projectile:SetPos(spawnPos)
+	end
+	projectile:SetOwner(owner)
+	projectile:Activate()
+	projectile:Spawn()
 	
-	local phys = proj:GetPhysicsObject()
+	local phys = projectile:GetPhysicsObject()
 	if IsValid(phys) then
-		if self:GetOwner():IsPlayer() then
-			phys:SetVelocity(self:GetOwner():GetAimVector() * 15000)
+		if owner.IsVJBaseSNPC then
+			phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetAimPosition(owner:GetEnemy(), spawnPos, 1, 15000), 15000))
+		elseif owner:IsPlayer() then
+			phys:SetVelocity(owner:GetAimVector() * 15000)
 		else
-			phys:SetVelocity(self:GetOwner():CalculateProjectile("Line", self:GetNW2Vector("VJ_CurBulletPos"), self:GetOwner():GetEnemy():GetPos() + self:GetOwner():GetEnemy():OBBCenter(), 15000))
+			phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetEnemy():GetPos() + owner:GetEnemy():OBBCenter(), 15000))
 		end
+		projectile:SetAngles(projectile:GetVelocity():GetNormal():Angle())
 	end
 end

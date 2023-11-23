@@ -192,17 +192,19 @@ function SWEP:NPC_SecondaryFire_BeforeTimer(eneEnt, fireTime) end
 function SWEP:NPC_SecondaryFire()
 	-- Override this function if you want to make your own secondary attack!
 	local owner = self:GetOwner()
-	local pos = self:GetNW2Vector("VJ_CurBulletPos")
-	local proj = ents.Create(self.NPC_SecondaryFireEnt)
-	proj:SetPos(pos)
-	proj:SetAngles(owner:GetAngles())
-	proj:SetOwner(owner)
-	proj:Spawn()
-	proj:Activate()
-	local phys = proj:GetPhysicsObject()
+	local spawnPos = self:GetNW2Vector("VJ_CurBulletPos")
+	local projectile = ents.Create(self.NPC_SecondaryFireEnt)
+	projectile:SetPos(spawnPos)
+	projectile:SetAngles(owner:GetAngles())
+	projectile:SetOwner(owner)
+	projectile:Spawn()
+	projectile:Activate()
+	local phys = projectile:GetPhysicsObject()
 	if IsValid(phys) then
 		phys:Wake()
-		phys:SetVelocity(owner:CalculateProjectile("Curve", pos, owner.EnemyData.LastVisiblePos, 1000))
+		local vel = owner:CalculateProjectile("Line", spawnPos, owner:GetAimPosition(owner:GetEnemy(), spawnPos, 1, 1000), 1000)
+		phys:SetVelocity(vel)
+		projectile:SetAngles(vel:GetNormal():Angle())
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -607,20 +609,21 @@ function SWEP:PrimaryAttack(UseAlt)
 					elseif isnumber(plyDmg) then
 						bullet.Damage = plyDmg
 					end
-				else
+				elseif owner.IsVJBaseSNPC then
 					local ene = owner:GetEnemy()
 					local spawnPos = self:GetNW2Vector("VJ_CurBulletPos")
-					// owner:GetPos():Distance(owner.VJ_TheController:GetEyeTrace().HitPos) -- Was used when NPC was being controlled
-					local fSpread = (owner:GetPos():Distance(ene:GetPos()) / 28) * (owner.WeaponSpread or 1) * (self.NPC_CustomSpread or 1)
-					bullet.Spread = Vector(fSpread, fSpread, 0)
+					local aimPos = owner:GetAimPosition(ene, spawnPos, 0)
+					local spread = owner:CalcAimSpread(ene, aimPos, self.NPC_CustomSpread or 1) // owner:GetPos():Distance(owner.VJ_TheController:GetEyeTrace().HitPos) -- Was used when NPC was being controlled
+					bullet.Spread = Vector(spread, spread, 0)
+					bullet.Dir = (aimPos - spawnPos):GetNormal()
 					bullet.Src = spawnPos
-					if owner.WeaponUseEnemyEyePos then
-						-- Take OBB Max's z and minus it with OBB Center's z to remove center to min, then divide the result to decrease the distance so its somewhere between Eye pos and OBB center
-						bullet.Dir = (ene:EyePos() - ene:GetUp()*((ene:OBBMaxs().z - ene:OBBCenter().z) / 2.5)) - spawnPos
-					else
-						bullet.Dir = (ene:GetPos() + ene:OBBCenter()) -  spawnPos
-					end
-					bullet.Damage = owner.IsVJBaseSNPC and owner:VJ_GetDifficultyValue(self.Primary.Damage) or self.Primary.Damage
+					bullet.Damage = owner:VJ_GetDifficultyValue(self.Primary.Damage)
+				else
+					local spawnPos = self:GetNW2Vector("VJ_CurBulletPos")
+					bullet.Spread = Vector(0.05, 0.05, 0)
+					bullet.Dir = (owner:GetEnemy():BodyTarget(spawnPos) - spawnPos):GetNormal()
+					bullet.Src = spawnPos
+					bullet.Damage = self.Primary.Damage
 				end
 				
 				-- Callback
