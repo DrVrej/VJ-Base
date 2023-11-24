@@ -9,10 +9,10 @@ function ENT:VJ_TASK_FACE_X(faceType, customFunc)
 	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
 	if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false) or (self.IsVJBaseSNPC_Tank == true) then return end
 	//self.NextIdleStandTime = CurTime() + 1.2
-	local vschedFaceX = vj_ai_schedule.New("vj_face_x")
-	vschedFaceX:EngTask(faceType or "TASK_FACE_TARGET", 0)
-	if (customFunc) then customFunc(vschedFaceX) end
-	self:StartSchedule(vschedFaceX)
+	local schedFace = vj_ai_schedule.New("vj_face_x")
+	schedFace:EngTask(faceType or "TASK_FACE_TARGET", 0)
+	if (customFunc) then customFunc(schedFace) end
+	self:StartSchedule(schedFace)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_GOTO_LASTPOS(moveType, customFunc)
@@ -20,14 +20,14 @@ function ENT:VJ_TASK_GOTO_LASTPOS(moveType, customFunc)
 		self:AA_MoveTo(self:GetLastPosition(), true, (moveType == "TASK_RUN_PATH" and "Alert") or "Calm")
 		return
 	end
-	local vsched = vj_ai_schedule.New("vj_goto_lastpos")
-	vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-	//vsched:EngTask(moveType, 0)
-	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	vsched.IsMovingTask = true
-	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
-	if (customFunc) then customFunc(vsched) end
-	self:StartSchedule(vsched)
+	local schedGoToLastPos = vj_ai_schedule.New("vj_goto_lastpos")
+	schedGoToLastPos:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
+	//schedGoToLastPos:EngTask(moveType, 0)
+	schedGoToLastPos:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	schedGoToLastPos.IsMovingTask = true
+	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) schedGoToLastPos.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) schedGoToLastPos.MoveType = 0 end
+	if (customFunc) then customFunc(schedGoToLastPos) end
+	self:StartSchedule(schedGoToLastPos)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_GOTO_TARGET(moveType, customFunc)
@@ -35,15 +35,15 @@ function ENT:VJ_TASK_GOTO_TARGET(moveType, customFunc)
 		self:AA_MoveTo(self:GetTarget(), true, (moveType == "TASK_RUN_PATH" and "Alert") or "Calm")
 		return
 	end
-	local vsched = vj_ai_schedule.New("vj_goto_target")
-	vsched:EngTask("TASK_GET_PATH_TO_TARGET", 0)
-	//vsched:EngTask(moveType, 0)
-	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	vsched:EngTask("TASK_FACE_TARGET", 1)
-	vsched.IsMovingTask = true
-	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
-	if (customFunc) then customFunc(vsched) end
-	self:StartSchedule(vsched)
+	local schedGoToTarget = vj_ai_schedule.New("vj_goto_target")
+	schedGoToTarget:EngTask("TASK_GET_PATH_TO_TARGET", 0)
+	//schedGoToTarget:EngTask(moveType, 0)
+	schedGoToTarget:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	schedGoToTarget:EngTask("TASK_FACE_TARGET", 1)
+	schedGoToTarget.IsMovingTask = true
+	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) schedGoToTarget.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) schedGoToTarget.MoveType = 0 end
+	if (customFunc) then customFunc(schedGoToTarget) end
+	self:StartSchedule(schedGoToTarget)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_GOTO_PLAYER(moveType, customFunc)
@@ -51,81 +51,81 @@ function ENT:VJ_TASK_GOTO_PLAYER(moveType, customFunc)
 		self:AA_MoveTo(self:GetTarget(), true, (moveType == "TASK_RUN_PATH" and "Alert") or "Calm")
 		return
 	end
-	local vsched = vj_ai_schedule.New("vj_goto_player")
-	vsched:EngTask("TASK_GET_PATH_TO_PLAYER", 0)
-	//vsched:EngTask(moveType, 0)
-	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	vsched.IsMovingTask = true
-	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
-	if (customFunc) then customFunc(vsched) end
-	self:StartSchedule(vsched)
+	local schedGoToPlayer = vj_ai_schedule.New("vj_goto_player")
+	schedGoToPlayer:EngTask("TASK_GET_PATH_TO_PLAYER", 0)
+	//schedGoToPlayer:EngTask(moveType, 0)
+	schedGoToPlayer:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	schedGoToPlayer.IsMovingTask = true
+	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) schedGoToPlayer.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) schedGoToPlayer.MoveType = 0 end
+	if (customFunc) then customFunc(schedGoToPlayer) end
+	self:StartSchedule(schedGoToPlayer)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_COVER_FROM_ENEMY(moveType, customFunc)
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
 	moveType = moveType or "TASK_RUN_PATH"
-	local vsched = vj_ai_schedule.New("vj_cover_from_enemy")
-	vsched:EngTask("TASK_FIND_COVER_FROM_ORIGIN", 0)
-	//vsched:EngTask(moveType, 0)
-	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	vsched.IsMovingTask = true
-	if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
-	vsched.RunCode_OnFail = function()
+	local schedCoverFromEnemy = vj_ai_schedule.New("vj_cover_from_enemy")
+	schedCoverFromEnemy:EngTask("TASK_FIND_COVER_FROM_ORIGIN", 0)
+	//schedCoverFromEnemy:EngTask(moveType, 0)
+	schedCoverFromEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	schedCoverFromEnemy.IsMovingTask = true
+	if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) schedCoverFromEnemy.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) schedCoverFromEnemy.MoveType = 0 end
+	schedCoverFromEnemy.RunCode_OnFail = function()
 		//print("Cover from enemy failed!")
-		local vschedFail = vj_ai_schedule.New("vj_cover_from_enemy_fail")
-		vschedFail:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
-		vschedFail:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
-		//vschedFail:EngTask(moveType, 0)
-		vschedFail:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-		vschedFail.IsMovingTask = true
-		if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) vschedFail.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) vschedFail.MoveType = 0 end
-		if (customFunc) then customFunc(vschedFail) end
-		self:StartSchedule(vschedFail)
+		local schedFailCoverFromEnemy = vj_ai_schedule.New("vj_cover_from_enemy_fail")
+		schedFailCoverFromEnemy:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
+		schedFailCoverFromEnemy:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
+		//schedFailCoverFromEnemy:EngTask(moveType, 0)
+		schedFailCoverFromEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+		schedFailCoverFromEnemy.IsMovingTask = true
+		if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) schedFailCoverFromEnemy.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) schedFailCoverFromEnemy.MoveType = 0 end
+		if (customFunc) then customFunc(schedFailCoverFromEnemy) end
+		self:StartSchedule(schedFailCoverFromEnemy)
 	end
-	if (customFunc) then customFunc(vsched) end
-	self:StartSchedule(vsched)
+	if (customFunc) then customFunc(schedCoverFromEnemy) end
+	self:StartSchedule(schedCoverFromEnemy)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_COVER_FROM_ORIGIN(moveType, customFunc)
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
 	moveType = moveType or "TASK_RUN_PATH"
-	local vsched = vj_ai_schedule.New("vj_cover_from_origin")
-	vsched:EngTask("TASK_FIND_COVER_FROM_ORIGIN", 0)
-	//vsched:EngTask(moveType, 0)
-	vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	vsched.IsMovingTask = true
-	if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) vsched.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) vsched.MoveType = 0 end
-	vsched.RunCode_OnFail = function()
-		local vschedFail = vj_ai_schedule.New("vj_cover_from_origin_fail")
-		vschedFail:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
-		vschedFail:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
-		//vschedFail:EngTask(moveType, 0)
-		vschedFail:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-		vschedFail.IsMovingTask = true
-		if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) vschedFail.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) vschedFail.MoveType = 0 end
-		if (customFunc) then customFunc(vschedFail) end
-		self:StartSchedule(vschedFail)
+	local schedCoverFromOrigin = vj_ai_schedule.New("vj_cover_from_origin")
+	schedCoverFromOrigin:EngTask("TASK_FIND_COVER_FROM_ORIGIN", 0)
+	//schedCoverFromOrigin:EngTask(moveType, 0)
+	schedCoverFromOrigin:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	schedCoverFromOrigin.IsMovingTask = true
+	if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) schedCoverFromOrigin.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) schedCoverFromOrigin.MoveType = 0 end
+	schedCoverFromOrigin.RunCode_OnFail = function()
+		local schedFailCoverFromOrigin = vj_ai_schedule.New("vj_cover_from_origin_fail")
+		schedFailCoverFromOrigin:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
+		schedFailCoverFromOrigin:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
+		//schedFailCoverFromOrigin:EngTask(moveType, 0)
+		schedFailCoverFromOrigin:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+		schedFailCoverFromOrigin.IsMovingTask = true
+		if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) schedFailCoverFromOrigin.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) schedFailCoverFromOrigin.MoveType = 0 end
+		if (customFunc) then customFunc(schedFailCoverFromOrigin) end
+		self:StartSchedule(schedFailCoverFromOrigin)
 	end
-	if (customFunc) then customFunc(vsched) end
-	self:StartSchedule(vsched)
+	if (customFunc) then customFunc(schedCoverFromOrigin) end
+	self:StartSchedule(schedCoverFromOrigin)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local task_idleWander = vj_ai_schedule.New("vj_idle_wander")
-	//task_idleWander:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 0)
-	//task_idleWander:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-	task_idleWander:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 350)
-	//task_idleWander:EngTask("TASK_WALK_PATH", 0)
-	task_idleWander:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	task_idleWander.ResetOnFail = true
-	task_idleWander.CanBeInterrupted = true
-	task_idleWander.IsMovingTask = true
-	task_idleWander.MoveType = 0
+local schedIdleWander = vj_ai_schedule.New("vj_idle_wander")
+	//schedIdleWander:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 0)
+	//schedIdleWander:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
+	schedIdleWander:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 350)
+	//schedIdleWander:EngTask("TASK_WALK_PATH", 0)
+	schedIdleWander:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	schedIdleWander.ResetOnFail = true
+	schedIdleWander.CanBeInterrupted = true
+	schedIdleWander.IsMovingTask = true
+	schedIdleWander.MoveType = 0
 	
 function ENT:VJ_TASK_IDLE_WANDER()
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
 	self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk))
 	//self:SetLastPosition(self:GetPos() + self:GetForward() * 300)
-	self:StartSchedule(task_idleWander)
+	self:StartSchedule(schedIdleWander)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:TASK_VJ_PLAY_ACTIVITY(taskStatus, data)

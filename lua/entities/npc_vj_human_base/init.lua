@@ -1454,14 +1454,14 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				self:SetLayerPlaybackRate(gesture, finalPlayBackRate * 0.5)
 			end
 		else -- Sequences & Activities
-			local vsched = vj_ai_schedule.New("vj_act_"..animation)
+			local schedPlayAct = vj_ai_schedule.New("vj_act_"..animation)
 			
 			-- For humans NPCs, internally the base will set these variables back to true after this function if it's called by weapon attack animations!
 			self.DoingWeaponAttack = false
 			self.DoingWeaponAttack_Standing = false
 			
-			//self:StartEngineTask(ai.GetTaskID("TASK_RESET_ACTIVITY"), 0) //vsched:EngTask("TASK_RESET_ACTIVITY", 0)
-			//if self.Dead then vsched:EngTask("TASK_STOP_MOVING", 0) end
+			//self:StartEngineTask(ai.GetTaskID("TASK_RESET_ACTIVITY"), 0) //schedPlayAct:EngTask("TASK_RESET_ACTIVITY", 0)
+			//if self.Dead then schedPlayAct:EngTask("TASK_STOP_MOVING", 0) end
 			//self:FrameAdvance(0)
 			self:TaskComplete()
 			self:StopMoving()
@@ -1476,7 +1476,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				local transitionAnimTime = 0
 				if transitionAnim != -1 && seqID != transitionAnim then -- If it exists AND it's not the same as the animation
 					transitionAnimTime = self:SequenceDuration(transitionAnim) / self.AnimationPlaybackRate
-					vsched:AddTask("TASK_VJ_PLAY_SEQUENCE", {
+					schedPlayAct:AddTask("TASK_VJ_PLAY_SEQUENCE", {
 						animation = transitionAnim,
 						playbackRate = finalPlayBackRate,
 						duration = transitionAnimTime
@@ -1484,7 +1484,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				end
 				-- END: Experimental transition system for sequences
 				--
-				vsched:AddTask("TASK_VJ_PLAY_SEQUENCE", {
+				schedPlayAct:AddTask("TASK_VJ_PLAY_SEQUENCE", {
 					animation = animation,
 					playbackRate = finalPlayBackRate,
 					duration = animTime
@@ -1493,16 +1493,16 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				animTime = animTime + transitionAnimTime -- Adjust the animation time in case we have a transition animation!
 			else -- Only if activity
 				//self:SetActivity(ACT_RESET)
-				vsched:AddTask("TASK_VJ_PLAY_ACTIVITY", {
+				schedPlayAct:AddTask("TASK_VJ_PLAY_ACTIVITY", {
 					animation = animation,
 					duration = animTime
 				})
 				-- Old engine task animation system
 				/*if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 					self:ResetIdealActivity(animation)
-					//vsched:EngTask("TASK_SET_ACTIVITY", animation) -- To avoid AutoMovement stopping the velocity
+					//schedPlayAct:EngTask("TASK_SET_ACTIVITY", animation) -- To avoid AutoMovement stopping the velocity
 				//elseif faceEnemy == true then
-					//vsched:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY", animation)
+					//schedPlayAct:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY", animation)
 				else
 					-- Engine's default animation task
 					-- REQUIRED FOR TASK_PLAY_SEQUENCE: It fixes animations NOT applying walk frames if the previous animation was the same!
@@ -1510,16 +1510,16 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 						self:ResetSequenceInfo()
 						self:SetSaveValue("sequence", 0)
 					end
-					vsched:EngTask("TASK_PLAY_SEQUENCE", animation)
+					schedPlayAct:EngTask("TASK_PLAY_SEQUENCE", animation)
 				end*/
 			end
 			if faceEnemy == true then
 				self:SetTurnTarget("Enemy", animTime)
 			end
-			vsched.IsPlayActivity = true
-			vsched.CanBeInterrupted = !stopActivities
-			if (customFunc) then customFunc(vsched, animation) end
-			self:StartSchedule(vsched)
+			schedPlayAct.IsPlayActivity = true
+			schedPlayAct.CanBeInterrupted = !stopActivities
+			if (customFunc) then customFunc(schedPlayAct, animation) end
+			self:StartSchedule(schedPlayAct)
 		end
 		
 		-- If it has a OnFinish function, then set the timer to run it when it finishes!
@@ -1599,13 +1599,6 @@ function ENT:VJ_TASK_IDLE_STAND()
 	//if (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_idle_stand") or (self.CurrentAnim_CustomIdle != 0 && VJ.IsCurrentAnimation(self,self.CurrentAnim_CustomIdle) == true) then return end
 	//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
 	//if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_StopMoving() return end
-
-	/*local vschedIdleStand = vj_ai_schedule.New("vj_idle_stand")
-	//vschedIdleStand:EngTask("TASK_FACE_REASONABLE")
-	vschedIdleStand:EngTask("TASK_STOP_MOVING")
-	vschedIdleStand:EngTask("TASK_WAIT_INDEFINITE")
-	vschedIdleStand.CanBeInterrupted = true
-	self:StartSchedule(vschedIdleStand)*/
 	
 	local idleAnimTbl = self.NoWeapon_UseScaredBehavior_Active == true and self.AnimTbl_ScaredBehaviorStand or ((self.Alerted && self:GetWeaponState() != VJ.NPC_WEP_STATE_HOLSTERED && IsValid(self:GetActiveWeapon())) and self.AnimTbl_WeaponAim or self.AnimTbl_IdleStand)
 	local posIdlesTbl = {}
@@ -2785,13 +2778,13 @@ function ENT:Think()
 								else -- If all is good, then run to a hiding spot and then reload!
 									if self.WeaponReload_FindCover == true then
 										self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run))
-										local vsched = vj_ai_schedule.New("vj_weapon_reload")
-										vsched:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
-										vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-										vsched.StopScheduleIfNotMoving = true
-										vsched.IsMovingTask = true
-										vsched.MoveType = 1
-										vsched.RunCode_OnFinish = function()
+										local schedReload = vj_ai_schedule.New("vj_weapon_reload")
+										schedReload:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
+										schedReload:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+										schedReload.StopScheduleIfNotMoving = true
+										schedReload.IsMovingTask = true
+										schedReload.MoveType = 1
+										schedReload.RunCode_OnFinish = function()
 											if self:GetWeaponState() == VJ.NPC_WEP_STATE_RELOADING then
 												-- If the current situation isn't favorable, then abandon the current reload, and try again!
 												if (self.AttackType != VJ.ATTACK_TYPE_NONE) or (IsValid(self:GetEnemy()) && self.HasWeaponBackAway == true && (self:GetPos():Distance(self:GetEnemy():GetPos()) <= self.WeaponBackAway_Distance)) then
@@ -2802,7 +2795,7 @@ function ENT:Think()
 												end
 											end
 										end
-										self:StartSchedule(vsched)
+										self:StartSchedule(schedReload)
 									else
 										DoReloadAnimation(self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_WeaponReload)))
 									end
@@ -2980,15 +2973,18 @@ function ENT:Think()
 		
 		-- Handle the unique movement system for player models
 		if self.UsePlayerModelMovement == true && self.MovementType == VJ_MOVETYPE_GROUND then
-			local moveDir = self:GetMoveDirection(true)
-			if moveDir != defPos then
-				self:SetPoseParameter("move_x", moveDir.x)
-				self:SetPoseParameter("move_y", moveDir.y)
-				if !didTurn then -- Only face move direction if I have NOT faced anything else!
-					self:SetTurnTarget(self:GetCurWaypointPos())
-				end
-			end
-		end
+            local moveDir = self:GetMoveDirection(true)
+            if moveDir then
+                self:SetPoseParameter("move_x", moveDir.x)
+                self:SetPoseParameter("move_y", moveDir.y)
+                if !didTurn then -- Only face move direction if I have NOT faced anything else!
+                    self:SetTurnTarget(self:GetCurWaypointPos())
+                end
+            else -- I am not moving, reset the pose parameters, otherwise I will run in place!
+                self:SetPoseParameter("move_x", 0)
+                self:SetPoseParameter("move_y", 0)
+            end
+        end
 	else -- AI Not enabled
 		self.DoingWeaponAttack = false
 	end
@@ -2996,9 +2992,8 @@ function ENT:Think()
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MeleeAttackCode(customEnt)
+function ENT:MeleeAttackCode()
 	if self.Dead or self.vACT_StopAttacks or self.Flinching or self.AttackType == VJ.ATTACK_TYPE_GRENADE or (self.StopMeleeAttackAfterFirstHit && self.AttackState == VJ.ATTACK_STATE_EXECUTED_HIT) then return end
-	local curEnemy = customEnt or self:GetEnemy()
 	if self.MeleeAttackAnimationFaceEnemy then self:SetTurnTarget("Enemy") end
 	//self.MeleeAttacking = true
 	self:CustomOnMeleeAttack_BeforeChecks()
@@ -3486,7 +3481,7 @@ function ENT:IsAbleToShootWeapon(checkDistance, checkDistanceOnly, enemyDist)
 	if self:CustomOnIsAbleToShootWeapon() == false then return end
 	local hasDist = false
 	local hasChecks = false
-	
+
 	if self:GetWeaponState() == VJ.NPC_WEP_STATE_HOLSTERED or self.vACT_StopAttacks then return false end
 	if self.VJ_IsBeingControlled then checkDistance = false checkDistanceOnly = false end
 	if checkDistance == true && CurTime() > self.NextWeaponAttackT && enemyDist < self.Weapon_FiringDistanceFar && ((enemyDist > self.Weapon_FiringDistanceClose) or self.CurrentWeaponEntity.IsMeleeWeapon) then
@@ -3669,20 +3664,20 @@ function ENT:SelectSchedule()
 												if self.IsGuard then self.GuardingPosition = nearestEnePos end -- Set the guard position to this new position that provides cover
 												self:SetLastPosition(nearestEnePos)
 												//VJ.DEBUG_TempEnt(nearestEnePos, self:GetAngles(), Color(0,255,255))
-												local vsched = vj_ai_schedule.New("vj_goto_cover")
-												vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-												vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-												vsched.IsMovingTask = true
-												vsched.FaceData = {Type = VJ.NPC_FACE_ENEMY}
-												vsched.StopScheduleIfNotMoving_Any = true
+												local schedGoToCover = vj_ai_schedule.New("vj_goto_cover")
+												schedGoToCover:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
+												schedGoToCover:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+												schedGoToCover.IsMovingTask = true
+												schedGoToCover.FaceData = {Type = VJ.NPC_FACE_ENEMY}
+												schedGoToCover.StopScheduleIfNotMoving_Any = true
 												local coverRunAnim = self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_MoveToCover))
 												if VJ.AnimExists(self, coverRunAnim) == true then
 													self:SetMovementActivity(coverRunAnim)
 												else
-													vsched.CanShootWhenMoving = true
-													vsched.MoveType = 1
+													schedGoToCover.CanShootWhenMoving = true
+													schedGoToCover.MoveType = 1
 												end
-												self:StartSchedule(vsched)
+												self:StartSchedule(schedGoToCover)
 												//self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
 											end
 											self.NextMoveOnGunCoveredT = CurTime() + 2
@@ -3849,9 +3844,9 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		self:ClearEnemyMemory(ene)
 	end
 	//self:UpdateEnemyMemory(self,self:GetPos())
-	//local vsched = vj_ai_schedule.New("vj_act_resetenemy")
-	//if eneValid then vsched:EngTask("TASK_FORGET", ene) end
-	//vsched:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
+	//local schedResetEnemy = vj_ai_schedule.New("vj_act_resetenemy")
+	//if eneValid then schedResetEnemy:EngTask("TASK_FORGET", ene) end
+	//schedResetEnemy:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
 	self.NextWanderTime = CurTime() + math.Rand(3, 5)
 	-- This is needed for the human base because when taking cover from enemy, the AI can get stuck in a loop (EX: When self.NoWeapon_UseScaredBehavior_Active is true!)
 	local curSched = self.CurrentSchedule
@@ -3861,21 +3856,21 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 	if moveToEnemy && !self:IsBusy() && !self.IsGuard && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && self.LastHiddenZone_CanWander == true && !self.NoWeapon_UseScaredBehavior_Active then
 		//ParticleEffect("explosion_turret_break", self.LatestEnemyPosition, Angle(0,0,0))
 		self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk))
-		local vsched = vj_ai_schedule.New("vj_act_resetenemy")
-		vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-		//vsched:EngTask("TASK_WALK_PATH", 0)
-		vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-		vsched.ResetOnFail = true
-		vsched.CanShootWhenMoving = true
-		vsched.FaceData = {Type = VJ.NPC_FACE_ENEMY}
-		vsched.CanBeInterrupted = true
-		vsched.IsMovingTask = true
-		vsched.MoveType = 0
+		local schedResetEnemy = vj_ai_schedule.New("vj_act_resetenemy")
+		schedResetEnemy:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
+		//schedResetEnemy:EngTask("TASK_WALK_PATH", 0)
+		schedResetEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+		schedResetEnemy.ResetOnFail = true
+		schedResetEnemy.CanShootWhenMoving = true
+		schedResetEnemy.FaceData = {Type = VJ.NPC_FACE_ENEMY}
+		schedResetEnemy.CanBeInterrupted = true
+		schedResetEnemy.IsMovingTask = true
+		schedResetEnemy.MoveType = 0
 		//self.NextIdleTime = CurTime() + 10
-		self:StartSchedule(vsched)
+		self:StartSchedule(schedResetEnemy)
 	end
-	//if vsched.TaskCount > 0 then
-		//self:StartSchedule(vsched)
+	//if schedResetEnemy.TaskCount > 0 then
+		//self:StartSchedule(schedResetEnemy)
 	//end
 	self:SetEnemy(NULL)
 end

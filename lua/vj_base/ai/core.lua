@@ -442,10 +442,11 @@ end
 	Gets the forward vector that the NPC is moving towards and returns it
 		- ignoreZ = Ignores the Z axis of the direction during calculations | DEFAULT = false
 	Returns
-		- Vector, the direction the NPC is moving towards
+		- Vector, direction the NPC is moving towards
+		- false, currently NOT moving
 -----------------------------------------------------------]]
 function ENT:GetMoveDirection(ignoreZ)
-	if !self:IsMoving() then return defPos end
+	if !self:IsMoving() then return false end
 	local myPos = self:GetPos()
 	local dir = ((self:GetCurWaypointPos() or myPos) - myPos)
 	if ignoreZ then dir.z = 0 end

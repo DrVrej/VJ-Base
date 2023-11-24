@@ -1372,14 +1372,14 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				self:SetLayerPlaybackRate(gesture, finalPlayBackRate * 0.5)
 			end
 		else -- Sequences & Activities
-			local vsched = vj_ai_schedule.New("vj_act_"..animation)
+			local schedPlayAct = vj_ai_schedule.New("vj_act_"..animation)
 			
 			-- For humans NPCs, internally the base will set these variables back to true after this function if it's called by weapon attack animations!
 			self.DoingWeaponAttack = false
 			self.DoingWeaponAttack_Standing = false
 			
-			//self:StartEngineTask(ai.GetTaskID("TASK_RESET_ACTIVITY"), 0) //vsched:EngTask("TASK_RESET_ACTIVITY", 0)
-			//if self.Dead then vsched:EngTask("TASK_STOP_MOVING", 0) end
+			//self:StartEngineTask(ai.GetTaskID("TASK_RESET_ACTIVITY"), 0) //schedPlayAct:EngTask("TASK_RESET_ACTIVITY", 0)
+			//if self.Dead then schedPlayAct:EngTask("TASK_STOP_MOVING", 0) end
 			//self:FrameAdvance(0)
 			self:TaskComplete()
 			self:StopMoving()
@@ -1394,7 +1394,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				local transitionAnimTime = 0
 				if transitionAnim != -1 && seqID != transitionAnim then -- If it exists AND it's not the same as the animation
 					transitionAnimTime = self:SequenceDuration(transitionAnim) / self.AnimationPlaybackRate
-					vsched:AddTask("TASK_VJ_PLAY_SEQUENCE", {
+					schedPlayAct:AddTask("TASK_VJ_PLAY_SEQUENCE", {
 						animation = transitionAnim,
 						playbackRate = finalPlayBackRate,
 						duration = transitionAnimTime
@@ -1402,7 +1402,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				end
 				-- END: Experimental transition system for sequences
 				--
-				vsched:AddTask("TASK_VJ_PLAY_SEQUENCE", {
+				schedPlayAct:AddTask("TASK_VJ_PLAY_SEQUENCE", {
 					animation = animation,
 					playbackRate = finalPlayBackRate,
 					duration = animTime
@@ -1411,16 +1411,16 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				animTime = animTime + transitionAnimTime -- Adjust the animation time in case we have a transition animation!
 			else -- Only if activity
 				//self:SetActivity(ACT_RESET)
-				vsched:AddTask("TASK_VJ_PLAY_ACTIVITY", {
+				schedPlayAct:AddTask("TASK_VJ_PLAY_ACTIVITY", {
 					animation = animation,
 					duration = animTime
 				})
 				-- Old engine task animation system
 				/*if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 					self:ResetIdealActivity(animation)
-					//vsched:EngTask("TASK_SET_ACTIVITY", animation) -- To avoid AutoMovement stopping the velocity
+					//schedPlayAct:EngTask("TASK_SET_ACTIVITY", animation) -- To avoid AutoMovement stopping the velocity
 				//elseif faceEnemy == true then
-					//vsched:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY", animation)
+					//schedPlayAct:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY", animation)
 				else
 					-- Engine's default animation task
 					-- REQUIRED FOR TASK_PLAY_SEQUENCE: It fixes animations NOT applying walk frames if the previous animation was the same!
@@ -1428,16 +1428,16 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 						self:ResetSequenceInfo()
 						self:SetSaveValue("sequence", 0)
 					end
-					vsched:EngTask("TASK_PLAY_SEQUENCE", animation)
+					schedPlayAct:EngTask("TASK_PLAY_SEQUENCE", animation)
 				end*/
 			end
 			if faceEnemy == true then
 				self:SetTurnTarget("Enemy", animTime)
 			end
-			vsched.IsPlayActivity = true
-			vsched.CanBeInterrupted = !stopActivities
-			if (customFunc) then customFunc(vsched, animation) end
-			self:StartSchedule(vsched)
+			schedPlayAct.IsPlayActivity = true
+			schedPlayAct.CanBeInterrupted = !stopActivities
+			if (customFunc) then customFunc(schedPlayAct, animation) end
+			self:StartSchedule(schedPlayAct)
 		end
 		
 		-- If it has a OnFinish function, then set the timer to run it when it finishes!
@@ -1518,13 +1518,6 @@ function ENT:VJ_TASK_IDLE_STAND()
 	//if (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_idle_stand") or (self.CurrentAnim_CustomIdle != 0 && VJ.IsCurrentAnimation(self,self.CurrentAnim_CustomIdle) == true) then return end
 	//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
 	//if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_StopMoving() return end
-
-	/*local vschedIdleStand = vj_ai_schedule.New("vj_idle_stand")
-	//vschedIdleStand:EngTask("TASK_FACE_REASONABLE")
-	vschedIdleStand:EngTask("TASK_STOP_MOVING")
-	vschedIdleStand:EngTask("TASK_WAIT_INDEFINITE")
-	vschedIdleStand.CanBeInterrupted = true
-	self:StartSchedule(vschedIdleStand)*/
 	
 	local idleAnimTbl = self.AnimTbl_IdleStand
 	local posIdlesTbl = {}
@@ -2299,15 +2292,18 @@ function ENT:Think()
 		
 		-- Handle the unique movement system for player models
 		if self.UsePlayerModelMovement == true && self.MovementType == VJ_MOVETYPE_GROUND then
-			local moveDir = self:GetMoveDirection(true)
-			if moveDir != defPos then
-				self:SetPoseParameter("move_x", moveDir.x)
-				self:SetPoseParameter("move_y", moveDir.y)
-				if !didTurn then -- Only face move direction if I have NOT faced anything else!
-					self:SetTurnTarget(self:GetCurWaypointPos())
-				end
-			end
-		end
+            local moveDir = self:GetMoveDirection(true)
+            if moveDir then
+                self:SetPoseParameter("move_x", moveDir.x)
+                self:SetPoseParameter("move_y", moveDir.y)
+                if !didTurn then -- Only face move direction if I have NOT faced anything else!
+                    self:SetTurnTarget(self:GetCurWaypointPos())
+                end
+            else -- I am not moving, reset the pose parameters, otherwise I will run in place!
+                self:SetPoseParameter("move_x", 0)
+                self:SetPoseParameter("move_y", 0)
+            end
+        end
 	else -- AI Not enabled
 		if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then self:AA_StopMoving() end
 	end
@@ -2766,28 +2762,28 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		self:ClearEnemyMemory(ene)
 	end
 	//self:UpdateEnemyMemory(self,self:GetPos())
-	//local vsched = vj_ai_schedule.New("vj_act_resetenemy")
-	//if eneValid then vsched:EngTask("TASK_FORGET", ene) end
-	//vsched:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
+	//local schedResetEnemy = vj_ai_schedule.New("vj_act_resetenemy")
+	//if eneValid then schedResetEnemy:EngTask("TASK_FORGET", ene) end
+	//schedResetEnemy:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
 	self.NextWanderTime = CurTime() + math.Rand(3, 5)
 	if moveToEnemy && !self:IsBusy() && !self.IsGuard && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && self.LastHiddenZone_CanWander == true then
 		//ParticleEffect("explosion_turret_break", self.LatestEnemyPosition, Angle(0,0,0))
 		self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk))
-		local vsched = vj_ai_schedule.New("vj_act_resetenemy")
-		vsched:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-		//vsched:EngTask("TASK_WALK_PATH", 0)
-		vsched:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-		vsched.ResetOnFail = true
-		vsched.CanShootWhenMoving = true
-		vsched.FaceData = {Type = VJ.NPC_FACE_ENEMY}
-		vsched.CanBeInterrupted = true
-		vsched.IsMovingTask = true
-		vsched.MoveType = 0
+		local schedResetEnemy = vj_ai_schedule.New("vj_act_resetenemy")
+		schedResetEnemy:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
+		//schedResetEnemy:EngTask("TASK_WALK_PATH", 0)
+		schedResetEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+		schedResetEnemy.ResetOnFail = true
+		schedResetEnemy.CanShootWhenMoving = true
+		schedResetEnemy.FaceData = {Type = VJ.NPC_FACE_ENEMY}
+		schedResetEnemy.CanBeInterrupted = true
+		schedResetEnemy.IsMovingTask = true
+		schedResetEnemy.MoveType = 0
 		//self.NextIdleTime = CurTime() + 10
-		self:StartSchedule(vsched)
+		self:StartSchedule(schedResetEnemy)
 	end
-	//if vsched.TaskCount > 0 then
-		//self:StartSchedule(vsched)
+	//if schedResetEnemy.TaskCount > 0 then
+		//self:StartSchedule(schedResetEnemy)
 	//end
 	self:SetEnemy(NULL)
 end
