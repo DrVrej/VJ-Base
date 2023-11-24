@@ -865,7 +865,7 @@ end
 	Returns
 		- number, the hit group
 -----------------------------------------------------------]]
-function  ENT:GetLastDamageHitGroup()
+function ENT:GetLastDamageHitGroup()
 	return self:GetInternalVariable("m_LastHitGroup")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -874,7 +874,7 @@ end
 	Returns
 		- number, time
 -----------------------------------------------------------]]
-function  ENT:GetLastDamageTime()
+function ENT:GetLastDamageTime()
 	return self:GetInternalVariable("m_flLastDamageTime")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -883,7 +883,7 @@ end
 	Returns
 		- number, the damage count
 -----------------------------------------------------------]]
-function  ENT:GetTotalDamageCount()
+function ENT:GetTotalDamageCount()
 	return self:GetInternalVariable("m_iDamageCount")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -891,7 +891,7 @@ end
 	Scale the amount of energy used to calculate damage this NPC takes due to physics
 		- EXAMPLES: 0 = Take no physics damage | 0.001 = Take extremely minimum damage (manhack level) | 0.1 = Take little damage | 999999999 = Instant death
 -----------------------------------------------------------]]
-function  ENT:SetImpactEnergyScale(scale)
+function ENT:SetImpactEnergyScale(scale)
 	self:SetSaveValue("m_impactEnergyScale", scale)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

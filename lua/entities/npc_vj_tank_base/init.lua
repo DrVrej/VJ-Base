@@ -154,12 +154,16 @@ function ENT:CustomOnInitialize()
 	end
 	
 	-- Create the gunner NPC
-	self.Gunner = ents.Create(self.Tank_GunnerENT)
-	if IsValid(self.Gunner) then
-		self.Gunner:SetPos(self:Tank_GunnerSpawnPosition())
-		self.Gunner:SetAngles(self:GetAngles())
-		self.Gunner:Spawn()
-		self.Gunner:SetParent(self)
+	local gunner = ents.Create(self.Tank_GunnerENT)
+	if IsValid(gunner) then
+		gunner:SetPos(self:Tank_GunnerSpawnPosition())
+		gunner:SetAngles(self:GetAngles())
+		gunner:SetOwner(self)
+		gunner:SetParent(self)
+		gunner.VJ_NPC_Class = self.VJ_NPC_Class
+		gunner:Spawn()
+		gunner:Activate()
+		self.Gunner = gunner
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

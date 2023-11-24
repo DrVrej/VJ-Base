@@ -22,8 +22,7 @@ ENT.HealthRegenerationAmount = 4 -- How much should the health increase after ev
 ENT.HealthRegenerationDelay = VJ.SET(2, 4) -- How much time until the health increases
 ENT.HealthRegenerationResetOnDmg = true -- Should the delay reset when it receives damage?
 	-- ====== Collision / Hitbox Variables ====== --
-ENT.HullType = HULL_HUMAN
-ENT.HasHull = true -- Set to false to disable HULL
+ENT.HullType = HULL_HUMAN -- List of Hull types: https://wiki.facepunch.com/gmod/Enums/HULL
 ENT.HullSizeNormal = true -- set to false to cancel out the self:SetHullSizeNormal()
 ENT.HasSetSolid = true -- set to false to disable SetSolid
 	-- ====== Sight & Speed Variables ====== --
@@ -53,7 +52,6 @@ ENT.JumpVars = {
 }
 	-- Movement: STATIONARY --
 ENT.CanTurnWhileStationary = true -- Can the NPC turn while it's stationary?
-ENT.Stationary_UseNoneMoveType = false -- Technical variable, used if there is any issues with the NPC's position (It has its downsides, use only when needed!)
 	-- ====== NPC Controller Data ====== --
 ENT.VJC_Data = {
 	CameraMode = 1, -- Sets the default camera mode | 1 = Third Person, 2 = First Person
@@ -1129,7 +1127,7 @@ function ENT:Initialize()
 	end
 	self.SelectedDifficulty = GetConVar("vj_npc_difficulty"):GetInt()
 	if VJ.PICK(self.Model) != false then self:SetModel(VJ.PICK(self.Model)) end
-	if self.HasHull == true then self:SetHullType(self.HullType) end
+	self:SetHullType(self.HullType)
 	if self.HullSizeNormal == true then self:SetHullSizeNormal() end
 	if self.HasSetSolid == true then self:SetSolid(SOLID_BBOX) end // SOLID_OBB
 	self:SetCollisionGroup(COLLISION_GROUP_NPC)
@@ -1236,19 +1234,13 @@ ENT.ThrowingGrenade = false
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetInitializeCapabilities()
-	self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK))
-	self:CapabilitiesAdd(bit.bor(CAP_ANIMATEDFACE))
-	self:CapabilitiesAdd(bit.bor(CAP_TURN_HEAD))
+	self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK, CAP_ANIMATEDFACE, CAP_TURN_HEAD, CAP_DUCK))
 	if self.CanOpenDoors == true then
-		self:CapabilitiesAdd(bit.bor(CAP_OPEN_DOORS))
-		self:CapabilitiesAdd(bit.bor(CAP_AUTO_DOORS))
-		self:CapabilitiesAdd(bit.bor(CAP_USE))
+		self:CapabilitiesAdd(bit.bor(CAP_OPEN_DOORS, CAP_AUTO_DOORS, CAP_USE))
 	end
-	self:CapabilitiesAdd(bit.bor(CAP_DUCK))
 	//if self.HasSquad == true then self:CapabilitiesAdd(bit.bor(CAP_SQUAD)) end
 	if self.DisableWeapons == false && self.Weapon_NoSpawnMenu == false then
-		self:CapabilitiesAdd(bit.bor(CAP_USE_WEAPONS))
-		self:CapabilitiesAdd(bit.bor(CAP_WEAPON_RANGE_ATTACK1))
+		self:CapabilitiesAdd(bit.bor(CAP_USE_WEAPONS, CAP_WEAPON_RANGE_ATTACK1))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1257,45 +1249,32 @@ function ENT:DoChangeMovementType(movType)
 	if movType != -1 then self.MovementType = movType end
 	if self.MovementType == VJ_MOVETYPE_GROUND then
 		self:RemoveFlags(FL_FLY)
+		self:CapabilitiesRemove(CAP_MOVE_FLY)
 		self:SetNavType(NAV_GROUND)
 		self:SetMoveType(MOVETYPE_STEP)
-		self:CapabilitiesRemove(CAP_MOVE_FLY)
-		self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND))
-		if (VJ.AnimExists(self,ACT_JUMP) == true && GetConVar("vj_npc_human_canjump"):GetInt() == 1) or self.UsePlayerModelMovement == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_JUMP)) end
-		//if VJ.AnimExists(self,ACT_CLIMB_UP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
-		if self.DisableWeapons == false then self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT)) end
+		self:CapabilitiesAdd(CAP_MOVE_GROUND)
+		if (VJ.AnimExists(self, ACT_JUMP) == true && GetConVar("vj_npc_human_canjump"):GetInt() == 1) or self.UsePlayerModelMovement == true then self:CapabilitiesAdd(CAP_MOVE_JUMP) end
+		//if VJ.AnimExists(self, ACT_CLIMB_UP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
+		if self.DisableWeapons == false then self:CapabilitiesAdd(CAP_MOVE_SHOOT) end
 	elseif self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+		self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT))
 		self:SetGroundEntity(NULL)
 		self:AddFlags(FL_FLY)
 		self:SetNavType(NAV_FLY)
-		self:SetMoveType(MOVETYPE_STEP) // MOVETYPE_FLY, causes issues like Lerp functions not being smooth
-		self:CapabilitiesRemove(CAP_MOVE_GROUND)
-		self:CapabilitiesRemove(CAP_MOVE_JUMP)
-		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
-		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
-		self:CapabilitiesAdd(bit.bor(CAP_MOVE_FLY))
+		self:SetMoveType(MOVETYPE_STEP) // MOVETYPE_FLY = causes issues like Lerp functions not being smooth
+		self:CapabilitiesAdd(CAP_MOVE_FLY)
 	elseif self.MovementType == VJ_MOVETYPE_STATIONARY then
 		self:RemoveFlags(FL_FLY)
+		self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT, CAP_MOVE_FLY))
 		self:SetNavType(NAV_NONE)
-		if self.Stationary_UseNoneMoveType == true then
-			self:SetMoveType(MOVETYPE_NONE)
-		else
+		if !IsValid(self:GetParent()) then -- Only set move type if it does NOT have a parent!
 			self:SetMoveType(MOVETYPE_FLY)
 		end
-		self:CapabilitiesRemove(CAP_MOVE_GROUND)
-		self:CapabilitiesRemove(CAP_MOVE_JUMP)
-		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
-		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
-		self:CapabilitiesRemove(CAP_MOVE_FLY)
 	elseif self.MovementType == VJ_MOVETYPE_PHYSICS then
 		self:RemoveFlags(FL_FLY)
+		self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT, CAP_MOVE_FLY))
 		self:SetNavType(NAV_NONE)
 		self:SetMoveType(MOVETYPE_VPHYSICS)
-		self:CapabilitiesRemove(CAP_MOVE_GROUND)
-		self:CapabilitiesRemove(CAP_MOVE_JUMP)
-		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
-		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
-		self:CapabilitiesRemove(CAP_MOVE_FLY)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2698,7 +2677,7 @@ function ENT:Think()
 				end
 			end
 			
-			if self.DoingWeaponAttack == true then self:CapabilitiesRemove(CAP_TURN_HEAD) else self:CapabilitiesAdd(bit.bor(CAP_TURN_HEAD)) end -- Fixes their heads breaking
+			if self.DoingWeaponAttack == true then self:CapabilitiesRemove(CAP_TURN_HEAD) else self:CapabilitiesAdd(CAP_TURN_HEAD) end -- Fixes their heads breaking
 			-- If we have a valid weapon...
 			if IsValid(self.CurrentWeaponEntity) then
 				-- Weapon Inventory System
@@ -3454,7 +3433,7 @@ function ENT:DoWeaponAttackMovementCode(override, moveType)
 				if VJ.AnimExists(self,anim) == true then
 					self.DoingWeaponAttack = true
 					self.DoingWeaponAttack_Standing = false
-					self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
+					self:CapabilitiesAdd(CAP_MOVE_SHOOT)
 					self:SetMovementActivity(anim)
 					self:SetArrivalActivity(self.CurrentWeaponAnimation)
 				end
@@ -3463,7 +3442,7 @@ function ENT:DoWeaponAttackMovementCode(override, moveType)
 				if VJ.AnimExists(self,anim) == true then
 					self.DoingWeaponAttack = true
 					self.DoingWeaponAttack_Standing = false
-					self:CapabilitiesAdd(bit.bor(CAP_MOVE_SHOOT))
+					self:CapabilitiesAdd(CAP_MOVE_SHOOT)
 					self:SetMovementActivity(anim)
 					self:SetArrivalActivity(self.CurrentWeaponAnimation)
 				end

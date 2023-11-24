@@ -10,12 +10,10 @@ include('shared.lua')
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.StartHealth = 0
 ENT.HullType = HULL_TINY
-ENT.HullSizeNormal = false -- set to false to cancel out the self:SetHullSizeNormal()
 ENT.HasSetSolid = false -- set to false to disable SetSolid
 ENT.VJ_IsHugeMonster = true -- Is this a huge monster?
 ENT.MovementType = VJ_MOVETYPE_STATIONARY -- How does the SNPC move?
 ENT.CanTurnWhileStationary = false -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
-ENT.Stationary_UseNoneMoveType = true -- Technical variable, use this if there is any issues with the SNPC's position, though it does have its downsides, so use it only when needed
 ENT.GodMode = true -- Immune to everything
 ENT.Bleeds = false -- Does the SNPC bleed? (Blood decal, particle, etc.)
 ENT.Immune_Dissolve = true -- Immune to Dissolving | Example: Combine Ball

@@ -22,8 +22,7 @@ ENT.HealthRegenerationAmount = 4 -- How much should the health increase after ev
 ENT.HealthRegenerationDelay = VJ.SET(2, 4) -- How much time until the health increases
 ENT.HealthRegenerationResetOnDmg = true -- Should the delay reset when it receives damage?
 	-- ====== Collision / Hitbox Variables ====== --
-ENT.HullType = HULL_HUMAN
-ENT.HasHull = true -- Set to false to disable HULL
+ENT.HullType = HULL_HUMAN -- List of Hull types: https://wiki.facepunch.com/gmod/Enums/HULL
 ENT.HullSizeNormal = true -- set to false to cancel out the self:SetHullSizeNormal()
 ENT.HasSetSolid = true -- set to false to disable SetSolid
 	-- ====== Sight & Speed Variables ====== --
@@ -53,7 +52,6 @@ ENT.JumpVars = {
 }
 	-- Movement: STATIONARY --
 ENT.CanTurnWhileStationary = true -- Can the NPC turn while it's stationary?
-ENT.Stationary_UseNoneMoveType = false -- Technical variable, used if there is any issues with the NPC's position (It has its downsides, use only when needed!)
 	-- Movement: AERIAL --
 ENT.Aerial_FlyingSpeed_Calm = 80 -- The speed it should fly with, when it's wandering, moving slowly, etc. | Basically walking compared to ground SNPCs
 ENT.Aerial_FlyingSpeed_Alerted = 200 -- The speed it should fly with, when it's chasing an enemy, moving away quickly, etc. | Basically running compared to ground SNPCs
@@ -1096,7 +1094,7 @@ function ENT:Initialize()
 	end
 	self.SelectedDifficulty = GetConVar("vj_npc_difficulty"):GetInt()
 	if VJ.PICK(self.Model) != false then self:SetModel(VJ.PICK(self.Model)) end
-	if self.HasHull == true then self:SetHullType(self.HullType) end
+	self:SetHullType(self.HullType)
 	if self.HullSizeNormal == true then self:SetHullSizeNormal() end
 	if self.HasSetSolid == true then self:SetSolid(SOLID_BBOX) end // SOLID_OBB
 	self:SetCollisionGroup(COLLISION_GROUP_NPC)
@@ -1166,13 +1164,10 @@ ENT.LeapAttacking = false
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetInitializeCapabilities()
-	self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK))
-	//self:CapabilitiesAdd(bit.bor(CAP_ANIMATEDFACE)) -- Breaks some NPCs because during high velocity, the model tilts (EX: leap attacks)
-	self:CapabilitiesAdd(bit.bor(CAP_TURN_HEAD))
+	self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK, CAP_TURN_HEAD))
+	//self:CapabilitiesAdd(CAP_ANIMATEDFACE) -- Breaks some NPCs because during high velocity, the model tilts (EX: leap attacks)
 	if self.CanOpenDoors == true then
-		self:CapabilitiesAdd(bit.bor(CAP_OPEN_DOORS))
-		self:CapabilitiesAdd(bit.bor(CAP_AUTO_DOORS))
-		self:CapabilitiesAdd(bit.bor(CAP_USE))
+		self:CapabilitiesAdd(bit.bor(CAP_OPEN_DOORS, CAP_AUTO_DOORS, CAP_USE))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1181,44 +1176,31 @@ function ENT:DoChangeMovementType(movType)
 	if movType != -1 then self.MovementType = movType end
 	if self.MovementType == VJ_MOVETYPE_GROUND then
 		self:RemoveFlags(FL_FLY)
+		self:CapabilitiesRemove(CAP_MOVE_FLY)
 		self:SetNavType(NAV_GROUND)
 		self:SetMoveType(MOVETYPE_STEP)
-		self:CapabilitiesRemove(CAP_MOVE_FLY)
-		self:CapabilitiesAdd(bit.bor(CAP_MOVE_GROUND))
-		if VJ.AnimExists(self,ACT_JUMP) == true or self.UsePlayerModelMovement == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_JUMP)) end
-		if VJ.AnimExists(self,ACT_CLIMB_UP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
+		self:CapabilitiesAdd(CAP_MOVE_GROUND)
+		if VJ.AnimExists(self, ACT_JUMP) == true or self.UsePlayerModelMovement == true then self:CapabilitiesAdd(CAP_MOVE_JUMP) end
+		if VJ.AnimExists(self, ACT_CLIMB_UP) == true then self:CapabilitiesAdd(CAP_MOVE_CLIMB) end
 	elseif self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+		self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT))
 		self:SetGroundEntity(NULL)
 		self:AddFlags(FL_FLY)
 		self:SetNavType(NAV_FLY)
 		self:SetMoveType(MOVETYPE_STEP) // MOVETYPE_FLY, causes issues like Lerp functions not being smooth
-		self:CapabilitiesRemove(CAP_MOVE_GROUND)
-		self:CapabilitiesRemove(CAP_MOVE_JUMP)
-		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
-		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
-		self:CapabilitiesAdd(bit.bor(CAP_MOVE_FLY))
+		self:CapabilitiesAdd(CAP_MOVE_FLY)
 	elseif self.MovementType == VJ_MOVETYPE_STATIONARY then
 		self:RemoveFlags(FL_FLY)
+		self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT, CAP_MOVE_FLY))
 		self:SetNavType(NAV_NONE)
-		if self.Stationary_UseNoneMoveType == true then
-			self:SetMoveType(MOVETYPE_NONE)
-		else
+		if !IsValid(self:GetParent()) then -- Only set move type if it does NOT have a parent!
 			self:SetMoveType(MOVETYPE_FLY)
 		end
-		self:CapabilitiesRemove(CAP_MOVE_GROUND)
-		self:CapabilitiesRemove(CAP_MOVE_JUMP)
-		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
-		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
-		self:CapabilitiesRemove(CAP_MOVE_FLY)
 	elseif self.MovementType == VJ_MOVETYPE_PHYSICS then
 		self:RemoveFlags(FL_FLY)
+		self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT, CAP_MOVE_FLY))
 		self:SetNavType(NAV_NONE)
 		self:SetMoveType(MOVETYPE_VPHYSICS)
-		self:CapabilitiesRemove(CAP_MOVE_GROUND)
-		self:CapabilitiesRemove(CAP_MOVE_JUMP)
-		self:CapabilitiesRemove(CAP_MOVE_CLIMB)
-		self:CapabilitiesRemove(CAP_MOVE_SHOOT)
-		self:CapabilitiesRemove(CAP_MOVE_FLY)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
