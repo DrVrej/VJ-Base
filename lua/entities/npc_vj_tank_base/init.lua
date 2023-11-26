@@ -23,7 +23,6 @@ ENT.DeathCorpseCollisionType = COLLISION_GROUP_NONE -- Collision type for the co
 ENT.WaitBeforeDeathTime = 2 -- Time until the SNPC spawns its corpse and gets removed
 ENT.HasMeleeAttack = false -- Should the SNPC have a melee attack?
 ENT.DisableInitializeCapabilities = true -- If true, it will disable the initialize capabilities, this will allow you to add your own
-ENT.DisableSelectSchedule = true -- Disables Schedule code, Custom Schedule can still work
 ENT.DisableWandering = true -- Disables wandering when the SNPC is idle
 ENT.BringFriendsOnDeath = false -- Should the SNPC's friends come to its position before it dies?
 ENT.CallForBackUpOnDamage = false -- Should the SNPC call for help when damaged? (Only happens if the SNPC hasn't seen a enemy)
@@ -266,7 +265,7 @@ function ENT:CustomOnThink_AIEnabled()
 		self.Tank_IsMoving = false
 	end
 
-	self:CustomOnSchedule()
+	self:SelectSchedule()
 	
 	if self.Tank_Status == 0 && tr.Hit then
 		local ene = self:GetEnemy()
@@ -302,7 +301,7 @@ function ENT:CustomOnThink_AIEnabled()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnSchedule()
+function ENT:SelectSchedule()
 	if self:Health() <= 0 or self.Dead then return end
 
 	self:IdleSoundCode()

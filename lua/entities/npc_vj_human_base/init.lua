@@ -172,7 +172,6 @@ ENT.AnimTbl_MoveToCover = {ACT_RUN_CROUCH} -- The animation it plays when moving
 ENT.FindEnemy_UseSphere = false -- Should the SNPC be able to see all around him? (360) | Objects and walls can still block its sight!
 ENT.FindEnemy_CanSeeThroughWalls = false -- Should it be able to see through walls and objects? | Can be useful if you want to make it know where the enemy is at all times
 ENT.DisableFindEnemy = false -- Disables FindEnemy code, friendly code still works though
-ENT.DisableSelectSchedule = false -- Disables Schedule code, Custom Schedule can still work
 ENT.DisableTakeDamageFindEnemy = false -- Disable the SNPC finding the enemy when being damaged
 ENT.DisableTouchFindEnemy = false -- Disable the SNPC finding the enemy when being touched
 ENT.DisableMakingSelfEnemyToNPCs = false -- Disables the "AddEntityRelationship" that runs in think
@@ -669,8 +668,6 @@ function ENT:CustomOnThink_AIEnabled() end
 function ENT:CustomOn_PoseParameterLookingCode(pitch, yaw, roll) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnSetupWeaponHoldTypeAnims(hType) return false end -- return true to disable the base code
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnSchedule() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Called from the engine
 -- function ENT:ExpressionFinished(strExp) end
@@ -3491,9 +3488,7 @@ local schedMoveAway = vj_ai_schedule.New("vj_move_away")
 	schedMoveAway.FaceData = {} -- This is constantly edited!
 --
 function ENT:SelectSchedule()
-	if self.VJ_IsBeingControlled then return end
-	self:CustomOnSchedule()
-	if self.DisableSelectSchedule == true or self.Dead then return end
+	if self.VJ_IsBeingControlled or self.Dead then return end
 	
 	local ene = self:GetEnemy()
 	local eneValid = IsValid(self:GetEnemy())

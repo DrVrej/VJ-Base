@@ -24,7 +24,6 @@ ENT.FindEnemy_UseSphere = true -- Should the SNPC be able to see all around him?
 ENT.DeathCorpseCollisionType = COLLISION_GROUP_NONE -- Collision type for the corpse | SNPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
 ENT.HasMeleeAttack = false -- Should the SNPC have a melee attack?
 ENT.DisableInitializeCapabilities = true -- If true, it will disable the initialize capabilities, this will allow you to add your own
-ENT.DisableSelectSchedule = true -- Disables Schedule code, Custom Schedule can still work
 ENT.DisableWandering = true -- Disables wandering when the SNPC is idle
 ENT.DisableFindEnemy = true -- Disables FindEnemy code, friendly code still works though
 ENT.BringFriendsOnDeath = false -- Should the SNPC's friends come to its position before it dies?
@@ -215,7 +214,7 @@ function ENT:CustomOnThink_AIEnabled()
 	self:Tank_CustomOnThink_AIEnabled()
 
 	if self.Tank_GunnerIsTurning == true then self:Tank_Sound_Moving() else VJ.STOPSOUND(self.CurrentTankMovingSound) end
-	self:CustomOnSchedule()
+	self:SelectSchedule()
 	
 	if self.Tank_Status == 0 then
 		local ene = self:GetEnemy()
@@ -253,7 +252,7 @@ function ENT:CustomOnThink_AIEnabled()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnSchedule()
+function ENT:SelectSchedule()
 	if self.Dead then return end
 	
 	self:IdleSoundCode()

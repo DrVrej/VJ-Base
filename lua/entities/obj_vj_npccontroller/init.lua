@@ -213,21 +213,19 @@ function ENT:SetControlledNPC(npcEnt)
 			[2] = npcEnt.DisableChasingEnemy,
 			[3] = npcEnt.DisableTakeDamageFindEnemy,
 			[4] = npcEnt.DisableTouchFindEnemy,
-			[5] = npcEnt.DisableSelectSchedule,
-			[6] = npcEnt.CallForHelp,
-			[7] = npcEnt.CallForBackUpOnDamage,
-			[8] = npcEnt.BringFriendsOnDeath,
-			[9] = npcEnt.FollowPlayer,
-			[10] = npcEnt.CanDetectDangers,
-			[11] = npcEnt.Passive_RunOnTouch,
-			[12] = npcEnt.Passive_RunOnDamage,
-			[13] = npcEnt.IsGuard,
+			[5] = npcEnt.CallForHelp,
+			[6] = npcEnt.CallForBackUpOnDamage,
+			[7] = npcEnt.BringFriendsOnDeath,
+			[8] = npcEnt.FollowPlayer,
+			[9] = npcEnt.CanDetectDangers,
+			[10] = npcEnt.Passive_RunOnTouch,
+			[11] = npcEnt.Passive_RunOnDamage,
+			[12] = npcEnt.IsGuard,
 		}
 		npcEnt.DisableWandering = true
 		npcEnt.DisableChasingEnemy = true
 		npcEnt.DisableTakeDamageFindEnemy = true
 		npcEnt.DisableTouchFindEnemy = true
-		npcEnt.DisableSelectSchedule = true
 		npcEnt.CallForHelp = false
 		npcEnt.CallForBackUpOnDamage = false
 		npcEnt.BringFriendsOnDeath = false
@@ -236,9 +234,13 @@ function ENT:SetControlledNPC(npcEnt)
 		npcEnt.Passive_RunOnTouch = false
 		npcEnt.Passive_RunOnDamage = false
 		npcEnt.IsGuard = false
-		
 		npcEnt.vACT_StopAttacks = true
 		npcEnt.NextThrowGrenadeT = 0
+		if npcEnt.Medic_Status then npcEnt:DoMedicReset() end
+		if npcEnt.VJTag_IsEating then
+			npcEnt:CustomOnEat("StopEating", "Unspecified") -- So it plays the get up animation
+			npcEnt:EatingReset("Unspecified")
+		end
 	end
 	npcEnt:ClearSchedule()
 	npcEnt:StopMoving()
@@ -513,15 +515,14 @@ function ENT:StopControlling(keyPressed)
 			npc.DisableChasingEnemy = npcData[2]
 			npc.DisableTakeDamageFindEnemy = npcData[3]
 			npc.DisableTouchFindEnemy = npcData[4]
-			npc.DisableSelectSchedule = npcData[5]
-			npc.CallForHelp = npcData[6]
-			npc.CallForBackUpOnDamage = npcData[7]
-			npc.BringFriendsOnDeath = npcData[8]
-			npc.FollowPlayer = npcData[9]
-			npc.CanDetectDangers = npcData[10]
-			npc.Passive_RunOnTouch = npcData[11]
-			npc.Passive_RunOnDamage = npcData[12]
-			npc.IsGuard = npcData[13]
+			npc.CallForHelp = npcData[5]
+			npc.CallForBackUpOnDamage = npcData[6]
+			npc.BringFriendsOnDeath = npcData[7]
+			npc.FollowPlayer = npcData[8]
+			npc.CanDetectDangers = npcData[9]
+			npc.Passive_RunOnTouch = npcData[10]
+			npc.Passive_RunOnDamage = npcData[11]
+			npc.IsGuard = npcData[12]
 		end
 	end
 	//self.VJCE_Camera:Remove()
