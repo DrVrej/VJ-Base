@@ -809,22 +809,20 @@ end
 -----------------------------------------------------------]]
 function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 	if !IsValid(ent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or ent:Health() <= 0 or (ent:IsPlayer() && (!ent:Alive() or VJ_CVAR_IGNOREPLAYERS)) then return end
-	stopMoving = stopMoving or false -- Will not run if doQuickIfActiveEnemy passes!
-	doQuickIfActiveEnemy = doQuickIfActiveEnemy or false -- It will run a much quicker set enemy without resetting everything (Only if it has an active enemy!)
 	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == ent then self:DoMedicReset() end
 	local eneData = self.EnemyData
 	eneData.TimeSet = CurTime()
 	self:AddEntityRelationship(ent, D_HT, 0)
 	self:UpdateEnemyMemory(ent, ent:GetPos())
 	self:SetNPCState(NPC_STATE_COMBAT)
-	if doQuickIfActiveEnemy == true && IsValid(self:GetEnemy()) then
+	if doQuickIfActiveEnemy && IsValid(self:GetEnemy()) then
 		self:SetEnemy(ent)
 		return -- End it here if it's a minor set enemy
 	end
 	self:SetEnemy(ent)
 	eneData.TimeSinceAcquired = CurTime()
 	//self.NextResetEnemyT = CurTime() + 0.5 //2
-	if stopMoving == true then
+	if stopMoving then
 		self:ClearGoal()
 		self:StopMoving()
 	end
@@ -965,6 +963,8 @@ end
 */
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local vecZN100 = Vector(0, 0, -100)
+--
 function ENT:IsJumpLegal(startPos, apex, endPos)
 	/*if !self.AllowMovementJumping then return false end
 	local result = self:CustomOnIsJumpLegal(startPos, apex, endPos)
@@ -993,7 +993,7 @@ function ENT:IsJumpLegal(startPos, apex, endPos)
 	end
 	local tr = util.TraceLine({
 		start = endPos,
-		endpos = endPos + Vector(0, 0, -100),
+		endpos = endPos + vecZN100,
 	})
 	/*VJ.DEBUG_TempEnt(startPos, Angle(0,0,0), Color(0,255,0))
 	VJ.DEBUG_TempEnt(apex, Angle(0,0,0), Color(255,115,0))

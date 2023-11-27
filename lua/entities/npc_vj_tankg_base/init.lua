@@ -9,21 +9,16 @@ include('shared.lua')
 ------ Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.StartHealth = 0
-ENT.HullType = HULL_TINY
+ENT.HullType = HULL_LARGE
 ENT.HasSetSolid = false -- set to false to disable SetSolid
 ENT.VJ_IsHugeMonster = true -- Is this a huge monster?
 ENT.MovementType = VJ_MOVETYPE_STATIONARY -- How does the SNPC move?
 ENT.CanTurnWhileStationary = false -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
 ENT.GodMode = true -- Immune to everything
 ENT.Bleeds = false -- Does the SNPC bleed? (Blood decal, particle, etc.)
-ENT.Immune_Dissolve = true -- Immune to Dissolving | Example: Combine Ball
-ENT.Immune_AcidPoisonRadiation = true -- Immune to Acid, Poison and Radiation
-ENT.Immune_Bullet = true -- Immune to Bullets
-ENT.ImmuneDamagesTable = {DMG_SLASH,DMG_GENERIC,DMG_CLUB,DMG_PHYSGUN} -- You can set Specific types of damages for the SNPC to be immune to
 ENT.FindEnemy_UseSphere = true -- Should the SNPC be able to see all around him? (360) | Objects and walls can still block its sight!
 ENT.DeathCorpseCollisionType = COLLISION_GROUP_NONE -- Collision type for the corpse | SNPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
 ENT.HasMeleeAttack = false -- Should the SNPC have a melee attack?
-ENT.DisableInitializeCapabilities = true -- If true, it will disable the initialize capabilities, this will allow you to add your own
 ENT.DisableWandering = true -- Disables wandering when the SNPC is idle
 ENT.DisableFindEnemy = true -- Disables FindEnemy code, friendly code still works though
 ENT.BringFriendsOnDeath = false -- Should the SNPC's friends come to its position before it dies?

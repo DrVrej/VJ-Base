@@ -67,7 +67,7 @@ ENT.HasEntitiesToNoCollide = true -- If set to false, it won't run the EntitiesT
 ENT.EntitiesToNoCollide = {} -- Entities to not collide with when HasEntitiesToNoCollide is set to true
 ENT.AllowPrintingInChat = true -- Should this SNPC be allowed to post in player's chat? Example: "Blank no longer likes you."
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- AI / Relationship Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ AI & Relationship Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.CanOpenDoors = true -- Can it open doors?
 ENT.HasAllies = true -- Put to false if you want it not to have any allies
@@ -177,8 +177,6 @@ ENT.DisableTouchFindEnemy = false -- Disable the SNPC finding the enemy when bei
 ENT.DisableMakingSelfEnemyToNPCs = false -- Disables the "AddEntityRelationship" that runs in think
 ENT.TimeUntilEnemyLost = 15 -- Time until it resets its enemy if the enemy is not visible
 ENT.NextProcessTime = 1 -- Time until it runs the essential part of the AI, which can be performance heavy!
-	-- ====== Miscellaneous Variables ====== --
-ENT.DisableInitializeCapabilities = false -- If enabled, all of the Capabilities will be disabled, allowing you to add your own
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Damaged / Injured Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -194,7 +192,7 @@ ENT.CustomBlood_Pool = {} -- Blood pool types after it dies | Leave empty for th
 ENT.HasBloodDecal = true -- Does it spawn a decal when damaged?
 ENT.CustomBlood_Decal = {} -- Decals to spawn when it's damaged | Leave empty for the base to decide
 ENT.BloodDecalUseGMod = false -- Should use the current default decals defined by Garry's Mod? (This only applies for certain blood types only!)
-ENT.BloodDecalDistance = 150 -- How far the decal can spawn in world units
+ENT.BloodDecalDistance = 150 -- Max distance blood decals can splatter
 	-- ====== Immunity Variables ====== --
 ENT.GodMode = false -- Immune to everything
 ENT.Immune_AcidPoisonRadiation = false -- Immune to Acid, Poison and Radiation
@@ -240,8 +238,8 @@ ENT.HideOnUnknownDamage = 5 -- number = Hide on unknown damage, defines the time
 ------ Death & Corpse Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- ====== Ally Reaction On Death Variables ====== --
-	-- Default: Creature base uses BringFriends and Human base uses AlertFriends
-	-- BringFriendsOnDeath takes priority over AlertFriendsOnDeath!
+	-- Default: Creature base uses "BringFriends" and Human base uses "AlertFriends"
+	-- "BringFriendsOnDeath" takes priority over "AlertFriendsOnDeath"!
 ENT.BringFriendsOnDeath = false -- Should the SNPC's friends come to its position before it dies?
 ENT.BringFriendsOnDeathDistance = 800 -- How far away does the signal go? | Counted in World Units
 ENT.BringFriendsOnDeathLimit = 3 -- How many people should it call? | 0 = Unlimited
@@ -496,7 +494,7 @@ ENT.SoundTbl_Death = {}
 ENT.SoundTbl_SoundTrack = {}
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ ///// WARNING: Don't change anything in this box! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- These are the default file paths in case the user doesn't put one (tables above).
+-- Default sound file paths for certain sound tables | Base will play these if the corresponding table is left empty
 local DefaultSoundTbl_FootStep = {"npc/metropolice/gear1.wav","npc/metropolice/gear2.wav","npc/metropolice/gear3.wav","npc/metropolice/gear4.wav","npc/metropolice/gear5.wav","npc/metropolice/gear6.wav"}
 local DefaultSoundTbl_MedicAfterHeal = {"items/smallmedkit1.wav"}
 ENT.DefaultSoundTbl_MeleeAttack = {"physics/body/body_medium_impact_hard1.wav","physics/body/body_medium_impact_hard2.wav","physics/body/body_medium_impact_hard3.wav","physics/body/body_medium_impact_hard4.wav","physics/body/body_medium_impact_hard5.wav","physics/body/body_medium_impact_hard6.wav"}
@@ -594,7 +592,6 @@ ENT.PainSoundLevel = 80
 ENT.ImpactSoundLevel = 60
 ENT.DamageByPlayerSoundLevel = 75
 ENT.DeathSoundLevel = 80
-//ENT.SoundTrackLevel = 0.9
 	-- ====== Sound Pitch Variables ====== --
 	-- Range: 0 - 255 | Lower pitch < x > Higher pitch
 ENT.UseTheSameGeneralSoundPitch = true -- If set to true, the base will decide a number when the NPC spawns and uses it for all sound pitches set to false
@@ -645,7 +642,7 @@ ENT.SoundTrackPlaybackRate = 1
 ------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Use the functions below to customize parts of the base or to add new custom systems
--- Some functions don't have a custom function because you can simply override the base function and call "self.BaseClass.FuncName" to run the base code as well
+-- Some functions don't have a custom function because you can simply override the base function and call "self.BaseClass.FuncName(self)" to run the base code as well
 -- 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPreInitialize() end
@@ -1143,7 +1140,14 @@ function ENT:Initialize()
 		self.DisableWeapons = true
 		self.Weapon_NoSpawnMenu = true
 	end
-	if self.DisableInitializeCapabilities == false then self:SetInitializeCapabilities() end
+	self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK, CAP_ANIMATEDFACE, CAP_TURN_HEAD, CAP_DUCK))
+	if self.CanOpenDoors == true then
+		self:CapabilitiesAdd(bit.bor(CAP_OPEN_DOORS, CAP_AUTO_DOORS, CAP_USE))
+	end
+	if self.DisableWeapons == false && self.Weapon_NoSpawnMenu == false then
+		self:CapabilitiesAdd(bit.bor(CAP_USE_WEAPONS, CAP_WEAPON_RANGE_ATTACK1))
+	end
+	//if self.HasSquad == true then self:CapabilitiesAdd(bit.bor(CAP_SQUAD)) end
 	self:SetHealth((GetConVar("vj_npc_allhealth"):GetInt() > 0) and GetConVar("vj_npc_allhealth"):GetInt() or self:VJ_GetDifficultyValue(self.StartHealth))
 	self.StartHealth = self:Health()
 	//if self.HasSquad == true then self:Fire("setsquad", self.SquadName) end
@@ -1229,17 +1233,6 @@ end
 ENT.MeleeAttacking = false
 ENT.ThrowingGrenade = false
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SetInitializeCapabilities()
-	self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK, CAP_ANIMATEDFACE, CAP_TURN_HEAD, CAP_DUCK))
-	if self.CanOpenDoors == true then
-		self:CapabilitiesAdd(bit.bor(CAP_OPEN_DOORS, CAP_AUTO_DOORS, CAP_USE))
-	end
-	//if self.HasSquad == true then self:CapabilitiesAdd(bit.bor(CAP_SQUAD)) end
-	if self.DisableWeapons == false && self.Weapon_NoSpawnMenu == false then
-		self:CapabilitiesAdd(bit.bor(CAP_USE_WEAPONS, CAP_WEAPON_RANGE_ATTACK1))
-	end
-end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChangeMovementType(movType)
 	movType = movType or -1

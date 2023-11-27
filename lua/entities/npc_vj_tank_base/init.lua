@@ -22,7 +22,6 @@ ENT.GetDamageFromIsHugeMonster = true -- Should it get damaged no matter what by
 ENT.DeathCorpseCollisionType = COLLISION_GROUP_NONE -- Collision type for the corpse | SNPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
 ENT.WaitBeforeDeathTime = 2 -- Time until the SNPC spawns its corpse and gets removed
 ENT.HasMeleeAttack = false -- Should the SNPC have a melee attack?
-ENT.DisableInitializeCapabilities = true -- If true, it will disable the initialize capabilities, this will allow you to add your own
 ENT.DisableWandering = true -- Disables wandering when the SNPC is idle
 ENT.BringFriendsOnDeath = false -- Should the SNPC's friends come to its position before it dies?
 ENT.CallForBackUpOnDamage = false -- Should the SNPC call for help when damaged? (Only happens if the SNPC hasn't seen a enemy)
