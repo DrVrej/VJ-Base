@@ -1487,9 +1487,7 @@ end
 function ENT:VJ_TASK_IDLE_STAND()
 	if self:IsMoving() or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end // self.CurrentSchedule != nil
 	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:BusyWithActivity() then return end
-	//if (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_idle_stand") or (self.CurrentAnim_CustomIdle != 0 && VJ.IsCurrentAnimation(self,self.CurrentAnim_CustomIdle) == true) then return end
 	//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
-	//if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_StopMoving() return end
 	
 	local idleAnimTbl = self.AnimTbl_IdleStand
 	local posIdlesTbl = {}
@@ -1513,9 +1511,9 @@ function ENT:VJ_TASK_IDLE_STAND()
 	end
 	//PrintTable(idleAnimTbl)
 	-- If there is more than 1 animation in the table AND one of the animations is the current animation AND time hasn't expired, then return!
-	/*if #idleAnimTbl > 1 && sameAnimFound == true && self.NextIdleStandTime > CurTime() then
-		return
-	end*/
+	//if #idleAnimTbl > 1 && sameAnimFound == true && self.NextIdleStandTime > CurTime() then
+		//return
+	//end
 	
 	local pickedAnim = VJ.PICK(posIdlesTbl) or ACT_IDLE -- If no animation was found, then use ACT_IDLE
 	
@@ -1523,20 +1521,19 @@ function ENT:VJ_TASK_IDLE_STAND()
 	//pickedAnim = VJ.SequenceToActivity(self,pickedAnim)
 	//if pickedAnim == false then return false end
 	
-	if (!sameAnimFound /*or (sameAnimFound && numOfAnims == 1 && CurTime() > self.NextIdleStandTime)*/) or (CurTime() > self.NextIdleStandTime) then
+	if (!sameAnimFound) or (CurTime() > self.NextIdleStandTime) then // or (sameAnimFound && numOfAnims == 1 && CurTime() > self.NextIdleStandTime)
 		self.CurrentIdleAnimation = pickedAnim
 		//self.CurIdleStandMove = false
-		-- Old system
-		/*if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
-			if self:BusyWithActivity() == true then return end // self:GetSequence() == 0
-			self:AA_StopMoving()
-			self:VJ_ACT_PLAYACTIVITY(pickedAnim, false, 0, false, 0, {SequenceDuration=false, SequenceInterruptible=true}) // AlwaysUseSequence=true
-		end
-		if self.CurrentSchedule == nil then -- If it's not doing a schedule then reset the activity to make sure it's not already playing the same idle activity!
-			self:StartEngineTask(ai.GetTaskID("TASK_RESET_ACTIVITY"), 0)
-			//self:SetIdealActivity(ACT_RESET)
-		end*/
-		//self:StartEngineTask(ai.GetTaskID("TASK_PLAY_SEQUENCE"),pickedAnim)
+		-- VERY old system
+		//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
+			//if self:BusyWithActivity() == true then return end
+			//self:AA_StopMoving()
+			//self:VJ_ACT_PLAYACTIVITY(pickedAnim, false, 0, false, 0, {SequenceDuration=false, SequenceInterruptible=true}) // AlwaysUseSequence=true
+		//end
+		//if self.CurrentSchedule == nil then -- If it's not doing a schedule then reset the activity to make sure it's not already playing the same idle activity!
+			//self:StartEngineTask(ai.GetTaskID("TASK_RESET_ACTIVITY"), 0)
+		//end -- End of VERY old system
+		//self:StartEngineTask(ai.GetTaskID("TASK_PLAY_SEQUENCE"), pickedAnim)
 		if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then self:AA_StopMoving() end
 		self.CurAnimationSeed = 0
 		self:ResetIdealActivity(pickedAnim)
