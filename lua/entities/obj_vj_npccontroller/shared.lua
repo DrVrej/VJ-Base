@@ -27,7 +27,7 @@ if CLIENT then
 		if !IsValid(camera) or !IsValid(npc) then return end
 		if IsValid(ply:GetViewEntity()) && ply:GetViewEntity():GetClass() == "gmod_cameraprop" then return end
 		local cameraMode = ply.VJC_Camera_Mode
-		local customData = npc.CustomOnCalcView and npc:CustomOnCalcView(ply, origin, angles, fov, camera, cameraMode) or false
+		local customData = npc.Controller_CalcView and npc:Controller_CalcView(ply, origin, angles, fov, camera, cameraMode) or false
 		local lerpSpeed = ply:GetInfoNum("vj_npc_cont_cam_speed", 6)
 	
 		local pos = origin -- The position that will be set

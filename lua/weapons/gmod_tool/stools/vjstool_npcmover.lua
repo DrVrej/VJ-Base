@@ -227,11 +227,11 @@ else -- If SERVER
 					if v.IsVJBaseSNPC == true then
 						if k == 1 or math.random(1, 5) == 1 then v:PlaySoundSystem("OnReceiveOrder") end
 						v:VJ_TASK_GOTO_LASTPOS(type_task, function(schedule)
-							if IsValid(v:GetEnemy()) && v:Visible(v:GetEnemy()) then
-								schedule:EngTask("TASK_FACE_ENEMY", 0)
+							//if IsValid(v:GetEnemy()) && v:Visible(v:GetEnemy()) then
+								//schedule:EngTask("TASK_FACE_ENEMY", 0)
 								schedule.CanShootWhenMoving = true
-								schedule.FaceData = {Type = VJ.NPC_FACE_ENEMY}
-							end
+								schedule.FaceData = {Type = VJ.NPC_FACE_ENEMY_VISIBLE}
+							//end
 						end)
 					else -- For non-VJ NPCs
 						v:SetSchedule(type_sched)
