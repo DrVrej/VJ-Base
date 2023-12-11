@@ -356,15 +356,15 @@ end
 function SWEP:TranslateActivity(act)
 	local owner = self:GetOwner()
 	if (owner:IsNPC()) then
-		if owner.IsVJBaseSNPC_Human == true then
-			local wepT = owner.WeaponAnimTranslations[act]
+		if owner.IsVJBaseSNPC == true then
+			local wepT = owner.AnimationTranslations[act]
 			if (wepT) then
 				if istable(wepT) then
 					return VJ.PICK(wepT)
 				end
 				return wepT
 			end
-		elseif (self.ActivityTranslateAI[act]) then -- For non-VJ Human NPCs
+		elseif (self.ActivityTranslateAI[act]) then -- For non-VJ NPCs
 			return self.ActivityTranslateAI[act]
 		end
 		return -1
@@ -432,7 +432,7 @@ function SWEP:NPCAbleToShoot()
 		if (owner.IsVJBaseSNPC_Human && IsValid(ene) && owner:IsAbleToShootWeapon(true, true) == false) or (self.NPC_StandingOnly == true && owner:IsMoving()) then
 			return false
 		end
-		if owner:GetActivity() != nil && ((owner.IsVJBaseSNPC_Human == true && owner.DoingWeaponAttack == true && (/*(owner.CurrentWeaponAnimation == owner:GetSequenceActivity(owner:GetSequence())) or*/ (owner.CurrentWeaponAnimation == owner:GetActivity()) or (owner:GetActivity() == owner:TranslateToWeaponAnim(owner.CurrentWeaponAnimation)) or (!owner.DoingWeaponAttack_Standing))) or (!owner.IsVJBaseSNPC_Human)) then
+		if owner:GetActivity() != nil && ((owner.IsVJBaseSNPC_Human == true && owner.DoingWeaponAttack == true && (/*(owner.CurrentWeaponAnimation == owner:GetSequenceActivity(owner:GetSequence())) or*/ (owner.CurrentWeaponAnimation == owner:GetActivity()) or (owner:GetActivity() == owner:TranslateActivity(owner.CurrentWeaponAnimation)) or (!owner.DoingWeaponAttack_Standing))) or (!owner.IsVJBaseSNPC_Human)) then
 			-- For VJ Humans only, ammo check
 			if owner.IsVJBaseSNPC_Human && owner.AllowWeaponReloading == true && self:Clip1() <= 0 then -- No ammo!
 				if owner.VJ_IsBeingControlled == true then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER, "Press R to reload!") end
@@ -550,7 +550,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	
 	-- Firing Gesture
 	if owner.IsVJBaseSNPC_Human == true && owner.DisableWeaponFiringGesture != true then
-		owner:VJ_ACT_PLAYACTIVITY(owner:TranslateToWeaponAnim(VJ.PICK(owner.AnimTbl_WeaponAttackFiringGesture)), false, false, false, 0, {AlwaysUseGesture=true})
+		owner:VJ_ACT_PLAYACTIVITY(owner:TranslateActivity(VJ.PICK(owner.AnimTbl_WeaponAttackFiringGesture)), false, false, false, 0, {AlwaysUseGesture=true})
 	end
 	
 	-- MELEE WEAPON

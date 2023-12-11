@@ -342,7 +342,7 @@ function ENT:Think()
 				npc:SetTurnTarget(bullseyePos, 0.2)
 				canTurn = false
 				// Prints show that the animations aren't being set, hence why they have trouble shooting
-				if VJ.IsCurrentAnimation(npc, npc:TranslateToWeaponAnim(npc.CurrentWeaponAnimation)) == false && VJ.IsCurrentAnimation(npc, npc.AnimTbl_WeaponAttack) == false then
+				if VJ.IsCurrentAnimation(npc, npc:TranslateActivity(npc.CurrentWeaponAnimation)) == false && VJ.IsCurrentAnimation(npc, npc.AnimTbl_WeaponAttack) == false then
 					npc:CustomOnWeaponAttack()
 					npc.CurrentWeaponAnimation = VJ.PICK(npc.AnimTbl_WeaponAttack)
 					npc:VJ_ACT_PLAYACTIVITY(npc.CurrentWeaponAnimation, false, 2, false)

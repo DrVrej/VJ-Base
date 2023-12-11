@@ -68,7 +68,7 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 	if SERVER && ent:IsNPC() && !ignoreEnts[entClass] then
 		local isVJ = ent.IsVJBaseSNPC
 		if isVJ then
-			ent.NextProcessT = CurTime() + 0.15
+			ent.NextProcessT = CurTime() + math.Rand(0.15, 1)
 		else
 			-- Set the tags for default player allies
 			if NPCTbl_Resistance[entClass] then
@@ -238,4 +238,8 @@ cvars.AddChangeCallback("ai_ignoreplayers", function(convar_name, oldValue, newV
 			end
 		end
 	end
+end)
+---------------------------------------------------------------------------------------------------------------------------------------------
+cvars.AddChangeCallback("ai_disabled", function(convar_name, oldValue, newValue)
+	VJ_CVAR_AI_ENABLED = tonumber(newValue) != 1
 end)

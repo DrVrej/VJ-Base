@@ -293,7 +293,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_FireShell()
 	local ene = self:GetEnemy()
-	if (GetConVar("ai_disabled"):GetInt() == 1) or self.Dead or (!self.Tank_ProperHeightShoot) or (!IsValid(ene)) or (!self.Tank_FacingTarget) then return end // self.Tank_FacingTarget != true
+	if !VJ_CVAR_AI_ENABLED or self.Dead or (!self.Tank_ProperHeightShoot) or (!IsValid(ene)) or (!self.Tank_FacingTarget) then return end // self.Tank_FacingTarget != true
 	if self:Visible(ene) then
 		self:Tank_Sound_FireShell()
 		self:Tank_ShellFireEffects()

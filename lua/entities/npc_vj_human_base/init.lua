@@ -664,8 +664,6 @@ function ENT:CustomOnThink_AIEnabled() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOn_PoseParameterLookingCode(pitch, yaw, roll) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnSetupWeaponHoldTypeAnims(hType) return false end -- return true to disable the base code
----------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Called from the engine
 -- function ENT:ExpressionFinished(strExp) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -888,6 +886,650 @@ function ENT:CustomOnRemove() end
 function ENT:Controller_Initialize(ply, controlEnt)
 	//ply:ChatPrint("CTRL + MOUSE2: Rocket Attack") -- Example key binding message
 end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:SetAnimationTranslations(wepHoldType)
+	------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	------ Combine ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	if self.ModelAnimationSet == VJ.ANIM_SET_COMBINE then
+		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.71120220422745 end
+		self.AnimationTranslations[ACT_RUN_PROTECTED] 				= ACT_RUN_CROUCH_RIFLE
+		
+		-- Use rifle animations with minor edits if it's holding a handgun
+		local rifle_idle = ACT_IDLE_SMG1
+		local rifle_walk = VJ.PICK({ACT_WALK_RIFLE, VJ.SequenceToActivity(self, "walkeasy_all")})
+		if wepHoldType == "pistol" or wepHoldType == "revolver" or wepHoldType == "melee" or wepHoldType == "melee2" or wepHoldType == "knife" then
+			rifle_idle = VJ.SequenceToActivity(self, "idle_unarmed")
+			rifle_walk = VJ.SequenceToActivity(self, "walkunarmed_all")
+		end
+		
+		-- "Leanwall_CrouchLeft_A_idle", "Leanwall_CrouchLeft_B_idle", "Leanwall_CrouchLeft_C_idle", "Leanwall_CrouchLeft_D_idle"
+		self.AnimationTranslations[ACT_COVER_LOW] 						= {ACT_COVER, "vjseq_Leanwall_CrouchLeft_A_idle", "vjseq_Leanwall_CrouchLeft_B_idle", "vjseq_Leanwall_CrouchLeft_C_idle", "vjseq_Leanwall_CrouchLeft_D_idle"}
+		if wepHoldType == "ar2" or wepHoldType == "smg" or wepHoldType == "rpg" or wepHoldType == "pistol" or wepHoldType == "revolver" or wepHoldType == "melee" or wepHoldType == "melee2" or wepHoldType == "knife" then
+			if wepHoldType == "ar2" or wepHoldType == "pistol" or wepHoldType == "revolver" then
+				self.AnimationTranslations[ACT_RANGE_ATTACK1] 			= ACT_RANGE_ATTACK_AR2
+				self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 	= ACT_GESTURE_RANGE_ATTACK_AR2
+				self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 		= ACT_RANGE_ATTACK_AR2_LOW
+				//self.AnimationTranslations[ACT_RELOAD] 				= ACT_RELOAD_SMG1 -- No need to translate
+				//self.AnimationTranslations[ACT_IDLE_ANGRY] 			= ACT_IDLE_ANGRY -- No need to translate, it's already the correct animation
+			elseif wepHoldType == "smg" or wepHoldType == "rpg" then
+				self.AnimationTranslations[ACT_RANGE_ATTACK1] 			= ACT_RANGE_ATTACK_SMG1
+				self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 	= ACT_GESTURE_RANGE_ATTACK_SMG1
+				self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 		= ACT_RANGE_ATTACK_SMG1_LOW
+				//self.AnimationTranslations[ACT_RELOAD] 				= ACT_RELOAD_SMG1 -- No need to translate
+				self.AnimationTranslations[ACT_IDLE_ANGRY] 				= ACT_IDLE_ANGRY_SMG1
+			elseif wepHoldType == "melee" or wepHoldType == "melee2" or wepHoldType == "knife" then
+				self.AnimationTranslations[ACT_RANGE_ATTACK1] 			= ACT_MELEE_ATTACK1
+				self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 	= false -- Don't play anything!
+				//self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 	= ACT_RANGE_ATTACK_SMG1_LOW -- Not used for melee
+				//self.AnimationTranslations[ACT_RELOAD] 				= ACT_RELOAD_SMG1 -- Not used for melee
+				self.AnimationTranslations[ACT_IDLE_ANGRY] 				= rifle_idle
+			end
+			//self.AnimationTranslations[ACT_RELOAD_LOW] 				= ACT_RELOAD_SMG1_LOW -- No need to translate
+			
+			self.AnimationTranslations[ACT_IDLE] 						= rifle_idle
+			
+			self.AnimationTranslations[ACT_WALK] 						= rifle_walk
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_RIFLE
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_RUN_RIFLE
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_RUN_AIM_RIFLE
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		elseif wepHoldType == "crossbow" or wepHoldType == "shotgun" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_SHOTGUN
+			if wepHoldType == "crossbow" then
+				self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 	= ACT_GESTURE_RANGE_ATTACK_AR2
+			else
+				self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 	= ACT_GESTURE_RANGE_ATTACK_SHOTGUN
+			end
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SHOTGUN_LOW
+			//self.AnimationTranslations[ACT_RELOAD] 					= ACT_RELOAD_SHOTGUN -- No need to translate
+			//self.AnimationTranslations[ACT_RELOAD_LOW] 				= ACT_RELOAD_SMG1_LOW -- No need to translate
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_IDLE_SMG1
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SHOTGUN
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_WALK_AIM_SHOTGUN
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_SHOTGUN
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_RUN_RIFLE
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_RUN_AIM_SHOTGUN
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		else -- Unarmed!
+			self.AnimationTranslations[ACT_IDLE] 						= VJ.SequenceToActivity(self, "idle_unarmed")
+			self.AnimationTranslations[ACT_WALK] 						= VJ.SequenceToActivity(self, "walkunarmed_all")
+			self.AnimationTranslations[ACT_RUN] 						= ACT_RUN_RIFLE
+		end
+	------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	------ Metrocop ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	elseif self.ModelAnimationSet == VJ.ANIM_SET_METROCOP then
+		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.71120220422745 end
+		
+		-- Do not translate crouch walking and also make the crouch running a walking one instead
+		self.AnimationTranslations[ACT_RUN_CROUCH] 						= ACT_WALK_CROUCH
+		
+		if wepHoldType == "smg" or wepHoldType == "rpg" or wepHoldType == "ar2" or wepHoldType == "crossbow" or wepHoldType == "shotgun" then
+			-- Note: Metrocops must use smg animation, they don't have any animations for AR2!
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_SMG1
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SMG1
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SMG1_LOW
+			self.AnimationTranslations[ACT_RELOAD] 						= ACT_RELOAD_SMG1
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_COVER_SMG1_LOW
+			self.AnimationTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_IDLE_SMG1
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SMG1
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_WALK_RIFLE
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_RIFLE
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_RUN_RIFLE
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_RUN_AIM_RIFLE
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		elseif wepHoldType == "pistol" or wepHoldType == "revolver" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_PISTOL
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_PISTOL
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_PISTOL_LOW
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_COVER_PISTOL_LOW
+			self.AnimationTranslations[ACT_RELOAD] 						= ACT_RELOAD_PISTOL
+			self.AnimationTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_PISTOL_LOW
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_IDLE_PISTOL
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_PISTOL
+			
+			self.AnimationTranslations[ACT_WALK] 						= VJ.PICK({ACT_WALK, ACT_WALK_PISTOL})
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_PISTOL
+			//self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE -- No need to translate
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
+			
+			self.AnimationTranslations[ACT_RUN] 						= VJ.PICK({ACT_RUN, ACT_RUN_PISTOL})
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_RUN_AIM_PISTOL
+			//self.AnimationTranslations[ACT_RUN_CROUCH] 				= ACT_RUN_CROUCH_RIFLE -- No need to translate
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		elseif wepHoldType == "melee" or wepHoldType == "melee2" or wepHoldType == "knife" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_MELEE_ATTACK_SWING
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= false //ACT_MELEE_ATTACK_SWING_GESTURE -- Don't play anything!
+			//self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 		= ACT_RANGE_ATTACK_SMG1_LOW -- Not used for melee
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_COWER
+			//self.AnimationTranslations[ACT_RELOAD] 					= ACT_RELOAD_SMG1 -- Not used for melee
+			//self.AnimationTranslations[ACT_RELOAD_LOW] 				= ACT_RELOAD_SMG1_LOW -- Not used for melee
+			
+			self.AnimationTranslations[ACT_IDLE] 						= {ACT_IDLE, ACT_IDLE, VJ.SequenceToActivity(self, "plazathreat1")}
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_MELEE
+			
+			self.AnimationTranslations[ACT_WALK] 						= VJ.PICK({ACT_WALK, ACT_WALK_ANGRY})
+			//self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_RIFLE -- Not used for melee
+			//self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE -- No need to translate
+			//self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE -- Not used for melee
+			
+			//self.AnimationTranslations[ACT_RUN] 						= ACT_RUN -- No need to translate
+			//self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_RUN_AIM_RIFLE -- Not used for melee
+			//self.AnimationTranslations[ACT_RUN_CROUCH] 				= ACT_RUN_CROUCH_RIFLE -- No need to translate
+			//self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 			= ACT_RUN_CROUCH_AIM_RIFLE -- Not used for melee
+		end
+	------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	------ Rebel / Citizen ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	elseif self.ModelAnimationSet == VJ.ANIM_SET_REBEL then
+		local isFemale = VJ.AnimExists(self, ACT_IDLE_ANGRY_PISTOL)
+		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.78187280893326 end
+		
+		-- handguns use a different set!
+		self.AnimationTranslations[ACT_COVER_LOW] 						= {ACT_COVER_LOW_RPG, ACT_COVER_LOW, "vjseq_coverlow_l", "vjseq_coverlow_r"}
+		
+		if wepHoldType == "ar2" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_AR2
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_AR2
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_AR2_LOW
+			self.AnimationTranslations[ACT_RELOAD] 						= VJ.SequenceToActivity(self, "reload_ar2")
+			self.AnimationTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
+			
+			self.AnimationTranslations[ACT_IDLE] 						= VJ.PICK({VJ.SequenceToActivity(self, "idle_relaxed_ar2_1"), VJ.SequenceToActivity(self, "idle_alert_ar2_1"), VJ.SequenceToActivity(self, "idle_angry_ar2")})
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= VJ.SequenceToActivity(self, "idle_ar2_aim")
+			
+			self.AnimationTranslations[ACT_WALK] 						= VJ.PICK({VJ.SequenceToActivity(self, "walk_ar2_relaxed_all"), VJ.SequenceToActivity(self, "walkalerthold_ar2_all1"), VJ.SequenceToActivity(self, "walkholdall1_ar2")})
+			self.AnimationTranslations[ACT_WALK_AIM] 					= VJ.PICK({VJ.SequenceToActivity(self, "walkaimall1_ar2"), VJ.SequenceToActivity(self, "walkalertaim_ar2_all1")})
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RPG
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
+			
+			self.AnimationTranslations[ACT_RUN] 						= VJ.PICK({VJ.SequenceToActivity(self, "run_alert_holding_ar2_all"), VJ.SequenceToActivity(self, "run_ar2_relaxed_all"), VJ.SequenceToActivity(self, "run_holding_ar2_all")})
+			self.AnimationTranslations[ACT_RUN_AIM] 					= VJ.PICK({ACT_RUN_AIM_RIFLE, VJ.SequenceToActivity(self, "run_alert_aiming_ar2_all")})
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RPG
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		elseif wepHoldType == "smg" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_SMG1
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SMG1
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SMG1_LOW
+			self.AnimationTranslations[ACT_RELOAD] 						= ACT_RELOAD_SMG1
+			self.AnimationTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
+			
+			self.AnimationTranslations[ACT_IDLE] 							= VJ.PICK({ACT_IDLE_SMG1_RELAXED, ACT_IDLE_SMG1_STIMULATED, ACT_IDLE_SMG1, VJ.SequenceToActivity(self, "idle_smg1_relaxed")})
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SMG1
+			
+			self.AnimationTranslations[ACT_WALK] 						= VJ.PICK({ACT_WALK_RIFLE, ACT_WALK_RIFLE_RELAXED, ACT_WALK_RIFLE_STIMULATED})
+			self.AnimationTranslations[ACT_WALK_AIM] 					= VJ.PICK({ACT_WALK_AIM_RIFLE, ACT_WALK_AIM_RIFLE_STIMULATED})
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
+			
+			self.AnimationTranslations[ACT_RUN] 						= VJ.PICK({ACT_RUN_RIFLE, ACT_RUN_RIFLE_STIMULATED, ACT_RUN_RIFLE_RELAXED})
+			self.AnimationTranslations[ACT_RUN_AIM] 					= VJ.PICK({ACT_RUN_AIM_RIFLE, ACT_RUN_AIM_RIFLE_STIMULATED})
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		elseif wepHoldType == "crossbow" or wepHoldType == "shotgun" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_SHOTGUN
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SHOTGUN
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SMG1_LOW
+			self.AnimationTranslations[ACT_RELOAD] 						= ACT_RELOAD_SHOTGUN
+			self.AnimationTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW //ACT_RELOAD_SHOTGUN_LOW
+			
+			self.AnimationTranslations[ACT_IDLE] 						= VJ.PICK({ACT_IDLE_SHOTGUN_RELAXED, ACT_IDLE_SHOTGUN_STIMULATED})
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= VJ.SequenceToActivity(self, "idle_ar2_aim")
+			
+			self.AnimationTranslations[ACT_WALK] 						= VJ.PICK({VJ.SequenceToActivity(self, "walk_ar2_relaxed_all"), VJ.SequenceToActivity(self, "walkalerthold_ar2_all1"), VJ.SequenceToActivity(self, "walkholdall1_ar2")})
+			self.AnimationTranslations[ACT_WALK_AIM] 					= VJ.PICK({VJ.SequenceToActivity(self, "walkaimall1_ar2"), VJ.SequenceToActivity(self, "walkalertaim_ar2_all1")})
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RPG
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
+			
+			self.AnimationTranslations[ACT_RUN] 						= VJ.PICK({VJ.SequenceToActivity(self, "run_alert_holding_ar2_all"), VJ.SequenceToActivity(self, "run_ar2_relaxed_all"), VJ.SequenceToActivity(self, "run_holding_ar2_all")})
+			self.AnimationTranslations[ACT_RUN_AIM] 					= VJ.PICK({ACT_RUN_AIM_RIFLE, VJ.SequenceToActivity(self, "run_alert_aiming_ar2_all")})
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RPG
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		elseif wepHoldType == "rpg" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_RPG
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_RPG
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SMG1_LOW
+			self.AnimationTranslations[ACT_RELOAD] 						= ACT_RELOAD_SMG1
+			self.AnimationTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
+			
+			self.AnimationTranslations[ACT_IDLE] 						= VJ.PICK({ACT_IDLE_RPG, ACT_IDLE_RPG_RELAXED})
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_RPG
+			
+			self.AnimationTranslations[ACT_WALK] 						= VJ.PICK({ACT_WALK_RPG, ACT_WALK_RPG_RELAXED})
+			self.AnimationTranslations[ACT_WALK_AIM] 					= VJ.PICK({VJ.SequenceToActivity(self, "walkaimall1_ar2"), VJ.SequenceToActivity(self, "walkalertaim_ar2_all1")})
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RPG
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
+			
+			self.AnimationTranslations[ACT_RUN] 						= VJ.PICK({ACT_RUN_RPG, ACT_RUN_RPG_RELAXED})
+			self.AnimationTranslations[ACT_RUN_AIM] 					= VJ.PICK({ACT_RUN_AIM_RIFLE, VJ.SequenceToActivity(self, "run_alert_aiming_ar2_all")})
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RPG
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		elseif wepHoldType == "pistol" or wepHoldType == "revolver" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_PISTOL
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_PISTOL
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_PISTOL_LOW
+			self.AnimationTranslations[ACT_COVER_LOW] 					= {"crouchidle_panicked4", "vjseq_crouchidlehide"}
+			self.AnimationTranslations[ACT_RELOAD] 						= ACT_RELOAD_PISTOL
+			self.AnimationTranslations[ACT_RELOAD_LOW] 					= isFemale and ACT_RELOAD_SMG1_LOW or ACT_RELOAD_PISTOL_LOW -- Only males have covered pistol reload
+			
+			self.AnimationTranslations[ACT_IDLE] 						= isFemale and ACT_IDLE_PISTOL or ACT_IDLE -- Only females have pistol idle animation
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= isFemale and ACT_IDLE_ANGRY_PISTOL or VJ.SequenceToActivity(self, "idle_ar2_aim") -- Only females have angry pistol animation
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_WALK_PISTOL
+			self.AnimationTranslations[ACT_WALK_AIM] 					= VJ.PICK({VJ.SequenceToActivity(self, "walkaimall1_ar2"), VJ.SequenceToActivity(self, "walkalertaim_ar2_all1")})
+			//self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE -- No need to translate
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_RUN_PISTOL
+			self.AnimationTranslations[ACT_RUN_AIM] 					= VJ.SequenceToActivity(self, "run_alert_aiming_ar2_all")
+			//self.AnimationTranslations[ACT_RUN_CROUCH] 				= ACT_RUN_CROUCH_RIFLE -- No need to translate
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		elseif wepHoldType == "melee" or wepHoldType == "melee2" or wepHoldType == "knife" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_MELEE_ATTACK_SWING
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= false -- Don't play anything!
+			//self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 		= ACT_RANGE_ATTACK_SMG1_LOW -- Not used for melee
+			self.AnimationTranslations[ACT_COVER_LOW] 					= {"crouchidle_panicked4", "vjseq_crouchidlehide"}
+			//self.AnimationTranslations[ACT_RELOAD] 					= ACT_RELOAD_SMG1 -- Not used for melee
+			//self.AnimationTranslations[ACT_RELOAD_LOW] 				= ACT_RELOAD_SMG1_LOW -- Not used for melee
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_IDLE
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= isFemale and ACT_IDLE_ANGRY or ACT_IDLE_ANGRY_MELEE -- Only males have unique idle angry for melee weapons!
+			
+			//self.AnimationTranslations[ACT_WALK] 						= ACT_WALK -- No need to translate
+			//self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_RIFLE -- Not used for melee
+			//self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE -- No need to translate
+			//self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE -- Not used for melee
+			
+			self.AnimationTranslations[ACT_RUN] 						= VJ.SequenceToActivity(self, "run_all_panicked")
+			//self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_RUN_AIM_RIFLE -- Not used for melee
+			//self.AnimationTranslations[ACT_RUN_CROUCH] 				= ACT_RUN_CROUCH_RIFLE -- No need to translate
+			//self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 			= ACT_RUN_CROUCH_AIM_RIFLE -- Not used for melee
+		end
+	------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	------ Player ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	elseif self.ModelAnimationSet == VJ.ANIM_SET_PLAYER then
+		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.61155587434769	end
+		self.AnimationTranslations[ACT_COWER] 							= ACT_HL2MP_IDLE_COWER
+		self.AnimationTranslations[ACT_RUN_PROTECTED] 					= ACT_HL2MP_RUN_PROTECTED
+		
+		if wepHoldType == "ar2" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_AR2
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_AR2
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_AR2
+			self.AnimationTranslations[ACT_RELOAD] 						= "vjges_reload_ar2"
+			self.AnimationTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_ar2"
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_AR2
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE_PASSIVE
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_AR2
+			self.AnimationTranslations[ACT_JUMP] 						= ACT_HL2MP_JUMP_AR2
+			self.AnimationTranslations[ACT_GLIDE] 						= ACT_HL2MP_JUMP_AR2
+			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_AR2
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK_PASSIVE
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_AR2
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH_PASSIVE
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_AR2
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN_PASSIVE
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_AR2
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_AR2
+		elseif wepHoldType == "pistol" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_PISTOL
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_PISTOL
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_PISTOL
+			self.AnimationTranslations[ACT_RELOAD] 						= "vjges_reload_pistol"
+			self.AnimationTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_pistol"
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_PISTOL
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_PISTOL
+			self.AnimationTranslations[ACT_JUMP] 						= ACT_HL2MP_JUMP_PISTOL
+			self.AnimationTranslations[ACT_GLIDE] 						= ACT_HL2MP_JUMP_PISTOL
+			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_PISTOL
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_PISTOL
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_PISTOL
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN_FAST
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_PISTOL
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_PISTOL
+		elseif wepHoldType == "smg" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_SMG1
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_SMG1
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_SMG1
+			self.AnimationTranslations[ACT_RELOAD] 						= "vjges_reload_smg1"
+			self.AnimationTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_smg1"
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_SMG1
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE_PASSIVE
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_SMG1
+			self.AnimationTranslations[ACT_JUMP] 						= ACT_HL2MP_JUMP_SMG1
+			self.AnimationTranslations[ACT_GLIDE] 						= ACT_HL2MP_JUMP_SMG1
+			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_SMG1
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK_PASSIVE
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_SMG1
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH_PASSIVE
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_SMG1
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN_PASSIVE
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_SMG1
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_SMG1
+		elseif wepHoldType == "grenade" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_GRENADE
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_GRENADE
+			-- self.AnimationTranslations[ACT_RELOAD] 					= "vjges_reload_pistol"
+			-- self.AnimationTranslations[ACT_RELOAD_LOW] 				= "vjges_reload_pistol"
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_GRENADE
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_GRENADE
+			self.AnimationTranslations[ACT_JUMP] 						= ACT_HL2MP_JUMP_GRENADE
+			self.AnimationTranslations[ACT_GLIDE] 						= ACT_HL2MP_JUMP_GRENADE
+			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_GRENADE
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_GRENADE
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_GRENADE
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_GRENADE
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_GRENADE
+		elseif wepHoldType == "shotgun" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_SHOTGUN
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_SHOTGUN
+			self.AnimationTranslations[ACT_RELOAD] 						= "vjges_reload_shotgun"
+			self.AnimationTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_shotgun"
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_SHOTGUN
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE_PASSIVE
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_SHOTGUN
+			self.AnimationTranslations[ACT_JUMP] 						= ACT_HL2MP_JUMP_SHOTGUN
+			self.AnimationTranslations[ACT_GLIDE] 						= ACT_HL2MP_JUMP_SHOTGUN
+			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_SHOTGUN
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK_PASSIVE
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_SHOTGUN
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH_PASSIVE
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_SHOTGUN
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN_PASSIVE
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_SHOTGUN
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_SHOTGUN
+		elseif wepHoldType == "rpg" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_RPG
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_RPG
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_RPG
+			self.AnimationTranslations[ACT_RELOAD] 						= "vjges_reload_ar2"
+			self.AnimationTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_ar2"
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_RPG
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE_PASSIVE
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_RPG
+			self.AnimationTranslations[ACT_JUMP] 						= ACT_HL2MP_JUMP_RPG
+			self.AnimationTranslations[ACT_GLIDE] 						= ACT_HL2MP_JUMP_RPG
+			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_RPG
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK_PASSIVE
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_RPG
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH_PASSIVE
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_RPG
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN_PASSIVE
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_RPG
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_RPG
+		elseif wepHoldType == "physgun" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_PHYSGUN
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_PHYSGUN
+			self.AnimationTranslations[ACT_RELOAD] 						= "vjges_reload_ar2"
+			self.AnimationTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_ar2"
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_PHYSGUN
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE_PASSIVE
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_PHYSGUN
+			self.AnimationTranslations[ACT_JUMP] 						= ACT_HL2MP_JUMP_PHYSGUN
+			self.AnimationTranslations[ACT_GLIDE] 						= ACT_HL2MP_JUMP_PHYSGUN
+			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_PHYSGUN
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK_PASSIVE
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_PHYSGUN
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH_PASSIVE
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_PHYSGUN
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN_PASSIVE
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_PHYSGUN
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_PHYSGUN
+		elseif wepHoldType == "crossbow" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_CROSSBOW
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_CROSSBOW
+			self.AnimationTranslations[ACT_RELOAD] 						= "vjges_reload_ar2"
+			self.AnimationTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_ar2"
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_CROSSBOW
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE_PASSIVE
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_CROSSBOW
+			self.AnimationTranslations[ACT_JUMP] 						= ACT_HL2MP_JUMP_CROSSBOW
+			self.AnimationTranslations[ACT_GLIDE] 						= ACT_HL2MP_JUMP_CROSSBOW
+			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_CROSSBOW
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK_PASSIVE
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_CROSSBOW
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH_PASSIVE
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_CROSSBOW
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN_PASSIVE
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_CROSSBOW
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_CROSSBOW
+		elseif wepHoldType == "slam" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_SLAM
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_SLAM
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_SLAM
+			-- self.AnimationTranslations[ACT_RELOAD] 					= "vjges_reload_pistol"
+			-- self.AnimationTranslations[ACT_RELOAD_LOW] 				= "vjges_reload_pistol"
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_SLAM
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_SLAM
+			self.AnimationTranslations[ACT_JUMP] 						= ACT_HL2MP_JUMP_SLAM
+			self.AnimationTranslations[ACT_GLIDE] 						= ACT_HL2MP_JUMP_SLAM
+			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_SLAM
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_SLAM
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_SLAM
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_SLAM
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_SLAM
+		elseif wepHoldType == "duel" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_DUEL
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_DUEL
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_DUEL
+			self.AnimationTranslations[ACT_RELOAD] 						= "vjges_reload_duel"
+			self.AnimationTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_duel"
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_DUEL
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_DUEL
+			self.AnimationTranslations[ACT_JUMP] 						= ACT_HL2MP_JUMP_DUEL
+			self.AnimationTranslations[ACT_GLIDE] 						= ACT_HL2MP_JUMP_DUEL
+			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_DUEL
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_DUEL
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_DUEL
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_DUEL
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_DUEL
+		elseif wepHoldType == "revolver" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_REVOLVER
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_REVOLVER
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_REVOLVER
+			self.AnimationTranslations[ACT_RELOAD] 						= "vjges_reload_revolver"
+			self.AnimationTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_revolver"
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_REVOLVER
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_REVOLVER
+			self.AnimationTranslations[ACT_JUMP] 						= ACT_HL2MP_JUMP_REVOLVER
+			self.AnimationTranslations[ACT_GLIDE] 						= ACT_HL2MP_JUMP_REVOLVER
+			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_REVOLVER
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_REVOLVER
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_REVOLVER
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_REVOLVER
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_REVOLVER
+		elseif wepHoldType == "melee" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_MELEE
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_MELEE
+			-- self.AnimationTranslations[ACT_RELOAD] 					= "vjges_reload_pistol"
+			-- self.AnimationTranslations[ACT_RELOAD_LOW] 				= "vjges_reload_pistol"
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_MELEE
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_MELEE
+			self.AnimationTranslations[ACT_JUMP] 						= ACT_HL2MP_JUMP_MELEE
+			self.AnimationTranslations[ACT_GLIDE] 						= ACT_HL2MP_JUMP_MELEE
+			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_MELEE
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_MELEE
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_MELEE
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_MELEE
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_MELEE
+		elseif wepHoldType == "melee2" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_MELEE2
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_MELEE2
+			-- self.AnimationTranslations[ACT_RELOAD] 					= "vjges_reload_pistol"
+			-- self.AnimationTranslations[ACT_RELOAD_LOW] 				= "vjges_reload_pistol"
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_MELEE2
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_MELEE2
+			self.AnimationTranslations[ACT_JUMP] 						= ACT_HL2MP_JUMP_MELEE2
+			self.AnimationTranslations[ACT_GLIDE] 						= ACT_HL2MP_JUMP_MELEE2
+			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_MELEE2
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_MELEE2
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_MELEE2
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_MELEE2
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_MELEE2
+		elseif wepHoldType == "knife" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_KNIFE
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_KNIFE
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_KNIFE
+			-- self.AnimationTranslations[ACT_RELOAD] 					= "vjges_reload_pistol"
+			-- self.AnimationTranslations[ACT_RELOAD_LOW] 				= "vjges_reload_pistol"
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_KNIFE
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_KNIFE
+			self.AnimationTranslations[ACT_JUMP] 						= ACT_HL2MP_JUMP_KNIFE
+			self.AnimationTranslations[ACT_GLIDE] 						= ACT_HL2MP_JUMP_KNIFE
+			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_KNIFE
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_KNIFE
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_KNIFE
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_KNIFE
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_KNIFE
+		elseif wepHoldType == "camera" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_CAMERA
+			-- self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_CAMERA
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_CAMERA
+			-- self.AnimationTranslations[ACT_RELOAD] 					= "vjges_reload_pistol"
+			-- self.AnimationTranslations[ACT_RELOAD_LOW] 				= "vjges_reload_pistol"
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_CAMERA
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_CAMERA
+			self.AnimationTranslations[ACT_JUMP] 						= ACT_HL2MP_JUMP_CAMERA
+			self.AnimationTranslations[ACT_GLIDE] 						= ACT_HL2MP_JUMP_CAMERA
+			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_CAMERA
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_CAMERA
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_CAMERA
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_CAMERA
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_CAMERA
+		else -- Unarmed!
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_ANGRY
+			self.AnimationTranslations[ACT_JUMP] 						= ACT_HL2MP_JUMP_PISTOL
+			self.AnimationTranslations[ACT_GLIDE] 						= ACT_HL2MP_JUMP_PISTOL
+			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_PISTOL
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN_FAST
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
+		end
+	end
+end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -976,6 +1618,7 @@ ENT.NextDoAnyAttackT = 0
 ENT.NearestPointToEnemyDistance = 0
 ENT.LatestEnemyDistance = 0
 ENT.HealthRegenerationDelayT = 0
+ENT.NextActualThink = 0
 ENT.NextWeaponAttackT_Base = 0 -- This is handled by the base, used to avoid running shoot animation twice
 ENT.CurAttackSeed = 0
 ENT.CurAnimationSeed = 0
@@ -1026,7 +1669,6 @@ local math_angApproach = math.ApproachAngle
 local math_angDif = math.AngleDifference
 local string_find = string.find
 local string_sub = string.sub
-local table_remove = table.remove
 local table_concat = table.concat
 
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1132,7 +1774,7 @@ function ENT:Initialize()
 	self.VJ_AddCertainEntityAsEnemy = {}
 	self.VJ_AddCertainEntityAsFriendly = {}
 	self.CurrentPossibleEnemies = {}
-	self.WeaponAnimTranslations = {}
+	self.AnimationTranslations = {}
 	self.WeaponInventory = {}
 	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.3, 6)
 	self.UseTheSameGeneralSoundPitch_PickedNumber = (self.UseTheSameGeneralSoundPitch and math.random(self.GeneralSoundPitch1, self.GeneralSoundPitch2)) or 0
@@ -1201,6 +1843,7 @@ function ENT:Initialize()
 			if IsValid(self) then
 				local wep = self:GetActiveWeapon()
 				if IsValid(wep) then
+					self.CurrentWeaponEntity = self:DoChangeWeapon() -- Setup the weapon
 					self.WeaponInventory.Primary = wep
 					if IsValid(self:GetCreator()) && self.AllowPrintingInChat == true && !wep.IsVJBaseWeapon then
 						self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: "..self:GetName().." requires a VJ Base weapon to work properly!")
@@ -1221,8 +1864,14 @@ function ENT:Initialize()
 						self:SelectWeapon(wep) -- Change the weapon back to the original weapon
 						wep:Equip(self)
 					end
-				elseif IsValid(self:GetCreator()) && self.AllowPrintingInChat == true && self.Weapon_NoSpawnMenu == false then
-					self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: "..self:GetName().." needs a weapon!")
+				else
+					self:UpdateAnimationTranslations()
+					if IsValid(self:GetCreator()) && self.AllowPrintingInChat == true && self.Weapon_NoSpawnMenu == false then
+						self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: "..self:GetName().." needs a weapon!")
+					end
+				end
+				if self:GetIdealActivity() == ACT_IDLE then -- Reset the idle animation in case animation translations changed it!
+					self:MaintainIdleAnimation(true)
 				end
 			end
 		end)
@@ -1245,7 +1894,7 @@ function ENT:DoChangeMovementType(movType)
 		self:CapabilitiesAdd(CAP_MOVE_GROUND)
 		if (VJ.AnimExists(self, ACT_JUMP) == true && GetConVar("vj_npc_human_canjump"):GetInt() == 1) or self.UsePlayerModelMovement == true then self:CapabilitiesAdd(CAP_MOVE_JUMP) end
 		//if VJ.AnimExists(self, ACT_CLIMB_UP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
-		if self.DisableWeapons == false then self:CapabilitiesAdd(CAP_MOVE_SHOOT) end
+		if self.DisableWeapons == false && self.HasShootWhileMoving then self:CapabilitiesAdd(CAP_MOVE_SHOOT) end
 	elseif self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 		self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT))
 		self:SetGroundEntity(NULL)
@@ -1366,16 +2015,19 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 			isSequence = true
 		else -- Set it as an activity
 			animation = result
+			isString = false
 		end
 	end
 	
 	-- If the given animation doesn't exist, then check to see if it does in the weapon translation list
 	if VJ.AnimExists(self, animation) == false then
-		if !isString && IsValid(self:GetActiveWeapon()) then -- If it's an activity and has a valid weapon then check for weapon translation
-			-- If it returns the same activity as animation, then there isn't even a translation for it so don't play any animation =(
-			if self:GetActiveWeapon().IsVJBaseWeapon && self:TranslateToWeaponAnim(animation) == animation then return ACT_INVALID, 0 end
-		else
-			return ACT_INVALID, 0 -- No animation =(
+		if !isString then -- If it's an activity then check for possible translation
+			-- If it returns the same activity as "animation", then there isn't even a translation for it so don't play any animation =(
+			if self:TranslateActivity(animation) == animation then
+				return ACT_INVALID, 0
+			end
+		else -- No animation =(
+			return ACT_INVALID, 0
 		end
 	end
 	
@@ -1523,20 +2175,16 @@ local task_chaseEnemyLOS = vj_ai_schedule.New("vj_chase_enemy_los")
 	//task_chaseEnemyLOS.ResetOnFail = true
 	task_chaseEnemyLOS.CanShootWhenMoving = true
 	task_chaseEnemyLOS.CanBeInterrupted = true
-	task_chaseEnemyLOS.IsMovingTask = true
-	task_chaseEnemyLOS.MoveType = 1
 --
 local task_chaseEnemy = vj_ai_schedule.New("vj_chase_enemy")
 	task_chaseEnemy:EngTask("TASK_GET_PATH_TO_ENEMY", 0)
-	//task_chaseEnemy:EngTask("TASK_RUN_PATH", 0)
+	task_chaseEnemy:EngTask("TASK_RUN_PATH", 0)
 	task_chaseEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	//task_chaseEnemy:EngTask("TASK_FACE_ENEMY", 0)
 	//task_chaseEnemy.ResetOnFail = true
 	task_chaseEnemy.CanShootWhenMoving = true
 	//task_chaseEnemy.StopScheduleIfNotMoving = true
 	task_chaseEnemy.CanBeInterrupted = true
-	task_chaseEnemy.IsMovingTask = true
-	task_chaseEnemy.MoveType = 1
 --
 local varChaseEnemy = "vj_chase_enemy"
 function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase)
@@ -1547,7 +2195,6 @@ function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase)
 	if self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
 	//if (CurTime() <= self.JumpLegalLandingTime && (self:GetActivity() == ACT_JUMP or self:GetActivity() == ACT_GLIDE or self:GetActivity() == ACT_LAND)) or self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
 	if (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) <= 12) && self.CurrentSchedule != nil && self.CurrentSchedule.Name == varChaseEnemy then return end
-	self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run))
 	if doLOSChase == true then
 		task_chaseEnemyLOS.RunCode_OnFinish = function()
 			local ene = self:GetEnemy()
@@ -1559,88 +2206,6 @@ function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase)
 		self:StartSchedule(task_chaseEnemyLOS)
 	else
 		self:StartSchedule(task_chaseEnemy)
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_TASK_IDLE_STAND()
-	if self:IsMoving() or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end // self.CurrentSchedule != nil
-	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:BusyWithActivity() then return end
-	//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
-	
-	local idleAnimTbl = self.NoWeapon_UseScaredBehavior_Active == true and self.AnimTbl_ScaredBehaviorStand or ((self.Alerted && self:GetWeaponState() != VJ.NPC_WEP_STATE_HOLSTERED && IsValid(self:GetActiveWeapon())) and self.AnimTbl_WeaponAim or self.AnimTbl_IdleStand)
-	local posIdlesTbl = {}
-	local posIdlesTblIndex = 1
-	local sameAnimFound = false -- If true then it one of the animations in the table is the same as the current!
-	local curAnim = self.CurrentIdleAnimation
-	for k, v in ipairs(idleAnimTbl) do
-		v = VJ.SequenceToActivity(self, v) -- Translate any sequence to activity
-		if v != false then -- Its a valid activity
-			-- Human base ONLY
-			local wepAnim = self.WeaponAnimTranslations[v] -- Translate to weapon act in case it needs to!
-			if wepAnim then -- Translation found
-				v = VJ.PICK(wepAnim)
-				-- VERY UGLY: If it's a table, then check inside it to see if current idle anim is one of them
-				if curAnim != v && istable(wepAnim) then
-					for _, v2 in ipairs(wepAnim) do
-						if curAnim == v2 then
-							sameAnimFound = true
-							break
-						end
-					end
-				end
-			end-- End of human base only
-			//idleAnimTbl[k] = v -- In case it was a sequence, override it with the translated activity number
-			posIdlesTbl[posIdlesTblIndex] = v
-			posIdlesTblIndex = posIdlesTblIndex + 1
-			-- Check if its the current idle animation...
-			if sameAnimFound == false && curAnim == v then
-				sameAnimFound = true
-				//break
-			end
-		else -- Get rid of any animations that aren't valid!
-			table_remove(idleAnimTbl, k)
-		end
-	end
-	//PrintTable(idleAnimTbl)
-	-- If there is more than 1 animation in the table AND one of the animations is the current animation AND time hasn't expired, then return!
-	//if #idleAnimTbl > 1 && sameAnimFound == true && self.NextIdleStandTime > CurTime() then
-		//return
-	//end
-	
-	local pickedAnim = VJ.PICK(posIdlesTbl) or ACT_IDLE -- If no animation was found, then use ACT_IDLE
-	
-	-- If sequence and it has no activity, then don't continue!
-	//pickedAnim = VJ.SequenceToActivity(self,pickedAnim)
-	//if pickedAnim == false then return false end
-	
-	if (!sameAnimFound) or (CurTime() > self.NextIdleStandTime) then // or (sameAnimFound && numOfAnims == 1 && CurTime() > self.NextIdleStandTime)
-		self.CurrentIdleAnimation = pickedAnim
-		//self.CurIdleStandMove = false
-		-- VERY old system
-		//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
-			//if self:BusyWithActivity() == true then return end
-			//self:AA_StopMoving()
-			//self:VJ_ACT_PLAYACTIVITY(pickedAnim, false, 0, false, 0, {SequenceDuration=false, SequenceInterruptible=true}) // AlwaysUseSequence=true
-		//end
-		//if self.CurrentSchedule == nil then -- If it's not doing a schedule then reset the activity to make sure it's not already playing the same idle activity!
-			//self:StartEngineTask(ai.GetTaskID("TASK_RESET_ACTIVITY"), 0)
-		//end -- End of VERY old system
-		//self:StartEngineTask(ai.GetTaskID("TASK_PLAY_SEQUENCE"), pickedAnim)
-		if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then self:AA_StopMoving() end
-		self.CurAnimationSeed = 0
-		self:ResetIdealActivity(pickedAnim)
-		timer.Simple(0.01, function() -- So we can make sure the engine has enough time to set the animation
-			if IsValid(self) && self.NextIdleStandTime != 0 then
-				local getSeq = self:GetSequence()
-				//self.CurIdleStandMove = self:GetSequenceMoveDist(getSeq) > 0
-				if VJ.SequenceToActivity(self, self:GetSequenceName(getSeq)) == pickedAnim then -- Nayir yete himagva animation e nooynene
-					self.NextIdleStandTime = CurTime() + ((self:SequenceDuration(getSeq) - 0.01) / self:GetPlaybackRate()) -- Yete nooynene ooremen jamanage tir animation-en yergarootyan chap!
-				end
-			end
-		end)
-		self.NextIdleStandTime = CurTime() + 0.15 -- This is temp, timer above overrides it
-	//elseif self.CurIdleStandMove && !self:IsSequenceFinished() then
-		//self:AutoMovement(self:GetAnimTimeInterval())
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1701,636 +2266,47 @@ function ENT:DoChaseAnimation(alwaysChase) -- alwaysChase: true = Override to al
 	self.NextChaseTime = CurTime() + (((self.LatestEnemyDistance > 2000) and 1) or 0.1) -- If the enemy is far, increase the delay!
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SetupWeaponHoldTypeAnims(hType)
-	-- Decide what type of animation set it uses
-	if VJ.AnimExists(self, "signal_takecover") == true && VJ.AnimExists(self, "grenthrow") == true && VJ.AnimExists(self, "bugbait_hit") == true then
-		self.ModelAnimationSet = VJ.ANIM_SET_COMBINE -- Combine
-	elseif VJ.AnimExists(self, ACT_WALK_AIM_PISTOL) == true && VJ.AnimExists(self, ACT_RUN_AIM_PISTOL) == true && VJ.AnimExists(self, ACT_POLICE_HARASS1) == true then
-		self.ModelAnimationSet = VJ.ANIM_SET_METROCOP -- Metrocop
-	elseif VJ.AnimExists(self, "coverlow_r") == true && VJ.AnimExists(self, "wave_smg1") == true && VJ.AnimExists(self, ACT_BUSY_SIT_GROUND) == true then
-		self.ModelAnimationSet = VJ.ANIM_SET_REBEL -- Rebel
-	elseif VJ.AnimExists(self, "gmod_breath_layer") == true then
-		self.ModelAnimationSet = VJ.ANIM_SET_PLAYER -- Player
+function ENT:TranslateActivity(act)
+	//print("TranslateActivity", act)
+	-- Handle idle scared and angry animations
+	if act == ACT_IDLE then
+		if self.NoWeapon_UseScaredBehavior_Active == true then
+			//return VJ.PICK(self.AnimTbl_ScaredBehaviorStand)
+			return ACT_COWER
+		elseif self.Alerted && self:GetWeaponState() != VJ.NPC_WEP_STATE_HOLSTERED && IsValid(self:GetActiveWeapon()) then
+			//return VJ.PICK(self.AnimTbl_WeaponAim)
+			return ACT_IDLE_ANGRY
+		end
+	-- Handle running while scared animation
+	elseif act == ACT_RUN && self.NoWeapon_UseScaredBehavior_Active == true && !self.VJ_IsBeingControlled then
+		// VJ.PICK(self.AnimTbl_ScaredBehaviorMovement)
+		return ACT_RUN_PROTECTED
+	-- Handle aiming while moving animations
+	elseif (act == ACT_RUN or act == ACT_WALK) && self.HasShootWhileMoving == true && IsValid(self:GetEnemy()) then
+		if (self.EnemyData.IsVisible or (self.EnemyData.LastVisibleTime + 5) > CurTime()) && self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true && self:IsAbleToShootWeapon(true, false) == true then
+			local anim = self:TranslateToWeaponAnim(act == ACT_RUN and ACT_RUN_AIM or ACT_WALK_AIM)
+			if VJ.AnimExists(self, anim) == true then
+				self.DoingWeaponAttack = true
+				self.DoingWeaponAttack_Standing = false
+				return anim
+			end
+		end
 	end
 	
-	self.WeaponAnimTranslations = {}
-	self.NextIdleStandTime = 0
-	if self:CustomOnSetupWeaponHoldTypeAnims(hType) == true then return end
-	
-	if self.ModelAnimationSet == VJ.ANIM_SET_COMBINE then -- Combine =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
-		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.71120220422745 end
-		
-		-- Use rifle animations with minor edits if it's holding a handgun
-		local rifle_idle = ACT_IDLE_SMG1
-		local rifle_walk = VJ.PICK({ACT_WALK_RIFLE, VJ.SequenceToActivity(self, "walkeasy_all")})
-		if hType == "pistol" or hType == "revolver" or hType == "melee" or hType == "melee2" or hType == "knife" then
-			rifle_idle = VJ.SequenceToActivity(self, "idle_unarmed")
-			rifle_walk = VJ.SequenceToActivity(self, "walkunarmed_all")
-		end
-		
-		-- "Leanwall_CrouchLeft_A_idle", "Leanwall_CrouchLeft_B_idle", "Leanwall_CrouchLeft_C_idle", "Leanwall_CrouchLeft_D_idle"
-		self.WeaponAnimTranslations[ACT_COVER_LOW] 							= {ACT_COVER, "vjseq_Leanwall_CrouchLeft_A_idle", "vjseq_Leanwall_CrouchLeft_B_idle", "vjseq_Leanwall_CrouchLeft_C_idle", "vjseq_Leanwall_CrouchLeft_D_idle"}
-		if hType == "ar2" or hType == "smg" or hType == "rpg" or hType == "pistol" or hType == "revolver" or hType == "melee" or hType == "melee2" or hType == "knife" then
-			if hType == "ar2" or hType == "pistol" or hType == "revolver" then
-				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_AR2
-				self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_AR2
-				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_AR2_LOW
-				//self.WeaponAnimTranslations[ACT_RELOAD] 					= ACT_RELOAD_SMG1 -- No need to translate
-				//self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 				= ACT_IDLE_ANGRY -- No need to translate, it's already the correct animation
-			elseif hType == "smg" or hType == "rpg" then
-				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_SMG1
-				self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_SMG1
-				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SMG1_LOW
-				//self.WeaponAnimTranslations[ACT_RELOAD] 					= ACT_RELOAD_SMG1 -- No need to translate
-				self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 				= ACT_IDLE_ANGRY_SMG1
-			elseif hType == "melee" or hType == "melee2" or hType == "knife" then
-				self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 				= ACT_MELEE_ATTACK1
-				self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= false -- Don't play anything!
-				//self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 		= ACT_RANGE_ATTACK_SMG1_LOW -- Not used for melee
-				//self.WeaponAnimTranslations[ACT_RELOAD] 					= ACT_RELOAD_SMG1 -- Not used for melee
-				self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 				= rifle_idle
-			end
-			//self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW -- No need to translate
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= rifle_idle
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= rifle_walk
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_RIFLE
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
-		elseif hType == "crossbow" or hType == "shotgun" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_SHOTGUN
-			if hType == "crossbow" then
-				self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_AR2
-			else
-				self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_SHOTGUN
-			end
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SHOTGUN_LOW
-			//self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SHOTGUN -- No need to translate
-			//self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW -- No need to translate
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_IDLE_SMG1
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SHOTGUN
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_AIM_SHOTGUN
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_SHOTGUN
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_RIFLE
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_SHOTGUN
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
-		end
-	elseif self.ModelAnimationSet == VJ.ANIM_SET_METROCOP then -- Metrocop =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
-		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.71120220422745 end
-		
-		-- Do not translate crouch walking and also make the crouch running a walking one instead
-		self.WeaponAnimTranslations[ACT_RUN_CROUCH] 						= ACT_WALK_CROUCH
-		
-		if hType == "smg" or hType == "rpg" or hType == "ar2" or hType == "crossbow" or hType == "shotgun" then
-			-- Note: Metrocops must use smg animation, they don't have any animations for AR2!
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_SMG1
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_SMG1
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SMG1_LOW
-			self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SMG1
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_SMG1_LOW
-			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_IDLE_SMG1
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SMG1
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_RIFLE
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_RIFLE
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_RIFLE
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
-		elseif hType == "pistol" or hType == "revolver" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_PISTOL
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_PISTOL
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_PISTOL_LOW
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COVER_PISTOL_LOW
-			self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_PISTOL
-			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_PISTOL_LOW
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_IDLE_PISTOL
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_PISTOL
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= VJ.PICK({ACT_WALK, ACT_WALK_PISTOL})
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_WALK_AIM_PISTOL
-			//self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE -- No need to translate
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= VJ.PICK({ACT_RUN, ACT_RUN_PISTOL})
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_PISTOL
-			//self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE -- No need to translate
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
-		elseif hType == "melee" or hType == "melee2" or hType == "knife" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_MELEE_ATTACK_SWING
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= false //ACT_MELEE_ATTACK_SWING_GESTURE -- Don't play anything!
-			//self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SMG1_LOW -- Not used for melee
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_COWER
-			//self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SMG1 -- Not used for melee
-			//self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW -- Not used for melee
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= {ACT_IDLE, ACT_IDLE, VJ.SequenceToActivity(self, "plazathreat1")}
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_MELEE
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= VJ.PICK({ACT_WALK, ACT_WALK_ANGRY})
-			//self.WeaponAnimTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_RIFLE -- Not used for melee
-			//self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE -- No need to translate
-			//self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE -- Not used for melee
-			
-			//self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN -- No need to translate
-			//self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE -- Not used for melee
-			//self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE -- No need to translate
-			//self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE -- Not used for melee
-		end
-	elseif self.ModelAnimationSet == VJ.ANIM_SET_REBEL then -- Rebel =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
-		local isFemale = VJ.AnimExists(self, ACT_IDLE_ANGRY_PISTOL)
-		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.78187280893326 end
-		
-		-- handguns use a different set!
-		self.WeaponAnimTranslations[ACT_COVER_LOW] 							= {ACT_COVER_LOW_RPG, ACT_COVER_LOW, "vjseq_coverlow_l", "vjseq_coverlow_r"}
-		
-		if hType == "ar2" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_AR2
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_AR2
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_AR2_LOW
-			self.WeaponAnimTranslations[ACT_RELOAD] 						= VJ.SequenceToActivity(self, "reload_ar2")
-			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= VJ.PICK({VJ.SequenceToActivity(self, "idle_relaxed_ar2_1"), VJ.SequenceToActivity(self, "idle_alert_ar2_1"), VJ.SequenceToActivity(self, "idle_angry_ar2")})
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= VJ.SequenceToActivity(self, "idle_ar2_aim")
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= VJ.PICK({VJ.SequenceToActivity(self, "walk_ar2_relaxed_all"), VJ.SequenceToActivity(self, "walkalerthold_ar2_all1"), VJ.SequenceToActivity(self, "walkholdall1_ar2")})
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= VJ.PICK({VJ.SequenceToActivity(self, "walkaimall1_ar2"), VJ.SequenceToActivity(self, "walkalertaim_ar2_all1")})
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RPG
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= VJ.PICK({VJ.SequenceToActivity(self, "run_alert_holding_ar2_all"), VJ.SequenceToActivity(self, "run_ar2_relaxed_all"), VJ.SequenceToActivity(self, "run_holding_ar2_all")})
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= VJ.PICK({ACT_RUN_AIM_RIFLE, VJ.SequenceToActivity(self, "run_alert_aiming_ar2_all")})
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RPG
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
-		elseif hType == "smg" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_SMG1
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_SMG1
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SMG1_LOW
-			self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SMG1
-			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= VJ.PICK({ACT_IDLE_SMG1_RELAXED, ACT_IDLE_SMG1_STIMULATED, ACT_IDLE_SMG1, VJ.SequenceToActivity(self, "idle_smg1_relaxed")})
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SMG1
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= VJ.PICK({ACT_WALK_RIFLE, ACT_WALK_RIFLE_RELAXED, ACT_WALK_RIFLE_STIMULATED})
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= VJ.PICK({ACT_WALK_AIM_RIFLE, ACT_WALK_AIM_RIFLE_STIMULATED})
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= VJ.PICK({ACT_RUN_RIFLE, ACT_RUN_RIFLE_STIMULATED, ACT_RUN_RIFLE_RELAXED})
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= VJ.PICK({ACT_RUN_AIM_RIFLE, ACT_RUN_AIM_RIFLE_STIMULATED})
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
-		elseif hType == "crossbow" or hType == "shotgun" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_SHOTGUN
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_SHOTGUN
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SMG1_LOW
-			self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SHOTGUN
-			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW //ACT_RELOAD_SHOTGUN_LOW
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= VJ.PICK({ACT_IDLE_SHOTGUN_RELAXED, ACT_IDLE_SHOTGUN_STIMULATED})
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= VJ.SequenceToActivity(self, "idle_ar2_aim")
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= VJ.PICK({VJ.SequenceToActivity(self, "walk_ar2_relaxed_all"), VJ.SequenceToActivity(self, "walkalerthold_ar2_all1"), VJ.SequenceToActivity(self, "walkholdall1_ar2")})
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= VJ.PICK({VJ.SequenceToActivity(self, "walkaimall1_ar2"), VJ.SequenceToActivity(self, "walkalertaim_ar2_all1")})
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RPG
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= VJ.PICK({VJ.SequenceToActivity(self, "run_alert_holding_ar2_all"), VJ.SequenceToActivity(self, "run_ar2_relaxed_all"), VJ.SequenceToActivity(self, "run_holding_ar2_all")})
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= VJ.PICK({ACT_RUN_AIM_RIFLE, VJ.SequenceToActivity(self, "run_alert_aiming_ar2_all")})
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RPG
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
-		elseif hType == "rpg" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_RPG
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_RPG
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_SMG1_LOW
-			self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SMG1
-			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= VJ.PICK({ACT_IDLE_RPG, ACT_IDLE_RPG_RELAXED})
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_RPG
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= VJ.PICK({ACT_WALK_RPG, ACT_WALK_RPG_RELAXED})
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= VJ.PICK({VJ.SequenceToActivity(self, "walkaimall1_ar2"), VJ.SequenceToActivity(self, "walkalertaim_ar2_all1")})
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RPG
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= VJ.PICK({ACT_RUN_RPG, ACT_RUN_RPG_RELAXED})
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= VJ.PICK({ACT_RUN_AIM_RIFLE, VJ.SequenceToActivity(self, "run_alert_aiming_ar2_all")})
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RPG
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
-		elseif hType == "pistol" or hType == "revolver" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_RANGE_ATTACK_PISTOL
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_GESTURE_RANGE_ATTACK_PISTOL
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_RANGE_ATTACK_PISTOL_LOW
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= {"crouchidle_panicked4", "vjseq_crouchidlehide"}
-			self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_PISTOL
-			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= isFemale and ACT_RELOAD_SMG1_LOW or ACT_RELOAD_PISTOL_LOW -- Only males have covered pistol reload
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= isFemale and ACT_IDLE_PISTOL or ACT_IDLE -- Only females have pistol idle animation
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= isFemale and ACT_IDLE_ANGRY_PISTOL or VJ.SequenceToActivity(self, "idle_ar2_aim") -- Only females have angry pistol animation
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_WALK_PISTOL
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= VJ.PICK({VJ.SequenceToActivity(self, "walkaimall1_ar2"), VJ.SequenceToActivity(self, "walkalertaim_ar2_all1")})
-			//self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE -- No need to translate
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_RUN_PISTOL
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= VJ.SequenceToActivity(self, "run_alert_aiming_ar2_all")
-			//self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE -- No need to translate
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
-		elseif hType == "melee" or hType == "melee2" or hType == "knife" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_MELEE_ATTACK_SWING
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= false -- Don't play anything!
-			//self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SMG1_LOW -- Not used for melee
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= {"crouchidle_panicked4", "vjseq_crouchidlehide"}
-			//self.WeaponAnimTranslations[ACT_RELOAD] 						= ACT_RELOAD_SMG1 -- Not used for melee
-			//self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= ACT_RELOAD_SMG1_LOW -- Not used for melee
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_IDLE
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= isFemale and ACT_IDLE_ANGRY or ACT_IDLE_ANGRY_MELEE -- Only males have unique idle angry for melee weapons!
-			
-			//self.WeaponAnimTranslations[ACT_WALK] 						= ACT_WALK -- No need to translate
-			//self.WeaponAnimTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_RIFLE -- Not used for melee
-			//self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_WALK_CROUCH_RIFLE -- No need to translate
-			//self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_WALK_CROUCH_AIM_RIFLE -- Not used for melee
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= VJ.SequenceToActivity(self, "run_all_panicked")
-			//self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_RUN_AIM_RIFLE -- Not used for melee
-			//self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE -- No need to translate
-			//self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE -- Not used for melee
-		end
-	elseif self.ModelAnimationSet == VJ.ANIM_SET_PLAYER then -- Player =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
-		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.61155587434769	end
-		
-		if hType == "ar2" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_HL2MP_IDLE_AR2
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_AR2
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_HL2MP_IDLE_CROUCH_AR2
-			self.WeaponAnimTranslations[ACT_RELOAD] 						= "vjges_reload_ar2"
-			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_ar2"
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_HL2MP_IDLE_CROUCH_AR2
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_HL2MP_IDLE_PASSIVE
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_AR2
-			self.WeaponAnimTranslations[ACT_JUMP] 							= ACT_HL2MP_JUMP_AR2
-			self.WeaponAnimTranslations[ACT_GLIDE] 							= ACT_HL2MP_JUMP_AR2
-			self.WeaponAnimTranslations[ACT_LAND] 							= ACT_HL2MP_IDLE_AR2
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_HL2MP_WALK_PASSIVE
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_HL2MP_WALK_AR2
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_AR2
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_HL2MP_RUN_PASSIVE
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_HL2MP_RUN_AR2
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_AR2
-		elseif hType == "pistol" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_HL2MP_IDLE_PISTOL
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_PISTOL
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_HL2MP_IDLE_CROUCH_PISTOL
-			self.WeaponAnimTranslations[ACT_RELOAD] 						= "vjges_reload_pistol"
-			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_pistol"
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_HL2MP_IDLE_CROUCH_PISTOL
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_HL2MP_IDLE
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_PISTOL
-			self.WeaponAnimTranslations[ACT_JUMP] 							= ACT_HL2MP_JUMP_PISTOL
-			self.WeaponAnimTranslations[ACT_GLIDE] 							= ACT_HL2MP_JUMP_PISTOL
-			self.WeaponAnimTranslations[ACT_LAND] 							= ACT_HL2MP_IDLE_PISTOL
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_HL2MP_WALK
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_HL2MP_WALK_PISTOL
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_PISTOL
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_HL2MP_RUN_FAST
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_HL2MP_RUN_PISTOL
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_PISTOL
-		elseif hType == "smg" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_HL2MP_IDLE_SMG1
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_SMG1
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_HL2MP_IDLE_CROUCH_SMG1
-			self.WeaponAnimTranslations[ACT_RELOAD] 						= "vjges_reload_smg1"
-			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_smg1"
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_HL2MP_IDLE_CROUCH_SMG1
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_HL2MP_IDLE_PASSIVE
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_SMG1
-			self.WeaponAnimTranslations[ACT_JUMP] 							= ACT_HL2MP_JUMP_SMG1
-			self.WeaponAnimTranslations[ACT_GLIDE] 							= ACT_HL2MP_JUMP_SMG1
-			self.WeaponAnimTranslations[ACT_LAND] 							= ACT_HL2MP_IDLE_SMG1
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_HL2MP_WALK_PASSIVE
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_HL2MP_WALK_SMG1
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_SMG1
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_HL2MP_RUN_PASSIVE
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_HL2MP_RUN_SMG1
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_SMG1
-		elseif hType == "grenade" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_HL2MP_IDLE_GRENADE
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_HL2MP_IDLE_CROUCH_GRENADE
-			-- self.WeaponAnimTranslations[ACT_RELOAD] 						= "vjges_reload_pistol"
-			-- self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_pistol"
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_HL2MP_IDLE_CROUCH_GRENADE
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_HL2MP_IDLE
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_GRENADE
-			self.WeaponAnimTranslations[ACT_JUMP] 							= ACT_HL2MP_JUMP_GRENADE
-			self.WeaponAnimTranslations[ACT_GLIDE] 							= ACT_HL2MP_JUMP_GRENADE
-			self.WeaponAnimTranslations[ACT_LAND] 							= ACT_HL2MP_IDLE_GRENADE
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_HL2MP_WALK
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_HL2MP_WALK_GRENADE
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_GRENADE
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_HL2MP_RUN
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_HL2MP_RUN_GRENADE
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_GRENADE
-		elseif hType == "shotgun" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_HL2MP_IDLE_SHOTGUN
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_HL2MP_IDLE_CROUCH_SHOTGUN
-			self.WeaponAnimTranslations[ACT_RELOAD] 						= "vjges_reload_shotgun"
-			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_shotgun"
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_HL2MP_IDLE_CROUCH_SHOTGUN
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_HL2MP_IDLE_PASSIVE
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_SHOTGUN
-			self.WeaponAnimTranslations[ACT_JUMP] 							= ACT_HL2MP_JUMP_SHOTGUN
-			self.WeaponAnimTranslations[ACT_GLIDE] 							= ACT_HL2MP_JUMP_SHOTGUN
-			self.WeaponAnimTranslations[ACT_LAND] 							= ACT_HL2MP_IDLE_SHOTGUN
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_HL2MP_WALK_PASSIVE
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_HL2MP_WALK_SHOTGUN
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_SHOTGUN
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_HL2MP_RUN_PASSIVE
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_HL2MP_RUN_SHOTGUN
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_SHOTGUN
-		elseif hType == "rpg" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_HL2MP_IDLE_RPG
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_RPG
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_HL2MP_IDLE_CROUCH_RPG
-			self.WeaponAnimTranslations[ACT_RELOAD] 						= "vjges_reload_ar2"
-			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_ar2"
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_HL2MP_IDLE_CROUCH_RPG
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_HL2MP_IDLE_PASSIVE
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_RPG
-			self.WeaponAnimTranslations[ACT_JUMP] 							= ACT_HL2MP_JUMP_RPG
-			self.WeaponAnimTranslations[ACT_GLIDE] 							= ACT_HL2MP_JUMP_RPG
-			self.WeaponAnimTranslations[ACT_LAND] 							= ACT_HL2MP_IDLE_RPG
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_HL2MP_WALK_PASSIVE
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_HL2MP_WALK_RPG
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_RPG
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_HL2MP_RUN_PASSIVE
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_HL2MP_RUN_RPG
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_RPG
-		elseif hType == "physgun" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_HL2MP_IDLE_PHYSGUN
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_HL2MP_IDLE_CROUCH_PHYSGUN
-			self.WeaponAnimTranslations[ACT_RELOAD] 						= "vjges_reload_ar2"
-			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_ar2"
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_HL2MP_IDLE_CROUCH_PHYSGUN
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_HL2MP_IDLE_PASSIVE
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_PHYSGUN
-			self.WeaponAnimTranslations[ACT_JUMP] 							= ACT_HL2MP_JUMP_PHYSGUN
-			self.WeaponAnimTranslations[ACT_GLIDE] 							= ACT_HL2MP_JUMP_PHYSGUN
-			self.WeaponAnimTranslations[ACT_LAND] 							= ACT_HL2MP_IDLE_PHYSGUN
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_HL2MP_WALK_PASSIVE
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_HL2MP_WALK_PHYSGUN
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_PHYSGUN
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_HL2MP_RUN_PASSIVE
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_HL2MP_RUN_PHYSGUN
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_PHYSGUN
-		elseif hType == "crossbow" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_HL2MP_IDLE_CROSSBOW
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_HL2MP_IDLE_CROUCH_CROSSBOW
-			self.WeaponAnimTranslations[ACT_RELOAD] 						= "vjges_reload_ar2"
-			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_ar2"
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_HL2MP_IDLE_CROUCH_CROSSBOW
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_HL2MP_IDLE_PASSIVE
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_CROSSBOW
-			self.WeaponAnimTranslations[ACT_JUMP] 							= ACT_HL2MP_JUMP_CROSSBOW
-			self.WeaponAnimTranslations[ACT_GLIDE] 							= ACT_HL2MP_JUMP_CROSSBOW
-			self.WeaponAnimTranslations[ACT_LAND] 							= ACT_HL2MP_IDLE_CROSSBOW
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_HL2MP_WALK_PASSIVE
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_HL2MP_WALK_CROSSBOW
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_CROSSBOW
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_HL2MP_RUN_PASSIVE
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_HL2MP_RUN_CROSSBOW
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_CROSSBOW
-		elseif hType == "slam" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_HL2MP_IDLE_SLAM
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_SLAM
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_HL2MP_IDLE_CROUCH_SLAM
-			-- self.WeaponAnimTranslations[ACT_RELOAD] 						= "vjges_reload_pistol"
-			-- self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_pistol"
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_HL2MP_IDLE_CROUCH_SLAM
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_HL2MP_IDLE
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_SLAM
-			self.WeaponAnimTranslations[ACT_JUMP] 							= ACT_HL2MP_JUMP_SLAM
-			self.WeaponAnimTranslations[ACT_GLIDE] 							= ACT_HL2MP_JUMP_SLAM
-			self.WeaponAnimTranslations[ACT_LAND] 							= ACT_HL2MP_IDLE_SLAM
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_HL2MP_WALK
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_HL2MP_WALK_SLAM
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_SLAM
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_HL2MP_RUN
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_HL2MP_RUN_SLAM
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_SLAM
-		elseif hType == "duel" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_HL2MP_IDLE_DUEL
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_DUEL
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_HL2MP_IDLE_CROUCH_DUEL
-			self.WeaponAnimTranslations[ACT_RELOAD] 						= "vjges_reload_duel"
-			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_duel"
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_HL2MP_IDLE_CROUCH_DUEL
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_HL2MP_IDLE
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_DUEL
-			self.WeaponAnimTranslations[ACT_JUMP] 							= ACT_HL2MP_JUMP_DUEL
-			self.WeaponAnimTranslations[ACT_GLIDE] 							= ACT_HL2MP_JUMP_DUEL
-			self.WeaponAnimTranslations[ACT_LAND] 							= ACT_HL2MP_IDLE_DUEL
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_HL2MP_WALK
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_HL2MP_WALK_DUEL
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_DUEL
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_HL2MP_RUN
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_HL2MP_RUN_DUEL
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_DUEL
-		elseif hType == "revolver" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_HL2MP_IDLE_REVOLVER
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_REVOLVER
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_HL2MP_IDLE_CROUCH_REVOLVER
-			self.WeaponAnimTranslations[ACT_RELOAD] 						= "vjges_reload_revolver"
-			self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_revolver"
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_HL2MP_IDLE_CROUCH_REVOLVER
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_HL2MP_IDLE
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_REVOLVER
-			self.WeaponAnimTranslations[ACT_JUMP] 							= ACT_HL2MP_JUMP_REVOLVER
-			self.WeaponAnimTranslations[ACT_GLIDE] 							= ACT_HL2MP_JUMP_REVOLVER
-			self.WeaponAnimTranslations[ACT_LAND] 							= ACT_HL2MP_IDLE_REVOLVER
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_HL2MP_WALK
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_HL2MP_WALK_REVOLVER
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_REVOLVER
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_HL2MP_RUN
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_HL2MP_RUN_REVOLVER
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_REVOLVER
-		elseif hType == "melee" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_HL2MP_IDLE_MELEE
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_HL2MP_IDLE_CROUCH_MELEE
-			-- self.WeaponAnimTranslations[ACT_RELOAD] 						= "vjges_reload_pistol"
-			-- self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_pistol"
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_HL2MP_IDLE_CROUCH_MELEE
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_HL2MP_IDLE
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_MELEE
-			self.WeaponAnimTranslations[ACT_JUMP] 							= ACT_HL2MP_JUMP_MELEE
-			self.WeaponAnimTranslations[ACT_GLIDE] 							= ACT_HL2MP_JUMP_MELEE
-			self.WeaponAnimTranslations[ACT_LAND] 							= ACT_HL2MP_IDLE_MELEE
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_HL2MP_WALK
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_HL2MP_WALK_MELEE
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_MELEE
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_HL2MP_RUN
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_HL2MP_RUN_MELEE
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_MELEE
-		elseif hType == "melee2" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_HL2MP_IDLE_MELEE2
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_HL2MP_IDLE_CROUCH_MELEE2
-			-- self.WeaponAnimTranslations[ACT_RELOAD] 						= "vjges_reload_pistol"
-			-- self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_pistol"
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_HL2MP_IDLE_CROUCH_MELEE2
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_HL2MP_IDLE
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_MELEE2
-			self.WeaponAnimTranslations[ACT_JUMP] 							= ACT_HL2MP_JUMP_MELEE2
-			self.WeaponAnimTranslations[ACT_GLIDE] 							= ACT_HL2MP_JUMP_MELEE2
-			self.WeaponAnimTranslations[ACT_LAND] 							= ACT_HL2MP_IDLE_MELEE2
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_HL2MP_WALK
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_HL2MP_WALK_MELEE2
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_MELEE2
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_HL2MP_RUN
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_HL2MP_RUN_MELEE2
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_MELEE2
-		elseif hType == "knife" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_HL2MP_IDLE_KNIFE
-			self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_KNIFE
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_HL2MP_IDLE_CROUCH_KNIFE
-			-- self.WeaponAnimTranslations[ACT_RELOAD] 						= "vjges_reload_pistol"
-			-- self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_pistol"
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_HL2MP_IDLE_CROUCH_KNIFE
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_HL2MP_IDLE
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_KNIFE
-			self.WeaponAnimTranslations[ACT_JUMP] 							= ACT_HL2MP_JUMP_KNIFE
-			self.WeaponAnimTranslations[ACT_GLIDE] 							= ACT_HL2MP_JUMP_KNIFE
-			self.WeaponAnimTranslations[ACT_LAND] 							= ACT_HL2MP_IDLE_KNIFE
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_HL2MP_WALK
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_HL2MP_WALK_KNIFE
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_KNIFE
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_HL2MP_RUN
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_HL2MP_RUN_KNIFE
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_KNIFE
-		elseif hType == "camera" then
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1] 					= ACT_HL2MP_IDLE_CAMERA
-			-- self.WeaponAnimTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_CAMERA
-			self.WeaponAnimTranslations[ACT_RANGE_ATTACK1_LOW] 				= ACT_HL2MP_IDLE_CROUCH_CAMERA
-			-- self.WeaponAnimTranslations[ACT_RELOAD] 						= "vjges_reload_pistol"
-			-- self.WeaponAnimTranslations[ACT_RELOAD_LOW] 					= "vjges_reload_pistol"
-			self.WeaponAnimTranslations[ACT_COVER_LOW] 						= ACT_HL2MP_IDLE_CROUCH_CAMERA
-			
-			self.WeaponAnimTranslations[ACT_IDLE] 							= ACT_HL2MP_IDLE
-			self.WeaponAnimTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_CAMERA
-			self.WeaponAnimTranslations[ACT_JUMP] 							= ACT_HL2MP_JUMP_CAMERA
-			self.WeaponAnimTranslations[ACT_GLIDE] 							= ACT_HL2MP_JUMP_CAMERA
-			self.WeaponAnimTranslations[ACT_LAND] 							= ACT_HL2MP_IDLE_CAMERA
-			
-			self.WeaponAnimTranslations[ACT_WALK] 							= ACT_HL2MP_WALK
-			self.WeaponAnimTranslations[ACT_WALK_AIM] 						= ACT_HL2MP_WALK_CAMERA
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.WeaponAnimTranslations[ACT_WALK_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_CAMERA
-			
-			self.WeaponAnimTranslations[ACT_RUN] 							= ACT_HL2MP_RUN
-			self.WeaponAnimTranslations[ACT_RUN_AIM] 						= ACT_HL2MP_RUN_CAMERA
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.WeaponAnimTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_CAMERA
+	-- Check for translations
+	local translation = self.AnimationTranslations[act]
+	if translation then
+		if istable(translation) then
+			act = translation[math.random(1, #translation)] or act -- "or act" = To make sure it doesn't return nil when the table is empty!
+		else
+			act = translation
 		end
 	end
+	return act
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:TranslateToWeaponAnim(act)
-	local translate = self.WeaponAnimTranslations[act]
+	local translate = self.AnimationTranslations[act]
 	if translate == nil then -- If no animation found, then just return the given activity
 		return act
 	else -- Found an animation!
@@ -2381,7 +2357,7 @@ function ENT:DoChangeWeapon(wep, invSwitch)
 				self.WeaponInventory.Primary = curWep
 			end
 		end
-		self:SetupWeaponHoldTypeAnims(curWep:GetHoldType())
+		self:UpdateAnimationTranslations(curWep:GetHoldType())
 		self:CustomOnDoChangeWeapon(curWep, self.CurrentWeaponEntity, invSwitch)
 		self.CurrentWeaponEntity = curWep
 	else
@@ -2448,514 +2424,523 @@ local finishAttack = {
 */
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-	//PrintTable(self:GetAnimInfo(self:GetActivity()))
-	//self:MoveStop()
-	//self:ResetMoveCalc()
-	//print("---------------------")
-	//PrintTable(self:GetSaveTable())
-	//print(self:GetInternalVariable("m_flFieldOfView"))
-	//print(self:GetInternalVariable("m_flMoveWaitFinished") - CurTime())
-	//self:SetSaveValue("m_flMoveWaitFinished", CurTime() + 2)
-	
-	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
-	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
-	
-	//self:SetCondition(1) -- Probably not needed as "sv_pvsskipanimation" handles it | Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case "sv_pvsskipanimation" isn't disabled!
-	//if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) /*&& curSched.IsMovingTask == true*/ then self:DropToFloor() end -- No need, already handled by the engine
-
-	local curSched = self.CurrentSchedule
-	if curSched != nil then
-		if self:IsMoving() then
-			if curSched.MoveType == 0 && !VJ.HasValue(self.AnimTbl_Walk, self:GetMovementActivity()) then
-				self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk))
-			elseif curSched.MoveType == 1 && !VJ.HasValue(self.AnimTbl_Run, self:GetMovementActivity()) then
-				self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run))
+	if self.NextActualThink <= CurTime() then
+		self.NextActualThink = CurTime() + 0.065
+		
+		-- Schedule debug
+		//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
+		//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
+		
+		//self:SetCondition(1) -- Probably not needed as "sv_pvsskipanimation" handles it | Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case "sv_pvsskipanimation" isn't disabled!
+		//if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) /*&& curSched.IsMovingTask == true*/ then self:DropToFloor() end -- No need, already handled by the engine
+		local curSched = self.CurrentSchedule
+		if curSched != nil then
+			-- No longer needed, "RunAI" and "TranslateActivity" now handle it
+			/*if self:IsMoving() then
+				if curSched.MoveType == 0 && !VJ.HasValue(self.AnimTbl_Walk, self:GetMovementActivity()) then
+					self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk))
+				elseif curSched.MoveType == 1 && !VJ.HasValue(self.AnimTbl_Run, self:GetMovementActivity()) then
+					self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run))
+				end
+			end*/
+			local blockingEnt = self:GetBlockingEntity()
+			-- No longer needed as the engine now does detects and opens the doors
+			//if self.CanOpenDoors && IsValid(blockingEnt) && (blockingEnt:GetClass() == "func_door" or blockingEnt:GetClass() == "func_door_rotating") && (blockingEnt:HasSpawnFlags(256) or blockingEnt:HasSpawnFlags(1024)) && !blockingEnt:HasSpawnFlags(512) then
+				//blockingEnt:Fire("Open")
+			//end
+			if (curSched.StopScheduleIfNotMoving == true or curSched.StopScheduleIfNotMoving_Any == true) && (!self:IsMoving() or (IsValid(blockingEnt) && (blockingEnt:IsNPC() or curSched.StopScheduleIfNotMoving_Any == true))) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
+				self:ScheduleFinished(curSched)
+				//self:SetCondition(COND_TASK_FAILED)
+				//self:StopMoving()
 			end
-		end
-		local blockingEnt = self:GetBlockingEntity()
-		-- No longer needed as the engine now does detects and opens the doors
-		//if self.CanOpenDoors && IsValid(blockingEnt) && (blockingEnt:GetClass() == "func_door" or blockingEnt:GetClass() == "func_door_rotating") && (blockingEnt:HasSpawnFlags(256) or blockingEnt:HasSpawnFlags(1024)) && !blockingEnt:HasSpawnFlags(512) then
-			//blockingEnt:Fire("Open")
-		//end
-		if (curSched.StopScheduleIfNotMoving == true or curSched.StopScheduleIfNotMoving_Any == true) && (!self:IsMoving() or (IsValid(blockingEnt) && (blockingEnt:IsNPC() or curSched.StopScheduleIfNotMoving_Any == true))) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
-			self:ScheduleFinished(curSched)
-			//self:SetCondition(COND_TASK_FAILED)
-			//self:StopMoving()
-		end
-		-- self:OnMovementFailed() handles some of them, but we do still need this for non-movement failures (EX: Finding cover area)
-		if self:HasCondition(COND_TASK_FAILED) then
-			//print("VJ Base: Task Failed Condition Identified! "..self:GetName())
-			if self:DoRunCode_OnFail(curSched) == true then
-				self:ClearCondition(COND_TASK_FAILED)
-			end
-			if curSched.ResetOnFail == true then
-				self:ClearCondition(COND_TASK_FAILED)
-				self:StopMoving()
-				//self:SelectSchedule()
-			end
-		end
-	end
-	
-	//print("------------------")
-	//print(self:GetActiveWeapon())
-	//PrintTable(self:GetWeapons())
-	if self.DoingWeaponAttack == false then self.DoingWeaponAttack_Standing = false end
-	
-	local curTime = CurTime()
-	
-	if !self.Dead then
-		-- Detect any weapon change, unless the NPC is dead because the variable is used by self:DoDropWeaponOnDeath()
-		if self.CurrentWeaponEntity != self:GetActiveWeapon() then
-			self.CurrentWeaponEntity = self:DoChangeWeapon()
+			-- self:OnMovementFailed() handles some of them, but we do still need this for non-movement failures (EX: Finding cover area)
+			-- Now completely handled in `OnTaskFailed`
+			/*if self:HasCondition(COND_TASK_FAILED) then
+				print("VJ Base: Task Failed Condition Identified! "..self:GetName())
+				if self:DoRunCode_OnFail(curSched) == true then
+					self:ClearCondition(COND_TASK_FAILED)
+				end
+				if curSched.ResetOnFail == true then
+					self:ClearCondition(COND_TASK_FAILED)
+					self:StopMoving()
+					//self:SelectSchedule()
+				end
+			end*/
 		end
 		
-		-- Breath sound system
-		if self.HasBreathSound && self.HasSounds && curTime > self.NextBreathSoundT then
-			local sdTbl = VJ.PICK(self.SoundTbl_Breath)
-			local dur = 1
-			if sdTbl then
-				StopSound(self.CurrentBreathSound)
-				dur = (self.NextSoundTime_Breath == false and SoundDuration(sdTbl)) or math.Rand(self.NextSoundTime_Breath.a, self.NextSoundTime_Breath.b)
-				self.CurrentBreathSound = VJ.CreateSound(self, sdTbl, self.BreathSoundLevel, self:VJ_DecideSoundPitch(self.BreathSoundPitch.a, self.BreathSoundPitch.b))
-			end
-			self.NextBreathSoundT = curTime + dur
-		end
-	end
-	
-	self:CustomOnThink()
-	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
-	if GetConVar("ai_disabled"):GetInt() == 0 && self:GetState() != VJ_STATE_FREEZE && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
-		if self.VJ_DEBUG == true then
-			if GetConVar("vj_npc_printcurenemy"):GetInt() == 1 then print(self:GetClass().."'s Enemy: ",self:GetEnemy()," Alerted? ",self.Alerted) end
-			if GetConVar("vj_npc_printtakingcover"):GetInt() == 1 then if curTime > self.TakingCoverT == true then print(self:GetClass().." Is Not Taking Cover") else print(self:GetClass().." Is Taking Cover ("..self.TakingCoverT-curTime..")") end end
-			if GetConVar("vj_npc_printlastseenenemy"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - self.EnemyData.LastVisibleTime).." ("..self:GetName()..")") end
-			if IsValid(self.CurrentWeaponEntity) && GetConVar("vj_npc_dev_printwepinfo"):GetInt() == 1 then print(self:GetName().." -->", self.CurrentWeaponEntity, "Ammo: "..self.CurrentWeaponEntity:Clip1().."/"..self.CurrentWeaponEntity:GetMaxClip1().." | Accuracy: "..self.WeaponSpread) end
-		end
-		
-		local eneData = self.EnemyData
-		local didTurn = false -- Did the NPC do any turning?
-		
-		self:SetPlaybackRate(self.AnimationPlaybackRate)
-		if self:GetArrivalActivity() == -1 then
-			self:SetArrivalActivity(self.CurrentIdleAnimation)
-		end
-		
-		self:CustomOnThink_AIEnabled()
-		
-		if self.DisableFootStepSoundTimer == false then self:FootStepSoundCode() end
-		
-		-- Update follow system's data
 		//print("------------------")
-		//PrintTable(self.FollowData)
-		if self.IsFollowing == true && self:GetNavType() != NAV_JUMP && self:GetNavType() != NAV_CLIMB then
-			local followData = self.FollowData
-			local followEnt = followData.Ent
-			local followIsLiving = followData.IsLiving
-			//print(self:GetTarget())
-			if IsValid(followEnt) && (!followIsLiving or (followIsLiving && (self:Disposition(followEnt) == D_LI or self:GetClass() == followEnt:GetClass()) && VJ.IsAlive(followEnt))) then
-				if curTime > self.NextFollowUpdateT && !self.VJTag_IsHealing then
-					local distToPly = self:GetPos():Distance(followEnt:GetPos())
-					local busy = self:BusyWithActivity()
-					self:SetTarget(followEnt)
-					followData.StopAct = false
-					if distToPly > followData.MinDist then -- Entity is far away, move towards it!
-						local isFar = distToPly > (followData.MinDist * 4)
-						-- IF (we are busy but far) OR (not busy) THEN move
-						if (busy && isFar) or (!busy) then
-							followData.Moving = true
-							-- If we are far then stop all activities (ex: attacks) and just go there already!
-							if isFar then
-								followData.StopAct = true
+		//print(self:GetActiveWeapon())
+		//PrintTable(self:GetWeapons())
+		if self.DoingWeaponAttack == false then self.DoingWeaponAttack_Standing = false end
+		
+		local curTime = CurTime()
+		
+		-- This is here to make sure the initialized process time stays in place...
+		-- otherwise if AI is disabled then reenabled, all the NPCs will now start processing at the same exact CurTime!
+		local doHeavyProcesses = curTime > self.NextProcessT
+		if doHeavyProcesses then
+			self.NextProcessT = curTime + self.NextProcessTime
+		end
+		
+		if !self.Dead then
+			-- Detect any weapon change, unless the NPC is dead because the variable is used by self:DoDropWeaponOnDeath()
+			if self.CurrentWeaponEntity != self:GetActiveWeapon() then
+				self.CurrentWeaponEntity = self:DoChangeWeapon()
+			end
+			
+			-- Breath sound system
+			if self.HasBreathSound && self.HasSounds && curTime > self.NextBreathSoundT then
+				local sdTbl = VJ.PICK(self.SoundTbl_Breath)
+				local dur = 1
+				if sdTbl then
+					StopSound(self.CurrentBreathSound)
+					dur = (self.NextSoundTime_Breath == false and SoundDuration(sdTbl)) or math.Rand(self.NextSoundTime_Breath.a, self.NextSoundTime_Breath.b)
+					self.CurrentBreathSound = VJ.CreateSound(self, sdTbl, self.BreathSoundLevel, self:VJ_DecideSoundPitch(self.BreathSoundPitch.a, self.BreathSoundPitch.b))
+				end
+				self.NextBreathSoundT = curTime + dur
+			end
+		end
+		
+		self:CustomOnThink()
+		--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
+		if VJ_CVAR_AI_ENABLED && self:GetState() != VJ_STATE_FREEZE && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
+			if self.VJ_DEBUG == true then
+				if GetConVar("vj_npc_printcurenemy"):GetInt() == 1 then print(self:GetClass().."'s Enemy: ",self:GetEnemy()," Alerted? ",self.Alerted) end
+				if GetConVar("vj_npc_printtakingcover"):GetInt() == 1 then if curTime > self.TakingCoverT == true then print(self:GetClass().." Is Not Taking Cover") else print(self:GetClass().." Is Taking Cover ("..self.TakingCoverT-curTime..")") end end
+				if GetConVar("vj_npc_printlastseenenemy"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - self.EnemyData.LastVisibleTime).." ("..self:GetName()..")") end
+				if IsValid(self.CurrentWeaponEntity) && GetConVar("vj_npc_dev_printwepinfo"):GetInt() == 1 then print(self:GetName().." -->", self.CurrentWeaponEntity, "Ammo: "..self.CurrentWeaponEntity:Clip1().."/"..self.CurrentWeaponEntity:GetMaxClip1().." | Accuracy: "..self.WeaponSpread) end
+			end
+			
+			local eneData = self.EnemyData
+			
+			self:SetPlaybackRate(self.AnimationPlaybackRate)
+			//if self:GetArrivalActivity() == -1 then -- No longer needed
+				//self:SetArrivalActivity(self.CurrentIdleAnimation)
+			//end
+			
+			self:CustomOnThink_AIEnabled()
+			
+			-- Update follow system's data
+			//print("------------------")
+			//PrintTable(self.FollowData)
+			if self.IsFollowing == true && self:GetNavType() != NAV_JUMP && self:GetNavType() != NAV_CLIMB then
+				local followData = self.FollowData
+				local followEnt = followData.Ent
+				local followIsLiving = followData.IsLiving
+				//print(self:GetTarget())
+				if IsValid(followEnt) && (!followIsLiving or (followIsLiving && (self:Disposition(followEnt) == D_LI or self:GetClass() == followEnt:GetClass()) && VJ.IsAlive(followEnt))) then
+					if curTime > self.NextFollowUpdateT && !self.VJTag_IsHealing then
+						local distToPly = self:GetPos():Distance(followEnt:GetPos())
+						local busy = self:BusyWithActivity()
+						self:SetTarget(followEnt)
+						followData.StopAct = false
+						if distToPly > followData.MinDist then -- Entity is far away, move towards it!
+							local isFar = distToPly > (followData.MinDist * 4)
+							-- IF (we are busy but far) OR (not busy) THEN move
+							if (busy && isFar) or (!busy) then
+								followData.Moving = true
+								-- If we are far then stop all activities (ex: attacks) and just go there already!
+								if isFar then
+									followData.StopAct = true
+								end
+								-- If we are close then walk otherwise run
+								self:VJ_TASK_GOTO_TARGET((distToPly < (followData.MinDist * 1.5) and "TASK_WALK_PATH") or "TASK_RUN_PATH", function(schedule)
+									schedule.CanShootWhenMoving = true
+									if IsValid(self:GetActiveWeapon()) then
+										schedule.FaceData = {Type = VJ.NPC_FACE_ENEMY_VISIBLE}
+									end
+								end)
 							end
-							-- If we are close then walk otherwise run
-							self:VJ_TASK_GOTO_TARGET((distToPly < (followData.MinDist * 1.5) and "TASK_WALK_PATH") or "TASK_RUN_PATH", function(schedule)
-								schedule.CanShootWhenMoving = true
-								if IsValid(self:GetActiveWeapon()) then
-									schedule.FaceData = {Type = VJ.NPC_FACE_ENEMY_VISIBLE}
+						elseif followData.Moving == true then -- Entity is very close, stop moving!
+							if !busy then -- If not busy then make it stop moving and do something
+								self:StopMoving()
+								self:SelectSchedule()
+							end
+							followData.Moving = false
+						end
+						self.NextFollowUpdateT = curTime + self.NextFollowUpdateTime
+					end
+				else
+					self:FollowReset()
+				end
+			end
+
+			-- Handle main parts of the turning system
+			local turnData = self.TurnData
+			if turnData.Type != VJ.NPC_FACE_NONE then
+				-- If StopOnFace flag is set AND (Something has requested to take over by checking "ideal yaw != last set yaw") OR (we are facing ideal) then finish it!
+				if turnData.StopOnFace && (self:GetIdealYaw() != turnData.LastYaw or self:IsFacingIdealYaw()) then
+					self:ResetTurnTarget()
+				else
+					self.TurnData.LastYaw = 0 -- To make sure the turning maintain works correctly
+					local turnTarget = turnData.Target
+					if turnData.Type == VJ.NPC_FACE_POSITION or (turnData.Type == VJ.NPC_FACE_POSITION_VISIBLE && self:VisibleVec(turnTarget)) then
+						local resultAng = self:GetFaceAngle((turnTarget - self:GetPos()):Angle())
+						if self.TurningUseAllAxis == true then
+							local myAng = self:GetAngles()
+							self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
+						end
+						self:SetIdealYawAndUpdate(resultAng.y)
+						self.TurnData.LastYaw = resultAng.y
+					elseif IsValid(turnTarget) && (turnData.Type == VJ.NPC_FACE_ENTITY or (turnData.Type == VJ.NPC_FACE_ENTITY_VISIBLE && self:Visible(turnTarget))) then
+						local resultAng = self:GetFaceAngle((turnTarget:GetPos() - self:GetPos()):Angle())
+						if self.TurningUseAllAxis == true then
+							local myAng = self:GetAngles()
+							self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
+						end
+						self:SetIdealYawAndUpdate(resultAng.y)
+						self.TurnData.LastYaw = resultAng.y
+					end
+				end
+			end
+			
+			//VJ.DEBUG_TempEnt(self:GetEnemyLastSeenPos())
+			//print(self:HasEnemyMemory())
+			//print(curTime - self:GetEnemyLastTimeSeen())
+			//print(curTime - self:GetEnemyFirstTimeSeen())
+			
+			//print("MAX CLIP: ", self.CurrentWeaponEntity:GetMaxClip1())
+			//print("CLIP: ", self.CurrentWeaponEntity:Clip1())
+				
+			if !self.Dead then
+				-- Health Regeneration System
+				if self.HasHealthRegeneration == true && curTime > self.HealthRegenerationDelayT then
+					local myHP = self:Health()
+					self:SetHealth(math_clamp(myHP + self.HealthRegenerationAmount, myHP, self:GetMaxHealth()))
+					self.HealthRegenerationDelayT = curTime + math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b)
+				end
+				
+				-- Run the heavy processes
+				if doHeavyProcesses then
+					self:MaintainRelationships()
+					self:CheckForDangers()
+					self:MaintainMedicBehavior()
+					//self.NextProcessT = curTime + self.NextProcessTime
+				end
+				
+				local plyControlled = self.VJ_IsBeingControlled
+				local myPos = self:GetPos()
+				local ene = self:GetEnemy()
+				local eneValid = IsValid(ene)
+				if eneData.Reset == false then
+					-- Reset enemy if it doesn't exist or it's dead
+					if (!eneValid) or (eneValid && ene:Health() <= 0) then
+						eneData.Reset = true
+						self:ResetEnemy(true)
+						ene = self:GetEnemy()
+						eneValid = IsValid(ene)
+					end
+					-- Reset enemy if it has been unseen for a while
+					if (curTime - eneData.LastVisibleTime) > ((self.LatestEnemyDistance < 4000 and self.TimeUntilEnemyLost) or (self.TimeUntilEnemyLost / 2)) && (!self.IsVJBaseSNPC_Tank) then
+						self:PlaySoundSystem("LostEnemy")
+						eneData.Reset = true
+						self:ResetEnemy(true)
+						ene = self:GetEnemy()
+						eneValid = IsValid(ene)
+					end
+				end
+				
+				if self.DoingWeaponAttack == true then self:CapabilitiesRemove(CAP_TURN_HEAD) else self:CapabilitiesAdd(CAP_TURN_HEAD) end -- Fixes their heads breaking
+				-- If we have a valid weapon...
+				if IsValid(self.CurrentWeaponEntity) then
+					-- Weapon Inventory System
+					if !plyControlled && !self:BusyWithActivity() then // self.IsReloadingWeapon == false
+						if eneValid then
+							-- Switch to melee
+							if !self.IsGuard && IsValid(self.WeaponInventory.Melee) && ((self.LatestEnemyDistance < self.MeleeAttackDistance) or (self.LatestEnemyDistance < 300 && self.CurrentWeaponEntity:Clip1() <= 0)) && (self:Health() > self:GetMaxHealth() * 0.25) && self.CurrentWeaponEntity != self.WeaponInventory.Melee then
+								if self:GetWeaponState() == VJ.NPC_WEP_STATE_RELOADING then self:SetWeaponState() end -- Since the reloading can be cut off, reset it back to false, or else it can mess up its behavior!
+								//timer.Remove("timer_reload_end"..self:EntIndex()) -- No longer needed
+								self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_MELEE
+								self:DoChangeWeapon(self.WeaponInventory.Melee, true)
+							-- Switch to anti-armor
+							elseif self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING && IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank == true or ene.VJ_IsHugeMonster == true) && self.CurrentWeaponEntity != self.WeaponInventory.AntiArmor then
+								self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_ANTI_ARMOR
+								self:DoChangeWeapon(self.WeaponInventory.AntiArmor, true)
+							end
+						end
+						if self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING then
+							-- Reset weapon status from melee to primary
+							if self.WeaponInventoryStatus == VJ.NPC_WEP_INVENTORY_MELEE && (!eneValid or (eneValid && self.LatestEnemyDistance >= 300)) then
+								self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_PRIMARY
+								self:DoChangeWeapon(self.WeaponInventory.Primary, true)
+							-- Reset weapon status from anti-armor to primary
+							elseif self.WeaponInventoryStatus == VJ.NPC_WEP_INVENTORY_ANTI_ARMOR && (!eneValid or (eneValid && ene.IsVJBaseSNPC_Tank != true && ene.VJ_IsHugeMonster != true)) then
+								self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_PRIMARY
+								self:DoChangeWeapon(self.WeaponInventory.Primary, true)
+							end
+						end
+					end
+					
+					-- Weapon Reloading
+					if self.AllowWeaponReloading && !self:BusyWithActivity() && self:GetWeaponState() == VJ.NPC_WEP_STATE_READY && (!self.CurrentWeaponEntity.IsMeleeWeapon) && self.AttackType == VJ.ATTACK_TYPE_NONE && ((!plyControlled && ((!eneValid && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1() && (curTime - eneData.TimeSet) > math.random(3, 8) && !self:IsMoving()) or (eneValid && self.CurrentWeaponEntity:Clip1() <= 0))) or (plyControlled && self.VJ_TheController:KeyDown(IN_RELOAD) && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1())) then
+						self.DoingWeaponAttack = false
+						self.DoingWeaponAttack_Standing = false
+						if !plyControlled then self:SetWeaponState(VJ.NPC_WEP_STATE_RELOADING) end
+						self.NextChaseTime = curTime + 2
+						if eneValid == true then self:PlaySoundSystem("WeaponReload") end -- tsayn han e minag yete teshnami ga!
+						self:CustomOnWeaponReload()
+						if self.DisableWeaponReloadAnimation == false then
+							local function DoReloadAnimation(givenAnim)
+								local anim, animDur = self:VJ_ACT_PLAYACTIVITY(givenAnim, true, false, self.WeaponReloadAnimationFaceEnemy, self.WeaponReloadAnimationDelay)
+								if anim != ACT_INVALID then
+									local wep = self.CurrentWeaponEntity
+									if wep.IsVJBaseWeapon == true then wep:NPC_Reload() end
+									timer.Create("timer_reload_end"..self:EntIndex(), animDur, 1, function()
+										if IsValid(self) && IsValid(wep) && self:GetWeaponState() == VJ.NPC_WEP_STATE_RELOADING then
+											wep:SetClip1(wep:GetMaxClip1())
+											if wep.IsVJBaseWeapon == true then wep:CustomOnReload_Finish() end
+											self:SetWeaponState()
+										end
+									end)
+									self.AllowToDo_WaitForEnemyToComeOut = false
+									-- If NOT controlled by a player AND is a gesture make it stop moving so it doesn't run after the enemy right away
+									if !plyControlled && string_find(anim, "vjges_") then
+										self:StopMoving()
+									end
+									return true -- We have successfully ran the reload animation!
+								end
+								return false -- The given animation was invalid!
+							end
+							-- Controlled by a player...
+							if plyControlled == true then
+								self:SetWeaponState(VJ.NPC_WEP_STATE_RELOADING)
+								DoReloadAnimation(self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReload)))
+							-- NOT controlled by a player...
+							else
+								-- NPC is hidden, so attempt to crouch reload
+								if eneValid == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPos + self:OBBCenter()), ene:EyePos(), false, {SetLastHiddenTime=true}) == true then -- Behvedadz
+									-- if It does NOT have a cover reload animation, then just play the regular standing reload animation
+									if !DoReloadAnimation(self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReloadBehindCover))) then
+										DoReloadAnimation(self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReload)))
+									end
+								else -- NPC is NOT hidden...
+									-- Under certain situations, simply do standing reload without running to a hiding spot
+									if self.IsGuard == true or self.IsFollowing == true or self.VJ_IsBeingControlled_Tool == true or eneValid == false or self.MovementType == VJ_MOVETYPE_STATIONARY or self.LatestEnemyDistance < 650 then
+										DoReloadAnimation(self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReload)))
+									else -- If all is good, then run to a hiding spot and then reload!
+										if self.WeaponReload_FindCover == true then
+											local schedReload = vj_ai_schedule.New("vj_weapon_reload")
+											schedReload:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
+											schedReload:EngTask("TASK_RUN_PATH", 0)
+											schedReload:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+											schedReload.StopScheduleIfNotMoving = true
+											schedReload.RunCode_OnFinish = function()
+												if self:GetWeaponState() == VJ.NPC_WEP_STATE_RELOADING then
+													-- If the current situation isn't favorable, then abandon the current reload, and try again!
+													if (self.AttackType != VJ.ATTACK_TYPE_NONE) or (IsValid(self:GetEnemy()) && self.HasWeaponBackAway == true && (self:GetPos():Distance(self:GetEnemy():GetPos()) <= self.WeaponBackAway_Distance)) then
+														self:SetWeaponState()
+														//timer.Remove("timer_reload_end"..self:EntIndex()) -- Remove the timer to make sure it doesn't set reloading to false at a random time (later on)
+													else -- Our hiding spot is good, so reload!
+														DoReloadAnimation(self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReload)))
+													end
+												end
+											end
+											self:StartSchedule(schedReload)
+										else
+											DoReloadAnimation(self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReload)))
+										end
+									end
+								end
+							end
+						else -- If the reload animation is disabled
+							if self:GetWeaponState() == VJ.NPC_WEP_STATE_RELOADING then self:SetWeaponState() end
+							self.CurrentWeaponEntity:SetClip1(self.CurrentWeaponEntity:GetMaxClip1())
+							self.CurrentWeaponEntity:NPC_Reload()
+						end
+					end
+				end
+			
+				if eneValid then
+					local enePos = ene:GetPos()
+					if self.DoingWeaponAttack then self:PlaySoundSystem("Suppressing") end
+					
+					-- Set latest enemy information
+					self:UpdateEnemyMemory(ene, enePos)
+					eneData.Reset = false
+					eneData.IsVisible = plyControlled and self:VisibleVec(enePos) or self:Visible(ene) -- Need to use VisibleVec when controlled because "Visible" will return false randomly
+					eneData.SightDiff = self:GetSightDirection():Dot((enePos - myPos):GetNormalized())
+					self.LatestEnemyDistance = myPos:Distance(enePos)
+					self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene)
+					if (eneData.SightDiff > math_cos(math_rad(self.SightAngle))) && (self.LatestEnemyDistance < self:GetMaxLookDistance()) && eneData.IsVisible then
+						eneData.LastVisibleTime = curTime
+						-- Why 2 vars? Because the last "Visible" tick is usually not updated in time, causing the engine to give false positive, thinking the enemy IS visible
+						eneData.LastVisiblePos = eneData.LastVisiblePosReal
+						eneData.LastVisiblePosReal = ene:EyePos() -- Use EyePos because "Visible" uses it to run the trace in the engine! | For origin, use "self:GetEnemyLastSeenPos()"
+					end
+					
+					-- Turning / Facing Enemy
+					if self.ConstantlyFaceEnemy then self:DoConstantlyFaceEnemy() end
+					turnData = self.TurnData
+					if turnData.Type == VJ.NPC_FACE_ENEMY or (turnData.Type == VJ.NPC_FACE_ENEMY_VISIBLE && eneData.IsVisible) then
+						local resultAng = self:GetFaceAngle((enePos - myPos):Angle())
+						if self.TurningUseAllAxis == true then
+							local myAng = self:GetAngles()
+							self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
+						end
+						self:SetIdealYawAndUpdate(resultAng.y)
+						self.TurnData.LastYaw = resultAng.y
+					end
+
+					-- Call for help
+					if self.AttackType != VJ.ATTACK_TYPE_GRENADE && self.CallForHelp == true && curTime > self.NextCallForHelpT then
+						self:Allies_CallHelp(self.CallForHelpDistance)
+						self.NextCallForHelpT = curTime + self.NextCallForHelpTime
+					end
+					
+					-- Sets the scared behavior movement activity
+					-- No longer needed as it's now handled in the TranslateActivity
+					/*if !IsValid(self.CurrentWeaponEntity) && self.NoWeapon_UseScaredBehavior && !plyControlled then
+						local anim = VJ.PICK(self.AnimTbl_ScaredBehaviorMovement)
+						if anim != false then
+							self:SetMovementActivity(anim)
+						else
+							if VJ.AnimExists(self, ACT_RUN_PROTECTED) == true then
+								self:SetMovementActivity(ACT_RUN_PROTECTED)
+							elseif VJ.AnimExists(self, ACT_RUN_CROUCH_RIFLE) == true then
+								self:SetMovementActivity(ACT_RUN_CROUCH_RIFLE)
+							end
+						end
+						//self:SetArrivalActivity(VJ.PICK(self.AnimTbl_ScaredBehaviorStand)) -- Already done by self.CurrentIdleAnimation
+					end*/
+					
+					if !eneData.IsVisible then
+						self.DoingWeaponAttack = false
+						self.DoingWeaponAttack_Standing = false
+					end
+					
+					//self:DoWeaponAttackMovementCode()
+					self:DoPoseParameterLooking()
+					
+					-- Face enemy for stationary types OR attacks
+					if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true) or (self.MeleeAttackAnimationFaceEnemy == true && self.AttackType == VJ.ATTACK_TYPE_MELEE) or (self.GrenadeAttackAnimationFaceEnemy == true && self.AttackType == VJ.ATTACK_TYPE_GRENADE && eneData.IsVisible == true) then
+						self:SetTurnTarget("Enemy")
+					end
+					
+					if !self.vACT_StopAttacks && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && curTime > self.NextDoAnyAttackT then
+						local funcCustomAtk = self.CustomAttack; if funcCustomAtk then funcCustomAtk(self, ene, eneData.IsVisible) end
+					
+						-- Melee Attack
+						if self.HasMeleeAttack == true && self.IsAbleToMeleeAttack && !self.Flinching && !self.FollowData.StopAct && self.AttackType == VJ.ATTACK_TYPE_NONE && (!IsValid(self.CurrentWeaponEntity) or (IsValid(self.CurrentWeaponEntity) && (!self.CurrentWeaponEntity.IsMeleeWeapon))) && ((plyControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (plyControlled == false && (self.NearestPointToEnemyDistance < self.MeleeAttackDistance && eneData.IsVisible) && (eneData.SightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))))) then
+							local seed = curTime; self.CurAttackSeed = seed
+							self.AttackType = VJ.ATTACK_TYPE_MELEE
+							self.AttackState = VJ.ATTACK_STATE_STARTED
+							self.MeleeAttacking = true
+							self.IsAbleToMeleeAttack = false
+							self:SetTurnTarget("Enemy")
+							self:CustomOnMeleeAttack_BeforeStartTimer(seed)
+							timer.Simple(self.BeforeMeleeAttackSounds_WaitTime, function() if IsValid(self) then self:PlaySoundSystem("BeforeMeleeAttack") end end)
+							self.NextAlertSoundT = curTime + 0.4
+							if self.DisableMeleeAttackAnimation == false then
+								local anim, animDur = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_MeleeAttack, false, 0, false, self.MeleeAttackAnimationDelay)
+								if anim != ACT_INVALID then
+									self.CurrentAttackAnimation = anim
+									self.CurrentAttackAnimationDuration = animDur - (self.MeleeAttackAnimationDecreaseLengthAmount / self:GetPlaybackRate())
+									if self.MeleeAttackAnimationAllowOtherTasks == false then -- Useful for gesture-based attacks
+										self.CurrentAttackAnimationTime = curTime + self.CurrentAttackAnimationDuration
+									end
+								end
+							end
+							if self.TimeUntilMeleeAttackDamage == false then
+								finishAttack[VJ.ATTACK_TYPE_MELEE](self)
+							else -- If it's not event based...
+								timer.Create("timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self:GetPlaybackRate(), self.MeleeAttackReps, function() if self.CurAttackSeed == seed then self:MeleeAttackCode() end end)
+								if self.MeleeAttackExtraTimers then
+									for k, t in ipairs(self.MeleeAttackExtraTimers) do
+										self:DoAddExtraAttackTimers("timer_melee_start"..curTime + k, t, function() if self.CurAttackSeed == seed then self:MeleeAttackCode() end end)
+									end
+								end
+							end
+							self:CustomOnMeleeAttack_AfterStartTimer(seed)
+						end
+						
+						-- Grenade attack
+						if self.HasGrenadeAttack && self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING && !self:BusyWithActivity() && curTime > self.NextThrowGrenadeT && curTime > self.TakingCoverT then
+							if plyControlled && self.VJ_TheController:KeyDown(IN_JUMP) then
+								self:GrenadeAttack()
+								self.NextThrowGrenadeT = curTime + math.random(self.NextThrowGrenadeTime.a, self.NextThrowGrenadeTime.b)
+							elseif !plyControlled then
+								local chance = self.ThrowGrenadeChance
+								-- If chance is above 4, then half it by 2 if the enemy is a tank OR not visible
+								if math.random(1, (chance > 3 && (ene.IsVJBaseSNPC_Tank or !eneData.IsVisible) and math.floor(chance / 2)) or chance) == 1 && self.LatestEnemyDistance < self.GrenadeAttackThrowDistance && self.LatestEnemyDistance > self.GrenadeAttackThrowDistanceClose then
+									self:GrenadeAttack()
+								end
+								self.NextThrowGrenadeT = curTime + math.random(self.NextThrowGrenadeTime.a, self.NextThrowGrenadeTime.b)
+							end
+						end
+					end
+				else -- No Enemy
+					self.DoingWeaponAttack = false
+					self.DoingWeaponAttack_Standing = false
+					if !self.Alerted && self.DidWeaponAttackAimParameter && !plyControlled then
+						self:ClearPoseParameters()
+						self.DidWeaponAttackAimParameter = false
+					end
+					
+					//if self:GetArrivalActivity() == self.CurrentWeaponAnimation then
+						//self:SetArrivalActivity(self.CurrentIdleAnimation)
+					//end
+					
+					eneData.TimeSinceAcquired = 0
+					if eneData.Reset == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") eneData.Reset = true self:ResetEnemy(true) end
+				end
+				
+				-- Guarding Position
+				if self.IsGuard == true && self.IsFollowing == false then
+					if self.GuardingPosition == nil then -- If it hasn't been set then set the guard position to its current position
+						self.GuardingPosition = myPos
+						self.GuardingFacePosition = myPos + self:GetForward()*51
+					end
+					-- If it's far from the guarding position, then go there!
+					if !self:IsMoving() && self:BusyWithActivity() == false then
+						local dist = myPos:Distance(self.GuardingPosition) -- Distance to the guard position
+						if dist > 50 then
+							self:SetLastPosition(self.GuardingPosition)
+							self:VJ_TASK_GOTO_LASTPOS(dist <= 800 and "TASK_WALK_PATH" or "TASK_RUN_PATH", function(x)
+								x.CanShootWhenMoving = true
+								x.FaceData = {Type = VJ.NPC_FACE_ENEMY}
+								x.RunCode_OnFinish = function()
+									timer.Simple(0.01, function()
+										if IsValid(self) && !self:IsMoving() && self:BusyWithActivity() == false && self.GuardingFacePosition != nil then
+											self:SetLastPosition(self.GuardingFacePosition)
+											self:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
+										end
+									end)
 								end
 							end)
 						end
-					elseif followData.Moving == true then -- Entity is very close, stop moving!
-						if !busy then -- If not busy then make it stop moving and do something
-							self:StopMoving()
-							self:SelectSchedule()
-						end
-						followData.Moving = false
 					end
-					self.NextFollowUpdateT = curTime + self.NextFollowUpdateTime
 				end
-			else
-				self:FollowReset()
 			end
+			-- Handle the unique movement system for player models
+			if self.UsePlayerModelMovement == true && self.MovementType == VJ_MOVETYPE_GROUND then
+				local moveDir = self:GetMoveDirection(true)
+				if moveDir then
+					self:SetPoseParameter("move_x", moveDir.x)
+					self:SetPoseParameter("move_y", moveDir.y)
+				else -- I am not moving, reset the pose parameters, otherwise I will run in place!
+					self:SetPoseParameter("move_x", 0)
+					self:SetPoseParameter("move_y", 0)
+				end
+			end
+		else -- AI Not enabled
+			self.DoingWeaponAttack = false
 		end
-
-		-- Handle main parts of the turning system
-		local turnData = self.TurnData
-		if turnData.Type != VJ.NPC_FACE_NONE then
-			-- If StopOnFace flag is set AND (Something has requested to take over by checking "ideal yaw != last set yaw") OR (we are facing ideal) then finish it!
-			if turnData.StopOnFace && (self:GetIdealYaw() != turnData.LastYaw or self:IsFacingIdealYaw()) then
-				self:ResetTurnTarget()
-			else
-				local turnTarget = turnData.Target
-				if turnData.Type == VJ.NPC_FACE_POSITION or (turnData.Type == VJ.NPC_FACE_POSITION_VISIBLE && self:VisibleVec(turnTarget)) then
-					local resultAng = self:GetFaceAngle((turnTarget - self:GetPos()):Angle())
-					if self.TurningUseAllAxis == true then
-						local myAng = self:GetAngles()
-						self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
-					end
-					self:SetIdealYawAndUpdate(resultAng.y)
-					self.TurnData.LastYaw = resultAng.y
-					didTurn = true
-				elseif IsValid(turnTarget) && (turnData.Type == VJ.NPC_FACE_ENTITY or (turnData.Type == VJ.NPC_FACE_ENTITY_VISIBLE && self:Visible(turnTarget))) then
-					local resultAng = self:GetFaceAngle((turnTarget:GetPos() - self:GetPos()):Angle())
-					if self.TurningUseAllAxis == true then
-						local myAng = self:GetAngles()
-						self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
-					end
-					self:SetIdealYawAndUpdate(resultAng.y)
-					self.TurnData.LastYaw = resultAng.y
-					didTurn = true
-				end
-			end
-		end
-		
-		//VJ.DEBUG_TempEnt(self:GetEnemyLastSeenPos())
-		//print(self:HasEnemyMemory())
-		//print(curTime - self:GetEnemyLastTimeSeen())
-		//print(curTime - self:GetEnemyFirstTimeSeen())
-		
-		//print("MAX CLIP: ", self.CurrentWeaponEntity:GetMaxClip1())
-		//print("CLIP: ", self.CurrentWeaponEntity:Clip1())
-			
-		if !self.Dead then
-			-- Health Regeneration System
-			if self.HasHealthRegeneration == true && curTime > self.HealthRegenerationDelayT then
-				local myHP = self:Health()
-				self:SetHealth(math_clamp(myHP + self.HealthRegenerationAmount, myHP, self:GetMaxHealth()))
-				self.HealthRegenerationDelayT = curTime + math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b)
-			end
-			
-			-- Run the heavy processes
-			if curTime > self.NextProcessT then
-				self:MaintainRelationships()
-				self:CheckForDangers()
-				self:MaintainMedicBehavior()
-				self.NextProcessT = curTime + self.NextProcessTime
-			end
-			
-			local plyControlled = self.VJ_IsBeingControlled
-			local myPos = self:GetPos()
-			local ene = self:GetEnemy()
-			local eneValid = IsValid(ene)
-			if eneData.Reset == false then
-				-- Reset enemy if it doesn't exist or it's dead
-				if (!eneValid) or (eneValid && ene:Health() <= 0) then
-					eneData.Reset = true
-					self:ResetEnemy(true)
-					ene = self:GetEnemy()
-					eneValid = IsValid(ene)
-				end
-				-- Reset enemy if it has been unseen for a while
-				if (curTime - eneData.LastVisibleTime) > ((self.LatestEnemyDistance < 4000 and self.TimeUntilEnemyLost) or (self.TimeUntilEnemyLost / 2)) && (!self.IsVJBaseSNPC_Tank) then
-					self:PlaySoundSystem("LostEnemy")
-					eneData.Reset = true
-					self:ResetEnemy(true)
-					ene = self:GetEnemy()
-					eneValid = IsValid(ene)
-				end
-			end
-			
-			if self.DoingWeaponAttack == true then self:CapabilitiesRemove(CAP_TURN_HEAD) else self:CapabilitiesAdd(CAP_TURN_HEAD) end -- Fixes their heads breaking
-			-- If we have a valid weapon...
-			if IsValid(self.CurrentWeaponEntity) then
-				-- Weapon Inventory System
-				if !plyControlled && !self:BusyWithActivity() then // self.IsReloadingWeapon == false
-					if eneValid then
-						-- Switch to melee
-						if !self.IsGuard && IsValid(self.WeaponInventory.Melee) && ((self.LatestEnemyDistance < self.MeleeAttackDistance) or (self.LatestEnemyDistance < 300 && self.CurrentWeaponEntity:Clip1() <= 0)) && (self:Health() > self:GetMaxHealth() * 0.25) && self.CurrentWeaponEntity != self.WeaponInventory.Melee then
-							if self:GetWeaponState() == VJ.NPC_WEP_STATE_RELOADING then self:SetWeaponState() end -- Since the reloading can be cut off, reset it back to false, or else it can mess up its behavior!
-							//timer.Remove("timer_reload_end"..self:EntIndex()) -- No longer needed
-							self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_MELEE
-							self:DoChangeWeapon(self.WeaponInventory.Melee, true)
-						-- Switch to anti-armor
-						elseif self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING && IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank == true or ene.VJ_IsHugeMonster == true) && self.CurrentWeaponEntity != self.WeaponInventory.AntiArmor then
-							self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_ANTI_ARMOR
-							self:DoChangeWeapon(self.WeaponInventory.AntiArmor, true)
-						end
-					end
-					if self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING then
-						-- Reset weapon status from melee to primary
-						if self.WeaponInventoryStatus == VJ.NPC_WEP_INVENTORY_MELEE && (!eneValid or (eneValid && self.LatestEnemyDistance >= 300)) then
-							self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_PRIMARY
-							self:DoChangeWeapon(self.WeaponInventory.Primary, true)
-						-- Reset weapon status from anti-armor to primary
-						elseif self.WeaponInventoryStatus == VJ.NPC_WEP_INVENTORY_ANTI_ARMOR && (!eneValid or (eneValid && ene.IsVJBaseSNPC_Tank != true && ene.VJ_IsHugeMonster != true)) then
-							self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_PRIMARY
-							self:DoChangeWeapon(self.WeaponInventory.Primary, true)
-						end
-					end
-				end
-				
-				-- Weapon Reloading
-				if self.AllowWeaponReloading && !self:BusyWithActivity() && self:GetWeaponState() == VJ.NPC_WEP_STATE_READY && (!self.CurrentWeaponEntity.IsMeleeWeapon) && self.AttackType == VJ.ATTACK_TYPE_NONE && ((!plyControlled && ((!eneValid && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1() && (curTime - eneData.TimeSet) > math.random(3, 8) && !self:IsMoving()) or (eneValid && self.CurrentWeaponEntity:Clip1() <= 0))) or (plyControlled && self.VJ_TheController:KeyDown(IN_RELOAD) && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1())) then
-					self.DoingWeaponAttack = false
-					self.DoingWeaponAttack_Standing = false
-					if !plyControlled then self:SetWeaponState(VJ.NPC_WEP_STATE_RELOADING) end
-					self.NextChaseTime = curTime + 2
-					if eneValid == true then self:PlaySoundSystem("WeaponReload") end -- tsayn han e minag yete teshnami ga!
-					self:CustomOnWeaponReload()
-					if self.DisableWeaponReloadAnimation == false then
-						local function DoReloadAnimation(givenAnim)
-							local anim, animDur = self:VJ_ACT_PLAYACTIVITY(givenAnim, true, false, self.WeaponReloadAnimationFaceEnemy, self.WeaponReloadAnimationDelay)
-							if anim != ACT_INVALID then
-								local wep = self.CurrentWeaponEntity
-								if wep.IsVJBaseWeapon == true then wep:NPC_Reload() end
-								timer.Create("timer_reload_end"..self:EntIndex(), animDur, 1, function()
-									if IsValid(self) && IsValid(wep) && self:GetWeaponState() == VJ.NPC_WEP_STATE_RELOADING then
-										wep:SetClip1(wep:GetMaxClip1())
-										if wep.IsVJBaseWeapon == true then wep:CustomOnReload_Finish() end
-										self:SetWeaponState()
-									end
-								end)
-								self.AllowToDo_WaitForEnemyToComeOut = false
-								-- If NOT controlled by a player AND is a gesture make it stop moving so it doesn't run after the enemy right away
-								if !plyControlled && string_find(anim, "vjges_") then
-									self:StopMoving()
-								end
-								return true -- We have successfully ran the reload animation!
-							end
-							return false -- The given animation was invalid!
-						end
-						-- Controlled by a player...
-						if plyControlled == true then
-							self:SetWeaponState(VJ.NPC_WEP_STATE_RELOADING)
-							DoReloadAnimation(self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_WeaponReload)))
-						-- NOT controlled by a player...
-						else
-							-- NPC is hidden, so attempt to crouch reload
-							if eneValid == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPos + self:OBBCenter()), ene:EyePos(), false, {SetLastHiddenTime=true}) == true then -- Behvedadz
-								-- if It does NOT have a cover reload animation, then just play the regular standing reload animation
-								if !DoReloadAnimation(self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_WeaponReloadBehindCover))) then
-									DoReloadAnimation(self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_WeaponReload)))
-								end
-							else -- NPC is NOT hidden...
-								-- Under certain situations, simply do standing reload without running to a hiding spot
-								if self.IsGuard == true or self.IsFollowing == true or self.VJ_IsBeingControlled_Tool == true or eneValid == false or self.MovementType == VJ_MOVETYPE_STATIONARY or self.LatestEnemyDistance < 650 then
-									DoReloadAnimation(self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_WeaponReload)))
-								else -- If all is good, then run to a hiding spot and then reload!
-									if self.WeaponReload_FindCover == true then
-										self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run))
-										local schedReload = vj_ai_schedule.New("vj_weapon_reload")
-										schedReload:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
-										schedReload:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-										schedReload.StopScheduleIfNotMoving = true
-										schedReload.IsMovingTask = true
-										schedReload.MoveType = 1
-										schedReload.RunCode_OnFinish = function()
-											if self:GetWeaponState() == VJ.NPC_WEP_STATE_RELOADING then
-												-- If the current situation isn't favorable, then abandon the current reload, and try again!
-												if (self.AttackType != VJ.ATTACK_TYPE_NONE) or (IsValid(self:GetEnemy()) && self.HasWeaponBackAway == true && (self:GetPos():Distance(self:GetEnemy():GetPos()) <= self.WeaponBackAway_Distance)) then
-													self:SetWeaponState()
-													//timer.Remove("timer_reload_end"..self:EntIndex()) -- Remove the timer to make sure it doesn't set reloading to false at a random time (later on)
-												else -- Our hiding spot is good, so reload!
-													DoReloadAnimation(self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_WeaponReload)))
-												end
-											end
-										end
-										self:StartSchedule(schedReload)
-									else
-										DoReloadAnimation(self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_WeaponReload)))
-									end
-								end
-							end
-						end
-					else -- If the reload animation is disabled
-						if self:GetWeaponState() == VJ.NPC_WEP_STATE_RELOADING then self:SetWeaponState() end
-						self.CurrentWeaponEntity:SetClip1(self.CurrentWeaponEntity:GetMaxClip1())
-						self.CurrentWeaponEntity:NPC_Reload()
-					end
-				end
-			end
-		
-			if eneValid then
-				local enePos = ene:GetPos()
-				if self.DoingWeaponAttack then self:PlaySoundSystem("Suppressing") end
-				
-				-- Set latest enemy information
-				self:UpdateEnemyMemory(ene, enePos)
-				eneData.Reset = false
-				eneData.IsVisible = plyControlled and self:VisibleVec(enePos) or self:Visible(ene) -- Need to use VisibleVec when controlled because "Visible" will return false randomly
-				eneData.SightDiff = self:GetSightDirection():Dot((enePos - myPos):GetNormalized())
-				self.LatestEnemyDistance = myPos:Distance(enePos)
-				self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene)
-				if (eneData.SightDiff > math_cos(math_rad(self.SightAngle))) && (self.LatestEnemyDistance < self:GetMaxLookDistance()) && eneData.IsVisible then
-					eneData.LastVisibleTime = curTime
-					-- Why 2 vars? Because the last "Visible" tick is usually not updated in time, causing the engine to give false positive, thinking the enemy IS visible
-					eneData.LastVisiblePos = eneData.LastVisiblePosReal
-					eneData.LastVisiblePosReal = ene:EyePos() -- Use EyePos because "Visible" uses it to run the trace in the engine! | For origin, use "self:GetEnemyLastSeenPos()"
-				end
-				
-				-- Turning / Facing Enemy
-				if self.ConstantlyFaceEnemy && self:DoConstantlyFaceEnemy() then didTurn = true end
-				turnData = self.TurnData
-				if turnData.Type == VJ.NPC_FACE_ENEMY or (turnData.Type == VJ.NPC_FACE_ENEMY_VISIBLE && eneData.IsVisible) then
-					local faceAng = self:GetFaceAngle((enePos - myPos):Angle())
-					if self.TurningUseAllAxis == true then
-						local myAng = self:GetAngles()
-						self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(faceAng.p, myAng.y, faceAng.r)))
-					end
-					self:SetIdealYawAndUpdate(faceAng.y)
-					didTurn = true
-				end
-
-				-- Call for help
-				if self.AttackType != VJ.ATTACK_TYPE_GRENADE && self.CallForHelp == true && curTime > self.NextCallForHelpT then
-					self:Allies_CallHelp(self.CallForHelpDistance)
-					self.NextCallForHelpT = curTime + self.NextCallForHelpTime
-				end
-				
-				-- Sets the scared behavior movement activity
-				if !IsValid(self.CurrentWeaponEntity) && self.NoWeapon_UseScaredBehavior && !plyControlled then
-					local anim = VJ.PICK(self.AnimTbl_ScaredBehaviorMovement)
-					if anim != false then
-						self:SetMovementActivity(anim)
-					else
-						if VJ.AnimExists(self, ACT_RUN_PROTECTED) == true then
-							self:SetMovementActivity(ACT_RUN_PROTECTED)
-						elseif VJ.AnimExists(self, ACT_RUN_CROUCH_RIFLE) == true then
-							self:SetMovementActivity(ACT_RUN_CROUCH_RIFLE)
-						end
-					end
-					//self:SetArrivalActivity(VJ.PICK(self.AnimTbl_ScaredBehaviorStand)) -- Already done by self.CurrentIdleAnimation
-				end
-				
-				if !eneData.IsVisible then
-					self.DoingWeaponAttack = false
-					self.DoingWeaponAttack_Standing = false
-				end
-				
-				self:DoWeaponAttackMovementCode()
-				self:DoPoseParameterLooking()
-				
-				-- Face enemy for stationary types OR attacks
-				if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true) or (self.MeleeAttackAnimationFaceEnemy == true && self.AttackType == VJ.ATTACK_TYPE_MELEE) or (self.GrenadeAttackAnimationFaceEnemy == true && self.AttackType == VJ.ATTACK_TYPE_GRENADE && eneData.IsVisible == true) then
-					self:SetTurnTarget("Enemy")
-				end
-				
-				if !self.vACT_StopAttacks && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && curTime > self.NextDoAnyAttackT then
-					local funcCustomAtk = self.CustomAttack; if funcCustomAtk then funcCustomAtk(self, ene, eneData.IsVisible) end
-				
-					-- Melee Attack
-					if self.HasMeleeAttack == true && self.IsAbleToMeleeAttack && !self.Flinching && !self.FollowData.StopAct && self.AttackType == VJ.ATTACK_TYPE_NONE && (!IsValid(self.CurrentWeaponEntity) or (IsValid(self.CurrentWeaponEntity) && (!self.CurrentWeaponEntity.IsMeleeWeapon))) && ((plyControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (plyControlled == false && (self.NearestPointToEnemyDistance < self.MeleeAttackDistance && eneData.IsVisible) && (eneData.SightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))))) then
-						local seed = curTime; self.CurAttackSeed = seed
-						self.AttackType = VJ.ATTACK_TYPE_MELEE
-						self.AttackState = VJ.ATTACK_STATE_STARTED
-						self.MeleeAttacking = true
-						self.IsAbleToMeleeAttack = false
-						self:SetTurnTarget("Enemy")
-						self:CustomOnMeleeAttack_BeforeStartTimer(seed)
-						timer.Simple(self.BeforeMeleeAttackSounds_WaitTime, function() if IsValid(self) then self:PlaySoundSystem("BeforeMeleeAttack") end end)
-						self.NextAlertSoundT = curTime + 0.4
-						if self.DisableMeleeAttackAnimation == false then
-							local anim, animDur = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_MeleeAttack, false, 0, false, self.MeleeAttackAnimationDelay)
-							if anim != ACT_INVALID then
-								self.CurrentAttackAnimation = anim
-								self.CurrentAttackAnimationDuration = animDur - (self.MeleeAttackAnimationDecreaseLengthAmount / self:GetPlaybackRate())
-								if self.MeleeAttackAnimationAllowOtherTasks == false then -- Useful for gesture-based attacks
-									self.CurrentAttackAnimationTime = curTime + self.CurrentAttackAnimationDuration
-								end
-							end
-						end
-						if self.TimeUntilMeleeAttackDamage == false then
-							finishAttack[VJ.ATTACK_TYPE_MELEE](self)
-						else -- If it's not event based...
-							timer.Create("timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self:GetPlaybackRate(), self.MeleeAttackReps, function() if self.CurAttackSeed == seed then self:MeleeAttackCode() end end)
-							if self.MeleeAttackExtraTimers then
-								for k, t in ipairs(self.MeleeAttackExtraTimers) do
-									self:DoAddExtraAttackTimers("timer_melee_start"..curTime + k, t, function() if self.CurAttackSeed == seed then self:MeleeAttackCode() end end)
-								end
-							end
-						end
-						self:CustomOnMeleeAttack_AfterStartTimer(seed)
-					end
-					
-					-- Grenade attack
-					if self.HasGrenadeAttack && self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING && !self:BusyWithActivity() && curTime > self.NextThrowGrenadeT && curTime > self.TakingCoverT then
-						if plyControlled && self.VJ_TheController:KeyDown(IN_JUMP) then
-							self:GrenadeAttack()
-							self.NextThrowGrenadeT = curTime + math.random(self.NextThrowGrenadeTime.a, self.NextThrowGrenadeTime.b)
-						elseif !plyControlled then
-							local chance = self.ThrowGrenadeChance
-							-- If chance is above 4, then half it by 2 if the enemy is a tank OR not visible
-							if math.random(1, (chance > 3 && (ene.IsVJBaseSNPC_Tank or !eneData.IsVisible) and math.floor(chance / 2)) or chance) == 1 && self.LatestEnemyDistance < self.GrenadeAttackThrowDistance && self.LatestEnemyDistance > self.GrenadeAttackThrowDistanceClose then
-								self:GrenadeAttack()
-							end
-							self.NextThrowGrenadeT = curTime + math.random(self.NextThrowGrenadeTime.a, self.NextThrowGrenadeTime.b)
-						end
-					end
-				end
-			else -- No Enemy
-				self.DoingWeaponAttack = false
-				self.DoingWeaponAttack_Standing = false
-				if !self.Alerted && self.DidWeaponAttackAimParameter && !plyControlled then
-					self:ClearPoseParameters()
-					self.DidWeaponAttackAimParameter = false
-				end
-				
-				if self:GetArrivalActivity() == self.CurrentWeaponAnimation then
-					self:SetArrivalActivity(self.CurrentIdleAnimation)
-				end
-				
-				eneData.TimeSinceAcquired = 0
-				if eneData.Reset == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") eneData.Reset = true self:ResetEnemy(true) end
-			end
-			
-			-- Guarding Position
-			if self.IsGuard == true && self.IsFollowing == false then
-				if self.GuardingPosition == nil then -- If it hasn't been set then set the guard position to its current position
-					self.GuardingPosition = myPos
-					self.GuardingFacePosition = myPos + self:GetForward()*51
-				end
-				-- If it's far from the guarding position, then go there!
-				if !self:IsMoving() && self:BusyWithActivity() == false then
-					local dist = myPos:Distance(self.GuardingPosition) -- Distance to the guard position
-					if dist > 50 then
-						self:SetLastPosition(self.GuardingPosition)
-						self:VJ_TASK_GOTO_LASTPOS(dist <= 800 and "TASK_WALK_PATH" or "TASK_RUN_PATH", function(x)
-							x.CanShootWhenMoving = true
-							x.FaceData = {Type = VJ.NPC_FACE_ENEMY}
-							x.RunCode_OnFinish = function()
-								timer.Simple(0.01, function()
-									if IsValid(self) && !self:IsMoving() && self:BusyWithActivity() == false && self.GuardingFacePosition != nil then
-										self:SetLastPosition(self.GuardingFacePosition)
-										self:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
-									end
-								end)
-							end
-						end)
-					end
-				end
-			end
-		end
-		
-		-- Handle the unique movement system for player models
-		if self.UsePlayerModelMovement == true && self.MovementType == VJ_MOVETYPE_GROUND then
-            local moveDir = self:GetMoveDirection(true)
-            if moveDir then
-                self:SetPoseParameter("move_x", moveDir.x)
-                self:SetPoseParameter("move_y", moveDir.y)
-                if !didTurn then -- Only face move direction if I have NOT faced anything else!
-                    self:SetTurnTarget(self:GetCurWaypointPos())
-                end
-            else -- I am not moving, reset the pose parameters, otherwise I will run in place!
-                self:SetPoseParameter("move_x", 0)
-                self:SetPoseParameter("move_y", 0)
-            end
-        end
-	else -- AI Not enabled
-		self.DoingWeaponAttack = false
 	end
-	self:NextThink(curTime + (0.069696968793869 + FrameTime()))
+	
+	self:MaintainIdleAnimation()
+	//print(self:GetIdealActivity(), self:GetActivity(), self:GetSequenceName(self:GetSequence()), self:GetSequenceName(self:GetInternalVariable("m_nIdealSequence")), self:IsSequenceFinished(), self:GetInternalVariable("m_bSequenceLoops"), self:GetCycle())
+	
+	-- Maintain turning when needed otherwise Engine will take over during movements!
+	-- No longer needed as "OverrideMoveFacing" now handles it!
+	/*if !didTurn then
+		local curTurnData = self.TurnData
+		if curTurnData.Type != VJ.NPC_FACE_NONE && curTurnData.LastYaw != 0 then
+			self:SetIdealYawAndUpdate(curTurnData.LastYaw)
+			didTurn = true
+		end
+	end*/
+	
+	self:NextThink(CurTime()) -- Set the next think to run asap (next frame)
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3408,43 +3393,19 @@ function ENT:DoPoseParameterLooking(resetPoses)
 	end
 	self.DidWeaponAttackAimParameter = true
 end
---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoWeaponAttackMovementCode(override, moveType)
-	override = override or false -- Overrides some of the checks, only used for the internal task system!
-	moveType = moveType or 0 -- This is used with override | 0 = Run, 1 = Walk
-	if (self.CurrentWeaponEntity.IsMeleeWeapon) then
-		self.DoingWeaponAttack = true
-	elseif self.HasShootWhileMoving == true then
-		if self.EnemyData.IsVisible && self:IsAbleToShootWeapon(true, false) == true && ((self:IsMoving() && (self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true)) or (override == true)) then
-			if (override == true && moveType == 0) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 1) then
-				local anim = self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_ShootWhileMovingRun))
-				if VJ.AnimExists(self,anim) == true then
-					self.DoingWeaponAttack = true
-					self.DoingWeaponAttack_Standing = false
-					self:CapabilitiesAdd(CAP_MOVE_SHOOT)
-					self:SetMovementActivity(anim)
-					self:SetArrivalActivity(self.CurrentWeaponAnimation)
-				end
-			elseif (override == true && moveType == 1) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 0) then
-				local anim = self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_ShootWhileMovingWalk))
-				if VJ.AnimExists(self,anim) == true then
-					self.DoingWeaponAttack = true
-					self.DoingWeaponAttack_Standing = false
-					self:CapabilitiesAdd(CAP_MOVE_SHOOT)
-					self:SetMovementActivity(anim)
-					self:SetArrivalActivity(self.CurrentWeaponAnimation)
-				end
-			end
-		end
-	else -- Can't move shoot!
-		self:CapabilitiesRemove(CAP_MOVE_SHOOT) -- Remove the capability if it can't even move-shoot
-	end
-end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Determines whether or not the NPC should be able to fire its current weapon
+		- checkDistance = Should it check for distance and weapon time too? | DEFAULT = false
+		- checkDistanceOnly = Should it only check the above statement? | DEFAULT = false
+		- enemyDist = Distance used for "checkDistance" | DEFAULT = "self.LatestEnemyDistance"
+	Returns
+		- Boolean, Whether or not it should fire
+-----------------------------------------------------------]]
 function ENT:IsAbleToShootWeapon(checkDistance, checkDistanceOnly, enemyDist)
 	checkDistance = checkDistance or false -- Check for distance and weapon time as well?
 	checkDistanceOnly = checkDistanceOnly or false -- Should it only check the above statement?
-	enemyDist = enemyDist or self:EyePos():Distance(self:GetEnemy():EyePos()) -- Distance used for checkDistance
+	enemyDist = enemyDist or self.LatestEnemyDistance -- Distance used for checkDistance
 	if self:CustomOnIsAbleToShootWeapon() == false then return end
 	local hasDist = false
 	local hasChecks = false
@@ -3473,8 +3434,6 @@ local schedMoveAway = vj_ai_schedule.New("vj_move_away")
 	schedMoveAway:EngTask("TASK_MOVE_AWAY_PATH", 120)
 	schedMoveAway:EngTask("TASK_RUN_PATH", 0)
 	schedMoveAway:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	schedMoveAway.IsMovingTask = true
-	schedMoveAway.MoveType = 1
 	schedMoveAway.CanShootWhenMoving = true
 	schedMoveAway.FaceData = {} -- This is constantly edited!
 --
@@ -3631,17 +3590,15 @@ function ENT:SelectSchedule()
 												//VJ.DEBUG_TempEnt(nearestEnePos, self:GetAngles(), Color(0,255,255))
 												local schedGoToCover = vj_ai_schedule.New("vj_goto_cover")
 												schedGoToCover:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-												schedGoToCover:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-												schedGoToCover.IsMovingTask = true
-												schedGoToCover.FaceData = {Type = VJ.NPC_FACE_ENEMY}
-												schedGoToCover.StopScheduleIfNotMoving_Any = true
-												local coverRunAnim = self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_MoveToCover))
+												local coverRunAnim = self:TranslateActivity(VJ.PICK(self.AnimTbl_MoveToCover))
 												if VJ.AnimExists(self, coverRunAnim) == true then
 													self:SetMovementActivity(coverRunAnim)
-												else
+												else -- Only shoot if we aren't crouching running!
 													schedGoToCover.CanShootWhenMoving = true
-													schedGoToCover.MoveType = 1
 												end
+												schedGoToCover:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+												schedGoToCover.FaceData = {Type = VJ.NPC_FACE_ENEMY}
+												schedGoToCover.StopScheduleIfNotMoving_Any = true
 												self:StartSchedule(schedGoToCover)
 												//self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH",function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
 											end
@@ -3655,7 +3612,7 @@ function ENT:SelectSchedule()
 									-- Melee weapons
 									if (wep.IsMeleeWeapon) then
 										self:CustomOnWeaponAttack()
-										local finalAnim = self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_WeaponAttack))
+										local finalAnim = self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponAttack))
 										if CurTime() > self.NextMeleeWeaponAttackT && VJ.AnimExists(self, finalAnim) == true /*&& VJ.IsCurrentAnimation(self, finalAnim) == false*/ then
 											local animDur = VJ.AnimDuration(self, finalAnim)
 											wep.NPC_NextPrimaryFire = animDur -- Make melee weapons dynamically change the next primary fire
@@ -3672,7 +3629,7 @@ function ENT:SelectSchedule()
 											self.CurrentWeaponAnimation = -1
 										end
 										-- If the current animation is already a firing animation, then just tell the base it's already firing and do NOT restart the animation
-										if VJ.IsCurrentAnimation(self, self:TranslateToWeaponAnim(self.CurrentWeaponAnimation)) == true then
+										if VJ.IsCurrentAnimation(self, self:TranslateActivity(self.CurrentWeaponAnimation)) == true then
 											self.DoingWeaponAttack = true
 											self.DoingWeaponAttack_Standing = true
 										-- If the current activity isn't the last weapon animation and it's not a transition, then continue
@@ -3684,15 +3641,15 @@ function ENT:SelectSchedule()
 											local finalAnim;
 											-- Check if the NPC has ammo
 											if !hasAmmo then
-												finalAnim = self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_WeaponAim))
+												finalAnim = self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponAim))
 												self.CurrentWeaponAnimationIsAim = true
 											else
-												local anim_crouch = self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_WeaponAttackCrouch))
+												local anim_crouch = self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponAttackCrouch))
 												if self.CanCrouchOnWeaponAttack == true && cover_npc == false && cover_wep == false && eneDist_Eye > 500 && VJ.AnimExists(self, anim_crouch) == true && ((math.random(1, self.CanCrouchOnWeaponAttackChance) == 1) or (CurTime() <= self.Weapon_DoingCrouchAttackT)) && self:VJ_ForwardIsHidingZone(wep:GetNW2Vector("VJ_CurBulletPos") + self:GetUp()*-18, enePos_Eye, false) == false then
 													finalAnim = anim_crouch
 													self.Weapon_DoingCrouchAttackT = CurTime() + 2 -- Asiga bedke vor vestah elank yed votgi cheler hemen
 												else -- Not crouching
-													finalAnim = self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_WeaponAttack))
+													finalAnim = self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponAttack))
 												end
 											end
 											if VJ.AnimExists(self, finalAnim) == true && ((VJ.IsCurrentAnimation(self, finalAnim) == false) or (!self.DoingWeaponAttack)) then
@@ -3740,7 +3697,6 @@ function ENT:SelectSchedule()
 	-- Handle move away behavior
 	if self:HasCondition(COND_PLAYER_PUSHING) && CurTime() > self.TakingCoverT && !self:BusyWithActivity() then
 		self:PlaySoundSystem("MoveOutOfPlayersWay")
-		self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run))
 		if eneValid then -- Face current enemy
 			schedMoveAway.FaceData.Type = VJ.NPC_FACE_ENEMY_VISIBLE
 			schedMoveAway.FaceData.Target = nil
@@ -3780,7 +3736,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		if (eneValid && (curEnemies - 1) >= 1) or (!eneValid && curEnemies >= 1) then
 			//self:VJ_DoSetEnemy(v, false, true)
 			self:MaintainRelationships() -- Select a new enemy
-			self.NextProcessT = CurTime() + self.NextProcessTime
+			//self.NextProcessT = CurTime() + self.NextProcessTime
 			eneData.Reset = false
 			return false
 		end
@@ -3820,17 +3776,14 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 	end
 	if moveToEnemy && !self:IsBusy() && !self.IsGuard && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && self.LastHiddenZone_CanWander == true && !self.NoWeapon_UseScaredBehavior_Active then
 		//ParticleEffect("explosion_turret_break", self.LatestEnemyPosition, Angle(0,0,0))
-		self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk))
 		local schedResetEnemy = vj_ai_schedule.New("vj_act_resetenemy")
 		schedResetEnemy:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-		//schedResetEnemy:EngTask("TASK_WALK_PATH", 0)
+		schedResetEnemy:EngTask("TASK_WALK_PATH", 0)
 		schedResetEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 		schedResetEnemy.ResetOnFail = true
 		schedResetEnemy.CanShootWhenMoving = true
 		schedResetEnemy.FaceData = {Type = VJ.NPC_FACE_ENEMY}
 		schedResetEnemy.CanBeInterrupted = true
-		schedResetEnemy.IsMovingTask = true
-		schedResetEnemy.MoveType = 0
 		//self.NextIdleTime = CurTime() + 10
 		self:StartSchedule(schedResetEnemy)
 	end
@@ -3919,7 +3872,7 @@ function ENT:OnTakeDamage(dmginfo)
 	local stillAlive = self:Health() > 0
 	if stillAlive then self:PlaySoundSystem("Pain") end
 
-	if GetConVar("ai_disabled"):GetInt() == 0 && self:GetState() != VJ_STATE_FREEZE then
+	if VJ_CVAR_AI_ENABLED && self:GetState() != VJ_STATE_FREEZE then
 		-- Make passive NPCs move away | RESULT: May move away AND may cause other passive NPCs to move as well
 		if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && curTime > self.TakingCoverT then
 			if stillAlive && self.Passive_RunOnDamage then
@@ -3953,10 +3906,10 @@ function ENT:OnTakeDamage(dmginfo)
 			self:PlaySoundSystem("Pain")
 			
 			-- Move or hide when damaged by an enemy | RESULT: May play a hiding animation OR may move to take cover from enemy
-			if self.MoveOrHideOnDamageByEnemy && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && IsValid(self:GetEnemy()) && curTime > self.NextMoveOrHideOnDamageByEnemyT && !self.IsFollowing && self.AttackType == VJ.ATTACK_TYPE_NONE && curTime > self.TakingCoverT && self.EnemyData.IsVisible && self.VJ_IsBeingControlled == false && self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING && self:EyePos():Distance(self:GetEnemy():EyePos()) < self.Weapon_FiringDistanceFar then
+			if self.MoveOrHideOnDamageByEnemy && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && IsValid(self:GetEnemy()) && curTime > self.NextMoveOrHideOnDamageByEnemyT && !self.IsFollowing && self.AttackType == VJ.ATTACK_TYPE_NONE && curTime > self.TakingCoverT && self.EnemyData.IsVisible && self.VJ_IsBeingControlled == false && self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING && self.LatestEnemyDistance < self.Weapon_FiringDistanceFar then
 				local wep = self:GetActiveWeapon()
 				if !self.MoveOrHideOnDamageByEnemy_OnlyMove && self:VJ_ForwardIsHidingZone(self:NearestPoint(self:GetPos() + self:OBBCenter()), self:GetEnemy():EyePos()) == true then
-					local anim = VJ.PICK(self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_TakingCover)))
+					local anim = self:TranslateActivity(VJ.PICK(self.AnimTbl_TakingCover))
 					if VJ.AnimExists(self, anim) == true then
 						local hideTime = math.Rand(self.MoveOrHideOnDamageByEnemy_HideTime.a, self.MoveOrHideOnDamageByEnemy_HideTime.b)
 						self:VJ_ACT_PLAYACTIVITY(anim, false, hideTime, false) -- Don't set stopActivities because we want it to shoot if an enemy is suddenly visible!
@@ -4072,7 +4025,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 			self:Allies_Bring("Diamond", self.BringFriendsOnDeathDistance, allies, self.BringFriendsOnDeathLimit, true)
 			noAlert = false
 		end
-		local doBecomeEnemyToPlayer = (self.BecomeEnemyToPlayer == true && dmgAttacker:IsPlayer() && GetConVar("ai_disabled"):GetInt() == 0 && !VJ_CVAR_IGNOREPLAYERS) or false
+		local doBecomeEnemyToPlayer = (self.BecomeEnemyToPlayer == true && dmgAttacker:IsPlayer() && VJ_CVAR_AI_ENABLED && !VJ_CVAR_IGNOREPLAYERS) or false
 		local it = 0 -- Number of allies that have been alerted
 		for _, v in ipairs(allies) do
 			v:CustomOnAllyDeath(self)
@@ -4166,7 +4119,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	
 	if self.HasDeathAnimation == true && !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) && self:GetNavType() != NAV_CLIMB then
 		if IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball" then DoKilled() return end
-		if GetConVar("vj_npc_nodeathanimation"):GetInt() == 0 && GetConVar("ai_disabled"):GetInt() == 0 && !dmginfo:IsDamageType(DMG_DISSOLVE) && math.random(1, self.DeathAnimationChance) == 1 then
+		if GetConVar("vj_npc_nodeathanimation"):GetInt() == 0 && VJ_CVAR_AI_ENABLED && !dmginfo:IsDamageType(DMG_DISSOLVE) && math.random(1, self.DeathAnimationChance) == 1 then
 			self:RemoveAllGestures()
 			self:CustomDeathAnimationCode(dmginfo, hitgroup)
 			local chosenAnim = VJ.PICK(self.AnimTbl_Death)
@@ -4788,13 +4741,13 @@ function ENT:FootStepSoundCode(customSd)
 			if customTbl then sdtbl = customTbl end
 			if !sdtbl then sdtbl = DefaultSoundTbl_FootStep end
 			local curSched = self.CurrentSchedule
-			if !self.DisableFootStepOnRun && ((VJ.HasValue(self.AnimTbl_Run, self:GetMovementActivity())) or (curSched != nil && curSched.MoveType == 1)) then
+			if !self.DisableFootStepOnRun && curSched != nil && curSched.MoveType == 1 then // VJ.HasValue(self.AnimTbl_Run, self:GetMovementActivity())
 				VJ.EmitSound(self, sdtbl, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
 				local funcCustom = self.CustomOnFootStepSound; if funcCustom then funcCustom(self, "Run", sdtbl) end
 				if self.HasWorldShakeOnMove then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000) end -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 				self.FootStepT = CurTime() + self.FootStepTimeRun
 				return
-			elseif !self.DisableFootStepOnWalk && (VJ.HasValue(self.AnimTbl_Walk, self:GetMovementActivity()) or (curSched != nil && curSched.MoveType == 0)) then
+			elseif !self.DisableFootStepOnWalk && curSched != nil && curSched.MoveType == 0 then  // VJ.HasValue(self.AnimTbl_Walk, self:GetMovementActivity())
 				VJ.EmitSound(self, sdtbl, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
 				local funcCustom = self.CustomOnFootStepSound; if funcCustom then funcCustom(self, "Walk", sdtbl) end
 				if self.HasWorldShakeOnMove then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000) end -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]

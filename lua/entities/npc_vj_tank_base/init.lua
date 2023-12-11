@@ -166,7 +166,7 @@ function ENT:CustomOnInitialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnTouch(ent)
-	if GetConVar("ai_disabled"):GetInt() == 1 then return end
+	if !VJ_CVAR_AI_ENABLED then return end
 	if self.Tank_Status == 0 then
 		self:Tank_RunOver(ent)
 	end

@@ -37,8 +37,11 @@ local string_sub = string.sub
 local table_remove = table.remove
 local bAND = bit.band
 local math_rad = math.rad
+local math_deg = math.deg
 local math_cos = math.cos
+local math_atan2 = math.atan2
 local math_clamp = math.Clamp
+local math_angDif = math.AngleDifference
 local varCPly = "CLASS_PLAYER_ALLY"
 local varCAnt = "CLASS_ANTLION"
 local varCCom = "CLASS_COMBINE"
@@ -314,6 +317,24 @@ function ENT:CustomOnEat(status, statusInfo)
 	return 0
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:UpdateAnimationTranslations(wepHoldType)
+	-- Decide what type of animation set to use
+	if self.ModelAnimationSet == VJ.ANIM_SET_NONE then
+		if VJ.AnimExists(self, "signal_takecover") == true && VJ.AnimExists(self, "grenthrow") == true && VJ.AnimExists(self, "bugbait_hit") == true then
+			self.ModelAnimationSet = VJ.ANIM_SET_COMBINE -- Combine
+		elseif VJ.AnimExists(self, ACT_WALK_AIM_PISTOL) == true && VJ.AnimExists(self, ACT_RUN_AIM_PISTOL) == true && VJ.AnimExists(self, ACT_POLICE_HARASS1) == true then
+			self.ModelAnimationSet = VJ.ANIM_SET_METROCOP -- Metrocop
+		elseif VJ.AnimExists(self, "coverlow_r") == true && VJ.AnimExists(self, "wave_smg1") == true && VJ.AnimExists(self, ACT_BUSY_SIT_GROUND) == true then
+			self.ModelAnimationSet = VJ.ANIM_SET_REBEL -- Rebel
+		elseif VJ.AnimExists(self, "gmod_breath_layer") == true then
+			self.ModelAnimationSet = VJ.ANIM_SET_PLAYER -- Player
+		end
+	end
+	self.AnimationTranslations = {} -- Reset all translated animations
+	self.NextIdleStandTime = 0
+	self:SetAnimationTranslations(wepHoldType)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Sets the NPC's idle animation table
 		- anims = Table with animation(s)
@@ -325,6 +346,107 @@ function ENT:SetIdleAnimation(anims, reset)
 		self.CurrentIdleAnimation = -1
 		//self.NextIdleStandTime = 0
 	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:VJ_TASK_IDLE_STAND()
+	if self:IsMoving() or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end // self.CurrentSchedule != nil
+	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:BusyWithActivity() then return end
+	//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
+	self:MaintainIdleAnimation(self:GetIdealActivity() != ACT_IDLE)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Maintains / applies the idle animation
+		- force = Forcibly apply the idle animation without checking if it's currently idling
+-----------------------------------------------------------]]
+function ENT:MaintainIdleAnimation(force)
+	-- "m_bSequenceLoops" has to be true because non-looped animations tend to cut off near the end, usually after the cycle passes 0.8
+	-- Animation cycle needs to be set to 0 to make sure engine does NOT attempt to switch sequence multiple times in this code: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L2987
+	-- "self:IsSequenceFinished()" should NOT be used as it's broken, it returns "true" even though the animation hasn't finished, especially for non-looped animations
+	local isIdealIdle = self:GetIdealActivity() == ACT_IDLE
+	if force or (isIdealIdle && self:GetCycle() >= 0.99) then // self:IsSequenceFinished()
+		//print(bit.band(self:GetSequenceInfo(self:GetSequence()).flags, 1) == 0) -- its a none-looping anim
+		self.CurAnimationSeed = 0
+		self:ResetIdealActivity(ACT_IDLE)
+		self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L2987
+		-- Alternative system: Directly sets the translated activity, but has other downsides
+		//if self.CurrentIdleAnimation != self:GetInternalVariable("m_nIdealSequence") or CurTime() > self.NextIdleStandTime then
+			//self.CurrentIdleAnimation = self:GetInternalVariable("m_nIdealSequence")
+			//self.NextIdleStandTime = CurTime() + (self:SequenceDuration(self:GetInternalVariable("m_nIdealSequence")) / self:GetPlaybackRate())
+			//self:ResetIdealActivity(self:TranslateActivity(ACT_IDLE))
+		//end
+	end
+	if isIdealIdle then
+		self:SetSaveValue("m_bSequenceLoops", true)
+	end
+	
+	/* -- Old idle system
+	local idleAnimTbl = self.NoWeapon_UseScaredBehavior_Active == true and self.AnimTbl_ScaredBehaviorStand or ((self.Alerted && self:GetWeaponState() != VJ.NPC_WEP_STATE_HOLSTERED && IsValid(self:GetActiveWeapon())) and self.AnimTbl_WeaponAim or self.AnimTbl_IdleStand)
+	local posIdlesTbl = {}
+	local posIdlesTblIndex = 1
+	local sameAnimFound = false -- If true then it one of the animations in the table is the same as the current!
+	local curAnim = self.CurrentIdleAnimation
+	for k, v in ipairs(idleAnimTbl) do
+		v = VJ.SequenceToActivity(self, v) -- Translate any sequence to activity
+		if v != false then -- Its a valid activity
+			-- Human base ONLY
+			local wepAnim = self.WeaponAnimTranslations[v] -- Translate to weapon act in case it needs to!
+			if wepAnim then -- Translation found
+				v = VJ.PICK(wepAnim)
+				-- VERY UGLY: If it's a table, then check inside it to see if current idle anim is one of them
+				if curAnim != v && istable(wepAnim) then
+					for _, v2 in ipairs(wepAnim) do
+						if curAnim == v2 then
+							sameAnimFound = true
+							break
+						end
+					end
+				end
+			end-- End of human base only
+			//idleAnimTbl[k] = v -- In case it was a sequence, override it with the translated activity number
+			posIdlesTbl[posIdlesTblIndex] = v
+			posIdlesTblIndex = posIdlesTblIndex + 1
+			-- Check if its the current idle animation...
+			if sameAnimFound == false && curAnim == v then
+				sameAnimFound = true
+				//break
+			end
+		else -- Get rid of any animations that aren't valid!
+			table_remove(idleAnimTbl, k)
+		end
+	end
+	//PrintTable(idleAnimTbl)
+	-- If there is more than 1 animation in the table AND one of the animations is the current animation AND time hasn't expired, then return!
+	//if #idleAnimTbl > 1 && sameAnimFound == true && self.NextIdleStandTime > CurTime() then
+		//return
+	//end
+	
+	local pickedAnim = VJ.PICK(posIdlesTbl) or ACT_IDLE -- If no animation was found, then use ACT_IDLE
+	
+	-- If sequence and it has no activity, then don't continue!
+	//pickedAnim = VJ.SequenceToActivity(self,pickedAnim)
+	//if pickedAnim == false then return false end
+	
+	if (!sameAnimFound) or (CurTime() > self.NextIdleStandTime) then // or (sameAnimFound && numOfAnims == 1 && CurTime() > self.NextIdleStandTime)
+		self.CurrentIdleAnimation = pickedAnim
+		//self.CurIdleStandMove = false
+		-- VERY old system
+		//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
+			//if self:BusyWithActivity() == true then return end
+			//self:AA_StopMoving()
+			//self:VJ_ACT_PLAYACTIVITY(pickedAnim, false, 0, false, 0, {SequenceDuration=false, SequenceInterruptible=true}) // AlwaysUseSequence=true
+		//end
+		//if self.CurrentSchedule == nil then -- If it's not doing a schedule then reset the activity to make sure it's not already playing the same idle activity!
+			//self:StartEngineTask(ai.GetTaskID("TASK_RESET_ACTIVITY"), 0)
+		//end -- End of VERY old system
+		//self:StartEngineTask(ai.GetTaskID("TASK_PLAY_SEQUENCE"), pickedAnim)
+		if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then self:AA_StopMoving() end
+		self.CurAnimationSeed = 0
+		self:ResetIdealActivity(pickedAnim)
+		self.NextIdleStandTime = CurTime() + (self:SequenceDuration(self:GetInternalVariable("m_nIdealSequence")) / self:GetPlaybackRate())
+	//elseif self.CurIdleStandMove && !self:IsSequenceFinished() then
+		//self:AutoMovement(self:GetAnimTimeInterval())
+	end*/
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -552,7 +674,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 			self.TurnData.StopOnFace = stopOnFace or false
 			self.TurnData.LastYaw = resultAng.y
 			if faceTime != -1 then -- -1 = Face forever and never reset unless overridden
-				timer.Create("timer_turning"..self:EntIndex(), faceTime or 0, 1, function()
+				timer.Create("timer_turning"..self:EntIndex(), faceTime or 0.2, 1, function()
 					self:ResetTurnTarget()
 				end)
 			end
@@ -571,7 +693,43 @@ function ENT:DeltaIdealYaw()
     if flCurrentYaw == self:GetIdealYaw() then
         return 0;
     end
-    return math.AngleDifference(self:GetIdealYaw(), flCurrentYaw)
+    return math_angDif(self:GetIdealYaw(), flCurrentYaw)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+local function UTIL_VecToYaw(vec) -- Based on: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/shared/util_shared.cpp#L44
+	if (vec.y == 0 && vec.x == 0) then return 0 end
+	local yaw = math_deg(math_atan2( vec.y, vec.x ))
+	return yaw < 0 and yaw + 360 or yaw;
+end
+--
+function ENT:OverrideMoveFacing(flInterval, move)
+	if self.DisableFootStepSoundTimer == false then self:FootStepSoundCode() end
+	//print("OverrideMoveFacing", flInterval)
+	//PrintTable(move)
+	
+	-- Maintain turning
+	local didTurn = false -- Did the NPC do any turning?
+	local curTurnData = self.TurnData
+	if curTurnData.Type != VJ.NPC_FACE_NONE && curTurnData.LastYaw != 0 then
+		self:UpdateYaw() -- Use "UpdateYaw" instead of "SetIdealYawAndUpdate" to avoid pose parameter glitches!
+		self:SetPoseParameter("move_yaw", math_angDif(UTIL_VecToYaw( move.dir ), self:GetLocalAngles().y))
+		-- Need to set the yaw pose parameter, otherwise when face moving, certain directions will look broken (such as Combine soldier facing forward while moving backwards)
+		-- Based on: "CAI_Motor::MoveFacing( const AILocalMoveGoal_t &move )" | Link: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_motor.cpp#L631
+		didTurn = true
+		return true -- Disable engine move facing
+	end
+	
+	-- Handle the unique movement system for player models | Only face move direction if I have NOT faced anything else!
+	if !didTurn && self.UsePlayerModelMovement == true && self.MovementType == VJ_MOVETYPE_GROUND then
+		//self:SetTurnTarget(self:GetCurWaypointPos()) -- Because it will reset the current turning (if any), this will break "firing while moving" turning
+		local resultAng = self:GetFaceAngle((self:GetCurWaypointPos() - self:GetPos()):Angle())
+		if self.TurningUseAllAxis == true then
+			local myAng = self:GetAngles()
+			self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
+		end
+		self:SetIdealYawAndUpdate(resultAng.y)
+		return true -- Disable engine move facing
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1061,7 +1219,7 @@ end
 function ENT:Touch(entity)
 	if self.VJ_DEBUG == true && GetConVar("vj_npc_printontouch"):GetInt() == 1 then print(self:GetClass().." Has Touched "..entity:GetClass()) end
 	self:CustomOnTouch(entity)
-	if GetConVar("ai_disabled"):GetInt() == 1 or self.VJ_IsBeingControlled then return end
+	if !VJ_CVAR_AI_ENABLED or self.VJ_IsBeingControlled then return end
 	
 	-- If it's a passive SNPC...
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
@@ -1146,7 +1304,7 @@ end
 			3 = NPC is hostile or neutral the entity
 -----------------------------------------------------------]]
 function ENT:Follow(ent, stopIfFollowing)
-	if !IsValid(ent) or self.Dead or GetConVar("ai_disabled"):GetInt() == 1 or self == ent then return false, 0 end
+	if !IsValid(ent) or self.Dead or !VJ_CVAR_AI_ENABLED or self == ent then return false, 0 end
 	
 	local isPly = ent:IsPlayer()
 	local isLiving = isPly or ent:IsNPC() -- Is it a living entity?
@@ -1416,7 +1574,10 @@ end
 function ENT:DoAlert(ent)
 	if !IsValid(self:GetEnemy()) or self.Alerted == true then return end
 	self.Alerted = true
-	self:SetNPCState(NPC_STATE_ALERT)
+	-- Fixes the NPC switching from combat to alert to combat after it sees an enemy because `DoAlert` is called after NPC_STATE_COMBAT is set
+	if self:GetNPCState() != NPC_STATE_COMBAT then
+		self:SetNPCState(NPC_STATE_ALERT)
+	end
 	self.EnemyData.LastVisibleTime = CurTime()
 	self:CustomOnAlert(ent)
 	if CurTime() > self.NextAlertSoundT then
@@ -2402,3 +2563,37 @@ end*/
 	end
  end
 end*/
+--------------------------------------------------------------------------------------------------------------------------------------------
+/* -- Was used in the Human base to handle firing guns while moving
+function ENT:DoWeaponAttackMovementCode(override, moveType)
+	override = override or false -- Overrides some of the checks, only used for the internal task system!
+	moveType = moveType or 0 -- This is used with override | 0 = Run, 1 = Walk
+	if (self.CurrentWeaponEntity.IsMeleeWeapon) then
+		self.DoingWeaponAttack = true
+	elseif self.HasShootWhileMoving == true then
+		if self.EnemyData.IsVisible && self:IsAbleToShootWeapon(true, false) == true && ((self:IsMoving() && (self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true)) or (override == true)) then
+			if (override == true && moveType == 0) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 1) then
+				local anim = self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_ShootWhileMovingRun))
+				if VJ.AnimExists(self,anim) == true then
+					self.DoingWeaponAttack = true
+					self.DoingWeaponAttack_Standing = false
+					self:CapabilitiesAdd(CAP_MOVE_SHOOT)
+					self:SetMovementActivity(anim)
+					self:SetArrivalActivity(self.CurrentWeaponAnimation)
+				end
+			elseif (override == true && moveType == 1) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 0) then
+				local anim = self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_ShootWhileMovingWalk))
+				if VJ.AnimExists(self,anim) == true then
+					self.DoingWeaponAttack = true
+					self.DoingWeaponAttack_Standing = false
+					self:CapabilitiesAdd(CAP_MOVE_SHOOT)
+					self:SetMovementActivity(anim)
+					self:SetArrivalActivity(self.CurrentWeaponAnimation)
+				end
+			end
+		end
+	else -- Can't move shoot!
+		self:CapabilitiesRemove(CAP_MOVE_SHOOT) -- Remove the capability if it can't even move-shoot
+	end
+end
+*/

@@ -29,13 +29,11 @@ local bShiftR = bit.rshift
 		- false, Table is empty or value is non existent
 		- value, the randomly picked value from the table (Can be anything)
 -----------------------------------------------------------]]
-function VJ.PICK(tbl)
-	if istable(tbl) then
-		local len = #tbl
-		if len < 1 then return false end -- Table is empty
-		return tbl[math.random(1, len)]
+function VJ.PICK(values)
+	if istable(values) then
+		return values[math.random(1, #values)] or false -- "or false" = To make sure it doesn't return nil when the table is empty!
 	end
-	return tbl or false -- Not a table, so just return it
+	return values or false -- Not a table, so just return it
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------

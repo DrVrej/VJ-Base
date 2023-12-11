@@ -21,11 +21,11 @@ function ENT:VJ_TASK_GOTO_LASTPOS(moveType, customFunc)
 		return
 	end
 	local schedGoToLastPos = vj_ai_schedule.New("vj_goto_lastpos")
+	schedGoToLastPos:EngTask("TASK_SET_TOLERANCE_DISTANCE", 48)
+	schedGoToLastPos:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 3)
 	schedGoToLastPos:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-	//schedGoToLastPos:EngTask(moveType, 0)
+	schedGoToLastPos:EngTask(moveType or "TASK_RUN_PATH", 0)
 	schedGoToLastPos:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	schedGoToLastPos.IsMovingTask = true
-	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) schedGoToLastPos.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) schedGoToLastPos.MoveType = 0 end
 	if (customFunc) then customFunc(schedGoToLastPos) end
 	self:StartSchedule(schedGoToLastPos)
 end
@@ -37,28 +37,11 @@ function ENT:VJ_TASK_GOTO_TARGET(moveType, customFunc)
 	end
 	local schedGoToTarget = vj_ai_schedule.New("vj_goto_target")
 	schedGoToTarget:EngTask("TASK_GET_PATH_TO_TARGET", 0)
-	//schedGoToTarget:EngTask(moveType, 0)
+	schedGoToTarget:EngTask(moveType or "TASK_RUN_PATH", 0)
 	schedGoToTarget:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	schedGoToTarget:EngTask("TASK_FACE_TARGET", 1)
-	schedGoToTarget.IsMovingTask = true
-	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) schedGoToTarget.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) schedGoToTarget.MoveType = 0 end
 	if (customFunc) then customFunc(schedGoToTarget) end
 	self:StartSchedule(schedGoToTarget)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_TASK_GOTO_PLAYER(moveType, customFunc)
-	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
-		self:AA_MoveTo(self:GetTarget(), true, (moveType == "TASK_RUN_PATH" and "Alert") or "Calm")
-		return
-	end
-	local schedGoToPlayer = vj_ai_schedule.New("vj_goto_player")
-	schedGoToPlayer:EngTask("TASK_GET_PATH_TO_PLAYER", 0)
-	//schedGoToPlayer:EngTask(moveType, 0)
-	schedGoToPlayer:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	schedGoToPlayer.IsMovingTask = true
-	if (moveType or "TASK_RUN_PATH") == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) schedGoToPlayer.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) schedGoToPlayer.MoveType = 0 end
-	if (customFunc) then customFunc(schedGoToPlayer) end
-	self:StartSchedule(schedGoToPlayer)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_COVER_FROM_ENEMY(moveType, customFunc)
@@ -66,19 +49,15 @@ function ENT:VJ_TASK_COVER_FROM_ENEMY(moveType, customFunc)
 	moveType = moveType or "TASK_RUN_PATH"
 	local schedCoverFromEnemy = vj_ai_schedule.New("vj_cover_from_enemy")
 	schedCoverFromEnemy:EngTask("TASK_FIND_COVER_FROM_ORIGIN", 0)
-	//schedCoverFromEnemy:EngTask(moveType, 0)
+	schedCoverFromEnemy:EngTask(moveType or "TASK_RUN_PATH", 0)
 	schedCoverFromEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	schedCoverFromEnemy.IsMovingTask = true
-	if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) schedCoverFromEnemy.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) schedCoverFromEnemy.MoveType = 0 end
 	schedCoverFromEnemy.RunCode_OnFail = function()
 		//print("Cover from enemy failed!")
 		local schedFailCoverFromEnemy = vj_ai_schedule.New("vj_cover_from_enemy_fail")
 		schedFailCoverFromEnemy:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
 		schedFailCoverFromEnemy:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
-		//schedFailCoverFromEnemy:EngTask(moveType, 0)
+		schedFailCoverFromEnemy:EngTask(moveType or "TASK_RUN_PATH", 0)
 		schedFailCoverFromEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-		schedFailCoverFromEnemy.IsMovingTask = true
-		if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) schedFailCoverFromEnemy.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) schedFailCoverFromEnemy.MoveType = 0 end
 		if (customFunc) then customFunc(schedFailCoverFromEnemy) end
 		self:StartSchedule(schedFailCoverFromEnemy)
 	end
@@ -91,18 +70,14 @@ function ENT:VJ_TASK_COVER_FROM_ORIGIN(moveType, customFunc)
 	moveType = moveType or "TASK_RUN_PATH"
 	local schedCoverFromOrigin = vj_ai_schedule.New("vj_cover_from_origin")
 	schedCoverFromOrigin:EngTask("TASK_FIND_COVER_FROM_ORIGIN", 0)
-	//schedCoverFromOrigin:EngTask(moveType, 0)
+	schedCoverFromOrigin:EngTask(moveType or "TASK_RUN_PATH", 0)
 	schedCoverFromOrigin:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	schedCoverFromOrigin.IsMovingTask = true
-	if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) schedCoverFromOrigin.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) schedCoverFromOrigin.MoveType = 0 end
 	schedCoverFromOrigin.RunCode_OnFail = function()
 		local schedFailCoverFromOrigin = vj_ai_schedule.New("vj_cover_from_origin_fail")
 		schedFailCoverFromOrigin:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
 		schedFailCoverFromOrigin:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
-		//schedFailCoverFromOrigin:EngTask(moveType, 0)
+		schedFailCoverFromOrigin:EngTask(moveType or "TASK_RUN_PATH", 0)
 		schedFailCoverFromOrigin:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-		schedFailCoverFromOrigin.IsMovingTask = true
-		if moveType == "TASK_RUN_PATH" then self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run)) schedFailCoverFromOrigin.MoveType = 1 else self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk)) schedFailCoverFromOrigin.MoveType = 0 end
 		if (customFunc) then customFunc(schedFailCoverFromOrigin) end
 		self:StartSchedule(schedFailCoverFromOrigin)
 	end
@@ -114,16 +89,13 @@ local schedIdleWander = vj_ai_schedule.New("vj_idle_wander")
 	//schedIdleWander:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 0)
 	//schedIdleWander:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
 	schedIdleWander:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 350)
-	//schedIdleWander:EngTask("TASK_WALK_PATH", 0)
+	schedIdleWander:EngTask("TASK_WALK_PATH", 0)
 	schedIdleWander:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	schedIdleWander.ResetOnFail = true
 	schedIdleWander.CanBeInterrupted = true
-	schedIdleWander.IsMovingTask = true
-	schedIdleWander.MoveType = 0
 	
 function ENT:VJ_TASK_IDLE_WANDER()
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
-	self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk))
 	//self:SetLastPosition(self:GetPos() + self:GetForward() * 300)
 	self:StartSchedule(schedIdleWander)
 end
@@ -190,6 +162,26 @@ function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 	
 	-- If we are currently running a schedule then run it otherwise call SelectSchedule to decide what to do next
 	if curSched then
+		-- Handle movement animations
+			-- 1. Make sure the movement activity is the current activity
+			-- 2. Compare the current movement sequence to the current ideal sequence, if they don't match then the movement activity may be outdated depending on the next check!
+			-- 3. Compare their activities and continue if they don't match! A single activity can have multiple sequences tied to it, without this check it will cause it to bug out!
+			-- 4. Force the ideal sequence to be the actual movement activity's sequence (including translated)
+			-- This is needed because:
+				-- 1. Often times translating alone will NOT update the movement animation!
+				-- 2. Half of the time, the engine will NOT even call the translate function!
+		if self:IsMoving() then
+			moveAct = self:GetMovementActivity()
+			if self:GetActivity() == moveAct then
+				self:SetMovementActivity(moveAct) -- Force update the movement sequence, aka "m_sequence" in the engine
+				local moveSeq = self:GetMovementSequence()
+				local idealSeq = self:GetInternalVariable("m_nIdealSequence")
+				if moveSeq != idealSeq && self:GetSequenceActivity(moveSeq) != self:GetSequenceActivity(idealSeq) then
+					self:SetSaveValue("m_nIdealSequence", moveSeq)
+				end
+			end
+		end
+		
 		self:DoSchedule(curSched)
 		if curSched.CanBeInterrupted or (self:IsScheduleFinished(curSched)) or (curSched.IsMovingTask && !self:IsMoving()) then
 			self:SelectSchedule()
@@ -208,39 +200,67 @@ end
 		- failCode = 
 -----------------------------------------------------------]]
 function ENT:OnTaskFailed(failCode, failString)
-	//print("task failed:", failCode, failString)
+	//print("OnTaskFailed: ", failCode, failString)
+	local curSched = self.CurrentSchedule
+	if curSched != nil then
+		//print("Do run fail")
+		-- Give it a very small delay to let the engine set its values before we continue
+		timer.Simple(0.05, function()
+			if IsValid(self) then
+				if curSched.ResetOnFail == true then
+					curSched.FailureHandled = true
+					self:StopMoving()
+					//self:SelectSchedule()
+					//self:ClearCondition(COND_TASK_FAILED) -- Won't do anything, engine will set COND_TASK_FAILED right after
+				end
+				self:ClearGoal() -- Otherwise we may get stuck in movement (if schedule had a movement!)
+				self:NextTask(curSched) -- Attempt to move on to the next task!
+				self:DoRunCode_OnFail(curSched) -- Run the failure function if we have one
+			end
+		end)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoRunCode_OnFail(schedule)
 	if schedule == nil or schedule.AlreadyRanCode_OnFail == true then return false end
-	if schedule.RunCode_OnFail != nil && IsValid(self) then schedule.AlreadyRanCode_OnFail = true schedule.RunCode_OnFail() return true end
+	if schedule.RunCode_OnFail != nil && IsValid(self) then
+		schedule.FailureHandled = true
+		schedule.AlreadyRanCode_OnFail = true
+		schedule.RunCode_OnFail()
+		//self:ClearCondition(COND_TASK_FAILED) -- Won't do anything, engine will set COND_TASK_FAILED right after
+		return true
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnMovementFailed()
 	//print("VJ Base: Movement Failed! "..self:GetName())
-	local curSchedule = self.CurrentSchedule
+	-- Now handled in `OnTaskFailed`
+	/*local curSchedule = self.CurrentSchedule
 	if curSchedule != nil then
 		if self:DoRunCode_OnFail(curSchedule) == true then
 			self:ClearCondition(COND_TASK_FAILED)
 		end
 		if curSchedule.ResetOnFail == true then
+			curSched.FailureHandled = true
 			self:ClearCondition(COND_TASK_FAILED)
 			self:StopMoving()
 			//self:SelectSchedule()
 		end
-	end
+	end*/
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnMovementComplete()
 	//print("Movement completed!")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OnStateChange(oldState, newState)
+	//print("OnStateChange: ", oldState, newState)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 -- lua_run PrintTable(Entity(1):GetEyeTrace().Entity.CurrentSchedule)
-local tasksRun = {TASK_RUN_PATH=true, TASK_RUN_PATH_FLEE=true, TASK_RUN_PATH_TIMED=true, TASK_RUN_PATH_FOR_UNITS=true, TASK_RUN_PATH_WITHIN_DIST=true}
-local tasksWalk = {TASK_WALK_PATH=true, TASK_WALK_PATH_TIMED=true, TASK_WALK_PATH_FOR_UNITS=true, TASK_WALK_PATH_WITHIN_DIST=true}
 --
 function ENT:StartSchedule(schedule)
-	if self.MovementType == VJ_MOVETYPE_STATIONARY && schedule.IsMovingTask == true then return end -- It's stationary therefore should not move!
+	if self.MovementType == VJ_MOVETYPE_STATIONARY && schedule.IsMovingTask == true then return end -- It's stationary therefore it should not move!
 	if (self:GetState() == VJ_STATE_ONLY_ANIMATION or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self:GetState() == VJ_STATE_ONLY_ANIMATION_NOATTACK) && !schedule.IsPlayActivity then return end
 	local curSched = self.CurrentSchedule
 	if (IsValid(self:GetInternalVariable("m_hOpeningDoor")) or self:GetInternalVariable("m_flMoveWaitFinished") > 0) && curSched && schedule.Name == curSched.Name then return end -- If it's the same task and it's opening a door, then DO NOT continue
@@ -257,7 +277,8 @@ function ENT:StartSchedule(schedule)
 	if (!schedule.StopScheduleIfNotMoving_Any) then schedule.StopScheduleIfNotMoving_Any = false end -- Will stop from any blocking entity!
 	if (!schedule.CanBeInterrupted) then schedule.CanBeInterrupted = false end
 	if (!schedule.CanShootWhenMoving) then schedule.CanShootWhenMoving = false end -- Is it able to fire when moving?
-	if !schedule.IsMovingTask then
+	-- No longer needed, all the corresponding variables are set directly in the module to save performance!
+	/*if !schedule.IsMovingTask then
 		for _,v in ipairs(schedule.Tasks) do
 			if tasksRun[v.TaskName] then
 				schedule.IsMovingTask = true
@@ -274,7 +295,7 @@ function ENT:StartSchedule(schedule)
 		end
 	end
 	if schedule.IsMovingTask == nil then schedule.IsMovingTask = false end
-	if schedule.MoveType == nil then schedule.MoveType = false end
+	if schedule.MoveType == nil then schedule.MoveType = false end*/
 	-- This stops movements from running if another NPC is stuck in it
 	-- Pros:
 		-- Successfully reduces lag when many NPCs are stuck in each other
@@ -297,10 +318,12 @@ function ENT:StartSchedule(schedule)
 		self.LastHiddenZoneT = 0
 		self.CurAnimationSeed = 0
 	end*/
-	if schedule.CanShootWhenMoving == true && self.CurrentWeaponAnimation != nil && IsValid(self:GetEnemy()) then
-		self:DoWeaponAttackMovementCode(true, (schedule.MoveType == 0 and 1) or 0) -- Send 1 if the current task is walking!
-		self:SetArrivalActivity(self.CurrentWeaponAnimation)
-	end
+	
+	-- No longer needed, `TranslateActivity` handles it now
+	//if schedule.CanShootWhenMoving == true && self.CurrentWeaponAnimation != nil && IsValid(self:GetEnemy()) then
+		//self:DoWeaponAttackMovementCode(true, (schedule.MoveType == 0 and 1) or 0) -- Send 1 if the current task is walking!
+		//self:SetArrivalActivity(self.CurrentWeaponAnimation)
+	//end
 	
 	-- Handle facing data sent by "FaceData"
 		-- Type = Type of facing it should do | Target = The vector/ent to face (Not required for enemy facing!)
@@ -315,6 +338,7 @@ function ENT:StartSchedule(schedule)
 			self.TurnData.Type = faceType
 			self.TurnData.Target = isvector(turnTarget) and self:GetFaceAngle((turnTarget - self:GetPos()):Angle()) or turnTarget
 			self.TurnData.IsSchedule = true
+			self.TurnData.LastYaw = 1 -- So it doesn't face movement direction between move schedules, but should it be kept??
 		end
 	end
 	
@@ -338,11 +362,16 @@ function ENT:DoSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ScheduleFinished(schedule)
+	//print("ScheduleFinished", schedule)
 	if schedule then
 		-- Handle "RunCode_OnFinish"
 		if !schedule.AlreadyRanCode_OnFinish && schedule.RunCode_OnFinish != nil then
 			schedule.AlreadyRanCode_OnFinish = true
 			schedule.RunCode_OnFinish()
+		end
+		-- Handle COND_TASK_FAILED, unless we have handled the failure case, we should keep the failure condition forever until it's handled or new schedule is ran
+		if schedule.FailureHandled then
+			self:ClearCondition(COND_TASK_FAILED)
 		end
 		-- Reset facing data if its based on a schedule!
 		if self.TurnData.IsSchedule then
