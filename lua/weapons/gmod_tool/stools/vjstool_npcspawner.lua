@@ -106,7 +106,7 @@ if CLIENT then
 		for k,v in pairs(VJ_NPCSPAWNER_TblCurrentValues) do
 			if v.Entities == "" or v.Entities == "none" or v.Entities == {} then table.remove(VJ_NPCSPAWNER_TblCurrentValues,k) continue end
 			if v.Entities != "" && v.Entities != "none" && v.Entities != {} then
-				CheckList:AddLine(v.EntityName,Vector(v.SpawnPosition.vForward,v.SpawnPosition.vRight,v.SpawnPosition.vUp),v.WeaponsList,v.Entities,v.Relationship)
+				CheckList:AddLine(v.EntityName,v.SpawnPosition,v.WeaponsList,v.Entities,v.Relationship)
 				//CheckList:AddLine(v.Entities,"x:"..v.SpawnPosition.vForward.." y:"..v.SpawnPosition.vRight.." z:"..v.SpawnPosition.vUp)
 			end
 		end
@@ -220,7 +220,7 @@ if CLIENT then
 		local spawnnpclass = GetConVarString("vjstool_npcspawner_spawnnpclass")
 		local spawnfritoplyallies = GetConVarString("vjstool_npcspawner_fritoplyallies")
 		local spawnequip = string.lower(GetConVarString("vjstool_npcspawner_weaponequip"))
-		table.insert(VJ_NPCSPAWNER_TblCurrentValues,{EntityName=spawnentname, Entities=spawnent, SpawnPosition={vForward=spawnposfor,vRight=spawnposright,vUp=spawnposup}, WeaponsList=spawnequip, Relationship={Class = spawnnpclass, FriToPlyAllies = spawnfritoplyallies}})
+		table.insert(VJ_NPCSPAWNER_TblCurrentValues,{EntityName=spawnentname, Entities=spawnent, SpawnPosition=Vector(spawnposfor, spawnposright, spawnposup), WeaponsList=spawnequip, Relationship={Class = spawnnpclass, FriToPlyAllies = spawnfritoplyallies}})
 		local GetPanel = controlpanel.Get("vjstool_npcspawner")
 		GetPanel:ClearControls()
 		DoBuildCPanel_Spawner(GetPanel)
@@ -275,7 +275,7 @@ else -- If SERVER
 			spawner:SetAngles(angs)
 			for _,v in pairs(svgetlines) do
 				//if v.IsVJBaseSpawner == true then ply:ChatPrint("Can't be spawned because it's a spawner") end
-				table.insert(spawner.EntitiesToSpawn,{SpawnPosition={vForward=v.SpawnPosition.x,vRight=v.SpawnPosition.y,vUp=v.SpawnPosition.z}, Entities={v.Entities}, WeaponsList={v.WeaponsList}, NPC_Class = v.Relationship.Class, FriToPlyAllies = tobool(v.Relationship.FriToPlyAllies)})
+				table.insert(spawner.EntitiesToSpawn,{SpawnPosition=v.SpawnPosition, Entities={v.Entities}, WeaponsList={v.WeaponsList}, NPC_Class = v.Relationship.Class, FriToPlyAllies = tobool(v.Relationship.FriToPlyAllies)})
 			end
 			//spawner.EntitiesToSpawn = {entitiestospawntbl}
 			if convartbl.vjstool_npcspawner_playsound == 1 then
