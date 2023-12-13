@@ -779,7 +779,7 @@ function ENT:GetMeleeAttackDamageOrigin()
 	return self:GetPos() + self:GetForward() -- Override this to use a different position
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMeleeAttack_AfterChecks(hitEnt, isProp) return false end -- return true to disable the attack and move onto the next entity!
+function ENT:CustomOnMeleeAttack_AfterChecks(hitEnt, isProp) end -- return `true` to disable the attack and move onto the next entity!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackKnockbackVelocity(hitEnt)
 	return self:GetForward()*math.random(100, 140) + self:GetUp()*10
@@ -3171,8 +3171,10 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		
 		if self:IsOnFire() then -- If was on fire then...
 			corpse:Ignite(math.Rand(8, 10), 0)
-			corpse:SetColor(colorGrey)
-			//corpse:SetMaterial("models/props_foliage/tree_deciduous_01a_trunk")
+			if !self.Immune_Fire then -- Don't darken the corpse if we are immune to fire!
+				corpse:SetColor(colorGrey)
+				//corpse:SetMaterial("models/props_foliage/tree_deciduous_01a_trunk")
+			end
 		end
 		//gamemode.Call("CreateEntityRagdoll",self,corpse)
 		
