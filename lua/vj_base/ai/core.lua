@@ -1538,10 +1538,11 @@ function ENT:VJ_PlaySequence(animation, playbackRate)
 	if !animation then return false end
 	//self.VJ_PlayingSequence = true -- No longer needed as it is handled by ACT_DO_NOT_DISTURB
 	
-	self:SetActivity(ACT_DO_NOT_DISTURB)
+	self:SetActivity(ACT_DO_NOT_DISTURB) -- So `self:GetActivity()` will return the current result (alongside other immediate calls after `VJ_PlaySequence`)
+	self:SetIdealActivity(ACT_DO_NOT_DISTURB) -- Avoids the engine from progressing to an ideal activity that was set very recently | EX: Fixes melee attack anims breaking when called right after `self:VJ_TASK_IDLE_STAND()`
+		-- Set both the current activity and the ideal activity, 
 		-- Keeps MaintainActivity from overriding sequences as seen here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L6331
-		-- If "m_IdealActivity" is set to ACT_DO_NOT_DISTURB, the engine will understand it's a sequence and will avoid messing with it, described here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/shared/ai_activity.h#L215
-		// self:SetIdealActivity(ACT_DO_NOT_DISTURB) -- Engine uses SetIdealActivity, but this resulted in self:GetActivity() returning wrong activity!
+		-- If `m_IdealActivity` is set to ACT_DO_NOT_DISTURB, the engine will understand it's a sequence and will avoid messing with it, described here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/shared/ai_activity.h#L215
 	local seqID = isstring(animation) and self:LookupSequence(animation) or animation
 	self:ResetSequence(seqID)
 	self:ResetSequenceInfo()

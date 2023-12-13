@@ -202,20 +202,24 @@ end
 function ENT:OnTaskFailed(failCode, failString)
 	//print("OnTaskFailed: ", failCode, failString)
 	local curSched = self.CurrentSchedule
-	if curSched != nil then
+	if curSched then
 		//print("Do run fail")
 		-- Give it a very small delay to let the engine set its values before we continue
 		timer.Simple(0.05, function()
 			if IsValid(self) then
-				if curSched.ResetOnFail == true then
-					curSched.FailureHandled = true
-					self:StopMoving()
-					//self:SelectSchedule()
-					//self:ClearCondition(COND_TASK_FAILED) -- Won't do anything, engine will set COND_TASK_FAILED right after
+				local curSched2 = self.CurrentSchedule
+				if curSched2 && curSched == curSched2 then -- Make sure the schedule hasn't changed!
+					curSched = curSched2
+					if curSched.ResetOnFail == true then
+						curSched.FailureHandled = true
+						self:StopMoving()
+						//self:SelectSchedule()
+						//self:ClearCondition(COND_TASK_FAILED) -- Won't do anything, engine will set COND_TASK_FAILED right after
+					end
+					self:ClearGoal() -- Otherwise we may get stuck in movement (if schedule had a movement!)
+					self:NextTask(curSched) -- Attempt to move on to the next task!
+					self:DoRunCode_OnFail(curSched) -- Run the failure function if we have one
 				end
-				self:ClearGoal() -- Otherwise we may get stuck in movement (if schedule had a movement!)
-				self:NextTask(curSched) -- Attempt to move on to the next task!
-				self:DoRunCode_OnFail(curSched) -- Run the failure function if we have one
 			end
 		end)
 	end

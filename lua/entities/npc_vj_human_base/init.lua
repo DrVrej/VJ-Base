@@ -13,7 +13,7 @@ AccessorFunc(ENT, "m_fMaxYawSpeed", "MaxYawSpeed", FORCE_NUMBER)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ENT.Model = {} -- The game will pick a random model from the table when the SNPC is spawned | Add as many as you want
+ENT.Model = false -- The game will pick a random model from the table when the SNPC is spawned | Add as many as you want
 ENT.VJ_IsHugeMonster = false -- This is mostly used for massive or boss SNPCs, it affects certain part of the SNPC, for example the SNPC won't receive any knock back
 	-- ====== Health ====== --
 ENT.StartHealth = 50 -- The starting health of the NPC
