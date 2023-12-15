@@ -2327,10 +2327,11 @@ function ENT:RunGibOnDeathCode(dmginfo, hitgroup, extraOptions)
 		local v = dmgTbl[k]
 		if (v == "All") or (v == "UseDefault" && self:IsDefaultGibDamageType(dmgType) && bAND(dmgType, DMG_NEVERGIB) == 0) or (v != "UseDefault" && bAND(dmgType, v) != 0) then
 			local setupGibs, setupGibsExtra = self:SetUpGibesOnDeath(dmginfo, hitgroup)
-			if setupGibsExtra == nil then setupGibsExtra = {} end
 			if setupGibs == true then
-				if setupGibsExtra.AllowCorpse != true then self.HasDeathRagdoll = false end
-				if setupGibsExtra.DeathAnim != true then self.HasDeathAnimation = false end
+				if setupGibsExtra then
+					if setupGibsExtra.AllowCorpse != true then self.HasDeathRagdoll = false end
+					if setupGibsExtra.DeathAnim != true then self.HasDeathAnimation = false end
+				end
 				self.HasBeenGibbedOnDeath = true
 				self:PlayGibOnDeathSounds(dmginfo, hitgroup)
 			end

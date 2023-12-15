@@ -171,7 +171,7 @@ function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 				-- 1. Often times translating alone will NOT update the movement animation!
 				-- 2. Half of the time, the engine will NOT even call the translate function!
 		if self:IsMoving() then
-			moveAct = self:GetMovementActivity()
+			local moveAct = self:GetMovementActivity()
 			if self:GetActivity() == moveAct then
 				self:SetMovementActivity(moveAct) -- Force update the movement sequence, aka "m_sequence" in the engine
 				local moveSeq = self:GetMovementSequence()
