@@ -699,10 +699,10 @@ function ENT:CustomOnTouch(ent) end
 -- function ENT:OnCondition(cond) print(self, " Condition: ", cond, " - ", self:ConditionName(cond)) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE
--- function ENT:CustomOnAcceptInput(key, activator, caller, data) end
+-- function ENT:CustomOnAcceptInput(key, activator, caller, data) print("OnAcceptInput", key, activator, caller, data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE
--- function ENT:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions) end
+-- function ENT:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions) print("OnHandleAnimEvent", ev, evTime, evCycle, evType, evOptions) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Called whenever the NPC begins following or stops following an entity
@@ -1563,15 +1563,29 @@ function ENT:DoChaseAnimation(alwaysChase) -- alwaysChase: true = Override to al
 	self.NextChaseTime = CurTime() + (((self.LatestEnemyDistance > 2000) and 1) or 0.1) -- If the enemy is far, increase the delay!
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Overrides any activity by returning another activity
+		- act = Activity that is being called to be translated
+	Returns
+		- Activity, the translated activity, otherwise it will return the given activity back
+	RULES
+		1. Always return an activity, never return nothing or a table!
+			- Suggested to call `return self.BaseClass.TranslateActivity(self, act)` at the end of the function
+		2. If you are replacing ACT_IDLE from a randomized table, then you must call `self:ResolveAnimation`
+			- This is to ensure the idle animation system properly detects if it should be setting a new idle animation
+-----------------------------------------------------------]]
 function ENT:TranslateActivity(act)
 	//print("TranslateActivity", act)
-	-- Check for translations
+	-- Handle translations table
 	local translation = self.AnimationTranslations[act]
 	if translation then
 		if istable(translation) then
-			act = translation[math.random(1, #translation)] or act -- "or act" = To make sure it doesn't return nil when the table is empty!
+			if act == ACT_IDLE then
+				self:ResolveAnimation(translation)
+			end
+			return translation[math.random(1, #translation)] or act -- "or act" = To make sure it doesn't return nil when the table is empty!
 		else
-			act = translation
+			return translation
 		end
 	end
 	return act
@@ -1633,6 +1647,7 @@ if self:GetNavType() == NAV_CLIMB then
 end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
+	local aiEnabled = VJ_CVAR_AI_ENABLED
 	if self.NextActualThink <= CurTime() then
 		self.NextActualThink = CurTime() + 0.065
 		
@@ -1701,7 +1716,7 @@ function ENT:Think()
 		
 		self:CustomOnThink()
 		--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
-		if VJ_CVAR_AI_ENABLED && self:GetState() != VJ_STATE_FREEZE && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
+		if aiEnabled && self:GetState() != VJ_STATE_FREEZE && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
 			if self.VJ_DEBUG == true then
 				if GetConVar("vj_npc_printcurenemy"):GetInt() == 1 then print(self:GetClass().."'s Enemy: ",self:GetEnemy()," Alerted? ",self.Alerted) end
 				if GetConVar("vj_npc_printtakingcover"):GetInt() == 1 then if curTime > self.TakingCoverT == true then print(self:GetClass().." Is Not Taking Cover") else print(self:GetClass().." Is Taking Cover ("..self.TakingCoverT-curTime..")") end end
@@ -2243,7 +2258,9 @@ function ENT:Think()
 		end
 	end
 		
-	self:MaintainIdleAnimation()
+	if aiEnabled then
+		self:MaintainIdleAnimation()
+	end
 	//print(self:GetIdealActivity(), self:GetActivity(), self:GetSequenceName(self:GetSequence()), self:GetSequenceName(self:GetInternalVariable("m_nIdealSequence")), self:IsSequenceFinished(), self:GetInternalVariable("m_bSequenceLoops"), self:GetCycle())
 
 	-- Maintain turning when needed otherwise Engine will take over during movements!
@@ -2541,6 +2558,7 @@ function ENT:LeapAttackVelocityCode()
 	if self.LeapAttackAnimationFaceEnemy == true then self:SetTurnTarget("Enemy") end
 	self.LeapAttackHasJumped = true
 	if self:CustomOnLeapAttackVelocityCode() != true then
+		
 		self:SetLocalVelocity(((ene:GetPos() + ene:OBBCenter()) - (self:GetPos() + self:OBBCenter())):GetNormal()*400 + self:GetForward()*self.LeapAttackVelocityForward + self:GetUp()*self.LeapAttackVelocityUp + self:GetRight()*self.LeapAttackVelocityRight)
 	end 
 	self:PlaySoundSystem("LeapAttackJump")
@@ -3169,7 +3187,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			end
 		end
 		
-		if self:IsOnFire() then -- If was on fire then...
+		if self:IsOnFire() then
 			corpse:Ignite(math.Rand(8, 10), 0)
 			if !self.Immune_Fire then -- Don't darken the corpse if we are immune to fire!
 				corpse:SetColor(colorGrey)

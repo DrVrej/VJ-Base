@@ -348,6 +348,26 @@ function ENT:SetIdleAnimation(anims, reset)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Helper function used in `TranslateActivity` when randomly picking from a table
+	NOTE: ALWAYS use this when overriding ACT_IDLE from a table!
+		- tbl = Table to retrieve an animation from
+	Returns
+		- Activity it picked
+-----------------------------------------------------------]]
+function ENT:ResolveAnimation(tbl)
+	-- Returns the current animation if it's found in the table and is not done playing it
+	if self:GetCycle() < 0.99 then
+		local curAnim = self:GetSequenceActivity(self:GetInternalVariable("m_nIdealSequence"))
+		for _, v in ipairs(tbl) do
+			if curAnim == v then
+				return v
+			end
+		end
+	end
+	return tbl[math.random(1, #tbl)]
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_IDLE_STAND()
 	if self:IsMoving() or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end // self.CurrentSchedule != nil
 	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:BusyWithActivity() then return end
@@ -356,29 +376,34 @@ function ENT:VJ_TASK_IDLE_STAND()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Maintains / applies the idle animation
-		- force = Forcibly apply the idle animation without checking if it's currently idling
+	Maintains and applies the idle animation
+		- force = Forcibly apply the idle animation without checking if it's already playing ACT_IDLE
 -----------------------------------------------------------]]
 function ENT:MaintainIdleAnimation(force)
 	-- "m_bSequenceLoops" has to be true because non-looped animations tend to cut off near the end, usually after the cycle passes 0.8
 	-- Animation cycle needs to be set to 0 to make sure engine does NOT attempt to switch sequence multiple times in this code: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L2987
 	-- "self:IsSequenceFinished()" should NOT be used as it's broken, it returns "true" even though the animation hasn't finished, especially for non-looped animations
-	local isIdealIdle = self:GetIdealActivity() == ACT_IDLE
-	if force or (isIdealIdle && self:GetCycle() >= 0.99) then // self:IsSequenceFinished()
-		//print(bit.band(self:GetSequenceInfo(self:GetSequence()).flags, 1) == 0) -- its a none-looping anim
+	// bit.band(self:GetSequenceInfo(self:GetSequence()).flags, 1) == 0 -- Checks if animation is none-looping
+	if force then
 		self.CurAnimationSeed = 0
 		self:ResetIdealActivity(ACT_IDLE)
 		self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L2987
-		-- Alternative system: Directly sets the translated activity, but has other downsides
-		//if self.CurrentIdleAnimation != self:GetInternalVariable("m_nIdealSequence") or CurTime() > self.NextIdleStandTime then
-			//self.CurrentIdleAnimation = self:GetInternalVariable("m_nIdealSequence")
-			//self.NextIdleStandTime = CurTime() + (self:SequenceDuration(self:GetInternalVariable("m_nIdealSequence")) / self:GetPlaybackRate())
-			//self:ResetIdealActivity(self:TranslateActivity(ACT_IDLE))
-		//end
-	end
-	if isIdealIdle then
+	elseif self:GetIdealActivity() == ACT_IDLE then
+		-- If animation has finished OR idle animation has changed then play a new idle!
+		if (self:GetCycle() >= 0.99) or (self:TranslateActivity(ACT_IDLE) != self:GetSequenceActivity(self:GetInternalVariable("m_nIdealSequence"))) then
+			self.CurAnimationSeed = 0
+			self:ResetIdealActivity(ACT_IDLE)
+			self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L2987
+		end
 		self:SetSaveValue("m_bSequenceLoops", true)
 	end
+	
+	-- Alternative system: Directly sets the translated activity, but has other downsides
+	//if self.CurrentIdleAnimation != self:GetInternalVariable("m_nIdealSequence") or CurTime() > self.NextIdleStandTime then
+		//self.CurrentIdleAnimation = self:GetInternalVariable("m_nIdealSequence")
+		//self.NextIdleStandTime = CurTime() + (self:SequenceDuration(self:GetInternalVariable("m_nIdealSequence")) / self:GetPlaybackRate())
+		//self:ResetIdealActivity(self:TranslateActivity(ACT_IDLE))
+	//end
 	
 	/* -- Old idle system
 	local idleAnimTbl = self.NoWeapon_UseScaredBehavior_Active == true and self.AnimTbl_ScaredBehaviorStand or ((self.Alerted && self:GetWeaponState() != VJ.NPC_WEP_STATE_HOLSTERED && IsValid(self:GetActiveWeapon())) and self.AnimTbl_WeaponAim or self.AnimTbl_IdleStand)
@@ -2331,6 +2356,9 @@ function ENT:RunGibOnDeathCode(dmginfo, hitgroup, extraOptions)
 				if setupGibsExtra then
 					if setupGibsExtra.AllowCorpse != true then self.HasDeathRagdoll = false end
 					if setupGibsExtra.DeathAnim != true then self.HasDeathAnimation = false end
+				else -- By default disable corpse spawning and death animation if it gibbed!
+					self.HasDeathRagdoll = false
+					self.HasDeathAnimation = false
 				end
 				self.HasBeenGibbedOnDeath = true
 				self:PlayGibOnDeathSounds(dmginfo, hitgroup)

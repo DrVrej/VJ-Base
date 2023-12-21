@@ -21,8 +21,8 @@ function ENT:VJ_TASK_GOTO_LASTPOS(moveType, customFunc)
 		return
 	end
 	local schedGoToLastPos = vj_ai_schedule.New("vj_goto_lastpos")
-	schedGoToLastPos:EngTask("TASK_SET_TOLERANCE_DISTANCE", 48)
-	schedGoToLastPos:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 3)
+	//schedGoToLastPos:EngTask("TASK_SET_TOLERANCE_DISTANCE", 48) -- Will cause the NPC not move at all in many cases!
+	//schedGoToLastPos:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 3)
 	schedGoToLastPos:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
 	schedGoToLastPos:EngTask(moveType or "TASK_RUN_PATH", 0)
 	schedGoToLastPos:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
