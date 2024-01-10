@@ -42,7 +42,6 @@ ENT.VJC_Camera_CurZoom = Vector(0, 0, 0)
 ENT.VJC_Key_Last = BUTTON_CODE_NONE -- The last button the user pressed
 ENT.VJC_Key_LastTime = 0 -- Time since the user last pressed a key
 ENT.VJC_NPC_LastPos = Vector(0, 0, 0)
-ENT.VJC_NPC_LastIdleAngle = 0
 ENT.VJC_Removed = false
 
 /* Important entities:
@@ -286,7 +285,6 @@ function ENT:SendDataToClient(reset)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local vecZ20 = Vector(0, 0, 20)
-local defAttackTypes = {MeleeAttack=false, RangeAttack=false, LeapAttack=false, WeaponAttack=false, GrenadeAttack=false, Ammo="---"}
 --
 function ENT:Think()
 	local ply = self.VJCE_Player
@@ -303,21 +301,18 @@ function ENT:Think()
 		self:SendDataToClient()
 		
 		-- HUD
-		local AttackTypes = defAttackTypes -- Optimization?
-		if npc.IsVJBaseSNPC == true then
-			if npc.HasMeleeAttack == true then AttackTypes["MeleeAttack"] = ((npc.IsAbleToMeleeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_MELEE) and 2) or true end
-			if npc.HasRangeAttack == true then AttackTypes["RangeAttack"] = ((npc.IsAbleToRangeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_RANGE) and 2) or true end
-			if npc.HasLeapAttack == true then AttackTypes["LeapAttack"] = ((npc.IsAbleToLeapAttack != true or npc.AttackType == VJ.ATTACK_TYPE_LEAP) and 2) or true end
-			if IsValid(npcWeapon) then AttackTypes["WeaponAttack"] = true AttackTypes["Ammo"] = npcWeapon:Clip1() end
-			if npc.HasGrenadeAttack == true then AttackTypes["GrenadeAttack"] = (curTime <= npc.NextThrowGrenadeT and 2) or true end
-		end
 		if self.VJC_Player_DrawHUD then
 			net.Start("vj_controller_hud")
 				net.WriteBool(ply:GetInfoNum("vj_npc_cont_hud", 1) == 1)
 				net.WriteFloat(npc:GetMaxHealth())
 				net.WriteFloat(npc:Health())
 				net.WriteString(npc:GetName())
-				net.WriteTable(AttackTypes)
+				net.WriteInt(npc.HasMeleeAttack == true && (((npc.IsAbleToMeleeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_MELEE) and 2) or 1) or 0, 3)
+				net.WriteInt(npc.HasRangeAttack == true && (((npc.IsAbleToRangeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_RANGE) and 2) or 1) or 0, 3)
+				net.WriteInt(npc.HasLeapAttack == true && (((npc.IsAbleToLeapAttack != true or npc.AttackType == VJ.ATTACK_TYPE_LEAP) and 2) or 1) or 0, 3)
+				net.WriteBool(IsValid(npcWeapon))
+				net.WriteInt(IsValid(npcWeapon) && npcWeapon:Clip1() or 0, 32)
+				net.WriteInt(npc.HasGrenadeAttack == true && ((curTime <= npc.NextThrowGrenadeT and 2) or 1) or 0, 3)
 			net.Send(ply)
 		end
 		
@@ -325,8 +320,8 @@ function ENT:Think()
 
 		local bullseyePos = self.VJCE_Bullseye:GetPos()
 		if ply:GetInfoNum("vj_npc_cont_devents", 0) == 1 then
-			VJ.DEBUG_TempEnt(ply:GetPos(), self:GetAngles(), Color(0,109,160))
-			VJ.DEBUG_TempEnt(camera:GetPos(), self:GetAngles(), Color(255,200,260))
+			VJ.DEBUG_TempEnt(ply:GetPos(), self:GetAngles(), Color(0,109,160)) -- Player's position
+			VJ.DEBUG_TempEnt(camera:GetPos(), self:GetAngles(), Color(255,200,260)) -- Camera's position
 			VJ.DEBUG_TempEnt(bullseyePos, self:GetAngles(), Color(255,0,0)) -- Bullseye's position
 		end
 		
@@ -341,7 +336,6 @@ function ENT:Think()
 				//npc:SetAngles(Angle(0,math.ApproachAngle(npc:GetAngles().y,ply:GetAimVector():Angle().y,100),0))
 				npc:SetTurnTarget(bullseyePos, 0.2)
 				canTurn = false
-				// Prints show that the animations aren't being set, hence why they have trouble shooting
 				if VJ.IsCurrentAnimation(npc, npc:TranslateActivity(npc.CurrentWeaponAnimation)) == false && VJ.IsCurrentAnimation(npc, npc.AnimTbl_WeaponAttack) == false then
 					npc:CustomOnWeaponAttack()
 					npc.CurrentWeaponAnimation = VJ.PICK(npc.AnimTbl_WeaponAttack)
@@ -359,18 +353,16 @@ function ENT:Think()
 		if npc.CurrentAttackAnimationTime < CurTime() && curTime > npc.NextChaseTime && npc.IsVJBaseSNPC_Tank != true then
 			-- Turning
 			if !npc:IsMoving() && canTurn && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
-				//npc:SetAngles(Angle(0,ply:GetAimVector():Angle().y,0))
-				local angdif = math.abs(math.AngleDifference(ply:EyeAngles().y, self.VJC_NPC_LastIdleAngle))
-				self.VJC_NPC_LastIdleAngle = npc:EyeAngles().y //tr_ply.HitPos
 				npc:VJ_TASK_IDLE_STAND()
-				if self.VJC_NPC_CanTurn == true && ((npc.MovementType != VJ_MOVETYPE_STATIONARY) or (npc.MovementType == VJ_MOVETYPE_STATIONARY && npc.CanTurnWhileStationary == true)) then
-					if (VJ.AnimExists(npc, ACT_TURN_LEFT) == false && VJ.AnimExists(npc, ACT_TURN_RIGHT) == false) or (angdif <= 50 && npc:GetActivity() != ACT_TURN_LEFT && npc:GetActivity() != ACT_TURN_RIGHT) then
-						//npc:VJ_TASK_IDLE_STAND()
-						npc:SetTurnTarget(bullseyePos, 0.1)
-					else
-						self.NextIdleStandTime = 0
-						npc:SetLastPosition(bullseyePos) // ply:GetEyeTrace().HitPos
-						npc:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
+				if self.VJC_NPC_CanTurn == true then
+					local turnData = npc.TurnData
+					if turnData.Target != self.VJCE_Bullseye then
+						npc:SetTurnTarget(self.VJCE_Bullseye, -1)
+					elseif npc:GetActivity() == ACT_IDLE && npc:GetIdealActivity() == ACT_IDLE then -- Check both current act AND ideal act because certain activities only change the current act (Ex: UpdateTurnActivity function)
+						npc:UpdateTurnActivity()
+						if npc:GetIdealActivity() != ACT_IDLE then -- If ideal act is no longer idle, then we have selected a turn activity!
+							npc.NextIdleTime = CurTime() + npc:DecideAnimationLength(npc:GetIdealActivity())
+						end
 					end
 				end
 				//self.TestLerp = npc:GetAngles().y
@@ -386,7 +378,7 @@ function ENT:Think()
 			//end
 		end
 	end
-	self:NextThink(curTime + (0.069696968793869 + FrameTime()))
+	self:NextThink(curTime)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartMovement(Dir, Rot)
@@ -432,6 +424,7 @@ function ENT:StartMovement(Dir, Rot)
 				if self.VJC_BullseyeTracking then
 					x.FaceData = {Type = VJ.NPC_FACE_ENEMY}
 				else
+					npc:ResetTurnTarget()
 					x:EngTask("TASK_FACE_LASTPOSITION", 0)
 				end
 			end

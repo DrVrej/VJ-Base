@@ -143,7 +143,12 @@ if CLIENT then
 		local maxhp = net.ReadFloat()
 		local hp = net.ReadFloat()
 		local name = net.ReadString()
-		local AtkTbl = net.ReadTable()
+		local atkMelee = net.ReadInt(3)
+		local atkRange = net.ReadInt(3)
+		local atkLeap = net.ReadInt(3)
+		local atkWeapon = net.ReadBool()
+		local atkWeaponAmmo = net.ReadInt(32)
+		local atkGrenade = net.ReadInt(3)
 		local ply = LocalPlayer()
 		hook.Add("HUDPaint", "vj_controller_HUD", function()
 			draw.RoundedBox(1, ScrW() / 2.25, ScrH()-120, 220, 100, Color(0, 0, 0, 150))
@@ -168,25 +173,25 @@ if CLIENT then
 			
 			-- Attack Icons
 			surface.SetMaterial(mat_icon_melee)
-			surface.SetDrawColor((AtkTbl["MeleeAttack"] == false and atk_col_red) or ((AtkTbl["MeleeAttack"] == 2 and atk_col_orange) or atk_col_green))
+			surface.SetDrawColor((atkMelee == 0 and atk_col_red) or ((atkMelee == 2 and atk_col_orange) or atk_col_green))
 			surface.DrawTexturedRect(ScrW() / 2.21, ScrH()-73, 28, 28)
 			
 			surface.SetMaterial(mat_icon_range)
-			surface.SetDrawColor((AtkTbl["RangeAttack"] == false and atk_col_red) or ((AtkTbl["RangeAttack"] == 2 and atk_col_orange) or atk_col_green))
+			surface.SetDrawColor((atkRange == 0 and atk_col_red) or ((atkRange == 2 and atk_col_orange) or atk_col_green))
 			surface.DrawTexturedRect(ScrW() / 2.14, ScrH()-73, 28, 28)
 			
 			surface.SetMaterial(mat_icon_leap)
-			surface.SetDrawColor((AtkTbl["LeapAttack"] == false and atk_col_red) or ((AtkTbl["LeapAttack"] == 2 and atk_col_orange) or atk_col_green))
+			surface.SetDrawColor((atkLeap == 0 and atk_col_red) or ((atkLeap == 2 and atk_col_orange) or atk_col_green))
 			surface.DrawTexturedRect(ScrW() / 2.065, ScrH()-73, 28, 28)
 			
 			surface.SetMaterial(mat_icon_grenade)
-			surface.SetDrawColor((AtkTbl["GrenadeAttack"] == false and atk_col_red) or ((AtkTbl["GrenadeAttack"] == 2 and atk_col_orange) or atk_col_green))
+			surface.SetDrawColor((atkGrenade == 0 and atk_col_red) or ((atkGrenade == 2 and atk_col_orange) or atk_col_green))
 			surface.DrawTexturedRect(ScrW() / 2.005, ScrH()-73, 28, 28)
 			
 			surface.SetMaterial(mat_icon_gun)
-			surface.SetDrawColor((AtkTbl["WeaponAttack"] != true and atk_col_red) or ((AtkTbl["Ammo"] <= 0 and atk_col_orange) or atk_col_green))
+			surface.SetDrawColor((!atkWeapon and atk_col_red) or ((atkWeaponAmmo <= 0 and atk_col_orange) or atk_col_green))
 			surface.DrawTexturedRect(ScrW() / 1.94, ScrH()-73, 28, 28) // 1.865
-			draw.SimpleText(AtkTbl["Ammo"], "VJFont_Trebuchet24_Medium", ScrW() / 1.885, ScrH()-70, (AtkTbl["WeaponAttack"] != true and atk_col_red) or ((AtkTbl["Ammo"] <= 0 and atk_col_orange) or atk_col_green), 0, 0)
+			draw.SimpleText(atkWeaponAmmo, "VJFont_Trebuchet24_Medium", ScrW() / 1.885, ScrH()-70, (!atkWeapon and atk_col_red) or ((atkWeaponAmmo <= 0 and atk_col_orange) or atk_col_green), 0, 0)
 			
 			-- Camera
 			surface.SetMaterial(mat_icon_camera)
