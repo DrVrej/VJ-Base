@@ -4,7 +4,7 @@ include("vj_base/ai/schedules.lua")
 include("vj_base/ai/move_aa.lua")
 include("shared.lua")
 /*--------------------------------------------------
-	*** Copyright (c) 2012-2023 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2024 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
@@ -2413,7 +2413,7 @@ function ENT:MeleeAttackCode(isPropAttack, attackDist, customEnt)
 		-- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 		if self.MeleeAttackWorldShakeOnMiss then util.ScreenShake(myPos, self.MeleeAttackWorldShakeOnMissAmplitude or 16, 100, self.MeleeAttackWorldShakeOnMissDuration or 1, self.MeleeAttackWorldShakeOnMissRadius or 2000) end
 		-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		self:PlaySoundSystem("MeleeAttackMiss", {}, VJ.EmitSound)
+		self:PlaySoundSystem("MeleeAttackMiss", nil, VJ.EmitSound)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
