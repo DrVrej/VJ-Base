@@ -166,14 +166,17 @@ function ENT:Initialize()
 		end
 	end
 	self.CurrentEntities = {}
-	for spawnKey, spawnTbl in ipairs(self.EntitiesToSpawn) do
-		local spawnPos = spawnTbl.SpawnPosition
-		if istable(spawnPos) then -- !!!!!!!!!!!!!! DO NOT USE THESE VARIABLES !!!!!!!!!!!!!! [Backwards Compatibility!]
-			spawnTbl.SpawnPosition = Vector(spawnPos.vForward or 0, spawnPos.vRight or 0, spawnPos.vUp or 0)
+	-- Delay to avoid issues such as the position of the spawner being offset
+	timer.Simple(0.1, function()
+		for spawnKey, spawnTbl in ipairs(self.EntitiesToSpawn) do
+			local spawnPos = spawnTbl.SpawnPosition
+			if istable(spawnPos) then -- !!!!!!!!!!!!!! DO NOT USE THESE VARIABLES !!!!!!!!!!!!!! [Backwards Compatibility!]
+				spawnTbl.SpawnPosition = Vector(spawnPos.vForward or 0, spawnPos.vRight or 0, spawnPos.vUp or 0)
+			end
+			self:SpawnAnEntity(spawnKey, spawnTbl, true)
 		end
-		self:SpawnAnEntity(spawnKey, spawnTbl, true)
-	end
-	self:CustomOnInitialize_AfterNPCSpawn()
+		self:CustomOnInitialize_AfterNPCSpawn()
+	end)
 end
 // lua_run for spawnKey,spawnTbl in ipairs(ents.GetAll()) do if spawnTbl.IsVJBaseSpawner == true then spawnTbl.VJBaseSpawnerDisabled = false end end
 ---------------------------------------------------------------------------------------------------------------------------------------------

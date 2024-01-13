@@ -2423,6 +2423,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
 	self:CustomOnRemove()
+	hook.Remove("Think", self)
 	self.Dead = true
 	if self.Medic_Status then self:DoMedicReset() end
 	if self.VJTag_IsEating then self:EatingReset("Dead") end
