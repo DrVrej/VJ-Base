@@ -242,6 +242,7 @@ SWEP.NPC_NextPrimaryFireT = 0
 SWEP.NPC_AnimationSet = VJ.ANIM_SET_CUSTOM
 SWEP.NPC_SecondaryFireNextT = 0
 SWEP.LastOwner = NULL
+SWEP.InitTime = 0 -- Holds the CurTime that it was spawned at, used to make sure spawned weapons can be given to the player without needing to press USE on it
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	-- Basically if someone is retrieving "VJ_CurBulletPos" using NW, it will convert it to NW2 otherwise it just runs the regular code
@@ -258,9 +259,10 @@ function SWEP:GetCapabilities()
 	return bit.bor(CAP_WEAPON_RANGE_ATTACK1, CAP_INNATE_RANGE_ATTACK1)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local oldShells = {VJ_Weapon_PistolShell1 = "ShellEject", VJ_Weapon_RifleShell1 = "RifleShellEject", VJ_Weapon_ShotgunShell1 = "ShotgunShellEject"}-- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
+local oldShells = {VJ_Weapon_PistolShell1 = "ShellEject", VJ_Weapon_RifleShell1 = "RifleShellEject", VJ_Weapon_ShotgunShell1 = "ShotgunShellEject"} -- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
 --
 function SWEP:Initialize()
+	self.InitTime = CurTime()
 	self.PrimaryEffects_ShellType = oldShells[self.PrimaryEffects_ShellType] or self.PrimaryEffects_ShellType -- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
 	self:SetNW2Vector("VJ_CurBulletPos", self:GetPos())
 	self:SetHoldType(self.HoldType)
@@ -397,8 +399,8 @@ function SWEP:NPC_ServerNextFire()
 	
 	//print("------------------")
 	//print(CurTime())
-	//VJ.DEBUG_TempEnt(self:DecideBulletPosition(),self:GetAngles(),Color(255,0,255),1)
-	//VJ.DEBUG_TempEnt(self:GetNW2Vector("VJ_CurBulletPos"),self:GetAngles(),Color(0,0,255),1)
+	//VJ.DEBUG_TempEnt(self:DecideBulletPosition(), self:GetAngles(), Color(255,0,255), 1)
+	//VJ.DEBUG_TempEnt(self:GetNW2Vector("VJ_CurBulletPos"), self:GetAngles(), Color(0,0,255), 1)
 
 	self:RunWorldModelThink()
 	self:CustomOnThink()

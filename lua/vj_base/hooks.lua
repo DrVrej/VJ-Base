@@ -185,21 +185,11 @@ end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerCanPickupWeapon", "VJ_PlayerCanPickupWeapon", function(ply, wep)
 	if wep.IsVJBaseWeapon then
-		if ply.VJ_CurPickupWithoutUse == wep:GetClass() && !ply:HasWeapon(wep:GetClass()) then
-			ply.VJ_CurPickupWithoutUse = nil
+		if (CurTime() - wep.InitTime) < 0.15 then
 			return true
 		end
-		//if wep.VJ_CurPickupWithoutUse then return true end
 		return GetConVar("vj_npc_plypickupdropwep"):GetInt() == 1 && ply:KeyPressed(IN_USE) && ply:GetEyeTrace().Entity == wep
 	end
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("PlayerGiveSWEP", "VJ_PlayerGiveSWEP", function(ply, class, swep)
-	//PrintTable(swep)
-	//if swep.IsVJBaseWeapon == true then
-		ply.VJ_CurPickupWithoutUse = class
-		timer.Simple(0.1, function() if IsValid(ply) then ply.VJ_CurPickupWithoutUse = nil end end)
-	//end
 end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Convar Callbacks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

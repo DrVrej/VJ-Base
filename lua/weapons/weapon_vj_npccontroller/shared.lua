@@ -51,10 +51,6 @@ SWEP.WorldModel_NoShadow = false -- Should the world model have a shadow?
 
 SWEP.DeploySound = {"physics/flesh/flesh_squishy_impact_hard1.wav","physics/flesh/flesh_squishy_impact_hard2.wav","physics/flesh/flesh_squishy_impact_hard3.wav","physics/flesh/flesh_squishy_impact_hard4.wav"} -- Sound played when the weapon is deployed
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:Initialize()
-	self:SetWeaponHoldType(self.HoldType)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttack()
 	local owner = self:GetOwner()
 	if CLIENT or owner:IsNPC() then return end

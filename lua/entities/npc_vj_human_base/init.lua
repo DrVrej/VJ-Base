@@ -23,7 +23,6 @@ ENT.HealthRegenerationDelay = VJ.SET(2, 4) -- How much time until the health inc
 ENT.HealthRegenerationResetOnDmg = true -- Should the delay reset when it receives damage?
 	-- ====== Collision / Hitbox Variables ====== --
 ENT.HullType = HULL_HUMAN -- List of Hull types: https://wiki.facepunch.com/gmod/Enums/HULL
-ENT.HullSizeNormal = true -- set to false to cancel out the self:SetHullSizeNormal()
 ENT.HasSetSolid = true -- set to false to disable SetSolid
 	-- ====== Sight & Speed Variables ====== --
 ENT.SightDistance = 10000 -- How far it can see | This is just a starting value! | To retrieve: "self:GetMaxLookDistance()" | To change: "self:SetMaxLookDistance(sight)"
@@ -1764,7 +1763,7 @@ function ENT:Initialize()
 	self.SelectedDifficulty = GetConVar("vj_npc_difficulty"):GetInt()
 	if VJ.PICK(self.Model) != false then self:SetModel(VJ.PICK(self.Model)) end
 	self:SetHullType(self.HullType)
-	if self.HullSizeNormal == true then self:SetHullSizeNormal() end
+	self:SetHullSizeNormal()
 	if self.HasSetSolid == true then self:SetSolid(SOLID_BBOX) end // SOLID_OBB
 	self:SetCollisionGroup(COLLISION_GROUP_NPC)
 	//self:SetCustomCollisionCheck() -- Used for the hook GM:ShouldCollide, not reliable!
@@ -3738,7 +3737,7 @@ function ENT:SelectSchedule()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetEnemy(checkAlliesEnemy)
-	if /*self.NextResetEnemyT > CurTime() or*/ self.Dead then self.EnemyData.Reset = false return false end
+	if self.Dead or (self.VJ_IsBeingControlled && self.VJ_TheControllerBullseye == self:GetEnemy()) then self.EnemyData.Reset = false return false end
 	checkAlliesEnemy = checkAlliesEnemy or false
 	local moveToEnemy = false
 	local ene = self:GetEnemy()
