@@ -1163,11 +1163,16 @@ function ENT:Initialize()
 			if self:GetIdealActivity() == ACT_IDLE then -- Reset the idle animation in case animation translations changed it!
 				self:MaintainIdleAnimation(true)
 			end
-			hook.Add("Think", self, function()
-				if VJ_CVAR_AI_ENABLED then
-					self:MaintainIdleAnimation()
-				end
-			end)
+			-- This is needed as setting "NextThink" to CurTime will cause performance drops, so we set the idle maintain in a separate hook that runs every tick
+			if !hook.GetTable()["Think"][self] then
+				hook.Add("Think", self, function()
+					if VJ_CVAR_AI_ENABLED then
+						self:MaintainIdleAnimation()
+					end
+				end)
+			else
+				print("[VJ Base] Warning: " .. self:GetClass() .. " [" .. self:EntIndex() .. "] has an existing embedded \"Think\" hook already, which is disallowing the default base hook from assigning. Make sure to handle \"MaintainIdleAnimation\" in the overridden hook!")
+			end
 		end
 	end)
 	//self:SetSaveValue("m_debugOverlays", 1) -- Enables source engine debug overlays (some commands like 'npc_conditions' need it)
