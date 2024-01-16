@@ -104,7 +104,13 @@ function ENT:TASK_VJ_PLAY_ACTIVITY(taskStatus, data)
 	if taskStatus == TASKSTATUS_NEW then
 		//print("TASK_VJ_PLAY_ACTIVITY: Start!", data.duration)
 		self:ResetIdealActivity(data.animation)
-		data.animEndTime = CurTime() + data.duration
+		self:SetActivity(data.animation) -- Avoids "MaintainActivity" from selecting another sequence from the activity (if it has multiple sequences tied to it)
+		local animTime = data.animEndTime
+		if animTime then
+			data.animEndTime = CurTime() + data.duration
+		else
+			data.animEndTime = CurTime() + self:SequenceDuration(self:GetInternalVariable("m_nIdealSequence"))
+		end
 		//self:AutoMovement(self:GetAnimTimeInterval()) -- Causes extra walk frame to be applied, especially when switching from movement to animation
 	else
 		//self:AutoMovement(self:GetAnimTimeInterval())

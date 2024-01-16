@@ -665,7 +665,7 @@ function ENT:CustomOnInitialize()
 	-- self:SetCollisionBounds(Vector(50, 50, 100), Vector(-50, -50, 0))
 	
 	-- Damage bounds of the NPC | NOTE: All 4 Xs and Ys should be the same! | To view: "cl_ent_absbox"
-	--self:SetSurroundingBounds(Vector(-150, -150, 0), Vector(150, 150, 200))
+	-- self:SetSurroundingBounds(Vector(150, 150, 200), Vector(-150, -150, 0))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink() end
@@ -1333,13 +1333,17 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 	local seed = CurTime(); self.CurAnimationSeed = seed
 	local function PlayAct()
 		local animTime = self:DecideAnimationLength(animation, false)
+		local doRealAnimTime = true -- Only for activities, recalculate the animTime after the schedule starts to get the real sequence time, if `stopActivitiesTime` is NOT set!
 		
 		if stopActivities == true then
 			if isbool(stopActivitiesTime) then -- false = Let the base calculate the time
 				stopActivitiesTime = animTime
-			elseif !extraOptions.PlayBackRateCalculated then -- Make sure not to calculate the playback rate when it already has!
-				stopActivitiesTime = stopActivitiesTime / self:GetPlaybackRate()
-				animTime = stopActivitiesTime
+			else
+				doRealAnimTime = false
+				if !extraOptions.PlayBackRateCalculated then -- Make sure not to calculate the playback rate when it already has!
+					stopActivitiesTime = stopActivitiesTime / self:GetPlaybackRate()
+					animTime = stopActivitiesTime
+				end
 			end
 			
 			self:StopAttacks(true)
@@ -1388,6 +1392,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 			self:ClearGoal()
 			
 			if isSequence == true then
+				doRealAnimTime = false -- Sequences already have the correct time
 				local seqID = self:LookupSequence(animation)
 				--
 				-- START: Experimental transition system for sequences
@@ -1414,7 +1419,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				//self:SetActivity(ACT_RESET)
 				schedPlayAct:AddTask("TASK_VJ_PLAY_ACTIVITY", {
 					animation = animation,
-					duration = animTime
+					duration = doRealAnimTime and false or animTime
 				})
 				-- Old engine task animation system
 				/*if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
@@ -1432,13 +1437,16 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 					schedPlayAct:EngTask("TASK_PLAY_SEQUENCE", animation)
 				end*/
 			end
-			if faceEnemy == true then
-				self:SetTurnTarget("Enemy", animTime)
-			end
 			schedPlayAct.IsPlayActivity = true
 			schedPlayAct.CanBeInterrupted = !stopActivities
 			if (customFunc) then customFunc(schedPlayAct, animation) end
 			self:StartSchedule(schedPlayAct)
+			if doRealAnimTime then
+				animTime = self:SequenceDuration(self:GetInternalVariable("m_nIdealSequence"))
+			end
+			if faceEnemy == true then
+				self:SetTurnTarget("Enemy", animTime)
+			end
 		end
 		
 		-- If it has a OnFinish function, then set the timer to run it when it finishes!

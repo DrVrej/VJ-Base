@@ -357,7 +357,7 @@ function ENT:Think()
 				if self.VJC_NPC_CanTurn == true then
 					local turnData = npc.TurnData
 					if turnData.Target != self.VJCE_Bullseye then
-						npc:SetTurnTarget(self.VJCE_Bullseye, -1)
+						npc:SetTurnTarget(self.VJCE_Bullseye, 1)
 					elseif npc:GetActivity() == ACT_IDLE && npc:GetIdealActivity() == ACT_IDLE then -- Check both current act AND ideal act because certain activities only change the current act (Ex: UpdateTurnActivity function)
 						npc:UpdateTurnActivity()
 						if npc:GetIdealActivity() != ACT_IDLE then -- If ideal act is no longer idle, then we have selected a turn activity!
