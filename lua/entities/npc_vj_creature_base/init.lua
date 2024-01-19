@@ -1163,7 +1163,8 @@ function ENT:Initialize()
 				self:MaintainIdleAnimation(true)
 			end
 			-- This is needed as setting "NextThink" to CurTime will cause performance drops, so we set the idle maintain in a separate hook that runs every tick
-			if !hook.GetTable()["Think"][self] then
+			local thinkHook = hook.GetTable()["Think"]
+			if (thinkHook && !thinkHook[self]) or (!thinkHook) then
 				hook.Add("Think", self, function()
 					if VJ_CVAR_AI_ENABLED then
 						self:MaintainIdleAnimation()
@@ -2276,7 +2277,6 @@ function ENT:Think()
 	//if aiEnabled then
 		//self:MaintainIdleAnimation()
 	//end
-	//print(self:GetIdealActivity(), self:GetActivity(), self:GetSequenceName(self:GetSequence()), self:GetSequenceName(self:GetInternalVariable("m_nIdealSequence")), self:IsSequenceFinished(), self:GetInternalVariable("m_bSequenceLoops"), self:GetCycle())
 
 	-- Maintain turning when needed otherwise Engine will take over during movements!
 	-- No longer needed as "OverrideMoveFacing" now handles it!
