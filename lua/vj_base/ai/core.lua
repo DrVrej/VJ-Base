@@ -787,7 +787,7 @@ function ENT:GetAimPosition(target, aimOrigin, predictionRate, projectileSpeed)
 			result.z = result.z - 15
 		end
 		if !self:VisibleVec(result) then
-			result = target:HeadTarget(aimOrigin)
+			result = target:HeadTarget(aimOrigin) or target:EyePos() -- Certain non player/NPC targets will return nil, so just use "EyePos"
 		end
 	else -- If not visible, use the last known position!
 		result = self.EnemyData.LastVisiblePos
