@@ -1257,7 +1257,7 @@ function ENT:Touch(entity)
 			self.TakingCoverT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
 			return
 		end
-	elseif self.DisableTouchFindEnemy == false && !IsValid(self:GetEnemy()) && self.IsFollowing == false && (entity:IsNPC() or entity:IsPlayer()) && self:CheckRelationship(entity) != D_LI then
+	elseif self.DisableTouchFindEnemy == false && !IsValid(self:GetEnemy()) && self.IsFollowing == false && (entity:IsNPC() or entity:IsPlayer()) && self:CheckRelationship(entity) != D_LI && !self:IsBusy() then
 		self:StopMoving()
 		self:SetTarget(entity)
 		self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
@@ -2007,10 +2007,10 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 		if HitgroupInfo != nil then animTbl = HitgroupInfo.Animation end
 		local anim = VJ.PICK(animTbl)
 		local animDur = self.NextMoveAfterFlinchTime == false and self:DecideAnimationLength(anim, false, self.FlinchAnimationDecreaseLengthAmount) or self.NextMoveAfterFlinchTime
-		self:VJ_ACT_PLAYACTIVITY(anim, true, animDur, false, 0, {PlayBackRateCalculated=true})
+		local resultAnim, resultAnimDur = self:VJ_ACT_PLAYACTIVITY(anim, true, animDur, false, 0, {PlayBackRateCalculated=true})
 		timer.Create("timer_act_flinching"..self:EntIndex(), animDur, 1, function() self.Flinching = false end)
 		self:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup)
-		self.NextFlinchT = CurTime() + self.NextFlinchTime
+		self.NextFlinchT = CurTime() + (self.NextFlinchTime == false and resultAnimDur or self.NextFlinchTime)
 	end
 	
 	if math.random(1, self.FlinchChance) == 1 && ((self.CanFlinch == 1) or (self.CanFlinch == 2 && FlinchDamageTypeCheck(self.FlinchDamageTypes, dmginfo:GetDamageType()))) then

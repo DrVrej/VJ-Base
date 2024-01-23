@@ -211,6 +211,7 @@ ENT.FlinchDamageTypes = {DMG_BLAST} -- If it uses damage-based flinching, which 
 ENT.FlinchChance = 16 -- Chance of it flinching from 1 to x | 1 will make it always flinch
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.NextMoveAfterFlinchTime = false -- How much time until it can move, attack, etc.
+	-- To let the base automatically detect the animation duration, set this to false:
 ENT.NextFlinchTime = 5 -- How much time until it can flinch again?
 ENT.AnimTbl_Flinch = {ACT_FLINCH_PHYSICS} -- If it uses normal based animation, use this
 ENT.FlinchAnimationDecreaseLengthAmount = 0 -- This will decrease the time it can move, attack, etc. | Use it to fix animation pauses after it finished the flinch animation
