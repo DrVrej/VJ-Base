@@ -5,7 +5,7 @@
 --------------------------------------------------*/
 AddCSLuaFile()
 
-ENT.Base 			= "base_gmodentity"
+ENT.Base 			= "base_anim"
 ENT.Type 			= "anim"
 ENT.PrintName 		= "Admin Health Kit"
 ENT.Author 			= "DrVrej"
