@@ -59,7 +59,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.FirePlaceOn = false
+ENT.IsOn = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetNW2Bool("VJ_FirePlace_Activated", false)
@@ -73,16 +73,16 @@ function ENT:Initialize()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-	if !self.FirePlaceOn then
+	if !self.IsOn then
 		VJ.STOPSOUND(self.fireLoopSD)
 		self:StopParticles()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Use(activator, caller)
-	if self.FirePlaceOn == false then
+	if self.IsOn == false then
 		self:SetNW2Bool("VJ_FirePlace_Activated", true)
-		self.FirePlaceOn = true
+		self.IsOn = true
 		self:EmitSound("ambient/fire/mtov_flame2.wav", 60, 100)
 		self.fireLoopSD = CreateSound(self, "ambient/fire/fire_small_loop1.wav")
 		self.fireLoopSD:SetSoundLevel(60)
@@ -90,7 +90,7 @@ function ENT:Use(activator, caller)
 		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.fireplace.activated") 
 	else
 		self:SetNW2Bool("VJ_FirePlace_Activated", false)
-		self.FirePlaceOn = false
+		self.IsOn = false
 		self:StopParticles()
 		VJ.STOPSOUND(self.fireLoopSD)
 		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.fireplace.deactivated")
@@ -98,7 +98,7 @@ function ENT:Use(activator, caller)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
-	if IsValid(entity) && entity:GetPos():Distance(self:GetPos()) <= 38 && self.FirePlaceOn && (entity:IsNPC() or entity:IsPlayer()) then
+	if IsValid(entity) && entity:GetPos():Distance(self:GetPos()) <= 38 && self.IsOn && (entity:IsNPC() or entity:IsPlayer()) then
 		entity:Ignite(math.Rand(3, 5))
 	end
 end

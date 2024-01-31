@@ -23,32 +23,28 @@ if CLIENT then
 	language.Add("#obj_vj_flareround", "Flare Round")
 	killicon.Add("#obj_vj_flareround","HUD/killicons/default",Color(255,80,0,255))
 	
-	function ENT:Draw() self:DrawModel() end
+	function ENT:Draw()
+		//self:DrawModel()
+	end
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.IdleSound1 = Sound("weapons/flaregun/burn.wav")
-ENT.TouchSound = Sound("weapons/hegrenade/he_bounce-1.wav")
-ENT.TouchSoundv = 75
-ENT.Decal = "Scorch"
-ENT.AlreadyPaintedDeathDecal = false
-ENT.Dead = false
-ENT.FuseTime = 10
-ENT.NextTouchSound = 0
+ENT.FuseTime = 60
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local colorRed = Color(255, 0, 0)
 local colorTrailRed = Color(155, 0, 0, 150)
 --
 function ENT:Initialize()
-	if self:GetModel() == "models/error.mdl" then self:SetModel("models/items/ar2_grenade.mdl") end
+	self:SetModel("models/items/ar2_grenade.mdl")
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:SetSolid(SOLID_VPHYSICS)
 	self:SetColor(colorRed)
 	self:SetUseType(SIMPLE_USE)
+	self:SetModelScale(0.5)
 
-	-- Physics Functions
+	-- Physics
 	local phys = self:GetPhysicsObject()
 	if IsValid(phys) then
 		phys:Wake()
@@ -56,7 +52,7 @@ function ENT:Initialize()
 		phys:SetBuoyancyRatio(0)
 	end
 
-	-- Misc Functions
+	-- Effects
 	//util.SpriteTrail(self, 0, Color(90,90,90,255), false, 10, 1, 3, 1/(15+1)*0.5, "trails/smoke.vmt")
 	//ParticleEffectAttach("vj_rpg1_smoke", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 	//ParticleEffectAttach("vj_rpg2_smoke2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
@@ -82,20 +78,16 @@ function ENT:Initialize()
 	envFlare:SetKeyValue("Scale","5")
 	envFlare:SetKeyValue("spawnflags","4")
 	envFlare:Spawn()
+	envFlare:Fire("Start", tostring(self.FuseTime))
+	envFlare:SetOwner(self);
+	
 	envFlare:SetColor(colorRed)
 
-	self.CurrentIdleSound = CreateSound(self, self.IdleSound1)
+	self.CurrentIdleSound = CreateSound(self, "weapons/flaregun/burn.wav")
 	self.CurrentIdleSound:SetSoundLevel(60)
 	self.CurrentIdleSound:PlayEx(1, 100)
-
-	local owner = self:GetOwner()
-	if IsValid(owner) && owner.FlareAttackFussTime then
-		timer.Simple(owner.FlareAttackFussTime, function() if IsValid(self) then self:DoDeath() end end)
-	else
-		timer.Simple(60, function() if IsValid(self) then self:DoDeath() end end)
-	end
 	
-	-- Make it drop after in the air for a while
+	-- Make it drop after some time in the air
 	timer.Simple(2, function()
 		if IsValid(self) then
 			phys = self:GetPhysicsObject()
@@ -109,6 +101,13 @@ function ENT:Initialize()
 			end
 		end
 	end)
+	
+	-- Remove after fuse time
+	timer.Simple(self.FuseTime, function()
+		if IsValid(self) then
+			self:Remove()
+		end
+	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Use(activator, caller)
@@ -118,6 +117,7 @@ function ENT:Use(activator, caller)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, physobj)
+	-- Make players and NPCs take damage
 	local hitEnt = data.HitEntity
 	if IsValid(hitEnt) && (hitEnt:IsNPC() or hitEnt:IsPlayer()) then
 		//hitEnt:Ignite(1)
@@ -135,19 +135,7 @@ function ENT:OnTakeDamage(dmginfo)
 	self:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce() * 0.1)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoDeath()
-	self.Dead = true
+function ENT:OnRemove()
 	if self.CurrentIdleSound then self.CurrentIdleSound:Stop() end
 	self:StopParticles()
-	
-	timer.Simple(2, function()
-		if IsValid(self) then
-			self:Remove()
-		end
-	end)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnRemove()
-	self.Dead = true
-	if self.CurrentIdleSound then self.CurrentIdleSound:Stop() end
 end

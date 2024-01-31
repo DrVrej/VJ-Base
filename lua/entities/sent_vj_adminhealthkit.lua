@@ -24,11 +24,11 @@ if CLIENT then
 	function ENT:Draw()
 		self:DrawModel()
 		
-		local angs = self:GetAngles()
-		angs:RotateAroundAxis(angs:Right(), vec.x)
-		angs:RotateAroundAxis(angs:Up(), vec.y)
-		angs:RotateAroundAxis(angs:Forward(), vec.z)
-		cam.Start3D2D(self:GetPos() + self:GetForward()*7 + self:GetUp()*6 + self:GetRight()*2, angs, 0.07)
+		local myAng = self:GetAngles()
+		myAng:RotateAroundAxis(myAng:Right(), vec.x)
+		myAng:RotateAroundAxis(myAng:Up(), vec.y)
+		myAng:RotateAroundAxis(myAng:Forward(), vec.z)
+		cam.Start3D2D(self:GetPos() + self:GetForward()*7 + self:GetUp()*6 + self:GetRight()*2, myAng, 0.07)
 		draw.SimpleText("Admin Health Kit", "DermaLarge", 31, -22, textColor, 1, 1)
 		cam.End3D2D()
 	end

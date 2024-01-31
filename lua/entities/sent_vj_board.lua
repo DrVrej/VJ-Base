@@ -27,12 +27,10 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.Model = {"models/props_debris/wood_board05a.mdl"}
 ENT.StartHealth = 50
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
-	if self:GetModel() == "models/error.mdl" then
-	self:SetModel(Model(VJ.PICK(self.Model))) end
+	self:SetModel("models/props_debris/wood_board05a.mdl")
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:SetSolid(SOLID_VPHYSICS)
