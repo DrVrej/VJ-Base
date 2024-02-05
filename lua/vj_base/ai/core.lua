@@ -358,7 +358,7 @@ end
 function ENT:ResolveAnimation(tbl)
 	-- Returns the current animation if it's found in the table and is not done playing it
 	if self:GetCycle() < 0.99 then
-		local curAnim = self:GetSequenceActivity(self:GetInternalVariable("m_nIdealSequence"))
+		local curAnim = self:GetSequenceActivity(self:GetIdealSequence())
 		for _, v in ipairs(tbl) do
 			if curAnim == v then
 				return v
@@ -383,7 +383,7 @@ function ENT:MaintainIdleAnimation(force)
 	-- Animation cycle needs to be set to 0 to make sure engine does NOT attempt to switch sequence multiple times in this code: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L2987
 	-- "self:IsSequenceFinished()" should NOT be used as it's broken, it returns "true" even though the animation hasn't finished, especially for non-looped animations
 	//bit.band(self:GetSequenceInfo(self:GetSequence()).flags, 1) == 0 -- Checks if animation is none-looping
-	//print(self:GetIdealActivity(), self:GetActivity(), self:GetSequenceName(self:GetSequence()), self:GetSequenceName(self:GetInternalVariable("m_nIdealSequence")), self:IsSequenceFinished(), self:GetInternalVariable("m_bSequenceLoops"), self:GetCycle())
+	//print(self:GetIdealActivity(), self:GetActivity(), self:GetSequenceName(self:GetSequence()), self:GetSequenceName(self:GetIdealSequence()), self:IsSequenceFinished(), self:GetInternalVariable("m_bSequenceLoops"), self:GetCycle())
 	if force then
 		self.CurAnimationSeed = 0
 		self:ResetIdealActivity(ACT_IDLE)
@@ -391,7 +391,7 @@ function ENT:MaintainIdleAnimation(force)
 		self:SetSaveValue("m_bSequenceLoops", false) -- Otherwise it will stutter and play an idle sequence at 999x playback speed for 0.001 second when changing from one idle to another!
 	elseif self:GetIdealActivity() == ACT_IDLE && self:GetActivity() == ACT_IDLE then -- Check both ideal and current to make sure we are 100% playing an idle, otherwise transitions, certain movements, and animations will break!
 		-- If animation has finished OR idle animation has changed then play a new idle!
-		if (self:GetCycle() >= 0.98) or (self:TranslateActivity(ACT_IDLE) != self:GetSequenceActivity(self:GetInternalVariable("m_nIdealSequence"))) then
+		if (self:GetCycle() >= 0.98) or (self:TranslateActivity(ACT_IDLE) != self:GetSequenceActivity(self:GetIdealSequence())) then
 			self.CurAnimationSeed = 0
 			self:ResetIdealActivity(ACT_IDLE)
 			self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L2987
@@ -402,9 +402,9 @@ function ENT:MaintainIdleAnimation(force)
 	end
 	
 	-- Alternative system: Directly sets the translated activity, but has other downsides
-	//if self.CurrentIdleAnimation != self:GetInternalVariable("m_nIdealSequence") or CurTime() > self.NextIdleStandTime then
-		//self.CurrentIdleAnimation = self:GetInternalVariable("m_nIdealSequence")
-		//self.NextIdleStandTime = CurTime() + (self:SequenceDuration(self:GetInternalVariable("m_nIdealSequence")) / self:GetPlaybackRate())
+	//if self.CurrentIdleAnimation != self:GetIdealSequence() or CurTime() > self.NextIdleStandTime then
+		//self.CurrentIdleAnimation = self:GetIdealSequence()
+		//self.NextIdleStandTime = CurTime() + (self:SequenceDuration(self:GetIdealSequence()) / self:GetPlaybackRate())
 		//self:ResetIdealActivity(self:TranslateActivity(ACT_IDLE))
 	//end
 	
@@ -471,7 +471,7 @@ function ENT:MaintainIdleAnimation(force)
 		if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then self:AA_StopMoving() end
 		self.CurAnimationSeed = 0
 		self:ResetIdealActivity(pickedAnim)
-		self.NextIdleStandTime = CurTime() + (self:SequenceDuration(self:GetInternalVariable("m_nIdealSequence")) / self:GetPlaybackRate())
+		self.NextIdleStandTime = CurTime() + (self:SequenceDuration(self:GetIdealSequence()) / self:GetPlaybackRate())
 	//elseif self.CurIdleStandMove && !self:IsSequenceFinished() then
 		//self:AutoMovement(self:GetAnimTimeInterval())
 	end*/
@@ -1341,17 +1341,17 @@ function ENT:Follow(ent, stopIfFollowing)
 		-- Refusal messages
 		if isLiving && self:GetClass() != ent:GetClass() && (self:Disposition(ent) == D_HT or self:Disposition(ent) == D_NU) then -- Check for enemy/neutral
 			if isPly && self.AllowPrintingInChat then
-				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." isn't friendly to you, therefore it won't follow you.")
+				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." isn't friendly so it won't follow you.")
 			end
 			return false, 3
 		elseif self.IsFollowing == true && ent != followData.Ent then -- Already following another entity
 			if isPly && self.AllowPrintingInChat then
-				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is already following another entity, therefore it won't follow you.")
+				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is following another entity so it won't follow you.")
 			end
 			return false, 2
 		elseif self.MovementType == VJ_MOVETYPE_STATIONARY or self.MovementType == VJ_MOVETYPE_PHYSICS then
 			if isPly && self.AllowPrintingInChat then
-				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is currently stationary, therefore it's unable follow you.")
+				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is currently stationary so it can't follow you.")
 			end
 			return false, 1
 		end

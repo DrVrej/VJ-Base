@@ -109,12 +109,12 @@ function ENT:TASK_VJ_PLAY_ACTIVITY(taskStatus, data)
 		if animTime then
 			data.animEndTime = CurTime() + data.duration
 		else
-			data.animEndTime = CurTime() + self:SequenceDuration(self:GetInternalVariable("m_nIdealSequence"))
+			data.animEndTime = CurTime() + self:SequenceDuration(self:GetIdealSequence())
 		end
 		//self:AutoMovement(self:GetAnimTimeInterval()) -- Causes extra walk frame to be applied, especially when switching from movement to animation
 	else
 		//self:AutoMovement(self:GetAnimTimeInterval())
-		if (CurTime() > data.animEndTime) or (self:IsSequenceFinished() && self:GetSequence() == self:GetInternalVariable("m_nIdealSequence")) then
+		if (CurTime() > data.animEndTime) or (self:IsSequenceFinished() && self:GetSequence() == self:GetIdealSequence()) then
 			//print("TASK_VJ_PLAY_ACTIVITY: Stop!")
 			self:TaskComplete()
 			return
@@ -160,7 +160,7 @@ function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 	
 	-- Apply walk frames to both activities and sequences
 	-- Parts of it replicate TASK_PLAY_SEQUENCE - https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc_schedule.cpp#L3312
-	if !self:IsSequenceFinished() && !self:IsMoving() && ((self:GetSequence() == self:GetInternalVariable("m_nIdealSequence")) or (self:GetActivity() == ACT_DO_NOT_DISTURB)) && self:GetSequenceMoveDist(self:GetSequence()) > 0 && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then
+	if !self:IsSequenceFinished() && !self:IsMoving() && ((self:GetSequence() == self:GetIdealSequence()) or (self:GetActivity() == ACT_DO_NOT_DISTURB)) && self:GetSequenceMoveDist(self:GetSequence()) > 0 && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then
 		self:AutoMovement(self:GetAnimTimeInterval())
 	end
 	
@@ -181,7 +181,7 @@ function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 			if self:GetActivity() == moveAct then
 				self:SetMovementActivity(moveAct) -- Force update the movement sequence, aka "m_sequence" in the engine
 				local moveSeq = self:GetMovementSequence()
-				local idealSeq = self:GetInternalVariable("m_nIdealSequence")
+				local idealSeq = self:GetIdealSequence()
 				if moveSeq != idealSeq && self:GetSequenceActivity(moveSeq) != self:GetSequenceActivity(idealSeq) then
 					self:SetSaveValue("m_nIdealSequence", moveSeq)
 				end

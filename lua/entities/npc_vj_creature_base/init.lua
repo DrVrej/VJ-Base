@@ -1444,7 +1444,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 			if (customFunc) then customFunc(schedPlayAct, animation) end
 			self:StartSchedule(schedPlayAct)
 			if doRealAnimTime then
-				animTime = self:SequenceDuration(self:GetInternalVariable("m_nIdealSequence"))
+				animTime = self:SequenceDuration(self:GetIdealSequence())
 			end
 			if faceEnemy == true then
 				self:SetTurnTarget("Enemy", animTime)

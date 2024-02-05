@@ -79,7 +79,7 @@ function ENT:Initialize()
 	envFlare:SetKeyValue("spawnflags","4")
 	envFlare:Spawn()
 	envFlare:Fire("Start", tostring(self.FuseTime))
-	envFlare:SetOwner(self);
+	envFlare:SetOwner(self)
 	
 	envFlare:SetColor(colorRed)
 
