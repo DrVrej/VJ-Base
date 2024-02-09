@@ -54,13 +54,13 @@ ENT.CanTurnWhileStationary = true -- Can the NPC turn while it's stationary?
 	-- Movement: AERIAL --
 ENT.Aerial_FlyingSpeed_Calm = 80 -- The speed it should fly with, when it's wandering, moving slowly, etc. | Basically walking compared to ground SNPCs
 ENT.Aerial_FlyingSpeed_Alerted = 200 -- The speed it should fly with, when it's chasing an enemy, moving away quickly, etc. | Basically running compared to ground SNPCs
-ENT.Aerial_AnimTbl_Calm = {} -- Animations it plays when it's wandering around while idle
-ENT.Aerial_AnimTbl_Alerted = {} -- Animations it plays when it's moving while alerted
+ENT.Aerial_AnimTbl_Calm = ACT_FLY -- Flying animations to play while idle | Equivalent to "walking" | Unlike other movements, sequences are allowed!
+ENT.Aerial_AnimTbl_Alerted = ACT_FLY -- Flying animations to play while alert | Equivalent to "Running" | Unlike other movements, sequences are allowed!
 	-- Movement: AQUATIC --
 ENT.Aquatic_SwimmingSpeed_Calm = 80 -- The speed it should swim with, when it's wandering, moving slowly, etc. | Basically walking compared to ground SNPCs
 ENT.Aquatic_SwimmingSpeed_Alerted = 200 -- The speed it should swim with, when it's chasing an enemy, moving away quickly, etc. | Basically running compared to ground SNPCs
-ENT.Aquatic_AnimTbl_Calm = {} -- Animations it plays when it's wandering around while idle
-ENT.Aquatic_AnimTbl_Alerted = {} -- Animations it plays when it's moving while alerted
+ENT.Aquatic_AnimTbl_Calm = ACT_SWIM -- Swimming animations to play while idle | Equivalent to "walking" | Unlike other movements, sequences are allowed!
+ENT.Aquatic_AnimTbl_Alerted = ACT_SWIM -- Swimming animations to play while alert | Equivalent to "Running" | Unlike other movements, sequences are allowed!
 	-- Movement: AERIAL & AQUATIC --
 ENT.AA_GroundLimit = 100 -- If the NPC's distance from itself to the ground is less than this, it will attempt to move up
 ENT.AA_MinWanderDist = 150 -- Minimum distance that the NPC should go to when wandering
