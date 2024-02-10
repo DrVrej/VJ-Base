@@ -352,7 +352,11 @@ end
 	Internal function, handles the movement animations
 -----------------------------------------------------------]]
 function ENT:AA_MoveAnimation()
-	if self:GetSequence() != self.AA_CurrentMoveAnimation && self:BusyWithActivity() == false && CurTime() > self.AA_NextMovementAnimTime then
+	-- NOTE: Unique condition used for directional flying animations in TranslateActivity:
+		--  if "self.AA_CurrentMoveAnimation" is current sequence AND current activity is not a sequence AND translated activity does not equal current sequence's activity
+	local curSeq = self:GetSequence()
+	local curACT = self:GetActivity()
+	if (CurTime() > self.AA_NextMovementAnimTime) or ((curSeq != self.AA_CurrentMoveAnimation or (curACT != ACT_DO_NOT_DISTURB && self:GetSequenceActivity(curSeq) != self:TranslateActivity(curACT))) && !self:BusyWithActivity()) then
 		local animTbl = {}
 		if self.AA_CurrentMoveAnimationType == "Calm" then
 			animTbl = (self.MovementType == VJ_MOVETYPE_AQUATIC and self.Aquatic_AnimTbl_Calm) or self.Aerial_AnimTbl_Calm

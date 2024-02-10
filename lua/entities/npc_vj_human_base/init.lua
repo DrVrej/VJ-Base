@@ -688,7 +688,12 @@ function ENT:CustomOnTouch(ent) end
 -- function ENT:CustomOnAcceptInput(key, activator, caller, data) print("OnAcceptInput", key, activator, caller, data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE
--- function ENT:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions) print("OnHandleAnimEvent", ev, evTime, evCycle, evType, evOptions) end
+-- local getEventName = util.GetAnimEventNameByID
+-- --
+-- function ENT:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions)
+-- 	local eventName = getEventName(ev)
+-- 	print("OnHandleAnimEvent", getEventName(ev), ev, evTime, evCycle, evType, evOptions)
+-- end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Called whenever the NPC begins following or stops following an entity

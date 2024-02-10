@@ -243,6 +243,10 @@ SWEP.NPC_AnimationSet = VJ.ANIM_SET_CUSTOM
 SWEP.NPC_SecondaryFireNextT = 0
 SWEP.LastOwner = NULL
 SWEP.InitTime = 0 -- Holds the CurTime that it was spawned at, used to make sure spawned weapons can be given to the player without needing to press USE on it
+
+local cv_muszzleflash = GetConVar("vj_wep_nomuszzleflash")
+local cv_dynamiclight = GetConVar("vj_wep_nomuszzleflash_dynamiclight")
+local cv_bulletshells = GetConVar("vj_wep_nobulletshells")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	-- Basically if someone is retrieving "VJ_CurBulletPos" using NW, it will convert it to NW2 otherwise it just runs the regular code
@@ -640,7 +644,7 @@ function SWEP:PrimaryAttack(UseAlt)
 				end
 			owner:FireBullets(bullet)
 		end
-		if GetConVar("vj_wep_nomuszzleflash"):GetInt() == 0 then owner:MuzzleFlash() end
+		if cv_muszzleflash:GetInt() == 0 then owner:MuzzleFlash() end
 	end
 	
 	if !self.IsMeleeWeapon then -- Melee weapons shouldn't consume ammo!
@@ -704,7 +708,7 @@ function SWEP:PrimaryAttackEffects(owner)
 	if self:CustomOnPrimaryAttackEffects(owner) != true or self.IsMeleeWeapon == true then return end
 	owner = owner or self:GetOwner()
 	
-	if GetConVar("vj_wep_nomuszzleflash"):GetInt() == 0 then
+	if cv_muszzleflash:GetInt() == 0 then
 		-- MUZZLE FLASH
 		if self.PrimaryEffects_MuzzleFlash == true then
 			local muzzleAttach = self.PrimaryEffects_MuzzleAttachment
@@ -730,7 +734,7 @@ function SWEP:PrimaryAttackEffects(owner)
 		end
 		
 		-- MUZZLE DYNAMIC LIGHT
-		if SERVER && self.PrimaryEffects_SpawnDynamicLight == true && GetConVar("vj_wep_nomuszzleflash_dynamiclight"):GetInt() == 0 then
+		if SERVER && self.PrimaryEffects_SpawnDynamicLight == true && cv_dynamiclight:GetInt() == 0 then
 			local muzzleLight = ents.Create("light_dynamic")
 			muzzleLight:SetKeyValue("brightness", self.PrimaryEffects_DynamicLightBrightness)
 			muzzleLight:SetKeyValue("distance", self.PrimaryEffects_DynamicLightDistance)
@@ -747,7 +751,7 @@ function SWEP:PrimaryAttackEffects(owner)
 	end
 
 	-- SHELL CASING
-	if !owner:IsPlayer() && self.PrimaryEffects_SpawnShells == true && GetConVar("vj_wep_nobulletshells"):GetInt() == 0 then
+	if !owner:IsPlayer() && self.PrimaryEffects_SpawnShells == true && cv_bulletshells:GetInt() == 0 then
 		local shellAttach = self.PrimaryEffects_ShellAttachment
 		if !isnumber(shellAttach) then shellAttach = self:LookupAttachment(shellAttach) end
 		shellAttach = self:GetAttachment(shellAttach)
@@ -767,11 +771,11 @@ function SWEP:FireAnimationEvent(pos, ang, event, options)
 	
 	if (event == 22 or event == 6001) then return true end
 	
-	if GetConVar("vj_wep_nomuszzleflash"):GetInt() == 1 && (event == 21 or event == 22 or event == 5001 or event == 5003) then
+	if cv_muszzleflash:GetInt() == 1 && (event == 21 or event == 22 or event == 5001 or event == 5003) then
 		return true
 	end
 
-	if GetConVar("vj_wep_nobulletshells"):GetInt() == 1 && event == 20 then
+	if cv_bulletshells:GetInt() == 1 && event == 20 then
 		return true
 	end
 end
