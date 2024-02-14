@@ -17,7 +17,7 @@ ENT.Category		= "VJ Base"
 ENT.Spawnable = true
 ENT.AdminOnly = false
 
-ENT.VJTag_ID_Prop = true
+ENT.VJTag_IsAttackable = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	function ENT:Draw()

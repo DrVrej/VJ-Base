@@ -49,25 +49,16 @@ VJ.NPC_WEP_INVENTORY_ANTI_ARMOR	= 4 -- Currently using its anti-armor weapon
 
 -- Model animation set
 VJ.ANIM_SET_NONE				= 0 -- No model animation set detected (Default)
-VJ.ANIM_SET_COMBINE				= 1 -- Current model's animation set is combine
-VJ.ANIM_SET_METROCOP			= 2 -- Current model's animation set is metrocop
-VJ.ANIM_SET_REBEL				= 3 -- Current model's animation set is citizen / rebel
-VJ.ANIM_SET_PLAYER				= 4 -- Current model's animation set is player
+VJ.ANIM_SET_COMBINE				= 1 -- Current model's animation set is HL2 combine
+VJ.ANIM_SET_METROCOP			= 2 -- Current model's animation set is HL2 metrocop
+VJ.ANIM_SET_REBEL				= 3 -- Current model's animation set is HL2 citizen / rebel
+VJ.ANIM_SET_PLAYER				= 4 -- Current model's animation set is default player
 VJ.ANIM_SET_CUSTOM				= 10 -- Use this when defining a custom model set
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Tags / Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*
 [Variable]						[Type]		[Description]
-
--- Activities & Behaviors
-VJTag_IsPickupable				bool		Entity can be picked up by NPCs (Ex: Grenades)
-VJTag_IsPickedUp				bool		Entity that is currently picked up by an NPC and most likely throwing it away (Ex: Grenades)
-VJTag_PickedUpOrgMoveType		enum		Entity's original move type before being picked up, usually set alongside "VJTag_IsPickedUp"
-VJTag_IsHealing					bool		Entity is healing (either itself or by another entity)
-VJTag_IsEating					bool		Entity is eating something (Ex: a corpse)
-VJTag_IsBeingEaten				bool		Entity is being eaten by something
-VJTag_IsBaseFriendly			bool		Friendly to VJ NPCs
 
 -- Base types
 IsVJBaseSNPC					bool
@@ -82,9 +73,19 @@ IsVJBaseBoneFollower			bool
 IsVJBaseBullseye				bool
 IsVJBaseEdited					bool		This entity's meta table has been edited by VJ Base
 
+-- Activities & Behaviors
+VJTag_IsAttackable				bool		Entity is an object that should be attacked or pushed by NPCs in certain cases (Ex: Object is in the way while chasing)
+VJTag_IsDamageable				bool		Entity is an object that should be damaged by attacks, projectiles, etc. (Ex: An object in the crossfire of a melee attack)
+VJTag_IsPickupable				bool		Entity can be picked up by NPCs (Ex: Grenades)
+VJTag_IsPickedUp				bool		Entity that is currently picked up by an NPC and most likely throwing it away (Ex: Grenades)
+VJTag_PickedUpOrgMoveType		enum		Entity's original move type before being picked up, usually set alongside "VJTag_IsPickedUp"
+VJTag_IsHealing					bool		Entity is healing (either itself or by another entity)
+VJTag_IsEating					bool		Entity is eating something (Ex: a corpse)
+VJTag_IsBeingEaten				bool		Entity is being eaten by something
+VJTag_IsBaseFriendly			bool		Friendly to all VJ NPCs
+
 -- Identifiers
 VJ_IsHugeMonster				bool		NPC is considered to be very large and/or a boss
-VJTag_ID_Prop					bool		Entity is considered a prop and can be attacked/pushed by NPCs
 VJTag_ID_Danger					bool		Entity is dangerous and should be detected as a regular danger by NPCs
 VJTag_ID_Grenade				bool		Entity is a grenade type and should be detected as a grenade danger by NPCs
 VJTag_ID_Headcrab				bool

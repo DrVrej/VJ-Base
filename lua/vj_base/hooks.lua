@@ -57,21 +57,22 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local NPCTbl_Resistance = {npc_magnusson=true,npc_vortigaunt=true,npc_mossman=true,npc_monk=true,npc_kleiner=true,npc_fisherman=true,npc_eli=true,npc_dog=true,npc_barney=true,npc_alyx=true,npc_citizen=true,monster_scientist=true,monster_barney=true}
-
-local ignoreEnts = {monster_generic=true, monster_furniture=true, npc_furniture=true, monster_gman=true, npc_grenade_frag=true, bullseye_strider_focus=true, npc_bullseye=true, npc_enemyfinder=true, hornet=true}
-local grenadeEnts = {npc_grenade_frag=true,grenade_hand=true,obj_spore=true,obj_grenade=true,obj_handgrenade=true,doom3_grenade=true,fas2_thrown_m67=true,cw_grenade_thrown=true,obj_cpt_grenade=true,cw_flash_thrown=true,ent_hl1_grenade=true}
-local grenadeThrowBackEnts = {npc_grenade_frag=true,obj_spore=true,obj_handgrenade=true,obj_cpt_grenade=true,cw_grenade_thrown=true,cw_flash_thrown=true,cw_smoke_thrown=true,ent_hl1_grenade=true}
+local resistanceNPCs = {npc_magnusson = true, npc_vortigaunt = true, npc_mossman = true, npc_monk = true, npc_kleiner = true, npc_fisherman = true, npc_eli = true, npc_dog = true, npc_barney = true, npc_alyx = true, npc_citizen = true, monster_scientist = true, monster_barney = true}
+local ignoredNPCs = {monster_generic = true,  monster_furniture = true,  npc_furniture = true,  monster_gman = true,  npc_grenade_frag = true,  bullseye_strider_focus = true,  npc_bullseye = true,  npc_enemyfinder = true,  hornet = true}
+local grenadeEnts = {npc_grenade_frag = true, grenade_hand = true, obj_spore = true, obj_grenade = true, obj_handgrenade = true, doom3_grenade = true, fas2_thrown_m67 = true, cw_grenade_thrown = true, obj_cpt_grenade = true, cw_flash_thrown = true, ent_hl1_grenade = true}
+local grenadeThrowBackEnts = {npc_grenade_frag = true, obj_spore = true, obj_handgrenade = true, obj_cpt_grenade = true, cw_grenade_thrown = true, cw_flash_thrown = true, cw_smoke_thrown = true, ent_hl1_grenade = true}
+local attackableEnts = {prop_physics = true, prop_physics_multiplayer = true, prop_physics_respawnable = true, func_breakable = true, func_physbox = true, prop_door_rotating = true}
+local damageableEnts = {func_breakable_surf = true, sent_sakariashelicopter = true}
 --
 hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 	local entClass = ent:GetClass()
-	if SERVER && ent:IsNPC() && !ignoreEnts[entClass] then
+	if SERVER && ent:IsNPC() && !ignoredNPCs[entClass] then
 		local isVJ = ent.IsVJBaseSNPC
 		if isVJ then
 			ent.NextProcessT = CurTime() + math.Rand(0.15, 1)
 		else
 			-- Set the tags for default player allies
-			if NPCTbl_Resistance[entClass] then
+			if resistanceNPCs[entClass] then
 				ent.PlayerFriendly = true
 				ent.FriendsWithAllPlayerAllies = true
 			end
@@ -85,7 +86,7 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 				local isPossibleEnemy = ((ent:IsNPC() && ent:Health() > 0 && (ent.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) or (ent:IsPlayer()))
 				for x = 1, #entsTbl do
 					local v = entsTbl[x]
-					if (v:IsNPC() or v:IsPlayer()) && !ignoreEnts[v:GetClass()] then
+					if (v:IsNPC() or v:IsPlayer()) && !ignoredNPCs[v:GetClass()] then
 						-- Add enemies to the created entity (if it's a VJ Base SNPC)
 						if isVJ == true then
 							ent:EntitiesToNoCollideCode(v)
@@ -109,6 +110,12 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 		if grenadeThrowBackEnts[entClass] then
 			ent.VJTag_IsPickupable = true
 		end
+	end
+	if attackableEnts[entClass] then
+		ent.VJTag_IsAttackable = true
+	end
+	if damageableEnts[entClass] or ent.LVS or ent.IsScar then -- Aside from specific table, supports: LVS, Simfphys, SCars
+		ent.VJTag_IsDamageable = true
 	end
 end)
 

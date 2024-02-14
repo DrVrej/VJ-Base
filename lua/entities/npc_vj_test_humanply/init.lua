@@ -25,11 +25,11 @@ ENT.WeaponInventory_MeleeList = {"weapon_vj_crowbar"}
 ENT.HasGrenadeAttack = true
 ENT.TimeUntilGrenadeIsReleased = 0.85 -- Time until the grenade is released
 ENT.GrenadeAttackModel = "models/weapons/w_npcnade.mdl"
-ENT.AnimTbl_GrenadeAttack = {"vjges_gesture_item_throw"}
+ENT.AnimTbl_GrenadeAttack = "vjges_gesture_item_throw"
 
-ENT.AnimTbl_Medic_GiveHealth = {"vjges_gesture_item_drop"}
+ENT.AnimTbl_Medic_GiveHealth = "vjges_gesture_item_drop"
 ENT.AnimTbl_CallForHelp = {"vjges_gesture_signal_group","vjges_gesture_signal_forward"}
-ENT.CallForBackUpOnDamageAnimation = {"vjges_gesture_signal_halt"}
+ENT.CallForBackUpOnDamageAnimation = "vjges_gesture_signal_halt"
 ENT.WaitForEnemyToComeOut = false
 
 ENT.FootStepTimeRun = 0.3

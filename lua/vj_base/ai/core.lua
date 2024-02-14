@@ -1452,7 +1452,7 @@ function ENT:MaintainMedicBehavior()
 			-- Handle the heal time and animation
 			local timeUntilHeal = self.Medic_TimeUntilHeal
 			if !self.Medic_DisableAnimation then
-				local _, animTime = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_Medic_GiveHealth, true, self.Medic_TimeUntilHeal or false)
+				local _, animTime = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_Medic_GiveHealth, true, timeUntilHeal or false)
 				timeUntilHeal = animTime
 			end
 			
