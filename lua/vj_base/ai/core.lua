@@ -2007,7 +2007,7 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 		if HitgroupInfo != nil then animTbl = HitgroupInfo.Animation end
 		local anim = VJ.PICK(animTbl)
 		local animDur = self.NextMoveAfterFlinchTime == false and self:DecideAnimationLength(anim, false, self.FlinchAnimationDecreaseLengthAmount) or self.NextMoveAfterFlinchTime
-		local resultAnim, resultAnimDur = self:VJ_ACT_PLAYACTIVITY(anim, true, animDur, false, 0, {PlayBackRateCalculated=true})
+		local _, resultAnimDur = self:VJ_ACT_PLAYACTIVITY(anim, true, animDur, false, 0, {PlayBackRateCalculated=true})
 		timer.Create("timer_act_flinching"..self:EntIndex(), animDur, 1, function() self.Flinching = false end)
 		self:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup)
 		self.NextFlinchT = CurTime() + (self.NextFlinchTime == false and resultAnimDur or self.NextFlinchTime)

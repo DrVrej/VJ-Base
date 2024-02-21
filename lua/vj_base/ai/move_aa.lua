@@ -227,7 +227,10 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 		if extraOptions.FaceDestTarget == true then
 			self:SetTurnTarget((chaseEnemy && self.CanTurnWhileMoving) and "Enemy" or dest, velTime)
 		else
-			self:SetTurnTarget(finalPos, velTime)
+			-- Offset the arrival position so it does NOT turn 180 degrees back from where it traveled from
+			local offsetFacing = finalPos + (finalPos - self:GetPos()):GetNormalized() * (self.AA_CurrentMoveMaxSpeed / 50)
+			offsetFacing.z = finalPos.z
+			self:SetTurnTarget(offsetFacing, velTime)
 		end
 		//self.AA_CurrentTurnAng = chaseEnemy and false or self:GetFaceAngle(self:GetFaceAngle((velPos):Angle()))
 	end
@@ -351,20 +354,24 @@ end
 --[[---------------------------------------------------------
 	Internal function, handles the movement animations
 -----------------------------------------------------------]]
+-- Activities that should be played as sequences otherwise the engine will override it and set it back to idle | Issue: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L3050
+local badACTs = {[ACT_WALK] = true, [ACT_WALK_AIM] = true, [ACT_RUN] = true, [ACT_RUN_AIM] = true}
+--
 function ENT:AA_MoveAnimation()
 	-- NOTE: Unique condition used for directional flying animations in TranslateActivity:
 		--  if "self.AA_CurrentMoveAnimation" is current sequence AND current activity is not a sequence AND translated activity does not equal current sequence's activity
 	local curSeq = self:GetSequence()
 	local curACT = self:GetActivity()
 	if ((CurTime() > self.AA_NextMovementAnimTime) or (curSeq != self.AA_CurrentMoveAnimation or (curACT != ACT_DO_NOT_DISTURB && self:GetSequenceActivity(curSeq) != self:TranslateActivity(curACT)))) && !self:BusyWithActivity() then
-		local animTbl = {}
+		local chosenAnim = false
 		if self.AA_CurrentMoveAnimationType == "Calm" then
-			animTbl = (self.MovementType == VJ_MOVETYPE_AQUATIC and self.Aquatic_AnimTbl_Calm) or self.Aerial_AnimTbl_Calm
+			chosenAnim = (self.MovementType == VJ_MOVETYPE_AQUATIC and self.Aquatic_AnimTbl_Calm) or self.Aerial_AnimTbl_Calm
 		elseif self.AA_CurrentMoveAnimationType == "Alert" then
-			animTbl = (self.MovementType == VJ_MOVETYPE_AQUATIC and self.Aquatic_AnimTbl_Alerted) or self.Aerial_AnimTbl_Alerted
+			chosenAnim = (self.MovementType == VJ_MOVETYPE_AQUATIC and self.Aquatic_AnimTbl_Alerted) or self.Aerial_AnimTbl_Alerted
 		end
-		local _, animDur = self:VJ_ACT_PLAYACTIVITY(VJ.PICK(animTbl), false, 0, false, 0) // {AlwaysUseSequence = true}
-		self.AA_CurrentMoveAnimation = self:GetIdealSequence() -- In case we played a non-sequence
+		chosenAnim = VJ.PICK(chosenAnim)
+		local _, animDur = self:VJ_ACT_PLAYACTIVITY(chosenAnim, false, 0, false, 0, {AlwaysUseSequence = badACTs[chosenAnim] or false})
+		self.AA_CurrentMoveAnimation = self:GetActivity() == ACT_DO_NOT_DISTURB and self:GetSequence() or self:GetIdealSequence() -- In case we played a non-sequence
 		self.AA_NextMovementAnimTime = CurTime() + animDur -- animDur will always be accurate
 	end
 end
