@@ -1836,33 +1836,37 @@ function ENT:MaintainRelationships()
 	//return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Checks allies around the NPC and call them to come to help the NPC
+		- dist = How far to check for allies | DEFAULT: 800
+-----------------------------------------------------------]]
 function ENT:Allies_CallHelp(dist)
-	if !self.CallForHelp or self.AttackType == VJ.ATTACK_TYPE_GRENADE then return false end
-	local entsTbl = ents.FindInSphere(self:GetPos(), dist)
-	if (!entsTbl) then return false end
+	if !self.CallForHelp or self.AttackType == VJ.ATTACK_TYPE_GRENADE then return end
 	local myClass = self:GetClass()
-	for _,v in ipairs(entsTbl) do
-		if v:IsNPC() && v != self && v.IsVJBaseSNPC && VJ.IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE /*&& v.IsFollowing == false*/ && !v.VJ_IsBeingControlled && (!v.IsVJBaseSNPC_Tank) && v.CallForHelp then
+	local curTime = CurTime()
+	for _, v in ipairs(ents.FindInSphere(self:GetPos(), dist or 800)) do
+		if v != self && v:IsNPC() && v.IsVJBaseSNPC && VJ.IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !v.VJ_IsBeingControlled && (!v.IsVJBaseSNPC_Tank) && v.CallForHelp then
 			local ene = self:GetEnemy()
 			if IsValid(ene) then
-				if v:GetPos():Distance(ene:GetPos()) > v:GetMaxLookDistance() then continue end -- Enemy to far away for ally, discontinue!
+				local eneIsPlayer = ene:IsPlayer()
+				if v:GetPos():Distance(ene:GetPos()) > v:GetMaxLookDistance() then continue end -- Enemy too far away for ally, discontinue!
 				//if v:CheckRelationship(ene) == D_HT then
-				if !IsValid(v:GetEnemy()) && ((!ene:IsPlayer() && v:Disposition(ene) != D_LI) or (ene:IsPlayer())) then
+				if !IsValid(v:GetEnemy()) && ((!eneIsPlayer && v:Disposition(ene) != D_LI) or (eneIsPlayer)) then
 					if v.IsGuard == true && !v:Visible(ene) then continue end -- If it's guarding and enemy is not visible, then don't call!
 					self:CustomOnCallForHelp(v)
 					self:PlaySoundSystem("CallForHelp")
 					-- Play the animation
-					if self.HasCallForHelpAnimation == true && CurTime() > self.NextCallForHelpAnimationT then
-						local pickanim = VJ.PICK(self.AnimTbl_CallForHelp)
-						self:VJ_ACT_PLAYACTIVITY(pickanim, self.CallForHelpStopAnimations, self:DecideAnimationLength(pickanim, self.CallForHelpStopAnimationsTime), self.CallForHelpAnimationFaceEnemy, self.CallForHelpAnimationDelay, {PlayBackRate=self.CallForHelpAnimationPlayBackRate, PlayBackRateCalculated=true})
-						self.NextCallForHelpAnimationT = CurTime() + self.NextCallForHelpAnimationTime
+					if self.HasCallForHelpAnimation && curTime > self.NextCallForHelpAnimationT then
+						local anim = VJ.PICK(self.AnimTbl_CallForHelp)
+						self:VJ_ACT_PLAYACTIVITY(anim, self.CallForHelpStopAnimations, self:DecideAnimationLength(anim, self.CallForHelpStopAnimationsTime), self.CallForHelpAnimationFaceEnemy, self.CallForHelpAnimationDelay, {PlayBackRate=self.CallForHelpAnimationPlayBackRate, PlayBackRateCalculated=true})
+						self.NextCallForHelpAnimationT = curTime + self.NextCallForHelpAnimationTime
 					end
 					-- If the enemy is a player and the ally is player-friendly then make that player an enemy to the ally
-					if ene:IsPlayer() && v.PlayerFriendly == true then
+					if eneIsPlayer && v.PlayerFriendly == true then
 						v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy + 1] = ene
 					end
 					v:VJ_DoSetEnemy(ene, true)
-					if CurTime() > v.NextChaseTime then
+					if curTime > v.NextChaseTime then
 						if v.Behavior != VJ_BEHAVIOR_PASSIVE && v:Visible(ene) then
 							v:SetTarget(ene)
 							v:VJ_TASK_FACE_X("TASK_FACE_TARGET")
@@ -1877,45 +1881,59 @@ function ENT:Allies_CallHelp(dist)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Checks allies around the NPC and return all of them as a table
+		- dist = How far to check for allies | DEFAULT: 800
+	Returns
+		- false, Failed to find any allies
+		- Table, table of allies it found
+-----------------------------------------------------------]]
 function ENT:Allies_Check(dist)
-	dist = dist or 800 -- How far can it check for allies
-	local entsTbl = ents.FindInSphere(self:GetPos(), dist)
-	if (!entsTbl) then return false end
-	local FoundAlliesTbl = {}
-	local it = 0
-	for _, v in ipairs(entsTbl) do
-		if VJ.IsAlive(v) == true && v:IsNPC() && v != self && (v:GetClass() == self:GetClass() or (v:Disposition(self) == D_LI or v.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
-			if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
+	local allies = {}
+	local alliesNum = 0
+	local isPassive = self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE
+	local myClass = self:GetClass()
+	for _, v in ipairs(ents.FindInSphere(self:GetPos(), dist or 800)) do
+		if v != self && v:IsNPC() && v.IsVJBaseSNPC && VJ.IsAlive(v) && (v:GetClass() == myClass or (v:Disposition(self) == D_LI or v.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
+			if isPassive then
 				if v.Behavior == VJ_BEHAVIOR_PASSIVE or v.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
-					it = it + 1
-					FoundAlliesTbl[it] = v
+					alliesNum = alliesNum + 1
+					allies[alliesNum] = v
 				end
 			else
-				it = it + 1
-				FoundAlliesTbl[it] = v
+				alliesNum = alliesNum + 1
+				allies[alliesNum] = v
 			end
 		end
 	end
-	if it > 0 then
-		return FoundAlliesTbl
-	else
-		return false
-	end
+	return alliesNum > 0 and allies or false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Checks allies around the NPC and brings them to the NPC
+		- formType = Type of formation the allies should do | DEFAULT: "Random"
+			- Types: "Random" | "Diamond"
+		- dist = How far to check for allies | DEFAULT: 800
+		- entsTbl = Pass in a table of entities to use, otherwise it will run a sphere check | DEFAULT: Sphere check
+		- limit = How many allies can it bring? | DEFAULT: 3
+			- 0 = Unlimited
+		- onlyVis = Should it only allow allies that are visible? | DEFAULT: false
+	Returns
+		- false, Failed to find any allies
+		- true, Number of allies surpassed or reached the limit
+		- nil, Allies found but within the limit
+-----------------------------------------------------------]]
 function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
-	formType = formType or "Random" -- Formation type: "Random" || "Diamond"
-	dist = dist or 800 -- How far can it check for allies
-	entsTbl = entsTbl or ents.FindInSphere(self:GetPos(), dist)
-	limit = limit or 3 -- Setting to 0 will automatically become 1
-	onlyVis = onlyVis or false -- Check only entities that are visible
-	if (!entsTbl) then return false end
+	local myPos = self:GetPos()
+	formType = formType or "Random"
+	dist = dist or 800
+	limit = limit or 3
 	local myClass = self:GetClass()
 	local it = 0
-	for _, v in ipairs(entsTbl) do
-		if VJ.IsAlive(v) == true && v:IsNPC() && v != self && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && v.IsFollowing == false && v.VJ_IsBeingControlled == false && !v.IsGuard && (!v.IsVJBaseSNPC_Tank) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
-			if onlyVis == true && !v:Visible(self) then continue end
-			if !IsValid(v:GetEnemy()) && self:GetPos():Distance(v:GetPos()) < dist then
+	for _, v in ipairs(entsTbl or ents.FindInSphere(myPos, dist)) do
+		if v != self && v:IsNPC() && v.IsVJBaseSNPC && VJ.IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && v.IsFollowing == false && v.VJ_IsBeingControlled == false && !v.IsGuard && (!v.IsVJBaseSNPC_Tank) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
+			if onlyVis && !v:Visible(self) then continue end
+			if !IsValid(v:GetEnemy()) && myPos:Distance(v:GetPos()) < dist then
 				self.NextWanderTime = CurTime() + 8
 				v.NextWanderTime = CurTime() + 8
 				it = it + 1
@@ -1923,19 +1941,19 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 				if formType == "Random" then
 					local randPos = math.random(1, 4)
 					if randPos == 1 then
-						v:SetLastPosition(self:GetPos() + self:GetRight()*math.random(20, 50))
+						v:SetLastPosition(myPos + self:GetRight()*math.random(20, 50))
 					elseif randPos == 2 then
-						v:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-20, -50))
+						v:SetLastPosition(myPos + self:GetRight()*math.random(-20, -50))
 					elseif randPos == 3 then
-						v:SetLastPosition(self:GetPos() + self:GetForward()*math.random(20, 50))
+						v:SetLastPosition(myPos + self:GetForward()*math.random(20, 50))
 					elseif randPos == 4 then
-						v:SetLastPosition(self:GetPos() + self:GetForward()*math.random(-20, -50))
+						v:SetLastPosition(myPos + self:GetForward()*math.random(-20, -50))
 					end
 				elseif formType == "Diamond" then
 					v:DoGroupFormation("Diamond", self, it)
 				end
 				-- Move type
-				if v.IsVJBaseSNPC_Human == true && !IsValid(v:GetActiveWeapon()) then
+				if v.IsVJBaseSNPC_Human && !IsValid(v:GetActiveWeapon()) then
 					v:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
 				else
 					v:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH", function(x) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)

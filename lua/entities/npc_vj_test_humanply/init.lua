@@ -15,7 +15,7 @@ ENT.VJ_NPC_Class = {"CLASS_PLAYER_ALLY"}
 ENT.FriendsWithAllPlayerAllies = true
 
 ENT.HasMeleeAttack = true
-ENT.AnimTbl_MeleeAttack = {"vjseq_seq_meleeattack01"}
+ENT.AnimTbl_MeleeAttack = "vjseq_seq_meleeattack01"
 
 ENT.WeaponInventory_AntiArmor = true
 ENT.WeaponInventory_AntiArmorList = {"weapon_vj_rpg"}
@@ -28,7 +28,7 @@ ENT.GrenadeAttackModel = "models/weapons/w_npcnade.mdl"
 ENT.AnimTbl_GrenadeAttack = "vjges_gesture_item_throw"
 
 ENT.AnimTbl_Medic_GiveHealth = "vjges_gesture_item_drop"
-ENT.AnimTbl_CallForHelp = {"vjges_gesture_signal_group","vjges_gesture_signal_forward"}
+ENT.AnimTbl_CallForHelp = {"vjges_gesture_signal_group", "vjges_gesture_signal_forward"}
 ENT.CallForBackUpOnDamageAnimation = "vjges_gesture_signal_halt"
 ENT.WaitForEnemyToComeOut = false
 
@@ -37,17 +37,17 @@ ENT.FootStepTimeWalk = 0.5
 
 ENT.CanFlinch = 1
 ENT.NextFlinchTime = 1
-ENT.AnimTbl_Flinch = {"vjges_flinch_01","vjges_flinch_02"}
+ENT.AnimTbl_Flinch = {"vjges_flinch_01", "vjges_flinch_02"}
 ENT.HitGroupFlinching_Values = {
-	{HitGroup = {HITGROUP_HEAD}, Animation = {"vjges_flinch_head_01","vjges_flinch_head_02"}},
-	{HitGroup = {HITGROUP_CHEST}, Animation = {"vjges_flinch_phys_01","vjges_flinch_phys_02","vjges_flinch_back_01"}},
-	{HitGroup = {HITGROUP_STOMACH}, Animation = {"vjges_flinch_stomach_01","vjges_flinch_stomach_02"}},
+	{HitGroup = {HITGROUP_HEAD}, Animation = {"vjges_flinch_head_01", "vjges_flinch_head_02"}},
+	{HitGroup = {HITGROUP_CHEST}, Animation = {"vjges_flinch_phys_01", "vjges_flinch_phys_02", "vjges_flinch_back_01"}},
+	{HitGroup = {HITGROUP_STOMACH}, Animation = {"vjges_flinch_stomach_01", "vjges_flinch_stomach_02"}},
 	{HitGroup = {HITGROUP_LEFTARM}, Animation = {"vjges_flinch_shoulder_l"}},
 	{HitGroup = {HITGROUP_RIGHTARM}, Animation = {"vjges_flinch_shoulder_r"}}
 }
 
 ENT.HasDeathAnimation = true
-ENT.AnimTbl_Death = {"vjseq_death_02","vjseq_death_03","vjseq_death_04"}
+ENT.AnimTbl_Death = {"vjseq_death_02", "vjseq_death_03", "vjseq_death_04"}
 ENT.DeathAnimationChance = 2
 
 ENT.SoundTbl_FootStep = {"npc/footsteps/hardboot_generic1.wav","npc/footsteps/hardboot_generic2.wav","npc/footsteps/hardboot_generic3.wav","npc/footsteps/hardboot_generic4.wav","npc/footsteps/hardboot_generic5.wav","npc/footsteps/hardboot_generic6.wav","npc/footsteps/hardboot_generic8.wav"}
