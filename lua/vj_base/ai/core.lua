@@ -1851,7 +1851,7 @@ function ENT:Allies_CallHelp(dist)
 				local eneIsPlayer = ene:IsPlayer()
 				if v:GetPos():Distance(ene:GetPos()) > v:GetMaxLookDistance() then continue end -- Enemy too far away for ally, discontinue!
 				//if v:CheckRelationship(ene) == D_HT then
-				if !IsValid(v:GetEnemy()) && ((!eneIsPlayer && v:Disposition(ene) != D_LI) or (eneIsPlayer)) then
+				if !IsValid(v:GetEnemy()) && ((!eneIsPlayer && v:Disposition(ene) != D_LI) or eneIsPlayer) then
 					if v.IsGuard == true && !v:Visible(ene) then continue end -- If it's guarding and enemy is not visible, then don't call!
 					self:CustomOnCallForHelp(v)
 					self:PlaySoundSystem("CallForHelp")

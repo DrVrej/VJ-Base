@@ -2862,6 +2862,9 @@ function ENT:Think()
 						self.AttackState = VJ.ATTACK_STATE_STARTED
 						self.MeleeAttacking = true
 						self.IsAbleToMeleeAttack = false
+						self.CurrentAttackAnimation = ACT_INVALID
+						self.CurrentAttackAnimationDuration = 0
+						self.CurrentAttackAnimationTime = 0
 						self:SetTurnTarget("Enemy")
 						self:CustomOnMeleeAttack_BeforeStartTimer(seed)
 						timer.Simple(self.BeforeMeleeAttackSounds_WaitTime, function() if IsValid(self) then self:PlaySoundSystem("BeforeMeleeAttack") end end)
@@ -3076,6 +3079,9 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 	end
 	
 	-- Handle animations
+	self.CurrentAttackAnimation = ACT_INVALID
+	self.CurrentAttackAnimationDuration = 0
+	self.CurrentAttackAnimationTime = 0
 	if self.DisableGrenadeAttackAnimation == false then
 		local anim, animDur = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_GrenadeAttack, false, 0, false, self.GrenadeAttackAnimationDelay)
 		if anim != ACT_INVALID then

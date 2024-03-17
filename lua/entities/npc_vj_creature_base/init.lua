@@ -2103,6 +2103,9 @@ function ENT:Think()
 								self.MeleeAttacking = true
 								self.IsAbleToMeleeAttack = false
 								self.RangeAttacking = false
+								self.CurrentAttackAnimation = ACT_INVALID
+								self.CurrentAttackAnimationDuration = 0
+								self.CurrentAttackAnimationTime = 0
 								self.NextAlertSoundT = curTime + 0.4
 								if atkType == 2 then
 									self.MeleeAttack_DoingPropAttack = true
@@ -2157,6 +2160,9 @@ function ENT:Think()
 								self.AttackState = VJ.ATTACK_STATE_STARTED
 								self.RangeAttacking = true
 								self.IsAbleToRangeAttack = false
+								self.CurrentAttackAnimation = ACT_INVALID
+								self.CurrentAttackAnimationDuration = 0
+								self.CurrentAttackAnimationTime = 0
 								if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
 								self:CustomOnRangeAttack_BeforeStartTimer(seed)
 								self:PlaySoundSystem("BeforeRangeAttack")
@@ -2193,6 +2199,9 @@ function ENT:Think()
 								self.IsAbleToLeapAttack = false
 								self.LeapAttackHasJumped = false
 								//self.JumpLegalLandingTime = 0
+								self.CurrentAttackAnimation = ACT_INVALID
+								self.CurrentAttackAnimationDuration = 0
+								self.CurrentAttackAnimationTime = 0
 								self:CustomOnLeapAttack_BeforeStartTimer(seed)
 								self:PlaySoundSystem("BeforeRangeAttack")
 								timer.Create("timer_leap_start_jump"..self:EntIndex(), self.TimeUntilLeapAttackVelocity / self:GetPlaybackRate(), 1, function() self:LeapAttackVelocityCode() end)
