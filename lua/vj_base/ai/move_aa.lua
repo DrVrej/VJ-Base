@@ -242,8 +242,10 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	
 	-- Animations
 	if playAnim != false then
-		self.AA_CurrentMoveAnimation = false
-		self.AA_CurrentMoveAnimationType = moveType
+		if self.AA_CurrentMoveAnimationType != moveType then
+			self.AA_CurrentMoveAnimation = false
+			self.AA_CurrentMoveAnimationType = moveType
+		end
 	else
 		self.AA_CurrentMoveAnimation = -1
 	end
@@ -334,8 +336,10 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 	
 	-- Animations
 	if playAnim != false then
-		self.AA_CurrentMoveAnimation = false
-		self.AA_CurrentMoveAnimationType = moveType
+		if self.AA_CurrentMoveAnimationType != moveType then
+			self.AA_CurrentMoveAnimation = false
+			self.AA_CurrentMoveAnimationType = moveType
+		end
 	else
 		self.AA_CurrentMoveAnimation = -1
 	end
