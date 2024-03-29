@@ -142,11 +142,11 @@ ENT.ConstantlyFaceEnemy_IfAttacking = false -- Should it face the enemy when att
 ENT.ConstantlyFaceEnemy_Postures = "Both" -- "Both" = Moving or standing | "Moving" = Only when moving | "Standing" = Only when standing
 ENT.ConstantlyFaceEnemyDistance = 2500 -- How close does it have to be until it starts to face the enemy?
 	-- ====== Pose Parameter Variables ====== --
-ENT.HasPoseParameterLooking = true -- Does it look at its enemy using poseparameters?
+ENT.HasPoseParameterLooking = true -- Does it look at its enemy using pose parameters?
 ENT.PoseParameterLooking_CanReset = true -- Should it reset its pose parameters if there is no enemies?
-ENT.PoseParameterLooking_InvertPitch = false -- Inverts the pitch poseparameters (X)
-ENT.PoseParameterLooking_InvertYaw = false -- Inverts the yaw poseparameters (Y)
-ENT.PoseParameterLooking_InvertRoll = false -- Inverts the roll poseparameters (Z)
+ENT.PoseParameterLooking_InvertPitch = false -- Inverts the pitch pose parameters (X)
+ENT.PoseParameterLooking_InvertYaw = false -- Inverts the yaw pose parameters (Y)
+ENT.PoseParameterLooking_InvertRoll = false -- Inverts the roll pose parameters (Z)
 ENT.PoseParameterLooking_TurningSpeed = 10 -- How fast does the parameter turn?
 ENT.PoseParameterLooking_Names = {pitch={}, yaw={}, roll={}} -- Custom pose parameters to use, can put as many as needed
 	-- ====== Investigation Variables ====== --
@@ -643,7 +643,7 @@ ENT.SoundTrackPlaybackRate = 1
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Use the functions below to customize parts of the base or to add new custom systems
 -- Some functions don't have a custom function because you can simply override the base function and call "self.BaseClass.FuncName(self)" to run the base code as well
--- 
+--
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPreInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------

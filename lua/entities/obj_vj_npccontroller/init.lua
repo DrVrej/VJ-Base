@@ -88,7 +88,6 @@ function ENT:StartControlling()
 	plyEnt.VJ_TheControllerEntity = self
 	plyEnt:Spectate(OBS_MODE_CHASE)
 	plyEnt:SpectateEntity(camEnt)
-	plyEnt:SetNoTarget(true)
 	plyEnt:DrawShadow(false)
 	plyEnt:SetNoDraw(true)
 	plyEnt:SetMoveType(MOVETYPE_OBSERVER)
@@ -96,15 +95,17 @@ function ENT:StartControlling()
 	plyEnt:DrawWorldModel(false)
 	local weps = {}
 	for _, v in ipairs(plyEnt:GetWeapons()) do
-		weps[#weps+1] = v:GetClass()
+		weps[#weps + 1] = v:GetClass()
 	end
 	self.VJC_Data_Player = {
 		health = plyEnt:Health(),
 		armor = plyEnt:Armor(),
 		weapons = weps,
 		activeWep = (IsValid(plyEnt:GetActiveWeapon()) and plyEnt:GetActiveWeapon():GetClass()) or "",
-		godMode = plyEnt:HasGodMode() -- Allow player's to maintain their God mode status even after exiting the controller
+		godMode = plyEnt:HasGodMode(), -- Maintain the player's God mode status after exiting the controller
+		noTarget = plyEnt:IsFlagSet(FL_NOTARGET)
 	}
+	plyEnt:SetNoTarget(true)
 	plyEnt:StripWeapons()
 	if plyEnt:GetInfoNum("vj_npc_cont_diewithnpc", 0) == 1 then self.VJC_Player_CanRespawn = false end
 
@@ -485,7 +486,7 @@ function ENT:StopControlling(keyPressed)
 		ply:SetPos(ply:GetPos()) end*/
 		ply:SetNoDraw(false)
 		ply:DrawShadow(true)
-		ply:SetNoTarget(false)
+		ply:SetNoTarget(plyData.noTarget)
 		//ply:Spectate(OBS_MODE_NONE)
 		ply:DrawViewModel(true)
 		ply:DrawWorldModel(true)
