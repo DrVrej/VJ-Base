@@ -2355,11 +2355,18 @@ function ENT:RemoveTimers()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:EntitiesToNoCollideCode(ent)
-	if !self.HasEntitiesToNoCollide or !istable(self.EntitiesToNoCollide) or !IsValid(ent) then return end
-	for i = 1, #self.EntitiesToNoCollide do
-		if self.EntitiesToNoCollide[i] == ent:GetClass() then
-			constraint.NoCollide(self, ent, 0, 0)
+--[[---------------------------------------------------------
+	Check if the given entity is in the "self.EntitiesToNoCollide" table, if it's then apply no collide
+		- ent = Entity to check and apply no collide to if it's in the table
+-----------------------------------------------------------]]
+function ENT:ValidateNoCollide(ent)
+	local noCollTbl = self.EntitiesToNoCollide
+	if noCollTbl then
+		local entClass = ent:GetClass()
+		for i = 1, #noCollTbl do
+			if noCollTbl[i] == entClass then
+				constraint.NoCollide(self, ent, 0, 0)
+			end
 		end
 	end
 end
@@ -2468,7 +2475,7 @@ function ENT:DoHardEntityCheck(CustomTbl)
 	for x=1, #EntsTbl do
 		if !EntsTbl[x]:IsNPC() && !EntsTbl[x]:IsPlayer() then continue end
 		local v = EntsTbl[x]
-		self:EntitiesToNoCollideCode(v)
+		self:ValidateNoCollide(v)
 		if (v:IsNPC() && v:GetClass() != self:GetClass() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && (!v.IsVJBaseSNPC_Animal) && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) && v:Health() > 0) or (v:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) then
 			EntsFinal[count] = v
 			count = count + 1

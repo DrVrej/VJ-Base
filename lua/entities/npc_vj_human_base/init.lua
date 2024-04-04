@@ -15,6 +15,8 @@ AccessorFunc(ENT, "m_fMaxYawSpeed", "MaxYawSpeed", FORCE_NUMBER)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Model = false -- The game will pick a random model from the table when the SNPC is spawned | Add as many as you want
 ENT.VJ_IsHugeMonster = false -- This is mostly used for massive or boss SNPCs, it affects certain part of the SNPC, for example the SNPC won't receive any knock back
+ENT.EntitiesToNoCollide = false -- Set to a table of entity class names for the NPC to not collide with otherwise leave it to false
+ENT.AllowPrintingInChat = true -- Should this SNPC be allowed to post in player's chat? Example: "Blank no longer likes you."
 	-- ====== Health ====== --
 ENT.StartHealth = 50 -- The starting health of the NPC
 ENT.HasHealthRegeneration = false -- Can the SNPC regenerate its health?
@@ -61,10 +63,6 @@ ENT.VJC_Data = {
 	FirstP_CameraBoneAng = 0, -- Should the camera's angle be affected by the bone's angle? | 0 = No, 1 = Pitch, 2 = Yaw, 3 = Roll
 	FirstP_CameraBoneAng_Offset = 0, -- How much should the camera's angle be rotated by? | Useful for weird bone angles
 }
-	-- ====== Miscellaneous Variables ====== --
-ENT.HasEntitiesToNoCollide = true -- If set to false, it won't run the EntitiesToNoCollide code
-ENT.EntitiesToNoCollide = {} -- Entities to not collide with when HasEntitiesToNoCollide is set to true
-ENT.AllowPrintingInChat = true -- Should this SNPC be allowed to post in player's chat? Example: "Blank no longer likes you."
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ AI & Relationship Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1939,8 +1937,11 @@ end
 			- If it's a string AND "vjseq_" or "vjges_" is NOT added:
 				- The base will attempt to convert it activity, if it fails, it will play it as a sequence
 				- This behavior can be overridden by AlwaysUseSequence & AlwaysUseGesture options
-		- stopActivities = If true, it will stop activities such as idle, chasing, attacking, etc. for a given amount of time | DEFAULT: false
-		- stopActivitiesTime = How long it will stop the activities such as idle, chasing, attacking, etc. | DEFAULT: 0
+		- stopActivities = Interruptibility type to use, this includes activities & behaviors such as idle, chasing, attacking, etc. | DEFAULT: false
+			- false = Interruptible by everything!
+			- true = Interruptible by nothing!
+			- "LetAttacks" = Interruptible by attacks!
+		- stopActivitiesTime = How long to hold the interruptibility type | DEFAULT: 0
 			- false = Base calculates the time (recommended)
 		- faceEnemy = Should it constantly face the enemy while playing this animation? | DEFAULT: false
 		- animDelay = Delays the animation by the given number | DEFAULT: 0
@@ -2051,7 +2052,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 		local animTime = self:DecideAnimationLength(animation, false)
 		local doRealAnimTime = true -- Only for activities, recalculate the animTime after the schedule starts to get the real sequence time, if `stopActivitiesTime` is NOT set!
 		
-		if stopActivities == true then
+		if stopActivities then
 			if isbool(stopActivitiesTime) then -- false = Let the base calculate the time
 				stopActivitiesTime = animTime
 			else
@@ -2062,13 +2063,12 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				end
 			end
 			
-			self:StopAttacks(true)
-			self.vACT_StopAttacks = true
 			self.NextChaseTime = CurTime() + stopActivitiesTime
 			self.NextIdleTime = CurTime() + stopActivitiesTime
 			
-			-- If there is already a timer, then adjust it instead of creating a new one
-			if !timer.Adjust("timer_act_stopattacks"..self:EntIndex(), stopActivitiesTime, 1, function() self.vACT_StopAttacks = false end) then
+			if stopActivities != "LetAttacks" then
+				self:StopAttacks(true)
+				self.vACT_StopAttacks = true
 				timer.Create("timer_act_stopattacks"..self:EntIndex(), stopActivitiesTime, 1, function() self.vACT_StopAttacks = false end)
 			end
 		end

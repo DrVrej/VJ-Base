@@ -79,7 +79,7 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 		end
 		timer.Simple(0.1, function() -- Make sure the NPC is initialized properly
 			if IsValid(ent) then
-				if isVJ == true && ent.CurrentPossibleEnemies == nil then ent.CurrentPossibleEnemies = {} end
+				if isVJ == true && !ent.CurrentPossibleEnemies then ent.CurrentPossibleEnemies = {} end
 				local entsTbl = ents.GetAll()
 				local count = 1
 				local cvSeePlys = !VJ_CVAR_IGNOREPLAYERS
@@ -89,7 +89,7 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 					if (v:IsNPC() or v:IsPlayer()) && !ignoredNPCs[v:GetClass()] then
 						-- Add enemies to the created entity (if it's a VJ Base SNPC)
 						if isVJ == true then
-							ent:EntitiesToNoCollideCode(v)
+							ent:ValidateNoCollide(v)
 							if (v:IsNPC() && (v:GetClass() != entClass && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && cvSeePlys /*&& v:Alive()*/) then
 								ent.CurrentPossibleEnemies[count] = v
 								count = count + 1
@@ -97,7 +97,7 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 						end
 						-- Add the created entity to the list of possible enemies of VJ Base SNPCs
 						if isPossibleEnemy && entClass != v:GetClass() && v.IsVJBaseSNPC then
-							v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = ent //v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
+							v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies + 1] = ent //v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
 						end
 					end
 				end
