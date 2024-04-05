@@ -58,7 +58,7 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local resistanceNPCs = {npc_magnusson = true, npc_vortigaunt = true, npc_mossman = true, npc_monk = true, npc_kleiner = true, npc_fisherman = true, npc_eli = true, npc_dog = true, npc_barney = true, npc_alyx = true, npc_citizen = true, monster_scientist = true, monster_barney = true}
-local ignoredNPCs = {monster_generic = true,  monster_furniture = true,  npc_furniture = true,  monster_gman = true,  npc_grenade_frag = true,  bullseye_strider_focus = true,  npc_bullseye = true,  npc_enemyfinder = true,  hornet = true}
+local ignoredNPCs = {monster_generic = true,  monster_furniture = true,  npc_furniture = true,  npc_helicoptersensor = true, monster_gman = true,  npc_grenade_frag = true,  bullseye_strider_focus = true,  npc_bullseye = true,  npc_enemyfinder = true,  hornet = true}
 local grenadeEnts = {npc_grenade_frag = true, grenade_hand = true, obj_spore = true, obj_grenade = true, obj_handgrenade = true, doom3_grenade = true, fas2_thrown_m67 = true, cw_grenade_thrown = true, obj_cpt_grenade = true, cw_flash_thrown = true, ent_hl1_grenade = true}
 local grenadeThrowBackEnts = {npc_grenade_frag = true, obj_spore = true, obj_handgrenade = true, obj_cpt_grenade = true, cw_grenade_thrown = true, cw_flash_thrown = true, cw_smoke_thrown = true, ent_hl1_grenade = true}
 local attackableEnts = {prop_physics = true, prop_physics_multiplayer = true, prop_physics_respawnable = true, func_breakable = true, func_physbox = true, prop_door_rotating = true}
