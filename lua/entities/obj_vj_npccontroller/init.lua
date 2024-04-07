@@ -174,7 +174,7 @@ function ENT:SetControlledNPC(npcEnt)
 	bullseyeEnt:SetColor(color0000)
 	bullseyeEnt:SetNoDraw(false)
 	bullseyeEnt:DrawShadow(false)
-	bullseyeEnt.VJ_AlwaysEnemyToEnt = npcEnt
+	bullseyeEnt.ForceEntAsEnemy = npcEnt
 	bullseyeEnt.VJ_IsBeingControlled = true
 	self:DeleteOnRemove(bullseyeEnt)
 	self.VJCE_Bullseye = bullseyeEnt
@@ -351,7 +351,7 @@ function ENT:Think()
 			end
 		end
 		
-		if npc.CurrentAttackAnimationTime < CurTime() && curTime > npc.NextChaseTime && npc.IsVJBaseSNPC_Tank != true then
+		if npc.IsVJBaseSNPC && npc.CurrentAttackAnimationTime < CurTime() && curTime > npc.NextChaseTime && npc.IsVJBaseSNPC_Tank != true then
 			-- Turning
 			if !npc:IsMoving() && canTurn && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
 				npc:VJ_TASK_IDLE_STAND()

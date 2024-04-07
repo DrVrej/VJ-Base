@@ -2353,11 +2353,14 @@ function ENT:MeleeAttackCode(isPropAttack, attackDist, customEnt)
 	self:CustomOnMeleeAttack_BeforeChecks()
 	if self.DisableDefaultMeleeAttackCode then return end
 	local myPos = self:GetPos()
+	local myClass = self:GetClass()
 	local hitRegistered = false
 	for _, v in ipairs(ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), attackDist)) do
-		if (self.VJ_IsBeingControlled && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.VJTag_IsControllingNPC == true) then continue end -- If controlled and v is the bullseye OR it's a player controlling then don't damage!
-		if v != self && v:GetClass() != self:GetClass() && (((v:IsNPC() or (v:IsPlayer() && v:Alive() && !VJ_CVAR_IGNOREPLAYERS)) && self:Disposition(v) != D_LI) or IsProp(v) == true or v.VJTag_IsAttackable == true or v.VJTag_IsDamageable == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
-			if isPropAttack == true && (v:IsPlayer() or v:IsNPC()) && self:VJ_GetNearestPointToEntityDistance(v) > self.MeleeAttackDistance then continue end //if (self:GetPos():Distance(v:GetPos()) <= self:VJ_GetNearestPointToEntityDistance(v) && self:VJ_GetNearestPointToEntityDistance(v) <= self.MeleeAttackDistance) == false then
+		if v == self or v:GetClass() == myClass then continue end
+		if (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) or (v:IsPlayer() && v.VJTag_IsControllingNPC == true) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
+		local isAliveEnt = v:IsNPC() or (v:IsPlayer() && v:Alive() && !VJ_CVAR_IGNOREPLAYERS) or v:IsNextBot()
+		if ((isAliveEnt && self:Disposition(v) != D_LI) or IsProp(v) == true or v.VJTag_IsAttackable == true or v.VJTag_IsDamageable == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
+			if isPropAttack == true && isAliveEnt && self:VJ_GetNearestPointToEntityDistance(v) > self.MeleeAttackDistance then continue end //if (self:GetPos():Distance(v:GetPos()) <= self:VJ_GetNearestPointToEntityDistance(v) && self:VJ_GetNearestPointToEntityDistance(v) <= self.MeleeAttackDistance) == false then
 			local vProp = IsProp(v)
 			if self:CustomOnMeleeAttack_AfterChecks(v, vProp) == true then continue end
 			-- Remove prop constraints and push it (If possible)
@@ -2393,14 +2396,14 @@ function ENT:MeleeAttackCode(isPropAttack, attackDist, customEnt)
 				applyDmg:SetDamage(self:VJ_GetDifficultyValue(self.MeleeAttackDamage))
 				applyDmg:SetDamageType(self.MeleeAttackDamageType)
 				//applyDmg:SetDamagePosition(self:VJ_GetNearestPointToEntity(v).MyPosition)
-				if v:IsNPC() or v:IsPlayer() then applyDmg:SetDamageForce(self:GetForward() * ((applyDmg:GetDamage() + 100) * 70)) end
+				if isAliveEnt then applyDmg:SetDamageForce(self:GetForward() * ((applyDmg:GetDamage() + 100) * 70)) end
 				applyDmg:SetInflictor(self)
 				applyDmg:SetAttacker(self)
 				VJ.DamageSpecialEnts(self, v, applyDmg)
 				v:TakeDamageInfo(applyDmg, self)
 			end
 			-- Bleed Enemy
-			if self.MeleeAttackBleedEnemy == true && math.random(1, self.MeleeAttackBleedEnemyChance) == 1 && ((v:IsNPC() && (!v.VJ_IsHugeMonster or self.VJ_IsHugeMonster)) or v:IsPlayer()) then
+			if self.MeleeAttackBleedEnemy && math.random(1, self.MeleeAttackBleedEnemyChance) == 1 && isAliveEnt && (!v.VJ_IsHugeMonster or self.VJ_IsHugeMonster) then
 				local tName = "timer_melee_bleedply"..v:EntIndex() -- Timer's name
 				local tDmg = self.MeleeAttackBleedEnemyDamage -- How much damage each rep does
 				timer.Create(tName, self.MeleeAttackBleedEnemyTime, self.MeleeAttackBleedEnemyReps, function()
@@ -2545,21 +2548,23 @@ function ENT:LeapDamageCode()
 	self:CustomOnLeapAttack_BeforeChecks()
 	local hitRegistered = false
 	for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.LeapAttackDamageDistance)) do
-		if (self.VJ_IsBeingControlled && self.VJ_TheControllerBullseye == v) or (v:IsPlayer() && v.VJTag_IsControllingNPC == true) then continue end
-		if (v:IsNPC() or (v:IsPlayer() && v:Alive()) && !VJ_CVAR_IGNOREPLAYERS) && (self:Disposition(v) != D_LI) && (v != self) && (v:GetClass() != self:GetClass()) or IsProp(v) == true or v.VJTag_IsAttackable == true or v.VJTag_IsDamageable == true then
+		if v == self or v:GetClass() == myClass then continue end
+		if (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) or (v:IsPlayer() && v.VJTag_IsControllingNPC == true) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
+		local isAliveEnt = v:IsNPC() or (v:IsPlayer() && v:Alive() && !VJ_CVAR_IGNOREPLAYERS) or v:IsNextBot()
+		if (isAliveEnt && self:Disposition(v) != D_LI) or IsProp(v) == true or v.VJTag_IsAttackable == true or v.VJTag_IsDamageable == true then
 			self:CustomOnLeapAttack_AfterChecks(v)
 			-- Damage
 			if self.DisableDefaultLeapAttackDamageCode == false then
-				local leapdmg = DamageInfo()
-				leapdmg:SetDamage(self:VJ_GetDifficultyValue(self.LeapAttackDamage))
-				leapdmg:SetInflictor(self)
-				leapdmg:SetDamageType(self.LeapAttackDamageType)
-				leapdmg:SetAttacker(self)
-				if v:IsNPC() or v:IsPlayer() then leapdmg:SetDamageForce(self:GetForward() * ((leapdmg:GetDamage() + 100) * 70)) end
-				v:TakeDamageInfo(leapdmg, self)
+				local dmgInfo = DamageInfo()
+				dmgInfo:SetDamage(self:VJ_GetDifficultyValue(self.LeapAttackDamage))
+				dmgInfo:SetInflictor(self)
+				dmgInfo:SetDamageType(self.LeapAttackDamageType)
+				dmgInfo:SetAttacker(self)
+				if isAliveEnt then dmgInfo:SetDamageForce(self:GetForward() * ((dmgInfo:GetDamage() + 100) * 70)) end
+				v:TakeDamageInfo(dmgInfo, self)
 			end
 			if v:IsPlayer() then
-				v:ViewPunch(Angle(math.random(-1,1 ) * self.LeapAttackDamage, math.random(-1, 1) * self.LeapAttackDamage,math.random(-1, 1) * self.LeapAttackDamage))
+				v:ViewPunch(Angle(math.random(-1, 1) * self.LeapAttackDamage, math.random(-1, 1) * self.LeapAttackDamage,math.random(-1, 1) * self.LeapAttackDamage))
 			end
 			hitRegistered = true
 		end

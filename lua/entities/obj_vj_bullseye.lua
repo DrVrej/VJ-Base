@@ -30,6 +30,7 @@ if !SERVER then return end
 ENT.SolidMovementType = "Dynamic" -- Physics type to use (Set in initialize)
 ENT.UseActivationSystem = false -- Mostly used for the Bullseye tool, allows you to activate/deactivate the bullseye
 ENT.ActivationSystemStatusColors = true -- Should it draw the status colors?
+ENT.ForceEntAsEnemy = false -- Set this to an NPC that should always override all other enemies and target this bullseye instead
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -38,7 +39,6 @@ ENT.ActivationSystemStatusColors = true -- Should it draw the status colors?
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Activated = true
-ENT.VJ_AlwaysEnemyToEnt = false
 
 local sdActivated = Sound("hl1/fvox/activated.wav")
 local sdDeactivated = Sound("hl1/fvox/deactivated.wav")
@@ -80,15 +80,15 @@ function ENT:AcceptInput(key, activator, caller, data)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-	if self.VJ_AlwaysEnemyToEnt != false then
+	if self.ForceEntAsEnemy != false then
 		//self:AddFlags(FL_NOTARGET) -- If NPC state is set, Source engine will automatically set m_hEnemy to NULL, so avoid putting this here!
-		if IsValid(self.VJ_AlwaysEnemyToEnt) && self.VJ_AlwaysEnemyToEnt:IsNPC() then
-			self.VJ_AlwaysEnemyToEnt:AddEntityRelationship(self, D_HT, 99)
-			self:AddEntityRelationship(self.VJ_AlwaysEnemyToEnt, D_HT, 99)
-			if self.VJ_AlwaysEnemyToEnt.IsVJBaseSNPC then
-				self.VJ_AlwaysEnemyToEnt:VJ_DoSetEnemy(self, false, false)
+		if IsValid(self.ForceEntAsEnemy) && self.ForceEntAsEnemy:IsNPC() then
+			self.ForceEntAsEnemy:AddEntityRelationship(self, D_HT, 99)
+			self:AddEntityRelationship(self.ForceEntAsEnemy, D_HT, 99)
+			if self.ForceEntAsEnemy.IsVJBaseSNPC then
+				self.ForceEntAsEnemy:VJ_DoSetEnemy(self, false, false)
 			end
-			self.VJ_AlwaysEnemyToEnt:SetEnemy(self)
+			self.ForceEntAsEnemy:SetEnemy(self)
 		end
 	elseif self.UseActivationSystem == true then
 		if self.Activated == false then

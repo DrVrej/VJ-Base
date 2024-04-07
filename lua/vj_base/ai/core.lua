@@ -545,8 +545,8 @@ end
 		- Disposition value, list: https://wiki.facepunch.com/gmod/Enums/D
 -----------------------------------------------------------]]
 function ENT:CheckRelationship(ent)
-	if ent.VJ_AlwaysEnemyToEnt == self then return D_HT end -- Always enemy to me (Used by the bullseye under certain circumstances)
-	if ent:IsFlagSet(FL_NOTARGET) or ent.VJ_NoTarget or NPCTbl_Animals[ent:GetClass()] then return D_NU end
+	if ent.ForceEntAsEnemy == self then return D_HT end -- Always enemy to me (Used by the bullseye under certain circumstances)
+	if ent:IsFlagSet(FL_NOTARGET) or NPCTbl_Animals[ent:GetClass()] then return D_NU end
 	if self:GetClass() == ent:GetClass() then return D_LI end
 	if ent:Health() > 0 && self:Disposition(ent) != D_LI then
 		local isPly = ent:IsPlayer()
@@ -1659,7 +1659,7 @@ function ENT:MaintainRelationships()
 			it = it + 1
 			//if !IsValid(v) then table_remove(self.CurrentPossibleEnemies,tonumber(v)) continue end
 			//if !IsValid(v) then continue end
-			if v:IsFlagSet(FL_NOTARGET) or v.VJ_NoTarget or (v.VJ_AlwaysEnemyToEnt && v.VJ_AlwaysEnemyToEnt != self) then
+			if v:IsFlagSet(FL_NOTARGET) or (v.ForceEntAsEnemy && v.ForceEntAsEnemy != self) then
 				if IsValid(self:GetEnemy()) && self:GetEnemy() == v then
 					self:ResetEnemy(false)
 				end
