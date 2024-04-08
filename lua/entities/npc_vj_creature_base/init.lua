@@ -117,8 +117,6 @@ ENT.CallForHelpDistance = 2000 -- -- How far away the SNPC's call for help goes 
 ENT.NextCallForHelpTime = 4 -- Time until it calls for help again
 ENT.HasCallForHelpAnimation = true -- if true, it will play the call for help animation
 ENT.AnimTbl_CallForHelp = {} -- Call For Help Animations
-ENT.CallForHelpAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
-ENT.CallForHelpAnimationPlayBackRate = 1 -- How fast should the animation play? | Currently only for gestures!
 ENT.CallForHelpStopAnimations = true -- Should it stop attacks for a certain amount of time?
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.CallForHelpStopAnimationsTime = false -- How long should it stop attacks?
@@ -227,7 +225,6 @@ ENT.NextMoveAfterFlinchTime = false -- How much time until it can move, attack, 
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.NextFlinchTime = 5 -- How much time until it can flinch again?
 ENT.AnimTbl_Flinch = ACT_FLINCH_PHYSICS -- If it uses normal based animation, use this
-ENT.FlinchAnimationDecreaseLengthAmount = 0 -- This will decrease the time it can move, attack, etc. | Use it to fix animation pauses after it finished the flinch animation
 ENT.HitGroupFlinching_DefaultWhenNotHit = true -- If it uses hitgroup flinching, should it do the regular flinch if it doesn't hit any of the specified hitgroups?
 ENT.HitGroupFlinching_Values = nil -- EXAMPLES: {{HitGroup = {HITGROUP_HEAD}, Animation = {ACT_FLINCH_HEAD}}, {HitGroup = {HITGROUP_LEFTARM}, Animation = {ACT_FLINCH_LEFTARM}}, {HitGroup = {HITGROUP_RIGHTARM}, Animation = {ACT_FLINCH_RIGHTARM}}, {HitGroup = {HITGROUP_LEFTLEG}, Animation = {ACT_FLINCH_LEFTLEG}}, {HitGroup = {HITGROUP_RIGHTLEG}, Animation = {ACT_FLINCH_RIGHTLEG}}}
 	-- ====== Call For Back On Damage Variables ====== --
@@ -293,7 +290,7 @@ ENT.MeleeAttackDamage = 10
 ENT.MeleeAttackDamageType = DMG_SLASH -- Type of Damage
 ENT.HasMeleeAttackKnockBack = false -- Should knockback be applied on melee hit? | Use "MeleeAttackKnockbackVelocity" function to edit the velocity
 	-- ====== Animation Variables ====== --
-ENT.AnimTbl_MeleeAttack = {ACT_MELEE_ATTACK1} -- Melee Attack Animations
+ENT.AnimTbl_MeleeAttack = ACT_MELEE_ATTACK1 -- Melee Attack Animations
 ENT.MeleeAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 ENT.MeleeAttackAnimationFaceEnemy = true -- Should it face the enemy while playing the melee attack animation?
 ENT.MeleeAttackAnimationDecreaseLengthAmount = 0 -- This will decrease the time until starts chasing again. Use it to fix animation pauses until it chases the enemy.
@@ -343,7 +340,7 @@ ENT.MeleeAttackDSPSoundUseDamageAmount = 60 -- Any damage that is greater than o
 ENT.HasRangeAttack = false -- Should the SNPC have a range attack?
 ENT.RangeAttackEntityToSpawn = "obj_vj_tank_shell" -- Entities that it can spawn when range attacking | If set as a table, it picks a random entity
 	-- ====== Animation Variables ====== --
-ENT.AnimTbl_RangeAttack = {ACT_RANGE_ATTACK1} -- Range Attack Animations
+ENT.AnimTbl_RangeAttack = ACT_RANGE_ATTACK1 -- Range Attack Animations
 ENT.RangeAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 ENT.RangeAttackAnimationFaceEnemy = true -- Should it face the enemy while playing the range attack animation?
 ENT.RangeAttackAnimationDecreaseLengthAmount = 0 -- This will decrease the time until starts chasing again. Use it to fix animation pauses until it chases the enemy.
@@ -378,7 +375,7 @@ ENT.HasLeapAttack = false -- Should the SNPC have a leap attack?
 ENT.LeapAttackDamage = 15
 ENT.LeapAttackDamageType = DMG_SLASH -- Type of Damage
 	-- ====== Animation Variables ====== --
-ENT.AnimTbl_LeapAttack = {ACT_SPECIAL_ATTACK1} -- Melee Attack Animations
+ENT.AnimTbl_LeapAttack = ACT_SPECIAL_ATTACK1 -- Melee Attack Animations
 ENT.LeapAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 ENT.LeapAttackAnimationFaceEnemy = 2 -- true = Face the enemy the entire time! | 2 = Face the enemy UNTIL it jumps! | false = Don't face the enemy AT ALL!
 ENT.LeapAttackAnimationDecreaseLengthAmount = 0 -- This will decrease the time until starts chasing again. Use it to fix animation pauses until it chases the enemy.
@@ -1087,7 +1084,10 @@ function ENT:Initialize()
 	self:AddEFlags(EFL_NO_DISSOLVE)
 	self:SetUseType(SIMPLE_USE)
 	if self:GetName() == "" then
-		self:SetName((self.PrintName == "" and list.Get("NPC")[self:GetClass()].Name) or self.PrintName)
+		local findListing = list.Get("NPC")[self:GetClass()]
+		if findListing then
+			self:SetName((self.PrintName == "" and findListing.Name) or self.PrintName)
+		end
 	end
 	self.SelectedDifficulty = GetConVar("vj_npc_difficulty"):GetInt()
 	if VJ.PICK(self.Model) != false then self:SetModel(VJ.PICK(self.Model)) end
@@ -1343,12 +1343,12 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 		if stopActivities then
 			if isbool(stopActivitiesTime) then -- false = Let the base calculate the time
 				stopActivitiesTime = animTime
-			else
+			else -- Manually calculated
 				doRealAnimTime = false
 				if !extraOptions.PlayBackRateCalculated then -- Make sure not to calculate the playback rate when it already has!
 					stopActivitiesTime = stopActivitiesTime / self:GetPlaybackRate()
-					animTime = stopActivitiesTime
 				end
+				animTime = stopActivitiesTime
 			end
 			
 			self.NextChaseTime = CurTime() + stopActivitiesTime

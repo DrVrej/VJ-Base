@@ -100,8 +100,6 @@ ENT.CallForHelpDistance = 2000 -- -- How far away the SNPC's call for help goes 
 ENT.NextCallForHelpTime = 4 -- Time until it calls for help again
 ENT.HasCallForHelpAnimation = true -- if true, it will play the call for help animation
 ENT.AnimTbl_CallForHelp = {ACT_SIGNAL_ADVANCE, ACT_SIGNAL_FORWARD} -- Call For Help Animations
-ENT.CallForHelpAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
-ENT.CallForHelpAnimationPlayBackRate = 1 -- How fast should the animation play? | Currently only for gestures!
 ENT.CallForHelpStopAnimations = true -- Should it stop attacks for a certain amount of time?
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.CallForHelpStopAnimationsTime = false -- How long should it stop attacks?
@@ -212,7 +210,6 @@ ENT.NextMoveAfterFlinchTime = false -- How much time until it can move, attack, 
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.NextFlinchTime = 5 -- How much time until it can flinch again?
 ENT.AnimTbl_Flinch = ACT_FLINCH_PHYSICS -- If it uses normal based animation, use this
-ENT.FlinchAnimationDecreaseLengthAmount = 0 -- This will decrease the time it can move, attack, etc. | Use it to fix animation pauses after it finished the flinch animation
 ENT.HitGroupFlinching_DefaultWhenNotHit = true -- If it uses hitgroup flinching, should it do the regular flinch if it doesn't hit any of the specified hitgroups?
 ENT.HitGroupFlinching_Values = nil -- EXAMPLES: {{HitGroup = {HITGROUP_HEAD}, Animation = {ACT_FLINCH_HEAD}}, {HitGroup = {HITGROUP_LEFTARM}, Animation = {ACT_FLINCH_LEFTARM}}, {HitGroup = {HITGROUP_RIGHTARM}, Animation = {ACT_FLINCH_RIGHTARM}}, {HitGroup = {HITGROUP_LEFTLEG}, Animation = {ACT_FLINCH_LEFTLEG}}, {HitGroup = {HITGROUP_RIGHTLEG}, Animation = {ACT_FLINCH_RIGHTLEG}}}
 	-- ====== Call For Back On Damage Variables ====== --
@@ -285,7 +282,7 @@ ENT.MeleeAttackDamage = 10
 ENT.MeleeAttackDamageType = DMG_CLUB -- Type of Damage
 ENT.HasMeleeAttackKnockBack = true -- Should knockback be applied on melee hit? | Use "MeleeAttackKnockbackVelocity" function to edit the velocity
 	-- ====== Animation Variables ====== --
-ENT.AnimTbl_MeleeAttack = {ACT_MELEE_ATTACK1} -- Melee Attack Animations
+ENT.AnimTbl_MeleeAttack = ACT_MELEE_ATTACK1 -- Melee Attack Animations
 ENT.MeleeAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 ENT.MeleeAttackAnimationFaceEnemy = true -- Should it face the enemy while playing the melee attack animation?
 ENT.MeleeAttackAnimationDecreaseLengthAmount = 0 -- This will decrease the time until starts chasing again. Use it to fix animation pauses until it chases the enemy.
@@ -325,15 +322,15 @@ ENT.Weapon_AimTurnDiff = false -- Weapon aim turning threshold between 0 and 1 |
 ENT.HasWeaponBackAway = true -- Should the SNPC back away if the enemy is close?
 ENT.WeaponBackAway_Distance = 150 -- When the enemy is this close, the SNPC will back away | 0 = Never back away
 	-- ====== Standing-Firing Variables ====== --
-ENT.AnimTbl_WeaponAttack = {ACT_RANGE_ATTACK1} -- Animation played when the SNPC does weapon attack
+ENT.AnimTbl_WeaponAttack = ACT_RANGE_ATTACK1 -- Animation played when the SNPC does weapon attack
 ENT.CanCrouchOnWeaponAttack = true -- Can it crouch while shooting?
-ENT.AnimTbl_WeaponAttackCrouch = {ACT_RANGE_ATTACK1_LOW} -- Animation played when the SNPC does weapon attack while crouching | For VJ Weapons
+ENT.AnimTbl_WeaponAttackCrouch = ACT_RANGE_ATTACK1_LOW -- Animation played when the SNPC does weapon attack while crouching | For VJ Weapons
 ENT.CanCrouchOnWeaponAttackChance = 2 -- How much chance of crouching? | 1 = Crouch every time
-ENT.AnimTbl_WeaponAttackFiringGesture = {ACT_GESTURE_RANGE_ATTACK1} -- Firing Gesture animations used when the SNPC is firing the weapon
+ENT.AnimTbl_WeaponAttackFiringGesture = ACT_GESTURE_RANGE_ATTACK1 -- Firing Gesture animations used when the SNPC is firing the weapon
 ENT.DisableWeaponFiringGesture = false -- If set to true, it will disable the weapon firing gestures
 	-- ====== Secondary Fire Variables ====== --
 ENT.CanUseSecondaryOnWeaponAttack = true -- Can the NPC use a secondary fire if it's available?
-ENT.AnimTbl_WeaponAttackSecondary = {"shootAR2alt"} -- Animations played when the SNPC fires a secondary weapon attack
+ENT.AnimTbl_WeaponAttackSecondary = "shootAR2alt" -- Animations played when the SNPC fires a secondary weapon attack
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.WeaponAttackSecondaryTimeUntilFire = 0.9 -- The weapon uses this integer to set the time until the firing code is ran
 	-- ====== Moving-Firing Variables ====== --
@@ -343,8 +340,8 @@ ENT.AnimTbl_ShootWhileMovingWalk = {ACT_WALK_AIM} -- Animations it will play whe
 	-- ====== Reloading Variables ====== --
 ENT.AllowWeaponReloading = true -- If false, the NPC will not reload
 ENT.DisableWeaponReloadAnimation = false -- if true, it will disable the animation code when reloading
-ENT.AnimTbl_WeaponReload = {ACT_RELOAD} -- Animations that play when the NPC reloads
-ENT.AnimTbl_WeaponReloadBehindCover = {ACT_RELOAD_LOW} -- Animations that play when the NPC reloads, but behind cover
+ENT.AnimTbl_WeaponReload = ACT_RELOAD -- Animations that play when the NPC reloads
+ENT.AnimTbl_WeaponReloadBehindCover = ACT_RELOAD_LOW -- Animations that play when the NPC reloads, but behind cover
 ENT.WeaponReload_FindCover = true -- Should it first find cover before reloading?
 ENT.WeaponReloadAnimationFaceEnemy = true -- Should it face the enemy while playing the weapon reload animation?
 ENT.WeaponReloadAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
@@ -379,7 +376,7 @@ ENT.GrenadeAttackModel = nil -- Overrides the model of the grenade | Can be nil,
 ENT.GrenadeAttackAttachment = "anim_attachment_LH" -- The attachment that the grenade will be set to | -1 = Skip to use "self.GrenadeAttackBone" instead
 ENT.GrenadeAttackBone = "ValveBiped.Bip01_L_Finger1" -- The bone that the grenade will be set to | -1 = Skip to use fail safe instead
 	-- ====== Animation Variables ====== --
-ENT.AnimTbl_GrenadeAttack = {"grenThrow"} -- Grenade Attack Animations
+ENT.AnimTbl_GrenadeAttack = "grenThrow" -- Grenade Attack Animations
 ENT.GrenadeAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 ENT.GrenadeAttackAnimationFaceEnemy = true -- Should it face the enemy while playing the grenade attack animation?
 	-- ====== Distance & Chance Variables ====== --
@@ -1753,7 +1750,10 @@ function ENT:Initialize()
 	self:AddEFlags(EFL_NO_DISSOLVE)
 	self:SetUseType(SIMPLE_USE)
 	if self:GetName() == "" then
-		self:SetName((self.PrintName == "" and list.Get("NPC")[self:GetClass()].Name) or self.PrintName)
+		local findListing = list.Get("NPC")[self:GetClass()]
+		if findListing then
+			self:SetName((self.PrintName == "" and findListing.Name) or self.PrintName)
+		end
 	end
 	self.SelectedDifficulty = GetConVar("vj_npc_difficulty"):GetInt()
 	if VJ.PICK(self.Model) != false then self:SetModel(VJ.PICK(self.Model)) end
@@ -2048,12 +2048,12 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 		if stopActivities then
 			if isbool(stopActivitiesTime) then -- false = Let the base calculate the time
 				stopActivitiesTime = animTime
-			else
+			else -- Manually calculated
 				doRealAnimTime = false
 				if !extraOptions.PlayBackRateCalculated then -- Make sure not to calculate the playback rate when it already has!
 					stopActivitiesTime = stopActivitiesTime / self:GetPlaybackRate()
-					animTime = stopActivitiesTime
 				end
+				animTime = stopActivitiesTime
 			end
 			
 			self.NextChaseTime = CurTime() + stopActivitiesTime

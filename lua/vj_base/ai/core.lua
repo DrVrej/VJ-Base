@@ -885,7 +885,7 @@ end
 function ENT:VJ_ForwardIsHidingZone(startPos, endPos, acceptWorld, extraOptions)
 	local ene = self:GetEnemy()
 	if !IsValid(ene) then return false, {} end
-	startPos = startPos or self:GetPos() + self:OBBCenter()
+	startPos = startPos or (self:GetPos() + self:OBBCenter())
 	endPos = endPos or ene:EyePos()
 	acceptWorld = acceptWorld or false
 	extraOptions = extraOptions or {}
@@ -1111,23 +1111,24 @@ end
 		- number, the scaled number
 -----------------------------------------------------------]]
 function ENT:VJ_GetDifficultyValue(int)
-	if self.SelectedDifficulty == -3 then
+	local dif = self.SelectedDifficulty
+	if dif == -3 then
 		return math_clamp(int - (int * 0.99), 1, int)
-	elseif self.SelectedDifficulty == -2 then
+	elseif dif == -2 then
 		return math_clamp(int - (int * 0.75), 1, int)
-	elseif self.SelectedDifficulty == -1 then
+	elseif dif == -1 then
 		return int / 2
-	elseif self.SelectedDifficulty == 1 then
+	elseif dif == 1 then
 		return int + (int * 0.5)
-	elseif self.SelectedDifficulty == 2 then
+	elseif dif == 2 then
 		return int * 2
-	elseif self.SelectedDifficulty == 3 then
+	elseif dif == 3 then
 		return int + (int * 1.5)
-	elseif self.SelectedDifficulty == 4 then
+	elseif dif == 4 then
 		return int + (int * 2.5)
-	elseif self.SelectedDifficulty == 5 then
+	elseif dif == 5 then
 		return int + (int * 3.5)
-	elseif self.SelectedDifficulty == 6 then
+	elseif dif == 6 then
 		return int + (int * 5.0)
 	end
 	return int -- Normal (default)
@@ -1853,7 +1854,7 @@ function ENT:Allies_CallHelp(dist)
 					-- Play the animation
 					if self.HasCallForHelpAnimation && curTime > self.NextCallForHelpAnimationT then
 						local anim = VJ.PICK(self.AnimTbl_CallForHelp)
-						self:VJ_ACT_PLAYACTIVITY(anim, self.CallForHelpStopAnimations, self:DecideAnimationLength(anim, self.CallForHelpStopAnimationsTime), self.CallForHelpAnimationFaceEnemy, self.CallForHelpAnimationDelay, {PlayBackRate=self.CallForHelpAnimationPlayBackRate, PlayBackRateCalculated=true})
+						self:VJ_ACT_PLAYACTIVITY(anim, self.CallForHelpStopAnimations, self:DecideAnimationLength(anim, self.CallForHelpStopAnimationsTime), self.CallForHelpAnimationFaceEnemy, 0, {PlayBackRateCalculated = true})
 						self.NextCallForHelpAnimationT = curTime + self.NextCallForHelpAnimationTime
 					end
 					-- If the enemy is a player and the ally is player-friendly then make that player an enemy to the ally
@@ -2012,18 +2013,15 @@ end
 function ENT:DoFlinch(dmginfo, hitgroup)
 	if self.CanFlinch == 0 or self.Flinching == true or self.TakingCoverT > CurTime() or self.NextFlinchT > CurTime() or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
 
-	local function RunFlinchCode(HitgroupInfo)
+	local function RunFlinch(hitgroupInfo)
 		self.Flinching = true
 		self:StopAttacks(true)
 		self.CurrentAttackAnimationTime = 0
-		local animTbl = self.AnimTbl_Flinch
-		if HitgroupInfo != nil then animTbl = HitgroupInfo.Animation end
-		local anim = VJ.PICK(animTbl)
-		local animDur = self.NextMoveAfterFlinchTime == false and self:DecideAnimationLength(anim, false, self.FlinchAnimationDecreaseLengthAmount) or self.NextMoveAfterFlinchTime
-		local _, resultAnimDur = self:VJ_ACT_PLAYACTIVITY(anim, true, animDur, false, 0, {PlayBackRateCalculated=true})
+		local anim = VJ.PICK(hitgroupInfo and hitgroupInfo.Animation or self.AnimTbl_Flinch)
+		local _, animDur = self:VJ_ACT_PLAYACTIVITY(anim, true, self:DecideAnimationLength(anim, self.NextMoveAfterFlinchTime), false, 0, {PlayBackRateCalculated=true})
 		timer.Create("timer_act_flinching"..self:EntIndex(), animDur, 1, function() self.Flinching = false end)
 		self:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup)
-		self.NextFlinchT = CurTime() + (self.NextFlinchTime == false and resultAnimDur or self.NextFlinchTime)
+		self.NextFlinchT = CurTime() + (self.NextFlinchTime == false and animDur or self.NextFlinchTime)
 	end
 	
 	if math.random(1, self.FlinchChance) == 1 && ((self.CanFlinch == 1) or (self.CanFlinch == 2 && FlinchDamageTypeCheck(self.FlinchDamageTypes, dmginfo:GetDamageType()))) then
@@ -2037,17 +2035,17 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 				-- Sub-table of hitGroups
 				for hitgroupX = 1, #hitGroups do
 					if hitGroups[hitgroupX] == hitgroup then
-						RunFlinchCode(v)
+						RunFlinch(v)
 						return
 					end
 				end
 			end
 			if self.HitGroupFlinching_DefaultWhenNotHit == true then
-				RunFlinchCode(nil)
+				RunFlinch(nil)
 			end
 		-- Non-hitgroup flinching
 		else
-			RunFlinchCode(nil)
+			RunFlinch(nil)
 		end
 	end
 end

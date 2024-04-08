@@ -105,7 +105,7 @@ function ENT:TASK_VJ_PLAY_ACTIVITY(taskStatus, data)
 		//print("TASK_VJ_PLAY_ACTIVITY: Start!", data.duration)
 		self:ResetIdealActivity(data.animation)
 		self:SetActivity(data.animation) -- Avoids "MaintainActivity" from selecting another sequence from the activity (if it has multiple sequences tied to it)
-		local animTime = data.animEndTime
+		local animTime = data.duration
 		if animTime then
 			data.animEndTime = CurTime() + data.duration
 		else

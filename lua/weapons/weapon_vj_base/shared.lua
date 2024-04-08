@@ -443,8 +443,8 @@ function SWEP:NPCAbleToShoot()
 			if owner.IsVJBaseSNPC_Human && owner.AllowWeaponReloading == true && self:Clip1() <= 0 then -- No ammo!
 				if owner.VJ_IsBeingControlled == true then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER, "Press R to reload!") end
 				if self.IsMeleeWeapon == false && self.HasDryFireSound == true && CurTime() > self.NextNPCDrySoundT then
-					local sdtbl = VJ.PICK(self.DryFireSound)
-					if sdtbl != false then owner:EmitSound(sdtbl, 80, math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b)) end
+					local sdTbl = VJ.PICK(self.DryFireSound)
+					if sdTbl != false then owner:EmitSound(sdTbl, 80, math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b)) end
 					if self.NPC_NextPrimaryFire != false then
 						self.NextNPCDrySoundT = CurTime() + self.NPC_NextPrimaryFire
 					end
