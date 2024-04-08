@@ -20,11 +20,11 @@
 */
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Localized static values
-local NPCTbl_Animals = {npc_barnacle=true,npc_crow=true,npc_pigeon=true,npc_seagull=true,monster_cockroach=true}
-local NPCTbl_Combine = {npc_stalker=true,npc_rollermine=true,npc_turret_ground=true,npc_turret_floor=true,npc_turret_ceiling=true,npc_strider=true,npc_sniper=true,npc_metropolice=true,npc_hunter=true,npc_breen=true,npc_combine_camera=true,npc_combine_s=true,npc_combinedropship=true,npc_combinegunship=true,npc_cscanner=true,npc_clawscanner=true,npc_helicopter=true,npc_manhack=true}
-local NPCTbl_Zombies = {npc_fastzombie_torso=true,npc_zombine=true,npc_zombie_torso=true,npc_zombie=true,npc_poisonzombie=true,npc_headcrab_fast=true,npc_headcrab_black=true,npc_headcrab_poison=true,npc_headcrab=true,npc_fastzombie=true,monster_zombie=true,monster_headcrab=true,monster_babycrab=true}
-local NPCTbl_Antlions = {npc_antlion=true,npc_antlionguard=true,npc_antlion_worker=true}
-local NPCTbl_Xen = {monster_bullchicken=true,monster_alien_grunt=true,monster_alien_slave=true,monster_alien_controller=true,monster_houndeye=true,monster_gargantua=true,monster_nihilanth=true}
+local NPCTbl_Animals = {npc_barnacle = true, npc_crow = true, npc_pigeon = true, npc_seagull = true, monster_cockroach = true}
+local NPCTbl_Combine = {npc_stalker = true, npc_rollermine = true, npc_turret_ground = true, npc_turret_floor = true, npc_turret_ceiling = true, npc_strider = true, npc_sniper = true, npc_metropolice = true, npc_hunter = true, npc_breen = true, npc_combine_camera = true, npc_combine_s = true, npc_combinedropship = true, npc_combinegunship = true, npc_cscanner = true, npc_clawscanner = true, npc_helicopter = true, npc_manhack = true}
+local NPCTbl_Zombies = {npc_fastzombie_torso = true, npc_zombine = true, npc_zombie_torso = true, npc_zombie = true, npc_poisonzombie = true, npc_headcrab_fast = true, npc_headcrab_black = true, npc_headcrab_poison = true, npc_headcrab = true, npc_fastzombie = true, monster_zombie = true, monster_headcrab = true, monster_babycrab = true}
+local NPCTbl_Antlions = {npc_antlion = true, npc_antlionguard = true, npc_antlion_worker = true}
+local NPCTbl_Xen = {monster_bullchicken = true, monster_alien_grunt = true, monster_alien_slave = true, monster_alien_controller = true, monster_houndeye = true, monster_gargantua = true, monster_nihilanth = true}
 local defPos = Vector(0, 0, 0)
 local defAng = Angle(0, 0, 0)
 local CurTime = CurTime
@@ -91,7 +91,7 @@ function ENT:CreateExtraDeathCorpse(class, models, extraOptions, customFunc)
 	ent:SetMaterial(self.Corpse:GetMaterial())
 	ent:SetCollisionGroup(self.DeathCorpseCollisionType)
 	if self.Corpse:IsOnFire() then
-		ent:Ignite(math.Rand(8,10),0)
+		ent:Ignite(math.Rand(8, 10), 0)
 		ent:SetColor(colorGrey)
 	end
 	if extraOptions.HasVel != false then
@@ -102,7 +102,7 @@ function ENT:CreateExtraDeathCorpse(class, models, extraOptions, customFunc)
 		ent:GetPhysicsObject():AddVelocity(extraOptions.Vel or dmgForce)
 	end
 	if extraOptions.ShouldFade == true then
-		local fadeTime = extraOptions.ShouldFadeTime or 0 
+		local fadeTime = extraOptions.ShouldFadeTime or 0
 		if ent:GetClass() == "prop_ragdoll" then
 			ent:Fire("FadeAndRemove", "", fadeTime)
 		else
@@ -342,10 +342,6 @@ end
 -----------------------------------------------------------]]
 function ENT:SetIdleAnimation(anims, reset)
 	self.AnimTbl_IdleStand = anims
-	if reset then
-		self.CurrentIdleAnimation = -1
-		//self.NextIdleStandTime = 0
-	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -716,17 +712,16 @@ function ENT:FaceCertainEntity(target, faceCurEnemy, faceTime) return self:SetTu
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- Based on: https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/game/server/ai_motor.cpp#L780
 function ENT:DeltaIdealYaw()
-    local    flCurrentYaw;
-    flCurrentYaw = (360 / 65536) * (math.floor(self:GetLocalAngles().y * (65536 / 360)) % 65535)
+    local flCurrentYaw = (360 / 65536) * (math.floor(self:GetLocalAngles().y * (65536 / 360)) % 65535)
     if flCurrentYaw == self:GetIdealYaw() then
-        return 0;
+        return 0
     end
     return math_angDif(self:GetIdealYaw(), flCurrentYaw)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function UTIL_VecToYaw(vec) -- Based on: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/shared/util_shared.cpp#L44
 	if (vec.y == 0 && vec.x == 0) then return 0 end
-	local yaw = math_deg(math_atan2( vec.y, vec.x ))
+	local yaw = math_deg(math_atan2(vec.y, vec.x))
 	return yaw < 0 and yaw + 360 or yaw;
 end
 --
@@ -995,7 +990,7 @@ end
 -----------------------------------------------------------]]
 function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 	if !IsValid(ent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or ent:Health() <= 0 or (ent:IsPlayer() && (!ent:Alive() or VJ_CVAR_IGNOREPLAYERS)) then return end
-	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == ent then self:DoMedicReset() end
+	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == ent then self:ResetMedicBehavior() end
 	local eneData = self.EnemyData
 	eneData.TimeSet = CurTime()
 	self:AddEntityRelationship(ent, D_HT, 0)
@@ -1014,7 +1009,7 @@ function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 	end
 	if self.Alerted == false then
 		self.LatestEnemyDistance = self:GetPos():Distance(ent:GetPos())
-		self:DoAlert(ent)
+		self:OnAlert(ent)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1399,7 +1394,7 @@ function ENT:Follow(ent, stopIfFollowing)
 	return false, 0
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoMedicReset()
+function ENT:ResetMedicBehavior()
 	self:CustomOnMedic_OnReset()
 	if IsValid(self.Medic_CurrentEntToHeal) then self.Medic_CurrentEntToHeal.VJTag_IsHealing = false end
 	if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
@@ -1425,7 +1420,7 @@ function ENT:MaintainMedicBehavior()
 		end
 	elseif self.Medic_Status != "Healing" then
 		local ally = self.Medic_CurrentEntToHeal
-		if !IsValid(ally) or !VJ.IsAlive(ally) or (ally:Health() > ally:GetMaxHealth() * 0.75) then self:DoMedicReset() return end
+		if !IsValid(ally) or !VJ.IsAlive(ally) or (ally:Health() > ally:GetMaxHealth() * 0.75) then self:ResetMedicBehavior() return end
 		if self:Visible(ally) && self:VJ_GetNearestPointToEntityDistance(ally) <= self.Medic_HealDistance then -- Are we in healing distance?
 			self.Medic_Status = "Healing"
 			self:CustomOnMedic_BeforeHeal()
@@ -1470,7 +1465,7 @@ function ENT:MaintainMedicBehavior()
 			timer.Simple(timeUntilHeal, function()
 				if IsValid(self) then
 					if !IsValid(ally) then -- Ally doesn't exist anymore, reset
-						self:DoMedicReset()
+						self:ResetMedicBehavior()
 					else -- If it exists...
 						if self:VJ_GetNearestPointToEntityDistance(ally) <= (self.Medic_HealDistance + 20) then -- Are we still in healing distance?
 							if self:CustomOnMedic_OnHeal(ally) != false then
@@ -1482,7 +1477,7 @@ function ENT:MaintainMedicBehavior()
 							if ally.IsVJBaseSNPC == true then
 								ally:PlaySoundSystem("MedicReceiveHeal")
 							end
-							self:DoMedicReset()
+							self:ResetMedicBehavior()
 						else -- If we are no longer in healing distance, go after the ally again
 							self.Medic_Status = "Active"
 							if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
@@ -1500,7 +1495,7 @@ function ENT:MaintainMedicBehavior()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoConstantlyFaceEnemy()
+function ENT:MaintainConstantlyFaceEnemy()
 	if self.VJ_IsBeingControlled then return false end
 	if self.LatestEnemyDistance < self.ConstantlyFaceEnemyDistance then
 		-- Only face if the enemy is visible ?
@@ -1593,16 +1588,16 @@ end
 		- time = How long until the timer expires | DEFAULT: 0.5
 		- func = The function to run when timer expires
 -----------------------------------------------------------]]
-function ENT:DoAddExtraAttackTimers(name, time, func)
+function ENT:AddExtraAttackTimer(name, time, func)
 	name = name or "timer_unknown"
 	self.TimersToRemove[#self.TimersToRemove + 1] = name
 	timer.Create(name..self:EntIndex(), (time or 0.5) / self:GetPlaybackRate(), 1, func)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoAlert(ent)
+function ENT:OnAlert(ent)
 	if !IsValid(self:GetEnemy()) or self.Alerted == true then return end
 	self.Alerted = true
-	-- Fixes the NPC switching from combat to alert to combat after it sees an enemy because `DoAlert` is called after NPC_STATE_COMBAT is set
+	-- Fixes the NPC switching from combat to alert to combat after it sees an enemy because `OnAlert` is called after NPC_STATE_COMBAT is set
 	if self:GetNPCState() != NPC_STATE_COMBAT then
 		self:SetNPCState(NPC_STATE_ALERT)
 	end
@@ -1703,7 +1698,7 @@ function ENT:MaintainRelationships()
 							end
 						end
 					end
-					-- Handle self.VJ Friendly AND self.FriendsWithAllPlayerAllies
+					-- Handle self.VJTag_IsBaseFriendly AND self.FriendsWithAllPlayerAllies
 					if vNPC && !entFri && ((self.VJTag_IsBaseFriendly && v.IsVJBaseSNPC == true) or (self.PlayerFriendly == true && self.FriendsWithAllPlayerAllies == true && v.PlayerFriendly == true && v.FriendsWithAllPlayerAllies == true)) then
 						v:AddEntityRelationship(self, D_LI, 0)
 						self:AddEntityRelationship(v, D_LI, 0)
@@ -2453,7 +2448,7 @@ function ENT:OnRemove()
 	self:CustomOnRemove()
 	hook.Remove("Think", self)
 	self.Dead = true
-	if self.Medic_Status then self:DoMedicReset() end
+	if self.Medic_Status then self:ResetMedicBehavior() end
 	if self.VJTag_IsEating then self:EatingReset("Dead") end
 	self:RemoveTimers()
 	self:StopAllCommonSounds()
@@ -2527,7 +2522,7 @@ for k,v in ipairs(EnemyTargets) do
 	end
 	//table.insert(LocalTargetTable,v)
 	//self.EnemyTable = LocalTargetTable
-	self:DoAlert()
+	self:OnAlert()
 	//return
   end
  end
@@ -2546,7 +2541,7 @@ for k,v in ipairs(EnemyTargets) do
 		self.MyEnemy = v
 		self:UpdateEnemyMemory(v,v:GetPos())
 	end
-	self:DoAlert()
+	self:OnAlert()
 	//return
   end
  end

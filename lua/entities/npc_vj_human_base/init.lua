@@ -162,8 +162,8 @@ ENT.DangerDetectionDistance = 400 -- Max danger detection distance | WARNING: Mo
 ENT.CanThrowBackDetectedGrenades = true -- Should it pick up the detected grenade and throw it away or to the enemy?
 	-- NOTE: Can only throw grenades away if it has a grenade attack AND can detect dangers
 	-- ====== Taking Cover Variables ====== --
-ENT.AnimTbl_TakingCover = {ACT_COVER_LOW} -- The animation it plays when hiding in a covered position
-ENT.AnimTbl_MoveToCover = {ACT_RUN_CROUCH} -- The animation it plays when moving to a covered position
+ENT.AnimTbl_TakingCover = ACT_COVER_LOW -- The animation it plays when hiding in a covered position
+ENT.AnimTbl_MoveToCover = ACT_RUN_CROUCH -- The animation it plays when moving to a covered position
 	-- ====== Control Variables ====== --
 	-- Adjust these variables carefully! Wrong adjustment can have unintended effects!
 ENT.FindEnemy_UseSphere = false -- Should the SNPC be able to see all around him? (360) | Objects and walls can still block its sight!
@@ -221,7 +221,7 @@ ENT.CallForBackUpOnDamage = true -- Should the NPC call for help when damaged?
 ENT.CallForBackUpOnDamageDistance = 800 -- How far away does the call for help go?
 ENT.CallForBackUpOnDamageLimit = 4 -- How many allies should it call? | 0 = Unlimited
 ENT.NextCallForBackUpOnDamageTime = VJ.SET(9, 11) -- How much time until it can run this AI component again
-ENT.CallForBackUpOnDamageAnimation = {ACT_SIGNAL_GROUP} -- Animations played when it calls for help on damage
+ENT.CallForBackUpOnDamageAnimation = ACT_SIGNAL_GROUP -- Animations played when it calls for help on damage
 ENT.CallForBackUpOnDamageAnimationTime = false -- How much time until it can use activities | false = Base automatically decides the animation duration
 ENT.DisableCallForBackUpOnDamageAnimation = false -- Disables the animations from playing
 	-- ====== Move Or Hide On Damage Variables ====== --
@@ -325,7 +325,6 @@ ENT.Weapon_AimTurnDiff = false -- Weapon aim turning threshold between 0 and 1 |
 ENT.HasWeaponBackAway = true -- Should the SNPC back away if the enemy is close?
 ENT.WeaponBackAway_Distance = 150 -- When the enemy is this close, the SNPC will back away | 0 = Never back away
 	-- ====== Standing-Firing Variables ====== --
-ENT.AnimTbl_WeaponAim = nil -- Animations played when the NPC is supposed to raise/aim its weapon | EX: Gun is out of ammo, combat idle, etc.| DEFAULT: {ACT_IDLE_ANGRY}
 ENT.AnimTbl_WeaponAttack = {ACT_RANGE_ATTACK1} -- Animation played when the SNPC does weapon attack
 ENT.CanCrouchOnWeaponAttack = true -- Can it crouch while shooting?
 ENT.AnimTbl_WeaponAttackCrouch = {ACT_RANGE_ATTACK1_LOW} -- Animation played when the SNPC does weapon attack while crouching | For VJ Weapons
@@ -367,7 +366,6 @@ ENT.NextMoveRandomlyWhenShootingTime2 = 6 -- How much time until it can move ran
 ENT.WaitForEnemyToComeOut = true -- Should it wait for the enemy to come out from hiding?
 ENT.WaitForEnemyToComeOutTime = VJ.SET(3, 5) -- How much time should it wait until it starts chasing the enemy?
 ENT.WaitForEnemyToComeOutDistance = 100 -- If it's this close to the enemy, it won't do it
-ENT.HasLostWeaponSightAnimation = false -- Set to true if you would like the SNPC to play a different animation when it has lost sight of the enemy and can't fire at it
 	-- ====== Scared Behavior Variables ====== --
 ENT.NoWeapon_UseScaredBehavior = true -- Should it use the scared behavior when it sees an enemy and doesn't have a weapon?
 ENT.AnimTbl_ScaredBehaviorStand = nil -- Animations it will play while scared and standing | Replaces the idle stand animation | DEFAULT: {ACT_COWER}
@@ -777,7 +775,7 @@ end
 function ENT:CustomOnMeleeAttack_AfterChecks(hitEnt, isProp) end -- return `true` to disable the attack and move onto the next entity!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackKnockbackVelocity(hitEnt)
-	return self:GetForward()*math.random(100, 140) + self:GetUp()*10
+	return self:GetForward() * math.random(100, 140) + self:GetUp() * 10
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_Miss() end
@@ -789,8 +787,6 @@ end
 function ENT:CustomOnWeaponAttack() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMoveRandomlyWhenShooting() end -- Returning false will disable the base code
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnWaitForEnemyToComeOut() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnWeaponReload() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1599,9 +1595,8 @@ ENT.Weapon_TimeSinceLastShot = 0
 ENT.NextMoveRandomlyWhenShootingT = 0
 ENT.NextWeaponAttackT = 0
 ENT.NextMeleeWeaponAttackT = 0
-ENT.CurrentWeaponAnimation = -1
+ENT.CurrentWeaponAnimation = ACT_INVALID
 ENT.NextGrenadeAttackSoundT = 0
-ENT.CurrentIdleAnimation = 0
 ENT.NextSuppressingSoundT = 0
 ENT.TakingCoverT = 0
 ENT.NextFlinchT = 0
@@ -1746,13 +1741,11 @@ local function ConvarsOnInit(self)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defIdleTbl = {ACT_IDLE}
-local defWeaponAimTbl = {ACT_IDLE_ANGRY}
 local defScaredStandTbl = {ACT_COWER}
 local defShootVec = Vector(0, 0, 55)
 --
 function ENT:Initialize()
 	if self.AnimTbl_IdleStand == nil then self.AnimTbl_IdleStand = defIdleTbl end
-	if self.AnimTbl_WeaponAim == nil then self.AnimTbl_WeaponAim = defWeaponAimTbl end
 	if self.AnimTbl_ScaredBehaviorStand == nil then self.AnimTbl_ScaredBehaviorStand = defScaredStandTbl end
 	self:CustomOnPreInitialize()
 	self:SetSpawnEffect(false)
@@ -2317,7 +2310,7 @@ function ENT:TranslateActivity(act)
 	-- Handle aiming while moving animations
 	elseif (act == ACT_RUN or act == ACT_WALK) && self.HasShootWhileMoving == true && IsValid(self:GetEnemy()) then
 		if (self.EnemyData.IsVisible or (self.EnemyData.LastVisibleTime + 5) > CurTime()) && self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true && self:IsAbleToShootWeapon(true, false) == true then
-			local anim = self:TranslateToWeaponAnim(act == ACT_RUN and ACT_RUN_AIM or ACT_WALK_AIM)
+			local anim = self:TranslateActivity(act == ACT_RUN and ACT_RUN_AIM or ACT_WALK_AIM)
 			if VJ.AnimExists(self, anim) == true then
 				self.DoingWeaponAttack = true
 				self.DoingWeaponAttack_Standing = false
@@ -2380,7 +2373,7 @@ function ENT:DoChangeWeapon(wep, invSwitch)
 	
 	-- If we are given a new weapon or switching weapon, then do all of the necessary set up
 	if IsValid(curWep) then
-		self.CurrentWeaponAnimation = -1
+		self.CurrentWeaponAnimation = ACT_INVALID
 		self:SetWeaponState() -- Reset the weapon state because we do NOT want previous weapon's state to be used!
 		if invSwitch then
 			if curWep.IsVJBaseWeapon then curWep:Equip(self) end
@@ -2805,7 +2798,7 @@ function ENT:Think()
 				end
 				
 				-- Turning / Facing Enemy
-				if self.ConstantlyFaceEnemy then self:DoConstantlyFaceEnemy() end
+				if self.ConstantlyFaceEnemy then self:MaintainConstantlyFaceEnemy() end
 				turnData = self.TurnData
 				if turnData.Type == VJ.NPC_FACE_ENEMY or (turnData.Type == VJ.NPC_FACE_ENEMY_VISIBLE && eneData.IsVisible) then
 					local resultAng = self:GetFaceAngle((enePos - myPos):Angle())
@@ -2885,7 +2878,7 @@ function ENT:Think()
 							timer.Create("timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self:GetPlaybackRate(), self.MeleeAttackReps, function() if self.CurAttackSeed == seed then self:MeleeAttackCode() end end)
 							if self.MeleeAttackExtraTimers then
 								for k, t in ipairs(self.MeleeAttackExtraTimers) do
-									self:DoAddExtraAttackTimers("timer_melee_start"..curTime + k, t, function() if self.CurAttackSeed == seed then self:MeleeAttackCode() end end)
+									self:AddExtraAttackTimer("timer_melee_start"..curTime + k, t, function() if self.CurAttackSeed == seed then self:MeleeAttackCode() end end)
 								end
 							end
 						end
@@ -3557,9 +3550,7 @@ function ENT:SelectSchedule()
 								-- Wait for the enemy to come out
 								if self.WaitForEnemyToComeOut && !self.WaitingForEnemyToComeOut && (!wep.IsMeleeWeapon) && self.AllowToDo_WaitForEnemyToComeOut && ((CurTime() - self.Weapon_TimeSinceLastShot) <= 4.5) && (eneDist_Eye > self.WaitForEnemyToComeOutDistance) then
 									self.WaitingForEnemyToComeOut = true
-									if self.HasLostWeaponSightAnimation == true then
-										self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_WeaponAim, false, 0, true)
-									end
+									self:DoIdleAnimation(2) -- Make it play idle stand (Which will turn into ACT_IDLE_ANGRY)
 									self.NextChaseTime = CurTime() + math.Rand(self.WaitForEnemyToComeOutTime.a, self.WaitForEnemyToComeOutTime.b)
 								-- If I am not supposed to wait for the enemy, then go after the enemy!
 								elseif /*self.DisableChasingEnemy == false &&*/ CurTime() > self.LastHiddenZoneT then
@@ -3668,7 +3659,7 @@ function ENT:SelectSchedule()
 									else
 										local hasAmmo = wep:Clip1() > 0 // AllowWeaponReloading
 										if !hasAmmo && !self.CurrentWeaponAnimationIsAim then
-											self.CurrentWeaponAnimation = -1
+											self.CurrentWeaponAnimation = ACT_INVALID
 										end
 										-- If the current animation is already a firing animation, then just tell the base it's already firing and do NOT restart the animation
 										if VJ.IsCurrentAnimation(self, self:TranslateActivity(self.CurrentWeaponAnimation)) == true then
@@ -3683,7 +3674,8 @@ function ENT:SelectSchedule()
 											local finalAnim;
 											-- Check if the NPC has ammo
 											if !hasAmmo then
-												finalAnim = self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponAim))
+												self:DoIdleAnimation(2) -- Make it play idle stand (Which will turn into ACT_IDLE_ANGRY)
+												//finalAnim = self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponAim))
 												self.CurrentWeaponAnimationIsAim = true
 											else
 												local anim_crouch = self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponAttackCrouch))
@@ -4056,7 +4048,7 @@ local vecZ4 = Vector(0, 0, 4)
 --
 function ENT:PriorToKilled(dmginfo, hitgroup)
 	self:CustomOnInitialKilled(dmginfo, hitgroup)
-	if self.Medic_Status then self:DoMedicReset() end
+	if self.Medic_Status then self:ResetMedicBehavior() end
 	local dmgInflictor = dmginfo:GetInflictor()
 	local dmgAttacker = dmginfo:GetAttacker()
 	
@@ -4089,8 +4081,8 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 					if v:Disposition(dmgAttacker) != D_HT then
 						v:CustomOnBecomeEnemyToPlayer(dmginfo, hitgroup)
 						if v.IsFollowing == true && v.FollowData.Ent == dmgAttacker then v:FollowReset() end
-						v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy+1] = dmgAttacker
-						v:AddEntityRelationship(dmgAttacker,D_HT,2)
+						v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy + 1] = dmgAttacker
+						v:AddEntityRelationship(dmgAttacker, D_HT, 2)
 						if v.AllowPrintingInChat == true then
 							dmgAttacker:PrintMessage(HUD_PRINTTALK, v:GetName().." no longer likes you.")
 						end

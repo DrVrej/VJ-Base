@@ -13,10 +13,17 @@
 	local blcolor = Color(130, 19, 10)
 	effectBlood:SetColor(VJ.Color2Byte(Color(r, g, b)))
 -------------------------------------- */
+local bAND = bit.band
+local bShiftR = bit.rshift
+--
+local function Color8Bit2Color(bits)
+	return Color(bShiftR(bits, 5) * 255 / 7, bAND(bShiftR(bits, 2), 0x07) * 255 / 7, bAND(bits, 0x03) * 255 / 3)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function EFFECT:Init(data)
 	local origin = data:GetOrigin()
 	local scale = data:GetScale()
-	local color = VJ.Color8Bit2Color(data:GetColor())
+	local color = Color8Bit2Color(data:GetColor())
 	
 	self.Emitter = ParticleEmitter(origin)
 	for _ = 0,6 do

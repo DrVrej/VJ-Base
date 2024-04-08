@@ -785,7 +785,7 @@ end
 function ENT:CustomOnMeleeAttack_AfterChecks(hitEnt, isProp) end -- return `true` to disable the attack and move onto the next entity!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackKnockbackVelocity(hitEnt)
-	return self:GetForward()*math.random(100, 140) + self:GetUp()*10
+	return self:GetForward() * math.random(100, 140) + self:GetUp() * 10
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_Miss() end
@@ -938,7 +938,6 @@ ENT.NextChaseTime = 0
 ENT.OnPlayerSightNextT = 0
 ENT.NextDamageByPlayerSoundT = 0
 ENT.Medic_NextHealT = 0
-ENT.CurrentIdleAnimation = 0
 ENT.NextFlinchT = 0
 ENT.NextCanGetCombineBallDamageT = 0
 ENT.UseTheSameGeneralSoundPitch_PickedNumber = 0
@@ -2028,7 +2027,7 @@ function ENT:Think()
 				end
 				
 				-- Turning / Facing Enemy
-				if self.ConstantlyFaceEnemy then self:DoConstantlyFaceEnemy() end
+				if self.ConstantlyFaceEnemy then self:MaintainConstantlyFaceEnemy() end
 				turnData = self.TurnData
 				if turnData.Type == VJ.NPC_FACE_ENEMY or (turnData.Type == VJ.NPC_FACE_ENEMY_VISIBLE && eneData.IsVisible) then
 					local resultAng = self:GetFaceAngle((enePos - myPos):Angle())
@@ -2137,7 +2136,7 @@ function ENT:Think()
 									end end)
 									if self.MeleeAttackExtraTimers then
 										for k, t in ipairs(self.MeleeAttackExtraTimers) do
-											self:DoAddExtraAttackTimers("timer_melee_start_"..curTime + k, t, function() if self.CurAttackSeed == seed then
+											self:AddExtraAttackTimer("timer_melee_start_"..curTime + k, t, function() if self.CurAttackSeed == seed then
 												if atkType == 2 then
 													self:MeleeAttackCode(true)
 												else
@@ -2180,7 +2179,7 @@ function ENT:Think()
 									timer.Create("timer_range_start"..self:EntIndex(), self.TimeUntilRangeAttackProjectileRelease / self:GetPlaybackRate(), self.RangeAttackReps, function() if self.CurAttackSeed == seed then self:RangeAttackCode() end end)
 									if self.RangeAttackExtraTimers then
 										for k, t in ipairs(self.RangeAttackExtraTimers) do
-											self:DoAddExtraAttackTimers("timer_range_start_"..curTime + k, t, function() if self.CurAttackSeed == seed then self:RangeAttackCode() end end)
+											self:AddExtraAttackTimer("timer_range_start_"..curTime + k, t, function() if self.CurAttackSeed == seed then self:RangeAttackCode() end end)
 										end
 									end
 								end
@@ -2219,7 +2218,7 @@ function ENT:Think()
 									timer.Create("timer_leap_start"..self:EntIndex(), self.TimeUntilLeapAttackDamage / self:GetPlaybackRate(), self.LeapAttackReps, function() if self.CurAttackSeed == seed then self:LeapDamageCode() end end)
 									if self.LeapAttackExtraTimers then
 										for k, t in ipairs(self.LeapAttackExtraTimers) do
-											self:DoAddExtraAttackTimers("timer_leap_start_"..curTime + k, t, function() if self.CurAttackSeed == seed then self:LeapDamageCode() end end)
+											self:AddExtraAttackTimer("timer_leap_start_"..curTime + k, t, function() if self.CurAttackSeed == seed then self:LeapDamageCode() end end)
 										end
 									end
 								end
@@ -2993,7 +2992,7 @@ local vecZ4 = Vector(0, 0, 4)
 --
 function ENT:PriorToKilled(dmginfo, hitgroup)
 	self:CustomOnInitialKilled(dmginfo, hitgroup)
-	if self.Medic_Status then self:DoMedicReset() end
+	if self.Medic_Status then self:ResetMedicBehavior() end
 	local dmgInflictor = dmginfo:GetInflictor()
 	local dmgAttacker = dmginfo:GetAttacker()
 	
@@ -3026,8 +3025,8 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 					if v:Disposition(dmgAttacker) != D_HT then
 						v:CustomOnBecomeEnemyToPlayer(dmginfo, hitgroup)
 						if v.IsFollowing == true && v.FollowData.Ent == dmgAttacker then v:FollowReset() end
-						v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy+1] = dmgAttacker
-						v:AddEntityRelationship(dmgAttacker,D_HT,2)
+						v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy + 1] = dmgAttacker
+						v:AddEntityRelationship(dmgAttacker, D_HT, 2)
 						if v.AllowPrintingInChat == true then
 							dmgAttacker:PrintMessage(HUD_PRINTTALK, v:GetName().." no longer likes you.")
 						end

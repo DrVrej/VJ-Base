@@ -18,9 +18,7 @@ local string_Replace = string.Replace
 local math_round = math.Round
 local math_floor = math.floor
 local math_clamp = math.Clamp
-local bAND = bit.band
 local bShiftL = bit.lshift
-local bShiftR = bit.rshift
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Takes a table and returns a random value from it
@@ -106,11 +104,7 @@ function VJ.RoundToMultiple(num, multiple) -- Credits to Bizzclaw for pointing m
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ.Color2Byte(color)
-	return bShiftL(math_floor(color.r*7/255), 5) + bShiftL(math_floor(color.g*7/255), 2) + math_floor(color.b*3/255)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function VJ.Color8Bit2Color(bits)
-	return Color(bShiftR(bits,5)*255/7, bAND(bShiftR(bits,2), 0x07)*255/7, bAND(bits,0x03)*255/3)
+	return bShiftL(math_floor(color.r * 7 / 255), 5) + bShiftL(math_floor(color.g * 7 / 255), 2) + math_floor(color.b * 3 / 255)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ.CreateSound(ent, sdFile, sdLevel, sdPitch, customFunc)
