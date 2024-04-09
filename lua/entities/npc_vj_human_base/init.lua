@@ -241,7 +241,7 @@ ENT.BringFriendsOnDeathLimit = 3 -- How many people should it call? | 0 = Unlimi
 ENT.AlertFriendsOnDeath = true -- Should the SNPCs allies get alerted when it dies? | Its allies will also need to have this variable set to true!
 ENT.AlertFriendsOnDeathDistance = 800 -- How far away does the signal go? | Counted in World Units
 ENT.AlertFriendsOnDeathLimit = 50 -- How many people should it alert?
-ENT.AnimTbl_AlertFriendsOnDeath = {ACT_RANGE_ATTACK1} -- Animations it plays when an ally dies that also has AlertFriendsOnDeath set to true
+ENT.AnimTbl_AlertFriendsOnDeath = ACT_RANGE_ATTACK1 -- Animations it plays when an ally dies that also has AlertFriendsOnDeath set to true
 -- ====== Death Animation Variables ====== --
 ENT.HasDeathAnimation = false -- Does it play an animation when it dies?
 ENT.AnimTbl_Death = {} -- Death Animations
@@ -252,7 +252,7 @@ ENT.DeathAnimationDecreaseLengthAmount = 0 -- This will decrease the time until 
 	-- ====== Corpse Variables ====== --
 ENT.HasDeathRagdoll = true -- If set to false, it will not spawn the regular ragdoll of the SNPC
 ENT.DeathCorpseEntityClass = "UseDefaultBehavior" -- The entity class it creates | "UseDefaultBehavior" = Let the base automatically detect the type
-ENT.DeathCorpseModel = {} -- The corpse model that it will spawn when it dies | Leave empty to use the NPC's model | Put as many models as desired, the base will pick a random one.
+ENT.DeathCorpseModel = false -- Model(s) to spawn as the NPC's corpse | false = Use the NPC's model | Can be a single string or a table of strings
 ENT.DeathCorpseCollisionType = COLLISION_GROUP_DEBRIS -- Collision type for the corpse | SNPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
 ENT.DeathCorpseSkin = -1 -- Used to override the death skin | -1 = Use the skin that the SNPC had before it died
 ENT.DeathCorpseSetBodyGroup = true -- Should it get the models bodygroups and set it to the corpse? When set to false, it uses the model's default bodygroups
@@ -339,12 +339,11 @@ ENT.AnimTbl_ShootWhileMovingRun = {ACT_RUN_AIM} -- Animations it will play when 
 ENT.AnimTbl_ShootWhileMovingWalk = {ACT_WALK_AIM} -- Animations it will play when shooting while walking
 	-- ====== Reloading Variables ====== --
 ENT.AllowWeaponReloading = true -- If false, the NPC will not reload
+ENT.WeaponReload_FindCover = true -- Should it first find cover before reloading?
 ENT.DisableWeaponReloadAnimation = false -- if true, it will disable the animation code when reloading
 ENT.AnimTbl_WeaponReload = ACT_RELOAD -- Animations that play when the NPC reloads
 ENT.AnimTbl_WeaponReloadBehindCover = ACT_RELOAD_LOW -- Animations that play when the NPC reloads, but behind cover
-ENT.WeaponReload_FindCover = true -- Should it first find cover before reloading?
 ENT.WeaponReloadAnimationFaceEnemy = true -- Should it face the enemy while playing the weapon reload animation?
-ENT.WeaponReloadAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 	-- ====== Weapon Inventory Variables ====== --
 	-- Weapons are given on spawn and the NPC will only switch to those if the requirements are met
 	-- The items that are stored in self.WeaponInventory:
@@ -357,8 +356,7 @@ ENT.WeaponInventory_Melee = false -- If true, the NPC will spawn with one of the
 ENT.WeaponInventory_MeleeList = {} -- It will randomly be given one of these weapons
 	-- ====== Move Randomly While Firing Variables ====== --
 ENT.MoveRandomlyWhenShooting = true -- Should it move randomly when shooting?
-ENT.NextMoveRandomlyWhenShootingTime1 = 3 -- How much time until it can move randomly when shooting? | First number in math.random
-ENT.NextMoveRandomlyWhenShootingTime2 = 6 -- How much time until it can move randomly when shooting? | Second number in math.random
+ENT.NextMoveRandomlyWhenShootingTime = VJ.SET(3, 6) -- How much time until it can randomly move again while shooting?
 	-- ====== Wait For Enemy To Come Out Variables ====== --
 ENT.WaitForEnemyToComeOut = true -- Should it wait for the enemy to come out from hiding?
 ENT.WaitForEnemyToComeOutTime = VJ.SET(3, 5) -- How much time should it wait until it starts chasing the enemy?
@@ -1737,6 +1735,20 @@ local function ConvarsOnInit(self)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local function ApplyBackwardsCompatibility(self)
+	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	if self.CustomInitialize then self:CustomInitialize() end
+	if self.NextMoveRandomlyWhenShootingTime1 or self.NextMoveRandomlyWhenShootingTime2 then self.NextMoveRandomlyWhenShootingTime = VJ.SET(self.NextMoveRandomlyWhenShootingTime1 or 3, self.NextMoveRandomlyWhenShootingTime2 or 6) end
+	if self.Immune_Physics then self:SetImpactEnergyScale(0) end
+	if self.MaxJumpLegalDistance then self.JumpVars.MaxRise = self.MaxJumpLegalDistance.a; self.JumpVars.MaxDrop = self.MaxJumpLegalDistance.b end
+	if self.HasWorldShakeOnMove && !self.CustomOnFootStepSound then
+		self.CustomOnFootStepSound = function()
+			util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000)
+		end
+	end
+	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 local defIdleTbl = {ACT_IDLE}
 local defScaredStandTbl = {ACT_COWER}
 local defShootVec = Vector(0, 0, 55)
@@ -1789,7 +1801,6 @@ function ENT:Initialize()
 	//if self.HasSquad == true then self:Fire("setsquad", self.SquadName) end
 	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
 	self:CustomOnInitialize()
-	if self.CustomInitialize then self:CustomInitialize() end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 	-- Auto compute damage bounds if the damage bounds == collision bounds then the developer has NOT changed it | Call after "CustomOnInitialize"
 	if self:GetSurroundingBounds() == self:WorldSpaceAABB() then
 		local collisionMin, collisionMax = self:GetCollisionBounds()
@@ -1799,8 +1810,7 @@ function ENT:Initialize()
 	self:SetupBloodColor(self.BloodColor) -- Collision bounds dependent, call after "CustomOnInitialize"
 	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + (self.IdleAlwaysWander and 0 or 1)) -- If self.NextWanderTime isn't given a value THEN if self.IdleAlwaysWander isn't true, wait at least 1 sec before wandering
 	self.SightDistance = (GetConVar("vj_npc_seedistance"):GetInt() > 0) and GetConVar("vj_npc_seedistance"):GetInt() or self.SightDistance
-	if self.Immune_Physics then self:SetImpactEnergyScale(0) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
-	if self.MaxJumpLegalDistance then self.JumpVars.MaxRise = self.MaxJumpLegalDistance.a; self.JumpVars.MaxDrop = self.MaxJumpLegalDistance.b; end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	ApplyBackwardsCompatibility(self)
 	timer.Simple(0.15, function()
 		if IsValid(self) then
 			self:SetMaxLookDistance(self.SightDistance)
@@ -2710,7 +2720,7 @@ function ENT:Think()
 					self:CustomOnWeaponReload()
 					if self.DisableWeaponReloadAnimation == false then
 						local function DoReloadAnimation(givenAnim)
-							local anim, animDur = self:VJ_ACT_PLAYACTIVITY(givenAnim, true, false, self.WeaponReloadAnimationFaceEnemy, self.WeaponReloadAnimationDelay)
+							local anim, animDur = self:VJ_ACT_PLAYACTIVITY(givenAnim, true, false, self.WeaponReloadAnimationFaceEnemy)
 							if anim != ACT_INVALID then
 								local wep = self.CurrentWeaponEntity
 								if wep.IsVJBaseWeapon == true then wep:NPC_Reload() end
@@ -3707,7 +3717,7 @@ function ENT:SelectSchedule()
 											self:VJ_TASK_GOTO_LASTPOS(math.random(1, 2) == 1 and "TASK_RUN_PATH" or "TASK_WALK_PATH", function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
 										end
 									end
-									self.NextMoveRandomlyWhenShootingT = CurTime() + math.Rand(self.NextMoveRandomlyWhenShootingTime1, self.NextMoveRandomlyWhenShootingTime2)
+									self.NextMoveRandomlyWhenShootingT = CurTime() + math.Rand(self.NextMoveRandomlyWhenShootingTime.a, self.NextMoveRandomlyWhenShootingTime.b)
 								end
 							else -- None VJ Base weapons
 								self:SetTurnTarget("Enemy")
@@ -4769,7 +4779,6 @@ function ENT:FootStepSoundCode(customSd)
 			if !sdtbl then sdtbl = DefaultSoundTbl_FootStep end
 			VJ.EmitSound(self, sdtbl, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
 			local funcCustom = self.CustomOnFootStepSound; if funcCustom then funcCustom(self, "Event", sdtbl) end
-			if self.HasWorldShakeOnMove then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000) end -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 			return
 		elseif self:IsMoving() && CurTime() > self.FootStepT && self:GetInternalVariable("m_flMoveWaitFinished") <= 0 then
 			local customTbl = VJ.PICK(customSd)
@@ -4780,13 +4789,11 @@ function ENT:FootStepSoundCode(customSd)
 			if !self.DisableFootStepOnRun && curSched != nil && curSched.MoveType == 1 then // VJ.HasValue(self.AnimTbl_Run, self:GetMovementActivity())
 				VJ.EmitSound(self, sdtbl, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
 				local funcCustom = self.CustomOnFootStepSound; if funcCustom then funcCustom(self, "Run", sdtbl) end
-				if self.HasWorldShakeOnMove then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000) end -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 				self.FootStepT = CurTime() + self.FootStepTimeRun
 				return
 			elseif !self.DisableFootStepOnWalk && curSched != nil && curSched.MoveType == 0 then  // VJ.HasValue(self.AnimTbl_Walk, self:GetMovementActivity())
 				VJ.EmitSound(self, sdtbl, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
 				local funcCustom = self.CustomOnFootStepSound; if funcCustom then funcCustom(self, "Walk", sdtbl) end
-				if self.HasWorldShakeOnMove then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000) end -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 				self.FootStepT = CurTime() + self.FootStepTimeWalk
 				return
 			end

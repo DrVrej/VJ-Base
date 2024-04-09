@@ -250,7 +250,7 @@ ENT.BringFriendsOnDeathLimit = 3 -- How many people should it call? | 0 = Unlimi
 ENT.AlertFriendsOnDeath = false -- Should the SNPCs allies get alerted when it dies? | Its allies will also need to have this variable set to true!
 ENT.AlertFriendsOnDeathDistance = 800 -- How far away does the signal go? | Counted in World Units
 ENT.AlertFriendsOnDeathLimit = 50 -- How many people should it alert?
-ENT.AnimTbl_AlertFriendsOnDeath = {ACT_RANGE_ATTACK1} -- Animations it plays when an ally dies that also has AlertFriendsOnDeath set to true
+ENT.AnimTbl_AlertFriendsOnDeath = ACT_RANGE_ATTACK1 -- Animations it plays when an ally dies that also has AlertFriendsOnDeath set to true
 -- ====== Death Animation Variables ====== --
 ENT.HasDeathAnimation = false -- Does it play an animation when it dies?
 ENT.AnimTbl_Death = {} -- Death Animations
@@ -261,7 +261,7 @@ ENT.DeathAnimationDecreaseLengthAmount = 0 -- This will decrease the time until 
 	-- ====== Corpse Variables ====== --
 ENT.HasDeathRagdoll = true -- If set to false, it will not spawn the regular ragdoll of the SNPC
 ENT.DeathCorpseEntityClass = "UseDefaultBehavior" -- The entity class it creates | "UseDefaultBehavior" = Let the base automatically detect the type
-ENT.DeathCorpseModel = {} -- The corpse model that it will spawn when it dies | Leave empty to use the NPC's model | Put as many models as desired, the base will pick a random one.
+ENT.DeathCorpseModel = false -- Model(s) to spawn as the NPC's corpse | false = Use the NPC's model | Can be a single string or a table of strings
 ENT.DeathCorpseCollisionType = COLLISION_GROUP_DEBRIS -- Collision type for the corpse | SNPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
 ENT.DeathCorpseSkin = -1 -- Used to override the death skin | -1 = Use the skin that the SNPC had before it died
 ENT.DeathCorpseSetBodyGroup = true -- Should it get the models bodygroups and set it to the corpse? When set to false, it uses the model's default bodygroups
@@ -1073,6 +1073,32 @@ local function ConvarsOnInit(self)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local function ApplyBackwardsCompatibility(self)
+	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	if self.CustomInitialize then self:CustomInitialize() end
+	if self.Immune_Physics then self:SetImpactEnergyScale(0) end
+	if self.MaxJumpLegalDistance then self.JumpVars.MaxRise = self.MaxJumpLegalDistance.a; self.JumpVars.MaxDrop = self.MaxJumpLegalDistance.b end
+	if self.HasWorldShakeOnMove && !self.CustomOnFootStepSound then
+		-- Only do this if "self.CustomOnFootStepSound" isn't already being used
+		self.CustomOnFootStepSound = function()
+			util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000)
+		end
+	end
+	if self.MeleeAttackWorldShakeOnMiss then
+		local orgFunc = self.CustomOnMeleeAttack_Miss -- If it already exists then override it
+		self.CustomOnMeleeAttack_Miss = function()
+			orgFunc(self)
+			util.ScreenShake(self:GetPos(), self.MeleeAttackWorldShakeOnMissAmplitude or 16, 100, self.MeleeAttackWorldShakeOnMissDuration or 1, self.MeleeAttackWorldShakeOnMissRadius or 2000)
+		end
+	end
+	if self.MeleeAttackKnockBack_Forward1 or self.MeleeAttackKnockBack_Forward2 or self.MeleeAttackKnockBack_Up1 or self.MeleeAttackKnockBack_Up2 then
+		self.MeleeAttackKnockbackVelocity = function()
+			return self:GetForward()*math.random(self.MeleeAttackKnockBack_Forward1 or 100, self.MeleeAttackKnockBack_Forward2 or 100) + self:GetUp()*math.random(self.MeleeAttackKnockBack_Up1 or 10, self.MeleeAttackKnockBack_Up2 or 10) + self:GetRight()*math.random(self.MeleeAttackKnockBack_Right1 or 0, self.MeleeAttackKnockBack_Right2 or 0)
+		end
+	end
+	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 local defIdleTbl = {ACT_IDLE}
 local defShootVec = Vector(0, 0, 55)
 --
@@ -1114,7 +1140,6 @@ function ENT:Initialize()
 	self.StartHealth = self:Health()
 	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
 	self:CustomOnInitialize()
-	if self.CustomInitialize then self:CustomInitialize() end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 	-- Auto compute damage bounds if the damage bounds == collision bounds then the developer has NOT changed it | Call after "CustomOnInitialize"
 	if self:GetSurroundingBounds() == self:WorldSpaceAABB() then
 		local collisionMin, collisionMax = self:GetCollisionBounds()
@@ -1124,8 +1149,7 @@ function ENT:Initialize()
 	self:SetupBloodColor(self.BloodColor) -- Collision bounds dependent, call after "CustomOnInitialize"
 	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + (self.IdleAlwaysWander and 0 or 1)) -- If self.NextWanderTime isn't given a value THEN if self.IdleAlwaysWander isn't true, wait at least 1 sec before wandering
 	self.SightDistance = (GetConVar("vj_npc_seedistance"):GetInt() > 0) and GetConVar("vj_npc_seedistance"):GetInt() or self.SightDistance
-	if self.Immune_Physics then self:SetImpactEnergyScale(0) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
-	if self.MaxJumpLegalDistance then self.JumpVars.MaxRise = self.MaxJumpLegalDistance.a; self.JumpVars.MaxDrop = self.MaxJumpLegalDistance.b; end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	ApplyBackwardsCompatibility(self)
 	timer.Simple(0.15, function()
 		if IsValid(self) then
 			self:SetMaxLookDistance(self.SightDistance)
@@ -2381,13 +2405,7 @@ function ENT:MeleeAttackCode(isPropAttack, attackDist, customEnt)
 			-- Knockback
 			if self.HasMeleeAttackKnockBack && v.MovementType != VJ_MOVETYPE_STATIONARY && (!v.VJ_IsHugeMonster or v.IsVJBaseSNPC_Tank) then
 				v:SetGroundEntity(NULL)
-				-- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
-				if self.MeleeAttackKnockBack_Forward1 or self.MeleeAttackKnockBack_Forward2 or self.MeleeAttackKnockBack_Up1 or self.MeleeAttackKnockBack_Up2 then
-					v:SetVelocity(self:GetForward()*math.random(self.MeleeAttackKnockBack_Forward1 or 100, self.MeleeAttackKnockBack_Forward2 or 100) + self:GetUp()*math.random(self.MeleeAttackKnockBack_Up1 or 10, self.MeleeAttackKnockBack_Up2 or 10) + self:GetRight()*math.random(self.MeleeAttackKnockBack_Right1 or 0, self.MeleeAttackKnockBack_Right2 or 0))
-				else
-				-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-					v:SetVelocity(self:MeleeAttackKnockbackVelocity(v))
-				end
+				v:SetVelocity(self:MeleeAttackKnockbackVelocity(v))
 			end
 			-- Apply actual damage
 			if !self.DisableDefaultMeleeAttackDamageCode then
@@ -2440,9 +2458,6 @@ function ENT:MeleeAttackCode(isPropAttack, attackDist, customEnt)
 		self.AttackState = VJ.ATTACK_STATE_EXECUTED_HIT
 	else
 		self:CustomOnMeleeAttack_Miss()
-		-- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
-		if self.MeleeAttackWorldShakeOnMiss then util.ScreenShake(myPos, self.MeleeAttackWorldShakeOnMissAmplitude or 16, 100, self.MeleeAttackWorldShakeOnMissDuration or 1, self.MeleeAttackWorldShakeOnMissRadius or 2000) end
-		-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		self:PlaySoundSystem("MeleeAttackMiss", nil, VJ.EmitSound)
 	end
 end
@@ -3683,7 +3698,6 @@ function ENT:FootStepSoundCode(customSd)
 				VJ.EmitSound(self, sdtbl, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
 				local funcCustom = self.CustomOnFootStepSound; if funcCustom then funcCustom(self, "Event", sdtbl) end
 			end
-			if self.HasWorldShakeOnMove then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000) end -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 			return
 		elseif self:IsMoving() && CurTime() > self.FootStepT && self:GetInternalVariable("m_flMoveWaitFinished") <= 0 then
 			local customTbl = VJ.PICK(customSd)
@@ -3694,13 +3708,11 @@ function ENT:FootStepSoundCode(customSd)
 			if !self.DisableFootStepOnRun && curSched != nil && curSched.MoveType == 1 then // VJ.HasValue(self.AnimTbl_Run, self:GetMovementActivity())
 				VJ.EmitSound(self, sdtbl, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
 				local funcCustom = self.CustomOnFootStepSound; if funcCustom then funcCustom(self, "Run", sdtbl) end
-				if self.HasWorldShakeOnMove then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000) end -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 				self.FootStepT = CurTime() + self.FootStepTimeRun
 				return
 			elseif !self.DisableFootStepOnWalk && curSched != nil && curSched.MoveType == 0 then  // VJ.HasValue(self.AnimTbl_Walk, self:GetMovementActivity())
 				VJ.EmitSound(self, sdtbl, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
 				local funcCustom = self.CustomOnFootStepSound; if funcCustom then funcCustom(self, "Walk", sdtbl) end
-				if self.HasWorldShakeOnMove then util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000) end -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 				self.FootStepT = CurTime() + self.FootStepTimeWalk
 				return
 			end

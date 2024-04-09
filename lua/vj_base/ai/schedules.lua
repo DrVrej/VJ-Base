@@ -327,8 +327,6 @@ function ENT:StartSchedule(schedule)
 			self:DoRunCode_OnFail(schedule)
 			return
 		end
-		self.LastHiddenZoneT = 0
-		self.CurAnimationSeed = 0
 	end*/
 	
 	-- No longer needed, `TranslateActivity` handles it now
@@ -358,6 +356,12 @@ function ENT:StartSchedule(schedule)
 	-- if you don't want it to reset on schedule finish then set & remove the conditions yourself outside of the schedule
 	if schedule.IgnoreConditions then
 		self:SetIgnoreConditions(schedule.IgnoreConditions)
+	end
+	
+	-- Clear certain systems that should be notified that we have moved
+	if schedule.IsMovingTask == true then
+		self.LastHiddenZoneT = 0
+		self.CurAnimationSeed = 0
 	end
 	
 	schedule.AlreadyRanCode_OnFail = false
