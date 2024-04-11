@@ -7,17 +7,20 @@
 if SERVER then
 	concommand.Add("vj_dev_numnpcs", function(ply, cmd, args)
 		if IsValid(ply) && ply:IsAdmin() then
-			local i = 0
-			local iVJ = 0
+			local numNPC = 0
+			local numVJ = 0
+			local numNextBot = 0
 			for _, v in ipairs(ents.GetAll()) do
 				if v:IsNPC() then
-					i = i + 1
+					numNPC = numNPC + 1
 					if v.IsVJBaseSNPC then
-						iVJ = iVJ + 1
+						numVJ = numVJ + 1
 					end
+				elseif v:IsNextBot() then
+					numNextBot = numNextBot + 1
 				end
 			end
-			ply:ChatPrint("Total NPCs: " .. i .. " | VJ NPCs: " .. iVJ)
+			ply:ChatPrint("Total NPCs: " .. numNPC .. " | VJ NPCs: " .. numVJ .. " | NextBots: " .. numNextBot)
 		end
 	end)
 	--

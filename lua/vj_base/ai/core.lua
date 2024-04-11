@@ -331,7 +331,6 @@ function ENT:UpdateAnimationTranslations(wepHoldType)
 		end
 	end
 	self.AnimationTranslations = {} -- Reset all translated animations
-	self.NextIdleStandTime = 0
 	self:SetAnimationTranslations(wepHoldType)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -381,14 +380,14 @@ function ENT:MaintainIdleAnimation(force)
 	//bit.band(self:GetSequenceInfo(self:GetSequence()).flags, 1) == 0 -- Checks if animation is none-looping
 	//print(self:GetIdealActivity(), self:GetActivity(), self:GetSequenceName(self:GetSequence()), self:GetSequenceName(self:GetIdealSequence()), self:IsSequenceFinished(), self:GetInternalVariable("m_bSequenceLoops"), self:GetCycle())
 	if force then
-		self.CurAnimationSeed = 0
+		self.LastAnimationSeed = 0
 		self:ResetIdealActivity(ACT_IDLE)
 		self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L2987
 		self:SetSaveValue("m_bSequenceLoops", false) -- Otherwise it will stutter and play an idle sequence at 999x playback speed for 0.001 second when changing from one idle to another!
 	elseif self:GetIdealActivity() == ACT_IDLE && self:GetActivity() == ACT_IDLE then -- Check both ideal and current to make sure we are 100% playing an idle, otherwise transitions, certain movements, and animations will break!
 		-- If animation has finished OR idle animation has changed then play a new idle!
 		if (self:GetCycle() >= 0.98) or (self:TranslateActivity(ACT_IDLE) != self:GetSequenceActivity(self:GetIdealSequence())) then
-			self.CurAnimationSeed = 0
+			self.LastAnimationSeed = 0
 			self:ResetIdealActivity(ACT_IDLE)
 			self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L2987
 			self:SetSaveValue("m_bSequenceLoops", false) -- Otherwise it will stutter and play an idle sequence at 999x playback speed for 0.001 second when changing from one idle to another!
@@ -465,7 +464,7 @@ function ENT:MaintainIdleAnimation(force)
 		//end -- End of VERY old system
 		//self:StartEngineTask(ai.GetTaskID("TASK_PLAY_SEQUENCE"), pickedAnim)
 		if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then self:AA_StopMoving() end
-		self.CurAnimationSeed = 0
+		self.LastAnimationSeed = 0
 		self:ResetIdealActivity(pickedAnim)
 		self.NextIdleStandTime = CurTime() + (self:SequenceDuration(self:GetIdealSequence()) / self:GetPlaybackRate())
 	//elseif self.CurIdleStandMove && !self:IsSequenceFinished() then
@@ -549,12 +548,22 @@ function ENT:CheckRelationship(ent)
 		if isPly && VJ_CVAR_IGNOREPLAYERS then return D_NU end
 		if VJ.HasValue(self.VJ_AddCertainEntityAsFriendly, ent) then return D_LI end
 		if VJ.HasValue(self.VJ_AddCertainEntityAsEnemy, ent) then return D_HT end
-		local entDisp = ent.Disposition and ent:Disposition(self)
-		if (ent:IsNPC() && ((entDisp == D_HT) or (entDisp == D_NU && ent.VJ_IsBeingControlled))) or (isPly && !self.PlayerFriendly && ent:Alive()) then
-			return D_HT
-		else
-			return D_NU
+		if ent.VJTag_IsLiving then
+			if ent:IsNPC() then
+				local entDisp = ent:Disposition(self)
+				if (entDisp == D_HT) or (entDisp == D_NU && ent.VJ_IsBeingControlled) then
+					return D_HT
+				end
+				return D_NU
+			elseif isPly then
+				if !self.PlayerFriendly && ent:Alive() then
+					return D_HT
+				end
+				return D_NU
+			end
+			return D_HT -- Mostly for NextBots, no specific checks for them so always hate
 		end
+		return D_NU -- Fail case where the entity somehow got here and it's not tagged with "self.VJTag_IsLiving"
 	end
 	return D_LI
 end
@@ -755,6 +764,23 @@ function ENT:OverrideMoveFacing(flInterval, move)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OverrideMove(flInterval)
+	-- Maintain and handle jumping movements | Handle here instead of "RunAI" to fix landing problems
+	-- If (Nav type == NAV_JUMP and Goal type == GOALTYPE_NONE) then we are probably running a custom/forced jump! (non-task based jump)
+	if self:GetNavType() == NAV_JUMP && self:GetCurGoalType() == 0 then
+		if self:OnGround() then
+			local result = self:MoveJumpStop()
+			if result == AIMR_CHANGE_TYPE then -- Landed and completed ACT_LAND animation
+				self:SetNavType(NAV_GROUND)
+			else -- AIMR_OK, still landing or playing ACT_LAND animation
+				self:MoveJumpExec()
+			end
+		else
+			self:MoveJumpExec()
+		end
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Get the position set by the function "self:SetLastPosition(vec)""
 	Returns
@@ -905,13 +931,13 @@ function ENT:VJ_ForwardIsHidingZone(startPos, endPos, acceptWorld, extraOptions)
 	-- Sometimes the trace isn't 100%, a tiny find in sphere check fixes this issue...
 	local sphereInvalidate = false
 	for _,v in ipairs(ents.FindInSphere(hitPos, 5)) do
-		if v == ene or v:IsNPC() or v:IsPlayer() then
+		if v == ene or v.VJTag_IsLiving then
 			sphereInvalidate = true
 		end
 	end
 	
 	-- Not a hiding zone: (Sphere found an enemy/NPC/Player) OR (Trace ent is an enemy/NPC/Player) OR (End pos is far from the hit position) OR (World is NOT accepted as a hiding zone)
-	if sphereInvalidate or (IsValid(hitEnt) && (hitEnt == ene or hitEnt:IsNPC() or hitEnt:IsPlayer() or hitEnt:GetVelocity():LengthSqr() > 1000)) or endPos:Distance(hitPos) <= 10 or (acceptWorld == false && tr.HitWorld == true) then
+	if sphereInvalidate or (IsValid(hitEnt) && (hitEnt == ene or hitEnt.VJTag_IsLiving or hitEnt:GetVelocity():LengthSqr() > 1000)) or endPos:Distance(hitPos) <= 10 or (acceptWorld == false && tr.HitWorld == true) then
 		if setLastHiddenTime == true then self.LastHiddenZoneT = 0 end
 		return false, tr
 	-- Hiding zone: It hit world AND it's close, override "acceptWorld" option!
@@ -1020,9 +1046,9 @@ end
 		self:ForceMoveJump((activator:GetPos() - self:GetPos()):GetNormal()*200 + Vector(0, 0, 300))
 -----------------------------------------------------------]]
 function ENT:ForceMoveJump(vel)
-	self.NextIdleStandTime = 0
 	self:SetNavType(NAV_JUMP)
 	self:MoveJumpStart(vel)
+	
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1187,10 +1213,9 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnChangeActivity(newAct)
 	//print(newAct)
-	if newAct == ACT_TURN_LEFT or newAct == ACT_TURN_RIGHT then
-		self.NextIdleStandTime = CurTime() + VJ.AnimDuration(self, self:GetSequenceName(self:GetSequence()))
-		//self.NextIdleStandTime = CurTime() + 1.2
-	end
+	//if newAct == ACT_TURN_LEFT or newAct == ACT_TURN_RIGHT then
+		//self.NextIdleStandTime = CurTime() + VJ.AnimDuration(self, self:GetSequenceName(self:GetSequence()))
+	//end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:KeyValue(key, value)
@@ -1247,13 +1272,13 @@ function ENT:Touch(entity)
 	
 	-- If it's a passive SNPC...
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
-		if self.Passive_RunOnTouch == true && (entity:IsNPC() or entity:IsPlayer()) && CurTime() > self.TakingCoverT && entity.Behavior != VJ_BEHAVIOR_PASSIVE && entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:CheckRelationship(entity) != D_LI then
+		if self.Passive_RunOnTouch == true && entity.VJTag_IsLiving && CurTime() > self.TakingCoverT && entity.Behavior != VJ_BEHAVIOR_PASSIVE && entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:CheckRelationship(entity) != D_LI then
 			self:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
 			self:PlaySoundSystem("Alert")
 			self.TakingCoverT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
 			return
 		end
-	elseif self.DisableTouchFindEnemy == false && !IsValid(self:GetEnemy()) && self.IsFollowing == false && (entity:IsNPC() or entity:IsPlayer()) && self:CheckRelationship(entity) != D_LI && !self:IsBusy() then
+	elseif self.DisableTouchFindEnemy == false && !IsValid(self:GetEnemy()) && self.IsFollowing == false && entity.VJTag_IsLiving && self:CheckRelationship(entity) != D_LI && !self:IsBusy() then
 		self:StopMoving()
 		self:SetTarget(entity)
 		self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
@@ -1310,7 +1335,6 @@ function ENT:FollowReset()
 	followData.MinDist = 0
 	followData.Moving = false
 	followData.StopAct = false
-	followData.IsLiving = false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1331,7 +1355,7 @@ function ENT:Follow(ent, stopIfFollowing)
 	if !IsValid(ent) or self.Dead or !VJ_CVAR_AI_ENABLED or self == ent then return false, 0 end
 	
 	local isPly = ent:IsPlayer()
-	local isLiving = isPly or ent:IsNPC() -- Is it a living entity?
+	local isLiving = ent.VJTag_IsLiving
 	if (!isLiving) or (VJ.IsAlive(ent) && ((isPly && !VJ_CVAR_IGNOREPLAYERS) or (!isPly))) then
 		local followData = self.FollowData
 		-- Refusal messages
@@ -1364,7 +1388,6 @@ function ENT:Follow(ent, stopIfFollowing)
 			end
 			followData.Ent = ent
 			followData.MinDist = self.FollowMinDistance + (self:OBBMaxs().y * 3)
-			followData.IsLiving = isLiving
 			self.IsFollowing = true
 			self:SetTarget(ent)
 			if !self:BusyWithActivity() then -- Face the entity and then move to it
@@ -1634,6 +1657,7 @@ function ENT:MaintainRelationships()
 	//local distlist = {}
 	local eneSeen = false
 	local myPos = self:GetPos()
+	local myClass = self:GetClass()
 	local nearestDist = nil
 	local mySDir = self:GetSightDirection()
 	local mySightDist = self:GetMaxLookDistance()
@@ -1669,7 +1693,7 @@ function ENT:MaintainRelationships()
 			local vClass = v:GetClass()
 			local vNPC = v:IsNPC()
 			local vPlayer = v:IsPlayer()
-			if vClass != self:GetClass() && (vPlayer or (vNPC && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
+			if vClass != myClass && v.VJTag_IsLiving /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
 				local inEneTbl = VJ.HasValue(self.VJ_AddCertainEntityAsEnemy, v)
 				if self.HasAllies == true && inEneTbl == false then
 					for _,friClass in ipairs(self.VJ_NPC_Class) do

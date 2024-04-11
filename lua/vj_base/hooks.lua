@@ -45,12 +45,13 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 	if IsValid(ply) then
 		ply.VJ_LastInvestigateSd = 0
 		ply.VJ_LastInvestigateSdLevel = 0
+		ply.VJTag_IsLiving = true
 		if !VJ_CVAR_IGNOREPLAYERS then
 			local entsTbl = ents.GetAll()
 			for x = 1, #entsTbl do
 				local v = entsTbl[x]
 				if v:IsNPC() && v.IsVJBaseSNPC == true then
-					v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies+1] = ply
+					v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies + 1] = ply
 				end
 			end
 		end
@@ -67,45 +68,53 @@ local damageableEnts = {func_breakable_surf = true, sent_sakariashelicopter = tr
 --
 hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 	local entClass = ent:GetClass()
-	if SERVER && ent:IsNPC() && !ignoredNPCs[entClass] then
-		local isVJ = ent.IsVJBaseSNPC
-		if isVJ then
-			ent.NextProcessT = CurTime() + math.Rand(0.15, 1)
-		else
-			-- Set the tags for default player allies
-			if resistanceNPCs[entClass] then
-				ent.PlayerFriendly = true
-				ent.FriendsWithAllPlayerAllies = true
-			elseif headcrabNPCs[entClass] then
-				ent.VJTag_ID_Headcrab = true
+	if ent:IsNPC() or ent:IsNextBot() then
+		ent.VJTag_IsLiving = true
+		if SERVER && !ignoredNPCs[entClass] then
+			local isVJ = ent.IsVJBaseSNPC
+			if isVJ then
+				ent.NextProcessT = CurTime() + math.Rand(0.15, 1)
+			else
+				-- Set player friendly tags for default player allies
+				if resistanceNPCs[entClass] then
+					ent.PlayerFriendly = true
+					ent.FriendsWithAllPlayerAllies = true
+				-- Set headcrab tag for default headcrab NPCs
+				elseif headcrabNPCs[entClass] then
+					ent.VJTag_ID_Headcrab = true
+				end
 			end
-		end
-		timer.Simple(0.1, function() -- Make sure the NPC is initialized properly
-			if IsValid(ent) then
-				if isVJ == true && !ent.CurrentPossibleEnemies then ent.CurrentPossibleEnemies = {} end
-				local entsTbl = ents.GetAll()
-				local count = 1
-				local cvSeePlys = !VJ_CVAR_IGNOREPLAYERS
-				local isPossibleEnemy = ((ent:IsNPC() && ent:Health() > 0 && (ent.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) or (ent:IsPlayer()))
-				for x = 1, #entsTbl do
-					local v = entsTbl[x]
-					if (v:IsNPC() or v:IsPlayer()) && !ignoredNPCs[v:GetClass()] then
-						-- Add enemies to the created entity (if it's a VJ Base SNPC)
-						if isVJ == true then
-							ent:ValidateNoCollide(v)
-							if (v:IsNPC() && (v:GetClass() != entClass && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && cvSeePlys /*&& v:Alive()*/) then
-								ent.CurrentPossibleEnemies[count] = v
-								count = count + 1
+			-- Wait 0.1 seconds to make sure the NPC is initialized properly
+			timer.Simple(0.1, function()
+				if IsValid(ent) then
+					if isVJ == true && !ent.CurrentPossibleEnemies then ent.CurrentPossibleEnemies = {} end
+					local entsTbl = ents.GetAll()
+					local count = 1
+					local cvSeePlys = !VJ_CVAR_IGNOREPLAYERS
+					local isPossibleEnemy = true
+					if ent:IsNPC() && (ent:Health() <= 0 or ent.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) then
+						isPossibleEnemy = false
+					end
+					for x = 1, #entsTbl do
+						local v = entsTbl[x]
+						if v.VJTag_IsLiving && !ignoredNPCs[v:GetClass()] then
+							-- Add enemies to the created entity (if it's a VJ Base SNPC)
+							if isVJ == true then
+								ent:ValidateNoCollide(v)
+								if (v:IsNPC() && (v:GetClass() != entClass && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && cvSeePlys /*&& v:Alive()*/) or (v:IsNextBot()) then
+									ent.CurrentPossibleEnemies[count] = v
+									count = count + 1
+								end
 							end
-						end
-						-- Add the created entity to the list of possible enemies of VJ Base SNPCs
-						if isPossibleEnemy && entClass != v:GetClass() && v.IsVJBaseSNPC then
-							v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies + 1] = ent //v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
+							-- Add the created entity to the list of possible enemies of existing VJ Base SNPCs
+							if isPossibleEnemy && entClass != v:GetClass() && v.IsVJBaseSNPC then
+								v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies + 1] = ent //v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
+							end
 						end
 					end
 				end
-			end
-		end)
+			end)
+		end
 	end
 	-- Make this portion run for server AND client to make sure the tags are shared!
 	if grenadeEnts[entClass] then

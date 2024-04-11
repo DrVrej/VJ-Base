@@ -940,7 +940,6 @@ ENT.NextCanGetCombineBallDamageT = 0
 ENT.UseTheSameGeneralSoundPitch_PickedNumber = 0
 ENT.OnKilledEnemySoundT = 0
 ENT.LastHiddenZoneT = 0
-ENT.NextIdleStandTime = 0
 ENT.NextWanderTime = 0
 ENT.TakingCoverT = 0
 ENT.NextInvestigationMove = 0
@@ -953,7 +952,8 @@ ENT.LatestEnemyDistance = 0
 ENT.HealthRegenerationDelayT = 0
 ENT.NextActualThink = 0
 ENT.CurAttackSeed = 0
-ENT.CurAnimationSeed = 0
+ENT.LastAnimationSeed = 0
+ENT.LastAnimationType = VJ.ANIM_TYPE_NONE
 ENT.GuardingPosition = nil
 ENT.GuardingFacePosition = nil
 ENT.SelectedDifficulty = 1
@@ -963,7 +963,7 @@ ENT.AttackType = VJ.ATTACK_TYPE_NONE
 ENT.AttackState = VJ.ATTACK_STATE_NONE
 ENT.TimersToRemove = {"timer_state_reset","timer_turning","timer_act_flinching","timer_act_stopattacks","timer_melee_finished","timer_melee_start","timer_melee_finished_abletomelee","timer_range_start","timer_range_finished","timer_range_finished_abletorange","timer_leap_start_jump","timer_leap_start","timer_leap_finished","timer_leap_finished_abletoleap","timer_alerted_reset"}
 ENT.TurnData = {Type = VJ.NPC_FACE_NONE, Target = nil, StopOnFace = false, IsSchedule = false, LastYaw = 0}
-ENT.FollowData = {Ent = NULL, MinDist = 0, Moving = false, StopAct = false, IsLiving = false}
+ENT.FollowData = {Ent = NULL, MinDist = 0, Moving = false, StopAct = false}
 ENT.EnemyData = {
 	TimeSet = 0, -- Last time an enemy was set | Updated whenever "VJ_DoSetEnemy" is ran successfully
 	TimeSinceAcquired = 0, -- Time since it acquired an enemy (Switching enemies does NOT reset this!)
@@ -1272,13 +1272,19 @@ end
 			- ACT_INVALID = No animation was played or found
 		- Number, Accurate animation play time after taking everything in account
 			- WARNING: If "animDelay" parameter is used, result may be inaccurate!
+		- Enum, Type of animation it played, such as activity, sequence, and gesture
+			- Enums are VJ.ANIM_TYPE_*
 -----------------------------------------------------------]]
 local varGes = "vjges_"
 local varSeq = "vjseq_"
+local ANIM_TYPE_NONE = VJ.ANIM_TYPE_NONE
+local ANIM_TYPE_ACTIVITY = VJ.ANIM_TYPE_ACTIVITY
+local ANIM_TYPE_SEQUENCE = VJ.ANIM_TYPE_SEQUENCE
+local ANIM_TYPE_GESTURE = VJ.ANIM_TYPE_GESTURE
 --
 function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, faceEnemy, animDelay, extraOptions, customFunc)
 	animation = VJ.PICK(animation)
-	if animation == false then return ACT_INVALID, 0 end
+	if animation == false then return ACT_INVALID, 0, ANIM_TYPE_NONE end
 	
 	stopActivities = stopActivities or false
 	if stopActivitiesTime == nil then -- If user didn't put anything, then default it to 0
@@ -1351,15 +1357,18 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 		if !isString then -- If it's an activity then check for possible translation
 			-- If it returns the same activity as "animation", then there isn't even a translation for it so don't play any animation =(
 			if self:TranslateActivity(animation) == animation then
-				return ACT_INVALID, 0
+				return ACT_INVALID, 0, ANIM_TYPE_NONE
 			end
 		else -- No animation =(
-			return ACT_INVALID, 0
+			return ACT_INVALID, 0, ANIM_TYPE_NONE
 		end
 	end
 	
-	-- Seed the current animation, used for animation delaying & on complete check
-	local seed = CurTime(); self.CurAnimationSeed = seed
+	local animType = ((isGesture and ANIM_TYPE_GESTURE) or isSequence and ANIM_TYPE_SEQUENCE) or ANIM_TYPE_ACTIVITY -- Find the animation type
+	local seed = CurTime() -- Seed the current animation, used for animation delaying & on complete check
+	self.LastAnimationType = animType
+	self.LastAnimationSeed = seed
+	
 	local function PlayAct()
 		local animTime = self:DecideAnimationLength(animation, false)
 		local doRealAnimTime = true -- Only for activities, recalculate the animTime after the schedule starts to get the real sequence time, if `stopActivitiesTime` is NOT set!
@@ -1384,9 +1393,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				timer.Create("timer_act_stopattacks"..self:EntIndex(), stopActivitiesTime, 1, function() self.vACT_StopAttacks = false end)
 			end
 		end
-		self.CurAnimationSeed = seed -- We need to set it again because self:StopAttacks() above will reset it when it calls to chase enemy!
-		
-		self.NextIdleStandTime = 0
+		self.LastAnimationSeed = seed -- We need to set it again because self:StopAttacks() above will reset it when it calls to chase enemy!
 		
 		self.AnimationPlaybackRate = finalPlayBackRate
 		self:SetPlaybackRate(finalPlayBackRate)
@@ -1481,7 +1488,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 		if (extraOptions.OnFinish) then
 			timer.Simple(animTime, function()
 				if IsValid(self) && !self.Dead then
-					extraOptions.OnFinish(self.CurAnimationSeed != seed, animation)
+					extraOptions.OnFinish(self.LastAnimationSeed != seed, animation)
 				end
 			end)
 		end
@@ -1491,13 +1498,13 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 	-- For delay system
 	if animDelay > 0 then
 		timer.Simple(animDelay, function()
-			if IsValid(self) && self.CurAnimationSeed == seed then
+			if IsValid(self) && self.LastAnimationSeed == seed then
 				PlayAct()
 			end
 		end)
-		return animation, animDelay + self:DecideAnimationLength(animation, false) -- Approximation, this may be inaccurate!
+		return animation, animDelay + self:DecideAnimationLength(animation, false), animType -- Approximation, this may be inaccurate!
 	else
-		return animation, PlayAct()
+		return animation, PlayAct(), animType
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1620,7 +1627,7 @@ end
 			- This is to ensure the idle animation system properly detects if it should be setting a new idle animation
 -----------------------------------------------------------]]
 function ENT:TranslateActivity(act)
-	//print("TranslateActivity", act)
+	//print("TranslateActivity ", act)
 	-- Handle translations table
 	local translation = self.AnimationTranslations[act]
 	if translation then
@@ -1673,7 +1680,6 @@ local finishAttack = {
 }
 -- Climbing Test
 /*print(self:GetNavType())
-self.NextIdleStandTime = 0
 self:SetNavType(NAV_CLIMB)
 climbDest = self:GetPos()+self:GetUp()*5000
 climbDir = climbDest - self:GetPos()
@@ -1824,7 +1830,7 @@ function ENT:Think()
 		if self.IsFollowing == true && self:GetNavType() != NAV_JUMP && self:GetNavType() != NAV_CLIMB then
 			local followData = self.FollowData
 			local followEnt = followData.Ent
-			local followIsLiving = followData.IsLiving
+			local followIsLiving = followEnt.VJTag_IsLiving
 			//print(self:GetTarget())
 			if IsValid(followEnt) && (!followIsLiving or (followIsLiving && (self:Disposition(followEnt) == D_LI or self:GetClass() == followEnt:GetClass()) && VJ.IsAlive(followEnt))) then
 				if curTime > self.NextFollowUpdateT && !self.VJTag_IsHealing then
@@ -2379,11 +2385,10 @@ function ENT:MeleeAttackCode(isPropAttack, attackDist, customEnt)
 	local myClass = self:GetClass()
 	local hitRegistered = false
 	for _, v in ipairs(ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), attackDist)) do
-		if v == self or v:GetClass() == myClass then continue end
-		if (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) or (v:IsPlayer() && v.VJTag_IsControllingNPC == true) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
-		local isAliveEnt = v:IsNPC() or (v:IsPlayer() && v:Alive() && !VJ_CVAR_IGNOREPLAYERS) or v:IsNextBot()
-		if ((isAliveEnt && self:Disposition(v) != D_LI) or IsProp(v) == true or v.VJTag_IsAttackable == true or v.VJTag_IsDamageable == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
-			if isPropAttack == true && isAliveEnt && self:VJ_GetNearestPointToEntityDistance(v) > self.MeleeAttackDistance then continue end //if (self:GetPos():Distance(v:GetPos()) <= self:VJ_GetNearestPointToEntityDistance(v) && self:VJ_GetNearestPointToEntityDistance(v) <= self.MeleeAttackDistance) == false then
+		if v == self or v:GetClass() == myClass or (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) then continue end
+		if v:IsPlayer() && (v.VJTag_IsControllingNPC or !v:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
+		if ((v.VJTag_IsLiving && self:Disposition(v) != D_LI) or IsProp(v) == true or v.VJTag_IsAttackable == true or v.VJTag_IsDamageable == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
+			if isPropAttack == true && v.VJTag_IsLiving && self:VJ_GetNearestPointToEntityDistance(v) > self.MeleeAttackDistance then continue end //if (self:GetPos():Distance(v:GetPos()) <= self:VJ_GetNearestPointToEntityDistance(v) && self:VJ_GetNearestPointToEntityDistance(v) <= self.MeleeAttackDistance) == false then
 			local vProp = IsProp(v)
 			if self:CustomOnMeleeAttack_AfterChecks(v, vProp) == true then continue end
 			-- Remove prop constraints and push it (If possible)
@@ -2413,14 +2418,14 @@ function ENT:MeleeAttackCode(isPropAttack, attackDist, customEnt)
 				applyDmg:SetDamage(self:VJ_GetDifficultyValue(self.MeleeAttackDamage))
 				applyDmg:SetDamageType(self.MeleeAttackDamageType)
 				//applyDmg:SetDamagePosition(self:VJ_GetNearestPointToEntity(v).MyPosition)
-				if isAliveEnt then applyDmg:SetDamageForce(self:GetForward() * ((applyDmg:GetDamage() + 100) * 70)) end
+				if v.VJTag_IsLiving then applyDmg:SetDamageForce(self:GetForward() * ((applyDmg:GetDamage() + 100) * 70)) end
 				applyDmg:SetInflictor(self)
 				applyDmg:SetAttacker(self)
 				VJ.DamageSpecialEnts(self, v, applyDmg)
 				v:TakeDamageInfo(applyDmg, self)
 			end
 			-- Bleed Enemy
-			if self.MeleeAttackBleedEnemy && math.random(1, self.MeleeAttackBleedEnemyChance) == 1 && isAliveEnt && (!v.VJ_IsHugeMonster or self.VJ_IsHugeMonster) then
+			if self.MeleeAttackBleedEnemy && math.random(1, self.MeleeAttackBleedEnemyChance) == 1 && v.VJTag_IsLiving && (!v.VJ_IsHugeMonster or self.VJ_IsHugeMonster) then
 				local tName = "timer_melee_bleedply"..v:EntIndex() -- Timer's name
 				local tDmg = self.MeleeAttackBleedEnemyDamage -- How much damage each rep does
 				timer.Create(tName, self.MeleeAttackBleedEnemyTime, self.MeleeAttackBleedEnemyReps, function()
@@ -2560,12 +2565,12 @@ end
 function ENT:LeapDamageCode()
 	if self.Dead or self.vACT_StopAttacks or self.Flinching or (self.StopLeapAttackAfterFirstHit && self.AttackState == VJ.ATTACK_STATE_EXECUTED_HIT) then return end
 	self:CustomOnLeapAttack_BeforeChecks()
+	local myClass = self:GetClass()
 	local hitRegistered = false
 	for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.LeapAttackDamageDistance)) do
-		if v == self or v:GetClass() == myClass then continue end
-		if (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) or (v:IsPlayer() && v.VJTag_IsControllingNPC == true) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
-		local isAliveEnt = v:IsNPC() or (v:IsPlayer() && v:Alive() && !VJ_CVAR_IGNOREPLAYERS) or v:IsNextBot()
-		if (isAliveEnt && self:Disposition(v) != D_LI) or IsProp(v) == true or v.VJTag_IsAttackable == true or v.VJTag_IsDamageable == true then
+		if v == self or v:GetClass() == myClass or (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) then continue end
+		if v:IsPlayer() && (v.VJTag_IsControllingNPC or !v:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
+		if (v.VJTag_IsLiving && self:Disposition(v) != D_LI) or IsProp(v) == true or v.VJTag_IsAttackable == true or v.VJTag_IsDamageable == true then
 			self:CustomOnLeapAttack_AfterChecks(v)
 			-- Damage
 			if self.DisableDefaultLeapAttackDamageCode == false then
@@ -2574,7 +2579,7 @@ function ENT:LeapDamageCode()
 				dmgInfo:SetInflictor(self)
 				dmgInfo:SetDamageType(self.LeapAttackDamageType)
 				dmgInfo:SetAttacker(self)
-				if isAliveEnt then dmgInfo:SetDamageForce(self:GetForward() * ((dmgInfo:GetDamage() + 100) * 70)) end
+				if v.VJTag_IsLiving then dmgInfo:SetDamageForce(self:GetForward() * ((dmgInfo:GetDamage() + 100) * 70)) end
 				v:TakeDamageInfo(dmgInfo, self)
 			end
 			if v:IsPlayer() then

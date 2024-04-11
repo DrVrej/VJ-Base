@@ -8,7 +8,6 @@ require("vj_ai_schedule")
 function ENT:VJ_TASK_FACE_X(faceType, customFunc)
 	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
 	if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false) or (self.IsVJBaseSNPC_Tank == true) then return end
-	//self.NextIdleStandTime = CurTime() + 1.2
 	local schedFace = vj_ai_schedule.New("vj_face_x")
 	schedFace:EngTask(faceType or "TASK_FACE_TARGET", 0)
 	if (customFunc) then customFunc(schedFace) end
@@ -143,20 +142,6 @@ function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 	if self:IsRunningBehavior() or self:DoingEngineSchedule() then return true end -- true = Run "MaintainSchedule" in engine
 	//self:SetArrivalActivity(ACT_COWER)
 	//self:SetArrivalSpeed(1000)
-	
-	-- Maintain and handle jumping movements
-	if self:GetNavType() == NAV_JUMP then
-		if self:OnGround() then
-			self:MoveJumpStop()
-			if VJ.AnimExists(self, ACT_LAND) then
-				self.NextIdleStandTime = CurTime() + self:SequenceDuration(self:GetSequence()) - 0.1
-			end
-			self:SetNavType(NAV_GROUND)
-			self:ClearGoal()
-		else
-			self:MoveJumpExec()
-		end
-	end
 	
 	-- Apply walk frames to both activities and sequences
 	-- Parts of it replicate TASK_PLAY_SEQUENCE - https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc_schedule.cpp#L3312
@@ -361,7 +346,9 @@ function ENT:StartSchedule(schedule)
 	-- Clear certain systems that should be notified that we have moved
 	if schedule.IsMovingTask == true then
 		self.LastHiddenZoneT = 0
-		self.CurAnimationSeed = 0
+		if self.LastAnimationType != VJ.ANIM_TYPE_GESTURE then -- Movements shouldn't interrupt gestures
+			self.LastAnimationSeed = 0
+		end
 	end
 	
 	schedule.AlreadyRanCode_OnFail = false
