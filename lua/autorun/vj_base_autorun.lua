@@ -381,7 +381,6 @@ VJ_PICKRANDOMTABLE			= VJ.PICK
 VJ_STOPSOUND				= VJ.STOPSOUND
 VJ_Set						= VJ.SET
 VJ_HasValue					= VJ.HasValue
-VJ_RoundToMultiple			= VJ.RoundToMultiple
 VJ_Color2Byte				= VJ.Color2Byte
 VJ_FindInCone				= VJ.FindInCone
 VJ_CreateSound				= VJ.CreateSound
@@ -391,7 +390,6 @@ VJ_GetSequenceDuration		= VJ.AnimDuration
 VJ_SequenceToActivity		= VJ.SequenceToActivity
 VJ_IsCurrentAnimation		= VJ.IsCurrentAnimation
 VJ_IsProp					= VJ.IsProp
-VJ_IsAlive					= VJ.IsAlive
 VJ_DestroyCombineTurret		= VJ.DamageSpecialEnts
 util.VJ_SphereDamage		= VJ.ApplyRadiusDamage
 -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!!

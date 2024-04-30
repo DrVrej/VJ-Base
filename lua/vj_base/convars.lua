@@ -110,7 +110,7 @@ cvarList["vj_npc_sd_suppressing"] = 0 -- Disable suppressing callout sounds
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Developer Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-cvarList["vj_npc_usedevcommands"] = 0 -- Should it use Dev Commands? (Required to make the dev option below work!)
+CreateConVar("vj_npc_usedevcommands", 0) -- Should it use Dev Commands? (Required to make the dev option below work!)
 cvarList["vj_npc_printdied"] = 0 -- Prints Died when the NPC dies
 cvarList["vj_npc_printondamage"] = 0 -- Prints when the NPC gets damaged
 cvarList["vj_npc_printontouch"] = 0 -- Prints when something touches the NPC
@@ -142,5 +142,5 @@ VJ.AddClientConVar("vj_wep_nomuszzleflash_dynamiclight", 0, "Should weapons make
 VJ.AddClientConVar("vj_wep_nobulletshells", 0, "Should weapons drop bullet shells?")
 ---------------------------------------------------------------------------------------------------------------------------
 for k, v in pairs(cvarList) do
-	if !ConVarExists(k) then CreateConVar(k, v, {FCVAR_ARCHIVE}) end
+	CreateConVar(k, v, {FCVAR_ARCHIVE})
 end

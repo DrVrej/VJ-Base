@@ -141,8 +141,8 @@ SWEP.Primary.SoundVolume = 1
 SWEP.Primary.DistantSound = {}
 SWEP.Primary.HasDistantSound = true -- Does it have a distant sound when the gun is shot?
 SWEP.Primary.DistantSoundLevel = 140 -- Distant sound level
-SWEP.Primary.DistantSoundPitch	= VJ.SET(90, 110) -- Distant sound pitch
-SWEP.Primary.DistantSoundVolume	= 1 -- Distant sound volume
+SWEP.Primary.DistantSoundPitch = VJ.SET(90, 110) -- Distant sound pitch
+SWEP.Primary.DistantSoundVolume = 1 -- Distant sound volume
 	-- ====== Effect Variables ====== --
 SWEP.PrimaryEffects_MuzzleFlash = true
 SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_full"}

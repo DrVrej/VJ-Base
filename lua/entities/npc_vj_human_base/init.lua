@@ -1842,9 +1842,11 @@ function ENT:Initialize()
 		end
 	end)
 	duplicator.RegisterEntityClass(self:GetClass(), VJ.CreateDupe_NPC, "Class", "Equipment", "SpawnFlags", "Data")
-	if !self.DisableWeapons then
-		timer.Simple(0.1, function()
-			if IsValid(self) then
+	timer.Simple(0.1, function()
+		if IsValid(self) then
+			if self.DisableWeapons then
+				self:UpdateAnimationTranslations()
+			else
 				local wep = self:GetActiveWeapon()
 				if IsValid(wep) then
 					self.CurrentWeaponEntity = self:DoChangeWeapon() -- Setup the weapon
@@ -1874,23 +1876,23 @@ function ENT:Initialize()
 						self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: "..self:GetName().." needs a weapon!")
 					end
 				end
-				if self:GetIdealActivity() == ACT_IDLE then -- Reset the idle animation in case animation translations changed it!
-					self:MaintainIdleAnimation(true)
-				end
-				-- This is needed as setting "NextThink" to CurTime will cause performance drops, so we set the idle maintain in a separate hook that runs every tick
-				local thinkHook = hook.GetTable()["Think"]
-				if (thinkHook && !thinkHook[self]) or (!thinkHook) then
-					hook.Add("Think", self, function()
-						if VJ_CVAR_AI_ENABLED then
-							self:MaintainIdleAnimation()
-						end
-					end)
-				else
-					print("[VJ Base] Warning: " .. self:GetClass() .. " [" .. self:EntIndex() .. "] has an existing embedded \"Think\" hook already, which is disallowing the default base hook from assigning. Make sure to handle \"MaintainIdleAnimation\" in the overridden hook!")
-				end
 			end
-		end)
-	end
+			if self:GetIdealActivity() == ACT_IDLE then -- Reset the idle animation in case animation translations changed it!
+				self:MaintainIdleAnimation(true)
+			end
+			-- This is needed as setting "NextThink" to CurTime will cause performance drops, so we set the idle maintain in a separate hook that runs every tick
+			local thinkHook = hook.GetTable()["Think"]
+			if (thinkHook && !thinkHook[self]) or (!thinkHook) then
+				hook.Add("Think", self, function()
+					if VJ_CVAR_AI_ENABLED then
+						self:MaintainIdleAnimation()
+					end
+				end)
+			else
+				print("[VJ Base] Warning: " .. self:GetClass() .. " [" .. self:EntIndex() .. "] has an existing embedded \"Think\" hook already, which is disallowing the default base hook from assigning. Make sure to handle \"MaintainIdleAnimation\" in the overridden hook!")
+			end
+		end
+	end)
 	//self:SetSaveValue("m_debugOverlays", 1) -- Enables source engine debug overlays (some commands like 'npc_conditions' need it)
 end
 -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -3414,7 +3416,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoPoseParameterLooking(resetPoses)
 	if (!self.HasPoseParameterLooking) or (!self.VJ_IsBeingControlled && !self.DoingWeaponAttack && !self.EnemyData.IsVisible) then return end
-	//self:GetPoseParameters(true)
+	//VJ.GetPoseParameters(self)
 	local ene = self:GetEnemy()
 	local newPitch = 0 -- Pitch
 	local newYaw = 0 -- Yaw
@@ -3927,24 +3929,6 @@ function ENT:OnTakeDamage(dmginfo)
 	if stillAlive then self:PlaySoundSystem("Pain") end
 
 	if VJ_CVAR_AI_ENABLED && self:GetState() != VJ_STATE_FREEZE then
-		-- Make passive NPCs move away | RESULT: May move away AND may cause other passive NPCs to move as well
-		if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && curTime > self.TakingCoverT then
-			if stillAlive && self.Passive_RunOnDamage then
-				self:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
-			end
-			if self.Passive_AlliesRunOnDamage then -- Make passive allies run too!
-				local allies = self:Allies_Check(self.Passive_AlliesRunOnDamageDistance)
-				if allies != false then
-					for _, v in ipairs(allies) do
-						v.TakingCoverT = curTime + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
-						v:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
-						v:PlaySoundSystem("Alert")
-					end
-				end
-			end
-			self.TakingCoverT = curTime + math.Rand(self.Passive_NextRunOnDamageTime.a, self.Passive_NextRunOnDamageTime.b)
-		end
-
 		if stillAlive then
 			self:DoFlinch(dmginfo, hitgroup)
 			
@@ -4040,6 +4024,24 @@ function ENT:OnTakeDamage(dmginfo)
 					self.TakingCoverT = curTime + self.HideOnUnknownDamage
 				end
 			end
+		end
+		
+		-- Make passive NPCs move away | RESULT: May move away AND may cause other passive NPCs to move as well
+		if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && curTime > self.TakingCoverT then
+			if stillAlive && self.Passive_RunOnDamage && !self:IsBusy() then
+				self:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
+			end
+			if self.Passive_AlliesRunOnDamage then -- Make passive allies run too!
+				local allies = self:Allies_Check(self.Passive_AlliesRunOnDamageDistance)
+				if allies != false then
+					for _, v in ipairs(allies) do
+						v.TakingCoverT = curTime + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
+						v:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
+						v:PlaySoundSystem("Alert")
+					end
+				end
+			end
+			self.TakingCoverT = curTime + math.Rand(self.Passive_NextRunOnDamageTime.a, self.Passive_NextRunOnDamageTime.b)
 		end
 	end
 	

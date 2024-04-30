@@ -368,6 +368,7 @@ function ENT:VJ_TASK_IDLE_STAND()
 	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:BusyWithActivity() then return end
 	//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
 	self:MaintainIdleAnimation(self:GetIdealActivity() != ACT_IDLE)
+	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -378,8 +379,9 @@ function ENT:MaintainIdleAnimation(force)
 	-- Animation cycle needs to be set to 0 to make sure engine does NOT attempt to switch sequence multiple times in this code: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L2987
 	-- "self:IsSequenceFinished()" should NOT be used as it's broken, it returns "true" even though the animation hasn't finished, especially for non-looped animations
 	//bit.band(self:GetSequenceInfo(self:GetSequence()).flags, 1) == 0 -- Checks if animation is none-looping
-	//print(self:GetIdealActivity(), self:GetActivity(), self:GetSequenceName(self:GetSequence()), self:GetSequenceName(self:GetIdealSequence()), self:IsSequenceFinished(), self:GetInternalVariable("m_bSequenceLoops"), self:GetCycle())
+	//print(self:GetIdealActivity(), self:GetActivity(), self:GetSequenceName(self:GetIdealSequence()), self:GetSequenceName(self:GetSequence()), self:IsSequenceFinished(), self:GetInternalVariable("m_bSequenceLoops"), self:GetCycle())
 	if force then
+		//print("MaintainIdleAnimation - force")
 		self.LastAnimationSeed = 0
 		self:ResetIdealActivity(ACT_IDLE)
 		self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L2987
@@ -387,6 +389,7 @@ function ENT:MaintainIdleAnimation(force)
 	elseif self:GetIdealActivity() == ACT_IDLE && self:GetActivity() == ACT_IDLE then -- Check both ideal and current to make sure we are 100% playing an idle, otherwise transitions, certain movements, and animations will break!
 		-- If animation has finished OR idle animation has changed then play a new idle!
 		if (self:GetCycle() >= 0.98) or (self:TranslateActivity(ACT_IDLE) != self:GetSequenceActivity(self:GetIdealSequence())) then
+			//print("MaintainIdleAnimation - auto")
 			self.LastAnimationSeed = 0
 			self:ResetIdealActivity(ACT_IDLE)
 			self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L2987
@@ -606,24 +609,6 @@ function ENT:GetMoveDirection(ignoreZ)
 	local dir = ((self:GetCurWaypointPos() or myPos) - myPos)
 	if ignoreZ then dir.z = 0 end
 	return (self:GetAngles() - dir:Angle()):Forward()
-end
----------------------------------------------------------------------------------------------------------------------------------------------
---[[---------------------------------------------------------
-	Gets all the pose the parameters of the NPC and returns it.
-		- prt = Prints the pose parameters
-	Returns
-		- table of all the pose parameters
------------------------------------------------------------]]
-function ENT:GetPoseParameters(prt)
-	local result = {}
-	for i = 0, self:GetNumPoseParameters() - 1 do
-		if prt == true then
-			local min, max = self:GetPoseParameterRange(i)
-			print(self:GetPoseParameterName(i)..' '..min.." / "..max)
-		end
-		table.insert(result, self:GetPoseParameterName(i))
-	end
-	return result
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:GetFaceAngle(ang)
@@ -1452,7 +1437,7 @@ function ENT:MaintainMedicBehavior()
 			
 			-- Spawn the prop
 			if self.Medic_SpawnPropOnHeal == true && self:LookupAttachment(self.Medic_SpawnPropOnHealAttachment) != 0 then
-				prop = ents.Create("prop_physics")
+				local prop = ents.Create("prop_physics")
 				prop:SetModel(self.Medic_SpawnPropOnHealModel)
 				prop:SetLocalPos(self:GetPos())
 				prop:SetOwner(self)

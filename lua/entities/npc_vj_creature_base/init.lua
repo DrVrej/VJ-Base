@@ -1878,7 +1878,7 @@ function ENT:Think()
 		end*/
 
 		-- Handle main parts of the turning system
-		turnData = self.TurnData
+		local turnData = self.TurnData
 		if turnData.Type != VJ.NPC_FACE_NONE then
 			-- If StopOnFace flag is set AND (Something has requested to take over by checking "ideal yaw != last set yaw") OR (we are facing ideal) then finish it!
 			if turnData.StopOnFace && (self:GetIdealYaw() != turnData.LastYaw or self:IsFacingIdealYaw()) then
@@ -2644,7 +2644,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoPoseParameterLooking(resetPoses)
 	if !self.HasPoseParameterLooking then return end
-	//self:GetPoseParameters(true)
+	//VJ.GetPoseParameters(self)
 	local ene = self:GetEnemy()
 	local newPitch = 0 -- Pitch
 	local newYaw = 0 -- Yaw
@@ -2879,24 +2879,6 @@ function ENT:OnTakeDamage(dmginfo)
 	if stillAlive then self:PlaySoundSystem("Pain") end
 
 	if VJ_CVAR_AI_ENABLED && self:GetState() != VJ_STATE_FREEZE then
-		-- Make passive NPCs move away | RESULT: May move away AND may cause other passive NPCs to move as well
-		if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && curTime > self.TakingCoverT then
-			if stillAlive && self.Passive_RunOnDamage then
-				self:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
-			end
-			if self.Passive_AlliesRunOnDamage then -- Make passive allies run too!
-				local allies = self:Allies_Check(self.Passive_AlliesRunOnDamageDistance)
-				if allies != false then
-					for _, v in ipairs(allies) do
-						v.TakingCoverT = curTime + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
-						v:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
-						v:PlaySoundSystem("Alert")
-					end
-				end
-			end
-			self.TakingCoverT = curTime + math.Rand(self.Passive_NextRunOnDamageTime.a, self.Passive_NextRunOnDamageTime.b)
-		end
-
 		if stillAlive then
 			self:DoFlinch(dmginfo, hitgroup)
 			
@@ -2984,6 +2966,24 @@ function ENT:OnTakeDamage(dmginfo)
 				mdlBolt:Spawn()
 				mdlBolt:Activate()
 			end*/
+		end
+		
+		-- Make passive NPCs move away | RESULT: May move away AND may cause other passive NPCs to move as well
+		if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && curTime > self.TakingCoverT then
+			if stillAlive && self.Passive_RunOnDamage && !self:IsBusy() then
+				self:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
+			end
+			if self.Passive_AlliesRunOnDamage then -- Make passive allies run too!
+				local allies = self:Allies_Check(self.Passive_AlliesRunOnDamageDistance)
+				if allies != false then
+					for _, v in ipairs(allies) do
+						v.TakingCoverT = curTime + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
+						v:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
+						v:PlaySoundSystem("Alert")
+					end
+				end
+			end
+			self.TakingCoverT = curTime + math.Rand(self.Passive_NextRunOnDamageTime.a, self.Passive_NextRunOnDamageTime.b)
 		end
 	end
 	

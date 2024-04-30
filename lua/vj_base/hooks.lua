@@ -50,7 +50,7 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 			local entsTbl = ents.GetAll()
 			for x = 1, #entsTbl do
 				local v = entsTbl[x]
-				if v:IsNPC() && v.IsVJBaseSNPC == true then
+				if v:IsNPC() && v.IsVJBaseSNPC then
 					v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies + 1] = ply
 				end
 			end

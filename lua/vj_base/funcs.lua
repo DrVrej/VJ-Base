@@ -237,8 +237,8 @@ function VJ.IsCurrentAnimation(ent, anim)
 			end
 		end
 	else
-		if isnumber(anim) then -- Translate activity to sequence
-			return anim != -1 && ent:SelectWeightedSequence(anim) == ent:GetSequence()
+		if isnumber(anim) then -- For numbers do an activity check because an activity can have more than 1 sequence!
+			return anim != -1 && anim == ent:GetActivity()
 		end
 		return ent:LookupSequence(anim) == ent:GetSequence()
 	end
@@ -255,6 +255,25 @@ local props = {prop_physics=true, prop_physics_multiplayer=true, prop_physics_re
 --
 function VJ.IsProp(ent)
 	return props[ent:GetClass()] == true -- Without == check, it would return nil on false
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Retrieves all the pose the parameters of the entity and returns it.
+		- ent = The entity to retrieve pose parameters
+		- prt = Should it print the pose parameters? | DEFAULT: true
+	Returns
+		- table of all the pose parameters
+-----------------------------------------------------------]]
+function VJ.GetPoseParameters(ent, prt)
+	local result = {}
+	for i = 0, ent:GetNumPoseParameters() - 1 do
+		if prt != false then
+			local min, max = ent:GetPoseParameterRange(i)
+			print(ent:GetPoseParameterName(i)..' '..min.." / "..max)
+		end
+		table.insert(result, ent:GetPoseParameterName(i))
+	end
+	return result
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
