@@ -611,6 +611,12 @@ function ENT:GetMoveDirection(ignoreZ)
 	return (self:GetAngles() - dir:Angle()):Forward()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Quickly patches the given angle to the rotations the NPC is allowed to use (pitch, yaw, roll)
+		- ang = The angle to patch
+	Returns
+		- Angle, the turn angle it should use
+-----------------------------------------------------------]]
 function ENT:GetFaceAngle(ang)
 	return self.TurningUseAllAxis and ang or Angle(0, ang.y, 0)
 end
@@ -767,7 +773,7 @@ function ENT:OverrideMove(flInterval)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Get the position set by the function "self:SetLastPosition(vec)""
+	Returns the position set by "SetLastPosition"
 	Returns
 		- Vector, the last position
 -----------------------------------------------------------]]
@@ -1033,7 +1039,6 @@ end
 function ENT:ForceMoveJump(vel)
 	self:SetNavType(NAV_JUMP)
 	self:MoveJumpStart(vel)
-	
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1043,9 +1048,10 @@ end
 	Returns
 		- true, At least 1 damage type is included
 		- false, NO damage type is included
+	Notes
+		- DMG_DIRECT = Disabled because default fire uses it!
+		- DMG_ALWAYSGIB = Make sure damage is NOT a bullet because GMod sets DMG_ALWAYSGIB randomly for certain bullets! (Maybe if the damage is high?)
 -----------------------------------------------------------]]
-// - DMG_DIRECT = Disabled because fire uses it!
-// - DMG_ALWAYSGIB = Make sure damage is NOT a bullet because GMod sets DMG_ALWAYSGIB randomly for certain bullets (Maybe if the damage is high?)
 function ENT:IsDefaultGibDamageType(dmgType)
 	return (bAND(dmgType, DMG_ALWAYSGIB) != 0 && bAND(dmgType, DMG_BULLET) == 0) or bAND(dmgType, DMG_ENERGYBEAM) != 0 or bAND(dmgType, DMG_BLAST) != 0 or bAND(dmgType, DMG_VEHICLE) != 0 or bAND(dmgType, DMG_CRUSH) != 0 or bAND(dmgType, DMG_DISSOLVE) != 0 or bAND(dmgType, DMG_SLOWBURN) != 0 or bAND(dmgType, DMG_PHYSGUN) != 0 or bAND(dmgType, DMG_PLASMA) != 0 or bAND(dmgType, DMG_SONIC) != 0
 end
@@ -1085,34 +1091,74 @@ function ENT:SetImpactEnergyScale(scale)
 	self:SetSaveValue("m_impactEnergyScale", scale)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_GetNearestPointToVector(pos, sameZ)
-	-- sameZ = Should the Z of the result pos (resPos) be the same as my Z ?
-	local myZ = self:GetPos().z
-	local resMe = self:NearestPoint(pos + self:OBBCenter())
-	resMe.z = myZ
-	local resPos = pos
-	resPos.z = sameZ and myZ or pos.z
-	return resMe, resPos
+--[[---------------------------------------------------------
+	Finds the nearest position from the NPC to the position and from the position to the NPC, then returns both positions
+		- pos = The vector to find the nearest position of in respect to the NPC
+		- groundedZ = Should the Z-axis of both the NPC and given position be the NPC's origin? | DEFAULT: false
+	Returns
+		1:
+			- Vector, NPC's nearest position to the given vector
+		2:
+			- Vector, Given vector's nearest position to the NPC
+-----------------------------------------------------------]]
+function ENT:VJ_GetNearestPointToVector(pos, groundedZ)
+	local myNearPos = self:NearestPoint(pos + pos:OBBCenter())
+	local otherNearPos = pos
+	if groundedZ then
+		local myZ = self:GetPos().z
+		myNearPos.z = myZ
+		otherNearPos.z = myZ
+	end
+	return myNearPos, otherNearPos
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_GetNearestPointToEntity(ent, sameZ)
-	-- sameZ = Should the Z of the other entity's result pos (resEnt) be the same as my Z ?
-	local myNearPoint = self:GetDynamicOrigin()
-	local resMe = self:NearestPoint(ent:GetPos() + self:OBBCenter())
-	resMe.z = myNearPoint.z
-	local resEnt = ent:NearestPoint(myNearPoint + ent:OBBCenter())
-	resEnt.z = sameZ and myNearPoint.z or ent:GetPos().z
-	return resMe, resEnt
+--[[---------------------------------------------------------
+	Finds the nearest position from the NPC to the entity and from the entity to the NPC, then returns both positions
+		- ent = The entity to find the nearest position of in respect to the NPC
+		- groundedZ = Should the Z-axis of both the NPC and the entity be the NPC's origin? | DEFAULT: false
+		- centerNPC = Should the X-axis and Y-axis for the NPC stay at the NPC's origin with ONLY the Z-axis changing? | DEFAULT: false
+			- WARNING: This will override "groundedZ" to false because if both are enabled then the NPC's near position just becomes its origin
+	Returns
+		1:
+			- Vector, NPC's nearest position to the given entity
+		2:
+			- Vector, Given entity's nearest position to the NPC
+-----------------------------------------------------------]]
+function ENT:VJ_GetNearestPointToEntity(ent, groundedZ, centerNPC)
+	local myPos = self:GetPos()
+	local myNearPos = self:NearestPoint(ent:GetPos() + ent:OBBCenter())
+	local otherNearPos = ent:NearestPoint(myPos + self:OBBCenter())
+	if centerNPC then
+		myNearPos.x = myPos.x
+		myNearPos.y = myPos.y
+	elseif groundedZ then
+		myNearPos.z = myPos.z
+		otherNearPos.z = myPos.z
+	end
+	//VJ.DEBUG_TempEnt(myNearPos, Angle(0, 0, 0), Color(0, 255, 0))
+	//VJ.DEBUG_TempEnt(otherNearPos)
+	return myNearPos, otherNearPos
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_GetNearestPointToEntityDistance(ent)
-	local entPos = ent:GetPos()
-	local myNearPoint = self:GetDynamicOrigin()
-	local resMe = self:NearestPoint(entPos + self:OBBCenter())
-	resMe.z = myNearPoint.z
-	local resEnt = ent:NearestPoint(myNearPoint + ent:OBBCenter())
-	resEnt.z = entPos.z
-	return resEnt:Distance(resMe)
+--[[---------------------------------------------------------
+	Finds the nearest position from the NPC to the entity and from the entity to the NPC, then returns the distance between them
+	NOTE: Same as "VJ_GetNearestPointToEntity" but a little faster
+		- ent = The entity to find the nearest position of in respect to the NPC
+		- centerNPC = Should the X-axis and Y-axis for the NPC stay at the NPC's origin with ONLY the Z-axis changing? | DEFAULT: false
+	Returns
+		number, The distance from the NPC nearest position to the given NPC's nearest position
+-----------------------------------------------------------]]
+function ENT:VJ_GetNearestPointToEntityDistance(ent, centerNPC)
+	local myPos = self:GetPos()
+	local myNearPos = self:NearestPoint(ent:GetPos() + ent:OBBCenter())
+	local otherNearPos = ent:NearestPoint(myPos + self:OBBCenter())
+	if centerNPC then
+		myNearPos.x = myPos.x
+		myNearPos.y = myPos.y
+	end
+	//VJ.DEBUG_TempEnt(myNearPos, Angle(0, 0, 0), Color(0, 255, 0))
+	//VJ.DEBUG_TempEnt(otherNearPos)
+	return otherNearPos:Distance(myNearPos)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------

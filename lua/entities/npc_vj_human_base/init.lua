@@ -288,9 +288,9 @@ ENT.MeleeAttackAnimationFaceEnemy = true -- Should it face the enemy while playi
 ENT.MeleeAttackAnimationDecreaseLengthAmount = 0 -- This will decrease the time until starts chasing again. Use it to fix animation pauses until it chases the enemy.
 ENT.MeleeAttackAnimationAllowOtherTasks = false -- If set to true, the animation will not stop other tasks from playing, such as chasing | Useful for gesture attacks!
 	-- ====== Distance Variables ====== --
-ENT.MeleeAttackDistance = 30 -- How close does it have to be until it attacks?
+ENT.MeleeAttackDistance = false -- How close an enemy has to be to trigger a melee attack | false = Let the base auto calculate on initialize based on the NPC's collision bounds
 ENT.MeleeAttackAngleRadius = 100 -- What is the attack angle radius? | 100 = In front of the SNPC | 180 = All around the SNPC
-ENT.MeleeAttackDamageDistance = 70 -- How far does the damage go?
+ENT.MeleeAttackDamageDistance = false -- How far does the damage go? | false = Let the base auto calculate on initialize based on the NPC's collision bounds
 ENT.MeleeAttackDamageAngleRadius = 100 -- What is the damage angle radius? | 100 = In front of the SNPC | 180 = All around the SNPC
 	-- ====== Timer Variables ====== --
 	-- Set this to false to make the attack event-based:
@@ -750,10 +750,6 @@ function ENT:GetSightDirection()
 	return self:GetForward() -- Make sure to return a direction!
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:GetDynamicOrigin()
-	return self:GetPos() + self:GetForward() -- Override this to use a different position
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Use this to create a completely new attack system!
 -- function ENT:CustomAttack(ene, eneVisible) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -764,7 +760,7 @@ function ENT:CustomOnMeleeAttack_AfterStartTimer(seed) end
 function ENT:CustomOnMeleeAttack_BeforeChecks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:GetMeleeAttackDamageOrigin()
-	return self:GetPos() + self:GetForward() -- Override this to use a different position
+	return (IsValid(self:GetEnemy()) and self:VJ_GetNearestPointToEntity(self:GetEnemy(), false, true)) or self:GetPos() + self:GetForward() -- Override this to use a different position
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_AfterChecks(hitEnt, isProp) end -- return `true` to disable the attack and move onto the next entity!
@@ -1801,12 +1797,14 @@ function ENT:Initialize()
 	//if self.HasSquad == true then self:Fire("setsquad", self.SquadName) end
 	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
 	self:CustomOnInitialize()
+	//self:SetSurroundingBoundsType(BOUNDS_HITBOXES) -- AVOID! Has to constantly recompute the bounds! | Issues: Entities get stuck inside the NPC, movements failing, unable to grab the NPC with physgun
+	local collisionMin, collisionMax = self:GetCollisionBounds()
 	-- Auto compute damage bounds if the damage bounds == collision bounds then the developer has NOT changed it | Call after "CustomOnInitialize"
 	if self:GetSurroundingBounds() == self:WorldSpaceAABB() then
-		local collisionMin, collisionMax = self:GetCollisionBounds()
 		self:SetSurroundingBounds(Vector(collisionMin.x * 2, collisionMin.y * 2, collisionMin.z * 1.2), Vector(collisionMax.x * 2, collisionMax.y * 2, collisionMax.z * 1.2))
 	end
-	//self:SetSurroundingBoundsType(BOUNDS_HITBOXES) -- AVOID! Has to constantly recompute the bounds! | Issues: Entities get stuck inside the NPC, movements failing, unable to grab the NPC with physgun
+	if !self.MeleeAttackDistance then self.MeleeAttackDistance = math.abs(collisionMax.x) + 30 end
+	if !self.MeleeAttackDamageDistance then self.MeleeAttackDamageDistance = math.abs(collisionMax.x) + 60 end
 	self:SetupBloodColor(self.BloodColor) -- Collision bounds dependent, call after "CustomOnInitialize"
 	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + (self.IdleAlwaysWander and 0 or 1)) -- If self.NextWanderTime isn't given a value THEN if self.IdleAlwaysWander isn't true, wait at least 1 sec before wandering
 	self.SightDistance = (GetConVar("vj_npc_seedistance"):GetInt() > 0) and GetConVar("vj_npc_seedistance"):GetInt() or self.SightDistance
@@ -2270,7 +2268,7 @@ end
 function ENT:DoChaseAnimation(alwaysChase) -- alwaysChase: true = Override to always make the NPC chase
 	local ene = self:GetEnemy()
 	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead or self.VJ_IsBeingControlled or self.CurrentAttackAnimationTime > CurTime() or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.CurrentAttackAnimationTime > CurTime() && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
-	if self:VJ_GetNearestPointToEntityDistance(ene) < self.MeleeAttackDistance && self.EnemyData.IsVisible && (self.EnemyData.SightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))) then self:VJ_TASK_IDLE_STAND() return end -- Not melee attacking yet but it is in range, so stop moving!
+	if self:VJ_GetNearestPointToEntityDistance(ene, true) < self.MeleeAttackDistance && self.EnemyData.IsVisible && (self.EnemyData.SightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))) then self:VJ_TASK_IDLE_STAND() return end -- Not melee attacking yet but it is in range, so stop moving!
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
 	if self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsFollowing == true or self.Medic_Status or self:GetState() == VJ_STATE_ONLY_ANIMATION then
@@ -2809,7 +2807,7 @@ function ENT:Think()
 				eneData.IsVisible = plyControlled and self:VisibleVec(enePos) or self:Visible(ene) -- Need to use VisibleVec when controlled because "Visible" will return false randomly
 				eneData.SightDiff = self:GetSightDirection():Dot((enePos - myPos):GetNormalized())
 				self.LatestEnemyDistance = myPos:Distance(enePos)
-				self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene)
+				self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene, true)
 				if (eneData.SightDiff > math_cos(math_rad(self.SightAngle))) && (self.LatestEnemyDistance < self:GetMaxLookDistance()) && eneData.IsVisible then
 					eneData.LastVisibleTime = curTime
 					-- Why 2 vars? Because the last "Visible" tick is usually not updated in time, causing the engine to give false positive, thinking the enemy IS visible
@@ -3632,17 +3630,17 @@ function ENT:SelectSchedule()
 											noAttack = true
 										elseif CurTime() > self.NextMoveOnGunCoveredT && ((cover_npc_tr.HitPos:Distance(myPos) > 150 && cover_npc_isObj == true) or (cover_wep == true && !cover_wep_ent.VJTag_IsLiving)) then
 											local nearestPos;
-											local nearestEnePos;
+											local nearestEntPos;
 											if IsValid(cover_npc_ent) then
-												nearestPos, nearestEnePos = self:VJ_GetNearestPointToEntity(cover_npc_ent, true)
+												nearestPos, nearestEntPos = self:VJ_GetNearestPointToEntity(cover_npc_ent, true)
 											else
-												nearestPos, nearestEnePos = self:VJ_GetNearestPointToVector(cover_npc_tr.HitPos, true)
+												nearestPos, nearestEntPos = self:VJ_GetNearestPointToVector(cover_npc_tr.HitPos, true)
 											end
-											nearestEnePos = nearestEnePos - self:GetForward()*15
-											if nearestPos:Distance(nearestEnePos) <= (self.IsGuard and 60 or 1000) then
-												if self.IsGuard then self.GuardingPosition = nearestEnePos end -- Set the guard position to this new position that provides cover
-												self:SetLastPosition(nearestEnePos)
-												//VJ.DEBUG_TempEnt(nearestEnePos, self:GetAngles(), Color(0,255,255))
+											nearestEntPos = nearestEntPos - self:GetForward()*15
+											if nearestPos:Distance(nearestEntPos) <= (self.IsGuard and 60 or 1000) then
+												if self.IsGuard then self.GuardingPosition = nearestEntPos end -- Set the guard position to this new position that provides cover
+												self:SetLastPosition(nearestEntPos)
+												//VJ.DEBUG_TempEnt(nearestEntPos, self:GetAngles(), Color(0,255,255))
 												local schedGoToCover = vj_ai_schedule.New("vj_goto_cover")
 												schedGoToCover:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
 												local coverRunAnim = self:TranslateActivity(VJ.PICK(self.AnimTbl_MoveToCover))
