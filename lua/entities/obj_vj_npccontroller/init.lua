@@ -165,7 +165,7 @@ end
 function ENT:SetControlledNPC(npcEnt)
 	-- Set the bullseye entity values
 	local bullseyeEnt = ents.Create("obj_vj_bullseye")
-	bullseyeEnt:SetPos(npcEnt:GetPos() + npcEnt:GetForward()*100 + npcEnt:GetUp()*50)//Vector(npcEnt:OBBMaxs().x +20,0,npcEnt:OBBMaxs().z +20))
+	bullseyeEnt:SetPos(npcEnt:GetPos() + npcEnt:GetForward()*100 + npcEnt:GetUp()*50) //Vector(npcEnt:OBBMaxs().x +20,0,npcEnt:OBBMaxs().z +20))
 	bullseyeEnt:SetModel("models/hunter/blocks/cube025x025x025.mdl")
 	//bullseyeEnt:SetParent(npcEnt)
 	bullseyeEnt:SetRenderMode(RENDERMODE_NONE)

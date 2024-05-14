@@ -12,8 +12,7 @@ local table = table
 local print = print
 local vj_ai_task = vj_ai_task
 
-local tasksRun = {TASK_RUN_PATH=true, TASK_RUN_PATH_FLEE=true, TASK_RUN_PATH_TIMED=true, TASK_RUN_PATH_FOR_UNITS=true, TASK_RUN_PATH_WITHIN_DIST=true}
-local tasksWalk = {TASK_WALK_PATH=true, TASK_WALK_PATH_TIMED=true, TASK_WALK_PATH_FOR_UNITS=true, TASK_WALK_PATH_WITHIN_DIST=true}
+local tasksMove = {TASK_WAIT_FOR_MOVEMENT=true, TASK_MOVE_TO_TARGET_RANGE=true, TASK_MOVE_TO_GOAL_RANGE=true, TASK_WALK_PATH=true, TASK_WALK_PATH_TIMED=true, TASK_WALK_PATH_FOR_UNITS=true, TASK_WALK_PATH_WITHIN_DIST=true, TASK_RUN_PATH=true, TASK_RUN_PATH_FLEE=true, TASK_RUN_PATH_TIMED=true, TASK_RUN_PATH_FOR_UNITS=true, TASK_RUN_PATH_WITHIN_DIST=true, TASK_WEAPON_RUN_PATH=true, TASK_ITEM_RUN_PATH=true}
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Begin Metatable ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -25,8 +24,7 @@ function Schedule:Init(Name)
 	self.Name = tostring(Name)
 	self.Tasks = {}
 	self.TaskCount = 0
-	self.IsMovingTask = false
-	self.MoveType = false -- 0 = walk | 1 = run
+	self.HasMovement = false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Schedule:EngTask(taskName, taskData) -- Set an engine defined task
@@ -34,14 +32,8 @@ function Schedule:EngTask(taskName, taskData) -- Set an engine defined task
 	newTask:InitEngine(taskName, taskData)
 	self.TaskCount = table.insert(self.Tasks, newTask)
 	-- Handle movement tasks
-	if tasksRun[taskName] then
-		self.IsMovingTask = true
-		self.MoveType = 1
-	elseif tasksWalk[taskName] then
-		self.IsMovingTask = true
-		self.MoveType = 0
-	elseif taskName == "TASK_WAIT_FOR_MOVEMENT" then
-		self.IsMovingTask = true
+	if tasksMove[taskName] then
+		self.HasMovement = true
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -50,14 +42,8 @@ function Schedule:AddTask(taskName, data) -- Set a custom task where the task na
 	newTask:InitCustom(taskName, taskName, taskName, data)
 	self.TaskCount = table.insert(self.Tasks, newTask)
 	-- Handle movement tasks
-	if tasksRun[taskName] then
-		self.IsMovingTask = true
-		self.MoveType = 1
-	elseif tasksWalk[taskName] then
-		self.IsMovingTask = true
-		self.MoveType = 0
-	elseif taskName == "TASK_WAIT_FOR_MOVEMENT" then
-		self.IsMovingTask = true
+	if tasksMove[taskName] then
+		self.HasMovement = true
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -66,14 +52,8 @@ function Schedule:AddTaskEx(taskName, startFunc, runFunc, data) -- Set a custom 
 	newTask:InitCustom(taskName, startFunc, runFunc, data)
 	self.TaskCount = table.insert(self.Tasks, newTask)
 	-- Handle movement tasks
-	if tasksRun[taskName] then
-		self.IsMovingTask = true
-		self.MoveType = 1
-	elseif tasksWalk[taskName] then
-		self.IsMovingTask = true
-		self.MoveType = 0
-	elseif taskName == "TASK_WAIT_FOR_MOVEMENT" then
-		self.IsMovingTask = true
+	if tasksMove[taskName] then
+		self.HasMovement = true
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -1418,7 +1418,7 @@ function ENT:Follow(ent, stopIfFollowing)
 				self:PlaySoundSystem("FollowPlayer")
 			end
 			followData.Ent = ent
-			followData.MinDist = self.FollowMinDistance + (self:OBBMaxs().y * 3)
+			followData.MinDist = self.FollowMinDistance + self:OBBMaxs().y + ent:OBBMaxs().y
 			self.IsFollowing = true
 			self:SetTarget(ent)
 			if !self:BusyWithActivity() then -- Face the entity and then move to it

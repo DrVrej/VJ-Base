@@ -174,7 +174,7 @@ function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 		end
 		
 		self:DoSchedule(curSched)
-		if curSched.CanBeInterrupted or (self:IsScheduleFinished(curSched)) or (curSched.IsMovingTask && !self:IsMoving()) then
+		if curSched.CanBeInterrupted or (self:IsScheduleFinished(curSched)) or (curSched.HasMovement && !self:IsMoving()) then
 			self:SelectSchedule()
 		end
 	else
@@ -257,7 +257,7 @@ end
 -- lua_run PrintTable(Entity(1):GetEyeTrace().Entity.CurrentSchedule)
 --
 function ENT:StartSchedule(schedule)
-	if self.MovementType == VJ_MOVETYPE_STATIONARY && schedule.IsMovingTask == true then return end -- It's stationary therefore it should not move!
+	if self.MovementType == VJ_MOVETYPE_STATIONARY && schedule.HasMovement == true then return end -- It's stationary therefore it should not move!
 	if (self:GetState() == VJ_STATE_ONLY_ANIMATION or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self:GetState() == VJ_STATE_ONLY_ANIMATION_NOATTACK) && !schedule.IsPlayActivity then return end
 	local curSched = self.CurrentSchedule
 	if (IsValid(self:GetInternalVariable("m_hOpeningDoor")) or self:GetInternalVariable("m_flMoveWaitFinished") > 0) && curSched && schedule.Name == curSched.Name then return end -- If it's the same task and it's opening a door, then DO NOT continue
@@ -275,23 +275,23 @@ function ENT:StartSchedule(schedule)
 	if (!schedule.CanBeInterrupted) then schedule.CanBeInterrupted = false end
 	if (!schedule.CanShootWhenMoving) then schedule.CanShootWhenMoving = false end -- Is it able to fire when moving?
 	-- No longer needed, all the corresponding variables are set directly in the module to save performance!
-	/*if !schedule.IsMovingTask then
+	/*if !schedule.HasMovement then
 		for _,v in ipairs(schedule.Tasks) do
 			if tasksRun[v.TaskName] then
-				schedule.IsMovingTask = true
+				schedule.HasMovement = true
 				schedule.MoveType = 1
 				break
 			elseif tasksWalk[v.TaskName] then
-				schedule.IsMovingTask = true
+				schedule.HasMovement = true
 				schedule.MoveType = 0
 				break
 			else
-				schedule.IsMovingTask = false
+				schedule.HasMovement = false
 				schedule.MoveType = false
 			end
 		end
 	end
-	if schedule.IsMovingTask == nil then schedule.IsMovingTask = false end
+	if schedule.HasMovement == nil then schedule.HasMovement = false end
 	if schedule.MoveType == nil then schedule.MoveType = false end*/
 	-- This stops movements from running if another NPC is stuck in it
 	-- Pros:
@@ -299,7 +299,7 @@ function ENT:StartSchedule(schedule)
 	-- Cons:
 		-- When using "BOUNDS_HITBOXES" for "SetSurroundingBoundsType", NPCs often end up inside each other, and this check causes movements to not run (NPCs end up freezing)
 		-- Needed very rarely, not worth running a trace hull and table has value check for every movement task
-	/*if schedule.IsMovingTask == true then
+	/*if schedule.HasMovement == true then
 		local tr_addVec = Vector(0, 0, 2)
 		local tr = util.TraceHull({
 			start = self:GetPos(),
@@ -344,7 +344,7 @@ function ENT:StartSchedule(schedule)
 	end
 	
 	-- Clear certain systems that should be notified that we have moved
-	if schedule.IsMovingTask == true then
+	if schedule.HasMovement == true then
 		self.LastHiddenZoneT = 0
 		if self.LastAnimationType != VJ.ANIM_TYPE_GESTURE then -- Movements shouldn't interrupt gestures
 			self.LastAnimationSeed = 0
