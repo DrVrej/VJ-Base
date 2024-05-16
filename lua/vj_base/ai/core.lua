@@ -2414,6 +2414,13 @@ function ENT:ValidateNoCollide(ent)
 		for i = 1, #noCollTbl do
 			if noCollTbl[i] == entClass then
 				constraint.NoCollide(self, ent, 0, 0)
+				-- Check if the other entity has bone followers, if it does then make them no collide
+				local boneFollowers = ent:GetBoneFollowers()
+				if #boneFollowers > 0 then
+					for _, v in ipairs(boneFollowers) do
+						constraint.NoCollide(self, v.follower, 0, 0)
+					end
+				end
 			end
 		end
 	end
@@ -2506,6 +2513,7 @@ function ENT:OnRemove()
 	self:RemoveTimers()
 	self:StopAllCommonSounds()
 	self:StopParticles()
+	self:DestroyBoneFollowers()
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

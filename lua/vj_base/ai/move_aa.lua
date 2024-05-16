@@ -60,6 +60,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	local moveSpeed = (moveType == "Calm" and self.Aerial_FlyingSpeed_Calm) or self.Aerial_FlyingSpeed_Alerted
 	local debug = self.VJ_DEBUG
 	local myPos = self:GetPos()
+	local trFilter = {self, isentity(dest) and dest or NULL, "phys_bone_follower"} -- Pass in NULL when "dest" is not an entity otherwise filter will ignore everything after it!
 	
 	-- Initial checks for aquatic NPCs
 	if self.MovementType == VJ_MOVETYPE_AQUATIC then
@@ -76,7 +77,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 			local tr_aquatic = util.TraceLine({
 				start = myPos,
 				endpos = destVec,
-				filter = self,
+				filter = trFilter,
 				mask = MASK_WATER
 			})
 			if !tr_aquatic.Hit then self:DoIdleAnimation(1) return end
@@ -90,7 +91,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 				local trene = util.TraceLine({
 					start = dest:GetPos() + self:OBBCenter(),
 					endpos = (dest:GetPos() + self:OBBCenter()) + dest:GetUp()*-20,
-					filter = self
+					filter = trFilter
 				})
 				//PrintTable(trene)
 				//print(trene.Hit)
@@ -108,18 +109,18 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	local tr = util.TraceHull({
 		start = startPos,
 		endpos = endPos,
-		filter = {self, dest},
+		filter = trFilter,
 		mins = self:OBBMins(),
 		maxs = self:OBBMaxs()
 	})
 	local trHitPos = tr.HitPos
 	//local groundLimited = false -- If true, it limited the ground because it was too close
 	-- Preform ground check if:
-		-- It's an aerial NPC AND it is not ignoring ground
+		-- It's an aerial NPC AND it is not ignoring ground AND-
 		-- It's NOT a chase enemy OR it is but the NPC doesn't have a melee attack
 	if self.MovementType == VJ_MOVETYPE_AERIAL && extraOptions.IgnoreGround != true && ((!chaseEnemy) or (chaseEnemy && !self.HasMeleeAttack)) then
-		local tr_check1 = util.TraceLine({start = startPos, endpos = startPos + Vector(0, 0, -self.AA_GroundLimit), filter = {self, dest}})
-		local tr_check2 = util.TraceLine({start = trHitPos, endpos = trHitPos + Vector(0, 0, -self.AA_GroundLimit), filter = {self, dest}})
+		local tr_check1 = util.TraceLine({start = startPos, endpos = startPos + Vector(0, 0, -self.AA_GroundLimit), filter = trFilter})
+		local tr_check2 = util.TraceLine({start = trHitPos, endpos = trHitPos + Vector(0, 0, -self.AA_GroundLimit), filter = trFilter})
 		if debug == true then
 			print("checking...")
 			VJ.DEBUG_TempEnt(startPos, self:GetAngles(), Color(145,255,0), 5)
@@ -133,7 +134,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 			tr = util.TraceHull({
 				start = startPos,
 				endpos = endPos,
-				filter = {self, dest},
+				filter = trFilter,
 				mins = self:OBBMins(),
 				maxs = self:OBBMaxs()
 			})
@@ -162,7 +163,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 				tr = util.TraceHull({
 					start = startPos,
 					endpos = self.AA_LastChasePos,
-					filter = {self, dest},
+					filter = trFilter,
 					mins = self:OBBMins(),
 					maxs = self:OBBMaxs()
 				})
@@ -286,12 +287,13 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 	if moveDown == true then
 		tr_endpos = myPos + self:GetUp()*((myMaxs + math.random(100, 150))*-1)
 	end
-	local tr = util.TraceLine({start = myPos, endpos = tr_endpos, filter = self})
+	local trFilter = {self, "phys_bone_follower"}
+	local tr = util.TraceLine({start = myPos, endpos = tr_endpos, filter = trFilter})
 	local finalPos = tr.HitPos
 	//PrintTable(tr)
 	-- If we aren't being forced to move down, then make sure we limit how close we get to the ground!
 	if extraOptions.IgnoreGround != true && !moveDown && self.MovementType == VJ_MOVETYPE_AERIAL then
-		local tr_check = util.TraceLine({start = finalPos, endpos = finalPos + Vector(0, 0, -self.AA_GroundLimit), filter = self})
+		local tr_check = util.TraceLine({start = finalPos, endpos = finalPos + Vector(0, 0, -self.AA_GroundLimit), filter = trFilter})
 		if debug == true then
 			print("checking...")
 			VJ.DEBUG_TempEnt(finalPos, self:GetAngles(), Color(255, 255, 255), 5)
@@ -301,7 +303,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 		if tr_check.HitWorld == true then
 			if debug == true then print("Ground Hit!", tr_check.HitPos:Distance(finalPos)) end
 			tr_endpos.z = myPos.z + self.AA_GroundLimit
-			tr = util.TraceLine({start = myPos, endpos = tr_endpos, filter = self})
+			tr = util.TraceLine({start = myPos, endpos = tr_endpos, filter = trFilter})
 			finalPos = tr.HitPos
 		end
 	end

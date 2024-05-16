@@ -683,7 +683,7 @@ function ENT:CustomOnTouch(ent) end
 -- --
 -- function ENT:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions)
 -- 	local eventName = getEventName(ev)
--- 	print("OnHandleAnimEvent", getEventName(ev), ev, evTime, evCycle, evType, evOptions)
+-- 	print("OnHandleAnimEvent", eventName, ev, evTime, evCycle, evType, evOptions)
 -- end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1012,7 +1012,7 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			//self.AnimationTranslations[ACT_RELOAD] 					= ACT_RELOAD_SMG1 -- Not used for melee
 			//self.AnimationTranslations[ACT_RELOAD_LOW] 				= ACT_RELOAD_SMG1_LOW -- Not used for melee
 			
-			self.AnimationTranslations[ACT_IDLE] 						= {ACT_IDLE, ACT_IDLE, VJ.SequenceToActivity(self, "plazathreat1")}
+			self.AnimationTranslations[ACT_IDLE] 						= {ACT_IDLE, ACT_IDLE, ACT_IDLE, ACT_IDLE, VJ.SequenceToActivity(self, "plazathreat1")}
 			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_MELEE
 			
 			self.AnimationTranslations[ACT_WALK] 						= VJ.PICK({ACT_WALK, ACT_WALK_ANGRY})
@@ -1881,11 +1881,20 @@ function ENT:Initialize()
 			-- This is needed as setting "NextThink" to CurTime will cause performance drops, so we set the idle maintain in a separate hook that runs every tick
 			local thinkHook = hook.GetTable()["Think"]
 			if (thinkHook && !thinkHook[self]) or (!thinkHook) then
-				hook.Add("Think", self, function()
-					if VJ_CVAR_AI_ENABLED then
-						self:MaintainIdleAnimation()
-					end
-				end)
+				if #self:GetBoneFollowers() > 0 then
+					hook.Add("Think", self, function()
+						if VJ_CVAR_AI_ENABLED then
+							self:MaintainIdleAnimation()
+						end
+						self:UpdateBoneFollowers()
+					end)
+				else
+					hook.Add("Think", self, function()
+						if VJ_CVAR_AI_ENABLED then
+							self:MaintainIdleAnimation()
+						end
+					end)
+				end
 			else
 				print("[VJ Base] Warning: " .. self:GetClass() .. " [" .. self:EntIndex() .. "] has an existing embedded \"Think\" hook already, which is disallowing the default base hook from assigning. Make sure to handle \"MaintainIdleAnimation\" in the overridden hook!")
 			end
@@ -2341,7 +2350,7 @@ function ENT:TranslateActivity(act)
 	if translation then
 		if istable(translation) then
 			if act == ACT_IDLE then
-				self:ResolveAnimation(translation)
+				return self:ResolveAnimation(translation)
 			end
 			return translation[math.random(1, #translation)] or act -- "or act" = To make sure it doesn't return nil when the table is empty!
 		else
@@ -4319,10 +4328,12 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			end
 		end
 		//gamemode.Call("CreateEntityRagdoll",self,corpse)
-
+		
 		-- Dissolve --
 		if (bit.band(self.SavedDmgInfo.type, DMG_DISSOLVE) != 0) or (IsValid(self.SavedDmgInfo.inflictor) && self.SavedDmgInfo.inflictor:GetClass() == "prop_combine_ball") then
-			corpse:SetName("vj_dissolve_corpse")
+			corpse:Dissolve(0, 1)
+			-- No longer needed, Dissolve function is now part of the engine!
+			/*corpse:SetName("vj_dissolve_corpse")
 			local dissolver = ents.Create("env_entity_dissolver")
 			dissolver:SetPos(corpse:GetPos())
 			dissolver:Spawn()
@@ -4337,6 +4348,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			end
 			dissolver:Fire("Kill", "", 0.1)
 			//dissolver:Remove()
+			*/
 		end
 		
 		-- Bone and Angle --
@@ -4359,23 +4371,23 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 						if self.DeathCorpseSetBoneAngles == true then childPhysObj:SetAngles(childPhysObj_BoneAng) end
 						childPhysObj:SetPos(childPhysObj_BonePos)
 					//end
-					if corpse:GetName() == "vj_dissolve_corpse" then
-						childPhysObj:EnableGravity(false)
-						childPhysObj:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
-					else
+					//if corpse:GetName() == "vj_dissolve_corpse" then -- No longer needed, Dissolve function is now part of the engine!
+						//childPhysObj:EnableGravity(false)
+						//childPhysObj:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
+					//else
 						if self.DeathCorpseApplyForce == true /*&& self.DeathAnimationCodeRan == false*/ then
 							childPhysObj:SetVelocity(dmgForce / math.max(1, (useLocalVel and childPhysObj_BonePos:Distance(self.SavedDmgInfo.pos)/12) or 1))
 						end
-					end
+					//end
 				elseif physCount == 1 then -- If it's only 1, then it's likely a regular physics model with no bones
-					if corpse:GetName() == "vj_dissolve_corpse" then
-						childPhysObj:EnableGravity(false)
-						childPhysObj:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
-					else
+					//if corpse:GetName() == "vj_dissolve_corpse" then -- No longer needed, Dissolve function is now part of the engine!
+						//childPhysObj:EnableGravity(false)
+						//childPhysObj:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
+					//else
 						if self.DeathCorpseApplyForce == true /*&& self.DeathAnimationCodeRan == false*/ then
 							childPhysObj:SetVelocity(dmgForce / math.max(1, (useLocalVel and corpse:GetPos():Distance(self.SavedDmgInfo.pos)/12) or 1))
 						end
-					end
+					//end
 				end
 			end
 		end
@@ -4387,10 +4399,20 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		end
 		VJ.Corpse_AddStinky(corpse, true)
 		
-		if IsValid(self.CurrentWeaponEntity) then corpse.ChildEnts[#corpse.ChildEnts+1] = self.CurrentWeaponEntity end
+		if IsValid(self.CurrentWeaponEntity) then corpse.ChildEnts[#corpse.ChildEnts + 1] = self.CurrentWeaponEntity end
 		if self.DeathCorpseFade == true then corpse:Fire(corpse.FadeCorpseType, "", self.DeathCorpseFadeTime) end
 		if GetConVar("vj_npc_corpsefade"):GetInt() == 1 then corpse:Fire(corpse.FadeCorpseType, "", GetConVar("vj_npc_corpsefadetime"):GetInt()) end
 		self:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpse)
+		if corpse:IsFlagSet(FL_DISSOLVING) then
+			if IsValid(self.CurrentWeaponEntity) then
+				self.CurrentWeaponEntity:Dissolve(0, 1)
+			end
+			if corpse.ChildEnts then
+				for _, v in ipairs(corpse.ChildEnts) do
+					v:Dissolve(0, 1)
+				end
+			end
+		end
 		corpse:CallOnRemove("vj_" .. corpse:EntIndex(), function(ent, childPieces)
 			for _, child in ipairs(childPieces) do
 				if IsValid(child) then
