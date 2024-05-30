@@ -23,11 +23,12 @@ ENT.DeathCorpseCollisionType = COLLISION_GROUP_NONE -- Collision type for the co
 ENT.WaitBeforeDeathTime = 2 -- Time until the SNPC spawns its corpse and gets removed
 ENT.HasMeleeAttack = false -- Should the SNPC have a melee attack?
 ENT.DisableWandering = true -- Disables wandering when the SNPC is idle
+ENT.CanReceiveOrders = false -- Can the NPC receive orders from others? | Ex: Allies calling for help, allies requesting backup on damage, etc.
 ENT.BringFriendsOnDeath = false -- Should the SNPC's friends come to its position before it dies?
+ENT.AlertFriendsOnDeath = true -- Should the SNPCs allies get alerted when it dies? | Its allies will also need to have this variable set to true!
 ENT.CallForBackUpOnDamage = false -- Should the SNPC call for help when damaged? (Only happens if the SNPC hasn't seen a enemy)
 ENT.MoveOrHideOnDamageByEnemy = false -- Should the SNPC move or hide when being damaged by an enemy?
 ENT.MoveOutOfFriendlyPlayersWay = false -- Should the SNPC move out of the way when a friendly player comes close to it?
-ENT.CallForHelp = false -- Does the SNPC call for help?
 ENT.HasPainSounds = false -- If set to false, it won't play the pain sounds
 	-- ====== Sound File Paths ====== --
 -- Leave blank if you don't want any sounds to play

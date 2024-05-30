@@ -77,23 +77,27 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnGrenadeAttack(status, grenade, customEnt, landDir, landingPos)
 	if status == "Throw" then
-		-- Custom grenade model and sounds
-		grenade.SoundTbl_Idle = {"weapons/grenade/tick1.wav"}
-		grenade.IdleSoundPitch = VJ.SET(100, 100)
-		
-		local redGlow = ents.Create("env_sprite")
-		redGlow:SetKeyValue("model", "vj_base/sprites/vj_glow1.vmt")
-		redGlow:SetKeyValue("scale", "0.07")
-		redGlow:SetKeyValue("rendermode", "5")
-		redGlow:SetKeyValue("rendercolor", "150 0 0")
-		redGlow:SetKeyValue("spawnflags", "1") -- If animated
-		redGlow:SetParent(grenade)
-		redGlow:Fire("SetParentAttachment", "fuse", 0)
-		redGlow:Spawn()
-		redGlow:Activate()
-		grenade:DeleteOnRemove(redGlow)
-		util.SpriteTrail(grenade, 1, Color(200,0,0), true, 15, 15, 0.35, 1/(6+6)*0.5, "VJ_Base/sprites/vj_trial1.vmt")
-	
+		if !IsValid(customEnt) then
+			-- Glow and trail are both based on the original: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/hl2/grenade_frag.cpp#L158
+			local redGlow = ents.Create("env_sprite")
+			redGlow:SetKeyValue("model", "sprites/redglow1.vmt")
+			redGlow:SetKeyValue("scale", "0.2")
+			redGlow:SetKeyValue("rendermode", "3") -- kRenderGlow
+			redGlow:SetKeyValue("renderfx", "14") -- kRenderFxNoDissipation
+			redGlow:SetKeyValue("renderamt", "200")
+			redGlow:SetKeyValue("rendercolor", "255 255 255")
+			redGlow:SetKeyValue("GlowProxySize", "4.0")
+			redGlow:SetParent(grenade)
+			redGlow:Fire("SetParentAttachment", "fuse")
+			redGlow:Spawn()
+			redGlow:Activate()
+			grenade:DeleteOnRemove(redGlow)
+			local redTrail = util.SpriteTrail(grenade, 1, Color(255, 0, 0), true, 8, 1, 0.5, 0.0555, "sprites/bluelaser1.vmt")
+			redTrail:SetKeyValue("rendermode", "5") -- kRenderTransAdd
+			redTrail:SetKeyValue("renderfx", "0") -- kRenderFxNone
+			grenade.SoundTbl_Idle = "Grenade.Blip"
+			grenade.IdleSoundPitch = VJ.SET(100, 100)
+		end
 		return (landingPos - grenade:GetPos()) + (self:GetUp()*200 + self:GetForward()*500 + self:GetRight()*math.Rand(-20, 20))
 	end
 end

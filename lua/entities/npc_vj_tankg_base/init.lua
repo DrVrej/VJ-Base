@@ -21,11 +21,11 @@ ENT.DeathCorpseCollisionType = COLLISION_GROUP_NONE -- Collision type for the co
 ENT.HasMeleeAttack = false -- Should the SNPC have a melee attack?
 ENT.DisableWandering = true -- Disables wandering when the SNPC is idle
 ENT.DisableFindEnemy = true -- Disables FindEnemy code, friendly code still works though
+ENT.CanReceiveOrders = false -- Can the NPC receive orders from others? | Ex: Allies calling for help, allies requesting backup on damage, etc.
 ENT.BringFriendsOnDeath = false -- Should the SNPC's friends come to its position before it dies?
 ENT.CallForBackUpOnDamage = false -- Should the SNPC call for help when damaged? (Only happens if the SNPC hasn't seen a enemy)
 ENT.MoveOrHideOnDamageByEnemy = false -- Should the SNPC move or hide when being damaged by an enemy?
 ENT.MoveOutOfFriendlyPlayersWay = false -- Should the SNPC move out of the way when a friendly player comes close to it?
-ENT.CallForHelp = false -- Does the SNPC call for help?
 ENT.HasPainSounds = false -- If set to false, it won't play the pain sounds
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Tank Base Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

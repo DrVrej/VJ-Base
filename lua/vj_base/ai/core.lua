@@ -1896,7 +1896,7 @@ function ENT:Allies_CallHelp(dist)
 	local myClass = self:GetClass()
 	local curTime = CurTime()
 	for _, v in ipairs(ents.FindInSphere(self:GetPos(), dist or 800)) do
-		if v != self && v:IsNPC() && v.IsVJBaseSNPC && VJ.IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !v.VJ_IsBeingControlled && (!v.IsVJBaseSNPC_Tank) && v.CallForHelp then
+		if v != self && v:IsNPC() && v.IsVJBaseSNPC && VJ.IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !v.VJ_IsBeingControlled && v.CanReceiveOrders then
 			local ene = self:GetEnemy()
 			if IsValid(ene) then
 				local eneIsPlayer = ene:IsPlayer()
@@ -1945,7 +1945,7 @@ function ENT:Allies_Check(dist)
 	local isPassive = self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE
 	local myClass = self:GetClass()
 	for _, v in ipairs(ents.FindInSphere(self:GetPos(), dist or 800)) do
-		if v != self && v:IsNPC() && v.IsVJBaseSNPC && VJ.IsAlive(v) && (v:GetClass() == myClass or (v:Disposition(self) == D_LI or v.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
+		if v != self && v:IsNPC() && v.IsVJBaseSNPC && VJ.IsAlive(v) && (v:GetClass() == myClass or (v:Disposition(self) == D_LI or v.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE)) && v.CanReceiveOrders then
 			if isPassive then
 				if v.Behavior == VJ_BEHAVIOR_PASSIVE or v.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
 					alliesNum = alliesNum + 1
@@ -1982,7 +1982,7 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 	local myClass = self:GetClass()
 	local it = 0
 	for _, v in ipairs(entsTbl or ents.FindInSphere(myPos, dist)) do
-		if v != self && v:IsNPC() && v.IsVJBaseSNPC && VJ.IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && v.IsFollowing == false && v.VJ_IsBeingControlled == false && !v.IsGuard && (!v.IsVJBaseSNPC_Tank) && (v.BringFriendsOnDeath == true or v.CallForBackUpOnDamage == true or v.CallForHelp == true) then
+		if v != self && v:IsNPC() && v.IsVJBaseSNPC && VJ.IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && v.IsFollowing == false && v.VJ_IsBeingControlled == false && !v.IsGuard && (!v.IsVJBaseSNPC_Tank) && v.CanReceiveOrders then
 			if onlyVis && !v:Visible(self) then continue end
 			if !IsValid(v:GetEnemy()) && myPos:Distance(v:GetPos()) < dist then
 				self.NextWanderTime = CurTime() + 8

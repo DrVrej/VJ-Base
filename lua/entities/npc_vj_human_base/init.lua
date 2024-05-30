@@ -67,6 +67,8 @@ ENT.VJC_Data = {
 ------ AI & Relationship Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.CanOpenDoors = true -- Can it open doors?
+ENT.CanReceiveOrders = true -- Can the NPC receive orders from others? | Ex: Allies calling for help, allies requesting backup on damage, etc.
+	-- When false it will not receive the following: "CallForHelp", "CallForBackUpOnDamage", "BringFriendsOnDeath", "AlertFriendsOnDeath", "Passive_AlliesRunOnDamage"
 ENT.HasAllies = true -- Put to false if you want it not to have any allies
 ENT.VJ_NPC_Class = {} -- NPCs with the same class with be allied to each other
 	-- Common Classes: Combine = CLASS_COMBINE || Zombie = CLASS_ZOMBIE || Antlions = CLASS_ANTLION || Xen = CLASS_XEN || Player Friendly = CLASS_PLAYER_ALLY
@@ -95,7 +97,7 @@ ENT.OnPlayerSightDispositionLevel = 1 -- 0 = Run it every time | 1 = Run it only
 ENT.OnPlayerSightOnlyOnce = true -- If true, it will only run the code once | Sets self.HasOnPlayerSight to false once it runs!
 ENT.OnPlayerSightNextTime = VJ.SET(15, 20) -- How much time should it pass until it runs the code again?
 	-- ====== Call For Help Variables ====== --
-ENT.CallForHelp = true -- Does the SNPC call for help?
+ENT.CallForHelp = true -- Can the NPC request allies for help while in combat?
 ENT.CallForHelpDistance = 2000 -- -- How far away the SNPC's call for help goes | Counted in World Units
 ENT.NextCallForHelpTime = 4 -- Time until it calls for help again
 ENT.HasCallForHelpAnimation = true -- if true, it will play the call for help animation
@@ -2857,7 +2859,7 @@ function ENT:Think()
 				end
 
 				-- Call for help
-				if self.AttackType != VJ.ATTACK_TYPE_GRENADE && self.CallForHelp == true && curTime > self.NextCallForHelpT then
+				if self.AttackType != VJ.ATTACK_TYPE_GRENADE && self.CallForHelp && curTime > self.NextCallForHelpT then
 					self:Allies_CallHelp(self.CallForHelpDistance)
 					self.NextCallForHelpT = curTime + self.NextCallForHelpTime
 				end

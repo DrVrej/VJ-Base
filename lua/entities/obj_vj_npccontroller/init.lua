@@ -221,6 +221,7 @@ function ENT:SetControlledNPC(npcEnt)
 			[10] = npcEnt.Passive_RunOnTouch,
 			[11] = npcEnt.Passive_RunOnDamage,
 			[12] = npcEnt.IsGuard,
+			[13] = npcEnt.CanReceiveOrders,
 		}
 		npcEnt.DisableWandering = true
 		npcEnt.DisableChasingEnemy = true
@@ -517,6 +518,7 @@ function ENT:StopControlling(keyPressed)
 			npc.Passive_RunOnTouch = npcData[10]
 			npc.Passive_RunOnDamage = npcData[11]
 			npc.IsGuard = npcData[12]
+			npc.CanReceiveOrders = npcData[13]
 		end
 	end
 	//self.VJCE_Camera:Remove()
