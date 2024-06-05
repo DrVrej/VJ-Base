@@ -1092,70 +1092,48 @@ function ENT:SetImpactEnergyScale(scale)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Finds the nearest position from the NPC to the position and from the position to the NPC, then returns both positions
-		- pos = The vector to find the nearest position of in respect to the NPC
-		- groundedZ = Should the Z-axis of both the NPC and given position be the NPC's origin? | DEFAULT: false
-	Returns
-		1:
-			- Vector, NPC's nearest position to the given vector
-		2:
-			- Vector, Given vector's nearest position to the NPC
------------------------------------------------------------]]
-function ENT:VJ_GetNearestPointToVector(pos, groundedZ)
-	local myNearPos = self:NearestPoint(pos + pos:OBBCenter())
-	local otherNearPos = pos
-	if groundedZ then
-		local myZ = self:GetPos().z
-		myNearPos.z = myZ
-		otherNearPos.z = myZ
-	end
-	return myNearPos, otherNearPos
-end
----------------------------------------------------------------------------------------------------------------------------------------------
---[[---------------------------------------------------------
-	Finds the nearest position from the NPC to the entity and from the entity to the NPC, then returns both positions
+	Finds the nearest position from the NPC to the entity and from the entity to the nearest NPC position found previously, then returns both positions
 		- ent = The entity to find the nearest position of in respect to the NPC
-		- groundedZ = Should the Z-axis of both the NPC and the entity be the NPC's origin? | DEFAULT: false
 		- centerNPC = Should the X-axis and Y-axis for the NPC stay at the NPC's origin with ONLY the Z-axis changing? | DEFAULT: false
 			- WARNING: This will override "groundedZ" to false because if both are enabled then the NPC's near position just becomes its origin
 	Returns
 		1:
 			- Vector, NPC's nearest position to the given entity
 		2:
-			- Vector, Given entity's nearest position to the NPC
+			- Vector, Given entity's nearest position to the NPC's nearest position
 -----------------------------------------------------------]]
-function ENT:VJ_GetNearestPointToEntity(ent, groundedZ, centerNPC)
-	local myPos = self:GetPos()
+function ENT:VJ_GetNearestPointToEntity(ent, centerNPC)
 	local myNearPos = self:NearestPoint(ent:GetPos() + ent:OBBCenter())
-	local otherNearPos = ent:NearestPoint(myPos + self:OBBCenter())
 	if centerNPC then
+		local myPos = self:GetPos()
 		myNearPos.x = myPos.x
 		myNearPos.y = myPos.y
-	elseif groundedZ then
-		myNearPos.z = myPos.z
-		otherNearPos.z = myPos.z
+	//elseif groundedZ then -- No need to have it built-in, can just be grounded after the function call
+		//myNearPos.z = myPos.z
+		//otherNearPos.z = myPos.z
 	end
+	local otherNearPos = ent:NearestPoint(myNearPos)
 	//VJ.DEBUG_TempEnt(myNearPos, Angle(0, 0, 0), Color(0, 255, 0))
 	//VJ.DEBUG_TempEnt(otherNearPos)
 	return myNearPos, otherNearPos
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Finds the nearest position from the NPC to the entity and from the entity to the NPC, then returns the distance between them
-	NOTE: Same as "VJ_GetNearestPointToEntity" but a little faster
+	Finds the nearest position from the NPC to the entity and from the entity to the nearest NPC position found previously, then returns the distance between them
+		NOTE: Identical to "VJ_GetNearestPointToEntity", this is just a convenience function
 		- ent = The entity to find the nearest position of in respect to the NPC
 		- centerNPC = Should the X-axis and Y-axis for the NPC stay at the NPC's origin with ONLY the Z-axis changing? | DEFAULT: false
 	Returns
 		number, The distance from the NPC nearest position to the given NPC's nearest position
 -----------------------------------------------------------]]
 function ENT:VJ_GetNearestPointToEntityDistance(ent, centerNPC)
-	local myPos = self:GetPos()
 	local myNearPos = self:NearestPoint(ent:GetPos() + ent:OBBCenter())
-	local otherNearPos = ent:NearestPoint(myPos + self:OBBCenter())
 	if centerNPC then
+		local myPos = self:GetPos()
 		myNearPos.x = myPos.x
 		myNearPos.y = myPos.y
 	end
+	local otherNearPos = ent:NearestPoint(myNearPos)
 	//VJ.DEBUG_TempEnt(myNearPos, Angle(0, 0, 0), Color(0, 255, 0))
 	//VJ.DEBUG_TempEnt(otherNearPos)
 	return otherNearPos:Distance(myNearPos)

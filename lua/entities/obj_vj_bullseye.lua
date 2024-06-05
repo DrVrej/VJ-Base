@@ -40,8 +40,8 @@ ENT.ForceEntAsEnemy = false -- Set this to an NPC that should always override al
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Activated = true
 
-local sdActivated = Sound("hl1/fvox/activated.wav")
-local sdDeactivated = Sound("hl1/fvox/deactivated.wav")
+local sdActivated = "hl1/fvox/activated.wav"
+local sdDeactivated = "hl1/fvox/deactivated.wav"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	//self:SetModel("models/hunter/plates/plate.mdl")
@@ -63,7 +63,7 @@ function ENT:Initialize()
 	self:SetUseType(SIMPLE_USE)
 	self:SetMaxHealth(999999)
 	self:SetHealth(999999) -- So SNPCs won't think it's dead
-	//self:SetColor(Color(255,0,0))
+	//self:SetColor(Color(255, 0, 0))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AcceptInput(key, activator, caller, data)
@@ -93,10 +93,10 @@ function ENT:Think()
 	elseif self.UseActivationSystem == true then
 		if self.Activated == false then
 			self:AddFlags(FL_NOTARGET)
-			if self.ActivationSystemStatusColors == true then self:SetColor(Color(255,0,0)) end
+			if self.ActivationSystemStatusColors == true then self:SetColor(Color(255, 0, 0)) end
 		elseif self.Activated == true then
 			self:RemoveFlags(FL_NOTARGET)
-			if self.ActivationSystemStatusColors == true then self:SetColor(Color(0,255,0)) end
+			if self.ActivationSystemStatusColors == true then self:SetColor(Color(0, 255, 0)) end
 		end
 	end
 	/*if IsValid(self.VJBULLSEYE_TheAttacker) && self.Alreadydoneit == false then

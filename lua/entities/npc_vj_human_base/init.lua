@@ -762,7 +762,7 @@ function ENT:CustomOnMeleeAttack_AfterStartTimer(seed) end
 function ENT:CustomOnMeleeAttack_BeforeChecks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:GetMeleeAttackDamageOrigin()
-	return (IsValid(self:GetEnemy()) and self:VJ_GetNearestPointToEntity(self:GetEnemy(), false, true)) or self:GetPos() + self:GetForward() -- Override this to use a different position
+	return (IsValid(self:GetEnemy()) and self:VJ_GetNearestPointToEntity(self:GetEnemy(), true)) or self:GetPos() + self:GetForward() -- Override this to use a different position
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_AfterChecks(hitEnt, isProp) end -- return `true` to disable the attack and move onto the next entity!
@@ -2255,7 +2255,7 @@ end
 function ENT:DoIdleAnimation(idleType) -- idleType: nil = Random | 1 = Wander | 2 = Idle Stand
 	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead or self.VJ_IsBeingControlled or self.CurrentAttackAnimationTime > CurTime() or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
 	
-	if self.IdleAlwaysWander == true then idleType = 1 end
+	if self.IdleAlwaysWander && !idleType then idleType = 1 end
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
 	if self.DisableWandering == true or self.IsGuard == true or self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsVJBaseSNPC_Tank == true or self.LastHiddenZone_CanWander == false or self.NextWanderTime > CurTime() or self.IsFollowing == true or self.Medic_Status then
@@ -3662,9 +3662,10 @@ function ENT:SelectSchedule()
 											local nearestPos;
 											local nearestEntPos;
 											if IsValid(cover_npc_ent) then
-												nearestPos, nearestEntPos = self:VJ_GetNearestPointToEntity(cover_npc_ent, true)
+												nearestPos, nearestEntPos = self:VJ_GetNearestPointToEntity(cover_npc_ent)
+												nearestPos.z = myPos.z; nearestEntPos.z = myPos.z -- Floor the Z-axis as it can be used for a movement position!
 											else
-												nearestPos, nearestEntPos = self:VJ_GetNearestPointToVector(cover_npc_tr.HitPos, true)
+												nearestPos, nearestEntPos = self:NearestPoint(cover_npc_tr.HitPos), cover_npc_tr.HitPos
 											end
 											nearestEntPos = nearestEntPos - self:GetForward()*15
 											if nearestPos:Distance(nearestEntPos) <= (self.IsGuard and 60 or 1000) then
