@@ -285,6 +285,159 @@ end
 function VJ.IsAlive(ent)
 	return ent:Health() > 0 && !ent.Dead
 end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Calculates and returns a trajectory velocity that can be used to throw projectiles, props, etc.
+		- self = Entity that's throwing the object
+		- target = Target that self is trying to throw at | DEFAULT: NULL | This isn't required
+		- algorithmType = Type of algorithm to use for the calculation
+			-- "Line" = Creates a straight line with the given speed
+				--- Ignores gravity  |   Ignores "ApplyDist" option
+			-- "Curve" = Creates a curved velocity with the given arc strength
+				--- Obeys gravity    |   Obeys "ApplyDist" option
+			-- "CurveAntlion" = Alternative to "Curve", it uses the Antlion Worker trajectory algorithm from Episode 2
+				--- Obeys gravity    |   Ignores "ApplyDist" option
+			-- "CurveOld" = Much older version of "Curve" made prior to VJ Base revamp, recommended to NOT use!
+				--- Semi-Obeys gravity    |   Ignores "ApplyDist" option
+		- startPos = Position that the velocity starts from
+		- targetPos = Position to land the object | DEFAULT: 1
+			-- Vector = Uses this position as the landing position
+			-- Number = Let the base calculate with prediction where the number is the prediction rate
+				--- 0 : No prediction   |   0 < to > 1 : Closer to target   |   1 : Perfect prediction   |   1 < : Ahead of the prediction (will be very ahead/inaccurate)
+				--- EX: Adjust land position to the head of the target if its body is covered + predict where the target will be if prediction is enabled
+				--- REQUIRED: Valid target entity
+				--- WARNING: Prediction is only for VJ NPCs, anything else is set to the target's center position
+				--- WARNING: Prediction will mess up when using a curved algorithm with a large arc
+		- strength = How strong or fast the velocity should be (Depends on the algorithm type)
+			-- For "Line" it's the speed, for all others it's the arc of the curve
+		- extraOptions = Table that holds extra options to modify parts of the code
+			- ApplyDist = Instead of only applying the given strength to the arc, it will also account for the distance between the start and target positions | DEFAULT: true
+				-- NOTE: If the base detects that the projectile can't reach, it will override this option to true! | EX: Strength is set to very low number and enemy is very far away
+	Returns
+		- Vector, the calculated velocity
+-----------------------------------------------------------]]
+function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos, strength, extraOptions)
+	extraOptions = extraOptions or {}
+	local predict = false
+	local predictProjSpeed = 1
+	if isnumber(targetPos) then
+		if IsValid(target) then
+			if self.IsVJBaseSNPC then -- Only VJ NPCs can adjust based on target's visibility and only they can predict!
+				if targetPos > 0 then -- Set to predict, so save the prediction rate!
+					predict = targetPos
+				end
+				targetPos = self:GetAimPosition(target, startPos)
+			else -- Non-VJ entities will just get the target's center
+				targetPos = target:GetPos() + target:OBBCenter()
+			end
+		else -- Fail safe in case we are given a number as the target position with no valid target
+			targetPos = self:GetPos() + self:GetForward() * 200
+		end
+	end
+	local result; -- Final result that will be used as the velocity
+
+	if algorithmType == "Line" then -- Suggested to disable gravity!
+		result = ((targetPos - startPos):GetNormal()) * strength
+		predictProjSpeed = result:Length() * 0.8
+	elseif algorithmType == "Curve" then
+		local gravity = math.abs(physenv.GetGravity().z)
+		local dist = startPos:Distance(targetPos)
+		local midPoint = startPos + (targetPos - startPos) * 0.5 -- The halfway point of the start and end positions, basically the RIGHT side of a triangle
+		local applyDist = extraOptions.ApplyDist; if applyDist == nil then applyDist = true end
+		-- Adjust the Z-axis to account for the following:
+			-- 1. How high/low the end position is
+			-- 2. Apply the strength to adjust the size of the arc
+			-- 3. Adjust the strength's arc if "ApplyDist" is enabled to make it arc less when closer
+			-- 4. Apply further adjustments if base detects that it won't hit the target (Usually happens when target is too far for the given arc strength)
+		local verticalAdjustment = math.abs(startPos.z - targetPos.z) + (applyDist and math.Clamp(strength, -dist, dist) or strength) //+ math.Clamp(strength, -dist, dist / 4) //midPoint:Length() * (strength / (startPos:Distance(targetPos)))
+		if dist > (strength * 9.5) && dist > 2000 then -- Bulletin #4 above
+			if self.VJ_DEBUG then print(self, "CalculateTrajectory: Target is too far for the given arc strength, applying adjustment avoid failure!") end
+			verticalAdjustment = verticalAdjustment + (dist * 0.1) //((dist * 0.001) * 30) + strength^(dist * 0.0003)
+		end
+		
+		-- Handle situations where it might hit a ceiling
+		local tr = util.TraceLine({
+			start = startPos,
+			endpos = midPoint + Vector(0, 0, verticalAdjustment),
+			mask = MASK_SOLID_BRUSHONLY,
+		})
+		//midPoint = tr.HitPos
+		if tr.Fraction != 1 then
+			if self.VJ_DEBUG then print(self, "CalculateTrajectory: Blocked by ceiling, decreasing arc to avoid hitting it!"); debugoverlay.Text(tr.HitPos, "Ceiling tr.HitPos", 5, false) end
+			midPoint = tr.HitPos - self:GetUp() * 25
+		else
+			midPoint.z = midPoint.z + verticalAdjustment
+		end
+		
+		-- Failed to find enough trajectory space | EX: There is an object between the midPoint and targetPos
+		if (midPoint.z < startPos.z || midPoint.z < targetPos.z) then
+			if self.VJ_DEBUG then print(self, "CalculateTrajectory: Not enough space, applying fail case velocity!") end
+			midPoint = targetPos -- Fail case, will still fail in many situations but is better than nothing!
+		end
+		
+		-- How high should the projectile travel to reach the apex
+		local distance1 = midPoint.z - startPos.z
+		local distance2 = midPoint.z - targetPos.z
+
+		-- How long will it take for the projectile to travel this distance
+		local time1 = math.sqrt(distance1 / (0.5 * gravity))
+		local time2 = math.sqrt(distance2 / (0.5 * gravity))
+		
+		result = (targetPos - startPos) / (time1 + time2) -- How hard to throw sideways to get there in time
+		result.z = gravity * time1 -- How hard upwards to reach the apex at the right time
+		predictProjSpeed = result:Length() * 0.9
+		
+		if self.VJ_DEBUG then
+			if time1 < 0.1 then print(self, "CalculateTrajectory: Probably failed because the trajectory time is below 0.1!") end
+			local apexPos = startPos + (result * time1) -- The peak of the velocity
+			apexPos.z = midPoint.z
+			debugoverlay.Cross(apexPos, 8, 5, Color(255, 0, 0))
+			debugoverlay.Text(midPoint, "Apex", 5, false)
+			debugoverlay.Cross(midPoint, 8, 5, Color(0, 255, 0))
+			debugoverlay.Text(midPoint, "midPoint", 5, false)
+		end
+	elseif algorithmType == "CurveOld" then
+		-- Oknoutyoun: https://gamedev.stackexchange.com/questions/53552/how-can-i-find-a-projectiles-launch-angle
+		-- Negar: https://wikimedia.org/api/rest_v1/media/math/render/svg/4db61cb4c3140b763d9480e51f90050967288397
+		result = Vector(targetPos.x - startPos.x, targetPos.y - startPos.y, 0) -- Verchnagan deghe
+		local pos_x = result:Length()
+		local pos_y = targetPos.z - startPos.z
+		local grav = physenv.GetGravity():Length()
+		local sqrtcalc1 = (strength * strength * strength * strength)
+		local sqrtcalc2 = grav * ((grav * (pos_x * pos_x)) + (2 * pos_y * (strength * strength)))
+		local calcsum = sqrtcalc1 - sqrtcalc2 -- Yergou tevere aveltsour
+		if calcsum < 0 then -- Yete teve nevas e, ooremen sharnage
+			calcsum = math.abs(calcsum)
+		end
+		local angsqrt =  math.sqrt(calcsum)
+		local angpos = math.atan(((strength * strength) + angsqrt) / (grav * pos_x))
+		local angneg = math.atan(((strength * strength) - angsqrt) / (grav * pos_x))
+		local pitch = 1
+		if angpos > angneg then
+			pitch = angneg -- Yete asiga angpos enes ne, aveli veregele
+		else
+			pitch = angpos
+		end
+		result.z = math.tan(pitch) * pos_x
+		result = result:GetNormal() * strength
+		predictProjSpeed = strength
+	elseif algorithmType == "CurveAntlion" then
+		local gravity = math.abs(physenv.GetGravity().z)
+		result = targetPos - startPos
+		local time = result:Length() / strength -- Throw at a constant time
+		result = result * (1.0 / time)
+		result.z = result.z + (gravity * time * 0.5) -- Adjust upward toss to compensate for gravity loss
+		predictProjSpeed = strength
+	end
+	
+	-- Return the result and redo it with prediction if needed!
+	if predict then
+		//print(predictProjSpeed, startPos:Distance(target:GetPos()))
+		return VJ.CalculateTrajectory(self, target, algorithmType, startPos, self:GetAimPosition(target, startPos, predict, predictProjSpeed), strength, extraOptions)
+	else
+		return result
+	end
+end
 --------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Applies speed effect to the given NPC/Player, if another speed effect is already applied, it will skip!

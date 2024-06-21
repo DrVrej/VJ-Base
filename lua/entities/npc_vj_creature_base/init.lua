@@ -2583,6 +2583,10 @@ function ENT:RangeAttackCode()
 				local vel = self:RangeAttackCode_GetShootPos(projectile)
 				phys:SetVelocity(vel) //ApplyForceCenter
 				projectile:SetAngles(vel:GetNormal():Angle())
+			else
+				local vel = self:RangeAttackCode_GetShootPos(projectile)
+				projectile:SetVelocity(vel)
+				projectile:SetAngles(vel:GetNormal():Angle())
 			end
 			self:CustomRangeAttackCode_AfterProjectileSpawn(projectile)
 		end

@@ -786,7 +786,7 @@ end
 		- target = The entity to aim at
 		- aimOrigin = The starting point of the aim | EX: Muzzle of a gun the NPC is holding
 		- predictionRate = Predication rate | DEFAULT = 0
-			-- <= 0 : No prediction   |   0 < to > 1 : Closer to target   |   1 : Perfect prediction   |   1 < : Ahead of the prediction (will be very ahead/inaccurate)
+			-- 0 : No prediction   |   0 < to > 1 : Closer to target   |   1 : Perfect prediction   |   1 < : Ahead of the prediction (will be very ahead/inaccurate)
 		- projectileSpeed = Used if prediction is being used, helps it properly calculate the predicted aim position | DEFAULT = 1
 	Returns
 		- Vector, the best aim position it found | Normalize this return to get the aim direction!
