@@ -292,13 +292,13 @@ end
 		- target = Target that self is trying to throw at | DEFAULT: NULL | This isn't required
 		- algorithmType = Type of algorithm to use for the calculation
 			-- "Line" = Creates a straight line with the given speed
-				--- Ignores gravity  |   Ignores "ApplyDist" option
-			-- "Curve" = Creates a curved velocity with the given arc strength
-				--- Obeys gravity    |   Obeys "ApplyDist" option
+				--- Ignores gravity		|   Ignores "ApplyDist" option
+			-- "Curve" = Creates a curved velocity with the given arc strength, prefer this over the other curve algorithms
+				--- Obeys gravity		|   Obeys "ApplyDist" option
 			-- "CurveAntlion" = Alternative to "Curve", it uses the Antlion Worker trajectory algorithm from Episode 2
-				--- Obeys gravity    |   Ignores "ApplyDist" option
-			-- "CurveOld" = Much older version of "Curve" made prior to VJ Base revamp, recommended to NOT use!
-				--- Semi-Obeys gravity    |   Ignores "ApplyDist" option
+				--- Obeys gravity    	|   Ignores "ApplyDist" option
+			-- "CurveOld" = Much older version of "Curve" made prior to VJ Base revamp | Recommended to NOT use!
+				--- Semi-Obeys gravity  |   Ignores "ApplyDist" option
 		- startPos = Position that the velocity starts from
 		- targetPos = Position to land the object | DEFAULT: 1
 			-- Vector = Uses this position as the landing position
@@ -351,7 +351,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 			-- 4. Apply further adjustments if base detects that it won't hit the target (Usually happens when target is too far for the given arc strength)
 		local verticalAdjustment = math.abs(startPos.z - targetPos.z) + (applyDist and math.Clamp(strength, -dist, dist) or strength) //+ math.Clamp(strength, -dist, dist / 4) //midPoint:Length() * (strength / (startPos:Distance(targetPos)))
 		if dist > (strength * 9.5) && dist > 2000 then -- Bulletin #4 above
-			if self.VJ_DEBUG then print(self, "CalculateTrajectory: Target is too far for the given arc strength, applying adjustment avoid failure!") end
+			if self.VJ_DEBUG then print(self, "CalculateTrajectory: Target is too far for the given arc strength, applying adjustment to avoid failure!") end
 			verticalAdjustment = verticalAdjustment + (dist * 0.1) //((dist * 0.001) * 30) + strength^(dist * 0.0003)
 		end
 		

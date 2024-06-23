@@ -801,7 +801,7 @@ function ENT:CustomRangeAttackCode_AfterProjectileSpawn(projectile) end -- Calle
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttackCode_OverrideProjectilePos(projectile) return 0 end -- return other value then 0 to override the projectile's position
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RangeAttackCode_GetShootPos(projectile) local projPos = projectile:GetPos() return self:CalculateProjectile("Line", projPos, self:GetAimPosition(self:GetEnemy(), projPos, 0.5, 1500), 1500) end
+function ENT:RangeAttackCode_GetShootPos(projectile) return VJ.CalculateTrajectory(self, self:GetEnemy(), "Curve", projectile:GetPos(), 1, 10) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MultipleLeapAttacks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
