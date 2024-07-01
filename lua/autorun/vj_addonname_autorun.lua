@@ -4,7 +4,7 @@ local AddonType = "Addon type(s) Example: NPC"
 -------------------------------------------------------
 local VJExists = file.Exists("lua/autorun/vj_base_autorun.lua", "GAME")
 if VJExists == true then
-	include('autorun/vj_controls.lua')
+	include("autorun/vj_controls.lua")
 
 	local spawnCategory = "VJ Dummy Category" -- Category, you can also set a category individually by replacing the spawnCategory with a string value
 	
