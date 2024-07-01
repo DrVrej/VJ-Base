@@ -2138,8 +2138,9 @@ function ENT:Think()
 				
 				-- Attacks
 				if !self.vACT_StopAttacks && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && curTime > self.NextDoAnyAttackT then
+					-- Attack priority in order: Custom --> Melee --> Range --> Leap
+					-- To avoid overlapping situations where 2 attacks can be called at once, check for "self.AttackType == VJ.ATTACK_TYPE_NONE"
 					local funcCustomAtk = self.CustomAttack; if funcCustomAtk then funcCustomAtk(self, ene, eneData.IsVisible) end
-					
 					if !self.Flinching && !self.FollowData.StopAct && self.AttackType == VJ.ATTACK_TYPE_NONE then
 						-- Melee Attack
 						if self.HasMeleeAttack == true && self.IsAbleToMeleeAttack then
@@ -2211,7 +2212,7 @@ function ENT:Think()
 						end
 
 						-- Range Attack
-						if self.HasRangeAttack == true && self.IsAbleToRangeAttack && eneData.IsVisible then
+						if self.HasRangeAttack == true && self.IsAbleToRangeAttack && eneData.IsVisible && self.AttackType == VJ.ATTACK_TYPE_NONE then
 							self:MultipleRangeAttacks()
 							if self:CustomAttackCheck_RangeAttack() == true && ((plyControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK2)) or (plyControlled == false && (self.LatestEnemyDistance < self.RangeDistance) && (self.LatestEnemyDistance > self.RangeToMeleeDistance) && (eneData.SightDiff > math_cos(math_rad(self.RangeAttackAngleRadius))))) then
 								local seed = curTime; self.CurAttackSeed = seed
@@ -2248,7 +2249,7 @@ function ENT:Think()
 						end
 
 						-- Leap Attack
-						if self.HasLeapAttack == true && self.IsAbleToLeapAttack && eneData.IsVisible then
+						if self.HasLeapAttack == true && self.IsAbleToLeapAttack && eneData.IsVisible && self.AttackType == VJ.ATTACK_TYPE_NONE then
 							self:MultipleLeapAttacks()
 							if self:CustomAttackCheck_LeapAttack() == true && ((plyControlled == true && self.VJ_TheController:KeyDown(IN_JUMP)) or (plyControlled == false && (self:IsOnGround() && self.LatestEnemyDistance < self.LeapDistance) && (self.LatestEnemyDistance > self.LeapToMeleeDistance) && (eneData.SightDiff > math_cos(math_rad(self.LeapAttackAngleRadius))))) then
 								local seed = curTime; self.CurAttackSeed = seed
@@ -2661,7 +2662,7 @@ local stopAtkTypes = {
 --
 function ENT:StopAttacks(checkTimers)
 	if self:Health() <= 0 then return end
-	if self.VJ_DEBUG == true && GetConVar("vj_npc_printstoppedattacks"):GetInt() == 1 then print(self:GetClass().." Stopped all Attacks!") end
+	if self.VJ_DEBUG == true && GetConVar("vj_npc_printstoppedattacks"):GetInt() == 1 then print(self:GetClass() .. " : Stopped all Attacks! | Attack type: " .. self.AttackType) end
 	
 	if checkTimers == true && stopAtkTypes[self.AttackType] && self.AttackState < VJ.ATTACK_STATE_EXECUTED then
 		stopAtkTypes[self.AttackType](self)

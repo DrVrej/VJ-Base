@@ -2894,8 +2894,9 @@ function ENT:Think()
 				end
 				
 				if !self.vACT_StopAttacks && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && curTime > self.NextDoAnyAttackT then
+					-- Attack priority in order: Custom --> Melee --> Grenade
+					-- To avoid overlapping situations where 2 attacks can be called at once, check for "self.AttackType == VJ.ATTACK_TYPE_NONE"
 					local funcCustomAtk = self.CustomAttack; if funcCustomAtk then funcCustomAtk(self, ene, eneData.IsVisible) end
-				
 					-- Melee Attack
 					if self.HasMeleeAttack == true && self.IsAbleToMeleeAttack && !self.Flinching && !self.FollowData.StopAct && self.AttackType == VJ.ATTACK_TYPE_NONE && (!IsValid(self.CurrentWeaponEntity) or (IsValid(self.CurrentWeaponEntity) && (!self.CurrentWeaponEntity.IsMeleeWeapon))) && ((plyControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (plyControlled == false && (self.NearestPointToEnemyDistance < self.MeleeAttackDistance && eneData.IsVisible) && (eneData.SightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))))) then
 						local seed = curTime; self.CurAttackSeed = seed
@@ -3426,7 +3427,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAttacks(checkTimers)
 	if self:Health() <= 0 then return end
-	if self.VJ_DEBUG == true && GetConVar("vj_npc_printstoppedattacks"):GetInt() == 1 then print(self:GetClass().." Stopped all Attacks!") end
+	if self.VJ_DEBUG == true && GetConVar("vj_npc_printstoppedattacks"):GetInt() == 1 then print(self:GetClass() .. " : Stopped all Attacks! | Attack type: " .. self.AttackType) end
 	
 	if checkTimers == true && self.AttackType == VJ.ATTACK_TYPE_MELEE && self.AttackState < VJ.ATTACK_STATE_EXECUTED then
 		finishAttack[VJ.ATTACK_TYPE_MELEE](self, true)
