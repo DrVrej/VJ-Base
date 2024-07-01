@@ -14,6 +14,9 @@ SWEP.Category = "VJ Base"
 //SWEP.Spawnable = false
 //SWEP.AdminOnly = false
 SWEP.MadeForNPCsOnly = false -- Is this weapon meant to be for NPCs only?
+SWEP.ReplacementWeapon = nil -- When picked up by a player it gives them a replacement weapon | Useful for NPC-only weapons
+	-- String = Replaces the weapon if it's a valid class name
+	-- Table = Replaces the weapon by going in order of the table until a valid class name is given
 SWEP.HoldType = "ar2"
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ View Model Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -87,16 +90,16 @@ SWEP.AutoSwitchFrom = false -- Auto switch weapon when the owner picks up a bett
 SWEP.DrawWeaponInfoBox = true -- Should the information box show in the weapon selection menu?
 SWEP.BounceWeaponIcon = true -- Should the icon bounce in the weapon selection menu?
 	-- ====== Deployment Variables ====== --
-SWEP.AnimTbl_Deploy = {ACT_VM_DRAW}
+SWEP.AnimTbl_Deploy = ACT_VM_DRAW
 SWEP.HasDeploySound = true -- Does the weapon have a deploy sound?
 SWEP.DeploySound = {} -- Sound played when the weapon is deployed
 	-- ====== Idle Variables ====== --
 SWEP.HasIdleAnimation = true -- Does it have a idle animation?
-SWEP.AnimTbl_Idle = {ACT_VM_IDLE}
+SWEP.AnimTbl_Idle = ACT_VM_IDLE
 	-- ====== Reload Variables ====== --
 SWEP.HasReloadSound = false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
 SWEP.ReloadSound = {}
-SWEP.AnimTbl_Reload = {ACT_VM_RELOAD}
+SWEP.AnimTbl_Reload = ACT_VM_RELOAD
 SWEP.Reload_TimeUntilAmmoIsSet = 1 -- Time until ammo is set to the weapon
 	-- ====== Secondary Fire Variables ====== --
 SWEP.Secondary.Automatic = false -- Is it automatic?
@@ -104,7 +107,7 @@ SWEP.Secondary.Ammo = "none" -- Ammo type
 SWEP.Secondary.TakeAmmo = 1 -- How much ammo should it take on each shot?
 	-- To let the base automatically detect the animation duration, set this to false:
 SWEP.Secondary.Delay = false -- Time until it can shoot again
-SWEP.AnimTbl_SecondaryFire = {ACT_VM_SECONDARYATTACK}
+SWEP.AnimTbl_SecondaryFire = ACT_VM_SECONDARYATTACK
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Dry Fire Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -132,7 +135,7 @@ SWEP.Primary.TracerType = "Tracer" -- Tracer type (Examples: AR2)
 SWEP.Primary.TakeAmmo = 1 -- How much ammo should it take from the clip after each shot? | 0 = Unlimited clip
 SWEP.Primary.Automatic = true -- Is it automatic?
 SWEP.Primary.Ammo = "SMG1" -- Ammo type
-SWEP.AnimTbl_PrimaryFire = {ACT_VM_PRIMARYATTACK}
+SWEP.AnimTbl_PrimaryFire = ACT_VM_PRIMARYATTACK
 	-- ====== Sound Variables ====== --
 SWEP.Primary.Sound = {}
 SWEP.Primary.SoundLevel = 80
@@ -289,6 +292,22 @@ function SWEP:Equip(newOwner)
 		self:SetClip1(self.Primary.ClipSize)
 	end
 	if newOwner:IsPlayer() then
+		local replacementWep = self.ReplacementWeapon
+		if replacementWep then
+			if istable(replacementWep) then -- table
+				for _, v in ipairs(replacementWep) do
+					if IsValid(newOwner:Give(v)) then -- Go in order until a weapon is valid
+						self:Remove()
+						return
+					end
+				end
+			else -- string
+				if IsValid(newOwner:Give(replacementWep)) then
+					self:Remove()
+					return
+				end
+			end
+		end
 		if self.Primary.PickUpAmmoAmount == "Default" then
 			newOwner:GiveAmmo(self.Primary.ClipSize * 2, self.Primary.Ammo)
 		elseif isnumber(self.Primary.PickUpAmmoAmount) then

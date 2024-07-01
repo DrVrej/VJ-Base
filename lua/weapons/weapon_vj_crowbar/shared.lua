@@ -6,6 +6,7 @@ SWEP.Purpose = "This weapon is made for Players and NPCs"
 SWEP.Instructions = "Controls are like a regular weapon."
 SWEP.Category = "VJ Base"
 SWEP.MadeForNPCsOnly = true -- Is this weapon meant to be for NPCs only?
+SWEP.ReplacementWeapon = "weapon_crowbar"
 	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.NPC_NextPrimaryFire = 1 -- Next time it can use primary fire
 SWEP.NPC_TimeUntilFire = 0.5 -- How much time until the bullet/projectile is fired?

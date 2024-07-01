@@ -414,7 +414,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 		local angneg = math.atan(((strength * strength) - angsqrt) / (grav * pos_x))
 		local pitch = 1
 		if angpos > angneg then
-			pitch = angneg -- Yete asiga angpos enes ne, aveli veregele
+			pitch = angneg -- Yete asiga angpos enes ne, aveli ver gele
 		else
 			pitch = angpos
 		end

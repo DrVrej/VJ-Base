@@ -65,7 +65,7 @@ function metaEntity:CalculateProjectile(algorithmType, startPos, targetPos, stre
 	if algorithmType == "Line" then
 		return VJ.CalculateTrajectory(self, (self.IsVJBaseSNPC and IsValid(self:GetEnemy())) and self:GetEnemy() or NULL, "Line", startPos, self.IsVJBaseSNPC and 1 or targetPos, strength)
 	elseif algorithmType == "Curve" then
-		return VJ.CalculateTrajectory(self, (self.IsVJBaseSNPC and IsValid(self:GetEnemy())) and self:GetEnemy() or NULL, "CurveOld", startPos, self.IsVJBaseSNPC and 1 or targetPos, strength)
+		return VJ.CalculateTrajectory(self, (self.IsVJBaseSNPC and IsValid(self:GetEnemy())) and self:GetEnemy() or NULL, "CurveOld", startPos, targetPos, strength)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

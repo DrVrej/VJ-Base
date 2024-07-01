@@ -7,6 +7,7 @@ SWEP.Instructions = "Controls are like a regular weapon."
 SWEP.Category = "VJ Base"
 	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.MadeForNPCsOnly = true
+SWEP.ReplacementWeapon = "weapon_crossbow"
 SWEP.NPC_NextPrimaryFire = 1 -- Next time it can use primary fire
 SWEP.NPC_TimeUntilFire = 0.15 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_ReloadSound = {"weapons/crossbow/reload1.wav"}
