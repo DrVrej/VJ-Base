@@ -265,9 +265,6 @@ ENT.HasDeathRagdoll = true -- If set to false, it will not spawn the regular rag
 ENT.DeathCorpseEntityClass = "UseDefaultBehavior" -- The entity class it creates | "UseDefaultBehavior" = Let the base automatically detect the type
 ENT.DeathCorpseModel = false -- Model(s) to spawn as the NPC's corpse | false = Use the NPC's model | Can be a single string or a table of strings
 ENT.DeathCorpseCollisionType = COLLISION_GROUP_DEBRIS -- Collision type for the corpse | SNPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
-ENT.DeathCorpseSkin = -1 -- Used to override the death skin | -1 = Use the skin that the SNPC had before it died
-ENT.DeathCorpseSetBodyGroup = true -- Should it get the models bodygroups and set it to the corpse? When set to false, it uses the model's default bodygroups
-ENT.DeathCorpseBodyGroup = VJ.SET(-1, -1) -- #1 = the category of the first bodygroup | #2 = the value of the second bodygroup | Set -1 for #1 to let the base decide the corpse's bodygroup
 ENT.DeathCorpseSubMaterials = nil -- Apply a table of indexes that correspond to a sub material index, this will cause the base to copy the NPC's sub material to the corpse.
 ENT.DeathCorpseFade = false -- Fades the ragdoll on death
 ENT.DeathCorpseFadeTime = 10 -- How much time until the ragdoll fades | Unit = Seconds
@@ -1094,6 +1091,13 @@ local function ApplyBackwardsCompatibility(self)
 			return self:GetForward()*math.random(self.MeleeAttackKnockBack_Forward1 or 100, self.MeleeAttackKnockBack_Forward2 or 100) + self:GetUp()*math.random(self.MeleeAttackKnockBack_Up1 or 10, self.MeleeAttackKnockBack_Up2 or 10) + self:GetRight()*math.random(self.MeleeAttackKnockBack_Right1 or 0, self.MeleeAttackKnockBack_Right2 or 0)
 		end
 	end
+	if self.DeathCorpseSkin && self.DeathCorpseSkin != -1 then
+		local orgFunc = self.CustomOnDeath_AfterCorpseSpawned
+		self.CustomOnDeath_AfterCorpseSpawned = function(_, dmginfo, hitgroup, corpseEnt)
+			orgFunc(self, dmginfo, hitgroup, corpseEnt)
+			corpseEnt:SetSkin(self.DeathCorpseSkin)
+		end
+	end
 	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1212,11 +1216,6 @@ function ENT:Initialize()
 	end)
 	//self:SetSaveValue("m_debugOverlays", 1) -- Enables source engine debug overlays (some commands like 'npc_conditions' need it)
 end
--- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
-ENT.MeleeAttacking = false
-ENT.RangeAttacking = false
-ENT.LeapAttacking = false
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChangeMovementType(movType)
 	movType = movType or -1
@@ -2160,9 +2159,7 @@ function ENT:Think()
 								local seed = curTime; self.CurAttackSeed = seed
 								self.AttackType = VJ.ATTACK_TYPE_MELEE
 								self.AttackState = VJ.ATTACK_STATE_STARTED
-								self.MeleeAttacking = true
 								self.IsAbleToMeleeAttack = false
-								self.RangeAttacking = false
 								self.CurrentAttackAnimation = ACT_INVALID
 								self.CurrentAttackAnimationDuration = 0
 								self.CurrentAttackAnimationTime = 0
@@ -2218,7 +2215,6 @@ function ENT:Think()
 								local seed = curTime; self.CurAttackSeed = seed
 								self.AttackType = VJ.ATTACK_TYPE_RANGE
 								self.AttackState = VJ.ATTACK_STATE_STARTED
-								self.RangeAttacking = true
 								self.IsAbleToRangeAttack = false
 								self.CurrentAttackAnimation = ACT_INVALID
 								self.CurrentAttackAnimationDuration = 0
@@ -2255,7 +2251,6 @@ function ENT:Think()
 								local seed = curTime; self.CurAttackSeed = seed
 								self.AttackType = VJ.ATTACK_TYPE_LEAP
 								self.AttackState = VJ.ATTACK_STATE_STARTED
-								self.LeapAttacking = true
 								self.IsAbleToLeapAttack = false
 								self.LeapAttackHasJumped = false
 								//self.JumpLegalLandingTime = 0
@@ -2407,7 +2402,6 @@ function ENT:MeleeAttackCode(isPropAttack)
 	if self.Dead or self.vACT_StopAttacks or self.Flinching or (self.StopMeleeAttackAfterFirstHit && self.AttackState == VJ.ATTACK_STATE_EXECUTED_HIT) then return end
 	isPropAttack = isPropAttack or self.MeleeAttack_DoingPropAttack -- Is this a prop attack?
 	if self.MeleeAttackAnimationFaceEnemy && !isPropAttack then self:SetTurnTarget("Enemy") end
-	//self.MeleeAttacking = true
 	self:CustomOnMeleeAttack_BeforeChecks()
 	if self.DisableDefaultMeleeAttackCode then return end
 	local myPos = self:GetPos()
@@ -2552,7 +2546,6 @@ function ENT:RangeAttackCode()
 	local ene = self:GetEnemy()
 	if IsValid(ene) then
 		self.AttackType = VJ.ATTACK_TYPE_RANGE
-		self.RangeAttacking = true
 		self:PlaySoundSystem("RangeAttack")
 		if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
 		if self.RangeAttackAnimationFaceEnemy == true then self:SetTurnTarget("Enemy") end
@@ -2671,10 +2664,6 @@ function ENT:StopAttacks(checkTimers)
 	self.AttackType = VJ.ATTACK_TYPE_NONE
 	self.AttackState = VJ.ATTACK_STATE_DONE
 	self.CurAttackSeed = 0
-	
-	self.MeleeAttacking = false
-	self.RangeAttacking = false
-	self.LeapAttacking = false
 	self.LeapAttackHasJumped = false
 
 	self:DoChaseAnimation()
@@ -3054,43 +3043,45 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	local dmgInflictor = dmginfo:GetInflictor()
 	local dmgAttacker = dmginfo:GetAttacker()
 	
-	local allies = self:Allies_Check(math.max(800, self.BringFriendsOnDeathDistance, self.AlertFriendsOnDeathDistance))
-	if allies != false then
-		local noAlert = true -- Don't run the AlertFriendsOnDeath if we have BringFriendsOnDeath enabled!
-		if self.BringFriendsOnDeath == true then
-			self:Allies_Bring("Random", self.BringFriendsOnDeathDistance, allies, self.BringFriendsOnDeathLimit, true)
-			noAlert = false
-		end
-		local doBecomeEnemyToPlayer = (self.BecomeEnemyToPlayer == true && dmgAttacker:IsPlayer() && VJ_CVAR_AI_ENABLED && !VJ_CVAR_IGNOREPLAYERS) or false
-		local it = 0 -- Number of allies that have been alerted
-		for _, v in ipairs(allies) do
-			v:CustomOnAllyDeath(self)
-			v:PlaySoundSystem("AllyDeath")
-			
-			-- AlertFriendsOnDeath
-			if noAlert == true && self.AlertFriendsOnDeath == true && !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath == true && it != self.AlertFriendsOnDeathLimit && self:GetPos():Distance(v:GetPos()) < self.AlertFriendsOnDeathDistance then
-				it = it + 1
-				local faceTime = math.Rand(5, 8)
-				v:SetTurnTarget(self:GetPos(), faceTime, true)
-				v:VJ_ACT_PLAYACTIVITY(VJ.PICK(v.AnimTbl_AlertFriendsOnDeath))
-				v.NextIdleTime = CurTime() + faceTime
+	if VJ_CVAR_AI_ENABLED then
+		local allies = self:Allies_Check(math.max(800, self.BringFriendsOnDeathDistance, self.AlertFriendsOnDeathDistance))
+		if allies != false then
+			local noAlert = true -- Don't run the AlertFriendsOnDeath if we have BringFriendsOnDeath enabled!
+			if self.BringFriendsOnDeath == true then
+				self:Allies_Bring("Random", self.BringFriendsOnDeathDistance, allies, self.BringFriendsOnDeathLimit, true)
+				noAlert = false
 			end
-			
-			-- BecomeEnemyToPlayer
-			if doBecomeEnemyToPlayer && v.BecomeEnemyToPlayer == true && v:Disposition(dmgAttacker) == D_LI then
-				v.AngerLevelTowardsPlayer = v.AngerLevelTowardsPlayer + 1
-				if v.AngerLevelTowardsPlayer > v.BecomeEnemyToPlayerLevel then
-					if v:Disposition(dmgAttacker) != D_HT then
-						v:CustomOnBecomeEnemyToPlayer(dmginfo, hitgroup)
-						if v.IsFollowing == true && v.FollowData.Ent == dmgAttacker then v:FollowReset() end
-						v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy + 1] = dmgAttacker
-						v:AddEntityRelationship(dmgAttacker, D_HT, 2)
-						if v.AllowPrintingInChat == true then
-							dmgAttacker:PrintMessage(HUD_PRINTTALK, v:GetName().." no longer likes you.")
+			local doBecomeEnemyToPlayer = (self.BecomeEnemyToPlayer == true && dmgAttacker:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or false
+			local it = 0 -- Number of allies that have been alerted
+			for _, v in ipairs(allies) do
+				v:CustomOnAllyDeath(self)
+				v:PlaySoundSystem("AllyDeath")
+				
+				-- AlertFriendsOnDeath
+				if noAlert == true && self.AlertFriendsOnDeath == true && !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath == true && it != self.AlertFriendsOnDeathLimit && self:GetPos():Distance(v:GetPos()) < self.AlertFriendsOnDeathDistance then
+					it = it + 1
+					local faceTime = math.Rand(5, 8)
+					v:SetTurnTarget(self:GetPos(), faceTime, true)
+					v:VJ_ACT_PLAYACTIVITY(VJ.PICK(v.AnimTbl_AlertFriendsOnDeath))
+					v.NextIdleTime = CurTime() + faceTime
+				end
+				
+				-- BecomeEnemyToPlayer
+				if doBecomeEnemyToPlayer && v.BecomeEnemyToPlayer == true && v:Disposition(dmgAttacker) == D_LI then
+					v.AngerLevelTowardsPlayer = v.AngerLevelTowardsPlayer + 1
+					if v.AngerLevelTowardsPlayer > v.BecomeEnemyToPlayerLevel then
+						if v:Disposition(dmgAttacker) != D_HT then
+							v:CustomOnBecomeEnemyToPlayer(dmginfo, hitgroup)
+							if v.IsFollowing == true && v.FollowData.Ent == dmgAttacker then v:FollowReset() end
+							v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy + 1] = dmgAttacker
+							v:AddEntityRelationship(dmgAttacker, D_HT, 2)
+							if v.AllowPrintingInChat == true then
+								dmgAttacker:PrintMessage(HUD_PRINTTALK, v:GetName().." no longer likes you.")
+							end
+							v:PlaySoundSystem("BecomeEnemyToPlayer")
 						end
-						v:PlaySoundSystem("BecomeEnemyToPlayer")
+						v.Alerted = true
 					end
-					v.Alerted = true
 				end
 			end
 		end
@@ -3129,9 +3120,6 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	if self.IsFollowing == true then self:FollowReset() end
 	self:RemoveTimers()
 	self.AttackType = VJ.ATTACK_TYPE_NONE
-	self.MeleeAttacking = false
-	self.RangeAttacking = false
-	self.LeapAttacking = false
 	self.HasMeleeAttack = false
 	self.HasRangeAttack = false
 	self.HasLeapAttack = false
@@ -3227,6 +3215,10 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		corpse:SetAngles(self:GetAngles())
 		corpse:Spawn()
 		corpse:Activate()
+		corpse:SetSkin(self:GetSkin())
+		for i = 0, self:GetNumBodyGroups() do
+			corpse:SetBodygroup(i, self:GetBodygroup(i))
+		end
 		corpse:SetColor(self:GetColor())
 		corpse:SetMaterial(self:GetMaterial())
 		if corpseMdlCustom == false && self.DeathCorpseSubMaterials != nil then -- Take care of sub materials
@@ -3266,17 +3258,6 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		cleanup.ReplaceEntity(self, corpse) -- Delete on cleanup
 		
 		-- Miscellaneous --
-		corpse:SetSkin((self.DeathCorpseSkin == -1 and self:GetSkin()) or self.DeathCorpseSkin)
-		
-		if self.DeathCorpseSetBodyGroup == true then -- Yete asega true-e, ooremen gerna bodygroup tenel
-			for i = 0, self:GetNumBodyGroups() do
-				corpse:SetBodygroup(i, self:GetBodygroup(i))
-			end
-			if self.DeathCorpseBodyGroup.a != -1 then -- Yete asiga nevaz meg chene, user-in teradz tevere kordzadze
-				corpse:SetBodygroup(self.DeathCorpseBodyGroup.a, self.DeathCorpseBodyGroup.b)
-			end
-		end
-		
 		if self:IsOnFire() then
 			corpse:Ignite(math.Rand(8, 10), 0)
 			if !self.Immune_Fire then -- Don't darken the corpse if we are immune to fire!
@@ -3284,7 +3265,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 				//corpse:SetMaterial("models/props_foliage/tree_deciduous_01a_trunk")
 			end
 		end
-		//gamemode.Call("CreateEntityRagdoll",self,corpse)
+		//gamemode.Call("CreateEntityRagdoll", self, corpse)
 		
 		-- Dissolve --
 		if (bit.band(self.SavedDmgInfo.type, DMG_DISSOLVE) != 0) or (IsValid(self.SavedDmgInfo.inflictor) && self.SavedDmgInfo.inflictor:GetClass() == "prop_combine_ball") then

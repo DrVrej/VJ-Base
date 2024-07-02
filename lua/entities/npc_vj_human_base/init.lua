@@ -256,9 +256,6 @@ ENT.HasDeathRagdoll = true -- If set to false, it will not spawn the regular rag
 ENT.DeathCorpseEntityClass = "UseDefaultBehavior" -- The entity class it creates | "UseDefaultBehavior" = Let the base automatically detect the type
 ENT.DeathCorpseModel = false -- Model(s) to spawn as the NPC's corpse | false = Use the NPC's model | Can be a single string or a table of strings
 ENT.DeathCorpseCollisionType = COLLISION_GROUP_DEBRIS -- Collision type for the corpse | SNPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
-ENT.DeathCorpseSkin = -1 -- Used to override the death skin | -1 = Use the skin that the SNPC had before it died
-ENT.DeathCorpseSetBodyGroup = true -- Should it get the models bodygroups and set it to the corpse? When set to false, it uses the model's default bodygroups
-ENT.DeathCorpseBodyGroup = VJ.SET(-1, -1) -- #1 = the category of the first bodygroup | #2 = the value of the second bodygroup | Set -1 for #1 to let the base decide the corpse's bodygroup
 ENT.DeathCorpseSubMaterials = nil -- Apply a table of indexes that correspond to a sub material index, this will cause the base to copy the NPC's sub material to the corpse.
 ENT.DeathCorpseFade = false -- Fades the ragdoll on death
 ENT.DeathCorpseFadeTime = 10 -- How much time until the ragdoll fades | Unit = Seconds
@@ -348,14 +345,12 @@ ENT.AnimTbl_WeaponReloadBehindCover = ACT_RELOAD_LOW -- Animations that play whe
 ENT.WeaponReloadAnimationFaceEnemy = true -- Should it face the enemy while playing the weapon reload animation?
 	-- ====== Weapon Inventory Variables ====== --
 	-- Weapons are given on spawn and the NPC will only switch to those if the requirements are met
-	-- The items that are stored in self.WeaponInventory:
-		-- Primary - Default weapon
-		-- AntiArmor - Current enemy is an armored enemy tank/vehicle or a boss
-		-- Melee - Current enemy is (very close and the NPC is out of ammo) OR (in regular melee attack distance) + NPC must have more than 25% health
-ENT.WeaponInventory_AntiArmor = false -- If true, the NPC will spawn with one of the given weapons (Will only be given the weapon if it already has another!)
-ENT.WeaponInventory_AntiArmorList = {} -- It will randomly be given one of these weapons
-ENT.WeaponInventory_Melee = false -- If true, the NPC will spawn with one of the given weapons (Will only be given the weapon if it already has another!)
-ENT.WeaponInventory_MeleeList = {} -- It will randomly be given one of these weapons
+	-- All are stored in "self.WeaponInventory" with the following keys:
+		-- Primary : Default weapon
+		-- AntiArmor : Current enemy is an armored enemy tank/vehicle or a boss
+		-- Melee : Current enemy is (very close and the NPC is out of ammo) OR (in regular melee attack distance) + NPC must have more than 25% health
+ENT.WeaponInventory_AntiArmorList = false -- On spawn it will give the NPC one of the weapons | Can be a table or a string
+ENT.WeaponInventory_MeleeList = false -- On spawn it will give the NPC one of the weapons | Can be a table or a string
 	-- ====== Move Randomly While Firing Variables ====== --
 ENT.MoveRandomlyWhenShooting = true -- Should it move randomly when shooting?
 ENT.NextMoveRandomlyWhenShootingTime = VJ.SET(3, 6) -- How much time until it can randomly move again while shooting?
@@ -1744,6 +1739,13 @@ local function ApplyBackwardsCompatibility(self)
 			util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000)
 		end
 	end
+	if self.DeathCorpseSkin && self.DeathCorpseSkin != -1 then
+		local orgFunc = self.CustomOnDeath_AfterCorpseSpawned
+		self.CustomOnDeath_AfterCorpseSpawned = function(_, dmginfo, hitgroup, corpseEnt)
+			orgFunc(self, dmginfo, hitgroup, corpseEnt)
+			corpseEnt:SetSkin(self.DeathCorpseSkin)
+		end
+	end
 	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1854,20 +1856,16 @@ function ENT:Initialize()
 					if IsValid(self:GetCreator()) && self.AllowPrintingInChat == true && !wep.IsVJBaseWeapon then
 						self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: "..self:GetName().." requires a VJ Base weapon to work properly!")
 					end
-					if self.WeaponInventory_AntiArmor == true then
-						local antiArmor = VJ.PICK(self.WeaponInventory_AntiArmorList)
-						if antiArmor != false && wep:GetClass() != antiArmor then -- If the list isn't empty and it's not the current active weapon
-							self.WeaponInventory.AntiArmor = self:Give(antiArmor)
-						end
-						self:SelectWeapon(wep) -- Change the weapon back to the original weapon
+					local antiArmor = VJ.PICK(self.WeaponInventory_AntiArmorList)
+					if antiArmor && wep:GetClass() != antiArmor then -- If the list isn't empty and it's not the current active weapon
+						self.WeaponInventory.AntiArmor = self:Give(antiArmor)
+						self:SelectWeapon(wep) -- Change the weapon back to the primary weapon
 						wep:Equip(self)
 					end
-					if self.WeaponInventory_Melee == true then
-						local melee = VJ.PICK(self.WeaponInventory_MeleeList)
-						if melee != false && wep:GetClass() != melee then -- If the list isn't empty and it's not the current active weapon
-							self.WeaponInventory.Melee = self:Give(melee)
-						end
-						self:SelectWeapon(wep) -- Change the weapon back to the original weapon
+					local melee = VJ.PICK(self.WeaponInventory_MeleeList)
+					if melee && wep:GetClass() != melee then -- If the list isn't empty and it's not the current active weapon
+						self.WeaponInventory.Melee = self:Give(melee)
+						self:SelectWeapon(wep) -- Change the weapon back to the primary weapon
 						wep:Equip(self)
 					end
 				else
@@ -1904,10 +1902,6 @@ function ENT:Initialize()
 	end)
 	//self:SetSaveValue("m_debugOverlays", 1) -- Enables source engine debug overlays (some commands like 'npc_conditions' need it)
 end
--- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
-ENT.MeleeAttacking = false
-ENT.ThrowingGrenade = false
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChangeMovementType(movType)
 	movType = movType or -1
@@ -2902,7 +2896,6 @@ function ENT:Think()
 						local seed = curTime; self.CurAttackSeed = seed
 						self.AttackType = VJ.ATTACK_TYPE_MELEE
 						self.AttackState = VJ.ATTACK_STATE_STARTED
-						self.MeleeAttacking = true
 						self.IsAbleToMeleeAttack = false
 						self.CurrentAttackAnimation = ACT_INVALID
 						self.CurrentAttackAnimationDuration = 0
@@ -3028,7 +3021,6 @@ end
 function ENT:MeleeAttackCode()
 	if self.Dead or self.vACT_StopAttacks or self.Flinching or self.AttackType == VJ.ATTACK_TYPE_GRENADE or (self.StopMeleeAttackAfterFirstHit && self.AttackState == VJ.ATTACK_STATE_EXECUTED_HIT) then return end
 	if self.MeleeAttackAnimationFaceEnemy then self:SetTurnTarget("Enemy") end
-	//self.MeleeAttacking = true
 	self:CustomOnMeleeAttack_BeforeChecks()
 	if self.DisableDefaultMeleeAttackCode then return end
 	local myPos = self:GetPos()
@@ -3189,7 +3181,6 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 
 	self.AttackType = VJ.ATTACK_TYPE_GRENADE
 	self.AttackState = VJ.ATTACK_STATE_STARTED
-	self.ThrowingGrenade = true
 	self:OnGrenadeAttack("Start", nil, customEnt, landDir, nil)
 	self:PlaySoundSystem("GrenadeAttack")
 	
@@ -3436,9 +3427,6 @@ function ENT:StopAttacks(checkTimers)
 	self.AttackType = VJ.ATTACK_TYPE_NONE
 	self.AttackState = VJ.ATTACK_STATE_DONE
 	self.CurAttackSeed = 0
-	
-	self.MeleeAttacking = false
-	self.ThrowingGrenade = false
 	
 	self:DoChaseAnimation()
 end
@@ -4104,43 +4092,45 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	local dmgInflictor = dmginfo:GetInflictor()
 	local dmgAttacker = dmginfo:GetAttacker()
 	
-	local allies = self:Allies_Check(math.max(800, self.BringFriendsOnDeathDistance, self.AlertFriendsOnDeathDistance))
-	if allies != false then
-		local noAlert = true -- Don't run the AlertFriendsOnDeath if we have BringFriendsOnDeath enabled!
-		if self.BringFriendsOnDeath == true then
-			self:Allies_Bring("Diamond", self.BringFriendsOnDeathDistance, allies, self.BringFriendsOnDeathLimit, true)
-			noAlert = false
-		end
-		local doBecomeEnemyToPlayer = (self.BecomeEnemyToPlayer == true && dmgAttacker:IsPlayer() && VJ_CVAR_AI_ENABLED && !VJ_CVAR_IGNOREPLAYERS) or false
-		local it = 0 -- Number of allies that have been alerted
-		for _, v in ipairs(allies) do
-			v:CustomOnAllyDeath(self)
-			v:PlaySoundSystem("AllyDeath")
-			
-			-- AlertFriendsOnDeath
-			if noAlert == true && self.AlertFriendsOnDeath == true && !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath == true && it != self.AlertFriendsOnDeathLimit && self:GetPos():Distance(v:GetPos()) < self.AlertFriendsOnDeathDistance && (!IsValid(v:GetActiveWeapon()) or (IsValid(v:GetActiveWeapon()) && !(v:GetActiveWeapon().IsMeleeWeapon))) then
-				it = it + 1
-				local faceTime = math.Rand(5, 8)
-				v:SetTurnTarget(self:GetPos(), faceTime, true)
-				v:VJ_ACT_PLAYACTIVITY(VJ.PICK(v.AnimTbl_AlertFriendsOnDeath))
-				v.NextIdleTime = CurTime() + faceTime
+	if VJ_CVAR_AI_ENABLED then
+		local allies = self:Allies_Check(math.max(800, self.BringFriendsOnDeathDistance, self.AlertFriendsOnDeathDistance))
+		if allies != false then
+			local noAlert = true -- Don't run the AlertFriendsOnDeath if we have BringFriendsOnDeath enabled!
+			if self.BringFriendsOnDeath == true then
+				self:Allies_Bring("Diamond", self.BringFriendsOnDeathDistance, allies, self.BringFriendsOnDeathLimit, true)
+				noAlert = false
 			end
-			
-			-- BecomeEnemyToPlayer
-			if doBecomeEnemyToPlayer && v.BecomeEnemyToPlayer == true && v:Disposition(dmgAttacker) == D_LI then
-				v.AngerLevelTowardsPlayer = v.AngerLevelTowardsPlayer + 1
-				if v.AngerLevelTowardsPlayer > v.BecomeEnemyToPlayerLevel then
-					if v:Disposition(dmgAttacker) != D_HT then
-						v:CustomOnBecomeEnemyToPlayer(dmginfo, hitgroup)
-						if v.IsFollowing == true && v.FollowData.Ent == dmgAttacker then v:FollowReset() end
-						v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy + 1] = dmgAttacker
-						v:AddEntityRelationship(dmgAttacker, D_HT, 2)
-						if v.AllowPrintingInChat == true then
-							dmgAttacker:PrintMessage(HUD_PRINTTALK, v:GetName().." no longer likes you.")
+			local doBecomeEnemyToPlayer = (self.BecomeEnemyToPlayer == true && dmgAttacker:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or false
+			local it = 0 -- Number of allies that have been alerted
+			for _, v in ipairs(allies) do
+				v:CustomOnAllyDeath(self)
+				v:PlaySoundSystem("AllyDeath")
+				
+				-- AlertFriendsOnDeath
+				if noAlert == true && self.AlertFriendsOnDeath == true && !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath == true && it != self.AlertFriendsOnDeathLimit && self:GetPos():Distance(v:GetPos()) < self.AlertFriendsOnDeathDistance && (!IsValid(v:GetActiveWeapon()) or (IsValid(v:GetActiveWeapon()) && !(v:GetActiveWeapon().IsMeleeWeapon))) then
+					it = it + 1
+					local faceTime = math.Rand(5, 8)
+					v:SetTurnTarget(self:GetPos(), faceTime, true)
+					v:VJ_ACT_PLAYACTIVITY(VJ.PICK(v.AnimTbl_AlertFriendsOnDeath))
+					v.NextIdleTime = CurTime() + faceTime
+				end
+				
+				-- BecomeEnemyToPlayer
+				if doBecomeEnemyToPlayer && v.BecomeEnemyToPlayer == true && v:Disposition(dmgAttacker) == D_LI then
+					v.AngerLevelTowardsPlayer = v.AngerLevelTowardsPlayer + 1
+					if v.AngerLevelTowardsPlayer > v.BecomeEnemyToPlayerLevel then
+						if v:Disposition(dmgAttacker) != D_HT then
+							v:CustomOnBecomeEnemyToPlayer(dmginfo, hitgroup)
+							if v.IsFollowing == true && v.FollowData.Ent == dmgAttacker then v:FollowReset() end
+							v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy + 1] = dmgAttacker
+							v:AddEntityRelationship(dmgAttacker, D_HT, 2)
+							if v.AllowPrintingInChat == true then
+								dmgAttacker:PrintMessage(HUD_PRINTTALK, v:GetName().." no longer likes you.")
+							end
+							v:PlaySoundSystem("BecomeEnemyToPlayer")
 						end
-						v:PlaySoundSystem("BecomeEnemyToPlayer")
+						v.Alerted = true
 					end
-					v.Alerted = true
 				end
 			end
 		end
@@ -4179,7 +4169,6 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 	if self.IsFollowing == true then self:FollowReset() end
 	self:RemoveTimers()
 	self.AttackType = VJ.ATTACK_TYPE_NONE
-	self.MeleeAttacking = false
 	self.HasMeleeAttack = false
 	self:StopAllCommonSounds()
 	if IsValid(dmgAttacker) then
@@ -4274,6 +4263,10 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		corpse:SetAngles(self:GetAngles())
 		corpse:Spawn()
 		corpse:Activate()
+		corpse:SetSkin(self:GetSkin())
+		for i = 0, self:GetNumBodyGroups() do
+			corpse:SetBodygroup(i, self:GetBodygroup(i))
+		end
 		corpse:SetColor(self:GetColor())
 		corpse:SetMaterial(self:GetMaterial())
 		if corpseMdlCustom == false && self.DeathCorpseSubMaterials != nil then -- Take care of sub materials
@@ -4313,17 +4306,6 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		cleanup.ReplaceEntity(self, corpse) -- Delete on cleanup
 		
 		-- Miscellaneous --
-		corpse:SetSkin((self.DeathCorpseSkin == -1 and self:GetSkin()) or self.DeathCorpseSkin)
-		
-		if self.DeathCorpseSetBodyGroup == true then -- Yete asega true-e, ooremen gerna bodygroup tenel
-			for i = 0, self:GetNumBodyGroups() do
-				corpse:SetBodygroup(i, self:GetBodygroup(i))
-			end
-			if self.DeathCorpseBodyGroup.a != -1 then -- Yete asiga nevaz meg chene, user-in teradz tevere kordzadze
-				corpse:SetBodygroup(self.DeathCorpseBodyGroup.a, self.DeathCorpseBodyGroup.b)
-			end
-		end
-		
 		if self:IsOnFire() then
 			corpse:Ignite(math.Rand(8, 10), 0)
 			if !self.Immune_Fire then -- Don't darken the corpse if we are immune to fire!
@@ -4331,7 +4313,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 				//corpse:SetMaterial("models/props_foliage/tree_deciduous_01a_trunk")
 			end
 		end
-		//gamemode.Call("CreateEntityRagdoll",self,corpse)
+		//gamemode.Call("CreateEntityRagdoll", self, corpse)
 		
 		-- Dissolve --
 		if (bit.band(self.SavedDmgInfo.type, DMG_DISSOLVE) != 0) or (IsValid(self.SavedDmgInfo.inflictor) && self.SavedDmgInfo.inflictor:GetClass() == "prop_combine_ball") then

@@ -17,9 +17,7 @@ ENT.FriendsWithAllPlayerAllies = true
 ENT.HasMeleeAttack = true
 ENT.AnimTbl_MeleeAttack = "vjseq_seq_meleeattack01"
 
-ENT.WeaponInventory_AntiArmor = true
 ENT.WeaponInventory_AntiArmorList = {"weapon_vj_rpg"}
-ENT.WeaponInventory_Melee = true
 ENT.WeaponInventory_MeleeList = {"weapon_vj_crowbar"}
 
 ENT.HasGrenadeAttack = true
