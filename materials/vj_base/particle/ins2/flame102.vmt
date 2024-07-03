@@ -1,0 +1,18 @@
+Spritecard
+{
+    "srgb?$overbrightfactor" 5
+    $basetexture "vj_base/particle/ins2/flame102"
+    $translucent 1
+
+    $addself "0.5"
+    $DEPTHBLEND 1
+    $DEPTHBLENDSCALE 100
+    $startfadesize ".3"
+    $endfadesize ".5"
+    $maxsize ".4"
+    <dx90
+    {
+
+    $maxsize ".15"
+    }
+}

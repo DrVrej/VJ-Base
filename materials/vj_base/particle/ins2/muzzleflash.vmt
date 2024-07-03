@@ -1,0 +1,8 @@
+"UnlitGeneric"
+{
+	"$basetexture" "vj_base/particle/ins2/muzzleflash"
+	"$vertexcolor" "1"
+	"$vertexalpha" "1"
+	"$translucent" "1"	
+	"$additive" 1
+}

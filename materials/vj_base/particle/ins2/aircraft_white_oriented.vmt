@@ -1,0 +1,8 @@
+"SpriteCard"
+{
+    $basetexture "vj_base/particle/ins2/aircraft_white"
+
+    $additive 1
+    $ignorez 0
+    $orientation 3
+}

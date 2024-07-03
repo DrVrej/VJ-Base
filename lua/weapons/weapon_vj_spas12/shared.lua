@@ -34,6 +34,7 @@ SWEP.Primary.Automatic = true -- Is it automatic?
 SWEP.Primary.Ammo = "Buckshot" -- Ammo type
 SWEP.Primary.Sound = {"vj_weapons/hl2_shotgun/shotgun_single1.wav"}
 SWEP.Primary.DistantSound = {"vj_weapons/hl2_shotgun/shotgun_single_dist.wav"}
+SWEP.PrimaryEffects_MuzzleParticles = {"vj_muzzle_sg_main"}
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellAttachment = 2
 SWEP.PrimaryEffects_ShellType = "ShotgunShellEject"

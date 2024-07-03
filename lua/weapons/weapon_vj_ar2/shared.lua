@@ -36,9 +36,9 @@ SWEP.Primary.Automatic = true -- Is it automatic?
 SWEP.Primary.Ammo = "AR2" -- Ammo type
 SWEP.Primary.Sound = {"vj_weapons/hl2_ar2/ar2_single1.wav","vj_weapons/hl2_ar2/ar2_single2.wav","vj_weapons/hl2_ar2/ar2_single3.wav"}
 SWEP.Primary.DistantSound = {"^weapons/ar1/ar1_dist1.wav","^weapons/ar1/ar1_dist2.wav"}
-SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_full_blue"}
+SWEP.PrimaryEffects_MuzzleParticles = {"vj_muzzle_ar2_main"}
 SWEP.PrimaryEffects_SpawnShells = false
-SWEP.PrimaryEffects_DynamicLightColor = Color(0, 31, 225)
+SWEP.PrimaryEffects_DynamicLightColor = Color(0, 172, 225)
 	-- ====== Secondary Fire Variables ====== --
 SWEP.Secondary.Ammo = "AR2AltFire" -- Ammo type
 
@@ -69,6 +69,7 @@ function SWEP:NPC_SecondaryFire()
 		projectile:SetAngles(vel:GetNormal():Angle())
 	end
 
+	self:PrimaryAttackEffects(owner)
 	VJ.CreateSound(self, "weapons/irifle/irifle_fire2.wav", 90)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -260,6 +260,13 @@ VJ.AddParticle("particles/vj_rpgtrails2.pcf",{
 	"vj_rpg2_flare",
 	"vj_rpg2_glow",
 })
+VJ.AddParticle("particles/vj_weaponfx_new.pcf",{
+    "vj_muzzle_main",
+    "vj_muzzle_big_main",
+    "vj_muzzle_sg_main",
+    "vj_muzzle_ar2_main",
+    "vj_muzzle_ar2_main_b",
+})
 VJ.AddParticle("particles/vj_weaponfx_rifle.pcf",{
     "vj_rifle_smoke",
     "vj_rifle_smoke_dark",

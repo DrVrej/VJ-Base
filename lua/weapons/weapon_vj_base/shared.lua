@@ -148,7 +148,7 @@ SWEP.Primary.DistantSoundPitch = VJ.SET(90, 110) -- Distant sound pitch
 SWEP.Primary.DistantSoundVolume = 1 -- Distant sound volume
 	-- ====== Effect Variables ====== --
 SWEP.PrimaryEffects_MuzzleFlash = true
-SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_full"}
+SWEP.PrimaryEffects_MuzzleParticles = {"vj_muzzle_main"}
 SWEP.PrimaryEffects_MuzzleParticlesAsOne = false -- If set to true, the base will spawn all the given particles instead of picking one
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_SpawnShells = true
