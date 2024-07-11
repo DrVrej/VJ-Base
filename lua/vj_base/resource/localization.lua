@@ -45,7 +45,14 @@ if CLIENT then
 		["lt"] = "lithuanian",
 		["es-ES"] = "spanish_lt",
 		["pt-BR"] = "portuguese_br",
-		["zh-CN"] = "schinese"
+		["zh-CN"] = "schinese",
+		["tr"] = "turkish",
+		["nl"] = "dutch",
+		["no"] = "norwegian",
+		["pl"] = "polish",
+		["el"] = "greek",
+		["ja"] = "japanese",
+		["vi"] = "vietnamese"
 	}
 	
 	function VJ.RefreshLanguage()

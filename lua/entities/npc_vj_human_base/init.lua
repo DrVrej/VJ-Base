@@ -391,7 +391,7 @@ ENT.DisableGrenadeAttackAnimation = false -- if true, it will disable the animat
 ------ Sound Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasSounds = true -- Put to false to disable ALL sounds!
-	-- ====== Footstep Sound / World Shake On Move Variables ====== --
+	-- ====== Footstep Sound Variables ====== --
 ENT.DisableFootStepSoundTimer = false -- If set to true, it will disable the time system for the footstep sound code, allowing you to use other ways like model events
 ENT.FootStepTimeRun = 0.5 -- Next foot step sound when it is running
 ENT.FootStepTimeWalk = 1 -- Next foot step sound when it is walking
@@ -526,7 +526,8 @@ ENT.DeathSoundChance = 1
 ENT.SoundTrackChance = 1
 	-- ====== Timer Variables ====== --
 	-- Randomized time between the two variables, x amount of time has to pass for the sound to play again | Counted in seconds
-ENT.NextSoundTime_Breath = false -- false = Base will decide the time
+	-- false = Base will decide the time
+ENT.NextSoundTime_Breath = false
 ENT.NextSoundTime_Idle = VJ.SET(8, 25)
 ENT.NextSoundTime_Investigate = VJ.SET(5, 5)
 ENT.NextSoundTime_LostEnemy = VJ.SET(5, 6)
@@ -537,7 +538,7 @@ ENT.NextSoundTime_Suppressing = VJ.SET(7, 15)
 ENT.NextSoundTime_WeaponReload = VJ.SET(3, 5)
 ENT.NextSoundTime_OnKilledEnemy = VJ.SET(3, 5)
 ENT.NextSoundTime_AllyDeath = VJ.SET(3, 5)
-ENT.NextSoundTime_Pain = false -- false = Base will decide the time
+ENT.NextSoundTime_Pain = false
 ENT.NextSoundTime_DamageByPlayer = VJ.SET(2, 2.3)
 	-- ====== Volume Variables ====== --
 	-- Number must be between 0 and 1
