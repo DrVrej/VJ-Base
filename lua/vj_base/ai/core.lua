@@ -1873,6 +1873,7 @@ function ENT:Allies_CallHelp(dist)
 	if !self.CallForHelp or self.AttackType == VJ.ATTACK_TYPE_GRENADE then return end
 	local myClass = self:GetClass()
 	local curTime = CurTime()
+	local isFirst = true -- Is this the first ally that received this call?
 	for _, v in ipairs(ents.FindInSphere(self:GetPos(), dist or 800)) do
 		if v != self && v:IsNPC() && v.IsVJBaseSNPC && VJ.IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !v.VJ_IsBeingControlled && v.CanReceiveOrders then
 			local ene = self:GetEnemy()
@@ -1882,7 +1883,7 @@ function ENT:Allies_CallHelp(dist)
 				//if v:CheckRelationship(ene) == D_HT then
 				if !IsValid(v:GetEnemy()) && ((!eneIsPlayer && v:Disposition(ene) != D_LI) or eneIsPlayer) then
 					if v.IsGuard == true && !v:Visible(ene) then continue end -- If it's guarding and enemy is not visible, then don't call!
-					self:CustomOnCallForHelp(v)
+					self:CustomOnCallForHelp(v, isFirst)
 					self:PlaySoundSystem("CallForHelp")
 					-- Play the animation
 					if self.HasCallForHelpAnimation && curTime > self.NextCallForHelpAnimationT then
@@ -1904,6 +1905,7 @@ function ENT:Allies_CallHelp(dist)
 							v:DoChaseAnimation()
 						end
 					end
+					isFirst = false
 				end
 			end
 		end

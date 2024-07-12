@@ -739,7 +739,9 @@ function ENT:CustomOnResetEnemy() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnAlert(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnCallForHelp(ally) end
+-- "ally" = Ally that we called for help
+-- "isFirst" = Is this the first ally that received this call? Use this to avoid running certain multiple times when many allies are around!
+function ENT:CustomOnCallForHelp(ally, isFirst) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- The NPC's sight direction | Used by main sight angle, all attack angle radiuses, etc.
 function ENT:GetSightDirection()
