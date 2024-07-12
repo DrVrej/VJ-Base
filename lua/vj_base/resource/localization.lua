@@ -1838,15 +1838,13 @@ if CLIENT then
 			add("vjbase.print.plyspawnpoint.deactivated", "已禁用此出生点！")
 
 		elseif conv == "turkish" then ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-					
-					-- Spawn Menu
+			-- Spawn Menu
 			add("vjbase.spawn.menu.npc.disablethinking", "AI Düşünmesini Kapat")
 			add("vjbase.spawn.menu.npc.ignoreplayers", "AI Oyuncuları Umursamasın")
 			add("vjbase.spawn.menu.npc.keepcorpses", "NPC Cesetleri Kaldır/Tut")
 			add("vjbase.spawn.menu.npc.guard", "NPC'leri Guard Olarak Oluştur")
 		
-		-- General Menu (Used everywhere)
+			-- General Menu (Used everywhere)
 			add("vjbase.menu.general.default", "Varsayılan")
 			add("vjbase.menu.general.admin.only", "Uyarı: Bu menüyü sadece yöneticiler kullanır.")
 			add("vjbase.menu.general.admin.not", "Yönetici değilsin!")
@@ -1855,7 +1853,7 @@ if CLIENT then
 			add("vjbase.menu.general.snpc.creaturesettings", "Yaratık Ayarları:")
 			add("vjbase.menu.general.snpc.humansettings", "İnsan Ayarları:")
 		
-		-- Menu Tabs
+			-- Menu Tabs
 			add("vjbase.menu.tabs.mainmenu", "Ana Menü")
 			add("vjbase.menu.tabs.settings.snpc", "SNPC Ayarları")
 			add("vjbase.menu.tabs.settings.weapon", "Silah Ayarları")
@@ -1863,7 +1861,7 @@ if CLIENT then
 			add("vjbase.menu.tabs.tools", "Araçlar")
 			add("vjbase.menu.tabs.configures.snpc", "SNPC Yapılandırmaları")
 		
-		-- Main Menu
+			-- Main Menu
 			add("vjbase.menu.cleanup", "Temizle")
 			add("vjbase.menu.cleanup.all", "Her şeyi Temizle")
 			add("vjbase.menu.cleanup.stopsounds", "Tüm Sesleri Durdur")
@@ -2085,8 +2083,7 @@ if CLIENT then
 			
 			add("vjbase.menu.snpc.consettings", "Kontrolcü Ayarları")
 			add("vjbase.menu.snpc.consettings.label1", "Bilgilendirme: Bu ayarlar sadece istemci taraflıdır!")
-			add("vjbase.menu.snpc.consettings.label2", "Yakınlaştırmanın uzaklığı veya yakınlığı her tıklamada ne kadar değişir?
-.")
+			add("vjbase.menu.snpc.consettings.label2", "Yakınlaştırmanın uzaklığı veya yakınlığı her tıklamada ne kadar değişir?.")
 			add("vjbase.menu.snpc.consettings.displayhud", "HUD Göster")
 			add("vjbase.menu.snpc.consettings.camzoomdistance", "Kamera Hareket Uzaklığı")
 			add("vjbase.menu.snpc.consettings.camspeed", "Kamera Hızı")
@@ -2172,8 +2169,7 @@ if CLIENT then
 			add("tool.vjstool_notarget.desc", "Hiçbir hedef belirlememek, tüm NPC'lerin belirli bir entity'i görmemesine neden olur")
 			add("tool.vjstool_notarget.left", "Hedef yok seçeneğini kendinize değiştirin")
 			add("tool.vjstool_notarget.right", "Hedef yok seçeneğini bir NPC veya oyuncu olarak değiştir")
-			add("tool.vjstool_notarget.label", "Bir Entity'de hedef yok seçeneği etkinleştirildiğinde, NPC'ler onu hedeflemeyecektir!
-")
+			add("tool.vjstool_notarget.label", "Bir Entity'de hedef yok seçeneği etkinleştirildiğinde, NPC'ler onu hedeflemeyecektir!")
 			add("tool.vjstool_notarget.print.yourselfon", "Kendin İçin Hedef Yok: AÇIK")
 			add("tool.vjstool_notarget.print.yourselfoff", "Kendin İçin Hedef Yok: KAPALI")
 			
@@ -2270,7 +2266,6 @@ if CLIENT then
 			add("vjbase.print.plyspawnpoint.activated", "Bu doğma noktası etkinleştirildi!")
 			add("vjbase.print.plyspawnpoint.deactivated", "Bu doğma noktası devre dışı!")
 		end
-	
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
