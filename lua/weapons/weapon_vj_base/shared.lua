@@ -308,10 +308,12 @@ function SWEP:Equip(newOwner)
 				end
 			end
 		end
-		if self.Primary.PickUpAmmoAmount == "Default" then
-			newOwner:GiveAmmo(self.Primary.ClipSize * 2, self.Primary.Ammo)
-		elseif isnumber(self.Primary.PickUpAmmoAmount) then
-			newOwner:GiveAmmo(self.Primary.PickUpAmmoAmount, self.Primary.Ammo)
+		if !self.IsMeleeWeapon then
+			if self.Primary.PickUpAmmoAmount == "Default" then
+				newOwner:GiveAmmo(self.Primary.ClipSize * 2, self.Primary.Ammo)
+			elseif isnumber(self.Primary.PickUpAmmoAmount) then
+				newOwner:GiveAmmo(self.Primary.PickUpAmmoAmount, self.Primary.Ammo)
+			end
 		end
 		//newOwner:RemoveAmmo(self.Primary.DefaultClip,self.Primary.Ammo)
 		if self.MadeForNPCsOnly == true then

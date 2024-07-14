@@ -221,7 +221,7 @@ ENT.AllowIgnition = true -- Can this SNPC be set on fire?
 	-- ====== Flinching Variables ====== --
 ENT.CanFlinch = 0 -- 0 = Don't flinch | 1 = Flinch at any damage | 2 = Flinch only from certain damages
 ENT.FlinchDamageTypes = {DMG_BLAST} -- If it uses damage-based flinching, which types of damages should it flinch from?
-ENT.FlinchChance = 16 -- Chance of it flinching from 1 to x | 1 will make it always flinch
+ENT.FlinchChance = 14 -- Chance of it flinching from 1 to x | 1 will make it always flinch
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.NextMoveAfterFlinchTime = false -- How much time until it can move, attack, etc.
 	-- To let the base automatically detect the animation duration, set this to false:
@@ -1973,12 +1973,12 @@ function ENT:Think()
 					eneValid = IsValid(ene)
 				end
 			end
-			
+			self.CanEat = true
 			-- Eating system
 			if self.CanEat && !plyControlled then
 				local eatingData = self.EatingData
 				if !eatingData then -- Eating data has NOT been initialized, so initialize it!
-					self.EatingData = {Ent = NULL, NextCheck = 0, AnimStatus = "None", OldIdleTbl = nil}
+					self.EatingData = {Ent = NULL, NextCheck = 0, AnimStatus = "None", OrgIdle = nil}
 						-- AnimStatus: "None" = Not prepared (Probably moving to food location) | "Prepared" = Prepared (Ex: Played crouch down anim) | "Eating" = Prepared and is actively eating
 					eatingData = self.EatingData
 				end
@@ -2005,7 +2005,7 @@ function ENT:Think()
 								else
 									if eatingData.AnimStatus != "None" then -- We need to play get up anim first!
 										eatingData.AnimStatus = "None"
-										self:SetIdleAnimation(eatingData.OldIdleTbl, true) -- Reset the idle animation table in case it changed!
+										self.AnimationTranslations[ACT_IDLE] = eatingData.OrgIdle -- Reset the idle animation table in case it changed!
 										eatingData.NextCheck = curTime + (self:CustomOnEat("StopEating", "HaltOnly") or 1)
 									else
 										self.NextWanderTime = CurTime() + math.Rand(3, 5)
@@ -2056,7 +2056,7 @@ function ENT:Think()
 									//PrintTable(hint)
 									self.VJTag_IsEating = true
 									food.VJTag_IsBeingEaten = true
-									self.EatingData.OldIdleTbl = self.AnimTbl_IdleStand -- Save the current idle anim table in case we gonna change it while eating!
+									self.EatingData.OrgIdle = self.AnimationTranslations[ACT_IDLE] -- Save the current idle anim table in case we gonna change it while eating!
 									eatingData.Ent = food
 									self:CustomOnEat("StartBehavior")
 									self:SetState(VJ_STATE_ONLY_ANIMATION_NOATTACK)
@@ -2359,38 +2359,34 @@ function ENT:Think()
 		end
 	end*/
 
-	self:NextThink(CurTime() + 0.065) -- Set the next think to run asap (next frame)
+	self:NextThink(CurTime() + 0.065)
 	return true
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
 local propColBlacklist = {[COLLISION_GROUP_DEBRIS]=true, [COLLISION_GROUP_DEBRIS_TRIGGER]=true, [COLLISION_GROUP_DISSOLVING]=true, [COLLISION_GROUP_IN_VEHICLE]=true, [COLLISION_GROUP_WORLD]=true}
 --
-function ENT:DoPropAPCheck(customEnts, customMeleeDistance)
+function ENT:DoPropAPCheck(customEnts)
 	if !self.PushProps && !self.AttackProps then return false end
 	local myPos = self:GetPos()
-	for _, v in ipairs(customEnts or ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), customMeleeDistance or math_clamp(self.MeleeAttackDamageDistance - 30, self.MeleeAttackDistance, self.MeleeAttackDamageDistance))) do
-		local verifiedEnt = ((v.VJTag_IsAttackable == true) and true) or false -- Whether or not it's a prop or an entity to attack
-		if v:GetClass() == "prop_door_rotating" && v:Health() <= 0 then verifiedEnt = false end -- If it's a door and it has no health, then don't attack it!
-		if IsProp(v) or verifiedEnt then --If it's a prop or a entity then attack
-			local phys = v:GetPhysicsObject()
-			-- Serpevadz abrankner: self:VJ_GetNearestPointToEntityDistance(v) < (customMeleeDistance) && self:Visible(v)
-			if IsValid(phys) && !propColBlacklist[v:GetCollisionGroup()] then
-				local vPos = v:GetPos()
+	local myCenter = myPos + self:OBBCenter()
+	for _, v in ipairs(customEnts or ents.FindInSphere(myCenter, self.MeleeAttackDistance * 1.2)) do
+		if v.VJTag_IsAttackable then --If it's a prop or a entity then attack
+			local vPhys = v:GetPhysicsObject()
+			if IsValid(vPhys) && !propColBlacklist[v:GetCollisionGroup()] && (self:GetSightDirection():Dot((v:GetPos() - myPos):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius / 1.3))) then
 				local tr = util.TraceLine({
-					start = myPos,
-					endpos = vPos + v:GetUp()*10,
+					start = myCenter,
+					endpos = v:NearestPoint(myCenter),
 					filter = self
 				})
-				if (IsValid(tr.Entity) && !tr.HitWorld && !tr.HitSky) && (self:GetSightDirection():Dot((vPos - myPos):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius / 1.3))) then
-					if verifiedEnt then return true end -- Since it's an entity, no need to check for size etc.
+				if !tr.HitWorld && !tr.HitSky then
 					-- Attacking: Make sure it has health
-					if self.AttackProps == true && v:Health() > 0 then
+					if self.AttackProps && v:Health() > 0 then
 						return true
 					end
 					-- Pushing: Make sure it's not a small object and the NPC is appropriately sized to push the object
-					if self.PushProps == true && phys:GetMass() > 4 && phys:GetSurfaceArea() > 800 then
-						local selfPhys = self:GetPhysicsObject()
-						if IsValid(selfPhys) && (selfPhys:GetSurfaceArea() * self.PropAP_MaxSize) >= phys:GetSurfaceArea() then
+					if self.PushProps && vPhys:GetMass() > 4 && vPhys:GetSurfaceArea() > 800 then
+						local myPhys = self:GetPhysicsObject()
+						if IsValid(myPhys) && (myPhys:GetSurfaceArea() * self.PropAP_MaxSize) >= vPhys:GetSurfaceArea() then
 							return true
 						end
 					end
@@ -2424,7 +2420,7 @@ function ENT:MeleeAttackCode(isPropAttack)
 			-- Remove prop constraints and push it (If possible)
 			if vProp then
 				local phys = v:GetPhysicsObject()
-				if IsValid(phys) && self:DoPropAPCheck({v}, self.MeleeAttackDamageDistance) then
+				if IsValid(phys) && self:DoPropAPCheck({v}) then
 					hitRegistered = true
 					phys:EnableMotion(true)
 					//phys:EnableGravity(true)

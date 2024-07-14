@@ -360,8 +360,6 @@ ENT.WaitForEnemyToComeOutTime = VJ.SET(3, 5) -- How much time should it wait unt
 ENT.WaitForEnemyToComeOutDistance = 100 -- If it's this close to the enemy, it won't do it
 	-- ====== Scared Behavior Variables ====== --
 ENT.NoWeapon_UseScaredBehavior = true -- Should it use the scared behavior when it sees an enemy and doesn't have a weapon?
-ENT.AnimTbl_ScaredBehaviorStand = nil -- Animations it will play while scared and standing | Replaces the idle stand animation | DEFAULT: {ACT_COWER}
-ENT.AnimTbl_ScaredBehaviorMovement = {} -- Animations it will play while scared and moving | Leave empty for the base to decide the animation
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Grenade Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1753,12 +1751,10 @@ local function ApplyBackwardsCompatibility(self)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defIdleTbl = {ACT_IDLE}
-local defScaredStandTbl = {ACT_COWER}
 local defShootVec = Vector(0, 0, 55)
 --
 function ENT:Initialize()
 	if self.AnimTbl_IdleStand == nil then self.AnimTbl_IdleStand = defIdleTbl end
-	if self.AnimTbl_ScaredBehaviorStand == nil then self.AnimTbl_ScaredBehaviorStand = defScaredStandTbl end
 	self:CustomOnPreInitialize()
 	self:SetSpawnEffect(false)
 	self:SetRenderMode(RENDERMODE_NORMAL) // RENDERMODE_TRANSALPHA
@@ -2357,15 +2353,6 @@ function ENT:TranslateActivity(act)
 		end
 	end
 	return act
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:TranslateToWeaponAnim(act)
-	local translate = self.AnimationTranslations[act]
-	if translate == nil then -- If no animation found, then just return the given activity
-		return act
-	else -- Found an animation!
-		return VJ.PICK(translate)
-	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local sdWepSwitch = {"physics/metal/weapon_impact_soft1.wav","physics/metal/weapon_impact_soft2.wav","physics/metal/weapon_impact_soft3.wav"}
@@ -3017,7 +3004,7 @@ function ENT:Think()
 		end
 	end*/
 	
-	self:NextThink(CurTime() + 0.065) -- Set the next think to run asap (next frame)
+	self:NextThink(CurTime() + 0.065)
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

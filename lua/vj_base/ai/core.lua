@@ -236,7 +236,7 @@ function ENT:EatingReset(statusInfo)
 	self:SetState(VJ_STATE_NONE)
 	self:CustomOnEat("StopEating", statusInfo)
 	self.VJTag_IsEating = false
-	self:SetIdleAnimation(eatingData.OldIdleTbl, true) -- Reset the idle animation table in case it changed!
+	self.AnimationTranslations[ACT_IDLE] = eatingData.OrgIdle -- Reset the idle animation table in case it changed!
 	local food = eatingData.Ent
 	if IsValid(food) then
 		local foodData = food.FoodData
@@ -250,7 +250,7 @@ function ENT:EatingReset(statusInfo)
 			foodData.SizeRemaining = foodData.SizeRemaining + self:OBBMaxs():Distance(self:OBBMins())
 		end
 	end
-	self.EatingData = {Ent = NULL, NextCheck = eatingData.NextCheck, AnimStatus = "None", OldIdleTbl = nil}
+	self.EatingData = {Ent = NULL, NextCheck = eatingData.NextCheck, AnimStatus = "None", OrgIdle = nil}
 	-- AnimStatus: "None" = Not prepared (Probably moving to food location) | "Prepared" = Prepared (Ex: Played crouch down anim) | "Eating" = Prepared and is actively eating
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -283,7 +283,7 @@ function ENT:CustomOnEat(status, statusInfo)
 	if status == "CheckFood" then
 		return true //statusInfo.owner.BloodData && statusInfo.owner.BloodData.Color == "Red"
 	elseif status == "BeginEating" then
-		self:SetIdleAnimation({ACT_GESTURE_RANGE_ATTACK1}, true)
+		self.AnimationTranslations[ACT_IDLE] = ACT_GESTURE_RANGE_ATTACK1 -- Eating animation
 		return select(2, self:VJ_ACT_PLAYACTIVITY(ACT_ARM, true, false))
 	elseif status == "Eat" then
 		VJ.EmitSound(self, "barnacle/bcl_chew"..math.random(1, 3)..".wav", 55)
@@ -332,15 +332,6 @@ function ENT:UpdateAnimationTranslations(wepHoldType)
 	end
 	self.AnimationTranslations = {} -- Reset all translated animations
 	self:SetAnimationTranslations(wepHoldType)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
---[[---------------------------------------------------------
-	Sets the NPC's idle animation table
-		- anims = Table with animation(s)
-		- reset = Should it reset the idle animation?
------------------------------------------------------------]]
-function ENT:SetIdleAnimation(anims, reset)
-	self.AnimTbl_IdleStand = anims
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1256,9 +1247,13 @@ function ENT:AcceptInput(key, activator, caller, data)
 	//print(self, key, activator, caller, data)
 	local funcCustom = self.CustomOnAcceptInput; if funcCustom then funcCustom(self, key, activator, caller, data) end
 	if key == "Use" then
-		if self.FollowPlayer then
-			self:Follow(activator, true)
-		end
+		-- 1. Add a delay so the game registers other key presses
+		-- 2. Check for mouse 1, mouse 2, and reload
+		timer.Simple(0.1, function()
+			if IsValid(self) && self.FollowPlayer && !activator:KeyDown(IN_ATTACK) && !activator:KeyDownLast(IN_ATTACK) && !activator:KeyPressed(IN_ATTACK) && !activator:KeyReleased(IN_ATTACK) && !activator:KeyDown(IN_ATTACK2) && !activator:KeyDownLast(IN_ATTACK2) && !activator:KeyPressed(IN_ATTACK2) && !activator:KeyReleased(IN_ATTACK2) && !activator:KeyDown(IN_RELOAD) && !activator:KeyDownLast(IN_RELOAD) && !activator:KeyPressed(IN_RELOAD) && !activator:KeyReleased(IN_RELOAD) then
+				self:Follow(activator, true)
+			end
+		end)
 	elseif key == "StartScripting" then
 		self:SetState(VJ_STATE_FREEZE)
 	elseif key == "StopScripting" then
