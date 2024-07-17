@@ -669,7 +669,7 @@ function ENT:CustomOnThink() end
 function ENT:CustomOnThink_AIEnabled() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Called at the end of every entity it checks every process time
--- function ENT:CustomOnMaintainRelationships(ent, entFri, entDist) end
+-- function ENT:OnMaintainRelationships(ent, entFri, entDist) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOn_PoseParameterLookingCode(pitch, yaw, roll) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -688,7 +688,8 @@ function ENT:CustomOn_PoseParameterLookingCode(pitch, yaw, roll) end
 -- UNCOMMENT TO USE | Called every time "self:FireBullets" is called
 -- function ENT:OnFireBullet(data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnTouch(ent) end
+-- UNCOMMENT TO USE | Called whenever something collides with the NPC
+-- function ENT:OnTouch(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Called from the engine
 -- function ENT:OnCondition(cond) print(self, " Condition: ", cond, " - ", self:ConditionName(cond)) end
@@ -980,7 +981,6 @@ ENT.EatingData = nil
 -- Localized static values
 local defPos = Vector(0, 0, 0)
 
-local IsProp = VJ.IsProp
 local StopSound = VJ.STOPSOUND
 local CurTime = CurTime
 local IsValid = IsValid
@@ -1099,6 +1099,11 @@ local function ApplyBackwardsCompatibility(self)
 		self.CustomOnDeath_AfterCorpseSpawned = function(_, dmginfo, hitgroup, corpseEnt)
 			orgFunc(self, dmginfo, hitgroup, corpseEnt)
 			corpseEnt:SetSkin(self.DeathCorpseSkin)
+		end
+	end
+	if self.CustomOnTouch then
+		self.OnTouch = function(_, ent)
+			self:CustomOnTouch(ent)
 		end
 	end
 	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -1973,7 +1978,7 @@ function ENT:Think()
 					eneValid = IsValid(ene)
 				end
 			end
-			self.CanEat = true
+			
 			-- Eating system
 			if self.CanEat && !plyControlled then
 				local eatingData = self.EatingData
@@ -2413,12 +2418,12 @@ function ENT:MeleeAttackCode(isPropAttack)
 	for _, v in ipairs(ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), self.MeleeAttackDamageDistance)) do
 		if v == self or v:GetClass() == myClass or (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) then continue end
 		if v:IsPlayer() && (v.VJTag_IsControllingNPC or !v:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
-		if ((v.VJTag_IsLiving && self:Disposition(v) != D_LI) or IsProp(v) == true or v.VJTag_IsAttackable == true or v.VJTag_IsDamageable == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
+		if ((v.VJTag_IsLiving && self:Disposition(v) != D_LI) or v.VJTag_IsAttackable == true or v.VJTag_IsDamageable == true) && self:GetSightDirection():Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
 			if isPropAttack == true && v.VJTag_IsLiving && self:VJ_GetNearestPointToEntityDistance(v, true) > self.MeleeAttackDistance then continue end //if (self:GetPos():Distance(v:GetPos()) <= self:VJ_GetNearestPointToEntityDistance(v) && self:VJ_GetNearestPointToEntityDistance(v) <= self.MeleeAttackDistance) == false then
-			local vProp = IsProp(v)
-			if self:CustomOnMeleeAttack_AfterChecks(v, vProp) == true then continue end
+			local isProp = v.VJTag_IsAttackable == true
+			if self:CustomOnMeleeAttack_AfterChecks(v, isProp) == true then continue end
 			-- Remove prop constraints and push it (If possible)
-			if vProp then
+			if isProp then
 				local phys = v:GetPhysicsObject()
 				if IsValid(phys) && self:DoPropAPCheck({v}) then
 					hitRegistered = true
@@ -2474,7 +2479,7 @@ function ENT:MeleeAttackCode(isPropAttack)
 					self:VJ_DoSlowPlayer(v, self.SlowPlayerOnMeleeAttack_WalkSpeed, self.SlowPlayerOnMeleeAttack_RunSpeed, self.SlowPlayerOnMeleeAttackTime, {PlaySound=self.HasMeleeAttackSlowPlayerSound, SoundTable=self.SoundTbl_MeleeAttackSlowPlayer, SoundLevel=self.MeleeAttackSlowPlayerSoundLevel, FadeOutTime=self.MeleeAttackSlowPlayerSoundFadeOutTime})
 				end
 			end
-			if !vProp then -- Only for non-props...
+			if !isProp then -- Only for non-props...
 				hitRegistered = true
 			end
 		end
@@ -2600,7 +2605,7 @@ function ENT:LeapDamageCode()
 	for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.LeapAttackDamageDistance)) do
 		if v == self or v:GetClass() == myClass or (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) then continue end
 		if v:IsPlayer() && (v.VJTag_IsControllingNPC or !v:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
-		if (v.VJTag_IsLiving && self:Disposition(v) != D_LI) or IsProp(v) == true or v.VJTag_IsAttackable == true or v.VJTag_IsDamageable == true then
+		if (v.VJTag_IsLiving && self:Disposition(v) != D_LI) or v.VJTag_IsAttackable == true or v.VJTag_IsDamageable == true then
 			self:CustomOnLeapAttack_AfterChecks(v)
 			-- Damage
 			if self.DisableDefaultLeapAttackDamageCode == false then

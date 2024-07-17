@@ -166,7 +166,7 @@ function ENT:CustomOnInitialize()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnTouch(ent)
+function ENT:OnTouch(ent)
 	if !VJ_CVAR_AI_ENABLED then return end
 	if self.Tank_Status == 0 then
 		self:Tank_RunOver(ent)

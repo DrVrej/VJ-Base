@@ -1222,14 +1222,12 @@ function ENT:KeyValue(key, value)
 	//print(self, key, value)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local defIdleTbl = {ACT_IDLE}
---
 // lua_run PrintTable(Entity(1):GetEyeTrace().Entity:GetTable())
+--
 function ENT:OnRestore()
 	//print("RELOAD:", self)
 	self:StopMoving()
 	self:ResetMoveCalc()
-	if !istable(self.AnimTbl_IdleStand) then self.AnimTbl_IdleStand = defIdleTbl end -- Resets to nil for some reason...
 	-- Reset the current schedule because often times GMod attempts to run it before AI task modules have loaded!
 	if self.CurrentSchedule then
 		self.CurrentSchedule = nil
@@ -1271,7 +1269,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
 	if self.VJ_DEBUG == true && GetConVar("vj_npc_printontouch"):GetInt() == 1 then print(self:GetClass().." Has Touched "..entity:GetClass()) end
-	self:CustomOnTouch(entity)
+	local funcCustom = self.OnTouch; if funcCustom then funcCustom(self, entity) end
 	if !VJ_CVAR_AI_ENABLED or self.VJ_IsBeingControlled then return end
 	
 	-- If it's a passive SNPC...
@@ -1282,7 +1280,7 @@ function ENT:Touch(entity)
 			self.TakingCoverT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
 			return
 		end
-	elseif self.DisableTouchFindEnemy == false && !IsValid(self:GetEnemy()) && self.IsFollowing == false && entity.VJTag_IsLiving && self:CheckRelationship(entity) != D_LI && !self:IsBusy() then
+	elseif !self.DisableTouchFindEnemy && !self.IsFollowing && entity.VJTag_IsLiving && !IsValid(self:GetEnemy()) && self:CheckRelationship(entity) != D_LI && !self:IsBusy() then
 		self:StopMoving()
 		self:SetTarget(entity)
 		self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
@@ -1852,7 +1850,7 @@ function ENT:MaintainRelationships()
 					end
 				end
 			end
-			local funcCustom = self.CustomOnMaintainRelationships; if funcCustom then funcCustom(self, v, entFri, vDistanceToMy) end
+			local funcCustom = self.OnMaintainRelationships; if funcCustom then funcCustom(self, v, entFri, vDistanceToMy) end
 		end
 		//return true
 	end
