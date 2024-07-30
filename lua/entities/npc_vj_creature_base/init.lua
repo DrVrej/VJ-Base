@@ -357,12 +357,6 @@ ENT.NextAnyAttackTime_Range = false -- How much time until it can use any attack
 ENT.NextAnyAttackTime_Range_DoRand = false -- False = Don't use random time | Number = Picks a random number between the regular timer and this timer
 ENT.RangeAttackReps = 1 -- How many times does it run the projectile code?
 ENT.RangeAttackExtraTimers = nil -- Extra range attack timers, EX: {1, 1.4} | it will run the projectile code after the given amount of seconds
-	-- ====== Projectile Spawn Position Variables ====== --
-ENT.RangeUseAttachmentForPos = false -- Should the projectile spawn on a attachment?
-ENT.RangeUseAttachmentForPosID = "muzzle" -- The attachment used on the range attack if RangeUseAttachmentForPos is set to true
-ENT.RangeAttackPos_Up = 20 -- Up/Down spawning position for range attack
-ENT.RangeAttackPos_Forward = 0 -- Forward/Backward spawning position for range attack
-ENT.RangeAttackPos_Right = 0 -- Right/Left spawning position for range attack
 	-- ====== Control Variables ====== --
 ENT.DisableRangeAttackAnimation = false -- if true, it will disable the animation code
 ENT.DisableDefaultRangeAttackCode = false -- When true, it won't spawn the range attack entity, allowing you to make your own
@@ -795,13 +789,16 @@ function ENT:CustomOnRangeAttack_AfterStartTimer(seed) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomRangeAttackCode() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomRangeAttackCode_BeforeProjectileSpawn(projectile) end -- This is ran before Spawn() is called
+function ENT:CustomRangeAttackCode_BeforeProjectileSpawn(projectile) end -- Called before Spawn()
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomRangeAttackCode_AfterProjectileSpawn(projectile) end -- Called after Spawn()
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RangeAttackCode_OverrideProjectilePos(projectile) return 0 end -- return other value then 0 to override the projectile's position
+function ENT:RangeAttackProjSpawnPos(projectile)
+	// return self:GetAttachment(self:LookupAttachment("muzzle")).Pos -- Attachment example
+	return self:GetPos() + self:GetUp() * 20
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RangeAttackCode_GetShootPos(projectile) return VJ.CalculateTrajectory(self, self:GetEnemy(), "Curve", projectile:GetPos(), 1, 10) end
+function ENT:RangeAttackProjVelocity(projectile) return VJ.CalculateTrajectory(self, self:GetEnemy(), "Curve", projectile:GetPos(), 1, 10) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MultipleLeapAttacks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1103,6 +1100,20 @@ local function ApplyBackwardsCompatibility(self)
 	if self.CustomOnTouch then
 		self.OnTouch = function(_, ent)
 			self:CustomOnTouch(ent)
+		end
+	end
+	if self.RangeUseAttachmentForPos then
+		self.RangeAttackProjSpawnPos = function(_, projectile)
+			return self:GetAttachment(self:LookupAttachment(self.RangeUseAttachmentForPosID)).Pos
+		end
+	elseif self.RangeAttackPos_Up or self.RangeAttackPos_Forward or self.RangeAttackPos_Right then
+		self.RangeAttackProjSpawnPos = function(_, projectile)
+			return self:GetPos() + self:GetUp()*(self.RangeAttackPos_Up or 20) + self:GetForward()*(self.RangeAttackPos_Forward or 0) + self:GetRight()*(self.RangeAttackPos_Right or 0)
+		end
+	end
+	if self.RangeAttackCode_GetShootPos then
+		self.RangeAttackProjVelocity = function(_, projectile)
+			return self.RangeAttackCode_GetShootPos(self, projectile)
 		end
 	end
 	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -2557,16 +2568,7 @@ function ENT:RangeAttackCode()
 		-- Default projectile code
 		if self.DisableDefaultRangeAttackCode == false then
 			local projectile = ents.Create(VJ.PICK(self.RangeAttackEntityToSpawn))
-			local spawnPosOverride = self:RangeAttackCode_OverrideProjectilePos(projectile)
-			if spawnPosOverride == 0 then -- 0 = Let base decide
-				if self.RangeUseAttachmentForPos == false then
-					projectile:SetPos(self:GetPos() + self:GetUp()*self.RangeAttackPos_Up + self:GetForward()*self.RangeAttackPos_Forward + self:GetRight()*self.RangeAttackPos_Right)
-				else
-					projectile:SetPos(self:GetAttachment(self:LookupAttachment(self.RangeUseAttachmentForPosID)).Pos)
-				end
-			else -- Custom position
-				projectile:SetPos(spawnPosOverride)
-			end
+			projectile:SetPos(self:RangeAttackProjSpawnPos(projectile))
 			projectile:SetAngles((ene:GetPos() - projectile:GetPos()):Angle())
 			self:CustomRangeAttackCode_BeforeProjectileSpawn(projectile)
 			projectile:SetOwner(self)
@@ -2577,11 +2579,11 @@ function ENT:RangeAttackCode()
 			local phys = projectile:GetPhysicsObject()
 			if IsValid(phys) then
 				phys:Wake()
-				local vel = self:RangeAttackCode_GetShootPos(projectile)
+				local vel = self:RangeAttackProjVelocity(projectile)
 				phys:SetVelocity(vel) //ApplyForceCenter
 				projectile:SetAngles(vel:GetNormal():Angle())
 			else
-				local vel = self:RangeAttackCode_GetShootPos(projectile)
+				local vel = self:RangeAttackProjVelocity(projectile)
 				projectile:SetVelocity(vel)
 				projectile:SetAngles(vel:GetNormal():Angle())
 			end

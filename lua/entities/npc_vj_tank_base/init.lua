@@ -140,8 +140,8 @@ function ENT:CustomOnInitialize()
 	self:SetImpactEnergyScale(0) -- Take no physics damage
 	self.DeathAnimationCodeRan = true -- So corpse doesn't fly away on death (Take this out if not using death explosion sequence)
 	self:CustomInitialize_CustomTank()
-	self:PhysicsInit(SOLID_BBOX) // SOLID_VPHYSICS
-	self:SetSolid(SOLID_VPHYSICS)
+	self:PhysicsInit(SOLID_VPHYSICS) // SOLID_BBOX
+	//self:SetSolid(SOLID_VPHYSICS)
 	self:SetAngles(self:GetAngles() + Angle(0, -self.Tank_AngleDiffuseNumber, 0))
 	//self:SetPos(self:GetPos()+Vector(0,0,90))
 	self:SetCollisionBounds(Vector(self.Tank_CollisionBoundSize, self.Tank_CollisionBoundSize, self.Tank_CollisionBoundUp), Vector(-self.Tank_CollisionBoundSize, -self.Tank_CollisionBoundSize, self.Tank_CollisionBoundDown))
