@@ -364,6 +364,20 @@ function ENT:DoSchedule(schedule)
 	if self.CurrentTask then self:RunTask(self.CurrentTask) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:StopCurrentSchedule()
+	local schedule = self.CurrentSchedule
+	//print("StopCurrentSchedule", schedule)
+	if schedule then
+		timer.Remove("timer_act_stopattacks"..self:EntIndex())
+		self.NextIdleTime = 0
+		self.NextChaseTime = 0
+		self:ClearSchedule()
+		self:ClearGoal()
+		self:ScheduleFinished(schedule)
+		//self:SelectSchedule()
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ScheduleFinished(schedule)
 	//print("ScheduleFinished", schedule)
 	if schedule then
