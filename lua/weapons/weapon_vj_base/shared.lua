@@ -160,7 +160,7 @@ SWEP.PrimaryEffects_DynamicLightDistance = 120
 SWEP.PrimaryEffects_DynamicLightColor = Color(255, 150, 60)
 	-- ====== Melee Variables ====== --
 SWEP.IsMeleeWeapon = false -- Should this weapon be a melee weapon?
-SWEP.MeleeWeaponDistance = 100 -- If it's this close, it will attack
+SWEP.MeleeWeaponDistance = 60 -- If it's this close, it will attack
 SWEP.MeleeWeaponSound_Hit = {"physics/flesh/flesh_impact_bullet1.wav"} -- Sound it plays when it hits something
 SWEP.MeleeWeaponSound_Miss = {"weapons/iceaxe/iceaxe_swing1.wav"} -- Sound it plays when it misses (Doesn't hit anything)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -583,7 +583,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	-- MELEE WEAPON
 	if self.IsMeleeWeapon == true then
 		local meleeHitEnt = false
-		for _,v in ipairs(ents.FindInSphere(owner:GetPos(), self.MeleeWeaponDistance)) do
+		for _,v in ipairs(ents.FindInSphere(owner:GetPos(), self.MeleeWeaponDistance + 20)) do
 			if (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) or (v:IsPlayer() && v.VJTag_IsControllingNPC == true) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
 			if (isPly && v:EntIndex() != owner:EntIndex()) or (isNPC && (v:IsNPC() or (v:IsPlayer() && v:Alive() && !VJ_CVAR_IGNOREPLAYERS) or v:IsNextBot()) && (owner:Disposition(v) != D_LI) && (v != owner) && (v:GetClass() != owner:GetClass()) or (v:GetClass() == "prop_physics") or v.VJTag_IsAttackable == true or v.VJTag_IsDamageable == true && (owner:GetForward():Dot((v:GetPos() - owner:GetPos()):GetNormalized()) > math.cos(math.rad(owner.MeleeAttackDamageAngleRadius)))) then
 				local dmginfo = DamageInfo()

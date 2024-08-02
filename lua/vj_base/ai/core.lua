@@ -2657,7 +2657,7 @@ function ENT:DoWeaponAttackMovementCode(override, moveType)
 	moveType = moveType or 0 -- This is used with override | 0 = Run, 1 = Walk
 	if (self.CurrentWeaponEntity.IsMeleeWeapon) then
 		self.DoingWeaponAttack = true
-	elseif self.HasShootWhileMoving == true then
+	elseif self.Weapon_ShootWhileMoving == true then
 		if self.EnemyData.IsVisible && self:IsAbleToShootWeapon(true, false) == true && ((self:IsMoving() && (self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true)) or (override == true)) then
 			if (override == true && moveType == 0) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 1) then
 				local anim = self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_ShootWhileMovingRun))

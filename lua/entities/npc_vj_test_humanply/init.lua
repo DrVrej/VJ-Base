@@ -48,12 +48,12 @@ ENT.HasDeathAnimation = true
 ENT.AnimTbl_Death = {"vjseq_death_02", "vjseq_death_03", "vjseq_death_04"}
 ENT.DeathAnimationChance = 2
 
-ENT.SoundTbl_FootStep = {"npc/footsteps/hardboot_generic1.wav","npc/footsteps/hardboot_generic2.wav","npc/footsteps/hardboot_generic3.wav","npc/footsteps/hardboot_generic4.wav","npc/footsteps/hardboot_generic5.wav","npc/footsteps/hardboot_generic6.wav","npc/footsteps/hardboot_generic8.wav"}
-ENT.SoundTbl_IdleDialogue = {"common/wpn_denyselect.wav","common/wpn_select.wav"}
-ENT.SoundTbl_IdleDialogueAnswer = {"common/wpn_denyselect.wav","common/wpn_select.wav"}
-ENT.SoundTbl_FollowPlayer = {"common/wpn_select.wav"}
-ENT.SoundTbl_UnFollowPlayer = {"common/wpn_denyselect.wav"}
-ENT.SoundTbl_Death = {"player/pl_pain5.wav","player/pl_pain6.wav","player/pl_pain7.wav"}
+ENT.SoundTbl_FootStep = {"npc/footsteps/hardboot_generic1.wav", "npc/footsteps/hardboot_generic2.wav", "npc/footsteps/hardboot_generic3.wav", "npc/footsteps/hardboot_generic4.wav", "npc/footsteps/hardboot_generic5.wav", "npc/footsteps/hardboot_generic6.wav", "npc/footsteps/hardboot_generic8.wav"}
+ENT.SoundTbl_IdleDialogue = {"common/wpn_denyselect.wav", "common/wpn_select.wav"}
+ENT.SoundTbl_IdleDialogueAnswer = {"common/wpn_denyselect.wav", "common/wpn_select.wav"}
+ENT.SoundTbl_FollowPlayer = "common/wpn_select.wav"
+ENT.SoundTbl_UnFollowPlayer = "common/wpn_denyselect.wav"
+ENT.SoundTbl_Death = {"player/pl_pain5.wav", "player/pl_pain6.wav", "player/pl_pain7.wav"}
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnPreInitialize()
 	-- Set all the player models into the model variable
@@ -65,7 +65,6 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize()
 	VJ.EmitSound(self, "player/pl_drown1.wav") -- Player connect sound
-	self:SetSurroundingBoundsType(BOUNDS_COLLISION) -- BOUNDS_HITBOXES breaks collision on NPCs at the expense of proper trace hitting, not needed for simple biped NPCs such as this one
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:GetSightDirection()

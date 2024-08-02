@@ -11,24 +11,24 @@ include("shared.lua")
 ENT.StartHealth = 200
 ENT.HullType = HULL_LARGE
 ENT.VJ_IsHugeMonster = true -- Is this a huge monster?
-ENT.MovementType = VJ_MOVETYPE_PHYSICS -- How does the SNPC move?
-ENT.Bleeds = false -- Does the SNPC bleed? (Blood decal, particle, etc.)
+ENT.MovementType = VJ_MOVETYPE_PHYSICS -- How the NPC moves around
+ENT.Bleeds = false -- Does the NPC bleed? Controls all bleeding related components such blood decal, particle, pool, etc.
 ENT.Immune_Dissolve = true -- Immune to Dissolving | Example: Combine Ball
 ENT.Immune_AcidPoisonRadiation = true -- Immune to Acid, Poison and Radiation
 ENT.Immune_Bullet = true -- Immune to Bullets
 ENT.ImmuneDamagesTable = {DMG_PHYSGUN} -- You can set Specific types of damages for the SNPC to be immune to
-ENT.FindEnemy_UseSphere = true -- Should the SNPC be able to see all around him? (360) | Objects and walls can still block its sight!
-ENT.GetDamageFromIsHugeMonster = true -- Should it get damaged no matter what by SNPCs that are tagged as VJ_IsHugeMonster?
-ENT.DeathCorpseCollisionType = COLLISION_GROUP_NONE -- Collision type for the corpse | SNPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
-ENT.WaitBeforeDeathTime = 2 -- Time until the SNPC spawns its corpse and gets removed
-ENT.HasMeleeAttack = false -- Should the SNPC have a melee attack?
-ENT.DisableWandering = true -- Disables wandering when the SNPC is idle
+ENT.FindEnemy_UseSphere = true -- Should the NPC see all around? (360 degrees) | Objects and walls can still block its sight!
+ENT.GetDamageFromIsHugeMonster = true -- Should it skip immunity checks and hurt by all damage types if the attacker is tagged with "VJ_IsHugeMonster"?
+ENT.DeathCorpseCollisionType = COLLISION_GROUP_NONE -- Collision type for the corpse | NPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
+ENT.WaitBeforeDeathTime = 2 -- Time until the NPC spawns its corpse and gets removed
+ENT.HasMeleeAttack = false -- Can this NPC melee attack?
+ENT.DisableWandering = true -- Disables wandering when the NPC is idle
 ENT.CanReceiveOrders = false -- Can the NPC receive orders from others? | Ex: Allies calling for help, allies requesting backup on damage, etc.
-ENT.BringFriendsOnDeath = false -- Should the SNPC's friends come to its position before it dies?
-ENT.AlertFriendsOnDeath = true -- Should the SNPCs allies get alerted when it dies? | Its allies will also need to have this variable set to true!
+ENT.BringFriendsOnDeath = false -- Should the NPC's allies come to its position while it's dying?
+ENT.AlertFriendsOnDeath = true -- Should the NPC's allies get alerted while it's dying? | Its allies will also need to have this variable set to true!
 ENT.CallForBackUpOnDamage = false -- Should the SNPC call for help when damaged? (Only happens if the SNPC hasn't seen a enemy)
-ENT.MoveOrHideOnDamageByEnemy = false -- Should the SNPC move or hide when being damaged by an enemy?
-ENT.MoveOutOfFriendlyPlayersWay = false -- Should the SNPC move out of the way when a friendly player comes close to it?
+ENT.MoveOrHideOnDamageByEnemy = false -- Should the NPC move or hide when being damaged by an enemy?
+ENT.MoveOutOfFriendlyPlayersWay = false -- Should the NPC move and give space to friendly players?
 ENT.HasPainSounds = false -- If set to false, it won't play the pain sounds
 	-- ====== Sound File Paths ====== --
 -- Leave blank if you don't want any sounds to play
