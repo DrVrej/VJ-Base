@@ -2198,7 +2198,7 @@ function ENT:Think()
 									if anim != ACT_INVALID then
 										self.CurrentAttackAnimation = anim
 										self.CurrentAttackAnimationDuration = animDur - (self.MeleeAttackAnimationDecreaseLengthAmount / self:GetPlaybackRate())
-										if animType == ANIM_TYPE_GESTURE then -- Useful for gesture-based attacks, it allows things like chasing to continue running
+										if animType != ANIM_TYPE_GESTURE then -- Useful for gesture-based attacks, it allows things like chasing to continue running
 											self.CurrentAttackAnimationTime = curTime + self.CurrentAttackAnimationDuration
 										end
 									end
