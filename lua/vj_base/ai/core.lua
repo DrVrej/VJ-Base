@@ -133,11 +133,11 @@ end
 			- RemoveOnCorpseDelete = Should the entity get removed if the corpse is removed? | DEFAULT = false
 		- customFunc(gib) = Use this to edit the entity which is given as parameter "gib"
 -----------------------------------------------------------]]
-local gib_mdlAAll = {"models/gibs/xenians/sgib_01.mdl","models/gibs/xenians/sgib_02.mdl","models/gibs/xenians/sgib_03.mdl","models/gibs/xenians/mgib_01.mdl","models/gibs/xenians/mgib_02.mdl","models/gibs/xenians/mgib_03.mdl","models/gibs/xenians/mgib_04.mdl","models/gibs/xenians/mgib_05.mdl","models/gibs/xenians/mgib_06.mdl","models/gibs/xenians/mgib_07.mdl"}
-local gib_mdlASmall = {"models/gibs/xenians/sgib_01.mdl","models/gibs/xenians/sgib_02.mdl","models/gibs/xenians/sgib_03.mdl"}
-local gib_mdlABig = {"models/gibs/xenians/mgib_01.mdl","models/gibs/xenians/mgib_02.mdl","models/gibs/xenians/mgib_03.mdl","models/gibs/xenians/mgib_04.mdl","models/gibs/xenians/mgib_05.mdl","models/gibs/xenians/mgib_06.mdl","models/gibs/xenians/mgib_07.mdl"}
-local gib_mdlHSmall = {"models/gibs/humans/sgib_01.mdl","models/gibs/humans/sgib_02.mdl","models/gibs/humans/sgib_03.mdl"}
-local gib_mdlHBig = {"models/gibs/humans/mgib_01.mdl","models/gibs/humans/mgib_02.mdl","models/gibs/humans/mgib_03.mdl","models/gibs/humans/mgib_04.mdl","models/gibs/humans/mgib_05.mdl","models/gibs/humans/mgib_06.mdl","models/gibs/humans/mgib_07.mdl"}
+local gib_mdlAAll = {"models/gibs/xenians/sgib_01.mdl", "models/gibs/xenians/sgib_02.mdl", "models/gibs/xenians/sgib_03.mdl", "models/gibs/xenians/mgib_01.mdl", "models/gibs/xenians/mgib_02.mdl", "models/gibs/xenians/mgib_03.mdl", "models/gibs/xenians/mgib_04.mdl", "models/gibs/xenians/mgib_05.mdl", "models/gibs/xenians/mgib_06.mdl", "models/gibs/xenians/mgib_07.mdl"}
+local gib_mdlASmall = {"models/gibs/xenians/sgib_01.mdl", "models/gibs/xenians/sgib_02.mdl", "models/gibs/xenians/sgib_03.mdl"}
+local gib_mdlABig = {"models/gibs/xenians/mgib_01.mdl", "models/gibs/xenians/mgib_02.mdl", "models/gibs/xenians/mgib_03.mdl", "models/gibs/xenians/mgib_04.mdl", "models/gibs/xenians/mgib_05.mdl", "models/gibs/xenians/mgib_06.mdl", "models/gibs/xenians/mgib_07.mdl"}
+local gib_mdlHSmall = {"models/gibs/humans/sgib_01.mdl", "models/gibs/humans/sgib_02.mdl", "models/gibs/humans/sgib_03.mdl"}
+local gib_mdlHBig = {"models/gibs/humans/mgib_01.mdl", "models/gibs/humans/mgib_02.mdl", "models/gibs/humans/mgib_03.mdl", "models/gibs/humans/mgib_04.mdl", "models/gibs/humans/mgib_05.mdl", "models/gibs/humans/mgib_06.mdl", "models/gibs/humans/mgib_07.mdl"}
 --
 function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 	// self:CreateGibEntity("prop_ragdoll", "", {Pos=self:LocalToWorld(Vector(0,3,0)), Ang=self:GetAngles(), Vel=})
@@ -1138,24 +1138,26 @@ end
 -----------------------------------------------------------]]
 function ENT:VJ_GetDifficultyValue(int)
 	local dif = self.SelectedDifficulty
-	if dif == -3 then
+	if dif == 0 then
+		return int
+	elseif dif == -3 then
 		return math_clamp(int - (int * 0.99), 1, int)
 	elseif dif == -2 then
 		return math_clamp(int - (int * 0.75), 1, int)
 	elseif dif == -1 then
-		return int / 2
+		return int * 0.5
 	elseif dif == 1 then
-		return int + (int * 0.5)
+		return int * 1.5
 	elseif dif == 2 then
 		return int * 2
 	elseif dif == 3 then
-		return int + (int * 1.5)
+		return int * 2.5
 	elseif dif == 4 then
-		return int + (int * 2.5)
+		return int * 3.5
 	elseif dif == 5 then
-		return int + (int * 3.5)
+		return int * 4.5
 	elseif dif == 6 then
-		return int + (int * 5.0)
+		return int * 6
 	end
 	return int -- Normal (default)
 end
@@ -1586,7 +1588,6 @@ end
 function ENT:VJ_PlaySequence(animation, playbackRate)
 	if !animation then return false end
 	//self.VJ_PlayingSequence = true -- No longer needed as it is handled by ACT_DO_NOT_DISTURB
-	
 	self:SetActivity(ACT_DO_NOT_DISTURB) -- So `self:GetActivity()` will return the current result (alongside other immediate calls after `VJ_PlaySequence`)
 	self:SetIdealActivity(ACT_DO_NOT_DISTURB) -- Avoids the engine from progressing to an ideal activity that was set very recently | EX: Fixes melee attack anims breaking when called right after `self:VJ_TASK_IDLE_STAND()`
 		-- Keeps MaintainActivity from overriding sequences as seen here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L6331
@@ -1631,9 +1632,6 @@ function ENT:OnAlert(ent)
 	self:CustomOnAlert(ent)
 	if CurTime() > self.NextAlertSoundT then
 		self:PlaySoundSystem("Alert")
-		if self.AlertSounds_OnlyOnce == true then
-			self.HasAlertSounds = false
-		end
 		self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert.a, self.NextSoundTime_Alert.b)
 	end
 end

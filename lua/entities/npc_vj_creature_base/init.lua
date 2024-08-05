@@ -140,14 +140,14 @@ ENT.Medic_SpawnPropOnHealAttachment = "anim_attachment_LH" -- The attachment it 
 ENT.Medic_CanBeHealed = true -- Can this NPC be healed by medics?
 	-- ====== Follow System Variables ====== --
 	-- Associated variables: self.FollowData, self.IsFollowing
+ENT.FollowPlayer = true -- Should the NPC follow the player when the player presses a certain key? | Restrictions: Player has to be friendly and the NPC's move type cannot be stationary!
 ENT.FollowMinDistance = 100 -- Minimum distance the NPC should come to the player | The base automatically adds the NPC's size to this variable to account for different sizes!
 ENT.NextFollowUpdateTime = 0.5 -- Time until it checks if it should move to the player again | Lower number = More performance loss
-ENT.FollowPlayer = true -- Should the NPC follow the player when the player presses a certain key? | Restrictions: Player has to be friendly and the NPC's move type cannot be stationary!
 	-- ====== Movement & Idle Variables ====== --
 ENT.AnimTbl_IdleStand = nil -- The idle animation table when AI is enabled | DEFAULT: {ACT_IDLE}
 ENT.AnimTbl_Walk = {ACT_WALK} -- Set the walking animations | Put multiple to let the base pick a random animation when it moves
 ENT.AnimTbl_Run = {ACT_RUN} -- Set the running animations | Put multiple to let the base pick a random animation when it moves
-ENT.IdleAlwaysWander = false -- Should the NPC constantly wander while idiling?
+ENT.IdleAlwaysWander = false -- Should the NPC constantly wander while idling?
 ENT.DisableWandering = false -- Disables wandering when the NPC is idle
 ENT.DisableChasingEnemy = false -- Disables chasing enemies
 	-- ====== Constantly Face Enemy Variables ====== --
@@ -416,7 +416,6 @@ ENT.HasIdleDialogueAnswerSounds = true -- If set to false, it won't play the idl
 ENT.IdleDialogueDistance = 400 -- How close should the ally be for the NPC to talk to the it?
 ENT.IdleDialogueCanTurn = true -- If set to false, it won't turn when a dialogue occurs
 	-- ====== Miscellaneous Variables ====== --
-ENT.AlertSounds_OnlyOnce = false -- After it plays it once, it will never play it again
 ENT.BeforeMeleeAttackSounds_WaitTime = 0 -- Time until it starts playing the Before Melee Attack sounds
 ENT.OnlyDoKillEnemyWhenClear = true -- If set to true, it will only play the OnKilledEnemy sound when there isn't any other enemies
 ENT.DamageByPlayerDispositionLevel = 1 -- At which disposition levels it should play the damage by player sounds | 0 = Always | 1 = ONLY when friendly to player | 2 = ONLY when enemy to player
@@ -496,9 +495,9 @@ ENT.SoundTbl_SoundTrack = {}
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ ///// WARNING: Don't change anything in this box! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Default sound file paths for certain sound tables | Base will play these if the corresponding table is left empty
-local DefaultSoundTbl_MedicAfterHeal = {"items/smallmedkit1.wav"}
-local DefaultSoundTbl_MeleeAttackExtra = {"npc/zombie/claw_strike1.wav", "npc/zombie/claw_strike2.wav", "npc/zombie/claw_strike3.wav"}
-local DefaultSoundTbl_Impact = {"vj_flesh/alien_flesh1.wav"}
+local DefaultSD_MedicAfterHeal = "items/smallmedkit1.wav"
+local DefaultSD_MeleeAttackExtra = {"npc/zombie/claw_strike1.wav", "npc/zombie/claw_strike2.wav", "npc/zombie/claw_strike3.wav"}
+local DefaultSD_Impact = "vj_flesh/alien_flesh1.wav"
 ------ ///// WARNING: Don't change anything in this box! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- ====== Fade Out Time Variables ====== --
@@ -946,7 +945,6 @@ ENT.NextDoAnyAttackT = 0
 ENT.NearestPointToEnemyDistance = 0
 ENT.LatestEnemyDistance = 0
 ENT.HealthRegenerationDelayT = 0
-ENT.NextActualThink = 0
 ENT.CurAttackSeed = 0
 ENT.LastAnimationSeed = 0
 ENT.LastAnimationType = VJ.ANIM_TYPE_NONE
@@ -2402,7 +2400,7 @@ function ENT:DoPropAPCheck(customEnts)
 						return true
 					end
 					-- Pushing: Make sure it's not a small object and the NPC is appropriately sized to push the object
-					if self.PushProps && vPhys:GetMass() > 4 && vPhys:GetSurfaceArea() > 800 then
+					if self.PushProps && v:GetMoveType() != MOVETYPE_PUSH && vPhys:GetMass() > 4 && vPhys:GetSurfaceArea() > 800 then
 						local myPhys = self:GetPhysicsObject()
 						if IsValid(myPhys) && (myPhys:GetSurfaceArea() * self.PropAP_MaxSize) >= vPhys:GetSurfaceArea() then
 							return true
@@ -2452,8 +2450,8 @@ function ENT:MeleeAttackCode(isPropAttack)
 					end
 				end
 			end
-			-- Knockback
-			if self.HasMeleeAttackKnockBack && v.MovementType != VJ_MOVETYPE_STATIONARY && (!v.VJ_IsHugeMonster or v.IsVJBaseSNPC_Tank) then
+			-- Knockback (Don't push things like doors, trains, elevators as it will make them fly when activated)
+			if self.HasMeleeAttackKnockBack && v:GetMoveType() != MOVETYPE_PUSH && v.MovementType != VJ_MOVETYPE_STATIONARY && (!v.VJ_IsHugeMonster or v.IsVJBaseSNPC_Tank) then
 				v:SetGroundEntity(NULL)
 				v:SetVelocity(self:MeleeAttackKnockbackVelocity(v))
 			end
@@ -3443,7 +3441,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "MedicOnHeal" then
 		if self.HasMedicSounds_AfterHeal == true then
 			local pickedSD = VJ.PICK(self.SoundTbl_MedicAfterHeal)
-			if pickedSD == false then pickedSD = VJ.PICK(DefaultSoundTbl_MedicAfterHeal) end -- Default table
+			if pickedSD == false then pickedSD = DefaultSD_MedicAfterHeal end -- Default sound
 			if (math.random(1, self.MedicAfterHealSoundChance) == 1 && pickedSD) or customTbl then
 				if customTbl then pickedSD = customTbl end
 				self:StopAllCommonSpeechSounds()
@@ -3584,7 +3582,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "Impact" then
 		if self.HasImpactSounds == true then
 			local pickedSD = VJ.PICK(self.SoundTbl_Impact)
-			if pickedSD == false then pickedSD = VJ.PICK(DefaultSoundTbl_Impact) end -- Default table
+			if pickedSD == false then pickedSD = DefaultSD_Impact end -- Default sound
 			if (math.random(1, self.ImpactSoundChance) == 1 && pickedSD) or customTbl then
 				if customTbl then pickedSD = customTbl end
 				self.CurrentImpactSound = sdType(self, pickedSD, self.ImpactSoundLevel, self:VJ_DecideSoundPitch(self.ImpactSoundPitch.a, self.ImpactSoundPitch.b))
@@ -3639,7 +3637,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			end
 			if self.HasExtraMeleeAttackSounds == true then
 				pickedSD = VJ.PICK(self.SoundTbl_MeleeAttackExtra)
-				if pickedSD == false then pickedSD = VJ.PICK(DefaultSoundTbl_MeleeAttackExtra) end -- Default table
+				if pickedSD == false then pickedSD = VJ.PICK(DefaultSD_MeleeAttackExtra) end -- Default table
 				if (math.random(1, self.ExtraMeleeSoundChance) == 1 && pickedSD) or customTbl then
 					if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 					self.CurrentExtraMeleeAttackSound = VJ.EmitSound(self, pickedSD, self.ExtraMeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.ExtraMeleeSoundPitch.a, self.ExtraMeleeSoundPitch.b))
