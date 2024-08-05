@@ -166,7 +166,7 @@ ENT.PoseParameterLooking_TurningSpeed = 10 -- How fast does the parameter turn?
 ENT.PoseParameterLooking_Names = {pitch={}, yaw={}, roll={}} -- Custom pose parameters to use, can put as many as needed
 	-- ====== Investigation Variables ====== --
 	-- Showcase: https://www.youtube.com/watch?v=cCqoqSDFyC4
-ENT.CanInvestigate = true -- Can it detect and investigate possible enemy disturbances? | EX: Sounds, movement and flashlight
+ENT.CanInvestigate = true -- Can it detect and investigate disturbances? | EX: Sounds, movement, flashlight, bullet hits
 ENT.InvestigateSoundDistance = 9 -- How far can the NPC hear sounds? | This number is multiplied by the calculated volume of the detectable sound
 	-- ====== Eating Variables ====== --
 ENT.CanEat = false -- Should it search and eat organic stuff when idle?
@@ -1019,6 +1019,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_godmodesnpc"):GetInt() == 1 then self.GodMode = true end
 	if GetConVar("vj_npc_nobecomeenemytoply"):GetInt() == 1 then self.BecomeEnemyToPlayer = false end
 	if GetConVar("vj_npc_nocallhelp"):GetInt() == 1 then self.CallForHelp = false end
+	if GetConVar("vj_npc_noinvestigate"):GetInt() == 1 then self.CanInvestigate = false end
 	if GetConVar("vj_npc_noeating"):GetInt() == 1 then self.CanEat = false end
 	if GetConVar("vj_npc_nofollowplayer"):GetInt() == 1 then self.FollowPlayer = false end
 	if GetConVar("vj_npc_nosnpcchat"):GetInt() == 1 then self.AllowPrintingInChat = false end

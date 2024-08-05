@@ -25,6 +25,7 @@ cvarList["vj_npc_novfx_gibdeath"] = 0 -- Disable gib or death VFX (particles, ef
 cvarList["vj_npc_noidleparticle"] = 0 -- Disable idle particles and effects
 cvarList["vj_npc_nobecomeenemytoply"] = 0 -- Disable friendly NPCs becoming enemy to player
 cvarList["vj_npc_nocallhelp"] = 0 -- Disable NPCs calling for help
+cvarList["vj_npc_noinvestigate"] = 0 -- Disable NPCs detecting and investigating disturbances
 cvarList["vj_npc_nofollowplayer"] = 0 -- Disable NPCs following players
 cvarList["vj_npc_nobloodpool"] = 0 -- Disables the blood pools spawned on death
 cvarList["vj_npc_nochasingenemy"] = 0 -- Disables the NPCs chasing the enemy
