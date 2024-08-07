@@ -534,7 +534,14 @@ end
 		- Disposition value, list: https://wiki.facepunch.com/gmod/Enums/D
 -----------------------------------------------------------]]
 function ENT:CheckRelationship(ent)
-	if ent.ForceEntAsEnemy == self then return D_HT else return D_NU end -- Always enemy to me (Used by the bullseye under certain circumstances)
+	-- Only enemy to a single NPC | Used by the bullseye under certain circumstances
+	if ent.ForceEntAsEnemy then
+		if ent.ForceEntAsEnemy == self then
+			return D_HT
+		else
+			return D_NU
+		end
+	end
 	if ent:IsFlagSet(FL_NOTARGET) or NPCTbl_Animals[ent:GetClass()] then return D_NU end
 	if self:GetClass() == ent:GetClass() then return D_LI end
 	if ent:Health() > 0 && self:Disposition(ent) != D_LI then

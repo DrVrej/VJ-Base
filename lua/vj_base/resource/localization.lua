@@ -256,7 +256,7 @@ if CLIENT then
 		add("vjbase.menu.snpc.settings.toggleflinching", "Disable Flinching")
 		add("vjbase.menu.snpc.settings.togglebleeding", "Disable Bleeding")
 		add("vjbase.menu.snpc.settings.help.bleeding", "Disables blood particles, decals, pools etc.")
-		add("vjbase.menu.snpc.settings.togglebloodpool", "Disable Blood Pools (On Death)")
+		add("vjbase.menu.snpc.settings.togglebloodpool", "Disable Blood Pools On Death")
 		add("vjbase.menu.snpc.settings.togglegib", "Disable Gibbing")
 		add("vjbase.menu.snpc.settings.help.gib", "Disabling this can help with performance")
 		add("vjbase.menu.snpc.settings.togglegibdeathvfx", "Disable Gib/Death VFX (particles, decals, etc.)")
