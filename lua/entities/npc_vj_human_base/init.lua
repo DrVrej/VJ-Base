@@ -3613,7 +3613,7 @@ function ENT:SelectSchedule()
 								-- if covered, try to move forward by calculating the distance between the prop and the NPC
 								local cover_npc, cover_npc_tr = self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered), enePos_Eye, false, {SetLastHiddenTime=true})
 								local cover_npc_ent = cover_npc_tr.Entity
-								local cover_wep, cover_wep_tr = self:VJ_ForwardIsHidingZone(wep:GetNW2Vector("VJ_CurBulletPos"), enePos_Eye, false)
+								local cover_wep, cover_wep_tr = self:VJ_ForwardIsHidingZone(wep:GetBulletPos(), enePos_Eye, false)
 								local cover_wep_ent = cover_wep_tr.Entity
 								//print("Is covered? ", cover_npc)
 								//print("Is gun covered? ", cover_wep)
@@ -3711,7 +3711,7 @@ function ENT:SelectSchedule()
 												self.CurrentWeaponAnimationIsAim = true
 											else
 												local anim_crouch = self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponAttackCrouch))
-												if self.CanCrouchOnWeaponAttack == true && cover_npc == false && cover_wep == false && self.LatestEnemyDistance > 500 && VJ.AnimExists(self, anim_crouch) == true && ((math.random(1, self.CanCrouchOnWeaponAttackChance) == 1) or (CurTime() <= self.Weapon_DoingCrouchAttackT)) && self:VJ_ForwardIsHidingZone(wep:GetNW2Vector("VJ_CurBulletPos") + self:GetUp()*-18, enePos_Eye, false) == false then
+												if self.CanCrouchOnWeaponAttack == true && cover_npc == false && cover_wep == false && self.LatestEnemyDistance > 500 && VJ.AnimExists(self, anim_crouch) == true && ((math.random(1, self.CanCrouchOnWeaponAttackChance) == 1) or (CurTime() <= self.Weapon_DoingCrouchAttackT)) && self:VJ_ForwardIsHidingZone(wep:GetBulletPos() + self:GetUp()*-18, enePos_Eye, false) == false then
 													finalAnim = anim_crouch
 													self.Weapon_DoingCrouchAttackT = CurTime() + 2 -- Asiga bedke vor vestah elank yed votgi cheler hemen
 												else -- Not crouching

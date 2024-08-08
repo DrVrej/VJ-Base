@@ -2,7 +2,7 @@ IncludeCS("ai_translations.lua")
 
 SWEP.IsVJBaseWeapon = true
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Core & Information-Related Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Core & Information ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //SWEP.Base = "weapon_base"
 SWEP.PrintName = "VJ Weapon Base"
@@ -19,7 +19,7 @@ SWEP.ReplacementWeapon = nil -- When picked up by a player it gives them a repla
 	-- Table = Replaces the weapon by going in order of the table until a valid class name is given
 SWEP.HoldType = "ar2"
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- View Model Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ View Model ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel = "models/weapons/c_pistol.mdl"
 SWEP.UseHands = false -- Should this weapon use Garry's Mod hands? (The model must support it!)
@@ -31,7 +31,7 @@ SWEP.CSMuzzleFlashes = false -- Recommended to enable for Counter Strike: Source
 SWEP.DrawAmmo = true -- Draw regular Garry's Mod HUD?
 SWEP.DrawCrosshair = true -- Draw Crosshair?
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- World Model Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ World Model ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.WorldModel = "models/weapons/w_rif_ak47.mdl"
 SWEP.WorldModel_UseCustomPosition = false -- Should the gun use custom position? This can be used to fix guns that are in the crotch
@@ -41,12 +41,12 @@ SWEP.WorldModel_CustomPositionBone = "ValveBiped.Bip01_R_Hand" -- The bone it wi
 SWEP.WorldModel_Invisible = false -- Should the world model be invisible?
 SWEP.WorldModel_NoShadow = false -- Should the world model have a shadow?
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- General NPC Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ NPC Only ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- Set this to false to disable the timer automatically running the firing code, this allows for event-based SNPCs to fire at their own pace:
-SWEP.NPC_NextPrimaryFire = 0.1 -- Next time it can use primary fire
+SWEP.NPC_NextPrimaryFire = 0.11 -- RPM of the weapon in seconds | Calculation: 60 / RPM
 	-- Note: Melee weapons automatically change this number!
-SWEP.NPC_TimeUntilFire = 0.1 -- How much time until the bullet/projectile is fired?
+SWEP.NPC_TimeUntilFire = 0 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_TimeUntilFireExtraTimers = {} -- Extra timers, which will make the gun fire again! | The seconds are counted after the self.NPC_TimeUntilFire!
 SWEP.NPC_CustomSpread = 1 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
 SWEP.NPC_BulletSpawnAttachment = "" -- The attachment that the bullet spawns on, leave empty for base to decide!
@@ -79,7 +79,7 @@ SWEP.NPC_HasSecondaryFireSound = true -- Can the secondary fire sound be played?
 SWEP.NPC_SecondaryFireSound = {} -- The sound it plays when the secondary fire is used
 SWEP.NPC_SecondaryFireSoundLevel = 90 -- The sound level to use for the secondary firing sound
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- General Player Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Player Only ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- ====== Inventory-Related Variables ====== --
 SWEP.Slot = 2 -- Which weapon slot you want your SWEP to be in? (1 2 3 4 5 6)
@@ -102,14 +102,14 @@ SWEP.ReloadSound = {}
 SWEP.AnimTbl_Reload = ACT_VM_RELOAD
 SWEP.Reload_TimeUntilAmmoIsSet = 1 -- Time until ammo is set to the weapon
 	-- ====== Secondary Fire Variables ====== --
-SWEP.Secondary.Automatic = false -- Is it automatic?
+SWEP.Secondary.Automatic = false -- Should the weapon continue firing as long as the attack button is held down?
 SWEP.Secondary.Ammo = "none" -- Ammo type
 SWEP.Secondary.TakeAmmo = 1 -- How much ammo should it take on each shot?
 	-- To let the base automatically detect the animation duration, set this to false:
 SWEP.Secondary.Delay = false -- Time until it can shoot again
 SWEP.AnimTbl_SecondaryFire = ACT_VM_SECONDARYATTACK
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Dry Fire Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Dry Fire ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- Examples: Under water, out of ammo
 SWEP.HasDryFireSound = true -- Should it play a sound when it's out of ammo?
@@ -117,24 +117,24 @@ SWEP.DryFireSound = {} -- The sound that it plays when the weapon is out of ammo
 SWEP.DryFireSoundLevel = 50 -- Dry fire sound level
 SWEP.DryFireSoundPitch = VJ.SET(90, 100) -- Dry fire sound pitch
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Primary Fire Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Primary Fire ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.DisableBulletCode = false -- The bullet won't spawn, this can be used when creating a projectile-based weapon
-SWEP.Primary.AllowFireInWater = false -- If true, you will be able to use primary fire in water
-SWEP.Primary.Damage = 5 -- Damage
-SWEP.Primary.PlayerDamage = "Same" -- Only applies for players | "Same" = Same as self.Primary.Damage, "Double" = Double the self.Primary.Damage OR put a number to be different from self.Primary.Damage
-SWEP.Primary.Force = 5 -- Force applied on the object the bullet hits
+SWEP.Primary.Damage = 5
+SWEP.Primary.PlayerDamage = "Same" -- For players only | "Same" = Same as self.Primary.Damage | "Double" = Double the self.Primary.Damage | number = Overrides self.Primary.Damage
+SWEP.Primary.Automatic = true -- Should the weapon continue firing as long as the attack button is held down?
+SWEP.Primary.AllowInWater = false -- Can it be fired in water?
 SWEP.Primary.NumberOfShots = 1 -- How many shots per attack?
-SWEP.Primary.ClipSize = 30 -- Max amount of bullets per clip
-SWEP.Primary.PickUpAmmoAmount = "Default" -- How much ammo should the player get the gun is picked up? | "Default" = 3 Clips
+SWEP.Primary.Force = 5 -- Force applied on the object the bullet hits
 SWEP.Primary.Recoil = 0.3 -- How much recoil does the player get?
 SWEP.Primary.Cone = 7 -- How accurate is the bullet? (Players)
 SWEP.Primary.Delay = 0.1 -- Time until it can shoot again
 SWEP.Primary.Tracer = 1 -- Show tracer for every x bullets
 SWEP.Primary.TracerType = "Tracer" -- Tracer type (Examples: AR2)
 SWEP.Primary.TakeAmmo = 1 -- How much ammo should it take from the clip after each shot? | 0 = Unlimited clip
-SWEP.Primary.Automatic = true -- Is it automatic?
 SWEP.Primary.Ammo = "SMG1" -- Ammo type
+SWEP.Primary.ClipSize = 30 -- Max amount of bullets per clip
+SWEP.Primary.PickUpAmmoAmount = "Default" -- How much ammo should the player get the gun is picked up? | "Default" = 3 Clips
 SWEP.AnimTbl_PrimaryFire = ACT_VM_PRIMARYATTACK
 	-- ====== Sound Variables ====== --
 SWEP.Primary.Sound = {}
@@ -143,17 +143,17 @@ SWEP.Primary.SoundPitch	= VJ.SET(90, 100)
 SWEP.Primary.SoundVolume = 1
 SWEP.Primary.DistantSound = {}
 SWEP.Primary.HasDistantSound = true -- Does it have a distant sound when the gun is shot?
-SWEP.Primary.DistantSoundLevel = 140 -- Distant sound level
-SWEP.Primary.DistantSoundPitch = VJ.SET(90, 110) -- Distant sound pitch
-SWEP.Primary.DistantSoundVolume = 1 -- Distant sound volume
+SWEP.Primary.DistantSoundLevel = 140
+SWEP.Primary.DistantSoundPitch = VJ.SET(90, 110)
+SWEP.Primary.DistantSoundVolume = 1
 	-- ====== Effect Variables ====== --
 SWEP.PrimaryEffects_MuzzleFlash = true
 SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_full"}
-SWEP.PrimaryEffects_MuzzleParticlesAsOne = false -- If set to true, the base will spawn all the given particles instead of picking one
+SWEP.PrimaryEffects_MuzzleParticlesAsOne = false -- Should all the particles spawn together instead of picking only one?
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_SpawnShells = true
 SWEP.PrimaryEffects_ShellAttachment = "shell"
-SWEP.PrimaryEffects_ShellType = "RifleShellEject" -- Pistol = ShellEject | Rifle = RifleShellEject | Shotgun = ShotgunShellEject
+SWEP.PrimaryEffects_ShellType = "RifleShellEject" -- Pistol = "ShellEject" | Rifle = "RifleShellEject" | Shotgun = "ShotgunShellEject"
 SWEP.PrimaryEffects_SpawnDynamicLight = true
 SWEP.PrimaryEffects_DynamicLightBrightness = 4
 SWEP.PrimaryEffects_DynamicLightDistance = 120
@@ -161,8 +161,8 @@ SWEP.PrimaryEffects_DynamicLightColor = Color(255, 150, 60)
 	-- ====== Melee Variables ====== --
 SWEP.IsMeleeWeapon = false -- Should this weapon be a melee weapon?
 SWEP.MeleeWeaponDistance = 60 -- If it's this close, it will attack
-SWEP.MeleeWeaponSound_Hit = {"physics/flesh/flesh_impact_bullet1.wav"} -- Sound it plays when it hits something
-SWEP.MeleeWeaponSound_Miss = {"weapons/iceaxe/iceaxe_swing1.wav"} -- Sound it plays when it misses (Doesn't hit anything)
+SWEP.MeleeWeaponSound_Hit = "physics/flesh/flesh_impact_bullet1.wav" -- Sound it plays when it hits something
+SWEP.MeleeWeaponSound_Miss = "weapons/iceaxe/iceaxe_swing1.wav" -- Sound it plays when it misses (Doesn't hit anything)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -172,13 +172,15 @@ function SWEP:CustomOnInitialize() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnEquip(newOwner) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnDeploy() end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnReload() end
+function SWEP:CustomBulletSpawnPosition() return false end -- Return a position to override the bullet spawn position
 ---------------------------------------------------------------------------------------------------------------------------------------------
--- Unlike CustomOnReload(), this is called AFTER the reload animation has finished
--- This only works for players and VJ Humans!
-function SWEP:CustomOnReload_Finish() return true end -- Return false to to override base code
+function SWEP:CustomOnDrawWorldModel() return true end -- Return false to not draw the world model | This is client side only!
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CustomOnFireAnimationEvent(pos, ang, event, options) return false end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_BeforeShoot() end -- Return true to not run rest of the firing code
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -195,7 +197,7 @@ function SWEP:NPC_SecondaryFire_BeforeTimer(eneEnt, fireTime) end
 function SWEP:NPC_SecondaryFire()
 	-- Override this function if you want to make your own secondary attack!
 	local owner = self:GetOwner()
-	local spawnPos = self:GetNW2Vector("VJ_CurBulletPos")
+	local spawnPos = self:GetBulletPos()
 	local projectile = ents.Create(self.NPC_SecondaryFireEnt)
 	projectile:SetPos(spawnPos)
 	projectile:SetAngles(owner:GetAngles())
@@ -213,15 +215,11 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnSecondaryAttack() return true end -- Players only! | Return false to override base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomBulletSpawnPosition() return false end -- Return a position to override the bullet spawn position
+function SWEP:CustomOnReload() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnFireAnimationEvent(pos, ang, event, options) return false end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnDrawWorldModel() return true end -- Return false to not draw the world model | This is client side only!
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnDeploy() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnIdle() end
+-- Unlike CustomOnReload(), this is called AFTER the reload animation has finished
+-- This only works for players and VJ Humans!
+function SWEP:CustomOnReload_Finish() return true end -- Return false to to override base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnHolster(newWep) return true end -- Return false to disallow the weapon from switching
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -251,39 +249,55 @@ local cv_muszzleflash = GetConVar("vj_wep_nomuszzleflash")
 local cv_dynamiclight = GetConVar("vj_wep_nomuszzleflash_dynamiclight")
 local cv_bulletshells = GetConVar("vj_wep_nobulletshells")
 ---------------------------------------------------------------------------------------------------------------------------------------------
--- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
-	-- Basically if someone is retrieving "VJ_CurBulletPos" using NW, it will convert it to NW2 otherwise it just runs the regular code
-local wepMETA = FindMetaTable("Weapon")
-local old_GetNWVector = FindMetaTable("Entity").GetNWVector
-function wepMETA:GetNWVector(name, default)
-	if name == "VJ_CurBulletPos" then
-		return self:GetNW2Vector("VJ_CurBulletPos", default)
-	end
-	return old_GetNWVector(self, name, default)
+local oldShells = {VJ_Weapon_PistolShell1 = "ShellEject", VJ_Weapon_RifleShell1 = "RifleShellEject", VJ_Weapon_ShotgunShell1 = "ShotgunShellEject"} -- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
+--
+function SWEP:Initialize()
+	self.InitTime = CurTime()
+	self.PrimaryEffects_ShellType = oldShells[self.PrimaryEffects_ShellType] or self.PrimaryEffects_ShellType -- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
+	self:SetHoldType(self.HoldType)
+	if self.HasIdleAnimation == true then self.InitHasIdleAnimation = true end
+	self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
+	self:CustomOnInitialize()
+	//if SERVER then
+		//self:SetWeaponHoldType(self.HoldType)
+		//self:SetNPCMinBurst(10)
+		//self:SetNPCMaxBurst(20)
+		//self:SetNPCFireRate(10)
+	//end
+	self:SetDefaultValues(self.HoldType)
+	//self:SetKeyValue("spawnflags", bit.bor(SF_WEAPON_NO_PLAYER_PICKUP))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:GetCapabilities()
 	return bit.bor(CAP_WEAPON_RANGE_ATTACK1, CAP_INNATE_RANGE_ATTACK1)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local oldShells = {VJ_Weapon_PistolShell1 = "ShellEject", VJ_Weapon_RifleShell1 = "RifleShellEject", VJ_Weapon_ShotgunShell1 = "ShotgunShellEject"} -- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
---
-function SWEP:Initialize()
-	self.InitTime = CurTime()
-	self.PrimaryEffects_ShellType = oldShells[self.PrimaryEffects_ShellType] or self.PrimaryEffects_ShellType -- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
-	self:SetNW2Vector("VJ_CurBulletPos", self:GetPos())
-	self:SetHoldType(self.HoldType)
-	if self.HasIdleAnimation == true then self.InitHasIdleAnimation = true end
-	self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
-	self:CustomOnInitialize()
-	if SERVER then
-		//self:SetWeaponHoldType(self.HoldType)
-		self:SetNPCMinBurst(10)
-		self:SetNPCMaxBurst(20)
-		self:SetNPCFireRate(10)
+function SWEP:SetDefaultValues(holdType)
+	if holdType == "pistol" then
+		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "weapons/draw_pistol.wav" end
+		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_weapons/dryfire_pistol.wav" end
+		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_weapons/reload_pistol.wav" end
+	elseif holdType == "revolver" then
+		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "weapons/draw_pistol.wav" end
+		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_weapons/dryfire_revolver.wav" end
+		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_weapons/reload_revolver.wav" end
+	elseif holdType == "shotgun" or holdType == "crossbow" then
+		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "weapons/draw_rifle.wav" end
+		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_weapons/dryfire_rifle.wav" end
+		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_weapons/reload_shotgun.wav" end
+	elseif holdType == "rpg" then
+		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "weapons/draw_rifle.wav" end
+		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_weapons/dryfire_rifle.wav" end
+		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_weapons/reload_rpg.wav" end
+	elseif holdType == "melee" or holdType == "melee2" or holdType == "knife" then
+		self.DeploySound = "weapons/draw_rifle.wav"
+		self.HasDryFireSound = false
+		self.NPC_HasReloadSound = false
+	else -- "smg", "ar2" and any other that didn't match
+		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "weapons/draw_rifle.wav" end
+		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_weapons/dryfire_rifle.wav" end
+		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_weapons/reload_rifle.wav" end
 	end
-	self:SetDefaultValues(self.HoldType)
-	//self:SetKeyValue("spawnflags", bit.bor(SF_WEAPON_NO_PLAYER_PICKUP))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Equip(newOwner)
@@ -321,134 +335,119 @@ function SWEP:Equip(newOwner)
 			self:Remove()
 		end
 	elseif newOwner:IsNPC() then
-		-- For default HL2 NPCs
-		if VJ.AnimExists(newOwner,ACT_WALK_AIM_PISTOL) == true && VJ.AnimExists(newOwner,ACT_RUN_AIM_PISTOL) == true && VJ.AnimExists(newOwner,ACT_POLICE_HARASS1) == true then
-			self.NPC_AnimationSet = VJ.ANIM_SET_METROCOP
-		elseif VJ.AnimExists(newOwner,"cheer1") == true && VJ.AnimExists(newOwner,"wave_smg1") == true && VJ.AnimExists(newOwner,ACT_BUSY_SIT_GROUND) == true then
-			self.NPC_AnimationSet = VJ.ANIM_SET_REBEL
-		elseif VJ.AnimExists(newOwner,"signal_takecover") == true && VJ.AnimExists(newOwner,"grenthrow") == true && VJ.AnimExists(newOwner,"bugbait_hit") == true then
-			self.NPC_AnimationSet = VJ.ANIM_SET_COMBINE
-		end
-
-		if newOwner:GetClass() == "npc_citizen" then newOwner:Fire("DisableWeaponPickup") end -- If it's a citizen, disable them picking up weapons from the ground
-		newOwner:SetKeyValue("spawnflags", "256") -- Long Visibility Shooting since HL2 NPCs are blind
 		hook.Add("Think", self, self.NPC_ServerNextFire)
-		
-		if newOwner.IsVJBaseSNPC && newOwner.IsVJBaseSNPC_Human == true then
-			newOwner.Weapon_OriginalFiringDistanceFar = newOwner.Weapon_OriginalFiringDistanceFar or newOwner.Weapon_FiringDistanceFar
-			if self.IsMeleeWeapon == true then
-				newOwner.Weapon_FiringDistanceFar = self.MeleeWeaponDistance
-			else
-				newOwner.Weapon_FiringDistanceFar = math.Clamp(newOwner.Weapon_OriginalFiringDistanceFar * self.NPC_FiringDistanceScale, newOwner.Weapon_FiringDistanceClose, self.NPC_FiringDistanceMax)
+		if newOwner.IsVJBaseSNPC then
+			if newOwner.IsVJBaseSNPC_Human == true then
+				newOwner.Weapon_OriginalFiringDistanceFar = newOwner.Weapon_OriginalFiringDistanceFar or newOwner.Weapon_FiringDistanceFar
+				if self.IsMeleeWeapon == true then
+					newOwner.Weapon_FiringDistanceFar = self.MeleeWeaponDistance
+				else
+					newOwner.Weapon_FiringDistanceFar = math.Clamp(newOwner.Weapon_OriginalFiringDistanceFar * self.NPC_FiringDistanceScale, newOwner.Weapon_FiringDistanceClose, self.NPC_FiringDistanceMax)
+				end
 			end
+		else -- For non-VJ NPCs
+			if VJ.AnimExists(newOwner,ACT_WALK_AIM_PISTOL) == true && VJ.AnimExists(newOwner,ACT_RUN_AIM_PISTOL) == true && VJ.AnimExists(newOwner,ACT_POLICE_HARASS1) == true then
+				self.NPC_AnimationSet = VJ.ANIM_SET_METROCOP
+			elseif VJ.AnimExists(newOwner,"cheer1") == true && VJ.AnimExists(newOwner,"wave_smg1") == true && VJ.AnimExists(newOwner,ACT_BUSY_SIT_GROUND) == true then
+				self.NPC_AnimationSet = VJ.ANIM_SET_REBEL
+			elseif VJ.AnimExists(newOwner,"signal_takecover") == true && VJ.AnimExists(newOwner,"grenthrow") == true && VJ.AnimExists(newOwner,"bugbait_hit") == true then
+				self.NPC_AnimationSet = VJ.ANIM_SET_COMBINE
+			end
+			if newOwner:GetClass() == "npc_citizen" then newOwner:Fire("DisableWeaponPickup") end -- If it's a citizen, disable them picking up weapons from the ground
+			newOwner:SetKeyValue("spawnflags", "256") -- Long Visibility Shooting since HL2 NPCs are blind
 		end
 	end
 	self:CustomOnEquip(newOwner)
 	self.LastOwner = newOwner
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:SetDefaultValues(holdType)
-	holdType = holdType or "ar2"
-	if holdType == "pistol" then
-		if VJ.PICK(self.DeploySound) == false then self.DeploySound = {"weapons/draw_pistol.wav"} end
-		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_pistol.wav"} end
-		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_pistol.wav"} end
-	elseif holdType == "revolver" then
-		if VJ.PICK(self.DeploySound) == false then self.DeploySound = {"weapons/draw_pistol.wav"} end
-		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_revolver.wav"} end
-		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_revolver.wav"} end
-	elseif holdType == "shotgun" or holdType == "crossbow" then
-		if VJ.PICK(self.DeploySound) == false then self.DeploySound = {"weapons/draw_rifle.wav"} end
-		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
-		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_shotgun.wav"} end
-	elseif holdType == "rpg" then
-		if VJ.PICK(self.DeploySound) == false then self.DeploySound = {"weapons/draw_rifle.wav"} end
-		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
-		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_rpg.wav"} end
-	elseif holdType == "smg" or holdType == "ar2" then
-		if VJ.PICK(self.DeploySound) == false then self.DeploySound = {"weapons/draw_rifle.wav"} end
-		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"} end
-		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = {"vj_weapons/reload_rifle.wav"} end
-	elseif holdType == "melee" or holdType == "melee2" or holdType == "knife" then
-		self.DeploySound = {"weapons/draw_rifle.wav"}
-		self.HasDryFireSound = false
-		self.NPC_HasReloadSound = false
-	else
-		self.DeploySound = {"weapons/draw_rifle.wav"}
-		self.DryFireSound = {"vj_weapons/dryfire_rifle.wav"}
-		self.NPC_ReloadSound = {"vj_weapons/reload_rifle.wav"}
+function SWEP:EquipAmmo(ply)
+	if ply:IsPlayer() then
+		ply:GiveAmmo(self.Primary.ClipSize, self.Primary.Ammo)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:TranslateActivity(act)
+function SWEP:Deploy()
+	if self.InitHasIdleAnimation == true then self.HasIdleAnimation = true end
 	local owner = self:GetOwner()
-	if (owner:IsNPC()) then
-		if owner.IsVJBaseSNPC == true then
-			local wepT = owner.AnimationTranslations[act]
-			if (wepT) then
-				if istable(wepT) then
-					return VJ.PICK(wepT)
-				end
-				return wepT
-			end
-		elseif (self.ActivityTranslateAI[act]) then -- For non-VJ NPCs
-			return self.ActivityTranslateAI[act]
-		end
-		return -1
+	self:CustomOnDeploy()
+	if owner:IsPlayer() then
+		if self.HasDeploySound == true then self:EmitSound(VJ.PICK(self.DeploySound), 50, math.random(90, 100)) end
+		local curTime = CurTime()
+		local anim = VJ.PICK(self.AnimTbl_Deploy)
+		local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
+		self:SendWeaponAnim(anim)
+		self:SetNextPrimaryFire(curTime + animTime)
+		self:SetNextSecondaryFire(curTime + animTime)
+		self.NextIdleT = curTime + animTime
+		self.NextReloadT = curTime + animTime
+	end
+	return true -- Or else the player won't be able to get the weapon!
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+local commonAttachmentNames = {
+    muzzle = true,
+    muzzleA = true,
+    muzzle_flash = true,
+    muzzle_flash1 = true,
+    muzzle_flash2 = true,
+    ["ValveBiped.muzzle"] = true
+}
+--
+function SWEP:GetBulletPos()
+	local owner = self:GetOwner()
+	if !IsValid(owner) then return nil end
+	if owner:IsPlayer() then return owner:GetShootPos() end
+	
+	-- Custom Position
+	local customPos = self:CustomBulletSpawnPosition()
+	if customPos != false then
+		return customPos
 	end
 	
-	-- For non-NPCs
-	if (self.ActivityTranslate[act] != nil) then
-		return self.ActivityTranslate[act]
+	-- Attachment
+	local bulletAttach = self.NPC_BulletSpawnAttachment
+	if bulletAttach != "" && self:LookupAttachment(bulletAttach) != 0 && self:LookupAttachment(bulletAttach) != -1 then
+		return self:GetAttachment(self:LookupAttachment(bulletAttach)).Pos
 	end
-	return -1
+	
+	-- Try to find a common attachment
+	local attachments = self:GetAttachments()
+	for i = 1, #attachments do
+		local attachmentName = attachments[i].name
+		if commonAttachmentNames[attachmentName] then
+			return self:GetAttachment(self:LookupAttachment(attachmentName)).Pos
+		end
+	end
+	
+	-- Try to find a common bone
+	if owner:LookupBone("ValveBiped.Bip01_R_Hand") != nil then
+		return owner:GetBonePosition(owner:LookupBone("ValveBiped.Bip01_R_Hand"))
+	end
+	
+	-- Everything else has failed, post a warning and use eye position!
+	print("WARNING: "..self:GetClass().." doesn't have a custom position or attachment or bone for bullet spawn! Using EyePos!")
+	return owner:EyePos()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CanBePickedUpByNPCs()
-	return self.NPC_CanBePickedUp
+function SWEP:Think() -- NOTE: This only runs for players not NPCs!
+	self:CustomOnThink()
+	if SERVER then
+		self:MaintainWorldModel()
+		self:DoIdleAnimation()
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_ServerNextFire()
 	if !IsValid(self) then return end
 	local owner = self:GetOwner()
 	if !IsValid(owner) or !owner:IsNPC() or owner:GetActiveWeapon() != self then return end
-	
-	if !self.IsMeleeWeapon then
-		local pos = self:DecideBulletPosition()
-		if pos != nil then
-			self:SetNW2Vector("VJ_CurBulletPos", pos)
-		end
-	end
-	
-	if !owner:GetActivity() then return end
-	
-	//print("------------------")
-	//print(CurTime())
-	//VJ.DEBUG_TempEnt(self:DecideBulletPosition(), self:GetAngles(), Color(255,0,255), 1)
-	//VJ.DEBUG_TempEnt(self:GetNW2Vector("VJ_CurBulletPos"), self:GetAngles(), Color(0,0,255), 1)
 
-	self:RunWorldModelThink()
+	self:MaintainWorldModel()
 	self:CustomOnThink()
 	
-	if self.NPC_NextPrimaryFire != false && self:NPCAbleToShoot() == true then
+	if self.NPC_NextPrimaryFire != false && CurTime() > self.NPC_NextPrimaryFireT && self:NPCAbleToShoot() then
 		self:NPCShoot_Primary() -- Panpoushde zarg
-		hook.Remove("Think", self)
-		//print(self.NPC_NextPrimaryFire)
-		local nxt = self.NPC_NextPrimaryFire
-		if nxt > 0.15 then nxt = 0.15 end -- Yete nxt aveli medz e 0.15, ere vor 0.15 ela
-		timer.Simple(nxt, function()
-			-- Had to add "isfunction" check because after GMod devs applied this: https://github.com/Facepunch/garrysmod/pull/1344
-			-- It will VERY rarely think self.NPC_ServerNextFire is nil, why? No one knows, the error never appeared for me, but it has appeared 1-2 for some people.
-			-- I would rather have a function that fails silently then fail 1 in 999,999 times without actual reason, so does this check avoid it? (I don't know...)
-			if IsValid(self) then
-				hook.Add("Think", self, function()
-					if isfunction(self.NPC_ServerNextFire) then
-						self:NPC_ServerNextFire()
-					end
-				end)
-			end
-		end)
-		//self.NPC_NextPrimaryFireT = CurTime() + self.NPC_NextPrimaryFire
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -459,10 +458,10 @@ function SWEP:NPCAbleToShoot()
 		if (owner.IsVJBaseSNPC_Human && IsValid(ene) && owner:IsAbleToShootWeapon(true, true) == false) or (self.NPC_StandingOnly == true && owner:IsMoving()) then
 			return false
 		end
-		if owner:GetActivity() != nil && ((owner.IsVJBaseSNPC_Human && owner.DoingWeaponAttack && (VJ.IsCurrentAnimation(owner, owner.CurrentWeaponAnimation) or (!owner.DoingWeaponAttack_Standing))) or (!owner.IsVJBaseSNPC_Human)) then
+		if (owner.IsVJBaseSNPC_Human && owner.DoingWeaponAttack && (VJ.IsCurrentAnimation(owner, owner.CurrentWeaponAnimation) or (!owner.DoingWeaponAttack_Standing))) or (!owner.IsVJBaseSNPC_Human) then
 			-- For VJ Humans only, ammo check
 			if owner.IsVJBaseSNPC_Human && owner.AllowWeaponReloading == true && self:Clip1() <= 0 then -- No ammo!
-				if owner.VJ_IsBeingControlled == true then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER, "Press R to reload!") end
+				if owner.VJ_IsBeingControlled then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER, "Press R to reload!") end
 				if self.IsMeleeWeapon == false && self.HasDryFireSound == true && CurTime() > self.NextNPCDrySoundT then
 					local sdTbl = VJ.PICK(self.DryFireSound)
 					if sdTbl != false then owner:EmitSound(sdTbl, 80, math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b)) end
@@ -485,7 +484,7 @@ function SWEP:NPCShoot_Primary()
 	if !IsValid(owner) then return end
 	local ene = owner:GetEnemy()
 	if !owner.VJ_IsBeingControlled && (!IsValid(ene) or (!owner:Visible(ene))) then return end
-	if owner.IsVJBaseSNPC == true then
+	if owner.IsVJBaseSNPC then
 		owner:DoPoseParameterLooking()
 	end
 	
@@ -519,16 +518,9 @@ function SWEP:NPCShoot_Primary()
 					timer.Simple(tv, function() if IsValid(self) && IsValid(owner) && self:NPCAbleToShoot() == true then self:PrimaryAttack() end end)
 				end
 			end
-			if owner.IsVJBaseSNPC == true then owner.Weapon_TimeSinceLastShot = CurTime() end
+			if owner.IsVJBaseSNPC then owner.Weapon_TimeSinceLastShot = CurTime() end
 		end
 	end)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:NPC_Reload()
-	local owner = self:GetOwner()
-	owner.NextThrowGrenadeT = owner.NextThrowGrenadeT + 2
-	self:CustomOnReload()
-	if self.NPC_HasReloadSound == true then VJ.EmitSound(owner, self.NPC_ReloadSound, self.NPC_ReloadSoundLevel) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttack(UseAlt)
@@ -543,7 +535,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	
 	if self.Reloading or self:GetNextSecondaryFire() > CurTime() then return end
 	if isNPC && owner.VJ_IsBeingControlled == false && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return end
-	if self.IsMeleeWeapon == false && ((isPly && self.Primary.AllowFireInWater == false && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then
+	if self.IsMeleeWeapon == false && ((isPly && self.Primary.AllowInWater == false && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then
 		if SERVER then
 			owner:EmitSound(VJ.PICK(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b))
 		end
@@ -638,7 +630,7 @@ function SWEP:PrimaryAttack(UseAlt)
 					end
 				elseif owner.IsVJBaseSNPC then
 					local ene = owner:GetEnemy()
-					local spawnPos = self:GetNW2Vector("VJ_CurBulletPos")
+					local spawnPos = self:GetBulletPos()
 					local aimPos = owner:GetAimPosition(ene, spawnPos, 0)
 					local spread = owner:CalcAimSpread(ene, aimPos, self.NPC_CustomSpread or 1) // owner:GetPos():Distance(owner.VJ_TheController:GetEyeTrace().HitPos) -- Was used when NPC was being controlled
 					bullet.Spread = Vector(spread, spread, 0)
@@ -646,7 +638,7 @@ function SWEP:PrimaryAttack(UseAlt)
 					bullet.Src = spawnPos
 					bullet.Damage = owner:VJ_GetDifficultyValue(self.Primary.Damage)
 				else
-					local spawnPos = self:GetNW2Vector("VJ_CurBulletPos")
+					local spawnPos = self:GetBulletPos()
 					bullet.Spread = Vector(0.05, 0.05, 0)
 					bullet.Dir = (owner:GetEnemy():BodyTarget(spawnPos) - spawnPos):GetNormal()
 					bullet.Src = spawnPos
@@ -692,39 +684,6 @@ function SWEP:PrimaryAttack(UseAlt)
 	//self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CanSecondaryAttack()
-	return self:Clip2() > 0 && self:GetNextSecondaryFire() < CurTime() && self.Secondary.Ammo != "none"
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:SecondaryAttack()
-	if !self:CanSecondaryAttack() or self.Reloading then return end
-	if self:CustomOnSecondaryAttack() == false then return end
-	
-	local owner = self:GetOwner()
-	self:TakePrimaryAmmo(self.Secondary.TakeAmmo)
-	owner:SetAnimation(PLAYER_ATTACK1)
-	local anim = VJ.PICK(self.AnimTbl_SecondaryFire)
-	local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
-	self:SendWeaponAnim(anim)
-	self.NextIdleT = CurTime() + animTime
-	self.NextReloadT = CurTime() + animTime
-	
-	self:SetNextSecondaryFire(CurTime() + (self.Secondary.Delay == false and animTime or self.Secondary.Delay))
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:DoIdleAnimation()
-	if !self.HasIdleAnimation or CurTime() < self.NextIdleT then return end
-	self:CustomOnIdle()
-	local owner = self:GetOwner()
-	if IsValid(owner) then
-		owner:SetAnimation(PLAYER_IDLE)
-		local anim = VJ.PICK(self.AnimTbl_Idle)
-		local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
-		self:SendWeaponAnim(anim)
-		self.NextIdleT = CurTime() + animTime
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttackEffects(owner)
 	if self:CustomOnPrimaryAttackEffects(owner) != true or self.IsMeleeWeapon == true then return end
 	owner = owner or self:GetOwner()
@@ -759,7 +718,7 @@ function SWEP:PrimaryAttackEffects(owner)
 			local muzzleLight = ents.Create("light_dynamic")
 			muzzleLight:SetKeyValue("brightness", self.PrimaryEffects_DynamicLightBrightness)
 			muzzleLight:SetKeyValue("distance", self.PrimaryEffects_DynamicLightDistance)
-			if owner:IsPlayer() then muzzleLight:SetLocalPos(owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else muzzleLight:SetLocalPos(self:GetNW2Vector("VJ_CurBulletPos")) end
+			if owner:IsPlayer() then muzzleLight:SetLocalPos(owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else muzzleLight:SetLocalPos(self:GetBulletPos()) end
 			muzzleLight:SetLocalAngles(self:GetAngles())
 			muzzleLight:Fire("Color", self.PrimaryEffects_DynamicLightColor.r.." "..self.PrimaryEffects_DynamicLightColor.g.." "..self.PrimaryEffects_DynamicLightColor.b)
 			//muzzleLight:SetParent(self)
@@ -787,25 +746,71 @@ function SWEP:PrimaryAttackEffects(owner)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:FireAnimationEvent(pos, ang, event, options)
-	if self:CustomOnFireAnimationEvent(pos, ang, event, options) == true then return true end
+function SWEP:CanSecondaryAttack()
+	return self:Clip2() > 0 && self:GetNextSecondaryFire() < CurTime() && self.Secondary.Ammo != "none"
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:SecondaryAttack()
+	if !self:CanSecondaryAttack() or self.Reloading then return end
+	if self:CustomOnSecondaryAttack() == false then return end
 	
-	if (event == 22 or event == 6001) then return true end
+	local owner = self:GetOwner()
+	self:TakePrimaryAmmo(self.Secondary.TakeAmmo)
+	owner:SetAnimation(PLAYER_ATTACK1)
+	local anim = VJ.PICK(self.AnimTbl_SecondaryFire)
+	local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
+	self:SendWeaponAnim(anim)
+	self.NextIdleT = CurTime() + animTime
+	self.NextReloadT = CurTime() + animTime
 	
-	if cv_muszzleflash:GetInt() == 1 && (event == 21 or event == 22 or event == 5001 or event == 5003) then
-		return true
-	end
-
-	if cv_bulletshells:GetInt() == 1 && event == 20 then
-		return true
+	self:SetNextSecondaryFire(CurTime() + (self.Secondary.Delay == false and animTime or self.Secondary.Delay))
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:DoIdleAnimation()
+	if !self.HasIdleAnimation or CurTime() < self.NextIdleT then return end
+	local owner = self:GetOwner()
+	if IsValid(owner) then
+		owner:SetAnimation(PLAYER_IDLE)
+		local anim = VJ.PICK(self.AnimTbl_Idle)
+		local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
+		self:SendWeaponAnim(anim)
+		self.NextIdleT = CurTime() + animTime
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:Think() -- NOTE: Works only in players hands. does NOT work in NPCs hands!
-	self:CustomOnThink()
-	if SERVER then
-		self:RunWorldModelThink()
-		self:DoIdleAnimation()
+function SWEP:TranslateActivity(act)
+	local owner = self:GetOwner()
+	if (owner:IsNPC()) then
+		if owner.IsVJBaseSNPC then
+			local wepT = owner.AnimationTranslations[act]
+			if (wepT) then
+				if istable(wepT) then
+					return VJ.PICK(wepT)
+				end
+				return wepT
+			end
+		elseif (self.ActivityTranslateAI[act]) then -- For non-VJ NPCs
+			return self.ActivityTranslateAI[act]
+		end
+		return -1
+	end
+	
+	-- For non-NPCs
+	if self.ActivityTranslate[act] != nil then
+		return self.ActivityTranslate[act]
+	end
+	return -1
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:FireAnimationEvent(pos, ang, event, options)
+	if self:CustomOnFireAnimationEvent(pos, ang, event, options) == true then
+		return true
+	elseif event == 22 or event == 6001 then
+		return true
+	elseif cv_muszzleflash:GetInt() == 1 && (event == 21 or event == 5001 or event == 5003) then
+		return true
+	elseif cv_bulletshells:GetInt() == 1 && event == 20 then
+		return true
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -841,37 +846,28 @@ function SWEP:Reload()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:Deploy()
-	if self.InitHasIdleAnimation == true then self.HasIdleAnimation = true end
+function SWEP:NPC_Reload()
 	local owner = self:GetOwner()
-	if owner:IsPlayer() then
-		self:CustomOnDeploy()
-		if self.HasDeploySound == true then self:EmitSound(VJ.PICK(self.DeploySound), 50, math.random(90, 100)) end
-		
-		local curTime = CurTime()
-		local anim = VJ.PICK(self.AnimTbl_Deploy)
-		local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
-		self:SendWeaponAnim(anim)
-		self:SetNextPrimaryFire(curTime + animTime)
-		self:SetNextSecondaryFire(curTime + animTime)
-		self.NextIdleT = curTime + animTime
-		self.NextReloadT = curTime + animTime
-	end
-	return true -- Or else the player won't be able to get the weapon!
+	owner.NextThrowGrenadeT = owner.NextThrowGrenadeT + 2
+	self:CustomOnReload()
+	if self.NPC_HasReloadSound == true then VJ.EmitSound(owner, self.NPC_ReloadSound, self.NPC_ReloadSoundLevel) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Holster(newWep)
 	//if CLIENT then return end
 	if self == newWep or self.Reloading == true then return end
+	hook.Remove("Think", self) -- Otherwise "NPC_ServerNextFire" will just keep running!
 	self.HasIdleAnimation = false
 	//self:SendWeaponAnim(ACT_VM_HOLSTER)
 	return self:CustomOnHolster(newWep)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:EquipAmmo(ply)
-	if ply:IsPlayer() then
-		ply:GiveAmmo(self.Primary.ClipSize, self.Primary.Ammo)
-	end
+function SWEP:OnDrop()
+	hook.Remove("Think", self) -- Otherwise "NPC_ServerNextFire" will just keep running!
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function SWEP:CanBePickedUpByNPCs()
+	return self.NPC_CanBePickedUp
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnRemove()
@@ -880,95 +876,32 @@ function SWEP:OnRemove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:GetWeaponCustomPosition(owner)
-	if owner:LookupBone(self.WorldModel_CustomPositionBone) == nil then return nil end
-	local pos, ang = owner:GetBonePosition(owner:LookupBone(self.WorldModel_CustomPositionBone))
-	ang:RotateAroundAxis(ang:Right(), self.WorldModel_CustomPositionAngle.x)
-	ang:RotateAroundAxis(ang:Up(), self.WorldModel_CustomPositionAngle.y)
-	ang:RotateAroundAxis(ang:Forward(), self.WorldModel_CustomPositionAngle.z)
-	pos = pos + self.WorldModel_CustomPositionOrigin.x * ang:Right()
-	pos = pos + self.WorldModel_CustomPositionOrigin.y * ang:Forward()
-	pos = pos + self.WorldModel_CustomPositionOrigin.z * ang:Up()
-	return {pos = pos, ang = ang}
+	local boneID = owner:LookupBone(self.WorldModel_CustomPositionBone)
+	if !boneID then return false end
+	local customPos = self.WorldModel_CustomPositionOrigin
+	local customAng = self.WorldModel_CustomPositionAngle
+	local pos, ang = owner:GetBonePosition(boneID)
+	ang:RotateAroundAxis(ang:Right(), customAng.x)
+	ang:RotateAroundAxis(ang:Up(), customAng.y)
+	ang:RotateAroundAxis(ang:Forward(), customAng.z)
+	pos = pos + (customPos.x * ang:Right() + customPos.y * ang:Forward() + customPos.z * ang:Up())
+	return pos, ang
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:RunWorldModelThink()
+function SWEP:MaintainWorldModel()
 	if self:GetNW2Bool("VJ_WorldModel_Invisible") != self.WorldModel_Invisible then
 		self:SetNW2Bool("VJ_WorldModel_Invisible", self.WorldModel_Invisible)
 	end
 	
 	local owner = self:GetOwner()
 	if IsValid(owner) && self.WorldModel_UseCustomPosition == true then
-		local wepPos = self:GetWeaponCustomPosition(owner)
-		if wepPos == nil then return end
-		self:SetPos(wepPos.pos)
-		self:SetAngles(wepPos.ang)
+		local wepPos, wepAng = self:GetWeaponCustomPosition(owner)
+		if wepPos then
+			self:SetPos(wepPos)
+			self:SetAngles(wepAng)
+		end
 	end
 end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:DecideBulletPosition()
-	local owner = self:GetOwner()
-	if !IsValid(owner) then return nil end
-	if !owner:IsNPC() then return owner:GetShootPos() end
-	
-	-- Custom Position
-	local customPos = self:CustomBulletSpawnPosition()
-	if customPos != false then
-		return customPos
-	end
-	
-	-- Custom Attachment
-	if self.NPC_BulletSpawnAttachment != "" && self:LookupAttachment(self.NPC_BulletSpawnAttachment) != 0 && self:LookupAttachment(self.NPC_BulletSpawnAttachment) != -1 then
-		return self:GetAttachment(self:LookupAttachment(self.NPC_BulletSpawnAttachment)).Pos
-	end
-	
-	-- Nothing found, try to find a common attachment
-	local commonAttach = nil;
-	local attachments = self:GetAttachments()
-	for i = 1, #attachments do
-		if attachments[i].name == "muzzle" then
-			commonAttach = "muzzle"; break
-		elseif attachments[i].name == "muzzleA" then
-			commonAttach = "muzzleA"; break
-		elseif attachments[i].name == "muzzle_flash" then
-			commonAttach = "muzzle_flash"; break
-		elseif attachments[i].name == "muzzle_flash1" then
-			commonAttach = "muzzle_flash1"; break
-		elseif attachments[i].name == "muzzle_flash2" then
-			commonAttach = "muzzle_flash2"; break
-		elseif attachments[i].name == "ValveBiped.muzzle" then
-			commonAttach = "ValveBiped.muzzle"; break
-		end
-	end
-	
-	-- Not even a common attachment was found! Try to find a common bone!
-	if !commonAttach then
-		if owner:LookupBone("ValveBiped.Bip01_R_Hand") != nil then
-			return owner:GetBonePosition(owner:LookupBone("ValveBiped.Bip01_R_Hand"))
-		else -- Everything else has failed, post a warning and use eye position
-			print("WARNING: "..self:GetClass().." doesn't have a proper attachment or bone for bullet spawn! Using EyePos!")
-			return owner:EyePos()
-		end
-	-- Common attachment found!
-	else
-		return self:GetAttachment(self:LookupAttachment(commonAttach)).Pos
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-/*if SERVER then -- No longer needed, disabling sv_pvsskipanimation fixes it!
-	util.AddNetworkString("vj_weapon_curbulletpos")
-	
-	net.Receive("vj_weapon_curbulletpos", function(len,pl)
-		local vec = net.ReadVector()
-		local ent = ents.GetByIndex(net.ReadInt(15))
-		if IsValid(ent) then
-			ent.worldupdate = ent.worldupdate or 0
-			if ent.worldupdate <= CurTime() then
-				ent:SetNW2Vector("VJ_CurBulletPos",vec)
-				ent.worldupdate = CurTime() + 0.33
-			end
-		end
-	end)
-end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	function SWEP:DrawWorldModel()
@@ -981,26 +914,18 @@ if CLIENT then
 			self:DrawShadow(false)
 		end
 		
-		-- No longer needed, disabling sv_pvsskipanimation fixes it!
-		/*local pos = self:DecideBulletPosition()
-		if pos != nil && IsValid(self:GetOwner()) then
-			net.Start("vj_weapon_curbulletpos")
-			net.WriteVector(pos)
-			net.WriteInt(self:EntIndex(), 15)
-			net.SendToServer()
-		end*/
-		
 		if self.WorldModel_UseCustomPosition == true then
 			local owner = self:GetOwner()
 			if IsValid(owner) then
 				if owner:IsPlayer() && owner:InVehicle() then return end
-				local wepPos = self:GetWeaponCustomPosition(owner)
-				if wepPos == nil then return end
-				self:SetRenderOrigin(wepPos.pos)
-				self:SetRenderAngles(wepPos.ang)
-				self:FrameAdvance(FrameTime())
-				self:SetupBones()
-				if noDraw == false then self:DrawModel() end
+				local wepPos, wepAng = self:GetWeaponCustomPosition(owner)
+				if wepPos then
+					self:SetRenderOrigin(wepPos)
+					self:SetRenderAngles(wepAng)
+					self:FrameAdvance(FrameTime())
+					self:SetupBones()
+					if noDraw == false then self:DrawModel() end
+				end
 			else
 				self:SetRenderOrigin(nil)
 				self:SetRenderAngles(nil)

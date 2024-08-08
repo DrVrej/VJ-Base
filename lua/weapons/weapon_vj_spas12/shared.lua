@@ -12,9 +12,10 @@ if CLIENT then
 	SWEP.UseHands = true
 end
 	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.NPC_NextPrimaryFire = 0.9 -- Next time it can use primary fire
+SWEP.NPC_NextPrimaryFire = 0.9 -- RPM of the weapon in seconds | Calculation: 60 / RPM
+SWEP.NPC_TimeUntilFire = 0.2 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_CustomSpread = 2.5 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
-SWEP.NPC_ExtraFireSound = {"vj_weapons/perform_shotgunpump.wav"} -- Plays an extra sound after it fires (Example: Bolt action sound)
+SWEP.NPC_ExtraFireSound = "vj_weapons/perform_shotgunpump.wav" -- Plays an extra sound after it fires (Example: Bolt action sound)
 SWEP.NPC_FiringDistanceScale = 0.5 -- Changes how far the NPC can fire | 1 = No change, x < 1 = closer, x > 1 = farther
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel = "models/weapons/c_shotgun.mdl"
@@ -24,25 +25,25 @@ SWEP.Spawnable = true
 SWEP.AdminSpawnable = false
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Damage = 4 -- Damage
-SWEP.Primary.PlayerDamage = "Double" -- Only applies for players | "Same" = Same as self.Primary.Damage, "Double" = Double the self.Primary.Damage OR put a number to be different from self.Primary.Damage
+SWEP.Primary.PlayerDamage = "Double" -- For players only | "Same" = Same as self.Primary.Damage | "Double" = Double the self.Primary.Damage | number = Overrides self.Primary.Damage
 SWEP.Primary.Force = 1 -- Force applied on the object the bullet hits
 SWEP.Primary.NumberOfShots = 7 -- How many shots per attack?
 SWEP.Primary.ClipSize = 6 -- Max amount of bullets per clip
 SWEP.Primary.Cone = 12 -- How accurate is the bullet? (Players)
 SWEP.Primary.Delay = 0.8 -- Time until it can shoot again
-SWEP.Primary.Automatic = true -- Is it automatic?
+SWEP.Primary.Automatic = true -- Should the weapon continue firing as long as the attack button is held down?
 SWEP.Primary.Ammo = "Buckshot" -- Ammo type
-SWEP.Primary.Sound = {"vj_weapons/hl2_shotgun/shotgun_single1.wav"}
-SWEP.Primary.DistantSound = {"vj_weapons/hl2_shotgun/shotgun_single_dist.wav"}
+SWEP.Primary.Sound = "vj_weapons/hl2_shotgun/shotgun_single1.wav"
+SWEP.Primary.DistantSound = "vj_weapons/hl2_shotgun/shotgun_single_dist.wav"
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellAttachment = 2
 SWEP.PrimaryEffects_ShellType = "ShotgunShellEject"
 	-- ====== Secondary Fire Variables ====== --
-SWEP.Secondary.Automatic = true -- Is it automatic?
+SWEP.Secondary.Automatic = true -- Should the weapon continue firing as long as the attack button is held down?
 SWEP.Secondary.Ammo = "Buckshot" -- Ammo type
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound = true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
-SWEP.ReloadSound = {"weapons/shotgun/shotgun_reload1.wav","weapons/shotgun/shotgun_reload2.wav","weapons/shotgun/shotgun_reload3.wav"}
+SWEP.ReloadSound = {"weapons/shotgun/shotgun_reload1.wav", "weapons/shotgun/shotgun_reload2.wav", "weapons/shotgun/shotgun_reload3.wav"}
 SWEP.Reload_TimeUntilAmmoIsSet = 0.3 -- Time until ammo is set to the weapon
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnPrimaryAttack_AfterShoot()

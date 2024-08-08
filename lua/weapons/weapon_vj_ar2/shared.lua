@@ -17,7 +17,7 @@ SWEP.NPC_SecondaryFireEnt = "obj_vj_combineball"
 SWEP.NPC_SecondaryFireDistance = 3000 -- How close does the owner's enemy have to be for it to fire?
 SWEP.NPC_SecondaryFireChance = 4 -- Chance that the secondary fire is used | 1 = always
 SWEP.NPC_SecondaryFireNext = VJ.SET(15, 20) -- How much time until the secondary fire can be used again?
-SWEP.NPC_NextPrimaryFire = 0.9 -- Next time it can use primary fire
+SWEP.NPC_NextPrimaryFire = 0.9 -- RPM of the weapon in seconds | Calculation: 60 / RPM
 SWEP.NPC_TimeUntilFire = 0.1 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_TimeUntilFireExtraTimers = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6} -- Extra timers, which will make the gun fire again! | The seconds are counted after the self.NPC_TimeUntilFire!
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -32,21 +32,21 @@ SWEP.Primary.Force = 10 -- Force applied on the object the bullet hits
 SWEP.Primary.ClipSize = 30 -- Max amount of bullets per clip
 SWEP.Primary.Delay = 0.1 -- Time until it can shoot again
 SWEP.Primary.TracerType = "AR2Tracer" -- Tracer type (Examples: AR2, laster, 9mm)
-SWEP.Primary.Automatic = true -- Is it automatic?
+SWEP.Primary.Automatic = true -- Should the weapon continue firing as long as the attack button is held down?
 SWEP.Primary.Ammo = "AR2" -- Ammo type
-SWEP.Primary.Sound = {"vj_weapons/hl2_ar2/ar2_single1.wav","vj_weapons/hl2_ar2/ar2_single2.wav","vj_weapons/hl2_ar2/ar2_single3.wav"}
-SWEP.Primary.DistantSound = {"^weapons/ar1/ar1_dist1.wav","^weapons/ar1/ar1_dist2.wav"}
+SWEP.Primary.Sound = {"vj_weapons/hl2_ar2/ar2_single1.wav", "vj_weapons/hl2_ar2/ar2_single2.wav", "vj_weapons/hl2_ar2/ar2_single3.wav"}
+SWEP.Primary.DistantSound = {"^weapons/ar1/ar1_dist1.wav", "^weapons/ar1/ar1_dist2.wav"}
 SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_full_blue"}
 SWEP.PrimaryEffects_SpawnShells = false
 SWEP.PrimaryEffects_DynamicLightColor = Color(0, 31, 225)
 	-- ====== Secondary Fire Variables ====== --
 SWEP.Secondary.Ammo = "AR2AltFire" -- Ammo type
 
-SWEP.DryFireSound = {"weapons/ar2/ar2_empty.wav"}
+SWEP.DryFireSound = "weapons/ar2/ar2_empty.wav"
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.HasReloadSound				= false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
-SWEP.ReloadSound				= "weapons/ar2/ar2_reload.wav"
-SWEP.Reload_TimeUntilAmmoIsSet	= 0.8 -- Time until ammo is set to the weapon
+SWEP.HasReloadSound = false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
+SWEP.ReloadSound = "weapons/ar2/ar2_reload.wav"
+SWEP.Reload_TimeUntilAmmoIsSet = 0.8 -- Time until ammo is set to the weapon
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_SecondaryFire_BeforeTimer(eneEnt, fireTime)
 	VJ.EmitSound(self, "weapons/cguard/charging.wav", 70)
@@ -54,7 +54,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_SecondaryFire()
 	local owner = self:GetOwner()
-	local spawnPos = self:GetNW2Vector("VJ_CurBulletPos")
+	local spawnPos = self:GetBulletPos()
 	local projectile = ents.Create(self.NPC_SecondaryFireEnt)
 	projectile:SetPos(spawnPos)
 	projectile:SetAngles(owner:GetAngles())
