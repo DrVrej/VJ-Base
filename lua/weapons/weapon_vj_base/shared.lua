@@ -371,7 +371,9 @@ function SWEP:Deploy()
 	if self.InitHasIdleAnimation == true then self.HasIdleAnimation = true end
 	local owner = self:GetOwner()
 	self:CustomOnDeploy()
-	if owner:IsPlayer() then
+	if owner:IsNPC() then
+		hook.Add("Think", self, self.NPC_ServerNextFire)
+	elseif owner:IsPlayer() then
 		if self.HasDeploySound == true then self:EmitSound(VJ.PICK(self.DeploySound), 50, math.random(90, 100)) end
 		local curTime = CurTime()
 		local anim = VJ.PICK(self.AnimTbl_Deploy)
