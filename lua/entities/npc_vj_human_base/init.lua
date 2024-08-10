@@ -224,11 +224,12 @@ ENT.CallForBackUpOnDamageAnimation = ACT_SIGNAL_GROUP -- Animations played when 
 ENT.CallForBackUpOnDamageAnimationTime = false -- How much time until it can use activities | false = Base automatically decides the animation duration
 ENT.DisableCallForBackUpOnDamageAnimation = false -- Disables the animations from playing
 	-- ====== Move Or Hide On Damage Variables ====== --
-ENT.MoveOrHideOnDamageByEnemy = true -- Should the NPC move or hide when being damaged by an enemy?
-ENT.MoveOrHideOnDamageByEnemy_OnlyMove = false -- Should it only move and not hide?
-ENT.MoveOrHideOnDamageByEnemy_HideTime = VJ.SET(3, 4) -- How long should it hide?
-ENT.NextMoveOrHideOnDamageByEnemy1 = 3 -- How much time until it moves or hides on damage by enemy? | The first # in math.random
-ENT.NextMoveOrHideOnDamageByEnemy2 = 3.5 -- How much time until it moves or hides on damage by enemy? | The second # in math.random
+	-- Basically when damaged it will attempt to hide behind cover or move away if no cover is found
+	-- NOTE: This only runs when it has a active enemy
+ENT.MoveOrHideOnDamageByEnemy = true -- Should the NPC move away or hide behind cover when being damaged while fighting an enemy?
+ENT.MoveOrHideOnDamageByEnemy_OnlyMove = false -- Should it only move away and not hide behind cover?
+ENT.MoveOrHideOnDamageByEnemy_HideTime = VJ.SET(3, 5) -- How long should it hide behind cover?
+ENT.MoveOrHideOnDamageByEnemy_NextTime = VJ.SET(3, 3.5) -- How long until it can do this behavior again? (hide behind cover or move away)
 	-- ====== Miscellaneous Variables ====== --
 ENT.HideOnUnknownDamage = 5 -- number = Hide on unknown damage, defines the time until it can hide again | false = Disable this AI component
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -3965,10 +3966,10 @@ function ENT:OnTakeDamage(dmginfo)
 						self.TakingCoverT = curTime + hideTime
 						self.DoingWeaponAttack = false
 					end
-					self.NextMoveOrHideOnDamageByEnemyT = curTime + math.random(self.NextMoveOrHideOnDamageByEnemy1, self.NextMoveOrHideOnDamageByEnemy2)
+					self.NextMoveOrHideOnDamageByEnemyT = curTime + math.random(self.MoveOrHideOnDamageByEnemy_NextTime.a, self.MoveOrHideOnDamageByEnemy_NextTime.b)
 				elseif !self:IsMoving() && (!IsValid(wep) or (IsValid(wep) && !wep.IsMeleeWeapon)) then -- Run away if not moving AND has a non-melee weapon
 					self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
-					self.NextMoveOrHideOnDamageByEnemyT = curTime + math.random(self.NextMoveOrHideOnDamageByEnemy1, self.NextMoveOrHideOnDamageByEnemy2)
+					self.NextMoveOrHideOnDamageByEnemyT = curTime + math.random(self.MoveOrHideOnDamageByEnemy_NextTime.a, self.MoveOrHideOnDamageByEnemy_NextTime.b)
 				end
 			end
 

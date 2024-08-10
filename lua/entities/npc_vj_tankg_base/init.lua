@@ -24,7 +24,7 @@ ENT.DisableFindEnemy = true -- Disables FindEnemy code, friendly code still work
 ENT.CanReceiveOrders = false -- Can the NPC receive orders from others? | Ex: Allies calling for help, allies requesting backup on damage, etc.
 ENT.BringFriendsOnDeath = false -- Should the NPC's allies come to its position while it's dying?
 ENT.CallForBackUpOnDamage = false -- Should the SNPC call for help when damaged? (Only happens if the SNPC hasn't seen a enemy)
-ENT.MoveOrHideOnDamageByEnemy = false -- Should the NPC move or hide when being damaged by an enemy?
+ENT.MoveOrHideOnDamageByEnemy = false -- Should the NPC move away or hide behind cover when being damaged while fighting an enemy?
 ENT.MoveOutOfFriendlyPlayersWay = false -- Should the NPC move and give space to friendly players?
 ENT.HasPainSounds = false -- If set to false, it won't play the pain sounds
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
