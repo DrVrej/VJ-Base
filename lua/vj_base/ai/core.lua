@@ -2429,10 +2429,10 @@ function ENT:RunGibOnDeathCode(dmginfo, hitgroup, extraOptions)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local gib_sd1 = "vj_gib/default_gib_splat.wav"
-local gib_sd2 = "vj_gib/gibbing1.wav"
-local gib_sd3 = "vj_gib/gibbing2.wav"
-local gib_sd4 = "vj_gib/gibbing3.wav"
+local gib_sd1 = "vj_base/gib/splat.wav"
+local gib_sd2 = "vj_base/gib/break1.wav"
+local gib_sd3 = "vj_base/gib/break2.wav"
+local gib_sd4 = "vj_base/gib/break3.wav"
 --
 function ENT:PlayGibOnDeathSounds(dmginfo, hitgroup)
 	if self.HasGibOnDeathSounds == false then return end

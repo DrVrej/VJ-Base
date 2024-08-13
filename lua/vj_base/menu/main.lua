@@ -351,7 +351,7 @@ else
 			pluginList:AddLine("#vjbase.menu.plugins.notfound", "")
 		end
 		pluginList.OnRowSelected = function(panel, rowIndex, row)
-			//surface.PlaySound("vj_misc/illuminati_confirmed.mp3")
+			//surface.PlaySound("vj_base/player/illuminati.mp3")
 			chat.AddText(colorYellow, language.GetPhrase("#vjbase.menu.plugins.chat.pluginname").." "..row:GetValue(1))
 			chat.AddText(colorYellow, language.GetPhrase("#vjbase.menu.plugins.chat.plugintypes").." "..row:GetValue(2))
 		end

@@ -13,7 +13,7 @@ SWEP.UseHands = true
 end
 	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.NPC_NextPrimaryFire = 0.3 -- RPM of the weapon in seconds | Calculation: 60 / RPM
-SWEP.NPC_ReloadSound = "vj_weapons/blaster/blaster_reload.wav" -- Sounds it plays when the base detects the SNPC playing a reload animation
+SWEP.NPC_ReloadSound = "vj_base/weapons/blaster/blaster_reload.wav" -- Sounds it plays when the base detects the SNPC playing a reload animation
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel = "models/vj_weapons/c_e5.mdl"
 SWEP.WorldModel = "models/vj_weapons/w_e5.mdl"
@@ -29,7 +29,7 @@ SWEP.Primary.Delay = 0.3 -- Time until it can shoot again
 SWEP.Primary.TracerType = "VJ_Laserrod_Red" -- Tracer type (Examples: AR2, laster, 9mm)
 SWEP.Primary.Automatic = true -- Should the weapon continue firing as long as the attack button is held down?
 SWEP.Primary.Ammo = "SMG1" -- Ammo type
-SWEP.Primary.Sound = "vj_weapons/blaster/blaster_fire.wav" -- npc/roller/mine/rmine_explode_shock1.wav
+SWEP.Primary.Sound = "vj_base/weapons/blaster/blaster_single.wav" -- npc/roller/mine/rmine_explode_shock1.wav
 SWEP.Primary.HasDistantSound = false -- Does it have a distant sound when the gun is shot?
 //SWEP.Primary.DisableBulletCode = true -- The bullet won't spawn, this can be used when creating a projectile-based weapon
 SWEP.PrimaryEffects_MuzzleParticles = {"vj_muzzle_blaster_red"}
@@ -39,7 +39,7 @@ SWEP.PrimaryEffects_SpawnShells = false
 SWEP.PrimaryEffects_DynamicLightColor = Color(255, 0, 0)
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound = true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
-SWEP.ReloadSound = "vj_weapons/blaster/blaster_reload.wav"
+SWEP.ReloadSound = "vj_base/weapons/blaster/blaster_reload.wav"
 SWEP.Reload_TimeUntilAmmoIsSet = 0.8 -- Time until ammo is set to the weapon
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- Old code for firing physical blaster rods

@@ -139,7 +139,7 @@ SWEP.AnimTbl_PrimaryFire = ACT_VM_PRIMARYATTACK
 	-- ====== Sound Variables ====== --
 SWEP.Primary.Sound = {}
 SWEP.Primary.SoundLevel = 80
-SWEP.Primary.SoundPitch	= VJ.SET(90, 100)
+SWEP.Primary.SoundPitch	= VJ.SET(90, 110)
 SWEP.Primary.SoundVolume = 1
 SWEP.Primary.DistantSound = {}
 SWEP.Primary.HasDistantSound = true -- Does it have a distant sound when the gun is shot?
@@ -274,29 +274,29 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:SetDefaultValues(holdType)
 	if holdType == "pistol" then
-		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "weapons/draw_pistol.wav" end
-		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_weapons/dryfire_pistol.wav" end
-		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_weapons/reload_pistol.wav" end
+		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "VJ.Weapon.Draw_Pistol" end
+		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_base/weapons/dryfire_pistol.wav" end
+		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_base/weapons/reload_pistol.wav" end
 	elseif holdType == "revolver" then
-		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "weapons/draw_pistol.wav" end
-		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_weapons/dryfire_revolver.wav" end
-		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_weapons/reload_revolver.wav" end
+		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "VJ.Weapon.Draw_Pistol" end
+		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_base/weapons/dryfire_revolver.wav" end
+		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_base/weapons/reload_revolver.wav" end
 	elseif holdType == "shotgun" or holdType == "crossbow" then
-		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "weapons/draw_rifle.wav" end
-		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_weapons/dryfire_rifle.wav" end
-		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_weapons/reload_shotgun.wav" end
+		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "VJ.Weapon.Draw_Rifle" end
+		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_base/weapons/dryfire_rifle.wav" end
+		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_base/weapons/reload_shotgun.wav" end
 	elseif holdType == "rpg" then
-		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "weapons/draw_rifle.wav" end
-		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_weapons/dryfire_rifle.wav" end
-		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_weapons/reload_rpg.wav" end
+		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "VJ.Weapon.Draw_Rifle" end
+		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_base/weapons/dryfire_rifle.wav" end
+		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_base/weapons/reload_rpg.wav" end
 	elseif holdType == "melee" or holdType == "melee2" or holdType == "knife" then
-		self.DeploySound = "weapons/draw_rifle.wav"
+		self.DeploySound = "VJ.Weapon.Draw_Rifle"
 		self.HasDryFireSound = false
 		self.NPC_HasReloadSound = false
 	else -- "smg", "ar2" and any other that didn't match
-		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "weapons/draw_rifle.wav" end
-		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_weapons/dryfire_rifle.wav" end
-		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_weapons/reload_rifle.wav" end
+		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "VJ.Weapon.Draw_Rifle" end
+		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_base/weapons/dryfire_rifle.wav" end
+		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_base/weapons/reload_rifle.wav" end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -308,15 +308,18 @@ function SWEP:Equip(newOwner)
 	if newOwner:IsPlayer() then
 		local replacementWep = self.ReplacementWeapon
 		if replacementWep then
-			if istable(replacementWep) then -- table
-				for _, v in ipairs(replacementWep) do
-					if IsValid(newOwner:Give(v)) then -- Go in order until a weapon is valid
-						self:Remove()
-						return
+			if isstring(replacementWep) then replacementWep = {replacementWep} end
+			for _, weapon in ipairs(replacementWep) do
+				-- Go in order until a weapon is valid
+				if IsValid(newOwner:Give(weapon)) then
+					self:Remove()
+					return
+				elseif newOwner:HasWeapon(weapon) then -- Failed to give weapon, check if it already has it!
+					local actualWeapon = newOwner:GetWeapon(weapon)
+					local ammoType = actualWeapon:GetPrimaryAmmoType()
+					if ammoType != -1 then -- Give a clip of the replacement weapon
+						newOwner:GiveAmmo(actualWeapon:GetMaxClip1(), ammoType)
 					end
-				end
-			else -- string
-				if IsValid(newOwner:Give(replacementWep)) then
 					self:Remove()
 					return
 				end
@@ -374,7 +377,12 @@ function SWEP:Deploy()
 	if owner:IsNPC() then
 		hook.Add("Think", self, self.NPC_ServerNextFire)
 	elseif owner:IsPlayer() then
-		if self.HasDeploySound == true then self:EmitSound(VJ.PICK(self.DeploySound), 50, math.random(90, 100)) end
+		if self.HasDeploySound == true then
+			local deploySD = VJ.PICK(self.DeploySound)
+			if deploySD then
+				self:EmitSound(deploySD, 50, math.random(90, 100))
+			end
+		end
 		local curTime = CurTime()
 		local anim = VJ.PICK(self.AnimTbl_Deploy)
 		local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)
@@ -558,13 +566,19 @@ function SWEP:PrimaryAttack(UseAlt)
 	if SERVER then
 		local fireSd = VJ.PICK(self.Primary.Sound)
 		if fireSd != false then
-			sound.Play(fireSd, owner:GetPos(), self.Primary.SoundLevel, math.random(self.Primary.SoundPitch.a, self.Primary.SoundPitch.b), self.Primary.SoundVolume)
-			//self:EmitSound(fireSd, 80, math.random(90,100))
+			local filter = RecipientFilter()
+			filter:AddAllPlayers()
+			self:EmitSound(fireSd, self.Primary.SoundLevel, math.random(self.Primary.SoundPitch.a, self.Primary.SoundPitch.b), self.Primary.SoundVolume, CHAN_WEAPON, 0, 0, filter)
+			//EmitSound(fireSd, owner:GetPos(), owner:EntIndex(), CHAN_WEAPON, 1, 140, 0, 100, 0, filter)
+			//sound.Play(fireSd, owner:GetPos(), self.Primary.SoundLevel, math.random(self.Primary.SoundPitch.a, self.Primary.SoundPitch.b), self.Primary.SoundVolume)
 		end
 		if self.Primary.HasDistantSound == true then
 			local fireFarSd = VJ.PICK(self.Primary.DistantSound)
 			if fireFarSd != false then
-				sound.Play(fireFarSd, owner:GetPos(), self.Primary.DistantSoundLevel, math.random(self.Primary.DistantSoundPitch.a, self.Primary.DistantSoundPitch.b), self.Primary.DistantSoundVolume)
+				local filter = RecipientFilter()
+				filter:AddAllPlayers()
+				-- Use "CHAN_AUTO" instead of "CHAN_WEAPON" otherwise it will override primary firing sound because it's also "CHAN_WEAPON"
+				self:EmitSound(fireFarSd, self.Primary.DistantSoundLevel, math.random(self.Primary.DistantSoundPitch.a, self.Primary.DistantSoundPitch.b), self.Primary.DistantSoundVolume, CHAN_AUTO, 0, 0, filter)
 			end
 		end
 	end
@@ -823,7 +837,12 @@ function SWEP:Reload()
 	if self:Clip1() < self.Primary.ClipSize then
 		self.Reloading = true
 		self:CustomOnReload()
-		if SERVER && self.HasReloadSound == true then owner:EmitSound(VJ.PICK(self.ReloadSound), 50, math.random(90, 100)) end
+		if SERVER && self.HasReloadSound == true then
+			local reloadSD = VJ.PICK(self.ReloadSound)
+			if reloadSD then
+				owner:EmitSound(reloadSD, 50, math.random(90, 100))
+			end
+		end
 		-- Handle clip
 		timer.Simple(self.Reload_TimeUntilAmmoIsSet, function()
 			if IsValid(self) && self:CustomOnReload_Finish() != false then

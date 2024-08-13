@@ -150,10 +150,12 @@ include("vj_base/menu/entity_properties.lua")
 AddCSLuaFile("vj_base/resource/localization.lua")
 AddCSLuaFile("vj_base/resource/main.lua")
 AddCSLuaFile("vj_base/resource/particles.lua")
+AddCSLuaFile("vj_base/resource/sounds.lua")
 
 include("vj_base/resource/localization.lua")
 include("vj_base/resource/main.lua")
 include("vj_base/resource/particles.lua")
+include("vj_base/resource/sounds.lua")
 
 	-- ====== Extension ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 AddCSLuaFile("vj_base/extension/corpse.lua")
@@ -283,7 +285,7 @@ hook.Add("PlayerInitialSpawn", "VJBaseSpawn", function(ply, transition)
 	if !game.SinglePlayer() && ply:SteamID() == "STEAM_0:0:22688298" then
 		PrintMessage(HUD_PRINTTALK, "DrVrej Has Joined The Game!")
 		PrintMessage(HUD_PRINTCENTER, "DrVrej Has Joined The Game!")
-		local sd = CreateSound(game.GetWorld(), "vj_misc/illuminati_confirmed.mp3")
+		local sd = CreateSound(game.GetWorld(), "vj_base/player/illuminati.mp3")
 		sd:SetSoundLevel(0)
 		sd:Play()
 		timer.Simple(10, function() if sd then sd:Stop() end end)
@@ -293,7 +295,7 @@ end)
 net.Receive("vj_meme", function(len, pl)
 	if pl:IsPlayer() && pl:SteamID() == "STEAM_0:0:22688298" then
 		PrintMessage(HUD_PRINTTALK, "DrVrej is in the server!")
-		local sd = CreateSound(game.GetWorld(), "vj_misc/illuminati_confirmed.mp3")
+		local sd = CreateSound(game.GetWorld(), "vj_base/player/illuminati.mp3")
 		sd:SetSoundLevel(0)
 		sd:Play()
 	end

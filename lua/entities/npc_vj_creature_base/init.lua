@@ -478,7 +478,7 @@ ENT.SoundTbl_BeforeMeleeAttack = {}
 ENT.SoundTbl_MeleeAttack = {}
 ENT.SoundTbl_MeleeAttackExtra = {}
 ENT.SoundTbl_MeleeAttackMiss = {}
-ENT.SoundTbl_MeleeAttackSlowPlayer = {"vj_base/player/heartbeat.wav"}
+ENT.SoundTbl_MeleeAttackSlowPlayer = {"vj_base/player/heartbeat_loop.wav"}
 ENT.SoundTbl_BeforeRangeAttack = {}
 ENT.SoundTbl_RangeAttack = {}
 ENT.SoundTbl_BeforeLeapAttack = {}
@@ -497,7 +497,7 @@ ENT.SoundTbl_SoundTrack = {}
 -- Default sound file paths for certain sound tables | Base will play these if the corresponding table is left empty
 local DefaultSD_MedicAfterHeal = "items/smallmedkit1.wav"
 local DefaultSD_MeleeAttackExtra = {"npc/zombie/claw_strike1.wav", "npc/zombie/claw_strike2.wav", "npc/zombie/claw_strike3.wav"}
-local DefaultSD_Impact = "vj_flesh/alien_flesh1.wav"
+local DefaultSD_Impact = "vj_base/impact/flesh_alien.wav"
 ------ ///// WARNING: Don't change anything in this box! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- ====== Fade Out Time Variables ====== --

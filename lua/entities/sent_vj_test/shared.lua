@@ -47,7 +47,7 @@ if CLIENT then
 		button_kill:SetSize(100, 50)
 		button_kill.DoClick = function()
 			RunConsoleCommand("kill")
-			LocalPlayer():EmitSound("vj_misc/illuminati_confirmed.mp3", 0, 200)
+			LocalPlayer():EmitSound("vj_base/player/illuminati.mp3", 0, 200)
 		end
 		
 		local label_admin = vgui.Create("DLabel", frame)

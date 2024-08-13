@@ -32,8 +32,8 @@ ENT.MoveOutOfFriendlyPlayersWay = false -- Should the NPC move and give space to
 ENT.HasPainSounds = false -- If set to false, it won't play the pain sounds
 	-- ====== Sound File Paths ====== --
 -- Leave blank if you don't want any sounds to play
-ENT.SoundTbl_Breath = {"vj_vehicles/armored/engine_idle1.wav"}
-ENT.SoundTbl_Death = {"vj_fire/explosion1.wav"}
+ENT.SoundTbl_Breath = "vj_base/vehicles/armored/engine_idle.wav"
+ENT.SoundTbl_Death = "vj_base/ambience/explosion1.wav"
 
 ENT.AlertSoundLevel = 70
 ENT.IdleSoundLevel = 70
@@ -69,9 +69,9 @@ ENT.Tank_SoundTbl_DrivingEngine = {}
 ENT.Tank_SoundTbl_Track = {}
 ENT.Tank_SoundTbl_RunOver = {}
 
-ENT.Tank_DefaultSoundTbl_DrivingEngine = {"vj_vehicles/armored/engine_drive1.wav"}
-ENT.Tank_DefaultSoundTbl_Track = {"vj_vehicles/armored/tracks1.wav"}
-ENT.Tank_DefaultSoundTbl_RunOver = {"vj_gib/bones_snapping1.wav","vj_gib/bones_snapping2.wav","vj_gib/bones_snapping3.wav"}
+ENT.Tank_DefaultSoundTbl_DrivingEngine = "vj_base/vehicles/armored/engine_drive.wav"
+ENT.Tank_DefaultSoundTbl_Track = "vj_base/vehicles/armored/tracks1.wav"
+ENT.Tank_DefaultSoundTbl_RunOver = {"vj_base/gib/bone_snap1.wav", "vj_base/gib/bone_snap2.wav", "vj_base/gib/bone_snap3.wav"}
 
 //util.AddNetworkString("vj_tank_base_spawneffects")
 //util.AddNetworkString("vj_tank_base_moveeffects")
@@ -345,7 +345,7 @@ function ENT:CustomOnPriorToKilled(dmginfo, hitgroup)
 			timer.Simple(i, function()
 				if IsValid(self) then
 					local myPos = self:GetPos()
-					VJ.EmitSound(self, "vj_fire/explosion2.wav", 100, 100)
+					VJ.EmitSound(self, "vj_base/ambience/explosion2.wav", 100, 100)
 					util.BlastDamage(self, self, myPos, 200, 40)
 					util.ScreenShake(myPos, 100, 200, 1, 2500)
 					if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2", myPos, defAng) end
@@ -356,8 +356,8 @@ function ENT:CustomOnPriorToKilled(dmginfo, hitgroup)
 		timer.Simple(1.5, function()
 			if IsValid(self) then
 				local myPos = self:GetPos()
-				VJ.EmitSound(self,"vj_fire/explosion2.wav", 100, 100)
-				VJ.EmitSound(self,"vj_fire/explosion3.wav", 100, 100)
+				VJ.EmitSound(self,"vj_base/ambience/explosion2.wav", 100, 100)
+				VJ.EmitSound(self,"vj_base/ambience/explosion3.wav", 100, 100)
 				util.BlastDamage(self, self, myPos, 200, 40)
 				util.ScreenShake(myPos, 100, 200, 1, 2500)
 				if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2", myPos, defAng) end

@@ -32,8 +32,8 @@ SWEP.Primary.Cone = 5 -- How accurate is the bullet? (Players)
 SWEP.Primary.Delay = 0.25 -- Time until it can shoot again
 SWEP.Primary.Automatic = true -- Should the weapon continue firing as long as the attack button is held down?
 SWEP.Primary.Ammo = "Pistol" -- Ammo type
-SWEP.Primary.Sound = "vj_weapons/glock_17/glock17_single.wav"
-SWEP.Primary.DistantSound = "vj_weapons/glock_17/glock17_single_dist.wav"
+SWEP.Primary.Sound = "vj_base/weapons/glock17/glock17_single.wav"
+SWEP.Primary.DistantSound = "vj_base/weapons/glock17/glock17_single_dist.wav"
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellAttachment = "ejectbrass"
 SWEP.PrimaryEffects_ShellType = "ShellEject"
@@ -44,7 +44,7 @@ SWEP.Secondary.Ammo = "Pistol" -- Ammo type
 SWEP.AnimTbl_Deploy = ACT_VM_IDLE_TO_LOWERED
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound = true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
-SWEP.ReloadSound = "vj_weapons/glock_17/reload.wav"
+SWEP.ReloadSound = "vj_base/weapons/glock17/glock17_reload.wav"
 SWEP.Reload_TimeUntilAmmoIsSet = 1.5 -- Time until ammo is set to the weapon
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnSecondaryAttack()
