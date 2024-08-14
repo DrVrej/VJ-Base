@@ -72,8 +72,8 @@ SWEP.NPC_ExtraFireSoundPitch = VJ.SET(90, 100) -- How much time until the second
 	-- ====== Secondary Fire Variables ====== --
 SWEP.NPC_HasSecondaryFire = false -- Can the weapon have a secondary fire?
 SWEP.NPC_SecondaryFireEnt = "obj_vj_grenade_rifle" -- The entity to fire, this only applies if self:NPC_SecondaryFire() has NOT been overridden!
-SWEP.NPC_SecondaryFireChance = 1 -- Chance that the secondary fire is used | 1 = always
-SWEP.NPC_SecondaryFireNext = VJ.SET(2, 2) -- How much time until the secondary fire can be used again?
+SWEP.NPC_SecondaryFireChance = 3 -- Chance that the secondary fire is used | 1 = always
+SWEP.NPC_SecondaryFireNext = VJ.SET(12, 15) -- How much time until the secondary fire can be used again?
 SWEP.NPC_SecondaryFireDistance = 1000 -- How close does the owner's enemy have to be for it to fire?
 SWEP.NPC_HasSecondaryFireSound = true -- Can the secondary fire sound be played?
 SWEP.NPC_SecondaryFireSound = {} -- The sound it plays when the secondary fire is used
