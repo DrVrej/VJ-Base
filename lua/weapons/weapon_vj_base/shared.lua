@@ -72,8 +72,8 @@ SWEP.NPC_ExtraFireSoundPitch = VJ.SET(90, 100) -- How much time until the second
 	-- ====== Secondary Fire Variables ====== --
 SWEP.NPC_HasSecondaryFire = false -- Can the weapon have a secondary fire?
 SWEP.NPC_SecondaryFireEnt = "obj_vj_grenade_rifle" -- The entity to fire, this only applies if self:NPC_SecondaryFire() has NOT been overridden!
-SWEP.NPC_SecondaryFireChance = 3 -- Chance that the secondary fire is used | 1 = always
-SWEP.NPC_SecondaryFireNext = VJ.SET(12, 15) -- How much time until the secondary fire can be used again?
+SWEP.NPC_SecondaryFireChance = 1 -- Chance that the secondary fire is used | 1 = always
+SWEP.NPC_SecondaryFireNext = VJ.SET(2, 2) -- How much time until the secondary fire can be used again?
 SWEP.NPC_SecondaryFireDistance = 1000 -- How close does the owner's enemy have to be for it to fire?
 SWEP.NPC_HasSecondaryFireSound = true -- Can the secondary fire sound be played?
 SWEP.NPC_SecondaryFireSound = {} -- The sound it plays when the secondary fire is used
@@ -508,7 +508,14 @@ function SWEP:NPCShoot_Primary()
 			timer.Simple(fireTime, function()
 				if IsValid(self) && IsValid(owner) && IsValid(owner:GetEnemy()) && CurTime() > self.NPC_SecondaryFireNextT && (anim == ACT_INVALID or (anim && VJ.IsCurrentAnimation(owner, anim))) then -- ONLY check for cur anim IF it even had one!
 					self:NPC_SecondaryFire()
-					if self.NPC_HasSecondaryFireSound == true then VJ.EmitSound(owner, self.NPC_SecondaryFireSound, self.NPC_SecondaryFireSoundLevel) end
+					if self.NPC_HasSecondaryFireSound then
+						local fireSd = VJ.PICK(self.NPC_SecondaryFireSound)
+						if fireSd != false then
+							local filter = RecipientFilter()
+							filter:AddAllPlayers()
+							self:EmitSound(fireSd, self.NPC_SecondaryFireSoundLevel, math.random(90, 110), 1, CHAN_WEAPON, 0, 0, filter)
+						end
+					end
 					self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
 				end
 			end)

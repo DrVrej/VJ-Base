@@ -19,15 +19,15 @@ SWEP.Spawnable = true
 SWEP.AdminSpawnable = false
 	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.NPC_HasSecondaryFire = true -- Can the weapon have a secondary fire?
-SWEP.NPC_SecondaryFireSound = "weapons/ar2/ar2_altfire.wav" -- The sound it plays when the secondary fire is used
+SWEP.NPC_SecondaryFireSound = "VJ.Weapon_SMG1.Secondary" -- The sound it plays when the secondary fire is used
+SWEP.NPC_ReloadSound = "vj_base/weapons/smg1/smg1_reload.wav" -- Sounds it plays when the base detects the SNPC playing a reload animation
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Damage = 5 -- Damage
 SWEP.Primary.ClipSize = 45 -- Max amount of bullets per clip
 SWEP.Primary.Delay = 0.09 -- Time until it can shoot again
 SWEP.Primary.Automatic = true -- Should the weapon continue firing as long as the attack button is held down?
 SWEP.Primary.Ammo = "SMG1" -- Ammo type
-SWEP.Primary.Sound = {"vj_base/weapons/smg1/smg1_single1.wav", "vj_base/weapons/smg1/smg1_single2.wav", "vj_base/weapons/smg1/smg1_single3.wav"}
-SWEP.Primary.DistantSound = "Weapon_SMG1.NPC_Single"
+SWEP.Primary.Sound = "VJ.Weapon_SMG1.Single"
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_ShellAttachment = 2
 SWEP.PrimaryEffects_ShellType = "ShellEject"
@@ -40,7 +40,7 @@ SWEP.ReloadSound = "weapons/smg1/smg1_reload.wav"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnSecondaryAttack()
 	local owner = self:GetOwner()
-	owner:ViewPunch(Angle(-self.Primary.Recoil *3, 0, 0))
+	owner:ViewPunch(Angle(-self.Primary.Recoil * 3, 0, 0))
 	VJ.EmitSound(self, "weapons/ar2/ar2_altfire.wav", 85)
 
 	if SERVER then

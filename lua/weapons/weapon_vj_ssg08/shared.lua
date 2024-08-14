@@ -30,5 +30,4 @@ SWEP.Primary.Damage = 80 -- Damage
 SWEP.Primary.Force = 1 -- Force applied on the object the bullet hits
 SWEP.Primary.ClipSize = 10 -- Max amount of bullets per clip
 SWEP.Primary.Ammo = "SniperRound" -- Ammo type
-SWEP.Primary.Sound = "vj_base/weapons/ssg08/ssg08_single.wav"
-SWEP.Primary.DistantSound = {"vj_base/weapons/ssg08/ssg08_single_dist1.wav", "vj_base/weapons/ssg08/ssg08_single_dist2.wav", "vj_base/weapons/ssg08/ssg08_single_dist3.wav", "vj_base/weapons/ssg08/ssg08_single_dist4.wav"}
+SWEP.Primary.Sound = "VJ.Weapon_SSG08.Single"

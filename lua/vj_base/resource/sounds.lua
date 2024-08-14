@@ -45,7 +45,83 @@ sound.Add({
 	sound = "^vj_base/weapons/ak47/ak47_single.wav"
 })
 
--- 
+-- AR2
+sound.Add({
+	name = "VJ.Weapon_AR2.Single",
+	channel = CHAN_WEAPON,
+	volume = 1.0,
+	level = SNDLVL_GUNFIRE,
+	pitch = PITCH_VJ_RAND,
+	sound = {"^vj_base/weapons/ar2/ar2_single1.wav", "^vj_base/weapons/ar2/ar2_single2.wav", "^vj_base/weapons/ar2/ar2_single3.wav"}
+})
+sound.Add({
+	name = "VJ.Weapon_AR2.Secondary",
+	channel = CHAN_WEAPON,
+	volume = 1.0,
+	level = SNDLVL_GUNFIRE,
+	pitch = PITCH_VJ_RAND,
+	sound = "^vj_base/weapons/ar2/ar2_secondary.wav"
+})
+
+-- Blaster
+sound.Add({
+	name = "VJ.Weapon_Blaster.Single",
+	channel = CHAN_WEAPON,
+	volume = 1.0,
+	level = SNDLVL_GUNFIRE,
+	pitch = PITCH_VJ_RAND,
+	sound = "^vj_base/weapons/blaster/blaster_single.wav"
+})
+
+-- Flare Gun
+sound.Add({
+	name = "VJ.Weapon_FlareGun.Single",
+	channel = CHAN_WEAPON,
+	volume = 1.0,
+	level = SNDLVL_GUNFIRE,
+	pitch = PITCH_VJ_RAND,
+	sound = "^vj_base/weapons/flaregun/flaregun_single.wav"
+})
+
+-- Glock 17
+sound.Add({
+	name = "VJ.Weapon_Glock17.Single",
+	channel = CHAN_WEAPON,
+	volume = 1.0,
+	level = SNDLVL_GUNFIRE,
+	pitch = PITCH_VJ_RAND,
+	sound = "^vj_base/weapons/glock17/glock17_single.wav"
+})
+
+-- K-3
+sound.Add({
+	name = "VJ.Weapon_K3.Single",
+	channel = CHAN_WEAPON,
+	volume = 1.0,
+	level = SNDLVL_GUNFIRE,
+	pitch = PITCH_VJ_RAND,
+	sound = "^vj_base/weapons/k3_armenian/k3_single.wav"
+})
+
+-- M4A1
+sound.Add({
+	name = "VJ.Weapon_M4A1.Single",
+	channel = CHAN_WEAPON,
+	volume = 1.0,
+	level = SNDLVL_GUNFIRE,
+	pitch = PITCH_VJ_RAND,
+	sound = "^vj_base/weapons/m4a1/m4a1_single.wav"
+})
+
+-- MP 40
+sound.Add({
+	name = "VJ.Weapon_MP40.Single",
+	channel = CHAN_WEAPON,
+	volume = 1.0,
+	level = SNDLVL_GUNFIRE,
+	pitch = PITCH_VJ_RAND,
+	sound = "^vj_base/weapons/mp40/mp40_single.wav"
+})
 sound.Add({
 	name = "VJ.Weapon_MP40.BoltBack",
 	channel = CHAN_ITEM,
@@ -77,4 +153,80 @@ sound.Add({
 	level = SNDLVL_NORM,
 	pitch = PITCH_NORM,
 	sound = "vj_base/weapons/mp40/mp40_clipout.wav"
+})
+
+-- 9mm Pistol
+sound.Add({
+	name = "VJ.Weapon_9mmPistol.Single",
+	channel = CHAN_WEAPON,
+	volume = 1.0,
+	level = SNDLVL_GUNFIRE,
+	pitch = PITCH_VJ_RAND,
+	sound = {"^vj_base/weapons/pistol_9mm/9mm_single1.wav", "^vj_base/weapons/pistol_9mm/9mm_single2.wav", "^vj_base/weapons/pistol_9mm/9mm_single3.wav"}
+})
+
+-- .357 Magnum
+sound.Add({
+	name = "VJ.Weapon_357Magnum.Single",
+	channel = CHAN_WEAPON,
+	volume = 1.0,
+	level = SNDLVL_GUNFIRE,
+	pitch = PITCH_VJ_RAND,
+	sound = {"^vj_base/weapons/revolver_357/357_single1.wav", "^vj_base/weapons/revolver_357/357_single2.wav", "^vj_base/weapons/revolver_357/357_single3.wav"}
+})
+
+-- RPG
+sound.Add({
+	name = "VJ.Weapon_RPG.Single1",
+	channel = CHAN_WEAPON,
+	volume = 1.0,
+	level = SNDLVL_GUNFIRE,
+	pitch = PITCH_VJ_RAND,
+	sound = "^vj_base/weapons/rpg/rpg1_single.wav"
+})
+sound.Add({
+	name = "VJ.Weapon_RPG.Single2",
+	channel = CHAN_WEAPON,
+	volume = 1.0,
+	level = SNDLVL_GUNFIRE,
+	pitch = PITCH_VJ_RAND,
+	sound = "^vj_base/weapons/rpg/rpg2_single.wav"
+})
+
+-- SMG1
+sound.Add({
+	name = "VJ.Weapon_SMG1.Single",
+	channel = CHAN_WEAPON,
+	volume = 1.0,
+	level = SNDLVL_GUNFIRE,
+	pitch = PITCH_VJ_RAND,
+	sound = {"^vj_base/weapons/smg1/smg1_single1.wav", "^vj_base/weapons/smg1/smg1_single2.wav", "^vj_base/weapons/smg1/smg1_single3.wav"}
+})
+sound.Add({
+	name = "VJ.Weapon_SMG1.Secondary",
+	channel = CHAN_WEAPON,
+	volume = 1.0,
+	level = 100, -- Since it's a grenade launcher, make it less than a gun shot!
+	pitch = PITCH_VJ_RAND,
+	sound = "^vj_base/weapons/smg1/smg1_glauncher.wav"
+})
+
+-- SPAS-12
+sound.Add({
+	name = "VJ.Weapon_SPAS12.Single",
+	channel = CHAN_WEAPON,
+	volume = 1.0,
+	level = SNDLVL_GUNFIRE,
+	pitch = PITCH_VJ_RAND,
+	sound = "^vj_base/weapons/spas12/spas12_single.wav"
+})
+
+-- SSG-08
+sound.Add({
+	name = "VJ.Weapon_SSG08.Single",
+	channel = CHAN_WEAPON,
+	volume = 1.0,
+	level = SNDLVL_GUNFIRE,
+	pitch = PITCH_VJ_RAND,
+	sound = {"^vj_base/weapons/ssg08/ssg08_single1.wav", "^vj_base/weapons/ssg08/ssg08_single2.wav", "^vj_base/weapons/ssg08/ssg08_single3.wav"}
 })

@@ -17,9 +17,11 @@ SWEP.NPC_SecondaryFireEnt = "obj_vj_combineball"
 SWEP.NPC_SecondaryFireDistance = 3000 -- How close does the owner's enemy have to be for it to fire?
 SWEP.NPC_SecondaryFireChance = 4 -- Chance that the secondary fire is used | 1 = always
 SWEP.NPC_SecondaryFireNext = VJ.SET(15, 20) -- How much time until the secondary fire can be used again?
+SWEP.NPC_SecondaryFireSound = "VJ.Weapon_AR2.Secondary" -- The sound it plays when the secondary fire is used
 SWEP.NPC_NextPrimaryFire = 0.9 -- RPM of the weapon in seconds | Calculation: 60 / RPM
 SWEP.NPC_TimeUntilFire = 0.1 -- How much time until the bullet/projectile is fired?
 SWEP.NPC_TimeUntilFireExtraTimers = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6} -- Extra timers, which will make the gun fire again! | The seconds are counted after the self.NPC_TimeUntilFire!
+SWEP.NPC_ReloadSound = "vj_base/weapons/ar2/ar2_reload.wav" -- Sounds it plays when the base detects the SNPC playing a reload animation
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel = "models/weapons/c_irifle.mdl"
 SWEP.WorldModel = "models/weapons/w_irifle.mdl"
@@ -34,8 +36,7 @@ SWEP.Primary.Delay = 0.1 -- Time until it can shoot again
 SWEP.Primary.TracerType = "AR2Tracer" -- Tracer type (Examples: AR2, laster, 9mm)
 SWEP.Primary.Automatic = true -- Should the weapon continue firing as long as the attack button is held down?
 SWEP.Primary.Ammo = "AR2" -- Ammo type
-SWEP.Primary.Sound = {"vj_base/weapons/ar2/ar2_single1.wav", "vj_base/weapons/ar2/ar2_single2.wav", "vj_base/weapons/ar2/ar2_single3.wav"}
-SWEP.Primary.DistantSound = {"^weapons/ar1/ar1_dist1.wav", "^weapons/ar1/ar1_dist2.wav"}
+SWEP.Primary.Sound = "VJ.Weapon_AR2.Single"
 SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_full_blue"}
 SWEP.PrimaryEffects_SpawnShells = false
 SWEP.PrimaryEffects_DynamicLightColor = Color(0, 31, 225)
@@ -68,8 +69,6 @@ function SWEP:NPC_SecondaryFire()
 		phys:SetVelocity(vel)
 		projectile:SetAngles(vel:GetNormal():Angle())
 	end
-
-	VJ.CreateSound(self, "weapons/irifle/irifle_fire2.wav", 90)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnSecondaryAttack()

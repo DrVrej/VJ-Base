@@ -19,7 +19,7 @@ SWEP.WorldModel_UseCustomPosition = true -- Should the gun use custom position? 
 SWEP.WorldModel_CustomPositionAngle = Vector(-8, 90, 180)
 SWEP.WorldModel_CustomPositionOrigin = Vector(-3.4, -1, -0.5)
 SWEP.HoldType = "ar2"
-SWEP.ViewModelFlip = false -- Flip the model? Usally used for CS:S models
+SWEP.ViewModelFlip = false -- Flip the model? Usually used for CS:S models
 SWEP.Spawnable = true
 SWEP.AdminSpawnable = false
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------

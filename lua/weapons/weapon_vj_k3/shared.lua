@@ -6,7 +6,6 @@ SWEP.Purpose = "This weapon is made for Players and NPCs"
 SWEP.Instructions = "Controls are like a regular weapon."
 SWEP.Category = "VJ Base"
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.ReplacementWeapon = {"weapong_glock_hl1", "weapon_flechettegun"} -- When picked up by a player it gives them a replacement weapon | Useful for NPC-only weapons
 SWEP.MadeForNPCsOnly = true -- Is this weapon meant to be for NPCs only?
 SWEP.WorldModel = "models/vj_weapons/w_k3.mdl"
 SWEP.HoldType = "ar2"
@@ -19,8 +18,7 @@ SWEP.Primary.Damage = 12 -- Damage
 SWEP.Primary.Force = 1 -- Force applied on the object the bullet hits
 SWEP.Primary.ClipSize = 45 -- Max amount of bullets per clip
 SWEP.Primary.Ammo = "SMG1" -- Ammo type
-SWEP.Primary.Sound = "vj_base/weapons/k3_armenian/k3_single.wav"
-SWEP.Primary.DistantSound = "vj_base/weapons/k3_armenian/k3_single_dist.wav"
+SWEP.Primary.Sound = "VJ.Weapon_K3.Single"
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_ShellAttachment = 2
 SWEP.PrimaryEffects_ShellType = "RifleShellEject"
