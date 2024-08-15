@@ -474,7 +474,7 @@ function SWEP:NPCAbleToShoot()
 				if owner.VJ_IsBeingControlled then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER, "Press R to reload!") end
 				if self.IsMeleeWeapon == false && self.HasDryFireSound == true && CurTime() > self.NextNPCDrySoundT then
 					local sdTbl = VJ.PICK(self.DryFireSound)
-					if sdTbl != false then owner:EmitSound(sdTbl, 80, math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b)) end
+					if sdTbl != false then owner:EmitSound(sdTbl, 80, math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b), 1, CHAN_AUTO, 0, 0, VJ_RecipientFilter) end
 					if self.NPC_NextPrimaryFire != false then
 						self.NextNPCDrySoundT = CurTime() + self.NPC_NextPrimaryFire
 					end
@@ -511,9 +511,7 @@ function SWEP:NPCShoot_Primary()
 					if self.NPC_HasSecondaryFireSound then
 						local fireSd = VJ.PICK(self.NPC_SecondaryFireSound)
 						if fireSd != false then
-							local filter = RecipientFilter()
-							filter:AddAllPlayers()
-							self:EmitSound(fireSd, self.NPC_SecondaryFireSoundLevel, math.random(90, 110), 1, CHAN_WEAPON, 0, 0, filter)
+							self:EmitSound(fireSd, self.NPC_SecondaryFireSoundLevel, math.random(90, 110), 1, CHAN_WEAPON, 0, 0, VJ_RecipientFilter)
 						end
 					end
 					self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
@@ -554,7 +552,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	if isNPC && owner.VJ_IsBeingControlled == false && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return end
 	if self.IsMeleeWeapon == false && ((isPly && self.Primary.AllowInWater == false && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then
 		if SERVER then
-			owner:EmitSound(VJ.PICK(self.DryFireSound),self.DryFireSoundLevel,math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b))
+			owner:EmitSound(VJ.PICK(self.DryFireSound), self.DryFireSoundLevel, math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b))
 		end
 		return
 	end
@@ -573,19 +571,15 @@ function SWEP:PrimaryAttack(UseAlt)
 	if SERVER then
 		local fireSd = VJ.PICK(self.Primary.Sound)
 		if fireSd != false then
-			local filter = RecipientFilter()
-			filter:AddAllPlayers()
-			self:EmitSound(fireSd, self.Primary.SoundLevel, math.random(self.Primary.SoundPitch.a, self.Primary.SoundPitch.b), self.Primary.SoundVolume, CHAN_WEAPON, 0, 0, filter)
+			self:EmitSound(fireSd, self.Primary.SoundLevel, math.random(self.Primary.SoundPitch.a, self.Primary.SoundPitch.b), self.Primary.SoundVolume, CHAN_WEAPON, 0, 0, VJ_RecipientFilter)
 			//EmitSound(fireSd, owner:GetPos(), owner:EntIndex(), CHAN_WEAPON, 1, 140, 0, 100, 0, filter)
 			//sound.Play(fireSd, owner:GetPos(), self.Primary.SoundLevel, math.random(self.Primary.SoundPitch.a, self.Primary.SoundPitch.b), self.Primary.SoundVolume)
 		end
 		if self.Primary.HasDistantSound == true then
 			local fireFarSd = VJ.PICK(self.Primary.DistantSound)
 			if fireFarSd != false then
-				local filter = RecipientFilter()
-				filter:AddAllPlayers()
 				-- Use "CHAN_AUTO" instead of "CHAN_WEAPON" otherwise it will override primary firing sound because it's also "CHAN_WEAPON"
-				self:EmitSound(fireFarSd, self.Primary.DistantSoundLevel, math.random(self.Primary.DistantSoundPitch.a, self.Primary.DistantSoundPitch.b), self.Primary.DistantSoundVolume, CHAN_AUTO, 0, 0, filter)
+				self:EmitSound(fireFarSd, self.Primary.DistantSoundLevel, math.random(self.Primary.DistantSoundPitch.a, self.Primary.DistantSoundPitch.b), self.Primary.DistantSoundVolume, CHAN_AUTO, 0, 0, VJ_RecipientFilter)
 			end
 		end
 	end
@@ -619,13 +613,13 @@ function SWEP:PrimaryAttack(UseAlt)
 		if meleeHitEnt == true then
 			local meleeSd = VJ.PICK(self.MeleeWeaponSound_Hit)
 			if meleeSd != false then
-				self:EmitSound(meleeSd, 70, math.random(90, 100))
+				self:EmitSound(meleeSd, 70, math.random(90, 100), 1, CHAN_AUTO, 0, 0, VJ_RecipientFilter)
 			end
 		else
 			if owner.IsVJBaseSNPC == true then owner:CustomOnMeleeAttack_Miss() end
 			local meleeSd = VJ.PICK(self.MeleeWeaponSound_Miss)
 			if meleeSd != false then
-				self:EmitSound(meleeSd, 70, math.random(90, 100))
+				self:EmitSound(meleeSd, 70, math.random(90, 100), 1, CHAN_AUTO, 0, 0, VJ_RecipientFilter)
 			end
 		end
 	-- REGULAR WEAPON (NON-MELEE)

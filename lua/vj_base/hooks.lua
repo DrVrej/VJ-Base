@@ -55,6 +55,12 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 				end
 			end
 		end
+		if SERVER then
+			if !VJ_RecipientFilter then -- Just in case it wasn't created
+				VJ_RecipientFilter = RecipientFilter()
+			end
+			VJ_RecipientFilter:AddAllPlayers()
+		end
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------

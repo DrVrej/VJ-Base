@@ -43,7 +43,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.Model = {"models/weapons/w_missile_launch.mdl"} -- The models it should spawn with | Picks a random one from the table
+ENT.Model = "models/weapons/w_missile_launch.mdl" -- The models it should spawn with | Picks a random one from the table
 ENT.DoesRadiusDamage = true -- Should it do a blast damage when it hits something?
 ENT.RadiusDamageRadius = 250 -- How far the damage go? The farther away it's from its enemy, the less damage it will do | Counted in world units
 ENT.RadiusDamage = 110 -- How much damage should it deal? Remember this is a radius damage, therefore it will do less damage the farther away the entity is from its enemy
@@ -51,8 +51,8 @@ ENT.RadiusDamageUseRealisticRadius = true -- Should the damage decrease the fart
 ENT.RadiusDamageType = DMG_BLAST -- Damage type
 ENT.RadiusDamageForce = 90 -- Put the force amount it should apply | false = Don't apply any force
 ENT.DecalTbl_DeathDecals = {"Scorch"}
-ENT.SoundTbl_Idle = {"weapons/rpg/rocket1.wav"}
-ENT.SoundTbl_OnCollide = {"ambient/explosions/explode_8.wav"}
+ENT.SoundTbl_Idle = "weapons/rpg/rocket1.wav"
+ENT.SoundTbl_OnCollide = "ambient/explosions/explode_8.wav"
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize()
 	//util.SpriteTrail(self, 0, Color(90,90,90,255), false, 10, 1, 3, 1/(15+1)*0.5, "trails/smoke.vmt")

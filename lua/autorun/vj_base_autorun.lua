@@ -21,6 +21,7 @@ VJBASE_VERSION = "2.17.0"
 
 VJ_CVAR_IGNOREPLAYERS = GetConVar("ai_ignoreplayers"):GetInt() != 0
 VJ_CVAR_AI_ENABLED = GetConVar("ai_disabled"):GetInt() != 1
+if SERVER then VJ_RecipientFilter = RecipientFilter() end
 
 -- NPC movement types
 VJ_MOVETYPE_GROUND = 1
