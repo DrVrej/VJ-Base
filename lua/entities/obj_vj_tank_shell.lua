@@ -78,16 +78,17 @@ end
 local defAngle = Angle(0, 0, 0)
 --
 function ENT:DeathEffects(data, phys)
+	VJ.EmitSound(self, "VJ.Explosion")
+	ParticleEffect("vj_explosion3", data.HitPos, defAngle)
 	util.ScreenShake(data.HitPos, 16, 200, 1, 3000)
-	ParticleEffect("vj_explosion3", self:GetPos(), defAngle, nil)
 	
 	local effectData = EffectData()
 	effectData:SetOrigin(data.HitPos)
 	//effectData:SetScale(500)
 	//util.Effect("HelicopterMegaBomb", effectData)
 	//util.Effect("ThumperDust", effectData)
-	util.Effect("Explosion", effectData)
-	//util.Effect("VJ_Small_Explosion1", effectData)
+	//util.Effect("Explosion", effectData)
+	util.Effect("VJ_Small_Explosion1", effectData)
 
 	local expLight = ents.Create("light_dynamic")
 	expLight:SetKeyValue("brightness", "4")

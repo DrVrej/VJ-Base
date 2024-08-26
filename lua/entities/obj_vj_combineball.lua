@@ -31,7 +31,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.Model = {"models/effects/combineball.mdl"} -- The models it should spawn with | Picks a random one from the table
+ENT.Model = "models/effects/combineball.mdl" -- The models it should spawn with | Picks a random one from the table
 ENT.MoveCollideType = MOVECOLLIDE_FLY_BOUNCE
 ENT.RemoveOnHit = false -- Should it remove itself when it touches something? | It will run the hit sound, place a decal, etc.
 ENT.DoesDirectDamage = false -- Should it do a direct damage when it hits something?
@@ -39,8 +39,8 @@ ENT.DirectDamage = 200 -- How much damage should it do when it hits something
 ENT.DirectDamageType = bit.bor(DMG_DISSOLVE, DMG_BLAST, DMG_SHOCK) -- Damage type
 ENT.CollideCodeWithoutRemoving = true -- If RemoveOnHit is set to false, you can still make the projectile deal damage, place a decal, etc.
 ENT.DecalTbl_DeathDecals = {"Scorch"}
-ENT.SoundTbl_Idle = {"weapons/physcannon/energy_sing_loop4.wav"}
-ENT.SoundTbl_OnCollide = {"weapons/physcannon/energy_bounce1.wav","weapons/physcannon/energy_bounce2.wav"}
+ENT.SoundTbl_Idle = "weapons/physcannon/energy_sing_loop4.wav"
+ENT.SoundTbl_OnCollide = {"weapons/physcannon/energy_bounce1.wav", "weapons/physcannon/energy_bounce2.wav"}
 
 ENT.IdleSoundPitch = VJ.SET(100, 100)
 ---------------------------------------------------------------------------------------------------------------------------------------------

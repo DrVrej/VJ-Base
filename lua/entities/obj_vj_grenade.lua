@@ -30,7 +30,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.Model = {"models/vj_weapons/w_grenade.mdl"} -- The models it should spawn with | Picks a random one from the table
+ENT.Model = "models/vj_weapons/w_grenade.mdl" -- The models it should spawn with | Picks a random one from the table
 ENT.MoveCollideType = nil
 ENT.CollisionGroupType = nil
 ENT.SolidType = SOLID_VPHYSICS
@@ -42,7 +42,7 @@ ENT.RadiusDamageUseRealisticRadius = true -- Should the damage decrease the fart
 ENT.RadiusDamageType = DMG_BLAST -- Damage type
 ENT.RadiusDamageForce = 90 -- Put the force amount it should apply | false = Don't apply any force
 ENT.DecalTbl_DeathDecals = {"Scorch"}
-ENT.SoundTbl_OnCollide = {"weapons/hegrenade/he_bounce-1.wav"}
+ENT.SoundTbl_OnCollide = "weapons/hegrenade/he_bounce-1.wav"
 
 -- Custom
 ENT.FuseTime = 3
@@ -86,22 +86,24 @@ local vecZ4 = Vector(0, 0, 4)
 local vezZ100 = Vector(0, 0, 100)
 --
 function ENT:DeathEffects()
-	local selfPos = self:GetPos()
+	local myPos = self:GetPos()
 	
-	ParticleEffect("vj_explosion1", self:GetPos(), defAngle, nil)
+	VJ.EmitSound(self, "VJ.Explosion")
+	ParticleEffect("vj_explosion1", myPos, defAngle)
+	util.ScreenShake(myPos, 100, 200, 1, 2500)
 	
 	local effectData = EffectData()
-	effectData:SetOrigin(self:GetPos())
+	effectData:SetOrigin(myPos)
 	//effectData:SetScale(500)
 	//util.Effect("HelicopterMegaBomb", effectData)
 	//util.Effect("ThumperDust", effectData)
-	util.Effect("Explosion", effectData)
-	//util.Effect("VJ_Small_Explosion1", effectData)
+	//util.Effect("Explosion", effectData)
+	util.Effect("VJ_Small_Explosion1", effectData)
 
 	local expLight = ents.Create("light_dynamic")
 	expLight:SetKeyValue("brightness", "4")
 	expLight:SetKeyValue("distance", "300")
-	expLight:SetLocalPos(selfPos)
+	expLight:SetLocalPos(myPos)
 	expLight:SetLocalAngles(self:GetAngles())
 	expLight:Fire("Color", "255 150 0")
 	expLight:SetParent(self)
@@ -109,12 +111,11 @@ function ENT:DeathEffects()
 	expLight:Activate()
 	expLight:Fire("TurnOn", "", 0)
 	self:DeleteOnRemove(expLight)
-	util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
 
-	self:SetLocalPos(selfPos + vecZ4) -- Because the entity is too close to the ground
+	self:SetLocalPos(myPos + vecZ4) -- Because the entity is too close to the ground
 	local tr = util.TraceLine({
-		start = self:GetPos(),
-		endpos = self:GetPos() - vezZ100,
+		start = myPos,
+		endpos = myPos - vezZ100,
 		filter = self
 	})
 	util.Decal(VJ.PICK(self.DecalTbl_DeathDecals), tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)

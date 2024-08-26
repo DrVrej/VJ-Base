@@ -29,7 +29,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.Model = {"models/weapons/ar2_grenade.mdl"} -- The models it should spawn with | Picks a random one from the table
+ENT.Model = "models/weapons/ar2_grenade.mdl" -- The models it should spawn with | Picks a random one from the table
 ENT.DoesRadiusDamage = true -- Should it do a blast damage when it hits something?
 ENT.RadiusDamageRadius = 150 -- How far the damage go? The farther away it's from its enemy, the less damage it will do | Counted in world units
 ENT.RadiusDamage = 80 -- How much damage should it deal? Remember this is a radius damage, therefore it will do less damage the farther away the entity is from its enemy
@@ -57,21 +57,25 @@ function ENT:CustomPhysicsObjectOnInitialize(phys)
 	phys:AddAngleVelocity(Vector(0, math.random(300, 400), 0))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DeathEffects()
-	local myPos = self:GetPos()
+local defAngle = Angle(0, 0, 0)
+--
+function ENT:DeathEffects(data, phys)
+	VJ.EmitSound(self, "VJ.Explosion")
+	ParticleEffect("vj_explosion1", data.HitPos, defAngle)
+	util.ScreenShake(data.HitPos, 100, 200, 1, 2500)
 	
 	local effectData = EffectData()
-	effectData:SetOrigin(myPos)
-	//effectData:SetScale( 500 )
-	util.Effect("HelicopterMegaBomb", effectData)
-	util.Effect("ThumperDust", effectData)
-	util.Effect("Explosion", effectData)
+	effectData:SetOrigin(data.HitPos)
+	//effectData:SetScale(500)
+	//util.Effect("HelicopterMegaBomb", effectData)
+	//util.Effect("ThumperDust", effectData)
+	//util.Effect("Explosion", effectData)
 	util.Effect("VJ_Small_Explosion1", effectData)
 
 	local expLight = ents.Create("light_dynamic")
 	expLight:SetKeyValue("brightness", "4")
 	expLight:SetKeyValue("distance", "300")
-	expLight:SetLocalPos(myPos)
+	expLight:SetLocalPos(data.HitPos)
 	expLight:SetLocalAngles(self:GetAngles())
 	expLight:Fire("Color", "255 150 0")
 	expLight:SetParent(self)
@@ -79,6 +83,4 @@ function ENT:DeathEffects()
 	expLight:Activate()
 	expLight:Fire("TurnOn", "", 0)
 	self:DeleteOnRemove(expLight)
-	
-	util.ScreenShake(myPos, 100, 200, 1, 2500)
 end

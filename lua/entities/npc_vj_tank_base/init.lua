@@ -33,7 +33,7 @@ ENT.HasPainSounds = false -- If set to false, it won't play the pain sounds
 	-- ====== Sound File Paths ====== --
 -- Leave blank if you don't want any sounds to play
 ENT.SoundTbl_Breath = "vj_base/vehicles/armored/engine_idle.wav"
-ENT.SoundTbl_Death = "vj_base/ambience/explosion1.wav"
+ENT.SoundTbl_Death = "VJ.Explosion"
 
 ENT.AlertSoundLevel = 70
 ENT.IdleSoundLevel = 70
@@ -341,28 +341,17 @@ function ENT:CustomOnPriorToKilled(dmginfo, hitgroup)
 	end
 	
 	if self:Tank_CustomOnPriorToKilled(dmginfo, hitgroup) == true then
-		for i=0, 1, 0.5 do
+		for i=0, 1.5, 0.5 do
 			timer.Simple(i, function()
 				if IsValid(self) then
 					local myPos = self:GetPos()
-					VJ.EmitSound(self, "vj_base/ambience/explosion2.wav", 100, 100)
+					VJ.EmitSound(self, "VJ.Explosion")
 					util.BlastDamage(self, self, myPos, 200, 40)
 					util.ScreenShake(myPos, 100, 200, 1, 2500)
 					if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2", myPos, defAng) end
 				end
 			end)
 		end
-		
-		timer.Simple(1.5, function()
-			if IsValid(self) then
-				local myPos = self:GetPos()
-				VJ.EmitSound(self,"vj_base/ambience/explosion2.wav", 100, 100)
-				VJ.EmitSound(self,"vj_base/ambience/explosion3.wav", 100, 100)
-				util.BlastDamage(self, self, myPos, 200, 40)
-				util.ScreenShake(myPos, 100, 200, 1, 2500)
-				if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2", myPos, defAng) end
-			end
-		end)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -380,6 +369,7 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
 	if self:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) == true then
 		local myPos = self:GetPos()
 		
+		VJ.EmitSound(self, "VJ.Explosion")
 		util.BlastDamage(self, self, myPos, 400, 40)
 		util.ScreenShake(myPos, 100, 200, 1, 2500)
 	
@@ -415,15 +405,11 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
 			ParticleEffect("vj_explosion2", myPos + self:GetForward()*130, defAng)
 			ParticleEffectAttach("smoke_burning_engine_01", PATTACH_ABSORIGIN_FOLLOW, corpseEnt, 0)
 			
-			local effectExp = EffectData()
-			effectExp:SetOrigin(myPos)
-			util.Effect("VJ_Medium_Explosion1", effectExp)
-			util.Effect("Explosion", effectExp)
-			
-			local effectDust = EffectData()
-			effectDust:SetOrigin(myPos)
-			effectDust:SetScale(800)
-			util.Effect("ThumperDust", effectDust)
+			local effectData = EffectData()
+			effectData:SetOrigin(myPos)
+			util.Effect("VJ_Medium_Explosion1", effectData)
+			effectData:SetScale(800)
+			util.Effect("ThumperDust", effectData)
 		end
 	end
 end

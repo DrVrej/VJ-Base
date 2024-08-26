@@ -24,12 +24,12 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.Model = {"models/crossbow_bolt.mdl"} -- The models it should spawn with | Picks a random one from the table
+ENT.Model = "models/crossbow_bolt.mdl" -- The models it should spawn with | Picks a random one from the table
 ENT.DoesDirectDamage = true -- Should it do a direct damage when it hits something?
 ENT.DirectDamage = 90 -- How much damage should it do when it hits something
 ENT.DecalTbl_DeathDecals = {"Impact.Concrete"}
-ENT.SoundTbl_Idle = {"weapons/fx/nearmiss/bulletltor03.wav"}
-ENT.SoundTbl_OnCollide = {"weapons/crossbow/hit1.wav"}
+ENT.SoundTbl_Idle = "weapons/fx/nearmiss/bulletltor03.wav"
+ENT.SoundTbl_OnCollide = "weapons/crossbow/hit1.wav"
 
 ENT.IdleSoundLevel = 60
 
