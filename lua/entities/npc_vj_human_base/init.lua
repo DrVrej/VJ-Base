@@ -127,9 +127,6 @@ ENT.FollowPlayer = true -- Should the NPC follow the player when the player pres
 ENT.FollowMinDistance = 100 -- Minimum distance the NPC should come to the player | The base automatically adds the NPC's size to this variable to account for different sizes!
 ENT.NextFollowUpdateTime = 0.5 -- Time until it checks if it should move to the player again | Lower number = More performance loss
 	-- ====== Movement & Idle Variables ====== --
-ENT.AnimTbl_IdleStand = nil -- The idle animation table when AI is enabled | DEFAULT: {ACT_IDLE}
-ENT.AnimTbl_Walk = {ACT_WALK} -- Set the walking animations | Put multiple to let the base pick a random animation when it moves
-ENT.AnimTbl_Run = {ACT_RUN} -- Set the running animations | Put multiple to let the base pick a random animation when it moves
 ENT.IdleAlwaysWander = false -- Should the NPC constantly wander while idling?
 ENT.DisableWandering = false -- Disables wandering when the NPC is idle
 ENT.DisableChasingEnemy = false -- Disables chasing enemies
@@ -1751,11 +1748,9 @@ local function ApplyBackwardsCompatibility(self)
 	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local defIdleTbl = {ACT_IDLE}
 local defShootVec = Vector(0, 0, 55)
 --
 function ENT:Initialize()
-	if self.AnimTbl_IdleStand == nil then self.AnimTbl_IdleStand = defIdleTbl end
 	self:CustomOnPreInitialize()
 	self:SetSpawnEffect(false)
 	self:SetRenderMode(RENDERMODE_NORMAL) // RENDERMODE_TRANSALPHA

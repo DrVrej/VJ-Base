@@ -289,7 +289,7 @@ end
 --[[---------------------------------------------------------
 	Calculates and returns a trajectory velocity that can be used to throw projectiles, props, etc.
 		- self = Entity that's throwing the object
-		- target = Target that self is trying to throw at | DEFAULT: NULL | This isn't required
+		- target = Target that self is trying to throw at | DEFAULT: NULL | This isn't required especially when NOT using prediction
 		- algorithmType = Type of algorithm to use for the calculation
 			-- "Line" = Creates a straight line with the given speed
 				--- Ignores gravity		|   Ignores "ApplyDist" option

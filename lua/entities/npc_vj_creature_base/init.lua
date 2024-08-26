@@ -144,9 +144,6 @@ ENT.FollowPlayer = true -- Should the NPC follow the player when the player pres
 ENT.FollowMinDistance = 100 -- Minimum distance the NPC should come to the player | The base automatically adds the NPC's size to this variable to account for different sizes!
 ENT.NextFollowUpdateTime = 0.5 -- Time until it checks if it should move to the player again | Lower number = More performance loss
 	-- ====== Movement & Idle Variables ====== --
-ENT.AnimTbl_IdleStand = nil -- The idle animation table when AI is enabled | DEFAULT: {ACT_IDLE}
-ENT.AnimTbl_Walk = {ACT_WALK} -- Set the walking animations | Put multiple to let the base pick a random animation when it moves
-ENT.AnimTbl_Run = {ACT_RUN} -- Set the running animations | Put multiple to let the base pick a random animation when it moves
 ENT.IdleAlwaysWander = false -- Should the NPC constantly wander while idling?
 ENT.DisableWandering = false -- Disables wandering when the NPC is idle
 ENT.DisableChasingEnemy = false -- Disables chasing enemies
@@ -388,10 +385,6 @@ ENT.NextAnyAttackTime_Leap_DoRand = false -- False = Don't use random time | Num
 ENT.LeapAttackReps = 1 -- How many times does it run the leap attack code?
 ENT.LeapAttackExtraTimers = nil -- Extra leap attack timers, EX: {1, 1.4} | it will run the damage code after the given amount of seconds
 ENT.StopLeapAttackAfterFirstHit = true -- Should it stop the leap attack from running rest of timers when it hits an enemy?
-	-- ====== Velocity Variables ====== --
-ENT.LeapAttackVelocityForward = 2000 -- How much forward force should it apply?
-ENT.LeapAttackVelocityUp = 200 -- How much upward force should it apply?
-ENT.LeapAttackVelocityRight = 0 -- How much right force should it apply?
 	-- ====== Control Variables ====== --
 ENT.DisableLeapAttackAnimation = false -- if true, it will disable the animation code
 ENT.DisableDefaultLeapAttackDamageCode = false -- Disables the default leap attack damage code
@@ -808,7 +801,13 @@ function ENT:CustomOnLeapAttack_BeforeStartTimer(seed) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnLeapAttack_AfterStartTimer(seed) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnLeapAttackVelocityCode() end -- Return true here to override the default velocity code
+function ENT:GetLeapAttackVelocity()
+	local ene = self:GetEnemy()
+	return VJ.CalculateTrajectory(self, ene, "Curve", self:GetPos() + self:OBBCenter(), ene:GetPos() + ene:OBBCenter(), 1)
+	
+	-- Classic velocity, useful for more straight line type of jumps
+	//return ((ene:GetPos() + ene:OBBCenter()) - (self:GetPos() + self:OBBCenter())):GetNormal() * 400 + self:GetForward() * 200 + self:GetUp() * 100
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnLeapAttack_BeforeChecks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1115,14 +1114,19 @@ local function ApplyBackwardsCompatibility(self)
 			return self.RangeAttackCode_GetShootPos(self, projectile)
 		end
 	end
+	
+	if self.LeapAttackVelocityForward or self.LeapAttackVelocityUp then
+		self.GetLeapAttackVelocity = function()
+			local ene = self:GetEnemy()
+			return ((ene:GetPos() + ene:OBBCenter()) - (self:GetPos() + self:OBBCenter())):GetNormal()*400 + self:GetForward()*(self.LeapAttackVelocityForward or 2000) + self:GetUp()*(self.LeapAttackVelocityUp or 200)
+		end
+	end
 	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local defIdleTbl = {ACT_IDLE}
 local defShootVec = Vector(0, 0, 55)
 --
 function ENT:Initialize()
-	if self.AnimTbl_IdleStand == nil then self.AnimTbl_IdleStand = defIdleTbl end
 	self:CustomOnPreInitialize()
 	self:SetSpawnEffect(false)
 	self:SetRenderMode(RENDERMODE_NORMAL) // RENDERMODE_TRANSALPHA
@@ -2647,10 +2651,7 @@ function ENT:LeapAttackVelocityCode()
 	self:SetGroundEntity(NULL)
 	if self.LeapAttackAnimationFaceEnemy == true then self:SetTurnTarget("Enemy") end
 	self.LeapAttackHasJumped = true
-	if self:CustomOnLeapAttackVelocityCode() != true then
-		
-		self:SetLocalVelocity(((ene:GetPos() + ene:OBBCenter()) - (self:GetPos() + self:OBBCenter())):GetNormal()*400 + self:GetForward()*self.LeapAttackVelocityForward + self:GetUp()*self.LeapAttackVelocityUp + self:GetRight()*self.LeapAttackVelocityRight)
-	end 
+	self:SetLocalVelocity(self:GetLeapAttackVelocity())
 	self:PlaySoundSystem("LeapAttackJump")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
