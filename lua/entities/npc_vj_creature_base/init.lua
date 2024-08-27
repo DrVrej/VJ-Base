@@ -325,7 +325,7 @@ ENT.SlowPlayerOnMeleeAttack_RunSpeed = 100 -- Running Speed when Slow Player is 
 ENT.SlowPlayerOnMeleeAttackTime = 5 -- How much time until player's Speed resets
 	-- ====== Digital Signal Processor (DSP) Variables ====== --
 	-- Applies a DSP (Digital Signal Processor) to the player(s) that got hit
-	-- DSP Presents: https://developer.valvesoftware.com/wiki/Dsp_presets
+	-- DSP Presents: https://wiki.facepunch.com/gmod/DSP_Presets OR https://developer.valvesoftware.com/wiki/Dsp_presets
 ENT.MeleeAttackDSPSoundType = 32 -- DSP type | false = Disables the system completely
 ENT.MeleeAttackDSPSoundUseDamage = true -- true = Only apply the DSP effect past certain damage| false = Always apply the DSP effect!
 ENT.MeleeAttackDSPSoundUseDamageAmount = 60 -- Any damage that is greater than or equal to this number will cause the DSP effect to apply
@@ -417,8 +417,7 @@ ENT.HasFootStepSound = true -- Can the NPC play footstep sounds?
 ENT.HasBreathSound = true -- Should it make a breathing sound?
 ENT.HasIdleSounds = true -- If set to false, it won't play the idle sounds
 ENT.HasOnReceiveOrderSounds = true -- If set to false, it won't play any sound when it receives an order from an ally
-ENT.HasFollowPlayerSounds_Follow = true -- If set to false, it won't play the follow player sounds
-ENT.HasFollowPlayerSounds_UnFollow = true -- If set to false, it won't play the unfollow player sounds
+ENT.HasFollowPlayerSounds = true -- Can it play follow and unfollow player sounds?
 ENT.HasMoveOutOfPlayersWaySounds = true -- If set to false, it won't play any sounds when it moves out of the player's way
 ENT.HasMedicSounds_BeforeHeal = true -- If set to false, it won't play any sounds before it gives a med kit to an ally
 ENT.HasMedicSounds_AfterHeal = true -- If set to false, it won't play any sounds after it gives a med kit to an ally
@@ -502,8 +501,7 @@ ENT.IdleSoundChance = 2
 ENT.IdleDialogueAnswerSoundChance = 1
 ENT.CombatIdleSoundChance = 1
 ENT.OnReceiveOrderSoundChance = 1
-ENT.FollowPlayerSoundChance = 1
-ENT.UnFollowPlayerSoundChance = 1
+ENT.FollowPlayerSoundChance = 1 -- Controls both "self.SoundTbl_FollowPlayer" and "self.SoundTbl_UnFollowPlayer"
 ENT.MoveOutOfPlayersWaySoundChance = 2
 ENT.MedicBeforeHealSoundChance = 1
 ENT.MedicAfterHealSoundChance = 1
@@ -557,8 +555,7 @@ ENT.IdleDialogueSoundLevel = 75
 ENT.IdleDialogueAnswerSoundLevel = 75
 ENT.CombatIdleSoundLevel = 80
 ENT.OnReceiveOrderSoundLevel = 80
-ENT.FollowPlayerSoundLevel = 75
-ENT.UnFollowPlayerSoundLevel = 75
+ENT.FollowPlayerSoundLevel = 75 -- Controls both "self.SoundTbl_FollowPlayer" and "self.SoundTbl_UnFollowPlayer"
 ENT.MoveOutOfPlayersWaySoundLevel = 75
 ENT.BeforeHealSoundLevel = 75
 ENT.AfterHealSoundLevel = 75
@@ -601,8 +598,7 @@ ENT.IdleDialogueSoundPitch = VJ.SET(false, false)
 ENT.IdleDialogueAnswerSoundPitch = VJ.SET(false, false)
 ENT.CombatIdleSoundPitch = VJ.SET(false, false)
 ENT.OnReceiveOrderSoundPitch = VJ.SET(false, false)
-ENT.FollowPlayerPitch = VJ.SET(false, false)
-ENT.UnFollowPlayerPitch = VJ.SET(false, false)
+ENT.FollowPlayerPitch = VJ.SET(false, false) -- Controls both "self.SoundTbl_FollowPlayer" and "self.SoundTbl_UnFollowPlayer"
 ENT.MoveOutOfPlayersWaySoundPitch = VJ.SET(false, false)
 ENT.BeforeHealSoundPitch = VJ.SET(false, false)
 ENT.AfterHealSoundPitch = VJ.SET(100, 100)
@@ -1039,7 +1035,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_sd_leapattack"):GetInt() == 1 then self.HasBeforeLeapAttackSound = false self.HasLeapAttackJumpSound = false self.HasLeapAttackDamageSound = false self.HasLeapAttackDamageMissSound = false end
 	if GetConVar("vj_npc_sd_pain"):GetInt() == 1 then self.HasPainSounds = false end
 	if GetConVar("vj_npc_sd_death"):GetInt() == 1 then self.HasDeathSounds = false end
-	if GetConVar("vj_npc_sd_followplayer"):GetInt() == 1 then self.HasFollowPlayerSounds_Follow = false self.HasFollowPlayerSounds_UnFollow = false end
+	if GetConVar("vj_npc_sd_followplayer"):GetInt() == 1 then self.HasFollowPlayerSounds = false end
 	if GetConVar("vj_npc_sd_becomenemytoply"):GetInt() == 1 then self.HasBecomeEnemyToPlayerSounds = false end
 	if GetConVar("vj_npc_sd_damagebyplayer"):GetInt() == 1 then self.HasDamageByPlayerSounds = false end
 	if GetConVar("vj_npc_sd_onplayersight"):GetInt() == 1 then self.HasOnPlayerSightSounds = false end
@@ -1114,7 +1110,6 @@ local function ApplyBackwardsCompatibility(self)
 			return self.RangeAttackCode_GetShootPos(self, projectile)
 		end
 	end
-	
 	if self.LeapAttackVelocityForward or self.LeapAttackVelocityUp then
 		self.GetLeapAttackVelocity = function()
 			local ene = self:GetEnemy()
@@ -1883,10 +1878,11 @@ function ENT:Think()
 							if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 								self:AA_MoveTo(self:GetTarget(), true, (distToPly < (followData.MinDist * 1.5) and "Calm") or "Alert", {FaceDestTarget = true})
 							elseif !self:IsMoving() or self:GetCurGoalType() != 1 then
-								self:NavSetGoalTarget(followEnt) // local goalTarget =
+								//self:NavSetGoalTarget(followEnt) // local goalTarget = -- No longer works, a recent GMod commit broke it
 								-- Do NOT check for validity! Let it be sent to "OnTaskFailed" so an NPC can capture it! (Ex: HL1 scientist complaining to the player)
 								//if goalTarget then
 								local schedGoToTarget = vj_ai_schedule.New("vj_follow_ent")
+								schedGoToTarget:EngTask("TASK_GET_PATH_TO_TARGET", 0) -- Required to generate the path!
 								schedGoToTarget:EngTask("TASK_MOVE_TO_TARGET_RANGE", followData.MinDist * 0.8)
 								schedGoToTarget:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 								schedGoToTarget:EngTask("TASK_FACE_TARGET", 1)
@@ -3385,7 +3381,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 		end
 		return
 	elseif sdSet == "FollowPlayer" then
-		if self.HasFollowPlayerSounds_Follow == true then
+		if self.HasFollowPlayerSounds then
 			local pickedSD = VJ.PICK(self.SoundTbl_FollowPlayer)
 			if (math.random(1, self.FollowPlayerSoundChance) == 1 && pickedSD) or customTbl then
 				if customTbl then pickedSD = customTbl end
@@ -3396,13 +3392,13 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 		end
 		return
 	elseif sdSet == "UnFollowPlayer" then
-		if self.HasFollowPlayerSounds_UnFollow == true then
+		if self.HasFollowPlayerSounds then
 			local pickedSD = VJ.PICK(self.SoundTbl_UnFollowPlayer)
-			if (math.random(1, self.UnFollowPlayerSoundChance) == 1 && pickedSD) or customTbl then
+			if (math.random(1, self.FollowPlayerSoundChance) == 1 && pickedSD) or customTbl then
 				if customTbl then pickedSD = customTbl end
 				self:StopAllCommonSpeechSounds()
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
-				self.CurrentUnFollowPlayerSound = sdType(self, pickedSD, self.UnFollowPlayerSoundLevel, self:VJ_DecideSoundPitch(self.UnFollowPlayerPitch.a, self.UnFollowPlayerPitch.b))
+				self.CurrentFollowPlayerSound = sdType(self, pickedSD, self.FollowPlayerSoundLevel, self:VJ_DecideSoundPitch(self.FollowPlayerPitch.a, self.FollowPlayerPitch.b))
 			end
 		end
 		return
@@ -3766,7 +3762,6 @@ function ENT:StopAllCommonSpeechSounds()
 	StopSound(self.CurrentLostEnemySound)
 	StopSound(self.CurrentAlertSound)
 	StopSound(self.CurrentFollowPlayerSound)
-	StopSound(self.CurrentUnFollowPlayerSound)
 	StopSound(self.CurrentMoveOutOfPlayersWaySound)
 	StopSound(self.CurrentBecomeEnemyToPlayerSound)
 	StopSound(self.CurrentOnPlayerSightSound)
@@ -3798,7 +3793,6 @@ function ENT:StopAllCommonSounds()
 	StopSound(self.CurrentLeapAttackDamageSound)
 	StopSound(self.CurrentPainSound)
 	StopSound(self.CurrentFollowPlayerSound)
-	StopSound(self.CurrentUnFollowPlayerSound)
 	StopSound(self.CurrentMoveOutOfPlayersWaySound)
 	StopSound(self.CurrentBecomeEnemyToPlayerSound)
 	StopSound(self.CurrentOnPlayerSightSound)
