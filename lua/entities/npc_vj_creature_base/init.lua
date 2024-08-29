@@ -14,7 +14,6 @@ AccessorFunc(ENT, "m_fMaxYawSpeed", "MaxYawSpeed", FORCE_NUMBER)
 ------ Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Model = false -- Model(s) to spawn with | Picks a random one if it's a table
-ENT.VJ_IsHugeMonster = false -- Use for bosses or massive NPCs as it affects parts of the NPC | EX: It won't receive any melee knock back
 ENT.EntitiesToNoCollide = false -- Set to a table of entity class names for the NPC to not collide with otherwise leave it to false
 ENT.AllowPrintingInChat = true -- Should this NPC be allowed to post in a player's chat? | Example: "Blank no longer likes you."
 	-- ====== Health ====== --
@@ -213,7 +212,7 @@ ENT.Immune_Fire = false -- Immune to fire-type damages
 ENT.Immune_Melee = false -- Immune to melee-type damage | Example: Crowbar, slash damages
 ENT.Immune_Sonic = false -- Immune to sonic-type damages
 ENT.ImmuneDamagesTable = {} -- Makes the NPC immune to the give type of damage types | Takes DMG_ enumerations
-ENT.GetDamageFromIsHugeMonster = false -- Should it skip immunity checks and hurt by all damage types if the attacker is tagged with "VJ_IsHugeMonster"?
+ENT.ForceDamageFromBosses = false -- Should the NPC get damaged by bosses regardless if it's not supposed to by skipping immunity checks, etc. | Bosses are attackers tagged with "VJTag_ID_Boss"
 ENT.AllowIgnition = true -- Can this NPC be set on fire?
 	-- ====== Flinching Variables ====== --
 ENT.CanFlinch = 0 -- 0 = Don't flinch | 1 = Flinch at any damage | 2 = Flinch only from certain damages
@@ -1066,6 +1065,7 @@ local function ApplyBackwardsCompatibility(self)
 	if self.CustomInitialize then self:CustomInitialize() end
 	if self.Immune_Physics then self:SetImpactEnergyScale(0) end
 	if self.MaxJumpLegalDistance then self.JumpVars.MaxRise = self.MaxJumpLegalDistance.a; self.JumpVars.MaxDrop = self.MaxJumpLegalDistance.b end
+	if self.VJ_IsHugeMonster then self.VJTag_ID_Boss = self.VJ_IsHugeMonster end
 	if self.HasWorldShakeOnMove && !self.CustomOnFootStepSound then
 		-- Only do this if "self.CustomOnFootStepSound" isn't already being used
 		self.CustomOnFootStepSound = function()
@@ -2452,7 +2452,7 @@ function ENT:MeleeAttackCode(isPropAttack)
 				end
 			end
 			-- Knockback (Don't push things like doors, trains, elevators as it will make them fly when activated)
-			if self.HasMeleeAttackKnockBack && v:GetMoveType() != MOVETYPE_PUSH && v.MovementType != VJ_MOVETYPE_STATIONARY && (!v.VJ_IsHugeMonster or v.IsVJBaseSNPC_Tank) then
+			if self.HasMeleeAttackKnockBack && v:GetMoveType() != MOVETYPE_PUSH && v.MovementType != VJ_MOVETYPE_STATIONARY && (!v.VJTag_ID_Boss or v.IsVJBaseSNPC_Tank) then
 				v:SetGroundEntity(NULL)
 				v:SetVelocity(self:MeleeAttackKnockbackVelocity(v))
 			end
@@ -2469,7 +2469,7 @@ function ENT:MeleeAttackCode(isPropAttack)
 				v:TakeDamageInfo(applyDmg, self)
 			end
 			-- Bleed Enemy
-			if self.MeleeAttackBleedEnemy && math.random(1, self.MeleeAttackBleedEnemyChance) == 1 && v.VJTag_IsLiving && (!v.VJ_IsHugeMonster or self.VJ_IsHugeMonster) then
+			if self.MeleeAttackBleedEnemy && math.random(1, self.MeleeAttackBleedEnemyChance) == 1 && v.VJTag_IsLiving && (!v.VJTag_ID_Boss or self.VJTag_ID_Boss) then
 				local tName = "timer_melee_bleedply"..v:EntIndex() -- Timer's name
 				local tDmg = self.MeleeAttackBleedEnemyDamage -- How much damage each rep does
 				timer.Create(tName, self.MeleeAttackBleedEnemyTime, self.MeleeAttackBleedEnemyReps, function()
@@ -2843,7 +2843,7 @@ function ENT:OnTakeDamage(dmginfo)
 	local isFireDmg = self:IsOnFire() && IsValid(dmgInflictor) && IsValid(dmgAttacker) && dmgInflictor:GetClass() == "entityflame" && dmgAttacker:GetClass() == "entityflame"
 	
 	-- If it should always take damage from huge monsters, then skip immunity checks!
-	if self.GetDamageFromIsHugeMonster && dmgAttacker.VJ_IsHugeMonster then
+	if self.ForceDamageFromBosses && dmgAttacker.VJTag_ID_Boss then
 		goto skip_immunity
 	end
 	if VJ.HasValue(self.ImmuneDamagesTable, dmgType) then return 0 end

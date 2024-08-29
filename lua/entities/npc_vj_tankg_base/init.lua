@@ -11,7 +11,7 @@ include("shared.lua")
 ENT.StartHealth = 0
 ENT.HullType = HULL_LARGE
 ENT.HasSetSolid = false -- set to false to disable SetSolid
-ENT.VJ_IsHugeMonster = true -- Is this a huge monster?
+ENT.VJTag_ID_Boss = true -- Is this a huge monster?
 ENT.MovementType = VJ_MOVETYPE_STATIONARY -- How the NPC moves around
 ENT.CanTurnWhileStationary = false -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
 ENT.GodMode = true -- Immune to everything

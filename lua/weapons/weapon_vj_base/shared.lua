@@ -470,7 +470,7 @@ function SWEP:NPCAbleToShoot()
 		end
 		if (owner.IsVJBaseSNPC_Human && owner.DoingWeaponAttack && (VJ.IsCurrentAnimation(owner, owner.CurrentWeaponAnimation) or (!owner.DoingWeaponAttack_Standing))) or (!owner.IsVJBaseSNPC_Human) then
 			-- For VJ Humans only, ammo check
-			if owner.IsVJBaseSNPC_Human && owner.AllowWeaponReloading == true && self:Clip1() <= 0 then -- No ammo!
+			if owner.IsVJBaseSNPC_Human && owner.Weapon_CanReload == true && self:Clip1() <= 0 then -- No ammo!
 				if owner.VJ_IsBeingControlled then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER, "Press R to reload!") end
 				if self.IsMeleeWeapon == false && self.HasDryFireSound == true && CurTime() > self.NextNPCDrySoundT then
 					local sdTbl = VJ.PICK(self.DryFireSound)

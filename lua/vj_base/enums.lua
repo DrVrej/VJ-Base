@@ -80,7 +80,6 @@ IsVJBaseWeapon					bool
 IsVJBaseCorpse					bool
 IsVJBaseCorpse_Gib				bool
 IsVJBaseSpawner					bool
-IsVJBaseBoneFollower			bool
 IsVJBaseBullseye				bool
 IsVJBaseEdited					bool		This entity's meta table has been edited by VJ Base
 
@@ -97,7 +96,7 @@ VJTag_IsBeingEaten				bool		Entity is being eaten by something
 VJTag_IsBaseFriendly			bool		Friendly to all VJ NPCs
 
 -- Identifiers
-VJ_IsHugeMonster				bool		NPC is considered to be very large and/or a boss
+VJTag_ID_Boss					bool		Entity is a very large and/or a boss | It affects parts of the entity, for example It won't receive any melee knock back
 VJTag_ID_Danger					bool		Entity is dangerous and should be detected as a regular danger by NPCs
 VJTag_ID_Grenade				bool		Entity is a grenade type and should be detected as a grenade danger by NPCs
 VJTag_ID_Headcrab				bool

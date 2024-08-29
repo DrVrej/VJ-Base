@@ -14,7 +14,6 @@ AccessorFunc(ENT, "m_fMaxYawSpeed", "MaxYawSpeed", FORCE_NUMBER)
 ------ Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Model = false -- Model(s) to spawn with | Picks a random one if it's a table
-ENT.VJ_IsHugeMonster = false -- Use for bosses or massive NPCs as it affects parts of the NPC | EX: It won't receive any melee knock back
 ENT.EntitiesToNoCollide = false -- Set to a table of entity class names for the NPC to not collide with otherwise leave it to false
 ENT.AllowPrintingInChat = true -- Should this NPC be allowed to post in a player's chat? | Example: "Blank no longer likes you."
 	-- ====== Health ====== --
@@ -198,7 +197,7 @@ ENT.Immune_Fire = false -- Immune to fire-type damages
 ENT.Immune_Melee = false -- Immune to melee-type damage | Example: Crowbar, slash damages
 ENT.Immune_Sonic = false -- Immune to sonic-type damages
 ENT.ImmuneDamagesTable = {} -- Makes the NPC immune to the give type of damage types | Takes DMG_ enumerations
-ENT.GetDamageFromIsHugeMonster = false -- Should it skip immunity checks and hurt by all damage types if the attacker is tagged with "VJ_IsHugeMonster"?
+ENT.ForceDamageFromBosses = false -- Should the NPC get damaged by bosses regardless if it's not supposed to by skipping immunity checks, etc. | Bosses are attackers tagged with "VJTag_ID_Boss"
 ENT.AllowIgnition = true -- Can this NPC be set on fire?
 	-- ====== Flinching Variables ====== --
 ENT.CanFlinch = 0 -- 0 = Don't flinch | 1 = Flinch at any damage | 2 = Flinch only from certain damages
@@ -307,8 +306,8 @@ ENT.DisableDefaultMeleeAttackDamageCode = false -- Disables the default melee at
 ------ Weapon Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.DisableWeapons = false -- If set to true, it won't be able to use weapons
-ENT.Weapon_NoSpawnMenu = false -- If ture, it will ignore the weapon override settings in the spawn menu
-ENT.WeaponSpread = 1 -- What's the spread of the weapon? | Closer to 0 = better accuracy, Farther than 1 = worse accuracy
+ENT.Weapon_NoSpawnMenu = false -- If true, it will ignore the weapon override settings in the spawn menu
+ENT.Weapon_Accuracy = 1 -- What's the spread of the weapon? | Closer to 0 = better accuracy, Farther than 1 = worse accuracy
 ENT.Weapon_ShootWhileMoving = true -- Can it shoot its weapon while moving?
 ENT.NoWeapon_UseScaredBehavior = true -- Should it use the scared behavior when it sees an enemy and doesn't have a weapon?
 	-- ====== Distance Variables ====== --
@@ -331,8 +330,8 @@ ENT.AnimTbl_WeaponAttackSecondary = "shootAR2alt" -- Animation(s) to play while 
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.WeaponAttackSecondaryTimeUntilFire = 0.9 -- The weapon uses this integer to set the time until the firing code is ran
 	-- ====== Reloading Variables ====== --
-ENT.AllowWeaponReloading = true -- If false, the NPC will not reload
-ENT.WeaponReload_FindCover = true -- Should it first find cover before reloading?
+ENT.Weapon_CanReload = true -- Can the NPC reload its weapon?
+ENT.Weapon_FindCoverOnReload = true -- Should it attempt to find cover before proceeding to reload?
 ENT.AnimTbl_WeaponReload = ACT_RELOAD -- Animations that play when the NPC reloads
 ENT.AnimTbl_WeaponReloadBehindCover = ACT_RELOAD_LOW -- Animations that play when the NPC reloads, but behind cover
 ENT.DisableWeaponReloadAnimation = false -- if true, it will disable the animation code when reloading
@@ -521,7 +520,6 @@ ENT.NextSoundTime_Alert = VJ.SET(2, 3)
 ENT.NextSoundTime_OnGrenadeSight = VJ.SET(3, 3)
 ENT.NextSoundTime_OnDangerSight = VJ.SET(3, 3)
 ENT.NextSoundTime_Suppressing = VJ.SET(7, 15)
-ENT.NextSoundTime_WeaponReload = VJ.SET(3, 5)
 ENT.NextSoundTime_OnKilledEnemy = VJ.SET(3, 5)
 ENT.NextSoundTime_AllyDeath = VJ.SET(3, 5)
 ENT.NextSoundTime_Pain = false
@@ -1660,7 +1658,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_nomelee"):GetInt() == 1 then self.HasMeleeAttack = false end
 	if GetConVar("vj_npc_nobleed"):GetInt() == 1 then self.Bleeds = false end
 	if GetConVar("vj_npc_godmodesnpc"):GetInt() == 1 then self.GodMode = true end
-	if GetConVar("vj_npc_noreload"):GetInt() == 1 then self.AllowWeaponReloading = false end
+	if GetConVar("vj_npc_noreload"):GetInt() == 1 then self.Weapon_CanReload = false end
 	if GetConVar("vj_npc_nobecomeenemytoply"):GetInt() == 1 then self.BecomeEnemyToPlayer = false end
 	if GetConVar("vj_npc_nocallhelp"):GetInt() == 1 then self.CallForHelp = false end
 	if GetConVar("vj_npc_noinvestigate"):GetInt() == 1 then self.CanInvestigate = false end
@@ -1720,9 +1718,13 @@ local function ApplyBackwardsCompatibility(self)
 	if self.NextMoveRandomlyWhenShootingTime1 or self.NextMoveRandomlyWhenShootingTime2 then self.NextMoveRandomlyWhenShootingTime = VJ.SET(self.NextMoveRandomlyWhenShootingTime1 or 3, self.NextMoveRandomlyWhenShootingTime2 or 6) end
 	if self.Immune_Physics then self:SetImpactEnergyScale(0) end
 	if self.MaxJumpLegalDistance then self.JumpVars.MaxRise = self.MaxJumpLegalDistance.a; self.JumpVars.MaxDrop = self.MaxJumpLegalDistance.b end
+	if self.VJ_IsHugeMonster then self.VJTag_ID_Boss = self.VJ_IsHugeMonster end
 	if self.HasShootWhileMoving == false then self.Weapon_ShootWhileMoving = false end
 	if self.HasWeaponBackAway == false then self.Weapon_RetreatDistance = 0 end
 	if self.WeaponBackAway_Distance then self.Weapon_RetreatDistance = self.WeaponBackAway_Distance end
+	if self.WeaponSpread then self.Weapon_Accuracy = self.WeaponSpread end
+	if self.AllowWeaponReloading then self.Weapon_CanReload = self.AllowWeaponReloading end
+	if self.WeaponReload_FindCover then self.Weapon_FindCoverOnReload = self.WeaponReload_FindCover end
 	if self.ThrowGrenadeChance then self.GrenadeAttackChance = self.ThrowGrenadeChance end
 	if self.HasWorldShakeOnMove && !self.CustomOnFootStepSound then
 		self.CustomOnFootStepSound = function()
@@ -2545,7 +2547,7 @@ function ENT:Think()
 			if GetConVar("vj_npc_printcurenemy"):GetInt() == 1 then print(self:GetClass().."'s Enemy: ",self:GetEnemy()," Alerted? ",self.Alerted) end
 			if GetConVar("vj_npc_printtakingcover"):GetInt() == 1 then if curTime > self.TakingCoverT == true then print(self:GetClass().." Is Not Taking Cover") else print(self:GetClass().." Is Taking Cover ("..self.TakingCoverT-curTime..")") end end
 			if GetConVar("vj_npc_printlastseenenemy"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - self.EnemyData.LastVisibleTime).." ("..self:GetName()..")") end
-			if IsValid(self.CurrentWeaponEntity) && GetConVar("vj_npc_dev_printwepinfo"):GetInt() == 1 then print(self:GetName().." -->", self.CurrentWeaponEntity, "Ammo: "..self.CurrentWeaponEntity:Clip1().."/"..self.CurrentWeaponEntity:GetMaxClip1().." | Accuracy: "..self.WeaponSpread) end
+			if IsValid(self.CurrentWeaponEntity) && GetConVar("vj_npc_dev_printwepinfo"):GetInt() == 1 then print(self:GetName().." -->", self.CurrentWeaponEntity, "Ammo: "..self.CurrentWeaponEntity:Clip1().."/"..self.CurrentWeaponEntity:GetMaxClip1().." | Accuracy: "..self.Weapon_Accuracy) end
 		end
 		
 		local eneData = self.EnemyData
@@ -2710,7 +2712,7 @@ function ENT:Think()
 							self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_MELEE
 							self:DoChangeWeapon(self.WeaponInventory.Melee, true)
 						-- Switch to anti-armor
-						elseif self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING && IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank == true or ene.VJ_IsHugeMonster == true) && self.CurrentWeaponEntity != self.WeaponInventory.AntiArmor then
+						elseif self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING && IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank == true or ene.VJTag_ID_Boss == true) && self.CurrentWeaponEntity != self.WeaponInventory.AntiArmor then
 							self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_ANTI_ARMOR
 							self:DoChangeWeapon(self.WeaponInventory.AntiArmor, true)
 						end
@@ -2721,7 +2723,7 @@ function ENT:Think()
 							self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_PRIMARY
 							self:DoChangeWeapon(self.WeaponInventory.Primary, true)
 						-- Reset weapon status from anti-armor to primary
-						elseif self.WeaponInventoryStatus == VJ.NPC_WEP_INVENTORY_ANTI_ARMOR && (!eneValid or (eneValid && ene.IsVJBaseSNPC_Tank != true && ene.VJ_IsHugeMonster != true)) then
+						elseif self.WeaponInventoryStatus == VJ.NPC_WEP_INVENTORY_ANTI_ARMOR && (!eneValid or (eneValid && ene.IsVJBaseSNPC_Tank != true && ene.VJTag_ID_Boss != true)) then
 							self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_PRIMARY
 							self:DoChangeWeapon(self.WeaponInventory.Primary, true)
 						end
@@ -2729,7 +2731,7 @@ function ENT:Think()
 				end
 				
 				-- Weapon Reloading
-				if self.AllowWeaponReloading && !self:BusyWithActivity() && self:GetWeaponState() == VJ.NPC_WEP_STATE_READY && (!self.CurrentWeaponEntity.IsMeleeWeapon) && self.AttackType == VJ.ATTACK_TYPE_NONE && ((!plyControlled && ((!eneValid && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1() && (curTime - eneData.TimeSet) > math.random(3, 8) && !self:IsMoving()) or (eneValid && self.CurrentWeaponEntity:Clip1() <= 0))) or (plyControlled && self.VJ_TheController:KeyDown(IN_RELOAD) && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1())) then
+				if self.Weapon_CanReload && !self:BusyWithActivity() && self:GetWeaponState() == VJ.NPC_WEP_STATE_READY && (!self.CurrentWeaponEntity.IsMeleeWeapon) && self.AttackType == VJ.ATTACK_TYPE_NONE && ((!plyControlled && ((!eneValid && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1() && (curTime - eneData.TimeSet) > math.random(3, 8) && !self:IsMoving()) or (eneValid && self.CurrentWeaponEntity:Clip1() <= 0))) or (plyControlled && self.VJ_TheController:KeyDown(IN_RELOAD) && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1())) then
 					self.DoingWeaponAttack = false
 					self.DoingWeaponAttack_Standing = false
 					if !plyControlled then self:SetWeaponState(VJ.NPC_WEP_STATE_RELOADING) end
@@ -2775,7 +2777,7 @@ function ENT:Think()
 								if self.IsGuard == true or self.IsFollowing == true or self.VJ_IsBeingControlled_Tool == true or eneValid == false or self.MovementType == VJ_MOVETYPE_STATIONARY or self.LatestEnemyDistance < 650 then
 									DoReloadAnimation(self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReload)))
 								else -- If all is good, then run to a hiding spot and then reload!
-									if self.WeaponReload_FindCover == true then
+									if self.Weapon_FindCoverOnReload == true then
 										local schedReload = vj_ai_schedule.New("vj_weapon_reload")
 										schedReload:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
 										schedReload:EngTask("TASK_RUN_PATH", 0)
@@ -3019,7 +3021,7 @@ function ENT:MeleeAttackCode()
 			local isProp = v.VJTag_IsAttackable == true
 			if self:CustomOnMeleeAttack_AfterChecks(v, isProp) == true then continue end
 			-- Knockback (Don't push things like doors, trains, elevators as it will make them fly when activated)
-			if self.HasMeleeAttackKnockBack && v:GetMoveType() != MOVETYPE_PUSH && v.MovementType != VJ_MOVETYPE_STATIONARY && (!v.VJ_IsHugeMonster or v.IsVJBaseSNPC_Tank) then
+			if self.HasMeleeAttackKnockBack && v:GetMoveType() != MOVETYPE_PUSH && v.MovementType != VJ_MOVETYPE_STATIONARY && (!v.VJTag_ID_Boss or v.IsVJBaseSNPC_Tank) then
 				v:SetGroundEntity(NULL)
 				v:SetVelocity(self:MeleeAttackKnockbackVelocity(v))
 			end
@@ -3682,7 +3684,7 @@ function ENT:SelectSchedule()
 										end
 									-- Normal ranged weapons
 									else
-										local hasAmmo = wep:Clip1() > 0 // AllowWeaponReloading
+										local hasAmmo = wep:Clip1() > 0 // Weapon_CanReload
 										if !hasAmmo && !self.CurrentWeaponAnimationIsAim then
 											self.CurrentWeaponAnimation = ACT_INVALID
 										end
@@ -3865,7 +3867,7 @@ function ENT:OnTakeDamage(dmginfo)
 	local isFireDmg = self:IsOnFire() && IsValid(dmgInflictor) && IsValid(dmgAttacker) && dmgInflictor:GetClass() == "entityflame" && dmgAttacker:GetClass() == "entityflame"
 	
 	-- If it should always take damage from huge monsters, then skip immunity checks!
-	if self.GetDamageFromIsHugeMonster && dmgAttacker.VJ_IsHugeMonster then
+	if self.ForceDamageFromBosses && dmgAttacker.VJTag_ID_Boss then
 		goto skip_immunity
 	end
 	if VJ.HasValue(self.ImmuneDamagesTable, dmgType) then return 0 end
@@ -4702,13 +4704,15 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	elseif sdSet == "WeaponReload" then
 		if self.HasWeaponReloadSounds == true && CurTime() > self.NextWeaponReloadSoundT then
 			local pickedSD = VJ.PICK(self.SoundTbl_WeaponReload)
+			local sdDur = 3
 			if (math.random(1, self.WeaponReloadSoundChance) == 1 && pickedSD) or customTbl then
 				if customTbl then pickedSD = customTbl end
 				self:StopAllCommonSpeechSounds()
+				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentWeaponReloadSound = sdType(self, pickedSD, self.WeaponReloadSoundLevel, self:VJ_DecideSoundPitch(self.WeaponReloadSoundPitch.a, self.WeaponReloadSoundPitch.b))
 			end
-			self.NextWeaponReloadSoundT = CurTime() + math.Rand(self.NextSoundTime_WeaponReload.a, self.NextSoundTime_WeaponReload.b)
+			self.NextWeaponReloadSoundT = CurTime() + sdDur
 		end
 		return
 	elseif sdSet == "BeforeMeleeAttack" then

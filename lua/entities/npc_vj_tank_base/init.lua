@@ -10,7 +10,7 @@ include("shared.lua")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.StartHealth = 200
 ENT.HullType = HULL_LARGE
-ENT.VJ_IsHugeMonster = true -- Is this a huge monster?
+ENT.VJTag_ID_Boss = true -- Is this a huge monster?
 ENT.MovementType = VJ_MOVETYPE_PHYSICS -- How the NPC moves around
 ENT.Bleeds = false -- Does the NPC bleed? Controls all bleeding related components such blood decal, particle, pool, etc.
 ENT.Immune_Dissolve = true -- Immune to Dissolving | Example: Combine Ball
@@ -18,7 +18,7 @@ ENT.Immune_AcidPoisonRadiation = true -- Immune to Acid, Poison and Radiation
 ENT.Immune_Bullet = true -- Immune to Bullets
 ENT.ImmuneDamagesTable = {DMG_PHYSGUN} -- You can set Specific types of damages for the SNPC to be immune to
 ENT.FindEnemy_UseSphere = true -- Should the NPC see all around? (360 degrees) | Objects and walls can still block its sight!
-ENT.GetDamageFromIsHugeMonster = true -- Should it skip immunity checks and hurt by all damage types if the attacker is tagged with "VJ_IsHugeMonster"?
+ENT.ForceDamageFromBosses = true -- Should the NPC get damaged by bosses regardless if it's not supposed to by skipping immunity checks, etc. | Bosses are attackers tagged with "VJTag_ID_Boss"
 ENT.DeathCorpseCollisionType = COLLISION_GROUP_NONE -- Collision type for the corpse | NPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
 ENT.WaitBeforeDeathTime = 2 -- Time until the NPC spawns its corpse and gets removed
 ENT.HasMeleeAttack = false -- Can this NPC melee attack?
@@ -175,7 +175,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_RunOver(ent)
 	if !self.Tank_IsMoving or !IsValid(ent) or (GetConVar("vj_npc_nomelee"):GetInt() == 1 /*or self.HasMeleeAttack == false*/) or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then return end
-	if self:Disposition(ent) == 1 && ent:Health() > 0 && ((ent:IsNPC() && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot()) && !ent.VJ_IsHugeMonster then
+	if self:Disposition(ent) == 1 && ent:Health() > 0 && ((ent:IsNPC() && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot()) && !ent.VJTag_ID_Boss then
 		self:Tank_CustomOnRunOver(ent)
 		self:Tank_Sound_RunOver()
 		ent:TakeDamage(self:VJ_GetDifficultyValue(8), self, self)
@@ -326,7 +326,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnTakeDamage_BeforeDamage(dmginfo, hitgroup)
 	if dmginfo:IsDamageType(DMG_SLASH) or dmginfo:IsDamageType(DMG_GENERIC) or dmginfo:IsDamageType(DMG_CLUB) then
-		if dmginfo:GetDamage() >= 30 && !dmginfo:GetAttacker().VJ_IsHugeMonster then
+		if dmginfo:GetDamage() >= 30 && !dmginfo:GetAttacker().VJTag_ID_Boss then
 			dmginfo:SetDamage(dmginfo:GetDamage() / 2)
 		else
 			dmginfo:SetDamage(0)

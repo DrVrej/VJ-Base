@@ -839,7 +839,7 @@ end
 		12. Multiply the spread result by the calculated value
 		--
 		-- Other modifiers
-		13. Multiply it by the owner's weapon accuracy (WeaponSpread)
+		13. Multiply it by the owner's weapon accuracy (Weapon_Accuracy)
 		14. Apply the modifier parameter, if any
 -----------------------------------------------------------]]
 -- To convert division to multiplication do (1 / division_number) | NOTE: Multiplication a bit faster!
@@ -853,7 +853,7 @@ function ENT:CalcAimSpread(target, goalPos, modifier)
 		result = result + math.min(target:GetMovementVelocity():LengthSqr() * aimMaxMove, 0.05) -- Target movement modifier
 		result = result * (2.5 - math.min((CurTime() - self:GetLastDamageTime()) / damageCooldown, 1.5)) -- Suppression modifier (Inverse effect over time)
 	end
-	return result * (self.WeaponSpread or 1) * modifier
+	return result * (self.Weapon_Accuracy or 1) * modifier
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1752,7 +1752,7 @@ function ENT:MaintainRelationships()
 					if vPlayer then
 						self:AddEntityRelationship(v, D_NU, 0) -- Make the player neutral since it's not supposed to be a friend
 						//if v:Crouching() && v:GetMoveType() != MOVETYPE_NOCLIP then -- Old and broken
-							//mySightDist = self.VJ_IsHugeMonster == true and 5000 or 2000
+							//mySightDist = self.VJTag_ID_Boss == true and 5000 or 2000
 						//end
 					end
 					if self.CanInvestigate && self.NextInvestigationMove < CurTime() then
