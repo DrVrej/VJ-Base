@@ -49,8 +49,7 @@ ENT.HasStartupSounds = true -- Does it make a sound when the projectile is creat
 ENT.HasIdleSounds = true -- Does it have idle sounds?
 ENT.HasOnCollideSounds = true -- Should it play a sound when it collides something?
 ENT.HasOnRemoveSounds = true -- Should it play a sound when it gets removed?
-	-- ====== File Path Variables ====== --
-	-- Leave blank if you don't want any sounds to play
+	-- ====== Sound Paths ====== --
 ENT.SoundTbl_Startup = {}
 ENT.SoundTbl_Idle = {}
 ENT.SoundTbl_OnCollide = {}

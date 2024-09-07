@@ -47,6 +47,7 @@ local varCAnt = "CLASS_ANTLION"
 local varCCom = "CLASS_COMBINE"
 local varCXen = "CLASS_XEN"
 local varCZom = "CLASS_ZOMBIE"
+local StopSound = VJ.STOPSOUND
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*
  ######  ##     ##  ######  ########  #######  ##     ##         ######## ########  #### ######## ##    ## ########  ##       ##    ##    ######## ##     ## ##    ##  ######  ######## ####  #######  ##    ##  ######
@@ -592,6 +593,16 @@ function ENT:VJ_DecideSoundPitch(pitch1, pitch2)
 	if pitch1 != false && isnumber(pitch1) then finalPitch1 = pitch1 end
 	if pitch2 != false && isnumber(pitch2) then finalPitch2 = pitch2 end
 	return math.random(finalPitch1, finalPitch2)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Stops most sounds played by the NPC | Excludes: Death, impact, attack misses, attack impacts
+-----------------------------------------------------------]]
+function ENT:StopAllSounds()
+	StopSound(self.CurrentSpeechSound)
+	StopSound(self.CurrentBreathSound)
+	StopSound(self.CurrentIdleSound)
+	StopSound(self.CurrentMedicAfterHealSound)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1508,7 +1519,7 @@ function ENT:MaintainMedicBehavior()
 								ally:SetHealth(math_clamp(friCurHP + self.Medic_HealthAmount, friCurHP, ally:GetMaxHealth()))
 								ally:RemoveAllDecals()
 							end
-							self:PlaySoundSystem("MedicOnHeal")
+							self:PlaySoundSystem("MedicOnHeal", nil, VJ.EmitSound)
 							if ally.IsVJBaseSNPC == true then
 								ally:PlaySoundSystem("MedicReceiveHeal")
 							end
@@ -2360,9 +2371,10 @@ function ENT:IdleDialogueAnswerSoundCode(customSd, sdType)
 	local sdtbl = VJ.PICK(self.SoundTbl_IdleDialogueAnswer)
 	if (math.random(1,self.IdleDialogueAnswerSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 		if cTbl != false then sdtbl = cTbl end
-		self:StopAllCommonSpeechSounds()
+		StopSound(self.CurrentSpeechSound)
+		StopSound(self.CurrentIdleSound)
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2, 3)
-		self.CurrentIdleDialogueAnswerSound = sdType(self, sdtbl, self.IdleDialogueAnswerSoundLevel, self:VJ_DecideSoundPitch(self.IdleDialogueAnswerSoundPitch.a, self.IdleDialogueAnswerSoundPitch.b))
+		self.CurrentSpeechSound = sdType(self, sdtbl, self.IdleDialogueAnswerSoundLevel, self:VJ_DecideSoundPitch(self.IdleDialogueAnswerSoundPitch.a, self.IdleDialogueAnswerSoundPitch.b))
 		return SoundDuration(sdtbl) -- Return the duration of the sound, which will be used to make the other SNPC stand still
 	else
 		return 0
@@ -2489,7 +2501,7 @@ function ENT:OnRemove()
 	if self.Medic_Status then self:ResetMedicBehavior() end
 	if self.VJTag_IsEating then self:EatingReset("Dead") end
 	self:RemoveTimers()
-	self:StopAllCommonSounds()
+	self:StopAllSounds()
 	self:StopParticles()
 	self:DestroyBoneFollowers()
 end

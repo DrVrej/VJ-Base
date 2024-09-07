@@ -24,8 +24,7 @@ ENT.NextAnyAttackTime_Melee = false -- How much time until it can use any attack
 ENT.MeleeAttackDamage = 30
 ENT.HasDeathRagdoll = false -- Should the NPC spawn a corpse when it dies?
 ENT.HasExtraMeleeAttackSounds = true -- Set to true to use the extra melee attack sounds
-	-- ====== Sound File Paths ====== --
--- Leave blank if you don't want any sounds to play
+	-- ====== Sound Paths ====== --
 ENT.SoundTbl_Breath = "npc/scanner/scanner_combat_loop1.wav"
 ENT.SoundTbl_Idle = {"npc/scanner/scanner_talk1.wav", "npc/scanner/scanner_talk2.wav"}
 ENT.SoundTbl_Alert = "npc/scanner/combat_scan5.wav"

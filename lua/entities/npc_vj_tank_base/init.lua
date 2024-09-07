@@ -30,8 +30,7 @@ ENT.CallForBackUpOnDamage = false -- Should the SNPC call for help when damaged?
 ENT.MoveOrHideOnDamageByEnemy = false -- Should the NPC move away or hide behind cover when being damaged while fighting an enemy?
 ENT.MoveOutOfFriendlyPlayersWay = false -- Should the NPC move and give space to friendly players?
 ENT.HasPainSounds = false -- If set to false, it won't play the pain sounds
-	-- ====== Sound File Paths ====== --
--- Leave blank if you don't want any sounds to play
+	-- ====== Sound Paths ====== --
 ENT.SoundTbl_Breath = "vj_base/vehicles/armored/engine_idle.wav"
 ENT.SoundTbl_Death = "VJ.Explosion"
 
