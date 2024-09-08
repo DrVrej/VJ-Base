@@ -11,7 +11,7 @@
 
 --------------------------------------------------*/
 AddCSLuaFile()
-if CLIENT then print("Loading VJ Base client files...") else print("Loading VJ Base server files...") end
+if CLIENT then print("Initializing VJ Base client files...") else print("Initializing VJ Base server files...") end
 
 local GetConVar = GetConVar
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -21,27 +21,27 @@ VJBASE_VERSION = "2.17.0"
 
 VJ_CVAR_IGNOREPLAYERS = GetConVar("ai_ignoreplayers"):GetInt() != 0
 VJ_CVAR_AI_ENABLED = GetConVar("ai_disabled"):GetInt() != 1
-if SERVER then VJ_RecipientFilter = RecipientFilter() end
+if SERVER then VJ_RecipientFilter = RecipientFilter() VJ_RecipientFilter:AddAllPlayers() end
 
 -- NPC movement types
-VJ_MOVETYPE_GROUND = 1
-VJ_MOVETYPE_AERIAL = 2
-VJ_MOVETYPE_AQUATIC = 3
-VJ_MOVETYPE_STATIONARY = 4
-VJ_MOVETYPE_PHYSICS = 5
+VJ_MOVETYPE_GROUND					= 1
+VJ_MOVETYPE_AERIAL					= 2
+VJ_MOVETYPE_AQUATIC					= 3
+VJ_MOVETYPE_STATIONARY				= 4
+VJ_MOVETYPE_PHYSICS					= 5
 
 -- NPC behavior types
-VJ_BEHAVIOR_AGGRESSIVE = 1
-VJ_BEHAVIOR_NEUTRAL = 2
-VJ_BEHAVIOR_PASSIVE = 3
-VJ_BEHAVIOR_PASSIVE_NATURE = 4
+VJ_BEHAVIOR_AGGRESSIVE				= 1
+VJ_BEHAVIOR_NEUTRAL					= 2
+VJ_BEHAVIOR_PASSIVE					= 3
+VJ_BEHAVIOR_PASSIVE_NATURE			= 4
 
 -- NPC AI states
-VJ_STATE_NONE = 0 -- No state is set (Default)
-VJ_STATE_FREEZE = 1 -- AI Completely freezes, basically applies Disable AI on the NPC (Including relationship system!)
-VJ_STATE_ONLY_ANIMATION = 100 -- Only plays animation tasks, attacks. Disables: Movements, turning and other non-animation tasks!
-VJ_STATE_ONLY_ANIMATION_CONSTANT = 101 -- Same as VJ_STATE_ONLY_ANIMATION + Idle animation will not play!
-VJ_STATE_ONLY_ANIMATION_NOATTACK = 102 -- Same as VJ_STATE_ONLY_ANIMATION + Attacks will be disabled
+VJ_STATE_NONE						= 0 -- No state is set (Default)
+VJ_STATE_FREEZE						= 1 -- AI Completely freezes, basically applies Disable AI on the NPC (Including relationship system!)
+VJ_STATE_ONLY_ANIMATION				= 2 -- Only plays animation tasks, attacks. Disables: Movements, turning and other non-animation tasks!
+VJ_STATE_ONLY_ANIMATION_CONSTANT	= 3 -- Same as VJ_STATE_ONLY_ANIMATION + Idle animation will not play!
+VJ_STATE_ONLY_ANIMATION_NOATTACK	= 4 -- Same as VJ_STATE_ONLY_ANIMATION + Attacks will be disabled
 
 -- These are finally defined in Garry's Mod itself, but unfortunately it requires an extra call, tests showed it's more optimized to call the ones below
 COND_BEHIND_ENEMY = 29
@@ -147,23 +147,23 @@ include("vj_base/menu/spawn.lua")
 include("vj_base/menu/entity_configures.lua")
 include("vj_base/menu/entity_properties.lua")
 
- -- ====== Resource ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-AddCSLuaFile("vj_base/resource/localization.lua")
-AddCSLuaFile("vj_base/resource/main.lua")
-AddCSLuaFile("vj_base/resource/particles.lua")
-AddCSLuaFile("vj_base/resource/sounds.lua")
+ -- ====== Resources ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+AddCSLuaFile("vj_base/resources/localization.lua")
+AddCSLuaFile("vj_base/resources/main.lua")
+AddCSLuaFile("vj_base/resources/particles.lua")
+AddCSLuaFile("vj_base/resources/sounds.lua")
 
-include("vj_base/resource/localization.lua")
-include("vj_base/resource/main.lua")
-include("vj_base/resource/particles.lua")
-include("vj_base/resource/sounds.lua")
+include("vj_base/resources/localization.lua")
+include("vj_base/resources/main.lua")
+include("vj_base/resources/particles.lua")
+include("vj_base/resources/sounds.lua")
 
-	-- ====== Extension ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-AddCSLuaFile("vj_base/extension/corpse.lua")
-AddCSLuaFile("vj_base/extension/music.lua")
+	-- ====== Extensions ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+AddCSLuaFile("vj_base/extensions/corpse.lua")
+AddCSLuaFile("vj_base/extensions/music.lua")
 
-include("vj_base/extension/corpse.lua")
-include("vj_base/extension/music.lua")
+include("vj_base/extensions/corpse.lua")
+include("vj_base/extensions/music.lua")
 
 	-- ====== Modules ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 AddCSLuaFile("includes/modules/vj_ai_nodegraph.lua")
@@ -380,7 +380,6 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 VJ_PICK						= VJ.PICK
-VJ_PICKRANDOMTABLE			= VJ.PICK
 VJ_STOPSOUND				= VJ.STOPSOUND
 VJ_Set						= VJ.SET
 VJ_HasValue					= VJ.HasValue
