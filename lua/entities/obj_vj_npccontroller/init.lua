@@ -239,7 +239,7 @@ function ENT:SetControlledNPC(npcEnt)
 		npcEnt.NextThrowGrenadeT = 0
 		if npcEnt.Medic_Status then npcEnt:ResetMedicBehavior() end
 		if npcEnt.VJTag_IsEating then
-			npcEnt:CustomOnEat("StopEating", "Unspecified") -- So it plays the get up animation
+			npcEnt:OnEat("StopEating", "Unspecified") -- So it plays the get up animation
 			npcEnt:EatingReset("Unspecified")
 		end
 	end

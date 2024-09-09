@@ -92,7 +92,7 @@ local schedIdleWander = vj_ai_schedule.New("vj_idle_wander")
 	schedIdleWander:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	schedIdleWander.ResetOnFail = true
 	schedIdleWander.CanBeInterrupted = true
-	
+--
 function ENT:VJ_TASK_IDLE_WANDER()
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
 	//self:SetLastPosition(self:GetPos() + self:GetForward() * 300)

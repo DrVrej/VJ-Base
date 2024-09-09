@@ -230,12 +230,12 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Reset and stop the eating behavior
-		- statusInfo = Status info to pass to "CustomOnEat" (info types defined in that function)
+		- statusInfo = Status info to pass to "OnEat" (info types defined in that function)
 -----------------------------------------------------------]]
 function ENT:EatingReset(statusInfo)
 	local eatingData = self.EatingData
 	self:SetState(VJ_STATE_NONE)
-	self:CustomOnEat("StopEating", statusInfo)
+	self:OnEat("StopEating", statusInfo)
 	self.VJTag_IsEating = false
 	self.AnimationTranslations[ACT_IDLE] = eatingData.OrgIdle -- Reset the idle animation table in case it changed!
 	local food = eatingData.Ent
@@ -278,7 +278,7 @@ end
 -----------------------------------------------------------]]
 local vecZ50 = Vector(0, 0, -50)
 --
-function ENT:CustomOnEat(status, statusInfo)
+function ENT:OnEat(status, statusInfo)
 	-- The following code is a ideal example based on Half-Life 1 Zombie
 	//print(self, "Eating Status: ", status, statusInfo)
 	if status == "CheckFood" then
@@ -356,7 +356,7 @@ function ENT:ResolveAnimation(tbl)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_IDLE_STAND()
-	if self:IsMoving() or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end // self.CurrentSchedule != nil
+	if self:IsMoving() or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
 	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:BusyWithActivity() then return end
 	//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
 	self:MaintainIdleAnimation(self:GetIdealActivity() != ACT_IDLE)
@@ -569,9 +569,6 @@ function ENT:CheckRelationship(ent)
 	end
 	return D_LI
 end
--- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
-local dispToVal = {[D_LI] = false, [D_HT] = true, [D_NU] = "Neutral"}
-function ENT:DoRelationshipCheck(ent) return dispToVal[self:CheckRelationship(ent)] end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Helps you decide the pitch for the NPC, very useful for speech-type of sounds!
@@ -715,9 +712,6 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 	end
 	return resultAng
 end
--- !!!!!!!!!!!!!! DO NOT USE THESE FUNCTIONS !!!!!!!!!!!!!! [Backwards Compatibility!]
-function ENT:FaceCertainPosition(target, faceTime) return self:SetTurnTarget(target, faceTime, false, false) end
-function ENT:FaceCertainEntity(target, faceCurEnemy, faceTime) return self:SetTurnTarget(faceCurEnemy and "Enemy" or target, faceTime, false, false) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- Based on: https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/game/server/ai_motor.cpp#L780
 function ENT:DeltaIdealYaw()
@@ -2301,7 +2295,7 @@ function ENT:IdleSoundCode(customSd, sdType)
 						foundEnt.NextIdleSoundT = talkTime
 						foundEnt.NextWanderTime = talkTime
 						
-						self:CustomOnIdleDialogue(foundEnt, "Speak", talkTime)
+						self:OnIdleDialogue(foundEnt, "Speak", talkTime)
 						
 						-- Stop moving and look at each other
 						if self.IdleDialogueCanTurn == true then
@@ -2317,7 +2311,7 @@ function ENT:IdleSoundCode(customSd, sdType)
 						
 						-- For the other SNPC to answer back:
 						timer.Simple(dur + 0.3, function()
-							if IsValid(self) && IsValid(foundEnt) && !foundEnt:CustomOnIdleDialogue(self, "Answer") then
+							if IsValid(self) && IsValid(foundEnt) && !foundEnt:OnIdleDialogue(self, "Answer") then
 								local response = foundEnt:IdleDialogueAnswerSoundCode()
 								if response > 0 then -- If the ally responded, then make sure both SNPCs stand still & don't play another idle sound until the whole conversation is finished!
 									local curTime = CurTime()
@@ -2348,12 +2342,12 @@ function ENT:IdleDialogueFindEnt()
 	local returnEnt = false
 	for _, v in ipairs(ents.FindInSphere(self:GetPos(), self.IdleDialogueDistance)) do
 		if v:IsPlayer() then
-			if self:CheckRelationship(v) == D_LI && !self:CustomOnIdleDialogue(v, "CheckEnt", false) then
+			if self:CheckRelationship(v) == D_LI && !self:OnIdleDialogue(v, "CheckEnt", false) then
 				returnEnt = v
 			end
 		elseif v != self && ((self:GetClass() == v:GetClass()) or (v:IsNPC() && self:CheckRelationship(v) == D_LI)) && self:Visible(v) then
 			local canAnswer = (v.IsVJBaseSNPC and VJ.PICK(v.SoundTbl_IdleDialogueAnswer)) or false
-			if !self:CustomOnIdleDialogue(v, "CheckEnt", canAnswer) then
+			if !self:OnIdleDialogue(v, "CheckEnt", canAnswer) then
 				returnEnt = v
 				if v.IsVJBaseSNPC && !v.Dead && canAnswer then -- VJ NPC hit!
 					return v, true
@@ -2512,6 +2506,12 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
+local dispToVal = {[D_LI] = false, [D_HT] = true, [D_NU] = "Neutral"}
+function ENT:DoRelationshipCheck(ent) return dispToVal[self:CheckRelationship(ent)] end
+function ENT:FaceCertainPosition(target, faceTime) return self:SetTurnTarget(target, faceTime, false, false) end
+function ENT:FaceCertainEntity(target, faceCurEnemy, faceTime) return self:SetTurnTarget(faceCurEnemy and "Enemy" or target, faceTime, false, false) end
+---------------------------------------------------------------------------------------------------------------------------------------------
 /*
 function ENT:DoHardEntityCheck(CustomTbl)
 	local EntsTbl = CustomTbl or ents.GetAll()

@@ -378,6 +378,8 @@ ENT.GrenadeAttackFuseTime = 3 -- The grenade's fuse start time right after the N
 ------ Sound Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasSounds = true -- Put to false to disable ALL sounds!
+ENT.OnlyDoKillEnemyWhenClear = true -- If set to true, it will only play the OnKilledEnemy sound when there isn't any other enemies
+ENT.DamageByPlayerDispositionLevel = 1 -- At which disposition levels it should play the damage by player sounds | 0 = Always | 1 = ONLY when friendly to player | 2 = ONLY when enemy to player
 	-- ====== Footstep Sound Variables ====== --
 ENT.DisableFootStepSoundTimer = false -- If set to true, it will disable the time system for the footstep sound code, allowing you to use other ways like model events
 ENT.FootStepTimeRun = 0.5 -- Next foot step sound when it is running
@@ -394,10 +396,6 @@ ENT.HasIdleDialogueSounds = true -- If set to false, it won't play the idle dial
 ENT.HasIdleDialogueAnswerSounds = true -- If set to false, it won't play the idle dialogue answer sounds
 ENT.IdleDialogueDistance = 400 -- How close should the ally be for the NPC to talk to the it?
 ENT.IdleDialogueCanTurn = true -- If set to false, it won't turn when a dialogue occurs
-	-- ====== Miscellaneous Variables ====== --
-ENT.BeforeMeleeAttackSounds_WaitTime = 0 -- Time until it starts playing the Before Melee Attack sounds
-ENT.OnlyDoKillEnemyWhenClear = true -- If set to true, it will only play the OnKilledEnemy sound when there isn't any other enemies
-ENT.DamageByPlayerDispositionLevel = 1 -- At which disposition levels it should play the damage by player sounds | 0 = Always | 1 = ONLY when friendly to player | 2 = ONLY when enemy to player
 	-- ====== Main Control Variables ====== --
 ENT.HasFootStepSound = true -- Can the NPC play footstep sounds?
 ENT.HasBreathSound = true -- Should it make a breathing sound?
@@ -691,7 +689,7 @@ function ENT:OnFollow(status, ent) end
 	Returns
 		- ONLY used for "CheckEnt" & "Answer" | Check above for what each status return does
 -----------------------------------------------------------]]
-function ENT:CustomOnIdleDialogue(ent, status, statusInfo) end
+function ENT:OnIdleDialogue(ent, status, statusInfo) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMedic_BeforeHeal() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -708,7 +706,7 @@ function ENT:CustomOnPlayerSight(ent) end
 -----------------------------------------------------------]]
 -- function ENT:CustomOnFootStepSound(moveType, sdFile) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnDoChangeWeapon(newWeapon, oldWeapon, invSwitch) end
+function ENT:OnChangeWeapon(newWeapon, oldWeapon, invSwitch) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	UNCOMMENT TO USE | Called when the NPC detects a danger
@@ -720,7 +718,7 @@ function ENT:CustomOnDoChangeWeapon(newWeapon, oldWeapon, invSwitch) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInvestigate(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnResetEnemy() end
+function ENT:OnResetEnemy() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnAlert(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -814,9 +812,9 @@ function ENT:CustomOnFlinch_BeforeFlinch(dmginfo, hitgroup) end -- Return false 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnBecomeEnemyToPlayer(dmginfo, hitgroup) end
+function ENT:OnBecomeEnemyToPlayer(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnSetEnemyOnDamage(dmginfo, hitgroup) end
+function ENT:OnSetEnemyFromDamage(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetUpGibesOnDeath(dmginfo, hitgroup)
 	return false -- Return to true if it gibbed!
@@ -838,7 +836,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomGibOnDeathSounds(dmginfo, hitgroup) return true end -- returning false will make the default gibbing sounds not play
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnAllyDeath(ent) end
+function ENT:OnAllyKilled(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialKilled(dmginfo, hitgroup) end -- Ran the moment the NPC dies!
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2398,7 +2396,7 @@ function ENT:DoChangeWeapon(wep, invSwitch)
 			end
 		end
 		self:UpdateAnimationTranslations(curWep:GetHoldType())
-		self:CustomOnDoChangeWeapon(curWep, self.CurrentWeaponEntity, invSwitch)
+		self:OnChangeWeapon(curWep, self.CurrentWeaponEntity, invSwitch)
 		self.CurrentWeaponEntity = curWep
 	else
 		self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_NONE
@@ -2892,7 +2890,6 @@ function ENT:Think()
 						self.CurrentAttackAnimationTime = 0
 						self:SetTurnTarget("Enemy")
 						self:CustomOnMeleeAttack_BeforeStartTimer(seed)
-						timer.Simple(self.BeforeMeleeAttackSounds_WaitTime, function() if IsValid(self) then self:PlaySoundSystem("BeforeMeleeAttack") end end)
 						self.NextAlertSoundT = curTime + 0.4
 						if self.DisableMeleeAttackAnimation == false then
 							local anim, animDur, animType = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_MeleeAttack, false, 0, false, self.MeleeAttackAnimationDelay)
@@ -3807,7 +3804,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 	
 	self:SetNPCState(NPC_STATE_ALERT)
 	timer.Create("timer_alerted_reset"..self:EntIndex(), math.Rand(self.AlertedToIdleTime.a, self.AlertedToIdleTime.b), 1, function() if !IsValid(self:GetEnemy()) then self.Alerted = false self:SetNPCState(NPC_STATE_IDLE) end end)
-	self:CustomOnResetEnemy()
+	self:OnResetEnemy()
 	if self.VJ_DEBUG == true && GetConVar("vj_npc_printresetenemy"):GetInt() == 1 then print(self:GetName().." has reseted its enemy") end
 	if eneValid then
 		if self.IsFollowing == false && (!self.IsVJBaseSNPC_Tank) && !self:Visible(ene) && self:GetEnemyLastKnownPos() != defPos then
@@ -3990,7 +3987,7 @@ function ENT:OnTakeDamage(dmginfo)
 				self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1
 				if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
 					if self:Disposition(dmgAttacker) != D_HT then
-						self:CustomOnBecomeEnemyToPlayer(dmginfo, hitgroup)
+						self:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
 						if self.IsFollowing == true && self.FollowData.Ent == dmgAttacker then self:FollowReset() end
 						self.VJ_AddCertainEntityAsEnemy[#self.VJ_AddCertainEntityAsEnemy + 1] = dmgAttacker
 						self:AddEntityRelationship(dmgAttacker, D_HT, 2)
@@ -4018,7 +4015,7 @@ function ENT:OnTakeDamage(dmginfo)
 				-- IF normal sight dist is less than 1000 then change nothing, OR ELSE use half the distance with 1000 as minimum
 				for _, v in ipairs(ents.FindInSphere(self:GetPos(), sightDist)) do
 					if (curTime - self.EnemyData.TimeSet) > 2 && self:Visible(v) && self:CheckRelationship(v) == D_HT then
-						self:CustomOnSetEnemyOnDamage(dmginfo, hitgroup)
+						self:OnSetEnemyFromDamage(dmginfo, hitgroup)
 						self.NextCallForHelpT = curTime + 1
 						self:VJ_DoSetEnemy(v, true)
 						self:DoChaseAnimation()
@@ -4092,7 +4089,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 			local doBecomeEnemyToPlayer = (self.BecomeEnemyToPlayer == true && dmgAttacker:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or false
 			local it = 0 -- Number of allies that have been alerted
 			for _, v in ipairs(allies) do
-				v:CustomOnAllyDeath(self)
+				v:OnAllyKilled(self)
 				v:PlaySoundSystem("AllyDeath")
 				
 				-- AlertFriendsOnDeath
@@ -4109,7 +4106,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 					v.AngerLevelTowardsPlayer = v.AngerLevelTowardsPlayer + 1
 					if v.AngerLevelTowardsPlayer > v.BecomeEnemyToPlayerLevel then
 						if v:Disposition(dmgAttacker) != D_HT then
-							v:CustomOnBecomeEnemyToPlayer(dmginfo, hitgroup)
+							v:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
 							if v.IsFollowing == true && v.FollowData.Ent == dmgAttacker then v:FollowReset() end
 							v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy + 1] = dmgAttacker
 							v:AddEntityRelationship(dmgAttacker, D_HT, 2)

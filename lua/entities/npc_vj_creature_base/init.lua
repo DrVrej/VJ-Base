@@ -97,6 +97,7 @@ ENT.AlertedToIdleTime = VJ.SET(4, 6) -- How much time until it calms down after 
 ENT.MoveOutOfFriendlyPlayersWay = true -- Should the NPC move and give space to friendly players?
 ENT.BecomeEnemyToPlayer = false -- Should the NPC become enemy towards a friendly player if it's damaged by it or it witnesses another ally killed by it
 ENT.BecomeEnemyToPlayerLevel = 2 -- Any time the player does something bad, the NPC's anger level raises by 1, if it surpasses this, it will become enemy!
+ENT.CanEat = false -- Should it search and eat organic stuff when idle?
 	-- ====== Old Variables (Can still be used, but it's recommended not to use them) ====== --
 ENT.PlayerFriendly = false -- Makes the NPC friendly to the player and HL2 Resistance
 	-- ====== Passive Behavior Variables ====== --
@@ -164,8 +165,6 @@ ENT.PoseParameterLooking_Names = {pitch={}, yaw={}, roll={}} -- Custom pose para
 	-- Showcase: https://www.youtube.com/watch?v=cCqoqSDFyC4
 ENT.CanInvestigate = true -- Can it detect and investigate disturbances? | EX: Sounds, movement, flashlight, bullet hits
 ENT.InvestigateSoundDistance = 9 -- How far can the NPC hear sounds? | This number is multiplied by the calculated volume of the detectable sound
-	-- ====== Eating Variables ====== --
-ENT.CanEat = false -- Should it search and eat organic stuff when idle?
 	-- ====== No Chase After Certain Distance Variables ====== --
 ENT.NoChaseAfterCertainRange = false -- Should the NPC stop chasing when the enemy is within the given far and close distances?
 ENT.NoChaseAfterCertainRange_FarDistance = 2000 -- How far until it can chase again? | "UseRangeDistance" = Use the number provided by the range attack instead
@@ -391,7 +390,10 @@ ENT.DisableDefaultLeapAttackDamageCode = false -- Disables the default leap atta
 ------ Sound Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasSounds = true -- Put to false to disable ALL sounds!
-	-- ====== Footstep Sound Variables ====== --
+ENT.OnlyDoKillEnemyWhenClear = true -- If set to true, it will only play the OnKilledEnemy sound when there isn't any other enemies
+ENT.DamageByPlayerDispositionLevel = 1 -- At which disposition levels it should play the damage by player sounds | 0 = Always | 1 = ONLY when friendly to player | 2 = ONLY when enemy to player
+ENT.MeleeAttackSlowPlayerSoundFadeOutTime = 1 -- 0 = Fade out instantly
+-- ====== Footstep Sound Variables ====== --
 ENT.DisableFootStepSoundTimer = false -- If set to true, it will disable the time system for the footstep sound code, allowing you to use other ways like model events
 ENT.FootStepTimeRun = 0.5 -- Next foot step sound when it is running
 ENT.FootStepTimeWalk = 1 -- Next foot step sound when it is walking
@@ -407,10 +409,6 @@ ENT.HasIdleDialogueSounds = true -- If set to false, it won't play the idle dial
 ENT.HasIdleDialogueAnswerSounds = true -- If set to false, it won't play the idle dialogue answer sounds
 ENT.IdleDialogueDistance = 400 -- How close should the ally be for the NPC to talk to the it?
 ENT.IdleDialogueCanTurn = true -- If set to false, it won't turn when a dialogue occurs
-	-- ====== Miscellaneous Variables ====== --
-ENT.BeforeMeleeAttackSounds_WaitTime = 0 -- Time until it starts playing the Before Melee Attack sounds
-ENT.OnlyDoKillEnemyWhenClear = true -- If set to true, it will only play the OnKilledEnemy sound when there isn't any other enemies
-ENT.DamageByPlayerDispositionLevel = 1 -- At which disposition levels it should play the damage by player sounds | 0 = Always | 1 = ONLY when friendly to player | 2 = ONLY when enemy to player
 	-- ====== Main Control Variables ====== --
 ENT.HasFootStepSound = true -- Can the NPC play footstep sounds?
 ENT.HasBreathSound = true -- Should it make a breathing sound?
@@ -493,9 +491,6 @@ local DefaultSD_MeleeAttackExtra = {"npc/zombie/claw_strike1.wav", "npc/zombie/c
 local DefaultSD_Impact = "vj_base/impact/flesh_alien.wav"
 ------ ///// WARNING: Don't change anything in this box! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	-- ====== Fade Out Time Variables ====== --
-	-- Put to 0 if you want it to stop instantly
-ENT.MeleeAttackSlowPlayerSoundFadeOutTime = 1
 	-- ====== Sound Chance Variables ====== --
 	-- Higher number = less chance of playing | 1 = Always play
 ENT.IdleSoundChance = 2
@@ -710,7 +705,7 @@ function ENT:OnFollow(status, ent) end
 	Returns
 		- ONLY used for "CheckEnt" & "Answer" | Check above for what each status return does
 -----------------------------------------------------------]]
-function ENT:CustomOnIdleDialogue(ent, status, statusInfo) end
+function ENT:OnIdleDialogue(ent, status, statusInfo) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMedic_BeforeHeal() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -729,7 +724,7 @@ function ENT:CustomOnPlayerSight(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInvestigate(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnResetEnemy() end
+function ENT:OnResetEnemy() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnAlert(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -826,9 +821,9 @@ function ENT:CustomOnFlinch_BeforeFlinch(dmginfo, hitgroup) end -- Return false 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnBecomeEnemyToPlayer(dmginfo, hitgroup) end
+function ENT:OnBecomeEnemyToPlayer(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnSetEnemyOnDamage(dmginfo, hitgroup) end
+function ENT:OnSetEnemyFromDamage(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SetUpGibesOnDeath(dmginfo, hitgroup)
 	return false -- Return to true if it gibbed!
@@ -850,7 +845,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomGibOnDeathSounds(dmginfo, hitgroup) return true end -- returning false will make the default gibbing sounds not play
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnAllyDeath(ent) end
+function ENT:OnAllyKilled(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialKilled(dmginfo, hitgroup) end -- Ran the moment the NPC dies!
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1168,7 +1163,6 @@ function ENT:Initialize()
 	end
 	if !self.MeleeAttackDistance then self.MeleeAttackDistance = math.abs(collisionMax.x) + 30 end
 	if !self.MeleeAttackDamageDistance then self.MeleeAttackDamageDistance = math.abs(collisionMax.x) + 60 end
-	
 	self:SetupBloodColor(self.BloodColor) -- Collision bounds dependent, call after "CustomOnInitialize"
 	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + (self.IdleAlwaysWander and 0 or 1)) -- If self.NextWanderTime isn't given a value THEN if self.IdleAlwaysWander isn't true, wait at least 1 sec before wandering
 	self.SightDistance = (GetConVar("vj_npc_seedistance"):GetInt() > 0) and GetConVar("vj_npc_seedistance"):GetInt() or self.SightDistance
@@ -2025,7 +2019,7 @@ function ENT:Think()
 									if eatingData.AnimStatus != "None" then -- We need to play get up anim first!
 										eatingData.AnimStatus = "None"
 										self.AnimationTranslations[ACT_IDLE] = eatingData.OrgIdle -- Reset the idle animation table in case it changed!
-										eatingData.NextCheck = curTime + (self:CustomOnEat("StopEating", "HaltOnly") or 1)
+										eatingData.NextCheck = curTime + (self:OnEat("StopEating", "HaltOnly") or 1)
 									else
 										self.NextWanderTime = CurTime() + math.Rand(3, 5)
 										self:SetState(VJ_STATE_NONE)
@@ -2041,7 +2035,7 @@ function ENT:Think()
 								self:SetState(VJ_STATE_ONLY_ANIMATION_NOATTACK)
 								if eatingData.AnimStatus != "None" then -- We are already prepared, so eat!
 									eatingData.AnimStatus = "Eating"
-									eatingData.NextCheck = curTime + self:CustomOnEat("Eat")
+									eatingData.NextCheck = curTime + self:OnEat("Eat")
 									if food:Health() <= 0 then -- Finished eating!
 										eatingData.NextCheck = curTime + 30
 										self:EatingReset("Devoured")
@@ -2050,7 +2044,7 @@ function ENT:Think()
 									end
 								else -- We need to first prepare before eating! (Ex: Crouch-down animation
 									eatingData.AnimStatus = "Prepared"
-									eatingData.NextCheck = curTime + (self:CustomOnEat("BeginEating") or 1)
+									eatingData.NextCheck = curTime + (self:OnEat("BeginEating") or 1)
 								end
 							end
 						end
@@ -2068,7 +2062,7 @@ function ENT:Think()
 									}
 								end
 								//print("food", food, self)
-								if food.FoodData.SizeRemaining > 0 && self:CustomOnEat("CheckFood", hint) then
+								if food.FoodData.SizeRemaining > 0 && self:OnEat("CheckFood", hint) then
 									local foodData = food.FoodData
 									foodData.NumConsumers = foodData.NumConsumers + 1
 									foodData.SizeRemaining = foodData.SizeRemaining - self:OBBMaxs():Distance(self:OBBMins())
@@ -2077,7 +2071,7 @@ function ENT:Think()
 									food.VJTag_IsBeingEaten = true
 									self.EatingData.OrgIdle = self.AnimationTranslations[ACT_IDLE] -- Save the current idle anim table in case we gonna change it while eating!
 									eatingData.Ent = food
-									self:CustomOnEat("StartBehavior")
+									self:OnEat("StartBehavior")
 									self:SetState(VJ_STATE_ONLY_ANIMATION_NOATTACK)
 									self.NextWanderTime = CurTime() + math.Rand(3, 5)
 								end
@@ -2193,7 +2187,6 @@ function ENT:Think()
 									self.MeleeAttack_DoingPropAttack = false
 								end
 								self:CustomOnMeleeAttack_BeforeStartTimer(seed)
-								timer.Simple(self.BeforeMeleeAttackSounds_WaitTime, function() if IsValid(self) then self:PlaySoundSystem("BeforeMeleeAttack") end end)
 								if self.DisableMeleeAttackAnimation == false then
 									local anim, animDur, animType = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_MeleeAttack, false, 0, false, self.MeleeAttackAnimationDelay)
 									if anim != ACT_INVALID then
@@ -2791,7 +2784,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 	
 	self:SetNPCState(NPC_STATE_ALERT)
 	timer.Create("timer_alerted_reset"..self:EntIndex(), math.Rand(self.AlertedToIdleTime.a, self.AlertedToIdleTime.b), 1, function() if !IsValid(self:GetEnemy()) then self.Alerted = false self:SetNPCState(NPC_STATE_IDLE) end end)
-	self:CustomOnResetEnemy()
+	self:OnResetEnemy()
 	if self.VJ_DEBUG == true && GetConVar("vj_npc_printresetenemy"):GetInt() == 1 then print(self:GetName().." has reseted its enemy") end
 	if eneValid then
 		if self.IsFollowing == false && (!self.IsVJBaseSNPC_Tank) && !self:Visible(ene) && self:GetEnemyLastKnownPos() != defPos then
@@ -2947,7 +2940,7 @@ function ENT:OnTakeDamage(dmginfo)
 				self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1
 				if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
 					if self:Disposition(dmgAttacker) != D_HT then
-						self:CustomOnBecomeEnemyToPlayer(dmginfo, hitgroup)
+						self:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
 						if self.IsFollowing == true && self.FollowData.Ent == dmgAttacker then self:FollowReset() end
 						self.VJ_AddCertainEntityAsEnemy[#self.VJ_AddCertainEntityAsEnemy + 1] = dmgAttacker
 						self:AddEntityRelationship(dmgAttacker, D_HT, 2)
@@ -2975,7 +2968,7 @@ function ENT:OnTakeDamage(dmginfo)
 				-- IF normal sight dist is less than 1000 then change nothing, OR ELSE use half the distance with 1000 as minimum
 				for _, v in ipairs(ents.FindInSphere(self:GetPos(), sightDist)) do
 					if (curTime - self.EnemyData.TimeSet) > 2 && self:Visible(v) && self:CheckRelationship(v) == D_HT then
-						self:CustomOnSetEnemyOnDamage(dmginfo, hitgroup)
+						self:OnSetEnemyFromDamage(dmginfo, hitgroup)
 						self.NextCallForHelpT = curTime + 1
 						self:VJ_DoSetEnemy(v, true)
 						self:DoChaseAnimation()
@@ -3060,7 +3053,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 			local doBecomeEnemyToPlayer = (self.BecomeEnemyToPlayer == true && dmgAttacker:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or false
 			local it = 0 -- Number of allies that have been alerted
 			for _, v in ipairs(allies) do
-				v:CustomOnAllyDeath(self)
+				v:OnAllyKilled(self)
 				v:PlaySoundSystem("AllyDeath")
 				
 				-- AlertFriendsOnDeath
@@ -3077,7 +3070,7 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 					v.AngerLevelTowardsPlayer = v.AngerLevelTowardsPlayer + 1
 					if v.AngerLevelTowardsPlayer > v.BecomeEnemyToPlayerLevel then
 						if v:Disposition(dmgAttacker) != D_HT then
-							v:CustomOnBecomeEnemyToPlayer(dmginfo, hitgroup)
+							v:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
 							if v.IsFollowing == true && v.FollowData.Ent == dmgAttacker then v:FollowReset() end
 							v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy + 1] = dmgAttacker
 							v:AddEntityRelationship(dmgAttacker, D_HT, 2)

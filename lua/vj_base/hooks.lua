@@ -202,7 +202,7 @@ hook.Add("PlayerDeath", "VJ_PlayerDeath", function(victim, inflictor, attacker)
 	-- Let allied SNPCs know that the player died
 	for _,v in ipairs(ents.FindInSphere(victim:GetPos(), 400)) do
 		if v.IsVJBaseSNPC && v:Disposition(victim) == D_LI then
-			v:CustomOnAllyDeath(victim)
+			v:OnAllyKilled(victim)
 			v:PlaySoundSystem("AllyDeath")
 		end
 	end
