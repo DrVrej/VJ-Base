@@ -2890,6 +2890,7 @@ function ENT:Think()
 						self.CurrentAttackAnimationTime = 0
 						self:SetTurnTarget("Enemy")
 						self:CustomOnMeleeAttack_BeforeStartTimer(seed)
+						self:PlaySoundSystem("BeforeMeleeAttack")
 						self.NextAlertSoundT = curTime + 0.4
 						if self.DisableMeleeAttackAnimation == false then
 							local anim, animDur, animType = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_MeleeAttack, false, 0, false, self.MeleeAttackAnimationDelay)
@@ -3916,7 +3917,7 @@ function ENT:OnTakeDamage(dmginfo)
 	if self.HasHealthRegeneration == true && self.HealthRegenerationResetOnDmg == true then
 		self.HealthRegenerationDelayT = curTime + (math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b) * 1.5)
 	end
-	self:SetSaveValue("m_iDamageCount", self:GetSaveTable().m_iDamageCount + 1)
+	self:SetSaveValue("m_iDamageCount", self:GetInternalVariable("m_iDamageCount") + 1)
 	self:SetSaveValue("m_flLastDamageTime", curTime)
 	self:CustomOnTakeDamage_AfterDamage(dmginfo, hitgroup)
 	DoBleed()

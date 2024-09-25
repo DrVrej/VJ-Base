@@ -2187,6 +2187,7 @@ function ENT:Think()
 									self.MeleeAttack_DoingPropAttack = false
 								end
 								self:CustomOnMeleeAttack_BeforeStartTimer(seed)
+								self:PlaySoundSystem("BeforeMeleeAttack")
 								if self.DisableMeleeAttackAnimation == false then
 									local anim, animDur, animType = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_MeleeAttack, false, 0, false, self.MeleeAttackAnimationDelay)
 									if anim != ACT_INVALID then
@@ -2273,7 +2274,7 @@ function ENT:Think()
 								self.CurrentAttackAnimationDuration = 0
 								self.CurrentAttackAnimationTime = 0
 								self:CustomOnLeapAttack_BeforeStartTimer(seed)
-								self:PlaySoundSystem("BeforeRangeAttack")
+								self:PlaySoundSystem("BeforeLeapAttack")
 								timer.Create("timer_leap_start_jump"..self:EntIndex(), self.TimeUntilLeapAttackVelocity / self:GetPlaybackRate(), 1, function() self:LeapAttackVelocityCode() end)
 								if self.DisableLeapAttackAnimation == false then
 									local anim, animDur = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_LeapAttack, false, 0, false, self.LeapAttackAnimationDelay)
@@ -2888,7 +2889,7 @@ function ENT:OnTakeDamage(dmginfo)
 	if self.HasHealthRegeneration == true && self.HealthRegenerationResetOnDmg == true then
 		self.HealthRegenerationDelayT = curTime + (math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b) * 1.5)
 	end
-	self:SetSaveValue("m_iDamageCount", self:GetSaveTable().m_iDamageCount + 1)
+	self:SetSaveValue("m_iDamageCount", self:GetInternalVariable("m_iDamageCount") + 1)
 	self:SetSaveValue("m_flLastDamageTime", curTime)
 	self:CustomOnTakeDamage_AfterDamage(dmginfo, hitgroup)
 	DoBleed()
