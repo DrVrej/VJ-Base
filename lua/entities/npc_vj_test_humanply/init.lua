@@ -28,7 +28,7 @@ ENT.AnimTbl_GrenadeAttack = "vjges_gesture_item_throw"
 ENT.AnimTbl_Medic_GiveHealth = "vjges_gesture_item_drop"
 ENT.AnimTbl_CallForHelp = {"vjges_gesture_signal_group", "vjges_gesture_signal_forward"}
 ENT.CallForBackUpOnDamageAnimation = "vjges_gesture_signal_halt"
-ENT.WaitForEnemyToComeOut = false
+ENT.Weapon_WaitOnOcclusion = false
 
 ENT.FootStepTimeRun = 0.3
 ENT.FootStepTimeWalk = 0.5
@@ -55,7 +55,7 @@ ENT.SoundTbl_FollowPlayer = "common/wpn_select.wav"
 ENT.SoundTbl_UnFollowPlayer = "common/wpn_denyselect.wav"
 ENT.SoundTbl_Death = {"player/pl_pain5.wav", "player/pl_pain6.wav", "player/pl_pain7.wav"}
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnPreInitialize()
+function ENT:PreInit()
 	-- Set all the player models into the model variable
 	-- WARNING: Do NOT use "ipairs", this is NOT a sequential table!
     for _, v in pairs(player_manager.AllValidModels()) do
@@ -63,7 +63,7 @@ function ENT:CustomOnPreInitialize()
     end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnInitialize()
+function ENT:Init()
 	VJ.EmitSound(self, "player/pl_drown1.wav") -- Player connect sound
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -99,17 +99,19 @@ function ENT:OnGrenadeAttack(status, grenade, customEnt, landDir, landingPos)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnKilled()
-	local pos = self:GetPos()
-	local pitch = math.random(95, 105)
-	local function deathSound(time, snd)
-		timer.Simple(time, function()
-			sound.Play(snd, pos, 65, pitch)
-		end)
+function ENT:OnDeath(dmginfo, hitgroup, status)
+	if status == "Initial" then
+		local pos = self:GetPos()
+		local pitch = math.random(95, 105)
+		local function deathSound(time, snd)
+			timer.Simple(time, function()
+				sound.Play(snd, pos, 65, pitch)
+			end)
+		end
+		deathSound(0, "hl1/fvox/beep.wav")
+		deathSound(0.25, "hl1/fvox/beep.wav")
+		deathSound(0.75, "hl1/fvox/beep.wav")
+		deathSound(1.25, "hl1/fvox/beep.wav")
+		deathSound(1.7, "hl1/fvox/flatline.wav")
 	end
-	deathSound(0, "hl1/fvox/beep.wav")
-	deathSound(0.25, "hl1/fvox/beep.wav")
-	deathSound(0.75, "hl1/fvox/beep.wav")
-	deathSound(1.25, "hl1/fvox/beep.wav")
-	deathSound(1.7, "hl1/fvox/flatline.wav")
 end

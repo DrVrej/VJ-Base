@@ -28,6 +28,6 @@ SWEP.HoldType = "ar2"
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Damage = 80 -- Damage
 SWEP.Primary.Force = 1 -- Force applied on the object the bullet hits
-SWEP.Primary.ClipSize = 10 -- Max amount of bullets per clip
+SWEP.Primary.ClipSize = 10 -- Max amount of rounds per clip
 SWEP.Primary.Ammo = "SniperRound" -- Ammo type
 SWEP.Primary.Sound = "VJ.Weapon_SSG08.Single"

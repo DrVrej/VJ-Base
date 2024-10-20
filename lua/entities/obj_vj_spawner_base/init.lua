@@ -63,11 +63,11 @@ ENT.SpawnEntitySoundPitch = VJ.SET(80, 100)
 -----------------------------------------------------------]]
 function ENT:CustomOnEntitySpawn(ent, spawnKey, spawnTbl, initSpawn) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnInitialize() end
+function ENT:Init() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitialize_AfterNPCSpawn() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnThink() end
+function ENT:OnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnThink_AfterAliveChecks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -153,8 +153,9 @@ function ENT:SpawnAnEntity(spawnKey, spawnTbl, initSpawn)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
-	self:CustomOnInitialize()
-	if self.CustomOnInitialize_BeforeNPCSpawn then self:CustomOnInitialize_BeforeNPCSpawn() end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	self:Init()
+	if self.CustomOnInitialize then self:CustomOnInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	if self:GetModel() == "models/error.mdl" then -- No model was detected
 		local mdls = VJ.PICK(self.Model)
 		if mdls && mdl !="models/props_junk/popcan01a.mdl" then
@@ -183,7 +184,7 @@ end
 function ENT:Think()
 	//print("-----------------------------------------------------------")
 	//PrintTable(self.CurrentEntities)
-	self:CustomOnThink()
+	self:OnThink()
 	self:IdleSoundCode()
 	
 	-- If it's a continuous spawner then make sure to respawn any entity that has been removed

@@ -189,9 +189,14 @@ hook.Add("EntityTakeDamage", "VJ_EntityTakeDamage", function(target, dmginfo)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local function VJ_NPCPLY_DEATH(npc, attacker, inflictor)
+local function VJ_NPCPLY_DEATH(ent, attacker, inflictor)
 	if IsValid(attacker) && attacker.IsVJBaseSNPC then
-		attacker:DoKilledEnemy(npc, attacker, inflictor)
+		local wasLast = (!IsValid(attacker:GetEnemy()) or (attacker.EnemyData.VisibleCount <= 1))
+		attacker:OnKilledEnemy(ent, inflictor, wasLast)
+		-- If its the last enemy then --> (If there no valid enemy) OR (The number of enemies is 1 or less)
+		if (attacker.OnKilledEnemy_OnlyLast == false) or (attacker.OnKilledEnemy_OnlyLast == true && wasLast) then
+			attacker:PlaySoundSystem("OnKilledEnemy")
+		end
 		attacker:MaintainRelationships()
 	end
 end

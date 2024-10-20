@@ -28,7 +28,7 @@ SWEP.Primary.Damage = 4 -- Damage
 SWEP.Primary.PlayerDamage = "Double" -- For players only | "Same" = Same as self.Primary.Damage | "Double" = Double the self.Primary.Damage | number = Overrides self.Primary.Damage
 SWEP.Primary.Force = 1 -- Force applied on the object the bullet hits
 SWEP.Primary.NumberOfShots = 7 -- How many shots per attack?
-SWEP.Primary.ClipSize = 6 -- Max amount of bullets per clip
+SWEP.Primary.ClipSize = 6 -- Max amount of rounds per clip
 SWEP.Primary.Cone = 12 -- How accurate is the bullet? (Players)
 SWEP.Primary.Delay = 0.8 -- Time until it can shoot again
 SWEP.Primary.Automatic = true -- Should the weapon continue firing as long as the attack button is held down?

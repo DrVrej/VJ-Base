@@ -23,7 +23,7 @@ SWEP.AdminSpawnable = false
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Damage = 10 -- Damage
 SWEP.Primary.Force = 5 -- Force applied on the object the bullet hits
-SWEP.Primary.ClipSize = 30 -- Max amount of bullets per clip
+SWEP.Primary.ClipSize = 30 -- Max amount of rounds per clip
 SWEP.Primary.Recoil = 0.6 -- How much recoil does the player get?
 SWEP.Primary.Delay = 0.3 -- Time until it can shoot again
 SWEP.Primary.TracerType = "VJ_Laserrod_Red" -- Tracer type (Examples: AR2, laster, 9mm)

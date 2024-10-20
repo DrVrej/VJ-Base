@@ -24,7 +24,7 @@ SWEP.AdminSpawnable = false
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Damage = 20 -- Damage
 SWEP.Primary.Force = 1 -- Force applied on the object the bullet hits
-SWEP.Primary.ClipSize = 1 -- Max amount of bullets per clip
+SWEP.Primary.ClipSize = 1 -- Max amount of rounds per clip
 SWEP.Primary.Recoil = 2 -- How much recoil does the player get?
 SWEP.Primary.Delay = 0.2 -- Time until it can shoot again
 SWEP.Primary.Automatic = false -- Should the weapon continue firing as long as the attack button is held down?

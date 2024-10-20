@@ -38,7 +38,7 @@ if CLIENT then
 				self:CustomOnDraw()
 			end
 		end
-		self:CustomOnInitialize()
+		self:Init()
 	end
 	function ENT:Draw() self:DrawModel() end
 	function ENT:DrawTranslucent() self:Draw() end
@@ -47,7 +47,7 @@ if CLIENT then
 	function ENT:DoRagdollBone(PhysBoneNum, BoneNum) end // self:SetBonePosition(BoneNum,Pos,Angle)
 	//function ENT:CalcAbsolutePosition(pos, ang) end
 	-- Custom functions ---------------------------------------------------------------------------------------------------------------------------------------------
-	function ENT:CustomOnInitialize() end
+	function ENT:Init() end
 	--[[---------------------------------------------------------
 		UNCOMMENT TO USE | Overrides the camera calculations for the NPC Controller
 			- ply = Player that is controlling the NPC

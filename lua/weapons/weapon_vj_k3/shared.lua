@@ -16,7 +16,7 @@ SWEP.WorldModel_CustomPositionOrigin = Vector(-10, -8, -61)
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Damage = 12 -- Damage
 SWEP.Primary.Force = 1 -- Force applied on the object the bullet hits
-SWEP.Primary.ClipSize = 45 -- Max amount of bullets per clip
+SWEP.Primary.ClipSize = 45 -- Max amount of rounds per clip
 SWEP.Primary.Ammo = "SMG1" -- Ammo type
 SWEP.Primary.Sound = "VJ.Weapon_K3.Single"
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"

@@ -105,6 +105,8 @@ SWEP.Reload_TimeUntilAmmoIsSet = 1 -- Time until ammo is set to the weapon
 SWEP.Secondary.Automatic = false -- Should the weapon continue firing as long as the attack button is held down?
 SWEP.Secondary.Ammo = "none" -- Ammo type
 SWEP.Secondary.TakeAmmo = 1 -- How much ammo should it take on each shot?
+SWEP.Secondary.ClipSize = 0 -- Max amount of rounds per clip
+SWEP.Secondary.DefaultClip = 5 -- Default number of bullets in a clip | It will give this amount on initial pickup
 	-- To let the base automatically detect the animation duration, set this to false:
 SWEP.Secondary.Delay = false -- Time until it can shoot again
 SWEP.AnimTbl_SecondaryFire = ACT_VM_SECONDARYATTACK
@@ -133,7 +135,7 @@ SWEP.Primary.Tracer = 1 -- Show tracer for every x bullets
 SWEP.Primary.TracerType = "Tracer" -- Tracer type (Examples: AR2)
 SWEP.Primary.TakeAmmo = 1 -- How much ammo should it take from the clip after each shot? | 0 = Unlimited clip
 SWEP.Primary.Ammo = "SMG1" -- Ammo type
-SWEP.Primary.ClipSize = 30 -- Max amount of bullets per clip
+SWEP.Primary.ClipSize = 30 -- Max amount of rounds per clip
 SWEP.Primary.PickUpAmmoAmount = "Default" -- How much ammo should the player get the gun is picked up? | "Default" = 3 Clips
 SWEP.AnimTbl_PrimaryFire = ACT_VM_PRIMARYATTACK
 	-- ====== Sound Variables ====== --
@@ -168,13 +170,13 @@ SWEP.MeleeWeaponSound_Miss = "weapons/iceaxe/iceaxe_swing1.wav" -- Sound it play
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- Use the functions below to customize certain parts of the base or to add new custom systems
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnInitialize() end
+function SWEP:Init() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnEquip(newOwner) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnDeploy() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnThink() end
+function SWEP:OnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomBulletSpawnPosition() return false end -- Return a position to override the bullet spawn position
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -257,7 +259,9 @@ function SWEP:Initialize()
 	self:SetHoldType(self.HoldType)
 	if self.HasIdleAnimation == true then self.InitHasIdleAnimation = true end
 	self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
-	self:CustomOnInitialize()
+	self:Init()
+	if self.CustomOnInitialize then self:CustomOnInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	//if SERVER then
 		//self:SetWeaponHoldType(self.HoldType)
 		//self:SetNPCMinBurst(10)
@@ -406,7 +410,7 @@ local commonAttachmentNames = {
 --
 function SWEP:GetBulletPos()
 	local owner = self:GetOwner()
-	if !IsValid(owner) then return nil end
+	if !IsValid(owner) then return self:GetPos() end -- Fail safe
 	if owner:IsPlayer() then return owner:GetShootPos() end
 	
 	-- Custom Position
@@ -441,7 +445,7 @@ function SWEP:GetBulletPos()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Think() -- NOTE: This only runs for players not NPCs!
-	self:CustomOnThink()
+	self:OnThink()
 	if SERVER then
 		self:MaintainWorldModel()
 		self:DoIdleAnimation()
@@ -454,7 +458,7 @@ function SWEP:NPC_ServerNextFire()
 	if !IsValid(owner) or !owner:IsNPC() or owner:GetActiveWeapon() != self then return end
 
 	self:MaintainWorldModel()
-	self:CustomOnThink()
+	self:OnThink()
 	
 	if self.NPC_NextPrimaryFire != false && CurTime() > self.NPC_NextPrimaryFireT && self:NPCAbleToShoot() then
 		self:NPCShoot_Primary() -- Panpoushde zarg
@@ -465,7 +469,7 @@ function SWEP:NPCAbleToShoot()
 	local owner = self:GetOwner()
 	if IsValid(owner) && owner:IsNPC() then
 		local ene = owner:GetEnemy()
-		if (owner.IsVJBaseSNPC_Human && IsValid(ene) && owner:IsAbleToShootWeapon(true, true) == false) or (self.NPC_StandingOnly == true && owner:IsMoving()) then
+		if (owner.IsVJBaseSNPC_Human && IsValid(ene) && owner:CanFireWeapon(true, true) == false) or (self.NPC_StandingOnly == true && owner:IsMoving()) then
 			return false
 		end
 		if (owner.IsVJBaseSNPC_Human && owner.DoingWeaponAttack && (VJ.IsCurrentAnimation(owner, owner.CurrentWeaponAnimation) or (!owner.DoingWeaponAttack_Standing))) or (!owner.IsVJBaseSNPC_Human) then
@@ -495,7 +499,7 @@ function SWEP:NPCShoot_Primary()
 	local ene = owner:GetEnemy()
 	if !owner.VJ_IsBeingControlled && (!IsValid(ene) or (!owner:Visible(ene))) then return end
 	if owner.IsVJBaseSNPC then
-		owner:DoPoseParameterLooking()
+		owner:UpdatePoseParamTracking()
 	end
 	
 	-- Secondary Fire
@@ -735,7 +739,7 @@ function SWEP:PrimaryAttackEffects(owner)
 			local muzzleLight = ents.Create("light_dynamic")
 			muzzleLight:SetKeyValue("brightness", self.PrimaryEffects_DynamicLightBrightness)
 			muzzleLight:SetKeyValue("distance", self.PrimaryEffects_DynamicLightDistance)
-			if owner:IsPlayer() then muzzleLight:SetLocalPos(owner:GetShootPos() +self:GetForward()*40 + self:GetUp()*-10) else muzzleLight:SetLocalPos(self:GetBulletPos()) end
+			if owner:IsPlayer() then muzzleLight:SetLocalPos(owner:GetShootPos() + self:GetForward()*40 + self:GetUp()*-10) else muzzleLight:SetLocalPos(self:GetBulletPos()) end
 			muzzleLight:SetLocalAngles(self:GetAngles())
 			muzzleLight:Fire("Color", self.PrimaryEffects_DynamicLightColor.r.." "..self.PrimaryEffects_DynamicLightColor.g.." "..self.PrimaryEffects_DynamicLightColor.b)
 			//muzzleLight:SetParent(self)
@@ -768,11 +772,12 @@ function SWEP:CanSecondaryAttack()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:SecondaryAttack()
-	if !self:CanSecondaryAttack() or self.Reloading then return end
+	if self:Ammo2() <= 0 or self.Reloading then return end // !self:CanSecondaryAttack()
 	if self:CustomOnSecondaryAttack() == false then return end
 	
 	local owner = self:GetOwner()
-	self:TakePrimaryAmmo(self.Secondary.TakeAmmo)
+	print(self:GetMaxClip2(), self:Clip2(), self:Ammo2())
+	self:TakeSecondaryAmmo(self.Secondary.TakeAmmo)
 	owner:SetAnimation(PLAYER_ATTACK1)
 	local anim = VJ.PICK(self.AnimTbl_SecondaryFire)
 	local animTime = VJ.AnimDuration(owner:GetViewModel(), anim)

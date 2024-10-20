@@ -10,7 +10,7 @@ include("shared.lua")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.StartHealth = 200
 ENT.HullType = HULL_LARGE
-ENT.VJTag_ID_Boss = true -- Is this a huge monster?
+ENT.VJTag_ID_Boss = true
 ENT.MovementType = VJ_MOVETYPE_PHYSICS -- How the NPC moves around
 ENT.Bleeds = false -- Does the NPC bleed? Controls all bleeding related components such blood decal, particle, pool, etc.
 ENT.Immune_Dissolve = true -- Immune to Dissolving | Example: Combine Ball
@@ -20,7 +20,7 @@ ENT.ImmuneDamagesTable = {DMG_PHYSGUN} -- You can set Specific types of damages 
 ENT.FindEnemy_UseSphere = true -- Should the NPC see all around? (360 degrees) | Objects and walls can still block its sight!
 ENT.ForceDamageFromBosses = true -- Should the NPC get damaged by bosses regardless if it's not supposed to by skipping immunity checks, etc. | Bosses are attackers tagged with "VJTag_ID_Boss"
 ENT.DeathCorpseCollisionType = COLLISION_GROUP_NONE -- Collision type for the corpse | NPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
-ENT.WaitBeforeDeathTime = 2 -- Time until the NPC spawns its corpse and gets removed
+ENT.DeathDelayTime = 2 -- Time until the NPC spawns the corpse, removes itself, etc.
 ENT.HasMeleeAttack = false -- Can this NPC melee attack?
 ENT.DisableWandering = true -- Disables wandering when the NPC is idle
 ENT.CanReceiveOrders = false -- Can the NPC receive orders from others? | Ex: Allies calling for help, allies requesting backup on damage, etc.
@@ -85,9 +85,9 @@ function ENT:Tank_GunnerSpawnPosition()
 	return self:GetPos()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnThink() return true end -- Return false to disable the default base code
+function ENT:Tank_OnThink() return true end -- Return false to disable the default base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnRunOver(ent) end
+function ENT:Tank_OnRunOver(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:GetNearDeathSparkPositions()
 	local randPos = math.random(1, 2)
@@ -98,7 +98,7 @@ function ENT:GetNearDeathSparkPositions()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnPriorToKilled(dmginfo, hitgroup) return true end -- Return false to disable the default base code
+function ENT:Tank_OnInitialDeath(dmginfo, hitgroup) return true end -- Return false to disable the default base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) return true end -- Return false to disable the default base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -135,7 +135,7 @@ ENT.Tank_NextRunOverSoundT = 0
 local runoverException = {npc_antlionguard=true,npc_turret_ceiling=true,monster_gargantua=true,monster_bigmomma=true,monster_nihilanth=true,npc_strider=true,npc_combine_camera=true,npc_helicopter=true,npc_combinegunship=true,npc_combinedropship=true,npc_rollermine=true}
 local defAng = Angle(0, 0, 0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnInitialize()
+function ENT:Init()
 	self:SetImpactEnergyScale(0) -- Take no physics damage
 	self.DeathAnimationCodeRan = true -- So corpse doesn't fly away on death (Take this out if not using death explosion sequence)
 	self:CustomInitialize_CustomTank()
@@ -175,7 +175,7 @@ end
 function ENT:Tank_RunOver(ent)
 	if !self.Tank_IsMoving or !IsValid(ent) or (GetConVar("vj_npc_nomelee"):GetInt() == 1 /*or self.HasMeleeAttack == false*/) or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then return end
 	if self:Disposition(ent) == 1 && ent:Health() > 0 && ((ent:IsNPC() && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot()) && !ent.VJTag_ID_Boss then
-		self:Tank_CustomOnRunOver(ent)
+		self:Tank_OnRunOver(ent)
 		self:Tank_Sound_RunOver()
 		ent:TakeDamage(self:VJ_GetDifficultyValue(8), self, self)
 		VJ.DamageSpecialEnts(self, ent, nil)
@@ -190,8 +190,8 @@ function ENT:AngleDiffuse(ang1, ang2)
 	return outcome
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnThink()
-	if self:Tank_CustomOnThink() == true then
+function ENT:OnThink()
+	if self:Tank_OnThink() == true then
 		if GetConVar("vj_npc_noidleparticle"):GetInt() == 1 then return end
 		timer.Simple(0.1, function()
 			if IsValid(self) && !self.Dead then
@@ -237,7 +237,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local vec80z = Vector(0, 0, 80)
 --
-function ENT:CustomOnThink_AIEnabled()
+function ENT:OnThinkActive()
 	if self.Dead then return end
 	//timer.Simple(0.1, function() if !self.Dead then ParticleEffect("smoke_exhaust_01",self:LocalToWorld(Vector(150,30,30)),defAng,self) end end)
 	//timer.Simple(0.2, function() if !self.Dead then self:StopParticles() end end)
@@ -323,8 +323,8 @@ function ENT:SelectSchedule()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnTakeDamage_BeforeDamage(dmginfo, hitgroup)
-	if dmginfo:IsDamageType(DMG_SLASH) or dmginfo:IsDamageType(DMG_GENERIC) or dmginfo:IsDamageType(DMG_CLUB) then
+function ENT:OnDamaged(dmginfo, hitgroup, status)
+	if status == "PreDamage" && dmginfo:IsDamageType(DMG_SLASH) or dmginfo:IsDamageType(DMG_GENERIC) or dmginfo:IsDamageType(DMG_CLUB) then
 		if dmginfo:GetDamage() >= 30 && !dmginfo:GetAttacker().VJTag_ID_Boss then
 			dmginfo:SetDamage(dmginfo:GetDamage() / 2)
 		else
@@ -333,23 +333,25 @@ function ENT:CustomOnTakeDamage_BeforeDamage(dmginfo, hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnPriorToKilled(dmginfo, hitgroup)
-	if IsValid(self.Gunner) then
-		self.Gunner.Dead = true
-		if self:IsOnFire() then self.Gunner:Ignite(math.Rand(8, 10), 0) end
-	end
-	
-	if self:Tank_CustomOnPriorToKilled(dmginfo, hitgroup) == true then
-		for i=0, 1.5, 0.5 do
-			timer.Simple(i, function()
-				if IsValid(self) then
-					local myPos = self:GetPos()
-					VJ.EmitSound(self, "VJ.Explosion")
-					util.BlastDamage(self, self, myPos, 200, 40)
-					util.ScreenShake(myPos, 100, 200, 1, 2500)
-					if self.HasGibDeathParticles == true then ParticleEffect("vj_explosion2", myPos, defAng) end
-				end
-			end)
+function ENT:OnDeath(dmginfo, hitgroup, status)
+	if status == "Initial" then
+		if IsValid(self.Gunner) then
+			self.Gunner.Dead = true
+			if self:IsOnFire() then self.Gunner:Ignite(math.Rand(8, 10), 0) end
+		end
+		
+		if self:Tank_OnInitialDeath(dmginfo, hitgroup) == true then
+			for i=0, 1.5, 0.5 do
+				timer.Simple(i, function()
+					if IsValid(self) then
+						local myPos = self:GetPos()
+						VJ.EmitSound(self, "VJ.Explosion")
+						util.BlastDamage(self, self, myPos, 200, 40)
+						util.ScreenShake(myPos, 100, 200, 1, 2500)
+						if self.HasGibOnDeathEffects == true then ParticleEffect("vj_explosion2", myPos, defAng) end
+					end
+				end)
+			end
 		end
 	end
 end
@@ -357,7 +359,7 @@ end
 local vec500z = Vector(0, 0, 500)
 local colorGray = Color(90, 90, 90)
 --
-function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
+function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpseEnt)
 	-- Spawn the gunner corpse
 	if IsValid(self.Gunner) then
 		self.Gunner.SavedDmgInfo = self.SavedDmgInfo
@@ -393,7 +395,7 @@ function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
 		})
 		util.Decal(VJ.PICK(self.Tank_DeathDecal), tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
 
-		if self.HasGibDeathParticles == true && self:Tank_CustomOnDeath_AfterCorpseSpawned_Effects(dmginfo, hitgroup, corpseEnt) == true then
+		if self.HasGibOnDeathEffects == true && self:Tank_CustomOnDeath_AfterCorpseSpawned_Effects(dmginfo, hitgroup, corpseEnt) == true then
 			//self.FireEffect = ents.Create( "env_fire_trail" )
 			//self.FireEffect:SetPos(myPos+self:GetUp()*70)
 			//self.FireEffect:Spawn()

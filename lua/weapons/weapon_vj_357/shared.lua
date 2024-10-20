@@ -25,7 +25,7 @@ SWEP.AdminSpawnable = false
 SWEP.Primary.Damage = 20 -- Damage
 SWEP.Primary.PlayerDamage = "Double" -- For players only | "Same" = Same as self.Primary.Damage | "Double" = Double the self.Primary.Damage | number = Overrides self.Primary.Damage
 SWEP.Primary.Force = 1 -- Force applied on the object the bullet hits
-SWEP.Primary.ClipSize = 6 -- Max amount of bullets per clip
+SWEP.Primary.ClipSize = 6 -- Max amount of rounds per clip
 SWEP.Primary.Recoil = 2 -- How much recoil does the player get?
 SWEP.Primary.Cone = 1 -- How accurate is the bullet? (Players)
 SWEP.Primary.Delay = 0.9 -- Time until it can shoot again

@@ -26,7 +26,7 @@ SWEP.Primary.AllowInWater = true -- Can it be fired in water?
 SWEP.Primary.Damage = 25 -- Damage
 SWEP.Primary.PlayerDamage = 15 -- For players only | "Same" = Same as self.Primary.Damage | "Double" = Double the self.Primary.Damage | number = Overrides self.Primary.Damage
 SWEP.Primary.Force = 5 -- Force applied on the object the bullet hits
-SWEP.Primary.ClipSize = 17 -- Max amount of bullets per clip
+SWEP.Primary.ClipSize = 17 -- Max amount of rounds per clip
 SWEP.Primary.Recoil = 0.3 -- How much recoil does the player get?
 SWEP.Primary.Cone = 5 -- How accurate is the bullet? (Players)
 SWEP.Primary.Delay = 0.25 -- Time until it can shoot again

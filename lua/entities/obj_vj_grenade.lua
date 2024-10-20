@@ -53,7 +53,7 @@ function ENT:CustomPhysicsObjectOnInitialize(phys)
 	phys:SetBuoyancyRatio(0)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnInitialize()
+function ENT:Init()
 	timer.Simple(self.FuseTime, function()
 		if IsValid(self) then
 			self:DeathEffects()

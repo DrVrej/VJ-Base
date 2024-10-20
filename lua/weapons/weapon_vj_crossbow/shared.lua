@@ -17,7 +17,7 @@ SWEP.NPC_StandingOnly = true -- If true, the weapon can only be fired if the NPC
 SWEP.WorldModel = "models/weapons/w_crossbow.mdl"
 SWEP.HoldType = "crossbow"
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.Primary.ClipSize = 1 -- Max amount of bullets per clip
+SWEP.Primary.ClipSize = 1 -- Max amount of rounds per clip
 SWEP.Primary.Ammo = "XBowBolt" -- Ammo type
 SWEP.Primary.Sound = "weapons/crossbow/fire1.wav"
 SWEP.Primary.DisableBulletCode = true -- The bullet won't spawn, this can be used when creating a projectile-based weapon

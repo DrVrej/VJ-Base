@@ -168,7 +168,7 @@ function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
 				local moveSeq = self:GetMovementSequence()
 				local idealSeq = self:GetIdealSequence()
 				if moveSeq != idealSeq && self:GetSequenceActivity(moveSeq) != self:GetSequenceActivity(idealSeq) then
-					self:SetSaveValue("m_nIdealSequence", moveSeq)
+					self:SetIdealSequence(moveSeq)
 				end
 			end
 		end
@@ -371,6 +371,7 @@ function ENT:StopCurrentSchedule()
 		timer.Remove("timer_act_stopattacks"..self:EntIndex())
 		self.NextIdleTime = 0
 		self.NextChaseTime = 0
+		self.AnimLockTime = 0
 		self:ClearSchedule()
 		self:ClearGoal()
 		self:ScheduleFinished(schedule)

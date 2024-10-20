@@ -79,7 +79,7 @@ ENT.OnRemoveSoundPitch = VJ.SET(90, 100)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- Use the functions below to customize certain parts of the base or to add new custom systems
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnPreInitialize() end
+function ENT:PreInit() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnInitializeBeforePhys() /* Example: self:PhysicsInitSphere(1, "metal_bouncy") */ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -90,9 +90,9 @@ function ENT:CustomPhysicsObjectOnInitialize(phys)
 	phys:SetBuoyancyRatio(0)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnInitialize() end
+function ENT:Init() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnThink() end
+function ENT:OnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnTakeDamage(dmginfo) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -122,7 +122,8 @@ ENT.NextCollideWithoutRemoveT = 0
 local defVec = Vector(0, 0, 0)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
-	self:CustomOnPreInitialize()
+	self:PreInit()
+	if self.CustomOnPreInitialize then self:CustomOnPreInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	if self:GetModel() == "models/error.mdl" then self:SetModel(VJ.PICK(self.Model)) end
 	self:PhysicsInit(self.PhysicsInitType)
 	self:SetMoveType(self.MoveType)
@@ -141,7 +142,9 @@ function ENT:Initialize()
 	self:StartupSoundCode()
 	if self.IdleSoundPitch1 then self.IdleSoundPitch = VJ.SET(self.IdleSoundPitch1, self.IdleSoundPitch2) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	
-	self:CustomOnInitialize()
+	self:Init()
+	if self.CustomOnInitialize then self:CustomOnInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
@@ -149,7 +152,7 @@ function ENT:Think()
 	
 	//self:SetAngles(self:GetVelocity():GetNormal():Angle())
 	
-	self:CustomOnThink()
+	self:OnThink()
 	self:IdleSoundCode()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

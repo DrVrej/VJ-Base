@@ -142,7 +142,7 @@ local gib_mdlHBig = {"models/gibs/humans/mgib_01.mdl", "models/gibs/humans/mgib_
 --
 function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 	// self:CreateGibEntity("prop_ragdoll", "", {Pos=self:LocalToWorld(Vector(0,3,0)), Ang=self:GetAngles(), Vel=})
-	if self.AllowedToGib == false then return end
+	if self.CanGib == false then return end
 	local bloodType = false
 	class = class or "obj_vj_gib"
 	if models == "UseAlien_Small" then
@@ -230,12 +230,12 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Reset and stop the eating behavior
-		- statusInfo = Status info to pass to "OnEat" (info types defined in that function)
+		- statusData = Status info to pass to "OnEat" (info types defined in that function)
 -----------------------------------------------------------]]
-function ENT:EatingReset(statusInfo)
+function ENT:EatingReset(statusData)
 	local eatingData = self.EatingData
 	self:SetState(VJ_STATE_NONE)
-	self:OnEat("StopEating", statusInfo)
+	self:OnEat("StopEating", statusData)
 	self.VJTag_IsEating = false
 	self.AnimationTranslations[ACT_IDLE] = eatingData.OrgIdle -- Reset the idle animation table in case it changed!
 	local food = eatingData.Ent
@@ -263,9 +263,9 @@ end
 			- "BeginEating"		= Food location reached
 			- "Eat"				= Actively eating food
 			- "StopEating"		= Food may have moved, removed, or finished
-		- statusInfo = Some status may have extra info, possible infos:
+		- statusData = Some status may have extra data:
 			- "CheckFood": SoundHintData table, more info: https://wiki.facepunch.com/gmod/Structures/SoundHintData
-			- "StopEating":
+			- "StopEating": String, holding one of the following states:
 				- "HaltOnly"	= This is ONLY a halt, not complete reset!		| Recommendation: Play normal get up anim
 				- "Unspecified"	= Ex: Food suddenly removed or moved far away	| Recommendation: Play normal get up anim
 				- "Devoured"	= Has completely devoured the food!				| Recommendation: Play normal get up anim and play a sound
@@ -278,11 +278,11 @@ end
 -----------------------------------------------------------]]
 local vecZ50 = Vector(0, 0, -50)
 --
-function ENT:OnEat(status, statusInfo)
+function ENT:OnEat(status, statusData)
 	-- The following code is a ideal example based on Half-Life 1 Zombie
-	//print(self, "Eating Status: ", status, statusInfo)
+	//print(self, "Eating Status: ", status, statusData)
 	if status == "CheckFood" then
-		return true //statusInfo.owner.BloodData && statusInfo.owner.BloodData.Color == "Red"
+		return true //statusData.owner.BloodData && statusData.owner.BloodData.Color == "Red"
 	elseif status == "BeginEating" then
 		self.AnimationTranslations[ACT_IDLE] = ACT_GESTURE_RANGE_ATTACK1 -- Eating animation
 		return select(2, self:VJ_ACT_PLAYACTIVITY(ACT_ARM, true, false))
@@ -311,7 +311,7 @@ function ENT:OnEat(status, statusInfo)
 		end
 		return 2 -- Eat every this seconds
 	elseif status == "StopEating" then
-		if statusInfo != "Dead" && self.EatingData.AnimStatus != "None" then -- Do NOT play anim while dead or has NOT prepared to eat
+		if statusData != "Dead" && self.EatingData.AnimStatus != "None" then -- Do NOT play anim while dead or has NOT prepared to eat
 			return select(2, self:VJ_ACT_PLAYACTIVITY(ACT_DISARM, true, false))
 		end
 	end
@@ -475,7 +475,7 @@ end
 		- true, Busy
 -----------------------------------------------------------]]
 function ENT:BusyWithActivity()
-	return self.vACT_StopAttacks or self.CurrentAttackAnimationTime > CurTime() or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB
+	return self.vACT_StopAttacks or self.AnimLockTime > CurTime() or self.CurrentAttackAnimationTime > CurTime() or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1029,7 +1029,7 @@ function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
 	end
 	if self.Alerted == false then
 		self.LatestEnemyDistance = self:GetPos():Distance(ent:GetPos())
-		self:OnAlert(ent)
+		self:DoAlert(ent)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1257,7 +1257,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AcceptInput(key, activator, caller, data)
 	//print(self, key, activator, caller, data)
-	local funcCustom = self.CustomOnAcceptInput; if funcCustom then funcCustom(self, key, activator, caller, data) end
+	local funcCustom = self.OnInput; if funcCustom then funcCustom(self, key, activator, caller, data) end
 	if key == "Use" then
 		-- 1. Add a delay so the game registers other key presses
 		-- 2. Check for mouse 1, mouse 2, and reload
@@ -1278,11 +1278,11 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:HandleAnimEvent(ev, evTime, evCycle, evType, evOptions)
 	//print(ev, evTime, evCycle, evType, evOptions)
-	local funcCustom = self.CustomOnHandleAnimEvent; if funcCustom then funcCustom(self, ev, evTime, evCycle, evType, evOptions) end
+	local funcCustom = self.OnAnimEvent; if funcCustom then funcCustom(self, ev, evTime, evCycle, evType, evOptions) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
-	if self.VJ_DEBUG == true && GetConVar("vj_npc_printontouch"):GetInt() == 1 then print(self:GetClass().." Has Touched "..entity:GetClass()) end
+	if self.VJ_DEBUG == true && GetConVar("vj_npc_debug_ontouch"):GetInt() == 1 then print(self:GetClass() .. " : Touched --> " .. entity:GetClass()) end
 	local funcCustom = self.OnTouch; if funcCustom then funcCustom(self, entity) end
 	if !VJ_CVAR_AI_ENABLED or self.VJ_IsBeingControlled then return end
 	
@@ -1435,7 +1435,7 @@ function ENT:Follow(ent, stopIfFollowing)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetMedicBehavior()
-	self:CustomOnMedic_OnReset()
+	self:OnMedicBehavior("OnReset", "End")
 	if IsValid(self.Medic_CurrentEntToHeal) then self.Medic_CurrentEntToHeal.VJTag_IsHealing = false end
 	if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
 	self.Medic_NextHealT = CurTime() + math.Rand(self.Medic_NextHealTime.a, self.Medic_NextHealTime.b)
@@ -1463,7 +1463,7 @@ function ENT:MaintainMedicBehavior()
 		if !IsValid(ally) or !VJ.IsAlive(ally) or (ally:Health() > ally:GetMaxHealth() * 0.75) then self:ResetMedicBehavior() return end
 		if self:Visible(ally) && self:VJ_GetNearestPointToEntityDistance(ally) <= self.Medic_HealDistance then -- Are we in healing distance?
 			self.Medic_Status = "Healing"
-			self:CustomOnMedic_BeforeHeal()
+			self:OnMedicBehavior("BeforeHeal")
 			self:PlaySoundSystem("MedicBeforeHeal")
 			
 			-- Spawn the prop
@@ -1508,7 +1508,7 @@ function ENT:MaintainMedicBehavior()
 						self:ResetMedicBehavior()
 					else -- If it exists...
 						if self:VJ_GetNearestPointToEntityDistance(ally) <= (self.Medic_HealDistance + 20) then -- Are we still in healing distance?
-							if self:CustomOnMedic_OnHeal(ally) != false then
+							if self:OnMedicBehavior("OnHeal", ally) != false then
 								local friCurHP = ally:Health()
 								ally:SetHealth(math_clamp(friCurHP + self.Medic_HealthAmount, friCurHP, ally:GetMaxHealth()))
 								ally:RemoveAllDecals()
@@ -1521,7 +1521,7 @@ function ENT:MaintainMedicBehavior()
 						else -- If we are no longer in healing distance, go after the ally again
 							self.Medic_Status = "Active"
 							if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
-							self:CustomOnMedic_OnReset()
+							self:OnMedicBehavior("OnReset", "Retry")
 						end
 					end
 				end
@@ -1633,15 +1633,15 @@ function ENT:AddExtraAttackTimer(name, time, func)
 	timer.Create(name..self:EntIndex(), (time or 0.5) / self:GetPlaybackRate(), 1, func)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnAlert(ent)
+function ENT:DoAlert(ent)
 	if !IsValid(self:GetEnemy()) or self.Alerted == true then return end
 	self.Alerted = true
-	-- Fixes the NPC switching from combat to alert to combat after it sees an enemy because `OnAlert` is called after NPC_STATE_COMBAT is set
+	-- Fixes the NPC switching from combat to alert to combat after it sees an enemy because `DoAlert` is called after NPC_STATE_COMBAT is set
 	if self:GetNPCState() != NPC_STATE_COMBAT then
 		self:SetNPCState(NPC_STATE_ALERT)
 	end
 	self.EnemyData.LastVisibleTime = CurTime()
-	self:CustomOnAlert(ent)
+	self:OnAlert(ent)
 	if CurTime() > self.NextAlertSoundT then
 		self:PlaySoundSystem("Alert")
 		self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert.a, self.NextSoundTime_Alert.b)
@@ -1773,14 +1773,14 @@ function ENT:MaintainRelationships()
 								self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
 								self.NextInvestigationMove = CurTime() + 2 -- Long delay, so it doesn't spam movement
 							end
-							self:CustomOnInvestigate(v)
+							self:OnInvestigate(v)
 							self:PlaySoundSystem("InvestigateSound")
 						-- When a bullet hit is detected
 						elseif IsValid(sdHintBulletOwner) && sdHintBulletOwner == v then
 							self:StopMoving()
 							self:SetLastPosition(sdHintBullet.origin)
 							self:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
-							self:CustomOnInvestigate(v)
+							self:OnInvestigate(v)
 							self:PlaySoundSystem("InvestigateSound")
 							self.NextInvestigationMove = CurTime() + 0.3 -- Short delay because many bullets could hit
 						-- PLAYER ONLY: Flashlight shining on the NPC
@@ -1850,7 +1850,7 @@ function ENT:MaintainRelationships()
 					-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 					local disp = self.OnPlayerSightDispositionLevel
 					if (disp == 0) or (disp == 1 && (self:Disposition(v) == D_LI or self:Disposition(v) == D_NU)) or (disp == 2 && self:Disposition(v) != D_LI) then
-						self:CustomOnPlayerSight(v)
+						self:OnPlayerSight(v)
 						self:PlaySoundSystem("OnPlayerSight")
 						if self.OnPlayerSightOnlyOnce == true then -- If it's only suppose to play it once then turn the system off
 							self.HasOnPlayerSight = false
@@ -1886,7 +1886,7 @@ function ENT:Allies_CallHelp(dist)
 				//if v:CheckRelationship(ene) == D_HT then
 				if !IsValid(v:GetEnemy()) && ((!eneIsPlayer && v:Disposition(ene) != D_LI) or eneIsPlayer) then
 					if v.IsGuard == true && !v:Visible(ene) then continue end -- If it's guarding and enemy is not visible, then don't call!
-					self:CustomOnCallForHelp(v, isFirst)
+					self:OnCallForHelp(v, isFirst)
 					self:PlaySoundSystem("CallForHelp")
 					-- Play the animation
 					if self.HasCallForHelpAnimation && curTime > self.NextCallForHelpAnimationT then
@@ -2031,15 +2031,6 @@ function ENT:DecideAttackTimer(timer1, timer2, untilDamage, animDur)
 	return result // / self:GetPlaybackRate() -- No need, playback is already calculated above
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoKilledEnemy(ent, attacker, inflictor)
-	if !IsValid(ent) then return end
-	-- If it can only do it if there is no enemies left then check --> (If there no valid enemy) OR (The number of enemies is 1 or less)
-	if (self.OnlyDoKillEnemyWhenClear == false) or (self.OnlyDoKillEnemyWhenClear == true && (!IsValid(self:GetEnemy()) or (self.EnemyData.VisibleCount <= 1))) then
-		self:CustomOnDoKilledEnemy(ent, attacker, inflictor)
-		self:PlaySoundSystem("OnKilledEnemy")
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 local function FlinchDamageTypeCheck(checkTbl, dmgType)
 	for k = 1, #checkTbl do
 		if bAND(dmgType, checkTbl[k]) != 0 then
@@ -2049,7 +2040,7 @@ local function FlinchDamageTypeCheck(checkTbl, dmgType)
 end
 --
 function ENT:DoFlinch(dmginfo, hitgroup)
-	if self.CanFlinch == 0 or self.Flinching == true or self.TakingCoverT > CurTime() or self.NextFlinchT > CurTime() or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
+	if self.CanFlinch == 0 or self.Flinching == true or self.AnimLockTime > CurTime() or self.TakingCoverT > CurTime() or self.NextFlinchT > CurTime() or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
 
 	local function RunFlinch(hitgroupInfo)
 		self.Flinching = true
@@ -2058,12 +2049,12 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 		local anim = VJ.PICK(hitgroupInfo and hitgroupInfo.Animation or self.AnimTbl_Flinch)
 		local _, animDur = self:VJ_ACT_PLAYACTIVITY(anim, true, self:DecideAnimationLength(anim, self.NextMoveAfterFlinchTime), false, 0, {PlayBackRateCalculated=true})
 		timer.Create("timer_act_flinching"..self:EntIndex(), animDur, 1, function() self.Flinching = false end)
-		self:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup)
+		self:OnFlinch(dmginfo, hitgroup, "Execute")
 		self.NextFlinchT = CurTime() + (self.NextFlinchTime == false and animDur or self.NextFlinchTime)
 	end
 	
 	if math.random(1, self.FlinchChance) == 1 && ((self.CanFlinch == 1) or (self.CanFlinch == 2 && FlinchDamageTypeCheck(self.FlinchDamageTypes, dmginfo:GetDamageType()))) then
-		if self:CustomOnFlinch_BeforeFlinch(dmginfo, hitgroup) == false then return end
+		if self:OnFlinch(dmginfo, hitgroup, "PriorExecution") == false then return end
 		
 		local hitgroupTbl = self.HitGroupFlinching_Values
 		-- Hitgroup flinching
@@ -2410,8 +2401,8 @@ function ENT:ValidateNoCollide(ent)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RunGibOnDeathCode(dmginfo, hitgroup, extraOptions)
-	if !self.AllowedToGib or !self.HasGibOnDeath or self.HasBeenGibbedOnDeath then return end
+function ENT:DoGibOnDeath(dmginfo, hitgroup, extraOptions)
+	if !self.CanGib or !self.CanGibOnDeath or self.GibbedOnDeath then return end
 	extraOptions = extraOptions or {}
 	local dmgTbl = extraOptions.CustomDmgTbl or self.GibOnDeathDamagesTable
 	local dmgType = dmginfo:GetDamageType()
@@ -2421,13 +2412,13 @@ function ENT:RunGibOnDeathCode(dmginfo, hitgroup, extraOptions)
 			local setupGibs, setupGibsExtra = self:SetUpGibesOnDeath(dmginfo, hitgroup)
 			if setupGibs == true then
 				if setupGibsExtra then
-					if setupGibsExtra.AllowCorpse != true then self.HasDeathRagdoll = false end
+					if setupGibsExtra.AllowCorpse != true then self.HasDeathCorpse = false end
 					if setupGibsExtra.DeathAnim != true then self.HasDeathAnimation = false end
 				else -- By default disable corpse spawning and death animation if it gibbed!
-					self.HasDeathRagdoll = false
+					self.HasDeathCorpse = false
 					self.HasDeathAnimation = false
 				end
-				self.HasBeenGibbedOnDeath = true
+				self.GibbedOnDeath = true
 				self:PlayGibOnDeathSounds(dmginfo, hitgroup)
 			end
 			break
@@ -2573,7 +2564,7 @@ for k,v in ipairs(EnemyTargets) do
 	end
 	//table.insert(LocalTargetTable,v)
 	//self.EnemyTable = LocalTargetTable
-	self:OnAlert()
+	self:DoAlert()
 	//return
   end
  end
@@ -2592,7 +2583,7 @@ for k,v in ipairs(EnemyTargets) do
 		self.MyEnemy = v
 		self:UpdateEnemyMemory(v,v:GetPos())
 	end
-	self:OnAlert()
+	self:DoAlert()
 	//return
   end
  end
@@ -2674,8 +2665,8 @@ function ENT:DoWeaponAttackMovementCode(override, moveType)
 	moveType = moveType or 0 -- This is used with override | 0 = Run, 1 = Walk
 	if (self.CurrentWeaponEntity.IsMeleeWeapon) then
 		self.DoingWeaponAttack = true
-	elseif self.Weapon_ShootWhileMoving == true then
-		if self.EnemyData.IsVisible && self:IsAbleToShootWeapon(true, false) == true && ((self:IsMoving() && (self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true)) or (override == true)) then
+	elseif self.Weapon_CanFireWhileMoving == true then
+		if self.EnemyData.IsVisible && self:CanFireWeapon(true, false) == true && ((self:IsMoving() && (self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true)) or (override == true)) then
 			if (override == true && moveType == 0) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 1) then
 				local anim = self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_ShootWhileMovingRun))
 				if VJ.AnimExists(self,anim) == true then

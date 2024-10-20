@@ -11,7 +11,7 @@ include("shared.lua")
 ENT.StartHealth = 0
 ENT.HullType = HULL_LARGE
 ENT.HasSetSolid = false -- set to false to disable SetSolid
-ENT.VJTag_ID_Boss = true -- Is this a huge monster?
+ENT.VJTag_ID_Boss = true
 ENT.MovementType = VJ_MOVETYPE_STATIONARY -- How the NPC moves around
 ENT.CanTurnWhileStationary = false -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
 ENT.GodMode = true -- Immune to everything
@@ -72,7 +72,7 @@ ENT.Tank_DefaultSoundTbl_FireShell = {"vj_base/vehicles/armored/gun_main_fire1.w
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomInitialize_CustomTank() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnThink() return true end -- Return false to disable think code (Its just the StartSpawnEffects)
+function ENT:Tank_OnThink() return true end -- Return false to disable think code (Its just the StartSpawnEffects)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_CustomOnThink_AIEnabled() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -180,7 +180,7 @@ ENT.Tank_Status = 0 -- 0 = Can fire | 1 = Can NOT fire
 ENT.Tank_Shell_NextFireT = 0
 ENT.Tank_TurningLerp = nil
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnInitialize()
+function ENT:Init()
 	self.DeathAnimationCodeRan = true -- So corpse doesn't fly away on death (Take this out if not using death explosion sequence)
 	self:SetImpactEnergyScale(0) -- Take no physics damage
 	self:CustomInitialize_CustomTank()
@@ -193,8 +193,8 @@ function ENT:AngleDiffuse(ang1, ang2)
 	return outcome
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnThink()
-	if self:Tank_CustomOnThink() == true && GetConVar("vj_npc_noidleparticle"):GetInt() == 0 then
+function ENT:OnThink()
+	if self:Tank_OnThink() == true && GetConVar("vj_npc_noidleparticle"):GetInt() == 0 then
 		timer.Simple(0.1, function()
 			if IsValid(self) && !self.Dead then
 				self:StartSpawnEffects()
@@ -203,7 +203,7 @@ function ENT:CustomOnThink()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnThink_AIEnabled()
+function ENT:OnThinkActive()
 	if self.Dead then return end
 	self:SetEnemy(self:GetParent():GetEnemy())
 	self:Tank_CustomOnThink_AIEnabled()
@@ -327,7 +327,7 @@ function ENT:Tank_FireShell()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt)
+function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpseEnt)
 	if self:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) == true then
 		local corpsePhys = corpseEnt:GetPhysicsObject()
 		if IsValid(corpsePhys) then

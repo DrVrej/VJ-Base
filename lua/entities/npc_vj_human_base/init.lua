@@ -11,7 +11,7 @@ include("shared.lua")
 AccessorFunc(ENT, "m_iClass", "NPCClass", FORCE_NUMBER)
 AccessorFunc(ENT, "m_fMaxYawSpeed", "MaxYawSpeed", FORCE_NUMBER)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Core ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Model = false -- Model(s) to spawn with | Picks a random one if it's a table
 ENT.EntitiesToNoCollide = false -- Set to a table of entity class names for the NPC to not collide with otherwise leave it to false
@@ -22,17 +22,17 @@ ENT.HasHealthRegeneration = false -- Can the NPC regenerate its health?
 ENT.HealthRegenerationAmount = 4 -- How much should the health increase after every delay?
 ENT.HealthRegenerationDelay = VJ.SET(2, 4) -- How much time until the health increases
 ENT.HealthRegenerationResetOnDmg = true -- Should the delay reset when it receives damage?
-	-- ====== Collision / Hitbox Variables ====== --
+	-- ====== Collision / Hitbox ====== --
 ENT.HullType = HULL_HUMAN -- List of Hull types: https://wiki.facepunch.com/gmod/Enums/HULL
 ENT.HasSetSolid = true -- set to false to disable SetSolid
-	-- ====== Sight & Speed Variables ====== --
+	-- ====== Sight & Speed ====== --
 ENT.SightDistance = 6500 -- How far it can see | This is just a starting value! | To retrieve: "self:GetMaxLookDistance()" | To change: "self:SetMaxLookDistance(sight)"
 ENT.SightAngle = 80 -- The sight angle | Example: 180 would make the it see all around it | Measured in degrees and then converted to radians
 ENT.TurningSpeed = 20 -- How fast it can turn
 ENT.TurningUseAllAxis = false -- If set to true, angles will not be restricted to y-axis, it will change all axes (plural axis)
 ENT.CanTurnWhileMoving = true -- Can the NPC turn while moving? | EX: GoldSrc NPCs, Facing enemy while running to cover, Facing the player while moving out of the way
 ENT.AnimationPlaybackRate = 1 -- Controls the playback rate of all animations
-	-- ====== Movement Variables ====== --
+	-- ====== Movement ====== --
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How the NPC moves around
 ENT.UsePlayerModelMovement = false -- If true, it will allow the NPC to use player models properly by calculating the direction it needs to go to and setting the appropriate values
@@ -63,7 +63,7 @@ ENT.VJC_Data = {
 	FirstP_CameraBoneAng_Offset = 0, -- How much should the camera's angle be rotated by? | Useful for weird bone angles
 }
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- AI & Relationship Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ AI & Relationship ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.CanOpenDoors = true -- Can it open doors?
 ENT.CanReceiveOrders = true -- Can the NPC receive orders from others? | Ex: Allies calling for help, allies requesting backup on damage, etc.
@@ -80,33 +80,33 @@ ENT.AlertedToIdleTime = VJ.SET(4, 6) -- How much time until it calms down after 
 ENT.MoveOutOfFriendlyPlayersWay = true -- Should the NPC move and give space to friendly players?
 ENT.BecomeEnemyToPlayer = false -- Should the NPC become enemy towards a friendly player if it's damaged by it or it witnesses another ally killed by it
 ENT.BecomeEnemyToPlayerLevel = 2 -- Any time the player does something bad, the NPC's anger level raises by 1, if it surpasses this, it will become enemy!
-	-- ====== Old Variables (Can still be used, but it's recommended not to use them) ====== --
+	-- ====== Old (Can still be used, but it's recommended not to use them) ====== --
 ENT.PlayerFriendly = false -- Makes the NPC friendly to the player and HL2 Resistance
-	-- ====== Passive Behavior Variables ====== --
+	-- ====== Passive Behavior ====== --
 ENT.Passive_RunOnTouch = true -- Should it run away and make a alert sound when something collides with it?
 ENT.Passive_NextRunOnTouchTime = VJ.SET(3, 4) -- How much until it can run away again when something collides with it?
 ENT.Passive_RunOnDamage = true -- Should it run when it's damaged? | This doesn't impact how self.Passive_AlliesRunOnDamage works
 ENT.Passive_AlliesRunOnDamage = true -- Should its allies (other passive NPCs) also run when it's damaged?
 ENT.Passive_AlliesRunOnDamageDistance = 800 -- Any allies within this distance will run when it's damaged
 ENT.Passive_NextRunOnDamageTime = VJ.SET(6, 7) -- How much until it can run the code again?
-	-- ====== On Player Sight Variables ====== --
+	-- ====== On Player Sight ====== --
 ENT.HasOnPlayerSight = false -- Should do something when it sees the enemy? Example: Play a sound
 ENT.OnPlayerSightDistance = 200 -- How close should the player be until it runs the code?
 ENT.OnPlayerSightDispositionLevel = 1 -- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 ENT.OnPlayerSightOnlyOnce = true -- If true, it will only run the code once | Sets self.HasOnPlayerSight to false once it runs!
 ENT.OnPlayerSightNextTime = VJ.SET(15, 20) -- How much time should it pass until it runs the code again?
-	-- ====== Call For Help Variables ====== --
+	-- ====== Call For Help ====== --
 ENT.CallForHelp = true -- Can the NPC request allies for help while in combat?
 ENT.CallForHelpDistance = 2000 -- -- How far away the NPC's call for help travels
 ENT.NextCallForHelpTime = 4 -- Time until it calls for help again
 ENT.HasCallForHelpAnimation = true -- if true, it will play the call for help animation
-ENT.AnimTbl_CallForHelp = {ACT_SIGNAL_ADVANCE, ACT_SIGNAL_FORWARD} -- Call For Help Animations
+ENT.AnimTbl_CallForHelp = {ACT_SIGNAL_ADVANCE, ACT_SIGNAL_FORWARD}
 ENT.CallForHelpStopAnimations = true -- Should it stop attacks for a certain amount of time?
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.CallForHelpStopAnimationsTime = false -- How long should it stop attacks?
 ENT.CallForHelpAnimationFaceEnemy = true -- Should it face the enemy when playing the animation?
 ENT.NextCallForHelpAnimationTime = 30 -- How much time until it can play the animation again?
-	-- ====== Medic Variables ====== --
+	-- ====== Medic ====== --
 ENT.IsMedicSNPC = false -- Is this NPC a medic? It will heal friendly players and NPCs
 ENT.Medic_CanBeHealed = true -- Can this NPC be healed by medics?
 ENT.AnimTbl_Medic_GiveHealth = ACT_SPECIAL_ATTACK1 -- Animations is plays when giving health to an ally
@@ -120,22 +120,22 @@ ENT.Medic_NextHealTime = VJ.SET(10, 15) -- How much time until it can give healt
 ENT.Medic_SpawnPropOnHeal = true -- Should it spawn a prop, such as small health vial at a attachment when healing an ally?
 ENT.Medic_SpawnPropOnHealModel = "models/healthvial.mdl" -- The model that it spawns
 ENT.Medic_SpawnPropOnHealAttachment = "anim_attachment_LH" -- The attachment it spawns on
-	-- ====== Follow System Variables ====== --
+	-- ====== Follow System ====== --
 	-- Associated variables: self.FollowData, self.IsFollowing
 ENT.FollowPlayer = true -- Should the NPC follow the player when the player presses a certain key? | Restrictions: Player has to be friendly and the NPC's move type cannot be stationary!
 ENT.FollowMinDistance = 100 -- Minimum distance the NPC should come to the player | The base automatically adds the NPC's size to this variable to account for different sizes!
 ENT.NextFollowUpdateTime = 0.5 -- Time until it checks if it should move to the player again | Lower number = More performance loss
-	-- ====== Movement & Idle Variables ====== --
+	-- ====== Movement & Idle ====== --
 ENT.IdleAlwaysWander = false -- Should the NPC constantly wander while idling?
 ENT.DisableWandering = false -- Disables wandering when the NPC is idle
 ENT.DisableChasingEnemy = false -- Disables chasing enemies
-	-- ====== Constantly Face Enemy Variables ====== --
+	-- ====== Constantly Face Enemy ====== --
 ENT.ConstantlyFaceEnemy = false -- Should it face the enemy constantly?
 ENT.ConstantlyFaceEnemy_IfVisible = true -- Should it only face the enemy if it's visible?
 ENT.ConstantlyFaceEnemy_IfAttacking = false -- Should it face the enemy when attacking?
 ENT.ConstantlyFaceEnemy_Postures = "Both" -- "Both" = Moving or standing | "Moving" = Only when moving | "Standing" = Only when standing
 ENT.ConstantlyFaceEnemyDistance = 2500 -- How close does it have to be until it starts to face the enemy?
-	-- ====== Pose Parameter Variables ====== --
+	-- ====== Pose Parameter ====== --
 ENT.HasPoseParameterLooking = true -- Does it look at its enemy using pose parameters?
 ENT.PoseParameterLooking_CanReset = true -- Should it reset its pose parameters if there is no enemies?
 ENT.PoseParameterLooking_InvertPitch = false -- Inverts the pitch pose parameters (X)
@@ -143,11 +143,11 @@ ENT.PoseParameterLooking_InvertYaw = false -- Inverts the yaw pose parameters (Y
 ENT.PoseParameterLooking_InvertRoll = false -- Inverts the roll pose parameters (Z)
 ENT.PoseParameterLooking_TurningSpeed = 10 -- How fast does the parameter turn?
 ENT.PoseParameterLooking_Names = {pitch={}, yaw={}, roll={}} -- Custom pose parameters to use, can put as many as needed
-	-- ====== Investigation Variables ====== --
+	-- ====== Investigation ====== --
 	-- Showcase: https://www.youtube.com/watch?v=cCqoqSDFyC4
 ENT.CanInvestigate = true -- Can it detect and investigate disturbances? | EX: Sounds, movement, flashlight, bullet hits
 ENT.InvestigateSoundDistance = 9 -- How far can the NPC hear sounds? | This number is multiplied by the calculated volume of the detectable sound
-	-- ====== Danger & Grenade Detection Variables ====== --
+	-- ====== Danger & Grenade Detection ====== --
 	-- Showcase: https://www.youtube.com/watch?v=XuaMWPTe6rA
 	-- EXAMPLES: Props that are one fire, especially objects like barrels that are about to explode, Combine mine that is triggered and about to explode, The location that the Antlion Worker's spit is going to hit, Combine Flechette that is about to explode,
 	-- Antlion Guard that is charging towards the NPC, Player that is driving a vehicle at high speed towards the NPC, Manhack that has opened its blades, Rollermine that is about to self-destruct, Combine Helicopter that is about to drop bombs or is firing a turret near the NPC,
@@ -157,10 +157,10 @@ ENT.CanDetectDangers = true -- Should the NPC detect dangers? | This includes gr
 ENT.DangerDetectionDistance = 400 -- Max danger detection distance | WARNING: Most of the non-grenade dangers ignore this max value
 ENT.CanThrowBackDetectedGrenades = true -- Should it pick up the detected grenade and throw it away or to the enemy?
 	-- NOTE: Can only throw grenades away if it has a grenade attack AND can detect dangers
-	-- ====== Taking Cover Variables ====== --
+	-- ====== Taking Cover ====== --
 ENT.AnimTbl_TakingCover = ACT_COVER_LOW -- The animation it plays when hiding in a covered position
 ENT.AnimTbl_MoveToCover = ACT_RUN_CROUCH -- The animation it plays when moving to a covered position
-	-- ====== Control Variables ====== --
+	-- ====== Control ====== --
 	-- Adjust these variables carefully! Wrong adjustment can have unintended effects!
 ENT.FindEnemy_UseSphere = false -- Should the NPC see all around? (360 degrees) | Objects and walls can still block its sight!
 ENT.FindEnemy_CanSeeThroughWalls = false -- Should it be able to see through walls and objects? | Can be useful if you want to make it know where the enemy is at all times
@@ -171,9 +171,9 @@ ENT.DisableMakingSelfEnemyToNPCs = false -- Disables the "AddEntityRelationship"
 ENT.TimeUntilEnemyLost = 15 -- Time until it resets its enemy if the enemy is not visible
 ENT.NextProcessTime = 1 -- Time until it runs the essential part of the AI, which can be performance heavy!
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Damaged / Injured Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Damaged / Injured ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	-- ====== Blood-Related Variables ====== --
+	-- ====== Blood-Related ====== --
 	-- Leave custom blood tables empty to let the base decide depending on the blood type
 ENT.Bleeds = true -- Does the NPC bleed? Controls all bleeding related components such blood decal, particle, pool, etc.
 ENT.BloodColor = "" -- The blood type, this will determine what it should use (decal, particle, etc.)
@@ -186,7 +186,7 @@ ENT.HasBloodDecal = true -- Does it spawn a decal when damaged?
 ENT.CustomBlood_Decal = {} -- Decals to spawn when it's damaged | Leave empty for the base to decide
 ENT.BloodDecalUseGMod = false -- Should use the current default decals defined by Garry's Mod? (This only applies for certain blood types only!)
 ENT.BloodDecalDistance = 150 -- Max distance blood decals can splatter
-	-- ====== Immunity Variables ====== --
+	-- ====== Immunity ====== --
 ENT.GodMode = false -- Immune to everything
 ENT.Immune_AcidPoisonRadiation = false -- Immune to Acid, Poison and Radiation
 ENT.Immune_Bullet = false -- Immune to bullet type damages
@@ -199,7 +199,7 @@ ENT.Immune_Sonic = false -- Immune to sonic-type damages
 ENT.ImmuneDamagesTable = {} -- Makes the NPC immune to the give type of damage types | Takes DMG_ enumerations
 ENT.ForceDamageFromBosses = false -- Should the NPC get damaged by bosses regardless if it's not supposed to by skipping immunity checks, etc. | Bosses are attackers tagged with "VJTag_ID_Boss"
 ENT.AllowIgnition = true -- Can this NPC be set on fire?
-	-- ====== Flinching Variables ====== --
+	-- ====== Flinching ====== --
 ENT.CanFlinch = 0 -- 0 = Don't flinch | 1 = Flinch at any damage | 2 = Flinch only from certain damages
 ENT.FlinchDamageTypes = {DMG_BLAST} -- If it uses damage-based flinching, which types of damages should it flinch from?
 ENT.FlinchChance = 16 -- Chance of it flinching from 1 to x | 1 will make it always flinch
@@ -207,10 +207,10 @@ ENT.FlinchChance = 16 -- Chance of it flinching from 1 to x | 1 will make it alw
 ENT.NextMoveAfterFlinchTime = false -- How much time until it can move, attack, etc.
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.NextFlinchTime = 5 -- How much time until it can flinch again?
-ENT.AnimTbl_Flinch = ACT_FLINCH_PHYSICS -- If it uses normal based animation, use this
+ENT.AnimTbl_Flinch = ACT_FLINCH_PHYSICS -- The regular flinch animations to play
 ENT.HitGroupFlinching_DefaultWhenNotHit = true -- If it uses hitgroup flinching, should it do the regular flinch if it doesn't hit any of the specified hitgroups?
 ENT.HitGroupFlinching_Values = nil -- EXAMPLES: {{HitGroup = {HITGROUP_HEAD}, Animation = {ACT_FLINCH_HEAD}}, {HitGroup = {HITGROUP_LEFTARM}, Animation = {ACT_FLINCH_LEFTARM}}, {HitGroup = {HITGROUP_RIGHTARM}, Animation = {ACT_FLINCH_RIGHTARM}}, {HitGroup = {HITGROUP_LEFTLEG}, Animation = {ACT_FLINCH_LEFTLEG}}, {HitGroup = {HITGROUP_RIGHTLEG}, Animation = {ACT_FLINCH_RIGHTLEG}}}
-	-- ====== Call For Back On Damage Variables ====== --
+	-- ====== Call For Back On Damage ====== --
 	-- NOTE: This AI component only runs when there is NO enemy detected!
 ENT.CallForBackUpOnDamage = true -- Should the NPC call for help when damaged?
 ENT.CallForBackUpOnDamageDistance = 800 -- How far away does the call for help go?
@@ -219,19 +219,20 @@ ENT.NextCallForBackUpOnDamageTime = VJ.SET(9, 11) -- How much time until it can 
 ENT.CallForBackUpOnDamageAnimation = ACT_SIGNAL_GROUP -- Animations played when it calls for help on damage
 ENT.CallForBackUpOnDamageAnimationTime = false -- How much time until it can use activities | false = Base automatically decides the animation duration
 ENT.DisableCallForBackUpOnDamageAnimation = false -- Disables the animations from playing
-	-- ====== Move Or Hide On Damage Variables ====== --
+	-- ====== Move Or Hide On Damage ====== --
 	-- Basically when damaged it will attempt to hide behind cover or move away if no cover is found
 	-- NOTE: This only runs when it has a active enemy
 ENT.MoveOrHideOnDamageByEnemy = true -- Should the NPC move away or hide behind cover when being damaged while fighting an enemy?
 ENT.MoveOrHideOnDamageByEnemy_OnlyMove = false -- Should it only move away and not hide behind cover?
 ENT.MoveOrHideOnDamageByEnemy_HideTime = VJ.SET(3, 5) -- How long should it hide behind cover?
 ENT.MoveOrHideOnDamageByEnemy_NextTime = VJ.SET(3, 3.5) -- How long until it can do this behavior again? (hide behind cover or move away)
-	-- ====== Miscellaneous Variables ====== --
+	-- ====== Miscellaneous ====== --
 ENT.HideOnUnknownDamage = 5 -- number = Hide on unknown damage, defines the time until it can hide again | false = Disable this AI component
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Death & Corpse Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Death & Corpse ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	-- ====== Ally Reaction On Death Variables ====== --
+ENT.DeathDelayTime = 0 -- Time until the NPC spawns the corpse, removes itself, etc.
+-- ====== Ally Reaction On Death ====== --
 	-- Default: Creature base uses "BringFriends" and Human base uses "AlertFriends"
 	-- "BringFriendsOnDeath" takes priority over "AlertFriendsOnDeath"!
 ENT.BringFriendsOnDeath = false -- Should the NPC's allies come to its position while it's dying?
@@ -241,15 +242,16 @@ ENT.AlertFriendsOnDeath = true -- Should the NPC's allies get alerted while it's
 ENT.AlertFriendsOnDeathDistance = 800 -- How far away does the signal go? | Counted in World Units
 ENT.AlertFriendsOnDeathLimit = 50 -- How many people should it alert?
 ENT.AnimTbl_AlertFriendsOnDeath = ACT_RANGE_ATTACK1 -- Animations it plays when an ally dies that also has AlertFriendsOnDeath set to true
--- ====== Death Animation Variables ====== --
+-- ====== Death Animation ====== --
 ENT.HasDeathAnimation = false -- Does it play an animation when it dies?
-ENT.AnimTbl_Death = {} -- Death Animations
+ENT.AnimTbl_Death = {}
 	-- To let the base automatically detect the animation duration, set this to false:
-ENT.DeathAnimationTime = false -- Time until the NPC spawns its corpse and gets removed
+	-- NOTE: This is added on top of "self.DeathDelayTime" !
+ENT.DeathAnimationTime = false -- How long should the death animation play?
 ENT.DeathAnimationChance = 1 -- Put 1 if you want it to play the animation all the time
 ENT.DeathAnimationDecreaseLengthAmount = 0 -- This will decrease the time until it turns into a corpse
-	-- ====== Corpse Variables ====== --
-ENT.HasDeathRagdoll = true -- Should the NPC spawn a corpse when it dies?
+	-- ====== Corpse ====== --
+ENT.HasDeathCorpse = true -- Should a corpse spawn when it's killed?
 ENT.DeathCorpseEntityClass = "UseDefaultBehavior" -- The entity class it creates | "UseDefaultBehavior" = Let the base automatically detect the type
 ENT.DeathCorpseModel = false -- Model(s) to spawn as the NPC's corpse | false = Use the NPC's model | Can be a single string or a table of strings
 ENT.DeathCorpseCollisionType = COLLISION_GROUP_DEBRIS -- Collision type for the corpse | NPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
@@ -258,36 +260,35 @@ ENT.DeathCorpseFade = false -- Fades the ragdoll on death
 ENT.DeathCorpseFadeTime = 10 -- How much time until the ragdoll fades | Unit = Seconds
 ENT.DeathCorpseSetBoneAngles = true -- This can be used to stop the corpse glitching or flying on death
 ENT.DeathCorpseApplyForce = true -- Should the force of the damage be applied to the corpse?
-ENT.WaitBeforeDeathTime = 0 -- Time until the NPC spawns its corpse and gets removed
-	-- ====== Dismemberment/Gib Variables ====== --
-ENT.AllowedToGib = true -- Is it allowed to gib in general? This can be on death or when shot in a certain place
-ENT.HasGibOnDeath = true -- Is it allowed to gib on death?
+	-- ====== Dismemberment / Gib ====== --
+ENT.CanGib = true -- Can the NPC gib? | Makes "CreateGibEntity" fail and overrides "CanGibOnDeath" to false
+ENT.CanGibOnDeath = true -- Is it allowed to gib on death?
 ENT.GibOnDeathDamagesTable = {"UseDefault"} -- Damages that it gibs from | "UseDefault" = Uses default damage types | "All" = Gib from any damage
 ENT.HasGibOnDeathSounds = true -- Does it have gib sounds? | Mostly used for the settings menu
-ENT.HasGibDeathParticles = true -- Does it spawn particles on death or when it gibs? | Mostly used for the settings menu
-	-- ====== Item Drops On Death Variables ====== --
+ENT.HasGibOnDeathEffects = true -- Does it spawn particles on death or when it gibs? | Mostly used for the settings menu
+	-- ====== Item Drops On Death ====== --
 ENT.DropWeaponOnDeath = true -- Should it drop its weapon on death?
 ENT.HasItemDropsOnDeath = true -- Should it drop items on death?
 ENT.ItemDropsOnDeathChance = 14 -- If set to 1, it will always drop it
 ENT.ItemDropsOnDeath_EntityList = {"weapon_frag", "item_healthvial"} -- List of items it will randomly pick from | Leave it empty to drop nothing or to make your own dropping code (Using CustomOn...)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Melee Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Melee Attack ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasMeleeAttack = true -- Can this NPC melee attack?
 ENT.MeleeAttackDamage = 10
 ENT.MeleeAttackDamageType = DMG_CLUB -- Type of Damage
 ENT.HasMeleeAttackKnockBack = true -- Should knockback be applied on melee hit? | Use "MeleeAttackKnockbackVelocity" function to edit the velocity
-	-- ====== Animation Variables ====== --
-ENT.AnimTbl_MeleeAttack = ACT_MELEE_ATTACK1 -- Melee Attack Animations
+	-- ====== Animation ====== --
+ENT.AnimTbl_MeleeAttack = ACT_MELEE_ATTACK1
 ENT.MeleeAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 ENT.MeleeAttackAnimationFaceEnemy = true -- Should it face the enemy while playing the melee attack animation?
 ENT.MeleeAttackAnimationDecreaseLengthAmount = 0 -- This will decrease the time until starts chasing again. Use it to fix animation pauses until it chases the enemy.
-	-- ====== Distance Variables ====== --
+	-- ====== Distance ====== --
 ENT.MeleeAttackDistance = false -- How close an enemy has to be to trigger a melee attack | false = Let the base auto calculate on initialize based on the NPC's collision bounds
 ENT.MeleeAttackAngleRadius = 100 -- What is the attack angle radius? | 100 = In front of the NPC | 180 = All around the NPC
 ENT.MeleeAttackDamageDistance = false -- How far does the damage go? | false = Let the base auto calculate on initialize based on the NPC's collision bounds
 ENT.MeleeAttackDamageAngleRadius = 100 -- What is the damage angle radius? | 100 = In front of the NPC | 180 = All around the NPC
-	-- ====== Timer Variables ====== --
+	-- ====== Timer ====== --
 	-- Set this to false to make the attack event-based:
 ENT.TimeUntilMeleeAttackDamage = 0.5 -- This counted in seconds | This calculates the time until it hits something
 ENT.NextMeleeAttackTime = 0 -- How much time until it can use a melee attack?
@@ -298,44 +299,49 @@ ENT.NextAnyAttackTime_Melee_DoRand = false -- False = Don't use random time | Nu
 ENT.MeleeAttackReps = 1 -- How many times does it run the melee attack code?
 ENT.MeleeAttackExtraTimers = nil -- Extra melee attack timers, EX: {1, 1.4} | it will run the damage code after the given amount of seconds
 ENT.StopMeleeAttackAfterFirstHit = false -- Should it stop the melee attack from running rest of timers when it hits an enemy?
-	-- ====== Control Variables ====== --
+	-- ====== Control ====== --
 ENT.DisableMeleeAttackAnimation = false -- if true, it will disable the animation code
 ENT.DisableDefaultMeleeAttackCode = false -- When set to true, it will completely disable the melee attack code
 ENT.DisableDefaultMeleeAttackDamageCode = false -- Disables the default melee attack damage code
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Weapon Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Weapon Attack ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.DisableWeapons = false -- If set to true, it won't be able to use weapons
-ENT.Weapon_NoSpawnMenu = false -- If true, it will ignore the weapon override settings in the spawn menu
-ENT.Weapon_Accuracy = 1 -- What's the spread of the weapon? | Closer to 0 = better accuracy, Farther than 1 = worse accuracy
-ENT.Weapon_ShootWhileMoving = true -- Can it shoot its weapon while moving?
+ENT.Weapon_NoSpawnMenu = false -- If enabled, it will ignore the weapon override setting from the spawn menu
+ENT.Weapon_Accuracy = 1 -- NPC's accuracy with weapons, affects bullet spread! | x < 1 = Better accuracy | x > 1 = Worse accuracy
+ENT.Weapon_CanFireWhileMoving = true -- Can it fire its weapon while it's moving?
+ENT.Weapon_StrafeWhileFiring = true -- Should it move randomly while firing a weapon?
+ENT.Weapon_StrafeWhileFiringDelay = VJ.SET(3, 6) -- How much time until it can randomly move again?
+ENT.Weapon_WaitOnOcclusion = true -- Should it wait before leaving its position to pursue the enemy after its been occluded?
+ENT.Weapon_WaitOnOcclusionTime = VJ.SET(3, 5) -- How long should it wait before it starts to pursue?
+ENT.Weapon_WaitOnOcclusionMinDist = 100 -- Skip this behavior if the occluded enemy is within this distance
 ENT.NoWeapon_UseScaredBehavior = true -- Should it use the scared behavior when it sees an enemy and doesn't have a weapon?
-	-- ====== Distance Variables ====== --
+	-- ====== Distance ====== --
 ENT.Weapon_FiringDistanceFar = 3000 -- How far away it can shoot
 ENT.Weapon_FiringDistanceClose = 10 -- How close until it stops shooting
 ENT.Weapon_RetreatDistance = 150 -- If enemy is within this distance, it will retreat back | 0 = Never back away
 ENT.Weapon_AimTurnDiff = false -- Weapon aim turning threshold between 0 and 1 | "self.HasPoseParameterLooking" must be set to true!
 	-- EXAMPLES: 0.707106781187 = 45 degrees | 0.866025403784 = 30 degrees | 1 = 0 degrees, always turn!
 	-- false = Let base decide based on animation set and weapon hold type
-	-- ====== Standing-Firing Variables ====== --
+	-- ====== Primary Fire ====== --
 ENT.AnimTbl_WeaponAttack = ACT_RANGE_ATTACK1 -- Animation(s) to play while firing a weapon
 ENT.CanCrouchOnWeaponAttack = true -- Can it crouch while shooting?
 ENT.AnimTbl_WeaponAttackCrouch = ACT_RANGE_ATTACK1_LOW -- Animation(s) to play while firing a weapon in crouched position
 ENT.CanCrouchOnWeaponAttackChance = 2 -- How much chance of crouching? | 1 = Crouch every time
 ENT.AnimTbl_WeaponAttackFiringGesture = ACT_GESTURE_RANGE_ATTACK1 -- Gesture animation(s) to play while firing a weapon
 ENT.DisableWeaponFiringGesture = false -- If set to true, it will disable the weapon firing gestures
-	-- ====== Secondary Fire Variables ====== --
+	-- ====== Secondary Fire ====== --
 ENT.CanUseSecondaryOnWeaponAttack = true -- Can the NPC use a secondary fire if it's available?
 ENT.AnimTbl_WeaponAttackSecondary = "shootAR2alt" -- Animation(s) to play while firing the weapon's secondary attack
 	-- To let the base automatically detect the animation duration, set this to false:
 ENT.WeaponAttackSecondaryTimeUntilFire = 0.9 -- The weapon uses this integer to set the time until the firing code is ran
-	-- ====== Reloading Variables ====== --
+	-- ====== Reloading ====== --
 ENT.Weapon_CanReload = true -- Can the NPC reload its weapon?
 ENT.Weapon_FindCoverOnReload = true -- Should it attempt to find cover before proceeding to reload?
 ENT.AnimTbl_WeaponReload = ACT_RELOAD -- Animations that play when the NPC reloads
 ENT.AnimTbl_WeaponReloadBehindCover = ACT_RELOAD_LOW -- Animations that play when the NPC reloads, but behind cover
 ENT.DisableWeaponReloadAnimation = false -- if true, it will disable the animation code when reloading
-	-- ====== Weapon Inventory Variables ====== --
+	-- ====== Weapon Inventory ====== --
 	-- Weapons are given on spawn and the NPC will only switch to those if the requirements are met
 	-- All are stored in "self.WeaponInventory" with the following keys:
 		-- Primary : Default weapon
@@ -343,31 +349,24 @@ ENT.DisableWeaponReloadAnimation = false -- if true, it will disable the animati
 		-- Melee : Current enemy is (very close and the NPC is out of ammo) OR (in regular melee attack distance) + NPC must have more than 25% health
 ENT.WeaponInventory_AntiArmorList = false -- On spawn it will give the NPC one of the weapons | Can be a table or a string
 ENT.WeaponInventory_MeleeList = false -- On spawn it will give the NPC one of the weapons | Can be a table or a string
-	-- ====== Move Randomly While Shooting Variables ====== --
-ENT.MoveRandomlyWhenShooting = true -- Should it move randomly while shooting a weapon?
-ENT.NextMoveRandomlyWhenShootingTime = VJ.SET(3, 6) -- How much time until it can randomly move again while shooting?
-	-- ====== Wait For Enemy To Come Out Variables ====== --
-ENT.WaitForEnemyToComeOut = true -- Should it wait for the enemy to come out from hiding?
-ENT.WaitForEnemyToComeOutTime = VJ.SET(3, 5) -- How much time should it wait until it starts chasing the enemy?
-ENT.WaitForEnemyToComeOutDistance = 100 -- If it's this close to the enemy, it won't do it
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Grenade Attack Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Grenade Attack ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasGrenadeAttack = false -- Should the NPC have a grenade attack?
 ENT.GrenadeAttackEntity = "obj_vj_grenade" -- Entities that it can spawn when throwing a grenade | If set as a table, it picks a random entity | VJ: "obj_vj_grenade" | HL2: "npc_grenade_frag"
 ENT.GrenadeAttackModel = nil -- Overrides the model of the grenade | Can be nil, string, and table | Does NOT apply to picked up grenades and forced grenade attacks with custom entity
 ENT.GrenadeAttackAttachment = "anim_attachment_LH" -- The attachment that the grenade will be set to | -1 = Skip to use "self.GrenadeAttackBone" instead
 ENT.GrenadeAttackBone = "ValveBiped.Bip01_L_Finger1" -- The bone that the grenade will be set to | -1 = Skip to use fail safe instead
-	-- ====== Animation Variables ====== --
-ENT.AnimTbl_GrenadeAttack = "grenThrow" -- Grenade Attack Animations
+	-- ====== Animation ====== --
+ENT.AnimTbl_GrenadeAttack = "grenThrow"
 ENT.GrenadeAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation
 ENT.GrenadeAttackAnimationFaceEnemy = true -- Should it face the enemy while playing the grenade attack animation?
 ENT.DisableGrenadeAttackAnimation = false -- if true, it will disable the animation code when doing grenade attack
-	-- ====== Distance & Chance Variables ====== --
+	-- ====== Distance & Chance ====== --
 ENT.GrenadeAttackChance = 4 -- 1 in x chance that it will throw a grenade when all the requirements are met | 1 = Throw it every time
 ENT.GrenadeAttackThrowDistance = 1500 -- How far it can throw grenades
 ENT.GrenadeAttackThrowDistanceClose = 400 -- How close until it stops throwing grenades
-	-- ====== Timer Variables ====== --
+	-- ====== Timer ====== --
 	-- Set this to false to make the attack event-based:
 ENT.TimeUntilGrenadeIsReleased = 0.72 -- Time until the grenade is released
 ENT.NextThrowGrenadeTime = VJ.SET(10, 15) -- Time until it can throw a grenade again
@@ -375,28 +374,28 @@ ENT.NextThrowGrenadeTime = VJ.SET(10, 15) -- Time until it can throw a grenade a
 ENT.NextAnyAttackTime_Grenade = VJ.SET(false, false) -- How much time until it can use any attack again? | Counted in Seconds
 ENT.GrenadeAttackFuseTime = 3 -- The grenade's fuse start time right after the NPC throws it
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Sound Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Sound ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasSounds = true -- Put to false to disable ALL sounds!
-ENT.OnlyDoKillEnemyWhenClear = true -- If set to true, it will only play the OnKilledEnemy sound when there isn't any other enemies
+ENT.OnKilledEnemy_OnlyLast = true -- Should it only play the "OnKilledEnemy" sounds if there is no enemies left? 
 ENT.DamageByPlayerDispositionLevel = 1 -- At which disposition levels it should play the damage by player sounds | 0 = Always | 1 = ONLY when friendly to player | 2 = ONLY when enemy to player
-	-- ====== Footstep Sound Variables ====== --
+	-- ====== Footstep Sound ====== --
 ENT.DisableFootStepSoundTimer = false -- If set to true, it will disable the time system for the footstep sound code, allowing you to use other ways like model events
 ENT.FootStepTimeRun = 0.5 -- Next foot step sound when it is running
 ENT.FootStepTimeWalk = 1 -- Next foot step sound when it is walking
 ENT.DisableFootStepOnRun = false -- It will not play the footstep sound when running
 ENT.DisableFootStepOnWalk = false -- It will not play the footstep sound when walking
-	-- ====== Idle Sound Variables ====== --
+	-- ====== Idle Sound ====== --
 ENT.IdleSounds_PlayOnAttacks = false -- It will be able to continue and play idle sounds when it performs an attack
 ENT.IdleSounds_NoRegularIdleOnAlerted = false -- if set to true, it will not play the regular idle sound table if the combat idle sound table is empty
-	-- ====== Idle dialogue Sound Variables ====== --
+	-- ====== Idle dialogue Sound ====== --
 	-- When an allied NPC or player is within range, it will play these sounds rather than regular idle sounds
 	-- If the ally is a VJ NPC and has dialogue answer sounds, it will respond back
 ENT.HasIdleDialogueSounds = true -- If set to false, it won't play the idle dialogue sounds
 ENT.HasIdleDialogueAnswerSounds = true -- If set to false, it won't play the idle dialogue answer sounds
 ENT.IdleDialogueDistance = 400 -- How close should the ally be for the NPC to talk to the it?
 ENT.IdleDialogueCanTurn = true -- If set to false, it won't turn when a dialogue occurs
-	-- ====== Main Control Variables ====== --
+	-- ====== Main Control ====== --
 ENT.HasFootStepSound = true -- Can the NPC play footstep sounds?
 ENT.HasBreathSound = true -- Should it make a breathing sound?
 ENT.HasIdleSounds = true -- If set to false, it won't play the idle sounds
@@ -476,7 +475,7 @@ local DefaultSoundTbl_MeleeAttackMiss = {"npc/zombie/claw_miss1.wav", "npc/zombi
 local DefaultSD_Impact = {"physics/flesh/flesh_impact_bullet1.wav", "physics/flesh/flesh_impact_bullet2.wav", "physics/flesh/flesh_impact_bullet3.wav", "physics/flesh/flesh_impact_bullet4.wav", "physics/flesh/flesh_impact_bullet5.wav"}
 ------ ///// WARNING: Don't change anything in this box! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	-- ====== Sound Chance Variables ====== --
+	-- ====== Sound Chance ====== --
 	-- Higher number = less chance of playing | 1 = Always play
 ENT.IdleSoundChance = 3
 ENT.IdleDialogueAnswerSoundChance = 1
@@ -509,7 +508,7 @@ ENT.ImpactSoundChance = 1
 ENT.DamageByPlayerSoundChance = 1
 ENT.DeathSoundChance = 1
 ENT.SoundTrackChance = 1
-	-- ====== Timer Variables ====== --
+	-- ====== Timer ====== --
 	-- Randomized time between the two variables, x amount of time has to pass for the sound to play again | Counted in seconds
 	-- false = Base will decide the time
 ENT.NextSoundTime_Breath = false
@@ -524,11 +523,11 @@ ENT.NextSoundTime_OnKilledEnemy = VJ.SET(3, 5)
 ENT.NextSoundTime_AllyDeath = VJ.SET(3, 5)
 ENT.NextSoundTime_Pain = false
 ENT.NextSoundTime_DamageByPlayer = VJ.SET(2, 2.3)
-	-- ====== Volume Variables ====== --
+	-- ====== Volume ====== --
 	-- Number must be between 0 and 1
 	-- 0 = No sound, 1 = normal/loudest
 ENT.SoundTrackVolume = 1
-	-- ====== Sound Level Variables ====== --
+	-- ====== Sound Level ====== --
 	-- The proper number are usually range from 0 to 180, though it can go as high as 511
 	-- More Information: https://developer.valvesoftware.com/wiki/Soundscripts#SoundLevel_Flags
 ENT.FootStepSoundLevel = 70
@@ -564,7 +563,7 @@ ENT.PainSoundLevel = 80
 ENT.ImpactSoundLevel = 60
 ENT.DamageByPlayerSoundLevel = 75
 ENT.DeathSoundLevel = 80
-	-- ====== Sound Pitch Variables ====== --
+	-- ====== Sound Pitch ====== --
 	-- Range: 0 - 255 | Lower pitch < x > Higher pitch
 ENT.UseTheSameGeneralSoundPitch = true -- If set to true, the base will decide a number when the NPC spawns and uses it for all sound pitches set to false
 	-- It picks the number between these two variables below:
@@ -605,20 +604,20 @@ ENT.PainSoundPitch = VJ.SET(false, false)
 ENT.ImpactSoundPitch = VJ.SET(80, 100)
 ENT.DamageByPlayerPitch = VJ.SET(false, false)
 ENT.DeathSoundPitch = VJ.SET(false, false)
-	-- ====== Playback Rate Variables ====== --
+	-- ====== Playback Rate ====== --
 	-- Decides how fast the sound should play
 	-- Examples: 1 = normal, 2 = twice the normal speed, 0.5 = half the normal speed
 ENT.SoundTrackPlaybackRate = 1
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- Use the functions below to customize parts of the base or to add new custom systems
--- Some functions don't have a custom function because you can simply override the base function and call "self.BaseClass.FuncName(self)" to run the base code as well
+-- Use the functions below to customize parts of the base or to add new custom systems without editing major parts of the base
+-- Some base functions don't have a extra function because you can simply override the base function and call "self.BaseClass.FuncName(self)" to run the base code as well
 --
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnPreInitialize() end
+function ENT:PreInit() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnInitialize()
+function ENT:Init()
 	-- Collision bounds of the NPC | NOTE: All 4 Xs and Ys should be the same! | To view: "cl_ent_bbox"
 	-- self:SetCollisionBounds(Vector(50, 50, 100), Vector(-50, -50, 0))
 	
@@ -626,14 +625,14 @@ function ENT:CustomOnInitialize()
 	-- self:SetSurroundingBounds(Vector(150, 150, 200), Vector(-150, -150, 0))
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnThink() end
+function ENT:OnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnThink_AIEnabled() end
+function ENT:OnThinkActive() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Called at the end of every entity it checks every process time
 -- function ENT:OnMaintainRelationships(ent, entFri, entDist) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOn_PoseParameterLookingCode(pitch, yaw, roll) end
+function ENT:OnUpdatePoseParamTracking(pitch, yaw, roll) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Called from the engine
 -- function ENT:ExpressionFinished(strExp) end
@@ -657,14 +656,14 @@ function ENT:CustomOn_PoseParameterLookingCode(pitch, yaw, roll) end
 -- function ENT:OnCondition(cond) print(self, " Condition: ", cond, " - ", self:ConditionName(cond)) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE
--- function ENT:CustomOnAcceptInput(key, activator, caller, data) print("OnAcceptInput", key, activator, caller, data) end
+-- function ENT:OnInput(key, activator, caller, data) print("OnInput: ", key, activator, caller, data) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE
 -- local getEventName = util.GetAnimEventNameByID
 -- --
--- function ENT:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions)
+-- function ENT:OnAnimEvent(ev, evTime, evCycle, evType, evOptions)
 -- 	local eventName = getEventName(ev)
--- 	print("OnHandleAnimEvent", eventName, ev, evTime, evCycle, evType, evOptions)
+-- 	print("OnAnimEvent: ", eventName, ev, evTime, evCycle, evType, evOptions)
 -- end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -683,48 +682,45 @@ function ENT:OnFollow(status, ent) end
 			- "CheckEnt"	= Possible friendly entity found, should we speak to it? | return anything other than nil or "false" to skip and not speak to this entity!
 			- "Speak"		= Everything passed, start speaking
 			- "Answer"		= Another entity has spoken to me, answer back! | return anything other than nil or "false" to not play an answer back dialogue!
-		- statusInfo = Some status may have extra info, possible infos:
+		- statusData = Some status may have extra info, possible infos:
 			- For "CheckEnt"	= Boolean value, whether or not the entity can answer back
 			- For "Speak"		= Duration of our sentence
 	Returns
 		- ONLY used for "CheckEnt" & "Answer" | Check above for what each status return does
 -----------------------------------------------------------]]
-function ENT:OnIdleDialogue(ent, status, statusInfo) end
+function ENT:OnIdleDialogue(ent, status, statusData) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMedic_BeforeHeal() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMedic_OnHeal(ent) return true end -- Return false to NOT update its ally's health and NOT clear its decals, allowing to custom code it
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMedic_OnReset() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnPlayerSight(ent) end
----------------------------------------------------------------------------------------------------------------------------------------------
---[[---------------------------------------------------------
-	UNCOMMENT TO USE | Called every time footstep sound plays
-		- moveType = Type of movement | Types: "Walk", "Run", "Event"
-		- sdFile = Sound that it just played
------------------------------------------------------------]]
--- function ENT:CustomOnFootStepSound(moveType, sdFile) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnChangeWeapon(newWeapon, oldWeapon, invSwitch) end
----------------------------------------------------------------------------------------------------------------------------------------------
---[[---------------------------------------------------------
-	UNCOMMENT TO USE | Called when the NPC detects a danger
-		- dangerType = Type of danger detected | Enum VJ.NPC_DANGER_TYPE_*
-		- data = Danger / grenade entity for types "NPC_DANGER_TYPE_ENTITY" and "NPC_DANGER_TYPE_GRENADE"
-			-- Currently empty for danger type "NPC_DANGER_TYPE_HINT"
------------------------------------------------------------]]
--- function ENT:OnDangerDetected(dangerType, data) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnInvestigate(ent) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnResetEnemy() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnAlert(ent) end
----------------------------------------------------------------------------------------------------------------------------------------------
--- "ally" = Ally that we called for help
--- "isFirst" = Is this the first ally that received this call? Use this to avoid running certain multiple times when many allies are around!
-function ENT:CustomOnCallForHelp(ally, isFirst) end
+--[[
+| Called whenever the medic behavior updates
+|
+|=-=-=| PARAMETERS |=-=-=
+|	1. status [string] : Type of update that is occurring, holds one of the following states:
+|		-> "BeforeHeal" : Right before it's about to heal an entity
+|				USAGE EXAMPLES -> Play chain of animations | Additional sound effect
+|				PARAMETERS
+|					2. statusData [nil]
+|				RETURNS
+|					-> [nil]
+|		-> "OnHeal" : When the timer expires and is about to give health
+|				USAGE EXAMPLES -> Override healing code | Play an after heal animation
+|				PARAMETERS
+|					2. statusData [entity] : The entity that it's about to heal
+|				RETURNS
+|					-> [bool] : Returning false will NOT update entity's health and will NOT clear its decals (Useful for custom code)
+|		-> "OnReset" : When the behavior ends OR has to move because entity moved
+|				USAGE EXAMPLES -> Cleanup bodygroups | Play a sound
+|				PARAMETERS
+|					2. statusData [string] : Holds one of the following states:
+|						--> "Retry" : When it attempts to retry healing the entity, such as when the entity moved away so it has to chase again
+|						--> "End" : When the medic behavior exits completely
+|				RETURNS
+|					-> [nil]
+|	2. statusData [nil | entity | string] : Depends on `status` value, refer to it for more details
+|
+|=-=-=| RETURNS |=-=-=
+|	-> [nil | bool] : Depends on `status` value, refer to it for more details
+--]]
+function ENT:OnMedicBehavior(status, statusData) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- The NPC's sight direction | Used by main sight angle, all attack angle radiuses, etc.
 function ENT:GetSightDirection()
@@ -732,6 +728,33 @@ function ENT:GetSightDirection()
 	//return select(2, self:GetBonePosition(self:LookupBone("bip01 head"))):Forward() -- Bone example
 	return self:GetForward() -- Make sure to return a direction!
 end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OnPlayerSight(ent) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	UNCOMMENT TO USE | Called every time footstep sound plays
+		- moveType = Type of movement | Types: "Walk", "Run", "Event"
+		- sdFile = Sound that it just played
+-----------------------------------------------------------]]
+-- function ENT:OnFootstepSound(moveType, sdFile) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	UNCOMMENT TO USE | Called when the NPC detects a danger
+		- dangerType = Type of danger detected | Enum: VJ.NPC_DANGER_TYPE_*
+		- data = Danger / grenade entity for types "NPC_DANGER_TYPE_ENTITY" and "NPC_DANGER_TYPE_GRENADE"
+			-- Currently empty for danger type "NPC_DANGER_TYPE_HINT"
+-----------------------------------------------------------]]
+-- function ENT:OnDangerDetected(dangerType, data) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OnInvestigate(ent) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OnResetEnemy() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OnAlert(ent) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- "ally" = Ally that we called for help
+-- "isFirst" = Is this the first ally that received this call? Use this to avoid running certain multiple times when many allies are around!
+function ENT:OnCallForHelp(ally, isFirst) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Use this to create a completely new attack system!
 -- function ENT:CustomAttack(ene, eneVisible) end
@@ -754,105 +777,138 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_Miss() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnIsAbleToShootWeapon()
-	return true -- Set this to false to disallow shooting
-end
+function ENT:OnWeaponChange(newWeapon, oldWeapon, invSwitch) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnWeaponAttack() end
+function ENT:OnWeaponCanFire() end -- Return false to disallow firing the weapon
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnMoveRandomlyWhenShooting() end -- Returning false will disable the base code
+function ENT:OnWeaponAttack() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnWeaponReload() end
+function ENT:OnWeaponStrafeWhileFiring() end -- Return false to disable default behavior, delay will still apply!
 ---------------------------------------------------------------------------------------------------------------------------------------------
---[[---------------------------------------------------------
-	Called for important changes or requests during a grenade attack
-		- status = Type of call:
-			- "Start"		= Before the start timer is ran			| Examples: Change grenade attack sounds, Make changes to "self.TimeUntilGrenadeIsReleased"
-			- "SpawnPos"	= When the spawn position is requested	| Examples: Override the spawn position if needed by returning a vector
-			- "Throw"		= When the grenade is being thrown 		| Examples: Throw velocity, apply changes to grenade entity, disallow throw velocity
-				- WARNING: Must return a vector otherwise velocity will NOT be applied!
-		- grenade = The actual grenade entity that is being thrown | NOTE: Only valid for "Throw" status
-		- customEnt = What entity it should throw, if any
-			- nil = Using the default grenade class set by "self.GrenadeAttackEntity"
-			- string = Using the given class name to override "self.GrenadeAttackEntity"
-			- entity = Use an existing entity to override "self.GrenadeAttackEntity" | Example: When the NPC is throwing back an enemy grenade
-		- landDir = Direction the grenade should land | Used by the base to align where the grenade is gonna land
-			- 0 = Use enemy's position
-			- 1 = Use enemy's last visible position
-			- Vector = Use given vector's position
-			- Anything else = Find a best random position
-		- landingPos = The position the grenade is aimed to land | NOTE: Only valid for "Throw" status
-	Returns
-		- Return value depends on the "status" parameter:
-			- "Start": nil
-			- "SpawnPos":
-				- nil, Do NOT override the spawn position
-				- vector, Override the spawn position
-			- "Throw":
-				- nil, Do NOT apply any velocity
-				- vector, The velocity to apply
------------------------------------------------------------]]
+function ENT:OnWeaponReload() end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[
+| Called for important changes or requests during a grenade attack
+|
+|=-=-=| PARAMETERS |=-=-=
+|	1. status [string] : Type of update that is occurring, holds one of the following states:
+|		-> "Start" : Before the start timer is ran
+|			USAGE EXAMPLES -> Change grenade attack sounds | Make changes to "self.TimeUntilGrenadeIsReleased"
+|			RETURNS
+|				-> [nil]
+|		-> "SpawnPos" : When the spawn position is requested
+|			USAGE EXAMPLES -> Override the spawn position if needed by returning a vector
+|			RETURNS
+|				-> [nil] : Do NOT override the spawn position, this lets the default code execute
+|				-> [vector] : Override the spawn position
+|		-> "Throw" : When the grenade is being thrown
+|			USAGE EXAMPLES -> Throw velocity | Apply changes to grenade entity | Disallow throw velocity
+|			RETURNS
+|				-> [nil] : Do NOT apply any velocity to the grenade
+|				-> [vector] : Velocity that will be applied to the grenade
+|	2. grenade [nil | entity] : The actual grenade entity that is being thrown | NOTE: Only valid for "Throw" status
+|	3. customEnt [nil | string | entity] : What entity it should throw (IF any)
+|		-> [nil] : Using the default grenade class set by "self.GrenadeAttackEntity"
+|		-> [string] : Using the given class name to override "self.GrenadeAttackEntity"
+|		-> [entity] : Using an existing entity to override "self.GrenadeAttackEntity" | Example: When the NPC is throwing back an enemy grenade
+|	4. landDir [number | vector | bool] : Direction the grenade should land, used to align where the grenade should land
+|		-> 0 : Use enemy's position
+|		-> 1 : Use enemy's last visible position
+|		-> [vector] : Use given vector
+|		-> [bool] : Find the best random position
+|	5. landingPos [nil | vector] : The position the grenade is aimed to land | NOTE: Only valid for "Throw" status
+|
+|=-=-=| RETURNS |=-=-=
+|	-> [nil | vector] : Depends on `status` value, refer to it for more details
+--]]
 function ENT:OnGrenadeAttack(status, grenade, customEnt, landDir, landingPos)
 	if status == "Throw" then
 		return (landingPos - grenade:GetPos()) + (self:GetUp()*200 + self:GetForward()*500 + self:GetRight()*math.Rand(-20, 20))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnDoKilledEnemy(ent, attacker, inflictor) end
+function ENT:OnKilledEnemy(ent, inflictor, wasLast) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo, hitgroup) end
+function ENT:OnAllyKilled(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnTakeDamage_BeforeDamage(dmginfo, hitgroup) end
+--[[
+ Called whenever the NPC takes damage
+
+=-=-=| PARAMETERS |=-=-=
+	1. dmginfo [object] = CTakeDamageInfo object
+	2. hitgroup [number] = The hitgroup that it hit
+	3. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "Initial" : First call on take damage, even before immune checks
+		-> "PreDamage" : Right the damage is applied to the NPC
+		-> "PostDamage" : Right after the damage is applied to the NPC
+--]]
+function ENT:OnDamaged(dmginfo, hitgroup, status) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnTakeDamage_AfterDamage(dmginfo, hitgroup) end
+function ENT:OnBleed(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnTakeDamage_OnBleed(dmginfo, hitgroup) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnFlinch_BeforeFlinch(dmginfo, hitgroup) end -- Return false to disallow the flinch from playing
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup) end
+--[[
+ Called whenever the NPC attempts to play flinch
+
+=-=-=| PARAMETERS |=-=-=
+	1. dmginfo [object] = CTakeDamageInfo object
+	2. hitgroup [number] = The hitgroup that it hit
+	3. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "PriorExecution" : Before the animation is played or any values are set
+				USAGE EXAMPLES -> Disallow flinch | Override the animation | Add a extra check
+				RETURNS
+					-> [nil | bool] : Return false to disallow the flinch from playing
+		-> "Execute" : Right after the flinch animation starts playing and all the values are set
+				RETURNS
+					-> [nil]
+
+=-=-=| RETURNS |=-=-=
+	-> [nil | bool] : Depends on `status` value, refer to it for more details
+--]]
+function ENT:OnFlinch(dmginfo, hitgroup, status) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnBecomeEnemyToPlayer(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnSetEnemyFromDamage(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SetUpGibesOnDeath(dmginfo, hitgroup)
-	return false -- Return to true if it gibbed!
-	/*--------------------------------------
-		-- Extra Features --
-			Extra features allow you to have more control over the gibbing system.
-			--/// Types \\\--
-				AllowCorpse -- Should it allow corpse to spawn?
-				DeathAnim -- Should it allow death animation?
-			--/// Implementing it \\\--
-				1. Let's use type DeathAnim as an example. NOTE: You can have as many types as you want!
-				2. Put a comma next to return. 		===> return true,
-				3. Make a table after the comma. 	===> return true, {}
-				4. Put the type(s) that you want.	===> return true, {DeathAnim=true}
-				5. And you are done!
-				Example with multiple types:		===> return true, {DeathAnim=true,AllowCorpse=true}
-	--------------------------------------*/
-end
+--[[
+ Called on death, used to gib the NPC
+
+=-=-=| PARAMETERS |=-=-=
+	1. dmginfo [object] = CTakeDamageInfo object
+	2. hitgroup [number] = The hitgroup that it hit
+
+=-=-=| RETURNS |=-=-=
+	-> [bool] : Notifies the base if the NPC gibbed or not
+		- false : Spawns death corpse | Plays death animations | Does NOT play gib sounds
+		- true : Disallows death corpse | Disallows death animations | Play gib sounds
+	-> [nil | table] : Used to provide extra customization to the first return if it's passed as "true"
+		- {AllowCorpse = true} : Allows death corpse to spawn
+		- {DeathAnim = true} : Allows death animations to play
+		EXAMPLE:
+			- {DeathAnim = true, AllowCorpse = true} : Will spawn death corpse and play death animations
+--]]
+function ENT:SetUpGibesOnDeath(dmginfo, hitgroup) return false end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomGibOnDeathSounds(dmginfo, hitgroup) return true end -- returning false will make the default gibbing sounds not play
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnAllyKilled(ent) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnInitialKilled(dmginfo, hitgroup) end -- Ran the moment the NPC dies!
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnPriorToKilled(dmginfo, hitgroup) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomDeathAnimationCode(dmginfo, hitgroup) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnKilled(dmginfo, hitgroup) end
+--[[
+ Called when the NPC dies
+
+=-=-=| PARAMETERS |=-=-=
+	1. dmginfo [object] = CTakeDamageInfo object
+	2. hitgroup [number] = The hitgroup that it hit
+	3. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "Initial" : First call when it dies before anything is changed or reset
+		-> "DeathAnim" : Right before the death animation plays
+		-> "Finish" : Right before the corpse is spawned, the active weapon is dropped and the NPC is removed
+--]]
+function ENT:OnDeath(dmginfo, hitgroup, status) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomRareDropsOnDeathCode(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnDropWeapon(dmginfo, hitgroup, wepEnt) end
+function ENT:OnDeathWeaponDrop(dmginfo, hitgroup, wepEnt) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnDeath_BeforeCorpseSpawned(dmginfo, hitgroup) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) end
+function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpseEnt) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1519,13 +1575,13 @@ ENT.FollowingPlayer = false
 ENT.VJ_IsBeingControlled = false
 ENT.DoingWeaponAttack = false
 ENT.DoingWeaponAttack_Standing = false
-ENT.WaitingForEnemyToComeOut = false
+ENT.DoingWeaponWaitOnOcclusion = false
 ENT.VJ_DEBUG = false
 ENT.DidWeaponAttackAimParameter = false
 ENT.Medic_Status = false -- false = Not active | "Active" = Attempting to heal ally (Going after etc.) | "Healing" = Has reached ally and is healing it
 ENT.IsAbleToMeleeAttack = true
-ENT.AllowToDo_WaitForEnemyToComeOut = true
-ENT.HasBeenGibbedOnDeath = false
+ENT.AllowWeaponWaitOnOcclusion = true
+ENT.GibbedOnDeath = false
 ENT.DeathAnimationCodeRan = false
 ENT.VJ_IsBeingControlled_Tool = false
 ENT.LastHiddenZone_CanWander = true
@@ -1566,7 +1622,7 @@ ENT.NextDamageByPlayerSoundT = 0
 ENT.NextWeaponReloadSoundT = 0
 ENT.Medic_NextHealT = 0
 ENT.Weapon_TimeSinceLastShot = 0
-ENT.NextMoveRandomlyWhenShootingT = 0
+ENT.NextWeaponStrafeWhileFiringT = 0
 ENT.NextWeaponAttackT = 0
 ENT.NextMeleeWeaponAttackT = 0
 ENT.CurrentWeaponAnimation = ACT_INVALID
@@ -1589,6 +1645,7 @@ ENT.NextDoAnyAttackT = 0
 ENT.NearestPointToEnemyDistance = 0
 ENT.LatestEnemyDistance = 0
 ENT.HealthRegenerationDelayT = 0
+ENT.AnimLockTime = 0
 ENT.NextWeaponAttackT_Base = 0 -- This is handled by the base, used to avoid running shoot animation twice
 ENT.CurAttackSeed = 0
 ENT.LastAnimationSeed = 0
@@ -1641,7 +1698,7 @@ local table_concat = table.concat
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function ConvarsOnInit(self)
 	--<>-- Convars that run on Initialize --<>--
-	if GetConVar("vj_npc_usedevcommands"):GetInt() == 1 then self.VJ_DEBUG = true end
+	if GetConVar("vj_npc_debug"):GetInt() == 1 then self.VJ_DEBUG = true end
 	self.NextProcessTime = GetConVar("vj_npc_processtime"):GetInt()
 	if GetConVar("vj_npc_sd_nosounds"):GetInt() == 1 then self.HasSounds = false end
 	if GetConVar("vj_npc_vjfriendly"):GetInt() == 1 then self.VJTag_IsBaseFriendly = true end
@@ -1650,7 +1707,8 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_combinefriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_COMBINE" end
 	if GetConVar("vj_npc_zombiefriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_ZOMBIE" end
 	if GetConVar("vj_npc_noallies"):GetInt() == 1 then self.HasAllies = false self.PlayerFriendly = false end
-	if GetConVar("vj_npc_nocorpses"):GetInt() == 1 then self.HasDeathRagdoll = false end
+	if GetConVar("vj_npc_nodeathanimation"):GetInt() == 1 then self.HasDeathAnimation = false end
+	if GetConVar("vj_npc_nocorpses"):GetInt() == 1 then self.HasDeathCorpse = false end
 	if GetConVar("vj_npc_itemdrops"):GetInt() == 0 then self.HasItemDropsOnDeath = false end
 	if GetConVar("vj_npc_nowandering"):GetInt() == 1 then self.DisableWandering = true end
 	if GetConVar("vj_npc_nochasingenemy"):GetInt() == 1 then self.DisableChasingEnemy = true end
@@ -1670,8 +1728,8 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_nodangerdetection"):GetInt() == 1 then self.CanDetectDangers = false end
 	if GetConVar("vj_npc_dropweapon"):GetInt() == 0 then self.DropWeaponOnDeath = false end
 	if GetConVar("vj_npc_nomedics"):GetInt() == 1 then self.IsMedicSNPC = false end
-	if GetConVar("vj_npc_novfx_gibdeath"):GetInt() == 1 then self.HasGibDeathParticles = false end
-	if GetConVar("vj_npc_nogib"):GetInt() == 1 then self.AllowedToGib = false self.HasGibOnDeath = false end
+	if GetConVar("vj_npc_novfx_gibdeath"):GetInt() == 1 then self.HasGibOnDeathEffects = false end
+	if GetConVar("vj_npc_nogib"):GetInt() == 1 then self.CanGib = false self.CanGibOnDeath = false end
 	if GetConVar("vj_npc_usegmoddecals"):GetInt() == 1 then self.BloodDecalUseGMod = true end
 	if GetConVar("vj_npc_knowenemylocation"):GetInt() == 1 then self.FindEnemy_UseSphere = true self.FindEnemy_CanSeeThroughWalls = true end
 	if GetConVar("vj_npc_sd_gibbing"):GetInt() == 1 then self.HasGibOnDeathSounds = false end
@@ -1714,26 +1772,105 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function ApplyBackwardsCompatibility(self)
 	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	-- Most of these are pre-revamp variables & functions
 	if self.CustomInitialize then self:CustomInitialize() end
-	if self.NextMoveRandomlyWhenShootingTime1 or self.NextMoveRandomlyWhenShootingTime2 then self.NextMoveRandomlyWhenShootingTime = VJ.SET(self.NextMoveRandomlyWhenShootingTime1 or 3, self.NextMoveRandomlyWhenShootingTime2 or 6) end
+	if self.CustomOn_PoseParameterLookingCode then self.OnUpdatePoseParamTracking = function(_, pitch, yaw, roll) self:CustomOn_PoseParameterLookingCode(pitch, yaw, roll) end end
+	if self.CustomOnAlert then self.OnAlert = function(_, ent) self:CustomOnAlert(ent) end end
+	if self.CustomOnInvestigate then self.OnInvestigate = function(_, ent) self:CustomOnInvestigate(ent) end end
+	if self.CustomOnFootStepSound then self.OnFootstepSound = function(_, moveType, sdFile) self:CustomOnFootStepSound(moveType, sdFile) end end
+	if self.CustomOnCallForHelp then self.OnCallForHelp = function(_, ally, isFirst) self:CustomOnCallForHelp(ally, isFirst) end end
+	if self.CustomOnPlayerSight then self.OnPlayerSight = function(_, ent) self:CustomOnPlayerSight(ent) end end
+	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end
+	if self.CustomOnThink_AIEnabled then self.OnThinkActive = function() self:CustomOnThink_AIEnabled() end end
+	if self.CustomOnTakeDamage_OnBleed then self.OnBleed = function(_, dmginfo, hitgroup) self:CustomOnTakeDamage_OnBleed(dmginfo, hitgroup) end end
+	if self.CustomOnMoveRandomlyWhenShooting then self.OnWeaponStrafeWhileFiring = function() self:CustomOnMoveRandomlyWhenShooting() end end
+	if self.CustomOnAcceptInput then self.OnInput = function(_, key, activator, caller, data) self:CustomOnAcceptInput(key, activator, caller, data) end end
+	if self.CustomOnHandleAnimEvent then self.OnAnimEvent = function(_, ev, evTime, evCycle, evType, evOptions) self:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions) end end
+	if self.CustomOnWeaponReload then self.OnWeaponReload = function() self:CustomOnWeaponReload() end end
+	if self.CustomOnWeaponAttack then self.OnWeaponAttack = function() self:CustomOnWeaponAttack() end end
+	if self.CustomOnDropWeapon then self.OnDeathWeaponDrop = function(_, dmginfo, hitgroup, wepEnt) self:CustomOnDropWeapon(dmginfo, hitgroup, wepEnt) end end
+	if self.CustomOnDeath_AfterCorpseSpawned then self.OnCreateDeathCorpse = function(_, dmginfo, hitgroup, corpseEnt) self:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) end end
+	if self.MoveRandomlyWhenShooting != nil then self.Weapon_StrafeWhileFiring = self.MoveRandomlyWhenShooting end
+	if self.NextMoveRandomlyWhenShootingTime1 or self.NextMoveRandomlyWhenShootingTime2 then self.Weapon_StrafeWhileFiringDelay = VJ.SET(self.NextMoveRandomlyWhenShootingTime1 or 3, self.NextMoveRandomlyWhenShootingTime2 or 6) end
+	if self.WaitForEnemyToComeOut != nil then self.Weapon_WaitOnOcclusion = self.WaitForEnemyToComeOut end
+	if self.WaitForEnemyToComeOutTime then self.Weapon_WaitOnOcclusionTime = self.WaitForEnemyToComeOutTime end
 	if self.Immune_Physics then self:SetImpactEnergyScale(0) end
 	if self.MaxJumpLegalDistance then self.JumpVars.MaxRise = self.MaxJumpLegalDistance.a; self.JumpVars.MaxDrop = self.MaxJumpLegalDistance.b end
 	if self.VJ_IsHugeMonster then self.VJTag_ID_Boss = self.VJ_IsHugeMonster end
-	if self.HasShootWhileMoving == false then self.Weapon_ShootWhileMoving = false end
+	if self.WaitBeforeDeathTime then self.DeathDelayTime = self.WaitBeforeDeathTime end
+	if self.HasDeathRagdoll != nil then self.HasDeathCorpse = self.HasDeathRagdoll end
+	if self.AllowedToGib != nil then self.CanGib = self.AllowedToGib end
+	if self.HasGibOnDeath != nil then self.CanGibOnDeath = self.HasGibOnDeath end
+	if self.HasGibDeathParticles != nil then self.HasGibOnDeathEffects = self.HasGibDeathParticles else self.HasGibDeathParticles = self.HasGibOnDeathEffects end
+	if self.HasShootWhileMoving == false then self.Weapon_CanFireWhileMoving = false end
 	if self.HasWeaponBackAway == false then self.Weapon_RetreatDistance = 0 end
 	if self.WeaponBackAway_Distance then self.Weapon_RetreatDistance = self.WeaponBackAway_Distance end
 	if self.WeaponSpread then self.Weapon_Accuracy = self.WeaponSpread end
-	if self.AllowWeaponReloading then self.Weapon_CanReload = self.AllowWeaponReloading end
-	if self.WeaponReload_FindCover then self.Weapon_FindCoverOnReload = self.WeaponReload_FindCover end
+	if self.AllowWeaponReloading != nil then self.Weapon_CanReload = self.AllowWeaponReloading end
+	if self.WeaponReload_FindCover != nil then self.Weapon_FindCoverOnReload = self.WeaponReload_FindCover end
 	if self.ThrowGrenadeChance then self.GrenadeAttackChance = self.ThrowGrenadeChance end
-	if self.HasWorldShakeOnMove && !self.CustomOnFootStepSound then
-		self.CustomOnFootStepSound = function()
+	if self.OnlyDoKillEnemyWhenClear != nil then self.OnKilledEnemy_OnlyLast = self.OnlyDoKillEnemyWhenClear end
+	if self.CustomOnDoKilledEnemy then
+		self.OnKilledEnemy = function(_, ent, inflictor, wasLast)
+			if (self.OnKilledEnemy_OnlyLast == false) or (self.OnKilledEnemy_OnlyLast == true && wasLast) then
+				self:CustomOnDoKilledEnemy(ent, self, inflictor)
+			end
+		end
+	end
+	if self.CustomOnMedic_BeforeHeal or self.CustomOnMedic_OnHeal or self.CustomOnMedic_OnReset then
+		self.OnMedicBehavior = function(_, status, statusData)
+			if status == "BeforeHeal" && self.CustomOnMedic_BeforeHeal then
+				self:CustomOnMedic_BeforeHeal()
+			elseif status == "OnHeal" && self.CustomOnMedic_OnHeal then
+				return self:CustomOnMedic_OnHeal(statusData)
+			elseif status == "OnReset" && self.CustomOnMedic_OnReset then
+				self:CustomOnMedic_OnReset()
+			end
+		end
+	end
+	if self.CustomOnTakeDamage_BeforeImmuneChecks or self.CustomOnTakeDamage_BeforeDamage or self.CustomOnTakeDamage_AfterDamage then
+		self.OnDamaged = function(_, dmginfo, hitgroup, status)
+			if status == "Initial" && self.CustomOnTakeDamage_BeforeImmuneChecks then
+				self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo, hitgroup)
+			elseif status == "PreDamage" && self.CustomOnTakeDamage_BeforeDamage then
+				self:CustomOnTakeDamage_BeforeDamage(dmginfo, hitgroup)
+			elseif status == "PostDamage" && self.CustomOnTakeDamage_AfterDamage then
+				self:CustomOnTakeDamage_AfterDamage(dmginfo, hitgroup)
+			end
+		end
+	end
+	if self.CustomOnFlinch_BeforeFlinch or self.CustomOnFlinch_AfterFlinch then
+		self.OnFlinch = function(_, dmginfo, hitgroup, status)
+			if status == "PriorExecution" then
+				if self.CustomOnFlinch_BeforeFlinch then
+					return self:CustomOnFlinch_BeforeFlinch(dmginfo, hitgroup)
+				end
+			elseif stauts == "Execute" then
+				if self.CustomOnFlinch_AfterFlinch then
+					self:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup)
+				end
+			end
+		end
+	end
+	if self.CustomOnInitialKilled or self.CustomDeathAnimationCode or self.CustomOnKilled then
+		self.OnDeath = function(_, dmginfo, hitgroup, status)
+			if status == "Initial" && self.CustomOnInitialKilled then
+				self:CustomOnInitialKilled(dmginfo, hitgroup)
+			elseif status == "DeathAnim" && self.CustomDeathAnimationCode then
+				self:CustomDeathAnimationCode(dmginfo, hitgroup)
+			elseif status == "Finish" && self.CustomOnKilled then
+				self:CustomOnKilled(dmginfo, hitgroup)
+			end
+		end
+	end
+	if self.HasWorldShakeOnMove && !self.OnFootstepSound then
+		self.OnFootstepSound = function()
 			util.ScreenShake(self:GetPos(), self.WorldShakeOnMoveAmplitude or 10, self.WorldShakeOnMoveFrequency or 100, self.WorldShakeOnMoveDuration or 0.4, self.WorldShakeOnMoveRadius or 1000)
 		end
 	end
 	if self.DeathCorpseSkin && self.DeathCorpseSkin != -1 then
-		local orgFunc = self.CustomOnDeath_AfterCorpseSpawned
-		self.CustomOnDeath_AfterCorpseSpawned = function(_, dmginfo, hitgroup, corpseEnt)
+		local orgFunc = self.OnCreateDeathCorpse
+		self.OnCreateDeathCorpse = function(_, dmginfo, hitgroup, corpseEnt)
 			orgFunc(self, dmginfo, hitgroup, corpseEnt)
 			corpseEnt:SetSkin(self.DeathCorpseSkin)
 		end
@@ -1743,13 +1880,28 @@ local function ApplyBackwardsCompatibility(self)
 			self:CustomOnTouch(ent)
 		end
 	end
+	if self.CustomOnPriorToKilled then
+		local orgFunc = self.CustomOnInitialKilled
+		self.CustomOnInitialKilled = function(_, dmginfo, hitgroup)
+			orgFunc(self, dmginfo, hitgroup)
+			self:CustomOnPriorToKilled(dmginfo, hitgroup)
+		end
+	end
+	if self.CustomOnDeath_BeforeCorpseSpawned then
+		local orgFunc = self.CustomOnKilled
+		self.CustomOnKilled = function(_, dmginfo, hitgroup)
+			orgFunc(self, dmginfo, hitgroup)
+			self:CustomOnDeath_BeforeCorpseSpawned(dmginfo, hitgroup)
+		end
+	end
 	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defShootVec = Vector(0, 0, 55)
 --
 function ENT:Initialize()
-	self:CustomOnPreInitialize()
+	self:PreInit()
+	if self.CustomOnPreInitialize then self:CustomOnPreInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	self:SetSpawnEffect(false)
 	self:SetRenderMode(RENDERMODE_NORMAL) // RENDERMODE_TRANSALPHA
 	self:AddEFlags(EFL_NO_DISSOLVE)
@@ -1793,16 +1945,17 @@ function ENT:Initialize()
 	self.StartHealth = self:Health()
 	//if self.HasSquad == true then self:Fire("setsquad", self.SquadName) end
 	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
-	self:CustomOnInitialize()
+	self:Init()
+	if self.CustomOnInitialize then self:CustomOnInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	//self:SetSurroundingBoundsType(BOUNDS_HITBOXES) -- AVOID! Has to constantly recompute the bounds! | Issues: Entities get stuck inside the NPC, movements failing, unable to grab the NPC with physgun
 	local collisionMin, collisionMax = self:GetCollisionBounds()
-	-- Auto compute damage bounds if the damage bounds == collision bounds then the developer has NOT changed it | Call after "CustomOnInitialize"
+	-- Auto compute damage bounds if the damage bounds == collision bounds then the developer has NOT changed it | Call after "Init"
 	if self:GetSurroundingBounds() == self:WorldSpaceAABB() then
 		self:SetSurroundingBounds(Vector(collisionMin.x * 2, collisionMin.y * 2, collisionMin.z * 1.2), Vector(collisionMax.x * 2, collisionMax.y * 2, collisionMax.z * 1.2))
 	end
 	if !self.MeleeAttackDistance then self.MeleeAttackDistance = math.abs(collisionMax.x) + 30 end
 	if !self.MeleeAttackDamageDistance then self.MeleeAttackDamageDistance = math.abs(collisionMax.x) + 60 end
-	self:SetupBloodColor(self.BloodColor) -- Collision bounds dependent, call after "CustomOnInitialize"
+	self:SetupBloodColor(self.BloodColor) -- Collision bounds dependent, call after "Init"
 	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + (self.IdleAlwaysWander and 0 or 1)) -- If self.NextWanderTime isn't given a value THEN if self.IdleAlwaysWander isn't true, wait at least 1 sec before wandering
 	self.SightDistance = (GetConVar("vj_npc_seedistance"):GetInt() > 0) and GetConVar("vj_npc_seedistance"):GetInt() or self.SightDistance
 	ApplyBackwardsCompatibility(self)
@@ -1907,7 +2060,7 @@ function ENT:DoChangeMovementType(movType)
 		self:CapabilitiesAdd(CAP_MOVE_GROUND)
 		if (VJ.AnimExists(self, ACT_JUMP) == true && GetConVar("vj_npc_human_canjump"):GetInt() == 1) or self.UsePlayerModelMovement == true then self:CapabilitiesAdd(CAP_MOVE_JUMP) end
 		//if VJ.AnimExists(self, ACT_CLIMB_UP) == true then self:CapabilitiesAdd(bit.bor(CAP_MOVE_CLIMB)) end
-		if self.DisableWeapons == false && self.Weapon_ShootWhileMoving then self:CapabilitiesAdd(CAP_MOVE_SHOOT) end
+		if self.DisableWeapons == false && self.Weapon_CanFireWhileMoving then self:CapabilitiesAdd(CAP_MOVE_SHOOT) end
 	elseif self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 		self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT))
 		self:SetGroundEntity(NULL)
@@ -1938,11 +2091,11 @@ end
 			- If it's a string AND "vjseq_" or "vjges_" is NOT added:
 				- The base will attempt to convert it activity, if it fails, it will play it as a sequence
 				- This behavior can be overridden by AlwaysUseSequence & AlwaysUseGesture options
-		- stopActivities = Interruptibility type to use, this includes activities & behaviors such as idle, chasing, attacking, etc. | DEFAULT: false
+		- lockAnim = Should the animation be locked and not interrupted? | Includes activities, behaviors, idle, chasing, attacking, etc. | DEFAULT: false
 			- false = Interruptible by everything!
-			- true = Interruptible by nothing!
-			- "LetAttacks" = Interruptible by attacks!
-		- stopActivitiesTime = How long to hold the interruptibility type | DEFAULT: 0
+			- true = Interruptible by nothing, completely locked!
+			- "LetAttacks" = Interruptible ONLY by attacks!
+		- lockAnimTime = How long should it lock the animation? | DEFAULT: 0
 			- false = Base calculates the time (recommended)
 		- faceEnemy = Should it constantly face the enemy while playing this animation? | DEFAULT: false
 			- false = Don't face the enemy
@@ -1957,7 +2110,7 @@ end
 			- AlwaysUseGesture = The base will force attempt to play this animation as a gesture regardless of the other options | DEFAULT: false
 				- NOTE: Combining "AlwaysUseSequence" and "AlwaysUseGesture" will force it to play a gesture-sequence
 			- PlayBackRate = How fast should the animation play? | DEFAULT: self.AnimationPlaybackRate
-			- PlayBackRateCalculated = If the playback rate is already calculated in the stopActivitiesTime, then set this to true! | DEFAULT: false
+			- PlayBackRateCalculated = If the playback rate is already calculated in the lockAnimTime, then set this to true! | DEFAULT: false
 		- customFunc() = TODO: NOT FINISHED
 	Returns
 		- Animation, this may be an activity number or a string depending on how the animation played
@@ -1974,13 +2127,13 @@ local ANIM_TYPE_ACTIVITY = VJ.ANIM_TYPE_ACTIVITY
 local ANIM_TYPE_SEQUENCE = VJ.ANIM_TYPE_SEQUENCE
 local ANIM_TYPE_GESTURE = VJ.ANIM_TYPE_GESTURE
 --
-function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, faceEnemy, animDelay, extraOptions, customFunc)
+function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, extraOptions, customFunc)
 	animation = VJ.PICK(animation)
 	if animation == false then return ACT_INVALID, 0, ANIM_TYPE_NONE end
 	
-	stopActivities = stopActivities or false
-	if stopActivitiesTime == nil then -- If user didn't put anything, then default it to 0
-		stopActivitiesTime = 0 -- Set this value to false to let the base calculate the time
+	lockAnim = lockAnim or false
+	if lockAnimTime == nil then -- If user didn't put anything, then default it to 0
+		lockAnimTime = 0 -- Set this value to false to let the base calculate the time
 	end
 	faceEnemy = faceEnemy or false -- Should it face the enemy while playing this animation?
 	animDelay = tonumber(animDelay) or 0 -- How much time until it starts playing the animation (seconds)
@@ -2063,26 +2216,27 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 	
 	local function PlayAct()
 		local animTime = self:DecideAnimationLength(animation, false)
-		local doRealAnimTime = true -- Only for activities, recalculate the animTime after the schedule starts to get the real sequence time, if `stopActivitiesTime` is NOT set!
+		local doRealAnimTime = true -- Only for activities, recalculate the animTime after the schedule starts to get the real sequence time, if `lockAnimTime` is NOT set!
 		
-		if stopActivities then
-			if isbool(stopActivitiesTime) then -- false = Let the base calculate the time
-				stopActivitiesTime = animTime
+		if lockAnim then
+			if isbool(lockAnimTime) then -- false = Let the base calculate the time
+				lockAnimTime = animTime
 			else -- Manually calculated
 				doRealAnimTime = false
 				if !extraOptions.PlayBackRateCalculated then -- Make sure not to calculate the playback rate when it already has!
-					stopActivitiesTime = stopActivitiesTime / self:GetPlaybackRate()
+					lockAnimTime = lockAnimTime / self:GetPlaybackRate()
 				end
-				animTime = stopActivitiesTime
+				animTime = lockAnimTime
 			end
 			
-			self.NextChaseTime = CurTime() + stopActivitiesTime
-			self.NextIdleTime = CurTime() + stopActivitiesTime
+			self.NextChaseTime = CurTime() + lockAnimTime
+			self.NextIdleTime = CurTime() + lockAnimTime
+			self.AnimLockTime = CurTime() + lockAnimTime
 			
-			if stopActivities != "LetAttacks" then
+			if lockAnim != "LetAttacks" then
 				self:StopAttacks(true)
 				self.vACT_StopAttacks = true
-				timer.Create("timer_act_stopattacks"..self:EntIndex(), stopActivitiesTime, 1, function() self.vACT_StopAttacks = false end)
+				timer.Create("timer_act_stopattacks"..self:EntIndex(), lockAnimTime, 1, function() self.vACT_StopAttacks = false end)
 			end
 		end
 		self.LastAnimationSeed = seed -- We need to set it again because self:StopAttacks() above will reset it when it calls to chase enemy!
@@ -2165,7 +2319,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, stopActivities, stopActivitiesTime, 
 				end*/
 			end
 			schedPlayAct.IsPlayActivity = true
-			schedPlayAct.CanBeInterrupted = !stopActivities
+			schedPlayAct.CanBeInterrupted = !lockAnim
 			if (customFunc) then customFunc(schedPlayAct, animation) end
 			self:StartSchedule(schedPlayAct)
 			if doRealAnimTime then
@@ -2326,8 +2480,8 @@ function ENT:TranslateActivity(act)
 		// VJ.PICK(self.AnimTbl_ScaredBehaviorMovement)
 		return ACT_RUN_PROTECTED
 	-- Handle aiming while moving animations
-	elseif (act == ACT_RUN or act == ACT_WALK) && self.Weapon_ShootWhileMoving && IsValid(self:GetEnemy()) then
-		if (self.EnemyData.IsVisible or (self.EnemyData.LastVisibleTime + 5) > CurTime()) && self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true && self:IsAbleToShootWeapon(true, false) == true then
+	elseif (act == ACT_RUN or act == ACT_WALK) && self.Weapon_CanFireWhileMoving && IsValid(self:GetEnemy()) then
+		if (self.EnemyData.IsVisible or (self.EnemyData.LastVisibleTime + 5) > CurTime()) && self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true && self:CanFireWeapon(true, false) == true then
 			local anim = self:TranslateActivity(act == ACT_RUN and ACT_RUN_AIM or ACT_WALK_AIM)
 			if VJ.AnimExists(self, anim) == true then
 				self.DoingWeaponAttack = true
@@ -2396,7 +2550,7 @@ function ENT:DoChangeWeapon(wep, invSwitch)
 			end
 		end
 		self:UpdateAnimationTranslations(curWep:GetHoldType())
-		self:OnChangeWeapon(curWep, self.CurrentWeaponEntity, invSwitch)
+		self:OnWeaponChange(curWep, self.CurrentWeaponEntity, invSwitch)
 		self.CurrentWeaponEntity = curWep
 	else
 		self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_NONE
@@ -2522,7 +2676,7 @@ function ENT:Think()
 	end
 	
 	if !self.Dead then
-		-- Detect any weapon change, unless the NPC is dead because the variable is used by self:DoDropWeaponOnDeath()
+		-- Detect any weapon change, unless the NPC is dead because the variable is used by self:DeathWeaponDrop()
 		if self.CurrentWeaponEntity != self:GetActiveWeapon() then
 			self.CurrentWeaponEntity = self:DoChangeWeapon()
 		end
@@ -2540,14 +2694,14 @@ function ENT:Think()
 		end
 	end
 	
-	self:CustomOnThink()
+	self:OnThink()
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	if VJ_CVAR_AI_ENABLED && self:GetState() != VJ_STATE_FREEZE && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
 		if self.VJ_DEBUG == true then
-			if GetConVar("vj_npc_printcurenemy"):GetInt() == 1 then print(self:GetClass().."'s Enemy: ",self:GetEnemy()," Alerted? ",self.Alerted) end
-			if GetConVar("vj_npc_printtakingcover"):GetInt() == 1 then if curTime > self.TakingCoverT == true then print(self:GetClass().." Is Not Taking Cover") else print(self:GetClass().." Is Taking Cover ("..self.TakingCoverT-curTime..")") end end
-			if GetConVar("vj_npc_printlastseenenemy"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - self.EnemyData.LastVisibleTime).." ("..self:GetName()..")") end
-			if IsValid(self.CurrentWeaponEntity) && GetConVar("vj_npc_dev_printwepinfo"):GetInt() == 1 then print(self:GetName().." -->", self.CurrentWeaponEntity, "Ammo: "..self.CurrentWeaponEntity:Clip1().."/"..self.CurrentWeaponEntity:GetMaxClip1().." | Accuracy: "..self.Weapon_Accuracy) end
+			if GetConVar("vj_npc_debug_enemy"):GetInt() == 1 then print(self:GetClass().." : Enemy -> " .. tostring(self:GetEnemy() or "NULL") .. " | Alerted? " .. tostring(self.Alerted)) end
+			if GetConVar("vj_npc_debug_takingcover"):GetInt() == 1 then if curTime > self.TakingCoverT == true then print(self:GetClass().." : NOT taking cover") else print(self:GetClass().." : Taking cover ("..self.TakingCoverT - curTime..")") end end
+			if GetConVar("vj_npc_debug_lastseenenemytime"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - self.EnemyData.LastVisibleTime).." ("..self:GetName()..")") end
+			if IsValid(self.CurrentWeaponEntity) && GetConVar("vj_npc_debug_weapon"):GetInt() == 1 then print(self:GetName().." : Weapon -> " .. tostring(self.CurrentWeaponEntity) .. " | Ammo: "..self.CurrentWeaponEntity:Clip1().." / "..self.CurrentWeaponEntity:GetMaxClip1().." | Accuracy: "..self.Weapon_Accuracy) end
 		end
 		
 		local eneData = self.EnemyData
@@ -2557,7 +2711,7 @@ function ENT:Think()
 			//self:SetArrivalActivity(self.CurrentIdleAnimation)
 		//end
 		
-		self:CustomOnThink_AIEnabled()
+		self:OnThinkActive()
 		
 		-- Update follow system's data
 		//print("------------------")
@@ -2737,7 +2891,7 @@ function ENT:Think()
 					if !plyControlled then self:SetWeaponState(VJ.NPC_WEP_STATE_RELOADING) end
 					self.NextChaseTime = curTime + 2
 					if eneValid == true then self:PlaySoundSystem("WeaponReload") end -- tsayn han e minag yete teshnami ga!
-					self:CustomOnWeaponReload()
+					self:OnWeaponReload()
 					if self.DisableWeaponReloadAnimation == false then
 						local function DoReloadAnimation(givenAnim)
 							local anim, animDur, animType = self:VJ_ACT_PLAYACTIVITY(givenAnim, true, false, "Visible")
@@ -2751,7 +2905,7 @@ function ENT:Think()
 										self:SetWeaponState()
 									end
 								end)
-								self.AllowToDo_WaitForEnemyToComeOut = false
+								self.AllowWeaponWaitOnOcclusion = false
 								-- If NOT controlled by a player AND is a gesture make it stop moving so it doesn't run after the enemy right away
 								if !plyControlled && animType == ANIM_TYPE_GESTURE then
 									self:StopMoving()
@@ -2868,7 +3022,7 @@ function ENT:Think()
 				end
 				
 				//self:DoWeaponAttackMovementCode()
-				self:DoPoseParameterLooking()
+				self:UpdatePoseParamTracking()
 				
 				-- Face enemy for stationary types OR attacks
 				if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true) or (self.MeleeAttackAnimationFaceEnemy == true && self.AttackType == VJ.ATTACK_TYPE_MELEE) or (self.GrenadeAttackAnimationFaceEnemy == true && self.AttackType == VJ.ATTACK_TYPE_GRENADE && eneData.IsVisible == true) then
@@ -3406,7 +3560,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAttacks(checkTimers)
 	if self:Health() <= 0 then return end
-	if self.VJ_DEBUG == true && GetConVar("vj_npc_printstoppedattacks"):GetInt() == 1 then print(self:GetClass() .. " : Stopped all Attacks! | Attack type: " .. self.AttackType) end
+	if self.VJ_DEBUG == true && GetConVar("vj_npc_debug_stopattacks"):GetInt() == 1 then print(self:GetClass() .. " : Stopped all attacks! | Attack type: " .. self.AttackType) end
 	
 	if checkTimers == true && self.AttackType == VJ.ATTACK_TYPE_MELEE && self.AttackState < VJ.ATTACK_STATE_EXECUTED then
 		finishAttack[VJ.ATTACK_TYPE_MELEE](self, true)
@@ -3419,7 +3573,7 @@ function ENT:StopAttacks(checkTimers)
 	self:DoChaseAnimation()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoPoseParameterLooking(resetPoses)
+function ENT:UpdatePoseParamTracking(resetPoses)
 	if (!self.HasPoseParameterLooking) or (!self.VJ_IsBeingControlled && !self.DoingWeaponAttack && !self.EnemyData.IsVisible) then return end
 	//VJ.GetPoseParameters(self)
 	local ene = self:GetEnemy()
@@ -3441,7 +3595,7 @@ function ENT:DoPoseParameterLooking(resetPoses)
 		return
 	end
 	
-	self:CustomOn_PoseParameterLookingCode(newPitch, newYaw, newRoll)
+	self:OnUpdatePoseParamTracking(newPitch, newYaw, newRoll)
 	
 	local names = self.PoseParameterLooking_Names
 	for x = 1, #names.pitch do
@@ -3457,18 +3611,18 @@ function ENT:DoPoseParameterLooking(resetPoses)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Determines whether or not the NPC should be able to fire its current weapon
+	Determines whether it's about to fire its current weapon
 		- checkDistance = Should it check for distance and weapon time too? | DEFAULT = false
 		- checkDistanceOnly = Should it only check the above statement? | DEFAULT = false
 		- enemyDist = Distance used for "checkDistance" | DEFAULT = "self.LatestEnemyDistance"
 	Returns
-		- Boolean, Whether or not it should fire
+		- Boolean, Whether or not it can fire
 -----------------------------------------------------------]]
-function ENT:IsAbleToShootWeapon(checkDistance, checkDistanceOnly, enemyDist)
+function ENT:CanFireWeapon(checkDistance, checkDistanceOnly, enemyDist)
 	checkDistance = checkDistance or false -- Check for distance and weapon time as well?
 	checkDistanceOnly = checkDistanceOnly or false -- Should it only check the above statement?
 	enemyDist = enemyDist or self.LatestEnemyDistance -- Distance used for checkDistance
-	if self:CustomOnIsAbleToShootWeapon() == false then return end
+	if self:OnWeaponCanFire() == false then return end
 	local hasDist = false
 	local hasChecks = false
 
@@ -3562,22 +3716,22 @@ function ENT:SelectSchedule()
 					end
 				end
 				
-				if canAttack && self:IsAbleToShootWeapon(false, false, self.LatestEnemyDistance) == true && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK then
+				if canAttack && self:CanFireWeapon(false, false, self.LatestEnemyDistance) == true && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK then
 					-- Enemy to far away or not allowed to fire a weapon
 					if self.LatestEnemyDistance > self.Weapon_FiringDistanceFar or CurTime() < self.NextWeaponAttackT then
 						self:DoChaseAnimation()
-						self.AllowToDo_WaitForEnemyToComeOut = false
+						self.AllowWeaponWaitOnOcclusion = false
 					-- Check if enemy is in sight, then continue...
-					elseif self:IsAbleToShootWeapon(true, true, self.LatestEnemyDistance) == true then
+					elseif self:CanFireWeapon(true, true, self.LatestEnemyDistance) == true then
 						//self:VJ_ForwardIsHidingZone(self:EyePos(), enePos_Eye, true, {Debug=true})
 						-- If I can't see the enemy then either wait for it or charge at the enemy
 						if self:VJ_ForwardIsHidingZone(self:EyePos(), enePos_Eye, true) == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered) + self:GetUp()*30, enePos_Eye + self:GetUp()*30, true) /*or self:VJ_ForwardIsHidingZone(util.VJ_GetWeaponPos(self),enePos_Eye) == true*/ /*or (!self.EnemyData.IsVisible)*/ then
 							if self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING then
-								-- Wait for the enemy to come out
-								if self.WaitForEnemyToComeOut && !self.WaitingForEnemyToComeOut && (!wep.IsMeleeWeapon) && self.AllowToDo_WaitForEnemyToComeOut && ((CurTime() - self.Weapon_TimeSinceLastShot) <= 4.5) && (self.LatestEnemyDistance > self.WaitForEnemyToComeOutDistance) then
-									self.WaitingForEnemyToComeOut = true
+								-- Wait when enemy is occluded
+								if self.Weapon_WaitOnOcclusion && !self.DoingWeaponWaitOnOcclusion && (!wep.IsMeleeWeapon) && self.AllowWeaponWaitOnOcclusion && ((CurTime() - self.Weapon_TimeSinceLastShot) <= 4.5) && (self.LatestEnemyDistance > self.Weapon_WaitOnOcclusionMinDist) then
+									self.DoingWeaponWaitOnOcclusion = true
 									self:DoIdleAnimation(2) -- Make it play idle stand (Which will turn into ACT_IDLE_ANGRY)
-									self.NextChaseTime = CurTime() + math.Rand(self.WaitForEnemyToComeOutTime.a, self.WaitForEnemyToComeOutTime.b)
+									self.NextChaseTime = CurTime() + math.Rand(self.Weapon_WaitOnOcclusionTime.a, self.Weapon_WaitOnOcclusionTime.b)
 								-- If I am not supposed to wait for the enemy, then go after the enemy!
 								elseif /*self.DisableChasingEnemy == false &&*/ CurTime() > self.LastHiddenZoneT then
 									self.DoingWeaponAttack = false
@@ -3586,7 +3740,7 @@ function ENT:SelectSchedule()
 								end
 							end
 						else -- I can see the enemy...
-							self.AllowToDo_WaitForEnemyToComeOut = true
+							self.AllowWeaponWaitOnOcclusion = true
 							if (wep.IsVJBaseWeapon) then -- VJ Base weapons
 								-- Do proper weapon aim turning, based on "FInAimCone" - https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/mp/src/game/server/ai_basenpc.cpp#L2584
 								if !self.HasPoseParameterLooking then -- Pose parameter looking is disabled then always face
@@ -3600,7 +3754,7 @@ function ENT:SelectSchedule()
 									local coneCalc = facingDir:Dot((los):GetNormalized())
 									if coneCalc < wepDif then
 										self:SetTurnTarget("Enemy")
-										self:DoPoseParameterLooking(true) -- Reset pose parameters to help with turning snaps
+										self:UpdatePoseParamTracking(true) -- Reset pose parameters to help with turning snaps
 									end
 								end
 								local noAttack = false
@@ -3671,7 +3825,7 @@ function ENT:SelectSchedule()
 								if noAttack == false && CurTime() > self.NextWeaponAttackT && CurTime() > self.NextWeaponAttackT_Base /*&& self.DoingWeaponAttack == false*/ then
 									-- Melee weapons
 									if (wep.IsMeleeWeapon) then
-										self:CustomOnWeaponAttack()
+										self:OnWeaponAttack()
 										local finalAnim = self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponAttack))
 										if CurTime() > self.NextMeleeWeaponAttackT && VJ.AnimExists(self, finalAnim) == true /*&& VJ.IsCurrentAnimation(self, finalAnim) == false*/ then
 											local animDur = VJ.AnimDuration(self, finalAnim)
@@ -3694,10 +3848,10 @@ function ENT:SelectSchedule()
 											self.DoingWeaponAttack_Standing = true
 										-- If the current activity isn't the last weapon animation and it's not a transition, then continue
 										elseif self:GetActivity() != self.CurrentWeaponAnimation && self:GetActivity() != ACT_TRANSITION then
-											self:CustomOnWeaponAttack()
-											self.WaitingForEnemyToComeOut = false
+											self:OnWeaponAttack()
+											self.DoingWeaponWaitOnOcclusion = false
 											self.Weapon_TimeSinceLastShot = CurTime()
-											//self.NextMoveRandomlyWhenShootingT = CurTime() + 2
+											//self.NextWeaponStrafeWhileFiringT = CurTime() + 2
 											local finalAnim;
 											-- Check if the NPC has ammo
 											if !hasAmmo then
@@ -3725,8 +3879,8 @@ function ENT:SelectSchedule()
 									end
 								end
 								-- Move randomly when shooting
-								if self.MoveRandomlyWhenShooting && cover_npc == false && !self.IsGuard && !self.IsFollowing && (!wep.IsMeleeWeapon) && (!wep.NPC_StandingOnly) && self.DoingWeaponAttack && self.DoingWeaponAttack_Standing && CurTime() > self.NextMoveRandomlyWhenShootingT && (CurTime() - self.EnemyData.TimeSinceAcquired) > 2 && (self.LatestEnemyDistance < (self.Weapon_FiringDistanceFar / 1.25)) && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered), enePos_Eye) == false then
-									if self:CustomOnMoveRandomlyWhenShooting() != false then
+								if self.Weapon_StrafeWhileFiring && cover_npc == false && !self.IsGuard && !self.IsFollowing && (!wep.IsMeleeWeapon) && (!wep.NPC_StandingOnly) && self.DoingWeaponAttack && self.DoingWeaponAttack_Standing && CurTime() > self.NextWeaponStrafeWhileFiringT && (CurTime() - self.EnemyData.TimeSinceAcquired) > 2 && (self.LatestEnemyDistance < (self.Weapon_FiringDistanceFar / 1.25)) && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered), enePos_Eye) == false then
+									if self:OnWeaponStrafeWhileFiring() != false then
 										local moveCheck = VJ.PICK(self:VJ_CheckAllFourSides(math.random(150, 400), true, "0111"))
 										if moveCheck then
 											self:StopMoving()
@@ -3734,14 +3888,14 @@ function ENT:SelectSchedule()
 											self:VJ_TASK_GOTO_LASTPOS(math.random(1, 2) == 1 and "TASK_RUN_PATH" or "TASK_WALK_PATH", function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
 										end
 									end
-									self.NextMoveRandomlyWhenShootingT = CurTime() + math.Rand(self.NextMoveRandomlyWhenShootingTime.a, self.NextMoveRandomlyWhenShootingTime.b)
+									self.NextWeaponStrafeWhileFiringT = CurTime() + math.Rand(self.Weapon_StrafeWhileFiringDelay.a, self.Weapon_StrafeWhileFiringDelay.b)
 								end
 							else -- None VJ Base weapons
 								self:SetTurnTarget("Enemy")
-								self.WaitingForEnemyToComeOut = false
+								self.DoingWeaponWaitOnOcclusion = false
 								self.DoingWeaponAttack = true
 								self.DoingWeaponAttack_Standing = true
-								self:CustomOnWeaponAttack()
+								self:OnWeaponAttack()
 								self.Weapon_TimeSinceLastShot = CurTime()
 								//wep:SetClip1(99999)
 								self:SetSchedule(SCHED_RANGE_ATTACK1)
@@ -3806,7 +3960,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 	self:SetNPCState(NPC_STATE_ALERT)
 	timer.Create("timer_alerted_reset"..self:EntIndex(), math.Rand(self.AlertedToIdleTime.a, self.AlertedToIdleTime.b), 1, function() if !IsValid(self:GetEnemy()) then self.Alerted = false self:SetNPCState(NPC_STATE_IDLE) end end)
 	self:OnResetEnemy()
-	if self.VJ_DEBUG == true && GetConVar("vj_npc_printresetenemy"):GetInt() == 1 then print(self:GetName().." has reseted its enemy") end
+	if self.VJ_DEBUG == true && GetConVar("vj_npc_debug_resetenemy"):GetInt() == 1 then print(self:GetName() .. " : Reset enemy ( " .. tostring(ene) .. " )") end
 	if eneValid then
 		if self.IsFollowing == false && (!self.IsVJBaseSNPC_Tank) && !self:Visible(ene) && self:GetEnemyLastKnownPos() != defPos then
 			self:SetLastPosition(self:GetEnemyLastKnownPos())
@@ -3858,7 +4012,7 @@ function ENT:OnTakeDamage(dmginfo)
 	local dmgInflictor = dmginfo:GetInflictor()
 	local hitgroup = self:GetLastDamageHitGroup()
 	if IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_ragdoll" && dmgInflictor:GetVelocity():Length() <= 100 then return 0 end -- Avoid taking damage when walking on ragdolls
-	self:CustomOnTakeDamage_BeforeImmuneChecks(dmginfo, hitgroup)
+	self:OnDamaged(dmginfo, hitgroup, "Initial")
 	if self.GodMode or dmginfo:GetDamage() <= 0 then return 0 end
 	if self:IsOnFire() && self:WaterLevel() == 2 then self:Extinguish() end -- If we are in water, then extinguish the fire
 	local dmgAttacker = dmginfo:GetAttacker()
@@ -3889,7 +4043,7 @@ function ENT:OnTakeDamage(dmginfo)
 	::skip_immunity::
 	local function DoBleed()
 		if self.Bleeds == true then
-			self:CustomOnTakeDamage_OnBleed(dmginfo, hitgroup)
+			self:OnBleed(dmginfo, hitgroup)
 			-- Spawn the blood particle only if it's not caused by the default fire entity [Causes the damage position to be at Vector(0, 0, 0)]
 			if self.HasBloodParticle == true && !isFireDmg then self:SpawnBloodParticles(dmginfo, hitgroup) end
 			if self.HasBloodDecal == true then self:SpawnBloodDecal(dmginfo, hitgroup) end
@@ -3898,7 +4052,7 @@ function ENT:OnTakeDamage(dmginfo)
 	end
 	if self.Dead then DoBleed() return 0 end -- If dead then just bleed but take no damage
 	
-	self:CustomOnTakeDamage_BeforeDamage(dmginfo, hitgroup)
+	self:OnDamaged(dmginfo, hitgroup, "PreDamage")
 	if dmginfo:GetDamage() <= 0 then return 0 end -- Only take damage if it's above 0!
 	-- Why? Because GMod resets/randomizes dmginfo after a tick...
 	self.SavedDmgInfo = {
@@ -3913,13 +4067,13 @@ function ENT:OnTakeDamage(dmginfo)
 		hitgroup = hitgroup,
 	}
 	self:SetHealth(self:Health() - dmginfo:GetDamage())
-	if self.VJ_DEBUG == true && GetConVar("vj_npc_printondamage"):GetInt() == 1 then print(self:GetClass().." Got Damaged! | Amount = "..dmginfo:GetDamage()) end
+	if self.VJ_DEBUG == true && GetConVar("vj_npc_debug_ondmg"):GetInt() == 1 then print(self:GetClass().." : Damaged! ("..dmginfo:GetDamage()..")") end
 	if self.HasHealthRegeneration == true && self.HealthRegenerationResetOnDmg == true then
 		self.HealthRegenerationDelayT = curTime + (math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b) * 1.5)
 	end
 	self:SetSaveValue("m_iDamageCount", self:GetInternalVariable("m_iDamageCount") + 1)
 	self:SetSaveValue("m_flLastDamageTime", curTime)
-	self:CustomOnTakeDamage_AfterDamage(dmginfo, hitgroup)
+	self:OnDamaged(dmginfo, hitgroup, "PostDamage")
 	DoBleed()
 	
 	-- I/O events, from: https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/sp/src/game/server/ai_basenpc.cpp#L764
@@ -3955,7 +4109,7 @@ function ENT:OnTakeDamage(dmginfo)
 					local anim = self:TranslateActivity(VJ.PICK(self.AnimTbl_TakingCover))
 					if VJ.AnimExists(self, anim) == true then
 						local hideTime = math.Rand(self.MoveOrHideOnDamageByEnemy_HideTime.a, self.MoveOrHideOnDamageByEnemy_HideTime.b)
-						self:VJ_ACT_PLAYACTIVITY(anim, false, hideTime, false) -- Don't set stopActivities because we want it to shoot if an enemy is suddenly visible!
+						self:VJ_ACT_PLAYACTIVITY(anim, false, hideTime, false) -- Don't set lockAnim because we want it to shoot if an enemy is suddenly visible!
 						self.NextChaseTime = curTime + hideTime
 						self.TakingCoverT = curTime + hideTime
 						self.DoingWeaponAttack = false
@@ -4065,7 +4219,7 @@ function ENT:OnTakeDamage(dmginfo)
 			dissolve:SetDamageType(DMG_DISSOLVE)
 			self:TakeDamageInfo(dissolve)
 		end
-		self:PriorToKilled(dmginfo, hitgroup)
+		self:BeginDeath(dmginfo, hitgroup)
 	end
 	return 1
 end
@@ -4073,8 +4227,9 @@ end
 local vecZ500 = Vector(0, 0, 500)
 local vecZ4 = Vector(0, 0, 4)
 --
-function ENT:PriorToKilled(dmginfo, hitgroup)
-	self:CustomOnInitialKilled(dmginfo, hitgroup)
+function ENT:BeginDeath(dmginfo, hitgroup)
+	self.Dead = true
+	self:OnDeath(dmginfo, hitgroup, "Initial")
 	if self.Medic_Status then self:ResetMedicBehavior() end
 	local dmgInflictor = dmginfo:GetInflictor()
 	local dmgAttacker = dmginfo:GetAttacker()
@@ -4123,20 +4278,6 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 		end
 	end
 	
-	local function DoKilled()
-		if IsValid(self) then
-			if self.WaitBeforeDeathTime == 0 then
-				self:OnKilled(dmginfo, hitgroup)
-			else
-				timer.Simple(self.WaitBeforeDeathTime, function()
-					if IsValid(self) then
-						self:OnKilled(dmginfo, hitgroup)
-					end
-				end)
-			end
-		end
-	end
-	
 	-- Blood decal on the ground
 	if self.Bleeds == true && self.HasBloodDecal == true then
 		local bloodDecal = VJ.PICK(self.CustomBlood_Decal)
@@ -4152,22 +4293,20 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 		end
 	end
 	
-	self.Dead = true
 	if self.IsFollowing == true then self:FollowReset() end
 	self:RemoveTimers()
 	self.AttackType = VJ.ATTACK_TYPE_NONE
 	self.HasMeleeAttack = false
 	self:StopAllSounds()
 	if IsValid(dmgAttacker) then
-		if dmgAttacker:GetClass() == "npc_barnacle" then self.HasDeathRagdoll = false end -- Don't make a corpse if it's killed by a barnacle!
+		if dmgAttacker:GetClass() == "npc_barnacle" then self.HasDeathCorpse = false end -- Don't make a corpse if it's killed by a barnacle!
 		if GetConVar("vj_npc_addfrags"):GetInt() == 1 && dmgAttacker:IsPlayer() then dmgAttacker:AddFrags(1) end
 		if IsValid(dmgInflictor) then
 			gamemode.Call("OnNPCKilled", self, dmgAttacker, dmgInflictor, dmginfo)
 		end
 	end
-	self:CustomOnPriorToKilled(dmginfo, hitgroup)
-	self:SetCollisionGroup(1)
-	self:RunGibOnDeathCode(dmginfo, hitgroup)
+	self:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+	self:DoGibOnDeath(dmginfo, hitgroup)
 	self:PlaySoundSystem("Death")
 	//self:AA_StopMoving()
 	
@@ -4179,32 +4318,36 @@ function ENT:PriorToKilled(dmginfo, hitgroup)
 		self:TriggerOutput("OnDeath", self)
 	end
 	
-	if self.HasDeathAnimation == true && !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) && self:GetNavType() != NAV_CLIMB then
-		if IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball" then DoKilled() return end
-		if GetConVar("vj_npc_nodeathanimation"):GetInt() == 0 && VJ_CVAR_AI_ENABLED && !dmginfo:IsDamageType(DMG_DISSOLVE) && math.random(1, self.DeathAnimationChance) == 1 then
-			self:RemoveAllGestures()
-			self:CustomDeathAnimationCode(dmginfo, hitgroup)
-			local chosenAnim = VJ.PICK(self.AnimTbl_Death)
-			local animTime = self:DecideAnimationLength(chosenAnim, self.DeathAnimationTime) - self.DeathAnimationDecreaseLengthAmount
-			self:VJ_ACT_PLAYACTIVITY(chosenAnim, true, animTime, false, 0, {PlayBackRateCalculated=true})
-			self.DeathAnimationCodeRan = true
-			timer.Simple(animTime, DoKilled)
-		else
-			DoKilled()
-		end
+	-- Handle death animation, death delay, and the final death phase
+	local deathTime = self.DeathDelayTime
+	if IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball" then self.HasDeathAnimation = false end
+	if self.HasDeathAnimation && VJ_CVAR_AI_ENABLED && !dmginfo:IsDamageType(DMG_REMOVENORAGDOLL) && !dmginfo:IsDamageType(DMG_DISSOLVE) && self:GetNavType() != NAV_CLIMB && math.random(1, self.DeathAnimationChance) == 1 then
+		self:RemoveAllGestures()
+		self:OnDeath(dmginfo, hitgroup, "DeathAnim")
+		local chosenAnim = VJ.PICK(self.AnimTbl_Death)
+		local animTime = self:DecideAnimationLength(chosenAnim, self.DeathAnimationTime) - self.DeathAnimationDecreaseLengthAmount
+		self:VJ_ACT_PLAYACTIVITY(chosenAnim, true, animTime, false, 0, {PlayBackRateCalculated=true})
+		deathTime = deathTime + animTime
+		self.DeathAnimationCodeRan = true
+	end
+	if deathTime > 0 then
+		timer.Simple(deathTime, function()
+			if IsValid(self) then
+				self:FinishDeath(dmginfo, hitgroup)
+			end
+		end)
 	else
-		DoKilled()
+		self:FinishDeath(dmginfo, hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnKilled(dmginfo, hitgroup)
-	if self.VJ_DEBUG == true && GetConVar("vj_npc_printdied"):GetInt() == 1 then print(self:GetClass().." Died!") end
-	self:CustomOnKilled(dmginfo, hitgroup)
-	self:RunItemDropsOnDeathCode(dmginfo, hitgroup) -- Item drops on death
+function ENT:FinishDeath(dmginfo, hitgroup)
+	if self.VJ_DEBUG == true && GetConVar("vj_npc_debug_death"):GetInt() == 1 then print(self:GetClass().." : Killed!") end
+	self:OnDeath(dmginfo, hitgroup, "Finish")
+	self:RunItemDropsOnDeathCode(dmginfo, hitgroup)
 	self:ClearEnemyMemory()
-	//self:ClearSchedule()
 	//self:SetNPCState(NPC_STATE_DEAD)
-	if bit.band(self.SavedDmgInfo.type, DMG_REMOVENORAGDOLL) == 0 then self:DoDropWeaponOnDeath(dmginfo, hitgroup) self:CreateDeathCorpse(dmginfo, hitgroup) end
+	if bit.band(self.SavedDmgInfo.type, DMG_REMOVENORAGDOLL) == 0 then self:DeathWeaponDrop(dmginfo, hitgroup) self:CreateDeathCorpse(dmginfo, hitgroup) end
 	self:Remove()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -4227,8 +4370,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		}
 	end
 	
-	self:CustomOnDeath_BeforeCorpseSpawned(dmginfo, hitgroup)
-	if self.HasDeathRagdoll == true then
+	if self.HasDeathCorpse && self.HasDeathRagdoll != false then
 		local corpseMdl = self:GetModel()
 		local corpseMdlCustom = VJ.PICK(self.DeathCorpseModel)
 		if corpseMdlCustom != false then corpseMdl = corpseMdlCustom end
@@ -4375,7 +4517,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		if IsValid(self.CurrentWeaponEntity) then corpse.ChildEnts[#corpse.ChildEnts + 1] = self.CurrentWeaponEntity end
 		if self.DeathCorpseFade == true then corpse:Fire(corpse.FadeCorpseType, "", self.DeathCorpseFadeTime) end
 		if GetConVar("vj_npc_corpsefade"):GetInt() == 1 then corpse:Fire(corpse.FadeCorpseType, "", GetConVar("vj_npc_corpsefadetime"):GetInt()) end
-		self:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpse)
+		self:OnCreateDeathCorpse(dmginfo, hitgroup, corpse)
 		if corpse:IsFlagSet(FL_DISSOLVING) then
 			if IsValid(self.CurrentWeaponEntity) then
 				self.CurrentWeaponEntity:Dissolve(0, 1)
@@ -4410,7 +4552,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoDropWeaponOnDeath(dmginfo, hitgroup)
+function ENT:DeathWeaponDrop(dmginfo, hitgroup)
 	local activeWep = self:GetActiveWeapon()
 	if !self.DropWeaponOnDeath or !IsValid(activeWep) then return end
 	
@@ -4438,7 +4580,7 @@ function ENT:DoDropWeaponOnDeath(dmginfo, hitgroup)
 	end
 	self.CurrentWeaponEntity = activeWep
 	
-	self:CustomOnDropWeapon(dmginfo, hitgroup, activeWep)
+	self:OnDeathWeaponDrop(dmginfo, hitgroup, activeWep)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlaySoundSystem(sdSet, customSD, sdType)
@@ -4827,7 +4969,7 @@ function ENT:FootStepSoundCode(customSD)
 				if !pickedSD then pickedSD = DefaultSoundTbl_FootStep end
 			end
 			VJ.EmitSound(self, pickedSD, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
-			local funcCustom = self.CustomOnFootStepSound; if funcCustom then funcCustom(self, "Event", pickedSD) end
+			local funcCustom = self.OnFootstepSound; if funcCustom then funcCustom(self, "Event", pickedSD) end
 		elseif self:IsMoving() && CurTime() > self.FootStepT && self:GetInternalVariable("m_flMoveWaitFinished") <= 0 then
 			-- Use custom table if available, if none found then use the footstep sound table, if again none found then use the backup default footstep sounds
 			local pickedSD;
@@ -4838,11 +4980,11 @@ function ENT:FootStepSoundCode(customSD)
 			end
 			if !self.DisableFootStepOnRun && self:GetMovementActivity() == ACT_RUN then
 				VJ.EmitSound(self, pickedSD, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
-				local funcCustom = self.CustomOnFootStepSound; if funcCustom then funcCustom(self, "Run", pickedSD) end
+				local funcCustom = self.OnFootstepSound; if funcCustom then funcCustom(self, "Run", pickedSD) end
 				self.FootStepT = CurTime() + self.FootStepTimeRun
 			elseif !self.DisableFootStepOnWalk && self:GetMovementActivity() == ACT_WALK then
 				VJ.EmitSound(self, pickedSD, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
-				local funcCustom = self.CustomOnFootStepSound; if funcCustom then funcCustom(self, "Walk", pickedSD) end
+				local funcCustom = self.OnFootstepSound; if funcCustom then funcCustom(self, "Walk", pickedSD) end
 				self.FootStepT = CurTime() + self.FootStepTimeWalk
 			end
 		end

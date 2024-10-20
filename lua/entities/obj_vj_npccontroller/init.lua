@@ -16,9 +16,9 @@ ENT.VJC_BullseyeTracking = false -- Activates bullseye tracking (Will not turn t
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- Use the functions below to customize certain parts of the base or to add new custom systems
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnInitialize() end
+function ENT:Init() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnThink() end
+function ENT:OnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- Different from self:CustomOnKeyBindPressed(), this uses: https://wiki.facepunch.com/gmod/Enums/KEY
 function ENT:CustomOnKeyPressed(key) end
@@ -62,7 +62,9 @@ function ENT:Initialize()
 	self:SetSolid(SOLID_NONE)
 	self:DrawShadow(false)
 	self:SetRenderMode(RENDERMODE_NONE) -- Disable shadow for dynamic lights
-	self:CustomOnInitialize()
+	self:Init()
+	if self.CustomOnInitialize then self:CustomOnInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local color0000 = Color(0, 0, 0, 0)
@@ -327,7 +329,7 @@ function ENT:Think()
 			VJ.DEBUG_TempEnt(bullseyePos, self:GetAngles(), Color(255,0,0)) -- Bullseye's position
 		end
 		
-		self:CustomOnThink()
+		self:OnThink()
 
 		local canTurn = true
 		if npc.Flinching == true or (((npc.CurrentSchedule && !npc.CurrentSchedule.IsPlayActivity) or npc.CurrentSchedule == nil) && npc:GetNavType() == NAV_JUMP) then return end
@@ -339,7 +341,7 @@ function ENT:Think()
 				npc:SetTurnTarget(bullseyePos, 0.2)
 				canTurn = false
 				if VJ.IsCurrentAnimation(npc, npc:TranslateActivity(npc.CurrentWeaponAnimation)) == false && VJ.IsCurrentAnimation(npc, npc.AnimTbl_WeaponAttack) == false then
-					npc:CustomOnWeaponAttack()
+					npc:OnWeaponAttack()
 					npc.CurrentWeaponAnimation = VJ.PICK(npc.AnimTbl_WeaponAttack)
 					npc:VJ_ACT_PLAYACTIVITY(npc.CurrentWeaponAnimation, false, 2, false)
 					npc.DoingWeaponAttack = true

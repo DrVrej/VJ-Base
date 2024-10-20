@@ -67,7 +67,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local colorWhite = Color(255, 255, 255, 255)
 --
-function ENT:CustomOnInitialize()
+function ENT:Init()
 	timer.Simple(5, function() if IsValid(self) then self:DeathEffects() end end)
 
 	self:DrawShadow(false)

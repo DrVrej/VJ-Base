@@ -45,9 +45,9 @@ cvarList["vj_npc_noweapon"] = 0 -- No Weapon - Human
 cvarList["vj_npc_nodangerdetection"] = 0 -- Disable running from grenades/dangers
 cvarList["vj_npc_noreload"] = 0 -- Disable reloading
 cvarList["vj_npc_nothrowgrenade"] = 0 -- Disable humans NPCs throwing grenades
-	-- ====== Animal Settings ====== --
-cvarList["vj_npc_animal_runontouch"] = 0 -- Disable animals running away on touch
-cvarList["vj_npc_animal_runonhit"] = 0 -- Disable animals running away when hit
+	-- ====== Passive Settings ====== --
+cvarList["vj_npc_no_runontouch"] = 0 -- Disable passive NPCs running away on touch
+cvarList["vj_npc_no_runonhit"] = 0 -- Disable passive NPCs running away when hit
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Options ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -111,17 +111,17 @@ cvarList["vj_npc_sd_suppressing"] = 0 -- Disable suppressing callout sounds
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Developer Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-CreateConVar("vj_npc_usedevcommands", 0) -- Should it use Dev Commands? (Required to make the dev option below work!)
-cvarList["vj_npc_printdied"] = 0 -- Prints Died when the NPC dies
-cvarList["vj_npc_printondamage"] = 0 -- Prints when the NPC gets damaged
-cvarList["vj_npc_printontouch"] = 0 -- Prints when something touches the NPC
-cvarList["vj_npc_printstoppedattacks"] = 0 -- Prints when the NPC stops its attacks
-cvarList["vj_npc_printresetenemy"] = 0 -- Prints something when the NPC has rested its enemy
-cvarList["vj_npc_printlastseenenemy"] = 0 -- Prints the 'LastSeenEnemy' time
-cvarList["vj_npc_printcurenemy"] = 0 -- Prints the current enemy
-cvarList["vj_npc_printtakingcover"] = 0 -- Prints whether the NPC is taking cover or not
+CreateConVar("vj_npc_debug", 0) -- Should NPC debugging be active? | Required to make the dev option below work!
+cvarList["vj_npc_debug_death"] = 0 -- Prints Died when the NPC dies
+cvarList["vj_npc_debug_ondmg"] = 0 -- Prints when the NPC gets damaged
+cvarList["vj_npc_debug_ontouch"] = 0 -- Prints when something touches the NPC
+cvarList["vj_npc_debug_stopattacks"] = 0 -- Prints when the NPC stops its attacks
+cvarList["vj_npc_debug_resetenemy"] = 0 -- Prints something when the NPC has rested its enemy
+cvarList["vj_npc_debug_lastseenenemytime"] = 0 -- Prints the 'LastSeenEnemy' time
+cvarList["vj_npc_debug_enemy"] = 0 -- Prints the current enemy
+cvarList["vj_npc_debug_takingcover"] = 0 -- Prints whether the NPC is taking cover or not
 	-- ====== Human Options ====== --
-cvarList["vj_npc_dev_printwepinfo"] = 0 -- Prints weapon-related information
+cvarList["vj_npc_debug_weapon"] = 0 -- Prints weapon-related information
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ NPC Controller Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

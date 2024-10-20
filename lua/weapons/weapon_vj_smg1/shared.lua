@@ -23,7 +23,7 @@ SWEP.NPC_SecondaryFireSound = "VJ.Weapon_SMG1.Secondary" -- The sound it plays w
 SWEP.NPC_ReloadSound = "vj_base/weapons/smg1/smg1_reload.wav" -- Sounds it plays when the base detects the SNPC playing a reload animation
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Damage = 5 -- Damage
-SWEP.Primary.ClipSize = 45 -- Max amount of bullets per clip
+SWEP.Primary.ClipSize = 45 -- Max amount of rounds per clip
 SWEP.Primary.Delay = 0.09 -- Time until it can shoot again
 SWEP.Primary.Automatic = true -- Should the weapon continue firing as long as the attack button is held down?
 SWEP.Primary.Ammo = "SMG1" -- Ammo type

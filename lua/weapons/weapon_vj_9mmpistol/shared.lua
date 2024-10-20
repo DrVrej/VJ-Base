@@ -23,7 +23,7 @@ SWEP.Spawnable = true
 SWEP.AdminSpawnable = false
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Damage = 8 -- Damage
-SWEP.Primary.ClipSize = 18 -- Max amount of bullets per clip
+SWEP.Primary.ClipSize = 18 -- Max amount of rounds per clip
 SWEP.Primary.Delay = 0.25 -- Time until it can shoot again
 SWEP.Primary.Automatic = true -- Should the weapon continue firing as long as the attack button is held down?
 SWEP.Primary.Ammo = "Pistol" -- Ammo type
