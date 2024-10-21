@@ -1845,7 +1845,7 @@ local function ApplyBackwardsCompatibility(self)
 				if self.CustomOnFlinch_BeforeFlinch then
 					return self:CustomOnFlinch_BeforeFlinch(dmginfo, hitgroup)
 				end
-			elseif stauts == "Execute" then
+			elseif status == "Execute" then
 				if self.CustomOnFlinch_AfterFlinch then
 					self:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup)
 				end
@@ -4881,7 +4881,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				StopSound(self.CurrentSpeechSound)
 				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.BeforeMeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.BeforeMeleeAttackSoundPitch.a, self.BeforeMeleeAttackSoundPitch.b))
+				self.CurrentExtraSpeechSound = sdType(self, pickedSD, self.BeforeMeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.BeforeMeleeAttackSoundPitch.a, self.BeforeMeleeAttackSoundPitch.b))
 			end
 		end
 		return

@@ -1181,7 +1181,7 @@ local function ApplyBackwardsCompatibility(self)
 				if self.CustomOnFlinch_BeforeFlinch then
 					return self:CustomOnFlinch_BeforeFlinch(dmginfo, hitgroup)
 				end
-			elseif stauts == "Execute" then
+			elseif status == "Execute" then
 				if self.CustomOnFlinch_AfterFlinch then
 					self:CustomOnFlinch_AfterFlinch(dmginfo, hitgroup)
 				end
@@ -3772,7 +3772,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				StopSound(self.CurrentSpeechSound)
 				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.BeforeMeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.BeforeMeleeAttackSoundPitch.a, self.BeforeMeleeAttackSoundPitch.b))
+				self.CurrentExtraSpeechSound = sdType(self, pickedSD, self.BeforeMeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.BeforeMeleeAttackSoundPitch.a, self.BeforeMeleeAttackSoundPitch.b))
 			end
 		end
 		return
@@ -3815,7 +3815,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				StopSound(self.CurrentSpeechSound)
 				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.BeforeRangeAttackSoundLevel, self:VJ_DecideSoundPitch(self.BeforeRangeAttackPitch.a, self.BeforeRangeAttackPitch.b))
+				self.CurrentExtraSpeechSound = sdType(self, pickedSD, self.BeforeRangeAttackSoundLevel, self:VJ_DecideSoundPitch(self.BeforeRangeAttackPitch.a, self.BeforeRangeAttackPitch.b))
 			end
 		end
 		return
@@ -3839,7 +3839,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				StopSound(self.CurrentSpeechSound)
 				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
-				self.CurrentSpeechSound = sdType(self, pickedSD, self.BeforeLeapAttackSoundLevel, self:VJ_DecideSoundPitch(self.BeforeLeapAttackSoundPitch.a, self.BeforeLeapAttackSoundPitch.b))
+				self.CurrentExtraSpeechSound = sdType(self, pickedSD, self.BeforeLeapAttackSoundLevel, self:VJ_DecideSoundPitch(self.BeforeLeapAttackSoundPitch.a, self.BeforeLeapAttackSoundPitch.b))
 			end
 		end
 		return

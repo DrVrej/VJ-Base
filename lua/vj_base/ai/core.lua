@@ -597,6 +597,7 @@ end
 -----------------------------------------------------------]]
 function ENT:StopAllSounds()
 	StopSound(self.CurrentSpeechSound)
+	StopSound(self.CurrentExtraSpeechSound)
 	StopSound(self.CurrentBreathSound)
 	StopSound(self.CurrentIdleSound)
 	StopSound(self.CurrentMedicAfterHealSound)
@@ -2357,6 +2358,7 @@ function ENT:IdleDialogueAnswerSoundCode(customSd, sdType)
 	if (math.random(1,self.IdleDialogueAnswerSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
 		if cTbl != false then sdtbl = cTbl end
 		StopSound(self.CurrentSpeechSound)
+		StopSound(self.CurrentExtraSpeechSound)
 		StopSound(self.CurrentIdleSound)
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2, 3)
 		self.CurrentSpeechSound = sdType(self, sdtbl, self.IdleDialogueAnswerSoundLevel, self:VJ_DecideSoundPitch(self.IdleDialogueAnswerSoundPitch.a, self.IdleDialogueAnswerSoundPitch.b))
