@@ -691,34 +691,34 @@ function ENT:OnFollow(status, ent) end
 function ENT:OnIdleDialogue(ent, status, statusData) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[
-| Called whenever the medic behavior updates
-|
-|=-=-=| PARAMETERS |=-=-=
-|	1. status [string] : Type of update that is occurring, holds one of the following states:
-|		-> "BeforeHeal" : Right before it's about to heal an entity
-|				USAGE EXAMPLES -> Play chain of animations | Additional sound effect
-|				PARAMETERS
-|					2. statusData [nil]
-|				RETURNS
-|					-> [nil]
-|		-> "OnHeal" : When the timer expires and is about to give health
-|				USAGE EXAMPLES -> Override healing code | Play an after heal animation
-|				PARAMETERS
-|					2. statusData [entity] : The entity that it's about to heal
-|				RETURNS
-|					-> [bool] : Returning false will NOT update entity's health and will NOT clear its decals (Useful for custom code)
-|		-> "OnReset" : When the behavior ends OR has to move because entity moved
-|				USAGE EXAMPLES -> Cleanup bodygroups | Play a sound
-|				PARAMETERS
-|					2. statusData [string] : Holds one of the following states:
-|						--> "Retry" : When it attempts to retry healing the entity, such as when the entity moved away so it has to chase again
-|						--> "End" : When the medic behavior exits completely
-|				RETURNS
-|					-> [nil]
-|	2. statusData [nil | entity | string] : Depends on `status` value, refer to it for more details
-|
-|=-=-=| RETURNS |=-=-=
-|	-> [nil | bool] : Depends on `status` value, refer to it for more details
+Called whenever the medic behavior updates
+
+=-=-=| PARAMETERS |=-=-=
+	1. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "BeforeHeal" : Right before it's about to heal an entity
+				USAGE EXAMPLES -> Play chain of animations | Additional sound effect
+				PARAMETERS
+					2. statusData [nil]
+				RETURNS
+					-> [nil]
+		-> "OnHeal" : When the timer expires and is about to give health
+				USAGE EXAMPLES -> Override healing code | Play an after heal animation
+				PARAMETERS
+					2. statusData [entity] : The entity that it's about to heal
+				RETURNS
+					-> [bool] : Returning false will NOT update entity's health and will NOT clear its decals (Useful for custom code)
+		-> "OnReset" : When the behavior ends OR has to move because entity moved
+				USAGE EXAMPLES -> Cleanup bodygroups | Play a sound
+				PARAMETERS
+					2. statusData [string] : Holds one of the following states:
+						--> "Retry" : When it attempts to retry healing the entity, such as when the entity moved away so it has to chase again
+						--> "End" : When the medic behavior exits completely
+				RETURNS
+					-> [nil]
+	2. statusData [nil | entity | string] : Depends on `status` value, refer to it for more details
+
+=-=-=| RETURNS |=-=-=
+	-> [nil | bool] : Depends on `status` value, refer to it for more details
 --]]
 function ENT:OnMedicBehavior(status, statusData) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -788,38 +788,38 @@ function ENT:OnWeaponStrafeWhileFiring() end -- Return false to disable default 
 function ENT:OnWeaponReload() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[
-| Called for important changes or requests during a grenade attack
-|
-|=-=-=| PARAMETERS |=-=-=
-|	1. status [string] : Type of update that is occurring, holds one of the following states:
-|		-> "Start" : Before the start timer is ran
-|			USAGE EXAMPLES -> Change grenade attack sounds | Make changes to "self.TimeUntilGrenadeIsReleased"
-|			RETURNS
-|				-> [nil]
-|		-> "SpawnPos" : When the spawn position is requested
-|			USAGE EXAMPLES -> Override the spawn position if needed by returning a vector
-|			RETURNS
-|				-> [nil] : Do NOT override the spawn position, this lets the default code execute
-|				-> [vector] : Override the spawn position
-|		-> "Throw" : When the grenade is being thrown
-|			USAGE EXAMPLES -> Throw velocity | Apply changes to grenade entity | Disallow throw velocity
-|			RETURNS
-|				-> [nil] : Do NOT apply any velocity to the grenade
-|				-> [vector] : Velocity that will be applied to the grenade
-|	2. grenade [nil | entity] : The actual grenade entity that is being thrown | NOTE: Only valid for "Throw" status
-|	3. customEnt [nil | string | entity] : What entity it should throw (IF any)
-|		-> [nil] : Using the default grenade class set by "self.GrenadeAttackEntity"
-|		-> [string] : Using the given class name to override "self.GrenadeAttackEntity"
-|		-> [entity] : Using an existing entity to override "self.GrenadeAttackEntity" | Example: When the NPC is throwing back an enemy grenade
-|	4. landDir [number | vector | bool] : Direction the grenade should land, used to align where the grenade should land
-|		-> 0 : Use enemy's position
-|		-> 1 : Use enemy's last visible position
-|		-> [vector] : Use given vector
-|		-> [bool] : Find the best random position
-|	5. landingPos [nil | vector] : The position the grenade is aimed to land | NOTE: Only valid for "Throw" status
-|
-|=-=-=| RETURNS |=-=-=
-|	-> [nil | vector] : Depends on `status` value, refer to it for more details
+Called for important changes or requests during a grenade attack
+
+=-=-=| PARAMETERS |=-=-=
+	1. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "Start" : Before the start timer is ran
+			USAGE EXAMPLES -> Change grenade attack sounds | Make changes to "self.TimeUntilGrenadeIsReleased"
+			RETURNS
+				-> [nil]
+		-> "SpawnPos" : When the spawn position is requested
+			USAGE EXAMPLES -> Override the spawn position if needed by returning a vector
+			RETURNS
+				-> [nil] : Do NOT override the spawn position, this lets the default code execute
+				-> [vector] : Override the spawn position
+		-> "Throw" : When the grenade is being thrown
+			USAGE EXAMPLES -> Throw velocity | Apply changes to grenade entity | Disallow throw velocity
+			RETURNS
+				-> [nil] : Do NOT apply any velocity to the grenade
+				-> [vector] : Velocity that will be applied to the grenade
+	2. grenade [nil | entity] : The actual grenade entity that is being thrown | NOTE: Only valid for "Throw" status
+	3. customEnt [nil | string | entity] : What entity it should throw (IF any)
+		-> [nil] : Using the default grenade class set by "self.GrenadeAttackEntity"
+		-> [string] : Using the given class name to override "self.GrenadeAttackEntity"
+		-> [entity] : Using an existing entity to override "self.GrenadeAttackEntity" | Example: When the NPC is throwing back an enemy grenade
+	4. landDir [number | vector | bool] : Direction the grenade should land, used to align where the grenade should land
+		-> 0 : Use enemy's position
+		-> 1 : Use enemy's last visible position
+		-> [vector] : Use given vector
+		-> [bool] : Find the best random position
+	5. landingPos [nil | vector] : The position the grenade is aimed to land | NOTE: Only valid for "Throw" status
+
+=-=-=| RETURNS |=-=-=
+	-> [nil | vector] : Depends on `status` value, refer to it for more details
 --]]
 function ENT:OnGrenadeAttack(status, grenade, customEnt, landDir, landingPos)
 	if status == "Throw" then

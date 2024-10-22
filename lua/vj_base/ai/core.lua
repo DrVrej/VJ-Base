@@ -71,7 +71,7 @@ local StopSound = VJ.STOPSOUND
 			- ShouldFade = Should it fade away after certain time | DEFAULT = false
 			- ShouldFadeTime = How much time until the entity fades away | DEFAULT = 0
 			- RemoveOnCorpseDelete = Should the entity get removed if the corpse is removed? | DEFAULT = true
-		- customFunc(gib) = Use this to edit the entity which is given as parameter "gib"
+		- customFunc(ent) = Use this to edit the entity which is given as parameter "ent"
 -----------------------------------------------------------]]
 local colorGrey = Color(90, 90, 90)
 --

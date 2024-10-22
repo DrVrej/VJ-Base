@@ -70,82 +70,49 @@ ENT.Tank_DefaultSoundTbl_FireShell = {"vj_base/vehicles/armored/gun_main_fire1.w
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- Use the functions below to customize certain parts of the base or to add new custom systems
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomInitialize_CustomTank() end
+function ENT:Tank_Init() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_OnThink() return true end -- Return false to disable think code (Its just the StartSpawnEffects)
+function ENT:Tank_OnThink() end -- Return true to disable the default base code (Its just the StartSpawnEffects)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnThink_AIEnabled() end
+function ENT:Tank_OnThinkActive() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnReloadShell() end
+function ENT:Tank_OnPrepareShell() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
--- Use this function to set your own effects or to change the existing ones
-function ENT:Tank_ShellFireEffects()
-	local myAng = self:GetAngles()
-	
-	local lightFire = ents.Create("light_dynamic")
-	lightFire:SetKeyValue("brightness", "4")
-	lightFire:SetKeyValue("distance", "400")
-	lightFire:SetPos(self:LocalToWorld(self.Tank_Shell_DynamicLightPos))
-	lightFire:SetLocalAngles(myAng)
-	lightFire:Fire("Color", "255 150 60")
-	lightFire:SetParent(self)
-	lightFire:Spawn()
-	lightFire:Activate()
-	lightFire:Fire("TurnOn", "", 0)
-	lightFire:Fire("Kill", "", 0.1)
-	self:DeleteOnRemove(lightFire)
-	
-	local muzzleFlash = ents.Create("env_muzzleflash")
-	muzzleFlash:SetPos(self:LocalToWorld(self.Tank_Shell_MuzzleFlashPos))
-	muzzleFlash:SetAngles(self:GetAngles() + Angle(0, self.Tank_AngleDiffuseNumber, 0))
-	muzzleFlash:SetKeyValue("scale", "6")
-	muzzleFlash:Fire("Fire", 0, 0)
+--[[
+Called when the tank is firing its shell
 
-	local iClientEffect = 0
-	for _ = 1, 40 do
-		iClientEffect = iClientEffect + 0.1
-		timer.Simple(iClientEffect, function() if IsValid(self) && !self.Dead then self:StartShootEffects() end end)
-	end
-	
-	local smokeAngle = Angle(myAng.x, -myAng.y, myAng.z)
-	local particleSmoke = ents.Create("info_particle_system")
-	particleSmoke:SetKeyValue("effect_name", "smoke_exhaust_01a")
-	particleSmoke:SetPos(self:LocalToWorld(self.Tank_Shell_ParticlePos))
-	particleSmoke:SetAngles(smokeAngle)
-	particleSmoke:SetParent(self)
-	particleSmoke:Spawn()
-	particleSmoke:Activate()
-	particleSmoke:Fire("Start", "", 0)
-	particleSmoke:Fire("Kill", "", 4)
-	
-	local particleSmokeWhite = ents.Create("info_particle_system")
-	particleSmokeWhite:SetKeyValue("effect_name", "Advisor_Pod_Steam_Continuous")
-	particleSmokeWhite:SetPos(self:LocalToWorld(self.Tank_Shell_ParticlePos))
-	particleSmokeWhite:SetAngles(smokeAngle)
-	particleSmokeWhite:SetParent(self)
-	particleSmokeWhite:Spawn()
-	particleSmokeWhite:Activate()
-	particleSmokeWhite:Fire("Start", "", 0)
-	particleSmokeWhite:Fire("Kill", "", 4)
-		
-	local dust = EffectData()
-	dust:SetOrigin(self:GetParent():GetPos())
-	dust:SetScale(500)
-	util.Effect("ThumperDust", dust)
-	
-	util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnShellFire_BeforeShellCreate() return true end -- Return false to not create the default shell
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnShellFire_BeforeShellSpawn(shell, spawnPos) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_ShellFireVelocity(shell, spawnPos, calculatedVel, phys)
-	-- Use this override the firing shell velocity, calculatedVel is not required but is a helpful variable to utilize
-	phys:SetVelocity(Vector(calculatedVel.x, calculatedVel.y, math.Clamp(calculatedVel.z, self.Tank_Shell_SpawnPos.z - 735, self.Tank_Shell_SpawnPos.z + 335)))
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnShellFire(shell) end
+=-=-=| PARAMETERS |=-=-=
+	1. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "Initial" : Before the shell is created, can be used to override the shell entity code
+				USAGE EXAMPLES -> Create completely custom shell entity code
+				PARAMETERS
+					5. statusData [nil]
+				RETURNS
+					-> [nil | bool] : Returning true will NOT let the base shell execute, effectively overriding it entirely (Effects still run!)
+		-> "OnCreate" : Right after the shell is created but before it's spawned
+				USAGE EXAMPLES -> Set an spawn value for the projectile, such various types of shells inside a single projectile class
+				PARAMETERS
+					5. statusData [entity] : The newly created shell entity (but not spawned!)
+				RETURNS
+					-> [nil]
+		-> "OnSpawn" : After the shell has spawned
+				USAGE EXAMPLES -> Override the default velocity
+				PARAMETERS
+					5. statusData [entity] : The newly spawned shell entity
+				RETURNS
+					-> [nil | bool] : Returning true will NOT let the base velocity apply
+		-> "Effects" : Firing effects including dynamic light, particles, muzzle flash, world shake, etc.
+				USAGE EXAMPLES -> Add extra effects | Override the base effects completely
+				PARAMETERS
+					5. statusData [nil]
+				RETURNS
+					-> [nil | bool] : Returning true will NOT let the base effects be created
+	2. statusData [nil | entity] : Depends on `status` value, refer to it for more details
+
+=-=-=| RETURNS |=-=-=
+	-> [nil | bool] : Depends on `status` value, refer to it for more details
+--]]
+function ENT:Tank_OnFireShell(status, statusData) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSpawnEffects()
 	/* Example:
@@ -156,15 +123,12 @@ function ENT:StartSpawnEffects()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartShootEffects()
-	/* Example:
-	-- Note: This is ran many times (~40) when the tank fires!
+	/* Example: Note: This is ran many times (~40) when the tank fires!
 	net.Start("vj_tankg_base_shooteffects")
 	net.WriteEntity(self)
 	net.Broadcast()
 	*/
 end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -183,7 +147,8 @@ ENT.Tank_TurningLerp = nil
 function ENT:Init()
 	self.DeathAnimationCodeRan = true -- So corpse doesn't fly away on death (Take this out if not using death explosion sequence)
 	self:SetImpactEnergyScale(0) -- Take no physics damage
-	self:CustomInitialize_CustomTank()
+	self:Tank_Init()
+	if self.CustomInitialize_CustomTank then self:CustomInitialize_CustomTank() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AngleDiffuse(ang1, ang2)
@@ -194,7 +159,7 @@ function ENT:AngleDiffuse(ang1, ang2)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnThink()
-	if self:Tank_OnThink() == true && GetConVar("vj_npc_noidleparticle"):GetInt() == 0 then
+	if self:Tank_OnThink() != true && GetConVar("vj_npc_noidleparticle"):GetInt() == 0 then
 		timer.Simple(0.1, function()
 			if IsValid(self) && !self.Dead then
 				self:StartSpawnEffects()
@@ -206,7 +171,7 @@ end
 function ENT:OnThinkActive()
 	if self.Dead then return end
 	self:SetEnemy(self:GetParent():GetEnemy())
-	self:Tank_CustomOnThink_AIEnabled()
+	self:Tank_OnThinkActive()
 
 	if self.Tank_GunnerIsTurning == true then self:Tank_Sound_Moving() else VJ.STOPSOUND(self.CurrentTankMovingSound) end
 	self:SelectSchedule()
@@ -277,7 +242,7 @@ function ENT:Tank_PrepareShell()
 		self:Tank_FireShell()
 	-- Otherwise reload and fire
 	elseif self.Tank_Shell_Status == 0 then
-		self:Tank_CustomOnReloadShell()
+		self:Tank_OnPrepareShell()
 		self:Tank_Sound_ReloadShell()
 		self.Tank_Shell_Status = 1
 		local ene = self:GetEnemy()
@@ -296,9 +261,8 @@ function ENT:Tank_FireShell()
 	if !VJ_CVAR_AI_ENABLED or self.Dead or (!self.Tank_ProperHeightShoot) or (!IsValid(ene)) or (!self.Tank_FacingTarget) then return end // self.Tank_FacingTarget != true
 	if self:Visible(ene) then
 		self:Tank_Sound_FireShell()
-		self:Tank_ShellFireEffects()
 		
-		if self:Tank_CustomOnShellFire_BeforeShellCreate() == true then
+		if self:Tank_OnFireShell("Initial") != true then
 			local spawnPos = self:LocalToWorld(self.Tank_Shell_SpawnPos)
 			local calculatedVel = (ene:GetPos() + ene:OBBCenter() - spawnPos):GetNormal()*self.Tank_Shell_VelocitySpeed
 			-- If not facing, then just shoot straight ahead
@@ -310,15 +274,75 @@ function ENT:Tank_FireShell()
 			local shell = ents.Create(self.Tank_Shell_EntityToSpawn)
 			shell:SetPos(spawnPos)
 			shell:SetAngles(calculatedVel:Angle())
-			self:Tank_CustomOnShellFire_BeforeShellSpawn(shell, spawnPos)
+			self:Tank_OnFireShell("OnCreate", shell)
 			shell:Spawn()
 			shell:Activate()
 			shell:SetOwner(self)
-			local phys = shell:GetPhysicsObject()
-			if IsValid(phys) then
-				self:Tank_ShellFireVelocity(shell, spawnPos, calculatedVel, phys)
+			if self:Tank_OnFireShell("OnSpawn", shell) != true then
+				local phys = shell:GetPhysicsObject()
+				if IsValid(phys) then
+					phys:SetVelocity(Vector(calculatedVel.x, calculatedVel.y, math.Clamp(calculatedVel.z, self.Tank_Shell_SpawnPos.z - 735, self.Tank_Shell_SpawnPos.z + 335)))
+				end
 			end
-			self:Tank_CustomOnShellFire(shell)
+		end
+		if self:Tank_OnFireShell("Effects") != true then
+			local myAng = self:GetAngles()
+			util.ScreenShake(self:GetPos(), 100, 200, 1, 2500)
+			
+			-- Dynamic light
+			local lightFire = ents.Create("light_dynamic")
+			lightFire:SetKeyValue("brightness", "4")
+			lightFire:SetKeyValue("distance", "400")
+			lightFire:SetPos(self:LocalToWorld(self.Tank_Shell_DynamicLightPos))
+			lightFire:SetLocalAngles(myAng)
+			lightFire:Fire("Color", "255 150 60")
+			lightFire:SetParent(self)
+			lightFire:Spawn()
+			lightFire:Activate()
+			lightFire:Fire("TurnOn")
+			lightFire:Fire("Kill", "", 0.1)
+			self:DeleteOnRemove(lightFire)
+			
+			-- Muzzle flash effect
+			local muzzleFlash = ents.Create("env_muzzleflash")
+			muzzleFlash:SetPos(self:LocalToWorld(self.Tank_Shell_MuzzleFlashPos))
+			muzzleFlash:SetAngles(myAng + Angle(0, self.Tank_AngleDiffuseNumber, 0))
+			muzzleFlash:SetKeyValue("scale", "6")
+			muzzleFlash:Fire("Fire", 0, 0)
+			
+			-- Smoke effects
+			local smokeAngle = Angle(myAng.x, -myAng.y, myAng.z)
+			local smoke = ents.Create("info_particle_system")
+			smoke:SetKeyValue("effect_name", "smoke_exhaust_01a")
+			smoke:SetPos(self:LocalToWorld(self.Tank_Shell_ParticlePos))
+			smoke:SetAngles(smokeAngle)
+			smoke:SetParent(self)
+			smoke:Spawn()
+			smoke:Activate()
+			smoke:Fire("Start")
+			smoke:Fire("Kill", "", 4)
+			local smokeWhite = ents.Create("info_particle_system")
+			smokeWhite:SetKeyValue("effect_name", "Advisor_Pod_Steam_Continuous")
+			smokeWhite:SetPos(self:LocalToWorld(self.Tank_Shell_ParticlePos))
+			smokeWhite:SetAngles(smokeAngle)
+			smokeWhite:SetParent(self)
+			smokeWhite:Spawn()
+			smokeWhite:Activate()
+			smokeWhite:Fire("Start")
+			smokeWhite:Fire("Kill", "", 4)
+			
+			-- Dust effects
+			local dust = EffectData()
+			dust:SetOrigin(self:GetParent():GetPos())
+			dust:SetScale(500)
+			util.Effect("ThumperDust", dust)
+			
+			-- Custom firing effects
+			local iClientEffect = 0
+			for _ = 1, 40 do
+				iClientEffect = iClientEffect + 0.1
+				timer.Simple(iClientEffect, function() if IsValid(self) && !self.Dead then self:StartShootEffects() end end)
+			end
 		end
 		self.Tank_Shell_Status = 0
 		self.Tank_Shell_NextFireT = CurTime() + self.Tank_Shell_NextFireTime
@@ -328,12 +352,10 @@ function ENT:Tank_FireShell()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpseEnt)
-	if self:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) == true then
-		local corpsePhys = corpseEnt:GetPhysicsObject()
-		if IsValid(corpsePhys) then
-			corpsePhys:AddVelocity(Vector(math.Rand(-200, 200), math.Rand(-200, 200), math.Rand(200, 400)))
-			corpsePhys:AddAngleVelocity(Vector(math.Rand(-100, 100), math.Rand(-100, 100), math.Rand(-100, 100)))
-		end
+	local corpsePhys = corpseEnt:GetPhysicsObject()
+	if IsValid(corpsePhys) then
+		corpsePhys:AddVelocity(Vector(math.Rand(-200, 200), math.Rand(-200, 200), math.Rand(200, 400)))
+		corpsePhys:AddAngleVelocity(Vector(math.Rand(-100, 100), math.Rand(-100, 100), math.Rand(-100, 100)))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

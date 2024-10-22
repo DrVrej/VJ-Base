@@ -79,13 +79,13 @@ ENT.Tank_DefaultSoundTbl_RunOver = {"vj_base/gib/bone_snap1.wav", "vj_base/gib/b
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- Use the functions below to customize certain parts of the base or to add new custom systems
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomInitialize_CustomTank() end
+function ENT:Tank_Init() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_GunnerSpawnPosition()
 	return self:GetPos()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_OnThink() return true end -- Return false to disable the default base code
+function ENT:Tank_OnThink() end -- Return true to disable the default base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_OnRunOver(ent) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -98,13 +98,40 @@ function ENT:GetNearDeathSparkPositions()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_OnInitialDeath(dmginfo, hitgroup) return true end -- Return false to disable the default base code
+function ENT:Tank_OnInitialDeath(dmginfo, hitgroup) end -- Return true to disable the default base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) return true end -- Return false to disable the default base code
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnDeath_AfterDeathSoldierSpawned(dmginfo, hitgroup, soldierCorpse) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_CustomOnDeath_AfterCorpseSpawned_Effects(dmginfo, hitgroup, corpseEnt) return true end -- Return false to disable the default base code
+--[[
+Called when the tank is about to spawn death soldier model, death effects, and death sounds
+
+=-=-=| PARAMETERS |=-=-=
+	1. dmginfo [object] = CTakeDamageInfo object
+	2. hitgroup [number] = The hitgroup that it hit
+	3. corpseEnt [entity] = The corpse entity of the tank
+	4. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "Override" : Right before anything is create, can be used to override the entire function
+				USAGE EXAMPLES -> Add extra gib pieces | Add extra blast
+				PARAMETERS
+					5. statusData [nil]
+				RETURNS
+					-> [nil | bool] : Returning true will NOT let the base code execute, effectively overriding it entirely
+		-> "Soldier" : The soldier corpse that it created
+				USAGE EXAMPLES -> Set a skin or bodygroup
+				PARAMETERS
+					5. statusData [entity] : Soldier corpse entity
+				RETURNS
+					-> [nil]
+		-> "Effects" : Right before it's about to spawn the death effects
+				USAGE EXAMPLES -> Add extra effects | Override the base effects entirely
+				PARAMETERS
+					5. statusData [nil]
+				RETURNS
+					-> [nil | bool] : Returning true will NOT let the base effects be created
+	5. statusData [nil | entity] : Depends on `status` value, refer to it for more details
+
+=-=-=| RETURNS |=-=-=
+	-> [nil | bool] : Depends on `status` value, refer to it for more details
+--]]
+function ENT:Tank_OnDeathCorpse(dmginfo, hitgroup, corpseEnt, status, statusData) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSpawnEffects()
 	/* Example:
@@ -138,7 +165,8 @@ local defAng = Angle(0, 0, 0)
 function ENT:Init()
 	self:SetImpactEnergyScale(0) -- Take no physics damage
 	self.DeathAnimationCodeRan = true -- So corpse doesn't fly away on death (Take this out if not using death explosion sequence)
-	self:CustomInitialize_CustomTank()
+	self:Tank_Init()
+	if self.CustomInitialize_CustomTank then self:CustomInitialize_CustomTank() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	self:PhysicsInit(SOLID_VPHYSICS) // SOLID_BBOX
 	//self:SetSolid(SOLID_VPHYSICS)
 	self:SetAngles(self:GetAngles() + Angle(0, -self.Tank_AngleDiffuseNumber, 0))
@@ -191,7 +219,7 @@ function ENT:AngleDiffuse(ang1, ang2)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnThink()
-	if self:Tank_OnThink() == true then
+	if self:Tank_OnThink() != true then
 		if GetConVar("vj_npc_noidleparticle"):GetInt() == 1 then return end
 		timer.Simple(0.1, function()
 			if IsValid(self) && !self.Dead then
@@ -340,7 +368,7 @@ function ENT:OnDeath(dmginfo, hitgroup, status)
 			if self:IsOnFire() then self.Gunner:Ignite(math.Rand(8, 10), 0) end
 		end
 		
-		if self:Tank_OnInitialDeath(dmginfo, hitgroup) == true then
+		if self:Tank_OnInitialDeath(dmginfo, hitgroup) != true then
 			for i=0, 1.5, 0.5 do
 				timer.Simple(i, function()
 					if IsValid(self) then
@@ -364,48 +392,39 @@ function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpseEnt)
 	if IsValid(self.Gunner) then
 		self.Gunner.SavedDmgInfo = self.SavedDmgInfo
 		local gunCorpse = self.Gunner:CreateDeathCorpse(dmginfo, hitgroup)
-		if IsValid(gunCorpse) then corpseEnt.ChildEnts[#corpseEnt.ChildEnts+1] = gunCorpse end
+		if IsValid(gunCorpse) then corpseEnt.ChildEnts[#corpseEnt.ChildEnts + 1] = gunCorpse end
 	end
 	
-	if self:Tank_CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) == true then
+	if self:Tank_OnDeathCorpse(dmginfo, hitgroup, corpseEnt, "Override") != true then
 		local myPos = self:GetPos()
-		
 		VJ.EmitSound(self, "VJ.Explosion")
 		util.BlastDamage(self, self, myPos, 400, 40)
 		util.ScreenShake(myPos, 100, 200, 1, 2500)
-	
-		-- Spawn the death soldier corpse
-		if math.random(1, self.Tank_DeathSoldierChance) == 1 then
-			local soldierMDL = VJ.PICK(self.Tank_DeathSoldierModels)
-			if soldierMDL != false then
-				self:CreateExtraDeathCorpse("prop_ragdoll", soldierMDL, {Pos=myPos + self:GetUp()*90 + self:GetRight()*-30, Vel=Vector(math.Rand(-600, 600), math.Rand(-600, 600), 500)}, function(extraent)
-					extraent:Ignite(math.Rand(8, 10), 0)
-					extraent:SetColor(colorGray)
-					self:Tank_CustomOnDeath_AfterDeathSoldierSpawned(dmginfo, hitgroup, extraent)
-				end)
-			end
-		end
-
-		self:SetPos(Vector(myPos.x, myPos.y, myPos.z + 4)) -- Because the NPC is too close to the ground
-		myPos = self:GetPos()
 		local tr = util.TraceLine({
-			start = myPos,
+			start = myPos + self:GetUp() * 4,
 			endpos = myPos - vec500z,
 			filter = self
 		})
 		util.Decal(VJ.PICK(self.Tank_DeathDecal), tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
+		
+		-- Create soldier corpse
+		if math.random(1, self.Tank_DeathSoldierChance) == 1 then
+			local soldierMDL = VJ.PICK(self.Tank_DeathSoldierModels)
+			if soldierMDL != false then
+				self:CreateExtraDeathCorpse("prop_ragdoll", soldierMDL, {Pos=myPos + self:GetUp()*90 + self:GetRight()*-30, Vel=Vector(math.Rand(-600, 600), math.Rand(-600, 600), 500)}, function(ent)
+					ent:Ignite(math.Rand(8, 10), 0)
+					ent:SetColor(colorGray)
+					self:Tank_OnDeathCorpse(dmginfo, hitgroup, corpseEnt, "Soldier", ent)
+				end)
+			end
+		end
 
-		if self.HasGibOnDeathEffects == true && self:Tank_CustomOnDeath_AfterCorpseSpawned_Effects(dmginfo, hitgroup, corpseEnt) == true then
-			//self.FireEffect = ents.Create( "env_fire_trail" )
-			//self.FireEffect:SetPos(myPos+self:GetUp()*70)
-			//self.FireEffect:Spawn()
-			//self.FireEffect:SetParent(corpseEnt)
-			//ParticleEffectAttach("smoke_large_01b",PATTACH_ABSORIGIN_FOLLOW,corpseEnt,0)
+		-- Effects / Particles
+		if self.HasGibOnDeathEffects == true && self:Tank_OnDeathCorpse(dmginfo, hitgroup, corpseEnt, "Effects") != true then
 			ParticleEffect("vj_explosion3", myPos, defAng)
 			ParticleEffect("vj_explosion2", myPos + self:GetForward()*-130, defAng)
 			ParticleEffect("vj_explosion2", myPos + self:GetForward()*130, defAng)
 			ParticleEffectAttach("smoke_burning_engine_01", PATTACH_ABSORIGIN_FOLLOW, corpseEnt, 0)
-			
 			local effectData = EffectData()
 			effectData:SetOrigin(myPos)
 			util.Effect("VJ_Medium_Explosion1", effectData)

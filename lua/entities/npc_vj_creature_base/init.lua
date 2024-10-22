@@ -709,34 +709,34 @@ function ENT:OnFollow(status, ent) end
 function ENT:OnIdleDialogue(ent, status, statusData) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[
-| Called whenever the medic behavior updates
-|
-|=-=-=| PARAMETERS |=-=-=
-|	1. status [string] : Type of update that is occurring, holds one of the following states:
-|		-> "BeforeHeal" : Right before it's about to heal an entity
-|				USAGE EXAMPLES -> Play chain of animations | Additional sound effect
-|				PARAMETERS
-|					2. statusData [nil]
-|				RETURNS
-|					-> [nil]
-|		-> "OnHeal" : When the timer expires and is about to give health
-|				USAGE EXAMPLES -> Override healing code | Play an after heal animation
-|				PARAMETERS
-|					2. statusData [entity] : The entity that it's about to heal
-|				RETURNS
-|					-> [bool] : Returning false will NOT update entity's health and will NOT clear its decals (Useful for custom code)
-|		-> "OnReset" : When the behavior ends OR has to move because entity moved
-|				USAGE EXAMPLES -> Cleanup bodygroups | Play a sound
-|				PARAMETERS
-|					2. statusData [string] : Holds one of the following states:
-|						--> "Retry" : When it attempts to retry healing the entity, such as when the entity moved away so it has to chase again
-|						--> "End" : When the medic behavior exits completely
-|				RETURNS
-|					-> [nil]
-|	2. statusData [nil | entity | string] : Depends on `status` value, refer to it for more details
-|
-|=-=-=| RETURNS |=-=-=
-|	-> [nil | bool] : Depends on `status` value, refer to it for more details
+Called whenever the medic behavior updates
+
+=-=-=| PARAMETERS |=-=-=
+	1. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "BeforeHeal" : Right before it's about to heal an entity
+				USAGE EXAMPLES -> Play chain of animations | Additional sound effect
+				PARAMETERS
+					2. statusData [nil]
+				RETURNS
+					-> [nil]
+		-> "OnHeal" : When the timer expires and is about to give health
+				USAGE EXAMPLES -> Override healing code | Play an after heal animation
+				PARAMETERS
+					2. statusData [entity] : The entity that it's about to heal
+				RETURNS
+					-> [bool] : Returning false will NOT update entity's health and will NOT clear its decals (Useful for custom code)
+		-> "OnReset" : When the behavior ends OR has to move because entity moved
+				USAGE EXAMPLES -> Cleanup bodygroups | Play a sound
+				PARAMETERS
+					2. statusData [string] : Holds one of the following states:
+						--> "Retry" : When it attempts to retry healing the entity, such as when the entity moved away so it has to chase again
+						--> "End" : When the medic behavior exits completely
+				RETURNS
+					-> [nil]
+	2. statusData [nil | entity | string] : Depends on `status` value, refer to it for more details
+
+=-=-=| RETURNS |=-=-=
+	-> [nil | bool] : Depends on `status` value, refer to it for more details
 --]]
 function ENT:OnMedicBehavior(status, statusData) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
