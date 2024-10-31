@@ -4071,7 +4071,7 @@ function ENT:OnTakeDamage(dmginfo)
 	if self.HasHealthRegeneration == true && self.HealthRegenerationResetOnDmg == true then
 		self.HealthRegenerationDelayT = curTime + (math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b) * 1.5)
 	end
-	self:SetSaveValue("m_iDamageCount", self:GetInternalVariable("m_iDamageCount") + 1)
+	self:SetSaveValue("m_iDamageCount", self:GetTotalDamageCount() + 1)
 	self:SetSaveValue("m_flLastDamageTime", curTime)
 	self:OnDamaged(dmginfo, hitgroup, "PostDamage")
 	DoBleed()
