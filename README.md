@@ -4,5 +4,5 @@ VJ Base, short for Vrej Base, was established in 2012 with the aim of assisting 
 
 [Steam Workshop Page](http://steamcommunity.com/sharedfiles/filedetails/?id=131759821)   
 [Change Logs](https://github.com/DrVrej/VJ-Base/releases)   
-[Official and Unofficial Addons (Discontinued)](http://steamcommunity.com/sharedfiles/filedetails/?id=1080924)<!--include-end-->  
+[Official and Unofficial Addons (Discontinued)](https://steamcommunity.com/sharedfiles/filedetails/?id=1080924955)<!--include-end-->  
 [Want to make an addon using this base? Read this page](https://github.com/DrVrej/VJ-Base/wiki)   
