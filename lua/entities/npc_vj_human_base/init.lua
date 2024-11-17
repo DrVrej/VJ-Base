@@ -266,11 +266,11 @@ ENT.CanGibOnDeath = true -- Is it allowed to gib on death?
 ENT.GibOnDeathDamagesTable = {"UseDefault"} -- Damages that it gibs from | "UseDefault" = Uses default damage types | "All" = Gib from any damage
 ENT.HasGibOnDeathSounds = true -- Does it have gib sounds? | Mostly used for the settings menu
 ENT.HasGibOnDeathEffects = true -- Does it spawn particles on death or when it gibs? | Mostly used for the settings menu
-	-- ====== Item Drops On Death ====== --
+	-- ====== Drops On Death ====== --
 ENT.DropWeaponOnDeath = true -- Should it drop its weapon on death?
-ENT.HasItemDropsOnDeath = true -- Should it drop items on death?
-ENT.ItemDropsOnDeathChance = 14 -- If set to 1, it will always drop it
-ENT.ItemDropsOnDeath_EntityList = {"weapon_frag", "item_healthvial"} -- List of items it will randomly pick from | Leave it empty to drop nothing or to make your own dropping code (Using CustomOn...)
+ENT.DropDeathLoot = true -- Should it drop loot on death?
+ENT.DeathLootChance = 14 -- If set to 1, it will always drop loot
+ENT.DeathLoot = {"weapon_frag", "item_healthvial"} -- List of entities it will randomly pick to drop | Leave it empty to drop nothing
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Melee Attack ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -903,8 +903,6 @@ function ENT:CustomGibOnDeathSounds(dmginfo, hitgroup) return true end -- return
 		-> "Finish" : Right before the corpse is spawned, the active weapon is dropped and the NPC is removed
 --]]
 function ENT:OnDeath(dmginfo, hitgroup, status) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomRareDropsOnDeathCode(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnDeathWeaponDrop(dmginfo, hitgroup, wepEnt) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1709,7 +1707,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_noallies"):GetInt() == 1 then self.HasAllies = false self.PlayerFriendly = false end
 	if GetConVar("vj_npc_nodeathanimation"):GetInt() == 1 then self.HasDeathAnimation = false end
 	if GetConVar("vj_npc_nocorpses"):GetInt() == 1 then self.HasDeathCorpse = false end
-	if GetConVar("vj_npc_itemdrops"):GetInt() == 0 then self.HasItemDropsOnDeath = false end
+	if GetConVar("vj_npc_droploot"):GetInt() == 0 then self.DropDeathLoot = false end
 	if GetConVar("vj_npc_nowandering"):GetInt() == 1 then self.DisableWandering = true end
 	if GetConVar("vj_npc_nochasingenemy"):GetInt() == 1 then self.DisableChasingEnemy = true end
 	if GetConVar("vj_npc_noflinching"):GetInt() == 1 then self.CanFlinch = false end
@@ -1802,6 +1800,9 @@ local function ApplyBackwardsCompatibility(self)
 	if self.AllowedToGib != nil then self.CanGib = self.AllowedToGib end
 	if self.HasGibOnDeath != nil then self.CanGibOnDeath = self.HasGibOnDeath end
 	if self.HasGibDeathParticles != nil then self.HasGibOnDeathEffects = self.HasGibDeathParticles else self.HasGibDeathParticles = self.HasGibOnDeathEffects end
+	if self.HasItemDropsOnDeath != nil then self.DropDeathLoot = self.HasItemDropsOnDeath end
+	if self.ItemDropsOnDeathChance != nil then self.DeathLootChance = self.ItemDropsOnDeathChance end
+	if self.ItemDropsOnDeath_EntityList != nil then self.DeathLoot = self.ItemDropsOnDeath_EntityList end
 	if self.HasShootWhileMoving == false then self.Weapon_CanFireWhileMoving = false end
 	if self.HasWeaponBackAway == false then self.Weapon_RetreatDistance = 0 end
 	if self.WeaponBackAway_Distance then self.Weapon_RetreatDistance = self.WeaponBackAway_Distance end
@@ -2901,7 +2902,7 @@ function ENT:Think()
 								timer.Create("timer_reload_end"..self:EntIndex(), animDur, 1, function()
 									if IsValid(self) && IsValid(wep) && self:GetWeaponState() == VJ.NPC_WEP_STATE_RELOADING then
 										wep:SetClip1(wep:GetMaxClip1())
-										if wep.IsVJBaseWeapon == true then wep:CustomOnReload_Finish() end
+										if wep.IsVJBaseWeapon == true then wep:OnReload("Finish") end
 										self:SetWeaponState()
 									end
 								end)
@@ -4344,7 +4345,9 @@ end
 function ENT:FinishDeath(dmginfo, hitgroup)
 	if self.VJ_DEBUG == true && GetConVar("vj_npc_debug_death"):GetInt() == 1 then print(self:GetClass().." : Killed!") end
 	self:OnDeath(dmginfo, hitgroup, "Finish")
-	self:RunItemDropsOnDeathCode(dmginfo, hitgroup)
+	if self.DropDeathLoot then
+		self:CreateDeathLoot(dmginfo, hitgroup)
+	end
 	self:ClearEnemyMemory()
 	//self:SetNPCState(NPC_STATE_DEAD)
 	if bit.band(self.SavedDmgInfo.type, DMG_REMOVENORAGDOLL) == 0 then self:DeathWeaponDrop(dmginfo, hitgroup) self:CreateDeathCorpse(dmginfo, hitgroup) end

@@ -67,7 +67,7 @@ cvarList["vj_npc_gibcollidable"] = 0 -- Collidable Gibs?
 cvarList["vj_npc_fadegibs"] = 1 -- Should Gibs Fade or not?
 cvarList["vj_npc_fadegibstime"] = 90 -- Gib Fade Time
 cvarList["vj_npc_addfrags"] = 1 -- Disable frags(points) being added to player's scoreboard
-cvarList["vj_npc_itemdrops"] = 1 -- item drops on death?
+cvarList["vj_npc_droploot"] = 1 -- Can NPCs drop loot on death?
 cvarList["vj_npc_seedistance"] = 0 -- How far can the NPCs see? 0 = The distance that the NPC uses
 cvarList["vj_npc_globalcorpselimit"] = 32 -- What is the limit for NPC corpses on the ground? (When Keep Corpses is off)
 cvarList["vj_npc_processtime"] = 1 -- How much time it takes for an NPC to process something

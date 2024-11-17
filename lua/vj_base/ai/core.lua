@@ -2457,11 +2457,9 @@ function ENT:StartSoundTrack()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RunItemDropsOnDeathCode(dmginfo, hitgroup)
-	if self.HasItemDropsOnDeath == false then return end
-	if math.random(1, self.ItemDropsOnDeathChance) == 1 then
-		self:CustomRareDropsOnDeathCode(dmginfo, hitgroup)
-		local pickedEnt = VJ.PICK(self.ItemDropsOnDeath_EntityList)
+function ENT:CreateDeathLoot(dmginfo, hitgroup)
+	if math.random(1, self.DeathLootChance) == 1 then
+		local pickedEnt = VJ.PICK(self.DeathLoot)
 		if pickedEnt != false then
 			local ent = ents.Create(pickedEnt)
 			ent:SetPos(self:GetPos() + self:OBBCenter())

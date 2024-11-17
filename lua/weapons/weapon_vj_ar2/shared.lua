@@ -71,7 +71,7 @@ function SWEP:NPC_SecondaryFire()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnSecondaryAttack()
+function SWEP:OnSecondaryAttack()
 	local owner = self:GetOwner()
 	local vm = owner:GetViewModel()
 	local fidgetTime = VJ.AnimDuration(vm, ACT_VM_FIDGET)
@@ -108,5 +108,5 @@ function SWEP:CustomOnSecondaryAttack()
 			self:TakeSecondaryAmmo(1)
 		end
 	end)
-	return false
+	return true
 end

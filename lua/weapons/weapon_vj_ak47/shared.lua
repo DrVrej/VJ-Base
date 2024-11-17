@@ -38,6 +38,6 @@ SWEP.PrimaryEffects_ShellType = "RifleShellEject"
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Reload_TimeUntilAmmoIsSet	= 1.8 -- Time until ammo is set to the weapon
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnFireAnimationEvent(pos, ang, event, options)
+function SWEP:OnAnimEvent(pos, ang, event, options)
 	if event == 5001 then return true end -- Asiga hose vor shtke gedervadz flash-e
 end

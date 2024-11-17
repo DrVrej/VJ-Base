@@ -212,7 +212,7 @@ if CLIENT then
 		add("vjbase.menu.snpc.options.label10", "Miscellaneous Options:")
 		add("vjbase.menu.snpc.options.togglegmoddecals", "Use Garry's Mod's Current Blood Decals")
 		add("vjbase.menu.snpc.options.label11", "Only for Yellow and Red colors!")
-		add("vjbase.menu.snpc.options.toggleitemdrops", "Item Drops On Death")
+		add("vjbase.menu.snpc.options.toggleitemdrops", "Loot Drops On Death")
 		add("vjbase.menu.snpc.options.toggleaddfrags", "Add points to the player's scoreboard when killed")
 		add("vjbase.menu.snpc.options.togglecreatureopendoor", "Creatures Can Open Doors")
 		add("vjbase.menu.snpc.options.togglehumansdropweapon", "Humans Drop Weapon On Death")

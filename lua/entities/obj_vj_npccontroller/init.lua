@@ -20,13 +20,13 @@ function ENT:Init() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
--- Different from self:CustomOnKeyBindPressed(), this uses: https://wiki.facepunch.com/gmod/Enums/KEY
-function ENT:CustomOnKeyPressed(key) end
+-- Different from self:OnKeyBindPressed(), this uses: https://wiki.facepunch.com/gmod/Enums/KEY
+function ENT:OnKeyPressed(key) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
--- Different from self:CustomOnKeyPressed(), this uses: https://wiki.facepunch.com/gmod/Enums/IN
-function ENT:CustomOnKeyBindPressed(key) end
+-- Different from self:OnKeyPressed(), this uses: https://wiki.facepunch.com/gmod/Enums/IN
+function ENT:OnKeyBindPressed(key) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnStopControlling(keyPressed) end
+function ENT:OnStopControlling(keyPressed) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -116,7 +116,7 @@ function ENT:StartControlling()
 			local cent = ply.VJ_TheControllerEntity
 			cent.VJC_Key_Last = button
 			cent.VJC_Key_LastTime = CurTime()
-			cent:CustomOnKeyPressed(button)
+			cent:OnKeyPressed(button)
 			
 			-- Stop Controlling
 			if cent.VJC_Player_CanExit == true and button == KEY_END then
@@ -159,7 +159,7 @@ function ENT:StartControlling()
 		//print(key)
 		if ply.VJTag_IsControllingNPC == true && IsValid(ply.VJ_TheControllerEntity) then
 			local cent = ply.VJ_TheControllerEntity
-			cent:CustomOnKeyBindPressed(key)
+			cent:OnKeyBindPressed(key)
 		end
 	end)
 end
@@ -245,6 +245,11 @@ function ENT:SetControlledNPC(npcEnt)
 			npcEnt:EatingReset("Unspecified")
 		end
 	end
+	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	if self.CustomOnKeyPressed then self.OnKeyPressed = function(_, key) self:CustomOnKeyPressed(key) end end
+	if self.CustomOnKeyBindPressed then print("wtf?") self.OnKeyBindPressed = function(_, key) self:CustomOnKeyBindPressed(key) end end
+	if self.CustomOnStopControlling then self.OnStopControlling = function(_, keyPressed) self:CustomOnStopControlling(keyPressed) end end
+	--
 	npcEnt:ClearSchedule()
 	npcEnt:StopMoving()
 	self.VJCE_NPC = npcEnt
@@ -459,7 +464,7 @@ end
 function ENT:StopControlling(keyPressed)
 	//if !IsValid(self.VJCE_Player) then return self:Remove() end
 	keyPressed = keyPressed or false
-	self:CustomOnStopControlling(keyPressed)
+	self:OnStopControlling(keyPressed)
 
 	local npc = self.VJCE_NPC
 	local ply = self.VJCE_Player

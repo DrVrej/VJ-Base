@@ -46,7 +46,7 @@ SWEP.HasReloadSound = true -- Does it have a reload sound? Remember even if this
 SWEP.ReloadSound = "vj_base/weapons/glock17/glock17_reload.wav"
 SWEP.Reload_TimeUntilAmmoIsSet = 1.5 -- Time until ammo is set to the weapon
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnSecondaryAttack()
+function SWEP:OnSecondaryAttack()
 	self.Primary.Delay = 0.175
 	self.Primary.Cone = 20
 	self:PrimaryAttack()
@@ -54,5 +54,5 @@ function SWEP:CustomOnSecondaryAttack()
 	self.Primary.Cone = 5
 	
 	self:SetNextSecondaryFire(CurTime() + 0.175)
-	return false
+	return true
 end

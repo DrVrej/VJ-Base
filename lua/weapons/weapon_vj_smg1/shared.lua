@@ -38,7 +38,7 @@ SWEP.Secondary.Ammo = "SMG1_Grenade" -- Ammo type
 SWEP.HasReloadSound = true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
 SWEP.ReloadSound = "weapons/smg1/smg1_reload.wav"
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnSecondaryAttack()
+function SWEP:OnSecondaryAttack()
 	local owner = self:GetOwner()
 	owner:ViewPunch(Angle(-self.Primary.Recoil * 3, 0, 0))
 	VJ.EmitSound(self, "weapons/ar2/ar2_altfire.wav", 85)
@@ -56,5 +56,4 @@ function SWEP:CustomOnSecondaryAttack()
 			phys:SetVelocity(owner:GetAimVector() * 2000)
 		end
 	end
-	return true
 end

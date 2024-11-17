@@ -26,32 +26,36 @@ SWEP.PrimaryEffects_MuzzleParticlesAsOne = true -- Should all the particles spaw
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
 SWEP.PrimaryEffects_SpawnShells = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttack_BeforeShoot()
-	if CLIENT then return end
-	local projectile = ents.Create("obj_vj_crossbowbolt")
-	local spawnPos = self:GetBulletPos()
-	local owner = self:GetOwner()
-	projectile:SetPos(spawnPos)
-	projectile:SetOwner(owner)
-	projectile:Activate()
-	projectile:Spawn()
-	
-	local phys = projectile:GetPhysicsObject()
-	if owner.IsVJBaseSNPC then
-		spawnPos = spawnPos + Vector(math.Rand(-30,30), math.Rand(-30,30), math.Rand(-30,30))
-		phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetAimPosition(owner:GetEnemy(), spawnPos, 1, 4000), 4000))
-	else
-		phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetEnemy():GetPos() + owner:GetEnemy():OBBCenter(), 4000))
+function SWEP:OnPrimaryAttack(status, statusData)
+	if status == "Initial" then
+		if CLIENT then return end
+		local projectile = ents.Create("obj_vj_crossbowbolt")
+		local spawnPos = self:GetBulletPos()
+		local owner = self:GetOwner()
+		projectile:SetPos(spawnPos)
+		projectile:SetOwner(owner)
+		projectile:Activate()
+		projectile:Spawn()
+		
+		local phys = projectile:GetPhysicsObject()
+		if owner.IsVJBaseSNPC then
+			spawnPos = spawnPos + Vector(math.Rand(-30,30), math.Rand(-30,30), math.Rand(-30,30))
+			phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetAimPosition(owner:GetEnemy(), spawnPos, 1, 4000), 4000))
+		else
+			phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetEnemy():GetPos() + owner:GetEnemy():OBBCenter(), 4000))
+		end
+		projectile:SetAngles(projectile:GetVelocity():GetNormal():Angle())
 	end
-	projectile:SetAngles(projectile:GetVelocity():GetNormal():Angle())
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local sdLoadDone = {"weapons/crossbow/bolt_load1.wav", "weapons/crossbow/bolt_load2.wav"}
 --
-function SWEP:CustomOnReload()
-	timer.Simple(SoundDuration("weapons/crossbow/reload1.wav"), function()
-		if IsValid(self) && IsValid(self:GetOwner()) then
-			VJ.EmitSound(self:GetOwner(), sdLoadDone, self.NPC_ReloadSoundLevel)
-		end
-	end)
+function SWEP:OnReload(status)
+	if status == "Start" then
+		timer.Simple(SoundDuration("weapons/crossbow/reload1.wav"), function()
+			if IsValid(self) && IsValid(self:GetOwner()) then
+				VJ.EmitSound(self:GetOwner(), sdLoadDone, self.NPC_ReloadSoundLevel)
+			end
+		end)
+	end
 end

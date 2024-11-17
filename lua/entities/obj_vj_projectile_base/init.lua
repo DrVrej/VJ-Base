@@ -140,11 +140,14 @@ function ENT:Initialize()
 	end
 	
 	self:StartupSoundCode()
-	if self.IdleSoundPitch1 then self.IdleSoundPitch = VJ.SET(self.IdleSoundPitch1, self.IdleSoundPitch2) end -- !!!!!!!!!!!!!! DO NOT USE THIS VARIABLE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	
 	self:Init()
-	if self.CustomOnInitialize then self:CustomOnInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
-	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	
+	-- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	if self.IdleSoundPitch1 then self.IdleSoundPitch = VJ.SET(self.IdleSoundPitch1, self.IdleSoundPitch2) end
+	if self.CustomOnInitialize then self:CustomOnInitialize() end
+	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end
+	--
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()

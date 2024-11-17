@@ -172,27 +172,48 @@ SWEP.MeleeWeaponSound_Miss = "weapons/iceaxe/iceaxe_swing1.wav" -- Sound it play
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:Init() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnEquip(newOwner) end
+function SWEP:OnEquip(newOwner) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnDeploy() end
+function SWEP:OnDeploy() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnThink() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomBulletSpawnPosition() return false end -- Return a position to override the bullet spawn position
+function SWEP:OnGetBulletPos() end -- Return a position to override the bullet spawn position
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnDrawWorldModel() return true end -- Return false to not draw the world model | This is client side only!
+function SWEP:OnDrawWorldModel() return true end -- Return false to not draw the world model | This is client side only!
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnFireAnimationEvent(pos, ang, event, options) return false end
+function SWEP:OnAnimEvent(pos, ang, event, options) end -- return true to disable the effect | For more info check here: https://wiki.facepunch.com/gmod/WEAPON:FireAnimationEvent
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttack_BeforeShoot() end -- Return true to not run rest of the firing code
+--[[
+Called whenever the weapon's primary attack is attempted to fire
+
+=-=-=| PARAMETERS |=-=-=
+	1. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "Initial" : Before the weapon fires its primary, this can be used to override the base code
+				PARAMETERS
+					2. statusData [nil]
+				RETURNS
+					-> [boolean] : return "true" to override the base primary attack
+		-> "PostFire" : Right after the primary fire is used
+				PARAMETERS
+					2. statusData [nil]
+				RETURNS
+					-> nil
+		-> "MeleeHit" : Called when the primary attack is melee and its hits an entity
+				PARAMETERS
+					2. statusData [entity] : The entity that got hit
+				RETURNS
+					-> nil
+	2. statusData [nil | entity] : Depends on `status` value, refer to it for more details
+
+=-=-=| RETURNS |=-=-=
+	-> [nil | bool] : Depends on `status` value, refer to it for more details
+--]]
+function SWEP:OnPrimaryAttack(status, statusData) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttack_AfterShoot() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttack_MeleeHit(ent) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttack_BulletCallback(attacker, tr, dmginfo) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttackEffects(owner) return true end -- Return false to disable the base effects
+-- More info: https://wiki.facepunch.com/gmod/Structures/Bullet#Callback
+-- Can also give it the return table as seen in the link above
+function SWEP:OnPrimaryAttack_BulletCallback(attacker, tr, dmginfo) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:NPC_SecondaryFire_BeforeTimer(eneEnt, fireTime) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -215,15 +236,26 @@ function SWEP:NPC_SecondaryFire()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnSecondaryAttack() return true end -- Players only! | Return false to override base code
+function SWEP:OnSecondaryAttack() end -- Players only! | Return true to override base code
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnReload() end
+--[[
+Called whenever the weapon is reloaded
+
+=-=-=| PARAMETERS |=-=-=
+	1. status [string] : Type of update that is occurring, holds one of the following states:
+		-> "Start" : When the weapon reload starts before anything is set such as the animation or clip
+				RETURNS
+					-> nil
+		-> "Finish" : Right after the flinch reload animation has finished | Only called for players and VJ Humans!
+				RETURNS
+					-> [boolean] : return "true" to override the base code including setting the clip and removing reserve ammo
+
+=-=-=| RETURNS |=-=-=
+	-> [nil | bool] : Depends on `status` value, refer to it for more details
+--]]
+function SWEP:OnReload(status) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
--- Unlike CustomOnReload(), this is called AFTER the reload animation has finished
--- This only works for players and VJ Humans!
-function SWEP:CustomOnReload_Finish() return true end -- Return false to to override base code
----------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnHolster(newWep) return true end -- Return false to disallow the weapon from switching
+function SWEP:OnHolster(newWep) return true end -- Return false to disallow the weapon from switching
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:CustomOnRemove() end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -260,8 +292,41 @@ function SWEP:Initialize()
 	if self.HasIdleAnimation == true then self.InitHasIdleAnimation = true end
 	self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
 	self:Init()
-	if self.CustomOnInitialize then self:CustomOnInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
-	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	
+	-- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	if self.CustomOnInitialize then self:CustomOnInitialize() end
+	if self.CustomOnThink then self.OnThink = function() self:CustomOnThink() end end
+	if self.CustomOnInitialize then self:CustomOnInitialize() end
+	if self.CustomOnEquip then self.OnEquip = function(_, newOwner) self:CustomOnEquip(newOwner) end end
+	if self.CustomOnDeploy then self.OnDeploy = function() self:CustomOnDeploy() end end
+	if self.CustomBulletSpawnPosition then self.OnGetBulletPos = function() return self:CustomBulletSpawnPosition() end end
+	if self.CustomOnDrawWorldModel then self.OnDrawWorldModel = function() return self:CustomOnDrawWorldModel() end end
+	if self.CustomOnFireAnimationEvent then self.OnAnimEvent = function(_, pos, ang, event, options) return self:CustomOnFireAnimationEvent(pos, ang, event, options) end end
+	if self.CustomOnHolster then self.OnHolster = function(_, newWep) return self:CustomOnHolster(newWep) end end
+	if self.CustomOnReload or self.CustomOnReload_Finish then
+		self.OnReload = function(_, status)
+			if status == "Start" && self.CustomOnReload then
+				self:CustomOnReload()
+			elseif status == "Finish" && self.CustomOnReload_Finish then
+				return !self:CustomOnReload_Finish()
+			end
+		end
+	end
+	if self.CustomOnPrimaryAttack_BeforeShoot or self.CustomOnPrimaryAttack_AfterShoot or self.CustomOnPrimaryAttack_MeleeHit then
+		self.OnPrimaryAttack = function(_, status, statusData)
+			if status == "Initial" && self.CustomOnPrimaryAttack_BeforeShoot then
+				return self:CustomOnPrimaryAttack_BeforeShoot()
+			elseif status == "PostFire" && self.CustomOnPrimaryAttack_AfterShoot then
+				self:CustomOnPrimaryAttack_AfterShoot()
+			elseif status == "MeleeHit" && self.CustomOnPrimaryAttack_MeleeHit then
+				self:CustomOnPrimaryAttack_MeleeHit(statusData)
+			end
+		end
+	end
+	if self.CustomOnPrimaryAttack_BulletCallback then self.OnPrimaryAttack_BulletCallback = function(_, attacker, tr, dmginfo) return self:CustomOnPrimaryAttack_BulletCallback(attacker, tr, dmginfo) end end
+	if self.CustomOnSecondaryAttack then self.OnSecondaryAttack = function() return !self:CustomOnSecondaryAttack() end end
+	--
+	
 	//if SERVER then
 		//self:SetWeaponHoldType(self.HoldType)
 		//self:SetNPCMinBurst(10)
@@ -364,7 +429,7 @@ function SWEP:Equip(newOwner)
 			newOwner:SetKeyValue("spawnflags", "256") -- Long Visibility Shooting since HL2 NPCs are blind
 		end
 	end
-	self:CustomOnEquip(newOwner)
+	self:OnEquip(newOwner)
 	self.LastOwner = newOwner
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -377,7 +442,7 @@ end
 function SWEP:Deploy()
 	if self.InitHasIdleAnimation == true then self.HasIdleAnimation = true end
 	local owner = self:GetOwner()
-	self:CustomOnDeploy()
+	self:OnDeploy()
 	if owner:IsNPC() then
 		hook.Add("Think", self, self.NPC_ServerNextFire)
 	elseif owner:IsPlayer() then
@@ -414,8 +479,8 @@ function SWEP:GetBulletPos()
 	if owner:IsPlayer() then return owner:GetShootPos() end
 	
 	-- Custom Position
-	local customPos = self:CustomBulletSpawnPosition()
-	if customPos != false then
+	local customPos = self:OnGetBulletPos()
+	if customPos then
 		return customPos
 	end
 	
@@ -561,7 +626,7 @@ function SWEP:PrimaryAttack(UseAlt)
 		return
 	end
 	if (!self:CanPrimaryAttack()) then return end
-	if self:CustomOnPrimaryAttack_BeforeShoot() == true then return end
+	if self:OnPrimaryAttack("Initial") == true then return end
 	
 	if isNPC && owner.IsVJBaseSNPC == true then
 		timer.Simple(self.NPC_ExtraFireSoundTime, function()
@@ -610,7 +675,7 @@ function SWEP:PrimaryAttack(UseAlt)
 				if v:IsPlayer() then
 					v:ViewPunch(Angle(math.random(-1, 1)*10, math.random(-1, 1)*10, math.random(-1, 1)*10))
 				end
-				self:CustomOnPrimaryAttack_MeleeHit(v)
+				self:OnPrimaryAttack("MeleeHit", v)
 				meleeHitEnt = true
 			end
 		end
@@ -668,7 +733,7 @@ function SWEP:PrimaryAttack(UseAlt)
 				
 				-- Callback
 				bullet.Callback = function(attacker, tr, dmginfo)
-					self:CustomOnPrimaryAttack_BulletCallback(attacker, tr, dmginfo)
+					return self:OnPrimaryAttack_BulletCallback(attacker, tr, dmginfo)
 					/*local laserhit = EffectData()
 					laserhit:SetOrigin(tr.HitPos)
 					laserhit:SetNormal(tr.HitNormal)
@@ -701,12 +766,13 @@ function SWEP:PrimaryAttack(UseAlt)
 		self.NextIdleT = CurTime() + animTime
 		self.NextReloadT = CurTime() + animTime
 	end
-	self:CustomOnPrimaryAttack_AfterShoot()
+	self:OnPrimaryAttack("PostFire")
 	//self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttackEffects(owner)
-	if self:CustomOnPrimaryAttackEffects(owner) != true or self.IsMeleeWeapon == true then return end
+	if self.IsMeleeWeapon == true then return end
+	if self.CustomOnPrimaryAttackEffects && self:CustomOnPrimaryAttackEffects(owner) == false then return end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	owner = owner or self:GetOwner()
 	
 	if cv_muszzleflash:GetInt() == 0 then
@@ -773,10 +839,9 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:SecondaryAttack()
 	if self:Ammo2() <= 0 or self.Reloading then return end // !self:CanSecondaryAttack()
-	if self:CustomOnSecondaryAttack() == false then return end
+	if self:OnSecondaryAttack() == true then return end
 	
 	local owner = self:GetOwner()
-	print(self:GetMaxClip2(), self:Clip2(), self:Ammo2())
 	self:TakeSecondaryAmmo(self.Secondary.TakeAmmo)
 	owner:SetAnimation(PLAYER_ATTACK1)
 	local anim = VJ.PICK(self.AnimTbl_SecondaryFire)
@@ -825,7 +890,7 @@ function SWEP:TranslateActivity(act)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:FireAnimationEvent(pos, ang, event, options)
-	if self:CustomOnFireAnimationEvent(pos, ang, event, options) == true then
+	if self:OnAnimEvent(pos, ang, event, options) == true then
 		return true
 	elseif event == 22 or event == 6001 then
 		return true
@@ -842,7 +907,7 @@ function SWEP:Reload()
 	if !IsValid(owner) or !owner:IsPlayer() or !owner:Alive() or owner:GetAmmoCount(self.Primary.Ammo) == 0 or self.Reloading or CurTime() < self.NextReloadT then return end // or !owner:KeyDown(IN_RELOAD)
 	if self:Clip1() < self.Primary.ClipSize then
 		self.Reloading = true
-		self:CustomOnReload()
+		self:OnReload("Start")
 		if SERVER && self.HasReloadSound == true then
 			local reloadSD = VJ.PICK(self.ReloadSound)
 			if reloadSD then
@@ -851,11 +916,10 @@ function SWEP:Reload()
 		end
 		-- Handle clip
 		timer.Simple(self.Reload_TimeUntilAmmoIsSet, function()
-			if IsValid(self) && self:CustomOnReload_Finish() != false then
+			if IsValid(self) && self:OnReload("Finish") != true then
 				local ammoUsed = math.Clamp(self.Primary.ClipSize - self:Clip1(), 0, owner:GetAmmoCount(self:GetPrimaryAmmoType())) -- Amount of ammo that it will use (Take from the reserve)
 				owner:RemoveAmmo(ammoUsed, self.Primary.Ammo)
 				self:SetClip1(self:Clip1() + ammoUsed)
-				self:CustomOnReload_Finish()
 			end
 		end)
 		-- Handle animation
@@ -876,7 +940,7 @@ end
 function SWEP:NPC_Reload()
 	local owner = self:GetOwner()
 	owner.NextThrowGrenadeT = owner.NextThrowGrenadeT + 2
-	self:CustomOnReload()
+	self:OnReload("Start")
 	if self.NPC_HasReloadSound == true then VJ.EmitSound(owner, self.NPC_ReloadSound, self.NPC_ReloadSoundLevel) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -886,7 +950,7 @@ function SWEP:Holster(newWep)
 	hook.Remove("Think", self) -- Otherwise "NPC_ServerNextFire" will just keep running!
 	self.HasIdleAnimation = false
 	//self:SendWeaponAnim(ACT_VM_HOLSTER)
-	return self:CustomOnHolster(newWep)
+	return self:OnHolster(newWep)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnDrop()
@@ -935,7 +999,7 @@ if CLIENT then
 		if !IsValid(self) then return end
 		
 		local noDraw = false
-		if !self:CustomOnDrawWorldModel() or self:GetNW2Bool("VJ_WorldModel_Invisible") == true or self.WorldModel_Invisible == true then noDraw = true end
+		if !self:OnDrawWorldModel() or self:GetNW2Bool("VJ_WorldModel_Invisible") == true or self.WorldModel_Invisible == true then noDraw = true end
 		
 		if self.WorldModel_NoShadow == true then
 			self:DrawShadow(false)

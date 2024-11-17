@@ -45,29 +45,31 @@ SWEP.HasReloadSound = true -- Does it have a reload sound? Remember even if this
 SWEP.ReloadSound = {"weapons/shotgun/shotgun_reload1.wav", "weapons/shotgun/shotgun_reload2.wav", "weapons/shotgun/shotgun_reload3.wav"}
 SWEP.Reload_TimeUntilAmmoIsSet = 0.3 -- Time until ammo is set to the weapon
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttack_AfterShoot()
-	local owner = self:GetOwner()
-	if IsValid(owner) && owner:IsPlayer() then
-		timer.Simple(0.2, function()
-			if IsValid(self) && IsValid(owner) && owner:IsPlayer() then
-				self:EmitSound("weapons/shotgun/shotgun_cock.wav", 80, 100)
-				local animTime = VJ.AnimDuration(owner:GetViewModel(), ACT_SHOTGUN_PUMP)
-				self:SendWeaponAnim(ACT_SHOTGUN_PUMP)
-				self.NextIdleT = CurTime() + animTime
-				self.NextReloadT = CurTime() + animTime
-			end
-		end)
+function SWEP:OnPrimaryAttack(status, statusData)
+	if status == "PostFire" then
+		local owner = self:GetOwner()
+		if IsValid(owner) && owner:IsPlayer() then
+			timer.Simple(0.2, function()
+				if IsValid(self) && IsValid(owner) && owner:IsPlayer() then
+					self:EmitSound("weapons/shotgun/shotgun_cock.wav", 80, 100)
+					local animTime = VJ.AnimDuration(owner:GetViewModel(), ACT_SHOTGUN_PUMP)
+					self:SendWeaponAnim(ACT_SHOTGUN_PUMP)
+					self.NextIdleT = CurTime() + animTime
+					self.NextReloadT = CurTime() + animTime
+				end
+			end)
+		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnSecondaryAttack()
+function SWEP:OnSecondaryAttack()
 	if self:Clip1() > 1 then
 		self.Primary.Delay = 1
 		self.Primary.Cone = 20
 		self.Primary.NumberOfShots = 14
 		self.Primary.TakeAmmo = 2
 		self.NextIdle_PrimaryAttack = 1
-		self.AnimTbl_PrimaryFire = {ACT_VM_SECONDARYATTACK}
+		self.AnimTbl_PrimaryFire = ACT_VM_SECONDARYATTACK
 	end
 	self:PrimaryAttack()
 	self.Primary.Delay = 0.8
@@ -75,24 +77,26 @@ function SWEP:CustomOnSecondaryAttack()
 	self.Primary.NumberOfShots = 7
 	self.Primary.TakeAmmo = 1
 	self.NextIdle_PrimaryAttack = 0.8
-	self.AnimTbl_PrimaryFire = {ACT_VM_PRIMARYATTACK}
+	self.AnimTbl_PrimaryFire = ACT_VM_PRIMARYATTACK
 	
 	self:SetNextSecondaryFire(CurTime() + 1)
-	return false
+	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnReload_Finish()
-	local owner = self:GetOwner()
-	if !owner:IsPlayer() then return true end
-	self:GetOwner():RemoveAmmo(1, self.Primary.Ammo)
-	self:SetClip1(self:Clip1() + 1)
-	if self.Primary.ClipSize > self:Clip1() then
-		timer.Simple(0.1, function()
-			if IsValid(self) && IsValid(self:GetOwner()) then
-				self.Reloading = false
-				self:Reload()
-			end
-		end)
+function SWEP:OnReload(status)
+	if status == "Finish" then
+		local owner = self:GetOwner()
+		if !owner:IsPlayer() then return true end
+		self:GetOwner():RemoveAmmo(1, self.Primary.Ammo)
+		self:SetClip1(self:Clip1() + 1)
+		if self.Primary.ClipSize > self:Clip1() then
+			timer.Simple(0.1, function()
+				if IsValid(self) && IsValid(self:GetOwner()) then
+					self.Reloading = false
+					self:Reload()
+				end
+			end)
+		end
+		return true
 	end
-	return false
 end

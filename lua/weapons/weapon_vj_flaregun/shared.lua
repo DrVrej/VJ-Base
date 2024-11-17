@@ -36,29 +36,31 @@ SWEP.Primary.DisableBulletCode = true -- The bullet won't spawn, this can be use
 SWEP.PrimaryEffects_MuzzleAttachment = 1
 SWEP.PrimaryEffects_SpawnShells = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttack_BeforeShoot()
-	if CLIENT then return end
-	local owner = self:GetOwner()
-	local projectile = ents.Create("obj_vj_flareround")
-	local spawnPos = self:GetBulletPos()
-	if owner:IsPlayer() then
-		projectile:SetPos(owner:GetShootPos())
-	else
-		projectile:SetPos(spawnPos)
-	end
-	projectile:SetOwner(owner)
-	projectile:Activate()
-	projectile:Spawn()
-	
-	local phys = projectile:GetPhysicsObject()
-	if IsValid(phys) then
-		if owner.IsVJBaseSNPC then
-			phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetAimPosition(owner:GetEnemy(), spawnPos, 1, 15000), 15000))
-		elseif owner:IsPlayer() then
-			phys:SetVelocity(owner:GetAimVector() * 15000)
+function SWEP:OnPrimaryAttack(status, statusData)
+	if status == "Initial" then
+		if CLIENT then return end
+		local owner = self:GetOwner()
+		local projectile = ents.Create("obj_vj_flareround")
+		local spawnPos = self:GetBulletPos()
+		if owner:IsPlayer() then
+			projectile:SetPos(owner:GetShootPos())
 		else
-			phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetEnemy():GetPos() + owner:GetEnemy():OBBCenter(), 15000))
+			projectile:SetPos(spawnPos)
 		end
-		projectile:SetAngles(projectile:GetVelocity():GetNormal():Angle())
+		projectile:SetOwner(owner)
+		projectile:Activate()
+		projectile:Spawn()
+		
+		local phys = projectile:GetPhysicsObject()
+		if IsValid(phys) then
+			if owner.IsVJBaseSNPC then
+				phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetAimPosition(owner:GetEnemy(), spawnPos, 1, 15000), 15000))
+			elseif owner:IsPlayer() then
+				phys:SetVelocity(owner:GetAimVector() * 15000)
+			else
+				phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetEnemy():GetPos() + owner:GetEnemy():OBBCenter(), 15000))
+			end
+			projectile:SetAngles(projectile:GetVelocity():GetNormal():Angle())
+		end
 	end
 end

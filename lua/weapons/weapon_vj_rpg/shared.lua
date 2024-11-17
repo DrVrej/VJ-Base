@@ -44,46 +44,49 @@ SWEP.HasReloadSound = true -- Does it have a reload sound? Remember even if this
 SWEP.Reload_TimeUntilAmmoIsSet = 0.8 -- Time until ammo is set to the weapon
 SWEP.ReloadSound = "vj_base/weapons/reload_rpg.wav"
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttack_BeforeShoot()
-	if CLIENT then return end
-	local owner = self:GetOwner()
-	local projectile = ents.Create("obj_vj_tank_shell")
-	local spawnPos = self:GetBulletPos()
-	if owner:IsPlayer() then
-		local plyAng = owner:GetAimVector():Angle()
-		projectile:SetPos(owner:GetShootPos() + plyAng:Forward()*-20 + plyAng:Up()*-9 + plyAng:Right()*10)
-	else
-		projectile:SetPos(spawnPos)
-	end
-	projectile:SetOwner(owner)
-	projectile:Activate()
-	projectile:Spawn()
-	
-	local phys = projectile:GetPhysicsObject()
-	if IsValid(phys) then
-		if owner.IsVJBaseSNPC then
-			phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetAimPosition(owner:GetEnemy(), spawnPos, 1, 2500), 2500))
-		elseif owner:IsPlayer() then
-			phys:SetVelocity(owner:GetAimVector() * 2500)
+function SWEP:OnPrimaryAttack(status, statusData)
+	if status == "Initial" then
+		if CLIENT then return end
+		local owner = self:GetOwner()
+		local projectile = ents.Create("obj_vj_tank_shell")
+		local spawnPos = self:GetBulletPos()
+		if owner:IsPlayer() then
+			local plyAng = owner:GetAimVector():Angle()
+			projectile:SetPos(owner:GetShootPos() + plyAng:Forward()*-20 + plyAng:Up()*-9 + plyAng:Right()*10)
 		else
-			phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetEnemy():GetPos() + owner:GetEnemy():OBBCenter(), 2500))
+			projectile:SetPos(spawnPos)
 		end
-		projectile:SetAngles(projectile:GetVelocity():GetNormal():Angle())
+		projectile:SetOwner(owner)
+		projectile:Activate()
+		projectile:Spawn()
+		
+		local phys = projectile:GetPhysicsObject()
+		if IsValid(phys) then
+			if owner.IsVJBaseSNPC then
+				phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetAimPosition(owner:GetEnemy(), spawnPos, 1, 2500), 2500))
+			elseif owner:IsPlayer() then
+				phys:SetVelocity(owner:GetAimVector() * 2500)
+			else
+				phys:SetVelocity(owner:CalculateProjectile("Line", spawnPos, owner:GetEnemy():GetPos() + owner:GetEnemy():OBBCenter(), 2500))
+			end
+			projectile:SetAngles(projectile:GetVelocity():GetNormal():Angle())
+		end
+		
+		self:SetBodygroup(1, 1)
 	end
-	
-	self:SetBodygroup(1, 1)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnPrimaryAttackEffects()
-	//ParticleEffect("vj_rpg2_smoke1", self:GetAttachment(3).Pos, Angle(0,0,0), self)
+function SWEP:PrimaryAttackEffects(owner)
+	//ParticleEffect("vj_rpg2_smoke1", self:GetAttachment(3).Pos, Angle(0, 0, 0), self)
 	ParticleEffectAttach("smoke_exhaust_01a", PATTACH_POINT_FOLLOW, self, 2)
 	ParticleEffectAttach("smoke_exhaust_01a", PATTACH_POINT_FOLLOW, self, 2)
 	ParticleEffectAttach("smoke_exhaust_01a", PATTACH_POINT_FOLLOW, self, 2)
 	timer.Simple(4, function() if IsValid(self) then self:StopParticles() end end)
-	return true
+	self.BaseClass.PrimaryAttackEffects(self, owner)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:CustomOnReload_Finish()
-	self:SetBodygroup(1, 0)
-	return true
+function SWEP:OnReload(status)
+	if status == "Finish" then
+		self:SetBodygroup(1, 0)
+	end
 end

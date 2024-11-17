@@ -54,6 +54,8 @@ ENT.SpawnEntitySoundPitch = VJ.SET(80, 100)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- Use the functions below to customize certain parts of the base or to add new custom systems
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:Init() end
+---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Called when an entity spawns.
 		- ent = The entity it spawned
@@ -61,15 +63,9 @@ ENT.SpawnEntitySoundPitch = VJ.SET(80, 100)
 		- spawnTbl = Table of information for the entity it spawned including class names, spawn position, weapons, etc.
 		- initSpawn = Was this an initial spawn? Used by the base during initialization
 -----------------------------------------------------------]]
-function ENT:CustomOnEntitySpawn(ent, spawnKey, spawnTbl, initSpawn) end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Init() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnInitialize_AfterNPCSpawn() end
+function ENT:OnSpawnEntity(ent, spawnKey, spawnTbl, initSpawn) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnThink() end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnThink_AfterAliveChecks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnRemove() end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -92,7 +88,7 @@ local defAng = Angle(0, 0, 0)
 		- spawnTbl = Table of information for the entity to spawn including class names, spawn position, weapons, etc.
 		- initSpawn = Is this a initial spawn? Used by the base during initialization | DEFAULT: false
 -----------------------------------------------------------]]
-function ENT:SpawnAnEntity(spawnKey, spawnTbl, initSpawn)
+function ENT:SpawnEntity(spawnKey, spawnTbl, initSpawn)
 	local initOverrideDisable = (initSpawn == true && self.OverrideDisableOnSpawn)
 	if self.VJBaseSpawnerDisabled == true && initOverrideDisable == false then return end
 	
@@ -147,9 +143,9 @@ function ENT:SpawnAnEntity(spawnKey, spawnTbl, initSpawn)
 	self.CurrentEntities[spawnKey] = {Entities=spawnEnts, SpawnPosition=spawnPos, SpawnAngle=spawnAng, WeaponsList=spawnTbl.WeaponsList, NPC_Class=spawnNPCClass, FriToPlyAllies=spawnFriToPlyAllies, Ent=ent, Dead=false}
 	//table_remove(self.CurrentEntities, spawnKey) 
 	//table.insert(self.CurrentEntities, spawnKey, {SpawnPosition=spawnPos, Entities=spawnEnts, WeaponsList=wepList, Ent=ent, Dead=false})
-	self:CustomOnEntitySpawn(ent, spawnKey, spawnTbl, initSpawn)
-	self:SpawnEntitySoundCode()
-	timer.Simple(0.1, function() if IsValid(self) && self.SingleSpawner == true then self:DoSingleSpawnerRemove() end end)
+	self:OnSpawnEntity(ent, spawnKey, spawnTbl, initSpawn)
+	self:PlaySpawnEntitySound()
+	timer.Simple(0.1, function() if IsValid(self) && self.SingleSpawner == true then self:DoSingleSpawn() end end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
@@ -174,9 +170,8 @@ function ENT:Initialize()
 			if istable(spawnPos) then -- !!!!!!!!!!!!!! DO NOT USE THESE VARIABLES !!!!!!!!!!!!!! [Backwards Compatibility!]
 				spawnTbl.SpawnPosition = Vector(spawnPos.vForward or 0, spawnPos.vRight or 0, spawnPos.vUp or 0)
 			end
-			self:SpawnAnEntity(spawnKey, spawnTbl, true)
+			self:SpawnEntity(spawnKey, spawnTbl, true)
 		end
-		self:CustomOnInitialize_AfterNPCSpawn()
 	end)
 end
 // lua_run for spawnKey,spawnTbl in ipairs(ents.GetAll()) do if spawnTbl.IsVJBaseSpawner == true then spawnTbl.VJBaseSpawnerDisabled = false end end
@@ -185,7 +180,7 @@ function ENT:Think()
 	//print("-----------------------------------------------------------")
 	//PrintTable(self.CurrentEntities)
 	self:OnThink()
-	self:IdleSoundCode()
+	self:PlayIdleSound()
 	
 	-- If it's a continuous spawner then make sure to respawn any entity that has been removed
 	if self.VJBaseSpawnerDisabled == false && self.SingleSpawner == false then
@@ -195,16 +190,15 @@ function ENT:Think()
 				spawnTbl.Dead = true -- To make sure we do NOT respawn it more than once!
 				timer.Simple(self.TimedSpawn_Time, function()
 					if IsValid(self) then
-						self:SpawnAnEntity(spawnKey, spawnTbl, false)
+						self:SpawnEntity(spawnKey, spawnTbl, false)
 					end
 				end)
 			end
 		end
 	end
-	self:CustomOnThink_AfterAliveChecks()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:IdleSoundCode()
+function ENT:PlayIdleSound()
 	if self.HasIdleSounds == false then return end
 	if CurTime() > self.NextIdleSoundT then
 		if math.random(1, self.IdleSoundChance) == 1 then
@@ -214,14 +208,14 @@ function ENT:IdleSoundCode()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SpawnEntitySoundCode()
+function ENT:PlaySpawnEntitySound()
 	if self.HasSpawnEntitySound == false then return end
 	if math.random(1, self.SpawnEntitySoundChance) then
 		self.CurrentSpawnEntitySound = VJ.CreateSound(self, self.SoundTbl_SpawnEntity, self.SpawnEntitySoundLevel, math.random(self.SpawnEntitySoundPitch.a, self.SpawnEntitySoundPitch.b))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoSingleSpawnerRemove()
+function ENT:DoSingleSpawn()
 	if self.Dead then return end
 	if IsValid(self:GetCreator()) then
 		for _, spawnTbl in ipairs(self.CurrentEntities) do
