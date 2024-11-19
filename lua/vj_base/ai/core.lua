@@ -20,11 +20,7 @@
 */
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Localized static values
-local NPCTbl_Animals = {npc_barnacle = true, npc_crow = true, npc_pigeon = true, npc_seagull = true, monster_cockroach = true}
-local NPCTbl_Combine = {npc_stalker = true, npc_rollermine = true, npc_turret_ground = true, npc_turret_floor = true, npc_turret_ceiling = true, npc_strider = true, npc_sniper = true, npc_metropolice = true, npc_hunter = true, npc_breen = true, npc_combine_camera = true, npc_combine_s = true, npc_combinedropship = true, npc_combinegunship = true, npc_cscanner = true, npc_clawscanner = true, npc_helicopter = true, npc_manhack = true}
-local NPCTbl_Zombies = {npc_fastzombie_torso = true, npc_zombine = true, npc_zombie_torso = true, npc_zombie = true, npc_poisonzombie = true, npc_headcrab_fast = true, npc_headcrab_black = true, npc_headcrab_poison = true, npc_headcrab = true, npc_fastzombie = true, monster_zombie = true, monster_headcrab = true, monster_babycrab = true}
-local NPCTbl_Antlions = {npc_antlion = true, npc_antlionguard = true, npc_antlion_worker = true}
-local NPCTbl_Xen = {monster_bullchicken = true, monster_alien_grunt = true, monster_alien_slave = true, monster_alien_controller = true, monster_houndeye = true, monster_gargantua = true, monster_nihilanth = true}
+local NPCTbl_Animals = {npc_barnacle = true, monster_barnacle = true, npc_crow = true, npc_pigeon = true, npc_seagull = true, monster_cockroach = true}
 local defPos = Vector(0, 0, 0)
 local defAng = Angle(0, 0, 0)
 local CurTime = CurTime
@@ -39,14 +35,11 @@ local bAND = bit.band
 local math_rad = math.rad
 local math_deg = math.deg
 local math_cos = math.cos
+local math_sin = math.sin
 local math_atan2 = math.atan2
 local math_clamp = math.Clamp
 local math_angDif = math.AngleDifference
 local varCPly = "CLASS_PLAYER_ALLY"
-local varCAnt = "CLASS_ANTLION"
-local varCCom = "CLASS_COMBINE"
-local varCXen = "CLASS_XEN"
-local varCZom = "CLASS_ZOMBIE"
 local StopSound = VJ.STOPSOUND
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*
@@ -946,61 +939,120 @@ function ENT:VJ_ForwardIsHidingZone(startPos, endPos, acceptWorld, extraOptions)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Checks all 4 sides around the NPC
-		- checkDist = How far should each trace go? | DEFAULT = 200
-		- returnPos = Instead of returning a table of sides, it will return a table of actual positions | DEFAULT: false
-			- Use this whenever possible as it is much more optimized to utilize!
-		- sides = Use this to disable checking certain positions by setting the 1 to 0, "Forward-Backward-Right-Left" | DEFAULT = "1111"
+	Runs traces around the entity based on the number of given directions
+		- trType [string] = Type of trace to perform
+			- "Quick" = High performance, but limited to 4 or 8 directions
+			- "Radial" = Traces in a circular pattern based on directionCount
+		- maxDist [number] = Max distance a trace can travel | DEFAULT = 200
+		- requireFullDist [boolean] = If true, only traces reaching "maxDist" or beyond are included | DEFAULT = false
+			- Useful for checking if a direction is obstructed
+			- WARNING: Enabling this reduces performance
+		- returnAsDict [boolean] = If true, returns results as a dictionary table classified by directions | DEFAULT = false
+			- WARNING: Enabling this reduces performance compared to returning a flat table of positions
+		- numDirections [number] = Number of directions to trace | DEFAULT = 4
+		- excludeForward [boolean] = If true, it will exclude positions within the forward direction | DEFAULT = false
+		- excludeBack [boolean] = If true, it will exclude positions within the backward direction | DEFAULT = false
+		- excludeLeft [boolean] = If true, it will exclude positions within the left direction | DEFAULT = false
+		- excludeRight [boolean] = If true, it will exclude positions within the right direction | DEFAULT = false
 	Returns
-		- When returnPos is true:
-			- Table of positions (4 max)
-		- When returnPos is false:
-			- Table dictionary, includes 4 values, if true then that side isn't blocked!
-				- Values: Forward, Backward, Right, Left
+		- Based on "returnAsDict"
 -----------------------------------------------------------]]
-local str1111 = "1111"
-local str1 = "1"
---
-function ENT:VJ_CheckAllFourSides(checkDist, returnPos, sides)
-	checkDist = checkDist or 200
-	sides = sides or str1111
-	local result = returnPos == true and {} or {Forward=false, Backward=false, Right=false, Left=false}
-	local i = 0
-	local myPos = self:GetPos()
-	local myPosCentered = myPos + self:OBBCenter()
+function ENT:TraceDirections(trType, maxDist, requireFullDist, returnAsDict, numDirections, excludeForward, excludeBack, excludeLeft, excludeRight)
+    maxDist = maxDist or 200
+    numDirections = numDirections or 4
+    local myPos = self:GetPos()
+    local myPosZ = myPos.z
+    local myPosCentered = myPos + self:OBBCenter()
 	local myForward = self:GetForward()
-	local myRight = self:GetRight()
-	local positions = { -- Set the positions that we need to check
-		string_sub(sides, 1, 1) == str1 and myForward or 0,
-		string_sub(sides, 2, 2) == str1 and -myForward or 0,
-		string_sub(sides, 3, 3) == str1 and myRight or 0,
-		string_sub(sides, 4, 4) == str1 and -myRight or 0
-	}
-	for _, v in ipairs(positions) do
-		i = i + 1
-		if v == 0 then continue end -- If 0 then we have the tag to skip this!
-		local tr = util.TraceLine({
-			start = myPosCentered,
-			endpos = myPosCentered + v*checkDist,
-			filter = self
-		})
-		local hitPos = tr.HitPos
-		if myPos:Distance(hitPos) >= checkDist then
-			if returnPos == true then
-				hitPos.z = myPos.z -- Reset it to self:GetPos() z-axis
-				result[#result + 1] = hitPos
-			elseif i == 1 then
-				result.Forward = true
-			elseif i == 2 then
-				result.Backward = true
-			elseif i == 3 then
-				result.Right = true
-			elseif i == 4 then
-				result.Left = true
+    local myRight = self:GetRight()
+	local trData = {start = myPosCentered, endpos = myPosCentered, filter = self} -- For optimization purposes
+	local resultIndex = 1 -- For optimization purposes
+	if trType == "Quick" then
+		local result = returnAsDict and {Forward=false, Back=false, Left=false, Right=false, ForwardLeft=false, ForwardRight=false, BackLeft=false, BackRight=false} or {}
+		
+		-- Helper function for tracing a direction
+		local function runTrace(dir, dirName)
+			trData.endpos = myPosCentered + (dir * maxDist)
+			local tr = util.TraceLine(trData)
+			local hitPos = tr.HitPos
+			if !requireFullDist or myPos:Distance(hitPos) >= maxDist then
+				//VJ.DEBUG_TempEnt(hitPos)
+				hitPos.z = myPosZ -- Reset it to self:GetPos() z-axis
+				if returnAsDict then
+					result.dirName = hitPos
+				else
+					result[resultIndex] = hitPos
+					resultIndex = resultIndex + 1
+				end
 			end
 		end
+		
+		-- Run the traces (Up to 8)
+		if !excludeForward then
+			runTrace(myForward, "Forward")
+			if numDirections >= 5 then
+				runTrace((myForward - myRight):GetNormalized(), "ForwardLeft")
+				runTrace((myForward + myRight):GetNormalized(), "ForwardRight")
+			end
+		end
+		if !excludeBack then
+			runTrace(-myForward, "Back")
+			if numDirections >= 5 then
+				runTrace((-myForward - myRight):GetNormalized(), "BackLeft")
+				runTrace((-myForward + myRight):GetNormalized(), "BackRight")
+			end
+		end
+		if !excludeLeft then
+			runTrace(-myRight, "Left")
+		end
+		if !excludeRight then
+			runTrace(myRight, "Right")
+		end
+		return result
+	else -- "Radial"
+		local result = returnAsDict and {Forward = {}, Back = {}, Left = {}, Right = {}} or {}
+		local angleIncrement = (2 * math.pi) / numDirections -- Angle increment based on the number of directions
+
+		-- Calculate all directions and run traces
+		for i = 0, numDirections - 1 do
+			local angle = i * angleIncrement
+			local dir = myForward * math_cos(angle) + myRight * math_sin(angle)
+			local forwardDot = dir:Dot(myForward)
+            local rightDot = dir:Dot(myRight)
+			
+			-- Check which sides we are allowed to calculate
+			if (excludeForward && forwardDot > 0.7) or (excludeBack && forwardDot < -0.7) or (excludeLeft && rightDot < -0.7) or (excludeRight && rightDot > 0.7) then
+				continue
+			end
+
+			trData.endpos = myPosCentered + (dir * maxDist)
+			local tr = util.TraceLine(trData)
+			local hitPos = tr.HitPos
+			if !requireFullDist or myPos:Distance(hitPos) >= maxDist then
+				//VJ.DEBUG_TempEnt(hitPos)
+				hitPos.z = myPosZ -- Reset it to self:GetPos() z-axis
+				if returnAsDict then
+					if forwardDot > 0.7 then
+						local resultForward = result.Forward
+						resultForward[#resultForward + 1] = hitPos
+					elseif forwardDot < -0.7 then
+						local resultBack = result.Back
+						resultBack[#resultBack + 1] = hitPos
+					elseif rightDot < -0.7 then
+						local resultLeft = result.Left
+						resultLeft[#resultLeft + 1] = hitPos
+					elseif rightDot > 0.7 then
+						local resultRight = result.Right
+						resultRight[#resultRight + 1] = hitPos
+					end
+				else
+					result[resultIndex] = hitPos
+					resultIndex = resultIndex + 1
+				end
+			end
+		end
+		return result
 	end
-	return result
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1709,14 +1761,8 @@ function ENT:MaintainRelationships()
 			if vClass != myClass && v.VJTag_IsLiving /*&& MyVisibleTov && self:Disposition(v) != D_LI*/ then
 				local inEneTbl = VJ.HasValue(self.VJ_AddCertainEntityAsEnemy, v)
 				if self.HasAllies == true && inEneTbl == false then
-					for _,friClass in ipairs(self.VJ_NPC_Class) do
-						if friClass == varCPly && self.PlayerFriendly == false then self.PlayerFriendly = true end -- If player ally then set the PlayerFriendly to true
-						-- Handle common class types
-						if (friClass == varCCom && NPCTbl_Combine[vClass]) or (friClass == varCZom && NPCTbl_Zombies[vClass]) or (friClass == varCAnt && NPCTbl_Antlions[vClass]) or (friClass == varCXen && NPCTbl_Xen[vClass]) then
-							v:AddEntityRelationship(self, D_LI, 0)
-							self:AddEntityRelationship(v, D_LI, 0)
-							entFri = true
-						end
+					for _, friClass in ipairs(self.VJ_NPC_Class) do
+						if friClass == varCPly && !self.PlayerFriendly then self.PlayerFriendly = true end -- If player ally then set the PlayerFriendly to true
 						if (v.VJ_NPC_Class && VJ.HasValue(v.VJ_NPC_Class, friClass)) or (entFri == true) then
 							if friClass == varCPly then -- If we have the player ally class then check if we both of us are supposed to be friends
 								if self.FriendsWithAllPlayerAllies == true && v.FriendsWithAllPlayerAllies == true then
@@ -2502,6 +2548,64 @@ local dispToVal = {[D_LI] = false, [D_HT] = true, [D_NU] = "Neutral"}
 function ENT:DoRelationshipCheck(ent) return dispToVal[self:CheckRelationship(ent)] end
 function ENT:FaceCertainPosition(target, faceTime) return self:SetTurnTarget(target, faceTime, false, false) end
 function ENT:FaceCertainEntity(target, faceCurEnemy, faceTime) return self:SetTurnTarget(faceCurEnemy and "Enemy" or target, faceTime, false, false) end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Checks all 4 sides around the NPC
+		- checkDist = How far should each trace go? | DEFAULT = 200
+		- returnPos = Instead of returning a table of sides, it will return a table of actual positions | DEFAULT: false
+			- Use this whenever possible as it is much more optimized to utilize!
+		- sides = Use this to disable checking certain positions by setting the 1 to 0, "Forward-Backward-Right-Left" | DEFAULT = "1111"
+	Returns
+		- When returnPos is true:
+			- Table of positions (4 max)
+		- When returnPos is false:
+			- Table dictionary, includes 4 values, if true then that side isn't blocked!
+				- Values: Forward, Backward, Right, Left
+-----------------------------------------------------------]]
+local str1111 = "1111"
+local str1 = "1"
+--
+function ENT:VJ_CheckAllFourSides(checkDist, returnPos, sides)
+	checkDist = checkDist or 200
+	sides = sides or str1111
+	local result = returnPos == true and {} or {Forward=false, Backward=false, Right=false, Left=false}
+	local i = 0
+	local myPos = self:GetPos()
+	local myPosCentered = myPos + self:OBBCenter()
+	local myForward = self:GetForward()
+	local myRight = self:GetRight()
+	local positions = { -- Set the positions that we need to check
+		string_sub(sides, 1, 1) == str1 and myForward or 0,
+		string_sub(sides, 2, 2) == str1 and -myForward or 0,
+		string_sub(sides, 3, 3) == str1 and myRight or 0,
+		string_sub(sides, 4, 4) == str1 and -myRight or 0
+	}
+	for _, v in ipairs(positions) do
+		i = i + 1
+		if v == 0 then continue end -- If 0 then we have the tag to skip this!
+		local tr = util.TraceLine({
+			start = myPosCentered,
+			endpos = myPosCentered + v*checkDist,
+			filter = self
+		})
+		local hitPos = tr.HitPos
+		if myPos:Distance(hitPos) >= checkDist then
+			if returnPos == true then
+				hitPos.z = myPos.z -- Reset it to self:GetPos() z-axis
+				result[#result + 1] = hitPos
+			elseif i == 1 then
+				result.Forward = true
+			elseif i == 2 then
+				result.Backward = true
+			elseif i == 3 then
+				result.Right = true
+			elseif i == 4 then
+				result.Left = true
+			end
+		end
+	end
+	return result
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*
 function ENT:DoHardEntityCheck(CustomTbl)

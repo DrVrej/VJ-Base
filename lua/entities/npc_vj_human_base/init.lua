@@ -3277,7 +3277,7 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 	elseif landDir == 1 then -- Face enemy's last visible pos
 		self:SetTurnTarget(eneData.LastVisiblePos, self.CurrentAttackAnimationDuration or 1.5)
 	else -- Face best pos
-		local bestPos = VJ.PICK(self:VJ_CheckAllFourSides(200, true))
+		local bestPos = VJ.PICK(self:TraceDirections("Quick", 200, true, false, 8))
 		if bestPos then
 			landDir = bestPos -- Save the position so it can be used when it's thrown
 			self:SetTurnTarget(bestPos, self.CurrentAttackAnimationDuration or 1.5)
@@ -3404,7 +3404,7 @@ function ENT:GrenadeAttackThrow(customEnt, disableOwner, landDir)
 	elseif isvector(landDir) then -- Use given vector's position
 		landingPos = landDir
 	else -- Find a best random position
-		local bestPos = VJ.PICK(self:VJ_CheckAllFourSides(200, true))
+		local bestPos = VJ.PICK(self:TraceDirections("Quick", 200, true, false, 8))
 		if bestPos then
 			landingPos = bestPos
 			//self:SetTurnTarget(bestPos, self.CurrentAttackAnimationDuration - self.TimeUntilGrenadeIsReleased)
@@ -3707,7 +3707,7 @@ function ENT:SelectSchedule()
 				
 				-- Back away from the enemy if it's to close
 				if self.LatestEnemyDistance <= self.Weapon_RetreatDistance && (!wep.IsMeleeWeapon) && CurTime() > self.TakingCoverT && CurTime() > self.NextChaseTime && self.AttackType == VJ.ATTACK_TYPE_NONE && !self.IsFollowing && ene.Behavior != VJ_BEHAVIOR_PASSIVE && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered), enePos_Eye) == false then
-					local moveCheck = VJ.PICK(self:VJ_CheckAllFourSides(200, true, "0111"))
+					local moveCheck = VJ.PICK(self:TraceDirections("Quick", 200, true, false, 8, true))
 					if moveCheck then
 						self:SetLastPosition(moveCheck)
 						if self:GetWeaponState() == VJ.NPC_WEP_STATE_RELOADING then self:SetWeaponState() end
@@ -3774,7 +3774,7 @@ function ENT:SelectSchedule()
 								if !wep.IsMeleeWeapon then
 									-- If friendly in line of fire, then move!
 									if !cover_npc_isObj && self.DoingWeaponAttack_Standing == true && CurTime() > self.TakingCoverT && IsValid(cover_wep_ent) && cover_wep_ent:IsNPC() && cover_wep_ent != self && (self:Disposition(cover_wep_ent) == D_LI or self:Disposition(cover_wep_ent) == D_NU) && cover_wep_tr.HitPos:Distance(cover_wep_tr.StartPos) <= 3000 then
-										local moveCheck = VJ.PICK(self:VJ_CheckAllFourSides(50, true, "0011"))
+										local moveCheck = VJ.PICK(self:TraceDirections("Quick", 50, true, false, 4, true, true))
 										if moveCheck then
 											self:StopMoving()
 											if self.IsGuard then self.GuardingPosition = moveCheck end -- Set the guard position to this new position that avoids friendly fire
@@ -3882,7 +3882,7 @@ function ENT:SelectSchedule()
 								-- Move randomly when shooting
 								if self.Weapon_StrafeWhileFiring && cover_npc == false && !self.IsGuard && !self.IsFollowing && (!wep.IsMeleeWeapon) && (!wep.NPC_StandingOnly) && self.DoingWeaponAttack && self.DoingWeaponAttack_Standing && CurTime() > self.NextWeaponStrafeWhileFiringT && (CurTime() - self.EnemyData.TimeSinceAcquired) > 2 && (self.LatestEnemyDistance < (self.Weapon_FiringDistanceFar / 1.25)) && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered), enePos_Eye) == false then
 									if self:OnWeaponStrafeWhileFiring() != false then
-										local moveCheck = VJ.PICK(self:VJ_CheckAllFourSides(math.random(150, 400), true, "0111"))
+										local moveCheck = VJ.PICK(self:TraceDirections("Radial", math.random(150, 400), true, false, 12, true))
 										if moveCheck then
 											self:StopMoving()
 											self:SetLastPosition(moveCheck)
