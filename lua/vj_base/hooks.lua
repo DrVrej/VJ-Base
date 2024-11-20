@@ -65,10 +65,10 @@ hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local resistanceNPCs = {npc_magnusson = true, npc_vortigaunt = true, npc_mossman = true, npc_monk = true, npc_kleiner = true, npc_fisherman = true, npc_eli = true, npc_dog = true, npc_barney = true, npc_alyx = true, npc_citizen = true, monster_scientist = true, monster_barney = true, monster_sitting_scientist = true}
-local NPCTbl_Combine = {npc_stalker = true, npc_rollermine = true, npc_turret_ground = true, npc_turret_floor = true, npc_turret_ceiling = true, npc_strider = true, npc_sniper = true, npc_metropolice = true, npc_hunter = true, npc_breen = true, npc_combine_camera = true, npc_combine_s = true, npc_combinedropship = true, npc_combinegunship = true, npc_cscanner = true, npc_clawscanner = true, npc_helicopter = true, npc_manhack = true, npc_advisor = true}
-local NPCTbl_Zombies = {npc_fastzombie_torso = true, npc_zombine = true, npc_zombie_torso = true, npc_zombie = true, npc_poisonzombie = true, npc_headcrab_fast = true, npc_headcrab_black = true, npc_headcrab_poison = true, npc_headcrab = true, npc_fastzombie = true, monster_zombie = true, monster_headcrab = true, monster_babycrab = true, monster_bigmomma = true}
-local NPCTbl_Antlions = {npc_antlion = true, npc_antlionguard = true, npc_antlion_worker = true, npc_antlion_grub = true}
-local NPCTbl_Xen = {monster_bullchicken = true, monster_alien_grunt = true, monster_alien_slave = true, monster_alien_controller = true, monster_houndeye = true, monster_gargantua = true, monster_nihilanth = true, monster_ichthyosaur = true, monster_tentacle = true}
+local combineNPCs = {npc_stalker = true, npc_rollermine = true, npc_turret_ground = true, npc_turret_floor = true, npc_turret_ceiling = true, npc_strider = true, npc_sniper = true, npc_metropolice = true, npc_hunter = true, npc_breen = true, npc_combine_camera = true, npc_combine_s = true, npc_combinedropship = true, npc_combinegunship = true, npc_cscanner = true, npc_clawscanner = true, npc_helicopter = true, npc_manhack = true, npc_advisor = true, npc_apcdriver = true, npc_enemyfinder_combinecannon = true}
+local zombieNPCs = {npc_fastzombie_torso = true, npc_zombine = true, npc_zombie_torso = true, npc_zombie = true, npc_poisonzombie = true, npc_headcrab_fast = true, npc_headcrab_black = true, npc_headcrab_poison = true, npc_headcrab = true, npc_fastzombie = true, monster_zombie = true, monster_headcrab = true, monster_babycrab = true, monster_bigmomma = true}
+local antlionNPCs = {npc_antlion = true, npc_antlionguard = true, npc_antlion_worker = true, npc_antlion_grub = true}
+local xenNPCs = {monster_bullchicken = true, monster_alien_grunt = true, monster_alien_slave = true, monster_alien_controller = true, monster_houndeye = true, monster_gargantua = true, monster_nihilanth = true, monster_ichthyosaur = true, monster_tentacle = true}
 local headcrabNPCs = {npc_headcrab_fast = true, npc_headcrab_black = true, npc_headcrab_poison = true, npc_headcrab = true, monster_headcrab = true, monster_babycrab = true}
 local ignoredNPCs = {monster_generic = true,  monster_furniture = true,  npc_furniture = true,  npc_helicoptersensor = true, monster_gman = true,  npc_grenade_frag = true,  bullseye_strider_focus = true,  npc_bullseye = true,  npc_enemyfinder = true,  hornet = true}
 local grenadeEnts = {npc_grenade_frag = true, grenade_hand = true, obj_spore = true, obj_grenade = true, obj_handgrenade = true, doom3_grenade = true, fas2_thrown_m67 = true, cw_grenade_thrown = true, obj_cpt_grenade = true, cw_flash_thrown = true, ent_hl1_grenade = true, rtbr_grenade_frag = true}
@@ -100,9 +100,9 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 				if IsValid(ent) then
 					-- If the NPC doesn't have a VJ class table set, then see if it's a default type and apply the appropriate class
 					if !ent.VJ_NPC_Class then
-						if NPCTbl_Antlions[entClass] then
+						if antlionNPCs[entClass] then
 							ent.VJ_NPC_Class = {"CLASS_ANTLION"}
-						elseif NPCTbl_Combine[entClass] then
+						elseif combineNPCs[entClass] then
 							if entClass == "npc_turret_floor" && ent:HasSpawnFlags(SF_FLOOR_TURRET_CITIZEN) then -- Resistance turret
 								ent.VJ_NPC_Class = {"CLASS_PLAYER_ALLY"}
 								ent.PlayerFriendly = true
@@ -110,9 +110,9 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 							else
 								ent.VJ_NPC_Class = {"CLASS_COMBINE"}
 							end
-						elseif NPCTbl_Xen[entClass] then
+						elseif xenNPCs[entClass] then
 							ent.VJ_NPC_Class = {"CLASS_XEN"}
-						elseif NPCTbl_Zombies[entClass] then
+						elseif zombieNPCs[entClass] then
 							ent.VJ_NPC_Class = {"CLASS_ZOMBIE"}
 						end
 					end
