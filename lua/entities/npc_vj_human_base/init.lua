@@ -1628,7 +1628,7 @@ ENT.NextGrenadeAttackSoundT = 0
 ENT.NextSuppressingSoundT = 0
 ENT.TakingCoverT = 0
 ENT.NextFlinchT = 0
-ENT.NextCanGetCombineBallDamageT = 0
+ENT.NextCombineBallDmgT = 0
 ENT.UseTheSameGeneralSoundPitch_PickedNumber = 0
 ENT.OnKilledEnemySoundT = 0
 ENT.LastHiddenZoneT = 0
@@ -4032,10 +4032,10 @@ function ENT:OnTakeDamage(dmginfo)
 	if (IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball") or (IsValid(dmgAttacker) && dmgAttacker:GetClass() == "prop_combine_ball") then
 		if self.Immune_Dissolve == true then return 0 end
 		-- Make sure combine ball does reasonable damage and doesn't spam it!
-		if curTime > self.NextCanGetCombineBallDamageT then
+		if curTime > self.NextCombineBallDmgT then
 			dmginfo:SetDamage(math.random(400, 500))
 			dmginfo:SetDamageType(DMG_DISSOLVE)
-			self.NextCanGetCombineBallDamageT = curTime + 0.2
+			self.NextCombineBallDmgT = curTime + 0.2
 		else
 			return 0
 		end
