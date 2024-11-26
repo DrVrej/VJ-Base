@@ -260,7 +260,7 @@ end
 function ENT:StartSchedule(schedule)
 	if self.MovementType == VJ_MOVETYPE_STATIONARY && schedule.HasMovement == true then return end -- It's stationary therefore it should not move!
 	-- Certain states should ONLY do animation schedules!
-	if schedule.IsPlayActivity then
+	if !schedule.IsPlayActivity then
 		local curState = self:GetState()
 		if curState == VJ_STATE_ONLY_ANIMATION or curState == VJ_STATE_ONLY_ANIMATION_CONSTANT or curState == VJ_STATE_ONLY_ANIMATION_NOATTACK then return end
 	end
