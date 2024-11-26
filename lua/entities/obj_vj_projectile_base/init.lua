@@ -234,9 +234,15 @@ function ENT:PhysicsCollide(data, phys)
 			self:SetDeathVariablesTrue(data, phys, true)
 			if self.DelayedRemove > 0 then
 				self:SetNoDraw(true)
-				self:SetMoveType(MOVETYPE_NONE)
-				self:AddSolidFlags(FSOLID_NOT_SOLID)
-				self:SetLocalVelocity(defVec)
+				-- Here to avoid "Changing collision rules within a callback is likely to cause crashes!"
+				timer.Simple(0, function()
+					if IsValid(self) then
+						self:SetMoveType(MOVETYPE_NONE)
+						self:AddSolidFlags(FSOLID_NOT_SOLID)
+					end
+				end)
+				phys:EnableMotion(false)
+				phys:SetVelocityInstantaneous(defVec)
 				SafeRemoveEntityDelayed(self, self.DelayedRemove)
 				self:OnRemove()
 			else
@@ -250,7 +256,12 @@ function ENT:PhysicsCollide(data, phys)
 			if self.PaintDecalOnCollide == true && VJ.PICK(self.DecalTbl_OnCollideDecals) != false && self.AlreadyPaintedDeathDecal == false then
 				util.Decal(VJ.PICK(self.DecalTbl_OnCollideDecals), data.HitPos + data.HitNormal, data.HitPos - data.HitNormal)
 			end
-			self:CustomOnCollideWithoutRemove(data, phys)
+			-- Here to avoid "Changing collision rules within a callback is likely to cause crashes!"
+			timer.Simple(0, function()
+				if IsValid(self) then
+					self:CustomOnCollideWithoutRemove(data, phys)
+				end
+			end)
 			self.NextCollideWithoutRemoveT = CurTime() + math.Rand(self.NextCollideWithoutRemove.a, self.NextCollideWithoutRemove.b)
 		end
 	end

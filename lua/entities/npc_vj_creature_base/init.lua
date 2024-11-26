@@ -2836,11 +2836,12 @@ local schedMoveAway = vj_ai_schedule.New("vj_move_away")
 function ENT:SelectSchedule()
 	if self.VJ_IsBeingControlled or self.Dead then return end
 	
+	local hasCond = self.HasCondition
 	local eneValid = IsValid(self:GetEnemy())
 	self:IdleSoundCode()
 	
 	-- Handle move away behavior
-	if self:HasCondition(COND_PLAYER_PUSHING) && CurTime() > self.TakingCoverT && !self:BusyWithActivity() then
+	if hasCond(self, COND_PLAYER_PUSHING) && CurTime() > self.TakingCoverT && !self:BusyWithActivity() then
 		self:PlaySoundSystem("MoveOutOfPlayersWay")
 		if eneValid then -- Face current enemy
 			schedMoveAway.FaceData.Type = VJ.NPC_FACE_ENEMY_VISIBLE
@@ -2865,6 +2866,32 @@ function ENT:SelectSchedule()
 		if self.Alerted == false then
 			self.TakingCoverT = 0
 		end
+		
+		-- Investigation: Conditions // hasCond(self, COND_HEAR_PLAYER)
+		if self.CanInvestigate && (hasCond(self, COND_HEAR_BULLET_IMPACT) or hasCond(self, COND_HEAR_COMBAT) or hasCond(self, COND_HEAR_WORLD) or hasCond(self, COND_HEAR_DANGER)) && self.NextInvestigationMove < CurTime() && CurTime() > self.TakingCoverT && !self:BusyWithActivity() then
+			local soundSrc = self:GetBestSoundHint(bit.bor(SOUND_BULLET_IMPACT, SOUND_COMBAT, SOUND_WORLD, SOUND_DANGER)) // SOUND_PLAYER, SOUND_PLAYER_VEHICLE
+			if soundSrc then
+				-- For now ignore player sounds because friendly NPCs also see it since the sound owner is NULL
+				//if soundSrc.type == SOUND_PLAYER then
+				//	if VJ_CVAR_IGNOREPLAYERS or self:IsMoving() or self.IsGuard then
+				//		skip = true
+				//	end
+				//end
+				self:StopMoving()
+				self:SetLastPosition(soundSrc.origin)
+				self:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
+				-- Works but just faces the enemy that fired at
+				//local sched = vj_ai_schedule.New("vj_hear_sound")
+				//sched:EngTask("TASK_STORE_BESTSOUND_REACTORIGIN_IN_SAVEPOSITION", 0)
+				//sched:EngTask("TASK_STOP_MOVING", 0)
+				//sched:EngTask("TASK_FACE_SAVEPOSITION", 0)
+				//self:StartSchedule(sched)
+				self:OnInvestigate(soundSrc.owner)
+				self:PlaySoundSystem("InvestigateSound")
+				self.TakingCoverT = CurTime() + 1
+			end
+		end
+		
 		self:DoIdleAnimation()
 	end
 end

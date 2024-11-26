@@ -1675,11 +1675,6 @@ function ENT:MaintainRelationships()
 	local myClasses = self.VJ_NPC_Class
 	local nearestDist = nil
 	//local plyControlled = self.VJ_IsBeingControlled
-	local sdHintBullet = sound.GetLoudestSoundHint(SOUND_BULLET_IMPACT, myPos)
-	local sdHintBulletOwner = nil
-	if sdHintBullet then
-		sdHintBulletOwner = sdHintBullet.owner
-	end
 	local canAlly = self.HasAllies
 	local notIsNeutral = self.Behavior != VJ_BEHAVIOR_NEUTRAL
 	local customFunc = self.OnMaintainRelationships
@@ -1842,14 +1837,6 @@ function ENT:MaintainRelationships()
 						end
 						self:OnInvestigate(ent)
 						self:PlaySoundSystem("InvestigateSound")
-					-- Investigation: Bullet hit detection
-					elseif IsValid(sdHintBulletOwner) && sdHintBulletOwner == ent then
-						self:StopMoving()
-						self:SetLastPosition(sdHintBullet.origin)
-						self:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
-						self:OnInvestigate(ent)
-						self:PlaySoundSystem("InvestigateSound")
-						self.NextInvestigationMove = CurTime() + 0.3 -- Short delay because many bullets could hit
 					-- Investigation: Player shining flashlight onto the NPC
 					elseif entIsPLY && distanceToEnt < 350 && ent:FlashlightIsOn() && (ent:GetForward():Dot((myPos - entPos):GetNormalized()) > cosRad20) then
 						//			   Asiga hos-er ^ (!ent:Crouching() && ent:GetVelocity():Length() > 0 && ent:GetMoveType() != MOVETYPE_NOCLIP && ((!ent:KeyDown(IN_WALK) && (ent:KeyDown(IN_FORWARD) or ent:KeyDown(IN_BACK) or ent:KeyDown(IN_MOVELEFT) or ent:KeyDown(IN_MOVERIGHT))) or (ent:KeyDown(IN_SPEED) or ent:KeyDown(IN_JUMP)))) or
