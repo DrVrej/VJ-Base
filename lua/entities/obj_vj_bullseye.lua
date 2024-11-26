@@ -86,7 +86,7 @@ function ENT:Think()
 			self.ForceEntAsEnemy:AddEntityRelationship(self, D_HT, 99)
 			self:AddEntityRelationship(self.ForceEntAsEnemy, D_HT, 99)
 			if self.ForceEntAsEnemy.IsVJBaseSNPC then
-				self.ForceEntAsEnemy:VJ_DoSetEnemy(self, false, false)
+				self.ForceEntAsEnemy:ForceSetEnemy(self, false)
 			end
 			self.ForceEntAsEnemy:SetEnemy(self)
 		end
@@ -99,13 +99,6 @@ function ENT:Think()
 			if self.ActivationSystemStatusColors == true then self:SetColor(Color(0, 255, 0)) end
 		end
 	end
-	/*if IsValid(self.VJBULLSEYE_TheAttacker) && self.Alreadydoneit == false then
-		table.insert(self.VJBULLSEYE_TheAttacker.CurrentPossibleEnemies,self)
-		//print(self.VJBULLSEYE_TheAttacker)
-		//self.Alreadydoneit = true
-		self:AddEntityRelationship(self.VJBULLSEYE_TheAttacker,D_HT,99)
-		self.VJBULLSEYE_TheAttacker:VJ_DoSetEnemy(self)
-	end*/
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTakeDamage(dmginfo)

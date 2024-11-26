@@ -181,7 +181,6 @@ ENT.FindEnemy_CanSeeThroughWalls = false -- Should it be able to see through wal
 ENT.DisableFindEnemy = false -- Disables FindEnemy code, friendly code still works though
 ENT.DisableTakeDamageFindEnemy = false -- Disables the AI component that allows the NPC to find enemies all around it when it's damaged while idling
 ENT.DisableTouchFindEnemy = false -- Disables the AI component that makes the NPC turn and look at an enemy that touched it
-ENT.DisableMakingSelfEnemyToNPCs = false -- Disables the "AddEntityRelationship" that runs in think
 ENT.TimeUntilEnemyLost = 15 -- Time until it resets its enemy if the enemy is not visible
 ENT.NextProcessTime = 1 -- Time until it runs the essential part of the AI, which can be performance heavy!
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1011,7 +1010,7 @@ ENT.TimersToRemove = {"timer_state_reset", "timer_turning", "timer_act_flinching
 ENT.TurnData = {Type = VJ.NPC_FACE_NONE, Target = nil, StopOnFace = false, IsSchedule = false, LastYaw = 0}
 ENT.FollowData = {Ent = NULL, MinDist = 0, Moving = false, StopAct = false}
 ENT.EnemyData = {
-	TimeSet = 0, -- Last time an enemy was set | Updated whenever "VJ_DoSetEnemy" is ran successfully
+	TimeSet = 0, -- Last time an enemy was set | Updated whenever "ForceSetEnemy" is ran successfully
 	TimeSinceAcquired = 0, -- Time since it acquired an enemy (Switching enemies does NOT reset this!)
 	IsVisible = false, -- Is the enemy visible? | Updated every "Think" run!
 	LastVisibleTime = 0, -- Last time it saw the enemy
@@ -1038,7 +1037,6 @@ local math_clamp = math.Clamp
 local math_rad = math.rad
 local math_cos = math.cos
 local math_angApproach = math.ApproachAngle
-local math_angDif = math.AngleDifference
 local string_find = string.find
 local string_sub = string.sub
 local table_concat = table.concat
@@ -1049,8 +1047,8 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_debug"):GetInt() == 1 then self.VJ_DEBUG = true end
 	self.NextProcessTime = GetConVar("vj_npc_processtime"):GetInt()
 	if GetConVar("vj_npc_sd_nosounds"):GetInt() == 1 then self.HasSounds = false end
-	if GetConVar("vj_npc_vjfriendly"):GetInt() == 1 then self.VJTag_IsBaseFriendly = true end
-	if GetConVar("vj_npc_playerfriendly"):GetInt() == 1 then self.PlayerFriendly = true end
+	if GetConVar("vj_npc_vjfriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_VJ_BASE" end
+	if GetConVar("vj_npc_playerfriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_PLAYER_ALLY" end
 	if GetConVar("vj_npc_antlionfriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_ANTLION" end
 	if GetConVar("vj_npc_combinefriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_COMBINE" end
 	if GetConVar("vj_npc_zombiefriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_ZOMBIE" end
@@ -1308,6 +1306,13 @@ function ENT:Initialize()
 	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
 	self:Init()
 	if self.CustomOnInitialize then self:CustomOnInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	
+	/*local numericClasses = self.VJ_NPC_Class
+	self.VJ_NPC_Class = {}
+	for _, class in ipairs(numericClasses) do
+		self:VJ_CLASS_ADD(class)
+	end*/
+	
 	//self:SetSurroundingBoundsType(BOUNDS_HITBOXES) -- AVOID! Has to constantly recompute the bounds! | Issues: Entities get stuck inside the NPC, movements failing, unable to grab the NPC with physgun
 	local collisionMin, collisionMax = self:GetCollisionBounds()
 	-- Auto compute damage bounds if the damage bounds == collision bounds then the developer has NOT changed it | Call after "Init"
@@ -1327,25 +1332,23 @@ function ENT:Initialize()
 			if IsValid(self:GetCreator()) && self:GetCreator():GetInfoNum("vj_npc_spawn_guard", 0) == 1 then self.IsGuard = true end
 			self:StartSoundTrack()
 			
-			-- pitch
-			if self:LookupPoseParameter("aim_pitch") then
+			-- Setup common default pose parameters
+			if self:LookupPoseParameter("aim_pitch") != -1 then
 				self.PoseParameterLooking_Names.pitch[#self.PoseParameterLooking_Names.pitch + 1] = "aim_pitch"
 			end
-			if self:LookupPoseParameter("head_pitch") then
+			if self:LookupPoseParameter("head_pitch") != -1 then
 				self.PoseParameterLooking_Names.pitch[#self.PoseParameterLooking_Names.pitch + 1] = "head_pitch"
 			end
-			-- yaw
-			if self:LookupPoseParameter("aim_yaw") then
+			if self:LookupPoseParameter("aim_yaw") != -1 then
 				self.PoseParameterLooking_Names.yaw[#self.PoseParameterLooking_Names.yaw + 1] = "aim_yaw"
 			end
-			if self:LookupPoseParameter("head_yaw") then
+			if self:LookupPoseParameter("head_yaw") != -1 then
 				self.PoseParameterLooking_Names.yaw[#self.PoseParameterLooking_Names.yaw + 1] = "head_yaw"
 			end
-			-- roll
-			if self:LookupPoseParameter("aim_roll") then
+			if self:LookupPoseParameter("aim_roll") != -1 then
 				self.PoseParameterLooking_Names.roll[#self.PoseParameterLooking_Names.roll + 1] = "aim_roll"
 			end
-			if self:LookupPoseParameter("head_roll") then
+			if self:LookupPoseParameter("head_roll") != -1 then
 				self.PoseParameterLooking_Names.roll[#self.PoseParameterLooking_Names.roll + 1] = "head_roll"
 			end
 		end
@@ -1379,7 +1382,7 @@ function ENT:Initialize()
 			end
 		end
 	end)
-	//self:SetSaveValue("m_debugOverlays", 1) -- Enables source engine debug overlays (some commands like 'npc_conditions' need it)
+	//self:SetSaveValue("m_debugOverlays", bit.bor(0x00000001, 0x00000002, 0x00000004, 0x00000008, 0x00000010, 0x00000020, 0x00000040, 0x00000080, 0x00000100, 0x00000200, 0x00001000, 0x00002000, 0x00004000, 0x00008000, 0x00020000, 0x00040000, 0x00080000, 0x00100000, 0x00200000, 0x00400000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000)) -- Enables source engine debug overlays (some commands like 'npc_conditions' need it)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChangeMovementType(movType)
@@ -1755,8 +1758,18 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChaseAnimation(alwaysChase) -- alwaysChase: true = Override to always make the NPC chase
 	local ene = self:GetEnemy()
-	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead or self.VJ_IsBeingControlled or self.Flinching == true or self.IsVJBaseSNPC_Tank == true or !IsValid(ene) or (self.NextChaseTime > CurTime()) or (CurTime() < self.TakingCoverT) or (self.CurrentAttackAnimationTime > CurTime() && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
-	if self:VJ_GetNearestPointToEntityDistance(ene, true) < self.MeleeAttackDistance && self.EnemyData.IsVisible && (self.EnemyData.SightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))) then if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then self:AA_StopMoving() end self:VJ_TASK_IDLE_STAND() return end -- Not melee attacking yet but it is in range, so stop moving!
+	local curTime = CurTime()
+	if self.NextChaseTime > curTime or self.Dead or self.VJ_IsBeingControlled or self.Flinching or self.IsVJBaseSNPC_Tank or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
+	if !IsValid(ene) or self.TakingCoverT > curTime or (self.CurrentAttackAnimationTime > curTime && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
+	
+	-- Not melee attacking yet but it is in range, so don't chase the enemy!
+	if self.NearestPointToEnemyDistance < self.MeleeAttackDistance && self.EnemyData.IsVisible && (self.EnemyData.SightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))) then
+		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+			self:AA_StopMoving()
+		end
+		self:VJ_TASK_IDLE_STAND()
+		return
+	end
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
 	if self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsFollowing == true or self.Medic_Status or self:GetState() == VJ_STATE_ONLY_ANIMATION then
@@ -1767,7 +1780,7 @@ function ENT:DoChaseAnimation(alwaysChase) -- alwaysChase: true = Override to al
 	-- For non-aggressive SNPCs
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
 		self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
-		self.NextChaseTime = CurTime() + 3
+		self.NextChaseTime = curTime + 3
 		return
 	end
 	
@@ -1789,8 +1802,8 @@ function ENT:DoChaseAnimation(alwaysChase) -- alwaysChase: true = Override to al
 	end
 	
 	-- Set the next chase time
-	if self.NextChaseTime > CurTime() then return end -- Don't set it if it's already set!
-	self.NextChaseTime = CurTime() + (((self.LatestEnemyDistance > 2000) and 1) or 0.1) -- If the enemy is far, increase the delay!
+	if self.NextChaseTime > curTime then return end -- Don't set it if it's already set!
+	self.NextChaseTime = curTime + (((self.LatestEnemyDistance > 2000) and 1) or 0.1) -- If the enemy is far, increase the delay!
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1856,24 +1869,6 @@ local finishAttack = {
 		end)
 	end
 }
--- Climbing Test
-/*print(self:GetNavType())
-self:SetNavType(NAV_CLIMB)
-climbDest = self:GetPos()+self:GetUp()*5000
-climbDir = climbDest - self:GetPos()
-climbDist = climbDir:GetNormalized()
-print(climbDir)
-self:NavSetGoal(climbDest, 100, climbDir)
-self:MoveClimbStart(climbDest, climbDir, 100, 100)
-self:MoveClimbExec(climbDest, climbDir, climbDist:Length(), 100, 4)
-self:SetNavType(NAV_CLIMB)
-if self:GetNavType() == NAV_CLIMB then
-	climbDest = self:GetPos()+self:GetUp()*500
-	climbDir = climbDest - self:GetPos()
-	climbDist = climbDir:GetNormalized()
-	local result = self:MoveClimbExec(climbDest, climbDir, climbDist:Length(), 100, 4)
-	print("RESULT:", result)
-end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	//if self.NextActualThink <= CurTime() then
@@ -1885,41 +1880,6 @@ function ENT:Think()
 	
 	//self:SetCondition(1) -- Probably not needed as "sv_pvsskipanimation" handles it | Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case "sv_pvsskipanimation" isn't disabled!
 	//if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) /*&& curSched.HasMovement == true*/ then self:DropToFloor() end -- No need, already handled by the engine
-
-	local curSched = self.CurrentSchedule
-	if curSched != nil then
-		-- No longer needed, "RunAI" and "TranslateActivity" now handle it
-		/*if self:IsMoving() then
-			if curSched.MoveType == 0 && !VJ.HasValue(self.AnimTbl_Walk, self:GetMovementActivity()) then
-				self:SetMovementActivity(VJ.PICK(self.AnimTbl_Walk))
-			elseif curSched.MoveType == 1 && !VJ.HasValue(self.AnimTbl_Run, self:GetMovementActivity()) then
-				self:SetMovementActivity(VJ.PICK(self.AnimTbl_Run))
-			end
-		end*/
-		local blockingEnt = self:GetBlockingEntity()
-		-- No longer needed as the engine now does detects and opens the doors
-		//if self.CanOpenDoors && IsValid(blockingEnt) && (blockingEnt:GetClass() == "func_door" or blockingEnt:GetClass() == "func_door_rotating") && (blockingEnt:HasSpawnFlags(256) or blockingEnt:HasSpawnFlags(1024)) && !blockingEnt:HasSpawnFlags(512) then
-			//blockingEnt:Fire("Open")
-		//end
-		if (curSched.StopScheduleIfNotMoving == true or curSched.StopScheduleIfNotMoving_Any == true) && (!self:IsMoving() or (IsValid(blockingEnt) && (blockingEnt:IsNPC() or curSched.StopScheduleIfNotMoving_Any == true))) then // (self:GetGroundSpeedVelocity():Length() <= 0) == true
-			self:ScheduleFinished(curSched)
-			//self:SetCondition(COND_TASK_FAILED)
-			//self:StopMoving()
-		end
-		-- self:OnMovementFailed() handles some of them, but we do still need this for non-movement failures (EX: Finding cover area)
-		-- Now completely handled in `OnTaskFailed`
-		/*if self:HasCondition(COND_TASK_FAILED) then
-			print("VJ Base: Task Failed Condition Identified! "..self:GetName())
-			if self:DoRunCode_OnFail(curSched) == true then
-				self:ClearCondition(COND_TASK_FAILED)
-			end
-			if curSched.ResetOnFail == true then
-				self:ClearCondition(COND_TASK_FAILED)
-				self:StopMoving()
-				//self:SelectSchedule()
-			end
-		end*/
-	end
 	
 	local curTime = CurTime()
 	
@@ -1945,7 +1905,7 @@ function ENT:Think()
 	self:OnThink()
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	if VJ_CVAR_AI_ENABLED && self:GetState() != VJ_STATE_FREEZE && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
-		if self.VJ_DEBUG == true then
+		if self.VJ_DEBUG then
 			if GetConVar("vj_npc_debug_enemy"):GetInt() == 1 then print(self:GetClass().." : Enemy -> " .. tostring(self:GetEnemy() or "NULL") .. " | Alerted? " .. tostring(self.Alerted)) end
 			if GetConVar("vj_npc_debug_takingcover"):GetInt() == 1 then if curTime > self.TakingCoverT == true then print(self:GetClass().." : NOT taking cover") else print(self:GetClass().." : Taking cover ("..self.TakingCoverT - curTime..")") end end
 			if GetConVar("vj_npc_debug_lastseenenemytime"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - self.EnemyData.LastVisibleTime).." ("..self:GetName()..")") end
@@ -1954,13 +1914,7 @@ function ENT:Think()
 		local eneData = self.EnemyData
 		
 		self:SetPlaybackRate(self.AnimationPlaybackRate)
-		//if self:GetArrivalActivity() == -1 then -- No longer needed
-			//self:SetArrivalActivity(self.CurrentIdleAnimation)
-		//end
-		
 		self:OnThinkActive()
-
-		self:IdleSoundCode()
 		
 		-- For AA move types
 		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
@@ -2106,7 +2060,7 @@ function ENT:Think()
 		
 		if !self.Dead then
 			-- Health Regeneration System
-			if self.HasHealthRegeneration == true && curTime > self.HealthRegenerationDelayT then
+			if self.HasHealthRegeneration && curTime > self.HealthRegenerationDelayT then
 				local myHP = self:Health()
 				self:SetHealth(math_clamp(myHP + self.HealthRegenerationAmount, myHP, self:GetMaxHealth()))
 				self.HealthRegenerationDelayT = curTime + math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b)
@@ -2255,7 +2209,7 @@ function ENT:Think()
 				end
 				
 				-- Turning / Facing Enemy
-				if self.ConstantlyFaceEnemy then self:MaintainConstantlyFaceEnemy() end
+				if !plyControlled && self.ConstantlyFaceEnemy then self:MaintainConstantlyFaceEnemy() end
 				turnData = self.TurnData
 				if turnData.Type == VJ.NPC_FACE_ENEMY or (turnData.Type == VJ.NPC_FACE_ENEMY_VISIBLE && eneData.IsVisible) then
 					local resultAng = self:GetFaceAngle((enePos - myPos):Angle())
@@ -2274,7 +2228,7 @@ function ENT:Think()
 				end
 				
 				-- Stop chasing at certain distance
-				if self.NoChaseAfterCertainRange && !plyControlled && ((self.NoChaseAfterCertainRange_Type == "OnlyRange" && self.HasRangeAttack) or (self.NoChaseAfterCertainRange_Type == "Regular")) && eneData.IsVisible then
+				if !plyControlled && self.NoChaseAfterCertainRange && ((self.NoChaseAfterCertainRange_Type == "OnlyRange" && self.HasRangeAttack) or (self.NoChaseAfterCertainRange_Type == "Regular")) && eneData.IsVisible then
 					local farDist = self.NoChaseAfterCertainRange_FarDistance
 					local closeDist = self.NoChaseAfterCertainRange_CloseDistance
 					if farDist == "UseRangeDistance" then farDist = self.RangeDistance end
@@ -2286,7 +2240,7 @@ function ENT:Think()
 						end
 						self:DoIdleAnimation(2) -- Otherwise it won't play the idle animation and will loop the last PlayAct animation if range attack doesn't use animations!
 						local moveType = self.MovementType
-						curSched = self.CurrentSchedule -- Already defined
+						local curSched = self.CurrentSchedule -- Already defined
 						if curSched != nil && curSched.Name == "vj_chase_enemy" then self:StopMoving() end -- Interrupt enemy chasing because we are in range!
 						if moveType == VJ_MOVETYPE_GROUND && !self:IsMoving() && self:OnGround() then self:SetTurnTarget("Enemy") end
 						if (moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC) then
@@ -2463,7 +2417,7 @@ function ENT:Think()
 			end
 			
 			if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
-				if IsValid(ene) && self.CurrentAttackAnimationTime > CurTime() && self:VJ_GetNearestPointToEntityDistance(ene, true) < self.MeleeAttackDistance then
+				if IsValid(ene) && self.CurrentAttackAnimationTime > CurTime() && self.NearestPointToEnemyDistance < self.MeleeAttackDistance then
 					self:AA_StopMoving()
 				else
 					self:SelectSchedule()
@@ -2809,7 +2763,7 @@ local stopAtkTypes = {
 --
 function ENT:StopAttacks(checkTimers)
 	if self:Health() <= 0 then return end
-	if self.VJ_DEBUG == true && GetConVar("vj_npc_debug_stopattacks"):GetInt() == 1 then print(self:GetClass() .. " : Stopped all attacks! | Attack type: " .. self.AttackType) end
+	if self.VJ_DEBUG && GetConVar("vj_npc_debug_stopattacks"):GetInt() == 1 then print(self:GetClass() .. " : Stopped all attacks! | Attack type: " .. self.AttackType) end
 	
 	if checkTimers == true && stopAtkTypes[self.AttackType] && self.AttackState < VJ.ATTACK_STATE_EXECUTED then
 		stopAtkTypes[self.AttackType](self)
@@ -2823,39 +2777,52 @@ function ENT:StopAttacks(checkTimers)
 	self:DoChaseAnimation()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local function math_angDif(diff)
+    diff = diff % 360
+    if diff > 180 then return diff - 360 end
+    return diff
+end
+--
 function ENT:UpdatePoseParamTracking(resetPoses)
 	if !self.HasPoseParameterLooking then return end
 	//VJ.GetPoseParameters(self)
 	local ene = self:GetEnemy()
-	local newPitch = 0 -- Pitch
-	local newYaw = 0 -- Yaw
-	local newRoll = 0 -- Roll
+	local newPitch = 0
+	local newYaw = 0
+	local newRoll = 0
 	if IsValid(ene) && !resetPoses then
 		local myEyePos = self:EyePos()
 		local myAng = self:GetAngles()
-		local enePos = self:GetAimPosition(ene, myEyePos)
-		local eneAng = (enePos - myEyePos):Angle()
-		newPitch = math_angDif(eneAng.p, myAng.p)
-		if self.PoseParameterLooking_InvertPitch == true then newPitch = -newPitch end
-		newYaw = math_angDif(eneAng.y, myAng.y)
-		if self.PoseParameterLooking_InvertYaw == true then newYaw = -newYaw end
-		newRoll = math_angDif(eneAng.z, myAng.z)
-		if self.PoseParameterLooking_InvertRoll == true then newRoll = -newRoll end
+		local eneAng = (self:GetAimPosition(ene, myEyePos) - myEyePos):Angle()
+		newPitch = math_angDif(eneAng.p - myAng.p)
+		if self.PoseParameterLooking_InvertPitch then newPitch = -newPitch end
+		newYaw = math_angDif(eneAng.y - myAng.y)
+		if self.PoseParameterLooking_InvertYaw then newYaw = -newYaw end
+		newRoll = math_angDif(eneAng.z - myAng.z)
+		if self.PoseParameterLooking_InvertRoll then newRoll = -newRoll end
 	elseif !self.PoseParameterLooking_CanReset then -- Should it reset its pose parameters if there is no enemies?
 		return
 	end
 	
 	self:OnUpdatePoseParamTracking(newPitch, newYaw, newRoll)
 	
-	local names = self.PoseParameterLooking_Names
-	for x = 1, #names.pitch do
-		self:SetPoseParameter(names.pitch[x], math_angApproach(self:GetPoseParameter(names.pitch[x]), newPitch, self.PoseParameterLooking_TurningSpeed))
+	local namesPitch = self.PoseParameterLooking_Names.pitch
+	local namesYaw = self.PoseParameterLooking_Names.yaw
+	local namesRoll = self.PoseParameterLooking_Names.roll
+	local speed = self.PoseParameterLooking_TurningSpeed
+	local getPoseParameter = self.GetPoseParameter
+	local setPoseParameter = self.SetPoseParameter
+	for x = 1, #namesPitch do
+		local pose = namesPitch[x]
+		setPoseParameter(self, pose, math_angApproach(getPoseParameter(self, pose), newPitch, speed))
 	end
-	for x = 1, #names.yaw do
-		self:SetPoseParameter(names.yaw[x], math_angApproach(self:GetPoseParameter(names.yaw[x]), newYaw, self.PoseParameterLooking_TurningSpeed))
+	for x = 1, #namesYaw do
+		local pose = namesYaw[x]
+		setPoseParameter(self, pose, math_angApproach(getPoseParameter(self, pose), newYaw, speed))
 	end
-	for x = 1, #names.roll do
-		self:SetPoseParameter(names.roll[x], math_angApproach(self:GetPoseParameter(names.roll[x]), newRoll, self.PoseParameterLooking_TurningSpeed))
+	for x = 1, #namesRoll do
+		local pose = namesRoll[x]
+		setPoseParameter(self, pose, math_angApproach(getPoseParameter(self, pose), newRoll, speed))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2870,6 +2837,7 @@ function ENT:SelectSchedule()
 	if self.VJ_IsBeingControlled or self.Dead then return end
 	
 	local eneValid = IsValid(self:GetEnemy())
+	self:IdleSoundCode()
 	
 	-- Handle move away behavior
 	if self:HasCondition(COND_PLAYER_PUSHING) && CurTime() > self.TakingCoverT && !self:BusyWithActivity() then
@@ -2888,22 +2856,16 @@ function ENT:SelectSchedule()
 		self.TakingCoverT = CurTime() + 2
 	end
 	
-	-- If the enemy is out of reach, then reset enemy!
-	if eneValid && (self.LatestEnemyDistance > self:GetMaxLookDistance()) then
+	if eneValid then -- Chase the enemy
+		self:DoChaseAnimation()
+	/*elseif self.Alerted == true then -- No enemy, but alerted
 		self.TakingCoverT = 0
-		self:DoIdleAnimation()
-		self:ResetEnemy()
-	-- Otherwise do default idle or combat behaviors
-	else
-		if eneValid then -- Chase the enemy
-			self:DoChaseAnimation()
-		/*elseif self.Alerted == true then -- No enemy, but alerted
+		self:DoIdleAnimation()*/
+	else -- Idle
+		if self.Alerted == false then
 			self.TakingCoverT = 0
-			self:DoIdleAnimation()*/
-		else -- Idle
-			self.TakingCoverT = 0
-			self:DoIdleAnimation()
 		end
+		self:DoIdleAnimation()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2920,27 +2882,29 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 			for _, v in ipairs(getAllies) do
 				local allyEne = v:GetEnemy()
 				if IsValid(allyEne) && (CurTime() - v.EnemyData.LastVisibleTime) < self.TimeUntilEnemyLost && VJ.IsAlive(allyEne) && self:CheckRelationship(allyEne) == D_HT && self:GetPos():Distance(allyEne:GetPos()) <= self:GetMaxLookDistance() then
-					self:VJ_DoSetEnemy(allyEne, false)
+					self:ForceSetEnemy(allyEne, false)
 					eneData.Reset = false
 					return false
 				end
 			end
 		end
-		local curEnemies = eneData.VisibleCount //self.CurrentReachableEnemies
 		-- If the current number of reachable enemies is higher then 1, then don't reset
+		local curEnemies = eneData.VisibleCount //self.CurrentReachableEnemies
 		if (eneValid && (curEnemies - 1) >= 1) or (!eneValid && curEnemies >= 1) then
-			//self:VJ_DoSetEnemy(v, false, true)
 			self:MaintainRelationships() -- Select a new enemy
-			//self.NextProcessT = CurTime() + self.NextProcessTime
-			eneData.Reset = false
-			return false
+			-- Check that the reset enemy wasn't the only visible enemy
+			-- If we don't this, it will end calling "ResetEnemy" again!
+			if eneData.VisibleCount > 0 then
+				eneData.Reset = false
+				return false
+			end
 		end
 	end
 	
+	if self.VJ_DEBUG && GetConVar("vj_npc_debug_resetenemy"):GetInt() == 1 then print(self:GetName() .. " : Reset enemy ( " .. tostring(ene) .. " )") end
 	self:SetNPCState(NPC_STATE_ALERT)
 	timer.Create("timer_alerted_reset"..self:EntIndex(), math.Rand(self.AlertedToIdleTime.a, self.AlertedToIdleTime.b), 1, function() if !IsValid(self:GetEnemy()) then self.Alerted = false self:SetNPCState(NPC_STATE_IDLE) end end)
 	self:OnResetEnemy()
-	if self.VJ_DEBUG == true && GetConVar("vj_npc_debug_resetenemy"):GetInt() == 1 then print(self:GetName() .. " : Reset enemy ( " .. tostring(ene) .. " )") end
 	if eneValid then
 		if self.IsFollowing == false && (!self.IsVJBaseSNPC_Tank) && !self:Visible(ene) && self:GetEnemyLastKnownPos() != defPos then
 			self:SetLastPosition(self:GetEnemyLastKnownPos())
@@ -3039,7 +3003,7 @@ function ENT:OnTakeDamage(dmginfo)
 		hitgroup = hitgroup,
 	}
 	self:SetHealth(self:Health() - dmginfo:GetDamage())
-	if self.VJ_DEBUG == true && GetConVar("vj_npc_debug_ondmg"):GetInt() == 1 then print(self:GetClass().." : Damaged! ("..dmginfo:GetDamage()..")") end
+	if self.VJ_DEBUG && GetConVar("vj_npc_debug_ondmg"):GetInt() == 1 then print(self:GetClass().." : Damaged! ("..dmginfo:GetDamage()..")") end
 	if self.HasHealthRegeneration == true && self.HealthRegenerationResetOnDmg == true then
 		self.HealthRegenerationDelayT = curTime + (math.Rand(self.HealthRegenerationDelay.a, self.HealthRegenerationDelay.b) * 1.5)
 	end
@@ -3115,20 +3079,20 @@ function ENT:OnTakeDamage(dmginfo)
 				end
 			end
 
-			-- Attempt to find who damaged me | RESULT: May become alerted if enemy is visible OR it may move away
+			-- Attempt to find who damaged me | RESULT: May become alerted if attacker is visible OR it may hide if it didn't find the attacker
 			if !self.DisableTakeDamageFindEnemy && !self:BusyWithActivity() && !IsValid(self:GetEnemy()) && curTime > self.TakingCoverT && self.VJ_IsBeingControlled == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE then // self.Alerted == false
 				local eneFound = false
-				local sightDist = self:GetMaxLookDistance()
-				sightDist = math_clamp(sightDist / 2, sightDist <= 1000 and sightDist or 1000, sightDist)
-				-- IF normal sight dist is less than 1000 then change nothing, OR ELSE use half the distance with 1000 as minimum
-				for _, v in ipairs(ents.FindInSphere(self:GetPos(), sightDist)) do
-					if (curTime - self.EnemyData.TimeSet) > 2 && self:Visible(v) && self:CheckRelationship(v) == D_HT then
+				if IsValid(dmgAttacker) then
+					local sightDist = self:GetMaxLookDistance()
+					sightDist = math_clamp(sightDist / 2, sightDist <= 1000 and sightDist or 1000, sightDist)
+					-- IF normal sight dist is less than 1000 then change nothing, OR ELSE use half the distance with 1000 as minimum
+					if self:GetPos():Distance(dmgAttacker:GetPos()) <= sightDist && self:Visible(dmgAttacker) && self:CheckRelationship(dmgAttacker) == D_HT then
+						//self:AddEntityRelationship(dmgAttacker, D_HT, 10)
 						self:OnSetEnemyFromDamage(dmginfo, hitgroup)
 						self.NextCallForHelpT = curTime + 1
-						self:VJ_DoSetEnemy(v, true)
+						self:ForceSetEnemy(dmgAttacker, true)
 						self:DoChaseAnimation()
 						eneFound = true
-						break
 					end
 				end
 				if !eneFound && self.HideOnUnknownDamage && !self.IsFollowing && self.MovementType != VJ_MOVETYPE_STATIONARY then
@@ -3308,7 +3272,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:FinishDeath(dmginfo, hitgroup)
-	if self.VJ_DEBUG == true && GetConVar("vj_npc_debug_death"):GetInt() == 1 then print(self:GetClass().." : Killed!") end
+	if self.VJ_DEBUG && GetConVar("vj_npc_debug_death"):GetInt() == 1 then print(self:GetClass().." : Killed!") end
 	self:OnDeath(dmginfo, hitgroup, "Finish")
 	if self.DropDeathLoot then
 		self:CreateDeathLoot(dmginfo, hitgroup)

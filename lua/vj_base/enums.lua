@@ -93,7 +93,6 @@ VJTag_PickedUpOrgMoveType		enum		Entity's original move type before being picked
 VJTag_IsHealing					bool		Entity is healing (either itself or by another entity)
 VJTag_IsEating					bool		Entity is eating something (Ex: a corpse)
 VJTag_IsBeingEaten				bool		Entity is being eaten by something
-VJTag_IsBaseFriendly			bool		Friendly to all VJ NPCs
 
 -- Identifiers
 VJTag_ID_Boss					bool		Entity is a very large and/or a boss | It affects parts of the entity, for example It won't receive any melee knock back

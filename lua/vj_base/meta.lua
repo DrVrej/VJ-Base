@@ -29,6 +29,29 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Meta Additions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Variable:		self.VJ_NPC_Class
+-- Access: 			self.VJ_NPC_Class.CLASS_COMBINE
+-- Remove: 			self.VJ_NPC_Class.CLASS_COMBINE = nil
+-- Add: 			self:VJ_CLASS_ADD("CLASS_COMBINE", "CLASS_ZOMBIE", ...)
+--
+/*function metaEntity:VJ_CLASS_ADD(...)
+	//PrintTable({...})
+	for _, class in ipairs({...}) do
+		self.VJ_NPC_Class[class] = true
+	end
+end*/
+--[[---------------------------------------------------------
+	Determines whether or not this entity should be engaged by an enemy
+	1. otherEnt [entity] : The other entity that is testing to see if it can engage this entity
+	2, distance [nil | number] : Calculated distance from this entity to the other entity
+	Returns
+		- [boolean] : Return true if it should be engaged
+-----------------------------------------------------------]]
+-- UNCOMMENT TO USE
+--function metaEntity:CanBeEngaged(otherEnt, distance)
+--	print("default ", otherEnt, distance)
+--	return true
+--end
 --[[---------------------------------------------------------
 	Helper function to get the movement velocity of various different entities (Useful to get the move speed of an entity!)
 	Returns

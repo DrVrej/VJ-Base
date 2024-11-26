@@ -20,7 +20,6 @@
 */
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Localized static values
-local NPCTbl_Animals = {npc_barnacle = true, monster_barnacle = true, npc_crow = true, npc_pigeon = true, npc_seagull = true, monster_cockroach = true}
 local defPos = Vector(0, 0, 0)
 local defAng = Angle(0, 0, 0)
 local CurTime = CurTime
@@ -338,14 +337,6 @@ function ENT:ResolveAnimation(tbl)
 	return tbl[math.random(1, #tbl)]
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_TASK_IDLE_STAND()
-	if self:IsMoving() or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
-	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:BusyWithActivity() then return end
-	//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
-	self:MaintainIdleAnimation(self:GetIdealActivity() != ACT_IDLE)
-	return true
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Maintains and applies the idle animation
 		- force = Forcibly apply the idle animation without checking if it's already playing ACT_IDLE
@@ -509,48 +500,6 @@ end
 -----------------------------------------------------------]]
 function ENT:GetState()
 	return self.AIState
-end
----------------------------------------------------------------------------------------------------------------------------------------------
---[[---------------------------------------------------------
-	Checks the relationship with the given entity | Use with caution, it can reduce performance!
-		- ent = The entity to check its relation with
-	Returns
-		- Disposition value, list: https://wiki.facepunch.com/gmod/Enums/D
------------------------------------------------------------]]
-function ENT:CheckRelationship(ent)
-	-- Only enemy to a single NPC | Used by the bullseye under certain circumstances
-	if ent.ForceEntAsEnemy then
-		if ent.ForceEntAsEnemy == self then
-			return D_HT
-		else
-			return D_NU
-		end
-	end
-	if ent:IsFlagSet(FL_NOTARGET) or NPCTbl_Animals[ent:GetClass()] then return D_NU end
-	if self:GetClass() == ent:GetClass() then return D_LI end
-	if ent:Health() > 0 && self:Disposition(ent) != D_LI then
-		local isPly = ent:IsPlayer()
-		if isPly && VJ_CVAR_IGNOREPLAYERS then return D_NU end
-		if VJ.HasValue(self.VJ_AddCertainEntityAsFriendly, ent) then return D_LI end
-		if VJ.HasValue(self.VJ_AddCertainEntityAsEnemy, ent) then return D_HT end
-		if ent.VJTag_IsLiving then
-			if ent:IsNPC() then
-				local entDisp = ent:Disposition(self)
-				if (entDisp == D_HT) or (entDisp == D_NU && ent.VJ_IsBeingControlled) then
-					return D_HT
-				end
-				return D_NU
-			elseif isPly then
-				if !self.PlayerFriendly && ent:Alive() then
-					return D_HT
-				end
-				return D_NU
-			end
-			return D_HT -- Mostly for NextBots, no specific checks for them so always hate
-		end
-		return D_NU -- Fail case where the entity somehow got here and it's not tagged with "self.VJTag_IsLiving"
-	end
-	return D_LI
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1046,37 +995,6 @@ function ENT:TraceDirections(trType, maxDist, requireFullDist, returnAsDict, num
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Sets the enemy for the NPC, this function should always be used over the default GMod self:SetEnemy()!
-		- ent = The entity to set as the enemy
-		- stopMoving = Should it stop moving? Will not run if doQuickIfActiveEnemy passes! | DEFAULT = false
-		- doQuickIfActiveEnemy = Runs a quicker set enemy without resetting everything, it must have a active enemy! | DEFAULT = false
------------------------------------------------------------]]
-function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy)
-	if !IsValid(ent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or ent:Health() <= 0 or (ent:IsPlayer() && (!ent:Alive() or VJ_CVAR_IGNOREPLAYERS)) then return end
-	if IsValid(self.Medic_CurrentEntToHeal) && self.Medic_CurrentEntToHeal == ent then self:ResetMedicBehavior() end
-	local eneData = self.EnemyData
-	eneData.TimeSet = CurTime()
-	self:AddEntityRelationship(ent, D_HT, 0)
-	self:UpdateEnemyMemory(ent, ent:GetPos())
-	self:SetNPCState(NPC_STATE_COMBAT)
-	if doQuickIfActiveEnemy && IsValid(self:GetEnemy()) then
-		self:SetEnemy(ent)
-		return -- End it here if it's a minor set enemy
-	end
-	self:SetEnemy(ent)
-	eneData.TimeSinceAcquired = CurTime()
-	//self.NextResetEnemyT = CurTime() + 0.5 //2
-	if stopMoving then
-		self:ClearGoal()
-		self:StopMoving()
-	end
-	if self.Alerted == false then
-		self.LatestEnemyDistance = self:GetPos():Distance(ent:GetPos())
-		self:DoAlert(ent)
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
---[[---------------------------------------------------------
 	Forces the NPC to jump.
 		- vel = Velocity for the jump
 	EX: Force the NPC to jump to the location of another entity:
@@ -1314,7 +1232,7 @@ function ENT:HandleAnimEvent(ev, evTime, evCycle, evType, evOptions)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
-	if self.VJ_DEBUG == true && GetConVar("vj_npc_debug_ontouch"):GetInt() == 1 then print(self:GetClass() .. " : Touched --> " .. entity:GetClass()) end
+	if self.VJ_DEBUG && GetConVar("vj_npc_debug_ontouch"):GetInt() == 1 then print(self:GetClass() .. " : Touched --> " .. entity:GetClass()) end
 	local funcCustom = self.OnTouch; if funcCustom then funcCustom(self, entity) end
 	if !VJ_CVAR_AI_ENABLED or self.VJ_IsBeingControlled then return end
 	
@@ -1492,6 +1410,7 @@ function ENT:MaintainMedicBehavior()
 		end
 	elseif self.Medic_Status != "Healing" then
 		local ally = self.Medic_CurrentEntToHeal
+		if self:CheckRelationship(ally) != D_LI then self:ResetMedicBehavior() return end -- I no longer like them, stop healing them!
 		if !IsValid(ally) or !VJ.IsAlive(ally) or (ally:Health() > ally:GetMaxHealth() * 0.75) then self:ResetMedicBehavior() return end
 		if self:Visible(ally) && self:VJ_GetNearestPointToEntityDistance(ally) <= self.Medic_HealDistance then -- Are we in healing distance?
 			self.Medic_Status = "Healing"
@@ -1539,6 +1458,7 @@ function ENT:MaintainMedicBehavior()
 					if !IsValid(ally) then -- Ally doesn't exist anymore, reset
 						self:ResetMedicBehavior()
 					else -- If it exists...
+						if self:CheckRelationship(ally) != D_LI then self:ResetMedicBehavior() return end -- I no longer like them, stop healing them!
 						if self:VJ_GetNearestPointToEntityDistance(ally) <= (self.Medic_HealDistance + 20) then -- Are we still in healing distance?
 							if self:OnMedicBehavior("OnHeal", ally) != false then
 								local friCurHP = ally:Health()
@@ -1568,20 +1488,19 @@ function ENT:MaintainMedicBehavior()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainConstantlyFaceEnemy()
-	if self.VJ_IsBeingControlled then return false end
 	if self.LatestEnemyDistance < self.ConstantlyFaceEnemyDistance then
 		-- Only face if the enemy is visible ?
 		if self.ConstantlyFaceEnemy_IfVisible && !self.EnemyData.IsVisible then
-			return false
+			return
 		-- Do NOT face if attacking ?
 		elseif self.ConstantlyFaceEnemy_IfAttacking == false && self.AttackType != VJ.ATTACK_TYPE_NONE then
-			return false
+			return
 		elseif (self.ConstantlyFaceEnemy_Postures == "Both") or (self.ConstantlyFaceEnemy_Postures == "Moving" && self:IsMoving()) or (self.ConstantlyFaceEnemy_Postures == "Standing" && !self:IsMoving()) then
 			self:SetTurnTarget("Enemy")
-			return true
+			return
 		end
 	end
-	return false
+	return
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local angY45 = Angle(0, 45, 0)
@@ -1665,45 +1584,103 @@ function ENT:AddExtraAttackTimer(name, time, func)
 	timer.Create(name..self:EntIndex(), (time or 0.5) / self:GetPlaybackRate(), 1, func)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Forces the NPC to switch to the given entity as the enemy if certain criteria passes
+		- ent = The entity to set as the enemy
+		- stopMoving = Should it stop moving? Will not run it already has an enemy! | DEFAULT = false
+		- skipChecks = Used in "MaintainRelationships" basically skips all the initially checks for max performance | DEFAULT = false
+-----------------------------------------------------------]]
+function ENT:ForceSetEnemy(ent, stopMoving, skipChecks)
+	if !skipChecks && (!IsValid(ent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or ent:Health() <= 0 or (ent:IsPlayer() && (!ent:Alive() or VJ_CVAR_IGNOREPLAYERS))) then return end
+	local noEne = !IsValid(self:GetEnemy())
+	self:AddEntityRelationship(ent, D_HT, 0)
+	self:SetEnemy(ent)
+	self:UpdateEnemyMemory(ent, ent:GetPos())
+	-- Must be called after "UpdateEnemyMemory"
+		-- Let the engine know that our reaction time is instant otherwise it will reset the enemy if it's the first time it has seen this
+	self:IgnoreEnemyUntil(ent, 0)
+	self:SetNPCState(NPC_STATE_COMBAT)
+	self.EnemyData.TimeSet = CurTime()
+	if noEne then
+		if stopMoving then
+			self:ClearGoal()
+			self:StopMoving()
+		end
+		self:DoAlert(ent)
+	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoAlert(ent)
-	if !IsValid(self:GetEnemy()) or self.Alerted == true then return end
+	//print("DoAlert - ", self, ent, self:GetEnemy(), self.Alerted)
+	if !IsValid(ent) then return end
+	self.LatestEnemyDistance = self:GetPos():Distance(ent:GetPos())
+	if self.Alerted then return end
+	local curTime = CurTime()
+	local eneData = self.EnemyData
 	self.Alerted = true
 	-- Fixes the NPC switching from combat to alert to combat after it sees an enemy because `DoAlert` is called after NPC_STATE_COMBAT is set
 	if self:GetNPCState() != NPC_STATE_COMBAT then
 		self:SetNPCState(NPC_STATE_ALERT)
 	end
-	self.EnemyData.LastVisibleTime = CurTime()
+	eneData.TimeSinceAcquired = curTime
+	eneData.LastVisibleTime = curTime
 	self:OnAlert(ent)
-	if CurTime() > self.NextAlertSoundT then
+	if curTime > self.NextAlertSoundT then
 		self:PlaySoundSystem("Alert")
-		self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert.a, self.NextSoundTime_Alert.b)
+		self.NextAlertSoundT = curTime + math.Rand(self.NextSoundTime_Alert.a, self.NextSoundTime_Alert.b)
 	end
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Checks the relationship towards the given entity and converts custom dispositions such as "D_VJ_INTEREST" to a default source engine disposition
+		- ent = The entity to check its relation with
+	Returns
+		- Disposition value, list: https://wiki.facepunch.com/gmod/Enums/D
+-----------------------------------------------------------]]
+function ENT:CheckRelationship(ent)
+	-- Only enemy to a single NPC | Used by the bullseye under certain circumstances
+	if ent.ForceEntAsEnemy then
+		if ent.ForceEntAsEnemy == self then
+			return D_HT
+		else
+			return D_NU
+		end
+	end
+	if ent:IsFlagSet(FL_NOTARGET) or ent:Health() <= 0 then return D_NU end
+	if self:GetClass() == ent:GetClass() then return D_LI end
+	if ent:IsPlayer() && VJ_CVAR_IGNOREPLAYERS then return D_NU end
+	if self:Disposition(ent) == D_VJ_INTEREST then return D_HT end
+	return self:Disposition(ent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local cosRad20 = math_cos(math_rad(20))
 --
 function ENT:MaintainRelationships()
-	if self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE /*or self.Behavior == VJ_BEHAVIOR_PASSIVE*/ then return false end
+	if self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then return false end // or self.Behavior == VJ_BEHAVIOR_PASSIVE
 	local posEnemies = self.CurrentPossibleEnemies
 	if posEnemies == nil then return false end
-	//print(self:GetName().."'s Enemies:")
+	//print("---------------------------------------")
+	//print(self, "MaintainRelationships - CurrentPossibleEnemies:")
 	//PrintTable(posEnemies)
+	//print("----------")
 	
 	local eneData = self.EnemyData
-	eneData.VisibleCount = 0
 	local eneSeen = false
+	local eneVisCount = 0
 	local myPos = self:GetPos()
 	local myClass = self:GetClass()
 	local mySightDir = self:GetSightDirection()
 	local mySightDist = self:GetMaxLookDistance()
 	local mySightAng = math_cos(math_rad(self.SightAngle))
+	local myClasses = self.VJ_NPC_Class
 	local nearestDist = nil
-	local plyControlled = self.VJ_IsBeingControlled
+	//local plyControlled = self.VJ_IsBeingControlled
 	local sdHintBullet = sound.GetLoudestSoundHint(SOUND_BULLET_IMPACT, myPos)
 	local sdHintBulletOwner = nil
 	if sdHintBullet then
 		sdHintBulletOwner = sdHintBullet.owner
 	end
+	local canAlly = self.HasAllies
 	local notIsNeutral = self.Behavior != VJ_BEHAVIOR_NEUTRAL
 	local customFunc = self.OnMaintainRelationships
 	local it = 1
@@ -1721,140 +1698,84 @@ function ENT:MaintainRelationships()
 				if IsValid(self:GetEnemy()) && self:GetEnemy() == ent then
 					self:ResetEnemy(false)
 				end
+				self:AddEntityRelationship(ent, D_NU, 0)
 				continue
 			end
 			
 			local entPos = ent:GetPos()
 			local distanceToEnt = myPos:Distance(entPos)
-			if distanceToEnt > mySightDist then continue end
+			if distanceToEnt > mySightDist then
+				-- If ent is our current enemy then reset it!
+				local ene = self:GetEnemy()
+				if IsValid(ene) && ene == ent then
+					eneData.Reset = true
+					self:ResetEnemy(false)
+				end
+				continue
+			end
 			local entFri = false
 			local entClass = ent:GetClass()
 			local entIsNPC = ent:IsNPC()
 			local entIsPLY = ent:IsPlayer()
 			
-			-- Handle "self.VJ_AddCertainEntityAsEnemy", "self.VJ_NPC_Class", and investigations
-			if entClass != myClass && ent.VJTag_IsLiving /*&& MyVisibleTov && self:Disposition(ent) != D_LI*/ then
-				local inEneTbl = VJ.HasValue(self.VJ_AddCertainEntityAsEnemy, ent)
-				if self.HasAllies == true && inEneTbl == false then
-					for _, friClass in ipairs(self.VJ_NPC_Class) do
-						if friClass == varCPly && !self.PlayerFriendly then self.PlayerFriendly = true end -- If player ally then set the PlayerFriendly to true
-						if (ent.VJ_NPC_Class && VJ.HasValue(ent.VJ_NPC_Class, friClass)) or (entFri == true) then
-							if friClass == varCPly then -- If we have the player ally class then check if we both of us are supposed to be friends
-								if self.FriendsWithAllPlayerAllies == true && ent.FriendsWithAllPlayerAllies == true then
-									entFri = true
-									if entIsNPC then ent:AddEntityRelationship(self, D_LI, 0) end
-									self:AddEntityRelationship(ent, D_LI, 0)
-								end
-							else
+			-- Handle "self.VJ_AddCertainEntityAsEnemy", "self.VJ_AddCertainEntityAsFriendly", "self.VJ_NPC_Class"
+			if canAlly && entClass != myClass && ent.VJTag_IsLiving && !VJ.HasValue(self.VJ_AddCertainEntityAsEnemy, ent) then
+				-- Handle "self.VJ_NPC_Class"
+				for _, friClass in ipairs(myClasses) do
+					if friClass == varCPly && !self.PlayerFriendly then self.PlayerFriendly = true end -- If player ally then set the PlayerFriendly to true
+					if ent.VJ_NPC_Class && VJ.HasValue(ent.VJ_NPC_Class, friClass) then
+						-- Since we both have "CLASS_PLAYER_ALLY" then we need to do a special check if we both also have "self.FriendsWithAllPlayerAllies"
+						-- If we both do NOT have that, then we both like players but not each other!
+						if friClass == varCPly then
+							if self.FriendsWithAllPlayerAllies && ent.FriendsWithAllPlayerAllies then
 								entFri = true
-								-- If I am enemy to it, then reset it!
-								if IsValid(self:GetEnemy()) && self:GetEnemy() == ent then
-									eneData.Reset = true
-									self:ResetEnemy(false)
-								end
-								if entIsNPC then ent:AddEntityRelationship(self, D_LI, 0) end
-								self:AddEntityRelationship(ent, D_LI, 0)
 							end
+						else
+							entFri = true
 						end
 					end
-					-- Handle self.VJTag_IsBaseFriendly AND self.FriendsWithAllPlayerAllies
-					if entIsNPC && !entFri && ((self.VJTag_IsBaseFriendly && ent.IsVJBaseSNPC) or (self.PlayerFriendly && self.FriendsWithAllPlayerAllies && ent.PlayerFriendly && ent.FriendsWithAllPlayerAllies)) then
-						ent:AddEntityRelationship(self, D_LI, 0)
-						self:AddEntityRelationship(ent, D_LI, 0)
-						entFri = true
-					end
 				end
-				if !entFri && entIsNPC /*&& MyVisibleTov*/ && !self.DisableMakingSelfEnemyToNPCs && (ent.VJ_IsBeingControlled != true) then ent:AddEntityRelationship(self, D_HT, 0) end
-				if entIsPLY && (self.PlayerFriendly or entFri == true) then
-					if inEneTbl == false then
-						entFri = true
-						self:AddEntityRelationship(ent, D_LI, 0)
-						//DoPlayerSight()
-					else
-						entFri = false
-					end
-				end
-				-- Investigation detection systems, including sound, movement and flashlight
-				if !IsValid(self:GetEnemy()) && !entFri then
-					if entIsPLY then
-						self:AddEntityRelationship(ent, D_NU, 0) -- Make the player neutral since it's not supposed to be a friend
-						//if ent:Crouching() && ent:GetMoveType() != MOVETYPE_NOCLIP then -- Old and broken
-							//mySightDist = self.VJTag_ID_Boss == true and 5000 or 2000
-						//end
-					end
-					if self.CanInvestigate && self.NextInvestigationMove < CurTime() then
-						-- When a sound is detected
-						if ent.VJ_LastInvestigateSdLevel && distanceToEnt < (self.InvestigateSoundDistance * ent.VJ_LastInvestigateSdLevel) && ((CurTime() - ent.VJ_LastInvestigateSd) <= 1) then
-							if self:Visible(ent) then
-								self:StopMoving()
-								self:SetTarget(ent)
-								self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-								self.NextInvestigationMove = CurTime() + 0.3 -- Short delay, since it's only turning
-							elseif self.IsFollowing == false then
-								self:SetLastPosition(entPos)
-								self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
-								self.NextInvestigationMove = CurTime() + 2 -- Long delay, so it doesn't spam movement
-							end
-							self:OnInvestigate(ent)
-							self:PlaySoundSystem("InvestigateSound")
-						-- When a bullet hit is detected
-						elseif IsValid(sdHintBulletOwner) && sdHintBulletOwner == ent then
-							self:StopMoving()
-							self:SetLastPosition(sdHintBullet.origin)
-							self:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
-							self:OnInvestigate(ent)
-							self:PlaySoundSystem("InvestigateSound")
-							self.NextInvestigationMove = CurTime() + 0.3 -- Short delay because many bullets could hit
-						-- PLAYER ONLY: Flashlight shining on the NPC
-						elseif entIsPLY && distanceToEnt < 350 && ent:FlashlightIsOn() && (ent:GetForward():Dot((myPos - entPos):GetNormalized()) > cosRad20) then
-							//			   Asiga hos-er ^ (!ent:Crouching() && ent:GetVelocity():Length() > 0 && ent:GetMoveType() != MOVETYPE_NOCLIP && ((!ent:KeyDown(IN_WALK) && (ent:KeyDown(IN_FORWARD) or ent:KeyDown(IN_BACK) or ent:KeyDown(IN_MOVELEFT) or ent:KeyDown(IN_MOVERIGHT))) or (ent:KeyDown(IN_SPEED) or ent:KeyDown(IN_JUMP)))) or
-							self:StopMoving()
-							self:SetTarget(ent)
-							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-							self.NextInvestigationMove = CurTime() + 0.1 -- Short delay, since it's only turning
-						end
-					end
+				
+				-- Handle "self.FriendsWithAllPlayerAllies" (As a backup in case the NPC doesn't have the "CLASS_PLAYER_ALLY" class) AND "self.PlayerFriendly" AND "self.VJ_AddCertainEntityAsFriendly"
+				if !entFri && ((self.PlayerFriendly && ((entIsNPC && self.FriendsWithAllPlayerAllies && ent.PlayerFriendly && ent.FriendsWithAllPlayerAllies) or entIsPLY)) or (VJ.HasValue(self.VJ_AddCertainEntityAsFriendly, ent))) then
+					entFri = true
 				end
 			end
 			
-			/*print("----------")
-			print(self:HasEnemyEluded(ent))
-			print(self:HasEnemyMemory(ent))
-			print(CurTime() - self:GetEnemyLastTimeSeen(ent))
-			print(CurTime() - self:GetEnemyFirstTimeSeen(ent))*/
+			//print(self:HasEnemyEluded(ent))
+			//print(self:HasEnemyMemory(ent))
+			//print(CurTime() - self:GetEnemyLastTimeSeen(ent))
+			//print(CurTime() - self:GetEnemyFirstTimeSeen(ent))
 			
 			-- We have to do this here so we make sure non-VJ NPCs can still target this NPC, even if it's being controlled!
-			if plyControlled && self.VJ_TheControllerBullseye != ent then
-				//self:AddEntityRelationship(ent, D_NU, 0)
-				ent = self.VJ_TheControllerBullseye
-				entIsPLY = false
-			end
+			//if plyControlled && self.VJ_TheControllerBullseye != ent then
+			//	//self:AddEntityRelationship(ent, D_NU, 0)
+			//	ent = self.VJ_TheControllerBullseye
+			//	entIsPLY = false
+			//end
 			
-			-- Check in order: Can find enemy + Neutral or not + Is visible + In sight
-			if self.DisableFindEnemy == false && (notIsNeutral or self.Alerted) && (self.FindEnemy_CanSeeThroughWalls or self:Visible(ent)) && (self.FindEnemy_UseSphere or (mySightDir:Dot((entPos - myPos):GetNormalized()) > mySightAng)) then
-				local check = self:CheckRelationship(ent)
-				if check == D_HT then -- Is enemy
-					eneSeen = true
-					eneData.VisibleCount = eneData.VisibleCount + 1
-					self:AddEntityRelationship(ent, D_HT, 0)
-					-- If the detected enemy is closer than the previous enemy, the set this as the enemy!
-					if (nearestDist == nil) or (distanceToEnt < nearestDist) then
-						nearestDist = distanceToEnt
-						self:VJ_DoSetEnemy(ent, true, true)
-					end
-				-- If the current enemy is a friendly player, then reset the enemy!
-				elseif check == D_LI && entIsPLY && IsValid(self:GetEnemy()) && self:GetEnemy() == ent then
+			-- If the ent is a friend then set the relation as D_LI
+			if entFri then
+				//print("MaintainRelationships 2 - friendly!")
+				-- Reset the enemy if it's currently this friendly ent
+				local ene = self:GetEnemy()
+				if IsValid(ene) && ene == ent then
 					eneData.Reset = true
 					self:ResetEnemy(false)
 				end
-			end
-			
-			if entIsPLY then
+				
+				//ent:AddEntityRelationship(self, D_LI, 0)
+				self:AddEntityRelationship(ent, D_LI, 0)
+				
+				-- Handle how non-VJ NPCs feel towards us
+				if entIsNPC && !ent.IsVJBaseSNPC then
+					ent:AddEntityRelationship(self, D_LI, 0)
+				end
+				
 				-- MoveOutOfFriendlyPlayersWay system, Based on:
 					-- "CNPC_PlayerCompanion::PredictPlayerPush"	--> https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/hl2/npc_playercompanion.cpp#L548
 					-- "CAI_BaseNPC::TestPlayerPushing"				--> https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L12676
-				// && !self:BusyWithActivity()
-				if entFri && self.MoveOutOfFriendlyPlayersWay && !self.IsGuard && ent:GetMoveType() != MOVETYPE_NOCLIP then
+				if entIsPLY && self.MoveOutOfFriendlyPlayersWay && !self.IsGuard && ent:GetMoveType() != MOVETYPE_NOCLIP then // && !self:BusyWithActivity()
 					local plyVel = ent:GetInternalVariable("m_vecSmoothedVelocity")
 					if plyVel:LengthSqr() >= 19600 then -- 140 * 140 = 19600
 						local delta = self:WorldSpaceCenter() - (ent:WorldSpaceCenter() + plyVel * 0.4);
@@ -1871,28 +1792,96 @@ function ENT:MaintainRelationships()
 						end
 					end
 				end
-				-- HasOnPlayerSight system, used to do certain actions when it sees the player
-				if self.HasOnPlayerSight == true && ent:Alive() &&(CurTime() > self.OnPlayerSightNextT) && (distanceToEnt < self.OnPlayerSightDistance) && self:Visible(ent) && (mySightDir:Dot((ent:GetPos() - myPos):GetNormalized()) > mySightAng) then
-					-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
-					local disp = self.OnPlayerSightDispositionLevel
-					if (disp == 0) or (disp == 1 && (self:Disposition(ent) == D_LI or self:Disposition(ent) == D_NU)) or (disp == 2 && self:Disposition(ent) != D_LI) then
-						self:OnPlayerSight(ent)
-						self:PlaySoundSystem("OnPlayerSight")
-						if self.OnPlayerSightOnlyOnce == true then -- If it's only suppose to play it once then turn the system off
-							self.HasOnPlayerSight = false
-						else
-							self.OnPlayerSightNextT = CurTime() + math.Rand(self.OnPlayerSightNextTime.a, self.OnPlayerSightNextTime.b)
+			else
+				local ene = self:GetEnemy()
+				local eneValid = IsValid(ene)
+				
+				-- Handle how non-VJ NPCs feel towards us
+				if entIsNPC && !ent.IsVJBaseSNPC then
+					ent:AddEntityRelationship(self, D_HT, 0)
+				end
+				
+				-- Check if this NPC should be engaged, if not then set it as an interest but don't engage it
+				-- Restriction: If the current enemy is this entity then skip as it we want to engage regardless
+				local entCanEngage = ent.CanBeEngaged
+				if entCanEngage && !entCanEngage(ent, self, distanceToEnt) && (!eneValid or ene != ent) then
+					//print("MaintainRelationships 2 - entCanEngage")
+					self:AddEntityRelationship(ent, D_VJ_INTEREST, 0)
+				else
+					-- FindEnemy: In order - Can find enemy + Not neutral or alerted + Is visible + In sight
+					if !self.DisableFindEnemy && (notIsNeutral or self.Alerted) && (self.FindEnemy_CanSeeThroughWalls or self:Visible(ent)) && (self.FindEnemy_UseSphere or (mySightDir:Dot((entPos - myPos):GetNormalized()) > mySightAng)) then
+						//print("MaintainRelationships 2 - set enemy")
+						eneSeen = true
+						eneVisCount = eneVisCount + 1
+						self:AddEntityRelationship(ent, D_HT, 0)
+						-- If the detected enemy is closer than the previous enemy, the set this as the enemy!
+						if (nearestDist == nil) or (distanceToEnt < nearestDist) then
+							nearestDist = distanceToEnt
+							self:ForceSetEnemy(ent, true, true)
 						end
+					-- If all else failed then check if we hate this entity, if not then set it as an interest
+					elseif self:Disposition(ent) != D_HT then
+						//print("MaintainRelationships 2 - regular D_VJ_INTEREST")
+						self:AddEntityRelationship(ent, D_VJ_INTEREST, 0)
+					end
+				end
+				
+				-- Investigation detection systems, including sound, movement and player flashlight
+				if !eneValid && self.CanInvestigate && self.NextInvestigationMove < CurTime() then
+					-- Investigation: Sound detection
+					if ent.VJ_LastInvestigateSdLevel && distanceToEnt < (self.InvestigateSoundDistance * ent.VJ_LastInvestigateSdLevel) && ((CurTime() - ent.VJ_LastInvestigateSd) <= 1) then
+						if self:Visible(ent) then
+							self:StopMoving()
+							self:SetTarget(ent)
+							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+							self.NextInvestigationMove = CurTime() + 0.3 -- Short delay, since it's only turning
+						elseif self.IsFollowing == false then
+							self:SetLastPosition(entPos)
+							self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
+							self.NextInvestigationMove = CurTime() + 2 -- Long delay, so it doesn't spam movement
+						end
+						self:OnInvestigate(ent)
+						self:PlaySoundSystem("InvestigateSound")
+					-- Investigation: Bullet hit detection
+					elseif IsValid(sdHintBulletOwner) && sdHintBulletOwner == ent then
+						self:StopMoving()
+						self:SetLastPosition(sdHintBullet.origin)
+						self:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
+						self:OnInvestigate(ent)
+						self:PlaySoundSystem("InvestigateSound")
+						self.NextInvestigationMove = CurTime() + 0.3 -- Short delay because many bullets could hit
+					-- Investigation: Player shining flashlight onto the NPC
+					elseif entIsPLY && distanceToEnt < 350 && ent:FlashlightIsOn() && (ent:GetForward():Dot((myPos - entPos):GetNormalized()) > cosRad20) then
+						//			   Asiga hos-er ^ (!ent:Crouching() && ent:GetVelocity():Length() > 0 && ent:GetMoveType() != MOVETYPE_NOCLIP && ((!ent:KeyDown(IN_WALK) && (ent:KeyDown(IN_FORWARD) or ent:KeyDown(IN_BACK) or ent:KeyDown(IN_MOVELEFT) or ent:KeyDown(IN_MOVERIGHT))) or (ent:KeyDown(IN_SPEED) or ent:KeyDown(IN_JUMP)))) or
+						self:StopMoving()
+						self:SetTarget(ent)
+						self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+						self.NextInvestigationMove = CurTime() + 0.1 -- Short delay, since it's only turning
+					end
+				end
+			end
+			
+			-- HasOnPlayerSight system, used to do certain actions when it sees the player
+			if entIsPLY && self.HasOnPlayerSight == true && ent:Alive() &&(CurTime() > self.OnPlayerSightNextT) && (distanceToEnt < self.OnPlayerSightDistance) && self:Visible(ent) && (mySightDir:Dot((ent:GetPos() - myPos):GetNormalized()) > mySightAng) then
+				-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
+				local disp = self.OnPlayerSightDispositionLevel
+				if (disp == 0) or (disp == 1 && (self:Disposition(ent) == D_LI or self:Disposition(ent) == D_NU)) or (disp == 2 && self:Disposition(ent) != D_LI) then
+					self:OnPlayerSight(ent)
+					self:PlaySoundSystem("OnPlayerSight")
+					if self.OnPlayerSightOnlyOnce == true then -- If it's only suppose to play it once then turn the system off
+						self.HasOnPlayerSight = false
+					else
+						self.OnPlayerSightNextT = CurTime() + math.Rand(self.OnPlayerSightNextTime.a, self.OnPlayerSightNextTime.b)
 					end
 				end
 			end
 			
 			if customFunc then customFunc(self, ent, entFri, distanceToEnt) end
 		end
-		//return true
 	end
-	if eneSeen == true then return true else return false end
-	//return false
+	eneData.VisibleCount = eneVisCount
+	//print("---------------------------------------")
+	return eneSeen
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1900,7 +1889,6 @@ end
 		- dist = How far to check for allies | DEFAULT: 800
 -----------------------------------------------------------]]
 function ENT:Allies_CallHelp(dist)
-	if !self.CallForHelp or self.AttackType == VJ.ATTACK_TYPE_GRENADE then return end
 	local myClass = self:GetClass()
 	local curTime = CurTime()
 	local isFirst = true -- Is this the first ally that received this call?
@@ -1925,7 +1913,7 @@ function ENT:Allies_CallHelp(dist)
 					if eneIsPlayer && v.PlayerFriendly then
 						v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy + 1] = ene
 					end
-					v:VJ_DoSetEnemy(ene, true)
+					v:ForceSetEnemy(ene, true)
 					if curTime > v.NextChaseTime then
 						if v.Behavior != VJ_BEHAVIOR_PASSIVE && v:Visible(ene) then
 							v:SetTarget(ene)
@@ -2058,7 +2046,7 @@ function ENT:DecideAttackTimer(timer1, timer2, untilDamage, animDur)
 	return result // / self:GetPlaybackRate() -- No need, playback is already calculated above
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local function FlinchDamageTypeCheck(checkTbl, dmgType)
+local function flinchDamageTypeCheck(checkTbl, dmgType)
 	for k = 1, #checkTbl do
 		if bAND(dmgType, checkTbl[k]) != 0 then
 			return true
@@ -2080,7 +2068,7 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 		self.NextFlinchT = CurTime() + (self.NextFlinchTime == false and animDur or self.NextFlinchTime)
 	end
 	
-	if math.random(1, self.FlinchChance) == 1 && ((self.CanFlinch == 1) or (self.CanFlinch == 2 && FlinchDamageTypeCheck(self.FlinchDamageTypes, dmginfo:GetDamageType()))) then
+	if math.random(1, self.FlinchChance) == 1 && ((self.CanFlinch == 1) or (self.CanFlinch == 2 && flinchDamageTypeCheck(self.FlinchDamageTypes, dmginfo:GetDamageType()))) then
 		if self:OnFlinch(dmginfo, hitgroup, "PriorExecution") == false then return end
 		
 		local hitgroupTbl = self.HitGroupFlinching_Values
@@ -2206,15 +2194,13 @@ function ENT:SetupBloodColor(blColor)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodParticles(dmginfo, hitgroup)
-	local name = VJ.PICK(self.CustomBlood_Particle)
-	if name == false then return end
+	local particleName = VJ.PICK(self.CustomBlood_Particle)
+	if particleName == false then return end
 	
-	local pos = dmginfo:GetDamagePosition()
-	if pos == defPos then pos = self:GetPos() + self:OBBCenter() end
-	
+	local dmgPos = dmginfo:GetDamagePosition()
 	local particle = ents.Create("info_particle_system")
-	particle:SetKeyValue("effect_name", name)
-	particle:SetPos(pos)
+	particle:SetKeyValue("effect_name", particleName)
+	particle:SetPos((dmgPos == defPos and (self:GetPos() + self:OBBCenter())) or dmgPos)
 	particle:Spawn()
 	particle:Activate()
 	particle:Fire("Start")
@@ -2223,25 +2209,27 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodDecal(dmginfo, hitgroup)
 	if VJ.PICK(self.CustomBlood_Decal) == false then return end
-	local force = dmginfo:GetDamageForce()
-	local pos = dmginfo:GetDamagePosition()
-	if pos == defPos then pos = self:GetPos() + self:OBBCenter() end
+	local dmgForce = dmginfo:GetDamageForce()
+	local dmgPos = dmginfo:GetDamagePosition()
+	if dmgPos == defPos then dmgPos = self:GetPos() + self:OBBCenter() end
+	local decals = self.CustomBlood_Decal
+	local maxDist = self.BloodDecalDistance
+	local clampedLength = math_clamp(dmgForce:Length() * 10, 100, maxDist)
 	
 	-- Badi ayroun
-	local tr = util.TraceLine({start = pos, endpos = pos + force:GetNormal() * math_clamp(force:Length() * 10, 100, self.BloodDecalDistance), filter = self})
-	//if !tr.HitWorld then return end
+	local tr = util.TraceLine({start = dmgPos, endpos = dmgPos + dmgForce:GetNormal() * clampedLength, filter = self})
 	local trNormalP = tr.HitPos + tr.HitNormal
 	local trNormalN = tr.HitPos - tr.HitNormal
-	util.Decal(VJ.PICK(self.CustomBlood_Decal), trNormalP, trNormalN, self)
+	util.Decal(VJ.PICK(decals), trNormalP, trNormalN, self)
 	for _ = 1, 2 do
-		if math.random(1, 2) == 1 then util.Decal(VJ.PICK(self.CustomBlood_Decal), trNormalP + Vector(math.random(-70, 70), math.random(-70, 70), 0), trNormalN, self) end
+		if math.random(1, 2) == 1 then util.Decal(VJ.PICK(decals), trNormalP + Vector(math.random(-70, 70), math.random(-70, 70), 0), trNormalN, self) end
 	end
 	
 	-- Kedni ayroun
 	if math.random(1, 2) == 1 then
-		local d2_endpos = pos + Vector(0, 0, - math_clamp(force:Length() * 10, 100, self.BloodDecalDistance))
-		util.Decal(VJ.PICK(self.CustomBlood_Decal), pos, d2_endpos, self)
-		if math.random(1, 2) == 1 then util.Decal(VJ.PICK(self.CustomBlood_Decal), pos, d2_endpos + Vector(math.random(-120, 120), math.random(-120, 120), 0), self) end
+		local d2_endpos = dmgPos + Vector(0, 0, - clampedLength)
+		util.Decal(VJ.PICK(decals), dmgPos, d2_endpos, self)
+		if math.random(1, 2) == 1 then util.Decal(VJ.PICK(decals), dmgPos, d2_endpos + Vector(math.random(-120, 120), math.random(-120, 120), 0), self) end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2270,7 +2258,7 @@ function ENT:SpawnBloodPool(dmginfo, hitgroup)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:IdleSoundCode(customSd, sdType)
+function ENT:IdleSoundCode(customSD, sdType)
 	if !self.HasSounds or !self.HasIdleSounds or self.Dead then return end
 	if (self.NextIdleSoundT_RegularChange < CurTime()) && (CurTime() > self.NextIdleSoundT) then
 		sdType = sdType or VJ.CreateSound
@@ -2281,22 +2269,22 @@ function ENT:IdleSoundCode(customSd, sdType)
 			hasEnemy = false
 		end
 		
-		local cTbl = VJ.PICK(customSd)
+		local customTbl = VJ.PICK(customSD)
 		local setTimer = true
 		if hasEnemy == true then
-			local sdtbl = VJ.PICK(self.SoundTbl_CombatIdle)
-			if (math.random(1,self.CombatIdleSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
-				if cTbl != false then sdtbl = cTbl end
-				self.CurrentIdleSound = sdType(self, sdtbl, self.CombatIdleSoundLevel, self:VJ_DecideSoundPitch(self.CombatIdleSoundPitch.a, self.CombatIdleSoundPitch.b))
+			local pickedSD = VJ.PICK(self.SoundTbl_CombatIdle)
+			if (math.random(1,self.CombatIdleSoundChance) == 1 && pickedSD != false) or (customTbl != false) then
+				if customTbl != false then pickedSD = customTbl end
+				self.CurrentIdleSound = sdType(self, pickedSD, self.CombatIdleSoundLevel, self:VJ_DecideSoundPitch(self.CombatIdleSoundPitch.a, self.CombatIdleSoundPitch.b))
 			end
 		else
-			local sdtbl = VJ.PICK(self.SoundTbl_Idle)
+			local pickedSD = VJ.PICK(self.SoundTbl_Idle)
 			local sdtbl2 = VJ.PICK(self.SoundTbl_IdleDialogue)
 			local sdrand = math.random(1, self.IdleSoundChance)
 			local function RegularIdle()
-				if (sdrand == 1 && sdtbl != false) or (cTbl != false) then
-					if cTbl != false then sdtbl = cTbl end
-					self.CurrentIdleSound = sdType(self, sdtbl, self.IdleSoundLevel, self:VJ_DecideSoundPitch(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
+				if (sdrand == 1 && pickedSD != false) or (customTbl != false) then
+					if customTbl != false then pickedSD = customTbl end
+					self.CurrentIdleSound = sdType(self, pickedSD, self.IdleSoundLevel, self:VJ_DecideSoundPitch(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
 				end
 			end
 			if sdtbl2 != false && sdrand == 1 && self.HasIdleDialogueSounds == true && math.random(1, 2) == 1 then
@@ -2376,19 +2364,19 @@ function ENT:IdleDialogueFindEnt()
 	return returnEnt, false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:IdleDialogueAnswerSoundCode(customSd, sdType)
+function ENT:IdleDialogueAnswerSoundCode(customSD, sdType)
 	if self.Dead or self.HasSounds == false or self.HasIdleDialogueAnswerSounds == false then return 0 end
 	sdType = sdType or VJ.CreateSound
-	local cTbl = VJ.PICK(customSd)
-	local sdtbl = VJ.PICK(self.SoundTbl_IdleDialogueAnswer)
-	if (math.random(1,self.IdleDialogueAnswerSoundChance) == 1 && sdtbl != false) or (cTbl != false) then
-		if cTbl != false then sdtbl = cTbl end
+	local customTbl = VJ.PICK(customSD)
+	local pickedSD = VJ.PICK(self.SoundTbl_IdleDialogueAnswer)
+	if (math.random(1, self.IdleDialogueAnswerSoundChance) == 1 && pickedSD) or customTbl then
+		if customTbl then pickedSD = customTbl end
 		StopSound(self.CurrentSpeechSound)
 		StopSound(self.CurrentExtraSpeechSound)
 		StopSound(self.CurrentIdleSound)
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2, 3)
-		self.CurrentSpeechSound = sdType(self, sdtbl, self.IdleDialogueAnswerSoundLevel, self:VJ_DecideSoundPitch(self.IdleDialogueAnswerSoundPitch.a, self.IdleDialogueAnswerSoundPitch.b))
-		return SoundDuration(sdtbl) -- Return the duration of the sound, which will be used to make the other SNPC stand still
+		self.CurrentSpeechSound = sdType(self, pickedSD, self.IdleDialogueAnswerSoundLevel, self:VJ_DecideSoundPitch(self.IdleDialogueAnswerSoundPitch.a, self.IdleDialogueAnswerSoundPitch.b))
+		return SoundDuration(pickedSD) -- Return the duration of the sound, which will be used to make the other SNPC stand still
 	else
 		return 0
 	end
@@ -2528,6 +2516,7 @@ local dispToVal = {[D_LI] = false, [D_HT] = true, [D_NU] = "Neutral"}
 function ENT:DoRelationshipCheck(ent) return dispToVal[self:CheckRelationship(ent)] end
 function ENT:FaceCertainPosition(target, faceTime) return self:SetTurnTarget(target, faceTime, false, false) end
 function ENT:FaceCertainEntity(target, faceCurEnemy, faceTime) return self:SetTurnTarget(faceCurEnemy and "Enemy" or target, faceTime, false, false) end
+function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy) return self:ForceSetEnemy(ent, stopMoving) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Checks all 4 sides around the NPC

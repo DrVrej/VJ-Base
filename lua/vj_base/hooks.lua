@@ -70,6 +70,7 @@ local zombieNPCs = {npc_fastzombie_torso = true, npc_zombine = true, npc_zombie_
 local antlionNPCs = {npc_antlion = true, npc_antlionguard = true, npc_antlion_worker = true, npc_antlion_grub = true}
 local xenNPCs = {monster_bullchicken = true, monster_alien_grunt = true, monster_alien_slave = true, monster_alien_controller = true, monster_houndeye = true, monster_gargantua = true, monster_nihilanth = true, monster_ichthyosaur = true, monster_tentacle = true}
 local headcrabNPCs = {npc_headcrab_fast = true, npc_headcrab_black = true, npc_headcrab_poison = true, npc_headcrab = true, monster_headcrab = true, monster_babycrab = true}
+local natureNPCs = {npc_crow = true, npc_pigeon = true, npc_seagull = true, monster_cockroach = true}
 local ignoredNPCs = {monster_generic = true,  monster_furniture = true,  npc_furniture = true,  npc_helicoptersensor = true, monster_gman = true,  npc_grenade_frag = true,  bullseye_strider_focus = true,  npc_bullseye = true,  npc_enemyfinder = true,  hornet = true}
 local grenadeEnts = {npc_grenade_frag = true, grenade_hand = true, obj_spore = true, obj_grenade = true, obj_handgrenade = true, doom3_grenade = true, fas2_thrown_m67 = true, cw_grenade_thrown = true, obj_cpt_grenade = true, cw_flash_thrown = true, ent_hl1_grenade = true, rtbr_grenade_frag = true}
 local grenadeThrowBackEnts = {npc_grenade_frag = true, obj_spore = true, obj_handgrenade = true, obj_cpt_grenade = true, cw_grenade_thrown = true, cw_flash_thrown = true, cw_smoke_thrown = true, ent_hl1_grenade = true, rtbr_grenade_frag = true}
@@ -93,6 +94,17 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 				-- Set headcrab tag for default headcrab NPCs
 				elseif headcrabNPCs[entClass] then
 					ent.VJTag_ID_Headcrab = true
+				-- Make default nature-like NPCs have the correct behavior so VJ NPCs can recognize it correctly
+				elseif natureNPCs[entClass] then
+					ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE
+				elseif entClass == "npc_barnacle" or entClass == "monster_barnacle" then
+					ent.CanBeEngaged = function(_, otherEnt, distance)
+						if otherEnt.IsVJBaseSNPC_Human then
+							return distance <= 800
+						else
+							return (otherEnt.HasRangeAttack && distance <= 800) or (distance <= 100)
+						end
+					end
 				end
 			end
 			-- Wait 0.1 seconds to make sure the NPC is initialized properly
@@ -275,7 +287,11 @@ cvars.AddChangeCallback("ai_ignoreplayers", function(convar_name, oldValue, newV
 					local x = posEnemies[it]
 					if IsValid(x) && x:IsPlayer() then
 						v:AddEntityRelationship(x, D_NU, 10) -- Make the player neutral
-						if IsValid(v:GetEnemy()) && v:GetEnemy() == x then v:ResetEnemy() end -- Reset the NPC's enemy if it's a player
+						-- Reset the NPC's enemy if it's a player
+						if IsValid(v:GetEnemy()) && v:GetEnemy() == x then
+							v.EnemyData.Reset = true
+							v:ResetEnemy()
+						end
 						table_remove(posEnemies, it) -- Remove the player from possible enemy table
 					else
 						it = it + 1

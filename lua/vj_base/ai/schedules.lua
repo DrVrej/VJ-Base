@@ -7,7 +7,7 @@ require("vj_ai_schedule")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_FACE_X(faceType, customFunc)
 	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
-	if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false) or (self.IsVJBaseSNPC_Tank == true) then return end
+	if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false) or self.IsVJBaseSNPC_Tank then return end
 	local schedFace = vj_ai_schedule.New("vj_face_x")
 	schedFace:EngTask(faceType or "TASK_FACE_TARGET", 0)
 	if (customFunc) then customFunc(schedFace) end
@@ -97,6 +97,14 @@ function ENT:VJ_TASK_IDLE_WANDER()
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
 	//self:SetLastPosition(self:GetPos() + self:GetForward() * 300)
 	self:StartSchedule(schedIdleWander)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:VJ_TASK_IDLE_STAND()
+	if self:IsMoving() or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
+	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:BusyWithActivity() then return end
+	//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
+	self:MaintainIdleAnimation(self:GetIdealActivity() != ACT_IDLE)
+	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:TASK_VJ_PLAY_ACTIVITY(taskStatus, data)
@@ -211,21 +219,14 @@ function ENT:OnTaskFailed(failCode, failString)
 						self:ClearGoal() -- Otherwise we may get stuck in movement (if schedule had a movement!)
 						self:NextTask(curSched) -- Attempt to move on to the next task!
 					end
-					self:DoRunCode_OnFail(curSched) -- Run the failure function if we have one
+					-- Handle "RunCode_OnFail"
+					if !curSched.AlreadyRanCode_OnFail && curSched.RunCode_OnFail != nil then
+						curSched.AlreadyRanCode_OnFail = true
+						curSched.RunCode_OnFail()
+					end
 				end
 			end
 		end)
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoRunCode_OnFail(schedule)
-	if schedule == nil or schedule.AlreadyRanCode_OnFail == true then return false end
-	if schedule.RunCode_OnFail != nil && IsValid(self) then
-		schedule.FailureHandled = true
-		schedule.AlreadyRanCode_OnFail = true
-		schedule.RunCode_OnFail()
-		//self:ClearCondition(COND_TASK_FAILED) -- Won't do anything, engine will set COND_TASK_FAILED right after
-		return true
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -251,48 +252,36 @@ function ENT:OnMovementComplete()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnStateChange(oldState, newState)
-	//print("OnStateChange: ", oldState, newState)
+	//print("OnStateChange - ", self, ": ", oldState, newState)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- lua_run PrintTable(Entity(1):GetEyeTrace().Entity.CurrentSchedule)
 --
 function ENT:StartSchedule(schedule)
 	if self.MovementType == VJ_MOVETYPE_STATIONARY && schedule.HasMovement == true then return end -- It's stationary therefore it should not move!
-	if (self:GetState() == VJ_STATE_ONLY_ANIMATION or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self:GetState() == VJ_STATE_ONLY_ANIMATION_NOATTACK) && !schedule.IsPlayActivity then return end
-	local curSched = self.CurrentSchedule
-	if (IsValid(self:GetInternalVariable("m_hOpeningDoor")) or self:GetInternalVariable("m_flMoveWaitFinished") > 0) && curSched && schedule.Name == curSched.Name then return end -- If it's the same task and it's opening a door, then DO NOT continue
-	//print("StartSchedule:", schedule.Name)
-	-- Clean up any schedule it may have been doing
-	if curSched && !self.Dead then
-		self:ScheduleFinished(self.CurrentSchedule)
+	-- Certain states should ONLY do animation schedules!
+	if schedule.IsPlayActivity then
+		local curState = self:GetState()
+		if curState == VJ_STATE_ONLY_ANIMATION or curState == VJ_STATE_ONLY_ANIMATION_CONSTANT or curState == VJ_STATE_ONLY_ANIMATION_NOATTACK then return end
 	end
+	local curSched = self.CurrentSchedule
+	if curSched then
+		-- If it's the same task AND it's opening a door OR doing a move wait then cancel the new schedule!
+		if schedule.Name == curSched.Name && (IsValid(self:GetInternalVariable("m_hOpeningDoor")) or self:GetInternalVariable("m_flMoveWaitFinished") > 0) then
+			return
+		end
+		-- Clean up any schedule it may have been doing
+		if !self.Dead then
+			self:ScheduleFinished(curSched)
+		end
+	end
+	//print("StartSchedule:", schedule.Name)
 	self:ClearCondition(COND_TASK_FAILED)
 	if (!schedule.RunCode_OnFail) then schedule.RunCode_OnFail = nil end -- Code that will run ONLY when it fails!
 	if (!schedule.RunCode_OnFinish) then schedule.RunCode_OnFinish = nil end -- Code that will run once the task finished (Will run even if failed)
 	if (!schedule.ResetOnFail) then schedule.ResetOnFail = false end -- Makes the NPC stop moving if it fails
-	if (!schedule.StopScheduleIfNotMoving) then schedule.StopScheduleIfNotMoving = false end -- Will stop from certain entities, such as other NPCs
-	if (!schedule.StopScheduleIfNotMoving_Any) then schedule.StopScheduleIfNotMoving_Any = false end -- Will stop from any blocking entity!
 	if (!schedule.CanBeInterrupted) then schedule.CanBeInterrupted = false end
 	if (!schedule.CanShootWhenMoving) then schedule.CanShootWhenMoving = false end -- Is it able to fire when moving?
-	-- No longer needed, all the corresponding variables are set directly in the module to save performance!
-	/*if !schedule.HasMovement then
-		for _,v in ipairs(schedule.Tasks) do
-			if tasksRun[v.TaskName] then
-				schedule.HasMovement = true
-				schedule.MoveType = 1
-				break
-			elseif tasksWalk[v.TaskName] then
-				schedule.HasMovement = true
-				schedule.MoveType = 0
-				break
-			else
-				schedule.HasMovement = false
-				schedule.MoveType = false
-			end
-		end
-	end
-	if schedule.HasMovement == nil then schedule.HasMovement = false end
-	if schedule.MoveType == nil then schedule.MoveType = false end*/
 	-- This stops movements from running if another NPC is stuck in it
 	-- Pros:
 		-- Successfully reduces lag when many NPCs are stuck in each other
@@ -353,7 +342,7 @@ function ENT:StartSchedule(schedule)
 	
 	schedule.AlreadyRanCode_OnFail = false
 	schedule.AlreadyRanCode_OnFinish = false
-	//if self.VJ_DEBUG == true then PrintTable(schedule) end
+	//if self.VJ_DEBUG then PrintTable(schedule) end
 	self.CurrentSchedule = schedule
 	self.CurrentTaskID = 1
 	self:SetTask(schedule:GetTask(1))
