@@ -1907,7 +1907,7 @@ function ENT:Allies_CallHelp(dist)
 							v:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 						else
 							v:PlaySoundSystem("OnReceiveOrder")
-							v:DoChaseAnimation()
+							v:MaintainAlertBehavior()
 						end
 					end
 					isFirst = false
@@ -2504,6 +2504,7 @@ function ENT:DoRelationshipCheck(ent) return dispToVal[self:CheckRelationship(en
 function ENT:FaceCertainPosition(target, faceTime) return self:SetTurnTarget(target, faceTime, false, false) end
 function ENT:FaceCertainEntity(target, faceCurEnemy, faceTime) return self:SetTurnTarget(faceCurEnemy and "Enemy" or target, faceTime, false, false) end
 function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy) return self:ForceSetEnemy(ent, stopMoving) end
+function ENT:DoChaseAnimation(alwaysChase) self:MaintainAlertBehavior(alwaysChase) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Checks all 4 sides around the NPC

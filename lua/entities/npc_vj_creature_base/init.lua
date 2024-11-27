@@ -87,7 +87,9 @@ ENT.CanReceiveOrders = true -- Can the NPC receive orders from others? | Ex: All
 	-- When false it will not receive the following: "CallForHelp", "CallForBackUpOnDamage", "BringFriendsOnDeath", "AlertFriendsOnDeath", "Passive_AlliesRunOnDamage"
 ENT.HasAllies = true -- Put to false if you want it not to have any allies
 ENT.VJ_NPC_Class = {} -- NPCs with the same class with be allied to each other
-	-- Common Classes: Combine = CLASS_COMBINE || Zombie = CLASS_ZOMBIE || Antlions = CLASS_ANTLION || Xen = CLASS_XEN || Player Friendly = CLASS_PLAYER_ALLY
+	-- Common Classes:
+		-- Players / Resistance / Black Mesa = "CLASS_PLAYER_ALLY" || HECU = "CLASS_UNITED_STATES" || Portal = "CLASS_APERTURE"
+		-- Combine = "CLASS_COMBINE" || Zombie = "CLASS_ZOMBIE" || Antlions = "CLASS_ANTLION" || Xen = "CLASS_XEN" || Black-Ops = "CLASS_BLACKOPS"
 ENT.FriendsWithAllPlayerAllies = false -- Should this NPC be friends with other player allies?
 ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE -- Type of AI behavior to use for this NPC
 	-- VJ_BEHAVIOR_AGGRESSIVE = Default behavior, attacks enemies || VJ_BEHAVIOR_NEUTRAL = Neutral to everything, unless provoked
@@ -1732,7 +1734,7 @@ function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoIdleAnimation(idleType) -- idleType: nil = Random | 1 = Wander | 2 = Idle Stand
+function ENT:MaintainIdleBehavior(idleType) -- idleType: nil = Random | 1 = Wander | 2 = Idle Stand
 	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead or self.VJ_IsBeingControlled or (self.CurrentAttackAnimationTime > CurTime()) or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
 	
 	if self.IdleAlwaysWander && !idleType then idleType = 1 end
@@ -1756,7 +1758,7 @@ function ENT:DoIdleAnimation(idleType) -- idleType: nil = Random | 1 = Wander | 
 	self.NextWanderTime = CurTime() + math.Rand(3, 6) // self.NextIdleTime
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoChaseAnimation(alwaysChase) -- alwaysChase: true = Override to always make the NPC chase
+function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase: true = Override to always make the NPC chase
 	local ene = self:GetEnemy()
 	local curTime = CurTime()
 	if self.NextChaseTime > curTime or self.Dead or self.VJ_IsBeingControlled or self.Flinching or self.IsVJBaseSNPC_Tank or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
@@ -1792,7 +1794,7 @@ function ENT:DoChaseAnimation(alwaysChase) -- alwaysChase: true = Override to al
 			self:VJ_TASK_CHASE_ENEMY(true)
 		elseif math.random(1, 30) == 1 && !self:IsMoving() then
 			self.NextWanderTime = 0
-			self:DoIdleAnimation(1)
+			self:MaintainIdleBehavior(1)
 			self:RememberUnreachable(ene, 4)
 		else
 			self:VJ_TASK_IDLE_STAND()
@@ -1839,7 +1841,7 @@ local finishAttack = {
 		if skipStopAttacks != true then
 			timer.Create("timer_melee_finished"..self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Melee, self.NextAnyAttackTime_Melee_DoRand, self.TimeUntilMeleeAttackDamage, self.CurrentAttackAnimationDuration), 1, function()
 				self:StopAttacks()
-				self:DoChaseAnimation()
+				self:MaintainAlertBehavior()
 			end)
 		end
 		timer.Create("timer_melee_finished_abletomelee"..self:EntIndex(), self:DecideAttackTimer(self.NextMeleeAttackTime, self.NextMeleeAttackTime_DoRand), 1, function()
@@ -1850,7 +1852,7 @@ local finishAttack = {
 		if skipStopAttacks != true then
 			timer.Create("timer_range_finished"..self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Range, self.NextAnyAttackTime_Range_DoRand, self.TimeUntilRangeAttackProjectileRelease, self.CurrentAttackAnimationDuration), 1, function()
 				self:StopAttacks()
-				self:DoChaseAnimation()
+				self:MaintainAlertBehavior()
 			end)
 		end
 		timer.Create("timer_range_finished_abletorange"..self:EntIndex(), self:DecideAttackTimer(self.NextRangeAttackTime, self.NextRangeAttackTime_DoRand), 1, function()
@@ -1861,7 +1863,7 @@ local finishAttack = {
 		if skipStopAttacks != true then
 			timer.Create("timer_leap_finished"..self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Leap, self.NextAnyAttackTime_Leap_DoRand, self.TimeUntilLeapAttackDamage, self.CurrentAttackAnimationDuration), 1, function()
 				self:StopAttacks()
-				self:DoChaseAnimation()
+				self:MaintainAlertBehavior()
 			end)
 		end
 		timer.Create("timer_leap_finished_abletoleap"..self:EntIndex(), self:DecideAttackTimer(self.NextLeapAttackTime, self.NextLeapAttackTime_DoRand), 1, function()
@@ -2238,7 +2240,7 @@ function ENT:Think()
 						if (self.NextChaseTime - curTime) < 0.1 then
 							self.NextChaseTime = curTime + 0.5
 						end
-						self:DoIdleAnimation(2) -- Otherwise it won't play the idle animation and will loop the last PlayAct animation if range attack doesn't use animations!
+						self:MaintainIdleBehavior(2) -- Otherwise it won't play the idle animation and will loop the last PlayAct animation if range attack doesn't use animations!
 						local moveType = self.MovementType
 						local curSched = self.CurrentSchedule -- Already defined
 						if curSched != nil && curSched.Name == "vj_chase_enemy" then self:StopMoving() end -- Interrupt enemy chasing because we are in range!
@@ -2248,7 +2250,7 @@ function ENT:Think()
 							if curTime > self.AA_CurrentMoveTime then self:AA_IdleWander(true, "Calm", {FaceDest = !self.ConstantlyFaceEnemy}) /*self:AA_StopMoving()*/ end -- Only face the position if self.ConstantlyFaceEnemy is false!
 						end
 					else
-						if self.CurrentSchedule != nil && self.CurrentSchedule.Name != "vj_chase_enemy" then self:DoChaseAnimation() end
+						if self.CurrentSchedule != nil && self.CurrentSchedule.Name != "vj_chase_enemy" then self:MaintainAlertBehavior() end
 					end
 				end
 				
@@ -2774,7 +2776,7 @@ function ENT:StopAttacks(checkTimers)
 	self.CurAttackSeed = 0
 	self.LeapAttackHasJumped = false
 
-	self:DoChaseAnimation()
+	self:MaintainAlertBehavior()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function math_angDif(diff)
@@ -2858,10 +2860,10 @@ function ENT:SelectSchedule()
 	end
 	
 	if eneValid then -- Chase the enemy
-		self:DoChaseAnimation()
+		self:MaintainAlertBehavior()
 	/*elseif self.Alerted == true then -- No enemy, but alerted
 		self.TakingCoverT = 0
-		self:DoIdleAnimation()*/
+		self:MaintainIdleBehavior()*/
 	else -- Idle
 		if self.Alerted == false then
 			self.TakingCoverT = 0
@@ -2892,7 +2894,7 @@ function ENT:SelectSchedule()
 			end
 		end
 		
-		self:DoIdleAnimation()
+		self:MaintainIdleBehavior()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3118,7 +3120,7 @@ function ENT:OnTakeDamage(dmginfo)
 						self:OnSetEnemyFromDamage(dmginfo, hitgroup)
 						self.NextCallForHelpT = curTime + 1
 						self:ForceSetEnemy(dmgAttacker, true)
-						self:DoChaseAnimation()
+						self:MaintainAlertBehavior()
 						eneFound = true
 					end
 				end

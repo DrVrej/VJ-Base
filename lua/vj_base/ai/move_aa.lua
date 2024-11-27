@@ -71,7 +71,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 			if !destVec then print("dest WaterLevel: "..dest:WaterLevel()) end
 		end
 		-- NPC not fully in water, so forget the destination, instead wander OR go deeper into the war
-		if self:WaterLevel() <= 2 then self:DoIdleAnimation(1) return end
+		if self:WaterLevel() <= 2 then self:MaintainIdleBehavior(1) return end
 		-- If the destination is a vector then make sure it's in the water
 		if destVec then
 			local tr_aquatic = util.TraceLine({
@@ -80,14 +80,14 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 				filter = trFilter,
 				mask = MASK_WATER
 			})
-			if !tr_aquatic.Hit then self:DoIdleAnimation(1) return end
+			if !tr_aquatic.Hit then self:MaintainIdleBehavior(1) return end
 			//print(tr_aquatic.Hit)
 			//VJ.DEBUG_TempEnt(tr_aquatic.HitPos, self:GetAngles(), Color(255,255,0), 5)
 		-- If the destination is not a vector, then make sure it's reachable
 		else
 			if dest:WaterLevel() <= 1 then
 				-- Destination not in water, so forget the destination, instead wander OR go deeper into the war
-				if dest:WaterLevel() == 0 then self:DoIdleAnimation(1) return end
+				if dest:WaterLevel() == 0 then self:MaintainIdleBehavior(1) return end
 				local trene = util.TraceLine({
 					start = dest:GetPos() + self:OBBCenter(),
 					endpos = (dest:GetPos() + self:OBBCenter()) + dest:GetUp()*-20,

@@ -332,7 +332,7 @@ function ENT:SelectSchedule()
 	if self:Health() <= 0 or self.Dead then return end
 
 	self:IdleSoundCode()
-	self:DoIdleAnimation()
+	self:MaintainIdleBehavior()
 	
 	if IsValid(self:GetEnemy()) then
 		if self.VJ_IsBeingControlled then

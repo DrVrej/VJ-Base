@@ -216,7 +216,7 @@ function ENT:SelectSchedule()
 	if self.Dead then return end
 	
 	self:IdleSoundCode()
-	self:DoIdleAnimation()
+	self:MaintainIdleBehavior()
 	
 	if IsValid(self:GetEnemy()) then
 		-- Can always fire when being controlled

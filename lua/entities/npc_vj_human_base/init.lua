@@ -70,7 +70,9 @@ ENT.CanReceiveOrders = true -- Can the NPC receive orders from others? | Ex: All
 	-- When false it will not receive the following: "CallForHelp", "CallForBackUpOnDamage", "BringFriendsOnDeath", "AlertFriendsOnDeath", "Passive_AlliesRunOnDamage"
 ENT.HasAllies = true -- Put to false if you want it not to have any allies
 ENT.VJ_NPC_Class = {} -- NPCs with the same class with be allied to each other
-	-- Common Classes: Combine = CLASS_COMBINE || Zombie = CLASS_ZOMBIE || Antlions = CLASS_ANTLION || Xen = CLASS_XEN || Player Friendly = CLASS_PLAYER_ALLY
+	-- Common Classes:
+		-- Players / Resistance / Black Mesa = "CLASS_PLAYER_ALLY" || HECU = "CLASS_UNITED_STATES" || Portal = "CLASS_APERTURE"
+		-- Combine = "CLASS_COMBINE" || Zombie = "CLASS_ZOMBIE" || Antlions = "CLASS_ANTLION" || Xen = "CLASS_XEN" || Black-Ops = "CLASS_BLACKOPS"
 ENT.FriendsWithAllPlayerAllies = false -- Should this NPC be friends with other player allies?
 ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE -- Type of AI behavior to use for this NPC
 	-- VJ_BEHAVIOR_AGGRESSIVE = Default behavior, attacks enemies || VJ_BEHAVIOR_NEUTRAL = Neutral to everything, unless provoked
@@ -2393,7 +2395,7 @@ function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoIdleAnimation(idleType) -- idleType: nil = Random | 1 = Wander | 2 = Idle Stand
+function ENT:MaintainIdleBehavior(idleType) -- idleType: nil = Random | 1 = Wander | 2 = Idle Stand
 	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead or self.VJ_IsBeingControlled or self.CurrentAttackAnimationTime > CurTime() or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
 	
 	if self.IdleAlwaysWander && !idleType then idleType = 1 end
@@ -2417,7 +2419,7 @@ function ENT:DoIdleAnimation(idleType) -- idleType: nil = Random | 1 = Wander | 
 	self.NextWanderTime = CurTime() + math.Rand(3, 6) // self.NextIdleTime
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoChaseAnimation(alwaysChase) -- alwaysChase: true = Override to always make the NPC chase
+function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase: true = Override to always make the NPC chase
 	local ene = self:GetEnemy()
 	local curTime = CurTime()
 	if self.NextChaseTime > curTime or self.Dead or self.VJ_IsBeingControlled or self.CurrentAttackAnimationTime > curTime or self.Flinching or self.IsVJBaseSNPC_Tank or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
@@ -2583,7 +2585,7 @@ local finishAttack = {
 		if skipStopAttacks != true then
 			timer.Create("timer_melee_finished"..self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Melee, self.NextAnyAttackTime_Melee_DoRand, self.TimeUntilMeleeAttackDamage, self.CurrentAttackAnimationDuration), 1, function()
 				self:StopAttacks()
-				self:DoChaseAnimation()
+				self:MaintainAlertBehavior()
 			end)
 		end
 		timer.Create("timer_melee_finished_abletomelee"..self:EntIndex(), self:DecideAttackTimer(self.NextMeleeAttackTime, self.NextMeleeAttackTime_DoRand), 1, function()
@@ -2594,7 +2596,7 @@ local finishAttack = {
 		if skipStopAttacks != true then
 			timer.Create("timer_grenade_finished"..self:EntIndex(), self:DecideAttackTimer(self.NextAnyAttackTime_Grenade.a, self.NextAnyAttackTime_Grenade.b, self.TimeUntilGrenadeIsReleased, self.CurrentAttackAnimationDuration), 1, function()
 				self:StopAttacks()
-				self:DoChaseAnimation()
+				self:MaintainAlertBehavior()
 			end)
 		end
 		//timer.Create("timer_grenade_finished_abletothrow"..self:EntIndex(), self:DecideAttackTimer(self.NextThrowGrenadeTime.a, self.NextThrowGrenadeTime.b), 1, function()
@@ -3519,7 +3521,7 @@ function ENT:StopAttacks(checkTimers)
 	self.AttackState = VJ.ATTACK_STATE_DONE
 	self.CurAttackSeed = 0
 	
-	self:DoChaseAnimation()
+	self:MaintainAlertBehavior()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function math_angDif(diff)
@@ -3626,7 +3628,7 @@ function ENT:SelectSchedule()
 	-- Idle Behavior --
 	if !eneValid then
 		if self.AttackType != VJ.ATTACK_TYPE_GRENADE then
-			self:DoIdleAnimation()
+			self:MaintainIdleBehavior()
 		end
 		if self.Alerted == false then
 			self.TakingCoverT = 0
@@ -3677,10 +3679,10 @@ function ENT:SelectSchedule()
 			elseif self.HasMeleeAttack then
 				self.NoWeapon_UseScaredBehavior_Active = false -- In case it was scared, return it back to normal
 				self.NextDangerDetectionT = CurTime() + 4 -- Ignore dangers while chasing!
-				self:DoChaseAnimation()
+				self:MaintainAlertBehavior()
 				return
 			end
-			self:DoIdleAnimation(2)
+			self:MaintainIdleBehavior(2)
 			//return -- Allow other behaviors like "COND_PLAYER_PUSHING", etc to run
 		else
 			self.NoWeapon_UseScaredBehavior_Active = false -- In case it was scared, return it back to normal
@@ -3705,7 +3707,7 @@ function ENT:SelectSchedule()
 			if canAttack && self:CanFireWeapon(false, false, self.LatestEnemyDistance) == true && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK then
 				-- Enemy to far away or not allowed to fire a weapon
 				if self.LatestEnemyDistance > self.Weapon_FiringDistanceFar or CurTime() < self.NextWeaponAttackT then
-					self:DoChaseAnimation()
+					self:MaintainAlertBehavior()
 					self.AllowWeaponWaitOnOcclusion = false
 				-- Check if enemy is in sight, then continue...
 				elseif self:CanFireWeapon(true, true, self.LatestEnemyDistance) == true then
@@ -3716,13 +3718,13 @@ function ENT:SelectSchedule()
 							-- Wait when enemy is occluded
 							if self.Weapon_WaitOnOcclusion && !self.DoingWeaponWaitOnOcclusion && (!wep.IsMeleeWeapon) && self.AllowWeaponWaitOnOcclusion && ((CurTime() - self.Weapon_TimeSinceLastShot) <= 4.5) && (self.LatestEnemyDistance > self.Weapon_WaitOnOcclusionMinDist) then
 								self.DoingWeaponWaitOnOcclusion = true
-								self:DoIdleAnimation(2) -- Make it play idle stand (Which will turn into ACT_IDLE_ANGRY)
+								self:MaintainIdleBehavior(2) -- Make it play idle stand (Which will turn into ACT_IDLE_ANGRY)
 								self.NextChaseTime = CurTime() + math.Rand(self.Weapon_WaitOnOcclusionTime.a, self.Weapon_WaitOnOcclusionTime.b)
 							-- If I am not supposed to wait for the enemy, then go after the enemy!
 							elseif /*self.DisableChasingEnemy == false &&*/ CurTime() > self.LastHiddenZoneT then
 								self.DoingWeaponAttack = false
 								self.DoingWeaponAttack_Standing = false
-								self:DoChaseAnimation()
+								self:MaintainAlertBehavior()
 							end
 						end
 					else -- I can see the enemy...
@@ -3744,7 +3746,7 @@ function ENT:SelectSchedule()
 								end
 							end
 							local noAttack = false
-							// self:DoChaseAnimation()
+							// self:MaintainAlertBehavior()
 							-- if covered, try to move forward by calculating the distance between the prop and the NPC
 							local cover_npc, cover_npc_tr = self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered), enePos_Eye, false, {SetLastHiddenTime=true})
 							local cover_npc_ent = cover_npc_tr.Entity
@@ -3841,7 +3843,7 @@ function ENT:SelectSchedule()
 										local finalAnim;
 										-- Check if the NPC has ammo
 										if !hasAmmo then
-											self:DoIdleAnimation(2) -- Make it play idle stand (Which will turn into ACT_IDLE_ANGRY)
+											self:MaintainIdleBehavior(2) -- Make it play idle stand (Which will turn into ACT_IDLE_ANGRY)
 											//finalAnim = self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponAim))
 											self.CurrentWeaponAnimationIsAim = true
 										else
@@ -4159,7 +4161,7 @@ function ENT:OnTakeDamage(dmginfo)
 						self:OnSetEnemyFromDamage(dmginfo, hitgroup)
 						self.NextCallForHelpT = curTime + 1
 						self:ForceSetEnemy(dmgAttacker, true)
-						self:DoChaseAnimation()
+						self:MaintainAlertBehavior()
 						eneFound = true
 					end
 				end

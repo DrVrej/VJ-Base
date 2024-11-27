@@ -68,10 +68,13 @@ local resistanceNPCs = {npc_magnusson = true, npc_vortigaunt = true, npc_mossman
 local combineNPCs = {npc_stalker = true, npc_rollermine = true, npc_turret_ground = true, npc_turret_floor = true, npc_turret_ceiling = true, npc_strider = true, npc_sniper = true, npc_metropolice = true, npc_hunter = true, npc_breen = true, npc_combine_camera = true, npc_combine_s = true, npc_combinedropship = true, npc_combinegunship = true, npc_cscanner = true, npc_clawscanner = true, npc_helicopter = true, npc_manhack = true, npc_advisor = true, npc_apcdriver = true, npc_enemyfinder_combinecannon = true}
 local zombieNPCs = {npc_fastzombie_torso = true, npc_zombine = true, npc_zombie_torso = true, npc_zombie = true, npc_poisonzombie = true, npc_headcrab_fast = true, npc_headcrab_black = true, npc_headcrab_poison = true, npc_headcrab = true, npc_fastzombie = true, monster_zombie = true, monster_headcrab = true, monster_babycrab = true, monster_bigmomma = true}
 local antlionNPCs = {npc_antlion = true, npc_antlionguard = true, npc_antlion_worker = true, npc_antlion_grub = true}
-local xenNPCs = {monster_bullchicken = true, monster_alien_grunt = true, monster_alien_slave = true, monster_alien_controller = true, monster_houndeye = true, monster_gargantua = true, monster_nihilanth = true, monster_ichthyosaur = true, monster_tentacle = true}
+local xenNPCs = {monster_bullchicken = true, monster_alien_grunt = true, monster_alien_slave = true, monster_alien_controller = true, monster_houndeye = true, monster_gargantua = true, monster_nihilanth = true, monster_ichthyosaur = true, monster_tentacle = true, monster_leech = true}
+local hecuNPCs = {monster_human_grunt = true, monster_apache = true, monster_osprey = true, monster_sentry = true}
+local blackopsNPCs = {monster_human_assassin = true}
+local portalNPCs = {npc_portal_turret_floor = true, npc_rocket_turret = true, npc_security_camera = true, npc_wheatley_boss = true}
 local headcrabNPCs = {npc_headcrab_fast = true, npc_headcrab_black = true, npc_headcrab_poison = true, npc_headcrab = true, monster_headcrab = true, monster_babycrab = true}
-local natureNPCs = {npc_crow = true, npc_pigeon = true, npc_seagull = true, monster_cockroach = true}
-local ignoredNPCs = {monster_generic = true,  monster_furniture = true,  npc_furniture = true,  npc_helicoptersensor = true, monster_gman = true,  npc_grenade_frag = true,  bullseye_strider_focus = true,  npc_bullseye = true,  npc_enemyfinder = true,  hornet = true}
+local natureNPCs = {npc_crow = true, npc_pigeon = true, npc_seagull = true, monster_cockroach = true, monster_flyer = true}
+local ignoredNPCs = {npc_missiledefense = true, monster_generic = true,  monster_furniture = true,  npc_furniture = true,  npc_helicoptersensor = true, monster_gman = true,  npc_grenade_frag = true,  bullseye_strider_focus = true,  npc_bullseye = true,  npc_enemyfinder = true,  hornet = true}
 local grenadeEnts = {npc_grenade_frag = true, grenade_hand = true, obj_spore = true, obj_grenade = true, obj_handgrenade = true, doom3_grenade = true, fas2_thrown_m67 = true, cw_grenade_thrown = true, obj_cpt_grenade = true, cw_flash_thrown = true, ent_hl1_grenade = true, rtbr_grenade_frag = true}
 local grenadeThrowBackEnts = {npc_grenade_frag = true, obj_spore = true, obj_handgrenade = true, obj_cpt_grenade = true, cw_grenade_thrown = true, cw_flash_thrown = true, cw_smoke_thrown = true, ent_hl1_grenade = true, rtbr_grenade_frag = true}
 local attackableEnts = {prop_physics = true, prop_physics_multiplayer = true, prop_physics_respawnable = true, func_breakable = true, func_physbox = true, prop_door_rotating = true, item_item_crate = true}
@@ -122,10 +125,16 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 							else
 								ent.VJ_NPC_Class = {"CLASS_COMBINE"}
 							end
-						elseif xenNPCs[entClass] then
-							ent.VJ_NPC_Class = {"CLASS_XEN"}
 						elseif zombieNPCs[entClass] then
 							ent.VJ_NPC_Class = {"CLASS_ZOMBIE"}
+						elseif xenNPCs[entClass] then
+							ent.VJ_NPC_Class = {"CLASS_XEN"}
+						elseif hecuNPCs[entClass] then
+							ent.VJ_NPC_Class = {"CLASS_UNITED_STATES"}
+						elseif portalNPCs[entClass] then
+							ent.VJ_NPC_Class = {"CLASS_APERTURE"}
+						elseif blackopsNPCs[entClass] then
+							ent.VJ_NPC_Class = {"CLASS_BLACKOPS"}
 						end
 					end
 					
