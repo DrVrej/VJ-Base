@@ -112,54 +112,52 @@ function ENT:StartControlling()
 	if plyEnt:GetInfoNum("vj_npc_cont_diewithnpc", 0) == 1 then self.VJC_Player_CanRespawn = false end
 
 	hook.Add("PlayerButtonDown", self, function(ent, ply, button)
-		if ply.VJTag_IsControllingNPC == true && IsValid(ply.VJ_TheControllerEntity) then
-			local cent = ply.VJ_TheControllerEntity
-			cent.VJC_Key_Last = button
-			cent.VJC_Key_LastTime = CurTime()
-			cent:OnKeyPressed(button)
+		if IsValid(ent) && ply.VJTag_IsControllingNPC && ent.VJCE_Player == ply then
+			ent.VJC_Key_Last = button
+			ent.VJC_Key_LastTime = CurTime()
+			ent:OnKeyPressed(button)
 			
 			-- Stop Controlling
-			if cent.VJC_Player_CanExit == true and button == KEY_END then
-				cent:StopControlling(true)
+			if ent.VJC_Player_CanExit == true and button == KEY_END then
+				ent:StopControlling(true)
 			end
 			
 			-- Tracking
 			if button == KEY_T then
-				cent:ToggleBullseyeTracking()
+				ent:ToggleBullseyeTracking()
 			end
 			
 			-- Camera mode
 			if button == KEY_H then
-				cent.VJC_Camera_Mode = (cent.VJC_Camera_Mode == 1 and 2) or 1
+				ent.VJC_Camera_Mode = (ent.VJC_Camera_Mode == 1 and 2) or 1
 			end
 			
 			-- Allow movement jumping
 			if button == KEY_J then
-				cent:ToggleMovementJumping()
+				ent:ToggleMovementJumping()
 			end
 			
 			-- Zoom
 			local zoom = ply:GetInfoNum("vj_npc_cont_zoomdist", 5)
 			if button == KEY_LEFT then
-				cent.VJC_Camera_CurZoom = cent.VJC_Camera_CurZoom - Vector(0, zoom, 0)
+				ent.VJC_Camera_CurZoom = ent.VJC_Camera_CurZoom - Vector(0, zoom, 0)
 			elseif button == KEY_RIGHT then
-				cent.VJC_Camera_CurZoom = cent.VJC_Camera_CurZoom + Vector(0, zoom, 0)
+				ent.VJC_Camera_CurZoom = ent.VJC_Camera_CurZoom + Vector(0, zoom, 0)
 			elseif button == KEY_UP then
-				cent.VJC_Camera_CurZoom = cent.VJC_Camera_CurZoom + (ply:KeyDown(IN_SPEED) and Vector(0, 0, zoom) or Vector(zoom, 0, 0))
+				ent.VJC_Camera_CurZoom = ent.VJC_Camera_CurZoom + (ply:KeyDown(IN_SPEED) and Vector(0, 0, zoom) or Vector(zoom, 0, 0))
 			elseif button == KEY_DOWN then
-				cent.VJC_Camera_CurZoom = cent.VJC_Camera_CurZoom - (ply:KeyDown(IN_SPEED) and Vector(0, 0, zoom) or Vector(zoom, 0, 0))
+				ent.VJC_Camera_CurZoom = ent.VJC_Camera_CurZoom - (ply:KeyDown(IN_SPEED) and Vector(0, 0, zoom) or Vector(zoom, 0, 0))
 			end
 			if button == KEY_BACKSPACE then
-				cent.VJC_Camera_CurZoom = vecDef
+				ent.VJC_Camera_CurZoom = vecDef
 			end
 		end
 	end)
 
 	hook.Add("KeyPress", self, function(ent, ply, key)
 		//print(key)
-		if ply.VJTag_IsControllingNPC == true && IsValid(ply.VJ_TheControllerEntity) then
-			local cent = ply.VJ_TheControllerEntity
-			cent:OnKeyBindPressed(key)
+		if IsValid(ent) && ply.VJTag_IsControllingNPC && ent.VJCE_Player == ply then
+			ent:OnKeyBindPressed(key)
 		end
 	end)
 end

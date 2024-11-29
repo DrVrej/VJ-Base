@@ -1673,8 +1673,9 @@ function ENT:MaintainRelationships()
 	local mySightDist = self:GetMaxLookDistance()
 	local mySightAng = math_cos(math_rad(self.SightAngle))
 	local myClasses = self.VJ_NPC_Class
+	local myHandlePerceived = self.HandlePerceivedRelationship
 	local nearestDist = nil
-	//local plyControlled = self.VJ_IsBeingControlled
+	local plyControlled = self.VJ_IsBeingControlled
 	local canAlly = self.HasAllies
 	local notIsNeutral = self.Behavior != VJ_BEHAVIOR_NEUTRAL
 	local customFunc = self.OnMaintainRelationships
@@ -1689,7 +1690,8 @@ function ENT:MaintainRelationships()
 			it = it + 1
 			
 			-- Handle no target and "ForceEntAsEnemy"
-			if ent:IsFlagSet(FL_NOTARGET) or (ent.ForceEntAsEnemy && ent.ForceEntAsEnemy != self) then
+			local entForcedEne = ent.ForceEntAsEnemy
+			if ent:IsFlagSet(FL_NOTARGET) or ent:Health() <= 0 or (entForcedEne && entForcedEne != self) then
 				if IsValid(self:GetEnemy()) && self:GetEnemy() == ent then
 					self:ResetEnemy(false)
 				end
@@ -1749,6 +1751,16 @@ function ENT:MaintainRelationships()
 			//	entIsPLY = false
 			//end
 			
+			local entHandlePerceived = ent.HandlePerceivedRelationship
+            if entHandlePerceived then
+                -- Return false to let rest of the function run otherwise return a disposition to override
+				local result = entHandlePerceived(ent, self, distanceToEnt, entFri)
+                if result then
+                    self:AddEntityRelationship(ent, result, 0)
+                    continue
+                end
+            end
+			
 			-- If the ent is a friend then set the relation as D_LI
 			if entFri then
 				//print("MaintainRelationships 2 - friendly!")
@@ -1764,6 +1776,14 @@ function ENT:MaintainRelationships()
 				
 				-- Handle how non-VJ NPCs feel towards us
 				if entIsNPC && !ent.IsVJBaseSNPC then
+					-- This is here to make sure non VJ NPCs will respect how entities should feel towards this NPC in case it's overridden
+					if myHandlePerceived then
+						local result = myHandlePerceived(self, ent, distanceToEnt, entFri)
+						if result then
+							ent:AddEntityRelationship(self, result, 0)
+							continue
+						end
+					end
 					ent:AddEntityRelationship(self, D_LI, 0)
 				end
 				
@@ -1788,13 +1808,31 @@ function ENT:MaintainRelationships()
 					end
 				end
 			else
-				local ene = self:GetEnemy()
-				local eneValid = IsValid(ene)
-				
 				-- Handle how non-VJ NPCs feel towards us
 				if entIsNPC && !ent.IsVJBaseSNPC then
+					-- This is here to make sure non VJ NPCs will respect how entities should feel towards this NPC in case it's overridden
+					if myHandlePerceived then
+						local result = myHandlePerceived(self, ent, distanceToEnt, entFri)
+						if result then
+							ent:AddEntityRelationship(self, result, 0)
+							continue
+						end
+					end
 					ent:AddEntityRelationship(self, D_HT, 0)
 				end
+				
+				if plyControlled then
+					if entForcedEne == self then
+						self:ForceSetEnemy(ent, true, true)
+						continue
+					else
+						self:AddEntityRelationship(ent, D_VJ_INTEREST, 0)
+						continue
+					end
+				end
+				
+				local ene = self:GetEnemy()
+				local eneValid = IsValid(ene)
 				
 				-- Check if this NPC should be engaged, if not then set it as an interest but don't engage it
 				-- Restriction: If the current enemy is this entity then skip as it we want to engage regardless
@@ -1882,7 +1920,7 @@ function ENT:Allies_CallHelp(dist)
 	for _, v in ipairs(ents.FindInSphere(self:GetPos(), dist or 800)) do
 		if v != self && v:IsNPC() && v.IsVJBaseSNPC && VJ.IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !v.VJ_IsBeingControlled && v.CanReceiveOrders then
 			local ene = self:GetEnemy()
-			if IsValid(ene) then
+			if IsValid(ene) && ene:GetClass() != v:GetClass() then
 				local eneIsPlayer = ene:IsPlayer()
 				if v:GetPos():Distance(ene:GetPos()) > v:GetMaxLookDistance() then continue end -- Enemy too far away for ally, discontinue!
 				//if v:CheckRelationship(ene) == D_HT then

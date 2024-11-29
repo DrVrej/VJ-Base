@@ -41,9 +41,22 @@ end
 	end
 end*/
 --[[---------------------------------------------------------
+	Overrides how a VJ NPC should feel towards towards the calling entity (otherEnt)
+	1. otherEnt [entity] : The other entity that is testing to see how it should feel towards us
+	2. distance [nil | number] : Calculated distance from this entity to the other entity
+	3. isFriendly [boolean] : Whether or not the other entity has calculated us as friendly
+	Returns
+		- [boolean | Disposition enum] : Return false to not override anything | Return a disposition enum to set as an override
+-----------------------------------------------------------]]
+-- UNCOMMENT TO USE
+--function metaEntity:HandlePerceivedRelationship(otherEnt, distance, isFriendly)
+--	print("default ", otherEnt, distance, isFriendly)
+--	return true
+--end
+--[[---------------------------------------------------------
 	Determines whether or not this entity should be engaged by an enemy
 	1. otherEnt [entity] : The other entity that is testing to see if it can engage this entity
-	2, distance [nil | number] : Calculated distance from this entity to the other entity
+	2. distance [nil | number] : Calculated distance from this entity to the other entity
 	Returns
 		- [boolean] : Return true if it should be engaged
 -----------------------------------------------------------]]
