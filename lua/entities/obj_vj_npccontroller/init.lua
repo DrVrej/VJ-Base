@@ -175,6 +175,12 @@ function ENT:SetControlledNPC(npcEnt)
 	bullseyeEnt:SetNoDraw(false)
 	bullseyeEnt:DrawShadow(false)
 	bullseyeEnt.ForceEntAsEnemy = npcEnt
+	bullseyeEnt.HandlePerceivedRelationship = function(bullseye, otherEnt, distance, isFriendly)
+		if otherEnt == npcEnt then
+			return D_HT
+		end
+		return D_NU
+	end
 	bullseyeEnt.VJ_IsBeingControlled = true
 	self:DeleteOnRemove(bullseyeEnt)
 	self.VJCE_Bullseye = bullseyeEnt
@@ -222,6 +228,8 @@ function ENT:SetControlledNPC(npcEnt)
 			[11] = npcEnt.Passive_RunOnDamage,
 			[12] = npcEnt.IsGuard,
 			[13] = npcEnt.CanReceiveOrders,
+			[14] = npcEnt.FindEnemy_CanSeeThroughWalls,
+			[15] = npcEnt.FindEnemy_UseSphere
 		}
 		npcEnt.DisableWandering = true
 		npcEnt.DisableChasingEnemy = true
@@ -236,12 +244,24 @@ function ENT:SetControlledNPC(npcEnt)
 		npcEnt.Passive_RunOnDamage = false
 		npcEnt.IsGuard = false
 		npcEnt.vACT_StopAttacks = true
+		npcEnt.FindEnemy_CanSeeThroughWalls = true
+		npcEnt.FindEnemy_UseSphere = true
 		npcEnt.NextThrowGrenadeT = 0
+		 -- Apply a delay to VJ NPCs so they don't attack right away
+		if npcEnt.NextDoAnyAttackT < CurTime() then
+			npcEnt.NextDoAnyAttackT = CurTime() + 0.5
+		end
 		if npcEnt.Medic_Status then npcEnt:ResetMedicBehavior() end
 		if npcEnt.VJTag_IsEating then
 			npcEnt:OnEat("StopEating", "Unspecified") -- So it plays the get up animation
 			npcEnt:EatingReset("Unspecified")
 		end
+		-- Apply a small delay to assure that the bullseye is in the NPC's "CurrentPossibleEnemies"
+		timer.Simple(0.1, function()
+			if IsValid(self) && IsValid(npcEnt) then
+				npcEnt:MaintainRelationships()
+			end
+		end)
 	end
 	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	if self.CustomOnKeyPressed then self.OnKeyPressed = function(_, key) self:CustomOnKeyPressed(key) end end
@@ -524,6 +544,8 @@ function ENT:StopControlling(keyPressed)
 			npc.Passive_RunOnDamage = npcData[11]
 			npc.IsGuard = npcData[12]
 			npc.CanReceiveOrders = npcData[13]
+			npc.FindEnemy_CanSeeThroughWalls = npcData[14]
+			npc.FindEnemy_UseSphere = npcData[15]
 		end
 	end
 	//self.VJCE_Camera:Remove()

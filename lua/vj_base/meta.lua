@@ -50,8 +50,8 @@ end*/
 -----------------------------------------------------------]]
 -- UNCOMMENT TO USE
 --function metaEntity:HandlePerceivedRelationship(otherEnt, distance, isFriendly)
---	print("default ", otherEnt, distance, isFriendly)
---	return true
+--	print("HandlePerceivedRelationship ", otherEnt, distance, isFriendly)
+--	return
 --end
 --[[---------------------------------------------------------
 	Determines whether or not this entity should be engaged by an enemy
@@ -62,7 +62,7 @@ end*/
 -----------------------------------------------------------]]
 -- UNCOMMENT TO USE
 --function metaEntity:CanBeEngaged(otherEnt, distance)
---	print("default ", otherEnt, distance)
+--	print("CanBeEngaged ", otherEnt, distance)
 --	return true
 --end
 --[[---------------------------------------------------------

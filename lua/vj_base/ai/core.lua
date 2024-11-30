@@ -1601,7 +1601,7 @@ function ENT:ForceSetEnemy(ent, stopMoving, skipChecks)
 	self:IgnoreEnemyUntil(ent, 0)
 	self:SetNPCState(NPC_STATE_COMBAT)
 	self.EnemyData.TimeSet = CurTime()
-	if noEne then
+	if noEne or !self.Alerted then
 		if stopMoving then
 			self:ClearGoal()
 			self:StopMoving()
@@ -1638,17 +1638,8 @@ end
 		- Disposition value, list: https://wiki.facepunch.com/gmod/Enums/D
 -----------------------------------------------------------]]
 function ENT:CheckRelationship(ent)
-	-- Only enemy to a single NPC | Used by the bullseye under certain circumstances
-	if ent.ForceEntAsEnemy then
-		if ent.ForceEntAsEnemy == self then
-			return D_HT
-		else
-			return D_NU
-		end
-	end
-	if ent:IsFlagSet(FL_NOTARGET) or ent:Health() <= 0 then return D_NU end
+	if ent:IsFlagSet(FL_NOTARGET) or ent:Health() <= 0 or (ent:IsPlayer() && VJ_CVAR_IGNOREPLAYERS) then return D_NU end
 	if self:GetClass() == ent:GetClass() then return D_LI end
-	if ent:IsPlayer() && VJ_CVAR_IGNOREPLAYERS then return D_NU end
 	if self:Disposition(ent) == D_VJ_INTEREST then return D_HT end
 	return self:Disposition(ent)
 end
@@ -1675,7 +1666,6 @@ function ENT:MaintainRelationships()
 	local myClasses = self.VJ_NPC_Class
 	local myHandlePerceived = self.HandlePerceivedRelationship
 	local nearestDist = nil
-	local plyControlled = self.VJ_IsBeingControlled
 	local canAlly = self.HasAllies
 	local notIsNeutral = self.Behavior != VJ_BEHAVIOR_NEUTRAL
 	local customFunc = self.OnMaintainRelationships
@@ -1689,9 +1679,8 @@ function ENT:MaintainRelationships()
 		else
 			it = it + 1
 			
-			-- Handle no target and "ForceEntAsEnemy"
-			local entForcedEne = ent.ForceEntAsEnemy
-			if ent:IsFlagSet(FL_NOTARGET) or ent:Health() <= 0 or (entForcedEne && entForcedEne != self) then
+			-- Handle no target and health below 0
+			if ent:IsFlagSet(FL_NOTARGET) or ent:Health() <= 0 then
 				if IsValid(self:GetEnemy()) && self:GetEnemy() == ent then
 					self:ResetEnemy(false)
 				end
@@ -1710,7 +1699,7 @@ function ENT:MaintainRelationships()
 				end
 				continue
 			end
-			local entFri = false
+			local calculatedDisp = false
 			local entClass = ent:GetClass()
 			local entIsNPC = ent:IsNPC()
 			local entIsPLY = ent:IsPlayer()
@@ -1725,17 +1714,17 @@ function ENT:MaintainRelationships()
 						-- If we both do NOT have that, then we both like players but not each other!
 						if friClass == varCPly then
 							if self.FriendsWithAllPlayerAllies && ent.FriendsWithAllPlayerAllies then
-								entFri = true
+								calculatedDisp = D_LI
 							end
 						else
-							entFri = true
+							calculatedDisp = D_LI
 						end
 					end
 				end
 				
 				-- Handle "self.FriendsWithAllPlayerAllies" (As a backup in case the NPC doesn't have the "CLASS_PLAYER_ALLY" class) AND "self.PlayerFriendly" AND "self.VJ_AddCertainEntityAsFriendly"
-				if !entFri && ((self.PlayerFriendly && ((entIsNPC && self.FriendsWithAllPlayerAllies && ent.PlayerFriendly && ent.FriendsWithAllPlayerAllies) or entIsPLY)) or (VJ.HasValue(self.VJ_AddCertainEntityAsFriendly, ent))) then
-					entFri = true
+				if !calculatedDisp && ((self.PlayerFriendly && ((entIsNPC && self.FriendsWithAllPlayerAllies && ent.PlayerFriendly && ent.FriendsWithAllPlayerAllies) or entIsPLY)) or (VJ.HasValue(self.VJ_AddCertainEntityAsFriendly, ent))) then
+					calculatedDisp = D_LI
 				end
 			end
 			
@@ -1744,25 +1733,19 @@ function ENT:MaintainRelationships()
 			//print(CurTime() - self:GetEnemyLastTimeSeen(ent))
 			//print(CurTime() - self:GetEnemyFirstTimeSeen(ent))
 			
-			-- We have to do this here so we make sure non-VJ NPCs can still target this NPC, even if it's being controlled!
-			//if plyControlled && self.VJ_TheControllerBullseye != ent then
-			//	//self:AddEntityRelationship(ent, D_NU, 0)
-			//	ent = self.VJ_TheControllerBullseye
-			//	entIsPLY = false
-			//end
-			
 			local entHandlePerceived = ent.HandlePerceivedRelationship
             if entHandlePerceived then
                 -- Return false to let rest of the function run otherwise return a disposition to override
-				local result = entHandlePerceived(ent, self, distanceToEnt, entFri)
+				local result = entHandlePerceived(ent, self, distanceToEnt, calculatedDisp == D_LI)
                 if result then
                     self:AddEntityRelationship(ent, result, 0)
-                    continue
+					calculatedDisp = result
+                    //continue
                 end
             end
 			
 			-- If the ent is a friend then set the relation as D_LI
-			if entFri then
+			if calculatedDisp == D_LI then
 				//print("MaintainRelationships 2 - friendly!")
 				-- Reset the enemy if it's currently this friendly ent
 				local ene = self:GetEnemy()
@@ -1778,13 +1761,15 @@ function ENT:MaintainRelationships()
 				if entIsNPC && !ent.IsVJBaseSNPC then
 					-- This is here to make sure non VJ NPCs will respect how entities should feel towards this NPC in case it's overridden
 					if myHandlePerceived then
-						local result = myHandlePerceived(self, ent, distanceToEnt, entFri)
+						local result = myHandlePerceived(self, ent, distanceToEnt, calculatedDisp == D_LI)
 						if result then
 							ent:AddEntityRelationship(self, result, 0)
-							continue
+						else
+							ent:AddEntityRelationship(self, D_LI, 0)
 						end
+					else
+						ent:AddEntityRelationship(self, D_LI, 0)
 					end
-					ent:AddEntityRelationship(self, D_LI, 0)
 				end
 				
 				-- MoveOutOfFriendlyPlayersWay system, Based on:
@@ -1812,50 +1797,47 @@ function ENT:MaintainRelationships()
 				if entIsNPC && !ent.IsVJBaseSNPC then
 					-- This is here to make sure non VJ NPCs will respect how entities should feel towards this NPC in case it's overridden
 					if myHandlePerceived then
-						local result = myHandlePerceived(self, ent, distanceToEnt, entFri)
+						local result = myHandlePerceived(self, ent, distanceToEnt, calculatedDisp == D_LI)
 						if result then
 							ent:AddEntityRelationship(self, result, 0)
-							continue
+						else
+							ent:AddEntityRelationship(self, D_HT, 0)
 						end
-					end
-					ent:AddEntityRelationship(self, D_HT, 0)
-				end
-				
-				if plyControlled then
-					if entForcedEne == self then
-						self:ForceSetEnemy(ent, true, true)
-						continue
 					else
-						self:AddEntityRelationship(ent, D_VJ_INTEREST, 0)
-						continue
+						ent:AddEntityRelationship(self, D_HT, 0)
 					end
 				end
 				
-				local ene = self:GetEnemy()
-				local eneValid = IsValid(ene)
-				
-				-- Check if this NPC should be engaged, if not then set it as an interest but don't engage it
-				-- Restriction: If the current enemy is this entity then skip as it we want to engage regardless
-				local entCanEngage = ent.CanBeEngaged
-				if entCanEngage && !entCanEngage(ent, self, distanceToEnt) && (!eneValid or ene != ent) then
-					//print("MaintainRelationships 2 - entCanEngage")
-					self:AddEntityRelationship(ent, D_VJ_INTEREST, 0)
-				else
-					-- FindEnemy: In order - Can find enemy + Not neutral or alerted + Is visible + In sight
-					if !self.DisableFindEnemy && (notIsNeutral or self.Alerted) && (self.FindEnemy_CanSeeThroughWalls or self:Visible(ent)) && (self.FindEnemy_UseSphere or (mySightDir:Dot((entPos - myPos):GetNormalized()) > mySightAng)) then
-						//print("MaintainRelationships 2 - set enemy")
-						eneSeen = true
-						eneVisCount = eneVisCount + 1
-						self:AddEntityRelationship(ent, D_HT, 0)
-						-- If the detected enemy is closer than the previous enemy, the set this as the enemy!
-						if (nearestDist == nil) or (distanceToEnt < nearestDist) then
-							nearestDist = distanceToEnt
-							self:ForceSetEnemy(ent, true, true)
-						end
-					-- If all else failed then check if we hate this entity, if not then set it as an interest
-					elseif self:Disposition(ent) != D_HT then
-						//print("MaintainRelationships 2 - regular D_VJ_INTEREST")
+				if !calculatedDisp or calculatedDisp == D_VJ_INTEREST or calculatedDisp == D_HT then
+					local ene = self:GetEnemy()
+					local eneValid = IsValid(ene)
+					
+					-- Check if this NPC should be engaged, if not then set it as an interest but don't engage it
+					-- Restriction: If the current enemy is this entity then skip as it we want to engage regardless
+					local entCanEngage = ent.CanBeEngaged
+					if entCanEngage && !entCanEngage(ent, self, distanceToEnt) && (!eneValid or ene != ent) then
+						//print("MaintainRelationships 2 - entCanEngage")
 						self:AddEntityRelationship(ent, D_VJ_INTEREST, 0)
+						calculatedDisp = D_VJ_INTEREST
+					else
+						-- FindEnemy: In order - Can find enemy + Not neutral or alerted + Is visible + In sight
+						if !self.DisableFindEnemy && (notIsNeutral or self.Alerted) && (self.FindEnemy_CanSeeThroughWalls or self:Visible(ent)) && (self.FindEnemy_UseSphere or (mySightDir:Dot((entPos - myPos):GetNormalized()) > mySightAng)) then
+							//print("MaintainRelationships 2 - set enemy")
+							eneSeen = true
+							eneVisCount = eneVisCount + 1
+							self:AddEntityRelationship(ent, D_HT, 0)
+							calculatedDisp = D_HT
+							-- If the detected enemy is closer than the previous enemy, the set this as the enemy!
+							if (nearestDist == nil) or (distanceToEnt < nearestDist) then
+								nearestDist = distanceToEnt
+								self:ForceSetEnemy(ent, true, true)
+							end
+						-- If all else failed then check if we hate this entity, if not then set it as an interest
+						elseif self:Disposition(ent) != D_HT then
+							//print("MaintainRelationships 2 - regular D_VJ_INTEREST")
+							self:AddEntityRelationship(ent, D_VJ_INTEREST, 0)
+							calculatedDisp = D_VJ_INTEREST
+						end
 					end
 				end
 				
@@ -1901,7 +1883,7 @@ function ENT:MaintainRelationships()
 				end
 			end
 			
-			if customFunc then customFunc(self, ent, entFri, distanceToEnt) end
+			if customFunc then customFunc(self, ent, calculatedDisp, distanceToEnt) end
 		end
 	end
 	eneData.VisibleCount = eneVisCount

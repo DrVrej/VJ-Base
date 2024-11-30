@@ -631,7 +631,8 @@ function ENT:OnThink() end
 function ENT:OnThinkActive() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Called at the end of every entity it checks every process time
--- function ENT:OnMaintainRelationships(ent, entFri, entDist) end
+-- NOTE: "calculatedDisp" can be nil especially if its disposition towards the entity is D_NU!
+-- function ENT:OnMaintainRelationships(ent, calculatedDisp, entDist) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnUpdatePoseParamTracking(pitch, yaw, roll) end
 ---------------------------------------------------------------------------------------------------------------------------------------------

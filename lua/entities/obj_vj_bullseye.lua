@@ -80,17 +80,8 @@ function ENT:AcceptInput(key, activator, caller, data)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
-	if self.ForceEntAsEnemy != false then
-		//self:AddFlags(FL_NOTARGET) -- If NPC state is set, Source engine will automatically set m_hEnemy to NULL, so avoid putting this here!
-		if IsValid(self.ForceEntAsEnemy) && self.ForceEntAsEnemy:IsNPC() then
-			self.ForceEntAsEnemy:AddEntityRelationship(self, D_HT, 99)
-			self:AddEntityRelationship(self.ForceEntAsEnemy, D_HT, 99)
-			if self.ForceEntAsEnemy.IsVJBaseSNPC then
-				self.ForceEntAsEnemy:ForceSetEnemy(self, false)
-			end
-			self.ForceEntAsEnemy:SetEnemy(self)
-		end
-	elseif self.UseActivationSystem == true then
+	if self.ForceEntAsEnemy then return end
+	if self.UseActivationSystem then
 		if self.Activated == false then
 			self:AddFlags(FL_NOTARGET)
 			if self.ActivationSystemStatusColors == true then self:SetColor(Color(255, 0, 0)) end
