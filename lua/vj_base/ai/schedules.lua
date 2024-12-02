@@ -101,8 +101,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:VJ_TASK_IDLE_STAND()
 	if self:IsMoving() or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
-	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:BusyWithActivity() then return end
-	//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:GetVelocity():Length() > 0 then return end
+	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:BusyWithActivity() then return end // self:GetVelocity():Length() > 0
 	self:MaintainIdleAnimation(self:GetIdealActivity() != ACT_IDLE)
 	return true
 end

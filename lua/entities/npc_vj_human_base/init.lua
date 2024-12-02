@@ -78,7 +78,7 @@ ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE -- Type of AI behavior to use for this NPC
 	-- VJ_BEHAVIOR_AGGRESSIVE = Default behavior, attacks enemies || VJ_BEHAVIOR_NEUTRAL = Neutral to everything, unless provoked
 	-- VJ_BEHAVIOR_PASSIVE = Doesn't attack, but can be attacked by others || VJ_BEHAVIOR_PASSIVE_NATURE = Doesn't attack and is allied with everyone
 ENT.IsGuard = false -- If set to false, it will attempt to stick to its current position at all times
-ENT.AlertedToIdleTime = VJ.SET(4, 6) -- How much time until it calms down after the enemy has been killed/disappeared | Sets self.Alerted to false after the timer expires
+ENT.AlertedToIdleTime = VJ.SET(14, 16) -- How much time until it calms down after the enemy has been killed/disappeared | Sets self.Alerted to false after the timer expires
 ENT.MoveOutOfFriendlyPlayersWay = true -- Should the NPC move and give space to friendly players?
 ENT.BecomeEnemyToPlayer = false -- Should the NPC become enemy towards a friendly player if it's damaged by it or it witnesses another ally killed by it
 ENT.BecomeEnemyToPlayerLevel = 2 -- Any time the player does something bad, the NPC's anger level raises by 1, if it surpasses this, it will become enemy!
@@ -242,7 +242,6 @@ ENT.BringFriendsOnDeathLimit = 3 -- How many people should it call? | 0 = Unlimi
 ENT.AlertFriendsOnDeath = true -- Should the NPC's allies get alerted while it's dying? | Its allies will also need to have this variable set to true!
 ENT.AlertFriendsOnDeathDistance = 800 -- How far away does the signal go? | Counted in World Units
 ENT.AlertFriendsOnDeathLimit = 50 -- How many people should it alert?
-ENT.AnimTbl_AlertFriendsOnDeath = ACT_RANGE_ATTACK1 -- Animations it plays when an ally dies that also has AlertFriendsOnDeath set to true
 -- ====== Death Animation ====== --
 ENT.HasDeathAnimation = false -- Does it play an animation when it dies?
 ENT.AnimTbl_Death = {}
@@ -2811,9 +2810,8 @@ function ENT:Think()
 					self:ResetEnemy(true)
 					ene = self:GetEnemy()
 					eneValid = IsValid(ene)
-				end
 				-- Reset enemy if it has been unseen for a while
-				if (curTime - eneData.LastVisibleTime) > ((self.LatestEnemyDistance < 4000 and self.TimeUntilEnemyLost) or (self.TimeUntilEnemyLost / 2)) && (!self.IsVJBaseSNPC_Tank) then
+				elseif (curTime - eneData.LastVisibleTime) > ((self.LatestEnemyDistance < 4000 and self.TimeUntilEnemyLost) or (self.TimeUntilEnemyLost / 2)) && (!self.IsVJBaseSNPC_Tank) then
 					self:PlaySoundSystem("LostEnemy")
 					eneData.Reset = true
 					self:ResetEnemy(true)
@@ -3108,7 +3106,7 @@ function ENT:Think()
 		end
 	end*/
 	
-	self:NextThink(CurTime() + 0.065)
+	self:NextThink(curTime + 0.065)
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3631,33 +3629,48 @@ function ENT:SelectSchedule()
 		if self.AttackType != VJ.ATTACK_TYPE_GRENADE then
 			self:MaintainIdleBehavior()
 		end
-		if self.Alerted == false then
+		if !self.Alerted then
 			self.TakingCoverT = 0
 		end
 		self.NoWeapon_UseScaredBehavior_Active = false
 		
 		-- Investigation: Conditions // hasCond(self, COND_HEAR_PLAYER)
 		if self.CanInvestigate && (hasCond(self, COND_HEAR_BULLET_IMPACT) or hasCond(self, COND_HEAR_COMBAT) or hasCond(self, COND_HEAR_WORLD) or hasCond(self, COND_HEAR_DANGER)) && self.NextInvestigationMove < CurTime() && CurTime() > self.TakingCoverT && !self:BusyWithActivity() then
-			local soundSrc = self:GetBestSoundHint(bit.bor(SOUND_BULLET_IMPACT, SOUND_COMBAT, SOUND_WORLD, SOUND_DANGER)) // SOUND_PLAYER, SOUND_PLAYER_VEHICLE
-			if soundSrc then
+			local sdSrc = self:GetBestSoundHint(bit.bor(SOUND_BULLET_IMPACT, SOUND_COMBAT, SOUND_WORLD, SOUND_DANGER)) // SOUND_PLAYER, SOUND_PLAYER_VEHICLE
+			if sdSrc then
+				PrintTable(sdSrc)
+				local allowed = true
+				local sdOwner = sdSrc.owner
+				if IsValid(sdOwner) then
+					-- Ignore dangers produced by vehicles driven by an allies
+					if sdSrc.type == SOUND_DANGER && sdOwner:IsVehicle() && IsValid(sdOwner:GetDriver()) && self:Disposition(sdOwner:GetDriver()) == D_LI then
+						allowed = false
+					-- Ignore bullet impacts by allies
+					elseif self:Disposition(sdOwner) == D_LI then
+						allowed = false
+					end
+				end
 				-- For now ignore player sounds because friendly NPCs also see it since the sound owner is NULL
-				//if soundSrc.type == SOUND_PLAYER then
+				//if sdSrc.type == SOUND_PLAYER then
 				//	if VJ_CVAR_IGNOREPLAYERS or self:IsMoving() or self.IsGuard then
 				//		skip = true
 				//	end
 				//end
-				self:StopMoving()
-				self:SetLastPosition(soundSrc.origin)
-				self:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
-				-- Works but just faces the enemy that fired at
-				//local sched = vj_ai_schedule.New("vj_hear_sound")
-				//sched:EngTask("TASK_STORE_BESTSOUND_REACTORIGIN_IN_SAVEPOSITION", 0)
-				//sched:EngTask("TASK_STOP_MOVING", 0)
-				//sched:EngTask("TASK_FACE_SAVEPOSITION", 0)
-				//self:StartSchedule(sched)
-				self:OnInvestigate(soundSrc.owner)
-				self:PlaySoundSystem("InvestigateSound")
-				self.TakingCoverT = CurTime() + 1
+				if allowed then
+					self:DoReadyAlert()
+					self:StopMoving()
+					self:SetLastPosition(sdSrc.origin)
+					self:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
+					-- Works but just faces the enemy that fired at
+					//local sched = vj_ai_schedule.New("vj_hear_sound")
+					//sched:EngTask("TASK_STORE_BESTSOUND_REACTORIGIN_IN_SAVEPOSITION", 0)
+					//sched:EngTask("TASK_STOP_MOVING", 0)
+					//sched:EngTask("TASK_FACE_SAVEPOSITION", 0)
+					//self:StartSchedule(sched)
+					self:OnInvestigate(sdOwner)
+					self:PlaySoundSystem("InvestigateSound")
+					self.TakingCoverT = CurTime() + 1
+				end
 			end
 		end
 		
@@ -3937,7 +3950,7 @@ function ENT:ResetEnemy(checkAlliesEnemy)
 		if (eneValid && (curEnemies - 1) >= 1) or (!eneValid && curEnemies >= 1) then
 			self:MaintainRelationships() -- Select a new enemy
 			-- Check that the reset enemy wasn't the only visible enemy
-			-- If we don't this, it will end calling "ResetEnemy" again!
+			-- If we don't this, it will call "ResetEnemy" again!
 			if eneData.VisibleCount > 0 then
 				eneData.Reset = false
 				return false
@@ -4113,7 +4126,11 @@ function ENT:OnTakeDamage(dmginfo)
 			if self.CallForBackUpOnDamage && curTime > self.NextCallForBackUpOnDamageT && self.AttackType != VJ.ATTACK_TYPE_GRENADE && !IsValid(self:GetEnemy()) && self.IsFollowing == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !isFireDmg then
 				local allies = self:Allies_Check(self.CallForBackUpOnDamageDistance)
 				if allies != false then
+					self:DoReadyAlert()
 					self:Allies_Bring("Diamond", self.CallForBackUpOnDamageDistance, allies, self.CallForBackUpOnDamageLimit)
+					for _, v in ipairs(allies) do
+						v:DoReadyAlert()
+					end
 					self:ClearSchedule()
 					self.NextFlinchT = curTime + 1
 					local chosenAnim = VJ.PICK(self.CallForBackUpOnDamageAnimation)
@@ -4128,25 +4145,21 @@ function ENT:OnTakeDamage(dmginfo)
 			-- Become enemy to a friendly player | RESULT: May become alerted
 			if self.BecomeEnemyToPlayer == true && self.VJ_IsBeingControlled == false && dmgAttacker:IsPlayer() && self:CheckRelationship(dmgAttacker) == D_LI then
 				self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1
-				if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel then
-					if self:Disposition(dmgAttacker) != D_HT then
-						self:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
-						if self.IsFollowing == true && self.FollowData.Ent == dmgAttacker then self:FollowReset() end
-						self.VJ_AddCertainEntityAsEnemy[#self.VJ_AddCertainEntityAsEnemy + 1] = dmgAttacker
-						self:AddEntityRelationship(dmgAttacker, D_HT, 2)
-						self.TakingCoverT = curTime + 2
-						self:PlaySoundSystem("BecomeEnemyToPlayer")
-						if !IsValid(self:GetEnemy()) then
-							self:StopMoving()
-							self:SetTarget(dmgAttacker)
-							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-						end
-						if self.AllowPrintingInChat == true then
-							dmgAttacker:PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.")
-						end
+				if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel && self:Disposition(dmgAttacker) != D_HT then
+					self:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
+					if self.IsFollowing == true && self.FollowData.Ent == dmgAttacker then self:FollowReset() end
+					self.VJ_AddCertainEntityAsEnemy[#self.VJ_AddCertainEntityAsEnemy + 1] = dmgAttacker
+					self:AddEntityRelationship(dmgAttacker, D_HT, 2)
+					self.TakingCoverT = curTime + 2
+					self:PlaySoundSystem("BecomeEnemyToPlayer")
+					if !IsValid(self:GetEnemy()) then
+						self:StopMoving()
+						self:SetTarget(dmgAttacker)
+						self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
 					end
-					self.Alerted = true
-					self:SetNPCState(NPC_STATE_ALERT)
+					if self.AllowPrintingInChat == true then
+						dmgAttacker:PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.")
+					end
 				end
 			end
 
@@ -4233,6 +4246,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 			local doBecomeEnemyToPlayer = (self.BecomeEnemyToPlayer == true && dmgAttacker:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or false
 			local it = 0 -- Number of allies that have been alerted
 			for _, v in ipairs(allies) do
+				v:DoReadyAlert()
 				v:OnAllyKilled(self)
 				v:PlaySoundSystem("AllyDeath")
 				
@@ -4241,7 +4255,6 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 					it = it + 1
 					local faceTime = math.Rand(5, 8)
 					v:SetTurnTarget(self:GetPos(), faceTime, true)
-					v:VJ_ACT_PLAYACTIVITY(VJ.PICK(v.AnimTbl_AlertFriendsOnDeath))
 					v.NextIdleTime = CurTime() + faceTime
 				end
 				

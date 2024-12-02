@@ -35,6 +35,11 @@ VJ.NPC_FACE_ENTITY_VISIBLE		= 4 -- Currently attempting to face a specific entit
 VJ.NPC_FACE_POSITION			= 5 -- Currently attempting to face a specific position
 VJ.NPC_FACE_POSITION_VISIBLE	= 6 -- Currently attempting to face a specific position when it's visible
 
+-- Alert state
+VJ.NPC_ALERT_STATE_NONE			= false -- Not currently facing anything | DEFAULT
+VJ.NPC_ALERT_STATE_READY		= 1 -- Alerted but no enemy was ever seen since it got alerted
+VJ.NPC_ALERT_STATE_ENEMY		= true -- Has seen an enemy since it got alerted
+
 -- Danger detected type (Used by human NPCs)
 VJ.NPC_DANGER_TYPE_ENTITY		= 1 -- Entity type of danger | Commonly produced by projectiles | Associated: "ent.VJTag_ID_Danger"
 VJ.NPC_DANGER_TYPE_GRENADE		= 2 -- Grenade type of danger | Commonly produced by grenades | Associated: "ent.VJTag_ID_Grenade"

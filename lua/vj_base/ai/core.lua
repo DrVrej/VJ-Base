@@ -40,6 +40,8 @@ local math_clamp = math.Clamp
 local math_angDif = math.AngleDifference
 local varCPly = "CLASS_PLAYER_ALLY"
 local StopSound = VJ.STOPSOUND
+local NPC_ALERT_STATE_READY = VJ.NPC_ALERT_STATE_READY
+local NPC_ALERT_STATE_ENEMY = VJ.NPC_ALERT_STATE_ENEMY
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Creates a extra corpse entity, use this function to create extra corpse entities when the NPC is killed
@@ -1606,19 +1608,26 @@ function ENT:ForceSetEnemy(ent, stopMoving, skipChecks)
 			self:ClearGoal()
 			self:StopMoving()
 		end
-		self:DoAlert(ent)
+		self:DoEnemyAlert(ent)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoAlert(ent)
-	//print("DoAlert - ", self, ent, self:GetEnemy(), self.Alerted)
+-- Makes the NPC alerted but only as ready, useful when it's alerted by something unknown
+function ENT:DoReadyAlert()
+	self.EnemyData.Reset = false
+	self.Alerted = NPC_ALERT_STATE_READY
+	self:SetNPCState(NPC_STATE_ALERT)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:DoEnemyAlert(ent)
+	//print("DoEnemyAlert - ", self, ent, self:GetEnemy(), self.Alerted)
 	if !IsValid(ent) then return end
 	self.LatestEnemyDistance = self:GetPos():Distance(ent:GetPos())
-	if self.Alerted then return end
+	if self.Alerted == NPC_ALERT_STATE_ENEMY then return end
 	local curTime = CurTime()
 	local eneData = self.EnemyData
-	self.Alerted = true
-	-- Fixes the NPC switching from combat to alert to combat after it sees an enemy because `DoAlert` is called after NPC_STATE_COMBAT is set
+	self.Alerted = NPC_ALERT_STATE_ENEMY
+	-- Fixes the NPC switching from combat to alert to combat after it sees an enemy because `DoEnemyAlert` is called after NPC_STATE_COMBAT is set
 	if self:GetNPCState() != NPC_STATE_COMBAT then
 		self:SetNPCState(NPC_STATE_ALERT)
 	end
@@ -1694,6 +1703,7 @@ function ENT:MaintainRelationships()
 				-- If ent is our current enemy then reset it!
 				local ene = self:GetEnemy()
 				if IsValid(ene) && ene == ent then
+					self:PlaySoundSystem("LostEnemy")
 					eneData.Reset = true
 					self:ResetEnemy(false)
 				end
@@ -1821,7 +1831,7 @@ function ENT:MaintainRelationships()
 						calculatedDisp = D_VJ_INTEREST
 					else
 						-- FindEnemy: In order - Can find enemy + Not neutral or alerted + Is visible + In sight
-						if !self.DisableFindEnemy && (notIsNeutral or self.Alerted) && (self.FindEnemy_CanSeeThroughWalls or self:Visible(ent)) && (self.FindEnemy_UseSphere or (mySightDir:Dot((entPos - myPos):GetNormalized()) > mySightAng)) then
+						if !self.DisableFindEnemy && (notIsNeutral or self.Alerted == NPC_ALERT_STATE_ENEMY) && (self.FindEnemy_CanSeeThroughWalls or self:Visible(ent)) && (self.FindEnemy_UseSphere or (mySightDir:Dot((entPos - myPos):GetNormalized()) > mySightAng)) then
 							//print("MaintainRelationships 2 - set enemy")
 							eneSeen = true
 							eneVisCount = eneVisCount + 1
@@ -1845,6 +1855,7 @@ function ENT:MaintainRelationships()
 				if !eneValid && self.CanInvestigate && self.NextInvestigationMove < CurTime() then
 					-- Investigation: Sound detection
 					if ent.VJ_LastInvestigateSdLevel && distanceToEnt < (self.InvestigateSoundDistance * ent.VJ_LastInvestigateSdLevel) && ((CurTime() - ent.VJ_LastInvestigateSd) <= 1) then
+						self:DoReadyAlert()
 						if self:Visible(ent) then
 							self:StopMoving()
 							self:SetTarget(ent)
@@ -1869,7 +1880,7 @@ function ENT:MaintainRelationships()
 			end
 			
 			-- HasOnPlayerSight system, used to do certain actions when it sees the player
-			if entIsPLY && self.HasOnPlayerSight == true && ent:Alive() &&(CurTime() > self.OnPlayerSightNextT) && (distanceToEnt < self.OnPlayerSightDistance) && self:Visible(ent) && (mySightDir:Dot((ent:GetPos() - myPos):GetNormalized()) > mySightAng) then
+			if entIsPLY && self.HasOnPlayerSight && ent:Alive() &&(CurTime() > self.OnPlayerSightNextT) && (distanceToEnt < self.OnPlayerSightDistance) && self:Visible(ent) && (mySightDir:Dot((ent:GetPos() - myPos):GetNormalized()) > mySightAng) then
 				-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 				local disp = self.OnPlayerSightDispositionLevel
 				if (disp == 0) or (disp == 1 && (self:Disposition(ent) == D_LI or self:Disposition(ent) == D_NU)) or (disp == 2 && self:Disposition(ent) != D_LI) then
