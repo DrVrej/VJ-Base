@@ -144,7 +144,7 @@ function ENT:TASK_VJ_PLAY_SEQUENCE(taskStatus, data)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:RunAI(strExp) -- Called from the engine every 0.1 seconds
+function ENT:RunAI() -- Called from the engine every 0.1 seconds
 	if self:GetState() == VJ_STATE_FREEZE or self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then self:MaintainActivity() return end
 	if self:IsRunningBehavior() or self:DoingEngineSchedule() then return true end -- true = Run "MaintainSchedule" in engine
 	//self:SetArrivalActivity(ACT_COWER)

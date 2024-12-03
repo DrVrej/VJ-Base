@@ -206,18 +206,20 @@ end )
 hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 	local ent = data.Entity
 	if IsValid(ent) then
+		local isPly = ent:IsPlayer()
+		local isNPC = ent:IsNPC()
 		-- Investigate System
-		if SERVER && (ent:IsPlayer() or ent:IsNPC()) && data.SoundLevel >= 75 then
+		if SERVER && (isPly or isNPC) && data.SoundLevel >= 75 then
 			//print("---------------------------")
 			//PrintTable(data)
-			local quiet = (string_StartWith(data.OriginalSoundName, "player/footsteps") and (ent:IsPlayer() && (ent:Crouching() or ent:KeyDown(IN_WALK)))) or false
+			local quiet = (string_StartWith(data.OriginalSoundName, "player/footsteps") and (isPly && (ent:Crouching() or ent:KeyDown(IN_WALK)))) or false
 			if quiet != true && ent.Dead != true then
 				ent.VJ_LastInvestigateSd = CurTime()
 				ent.VJ_LastInvestigateSdLevel = (data.SoundLevel * data.Volume) + (((data.Volume <= 0.4) and 15) or 0)
 			end
 		-- Disable the built-in footstep sounds for the player footstep sound for VJ NPCs unless specified otherwise
 			-- Plays only on client-side, making it useless to play material-specific
-		elseif ent:IsNPC() && ent.IsVJBaseSNPC == true && (string.EndsWith(data.OriginalSoundName, "stepleft") or string.EndsWith(data.OriginalSoundName, "stepright")) then
+		elseif isNPC && ent.IsVJBaseSNPC && (string.EndsWith(data.OriginalSoundName, "stepleft") or string.EndsWith(data.OriginalSoundName, "stepright")) then
 			return ent:MatFootStepQCEvent(data)
 		end
 	end

@@ -8,6 +8,11 @@
 	- There are useful functions that are commonly called when making custom code in an NPC. (Custom-Friendly Functions)
 	- There are also functions that should be called with caution in a custom code. (General Functions)
 --------------------------------------------------*/
+---------------------------------------------------------------------------------------------------------------------------------------------
+/*
+	-- Change movement speed:
+	self:SetLocalVelocity(self:GetMoveVelocity() * 1.5)
+*/
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*
 ##     ##    ###    ########  ####    ###    ########  ##       ########  ######
@@ -304,7 +309,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:UpdateAnimationTranslations(wepHoldType)
 	-- Decide what type of animation set to use
-	if self.ModelAnimationSet == VJ.ANIM_SET_NONE then
+	if !self.ModelAnimationSet then
 		if VJ.AnimExists(self, "signal_takecover") == true && VJ.AnimExists(self, "grenthrow") == true && VJ.AnimExists(self, "bugbait_hit") == true then
 			self.ModelAnimationSet = VJ.ANIM_SET_COMBINE -- Combine
 		elseif VJ.AnimExists(self, ACT_WALK_AIM_PISTOL) == true && VJ.AnimExists(self, ACT_RUN_AIM_PISTOL) == true && VJ.AnimExists(self, ACT_POLICE_HARASS1) == true then
@@ -671,7 +676,7 @@ function ENT:OverrideMoveFacing(flInterval, move)
 	-- Maintain turning
 	local didTurn = false -- Did the NPC do any turning?
 	local curTurnData = self.TurnData
-	if curTurnData.Type != VJ.NPC_FACE_NONE && curTurnData.LastYaw != 0 then
+	if curTurnData.Type && curTurnData.LastYaw != 0 then
 		self:UpdateYaw() -- Use "UpdateYaw" instead of "SetIdealYawAndUpdate" to avoid pose parameter glitches!
 		self:SetPoseParameter("move_yaw", math_angDif(UTIL_VecToYaw( move.dir ), self:GetLocalAngles().y))
 		-- Need to set the yaw pose parameter, otherwise when face moving, certain directions will look broken (such as Combine soldier facing forward while moving backwards)
@@ -1349,8 +1354,8 @@ function ENT:Follow(ent, stopIfFollowing)
 				if self.AllowPrintingInChat then
 					ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is now following you.")
 				end
-				self.GuardingPosition = nil -- Reset the guarding position
-				self.GuardingFacePosition = nil
+				self.GuardingPosition = false -- Reset the guarding position
+				self.GuardingFacePosition = false
 				self.FollowingPlayer = true
 				self:PlaySoundSystem("FollowPlayer")
 			end
@@ -1495,7 +1500,7 @@ function ENT:MaintainConstantlyFaceEnemy()
 		if self.ConstantlyFaceEnemy_IfVisible && !self.EnemyData.IsVisible then
 			return
 		-- Do NOT face if attacking ?
-		elseif self.ConstantlyFaceEnemy_IfAttacking == false && self.AttackType != VJ.ATTACK_TYPE_NONE then
+		elseif self.ConstantlyFaceEnemy_IfAttacking == false && self.AttackType then
 			return
 		elseif (self.ConstantlyFaceEnemy_Postures == "Both") or (self.ConstantlyFaceEnemy_Postures == "Moving" && self:IsMoving()) or (self.ConstantlyFaceEnemy_Postures == "Standing" && !self:IsMoving()) then
 			self:SetTurnTarget("Enemy")
@@ -1818,9 +1823,9 @@ function ENT:MaintainRelationships()
 					end
 				end
 				
+				local ene = self:GetEnemy()
+				local eneValid = IsValid(ene)
 				if !calculatedDisp or calculatedDisp == D_VJ_INTEREST or calculatedDisp == D_HT then
-					local ene = self:GetEnemy()
-					local eneValid = IsValid(ene)
 					
 					-- Check if this NPC should be engaged, if not then set it as an interest but don't engage it
 					-- Restriction: If the current enemy is this entity then skip as it we want to engage regardless
@@ -2073,7 +2078,8 @@ local function flinchDamageTypeCheck(checkTbl, dmgType)
 end
 --
 function ENT:DoFlinch(dmginfo, hitgroup)
-	if self.CanFlinch == 0 or self.Flinching == true or self.AnimLockTime > CurTime() or self.TakingCoverT > CurTime() or self.NextFlinchT > CurTime() or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
+	local curTime = CurTime()
+	if self.CanFlinch == 0 or self.Flinching or self.AnimLockTime > curTime or self.TakingCoverT > curTime or self.NextFlinchT > curTime or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
 
 	local function RunFlinch(hitgroupInfo)
 		self.Flinching = true
@@ -2083,7 +2089,7 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 		local _, animDur = self:VJ_ACT_PLAYACTIVITY(anim, true, self:DecideAnimationLength(anim, self.NextMoveAfterFlinchTime), false, 0, {PlayBackRateCalculated=true})
 		timer.Create("timer_act_flinching"..self:EntIndex(), animDur, 1, function() self.Flinching = false end)
 		self:OnFlinch(dmginfo, hitgroup, "Execute")
-		self.NextFlinchT = CurTime() + (self.NextFlinchTime == false and animDur or self.NextFlinchTime)
+		self.NextFlinchT = curTime + (self.NextFlinchTime == false and animDur or self.NextFlinchTime)
 	end
 	
 	if math.random(1, self.FlinchChance) == 1 && ((self.CanFlinch == 1) or (self.CanFlinch == 2 && flinchDamageTypeCheck(self.FlinchDamageTypes, dmginfo:GetDamageType()))) then

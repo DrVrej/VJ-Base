@@ -1001,8 +1001,8 @@ ENT.AnimLockTime = 0
 ENT.CurAttackSeed = 0
 ENT.LastAnimationSeed = 0
 ENT.LastAnimationType = VJ.ANIM_TYPE_NONE
-ENT.GuardingPosition = nil
-ENT.GuardingFacePosition = nil
+ENT.GuardingPosition = false
+ENT.GuardingFacePosition = false
 ENT.SelectedDifficulty = 1
 ENT.ModelAnimationSet = VJ.ANIM_SET_NONE
 ENT.AIState = VJ_STATE_NONE
@@ -1042,6 +1042,22 @@ local math_angApproach = math.ApproachAngle
 local string_find = string.find
 local string_sub = string.sub
 local table_concat = table.concat
+local VJ_STATE_NONE = VJ_STATE_NONE
+local VJ_STATE_FREEZE = VJ_STATE_FREEZE
+local VJ_STATE_ONLY_ANIMATION = VJ_STATE_ONLY_ANIMATION
+local VJ_STATE_ONLY_ANIMATION_CONSTANT = VJ_STATE_ONLY_ANIMATION_CONSTANT
+local VJ_STATE_ONLY_ANIMATION_NOATTACK = VJ_STATE_ONLY_ANIMATION_NOATTACK
+local VJ_BEHAVIOR_PASSIVE = VJ_BEHAVIOR_PASSIVE
+local VJ_BEHAVIOR_PASSIVE_NATURE = VJ_BEHAVIOR_PASSIVE_NATURE
+local VJ_MOVETYPE_GROUND = VJ_MOVETYPE_GROUND
+local VJ_MOVETYPE_AERIAL = VJ_MOVETYPE_AERIAL
+local VJ_MOVETYPE_AQUATIC = VJ_MOVETYPE_AQUATIC
+local VJ_MOVETYPE_STATIONARY = VJ_MOVETYPE_STATIONARY
+local VJ_MOVETYPE_PHYSICS = VJ_MOVETYPE_PHYSICS
+local ANIM_TYPE_NONE = VJ.ANIM_TYPE_NONE
+local ANIM_TYPE_ACTIVITY = VJ.ANIM_TYPE_ACTIVITY
+local ANIM_TYPE_SEQUENCE = VJ.ANIM_TYPE_SEQUENCE
+local ANIM_TYPE_GESTURE = VJ.ANIM_TYPE_GESTURE
 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function ConvarsOnInit(self)
@@ -1396,7 +1412,7 @@ function ENT:DoChangeMovementType(movType)
 		self:SetNavType(NAV_GROUND)
 		self:SetMoveType(MOVETYPE_STEP)
 		self:CapabilitiesAdd(CAP_MOVE_GROUND)
-		if VJ.AnimExists(self, ACT_JUMP) == true or self.UsePlayerModelMovement == true then self:CapabilitiesAdd(CAP_MOVE_JUMP) end
+		if VJ.AnimExists(self, ACT_JUMP) == true or self.UsePlayerModelMovement then self:CapabilitiesAdd(CAP_MOVE_JUMP) end
 		if VJ.AnimExists(self, ACT_CLIMB_UP) == true then self:CapabilitiesAdd(CAP_MOVE_CLIMB) end
 	elseif self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 		self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT))
@@ -1459,10 +1475,6 @@ end
 -----------------------------------------------------------]]
 local varGes = "vjges_"
 local varSeq = "vjseq_"
-local ANIM_TYPE_NONE = VJ.ANIM_TYPE_NONE
-local ANIM_TYPE_ACTIVITY = VJ.ANIM_TYPE_ACTIVITY
-local ANIM_TYPE_SEQUENCE = VJ.ANIM_TYPE_SEQUENCE
-local ANIM_TYPE_GESTURE = VJ.ANIM_TYPE_GESTURE
 --
 function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, extraOptions, customFunc)
 	animation = VJ.PICK(animation)
@@ -1566,9 +1578,10 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 				animTime = lockAnimTime
 			end
 			
-			self.NextChaseTime = CurTime() + lockAnimTime
-			self.NextIdleTime = CurTime() + lockAnimTime
-			self.AnimLockTime = CurTime() + lockAnimTime
+			local curTime = CurTime()
+			self.NextChaseTime = curTime + lockAnimTime
+			self.NextIdleTime = curTime + lockAnimTime
+			self.AnimLockTime = curTime + lockAnimTime
 			
 			if lockAnim != "LetAttacks" then
 				self:StopAttacks(true)
@@ -1691,24 +1704,24 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local task_chaseEnemyLOS = vj_ai_schedule.New("vj_chase_enemy_los")
-	task_chaseEnemyLOS:EngTask("TASK_GET_PATH_TO_ENEMY_LOS", 0)
-	//task_chaseEnemyLOS:EngTask("TASK_RUN_PATH", 0)
-	task_chaseEnemyLOS:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	//task_chaseEnemyLOS:EngTask("TASK_FACE_ENEMY", 0)
-	//task_chaseEnemyLOS.ResetOnFail = true
-	task_chaseEnemyLOS.CanShootWhenMoving = true
-	task_chaseEnemyLOS.CanBeInterrupted = true
+local schedChaseEnemyLOS = vj_ai_schedule.New("vj_chase_enemy_los")
+	schedChaseEnemyLOS:EngTask("TASK_GET_PATH_TO_ENEMY_LOS", 0)
+	//schedChaseEnemyLOS:EngTask("TASK_RUN_PATH", 0)
+	schedChaseEnemyLOS:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	//schedChaseEnemyLOS:EngTask("TASK_FACE_ENEMY", 0)
+	//schedChaseEnemyLOS.ResetOnFail = true
+	schedChaseEnemyLOS.CanShootWhenMoving = true
+	schedChaseEnemyLOS.CanBeInterrupted = true
 --
-local task_chaseEnemy = vj_ai_schedule.New("vj_chase_enemy")
-	task_chaseEnemy:EngTask("TASK_GET_PATH_TO_ENEMY", 0)
-	task_chaseEnemy:EngTask("TASK_RUN_PATH", 0)
-	task_chaseEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	//task_chaseEnemy:EngTask("TASK_FACE_ENEMY", 0)
-	//task_chaseEnemy.ResetOnFail = true
-	task_chaseEnemy.CanShootWhenMoving = true
-	//task_chaseEnemy.StopScheduleIfNotMoving = true
-	task_chaseEnemy.CanBeInterrupted = true
+local schedChaseEnemy = vj_ai_schedule.New("vj_chase_enemy")
+	schedChaseEnemy:EngTask("TASK_GET_PATH_TO_ENEMY", 0)
+	schedChaseEnemy:EngTask("TASK_RUN_PATH", 0)
+	schedChaseEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	//schedChaseEnemy:EngTask("TASK_FACE_ENEMY", 0)
+	//schedChaseEnemy.ResetOnFail = true
+	schedChaseEnemy.CanShootWhenMoving = true
+	//schedChaseEnemy.StopScheduleIfNotMoving = true
+	schedChaseEnemy.CanBeInterrupted = true
 --
 local varChaseEnemy = "vj_chase_enemy"
 function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase)
@@ -1717,45 +1730,51 @@ function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase)
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_ChaseEnemy() return end
 	//if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
 	if self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
-	//if (CurTime() <= self.JumpLegalLandingTime && (self:GetActivity() == ACT_JUMP or self:GetActivity() == ACT_GLIDE or self:GetActivity() == ACT_LAND)) or self:GetActivity() == ACT_CLIMB_UP or self:GetActivity() == ACT_CLIMB_DOWN or self:GetActivity() == ACT_CLIMB_DISMOUNT then return end
-	if (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) <= 12) && self.CurrentSchedule != nil && self.CurrentSchedule.Name == varChaseEnemy then return end
+	if self.CurrentSchedule != nil && self.CurrentSchedule.Name == varChaseEnemy && (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) <= 12) then return end
 	if doLOSChase == true then
-		task_chaseEnemyLOS.RunCode_OnFinish = function()
+		schedChaseEnemyLOS.RunCode_OnFinish = function()
 			local ene = self:GetEnemy()
 			if IsValid(ene) then
 				//self:RememberUnreachable(ene, 0)
 				self:VJ_TASK_CHASE_ENEMY(false)
 			end
 		end
-		self:StartSchedule(task_chaseEnemyLOS)
+		self:StartSchedule(schedChaseEnemyLOS)
 	else
-		task_chaseEnemy.RunCode_OnFail = function() if self.VJ_TASK_IDLE_STAND then self:VJ_TASK_IDLE_STAND() end end
-		self:StartSchedule(task_chaseEnemy)
+		schedChaseEnemy.RunCode_OnFail = function() if self.VJ_TASK_IDLE_STAND then self:VJ_TASK_IDLE_STAND() end end
+		self:StartSchedule(schedChaseEnemy)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainIdleBehavior(idleType) -- idleType: nil = Random | 1 = Wander | 2 = Idle Stand
-	if self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT or self.Dead or self.VJ_IsBeingControlled or (self.CurrentAttackAnimationTime > CurTime()) or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") then return end
-	
-	if self.IdleAlwaysWander && !idleType then idleType = 1 end
+	local curTime = CurTime()
+	if self.Dead or self.VJ_IsBeingControlled or (self.CurrentAttackAnimationTime > curTime) or (self.NextIdleTime > curTime) or (self.AA_CurrentMoveTime > curTime) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
-	if self.DisableWandering == true or self.IsGuard == true or self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsVJBaseSNPC_Tank == true or self.LastHiddenZone_CanWander == false or self.NextWanderTime > CurTime() or self.IsFollowing == true or self.Medic_Status then
-		idleType = 2
+	if self.DisableWandering or self.IsGuard or self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsVJBaseSNPC_Tank or !self.LastHiddenZone_CanWander or self.NextWanderTime > curTime or self.IsFollowing or self.Medic_Status then
+		self:VJ_TASK_IDLE_STAND()
+		return -- Don't set self.NextWanderTime below
+	elseif !idleType && self.IdleAlwaysWander then
+		idleType = 1
 	end
 	
-	if !idleType then -- Random (Wander & Idle Stand)
+	-- Random (Wander & Idle Stand)
+	if !idleType then
 		if math.random(1, 3) == 1 then
-			self:VJ_TASK_IDLE_WANDER() else self:VJ_TASK_IDLE_STAND()
+			self:VJ_TASK_IDLE_WANDER()
+		else
+			self:VJ_TASK_IDLE_STAND()
 		end
-	elseif idleType == 1 then -- Wander
+	-- Wander
+	elseif idleType == 1 then
 		self:VJ_TASK_IDLE_WANDER()
-	elseif idleType == 2 then -- Idle Stand
+	-- Idle Stand
+	elseif idleType == 2 then
 		self:VJ_TASK_IDLE_STAND()
 		return -- Don't set self.NextWanderTime below
 	end
 	
-	self.NextWanderTime = CurTime() + math.Rand(3, 6) // self.NextIdleTime
+	self.NextWanderTime = curTime + math.Rand(3, 6) // self.NextIdleTime
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase: true = Override to always make the NPC chase
@@ -1895,7 +1914,7 @@ function ENT:Think()
 	-- Breath sound system
 	if !self.Dead && self.HasBreathSound && self.HasSounds && curTime > self.NextBreathSoundT then
 		local pickedSD = VJ.PICK(self.SoundTbl_Breath)
-		local dur = 1
+		local dur = 10 -- Make the default value large so we don't check it too much!
 		if pickedSD then
 			StopSound(self.CurrentBreathSound)
 			dur = (self.NextSoundTime_Breath == false and SoundDuration(pickedSD)) or math.Rand(self.NextSoundTime_Breath.a, self.NextSoundTime_Breath.b)
@@ -1903,7 +1922,7 @@ function ENT:Think()
 		end
 		self.NextBreathSoundT = curTime + dur
 	end
-	
+
 	self:OnThink()
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	if VJ_CVAR_AI_ENABLED && self:GetState() != VJ_STATE_FREEZE && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
@@ -2033,7 +2052,7 @@ function ENT:Think()
 
 		-- Handle main parts of the turning system
 		local turnData = self.TurnData
-		if turnData.Type != VJ.NPC_FACE_NONE then
+		if turnData.Type then
 			-- If StopOnFace flag is set AND (Something has requested to take over by checking "ideal yaw != last set yaw") OR (we are facing ideal) then finish it!
 			if turnData.StopOnFace && (self:GetIdealYaw() != turnData.LastYaw or self:IsFacingIdealYaw()) then
 				self:ResetTurnTarget()
@@ -2256,7 +2275,7 @@ function ENT:Think()
 				self:UpdatePoseParamTracking()
 				
 				-- Face enemy for stationary types OR attacks
-				if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == true) or (self.MeleeAttackAnimationFaceEnemy == true && self.MeleeAttack_DoingPropAttack == false && self.AttackType == VJ.ATTACK_TYPE_MELEE) or (self.RangeAttackAnimationFaceEnemy == true && self.AttackType == VJ.ATTACK_TYPE_RANGE) or ((self.LeapAttackAnimationFaceEnemy == true or (self.LeapAttackAnimationFaceEnemy == 2 && !self.LeapAttackHasJumped)) && self.AttackType == VJ.ATTACK_TYPE_LEAP) then
+				if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary) or (self.AttackType && ((self.MeleeAttackAnimationFaceEnemy && !self.MeleeAttack_DoingPropAttack && self.AttackType == VJ.ATTACK_TYPE_MELEE) or (self.RangeAttackAnimationFaceEnemy && self.AttackType == VJ.ATTACK_TYPE_RANGE) or ((self.LeapAttackAnimationFaceEnemy or (self.LeapAttackAnimationFaceEnemy == 2 && !self.LeapAttackHasJumped)) && self.AttackType == VJ.ATTACK_TYPE_LEAP))) then
 					self:SetTurnTarget("Enemy")
 				end
 				
@@ -2265,22 +2284,31 @@ function ENT:Think()
 					-- Attack priority in order: Custom --> Melee --> Range --> Leap
 					-- To avoid overlapping situations where 2 attacks can be called at once, check for "self.AttackType == VJ.ATTACK_TYPE_NONE"
 					local funcCustomAtk = self.CustomAttack; if funcCustomAtk then funcCustomAtk(self, ene, eneData.IsVisible) end
-					if !self.Flinching && !self.FollowData.StopAct && self.AttackType == VJ.ATTACK_TYPE_NONE then
+					if !self.Flinching && !self.FollowData.StopAct && !self.AttackType then
+						
 						-- Melee Attack
-						if self.HasMeleeAttack == true && self.IsAbleToMeleeAttack then
-							-- Check for possible props that we can attack/push
-							if curTime > self.NextPropAPCheckT then
-								self.PropAP_IsVisible = self:DoPropAPCheck()
-								self.NextPropAPCheckT = curTime + 0.5
-							end
+						if self.HasMeleeAttack && self.IsAbleToMeleeAttack then
+							local atkType = false -- false = No attack | 1 = Normal attack | 2 = Prop attack
 							self:MultipleMeleeAttacks()
-							local atkType = 0 -- 0 = No attack | 1 = Normal attack | 2 = Prop attack
-							if (plyControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK)) or (plyControlled == false && self.NearestPointToEnemyDistance < self.MeleeAttackDistance && eneData.IsVisible) then
-								atkType = 1
-							elseif self.PropAP_IsVisible then -- Check for props to attack/push
-								atkType = 2
+							if plyControlled then
+								if self.VJ_TheController:KeyDown(IN_ATTACK) then
+									atkType = 1
+								end
+							elseif eneData.SightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius)) then
+								-- Regular non-prop attack
+								if eneData.IsVisible && self.NearestPointToEnemyDistance < self.MeleeAttackDistance then
+									atkType = 1
+								-- Check for possible props that we can attack/push
+								elseif curTime > self.NextPropAPCheckT then
+									local propCheck = self:DoPropAPCheck()
+									if propCheck then
+										atkType = 2
+									end
+									self.PropAP_IsVisible = propCheck
+									self.NextPropAPCheckT = curTime + 0.5
+								end
 							end
-							if self:CustomAttackCheck_MeleeAttack() == true && ((plyControlled == true && atkType == 1) or (plyControlled == false && atkType != 0 && (eneData.SightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))))) then
+							if atkType && self:CustomAttackCheck_MeleeAttack() == true then
 								local seed = curTime; self.CurAttackSeed = seed
 								self.AttackType = VJ.ATTACK_TYPE_MELEE
 								self.AttackState = VJ.ATTACK_STATE_STARTED
@@ -2310,22 +2338,10 @@ function ENT:Think()
 								if self.TimeUntilMeleeAttackDamage == false then 
 									finishAttack[VJ.ATTACK_TYPE_MELEE](self)
 								else -- If it's not event based...
-									timer.Create("timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self:GetPlaybackRate(), self.MeleeAttackReps, function() if self.CurAttackSeed == seed then
-											if atkType == 2 then
-												self:MeleeAttackCode(true)
-											else
-												self:MeleeAttackCode()
-											end
-									end end)
+									timer.Create("timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self:GetPlaybackRate(), self.MeleeAttackReps, function() if self.CurAttackSeed == seed then self:MeleeAttackCode(atkType == 2) end end)
 									if self.MeleeAttackExtraTimers then
 										for k, t in ipairs(self.MeleeAttackExtraTimers) do
-											self:AddExtraAttackTimer("timer_melee_start_"..curTime + k, t, function() if self.CurAttackSeed == seed then
-												if atkType == 2 then
-													self:MeleeAttackCode(true)
-												else
-													self:MeleeAttackCode()
-												end
-											end end)
+											self:AddExtraAttackTimer("timer_melee_start_"..curTime + k, t, function() if self.CurAttackSeed == seed then self:MeleeAttackCode(atkType == 2) end end)
 										end
 									end
 								end
@@ -2334,9 +2350,9 @@ function ENT:Think()
 						end
 
 						-- Range Attack
-						if self.HasRangeAttack == true && self.IsAbleToRangeAttack && eneData.IsVisible && self.AttackType == VJ.ATTACK_TYPE_NONE then
+						if self.HasRangeAttack && self.IsAbleToRangeAttack && eneData.IsVisible && !self.AttackType then
 							self:MultipleRangeAttacks()
-							if self:CustomAttackCheck_RangeAttack() == true && ((plyControlled == true && self.VJ_TheController:KeyDown(IN_ATTACK2)) or (plyControlled == false && (self.LatestEnemyDistance < self.RangeDistance) && (self.LatestEnemyDistance > self.RangeToMeleeDistance) && (eneData.SightDiff > math_cos(math_rad(self.RangeAttackAngleRadius))))) then
+							if self:CustomAttackCheck_RangeAttack() == true && ((plyControlled && self.VJ_TheController:KeyDown(IN_ATTACK2)) or (!plyControlled && (self.LatestEnemyDistance < self.RangeDistance) && (self.LatestEnemyDistance > self.RangeToMeleeDistance) && (eneData.SightDiff > math_cos(math_rad(self.RangeAttackAngleRadius))))) then
 								local seed = curTime; self.CurAttackSeed = seed
 								self.AttackType = VJ.ATTACK_TYPE_RANGE
 								self.AttackState = VJ.ATTACK_STATE_STARTED
@@ -2344,7 +2360,7 @@ function ENT:Think()
 								self.CurrentAttackAnimation = ACT_INVALID
 								self.CurrentAttackAnimationDuration = 0
 								self.CurrentAttackAnimationTime = 0
-								if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
+								if self.RangeAttackAnimationStopMovement then self:StopMoving() end
 								self:CustomOnRangeAttack_BeforeStartTimer(seed)
 								self:PlaySoundSystem("BeforeRangeAttack")
 								if self.DisableRangeAttackAnimation == false then
@@ -2370,9 +2386,9 @@ function ENT:Think()
 						end
 
 						-- Leap Attack
-						if self.HasLeapAttack == true && self.IsAbleToLeapAttack && eneData.IsVisible && self.AttackType == VJ.ATTACK_TYPE_NONE then
+						if self.HasLeapAttack && self.IsAbleToLeapAttack && eneData.IsVisible && !self.AttackType then
 							self:MultipleLeapAttacks()
-							if self:CustomAttackCheck_LeapAttack() == true && ((plyControlled == true && self.VJ_TheController:KeyDown(IN_JUMP)) or (plyControlled == false && (self:IsOnGround() && self.LatestEnemyDistance < self.LeapDistance) && (self.LatestEnemyDistance > self.LeapToMeleeDistance) && (eneData.SightDiff > math_cos(math_rad(self.LeapAttackAngleRadius))))) then
+							if self:CustomAttackCheck_LeapAttack() == true && ((plyControlled && self.VJ_TheController:KeyDown(IN_JUMP)) or (!plyControlled && (self:IsOnGround() && self.LatestEnemyDistance < self.LeapDistance) && (self.LatestEnemyDistance > self.LeapToMeleeDistance) && (eneData.SightDiff > math_cos(math_rad(self.LeapAttackAngleRadius))))) then
 								local seed = curTime; self.CurAttackSeed = seed
 								self.AttackType = VJ.ATTACK_TYPE_LEAP
 								self.AttackState = VJ.ATTACK_STATE_STARTED
@@ -2418,7 +2434,7 @@ function ENT:Think()
 			end
 			
 			if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
-				if IsValid(ene) && self.CurrentAttackAnimationTime > CurTime() && self.NearestPointToEnemyDistance < self.MeleeAttackDistance then
+				if IsValid(ene) && self.CurrentAttackAnimationTime > curTime && self.NearestPointToEnemyDistance < self.MeleeAttackDistance then
 					self:AA_StopMoving()
 				else
 					self:SelectSchedule()
@@ -2426,13 +2442,13 @@ function ENT:Think()
 			end
 			
 			-- Guarding Position
-			if self.IsGuard == true && self.IsFollowing == false then
-				if self.GuardingPosition == nil then -- If it hasn't been set then set the guard position to its current position
+			if self.IsGuard && !self.IsFollowing then
+				if !self.GuardingPosition then -- If it hasn't been set then set the guard position to its current position
 					self.GuardingPosition = myPos
 					self.GuardingFacePosition = myPos + self:GetForward()*51
 				end
 				-- If it's far from the guarding position, then go there!
-				if !self:IsMoving() && self:BusyWithActivity() == false then
+				if !self:IsMoving() && !self:BusyWithActivity() then
 					local dist = myPos:Distance(self.GuardingPosition) -- Distance to the guard position
 					if dist > 50 then
 						self:SetLastPosition(self.GuardingPosition)
@@ -2441,7 +2457,7 @@ function ENT:Think()
 							x.FaceData = {Type = VJ.NPC_FACE_ENEMY}
 							x.RunCode_OnFinish = function()
 								timer.Simple(0.01, function()
-									if IsValid(self) && !self:IsMoving() && self:BusyWithActivity() == false && self.GuardingFacePosition != nil then
+									if IsValid(self) && !self:IsMoving() && !self:BusyWithActivity() && self.GuardingFacePosition then
 										self:SetLastPosition(self.GuardingFacePosition)
 										self:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
 									end
@@ -2453,7 +2469,7 @@ function ENT:Think()
 			end
 		end
 		-- Handle the unique movement system for player models
-		if self.UsePlayerModelMovement == true && self.MovementType == VJ_MOVETYPE_GROUND then
+		if self.UsePlayerModelMovement && self.MovementType == VJ_MOVETYPE_GROUND then
 			local moveDir = self:GetMoveDirection(true)
 			if moveDir then
 				self:SetPoseParameter("move_x", moveDir.x)
@@ -2475,7 +2491,7 @@ function ENT:Think()
 	-- No longer needed as "OverrideMoveFacing" now handles it!
 	/*if !didTurn then
 		local curTurnData = self.TurnData
-		if curTurnData.Type != VJ.NPC_FACE_NONE && curTurnData.LastYaw != 0 then
+		if curTurnData.Type && curTurnData.LastYaw != 0 then
 			self:SetIdealYawAndUpdate(curTurnData.LastYaw)
 			didTurn = true
 		end
@@ -2492,7 +2508,7 @@ function ENT:DoPropAPCheck(customEnts)
 	local myPos = self:GetPos()
 	local myCenter = myPos + self:OBBCenter()
 	for _, v in ipairs(customEnts or ents.FindInSphere(myCenter, self.MeleeAttackDistance * 1.2)) do
-		if v.VJTag_IsAttackable then --If it's a prop or a entity then attack
+		if v.VJTag_IsAttackable then
 			local vPhys = v:GetPhysicsObject()
 			if IsValid(vPhys) && !propColBlacklist[v:GetCollisionGroup()] && (self:GetSightDirection():Dot((v:GetPos() - myPos):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius / 1.3))) then
 				local tr = util.TraceLine({
@@ -2668,8 +2684,8 @@ function ENT:RangeAttackCode()
 	if IsValid(ene) then
 		self.AttackType = VJ.ATTACK_TYPE_RANGE
 		self:PlaySoundSystem("RangeAttack")
-		if self.RangeAttackAnimationStopMovement == true then self:StopMoving() end
-		if self.RangeAttackAnimationFaceEnemy == true then self:SetTurnTarget("Enemy") end
+		if self.RangeAttackAnimationStopMovement then self:StopMoving() end
+		if self.RangeAttackAnimationFaceEnemy then self:SetTurnTarget("Enemy") end
 		//self:PointAtEntity(ene)
 		self:CustomRangeAttackCode()
 		-- Default projectile code
@@ -2838,11 +2854,12 @@ function ENT:SelectSchedule()
 	if self.VJ_IsBeingControlled or self.Dead then return end
 	
 	local hasCond = self.HasCondition
+	local curTime = CurTime()
 	local eneValid = IsValid(self:GetEnemy())
 	self:IdleSoundCode()
 	
 	-- Handle move away behavior
-	if hasCond(self, COND_PLAYER_PUSHING) && CurTime() > self.TakingCoverT && !self:BusyWithActivity() then
+	if hasCond(self, COND_PLAYER_PUSHING) && curTime > self.TakingCoverT && !self:BusyWithActivity() then
 		self:PlaySoundSystem("MoveOutOfPlayersWay")
 		if eneValid then -- Face current enemy
 			schedMoveAway.FaceData.Type = VJ.NPC_FACE_ENEMY_VISIBLE
@@ -2855,7 +2872,7 @@ function ENT:SelectSchedule()
 			schedMoveAway.FaceData.Target = nil
 		end
 		self:StartSchedule(schedMoveAway)
-		self.TakingCoverT = CurTime() + 2
+		self.TakingCoverT = curTime + 2
 	end
 	
 	if eneValid then -- Chase the enemy
@@ -2869,10 +2886,10 @@ function ENT:SelectSchedule()
 		end
 		
 		-- Investigation: Conditions // hasCond(self, COND_HEAR_PLAYER)
-		if self.CanInvestigate && (hasCond(self, COND_HEAR_BULLET_IMPACT) or hasCond(self, COND_HEAR_COMBAT) or hasCond(self, COND_HEAR_WORLD) or hasCond(self, COND_HEAR_DANGER)) && self.NextInvestigationMove < CurTime() && CurTime() > self.TakingCoverT && !self:BusyWithActivity() then
+		if self.CanInvestigate && (hasCond(self, COND_HEAR_BULLET_IMPACT) or hasCond(self, COND_HEAR_COMBAT) or hasCond(self, COND_HEAR_WORLD) or hasCond(self, COND_HEAR_DANGER)) && self.NextInvestigationMove < curTime && self.TakingCoverT < curTime && !self:IsBusy() then
 			local sdSrc = self:GetBestSoundHint(bit.bor(SOUND_BULLET_IMPACT, SOUND_COMBAT, SOUND_WORLD, SOUND_DANGER)) // SOUND_PLAYER, SOUND_PLAYER_VEHICLE
 			if sdSrc then
-				PrintTable(sdSrc)
+				//PrintTable(sdSrc)
 				local allowed = true
 				local sdOwner = sdSrc.owner
 				if IsValid(sdOwner) then
@@ -2903,7 +2920,7 @@ function ENT:SelectSchedule()
 					//self:StartSchedule(sched)
 					self:OnInvestigate(sdOwner)
 					self:PlaySoundSystem("InvestigateSound")
-					self.TakingCoverT = CurTime() + 1
+					self.TakingCoverT = curTime + 1
 				end
 			end
 		end

@@ -12,7 +12,7 @@ if !VJ then VJ = {} end -- If VJ isn't initialized, initialize it!
 -----------------------------------------------------------]]
 
 -- NPC attack type
-VJ.ATTACK_TYPE_NONE				= 0 -- No attack is set | DEFAULT
+VJ.ATTACK_TYPE_NONE				= false -- No attack is set | DEFAULT
 VJ.ATTACK_TYPE_CUSTOM			= 1 -- Custom attack | Used by developers to make custom attacks
 VJ.ATTACK_TYPE_MELEE			= 2 -- Melee attack
 VJ.ATTACK_TYPE_RANGE			= 3 -- Ranged attack
@@ -27,7 +27,7 @@ VJ.ATTACK_STATE_EXECUTED		= 3 -- Current attack has been executed at least once
 VJ.ATTACK_STATE_EXECUTED_HIT	= 4 -- Current attack has been executed at least once AND hit an entity at least once (Melee & Leap attacks)
 
 -- NPC facing status
-VJ.NPC_FACE_NONE				= 0 -- Not currently facing anything | DEFAULT
+VJ.NPC_FACE_NONE				= false -- Not currently facing anything | DEFAULT
 VJ.NPC_FACE_ENEMY				= 1 -- Currently attempting to face the enemy
 VJ.NPC_FACE_ENEMY_VISIBLE		= 2 -- Currently attempting to face the enemy when it's visible
 VJ.NPC_FACE_ENTITY				= 3 -- Currently attempting to face a specific entity
@@ -58,13 +58,13 @@ VJ.NPC_WEP_INVENTORY_MELEE		= 3 -- Currently using its melee weapon
 VJ.NPC_WEP_INVENTORY_ANTI_ARMOR	= 4 -- Currently using its anti-armor weapon
 
 -- Animation type
-VJ.ANIM_TYPE_NONE				= 0 -- No type detected including fail cases and resets | DEFAULT
+VJ.ANIM_TYPE_NONE				= false -- No type detected including fail cases and resets | DEFAULT
 VJ.ANIM_TYPE_ACTIVITY			= 1 -- Animation is an activity
 VJ.ANIM_TYPE_SEQUENCE			= 2 -- Animation is a sequence
 VJ.ANIM_TYPE_GESTURE			= 3 -- Animation is a gesture
 
 -- Model animation set
-VJ.ANIM_SET_NONE				= 0 -- No model animation set detected | DEFAULT
+VJ.ANIM_SET_NONE				= false -- No model animation set detected | DEFAULT
 VJ.ANIM_SET_COMBINE				= 1 -- Current model's animation set is HL2 combine
 VJ.ANIM_SET_METROCOP			= 2 -- Current model's animation set is HL2 metrocop
 VJ.ANIM_SET_REBEL				= 3 -- Current model's animation set is HL2 citizen / rebel
