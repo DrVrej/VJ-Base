@@ -301,6 +301,7 @@ if CLIENT then
 		add("vjbase.menu.snpc.devsettings.label2", "WARNING: Some of these options cause lag!")
 		add("vjbase.menu.snpc.devsettings.toggledev", "Enable Developer Mode?")
 		add("vjbase.menu.snpc.devsettings.label3", "This option must be enabled from here or through the context menu! (Required for the options below)")
+		add("vjbase.menu.snpc.devsettings.enginedebug", "Engine Debugging (m_debugOverlays)")
 		add("vjbase.menu.snpc.devsettings.printtouch", "Print On Touch (Console)")
 		add("vjbase.menu.snpc.devsettings.printcurenemy", "Print Current Enemy (Console)")
 		add("vjbase.menu.snpc.devsettings.printlastseenenemy", "Print 'LastSeenEnemy' time (Chat)")

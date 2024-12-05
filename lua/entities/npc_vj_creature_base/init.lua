@@ -26,8 +26,8 @@ ENT.HealthRegenerationResetOnDmg = true -- Should the delay reset when it receiv
 ENT.HullType = HULL_HUMAN -- List of Hull types: https://wiki.facepunch.com/gmod/Enums/HULL
 ENT.HasSetSolid = true -- set to false to disable SetSolid
 	-- ====== Sight & Speed ====== --
-ENT.SightDistance = 6500 -- How far it can see | This is just a starting value! | To retrieve: "self:GetMaxLookDistance()" | To change: "self:SetMaxLookDistance(sight)"
-ENT.SightAngle = 80 -- The sight angle | Example: 180 would make the it see all around it | Measured in degrees and then converted to radians
+ENT.SightDistance = 6500 -- Initial sight distance | To retrieve: "self:GetMaxLookDistance()" | To change: "self:SetMaxLookDistance(sight)"
+ENT.SightAngle = 156 -- Initial field of view | To retrieve: "self:GetFOV()" | To change: "self:SetFOV(degree)" | 360 = See all around
 ENT.TurningSpeed = 20 -- How fast it can turn
 ENT.TurningUseAllAxis = false -- If set to true, angles will not be restricted to y-axis, it will change all axes (plural axis)
 ENT.CanTurnWhileMoving = true -- Can the NPC turn while moving? | EX: GoldSrc NPCs, Facing enemy while running to cover, Facing the player while moving out of the way
@@ -178,7 +178,6 @@ ENT.PushProps = true -- Should it push props when trying to move?
 ENT.PropAP_MaxSize = 1 -- This is a scale number for the max size it can attack/push | x < 1  = Smaller props & x > 1  = Larger props | Default base value: 1
 	-- ====== Control ====== --
 	-- Adjust these variables carefully! Wrong adjustment can have unintended effects!
-ENT.FindEnemy_UseSphere = false -- Should the NPC see all around? (360 degrees) | Objects and walls can still block its sight!
 ENT.FindEnemy_CanSeeThroughWalls = false -- Should it be able to see through walls and objects? | Can be useful if you want to make it know where the enemy is at all times
 ENT.DisableFindEnemy = false -- Disables FindEnemy code, friendly code still works though
 ENT.DisableTakeDamageFindEnemy = false -- Disables the AI component that allows the NPC to find enemies all around it when it's damaged while idling
@@ -1096,7 +1095,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_novfx_gibdeath"):GetInt() == 1 then self.HasGibOnDeathEffects = false end
 	if GetConVar("vj_npc_nogib"):GetInt() == 1 then self.CanGib = false self.CanGibOnDeath = false end
 	if GetConVar("vj_npc_usegmoddecals"):GetInt() == 1 then self.BloodDecalUseGMod = true end
-	if GetConVar("vj_npc_knowenemylocation"):GetInt() == 1 then self.FindEnemy_UseSphere = true self.FindEnemy_CanSeeThroughWalls = true end
+	if GetConVar("vj_npc_knowenemylocation"):GetInt() == 1 then self.SightAngle = 360 self.FindEnemy_CanSeeThroughWalls = true end
 	if GetConVar("vj_npc_sd_gibbing"):GetInt() == 1 then self.HasGibOnDeathSounds = false end
 	if GetConVar("vj_npc_sd_soundtrack"):GetInt() == 1 then self.HasSoundTrack = false end
 	if GetConVar("vj_npc_sd_footstep"):GetInt() == 1 then self.HasFootStepSound = false end
@@ -1133,6 +1132,10 @@ local function ConvarsOnInit(self)
 			self.DeathCorpseCollisionType = COLLISION_GROUP_NONE
 		end
 	end
+	-- Enables source engine debug overlays (some commands like 'npc_conditions' need it)
+	if self.VJ_DEBUG && GetConVar("vj_npc_debug_engine"):GetInt() == 1 then
+		self:SetSaveValue("m_debugOverlays", bit.bor(0x00000001, 0x00000002, 0x00000004, 0x00000008, 0x00000010, 0x00000020, 0x00000040, 0x00000080, 0x00000100, 0x00000200, 0x00001000, 0x00002000, 0x00004000, 0x00008000, 0x00020000, 0x00040000, 0x00080000, 0x00100000, 0x00200000, 0x00400000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000))
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function ApplyBackwardsCompatibility(self)
@@ -1163,6 +1166,7 @@ local function ApplyBackwardsCompatibility(self)
 	if self.ItemDropsOnDeathChance != nil then self.DeathLootChance = self.ItemDropsOnDeathChance end
 	if self.ItemDropsOnDeath_EntityList != nil then self.DeathLoot = self.ItemDropsOnDeath_EntityList end
 	if self.OnlyDoKillEnemyWhenClear != nil then self.OnKilledEnemy_OnlyLast = self.OnlyDoKillEnemyWhenClear end
+	if self.FindEnemy_UseSphere then self.SightAngle = 360 end
 	if self.CustomOnDoKilledEnemy then
 		self.OnKilledEnemy = function(_, ent, inflictor, wasLast)
 			if (self.OnKilledEnemy_OnlyLast == false) or (self.OnKilledEnemy_OnlyLast == true && wasLast) then
@@ -1315,7 +1319,10 @@ function ENT:Initialize()
 	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.3, 6)
 	self.UseTheSameGeneralSoundPitch_PickedNumber = (self.UseTheSameGeneralSoundPitch and math.random(self.GeneralSoundPitch1, self.GeneralSoundPitch2)) or 0
 	self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK, CAP_TURN_HEAD))
-	//self:CapabilitiesAdd(CAP_ANIMATEDFACE) -- Breaks some NPCs because during high velocity, the model tilts (EX: leap attacks)
+	-- Both of these attachments have to be valid for "ai_baseactor" to work properly!
+	if self:LookupAttachment("eyes") > 0 && self:LookupAttachment("forward") > 0 then
+		self:CapabilitiesAdd(CAP_ANIMATEDFACE)
+	end
 	if self.CanOpenDoors == true then
 		self:CapabilitiesAdd(bit.bor(CAP_OPEN_DOORS, CAP_AUTO_DOORS, CAP_USE))
 	end
@@ -1346,6 +1353,7 @@ function ENT:Initialize()
 	timer.Simple(0.15, function()
 		if IsValid(self) then
 			self:SetMaxLookDistance(self.SightDistance)
+			self:SetFOV(self.SightAngle)
 			if self:GetNPCState() <= NPC_STATE_NONE then self:SetNPCState(NPC_STATE_IDLE) end
 			if IsValid(self:GetCreator()) && self:GetCreator():GetInfoNum("vj_npc_spawn_guard", 0) == 1 then self.IsGuard = true end
 			self:StartSoundTrack()
@@ -1400,7 +1408,6 @@ function ENT:Initialize()
 			end
 		end
 	end)
-	//self:SetSaveValue("m_debugOverlays", bit.bor(0x00000001, 0x00000002, 0x00000004, 0x00000008, 0x00000010, 0x00000020, 0x00000040, 0x00000080, 0x00000100, 0x00000200, 0x00001000, 0x00002000, 0x00004000, 0x00008000, 0x00020000, 0x00040000, 0x00080000, 0x00100000, 0x00200000, 0x00400000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000)) -- Enables source engine debug overlays (some commands like 'npc_conditions' need it)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChangeMovementType(movType)
@@ -1793,7 +1800,7 @@ function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase: true = Override 
 	end
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
-	if self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsFollowing == true or self.Medic_Status or self:GetState() == VJ_STATE_ONLY_ANIMATION then
+	if self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsFollowing or self.Medic_Status or self:GetState() == VJ_STATE_ONLY_ANIMATION then
 		self:VJ_TASK_IDLE_STAND()
 		return
 	end
@@ -1892,6 +1899,11 @@ local finishAttack = {
 }
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
+	/*print(self:GetInternalVariable("m_flNextEyeLookTime") - CurTime())
+		local newEyeOffset = self:WorldToLocal(self:GetAttachment(self:LookupAttachment("mouth")).Pos)
+		self:SetViewOffset(newEyeOffset)
+		self:SetSaveValue("m_vDefaultEyeOffset", newEyeOffset)*/
+		
 	//if self.NextActualThink <= CurTime() then
 		//self.NextActualThink = CurTime() + 0.065
 	
@@ -1980,7 +1992,7 @@ function ENT:Think()
 		-- Update follow system's data
 		//print("------------------")
 		//PrintTable(self.FollowData)
-		if self.IsFollowing == true && self:GetNavType() != NAV_JUMP && self:GetNavType() != NAV_CLIMB then
+		if self.IsFollowing && self:GetNavType() != NAV_JUMP && self:GetNavType() != NAV_CLIMB then
 			local followData = self.FollowData
 			local followEnt = followData.Ent
 			local followIsLiving = followEnt.VJTag_IsLiving
@@ -2069,7 +2081,7 @@ function ENT:Think()
 					self.TurnData.LastYaw = resultAng.y
 				elseif IsValid(turnTarget) && (turnData.Type == VJ.NPC_FACE_ENTITY or (turnData.Type == VJ.NPC_FACE_ENTITY_VISIBLE && self:Visible(turnTarget))) then
 					local resultAng = self:GetFaceAngle((turnTarget:GetPos() - self:GetPos()):Angle())
-					if self.TurningUseAllAxis == true then
+					if self.TurningUseAllAxis then
 						local myAng = self:GetAngles()
 						self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
 					end
@@ -2098,7 +2110,7 @@ function ENT:Think()
 			local myPos = self:GetPos()
 			local ene = self:GetEnemy()
 			local eneValid = IsValid(ene)
-			if eneData.Reset == false then
+			if !eneData.Reset then
 				-- Reset enemy if it doesn't exist or it's dead
 				if (!eneValid) or (eneValid && ene:Health() <= 0) then
 					eneData.Reset = true
@@ -2221,7 +2233,7 @@ function ENT:Think()
 				eneData.SightDiff = self:GetSightDirection():Dot((enePos - myPos):GetNormalized())
 				self.LatestEnemyDistance = myPos:Distance(enePos)
 				self.NearestPointToEnemyDistance = self:VJ_GetNearestPointToEntityDistance(ene, true)
-				if (eneData.SightDiff > math_cos(math_rad(self.SightAngle))) && (self.LatestEnemyDistance < self:GetMaxLookDistance()) && eneData.IsVisible then
+				if eneData.IsVisible && (eneData.SightDiff > math_cos(math_rad(self.SightAngle / 2))) && (self.LatestEnemyDistance < self:GetMaxLookDistance()) then
 					eneData.LastVisibleTime = curTime
 					-- Why 2 vars? Because the last "Visible" tick is usually not updated in time, causing the engine to give false positive, thinking the enemy IS visible
 					eneData.LastVisiblePos = eneData.LastVisiblePosReal
@@ -2233,7 +2245,7 @@ function ENT:Think()
 				turnData = self.TurnData
 				if turnData.Type == VJ.NPC_FACE_ENEMY or (turnData.Type == VJ.NPC_FACE_ENEMY_VISIBLE && eneData.IsVisible) then
 					local resultAng = self:GetFaceAngle((enePos - myPos):Angle())
-					if self.TurningUseAllAxis == true then
+					if self.TurningUseAllAxis then
 						local myAng = self:GetAngles()
 						self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
 					end

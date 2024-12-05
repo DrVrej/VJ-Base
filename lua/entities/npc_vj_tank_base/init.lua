@@ -9,6 +9,7 @@ include("shared.lua")
 ------ Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.StartHealth = 200
+ENT.SightAngle = 360
 ENT.HullType = HULL_LARGE
 ENT.VJTag_ID_Boss = true
 ENT.MovementType = VJ_MOVETYPE_PHYSICS -- How the NPC moves around
@@ -17,7 +18,6 @@ ENT.Immune_Dissolve = true -- Immune to Dissolving | Example: Combine Ball
 ENT.Immune_AcidPoisonRadiation = true -- Immune to Acid, Poison and Radiation
 ENT.Immune_Bullet = true -- Immune to Bullets
 ENT.ImmuneDamagesTable = {DMG_PHYSGUN} -- You can set Specific types of damages for the SNPC to be immune to
-ENT.FindEnemy_UseSphere = true -- Should the NPC see all around? (360 degrees) | Objects and walls can still block its sight!
 ENT.ForceDamageFromBosses = true -- Should the NPC get damaged by bosses regardless if it's not supposed to by skipping immunity checks, etc. | Bosses are attackers tagged with "VJTag_ID_Boss"
 ENT.DeathCorpseCollisionType = COLLISION_GROUP_NONE -- Collision type for the corpse | NPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
 ENT.DeathDelayTime = 2 -- Time until the NPC spawns the corpse, removes itself, etc.

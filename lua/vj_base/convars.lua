@@ -112,6 +112,7 @@ cvarList["vj_npc_sd_suppressing"] = 0 -- Disable suppressing callout sounds
 ------ Developer Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 CreateConVar("vj_npc_debug", 0) -- Should NPC debugging be active? | Required to make the dev option below work!
+cvarList["vj_npc_debug_engine"] = 0 -- Enabled engine debugging
 cvarList["vj_npc_debug_death"] = 0 -- Prints Died when the NPC dies
 cvarList["vj_npc_debug_ondmg"] = 0 -- Prints when the NPC gets damaged
 cvarList["vj_npc_debug_ontouch"] = 0 -- Prints when something touches the NPC

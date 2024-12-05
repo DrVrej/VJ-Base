@@ -1674,9 +1674,7 @@ function ENT:MaintainRelationships()
 	local eneVisCount = 0
 	local myPos = self:GetPos()
 	local myClass = self:GetClass()
-	local mySightDir = self:GetSightDirection()
 	local mySightDist = self:GetMaxLookDistance()
-	local mySightAng = math_cos(math_rad(self.SightAngle))
 	local myClasses = self.VJ_NPC_Class
 	local myHandlePerceived = self.HandlePerceivedRelationship
 	local nearestDist = nil
@@ -1718,6 +1716,11 @@ function ENT:MaintainRelationships()
 			local entClass = ent:GetClass()
 			local entIsNPC = ent:IsNPC()
 			local entIsPLY = ent:IsPlayer()
+			
+			//if !entIsPLY then
+			//	print(ent:GetFOV())
+			//	ent:SetSaveValue("m_debugOverlays", bit.bor(0x00000001, 0x00000002, 0x00000004, 0x00000008, 0x00000010, 0x00000020, 0x00000040, 0x00000080, 0x00000100, 0x00000200, 0x00001000, 0x00002000, 0x00004000, 0x00008000, 0x00020000, 0x00040000, 0x00080000, 0x00100000, 0x00200000, 0x00400000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000))
+			//end
 			
 			-- Handle "self.VJ_AddCertainEntityAsEnemy", "self.VJ_AddCertainEntityAsFriendly", "self.VJ_NPC_Class"
 			if canAlly && entClass != myClass && ent.VJTag_IsLiving && !VJ.HasValue(self.VJ_AddCertainEntityAsEnemy, ent) then
@@ -1836,7 +1839,7 @@ function ENT:MaintainRelationships()
 						calculatedDisp = D_VJ_INTEREST
 					else
 						-- FindEnemy: In order - Can find enemy + Not neutral or alerted + Is visible + In sight
-						if !self.DisableFindEnemy && (notIsNeutral or self.Alerted == NPC_ALERT_STATE_ENEMY) && (self.FindEnemy_CanSeeThroughWalls or self:Visible(ent)) && (self.FindEnemy_UseSphere or (mySightDir:Dot((entPos - myPos):GetNormalized()) > mySightAng)) then
+						if !self.DisableFindEnemy && (notIsNeutral or self.Alerted == NPC_ALERT_STATE_ENEMY) && (self.FindEnemy_CanSeeThroughWalls or self:Visible(ent)) && self:IsInViewCone(ent) then
 							//print("MaintainRelationships 2 - set enemy")
 							eneSeen = true
 							eneVisCount = eneVisCount + 1
@@ -1885,7 +1888,7 @@ function ENT:MaintainRelationships()
 			end
 			
 			-- HasOnPlayerSight system, used to do certain actions when it sees the player
-			if entIsPLY && self.HasOnPlayerSight && ent:Alive() &&(CurTime() > self.OnPlayerSightNextT) && (distanceToEnt < self.OnPlayerSightDistance) && self:Visible(ent) && (mySightDir:Dot((ent:GetPos() - myPos):GetNormalized()) > mySightAng) then
+			if entIsPLY && self.HasOnPlayerSight && ent:Alive() &&(CurTime() > self.OnPlayerSightNextT) && (distanceToEnt < self.OnPlayerSightDistance) && self:Visible(ent) && self:IsInViewCone(ent) then
 				-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 				local disp = self.OnPlayerSightDispositionLevel
 				if (disp == 0) or (disp == 1 && (self:Disposition(ent) == D_LI or self:Disposition(ent) == D_NU)) or (disp == 2 && self:Disposition(ent) != D_LI) then

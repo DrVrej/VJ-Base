@@ -9,6 +9,7 @@ include("shared.lua")
 ------ Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.StartHealth = 0
+ENT.SightAngle = 360
 ENT.HullType = HULL_LARGE
 ENT.HasSetSolid = false -- set to false to disable SetSolid
 ENT.VJTag_ID_Boss = true
@@ -16,7 +17,6 @@ ENT.MovementType = VJ_MOVETYPE_STATIONARY -- How the NPC moves around
 ENT.CanTurnWhileStationary = false -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
 ENT.GodMode = true -- Immune to everything
 ENT.Bleeds = false -- Does the NPC bleed? Controls all bleeding related components such blood decal, particle, pool, etc.
-ENT.FindEnemy_UseSphere = true -- Should the NPC see all around? (360 degrees) | Objects and walls can still block its sight!
 ENT.DeathCorpseCollisionType = COLLISION_GROUP_NONE -- Collision type for the corpse | NPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
 ENT.HasMeleeAttack = false -- Can this NPC melee attack?
 ENT.DisableWandering = true -- Disables wandering when the NPC is idle

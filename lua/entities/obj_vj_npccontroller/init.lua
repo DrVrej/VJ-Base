@@ -229,7 +229,7 @@ function ENT:SetControlledNPC(npcEnt)
 			[12] = npcEnt.IsGuard,
 			[13] = npcEnt.CanReceiveOrders,
 			[14] = npcEnt.FindEnemy_CanSeeThroughWalls,
-			[15] = npcEnt.FindEnemy_UseSphere
+			[15] = npcEnt:GetFOV()
 		}
 		npcEnt.DisableWandering = true
 		npcEnt.DisableChasingEnemy = true
@@ -245,7 +245,7 @@ function ENT:SetControlledNPC(npcEnt)
 		npcEnt.IsGuard = false
 		npcEnt.vACT_StopAttacks = true
 		npcEnt.FindEnemy_CanSeeThroughWalls = true
-		npcEnt.FindEnemy_UseSphere = true
+		npcEnt:SetFOV(360)
 		npcEnt.NextThrowGrenadeT = 0
 		 -- Apply a delay to VJ NPCs so they don't attack right away
 		if npcEnt.NextDoAnyAttackT < CurTime() then
@@ -545,7 +545,7 @@ function ENT:StopControlling(keyPressed)
 			npc.IsGuard = npcData[12]
 			npc.CanReceiveOrders = npcData[13]
 			npc.FindEnemy_CanSeeThroughWalls = npcData[14]
-			npc.FindEnemy_UseSphere = npcData[15]
+			npc:SetFOV(npcData[15])
 		end
 	end
 	//self.VJCE_Camera:Remove()
