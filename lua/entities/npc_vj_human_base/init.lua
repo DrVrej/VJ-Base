@@ -31,7 +31,6 @@ ENT.SightAngle = 177 -- Initial field of view | To retrieve: "self:GetFOV()" | T
 ENT.TurningSpeed = 20 -- How fast it can turn
 ENT.TurningUseAllAxis = false -- If set to true, angles will not be restricted to y-axis, it will change all axes (plural axis)
 ENT.CanTurnWhileMoving = true -- Can the NPC turn while moving? | EX: GoldSrc NPCs, Facing enemy while running to cover, Facing the player while moving out of the way
-ENT.AnimationPlaybackRate = 1 -- Controls the playback rate of all animations
 	-- ====== Movement ====== --
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How the NPC moves around
@@ -2131,7 +2130,7 @@ end
 			- AlwaysUseSequence = The base will force attempt to play this animation as a sequence regardless of the other options | DEFAULT: false
 			- AlwaysUseGesture = The base will force attempt to play this animation as a gesture regardless of the other options | DEFAULT: false
 				- NOTE: Combining "AlwaysUseSequence" and "AlwaysUseGesture" will force it to play a gesture-sequence
-			- PlayBackRate = How fast should the animation play? | DEFAULT: self.AnimationPlaybackRate
+			- PlayBackRate = How fast should the animation play? | DEFAULT: Whatever the current playback rate is
 			- PlayBackRateCalculated = If the playback rate is already calculated in the lockAnimTime, then set this to true! | DEFAULT: false
 		- customFunc() = TODO: NOT FINISHED
 	Returns
@@ -2156,7 +2155,6 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 	faceEnemy = faceEnemy or false -- Should it face the enemy while playing this animation?
 	animDelay = tonumber(animDelay) or 0 -- How much time until it starts playing the animation (seconds)
 	extraOptions = extraOptions or {}
-		local finalPlayBackRate = extraOptions.PlayBackRate or self.AnimationPlaybackRate -- How fast should the animation play?
 	local isGesture = false
 	local isSequence = false
 	local isString = isstring(animation)
@@ -2233,6 +2231,13 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 	self.LastAnimationSeed = seed
 	
 	local function PlayAct()
+		local customPlaybackRate = extraOptions.PlayBackRate
+		local orgPlaybackRate = self:GetPlaybackRate()
+		local playbackRate = customPlaybackRate or orgPlaybackRate
+		if customPlaybackRate then -- So "DecideAnimationLength" does the correct calculation
+			self:SetPlaybackRate(customPlaybackRate)
+		end
+		
 		local animTime = self:DecideAnimationLength(animation, false)
 		local doRealAnimTime = true -- Only for activities, recalculate the animTime after the schedule starts to get the real sequence time, if `lockAnimTime` is NOT set!
 		
@@ -2242,7 +2247,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 			else -- Manually calculated
 				doRealAnimTime = false
 				if !extraOptions.PlayBackRateCalculated then -- Make sure not to calculate the playback rate when it already has!
-					lockAnimTime = lockAnimTime / self:GetPlaybackRate()
+					lockAnimTime = lockAnimTime / playbackRate
 				end
 				animTime = lockAnimTime
 			end
@@ -2260,9 +2265,6 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 		end
 		self.LastAnimationSeed = seed -- We need to set it again because self:StopAttacks() above will reset it when it calls to chase enemy!
 		
-		self.AnimationPlaybackRate = finalPlayBackRate
-		self:SetPlaybackRate(finalPlayBackRate)
-		
 		if isGesture == true then
 			-- If it's an activity gesture AND it's already playing it, then remove it! Fixes same activity gestures bugging out when played right after each other!
 			if !isSequence && self:IsPlayingGesture(animation) then
@@ -2274,7 +2276,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 			if gesture != -1 then
 				self:SetLayerPriority(gesture, 1) // 2
 				//self:SetLayerWeight(gesture, 1)
-				self:SetLayerPlaybackRate(gesture, finalPlayBackRate * 0.5)
+				self:SetLayerPlaybackRate(gesture, playbackRate * 0.5)
 			end
 		else -- Sequences & Activities
 			local schedPlayAct = vj_ai_schedule.New("vj_act_"..animation)
@@ -2299,10 +2301,11 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 				local transitionAnim = self:FindTransitionSequence(self:GetSequence(), seqID) -- Find the transition sequence
 				local transitionAnimTime = 0
 				if transitionAnim != -1 && seqID != transitionAnim then -- If it exists AND it's not the same as the animation
-					transitionAnimTime = self:SequenceDuration(transitionAnim) / self.AnimationPlaybackRate
+					transitionAnimTime = self:SequenceDuration(transitionAnim) / playbackRate
 					schedPlayAct:AddTask("TASK_VJ_PLAY_SEQUENCE", {
 						animation = transitionAnim,
-						playbackRate = finalPlayBackRate,
+						orgPlaybackRate = orgPlaybackRate,
+						playbackRate = customPlaybackRate or false,
 						duration = transitionAnimTime
 					})
 				end
@@ -2310,16 +2313,19 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 				--
 				schedPlayAct:AddTask("TASK_VJ_PLAY_SEQUENCE", {
 					animation = animation,
-					playbackRate = finalPlayBackRate,
+					orgPlaybackRate = orgPlaybackRate,
+					playbackRate = customPlaybackRate or false,
 					duration = animTime
 				})
-				//self:VJ_PlaySequence(animation, finalPlayBackRate, extraOptions.SequenceDuration != false, dur)
+				//self:VJ_PlaySequence(animation, playbackRate, extraOptions.SequenceDuration != false, dur)
 				animTime = animTime + transitionAnimTime -- Adjust the animation time in case we have a transition animation!
 			else -- Only if activity
 				//self:SetActivity(ACT_RESET)
 				schedPlayAct:AddTask("TASK_VJ_PLAY_ACTIVITY", {
 					animation = animation,
-					duration = doRealAnimTime and false or animTime
+					orgPlaybackRate = orgPlaybackRate,
+					playbackRate = customPlaybackRate or false,
+					duration = doRealAnimTime or animTime
 				})
 				-- Old engine task animation system
 				/*if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
@@ -2342,7 +2348,8 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 			if (customFunc) then customFunc(schedPlayAct, animation) end
 			self:StartSchedule(schedPlayAct)
 			if doRealAnimTime then
-				animTime = self:SequenceDuration(self:GetIdealSequence())
+				-- Get the calculated duration (Only done in Activity type)
+				animTime = self.CurrentTask.TaskData.duration
 			end
 			if faceEnemy then
 				self:SetTurnTarget("Enemy", animTime, false, faceEnemy == "Visible")
@@ -2632,6 +2639,28 @@ local finishAttack = {
 	end
 }
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local function playReloadAnimation(self, anims)
+	local anim, animDur, animType = self:VJ_ACT_PLAYACTIVITY(anims, true, false, "Visible")
+	if anim != ACT_INVALID then
+		local wep = self.CurrentWeaponEntity
+		if wep.IsVJBaseWeapon == true then wep:NPC_Reload() end
+		timer.Create("timer_reload_end"..self:EntIndex(), animDur, 1, function()
+			if IsValid(self) && IsValid(wep) && self:GetWeaponState() == VJ.NPC_WEP_STATE_RELOADING then
+				wep:SetClip1(wep:GetMaxClip1())
+				if wep.IsVJBaseWeapon == true then wep:OnReload("Finish") end
+				self:SetWeaponState()
+			end
+		end)
+		self.AllowWeaponWaitOnOcclusion = false
+		-- If NOT controlled by a player AND is a gesture make it stop moving so it doesn't run after the enemy right away
+		if !plyControlled && animType == ANIM_TYPE_GESTURE then
+			self:StopMoving()
+		end
+		return true -- We have successfully ran the reload animation!
+	end
+	return false -- The given animation was invalid!
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 //function ENT:OnActiveWeaponChanged(old, new) print(old, new) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
@@ -2689,9 +2718,7 @@ function ENT:Think()
 			if IsValid(self.CurrentWeaponEntity) && GetConVar("vj_npc_debug_weapon"):GetInt() == 1 then print(self:GetName().." : Weapon -> " .. tostring(self.CurrentWeaponEntity) .. " | Ammo: "..self.CurrentWeaponEntity:Clip1().." / "..self.CurrentWeaponEntity:GetMaxClip1().." | Accuracy: "..self.Weapon_Accuracy) end
 		end
 		
-		local eneData = self.EnemyData
-		
-		self:SetPlaybackRate(self.AnimationPlaybackRate)
+		//self:SetPlaybackRate(self.AnimationPlaybackRate)
 		self:OnThinkActive()
 		
 		-- Update follow system's data
@@ -2816,6 +2843,7 @@ function ENT:Think()
 			local myPos = self:GetPos()
 			local ene = self:GetEnemy()
 			local eneValid = IsValid(ene)
+			local eneData = self.EnemyData
 			if !eneData.Reset then
 				-- Reset enemy if it doesn't exist or it's dead
 				if (!eneValid) or (eneValid && ene:Health() <= 0) then
@@ -2873,43 +2901,22 @@ function ENT:Think()
 					if eneValid == true then self:PlaySoundSystem("WeaponReload") end -- tsayn han e minag yete teshnami ga!
 					self:OnWeaponReload()
 					if self.DisableWeaponReloadAnimation == false then
-						local function DoReloadAnimation(givenAnim)
-							local anim, animDur, animType = self:VJ_ACT_PLAYACTIVITY(givenAnim, true, false, "Visible")
-							if anim != ACT_INVALID then
-								local wep = self.CurrentWeaponEntity
-								if wep.IsVJBaseWeapon == true then wep:NPC_Reload() end
-								timer.Create("timer_reload_end"..self:EntIndex(), animDur, 1, function()
-									if IsValid(self) && IsValid(wep) && self:GetWeaponState() == VJ.NPC_WEP_STATE_RELOADING then
-										wep:SetClip1(wep:GetMaxClip1())
-										if wep.IsVJBaseWeapon == true then wep:OnReload("Finish") end
-										self:SetWeaponState()
-									end
-								end)
-								self.AllowWeaponWaitOnOcclusion = false
-								-- If NOT controlled by a player AND is a gesture make it stop moving so it doesn't run after the enemy right away
-								if !plyControlled && animType == ANIM_TYPE_GESTURE then
-									self:StopMoving()
-								end
-								return true -- We have successfully ran the reload animation!
-							end
-							return false -- The given animation was invalid!
-						end
 						-- Controlled by a player...
 						if plyControlled == true then
 							self:SetWeaponState(VJ.NPC_WEP_STATE_RELOADING)
-							DoReloadAnimation(self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReload)))
+							playReloadAnimation(self, self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReload)))
 						-- NOT controlled by a player...
 						else
 							-- NPC is hidden, so attempt to crouch reload
 							if eneValid == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPos + self:OBBCenter()), ene:EyePos(), false, {SetLastHiddenTime=true}) == true then -- Behvedadz
 								-- if It does NOT have a cover reload animation, then just play the regular standing reload animation
-								if !DoReloadAnimation(self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReloadBehindCover))) then
-									DoReloadAnimation(self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReload)))
+								if !playReloadAnimation(self, self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReloadBehindCover))) then
+									playReloadAnimation(self, self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReload)))
 								end
 							else -- NPC is NOT hidden...
 								-- Under certain situations, simply do standing reload without running to a hiding spot
 								if self.IsGuard == true or self.IsFollowing == true or self.VJ_IsBeingControlled_Tool == true or eneValid == false or self.MovementType == VJ_MOVETYPE_STATIONARY or self.LatestEnemyDistance < 650 then
-									DoReloadAnimation(self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReload)))
+									playReloadAnimation(self, self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReload)))
 								else -- If all is good, then run to a hiding spot and then reload!
 									if self.Weapon_FindCoverOnReload == true then
 										local schedReload = vj_ai_schedule.New("vj_weapon_reload")
@@ -2924,13 +2931,13 @@ function ENT:Think()
 													self:SetWeaponState()
 													//timer.Remove("timer_reload_end"..self:EntIndex()) -- Remove the timer to make sure it doesn't set reloading to false at a random time (later on)
 												else -- Our hiding spot is good, so reload!
-													DoReloadAnimation(self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReload)))
+													playReloadAnimation(self, self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReload)))
 												end
 											end
 										end
 										self:StartSchedule(schedReload)
 									else
-										DoReloadAnimation(self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReload)))
+										playReloadAnimation(self, self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReload)))
 									end
 								end
 							end

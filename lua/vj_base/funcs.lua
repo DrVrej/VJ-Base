@@ -465,7 +465,6 @@ function VJ.ApplySpeedEffect(ent, speed, setTime)
                 return
 			elseif (ent.VJ_SpeedEffectT < CurTime()) or (ent:Health() <= 0) then
                 hook.Remove("Think", hookName)
-				if ent.IsVJBaseSNPC then ent.AnimationPlaybackRate = orgPlayback end
 				ent:SetPlaybackRate(orgPlayback)
 				if ent:IsPlayer() then
 					ent:SetWalkSpeed(plyOrgWalk)
@@ -473,16 +472,16 @@ function VJ.ApplySpeedEffect(ent, speed, setTime)
 				end
                 return
             end
-			if ent.IsVJBaseSNPC then ent.AnimationPlaybackRate = speed end
 			ent:SetPlaybackRate(speed)
             if ent:IsPlayer() then
                 ent:SetWalkSpeed(plyOrgWalk * speed)
                 ent:SetRunSpeed(plyOrgRun * speed)
             end
         end)
-		return true
+	-- We already have a speed effect, so edit the existing one instead
+	else
+		ent.VJ_SpeedEffectT = CurTime() + (setTime or 1)
     end
-	return false
 end
 --------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------

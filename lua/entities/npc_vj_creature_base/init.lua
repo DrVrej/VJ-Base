@@ -31,7 +31,6 @@ ENT.SightAngle = 156 -- Initial field of view | To retrieve: "self:GetFOV()" | T
 ENT.TurningSpeed = 20 -- How fast it can turn
 ENT.TurningUseAllAxis = false -- If set to true, angles will not be restricted to y-axis, it will change all axes (plural axis)
 ENT.CanTurnWhileMoving = true -- Can the NPC turn while moving? | EX: GoldSrc NPCs, Facing enemy while running to cover, Facing the player while moving out of the way
-ENT.AnimationPlaybackRate = 1 -- Controls the playback rate of all animations
 	-- ====== Movement ====== --
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How the NPC moves around
@@ -1469,7 +1468,7 @@ end
 			- AlwaysUseSequence = The base will force attempt to play this animation as a sequence regardless of the other options | DEFAULT: false
 			- AlwaysUseGesture = The base will force attempt to play this animation as a gesture regardless of the other options | DEFAULT: false
 				- NOTE: Combining "AlwaysUseSequence" and "AlwaysUseGesture" will force it to play a gesture-sequence
-			- PlayBackRate = How fast should the animation play? | DEFAULT: self.AnimationPlaybackRate
+			- PlayBackRate = How fast should the animation play? | DEFAULT: Whatever the current playback rate is
 			- PlayBackRateCalculated = If the playback rate is already calculated in the lockAnimTime, then set this to true! | DEFAULT: false
 		- customFunc() = TODO: NOT FINISHED
 	Returns
@@ -1494,7 +1493,6 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 	faceEnemy = faceEnemy or false -- Should it face the enemy while playing this animation?
 	animDelay = tonumber(animDelay) or 0 -- How much time until it starts playing the animation (seconds)
 	extraOptions = extraOptions or {}
-		local finalPlayBackRate = extraOptions.PlayBackRate or self.AnimationPlaybackRate -- How fast should the animation play?
 	local isGesture = false
 	local isSequence = false
 	local isString = isstring(animation)
@@ -1571,6 +1569,13 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 	self.LastAnimationSeed = seed
 	
 	local function PlayAct()
+		local customPlaybackRate = extraOptions.PlayBackRate
+		local orgPlaybackRate = self:GetPlaybackRate()
+		local playbackRate = customPlaybackRate or orgPlaybackRate
+		if customPlaybackRate then -- So "DecideAnimationLength" does the correct calculation
+			self:SetPlaybackRate(customPlaybackRate)
+		end
+		
 		local animTime = self:DecideAnimationLength(animation, false)
 		local doRealAnimTime = true -- Only for activities, recalculate the animTime after the schedule starts to get the real sequence time, if `lockAnimTime` is NOT set!
 		
@@ -1580,7 +1585,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 			else -- Manually calculated
 				doRealAnimTime = false
 				if !extraOptions.PlayBackRateCalculated then -- Make sure not to calculate the playback rate when it already has!
-					lockAnimTime = lockAnimTime / self:GetPlaybackRate()
+					lockAnimTime = lockAnimTime / playbackRate
 				end
 				animTime = lockAnimTime
 			end
@@ -1598,9 +1603,6 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 		end
 		self.LastAnimationSeed = seed -- We need to set it again because self:StopAttacks() above will reset it when it calls to chase enemy!
 		
-		self.AnimationPlaybackRate = finalPlayBackRate
-		self:SetPlaybackRate(finalPlayBackRate)
-		
 		if isGesture == true then
 			-- If it's an activity gesture AND it's already playing it, then remove it! Fixes same activity gestures bugging out when played right after each other!
 			if !isSequence && self:IsPlayingGesture(animation) then
@@ -1612,7 +1614,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 			if gesture != -1 then
 				self:SetLayerPriority(gesture, 1) // 2
 				//self:SetLayerWeight(gesture, 1)
-				self:SetLayerPlaybackRate(gesture, finalPlayBackRate * 0.5)
+				self:SetLayerPlaybackRate(gesture, playbackRate * 0.5)
 			end
 		else -- Sequences & Activities
 			local schedPlayAct = vj_ai_schedule.New("vj_act_"..animation)
@@ -1637,10 +1639,11 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 				local transitionAnim = self:FindTransitionSequence(self:GetSequence(), seqID) -- Find the transition sequence
 				local transitionAnimTime = 0
 				if transitionAnim != -1 && seqID != transitionAnim then -- If it exists AND it's not the same as the animation
-					transitionAnimTime = self:SequenceDuration(transitionAnim) / self.AnimationPlaybackRate
+					transitionAnimTime = self:SequenceDuration(transitionAnim) / playbackRate
 					schedPlayAct:AddTask("TASK_VJ_PLAY_SEQUENCE", {
 						animation = transitionAnim,
-						playbackRate = finalPlayBackRate,
+						orgPlaybackRate = orgPlaybackRate,
+						playbackRate = hasPlaybackRate or false,
 						duration = transitionAnimTime
 					})
 				end
@@ -1648,16 +1651,19 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 				--
 				schedPlayAct:AddTask("TASK_VJ_PLAY_SEQUENCE", {
 					animation = animation,
-					playbackRate = finalPlayBackRate,
+					orgPlaybackRate = orgPlaybackRate,
+					playbackRate = hasPlaybackRate or false,
 					duration = animTime
 				})
-				//self:VJ_PlaySequence(animation, finalPlayBackRate, extraOptions.SequenceDuration != false, dur)
+				//self:VJ_PlaySequence(animation, playbackRate, extraOptions.SequenceDuration != false, dur)
 				animTime = animTime + transitionAnimTime -- Adjust the animation time in case we have a transition animation!
 			else -- Only if activity
 				//self:SetActivity(ACT_RESET)
 				schedPlayAct:AddTask("TASK_VJ_PLAY_ACTIVITY", {
 					animation = animation,
-					duration = doRealAnimTime and false or animTime
+					orgPlaybackRate = orgPlaybackRate,
+					playbackRate = hasPlaybackRate or false,
+					duration = doRealAnimTime or animTime
 				})
 				-- Old engine task animation system
 				/*if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
@@ -1680,7 +1686,8 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 			if (customFunc) then customFunc(schedPlayAct, animation) end
 			self:StartSchedule(schedPlayAct)
 			if doRealAnimTime then
-				animTime = self:SequenceDuration(self:GetIdealSequence())
+				-- Get the calculated duration (Only done in Activity type)
+				animTime = self.CurrentTask.TaskData.duration
 			end
 			if faceEnemy then
 				self:SetTurnTarget("Enemy", animTime, false, faceEnemy == "Visible")
@@ -1944,9 +1951,7 @@ function ENT:Think()
 			if GetConVar("vj_npc_debug_lastseenenemytime"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - self.EnemyData.LastVisibleTime).." ("..self:GetName()..")") end
 		end
 		
-		local eneData = self.EnemyData
-		
-		self:SetPlaybackRate(self.AnimationPlaybackRate)
+		//self:SetPlaybackRate(self.AnimationPlaybackRate)
 		self:OnThinkActive()
 		
 		-- For AA move types
@@ -2110,6 +2115,7 @@ function ENT:Think()
 			local myPos = self:GetPos()
 			local ene = self:GetEnemy()
 			local eneValid = IsValid(ene)
+			local eneData = self.EnemyData
 			if !eneData.Reset then
 				-- Reset enemy if it doesn't exist or it's dead
 				if (!eneValid) or (eneValid && ene:Health() <= 0) then
@@ -2347,7 +2353,7 @@ function ENT:Think()
 										end
 									end
 								end
-								if self.TimeUntilMeleeAttackDamage == false then 
+								if self.TimeUntilMeleeAttackDamage == false then
 									finishAttack[VJ.ATTACK_TYPE_MELEE](self)
 								else -- If it's not event based...
 									timer.Create("timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self:GetPlaybackRate(), self.MeleeAttackReps, function() if self.CurAttackSeed == seed then self:MeleeAttackCode(atkType == 2) end end)

@@ -1555,7 +1555,7 @@ function ENT:Controller_Movement(cont, ply, bullseyePos)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_PlaySequence(animation, playbackRate)
+function ENT:VJ_PlaySequence(animation)
 	if !animation then return false end
 	//self.VJ_PlayingSequence = true -- No longer needed as it is handled by ACT_DO_NOT_DISTURB
 	self:SetActivity(ACT_DO_NOT_DISTURB) -- So `self:GetActivity()` will return the current result (alongside other immediate calls after `VJ_PlaySequence`)
@@ -1566,10 +1566,6 @@ function ENT:VJ_PlaySequence(animation, playbackRate)
 	self:ResetSequence(seqID)
 	self:ResetSequenceInfo()
 	self:SetCycle(0) -- Start from the beginning
-	if isnumber(playbackRate) then
-		self.AnimationPlaybackRate = playbackRate
-		self:SetPlaybackRate(playbackRate)
-	end
 	/*if useDuration == true then -- No longer needed as it is handled by ACT_DO_NOT_DISTURB
 		timer.Create("timer_act_seqreset"..self:EntIndex(), duration, 1, function()
 			self.VJ_PlayingSequence = false
@@ -1829,7 +1825,6 @@ function ENT:MaintainRelationships()
 				local ene = self:GetEnemy()
 				local eneValid = IsValid(ene)
 				if !calculatedDisp or calculatedDisp == D_VJ_INTEREST or calculatedDisp == D_HT then
-					
 					-- Check if this NPC should be engaged, if not then set it as an interest but don't engage it
 					-- Restriction: If the current enemy is this entity then skip as it we want to engage regardless
 					local entCanEngage = ent.CanBeEngaged

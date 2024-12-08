@@ -109,21 +109,24 @@ end
 function ENT:TASK_VJ_PLAY_ACTIVITY(taskStatus, data)
 	if taskStatus == TASKSTATUS_NEW then
 		//print("TASK_VJ_PLAY_ACTIVITY: Start!", data.duration)
+		local playbackRate = data.playbackRate or data.orgPlaybackRate -- Since setting a new animation resets the playback rate, make sure to capture it before anything!
 		self:ResetIdealActivity(data.animation)
 		self:SetActivity(data.animation) -- Avoids "MaintainActivity" from selecting another sequence from the activity (if it has multiple sequences tied to it)
-		local animTime = data.duration
-		if animTime then
-			data.animEndTime = CurTime() + data.duration
-		else
-			data.animEndTime = CurTime() + self:SequenceDuration(self:GetIdealSequence())
+		self:SetPlaybackRate(playbackRate)
+		if !isnumber(data.duration) then
+			data.duration = self:SequenceDuration(self:GetIdealSequence()) / playbackRate
 		end
+		data.animEndTime = CurTime() + data.duration
 		//self:AutoMovement(self:GetAnimTimeInterval()) -- Causes extra walk frame to be applied, especially when switching from movement to animation
 	else
 		//self:AutoMovement(self:GetAnimTimeInterval())
 		if (CurTime() > data.animEndTime) or (self:IsSequenceFinished() && self:GetSequence() == self:GetIdealSequence()) then
 			//print("TASK_VJ_PLAY_ACTIVITY: Stop!")
+			if data.playbackRate then self:SetPlaybackRate(data.orgPlaybackRate) end
 			self:TaskComplete()
 			return
+		else
+			if data.playbackRate then self:SetPlaybackRate(data.playbackRate) end
 		end
 		//print("TASK_VJ_PLAY_ACTIVITY: Run!")
 	end
@@ -132,13 +135,18 @@ end
 function ENT:TASK_VJ_PLAY_SEQUENCE(taskStatus, data)
 	if taskStatus == TASKSTATUS_NEW then
 		//print("TASK_VJ_PLAY_SEQUENCE: Start!", data.duration)
-		data.seqID = self:VJ_PlaySequence(data.animation, data.playbackRate)
+		local playbackRate = data.playbackRate or data.orgPlaybackRate -- Since setting a new animation resets the playback rate, make sure to capture it before anything!
+		data.seqID = self:VJ_PlaySequence(data.animation)
+		self:SetPlaybackRate(playbackRate)
 		data.animEndTime = CurTime() + data.duration
 	else
 		if (CurTime() > data.animEndTime) or (self:IsSequenceFinished()) or (data.seqID != self:GetSequence()) then
 			//print("TASK_VJ_PLAY_SEQUENCE: Stop!")
+			if data.playbackRate then self:SetPlaybackRate(data.orgPlaybackRate) end
 			self:TaskComplete()
 			return
+		else
+			if data.playbackRate then self:SetPlaybackRate(data.playbackRate) end
 		end
 		//print("TASK_VJ_PLAY_SEQUENCE: Run!")
 	end
