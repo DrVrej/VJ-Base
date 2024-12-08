@@ -211,7 +211,7 @@ function ENT:SetControlledNPC(npcEnt)
 		if IsValid(EntityEnemy) then
 			npcEnt:AddEntityRelationship(EntityEnemy, D_NU, 10)
 			EntityEnemy:AddEntityRelationship(npcEnt, D_NU, 10)
-			npcEnt:ResetEnemy(false)
+			npcEnt:ResetEnemy()
 			npcEnt:SetEnemy(bullseyeEnt)
 		end
 		self.VJC_Data_NPC = {

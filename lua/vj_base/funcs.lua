@@ -452,7 +452,7 @@ function VJ.ApplySpeedEffect(ent, speed, setTime)
     ent.VJ_SpeedEffectT = ent.VJ_SpeedEffectT or 0
     if ent.VJ_SpeedEffectT < CurTime() then
         ent.VJ_SpeedEffectT = CurTime() + (setTime or 1)
-		local orgPlayback = ent:GetPlaybackRate()
+		local orgPlayback = ent.IsVJBaseSNPC and ent.TruePlaybackRate or ent:GetPlaybackRate()
 		local plyOrgWalk, plyOrgRun;
 		if ent:IsPlayer() then
 			plyOrgWalk = ent:GetWalkSpeed()

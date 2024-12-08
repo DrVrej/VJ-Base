@@ -649,7 +649,8 @@ function ENT:OnThinkActive() end
 -- NOTE: "calculatedDisp" can be nil especially if its disposition towards the entity is D_NU!
 -- function ENT:OnMaintainRelationships(ent, calculatedDisp, entDist) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:OnUpdatePoseParamTracking(pitch, yaw, roll) end
+-- UNCOMMENT TO USE
+-- function ENT:OnUpdatePoseParamTracking(pitch, yaw, roll) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Called from the engine
 -- function ENT:ExpressionFinished(strExp) end
@@ -1002,6 +1003,7 @@ ENT.LastAnimationType = VJ.ANIM_TYPE_NONE
 ENT.GuardingPosition = false
 ENT.GuardingFacePosition = false
 ENT.SelectedDifficulty = 1
+ENT.TruePlaybackRate = 1
 ENT.ModelAnimationSet = VJ.ANIM_SET_NONE
 ENT.AIState = VJ_STATE_NONE
 ENT.AttackType = VJ.ATTACK_TYPE_NONE
@@ -1062,6 +1064,8 @@ local function ConvarsOnInit(self)
 	--<>-- Convars that run on Initialize --<>--
 	if GetConVar("vj_npc_debug"):GetInt() == 1 then self.VJ_DEBUG = true end
 	self.NextProcessTime = GetConVar("vj_npc_processtime"):GetInt()
+	if GetConVar("vj_npc_poseparams"):GetInt() == 0 && !self.OnUpdatePoseParamTracking then self.HasPoseParameterLooking = false end
+	if GetConVar("vj_npc_shadows"):GetInt() == 0 then self:DrawShadow(false) end
 	if GetConVar("vj_npc_sd_nosounds"):GetInt() == 1 then self.HasSounds = false end
 	if GetConVar("vj_npc_vjfriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_VJ_BASE" end
 	if GetConVar("vj_npc_playerfriendly"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_PLAYER_ALLY" end
@@ -1569,14 +1573,12 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 	self.LastAnimationSeed = seed
 	
 	local function PlayAct()
+		local originalPlaybackRate = self.TruePlaybackRate
 		local customPlaybackRate = extraOptions.PlayBackRate
-		local orgPlaybackRate = self:GetPlaybackRate()
-		local playbackRate = customPlaybackRate or orgPlaybackRate
-		if customPlaybackRate then -- So "DecideAnimationLength" does the correct calculation
-			self:SetPlaybackRate(customPlaybackRate)
-		end
-		
+		local playbackRate = customPlaybackRate or originalPlaybackRate
+		self:SetPlaybackRate(playbackRate) -- Call this to change "self.TruePlaybackRate" so "DecideAnimationLength" can be calculated correctly
 		local animTime = self:DecideAnimationLength(animation, false)
+		self.TruePlaybackRate = originalPlaybackRate -- Change it back to the true rate
 		local doRealAnimTime = true -- Only for activities, recalculate the animTime after the schedule starts to get the real sequence time, if `lockAnimTime` is NOT set!
 		
 		if lockAnim then
@@ -1642,8 +1644,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 					transitionAnimTime = self:SequenceDuration(transitionAnim) / playbackRate
 					schedPlayAct:AddTask("TASK_VJ_PLAY_SEQUENCE", {
 						animation = transitionAnim,
-						orgPlaybackRate = orgPlaybackRate,
-						playbackRate = hasPlaybackRate or false,
+						playbackRate = customPlaybackRate or false,
 						duration = transitionAnimTime
 					})
 				end
@@ -1651,8 +1652,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 				--
 				schedPlayAct:AddTask("TASK_VJ_PLAY_SEQUENCE", {
 					animation = animation,
-					orgPlaybackRate = orgPlaybackRate,
-					playbackRate = hasPlaybackRate or false,
+					playbackRate = customPlaybackRate or false,
 					duration = animTime
 				})
 				//self:VJ_PlaySequence(animation, playbackRate, extraOptions.SequenceDuration != false, dur)
@@ -1661,8 +1661,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 				//self:SetActivity(ACT_RESET)
 				schedPlayAct:AddTask("TASK_VJ_PLAY_ACTIVITY", {
 					animation = animation,
-					orgPlaybackRate = orgPlaybackRate,
-					playbackRate = hasPlaybackRate or false,
+					playbackRate = customPlaybackRate or false,
 					duration = doRealAnimTime or animTime
 				})
 				-- Old engine task animation system
@@ -2118,16 +2117,16 @@ function ENT:Think()
 			local eneData = self.EnemyData
 			if !eneData.Reset then
 				-- Reset enemy if it doesn't exist or it's dead
-				if (!eneValid) or (eneValid && ene:Health() <= 0) then
+				if !eneValid then
 					eneData.Reset = true
-					self:ResetEnemy(true)
+					self:ResetEnemy(true, true)
 					ene = self:GetEnemy()
 					eneValid = IsValid(ene)
 				-- Reset enemy if it has been unseen for a while
 				elseif (curTime - eneData.LastVisibleTime) > self.TimeUntilEnemyLost && (!self.IsVJBaseSNPC_Tank) then
 					self:PlaySoundSystem("LostEnemy")
 					eneData.Reset = true
-					self:ResetEnemy(true)
+					self:ResetEnemy(true, true)
 					ene = self:GetEnemy()
 					eneValid = IsValid(ene)
 				end
@@ -2347,7 +2346,7 @@ function ENT:Think()
 									local anim, animDur, animType = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_MeleeAttack, false, 0, false, self.MeleeAttackAnimationDelay)
 									if anim != ACT_INVALID then
 										self.CurrentAttackAnimation = anim
-										self.CurrentAttackAnimationDuration = animDur - (self.MeleeAttackAnimationDecreaseLengthAmount / self:GetPlaybackRate())
+										self.CurrentAttackAnimationDuration = animDur - (self.MeleeAttackAnimationDecreaseLengthAmount / self.TruePlaybackRate)
 										if animType != ANIM_TYPE_GESTURE then -- Useful for gesture-based attacks, it allows things like chasing to continue running
 											self.CurrentAttackAnimationTime = curTime + self.CurrentAttackAnimationDuration
 										end
@@ -2356,7 +2355,7 @@ function ENT:Think()
 								if self.TimeUntilMeleeAttackDamage == false then
 									finishAttack[VJ.ATTACK_TYPE_MELEE](self)
 								else -- If it's not event based...
-									timer.Create("timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self:GetPlaybackRate(), self.MeleeAttackReps, function() if self.CurAttackSeed == seed then self:MeleeAttackCode(atkType == 2) end end)
+									timer.Create("timer_melee_start"..self:EntIndex(), self.TimeUntilMeleeAttackDamage / self.TruePlaybackRate, self.MeleeAttackReps, function() if self.CurAttackSeed == seed then self:MeleeAttackCode(atkType == 2) end end)
 									if self.MeleeAttackExtraTimers then
 										for k, t in ipairs(self.MeleeAttackExtraTimers) do
 											self:AddExtraAttackTimer("timer_melee_start_"..curTime + k, t, function() if self.CurAttackSeed == seed then self:MeleeAttackCode(atkType == 2) end end)
@@ -2385,14 +2384,14 @@ function ENT:Think()
 									local anim, animDur = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_RangeAttack, false, 0, false, self.RangeAttackAnimationDelay)
 									if anim != ACT_INVALID then
 										self.CurrentAttackAnimation = anim
-										self.CurrentAttackAnimationDuration = animDur - (self.RangeAttackAnimationDecreaseLengthAmount / self:GetPlaybackRate())
+										self.CurrentAttackAnimationDuration = animDur - (self.RangeAttackAnimationDecreaseLengthAmount / self.TruePlaybackRate)
 										self.CurrentAttackAnimationTime = curTime + self.CurrentAttackAnimationDuration
 									end
 								end
 								if self.TimeUntilRangeAttackProjectileRelease == false then
 									finishAttack[VJ.ATTACK_TYPE_RANGE](self)
 								else -- If it's not event based...
-									timer.Create("timer_range_start"..self:EntIndex(), self.TimeUntilRangeAttackProjectileRelease / self:GetPlaybackRate(), self.RangeAttackReps, function() if self.CurAttackSeed == seed then self:RangeAttackCode() end end)
+									timer.Create("timer_range_start"..self:EntIndex(), self.TimeUntilRangeAttackProjectileRelease / self.TruePlaybackRate, self.RangeAttackReps, function() if self.CurAttackSeed == seed then self:RangeAttackCode() end end)
 									if self.RangeAttackExtraTimers then
 										for k, t in ipairs(self.RangeAttackExtraTimers) do
 											self:AddExtraAttackTimer("timer_range_start_"..curTime + k, t, function() if self.CurAttackSeed == seed then self:RangeAttackCode() end end)
@@ -2418,19 +2417,19 @@ function ENT:Think()
 								self.CurrentAttackAnimationTime = 0
 								self:CustomOnLeapAttack_BeforeStartTimer(seed)
 								self:PlaySoundSystem("BeforeLeapAttack")
-								timer.Create("timer_leap_start_jump"..self:EntIndex(), self.TimeUntilLeapAttackVelocity / self:GetPlaybackRate(), 1, function() self:LeapAttackVelocityCode() end)
+								timer.Create("timer_leap_start_jump"..self:EntIndex(), self.TimeUntilLeapAttackVelocity / self.TruePlaybackRate, 1, function() self:LeapAttackVelocityCode() end)
 								if self.DisableLeapAttackAnimation == false then
 									local anim, animDur = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_LeapAttack, false, 0, false, self.LeapAttackAnimationDelay)
 									if anim != ACT_INVALID then
 										self.CurrentAttackAnimation = anim
-										self.CurrentAttackAnimationDuration = animDur - (self.LeapAttackAnimationDecreaseLengthAmount / self:GetPlaybackRate())
+										self.CurrentAttackAnimationDuration = animDur - (self.LeapAttackAnimationDecreaseLengthAmount / self.TruePlaybackRate)
 										self.CurrentAttackAnimationTime = curTime + self.CurrentAttackAnimationDuration
 									end
 								end
 								if self.TimeUntilLeapAttackDamage == false then
 									finishAttack[VJ.ATTACK_TYPE_LEAP](self)
 								else -- If it's not event based...
-									timer.Create("timer_leap_start"..self:EntIndex(), self.TimeUntilLeapAttackDamage / self:GetPlaybackRate(), self.LeapAttackReps, function() if self.CurAttackSeed == seed then self:LeapDamageCode() end end)
+									timer.Create("timer_leap_start"..self:EntIndex(), self.TimeUntilLeapAttackDamage / self.TruePlaybackRate, self.LeapAttackReps, function() if self.CurAttackSeed == seed then self:LeapDamageCode() end end)
 									if self.LeapAttackExtraTimers then
 										for k, t in ipairs(self.LeapAttackExtraTimers) do
 											self:AddExtraAttackTimer("timer_leap_start_"..curTime + k, t, function() if self.CurAttackSeed == seed then self:LeapDamageCode() end end)
@@ -2448,7 +2447,7 @@ function ENT:Think()
 					//self:ClearPoseParameters()
 				end
 				eneData.TimeSinceAcquired = 0
-				if eneData.Reset == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") eneData.Reset = true self:ResetEnemy(true) end
+				if eneData.Reset == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") eneData.Reset = true self:ResetEnemy(true, true) end
 			end
 			
 			if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
@@ -2839,7 +2838,7 @@ function ENT:UpdatePoseParamTracking(resetPoses)
 		return
 	end
 	
-	self:OnUpdatePoseParamTracking(newPitch, newYaw, newRoll)
+	local funcCustom = self.OnUpdatePoseParamTracking; if funcCustom then funcCustom(self, newPitch, newYaw, newRoll) end
 	
 	local namesPitch = self.PoseParameterLooking_Names.pitch
 	local namesYaw = self.PoseParameterLooking_Names.yaw
@@ -2947,25 +2946,27 @@ function ENT:SelectSchedule()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:ResetEnemy(checkAlliesEnemy)
+function ENT:ResetEnemy(checkAllies, checkVis)
 	if self.Dead or (self.VJ_IsBeingControlled && self.VJ_TheControllerBullseye == self:GetEnemy()) then self.EnemyData.Reset = false return false end
-	checkAlliesEnemy = checkAlliesEnemy or false
+	checkAllies = checkAllies or false
 	local moveToEnemy = false
 	local ene = self:GetEnemy()
 	local eneValid = IsValid(ene)
-	if checkAlliesEnemy == true then
-		local eneData = self.EnemyData
+	local eneData = self.EnemyData
+	if checkAllies == true then
 		local getAllies = self:Allies_Check(1000)
 		if getAllies != false then
 			for _, v in ipairs(getAllies) do
 				local allyEne = v:GetEnemy()
-				if IsValid(allyEne) && (CurTime() - v.EnemyData.LastVisibleTime) < self.TimeUntilEnemyLost && VJ.IsAlive(allyEne) && self:CheckRelationship(allyEne) == D_HT && self:GetPos():Distance(allyEne:GetPos()) <= self:GetMaxLookDistance() then
+				if IsValid(allyEne) && (CurTime() - v.EnemyData.LastVisibleTime) < self.TimeUntilEnemyLost && VJ.IsAlive(allyEne) && self:CheckRelationship(allyEne) == D_HT then
 					self:ForceSetEnemy(allyEne, false)
 					eneData.Reset = false
 					return false
 				end
 			end
 		end
+	end
+	if checkVis then
 		-- If the current number of reachable enemies is higher then 1, then don't reset
 		local curEnemies = eneData.VisibleCount //self.CurrentReachableEnemies
 		if (eneValid && (curEnemies - 1) >= 1) or (!eneValid && curEnemies >= 1) then

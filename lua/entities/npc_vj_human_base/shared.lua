@@ -32,6 +32,8 @@ end
 if CLIENT then
 	//ENT.RenderGroup = RENDERGROUP_BOTH
 	function ENT:Initialize()
+		if GetConVar("vj_npc_ikchains"):GetInt() == 0 then self:SetIK(false) end
+		if GetConVar("vj_npc_forcelowlod"):GetInt() == 1 then self:SetLOD(8) end
 		if self.CustomOnDraw then -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 			function self:Draw()
 				self:DrawModel()

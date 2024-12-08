@@ -119,7 +119,7 @@ end
 			- BloodDecal = Decal it spawns when it collides with something | DEFAULT = Base decides
 			- BloodType = Sets the blood type by overriding the BloodDecal option | Works only on "obj_vj_gib" and it uses the same values as a VJ NPC blood types!
 			- CollideSound = The sound it plays when it collides with something | DEFAULT = Base decides
-			- NoFade = Should it let the base make it fade & remove (Adjusted in the SNPC settings menu) | DEFAULT = false
+			- NoFade = Should it let the base make it fade & remove (Adjusted in the NPC settings menu) | DEFAULT = false
 			- RemoveOnCorpseDelete = Should the entity get removed if the corpse is removed? | DEFAULT = false
 		- customFunc(gib) = Use this to edit the entity which is given as parameter "gib"
 -----------------------------------------------------------]]
@@ -1584,7 +1584,7 @@ end
 function ENT:AddExtraAttackTimer(name, time, func)
 	name = name or "timer_unknown"
 	self.TimersToRemove[#self.TimersToRemove + 1] = name
-	timer.Create(name..self:EntIndex(), (time or 0.5) / self:GetPlaybackRate(), 1, func)
+	timer.Create(name..self:EntIndex(), (time or 0.5) / self.TruePlaybackRate, 1, func)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1690,7 +1690,8 @@ function ENT:MaintainRelationships()
 			-- Handle no target and health below 0
 			if ent:IsFlagSet(FL_NOTARGET) or ent:Health() <= 0 then
 				if IsValid(self:GetEnemy()) && self:GetEnemy() == ent then
-					self:ResetEnemy(false)
+					eneData.Reset = true
+					self:ResetEnemy(true, false)
 				end
 				self:AddEntityRelationship(ent, D_NU, 0)
 				continue
@@ -1704,7 +1705,7 @@ function ENT:MaintainRelationships()
 				if IsValid(ene) && ene == ent then
 					self:PlaySoundSystem("LostEnemy")
 					eneData.Reset = true
-					self:ResetEnemy(false)
+					self:ResetEnemy(true, false)
 				end
 				continue
 			end
@@ -1765,7 +1766,7 @@ function ENT:MaintainRelationships()
 				local ene = self:GetEnemy()
 				if IsValid(ene) && ene == ent then
 					eneData.Reset = true
-					self:ResetEnemy(false)
+					self:ResetEnemy(true, false)
 				end
 				
 				//ent:AddEntityRelationship(self, D_LI, 0)
@@ -1913,39 +1914,48 @@ function ENT:Allies_CallHelp(dist)
 	local myClass = self:GetClass()
 	local curTime = CurTime()
 	local isFirst = true -- Is this the first ally that received this call?
-	for _, v in ipairs(ents.FindInSphere(self:GetPos(), dist or 800)) do
-		if v != self && v:IsNPC() && v.IsVJBaseSNPC && VJ.IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !v.VJ_IsBeingControlled && v.CanReceiveOrders then
-			local ene = self:GetEnemy()
-			if IsValid(ene) && ene:GetClass() != v:GetClass() then
-				local eneIsPlayer = ene:IsPlayer()
-				if v:GetPos():Distance(ene:GetPos()) > v:GetMaxLookDistance() then continue end -- Enemy too far away for ally, discontinue!
-				//if v:CheckRelationship(ene) == D_HT then
-				if !IsValid(v:GetEnemy()) && ((!eneIsPlayer && v:Disposition(ene) != D_LI) or eneIsPlayer) then
-					if v.IsGuard == true && !v:Visible(ene) then continue end -- If it's guarding and enemy is not visible, then don't call!
-					self:OnCallForHelp(v, isFirst)
-					self:PlaySoundSystem("CallForHelp")
-					-- Play the animation
-					if self.HasCallForHelpAnimation && curTime > self.NextCallForHelpAnimationT then
-						local anim = VJ.PICK(self.AnimTbl_CallForHelp)
-						self:VJ_ACT_PLAYACTIVITY(anim, self.CallForHelpStopAnimations, self:DecideAnimationLength(anim, self.CallForHelpStopAnimationsTime), self.CallForHelpAnimationFaceEnemy, 0, {PlayBackRateCalculated = true})
-						self.NextCallForHelpAnimationT = curTime + self.NextCallForHelpAnimationTime
-					end
-					-- If the enemy is a player and the ally is player-friendly then make that player an enemy to the ally
-					if eneIsPlayer && v.PlayerFriendly then
-						v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy + 1] = ene
-					end
-					v:ForceSetEnemy(ene, true)
-					if curTime > v.NextChaseTime then
-						if v.Behavior != VJ_BEHAVIOR_PASSIVE && v:Visible(ene) then
-							v:SetTarget(ene)
-							v:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-						else
-							v:PlaySoundSystem("OnReceiveOrder")
-							v:MaintainAlertBehavior()
-						end
-					end
-					isFirst = false
+	local ene = self:GetEnemy()
+	if !IsValid(ene) then return end
+	for _, ally in ipairs(ents.FindInSphere(self:GetPos(), dist or 800)) do
+		if ally != self && ally.IsVJBaseSNPC && ally:IsNPC() && VJ.IsAlive(ally) && (ally:GetClass() == myClass or ally:Disposition(self) == D_LI) && ally.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !ally.VJ_IsBeingControlled && ally.CanReceiveOrders && ene:GetClass() != ally:GetClass() && !IsValid(ally:GetEnemy()) then
+			-- If it's guarding and enemy is not visible, then don't call!
+			if ally.IsGuard && !ally:Visible(ene) then continue end
+			
+			-- Enemy too far away for ally
+			if ally:GetPos():Distance(ene:GetPos()) > ally:GetMaxLookDistance() then
+				-- See if you can move to the ally's location to get closer
+				if !ally.IsFollowing && !ally:IsBusy() && !ally:IsMoving() then
+					ally:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-50, 50) + self:GetForward()*math.random(-50, 50))
+					ally:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH", function(x) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
 				end
+				continue
+			end
+			
+			local eneIsPlayer = ene:IsPlayer()
+			if ((!eneIsPlayer && ally:Disposition(ene) != D_LI) or eneIsPlayer) then
+				self:OnCallForHelp(ally, isFirst)
+				self:PlaySoundSystem("CallForHelp")
+				-- Play the animation
+				if self.HasCallForHelpAnimation && curTime > self.NextCallForHelpAnimationT then
+					local anim = VJ.PICK(self.AnimTbl_CallForHelp)
+					self:VJ_ACT_PLAYACTIVITY(anim, self.CallForHelpStopAnimations, self:DecideAnimationLength(anim, self.CallForHelpStopAnimationsTime), self.CallForHelpAnimationFaceEnemy, 0, {PlayBackRateCalculated = true})
+					self.NextCallForHelpAnimationT = curTime + self.NextCallForHelpAnimationTime
+				end
+				-- If the enemy is a player and the ally is player-friendly then make that player an enemy to the ally
+				if eneIsPlayer && ally.PlayerFriendly then
+					ally.VJ_AddCertainEntityAsEnemy[#ally.VJ_AddCertainEntityAsEnemy + 1] = ene
+				end
+				ally:ForceSetEnemy(ene, true)
+				if curTime > ally.NextChaseTime then
+					if ally.Behavior != VJ_BEHAVIOR_PASSIVE && ally:Visible(ene) then
+						ally:SetTarget(ene)
+						ally:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+					else
+						ally:PlaySoundSystem("OnReceiveOrder")
+						ally:MaintainAlertBehavior()
+					end
+				end
+				isFirst = false
 			end
 		end
 	end
@@ -2001,7 +2011,7 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 	local myClass = self:GetClass()
 	local it = 0
 	for _, v in ipairs(entsTbl or ents.FindInSphere(myPos, dist)) do
-		if v != self && v:IsNPC() && v.IsVJBaseSNPC && VJ.IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && v.IsFollowing == false && v.VJ_IsBeingControlled == false && !v.IsGuard && (!v.IsVJBaseSNPC_Tank) && v.CanReceiveOrders then
+		if v != self && v.IsVJBaseSNPC && v:IsNPC() && VJ.IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !v.IsFollowing && !v.VJ_IsBeingControlled && !v.IsGuard && !v.IsVJBaseSNPC_Tank && v.CanReceiveOrders then
 			if onlyVis && !v:Visible(self) then continue end
 			if !IsValid(v:GetEnemy()) && myPos:Distance(v:GetPos()) < dist then
 				self.NextWanderTime = CurTime() + 8
@@ -2050,21 +2060,21 @@ function ENT:DecideAttackTimer(timer1, timer2, untilDamage, animDur)
 			result = animDur
 		else -- Timer-based
 			if animDur <= 0 then -- If it's 0 or less, then this attack probably did NOT play an animation, so don't use animDur!
-				result = untilDamage / self:GetPlaybackRate()
+				result = untilDamage / self.TruePlaybackRate
 			else
-				result = animDur - (untilDamage / self:GetPlaybackRate())
+				result = animDur - (untilDamage / self.TruePlaybackRate)
 			end
 		end
 	else -- If a specific number has been put then make sure to calculate its playback rate
-		result = result / self:GetPlaybackRate()
+		result = result / self.TruePlaybackRate
 	end
 	
 	-- If a 2nd value is given (Used for randomization), calculate its playback rate as well and then get a random value between it and the result
 	if isnumber(timer2) then
-		result = math.Rand(result, timer2 / self:GetPlaybackRate())
+		result = math.Rand(result, timer2 / self.TruePlaybackRate)
 	end
 	
-	return result // / self:GetPlaybackRate() -- No need, playback is already calculated above
+	return result // / self.TruePlaybackRate -- No need, playback is already calculated above
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local function flinchDamageTypeCheck(checkTbl, dmgType)

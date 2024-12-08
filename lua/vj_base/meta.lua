@@ -25,6 +25,15 @@ if !metaNPC.IsVJBaseEdited then
 		self:SetSaveValue("m_flDistTooFar", dist) -- For certain Source attack, weapon, and condition distances
 		self.SightDistance = dist -- For VJ Base
 	end
+	---------------------------------------------------------------------------------------------------------------------------------------------
+	local orgSetPlaybackRate = metaEntity.SetPlaybackRate
+	-- Need this because "ai_blended_movement" will override it constantly and we won't know what the actual playback is supposed to be
+	function metaNPC:SetPlaybackRate(num, skipTrueRate)
+		if !skipTrueRate then
+			self.TruePlaybackRate = num
+		end
+		orgSetPlaybackRate(self, num)
+	end
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Meta Additions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -88,9 +97,9 @@ end
 function metaNPC:DecideAnimationLength(anim, override, decrease)
 	if isbool(anim) then return 0 end
 	if !override then -- Base decides
-		return (vj_animdur(self, anim) - (decrease or 0)) / self:GetPlaybackRate()
+		return (vj_animdur(self, anim) - (decrease or 0)) / self.TruePlaybackRate
 	elseif isnumber(override) then -- User decides
-		return override / self:GetPlaybackRate()
+		return override / self.TruePlaybackRate
 	else
 		return 0
 	end
