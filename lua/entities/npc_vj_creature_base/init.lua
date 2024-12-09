@@ -120,9 +120,6 @@ ENT.CallForHelpDistance = 2000 -- -- How far away the NPC's call for help travel
 ENT.NextCallForHelpTime = 4 -- Time until it calls for help again
 ENT.HasCallForHelpAnimation = true -- if true, it will play the call for help animation
 ENT.AnimTbl_CallForHelp = {}
-ENT.CallForHelpStopAnimations = true -- Should it stop attacks for a certain amount of time?
-	-- To let the base automatically detect the animation duration, set this to false:
-ENT.CallForHelpStopAnimationsTime = false -- How long should it stop attacks?
 ENT.CallForHelpAnimationFaceEnemy = true -- Should it face the enemy when playing the animation?
 ENT.NextCallForHelpAnimationTime = 30 -- How much time until it can play the animation again?
 	-- ====== Medic ====== --
@@ -230,7 +227,6 @@ ENT.CallForBackUpOnDamageDistance = 800 -- How far away does the call for help g
 ENT.CallForBackUpOnDamageLimit = 4 -- How many allies should it call? | 0 = Unlimited
 ENT.NextCallForBackUpOnDamageTime = VJ.SET(9, 11) -- How much time until it can run this AI component again
 ENT.CallForBackUpOnDamageAnimation = {} -- Animations played when it calls for help on damage
-ENT.CallForBackUpOnDamageAnimationTime = false -- How much time until it can use activities | false = Base automatically decides the animation duration
 ENT.DisableCallForBackUpOnDamageAnimation = false -- Disables the animations from playing
 	-- ====== Miscellaneous ====== --
 ENT.HideOnUnknownDamage = 5 -- number = Hide on unknown damage, defines the time until it can hide again | false = Disable this AI component
@@ -1455,6 +1451,7 @@ end
 				- The base will attempt to convert it activity, if it fails, it will play it as a sequence
 				- This behavior can be overridden by AlwaysUseSequence & AlwaysUseGesture options
 		- lockAnim = Should the animation be locked and not interrupted? | Includes activities, behaviors, idle, chasing, attacking, etc. | DEFAULT: false
+			- NOTE: This automatically turns off if it's a gesture, only works for activities and sequences!
 			- false = Interruptible by everything!
 			- true = Interruptible by nothing, completely locked!
 			- "LetAttacks" = Interruptible ONLY by attacks!
@@ -1486,7 +1483,7 @@ end
 local varGes = "vjges_"
 local varSeq = "vjseq_"
 --
-function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, extraOptions, customFunc)
+function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, extraOptions, customFunc)
 	animation = VJ.PICK(animation)
 	if animation == false then return ACT_INVALID, 0, ANIM_TYPE_NONE end
 	
@@ -1581,7 +1578,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 		self.TruePlaybackRate = originalPlaybackRate -- Change it back to the true rate
 		local doRealAnimTime = true -- Only for activities, recalculate the animTime after the schedule starts to get the real sequence time, if `lockAnimTime` is NOT set!
 		
-		if lockAnim then
+		if lockAnim && !isGesture then
 			if isbool(lockAnimTime) then -- false = Let the base calculate the time
 				lockAnimTime = animTime
 			else -- Manually calculated
@@ -1619,14 +1616,14 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 				self:SetLayerPlaybackRate(gesture, playbackRate * 0.5)
 			end
 		else -- Sequences & Activities
-			local schedPlayAct = vj_ai_schedule.New("vj_act_"..animation)
+			local schedule = vj_ai_schedule.New("PlayAnim_"..animation)
 			
 			-- For humans NPCs, internally the base will set these variables back to true after this function if it's called by weapon attack animations!
 			self.DoingWeaponAttack = false
 			self.DoingWeaponAttack_Standing = false
 			
-			//self:StartEngineTask(ai.GetTaskID("TASK_RESET_ACTIVITY"), 0) //schedPlayAct:EngTask("TASK_RESET_ACTIVITY", 0)
-			//if self.Dead then schedPlayAct:EngTask("TASK_STOP_MOVING", 0) end
+			//self:StartEngineTask(ai.GetTaskID("TASK_RESET_ACTIVITY"), 0) //schedule:EngTask("TASK_RESET_ACTIVITY", 0)
+			//if self.Dead then schedule:EngTask("TASK_STOP_MOVING", 0) end
 			//self:FrameAdvance(0)
 			self:TaskComplete()
 			self:StopMoving()
@@ -1642,7 +1639,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 				local transitionAnimTime = 0
 				if transitionAnim != -1 && seqID != transitionAnim then -- If it exists AND it's not the same as the animation
 					transitionAnimTime = self:SequenceDuration(transitionAnim) / playbackRate
-					schedPlayAct:AddTask("TASK_VJ_PLAY_SEQUENCE", {
+					schedule:AddTask("TASK_VJ_PLAY_SEQUENCE", {
 						animation = transitionAnim,
 						playbackRate = customPlaybackRate or false,
 						duration = transitionAnimTime
@@ -1650,7 +1647,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 				end
 				-- END: Experimental transition system for sequences
 				--
-				schedPlayAct:AddTask("TASK_VJ_PLAY_SEQUENCE", {
+				schedule:AddTask("TASK_VJ_PLAY_SEQUENCE", {
 					animation = animation,
 					playbackRate = customPlaybackRate or false,
 					duration = animTime
@@ -1659,7 +1656,7 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 				animTime = animTime + transitionAnimTime -- Adjust the animation time in case we have a transition animation!
 			else -- Only if activity
 				//self:SetActivity(ACT_RESET)
-				schedPlayAct:AddTask("TASK_VJ_PLAY_ACTIVITY", {
+				schedule:AddTask("TASK_VJ_PLAY_ACTIVITY", {
 					animation = animation,
 					playbackRate = customPlaybackRate or false,
 					duration = doRealAnimTime or animTime
@@ -1667,9 +1664,9 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 				-- Old engine task animation system
 				/*if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 					self:ResetIdealActivity(animation)
-					//schedPlayAct:EngTask("TASK_SET_ACTIVITY", animation) -- To avoid AutoMovement stopping the velocity
+					//schedule:EngTask("TASK_SET_ACTIVITY", animation) -- To avoid AutoMovement stopping the velocity
 				//elseif faceEnemy == true then
-					//schedPlayAct:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY", animation)
+					//schedule:EngTask("TASK_PLAY_SEQUENCE_FACE_ENEMY", animation)
 				else
 					-- Engine's default animation task
 					-- REQUIRED FOR TASK_PLAY_SEQUENCE: It fixes animations NOT applying walk frames if the previous animation was the same!
@@ -1677,13 +1674,13 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 						self:ResetSequenceInfo()
 						self:SetSaveValue("sequence", 0)
 					end
-					schedPlayAct:EngTask("TASK_PLAY_SEQUENCE", animation)
+					schedule:EngTask("TASK_PLAY_SEQUENCE", animation)
 				end*/
 			end
-			schedPlayAct.IsPlayActivity = true
-			schedPlayAct.CanBeInterrupted = !lockAnim
-			if (customFunc) then customFunc(schedPlayAct, animation) end
-			self:StartSchedule(schedPlayAct)
+			schedule.IsPlayActivity = true
+			schedule.CanBeInterrupted = !lockAnim
+			if (customFunc) then customFunc(schedule, animation) end
+			self:StartSchedule(schedule)
 			if doRealAnimTime then
 				-- Get the calculated duration (Only done in Activity type)
 				animTime = self.CurrentTask.TaskData.duration
@@ -1717,45 +1714,44 @@ function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, a
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local schedChaseEnemyLOS = vj_ai_schedule.New("vj_chase_enemy_los")
-	schedChaseEnemyLOS:EngTask("TASK_GET_PATH_TO_ENEMY_LOS", 0)
-	//schedChaseEnemyLOS:EngTask("TASK_RUN_PATH", 0)
-	schedChaseEnemyLOS:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	//schedChaseEnemyLOS:EngTask("TASK_FACE_ENEMY", 0)
-	//schedChaseEnemyLOS.ResetOnFail = true
-	schedChaseEnemyLOS.CanShootWhenMoving = true
-	schedChaseEnemyLOS.CanBeInterrupted = true
+local schedule_alert_chaseLOS = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE_LOS")
+	schedule_alert_chaseLOS:EngTask("TASK_GET_PATH_TO_ENEMY_LOS", 0)
+	//schedule_alert_chaseLOS:EngTask("TASK_RUN_PATH", 0)
+	schedule_alert_chaseLOS:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	//schedule_alert_chaseLOS:EngTask("TASK_FACE_ENEMY", 0)
+	//schedule_alert_chaseLOS.ResetOnFail = true
+	schedule_alert_chaseLOS.CanShootWhenMoving = true
+	schedule_alert_chaseLOS.CanBeInterrupted = true
 --
-local schedChaseEnemy = vj_ai_schedule.New("vj_chase_enemy")
-	schedChaseEnemy:EngTask("TASK_GET_PATH_TO_ENEMY", 0)
-	schedChaseEnemy:EngTask("TASK_RUN_PATH", 0)
-	schedChaseEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	//schedChaseEnemy:EngTask("TASK_FACE_ENEMY", 0)
-	//schedChaseEnemy.ResetOnFail = true
-	schedChaseEnemy.CanShootWhenMoving = true
-	//schedChaseEnemy.StopScheduleIfNotMoving = true
-	schedChaseEnemy.CanBeInterrupted = true
+local schedule_alert_chase = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE")
+	schedule_alert_chase:EngTask("TASK_GET_PATH_TO_ENEMY", 0)
+	schedule_alert_chase:EngTask("TASK_RUN_PATH", 0)
+	schedule_alert_chase:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	//schedule_alert_chase:EngTask("TASK_FACE_ENEMY", 0)
+	//schedule_alert_chase.ResetOnFail = true
+	schedule_alert_chase.CanShootWhenMoving = true
+	//schedule_alert_chase.StopScheduleIfNotMoving = true
+	schedule_alert_chase.CanBeInterrupted = true
 --
-local varChaseEnemy = "vj_chase_enemy"
-function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase)
+function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
 	doLOSChase = doLOSChase or false
 	self:ClearCondition(COND_ENEMY_UNREACHABLE)
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_ChaseEnemy() return end
-	//if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_chase_enemy" then return end
+	//if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "SCHEDULE_ALERT_CHASE" then return end
 	if self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
-	if self.CurrentSchedule != nil && self.CurrentSchedule.Name == varChaseEnemy && (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) <= 12) then return end
+	if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "SCHEDULE_ALERT_CHASE" && (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) <= 12) then return end
 	if doLOSChase == true then
-		schedChaseEnemyLOS.RunCode_OnFinish = function()
+		schedule_alert_chaseLOS.RunCode_OnFinish = function()
 			local ene = self:GetEnemy()
 			if IsValid(ene) then
 				//self:RememberUnreachable(ene, 0)
-				self:VJ_TASK_CHASE_ENEMY(false)
+				self:SCHEDULE_ALERT_CHASE(false)
 			end
 		end
-		self:StartSchedule(schedChaseEnemyLOS)
+		self:StartSchedule(schedule_alert_chaseLOS)
 	else
-		schedChaseEnemy.RunCode_OnFail = function() if self.VJ_TASK_IDLE_STAND then self:VJ_TASK_IDLE_STAND() end end
-		self:StartSchedule(schedChaseEnemy)
+		schedule_alert_chase.RunCode_OnFail = function() if self.SCHEDULE_IDLE_STAND then self:SCHEDULE_IDLE_STAND() end end
+		self:StartSchedule(schedule_alert_chase)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1765,7 +1761,7 @@ function ENT:MaintainIdleBehavior(idleType) -- idleType: nil = Random | 1 = Wand
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
 	if self.DisableWandering or self.IsGuard or self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsVJBaseSNPC_Tank or !self.LastHiddenZone_CanWander or self.NextWanderTime > curTime or self.IsFollowing or self.Medic_Status then
-		self:VJ_TASK_IDLE_STAND()
+		self:SCHEDULE_IDLE_STAND()
 		return -- Don't set self.NextWanderTime below
 	elseif !idleType && self.IdleAlwaysWander then
 		idleType = 1
@@ -1774,16 +1770,16 @@ function ENT:MaintainIdleBehavior(idleType) -- idleType: nil = Random | 1 = Wand
 	-- Random (Wander & Idle Stand)
 	if !idleType then
 		if math.random(1, 3) == 1 then
-			self:VJ_TASK_IDLE_WANDER()
+			self:SCHEDULE_IDLE_WANDER()
 		else
-			self:VJ_TASK_IDLE_STAND()
+			self:SCHEDULE_IDLE_STAND()
 		end
 	-- Wander
 	elseif idleType == 1 then
-		self:VJ_TASK_IDLE_WANDER()
+		self:SCHEDULE_IDLE_WANDER()
 	-- Idle Stand
 	elseif idleType == 2 then
-		self:VJ_TASK_IDLE_STAND()
+		self:SCHEDULE_IDLE_STAND()
 		return -- Don't set self.NextWanderTime below
 	end
 	
@@ -1801,38 +1797,38 @@ function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase: true = Override 
 		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 			self:AA_StopMoving()
 		end
-		self:VJ_TASK_IDLE_STAND()
+		self:SCHEDULE_IDLE_STAND()
 		return
 	end
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
 	if self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsFollowing or self.Medic_Status or self:GetState() == VJ_STATE_ONLY_ANIMATION then
-		self:VJ_TASK_IDLE_STAND()
+		self:SCHEDULE_IDLE_STAND()
 		return
 	end
 	
 	-- For non-aggressive SNPCs
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
-		self:VJ_TASK_COVER_FROM_ENEMY("TASK_RUN_PATH")
+		self:SCHEDULE_COVER_ENEMY("TASK_RUN_PATH")
 		self.NextChaseTime = curTime + 3
 		return
 	end
 	
-	if !alwaysChase && (self.DisableChasingEnemy == true or self.IsGuard == true) then self:VJ_TASK_IDLE_STAND() return end
+	if !alwaysChase && (self.DisableChasingEnemy == true or self.IsGuard == true) then self:SCHEDULE_IDLE_STAND() return end
 	
 	-- If the enemy is not reachable then wander around
 	if self:IsUnreachable(ene) == true then
 		if self.HasRangeAttack == true then -- Ranged NPCs
-			self:VJ_TASK_CHASE_ENEMY(true)
+			self:SCHEDULE_ALERT_CHASE(true)
 		elseif math.random(1, 30) == 1 && !self:IsMoving() then
 			self.NextWanderTime = 0
 			self:MaintainIdleBehavior(1)
 			self:RememberUnreachable(ene, 4)
 		else
-			self:VJ_TASK_IDLE_STAND()
+			self:SCHEDULE_IDLE_STAND()
 		end
 	else -- Is reachable, so chase the enemy!
-		self:VJ_TASK_CHASE_ENEMY()
+		self:SCHEDULE_ALERT_CHASE()
 	end
 	
 	-- Set the next chase time
@@ -2035,7 +2031,7 @@ function ENT:Think()
 								//else
 								//	self:ClearGoal()
 								//end
-								/*self:VJ_TASK_GOTO_TARGET((distToPly < (followData.MinDist * 1.5) and "TASK_WALK_PATH") or "TASK_RUN_PATH", function(schedule)
+								/*self:SCHEDULE_GOTO_TARGET((distToPly < (followData.MinDist * 1.5) and "TASK_WALK_PATH") or "TASK_RUN_PATH", function(schedule)
 									schedule.CanShootWhenMoving = true
 									if IsValid(self:GetActiveWeapon()) then
 										schedule.FaceData = {Type = VJ.NPC_FACE_ENEMY_VISIBLE}
@@ -2169,9 +2165,9 @@ function ENT:Think()
 										self.NextWanderTime = CurTime() + math.Rand(3, 5)
 										self:SetState(VJ_STATE_NONE)
 										self:SetLastPosition(select(2, self:VJ_GetNearestPointToEntity(food)))
-										self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
+										self:SCHEDULE_GOTO_POSITION("TASK_WALK_PATH")
 										//self:SetTarget(food)
-										//self:VJ_TASK_GOTO_TARGET("TASK_WALK_PATH")
+										//self:SCHEDULE_GOTO_TARGET("TASK_WALK_PATH")
 										eatingData.NextCheck = curTime + 1
 									end
 								end
@@ -2259,7 +2255,7 @@ function ENT:Think()
 				end
 
 				-- Call for help
-				if self.CallForHelp && curTime > self.NextCallForHelpT then
+				if self.CallForHelp && curTime > self.NextCallForHelpT && !self.AttackType then
 					self:Allies_CallHelp(self.CallForHelpDistance)
 					self.NextCallForHelpT = curTime + self.NextCallForHelpTime
 				end
@@ -2278,14 +2274,14 @@ function ENT:Think()
 						self:MaintainIdleBehavior(2) -- Otherwise it won't play the idle animation and will loop the last PlayAct animation if range attack doesn't use animations!
 						local moveType = self.MovementType
 						local curSched = self.CurrentSchedule -- Already defined
-						if curSched != nil && curSched.Name == "vj_chase_enemy" then self:StopMoving() end -- Interrupt enemy chasing because we are in range!
+						if curSched != nil && curSched.Name == "SCHEDULE_ALERT_CHASE" then self:StopMoving() end -- Interrupt enemy chasing because we are in range!
 						if moveType == VJ_MOVETYPE_GROUND && !self:IsMoving() && self:OnGround() then self:SetTurnTarget("Enemy") end
 						if (moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC) then
 							if self.AA_CurrentMoveType == 3 then self:AA_StopMoving() end -- Interrupt enemy chasing because we are in range!
 							if curTime > self.AA_CurrentMoveTime then self:AA_IdleWander(true, "Calm", {FaceDest = !self.ConstantlyFaceEnemy}) /*self:AA_StopMoving()*/ end -- Only face the position if self.ConstantlyFaceEnemy is false!
 						end
 					else
-						if self.CurrentSchedule != nil && self.CurrentSchedule.Name != "vj_chase_enemy" then self:MaintainAlertBehavior() end
+						if self.CurrentSchedule != nil && self.CurrentSchedule.Name != "SCHEDULE_ALERT_CHASE" then self:MaintainAlertBehavior() end
 					end
 				end
 				
@@ -2343,7 +2339,7 @@ function ENT:Think()
 								self:CustomOnMeleeAttack_BeforeStartTimer(seed)
 								self:PlaySoundSystem("BeforeMeleeAttack")
 								if self.DisableMeleeAttackAnimation == false then
-									local anim, animDur, animType = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_MeleeAttack, false, 0, false, self.MeleeAttackAnimationDelay)
+									local anim, animDur, animType = self:PlayAnim(self.AnimTbl_MeleeAttack, false, 0, false, self.MeleeAttackAnimationDelay)
 									if anim != ACT_INVALID then
 										self.CurrentAttackAnimation = anim
 										self.CurrentAttackAnimationDuration = animDur - (self.MeleeAttackAnimationDecreaseLengthAmount / self.TruePlaybackRate)
@@ -2381,7 +2377,7 @@ function ENT:Think()
 								self:CustomOnRangeAttack_BeforeStartTimer(seed)
 								self:PlaySoundSystem("BeforeRangeAttack")
 								if self.DisableRangeAttackAnimation == false then
-									local anim, animDur = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_RangeAttack, false, 0, false, self.RangeAttackAnimationDelay)
+									local anim, animDur = self:PlayAnim(self.AnimTbl_RangeAttack, false, 0, false, self.RangeAttackAnimationDelay)
 									if anim != ACT_INVALID then
 										self.CurrentAttackAnimation = anim
 										self.CurrentAttackAnimationDuration = animDur - (self.RangeAttackAnimationDecreaseLengthAmount / self.TruePlaybackRate)
@@ -2419,7 +2415,7 @@ function ENT:Think()
 								self:PlaySoundSystem("BeforeLeapAttack")
 								timer.Create("timer_leap_start_jump"..self:EntIndex(), self.TimeUntilLeapAttackVelocity / self.TruePlaybackRate, 1, function() self:LeapAttackVelocityCode() end)
 								if self.DisableLeapAttackAnimation == false then
-									local anim, animDur = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_LeapAttack, false, 0, false, self.LeapAttackAnimationDelay)
+									local anim, animDur = self:PlayAnim(self.AnimTbl_LeapAttack, false, 0, false, self.LeapAttackAnimationDelay)
 									if anim != ACT_INVALID then
 										self.CurrentAttackAnimation = anim
 										self.CurrentAttackAnimationDuration = animDur - (self.LeapAttackAnimationDecreaseLengthAmount / self.TruePlaybackRate)
@@ -2469,14 +2465,14 @@ function ENT:Think()
 					local dist = myPos:Distance(self.GuardingPosition) -- Distance to the guard position
 					if dist > 50 then
 						self:SetLastPosition(self.GuardingPosition)
-						self:VJ_TASK_GOTO_LASTPOS(dist <= 800 and "TASK_WALK_PATH" or "TASK_RUN_PATH", function(x)
+						self:SCHEDULE_GOTO_POSITION(dist <= 800 and "TASK_WALK_PATH" or "TASK_RUN_PATH", function(x)
 							x.CanShootWhenMoving = true
 							x.FaceData = {Type = VJ.NPC_FACE_ENEMY}
 							x.RunCode_OnFinish = function()
 								timer.Simple(0.01, function()
 									if IsValid(self) && !self:IsMoving() && !self:BusyWithActivity() && self.GuardingFacePosition then
 										self:SetLastPosition(self.GuardingFacePosition)
-										self:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
+										self:SCHEDULE_FACE("TASK_FACE_LASTPOSITION")
 									end
 								end)
 							end
@@ -2928,7 +2924,7 @@ function ENT:SelectSchedule()
 					self:DoReadyAlert()
 					self:StopMoving()
 					self:SetLastPosition(sdSrc.origin)
-					self:VJ_TASK_FACE_X("TASK_FACE_LASTPOSITION")
+					self:SCHEDULE_FACE("TASK_FACE_LASTPOSITION")
 					-- Works but just faces the enemy that fired at
 					//local sched = vj_ai_schedule.New("vj_hear_sound")
 					//sched:EngTask("TASK_STORE_BESTSOUND_REACTORIGIN_IN_SAVEPOSITION", 0)
@@ -3024,13 +3020,16 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTakeDamage(dmginfo)
+	local dmgAttacker = dmginfo:GetAttacker()
+	if dmginfo:IsBulletDamage() && IsValid(dmgAttacker) && dmgAttacker:IsNPC() && dmgAttacker:Disposition(self) != D_HT && (dmgAttacker:GetClass() == self:GetClass() or self:Disposition(dmgAttacker) == D_LI) then
+		return 0 -- Don't take bullet damage from friendly NPCs
+	end
 	local dmgInflictor = dmginfo:GetInflictor()
 	local hitgroup = self:GetLastDamageHitGroup()
 	if IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_ragdoll" && dmgInflictor:GetVelocity():Length() <= 100 then return 0 end -- Avoid taking damage when walking on ragdolls
 	self:OnDamaged(dmginfo, hitgroup, "Initial")
 	if self.GodMode or dmginfo:GetDamage() <= 0 then return 0 end
 	if self:IsOnFire() && self:WaterLevel() == 2 then self:Extinguish() end -- If we are in water, then extinguish the fire
-	local dmgAttacker = dmginfo:GetAttacker()
 	local dmgType = dmginfo:GetDamageType()
 	local curTime = CurTime()
 	local isFireDmg = self:IsOnFire() && IsValid(dmgInflictor) && IsValid(dmgAttacker) && dmgInflictor:GetClass() == "entityflame" && dmgAttacker:GetClass() == "entityflame"
@@ -3128,10 +3127,9 @@ function ENT:OnTakeDamage(dmginfo)
 					end
 					self:ClearSchedule()
 					self.NextFlinchT = curTime + 1
-					local chosenAnim = VJ.PICK(self.CallForBackUpOnDamageAnimation)
-					local playedAnim = !self.DisableCallForBackUpOnDamageAnimation and self:VJ_ACT_PLAYACTIVITY(chosenAnim, true, self:DecideAnimationLength(chosenAnim, self.CallForBackUpOnDamageAnimationTime), true, 0, {PlayBackRateCalculated=true}) or 0
-					if playedAnim == 0 && !self:BusyWithActivity() then
-						self:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
+					local playedAnim = !self.DisableCallForBackUpOnDamageAnimation and self:PlayAnim(self.CallForBackUpOnDamageAnimation, true, false, true) or false
+					if !playedAnim && !self:BusyWithActivity() then
+						self:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
 					end
 					self.NextCallForBackUpOnDamageT = curTime + math.Rand(self.NextCallForBackUpOnDamageTime.a, self.NextCallForBackUpOnDamageTime.b)
 				end
@@ -3150,7 +3148,7 @@ function ENT:OnTakeDamage(dmginfo)
 					if !IsValid(self:GetEnemy()) then
 						self:StopMoving()
 						self:SetTarget(dmgAttacker)
-						self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+						self:SCHEDULE_FACE("TASK_FACE_TARGET")
 					end
 					if self.AllowPrintingInChat == true then
 						dmgAttacker:PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.")
@@ -3175,7 +3173,7 @@ function ENT:OnTakeDamage(dmginfo)
 					end
 				end
 				if !eneFound && self.HideOnUnknownDamage && !self.IsFollowing && self.MovementType != VJ_MOVETYPE_STATIONARY then
-					self:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
+					self:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
 					self.TakingCoverT = curTime + self.HideOnUnknownDamage
 				end
 			end
@@ -3195,14 +3193,14 @@ function ENT:OnTakeDamage(dmginfo)
 		-- Make passive NPCs move away | RESULT: May move away AND may cause other passive NPCs to move as well
 		if (self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) && curTime > self.TakingCoverT then
 			if stillAlive && self.Passive_RunOnDamage && !self:IsBusy() then
-				self:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
+				self:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH")
 			end
 			if self.Passive_AlliesRunOnDamage then -- Make passive allies run too!
 				local allies = self:Allies_Check(self.Passive_AlliesRunOnDamageDistance)
 				if allies != false then
 					for _, v in ipairs(allies) do
 						v.TakingCoverT = curTime + math.Rand(v.Passive_NextRunOnDamageTime.b, v.Passive_NextRunOnDamageTime.a)
-						v:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
+						v:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH")
 						v:PlaySoundSystem("Alert")
 					end
 				end
@@ -3335,7 +3333,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 		self:OnDeath(dmginfo, hitgroup, "DeathAnim")
 		local chosenAnim = VJ.PICK(self.AnimTbl_Death)
 		local animTime = self:DecideAnimationLength(chosenAnim, self.DeathAnimationTime) - self.DeathAnimationDecreaseLengthAmount
-		self:VJ_ACT_PLAYACTIVITY(chosenAnim, true, animTime, false, 0, {PlayBackRateCalculated=true})
+		self:PlayAnim(chosenAnim, true, animTime, false, 0, {PlayBackRateCalculated=true})
 		deathTime = deathTime + animTime
 		self.DeathAnimationCodeRan = true
 	end

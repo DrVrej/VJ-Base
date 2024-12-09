@@ -570,7 +570,7 @@ function SWEP:NPCShoot_Primary()
 	-- Secondary Fire
 	if self.NPC_HasSecondaryFire && owner.CanUseSecondaryOnWeaponAttack && CurTime() > self.NPC_SecondaryFireNextT && ene:GetPos():Distance(owner:GetPos()) <= self.NPC_SecondaryFireDistance then
 		if math.random(1, self.NPC_SecondaryFireChance) == 1 then
-			local anim, animDur = owner:VJ_ACT_PLAYACTIVITY(VJ.PICK(owner.AnimTbl_WeaponAttackSecondary), true, false, true)
+			local anim, animDur = owner:PlayAnim(VJ.PICK(owner.AnimTbl_WeaponAttackSecondary), true, false, true)
 			local fireTime = (anim == ACT_INVALID and 0) or owner.WeaponAttackSecondaryTimeUntilFire or animDur
 				-- If no animation was found then fireTime is 0, otherwise if "WeaponAttackSecondaryTimeUntilFire" is false then use animation time
 			self:NPC_SecondaryFire_BeforeTimer(ene, fireTime)
@@ -655,7 +655,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	
 	-- Firing Gesture
 	if owner.IsVJBaseSNPC_Human == true && owner.DisableWeaponFiringGesture != true then
-		owner:VJ_ACT_PLAYACTIVITY(owner:TranslateActivity(VJ.PICK(owner.AnimTbl_WeaponAttackFiringGesture)), false, false, false, 0, {AlwaysUseGesture=true})
+		owner:PlayAnim(owner:TranslateActivity(VJ.PICK(owner.AnimTbl_WeaponAttackFiringGesture)), false, false, false, 0, {AlwaysUseGesture=true})
 	end
 	
 	-- MELEE WEAPON

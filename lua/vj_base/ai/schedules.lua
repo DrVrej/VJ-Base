@@ -5,101 +5,100 @@ require("vj_ai_schedule")
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_TASK_FACE_X(faceType, customFunc)
+function ENT:SCHEDULE_FACE(faceType, customFunc)
 	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
-	if (self.MovementType == VJ_MOVETYPE_STATIONARY && self.CanTurnWhileStationary == false) or self.IsVJBaseSNPC_Tank then return end
-	local schedFace = vj_ai_schedule.New("vj_face_x")
-	schedFace:EngTask(faceType or "TASK_FACE_TARGET", 0)
-	if (customFunc) then customFunc(schedFace) end
-	self:StartSchedule(schedFace)
+	if (self.MovementType == VJ_MOVETYPE_STATIONARY && !self.CanTurnWhileStationary) or self.IsVJBaseSNPC_Tank then return end
+	local schedule = vj_ai_schedule.New("SCHEDULE_FACE")
+	schedule:EngTask(faceType or "TASK_FACE_TARGET", 0)
+	if (customFunc) then customFunc(schedule) end
+	self:StartSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_TASK_GOTO_LASTPOS(moveType, customFunc)
+function ENT:SCHEDULE_GOTO_POSITION(moveType, customFunc)
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 		self:AA_MoveTo(self:GetLastPosition(), true, (moveType == "TASK_RUN_PATH" and "Alert") or "Calm")
 		return
 	end
-	local schedGoToLastPos = vj_ai_schedule.New("vj_goto_lastpos")
-	//schedGoToLastPos:EngTask("TASK_SET_TOLERANCE_DISTANCE", 48) -- Will cause the NPC not move at all in many cases!
-	//schedGoToLastPos:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 3)
-	schedGoToLastPos:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-	schedGoToLastPos:EngTask(moveType or "TASK_RUN_PATH", 0)
-	schedGoToLastPos:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	if (customFunc) then customFunc(schedGoToLastPos) end
-	self:StartSchedule(schedGoToLastPos)
+	local schedule = vj_ai_schedule.New("SCHEDULE_GOTO_POSITION")
+	//schedule:EngTask("TASK_SET_TOLERANCE_DISTANCE", 48) -- Will cause the NPC not move at all in many cases!
+	//schedule:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 3)
+	schedule:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
+	schedule:EngTask(moveType or "TASK_RUN_PATH", 0)
+	schedule:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	if (customFunc) then customFunc(schedule) end
+	self:StartSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_TASK_GOTO_TARGET(moveType, customFunc)
+function ENT:SCHEDULE_GOTO_TARGET(moveType, customFunc)
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
 		self:AA_MoveTo(self:GetTarget(), true, (moveType == "TASK_RUN_PATH" and "Alert") or "Calm")
 		return
 	end
-	local schedGoToTarget = vj_ai_schedule.New("vj_goto_target")
-	schedGoToTarget:EngTask("TASK_GET_PATH_TO_TARGET", 0)
-	schedGoToTarget:EngTask(moveType or "TASK_RUN_PATH", 0)
-	schedGoToTarget:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	schedGoToTarget:EngTask("TASK_FACE_TARGET", 1)
-	if (customFunc) then customFunc(schedGoToTarget) end
-	self:StartSchedule(schedGoToTarget)
+	local schedule = vj_ai_schedule.New("SCHEDULE_GOTO_TARGET")
+	schedule:EngTask("TASK_GET_PATH_TO_TARGET", 0)
+	schedule:EngTask(moveType or "TASK_RUN_PATH", 0)
+	schedule:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	schedule:EngTask("TASK_FACE_TARGET", 1)
+	if (customFunc) then customFunc(schedule) end
+	self:StartSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_TASK_COVER_FROM_ENEMY(moveType, customFunc)
+function ENT:SCHEDULE_COVER_ENEMY(moveType, customFunc)
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
 	moveType = moveType or "TASK_RUN_PATH"
-	local schedCoverFromEnemy = vj_ai_schedule.New("vj_cover_from_enemy")
-	schedCoverFromEnemy:EngTask("TASK_FIND_COVER_FROM_ORIGIN", 0)
-	schedCoverFromEnemy:EngTask(moveType or "TASK_RUN_PATH", 0)
-	schedCoverFromEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	schedCoverFromEnemy.RunCode_OnFail = function()
+	local schedule = vj_ai_schedule.New("SCHEDULE_COVER_ENEMY")
+	schedule:EngTask("TASK_FIND_COVER_FROM_ORIGIN", 0)
+	schedule:EngTask(moveType or "TASK_RUN_PATH", 0)
+	schedule:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	schedule.RunCode_OnFail = function()
 		//print("Cover from enemy failed!")
-		local schedFailCoverFromEnemy = vj_ai_schedule.New("vj_cover_from_enemy_fail")
-		schedFailCoverFromEnemy:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
-		schedFailCoverFromEnemy:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
-		schedFailCoverFromEnemy:EngTask(moveType or "TASK_RUN_PATH", 0)
-		schedFailCoverFromEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-		if (customFunc) then customFunc(schedFailCoverFromEnemy) end
-		self:StartSchedule(schedFailCoverFromEnemy)
+		local schedFail = vj_ai_schedule.New("SCHEDULE_COVER_ENEMY_FAIL")
+		schedFail:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
+		schedFail:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
+		schedFail:EngTask(moveType or "TASK_RUN_PATH", 0)
+		schedFail:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+		if (customFunc) then customFunc(schedFail) end
+		self:StartSchedule(schedFail)
 	end
-	if (customFunc) then customFunc(schedCoverFromEnemy) end
-	self:StartSchedule(schedCoverFromEnemy)
+	if (customFunc) then customFunc(schedule) end
+	self:StartSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_TASK_COVER_FROM_ORIGIN(moveType, customFunc)
+function ENT:SCHEDULE_COVER_ORIGIN(moveType, customFunc)
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
 	moveType = moveType or "TASK_RUN_PATH"
-	local schedCoverFromOrigin = vj_ai_schedule.New("vj_cover_from_origin")
-	schedCoverFromOrigin:EngTask("TASK_FIND_COVER_FROM_ORIGIN", 0)
-	schedCoverFromOrigin:EngTask(moveType or "TASK_RUN_PATH", 0)
-	schedCoverFromOrigin:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	schedCoverFromOrigin.RunCode_OnFail = function()
-		local schedFailCoverFromOrigin = vj_ai_schedule.New("vj_cover_from_origin_fail")
-		schedFailCoverFromOrigin:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
-		schedFailCoverFromOrigin:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
-		schedFailCoverFromOrigin:EngTask(moveType or "TASK_RUN_PATH", 0)
-		schedFailCoverFromOrigin:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-		if (customFunc) then customFunc(schedFailCoverFromOrigin) end
-		self:StartSchedule(schedFailCoverFromOrigin)
+	local schedule = vj_ai_schedule.New("SCHEDULE_COVER_ORIGIN")
+	schedule:EngTask("TASK_FIND_COVER_FROM_ORIGIN", 0)
+	schedule:EngTask(moveType or "TASK_RUN_PATH", 0)
+	schedule:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	schedule.RunCode_OnFail = function()
+		local schedFail = vj_ai_schedule.New("SCHEDULE_COVER_ORIGIN_FAIL")
+		schedFail:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
+		schedFail:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
+		schedFail:EngTask(moveType or "TASK_RUN_PATH", 0)
+		schedFail:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+		if (customFunc) then customFunc(schedFail) end
+		self:StartSchedule(schedFail)
 	end
-	if (customFunc) then customFunc(schedCoverFromOrigin) end
-	self:StartSchedule(schedCoverFromOrigin)
+	if (customFunc) then customFunc(schedule) end
+	self:StartSchedule(schedule)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local schedIdleWander = vj_ai_schedule.New("vj_idle_wander")
-	//schedIdleWander:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 0)
-	//schedIdleWander:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-	schedIdleWander:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 350)
-	schedIdleWander:EngTask("TASK_WALK_PATH", 0)
-	schedIdleWander:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	schedIdleWander.ResetOnFail = true
-	schedIdleWander.CanBeInterrupted = true
+local schedule_wander = vj_ai_schedule.New("SCHEDULE_IDLE_WANDER")
+	//schedule_wander:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 0)
+	//schedule_wander:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
+	schedule_wander:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 350)
+	schedule_wander:EngTask("TASK_WALK_PATH", 0)
+	schedule_wander:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	schedule_wander.ResetOnFail = true
+	schedule_wander.CanBeInterrupted = true
 --
-function ENT:VJ_TASK_IDLE_WANDER()
+function ENT:SCHEDULE_IDLE_WANDER()
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_IdleWander() return end
-	//self:SetLastPosition(self:GetPos() + self:GetForward() * 300)
-	self:StartSchedule(schedIdleWander)
+	self:StartSchedule(schedule_wander)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_TASK_IDLE_STAND()
+function ENT:SCHEDULE_IDLE_STAND()
 	if self:IsMoving() or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
 	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:BusyWithActivity() then return end // self:GetVelocity():Length() > 0
 	self:MaintainIdleAnimation(self:GetIdealActivity() != ACT_IDLE)

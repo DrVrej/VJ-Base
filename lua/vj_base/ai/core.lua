@@ -274,7 +274,7 @@ function ENT:OnEat(status, statusData)
 		return true //statusData.owner.BloodData && statusData.owner.BloodData.Color == "Red"
 	elseif status == "BeginEating" then
 		self.AnimationTranslations[ACT_IDLE] = ACT_GESTURE_RANGE_ATTACK1 -- Eating animation
-		return select(2, self:VJ_ACT_PLAYACTIVITY(ACT_ARM, true, false))
+		return select(2, self:PlayAnim(ACT_ARM, true, false))
 	elseif status == "Eat" then
 		VJ.EmitSound(self, "barnacle/bcl_chew"..math.random(1, 3)..".wav", 55)
 		-- Health changes
@@ -301,7 +301,7 @@ function ENT:OnEat(status, statusData)
 		return 2 -- Eat every this seconds
 	elseif status == "StopEating" then
 		if statusData != "Dead" && self.EatingData.AnimStatus != "None" then -- Do NOT play anim while dead or has NOT prepared to eat
-			return select(2, self:VJ_ACT_PLAYACTIVITY(ACT_DISARM, true, false))
+			return select(2, self:PlayAnim(ACT_DISARM, true, false))
 		end
 	end
 	return 0
@@ -433,7 +433,7 @@ function ENT:MaintainIdleAnimation(force)
 		//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then
 			//if self:BusyWithActivity() == true then return end
 			//self:AA_StopMoving()
-			//self:VJ_ACT_PLAYACTIVITY(pickedAnim, false, 0, false, 0, {SequenceDuration=false, SequenceInterruptible=true}) // AlwaysUseSequence=true
+			//self:PlayAnim(pickedAnim, false, 0, false, 0, {SequenceDuration=false, SequenceInterruptible=true}) // AlwaysUseSequence=true
 		//end
 		//if self.CurrentSchedule == nil then -- If it's not doing a schedule then reset the activity to make sure it's not already playing the same idle activity!
 			//self:StartEngineTask(ai.GetTaskID("TASK_RESET_ACTIVITY"), 0)
@@ -491,7 +491,7 @@ function ENT:SetState(state, time)
 	self.AIState = state
 	if state == VJ_STATE_FREEZE or self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then -- Reset the tasks
 		self:TaskComplete()
-		self:VJ_TASK_IDLE_STAND()
+		self:SCHEDULE_IDLE_STAND()
 	end
 	if time >= 0 then
 		timer.Create("timer_state_reset"..self:EntIndex(), time, 1, function()
@@ -1246,7 +1246,7 @@ function ENT:Touch(entity)
 	-- If it's a passive SNPC...
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
 		if self.Passive_RunOnTouch == true && entity.VJTag_IsLiving && CurTime() > self.TakingCoverT && entity.Behavior != VJ_BEHAVIOR_PASSIVE && entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:CheckRelationship(entity) != D_LI then
-			self:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
+			self:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH")
 			self:PlaySoundSystem("Alert")
 			self.TakingCoverT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
 			return
@@ -1254,7 +1254,7 @@ function ENT:Touch(entity)
 	elseif !self.DisableTouchFindEnemy && !self.IsFollowing && entity.VJTag_IsLiving && !IsValid(self:GetEnemy()) && self:CheckRelationship(entity) != D_LI && !self:IsBusy() then
 		self:StopMoving()
 		self:SetTarget(entity)
-		self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+		self:SCHEDULE_FACE("TASK_FACE_TARGET")
 		return
 	end
 	
@@ -1365,10 +1365,10 @@ function ENT:Follow(ent, stopIfFollowing)
 			self:SetTarget(ent)
 			if !self:BusyWithActivity() then -- Face the entity and then move to it
 				self:StopMoving()
-				self:VJ_TASK_FACE_X("TASK_FACE_TARGET", function(x)
+				self:SCHEDULE_FACE("TASK_FACE_TARGET", function(x)
 					x.RunCode_OnFinish = function()
 						if IsValid(self.FollowData.Ent) then
-							self:VJ_TASK_GOTO_TARGET(((self:GetPos():Distance(self.FollowData.Ent:GetPos()) < (followData.MinDist * 1.5)) and "TASK_WALK_PATH") or "TASK_RUN_PATH", function(y) y.CanShootWhenMoving = true y.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
+							self:SCHEDULE_GOTO_TARGET(((self:GetPos():Distance(self.FollowData.Ent:GetPos()) < (followData.MinDist * 1.5)) and "TASK_WALK_PATH") or "TASK_RUN_PATH", function(y) y.CanShootWhenMoving = true y.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
 						end
 					end
 				end)
@@ -1382,7 +1382,7 @@ function ENT:Follow(ent, stopIfFollowing)
 			self:StopMoving()
 			self.NextWanderTime = CurTime() + 2
 			if !self:BusyWithActivity() then
-				self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+				self:SCHEDULE_FACE("TASK_FACE_TARGET")
 			end
 			self:FollowReset()
 			self:OnFollow("Stop", ent)
@@ -1445,7 +1445,7 @@ function ENT:MaintainMedicBehavior()
 			-- Handle the heal time and animation
 			local timeUntilHeal = self.Medic_TimeUntilHeal
 			if !self.Medic_DisableAnimation then
-				local _, animTime = self:VJ_ACT_PLAYACTIVITY(self.AnimTbl_Medic_GiveHealth, true, timeUntilHeal or false)
+				local _, animTime = self:PlayAnim(self.AnimTbl_Medic_GiveHealth, true, timeUntilHeal or false)
 				timeUntilHeal = animTime
 			end
 			
@@ -1457,7 +1457,7 @@ function ENT:MaintainMedicBehavior()
 				self.NextChaseTime = CurTime() + 2
 				ally:StopMoving()
 				ally:SetTarget(self)
-				ally:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+				ally:SCHEDULE_FACE("TASK_FACE_TARGET")
 			end
 			
 			timer.Simple(timeUntilHeal, function()
@@ -1489,7 +1489,7 @@ function ENT:MaintainMedicBehavior()
 			self.NextIdleTime = CurTime() + 4
 			self.NextChaseTime = CurTime() + 4
 			self:SetTarget(ally)
-			self:VJ_TASK_GOTO_TARGET()
+			self:SCHEDULE_GOTO_TARGET()
 		end
 	end
 end
@@ -1559,7 +1559,7 @@ function ENT:VJ_PlaySequence(animation)
 	if !animation then return false end
 	//self.VJ_PlayingSequence = true -- No longer needed as it is handled by ACT_DO_NOT_DISTURB
 	self:SetActivity(ACT_DO_NOT_DISTURB) -- So `self:GetActivity()` will return the current result (alongside other immediate calls after `VJ_PlaySequence`)
-	self:SetIdealActivity(ACT_DO_NOT_DISTURB) -- Avoids the engine from progressing to an ideal activity that was set very recently | EX: Fixes melee attack anims breaking when called right after `self:VJ_TASK_IDLE_STAND()`
+	self:SetIdealActivity(ACT_DO_NOT_DISTURB) -- Avoids the engine from progressing to an ideal activity that was set very recently | EX: Fixes melee attack anims breaking when called right after `self:SCHEDULE_IDLE_STAND()`
 		-- Keeps MaintainActivity from overriding sequences as seen here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L6331
 		-- If `m_IdealActivity` is set to ACT_DO_NOT_DISTURB, the engine will understand it's a sequence and will avoid messing with it, described here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/shared/ai_activity.h#L215
 	local seqID = isstring(animation) and self:LookupSequence(animation) or animation
@@ -1863,11 +1863,11 @@ function ENT:MaintainRelationships()
 						if self:Visible(ent) then
 							self:StopMoving()
 							self:SetTarget(ent)
-							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+							self:SCHEDULE_FACE("TASK_FACE_TARGET")
 							self.NextInvestigationMove = CurTime() + 0.3 -- Short delay, since it's only turning
 						elseif self.IsFollowing == false then
 							self:SetLastPosition(entPos)
-							self:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH")
+							self:SCHEDULE_GOTO_POSITION("TASK_WALK_PATH")
 							self.NextInvestigationMove = CurTime() + 2 -- Long delay, so it doesn't spam movement
 						end
 						self:OnInvestigate(ent)
@@ -1877,7 +1877,7 @@ function ENT:MaintainRelationships()
 						//			   Asiga hos-er ^ (!ent:Crouching() && ent:GetVelocity():Length() > 0 && ent:GetMoveType() != MOVETYPE_NOCLIP && ((!ent:KeyDown(IN_WALK) && (ent:KeyDown(IN_FORWARD) or ent:KeyDown(IN_BACK) or ent:KeyDown(IN_MOVELEFT) or ent:KeyDown(IN_MOVERIGHT))) or (ent:KeyDown(IN_SPEED) or ent:KeyDown(IN_JUMP)))) or
 						self:StopMoving()
 						self:SetTarget(ent)
-						self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+						self:SCHEDULE_FACE("TASK_FACE_TARGET")
 						self.NextInvestigationMove = CurTime() + 0.1 -- Short delay, since it's only turning
 					end
 				end
@@ -1921,38 +1921,37 @@ function ENT:Allies_CallHelp(dist)
 			-- If it's guarding and enemy is not visible, then don't call!
 			if ally.IsGuard && !ally:Visible(ene) then continue end
 			
-			-- Enemy too far away for ally
-			if ally:GetPos():Distance(ene:GetPos()) > ally:GetMaxLookDistance() then
-				-- See if you can move to the ally's location to get closer
-				if !ally.IsFollowing && !ally:IsBusy() && !ally:IsMoving() then
-					ally:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-50, 50) + self:GetForward()*math.random(-50, 50))
-					ally:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH", function(x) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
-				end
-				continue
-			end
-			
 			local eneIsPlayer = ene:IsPlayer()
 			if ((!eneIsPlayer && ally:Disposition(ene) != D_LI) or eneIsPlayer) then
 				self:OnCallForHelp(ally, isFirst)
 				self:PlaySoundSystem("CallForHelp")
 				-- Play the animation
 				if self.HasCallForHelpAnimation && curTime > self.NextCallForHelpAnimationT then
-					local anim = VJ.PICK(self.AnimTbl_CallForHelp)
-					self:VJ_ACT_PLAYACTIVITY(anim, self.CallForHelpStopAnimations, self:DecideAnimationLength(anim, self.CallForHelpStopAnimationsTime), self.CallForHelpAnimationFaceEnemy, 0, {PlayBackRateCalculated = true})
+					self:PlayAnim(self.AnimTbl_CallForHelp, true, false, self.CallForHelpAnimationFaceEnemy)
 					self.NextCallForHelpAnimationT = curTime + self.NextCallForHelpAnimationTime
 				end
-				-- If the enemy is a player and the ally is player-friendly then make that player an enemy to the ally
-				if eneIsPlayer && ally.PlayerFriendly then
-					ally.VJ_AddCertainEntityAsEnemy[#ally.VJ_AddCertainEntityAsEnemy + 1] = ene
-				end
-				ally:ForceSetEnemy(ene, true)
-				if curTime > ally.NextChaseTime then
-					if ally.Behavior != VJ_BEHAVIOR_PASSIVE && ally:Visible(ene) then
-						ally:SetTarget(ene)
-						ally:VJ_TASK_FACE_X("TASK_FACE_TARGET")
-					else
-						ally:PlaySoundSystem("OnReceiveOrder")
-						ally:MaintainAlertBehavior()
+				
+				-- Enemy too far away for ally
+				if ally:GetPos():Distance(ene:GetPos()) > ally:GetMaxLookDistance() then
+					-- See if you can move to the ally's location to get closer
+					if !ally.IsFollowing && !ally:IsBusy() && !ally:IsMoving() then
+						ally:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-50, 50) + self:GetForward()*math.random(-50, 50))
+						ally:SCHEDULE_GOTO_POSITION("TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
+					end
+				else
+					-- If the enemy is a player and the ally is player-friendly then make that player an enemy to the ally
+					if eneIsPlayer && ally.PlayerFriendly then
+						ally.VJ_AddCertainEntityAsEnemy[#ally.VJ_AddCertainEntityAsEnemy + 1] = ene
+					end
+					ally:ForceSetEnemy(ene, true)
+					if curTime > ally.NextChaseTime then
+						if ally.Behavior != VJ_BEHAVIOR_PASSIVE && ally:Visible(ene) then
+							ally:SetTarget(ene)
+							ally:SCHEDULE_FACE("TASK_FACE_TARGET")
+						else
+							ally:PlaySoundSystem("OnReceiveOrder")
+							ally:MaintainAlertBehavior()
+						end
 					end
 				end
 				isFirst = false
@@ -2034,9 +2033,9 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 				end
 				-- Move type
 				if v.IsVJBaseSNPC_Human && !IsValid(v:GetActiveWeapon()) then
-					v:VJ_TASK_COVER_FROM_ORIGIN("TASK_RUN_PATH")
+					v:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH")
 				else
-					v:VJ_TASK_GOTO_LASTPOS("TASK_WALK_PATH", function(x) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
+					v:SCHEDULE_GOTO_POSITION("TASK_WALK_PATH", function(x) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
 				end
 			end
 			if limit != 0 && it >= limit then return true end -- Return true if it reached the limit
@@ -2094,7 +2093,7 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 		self:StopAttacks(true)
 		self.CurrentAttackAnimationTime = 0
 		local anim = VJ.PICK(hitgroupInfo and hitgroupInfo.Animation or self.AnimTbl_Flinch)
-		local _, animDur = self:VJ_ACT_PLAYACTIVITY(anim, true, self:DecideAnimationLength(anim, self.NextMoveAfterFlinchTime), false, 0, {PlayBackRateCalculated=true})
+		local _, animDur = self:PlayAnim(anim, true, self:DecideAnimationLength(anim, self.NextMoveAfterFlinchTime), false, 0, {PlayBackRateCalculated=true})
 		timer.Create("timer_act_flinching"..self:EntIndex(), animDur, 1, function() self.Flinching = false end)
 		self:OnFlinch(dmginfo, hitgroup, "Execute")
 		self.NextFlinchT = curTime + (self.NextFlinchTime == false and animDur or self.NextFlinchTime)
@@ -2339,12 +2338,12 @@ function ENT:IdleSoundCode(customSD, sdType)
 						if self.IdleDialogueCanTurn == true then
 							self:StopMoving()
 							self:SetTarget(foundEnt)
-							self:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+							self:SCHEDULE_FACE("TASK_FACE_TARGET")
 						end
 						if foundEnt.IdleDialogueCanTurn == true then
 							foundEnt:StopMoving()
 							foundEnt:SetTarget(self)
-							foundEnt:VJ_TASK_FACE_X("TASK_FACE_TARGET")
+							foundEnt:SCHEDULE_FACE("TASK_FACE_TARGET")
 						end
 						
 						-- For the other SNPC to answer back:
@@ -2550,6 +2549,15 @@ function ENT:FaceCertainPosition(target, faceTime) return self:SetTurnTarget(tar
 function ENT:FaceCertainEntity(target, faceCurEnemy, faceTime) return self:SetTurnTarget(faceCurEnemy and "Enemy" or target, faceTime, false, false) end
 function ENT:VJ_DoSetEnemy(ent, stopMoving, doQuickIfActiveEnemy) return self:ForceSetEnemy(ent, stopMoving) end
 function ENT:DoChaseAnimation(alwaysChase) self:MaintainAlertBehavior(alwaysChase) end
+function ENT:VJ_TASK_CHASE_ENEMY(doLOSChase) self:SCHEDULE_ALERT_CHASE(doLOSChase) end
+function ENT:VJ_TASK_FACE_X(faceType, customFunc) self:SCHEDULE_FACE(faceType, customFunc) end
+function ENT:VJ_TASK_GOTO_LASTPOS(moveType, customFunc) self:SCHEDULE_GOTO_POSITION(moveType, customFunc) end
+function ENT:VJ_TASK_GOTO_TARGET(moveType, customFunc) self:SCHEDULE_GOTO_TARGET(moveType, customFunc) end
+function ENT:VJ_TASK_COVER_FROM_ENEMY(moveType, customFunc) self:SCHEDULE_COVER_ENEMY(moveType, customFunc) end
+function ENT:VJ_TASK_COVER_FROM_ORIGIN(moveType, customFunc) self:SCHEDULE_COVER_ORIGIN(moveType, customFunc) end
+function ENT:VJ_TASK_IDLE_WANDER() self:SCHEDULE_IDLE_WANDER() end
+function ENT:VJ_TASK_IDLE_STAND() self:SCHEDULE_IDLE_STAND() end
+function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, extraOptions, customFunc) return self:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, extraOptions, customFunc) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Checks all 4 sides around the NPC

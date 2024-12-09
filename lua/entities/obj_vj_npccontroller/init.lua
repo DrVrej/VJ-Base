@@ -366,7 +366,7 @@ function ENT:Think()
 				if VJ.IsCurrentAnimation(npc, npc:TranslateActivity(npc.CurrentWeaponAnimation)) == false && VJ.IsCurrentAnimation(npc, npc.AnimTbl_WeaponAttack) == false then
 					npc:OnWeaponAttack()
 					npc.CurrentWeaponAnimation = VJ.PICK(npc.AnimTbl_WeaponAttack)
-					npc:VJ_ACT_PLAYACTIVITY(npc.CurrentWeaponAnimation, false, 2, false)
+					npc:PlayAnim(npc.CurrentWeaponAnimation, false, 2, false)
 					npc.DoingWeaponAttack = true
 					npc.DoingWeaponAttack_Standing = true
 				end
@@ -380,7 +380,7 @@ function ENT:Think()
 		if npc.IsVJBaseSNPC && npc.CurrentAttackAnimationTime < CurTime() && curTime > npc.NextChaseTime && npc.IsVJBaseSNPC_Tank != true then
 			-- Turning
 			if !npc:IsMoving() && canTurn && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
-				npc:VJ_TASK_IDLE_STAND()
+				npc:SCHEDULE_IDLE_STAND()
 				if self.VJC_NPC_CanTurn == true then
 					local turnData = npc.TurnData
 					if turnData.Target != self.VJCE_Bullseye then
@@ -443,7 +443,7 @@ function ENT:StartMovement(Dir, Rot)
 			VJ.DEBUG_TempEnt(finalPos, self:GetAngles(), Color(0, 255, 0)) -- Final move position
 		end
 		npc:SetLastPosition(finalPos)
-		npc:VJ_TASK_GOTO_LASTPOS(ply:KeyDown(IN_SPEED) and "TASK_RUN_PATH" or "TASK_WALK_PATH", function(x)
+		npc:SCHEDULE_GOTO_POSITION(ply:KeyDown(IN_SPEED) and "TASK_RUN_PATH" or "TASK_WALK_PATH", function(x)
 			if ply:KeyDown(IN_ATTACK2) && npc.IsVJBaseSNPC_Human then
 				x.FaceData = {Type = VJ.NPC_FACE_ENEMY}
 				x.CanShootWhenMoving = true

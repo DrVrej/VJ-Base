@@ -231,13 +231,6 @@ hook.Add("EntityFireBullets", "VJ_EntityFireBullets", function(ent, data)
 	end
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("EntityTakeDamage", "VJ_EntityTakeDamage", function(target, dmginfo)
-	local attacker = dmginfo:GetAttacker()
-	if IsValid(target) && target.IsVJBaseSNPC && IsValid(attacker) && attacker:IsNPC() && dmginfo:IsBulletDamage() && attacker:Disposition(target) != D_HT && (attacker:GetClass() == target:GetClass() or target:Disposition(attacker) == D_LI) then
-		dmginfo:SetDamage(0)
-	end
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
 local function VJ_NPCPLY_DEATH(ent, attacker, inflictor)
 	if IsValid(attacker) && attacker.IsVJBaseSNPC then
 		local wasLast = (!IsValid(attacker:GetEnemy()) or (attacker.EnemyData.VisibleCount <= 1))

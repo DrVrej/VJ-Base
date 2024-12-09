@@ -376,7 +376,7 @@ function ENT:AA_MoveAnimation()
 			chosenAnim = (self.MovementType == VJ_MOVETYPE_AQUATIC and self.Aquatic_AnimTbl_Alerted) or self.Aerial_AnimTbl_Alerted
 		end
 		chosenAnim = VJ.PICK(chosenAnim)
-		local _, animDur = self:VJ_ACT_PLAYACTIVITY(chosenAnim, false, 0, false, 0, {AlwaysUseSequence = badACTs[chosenAnim] or false})
+		local _, animDur = self:PlayAnim(chosenAnim, false, 0, false, 0, {AlwaysUseSequence = badACTs[chosenAnim] or false})
 		self.AA_CurrentMoveAnimation = self:GetActivity() == ACT_DO_NOT_DISTURB and self:GetSequence() or self:GetIdealSequence() -- In case we played a non-sequence
 		self.AA_NextMovementAnimTime = CurTime() + animDur -- animDur will always be accurate
 	end
