@@ -228,7 +228,7 @@ function ENT:OnTaskFailed(failCode, failString)
 					-- Handle "RunCode_OnFail"
 					if !curSched.AlreadyRanCode_OnFail && curSched.RunCode_OnFail != nil then
 						curSched.AlreadyRanCode_OnFail = true
-						curSched.RunCode_OnFail()
+						curSched.RunCode_OnFail(failCode, failString)
 					end
 				end
 			end
@@ -261,10 +261,8 @@ function ENT:OnStateChange(oldState, newState)
 	//print("OnStateChange - ", self, ": ", oldState, newState)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
--- lua_run PrintTable(Entity(1):GetEyeTrace().Entity.CurrentSchedule)
---
 function ENT:StartSchedule(schedule)
-	if self.MovementType == VJ_MOVETYPE_STATIONARY && schedule.HasMovement == true then return end -- It's stationary therefore it should not move!
+	if self.MovementType == VJ_MOVETYPE_STATIONARY && schedule.HasMovement then return end -- It's stationary therefore it should not move!
 	-- Certain states should ONLY do animation schedules!
 	if !schedule.IsPlayActivity then
 		local curState = self:GetState()
@@ -281,13 +279,9 @@ function ENT:StartSchedule(schedule)
 			self:ScheduleFinished(curSched)
 		end
 	end
-	//print("StartSchedule:", schedule.Name)
 	self:ClearCondition(COND_TASK_FAILED)
-	if (!schedule.RunCode_OnFail) then schedule.RunCode_OnFail = nil end -- Code that will run ONLY when it fails!
-	if (!schedule.RunCode_OnFinish) then schedule.RunCode_OnFinish = nil end -- Code that will run once the task finished (Will run even if failed)
-	if (!schedule.ResetOnFail) then schedule.ResetOnFail = false end -- Makes the NPC stop moving if it fails
-	if (!schedule.CanBeInterrupted) then schedule.CanBeInterrupted = false end
-	if (!schedule.CanShootWhenMoving) then schedule.CanShootWhenMoving = false end -- Is it able to fire when moving?
+	//print("StartSchedule:", schedule.Name)
+	
 	-- This stops movements from running if another NPC is stuck in it
 	-- Pros:
 		-- Successfully reduces lag when many NPCs are stuck in each other
@@ -339,17 +333,16 @@ function ENT:StartSchedule(schedule)
 	end
 	
 	-- Clear certain systems that should be notified that we have moved
-	if schedule.HasMovement == true then
+	if schedule.HasMovement then
 		self.LastHiddenZoneT = 0
 		if self.LastAnimationType != VJ.ANIM_TYPE_GESTURE then -- Movements shouldn't interrupt gestures
 			self.LastAnimationSeed = 0
 		end
 	end
 	
-	schedule.AlreadyRanCode_OnFail = false
-	schedule.AlreadyRanCode_OnFinish = false
 	//if self.VJ_DEBUG then PrintTable(schedule) end
 	self.CurrentSchedule = schedule
+	self.CurrentScheduleName = schedule.Name
 	self.CurrentTaskID = 1
 	self:SetTask(schedule:GetTask(1))
 end
@@ -396,6 +389,7 @@ function ENT:ScheduleFinished(schedule)
 		end
 	end
 	self.CurrentSchedule = nil
+	self.CurrentScheduleName = nil
 	self.CurrentTask = nil
 	self.CurrentTaskID = nil
 end
@@ -443,8 +437,8 @@ function ENT:IsScheduleFinished(schedule)
 	return self.CurrentTaskComplete && (!self.CurrentTaskID or self.CurrentTaskID >= schedule:NumTasks())
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:StartTask(task) if !task or !self then return end task:Start(self) end
-function ENT:RunTask(task) if !task or !self then return end task:Run(self) end
+function ENT:StartTask(task) task:Start(self) end
+function ENT:RunTask(task) task:Run(self) end
 function ENT:TaskTime() return CurTime() - self.TaskStartTime end
 -- Engine tasks / schedules ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartEngineTask(iTaskID, taskData) end

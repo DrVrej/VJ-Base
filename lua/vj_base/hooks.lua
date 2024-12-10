@@ -16,12 +16,6 @@ hook.Add("Initialize", "VJ_Initialize", function()
 	RunConsoleCommand("sv_pvsskipanimation", "0") -- Fix attachments, bones, positions, angles etc. being broken in NPCs!
 end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("PhysgunPickup", "VJ_PhysgunPickup", function(ply, ent)
-	if ent:GetClass() == "sent_vj_ply_spawnpoint" then
-		return ply:IsAdmin()
-	end
-end)
----------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerSelectSpawn", "VJ_PlayerSelectSpawn", function(ply)
 	local points = {}
 	for _,v in ipairs(ents.FindByClass("sent_vj_ply_spawnpoint")) do

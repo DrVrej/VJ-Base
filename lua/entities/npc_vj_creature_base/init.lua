@@ -1,7 +1,7 @@
 AddCSLuaFile("shared.lua")
 include("vj_base/ai/core.lua")
 include("vj_base/ai/schedules.lua")
-include("vj_base/ai/move_aa.lua")
+include("vj_base/ai/base_aa.lua")
 include("shared.lua")
 /*--------------------------------------------------
 	*** Copyright (c) 2012-2024 by DrVrej, All rights reserved. ***
@@ -123,7 +123,7 @@ ENT.AnimTbl_CallForHelp = {}
 ENT.CallForHelpAnimationFaceEnemy = true -- Should it face the enemy when playing the animation?
 ENT.NextCallForHelpAnimationTime = 30 -- How much time until it can play the animation again?
 	-- ====== Medic ====== --
-ENT.IsMedicSNPC = false -- Is this NPC a medic? It will heal friendly players and NPCs
+ENT.IsMedic = false -- Is this NPC a medic? It will heal friendly players and NPCs
 ENT.AnimTbl_Medic_GiveHealth = ACT_SPECIAL_ATTACK1 -- Animations is plays when giving health to an ally
 ENT.Medic_DisableAnimation = false -- if true, it will disable the animation code
 	-- To let the base automatically detect the animation duration, set this to false:
@@ -1090,7 +1090,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_noeating"):GetInt() == 1 then self.CanEat = false end
 	if GetConVar("vj_npc_nofollowplayer"):GetInt() == 1 then self.FollowPlayer = false end
 	if GetConVar("vj_npc_nosnpcchat"):GetInt() == 1 then self.AllowPrintingInChat = false end
-	if GetConVar("vj_npc_nomedics"):GetInt() == 1 then self.IsMedicSNPC = false end
+	if GetConVar("vj_npc_nomedics"):GetInt() == 1 then self.IsMedic = false end
 	if GetConVar("vj_npc_novfx_gibdeath"):GetInt() == 1 then self.HasGibOnDeathEffects = false end
 	if GetConVar("vj_npc_nogib"):GetInt() == 1 then self.CanGib = false self.CanGibOnDeath = false end
 	if GetConVar("vj_npc_usegmoddecals"):GetInt() == 1 then self.BloodDecalUseGMod = true end
@@ -1166,6 +1166,7 @@ local function ApplyBackwardsCompatibility(self)
 	if self.ItemDropsOnDeath_EntityList != nil then self.DeathLoot = self.ItemDropsOnDeath_EntityList end
 	if self.OnlyDoKillEnemyWhenClear != nil then self.OnKilledEnemy_OnlyLast = self.OnlyDoKillEnemyWhenClear end
 	if self.FindEnemy_UseSphere then self.SightAngle = 360 end
+	if self.IsMedicSNPC then self.IsMedic = self.IsMedicSNPC end
 	if self.CustomOnDoKilledEnemy then
 		self.OnKilledEnemy = function(_, ent, inflictor, wasLast)
 			if (self.OnKilledEnemy_OnlyLast == false) or (self.OnKilledEnemy_OnlyLast == true && wasLast) then
@@ -1737,9 +1738,9 @@ function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
 	doLOSChase = doLOSChase or false
 	self:ClearCondition(COND_ENEMY_UNREACHABLE)
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_ChaseEnemy() return end
-	//if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "SCHEDULE_ALERT_CHASE" then return end
+	//if self.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" then return end
 	if self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
-	if self.CurrentSchedule != nil && self.CurrentSchedule.Name == "SCHEDULE_ALERT_CHASE" && (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) <= 12) then return end
+	if self.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" && (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) <= 12) then return end
 	if doLOSChase == true then
 		schedule_alert_chaseLOS.RunCode_OnFinish = function()
 			local ene = self:GetEnemy()
@@ -1757,10 +1758,10 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainIdleBehavior(idleType) -- idleType: nil = Random | 1 = Wander | 2 = Idle Stand
 	local curTime = CurTime()
-	if self.Dead or self.VJ_IsBeingControlled or (self.CurrentAttackAnimationTime > curTime) or (self.NextIdleTime > curTime) or (self.AA_CurrentMoveTime > curTime) or (self.CurrentSchedule != nil && self.CurrentSchedule.Name == "vj_act_resetenemy") or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
+	if self.Dead or self.VJ_IsBeingControlled or (self.CurrentAttackAnimationTime > curTime) or (self.NextIdleTime > curTime) or (self.AA_CurrentMoveTime > curTime) or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
-	if self.DisableWandering or self.IsGuard or self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsVJBaseSNPC_Tank or !self.LastHiddenZone_CanWander or self.NextWanderTime > curTime or self.IsFollowing or self.Medic_Status then
+	if self:IsGoalActive() or self.DisableWandering or self.IsGuard or self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsVJBaseSNPC_Tank or !self.LastHiddenZone_CanWander or self.NextWanderTime > curTime or self.IsFollowing or self.Medic_Status then
 		self:SCHEDULE_IDLE_STAND()
 		return -- Don't set self.NextWanderTime below
 	elseif !idleType && self.IdleAlwaysWander then
@@ -2129,7 +2130,7 @@ function ENT:Think()
 			end
 			
 			-- Eating system
-			if self.CanEat && !plyControlled then
+			if self.CanEat then
 				local eatingData = self.EatingData
 				if !eatingData then -- Eating data has NOT been initialized, so initialize it!
 					self.EatingData = {Ent = NULL, NextCheck = 0, AnimStatus = "None", OrgIdle = nil}
@@ -2242,7 +2243,7 @@ function ENT:Think()
 				end
 				
 				-- Turning / Facing Enemy
-				if !plyControlled && self.ConstantlyFaceEnemy then self:MaintainConstantlyFaceEnemy() end
+				if self.ConstantlyFaceEnemy then self:MaintainConstantlyFaceEnemy() end
 				turnData = self.TurnData
 				if turnData.Type == VJ.NPC_FACE_ENEMY or (turnData.Type == VJ.NPC_FACE_ENEMY_VISIBLE && eneData.IsVisible) then
 					local resultAng = self:GetFaceAngle((enePos - myPos):Angle())
@@ -2261,7 +2262,7 @@ function ENT:Think()
 				end
 				
 				-- Stop chasing at certain distance
-				if !plyControlled && self.NoChaseAfterCertainRange && ((self.NoChaseAfterCertainRange_Type == "OnlyRange" && self.HasRangeAttack) or (self.NoChaseAfterCertainRange_Type == "Regular")) && eneData.IsVisible then
+				if self.NoChaseAfterCertainRange && ((self.NoChaseAfterCertainRange_Type == "OnlyRange" && self.HasRangeAttack) or (self.NoChaseAfterCertainRange_Type == "Regular")) && eneData.IsVisible then
 					local farDist = self.NoChaseAfterCertainRange_FarDistance
 					local closeDist = self.NoChaseAfterCertainRange_CloseDistance
 					if farDist == "UseRangeDistance" then farDist = self.RangeDistance end
@@ -2273,15 +2274,14 @@ function ENT:Think()
 						end
 						self:MaintainIdleBehavior(2) -- Otherwise it won't play the idle animation and will loop the last PlayAct animation if range attack doesn't use animations!
 						local moveType = self.MovementType
-						local curSched = self.CurrentSchedule -- Already defined
-						if curSched != nil && curSched.Name == "SCHEDULE_ALERT_CHASE" then self:StopMoving() end -- Interrupt enemy chasing because we are in range!
+						if self.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" then self:StopMoving() end -- Interrupt enemy chasing because we are in range!
 						if moveType == VJ_MOVETYPE_GROUND && !self:IsMoving() && self:OnGround() then self:SetTurnTarget("Enemy") end
 						if (moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC) then
 							if self.AA_CurrentMoveType == 3 then self:AA_StopMoving() end -- Interrupt enemy chasing because we are in range!
 							if curTime > self.AA_CurrentMoveTime then self:AA_IdleWander(true, "Calm", {FaceDest = !self.ConstantlyFaceEnemy}) /*self:AA_StopMoving()*/ end -- Only face the position if self.ConstantlyFaceEnemy is false!
 						end
 					else
-						if self.CurrentSchedule != nil && self.CurrentSchedule.Name != "SCHEDULE_ALERT_CHASE" then self:MaintainAlertBehavior() end
+						if self.CurrentScheduleName != "SCHEDULE_ALERT_CHASE" then self:MaintainAlertBehavior() end
 					end
 				end
 				
@@ -2443,7 +2443,6 @@ function ENT:Think()
 					//self:ClearPoseParameters()
 				end
 				eneData.TimeSinceAcquired = 0
-				if eneData.Reset == false && (!self.IsVJBaseSNPC_Tank) then self:PlaySoundSystem("LostEnemy") eneData.Reset = true self:ResetEnemy(true, true) end
 			end
 			
 			if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
@@ -2945,7 +2944,6 @@ end
 function ENT:ResetEnemy(checkAllies, checkVis)
 	if self.Dead or (self.VJ_IsBeingControlled && self.VJ_TheControllerBullseye == self:GetEnemy()) then self.EnemyData.Reset = false return false end
 	checkAllies = checkAllies or false
-	local moveToEnemy = false
 	local ene = self:GetEnemy()
 	local eneValid = IsValid(ene)
 	local eneData = self.EnemyData
@@ -2980,10 +2978,10 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 	self:SetNPCState(NPC_STATE_ALERT)
 	timer.Create("timer_alerted_reset"..self:EntIndex(), math.Rand(self.AlertedToIdleTime.a, self.AlertedToIdleTime.b), 1, function() if !IsValid(self:GetEnemy()) then self.Alerted = false self:SetNPCState(NPC_STATE_IDLE) end end)
 	self:OnResetEnemy()
+	local moveToEnemy = false
 	if eneValid then
-		if self.IsFollowing == false && (!self.IsVJBaseSNPC_Tank) && !self:Visible(ene) && self:GetEnemyLastKnownPos() != defPos then
-			self:SetLastPosition(self:GetEnemyLastKnownPos())
-			moveToEnemy = true
+		if !self.IsFollowing && !self.IsGuard && !self.IsVJBaseSNPC_Tank && !self.VJ_IsBeingControlled && self.LastHiddenZone_CanWander == true && !self.NoWeapon_UseScaredBehavior_Active && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !self:IsBusy() && !self:Visible(ene) && self:GetEnemyLastKnownPos() != defPos then
+			moveToEnemy = self:GetEnemyLastKnownPos()
 		end
 		self:MarkEnemyAsEluded(ene)
 		//self:ClearEnemyMemory(ene) // Completely resets the enemy memory
@@ -2995,28 +2993,22 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 		//print("Clear memory", ene)
 		self:ClearEnemyMemory(ene)
 	end
-	//self:UpdateEnemyMemory(self,self:GetPos())
-	//local schedResetEnemy = vj_ai_schedule.New("vj_act_resetenemy")
-	//if eneValid then schedResetEnemy:EngTask("TASK_FORGET", ene) end
-	//schedResetEnemy:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
 	self.NextWanderTime = CurTime() + math.Rand(3, 5)
-	if moveToEnemy && !self:IsBusy() && !self.IsGuard && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self.VJ_IsBeingControlled == false && self.LastHiddenZone_CanWander == true then
-		//ParticleEffect("explosion_turret_break", self.LatestEnemyPosition, Angle(0,0,0))
+	self:SetEnemy(NULL)
+	if moveToEnemy then
+		self:SetLastPosition(moveToEnemy)
 		local schedResetEnemy = vj_ai_schedule.New("vj_act_resetenemy")
+		//if eneValid then schedResetEnemy:EngTask("TASK_FORGET", ene) end
+		//schedResetEnemy:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
 		schedResetEnemy:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
 		schedResetEnemy:EngTask("TASK_WALK_PATH", 0)
 		schedResetEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 		schedResetEnemy.ResetOnFail = true
 		schedResetEnemy.CanShootWhenMoving = true
-		schedResetEnemy.FaceData = {Type = VJ.NPC_FACE_ENEMY}
 		schedResetEnemy.CanBeInterrupted = true
-		//self.NextIdleTime = CurTime() + 10
+		schedResetEnemy.FaceData = {Type = VJ.NPC_FACE_ENEMY}
 		self:StartSchedule(schedResetEnemy)
 	end
-	//if schedResetEnemy.TaskCount > 0 then
-		//self:StartSchedule(schedResetEnemy)
-	//end
-	self:SetEnemy(NULL)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTakeDamage(dmginfo)
@@ -3136,7 +3128,7 @@ function ENT:OnTakeDamage(dmginfo)
 			end
 
 			-- Become enemy to a friendly player | RESULT: May become alerted
-			if self.BecomeEnemyToPlayer == true && self.VJ_IsBeingControlled == false && dmgAttacker:IsPlayer() && self:CheckRelationship(dmgAttacker) == D_LI then
+			if self.BecomeEnemyToPlayer && dmgAttacker:IsPlayer() && self:CheckRelationship(dmgAttacker) == D_LI then
 				self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1
 				if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel && self:Disposition(dmgAttacker) != D_HT then
 					self:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
@@ -3157,7 +3149,7 @@ function ENT:OnTakeDamage(dmginfo)
 			end
 
 			-- Attempt to find who damaged me | RESULT: May become alerted if attacker is visible OR it may hide if it didn't find the attacker
-			if !self.DisableTakeDamageFindEnemy && !self:BusyWithActivity() && !IsValid(self:GetEnemy()) && curTime > self.TakingCoverT && self.VJ_IsBeingControlled == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE then // self.Alerted == false
+			if !self.DisableTakeDamageFindEnemy && !self:BusyWithActivity() && !IsValid(self:GetEnemy()) && curTime > self.TakingCoverT && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE then // self.Alerted == false
 				local eneFound = false
 				if IsValid(dmgAttacker) then
 					local sightDist = self:GetMaxLookDistance()

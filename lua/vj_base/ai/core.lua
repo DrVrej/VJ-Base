@@ -871,7 +871,7 @@ function ENT:VJ_ForwardIsHidingZone(startPos, endPos, acceptWorld, extraOptions)
 	end
 	
 	-- Not a hiding zone: (Sphere found an enemy/NPC/Player) OR (Trace ent is an enemy/NPC/Player) OR (End pos is far from the hit position) OR (World is NOT accepted as a hiding zone)
-	if sphereInvalidate or (IsValid(hitEnt) && (hitEnt == ene or hitEnt.VJTag_IsLiving or hitEnt:GetVelocity():LengthSqr() > 1000)) or endPos:Distance(hitPos) <= 10 or (acceptWorld == false && tr.HitWorld == true) then
+	if sphereInvalidate or (acceptWorld == false && tr.HitWorld == true) or (IsValid(hitEnt) && (hitEnt == ene or hitEnt.VJTag_IsLiving or hitEnt:GetVelocity():LengthSqr() > 1000)) or endPos:Distance(hitPos) <= 10 then
 		if setLastHiddenTime == true then self.LastHiddenZoneT = 0 end
 		return false, tr
 	-- Hiding zone: It hit world AND it's close, override "acceptWorld" option!
@@ -1202,6 +1202,7 @@ function ENT:OnRestore()
 	-- Reset the current schedule because often times GMod attempts to run it before AI task modules have loaded!
 	if self.CurrentSchedule then
 		self.CurrentSchedule = nil
+		self.CurrentScheduleName = nil
 		self.CurrentTask = nil
 		self.CurrentTaskID = nil
 	end
@@ -1401,7 +1402,7 @@ function ENT:ResetMedicBehavior()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainMedicBehavior()
-	if !self.IsMedicSNPC or self.NoWeapon_UseScaredBehavior_Active then return end -- Do NOT heal if playing scared animations!
+	if !self.IsMedic or self.NoWeapon_UseScaredBehavior_Active then return end -- Do NOT heal if playing scared animations!
 	if !self.Medic_Status then -- Not healing anyone, so check around for allies
 		if CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled then return end
 		for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
@@ -1496,18 +1497,13 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainConstantlyFaceEnemy()
 	if self.LatestEnemyDistance < self.ConstantlyFaceEnemyDistance then
-		-- Only face if the enemy is visible ?
-		if self.ConstantlyFaceEnemy_IfVisible && !self.EnemyData.IsVisible then
-			return
-		-- Do NOT face if attacking ?
-		elseif self.ConstantlyFaceEnemy_IfAttacking == false && self.AttackType then
-			return
-		elseif (self.ConstantlyFaceEnemy_Postures == "Both") or (self.ConstantlyFaceEnemy_Postures == "Moving" && self:IsMoving()) or (self.ConstantlyFaceEnemy_Postures == "Standing" && !self:IsMoving()) then
+		-- Handle "IfVisible" and "IfAttacking" cases
+		if (self.ConstantlyFaceEnemy_IfVisible && !self.EnemyData.IsVisible) or (!self.ConstantlyFaceEnemy_IfAttacking && self.AttackType) then return end
+		local postures = self.ConstantlyFaceEnemy_Postures
+		if (postures == "Both") or (postures == "Moving" && self:IsMoving()) or (postures == "Standing" && !self:IsMoving()) then
 			self:SetTurnTarget("Enemy")
-			return
 		end
 	end
-	return
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local angY45 = Angle(0, 45, 0)
@@ -1917,26 +1913,24 @@ function ENT:Allies_CallHelp(dist)
 	local ene = self:GetEnemy()
 	if !IsValid(ene) then return end
 	for _, ally in ipairs(ents.FindInSphere(self:GetPos(), dist or 800)) do
-		if ally != self && ally.IsVJBaseSNPC && ally:IsNPC() && VJ.IsAlive(ally) && (ally:GetClass() == myClass or ally:Disposition(self) == D_LI) && ally.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !ally.VJ_IsBeingControlled && ally.CanReceiveOrders && ene:GetClass() != ally:GetClass() && !IsValid(ally:GetEnemy()) then
+		if ally != self && ally.IsVJBaseSNPC && ally:IsNPC() && VJ.IsAlive(ally) && (ally:GetClass() == myClass or ally:Disposition(self) == D_LI) && ally.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && ally.CanReceiveOrders && ene:GetClass() != ally:GetClass() && !IsValid(ally:GetEnemy()) then
 			-- If it's guarding and enemy is not visible, then don't call!
 			if ally.IsGuard && !ally:Visible(ene) then continue end
 			
 			local eneIsPlayer = ene:IsPlayer()
 			if ((!eneIsPlayer && ally:Disposition(ene) != D_LI) or eneIsPlayer) then
-				self:OnCallForHelp(ally, isFirst)
-				self:PlaySoundSystem("CallForHelp")
-				-- Play the animation
-				if self.HasCallForHelpAnimation && curTime > self.NextCallForHelpAnimationT then
-					self:PlayAnim(self.AnimTbl_CallForHelp, true, false, self.CallForHelpAnimationFaceEnemy)
-					self.NextCallForHelpAnimationT = curTime + self.NextCallForHelpAnimationTime
-				end
-				
 				-- Enemy too far away for ally
 				if ally:GetPos():Distance(ene:GetPos()) > ally:GetMaxLookDistance() then
 					-- See if you can move to the ally's location to get closer
-					if !ally.IsFollowing && !ally:IsBusy() && !ally:IsMoving() then
+					if !ally.IsFollowing && !ally:IsBusy() then
+						-- If it's wandering, then just override it as it's not important
+						if ally:IsMoving() && self.CurrentScheduleName != "SCHEDULE_IDLE_WANDER" then
+							continue
+						end
 						ally:SetLastPosition(self:GetPos() + self:GetRight()*math.random(-50, 50) + self:GetForward()*math.random(-50, 50))
 						ally:SCHEDULE_GOTO_POSITION("TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
+					else
+						continue
 					end
 				else
 					-- If the enemy is a player and the ally is player-friendly then make that player an enemy to the ally
@@ -1953,6 +1947,14 @@ function ENT:Allies_CallHelp(dist)
 							ally:MaintainAlertBehavior()
 						end
 					end
+				end
+				
+				self:OnCallForHelp(ally, isFirst)
+				self:PlaySoundSystem("CallForHelp")
+				-- Play the animation
+				if self.HasCallForHelpAnimation && curTime > self.NextCallForHelpAnimationT then
+					self:PlayAnim(self.AnimTbl_CallForHelp, true, false, self.CallForHelpAnimationFaceEnemy)
+					self.NextCallForHelpAnimationT = curTime + self.NextCallForHelpAnimationTime
 				end
 				isFirst = false
 			end
@@ -2010,7 +2012,7 @@ function ENT:Allies_Bring(formType, dist, entsTbl, limit, onlyVis)
 	local myClass = self:GetClass()
 	local it = 0
 	for _, v in ipairs(entsTbl or ents.FindInSphere(myPos, dist)) do
-		if v != self && v.IsVJBaseSNPC && v:IsNPC() && VJ.IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !v.IsFollowing && !v.VJ_IsBeingControlled && !v.IsGuard && !v.IsVJBaseSNPC_Tank && v.CanReceiveOrders then
+		if v != self && v.IsVJBaseSNPC && v:IsNPC() && VJ.IsAlive(v) && (v:GetClass() == myClass or v:Disposition(self) == D_LI) && v.Behavior != VJ_BEHAVIOR_PASSIVE && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !v.IsFollowing && !v.IsGuard && v.CanReceiveOrders then
 			if onlyVis && !v:Visible(self) then continue end
 			if !IsValid(v:GetEnemy()) && myPos:Distance(v:GetPos()) < dist then
 				self.NextWanderTime = CurTime() + 8

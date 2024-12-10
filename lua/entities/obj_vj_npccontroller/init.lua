@@ -229,7 +229,12 @@ function ENT:SetControlledNPC(npcEnt)
 			[12] = npcEnt.IsGuard,
 			[13] = npcEnt.CanReceiveOrders,
 			[14] = npcEnt.FindEnemy_CanSeeThroughWalls,
-			[15] = npcEnt:GetFOV()
+			[15] = npcEnt:GetFOV(),
+			[16] = npcEnt.MoveOrHideOnDamageByEnemy,
+			[17] = npcEnt.BecomeEnemyToPlayer,
+			[18] = npcEnt.CanEat,
+			[19] = npcEnt.NoChaseAfterCertainRange,
+			[20] = npcEnt.ConstantlyFaceEnemy,
 		}
 		npcEnt.DisableWandering = true
 		npcEnt.DisableChasingEnemy = true
@@ -243,9 +248,15 @@ function ENT:SetControlledNPC(npcEnt)
 		npcEnt.Passive_RunOnTouch = false
 		npcEnt.Passive_RunOnDamage = false
 		npcEnt.IsGuard = false
-		npcEnt.vACT_StopAttacks = true
+		npcEnt.CanReceiveOrders = false
 		npcEnt.FindEnemy_CanSeeThroughWalls = true
 		npcEnt:SetFOV(360)
+		npcEnt.MoveOrHideOnDamageByEnemy = false
+		npcEnt.BecomeEnemyToPlayer = false
+		npcEnt.CanEat = false
+		npcEnt.NoChaseAfterCertainRange = false
+		npcEnt.ConstantlyFaceEnemy = false
+		npcEnt.vACT_StopAttacks = true
 		npcEnt.NextThrowGrenadeT = 0
 		 -- Apply a delay to VJ NPCs so they don't attack right away
 		if npcEnt.NextDoAnyAttackT < CurTime() then
@@ -530,7 +541,7 @@ function ENT:StopControlling(keyPressed)
 		npc.VJ_TheController = NULL
 		npc.VJ_TheControllerEntity = NULL
 		//npc:ClearSchedule()
-		if npc.IsVJBaseSNPC == true then
+		if npc.IsVJBaseSNPC then
 			npc.DisableWandering = npcData[1]
 			npc.DisableChasingEnemy = npcData[2]
 			npc.DisableTakeDamageFindEnemy = npcData[3]
@@ -546,6 +557,11 @@ function ENT:StopControlling(keyPressed)
 			npc.CanReceiveOrders = npcData[13]
 			npc.FindEnemy_CanSeeThroughWalls = npcData[14]
 			npc:SetFOV(npcData[15])
+			npc.MoveOrHideOnDamageByEnemy = npcData[16]
+			npc.BecomeEnemyToPlayer = npcData[17]
+			npc.CanEat = npcData[18]
+			npc.NoChaseAfterCertainRange = npcData[19]
+			npc.ConstantlyFaceEnemy = npcData[20]
 		end
 	end
 	//self.VJCE_Camera:Remove()

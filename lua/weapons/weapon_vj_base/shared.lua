@@ -618,7 +618,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	local isPly = owner:IsPlayer()
 	
 	if self.Reloading or self:GetNextSecondaryFire() > CurTime() then return end
-	if isNPC && owner.VJ_IsBeingControlled == false && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return end
+	if isNPC && !owner.VJ_IsBeingControlled && !IsValid(owner:GetEnemy()) then return end -- If the NPC owner isn't being controlled and doesn't have an enemy, then return end
 	if self.IsMeleeWeapon == false && ((isPly && self.Primary.AllowInWater == false && owner:WaterLevel() == 3) or (self:Clip1() <= 0)) then
 		if SERVER then
 			owner:EmitSound(VJ.PICK(self.DryFireSound), self.DryFireSoundLevel, math.random(self.DryFireSoundPitch.a, self.DryFireSoundPitch.b))

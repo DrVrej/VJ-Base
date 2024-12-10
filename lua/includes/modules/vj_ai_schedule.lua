@@ -24,7 +24,14 @@ function Schedule:Init(Name)
 	self.Name = tostring(Name)
 	self.Tasks = {}
 	self.TaskCount = 0
-	self.HasMovement = false
+	self.HasMovement = false -- Does this schedule contain a movement task?
+	self.ResetOnFail = false -- Should the NPC stop moving if one of the tasks fail?
+	self.CanBeInterrupted = false -- Can this schedule be interrupted? Especially by regular things like idle / alert maintain
+	self.CanShootWhenMoving = false -- Can the NPC fire its active weapon while doing this schedule?
+	self.RunCode_OnFail = nil -- Code that will run ONLY when it fails!
+	self.RunCode_OnFinish = nil -- Code that will run once the task finished (Will run even if failed)
+	self.AlreadyRanCode_OnFail = false
+	self.AlreadyRanCode_OnFinish = false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function Schedule:EngTask(taskName, taskData) -- Set an engine defined task

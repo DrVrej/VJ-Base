@@ -64,3 +64,7 @@ function ENT:Use(activator, caller)
 		end
 	end
 end
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:PhysgunPickup(ply)
+    return ply:IsAdmin()
+end

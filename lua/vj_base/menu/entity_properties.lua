@@ -35,7 +35,7 @@ properties.Add("vj_pr_npc_control",{
 		if (!self:Filter(ent, ply)) then return end
 		if !ply:Alive() then return end -- Keep the player from becoming a zombie =)
 		if ply.VJTag_IsControllingNPC then ply:ChatPrint("Can't control "..ent:GetName().." because you are already controlling another NPC!") return end
-		if ent.VJ_IsBeingControlled != true then
+		if !ent.VJ_IsBeingControlled then
 			if ent:Health() > 0 then
 				local obj = ents.Create("obj_vj_npccontroller")
 				obj.VJCE_Player = ply
@@ -76,7 +76,7 @@ properties.Add("vj_pr_npc_guard",{
 	Receive = function(self, length, ply) -- The action to perform upon using the property (Serverside)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
-		if ent.VJ_IsBeingControlled != true then
+		if !ent.VJ_IsBeingControlled then
 			if ent.IsGuard == true then
 				ply:ChatPrint("Disabled Guarding for "..ent:GetName()..".")
 				ent.IsGuard = false
@@ -115,7 +115,7 @@ properties.Add("vj_pr_npc_wander",{
 	Receive = function(self, length, ply) -- The action to perform upon using the property (Serverside)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
-		if ent.VJ_IsBeingControlled != true then
+		if !ent.VJ_IsBeingControlled then
 			if ent.DisableWandering == true then
 				ply:ChatPrint("Enabled Wandering for "..ent:GetName()..".")
 				ent.DisableWandering = false
@@ -154,12 +154,12 @@ properties.Add("vj_pr_npc_medic",{
 	Receive = function(self, length, ply) -- The action to perform upon using the property (Serverside)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
-		if ent.IsMedicSNPC == true then
+		if ent.IsMedic == true then
 			ply:ChatPrint(ent:GetName().." Is no longer a medic.")
-			ent.IsMedicSNPC = false
+			ent.IsMedic = false
 		else
 			ply:ChatPrint(ent:GetName().." Is now a medic.")
-			ent.IsMedicSNPC = true
+			ent.IsMedic = true
 		end
 	end
 })

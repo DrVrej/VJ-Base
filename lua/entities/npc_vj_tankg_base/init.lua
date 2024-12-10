@@ -220,7 +220,7 @@ function ENT:SelectSchedule()
 	
 	if IsValid(self:GetEnemy()) then
 		-- Can always fire when being controlled
-		if self:GetParent().VJ_IsBeingControlled == true then
+		if self:GetParent().VJ_IsBeingControlled then
 			self.Tank_Status = 0
 		else
 			-- Between these 2 limits it can fire! --
@@ -235,7 +235,7 @@ function ENT:SelectSchedule()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_PrepareShell()
-	if (CurTime() < self.Tank_Shell_NextFireT) or (self:GetParent().VJ_IsBeingControlled == true && !self:GetParent().VJ_TheController:KeyDown(IN_ATTACK2)) then return end
+	if (CurTime() < self.Tank_Shell_NextFireT) or (self:GetParent().VJ_IsBeingControlled && !self:GetParent().VJ_TheController:KeyDown(IN_ATTACK2)) then return end
 	
 	-- If it's already ready, then just fire it!
 	if self.Tank_Shell_Status == 2 then

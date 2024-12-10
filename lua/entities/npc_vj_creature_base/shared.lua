@@ -44,9 +44,6 @@ if CLIENT then
 	end
 	function ENT:Draw() self:DrawModel() end
 	function ENT:DrawTranslucent() self:Draw() end
-	function ENT:BuildBonePositions(NumBones ,NumPhysBones) end
-	function ENT:SetRagdollBones(bIn) self.m_bRagdollSetup = bIn end
-	function ENT:DoRagdollBone(PhysBoneNum, BoneNum) end // self:SetBonePosition(BoneNum,Pos,Angle)
 	//function ENT:CalcAbsolutePosition(pos, ang) end
 	-- Custom functions ---------------------------------------------------------------------------------------------------------------------------------------------
 	function ENT:Init() end
