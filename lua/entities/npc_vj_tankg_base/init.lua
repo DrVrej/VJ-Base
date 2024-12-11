@@ -1,5 +1,6 @@
 AddCSLuaFile("shared.lua")
 include("shared.lua")
+include("vj_base/ai/base_tank.lua")
 /*-----------------------------------------------
 	*** Copyright (c) 2012-2024 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
@@ -9,24 +10,11 @@ include("shared.lua")
 ------ Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.StartHealth = 0
-ENT.SightAngle = 360
-ENT.HullType = HULL_LARGE
 ENT.HasSetSolid = false -- set to false to disable SetSolid
-ENT.VJTag_ID_Boss = true
 ENT.MovementType = VJ_MOVETYPE_STATIONARY -- How the NPC moves around
 ENT.CanTurnWhileStationary = false -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
 ENT.GodMode = true -- Immune to everything
-ENT.Bleeds = false -- Does the NPC bleed? Controls all bleeding related components such blood decal, particle, pool, etc.
-ENT.DeathCorpseCollisionType = COLLISION_GROUP_NONE -- Collision type for the corpse | NPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
-ENT.HasMeleeAttack = false -- Can this NPC melee attack?
-ENT.DisableWandering = true -- Disables wandering when the NPC is idle
 ENT.DisableFindEnemy = true -- Disables FindEnemy code, friendly code still works though
-ENT.CanReceiveOrders = false -- Can the NPC receive orders from others? | Ex: Allies calling for help, allies requesting backup on damage, etc.
-ENT.BringFriendsOnDeath = false -- Should the NPC's allies come to its position while it's dying?
-ENT.CallForBackUpOnDamage = false -- Should the SNPC call for help when damaged? (Only happens if the SNPC hasn't seen a enemy)
-ENT.MoveOrHideOnDamageByEnemy = false -- Should the NPC move away or hide behind cover when being damaged while fighting an enemy?
-ENT.MoveOutOfFriendlyPlayersWay = false -- Should the NPC move and give space to friendly players?
-ENT.HasPainSounds = false -- If set to false, it won't play the pain sounds
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Tank Base Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -143,6 +131,9 @@ ENT.Tank_GunnerIsTurning = false
 ENT.Tank_Status = 0 -- 0 = Can fire | 1 = Can NOT fire
 ENT.Tank_Shell_NextFireT = 0
 ENT.Tank_TurningLerp = nil
+
+local cv_norange = GetConVar("vj_npc_norange")
+local cv_noidleparticle = GetConVar("vj_npc_noidleparticle")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
 	self.DeathAnimationCodeRan = true -- So corpse doesn't fly away on death (Take this out if not using death explosion sequence)
@@ -151,15 +142,8 @@ function ENT:Init()
 	if self.CustomInitialize_CustomTank then self:CustomInitialize_CustomTank() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AngleDiffuse(ang1, ang2)
-	local outcome = ang1 - ang2
-	if outcome < -180 then outcome = outcome + 360 end
-	if outcome > 180 then outcome = outcome - 360 end
-	return outcome
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnThink()
-	if self:Tank_OnThink() != true && GetConVar("vj_npc_noidleparticle"):GetInt() == 0 then
+	if self:Tank_OnThink() != true && cv_noidleparticle:GetInt() == 0 then
 		timer.Simple(0.1, function()
 			if IsValid(self) && !self.Dead then
 				self:StartSpawnEffects()
@@ -181,13 +165,13 @@ function ENT:OnThinkActive()
 		if IsValid(ene) then
 			self.Tank_GunnerIsTurning = false
 			local angEne = (ene:GetPos() - self:GetPos()):Angle()
-			local angDiffuse = self:AngleDiffuse(angEne.y, self:GetAngles().y + self.Tank_AngleDiffuseNumber) -- Cannon looking direction
+			local angDiffuse = self:Tank_AngleDiffuse(angEne.y, self:GetAngles().y + self.Tank_AngleDiffuseNumber) -- Cannon looking direction
 			local heightRatio = (ene:GetPos().z - self:GetPos().z) / self:GetPos():Distance(Vector(ene:GetPos().x, ene:GetPos().y, self:GetPos().z))
 			self.Tank_ProperHeightShoot = math.abs(heightRatio) < 0.15 and true or false -- How high it can fire
 			-- If the enemy is within the barrel firing limit AND not already firing a shell AND its height is is reachable AND the enemy is not extremely close, then FIRE!
 			if math.abs(angDiffuse) < self.Tank_AngleDiffuseFiringLimit && self.Tank_ProperHeightShoot && self.LatestEnemyDistance > self.Tank_SeeClose then
 				self.Tank_FacingTarget = true
-				if self:Visible(ene) && GetConVar("vj_npc_norange"):GetInt() == 0 then
+				if self:Visible(ene) && cv_norange:GetInt() == 0 then
 					self:Tank_PrepareShell() 
 				end
 			-- Turn Left

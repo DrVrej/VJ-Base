@@ -456,7 +456,7 @@ end
 		- true, Busy
 -----------------------------------------------------------]]
 function ENT:BusyWithActivity()
-	return self.vACT_StopAttacks or self.AnimLockTime > CurTime() or self.CurrentAttackAnimationTime > CurTime() or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB
+	return self.PauseAttacks or self.AnimLockTime > CurTime() or self.CurrentAttackAnimationTime > CurTime() or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -713,15 +713,6 @@ function ENT:OverrideMove(flInterval)
 			self:MoveJumpExec()
 		end
 	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
---[[---------------------------------------------------------
-	Returns the position set by "SetLastPosition"
-	Returns
-		- Vector, the last position
------------------------------------------------------------]]
-function ENT:GetLastPosition()
-	return self:GetInternalVariable("m_vecLastPosition")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1060,6 +1051,15 @@ end
 -----------------------------------------------------------]]
 function ENT:SetImpactEnergyScale(scale)
 	self:SetSaveValue("m_impactEnergyScale", scale)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Returns the position set by "SetLastPosition"
+	Returns
+		- Vector, the last position
+-----------------------------------------------------------]]
+function ENT:GetLastPosition()
+	return self:GetInternalVariable("m_vecLastPosition")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1565,7 +1565,7 @@ function ENT:VJ_PlaySequence(animation)
 	/*if useDuration == true then -- No longer needed as it is handled by ACT_DO_NOT_DISTURB
 		timer.Create("timer_act_seqreset"..self:EntIndex(), duration, 1, function()
 			self.VJ_PlayingSequence = false
-			//self.vACT_StopAttacks = false
+			//self.PauseAttacks = false
 		end)
 	end*/
 	return seqID
@@ -1661,16 +1661,15 @@ function ENT:MaintainRelationships()
 	//PrintTable(posEnemies)
 	//print("----------")
 	
-	local eneData = self.EnemyData
 	local eneSeen = false
 	local eneVisCount = 0
 	local myPos = self:GetPos()
-	local myClass = self:GetClass()
 	local mySightDist = self:GetMaxLookDistance()
 	local myClasses = self.VJ_NPC_Class
 	local myHandlePerceived = self.HandlePerceivedRelationship
 	local nearestDist = nil
 	local canAlly = self.HasAllies
+	local friPlyAllies = self.FriendsWithAllPlayerAllies
 	local notIsNeutral = self.Behavior != VJ_BEHAVIOR_NEUTRAL
 	local customFunc = self.OnMaintainRelationships
 	local it = 1
@@ -1686,7 +1685,6 @@ function ENT:MaintainRelationships()
 			-- Handle no target and health below 0
 			if ent:IsFlagSet(FL_NOTARGET) or ent:Health() <= 0 then
 				if IsValid(self:GetEnemy()) && self:GetEnemy() == ent then
-					eneData.Reset = true
 					self:ResetEnemy(true, false)
 				end
 				self:AddEntityRelationship(ent, D_NU, 0)
@@ -1700,13 +1698,11 @@ function ENT:MaintainRelationships()
 				local ene = self:GetEnemy()
 				if IsValid(ene) && ene == ent then
 					self:PlaySoundSystem("LostEnemy")
-					eneData.Reset = true
 					self:ResetEnemy(true, false)
 				end
 				continue
 			end
 			local calculatedDisp = false
-			local entClass = ent:GetClass()
 			local entIsNPC = ent:IsNPC()
 			local entIsPLY = ent:IsPlayer()
 			
@@ -1716,7 +1712,7 @@ function ENT:MaintainRelationships()
 			//end
 			
 			-- Handle "self.VJ_AddCertainEntityAsEnemy", "self.VJ_AddCertainEntityAsFriendly", "self.VJ_NPC_Class"
-			if canAlly && entClass != myClass && ent.VJTag_IsLiving && !VJ.HasValue(self.VJ_AddCertainEntityAsEnemy, ent) then
+			if canAlly && ent.VJTag_IsLiving && !VJ.HasValue(self.VJ_AddCertainEntityAsEnemy, ent) then
 				-- Handle "self.VJ_NPC_Class"
 				for _, friClass in ipairs(myClasses) do
 					if friClass == varCPly && !self.PlayerFriendly then self.PlayerFriendly = true end -- If player ally then set the PlayerFriendly to true
@@ -1724,7 +1720,7 @@ function ENT:MaintainRelationships()
 						-- Since we both have "CLASS_PLAYER_ALLY" then we need to do a special check if we both also have "self.FriendsWithAllPlayerAllies"
 						-- If we both do NOT have that, then we both like players but not each other!
 						if friClass == varCPly then
-							if self.FriendsWithAllPlayerAllies && ent.FriendsWithAllPlayerAllies then
+							if friPlyAllies && ent.FriendsWithAllPlayerAllies then
 								calculatedDisp = D_LI
 							end
 						else
@@ -1734,7 +1730,7 @@ function ENT:MaintainRelationships()
 				end
 				
 				-- Handle "self.FriendsWithAllPlayerAllies" (As a backup in case the NPC doesn't have the "CLASS_PLAYER_ALLY" class) AND "self.PlayerFriendly" AND "self.VJ_AddCertainEntityAsFriendly"
-				if !calculatedDisp && ((self.PlayerFriendly && ((entIsNPC && self.FriendsWithAllPlayerAllies && ent.PlayerFriendly && ent.FriendsWithAllPlayerAllies) or entIsPLY)) or (VJ.HasValue(self.VJ_AddCertainEntityAsFriendly, ent))) then
+				if !calculatedDisp && ((self.PlayerFriendly && (entIsPLY or (entIsNPC && friPlyAllies && ent.PlayerFriendly && ent.FriendsWithAllPlayerAllies))) or (VJ.HasValue(self.VJ_AddCertainEntityAsFriendly, ent))) then
 					calculatedDisp = D_LI
 				end
 			end
@@ -1761,7 +1757,6 @@ function ENT:MaintainRelationships()
 				-- Reset the enemy if it's currently this friendly ent
 				local ene = self:GetEnemy()
 				if IsValid(ene) && ene == ent then
-					eneData.Reset = true
 					self:ResetEnemy(true, false)
 				end
 				
@@ -1830,7 +1825,7 @@ function ENT:MaintainRelationships()
 						self:AddEntityRelationship(ent, D_VJ_INTEREST, 0)
 						calculatedDisp = D_VJ_INTEREST
 					else
-						-- FindEnemy: In order - Can find enemy + Not neutral or alerted + Is visible + In sight
+						-- FindEnemy: In order - Can find enemy + Not neutral or alerted + Is visible + In sight cone
 						if !self.DisableFindEnemy && (notIsNeutral or self.Alerted == NPC_ALERT_STATE_ENEMY) && (self.FindEnemy_CanSeeThroughWalls or self:Visible(ent)) && self:IsInViewCone(ent) then
 							//print("MaintainRelationships 2 - set enemy")
 							eneSeen = true
@@ -1849,9 +1844,11 @@ function ENT:MaintainRelationships()
 							calculatedDisp = D_VJ_INTEREST
 						end
 					end
+				else
+					calculatedDisp = D_NU
 				end
 				
-				-- Investigation detection systems, including sound, movement and player flashlight
+				-- Investigation detection: Sound and player flashlight systems
 				if !eneValid && self.CanInvestigate && self.NextInvestigationMove < CurTime() then
 					-- Investigation: Sound detection
 					if ent.VJ_LastInvestigateSdLevel && distanceToEnt < (self.InvestigateSoundDistance * ent.VJ_LastInvestigateSdLevel) && ((CurTime() - ent.VJ_LastInvestigateSd) <= 1) then
@@ -1861,7 +1858,7 @@ function ENT:MaintainRelationships()
 							self:SetTarget(ent)
 							self:SCHEDULE_FACE("TASK_FACE_TARGET")
 							self.NextInvestigationMove = CurTime() + 0.3 -- Short delay, since it's only turning
-						elseif self.IsFollowing == false then
+						elseif !self.IsFollowing then
 							self:SetLastPosition(entPos)
 							self:SCHEDULE_GOTO_POSITION("TASK_WALK_PATH")
 							self.NextInvestigationMove = CurTime() + 2 -- Long delay, so it doesn't spam movement
@@ -1880,7 +1877,7 @@ function ENT:MaintainRelationships()
 			end
 			
 			-- HasOnPlayerSight system, used to do certain actions when it sees the player
-			if entIsPLY && self.HasOnPlayerSight && ent:Alive() &&(CurTime() > self.OnPlayerSightNextT) && (distanceToEnt < self.OnPlayerSightDistance) && self:Visible(ent) && self:IsInViewCone(ent) then
+			if entIsPLY && self.HasOnPlayerSight && ent:Alive() && (CurTime() > self.OnPlayerSightNextT) && (distanceToEnt < self.OnPlayerSightDistance) && self:Visible(ent) && self:IsInViewCone(ent) then
 				-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
 				local disp = self.OnPlayerSightDispositionLevel
 				if (disp == 0) or (disp == 1 && (self:Disposition(ent) == D_LI or self:Disposition(ent) == D_NU)) or (disp == 2 && self:Disposition(ent) != D_LI) then
@@ -1897,7 +1894,7 @@ function ENT:MaintainRelationships()
 			if customFunc then customFunc(self, ent, calculatedDisp, distanceToEnt) end
 		end
 	end
-	eneData.VisibleCount = eneVisCount
+	self.EnemyData.VisibleCount = eneVisCount
 	//print("---------------------------------------")
 	return eneSeen
 end

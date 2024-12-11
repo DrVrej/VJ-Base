@@ -79,8 +79,8 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 	if ent:IsNPC() or ent:IsNextBot() then
 		ent.VJTag_IsLiving = true
 		if SERVER && !ignoredNPCs[entClass] then
-			local isVJ = ent.IsVJBaseSNPC
-			if isVJ then
+			local entIsVJ = ent.IsVJBaseSNPC
+			if entIsVJ then
 				ent.NextProcessT = CurTime() + math.Rand(0.15, 1)
 			else
 				-- Set player friendly tags for default player allies
@@ -132,7 +132,7 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 						end
 					end
 					
-					if isVJ == true && !ent.CurrentPossibleEnemies then ent.CurrentPossibleEnemies = {} end
+					if entIsVJ && !ent.CurrentPossibleEnemies then ent.CurrentPossibleEnemies = {} end
 					local entsTbl = ents.GetAll()
 					local count = 1
 					local cvSeePlys = !VJ_CVAR_IGNOREPLAYERS
@@ -144,15 +144,15 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 						local v = entsTbl[x]
 						if v.VJTag_IsLiving && !ignoredNPCs[v:GetClass()] then
 							-- Add enemies to the created entity (if it's a VJ Base SNPC)
-							if isVJ == true then
+							if entIsVJ then
 								ent:ValidateNoCollide(v)
-								if (v:IsNPC() && (v:GetClass() != entClass && (v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE)) && v:Health() > 0) or (v:IsPlayer() && cvSeePlys /*&& v:Alive()*/) or (v:IsNextBot()) then
+								if (v:IsNPC() && v:GetClass() != entClass && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && v:Health() > 0) or (v:IsPlayer() && cvSeePlys /*&& v:Alive()*/) or (v:IsNextBot()) then
 									ent.CurrentPossibleEnemies[count] = v
 									count = count + 1
 								end
 							end
 							-- Add the created entity to the list of possible enemies of existing VJ Base SNPCs
-							if isPossibleEnemy && entClass != v:GetClass() && v.IsVJBaseSNPC then
+							if isPossibleEnemy && v.IsVJBaseSNPC && entClass != v:GetClass() then
 								v.CurrentPossibleEnemies[#v.CurrentPossibleEnemies + 1] = ent //v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
 							end
 						end
@@ -287,7 +287,6 @@ cvars.AddChangeCallback("ai_ignoreplayers", function(convar_name, oldValue, newV
 						v:AddEntityRelationship(x, D_NU, 10) -- Make the player neutral
 						-- Reset the NPC's enemy if it's a player
 						if IsValid(v:GetEnemy()) && v:GetEnemy() == x then
-							v.EnemyData.Reset = true
 							v:ResetEnemy()
 						end
 						table_remove(posEnemies, it) -- Remove the player from possible enemy table

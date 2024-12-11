@@ -7,7 +7,7 @@ require("vj_ai_schedule")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SCHEDULE_FACE(faceType, customFunc)
 	-- Types: TASK_FACE_TARGET | TASK_FACE_ENEMY | TASK_FACE_PLAYER | TASK_FACE_LASTPOSITION | TASK_FACE_SAVEPOSITION | TASK_FACE_PATH | TASK_FACE_HINTNODE | TASK_FACE_IDEAL | TASK_FACE_REASONABLE
-	if (self.MovementType == VJ_MOVETYPE_STATIONARY && !self.CanTurnWhileStationary) or self.IsVJBaseSNPC_Tank then return end
+	if self.MovementType == VJ_MOVETYPE_STATIONARY && !self.CanTurnWhileStationary then return end
 	local schedule = vj_ai_schedule.New("SCHEDULE_FACE")
 	schedule:EngTask(faceType or "TASK_FACE_TARGET", 0)
 	if (customFunc) then customFunc(schedule) end
@@ -163,10 +163,10 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 		self:AutoMovement(self:GetAnimTimeInterval())
 	end
 	
-	local curSched = self.CurrentSchedule
+	local curSchedule = self.CurrentSchedule
 	
 	-- If we are currently running a schedule then run it otherwise call SelectSchedule to decide what to do next
-	if curSched then
+	if curSchedule then
 		-- Handle movement animations
 			-- 1. Make sure the movement activity is the current activity
 			-- 2. Compare the current movement sequence to the current ideal sequence, if they don't match then the movement activity may be outdated depending on the next check!
@@ -187,8 +187,8 @@ function ENT:RunAI() -- Called from the engine every 0.1 seconds
 			end
 		end
 		
-		self:DoSchedule(curSched)
-		if curSched.CanBeInterrupted or (self:IsScheduleFinished(curSched)) or (curSched.HasMovement && !self:IsMoving()) then
+		self:DoSchedule(curSchedule)
+		if curSchedule.CanBeInterrupted or (self:IsScheduleFinished(curSchedule)) or (curSchedule.HasMovement && !self:IsMoving()) then
 			self:SelectSchedule()
 		end
 	else
@@ -206,29 +206,29 @@ end
 -----------------------------------------------------------]]
 function ENT:OnTaskFailed(failCode, failString)
 	//print("OnTaskFailed: ", failCode, failString)
-	local curSched = self.CurrentSchedule
-	if curSched then
+	local curSchedule = self.CurrentSchedule
+	if curSchedule then
 		//print("Do run fail")
 		-- Give it a very small delay to let the engine set its values before we continue
 		timer.Simple(0.05, function()
 			if IsValid(self) then
-				local curSched2 = self.CurrentSchedule
-				if curSched2 && curSched == curSched2 then -- Make sure the schedule hasn't changed!
-					curSched = curSched2
-					if curSched.ResetOnFail == true then
-						curSched.FailureHandled = true
+				local curSchedule2 = self.CurrentSchedule
+				if curSchedule2 && curSchedule == curSchedule2 then -- Make sure the schedule hasn't changed!
+					curSchedule = curSchedule2
+					if curSchedule.ResetOnFail == true then
+						curSchedule.FailureHandled = true
 						self:StopMoving()
 						//self:SelectSchedule()
 						//self:ClearCondition(COND_TASK_FAILED) -- Won't do anything, engine will set COND_TASK_FAILED right after
 					end
 					if failCode != 14 then -- Skip this part for "FAIL_NO_ROUTE_ILLEGAL" to allow things like player model movement to work
 						self:ClearGoal() -- Otherwise we may get stuck in movement (if schedule had a movement!)
-						self:NextTask(curSched) -- Attempt to move on to the next task!
+						self:NextTask(curSchedule) -- Attempt to move on to the next task!
 					end
 					-- Handle "RunCode_OnFail"
-					if !curSched.AlreadyRanCode_OnFail && curSched.RunCode_OnFail != nil then
-						curSched.AlreadyRanCode_OnFail = true
-						curSched.RunCode_OnFail(failCode, failString)
+					if !curSchedule.AlreadyRanCode_OnFail && curSchedule.RunCode_OnFail != nil then
+						curSchedule.AlreadyRanCode_OnFail = true
+						curSchedule.RunCode_OnFail(failCode, failString)
 					end
 				end
 			end
@@ -245,7 +245,7 @@ function ENT:OnMovementFailed()
 			self:ClearCondition(COND_TASK_FAILED)
 		end
 		if curSchedule.ResetOnFail == true then
-			curSched.FailureHandled = true
+			curSchedule.FailureHandled = true
 			self:ClearCondition(COND_TASK_FAILED)
 			self:StopMoving()
 			//self:SelectSchedule()
@@ -268,15 +268,15 @@ function ENT:StartSchedule(schedule)
 		local curState = self:GetState()
 		if curState == VJ_STATE_ONLY_ANIMATION or curState == VJ_STATE_ONLY_ANIMATION_CONSTANT or curState == VJ_STATE_ONLY_ANIMATION_NOATTACK then return end
 	end
-	local curSched = self.CurrentSchedule
-	if curSched then
+	local curSchedule = self.CurrentSchedule
+	if curSchedule then
 		-- If it's the same task AND it's opening a door OR doing a move wait then cancel the new schedule!
-		if schedule.Name == curSched.Name && (IsValid(self:GetInternalVariable("m_hOpeningDoor")) or self:GetInternalVariable("m_flMoveWaitFinished") > 0) then
+		if schedule.Name == curSchedule.Name && (IsValid(self:GetInternalVariable("m_hOpeningDoor")) or self:GetInternalVariable("m_flMoveWaitFinished") > 0) then
 			return
 		end
 		-- Clean up any schedule it may have been doing
 		if !self.Dead then
-			self:ScheduleFinished(curSched)
+			self:ScheduleFinished(curSchedule)
 		end
 	end
 	self:ClearCondition(COND_TASK_FAILED)

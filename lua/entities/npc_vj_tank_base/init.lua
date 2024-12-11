@@ -1,5 +1,6 @@
 AddCSLuaFile("shared.lua")
 include("shared.lua")
+include("vj_base/ai/base_tank.lua")
 /*-----------------------------------------------
 	*** Copyright (c) 2012-2024 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
@@ -9,27 +10,10 @@ include("shared.lua")
 ------ Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.StartHealth = 200
-ENT.SightAngle = 360
-ENT.HullType = HULL_LARGE
-ENT.VJTag_ID_Boss = true
 ENT.MovementType = VJ_MOVETYPE_PHYSICS -- How the NPC moves around
-ENT.Bleeds = false -- Does the NPC bleed? Controls all bleeding related components such blood decal, particle, pool, etc.
-ENT.Immune_Dissolve = true -- Immune to Dissolving | Example: Combine Ball
-ENT.Immune_AcidPoisonRadiation = true -- Immune to Acid, Poison and Radiation
-ENT.Immune_Bullet = true -- Immune to Bullets
-ENT.ImmuneDamagesTable = {DMG_PHYSGUN} -- You can set Specific types of damages for the SNPC to be immune to
 ENT.ForceDamageFromBosses = true -- Should the NPC get damaged by bosses regardless if it's not supposed to by skipping immunity checks, etc. | Bosses are attackers tagged with "VJTag_ID_Boss"
-ENT.DeathCorpseCollisionType = COLLISION_GROUP_NONE -- Collision type for the corpse | NPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
 ENT.DeathDelayTime = 2 -- Time until the NPC spawns the corpse, removes itself, etc.
-ENT.HasMeleeAttack = false -- Can this NPC melee attack?
-ENT.DisableWandering = true -- Disables wandering when the NPC is idle
-ENT.CanReceiveOrders = false -- Can the NPC receive orders from others? | Ex: Allies calling for help, allies requesting backup on damage, etc.
-ENT.BringFriendsOnDeath = false -- Should the NPC's allies come to its position while it's dying?
 ENT.AlertFriendsOnDeath = true -- Should the NPC's allies get alerted while it's dying? | Its allies will also need to have this variable set to true!
-ENT.CallForBackUpOnDamage = false -- Should the SNPC call for help when damaged? (Only happens if the SNPC hasn't seen a enemy)
-ENT.MoveOrHideOnDamageByEnemy = false -- Should the NPC move away or hide behind cover when being damaged while fighting an enemy?
-ENT.MoveOutOfFriendlyPlayersWay = false -- Should the NPC move and give space to friendly players?
-ENT.HasPainSounds = false -- If set to false, it won't play the pain sounds
 	-- ====== Sound Paths ====== --
 ENT.SoundTbl_Breath = "vj_base/vehicles/armored/engine_idle.wav"
 ENT.SoundTbl_Death = "VJ.Explosion"
@@ -161,6 +145,9 @@ ENT.Tank_NextLowHealthSparkT = 0
 ENT.Tank_NextRunOverSoundT = 0
 local runoverException = {npc_antlionguard=true,npc_turret_ceiling=true,monster_gargantua=true,monster_bigmomma=true,monster_nihilanth=true,npc_strider=true,npc_combine_camera=true,npc_helicopter=true,npc_combinegunship=true,npc_combinedropship=true,npc_rollermine=true}
 local defAng = Angle(0, 0, 0)
+
+local cv_nomelee = GetConVar("vj_npc_nomelee")
+local cv_noidleparticle = GetConVar("vj_npc_noidleparticle")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
 	self:SetImpactEnergyScale(0) -- Take no physics damage
@@ -201,7 +188,7 @@ function ENT:OnTouch(ent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_RunOver(ent)
-	if !self.Tank_IsMoving or !IsValid(ent) or (GetConVar("vj_npc_nomelee"):GetInt() == 1 /*or self.HasMeleeAttack == false*/) or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then return end
+	if !self.Tank_IsMoving or !IsValid(ent) or (cv_nomelee:GetInt() == 1 /*or self.HasMeleeAttack == false*/) or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then return end
 	if self:Disposition(ent) == 1 && ent:Health() > 0 && ((ent:IsNPC() && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot()) && !ent.VJTag_ID_Boss then
 		self:Tank_OnRunOver(ent)
 		self:Tank_Sound_RunOver()
@@ -211,16 +198,9 @@ function ENT:Tank_RunOver(ent)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:AngleDiffuse(ang1, ang2)
-	local outcome = ang1 - ang2
-	if outcome < -180 then outcome = outcome + 360 end
-	if outcome > 180 then outcome = outcome - 360 end
-	return outcome
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnThink()
 	if self:Tank_OnThink() != true then
-		if GetConVar("vj_npc_noidleparticle"):GetInt() == 1 then return end
+		if cv_noidleparticle:GetInt() == 1 then return end
 		timer.Simple(0.1, function()
 			if IsValid(self) && !self.Dead then
 				self:StartSpawnEffects()
@@ -264,11 +244,12 @@ function ENT:OnThink()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local vec80z = Vector(0, 0, 80)
+local NPC_FACE_NONE = VJ.NPC_FACE_NONE
 --
 function ENT:OnThinkActive()
 	if self.Dead then return end
-	//timer.Simple(0.1, function() if !self.Dead then ParticleEffect("smoke_exhaust_01",self:LocalToWorld(Vector(150,30,30)),defAng,self) end end)
-	//timer.Simple(0.2, function() if !self.Dead then self:StopParticles() end end)
+	self.TurnData.Type = NPC_FACE_NONE -- This effectively makes it never face anything through Lua
+	
 	for _, v in ipairs(ents.FindInSphere(self:GetPos(), 100)) do
 		self:Tank_RunOver(v)
 	end
@@ -300,7 +281,7 @@ function ENT:OnThinkActive()
 			local phys = self:GetPhysicsObject()
 			if IsValid(phys) then
 				local angEne = (ene:GetPos() - self:GetPos() + vec80z):Angle()
-				local angDiffuse = self:AngleDiffuse(angEne.y, self:GetAngles().y + self.Tank_AngleDiffuseNumber)
+				local angDiffuse = self:Tank_AngleDiffuse(angEne.y, self:GetAngles().y + self.Tank_AngleDiffuseNumber)
 				local heightRatio = (ene:GetPos().z - self:GetPos().z) / self:GetPos():Distance(Vector(ene:GetPos().x, ene:GetPos().y, self:GetPos().z))
 				-- If the enemy's height isn't very high AND the enemy is ( within run over distance OR far away), then move towards the enemy!
 				-- OR
@@ -342,7 +323,7 @@ function ENT:SelectSchedule()
 				self.Tank_Status = 1
 			end
 		else
-			if self.LatestEnemyDistance < self.Tank_SeeFar && self.LatestEnemyDistance > self.Tank_SeeClose then -- If between this two numbers, stay still
+			if (self.LatestEnemyDistance < self.Tank_SeeFar && self.LatestEnemyDistance > self.Tank_SeeClose) or self.IsGuard then -- If between this two numbers, stay still
 				self.Tank_Status = 1
 			else
 				self.Tank_Status = 0
@@ -376,7 +357,7 @@ function ENT:OnDeath(dmginfo, hitgroup, status)
 						VJ.EmitSound(self, "VJ.Explosion")
 						util.BlastDamage(self, self, myPos, 200, 40)
 						util.ScreenShake(myPos, 100, 200, 1, 2500)
-						if self.HasGibOnDeathEffects == true then ParticleEffect("vj_explosion2", myPos, defAng) end
+						if self.HasGibOnDeathEffects then ParticleEffect("vj_explosion2", myPos, defAng) end
 					end
 				end)
 			end

@@ -204,13 +204,13 @@ function ENT:SetControlledNPC(npcEnt)
 	npcEnt.VJ_TheControllerBullseye = bullseyeEnt
 	npcEnt:SetEnemy(NULL)
 	plyEnt:ChatPrint("#vjbase.print.npccontroller.entrance")
-	if npcEnt.IsVJBaseSNPC == true then
+	if npcEnt.IsVJBaseSNPC then
 		local funcCustom = npcEnt.Controller_IntMsg; if funcCustom then funcCustom(npcEnt, plyEnt, self) end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 		npcEnt:Controller_Initialize(plyEnt, self)
-		local EntityEnemy = npcEnt:GetEnemy()
-		if IsValid(EntityEnemy) then
-			npcEnt:AddEntityRelationship(EntityEnemy, D_NU, 10)
-			EntityEnemy:AddEntityRelationship(npcEnt, D_NU, 10)
+		local npcEnemy = npcEnt:GetEnemy()
+		if IsValid(npcEnemy) then
+			npcEnt:AddEntityRelationship(npcEnemy, D_NU, 10)
+			npcEnemy:AddEntityRelationship(npcEnt, D_NU, 10)
 			npcEnt:ResetEnemy()
 			npcEnt:SetEnemy(bullseyeEnt)
 		end
@@ -256,7 +256,7 @@ function ENT:SetControlledNPC(npcEnt)
 		npcEnt.CanEat = false
 		npcEnt.NoChaseAfterCertainRange = false
 		npcEnt.ConstantlyFaceEnemy = false
-		npcEnt.vACT_StopAttacks = true
+		npcEnt.PauseAttacks = true
 		npcEnt.NextThrowGrenadeT = 0
 		 -- Apply a delay to VJ NPCs so they don't attack right away
 		if npcEnt.NextDoAnyAttackT < CurTime() then
@@ -284,7 +284,7 @@ function ENT:SetControlledNPC(npcEnt)
 	self.VJCE_NPC = npcEnt
 	timer.Simple(0, function() -- This only needs to be 0 seconds because we just need a tick to pass
 		if IsValid(self) && IsValid(self.VJCE_NPC) then
-			self.VJCE_NPC.vACT_StopAttacks = false
+			self.VJCE_NPC.PauseAttacks = false
 			self.VJCE_NPC:SetEnemy(self.VJCE_Bullseye)
 		end
 	end)
@@ -370,7 +370,7 @@ function ENT:Think()
 
 		-- Weapon attack
 		if npc.IsVJBaseSNPC_Human == true then
-			if IsValid(npcWeapon) && !npc:IsMoving() && npcWeapon.IsVJBaseWeapon == true && ply:KeyDown(IN_ATTACK2) && npc.AttackType && npc.vACT_StopAttacks == false && npc:GetWeaponState() == VJ.NPC_WEP_STATE_READY then
+			if IsValid(npcWeapon) && !npc:IsMoving() && npcWeapon.IsVJBaseWeapon == true && ply:KeyDown(IN_ATTACK2) && npc.AttackType && npc.PauseAttacks == false && npc:GetWeaponState() == VJ.NPC_WEP_STATE_READY then
 				//npc:SetAngles(Angle(0,math.ApproachAngle(npc:GetAngles().y,ply:GetAimVector():Angle().y,100),0))
 				npc:SetTurnTarget(bullseyePos, 0.2)
 				canTurn = false
@@ -388,7 +388,7 @@ function ENT:Think()
 			end
 		end
 		
-		if npc.IsVJBaseSNPC && npc.CurrentAttackAnimationTime < CurTime() && curTime > npc.NextChaseTime && npc.IsVJBaseSNPC_Tank != true then
+		if npc.IsVJBaseSNPC && npc.CurrentAttackAnimationTime < CurTime() && curTime > npc.NextChaseTime && !npc.IsVJBaseSNPC_Tank then
 			-- Turning
 			if !npc:IsMoving() && canTurn && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
 				npc:SCHEDULE_IDLE_STAND()

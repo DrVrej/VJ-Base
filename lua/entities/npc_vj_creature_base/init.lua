@@ -934,7 +934,7 @@ function ENT:SetAnimationTranslations(wepHoldType) end
 ENT.Alerted = false
 ENT.Dead = false
 ENT.Flinching = false
-ENT.vACT_StopAttacks = false
+ENT.PauseAttacks = false
 ENT.IsFollowing = false
 ENT.FollowingPlayer = false
 ENT.VJ_IsBeingControlled = false
@@ -1311,7 +1311,7 @@ function ENT:Initialize()
 	//self:SetCustomCollisionCheck() -- Used for the hook GM:ShouldCollide, not reliable!
 	self:SetMaxYawSpeed(self.TurningSpeed)
 	ConvarsOnInit(self)
-	self:DoChangeMovementType()
+	self:DoChangeMovementType(self.MovementType)
 	self.VJ_AddCertainEntityAsEnemy = {}
 	self.VJ_AddCertainEntityAsFriendly = {}
 	self.CurrentPossibleEnemies = {}
@@ -1379,7 +1379,6 @@ function ENT:Initialize()
 			end
 		end
 	end)
-	duplicator.RegisterEntityClass(self:GetClass(), VJ.CreateDupe_NPC, "Class", "Equipment", "SpawnFlags", "Data")
 	timer.Simple(0.1, function()
 		if IsValid(self) then
 			self:UpdateAnimationTranslations()
@@ -1408,38 +1407,40 @@ function ENT:Initialize()
 			end
 		end
 	end)
+	duplicator.RegisterEntityClass(self:GetClass(), VJ.CreateDupe_NPC, "Class", "Equipment", "SpawnFlags", "Data")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoChangeMovementType(movType)
-	movType = movType or -1
-	if movType != -1 then self.MovementType = movType end
-	if self.MovementType == VJ_MOVETYPE_GROUND then
-		self:RemoveFlags(FL_FLY)
-		self:CapabilitiesRemove(CAP_MOVE_FLY)
-		self:SetNavType(NAV_GROUND)
-		self:SetMoveType(MOVETYPE_STEP)
-		self:CapabilitiesAdd(CAP_MOVE_GROUND)
-		if VJ.AnimExists(self, ACT_JUMP) == true or self.UsePlayerModelMovement then self:CapabilitiesAdd(CAP_MOVE_JUMP) end
-		if VJ.AnimExists(self, ACT_CLIMB_UP) == true then self:CapabilitiesAdd(CAP_MOVE_CLIMB) end
-	elseif self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
-		self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT))
-		self:SetGroundEntity(NULL)
-		self:AddFlags(FL_FLY)
-		self:SetNavType(NAV_FLY)
-		self:SetMoveType(MOVETYPE_STEP) // MOVETYPE_FLY, causes issues like Lerp functions not being smooth
-		self:CapabilitiesAdd(CAP_MOVE_FLY)
-	elseif self.MovementType == VJ_MOVETYPE_STATIONARY then
-		self:RemoveFlags(FL_FLY)
-		self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT, CAP_MOVE_FLY))
-		self:SetNavType(NAV_NONE)
-		if !IsValid(self:GetParent()) then -- Only set move type if it does NOT have a parent!
-			self:SetMoveType(MOVETYPE_FLY)
+	if movType then
+		self.MovementType = movType
+		if movType == VJ_MOVETYPE_GROUND then
+			self:RemoveFlags(FL_FLY)
+			self:CapabilitiesRemove(CAP_MOVE_FLY)
+			self:SetNavType(NAV_GROUND)
+			self:SetMoveType(MOVETYPE_STEP)
+			self:CapabilitiesAdd(CAP_MOVE_GROUND)
+			if VJ.AnimExists(self, ACT_JUMP) or self.UsePlayerModelMovement then self:CapabilitiesAdd(CAP_MOVE_JUMP) end
+			if VJ.AnimExists(self, ACT_CLIMB_UP) then self:CapabilitiesAdd(CAP_MOVE_CLIMB) end
+		elseif movType == VJ_MOVETYPE_AERIAL or movType == VJ_MOVETYPE_AQUATIC then
+			self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT))
+			self:SetGroundEntity(NULL)
+			self:AddFlags(FL_FLY)
+			self:SetNavType(NAV_FLY)
+			self:SetMoveType(MOVETYPE_STEP) // MOVETYPE_FLY, causes issues like Lerp functions not being smooth
+			self:CapabilitiesAdd(CAP_MOVE_FLY)
+		elseif movType == VJ_MOVETYPE_STATIONARY then
+			self:RemoveFlags(FL_FLY)
+			self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT, CAP_MOVE_FLY))
+			self:SetNavType(NAV_NONE)
+			if !IsValid(self:GetParent()) then -- Only set move type if it does NOT have a parent!
+				self:SetMoveType(MOVETYPE_FLY)
+			end
+		elseif movType == VJ_MOVETYPE_PHYSICS then
+			self:RemoveFlags(FL_FLY)
+			self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT, CAP_MOVE_FLY))
+			self:SetNavType(NAV_NONE)
+			self:SetMoveType(MOVETYPE_VPHYSICS)
 		end
-	elseif self.MovementType == VJ_MOVETYPE_PHYSICS then
-		self:RemoveFlags(FL_FLY)
-		self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT, CAP_MOVE_FLY))
-		self:SetNavType(NAV_NONE)
-		self:SetMoveType(MOVETYPE_VPHYSICS)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1486,7 +1487,7 @@ local varSeq = "vjseq_"
 --
 function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, extraOptions, customFunc)
 	animation = VJ.PICK(animation)
-	if animation == false then return ACT_INVALID, 0, ANIM_TYPE_NONE end
+	if !animation then return ACT_INVALID, 0, ANIM_TYPE_NONE end
 	
 	lockAnim = lockAnim or false
 	if lockAnimTime == nil then -- If user didn't put anything, then default it to 0
@@ -1597,13 +1598,13 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 			
 			if lockAnim != "LetAttacks" then
 				self:StopAttacks(true)
-				self.vACT_StopAttacks = true
-				timer.Create("timer_act_stopattacks"..self:EntIndex(), lockAnimTime, 1, function() self.vACT_StopAttacks = false end)
+				self.PauseAttacks = true
+				timer.Create("timer_act_stopattacks"..self:EntIndex(), lockAnimTime, 1, function() self.PauseAttacks = false end)
 			end
 		end
 		self.LastAnimationSeed = seed -- We need to set it again because self:StopAttacks() above will reset it when it calls to chase enemy!
 		
-		if isGesture == true then
+		if isGesture then
 			-- If it's an activity gesture AND it's already playing it, then remove it! Fixes same activity gestures bugging out when played right after each other!
 			if !isSequence && self:IsPlayingGesture(animation) then
 				self:RemoveGesture(animation)
@@ -1631,7 +1632,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 			self:ClearSchedule()
 			self:ClearGoal()
 			
-			if isSequence == true then
+			if isSequence then
 				doRealAnimTime = false -- Sequences already have the correct time
 				local seqID = self:LookupSequence(animation)
 				--
@@ -1735,13 +1736,12 @@ local schedule_alert_chase = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE")
 	schedule_alert_chase.CanBeInterrupted = true
 --
 function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
-	doLOSChase = doLOSChase or false
 	self:ClearCondition(COND_ENEMY_UNREACHABLE)
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_ChaseEnemy() return end
 	//if self.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" then return end
 	if self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
 	if self.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" && (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) <= 12) then return end
-	if doLOSChase == true then
+	if doLOSChase then
 		schedule_alert_chaseLOS.RunCode_OnFinish = function()
 			local ene = self:GetEnemy()
 			if IsValid(ene) then
@@ -1761,7 +1761,7 @@ function ENT:MaintainIdleBehavior(idleType) -- idleType: nil = Random | 1 = Wand
 	if self.Dead or self.VJ_IsBeingControlled or (self.CurrentAttackAnimationTime > curTime) or (self.NextIdleTime > curTime) or (self.AA_CurrentMoveTime > curTime) or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
 	
 	-- Things that override can't bypass, Forces the NPC to ONLY idle stand!
-	if self:IsGoalActive() or self.DisableWandering or self.IsGuard or self.MovementType == VJ_MOVETYPE_STATIONARY or self.IsVJBaseSNPC_Tank or !self.LastHiddenZone_CanWander or self.NextWanderTime > curTime or self.IsFollowing or self.Medic_Status then
+	if self:IsGoalActive() or self.DisableWandering or self.IsGuard or self.MovementType == VJ_MOVETYPE_STATIONARY or !self.LastHiddenZone_CanWander or self.NextWanderTime > curTime or self.IsFollowing or self.Medic_Status then
 		self:SCHEDULE_IDLE_STAND()
 		return -- Don't set self.NextWanderTime below
 	elseif !idleType && self.IdleAlwaysWander then
@@ -1790,7 +1790,7 @@ end
 function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase: true = Override to always make the NPC chase
 	local ene = self:GetEnemy()
 	local curTime = CurTime()
-	if self.NextChaseTime > curTime or self.Dead or self.VJ_IsBeingControlled or self.Flinching or self.IsVJBaseSNPC_Tank or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
+	if self.NextChaseTime > curTime or self.Dead or self.VJ_IsBeingControlled or self.Flinching or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
 	if !IsValid(ene) or self.TakingCoverT > curTime or (self.CurrentAttackAnimationTime > curTime && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
 	
 	-- Not melee attacking yet but it is in range, so don't chase the enemy!
@@ -1815,7 +1815,7 @@ function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase: true = Override 
 		return
 	end
 	
-	if !alwaysChase && (self.DisableChasingEnemy == true or self.IsGuard == true) then self:SCHEDULE_IDLE_STAND() return end
+	if !alwaysChase && (self.DisableChasingEnemy or self.IsGuard) then self:SCHEDULE_IDLE_STAND() return end
 	
 	-- If the enemy is not reachable then wander around
 	if self:IsUnreachable(ene) == true then
@@ -1915,7 +1915,7 @@ function ENT:Think()
 	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
 	
 	//self:SetCondition(1) -- Probably not needed as "sv_pvsskipanimation" handles it | Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case "sv_pvsskipanimation" isn't disabled!
-	//if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) /*&& curSched.HasMovement == true*/ then self:DropToFloor() end -- No need, already handled by the engine
+	//if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) /*&& curSchedule.HasMovement == true*/ then self:DropToFloor() end -- No need, already handled by the engine
 	
 	local curTime = CurTime()
 	
@@ -2074,7 +2074,7 @@ function ENT:Think()
 				local turnTarget = turnData.Target
 				if turnData.Type == VJ.NPC_FACE_POSITION or (turnData.Type == VJ.NPC_FACE_POSITION_VISIBLE && self:VisibleVec(turnTarget)) then
 					local resultAng = self:GetFaceAngle((turnTarget - self:GetPos()):Angle())
-					if self.TurningUseAllAxis == true then
+					if self.TurningUseAllAxis then
 						local myAng = self:GetAngles()
 						self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
 					end
@@ -2115,14 +2115,12 @@ function ENT:Think()
 			if !eneData.Reset then
 				-- Reset enemy if it doesn't exist or it's dead
 				if !eneValid then
-					eneData.Reset = true
 					self:ResetEnemy(true, true)
 					ene = self:GetEnemy()
 					eneValid = IsValid(ene)
 				-- Reset enemy if it has been unseen for a while
-				elseif (curTime - eneData.LastVisibleTime) > self.TimeUntilEnemyLost && (!self.IsVJBaseSNPC_Tank) then
+				elseif (curTime - eneData.LastVisibleTime) > self.TimeUntilEnemyLost && !self.IsVJBaseSNPC_Tank then
 					self:PlaySoundSystem("LostEnemy")
-					eneData.Reset = true
 					self:ResetEnemy(true, true)
 					ene = self:GetEnemy()
 					eneValid = IsValid(ene)
@@ -2191,7 +2189,7 @@ function ENT:Think()
 							end
 						end
 					elseif self:HasCondition(COND_SMELL) && !self:IsMoving() && !self:IsBusy() then
-						local hint = sound.GetLoudestSoundHint(SOUND_CARCASS, myPos) // GetBestSoundHint = Do NOT use, completely broken!
+						local hint = sound.GetLoudestSoundHint(SOUND_CARCASS, myPos)
 						if hint then
 							local food = hint.owner
 							if IsValid(food) /*&& !food.VJTag_IsBeingEaten*/ then
@@ -2293,7 +2291,7 @@ function ENT:Think()
 				end
 				
 				-- Attacks
-				if !self.vACT_StopAttacks && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && curTime > self.NextDoAnyAttackT then
+				if !self.PauseAttacks && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && curTime > self.NextDoAnyAttackT then
 					-- Attack priority in order: Custom --> Melee --> Range --> Leap
 					-- To avoid overlapping situations where 2 attacks can be called at once, check for "self.AttackType == VJ.ATTACK_TYPE_NONE"
 					local funcCustomAtk = self.CustomAttack; if funcCustomAtk then funcCustomAtk(self, ene, eneData.IsVisible) end
@@ -2548,7 +2546,7 @@ function ENT:DoPropAPCheck(customEnts)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MeleeAttackCode(isPropAttack)
-	if self.Dead or self.vACT_StopAttacks or self.Flinching or (self.StopMeleeAttackAfterFirstHit && self.AttackState == VJ.ATTACK_STATE_EXECUTED_HIT) then return end
+	if self.Dead or self.PauseAttacks or self.Flinching or (self.StopMeleeAttackAfterFirstHit && self.AttackState == VJ.ATTACK_STATE_EXECUTED_HIT) then return end
 	isPropAttack = isPropAttack or self.MeleeAttack_DoingPropAttack -- Is this a prop attack?
 	if self.MeleeAttackAnimationFaceEnemy && !isPropAttack then self:SetTurnTarget("Enemy") end
 	self:CustomOnMeleeAttack_BeforeChecks()
@@ -2691,7 +2689,7 @@ function ENT:VJ_DoSlowPlayer(ent, WalkSpeed, RunSpeed, SlowTime, sdData, ExtraFe
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RangeAttackCode()
-	if self.Dead or self.vACT_StopAttacks or self.Flinching or self.AttackType == VJ.ATTACK_TYPE_MELEE then return end
+	if self.Dead or self.PauseAttacks or self.Flinching or self.AttackType == VJ.ATTACK_TYPE_MELEE then return end
 	local ene = self:GetEnemy()
 	if IsValid(ene) then
 		self.AttackType = VJ.ATTACK_TYPE_RANGE
@@ -2734,7 +2732,7 @@ function ENT:RangeAttackCode()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:LeapDamageCode()
-	if self.Dead or self.vACT_StopAttacks or self.Flinching or (self.StopLeapAttackAfterFirstHit && self.AttackState == VJ.ATTACK_STATE_EXECUTED_HIT) then return end
+	if self.Dead or self.PauseAttacks or self.Flinching or (self.StopLeapAttackAfterFirstHit && self.AttackState == VJ.ATTACK_STATE_EXECUTED_HIT) then return end
 	self:CustomOnLeapAttack_BeforeChecks()
 	local myClass = self:GetClass()
 	local hitRegistered = false
@@ -2975,6 +2973,7 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 	end
 	
 	if self.VJ_DEBUG && GetConVar("vj_npc_debug_resetenemy"):GetInt() == 1 then print(self:GetName() .. " : Reset enemy ( " .. tostring(ene) .. " )") end
+	eneData.Reset = true
 	self:SetNPCState(NPC_STATE_ALERT)
 	timer.Create("timer_alerted_reset"..self:EntIndex(), math.Rand(self.AlertedToIdleTime.a, self.AlertedToIdleTime.b), 1, function() if !IsValid(self:GetEnemy()) then self.Alerted = false self:SetNPCState(NPC_STATE_IDLE) end end)
 	self:OnResetEnemy()
@@ -2997,17 +2996,14 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 	self:SetEnemy(NULL)
 	if moveToEnemy then
 		self:SetLastPosition(moveToEnemy)
-		local schedResetEnemy = vj_ai_schedule.New("vj_act_resetenemy")
-		//if eneValid then schedResetEnemy:EngTask("TASK_FORGET", ene) end
-		//schedResetEnemy:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
-		schedResetEnemy:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
-		schedResetEnemy:EngTask("TASK_WALK_PATH", 0)
-		schedResetEnemy:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-		schedResetEnemy.ResetOnFail = true
-		schedResetEnemy.CanShootWhenMoving = true
-		schedResetEnemy.CanBeInterrupted = true
-		schedResetEnemy.FaceData = {Type = VJ.NPC_FACE_ENEMY}
-		self:StartSchedule(schedResetEnemy)
+		self:SCHEDULE_GOTO_POSITION("TASK_WALK_PATH", function(schedule)
+			//if eneValid then schedule:EngTask("TASK_FORGET", ene) end
+			//schedule:EngTask("TASK_IGNORE_OLD_ENEMIES", 0)
+			schedule.ResetOnFail = true
+			schedule.CanShootWhenMoving = true
+			schedule.CanBeInterrupted = true
+			schedule.FaceData = {Type = VJ.NPC_FACE_ENEMY}
+		end)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3542,7 +3538,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlaySoundSystem(sdSet, customSD, sdType)
-	if self.HasSounds == false or sdSet == nil then return end
+	if !self.HasSounds or !sdSet then return end
 	sdType = sdType or VJ.CreateSound
 	local customTbl = VJ.PICK(customSD)
 	

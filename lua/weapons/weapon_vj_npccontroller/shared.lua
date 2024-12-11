@@ -85,10 +85,6 @@ function SWEP:PrimaryAttack()
 		elseif tr.Entity:IsNPC() && tr.Entity:Health() <= 0 then
 			owner:ChatPrint("This NPC's health is 0 or below, therefore you can't control.")
 			return
-		//elseif tr.Entity.IsVJBaseSNPC_Tank == true then
-			//tr.Entity = tr.Entity.Gunner
-			//owner:ChatPrint("Tank are not controllable yet, sorry!")
-			//return
 		elseif tr.Entity.VJ_IsBeingControlled == true then
 			owner:ChatPrint("You can't control this NPC, it's already being controlled by someone else.")
 			return

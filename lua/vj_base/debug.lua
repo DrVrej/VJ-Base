@@ -39,7 +39,6 @@ end
 	Runs the given function x amount of times and prints how long it took to run it
 		- count = Number of times to execute the given function
 		- func = Function to execute on every counter
-	Note: Do multiple test and compare the 2 results using this: https://calculla.com/columnar_addition_calculator
 	EXAMPLE:
 		VJ_StressTest(1000, function()
 			-- Some code
