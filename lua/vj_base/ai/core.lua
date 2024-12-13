@@ -669,7 +669,7 @@ local function UTIL_VecToYaw(vec) -- Based on: https://github.com/ValveSoftware/
 end
 --
 function ENT:OverrideMoveFacing(flInterval, move)
-	if self.DisableFootStepSoundTimer == false then self:FootStepSoundCode() end
+	if !self.DisableFootStepSoundTimer then self:FootStepSoundCode() end
 	//print("OverrideMoveFacing", flInterval)
 	//PrintTable(move)
 	
@@ -686,10 +686,10 @@ function ENT:OverrideMoveFacing(flInterval, move)
 	end
 	
 	-- Handle the unique movement system for player models | Only face move direction if I have NOT faced anything else!
-	if !didTurn && self.UsePlayerModelMovement == true && self.MovementType == VJ_MOVETYPE_GROUND then
+	if !didTurn && self.UsePlayerModelMovement && self.MovementType == VJ_MOVETYPE_GROUND then
 		//self:SetTurnTarget(self:GetCurWaypointPos()) -- Because it will reset the current turning (if any), this will break "firing while moving" turning
 		local resultAng = self:GetFaceAngle((self:GetCurWaypointPos() - self:GetPos()):Angle())
-		if self.TurningUseAllAxis == true then
+		if self.TurningUseAllAxis then
 			local myAng = self:GetAngles()
 			self:SetAngles(LerpAngle(FrameTime()*self.TurningSpeed, myAng, Angle(resultAng.p, myAng.y, resultAng.r)))
 		end
@@ -1054,15 +1054,6 @@ function ENT:SetImpactEnergyScale(scale)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Returns the position set by "SetLastPosition"
-	Returns
-		- Vector, the last position
------------------------------------------------------------]]
-function ENT:GetLastPosition()
-	return self:GetInternalVariable("m_vecLastPosition")
-end
----------------------------------------------------------------------------------------------------------------------------------------------
---[[---------------------------------------------------------
 	Finds the nearest position from the NPC to the entity and from the entity to the nearest NPC position found previously, then returns both positions
 		- ent = The entity to find the nearest position of in respect to the NPC
 		- centerNPC = Should the X-axis and Y-axis for the NPC stay at the NPC's origin with ONLY the Z-axis changing? | DEFAULT: false
@@ -1404,7 +1395,7 @@ end
 function ENT:MaintainMedicBehavior()
 	if !self.IsMedic or self.NoWeapon_UseScaredBehavior_Active then return end -- Do NOT heal if playing scared animations!
 	if !self.Medic_Status then -- Not healing anyone, so check around for allies
-		if CurTime() < self.Medic_NextHealT or self.VJ_IsBeingControlled then return end
+		if CurTime() < self.Medic_NextHealT then return end
 		for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
 			-- Only allow VJ Base NPCs and players
 			if (v.IsVJBaseSNPC or v:IsPlayer()) && v != self && !v.VJTag_IsHealing && !v.VJTag_ID_Vehicle && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && (!IsValid(v:GetEnemy()) or v.VJ_IsBeingControlled)) or (v:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:CheckRelationship(v) == D_LI then

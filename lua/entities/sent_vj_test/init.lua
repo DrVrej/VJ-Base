@@ -5,7 +5,7 @@ include("shared.lua")
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
-ENT.PainSoundT = 0
+ENT.NextPainSoundT = 0
 
 util.AddNetworkString("vj_testentity_onmenuopen")
 util.AddNetworkString("vj_testentity_runtextsd")
@@ -36,9 +36,9 @@ function ENT:SelectSchedule()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTakeDamage()
-	if CurTime() > self.PainSoundT then
+	if CurTime() > self.NextPainSoundT then
 		self:EmitSound("vo/npc/male01/pain0"..math.random(1,9)..".wav")
-		self.PainSoundT = CurTime() + 1
+		self.NextPainSoundT = CurTime() + 1
 		self:SetSchedule(SCHED_RUN_FROM_ENEMY)
 	end
 	return 0

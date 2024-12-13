@@ -261,6 +261,22 @@ function ENT:OnStateChange(oldState, newState)
 	//print("OnStateChange - ", self, ": ", oldState, newState)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:TranslateNavGoal(enemy, currentGoal)
+	-- For "GOALTYPE_ENEMY" only
+	-- This is called every 0.1 seconds from here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L5790
+	if self:GetCurGoalType() == 2 then
+		if self.LatestEnemyDistance < 200 then
+			-- This makes "GetGoalRepathTolerance" return 0 as seen here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L5756
+			-- Otherwise it will go to the enemy if certain tolerance is passed!
+			self:SetArrivalDistance((self:GetPos() - currentGoal):Length())
+		end
+		return enemy:GetPos() -- Otherwise it will use "GetEnemyLastKnownPos", which is often incorrect location especially when sight is blocked!
+	end
+	//print("TranslateNavGoal", enemy, currentGoal)
+	//VJ.DEBUG_TempEnt(currentGoal)
+	//return currentGoal + enemy:GetForward()*math.random(-100, 100)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSchedule(schedule)
 	if self.MovementType == VJ_MOVETYPE_STATIONARY && schedule.HasMovement then return end -- It's stationary therefore it should not move!
 	-- Certain states should ONLY do animation schedules!
@@ -271,7 +287,7 @@ function ENT:StartSchedule(schedule)
 	local curSchedule = self.CurrentSchedule
 	if curSchedule then
 		-- If it's the same task AND it's opening a door OR doing a move wait then cancel the new schedule!
-		if schedule.Name == curSchedule.Name && (IsValid(self:GetInternalVariable("m_hOpeningDoor")) or self:GetInternalVariable("m_flMoveWaitFinished") > 0) then
+		if schedule.Name == curSchedule.Name && (IsValid(self:GetInternalVariable("m_hOpeningDoor")) or self:GetMoveDelay() > 0) then
 			return
 		end
 		-- Clean up any schedule it may have been doing

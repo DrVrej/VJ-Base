@@ -1592,9 +1592,9 @@ ENT.NextDangerDetectionT = 0
 ENT.NextFollowUpdateT = 0
 ENT.AngerLevelTowardsPlayer = 0
 ENT.NextBreathSoundT = 0
-ENT.FootStepT = 0
-ENT.PainSoundT = 0
-ENT.AllyDeathSoundT = 0
+ENT.NextFootstepSoundT = 0
+ENT.NextPainSoundT = 0
+ENT.NextAllyDeathSoundT = 0
 ENT.NextIdleSoundT = 0
 ENT.NextNoWeaponT = 0
 ENT.NextCallForHelpT = 0
@@ -1634,7 +1634,7 @@ ENT.Weapon_DoingCrouchAttackT = 0
 ENT.NextInvestigationMove = 0
 ENT.NextInvestigateSoundT = 0
 ENT.NextCallForHelpSoundT = 0
-ENT.LostEnemySoundT = 0
+ENT.NextLostEnemySoundT = 0
 ENT.NextDoAnyAttackT = 0
 ENT.NearestPointToEnemyDistance = 0
 ENT.LatestEnemyDistance = 0
@@ -2400,9 +2400,7 @@ local schedule_alert_chase = vj_ai_schedule.New("SCHEDULE_ALERT_CHASE")
 function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
 	self:ClearCondition(COND_ENEMY_UNREACHABLE)
 	if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then self:AA_ChaseEnemy() return end
-	//if self.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" then return end
-	if self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
-	if self.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" && (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) <= 12) then return end
+	if self.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end // && (self:GetEnemyLastKnownPos():Distance(self:GetEnemy():GetPos()) <= 12)
 	if doLOSChase then
 		schedule_alert_chaseLOS.RunCode_OnFinish = function()
 			local ene = self:GetEnemy()
@@ -2455,7 +2453,7 @@ function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase: true = Override 
 	if !IsValid(ene) or self.TakingCoverT > curTime or (self.CurrentAttackAnimationTime > curTime && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC) then return end
 	
 	-- Not melee attacking yet but it is in range, so don't chase the enemy!
-	if self.NearestPointToEnemyDistance < self.MeleeAttackDistance && self.EnemyData.IsVisible && (self.EnemyData.SightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))) then
+	if self.HasMeleeAttack && self.NearestPointToEnemyDistance < self.MeleeAttackDistance && self.EnemyData.IsVisible && (self.EnemyData.SightDiff > math_cos(math_rad(self.MeleeAttackAngleRadius))) then
 		self:SCHEDULE_IDLE_STAND()
 		return
 	end
@@ -3576,36 +3574,32 @@ end
 	Determines whether it's about to fire its current weapon
 		- checkDistance = Should it check for distance and weapon time too? | DEFAULT = false
 		- checkDistanceOnly = Should it only check the above statement? | DEFAULT = false
-		- enemyDist = Distance used for "checkDistance" | DEFAULT = "self.LatestEnemyDistance"
 	Returns
-		- Boolean, Whether or not it can fire
+		- Boolean, Whether or not it can fire its active weapon
 -----------------------------------------------------------]]
-function ENT:CanFireWeapon(checkDistance, checkDistanceOnly, enemyDist)
-	checkDistance = checkDistance or false -- Check for distance and weapon time as well?
-	checkDistanceOnly = checkDistanceOnly or false -- Should it only check the above statement?
-	enemyDist = enemyDist or self.LatestEnemyDistance -- Distance used for checkDistance
-	if self:OnWeaponCanFire() == false then return end
+function ENT:CanFireWeapon(checkDistance, checkDistanceOnly)
+	if self:OnWeaponCanFire() == false then return false end
 	local hasDist = false
 	local hasChecks = false
-
-	if self:GetWeaponState() == VJ.NPC_WEP_STATE_HOLSTERED or self.PauseAttacks then return false end
-	if self.VJ_IsBeingControlled then checkDistance = false checkDistanceOnly = false end
-	if checkDistance == true && CurTime() > self.NextWeaponAttackT && enemyDist < self.Weapon_FiringDistanceFar && ((enemyDist > self.Weapon_FiringDistanceClose) or self.CurrentWeaponEntity.IsMeleeWeapon) then
-		hasDist = true
-	end
-	if checkDistanceOnly == true then
-		if hasDist == true then
-			return true
-		else
-			return false
+	local curWep = self.CurrentWeaponEntity
+	
+	if self.PauseAttacks or !IsValid(curWep) or self:GetWeaponState() != VJ.NPC_WEP_STATE_READY then return false end
+	if self.VJ_IsBeingControlled then
+		checkDistance = false
+	else
+		local enemyDist = self.LatestEnemyDistance
+		if checkDistance && CurTime() > self.NextWeaponAttackT && enemyDist < self.Weapon_FiringDistanceFar && ((enemyDist > self.Weapon_FiringDistanceClose) or curWep.IsMeleeWeapon) then
+			hasDist = true
+		end
+		if checkDistanceOnly then
+			return hasDist
 		end
 	end
-	if IsValid(self:GetActiveWeapon()) && self.AttackType != VJ.ATTACK_TYPE_GRENADE && self:BusyWithActivity() == false && ((self:GetActiveWeapon().IsMeleeWeapon) or (self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING && self.AttackType != VJ.ATTACK_TYPE_MELEE && self.NearestPointToEnemyDistance > self.MeleeAttackDistance)) then
+	if !self.AttackType && !self:BusyWithActivity() then
 		hasChecks = true
-		if checkDistance == false then return true end
+		if !checkDistance then return true end
 	end
-	if checkDistanceOnly == false && hasDist == true && hasChecks == true then return true end
-	return false
+	return hasDist && hasChecks
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local schedMoveAway = vj_ai_schedule.New("vj_move_away")
@@ -3718,13 +3712,13 @@ function ENT:SelectSchedule()
 				end
 			end
 			
-			if canAttack && self:CanFireWeapon(false, false, self.LatestEnemyDistance) == true && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK then
+			if canAttack && self:CanFireWeapon(false, false) && self:GetState() != VJ_STATE_ONLY_ANIMATION_NOATTACK then
 				-- Enemy to far away or not allowed to fire a weapon
 				if self.LatestEnemyDistance > self.Weapon_FiringDistanceFar or curTime < self.NextWeaponAttackT then
 					self:MaintainAlertBehavior()
 					self.AllowWeaponWaitOnOcclusion = false
 				-- Check if enemy is in sight, then continue...
-				elseif self:CanFireWeapon(true, true, self.LatestEnemyDistance) == true then
+				elseif self:CanFireWeapon(true, true) then
 					//self:VJ_ForwardIsHidingZone(self:EyePos(), enePos_Eye, true, {Debug=true})
 					-- If I can't see the enemy then either wait for it or charge at the enemy
 					if self:VJ_ForwardIsHidingZone(self:EyePos(), enePos_Eye, true) == true && self:VJ_ForwardIsHidingZone(self:NearestPoint(myPosCentered) + self:GetUp()*30, enePos_Eye + self:GetUp()*30, true) /*or self:VJ_ForwardIsHidingZone(util.VJ_GetWeaponPos(self),enePos_Eye) == true*/ /*or (!self.EnemyData.IsVisible)*/ then
@@ -4584,45 +4578,42 @@ end
 function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	if !self.HasSounds or !sdSet then return end
 	sdType = sdType or VJ.CreateSound
-	local customTbl = VJ.PICK(customSD)
+	customSD = VJ.PICK(customSD)
 	
 	if sdSet == "GeneralSpeech" then -- Used to just play general speech sounds (Custom by developers)
-		if customTbl then
+		if customSD then
 			StopSound(self.CurrentSpeechSound)
 			StopSound(self.CurrentIdleSound)
-			self.NextIdleSoundT_RegularChange = CurTime() + ((((SoundDuration(customTbl) > 0) and SoundDuration(customTbl)) or 2) + 1)
-			self.CurrentSpeechSound = sdType(self, customTbl, 80, self:VJ_DecideSoundPitch(self.GeneralSoundPitch1, self.GeneralSoundPitch2))
+			self.NextIdleSoundT_RegularChange = CurTime() + ((((SoundDuration(customSD) > 0) and SoundDuration(customSD)) or 2) + 1)
+			self.CurrentSpeechSound = sdType(self, customSD, 80, self:VJ_DecideSoundPitch(self.GeneralSoundPitch1, self.GeneralSoundPitch2))
 		end
-		return
 	elseif sdSet == "FollowPlayer" then
 		if self.HasFollowPlayerSounds then
 			local pickedSD = VJ.PICK(self.SoundTbl_FollowPlayer)
-			if (math.random(1, self.FollowPlayerSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.FollowPlayerSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentSpeechSound = sdType(self, pickedSD, self.FollowPlayerSoundLevel, self:VJ_DecideSoundPitch(self.FollowPlayerPitch.a, self.FollowPlayerPitch.b))
 			end
 		end
-		return
 	elseif sdSet == "UnFollowPlayer" then
 		if self.HasFollowPlayerSounds then
 			local pickedSD = VJ.PICK(self.SoundTbl_UnFollowPlayer)
-			if (math.random(1, self.FollowPlayerSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.FollowPlayerSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentSpeechSound = sdType(self, pickedSD, self.FollowPlayerSoundLevel, self:VJ_DecideSoundPitch(self.FollowPlayerPitch.a, self.FollowPlayerPitch.b))
 			end
 		end
-		return
 	elseif sdSet == "OnReceiveOrder" then
-		if self.HasOnReceiveOrderSounds == true then
+		if self.HasOnReceiveOrderSounds then
 			local pickedSD = VJ.PICK(self.SoundTbl_OnReceiveOrder)
-			if (math.random(1, self.OnReceiveOrderSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.OnReceiveOrderSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT = self.NextIdleSoundT + 2
@@ -4630,61 +4621,56 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				self.CurrentSpeechSound = sdType(self, pickedSD, self.OnReceiveOrderSoundLevel, self:VJ_DecideSoundPitch(self.OnReceiveOrderSoundPitch.a, self.OnReceiveOrderSoundPitch.b))
 			end
 		end
-		return
 	elseif sdSet == "MoveOutOfPlayersWay" then
-		if self.HasMoveOutOfPlayersWaySounds == true then
+		if self.HasMoveOutOfPlayersWaySounds then
 			local pickedSD = VJ.PICK(self.SoundTbl_MoveOutOfPlayersWay)
-			if (math.random(1, self.MoveOutOfPlayersWaySoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.MoveOutOfPlayersWaySoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentSpeechSound = sdType(self, pickedSD, self.MoveOutOfPlayersWaySoundLevel, self:VJ_DecideSoundPitch(self.MoveOutOfPlayersWaySoundPitch.a, self.MoveOutOfPlayersWaySoundPitch.b))
 			end
 		end
-		return
 	elseif sdSet == "MedicBeforeHeal" then
-		if self.HasMedicSounds_BeforeHeal == true then
+		if self.HasMedicSounds_BeforeHeal then
 			local pickedSD = VJ.PICK(self.SoundTbl_MedicBeforeHeal)
-			if (math.random(1, self.MedicBeforeHealSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.MedicBeforeHealSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentSpeechSound = sdType(self, pickedSD, self.BeforeHealSoundLevel, self:VJ_DecideSoundPitch(self.BeforeHealSoundPitch.a, self.BeforeHealSoundPitch.b))
 			end
 		end
-		return
 	elseif sdSet == "MedicOnHeal" then
-		if self.HasMedicSounds_AfterHeal == true then
+		if self.HasMedicSounds_AfterHeal then
 			local pickedSD = VJ.PICK(self.SoundTbl_MedicAfterHeal)
 			if pickedSD == false then pickedSD = DefaultSD_MedicAfterHeal end -- Default sound
-			if (math.random(1, self.MedicAfterHealSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.MedicAfterHealSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentMedicAfterHealSound = sdType(self, pickedSD, self.AfterHealSoundLevel, self:VJ_DecideSoundPitch(self.AfterHealSoundPitch.a, self.AfterHealSoundPitch.b))
 			end
 		end
-		return
 	elseif sdSet == "MedicReceiveHeal" then
-		if self.HasMedicSounds_ReceiveHeal == true then
+		if self.HasMedicSounds_ReceiveHeal then
 			local pickedSD = VJ.PICK(self.SoundTbl_MedicReceiveHeal)
-			if (math.random(1, self.MedicReceiveHealSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.MedicReceiveHealSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentSpeechSound = sdType(self, pickedSD, self.MedicReceiveHealSoundLevel, self:VJ_DecideSoundPitch(self.MedicReceiveHealSoundPitch.a, self.MedicReceiveHealSoundPitch.b))
 			end
 		end
-		return
 	elseif sdSet == "OnPlayerSight" then
-		if self.HasOnPlayerSightSounds == true then
+		if self.HasOnPlayerSightSounds then
 			local pickedSD = VJ.PICK(self.SoundTbl_OnPlayerSight)
-			if (math.random(1, self.OnPlayerSightSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.OnPlayerSightSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
@@ -4692,12 +4678,11 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				self.CurrentSpeechSound = sdType(self, pickedSD, self.OnPlayerSightSoundLevel, self:VJ_DecideSoundPitch(self.OnPlayerSightSoundPitch.a, self.OnPlayerSightSoundPitch.b))
 			end
 		end
-		return
 	elseif sdSet == "InvestigateSound" then
-		if self.HasInvestigateSounds == true && CurTime() > self.NextInvestigateSoundT then
+		if self.HasInvestigateSounds && CurTime() > self.NextInvestigateSoundT then
 			local pickedSD = VJ.PICK(self.SoundTbl_Investigate)
-			if (math.random(1, self.InvestigateSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.InvestigateSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT = self.NextIdleSoundT + 2
@@ -4705,41 +4690,38 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			end
 			self.NextInvestigateSoundT = CurTime() + math.Rand(self.NextSoundTime_Investigate.a, self.NextSoundTime_Investigate.b)
 		end
-		return
 	elseif sdSet == "LostEnemy" then
-		if self.HasLostEnemySounds == true && CurTime() > self.LostEnemySoundT then
+		if self.HasLostEnemySounds && CurTime() > self.NextLostEnemySoundT then
 			local pickedSD = VJ.PICK(self.SoundTbl_LostEnemy)
-			if (math.random(1, self.LostEnemySoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.LostEnemySoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT = self.NextIdleSoundT + 2
 				self.CurrentSpeechSound = sdType(self, pickedSD, self.LostEnemySoundLevel, self:VJ_DecideSoundPitch(self.LostEnemySoundPitch.a, self.LostEnemySoundPitch.b))
 			end
-			self.LostEnemySoundT = CurTime() + math.Rand(self.NextSoundTime_LostEnemy.a, self.NextSoundTime_LostEnemy.b)
+			self.NextLostEnemySoundT = CurTime() + math.Rand(self.NextSoundTime_LostEnemy.a, self.NextSoundTime_LostEnemy.b)
 		end
-		return
 	elseif sdSet == "Alert" then
-		if self.HasAlertSounds == true then
+		if self.HasAlertSounds then
 			local pickedSD = VJ.PICK(self.SoundTbl_Alert)
-			if (math.random(1, self.AlertSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.AlertSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				local dur = CurTime() + ((((SoundDuration(pickedSD) > 0) and SoundDuration(pickedSD)) or 2) + 1)
 				self.NextIdleSoundT = dur
-				self.PainSoundT = dur
+				self.NextPainSoundT = dur
 				self.NextSuppressingSoundT = CurTime() + 4
 				self.NextAlertSoundT = CurTime() + math.Rand(self.NextSoundTime_Alert.a, self.NextSoundTime_Alert.b)
 				self.CurrentSpeechSound = sdType(self, pickedSD, self.AlertSoundLevel, self:VJ_DecideSoundPitch(self.AlertSoundPitch.a, self.AlertSoundPitch.b))
 			end
 		end
-		return
 	elseif sdSet == "CallForHelp" then
-		if self.HasCallForHelpSounds == true && CurTime() > self.NextCallForHelpSoundT then
+		if self.HasCallForHelpSounds && CurTime() > self.NextCallForHelpSoundT then
 			local pickedSD = VJ.PICK(self.SoundTbl_CallForHelp)
-			if (math.random(1, self.CallForHelpSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.CallForHelpSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT = self.NextIdleSoundT + 2
@@ -4748,16 +4730,15 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				self.NextCallForHelpSoundT = CurTime() + 2
 			end
 		end
-		return
 	elseif sdSet == "BecomeEnemyToPlayer" then
-		if self.HasBecomeEnemyToPlayerSounds == true then
+		if self.HasBecomeEnemyToPlayerSounds then
 			local pickedSD = VJ.PICK(self.SoundTbl_BecomeEnemyToPlayer)
-			if (math.random(1, self.BecomeEnemyToPlayerChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.BecomeEnemyToPlayerChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				local dur = CurTime() + ((((SoundDuration(pickedSD) > 0) and SoundDuration(pickedSD)) or 2) + 1)
-				self.PainSoundT = dur
+				self.NextPainSoundT = dur
 				self.NextAlertSoundT = dur
 				self.NextInvestigateSoundT = CurTime() + 2
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(2, 3)
@@ -4765,12 +4746,11 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				self.CurrentSpeechSound = sdType(self, pickedSD, self.BecomeEnemyToPlayerSoundLevel, self:VJ_DecideSoundPitch(self.BecomeEnemyToPlayerPitch.a, self.BecomeEnemyToPlayerPitch.b))
 			end
 		end
-		return
 	elseif sdSet == "OnKilledEnemy" then
-		if self.HasOnKilledEnemySound == true && CurTime() > self.OnKilledEnemySoundT then
+		if self.HasOnKilledEnemySound && CurTime() > self.OnKilledEnemySoundT then
 			local pickedSD = VJ.PICK(self.SoundTbl_OnKilledEnemy)
-			if (math.random(1, self.OnKilledEnemySoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.OnKilledEnemySoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT = self.NextIdleSoundT + 2
@@ -4778,76 +4758,70 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			end
 			self.OnKilledEnemySoundT = CurTime() + math.Rand(self.NextSoundTime_OnKilledEnemy.a, self.NextSoundTime_OnKilledEnemy.b)
 		end
-		return
 	elseif sdSet == "AllyDeath" then
-		if self.HasOnKilledEnemySound == true && CurTime() > self.AllyDeathSoundT then
+		if self.HasOnKilledEnemySound && CurTime() > self.NextAllyDeathSoundT then
 			local pickedSD = VJ.PICK(self.SoundTbl_AllyDeath)
-			if (math.random(1, self.AllyDeathSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.AllyDeathSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT = self.NextIdleSoundT + 2
 				self.CurrentSpeechSound = sdType(self, pickedSD, self.AllyDeathSoundLevel, self:VJ_DecideSoundPitch(self.AllyDeathSoundPitch.a, self.AllyDeathSoundPitch.b))
 			end
-			self.AllyDeathSoundT = CurTime() + math.Rand(self.NextSoundTime_AllyDeath.a, self.NextSoundTime_AllyDeath.b)
+			self.NextAllyDeathSoundT = CurTime() + math.Rand(self.NextSoundTime_AllyDeath.a, self.NextSoundTime_AllyDeath.b)
 		end
-		return
 	elseif sdSet == "Pain" then
-		if self.HasPainSounds == true && CurTime() > self.PainSoundT then
+		if self.HasPainSounds && CurTime() > self.NextPainSoundT then
 			local pickedSD = VJ.PICK(self.SoundTbl_Pain)
 			local sdDur = 2
-			if (math.random(1, self.PainSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.PainSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentSpeechSound = sdType(self, pickedSD, self.PainSoundLevel, self:VJ_DecideSoundPitch(self.PainSoundPitch.a, self.PainSoundPitch.b))
 				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
 			end
-			self.PainSoundT = CurTime() + ((self.NextSoundTime_Pain == false and sdDur) or math.Rand(self.NextSoundTime_Pain.a, self.NextSoundTime_Pain.b))
+			self.NextPainSoundT = CurTime() + ((self.NextSoundTime_Pain == false and sdDur) or math.Rand(self.NextSoundTime_Pain.a, self.NextSoundTime_Pain.b))
 		end
-		return
 	elseif sdSet == "Impact" then
-		if self.HasImpactSounds == true then
+		if self.HasImpactSounds then
 			local pickedSD = VJ.PICK(self.SoundTbl_Impact)
 			if pickedSD == false then pickedSD = VJ.PICK(DefaultSD_Impact) end -- Default table
-			if (math.random(1, self.ImpactSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.ImpactSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				self.CurrentImpactSound = sdType(self, pickedSD, self.ImpactSoundLevel, self:VJ_DecideSoundPitch(self.ImpactSoundPitch.a, self.ImpactSoundPitch.b))
 			end
 		end
-		return
 	elseif sdSet == "DamageByPlayer" then
-		//if self.HasDamageByPlayerSounds == true && CurTime() > self.NextDamageByPlayerSoundT then -- This is done in the call instead
+		//if self.HasDamageByPlayerSounds && CurTime() > self.NextDamageByPlayerSoundT then -- This is done in the call instead
 			local pickedSD = VJ.PICK(self.SoundTbl_DamageByPlayer)
 			local sdDur = 2
-			if (math.random(1, self.DamageByPlayerSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.DamageByPlayerSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
-				self.PainSoundT = CurTime() + sdDur
+				self.NextPainSoundT = CurTime() + sdDur
 				self.NextIdleSoundT_RegularChange = CurTime() + sdDur
 				self.CurrentSpeechSound = sdType(self, pickedSD, self.DamageByPlayerSoundLevel, self:VJ_DecideSoundPitch(self.DamageByPlayerPitch.a, self.DamageByPlayerPitch.b))
 			end
 			self.NextDamageByPlayerSoundT = CurTime() + ((self.NextSoundTime_DamageByPlayer == false and sdDur) or math.Rand(self.NextSoundTime_DamageByPlayer.a, self.NextSoundTime_DamageByPlayer.b))
 		//end
-		return
 	elseif sdSet == "Death" then
-		if self.HasDeathSounds == true then
+		if self.HasDeathSounds then
 			local pickedSD = VJ.PICK(self.SoundTbl_Death)
-			if (math.random(1, self.DeathSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.DeathSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				self.CurrentDeathSound = sdType(self, pickedSD, self.DeathSoundLevel, self:VJ_DecideSoundPitch(self.DeathSoundPitch.a, self.DeathSoundPitch.b))
 			end
 		end
-		return
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-- Base-Specific Sound Tables --=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	elseif sdSet == "Suppressing" then
-		if self.HasSuppressingSounds == true && CurTime() > self.NextSuppressingSoundT then
+		if self.HasSuppressingSounds && CurTime() > self.NextSuppressingSoundT then
 			local pickedSD = VJ.PICK(self.SoundTbl_Suppressing)
-			if (math.random(1, self.SuppressingSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.SuppressingSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + 2
@@ -4855,13 +4829,12 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			end
 			self.NextSuppressingSoundT = CurTime() + math.Rand(self.NextSoundTime_Suppressing.a, self.NextSoundTime_Suppressing.b)
 		end
-		return
 	elseif sdSet == "WeaponReload" then
-		if self.HasWeaponReloadSounds == true && CurTime() > self.NextWeaponReloadSoundT then
+		if self.HasWeaponReloadSounds && CurTime() > self.NextWeaponReloadSoundT then
 			local pickedSD = VJ.PICK(self.SoundTbl_WeaponReload)
 			local sdDur = 3
-			if (math.random(1, self.WeaponReloadSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.WeaponReloadSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
@@ -4870,68 +4843,63 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			end
 			self.NextWeaponReloadSoundT = CurTime() + sdDur
 		end
-		return
 	elseif sdSet == "BeforeMeleeAttack" then
-		if self.HasMeleeAttackSounds == true then
+		if self.HasMeleeAttackSounds then
 			local pickedSD = VJ.PICK(self.SoundTbl_BeforeMeleeAttack)
-			if (math.random(1, self.BeforeMeleeAttackSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.BeforeMeleeAttackSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentExtraSpeechSound = sdType(self, pickedSD, self.BeforeMeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.BeforeMeleeAttackSoundPitch.a, self.BeforeMeleeAttackSoundPitch.b))
 			end
 		end
-		return
 	elseif sdSet == "MeleeAttack" then
-		if self.HasMeleeAttackSounds == true then
+		if self.HasMeleeAttackSounds then
 			local pickedSD = VJ.PICK(self.SoundTbl_MeleeAttack)
 			if pickedSD == false then pickedSD = VJ.PICK(self.DefaultSoundTbl_MeleeAttack) end -- Default table
-			if (math.random(1, self.MeleeAttackSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.MeleeAttackSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentSpeechSound = sdType(self, pickedSD, self.MeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.MeleeAttackSoundPitch.a, self.MeleeAttackSoundPitch.b))
 			end
-			if self.HasExtraMeleeAttackSounds == true then
+			if self.HasExtraMeleeAttackSounds then
 				pickedSD = VJ.PICK(self.SoundTbl_MeleeAttackExtra)
-				if (math.random(1, self.ExtraMeleeSoundChance) == 1 && pickedSD) or customTbl then
+				if (math.random(1, self.ExtraMeleeSoundChance) == 1 && pickedSD) or customSD then
 					if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 					VJ.EmitSound(self, pickedSD, self.ExtraMeleeAttackSoundLevel, self:VJ_DecideSoundPitch(self.ExtraMeleeSoundPitch.a, self.ExtraMeleeSoundPitch.b))
 				end
 			end
 		end
-		return
 	elseif sdSet == "MeleeAttackMiss" then
-		if self.HasMeleeAttackMissSounds == true then
+		if self.HasMeleeAttackMissSounds then
 			local pickedSD = VJ.PICK(self.SoundTbl_MeleeAttackMiss)
 			if pickedSD == false then pickedSD = VJ.PICK(DefaultSoundTbl_MeleeAttackMiss) end -- Default table
-			if (math.random(1, self.MeleeAttackMissSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.MeleeAttackMissSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentMeleeAttackMissSound = sdType(self, pickedSD, self.MeleeAttackMissSoundLevel, self:VJ_DecideSoundPitch(self.MeleeAttackMissSoundPitch.a, self.MeleeAttackMissSoundPitch.b))
 			end
 		end
-		return
 	elseif sdSet == "GrenadeAttack" then
-		if self.HasGrenadeAttackSounds == true && CurTime() > self.NextGrenadeAttackSoundT then
+		if self.HasGrenadeAttackSounds && CurTime() > self.NextGrenadeAttackSoundT then
 			local pickedSD = VJ.PICK(self.SoundTbl_GrenadeAttack)
-			if (math.random(1, self.GrenadeAttackSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.GrenadeAttackSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
 				self.CurrentSpeechSound = sdType(self, pickedSD, self.GrenadeAttackSoundLevel, self:VJ_DecideSoundPitch(self.GrenadeAttackSoundPitch.a, self.GrenadeAttackSoundPitch.b))
 			end
 		end
-		return
 	elseif sdSet == "OnGrenadeSight" then
-		if self.HasOnGrenadeSightSounds == true && CurTime() > self.NextOnGrenadeSightSoundT then
+		if self.HasOnGrenadeSightSounds && CurTime() > self.NextOnGrenadeSightSoundT then
 			local pickedSD = VJ.PICK(self.SoundTbl_OnGrenadeSight)
-			if (math.random(1, self.OnGrenadeSightSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.OnGrenadeSightSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
@@ -4939,12 +4907,11 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			end
 			self.NextOnGrenadeSightSoundT = CurTime() + math.Rand(self.NextSoundTime_OnGrenadeSight.a, self.NextSoundTime_OnGrenadeSight.b)
 		end
-		return
 	elseif sdSet == "OnDangerSight" then
-		if self.HasOnDangerSightSounds == true && CurTime() > self.NextOnDangerSightSoundT then
+		if self.HasOnDangerSightSounds && CurTime() > self.NextOnDangerSightSoundT then
 			local pickedSD = VJ.PICK(self.SoundTbl_OnDangerSight)
-			if (math.random(1, self.OnDangerSightSoundChance) == 1 && pickedSD) or customTbl then
-				if customTbl then pickedSD = customTbl end
+			if (math.random(1, self.OnDangerSightSoundChance) == 1 && pickedSD) or customSD then
+				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
@@ -4952,38 +4919,31 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			end
 			self.NextOnDangerSightSoundT = CurTime() + math.Rand(self.NextSoundTime_OnDangerSight.a, self.NextSoundTime_OnDangerSight.b)
 		end
-		return
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:FootStepSoundCode(customSD)
-	if self.HasSounds && self.HasFootStepSound && self.MovementType != VJ_MOVETYPE_STATIONARY && self:IsOnGround() && self:GetGroundEntity() != NULL then
+	if self.HasSounds && self.HasFootStepSound && self.MovementType != VJ_MOVETYPE_STATIONARY && self:IsOnGround() then
 		if self.DisableFootStepSoundTimer then
 			-- Use custom table if available, if none found then use the footstep sound table, if again none found then use the backup default footstep sounds
-			local pickedSD;
-			if customSD then pickedSD = VJ.PICK(customSD) end
-			if !pickedSD then
-				pickedSD = VJ.PICK(self.SoundTbl_FootStep)
-				if !pickedSD then pickedSD = DefaultSoundTbl_FootStep end
+			local pickedSD = (customSD and VJ.PICK(customSD)) or VJ.PICK(self.SoundTbl_FootStep) or DefaultSoundTbl_FootStep
+			if pickedSD then
+				VJ.EmitSound(self, pickedSD, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
+				local funcCustom = self.OnFootstepSound; if funcCustom then funcCustom(self, "Event", pickedSD) end
 			end
-			VJ.EmitSound(self, pickedSD, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
-			local funcCustom = self.OnFootstepSound; if funcCustom then funcCustom(self, "Event", pickedSD) end
-		elseif self:IsMoving() && CurTime() > self.FootStepT && self:GetInternalVariable("m_flMoveWaitFinished") <= 0 then
+		elseif self:IsMoving() && CurTime() > self.NextFootstepSoundT && self:GetMoveDelay() <= 0 then
 			-- Use custom table if available, if none found then use the footstep sound table, if again none found then use the backup default footstep sounds
-			local pickedSD;
-			if customSD then pickedSD = VJ.PICK(customSD) end
-			if !pickedSD then
-				pickedSD = VJ.PICK(self.SoundTbl_FootStep)
-				if !pickedSD then pickedSD = DefaultSoundTbl_FootStep end
-			end
-			if !self.DisableFootStepOnRun && self:GetMovementActivity() == ACT_RUN then
-				VJ.EmitSound(self, pickedSD, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
-				local funcCustom = self.OnFootstepSound; if funcCustom then funcCustom(self, "Run", pickedSD) end
-				self.FootStepT = CurTime() + self.FootStepTimeRun
-			elseif !self.DisableFootStepOnWalk && self:GetMovementActivity() == ACT_WALK then
-				VJ.EmitSound(self, pickedSD, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
-				local funcCustom = self.OnFootstepSound; if funcCustom then funcCustom(self, "Walk", pickedSD) end
-				self.FootStepT = CurTime() + self.FootStepTimeWalk
+			local pickedSD = (customSD and VJ.PICK(customSD)) or VJ.PICK(self.SoundTbl_FootStep) or DefaultSoundTbl_FootStep
+			if pickedSD then
+				if !self.DisableFootStepOnRun && self:GetMovementActivity() == ACT_RUN then
+					VJ.EmitSound(self, pickedSD, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
+					local funcCustom = self.OnFootstepSound; if funcCustom then funcCustom(self, "Run", pickedSD) end
+					self.NextFootstepSoundT = CurTime() + self.FootStepTimeRun
+				elseif !self.DisableFootStepOnWalk && self:GetMovementActivity() == ACT_WALK then
+					VJ.EmitSound(self, pickedSD, self.FootStepSoundLevel, self:VJ_DecideSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
+					local funcCustom = self.OnFootstepSound; if funcCustom then funcCustom(self, "Walk", pickedSD) end
+					self.NextFootstepSoundT = CurTime() + self.FootStepTimeWalk
+				end
 			end
 		end
 	end

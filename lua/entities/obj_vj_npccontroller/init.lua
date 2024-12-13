@@ -235,6 +235,7 @@ function ENT:SetControlledNPC(npcEnt)
 			[18] = npcEnt.CanEat,
 			[19] = npcEnt.NoChaseAfterCertainRange,
 			[20] = npcEnt.ConstantlyFaceEnemy,
+			[21] = npcEnt.IsMedic,
 		}
 		npcEnt.DisableWandering = true
 		npcEnt.DisableChasingEnemy = true
@@ -256,6 +257,7 @@ function ENT:SetControlledNPC(npcEnt)
 		npcEnt.CanEat = false
 		npcEnt.NoChaseAfterCertainRange = false
 		npcEnt.ConstantlyFaceEnemy = false
+		npcEnt.IsMedic = false
 		npcEnt.PauseAttacks = true
 		npcEnt.NextThrowGrenadeT = 0
 		 -- Apply a delay to VJ NPCs so they don't attack right away
@@ -562,6 +564,7 @@ function ENT:StopControlling(keyPressed)
 			npc.CanEat = npcData[18]
 			npc.NoChaseAfterCertainRange = npcData[19]
 			npc.ConstantlyFaceEnemy = npcData[20]
+			npc.IsMedic = npcData[21]
 		end
 	end
 	//self.VJCE_Camera:Remove()

@@ -31,7 +31,7 @@ SWEP.Spawnable					= true
 SWEP.AdminSpawnable				= false
 SWEP.UseHands = true -- Should this weapon use Garry's Mod hands? (The model must support it!)
 	-- Primary/Secondary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.Primary.Sound = {"physics/flesh/flesh_squishy_impact_hard1.wav","physics/flesh/flesh_squishy_impact_hard2.wav","physics/flesh/flesh_squishy_impact_hard3.wav","physics/flesh/flesh_squishy_impact_hard4.wav"} -- Sound played when the weapon is deployed
+SWEP.Primary.Sound = {"physics/flesh/flesh_squishy_impact_hard1.wav", "physics/flesh/flesh_squishy_impact_hard2.wav", "physics/flesh/flesh_squishy_impact_hard3.wav", "physics/flesh/flesh_squishy_impact_hard4.wav"}
 SWEP.Primary.SoundPitch	= VJ.SET(140, 140)
 SWEP.Primary.ClipSize 			= -1
 SWEP.Primary.DefaultClip		= -1
@@ -46,8 +46,6 @@ SWEP.WorldModel_UseCustomPosition = true -- Should the gun use custom position? 
 SWEP.WorldModel_CustomPositionAngle = Vector(0, 0, 0)
 SWEP.WorldModel_CustomPositionOrigin = Vector(0, 4, -1.1)
 SWEP.WorldModel_CustomPositionBone = "ValveBiped.Bip01_R_Hand" -- The bone it will use as the main point (Owner's bone)
-SWEP.WorldModel_Invisible = false -- Should the world model be invisible?
-SWEP.WorldModel_NoShadow = false -- Should the world model have a shadow?
 
 SWEP.DeploySound = {"physics/flesh/flesh_squishy_impact_hard1.wav","physics/flesh/flesh_squishy_impact_hard2.wav","physics/flesh/flesh_squishy_impact_hard3.wav","physics/flesh/flesh_squishy_impact_hard4.wav"} -- Sound played when the weapon is deployed
 ---------------------------------------------------------------------------------------------------------------------------------------------

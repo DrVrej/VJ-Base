@@ -108,7 +108,7 @@ function VJ.Color2Byte(color)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ.CreateSound(ent, sdFile, sdLevel, sdPitch, customFunc)
-	if not sdFile then return end
+	if !sdFile then return end
 	if istable(sdFile) then
 		if #sdFile < 1 then return end -- If the table is empty then end it
 		sdFile = sdFile[math.random(1, #sdFile)]
@@ -124,7 +124,7 @@ function VJ.CreateSound(ent, sdFile, sdLevel, sdPitch, customFunc)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function VJ.EmitSound(ent, sdFile, sdLevel, sdPitch, sdVolume, sdChannel)
-	if not sdFile then return end
+	if !sdFile then return end
 	if istable(sdFile) then
 		if #sdFile < 1 then return end -- If the table is empty then end it
 		sdFile = sdFile[math.random(1, #sdFile)]
