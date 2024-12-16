@@ -51,24 +51,25 @@ SWEP.NPC_CustomSpread = 1 -- This is added on top of the custom spread that's se
 SWEP.NPC_BulletSpawnAttachment = "" -- The attachment that the bullet spawns on, leave empty for base to decide!
 SWEP.NPC_CanBePickedUp = true -- Can this weapon be picked up by NPCs? (Ex: Rebels)
 SWEP.NPC_StandingOnly = false -- If true, the weapon can only be fired if the NPC is standing still
-	-- ====== Firing Distance ====== --
+	-- ====== Firing Control ====== --
 SWEP.NPC_FiringDistanceScale = 1 -- Changes how far the NPC can fire | 1 = No change, x < 1 = closer, x > 1 = farther
 SWEP.NPC_FiringDistanceMax = 100000 -- Maximum firing distance | Clamped at the maximum sight distance of the NPC
-	-- ====== Reload Variables ====== --
+SWEP.NPC_FiringCone = 0.9 -- NPC can only fire when their target is within the cone (between -1 & 1) | -1 = 360° | 0 = 180 | 1 = Can fire when directly aiming at the target (nearly impossible)
+	-- ====== Reload ====== --
 SWEP.NPC_HasReloadSound = true -- Should it play a sound when the base detects the SNPC playing a reload animation?
 SWEP.NPC_ReloadSound = {} -- Sounds it plays when the base detects the SNPC playing a reload animation
 SWEP.NPC_ReloadSoundLevel = 60 -- How far does the sound go?
-	-- ====== Before Fire Sound Variables ====== --
+	-- ====== Before Fire Sound ====== --
 	-- NOTE: This only works with VJ Human NPCs!
 SWEP.NPC_BeforeFireSound = {} -- Plays a sound before the firing code is ran, usually in the beginning of the animation
 SWEP.NPC_BeforeFireSoundLevel = 70 -- How far does the sound go?
 SWEP.NPC_BeforeFireSoundPitch = VJ.SET(90, 100) -- How much time until the secondary fire can be used again?
-	-- ====== Extra Firing Sound Variables ====== --
+	-- ====== Extra Firing Sound ====== --
 SWEP.NPC_ExtraFireSound = {} -- Plays an extra sound after it fires (Example: Bolt action sound)
 SWEP.NPC_ExtraFireSoundTime = 0.4 -- How much time until it plays the sound (After Firing)?
 SWEP.NPC_ExtraFireSoundLevel = 70 -- How far does the sound go?
 SWEP.NPC_ExtraFireSoundPitch = VJ.SET(90, 100) -- How much time until the secondary fire can be used again?
-	-- ====== Secondary Fire Variables ====== --
+	-- ====== Secondary Fire ====== --
 SWEP.NPC_HasSecondaryFire = false -- Can the weapon have a secondary fire?
 SWEP.NPC_SecondaryFireEnt = "obj_vj_grenade_rifle" -- The entity to fire, this only applies if self:NPC_SecondaryFire() has NOT been overridden!
 SWEP.NPC_SecondaryFireChance = 3 -- Chance that the secondary fire is used | 1 = always
@@ -80,7 +81,7 @@ SWEP.NPC_SecondaryFireSoundLevel = 90 -- The sound level to use for the secondar
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Player Only ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	-- ====== Inventory-Related Variables ====== --
+	-- ====== Inventory-Related ====== --
 SWEP.Slot = 2 -- Which weapon slot you want your SWEP to be in? (1 2 3 4 5 6)
 SWEP.SlotPos = 4 -- Which part of that slot do you want the SWEP to be in? (1 2 3 4 5 6)
 SWEP.Weight = 30 -- Decides whether we should switch from/to this
@@ -88,19 +89,19 @@ SWEP.AutoSwitchTo = false -- Auto switch to this weapon when it's picked up
 SWEP.AutoSwitchFrom = false -- Auto switch weapon when the owner picks up a better weapon
 SWEP.DrawWeaponInfoBox = true -- Should the information box show in the weapon selection menu?
 SWEP.BounceWeaponIcon = true -- Should the icon bounce in the weapon selection menu?
-	-- ====== Deployment Variables ====== --
+	-- ====== Deployment ====== --
 SWEP.AnimTbl_Deploy = ACT_VM_DRAW
 SWEP.HasDeploySound = true -- Does the weapon have a deploy sound?
 SWEP.DeploySound = {} -- Sound played when the weapon is deployed
-	-- ====== Idle Variables ====== --
+	-- ====== Idle ====== --
 SWEP.HasIdleAnimation = true -- Does it have a idle animation?
 SWEP.AnimTbl_Idle = ACT_VM_IDLE
-	-- ====== Reload Variables ====== --
+	-- ====== Reload ====== --
 SWEP.HasReloadSound = false -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
 SWEP.ReloadSound = {}
 SWEP.AnimTbl_Reload = ACT_VM_RELOAD
 SWEP.Reload_TimeUntilAmmoIsSet = 1 -- Time until ammo is set to the weapon
-	-- ====== Secondary Fire Variables ====== --
+	-- ====== Secondary Fire ====== --
 SWEP.Secondary.Automatic = false -- Should the weapon continue firing as long as the attack button is held down?
 SWEP.Secondary.Ammo = "none" -- Ammo type
 SWEP.Secondary.TakeAmmo = 1 -- How much ammo should it take on each shot?
@@ -137,7 +138,7 @@ SWEP.Primary.Ammo = "SMG1" -- Ammo type
 SWEP.Primary.ClipSize = 30 -- Max amount of rounds per clip
 SWEP.Primary.PickUpAmmoAmount = "Default" -- How much ammo should the player get the gun is picked up? | "Default" = 3 Clips
 SWEP.AnimTbl_PrimaryFire = ACT_VM_PRIMARYATTACK
-	-- ====== Sound Variables ====== --
+	-- ====== Sound ====== --
 SWEP.Primary.Sound = {}
 SWEP.Primary.SoundLevel = 80
 SWEP.Primary.SoundPitch	= VJ.SET(90, 110)
@@ -147,7 +148,7 @@ SWEP.Primary.HasDistantSound = true -- Does it have a distant sound when the gun
 SWEP.Primary.DistantSoundLevel = 140
 SWEP.Primary.DistantSoundPitch = VJ.SET(90, 110)
 SWEP.Primary.DistantSoundVolume = 1
-	-- ====== Effect Variables ====== --
+	-- ====== Effect ====== --
 SWEP.PrimaryEffects_MuzzleFlash = true
 SWEP.PrimaryEffects_MuzzleParticles = {"vj_rifle_full"}
 SWEP.PrimaryEffects_MuzzleParticlesAsOne = false -- Should all the particles spawn together instead of picking only one?
@@ -159,7 +160,7 @@ SWEP.PrimaryEffects_SpawnDynamicLight = true
 SWEP.PrimaryEffects_DynamicLightBrightness = 4
 SWEP.PrimaryEffects_DynamicLightDistance = 120
 SWEP.PrimaryEffects_DynamicLightColor = Color(255, 150, 60)
-	-- ====== Melee Variables ====== --
+	-- ====== Melee ====== --
 SWEP.IsMeleeWeapon = false -- Should this weapon be a melee weapon?
 SWEP.MeleeWeaponDistance = 60 -- If it's this close, it will attack
 SWEP.MeleeWeaponSound_Hit = "physics/flesh/flesh_impact_bullet1.wav" -- Sound it plays when it hits something
@@ -229,9 +230,12 @@ function SWEP:NPC_SecondaryFire()
 	local phys = projectile:GetPhysicsObject()
 	if IsValid(phys) then
 		phys:Wake()
-		local vel = owner:CalculateProjectile("Line", spawnPos, owner:GetAimPosition(owner:GetEnemy(), spawnPos, 1, 1000), 1000)
-		phys:SetVelocity(vel)
-		projectile:SetAngles(vel:GetNormal():Angle())
+		if phys:IsGravityEnabled() then
+			phys:SetVelocity(VJ.CalculateTrajectory(owner, owner:GetEnemy(), "Curve", projectile:GetPos(), 1, 1))
+		else
+			phys:SetVelocity(VJ.CalculateTrajectory(owner, owner:GetEnemy(), "Line", projectile:GetPos(), 1, 2000))
+		end
+		projectile:SetAngles(projectile:GetVelocity():GetNormal():Angle())
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -408,9 +412,9 @@ function SWEP:Equip(newOwner)
 	elseif newOwner:IsNPC() then
 		hook.Add("Think", self, self.NPC_ServerNextFire)
 		if newOwner.IsVJBaseSNPC then
-			if newOwner.IsVJBaseSNPC_Human == true then
+			if newOwner.IsVJBaseSNPC_Human then
 				newOwner.Weapon_OriginalFiringDistanceFar = newOwner.Weapon_OriginalFiringDistanceFar or newOwner.Weapon_FiringDistanceFar
-				if self.IsMeleeWeapon == true then
+				if self.IsMeleeWeapon then
 					newOwner.Weapon_FiringDistanceFar = self.MeleeWeaponDistance
 				else
 					newOwner.Weapon_FiringDistanceFar = math.Clamp(newOwner.Weapon_OriginalFiringDistanceFar * self.NPC_FiringDistanceScale, newOwner.Weapon_FiringDistanceClose, self.NPC_FiringDistanceMax)
@@ -554,7 +558,19 @@ function SWEP:NPC_CanFire()
 				return false
 			end
 			if IsValid(ene) && ((!owner.VJ_IsBeingControlled) or (owner.VJ_IsBeingControlled && owner.VJ_TheController:KeyDown(IN_ATTACK2))) then
-				return true
+				-- Check make sure the enemy is within the firing cone!
+				local spawnPos = self:GetPos() //self:GetBulletPos() -- Because "GetBulletPos" is VERY costly sadly =(
+				local aimPos = owner.IsVJBaseSNPC and owner:GetAimPosition(ene, spawnPos, 0) or ene:BodyTarget(spawnPos)
+				local aimDir = aimPos - spawnPos
+				local sightDir = owner:GetInternalVariable("m_latchedHeadDirection") // owner:GetForward() -- Owner's sight direction
+				aimDir.z = 0
+				aimDir:Normalize()
+				sightDir.z = 0
+				sightDir:Normalize()
+				//print(sightDir:Dot(aimDir))
+				//debugoverlay.Line(spawnPos, spawnPos + aimDir * 10000, 2, Color(255, 0, 0), true) -- Red: Direction to enemy
+				//debugoverlay.Line(spawnPos, spawnPos + sightDir * 10000, 2, Color(0, 255, 0), true) -- Green: Aim direction
+				return sightDir:Dot(aimDir) > self.NPC_FiringCone
 			end
 		end
 	end
@@ -631,7 +647,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	if (!self:CanPrimaryAttack()) then return end
 	if self:OnPrimaryAttack("Initial") == true then return end
 	
-	if isNPC && owner.IsVJBaseSNPC == true then
+	if isNPC && owner.IsVJBaseSNPC then
 		timer.Simple(self.NPC_ExtraFireSoundTime, function()
 			if IsValid(self) && IsValid(owner) then
 				VJ.EmitSound(owner, self.NPC_ExtraFireSound, self.NPC_ExtraFireSoundLevel, math.Rand(self.NPC_ExtraFireSoundPitch.a, self.NPC_ExtraFireSoundPitch.b))
@@ -647,7 +663,7 @@ function SWEP:PrimaryAttack(UseAlt)
 			//EmitSound(fireSd, owner:GetPos(), owner:EntIndex(), CHAN_WEAPON, 1, 140, 0, 100, 0, filter)
 			//sound.Play(fireSd, owner:GetPos(), self.Primary.SoundLevel, math.random(self.Primary.SoundPitch.a, self.Primary.SoundPitch.b), self.Primary.SoundVolume)
 		end
-		if self.Primary.HasDistantSound == true then
+		if self.Primary.HasDistantSound then
 			local fireFarSd = VJ.PICK(self.Primary.DistantSound)
 			if fireFarSd != false then
 				-- Use "CHAN_AUTO" instead of "CHAN_WEAPON" otherwise it will override primary firing sound because it's also "CHAN_WEAPON"
@@ -657,12 +673,12 @@ function SWEP:PrimaryAttack(UseAlt)
 	end
 	
 	-- Firing Gesture
-	if owner.IsVJBaseSNPC_Human == true && owner.DisableWeaponFiringGesture != true then
+	if owner.IsVJBaseSNPC_Human && owner.DisableWeaponFiringGesture != true then
 		owner:PlayAnim(owner:TranslateActivity(VJ.PICK(owner.AnimTbl_WeaponAttackFiringGesture)), false, false, false, 0, {AlwaysUseGesture=true})
 	end
 	
 	-- MELEE WEAPON
-	if self.IsMeleeWeapon == true then
+	if self.IsMeleeWeapon then
 		local meleeHitEnt = false
 		for _,v in ipairs(ents.FindInSphere(owner:GetPos(), self.MeleeWeaponDistance + 20)) do
 			if (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) or (v:IsPlayer() && v.VJTag_IsControllingNPC == true) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
@@ -682,7 +698,7 @@ function SWEP:PrimaryAttack(UseAlt)
 				meleeHitEnt = true
 			end
 		end
-		if meleeHitEnt == true then
+		if meleeHitEnt then
 			local meleeSd = VJ.PICK(self.MeleeWeaponSound_Hit)
 			if meleeSd != false then
 				self:EmitSound(meleeSd, 70, math.random(90, 100), 1, CHAN_AUTO, 0, 0, VJ_RecipientFilter)
@@ -696,7 +712,7 @@ function SWEP:PrimaryAttack(UseAlt)
 		end
 	-- REGULAR WEAPON (NON-MELEE)
 	else
-		if self.Primary.DisableBulletCode == false then
+		if !self.Primary.DisableBulletCode then
 			local bullet = {}
 				bullet.Num = self.Primary.NumberOfShots
 				bullet.Tracer = self.Primary.Tracer

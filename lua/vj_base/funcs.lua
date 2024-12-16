@@ -62,13 +62,15 @@ end
 		- true, Value was found in the table
 -----------------------------------------------------------]]
 function VJ.HasValue(tbl, val)
-	if !istable(tbl) then return false end
-	for x = 1, #tbl do
-		if tbl[x] == val then
-			return true
+	if istable(tbl) then
+		for x = 1, #tbl do
+			if tbl[x] == val then
+				return true
+			end
 		end
+	else
+		return tbl == val
 	end
-	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------

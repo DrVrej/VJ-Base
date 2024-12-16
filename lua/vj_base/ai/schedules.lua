@@ -265,11 +265,12 @@ function ENT:TranslateNavGoal(enemy, currentGoal)
 	-- For "GOALTYPE_ENEMY" only
 	-- This is called every 0.1 seconds from here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L5790
 	if self:GetCurGoalType() == 2 then
-		if self.LatestEnemyDistance < 200 then
-			-- This makes "GetGoalRepathTolerance" return 0 as seen here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L5756
-			-- Otherwise it will go to the enemy if certain tolerance is passed!
-			self:SetArrivalDistance((self:GetPos() - currentGoal):Length())
-		end
+		-- Disabled for now as it causes movement stuttering when near the enemy
+		//if self.LatestEnemyDistance < 120 then
+		//	-- This makes "GetGoalRepathTolerance" return 0 as seen here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L5756
+		//	-- Otherwise it will go to the enemy only if certain tolerance is passed!
+		//	self:SetArrivalDistance((self:GetPos() - currentGoal):Length())
+		//end
 		return enemy:GetPos() -- Otherwise it will use "GetEnemyLastKnownPos", which is often incorrect location especially when sight is blocked!
 	end
 	//print("TranslateNavGoal", enemy, currentGoal)
@@ -282,7 +283,7 @@ function ENT:StartSchedule(schedule)
 	-- Certain states should ONLY do animation schedules!
 	if !schedule.IsPlayActivity then
 		local curState = self:GetState()
-		if curState == VJ_STATE_ONLY_ANIMATION or curState == VJ_STATE_ONLY_ANIMATION_CONSTANT or curState == VJ_STATE_ONLY_ANIMATION_NOATTACK then return end
+		if curState >= VJ_STATE_ONLY_ANIMATION then return end
 	end
 	local curSchedule = self.CurrentSchedule
 	if curSchedule then

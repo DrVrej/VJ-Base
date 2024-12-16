@@ -53,24 +53,6 @@ function SWEP:NPC_SecondaryFire_BeforeTimer(eneEnt, fireTime)
 	VJ.EmitSound(self, "weapons/cguard/charging.wav", 70)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function SWEP:NPC_SecondaryFire()
-	local owner = self:GetOwner()
-	local spawnPos = self:GetBulletPos()
-	local projectile = ents.Create(self.NPC_SecondaryFireEnt)
-	projectile:SetPos(spawnPos)
-	projectile:SetAngles(owner:GetAngles())
-	projectile:SetOwner(owner)
-	projectile:Spawn()
-	projectile:Activate()
-	local phys = projectile:GetPhysicsObject()
-	if IsValid(phys) then
-		phys:Wake()
-		local vel = owner:CalculateProjectile("Line", spawnPos, owner:GetAimPosition(owner:GetEnemy(), spawnPos, 1, 2000), 2000)
-		phys:SetVelocity(vel)
-		projectile:SetAngles(vel:GetNormal():Angle())
-	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnSecondaryAttack()
 	local owner = self:GetOwner()
 	local vm = owner:GetViewModel()

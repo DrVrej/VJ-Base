@@ -368,15 +368,15 @@ function ENT:Think()
 		self:OnThink()
 
 		local canTurn = true
-		if npc.Flinching == true or (((npc.CurrentSchedule && !npc.CurrentSchedule.IsPlayActivity) or npc.CurrentSchedule == nil) && npc:GetNavType() == NAV_JUMP) then return end
+		if npc.Flinching or (((npc.CurrentSchedule && !npc.CurrentSchedule.IsPlayActivity) or !npc.CurrentSchedule) && npc:GetNavType() == NAV_JUMP) then return end
 
 		-- Weapon attack
-		if npc.IsVJBaseSNPC_Human == true then
-			if IsValid(npcWeapon) && !npc:IsMoving() && npcWeapon.IsVJBaseWeapon == true && ply:KeyDown(IN_ATTACK2) && npc.AttackType && npc.PauseAttacks == false && npc:GetWeaponState() == VJ.NPC_WEP_STATE_READY then
+		if npc.IsVJBaseSNPC_Human then
+			if IsValid(npcWeapon) && !npc:IsMoving() && npcWeapon.IsVJBaseWeapon && ply:KeyDown(IN_ATTACK2) && !npc.AttackType && !npc.PauseAttacks && npc:GetWeaponState() == VJ.NPC_WEP_STATE_READY then
 				//npc:SetAngles(Angle(0,math.ApproachAngle(npc:GetAngles().y,ply:GetAimVector():Angle().y,100),0))
 				npc:SetTurnTarget(bullseyePos, 0.2)
 				canTurn = false
-				if VJ.IsCurrentAnimation(npc, npc:TranslateActivity(npc.CurrentWeaponAnimation)) == false && VJ.IsCurrentAnimation(npc, npc.AnimTbl_WeaponAttack) == false then
+				if !VJ.IsCurrentAnimation(npc, npc:TranslateActivity(npc.CurrentWeaponAnimation)) && !VJ.IsCurrentAnimation(npc, npc.AnimTbl_WeaponAttack) then
 					npc:OnWeaponAttack()
 					npc.CurrentWeaponAnimation = VJ.PICK(npc.AnimTbl_WeaponAttack)
 					npc:PlayAnim(npc.CurrentWeaponAnimation, false, 2, false)
