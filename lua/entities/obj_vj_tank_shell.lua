@@ -43,14 +43,14 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.Model = "models/weapons/w_missile_launch.mdl" -- The models it should spawn with | Picks a random one from the table
-ENT.DoesRadiusDamage = true -- Should it do a blast damage when it hits something?
-ENT.RadiusDamageRadius = 250 -- How far the damage go? The farther away it's from its enemy, the less damage it will do | Counted in world units
-ENT.RadiusDamage = 110 -- How much damage should it deal? Remember this is a radius damage, therefore it will do less damage the farther away the entity is from its enemy
-ENT.RadiusDamageUseRealisticRadius = true -- Should the damage decrease the farther away the enemy is from the position that the projectile hit?
-ENT.RadiusDamageType = DMG_BLAST -- Damage type
-ENT.RadiusDamageForce = 90 -- Put the force amount it should apply | false = Don't apply any force
-ENT.DecalTbl_DeathDecals = {"Scorch"}
+ENT.Model = "models/weapons/w_missile_launch.mdl" -- Model(s) to spawn with | Picks a random one if it's a table
+ENT.DoesRadiusDamage = true -- Should it deal radius damage when it collides with something?
+ENT.RadiusDamageRadius = 250
+ENT.RadiusDamage = 110
+ENT.RadiusDamageUseRealisticRadius = true -- Should the damage decrease the farther away the hit entity is from the radius origin?
+ENT.RadiusDamageType = DMG_BLAST
+ENT.RadiusDamageForce = 90 -- Damage force to apply to the hit entity | false = Don't apply any force
+ENT.CollisionDecals = {"Scorch"}
 ENT.SoundTbl_Idle = "weapons/rpg/rocket1.wav"
 ENT.SoundTbl_OnCollide = "ambient/explosions/explode_8.wav"
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -77,7 +77,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defAngle = Angle(0, 0, 0)
 --
-function ENT:DeathEffects(data, phys)
+function ENT:OnDestroy(data, phys)
 	VJ.EmitSound(self, "VJ.Explosion")
 	ParticleEffect("vj_explosion3", data.HitPos, defAngle)
 	util.ScreenShake(data.HitPos, 16, 200, 1, 3000)

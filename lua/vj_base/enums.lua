@@ -70,6 +70,31 @@ VJ.ANIM_SET_METROCOP			= 2 -- Current model's animation set is HL2 metrocop
 VJ.ANIM_SET_REBEL				= 3 -- Current model's animation set is HL2 citizen / rebel
 VJ.ANIM_SET_PLAYER				= 4 -- Current model's animation set is default player
 VJ.ANIM_SET_CUSTOM				= 10 -- Use this when defining a custom model set
+
+-- Projectile types
+VJ.PROJ_TYPE_LINEAR = 0
+	-- Gravity: Disabled
+	-- Mass: 1
+	-- Collision Group: COLLISION_GROUP_PROJECTILE
+	-- Triggers: Enabled
+	-- Examples: Rocket, Orb
+VJ.PROJ_TYPE_GRAVITY = 1
+	-- Gravity: Enabled
+	-- Mass: 1
+	-- Collision Group: COLLISION_GROUP_PROJECTILE
+	-- Triggers: Enabled
+	-- Examples: Spit
+VJ.PROJ_TYPE_PROP = 2
+	-- Gravity: Enabled
+	-- Mass: Model's mass
+	-- Collision Group: COLLISION_GROUP_NONE
+	-- Triggers: Disabled (Can't touch noclipping players, Certain flying NPCs, etc.)
+	-- Examples: Grenade
+
+-- Projectile collision behavior
+VJ.PROJ_COLLISION_NONE = false -- Do nothing
+VJ.PROJ_COLLISION_REMOVE = 1 -- Deal damage, paint decal, play sound, etc, and then remove the entity
+VJ.PROJ_COLLISION_PERSIST = 2 -- Deal damage, paint decal, play sound, etc, but do NOT remove the entity
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Tags / Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

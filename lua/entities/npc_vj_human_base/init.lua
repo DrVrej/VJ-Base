@@ -624,7 +624,7 @@ function ENT:OnThink() end
 function ENT:OnThinkActive() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE | Called at the end of every entity it checks every process time
--- NOTE: "calculatedDisp" can be nil especially if its disposition towards the entity is D_NU!
+-- NOTE: "calculatedDisp" can in some cases be nil
 -- function ENT:OnMaintainRelationships(ent, calculatedDisp, entDist) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- UNCOMMENT TO USE
@@ -1916,7 +1916,7 @@ function ENT:Initialize()
 		end
 	end
 	self.SelectedDifficulty = GetConVar("vj_npc_difficulty"):GetInt()
-	if VJ.PICK(self.Model) != false then self:SetModel(VJ.PICK(self.Model)) end
+	if VJ.PICK(self.Model) then self:SetModel(VJ.PICK(self.Model)) end
 	self:SetHullType(self.HullType)
 	self:SetHullSizeNormal()
 	if self.HasSetSolid == true then self:SetSolid(SOLID_BBOX) end // SOLID_OBB

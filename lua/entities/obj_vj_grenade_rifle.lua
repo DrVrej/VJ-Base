@@ -29,18 +29,23 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.Model = "models/weapons/ar2_grenade.mdl" -- The models it should spawn with | Picks a random one from the table
-ENT.DoesRadiusDamage = true -- Should it do a blast damage when it hits something?
-ENT.RadiusDamageRadius = 150 -- How far the damage go? The farther away it's from its enemy, the less damage it will do | Counted in world units
-ENT.RadiusDamage = 80 -- How much damage should it deal? Remember this is a radius damage, therefore it will do less damage the farther away the entity is from its enemy
-ENT.RadiusDamageUseRealisticRadius = true -- Should the damage decrease the farther away the enemy is from the position that the projectile hit?
-ENT.RadiusDamageType = DMG_BLAST -- Damage type
-ENT.RadiusDamageForce = 90 -- Put the force amount it should apply | false = Don't apply any force
-ENT.DecalTbl_DeathDecals = {"Scorch"} -- Decals that paint when the projectile dies | It picks a random one from this table
+ENT.Model = "models/weapons/ar2_grenade.mdl" -- Model(s) to spawn with | Picks a random one if it's a table
+ENT.ProjectileType = VJ.PROJ_TYPE_GRAVITY
+ENT.DoesRadiusDamage = true -- Should it deal radius damage when it collides with something?
+ENT.RadiusDamageRadius = 150
+ENT.RadiusDamage = 80
+ENT.RadiusDamageUseRealisticRadius = true -- Should the damage decrease the farther away the hit entity is from the radius origin?
+ENT.RadiusDamageType = DMG_BLAST
+ENT.RadiusDamageForce = 90 -- Damage force to apply to the hit entity | false = Don't apply any force
+ENT.CollisionDecals = "Scorch" -- Decals that paint when the projectile dies | It picks a random one from this table
 ENT.OnRemoveSoundLevel = 100
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnInitializeBeforePhys()
+function ENT:InitPhys()
 	self:PhysicsInitSphere(5, "metal_bouncy")
+	local phys = self:GetPhysicsObject()
+	if IsValid(phys) then
+		phys:AddAngleVelocity(Vector(0, math.random(300, 400), 0))
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
@@ -48,18 +53,9 @@ function ENT:Init()
 	ParticleEffectAttach("Rocket_Smoke_Trail", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomPhysicsObjectOnInitialize(phys)
-	phys:Wake()
-	phys:SetMass(1)
-	phys:EnableGravity(true)
-	phys:EnableDrag(false)
-	phys:SetBuoyancyRatio(0)
-	phys:AddAngleVelocity(Vector(0, math.random(300, 400), 0))
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 local defAngle = Angle(0, 0, 0)
 --
-function ENT:DeathEffects(data, phys)
+function ENT:OnDestroy(data, phys)
 	VJ.EmitSound(self, "VJ.Explosion")
 	ParticleEffect("vj_explosion1", data.HitPos, defAngle)
 	util.ScreenShake(data.HitPos, 100, 200, 1, 2500)

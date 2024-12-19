@@ -30,45 +30,37 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.Model = "models/vj_weapons/w_grenade.mdl" -- The models it should spawn with | Picks a random one from the table
-ENT.MoveCollideType = nil
-ENT.CollisionGroupType = nil
-ENT.SolidType = SOLID_VPHYSICS
-ENT.RemoveOnHit = false -- Should it remove itself when it touches something? | It will run the hit sound, place a decal, etc.
-ENT.DoesRadiusDamage = true -- Should it do a blast damage when it hits something?
-ENT.RadiusDamageRadius = 250 -- How far the damage go? The farther away it's from its enemy, the less damage it will do | Counted in world units
-ENT.RadiusDamage = 80 -- How much damage should it deal? Remember this is a radius damage, therefore it will do less damage the farther away the entity is from its enemy
-ENT.RadiusDamageUseRealisticRadius = true -- Should the damage decrease the farther away the enemy is from the position that the projectile hit?
-ENT.RadiusDamageType = DMG_BLAST -- Damage type
-ENT.RadiusDamageForce = 90 -- Put the force amount it should apply | false = Don't apply any force
-ENT.DecalTbl_DeathDecals = {"Scorch"}
+ENT.Model = "models/vj_weapons/w_grenade.mdl" -- Model(s) to spawn with | Picks a random one if it's a table
+ENT.ProjectileType = VJ.PROJ_TYPE_PROP
+ENT.DoesRadiusDamage = true -- Should it deal radius damage when it collides with something?
+ENT.RadiusDamageRadius = 250
+ENT.RadiusDamage = 80
+ENT.RadiusDamageUseRealisticRadius = true -- Should the damage decrease the farther away the hit entity is from the radius origin?
+ENT.RadiusDamageType = DMG_BLAST
+ENT.RadiusDamageForce = 90 -- Damage force to apply to the hit entity | false = Don't apply any force
+ENT.CollisionBehavior = VJ.PROJ_COLLISION_NONE
+ENT.CollisionDecals = "Scorch"
 ENT.SoundTbl_OnCollide = "weapons/hegrenade/he_bounce-1.wav"
 
 -- Custom
 ENT.FuseTime = 3
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomPhysicsObjectOnInitialize(phys)
-	phys:Wake()
-	phys:EnableGravity(true)
-	phys:SetBuoyancyRatio(0)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
 	timer.Simple(self.FuseTime, function()
 		if IsValid(self) then
-			self:DeathEffects()
+			self:Destroy()
 		end
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnTakeDamage(dmginfo)
+function ENT:OnDamaged(dmginfo)
 	local phys = self:GetPhysicsObject()
 	if IsValid(phys) then
 		phys:AddVelocity(dmginfo:GetDamageForce() * 0.1)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnPhysicsCollide(data, phys)
+function ENT:OnCollision(data, phys)
 	local getVel = phys:GetVelocity()
 	local curVelSpeed = getVel:Length()
 	//print(curVelSpeed)
@@ -77,7 +69,7 @@ function ENT:CustomOnPhysicsCollide(data, phys)
 	end
 	
 	if curVelSpeed > 100 then -- If the grenade is going faster than 100, then play the touch sound
-		self:OnCollideSoundCode()
+		self:PlaySound("OnCollide")
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -85,7 +77,7 @@ local defAngle = Angle(0, 0, 0)
 local vecZ4 = Vector(0, 0, 4)
 local vezZ100 = Vector(0, 0, 100)
 --
-function ENT:DeathEffects()
+function ENT:OnDestroy()
 	local myPos = self:GetPos()
 	
 	VJ.EmitSound(self, "VJ.Explosion")
@@ -118,9 +110,7 @@ function ENT:DeathEffects()
 		endpos = myPos - vezZ100,
 		filter = self
 	})
-	util.Decal(VJ.PICK(self.DecalTbl_DeathDecals), tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
+	util.Decal(VJ.PICK(self.CollisionDecals), tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
 	
-	self:DoDamageCode()
-	self:SetDeathVariablesTrue(nil, nil, false)
-	self:Remove()
+	self:DealDamage()
 end

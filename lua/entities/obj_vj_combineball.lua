@@ -31,28 +31,17 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.Model = "models/effects/combineball.mdl" -- The models it should spawn with | Picks a random one from the table
-ENT.MoveCollideType = MOVECOLLIDE_FLY_BOUNCE
-ENT.RemoveOnHit = false -- Should it remove itself when it touches something? | It will run the hit sound, place a decal, etc.
-ENT.DoesDirectDamage = false -- Should it do a direct damage when it hits something?
+ENT.Model = "models/effects/combineball.mdl" -- Model(s) to spawn with | Picks a random one if it's a table
+ENT.CollisionBehavior = VJ.PROJ_COLLISION_PERSIST
+ENT.CollisionDecals = "FadingScorch"
 ENT.DirectDamage = 200 -- How much damage should it do when it hits something
 ENT.DirectDamageType = bit.bor(DMG_DISSOLVE, DMG_BLAST, DMG_SHOCK) -- Damage type
-ENT.CollideCodeWithoutRemoving = true -- If RemoveOnHit is set to false, you can still make the projectile deal damage, place a decal, etc.
-ENT.DecalTbl_DeathDecals = {"Scorch"}
 ENT.SoundTbl_Idle = "weapons/physcannon/energy_sing_loop4.wav"
 ENT.SoundTbl_OnCollide = {"weapons/physcannon/energy_bounce1.wav", "weapons/physcannon/energy_bounce2.wav"}
 
 ENT.IdleSoundPitch = VJ.SET(100, 100)
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomPhysicsObjectOnInitialize(phys)
-	phys:Wake()
-	phys:SetMass(1)
-	phys:SetBuoyancyRatio(0)
-	phys:EnableDrag(false)
-	phys:EnableGravity(false)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnInitializeBeforePhys()
+function ENT:InitPhys()
 	self:PhysicsInitSphere(1, "metal_bouncy")
 	construct.SetPhysProp(self:GetOwner(), self, 0, self:GetPhysicsObject(), {GravityToggle = false, Material = "metal_bouncy"})
 end
@@ -68,7 +57,7 @@ end
 local colorWhite = Color(255, 255, 255, 255)
 --
 function ENT:Init()
-	timer.Simple(5, function() if IsValid(self) then self:DeathEffects() end end)
+	timer.Simple(5, function() if IsValid(self) then self:Destroy() end end)
 
 	self:DrawShadow(false)
 	self:ResetSequence("idle")
@@ -113,34 +102,37 @@ function ENT:OnBounce(data, phys)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnPhysicsCollide(data, phys)
+local sdHit = {"weapons/physcannon/energy_disintegrate4.wav", "weapons/physcannon/energy_disintegrate5.wav"}
+--
+function ENT:OnCollision(data, phys)
 	local owner = self:GetOwner()
-	local hitEnt = data.HitEntity
+	local dataEnt = data.HitEntity
 	if IsValid(owner) then
-		if (VJ.IsProp(hitEnt)) or (hitEnt:IsPlayer()) or (owner:IsNPC() && owner:CheckRelationship(hitEnt) == D_HT && hitEnt != owner) then
-			self:CustomOnDoDamage_Direct(data, phys, hitEnt)
+		if owner:IsPlayer() then self.DirectDamage = 400 end
+		if IsValid(dataEnt) && ((!dataEnt:IsNPC() && !dataEnt:IsPlayer()) or (dataEnt:IsNPC() && dataEnt:GetClass() != owner:GetClass() && (owner:IsPlayer() or (owner:IsNPC() && owner:Disposition(dataEnt) != D_LI))) or (dataEnt:IsPlayer() && dataEnt:Alive() && (owner:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !dataEnt:IsFlagSet(FL_NOTARGET))))) then
+			VJ.CreateSound(dataEnt, sdHit, 80)
 			local dmgInfo = DamageInfo()
 			dmgInfo:SetDamage(self.DirectDamage)
 			dmgInfo:SetDamageType(self.DirectDamageType)
 			dmgInfo:SetAttacker(owner)
 			dmgInfo:SetInflictor(self)
 			dmgInfo:SetDamagePosition(data.HitPos)
-			VJ.DamageSpecialEnts(owner, hitEnt, dmgInfo)
-			hitEnt:TakeDamageInfo(dmgInfo, self)
+			VJ.DamageSpecialEnts(owner, dataEnt, dmgInfo)
+			dataEnt:TakeDamageInfo(dmgInfo, self)
 		end
 	else
-		self:CustomOnDoDamage_Direct(data, phys, hitEnt)
+		VJ.CreateSound(dataEnt, sdHit, 80)
 		local dmgInfo = DamageInfo()
 		dmgInfo:SetDamage(self.DirectDamage)
 		dmgInfo:SetDamageType(self.DirectDamageType)
 		dmgInfo:SetAttacker(self)
 		dmgInfo:SetInflictor(self)
 		dmgInfo:SetDamagePosition(data.HitPos)
-		VJ.DamageSpecialEnts(self, hitEnt, dmgInfo)
-		hitEnt:TakeDamageInfo(dmgInfo, self)
+		VJ.DamageSpecialEnts(self, dataEnt, dmgInfo)
+		dataEnt:TakeDamageInfo(dmgInfo, self)
 	end
 
-	if (hitEnt:IsNPC() or hitEnt:IsPlayer()) then return end
+	if (dataEnt:IsNPC() or dataEnt:IsPlayer()) then return end
 	
 	self:OnBounce(data,phys)
 
@@ -161,16 +153,10 @@ function ENT:GravGunPunt(ply)
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local sdHit = {"weapons/physcannon/energy_disintegrate4.wav", "weapons/physcannon/energy_disintegrate5.wav"}
---
-function ENT:CustomOnDoDamage_Direct(data, phys, hitEnt)
-	VJ.CreateSound(hitEnt, VJ.PICK(sdHit), 80)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 local color1 = Color(255, 255, 225, 32)
 local color2 = Color(255, 255, 225, 64)
 --
-function ENT:DeathEffects(data, phys)
+function ENT:OnDestroy(data, phys)
 	local myPos = self:GetPos()
 	effects.BeamRingPoint(myPos, 0.2, 12, 1024, 64, 0, color1, {material="sprites/lgtning.vmt", framerate=2, flags=0, speed=0, delay=0, spread=0})
 	effects.BeamRingPoint(myPos, 0.5, 12, 1024, 64, 0, color2, {material="sprites/lgtning.vmt", framerate=2, flags=0, speed=0, delay=0, spread=0})
@@ -182,6 +168,4 @@ function ENT:DeathEffects(data, phys)
 	VJ.EmitSound(self, "weapons/physcannon/energy_sing_explosion2.wav", 150)
 	util.ScreenShake(myPos, 20, 150, 1, 1250)
 	VJ.ApplyRadiusDamage(self, self, myPos, 400, 25, bit.bor(DMG_SONIC, DMG_BLAST), true, true, {DisableVisibilityCheck=true, Force=80})
-
-	self:Remove()
 end

@@ -24,10 +24,10 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.Model = "models/crossbow_bolt.mdl" -- The models it should spawn with | Picks a random one from the table
-ENT.DoesDirectDamage = true -- Should it do a direct damage when it hits something?
-ENT.DirectDamage = 90 -- How much damage should it do when it hits something
-ENT.DecalTbl_DeathDecals = {"Impact.Concrete"}
+ENT.Model = "models/crossbow_bolt.mdl" -- Model(s) to spawn with | Picks a random one if it's a table
+ENT.DoesDirectDamage = true -- Should it deal direct damage when it collides with something?
+ENT.DirectDamage = 90
+ENT.CollisionDecals = "Impact.Concrete"
 ENT.SoundTbl_Idle = "weapons/fx/nearmiss/bulletltor03.wav"
 ENT.SoundTbl_OnCollide = "weapons/crossbow/hit1.wav"
 
@@ -35,18 +35,11 @@ ENT.IdleSoundLevel = 60
 
 local sdHitEnt = {"weapons/crossbow/hitbod1.wav", "weapons/crossbow/hitbod2.wav"} // weapons/crossbow/bolt_skewer1.wav
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnInitializeBeforePhys()
+function ENT:InitPhys()
 	self:PhysicsInitSphere(1, "metal_bouncy")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomPhysicsObjectOnInitialize(phys)
-	phys:SetMass(1)
-	phys:EnableGravity(false)
-	phys:EnableDrag(false)
-	phys:SetBuoyancyRatio(0)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomOnPhysicsCollide(data, phys)
+function ENT:OnCollision(data, phys)
 	if IsValid(data.HitEntity) then
 		self.SoundTbl_OnCollide = sdHitEnt
 		-- Ignite small entities

@@ -11,7 +11,7 @@ include("shared.lua")
 ENT.SingleSpawner = false -- If set to true, it will spawn the entities once then remove itself
 ENT.VJBaseSpawnerDisabled = false -- If set to true, it will stop spawning the entities
 ENT.OverrideDisableOnSpawn = false -- If set to true, the spawner will create entities on initialize even if it's disabled!
-ENT.Model = {} -- The models it should spawn with | Picks a random one from the table
+ENT.Model = {} -- Model(s) to spawn with | Picks a random one if it's a table
 ENT.EntitiesToSpawn = {}
 /*	Example (3 NPCs):
 		ENT.EntitiesToSpawn = {

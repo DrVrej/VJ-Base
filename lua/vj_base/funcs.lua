@@ -526,7 +526,7 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 		end
 		
 		if (disableVisibilityCheck == false && (v:VisibleVec(startPos) or v:Visible(attacker))) or (disableVisibilityCheck == true) then
-			local function DoDamageCode()
+			local function DealDamage()
 				if (customFunc) then customFunc(v) end
 				hitEnts[#hitEnts + 1] = v
 				if specialDmgEnts[v:GetClass()] then
@@ -561,10 +561,10 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 			end
 			-- Self
 			if v:EntIndex() == attacker:EntIndex() then
-				if extraOptions.DamageAttacker then DoDamageCode() end -- If it can't self hit, then skip
+				if extraOptions.DamageAttacker then DealDamage() end -- If it can't self hit, then skip
 			-- Other entities
 			elseif (ignoreInnocents == false) or (!v:IsNPC() && !v:IsPlayer()) or (v:IsNPC() && v:GetClass() != attacker:GetClass() && v:Health() > 0 && (attacker:IsPlayer() or (attacker:IsNPC() && attacker:Disposition(v) != D_LI))) or (v:IsPlayer() && v:Alive() && (attacker:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !v:IsFlagSet(FL_NOTARGET)))) then
-				DoDamageCode()
+				DealDamage()
 			end
 		end
 	end
