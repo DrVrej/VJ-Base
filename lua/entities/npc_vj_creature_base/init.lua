@@ -843,7 +843,7 @@ function ENT:OnAllyKilled(ent) end
 	2. hitgroup [number] = The hitgroup that it hit
 	3. status [string] : Type of update that is occurring, holds one of the following states:
 		-> "Initial" : First call on take damage, even before immune checks
-		-> "PreDamage" : Right the damage is applied to the NPC
+		-> "PreDamage" : Right before the damage is applied to the NPC
 		-> "PostDamage" : Right after the damage is applied to the NPC
 --]]
 function ENT:OnDamaged(dmginfo, hitgroup, status) end

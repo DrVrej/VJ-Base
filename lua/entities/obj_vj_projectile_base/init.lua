@@ -12,6 +12,7 @@ include("shared.lua")
 ENT.Model = false -- Model(s) to spawn with | Picks a random one if it's a table
 ENT.ProjectileType = VJ.PROJ_TYPE_LINEAR -- What type of projectile is this?
 ENT.CollisionBehavior = VJ.PROJ_COLLISION_REMOVE -- What should it do when it collides with something?
+ENT.CollisionFilter = true -- Should the projectile attempt to go through certain entities when the owner is an NPC? | Examples: Entity is an ally or a player with no target
 ENT.CollisionDecals = false -- Decals that paint when the projectile collides with something (string or table of strings) | false = to not paint anything
 ENT.RemoveDelay = 0 -- Setting this greater than 0 will delay the entity's removal | Useful for lingering trail effects
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -169,7 +170,7 @@ function ENT:StartTouch(ent)
 		-- Owner is the same class as ent
 		-- Owner is friendly to ent
 		-- Ent is a player AND is dead OR ignore players is on OR has no target
-	if IsValid(owner) && owner == ent or (owner:IsNPC() && (owner:GetClass() == ent:GetClass() or owner:Disposition(ent) == D_LI or (ent:IsPlayer() && (!ent:Alive() or VJ_CVAR_IGNOREPLAYERS or ent:IsFlagSet(FL_NOTARGET))))) then
+	if IsValid(owner) && owner == ent or (self.CollisionFilter && owner:IsNPC() && (owner:GetClass() == ent:GetClass() or owner:Disposition(ent) == D_LI or (ent:IsPlayer() && (!ent:Alive() or VJ_CVAR_IGNOREPLAYERS or ent:IsFlagSet(FL_NOTARGET))))) then
 		//print("START TOUCH - SKIPPPPP")
 		return
 	end

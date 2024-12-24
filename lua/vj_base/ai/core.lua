@@ -1739,8 +1739,10 @@ function ENT:MaintainMedicBehavior()
 			-- Handle the heal time and animation
 			local timeUntilHeal = self.Medic_TimeUntilHeal
 			if !self.Medic_DisableAnimation then
-				local _, animTime = self:PlayAnim(self.AnimTbl_Medic_GiveHealth, true, timeUntilHeal or false)
-				timeUntilHeal = animTime
+				local _, animTime = self:PlayAnim(self.AnimTbl_Medic_GiveHealth, true, false)
+				if !timeUntilHeal then -- Only change the heal time if "self.Medic_TimeUntilHeal" is set to false!
+					timeUntilHeal = animTime
+				end
 			end
 			
 			self:SetTurnTarget(ally, timeUntilHeal)

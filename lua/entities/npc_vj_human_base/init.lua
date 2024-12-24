@@ -828,7 +828,7 @@ function ENT:OnAllyKilled(ent) end
 	2. hitgroup [number] = The hitgroup that it hit
 	3. status [string] : Type of update that is occurring, holds one of the following states:
 		-> "Initial" : First call on take damage, even before immune checks
-		-> "PreDamage" : Right the damage is applied to the NPC
+		-> "PreDamage" : Right before the damage is applied to the NPC
 		-> "PostDamage" : Right after the damage is applied to the NPC
 --]]
 function ENT:OnDamaged(dmginfo, hitgroup, status) end
@@ -909,78 +909,83 @@ function ENT:SetAnimationTranslations(wepHoldType)
 	------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	if self.ModelAnimationSet == VJ.ANIM_SET_COMBINE then
 		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.71120220422745 end
+		
+		self.AnimationTranslations[ACT_COVER_LOW] 					= {ACT_COVER, "vjseq_Leanwall_CrouchLeft_A_idle", "vjseq_Leanwall_CrouchLeft_B_idle", "vjseq_Leanwall_CrouchLeft_C_idle", "vjseq_Leanwall_CrouchLeft_D_idle"}
+		//self.AnimationTranslations[ACT_RELOAD] 					= ACT_RELOAD_SMG1 -- No need to translate, it's already the correct animation
+		//self.AnimationTranslations[ACT_RELOAD_LOW] 				= ACT_RELOAD_SMG1_LOW -- No need to translate, it's already the correct animation
+		
+		self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE
+		self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
+		
+		self.AnimationTranslations[ACT_RUN] 						= ACT_RUN_RIFLE
+		self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_RUN_RIFLE
 		self.AnimationTranslations[ACT_RUN_PROTECTED] 				= ACT_RUN_CROUCH_RIFLE
+		self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
+		self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
 		
-		-- Use rifle animations with minor edits if it's holding a handgun
-		local rifle_idle = ACT_IDLE_SMG1
-		local rifle_walk = VJ.PICK({ACT_WALK_RIFLE, VJ.SequenceToActivity(self, "walkeasy_all")})
-		if wepHoldType == "pistol" or wepHoldType == "revolver" or wepHoldType == "melee" or wepHoldType == "melee2" or wepHoldType == "knife" then
-			rifle_idle = VJ.SequenceToActivity(self, "idle_unarmed")
-			rifle_walk = VJ.SequenceToActivity(self, "walkunarmed_all")
-		end
-		
-		-- "Leanwall_CrouchLeft_A_idle", "Leanwall_CrouchLeft_B_idle", "Leanwall_CrouchLeft_C_idle", "Leanwall_CrouchLeft_D_idle"
-		self.AnimationTranslations[ACT_COVER_LOW] 						= {ACT_COVER, "vjseq_Leanwall_CrouchLeft_A_idle", "vjseq_Leanwall_CrouchLeft_B_idle", "vjseq_Leanwall_CrouchLeft_C_idle", "vjseq_Leanwall_CrouchLeft_D_idle"}
-		if wepHoldType == "ar2" or wepHoldType == "smg" or wepHoldType == "rpg" or wepHoldType == "pistol" or wepHoldType == "revolver" or wepHoldType == "melee" or wepHoldType == "melee2" or wepHoldType == "knife" then
-			if wepHoldType == "ar2" or wepHoldType == "pistol" or wepHoldType == "revolver" then
+		if wepHoldType == "ar2" or wepHoldType == "smg" or wepHoldType == "rpg" then
+			if wepHoldType == "ar2" then
 				self.AnimationTranslations[ACT_RANGE_ATTACK1] 			= ACT_RANGE_ATTACK_AR2
 				self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 	= ACT_GESTURE_RANGE_ATTACK_AR2
 				self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 		= ACT_RANGE_ATTACK_AR2_LOW
-				//self.AnimationTranslations[ACT_RELOAD] 				= ACT_RELOAD_SMG1 -- No need to translate
 				//self.AnimationTranslations[ACT_IDLE_ANGRY] 			= ACT_IDLE_ANGRY -- No need to translate, it's already the correct animation
 			elseif wepHoldType == "smg" or wepHoldType == "rpg" then
 				self.AnimationTranslations[ACT_RANGE_ATTACK1] 			= ACT_RANGE_ATTACK_SMG1
 				self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 	= ACT_GESTURE_RANGE_ATTACK_SMG1
 				self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 		= ACT_RANGE_ATTACK_SMG1_LOW
-				//self.AnimationTranslations[ACT_RELOAD] 				= ACT_RELOAD_SMG1 -- No need to translate
 				self.AnimationTranslations[ACT_IDLE_ANGRY] 				= ACT_IDLE_ANGRY_SMG1
-			elseif wepHoldType == "melee" or wepHoldType == "melee2" or wepHoldType == "knife" then
-				self.AnimationTranslations[ACT_RANGE_ATTACK1] 			= ACT_MELEE_ATTACK1
-				self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 	= false -- Don't play anything!
-				//self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 	= ACT_RANGE_ATTACK_SMG1_LOW -- Not used for melee
-				//self.AnimationTranslations[ACT_RELOAD] 				= ACT_RELOAD_SMG1 -- Not used for melee
-				self.AnimationTranslations[ACT_IDLE_ANGRY] 				= rifle_idle
 			end
-			//self.AnimationTranslations[ACT_RELOAD_LOW] 				= ACT_RELOAD_SMG1_LOW -- No need to translate
 			
-			self.AnimationTranslations[ACT_IDLE] 						= rifle_idle
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_IDLE_SMG1
 			
-			self.AnimationTranslations[ACT_WALK] 						= rifle_walk
+			self.AnimationTranslations[ACT_WALK] 						= VJ.SequenceToActivity(self, "walkeasy_all")
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_WALK_RIFLE
 			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_RIFLE
-			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE
-			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
 			
-			self.AnimationTranslations[ACT_RUN] 						= ACT_RUN_RIFLE
 			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_RUN_AIM_RIFLE
-			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
-			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		elseif wepHoldType == "pistol" or wepHoldType == "revolver" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_AR2
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_AR2
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_AR2_LOW
+			
+			self.AnimationTranslations[ACT_IDLE] 						= VJ.SequenceToActivity(self, "idle_unarmed")
+			//self.AnimationTranslations[ACT_IDLE_ANGRY] 				= ACT_IDLE_ANGRY -- No need to translate, it's already the correct animation
+			
+			self.AnimationTranslations[ACT_WALK] 						= VJ.SequenceToActivity(self, "walkunarmed_all")
+			//self.AnimationTranslations[ACT_WALK_AGITATED] 			= ACT_WALK_RIFLE -- No need uses same as ACT_WALK
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_RIFLE
+			
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_RUN_AIM_RIFLE
 		elseif wepHoldType == "crossbow" or wepHoldType == "shotgun" then
 			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_SHOTGUN
-			if wepHoldType == "crossbow" then
-				self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 	= ACT_GESTURE_RANGE_ATTACK_AR2
-			else
-				self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 	= ACT_GESTURE_RANGE_ATTACK_SHOTGUN
-			end
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= wepHoldType == "crossbow" and ACT_GESTURE_RANGE_ATTACK_AR2 or ACT_GESTURE_RANGE_ATTACK_SHOTGUN
 			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_RANGE_ATTACK_SHOTGUN_LOW
-			//self.AnimationTranslations[ACT_RELOAD] 					= ACT_RELOAD_SHOTGUN -- No need to translate
-			//self.AnimationTranslations[ACT_RELOAD_LOW] 				= ACT_RELOAD_SMG1_LOW -- No need to translate
 			
 			self.AnimationTranslations[ACT_IDLE] 						= ACT_IDLE_SMG1
 			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SHOTGUN
 			
 			self.AnimationTranslations[ACT_WALK] 						= ACT_WALK_AIM_SHOTGUN
+			//self.AnimationTranslations[ACT_WALK_AGITATED] 			= ACT_WALK_AIM_SHOTGUN -- No need uses same as ACT_WALK
 			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_SHOTGUN
-			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE
-			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
 			
-			self.AnimationTranslations[ACT_RUN] 						= ACT_RUN_RIFLE
 			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_RUN_AIM_SHOTGUN
-			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
-			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
+		elseif wepHoldType == "melee" or wepHoldType == "melee2" or wepHoldType == "knife" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_MELEE_ATTACK1
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= false -- Don't play anything for melee!
+			//self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 		= ACT_RANGE_ATTACK_SMG1_LOW -- Not used for melee
+			
+			self.AnimationTranslations[ACT_IDLE] 						= VJ.SequenceToActivity(self, "idle_unarmed")
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= VJ.SequenceToActivity(self, "idle_unarmed")
+			
+			self.AnimationTranslations[ACT_WALK] 						= VJ.SequenceToActivity(self, "walkunarmed_all")
+			//self.AnimationTranslations[ACT_WALK_AGITATED] 			= ACT_WALK_AIM_SHOTGUN -- No need uses same as ACT_WALK
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_RIFLE
+			
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_RUN_AIM_RIFLE
 		else -- Unarmed!
 			self.AnimationTranslations[ACT_IDLE] 						= VJ.SequenceToActivity(self, "idle_unarmed")
 			self.AnimationTranslations[ACT_WALK] 						= VJ.SequenceToActivity(self, "walkunarmed_all")
-			self.AnimationTranslations[ACT_RUN] 						= ACT_RUN_RIFLE
+			//self.AnimationTranslations[ACT_WALK_AGITATED] 			= ACT_WALK_AIM_SHOTGUN -- No need uses same as ACT_WALK
 		end
 	------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	------ Metrocop ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1004,10 +1009,12 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SMG1
 			
 			self.AnimationTranslations[ACT_WALK] 						= ACT_WALK_RIFLE
+			//self.AnimationTranslations[ACT_WALK_AGITATED] 			= ACT_WALK_RIFLE -- No need uses same as ACT_WALK
 			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_RIFLE
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
 			
 			self.AnimationTranslations[ACT_RUN] 						= ACT_RUN_RIFLE
+			//self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_RUN_RIFLE -- No need uses same as ACT_RUN
 			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_RUN_AIM_RIFLE
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
 		elseif wepHoldType == "pistol" or wepHoldType == "revolver" then
@@ -1021,12 +1028,14 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_IDLE] 						= ACT_IDLE_PISTOL
 			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_PISTOL
 			
-			self.AnimationTranslations[ACT_WALK] 						= VJ.PICK({ACT_WALK, ACT_WALK_PISTOL})
+			//self.AnimationTranslations[ACT_WALK] 						= ACT_WALK -- No need to translate
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_WALK_PISTOL
 			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_PISTOL
 			//self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE -- No need to translate
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
 			
-			self.AnimationTranslations[ACT_RUN] 						= VJ.PICK({ACT_RUN, ACT_RUN_PISTOL})
+			//self.AnimationTranslations[ACT_RUN] 						= ACT_RUN -- No need to translate
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_RUN_PISTOL
 			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_RUN_AIM_PISTOL
 			//self.AnimationTranslations[ACT_RUN_CROUCH] 				= ACT_RUN_CROUCH_RIFLE -- No need to translate
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
@@ -1041,12 +1050,14 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_IDLE] 						= {ACT_IDLE, ACT_IDLE, ACT_IDLE, ACT_IDLE, VJ.SequenceToActivity(self, "plazathreat1")}
 			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_MELEE
 			
-			self.AnimationTranslations[ACT_WALK] 						= VJ.PICK({ACT_WALK, ACT_WALK_ANGRY})
+			//self.AnimationTranslations[ACT_WALK] 						= ACT_WALK -- No need to translate
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_WALK_ANGRY
 			//self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_RIFLE -- Not used for melee
 			//self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE -- No need to translate
 			//self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE -- Not used for melee
 			
 			//self.AnimationTranslations[ACT_RUN] 						= ACT_RUN -- No need to translate
+			//self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_RUN -- No need to translate
 			//self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_RUN_AIM_RIFLE -- Not used for melee
 			//self.AnimationTranslations[ACT_RUN_CROUCH] 				= ACT_RUN_CROUCH_RIFLE -- No need to translate
 			//self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 			= ACT_RUN_CROUCH_AIM_RIFLE -- Not used for melee
@@ -1058,7 +1069,7 @@ function ENT:SetAnimationTranslations(wepHoldType)
 		local isFemale = VJ.AnimExists(self, ACT_IDLE_ANGRY_PISTOL)
 		if !self.Weapon_AimTurnDiff then self.Weapon_AimTurnDiff_Def = 0.78187280893326 end
 		
-		-- handguns use a different set!
+		-- Handguns use a different set!
 		self.AnimationTranslations[ACT_COVER_LOW] 						= {ACT_COVER_LOW_RPG, ACT_COVER_LOW, "vjseq_coverlow_l", "vjseq_coverlow_r"}
 		
 		if wepHoldType == "ar2" then
@@ -1072,11 +1083,13 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= VJ.SequenceToActivity(self, "idle_ar2_aim")
 			
 			self.AnimationTranslations[ACT_WALK] 						= VJ.PICK({VJ.SequenceToActivity(self, "walk_ar2_relaxed_all"), VJ.SequenceToActivity(self, "walkalerthold_ar2_all1"), VJ.SequenceToActivity(self, "walkholdall1_ar2")})
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= VJ.SequenceToActivity(self, "walkalerthold_ar2_all1")
 			self.AnimationTranslations[ACT_WALK_AIM] 					= VJ.PICK({VJ.SequenceToActivity(self, "walkaimall1_ar2"), VJ.SequenceToActivity(self, "walkalertaim_ar2_all1")})
 			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RPG
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
 			
 			self.AnimationTranslations[ACT_RUN] 						= VJ.PICK({VJ.SequenceToActivity(self, "run_alert_holding_ar2_all"), VJ.SequenceToActivity(self, "run_ar2_relaxed_all"), VJ.SequenceToActivity(self, "run_holding_ar2_all")})
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= VJ.PICK({VJ.SequenceToActivity(self, "run_alert_holding_ar2_all"), VJ.SequenceToActivity(self, "run_holding_ar2_all")})
 			self.AnimationTranslations[ACT_RUN_AIM] 					= VJ.PICK({ACT_RUN_AIM_RIFLE, VJ.SequenceToActivity(self, "run_alert_aiming_ar2_all")})
 			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RPG
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
@@ -1090,12 +1103,14 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_IDLE] 						= VJ.PICK({ACT_IDLE_SMG1_RELAXED, ACT_IDLE_SMG1_STIMULATED, ACT_IDLE_SMG1, VJ.SequenceToActivity(self, "idle_smg1_relaxed")})
 			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_SMG1
 			
-			self.AnimationTranslations[ACT_WALK] 						= VJ.PICK({ACT_WALK_RIFLE, ACT_WALK_RIFLE_RELAXED, ACT_WALK_RIFLE_STIMULATED})
+			self.AnimationTranslations[ACT_WALK] 						= VJ.PICK({ACT_WALK_RIFLE_RELAXED, ACT_WALK_RIFLE_STIMULATED})
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_WALK_RIFLE
 			self.AnimationTranslations[ACT_WALK_AIM] 					= VJ.PICK({ACT_WALK_AIM_RIFLE, ACT_WALK_AIM_RIFLE_STIMULATED})
 			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
 			
 			self.AnimationTranslations[ACT_RUN] 						= VJ.PICK({ACT_RUN_RIFLE, ACT_RUN_RIFLE_STIMULATED, ACT_RUN_RIFLE_RELAXED})
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= VJ.PICK({ACT_RUN_RIFLE, ACT_RUN_RIFLE_STIMULATED})
 			self.AnimationTranslations[ACT_RUN_AIM] 					= VJ.PICK({ACT_RUN_AIM_RIFLE, ACT_RUN_AIM_RIFLE_STIMULATED})
 			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RIFLE
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
@@ -1110,11 +1125,13 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= VJ.SequenceToActivity(self, "idle_ar2_aim")
 			
 			self.AnimationTranslations[ACT_WALK] 						= VJ.PICK({VJ.SequenceToActivity(self, "walk_ar2_relaxed_all"), VJ.SequenceToActivity(self, "walkalerthold_ar2_all1"), VJ.SequenceToActivity(self, "walkholdall1_ar2")})
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= VJ.SequenceToActivity(self, "walkalerthold_ar2_all1")
 			self.AnimationTranslations[ACT_WALK_AIM] 					= VJ.PICK({VJ.SequenceToActivity(self, "walkaimall1_ar2"), VJ.SequenceToActivity(self, "walkalertaim_ar2_all1")})
 			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RPG
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
 			
 			self.AnimationTranslations[ACT_RUN] 						= VJ.PICK({VJ.SequenceToActivity(self, "run_alert_holding_ar2_all"), VJ.SequenceToActivity(self, "run_ar2_relaxed_all"), VJ.SequenceToActivity(self, "run_holding_ar2_all")})
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= VJ.PICK({VJ.SequenceToActivity(self, "run_alert_holding_ar2_all"), VJ.SequenceToActivity(self, "run_holding_ar2_all")})
 			self.AnimationTranslations[ACT_RUN_AIM] 					= VJ.PICK({ACT_RUN_AIM_RIFLE, VJ.SequenceToActivity(self, "run_alert_aiming_ar2_all")})
 			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RPG
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
@@ -1129,11 +1146,13 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_IDLE_ANGRY_RPG
 			
 			self.AnimationTranslations[ACT_WALK] 						= VJ.PICK({ACT_WALK_RPG, ACT_WALK_RPG_RELAXED})
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_WALK_RPG
 			self.AnimationTranslations[ACT_WALK_AIM] 					= VJ.PICK({VJ.SequenceToActivity(self, "walkaimall1_ar2"), VJ.SequenceToActivity(self, "walkalertaim_ar2_all1")})
 			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RPG
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
 			
 			self.AnimationTranslations[ACT_RUN] 						= VJ.PICK({ACT_RUN_RPG, ACT_RUN_RPG_RELAXED})
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_RUN_RPG
 			self.AnimationTranslations[ACT_RUN_AIM] 					= VJ.PICK({ACT_RUN_AIM_RIFLE, VJ.SequenceToActivity(self, "run_alert_aiming_ar2_all")})
 			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_RUN_CROUCH_RPG
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
@@ -1148,13 +1167,15 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_IDLE] 						= isFemale and ACT_IDLE_PISTOL or ACT_IDLE -- Only females have pistol idle animation
 			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= isFemale and ACT_IDLE_ANGRY_PISTOL or VJ.SequenceToActivity(self, "idle_ar2_aim") -- Only females have angry pistol animation
 			
-			self.AnimationTranslations[ACT_WALK] 						= ACT_WALK_PISTOL
-			self.AnimationTranslations[ACT_WALK_AIM] 					= VJ.PICK({VJ.SequenceToActivity(self, "walkaimall1_ar2"), VJ.SequenceToActivity(self, "walkalertaim_ar2_all1")})
+			//self.AnimationTranslations[ACT_WALK] 						= ACT_WALK -- No need to translate
+			//self.AnimationTranslations[ACT_WALK_AGITATED] 			= ACT_WALK -- No need, same as ACT_WALK
+			self.AnimationTranslations[ACT_WALK_AIM] 					= isFemale and ACT_WALK_AIM_PISTOL or VJ.PICK({VJ.SequenceToActivity(self, "walkaimall1_ar2"), VJ.SequenceToActivity(self, "walkalertaim_ar2_all1")})
 			//self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE -- No need to translate
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE
 			
-			self.AnimationTranslations[ACT_RUN] 						= ACT_RUN_PISTOL
-			self.AnimationTranslations[ACT_RUN_AIM] 					= VJ.SequenceToActivity(self, "run_alert_aiming_ar2_all")
+			//self.AnimationTranslations[ACT_RUN] 						= ACT_RUN -- No need to translate
+			//self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_RUN -- No need, same as ACT_RUN
+			self.AnimationTranslations[ACT_RUN_AIM] 					= isFemale and ACT_RUN_AIM_PISTOL or VJ.SequenceToActivity(self, "run_alert_aiming_ar2_all")
 			//self.AnimationTranslations[ACT_RUN_CROUCH] 				= ACT_RUN_CROUCH_RIFLE -- No need to translate
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_RUN_CROUCH_AIM_RIFLE
 		elseif wepHoldType == "melee" or wepHoldType == "melee2" or wepHoldType == "knife" then
@@ -1169,11 +1190,15 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= isFemale and ACT_IDLE_ANGRY or ACT_IDLE_ANGRY_MELEE -- Only males have unique idle angry for melee weapons!
 			
 			//self.AnimationTranslations[ACT_WALK] 						= ACT_WALK -- No need to translate
+			//self.AnimationTranslations[ACT_WALK_AGITATED] 			= ACT_WALK -- No need, same as ACT_WALK
 			//self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_WALK_AIM_RIFLE -- Not used for melee
 			//self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_WALK_CROUCH_RIFLE -- No need to translate
 			//self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_WALK_CROUCH_AIM_RIFLE -- Not used for melee
 			
-			self.AnimationTranslations[ACT_RUN] 						= VJ.SequenceToActivity(self, "run_all_panicked")
+			self.AnimationTranslations[ACT_RUN] 						= ACT_RUN
+			if !isFemale then -- Females don't have this sequence
+				self.AnimationTranslations[ACT_RUN_AGITATED] 			= VJ.SequenceToActivity(self, "run_all_panicked")
+			end
 			//self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_RUN_AIM_RIFLE -- Not used for melee
 			//self.AnimationTranslations[ACT_RUN_CROUCH] 				= ACT_RUN_CROUCH_RIFLE -- No need to translate
 			//self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 			= ACT_RUN_CROUCH_AIM_RIFLE -- Not used for melee
@@ -1201,11 +1226,13 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_AR2
 			
 			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK_PASSIVE
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_HL2MP_WALK_AR2
 			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_AR2
 			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH_PASSIVE
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_AR2
 			
 			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN_PASSIVE
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_HL2MP_RUN_AR2
 			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_AR2
 			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_AR2
@@ -1224,11 +1251,13 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_PISTOL
 			
 			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_HL2MP_WALK_PISTOL
 			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_PISTOL
 			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_PISTOL
 			
 			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN_FAST
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_HL2MP_RUN_PISTOL
 			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_PISTOL
 			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_PISTOL
@@ -1247,37 +1276,16 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_SMG1
 			
 			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK_PASSIVE
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_HL2MP_WALK_SMG1
 			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_SMG1
 			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH_PASSIVE
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_SMG1
 			
 			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN_PASSIVE
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_HL2MP_RUN_SMG1
 			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_SMG1
 			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_SMG1
-		elseif wepHoldType == "grenade" then
-			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_GRENADE
-			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE
-			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_GRENADE
-			-- self.AnimationTranslations[ACT_RELOAD] 					= "vjges_reload_pistol"
-			-- self.AnimationTranslations[ACT_RELOAD_LOW] 				= "vjges_reload_pistol"
-			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_GRENADE
-			
-			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE
-			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_GRENADE
-			self.AnimationTranslations[ACT_JUMP] 						= ACT_HL2MP_JUMP_GRENADE
-			self.AnimationTranslations[ACT_GLIDE] 						= ACT_HL2MP_JUMP_GRENADE
-			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_GRENADE
-			
-			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
-			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_GRENADE
-			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
-			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_GRENADE
-			
-			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN
-			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_GRENADE
-			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
-			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_GRENADE
 		elseif wepHoldType == "shotgun" then
 			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_SHOTGUN
 			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN
@@ -1293,11 +1301,13 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_SHOTGUN
 			
 			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK_PASSIVE
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_HL2MP_WALK_SHOTGUN
 			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_SHOTGUN
 			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH_PASSIVE
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_SHOTGUN
 			
 			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN_PASSIVE
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_HL2MP_RUN_SHOTGUN
 			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_SHOTGUN
 			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_SHOTGUN
@@ -1316,11 +1326,13 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_RPG
 			
 			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK_PASSIVE
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_HL2MP_WALK_RPG
 			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_RPG
 			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH_PASSIVE
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_RPG
 			
 			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN_PASSIVE
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_HL2MP_RUN_RPG
 			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_RPG
 			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_RPG
@@ -1339,11 +1351,13 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_PHYSGUN
 			
 			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK_PASSIVE
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_HL2MP_WALK_PHYSGUN
 			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_PHYSGUN
 			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH_PASSIVE
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_PHYSGUN
 			
 			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN_PASSIVE
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_HL2MP_RUN_PHYSGUN
 			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_PHYSGUN
 			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_PHYSGUN
@@ -1362,11 +1376,13 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_CROSSBOW
 			
 			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK_PASSIVE
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_HL2MP_WALK_CROSSBOW
 			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_CROSSBOW
 			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH_PASSIVE
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_CROSSBOW
 			
 			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN_PASSIVE
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_HL2MP_RUN_CROSSBOW
 			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_CROSSBOW
 			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH_PASSIVE
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_CROSSBOW
@@ -1374,8 +1390,8 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_SLAM
 			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_SLAM
 			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_SLAM
-			-- self.AnimationTranslations[ACT_RELOAD] 					= "vjges_reload_pistol"
-			-- self.AnimationTranslations[ACT_RELOAD_LOW] 				= "vjges_reload_pistol"
+			//self.AnimationTranslations[ACT_RELOAD] 					= "vjges_reload_pistol"
+			//self.AnimationTranslations[ACT_RELOAD_LOW] 				= "vjges_reload_pistol"
 			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_SLAM
 			
 			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE
@@ -1385,11 +1401,13 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_SLAM
 			
 			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_HL2MP_WALK_SLAM
 			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_SLAM
 			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_SLAM
 			
 			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_HL2MP_RUN_SLAM
 			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_SLAM
 			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_SLAM
@@ -1408,11 +1426,13 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_DUEL
 			
 			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_HL2MP_WALK_DUEL
 			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_DUEL
 			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_DUEL
 			
 			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_HL2MP_RUN_DUEL
 			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_DUEL
 			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_DUEL
@@ -1431,11 +1451,13 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_REVOLVER
 			
 			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_HL2MP_WALK_REVOLVER
 			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_REVOLVER
 			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_REVOLVER
 			
 			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_HL2MP_RUN_REVOLVER
 			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_REVOLVER
 			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_REVOLVER
@@ -1443,8 +1465,8 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_MELEE
 			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE
 			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_MELEE
-			-- self.AnimationTranslations[ACT_RELOAD] 					= "vjges_reload_pistol"
-			-- self.AnimationTranslations[ACT_RELOAD_LOW] 				= "vjges_reload_pistol"
+			//self.AnimationTranslations[ACT_RELOAD] 					= "vjges_reload_pistol"
+			//self.AnimationTranslations[ACT_RELOAD_LOW] 				= "vjges_reload_pistol"
 			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_MELEE
 			
 			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE
@@ -1454,11 +1476,13 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_MELEE
 			
 			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_HL2MP_WALK_MELEE
 			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_MELEE
 			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_MELEE
 			
 			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_HL2MP_RUN_MELEE
 			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_MELEE
 			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_MELEE
@@ -1466,8 +1490,8 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_MELEE2
 			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2
 			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_MELEE2
-			-- self.AnimationTranslations[ACT_RELOAD] 					= "vjges_reload_pistol"
-			-- self.AnimationTranslations[ACT_RELOAD_LOW] 				= "vjges_reload_pistol"
+			//self.AnimationTranslations[ACT_RELOAD] 					= "vjges_reload_pistol"
+			//self.AnimationTranslations[ACT_RELOAD_LOW] 				= "vjges_reload_pistol"
 			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_MELEE2
 			
 			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE
@@ -1477,11 +1501,13 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_MELEE2
 			
 			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_HL2MP_WALK_MELEE2
 			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_MELEE2
 			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_MELEE2
 			
 			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_HL2MP_RUN_MELEE2
 			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_MELEE2
 			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_MELEE2
@@ -1489,8 +1515,8 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_KNIFE
 			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_KNIFE
 			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_KNIFE
-			-- self.AnimationTranslations[ACT_RELOAD] 					= "vjges_reload_pistol"
-			-- self.AnimationTranslations[ACT_RELOAD_LOW] 				= "vjges_reload_pistol"
+			//self.AnimationTranslations[ACT_RELOAD] 					= "vjges_reload_pistol"
+			//self.AnimationTranslations[ACT_RELOAD_LOW] 				= "vjges_reload_pistol"
 			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_KNIFE
 			
 			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE
@@ -1500,20 +1526,47 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_KNIFE
 			
 			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_HL2MP_WALK_KNIFE
 			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_KNIFE
 			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_KNIFE
 			
 			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_HL2MP_RUN_KNIFE
 			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_KNIFE
 			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_KNIFE
+		elseif wepHoldType == "grenade" then
+			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_GRENADE
+			self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE
+			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_GRENADE
+			//self.AnimationTranslations[ACT_RELOAD] 					= "vjges_reload_pistol"
+			//self.AnimationTranslations[ACT_RELOAD_LOW] 				= "vjges_reload_pistol"
+			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_GRENADE
+			
+			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE
+			self.AnimationTranslations[ACT_IDLE_ANGRY] 					= ACT_HL2MP_IDLE_GRENADE
+			self.AnimationTranslations[ACT_JUMP] 						= ACT_HL2MP_JUMP_GRENADE
+			self.AnimationTranslations[ACT_GLIDE] 						= ACT_HL2MP_JUMP_GRENADE
+			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_GRENADE
+			
+			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_HL2MP_WALK_GRENADE
+			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_GRENADE
+			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_GRENADE
+			
+			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_HL2MP_RUN_GRENADE
+			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_GRENADE
+			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
+			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_GRENADE
 		elseif wepHoldType == "camera" then
 			self.AnimationTranslations[ACT_RANGE_ATTACK1] 				= ACT_HL2MP_IDLE_CAMERA
-			-- self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 			= ACT_HL2MP_GESTURE_RANGE_ATTACK_CAMERA
+			//self.AnimationTranslations[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_HL2MP_GESTURE_RANGE_ATTACK_CAMERA
 			self.AnimationTranslations[ACT_RANGE_ATTACK1_LOW] 			= ACT_HL2MP_IDLE_CROUCH_CAMERA
-			-- self.AnimationTranslations[ACT_RELOAD] 					= "vjges_reload_pistol"
-			-- self.AnimationTranslations[ACT_RELOAD_LOW] 				= "vjges_reload_pistol"
+			//self.AnimationTranslations[ACT_RELOAD] 					= "vjges_reload_pistol"
+			//self.AnimationTranslations[ACT_RELOAD_LOW] 				= "vjges_reload_pistol"
 			self.AnimationTranslations[ACT_COVER_LOW] 					= ACT_HL2MP_IDLE_CROUCH_CAMERA
 			
 			self.AnimationTranslations[ACT_IDLE] 						= ACT_HL2MP_IDLE
@@ -1523,11 +1576,13 @@ function ENT:SetAnimationTranslations(wepHoldType)
 			self.AnimationTranslations[ACT_LAND] 						= ACT_HL2MP_IDLE_CAMERA
 			
 			self.AnimationTranslations[ACT_WALK] 						= ACT_HL2MP_WALK
+			self.AnimationTranslations[ACT_WALK_AGITATED] 				= ACT_HL2MP_WALK_CAMERA
 			self.AnimationTranslations[ACT_WALK_AIM] 					= ACT_HL2MP_WALK_CAMERA
 			self.AnimationTranslations[ACT_WALK_CROUCH] 				= ACT_HL2MP_WALK_CROUCH
 			self.AnimationTranslations[ACT_WALK_CROUCH_AIM] 			= ACT_HL2MP_WALK_CROUCH_CAMERA
 			
 			self.AnimationTranslations[ACT_RUN] 						= ACT_HL2MP_RUN
+			self.AnimationTranslations[ACT_RUN_AGITATED] 				= ACT_HL2MP_RUN_CAMERA
 			self.AnimationTranslations[ACT_RUN_AIM] 					= ACT_HL2MP_RUN_CAMERA
 			self.AnimationTranslations[ACT_RUN_CROUCH] 					= ACT_HL2MP_WALK_CROUCH
 			self.AnimationTranslations[ACT_RUN_CROUCH_AIM] 				= ACT_HL2MP_WALK_CROUCH_CAMERA
@@ -2187,15 +2242,20 @@ function ENT:TranslateActivity(act)
 	elseif act == ACT_RUN && self.NoWeapon_UseScaredBehavior_Active && !self.VJ_IsBeingControlled then
 		// VJ.PICK(self.AnimTbl_ScaredBehaviorMovement)
 		return ACT_RUN_PROTECTED
-	-- Handle aiming while moving animations
-	elseif (act == ACT_RUN or act == ACT_WALK) && self.Weapon_CanFireWhileMoving && IsValid(self:GetEnemy()) then
-		if (self.EnemyData.IsVisible or (self.EnemyData.LastVisibleTime + 5) > CurTime()) && self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving && self:CanFireWeapon(true, false) then
+	elseif (act == ACT_RUN or act == ACT_WALK) && self.Alerted then
+		-- Handle aiming while moving animations
+		if self.Weapon_CanFireWhileMoving && IsValid(self:GetEnemy()) && (self.EnemyData.IsVisible or (self.EnemyData.LastVisibleTime + 5) > CurTime()) && self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving && self:CanFireWeapon(true, false) then
 			local anim = self:TranslateActivity(act == ACT_RUN and ACT_RUN_AIM or ACT_WALK_AIM)
 			if VJ.AnimExists(self, anim) then
 				self.DoingWeaponAttack = true
 				self.DoingWeaponAttack_Standing = false
 				return anim
 			end
+		end
+		-- Handle walk/run angry animations
+		local anim = self:TranslateActivity(act == ACT_RUN and ACT_RUN_AGITATED or ACT_WALK_AGITATED)
+		if VJ.AnimExists(self, anim) then
+			return anim
 		end
 	end
 	
