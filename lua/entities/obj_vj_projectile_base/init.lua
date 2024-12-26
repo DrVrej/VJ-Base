@@ -161,51 +161,6 @@ function ENT:Initialize()
 	--
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:StartTouch(ent)
-	//print("START TOUCH", ent)
-	local owner = self:GetOwner()
-	-- Skip the following cases:
-	-- Owner is the ent
-	-- Owner is an NPC:
-		-- Owner is the same class as ent
-		-- Owner is friendly to ent
-		-- Ent is a player AND is dead OR ignore players is on OR has no target
-	if IsValid(owner) && owner == ent or (self.CollisionFilter && owner:IsNPC() && (owner:GetClass() == ent:GetClass() or owner:Disposition(ent) == D_LI or (ent:IsPlayer() && (!ent:Alive() or VJ_CVAR_IGNOREPLAYERS or ent:IsFlagSet(FL_NOTARGET))))) then
-		//print("START TOUCH - SKIPPPPP")
-		return
-	end
-	-- Translate TraceResult --> CollisionData
-	local trace = self:GetTouchTrace()
-	local myPhys = self:GetPhysicsObject()
-	local myVel = myPhys:GetVelocity()
-	local myAngVel = myPhys:GetAngleVelocity()
-	local entPhys = ent:GetPhysicsObject()
-	local entVel;
-	local entAngVel;
-	if IsValid(entPhys) then
-		entVel = entPhys:GetVelocity()
-		entAngVel = entPhys:GetAngleVelocity()
-	else
-		entVel = ent:GetVelocity()
-		entAngVel = entVel
-	end
-	trace.PhysObject = myPhys
-	trace.HitEntity = ent
-	trace.HitObject = entPhys
-	trace.HitSpeed = (myVel - entVel):Length()
-	trace.Speed = myVel:Length()
-	trace.DeltaTime = 1
-	trace.OurSurfaceProps = trace.SurfaceProps
-	trace.OurOldVelocity = myVel
-	trace.OurOldAngularVelocity = myAngVel
-	trace.OurNewVelocity = myVel
-	trace.TheirSurfaceProps = trace.SurfaceProps
-	trace.TheirOldVelocity = entVel
-	trace.TheirOldAngularVelocity = entAngVel
-	trace.TheirNewVelocity = entVel
-	self:PhysicsCollide(trace, myPhys)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	if self.Dead then VJ.STOPSOUND(self.CurrentIdleSound) return end
 	
@@ -279,6 +234,54 @@ function ENT:DealDamage(data, phys)
 	self:OnDealDamage(data, phys, hitEnts)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:StartTouch(ent)
+	//print("START TOUCH", ent)
+	local owner = self:GetOwner()
+	-- Skip the following cases:
+	-- Owner is the ent
+	-- Owner is an NPC:
+		-- Owner is the same class as ent
+		-- Owner is friendly to ent
+		-- Ent is a player AND is dead OR ignore players is on OR has no target
+	if IsValid(owner) && owner == ent or (self.CollisionFilter && owner:IsNPC() && (owner:GetClass() == ent:GetClass() or owner:Disposition(ent) == D_LI or (ent:IsPlayer() && (!ent:Alive() or VJ_CVAR_IGNOREPLAYERS or ent:IsFlagSet(FL_NOTARGET))))) then
+		//print("START TOUCH - SKIPPPPP")
+		return
+	end
+	-- Translate TraceResult --> CollisionData
+	local trace = self:GetTouchTrace()
+	local myPhys = self:GetPhysicsObject()
+	local myVel = myPhys:GetVelocity()
+	local myAngVel = myPhys:GetAngleVelocity()
+	local entPhys = ent:GetPhysicsObject()
+	local entVel;
+	local entAngVel;
+	if IsValid(entPhys) then
+		entVel = entPhys:GetVelocity()
+		entAngVel = entPhys:GetAngleVelocity()
+	else
+		entVel = ent:GetVelocity()
+		entAngVel = entVel
+	end
+	if trace.HitNormal == defVec then -- Touch functions tend to return an invalid normal, so calculate it using the velocity
+		trace.HitNormal = myVel:GetNormalized()
+	end
+	trace.PhysObject = myPhys
+	trace.HitEntity = ent
+	trace.HitObject = entPhys
+	trace.HitSpeed = (myVel - entVel):Length()
+	trace.Speed = myVel:Length()
+	trace.DeltaTime = 1
+	trace.OurSurfaceProps = trace.SurfaceProps
+	trace.OurOldVelocity = myVel
+	trace.OurOldAngularVelocity = myAngVel
+	trace.OurNewVelocity = myVel
+	trace.TheirSurfaceProps = trace.SurfaceProps
+	trace.TheirOldVelocity = entVel
+	trace.TheirOldAngularVelocity = entAngVel
+	trace.TheirNewVelocity = entVel
+	self:PhysicsCollide(trace, myPhys)
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, phys)
 	if self.Dead then return end
 	if !self:OnCollision(data, phys) then
@@ -292,7 +295,7 @@ function ENT:PhysicsCollide(data, phys)
 				local decals = VJ.PICK(self.CollisionDecals)
 				if decals then
 					self.PaintedFinalDecal = true
-					util.Decal(decals, data.HitPos + data.HitNormal, data.HitPos - data.HitNormal)
+					util.Decal(decals, data.HitPos + data.HitNormal * -15, data.HitPos - data.HitNormal * -2)
 				end
 			end
 			
@@ -306,7 +309,7 @@ function ENT:PhysicsCollide(data, phys)
 			if !self.PaintedFinalDecal then
 				local decals = VJ.PICK(self.CollisionDecals)
 				if decals then
-					util.Decal(decals, data.HitPos + data.HitNormal, data.HitPos - data.HitNormal)
+					util.Decal(decals, data.HitPos + data.HitNormal * -15, data.HitPos - data.HitNormal * -2)
 				end
 			end
 			-- Avoids "Changing collision rules within a callback is likely to cause crashes!"

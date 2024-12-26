@@ -2274,7 +2274,7 @@ function ENT:TranslateActivity(act)
 	return act
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local sdWepSwitch = {"physics/metal/weapon_impact_soft1.wav","physics/metal/weapon_impact_soft2.wav","physics/metal/weapon_impact_soft3.wav"}
+local sdWepSwitch = {"physics/metal/weapon_impact_soft1.wav", "physics/metal/weapon_impact_soft2.wav", "physics/metal/weapon_impact_soft3.wav"}
 --
 function ENT:DoChangeWeapon(wep, invSwitch)
 	wep = wep or nil -- The weapon to give or setup | Setting it nil will only setup the current active weapon
@@ -2372,11 +2372,11 @@ local function playReloadAnimation(self, anims)
 	local anim, animDur, animType = self:PlayAnim(anims, true, false, "Visible")
 	if anim != ACT_INVALID then
 		local wep = self.CurrentWeaponEntity
-		if wep.IsVJBaseWeapon == true then wep:NPC_Reload() end
+		if wep.IsVJBaseWeapon then wep:NPC_Reload() end
 		timer.Create("timer_reload_end"..self:EntIndex(), animDur, 1, function()
 			if IsValid(self) && IsValid(wep) && self:GetWeaponState() == VJ.NPC_WEP_STATE_RELOADING then
 				wep:SetClip1(wep:GetMaxClip1())
-				if wep.IsVJBaseWeapon == true then wep:OnReload("Finish") end
+				if wep.IsVJBaseWeapon then wep:OnReload("Finish") end
 				self:SetWeaponState()
 			end
 		end)
@@ -2588,20 +2588,21 @@ function ENT:Think()
 				end
 			end
 			
+			local curWep = self.CurrentWeaponEntity
 			//if self.DoingWeaponAttack then self:CapabilitiesRemove(CAP_TURN_HEAD) else self:CapabilitiesAdd(CAP_TURN_HEAD) end -- Fixes their heads breaking
 			-- If we have a valid weapon...
-			if IsValid(self.CurrentWeaponEntity) && !self:BusyWithActivity() then
+			if IsValid(curWep) && !self:BusyWithActivity() then
 				-- Weapon Inventory System
 				if !plyControlled then
 					if eneValid then
 						-- Switch to melee
-						if !self.IsGuard && IsValid(self.WeaponInventory.Melee) && ((self.LatestEnemyDistance < self.MeleeAttackDistance) or (self.LatestEnemyDistance < 300 && self.CurrentWeaponEntity:Clip1() <= 0)) && (self:Health() > self:GetMaxHealth() * 0.25) && self.CurrentWeaponEntity != self.WeaponInventory.Melee then
+						if !self.IsGuard && IsValid(self.WeaponInventory.Melee) && ((self.LatestEnemyDistance < self.MeleeAttackDistance) or (self.LatestEnemyDistance < 300 && curWep:Clip1() <= 0)) && (self:Health() > self:GetMaxHealth() * 0.25) && curWep != self.WeaponInventory.Melee then
 							if self:GetWeaponState() == VJ.NPC_WEP_STATE_RELOADING then self:SetWeaponState() end -- Since the reloading can be cut off, reset it back to false, or else it can mess up its behavior!
 							//timer.Remove("timer_reload_end"..self:EntIndex()) -- No longer needed
 							self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_MELEE
 							self:DoChangeWeapon(self.WeaponInventory.Melee, true)
 						-- Switch to anti-armor
-						elseif self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING && IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank or ene.VJTag_ID_Boss) && self.CurrentWeaponEntity != self.WeaponInventory.AntiArmor then
+						elseif self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING && IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank or ene.VJTag_ID_Boss) && curWep != self.WeaponInventory.AntiArmor then
 							self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_ANTI_ARMOR
 							self:DoChangeWeapon(self.WeaponInventory.AntiArmor, true)
 						end
@@ -2620,7 +2621,7 @@ function ENT:Think()
 				end
 				
 				-- Weapon Reloading
-				if self.Weapon_CanReload && self:GetWeaponState() == VJ.NPC_WEP_STATE_READY && (!self.CurrentWeaponEntity.IsMeleeWeapon) && !self.AttackType && ((!plyControlled && ((!eneValid && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1() && (curTime - eneData.TimeSet) > math.random(3, 8) && !self:IsMoving()) or (eneValid && self.CurrentWeaponEntity:Clip1() <= 0))) or (plyControlled && self.VJ_TheController:KeyDown(IN_RELOAD) && self.CurrentWeaponEntity:GetMaxClip1() > self.CurrentWeaponEntity:Clip1())) then
+				if self.Weapon_CanReload && self:GetWeaponState() == VJ.NPC_WEP_STATE_READY && (!curWep.IsMeleeWeapon) && !self.AttackType && ((!plyControlled && ((!eneValid && curWep:GetMaxClip1() > curWep:Clip1() && (curTime - eneData.TimeSet) > math.random(3, 8) && !self:IsMoving()) or (eneValid && curWep:Clip1() <= 0))) or (plyControlled && self.VJ_TheController:KeyDown(IN_RELOAD) && curWep:GetMaxClip1() > curWep:Clip1())) then
 					self.DoingWeaponAttack = false
 					self.DoingWeaponAttack_Standing = false
 					self.NextChaseTime = curTime + 2
@@ -2629,8 +2630,8 @@ function ENT:Think()
 					self:OnWeaponReload()
 					if self.DisableWeaponReloadAnimation then -- Reload animation is disabled
 						if self:GetWeaponState() == VJ.NPC_WEP_STATE_RELOADING then self:SetWeaponState() end
-						self.CurrentWeaponEntity:SetClip1(self.CurrentWeaponEntity:GetMaxClip1())
-						self.CurrentWeaponEntity:NPC_Reload()
+						curWep:SetClip1(curWep:GetMaxClip1())
+						if curWep.IsVJBaseWeapon then curWep:NPC_Reload() end
 					else
 						-- Controlled by a player...
 						if plyControlled then
@@ -2721,7 +2722,7 @@ function ENT:Think()
 					-- To avoid overlapping situations where 2 attacks can be called at once, check for "self.AttackType == VJ.ATTACK_TYPE_NONE"
 					local funcCustomAtk = self.CustomAttack; if funcCustomAtk then funcCustomAtk(self, ene, eneData.IsVisible) end
 					-- Melee Attack
-					if self.HasMeleeAttack && self.IsAbleToMeleeAttack && !self.Flinching && !self.FollowData.StopAct && !self.AttackType && (!IsValid(self.CurrentWeaponEntity) or (IsValid(self.CurrentWeaponEntity) && (!self.CurrentWeaponEntity.IsMeleeWeapon))) && ((plyControlled && self.VJ_TheController:KeyDown(IN_ATTACK)) or (!plyControlled && (self.NearestPointToEnemyDistance < self.MeleeAttackDistance && eneData.IsVisible) && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius))))) then
+					if self.HasMeleeAttack && self.IsAbleToMeleeAttack && !self.Flinching && !self.FollowData.StopAct && !self.AttackType && (!IsValid(curWep) or (IsValid(curWep) && (!curWep.IsMeleeWeapon))) && ((plyControlled && self.VJ_TheController:KeyDown(IN_ATTACK)) or (!plyControlled && (self.NearestPointToEnemyDistance < self.MeleeAttackDistance && eneData.IsVisible) && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((enePos - myPos):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius))))) then
 						local seed = curTime; self.CurAttackSeed = seed
 						self.AttackType = VJ.ATTACK_TYPE_MELEE
 						self.AttackState = VJ.ATTACK_STATE_STARTED

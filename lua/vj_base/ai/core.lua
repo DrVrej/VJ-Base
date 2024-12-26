@@ -1711,8 +1711,7 @@ function ENT:MaintainMedicBehavior()
 		end
 	elseif self.Medic_Status != "Healing" then
 		local ally = self.Medic_CurrentEntToHeal
-		if self:CheckRelationship(ally) != D_LI then self:ResetMedicBehavior() return end -- I no longer like them, stop healing them!
-		if !IsValid(ally) or !VJ.IsAlive(ally) or (ally:Health() > ally:GetMaxHealth() * 0.75) then self:ResetMedicBehavior() return end
+		if !IsValid(ally) or !VJ.IsAlive(ally) or (ally:Health() > ally:GetMaxHealth() * 0.75) or self:CheckRelationship(ally) != D_LI then self:ResetMedicBehavior() return end
 		if self:Visible(ally) && self:VJ_GetNearestPointToEntityDistance(ally) <= self.Medic_HealDistance then -- Are we in healing distance?
 			self.Medic_Status = "Healing"
 			self:OnMedicBehavior("BeforeHeal")
