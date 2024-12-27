@@ -236,6 +236,7 @@ function ENT:SetControlledNPC(npcEnt)
 			[19] = npcEnt.NoChaseAfterCertainRange,
 			[20] = npcEnt.ConstantlyFaceEnemy,
 			[21] = npcEnt.IsMedic,
+			[22] = npcEnt.DisableFindEnemy,
 		}
 		npcEnt.DisableWandering = true
 		npcEnt.DisableChasingEnemy = true
@@ -260,6 +261,12 @@ function ENT:SetControlledNPC(npcEnt)
 		npcEnt.IsMedic = false
 		npcEnt.PauseAttacks = true
 		npcEnt.NextThrowGrenadeT = 0
+		npcEnt.DisableFindEnemy = true
+		for _, v in ipairs(npcEnt.CurrentPossibleEnemies) do
+			if IsValid(v) then
+				npcEnt:AddEntityRelationship(v, D_NU)
+			end
+		end
 		 -- Apply a delay to VJ NPCs so they don't attack right away
 		if npcEnt.NextDoAnyAttackT < CurTime() then
 			npcEnt.NextDoAnyAttackT = CurTime() + 0.5
@@ -278,7 +285,7 @@ function ENT:SetControlledNPC(npcEnt)
 	end
 	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	if self.CustomOnKeyPressed then self.OnKeyPressed = function(_, key) self:CustomOnKeyPressed(key) end end
-	if self.CustomOnKeyBindPressed then print("wtf?") self.OnKeyBindPressed = function(_, key) self:CustomOnKeyBindPressed(key) end end
+	if self.CustomOnKeyBindPressed then self.OnKeyBindPressed = function(_, key) self:CustomOnKeyBindPressed(key) end end
 	if self.CustomOnStopControlling then self.OnStopControlling = function(_, keyPressed) self:CustomOnStopControlling(keyPressed) end end
 	--
 	npcEnt:ClearSchedule()
@@ -339,6 +346,15 @@ function ENT:Think()
 		self.VJC_NPC_LastPos = npc:GetPos()
 		ply:SetPos(self.VJC_NPC_LastPos + vecZ20) -- Set the player's location
 		self:SendDataToClient()
+		
+		local npcEnemy = npc:GetEnemy()
+		if npcEnemy != self.VJCE_Bullseye then
+			if npc.IsVJBaseSNPC then
+				npc:ResetEnemy()
+			end
+			npc:AddEntityRelationship(self.VJCE_Bullseye, D_HT, 99)
+			npc:SetEnemy(self.VJCE_Bullseye)
+		end
 		
 		-- HUD
 		if self.VJC_Player_DrawHUD then
@@ -565,6 +581,7 @@ function ENT:StopControlling(keyPressed)
 			npc.NoChaseAfterCertainRange = npcData[19]
 			npc.ConstantlyFaceEnemy = npcData[20]
 			npc.IsMedic = npcData[21]
+			npc.DisableFindEnemy = npcData[22]
 		end
 	end
 	//self.VJCE_Camera:Remove()

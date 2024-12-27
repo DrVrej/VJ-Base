@@ -2601,10 +2601,12 @@ function ENT:Think()
 							//timer.Remove("timer_reload_end"..self:EntIndex()) -- No longer needed
 							self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_MELEE
 							self:DoChangeWeapon(self.WeaponInventory.Melee, true)
+							curWep = self.CurrentWeaponEntity
 						-- Switch to anti-armor
 						elseif self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING && IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank or ene.VJTag_ID_Boss) && curWep != self.WeaponInventory.AntiArmor then
 							self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_ANTI_ARMOR
 							self:DoChangeWeapon(self.WeaponInventory.AntiArmor, true)
+							curWep = self.CurrentWeaponEntity
 						end
 					end
 					if self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING then
@@ -2612,10 +2614,12 @@ function ENT:Think()
 						if self.WeaponInventoryStatus == VJ.NPC_WEP_INVENTORY_MELEE && (!eneValid or (eneValid && self.LatestEnemyDistance >= 300)) then
 							self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_PRIMARY
 							self:DoChangeWeapon(self.WeaponInventory.Primary, true)
+							curWep = self.CurrentWeaponEntity
 						-- Reset weapon status from anti-armor to primary
-						elseif self.WeaponInventoryStatus == VJ.NPC_WEP_INVENTORY_ANTI_ARMOR && (!eneValid or (eneValid && ene.IsVJBaseSNPC_Tank != true && ene.VJTag_ID_Boss != true)) then
+						elseif self.WeaponInventoryStatus == VJ.NPC_WEP_INVENTORY_ANTI_ARMOR && (!eneValid or (eneValid && !ene.IsVJBaseSNPC_Tank && !ene.VJTag_ID_Boss)) then
 							self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_PRIMARY
 							self:DoChangeWeapon(self.WeaponInventory.Primary, true)
+							curWep = self.CurrentWeaponEntity
 						end
 					end
 				end

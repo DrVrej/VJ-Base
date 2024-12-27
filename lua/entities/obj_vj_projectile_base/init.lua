@@ -236,6 +236,8 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartTouch(ent)
 	//print("START TOUCH", ent)
+	-- Filter out entities that shouldn't be hit (such as clips or triggers)
+	if !ent:IsPlayer() && !ent:IsNPC() && !ent:IsNextBot() && !ent:IsFlagSet(FL_OBJECT) && ent:GetSolid() != SOLID_VPHYSICS then return end
 	local owner = self:GetOwner()
 	-- Skip the following cases:
 	-- Owner is the ent
