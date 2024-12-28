@@ -103,7 +103,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	end
 	
 	-- Movement Calculations
-	// local nearpos = self:VJ_GetNearestPointToEntity(dest)
+	// local nearpos = self:FindNearestPositions(dest)
 	local startPos = myPos + self:OBBCenter() + vecStart // nearpos.MyPosition
 	local endPos = destVec or dest:GetPos() + dest:OBBCenter() + vecEnd // nearpos.EnemyPosition
 	local tr = util.TraceHull({

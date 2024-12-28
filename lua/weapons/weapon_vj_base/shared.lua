@@ -558,7 +558,7 @@ function SWEP:NPC_CanFire()
 				return false
 			end
 			if IsValid(ene) && ((!owner.VJ_IsBeingControlled) or (owner.VJ_IsBeingControlled && owner.VJ_TheController:KeyDown(IN_ATTACK2))) then
-				-- Check make sure the enemy is within the firing cone!
+				-- Check to make sure the enemy is within the firing cone!
 				local spawnPos = self:GetPos() //self:GetBulletPos() -- Because "GetBulletPos" is VERY costly sadly =(
 				local aimPos = owner.IsVJBaseSNPC and owner:GetAimPosition(ene, spawnPos, 0) or ene:BodyTarget(spawnPos)
 				local aimDir = aimPos - spawnPos
@@ -684,7 +684,7 @@ function SWEP:PrimaryAttack(UseAlt)
 			if (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) or (v:IsPlayer() && v.VJTag_IsControllingNPC == true) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
 			if (isPly && v:EntIndex() != owner:EntIndex()) or (isNPC && (v:IsNPC() or (v:IsPlayer() && v:Alive() && !VJ_CVAR_IGNOREPLAYERS) or v:IsNextBot()) && (owner:Disposition(v) != D_LI) && (v != owner) && (v:GetClass() != owner:GetClass()) or (v:GetClass() == "prop_physics") or v.VJTag_IsAttackable == true or v.VJTag_IsDamageable == true && (owner:GetForward():Dot((v:GetPos() - owner:GetPos()):GetNormalized()) > math.cos(math.rad(owner.MeleeAttackDamageAngleRadius)))) then
 				local dmginfo = DamageInfo()
-				dmginfo:SetDamage(isNPC and owner:VJ_GetDifficultyValue(self.Primary.Damage) or self.Primary.Damage)
+				dmginfo:SetDamage(isNPC and owner:ScaleByDifficulty(self.Primary.Damage) or self.Primary.Damage)
 				if v:IsNPC() or v:IsPlayer() then dmginfo:SetDamageForce(owner:GetForward() * ((dmginfo:GetDamage() + 100) * 70)) end
 				dmginfo:SetInflictor(owner)
 				dmginfo:SetAttacker(owner)
@@ -741,7 +741,7 @@ function SWEP:PrimaryAttack(UseAlt)
 					bullet.Spread = Vector(spread, spread, 0)
 					bullet.Dir = (aimPos - spawnPos):GetNormal()
 					bullet.Src = spawnPos
-					bullet.Damage = owner:VJ_GetDifficultyValue(self.Primary.Damage)
+					bullet.Damage = owner:ScaleByDifficulty(self.Primary.Damage)
 				else
 					local spawnPos = self:GetBulletPos()
 					bullet.Spread = Vector(0.05, 0.05, 0)

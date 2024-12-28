@@ -135,7 +135,7 @@ function ENT:TASK_VJ_PLAY_SEQUENCE(taskStatus, data)
 	if taskStatus == TASKSTATUS_NEW then
 		//print("TASK_VJ_PLAY_SEQUENCE: Start!", data.duration)
 		local playbackRate = data.playbackRate or self.TruePlaybackRate -- Since setting a new animation resets the playback rate, make sure to capture it before anything!
-		data.seqID = self:VJ_PlaySequence(data.animation)
+		data.seqID = self:PlaySequence(data.animation)
 		self:SetPlaybackRate(playbackRate, true)
 		data.animEndTime = CurTime() + data.duration
 	else
@@ -351,6 +351,8 @@ function ENT:StartSchedule(schedule)
 	
 	-- Clear certain systems that should be notified that we have moved
 	if schedule.HasMovement then
+		self.DoingWeaponAttack = false
+		self.DoingWeaponAttack_Standing = false
 		self.LastHiddenZoneT = 0
 		if self.LastAnimationType != VJ.ANIM_TYPE_GESTURE then -- Movements shouldn't interrupt gestures
 			self.LastAnimationSeed = 0

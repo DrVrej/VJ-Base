@@ -30,7 +30,6 @@ local defAng = Angle(0, 0, 0)
 local CurTime = CurTime
 local IsValid = IsValid
 local GetConVar = GetConVar
-local istable = istable
 local isnumber = isnumber
 local isvector = isvector
 local isstring = isstring
@@ -239,7 +238,7 @@ end
 	Reset and stop the eating behavior
 		- statusData = Status info to pass to "OnEat" (info types defined in that function)
 -----------------------------------------------------------]]
-function ENT:EatingReset(statusData)
+function ENT:ResetEatingBehavior(statusData)
 	local eatingData = self.EatingData
 	self:SetState(VJ_STATE_NONE)
 	self:OnEat("StopEating", statusData)
@@ -707,7 +706,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 					playbackRate = customPlaybackRate or false,
 					duration = animTime
 				})
-				//self:VJ_PlaySequence(animation, playbackRate, extraOptions.SequenceDuration != false, dur)
+				//self:PlaySequence(animation, playbackRate, extraOptions.SequenceDuration != false, dur)
 				animTime = animTime + transitionAnimTime -- Adjust the animation time in case we have a transition animation!
 			else -- Only if activity
 				//self:SetActivity(ACT_RESET)
@@ -838,7 +837,7 @@ end
 	Returns
 		- Number, the randomized number between pitch1 & pitch2
 -----------------------------------------------------------]]
-function ENT:VJ_DecideSoundPitch(pitch1, pitch2)
+function ENT:GetSoundPitch(pitch1, pitch2)
 	local finalPitch1 = self.GeneralSoundPitch1
 	local finalPitch2 = self.GeneralSoundPitch2
 	local pickedNum = self.UseTheSameGeneralSoundPitch_PickedNumber
@@ -847,8 +846,8 @@ function ENT:VJ_DecideSoundPitch(pitch1, pitch2)
 		finalPitch1 = pickedNum
 		finalPitch2 = pickedNum
 	end
-	if pitch1 != false && isnumber(pitch1) then finalPitch1 = pitch1 end
-	if pitch2 != false && isnumber(pitch2) then finalPitch2 = pitch2 end
+	if pitch1 && isnumber(pitch1) then finalPitch1 = pitch1 end
+	if pitch2 && isnumber(pitch2) then finalPitch2 = pitch2 end
 	return math.random(finalPitch1, finalPitch2)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1154,44 +1153,49 @@ end
 		- 2:
 			- Table, trace result
 -----------------------------------------------------------]]
-function ENT:VJ_ForwardIsHidingZone(startPos, endPos, acceptWorld, extraOptions)
+function ENT:DoCoverTrace(startPos, endPos, acceptWorld, extraOptions)
 	local ene = self:GetEnemy()
 	if !IsValid(ene) then return false, {} end
 	startPos = startPos or (self:GetPos() + self:OBBCenter())
 	endPos = endPos or ene:EyePos()
-	acceptWorld = acceptWorld or false
 	extraOptions = extraOptions or {}
 		local setLastHiddenTime = extraOptions.SetLastHiddenTime or false
 	local tr = util.TraceLine({
 		start = startPos,
 		endpos = endPos,
-		filter = self
+		filter = self,
+		mask = MASK_SHOT
 	})
 	local hitPos = tr.HitPos
 	local hitEnt = tr.Entity
-	if extraOptions.Debug == true then
-		print("--------------------------------------------")
-		PrintTable(tr)
-		VJ.DEBUG_TempEnt(hitPos)
+	if extraOptions.Debug then
+		debugoverlay.Box(startPos, Vector(-2, -2, -2), Vector(2, 2, 2), 1, Color(0, 255, 0))
+		debugoverlay.Text(startPos, "DoCoverTrace - startPos", 1)
+		debugoverlay.Box(endPos, Vector(-2, -2, -2), Vector(2, 2, 2), 1, Color(255, 0, 0))
+		debugoverlay.Text(endPos, "DoCoverTrace - endPos", 1)
+		debugoverlay.Box(hitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 1, Color(255, 255, 0))
+		debugoverlay.Line(startPos, hitPos, 1, Color(255, 255, 0))
+		debugoverlay.Text(hitPos, "DoCoverTrace - tr.HitPos", 1)
 	end
-	-- Sometimes the trace isn't 100%, a tiny find in sphere check fixes this issue...
+	
+	-- Sometimes tracing isn't 100%, a tiny find in sphere check fixes this issue...
 	local sphereInvalidate = false
-	for _,v in ipairs(ents.FindInSphere(hitPos, 5)) do
+	for _, v in ipairs(ents.FindInSphere(hitPos, 5)) do
 		if v == ene or v.VJTag_IsLiving then
 			sphereInvalidate = true
 		end
 	end
 	
-	-- Not a hiding zone: (Sphere found an enemy/NPC/Player) OR (Trace ent is an enemy/NPC/Player) OR (End pos is far from the hit position) OR (World is NOT accepted as a hiding zone)
-	if sphereInvalidate or (acceptWorld == false && tr.HitWorld == true) or (IsValid(hitEnt) && (hitEnt == ene or hitEnt.VJTag_IsLiving or hitEnt:GetVelocity():LengthSqr() > 1000)) or endPos:Distance(hitPos) <= 10 then
-		if setLastHiddenTime == true then self.LastHiddenZoneT = 0 end
-		return false, tr
 	-- Hiding zone: It hit world AND it's close, override "acceptWorld" option!
-	elseif tr.HitWorld == true && self:GetPos():Distance(hitPos) < 200 then
-		if setLastHiddenTime == true then self.LastHiddenZoneT = CurTime() + 20 end
+	if tr.HitWorld && startPos:Distance(hitPos) < 200 then
+		if setLastHiddenTime then self.LastHiddenZoneT = CurTime() + 20 end
 		return true, tr
+	-- Not a hiding zone: (Sphere found an enemy/NPC/Player) OR (World is NOT accepted as a hiding zone) OR (Trace ent is an enemy/NPC/Player) OR (End pos is far from the hit position)
+	elseif sphereInvalidate or (!acceptWorld && tr.HitWorld) or (IsValid(hitEnt) && (hitEnt == ene or hitEnt.VJTag_IsLiving or hitEnt:GetVelocity():LengthSqr() > 1000)) or endPos:Distance(hitPos) <= 10 then
+		if setLastHiddenTime then self.LastHiddenZoneT = 0 end
+		return false, tr
 	else -- Hidden!
-		if setLastHiddenTime == true then self.LastHiddenZoneT = CurTime() + 20 end
+		if setLastHiddenTime then self.LastHiddenZoneT = CurTime() + 20 end
 		return true, tr
 	end
 end
@@ -1333,10 +1337,24 @@ end
 		- false, NO damage type is included
 	Notes
 		- DMG_DIRECT = Disabled because default fire uses it!
-		- DMG_ALWAYSGIB = Make sure damage is NOT a bullet because GMod sets DMG_ALWAYSGIB randomly for certain bullets! (Maybe if the damage is high?)
+		- DMG_ALWAYSGIB = Skip if it's a bullet because engine sets DMG_ALWAYSGIB for "FireBullets" if it's more than 16 otherwise it sets DMG_NEVERGIB
 -----------------------------------------------------------]]
+local GIB_DAMAGE_MASK = bit.bor(
+    DMG_ALWAYSGIB,
+    DMG_ENERGYBEAM,
+    DMG_BLAST,
+    DMG_VEHICLE,
+    DMG_CRUSH,
+    DMG_DISSOLVE,
+    DMG_SLOWBURN,
+    DMG_PHYSGUN,
+    DMG_PLASMA,
+    DMG_SONIC
+	//DMG_DIRECT
+)
+--
 function ENT:IsDefaultGibDamageType(dmgType)
-	return (bAND(dmgType, DMG_ALWAYSGIB) != 0 && bAND(dmgType, DMG_BULLET) == 0) or bAND(dmgType, DMG_ENERGYBEAM) != 0 or bAND(dmgType, DMG_BLAST) != 0 or bAND(dmgType, DMG_VEHICLE) != 0 or bAND(dmgType, DMG_CRUSH) != 0 or bAND(dmgType, DMG_DISSOLVE) != 0 or bAND(dmgType, DMG_SLOWBURN) != 0 or bAND(dmgType, DMG_PHYSGUN) != 0 or bAND(dmgType, DMG_PLASMA) != 0 or bAND(dmgType, DMG_SONIC) != 0
+	return bAND(dmgType, DMG_NEVERGIB) == 0 && bAND(dmgType, GIB_DAMAGE_MASK) != 0 && (bAND(dmgType, DMG_ALWAYSGIB) == 0 || bAND(dmgType, DMG_BULLET) == 0)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -1385,7 +1403,7 @@ end
 		2:
 			- Vector, Given entity's nearest position to the NPC's nearest position
 -----------------------------------------------------------]]
-function ENT:VJ_GetNearestPointToEntity(ent, centerNPC)
+function ENT:FindNearestPositions(ent, centerNPC)
 	local myNearPos = self:NearestPoint(ent:GetPos() + ent:OBBCenter())
 	if centerNPC then
 		local myPos = self:GetPos()
@@ -1403,13 +1421,13 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Finds the nearest position from the NPC to the entity and from the entity to the nearest NPC position found previously, then returns the distance between them
-		NOTE: Identical to "VJ_GetNearestPointToEntity", this is just a convenience function
+		NOTE: Identical to "FindNearestPositions", this is just a convenience function
 		- ent = The entity to find the nearest position of in respect to the NPC
 		- centerNPC = Should the X-axis and Y-axis for the NPC stay at the NPC's origin with ONLY the Z-axis changing? | DEFAULT: false
 	Returns
 		number, The distance from the NPC nearest position to the given NPC's nearest position
 -----------------------------------------------------------]]
-function ENT:VJ_GetNearestPointToEntityDistance(ent, centerNPC)
+function ENT:FindNearestDistance(ent, centerNPC)
 	local myNearPos = self:NearestPoint(ent:GetPos() + ent:OBBCenter())
 	if centerNPC then
 		local myPos = self:GetPos()
@@ -1424,34 +1442,34 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Takes the given number and returns a scaled number according to the difficulty that NPC is set to
-		- int = The number to scale
+		- num = The number to scale
 	Returns
 		- number, the scaled number
 -----------------------------------------------------------]]
-function ENT:VJ_GetDifficultyValue(int)
+function ENT:ScaleByDifficulty(num)
 	local dif = self.SelectedDifficulty
 	if dif == 0 then
-		return int
+		return num
 	elseif dif == -3 then
-		return math_clamp(int - (int * 0.99), 1, int)
+		return math_clamp(num - (num * 0.99), 1, num)
 	elseif dif == -2 then
-		return math_clamp(int - (int * 0.75), 1, int)
+		return math_clamp(num - (num * 0.75), 1, num)
 	elseif dif == -1 then
-		return int * 0.5
+		return num * 0.5
 	elseif dif == 1 then
-		return int * 1.5
+		return num * 1.5
 	elseif dif == 2 then
-		return int * 2
+		return num * 2
 	elseif dif == 3 then
-		return int * 2.5
+		return num * 2.5
 	elseif dif == 4 then
-		return int * 3.5
+		return num * 3.5
 	elseif dif == 5 then
-		return int * 4.5
+		return num * 4.5
 	elseif dif == 6 then
-		return int * 6
+		return num * 6
 	end
-	return int -- Normal (default)
+	return num -- Normal (default)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local vecZN100 = Vector(0, 0, -100)
@@ -1586,7 +1604,7 @@ end
 --[[---------------------------------------------------------
 	Resets and stops following the current entity (If it's following any)
 -----------------------------------------------------------]]
-function ENT:FollowReset()
+function ENT:ResetFollowBehavior()
 	local followData = self.FollowData
 	local followEnt = followData.Ent
 	if IsValid(followEnt) && followEnt:IsPlayer() && self.AllowPrintingInChat then
@@ -1678,7 +1696,7 @@ function ENT:Follow(ent, stopIfFollowing)
 			if !self:BusyWithActivity() then
 				self:SCHEDULE_FACE("TASK_FACE_TARGET")
 			end
-			self:FollowReset()
+			self:ResetFollowBehavior()
 			self:OnFollow("Stop", ent)
 		end
 	end
@@ -1712,7 +1730,7 @@ function ENT:MaintainMedicBehavior()
 	elseif self.Medic_Status != "Healing" then
 		local ally = self.Medic_CurrentEntToHeal
 		if !IsValid(ally) or !VJ.IsAlive(ally) or (ally:Health() > ally:GetMaxHealth() * 0.75) or self:CheckRelationship(ally) != D_LI then self:ResetMedicBehavior() return end
-		if self:Visible(ally) && self:VJ_GetNearestPointToEntityDistance(ally) <= self.Medic_HealDistance then -- Are we in healing distance?
+		if self:Visible(ally) && self:FindNearestDistance(ally) <= self.Medic_HealDistance then -- Are we in healing distance?
 			self.Medic_Status = "Healing"
 			self:OnMedicBehavior("BeforeHeal")
 			self:PlaySoundSystem("MedicBeforeHeal")
@@ -1761,7 +1779,7 @@ function ENT:MaintainMedicBehavior()
 						self:ResetMedicBehavior()
 					else -- If it exists...
 						if self:CheckRelationship(ally) != D_LI then self:ResetMedicBehavior() return end -- I no longer like them, stop healing them!
-						if self:VJ_GetNearestPointToEntityDistance(ally) <= (self.Medic_HealDistance + 20) then -- Are we still in healing distance?
+						if self:FindNearestDistance(ally) <= (self.Medic_HealDistance + 20) then -- Are we still in healing distance?
 							if self:OnMedicBehavior("OnHeal", ally) != false then
 								local friCurHP = ally:Health()
 								ally:SetHealth(math_clamp(friCurHP + self.Medic_HealthAmount, friCurHP, ally:GetMaxHealth()))
@@ -1845,10 +1863,10 @@ function ENT:Controller_Movement(cont, ply, bullseyePos)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:VJ_PlaySequence(animation)
+function ENT:PlaySequence(animation)
 	if !animation then return false end
 	//self.VJ_PlayingSequence = true -- No longer needed as it is handled by ACT_DO_NOT_DISTURB
-	self:SetActivity(ACT_DO_NOT_DISTURB) -- So `self:GetActivity()` will return the current result (alongside other immediate calls after `VJ_PlaySequence`)
+	self:SetActivity(ACT_DO_NOT_DISTURB) -- So `self:GetActivity()` will return the current result (alongside other immediate calls after `PlaySequence`)
 	self:SetIdealActivity(ACT_DO_NOT_DISTURB) -- Avoids the engine from progressing to an ideal activity that was set very recently | EX: Fixes melee attack anims breaking when called right after `self:SCHEDULE_IDLE_STAND()`
 		-- Keeps MaintainActivity from overriding sequences as seen here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L6331
 		-- If `m_IdealActivity` is set to ACT_DO_NOT_DISTURB, the engine will understand it's a sequence and will avoid messing with it, described here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/shared/ai_activity.h#L215
@@ -2383,27 +2401,27 @@ local function flinchDamageTypeCheck(checkTbl, dmgType)
 	end
 end
 --
-function ENT:DoFlinch(dmginfo, hitgroup)
+function ENT:Flinch(dmginfo, hitgroup)
 	local curTime = CurTime()
 	if self.CanFlinch == 0 or self.Flinching or self.AnimLockTime > curTime or self.TakingCoverT > curTime or self.NextFlinchT > curTime or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
-
-	local function RunFlinch(hitgroupInfo)
-		self.Flinching = true
-		self:StopAttacks(true)
-		self.CurrentAttackAnimationTime = 0
-		local anim = VJ.PICK(hitgroupInfo and hitgroupInfo.Animation or self.AnimTbl_Flinch)
-		local _, animDur = self:PlayAnim(anim, true, self:DecideAnimationLength(anim, self.NextMoveAfterFlinchTime), false, 0, {PlayBackRateCalculated=true})
-		timer.Create("timer_act_flinching"..self:EntIndex(), animDur, 1, function() self.Flinching = false end)
-		self:OnFlinch(dmginfo, hitgroup, "Execute")
-		self.NextFlinchT = curTime + (self.NextFlinchTime == false and animDur or self.NextFlinchTime)
-	end
 	
 	if math.random(1, self.FlinchChance) == 1 && ((self.CanFlinch == 1) or (self.CanFlinch == 2 && flinchDamageTypeCheck(self.FlinchDamageTypes, dmginfo:GetDamageType()))) then
-		if self:OnFlinch(dmginfo, hitgroup, "PriorExecution") == false then return end
+		if self:OnFlinch(dmginfo, hitgroup, "PriorExecution") then return end
+		
+		local function RunFlinch(hitgroupInfo)
+			self.Flinching = true
+			self:StopAttacks(true)
+			self.CurrentAttackAnimationTime = 0
+			local anim = VJ.PICK(hitgroupInfo and hitgroupInfo.Animation or self.AnimTbl_Flinch)
+			local _, animDur = self:PlayAnim(anim, true, self:DecideAnimationLength(anim, self.NextMoveAfterFlinchTime), false, 0, {PlayBackRateCalculated=true})
+			timer.Create("timer_act_flinching"..self:EntIndex(), animDur, 1, function() self.Flinching = false end)
+			self:OnFlinch(dmginfo, hitgroup, "Execute")
+			self.NextFlinchT = curTime + (!self.NextFlinchTime and animDur or self.NextFlinchTime)
+		end
 		
 		local hitgroupTbl = self.HitGroupFlinching_Values
 		-- Hitgroup flinching
-		if istable(hitgroupTbl) then
+		if hitgroupTbl then
 			for _, v in ipairs(hitgroupTbl) do
 				local hitGroups = v.HitGroup
 				-- Sub-table of hitGroups
@@ -2414,7 +2432,7 @@ function ENT:DoFlinch(dmginfo, hitgroup)
 					end
 				end
 			end
-			if self.HitGroupFlinching_DefaultWhenNotHit == true then
+			if self.HitGroupFlinching_DefaultWhenNotHit then
 				RunFlinch(nil)
 			end
 		-- Non-hitgroup flinching
@@ -2525,26 +2543,26 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodParticles(dmginfo, hitgroup)
 	local particleName = VJ.PICK(self.CustomBlood_Particle)
-	if particleName == false then return end
-	
-	local dmgPos = dmginfo:GetDamagePosition()
-	local particle = ents.Create("info_particle_system")
-	particle:SetKeyValue("effect_name", particleName)
-	particle:SetPos((dmgPos == defPos and (self:GetPos() + self:OBBCenter())) or dmgPos)
-	particle:Spawn()
-	particle:Activate()
-	particle:Fire("Start")
-	particle:Fire("Kill", "", 0.1)
+	if particleName then
+		local dmgPos = dmginfo:GetDamagePosition()
+		local particle = ents.Create("info_particle_system")
+		particle:SetKeyValue("effect_name", particleName)
+		particle:SetPos((dmgPos == defPos and (self:GetPos() + self:OBBCenter())) or dmgPos)
+		particle:Spawn()
+		particle:Activate()
+		particle:Fire("Start")
+		particle:Fire("Kill", "", 0.1)
+	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodDecal(dmginfo, hitgroup)
-	if VJ.PICK(self.CustomBlood_Decal) == false then return end
+	local decals = self.CustomBlood_Decal
+	if !VJ.PICK(decals) then return end
+	
 	local dmgForce = dmginfo:GetDamageForce()
 	local dmgPos = dmginfo:GetDamagePosition()
 	if dmgPos == defPos then dmgPos = self:GetPos() + self:OBBCenter() end
-	local decals = self.CustomBlood_Decal
-	local maxDist = self.BloodDecalDistance
-	local clampedLength = math_clamp(dmgForce:Length() * 10, 100, maxDist)
+	local clampedLength = math_clamp(dmgForce:Length() * 10, 100, self.BloodDecalDistance)
 	
 	-- Badi ayroun
 	local tr = util.TraceLine({start = dmgPos, endpos = dmgPos + dmgForce:GetNormal() * clampedLength, filter = self})
@@ -2566,18 +2584,16 @@ end
 local vecZ30 = Vector(0, 0, 30)
 local vecZ1 = Vector(0, 0, 1)
 --
-function ENT:SpawnBloodPool(dmginfo, hitgroup)
-	local corpseEnt = self.Corpse
-	if !IsValid(corpseEnt) then return end
+function ENT:SpawnBloodPool(dmginfo, hitgroup, corpse)
 	local getBloodPool = VJ.PICK(self.CustomBlood_Pool)
 	if getBloodPool then
 		timer.Simple(2.2, function()
-			if IsValid(corpseEnt) then
-				local pos = corpseEnt:GetPos() + corpseEnt:OBBCenter()
+			if IsValid(corpse) then
+				local pos = corpse:GetPos() + corpse:OBBCenter()
 				local tr = util.TraceLine({
 					start = pos,
 					endpos = pos - vecZ30,
-					filter = corpseEnt, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
+					filter = corpse, //function( ent ) if ( ent:GetClass() == "prop_physics" ) then return true end end
 					mask = CONTENTS_SOLID
 				})
 				if tr.HitWorld && (tr.HitNormal == vecZ1) then // (tr.Fraction <= 0.405)
@@ -2606,7 +2622,7 @@ function ENT:IdleSoundCode(customSD, sdType)
 			local pickedSD = VJ.PICK(self.SoundTbl_CombatIdle)
 			if (math.random(1,self.CombatIdleSoundChance) == 1 && pickedSD) or customSD then
 				if customSD then pickedSD = customSD end
-				self.CurrentIdleSound = sdType(self, pickedSD, self.CombatIdleSoundLevel, self:VJ_DecideSoundPitch(self.CombatIdleSoundPitch.a, self.CombatIdleSoundPitch.b))
+				self.CurrentIdleSound = sdType(self, pickedSD, self.CombatIdleSoundLevel, self:GetSoundPitch(self.CombatIdleSoundPitch.a, self.CombatIdleSoundPitch.b))
 			end
 		else
 			local pickedSD = VJ.PICK(self.SoundTbl_Idle)
@@ -2615,13 +2631,13 @@ function ENT:IdleSoundCode(customSD, sdType)
 			local function RegularIdle()
 				if (sdrand == 1 && pickedSD) or customSD then
 					if customSD then pickedSD = customSD end
-					self.CurrentIdleSound = sdType(self, pickedSD, self.IdleSoundLevel, self:VJ_DecideSoundPitch(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
+					self.CurrentIdleSound = sdType(self, pickedSD, self.IdleSoundLevel, self:GetSoundPitch(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
 				end
 			end
 			if sdtbl2 != false && sdrand == 1 && self.HasIdleDialogueSounds && math.random(1, 2) == 1 then
 				local foundEnt, canAnswer = self:IdleDialogueFindEnt()
 				if foundEnt then
-					self.CurrentIdleSound = sdType(self, sdtbl2, self.IdleDialogueSoundLevel, self:VJ_DecideSoundPitch(self.IdleDialogueSoundPitch.a, self.IdleDialogueSoundPitch.b))
+					self.CurrentIdleSound = sdType(self, sdtbl2, self.IdleDialogueSoundLevel, self:GetSoundPitch(self.IdleDialogueSoundPitch.a, self.IdleDialogueSoundPitch.b))
 					if canAnswer then -- If we have a VJ NPC that can answer
 						local dur = SoundDuration(sdtbl2)
 						if dur == 0 then dur = 3 end -- Since some file types don't return a proper duration =(
@@ -2706,7 +2722,7 @@ function ENT:IdleDialogueAnswerSoundCode(customSD, sdType)
 		StopSound(self.CurrentExtraSpeechSound)
 		StopSound(self.CurrentIdleSound)
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2, 3)
-		self.CurrentSpeechSound = sdType(self, pickedSD, self.IdleDialogueAnswerSoundLevel, self:VJ_DecideSoundPitch(self.IdleDialogueAnswerSoundPitch.a, self.IdleDialogueAnswerSoundPitch.b))
+		self.CurrentSpeechSound = sdType(self, pickedSD, self.IdleDialogueAnswerSoundLevel, self:GetSoundPitch(self.IdleDialogueAnswerSoundPitch.a, self.IdleDialogueAnswerSoundPitch.b))
 		return SoundDuration(pickedSD) -- Return the duration of the sound, which will be used to make the other SNPC stand still
 	else
 		return 0
@@ -2755,7 +2771,7 @@ function ENT:DoGibOnDeath(dmginfo, hitgroup, extraOptions)
 	local dmgType = dmginfo:GetDamageType()
 	for k = 1, #dmgTbl do
 		local v = dmgTbl[k]
-		if (v == "All") or (v == "UseDefault" && self:IsDefaultGibDamageType(dmgType) && bAND(dmgType, DMG_NEVERGIB) == 0) or (v != "UseDefault" && bAND(dmgType, v) != 0) then
+		if (v == "All") or (v == "UseDefault" && self:IsDefaultGibDamageType(dmgType)) or (v != "UseDefault" && bAND(dmgType, v) != 0) then
 			local setupGibs, setupGibsExtra = self:SetUpGibesOnDeath(dmginfo, hitgroup)
 			if setupGibs == true then
 				if setupGibsExtra then
@@ -2779,7 +2795,7 @@ local gib_sd3 = "vj_base/gib/break2.wav"
 local gib_sd4 = "vj_base/gib/break3.wav"
 --
 function ENT:PlayGibOnDeathSounds(dmginfo, hitgroup)
-	if self.HasGibOnDeathSounds == false then return end
+	if !self.HasGibOnDeathSounds then return end
 	if self:CustomGibOnDeathSounds(dmginfo, hitgroup) == true then
 		VJ.EmitSound(self, gib_sd1, 90, math.random(80, 100))
 		VJ.EmitSound(self, gib_sd2, 90, math.random(80, 100))
@@ -2789,7 +2805,7 @@ function ENT:PlayGibOnDeathSounds(dmginfo, hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSoundTrack()
-	if self.HasSounds == false or self.HasSoundTrack == false then return end
+	if !self.HasSounds or !self.HasSoundTrack then return end
 	if math.random(1, self.SoundTrackChance) == 1 then
 		self.VJTag_SD_PlayingMusic = true
 		net.Start("vj_music_run")
@@ -2829,7 +2845,7 @@ function ENT:OnRemove()
 	hook.Remove("Think", self)
 	self.Dead = true
 	if self.Medic_Status then self:ResetMedicBehavior() end
-	if self.VJTag_IsEating then self:EatingReset("Dead") end
+	if self.VJTag_IsEating then self:ResetEatingBehavior("Dead") end
 	self:RemoveTimers()
 	self:StopAllSounds()
 	self:StopParticles()
@@ -2858,6 +2874,10 @@ function ENT:VJ_TASK_COVER_FROM_ORIGIN(moveType, customFunc) self:SCHEDULE_COVER
 function ENT:VJ_TASK_IDLE_WANDER() self:SCHEDULE_IDLE_WANDER() end
 function ENT:VJ_TASK_IDLE_STAND() self:SCHEDULE_IDLE_STAND() end
 function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, extraOptions, customFunc) return self:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, extraOptions, customFunc) end
+function ENT:VJ_DecideSoundPitch(pitch1, pitch2) self:GetSoundPitch(pitch1, pitch2) end
+function ENT:VJ_GetDifficultyValue(num) self:ScaleByDifficulty(num) end
+function ENT:VJ_GetNearestPointToEntity(ent, centerNPC) self:FindNearestPositions(ent, centerNPC) end
+function ENT:VJ_GetNearestPointToEntityDistance(ent, centerNPC) self:FindNearestDistance(ent, centerNPC) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Checks all 4 sides around the NPC

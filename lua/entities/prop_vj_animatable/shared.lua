@@ -10,7 +10,6 @@ ENT.Category		= "VJ Base"
 ENT.Spawnable = false
 ENT.AdminOnly = false
 ENT.AutomaticFrameAdvance = true
-//ENT.RenderGroup = RENDERGROUP_BOTH
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	function ENT:Draw()

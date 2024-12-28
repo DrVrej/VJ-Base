@@ -67,11 +67,6 @@ function ENT:Init()
 	VJ.EmitSound(self, "player/pl_drown1.wav") -- Player connect sound
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:GetSightDirection()
-    local att = self:LookupAttachment("eyes") -- Not all models have it, must check for validity
-    return att != 0 && self:GetAttachment(att).Ang:Forward() or self:GetForward()
-end
----------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnGrenadeAttack(status, grenade, customEnt, landDir, landingPos)
 	if status == "Throw" then
 		if !IsValid(customEnt) then

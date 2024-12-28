@@ -29,9 +29,6 @@ ENT.Active = true -- Is this spawnpoint active?
 
 local colorGreen = Color(0, 255, 0)
 local colorRed = Color(255, 0, 0)
-
-local sdActivated = Sound("hl1/fvox/activated.wav")
-local sdDeactivated = Sound("hl1/fvox/deactivated.wav")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetModel("models/props_junk/sawblade001a.mdl")
@@ -53,12 +50,12 @@ function ENT:Use(activator, caller)
 	if activator:IsPlayer() && activator:IsAdmin() then
 		if (self.Active == true) then
 			self.Active = false
-			self:EmitSound(sdDeactivated, 70, 100)
+			self:EmitSound("hl1/fvox/deactivated.wav", 70, 100)
 			self:SetColor(colorRed)
 			activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.plyspawnpoint.deactivated")
 		else
 			self.Active = true
-			self:EmitSound(sdActivated, 70, 100)
+			self:EmitSound("hl1/fvox/activated.wav", 70, 100)
 			self:SetColor(colorGreen)
 			activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.plyspawnpoint.activated")
 		end

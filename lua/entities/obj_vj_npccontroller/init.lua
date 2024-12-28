@@ -274,7 +274,7 @@ function ENT:SetControlledNPC(npcEnt)
 		if npcEnt.Medic_Status then npcEnt:ResetMedicBehavior() end
 		if npcEnt.VJTag_IsEating then
 			npcEnt:OnEat("StopEating", "Unspecified") -- So it plays the get up animation
-			npcEnt:EatingReset("Unspecified")
+			npcEnt:ResetEatingBehavior("Unspecified")
 		end
 		-- Apply a small delay to assure that the bullseye is in the NPC's "CurrentPossibleEnemies"
 		timer.Simple(0.1, function()

@@ -15,6 +15,8 @@ ENT.Category		= "VJ Base"
 
 ENT.Spawnable = true
 ENT.AdminOnly = false
+
+ENT.PhysicsSounds = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	language.Add("obj_vj_flareround", "Flare Round")
@@ -136,6 +138,6 @@ function ENT:OnTakeDamage(dmginfo)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnRemove()
-	if self.CurrentIdleSound then self.CurrentIdleSound:Stop() end
+	VJ.STOPSOUND(self.CurrentIdleSound)
 	self:StopParticles()
 end

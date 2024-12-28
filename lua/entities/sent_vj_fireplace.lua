@@ -98,7 +98,7 @@ function ENT:Use(activator, caller)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
-	if IsValid(entity) && entity:GetPos():Distance(self:GetPos()) <= 38 && self.IsOn && (entity:IsNPC() or entity:IsPlayer()) then
+	if IsValid(entity) && entity:GetPos():Distance(self:GetPos()) <= 38 && self.IsOn && (entity:IsNPC() or entity:IsPlayer() or entity:IsNextBot()) then
 		entity:Ignite(math.Rand(3, 5))
 	end
 end

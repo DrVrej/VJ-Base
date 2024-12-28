@@ -192,7 +192,7 @@ function ENT:Tank_RunOver(ent)
 	if self:Disposition(ent) == 1 && ent:Health() > 0 && ((ent:IsNPC() && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot()) && !ent.VJTag_ID_Boss then
 		self:Tank_OnRunOver(ent)
 		self:Tank_Sound_RunOver()
-		ent:TakeDamage(self:VJ_GetDifficultyValue(8), self, self)
+		ent:TakeDamage(self:ScaleByDifficulty(8), self, self)
 		VJ.DamageSpecialEnts(self, ent, nil)
 		ent:SetVelocity(ent:GetForward()*-200)
 	end

@@ -17,6 +17,7 @@ ENT.Category		= "VJ Base"
 ENT.Spawnable = true
 ENT.AdminOnly = false
 
+ENT.PhysicsSounds = true
 ENT.VJTag_IsAttackable = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
@@ -43,10 +44,6 @@ function ENT:Initialize()
 	if phys and IsValid(phys) then
 		phys:Wake()
 	end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:PhysicsCollide(data, physobj)
-	//self:EmitSound("physics/cardboard/cardboard_box_impact_soft"..math.random(1,5)..".wav")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Use(activator, caller)

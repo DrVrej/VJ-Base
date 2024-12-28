@@ -122,7 +122,7 @@ function TOOL:Reload(tr)
 	local ent = tr.Entity
 	if (!IsValid(ent)) or !ent:IsNPC() or !ent.IsVJBaseSNPC then return end
 	
-	ent:FollowReset()
+	ent:ResetFollowBehavior()
 	self:GetOwner():ChatPrint("#tool.vjstool_npcfollower.print.reset")
 	return true
 end

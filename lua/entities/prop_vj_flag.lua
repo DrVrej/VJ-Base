@@ -13,6 +13,8 @@ ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Purpose 		= "Used for flags."
 ENT.Instructions 	= "Don't change anything."
 ENT.Category		= "VJ Base"
+
+ENT.PhysicsSounds = true
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
