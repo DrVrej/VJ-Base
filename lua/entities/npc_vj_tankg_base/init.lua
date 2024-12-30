@@ -137,7 +137,7 @@ local cv_noidleparticle = GetConVar("vj_npc_noidleparticle")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
 	self.DeathAnimationCodeRan = true -- So corpse doesn't fly away on death (Take this out if not using death explosion sequence)
-	self:SetImpactEnergyScale(0) -- Take no physics damage
+	self:SetPhysicsDamageScale(0) -- Take no physics damage
 	self:Tank_Init()
 	if self.CustomInitialize_CustomTank then self:CustomInitialize_CustomTank() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 end

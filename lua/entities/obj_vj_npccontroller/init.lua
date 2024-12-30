@@ -499,12 +499,12 @@ function ENT:ToggleBullseyeTracking()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ToggleMovementJumping()
-	if !self.VJCE_NPC.AllowMovementJumping then
+	if !self.VJCE_NPC.CanMoveJump then
 		self.VJCE_Player:ChatPrint("#vjbase.print.npccontroller.movementjump.enable")
-		self.VJCE_NPC.AllowMovementJumping = true
+		self.VJCE_NPC.CanMoveJump = true
 	else
 		self.VJCE_Player:ChatPrint("#vjbase.print.npccontroller.movementjump.disable")
-		self.VJCE_NPC.AllowMovementJumping = false
+		self.VJCE_NPC.CanMoveJump = false
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

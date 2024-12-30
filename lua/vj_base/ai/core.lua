@@ -397,7 +397,7 @@ function ENT:MaintainIdleAnimation(force)
 	//end
 	
 	/* -- Old idle system
-	local idleAnimTbl = self.NoWeapon_UseScaredBehavior_Active == true and self.AnimTbl_ScaredBehaviorStand or ((self.Alerted && self:GetWeaponState() != VJ.NPC_WEP_STATE_HOLSTERED && IsValid(self:GetActiveWeapon())) and self.AnimTbl_WeaponAim or self.AnimTbl_IdleStand)
+	local idleAnimTbl = self.Weapon_UnarmedBehavior_Active == true and self.AnimTbl_ScaredBehaviorStand or ((self.Alerted && self:GetWeaponState() != VJ.NPC_WEP_STATE_HOLSTERED && IsValid(self:GetActiveWeapon())) and self.AnimTbl_WeaponAim or self.AnimTbl_IdleStand)
 	local posIdlesTbl = {}
 	local posIdlesTblIndex = 1
 	local sameAnimFound = false -- If true then it one of the animations in the table is the same as the current!
@@ -651,7 +651,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 			if lockAnim != "LetAttacks" then
 				self:StopAttacks(true)
 				self.PauseAttacks = true
-				timer.Create("timer_act_stopattacks"..self:EntIndex(), lockAnimTime, 1, function() self.PauseAttacks = false end)
+				timer.Create("timer_pauseattacks_reset"..self:EntIndex(), lockAnimTime, 1, function() self.PauseAttacks = false end)
 			end
 		end
 		self.LastAnimationSeed = seed -- We need to set it again because self:StopAttacks() above will reset it when it calls to chase enemy!
@@ -1006,7 +1006,7 @@ function ENT:OverrideMoveFacing(flInterval, move)
 	end
 	
 	-- Handle the unique movement system for player models | Only face move direction if I have NOT faced anything else!
-	if !didTurn && self.UsePlayerModelMovement && self.MovementType == VJ_MOVETYPE_GROUND then
+	if !didTurn && self.UsePoseParameterMovement && self.MovementType == VJ_MOVETYPE_GROUND then
 		//self:SetTurnTarget(self:GetCurWaypointPos()) -- Because it will reset the current turning (if any), this will break "firing while moving" turning
 		local resultAng = self:GetFaceAngle((self:GetCurWaypointPos() - self:GetPos()):Angle())
 		if self.TurningUseAllAxis then
@@ -1103,7 +1103,7 @@ local aimMaxDist = 0.0000001 -- Distance at which the bullet spread is at its ma
 local aimMaxMove = 0.0000001 -- Move speed at which the bullet spread is at its max (most inaccurate) | Equivalent = Dividing by 10000000
 local damageCooldown = 4 -- Cooldown time in seconds, amount of time until this modifier no longer affects the spread
 --
-function ENT:CalcAimSpread(target, goalPos, modifier)
+function ENT:GetAimSpread(target, goalPos, modifier)
 	local result = math.min(self:GetPos():DistToSqr(goalPos) * aimMaxDist, 0.05) -- Target distance modifier
 	if target then
 		result = result + math.min(target:GetMovementVelocity():LengthSqr() * aimMaxMove, 0.05) -- Target movement modifier
@@ -1388,7 +1388,7 @@ end
 	Scale the amount of energy used to calculate damage this NPC takes due to physics
 		- EXAMPLES: 0 = Take no physics damage | 0.001 = Take extremely minimum damage (manhack level) | 0.1 = Take little damage | 999999999 = Instant death
 -----------------------------------------------------------]]
-function ENT:SetImpactEnergyScale(scale)
+function ENT:SetPhysicsDamageScale(scale)
 	self:SetSaveValue("m_impactEnergyScale", scale)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -1475,7 +1475,7 @@ end
 local vecZN100 = Vector(0, 0, -100)
 --
 function ENT:IsJumpLegal(startPos, apex, endPos)
-	if !self.AllowMovementJumping then return false end
+	if !self.CanMoveJump then return false end
 	local jumpData = self.JumpVars
 	if ((endPos.z - startPos.z) > jumpData.MaxRise) or ((apex.z - startPos.z) > jumpData.MaxRise) or ((startPos.z - endPos.z) > jumpData.MaxDrop) or (startPos:Distance(endPos) > jumpData.MaxDistance) then
 		return false
@@ -1607,7 +1607,7 @@ end
 function ENT:ResetFollowBehavior()
 	local followData = self.FollowData
 	local followEnt = followData.Ent
-	if IsValid(followEnt) && followEnt:IsPlayer() && self.AllowPrintingInChat then
+	if IsValid(followEnt) && followEnt:IsPlayer() && self.CanChatMessage then
 		if self.Dead then
 			followEnt:PrintMessage(HUD_PRINTTALK, self:GetName().." has been killed.")
 		else
@@ -1645,17 +1645,17 @@ function ENT:Follow(ent, stopIfFollowing)
 		local followData = self.FollowData
 		-- Refusal messages
 		if isLiving && self:GetClass() != ent:GetClass() && (self:Disposition(ent) == D_HT or self:Disposition(ent) == D_NU) then -- Check for enemy/neutral
-			if isPly && self.AllowPrintingInChat then
+			if isPly && self.CanChatMessage then
 				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." isn't friendly so it won't follow you.")
 			end
 			return false, 3
 		elseif self.IsFollowing == true && ent != followData.Ent then -- Already following another entity
-			if isPly && self.AllowPrintingInChat then
+			if isPly && self.CanChatMessage then
 				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is following another entity so it won't follow you.")
 			end
 			return false, 2
 		elseif self.MovementType == VJ_MOVETYPE_STATIONARY or self.MovementType == VJ_MOVETYPE_PHYSICS then
-			if isPly && self.AllowPrintingInChat then
+			if isPly && self.CanChatMessage then
 				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is currently stationary so it can't follow you.")
 			end
 			return false, 1
@@ -1663,7 +1663,7 @@ function ENT:Follow(ent, stopIfFollowing)
 		
 		if !self.IsFollowing then
 			if isPly then
-				if self.AllowPrintingInChat then
+				if self.CanChatMessage then
 					ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is now following you.")
 				end
 				self.GuardingPosition = false -- Reset the guarding position
@@ -1713,7 +1713,7 @@ function ENT:ResetMedicBehavior()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainMedicBehavior()
-	if !self.IsMedic or self.NoWeapon_UseScaredBehavior_Active then return end -- Do NOT heal if playing scared animations!
+	if !self.IsMedic or self.Weapon_UnarmedBehavior_Active then return end -- Do NOT heal if playing scared animations!
 	if !self.Medic_Status then -- Not healing anyone, so check around for allies
 		if CurTime() < self.Medic_NextHealT then return end
 		for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
@@ -1783,6 +1783,9 @@ function ENT:MaintainMedicBehavior()
 							if self:OnMedicBehavior("OnHeal", ally) != false then
 								local friCurHP = ally:Health()
 								ally:SetHealth(math_clamp(friCurHP + self.Medic_HealthAmount, friCurHP, ally:GetMaxHealth()))
+								timer.Remove("timer_melee_bleed"..ally:EntIndex())
+								timer.Adjust("timer_melee_slowply"..ally:EntIndex(), 0)
+								ally.VJ_SpeedEffectT = 0
 								ally:RemoveAllDecals()
 							end
 							self:PlaySoundSystem("MedicOnHeal", nil, VJ.EmitSound)
@@ -2403,7 +2406,7 @@ end
 --
 function ENT:Flinch(dmginfo, hitgroup)
 	local curTime = CurTime()
-	if self.CanFlinch == 0 or self.Flinching or self.AnimLockTime > curTime or self.TakingCoverT > curTime or self.NextFlinchT > curTime or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB or (IsValid(dmginfo:GetInflictor()) && IsValid(dmginfo:GetAttacker()) && dmginfo:GetInflictor():GetClass() == "entityflame" && dmginfo:GetAttacker():GetClass() == "entityflame") then return end
+	if self.CanFlinch == 0 or self.Flinching or self.AnimLockTime > curTime or self.TakingCoverT > curTime or self.NextFlinchT > curTime or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
 	
 	if math.random(1, self.FlinchChance) == 1 && ((self.CanFlinch == 1) or (self.CanFlinch == 2 && flinchDamageTypeCheck(self.FlinchDamageTypes, dmginfo:GetDamageType()))) then
 		if self:OnFlinch(dmginfo, hitgroup, "PriorExecution") then return end
@@ -2414,7 +2417,7 @@ function ENT:Flinch(dmginfo, hitgroup)
 			self.CurrentAttackAnimationTime = 0
 			local anim = VJ.PICK(hitgroupInfo and hitgroupInfo.Animation or self.AnimTbl_Flinch)
 			local _, animDur = self:PlayAnim(anim, true, self:DecideAnimationLength(anim, self.NextMoveAfterFlinchTime), false, 0, {PlayBackRateCalculated=true})
-			timer.Create("timer_act_flinching"..self:EntIndex(), animDur, 1, function() self.Flinching = false end)
+			timer.Create("timer_flinch_reset"..self:EntIndex(), animDur, 1, function() self.Flinching = false end)
 			self:OnFlinch(dmginfo, hitgroup, "Execute")
 			self.NextFlinchT = curTime + (!self.NextFlinchTime and animDur or self.NextFlinchTime)
 		end
@@ -2447,7 +2450,7 @@ end
 		- blColor = The blood color to set it to | Must be a string, check the list below
 -----------------------------------------------------------]]
 local bloodNames = {
-	["Red"] = {
+	[VJ.BLOOD_COLOR_RED] = {
 		particle = "blood_impact_red_01", // vj_impact1_red
 		decal = "VJ_Blood_Red",
 		decal_gmod = "Blood",
@@ -2457,7 +2460,7 @@ local bloodNames = {
 			[2] = "vj_bleedout_red"
 		}
 	},
-	["Yellow"] = {
+	[VJ.BLOOD_COLOR_YELLOW] = {
 		particle = "blood_impact_yellow_01", // vj_impact1_yellow
 		decal = "VJ_Blood_Yellow",
 		decal_gmod = "YellowBlood",
@@ -2467,7 +2470,7 @@ local bloodNames = {
 			[2] = "vj_bleedout_yellow"
 		}
 	},
-	["Green"] = {
+	[VJ.BLOOD_COLOR_GREEN] = {
 		particle = "vj_impact1_green",
 		decal = "VJ_Blood_Green",
 		pool = {
@@ -2476,7 +2479,7 @@ local bloodNames = {
 			[2] = "vj_bleedout_green"
 		}
 	},
-	["Orange"] = {
+	[VJ.BLOOD_COLOR_ORANGE] = {
 		particle = "vj_impact1_orange",
 		decal = "VJ_Blood_Orange",
 		pool = {
@@ -2485,7 +2488,7 @@ local bloodNames = {
 			[2] = "vj_bleedout_orange"
 		}
 	},
-	["Blue"] = {
+	[VJ.BLOOD_COLOR_BLUE] = {
 		particle = "vj_impact1_blue",
 		decal = "VJ_Blood_Blue",
 		pool = {
@@ -2494,7 +2497,7 @@ local bloodNames = {
 			[2] = "vj_bleedout_blue"
 		}
 	},
-	["Purple"] = {
+	[VJ.BLOOD_COLOR_PURPLE] = {
 		particle = "vj_impact1_purple",
 		decal = "VJ_Blood_Purple",
 		pool = {
@@ -2503,7 +2506,7 @@ local bloodNames = {
 			[2] = "vj_bleedout_purple"
 		}
 	},
-	["White"] = {
+	[VJ.BLOOD_COLOR_WHITE] = {
 		particle = "vj_impact1_white",
 		decal = "VJ_Blood_White",
 		pool = {
@@ -2512,7 +2515,7 @@ local bloodNames = {
 			[2] = "vj_bleedout_white"
 		}
 	},
-	["Oil"] = {
+	[VJ.BLOOD_COLOR_OIL] = {
 		particle = "vj_impact1_oil",
 		decal = "VJ_Blood_Oil",
 		pool = {

@@ -15,7 +15,7 @@ AccessorFunc(ENT, "m_fMaxYawSpeed", "MaxYawSpeed", FORCE_NUMBER)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.Model = false -- Model(s) to spawn with | Picks a random one if it's a table
 ENT.EntitiesToNoCollide = false -- Set to a table of entity class names for the NPC to not collide with otherwise leave it to false
-ENT.AllowPrintingInChat = true -- Should this NPC be allowed to post in a player's chat? | Example: "Blank no longer likes you."
+ENT.CanChatMessage = true -- Should this NPC be allowed to post in a player's chat? | Example: "Blank no longer likes you."
 	-- ====== Health ====== --
 ENT.StartHealth = 50 -- The starting health of the NPC
 ENT.HasHealthRegeneration = false -- Can the NPC regenerate its health?
@@ -34,11 +34,11 @@ ENT.CanTurnWhileMoving = true -- Can the NPC turn while moving? | EX: GoldSrc NP
 	-- ====== Movement ====== --
 	-- Types: VJ_MOVETYPE_GROUND | VJ_MOVETYPE_AERIAL | VJ_MOVETYPE_AQUATIC | VJ_MOVETYPE_STATIONARY | VJ_MOVETYPE_PHYSICS
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How the NPC moves around
-ENT.UsePlayerModelMovement = false -- If true, it will allow the NPC to use player models properly by calculating the direction it needs to go to and setting the appropriate values
+ENT.UsePoseParameterMovement = false -- Sets the NPC's "move_x" and "move_y" pose parameters while moving | Required for player models to move properly!
 	-- Movement: JUMP --
 	-- NOTE: Requires "CAP_MOVE_JUMP" capability
 	-- Applied automatically by the base if "ACT_JUMP" is valid on the NPC's model
-ENT.AllowMovementJumping = true -- Should the NPC be allowed to jump from one node to another?
+ENT.CanMoveJump = true -- Can the NPC do movements jumps?
 -- Example scenario:
 --      [A]       <- Apex
 --     /   \
@@ -187,8 +187,7 @@ ENT.NextProcessTime = 1 -- Time until it runs the essential part of the AI, whic
 	-- ====== Blood-Related ====== --
 	-- Leave custom blood tables empty to let the base decide depending on the blood type
 ENT.Bleeds = true -- Does the NPC bleed? Controls all bleeding related components such blood decal, particle, pool, etc.
-ENT.BloodColor = "" -- The blood type, this will determine what it should use (decal, particle, etc.)
-	-- Types: "Red" || "Yellow" || "Green" || "Orange" || "Blue" || "Purple" || "White" || "Oil"
+ENT.BloodColor = VJ.BLOOD_COLOR_NONE -- The blood type, this will determine what it should use (decal, particle, etc.)
 ENT.HasBloodParticle = true -- Does it spawn a particle when damaged?
 ENT.CustomBlood_Particle = {} -- Particles to spawn when it's damaged | Leave empty for the base to decide
 ENT.HasBloodPool = true -- Does it have a blood pool?
@@ -386,15 +385,13 @@ ENT.DisableDefaultLeapAttackDamageCode = false -- Disables the default leap atta
 ------ Sound ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasSounds = true -- Put to false to disable ALL sounds!
-ENT.OnKilledEnemy_OnlyLast = true -- Should it only play the "OnKilledEnemy" sounds if there is no enemies left? 
+ENT.OnKilledEnemy_OnlyLast = true -- Should it only play the "OnKilledEnemy" sounds if there is no enemies left?
 ENT.DamageByPlayerDispositionLevel = 1 -- At which disposition levels it should play the damage by player sounds | 0 = Always | 1 = ONLY when friendly to player | 2 = ONLY when enemy to player
 ENT.MeleeAttackSlowPlayerSoundFadeOutTime = 1 -- 0 = Fade out instantly
 	-- ====== Footstep Sound ====== --
 ENT.DisableFootStepSoundTimer = false -- If set to true, it will disable the time system for the footstep sound code, allowing you to use other ways like model events
-ENT.FootStepTimeRun = 0.5 -- Next foot step sound when it is running
-ENT.FootStepTimeWalk = 1 -- Next foot step sound when it is walking
-ENT.DisableFootStepOnRun = false -- It will not play the footstep sound when running
-ENT.DisableFootStepOnWalk = false -- It will not play the footstep sound when walking
+ENT.FootStepTimeWalk = 1 -- Delay between footstep sounds while it is walking | false = Disable while walking
+ENT.FootStepTimeRun = 0.5 -- Delay between footstep sounds while it is running | false = Disable while running
 	-- ====== Idle Sound ====== --
 ENT.IdleSounds_PlayOnAttacks = false -- It will be able to continue and play idle sounds when it performs an attack
 ENT.IdleSounds_NoRegularIdleOnAlerted = false -- if set to true, it will not play the regular idle sound table if the combat idle sound table is empty
@@ -532,7 +529,6 @@ ENT.NextSoundTime_Alert = VJ.SET(2, 3)
 ENT.NextSoundTime_OnKilledEnemy = VJ.SET(3, 5)
 ENT.NextSoundTime_AllyDeath = VJ.SET(3, 5)
 ENT.NextSoundTime_Pain = false
-ENT.NextSoundTime_DamageByPlayer = VJ.SET(2, 2.3)
 	-- ====== Volume ====== --
 	-- Number must be between 0 and 1
 	-- 0 = No sound, 1 = normal/loudest
@@ -998,7 +994,7 @@ ENT.ModelAnimationSet = VJ.ANIM_SET_NONE
 ENT.AIState = VJ_STATE_NONE
 ENT.AttackType = VJ.ATTACK_TYPE_NONE
 ENT.AttackState = VJ.ATTACK_STATE_NONE
-ENT.TimersToRemove = {"timer_state_reset", "timer_turning", "timer_act_flinching", "timer_act_stopattacks", "timer_melee_finished", "timer_melee_start", "timer_melee_finished_abletomelee", "timer_range_start", "timer_range_finished", "timer_range_finished_abletorange", "timer_leap_start_jump", "timer_leap_start", "timer_leap_finished", "timer_leap_finished_abletoleap", "timer_alerted_reset"}
+ENT.TimersToRemove = {"timer_state_reset", "timer_turning", "timer_flinch_reset", "timer_pauseattacks_reset", "timer_melee_finished", "timer_melee_start", "timer_melee_finished_abletomelee", "timer_range_start", "timer_range_finished", "timer_range_finished_abletorange", "timer_leap_start_jump", "timer_leap_start", "timer_leap_finished", "timer_leap_finished_abletoleap", "timer_alerted_reset"}
 ENT.TurnData = {Type = VJ.NPC_FACE_NONE, Target = nil, StopOnFace = false, IsSchedule = false, LastYaw = 0}
 ENT.FollowData = {Ent = NULL, MinDist = 0, Moving = false, StopAct = false}
 ENT.EnemyData = {
@@ -1073,7 +1069,7 @@ local function ConvarsOnInit(self)
 	if GetConVar("vj_npc_noinvestigate"):GetInt() == 1 then self.CanInvestigate = false end
 	if GetConVar("vj_npc_noeating"):GetInt() == 1 then self.CanEat = false end
 	if GetConVar("vj_npc_nofollowplayer"):GetInt() == 1 then self.FollowPlayer = false end
-	if GetConVar("vj_npc_nosnpcchat"):GetInt() == 1 then self.AllowPrintingInChat = false end
+	if GetConVar("vj_npc_nosnpcchat"):GetInt() == 1 then self.CanChatMessage = false end
 	if GetConVar("vj_npc_nomedics"):GetInt() == 1 then self.IsMedic = false end
 	if GetConVar("vj_npc_novfx_gibdeath"):GetInt() == 1 then self.HasGibOnDeathEffects = false end
 	if GetConVar("vj_npc_nogib"):GetInt() == 1 then self.CanGib = false self.CanGibOnDeath = false end
@@ -1137,9 +1133,10 @@ local function ApplyBackwardsCompatibility(self)
 	if self.CustomOnAcceptInput then self.OnInput = function(_, key, activator, caller, data) self:CustomOnAcceptInput(key, activator, caller, data) end end
 	if self.CustomOnHandleAnimEvent then self.OnAnimEvent = function(_, ev, evTime, evCycle, evType, evOptions) self:CustomOnHandleAnimEvent(ev, evTime, evCycle, evType, evOptions) end end
 	if self.CustomOnDeath_AfterCorpseSpawned then self.OnCreateDeathCorpse = function(_, dmginfo, hitgroup, corpseEnt) self:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) end end
-	if self.Immune_Physics then self:SetImpactEnergyScale(0) end
+	if self.Immune_Physics then self:SetPhysicsDamageScale(0) end
 	if self.MaxJumpLegalDistance then self.JumpVars.MaxRise = self.MaxJumpLegalDistance.a; self.JumpVars.MaxDrop = self.MaxJumpLegalDistance.b end
 	if self.VJ_IsHugeMonster then self.VJTag_ID_Boss = self.VJ_IsHugeMonster end
+	if self.UsePlayerModelMovement then self.UsePoseParameterMovement = true end
 	if self.WaitBeforeDeathTime then self.DeathDelayTime = self.WaitBeforeDeathTime end
 	if self.HasDeathRagdoll != nil then self.HasDeathCorpse = self.HasDeathRagdoll end
 	if self.AllowedToGib != nil then self.CanGib = self.AllowedToGib end
@@ -1148,7 +1145,10 @@ local function ApplyBackwardsCompatibility(self)
 	if self.HasItemDropsOnDeath != nil then self.DropDeathLoot = self.HasItemDropsOnDeath end
 	if self.ItemDropsOnDeathChance != nil then self.DeathLootChance = self.ItemDropsOnDeathChance end
 	if self.ItemDropsOnDeath_EntityList != nil then self.DeathLoot = self.ItemDropsOnDeath_EntityList end
+	if self.AllowMovementJumping != nil then self.CanMoveJump = self.AllowMovementJumping end
 	if self.OnlyDoKillEnemyWhenClear != nil then self.OnKilledEnemy_OnlyLast = self.OnlyDoKillEnemyWhenClear end
+	if self.DisableFootStepOnWalk then self.FootStepTimeWalk = false end
+	if self.DisableFootStepOnRun then self.FootStepTimeRun = false end
 	if self.FindEnemy_UseSphere then self.SightAngle = 360 end
 	if self.IsMedicSNPC then self.IsMedic = self.IsMedicSNPC end
 	if self.CustomOnDoKilledEnemy then
@@ -1307,7 +1307,7 @@ function ENT:Initialize()
 	if self:LookupAttachment("eyes") > 0 && self:LookupAttachment("forward") > 0 then
 		self:CapabilitiesAdd(CAP_ANIMATEDFACE)
 	end
-	if self.CanOpenDoors == true then
+	if self.CanOpenDoors then
 		self:CapabilitiesAdd(bit.bor(CAP_OPEN_DOORS, CAP_AUTO_DOORS, CAP_USE))
 	end
 	self:SetHealth((GetConVar("vj_npc_allhealth"):GetInt() > 0) and GetConVar("vj_npc_allhealth"):GetInt() or self:ScaleByDifficulty(self.StartHealth))
@@ -1315,13 +1315,6 @@ function ENT:Initialize()
 	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
 	self:Init()
 	if self.CustomOnInitialize then self:CustomOnInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
-	
-	/*local numericClasses = self.VJ_NPC_Class
-	self.VJ_NPC_Class = {}
-	for _, class in ipairs(numericClasses) do
-		self:VJ_CLASS_ADD(class)
-	end*/
-	
 	//self:SetSurroundingBoundsType(BOUNDS_HITBOXES) -- AVOID! Has to constantly recompute the bounds! | Issues: Entities get stuck inside the NPC, movements failing, unable to grab the NPC with physgun
 	local collisionMin, collisionMax = self:GetCollisionBounds()
 	-- Auto compute damage bounds if the damage bounds == collision bounds then the developer has NOT changed it | Call after "Init"
@@ -1400,7 +1393,7 @@ function ENT:DoChangeMovementType(movType)
 			self:SetNavType(NAV_GROUND)
 			self:SetMoveType(MOVETYPE_STEP)
 			self:CapabilitiesAdd(CAP_MOVE_GROUND)
-			if VJ.AnimExists(self, ACT_JUMP) or self.UsePlayerModelMovement then self:CapabilitiesAdd(CAP_MOVE_JUMP) end
+			if VJ.AnimExists(self, ACT_JUMP) or self.UsePoseParameterMovement then self:CapabilitiesAdd(CAP_MOVE_JUMP) end
 			if VJ.AnimExists(self, ACT_CLIMB_UP) then self:CapabilitiesAdd(CAP_MOVE_CLIMB) end
 		elseif movType == VJ_MOVETYPE_AERIAL or movType == VJ_MOVETYPE_AQUATIC then
 			self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT))
@@ -2154,7 +2147,7 @@ function ENT:Think()
 			end
 		end
 		-- Handle the unique movement system for player models
-		if self.UsePlayerModelMovement && self.MovementType == VJ_MOVETYPE_GROUND then
+		if self.UsePoseParameterMovement && self.MovementType == VJ_MOVETYPE_GROUND then
 			local moveDir = self:GetMoveDirection(true)
 			if moveDir then
 				self:SetPoseParameter("move_x", moveDir.x)
@@ -2275,7 +2268,7 @@ function ENT:MeleeAttackCode(isPropAttack)
 			end
 			-- Bleed Enemy
 			if self.MeleeAttackBleedEnemy && math.random(1, self.MeleeAttackBleedEnemyChance) == 1 && v.VJTag_IsLiving && (!v.VJTag_ID_Boss or self.VJTag_ID_Boss) then
-				local tName = "timer_melee_bleedply"..v:EntIndex() -- Timer's name
+				local tName = "timer_melee_bleed"..v:EntIndex() -- Timer's name
 				local tDmg = self.MeleeAttackBleedEnemyDamage -- How much damage each rep does
 				timer.Create(tName, self.MeleeAttackBleedEnemyTime, self.MeleeAttackBleedEnemyReps, function()
 					if IsValid(v) && v:Health() > 0 then
@@ -2412,7 +2405,7 @@ function ENT:LeapDamageCode()
 	for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.LeapAttackDamageDistance)) do
 		if v == self or v:GetClass() == myClass or (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) then continue end
 		if v:IsPlayer() && (v.VJTag_IsControllingNPC or !v:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
-		if (v.VJTag_IsLiving && self:Disposition(v) != D_LI) or v.VJTag_IsAttackable == true or v.VJTag_IsDamageable == true then
+		if (v.VJTag_IsLiving && self:Disposition(v) != D_LI) or v.VJTag_IsAttackable or v.VJTag_IsDamageable then
 			self:CustomOnLeapAttack_AfterChecks(v)
 			-- Damage
 			if !self.DisableDefaultLeapAttackDamageCode then
@@ -2645,7 +2638,7 @@ function ENT:ResetEnemy(checkAllies, checkVis)
 	self:OnResetEnemy()
 	local moveToEnemy = false
 	if eneValid then
-		if !self.IsFollowing && !self.IsGuard && !self.IsVJBaseSNPC_Tank && !self.VJ_IsBeingControlled && self.LastHiddenZone_CanWander == true && !self.NoWeapon_UseScaredBehavior_Active && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !self:IsBusy() && !self:Visible(ene) && self:GetEnemyLastKnownPos() != defPos then
+		if !self.IsFollowing && !self.IsGuard && !self.IsVJBaseSNPC_Tank && !self.VJ_IsBeingControlled && self.LastHiddenZone_CanWander == true && !self.Weapon_UnarmedBehavior_Active && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !self:IsBusy() && !self:Visible(ene) && self:GetEnemyLastKnownPos() != defPos then
 			moveToEnemy = self:GetEnemyLastKnownPos()
 		end
 		self:MarkEnemyAsEluded(ene)
@@ -2675,30 +2668,42 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnTakeDamage(dmginfo)
 	local dmgAttacker = dmginfo:GetAttacker()
-	if dmginfo:IsBulletDamage() && IsValid(dmgAttacker) && dmgAttacker:IsNPC() && dmgAttacker:Disposition(self) != D_HT && (dmgAttacker:GetClass() == self:GetClass() or self:Disposition(dmgAttacker) == D_LI) then
-		return 0 -- Don't take bullet damage from friendly NPCs
-	end
+	if !IsValid(dmgAttacker) then dmgAttacker = false end
+	
+	-- Don't take bullet damage from friendly NPCs
+	if dmgAttacker && dmginfo:IsBulletDamage() && dmgAttacker:IsNPC() && dmgAttacker:Disposition(self) != D_HT && (dmgAttacker:GetClass() == self:GetClass() or self:Disposition(dmgAttacker) == D_LI) then return 0 end
+	
 	local dmgInflictor = dmginfo:GetInflictor()
+	if !IsValid(dmgInflictor) then dmgInflictor = false end
+	
+	-- Attempt to avoid taking damage when walking on ragdolls
+	if dmgInflictor && dmgInflictor:GetClass() == "prop_ragdoll" && dmgInflictor:GetVelocity():Length() <= 100 then return 0 end
+	
 	local hitgroup = self:GetLastDamageHitGroup()
-	if IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_ragdoll" && dmgInflictor:GetVelocity():Length() <= 100 then return 0 end -- Avoid taking damage when walking on ragdolls
 	self:OnDamaged(dmginfo, hitgroup, "Initial")
 	if self.GodMode or dmginfo:GetDamage() <= 0 then return 0 end
-	if self:IsOnFire() && self:WaterLevel() == 2 then self:Extinguish() end -- If we are in water, then extinguish the fire
+	
 	local dmgType = dmginfo:GetDamageType()
 	local curTime = CurTime()
-	local isFireDmg = self:IsOnFire() && IsValid(dmgInflictor) && IsValid(dmgAttacker) && dmgInflictor:GetClass() == "entityflame" && dmgAttacker:GetClass() == "entityflame"
+	local isFireEnt = false
+	if self:IsOnFire() then
+		isFireEnt = dmgInflictor && dmgAttacker && dmgInflictor:GetClass() == "entityflame" && dmgAttacker:GetClass() == "entityflame"
+		if self:WaterLevel() == 2 then self:Extinguish() end -- If we are in water, then extinguish the fire
+	end
 	
 	-- If it should always take damage from huge monsters, then skip immunity checks!
-	if self.ForceDamageFromBosses && dmgAttacker.VJTag_ID_Boss then
+	if dmgAttacker && self.ForceDamageFromBosses && dmgAttacker.VJTag_ID_Boss then
 		goto skip_immunity
 	end
+	
+	-- Immunity checks
 	if VJ.HasValue(self.ImmuneDamagesTable, dmgType) then return 0 end
-	if !self.AllowIgnition && isFireDmg then self:Extinguish() return 0 end
-	if self.Immune_Fire == true && (dmgType == DMG_BURN or dmgType == DMG_SLOWBURN or isFireDmg) then return 0 end
-	if (self.Immune_AcidPoisonRadiation == true && (dmgType == DMG_ACID or dmgType == DMG_RADIATION or dmgType == DMG_POISON or dmgType == DMG_NERVEGAS or dmgType == DMG_PARALYZE)) or (self.Immune_Bullet == true && (dmginfo:IsBulletDamage() or dmgType == DMG_BULLET or dmgType == DMG_AIRBOAT or dmgType == DMG_BUCKSHOT)) or (self.Immune_Blast == true && (dmgType == DMG_BLAST or dmgType == DMG_BLAST_SURFACE)) or (self.Immune_Dissolve == true && dmgType == DMG_DISSOLVE) or (self.Immune_Electricity == true && (dmgType == DMG_SHOCK or dmgType == DMG_ENERGYBEAM or dmgType == DMG_PHYSGUN)) or (self.Immune_Melee == true && (dmgType == DMG_CLUB or dmgType == DMG_SLASH)) or (self.Immune_Sonic == true && dmgType == DMG_SONIC) then return 0 end
-	if (IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball") or (IsValid(dmgAttacker) && dmgAttacker:GetClass() == "prop_combine_ball") then
-		if self.Immune_Dissolve == true then return 0 end
-		-- Make sure combine ball does reasonable damage and doesn't spam it!
+	if isFireEnt && !self.AllowIgnition then self:Extinguish() return 0 end
+	if (self.Immune_Fire && (dmgType == DMG_BURN or dmgType == DMG_SLOWBURN or isFireEnt)) or (self.Immune_AcidPoisonRadiation && (dmgType == DMG_ACID or dmgType == DMG_RADIATION or dmgType == DMG_POISON or dmgType == DMG_NERVEGAS or dmgType == DMG_PARALYZE)) or (self.Immune_Bullet && (dmginfo:IsBulletDamage() or dmgType == DMG_BULLET or dmgType == DMG_AIRBOAT or dmgType == DMG_BUCKSHOT)) or (self.Immune_Blast && (dmgType == DMG_BLAST or dmgType == DMG_BLAST_SURFACE)) or (self.Immune_Dissolve && dmgType == DMG_DISSOLVE) or (self.Immune_Electricity && (dmgType == DMG_SHOCK or dmgType == DMG_ENERGYBEAM or dmgType == DMG_PHYSGUN)) or (self.Immune_Melee && (dmgType == DMG_CLUB or dmgType == DMG_SLASH)) or (self.Immune_Sonic && dmgType == DMG_SONIC) then return 0 end
+	
+	-- Make sure combine ball does reasonable damage and doesn't spam!
+	if (dmgInflictor && dmgInflictor:GetClass() == "prop_combine_ball") or (dmgAttacker && dmgAttacker:GetClass() == "prop_combine_ball") then
+		if self.Immune_Dissolve then return 0 end
 		if curTime > self.NextCombineBallDmgT then
 			dmginfo:SetDamage(math.random(400, 500))
 			dmginfo:SetDamageType(DMG_DISSOLVE)
@@ -2707,13 +2712,13 @@ function ENT:OnTakeDamage(dmginfo)
 			return 0
 		end
 	end
-
 	::skip_immunity::
+	
 	local function DoBleed()
 		if self.Bleeds then
 			self:OnBleed(dmginfo, hitgroup)
 			-- Spawn the blood particle only if it's not caused by the default fire entity [Causes the damage position to be at Vector(0, 0, 0)]
-			if self.HasBloodParticle && !isFireDmg then self:SpawnBloodParticles(dmginfo, hitgroup) end
+			if self.HasBloodParticle && !isFireEnt then self:SpawnBloodParticles(dmginfo, hitgroup) end
 			if self.HasBloodDecal then self:SpawnBloodDecal(dmginfo, hitgroup) end
 			self:PlaySoundSystem("Impact", nil, VJ.EmitSound)
 		end
@@ -2745,7 +2750,7 @@ function ENT:OnTakeDamage(dmginfo)
 	DoBleed()
 	
 	-- I/O events, from: https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/sp/src/game/server/ai_basenpc.cpp#L764
-	if IsValid(dmgAttacker) then
+	if dmgAttacker then
 		self:TriggerOutput("OnDamaged", dmgAttacker)
 		self:MarkTookDamageFromEnemy(dmgAttacker)
 	else
@@ -2757,11 +2762,13 @@ function ENT:OnTakeDamage(dmginfo)
 
 	if VJ_CVAR_AI_ENABLED && self:GetState() != VJ_STATE_FREEZE then
 		if stillAlive then
-			self:Flinch(dmginfo, hitgroup)
+			if !isFireEnt then
+				self:Flinch(dmginfo, hitgroup)
+			end
 			
 			-- React to damage by a player
 				-- 0 = Run it every time | 1 = Run it only when friendly to player | 2 = Run it only when enemy to player
-			if self.HasDamageByPlayerSounds && dmgAttacker:IsPlayer() && curTime > self.NextDamageByPlayerSoundT && self:Visible(dmgAttacker) then
+			if dmgAttacker && self.HasDamageByPlayerSounds && dmgAttacker:IsPlayer() && curTime > self.NextDamageByPlayerSoundT && self:Visible(dmgAttacker) then
 				local dispLvl = self.DamageByPlayerDispositionLevel
 				if (dispLvl == 0 or (dispLvl == 1 && self:Disposition(dmgAttacker) == D_LI) or (dispLvl == 2 && self:Disposition(dmgAttacker) != D_HT)) then
 					self:PlaySoundSystem("DamageByPlayer")
@@ -2771,7 +2778,7 @@ function ENT:OnTakeDamage(dmginfo)
 			self:PlaySoundSystem("Pain")
 
 			-- Call for back on damage | RESULT: May play an animation OR it may move away, AND it may bring allies to its location
-			if self.CallForBackUpOnDamage && curTime > self.NextCallForBackUpOnDamageT && !IsValid(self:GetEnemy()) && self.IsFollowing == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !isFireDmg then
+			if self.CallForBackUpOnDamage && curTime > self.NextCallForBackUpOnDamageT && !IsValid(self:GetEnemy()) && self.IsFollowing == false && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && !isFireEnt then
 				local allies = self:Allies_Check(self.CallForBackUpOnDamageDistance)
 				if allies != false then
 					self:DoReadyAlert()
@@ -2790,7 +2797,7 @@ function ENT:OnTakeDamage(dmginfo)
 			end
 
 			-- Become enemy to a friendly player | RESULT: May become alerted
-			if self.BecomeEnemyToPlayer && dmgAttacker:IsPlayer() && self:CheckRelationship(dmgAttacker) == D_LI then
+			if dmgAttacker && self.BecomeEnemyToPlayer && dmgAttacker:IsPlayer() && self:CheckRelationship(dmgAttacker) == D_LI then
 				self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1
 				if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel && self:Disposition(dmgAttacker) != D_HT then
 					self:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
@@ -2804,7 +2811,7 @@ function ENT:OnTakeDamage(dmginfo)
 						self:SetTarget(dmgAttacker)
 						self:SCHEDULE_FACE("TASK_FACE_TARGET")
 					end
-					if self.AllowPrintingInChat == true then
+					if self.CanChatMessage == true then
 						dmgAttacker:PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.")
 					end
 				end
@@ -2813,7 +2820,7 @@ function ENT:OnTakeDamage(dmginfo)
 			-- Attempt to find who damaged me | RESULT: May become alerted if attacker is visible OR it may hide if it didn't find the attacker
 			if !self.DisableTakeDamageFindEnemy && !self:BusyWithActivity() && !IsValid(self:GetEnemy()) && curTime > self.TakingCoverT && self.Behavior != VJ_BEHAVIOR_PASSIVE && self.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE then // self.Alerted == false
 				local eneFound = false
-				if IsValid(dmgAttacker) then
+				if dmgAttacker then
 					local sightDist = self:GetMaxLookDistance()
 					sightDist = math_clamp(sightDist / 2, sightDist <= 1000 and sightDist or 1000, sightDist)
 					-- IF normal sight dist is less than 1000 then change nothing, OR ELSE use half the distance with 1000 as minimum
@@ -2871,10 +2878,10 @@ function ENT:OnTakeDamage(dmginfo)
 	
 	if self:Health() <= 0 && !self.Dead then
 		self:RemoveEFlags(EFL_NO_DISSOLVE)
-		if (dmginfo:IsDamageType(DMG_DISSOLVE)) or (IsValid(dmgInflictor) && dmgInflictor:GetClass() == "prop_combine_ball") then
+		if (dmginfo:IsDamageType(DMG_DISSOLVE)) or (dmgInflictor && dmgInflictor:GetClass() == "prop_combine_ball") then
 			local dissolve = DamageInfo()
 			dissolve:SetDamage(self:Health())
-			dissolve:SetAttacker(dmgAttacker)
+			dissolve:SetAttacker(dmginfo:GetAttacker())
 			dissolve:SetDamageType(DMG_DISSOLVE)
 			self:TakeDamageInfo(dissolve)
 		end
@@ -2925,7 +2932,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 							if v.IsFollowing == true && v.FollowData.Ent == dmgAttacker then v:ResetFollowBehavior() end
 							v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy + 1] = dmgAttacker
 							v:AddEntityRelationship(dmgAttacker, D_HT, 2)
-							if v.AllowPrintingInChat == true then
+							if v.CanChatMessage == true then
 								dmgAttacker:PrintMessage(HUD_PRINTTALK, v:GetName().." no longer likes you.")
 							end
 							v:PlaySoundSystem("BecomeEnemyToPlayer")
@@ -3091,7 +3098,6 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			undo.ReplaceEntity(self, corpse)
 		else -- Keep corpses is not enabled...
 			VJ.Corpse_Add(corpse)
-			//hook.Call("VJ_CreateSNPCCorpse", nil, corpse, self)
 			if GetConVar("vj_npc_undocorpse"):GetInt() == 1 then undo.ReplaceEntity(self, corpse) end -- Undoable
 		end
 		cleanup.ReplaceEntity(self, corpse) -- Delete on cleanup
@@ -3431,7 +3437,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				self.NextIdleSoundT_RegularChange = CurTime() + sdDur
 				self.CurrentSpeechSound = sdType(self, pickedSD, self.DamageByPlayerSoundLevel, self:GetSoundPitch(self.DamageByPlayerPitch.a, self.DamageByPlayerPitch.b))
 			end
-			self.NextDamageByPlayerSoundT = CurTime() + ((self.NextSoundTime_DamageByPlayer == false and sdDur) or math.Rand(self.NextSoundTime_DamageByPlayer.a, self.NextSoundTime_DamageByPlayer.b))
+			self.NextDamageByPlayerSoundT = CurTime() + sdDur
 		//end
 	elseif sdSet == "Death" then
 		if self.HasDeathSounds then
@@ -3562,11 +3568,11 @@ function ENT:FootStepSoundCode(customSD)
 			-- Use custom table if available, if none found then use the footstep sound table
 			local pickedSD = customSD and VJ.PICK(customSD) or VJ.PICK(self.SoundTbl_FootStep)
 			if pickedSD then
-				if !self.DisableFootStepOnRun && self:GetMovementActivity() == ACT_RUN then
+				if self.FootStepTimeRun && self:GetMovementActivity() == ACT_RUN then
 					VJ.EmitSound(self, pickedSD, self.FootStepSoundLevel, self:GetSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
 					local funcCustom = self.OnFootstepSound; if funcCustom then funcCustom(self, "Run", pickedSD) end
 					self.NextFootstepSoundT = CurTime() + self.FootStepTimeRun
-				elseif !self.DisableFootStepOnWalk && self:GetMovementActivity() == ACT_WALK then
+				elseif self.FootStepTimeWalk && self:GetMovementActivity() == ACT_WALK then
 					VJ.EmitSound(self, pickedSD, self.FootStepSoundLevel, self:GetSoundPitch(self.FootStepPitch.a, self.FootStepPitch.b))
 					local funcCustom = self.OnFootstepSound; if funcCustom then funcCustom(self, "Walk", pickedSD) end
 					self.NextFootstepSoundT = CurTime() + self.FootStepTimeWalk

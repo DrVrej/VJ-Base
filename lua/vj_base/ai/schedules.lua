@@ -375,7 +375,7 @@ function ENT:StopCurrentSchedule()
 	local schedule = self.CurrentSchedule
 	//print("StopCurrentSchedule", schedule)
 	if schedule then
-		timer.Remove("timer_act_stopattacks"..self:EntIndex())
+		timer.Remove("timer_pauseattacks_reset"..self:EntIndex())
 		self.NextIdleTime = 0
 		self.NextChaseTime = 0
 		self.AnimLockTime = 0

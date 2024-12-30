@@ -150,7 +150,7 @@ local cv_nomelee = GetConVar("vj_npc_nomelee")
 local cv_noidleparticle = GetConVar("vj_npc_noidleparticle")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
-	self:SetImpactEnergyScale(0) -- Take no physics damage
+	self:SetPhysicsDamageScale(0) -- Take no physics damage
 	self.DeathAnimationCodeRan = true -- So corpse doesn't fly away on death (Take this out if not using death explosion sequence)
 	self:Tank_Init()
 	if self.CustomInitialize_CustomTank then self:CustomInitialize_CustomTank() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -189,7 +189,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_RunOver(ent)
 	if !self.Tank_IsMoving or !IsValid(ent) or (cv_nomelee:GetInt() == 1 /*or self.HasMeleeAttack == false*/) or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then return end
-	if self:Disposition(ent) == 1 && ent:Health() > 0 && ((ent:IsNPC() && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot()) && !ent.VJTag_ID_Boss then
+	if self:Disposition(ent) == D_HT && ent:Health() > 0 && ((ent:IsNPC() && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot()) && !ent.VJTag_ID_Boss && !ent.VJTag_ID_Vehicle && !ent.VJTag_ID_Aircraft then
 		self:Tank_OnRunOver(ent)
 		self:Tank_Sound_RunOver()
 		ent:TakeDamage(self:ScaleByDifficulty(8), self, self)

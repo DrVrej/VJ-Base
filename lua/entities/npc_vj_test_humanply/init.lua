@@ -7,9 +7,9 @@ include("shared.lua")
 -----------------------------------------------*/
 ENT.Model = {"models/player/kleiner.mdl"}
 ENT.StartHealth = 100
-ENT.UsePlayerModelMovement = true
+ENT.UsePoseParameterMovement = true
 
-ENT.BloodColor = "Red"
+ENT.BloodColor = VJ.BLOOD_COLOR_RED
 
 ENT.VJ_NPC_Class = {"CLASS_PLAYER_ALLY"}
 ENT.FriendsWithAllPlayerAllies = true

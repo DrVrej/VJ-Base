@@ -43,6 +43,12 @@ end
 -- Remove: 			self.VJ_NPC_Class.CLASS_COMBINE = nil
 -- Add: 			self:VJ_CLASS_ADD("CLASS_COMBINE", "CLASS_ZOMBIE", ...)
 --
+/*local numericClasses = self.VJ_NPC_Class
+self.VJ_NPC_Class = {}
+for _, class in ipairs(numericClasses) do
+	self:VJ_CLASS_ADD(class)
+end*/
+
 /*function metaEntity:VJ_CLASS_ADD(...)
 	//PrintTable({...})
 	for _, class in ipairs({...}) do
@@ -57,7 +63,7 @@ end*/
 	Returns
 		- [boolean | Disposition enum] : Return false to not override anything | Return a disposition enum to set as an override
 -----------------------------------------------------------]]
--- UNCOMMENT TO USE
+-- Apply directly to the entity to use it
 --function metaEntity:HandlePerceivedRelationship(otherEnt, distance, isFriendly)
 --	print("HandlePerceivedRelationship ", otherEnt, distance, isFriendly)
 --	return
@@ -69,7 +75,7 @@ end*/
 	Returns
 		- [boolean] : Return true if it should be engaged
 -----------------------------------------------------------]]
--- UNCOMMENT TO USE
+-- Apply directly to the entity to use it
 --function metaEntity:CanBeEngaged(otherEnt, distance)
 --	print("CanBeEngaged ", otherEnt, distance)
 --	return true

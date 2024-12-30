@@ -587,11 +587,11 @@ function SWEP:NPCShoot_Primary()
 	end
 	
 	-- Secondary Fire
-	if self.NPC_HasSecondaryFire && owner.CanUseSecondaryOnWeaponAttack && CurTime() > self.NPC_SecondaryFireNextT && ene:GetPos():Distance(owner:GetPos()) <= self.NPC_SecondaryFireDistance then
+	if self.NPC_HasSecondaryFire && owner.Weapon_CanSecondaryFire && CurTime() > self.NPC_SecondaryFireNextT && ene:GetPos():Distance(owner:GetPos()) <= self.NPC_SecondaryFireDistance then
 		if math.random(1, self.NPC_SecondaryFireChance) == 1 then
 			local anim, animDur = owner:PlayAnim(VJ.PICK(owner.AnimTbl_WeaponAttackSecondary), true, false, true)
-			local fireTime = (anim == ACT_INVALID and 0) or owner.WeaponAttackSecondaryTimeUntilFire or animDur
-				-- If no animation was found then fireTime is 0, otherwise if "WeaponAttackSecondaryTimeUntilFire" is false then use animation time
+			local fireTime = (anim == ACT_INVALID and 0) or owner.Weapon_SecondaryFireTime or animDur
+				-- If no animation was found then fireTime is 0, otherwise if "Weapon_SecondaryFireTime" is false then use animation time
 			self:NPC_SecondaryFire_BeforeTimer(ene, fireTime)
 			timer.Simple(fireTime, function()
 				if IsValid(self) && IsValid(owner) && IsValid(owner:GetEnemy()) && CurTime() > self.NPC_SecondaryFireNextT && (anim == ACT_INVALID or (anim && VJ.IsCurrentAnimation(owner, anim))) then -- ONLY check for cur anim IF it even had one!
@@ -674,7 +674,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	
 	-- Firing Gesture
 	if owner.IsVJBaseSNPC_Human && owner.DisableWeaponFiringGesture != true then
-		owner:PlayAnim(owner:TranslateActivity(VJ.PICK(owner.AnimTbl_WeaponAttackFiringGesture)), false, false, false, 0, {AlwaysUseGesture=true})
+		owner:PlayAnim(owner:TranslateActivity(VJ.PICK(owner.AnimTbl_WeaponAttackGesture)), false, false, false, 0, {AlwaysUseGesture=true})
 	end
 	
 	-- MELEE WEAPON
@@ -682,7 +682,7 @@ function SWEP:PrimaryAttack(UseAlt)
 		local meleeHitEnt = false
 		for _,v in ipairs(ents.FindInSphere(owner:GetPos(), self.MeleeWeaponDistance + 20)) do
 			if (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) or (v:IsPlayer() && v.VJTag_IsControllingNPC == true) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
-			if (isPly && v:EntIndex() != owner:EntIndex()) or (isNPC && (v:IsNPC() or (v:IsPlayer() && v:Alive() && !VJ_CVAR_IGNOREPLAYERS) or v:IsNextBot()) && (owner:Disposition(v) != D_LI) && (v != owner) && (v:GetClass() != owner:GetClass()) or (v:GetClass() == "prop_physics") or v.VJTag_IsAttackable == true or v.VJTag_IsDamageable == true && (owner:GetForward():Dot((v:GetPos() - owner:GetPos()):GetNormalized()) > math.cos(math.rad(owner.MeleeAttackDamageAngleRadius)))) then
+			if (isPly && v:EntIndex() != owner:EntIndex()) or (isNPC && (v:IsNPC() or (v:IsPlayer() && v:Alive() && !VJ_CVAR_IGNOREPLAYERS) or v:IsNextBot()) && (owner:Disposition(v) != D_LI) && (v != owner) && (v:GetClass() != owner:GetClass()) or (v:GetClass() == "prop_physics") or v.VJTag_IsAttackable or v.VJTag_IsDamageable && (owner:GetForward():Dot((v:GetPos() - owner:GetPos()):GetNormalized()) > math.cos(math.rad(owner.MeleeAttackDamageAngleRadius)))) then
 				local dmginfo = DamageInfo()
 				dmginfo:SetDamage(isNPC and owner:ScaleByDifficulty(self.Primary.Damage) or self.Primary.Damage)
 				if v:IsNPC() or v:IsPlayer() then dmginfo:SetDamageForce(owner:GetForward() * ((dmginfo:GetDamage() + 100) * 70)) end
@@ -737,7 +737,7 @@ function SWEP:PrimaryAttack(UseAlt)
 					local ene = owner:GetEnemy()
 					local spawnPos = self:GetBulletPos()
 					local aimPos = owner:GetAimPosition(ene, spawnPos, 0)
-					local spread = owner:CalcAimSpread(ene, aimPos, self.NPC_CustomSpread or 1) // owner:GetPos():Distance(owner.VJ_TheController:GetEyeTrace().HitPos) -- Was used when NPC was being controlled
+					local spread = owner:GetAimSpread(ene, aimPos, self.NPC_CustomSpread or 1) // owner:GetPos():Distance(owner.VJ_TheController:GetEyeTrace().HitPos) -- Was used when NPC was being controlled
 					bullet.Spread = Vector(spread, spread, 0)
 					bullet.Dir = (aimPos - spawnPos):GetNormal()
 					bullet.Src = spawnPos
