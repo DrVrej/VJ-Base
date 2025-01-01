@@ -370,13 +370,13 @@ if CLIENT then
 		
 		-- NPC Properties (C Menu)
 		add("vjbase.menuproperties.control", "TAKE CONTROL")
-		add("vjbase.menuproperties.guard", "Toggle Guarding")
-		add("vjbase.menuproperties.wander", "Toggle Wandering")
-		add("vjbase.menuproperties.medic", "Make Medic (Toggle)")
+		add("vjbase.menuproperties.guard", "Toggle Guarding Behavior")
+		add("vjbase.menuproperties.wander", "Toggle Wandering Behavior")
+		add("vjbase.menuproperties.medic", "Toggle Medic Behavior")
 		add("vjbase.menuproperties.allyme", "Ally To Me")
 		add("vjbase.menuproperties.hostileme", "Hostile To Me")
 		add("vjbase.menuproperties.slay", "Slay")
-		add("vjbase.menuproperties.gib", "Gib (If Valid)")
+		add("vjbase.menuproperties.gib", "Gib (if possible)")
 		add("vjbase.menuproperties.devmode", "Toggle Developer Mode")
 		add("vjbase.menuproperties.print.adminonly", "These options are restricted to Admin only!")
 		

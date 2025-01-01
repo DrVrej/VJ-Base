@@ -54,7 +54,7 @@ SWEP.NPC_StandingOnly = false -- If true, the weapon can only be fired if the NP
 	-- ====== Firing Control ====== --
 SWEP.NPC_FiringDistanceScale = 1 -- Changes how far the NPC can fire | 1 = No change, x < 1 = closer, x > 1 = farther
 SWEP.NPC_FiringDistanceMax = 100000 -- Maximum firing distance | Clamped at the maximum sight distance of the NPC
-SWEP.NPC_FiringCone = 0.9 -- NPC can only fire when their target is within the cone (between -1 & 1) | -1 = 360° | 0 = 180 | 1 = Can fire when directly aiming at the target (nearly impossible)
+SWEP.NPC_FiringCone = 0.9 -- NPC can only fire when their target is within the cone (between -1 & 1) | -1 = 360° | 0 = 180° | 1 = Can fire when directly aiming at the target (nearly impossible)
 	-- ====== Reload ====== --
 SWEP.NPC_HasReloadSound = true -- Should it play a sound when the base detects the SNPC playing a reload animation?
 SWEP.NPC_ReloadSound = {} -- Sounds it plays when the base detects the SNPC playing a reload animation
@@ -753,12 +753,11 @@ function SWEP:PrimaryAttack(UseAlt)
 				-- Callback
 				bullet.Callback = function(attacker, tr, dmginfo)
 					return self:OnPrimaryAttack_BulletCallback(attacker, tr, dmginfo)
-					/*local laserhit = EffectData()
-					laserhit:SetOrigin(tr.HitPos)
-					laserhit:SetNormal(tr.HitNormal)
-					laserhit:SetScale(25)
-					util.Effect("AR2Impact", laserhit)
-					tr.HitPos:Ignite(8,0)*/
+					//local effectData = EffectData()
+					//effectData:SetOrigin(tr.HitPos)
+					//effectData:SetNormal(tr.HitNormal)
+					//effectData:SetScale(25)
+					//util.Effect("AR2Impact", effectData)
 				end
 			owner:FireBullets(bullet)
 		end
@@ -790,13 +789,13 @@ function SWEP:PrimaryAttack(UseAlt)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttackEffects(owner)
-	if self.IsMeleeWeapon == true then return end
+	if self.IsMeleeWeapon then return end
 	if self.CustomOnPrimaryAttackEffects && self:CustomOnPrimaryAttackEffects(owner) == false then return end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	owner = owner or self:GetOwner()
 	
 	if cv_muszzleflash:GetInt() == 0 then
 		-- MUZZLE FLASH
-		if self.PrimaryEffects_MuzzleFlash == true then
+		if self.PrimaryEffects_MuzzleFlash then
 			local muzzleAttach = self.PrimaryEffects_MuzzleAttachment
 			if !isnumber(muzzleAttach) then muzzleAttach = self:LookupAttachment(muzzleAttach) end
 			-- Players
@@ -809,7 +808,7 @@ function SWEP:PrimaryAttackEffects(owner)
 				muzzleFlashEffect:SetAttachment(muzzleAttach)
 				util.Effect("VJ_Weapon_PlayerMuzzle", muzzleFlashEffect)
 			else -- NPCs
-				if self.PrimaryEffects_MuzzleParticlesAsOne == true then -- Combine all of the particles in the table!
+				if self.PrimaryEffects_MuzzleParticlesAsOne then -- Combine all of the particles in the table!
 					for _, v in ipairs(self.PrimaryEffects_MuzzleParticles) do
 						ParticleEffectAttach(v, PATTACH_POINT_FOLLOW, self, muzzleAttach)
 					end
@@ -820,7 +819,7 @@ function SWEP:PrimaryAttackEffects(owner)
 		end
 		
 		-- MUZZLE DYNAMIC LIGHT
-		if SERVER && self.PrimaryEffects_SpawnDynamicLight == true && cv_dynamiclight:GetInt() == 0 then
+		if SERVER && self.PrimaryEffects_SpawnDynamicLight && cv_dynamiclight:GetInt() == 0 then
 			local muzzleLight = ents.Create("light_dynamic")
 			muzzleLight:SetKeyValue("brightness", self.PrimaryEffects_DynamicLightBrightness)
 			muzzleLight:SetKeyValue("distance", self.PrimaryEffects_DynamicLightDistance)
@@ -837,7 +836,7 @@ function SWEP:PrimaryAttackEffects(owner)
 	end
 
 	-- SHELL CASING
-	if !owner:IsPlayer() && self.PrimaryEffects_SpawnShells == true && cv_bulletshells:GetInt() == 0 then
+	if !owner:IsPlayer() && self.PrimaryEffects_SpawnShells && cv_bulletshells:GetInt() == 0 then
 		local shellAttach = self.PrimaryEffects_ShellAttachment
 		if !isnumber(shellAttach) then shellAttach = self:LookupAttachment(shellAttach) end
 		shellAttach = self:GetAttachment(shellAttach)

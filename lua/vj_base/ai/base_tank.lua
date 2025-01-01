@@ -19,13 +19,18 @@ ENT.Bleeds = false
 ENT.Immune_Dissolve = true
 ENT.Immune_AcidPoisonRadiation = true
 ENT.Immune_Bullet = true
-ENT.ImmuneDamagesTable = {DMG_PHYSGUN}
 ENT.DeathCorpseCollisionType = COLLISION_GROUP_NONE
 ENT.HasPainSounds = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SCHEDULE_FACE(faceType, customFunc) return end -- Tanks can NOT turn!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:MaintainAlertBehavior(alwaysChase) return end -- Tanks can NOT chase!
+---------------------------------------------------------------------------------------------------------------------------------------------
+function ENT:OnDamaged(dmginfo, hitgroup, status)
+	if status == "Initial" && dmginfo:IsDamageType(DMG_PHYSGUN) then
+		dmginfo:SetDamage(0)
+	end
+end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_AngleDiffuse(ang1, ang2)
 	local outcome = ang1 - ang2

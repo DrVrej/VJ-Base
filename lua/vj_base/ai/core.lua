@@ -14,16 +14,6 @@
 	self:SetLocalVelocity(self:GetMoveVelocity() * 1.5)
 */
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-/*
-##     ##    ###    ########  ####    ###    ########  ##       ########  ######
-##     ##   ## ##   ##     ##  ##    ## ##   ##     ## ##       ##       ##    ##
-##     ##  ##   ##  ##     ##  ##   ##   ##  ##     ## ##       ##       ##
-##     ## ##     ## ########   ##  ##     ## ########  ##       ######    ######
- ##   ##  ######### ##   ##    ##  ######### ##     ## ##       ##             ##
-  ## ##   ##     ## ##    ##   ##  ##     ## ##     ## ##       ##       ##    ##
-   ###    ##     ## ##     ## #### ##     ## ########  ######## ########  ######
-*/
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Localized static values
 local defPos = Vector(0, 0, 0)
 local defAng = Angle(0, 0, 0)
@@ -1329,35 +1319,6 @@ function ENT:ForceMoveJump(vel)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
-	Checks if the given damage type(s) contains 1 or more of the default gibbing damage types.
-		- dmgType = The damage type(s) to check for
-			EX: dmginfo:GetDamageType()
-	Returns
-		- true, At least 1 damage type is included
-		- false, NO damage type is included
-	Notes
-		- DMG_DIRECT = Disabled because default fire uses it!
-		- DMG_ALWAYSGIB = Skip if it's a bullet because engine sets DMG_ALWAYSGIB for "FireBullets" if it's more than 16 otherwise it sets DMG_NEVERGIB
------------------------------------------------------------]]
-local GIB_DAMAGE_MASK = bit.bor(
-    DMG_ALWAYSGIB,
-    DMG_ENERGYBEAM,
-    DMG_BLAST,
-    DMG_VEHICLE,
-    DMG_CRUSH,
-    DMG_DISSOLVE,
-    DMG_SLOWBURN,
-    DMG_PHYSGUN,
-    DMG_PLASMA,
-    DMG_SONIC
-	//DMG_DIRECT
-)
---
-function ENT:IsDefaultGibDamageType(dmgType)
-	return bAND(dmgType, DMG_NEVERGIB) == 0 && bAND(dmgType, GIB_DAMAGE_MASK) != 0 && (bAND(dmgType, DMG_ALWAYSGIB) == 0 || bAND(dmgType, DMG_BULLET) == 0)
-end
----------------------------------------------------------------------------------------------------------------------------------------------
---[[---------------------------------------------------------
 	The last damage hit group that the NPC received.
 	Returns
 		- number, the hit group
@@ -1403,7 +1364,7 @@ end
 		2:
 			- Vector, Given entity's nearest position to the NPC's nearest position
 -----------------------------------------------------------]]
-function ENT:FindNearestPositions(ent, centerNPC)
+function ENT:GetNearestPositions(ent, centerNPC)
 	local myNearPos = self:NearestPoint(ent:GetPos() + ent:OBBCenter())
 	if centerNPC then
 		local myPos = self:GetPos()
@@ -1421,13 +1382,13 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Finds the nearest position from the NPC to the entity and from the entity to the nearest NPC position found previously, then returns the distance between them
-		NOTE: Identical to "FindNearestPositions", this is just a convenience function
+		NOTE: Identical to "GetNearestPositions", this is just a convenience function
 		- ent = The entity to find the nearest position of in respect to the NPC
 		- centerNPC = Should the X-axis and Y-axis for the NPC stay at the NPC's origin with ONLY the Z-axis changing? | DEFAULT: false
 	Returns
 		number, The distance from the NPC nearest position to the given NPC's nearest position
 -----------------------------------------------------------]]
-function ENT:FindNearestDistance(ent, centerNPC)
+function ENT:GetNearestDistance(ent, centerNPC)
 	local myNearPos = self:NearestPoint(ent:GetPos() + ent:OBBCenter())
 	if centerNPC then
 		local myPos = self:GetPos()
@@ -1730,7 +1691,7 @@ function ENT:MaintainMedicBehavior()
 	elseif self.Medic_Status != "Healing" then
 		local ally = self.Medic_CurrentEntToHeal
 		if !IsValid(ally) or !VJ.IsAlive(ally) or (ally:Health() > ally:GetMaxHealth() * 0.75) or self:CheckRelationship(ally) != D_LI then self:ResetMedicBehavior() return end
-		if self:Visible(ally) && self:FindNearestDistance(ally) <= self.Medic_HealDistance then -- Are we in healing distance?
+		if self:Visible(ally) && self:GetNearestDistance(ally) <= self.Medic_HealDistance then -- Are we in healing distance?
 			self.Medic_Status = "Healing"
 			self:OnMedicBehavior("BeforeHeal")
 			self:PlaySoundSystem("MedicBeforeHeal")
@@ -1779,7 +1740,7 @@ function ENT:MaintainMedicBehavior()
 						self:ResetMedicBehavior()
 					else -- If it exists...
 						if self:CheckRelationship(ally) != D_LI then self:ResetMedicBehavior() return end -- I no longer like them, stop healing them!
-						if self:FindNearestDistance(ally) <= (self.Medic_HealDistance + 20) then -- Are we still in healing distance?
+						if self:GetNearestDistance(ally) <= (self.Medic_HealDistance + 20) then -- Are we still in healing distance?
 							if self:OnMedicBehavior("OnHeal", ally) != false then
 								local friCurHP = ally:Health()
 								ally:SetHealth(math_clamp(friCurHP + self.Medic_HealthAmount, friCurHP, ally:GetMaxHealth()))
@@ -2638,7 +2599,30 @@ function ENT:IdleSoundCode(customSD, sdType)
 				end
 			end
 			if sdtbl2 != false && sdrand == 1 && self.HasIdleDialogueSounds && math.random(1, 2) == 1 then
-				local foundEnt, canAnswer = self:IdleDialogueFindEnt()
+				local foundEnt;
+				local canAnswer = false
+				
+				-- Don't break the loop unless we hit a VJ NPC that can answer break
+				-- If above failed, then simply return the last checked ally
+				for _, v in ipairs(ents.FindInSphere(self:GetPos(), self.IdleDialogueDistance)) do
+					if v != self then
+						if v:IsPlayer() then
+							if self:CheckRelationship(v) == D_LI && !self:OnIdleDialogue(v, "CheckEnt", false) then
+								foundEnt = v
+							end
+						elseif v:IsNPC() && !v.Dead && ((self:GetClass() == v:GetClass()) or (self:CheckRelationship(v) == D_LI)) && self:Visible(v) then
+							local hasDialogueAnswer = (v.IsVJBaseSNPC and VJ.PICK(v.SoundTbl_IdleDialogueAnswer)) or false
+							if !self:OnIdleDialogue(v, "CheckEnt", hasDialogueAnswer) then
+								foundEnt = v
+								if hasDialogueAnswer then
+									canAnswer = true
+									break
+								end
+							end
+						end
+					end
+				end
+	
 				if foundEnt then
 					self.CurrentIdleSound = sdType(self, sdtbl2, self.IdleDialogueSoundLevel, self:GetSoundPitch(self.IdleDialogueSoundPitch.a, self.IdleDialogueSoundPitch.b))
 					if canAnswer then -- If we have a VJ NPC that can answer
@@ -2691,31 +2675,9 @@ function ENT:IdleSoundCode(customSD, sdType)
 		end
 	end
 end
---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:IdleDialogueFindEnt()
-	-- Don't break the loop unless we hit a VJ SNPC
-	-- If no VJ SNPC is hit, then just simply return the last checked friendly player or NPC
-	local returnEnt = false
-	for _, v in ipairs(ents.FindInSphere(self:GetPos(), self.IdleDialogueDistance)) do
-		if v:IsPlayer() then
-			if self:CheckRelationship(v) == D_LI && !self:OnIdleDialogue(v, "CheckEnt", false) then
-				returnEnt = v
-			end
-		elseif v != self && ((self:GetClass() == v:GetClass()) or (v:IsNPC() && self:CheckRelationship(v) == D_LI)) && self:Visible(v) then
-			local canAnswer = (v.IsVJBaseSNPC and VJ.PICK(v.SoundTbl_IdleDialogueAnswer)) or false
-			if !self:OnIdleDialogue(v, "CheckEnt", canAnswer) then
-				returnEnt = v
-				if v.IsVJBaseSNPC && !v.Dead && canAnswer then -- VJ NPC hit!
-					return v, true
-				end
-			end
-		end
-	end
-	return returnEnt, false
-end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:IdleDialogueAnswerSoundCode(customSD, sdType)
-	if self.Dead or self.HasSounds == false or self.HasIdleDialogueAnswerSounds == false then return 0 end
+	if self.Dead or !self.HasSounds or !self.HasIdleDialogueAnswerSounds then return 0 end
 	sdType = sdType or VJ.CreateSound
 	customSD = VJ.PICK(customSD)
 	local pickedSD = VJ.PICK(self.SoundTbl_IdleDialogueAnswer)
@@ -2727,9 +2689,8 @@ function ENT:IdleDialogueAnswerSoundCode(customSD, sdType)
 		self.NextIdleSoundT_RegularChange = CurTime() + math.random(2, 3)
 		self.CurrentSpeechSound = sdType(self, pickedSD, self.IdleDialogueAnswerSoundLevel, self:GetSoundPitch(self.IdleDialogueAnswerSoundPitch.a, self.IdleDialogueAnswerSoundPitch.b))
 		return SoundDuration(pickedSD) -- Return the duration of the sound, which will be used to make the other SNPC stand still
-	else
-		return 0
 	end
+	return 0
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RemoveTimers()
@@ -2767,44 +2728,53 @@ function ENT:ValidateNoCollide(ent)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:DoGibOnDeath(dmginfo, hitgroup, extraOptions)
-	if !self.CanGib or !self.CanGibOnDeath or self.GibbedOnDeath then return end
-	extraOptions = extraOptions or {}
-	local dmgTbl = extraOptions.CustomDmgTbl or self.GibOnDeathDamagesTable
-	local dmgType = dmginfo:GetDamageType()
-	for k = 1, #dmgTbl do
-		local v = dmgTbl[k]
-		if (v == "All") or (v == "UseDefault" && self:IsDefaultGibDamageType(dmgType)) or (v != "UseDefault" && bAND(dmgType, v) != 0) then
-			local setupGibs, setupGibsExtra = self:SetUpGibesOnDeath(dmginfo, hitgroup)
-			if setupGibs == true then
-				if setupGibsExtra then
-					if setupGibsExtra.AllowCorpse != true then self.HasDeathCorpse = false end
-					if setupGibsExtra.DeathAnim != true then self.HasDeathAnimation = false end
-				else -- By default disable corpse spawning and death animation if it gibbed!
-					self.HasDeathCorpse = false
-					self.HasDeathAnimation = false
-				end
-				self.GibbedOnDeath = true
-				self:PlayGibOnDeathSounds(dmginfo, hitgroup)
-			end
-			break
-		end
-	end
+--[[---------------------------------------------------------
+	Checks if the given damage type(s) contains 1 or more of the default gibbing damage types.
+		- dmgType = The damage type(s) to check for
+			EX: dmginfo:GetDamageType()
+	Returns
+		- true, At least 1 damage type is included
+		- false, NO damage type is included
+	Notes
+		- DMG_ALWAYSGIB = Skip if it's a bullet because engine sets DMG_ALWAYSGIB for "FireBullets" if it's more than 16 otherwise it sets DMG_NEVERGIB
+-----------------------------------------------------------]]
+local GIB_DAMAGE_MASK = bit.bor(
+    DMG_ALWAYSGIB,
+    DMG_ENERGYBEAM,
+    DMG_BLAST,
+    DMG_VEHICLE,
+    DMG_CRUSH,
+    DMG_DISSOLVE,
+    DMG_SLOWBURN,
+    DMG_PHYSGUN,
+    DMG_PLASMA,
+    DMG_SONIC
+	//DMG_DIRECT -- Disabled because default fire and intended weapons use it!
+)
+--
+function ENT:IsGibDamage(dmgType)
+	return bAND(dmgType, DMG_NEVERGIB) == 0 && bAND(dmgType, GIB_DAMAGE_MASK) != 0 && (bAND(dmgType, DMG_ALWAYSGIB) == 0 || bAND(dmgType, DMG_BULLET) == 0)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local gib_sd1 = "vj_base/gib/splat.wav"
-local gib_sd2 = "vj_base/gib/break1.wav"
-local gib_sd3 = "vj_base/gib/break2.wav"
-local gib_sd4 = "vj_base/gib/break3.wav"
---
-function ENT:PlayGibOnDeathSounds(dmginfo, hitgroup)
-	if !self.HasGibOnDeathSounds then return end
-	if self:CustomGibOnDeathSounds(dmginfo, hitgroup) == true then
-		VJ.EmitSound(self, gib_sd1, 90, math.random(80, 100))
-		VJ.EmitSound(self, gib_sd2, 90, math.random(80, 100))
-		VJ.EmitSound(self, gib_sd3, 90, math.random(80, 100))
-		VJ.EmitSound(self, gib_sd4, 90, math.random(80, 100))
+function ENT:GibOnDeath(dmginfo, hitgroup)
+	if !self.CanGib or !self.CanGibOnDeath or self.GibbedOnDeath then return false end
+	if !self.GibOnDeathFilter or (self.GibOnDeathFilter && self:IsGibDamage(dmginfo:GetDamageType())) then
+		local gibbed, overrides = self:HandleGibOnDeath(dmginfo, hitgroup)
+		if gibbed then
+			self.GibbedOnDeath = true
+			if overrides then
+				if !overrides.AllowCorpse then self.HasDeathCorpse = false end
+				if !overrides.AllowAnim then self.HasDeathAnimation = false end
+				if overrides.AllowSound != false then self:PlaySoundSystem("Gib") end -- nil/true = Play gib sound
+			else -- Default
+				self.HasDeathCorpse = false
+				self.HasDeathAnimation = false
+				self:PlaySoundSystem("Gib")
+			end
+			return true
+		end
 	end
+	return false
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSoundTrack()
@@ -2879,8 +2849,8 @@ function ENT:VJ_TASK_IDLE_STAND() self:SCHEDULE_IDLE_STAND() end
 function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, extraOptions, customFunc) return self:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, extraOptions, customFunc) end
 function ENT:VJ_DecideSoundPitch(pitch1, pitch2) self:GetSoundPitch(pitch1, pitch2) end
 function ENT:VJ_GetDifficultyValue(num) self:ScaleByDifficulty(num) end
-function ENT:VJ_GetNearestPointToEntity(ent, centerNPC) self:FindNearestPositions(ent, centerNPC) end
-function ENT:VJ_GetNearestPointToEntityDistance(ent, centerNPC) self:FindNearestDistance(ent, centerNPC) end
+function ENT:VJ_GetNearestPointToEntity(ent, centerNPC) self:GetNearestPositions(ent, centerNPC) end
+function ENT:VJ_GetNearestPointToEntityDistance(ent, centerNPC) self:GetNearestDistance(ent, centerNPC) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Checks all 4 sides around the NPC

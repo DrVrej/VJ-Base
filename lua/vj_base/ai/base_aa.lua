@@ -65,10 +65,10 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	-- Initial checks for aquatic NPCs
 	if self.MovementType == VJ_MOVETYPE_AQUATIC then
 		moveSpeed = (moveType == "Calm" and self.Aquatic_SwimmingSpeed_Calm) or self.Aquatic_SwimmingSpeed_Alerted
-		if debug == true then
+		if debug then
 			print("----------------")
-			print("My WaterLevel: "..self:WaterLevel())
-			if !destVec then print("dest WaterLevel: "..dest:WaterLevel()) end
+			print("[MoveTo] My WaterLevel: "..self:WaterLevel())
+			if !destVec then print("[MoveTo] dest WaterLevel: "..dest:WaterLevel()) end
 		end
 		-- NPC not fully in water, so forget the destination, instead wander OR go deeper into the war
 		if self:WaterLevel() <= 2 then self:MaintainIdleBehavior(1) return end
@@ -82,7 +82,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 			})
 			if !tr_aquatic.Hit then self:MaintainIdleBehavior(1) return end
 			//print(tr_aquatic.Hit)
-			//VJ.DEBUG_TempEnt(tr_aquatic.HitPos, self:GetAngles(), Color(255,255,0), 5)
+			//debugoverlay.Box(tr_aquatic.HitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(255, 255, 0))
 		-- If the destination is not a vector, then make sure it's reachable
 		else
 			if dest:WaterLevel() <= 1 then
@@ -94,8 +94,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 					filter = trFilter
 				})
 				//PrintTable(trene)
-				//print(trene.Hit)
-				//VJ.DEBUG_TempEnt(trene.HitPos, self:GetAngles(), Color(0,255,0), 5)
+				//debugoverlay.Box(trene.HitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(0, 255, 0))
 				if trene.Hit == true then return end
 				//if IsValid(trene.Entity) && trene.Entity == dest then return end
 			end
@@ -103,7 +102,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	end
 	
 	-- Movement Calculations
-	// local nearpos = self:FindNearestPositions(dest)
+	// local nearpos = self:GetNearestPositions(dest)
 	local startPos = myPos + self:OBBCenter() + vecStart // nearpos.MyPosition
 	local endPos = destVec or dest:GetPos() + dest:OBBCenter() + vecEnd // nearpos.EnemyPosition
 	local tr = util.TraceHull({
@@ -121,14 +120,14 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	if self.MovementType == VJ_MOVETYPE_AERIAL && extraOptions.IgnoreGround != true && ((!chaseEnemy) or (chaseEnemy && !self.HasMeleeAttack)) then
 		local tr_check1 = util.TraceLine({start = startPos, endpos = startPos + Vector(0, 0, -self.AA_GroundLimit), filter = trFilter})
 		local tr_check2 = util.TraceLine({start = trHitPos, endpos = trHitPos + Vector(0, 0, -self.AA_GroundLimit), filter = trFilter})
-		if debug == true then
-			print("checking...")
-			VJ.DEBUG_TempEnt(startPos, self:GetAngles(), Color(145,255,0), 5)
-			VJ.DEBUG_TempEnt(tr_check1.HitPos, self:GetAngles(), Color(0,183,255), 5)
+		if debug then
+			print("[MoveTo] checking...")
+			debugoverlay.Box(startPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(145, 255, 0))
+			debugoverlay.Box(tr_check1.HitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(0, 183, 255))
 		end
 		-- If it hit the world, then we are too close to the ground, replace "tr" with a new position!
 		if tr_check1.Hit == true or (tr_check2.Hit == true && !tr_check2.Entity:IsNPC()) then
-			if debug == true then print("Ground Hit!", tr_check1.HitPos:Distance(startPos)) end
+			if debug then print("[MoveTo] Ground Hit!", tr_check1.HitPos:Distance(startPos)) end
 			//groundLimited = true
 			endPos.z = (tr_check1.Hit and myPos.z or endPos.z) + self.AA_GroundLimit
 			tr = util.TraceHull({
@@ -145,7 +144,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	if !destVec then
 		-- If world is hit then our hitbox can't fully fit through the path to the destination
 		if tr.HitWorld then
-			if debug == true then print("hitworld") end
+			if debug then print("[MoveTo] hitworld") end
 			-- If we are already going to the last destination...
 			if self.AA_DoingLastChasePos then
 				-- Its movement is finished, therefore it's not moving there anymore!
@@ -158,7 +157,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 				end
 			-- If we have a last destination then move there!
 			elseif self.AA_LastChasePos != nil then
-				if debug == true then VJ.DEBUG_TempEnt(self.AA_LastChasePos, self:GetAngles(), Color(0,68,255), 5) end
+				if debug then debugoverlay.Box(self.AA_LastChasePos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(0, 68, 255)) end
 				self.AA_DoingLastChasePos = true
 				tr = util.TraceHull({
 					start = startPos,
@@ -175,14 +174,14 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	end
 	trHitPos = tr.HitPos
 	local trDistStart = startPos:Distance(trHitPos)
-	if debug == true then
-		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam", tr.StartPos, trHitPos, false, self:EntIndex(), 0)//vortigaunt_beam
-		VJ.DEBUG_TempEnt(trHitPos, self:GetAngles(), Color(212,0,255), 5)
+	if debug then
+		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam", tr.StartPos, trHitPos, false, self:EntIndex(), 0) //vortigaunt_beam
+		debugoverlay.Box(trHitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(212, 0, 255))
 	end
 	
 	local finalPos = trHitPos
 	if trDistStart <= 16 && tr.HitWorld == true then
-		if debug == true then print("AA: Forward Blocked! [MOVE-TO]") end
+		if debug then print("[MoveTo] Forward Blocked!") end
 		finalPos = endPos
 		-- Make sure the trace actually went somewhere...
 		if tr.Fraction > 0 then
@@ -197,7 +196,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	else
 		finalPos = finalPos + dest:GetForward()*addPos.x + dest:GetRight()*addPos.y + dest:GetUp()*addPos.z
 	end
-	if debug == true then ParticleEffect("vj_impact1_centaurspit", finalPos, defAng, self) end
+	if debug then ParticleEffect("vj_impact1_centaurspit", finalPos, defAng, self) end
 	
 	-- Z Calculations
 	-- BUG: Causes the NPC to go up / down VERY quickly!
@@ -205,10 +204,10 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	local distZFinal = finalPos.z - startPos.z -- Distance between the hit position and the start position
 	if !groundLimited then
 		if distZFinal > 5 then -- Up
-			if debug == true then print("AA: GOING UP [MOVE-TO]") end
+			if debug then print("[MoveTo] GOING UP") end
 			velUp = math.Clamp(distZFinal, 20, moveSpeed)
 		elseif distZFinal < 5 then -- Down
-			if debug == true then print("AA: GOING DOWN [MOVE-TO]") end
+			if debug then print("[MoveTo] GOING DOWN") end
 			velUp = -math.Clamp(math.abs(distZFinal), 20, moveSpeed)
 		end
 	end*/
@@ -294,24 +293,24 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 	-- If we aren't being forced to move down, then make sure we limit how close we get to the ground!
 	if extraOptions.IgnoreGround != true && !moveDown && self.MovementType == VJ_MOVETYPE_AERIAL then
 		local tr_check = util.TraceLine({start = finalPos, endpos = finalPos + Vector(0, 0, -self.AA_GroundLimit), filter = trFilter})
-		if debug == true then
-			print("checking...")
-			VJ.DEBUG_TempEnt(finalPos, self:GetAngles(), Color(255, 255, 255), 5)
-			VJ.DEBUG_TempEnt(tr_check.HitPos, self:GetAngles(), Color(255, 0, 255), 5)
+		if debug then
+			print("[IdleWander] checking...")
+			debugoverlay.Box(finalPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(255, 255, 255))
+			debugoverlay.Box(tr_check.HitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(255, 0, 255))
 		end
 		-- If it hit the world, then we are too close to the ground, replace "tr" with a new position!
 		if tr_check.HitWorld == true then
-			if debug == true then print("Ground Hit!", tr_check.HitPos:Distance(finalPos)) end
+			if debug then print("[IdleWander] Ground Hit!", tr_check.HitPos:Distance(finalPos)) end
 			tr_endpos.z = myPos.z + self.AA_GroundLimit
 			tr = util.TraceLine({start = myPos, endpos = tr_endpos, filter = trFilter})
 			finalPos = tr.HitPos
 		end
 	end
 	
-	if debug == true then
-		VJ.DEBUG_TempEnt(finalPos, self:GetAngles(), Color(0, 255, 255), 5)
+	if debug then
 		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam", tr.StartPos, finalPos, false, self:EntIndex(), 0)
 		ParticleEffect("vj_impact1_centaurspit", finalPos, defAng, self)
+		debugoverlay.Box(finalPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(0, 255, 255))
 	end
 	
 	self.AA_CurrentMoveMaxSpeed = moveSpeed

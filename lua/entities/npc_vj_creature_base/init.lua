@@ -206,7 +206,6 @@ ENT.Immune_Electricity = false -- Immune to electrical-type damages | Example: s
 ENT.Immune_Fire = false -- Immune to fire-type damages
 ENT.Immune_Melee = false -- Immune to melee-type damage | Example: Crowbar, slash damages
 ENT.Immune_Sonic = false -- Immune to sonic-type damages
-ENT.ImmuneDamagesTable = {} -- Makes the NPC immune to the give type of damage types | Takes DMG_ enumerations
 ENT.ForceDamageFromBosses = false -- Should the NPC get damaged by bosses regardless if it's not supposed to by skipping immunity checks, etc. | Bosses are attackers tagged with "VJTag_ID_Boss"
 ENT.AllowIgnition = true -- Can this NPC be set on fire?
 	-- ====== Flinching ====== --
@@ -264,7 +263,7 @@ ENT.DeathCorpseApplyForce = true -- Should the force of the damage be applied to
 	-- ====== Dismemberment / Gib ====== --
 ENT.CanGib = true -- Can the NPC gib? | Makes "CreateGibEntity" fail and overrides "CanGibOnDeath" to false
 ENT.CanGibOnDeath = true -- Is it allowed to gib on death?
-ENT.GibOnDeathDamagesTable = {"UseDefault"} -- Damages that it gibs from | "UseDefault" = Uses default damage types | "All" = Gib from any damage
+ENT.GibOnDeathFilter = true -- Should it only gib and call "self:HandleGibOnDeath" when it's killed by a specific damage types? | false = Call "self:HandleGibOnDeath" from any damage type
 ENT.HasGibOnDeathSounds = true -- Does it have gib sounds? | Mostly used for the settings menu
 ENT.HasGibOnDeathEffects = true -- Does it spawn particles on death or when it gibs? | Mostly used for the settings menu
 	-- ====== Drops On Death ====== --
@@ -389,10 +388,12 @@ ENT.OnKilledEnemy_OnlyLast = true -- Should it only play the "OnKilledEnemy" sou
 ENT.DamageByPlayerDispositionLevel = 1 -- At which disposition levels it should play the damage by player sounds | 0 = Always | 1 = ONLY when friendly to player | 2 = ONLY when enemy to player
 ENT.MeleeAttackSlowPlayerSoundFadeOutTime = 1 -- 0 = Fade out instantly
 	-- ====== Footstep Sound ====== --
+ENT.HasFootStepSound = true -- Can the NPC play footstep sounds?
 ENT.DisableFootStepSoundTimer = false -- If set to true, it will disable the time system for the footstep sound code, allowing you to use other ways like model events
 ENT.FootStepTimeWalk = 1 -- Delay between footstep sounds while it is walking | false = Disable while walking
 ENT.FootStepTimeRun = 0.5 -- Delay between footstep sounds while it is running | false = Disable while running
 	-- ====== Idle Sound ====== --
+ENT.HasIdleSounds = true -- If set to false, it won't play the idle sounds
 ENT.IdleSounds_PlayOnAttacks = false -- It will be able to continue and play idle sounds when it performs an attack
 ENT.IdleSounds_NoRegularIdleOnAlerted = false -- if set to true, it will not play the regular idle sound table if the combat idle sound table is empty
 	-- ====== Idle dialogue Sound ====== --
@@ -403,9 +404,7 @@ ENT.HasIdleDialogueAnswerSounds = true -- If set to false, it won't play the idl
 ENT.IdleDialogueDistance = 400 -- How close should the ally be for the NPC to talk to the it?
 ENT.IdleDialogueCanTurn = true -- If set to false, it won't turn when a dialogue occurs
 	-- ====== Main Control ====== --
-ENT.HasFootStepSound = true -- Can the NPC play footstep sounds?
 ENT.HasBreathSound = true -- Should it make a breathing sound?
-ENT.HasIdleSounds = true -- If set to false, it won't play the idle sounds
 ENT.HasOnReceiveOrderSounds = true -- If set to false, it won't play any sound when it receives an order from an ally
 ENT.HasFollowPlayerSounds = true -- Can it play follow and unfollow player sounds?
 ENT.HasMoveOutOfPlayersWaySounds = true -- If set to false, it won't play any sounds when it moves out of the player's way
@@ -690,9 +689,9 @@ function ENT:OnFollow(status, ent) end
 	Called every time a change occurs in the eating system
 		- ent = The entity that it is checking OR speaking with
 		- status = The change that occurred, possible changes:
-			- "CheckEnt"	= Possible friendly entity found, should we speak to it? | return anything other than nil or "false" to skip and not speak to this entity!
+			- "CheckEnt"	= Possible friendly entity found, should we speak to it? | return anything other than true to skip and not speak to this entity!
 			- "Speak"		= Everything passed, start speaking
-			- "Answer"		= Another entity has spoken to me, answer back! | return anything other than nil or "false" to not play an answer back dialogue!
+			- "Answer"		= Another entity has spoken to me, answer back! | return anything other than true to not play an answer back dialogue!
 		- statusData = Some status may have extra info, possible infos:
 			- For "CheckEnt"	= Boolean value, whether or not the entity can answer back
 			- For "Speak"		= Duration of our sentence
@@ -766,7 +765,7 @@ function ENT:CustomOnMeleeAttack_AfterStartTimer(seed) end
 function ENT:CustomOnMeleeAttack_BeforeChecks() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:GetMeleeAttackDamageOrigin()
-	return (IsValid(self:GetEnemy()) and self:FindNearestPositions(self:GetEnemy(), true)) or self:GetPos() + self:GetForward() -- Override this to use a different position
+	return (IsValid(self:GetEnemy()) and self:GetNearestPositions(self:GetEnemy(), true)) or self:GetPos() + self:GetForward() -- Override this to use a different position
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CustomOnMeleeAttack_AfterChecks(hitEnt, isProp) end -- return `true` to disable the attack and move onto the next entity!
@@ -872,7 +871,7 @@ function ENT:OnBecomeEnemyToPlayer(dmginfo, hitgroup) end
 function ENT:OnSetEnemyFromDamage(dmginfo, hitgroup) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[
- Called on death, used to gib the NPC
+ Called on death when the NPC is supposed to gib
 
 =-=-=| PARAMETERS |=-=-=
 	1. dmginfo [object] = CTakeDamageInfo object
@@ -881,16 +880,15 @@ function ENT:OnSetEnemyFromDamage(dmginfo, hitgroup) end
 =-=-=| RETURNS |=-=-=
 	-> [bool] : Notifies the base if the NPC gibbed or not
 		- false : Spawns death corpse | Plays death animations | Does NOT play gib sounds
-		- true : Disallows death corpse | Disallows death animations | Play gib sounds
-	-> [nil | table] : Used to provide extra customization to the first return if it's passed as "true"
-		- {AllowCorpse = true} : Allows death corpse to spawn
-		- {DeathAnim = true} : Allows death animations to play
+		- true : Disallows death corpse | Disallows death animations | Plays gib sounds
+	-> [nil | table] : Overrides default actions, first return must be "true" for this to apply!
+		- AllowCorpse : Allows death corpse to spawn | DEFAULT: false
+		- AllowAnim : Allows death animations to play | DEFAULT: false
+		- AllowSound : Allows default gib sounds to play | DEFAULT: true
 		EXAMPLE:
-			- {DeathAnim = true, AllowCorpse = true} : Will spawn death corpse and play death animations
+			- {AllowCorpse = true} : Will spawn death corpse
 --]]
-function ENT:SetUpGibesOnDeath(dmginfo, hitgroup) return false end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:CustomGibOnDeathSounds(dmginfo, hitgroup) return true end -- returning false will make the default gibbing sounds not play
+function ENT:HandleGibOnDeath(dmginfo, hitgroup) return false end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[
  Called when the NPC dies
@@ -1151,6 +1149,27 @@ local function ApplyBackwardsCompatibility(self)
 	if self.DisableFootStepOnRun then self.FootStepTimeRun = false end
 	if self.FindEnemy_UseSphere then self.SightAngle = 360 end
 	if self.IsMedicSNPC then self.IsMedic = self.IsMedicSNPC end
+	if self.GibOnDeathDamagesTable then
+		for _, v in ipairs(self.GibOnDeathDamagesTable) do
+			if v == "All" then
+				self.GibOnDeathFilter = false
+			end
+		end
+	end
+	if self.SetUpGibesOnDeath then
+		self.HandleGibOnDeath = function(_, dmginfo, hitgroup)
+			local gibbed, overrides = self:SetUpGibesOnDeath(dmginfo, hitgroup)
+			local tbl = {}
+			if overrides then
+				if overrides.AllowCorpse then tbl.AllowCorpse = true end
+				if overrides.DeathAnim then tbl.AllowAnim = true end
+			end
+			if self.CustomGibOnDeathSounds && !self:CustomGibOnDeathSounds(dmginfo, hitgroup) then
+				tbl.AllowSound = false
+			end
+			return gibbed, tbl
+		end
+	end
 	if self.CustomOnDoKilledEnemy then
 		self.OnKilledEnemy = function(_, ent, inflictor, wasLast)
 			if (self.OnKilledEnemy_OnlyLast == false) or (self.OnKilledEnemy_OnlyLast == true && wasLast) then
@@ -1816,7 +1835,7 @@ function ENT:Think()
 							eatingData.NextCheck = curTime + 10
 							self:ResetEatingBehavior("Unspecified")
 						elseif !self:IsMoving() then
-							local foodDist = self:FindNearestDistance(food) // myPos:Distance(food:GetPos())
+							local foodDist = self:GetNearestDistance(food) // myPos:Distance(food:GetPos())
 							if foodDist > 400 then -- Food too far away, reset!
 								eatingData.NextCheck = curTime + 10
 								self:ResetEatingBehavior("Unspecified")
@@ -1832,7 +1851,7 @@ function ENT:Think()
 									else
 										self.NextWanderTime = CurTime() + math.Rand(3, 5)
 										self:SetState(VJ_STATE_NONE)
-										self:SetLastPosition(select(2, self:FindNearestPositions(food)))
+										self:SetLastPosition(select(2, self:GetNearestPositions(food)))
 										self:SCHEDULE_GOTO_POSITION("TASK_WALK_PATH")
 										//self:SetTarget(food)
 										//self:SCHEDULE_GOTO_TARGET("TASK_WALK_PATH")
@@ -1900,7 +1919,7 @@ function ENT:Think()
 				eneData.Reset = false
 				eneData.IsVisible = plyControlled and self:VisibleVec(enePos) or self:Visible(ene) -- Need to use VisibleVec when controlled because "Visible" will return false randomly
 				self.LatestEnemyDistance = myPos:Distance(enePos)
-				self.NearestPointToEnemyDistance = self:FindNearestDistance(ene, true)
+				self.NearestPointToEnemyDistance = self:GetNearestDistance(ene, true)
 				if eneData.IsVisible && self:IsInViewCone(enePos) && (self.LatestEnemyDistance < self:GetMaxLookDistance()) then
 					eneData.LastVisibleTime = curTime
 					-- Why 2 vars? Because the last "Visible" tick is usually not updated in time, causing the engine to give false positive, thinking the enemy IS visible
@@ -2229,7 +2248,7 @@ function ENT:MeleeAttackCode(isPropAttack)
 		if v == self or v:GetClass() == myClass or (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) then continue end
 		if v:IsPlayer() && (v.VJTag_IsControllingNPC or !v:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
 		if ((v.VJTag_IsLiving && self:Disposition(v) != D_LI) or v.VJTag_IsAttackable or v.VJTag_IsDamageable) && self:GetInternalVariable("m_latchedHeadDirection"):Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
-			if isPropAttack == true && v.VJTag_IsLiving && self:FindNearestDistance(v, true) > self.MeleeAttackDistance then continue end //if (self:GetPos():Distance(v:GetPos()) <= self:FindNearestDistance(v) && self:FindNearestDistance(v) <= self.MeleeAttackDistance) == false then
+			if isPropAttack == true && v.VJTag_IsLiving && self:GetNearestDistance(v, true) > self.MeleeAttackDistance then continue end //if (self:GetPos():Distance(v:GetPos()) <= self:GetNearestDistance(v) && self:GetNearestDistance(v) <= self.MeleeAttackDistance) == false then
 			local isProp = v.VJTag_IsAttackable
 			if self:CustomOnMeleeAttack_AfterChecks(v, isProp) == true then continue end
 			-- Remove prop constraints and push it (If possible)
@@ -2259,7 +2278,7 @@ function ENT:MeleeAttackCode(isPropAttack)
 				local applyDmg = DamageInfo()
 				applyDmg:SetDamage(self:ScaleByDifficulty(self.MeleeAttackDamage))
 				applyDmg:SetDamageType(self.MeleeAttackDamageType)
-				//applyDmg:SetDamagePosition(self:FindNearestPositions(v).MyPosition)
+				//applyDmg:SetDamagePosition(self:GetNearestPositions(v).MyPosition)
 				if v.VJTag_IsLiving then applyDmg:SetDamageForce(self:GetForward() * ((applyDmg:GetDamage() + 100) * 70)) end
 				applyDmg:SetInflictor(self)
 				applyDmg:SetAttacker(self)
@@ -2697,7 +2716,6 @@ function ENT:OnTakeDamage(dmginfo)
 	end
 	
 	-- Immunity checks
-	if VJ.HasValue(self.ImmuneDamagesTable, dmgType) then return 0 end
 	if isFireEnt && !self.AllowIgnition then self:Extinguish() return 0 end
 	if (self.Immune_Fire && (dmgType == DMG_BURN or dmgType == DMG_SLOWBURN or isFireEnt)) or (self.Immune_AcidPoisonRadiation && (dmgType == DMG_ACID or dmgType == DMG_RADIATION or dmgType == DMG_POISON or dmgType == DMG_NERVEGAS or dmgType == DMG_PARALYZE)) or (self.Immune_Bullet && (dmginfo:IsBulletDamage() or dmgType == DMG_BULLET or dmgType == DMG_AIRBOAT or dmgType == DMG_BUCKSHOT)) or (self.Immune_Blast && (dmgType == DMG_BLAST or dmgType == DMG_BLAST_SURFACE)) or (self.Immune_Dissolve && dmgType == DMG_DISSOLVE) or (self.Immune_Electricity && (dmgType == DMG_SHOCK or dmgType == DMG_ENERGYBEAM or dmgType == DMG_PHYSGUN)) or (self.Immune_Melee && (dmgType == DMG_CLUB or dmgType == DMG_SLASH)) or (self.Immune_Sonic && dmgType == DMG_SONIC) then return 0 end
 	
@@ -2974,7 +2992,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 		end
 	end
 	self:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
-	self:DoGibOnDeath(dmginfo, hitgroup)
+	self:GibOnDeath(dmginfo, hitgroup)
 	self:PlaySoundSystem("Death")
 	//if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) then self:AA_StopMoving() end
 	
@@ -3214,14 +3232,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 	sdType = sdType or VJ.CreateSound
 	customSD = VJ.PICK(customSD)
 	
-	if sdSet == "GeneralSpeech" then -- Used to just play general speech sounds (Custom by developers)
-		if customSD then
-			StopSound(self.CurrentSpeechSound)
-			StopSound(self.CurrentIdleSound)
-			self.NextIdleSoundT_RegularChange = CurTime() + ((((SoundDuration(customSD) > 0) and SoundDuration(customSD)) or 2) + 1)
-			self.CurrentSpeechSound = sdType(self, customSD, 80, self:GetSoundPitch(self.GeneralSoundPitch1, self.GeneralSoundPitch2))
-		end
-	elseif sdSet == "FollowPlayer" then
+	if sdSet == "FollowPlayer" then
 		if self.HasFollowPlayerSounds then
 			local pickedSD = VJ.PICK(self.SoundTbl_FollowPlayer)
 			if (math.random(1, self.FollowPlayerSoundChance) == 1 && pickedSD) or customSD then
@@ -3447,6 +3458,18 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				self.CurrentDeathSound = sdType(self, pickedSD, self.DeathSoundLevel, self:GetSoundPitch(self.DeathSoundPitch.a, self.DeathSoundPitch.b))
 			end
 		end
+	elseif sdSet == "Gib" then
+		if self.HasGibOnDeathSounds then
+			sdType = VJ.EmitSound
+			if customSD then
+				sdType(self, customSD, 80, math.random(80, 100))
+			else
+				sdType(self, "vj_base/gib/splat.wav", 80, math.random(85, 100))
+				sdType(self, "vj_base/gib/break1.wav", 80, math.random(85, 100))
+				sdType(self, "vj_base/gib/break2.wav", 80, math.random(85, 100))
+				sdType(self, "vj_base/gib/break3.wav", 80, math.random(85, 100))
+			end
+		end
 	--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-- Base-Specific Sound Tables --=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--
 	elseif sdSet == "BeforeMeleeAttack" then
 		if self.HasMeleeAttackSounds then
@@ -3551,6 +3574,13 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentLeapAttackDamageMissSound = sdType(self, pickedSD, self.LeapAttackDamageMissSoundLevel, self:GetSoundPitch(self.LeapAttackDamageMissSoundPitch.a, self.LeapAttackDamageMissSoundPitch.b))
 			end
+		end
+	else -- Such as "GeneralSpeech"
+		if customSD then
+			StopSound(self.CurrentSpeechSound)
+			StopSound(self.CurrentIdleSound)
+			self.NextIdleSoundT_RegularChange = CurTime() + ((((SoundDuration(customSD) > 0) and SoundDuration(customSD)) or 2) + 1)
+			self.CurrentSpeechSound = sdType(self, customSD, 80, self:GetSoundPitch(self.GeneralSoundPitch1, self.GeneralSoundPitch2))
 		end
 	end
 end

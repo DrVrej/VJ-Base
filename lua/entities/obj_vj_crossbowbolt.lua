@@ -12,6 +12,8 @@ ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Information		= "Projectile, usually used for NPCs & Weapons"
 ENT.Category		= "VJ Base"
+
+ENT.PhysicsSolidMask = MASK_SHOT
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	local Name = "Crossbow Bolt"
