@@ -77,7 +77,6 @@ function SWEP:OnPrimaryAttack(status, statusData)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:PrimaryAttackEffects(owner)
-	//ParticleEffect("vj_rpg2_smoke1", self:GetAttachment(3).Pos, Angle(0, 0, 0), self)
 	ParticleEffectAttach("smoke_exhaust_01a", PATTACH_POINT_FOLLOW, self, 2)
 	ParticleEffectAttach("smoke_exhaust_01a", PATTACH_POINT_FOLLOW, self, 2)
 	ParticleEffectAttach("smoke_exhaust_01a", PATTACH_POINT_FOLLOW, self, 2)

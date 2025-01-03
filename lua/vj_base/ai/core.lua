@@ -2412,77 +2412,77 @@ end
 -----------------------------------------------------------]]
 local bloodNames = {
 	[VJ.BLOOD_COLOR_RED] = {
-		particle = "blood_impact_red_01", // vj_impact1_red
+		particle = "blood_impact_red_01", // vj_blood_impact_red
 		decal = "VJ_Blood_Red",
 		decal_gmod = "Blood",
 		pool = {
-			[0] = "vj_bleedout_red_tiny",
-			[1] = "vj_bleedout_red_small",
-			[2] = "vj_bleedout_red"
+			[0] = "vj_blood_pool_red_tiny",
+			[1] = "vj_blood_pool_red_small",
+			[2] = "vj_blood_pool_red"
 		}
 	},
 	[VJ.BLOOD_COLOR_YELLOW] = {
-		particle = "blood_impact_yellow_01", // vj_impact1_yellow
+		particle = "blood_impact_yellow_01", // vj_blood_impact_yellow
 		decal = "VJ_Blood_Yellow",
 		decal_gmod = "YellowBlood",
 		pool = {
-			[0] = "vj_bleedout_yellow_tiny",
-			[1] = "vj_bleedout_yellow_small",
-			[2] = "vj_bleedout_yellow"
+			[0] = "vj_blood_pool_yellow_tiny",
+			[1] = "vj_blood_pool_yellow_small",
+			[2] = "vj_blood_pool_yellow"
 		}
 	},
 	[VJ.BLOOD_COLOR_GREEN] = {
-		particle = "vj_impact1_green",
+		particle = "vj_blood_impact_green",
 		decal = "VJ_Blood_Green",
 		pool = {
-			[0] = "vj_bleedout_green_tiny",
-			[1] = "vj_bleedout_green_small",
-			[2] = "vj_bleedout_green"
+			[0] = "vj_blood_pool_green_tiny",
+			[1] = "vj_blood_pool_green_small",
+			[2] = "vj_blood_pool_green"
 		}
 	},
 	[VJ.BLOOD_COLOR_ORANGE] = {
-		particle = "vj_impact1_orange",
+		particle = "vj_blood_impact_orange",
 		decal = "VJ_Blood_Orange",
 		pool = {
-			[0] = "vj_bleedout_orange_tiny",
-			[1] = "vj_bleedout_orange_small",
-			[2] = "vj_bleedout_orange"
+			[0] = "vj_blood_pool_orange_tiny",
+			[1] = "vj_blood_pool_orange_small",
+			[2] = "vj_blood_pool_orange"
 		}
 	},
 	[VJ.BLOOD_COLOR_BLUE] = {
-		particle = "vj_impact1_blue",
+		particle = "vj_blood_impact_blue",
 		decal = "VJ_Blood_Blue",
 		pool = {
-			[0] = "vj_bleedout_blue_tiny",
-			[1] = "vj_bleedout_blue_small",
-			[2] = "vj_bleedout_blue"
+			[0] = "vj_blood_pool_blue_tiny",
+			[1] = "vj_blood_pool_blue_small",
+			[2] = "vj_blood_pool_blue"
 		}
 	},
 	[VJ.BLOOD_COLOR_PURPLE] = {
-		particle = "vj_impact1_purple",
+		particle = "vj_blood_impact_purple",
 		decal = "VJ_Blood_Purple",
 		pool = {
-			[0] = "vj_bleedout_purple_tiny",
-			[1] = "vj_bleedout_purple_small",
-			[2] = "vj_bleedout_purple"
+			[0] = "vj_blood_pool_purple_tiny",
+			[1] = "vj_blood_pool_purple_small",
+			[2] = "vj_blood_pool_purple"
 		}
 	},
 	[VJ.BLOOD_COLOR_WHITE] = {
-		particle = "vj_impact1_white",
+		particle = "vj_blood_impact_white",
 		decal = "VJ_Blood_White",
 		pool = {
-			[0] = "vj_bleedout_white_tiny",
-			[1] = "vj_bleedout_white_small",
-			[2] = "vj_bleedout_white"
+			[0] = "vj_blood_pool_white_tiny",
+			[1] = "vj_blood_pool_white_small",
+			[2] = "vj_blood_pool_white"
 		}
 	},
 	[VJ.BLOOD_COLOR_OIL] = {
-		particle = "vj_impact1_oil",
+		particle = "vj_blood_impact_oil",
 		decal = "VJ_Blood_Oil",
 		pool = {
-			[0] = "vj_bleedout_oil_tiny",
-			[1] = "vj_bleedout_oil_small",
-			[2] = "vj_bleedout_oil"
+			[0] = "vj_blood_pool_oil_tiny",
+			[1] = "vj_blood_pool_oil_small",
+			[2] = "vj_blood_pool_oil"
 		}
 	},
 }

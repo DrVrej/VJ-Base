@@ -79,7 +79,7 @@ if CLIENT then
 		
 		-- Send the player's hit position to the controller entity
 		local tr = util.TraceLine({start = viewLerpVec, endpos = viewLerpVec + viewLerpAng:Forward()*32768, filter = {ply, camera, npc}})
-		//ParticleEffect("vj_impact1_centaurspit", tr.HitPos, Angle(0,0,0), npc)
+		//ParticleEffect("vj_impact_dirty", tr.HitPos, Angle(0,0,0), npc)
 		net.Start("vj_controller_cldata")
 			net.WriteVector(tr.HitPos)
 		net.SendToServer()

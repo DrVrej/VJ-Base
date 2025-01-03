@@ -208,7 +208,7 @@ function ENT:OnThink()
 		end)
 
 		if self:Health() < (self.StartHealth*0.30) && CurTime() > self.Tank_NextLowHealthSparkT then
-			//ParticleEffectAttach("vj_rpg2_smoke2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
+			//ParticleEffectAttach("vj_rocket_idle2_smoke2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 
 			self.Spark1 = ents.Create("env_spark")
 			self.Spark1:SetKeyValue("MaxDelay",0.01)

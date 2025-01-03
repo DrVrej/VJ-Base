@@ -196,7 +196,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 	else
 		finalPos = finalPos + dest:GetForward()*addPos.x + dest:GetRight()*addPos.y + dest:GetUp()*addPos.z
 	end
-	if debug then ParticleEffect("vj_impact1_centaurspit", finalPos, defAng, self) end
+	if debug then ParticleEffect("vj_impact_dirty", finalPos, defAng, self) end
 	
 	-- Z Calculations
 	-- BUG: Causes the NPC to go up / down VERY quickly!
@@ -309,7 +309,7 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 	
 	if debug then
 		util.ParticleTracerEx("Weapon_Combine_Ion_Cannon_Beam", tr.StartPos, finalPos, false, self:EntIndex(), 0)
-		ParticleEffect("vj_impact1_centaurspit", finalPos, defAng, self)
+		ParticleEffect("vj_impact_dirty", finalPos, defAng, self)
 		debugoverlay.Box(finalPos, Vector(-2, -2, -2), Vector(2, 2, 2), 5, Color(0, 255, 255))
 	end
 	
