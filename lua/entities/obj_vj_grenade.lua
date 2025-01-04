@@ -30,7 +30,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
 
-ENT.Model = "models/vj_weapons/w_grenade.mdl" -- Model(s) to spawn with | Picks a random one if it's a table
+ENT.Model = "models/vj_base/weapons/w_grenade.mdl" -- Model(s) to spawn with | Picks a random one if it's a table
 ENT.ProjectileType = VJ.PROJ_TYPE_PROP
 ENT.DoesRadiusDamage = true -- Should it deal radius damage when it collides with something?
 ENT.RadiusDamageRadius = 250

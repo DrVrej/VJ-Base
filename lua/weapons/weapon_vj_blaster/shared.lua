@@ -15,8 +15,8 @@ end
 SWEP.NPC_NextPrimaryFire = 0.3 -- RPM of the weapon in seconds | Calculation: 60 / RPM
 SWEP.NPC_ReloadSound = "vj_base/weapons/blaster/blaster_reload.wav" -- Sounds it plays when the base detects the SNPC playing a reload animation
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.ViewModel = "models/vj_weapons/c_e5.mdl"
-SWEP.WorldModel = "models/vj_weapons/w_e5.mdl"
+SWEP.ViewModel = "models/vj_base/weapons/c_e5.mdl"
+SWEP.WorldModel = "models/vj_base/weapons/w_e5.mdl"
 SWEP.HoldType = "ar2"
 SWEP.Spawnable = true
 SWEP.AdminSpawnable = false

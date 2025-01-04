@@ -19,7 +19,7 @@ ENT.PhysicsSounds = true
 if !SERVER then return end
 
 function ENT:Initialize()
-	self:SetModel("models/vj_props/armenian_flag01.mdl")
+	self:SetModel("models/vj_base/flag_armenia.mdl")
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:ResetSequence("Idle")

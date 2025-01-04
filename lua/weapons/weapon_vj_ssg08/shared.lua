@@ -20,7 +20,7 @@ SWEP.NPC_ExtraFireSound = "vj_base/weapons/cycle_rifle_bolt.wav" -- Plays an ext
 SWEP.NPC_ExtraFireSoundTime = 0.4 -- How much time until it plays the sound (After Firing)?
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.MadeForNPCsOnly = true -- Is this weapon meant to be for NPCs only?
-SWEP.WorldModel = "models/vj_weapons/w_csgo_scout.mdl"
+SWEP.WorldModel = "models/vj_base/weapons/w_ssg08.mdl"
 SWEP.WorldModel_UseCustomPosition = true -- Should the gun use custom position? This can be used to fix guns that are in the crotch
 SWEP.WorldModel_CustomPositionAngle = Vector(-8, 90, 180)
 SWEP.WorldModel_CustomPositionOrigin = Vector(-4.4, -1, -0.5)

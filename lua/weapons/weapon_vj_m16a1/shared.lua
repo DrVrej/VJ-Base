@@ -14,7 +14,7 @@ SWEP.UseHands = true
 end
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel = "models/weapons/cstrike/c_rif_m4a1.mdl"
-SWEP.WorldModel = "models/vj_weapons/w_csgo_m4a1_s.mdl"
+SWEP.WorldModel = "models/vj_base/weapons/w_m4a1_s.mdl"
 SWEP.WorldModel_UseCustomPosition = true -- Should the gun use custom position? This can be used to fix guns that are in the crotch
 SWEP.WorldModel_CustomPositionAngle = Vector(0, 90, 180)
 SWEP.WorldModel_CustomPositionOrigin = Vector(-3.4, -1, 0)
@@ -33,7 +33,6 @@ SWEP.Primary.Automatic = true -- Should the weapon continue firing as long as th
 SWEP.Primary.Ammo = "SMG1" -- Ammo type
 SWEP.Primary.Sound = "VJ.Weapon_M4A1.Single"
 SWEP.PrimaryEffects_MuzzleAttachment = 1
-SWEP.PrimaryEffects_ShellAttachment = 2
 SWEP.PrimaryEffects_ShellType = "RifleShellEject"
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Reload_TimeUntilAmmoIsSet	= 1.8 -- Time until ammo is set to the weapon

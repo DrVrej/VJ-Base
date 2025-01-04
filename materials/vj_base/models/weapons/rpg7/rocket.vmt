@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "vj_base/models/weapons/rpg7/rocket"
+	"$halflambert" 1
+	"$bumpmap" "vj_base/models/weapons/rpg7/rpg7_n"
+}

@@ -63,7 +63,7 @@ ENT.IsOn = false
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetNW2Bool("VJ_FirePlace_Activated", false)
-	self:SetModel("models/vj_props/fireplace.mdl")
+	self:SetModel("models/vj_base/fireplace.mdl")
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_NONE)
 	self:SetSolid(SOLID_VPHYSICS)

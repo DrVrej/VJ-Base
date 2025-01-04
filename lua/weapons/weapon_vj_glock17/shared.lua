@@ -15,8 +15,8 @@ end
 SWEP.NPC_NextPrimaryFire = 0.3 -- RPM of the weapon in seconds | Calculation: 60 / RPM
 SWEP.NPC_CustomSpread = 0.8 -- This is added on top of the custom spread that's set inside the SNPC! | Starting from 1: Closer to 0 = better accuracy, Farther than 1 = worse accuracy
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.ViewModel = "models/vj_weapons/v_glock.mdl"
-SWEP.WorldModel = "models/vj_weapons/w_glock.mdl"
+SWEP.ViewModel = "models/vj_base/weapons/v_glock.mdl"
+SWEP.WorldModel = "models/vj_base/weapons/w_glock.mdl"
 SWEP.HoldType = "pistol"
 SWEP.ViewModelFOV = 70 -- Player FOV for the view model
 SWEP.Spawnable = true
@@ -34,7 +34,6 @@ SWEP.Primary.Automatic = true -- Should the weapon continue firing as long as th
 SWEP.Primary.Ammo = "Pistol" -- Ammo type
 SWEP.Primary.Sound = "VJ.Weapon_Glock17.Single"
 SWEP.PrimaryEffects_MuzzleAttachment = 1
-SWEP.PrimaryEffects_ShellAttachment = "ejectbrass"
 SWEP.PrimaryEffects_ShellType = "ShellEject"
 	-- ====== Secondary Fire Variables ====== --
 SWEP.Secondary.Automatic = true -- Should the weapon continue firing as long as the attack button is held down?

@@ -1,0 +1,5 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "vj_base/models/duffle_bag/bm_amb_holdall"
+	"$bumpmap" "vj_base/models/duffle_bag/bm_amb_holdall_n"
+}

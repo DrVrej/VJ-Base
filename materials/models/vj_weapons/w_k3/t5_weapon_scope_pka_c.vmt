@@ -1,9 +1,0 @@
-"VertexLitGeneric"
-{
-	"$baseTexture" "models/vj_weapons/w_k3/t5_weapon_scope_pka_c"
-	"$surfaceprop" "metal"
-	"$model" "1"
-	"$alpha" "1"
-	"$alphatest" "1"
-	"$nocull" "1"
-}

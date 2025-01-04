@@ -19,28 +19,28 @@ SWEP.RenderGroup 				= RENDERGROUP_OPAQUE
 end
 	-- Server Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 if SERVER then
-SWEP.Weight						= 30 -- Decides whether we should switch from/to this
-SWEP.AutoSwitchTo				= false -- Auto switch to this weapon when it's picked up
-SWEP.AutoSwitchFrom				= false -- Auto switch weapon when the owner picks up a better weapon
+SWEP.Weight = 30 -- Decides whether we should switch from/to this
+SWEP.AutoSwitchTo = false -- Auto switch to this weapon when it's picked up
+SWEP.AutoSwitchFrom = false -- Auto switch weapon when the owner picks up a better weapon
 end
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.ViewModel					= "models/vj_weapons/c_controller.mdl"
-SWEP.WorldModel					= "models/gibs/humans/brain_gib.mdl"
-SWEP.HoldType 					= "pistol"
-SWEP.Spawnable					= true
-SWEP.AdminSpawnable				= false
+SWEP.ViewModel = "models/vj_base/weapons/c_controller.mdl"
+SWEP.WorldModel = "models/gibs/humans/brain_gib.mdl"
+SWEP.HoldType = "pistol"
+SWEP.Spawnable = true
+SWEP.AdminSpawnable = false
 SWEP.UseHands = true -- Should this weapon use Garry's Mod hands? (The model must support it!)
 	-- Primary/Secondary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Sound = {"physics/flesh/flesh_squishy_impact_hard1.wav", "physics/flesh/flesh_squishy_impact_hard2.wav", "physics/flesh/flesh_squishy_impact_hard3.wav", "physics/flesh/flesh_squishy_impact_hard4.wav"}
 SWEP.Primary.SoundPitch	= VJ.SET(140, 140)
-SWEP.Primary.ClipSize 			= -1
-SWEP.Primary.DefaultClip		= -1
-SWEP.Primary.Automatic 			= false
-SWEP.Primary.Ammo 				= "none"
-SWEP.Secondary.ClipSize 		= -1
-SWEP.Secondary.DefaultClip 		= -1
-SWEP.Secondary.Automatic 		= false
-SWEP.Secondary.Ammo 			= "none"
+SWEP.Primary.ClipSize = -1
+SWEP.Primary.DefaultClip = -1
+SWEP.Primary.Automatic = false
+SWEP.Primary.Ammo = "none"
+SWEP.Secondary.ClipSize = -1
+SWEP.Secondary.DefaultClip = -1
+SWEP.Secondary.Automatic = false
+SWEP.Secondary.Ammo = "none"
 
 SWEP.WorldModel_UseCustomPosition = true -- Should the gun use custom position? This can be used to fix guns that are in the crotch
 SWEP.WorldModel_CustomPositionAngle = Vector(0, 0, 0)

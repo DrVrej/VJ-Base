@@ -1,0 +1,36 @@
+// "VertexLitGeneric"
+// {
+// 	$basetexture			
+// 	$bumpmap 			
+
+// 	$halflambert 	                "0"
+// 	$rimlight 	 	        "0"
+
+// 	$phong 				"1"
+// 	//$PhongAlbedoTint 		"0"	
+// 	//$BasemapLuminancePhongMask	"1"
+// 	$phongtint 			"[0.6 0.8 1.0]"
+// 	$phongexponent 			"45"
+// 	$phongboost 			"1"
+// 	$phongfresnelranges		"[.5 1 3]"
+
+// 	$envmap 			"env_cubemap"
+// 	$envmaptint 			"[0.007 0.007 0.007]"
+// }
+"VertexLitGeneric"
+{
+    "$basetexture"              "vj_base/models/weapons/rpg_ins/weapon_w_rpg_dm"
+	"$bumpmap"					"vj_base/models/weapons/rpg_ins/weapon_w_rpg_nm"
+	"$phongexponenttexture"		"vj_base/models/weapons/rpg_ins/weapon_w_rpg_em"
+	"$nocull" 					"1"
+
+	"$phong"                    "1"
+	"$phongboost"               "2"
+	"$phongfresnelranges"       "[0.15 0.545 0.115]"
+	"$phongalbedotint"          "1"
+	"$phongalbedoboost"         "30"
+
+	"$envmap"                   "env_cubemap"
+	"$envmaptint" 				"[0.007 0.007 0.007]"
+	"$envmapfresnel"            "0.4"
+}

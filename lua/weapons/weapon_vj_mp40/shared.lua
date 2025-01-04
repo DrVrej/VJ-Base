@@ -13,8 +13,8 @@ SWEP.SwayScale = 1 -- Default is 1, The scale of the viewmodel sway
 SWEP.UseHands = true
 end
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.ViewModel = "models/vj_weapons/c_mp40.mdl"
-SWEP.WorldModel = "models/vj_weapons/w_mp40.mdl"
+SWEP.ViewModel = "models/vj_base/weapons/c_mp40.mdl"
+SWEP.WorldModel = "models/vj_base/weapons/w_mp40.mdl"
 SWEP.HoldType = "smg"
 SWEP.ViewModelFOV = 45 -- Player FOV for the view model
 SWEP.Spawnable = true
@@ -30,7 +30,6 @@ SWEP.Primary.Automatic = true -- Should the weapon continue firing as long as th
 SWEP.Primary.Ammo = "SMG1" -- Ammo type
 SWEP.Primary.Sound = "VJ.Weapon_MP40.Single"
 SWEP.PrimaryEffects_MuzzleAttachment = 1
-SWEP.PrimaryEffects_ShellAttachment = 2
 SWEP.PrimaryEffects_ShellType = "RifleShellEject"
 	-- Deployment Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasDeploySound = false -- Does the weapon have a deploy sound?

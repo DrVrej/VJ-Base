@@ -18,8 +18,8 @@ SWEP.NPC_BulletSpawnAttachment = "missile" -- The attachment that the bullet spa
 SWEP.NPC_FiringDistanceScale = 2.5 -- Changes how far the NPC can fire | 1 = No change, x < 1 = closer, x > 1 = farther
 SWEP.NPC_StandingOnly = true -- If true, the weapon can only be fired if the NPC is standing still
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.ViewModel = "models/vj_weapons/c_rpg7.mdl" // "models/weapons/c_rpg.mdl"
-SWEP.WorldModel = "models/vj_weapons/w_ins_rpg7.mdl" // "models/weapons/w_rocket_launcher.mdl"
+SWEP.ViewModel = "models/vj_base/weapons/c_rpg7.mdl" // "models/weapons/c_rpg.mdl"
+SWEP.WorldModel = "models/vj_base/weapons/w_rpg7.mdl" // "models/weapons/w_rocket_launcher.mdl"
 SWEP.WorldModel_UseCustomPosition = true -- Should the gun use custom position? This can be used to fix guns that are in the crotch
 SWEP.WorldModel_CustomPositionAngle = Vector(-10, 0, 180)
 SWEP.WorldModel_CustomPositionOrigin = Vector(-1.5, -0.5, 1)

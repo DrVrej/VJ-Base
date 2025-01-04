@@ -16,8 +16,8 @@ end
 SWEP.NPC_NextPrimaryFire = 0.9 -- RPM of the weapon in seconds | Calculation: 60 / RPMs
 SWEP.NPC_TimeUntilFire = 0.5 -- How much time until the bullet/projectile is fired?
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
-SWEP.ViewModel = "models/vj_weapons/v_flaregun.mdl"
-SWEP.WorldModel = "models/vj_weapons/w_flaregun.mdl"
+SWEP.ViewModel = "models/vj_base/weapons/v_flaregun.mdl"
+SWEP.WorldModel = "models/vj_base/weapons/w_flaregun.mdl"
 SWEP.HoldType = "revolver"
 SWEP.Spawnable = true
 SWEP.AdminSpawnable = false

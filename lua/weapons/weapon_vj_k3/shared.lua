@@ -7,7 +7,7 @@ SWEP.Instructions = "Controls are like a regular weapon."
 SWEP.Category = "VJ Base"
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.MadeForNPCsOnly = true -- Is this weapon meant to be for NPCs only?
-SWEP.WorldModel = "models/vj_weapons/w_k3.mdl"
+SWEP.WorldModel = "models/vj_base/weapons/w_k3.mdl"
 SWEP.HoldType = "ar2"
 	-- World Model ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.WorldModel_UseCustomPosition = true -- Should the gun use custom position? This can be used to fix guns that are in the crotch
@@ -20,5 +20,4 @@ SWEP.Primary.ClipSize = 45 -- Max amount of rounds per clip
 SWEP.Primary.Ammo = "SMG1" -- Ammo type
 SWEP.Primary.Sound = "VJ.Weapon_K3.Single"
 SWEP.PrimaryEffects_MuzzleAttachment = "muzzle"
-SWEP.PrimaryEffects_ShellAttachment = 2
 SWEP.PrimaryEffects_ShellType = "RifleShellEject"
