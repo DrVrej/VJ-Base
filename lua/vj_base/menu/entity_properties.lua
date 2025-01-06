@@ -37,7 +37,7 @@ properties.Add("vj_pr_npc_control",{
 		if ply.VJ_IsControllingNPC then ply:ChatPrint("Can't control "..ent:GetName().." because you are already controlling another NPC!") return end
 		if !ent.VJ_IsBeingControlled then
 			if ent:Health() > 0 then
-				local obj = ents.Create("obj_vj_npccontroller")
+				local obj = ents.Create("obj_vj_controller")
 				obj.VJCE_Player = ply
 				obj:SetControlledNPC(ent)
 				obj:Spawn()

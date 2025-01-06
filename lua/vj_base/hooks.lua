@@ -18,7 +18,7 @@ end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerSelectSpawn", "VJ_PlayerSelectSpawn", function(ply)
 	local points = {}
-	for _,v in ipairs(ents.FindByClass("sent_vj_ply_spawnpoint")) do
+	for _,v in ipairs(ents.FindByClass("sent_vj_ply_spawn")) do
 		if (v.Active == true) then
 			points[#points + 1] = v
 		end

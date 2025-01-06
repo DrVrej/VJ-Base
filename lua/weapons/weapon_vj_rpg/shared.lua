@@ -48,7 +48,7 @@ function SWEP:OnPrimaryAttack(status, statusData)
 	if status == "Initial" then
 		if CLIENT then return end
 		local owner = self:GetOwner()
-		local projectile = ents.Create("obj_vj_tank_shell")
+		local projectile = ents.Create("obj_vj_rocket")
 		local spawnPos = self:GetBulletPos()
 		if owner:IsPlayer() then
 			local plyAng = owner:GetAimVector():Angle()

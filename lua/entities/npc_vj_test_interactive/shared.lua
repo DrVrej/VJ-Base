@@ -1,23 +1,19 @@
-ENT.Base 			= "base_ai"
+ENT.Base 			= "npc_vj_human_base"
 ENT.Type 			= "ai"
-ENT.PrintName 		= "VJ Test NPC"
+ENT.PrintName 		= "Interactive NPC"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Purpose 		= "Just a testing NPC."
 ENT.Instructions 	= "Don't change anything."
 ENT.Category		= "VJ Base"
 
-ENT.Spawnable = false
-ENT.AdminOnly = false
-ENT.AutomaticFrameAdvance = true
+ENT.VJ_ID_Civilian = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:SetAutomaticFrameAdvance(bUsingAnim)
-	self.AutomaticFrameAdvance = bUsingAnim
+function ENT:MatFootStepQCEvent(data)
+	return
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	function ENT:Draw() self:DrawModel() end
-	
 	net.Receive("vj_testentity_onmenuopen", function()
 		local welMsgs = {
 			"Welcome to my shop, how can I help you?",

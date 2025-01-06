@@ -6,7 +6,7 @@
 -- Based off of the GMod lasertracer
 EFFECT.MainMat = Material("effects/spark")
 
-function EFFECT:Init( data )
+function EFFECT:Init(data)
 	self.StartPos = data:GetStart()
 	self.EndPos = data:GetOrigin()
 	local ent = data:GetEntity()

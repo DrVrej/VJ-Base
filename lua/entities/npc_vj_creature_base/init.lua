@@ -325,7 +325,7 @@ ENT.MeleeAttackDSPSoundUseDamageAmount = 60 -- Any damage that is greater than o
 ------ Range Attack ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.HasRangeAttack = false -- Can this NPC range attack?
-ENT.RangeAttackEntityToSpawn = "obj_vj_tank_shell" -- Entities that it can spawn when range attacking | If set as a table, it picks a random entity
+ENT.RangeAttackEntityToSpawn = "obj_vj_rocket" -- Entities that it can spawn when range attacking | If set as a table, it picks a random entity
 	-- ====== Animation ====== --
 ENT.AnimTbl_RangeAttack = ACT_RANGE_ATTACK1
 ENT.RangeAttackAnimationDelay = 0 -- It will wait certain amount of time before playing the animation

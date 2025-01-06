@@ -7,7 +7,7 @@ AddCSLuaFile()
 
 ENT.Base 			= "base_anim"
 ENT.Type 			= "anim"
-ENT.PrintName 		= "Fireplace"
+ENT.PrintName 		= "Campfire"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Purpose 		= "Gives a warm feeling, especially in snowy maps."
@@ -16,6 +16,8 @@ ENT.Category		= "VJ Base"
 
 ENT.Spawnable = true
 ENT.AdminOnly = false
+
+scripted_ents.Alias("sent_vj_fireplace", "sent_vj_campfire") -- !! Backwards Compatibility !!
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	ENT.NextActivationCheckT = 0

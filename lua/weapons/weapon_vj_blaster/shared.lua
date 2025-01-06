@@ -40,25 +40,3 @@ SWEP.PrimaryEffects_DynamicLightColor = Color(255, 0, 0)
 SWEP.HasReloadSound = true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
 SWEP.ReloadSound = "vj_base/weapons/blaster/blaster_reload.wav"
 SWEP.Reload_TimeUntilAmmoIsSet = 0.8 -- Time until ammo is set to the weapon
----------------------------------------------------------------------------------------------------------------------------------------------
--- Old code for firing physical blaster rods
-/*function SWEP:CustomOnPrimaryAttack_BeforeShoot()
-	if CLIENT then return end
-	local SpawnBlaserRod = ents.Create("obj_vj_blasterrod")
-	local OwnerPos = self:GetOwner():GetShootPos()
-	local OwnerAng = self:GetOwner():GetAimVector():Angle()
-	OwnerPos = OwnerPos + OwnerAng:Forward()*-33 + OwnerAng:Up()*-5 + OwnerAng:Right()*6
-	if self:GetOwner():IsPlayer() then SpawnBlaserRod:SetPos(OwnerPos) else SpawnBlaserRod:SetPos(self:GetAttachment(self:LookupAttachment("muzzle")).Pos) end
-	if self:GetOwner():IsPlayer() then SpawnBlaserRod:SetAngles(OwnerAng) else SpawnBlaserRod:SetAngles(self:GetOwner():GetAngles()) end
-	SpawnBlaserRod:SetOwner(self:GetOwner())
-	SpawnBlaserRod:Activate()
-	SpawnBlaserRod:Spawn()
-	
-	local phy = SpawnBlaserRod:GetPhysicsObject()
-	if phy:IsValid() then
-		if self:GetOwner():IsPlayer() then
-		phy:ApplyForceCenter(self:GetOwner():GetAimVector() * 4000) else //200000
-		phy:ApplyForceCenter((self:GetOwner():GetEnemy():GetPos() - self:GetOwner():GetPos()) * 4000)
-		end
-	end
-end*/
