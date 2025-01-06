@@ -130,11 +130,11 @@ end
 			- RemoveOnCorpseDelete = Should the entity get removed if the corpse is removed? | DEFAULT = false
 		- customFunc(gib) = Use this to edit the entity which is given as parameter "gib"
 -----------------------------------------------------------]]
-local gib_mdlAAll = {"models/gibs/xenians/sgib_01.mdl", "models/gibs/xenians/sgib_02.mdl", "models/gibs/xenians/sgib_03.mdl", "models/gibs/xenians/mgib_01.mdl", "models/gibs/xenians/mgib_02.mdl", "models/gibs/xenians/mgib_03.mdl", "models/gibs/xenians/mgib_04.mdl", "models/gibs/xenians/mgib_05.mdl", "models/gibs/xenians/mgib_06.mdl", "models/gibs/xenians/mgib_07.mdl"}
-local gib_mdlASmall = {"models/gibs/xenians/sgib_01.mdl", "models/gibs/xenians/sgib_02.mdl", "models/gibs/xenians/sgib_03.mdl"}
-local gib_mdlABig = {"models/gibs/xenians/mgib_01.mdl", "models/gibs/xenians/mgib_02.mdl", "models/gibs/xenians/mgib_03.mdl", "models/gibs/xenians/mgib_04.mdl", "models/gibs/xenians/mgib_05.mdl", "models/gibs/xenians/mgib_06.mdl", "models/gibs/xenians/mgib_07.mdl"}
-local gib_mdlHSmall = {"models/gibs/humans/sgib_01.mdl", "models/gibs/humans/sgib_02.mdl", "models/gibs/humans/sgib_03.mdl"}
-local gib_mdlHBig = {"models/gibs/humans/mgib_01.mdl", "models/gibs/humans/mgib_02.mdl", "models/gibs/humans/mgib_03.mdl", "models/gibs/humans/mgib_04.mdl", "models/gibs/humans/mgib_05.mdl", "models/gibs/humans/mgib_06.mdl", "models/gibs/humans/mgib_07.mdl"}
+local gib_mdlAAll = {"models/vj_base/gibs/alien/gib_small1.mdl", "models/vj_base/gibs/alien/gib_small2.mdl", "models/vj_base/gibs/alien/gib_small3.mdl", "models/vj_base/gibs/alien/gib1.mdl", "models/vj_base/gibs/alien/gib2.mdl", "models/vj_base/gibs/alien/gib3.mdl", "models/vj_base/gibs/alien/gib4.mdl", "models/vj_base/gibs/alien/gib5.mdl", "models/vj_base/gibs/alien/gib6.mdl", "models/vj_base/gibs/alien/gib7.mdl"}
+local gib_mdlASmall = {"models/vj_base/gibs/alien/gib_small1.mdl", "models/vj_base/gibs/alien/gib_small2.mdl", "models/vj_base/gibs/alien/gib_small3.mdl"}
+local gib_mdlABig = {"models/vj_base/gibs/alien/gib1.mdl", "models/vj_base/gibs/alien/gib2.mdl", "models/vj_base/gibs/alien/gib3.mdl", "models/vj_base/gibs/alien/gib4.mdl", "models/vj_base/gibs/alien/gib5.mdl", "models/vj_base/gibs/alien/gib6.mdl", "models/vj_base/gibs/alien/gib7.mdl"}
+local gib_mdlHSmall = {"models/vj_base/gibs/human/gib_small1.mdl", "models/vj_base/gibs/human/gib_small2.mdl", "models/vj_base/gibs/human/gib_small3.mdl"}
+local gib_mdlHBig = {"models/vj_base/gibs/human/gib1.mdl", "models/vj_base/gibs/human/gib2.mdl", "models/vj_base/gibs/human/gib3.mdl", "models/vj_base/gibs/human/gib4.mdl", "models/vj_base/gibs/human/gib5.mdl", "models/vj_base/gibs/human/gib6.mdl", "models/vj_base/gibs/human/gib7.mdl"}
 --
 function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 	// self:CreateGibEntity("prop_ragdoll", "", {Pos=self:LocalToWorld(Vector(0,3,0)), Ang=self:GetAngles(), Vel=})

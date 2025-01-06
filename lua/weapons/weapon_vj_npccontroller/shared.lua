@@ -25,7 +25,7 @@ SWEP.AutoSwitchFrom = false -- Auto switch weapon when the owner picks up a bett
 end
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel = "models/vj_base/weapons/c_controller.mdl"
-SWEP.WorldModel = "models/gibs/humans/brain_gib.mdl"
+SWEP.WorldModel = "models/vj_base/gibs/human/brain.mdl"
 SWEP.HoldType = "pistol"
 SWEP.Spawnable = true
 SWEP.AdminSpawnable = false

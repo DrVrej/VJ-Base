@@ -1,0 +1,14 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "vj_base/models/gibs/gibsetxen"
+	"$halflambert" 1
+	"$surfaceprop" "alienflesh"
+	"$nocull" 1
+	"$bumpmap" "vj_base/models/gibs/gibset_n"
+	"$model" "1"
+	"$normalmapalphaenvmapmask" "1"
+	"$envmap" "env_cubemap"
+	"$envmaptint" "[1 1 1]"
+	"$envmapcontrast" "1"
+	"$envmapsaturation" "0.5"
+}

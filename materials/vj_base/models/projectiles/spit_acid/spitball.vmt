@@ -1,0 +1,11 @@
+"UnlitGeneric"
+{
+	"$basetexture" "vj_base/models/projectiles/spit_acid/spitball"
+	"$bumpmap" 	"vj_base/models/projectiles/spit_acid/spitball_normal"
+	"$envmap" "env_cubemap"
+ 	"$basealphaenvmapmask" 1
+	"$envmaptint" "[ 1.0 1.0 1.0]"
+	"$surfaceprop"	"alienflesh"
+	"$selfillum"	1
+	"$model" "1"
+}

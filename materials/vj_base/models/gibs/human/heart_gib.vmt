@@ -1,0 +1,12 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "vj_base/models/gibs/human/heart_gib"
+	"$bumpmap" "vj_base/models/gibs/human/heart_gib_normal"
+	"$model" "1"
+	"$normalmapalphaenvmapmask" "1"
+	"$envmap" "env_cubemap"
+	"$envmaptint" "[1 .7 .7]"
+	"$envmapcontrast" "1"
+	"$envmapsaturation" "0.3"
+	"$surfaceprop" "flesh"
+}
