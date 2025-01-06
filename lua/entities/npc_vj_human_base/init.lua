@@ -4,7 +4,7 @@ include("vj_base/ai/schedules.lua")
 include("vj_base/ai/base_aa.lua")
 include("shared.lua")
 /*--------------------------------------------------
-	*** Copyright (c) 2012-2024 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2025 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
@@ -191,7 +191,7 @@ ENT.Immune_Electricity = false -- Immune to electrical-type damages | Example: s
 ENT.Immune_Fire = false -- Immune to fire-type damages
 ENT.Immune_Melee = false -- Immune to melee-type damage | Example: Crowbar, slash damages
 ENT.Immune_Sonic = false -- Immune to sonic-type damages
-ENT.ForceDamageFromBosses = false -- Should the NPC get damaged by bosses regardless if it's not supposed to by skipping immunity checks, etc. | Bosses are attackers tagged with "VJTag_ID_Boss"
+ENT.ForceDamageFromBosses = false -- Should the NPC get damaged by bosses regardless if it's not supposed to by skipping immunity checks, etc. | Bosses are attackers tagged with "VJ_ID_Boss"
 ENT.AllowIgnition = true -- Can this NPC be set on fire?
 	-- ====== Flinching ====== --
 ENT.CanFlinch = 0 -- 0 = Don't flinch | 1 = Flinch at any damage | 2 = Flinch only from certain damages
@@ -1841,7 +1841,7 @@ local function ApplyBackwardsCompatibility(self)
 	if self.WaitForEnemyToComeOutTime then self.Weapon_WaitOnOcclusionTime = self.WaitForEnemyToComeOutTime end
 	if self.Immune_Physics then self:SetPhysicsDamageScale(0) end
 	if self.MaxJumpLegalDistance then self.JumpVars.MaxRise = self.MaxJumpLegalDistance.a; self.JumpVars.MaxDrop = self.MaxJumpLegalDistance.b end
-	if self.VJ_IsHugeMonster then self.VJTag_ID_Boss = self.VJ_IsHugeMonster end
+	if self.VJ_IsHugeMonster then self.VJ_ID_Boss = self.VJ_IsHugeMonster end
 	if self.UsePlayerModelMovement then self.UsePoseParameterMovement = true end
 	if self.WaitBeforeDeathTime then self.DeathDelayTime = self.WaitBeforeDeathTime end
 	if self.HasDeathRagdoll != nil then self.HasDeathCorpse = self.HasDeathRagdoll end
@@ -2479,10 +2479,10 @@ function ENT:Think()
 		if self.IsFollowing && self:GetNavType() != NAV_JUMP && self:GetNavType() != NAV_CLIMB then
 			local followData = self.FollowData
 			local followEnt = followData.Ent
-			local followIsLiving = followEnt.VJTag_IsLiving
+			local followIsLiving = followEnt.VJ_ID_Living
 			//print(self:GetTarget())
 			if IsValid(followEnt) && (!followIsLiving or (followIsLiving && (self:Disposition(followEnt) == D_LI or self:GetClass() == followEnt:GetClass()) && VJ.IsAlive(followEnt))) then
-				if curTime > self.NextFollowUpdateT && !self.VJTag_IsHealing then
+				if curTime > self.NextFollowUpdateT && !self.VJ_ST_Healing then
 					local distToPly = self:GetPos():Distance(followEnt:GetPos())
 					local busy = self:BusyWithActivity()
 					self:SetTarget(followEnt)
@@ -2626,7 +2626,7 @@ function ENT:Think()
 							self:DoChangeWeapon(self.WeaponInventory.Melee, true)
 							curWep = self.CurrentWeaponEntity
 						-- Switch to anti-armor
-						elseif self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING && IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank or ene.VJTag_ID_Boss) && curWep != self.WeaponInventory.AntiArmor then
+						elseif self:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING && IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank or ene.VJ_ID_Boss) && curWep != self.WeaponInventory.AntiArmor then
 							self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_ANTI_ARMOR
 							self:DoChangeWeapon(self.WeaponInventory.AntiArmor, true)
 							curWep = self.CurrentWeaponEntity
@@ -2639,7 +2639,7 @@ function ENT:Think()
 							self:DoChangeWeapon(self.WeaponInventory.Primary, true)
 							curWep = self.CurrentWeaponEntity
 						-- Reset weapon status from anti-armor to primary
-						elseif self.WeaponInventoryStatus == VJ.NPC_WEP_INVENTORY_ANTI_ARMOR && (!eneValid or (eneValid && !ene.IsVJBaseSNPC_Tank && !ene.VJTag_ID_Boss)) then
+						elseif self.WeaponInventoryStatus == VJ.NPC_WEP_INVENTORY_ANTI_ARMOR && (!eneValid or (eneValid && !ene.IsVJBaseSNPC_Tank && !ene.VJ_ID_Boss)) then
 							self.WeaponInventoryStatus = VJ.NPC_WEP_INVENTORY_PRIMARY
 							self:DoChangeWeapon(self.WeaponInventory.Primary, true)
 							curWep = self.CurrentWeaponEntity
@@ -2885,12 +2885,12 @@ function ENT:MeleeAttackCode()
 	local hitRegistered = false
 	for _, v in ipairs(ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), self.MeleeAttackDamageDistance)) do
 		if v == self or v:GetClass() == myClass or (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) then continue end
-		if v:IsPlayer() && (v.VJTag_IsControllingNPC or !v:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
-		if ((v.VJTag_IsLiving && self:Disposition(v) != D_LI) or v.VJTag_IsAttackable or v.VJTag_IsDamageable) && self:GetInternalVariable("m_latchedHeadDirection"):Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
-			local isProp = v.VJTag_IsAttackable
+		if v:IsPlayer() && (v.VJ_IsControllingNPC or !v:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
+		if ((v.VJ_ID_Living && self:Disposition(v) != D_LI) or v.VJ_ID_Attackable or v.VJ_ID_Destructible) && self:GetInternalVariable("m_latchedHeadDirection"):Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
+			local isProp = v.VJ_ID_Attackable
 			if self:CustomOnMeleeAttack_AfterChecks(v, isProp) == true then continue end
 			-- Knockback (Don't push things like doors, trains, elevators as it will make them fly when activated)
-			if self.HasMeleeAttackKnockBack && v:GetMoveType() != MOVETYPE_PUSH && v.MovementType != VJ_MOVETYPE_STATIONARY && (!v.VJTag_ID_Boss or v.IsVJBaseSNPC_Tank) then
+			if self.HasMeleeAttackKnockBack && v:GetMoveType() != MOVETYPE_PUSH && v.MovementType != VJ_MOVETYPE_STATIONARY && (!v.VJ_ID_Boss or v.IsVJBaseSNPC_Tank) then
 				v:SetGroundEntity(NULL)
 				v:SetVelocity(self:MeleeAttackKnockbackVelocity(v))
 			end
@@ -2900,7 +2900,7 @@ function ENT:MeleeAttackCode()
 				applyDmg:SetDamage(self:ScaleByDifficulty(self.MeleeAttackDamage))
 				applyDmg:SetDamageType(self.MeleeAttackDamageType)
 				//applyDmg:SetDamagePosition(self:GetNearestPositions(v).MyPosition)
-				if v.VJTag_IsLiving then applyDmg:SetDamageForce(self:GetForward() * ((applyDmg:GetDamage() + 100) * 70)) end
+				if v.VJ_ID_Living then applyDmg:SetDamageForce(self:GetForward() * ((applyDmg:GetDamage() + 100) * 70)) end
 				applyDmg:SetInflictor(self)
 				applyDmg:SetAttacker(self)
 				VJ.DamageSpecialEnts(self, v, applyDmg)
@@ -2999,8 +2999,8 @@ function ENT:GrenadeAttack(customEnt, disableOwner)
 	
 	-- Handle situation where already spawned entity is given | EX: Grenade picked up by the NPC
 	if isLiveEnt then
-		customEnt.VJTag_IsPickedUp = true
-		customEnt.VJTag_PickedUpOrgMoveType = customEnt:GetMoveType()
+		customEnt.VJ_ST_Grabbed = true
+		customEnt.VJ_ST_GrabOrgMoveType = customEnt:GetMoveType()
 		-- Change the grenade's position so the NPC is actively holding it, in order with priority:
 			-- 1. CUSTOM 		If custom position is given then use that, otherwise...
 			-- 2. ATTACHMENT 	If a valid attachment is given then use that, otherwise...
@@ -3127,10 +3127,10 @@ function ENT:GrenadeAttackThrow(customEnt, disableOwner, landDir)
 	-- If its a live entity then clean it up and set it as the grenade...
 	-- Otherwise, create a new entity with the given custom entity name OR one of NPC's default grenades
 	if isLiveEnt then -- It's an existing entity
-		customEnt.VJTag_IsPickedUp = false -- Set this to false, as we are no longer holding it!
+		customEnt.VJ_ST_Grabbed = false -- Set this to false, as we are no longer holding it!
 		-- Clean up by removing the parent, move type, and follow bone effect
 		customEnt:SetParent(NULL)
-		if customEnt:GetMoveType() == MOVETYPE_NONE && customEnt.VJTag_PickedUpOrgMoveType then customEnt:SetMoveType(customEnt.VJTag_PickedUpOrgMoveType) end
+		if customEnt:GetMoveType() == MOVETYPE_NONE && customEnt.VJ_ST_GrabOrgMoveType then customEnt:SetMoveType(customEnt.VJ_ST_GrabOrgMoveType) end
 		customEnt:RemoveEffects(EF_FOLLOWBONE)
 		grenade = customEnt
 		//customEnt:Remove()
@@ -3202,12 +3202,12 @@ local sdBitPlyVehicle = bit.bor(SOUND_DANGER, SOUND_CONTEXT_PLAYER_VEHICLE) --->
 local sdBitMortar = bit.bor(SOUND_DANGER, SOUND_CONTEXT_MORTAR) ---> Combine mortars impact position
 
 3 types of danger detections:
-- ent.VJTag_ID_Grenade
+- ent.VJ_ID_Grenade
 	- Detected as a grenade
 	- Distance based on self.DangerDetectionDistance
 	- Ignores grenades from allies
 	- BEST USE: Grenade type of entities
-- ent.VJTag_ID_Danger
+- ent.VJ_ID_Danger
 	- Detected as a danger
 	- Distance based on self.DangerDetectionDistance
 	- Ignores dangers from allies
@@ -3222,16 +3222,16 @@ function ENT:CheckForDangers()
 	if !self.CanDetectDangers or self.AttackType == VJ.ATTACK_TYPE_GRENADE or self.NextDangerDetectionT > CurTime() then return end
 	local regDangerDetected = false -- A regular non-grenade danger has been found (This is done to make sure grenades take priority over other dangers!)
 	for _, ent in ipairs(ents.FindInSphere(self:GetPos(), self.DangerDetectionDistance)) do
-		if (ent.VJTag_ID_Danger or ent.VJTag_ID_Grenade) && self:Visible(ent) then
+		if (ent.VJ_ID_Danger or ent.VJ_ID_Grenade) && self:Visible(ent) then
 			local vOwner = ent:GetOwner()
 			if !(IsValid(vOwner) && vOwner.IsVJBaseSNPC && ((self:GetClass() == vOwner:GetClass()) or (self:Disposition(vOwner) == D_LI))) then
-				if ent.VJTag_ID_Danger then regDangerDetected = ent continue end -- If it's a regular danger then just skip it for now
+				if ent.VJ_ID_Danger then regDangerDetected = ent continue end -- If it's a regular danger then just skip it for now
 				local funcCustom = self.OnDangerDetected; if funcCustom then funcCustom(self, VJ.NPC_DANGER_TYPE_GRENADE, ent) end
 				self:PlaySoundSystem("OnGrenadeSight")
 				self.NextDangerDetectionT = CurTime() + 4
 				self.TakingCoverT = CurTime() + 4
 				-- If has the ability to throw it back, then throw the grenade!
-				if self.CanThrowBackDetectedGrenades && self.HasGrenadeAttack && ent.VJTag_IsPickupable && !ent.VJTag_IsPickedUp && ent:GetVelocity():Length() < 400 && self:GetNearestDistance(ent) < 100 && self:GrenadeAttack(ent, true) then
+				if self.CanThrowBackDetectedGrenades && self.HasGrenadeAttack && ent.VJ_ID_Grabbable && !ent.VJ_ST_Grabbed && ent:GetVelocity():Length() < 400 && self:GetNearestDistance(ent) < 100 && self:GrenadeAttack(ent, true) then
 					self.NextGrenadeAttackSoundT = CurTime() + 3
 					return
 				end
@@ -3530,7 +3530,7 @@ function ENT:SelectSchedule()
 						//print("Is covered? ", inCover)
 						//print("Is gun covered? ", wepInCover)
 						local inCoverEntLiving = false -- The covered entity is NOT a living entity
-						if IsValid(inCoverEnt) && inCoverEnt.VJTag_IsLiving then
+						if IsValid(inCoverEnt) && inCoverEnt.VJ_ID_Living then
 							inCoverEntLiving = true
 						end
 						if !wep.IsMeleeWeapon then
@@ -3551,7 +3551,7 @@ function ENT:SelectSchedule()
 								-- Behind cover and I am taking cover, don't fire!
 								if curTime < self.TakingCoverT then
 									canFire = false
-								elseif curTime > self.NextMoveOnGunCoveredT && ((inCoverTrace.HitPos:Distance(myPos) > 150 && !inCoverEntLiving) or (wepInCover && !wepInCoverEnt.VJTag_IsLiving)) then
+								elseif curTime > self.NextMoveOnGunCoveredT && ((inCoverTrace.HitPos:Distance(myPos) > 150 && !inCoverEntLiving) or (wepInCover && !wepInCoverEnt.VJ_ID_Living)) then
 									self.AllowWeaponWaitOnOcclusion = false
 									local nearestPos;
 									local nearestEntPos;
@@ -3792,7 +3792,7 @@ function ENT:OnTakeDamage(dmginfo)
 	end
 	
 	-- If it should always take damage from huge monsters, then skip immunity checks!
-	if dmgAttacker && self.ForceDamageFromBosses && dmgAttacker.VJTag_ID_Boss then
+	if dmgAttacker && self.ForceDamageFromBosses && dmgAttacker.VJ_ID_Boss then
 		goto skip_immunity
 	end
 	
@@ -3978,7 +3978,7 @@ function ENT:OnTakeDamage(dmginfo)
 	end
 	
 	-- If eating, stop!
-	if self.CanEat && self.VJTag_IsEating then
+	if self.CanEat && self.VJ_ST_Eating then
 		self.EatingData.NextCheck = curTime + 15
 		self:ResetEatingBehavior("Injured")
 	end

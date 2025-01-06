@@ -1,7 +1,7 @@
 AddCSLuaFile("shared.lua")
 include("shared.lua")
 /*--------------------------------------------------
-	*** Copyright (c) 2012-2024 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2025 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
@@ -86,7 +86,7 @@ function ENT:StartControlling()
 	
 	-- Set up the player
 	local plyEnt = self.VJCE_Player
-	plyEnt.VJTag_IsControllingNPC = true
+	plyEnt.VJ_IsControllingNPC = true
 	plyEnt.VJ_TheControllerEntity = self
 	plyEnt:Spectate(OBS_MODE_CHASE)
 	plyEnt:SpectateEntity(camEnt)
@@ -112,7 +112,7 @@ function ENT:StartControlling()
 	if plyEnt:GetInfoNum("vj_npc_cont_diewithnpc", 0) == 1 then self.VJC_Player_CanRespawn = false end
 
 	hook.Add("PlayerButtonDown", self, function(ent, ply, button)
-		if IsValid(ent) && ply.VJTag_IsControllingNPC && ent.VJCE_Player == ply then
+		if IsValid(ent) && ply.VJ_IsControllingNPC && ent.VJCE_Player == ply then
 			ent.VJC_Key_Last = button
 			ent.VJC_Key_LastTime = CurTime()
 			ent:OnKeyPressed(button)
@@ -156,7 +156,7 @@ function ENT:StartControlling()
 
 	hook.Add("KeyPress", self, function(ent, ply, key)
 		//print(key)
-		if IsValid(ent) && ply.VJTag_IsControllingNPC && ent.VJCE_Player == ply then
+		if IsValid(ent) && ply.VJ_IsControllingNPC && ent.VJCE_Player == ply then
 			ent:OnKeyBindPressed(key)
 		end
 	end)
@@ -272,7 +272,7 @@ function ENT:SetControlledNPC(npcEnt)
 			npcEnt.NextDoAnyAttackT = CurTime() + 0.5
 		end
 		if npcEnt.Medic_Status then npcEnt:ResetMedicBehavior() end
-		if npcEnt.VJTag_IsEating then
+		if npcEnt.VJ_ST_Eating then
 			npcEnt:OnEat("StopEating", "Unspecified") -- So it plays the get up animation
 			npcEnt:ResetEatingBehavior("Unspecified")
 		end
@@ -303,7 +303,7 @@ end
 	-- Also avoids garbage positions that output from other methods
 net.Receive("vj_controller_cldata", function(len, ply)
 	-- Set the controller's bullseye position if the player is controlling an NPC AND controller entity exists AND Bullseye exists --> Protect against spam ?
-	if ply.VJTag_IsControllingNPC == true && IsValid(ply.VJ_TheControllerEntity) && ply.VJ_TheControllerEntity.VJC_Bullseye_RefreshPos == true && IsValid(ply.VJ_TheControllerEntity.VJCE_Bullseye) then -- Added a var for toggling the bullseye positioning, this way if one wants to override it they can
+	if ply.VJ_IsControllingNPC == true && IsValid(ply.VJ_TheControllerEntity) && ply.VJ_TheControllerEntity.VJC_Bullseye_RefreshPos == true && IsValid(ply.VJ_TheControllerEntity.VJCE_Bullseye) then -- Added a var for toggling the bullseye positioning, this way if one wants to override it they can
 		ply.VJ_TheControllerEntity.VJCE_Bullseye:SetPos(net.ReadVector())
 	end
 end)
@@ -314,7 +314,7 @@ function ENT:SendDataToClient(reset)
 	local npcData = npc.VJC_Data
 
 	net.Start("vj_controller_data")
-		net.WriteBool(ply.VJTag_IsControllingNPC)
+		net.WriteBool(ply.VJ_IsControllingNPC)
 		net.WriteUInt((reset == true and nil) or self.VJCE_Camera:EntIndex(), 14)
 		net.WriteUInt((reset == true and nil) or npc:EntIndex(), 14)
 		net.WriteUInt((reset == true and 1) or self.VJC_Camera_Mode, 2)
@@ -338,10 +338,10 @@ function ENT:Think()
 	local npc = self.VJCE_NPC
 	local camera = self.VJCE_Camera
 	if (!camera:IsValid()) then self:StopControlling() return end
-	if !IsValid(ply) /*or ply:KeyDown(IN_USE)*/ or ply:Health() <= 0 or (!ply.VJTag_IsControllingNPC) or !IsValid(npc) or (npc:Health() <= 0) then self:StopControlling() return end
-	if ply.VJTag_IsControllingNPC != true then return end
+	if !IsValid(ply) /*or ply:KeyDown(IN_USE)*/ or ply:Health() <= 0 or (!ply.VJ_IsControllingNPC) or !IsValid(npc) or (npc:Health() <= 0) then self:StopControlling() return end
+	if ply.VJ_IsControllingNPC != true then return end
 	local curTime = CurTime()
-	if ply.VJTag_IsControllingNPC && IsValid(npc) then
+	if ply.VJ_IsControllingNPC && IsValid(npc) then
 		local npcWeapon = npc:GetActiveWeapon()
 		self.VJC_NPC_LastPos = npc:GetPos()
 		ply:SetPos(self.VJC_NPC_LastPos + vecZ20) -- Set the player's location
@@ -546,7 +546,7 @@ function ENT:StopControlling(keyPressed)
 		ply:DrawViewModel(true)
 		ply:DrawWorldModel(true)
 		//ply:SetMoveType(MOVETYPE_WALK)
-		ply.VJTag_IsControllingNPC = false
+		ply.VJ_IsControllingNPC = false
 		ply.VJ_TheControllerEntity = NULL
 		self:SendDataToClient(true)
 	end

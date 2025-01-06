@@ -222,7 +222,7 @@ end
 function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
-	if IsValid(ent) && ent.VJTag_IsLiving then
+	if IsValid(ent) && ent.VJ_ID_Living then
 		local entname = ent:GetName()
 		if entname == "" then entname = ent:GetClass() end
 		net.Start("vj_npcrelationship_cl_leftclick")
@@ -238,7 +238,7 @@ end
 function TOOL:RightClick(tr)
 	if CLIENT then return true end
 	local ent = tr.Entity
-	if IsValid(ent) && ent.VJTag_IsLiving then
+	if IsValid(ent) && ent.VJ_ID_Living then
 		//local hasclasstbl = false
 		local classtbl = {nil}
 		local entname = ent:GetName()

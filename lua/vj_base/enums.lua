@@ -1,5 +1,5 @@
 /*-----------------------------------------------
-	*** Copyright (c) 2012-2024 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2025 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
@@ -41,8 +41,8 @@ VJ.NPC_ALERT_STATE_READY		= 1 -- Alerted but no enemy was ever seen since it got
 VJ.NPC_ALERT_STATE_ENEMY		= true -- Has seen an enemy since it got alerted
 
 -- Danger detected type (Used by human NPCs)
-VJ.NPC_DANGER_TYPE_ENTITY		= 1 -- Entity type of danger | Commonly produced by projectiles | Associated: "ent.VJTag_ID_Danger"
-VJ.NPC_DANGER_TYPE_GRENADE		= 2 -- Grenade type of danger | Commonly produced by grenades | Associated: "ent.VJTag_ID_Grenade"
+VJ.NPC_DANGER_TYPE_ENTITY		= 1 -- Entity type of danger | Commonly produced by projectiles | Associated: "ent.VJ_ID_Danger"
+VJ.NPC_DANGER_TYPE_GRENADE		= 2 -- Grenade type of danger | Commonly produced by grenades | Associated: "ent.VJ_ID_Grenade"
 VJ.NPC_DANGER_TYPE_HINT			= 3 -- Hint type of danger | Commonly used by sound hints | Associated: COND_HEAR_DANGER, COND_HEAR_PHYSICS_DANGER, COND_HEAR_MOVE_AWAY
 
 -- NPC weapon state
@@ -113,50 +113,49 @@ VJ.PROJ_COLLISION_PERSIST		= 2 -- Deal damage, paint decal, play sound, etc, but
 [Variable]						[Type]		[Description]
 
 -- Base types
-IsVJBaseSNPC					bool
-IsVJBaseSNPC_Creature			bool
-IsVJBaseSNPC_Human				bool
-IsVJBaseSNPC_Tank				bool
-IsVJBaseWeapon					bool
-IsVJBaseCorpse					bool
-IsVJBaseCorpse_Gib				bool
-IsVJBaseSpawner					bool
-IsVJBaseBullseye				bool
-IsVJBaseEdited					bool		This entity's meta table has been edited by VJ Base
+IsVJBaseSNPC					bool		It's inherited from a VJ NPC base
+IsVJBaseSNPC_Creature			bool		It's inherited from "npc_vj_creature_base"
+IsVJBaseSNPC_Human				bool		It's inherited from "npc_vj_human_base"
+IsVJBaseSNPC_Tank				bool		It's inherited from "npc_vj_tank_base" or "npc_vj_tankg_base"
+IsVJBaseWeapon					bool		It's inherited from "weapon_vj_base"
+IsVJBaseProjectile				bool		It's inherited from "obj_vj_projectile_base"
+IsVJBaseCorpse					bool		It's spawned as a corpse from a VJ NPC or inherited from "obj_vj_gib"
+IsVJBaseCorpse_Gib				bool		It's spawned as a gib from a VJ NPC or inherited from "obj_vj_gib"
+IsVJBaseSpawner					bool		It's inherited from "obj_vj_spawner_base"
+IsVJBaseBullseye				bool		It's inherited from "obj_vj_bullseye"
+IsVJBaseEdited					bool		its meta table has been edited by VJ Base
 
--- Activities & Behaviors
-VJTag_IsLiving					bool		Entity is a living object and should be detected by VJ NPCs | Includes: Players, NPCs, NextBots
-VJTag_IsAttackable				bool		Entity is an object that should be attacked or pushed by NPCs in certain cases (Ex: Object is in the way while chasing)
-VJTag_IsDamageable				bool		Entity is an object that should be damaged by attacks, projectiles, etc. (Ex: An object in the crossfire of a melee attack)
-VJTag_IsPickupable				bool		Entity can be picked up by NPCs (Ex: Grenades)
-VJTag_IsPickedUp				bool		Entity that is currently picked up by an NPC and most likely throwing it away (Ex: Grenades)
-VJTag_PickedUpOrgMoveType		enum		Entity's original move type before being picked up, usually set alongside "VJTag_IsPickedUp"
-VJTag_IsHealing					bool		Entity is healing (either itself or by another entity)
-VJTag_IsEating					bool		Entity is eating something (Ex: a corpse)
-VJTag_IsBeingEaten				bool		Entity is being eaten by something
+-- States
+VJ_ST_Grabbed					bool		It's currently grabbed by an NPC and most likely throwing it away (Ex: Grenades)
+VJ_ST_GrabOrgMoveType			enum		Its original move type before being grabbed, set alongside "VJ_ST_Grabbed"
+VJ_ST_Healing					bool		It's healing itself or by another entity
+VJ_ST_Eating					bool		It's eating something (Ex: a corpse)
+VJ_ST_BeingEaten				bool		It's being eaten by something
 
 -- Identifiers
-VJTag_ID_Boss					bool		Entity is a very large and/or a boss | It affects parts of the entity, for example It won't receive any melee knock back
-VJTag_ID_Danger					bool		Entity is dangerous and should be detected as a regular danger by NPCs
-VJTag_ID_Grenade				bool		Entity is a grenade type and should be detected as a grenade danger by NPCs
-VJTag_ID_Headcrab				bool
-VJTag_ID_Police					bool
-VJTag_ID_Civilian				bool
-VJTag_ID_Turret					bool
-VJTag_ID_Vehicle				bool
-VJTag_ID_Aircraft				bool
+VJ_ID_Living					bool		It's a living and should be detected by VJ NPCs | Includes: Players, NPCs, NextBots
+VJ_ID_Attackable				bool		It should be attacked or pushed by NPCs in certain cases (Ex: It's in the way while an NPC is chasing)
+VJ_ID_Destructible				bool		It should be damaged by attacks, projectiles, etc. (Ex: It's in the crossfire of a melee attack)
+VJ_ID_Grabbable					bool		It can be grabbed up by NPCs (Ex: Grenades)
+VJ_ID_Danger					bool		It's dangerous and should be detected as a regular danger by NPCs
+VJ_ID_Grenade					bool		It's a grenade type and should be detected as a grenade danger by NPCs
+VJ_ID_Boss						bool		It's a large and/or a boss | Affects parts of the entity, for example It won't receive any melee knock back
+VJ_ID_Police					bool		It's a police
+VJ_ID_Civilian					bool		It's a civilian
+VJ_ID_Headcrab					bool		It's a headcrab
+VJ_ID_Turret					bool		It's a turret or sentry gun
+VJ_ID_Vehicle					bool		It's a vehicle (Ex: Car, tank, APC, helicopter, plane, boat)
+VJ_ID_Aircraft					bool		It's an aircraft type of vehicle (Ex: Helicopter, jet, plane)
 
 -- Sounds
-VJTag_SD_PlayingMusic			bool		Entity is playing a sound track
+VJ_SD_InvestTime				number		Last time this NPC/Player has made a investigatable sound that should be heard by enemy NPCs
+VJ_SD_InvestLevel				number		Sound level of the last investigatable sound made by this NPC/Player | Used alongside "VJ_SD_InvestTime"
+VJ_SD_PlayingMusic				bool		It's playing a sound track
 
 -- Controllers
-VJTag_IsControllingNPC			bool		Entity is controlling an NPC, usually using the NPC Controller | Mainly used for players
-VJ_IsBeingControlled			bool		Entity is being controlled by the NPC Controller | Also applied to the bullseye entity!
-VJ_IsBeingControlled_Tool		bool		Entity is being controlled by the NPC Mover tool
+VJ_IsControllingNPC				bool		It's controlling an NPC, usually using the NPC Controller | Mainly used for players
+VJ_IsBeingControlled			bool		It's being controlled by the NPC Controller | Also applied to the bullseye entity!
+VJ_IsBeingControlled_Tool		bool		It's being controlled by the NPC Mover tool
 VJ_TheController				entity		The player that's controlling this entity through the NPC Controller
 VJ_TheControllerEntity			entity		The controller entity
-
--- Miscellaneous
-VJ_LastInvestigateSd			number		Last time this NPC/Player has made a sound that should be investigated by enemy NPCs
-VJ_LastInvestigateSdLevel		number		The sound level of the above variable
 */

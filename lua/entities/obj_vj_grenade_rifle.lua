@@ -1,5 +1,5 @@
 /*--------------------------------------------------
-	*** Copyright (c) 2012-2024 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2025 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
@@ -16,7 +16,7 @@ ENT.Category		= "VJ Base"
 ENT.Spawnable = false
 ENT.AdminOnly = false
 
-ENT.VJTag_ID_Danger = true
+ENT.VJ_ID_Danger = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	local Name = "Rifle Grenade"

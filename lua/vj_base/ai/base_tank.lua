@@ -1,11 +1,11 @@
 /*-----------------------------------------------
-	*** Copyright (c) 2012-2024 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2025 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- TANK BASE --
-ENT.VJTag_ID_Boss = true
+ENT.VJ_ID_Boss = true
 ENT.SightAngle = 360
 ENT.HullType = HULL_LARGE
 ENT.HasMeleeAttack = false

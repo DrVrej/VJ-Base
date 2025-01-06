@@ -2,7 +2,7 @@ AddCSLuaFile("shared.lua")
 include("shared.lua")
 /*--------------------------------------------------
 	=============== Projectile Base ===============
-	*** Copyright (c) 2012-2024 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2025 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
@@ -179,12 +179,12 @@ function ENT:DealDamage(data, phys)
 	local dataEnt = data and data.HitEntity
 	local hitEnts = false -- Entities that have been damaged (direct or radius)
 	local dmgPos = (data and data.HitPos) or self:GetPos()
-	if IsValid(dataEnt) && ((dataEnt.IsVJBaseBullseye && dataEnt.VJ_IsBeingControlled) or dataEnt.VJTag_IsControllingNPC) then return end -- Don't damage bulleyes used by the NPC controller OR entities that are controlling others (Usually players)
+	if IsValid(dataEnt) && ((dataEnt.IsVJBaseBullseye && dataEnt.VJ_IsBeingControlled) or dataEnt.VJ_IsControllingNPC) then return end -- Don't damage bulleyes used by the NPC controller OR entities that are controlling others (Usually players)
 	
 	if self.DoesRadiusDamage then
 		local attackEnt = ownerValid and owner or self -- The entity that will be set as the attacker
 		-- If the projectile is picked up (Such as a grenade picked up by a human NPC), then the damage position is the parent's position
-		if self.VJTag_IsPickedUp then
+		if self.VJ_ST_Grabbed then
 			local parent = self:GetParent()
 			if IsValid(parent) && parent:IsNPC() then
 				dmgPos = parent:GetPos()

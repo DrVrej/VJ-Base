@@ -11,7 +11,7 @@ ENT.Spawnable = false
 ENT.AdminSpawnable = false
 
 ENT.IsVJBaseSNPC_Tank = true
-ENT.VJTag_ID_Vehicle = true
+ENT.VJ_ID_Vehicle = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, physobj) end
 ---------------------------------------------------------------------------------------------------------------------------------------------

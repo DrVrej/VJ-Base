@@ -1,5 +1,5 @@
 /*--------------------------------------------------
-	*** Copyright (c) 2012-2024 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2025 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 
@@ -232,14 +232,14 @@ function ENT:ResetEatingBehavior(statusData)
 	local eatingData = self.EatingData
 	self:SetState(VJ_STATE_NONE)
 	self:OnEat("StopEating", statusData)
-	self.VJTag_IsEating = false
+	self.VJ_ST_Eating = false
 	self.AnimationTranslations[ACT_IDLE] = eatingData.OrgIdle -- Reset the idle animation table in case it changed!
 	local food = eatingData.Ent
 	if IsValid(food) then
 		local foodData = food.FoodData
 		-- if we are the last person eating, then reset the food data!
 		if foodData.NumConsumers <= 1 then
-			food.VJTag_IsBeingEaten = false
+			food.VJ_ST_BeingEaten = false
 			foodData.NumConsumers = 0
 			foodData.SizeRemaining = foodData.Size
 		else
@@ -1171,7 +1171,7 @@ function ENT:DoCoverTrace(startPos, endPos, acceptWorld, extraOptions)
 	-- Sometimes tracing isn't 100%, a tiny find in sphere check fixes this issue...
 	local sphereInvalidate = false
 	for _, v in ipairs(ents.FindInSphere(hitPos, 5)) do
-		if v == ene or v.VJTag_IsLiving then
+		if v == ene or v.VJ_ID_Living then
 			sphereInvalidate = true
 		end
 	end
@@ -1181,7 +1181,7 @@ function ENT:DoCoverTrace(startPos, endPos, acceptWorld, extraOptions)
 		if setLastHiddenTime then self.LastHiddenZoneT = CurTime() + 20 end
 		return true, tr
 	-- Not a hiding zone: (Sphere found an enemy/NPC/Player) OR (World is NOT accepted as a hiding zone) OR (Trace ent is an enemy/NPC/Player) OR (End pos is far from the hit position)
-	elseif sphereInvalidate or (!acceptWorld && tr.HitWorld) or (IsValid(hitEnt) && (hitEnt == ene or hitEnt.VJTag_IsLiving or hitEnt:GetVelocity():LengthSqr() > 1000)) or endPos:Distance(hitPos) <= 10 then
+	elseif sphereInvalidate or (!acceptWorld && tr.HitWorld) or (IsValid(hitEnt) && (hitEnt == ene or hitEnt.VJ_ID_Living or hitEnt:GetVelocity():LengthSqr() > 1000)) or endPos:Distance(hitPos) <= 10 then
 		if setLastHiddenTime then self.LastHiddenZoneT = 0 end
 		return false, tr
 	else -- Hidden!
@@ -1518,13 +1518,13 @@ function ENT:Touch(entity)
 	
 	-- If it's a passive SNPC...
 	if self.Behavior == VJ_BEHAVIOR_PASSIVE or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
-		if self.Passive_RunOnTouch && entity.VJTag_IsLiving && CurTime() > self.TakingCoverT && entity.Behavior != VJ_BEHAVIOR_PASSIVE && entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:CheckRelationship(entity) != D_LI then
+		if self.Passive_RunOnTouch && entity.VJ_ID_Living && CurTime() > self.TakingCoverT && entity.Behavior != VJ_BEHAVIOR_PASSIVE && entity.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && self:CheckRelationship(entity) != D_LI then
 			self:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH")
 			self:PlaySoundSystem("Alert")
 			self.TakingCoverT = CurTime() + math.Rand(self.Passive_NextRunOnTouchTime.a, self.Passive_NextRunOnTouchTime.b)
 			return
 		end
-	elseif !self.DisableTouchFindEnemy && !self.IsFollowing && entity.VJTag_IsLiving && !IsValid(self:GetEnemy()) && self:CheckRelationship(entity) != D_LI && !self:IsBusy() then
+	elseif !self.DisableTouchFindEnemy && !self.IsFollowing && entity.VJ_ID_Living && !IsValid(self:GetEnemy()) && self:CheckRelationship(entity) != D_LI && !self:IsBusy() then
 		self:StopMoving()
 		self:SetTarget(entity)
 		self:SCHEDULE_FACE("TASK_FACE_TARGET")
@@ -1601,7 +1601,7 @@ function ENT:Follow(ent, stopIfFollowing)
 	if !IsValid(ent) or self.Dead or !VJ_CVAR_AI_ENABLED or self == ent then return false, 0 end
 	
 	local isPly = ent:IsPlayer()
-	local isLiving = ent.VJTag_IsLiving
+	local isLiving = ent.VJ_ID_Living
 	if (!isLiving) or (VJ.IsAlive(ent) && ((isPly && !VJ_CVAR_IGNOREPLAYERS) or (!isPly))) then
 		local followData = self.FollowData
 		-- Refusal messages
@@ -1666,7 +1666,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetMedicBehavior()
 	self:OnMedicBehavior("OnReset", "End")
-	if IsValid(self.Medic_CurrentEntToHeal) then self.Medic_CurrentEntToHeal.VJTag_IsHealing = false end
+	if IsValid(self.Medic_CurrentEntToHeal) then self.Medic_CurrentEntToHeal.VJ_ST_Healing = false end
 	if IsValid(self.Medic_SpawnedProp) then self.Medic_SpawnedProp:Remove() end
 	self.Medic_NextHealT = CurTime() + math.Rand(self.Medic_NextHealTime.a, self.Medic_NextHealTime.b)
 	self.Medic_Status = false
@@ -1679,10 +1679,10 @@ function ENT:MaintainMedicBehavior()
 		if CurTime() < self.Medic_NextHealT then return end
 		for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
 			-- Only allow VJ Base NPCs and players
-			if (v.IsVJBaseSNPC or v:IsPlayer()) && v != self && !v.VJTag_IsHealing && !v.VJTag_ID_Vehicle && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && (!IsValid(v:GetEnemy()) or v.VJ_IsBeingControlled)) or (v:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:CheckRelationship(v) == D_LI then
+			if (v.IsVJBaseSNPC or v:IsPlayer()) && v != self && !v.VJ_ST_Healing && !v.VJ_ID_Vehicle && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && (!IsValid(v:GetEnemy()) or v.VJ_IsBeingControlled)) or (v:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:CheckRelationship(v) == D_LI then
 				self.Medic_CurrentEntToHeal = v
 				self.Medic_Status = "Active"
-				v.VJTag_IsHealing = true
+				v.VJ_ST_Healing = true
 				self:StopMoving()
 				self:MaintainMedicBehavior()
 				return
@@ -1988,7 +1988,7 @@ function ENT:MaintainRelationships()
 			//end
 			
 			-- Handle "self.VJ_AddCertainEntityAsEnemy", "self.VJ_AddCertainEntityAsFriendly", "self.VJ_NPC_Class"
-			if canAlly && ent.VJTag_IsLiving && !VJ.HasValue(self.VJ_AddCertainEntityAsEnemy, ent) then
+			if canAlly && ent.VJ_ID_Living && !VJ.HasValue(self.VJ_AddCertainEntityAsEnemy, ent) then
 				-- Handle "self.VJ_NPC_Class"
 				for _, friClass in ipairs(myClasses) do
 					if friClass == varCPly && !self.PlayerFriendly then self.PlayerFriendly = true end -- If player ally then set the PlayerFriendly to true
@@ -2127,7 +2127,7 @@ function ENT:MaintainRelationships()
 				-- Investigation detection: Sound and player flashlight systems
 				if !eneValid && self.CanInvestigate && self.NextInvestigationMove < CurTime() then
 					-- Investigation: Sound detection
-					if ent.VJ_LastInvestigateSdLevel && distanceToEnt < (self.InvestigateSoundDistance * ent.VJ_LastInvestigateSdLevel) && ((CurTime() - ent.VJ_LastInvestigateSd) <= 1) then
+					if ent.VJ_SD_InvestLevel && distanceToEnt < (self.InvestigateSoundDistance * ent.VJ_SD_InvestLevel) && ((CurTime() - ent.VJ_SD_InvestTime) <= 1) then
 						self:DoReadyAlert()
 						if self:Visible(ent) then
 							self:StopMoving()
@@ -2780,7 +2780,7 @@ end
 function ENT:StartSoundTrack()
 	if !self.HasSounds or !self.HasSoundTrack then return end
 	if math.random(1, self.SoundTrackChance) == 1 then
-		self.VJTag_SD_PlayingMusic = true
+		self.VJ_SD_PlayingMusic = true
 		net.Start("vj_music_run")
 			net.WriteEntity(self)
 			net.WriteString(VJ.PICK(self.SoundTbl_SoundTrack))
@@ -2818,7 +2818,7 @@ function ENT:OnRemove()
 	hook.Remove("Think", self)
 	self.Dead = true
 	if self.Medic_Status then self:ResetMedicBehavior() end
-	if self.VJTag_IsEating then self:ResetEatingBehavior("Dead") end
+	if self.VJ_ST_Eating then self:ResetEatingBehavior("Dead") end
 	self:RemoveTimers()
 	self:StopAllSounds()
 	self:StopParticles()

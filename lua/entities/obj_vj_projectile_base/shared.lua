@@ -9,6 +9,8 @@ ENT.Category		= "VJ Base"
 
 ENT.Spawnable 		= false
 ENT.AdminSpawnable	= false
+
+ENT.IsVJBaseProjectile = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	function ENT:Draw() self:DrawModel() end

@@ -2,7 +2,7 @@ AddCSLuaFile("shared.lua")
 include("shared.lua")
 include("vj_base/ai/base_tank.lua")
 /*-----------------------------------------------
-	*** Copyright (c) 2012-2024 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2025 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
@@ -11,7 +11,7 @@ include("vj_base/ai/base_tank.lua")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.StartHealth = 200
 ENT.MovementType = VJ_MOVETYPE_PHYSICS -- How the NPC moves around
-ENT.ForceDamageFromBosses = true -- Should the NPC get damaged by bosses regardless if it's not supposed to by skipping immunity checks, etc. | Bosses are attackers tagged with "VJTag_ID_Boss"
+ENT.ForceDamageFromBosses = true -- Should the NPC get damaged by bosses regardless if it's not supposed to by skipping immunity checks, etc. | Bosses are attackers tagged with "VJ_ID_Boss"
 ENT.DeathDelayTime = 2 -- Time until the NPC spawns the corpse, removes itself, etc.
 ENT.AlertFriendsOnDeath = true -- Should the NPC's allies get alerted while it's dying? | Its allies will also need to have this variable set to true!
 	-- ====== Sound Paths ====== --
@@ -189,7 +189,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_RunOver(ent)
 	if !self.Tank_IsMoving or !IsValid(ent) or (cv_nomelee:GetInt() == 1 /*or self.HasMeleeAttack == false*/) or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then return end
-	if self:Disposition(ent) == D_HT && ent:Health() > 0 && ((ent:IsNPC() && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot()) && !ent.VJTag_ID_Boss && !ent.VJTag_ID_Vehicle && !ent.VJTag_ID_Aircraft then
+	if self:Disposition(ent) == D_HT && ent:Health() > 0 && ((ent:IsNPC() && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot()) && !ent.VJ_ID_Boss && !ent.VJ_ID_Vehicle && !ent.VJ_ID_Aircraft then
 		self:Tank_OnRunOver(ent)
 		self:Tank_Sound_RunOver()
 		ent:TakeDamage(self:ScaleByDifficulty(8), self, self)
@@ -334,7 +334,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnDamaged(dmginfo, hitgroup, status)
 	if status == "PreDamage" && dmginfo:IsDamageType(DMG_SLASH) or dmginfo:IsDamageType(DMG_GENERIC) or dmginfo:IsDamageType(DMG_CLUB) then
-		if dmginfo:GetDamage() >= 30 && !dmginfo:GetAttacker().VJTag_ID_Boss then
+		if dmginfo:GetDamage() >= 30 && !dmginfo:GetAttacker().VJ_ID_Boss then
 			dmginfo:SetDamage(dmginfo:GetDamage() / 2)
 		else
 			dmginfo:SetDamage(0)

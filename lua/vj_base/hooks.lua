@@ -1,5 +1,5 @@
 /*--------------------------------------------------
-	*** Copyright (c) 2012-2024 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2025 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
@@ -37,9 +37,9 @@ end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn", function(ply)
 	if IsValid(ply) then
-		ply.VJ_LastInvestigateSd = 0
-		ply.VJ_LastInvestigateSdLevel = 0
-		ply.VJTag_IsLiving = true
+		ply.VJ_SD_InvestTime = 0
+		ply.VJ_SD_InvestLevel = 0
+		ply.VJ_ID_Living = true
 		if !VJ_CVAR_IGNOREPLAYERS then
 			local entsTbl = ents.GetAll()
 			for x = 1, #entsTbl do
@@ -77,7 +77,7 @@ local damageableEnts = {func_breakable_surf = true, sent_sakariashelicopter = tr
 hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 	local entClass = ent:GetClass()
 	if ent:IsNPC() or ent:IsNextBot() then
-		ent.VJTag_IsLiving = true
+		ent.VJ_ID_Living = true
 		if SERVER && !ignoredNPCs[entClass] then
 			local entIsVJ = ent.IsVJBaseSNPC
 			if entIsVJ then
@@ -90,7 +90,7 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 					ent.FriendsWithAllPlayerAllies = true
 				-- Set headcrab tag for default headcrab NPCs
 				elseif headcrabNPCs[entClass] then
-					ent.VJTag_ID_Headcrab = true
+					ent.VJ_ID_Headcrab = true
 				-- Make default nature-like NPCs have the correct behavior so VJ NPCs can recognize it correctly
 				elseif natureNPCs[entClass] then
 					ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE
@@ -142,7 +142,7 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 					end
 					for x = 1, #entsTbl do
 						local v = entsTbl[x]
-						if v.VJTag_IsLiving && !ignoredNPCs[v:GetClass()] then
+						if v.VJ_ID_Living && !ignoredNPCs[v:GetClass()] then
 							-- Add enemies to the created entity (if it's a VJ Base SNPC)
 							if entIsVJ then
 								ent:ValidateNoCollide(v)
@@ -164,16 +164,16 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 	
 	-- Make this portion run for server AND client to make sure the tags are shared!
 	if grenadeEnts[entClass] then
-		ent.VJTag_ID_Grenade = true
+		ent.VJ_ID_Grenade = true
 		if grenadeThrowBackEnts[entClass] then
-			ent.VJTag_IsPickupable = true
+			ent.VJ_ID_Grabbable = true
 		end
 	end
 	if attackableEnts[entClass] then
-		ent.VJTag_IsAttackable = true
+		ent.VJ_ID_Attackable = true
 	end
 	if damageableEnts[entClass] or ent.LVS or ent.IsScar then -- Aside from specific table, supports: LVS, Simfphys, SCars
-		ent.VJTag_IsDamageable = true
+		ent.VJ_ID_Destructible = true
 	end
 	--
 end)
@@ -208,8 +208,8 @@ hook.Add("EntityEmitSound", "VJ_EntityEmitSound", function(data)
 			//PrintTable(data)
 			local quiet = (string_StartWith(data.OriginalSoundName, "player/footsteps") and (isPly && (ent:Crouching() or ent:KeyDown(IN_WALK)))) or false
 			if quiet != true && ent.Dead != true then
-				ent.VJ_LastInvestigateSd = CurTime()
-				ent.VJ_LastInvestigateSdLevel = (data.SoundLevel * data.Volume) + (((data.Volume <= 0.4) and 15) or 0)
+				ent.VJ_SD_InvestTime = CurTime()
+				ent.VJ_SD_InvestLevel = (data.SoundLevel * data.Volume) + (((data.Volume <= 0.4) and 15) or 0)
 			end
 		-- Disable the built-in footstep sounds for the player footstep sound for VJ NPCs unless specified otherwise
 			-- Plays only on client-side, making it useless to play material-specific

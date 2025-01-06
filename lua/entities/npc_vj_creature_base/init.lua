@@ -4,7 +4,7 @@ include("vj_base/ai/schedules.lua")
 include("vj_base/ai/base_aa.lua")
 include("shared.lua")
 /*--------------------------------------------------
-	*** Copyright (c) 2012-2024 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2025 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
@@ -206,7 +206,7 @@ ENT.Immune_Electricity = false -- Immune to electrical-type damages | Example: s
 ENT.Immune_Fire = false -- Immune to fire-type damages
 ENT.Immune_Melee = false -- Immune to melee-type damage | Example: Crowbar, slash damages
 ENT.Immune_Sonic = false -- Immune to sonic-type damages
-ENT.ForceDamageFromBosses = false -- Should the NPC get damaged by bosses regardless if it's not supposed to by skipping immunity checks, etc. | Bosses are attackers tagged with "VJTag_ID_Boss"
+ENT.ForceDamageFromBosses = false -- Should the NPC get damaged by bosses regardless if it's not supposed to by skipping immunity checks, etc. | Bosses are attackers tagged with "VJ_ID_Boss"
 ENT.AllowIgnition = true -- Can this NPC be set on fire?
 	-- ====== Flinching ====== --
 ENT.CanFlinch = 0 -- 0 = Don't flinch | 1 = Flinch at any damage | 2 = Flinch only from certain damages
@@ -1133,7 +1133,7 @@ local function ApplyBackwardsCompatibility(self)
 	if self.CustomOnDeath_AfterCorpseSpawned then self.OnCreateDeathCorpse = function(_, dmginfo, hitgroup, corpseEnt) self:CustomOnDeath_AfterCorpseSpawned(dmginfo, hitgroup, corpseEnt) end end
 	if self.Immune_Physics then self:SetPhysicsDamageScale(0) end
 	if self.MaxJumpLegalDistance then self.JumpVars.MaxRise = self.MaxJumpLegalDistance.a; self.JumpVars.MaxDrop = self.MaxJumpLegalDistance.b end
-	if self.VJ_IsHugeMonster then self.VJTag_ID_Boss = self.VJ_IsHugeMonster end
+	if self.VJ_IsHugeMonster then self.VJ_ID_Boss = self.VJ_IsHugeMonster end
 	if self.UsePlayerModelMovement then self.UsePoseParameterMovement = true end
 	if self.WaitBeforeDeathTime then self.DeathDelayTime = self.WaitBeforeDeathTime end
 	if self.HasDeathRagdoll != nil then self.HasDeathCorpse = self.HasDeathRagdoll end
@@ -1684,10 +1684,10 @@ function ENT:Think()
 		if self.IsFollowing && self:GetNavType() != NAV_JUMP && self:GetNavType() != NAV_CLIMB then
 			local followData = self.FollowData
 			local followEnt = followData.Ent
-			local followIsLiving = followEnt.VJTag_IsLiving
+			local followIsLiving = followEnt.VJ_ID_Living
 			//print(self:GetTarget())
 			if IsValid(followEnt) && (!followIsLiving or (followIsLiving && (self:Disposition(followEnt) == D_LI or self:GetClass() == followEnt:GetClass()) && VJ.IsAlive(followEnt))) then
-				if curTime > self.NextFollowUpdateT && !self.VJTag_IsHealing then
+				if curTime > self.NextFollowUpdateT && !self.VJ_ST_Healing then
 					local distToPly = self:GetPos():Distance(followEnt:GetPos())
 					local busy = self:BusyWithActivity()
 					self:SetTarget(followEnt)
@@ -1824,12 +1824,12 @@ function ENT:Think()
 					eatingData = self.EatingData
 				end
 				if eneValid or self.Alerted then
-					if self.VJTag_IsEating then
+					if self.VJ_ST_Eating then
 						eatingData.NextCheck = curTime + 15
 						self:ResetEatingBehavior("Enemy")
 					end
 				elseif curTime > eatingData.NextCheck then
-					if self.VJTag_IsEating then
+					if self.VJ_ST_Eating then
 						local food = eatingData.Ent
 						if !IsValid(food) then -- Food no longer exists, reset!
 							eatingData.NextCheck = curTime + 10
@@ -1880,7 +1880,7 @@ function ENT:Think()
 						local hint = sound.GetLoudestSoundHint(SOUND_CARCASS, myPos)
 						if hint then
 							local food = hint.owner
-							if IsValid(food) /*&& !food.VJTag_IsBeingEaten*/ then
+							if IsValid(food) /*&& !food.VJ_ST_BeingEaten*/ then
 								if !food.FoodData then
 									local size = food:OBBMaxs():Distance(food:OBBMins()) * 2
 									food.FoodData = {
@@ -1895,8 +1895,8 @@ function ENT:Think()
 									foodData.NumConsumers = foodData.NumConsumers + 1
 									foodData.SizeRemaining = foodData.SizeRemaining - self:OBBMaxs():Distance(self:OBBMins())
 									//PrintTable(hint)
-									self.VJTag_IsEating = true
-									food.VJTag_IsBeingEaten = true
+									self.VJ_ST_Eating = true
+									food.VJ_ST_BeingEaten = true
 									self.EatingData.OrgIdle = self.AnimationTranslations[ACT_IDLE] -- Save the current idle anim table in case we gonna change it while eating!
 									eatingData.Ent = food
 									self:OnEat("StartBehavior")
@@ -2205,7 +2205,7 @@ function ENT:DoPropAPCheck(customEnts)
 	local myPos = self:GetPos()
 	local myCenter = myPos + self:OBBCenter()
 	for _, v in ipairs(customEnts or ents.FindInSphere(myCenter, self.MeleeAttackDistance * 1.2)) do
-		if v.VJTag_IsAttackable then
+		if v.VJ_ID_Attackable then
 			local vPhys = v:GetPhysicsObject()
 			if IsValid(vPhys) && !propColBlacklist[v:GetCollisionGroup()] && (self:GetInternalVariable("m_latchedHeadDirection"):Dot((v:GetPos() - myPos):GetNormalized()) > math_cos(math_rad(self.MeleeAttackAngleRadius / 1.3))) then
 				local tr = util.TraceLine({
@@ -2246,10 +2246,10 @@ function ENT:MeleeAttackCode(isPropAttack)
 	//debugoverlay.EntityTextAtPosition(self:GetMeleeAttackDamageOrigin() + self:GetForward()*self.MeleeAttackDamageDistance, 0, "Melee damage distance", 3, Color(238, 119, 222))
 	for _, v in ipairs(ents.FindInSphere(self:GetMeleeAttackDamageOrigin(), self.MeleeAttackDamageDistance)) do
 		if v == self or v:GetClass() == myClass or (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) then continue end
-		if v:IsPlayer() && (v.VJTag_IsControllingNPC or !v:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
-		if ((v.VJTag_IsLiving && self:Disposition(v) != D_LI) or v.VJTag_IsAttackable or v.VJTag_IsDamageable) && self:GetInternalVariable("m_latchedHeadDirection"):Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
-			if isPropAttack == true && v.VJTag_IsLiving && self:GetNearestDistance(v, true) > self.MeleeAttackDistance then continue end //if (self:GetPos():Distance(v:GetPos()) <= self:GetNearestDistance(v) && self:GetNearestDistance(v) <= self.MeleeAttackDistance) == false then
-			local isProp = v.VJTag_IsAttackable
+		if v:IsPlayer() && (v.VJ_IsControllingNPC or !v:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
+		if ((v.VJ_ID_Living && self:Disposition(v) != D_LI) or v.VJ_ID_Attackable or v.VJ_ID_Destructible) && self:GetInternalVariable("m_latchedHeadDirection"):Dot((Vector(v:GetPos().x, v:GetPos().y, 0) - Vector(myPos.x, myPos.y, 0)):GetNormalized()) > math_cos(math_rad(self.MeleeAttackDamageAngleRadius)) then
+			if isPropAttack == true && v.VJ_ID_Living && self:GetNearestDistance(v, true) > self.MeleeAttackDistance then continue end //if (self:GetPos():Distance(v:GetPos()) <= self:GetNearestDistance(v) && self:GetNearestDistance(v) <= self.MeleeAttackDistance) == false then
+			local isProp = v.VJ_ID_Attackable
 			if self:CustomOnMeleeAttack_AfterChecks(v, isProp) == true then continue end
 			-- Remove prop constraints and push it (If possible)
 			if isProp then
@@ -2269,7 +2269,7 @@ function ENT:MeleeAttackCode(isPropAttack)
 				end
 			end
 			-- Knockback (Don't push things like doors, trains, elevators as it will make them fly when activated)
-			if self.HasMeleeAttackKnockBack && v:GetMoveType() != MOVETYPE_PUSH && v.MovementType != VJ_MOVETYPE_STATIONARY && (!v.VJTag_ID_Boss or v.IsVJBaseSNPC_Tank) then
+			if self.HasMeleeAttackKnockBack && v:GetMoveType() != MOVETYPE_PUSH && v.MovementType != VJ_MOVETYPE_STATIONARY && (!v.VJ_ID_Boss or v.IsVJBaseSNPC_Tank) then
 				v:SetGroundEntity(NULL)
 				v:SetVelocity(self:MeleeAttackKnockbackVelocity(v))
 			end
@@ -2279,14 +2279,14 @@ function ENT:MeleeAttackCode(isPropAttack)
 				applyDmg:SetDamage(self:ScaleByDifficulty(self.MeleeAttackDamage))
 				applyDmg:SetDamageType(self.MeleeAttackDamageType)
 				//applyDmg:SetDamagePosition(self:GetNearestPositions(v).MyPosition)
-				if v.VJTag_IsLiving then applyDmg:SetDamageForce(self:GetForward() * ((applyDmg:GetDamage() + 100) * 70)) end
+				if v.VJ_ID_Living then applyDmg:SetDamageForce(self:GetForward() * ((applyDmg:GetDamage() + 100) * 70)) end
 				applyDmg:SetInflictor(self)
 				applyDmg:SetAttacker(self)
 				VJ.DamageSpecialEnts(self, v, applyDmg)
 				v:TakeDamageInfo(applyDmg, self)
 			end
 			-- Bleed Enemy
-			if self.MeleeAttackBleedEnemy && math.random(1, self.MeleeAttackBleedEnemyChance) == 1 && v.VJTag_IsLiving && (!v.VJTag_ID_Boss or self.VJTag_ID_Boss) then
+			if self.MeleeAttackBleedEnemy && math.random(1, self.MeleeAttackBleedEnemyChance) == 1 && v.VJ_ID_Living && (!v.VJ_ID_Boss or self.VJ_ID_Boss) then
 				local tName = "timer_melee_bleed"..v:EntIndex() -- Timer's name
 				local tDmg = self.MeleeAttackBleedEnemyDamage -- How much damage each rep does
 				timer.Create(tName, self.MeleeAttackBleedEnemyTime, self.MeleeAttackBleedEnemyReps, function()
@@ -2423,8 +2423,8 @@ function ENT:LeapDamageCode()
 	local hitRegistered = false
 	for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.LeapAttackDamageDistance)) do
 		if v == self or v:GetClass() == myClass or (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) then continue end
-		if v:IsPlayer() && (v.VJTag_IsControllingNPC or !v:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
-		if (v.VJTag_IsLiving && self:Disposition(v) != D_LI) or v.VJTag_IsAttackable or v.VJTag_IsDamageable then
+		if v:IsPlayer() && (v.VJ_IsControllingNPC or !v:Alive() or VJ_CVAR_IGNOREPLAYERS) then continue end
+		if (v.VJ_ID_Living && self:Disposition(v) != D_LI) or v.VJ_ID_Attackable or v.VJ_ID_Destructible then
 			self:CustomOnLeapAttack_AfterChecks(v)
 			-- Damage
 			if !self.DisableDefaultLeapAttackDamageCode then
@@ -2433,7 +2433,7 @@ function ENT:LeapDamageCode()
 				dmgInfo:SetInflictor(self)
 				dmgInfo:SetDamageType(self.LeapAttackDamageType)
 				dmgInfo:SetAttacker(self)
-				if v.VJTag_IsLiving then dmgInfo:SetDamageForce(self:GetForward() * ((dmgInfo:GetDamage() + 100) * 70)) end
+				if v.VJ_ID_Living then dmgInfo:SetDamageForce(self:GetForward() * ((dmgInfo:GetDamage() + 100) * 70)) end
 				v:TakeDamageInfo(dmgInfo, self)
 			end
 			if v:IsPlayer() then
@@ -2711,7 +2711,7 @@ function ENT:OnTakeDamage(dmginfo)
 	end
 	
 	-- If it should always take damage from huge monsters, then skip immunity checks!
-	if dmgAttacker && self.ForceDamageFromBosses && dmgAttacker.VJTag_ID_Boss then
+	if dmgAttacker && self.ForceDamageFromBosses && dmgAttacker.VJ_ID_Boss then
 		goto skip_immunity
 	end
 	
@@ -2889,7 +2889,7 @@ function ENT:OnTakeDamage(dmginfo)
 	end
 	
 	-- If eating, stop!
-	if self.CanEat && self.VJTag_IsEating then
+	if self.CanEat && self.VJ_ST_Eating then
 		self.EatingData.NextCheck = curTime + 15
 		self:ResetEatingBehavior("Injured")
 	end

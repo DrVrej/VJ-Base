@@ -1,5 +1,5 @@
 /*--------------------------------------------------
-	*** Copyright (c) 2012-2024 by DrVrej, All rights reserved. ***
+	*** Copyright (c) 2012-2025 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
@@ -34,7 +34,7 @@ properties.Add("vj_pr_npc_control",{
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		if !ply:Alive() then return end -- Keep the player from becoming a zombie =)
-		if ply.VJTag_IsControllingNPC then ply:ChatPrint("Can't control "..ent:GetName().." because you are already controlling another NPC!") return end
+		if ply.VJ_IsControllingNPC then ply:ChatPrint("Can't control "..ent:GetName().." because you are already controlling another NPC!") return end
 		if !ent.VJ_IsBeingControlled then
 			if ent:Health() > 0 then
 				local obj = ents.Create("obj_vj_npccontroller")
