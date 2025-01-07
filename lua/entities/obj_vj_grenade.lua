@@ -39,7 +39,7 @@ ENT.RadiusDamageUseRealisticRadius = true -- Should the damage decrease the fart
 ENT.RadiusDamageType = DMG_BLAST
 ENT.RadiusDamageForce = 90 -- Damage force to apply to the hit entity | false = Don't apply any force
 ENT.CollisionBehavior = VJ.PROJ_COLLISION_NONE
-ENT.CollisionDecals = "Scorch"
+ENT.CollisionDecal = "Scorch"
 ENT.SoundTbl_OnCollide = "weapons/hegrenade/he_bounce-1.wav"
 
 -- Custom
@@ -110,7 +110,7 @@ function ENT:OnDestroy()
 		endpos = myPos - vezZ100,
 		filter = self
 	})
-	util.Decal(VJ.PICK(self.CollisionDecals), tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
+	util.Decal(VJ.PICK(self.CollisionDecal), tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
 	
 	self:DealDamage()
 end

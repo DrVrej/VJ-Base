@@ -14,7 +14,7 @@ local IsValid = IsValid
 local table_remove = table.remove
 local sdEmitHint = sound.EmitHint
 
-local cv_globalcorpselimit = GetConVar("vj_npc_globalcorpselimit")
+local cv_globalcorpselimit = GetConVar("vj_npc_corpse_limit")
 
 VJ.Corpse_Ents = {}
 VJ.Corpse_StinkyEnts = {}

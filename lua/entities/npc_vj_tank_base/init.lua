@@ -146,8 +146,8 @@ ENT.Tank_NextRunOverSoundT = 0
 local runoverException = {npc_antlionguard=true,npc_turret_ceiling=true,monster_gargantua=true,monster_bigmomma=true,monster_nihilanth=true,npc_strider=true,npc_combine_camera=true,npc_helicopter=true,npc_combinegunship=true,npc_combinedropship=true,npc_rollermine=true}
 local defAng = Angle(0, 0, 0)
 
-local cv_nomelee = GetConVar("vj_npc_nomelee")
-local cv_noidleparticle = GetConVar("vj_npc_noidleparticle")
+local cv_nomelee = GetConVar("vj_npc_melee")
+local cv_noidleparticle = GetConVar("vj_npc_reduce_vfx")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
 	self:SetPhysicsDamageScale(0) -- Take no physics damage
@@ -188,7 +188,7 @@ function ENT:OnTouch(ent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_RunOver(ent)
-	if !self.Tank_IsMoving or !IsValid(ent) or (cv_nomelee:GetInt() == 1 /*or self.HasMeleeAttack == false*/) or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then return end
+	if !self.Tank_IsMoving or !IsValid(ent) or (cv_nomelee:GetInt() == 0 /*or self.HasMeleeAttack == false*/) or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then return end
 	if self:Disposition(ent) == D_HT && ent:Health() > 0 && ((ent:IsNPC() && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot()) && !ent.VJ_ID_Boss && !ent.VJ_ID_Vehicle && !ent.VJ_ID_Aircraft then
 		self:Tank_OnRunOver(ent)
 		self:Tank_Sound_RunOver()

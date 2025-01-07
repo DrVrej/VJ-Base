@@ -132,8 +132,8 @@ ENT.Tank_Status = 0 -- 0 = Can fire | 1 = Can NOT fire
 ENT.Tank_Shell_NextFireT = 0
 ENT.Tank_TurningLerp = nil
 
-local cv_norange = GetConVar("vj_npc_norange")
-local cv_noidleparticle = GetConVar("vj_npc_noidleparticle")
+local cv_norange = GetConVar("vj_npc_range")
+local cv_noidleparticle = GetConVar("vj_npc_reduce_vfx")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
 	self.DeathAnimationCodeRan = true -- So corpse doesn't fly away on death (Take this out if not using death explosion sequence)
@@ -171,7 +171,7 @@ function ENT:OnThinkActive()
 			-- If the enemy is within the barrel firing limit AND not already firing a shell AND its height is is reachable AND the enemy is not extremely close, then FIRE!
 			if math.abs(angDiffuse) < self.Tank_AngleDiffuseFiringLimit && self.Tank_ProperHeightShoot && self.LatestEnemyDistance > self.Tank_SeeClose then
 				self.Tank_FacingTarget = true
-				if self:Visible(ene) && cv_norange:GetInt() == 0 then
+				if self:Visible(ene) && cv_norange:GetInt() == 1 then
 					self:Tank_PrepareShell() 
 				end
 			-- Turn Left

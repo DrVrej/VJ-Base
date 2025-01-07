@@ -76,9 +76,8 @@ function ENT:CreateExtraDeathCorpse(class, models, extraOptions, customFunc)
 	if !IsValid(self.Corpse) then return end
 	local dmginfo = self.Corpse.DamageInfo
 	if dmginfo == nil then return end
-	class = class or "prop_ragdoll"
 	extraOptions = extraOptions or {}
-	local ent = ents.Create(class)
+	local ent = ents.Create(class or "prop_ragdoll")
 	if models != "None" then ent:SetModel(VJ.PICK(models)) end
 	ent:SetPos(extraOptions.Pos or self:GetPos())
 	ent:SetAngles(extraOptions.Ang or self:GetAngles())
@@ -123,9 +122,9 @@ end
 			- Vel = Sets the velocity | "UseDamageForce" = To use the damage's force only | DEFAULT = Random velocity
 			- Vel_ApplyDmgForce = If set to false, it won't add the damage force to the given velocity | DEFAULT = true
 			- AngVel = Angle velocity, basically the speed it rotates as it's flying | DEFAULT = Random velocity
-			- BloodDecal = Decal it spawns when it collides with something | DEFAULT = Base decides
-			- BloodType = Sets the blood type by overriding the BloodDecal option | Works only on "obj_vj_gib" and it uses the same values as a VJ NPC blood types!
-			- CollideSound = The sound it plays when it collides with something | DEFAULT = Base decides
+			- BloodType = Sets the blood type of the gib | Overrides "CollisionDecal" option | Works only with "obj_vj_gib"
+			- CollisionDecal = Decal it spawns when it collides with something | false = Disable decals | DEFAULT = Base decides
+			- CollisionSound = Sound(s) it plays when it collides with something | false = Disable collision sounds | DEFAULT = Base decides
 			- NoFade = Should it let the base make it fade & remove (Adjusted in the NPC settings menu) | DEFAULT = false
 			- RemoveOnCorpseDelete = Should the entity get removed if the corpse is removed? | DEFAULT = false
 		- customFunc(gib) = Use this to edit the entity which is given as parameter "gib"
@@ -137,26 +136,24 @@ local gib_mdlHSmall = {"models/vj_base/gibs/human/gib_small1.mdl", "models/vj_ba
 local gib_mdlHBig = {"models/vj_base/gibs/human/gib1.mdl", "models/vj_base/gibs/human/gib2.mdl", "models/vj_base/gibs/human/gib3.mdl", "models/vj_base/gibs/human/gib4.mdl", "models/vj_base/gibs/human/gib5.mdl", "models/vj_base/gibs/human/gib6.mdl", "models/vj_base/gibs/human/gib7.mdl"}
 --
 function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
-	// self:CreateGibEntity("prop_ragdoll", "", {Pos=self:LocalToWorld(Vector(0,3,0)), Ang=self:GetAngles(), Vel=})
 	if self.CanGib == false then return end
 	local bloodType = false
-	class = class or "obj_vj_gib"
 	if models == "UseAlien_Small" then
 		models =  VJ.PICK(gib_mdlASmall)
-		bloodType = "Yellow"
+		bloodType = VJ.BLOOD_COLOR_YELLOW
 	elseif models == "UseAlien_Big" then
 		models =  VJ.PICK(gib_mdlABig)
-		bloodType = "Yellow"
+		bloodType = VJ.BLOOD_COLOR_YELLOW
 	elseif models == "UseHuman_Small" then
 		models =  VJ.PICK(gib_mdlHSmall)
-		bloodType = "Red"
+		bloodType = VJ.BLOOD_COLOR_RED
 	elseif models == "UseHuman_Big" then
 		models =  VJ.PICK(gib_mdlHBig)
-		bloodType = "Red"
+		bloodType = VJ.BLOOD_COLOR_RED
 	else -- Custom models
 		models = VJ.PICK(models)
 		if VJ.HasValue(gib_mdlAAll, models) then
-			bloodType = "Yellow"
+			bloodType = VJ.BLOOD_COLOR_YELLOW
 		end
 	end
 	extraOptions = extraOptions or {}
@@ -171,29 +168,38 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 		end
 		bloodType = (extraOptions.BloodType or bloodType or self.BloodColor) -- Certain entities such as the VJ Gib entity, you can use this to set its gib type
 		local removeOnCorpseDelete = extraOptions.RemoveOnCorpseDelete or false -- Should the entity get removed if the corpse is removed?
-	local gib = ents.Create(class)
+	
+	local gib = ents.Create(class or "obj_vj_gib")
 	gib:SetModel(models)
 	gib:SetPos(extraOptions.Pos or (self:GetPos() + self:OBBCenter()))
 	gib:SetAngles(extraOptions.Ang or Angle(math.Rand(-180, 180), math.Rand(-180, 180), math.Rand(-180, 180)))
 	if gib:GetClass() == "obj_vj_gib" then
 		gib.BloodType = bloodType
-		gib.Collide_Decal = extraOptions.BloodDecal or "Default"
-		gib.CollideSound = extraOptions.CollideSound or "Default"
-		//gib.BloodData = {Color = bloodType, Particle = self.CustomBlood_Particle, Decal = self.Collide_Decal} -- For eating system
+		if extraOptions.CollisionDecal != nil then
+			gib.CollisionDecal = extraOptions.CollisionDecal
+		elseif extraOptions.BloodDecal then -- Backwards compatibility
+			gib.CollisionDecal = extraOptions.BloodDecal
+		end
+		if extraOptions.CollisionSound != nil then
+			gib.CollisionSound = extraOptions.CollisionSound
+		elseif extraOptions.CollideSound then -- Backwards compatibility
+			gib.CollisionSound = extraOptions.CollideSound
+		end
+		//gib.BloodData = {Color = bloodType, Particle = self.CustomBlood_Particle, Decal = self.CollisionDecal} -- For eating system
 	end
 	gib:Spawn()
 	gib:Activate()
 	gib.IsVJBaseCorpse_Gib = true
-	if GetConVar("vj_npc_gibcollidable"):GetInt() == 0 then gib:SetCollisionGroup(1) end
+	if GetConVar("vj_npc_gib_collision"):GetInt() == 0 then gib:SetCollisionGroup(COLLISION_GROUP_DEBRIS) end
 	local phys = gib:GetPhysicsObject()
 	if IsValid(phys) then
 		phys:AddVelocity(vel)
 		phys:AddAngleVelocity(extraOptions.AngVel or Vector(math.Rand(-200, 200), math.Rand(-200, 200), math.Rand(-200, 200)))
 	end
-	if extraOptions.NoFade != true && GetConVar("vj_npc_fadegibs"):GetInt() == 1 then
-		if gib:GetClass() == "obj_vj_gib" then timer.Simple(GetConVar("vj_npc_fadegibstime"):GetInt(), function() SafeRemoveEntity(gib) end)
-		elseif gib:GetClass() == "prop_ragdoll" then gib:Fire("FadeAndRemove", "", GetConVar("vj_npc_fadegibstime"):GetInt())
-		elseif gib:GetClass() == "prop_physics" then gib:Fire("kill", "", GetConVar("vj_npc_fadegibstime"):GetInt()) end
+	if extraOptions.NoFade != true && GetConVar("vj_npc_gib_fade"):GetInt() == 1 then
+		if gib:GetClass() == "obj_vj_gib" then timer.Simple(GetConVar("vj_npc_gib_fadetime"):GetInt(), function() SafeRemoveEntity(gib) end)
+		elseif gib:GetClass() == "prop_ragdoll" then gib:Fire("FadeAndRemove", "", GetConVar("vj_npc_gib_fadetime"):GetInt())
+		elseif gib:GetClass() == "prop_physics" then gib:Fire("kill", "", GetConVar("vj_npc_gib_fadetime"):GetInt()) end
 	end
 	if removeOnCorpseDelete == true then //self.Corpse:DeleteOnRemove(extraent)
 		if !self.DeathCorpse_ChildEnts then self.DeathCorpse_ChildEnts = {} end -- If it doesn't exist, then create it!
@@ -278,7 +284,7 @@ function ENT:OnEat(status, statusData)
 	-- The following code is a ideal example based on Half-Life 1 Zombie
 	//print(self, "Eating Status: ", status, statusData)
 	if status == "CheckFood" then
-		return true //statusData.owner.BloodData && statusData.owner.BloodData.Color == "Red"
+		return true //statusData.owner.BloodData && statusData.owner.BloodData.Color == VJ.BLOOD_COLOR_RED
 	elseif status == "BeginEating" then
 		self.AnimationTranslations[ACT_IDLE] = ACT_GESTURE_RANGE_ATTACK1 -- Eating animation
 		return select(2, self:PlayAnim(ACT_ARM, true, false))
@@ -1512,7 +1518,7 @@ function ENT:HandleAnimEvent(ev, evTime, evCycle, evType, evOptions)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
-	if self.VJ_DEBUG && GetConVar("vj_npc_debug_ontouch"):GetInt() == 1 then print(self:GetClass() .. " : Touched --> " .. entity:GetClass()) end
+	if self.VJ_DEBUG && GetConVar("vj_npc_debug_touch"):GetInt() == 1 then print(self:GetClass() .. " : Touched --> " .. entity:GetClass()) end
 	local funcCustom = self.OnTouch; if funcCustom then funcCustom(self, entity) end
 	if !VJ_CVAR_AI_ENABLED or self.VJ_IsBeingControlled then return end
 	

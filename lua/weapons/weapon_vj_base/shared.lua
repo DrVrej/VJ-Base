@@ -136,7 +136,7 @@ SWEP.Primary.TracerType = "Tracer" -- Tracer type (Examples: AR2)
 SWEP.Primary.TakeAmmo = 1 -- How much ammo should it take from the clip after each shot? | 0 = Unlimited clip
 SWEP.Primary.Ammo = "SMG1" -- Ammo type
 SWEP.Primary.ClipSize = 30 -- Max amount of rounds per clip
-SWEP.Primary.PickUpAmmoAmount = "Default" -- How much ammo should the player get the gun is picked up? | "Default" = 3 Clips
+SWEP.Primary.PickUpAmmoAmount = "Default" -- How much ammo should the player get when the gun is picked up? | "Default" = 3 Clips
 SWEP.AnimTbl_PrimaryFire = ACT_VM_PRIMARYATTACK
 	-- ====== Sound ====== --
 SWEP.Primary.Sound = {}

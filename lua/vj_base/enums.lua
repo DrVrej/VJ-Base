@@ -140,12 +140,12 @@ VJ_ID_Grabbable					bool		It can be grabbed up by NPCs (Ex: Grenades)
 VJ_ID_Danger					bool		It's dangerous and should be detected as a regular danger by NPCs
 VJ_ID_Grenade					bool		It's a grenade type and should be detected as a grenade danger by NPCs
 VJ_ID_Boss						bool		It's a large and/or a boss | Affects parts of the entity, for example It won't receive any melee knock back
-VJ_ID_Police					bool		It's a police
-VJ_ID_Civilian					bool		It's a civilian
-VJ_ID_Headcrab					bool		It's a headcrab
-VJ_ID_Turret					bool		It's a turret or sentry gun
-VJ_ID_Vehicle					bool		It's a vehicle (Ex: Car, tank, APC, helicopter, plane, boat)
-VJ_ID_Aircraft					bool		It's an aircraft type of vehicle (Ex: Helicopter, jet, plane)
+VJ_ID_Police					bool		Police officers, metrocops, etc.
+VJ_ID_Civilian					bool		Civilians, citizens, etc.
+VJ_ID_Headcrab					bool		Headcrabs
+VJ_ID_Turret					bool		Turrets, sentry guns, etc.
+VJ_ID_Vehicle					bool		Cars, tanks, APCs, helicopters, planes, boats, etc.
+VJ_ID_Aircraft					bool		Helicopters, jets, planes, etc.
 
 -- Sounds
 VJ_SD_InvestTime				number		Last time this NPC/Player has made a investigatable sound that should be heard by enemy NPCs

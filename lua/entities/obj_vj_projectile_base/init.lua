@@ -13,7 +13,7 @@ ENT.Model = false -- Model(s) to spawn with | Picks a random one if it's a table
 ENT.ProjectileType = VJ.PROJ_TYPE_LINEAR -- What type of projectile is this?
 ENT.CollisionBehavior = VJ.PROJ_COLLISION_REMOVE -- What should it do when it collides with something?
 ENT.CollisionFilter = true -- Should the projectile attempt to go through certain entities when the owner is an NPC? | Examples: Entity is an ally or a player with no target
-ENT.CollisionDecals = false -- Decals that paint when the projectile collides with something (string or table of strings) | false = to not paint anything
+ENT.CollisionDecal = false -- Decals that paint when the projectile collides with something (string or table of strings) | false = to not paint anything
 ENT.RemoveDelay = 0 -- Setting this greater than 0 will delay the entity's removal | Useful for lingering trail effects
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Damage ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -154,8 +154,8 @@ function ENT:Initialize()
 	if self.DeathEffects then self.OnDestroy = function(_, data, phys2) self:DeathEffects(data, phys2) end end
 	if self.CustomOnDoDamage then self.OnDealDamage = function(_, data, phys2, hitEnts) self:CustomOnDoDamage(data, phys2, hitEnts) end end
 	if self.CustomOnDoDamage_Direct then self.OnDealDamage = function(_, data, phys2, hitEnts) self:CustomOnDoDamage_Direct(data, phys2, hitEnts and hitEnts[1] or nil) end end
-	if self.DecalTbl_OnCollideDecals then self.CollisionDecals = self.DecalTbl_OnCollideDecals end
-	if self.DecalTbl_DeathDecals then self.CollisionDecals = self.DecalTbl_DeathDecals end
+	if self.DecalTbl_OnCollideDecals then self.CollisionDecal = self.DecalTbl_OnCollideDecals end
+	if self.DecalTbl_DeathDecals then self.CollisionDecal = self.DecalTbl_DeathDecals end
 	if self.RemoveOnHit then self.CollisionBehavior = VJ.PROJ_COLLISION_REMOVE end
 	if self.CollideCodeWithoutRemoving then self.CollisionBehavior = VJ.PROJ_COLLISION_PERSIST end
 	--
@@ -296,7 +296,7 @@ function ENT:PhysicsCollide(data, phys)
 			self:DealDamage(data, phys)
 			self:PlaySound("OnCollide")
 			if !self.PaintedFinalDecal then
-				local decals = VJ.PICK(self.CollisionDecals)
+				local decals = VJ.PICK(self.CollisionDecal)
 				if decals then
 					self.PaintedFinalDecal = true
 					util.Decal(decals, data.HitPos + data.HitNormal * -15, data.HitPos - data.HitNormal * -2)
@@ -311,7 +311,7 @@ function ENT:PhysicsCollide(data, phys)
 			self:DealDamage(data, phys)
 			self:PlaySound("OnCollide")
 			if !self.PaintedFinalDecal then
-				local decals = VJ.PICK(self.CollisionDecals)
+				local decals = VJ.PICK(self.CollisionDecal)
 				if decals then
 					util.Decal(decals, data.HitPos + data.HitNormal * -15, data.HitPos - data.HitNormal * -2)
 				end

@@ -29,7 +29,7 @@ if !SERVER then return end
 ENT.Model = "models/crossbow_bolt.mdl" -- Model(s) to spawn with | Picks a random one if it's a table
 ENT.DoesDirectDamage = true -- Should it deal direct damage when it collides with something?
 ENT.DirectDamage = 90
-ENT.CollisionDecals = "Impact.Concrete"
+ENT.CollisionDecal = "Impact.Concrete"
 ENT.SoundTbl_Idle = "weapons/fx/nearmiss/bulletltor03.wav"
 ENT.SoundTbl_OnCollide = "weapons/crossbow/hit1.wav"
 

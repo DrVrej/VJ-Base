@@ -5,23 +5,40 @@ include("shared.lua")
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
-ENT.BloodType = "Red" -- Uses the same values as a VJ NPC
-ENT.Collide_Decal = "Default"
-ENT.Collide_DecalChance = 3
-ENT.CollideSound = "Default" -- Make it a table to use custom sounds!
-ENT.CollideSoundLevel = 60
-ENT.CollideSoundPitch = VJ.SET(90, 100)
 ENT.IsStinky = false -- Is this a disgusting stinky gib??
-
+ENT.BloodType = VJ.BLOOD_COLOR_RED -- Uses the same values as a VJ NPC
+ENT.CollisionDecal = "Default"
+ENT.CollisionDecalChance = 3
+	-- ====== Sound ====== --
+ENT.CollisionSound = {"physics/flesh/flesh_squishy_impact_hard1.wav", "physics/flesh/flesh_squishy_impact_hard2.wav", "physics/flesh/flesh_squishy_impact_hard3.wav", "physics/flesh/flesh_squishy_impact_hard4.wav"}
+ENT.CollisionSoundLevel = 60
+ENT.CollisionSoundPitch = VJ.SET(90, 100)
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ ///// WARNING: Don't touch anything below this line! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.NextStinkyTime = 0
 
 local stinkyMatTypes = {alienflesh=true, antlion=true, armorflesh=true, bloodyflesh=true, flesh=true, zombieflesh=true, player=true}
+local defDecals = {
+	[VJ.BLOOD_COLOR_RED] = "VJ_Blood_Red",
+	[VJ.BLOOD_COLOR_YELLOW] = "VJ_Blood_Yellow",
+	[VJ.BLOOD_COLOR_GREEN] = "VJ_Blood_Green",
+	[VJ.BLOOD_COLOR_ORANGE] = "VJ_Blood_Orange",
+	[VJ.BLOOD_COLOR_BLUE] = "VJ_Blood_Blue",
+	[VJ.BLOOD_COLOR_PURPLE] = "VJ_Blood_Purple",
+	[VJ.BLOOD_COLOR_WHITE] = "VJ_Blood_White",
+	[VJ.BLOOD_COLOR_OIL] = "VJ_Blood_Oil",
+}
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:PhysicsInit(MOVETYPE_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS) -- Use MOVETYPE_NONE for testing, makes the entity freeze!
 	self:SetSolid(MOVETYPE_VPHYSICS)
-	if GetConVar("vj_npc_gibcollidable"):GetInt() == 0 then self:SetCollisionGroup(1) end
+	if GetConVar("vj_npc_gib_collision"):GetInt() == 0 then self:SetCollisionGroup(COLLISION_GROUP_DEBRIS) end
 
 	-- Physics Functions
 	local physObj = self:GetPhysicsObject()
@@ -37,43 +54,21 @@ function ENT:Initialize()
 	local hp = self:OBBMaxs():Distance(self:OBBMins())
 	self:SetMaxHealth(hp)
 	self:SetHealth(hp)
-
-	-- Setup
-	self:InitialSetup()
+	
+	if self.CollisionDecal == "Default" then
+		self.CollisionDecal = defDecals[self.BloodType] or false
+	end
 	
 	-- Used to correct the blood data (Ex: Eating system uses this!)
 	local bloodData = self.BloodData
 	if bloodData then
-		bloodData.Decal = self.Collide_Decal
+		bloodData.Decal = self.CollisionDecal
 	else
-		self.BloodData = {Decal = self.Collide_Decal}
+		self.BloodData = {Decal = self.CollisionDecal}
 	end
 	
-	if GetConVar("vj_npc_sd_gibbing"):GetInt() == 1 then self.CollideSound = "" end
-	if GetConVar("vj_npc_novfx_gibdeath"):GetInt() == 1 then self.Collide_Decal = "" end
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-local defCollideSds = {"physics/flesh/flesh_squishy_impact_hard1.wav","physics/flesh/flesh_squishy_impact_hard2.wav","physics/flesh/flesh_squishy_impact_hard3.wav","physics/flesh/flesh_squishy_impact_hard4.wav"}
-local defDecals = {
-	["Red"] = "VJ_Blood_Red",
-	["Yellow"] = "VJ_Blood_Yellow",
-	["Green"] = "VJ_Blood_Green",
-	["Orange"] = "VJ_Blood_Orange",
-	["Blue"] = "VJ_Blood_Blue",
-	["Purple"] = "VJ_Blood_Purple",
-	["White"] = "VJ_Blood_White",
-	["Oil"] = "VJ_Blood_Oil",
-}
-local strDefault = "Default"
---
-function ENT:InitialSetup()
-	if self.CollideSound == strDefault then
-		self.CollideSound = defCollideSds
-	end
-	
-	if self.Collide_Decal == strDefault then
-		self.Collide_Decal = defDecals[self.BloodType] or ""
-	end
+	if GetConVar("vj_npc_snd_gib"):GetInt() == 0 then self.CollisionSound = false end
+	if GetConVar("vj_npc_gib_vfx"):GetInt() == 0 then self.CollisionDecal = false end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
@@ -85,14 +80,16 @@ function ENT:Think()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PhysicsCollide(data, phys)
-	-- Effects
+	-- Collision Sound
 	local velSpeed = phys:GetVelocity():Length()
-	local randCollideSd = VJ.PICK(self.CollideSound)
-	if randCollideSd != false && velSpeed > 18 then
-		self:EmitSound(randCollideSd, self.CollideSoundLevel, math.random(self.CollideSoundPitch.a, self.CollideSoundPitch.b))
+	local collideSD = VJ.PICK(self.CollisionSound)
+	if collideSD && velSpeed > 18 then
+		self:EmitSound(collideSD, self.CollisionSoundLevel, math.random(self.CollisionSoundPitch.a, self.CollisionSoundPitch.b))
 	end
 
-	if self.Collide_Decal != "" && velSpeed > 18 && !data.Entity && math.random(1, self.Collide_DecalChance) == 1 then
+	-- Collision Decal
+	local collideDecal = VJ.PICK(self.CollisionDecal)
+	if collideDecal && velSpeed > 18 && !data.Entity && math.random(1, self.CollisionDecalChance) == 1 then
 		local myPos = self:GetPos()
 		self:SetLocalPos(myPos + self:GetUp() * 4) -- Because the entity is too close to the ground
 		local tr = util.TraceLine({
@@ -100,8 +97,7 @@ function ENT:PhysicsCollide(data, phys)
 			endpos = myPos - (data.HitNormal * -30),
 			filter = self
 		})
-		util.Decal(self.Collide_Decal, tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
-		//util.Decal(self.Collide_Decal, start, endpos)
+		util.Decal(collideDecal, tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

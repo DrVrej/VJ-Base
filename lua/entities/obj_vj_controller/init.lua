@@ -375,7 +375,7 @@ function ENT:Think()
 		if #ply:GetWeapons() > 0 then ply:StripWeapons() end
 
 		local bullseyePos = self.VJCE_Bullseye:GetPos()
-		if ply:GetInfoNum("vj_npc_cont_devents", 0) == 1 then
+		if ply:GetInfoNum("vj_npc_cont_debug", 0) == 1 then
 			VJ.DEBUG_TempEnt(ply:GetPos(), self:GetAngles(), Color(0,109,160)) -- Player's position
 			VJ.DEBUG_TempEnt(camera:GetPos(), self:GetAngles(), Color(255,200,260)) -- Camera's position
 			VJ.DEBUG_TempEnt(bullseyePos, self:GetAngles(), Color(255,0,0)) -- Bullseye's position
@@ -442,7 +442,7 @@ function ENT:StartMovement(Dir, Rot)
 	local ply = self.VJCE_Player
 	if npc:GetState() != VJ_STATE_NONE then return end
 
-	local DEBUG = ply:GetInfoNum("vj_npc_cont_devents", 0) == 1
+	local DEBUG = ply:GetInfoNum("vj_npc_cont_debug", 0) == 1
 	local plyAimVec = Dir
 	plyAimVec.z = 0
 	plyAimVec:Rotate(Rot)

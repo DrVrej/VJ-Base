@@ -4,300 +4,313 @@
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local function VJ_NPC_OPTIONS(Panel)
+local function VJ_NPC_SETTINGS_AI(panel)
 	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
-		Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
-		Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
-		return
-	end
-	
-	Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
-	Panel:AddControl("Label", {Text = "#vjbase.menu.general.snpc.warnfuture"})
-	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_godmodesnpc 0\nvj_npc_playerfriendly 0\nvj_npc_zombiefriendly 0\nvj_npc_antlionfriendly 0\nvj_npc_combinefriendly 0\nvj_npc_corpsefade 0\nvj_npc_corpsefadetime 10\nvj_npc_undocorpse 0\nvj_npc_allhealth 0\nvj_npc_fadegibs 1\nvj_npc_fadegibstime 90\nvj_npc_gibcollidable 0\nvj_npc_addfrags 1\nvj_npc_dropweapon 1\nvj_npc_droploot 1\nvj_npc_creatureopendoor 1\nvj_npc_vjfriendly 0\nvj_npc_globalcorpselimit 32\nvj_npc_seedistance 0\nvj_npc_usegmoddecals 0\nvj_npc_knowenemylocation 0\nvj_npc_plypickupdropwep 1\nvj_npc_difficulty 0\nvj_npc_human_canjump 1\nvj_npc_corpsecollision 0"})
-	local vj_difficulty = {Options = {}, CVars = {}, Label = "#vjbase.menu.npc.options.difficulty.header", MenuButton = "0"}
-		vj_difficulty.Options["#vjbase.menu.npc.options.difficulty.neanderthal"] = {vj_npc_difficulty = "-3"}
-		vj_difficulty.Options["#vjbase.menu.npc.options.difficulty.childs_play"] = {vj_npc_difficulty = "-2"}
-		vj_difficulty.Options["#vjbase.menu.npc.options.difficulty.easy"] = {vj_npc_difficulty = "-1"}
-		vj_difficulty.Options["#vjbase.menu.npc.options.difficulty.normal"] = {vj_npc_difficulty = "0"}
-		vj_difficulty.Options["#vjbase.menu.npc.options.difficulty.hard"] = {vj_npc_difficulty = "1"}
-		vj_difficulty.Options["#vjbase.menu.npc.options.difficulty.insane"] = {vj_npc_difficulty = "2"}
-		vj_difficulty.Options["#vjbase.menu.npc.options.difficulty.impossible"] = {vj_npc_difficulty = "3"}
-		vj_difficulty.Options["#vjbase.menu.npc.options.difficulty.nightmare"] = {vj_npc_difficulty = "4"}
-		vj_difficulty.Options["#vjbase.menu.npc.options.difficulty.hell_on_earth"] = {vj_npc_difficulty = "5"}
-		vj_difficulty.Options["#vjbase.menu.npc.options.difficulty.total_annihilation"] = {vj_npc_difficulty = "6"}
-	Panel:AddControl("ComboBox", vj_difficulty)
-	
-	Panel:AddControl("Label", {Text = "#vjbase.menu.npc.options.label1"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.options.togglefriendlyantlion", Command = "vj_npc_antlionfriendly"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.options.togglefriendlycombine", Command = "vj_npc_combinefriendly"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.options.togglefriendlyplayer", Command = "vj_npc_playerfriendly"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.options.togglefriendlyzombie", Command = "vj_npc_zombiefriendly"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.options.togglefriendlyvj", Command = "vj_npc_vjfriendly"})
-	Panel:ControlHelp("#vjbase.menu.npc.options.label2")
-	
-	Panel:AddControl("Label", {Text = "#vjbase.menu.npc.options.label3"})
-	local vj_collision = {Options = {}, CVars = {}, Label = "#vjbase.menu.npc.options.collision.header", MenuButton = "0"}
-		vj_collision.Options["#vjbase.menu.npc.options.collision.default"] = {vj_npc_corpsecollision = "0"}
-		vj_collision.Options["#vjbase.menu.npc.options.collision.everything"] = {vj_npc_corpsecollision = "1"}
-		vj_collision.Options["#vjbase.menu.npc.options.collision.onlyworld"] = {vj_npc_corpsecollision = "2"}
-		vj_collision.Options["#vjbase.menu.npc.options.collision.excludedebris"] = {vj_npc_corpsecollision = "3"}
-		vj_collision.Options["#vjbase.menu.npc.options.collision.excludeplynpcs"] = {vj_npc_corpsecollision = "4"}
-		vj_collision.Options["#vjbase.menu.npc.options.collision.excludeply"] = {vj_npc_corpsecollision = "5"}
-	Panel:AddControl("ComboBox", vj_collision)
-	Panel:AddControl("Slider",{Label = "#vjbase.menu.npc.options.corpselimit",min = 4,max = 300,Command = "vj_npc_globalcorpselimit"})
-	Panel:ControlHelp("#vjbase.menu.npc.options.label4")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.options.toggleundocorpses", Command = "vj_npc_undocorpse"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.options.togglecorpsefade", Command = "vj_npc_corpsefade"})
-	Panel:AddControl("Slider",{Label = "#vjbase.menu.npc.options.corpsefadetime",min = 0,max = 600,Command = "vj_npc_corpsefadetime"})
-	Panel:ControlHelp("#vjbase.menu.npc.options.label5")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.options.togglegibcollision", Command = "vj_npc_gibcollidable"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.options.togglefadegibs", Command = "vj_npc_fadegibs"})
-	Panel:AddControl("Slider",{Label = "#vjbase.menu.npc.options.gibfadetime",min = 0,max = 600,Command = "vj_npc_fadegibstime"})
-	Panel:ControlHelp("#vjbase.menu.npc.options.label6")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.options.togglesnpcgodmode", Command = "vj_npc_godmodesnpc"})
-	//Panel:AddControl("Slider", {Label = "Health Changer",min = 0,max = 10000,Command = "vj_npc_allhealth"})
-	Panel:AddControl("TextBox", {Label = "#vjbase.menu.npc.options.health", Command = "vj_npc_allhealth", WaitForEnter = "0"})
-	Panel:ControlHelp("#vjbase.menu.npc.options.defaulthealth")
-	
-	Panel:AddControl("Label", {Text = "#vjbase.menu.npc.options.label7"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.options.toggleknowenemylocation", Command = "vj_npc_knowenemylocation"})
-	Panel:AddControl("TextBox", {Label = "#vjbase.menu.npc.options.sightdistance", Command = "vj_npc_seedistance", WaitForEnter = "0"})
-	Panel:ControlHelp("#vjbase.menu.npc.options.label8")
-	
-	Panel:AddControl("Label", {Text = "#vjbase.menu.npc.options.label10"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.options.togglegmoddecals", Command = "vj_npc_usegmoddecals"})
-	Panel:ControlHelp("#vjbase.menu.npc.options.label11")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.options.togglecreatureopendoor", Command = "vj_npc_creatureopendoor"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.options.togglehumanscanjump", Command = "vj_npc_human_canjump"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.options.toggleitemdrops", Command = "vj_npc_droploot"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.options.togglehumansdropweapon", Command = "vj_npc_dropweapon"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.options.toggleplydroppedweapons", Command = "vj_npc_plypickupdropwep"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.options.toggleaddfrags", Command = "vj_npc_addfrags"})
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-local function VJ_NPC_SETTINGS(Panel)
-	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
-		Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
-		Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
+		panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
+		panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 		return
 	end
 
-	Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
-	Panel:AddControl("Label", {Text = "#vjbase.menu.general.snpc.warnfuture"})
-	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_nocorpses 0\nvj_npc_nobleed 0\nvj_npc_nomelee 0\nvj_npc_norange 0\nvj_npc_noleap 0\nvj_npc_noflinching 0\nvj_npc_noallies 0\nvj_npc_noweapon 0\nvj_npc_nowandering 0\nvj_npc_nogib 0\nvj_npc_nodeathanimation 0\nvj_npc_nodangerdetection 0\nvj_npc_no_runontouch 0\nvj_npc_no_runonhit 0\nvj_npc_slowplayer 0\nvj_npc_bleedenemyonmelee 0\nvj_npc_noproppush 0\nvj_npc_nopropattack 0\nvj_npc_novfx_gibdeath 0\nvj_npc_noidleparticle 0\nvj_npc_noreload 0\nvj_npc_nobecomeenemytoply 0\nvj_npc_nofollowplayer 0\nvj_npc_nothrowgrenade 0\nvj_npc_nobloodpool 0\nvj_npc_nochasingenemy 0\nvj_npc_nosnpcchat 0\nvj_npc_nomedics 0\nvj_npc_nomeleedmgdsp 0\nvj_npc_nocallhelp 0\nvj_npc_noeating 0\nvj_npc_noinvestigate 0"})
+	panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.warnfuture"})
+	panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_sight_distance 0\n vj_npc_sight_xray 0\n vj_npc_wander 1\n vj_npc_chase 1\n vj_npc_flinch 1\n vj_npc_investigate 1\n vj_npc_callhelp 1\n vj_npc_ply_follow 1\n vj_npc_medic 1\n vj_npc_eat 1\n vj_npc_dangerdetection 1\n vj_npc_runontouch 1\n vj_npc_runonhit 1\n vj_npc_human_jump 1\n vj_npc_creature_opendoor 1\n vj_npc_allies 1\n vj_npc_ply_betray 1\n vj_npc_fri_base 0\n vj_npc_fri_player 0\n vj_npc_fri_zombie 0\n vj_npc_fri_antlion 0\n vj_npc_fri_combine 0"})
 	
-	Panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.title.ai"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglewandering", Command = "vj_npc_nowandering"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglechasingenemy", Command = "vj_npc_nochasingenemy"})
-	Panel:ControlHelp("#vjbase.menu.npc.settings.help.chasingenemy")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglemedics", Command = "vj_npc_nomedics"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglefollowplayer", Command = "vj_npc_nofollowplayer"})
-	Panel:ControlHelp("#vjbase.menu.npc.settings.help.followplayer")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.toggleallies", Command = "vj_npc_noallies"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglebecomeenemytoply", Command = "vj_npc_nobecomeenemytoply"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglecallhelp", Command = "vj_npc_nocallhelp"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.toggleinvestigate", Command = "vj_npc_noinvestigate"})
-	Panel:ControlHelp("#vjbase.menu.npc.settings.help.investigate")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.toggleproppush", Command = "vj_npc_noproppush"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglepropattack", Command = "vj_npc_nopropattack"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.toggledangersight", Command = "vj_npc_nodangerdetection"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglereloading", Command = "vj_npc_noreload"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.toggleeating", Command = "vj_npc_noeating"})
 	
-	Panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.title.attack"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglemelee", Command = "vj_npc_nomelee"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglerange", Command = "vj_npc_norange"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.toggleleap", Command = "vj_npc_noleap"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglethrownade", Command = "vj_npc_nothrowgrenade"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.toggleweapons", Command = "vj_npc_noweapon"})
-	Panel:ControlHelp("#vjbase.menu.npc.settings.help.noweapon")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglemeleedsp", Command = "vj_npc_nomeleedmgdsp"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.toggleslowplayer", Command = "vj_npc_slowplayer"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglebleedonmelee", Command = "vj_npc_bleedenemyonmelee"})
 	
-	Panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.title.misc"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.toggleidleparticles", Command = "vj_npc_noidleparticle"})
-	Panel:ControlHelp("#vjbase.menu.npc.settings.help.idleparticles")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglesnpcchat", Command = "vj_npc_nosnpcchat"})
-	Panel:ControlHelp("#vjbase.menu.npc.settings.help.npcchat")
-	
-	Panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.title.damagecorpse"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.toggleflinching", Command = "vj_npc_noflinching"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglebleeding", Command = "vj_npc_nobleed"})
-	Panel:ControlHelp("#vjbase.menu.npc.settings.help.bleeding")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglebloodpool", Command = "vj_npc_nobloodpool"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglegib", Command = "vj_npc_nogib"})
-	Panel:ControlHelp("#vjbase.menu.npc.settings.help.gib")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglegibdeathvfx", Command = "vj_npc_novfx_gibdeath"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.toggledeathanim", Command = "vj_npc_nodeathanimation"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglecorpses", Command = "vj_npc_nocorpses"})
-	
-	Panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.title.passive"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglerunontouch", Command = "vj_npc_no_runontouch"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.togglerunonhit", Command = "vj_npc_no_runonhit"})
+	panel:AddControl("TextBox", {Label = "#vjbase.menu.npc.settings.ai.sightdistance", Command = "vj_npc_sight_distance", WaitForEnter = "0"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.ai.sightdistance.label")
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.sightxray", Command = "vj_npc_sight_xray"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.ai.sightxray.label")
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.wander", Command = "vj_npc_wander"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.chase", Command = "vj_npc_chase"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.detectdanger", Command = "vj_npc_dangerdetection"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.flinch", Command = "vj_npc_flinch"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.eat", Command = "vj_npc_eat"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.investigate", Command = "vj_npc_investigate"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.ai.investigate.label")
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.alliances", Command = "vj_npc_allies"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.medics", Command = "vj_npc_medic"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.callhelp", Command = "vj_npc_callhelp"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.plybetray", Command = "vj_npc_ply_betray"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.plyfollow", Command = "vj_npc_ply_follow"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.ai.plyfollow.label")
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.creatureopendoor", Command = "vj_npc_creature_opendoor"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.humanjump", Command = "vj_npc_human_jump"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.ai.passive.label"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.passive.runtouch", Command = "vj_npc_runontouch"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.passive.rundamage", Command = "vj_npc_runonhit"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.ai.relation.label"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.relation.antlion", Command = "vj_npc_fri_antlion"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.relation.combine", Command = "vj_npc_fri_combine"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.relation.player", Command = "vj_npc_fri_player"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.relation.zombie", Command = "vj_npc_fri_zombie"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.relation.base", Command = "vj_npc_fri_base"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.ai.relation.base.label")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local function VJ_NPC_SETTINGS_SOUND(Panel)
+local function VJ_NPC_SETTINGS_ATTACKS(panel)
 	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
-		Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
-		Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
+		panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
+		panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
+		return
+	end
+
+	panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.warnfuture"})
+	panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_wep_ply_pickup 1\n vj_npc_wep_drop 1\n vj_npc_wep_reload 1\n vj_npc_wep 1\n vj_npc_grenade 1\n vj_npc_melee_dsp 1\n vj_npc_melee_prop_attack 1\n vj_npc_melee_prop_push 1\n vj_npc_melee_bleed 1\n vj_npc_melee_ply_slow 1\n vj_npc_melee 1\n vj_npc_range 1\n vj_npc_leap 1"})
+	
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.atk.range", Command = "vj_npc_range"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.atk.grenade", Command = "vj_npc_grenade"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.atk.leap", Command = "vj_npc_leap"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.atk.melee.label"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.atk.melee", Command = "vj_npc_melee"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.atk.melee.proppush", Command = "vj_npc_melee_prop_push"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.atk.melee.propattack", Command = "vj_npc_melee_prop_attack"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.atk.melee.bleed", Command = "vj_npc_melee_bleed"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.atk.melee.dsp", Command = "vj_npc_melee_dsp"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.atk.melee.slowply", Command = "vj_npc_melee_ply_slow"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.atk.wep.label"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.atk.wep", Command = "vj_npc_wep"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.atk.wep.reload", Command = "vj_npc_wep_reload"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.atk.wep.drop", Command = "vj_npc_wep_drop"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.atk.wep.plypickup", Command = "vj_npc_wep_ply_pickup"})
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+local function VJ_NPC_SETTINGS_GENERAL(panel)
+	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
+		panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
+		panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
+		return
+	end
+
+	panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.warnfuture"})
+	panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_corpse 1\n vj_npc_corpse_limit 32\n vj_npc_corpse_collision 0\n vj_npc_corpse_fade 0\n vj_npc_corpse_fadetime 10\n vj_npc_corpse_undo 0\n vj_npc_gib 1\n vj_npc_gib_vfx 1\n vj_npc_gib_collision 0\n vj_npc_gib_fade 1\n vj_npc_gib_fadetime 90\n vj_npc_god 0\n vj_npc_health 0\n vj_npc_blood 1\n vj_npc_blood_pool 1\n vj_npc_blood_gmod 0\n vj_npc_anim_death 1\n vj_npc_loot 1\n vj_npc_difficulty 0\n vj_npc_ply_frag 1\n vj_npc_ply_chat 1"})
+	
+	local vj_difficulty = {Options = {}, CVars = {}, Label = "#vjbase.menu.npc.settings.gen.difficulty.header", MenuButton = "0"}
+		vj_difficulty.Options["#vjbase.menu.npc.settings.gen.difficulty.neanderthal"] = {vj_npc_difficulty = "-3"}
+		vj_difficulty.Options["#vjbase.menu.npc.settings.gen.difficulty.childs_play"] = {vj_npc_difficulty = "-2"}
+		vj_difficulty.Options["#vjbase.menu.npc.settings.gen.difficulty.easy"] = {vj_npc_difficulty = "-1"}
+		vj_difficulty.Options["#vjbase.menu.npc.settings.gen.difficulty.normal"] = {vj_npc_difficulty = "0"}
+		vj_difficulty.Options["#vjbase.menu.npc.settings.gen.difficulty.hard"] = {vj_npc_difficulty = "1"}
+		vj_difficulty.Options["#vjbase.menu.npc.settings.gen.difficulty.insane"] = {vj_npc_difficulty = "2"}
+		vj_difficulty.Options["#vjbase.menu.npc.settings.gen.difficulty.impossible"] = {vj_npc_difficulty = "3"}
+		vj_difficulty.Options["#vjbase.menu.npc.settings.gen.difficulty.nightmare"] = {vj_npc_difficulty = "4"}
+		vj_difficulty.Options["#vjbase.menu.npc.settings.gen.difficulty.hell_on_earth"] = {vj_npc_difficulty = "5"}
+		vj_difficulty.Options["#vjbase.menu.npc.settings.gen.difficulty.total_annihilation"] = {vj_npc_difficulty = "6"}
+	panel:AddControl("ComboBox", vj_difficulty)
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.gen.deathanim", Command = "vj_npc_anim_death"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.gen.lootdrops", Command = "vj_npc_loot"})
+	
+	panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.gen.health.label"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.gen.health.god", Command = "vj_npc_god"})
+	panel:AddControl("TextBox", {Label = "#vjbase.menu.npc.settings.gen.health.override", Command = "vj_npc_health", WaitForEnter = "0"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.gen.health.override.label")
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.gen.health.blood.vfx", Command = "vj_npc_blood"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.gen.health.blood.vfx.label")
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.gen.health.blood.pool", Command = "vj_npc_blood_pool"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.gen.health.blood.gmoddecals", Command = "vj_npc_blood_gmod"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.gen.health.blood.gmoddecals.label")
+	
+	panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.gen.corpse.label"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.gen.corpse", Command = "vj_npc_corpse"})
+	panel:AddControl("Slider",{Label = "#vjbase.menu.npc.settings.gen.corpse.limit",min = 4,max = 300,Command = "vj_npc_corpse_limit"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.gen.corpse.limit.label")
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.gen.corpse.fade", Command = "vj_npc_corpse_fade"})
+	panel:AddControl("Slider",{Label = "#vjbase.menu.npc.settings.gen.corpse.fadetime",min = 0,max = 600,Command = "vj_npc_corpse_fadetime"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.gen.corpse.fadetime.label")
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.gen.corpse.undo", Command = "vj_npc_corpse_undo"})
+	local vj_collision = {Options = {}, CVars = {}, Label = "#vjbase.menu.npc.settings.gen.collision.header", MenuButton = "0"}
+		vj_collision.Options["#vjbase.menu.npc.settings.gen.collision.default"] = {vj_npc_corpse_collision = "0"}
+		vj_collision.Options["#vjbase.menu.npc.settings.gen.collision.everything"] = {vj_npc_corpse_collision = "1"}
+		vj_collision.Options["#vjbase.menu.npc.settings.gen.collision.onlyworld"] = {vj_npc_corpse_collision = "2"}
+		vj_collision.Options["#vjbase.menu.npc.settings.gen.collision.excludedebris"] = {vj_npc_corpse_collision = "3"}
+		vj_collision.Options["#vjbase.menu.npc.settings.gen.collision.excludeplynpcs"] = {vj_npc_corpse_collision = "4"}
+		vj_collision.Options["#vjbase.menu.npc.settings.gen.collision.excludeply"] = {vj_npc_corpse_collision = "5"}
+	panel:AddControl("ComboBox", vj_collision)
+	
+	panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.gen.gib.label"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.gen.gib", Command = "vj_npc_gib"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.gen.gib.vfx", Command = "vj_npc_gib_vfx"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.gen.gib.vfx.label")
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.gen.gib.collision", Command = "vj_npc_gib_collision"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.gen.gib.fade", Command = "vj_npc_gib_fade"})
+	panel:AddControl("Slider",{Label = "#vjbase.menu.npc.settings.gen.gib.fadetime",min = 0,max = 600,Command = "vj_npc_gib_fadetime"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.gen.gib.fadetime.label")
+	
+	panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.gen.ply.label"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.gen.ply.addfrags", Command = "vj_npc_ply_frag"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.gen.ply.chat", Command = "vj_npc_ply_chat"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.gen.ply.chat.label")
+end
+---------------------------------------------------------------------------------------------------------------------------------------------
+local function VJ_NPC_SETTINGS_SOUND(panel)
+	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
+		panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
+		panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 		return
 	end
 	
-	Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
-	Panel:AddControl("Label", {Text = "#vjbase.menu.general.snpc.warnfuture"})
-	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_sd_nosounds 0\n vj_npc_sd_idle 0\n vj_npc_sd_alert 0\n vj_npc_sd_pain 0\n vj_npc_sd_death 0\n vj_npc_sd_footstep 0\n vj_npc_sd_soundtrack 0\n vj_npc_sd_meleeattack 0\n vj_npc_sd_rangeattack 0\n vj_npc_sd_leapattack 0\n vj_npc_sd_ondangersight 0\n vj_npc_sd_onplayersight 0\n vj_npc_sd_damagebyplayer 0\n vj_npc_sd_slowplayer 0\n vj_npc_sd_gibbing 0\n vj_npc_sd_breath 0\n vj_npc_sd_followplayer 0\n vj_npc_sd_becomenemytoply 0\n vj_npc_sd_medic 0\n vj_npc_sd_reload 0\n vj_npc_sd_grenadeattack 0\n vj_npc_sd_suppressing 0\n vj_npc_sd_callforhelp 0\n vj_npc_sd_onreceiveorder 0"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.toggleallsounds", Command = "vj_npc_sd_nosounds"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.togglesoundtrack", Command = "vj_npc_sd_soundtrack"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.toggleidle", Command = "vj_npc_sd_idle"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.togglebreathing", Command = "vj_npc_sd_breath"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.togglefootsteps", Command = "vj_npc_sd_footstep"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.toggleattacksounds", Command = "vj_npc_sd_meleeattack"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.togglerangeattack", Command = "vj_npc_sd_rangeattack"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.togglealert", Command = "vj_npc_sd_alert"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.togglepain", Command = "vj_npc_sd_pain"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.toggledeath", Command = "vj_npc_sd_death"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.togglegibbing", Command = "vj_npc_sd_gibbing"})
-	Panel:ControlHelp("#vjbase.menu.npc.sdsettings.label1")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.togglemedic", Command = "vj_npc_sd_medic"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.togglefollowing", Command = "vj_npc_sd_followplayer"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.togglecallhelp", Command = "vj_npc_sd_callforhelp"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.togglereceiveorder", Command = "vj_npc_sd_onreceiveorder"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.togglebecomeenemy", Command = "vj_npc_sd_becomenemytoply"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.toggleplayersight", Command = "vj_npc_sd_onplayersight"})
-	Panel:ControlHelp("#vjbase.menu.npc.sdsettings.label2")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.toggledmgbyplayer", Command = "vj_npc_sd_damagebyplayer"})
-	Panel:ControlHelp("#vjbase.menu.npc.sdsettings.label3")
+	panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.warnfuture"})
+	panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_snd 1\n vj_npc_snd_idle 1\n vj_npc_snd_alert 1\n vj_npc_snd_pain 1\n vj_npc_snd_death 1\n vj_npc_snd_footstep 1\n vj_npc_snd_track 1\n vj_npc_snd_melee 1\n vj_npc_snd_range 1\n vj_npc_snd_leap 1\n vj_npc_snd_danger 1\n vj_npc_snd_plysight 1\n vj_npc_snd_plydamage 1\n vj_npc_snd_plyslow 1\n vj_npc_snd_gib 1\n vj_npc_snd_breath 1\n vj_npc_snd_plyfollow 1\n vj_npc_snd_plybetrayal 1\n vj_npc_snd_medic 1\n vj_npc_snd_wep_reload 1\n vj_npc_snd_grenade 1\n vj_npc_snd_wep_suppressing 1\n vj_npc_snd_callhelp 1\n vj_npc_snd_receiveorder 1"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglesounds", Command = "vj_npc_snd"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglesoundtrack", Command = "vj_npc_snd_track"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.toggleidle", Command = "vj_npc_snd_idle"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglebreathing", Command = "vj_npc_snd_breath"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglefootsteps", Command = "vj_npc_snd_footstep"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglemelee", Command = "vj_npc_snd_melee"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglerange", Command = "vj_npc_snd_range"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglealert", Command = "vj_npc_snd_alert"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglepain", Command = "vj_npc_snd_pain"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.toggledeath", Command = "vj_npc_snd_death"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglegibbing", Command = "vj_npc_snd_gib"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.snd.togglegibbing.label")
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglemedic", Command = "vj_npc_snd_medic"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglefollowing", Command = "vj_npc_snd_plyfollow"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglecallhelp", Command = "vj_npc_snd_callhelp"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglereceiveorder", Command = "vj_npc_snd_receiveorder"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglebecomeenemy", Command = "vj_npc_snd_plybetrayal"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.toggleplayersight", Command = "vj_npc_snd_plysight"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.snd.toggleplayersight.label")
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.toggledmgbyplayer", Command = "vj_npc_snd_plydamage"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.snd.toggledmgbyplayer.label")
 	
-	Panel:AddControl("Label", {Text = "#vjbase.menu.general.snpc.creaturesettings"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.toggleleap", Command = "vj_npc_sd_leapattack"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.toggleslowedplayer", Command = "vj_npc_sd_slowplayer"})
-	Panel:ControlHelp("#vjbase.menu.npc.sdsettings.label4")
+	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.creaturesettings"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.toggleleap", Command = "vj_npc_snd_leap"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.toggleslowedplayer", Command = "vj_npc_snd_plyslow"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.snd.toggleslowedplayer.label")
 	
-	Panel:AddControl("Label", {Text = "#vjbase.menu.general.snpc.humansettings"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.togglegrenade", Command = "vj_npc_sd_grenadeattack"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.toggledangersight", Command = "vj_npc_sd_ondangersight"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.togglesuppressing", Command = "vj_npc_sd_suppressing"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.sdsettings.togglereload", Command = "vj_npc_sd_reload"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.humansettings"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglegrenade", Command = "vj_npc_snd_grenade"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.toggledangersight", Command = "vj_npc_snd_danger"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglesuppressing", Command = "vj_npc_snd_wep_suppressing"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.snd.togglereload", Command = "vj_npc_snd_wep_reload"})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local function VJ_NPC_SETTINGS_DEV(Panel)
+local function VJ_NPC_SETTINGS_DEV(panel)
 	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
-		Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
-		Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
+		panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
+		panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 		return
 	end
 	
-	Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
-	Panel:AddControl("Label", {Text = "#vjbase.menu.npc.devsettings.label1"})
-	Panel:AddControl("Label", {Text = "#vjbase.menu.npc.devsettings.label2"})
-	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_debug_weapon 0\n vj_npc_debug_death 0\n vj_npc_debug_ondmg 0\n vj_npc_debug_ontouch 0\n vj_npc_debug_stopattacks 0\n vj_npc_debug_takingcover 0\n vj_npc_debug_resetenemy 0\n vj_npc_debug_lastseenenemytime 0\n vj_npc_debug 0\n vj_npc_debug_enemy 0\n vj_npc_debug_engine 0"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.devsettings.toggledev", Command = "vj_npc_debug"})
-	Panel:ControlHelp("#vjbase.menu.npc.devsettings.label3")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.devsettings.enginedebug", Command = "vj_npc_debug_engine"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.devsettings.printcurenemy", Command = "vj_npc_debug_enemy"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.devsettings.printlastseenenemy", Command = "vj_npc_debug_lastseenenemytime"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.devsettings.printonreset", Command = "vj_npc_debug_resetenemy"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.devsettings.printonstopattack", Command = "vj_npc_debug_stopattacks"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.devsettings.printtakingcover", Command = "vj_npc_debug_takingcover"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.devsettings.printondamage", Command = "vj_npc_debug_ondmg"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.devsettings.printondeath", Command = "vj_npc_debug_death"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.devsettings.printtouch", Command = "vj_npc_debug_ontouch"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.devsettings.printweaponinfo", Command = "vj_npc_debug_weapon"})
-	Panel:AddControl("Button", {Label = "#vjbase.menu.npc.devsettings.cachedmodels", Command = "listmodels"})
-	Panel:AddControl("Button", {Label = "#vjbase.menu.npc.devsettings.numofnpcs", Command = "vj_dev_numnpcs"})
-	Panel:AddControl("Label", {Text = "#vjbase.menu.npc.devsettings.label4"})
-	Panel:AddControl("Button", {Label = "#vjbase.menu.npc.devsettings.reloadsounds", Command = "snd_restart"})
-	Panel:AddControl("Button", {Label = "#vjbase.menu.npc.devsettings.reloadmaterials", Command = "mat_reloadallmaterials"})
-	Panel:AddControl("Button", {Label = "#vjbase.menu.npc.devsettings.reloadtextures", Command = "mat_reloadtextures"})
-	Panel:AddControl("Button", {Label = "#vjbase.menu.npc.devsettings.reloadmodels", Command = "r_flushlod"})
-	Panel:AddControl("Button", {Label = "#vjbase.menu.npc.devsettings.reloadspawnmenu", Command = "spawnmenu_reload"})
+	panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.dev.label1"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.dev.label2"})
+	panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_debug_weapon 0\n vj_npc_debug_death 0\n vj_npc_debug_damage 0\n vj_npc_debug_touch 0\n vj_npc_debug_stopattacks 0\n vj_npc_debug_takingcover 0\n vj_npc_debug_resetenemy 0\n vj_npc_debug_lastseenenemytime 0\n vj_npc_debug 0\n vj_npc_debug_enemy 0\n vj_npc_debug_engine 0"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.dev.toggledev", Command = "vj_npc_debug"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.dev.label3")
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.dev.enginedebug", Command = "vj_npc_debug_engine"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.dev.printcurenemy", Command = "vj_npc_debug_enemy"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.dev.printlastseenenemy", Command = "vj_npc_debug_lastseenenemytime"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.dev.printonreset", Command = "vj_npc_debug_resetenemy"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.dev.printonstopattack", Command = "vj_npc_debug_stopattacks"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.dev.printtakingcover", Command = "vj_npc_debug_takingcover"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.dev.printondamage", Command = "vj_npc_debug_damage"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.dev.printondeath", Command = "vj_npc_debug_death"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.dev.printtouch", Command = "vj_npc_debug_touch"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.dev.printweaponinfo", Command = "vj_npc_debug_weapon"})
+	panel:AddControl("Button", {Label = "#vjbase.menu.npc.settings.dev.cachedmodels", Command = "listmodels"})
+	panel:AddControl("Button", {Label = "#vjbase.menu.npc.settings.dev.numofnpcs", Command = "vj_dev_numnpcs"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.dev.label4"})
+	panel:AddControl("Button", {Label = "#vjbase.menu.npc.settings.dev.reloadsounds", Command = "snd_restart"})
+	panel:AddControl("Button", {Label = "#vjbase.menu.npc.settings.dev.reloadmaterials", Command = "mat_reloadallmaterials"})
+	panel:AddControl("Button", {Label = "#vjbase.menu.npc.settings.dev.reloadtextures", Command = "mat_reloadtextures"})
+	panel:AddControl("Button", {Label = "#vjbase.menu.npc.settings.dev.reloadmodels", Command = "r_flushlod"})
+	panel:AddControl("Button", {Label = "#vjbase.menu.npc.settings.dev.reloadspawnmenu", Command = "spawnmenu_reload"})
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local function VJ_NPC_SETTINGS_CONTROLLER(Panel)
-	Panel:AddControl("Label", {Text = "#vjbase.menu.npc.consettings.label1"})
-	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_cont_hud 1\n vj_npc_cont_zoomdist 5\n vj_npc_cont_devents 0\n vj_npc_cont_cam_speed 6\n vj_npc_cont_cam_zoomspeed 10\n vj_npc_cont_diewithnpc 0"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.consettings.displayhud", Command = "vj_npc_cont_hud"})
-	Panel:AddControl("Slider", {Label = "#vjbase.menu.npc.consettings.camzoomdistance", min = 5, max = 300, Command = "vj_npc_cont_zoomdist"})
-	Panel:AddControl("Slider", {Label = "#vjbase.menu.npc.consettings.camzoomspeed", min = 1, max = 200, Command = "vj_npc_cont_cam_zoomspeed"})
-	Panel:AddControl("Slider", {Label = "#vjbase.menu.npc.consettings.camspeed", min = 1, max = 180, Command = "vj_npc_cont_cam_speed"})
-	Panel:ControlHelp("#vjbase.menu.npc.consettings.label2")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.consettings.diewithnpc", Command = "vj_npc_cont_diewithnpc"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.consettings.displaydev", Command = "vj_npc_cont_devents"})
+local function VJ_NPC_SETTINGS_CONTROLLER(panel)
+	panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.con.label1"})
+	panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_cont_hud 1\n vj_npc_cont_zoomdist 5\n vj_npc_cont_debug 0\n vj_npc_cont_cam_speed 6\n vj_npc_cont_cam_zoomspeed 10\n vj_npc_cont_diewithnpc 0"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.con.displayhud", Command = "vj_npc_cont_hud"})
+	panel:AddControl("Slider", {Label = "#vjbase.menu.npc.settings.con.camzoomdistance", min = 5, max = 300, Command = "vj_npc_cont_zoomdist"})
+	panel:AddControl("Slider", {Label = "#vjbase.menu.npc.settings.con.camzoomspeed", min = 1, max = 200, Command = "vj_npc_cont_cam_zoomspeed"})
+	panel:AddControl("Slider", {Label = "#vjbase.menu.npc.settings.con.camspeed", min = 1, max = 180, Command = "vj_npc_cont_cam_speed"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.con.label2")
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.con.diewithnpc", Command = "vj_npc_cont_diewithnpc"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.con.displaydev", Command = "vj_npc_cont_debug"})
 	
-	Panel:AddControl("Label", {Text = "#vjbase.menu.npc.consettings.label3"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.con.label3"})
 	
 	local ControlList = vgui.Create("DListView")
 		ControlList:SetTooltip(false)
 		ControlList:SetSize(100, 320)
 		ControlList:SetMultiSelect(false)
-		ControlList:AddColumn("#vjbase.menu.npc.consettings.bind.header1") -- Add column
-		ControlList:AddColumn("#vjbase.menu.npc.consettings.bind.header2") -- Add column
-			ControlList:AddLine("W A S D", "#vjbase.menu.npc.consettings.bind.movement")
-			ControlList:AddLine("END", "#vjbase.menu.npc.consettings.bind.exitcontrol")
-			ControlList:AddLine("FIRE1", "#vjbase.menu.npc.consettings.bind.meleeattack")
-			ControlList:AddLine("FIRE2", "#vjbase.menu.npc.consettings.bind.rangeattack")
-			ControlList:AddLine("JUMP", "#vjbase.menu.npc.consettings.bind.leaporgrenade")
-			ControlList:AddLine("RELOAD", "#vjbase.menu.npc.consettings.bind.reloadweapon")
-			ControlList:AddLine("T", "#vjbase.menu.npc.consettings.bind.togglebullseye")
-			ControlList:AddLine("H", "#vjbase.menu.npc.consettings.bind.cameramode")
-			ControlList:AddLine("J", "#vjbase.menu.npc.consettings.bind.movementjump")
-			ControlList:AddLine("MOUSE WHEEL", "#vjbase.menu.npc.consettings.bind.camerazoom")
-			ControlList:AddLine("UP ARROW", "#vjbase.menu.npc.consettings.bind.cameraforward")
-			ControlList:AddLine("UP ARROW + RUN", "#vjbase.menu.npc.consettings.bind.cameraup")
-			ControlList:AddLine("DOWN ARROW", "#vjbase.menu.npc.consettings.bind.camerabackward")
-			ControlList:AddLine("DOWN ARROW + RUN", "#vjbase.menu.npc.consettings.bind.cameradown")
-			ControlList:AddLine("LEFT ARROW", "#vjbase.menu.npc.consettings.bind.cameraleft")
-			ControlList:AddLine("RIGHT ARROW", "#vjbase.menu.npc.consettings.bind.cameraright")
-			ControlList:AddLine("BACKSPACE", "#vjbase.menu.npc.consettings.bind.resetzoom")
+		ControlList:AddColumn("#vjbase.menu.npc.settings.con.bind.header1") -- Add column
+		ControlList:AddColumn("#vjbase.menu.npc.settings.con.bind.header2") -- Add column
+			ControlList:AddLine("W A S D", "#vjbase.menu.npc.settings.con.bind.movement")
+			ControlList:AddLine("END", "#vjbase.menu.npc.settings.con.bind.exitcontrol")
+			ControlList:AddLine("FIRE1", "#vjbase.menu.npc.settings.con.bind.meleeattack")
+			ControlList:AddLine("FIRE2", "#vjbase.menu.npc.settings.con.bind.rangeattack")
+			ControlList:AddLine("JUMP", "#vjbase.menu.npc.settings.con.bind.leaporgrenade")
+			ControlList:AddLine("RELOAD", "#vjbase.menu.npc.settings.con.bind.reloadweapon")
+			ControlList:AddLine("T", "#vjbase.menu.npc.settings.con.bind.togglebullseye")
+			ControlList:AddLine("H", "#vjbase.menu.npc.settings.con.bind.cameramode")
+			ControlList:AddLine("J", "#vjbase.menu.npc.settings.con.bind.movementjump")
+			ControlList:AddLine("MOUSE WHEEL", "#vjbase.menu.npc.settings.con.bind.camerazoom")
+			ControlList:AddLine("UP ARROW", "#vjbase.menu.npc.settings.con.bind.cameraforward")
+			ControlList:AddLine("UP ARROW + RUN", "#vjbase.menu.npc.settings.con.bind.cameraup")
+			ControlList:AddLine("DOWN ARROW", "#vjbase.menu.npc.settings.con.bind.camerabackward")
+			ControlList:AddLine("DOWN ARROW + RUN", "#vjbase.menu.npc.settings.con.bind.cameradown")
+			ControlList:AddLine("LEFT ARROW", "#vjbase.menu.npc.settings.con.bind.cameraleft")
+			ControlList:AddLine("RIGHT ARROW", "#vjbase.menu.npc.settings.con.bind.cameraright")
+			ControlList:AddLine("BACKSPACE", "#vjbase.menu.npc.settings.con.bind.resetzoom")
 		ControlList.OnRowSelected = function(panel, rowIndex, row)
-			chat.AddText(Color(0,255,0), language.GetPhrase("#vjbase.menu.npc.consettings.bind.clickmsg1").." ", Color(255,255,0), row:GetValue(1), Color(0,255,0), " | "..language.GetPhrase("#vjbase.menu.npc.consettings.bind.clickmsg2").." ", Color(255,255,0), row:GetValue(2))
+			chat.AddText(Color(0,255,0), language.GetPhrase("#vjbase.menu.npc.settings.con.bind.clickmsg1").." ", Color(255,255,0), row:GetValue(1), Color(0,255,0), " | "..language.GetPhrase("#vjbase.menu.npc.settings.con.bind.clickmsg2").." ", Color(255,255,0), row:GetValue(2))
 		end
-	Panel:AddItem(ControlList)
+	panel:AddItem(ControlList)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local function VJ_NPC_SETTINGS_PERFORMANCE(Panel)
+local function VJ_NPC_SETTINGS_PERFORMANCE(panel)
 	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
-		Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
-		Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
+		panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
+		panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 		return
 	end
 	
-	Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
-	Panel:AddControl("Label", {Text = "#vjbase.menu.npc.performance.initial.label"})
-	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_shadows 1\n vj_npc_poseparams 1\n vj_npc_ikchains 1\nvj_npc_processtime 1\nvj_npc_forcelowlod 0"})
-	Panel:AddControl("Slider",{Label = "#vjbase.menu.npc.performance.processtime",Type = "Float",min = 0.05,max = 3,Command = "vj_npc_processtime"})
+	panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.warnfuture"})
+	panel:AddControl("Label", {Text = "#vjbase.menu.npc.settings.perf.initial.label"})
+	panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_shadows 1\n vj_npc_poseparams 1\n vj_npc_ikchains 1\nvj_npc_processtime 1\n vj_npc_forcelowlod 0\n vj_npc_reduce_vfx 0"})
+	
+	panel:AddControl("Slider",{Label = "#vjbase.menu.npc.settings.perf.processtime",Type = "Float",min = 0.05,max = 3,Command = "vj_npc_processtime"})
 	local vid = vgui.Create("DButton") -- Process Time Video
 		vid:SetFont("TargetID")
-		vid:SetText("#vjbase.menu.npc.performance.processtime.button")
+		vid:SetText("#vjbase.menu.npc.settings.perf.processtime.button")
 		vid:SetSize(150,25)
 		//vid:SetColor(Color(76,153,255,255))
 		vid.DoClick = function()
 			gui.OpenURL("https://www.youtube.com/watch?v=7wKsCmGpieU")
 		end
-	Panel:AddPanel(vid)
-	Panel:ControlHelp("#vjbase.menu.npc.performance.processtime.label")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.performance.poseparams", Command = "vj_npc_poseparams"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.performance.shadows", Command = "vj_npc_shadows"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.performance.ikchains", Command = "vj_npc_ikchains"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.performance.forcelowlod", Command = "vj_npc_forcelowlod"})
+	panel:AddPanel(vid)
+	panel:ControlHelp("#vjbase.menu.npc.settings.perf.processtime.label")
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.perf.poseparams", Command = "vj_npc_poseparams"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.perf.shadows", Command = "vj_npc_shadows"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.perf.ikchains", Command = "vj_npc_ikchains"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.perf.forcelowlod", Command = "vj_npc_forcelowlod"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.perf.reducevfx", Command = "vj_npc_reduce_vfx"})
+	panel:ControlHelp("#vjbase.menu.npc.settings.perf.reducevfx.label")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local function VJ_WEAPON_SETTINGS_CLIENT(Panel)
-	Panel:AddControl("Label", {Text = "#vjbase.menu.wep.clsettings.notice"})
-	Panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_wep_nomuszzleflash 0\n vj_wep_nobulletshells 0\n vj_wep_nomuszzleflash_dynamiclight 0"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.wep.clsettings.togglemuzzle", Command = "vj_wep_nomuszzleflash"})
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.wep.clsettings.togglemuzzlelight", Command = "vj_wep_nomuszzleflash_dynamiclight"})
-	Panel:ControlHelp("#vjbase.menu.wep.clsettings.togglemuzzle.label")
-	Panel:AddControl("Checkbox", {Label = "#vjbase.menu.wep.clsettings.togglemuzzlebulletshells", Command = "vj_wep_nobulletshells"})
+local function VJ_WEAPON_SETTINGS_CLIENT(panel)
+	panel:AddControl("Label", {Text = "#vjbase.menu.wep.clsettings.notice"})
+	panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_wep_nomuszzleflash 0\n vj_wep_nobulletshells 0\n vj_wep_nomuszzleflash_dynamiclight 0"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.wep.clsettings.togglemuzzle", Command = "vj_wep_nomuszzleflash"})
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.wep.clsettings.togglemuzzlelight", Command = "vj_wep_nomuszzleflash_dynamiclight"})
+	panel:ControlHelp("#vjbase.menu.wep.clsettings.togglemuzzle.label")
+	panel:AddControl("Checkbox", {Label = "#vjbase.menu.wep.clsettings.togglemuzzlebulletshells", Command = "vj_wep_nobulletshells"})
 end
+
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_CONFIGURES", function()
-	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_options", "#vjbase.menu.npc.options", "", "", VJ_NPC_OPTIONS, {})
-	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings", "#vjbase.menu.npc.settings", "", "", VJ_NPC_SETTINGS, {})
-	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_sound", "#vjbase.menu.npc.sdsettings", "", "", VJ_NPC_SETTINGS_SOUND, {})
-	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_dev", "#vjbase.menu.npc.devsettings", "", "", VJ_NPC_SETTINGS_DEV, {})
-	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_cont", "#vjbase.menu.npc.consettings", "", "", VJ_NPC_SETTINGS_CONTROLLER, {})
-	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_perf", "#vjbase.menu.npc.performance", "", "", VJ_NPC_SETTINGS_PERFORMANCE, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_ai", "#vjbase.menu.npc.settings.ai", "", "", VJ_NPC_SETTINGS_AI, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_atk", "#vjbase.menu.npc.settings.atk", "", "", VJ_NPC_SETTINGS_ATTACKS, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_gen", "#vjbase.menu.npc.settings.gen", "", "", VJ_NPC_SETTINGS_GENERAL, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_snd", "#vjbase.menu.npc.settings.snd", "", "", VJ_NPC_SETTINGS_SOUND, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_dev", "#vjbase.menu.npc.settings.dev", "", "", VJ_NPC_SETTINGS_DEV, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_con", "#vjbase.menu.npc.settings.con", "", "", VJ_NPC_SETTINGS_CONTROLLER, {})
+	spawnmenu.AddToolMenuOption("DrVrej", "NPCs", "vj_menu_npc_settings_perf", "#vjbase.menu.npc.settings.perf", "", "", VJ_NPC_SETTINGS_PERFORMANCE, {})
 	spawnmenu.AddToolMenuOption("DrVrej", "Weapons", "vj_menu_wep_settings_cl", "#vjbase.menu.wep.clsettings", "", "", VJ_WEAPON_SETTINGS_CLIENT, {})
 end)
