@@ -13,7 +13,6 @@
 AddCSLuaFile()
 if CLIENT then print("Initializing VJ Base client files...") else print("Initializing VJ Base server files...") end
 
-local GetConVar = GetConVar
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Global Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -279,7 +278,7 @@ elseif CLIENT then
 	end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-hook.Add("PlayerInitialSpawn", "VJBaseSpawn", function(ply, transition)
+hook.Add("PlayerInitialSpawn", "VJ_PlayerInitialSpawn_Msg", function(ply, transition)
 	-- Simple message for the users
 	timer.Simple(1, function()
 		net.Start("vj_welcome_msg")
@@ -289,7 +288,7 @@ hook.Add("PlayerInitialSpawn", "VJBaseSpawn", function(ply, transition)
 	if !game.SinglePlayer() && ply:SteamID() == "STEAM_0:0:22688298" then
 		PrintMessage(HUD_PRINTTALK, "DrVrej Has Joined The Game!")
 		PrintMessage(HUD_PRINTCENTER, "DrVrej Has Joined The Game!")
-		local sd = CreateSound(game.GetWorld(), "vj_base/player/illuminati.mp3")
+		local sd = CreateSound(game.GetWorld(), "vj_base/player/illuminati.mp3", VJ_RecipientFilter)
 		sd:SetSoundLevel(0)
 		sd:Play()
 		timer.Simple(10, function() if sd then sd:Stop() end end)
@@ -299,7 +298,7 @@ end)
 net.Receive("vj_meme", function(len, pl)
 	if pl:IsPlayer() && pl:SteamID() == "STEAM_0:0:22688298" then
 		PrintMessage(HUD_PRINTTALK, "DrVrej is in the server!")
-		local sd = CreateSound(game.GetWorld(), "vj_base/player/illuminati.mp3")
+		local sd = CreateSound(game.GetWorld(), "vj_base/player/illuminati.mp3", VJ_RecipientFilter)
 		sd:SetSoundLevel(0)
 		sd:Play()
 	end
@@ -307,20 +306,20 @@ end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Outdated Game Version Check ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-if SERVER && !isfunction(FindMetaTable("Entity").SetSurroundingBoundsType) then
+if SERVER && (!isfunction(FindMetaTable("Entity").SetSurroundingBoundsType) or !isfunction(FindMetaTable("NPC").GetMoveDelay)) then
 	timer.Simple(1, function()
 		if !VJBASE_ERROR_GAME_OUTDATED then
 			VJBASE_ERROR_GAME_OUTDATED = true
 			timer.Create("VJBASE_ERROR_GAME_OUTDATED", 2, 1, function()
-				PrintMessage(HUD_PRINTTALK, "--- Outdated version of Garry's Mod detected! ---")
-				PrintMessage(HUD_PRINTTALK, "Parts of VJ Base are now disabled! Expect errors & AI issues!")
-				PrintMessage(HUD_PRINTTALK, "REASON: Game is running on an old version or is pirated!")
+				PrintMessage(HUD_PRINTTALK, "--- VJ Base Error! ---")
+				PrintMessage(HUD_PRINTTALK, "Game is running on an old unsupported version!")
+				PrintMessage(HUD_PRINTTALK, "Expect errors, bugs, and crashes!")
 			end)
 		end
 	end)
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- SLV Base Check ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Confliction Check ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if (SLVBase) then
 	timer.Simple(1, function()

@@ -1,7 +1,5 @@
 "VertexLitGeneric"
-{	
-//THIS IS KEVINS HEV HAND TEXTURE
-//METAL TEXTURE
+{
 	"$baseTexture" "vj_base/models/weapons/glock/v_hand"
 	"$bumpmap" "vj_base/models/weapons/glock/v_hand_normal"
 //	"$halflambert" "1"
@@ -23,18 +21,4 @@
 	"$rimlight" "1"
 	"$rimlightexponent" "25"
 	"$rimlightboost" "0.05"
-
-//	$detail "effects/models/model_blood_red.vtf"
-	$detailscale 5
-	$detailblendfactor 0.0
-	$detailblendmode 0
-
-	$viewmodelhands 1
-
-	Proxies
-	{
-		ModelDetailFx
-		{
-		}
-	}
 }

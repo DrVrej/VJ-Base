@@ -26,26 +26,4 @@
 
 	"$tintA" "[5 3 1]"
 	"$tintB" "[.15 .15 .15]"
-
-//	$detail "effects/models/model_blood_red.vtf"
-	$detailscale 5
-	$detailblendfactor 0.0
-	$detailblendmode 0
-	Proxies
-	{
-		ModelDetailFx
-		{
-		}
-
-		"FlashyWeapon"
-		{
-			"resultVar" "$tintB"
-		}
-		"Multiply"
-		{
-			"srcVar1" "$tintA"
-			"srcVar2" "$tintB"
-			"resultVar" "$selfillumtint"
-		}
-	}
 }
