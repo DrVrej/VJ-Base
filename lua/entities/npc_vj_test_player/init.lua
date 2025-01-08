@@ -65,7 +65,31 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
 	VJ.EmitSound(self, "player/pl_drown1.wav") -- Player connect sound
+	
+	-- Random bodygroups and skins
+	for i = 1, self:GetNumBodyGroups() -1 do
+		self:SetBodygroup(i, math.random(0, self:GetBodygroupCount(i - 1)))
+	end
+	self:SetSkin(math.random(0, self:SkinCount() - 1))
+	
+	-- Random playermodel color
+	self:SetPlayerColor(Color(math.Rand(0, 255), math.Rand(0, 255), math.Rand(0, 255)):ToVector())
 end
+---------------------------------------------------------------------------------------------------------------------------------------------
+/*function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpseEnt)
+	-- Has to be client side, not worth networking, therefore this has been abandoned
+	corpseEnt.SetupDataTables = function()
+		//corpseEnt:NetworkVar("Vector", 0, "PlayerColor")
+		corpseEnt:DTVar("Vector", 0, "PlayerColor")
+	end
+	
+	corpseEnt:InstallDataTable()
+	corpseEnt:SetupDataTables()
+	
+	corpseEnt:DTVar("Vector", 0, "PlayerColor")
+	//corpseEnt:SetDTVector(0, self:GetPlayerColor())
+    //corpseEnt:SetPlayerColor(self:GetPlayerColor())
+end*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnGrenadeAttack(status, grenade, customEnt, landDir, landingPos)
 	if status == "Throw" then
