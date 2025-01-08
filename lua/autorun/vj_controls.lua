@@ -3,8 +3,6 @@
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
-local killIconColor = Color(255, 80, 0, 255)
-
 if !VJ then VJ = {} end -- If VJ isn't initialized, initialize it!
 
 if !VJ.Plugins then VJ.Plugins = {} end
@@ -34,6 +32,41 @@ VJ.AddCategoryInfo = function(category, options)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
+	Helper function to add kill icons
+		- class = Entity class to assign this kill icon to
+		- name = Name to display in the kill icon
+		- texture = Path to the texture to use for the kill icon | DEFAULT = VJ.KILLICON_DEFAULT
+			- Direct path to a texture OR predefined VJ.KILLICON_* enums
+			- Use VJ.KILLICON_TYPE_ALIAS to set it to an existing class's kill icon
+			- Use VJ.KILLICON_TYPE_FONT to set using a font
+		- data = Parameter changes depending on the call type
+			- VJ.KILLICON_TYPE_ALIAS : The alias class to use | DEFAULT = "prop_physics"
+			- VJ.KILLICON_TYPE_FONT : Table of data | DEFAULT = nil
+				- font = Font name
+				- symbol = Font symbol to use as the kill icon
+				- color = Color of the kill icon | DEFAULT = Color(255, 80, 0, 255)
+				- heightScale = Height scale of the kill icon | DEFAULT = 1
+			- Everything else : Color of the kill icon | DEFAULT = Color(255, 80, 0, 255)
+-----------------------------------------------------------]]
+local killIconDefColor = Color(255, 80, 0, 255)
+local KILLICON_DEFAULT = VJ.KILLICON_DEFAULT
+local KILLICON_TYPE_ALIAS = VJ.KILLICON_TYPE_ALIAS
+local KILLICON_TYPE_FONT = VJ.KILLICON_TYPE_FONT
+--
+local function addKillIcon(class, name, texture, data)
+	language.Add(class, name)
+	if texture == KILLICON_TYPE_ALIAS then
+		killicon.AddAlias(class, data or "prop_physics")
+	elseif data && texture == KILLICON_TYPE_FONT then
+		killicon.Add(class, data.font, data.symbol, data.color or killIconDefColor, data.heightScale or 1)
+	else	
+		killicon.Add(class, texture or KILLICON_DEFAULT, data or killIconDefColor)
+	end
+end
+--
+VJ.AddKillIcon = addKillIcon
+---------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
 	Adds an NPC to the spawn menu
 		- name = NPC's name
 		- class = NPC's class
@@ -46,11 +79,8 @@ VJ.AddNPC = function(name, class, category, adminOnly, customFunc)
 	if (customFunc) then customFunc(property) end
 	list.Set("NPC", class, property)
 	list.Set("VJBASE_SPAWNABLE_NPC", class, property)
-	if CLIENT then
-		language.Add(class, name)
-		killicon.Add(class, "HUD/killicons/default", killIconColor)
-		language.Add("#" .. class, name)
-		killicon.Add("#" .. class, "HUD/killicons/default", killIconColor)
+	if CLIENT && !killicon.Exists(class) then
+		addKillIcon(class, name, KILLICON_DEFAULT)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -68,11 +98,8 @@ VJ.AddNPC_HUMAN = function(name, class, weapons, category, adminOnly, customFunc
 	if (customFunc) then customFunc(property) end
 	list.Set("NPC", class, property)
 	list.Set("VJBASE_SPAWNABLE_NPC", class, property)
-	if CLIENT then
-		language.Add(class, name)
-		killicon.Add(class, "HUD/killicons/default", killIconColor)
-		language.Add("#" .. class, name)
-		killicon.Add("#" .. class, "HUD/killicons/default", killIconColor)
+	if CLIENT && !killicon.Exists(class) then
+		addKillIcon(class, name, KILLICON_DEFAULT)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

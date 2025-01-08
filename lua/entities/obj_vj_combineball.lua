@@ -16,12 +16,7 @@ ENT.Category		= "VJ Base"
 ENT.VJ_ID_Danger = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	local Name = "Combine Ball"
-	local LangName = "obj_vj_combineball"
-	language.Add(LangName, Name)
-	killicon.Add(LangName,"HUD/killicons/default",Color(255,80,0,255))
-	language.Add("#"..LangName, Name)
-	killicon.Add("#"..LangName,"HUD/killicons/default",Color(255,80,0,255))
+	VJ.AddKillIcon("obj_vj_combineball", ENT.PrintName, VJ.KILLICON_TYPE_ALIAS, "prop_combine_ball")
 
 	function ENT:Draw()
 		self:DrawModel()

@@ -5,6 +5,10 @@ SWEP.Contact = "http://steamcommunity.com/groups/vrejgaming"
 SWEP.Purpose = "This weapon is made for Players and NPCs"
 SWEP.Instructions = "Controls are like a regular weapon."
 SWEP.Category = "VJ Base"
+
+if CLIENT then
+	VJ.AddKillIcon("weapon_vj_crossbow", SWEP.PrintName, VJ.KILLICON_TYPE_ALIAS, "crossbow_bolt")
+end
 	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.MadeForNPCsOnly = true
 SWEP.ReplacementWeapon = "weapon_crossbow"

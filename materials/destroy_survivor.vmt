@@ -1,0 +1,9 @@
+"UnlitGeneric"
+{
+	"$basetexture" "destroy_survivor2"
+	"$translucent" 1
+	"$ignorez" 1
+	"$nomip" 1
+	"$nolod" 1
+	"$vertexalpha" 1
+}

@@ -19,12 +19,7 @@ ENT.AdminOnly = false
 ENT.VJ_ID_Danger = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	local Name = "Rifle Grenade"
-	local LangName = "obj_vj_grenade_rifle"
-	language.Add(LangName, Name)
-	killicon.Add(LangName,"HUD/killicons/default",Color(255,80,0,255))
-	language.Add("#"..LangName, Name)
-	killicon.Add("#"..LangName,"HUD/killicons/default",Color(255,80,0,255))
+	VJ.AddKillIcon("obj_vj_grenade_rifle", ENT.PrintName, VJ.KILLICON_TYPE_ALIAS, "grenade_ar2")
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end

@@ -21,6 +21,8 @@ ENT.PhysicsSounds = true
 ENT.VJ_ID_Attackable = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
+	VJ.AddKillIcon("sent_vj_board", ENT.PrintName, VJ.KILLICON_TYPE_ALIAS, "prop_physics")
+	
 	function ENT:Draw()
 		self:DrawModel()
 	end

@@ -2301,7 +2301,7 @@ function ENT:MeleeAttackCode(isPropAttack)
 			end
 			if v:IsPlayer() then
 				-- Apply DSP
-				if self.MeleeAttackDSPSoundType != false && ((self.MeleeAttackDSPSoundUseDamage == false) or (self.MeleeAttackDSPSoundUseDamage == true && self.MeleeAttackDamage >= self.MeleeAttackDSPSoundUseDamageAmount && GetConVar("vj_npc_melee_dsp"):GetInt() == 1)) then
+				if self.MeleeAttackDSPSoundType != false && ((self.MeleeAttackDSPSoundUseDamage == false) or (self.MeleeAttackDSPSoundUseDamage == true && self.MeleeAttackDamage >= self.MeleeAttackDSPSoundUseDamageAmount && GetConVar("vj_npc_melee_ply_dsp"):GetInt() == 1)) then
 					v:SetDSP(self.MeleeAttackDSPSoundType, false)
 				end
 				v:ViewPunch(Angle(math.random(-1, 1) * self.MeleeAttackDamage, math.random(-1, 1) * self.MeleeAttackDamage, math.random(-1, 1) * self.MeleeAttackDamage))

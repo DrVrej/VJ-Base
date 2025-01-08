@@ -20,12 +20,7 @@ ENT.VJ_ID_Grenade = true
 ENT.VJ_ID_Grabbable = true
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	local Name = "Grenade"
-	local LangName = "obj_vj_grenade"
-	language.Add(LangName, Name)
-	killicon.Add(LangName,"HUD/killicons/default",Color(255,80,0,255))
-	language.Add("#"..LangName, Name)
-	killicon.Add("#"..LangName,"HUD/killicons/default",Color(255,80,0,255))
+	VJ.AddKillIcon("obj_vj_grenade", ENT.PrintName, VJ.KILLICON_GRENADE)
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if !SERVER then return end
