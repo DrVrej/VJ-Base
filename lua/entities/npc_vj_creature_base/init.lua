@@ -1919,7 +1919,7 @@ function ENT:Think()
 				-- Set latest enemy information
 				self:UpdateEnemyMemory(ene, enePos)
 				eneData.Reset = false
-				eneData.IsVisible = plyControlled and self:VisibleVec(enePos) or self:Visible(ene) -- Need to use VisibleVec when controlled because "Visible" will return false randomly
+				eneData.IsVisible = plyControlled and true or self:Visible(ene) -- Need to use VisibleVec when controlled because "Visible" will return false randomly
 				self.LatestEnemyDistance = myPos:Distance(enePos)
 				self.NearestPointToEnemyDistance = self:GetNearestDistance(ene, true)
 				if eneData.IsVisible && self:IsInViewCone(enePos) && (self.LatestEnemyDistance < self:GetMaxLookDistance()) then

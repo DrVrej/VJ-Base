@@ -374,8 +374,8 @@ ENT.DamageByPlayerDispositionLevel = 1 -- At which disposition levels it should 
 	-- ====== Footstep Sound ====== --
 ENT.HasFootStepSound = true -- Can the NPC play footstep sounds?
 ENT.DisableFootStepSoundTimer = false -- If set to true, it will disable the time system for the footstep sound code, allowing you to use other ways like model events
-ENT.FootStepTimeWalk = 1 -- Delay between footstep sounds while it is walking | false = Disable while walking
-ENT.FootStepTimeRun = 0.5 -- Delay between footstep sounds while it is running | false = Disable while running
+ENT.FootStepTimeWalk = 0.5 -- Delay between footstep sounds while it is walking | false = Disable while walking
+ENT.FootStepTimeRun = 0.25 -- Delay between footstep sounds while it is running | false = Disable while running
 	-- ====== Idle Sound ====== --
 ENT.HasIdleSounds = true -- If set to false, it won't play the idle sounds
 ENT.IdleSounds_PlayOnAttacks = false -- It will be able to continue and play idle sounds when it performs an attack
@@ -2709,7 +2709,7 @@ function ENT:Think()
 				-- Set latest enemy information
 				self:UpdateEnemyMemory(ene, enePos)
 				eneData.Reset = false
-				eneData.IsVisible = plyControlled and self:VisibleVec(enePos) or self:Visible(ene) -- Need to use VisibleVec when controlled because "Visible" will return false randomly
+				eneData.IsVisible = plyControlled and true or self:Visible(ene) -- Need to use VisibleVec when controlled because "Visible" will return false randomly
 				self.LatestEnemyDistance = myPos:Distance(enePos)
 				self.NearestPointToEnemyDistance = self:GetNearestDistance(ene, true)
 				if eneData.IsVisible then
