@@ -401,7 +401,7 @@ function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpseEnt)
 		end
 
 		-- Effects / Particles
-		if self.HasGibOnDeathEffects == true && self:Tank_OnDeathCorpse(dmginfo, hitgroup, corpseEnt, "Effects") != true then
+		if self.HasGibOnDeathEffects && self:Tank_OnDeathCorpse(dmginfo, hitgroup, corpseEnt, "Effects") != true then
 			ParticleEffect("vj_explosion3", myPos, defAng)
 			ParticleEffect("vj_explosion2", myPos + self:GetForward()*-130, defAng)
 			ParticleEffect("vj_explosion2", myPos + self:GetForward()*130, defAng)

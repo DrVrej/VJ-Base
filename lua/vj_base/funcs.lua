@@ -525,7 +525,7 @@ function VJ.ApplyRadiusDamage(attacker, inflictor, startPos, dmgRadius, dmgMax, 
 			dmgFinal = math_clamp(dmgFinal * ((dmgRadius - startPos:Distance(nearestPos)) + 150) / dmgRadius, dmgMax / 2, dmgFinal)
 		end
 		
-		if (disableVisibilityCheck == false && (v:VisibleVec(startPos) or v:Visible(attacker))) or (disableVisibilityCheck == true) then
+		if disableVisibilityCheck or (!disableVisibilityCheck && (v:VisibleVec(startPos) or v:Visible(attacker))) then
 			local function DealDamage()
 				if (customFunc) then customFunc(v) end
 				hitEnts[#hitEnts + 1] = v

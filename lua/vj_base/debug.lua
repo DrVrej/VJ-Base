@@ -66,7 +66,7 @@ local function __index(self, key)
 end
 
 function metaVJ:GetIdealMoveSpeed(example)
-	if example == true then
+	if example then
 		return 1000
 	else
 		return metaNPC.GetIdealMoveSpeed(self)

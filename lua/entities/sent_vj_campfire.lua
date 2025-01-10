@@ -31,7 +31,7 @@ if CLIENT then
 	function ENT:Think()
 		local curTime = CurTime()
 		if curTime > self.NextActivationCheckT then
-			if self:GetNW2Bool("VJ_FirePlace_Activated") == true then
+			if self:GetNW2Bool("VJ_FirePlace_Activated", false) then
 				if !self.DoneFireParticles then
 					self.DoneFireParticles = true
 					ParticleEffectAttach("env_fire_tiny_smoke", PATTACH_ABSORIGIN_FOLLOW, self, 0)

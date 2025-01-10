@@ -1,6 +1,6 @@
 -- !!! USED ONLY FOR DEFAULT HL2 NPCS, NOT VJ NPCS !!!
 function SWEP:SetupWeaponHoldTypeForAI(wepHoldType)
-	if self:GetOwner().IsVJBaseSNPC_Human == true then return end
+	if self:GetOwner().IsVJBaseSNPC_Human then return end
 	
 	-- Yete NPC-en Rebel-e, ere vor medz zenki animation-ere kordzadze yerp vor ge kalegor
 	local bezdigZenk_Kalel = ACT_WALK_AIM_PISTOL
@@ -16,8 +16,8 @@ function SWEP:SetupWeaponHoldTypeForAI(wepHoldType)
 	local medzZenk_Kalel = ACT_WALK_RIFLE
 	if self.NPC_AnimationSet == VJ.ANIM_SET_COMBINE && (wepHoldType == "pistol" or wepHoldType == "revolver") then
 		rifleOverride = true
-		medzZenk_Genal = VJ.SequenceToActivity(self:GetOwner(),"idle_unarmed")
-		medzZenk_Kalel = VJ.SequenceToActivity(self:GetOwner(),"walkunarmed_all")
+		medzZenk_Genal = VJ.SequenceToActivity(self:GetOwner(), "idle_unarmed")
+		medzZenk_Kalel = VJ.SequenceToActivity(self:GetOwner(), "walkunarmed_all")
 	end
 	
 	-- Yete NPC-en Metrocop-e gamal Rebel-e, ere vor medz zenki animation-ere kordzadze yerp vor ge kalegor
@@ -30,8 +30,8 @@ function SWEP:SetupWeaponHoldTypeForAI(wepHoldType)
 	end
 	
 	self.ActivityTranslateAI = {}
-	if rifleOverride == true or wepHoldType == "ar2" or wepHoldType == "smg" then
-		if wepHoldType == "ar2" or rifleOverride == true then
+	if rifleOverride or wepHoldType == "ar2" or wepHoldType == "smg" then
+		if wepHoldType == "ar2" or rifleOverride then
 			self.ActivityTranslateAI[ACT_RANGE_ATTACK1] 				= ACT_RANGE_ATTACK_AR2
 			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1] 		= ACT_GESTURE_RANGE_ATTACK_AR2
 			self.ActivityTranslateAI[ACT_RANGE_AIM_LOW] 				= ACT_RANGE_AIM_AR2_LOW

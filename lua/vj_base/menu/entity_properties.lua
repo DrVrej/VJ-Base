@@ -77,7 +77,7 @@ properties.Add("vj_pr_npc_guard",{
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		if !ent.VJ_IsBeingControlled then
-			if ent.IsGuard == true then
+			if ent.IsGuard then
 				ply:ChatPrint("Disabled Guarding for "..ent:GetName()..".")
 				ent.IsGuard = false
 			else
@@ -116,7 +116,7 @@ properties.Add("vj_pr_npc_wander",{
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		if !ent.VJ_IsBeingControlled then
-			if ent.DisableWandering == true then
+			if ent.DisableWandering then
 				ply:ChatPrint("Enabled Wandering for "..ent:GetName()..".")
 				ent.DisableWandering = false
 			else
@@ -154,7 +154,7 @@ properties.Add("vj_pr_npc_medic",{
 	Receive = function(self, length, ply) -- The action to perform upon using the property (Serverside)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
-		if ent.IsMedic == true then
+		if ent.IsMedic then
 			ply:ChatPrint(ent:GetName().." Is no longer a medic.")
 			ent.IsMedic = false
 		else
@@ -321,7 +321,7 @@ properties.Add("vj_pr_npc_devmode",{
 	Receive = function(self, length, ply) -- The action to perform upon using the property (Serverside)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
-		if ent.VJ_DEBUG == true then
+		if ent.VJ_DEBUG then
 			ply:ChatPrint("Disabled Developer Mode for "..ent:GetName()..".")
 			ent.VJ_DEBUG = false
 		else

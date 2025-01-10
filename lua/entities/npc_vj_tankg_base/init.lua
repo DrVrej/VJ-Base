@@ -157,7 +157,7 @@ function ENT:OnThinkActive()
 	self:SetEnemy(self:GetParent():GetEnemy())
 	self:Tank_OnThinkActive()
 
-	if self.Tank_GunnerIsTurning == true then self:Tank_Sound_Moving() else VJ.STOPSOUND(self.CurrentTankMovingSound) end
+	if self.Tank_GunnerIsTurning then self:Tank_Sound_Moving() else VJ.STOPSOUND(self.CurrentTankMovingSound) end
 	self:SelectSchedule()
 	
 	if self.Tank_Status == 0 then

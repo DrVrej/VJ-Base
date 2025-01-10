@@ -215,7 +215,7 @@ function ENT:OnTaskFailed(failCode, failString)
 				local curSchedule2 = self.CurrentSchedule
 				if curSchedule2 && curSchedule == curSchedule2 then -- Make sure the schedule hasn't changed!
 					curSchedule = curSchedule2
-					if curSchedule.ResetOnFail == true then
+					if curSchedule.ResetOnFail then
 						curSchedule.FailureHandled = true
 						self:StopMoving()
 						//self:SelectSchedule()
@@ -244,7 +244,7 @@ function ENT:OnMovementFailed()
 		if self:DoRunCode_OnFail(curSchedule) == true then
 			self:ClearCondition(COND_TASK_FAILED)
 		end
-		if curSchedule.ResetOnFail == true then
+		if curSchedule.ResetOnFail then
 			curSchedule.FailureHandled = true
 			self:ClearCondition(COND_TASK_FAILED)
 			self:StopMoving()
@@ -305,7 +305,7 @@ function ENT:StartSchedule(schedule)
 	-- Cons:
 		-- When using "BOUNDS_HITBOXES" for "SetSurroundingBoundsType", NPCs often end up inside each other, and this check causes movements to not run (NPCs end up freezing)
 		-- Needed very rarely, not worth running a trace hull and table has value check for every movement task
-	/*if schedule.HasMovement == true then
+	/*if schedule.HasMovement then
 		local tr_addVec = Vector(0, 0, 2)
 		local tr = util.TraceHull({
 			start = self:GetPos(),
@@ -321,7 +321,7 @@ function ENT:StartSchedule(schedule)
 	end*/
 	
 	-- No longer needed, `TranslateActivity` handles it now
-	//if schedule.CanShootWhenMoving == true && self.CurrentWeaponAnimation != nil && IsValid(self:GetEnemy()) then
+	//if schedule.CanShootWhenMoving && self.CurrentWeaponAnimation != nil && IsValid(self:GetEnemy()) then
 		//self:DoWeaponAttackMovementCode(true, (schedule.MoveType == 0 and 1) or 0) -- Send 1 if the current task is walking!
 		//self:SetArrivalActivity(self.CurrentWeaponAnimation)
 	//end

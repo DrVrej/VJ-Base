@@ -48,7 +48,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Use(activator, caller)
 	if activator:IsPlayer() && activator:IsAdmin() then
-		if (self.Active == true) then
+		if self.Active then
 			self.Active = false
 			self:EmitSound("hl1/fvox/deactivated.wav", 70, 100)
 			self:SetColor(colorRed)

@@ -1311,7 +1311,7 @@ function ENT:Initialize()
 	if VJ.PICK(self.Model) then self:SetModel(VJ.PICK(self.Model)) end
 	self:SetHullType(self.HullType)
 	self:SetHullSizeNormal()
-	if self.HasSetSolid == true then self:SetSolid(SOLID_BBOX) end // SOLID_OBB
+	if self.HasSetSolid then self:SetSolid(SOLID_BBOX) end // SOLID_OBB
 	self:SetCollisionGroup(COLLISION_GROUP_NPC)
 	//self:SetCustomCollisionCheck() -- Used for the hook GM:ShouldCollide, not reliable!
 	self:SetMaxYawSpeed(self.TurningSpeed)
@@ -1507,8 +1507,8 @@ function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase: true = Override 
 	if !alwaysChase && (self.DisableChasingEnemy or self.IsGuard) then self:SCHEDULE_IDLE_STAND() return end
 	
 	-- If the enemy is not reachable then wander around
-	if self:IsUnreachable(ene) == true then
-		if self.HasRangeAttack == true then -- Ranged NPCs
+	if self:IsUnreachable(ene) then
+		if self.HasRangeAttack then -- Ranged NPCs
 			self:SCHEDULE_ALERT_CHASE(true)
 		elseif math.random(1, 30) == 1 && !self:IsMoving() then
 			self.NextWanderTime = 0
@@ -1605,7 +1605,7 @@ function ENT:Think()
 	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
 	
 	//self:SetCondition(1) -- Probably not needed as "sv_pvsskipanimation" handles it | Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case "sv_pvsskipanimation" isn't disabled!
-	//if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) /*&& curSchedule.HasMovement == true*/ then self:DropToFloor() end -- No need, already handled by the engine
+	//if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) /*&& curSchedule.HasMovement*/ then self:DropToFloor() end -- No need, already handled by the engine
 	
 	local curTime = CurTime()
 	
@@ -1633,7 +1633,7 @@ function ENT:Think()
 	if VJ_CVAR_AI_ENABLED && self:GetState() != VJ_STATE_FREEZE && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then
 		if self.VJ_DEBUG then
 			if GetConVar("vj_npc_debug_enemy"):GetInt() == 1 then print(self:GetClass().." : Enemy -> " .. tostring(self:GetEnemy() or "NULL") .. " | Alerted? " .. tostring(self.Alerted)) end
-			if GetConVar("vj_npc_debug_takingcover"):GetInt() == 1 then if curTime > self.TakingCoverT == true then print(self:GetClass().." : NOT taking cover") else print(self:GetClass().." : Taking cover ("..self.TakingCoverT - curTime..")") end end
+			if GetConVar("vj_npc_debug_takingcover"):GetInt() == 1 then if curTime > self.TakingCoverT then print(self:GetClass().." : NOT taking cover") else print(self:GetClass().." : Taking cover ("..self.TakingCoverT - curTime..")") end end
 			if GetConVar("vj_npc_debug_lastseenenemytime"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - self.EnemyData.LastVisibleTime).." ("..self:GetName()..")") end
 		end
 		
@@ -2301,7 +2301,7 @@ function ENT:MeleeAttackCode(isPropAttack)
 			end
 			if v:IsPlayer() then
 				-- Apply DSP
-				if self.MeleeAttackDSPSoundType != false && ((self.MeleeAttackDSPSoundUseDamage == false) or (self.MeleeAttackDSPSoundUseDamage == true && self.MeleeAttackDamage >= self.MeleeAttackDSPSoundUseDamageAmount && GetConVar("vj_npc_melee_ply_dsp"):GetInt() == 1)) then
+				if self.MeleeAttackDSPSoundType != false && ((self.MeleeAttackDSPSoundUseDamage == false) or (self.MeleeAttackDSPSoundUseDamage && self.MeleeAttackDamage >= self.MeleeAttackDSPSoundUseDamageAmount && GetConVar("vj_npc_melee_ply_dsp"):GetInt() == 1)) then
 					v:SetDSP(self.MeleeAttackDSPSoundType, false)
 				end
 				v:ViewPunch(Angle(math.random(-1, 1) * self.MeleeAttackDamage, math.random(-1, 1) * self.MeleeAttackDamage, math.random(-1, 1) * self.MeleeAttackDamage))
@@ -2343,18 +2343,18 @@ function ENT:VJ_DoSlowPlayer(ent, WalkSpeed, RunSpeed, SlowTime, sdData, ExtraFe
 		local vEF_NoInterrupt = ExtraFeatures.NoInterrupt or false -- If set to true, the player's speed won't change by another instance of this code
 	local walkspeed_before = ent:GetWalkSpeed()
 	local runspeed_before = ent:GetRunSpeed()
-	if ent.VJ_HasAlreadyBeenSlowedDown == true && ent.VJ_HasAlreadyBeenSlowedDown_NoInterrupt == true then return end
+	if ent.VJ_HasAlreadyBeenSlowedDown && ent.VJ_HasAlreadyBeenSlowedDown_NoInterrupt then return end
 	if (!ent.VJ_HasAlreadyBeenSlowedDown) then
 		ent.VJ_HasAlreadyBeenSlowedDown = true
-		if vEF_NoInterrupt == true then ent.VJ_HasAlreadyBeenSlowedDown_NoInterrupt = true end
+		if vEF_NoInterrupt then ent.VJ_HasAlreadyBeenSlowedDown_NoInterrupt = true end
 		ent.VJ_SlowDownPlayerWalkSpeed = walkspeed_before
 		ent.VJ_SlowDownPlayerRunSpeed = runspeed_before
 	end
 	ent:SetWalkSpeed(WalkSpeed)
 	ent:SetRunSpeed(RunSpeed)
 	if (customFunc) then customFunc() end
-	if self.HasSounds == true && vSD_PlaySound == true then
-		self.CurrentSlowPlayerSound = CreateSound(ent,VJ.PICK(vSD_SoundTable))
+	if self.HasSounds && vSD_PlaySound then
+		self.CurrentSlowPlayerSound = CreateSound(ent, VJ.PICK(vSD_SoundTable))
 		self.CurrentSlowPlayerSound:Play()
 		self.CurrentSlowPlayerSound:SetSoundLevel(vSD_SoundLevel)
 		if !ent:Alive() && self.CurrentSlowPlayerSound then self.CurrentSlowPlayerSound:FadeOut(vSD_FadeOutTime) end
@@ -2567,7 +2567,7 @@ function ENT:SelectSchedule()
 	
 	if eneValid then -- Chase the enemy
 		self:MaintainAlertBehavior()
-	/*elseif self.Alerted == true then -- No enemy, but alerted
+	/*elseif self.Alerted then -- No enemy, but alerted
 		self.TakingCoverT = 0
 		self:MaintainIdleBehavior()*/
 	else -- Idle
@@ -2621,11 +2621,10 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ResetEnemy(checkAllies, checkVis)
 	if self.Dead or (self.VJ_IsBeingControlled && self.VJ_TheControllerBullseye == self:GetEnemy()) then self.EnemyData.Reset = false return false end
-	checkAllies = checkAllies or false
 	local ene = self:GetEnemy()
 	local eneValid = IsValid(ene)
 	local eneData = self.EnemyData
-	if checkAllies == true then
+	if checkAllies then
 		local getAllies = self:Allies_Check(1000)
 		if getAllies != false then
 			for _, v in ipairs(getAllies) do
@@ -2821,7 +2820,7 @@ function ENT:OnTakeDamage(dmginfo)
 				self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1
 				if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel && self:Disposition(dmgAttacker) != D_HT then
 					self:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
-					if self.IsFollowing == true && self.FollowData.Ent == dmgAttacker then self:ResetFollowBehavior() end
+					if self.IsFollowing && self.FollowData.Ent == dmgAttacker then self:ResetFollowBehavior() end
 					self.VJ_AddCertainEntityAsEnemy[#self.VJ_AddCertainEntityAsEnemy + 1] = dmgAttacker
 					self:AddEntityRelationship(dmgAttacker, D_HT, 2)
 					self.TakingCoverT = curTime + 2
@@ -2831,7 +2830,7 @@ function ENT:OnTakeDamage(dmginfo)
 						self:SetTarget(dmgAttacker)
 						self:SCHEDULE_FACE("TASK_FACE_TARGET")
 					end
-					if self.CanChatMessage == true then
+					if self.CanChatMessage then
 						dmgAttacker:PrintMessage(HUD_PRINTTALK, self:GetName().." no longer likes you.")
 					end
 				end
@@ -2924,11 +2923,11 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 		local allies = self:Allies_Check(math.max(800, self.BringFriendsOnDeathDistance, self.AlertFriendsOnDeathDistance))
 		if allies != false then
 			local noAlert = true -- Don't run the AlertFriendsOnDeath if we have BringFriendsOnDeath enabled!
-			if self.BringFriendsOnDeath == true then
+			if self.BringFriendsOnDeath then
 				self:Allies_Bring("Random", self.BringFriendsOnDeathDistance, allies, self.BringFriendsOnDeathLimit, true)
 				noAlert = false
 			end
-			local doBecomeEnemyToPlayer = (self.BecomeEnemyToPlayer == true && dmgAttacker:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or false
+			local doBecomeEnemyToPlayer = (self.BecomeEnemyToPlayer && dmgAttacker:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or false
 			local it = 0 -- Number of allies that have been alerted
 			for _, v in ipairs(allies) do
 				v:DoReadyAlert()
@@ -2936,7 +2935,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 				v:PlaySoundSystem("AllyDeath")
 				
 				-- AlertFriendsOnDeath
-				if noAlert == true && self.AlertFriendsOnDeath == true && !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath == true && it != self.AlertFriendsOnDeathLimit && self:GetPos():Distance(v:GetPos()) < self.AlertFriendsOnDeathDistance then
+				if noAlert && self.AlertFriendsOnDeath && !IsValid(v:GetEnemy()) && v.AlertFriendsOnDeath && it != self.AlertFriendsOnDeathLimit && self:GetPos():Distance(v:GetPos()) < self.AlertFriendsOnDeathDistance then
 					it = it + 1
 					local faceTime = math.Rand(5, 8)
 					v:SetTurnTarget(self:GetPos(), faceTime, true)
@@ -2944,15 +2943,15 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 				end
 				
 				-- BecomeEnemyToPlayer
-				if doBecomeEnemyToPlayer && v.BecomeEnemyToPlayer == true && v:Disposition(dmgAttacker) == D_LI then
+				if doBecomeEnemyToPlayer && v.BecomeEnemyToPlayer && v:Disposition(dmgAttacker) == D_LI then
 					v.AngerLevelTowardsPlayer = v.AngerLevelTowardsPlayer + 1
 					if v.AngerLevelTowardsPlayer > v.BecomeEnemyToPlayerLevel then
 						if v:Disposition(dmgAttacker) != D_HT then
 							v:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
-							if v.IsFollowing == true && v.FollowData.Ent == dmgAttacker then v:ResetFollowBehavior() end
+							if v.IsFollowing && v.FollowData.Ent == dmgAttacker then v:ResetFollowBehavior() end
 							v.VJ_AddCertainEntityAsEnemy[#v.VJ_AddCertainEntityAsEnemy + 1] = dmgAttacker
 							v:AddEntityRelationship(dmgAttacker, D_HT, 2)
-							if v.CanChatMessage == true then
+							if v.CanChatMessage then
 								dmgAttacker:PrintMessage(HUD_PRINTTALK, v:GetName().." no longer likes you.")
 							end
 							v:PlaySoundSystem("BecomeEnemyToPlayer")
@@ -2965,7 +2964,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 	end
 	
 	-- Blood decal on the ground
-	if self.Bleeds == true && self.HasBloodDecal == true then
+	if self.Bleeds && self.HasBloodDecal then
 		local bloodDecal = VJ.PICK(self.CustomBlood_Decal)
 		if bloodDecal != false then
 			local decalPos = self:GetPos() + vecZ4
@@ -2979,7 +2978,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 		end
 	end
 	
-	if self.IsFollowing == true then self:ResetFollowBehavior() end
+	if self.IsFollowing then self:ResetFollowBehavior() end
 	self:RemoveTimers()
 	self.AttackType = VJ.ATTACK_TYPE_NONE
 	self.HasMeleeAttack = false
@@ -3066,7 +3065,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		if corpseMdlCustom != false then corpseMdl = corpseMdlCustom end
 		local corpseType = "prop_physics"
 		if !self.DeathCorpseEntityClass then
-			if util.IsValidRagdoll(corpseMdl) == true then
+			if util.IsValidRagdoll(corpseMdl) then
 				corpseType = "prop_ragdoll"
 			elseif util.IsValidProp(corpseMdl) == false or util.IsValidModel(corpseMdl) == false then
 				return false
@@ -3167,14 +3166,14 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 				local childPhysObj_BonePos, childPhysObj_BoneAng = self:GetBonePosition(corpse:TranslatePhysBoneToBone(boneLimit))
 				if (childPhysObj_BonePos) then
 					//if math.Round(math.abs(childPhysObj_BoneAng.r)) != 90 then -- Fixes ragdolls rotating, no longer needed!    --->    sv_pvsskipanimation 0
-						if self.DeathCorpseSetBoneAngles == true then childPhysObj:SetAngles(childPhysObj_BoneAng) end
+						if self.DeathCorpseSetBoneAngles then childPhysObj:SetAngles(childPhysObj_BoneAng) end
 						childPhysObj:SetPos(childPhysObj_BonePos)
 					//end
 					//if corpse:GetName() == "vj_dissolve_corpse" then -- No longer needed, Dissolve function is now part of the engine!
 						//childPhysObj:EnableGravity(false)
 						//childPhysObj:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
 					//else
-						if self.DeathCorpseApplyForce == true /*&& self.DeathAnimationCodeRan == false*/ then
+						if self.DeathCorpseApplyForce /*&& self.DeathAnimationCodeRan == false*/ then
 							childPhysObj:SetVelocity(dmgForce / math.max(1, (useLocalVel and childPhysObj_BonePos:Distance(self.SavedDmgInfo.pos)/12) or 1))
 						end
 					//end
@@ -3183,7 +3182,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 						//childPhysObj:EnableGravity(false)
 						//childPhysObj:SetVelocity(self:GetForward()*-150 + self:GetRight()*math.Rand(100,-100) + self:GetUp()*50)
 					//else
-						if self.DeathCorpseApplyForce == true /*&& self.DeathAnimationCodeRan == false*/ then
+						if self.DeathCorpseApplyForce /*&& self.DeathAnimationCodeRan == false*/ then
 							childPhysObj:SetVelocity(dmgForce / math.max(1, (useLocalVel and corpse:GetPos():Distance(self.SavedDmgInfo.pos)/12) or 1))
 						end
 					//end
@@ -3198,7 +3197,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		end
 		VJ.Corpse_AddStinky(corpse, true)
 		
-		if self.DeathCorpseFade == true then corpse:Fire(corpse.FadeCorpseType, "", self.DeathCorpseFadeTime) end
+		if self.DeathCorpseFade then corpse:Fire(corpse.FadeCorpseType, "", self.DeathCorpseFadeTime) end
 		if GetConVar("vj_npc_corpse_fade"):GetInt() == 1 then corpse:Fire(corpse.FadeCorpseType, "", GetConVar("vj_npc_corpse_fadetime"):GetInt()) end
 		self:OnCreateDeathCorpse(dmginfo, hitgroup, corpse)
 		if corpse:IsFlagSet(FL_DISSOLVING) && corpse.ChildEnts then

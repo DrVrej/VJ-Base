@@ -292,7 +292,7 @@ function SWEP:Initialize()
 	self.InitTime = CurTime()
 	self.PrimaryEffects_ShellType = oldShells[self.PrimaryEffects_ShellType] or self.PrimaryEffects_ShellType -- !!!!!!!!!!!!!! DO NOT USE THESE VALUES !!!!!!!!!!!!!! [Backwards Compatibility!]
 	self:SetHoldType(self.HoldType)
-	if self.HasIdleAnimation == true then self.InitHasIdleAnimation = true end
+	if self.HasIdleAnimation then self.InitHasIdleAnimation = true end
 	self.NPC_SecondaryFireNextT = CurTime() + math.Rand(self.NPC_SecondaryFireNext.a, self.NPC_SecondaryFireNext.b)
 	self:Init()
 	
@@ -405,7 +405,7 @@ function SWEP:Equip(newOwner)
 			end
 		end
 		//newOwner:RemoveAmmo(self.Primary.DefaultClip,self.Primary.Ammo)
-		if self.MadeForNPCsOnly == true then
+		if self.MadeForNPCsOnly then
 			newOwner:PrintMessage(HUD_PRINTTALK, self.PrintName.." removed! It's made for NPCs only!")
 			self:Remove()
 		end
@@ -421,11 +421,11 @@ function SWEP:Equip(newOwner)
 				end
 			end
 		else -- For non-VJ NPCs
-			if VJ.AnimExists(newOwner,ACT_WALK_AIM_PISTOL) == true && VJ.AnimExists(newOwner,ACT_RUN_AIM_PISTOL) == true && VJ.AnimExists(newOwner,ACT_POLICE_HARASS1) == true then
+			if VJ.AnimExists(newOwner,ACT_WALK_AIM_PISTOL) && VJ.AnimExists(newOwner,ACT_RUN_AIM_PISTOL) && VJ.AnimExists(newOwner,ACT_POLICE_HARASS1) then
 				self.NPC_AnimationSet = VJ.ANIM_SET_METROCOP
-			elseif VJ.AnimExists(newOwner,"cheer1") == true && VJ.AnimExists(newOwner,"wave_smg1") == true && VJ.AnimExists(newOwner,ACT_BUSY_SIT_GROUND) == true then
+			elseif VJ.AnimExists(newOwner,"cheer1") && VJ.AnimExists(newOwner,"wave_smg1") && VJ.AnimExists(newOwner,ACT_BUSY_SIT_GROUND) then
 				self.NPC_AnimationSet = VJ.ANIM_SET_REBEL
-			elseif VJ.AnimExists(newOwner,"signal_takecover") == true && VJ.AnimExists(newOwner,"grenthrow") == true && VJ.AnimExists(newOwner,"bugbait_hit") == true then
+			elseif VJ.AnimExists(newOwner,"signal_takecover") && VJ.AnimExists(newOwner,"grenthrow") && VJ.AnimExists(newOwner,"bugbait_hit") then
 				self.NPC_AnimationSet = VJ.ANIM_SET_COMBINE
 			end
 			if newOwner:GetClass() == "npc_citizen" then newOwner:Fire("DisableWeaponPickup") end -- If it's a citizen, disable them picking up weapons from the ground
@@ -449,7 +449,7 @@ function SWEP:Deploy()
 	if owner:IsNPC() then
 		hook.Add("Think", self, self.NPC_ServerNextFire)
 	elseif owner:IsPlayer() then
-		if self.HasDeploySound == true then
+		if self.HasDeploySound then
 			local deploySD = VJ.PICK(self.DeploySound)
 			if deploySD then
 				self:EmitSound(deploySD, 50, math.random(90, 100))
@@ -681,7 +681,7 @@ function SWEP:PrimaryAttack(UseAlt)
 	if self.IsMeleeWeapon then
 		local meleeHitEnt = false
 		for _,v in ipairs(ents.FindInSphere(owner:GetPos(), self.MeleeWeaponDistance + 20)) do
-			if (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) or (v:IsPlayer() && v.VJ_IsControllingNPC == true) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
+			if (v.IsVJBaseBullseye && v.VJ_IsBeingControlled) or (v:IsPlayer() && v.VJ_IsControllingNPC) then continue end -- If it's a bullseye and is controlled OR it's a player controlling then don't damage!
 			if (isPly && v:EntIndex() != owner:EntIndex()) or (isNPC && (v:IsNPC() or (v:IsPlayer() && v:Alive() && !VJ_CVAR_IGNOREPLAYERS) or v:IsNextBot()) && (owner:Disposition(v) != D_LI) && (v != owner) && (v:GetClass() != owner:GetClass()) or (v:GetClass() == "prop_physics") or v.VJ_ID_Attackable or v.VJ_ID_Destructible && (owner:GetForward():Dot((v:GetPos() - owner:GetPos()):GetNormalized()) > math.cos(math.rad(owner.MeleeAttackDamageAngleRadius)))) then
 				local dmginfo = DamageInfo()
 				dmginfo:SetDamage(isNPC and owner:ScaleByDifficulty(self.Primary.Damage) or self.Primary.Damage)
@@ -704,7 +704,7 @@ function SWEP:PrimaryAttack(UseAlt)
 				self:EmitSound(meleeSd, 70, math.random(90, 100), 1, CHAN_AUTO, 0, 0, VJ_RecipientFilter)
 			end
 		else
-			if owner.IsVJBaseSNPC == true then owner:CustomOnMeleeAttack_Miss() end
+			if owner.IsVJBaseSNPC then owner:CustomOnMeleeAttack_Miss() end
 			local meleeSd = VJ.PICK(self.MeleeWeaponSound_Miss)
 			if meleeSd != false then
 				self:EmitSound(meleeSd, 70, math.random(90, 100), 1, CHAN_AUTO, 0, 0, VJ_RecipientFilter)
@@ -806,7 +806,7 @@ function SWEP:PrimaryAttackEffects(owner)
 				muzzleFlashEffect:SetStart(owner:GetShootPos())
 				muzzleFlashEffect:SetNormal(owner:GetAimVector())
 				muzzleFlashEffect:SetAttachment(muzzleAttach)
-				util.Effect("VJ_Weapon_PlayerMuzzle", muzzleFlashEffect)
+				util.Effect("VJ_MuzzleFlash_Player", muzzleFlashEffect)
 			else -- NPCs
 				if self.PrimaryEffects_MuzzleParticlesAsOne then -- Combine all of the particles in the table!
 					for _, v in ipairs(self.PrimaryEffects_MuzzleParticles) do
@@ -926,7 +926,7 @@ function SWEP:Reload()
 	if self:Clip1() < self.Primary.ClipSize then
 		self.Reloading = true
 		self:OnReload("Start")
-		if SERVER && self.HasReloadSound == true then
+		if SERVER && self.HasReloadSound then
 			local reloadSD = VJ.PICK(self.ReloadSound)
 			if reloadSD then
 				owner:EmitSound(reloadSD, 50, math.random(90, 100))

@@ -2,14 +2,11 @@
 	*** Copyright (c) 2012-2025 by DrVrej, All rights reserved. ***
 	No parts of this code or any of its contents may be reproduced, copied, modified or adapted,
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
-
-	///// NOTES \\\\\
-	- This file contains functions and variables shared between all the NPC bases.
-	- There are useful functions that are commonly called when making custom code in an NPC. (Custom-Friendly Functions)
-	- There are also functions that should be called with caution in a custom code. (General Functions)
 --------------------------------------------------*/
 ---------------------------------------------------------------------------------------------------------------------------------------------
 /*
+	This file contains functions and variables shared between all the NPC bases.
+	
 	-- Change movement speed:
 	self:SetLocalVelocity(self:GetMoveVelocity() * 1.5)
 */
@@ -167,7 +164,6 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 			end
 		end
 		bloodType = (extraOptions.BloodType or bloodType or self.BloodColor) -- Certain entities such as the VJ Gib entity, you can use this to set its gib type
-		local removeOnCorpseDelete = extraOptions.RemoveOnCorpseDelete or false -- Should the entity get removed if the corpse is removed?
 	
 	local gib = ents.Create(class or "obj_vj_gib")
 	gib:SetModel(models)
@@ -201,7 +197,7 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 		elseif gib:GetClass() == "prop_ragdoll" then gib:Fire("FadeAndRemove", "", GetConVar("vj_npc_gib_fadetime"):GetInt())
 		elseif gib:GetClass() == "prop_physics" then gib:Fire("kill", "", GetConVar("vj_npc_gib_fadetime"):GetInt()) end
 	end
-	if removeOnCorpseDelete == true then //self.Corpse:DeleteOnRemove(extraent)
+	if removeOnCorpseDelete then //self.Corpse:DeleteOnRemove(extraent)
 		if !self.DeathCorpse_ChildEnts then self.DeathCorpse_ChildEnts = {} end -- If it doesn't exist, then create it!
 		self.DeathCorpse_ChildEnts[#self.DeathCorpse_ChildEnts + 1] = gib
 	end
@@ -393,7 +389,7 @@ function ENT:MaintainIdleAnimation(force)
 	//end
 	
 	/* -- Old idle system
-	local idleAnimTbl = self.Weapon_UnarmedBehavior_Active == true and self.AnimTbl_ScaredBehaviorStand or ((self.Alerted && self:GetWeaponState() != VJ.NPC_WEP_STATE_HOLSTERED && IsValid(self:GetActiveWeapon())) and self.AnimTbl_WeaponAim or self.AnimTbl_IdleStand)
+	local idleAnimTbl = self.Weapon_UnarmedBehavior_Active and self.AnimTbl_ScaredBehaviorStand or ((self.Alerted && self:GetWeaponState() != VJ.NPC_WEP_STATE_HOLSTERED && IsValid(self:GetActiveWeapon())) and self.AnimTbl_WeaponAim or self.AnimTbl_IdleStand)
 	local posIdlesTbl = {}
 	local posIdlesTblIndex = 1
 	local sameAnimFound = false -- If true then it one of the animations in the table is the same as the current!
@@ -584,8 +580,8 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 		end
 	end
 	
-	if extraOptions.AlwaysUseGesture == true then isGesture = true end -- Must play as a gesture
-	if extraOptions.AlwaysUseSequence == true then -- Must play as a sequence
+	if extraOptions.AlwaysUseGesture then isGesture = true end -- Must play as a gesture
+	if extraOptions.AlwaysUseSequence then -- Must play as a sequence
 		//isGesture = false -- Leave this alone to allow gesture-sequences to play even when "AlwaysUseSequence" is true!
 		isSequence = true
 		if isnumber(animation) then -- If it's an activity, then convert it to a string
@@ -1616,7 +1612,7 @@ function ENT:Follow(ent, stopIfFollowing)
 				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." isn't friendly so it won't follow you.")
 			end
 			return false, 3
-		elseif self.IsFollowing == true && ent != followData.Ent then -- Already following another entity
+		elseif self.IsFollowing && ent != followData.Ent then -- Already following another entity
 			if isPly && self.CanChatMessage then
 				ent:PrintMessage(HUD_PRINTTALK, self:GetName().." is following another entity so it won't follow you.")
 			end
@@ -1685,7 +1681,7 @@ function ENT:MaintainMedicBehavior()
 		if CurTime() < self.Medic_NextHealT then return end
 		for _,v in ipairs(ents.FindInSphere(self:GetPos(), self.Medic_CheckDistance)) do
 			-- Only allow VJ Base NPCs and players
-			if (v.IsVJBaseSNPC or v:IsPlayer()) && v != self && !v.VJ_ST_Healing && !v.VJ_ID_Vehicle && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed == true && !IsValid(self:GetEnemy()) && (!IsValid(v:GetEnemy()) or v.VJ_IsBeingControlled)) or (v:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:CheckRelationship(v) == D_LI then
+			if (v.IsVJBaseSNPC or v:IsPlayer()) && v != self && !v.VJ_ST_Healing && !v.VJ_ID_Vehicle && (v:Health() <= v:GetMaxHealth() * 0.75) && ((v.Medic_CanBeHealed && !IsValid(self:GetEnemy()) && (!IsValid(v:GetEnemy()) or v.VJ_IsBeingControlled)) or (v:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS)) && self:CheckRelationship(v) == D_LI then
 				self.Medic_CurrentEntToHeal = v
 				self.Medic_Status = "Active"
 				v.VJ_ST_Healing = true
@@ -1703,7 +1699,7 @@ function ENT:MaintainMedicBehavior()
 			self:PlaySoundSystem("MedicBeforeHeal")
 			
 			-- Spawn the prop
-			if self.Medic_SpawnPropOnHeal == true && self:LookupAttachment(self.Medic_SpawnPropOnHealAttachment) != 0 then
+			if self.Medic_SpawnPropOnHeal && self:LookupAttachment(self.Medic_SpawnPropOnHealAttachment) != 0 then
 				local prop = ents.Create("prop_physics")
 				prop:SetModel(self.Medic_SpawnPropOnHealModel)
 				prop:SetLocalPos(self:GetPos())
@@ -1756,7 +1752,7 @@ function ENT:MaintainMedicBehavior()
 								ally:RemoveAllDecals()
 							end
 							self:PlaySoundSystem("MedicOnHeal", nil, VJ.EmitSound)
-							if ally.IsVJBaseSNPC == true then
+							if ally.IsVJBaseSNPC then
 								ally:PlaySoundSystem("MedicReceiveHeal")
 							end
 							self:ResetMedicBehavior()
@@ -1844,7 +1840,7 @@ function ENT:PlaySequence(animation)
 	self:ResetSequence(seqID)
 	self:ResetSequenceInfo()
 	self:SetCycle(0) -- Start from the beginning
-	/*if useDuration == true then -- No longer needed as it is handled by ACT_DO_NOT_DISTURB
+	/*if useDuration then -- No longer needed as it is handled by ACT_DO_NOT_DISTURB
 		timer.Create("timer_act_seqreset"..self:EntIndex(), duration, 1, function()
 			self.VJ_PlayingSequence = false
 			//self.PauseAttacks = false
@@ -2171,7 +2167,7 @@ function ENT:MaintainRelationships()
 				if (disp == 0) or (disp == 1 && (self:Disposition(ent) == D_LI or self:Disposition(ent) == D_NU)) or (disp == 2 && self:Disposition(ent) != D_LI) then
 					self:OnPlayerSight(ent)
 					self:PlaySoundSystem("OnPlayerSight")
-					if self.OnPlayerSightOnlyOnce == true then -- If it's only suppose to play it once then turn the system off
+					if self.OnPlayerSightOnlyOnce then -- If it's only suppose to play it once then turn the system off
 						self.HasOnPlayerSight = false
 					else
 						self.OnPlayerSightNextT = CurTime() + math.Rand(self.OnPlayerSightNextTime.a, self.OnPlayerSightNextTime.b)
@@ -2899,7 +2895,7 @@ function ENT:VJ_CheckAllFourSides(checkDist, returnPos, sides)
 		})
 		local hitPos = tr.HitPos
 		if myPos:Distance(hitPos) >= checkDist then
-			if returnPos == true then
+			if returnPos then
 				hitPos.z = myPos.z -- Reset it to self:GetPos() z-axis
 				result[#result + 1] = hitPos
 			elseif i == 1 then
@@ -2915,47 +2911,6 @@ function ENT:VJ_CheckAllFourSides(checkDist, returnPos, sides)
 	end
 	return result
 end
----------------------------------------------------------------------------------------------------------------------------------------------
-/*
-function ENT:NoCollide_CombineBall()
-	for k, v in ipairs(ents.GetAll()) do
-		if v:GetClass() == "prop_combine_ball" then
-			constraint.NoCollide(self, v, 0, 0)
-		end
-	end
-end
-*/
---------------------------------------------------------------------------------------------------------------------------------------------
-/*
-function ENT:GetRelationship(entity)
-	if self.HasAllies == false then return end
-
-	local friendslist = {"", "", "", "", "", ""} -- List
-	for _,x in ipairs( friendslist ) do
-	local hl_friendlys = ents.FindByClass( x )
-	for _,x in ipairs( hl_friendlys ) do
-	if entity == x then
-	return D_LI
-	end
-  end
- end
-
-	local groupone = ents.FindByClass("npc_vj_example_*") -- Group
-	table.Add(groupone)
-	for _, x in ipairs(groupone) do
-	if entity == x then
-	return D_LI
-	end
- end
-
-	local groupone = ents.FindByClass("npc_vj_example") -- Single
-	for _, x in ipairs(groupone) do
-	if entity == x then
-	return D_LI
-	end
- end
-end
-*/
 --------------------------------------------------------------------------------------------------------------------------------------------
 /* -- Was used in the Human base to handle firing guns while moving
 function ENT:DoWeaponAttackMovementCode(override, moveType)

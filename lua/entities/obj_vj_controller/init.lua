@@ -118,7 +118,7 @@ function ENT:StartControlling()
 			ent:OnKeyPressed(button)
 			
 			-- Stop Controlling
-			if ent.VJC_Player_CanExit == true and button == KEY_END then
+			if ent.VJC_Player_CanExit and button == KEY_END then
 				ent:StopControlling(true)
 			end
 			
@@ -304,7 +304,7 @@ end
 	-- Also avoids garbage positions that output from other methods
 net.Receive("vj_controller_cldata", function(len, ply)
 	-- Set the controller's bullseye position if the player is controlling an NPC AND controller entity exists AND Bullseye exists --> Protect against spam ?
-	if ply.VJ_IsControllingNPC == true && IsValid(ply.VJ_TheControllerEntity) && ply.VJ_TheControllerEntity.VJC_Bullseye_RefreshPos == true && IsValid(ply.VJ_TheControllerEntity.VJCE_Bullseye) then -- Added a var for toggling the bullseye positioning, this way if one wants to override it they can
+	if ply.VJ_IsControllingNPC && IsValid(ply.VJ_TheControllerEntity) && ply.VJ_TheControllerEntity.VJC_Bullseye_RefreshPos && IsValid(ply.VJ_TheControllerEntity.VJCE_Bullseye) then -- Added a var for toggling the bullseye positioning, this way if one wants to override it they can
 		ply.VJ_TheControllerEntity.VJCE_Bullseye:SetPos(net.ReadVector())
 	end
 end)
@@ -316,11 +316,11 @@ function ENT:SendDataToClient(reset)
 
 	net.Start("vj_controller_data")
 		net.WriteBool(ply.VJ_IsControllingNPC)
-		net.WriteUInt((reset == true and nil) or self.VJCE_Camera:EntIndex(), 14)
-		net.WriteUInt((reset == true and nil) or npc:EntIndex(), 14)
-		net.WriteUInt((reset == true and 1) or self.VJC_Camera_Mode, 2)
-		net.WriteVector((reset == true and vecDef) or (npcData.ThirdP_Offset + self.VJC_Camera_CurZoom))
-		net.WriteVector((reset == true and vecDef) or npcData.FirstP_Offset)
+		net.WriteUInt((reset and nil) or self.VJCE_Camera:EntIndex(), 14)
+		net.WriteUInt((reset and nil) or npc:EntIndex(), 14)
+		net.WriteUInt((reset and 1) or self.VJC_Camera_Mode, 2)
+		net.WriteVector((reset and vecDef) or (npcData.ThirdP_Offset + self.VJC_Camera_CurZoom))
+		net.WriteVector((reset and vecDef) or npcData.FirstP_Offset)
 		local bone = -1
 		if reset != true then
 			bone = npc:LookupBone(npcData.FirstP_Bone) or -1
@@ -365,12 +365,12 @@ function ENT:Think()
 				net.WriteFloat(npc:GetMaxHealth())
 				net.WriteFloat(npc:Health())
 				net.WriteString(npc:GetName())
-				net.WriteInt(npc.HasMeleeAttack == true && (((npc.IsAbleToMeleeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_MELEE) and 2) or 1) or 0, 3)
-				net.WriteInt(npc.HasRangeAttack == true && (((npc.IsAbleToRangeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_RANGE) and 2) or 1) or 0, 3)
-				net.WriteInt(npc.HasLeapAttack == true && (((npc.IsAbleToLeapAttack != true or npc.AttackType == VJ.ATTACK_TYPE_LEAP) and 2) or 1) or 0, 3)
+				net.WriteInt(npc.HasMeleeAttack && (((npc.IsAbleToMeleeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_MELEE) and 2) or 1) or 0, 3)
+				net.WriteInt(npc.HasRangeAttack && (((npc.IsAbleToRangeAttack != true or npc.AttackType == VJ.ATTACK_TYPE_RANGE) and 2) or 1) or 0, 3)
+				net.WriteInt(npc.HasLeapAttack && (((npc.IsAbleToLeapAttack != true or npc.AttackType == VJ.ATTACK_TYPE_LEAP) and 2) or 1) or 0, 3)
 				net.WriteBool(IsValid(npcWeapon))
 				net.WriteInt(IsValid(npcWeapon) && npcWeapon:Clip1() or 0, 32)
-				net.WriteInt(npc.HasGrenadeAttack == true && ((curTime <= npc.NextThrowGrenadeT and 2) or 1) or 0, 3)
+				net.WriteInt(npc.HasGrenadeAttack && ((curTime <= npc.NextThrowGrenadeT and 2) or 1) or 0, 3)
 			net.Send(ply)
 		end
 		
@@ -412,7 +412,7 @@ function ENT:Think()
 			-- Turning
 			if !npc:IsMoving() && canTurn && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
 				npc:SCHEDULE_IDLE_STAND()
-				if self.VJC_NPC_CanTurn == true then
+				if self.VJC_NPC_CanTurn then
 					local turnData = npc.TurnData
 					if turnData.Target != self.VJCE_Bullseye then
 						npc:SetTurnTarget(self.VJCE_Bullseye, 1)
@@ -521,7 +521,7 @@ function ENT:StopControlling(keyPressed)
 		local plyData = self.VJC_Data_Player
 		ply:UnSpectate()
 		ply:KillSilent() -- If we don't, we will get bugs like no being able to pick up weapons when walking over them.
-		if self.VJC_Player_CanRespawn == true or keyPressed == true then
+		if self.VJC_Player_CanRespawn or keyPressed then
 			ply:Spawn()
 			ply:SetHealth(plyData.health)
 			ply:SetArmor(plyData.armor)
@@ -529,7 +529,7 @@ function ENT:StopControlling(keyPressed)
 				ply:Give(v)
 			end
 			ply:SelectWeapon(plyData.activeWep)
-			if plyData.godMode == true then
+			if plyData.godMode then
 				ply:GodEnable()
 			end
 		end

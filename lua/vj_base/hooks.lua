@@ -19,7 +19,7 @@ end)
 hook.Add("PlayerSelectSpawn", "VJ_PlayerSelectSpawn", function(ply)
 	local points = {}
 	for _,v in ipairs(ents.FindByClass("sent_vj_ply_spawn")) do
-		if (v.Active == true) then
+		if v.Active then
 			points[#points + 1] = v
 		end
 	end
@@ -185,7 +185,7 @@ triggerLua:SetName("triggerhook")
 triggerLua:Spawn()
 
 hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
-	if ent:IsNPC() && ent.IsVJBaseSNPC == true then
+	if ent:IsNPC() && ent.IsVJBaseSNPC then
 		-- Format: <output name> <targetname>:<inputname>:<parameter>:<delay>:<max times to fire, -1 means infinite>
 		self:Fire("AddOutput", "OnIgnite triggerhook:RunPassedCode:hook.Run( 'OnOutput' ):0:-1")
 	end
@@ -277,7 +277,7 @@ cvars.AddChangeCallback("ai_ignoreplayers", function(convar_name, oldValue, newV
 		VJ_CVAR_IGNOREPLAYERS = true
 		for _, v in ipairs(ents.GetAll()) do
 			if v.IsVJBaseSNPC then
-				if v.FollowingPlayer == true then v:ResetFollowBehavior() end -- Reset the NPC's follow system if it's following a player
+				if v.FollowingPlayer then v:ResetFollowBehavior() end -- Reset the NPC's follow system if it's following a player
 				//v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
 				local posEnemies = v.CurrentPossibleEnemies
 				local it = 1

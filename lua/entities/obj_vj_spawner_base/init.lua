@@ -90,7 +90,7 @@ local defAng = Angle(0, 0, 0)
 -----------------------------------------------------------]]
 function ENT:SpawnEntity(spawnKey, spawnTbl, initSpawn)
 	local initOverrideDisable = (initSpawn == true && self.OverrideDisableOnSpawn)
-	if self.VJBaseSpawnerDisabled == true && initOverrideDisable == false then return end
+	if self.VJBaseSpawnerDisabled && initOverrideDisable == false then return end
 	
 	local spawnPos = spawnTbl.SpawnPosition or defPos
 	local spawnAng = spawnTbl.SpawnAngle or defAng
@@ -145,7 +145,7 @@ function ENT:SpawnEntity(spawnKey, spawnTbl, initSpawn)
 	//table.insert(self.CurrentEntities, spawnKey, {SpawnPosition=spawnPos, Entities=spawnEnts, WeaponsList=wepList, Ent=ent, Dead=false})
 	self:OnSpawnEntity(ent, spawnKey, spawnTbl, initSpawn)
 	self:PlaySpawnEntitySound()
-	timer.Simple(0.1, function() if IsValid(self) && self.SingleSpawner == true then self:DoSingleSpawn() end end)
+	timer.Simple(0.1, function() if IsValid(self) && self.SingleSpawner then self:DoSingleSpawn() end end)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
@@ -174,7 +174,7 @@ function ENT:Initialize()
 		end
 	end)
 end
-// lua_run for spawnKey,spawnTbl in ipairs(ents.GetAll()) do if spawnTbl.IsVJBaseSpawner == true then spawnTbl.VJBaseSpawnerDisabled = false end end
+// lua_run for spawnKey,spawnTbl in ipairs(ents.GetAll()) do if spawnTbl.IsVJBaseSpawner then spawnTbl.VJBaseSpawnerDisabled = false end end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Think()
 	//print("-----------------------------------------------------------")

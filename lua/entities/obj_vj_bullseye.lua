@@ -68,11 +68,11 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AcceptInput(key, activator, caller, data)
 	if !activator:IsPlayer() then return end
-	if self.Activated == false then
+	if !self.Activated then
 		self.Activated = true
 		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.bullseye.activated")
 		self:EmitSound(sdActivated, 70, 100)
-	elseif self.Activated == true then
+	elseif self.Activated then
 		self.Activated = false
 		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.bullseye.deactivated")
 		self:EmitSound(sdDeactivated, 70, 100)
@@ -84,10 +84,10 @@ function ENT:Think()
 	if self.UseActivationSystem then
 		if self.Activated == false then
 			self:AddFlags(FL_NOTARGET)
-			if self.ActivationSystemStatusColors == true then self:SetColor(Color(255, 0, 0)) end
-		elseif self.Activated == true then
+			if self.ActivationSystemStatusColors then self:SetColor(Color(255, 0, 0)) end
+		elseif self.Activated then
 			self:RemoveFlags(FL_NOTARGET)
-			if self.ActivationSystemStatusColors == true then self:SetColor(Color(0, 255, 0)) end
+			if self.ActivationSystemStatusColors then self:SetColor(Color(0, 255, 0)) end
 		end
 	end
 end
