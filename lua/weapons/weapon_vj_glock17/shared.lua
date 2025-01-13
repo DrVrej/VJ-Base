@@ -42,7 +42,7 @@ SWEP.Secondary.Ammo = "Pistol" -- Ammo type
 SWEP.AnimTbl_Deploy = ACT_VM_IDLE_TO_LOWERED
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound = true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
-SWEP.ReloadSound = "vj_base/weapons/glock17/glock17_reload.wav"
+SWEP.ReloadSound = "vj_base/weapons/glock17/reload.wav"
 SWEP.Reload_TimeUntilAmmoIsSet = 1.5 -- Time until ammo is set to the weapon
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function SWEP:OnSecondaryAttack()

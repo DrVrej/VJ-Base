@@ -11,7 +11,7 @@ local SNDLVL_GUNFIRE	= 140
 //local PITCH_LOW 		= 95
 local PITCH_NORM 		= 100
 //local PITCH_HIGH 		= 120
-local PITCH_VJ_RAND		= {90, 110}
+local PITCH_RANDOM		= {90, 110}
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ General ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -23,6 +23,54 @@ sound.Add({
 	level = SNDLVL_GUNFIRE,
 	pitch = PITCH_NORM,
 	sound = {"^vj_base/ambience/explosion1.wav", "^vj_base/ambience/explosion2.wav", "^vj_base/ambience/explosion3.wav", "^vj_base/ambience/explosion4.wav", "^vj_base/ambience/explosion5.wav"}
+})
+
+-- Impacts
+sound.Add({
+	name = "VJ.Impact.Armor",
+	channel = CHAN_BODY,
+	volume = 1.0,
+	level = SNDLVL_NORM,
+	pitch = PITCH_RANDOM,
+	sound = {"vj_base/impact/armor1.wav", "vj_base/impact/armor2.wav", "vj_base/impact/armor3.wav", "vj_base/impact/armor4.wav", "vj_base/impact/armor5.wav", "vj_base/impact/armor6.wav", "vj_base/impact/armor7.wav", "vj_base/impact/armor8.wav", "vj_base/impact/armor9.wav", "vj_base/impact/armor10.wav"}
+})
+sound.Add({
+	name = "VJ.Impact.Metal_Crush",
+	channel = CHAN_BODY,
+	volume = 1.0,
+	level = SNDLVL_NORM,
+	pitch = PITCH_RANDOM,
+	sound = {"vj_base/impact/metal_crush1.wav", "vj_base/impact/metal_crush2.wav", "vj_base/impact/metal_crush3.wav"}
+})
+sound.Add({
+	name = "VJ.Impact.Flesh_Alien",
+	channel = CHAN_BODY,
+	volume = 1.0,
+	level = SNDLVL_NORM,
+	pitch = PITCH_RANDOM,
+	sound = "vj_base/impact/flesh_alien.wav"
+})
+
+-- Gibs
+sound.Add({
+	name = "VJ.Gib.Bone_Snap",
+	channel = CHAN_AUTO,
+	volume = 1.0,
+	level = 80,
+	pitch = {80, 100},
+	sound = {"vj_base/gib/bone_snap1.wav", "vj_base/gib/bone_snap2.wav", "vj_base/gib/bone_snap3.wav"}
+})
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ NPCs ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Tanks
+sound.Add({
+	name = "VJ.NPC_Tank.Fire",
+	channel = CHAN_STATIC,
+	volume = 1.0,
+	level = SNDLVL_GUNFIRE,
+	pitch = PITCH_RANDOM,
+	sound = {"^vj_base/vehicles/armored/gun_main_fire1.wav", "^vj_base/vehicles/armored/gun_main_fire2.wav", "^vj_base/vehicles/armored/gun_main_fire3.wav", "^vj_base/vehicles/armored/gun_main_fire4.wav"}
 })
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Weapons - General ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -44,6 +92,15 @@ sound.Add({
 	pitch = PITCH_NORM,
 	sound = "vj_base/weapons/draw_rifle.wav"
 })
+
+sound.Add({
+	name = "VJ.Weapon.Draw_Shotgun",
+	channel = CHAN_BODY,
+	volume = 1.0,
+	level = SNDLVL_NORM,
+	pitch = PITCH_NORM,
+	sound = "vj_base/weapons/draw_shotgun.wav"
+})
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Weapons ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -53,8 +110,8 @@ sound.Add({
 	channel = CHAN_WEAPON,
 	volume = 1.0,
 	level = SNDLVL_GUNFIRE,
-	pitch = PITCH_VJ_RAND,
-	sound = "^vj_base/weapons/ak47/ak47_single.wav"
+	pitch = PITCH_RANDOM,
+	sound = "^vj_base/weapons/ak47/single.wav"
 })
 
 -- AR2
@@ -63,16 +120,16 @@ sound.Add({
 	channel = CHAN_WEAPON,
 	volume = 1.0,
 	level = SNDLVL_GUNFIRE,
-	pitch = PITCH_VJ_RAND,
-	sound = {"^vj_base/weapons/ar2/ar2_single1.wav", "^vj_base/weapons/ar2/ar2_single2.wav", "^vj_base/weapons/ar2/ar2_single3.wav"}
+	pitch = PITCH_RANDOM,
+	sound = {"^vj_base/weapons/ar2/single1.wav", "^vj_base/weapons/ar2/single2.wav", "^vj_base/weapons/ar2/single3.wav"}
 })
 sound.Add({
 	name = "VJ.Weapon_AR2.Secondary",
 	channel = CHAN_WEAPON,
 	volume = 1.0,
 	level = SNDLVL_GUNFIRE,
-	pitch = PITCH_VJ_RAND,
-	sound = "^vj_base/weapons/ar2/ar2_secondary.wav"
+	pitch = PITCH_RANDOM,
+	sound = "^vj_base/weapons/ar2/secondary.wav"
 })
 
 -- Blaster
@@ -81,8 +138,8 @@ sound.Add({
 	channel = CHAN_WEAPON,
 	volume = 1.0,
 	level = SNDLVL_GUNFIRE,
-	pitch = PITCH_VJ_RAND,
-	sound = "^vj_base/weapons/blaster/blaster_single.wav"
+	pitch = PITCH_RANDOM,
+	sound = "^vj_base/weapons/blaster/single.wav"
 })
 
 -- Flare Gun
@@ -91,8 +148,8 @@ sound.Add({
 	channel = CHAN_WEAPON,
 	volume = 1.0,
 	level = SNDLVL_GUNFIRE,
-	pitch = PITCH_VJ_RAND,
-	sound = "^vj_base/weapons/flaregun/flaregun_single.wav"
+	pitch = PITCH_RANDOM,
+	sound = "^vj_base/weapons/flaregun/single.wav"
 })
 
 -- Glock 17
@@ -101,8 +158,8 @@ sound.Add({
 	channel = CHAN_WEAPON,
 	volume = 1.0,
 	level = SNDLVL_GUNFIRE,
-	pitch = PITCH_VJ_RAND,
-	sound = "^vj_base/weapons/glock17/glock17_single.wav"
+	pitch = PITCH_RANDOM,
+	sound = "^vj_base/weapons/glock17/single.wav"
 })
 
 -- K-3
@@ -111,8 +168,8 @@ sound.Add({
 	channel = CHAN_WEAPON,
 	volume = 1.0,
 	level = SNDLVL_GUNFIRE,
-	pitch = PITCH_VJ_RAND,
-	sound = "^vj_base/weapons/k3_armenian/k3_single.wav"
+	pitch = PITCH_RANDOM,
+	sound = "^vj_base/weapons/k3_armenian/single.wav"
 })
 
 -- M4A1
@@ -121,8 +178,8 @@ sound.Add({
 	channel = CHAN_WEAPON,
 	volume = 1.0,
 	level = SNDLVL_GUNFIRE,
-	pitch = PITCH_VJ_RAND,
-	sound = "^vj_base/weapons/m4a1/m4a1_single.wav"
+	pitch = PITCH_RANDOM,
+	sound = "^vj_base/weapons/m4a1/single.wav"
 })
 
 -- MP 40
@@ -131,8 +188,8 @@ sound.Add({
 	channel = CHAN_WEAPON,
 	volume = 1.0,
 	level = SNDLVL_GUNFIRE,
-	pitch = PITCH_VJ_RAND,
-	sound = "^vj_base/weapons/mp40/mp40_single.wav"
+	pitch = PITCH_RANDOM,
+	sound = "^vj_base/weapons/mp40/single.wav"
 })
 sound.Add({
 	name = "VJ.Weapon_MP40.BoltBack",
@@ -140,7 +197,7 @@ sound.Add({
 	volume = 1.0,
 	level = SNDLVL_NORM,
 	pitch = PITCH_NORM,
-	sound = "vj_base/weapons/mp40/mp40_boltback.wav"
+	sound = "vj_base/weapons/mp40/boltback.wav"
 })
 sound.Add({
 	name = "VJ.Weapon_MP40.BoltForward",
@@ -148,7 +205,7 @@ sound.Add({
 	volume = 1.0,
 	level = SNDLVL_NORM,
 	pitch = PITCH_NORM,
-	sound = "vj_base/weapons/mp40/mp40_boltforward.wav"
+	sound = "vj_base/weapons/mp40/boltforward.wav"
 })
 sound.Add({
 	name = "VJ.Weapon_MP40.ClipIn",
@@ -156,7 +213,7 @@ sound.Add({
 	volume = 1.0,
 	level = SNDLVL_NORM,
 	pitch = PITCH_NORM,
-	sound = "vj_base/weapons/mp40/mp40_clipin.wav"
+	sound = "vj_base/weapons/mp40/clipin.wav"
 })
 sound.Add({
 	name = "VJ.Weapon_MP40.ClipOut",
@@ -164,7 +221,7 @@ sound.Add({
 	volume = 1.0,
 	level = SNDLVL_NORM,
 	pitch = PITCH_NORM,
-	sound = "vj_base/weapons/mp40/mp40_clipout.wav"
+	sound = "vj_base/weapons/mp40/clipout.wav"
 })
 
 -- 9mm Pistol
@@ -173,8 +230,8 @@ sound.Add({
 	channel = CHAN_WEAPON,
 	volume = 1.0,
 	level = SNDLVL_GUNFIRE,
-	pitch = PITCH_VJ_RAND,
-	sound = {"^vj_base/weapons/pistol_9mm/9mm_single1.wav", "^vj_base/weapons/pistol_9mm/9mm_single2.wav", "^vj_base/weapons/pistol_9mm/9mm_single3.wav"}
+	pitch = PITCH_RANDOM,
+	sound = {"^vj_base/weapons/pistol_9mm/single1.wav", "^vj_base/weapons/pistol_9mm/single2.wav", "^vj_base/weapons/pistol_9mm/single3.wav"}
 })
 
 -- .357 Magnum
@@ -183,8 +240,8 @@ sound.Add({
 	channel = CHAN_WEAPON,
 	volume = 1.0,
 	level = SNDLVL_GUNFIRE,
-	pitch = PITCH_VJ_RAND,
-	sound = {"^vj_base/weapons/revolver_357/357_single1.wav", "^vj_base/weapons/revolver_357/357_single2.wav", "^vj_base/weapons/revolver_357/357_single3.wav"}
+	pitch = PITCH_RANDOM,
+	sound = {"^vj_base/weapons/revolver_357/single1.wav", "^vj_base/weapons/revolver_357/single2.wav", "^vj_base/weapons/revolver_357/single3.wav"}
 })
 
 -- RPG
@@ -193,16 +250,16 @@ sound.Add({
 	channel = CHAN_WEAPON,
 	volume = 1.0,
 	level = SNDLVL_GUNFIRE,
-	pitch = PITCH_VJ_RAND,
-	sound = "^vj_base/weapons/rpg/rpg1_single.wav"
+	pitch = PITCH_RANDOM,
+	sound = "^vj_base/weapons/rpg/single1a.wav"
 })
 sound.Add({
 	name = "VJ.Weapon_RPG.Single2",
 	channel = CHAN_WEAPON,
 	volume = 1.0,
 	level = SNDLVL_GUNFIRE,
-	pitch = PITCH_VJ_RAND,
-	sound = "^vj_base/weapons/rpg/rpg2_single.wav"
+	pitch = PITCH_RANDOM,
+	sound = "^vj_base/weapons/rpg/single1b.wav"
 })
 
 -- SMG1
@@ -211,16 +268,16 @@ sound.Add({
 	channel = CHAN_WEAPON,
 	volume = 1.0,
 	level = SNDLVL_GUNFIRE,
-	pitch = PITCH_VJ_RAND,
-	sound = {"^vj_base/weapons/smg1/smg1_single1.wav", "^vj_base/weapons/smg1/smg1_single2.wav", "^vj_base/weapons/smg1/smg1_single3.wav"}
+	pitch = PITCH_RANDOM,
+	sound = {"^vj_base/weapons/smg1/single1.wav", "^vj_base/weapons/smg1/single2.wav", "^vj_base/weapons/smg1/single3.wav"}
 })
 sound.Add({
 	name = "VJ.Weapon_SMG1.Secondary",
 	channel = CHAN_WEAPON,
 	volume = 1.0,
 	level = 100, -- Since it's a grenade launcher, make it less than a gun shot!
-	pitch = PITCH_VJ_RAND,
-	sound = "^vj_base/weapons/smg1/smg1_glauncher.wav"
+	pitch = PITCH_RANDOM,
+	sound = "^vj_base/weapons/smg1/single_launcher.wav"
 })
 
 -- SPAS-12
@@ -229,8 +286,8 @@ sound.Add({
 	channel = CHAN_WEAPON,
 	volume = 1.0,
 	level = SNDLVL_GUNFIRE,
-	pitch = PITCH_VJ_RAND,
-	sound = "^vj_base/weapons/spas12/spas12_single.wav"
+	pitch = PITCH_RANDOM,
+	sound = "^vj_base/weapons/spas12/single.wav"
 })
 
 -- SSG-08
@@ -239,6 +296,6 @@ sound.Add({
 	channel = CHAN_WEAPON,
 	volume = 1.0,
 	level = SNDLVL_GUNFIRE,
-	pitch = PITCH_VJ_RAND,
-	sound = {"^vj_base/weapons/ssg08/ssg08_single1.wav", "^vj_base/weapons/ssg08/ssg08_single2.wav", "^vj_base/weapons/ssg08/ssg08_single3.wav"}
+	pitch = PITCH_RANDOM,
+	sound = {"^vj_base/weapons/ssg08/single1.wav", "^vj_base/weapons/ssg08/single2.wav", "^vj_base/weapons/ssg08/single3.wav"}
 })

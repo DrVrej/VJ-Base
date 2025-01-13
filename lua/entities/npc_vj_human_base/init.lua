@@ -459,10 +459,7 @@ ENT.SoundTbl_SoundTrack = false
 ------ ///// WARNING: Don't change anything in this box! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Default sound file paths for certain sound tables | Base will play these if the corresponding table is left empty
 local DefaultSoundTbl_FootStep = {"npc/metropolice/gear1.wav", "npc/metropolice/gear2.wav", "npc/metropolice/gear3.wav", "npc/metropolice/gear4.wav", "npc/metropolice/gear5.wav", "npc/metropolice/gear6.wav"}
-local DefaultSD_MedicAfterHeal = "items/smallmedkit1.wav"
 ENT.DefaultSoundTbl_MeleeAttack = {"physics/body/body_medium_impact_hard1.wav", "physics/body/body_medium_impact_hard2.wav", "physics/body/body_medium_impact_hard3.wav", "physics/body/body_medium_impact_hard4.wav", "physics/body/body_medium_impact_hard5.wav", "physics/body/body_medium_impact_hard6.wav"}
-local DefaultSoundTbl_MeleeAttackMiss = {"npc/zombie/claw_miss1.wav", "npc/zombie/claw_miss2.wav"}
-local DefaultSD_Impact = {"physics/flesh/flesh_impact_bullet1.wav", "physics/flesh/flesh_impact_bullet2.wav", "physics/flesh/flesh_impact_bullet3.wav", "physics/flesh/flesh_impact_bullet4.wav", "physics/flesh/flesh_impact_bullet5.wav"}
 ------ ///// WARNING: Don't change anything in this box! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- ====== Sound Chance ====== --
@@ -4420,8 +4417,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 		end
 	elseif sdSet == "MedicOnHeal" then
 		if self.HasMedicSounds_AfterHeal then
-			local pickedSD = VJ.PICK(self.SoundTbl_MedicAfterHeal)
-			if pickedSD == false then pickedSD = DefaultSD_MedicAfterHeal end -- Default sound
+			local pickedSD = VJ.PICK(self.SoundTbl_MedicAfterHeal) or "items/smallmedkit1.wav"
 			if (math.random(1, self.MedicAfterHealSoundChance) == 1 && pickedSD) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
@@ -4561,8 +4557,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 		end
 	elseif sdSet == "Impact" then
 		if self.HasImpactSounds then
-			local pickedSD = VJ.PICK(self.SoundTbl_Impact)
-			if pickedSD == false then pickedSD = VJ.PICK(DefaultSD_Impact) end -- Default table
+			local pickedSD = VJ.PICK(self.SoundTbl_Impact) or "Flesh.BulletImpact"
 			if (math.random(1, self.ImpactSoundChance) == 1 && pickedSD) or customSD then
 				if customSD then pickedSD = customSD end
 				self.CurrentImpactSound = sdType(self, pickedSD, self.ImpactSoundLevel, self:GetSoundPitch(self.ImpactSoundPitch.a, self.ImpactSoundPitch.b))
@@ -4662,8 +4657,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 		end
 	elseif sdSet == "MeleeAttackMiss" then
 		if self.HasMeleeAttackMissSounds then
-			local pickedSD = VJ.PICK(self.SoundTbl_MeleeAttackMiss)
-			if pickedSD == false then pickedSD = VJ.PICK(DefaultSoundTbl_MeleeAttackMiss) end -- Default table
+			local pickedSD = VJ.PICK(self.SoundTbl_MeleeAttackMiss) or "Zombie.AttackMiss"
 			if (math.random(1, self.MeleeAttackMissSoundChance) == 1 && pickedSD) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentIdleSound)
@@ -4710,7 +4704,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			end
 			self.NextOnDangerSightSoundT = CurTime() + sdDur
 		end
-	else -- Such as "GeneralSpeech"
+	else -- Such as "Speech"
 		if customSD then
 			StopSound(self.CurrentSpeechSound)
 			StopSound(self.CurrentIdleSound)

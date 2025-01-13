@@ -7,7 +7,7 @@ include("vj_base/ai/base_tank.lua")
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 -----------------------------------------------*/
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Core Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Core ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.StartHealth = 200
 ENT.MovementType = VJ_MOVETYPE_PHYSICS -- How the NPC moves around
@@ -18,43 +18,40 @@ ENT.AlertFriendsOnDeath = true -- Should the NPC's allies get alerted while it's
 ENT.SoundTbl_Breath = "vj_base/vehicles/armored/engine_idle.wav"
 ENT.SoundTbl_Death = "VJ.Explosion"
 
-ENT.AlertSoundLevel = 70
+ENT.BreathSoundLevel = 80
 ENT.IdleSoundLevel = 70
 ENT.CombatIdleSoundLevel = 70
-ENT.BreathSoundLevel = 80
+ENT.AlertSoundLevel = 70
 ENT.DeathSoundLevel = 100
-
-ENT.GeneralSoundPitch1 = 90
-ENT.GeneralSoundPitch2 = 100
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Tank Base Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ Tank Base ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ENT.Tank_GunnerENT = "" -- The SNPC that will be the gunner (The head of the tank)
-ENT.Tank_AngleDiffuseNumber = 180 -- Used if the forward direction of the y-axis isn't correct on the model
-	-- ====== Sight Variables ====== --
-ENT.Tank_SeeClose = 1000 -- If the enemy is closer than this number, than move by either running over them or moving away for the gunner to fire
-ENT.Tank_SeeFar = 6000 -- If the enemy is higher than this number, than move towards the enemy
-ENT.Tank_DistRanOver = 500 -- If the enemy is within self.Tank_SeeClose & this number & not high up, then run over them!
-	-- ====== Movement Variables ====== --
+ENT.Tank_GunnerENT = "" -- Gunner entity of the tank
+ENT.Tank_AngleOffset = 0 -- Use to offset the forward angle if the model's y-axis isn't facing the correct direction
+	-- ====== Sight ====== --
+ENT.Tank_DriveAwayDistance = 1000 -- If the enemy is closer than this number, than move by either running over them or moving away for the gunner to fire
+ENT.Tank_DriveTowardsDistance = 5000 -- If the enemy is higher than this number, than move towards the enemy
+ENT.Tank_RanOverDistance = 500 -- If the enemy is within self.Tank_DriveAwayDistance & this number & not high up, then run over them!
+	-- ====== Movement ====== --
 ENT.Tank_TurningSpeed = 1.5 -- How fast the chassis moves as it's driving
 ENT.Tank_DrivingSpeed = 100 -- How fast the tank drives
-	-- ====== Collision Variables ====== --
+	-- ====== Collision ====== --
 	-- Used when the NPC is spawned
 ENT.Tank_CollisionBoundSize = 90
 ENT.Tank_CollisionBoundUp = 100
 ENT.Tank_CollisionBoundDown = -10
-	-- ====== Death Variables ====== --
-ENT.Tank_DeathSoldierModels = {} -- The corpses it will spawn on death (Example: A soldier) | false = Don't spawn anything
+	-- ====== Death ====== --
+ENT.Tank_DeathSoldierModels = false -- The corpses it will spawn on death (Example: A soldier) | false = Don't spawn anything
 ENT.Tank_DeathSoldierChance = 3 -- The chance that the soldier spawns | 1 = always
 ENT.Tank_DeathDecal = {"Scorch"} -- The decal that it places on the ground when it dies
-	-- ====== Sound Variables ====== --
-ENT.Tank_SoundTbl_DrivingEngine = {}
-ENT.Tank_SoundTbl_Track = {}
-ENT.Tank_SoundTbl_RunOver = {}
-
-ENT.Tank_DefaultSoundTbl_DrivingEngine = "vj_base/vehicles/armored/engine_drive.wav"
-ENT.Tank_DefaultSoundTbl_Track = "vj_base/vehicles/armored/tracks1.wav"
-ENT.Tank_DefaultSoundTbl_RunOver = {"vj_base/gib/bone_snap1.wav", "vj_base/gib/bone_snap2.wav", "vj_base/gib/bone_snap3.wav"}
+	-- ====== Sound ====== --
+-- driving movement sounds
+ENT.HasMoveSound = true
+ENT.Tank_SoundTbl_DrivingEngine = false
+ENT.Tank_SoundTbl_Track = false
+-- Run over sound
+ENT.HasRunOverSound = true
+ENT.Tank_SoundTbl_RunOver = false
 
 //util.AddNetworkString("vj_tank_base_spawneffects")
 //util.AddNetworkString("vj_tank_base_moveeffects")
@@ -156,7 +153,7 @@ function ENT:Init()
 	if self.CustomInitialize_CustomTank then self:CustomInitialize_CustomTank() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
 	self:PhysicsInit(SOLID_VPHYSICS) // SOLID_BBOX
 	//self:SetSolid(SOLID_VPHYSICS)
-	self:SetAngles(self:GetAngles() + Angle(0, -self.Tank_AngleDiffuseNumber, 0))
+	self:SetAngles(self:GetAngles() + Angle(0, -self.Tank_AngleOffset, 0))
 	//self:SetPos(self:GetPos()+Vector(0,0,90))
 	self:SetCollisionBounds(Vector(self.Tank_CollisionBoundSize, self.Tank_CollisionBoundSize, self.Tank_CollisionBoundUp), Vector(-self.Tank_CollisionBoundSize, -self.Tank_CollisionBoundSize, self.Tank_CollisionBoundDown))
 
@@ -191,7 +188,7 @@ function ENT:Tank_RunOver(ent)
 	if !self.Tank_IsMoving or !IsValid(ent) or (cv_nomelee:GetInt() == 0 /*or self.HasMeleeAttack == false*/) or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then return end
 	if self:Disposition(ent) == D_HT && ent:Health() > 0 && ((ent:IsNPC() && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot()) && !ent.VJ_ID_Boss && !ent.VJ_ID_Vehicle && !ent.VJ_ID_Aircraft then
 		self:Tank_OnRunOver(ent)
-		self:Tank_Sound_RunOver()
+		self:Tank_PlaySoundSystem("RunOver")
 		ent:TakeDamage(self:ScaleByDifficulty(8), self, self)
 		VJ.DamageSpecialEnts(self, ent, nil)
 		ent:SetVelocity(ent:GetForward()*-200)
@@ -259,7 +256,7 @@ function ENT:OnThinkActive()
 		local phys = self:GetPhysicsObject()
 		if IsValid(phys) && phys:GetVelocity():Length() > 10 && self.Tank_Status == 0 then -- Moving
 			self.Tank_IsMoving = true
-			self:Tank_Sound_Moving()
+			self:Tank_PlaySoundSystem("Movement")
 			self:StartMoveEffects()
 		else -- Not moving
 			VJ.STOPSOUND(self.CurrentTankMovingSound)
@@ -280,13 +277,15 @@ function ENT:OnThinkActive()
 		if IsValid(ene) then
 			local phys = self:GetPhysicsObject()
 			if IsValid(phys) then
-				local angEne = (ene:GetPos() - self:GetPos() + vec80z):Angle()
-				local angDiffuse = self:Tank_AngleDiffuse(angEne.y, self:GetAngles().y + self.Tank_AngleDiffuseNumber)
-				local heightRatio = (ene:GetPos().z - self:GetPos().z) / self:GetPos():Distance(Vector(ene:GetPos().x, ene:GetPos().y, self:GetPos().z))
+				local myPos = self:GetPos()
+				local enePos = ene:GetPos()
+				local angEne = (enePos - myPos + vec80z):Angle()
+				local angDiffuse = self:Tank_AngleDiffuse(angEne.y, self:GetAngles().y + self.Tank_AngleOffset)
+				local heightRatio = (enePos.z - myPos.z) / myPos:Distance(Vector(enePos.x, enePos.y, myPos.z))
 				-- If the enemy's height isn't very high AND the enemy is ( within run over distance OR far away), then move towards the enemy!
 				-- OR
 				-- If the enemy is very high up, then move away from it to help the gunner fire!
-				if (heightRatio < 0.15 && ((self.LatestEnemyDistance < self.Tank_DistRanOver) or (self.LatestEnemyDistance > self.Tank_SeeFar))) or (heightRatio > 0.15) then
+				if (heightRatio < 0.15 && ((self.LatestEnemyDistance < self.Tank_RanOverDistance) or (self.LatestEnemyDistance > self.Tank_DriveTowardsDistance))) or (heightRatio > 0.15) then
 					if angDiffuse > 15 then
 						self:SetLocalAngles(self:GetLocalAngles() + Angle(0, self.Tank_TurningSpeed, 0))
 						phys:SetAngles(self:GetAngles())
@@ -295,11 +294,13 @@ function ENT:OnThinkActive()
 						phys:SetAngles(self:GetAngles())
 					end
 					local moveVel = self:GetForward()
-					moveVel:Rotate(Angle(0, self.Tank_AngleDiffuseNumber, 0))
-					if heightRatio > 0.15 then -- Move away!
-						phys:SetVelocity(moveVel:GetNormal()*-self.Tank_DrivingSpeed)
-					else -- Move towards!
-						phys:SetVelocity(moveVel:GetNormal()*self.Tank_DrivingSpeed)
+					moveVel:Rotate(Angle(0, self.Tank_AngleOffset, 0))
+					-- Move away!
+					if heightRatio > 0.15 then
+						phys:SetVelocity(moveVel:GetNormal() * -self.Tank_DrivingSpeed)
+					-- Move towards!
+					else
+						phys:SetVelocity(moveVel:GetNormal() * self.Tank_DrivingSpeed)
 					end
 				end
 			end
@@ -323,7 +324,7 @@ function ENT:SelectSchedule()
 				self.Tank_Status = 1
 			end
 		else
-			if (self.LatestEnemyDistance < self.Tank_SeeFar && self.LatestEnemyDistance > self.Tank_SeeClose) or self.IsGuard then -- If between this two numbers, stay still
+			if (self.LatestEnemyDistance < self.Tank_DriveTowardsDistance && self.LatestEnemyDistance > self.Tank_DriveAwayDistance) or self.IsGuard then -- If between this two numbers, stay still
 				self.Tank_Status = 1
 			else
 				self.Tank_Status = 0
@@ -391,7 +392,7 @@ function ENT:OnCreateDeathCorpse(dmginfo, hitgroup, corpseEnt)
 		-- Create soldier corpse
 		if math.random(1, self.Tank_DeathSoldierChance) == 1 then
 			local soldierMDL = VJ.PICK(self.Tank_DeathSoldierModels)
-			if soldierMDL != false then
+			if soldierMDL then
 				self:CreateExtraDeathCorpse("prop_ragdoll", soldierMDL, {Pos=myPos + self:GetUp()*90 + self:GetRight()*-30, Vel=Vector(math.Rand(-600, 600), math.Rand(-600, 600), 500)}, function(ent)
 					ent:Ignite(math.Rand(8, 10), 0)
 					ent:SetColor(colorGray)
@@ -423,25 +424,17 @@ function ENT:CustomOnRemove()
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_Sound_Moving()
-	if self.HasSounds == false or self.HasFootStepSound == false then return end
-	
-	local sdtbl1 = VJ.PICK(self.Tank_SoundTbl_DrivingEngine)
-	if sdtbl1 == false then sdtbl1 = VJ.PICK(self.Tank_DefaultSoundTbl_DrivingEngine) end -- Default table
-	self.CurrentTankMovingSound = VJ.CreateSound(self, sdtbl1, 80, 100)
-	//self.Tank_NextRunOverSoundT = CurTime() + 0.2
-	
-	local sdtbl2 = VJ.PICK(self.Tank_SoundTbl_Track)
-	if sdtbl2 == false then sdtbl2 = VJ.PICK(self.Tank_DefaultSoundTbl_Track) end -- Default table
-	self.CurrentTankTrackSound = VJ.CreateSound(self, sdtbl2, 70, 100)
-	//self.Tank_NextRunOverSoundT = CurTime() + 0.2
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_Sound_RunOver()
-	if self.HasSounds == false or CurTime() < self.Tank_NextRunOverSoundT then return end
-	
-	local sdtbl = VJ.PICK(self.Tank_SoundTbl_RunOver)
-	if sdtbl == false then sdtbl = VJ.PICK(self.Tank_DefaultSoundTbl_RunOver) end -- Default table
-	self:EmitSound(sdtbl, 80, math.random(80, 100))
-	self.Tank_NextRunOverSoundT = CurTime() + 0.2
+function ENT:Tank_PlaySoundSystem(sdSet)
+	if !self.HasSounds or !sdSet then return end
+	if sdSet == "Movement" then
+		if self.HasMoveSound then
+			self.CurrentTankMovingSound = VJ.CreateSound(self, VJ.PICK(self.Tank_SoundTbl_DrivingEngine) or "vj_base/vehicles/armored/engine_drive.wav", 80, 100)
+			self.CurrentTankTrackSound = VJ.CreateSound(self, VJ.PICK(self.Tank_SoundTbl_Track) or "vj_base/vehicles/armored/chassis_tracks.wav", 70, 100)
+		end
+	elseif sdSet == "RunOver" then
+		if self.HasRunOverSound && CurTime() > self.Tank_NextRunOverSoundT then
+			self:EmitSound(VJ.PICK(self.Tank_SoundTbl_RunOver) or "VJ.Gib.Bone_Snap", 80, math.random(80, 100))
+			self.Tank_NextRunOverSoundT = CurTime() + 0.2
+		end
+	end
 end

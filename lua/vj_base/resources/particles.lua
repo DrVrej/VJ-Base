@@ -73,20 +73,19 @@ VJ.AddParticle("particles/vj_environment.pcf", {
 	"vj_aurora_shockwave_ring",
 	"vj_aurora_shockwave_trails",
 	"vj_aurora_floaters",
-	-- Smoke
-	"vj_smoke1",
-	"vj_smoke2",
+	-- Smoke (Black)
+	"vj_smoke_black1",
+	"vj_smoke_black2",
+	-- Smoke (White)
+	"vj_smoke_white_medium",
+	"vj_smoke_white_narrow",
 	-- Steam
 	"vj_steam",
-	"vj_steam_narrow",
-	"vj_steam_narrow_continuous",
 	"vj_steam_small",
 	"vj_steam_small_full",
 	"vj_steam_medium",
 	"vj_steam_medium_full",
 	"vj_steam_drops",
-	"vj_steam_puff",
-	"vj_steam_puff2",
 })
 VJ.AddParticle("particles/vj_projectiles.pcf", {
 	"vj_impact_dirty",

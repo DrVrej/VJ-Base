@@ -354,8 +354,8 @@ function SWEP:SetDefaultValues(holdType)
 		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_base/weapons/dryfire_revolver.wav" end
 		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_base/weapons/reload_revolver.wav" end
 	elseif holdType == "shotgun" or holdType == "crossbow" then
-		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "VJ.Weapon.Draw_Rifle" end
-		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_base/weapons/dryfire_rifle.wav" end
+		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "VJ.Weapon.Draw_Shotgun" end
+		if VJ.PICK(self.DryFireSound) == false then self.DryFireSound = "vj_base/weapons/dryfire_shotgun.wav" end
 		if VJ.PICK(self.NPC_ReloadSound) == false then self.NPC_ReloadSound = "vj_base/weapons/reload_shotgun.wav" end
 	elseif holdType == "rpg" then
 		if VJ.PICK(self.DeploySound) == false then self.DeploySound = "VJ.Weapon.Draw_Rifle" end

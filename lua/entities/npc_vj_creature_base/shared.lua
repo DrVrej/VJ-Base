@@ -1,6 +1,6 @@
 ENT.Base 			= "base_entity"
 ENT.Type 			= "ai"
-ENT.PrintName 		= "VJ Creature SNPC Base"
+ENT.PrintName 		= "VJ Base Creature"
 ENT.Author 			= "DrVrej"
 ENT.Contact 		= "http://steamcommunity.com/groups/vrejgaming"
 ENT.Purpose 		= "To make SNPCs."

@@ -13,7 +13,7 @@ if CLIENT then
 end
 	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.NPC_NextPrimaryFire = 0.3 -- RPM of the weapon in seconds | Calculation: 60 / RPM
-SWEP.NPC_ReloadSound = "vj_base/weapons/blaster/blaster_reload.wav" -- Sounds it plays when the base detects the SNPC playing a reload animation
+SWEP.NPC_ReloadSound = "vj_base/weapons/blaster/reload.wav" -- Sounds it plays when the base detects the SNPC playing a reload animation
 	-- Main Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.ViewModel = "models/vj_base/weapons/c_e5.mdl"
 SWEP.WorldModel = "models/vj_base/weapons/w_e5.mdl"
@@ -38,5 +38,5 @@ SWEP.PrimaryEffects_SpawnShells = false
 SWEP.PrimaryEffects_DynamicLightColor = Color(255, 0, 0)
 	-- Reload Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.HasReloadSound = true -- Does it have a reload sound? Remember even if this is set to false, the animation sound will still play!
-SWEP.ReloadSound = "vj_base/weapons/blaster/blaster_reload.wav"
+SWEP.ReloadSound = "vj_base/weapons/blaster/reload.wav"
 SWEP.Reload_TimeUntilAmmoIsSet = 0.8 -- Time until ammo is set to the weapon

@@ -22,7 +22,7 @@ SWEP.AdminSpawnable = false
 	-- NPC Settings ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.NPC_HasSecondaryFire = true -- Can the weapon have a secondary fire?
 SWEP.NPC_SecondaryFireSound = "VJ.Weapon_SMG1.Secondary" -- The sound it plays when the secondary fire is used
-SWEP.NPC_ReloadSound = "vj_base/weapons/smg1/smg1_reload.wav" -- Sounds it plays when the base detects the SNPC playing a reload animation
+SWEP.NPC_ReloadSound = "vj_base/weapons/smg1/reload.wav" -- Sounds it plays when the base detects the SNPC playing a reload animation
 	-- Primary Fire ---------------------------------------------------------------------------------------------------------------------------------------------
 SWEP.Primary.Damage = 5 -- Damage
 SWEP.Primary.ClipSize = 45 -- Max amount of rounds per clip

@@ -1,8 +1,8 @@
 "VertexLitGeneric"
 {
-    "$basetexture"              "vj_base/models/weapons/rpg_ins/weapon_w_rpg_dm"
-	"$bumpmap"					"vj_base/models/weapons/rpg_ins/weapon_w_rpg_nm"
-	"$phongexponenttexture"		"vj_base/models/weapons/rpg_ins/weapon_w_rpg_em"
+    "$basetexture"              "vj_base/models/weapons/rpg7/weapon_w_rpg_dm"
+	"$bumpmap"					"vj_base/models/weapons/rpg7/weapon_w_rpg_nm"
+	"$phongexponenttexture"		"vj_base/models/weapons/rpg7/weapon_w_rpg_em"
 	"$nocull" 					"1"
 
 	"$phong"                    "1"

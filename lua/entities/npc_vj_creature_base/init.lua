@@ -478,9 +478,7 @@ ENT.SoundTbl_SoundTrack = false
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ ///// WARNING: Don't change anything in this box! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Default sound file paths for certain sound tables | Base will play these if the corresponding table is left empty
-local DefaultSD_MedicAfterHeal = "items/smallmedkit1.wav"
 local DefaultSD_MeleeAttackExtra = {"npc/zombie/claw_strike1.wav", "npc/zombie/claw_strike2.wav", "npc/zombie/claw_strike3.wav"}
-local DefaultSD_Impact = "vj_base/impact/flesh_alien.wav"
 ------ ///// WARNING: Don't change anything in this box! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- ====== Sound Chance ====== --
@@ -3291,8 +3289,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 		end
 	elseif sdSet == "MedicOnHeal" then
 		if self.HasMedicSounds_AfterHeal then
-			local pickedSD = VJ.PICK(self.SoundTbl_MedicAfterHeal)
-			if pickedSD == false then pickedSD = DefaultSD_MedicAfterHeal end -- Default sound
+			local pickedSD = VJ.PICK(self.SoundTbl_MedicAfterHeal) or "items/smallmedkit1.wav"
 			if (math.random(1, self.MedicAfterHealSoundChance) == 1 && pickedSD) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
@@ -3429,8 +3426,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 		end
 	elseif sdSet == "Impact" then
 		if self.HasImpactSounds then
-			local pickedSD = VJ.PICK(self.SoundTbl_Impact)
-			if pickedSD == false then pickedSD = DefaultSD_Impact end -- Default sound
+			local pickedSD = VJ.PICK(self.SoundTbl_Impact) or "VJ.Impact.Flesh_Alien"
 			if (math.random(1, self.ImpactSoundChance) == 1 && pickedSD) or customSD then
 				if customSD then pickedSD = customSD end
 				self.CurrentImpactSound = sdType(self, pickedSD, self.ImpactSoundLevel, self:GetSoundPitch(self.ImpactSoundPitch.a, self.ImpactSoundPitch.b))
@@ -3576,7 +3572,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 				self.CurrentLeapAttackDamageMissSound = sdType(self, pickedSD, self.LeapAttackDamageMissSoundLevel, self:GetSoundPitch(self.LeapAttackDamageMissSoundPitch.a, self.LeapAttackDamageMissSoundPitch.b))
 			end
 		end
-	else -- Such as "GeneralSpeech"
+	else -- Such as "Speech"
 		if customSD then
 			StopSound(self.CurrentSpeechSound)
 			StopSound(self.CurrentIdleSound)

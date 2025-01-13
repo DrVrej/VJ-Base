@@ -55,6 +55,7 @@ function SWEP:OnPrimaryAttack(status, statusData)
 		if owner:IsPlayer() then
 			local plyAng = owner:GetAimVector():Angle()
 			projectile:SetPos(owner:GetShootPos() + plyAng:Forward()*-20 + plyAng:Up()*-9 + plyAng:Right()*10)
+			owner:GetViewModel():SetBodygroup(1, 1)
 		else
 			projectile:SetPos(spawnPos)
 		end
@@ -89,5 +90,10 @@ end
 function SWEP:OnReload(status)
 	if status == "Finish" then
 		self:SetBodygroup(1, 0)
+		
+		local owner = self:GetOwner()
+		if IsValid(owner) && owner:IsPlayer() then
+			owner:GetViewModel():SetBodygroup(1, 0)
+		end
 	end
 end
