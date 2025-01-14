@@ -2588,6 +2588,7 @@ function ENT:IdleSoundCode(customSD, sdType)
 			local pickedSD = VJ.PICK(self.SoundTbl_CombatIdle)
 			if (math.random(1,self.CombatIdleSoundChance) == 1 && pickedSD) or customSD then
 				if customSD then pickedSD = customSD end
+				StopSound(self.CurrentIdleSound)
 				self.CurrentIdleSound = sdType(self, pickedSD, self.CombatIdleSoundLevel, self:GetSoundPitch(self.CombatIdleSoundPitch.a, self.CombatIdleSoundPitch.b))
 			end
 		else
@@ -2597,6 +2598,7 @@ function ENT:IdleSoundCode(customSD, sdType)
 			local function RegularIdle()
 				if (sdrand == 1 && pickedSD) or customSD then
 					if customSD then pickedSD = customSD end
+					StopSound(self.CurrentIdleSound)
 					self.CurrentIdleSound = sdType(self, pickedSD, self.IdleSoundLevel, self:GetSoundPitch(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
 				end
 			end
@@ -2626,6 +2628,7 @@ function ENT:IdleSoundCode(customSD, sdType)
 				end
 	
 				if foundEnt then
+					StopSound(self.CurrentIdleSound)
 					self.CurrentIdleSound = sdType(self, sdtbl2, self.IdleDialogueSoundLevel, self:GetSoundPitch(self.IdleDialogueSoundPitch.a, self.IdleDialogueSoundPitch.b))
 					if canAnswer then -- If we have a VJ NPC that can answer
 						local dur = SoundDuration(sdtbl2)

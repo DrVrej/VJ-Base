@@ -3474,6 +3474,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			if (math.random(1, self.BeforeMeleeAttackSoundChance) == 1 && pickedSD) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentExtraSpeechSound)
 				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentExtraSpeechSound = sdType(self, pickedSD, self.BeforeMeleeAttackSoundLevel, self:GetSoundPitch(self.BeforeMeleeAttackSoundPitch.a, self.BeforeMeleeAttackSoundPitch.b))
@@ -3504,6 +3505,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			if (math.random(1, self.MeleeAttackMissSoundChance) == 1 && pickedSD) or customSD then
 				if customSD then pickedSD = customSD end
 				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+				StopSound(self.CurrentMeleeAttackMissSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentMeleeAttackMissSound = sdType(self, pickedSD, self.MeleeAttackMissSoundLevel, self:GetSoundPitch(self.MeleeAttackMissSoundPitch.a, self.MeleeAttackMissSoundPitch.b))
 			end
@@ -3514,6 +3516,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			if (math.random(1, self.BeforeRangeAttackSoundChance) == 1 && pickedSD) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentExtraSpeechSound)
 				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentExtraSpeechSound = sdType(self, pickedSD, self.BeforeRangeAttackSoundLevel, self:GetSoundPitch(self.BeforeRangeAttackPitch.a, self.BeforeRangeAttackPitch.b))
@@ -3536,6 +3539,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			if (math.random(1, self.BeforeLeapAttackSoundChance) == 1 && pickedSD) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
+				StopSound(self.CurrentExtraSpeechSound)
 				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentExtraSpeechSound = sdType(self, pickedSD, self.BeforeLeapAttackSoundLevel, self:GetSoundPitch(self.BeforeLeapAttackSoundPitch.a, self.BeforeLeapAttackSoundPitch.b))
@@ -3558,6 +3562,7 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			if (math.random(1, self.LeapAttackDamageSoundChance) == 1 && pickedSD) or customSD then
 				if customSD then pickedSD = customSD end
 				if self.IdleSounds_PlayOnAttacks == false then StopSound(self.CurrentIdleSound) end -- Don't stop idle sounds if we aren't suppose to
+				StopSound(self.CurrentSpeechSound)
 				self.NextIdleSoundT_RegularChange = CurTime() + 1
 				self.CurrentSpeechSound = sdType(self, pickedSD, self.LeapAttackDamageSoundLevel, self:GetSoundPitch(self.LeapAttackDamageSoundPitch.a, self.LeapAttackDamageSoundPitch.b))
 			end

@@ -10,6 +10,7 @@ include("vj_base/ai/base_tank.lua")
 ------ Core ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.StartHealth = 0
+ENT.SightDistance = 10000
 ENT.HasSetSolid = false -- set to false to disable SetSolid
 ENT.MovementType = VJ_MOVETYPE_STATIONARY -- How the NPC moves around
 ENT.CanTurnWhileStationary = false -- If set to true, the SNPC will be able to turn while it's a stationary SNPC
@@ -24,7 +25,7 @@ ENT.Tank_AngleDiffuseFiringLimit = 5 -- Firing angle diffuse limit, useful for l
 ENT.Tank_TurningSpeed = 5 -- How fast the gun moves as it's aiming towards an enemy
 	-- ====== Projectile Shell ====== --
 ENT.Tank_Shell_FireMin = 350 -- If the enemy is closer than this number, than don't shoot!
-ENT.Tank_Shell_FireMax = 6500 -- If the enemy is higher than this number, than don't shoot!
+ENT.Tank_Shell_FireMax = ENT.SightDistance -- If the enemy is higher than this number, than don't shoot!
 ENT.Tank_Shell_NextFireTime = 0 -- Delay between each fire, triggered the moment when the shell leaves the tank | It can NOT even reload if this delay is active!
 ENT.Tank_Shell_TimeUntilFire = 2.5 -- Delay until it fires the shell (Ran after reloading) | If Failure: it will instantly fire it the moment it's facing the enemy again!
 ENT.Tank_Shell_SpawnPos = Vector(-170, 0, 65)
@@ -149,8 +150,6 @@ function ENT:OnThinkActive()
 	if self.Dead then return end
 	self:SetEnemy(self:GetParent():GetEnemy())
 	self:Tank_OnThinkActive()
-
-	if self.Tank_GunnerIsTurning then self:Tank_PlaySoundSystem("Movement") else VJ.STOPSOUND(self.CurrentTankMovingSound) end
 	self:SelectSchedule()
 	
 	if self.Tank_Status == 0 then
@@ -189,6 +188,8 @@ function ENT:OnThinkActive()
 			self.Tank_GunnerIsTurning = false
 		end
 	end
+	
+	if self.Tank_GunnerIsTurning then self:Tank_PlaySoundSystem("Movement") else VJ.STOPSOUND(self.CurrentTankMovingSound) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule()
@@ -358,7 +359,11 @@ function ENT:Tank_PlaySoundSystem(sdSet)
 	if !self.HasSounds or !sdSet then return end
 	if sdSet == "Movement" then
 		if self.HasMoveSound then
-			self.CurrentTankMovingSound = VJ.CreateSound(self, VJ.PICK(self.Tank_SoundTbl_Turning) or "vj_base/vehicles/armored/gun_move2.wav", self.Tank_TurningSoundLevel, math.random(self.Tank_TurningSoundPitch.a, self.Tank_TurningSoundPitch.b))
+			local curMoveSD = self.CurrentTankMovingSound
+			if !curMoveSD or (curMoveSD && !curMoveSD:IsPlaying()) then
+				VJ.STOPSOUND(curMoveSD)
+				self.CurrentTankMovingSound = VJ.CreateSound(self, VJ.PICK(self.Tank_SoundTbl_Turning) or "vj_base/vehicles/armored/gun_move2.wav", self.Tank_TurningSoundLevel, math.random(self.Tank_TurningSoundPitch.a, self.Tank_TurningSoundPitch.b))
+			end
 		end
 	elseif sdSet == "ShellFire" then
 		if self.HasFireShellSound then

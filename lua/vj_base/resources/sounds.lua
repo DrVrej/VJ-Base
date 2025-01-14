@@ -246,20 +246,12 @@ sound.Add({
 
 -- RPG
 sound.Add({
-	name = "VJ.Weapon_RPG.Single1",
+	name = "VJ.Weapon_RPG.Single",
 	channel = CHAN_WEAPON,
 	volume = 1.0,
 	level = SNDLVL_GUNFIRE,
 	pitch = PITCH_RANDOM,
-	sound = "^vj_base/weapons/rpg/single1a.wav"
-})
-sound.Add({
-	name = "VJ.Weapon_RPG.Single2",
-	channel = CHAN_WEAPON,
-	volume = 1.0,
-	level = SNDLVL_GUNFIRE,
-	pitch = PITCH_RANDOM,
-	sound = "^vj_base/weapons/rpg/single1b.wav"
+	sound = "^vj_base/weapons/rpg/single.wav"
 })
 
 -- SMG1

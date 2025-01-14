@@ -202,6 +202,7 @@ function ENT:PlayIdleSound()
 	if self.HasIdleSounds == false then return end
 	if CurTime() > self.NextIdleSoundT then
 		if math.random(1, self.IdleSoundChance) == 1 then
+			VJ.STOPSOUND(self.CurrentIdleSound)
 			self.CurrentIdleSound = VJ.CreateSound(self, self.SoundTbl_Idle, self.IdleSoundLevel, math.random(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
 		end
 		self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle.a, self.NextSoundTime_Idle.b)
@@ -211,7 +212,7 @@ end
 function ENT:PlaySpawnEntitySound()
 	if self.HasSpawnEntitySound == false then return end
 	if math.random(1, self.SpawnEntitySoundChance) then
-		self.CurrentSpawnEntitySound = VJ.CreateSound(self, self.SoundTbl_SpawnEntity, self.SpawnEntitySoundLevel, math.random(self.SpawnEntitySoundPitch.a, self.SpawnEntitySoundPitch.b))
+		VJ.EmitSound(self, self.SoundTbl_SpawnEntity, self.SpawnEntitySoundLevel, math.random(self.SpawnEntitySoundPitch.a, self.SpawnEntitySoundPitch.b))
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -369,22 +369,23 @@ function ENT:PlaySound(sdSet)
 	if !sdSet then return end
 	if sdSet == "Startup" then
 		if self.HasStartupSounds && math.random(1, self.StartupSoundChance) == 1 then
-			self.CurrentStartupSound = VJ.EmitSound(self, self.SoundTbl_Startup, self.StartupSoundLevel, math.random(self.StartupSoundPitch.a, self.StartupSoundPitch.b))
+			VJ.EmitSound(self, self.SoundTbl_Startup, self.StartupSoundLevel, math.random(self.StartupSoundPitch.a, self.StartupSoundPitch.b))
 		end
 	elseif sdSet == "Idle" then
 		if self.HasIdleSounds && CurTime() > self.NextIdleSoundT then
 			if math.random(1, self.IdleSoundChance) == 1 then
+				VJ.STOPSOUND(self.CurrentIdleSound)
 				self.CurrentIdleSound = VJ.CreateSound(self, self.SoundTbl_Idle, self.IdleSoundLevel, math.random(self.IdleSoundPitch.a, self.IdleSoundPitch.b))
 			end
 			self.NextIdleSoundT = CurTime() + math.Rand(self.NextSoundTime_Idle.a ,self.NextSoundTime_Idle.b)
 		end
 	elseif sdSet == "OnCollide" then
 		if self.HasOnCollideSounds && math.random(1, self.OnCollideSoundChance) == 1 then
-			self.CurrentDeathSound = VJ.EmitSound(self, self.SoundTbl_OnCollide, self.OnCollideSoundLevel, math.random(self.OnCollideSoundPitch.a, self.OnCollideSoundPitch.b))
+			VJ.EmitSound(self, self.SoundTbl_OnCollide, self.OnCollideSoundLevel, math.random(self.OnCollideSoundPitch.a, self.OnCollideSoundPitch.b))
 		end
 	elseif sdSet == "OnRemove" then
 		if self.HasOnRemoveSounds && math.random(1, self.OnRemoveSoundChance) == 1 then
-			self.CurrentDeathSound = VJ.EmitSound(self, self.SoundTbl_OnRemove, self.OnRemoveSoundLevel, math.random(self.OnRemoveSoundPitch.a, self.OnRemoveSoundPitch.b))
+			VJ.EmitSound(self, self.SoundTbl_OnRemove, self.OnRemoveSoundLevel, math.random(self.OnRemoveSoundPitch.a, self.OnRemoveSoundPitch.b))
 		end
 	end
 end
