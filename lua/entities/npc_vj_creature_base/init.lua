@@ -17,7 +17,7 @@ ENT.Model = false -- Model(s) to spawn with | Picks a random one if it's a table
 ENT.EntitiesToNoCollide = false -- Set to a table of entity class names for the NPC to not collide with otherwise leave it to false
 ENT.CanChatMessage = true -- Should this NPC be allowed to post in a player's chat? | Example: "Blank no longer likes you."
 	-- ====== Health ====== --
-ENT.StartHealth = 50 -- The starting health of the NPC
+ENT.StartHealth = 50 -- Starting health of the NPC
 ENT.HasHealthRegeneration = false -- Can the NPC regenerate its health?
 ENT.HealthRegenerationAmount = 4 -- How much should the health increase after every delay?
 ENT.HealthRegenerationDelay = VJ.SET(2, 4) -- How much time until the health increases
@@ -26,7 +26,7 @@ ENT.HealthRegenerationResetOnDmg = true -- Should the delay reset when it receiv
 ENT.HullType = HULL_HUMAN -- List of Hull types: https://wiki.facepunch.com/gmod/Enums/HULL
 ENT.HasSetSolid = true -- set to false to disable SetSolid
 	-- ====== Sight & Speed ====== --
-ENT.SightDistance = 6500 -- Initial sight distance | To retrieve: "self:GetMaxLookDistance()" | To change: "self:SetMaxLookDistance(sight)"
+ENT.SightDistance = 6500 -- Initial sight distance | To retrieve: "self:GetMaxLookDistance()" | To change: "self:SetMaxLookDistance(distance)"
 ENT.SightAngle = 156 -- Initial field of view | To retrieve: "self:GetFOV()" | To change: "self:SetFOV(degree)" | 360 = See all around
 ENT.TurningSpeed = 20 -- How fast it can turn
 ENT.TurningUseAllAxis = false -- If set to true, angles will not be restricted to y-axis, it will change all axes (plural axis)
@@ -36,15 +36,15 @@ ENT.CanTurnWhileMoving = true -- Can the NPC turn while moving? | EX: GoldSrc NP
 ENT.MovementType = VJ_MOVETYPE_GROUND -- How the NPC moves around
 ENT.UsePoseParameterMovement = false -- Sets the NPC's "move_x" and "move_y" pose parameters while moving | Required for player models to move properly!
 	-- Movement: JUMP --
-	-- NOTE: Requires "CAP_MOVE_JUMP" capability
+	-- Requires "CAP_MOVE_JUMP" capability
 	-- Applied automatically by the base if "ACT_JUMP" is valid on the NPC's model
-ENT.CanMoveJump = true -- Can the NPC do movements jumps?
--- Example scenario:
---      [A]       <- Apex
---     /   \
---    /     [S]   <- Start
---  [E]           <- End
+	-- Example scenario:
+	--      [A]       <- Apex
+	--     /   \
+	--    /     [S]   <- Start
+	--  [E]           <- End
 ENT.JumpVars = {
+	Enabled = true, -- Can the NPC do movements jumps?
 	MaxRise = 220, -- How high it can jump up ((S -> A) AND (S -> E))
 	MaxDrop = 384, -- How low it can jump down (E -> S)
 	MaxDistance = 512, -- Maximum distance between Start and End
@@ -95,13 +95,12 @@ ENT.Behavior = VJ_BEHAVIOR_AGGRESSIVE -- Type of AI behavior to use for this NPC
 	-- VJ_BEHAVIOR_PASSIVE = Doesn't attack, but can be attacked by others || VJ_BEHAVIOR_PASSIVE_NATURE = Doesn't attack and is allied with everyone
 ENT.IsGuard = false -- If set to false, it will attempt to stick to its current position at all times
 ENT.AlertedToIdleTime = VJ.SET(14, 16) -- How much time until it calms down after the enemy has been killed/disappeared | Sets self.Alerted to false after the timer expires
+ENT.TimeUntilEnemyLost = 15 -- Time until it resets its enemy if the enemy is not visible
 ENT.MoveOutOfFriendlyPlayersWay = true -- Should the NPC move and give space to friendly players?
-ENT.BecomeEnemyToPlayer = false -- Should the NPC become enemy towards a friendly player if it's damaged by it or it witnesses another ally killed by it
-ENT.BecomeEnemyToPlayerLevel = 2 -- Any time the player does something bad, the NPC's anger level raises by 1, if it surpasses this, it will become enemy!
+ENT.BecomeEnemyToPlayer = false -- Should it become enemy towards an allied player if it's damaged by them or it witnesses another ally killed by them?
+	-- false = Don't | number = Threshold, where each negative event increases it by 1, if it passes this number it will become enemy
 ENT.CanEat = false -- Should it search and eat organic stuff when idle?
 ENT.NextEatTime = 30 -- How much time until it can eat again after devouring something?
-	-- ====== Old (Can still be used, but it's recommended not to use them) ====== --
-ENT.PlayerFriendly = false -- Makes the NPC friendly to the player and HL2 Resistance
 	-- ====== Passive Behavior ====== --
 ENT.Passive_RunOnTouch = true -- Should it run away and make a alert sound when something collides with it?
 ENT.Passive_NextRunOnTouchTime = VJ.SET(3, 4) -- How much until it can run away again when something collides with it?
@@ -144,8 +143,8 @@ ENT.FollowMinDistance = 100 -- Minimum distance the NPC should come to the playe
 ENT.NextFollowUpdateTime = 0.5 -- Time until it checks if it should move to the player again | Lower number = More performance loss
 	-- ====== Movement & Idle ====== --
 ENT.IdleAlwaysWander = false -- Should the NPC constantly wander while idling?
-ENT.DisableWandering = false -- Disables wandering when the NPC is idle
-ENT.DisableChasingEnemy = false -- Disables chasing enemies
+ENT.DisableWandering = false
+ENT.DisableChasingEnemy = false
 	-- ====== Constantly Face Enemy ====== --
 ENT.ConstantlyFaceEnemy = false -- Should it face the enemy constantly?
 ENT.ConstantlyFaceEnemy_IfVisible = true -- Should it only face the enemy if it's visible?
@@ -175,27 +174,27 @@ ENT.PushProps = true -- Should it push props when trying to move?
 ENT.PropAP_MaxSize = 1 -- This is a scale number for the max size it can attack/push | x < 1  = Smaller props & x > 1  = Larger props | Default base value: 1
 	-- ====== Control ====== --
 	-- Adjust these variables carefully! Wrong adjustment can have unintended effects!
-ENT.FindEnemy_CanSeeThroughWalls = false -- Should it be able to see through walls and objects? | Can be useful if you want to make it know where the enemy is at all times
+ENT.FindEnemy_CanSeeThroughWalls = false -- Should it be able to see through walls and objects? | Useful to make it know where the enemy is at all times
 ENT.DisableFindEnemy = false -- Disables FindEnemy code, friendly code still works though
 ENT.DisableTakeDamageFindEnemy = false -- Disables the AI component that allows the NPC to find enemies all around it when it's damaged while idling
 ENT.DisableTouchFindEnemy = false -- Disables the AI component that makes the NPC turn and look at an enemy that touched it
-ENT.TimeUntilEnemyLost = 15 -- Time until it resets its enemy if the enemy is not visible
 ENT.NextProcessTime = 1 -- Time until it runs the essential part of the AI, which can be performance heavy!
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Damaged / Injured ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	-- ====== Blood-Related ====== --
-	-- Leave custom blood tables empty to let the base decide depending on the blood type
+ENT.HideOnUnknownDamage = 5 -- number = Hide on unknown damage, defines the time until it can hide again | false = Disable this AI component
+	-- ====== Blood ====== --
+	-- Leave blood tables empty to let the base decide depending on the blood type
 ENT.Bleeds = true -- Does the NPC bleed? Controls all bleeding related components such blood decal, particle, pool, etc.
-ENT.BloodColor = VJ.BLOOD_COLOR_NONE -- The blood type, this will determine what it should use (decal, particle, etc.)
-ENT.HasBloodParticle = true -- Does it spawn a particle when damaged?
-ENT.CustomBlood_Particle = {} -- Particles to spawn when it's damaged | Leave empty for the base to decide
-ENT.HasBloodPool = true -- Does it have a blood pool?
-ENT.CustomBlood_Pool = {} -- Blood pool types after it dies | Leave empty for the base to decide
-ENT.HasBloodDecal = true -- Does it spawn a decal when damaged?
-ENT.CustomBlood_Decal = {} -- Decals to spawn when it's damaged | Leave empty for the base to decide
-ENT.BloodDecalUseGMod = false -- Should use the current default decals defined by Garry's Mod? (This only applies for certain blood types only!)
+ENT.BloodColor = VJ.BLOOD_COLOR_NONE -- NPC's blood type, this will determine the blood decal, particle, etc.
+ENT.HasBloodDecal = true -- Should it spawn a decal when damaged?
+ENT.BloodDecal = {} -- Decals to spawn when it's damaged
+ENT.BloodDecalUseGMod = false -- Should it use the current default decals defined by Garry's Mod? | Only applies for certain blood types!
 ENT.BloodDecalDistance = 150 -- Max distance blood decals can splatter
+ENT.HasBloodParticle = true -- Should it spawn a particle when damaged?
+ENT.BloodParticle = {} -- Particles to spawn when it's damaged
+ENT.HasBloodPool = true -- Should a blood pool spawn by its corpse?
+ENT.BloodPool = {} -- Blood pools to be spawned by the corpse
 	-- ====== Immunity ====== --
 ENT.GodMode = false -- Immune to everything
 ENT.Immune_AcidPoisonRadiation = false -- Immune to Acid, Poison and Radiation
@@ -227,13 +226,11 @@ ENT.CallForBackUpOnDamageLimit = 4 -- How many allies should it call? | 0 = Unli
 ENT.NextCallForBackUpOnDamageTime = VJ.SET(9, 11) -- How much time until it can run this AI component again
 ENT.CallForBackUpOnDamageAnimation = {} -- Animations played when it calls for help on damage
 ENT.DisableCallForBackUpOnDamageAnimation = false -- Disables the animations from playing
-	-- ====== Miscellaneous ====== --
-ENT.HideOnUnknownDamage = 5 -- number = Hide on unknown damage, defines the time until it can hide again | false = Disable this AI component
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Death & Corpse ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ENT.DeathDelayTime = 0 -- Time until the NPC spawns the corpse, removes itself, etc.
--- ====== Ally Reaction On Death ====== --
+	-- ====== Ally Reaction On Death ====== --
 	-- Default: Creature base uses "BringFriends" and Human base uses "AlertFriends"
 	-- "BringFriendsOnDeath" takes priority over "AlertFriendsOnDeath"!
 ENT.BringFriendsOnDeath = true -- Should the NPC's allies come to its position while it's dying?
@@ -242,7 +239,7 @@ ENT.BringFriendsOnDeathLimit = 3 -- How many people should it call? | 0 = Unlimi
 ENT.AlertFriendsOnDeath = false -- Should the NPC's allies get alerted while it's dying? | Its allies will also need to have this variable set to true!
 ENT.AlertFriendsOnDeathDistance = 800 -- How far away does the signal go? | Counted in World Units
 ENT.AlertFriendsOnDeathLimit = 50 -- How many people should it alert?
--- ====== Death Animation ====== --
+	-- ====== Death Animation ====== --
 ENT.HasDeathAnimation = false -- Does it play an animation when it dies?
 ENT.AnimTbl_Death = {}
 	-- To let the base automatically detect the animation duration, set this to false:
@@ -255,11 +252,10 @@ ENT.HasDeathCorpse = true -- Should a corpse spawn when it's killed?
 ENT.DeathCorpseEntityClass = false -- Corpse's class | false = Let the base automatically detect the class
 ENT.DeathCorpseModel = false -- Model(s) to spawn as the NPC's corpse | false = Use the NPC's model | Can be a single string or a table of strings
 ENT.DeathCorpseCollisionType = COLLISION_GROUP_DEBRIS -- Collision type for the corpse | NPC Options Menu can only override this value if it's set to COLLISION_GROUP_DEBRIS!
-ENT.DeathCorpseSubMaterials = nil -- Apply a table of indexes that correspond to a sub material index, this will cause the base to copy the NPC's sub material to the corpse.
-ENT.DeathCorpseFade = false -- Fades the ragdoll on death
-ENT.DeathCorpseFadeTime = 10 -- How much time until the ragdoll fades | Unit = Seconds
+ENT.DeathCorpseFade = false -- Should the corpse fade after the given amount of seconds? | false = Don't fade | number = Fade out time
 ENT.DeathCorpseSetBoneAngles = true -- This can be used to stop the corpse glitching or flying on death
 ENT.DeathCorpseApplyForce = true -- Should the force of the damage be applied to the corpse?
+ENT.DeathCorpseSubMaterials = nil -- Apply a table of indexes that correspond to a sub material index, this will cause the base to copy the NPC's sub material to the corpse.
 	-- ====== Dismemberment / Gib ====== --
 ENT.CanGib = true -- Can the NPC gib? | Makes "CreateGibEntity" fail and overrides "CanGibOnDeath" to false
 ENT.CanGibOnDeath = true -- Is it allowed to gib on death?
@@ -917,6 +913,7 @@ function ENT:SetAnimationTranslations(wepHoldType) end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ENT.PlayerFriendly = false
 ENT.Alerted = false
 ENT.Dead = false
 ENT.Flinching = false
@@ -1143,12 +1140,16 @@ local function ApplyBackwardsCompatibility(self)
 	if self.HasItemDropsOnDeath != nil then self.DropDeathLoot = self.HasItemDropsOnDeath end
 	if self.ItemDropsOnDeathChance != nil then self.DeathLootChance = self.ItemDropsOnDeathChance end
 	if self.ItemDropsOnDeath_EntityList != nil then self.DeathLoot = self.ItemDropsOnDeath_EntityList end
-	if self.AllowMovementJumping != nil then self.CanMoveJump = self.AllowMovementJumping end
+	if self.AllowMovementJumping != nil then self.JumpVars.Enabled = self.AllowMovementJumping end
 	if self.OnlyDoKillEnemyWhenClear != nil then self.OnKilledEnemy_OnlyLast = self.OnlyDoKillEnemyWhenClear end
 	if self.DisableFootStepOnWalk then self.FootStepTimeWalk = false end
 	if self.DisableFootStepOnRun then self.FootStepTimeRun = false end
 	if self.FindEnemy_UseSphere then self.SightAngle = 360 end
 	if self.IsMedicSNPC then self.IsMedic = self.IsMedicSNPC end
+	if self.BecomeEnemyToPlayer == true then self.BecomeEnemyToPlayer = self.BecomeEnemyToPlayerLevel or 2 end
+	if self.CustomBlood_Particle then self.BloodParticle = self.CustomBlood_Particle end
+	if self.CustomBlood_Pool then self.BloodPool = self.CustomBlood_Pool end
+	if self.CustomBlood_Decal then self.BloodDecal = self.CustomBlood_Decal end
 	if self.GibOnDeathDamagesTable then
 		for _, v in ipairs(self.GibOnDeathDamagesTable) do
 			if v == "All" then
@@ -2310,6 +2311,7 @@ function ENT:MeleeAttackCode(isPropAttack)
 			end
 			if !isProp then -- Only for non-props...
 				hitRegistered = true
+				if self.StopMeleeAttackAfterFirstHit then break end
 			end
 		end
 	end
@@ -2439,6 +2441,7 @@ function ENT:LeapDamageCode()
 			if v:IsPlayer() then
 				v:ViewPunch(Angle(math.random(-1, 1) * self.LeapAttackDamage, math.random(-1, 1) * self.LeapAttackDamage,math.random(-1, 1) * self.LeapAttackDamage))
 			end
+			if self.StopLeapAttackAfterFirstHit then break end
 			hitRegistered = true
 		end
 	end
@@ -2458,8 +2461,7 @@ function ENT:LeapDamageCode()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:LeapAttackJump()
-	local ene = self:GetEnemy()
-	if !IsValid(ene) then return end
+	if !IsValid(self:GetEnemy()) then return end
 	self:SetGroundEntity(NULL)
 	self.LeapAttackHasJumped = true
 	self:SetLocalVelocity(self:GetLeapAttackVelocity())
@@ -2816,7 +2818,7 @@ function ENT:OnTakeDamage(dmginfo)
 			-- Become enemy to a friendly player | RESULT: May become alerted
 			if dmgAttacker && self.BecomeEnemyToPlayer && dmgAttacker:IsPlayer() && self:CheckRelationship(dmgAttacker) == D_LI then
 				self.AngerLevelTowardsPlayer = self.AngerLevelTowardsPlayer + 1
-				if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayerLevel && self:Disposition(dmgAttacker) != D_HT then
+				if self.AngerLevelTowardsPlayer > self.BecomeEnemyToPlayer && self:Disposition(dmgAttacker) != D_HT then
 					self:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
 					if self.IsFollowing && self.FollowData.Ent == dmgAttacker then self:ResetFollowBehavior() end
 					self.VJ_AddCertainEntityAsEnemy[#self.VJ_AddCertainEntityAsEnemy + 1] = dmgAttacker
@@ -2943,7 +2945,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 				-- BecomeEnemyToPlayer
 				if doBecomeEnemyToPlayer && v.BecomeEnemyToPlayer && v:Disposition(dmgAttacker) == D_LI then
 					v.AngerLevelTowardsPlayer = v.AngerLevelTowardsPlayer + 1
-					if v.AngerLevelTowardsPlayer > v.BecomeEnemyToPlayerLevel then
+					if v.AngerLevelTowardsPlayer > v.BecomeEnemyToPlayer then
 						if v:Disposition(dmgAttacker) != D_HT then
 							v:OnBecomeEnemyToPlayer(dmginfo, hitgroup)
 							if v.IsFollowing && v.FollowData.Ent == dmgAttacker then v:ResetFollowBehavior() end
@@ -2963,7 +2965,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 	
 	-- Blood decal on the ground
 	if self.Bleeds && self.HasBloodDecal then
-		local bloodDecal = VJ.PICK(self.CustomBlood_Decal)
+		local bloodDecal = VJ.PICK(self.BloodDecal)
 		if bloodDecal != false then
 			local decalPos = self:GetPos() + vecZ4
 			self:SetLocalPos(decalPos) -- NPC is too close to the ground, we need to move it up a bit
@@ -3103,7 +3105,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		corpse.IsVJBaseCorpse = true
 		corpse.DamageInfo = dmginfo
 		corpse.ChildEnts = self.DeathCorpse_ChildEnts or {}
-		corpse.BloodData = {Color = self.BloodColor, Particle = self.CustomBlood_Particle, Decal = self.CustomBlood_Decal}
+		corpse.BloodData = {Color = self.BloodColor, Particle = self.BloodParticle, Decal = self.BloodDecal}
 
 		if self.Bleeds && self.HasBloodPool && GetConVar("vj_npc_blood_pool"):GetInt() == 1 then
 			self:SpawnBloodPool(dmginfo, hitgroup, corpse)
@@ -3195,7 +3197,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		end
 		VJ.Corpse_AddStinky(corpse, true)
 		
-		if self.DeathCorpseFade then corpse:Fire(corpse.FadeCorpseType, "", self.DeathCorpseFadeTime) end
+		if self.DeathCorpseFade then corpse:Fire(corpse.FadeCorpseType, "", self.DeathCorpseFade) end
 		if GetConVar("vj_npc_corpse_fade"):GetInt() == 1 then corpse:Fire(corpse.FadeCorpseType, "", GetConVar("vj_npc_corpse_fadetime"):GetInt()) end
 		self:OnCreateDeathCorpse(dmginfo, hitgroup, corpse)
 		if corpse:IsFlagSet(FL_DISSOLVING) && corpse.ChildEnts then

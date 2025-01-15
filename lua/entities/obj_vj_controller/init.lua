@@ -501,12 +501,12 @@ function ENT:ToggleBullseyeTracking()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ToggleMovementJumping()
-	if !self.VJCE_NPC.CanMoveJump then
+	if !self.VJCE_NPC.JumpVars.Enabled then
 		self.VJCE_Player:ChatPrint("#vjbase.print.npccontroller.movementjump.enable")
-		self.VJCE_NPC.CanMoveJump = true
+		self.VJCE_NPC.JumpVars.Enabled = true
 	else
 		self.VJCE_Player:ChatPrint("#vjbase.print.npccontroller.movementjump.disable")
-		self.VJCE_NPC.CanMoveJump = false
+		self.VJCE_NPC.JumpVars.Enabled = false
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -520,7 +520,7 @@ function ENT:StopControlling(keyPressed)
 	if IsValid(ply) then
 		local plyData = self.VJC_Data_Player
 		ply:UnSpectate()
-		ply:KillSilent() -- If we don't, we will get bugs like no being able to pick up weapons when walking over them.
+		ply:KillSilent() -- If we don't, we will get bugs like not being able to pick up weapons when walking over them
 		if self.VJC_Player_CanRespawn or keyPressed then
 			ply:Spawn()
 			ply:SetHealth(plyData.health)

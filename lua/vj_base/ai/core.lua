@@ -181,7 +181,7 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 		elseif extraOptions.CollideSound then -- Backwards compatibility
 			gib.CollisionSound = extraOptions.CollideSound
 		end
-		//gib.BloodData = {Color = bloodType, Particle = self.CustomBlood_Particle, Decal = self.CollisionDecal} -- For eating system
+		//gib.BloodData = {Color = bloodType, Particle = self.BloodParticle, Decal = self.CollisionDecal} -- For eating system
 	end
 	gib:Spawn()
 	gib:Activate()
@@ -1438,8 +1438,8 @@ end
 local vecZN100 = Vector(0, 0, -100)
 --
 function ENT:IsJumpLegal(startPos, apex, endPos)
-	if !self.CanMoveJump then return false end
 	local jumpData = self.JumpVars
+	if !jumpData.Enabled then return false end
 	if ((endPos.z - startPos.z) > jumpData.MaxRise) or ((apex.z - startPos.z) > jumpData.MaxRise) or ((startPos.z - endPos.z) > jumpData.MaxDrop) or (startPos:Distance(endPos) > jumpData.MaxDistance) then
 		return false
 	end
@@ -2495,20 +2495,20 @@ function ENT:SetupBloodColor(blColor)
 	npcSize = ((npcSize < 25 and 0) or npcSize < 50 and 1) or 2 -- 0 = tiny | 1 = small | 2 = normal
 	local blood = bloodNames[blColor]
 	if blood then
-		if !VJ.PICK(self.CustomBlood_Particle) then
-			self.CustomBlood_Particle = blood.particle
+		if !VJ.PICK(self.BloodParticle) then
+			self.BloodParticle = blood.particle
 		end
-		if !VJ.PICK(self.CustomBlood_Decal) then
-			self.CustomBlood_Decal = self.BloodDecalUseGMod and blood.decal_gmod or blood.decal
+		if !VJ.PICK(self.BloodDecal) then
+			self.BloodDecal = self.BloodDecalUseGMod and blood.decal_gmod or blood.decal
 		end
-		if !VJ.PICK(self.CustomBlood_Pool) then
-			self.CustomBlood_Pool = blood.pool[npcSize]
+		if !VJ.PICK(self.BloodPool) then
+			self.BloodPool = blood.pool[npcSize]
 		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodParticles(dmginfo, hitgroup)
-	local particleName = VJ.PICK(self.CustomBlood_Particle)
+	local particleName = VJ.PICK(self.BloodParticle)
 	if particleName then
 		local dmgPos = dmginfo:GetDamagePosition()
 		local particle = ents.Create("info_particle_system")
@@ -2522,7 +2522,7 @@ function ENT:SpawnBloodParticles(dmginfo, hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodDecal(dmginfo, hitgroup)
-	local decals = self.CustomBlood_Decal
+	local decals = self.BloodDecal
 	if !VJ.PICK(decals) then return end
 	
 	local dmgForce = dmginfo:GetDamageForce()
@@ -2551,7 +2551,7 @@ local vecZ30 = Vector(0, 0, 30)
 local vecZ1 = Vector(0, 0, 1)
 --
 function ENT:SpawnBloodPool(dmginfo, hitgroup, corpse)
-	local getBloodPool = VJ.PICK(self.CustomBlood_Pool)
+	local getBloodPool = VJ.PICK(self.BloodPool)
 	if getBloodPool then
 		timer.Simple(2.2, function()
 			if IsValid(corpse) then
