@@ -82,7 +82,7 @@ else
 	local colorDarkBlue = Color(30, 200, 255)
 	local colorYellow = Color(255, 215, 0)
 	--
-	local function VJ_MAINMENU_INFO(Panel)
+	local function VJ_MAIN_INFO(Panel)
 		local client = LocalPlayer() -- Local Player
 		Panel:AddControl("Label", {Text = "About VJ Base:"})
 		Panel:ControlHelp("VJ Base is made by DrVrej. The main purpose of this base is for the sake of simplicity. It provides many types of bases including a very advanced artificial intelligent NPC base.")
@@ -129,7 +129,7 @@ else
 		Panel:ControlHelp("No parts of the code may be reproduced, copied, modified or adapted, without the prior written consent of the author.")
 	end
 	----=================================----
-	local function VJ_MAINMENU_CLIENT(Panel)
+	local function VJ_MAIN_CLIENT(Panel)
 		Panel:AddControl("Label", {Text = "#vjbase.menu.clsettings.label"})
 		
 		-- Icons: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
@@ -143,9 +143,9 @@ else
 		vj_combo_box:AddChoice("Deutsche *", "german", false, "flags16/de.png")
 		vj_combo_box:AddChoice("Français *", "french", false, "flags16/fr.png")
 		vj_combo_box:AddChoice("Lietuvių", "lithuanian", false, "flags16/lt.png")
-		vj_combo_box:AddChoice("Español (Latino Americano) *", "spanish_lt", false, "flags16/mx.png")
+		vj_combo_box:AddChoice("Español (Latino Americano)", "spanish_lt", false, "flags16/mx.png")
 		vj_combo_box:AddChoice("Português (Brasileiro) *", "portuguese_br", false, "flags16/br.png")
-		vj_combo_box:AddChoice("Türkçe *", "turkish", false, "flags16/tr.png")
+		vj_combo_box:AddChoice("Türkçe", "turkish", false, "flags16/tr.png")
 		vj_combo_box:AddChoice("Nederlands *", "dutch", false, "flags16/nl.png")
 		vj_combo_box:AddChoice("norsk *", "norwegian", false, "flags16/no.png")
 		vj_combo_box:AddChoice("Polski *", "polish", false, "flags16/pl.png")
@@ -163,7 +163,7 @@ else
 		Panel:ControlHelp("#vjbase.menu.clsettings.lang.auto.label")
 	end
 	----=================================----
-	local function VJ_MAINMENU_CLEANUP(Panel)
+	local function VJ_MAIN_CLEANUP(Panel)
 		if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
 			Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
 			Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
@@ -185,7 +185,7 @@ else
 		Panel:Button("#vjbase.menu.cleanup.remove.allammo", "vj_cleanup", "allammo")
 	end
 	----=================================----
-	local function VJ_MAINMENU_MISC(Panel)
+	local function VJ_MAIN_MISC(Panel)
 		local incomp = vgui.Create("DButton") -- Incompatible Addons
 		incomp:SetFont("CloseCaption_Bold")
 		incomp:SetText("#vjbase.menu.helpsupport.incompatibleaddons")
@@ -289,7 +289,7 @@ else
 		//Panel:AddPanel(HTMLTest)
 	end
 	----=================================----
-	local function VJ_MAINMENU_ADMINSERVER(Panel)
+	local function VJ_MAIN_ADMINSERVER(Panel)
 		if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
 			Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
 			Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
@@ -328,7 +328,7 @@ else
 		end
 	end
 	----=================================----
-	local function VJ_MAINMENU_PLUGINS(Panel)
+	local function VJ_MAIN_PLUGINS(Panel)
 		local numPlugins = #VJ.Plugins
 		
 		Panel:AddControl("Label", {Text = "#vjbase.menu.plugins.label"})
@@ -421,11 +421,11 @@ else
 	end)
 	----=================================----
 	hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_MAIN", function()
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_plugins", "#vjbase.menu.plugins", "", "", VJ_MAINMENU_PLUGINS)
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_info", "#vjbase.menu.info", "", "", VJ_MAINMENU_INFO, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_clsettings", "#vjbase.menu.clsettings", "", "", VJ_MAINMENU_CLIENT, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_cleanup", "#vjbase.menu.cleanup", "", "", VJ_MAINMENU_CLEANUP, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_helpsupport", "#vjbase.menu.helpsupport", "", "", VJ_MAINMENU_MISC, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_svsettings", "#vjbase.menu.svsettings", "", "", VJ_MAINMENU_ADMINSERVER, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_plugins", "#vjbase.menu.plugins", "", "", VJ_MAIN_PLUGINS)
+		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_info", "#vjbase.menu.info", "", "", VJ_MAIN_INFO, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_clsettings", "#vjbase.menu.clsettings", "", "", VJ_MAIN_CLIENT, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_cleanup", "#vjbase.menu.cleanup", "", "", VJ_MAIN_CLEANUP, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_helpsupport", "#vjbase.menu.helpsupport", "", "", VJ_MAIN_MISC, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_svsettings", "#vjbase.menu.svsettings", "", "", VJ_MAIN_ADMINSERVER, {})
 	end)
 end

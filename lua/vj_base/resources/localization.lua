@@ -11,2286 +11,2300 @@ if !VJ then VJ = {} end -- If VJ isn't initialized, initialize it!
 	HOW IT WORKS:
 		* Looks for the current set language and translates all the strings that are given.
 		* If a string isn't translated, it will automatically default to English.
-		* When updated while in a map, it will attempt to refresh some of the menus, but many menus requires a map restart!
+		* When updated while in a map, it will refresh all the menus, but some menus require a map restart!
 	
 	HOW TO CONTRIBUTE:
 		* Make any edits in any language you would like.
 		* If a line doesn't exist in your language, then copy & paste it from the default (English) list.
-		* Once you are done translating or editing, you can push the edited file on GitHub.
-		* Once the file is pushed, I will review it and merge it with the base, it will then be included with the next update on Workshop.
+		* Once you are done translating or editing, you can push the edited file on GitHub and create pull request.
+		* I will then review it and merge it with the base and include it with the next update on Workshop.
 		* NOTE: Over time more lines will be added in the default (English) list. You are welcome to check back whenever and copy & paste any new lines that added and translate it.
 	
 	Q: I would like to translate and my language isn't listed below =(
-	A: No worries! Just simply contact me (DrVrej) and I will set up the profile for your language!
+	A: No worries! Just simply contact me (DrVrej) and I will setup a profile for your language!
 	
 	Q: Someone has already translated my language, how can I contribute now?
-	A: You can go over the translated lines and fix any errors. You can also compare it with the English version and make sure all lines are translated and updated!
+	A: Go over the existing translations and fix any errors. Also compare it with the English version and make sure all lines are updated!
 	
 	Thank you everyone that contributed!
 */
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+if !CLIENT then return end
 
-VJ.AddClientConVar("vj_language", "english", "The current VJ Base Language") -- The current VJ Base Language
-VJ.AddClientConVar("vj_language_auto", 1, "Automatically Set Language") -- Attempt to follow the language GMod itself is set to
-
-if CLIENT then
-	local function add(name, str)
-		language.Add(name, str)
-	end
+local strings_english = {
+	-- Spawn Menu
+	["vjbase.spawn.menu.npc.disablethinking"] = "Disable Thinking",
+	["vjbase.spawn.menu.npc.ignoreplayers"] = "Ignore Players",
+	["vjbase.spawn.menu.npc.keepcorpses"] = "Corpses Collide & Stay",
+	["vjbase.spawn.menu.npc.guard"] = "Spawn as Guard",
 	
-	local tblGModtoVJ = {
-		["en"] = "english",
-		["ru"] = "russian",
-		["de"] = "german",
-		["fr"] = "french",
-		["lt"] = "lithuanian",
-		["es-ES"] = "spanish_lt",
-		["pt-BR"] = "portuguese_br",
-		["zh-CN"] = "schinese",
-		["tr"] = "turkish",
-		["nl"] = "dutch",
-		["no"] = "norwegian",
-		["pl"] = "polish",
-		["el"] = "greek",
-		["ja"] = "japanese",
-		["vi"] = "vietnamese"
-	}
+	-- General Menu (Used everywhere)
+	["vjbase.menu.general.default"] = "Default",
+	["vjbase.menu.general.admin.only"] = "NOTE: Only admins can use this menu!",
+	["vjbase.menu.general.admin.not"] = "You are NOT an admin!",
+	["vjbase.menu.general.reset.everything"] = "Reset To Default",
+	["vjbase.menu.general.npc.warnfuture"] = "NOTE: Only future spawned NPCs will be affected!",
+	["vjbase.menu.general.npc.creaturesettings"] = "Creature Settings:",
+	["vjbase.menu.general.npc.humansettings"] = "Human Settings:",
 	
-	function VJ.RefreshLanguage()
-		local conv = GetConVar("vj_language"):GetString()
-		
-		-- Automatically set VJ Base to whatever GMod's language is set to
-			-- Based on: https://wiki.facepunch.com/gmod/Addon_Localization
-			-- Skip if VJ Base is set to a language unsupported by Garry's Mod
-		if GetConVar("vj_language_auto"):GetInt() == 1 && conv != "armenian" then
-			local gmod_conv = GetConVar("gmod_language"):GetString()
-			local converted = tblGModtoVJ[gmod_conv]
-			if converted then
-				RunConsoleCommand("vj_language", converted)
-				conv = converted
-			end
-		end
-		
-		-- DEFAULT (English) LIST | Copy & paste any of the lines below to your preferred language to translate it.
-		add("vjbase.menugeneral.default", "Default") -- DO NOT TRANSLATE. (Deprecated)
-		// add("vjbase.general.print.runningvj", "Notice: This server is running VJ Base.") -- DO NOT TRANSLATE.
-		
-		-- Spawn Menu
-		add("vjbase.spawn.menu.npc.disablethinking", "Disable Thinking")
-		add("vjbase.spawn.menu.npc.ignoreplayers", "Ignore Players")
-		add("vjbase.spawn.menu.npc.keepcorpses", "Corpses Collide & Stay")
-		add("vjbase.spawn.menu.npc.guard", "Spawn as Guard")
-		
+	-- Menu Tabs
+	["vjbase.menu.tabs.mainmenu"] = "Main Menu",
+	["vjbase.menu.tabs.settings.npc"] = "NPCs",
+	["vjbase.menu.tabs.settings.weapon"] = "Weapons",
+	["vjbase.menu.tabs.settings.hud"] = "HUD",
+	["vjbase.menu.tabs.tools"] = "Tools",
+	["vjbase.menu.tabs.configures.snpc"] = "SNPC Configures",
+	
+	-- Main Menu
+	["vjbase.menu.cleanup"] = "Clean Up",
+	["vjbase.menu.cleanup.all"] = "Clean Up Everything",
+	["vjbase.menu.cleanup.stopsounds"] = "Stop all Sounds",
+	["vjbase.menu.cleanup.remove.vjnpcs"] = "Remove all VJ NPCs",
+	["vjbase.menu.cleanup.remove.npcs"] = "Remove all NPCs",
+	["vjbase.menu.cleanup.remove.spawners"] = "Remove all Spawners",
+	["vjbase.menu.cleanup.remove.corpses"] = "Remove all Corpses",
+	["vjbase.menu.cleanup.remove.vjgibs"] = "Remove all VJ Gibs",
+	["vjbase.menu.cleanup.remove.groundweapons"] = "Remove all Ground Weapons",
+	["vjbase.menu.cleanup.remove.props"] = "Remove all Props",
+	["vjbase.menu.cleanup.remove.decals"] = "Remove all Decals",
+	["vjbase.menu.cleanup.remove.allweapons"] = "Remove all of your Weapons",
+	["vjbase.menu.cleanup.remove.allammo"] = "Remove all of your Ammo",
+	
+	["vjbase.menu.helpsupport"] = "Contact and Support",
+	["vjbase.menu.helpsupport.incompatibleaddons"] = "Incompatible Addons",
+	["vjbase.menu.helpsupport.reportbug"] = "Report a Bug",
+	["vjbase.menu.helpsupport.suggestion"] = "Suggest Something",
+	["vjbase.menu.helpsupport.discord"] = "Join me on Discord!",
+	["vjbase.menu.helpsupport.steam"] = "Join me on Steam!",
+	["vjbase.menu.helpsupport.youtube"] = "Subscribe me on YouTube!",
+	["vjbase.menu.helpsupport.twitter"] = "Follow me on Twitter!",
+	["vjbase.menu.helpsupport.patreon"] = "Donate me on Patreon!",
+	["vjbase.menu.helpsupport.label1"] = "Follow one of these links to get updates about my addons!",
+	["vjbase.menu.helpsupport.label2"] = "Donations help and encourage me to continue making/updating addons! Thank you!",
+	["vjbase.menu.helpsupport.thanks"] = "Thanks for your support!",
+	
+	["vjbase.menu.svsettings"] = "Admin Server Settings",
+	["vjbase.menu.svsettings.label"] = "WARNING: SOME SETTINGS NEED CHEATS ENABLED!",
+	["vjbase.menu.svsettings.admin.npcproperties"] = "Restrict NPC Properties to Admins Only",
+	["vjbase.menu.svsettings.noclip"] = "Allow NoClip",
+	["vjbase.menu.svsettings.weapons"] = "Allow Weapons",
+	["vjbase.menu.svsettings.pvp"] = "Allow PvP",
+	["vjbase.menu.svsettings.godmode"] = "God Mode (Everyone)",
+	["vjbase.menu.svsettings.bonemanip.npcs"] = "Bone Manipulate NPCs",
+	["vjbase.menu.svsettings.bonemanip.players"] = "Bone Manipulate Players",
+	["vjbase.menu.svsettings.bonemanip.others"] = "Bone Manipulate Others",
+	["vjbase.menu.svsettings.timescale.general"] = "General TimeScale",
+	["vjbase.menu.svsettings.timescale.physics"] = "Physics TimeScale",
+	["vjbase.menu.svsettings.gravity"] = "General Gravity",
+	["vjbase.menu.svsettings.maxentsprops"] = "Max Props/Entities:",
+	
+	["vjbase.menu.clsettings"] = "Client Settings",
+	["vjbase.menu.clsettings.label"] = "Use this menu to customize your client settings, servers can't change these settings!",
+	["vjbase.menu.clsettings.labellang"] = "Language Selection...",
+	["vjbase.menu.clsettings.notify.lang"] = "VJ Base Language Set To:",
+	["vjbase.menu.clsettings.lang.auto"] = "Automatically Set Language",
+	["vjbase.menu.clsettings.lang.auto.label"] = "Ignored if VJ Base is set to a language unsupported by GMod",
+	
+	["vjbase.menu.info"] = "Information",
+	
+	["vjbase.menu.plugins"] = "Plugins",
+	["vjbase.menu.plugins.label"] = "List of installed VJ Base plugins.",
+	["vjbase.menu.plugins.version"] = "Version:",
+	["vjbase.menu.plugins.totalplugins"] = "Total Plugins:",
+	["vjbase.menu.plugins.header1"] = "Name",
+	["vjbase.menu.plugins.header2"] = "Type",
+	["vjbase.menu.plugins.notfound"] = "No Plugins Found",
+	["vjbase.menu.plugins.changelog"] = "Changelog",
+	["vjbase.menu.plugins.makeaddon"] = "Want to make an addon?",
+	["vjbase.menu.plugins.chat.pluginname"] = "Plugin Name:",
+	["vjbase.menu.plugins.chat.plugintypes"] = "Plugin Type(s):",
+	
+	-- NPC AI Settings
+	["vjbase.menu.npc.settings.ai"] = "AI Settings",
+	["vjbase.menu.npc.settings.ai.sightdistance"] = "Sight Distance:",
+	["vjbase.menu.npc.settings.ai.sightdistance.label"] = "NPCs have their own distances, this will make them all the same! (0 = Original)",
+	["vjbase.menu.npc.settings.ai.sightxray"] = "X-Ray Vision",
+	["vjbase.menu.npc.settings.ai.sightxray.label"] = "They will see through walls & have a 360 FOV",
+	["vjbase.menu.npc.settings.ai.wander"] = "Wander",
+	["vjbase.menu.npc.settings.ai.chase"] = "Chase Enemies",
+	["vjbase.menu.npc.settings.ai.detectdanger"] = "Detect Dangers & Grenades (Humans)",
+	["vjbase.menu.npc.settings.ai.investigate"] = "Detect & Investigate Disturbances",
+	["vjbase.menu.npc.settings.ai.investigate.label"] = "Sounds, movement, flashlight, bullet impacts",
+	["vjbase.menu.npc.settings.ai.flinch"] = "Flinch Animations",
+	["vjbase.menu.npc.settings.ai.eat"] = "Eating (EX: Corpses or gibs)",
+	["vjbase.menu.npc.settings.ai.alliances"] = "Alliances",
+	["vjbase.menu.npc.settings.ai.medics"] = "Medics / Healers",
+	["vjbase.menu.npc.settings.ai.callhelp"] = "Call for Help",
+	["vjbase.menu.npc.settings.ai.plybetray"] = "Player Allies Can Become Enemy",
+	["vjbase.menu.npc.settings.ai.plyfollow"] = "Follow Players",
+	["vjbase.menu.npc.settings.ai.plyfollow.label"] = "Press 'E' on a friendly to follow you",
+	["vjbase.menu.npc.settings.ai.creatureopendoor"] = "Creatures Can Open Doors",
+	["vjbase.menu.npc.settings.ai.humanjump"] = "Humans Can Jump",
+	["vjbase.menu.npc.settings.ai.passive.label"] = "Passive NPCs:",
+	["vjbase.menu.npc.settings.ai.passive.runtouch"] = "Run on Touch",
+	["vjbase.menu.npc.settings.ai.passive.rundamage"] = "Run on Damage",
+	["vjbase.menu.npc.settings.ai.relation.label"] = "Relationship Overrides:",
+	["vjbase.menu.npc.settings.ai.relation.antlion"] = "Antlion Friendly",
+	["vjbase.menu.npc.settings.ai.relation.combine"] = "Combine Friendly",
+	["vjbase.menu.npc.settings.ai.relation.player"] = "Player Friendly",
+	["vjbase.menu.npc.settings.ai.relation.zombie"] = "Zombie Friendly",
+	["vjbase.menu.npc.settings.ai.relation.base"] = "VJ Base Friendly",
+	["vjbase.menu.npc.settings.ai.relation.base.label"] = "All VJ NPCs will be allied!",
+	
+	-- NPC Attack & Weapon Settings
+	["vjbase.menu.npc.settings.atk"] = "Attack & Weapon Settings",
+	["vjbase.menu.npc.settings.atk.range"] = "Range Attack",
+	["vjbase.menu.npc.settings.atk.grenade"] = "Grenade Attack (Humans)",
+	["vjbase.menu.npc.settings.atk.leap"] = "Leap Attack (Creatures)",
+	["vjbase.menu.npc.settings.atk.melee.label"] = "Melee Settings:",
+	["vjbase.menu.npc.settings.atk.melee"] = "Melee Attack",
+	["vjbase.menu.npc.settings.atk.melee.proppush"] = "Prop Push (Creatures)",
+	["vjbase.menu.npc.settings.atk.melee.propattack"] = "Prop Attack (Creatures)",
+	["vjbase.menu.npc.settings.atk.melee.bleed"] = "Apply Bleeding",
+	["vjbase.menu.npc.settings.atk.melee.dsp"] = "DSP Effect On Heavy Damage",
+	["vjbase.menu.npc.settings.atk.melee.slowply"] = "Slow Players",
+	["vjbase.menu.npc.settings.atk.wep.label"] = "Weapon Settings:",
+	["vjbase.menu.npc.settings.atk.wep"] = "Use Weapons (Humans)",
+	["vjbase.menu.npc.settings.atk.wep.reload"] = "Reload Weapon",
+	["vjbase.menu.npc.settings.atk.wep.drop"] = "Drop Weapon On Death",
+	["vjbase.menu.npc.settings.atk.wep.plypickup"] = "Players Can Pickup Dropped Weapons",
+	
+	-- NPC General Settings
+	["vjbase.menu.npc.settings.gen"] = "General Settings",
+	["vjbase.menu.npc.settings.gen.difficulty.header"] = "Select the Difficulty:",
+	["vjbase.menu.npc.settings.gen.difficulty.neanderthal"] = "[-3] Neanderthal | -99% Health and Damage",
+	["vjbase.menu.npc.settings.gen.difficulty.childs_play"] = "[-2] Child's Play | -75% Health and Damage",
+	["vjbase.menu.npc.settings.gen.difficulty.easy"] = "[-1] Easy | -50% Health and Damage",
+	["vjbase.menu.npc.settings.gen.difficulty.normal"] = "[0] Normal | Original Health and Damage",
+	["vjbase.menu.npc.settings.gen.difficulty.hard"] = "[1] Hard | +50% Health and Damage",
+	["vjbase.menu.npc.settings.gen.difficulty.insane"] = "[2] Insane | +100% Health and Damage",
+	["vjbase.menu.npc.settings.gen.difficulty.impossible"] = "[3] Impossible | +150% Health and Damage",
+	["vjbase.menu.npc.settings.gen.difficulty.nightmare"] = "[4] Nightmare | +250% Health and Damage",
+	["vjbase.menu.npc.settings.gen.difficulty.hell_on_earth"] = "[5] Hell On Earth | +350% Health and Damage",
+	["vjbase.menu.npc.settings.gen.difficulty.total_annihilation"] = "[6] Total Annihilation | +500% Health and Damage",
+	["vjbase.menu.npc.settings.gen.deathanim"] = "Death Animations",
+	["vjbase.menu.npc.settings.gen.lootdrops"] = "Loot Drops On Death",
+	["vjbase.menu.npc.settings.gen.health.label"] = "Health Settings:",
+	["vjbase.menu.npc.settings.gen.health.god"] = "God Mode (Won't take any damage)",
+	["vjbase.menu.npc.settings.gen.health.override"] = "Health:",
+	["vjbase.menu.npc.settings.gen.health.override.label"] = "Default: 0 | Total: 9 digits",
+	["vjbase.menu.npc.settings.gen.health.blood.vfx"] = "Blood VFX",
+	["vjbase.menu.npc.settings.gen.health.blood.vfx.label"] = "Blood particles, decals, pools etc.",
+	["vjbase.menu.npc.settings.gen.health.blood.pool"] = "Blood Pools",
+	["vjbase.menu.npc.settings.gen.health.blood.gmoddecals"] = "Use Garry's Mod's Current Blood Decals",
+	["vjbase.menu.npc.settings.gen.health.blood.gmoddecals.label"] = "Only for Yellow and Red colors!",
+	["vjbase.menu.npc.settings.gen.corpse.label"] = "Corpse Settings:",
+	["vjbase.menu.npc.settings.gen.corpse"] = "Spawn Corpses",
+	["vjbase.menu.npc.settings.gen.corpse.limit"] = "Corpse Limit, Def:32",
+	["vjbase.menu.npc.settings.gen.corpse.limit.label"] = "Corpse limit when 'Keep Corpses' is off",
+	["vjbase.menu.npc.settings.gen.corpse.undo"] = "Undoable Corpses (Undo Key)",
+	["vjbase.menu.npc.settings.gen.corpse.fade"] = "Fade Corpses",
+	["vjbase.menu.npc.settings.gen.corpse.fadetime"] = "Corpse Fade Time",
+	["vjbase.menu.npc.settings.gen.corpse.fadetime.label"] = "Total: 600 seconds (10 Minutes)",
+	["vjbase.menu.npc.settings.gen.collision.header"] = "Corpse Collision:",
+	["vjbase.menu.npc.settings.gen.collision.default"] = "Default | Excludes: Players, NPCs, Weapons, Ragdolls",
+	["vjbase.menu.npc.settings.gen.collision.everything"] = "No exclusions | Everything!",
+	["vjbase.menu.npc.settings.gen.collision.onlyworld"] = "Only World",
+	["vjbase.menu.npc.settings.gen.collision.excludedebris"] = "Excludes: Corpses, Debris",
+	["vjbase.menu.npc.settings.gen.collision.excludeplynpcs"] = "Excludes: Players, NPCs",
+	["vjbase.menu.npc.settings.gen.collision.excludeply"] = "Excludes: Players",
+	["vjbase.menu.npc.settings.gen.gib.label"] = "Dismemberment Settings:",
+	["vjbase.menu.npc.settings.gen.gib"] = "Allow Dismembering",
+	["vjbase.menu.npc.settings.gen.gib.vfx"] = "Gib VFX (particles, decals, etc.)",
+	["vjbase.menu.npc.settings.gen.gib.vfx.label"] = "Disabling this can help with performance",
+	["vjbase.menu.npc.settings.gen.gib.collision"] = "Collidable Gibs",
+	["vjbase.menu.npc.settings.gen.gib.fade"] = "Fade Gibs",
+	["vjbase.menu.npc.settings.gen.gib.fadetime"] = "Gib Fade Time",
+	["vjbase.menu.npc.settings.gen.gib.fadetime.label"] = "Default: 30 | Total: 600 seconds (10 Minutes)",
+	["vjbase.menu.npc.settings.gen.ply.label"] = "Player Settings:",
+	["vjbase.menu.npc.settings.gen.ply.addfrags"] = "Add Kills to Player's Frag Count",
+	["vjbase.menu.npc.settings.gen.ply.chat"] = "Post in Player Chat",
+	["vjbase.menu.npc.settings.gen.ply.chat.label"] = "Example: 'Scientist is now following you'",
+	
+	-- NPC Sound Settings
+	["vjbase.menu.npc.settings.snd"] = "Sound Settings",
+	["vjbase.menu.npc.settings.snd.togglesounds"] = "Allow Sounds",
+	["vjbase.menu.npc.settings.snd.togglesoundtrack"] = "Sound Tracks / Music",
+	["vjbase.menu.npc.settings.snd.toggleidle"] = "Idle Sounds",
+	["vjbase.menu.npc.settings.snd.togglebreathing"] = "Breathing Sounds",
+	["vjbase.menu.npc.settings.snd.togglefootsteps"] = "Footstep Sounds",
+	["vjbase.menu.npc.settings.snd.togglemelee"] = "Melee Attack Sounds",
+	["vjbase.menu.npc.settings.snd.togglerange"] = "Range Attack Sounds",
+	["vjbase.menu.npc.settings.snd.togglealert"] = "Alert Sounds",
+	["vjbase.menu.npc.settings.snd.togglepain"] = "Pain Sounds",
+	["vjbase.menu.npc.settings.snd.toggledeath"] = "Death Sounds",
+	["vjbase.menu.npc.settings.snd.togglegibbing"] = "Dismemberment Sounds",
+	["vjbase.menu.npc.settings.snd.togglegibbing.label"] = "Also applies to gib collision sounds",
+	["vjbase.menu.npc.settings.snd.togglemedic"] = "Medic Sounds",
+	["vjbase.menu.npc.settings.snd.togglefollowing"] = "Following Sounds",
+	["vjbase.menu.npc.settings.snd.togglecallhelp"] = "Calling for Help Sounds",
+	["vjbase.menu.npc.settings.snd.togglereceiveorder"] = "Receiving Order Sounds",
+	["vjbase.menu.npc.settings.snd.togglebecomeenemy"] = "Become Enemy to Player Sounds",
+	["vjbase.menu.npc.settings.snd.toggleplayersight"] = "Player Sighting Sounds",
+	["vjbase.menu.npc.settings.snd.toggleplayersight.label"] = "Special sounds when an NPC sees a player",
+	["vjbase.menu.npc.settings.snd.toggledmgbyplayer"] = "Damage By Player Sounds",
+	["vjbase.menu.npc.settings.snd.toggledmgbyplayer.label"] = "When a player damages an NPC (usually friendly)",
+	["vjbase.menu.npc.settings.snd.toggleleap"] = "Leap Attack Sounds",
+	["vjbase.menu.npc.settings.snd.toggleslowedplayer"] = "Slowed Player Sounds",
+	["vjbase.menu.npc.settings.snd.toggleslowedplayer.label"] = "When a player is slowed down by melee attack",
+	["vjbase.menu.npc.settings.snd.togglegrenade"] = "Grenade Attack Sounds",
+	["vjbase.menu.npc.settings.snd.toggledangersight"] = "Grenade & Danger Sight Sounds",
+	["vjbase.menu.npc.settings.snd.togglesuppressing"] = "Suppressing Call Out Sounds",
+	["vjbase.menu.npc.settings.snd.togglereload"] = "Reload Call Out Sounds",
+	
+	-- NPC Developer Settings
+	["vjbase.menu.npc.settings.dev"] = "Developer Settings",
+	["vjbase.menu.npc.settings.dev.label1"] = "These settings are used when developing SNPCs.",
+	["vjbase.menu.npc.settings.dev.label2"] = "WARNING: Some of these options cause lag!",
+	["vjbase.menu.npc.settings.dev.toggledev"] = "Enable Developer Mode?",
+	["vjbase.menu.npc.settings.dev.label3"] = "This option must be enabled from here or through the context menu! (Required for the options below)",
+	["vjbase.menu.npc.settings.dev.enginedebug"] = "Engine Debugging (m_debugOverlays)",
+	["vjbase.menu.npc.settings.dev.printtouch"] = "Print On Touch (Console)",
+	["vjbase.menu.npc.settings.dev.printcurenemy"] = "Print Current Enemy (Console)",
+	["vjbase.menu.npc.settings.dev.printlastseenenemy"] = "Print 'LastSeenEnemy' time (Chat)",
+	["vjbase.menu.npc.settings.dev.printonreset"] = "Print On Reset Enemy (Console)",
+	["vjbase.menu.npc.settings.dev.printonstopattack"] = "Print On Stopped Attacks (Console)",
+	["vjbase.menu.npc.settings.dev.printtakingcover"] = "Print Taking Cover (Console)",
+	["vjbase.menu.npc.settings.dev.printondamage"] = "Print On Damage (Console)",
+	["vjbase.menu.npc.settings.dev.printondeath"] = "Print On Death (Console)",
+	["vjbase.menu.npc.settings.dev.printweaponinfo"] = "Print Weapon Information (Console)",
+	["vjbase.menu.npc.settings.dev.cachedmodels"] = "Print Cached Models (Console)",
+	["vjbase.menu.npc.settings.dev.numofnpcs"] = "Print Number of NPCs (Chat)",
+	["vjbase.menu.npc.settings.dev.label4"] = "Reload Buttons:",
+	["vjbase.menu.npc.settings.dev.reloadsounds"] = "Reload Sounds",
+	["vjbase.menu.npc.settings.dev.reloadmaterials"] = "Reload Materials (VMTs)",
+	["vjbase.menu.npc.settings.dev.reloadtextures"] = "Reload Textures (VTFs)",
+	["vjbase.menu.npc.settings.dev.reloadmodels"] = "Reload Models",
+	["vjbase.menu.npc.settings.dev.reloadspawnmenu"] = "Reload Spawn Menu",
+	
+	-- NPC Performance Settings
+	["vjbase.menu.npc.settings.perf"] = "Performance Settings",
+	["vjbase.menu.npc.settings.perf.initial.label"] = "Use these settings to improve the performance of NPCs.",
+	["vjbase.menu.npc.settings.perf.processtime"] = "Process Time",
+	["vjbase.menu.npc.settings.perf.processtime.button"] = "What is Process Time?",
+	["vjbase.menu.npc.settings.perf.processtime.label"] = "Default: 1 | Lower number causes more lag!",
+	["vjbase.menu.npc.settings.perf.poseparams"] = "Use Pose Parameters",
+	["vjbase.menu.npc.settings.perf.poseparams.label"] = "WARNING: Disabling can break NPCs that rely on it!",
+	["vjbase.menu.npc.settings.perf.shadows"] = "Draw Shadows",
+	["vjbase.menu.npc.settings.perf.ikchains"] = "Inverse Kinematics (IK Chains)",
+	["vjbase.menu.npc.settings.perf.forcelowlod"] = "Force Use Lowest LOD",
+	["vjbase.menu.npc.settings.perf.reducevfx"] = "Reduce VFX",
+	["vjbase.menu.npc.settings.perf.reducevfx.label"] = "Examples: Eye glow, idle particles",
+	
+	-- NPC Controller Settings
+	["vjbase.menu.npc.settings.con"] = "Controller Settings",
+	["vjbase.menu.npc.settings.con.label1"] = "Notice: These are client-side settings only!",
+	["vjbase.menu.npc.settings.con.label2"] = "How far or close the zoom changes every click.",
+	["vjbase.menu.npc.settings.con.displayhud"] = "Display HUD",
+	["vjbase.menu.npc.settings.con.camzoomdistance"] = "Camera Move Distance",
+	["vjbase.menu.npc.settings.con.camspeed"] = "Camera Speed",
+	["vjbase.menu.npc.settings.con.camzoomspeed"] = "Camera Zoom Speed",
+	["vjbase.menu.npc.settings.con.diewithnpc"] = "Controller Dies With The NPC (Requires respawn!)",
+	["vjbase.menu.npc.settings.con.displaydev"] = "Display Developer Entities",
+	["vjbase.menu.npc.settings.con.label3"] = "Key Bindings:",
+	["vjbase.menu.npc.settings.con.bind.header1"] = "Control",
+	["vjbase.menu.npc.settings.con.bind.header2"] = "Description",
+	["vjbase.menu.npc.settings.con.bind.clickmsg1"] = "Selected Key:",
+	["vjbase.menu.npc.settings.con.bind.clickmsg2"] = "Description:",
+	["vjbase.menu.npc.settings.con.bind.movement"] = "Movement (Supports 8-Way)",
+	["vjbase.menu.npc.settings.con.bind.exitcontrol"] = "Exit the Controller",
+	["vjbase.menu.npc.settings.con.bind.meleeattack"] = "Melee Attack",
+	["vjbase.menu.npc.settings.con.bind.rangeattack"] = "Range / Weapon Attack",
+	["vjbase.menu.npc.settings.con.bind.leaporgrenade"] = "Leap / Grenade Attack",
+	["vjbase.menu.npc.settings.con.bind.reloadweapon"] = "Reload Weapon",
+	["vjbase.menu.npc.settings.con.bind.togglebullseye"] = "Toggle Bullseye Tracking",
+	["vjbase.menu.npc.settings.con.bind.cameramode"] = "Change Camera Mode",
+	["vjbase.menu.npc.settings.con.bind.movementjump"] = "Toggle Movement Jumping",
+	["vjbase.menu.npc.settings.con.bind.camerazoom"] = "Zoom In & Out",
+	["vjbase.menu.npc.settings.con.bind.cameraup"] = "Move Camera Up",
+	["vjbase.menu.npc.settings.con.bind.cameradown"] = "Move Camera Down",
+	["vjbase.menu.npc.settings.con.bind.cameraforward"] = "Move Camera Forward",
+	["vjbase.menu.npc.settings.con.bind.camerabackward"] = "Move Camera Backward",
+	["vjbase.menu.npc.settings.con.bind.cameraleft"] = "Move Camera Left",
+	["vjbase.menu.npc.settings.con.bind.cameraright"] = "Move Camera Right",
+	["vjbase.menu.npc.settings.con.bind.resetzoom"] = "Reset Camera Position",
+	
+	-- Weapon Client Settings
+	["vjbase.menu.wep.clsettings"] = "Client Settings",
+	["vjbase.menu.wep.clsettings.notice"] = "Notice: These settings are client, meaning it won't change for other people!",
+	["vjbase.menu.wep.clsettings.togglemuzzle"] = "Disable Muzzle Flash",
+	["vjbase.menu.wep.clsettings.togglemuzzlelight"] = "Disable Muzzle Flash Dynamic Light",
+	["vjbase.menu.wep.clsettings.togglemuzzle.label"] = "Disabling muzzle flash will also disable this",
+	["vjbase.menu.wep.clsettings.togglemuzzlebulletshells"] = "Disable Bullet Shells",
+	
+	-- NPC Properties (C Menu)
+	["vjbase.menuproperties.control"] = "TAKE CONTROL",
+	["vjbase.menuproperties.guard"] = "Toggle Guarding Behavior",
+	["vjbase.menuproperties.wander"] = "Toggle Wandering Behavior",
+	["vjbase.menuproperties.medic"] = "Toggle Medic Behavior",
+	["vjbase.menuproperties.allyme"] = "Ally To Me",
+	["vjbase.menuproperties.hostileme"] = "Hostile To Me",
+	["vjbase.menuproperties.slay"] = "Slay",
+	["vjbase.menuproperties.gib"] = "Gib (if possible)",
+	["vjbase.menuproperties.devmode"] = "Toggle Developer Mode",
+	["vjbase.menuproperties.print.adminonly"] = "These options are restricted to Admin only!",
+	
+	-- Tools
+	["tool.vjstool.menu.tutorialvideo"] = "Tutorial Video",
+	["tool.vjstool.menu.label.recommendation"] = "Recommended to use this tool only for VJ Base SNPCs.",
+	
+	["tool.vjstool_bullseye.name"] = "NPC Bullseye",
+	["tool.vjstool_bullseye.desc"] = "Creates a bullseye that NPCs will target",
+	["tool.vjstool_bullseye.left"] = "Create a bullseye",
+	["tool.vjstool_bullseye.menu.help1"] = "Press USE on the entity to activate/deactivate.",
+	["tool.vjstool_bullseye.menu.help2"] = "When deactivated, NPCs will no longer target it.",
+	["tool.vjstool_bullseye.menu.label1"] = "Select Movement Type",
+	["tool.vjstool_bullseye.menu.label2"] = "Model Directory",
+	["tool.vjstool_bullseye.menu.toggleusestatus"] = "Use Status Colors (Activated/Deactivated)",
+	["tool.vjstool_bullseye.menu.togglestartactivated"] = "Start Activated",
+	
+	["tool.vjstool_entityscanner.name"] = "Entity Scanner",
+	["tool.vjstool_entityscanner.desc"] = "Get information about an entity",
+	["tool.vjstool_entityscanner.left"] = "Print information about the entity in console",
+	["tool.vjstool_entityscanner.label"] = "Prints information about any selected entity, it's printed in the console.",
+	
+	["tool.vjstool_healthmodifier.name"] = "Health Modifier",
+	["tool.vjstool_healthmodifier.desc"] = "Modify the health of an entity",
+	["tool.vjstool_healthmodifier.left"] = "Set health",
+	["tool.vjstool_healthmodifier.right"] = "Set health & max health",
+	["tool.vjstool_healthmodifier.reload"] = "Heal the entity to its max health",
+	["tool.vjstool_healthmodifier.adminonly"] = "Only admins can modify or heal another player's health.",
+	["tool.vjstool_healthmodifier.sliderhealth"] = "Health",
+	["tool.vjstool_healthmodifier.label1"] = "Following are only for VJ Base SNPCs:",
+	["tool.vjstool_healthmodifier.togglegodmode"] = "God Mode (invincible)",
+	["tool.vjstool_healthmodifier.togglehealthregen"] = "Enable Health Regeneration",
+	["tool.vjstool_healthmodifier.sliderhealthregenamt"] = "Regeneration Amount",
+	["tool.vjstool_healthmodifier.sliderhealthregendelay"] = "Regeneration Delay",
+	
+	["tool.vjstool_notarget.name"] = "No Target",
+	["tool.vjstool_notarget.desc"] = "Setting no target will make all NPCs not see a certain entity",
+	["tool.vjstool_notarget.left"] = "Toggle no target to yourself",
+	["tool.vjstool_notarget.right"] = "Toggle no target to an NPC or player",
+	["tool.vjstool_notarget.label"] = "When a no target is enabled on an entity, NPCs will not target it!",
+	["tool.vjstool_notarget.print.yourselfon"] = "Set no target to yourself: ON",
+	["tool.vjstool_notarget.print.yourselfoff"] = "Set no target to yourself: OFF",
+	
+	["tool.vjstool_npcequipment.name"] = "NPC Equipment",
+	["tool.vjstool_npcequipment.desc"] = "Modifies an NPC's equipment",
+	["tool.vjstool_npcequipment.left"] = "Change the NPC's equipment",
+	["tool.vjstool_npcequipment.right"] = "Remove the NPC's equipment",
+	["tool.vjstool_npcequipment.label"] = "Changes or removes an NPC's equipment.",
+	["tool.vjstool_npcequipment.selectedequipment"] = "Selected Equipment",
+	["tool.vjstool_npcequipment.print.doubleclick"] = "Double click to select a weapon.",
+	["tool.vjstool_npcequipment.print.weaponselected1"] = "Weapon",
+	["tool.vjstool_npcequipment.print.weaponselected2"] = "selected!",
+	["tool.vjstool_npcequipment.header1"] = "Name",
+	["tool.vjstool_npcequipment.header2"] = "Class",
+	
+	["tool.vjstool_npcmover.name"] = "NPC Mover",
+	["tool.vjstool_npcmover.desc"] = "Move NPC(s), an NPC must first be selected",
+	["tool.vjstool_npcmover.left"] = "Select an NPC",
+	["tool.vjstool_npcmover.right"] = "Run to the location",
+	["tool.vjstool_npcmover.reload"] = "Walk to the location",
+	["tool.vjstool_npcmover.header1"] = "Name",
+	["tool.vjstool_npcmover.header2"] = "Class",
+	["tool.vjstool_npcmover.header3"] = "Information",
+	["tool.vjstool_npcmover.buttonunselectall"] = "Unselect All NPCs",
+	["tool.vjstool_npcmover.print.unselectedall"] = "Unselected all NPCs!",
+	["tool.vjstool_npcmover.print.unselectedall.error"] = "Nothing to unselect!",
+	
+	["tool.vjstool_npcrelationship.name"] = "NPC Relationship Modifier",
+	["tool.vjstool_npcrelationship.desc"] = "Modify the relationship of entities",
+	["tool.vjstool_npcrelationship.left"] = "Apply the relationship table",
+	["tool.vjstool_npcrelationship.right"] = "Obtain the current classes",
+	["tool.vjstool_npcrelationship.reload"] = "Apply the relationship table to yourself",
+	["tool.vjstool_npcrelationship.label1"] = "Modifies the relationship of an NPC, basically how it feels towards another entity.",
+	["tool.vjstool_npcrelationship.header"] = "Class",
+	["tool.vjstool_npcrelationship.label2"] = "Press return to add the class.",
+	["tool.vjstool_npcrelationship.button.combine"] = "Insert Combine Class",
+	["tool.vjstool_npcrelationship.button.antlion"] = "Insert Antlion Class",
+	["tool.vjstool_npcrelationship.button.zombie"] = "Insert Zombie Class",
+	["tool.vjstool_npcrelationship.button.player"] = "Insert Player Class",
+	["tool.vjstool_npcrelationship.togglealliedply"] = "Allied with all player allies?",
+	["tool.vjstool_npcrelationship.label3"] = "Only applies for VJ Base SNPCs and requires the SNPC to have",
+	["tool.vjstool_npcrelationship.print.applied"] = "Applied the relationship class table on",
+	
+	["tool.vjstool_npcspawner.name"] = "NPC Spawner",
+	["tool.vjstool_npcspawner.desc"] = "Creates a customizable spawner",
+	["tool.vjstool_npcspawner.left"] = "Create a spawner",
+	["tool.vjstool_npcspawner.right"] = "Create the entities once",
+	["tool.vjstool_npcspawner.selectednpc"] = "Selected NPC",
+	["tool.vjstool_npcspawner.spawnpos.forward"] = "Position | Forward",
+	["tool.vjstool_npcspawner.spawnpos.right"] = "Position | Right",
+	["tool.vjstool_npcspawner.spawnpos.up"] = "Position | Up",
+	["tool.vjstool_npcspawner.selectweapon"] = "Selected Weapon",
+	["tool.vjstool_npcspawner.spawnnpclass"] = "Relation Class Override",
+	["tool.vjstool_npcspawner.fritoplyallies"] = "Friendly To Player Allies",
+	["tool.vjstool_npcspawner.label.fritoplyallies"] = "Must have relation class (CLASS_PLAYER_ALLY)!",
+	["tool.vjstool_npcspawner.button.updatelist"] = "Update List",
+	["tool.vjstool_npcspawner.label1"] = "Double click on an item to remove it.",
+	["tool.vjstool_npcspawner.header1"] = "Name",
+	["tool.vjstool_npcspawner.header2"] = "Position",
+	["tool.vjstool_npcspawner.header3"] = "Equipment",
+	["tool.vjstool_npcspawner.label2"] = "Extra Options",
+	["tool.vjstool_npcspawner.toggle.spawnsound"] = "Play NPC Spawning Sound?",
+	["tool.vjstool_npcspawner.nextspawntime"] = "Next Spawn Time",
+	["tool.vjstool_npcspawner.popup.header1"] = "Name",
+	["tool.vjstool_npcspawner.popup.header2"] = "Class",
+	["tool.vjstool_npcspawner.popup.header3"] = "Category",
+	["tool.vjstool_npcspawner.title1"] = "Double click to select an NPC.",
+	["tool.vjstool_npcspawner.title2"] = "Double click to select a weapon.",
+	["tool.vjstool_npcspawner.print.nothingspawn"] = "Nothing to spawn!",
+	
+	["tool.vjstool_npcfollower.name"] = "NPC Follower",
+	["tool.vjstool_npcfollower.desc"] = "Select an NPC and make it follow an entity",
+	["tool.vjstool_npcfollower.left"] = "Select an NPC",
+	["tool.vjstool_npcfollower.right"] = "Make the selected NPC follow an entity",
+	["tool.vjstool_npcfollower.reload"] = "Unfollow any entity an NPC is following",
+	["tool.vjstool_npcfollower.print.noselection"] = "No NPC selected!",
+	["tool.vjstool_npcfollower.print.reset"] = "Unfollowed any entity it was following!",
+	
+	-- Miscellaneous (Prints)
+	["vjbase.print.bullseye.activated"] = "Activated NPC Bullseye.",
+	["vjbase.print.bullseye.deactivated"] = "Deactivated NPC Bullseye.",
+	
+	["vjbase.print.npccontroller.entrance"] = "For controls, check \"Controller Settings\" under \"DrVrej\" tab",
+	["vjbase.print.npccontroller.tracking.activated"] = "Bullseye tracking activated!",
+	["vjbase.print.npccontroller.tracking.deactivated"] = "Bullseye tracking deactivated!",
+	["vjbase.print.npccontroller.movementjump.enable"] = "Movement Jumping enabled!",
+	["vjbase.print.npccontroller.movementjump.disable"] = "Movement Jumping disabled!",
+	
+	["vjbase.print.adminhealth.pickup"] = "You have picked up 1,000,000 health!",
+	
+	["vjbase.print.fireplace.activated"] = "You turned on the fireplace.",
+	["vjbase.print.fireplace.deactivated"] = "You turned off the fireplace.",
+	
+	["vjbase.print.plyspawnpoint.activated"] = "Activated this spawnpoint!",
+	["vjbase.print.plyspawnpoint.deactivated"] = "Deactivated this spawnpoint!",
+}
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+local strings_russian = {
+	-- Spawn Menu
+	["vjbase.spawn.menu.npc.disablethinking"] = "Выключить ИИ",
+	["vjbase.spawn.menu.npc.ignoreplayers"] = "ИИ игнорирует игроков",
+	["vjbase.spawn.menu.npc.keepcorpses"] = "Оставлять/столкновения трупы(ов) NPC",
+	["vjbase.spawn.menu.npc.guard"] = "Создавать NPC в качестве телохранителя",
+
 		-- General Menu (Used everywhere)
-		add("vjbase.menu.general.default", "Default")
-		add("vjbase.menu.general.admin.only", "NOTE: Only admins can use this menu!")
-		add("vjbase.menu.general.admin.not", "You are NOT an admin!")
-		add("vjbase.menu.general.reset.everything", "Reset To Default")
-		add("vjbase.menu.general.npc.warnfuture", "NOTE: Only future spawned NPCs will be affected!")
-		add("vjbase.menu.general.npc.creaturesettings", "Creature Settings:")
-		add("vjbase.menu.general.npc.humansettings", "Human Settings:")
-		
-		-- Menu Tabs
-		add("vjbase.menu.tabs.mainmenu", "Main Menu")
-		add("vjbase.menu.tabs.settings.npc", "NPCs")
-		add("vjbase.menu.tabs.settings.weapon", "Weapons")
-		add("vjbase.menu.tabs.settings.hud", "HUD")
-		add("vjbase.menu.tabs.tools", "Tools")
-		add("vjbase.menu.tabs.configures.snpc", "SNPC Configures")
-		
-		-- Main Menu
-		add("vjbase.menu.cleanup", "Clean Up")
-		add("vjbase.menu.cleanup.all", "Clean Up Everything")
-		add("vjbase.menu.cleanup.stopsounds", "Stop all Sounds")
-		add("vjbase.menu.cleanup.remove.vjnpcs", "Remove all VJ NPCs")
-		add("vjbase.menu.cleanup.remove.npcs", "Remove all NPCs")
-		add("vjbase.menu.cleanup.remove.spawners", "Remove all Spawners")
-		add("vjbase.menu.cleanup.remove.corpses", "Remove all Corpses")
-		add("vjbase.menu.cleanup.remove.vjgibs", "Remove all VJ Gibs")
-		add("vjbase.menu.cleanup.remove.groundweapons", "Remove all Ground Weapons")
-		add("vjbase.menu.cleanup.remove.props", "Remove all Props")
-		add("vjbase.menu.cleanup.remove.decals", "Remove all Decals")
-		add("vjbase.menu.cleanup.remove.allweapons", "Remove all of your Weapons")
-		add("vjbase.menu.cleanup.remove.allammo", "Remove all of your Ammo")
-		
-		add("vjbase.menu.helpsupport", "Contact and Support")
-		add("vjbase.menu.helpsupport.incompatibleaddons", "Incompatible Addons")
-		add("vjbase.menu.helpsupport.reportbug", "Report a Bug")
-		add("vjbase.menu.helpsupport.suggestion", "Suggest Something")
-		add("vjbase.menu.helpsupport.discord", "Join me on Discord!")
-		add("vjbase.menu.helpsupport.steam", "Join me on Steam!")
-		add("vjbase.menu.helpsupport.youtube", "Subscribe me on YouTube!")
-		add("vjbase.menu.helpsupport.twitter", "Follow me on Twitter!")
-		add("vjbase.menu.helpsupport.patreon", "Donate me on Patreon!")
-		add("vjbase.menu.helpsupport.label1", "Follow one of these links to get updates about my addons!")
-		add("vjbase.menu.helpsupport.label2", "Donations help and encourage me to continue making/updating addons! Thank you!")
-		add("vjbase.menu.helpsupport.thanks", "Thanks for your support!")
-		
-		add("vjbase.menu.svsettings", "Admin Server Settings")
-		add("vjbase.menu.svsettings.label", "WARNING: SOME SETTINGS NEED CHEATS ENABLED!")
-		add("vjbase.menu.svsettings.admin.npcproperties", "Restrict NPC Properties to Admins Only")
-		add("vjbase.menu.svsettings.noclip", "Allow NoClip")
-		add("vjbase.menu.svsettings.weapons", "Allow Weapons")
-		add("vjbase.menu.svsettings.pvp", "Allow PvP")
-		add("vjbase.menu.svsettings.godmode", "God Mode (Everyone)")
-		add("vjbase.menu.svsettings.bonemanip.npcs", "Bone Manipulate NPCs")
-		add("vjbase.menu.svsettings.bonemanip.players", "Bone Manipulate Players")
-		add("vjbase.menu.svsettings.bonemanip.others", "Bone Manipulate Others")
-		add("vjbase.menu.svsettings.timescale.general", "General TimeScale")
-		add("vjbase.menu.svsettings.timescale.physics", "Physics TimeScale")
-		add("vjbase.menu.svsettings.gravity", "General Gravity")
-		add("vjbase.menu.svsettings.maxentsprops", "Max Props/Entities:")
-		
-		add("vjbase.menu.clsettings", "Client Settings")
-		add("vjbase.menu.clsettings.label", "Use this menu to customize your client settings, servers can't change these settings!")
-		add("vjbase.menu.clsettings.labellang", "Language Selection...")
-		add("vjbase.menu.clsettings.notify.lang", "VJ Base Language Set To:")
-		add("vjbase.menu.clsettings.lang.auto", "Automatically Set Language")
-		add("vjbase.menu.clsettings.lang.auto.label", "Ignored if VJ Base is set to a language unsupported by GMod")
-		
-		add("vjbase.menu.info", "Information")
-		
-		add("vjbase.menu.plugins", "Plugins")
-		add("vjbase.menu.plugins.label", "List of installed VJ Base plugins.")
-		add("vjbase.menu.plugins.version", "Version:")
-		add("vjbase.menu.plugins.totalplugins", "Total Plugins:")
-		add("vjbase.menu.plugins.header1", "Name")
-		add("vjbase.menu.plugins.header2", "Type")
-		add("vjbase.menu.plugins.notfound", "No Plugins Found")
-		add("vjbase.menu.plugins.changelog", "Changelog")
-		add("vjbase.menu.plugins.makeaddon", "Want to make an addon?")
-		add("vjbase.menu.plugins.chat.pluginname", "Plugin Name:")
-		add("vjbase.menu.plugins.chat.plugintypes", "Plugin Type(s):")
-		
-		-- NPC AI Settings
-		add("vjbase.menu.npc.settings.ai", "AI Settings")
-		add("vjbase.menu.npc.settings.ai.sightdistance", "Sight Distance:")
-		add("vjbase.menu.npc.settings.ai.sightdistance.label", "NPCs have their own distances, this will make them all the same! (0 = Original)")
-		add("vjbase.menu.npc.settings.ai.sightxray", "X-Ray Vision")
-		add("vjbase.menu.npc.settings.ai.sightxray.label", "They will see through walls & have a 360 FOV")
-		add("vjbase.menu.npc.settings.ai.wander", "Wander")
-		add("vjbase.menu.npc.settings.ai.chase", "Chase Enemies")
-		add("vjbase.menu.npc.settings.ai.detectdanger", "Detect Dangers & Grenades (Humans)")
-		add("vjbase.menu.npc.settings.ai.investigate", "Detect & Investigate Disturbances")
-		add("vjbase.menu.npc.settings.ai.investigate.label", "Sounds, movement, flashlight, bullet impacts")
-		add("vjbase.menu.npc.settings.ai.flinch", "Flinch Animations")
-		add("vjbase.menu.npc.settings.ai.eat", "Eating (EX: Corpses or gibs)")
-		add("vjbase.menu.npc.settings.ai.alliances", "Alliances")
-		add("vjbase.menu.npc.settings.ai.medics", "Medics / Healers")
-		add("vjbase.menu.npc.settings.ai.callhelp", "Call for Help")
-		add("vjbase.menu.npc.settings.ai.plybetray", "Player Allies Can Become Enemy")
-		add("vjbase.menu.npc.settings.ai.plyfollow", "Follow Players")
-		add("vjbase.menu.npc.settings.ai.plyfollow.label", "Press 'E' on a friendly to follow you")
-		add("vjbase.menu.npc.settings.ai.creatureopendoor", "Creatures Can Open Doors")
-		add("vjbase.menu.npc.settings.ai.humanjump", "Humans Can Jump")
-		add("vjbase.menu.npc.settings.ai.passive.label", "Passive NPCs:")
-		add("vjbase.menu.npc.settings.ai.passive.runtouch", "Run on Touch")
-		add("vjbase.menu.npc.settings.ai.passive.rundamage", "Run on Damage")
-		add("vjbase.menu.npc.settings.ai.relation.label", "Relationship Overrides:")
-		add("vjbase.menu.npc.settings.ai.relation.antlion", "Antlion Friendly")
-		add("vjbase.menu.npc.settings.ai.relation.combine", "Combine Friendly")
-		add("vjbase.menu.npc.settings.ai.relation.player", "Player Friendly")
-		add("vjbase.menu.npc.settings.ai.relation.zombie", "Zombie Friendly")
-		add("vjbase.menu.npc.settings.ai.relation.base", "VJ Base Friendly")
-		add("vjbase.menu.npc.settings.ai.relation.base.label", "All VJ NPCs will be allied!")
-		
-		-- NPC Attack & Weapon Settings
-		add("vjbase.menu.npc.settings.atk", "Attack & Weapon Settings")
-		add("vjbase.menu.npc.settings.atk.range", "Range Attack")
-		add("vjbase.menu.npc.settings.atk.grenade", "Grenade Attack (Humans)")
-		add("vjbase.menu.npc.settings.atk.leap", "Leap Attack (Creatures)")
-		add("vjbase.menu.npc.settings.atk.melee.label", "Melee Settings:")
-		add("vjbase.menu.npc.settings.atk.melee", "Melee Attack")
-		add("vjbase.menu.npc.settings.atk.melee.proppush", "Prop Push (Creatures)")
-		add("vjbase.menu.npc.settings.atk.melee.propattack", "Prop Attack (Creatures)")
-		add("vjbase.menu.npc.settings.atk.melee.bleed", "Apply Bleeding")
-		add("vjbase.menu.npc.settings.atk.melee.dsp", "DSP Effect On Heavy Damage")
-		add("vjbase.menu.npc.settings.atk.melee.slowply", "Slow Players")
-		add("vjbase.menu.npc.settings.atk.wep.label", "Weapon Settings:")
-		add("vjbase.menu.npc.settings.atk.wep", "Use Weapons (Humans)")
-		add("vjbase.menu.npc.settings.atk.wep.reload", "Reload Weapon")
-		add("vjbase.menu.npc.settings.atk.wep.drop", "Drop Weapon On Death")
-		add("vjbase.menu.npc.settings.atk.wep.plypickup", "Players Can Pickup Dropped Weapons")
-		
-		-- NPC General Settings
-		add("vjbase.menu.npc.settings.gen", "General Settings")
-		add("vjbase.menu.npc.settings.gen.difficulty.header", "Select the Difficulty:")
-		add("vjbase.menu.npc.settings.gen.difficulty.neanderthal", "[-3] Neanderthal | -99% Health and Damage")
-		add("vjbase.menu.npc.settings.gen.difficulty.childs_play", "[-2] Child's Play | -75% Health and Damage")
-		add("vjbase.menu.npc.settings.gen.difficulty.easy", "[-1] Easy | -50% Health and Damage")
-		add("vjbase.menu.npc.settings.gen.difficulty.normal", "[0] Normal | Original Health and Damage")
-		add("vjbase.menu.npc.settings.gen.difficulty.hard", "[1] Hard | +50% Health and Damage")
-		add("vjbase.menu.npc.settings.gen.difficulty.insane", "[2] Insane | +100% Health and Damage")
-		add("vjbase.menu.npc.settings.gen.difficulty.impossible", "[3] Impossible | +150% Health and Damage")
-		add("vjbase.menu.npc.settings.gen.difficulty.nightmare", "[4] Nightmare | +250% Health and Damage")
-		add("vjbase.menu.npc.settings.gen.difficulty.hell_on_earth", "[5] Hell On Earth | +350% Health and Damage")
-		add("vjbase.menu.npc.settings.gen.difficulty.total_annihilation", "[6] Total Annihilation | +500% Health and Damage")
-		add("vjbase.menu.npc.settings.gen.deathanim", "Death Animations")
-		add("vjbase.menu.npc.settings.gen.lootdrops", "Loot Drops On Death")
-		add("vjbase.menu.npc.settings.gen.health.label", "Health Settings:")
-		add("vjbase.menu.npc.settings.gen.health.god", "God Mode (Won't take any damage)")
-		add("vjbase.menu.npc.settings.gen.health.override", "Health:")
-		add("vjbase.menu.npc.settings.gen.health.override.label", "Default: 0 | Total: 9 digits")
-		add("vjbase.menu.npc.settings.gen.health.blood.vfx", "Blood VFX")
-		add("vjbase.menu.npc.settings.gen.health.blood.vfx.label", "Blood particles, decals, pools etc.")
-		add("vjbase.menu.npc.settings.gen.health.blood.pool", "Blood Pools")
-		add("vjbase.menu.npc.settings.gen.health.blood.gmoddecals", "Use Garry's Mod's Current Blood Decals")
-		add("vjbase.menu.npc.settings.gen.health.blood.gmoddecals.label", "Only for Yellow and Red colors!")
-		add("vjbase.menu.npc.settings.gen.corpse.label", "Corpse Settings:")
-		add("vjbase.menu.npc.settings.gen.corpse", "Spawn Corpses")
-		add("vjbase.menu.npc.settings.gen.corpse.limit", "Corpse Limit, Def:32")
-		add("vjbase.menu.npc.settings.gen.corpse.limit.label", "Corpse limit when 'Keep Corpses' is off")
-		add("vjbase.menu.npc.settings.gen.corpse.undo", "Undoable Corpses (Undo Key)")
-		add("vjbase.menu.npc.settings.gen.corpse.fade", "Fade Corpses")
-		add("vjbase.menu.npc.settings.gen.corpse.fadetime", "Corpse Fade Time")
-		add("vjbase.menu.npc.settings.gen.corpse.fadetime.label", "Total: 600 seconds (10 Minutes)")
-		add("vjbase.menu.npc.settings.gen.collision.header", "Corpse Collision:")
-		add("vjbase.menu.npc.settings.gen.collision.default", "Default | Excludes: Players, NPCs, Weapons, Ragdolls")
-		add("vjbase.menu.npc.settings.gen.collision.everything", "No exclusions | Everything!")
-		add("vjbase.menu.npc.settings.gen.collision.onlyworld", "Only World")
-		add("vjbase.menu.npc.settings.gen.collision.excludedebris", "Excludes: Corpses, Debris")
-		add("vjbase.menu.npc.settings.gen.collision.excludeplynpcs", "Excludes: Players, NPCs")
-		add("vjbase.menu.npc.settings.gen.collision.excludeply", "Excludes: Players")
-		add("vjbase.menu.npc.settings.gen.gib.label", "Dismemberment Settings:")
-		add("vjbase.menu.npc.settings.gen.gib", "Allow Dismembering")
-		add("vjbase.menu.npc.settings.gen.gib.vfx", "Gib VFX (particles, decals, etc.)")
-		add("vjbase.menu.npc.settings.gen.gib.vfx.label", "Disabling this can help with performance")
-		add("vjbase.menu.npc.settings.gen.gib.collision", "Collidable Gibs")
-		add("vjbase.menu.npc.settings.gen.gib.fade", "Fade Gibs")
-		add("vjbase.menu.npc.settings.gen.gib.fadetime", "Gib Fade Time")
-		add("vjbase.menu.npc.settings.gen.gib.fadetime.label", "Default: 30 | Total: 600 seconds (10 Minutes)")
-		add("vjbase.menu.npc.settings.gen.ply.label", "Player Settings:")
-		add("vjbase.menu.npc.settings.gen.ply.addfrags", "Add Kills to Player's Frag Count")
-		add("vjbase.menu.npc.settings.gen.ply.chat", "Post in Player Chat")
-		add("vjbase.menu.npc.settings.gen.ply.chat.label", "Example: 'Scientist is now following you'")
-		
-		-- NPC Sound Settings
-		add("vjbase.menu.npc.settings.snd", "Sound Settings")
-		add("vjbase.menu.npc.settings.snd.togglesounds", "Allow Sounds")
-		add("vjbase.menu.npc.settings.snd.togglesoundtrack", "Sound Tracks / Music")
-		add("vjbase.menu.npc.settings.snd.toggleidle", "Idle Sounds")
-		add("vjbase.menu.npc.settings.snd.togglebreathing", "Breathing Sounds")
-		add("vjbase.menu.npc.settings.snd.togglefootsteps", "Footstep Sounds")
-		add("vjbase.menu.npc.settings.snd.togglemelee", "Melee Attack Sounds")
-		add("vjbase.menu.npc.settings.snd.togglerange", "Range Attack Sounds")
-		add("vjbase.menu.npc.settings.snd.togglealert", "Alert Sounds")
-		add("vjbase.menu.npc.settings.snd.togglepain", "Pain Sounds")
-		add("vjbase.menu.npc.settings.snd.toggledeath", "Death Sounds")
-		add("vjbase.menu.npc.settings.snd.togglegibbing", "Dismemberment Sounds")
-		add("vjbase.menu.npc.settings.snd.togglegibbing.label", "Also applies to gib collision sounds")
-		add("vjbase.menu.npc.settings.snd.togglemedic", "Medic Sounds")
-		add("vjbase.menu.npc.settings.snd.togglefollowing", "Following Sounds")
-		add("vjbase.menu.npc.settings.snd.togglecallhelp", "Calling for Help Sounds")
-		add("vjbase.menu.npc.settings.snd.togglereceiveorder", "Receiving Order Sounds")
-		add("vjbase.menu.npc.settings.snd.togglebecomeenemy", "Become Enemy to Player Sounds")
-		add("vjbase.menu.npc.settings.snd.toggleplayersight", "Player Sighting Sounds")
-		add("vjbase.menu.npc.settings.snd.toggleplayersight.label", "Special sounds when an NPC sees a player")
-		add("vjbase.menu.npc.settings.snd.toggledmgbyplayer", "Damage By Player Sounds")
-		add("vjbase.menu.npc.settings.snd.toggledmgbyplayer.label", "When a player damages an NPC (usually friendly)")
-		add("vjbase.menu.npc.settings.snd.toggleleap", "Leap Attack Sounds")
-		add("vjbase.menu.npc.settings.snd.toggleslowedplayer", "Slowed Player Sounds")
-		add("vjbase.menu.npc.settings.snd.toggleslowedplayer.label", "When a player is slowed down by melee attack")
-		add("vjbase.menu.npc.settings.snd.togglegrenade", "Grenade Attack Sounds")
-		add("vjbase.menu.npc.settings.snd.toggledangersight", "Grenade & Danger Sight Sounds")
-		add("vjbase.menu.npc.settings.snd.togglesuppressing", "Suppressing Call Out Sounds")
-		add("vjbase.menu.npc.settings.snd.togglereload", "Reload Call Out Sounds")
-		
-		-- NPC Developer Settings
-		add("vjbase.menu.npc.settings.dev", "Developer Settings")
-		add("vjbase.menu.npc.settings.dev.label1", "These settings are used when developing SNPCs.")
-		add("vjbase.menu.npc.settings.dev.label2", "WARNING: Some of these options cause lag!")
-		add("vjbase.menu.npc.settings.dev.toggledev", "Enable Developer Mode?")
-		add("vjbase.menu.npc.settings.dev.label3", "This option must be enabled from here or through the context menu! (Required for the options below)")
-		add("vjbase.menu.npc.settings.dev.enginedebug", "Engine Debugging (m_debugOverlays)")
-		add("vjbase.menu.npc.settings.dev.printtouch", "Print On Touch (Console)")
-		add("vjbase.menu.npc.settings.dev.printcurenemy", "Print Current Enemy (Console)")
-		add("vjbase.menu.npc.settings.dev.printlastseenenemy", "Print 'LastSeenEnemy' time (Chat)")
-		add("vjbase.menu.npc.settings.dev.printonreset", "Print On Reset Enemy (Console)")
-		add("vjbase.menu.npc.settings.dev.printonstopattack", "Print On Stopped Attacks (Console)")
-		add("vjbase.menu.npc.settings.dev.printtakingcover", "Print Taking Cover (Console)")
-		add("vjbase.menu.npc.settings.dev.printondamage", "Print On Damage (Console)")
-		add("vjbase.menu.npc.settings.dev.printondeath", "Print On Death (Console)")
-		add("vjbase.menu.npc.settings.dev.printweaponinfo", "Print Weapon Information (Console)")
-		add("vjbase.menu.npc.settings.dev.cachedmodels", "Print Cached Models (Console)")
-		add("vjbase.menu.npc.settings.dev.numofnpcs", "Print Number of NPCs (Chat)")
-		add("vjbase.menu.npc.settings.dev.label4", "Reload Buttons:")
-		add("vjbase.menu.npc.settings.dev.reloadsounds", "Reload Sounds")
-		add("vjbase.menu.npc.settings.dev.reloadmaterials", "Reload Materials (VMTs)")
-		add("vjbase.menu.npc.settings.dev.reloadtextures", "Reload Textures (VTFs)")
-		add("vjbase.menu.npc.settings.dev.reloadmodels", "Reload Models")
-		add("vjbase.menu.npc.settings.dev.reloadspawnmenu", "Reload Spawn Menu")
-		
-		-- NPC Performance Settings
-		add("vjbase.menu.npc.settings.perf", "Performance Settings")
-		add("vjbase.menu.npc.settings.perf.initial.label", "Use these settings to improve the performance of NPCs.")
-		add("vjbase.menu.npc.settings.perf.processtime", "Process Time")
-		add("vjbase.menu.npc.settings.perf.processtime.button", "What is Process Time?")
-		add("vjbase.menu.npc.settings.perf.processtime.label", "Default: 1 | Lower number causes more lag!")
-		add("vjbase.menu.npc.settings.perf.poseparams", "Use Pose Parameters")
-		add("vjbase.menu.npc.settings.perf.poseparams.label", "WARNING: Disabling can break NPCs that rely on it!")
-		add("vjbase.menu.npc.settings.perf.shadows", "Draw Shadows")
-		add("vjbase.menu.npc.settings.perf.ikchains", "Inverse Kinematics (IK Chains)")
-		add("vjbase.menu.npc.settings.perf.forcelowlod", "Force Use Lowest LOD")
-		add("vjbase.menu.npc.settings.perf.reducevfx", "Reduce VFX")
-		add("vjbase.menu.npc.settings.perf.reducevfx.label", "Examples: Eye glow, idle particles")
-		
-		-- NPC Controller Settings
-		add("vjbase.menu.npc.settings.con", "Controller Settings")
-		add("vjbase.menu.npc.settings.con.label1", "Notice: These are client-side settings only!")
-		add("vjbase.menu.npc.settings.con.label2", "How far or close the zoom changes every click.")
-		add("vjbase.menu.npc.settings.con.displayhud", "Display HUD")
-		add("vjbase.menu.npc.settings.con.camzoomdistance", "Camera Move Distance")
-		add("vjbase.menu.npc.settings.con.camspeed", "Camera Speed")
-		add("vjbase.menu.npc.settings.con.camzoomspeed", "Camera Zoom Speed" )
-		add("vjbase.menu.npc.settings.con.diewithnpc", "Controller Dies With The NPC (Requires respawn!)")
-		add("vjbase.menu.npc.settings.con.displaydev", "Display Developer Entities")
-		add("vjbase.menu.npc.settings.con.label3", "Key Bindings:")
-		add("vjbase.menu.npc.settings.con.bind.header1", "Control")
-		add("vjbase.menu.npc.settings.con.bind.header2", "Description")
-		add("vjbase.menu.npc.settings.con.bind.clickmsg1", "Selected Key:")
-		add("vjbase.menu.npc.settings.con.bind.clickmsg2", "Description:")
-		add("vjbase.menu.npc.settings.con.bind.movement", "Movement (Supports 8-Way)")
-		add("vjbase.menu.npc.settings.con.bind.exitcontrol", "Exit the Controller")
-		add("vjbase.menu.npc.settings.con.bind.meleeattack", "Melee Attack")
-		add("vjbase.menu.npc.settings.con.bind.rangeattack", "Range / Weapon Attack")
-		add("vjbase.menu.npc.settings.con.bind.leaporgrenade", "Leap / Grenade Attack")
-		add("vjbase.menu.npc.settings.con.bind.reloadweapon", "Reload Weapon")
-		add("vjbase.menu.npc.settings.con.bind.togglebullseye", "Toggle Bullseye Tracking")
-		add("vjbase.menu.npc.settings.con.bind.cameramode", "Change Camera Mode")
-		add("vjbase.menu.npc.settings.con.bind.movementjump", "Toggle Movement Jumping")
-		add("vjbase.menu.npc.settings.con.bind.camerazoom", "Zoom In & Out")
-		add("vjbase.menu.npc.settings.con.bind.cameraup", "Move Camera Up")
-		add("vjbase.menu.npc.settings.con.bind.cameradown", "Move Camera Down")
-		add("vjbase.menu.npc.settings.con.bind.cameraforward", "Move Camera Forward")
-		add("vjbase.menu.npc.settings.con.bind.camerabackward", "Move Camera Backward")
-		add("vjbase.menu.npc.settings.con.bind.cameraleft", "Move Camera Left")
-		add("vjbase.menu.npc.settings.con.bind.cameraright", "Move Camera Right")
-		add("vjbase.menu.npc.settings.con.bind.resetzoom", "Reset Camera Position")
-		
-		-- Weapon Client Settings
-		add("vjbase.menu.wep.clsettings", "Client Settings")
-		add("vjbase.menu.wep.clsettings.notice", "Notice: These settings are client, meaning it won't change for other people!")
-		add("vjbase.menu.wep.clsettings.togglemuzzle", "Disable Muzzle Flash")
-		add("vjbase.menu.wep.clsettings.togglemuzzlelight", "Disable Muzzle Flash Dynamic Light")
-		add("vjbase.menu.wep.clsettings.togglemuzzle.label", "Disabling muzzle flash will also disable this")
-		add("vjbase.menu.wep.clsettings.togglemuzzlebulletshells", "Disable Bullet Shells")
-		
-		-- NPC Properties (C Menu)
-		add("vjbase.menuproperties.control", "TAKE CONTROL")
-		add("vjbase.menuproperties.guard", "Toggle Guarding Behavior")
-		add("vjbase.menuproperties.wander", "Toggle Wandering Behavior")
-		add("vjbase.menuproperties.medic", "Toggle Medic Behavior")
-		add("vjbase.menuproperties.allyme", "Ally To Me")
-		add("vjbase.menuproperties.hostileme", "Hostile To Me")
-		add("vjbase.menuproperties.slay", "Slay")
-		add("vjbase.menuproperties.gib", "Gib (if possible)")
-		add("vjbase.menuproperties.devmode", "Toggle Developer Mode")
-		add("vjbase.menuproperties.print.adminonly", "These options are restricted to Admin only!")
-		
-		-- Tools
-		add("tool.vjstool.menu.tutorialvideo", "Tutorial Video")
-		add("tool.vjstool.menu.label.recommendation", "Recommended to use this tool only for VJ Base SNPCs.")
-		
-		add("tool.vjstool_bullseye.name", "NPC Bullseye")
-		add("tool.vjstool_bullseye.desc", "Creates a bullseye that NPCs will target")
-		add("tool.vjstool_bullseye.left", "Create a bullseye")
-		add("tool.vjstool_bullseye.menu.help1", "Press USE on the entity to activate/deactivate.")
-		add("tool.vjstool_bullseye.menu.help2", "When deactivated, NPCs will no longer target it.")
-		add("tool.vjstool_bullseye.menu.label1", "Select Movement Type")
-		add("tool.vjstool_bullseye.menu.label2", "Model Directory")
-		add("tool.vjstool_bullseye.menu.toggleusestatus", "Use Status Colors (Activated/Deactivated)")
-		add("tool.vjstool_bullseye.menu.togglestartactivated", "Start Activated")
-		
-		add("tool.vjstool_entityscanner.name", "Entity Scanner")
-		add("tool.vjstool_entityscanner.desc", "Get information about an entity")
-		add("tool.vjstool_entityscanner.left", "Print information about the entity in console")
-		add("tool.vjstool_entityscanner.label", "Prints information about any selected entity, it's printed in the console.")
-		
-		add("tool.vjstool_healthmodifier.name", "Health Modifier")
-		add("tool.vjstool_healthmodifier.desc", "Modify the health of an entity")
-		add("tool.vjstool_healthmodifier.left", "Set health")
-		add("tool.vjstool_healthmodifier.right", "Set health & max health")
-		add("tool.vjstool_healthmodifier.reload", "Heal the entity to its max health")
-		add("tool.vjstool_healthmodifier.adminonly", "Only admins can modify or heal another player's health.")
-		add("tool.vjstool_healthmodifier.sliderhealth", "Health")
-		add("tool.vjstool_healthmodifier.label1", "Following are only for VJ Base SNPCs:")
-		add("tool.vjstool_healthmodifier.togglegodmode", "God Mode (invincible)")
-		add("tool.vjstool_healthmodifier.togglehealthregen", "Enable Health Regeneration")
-		add("tool.vjstool_healthmodifier.sliderhealthregenamt", "Regeneration Amount")
-		add("tool.vjstool_healthmodifier.sliderhealthregendelay", "Regeneration Delay")
-		
-		add("tool.vjstool_notarget.name", "No Target")
-		add("tool.vjstool_notarget.desc", "Setting no target will make all NPCs not see a certain entity")
-		add("tool.vjstool_notarget.left", "Toggle no target to yourself")
-		add("tool.vjstool_notarget.right", "Toggle no target to an NPC or player")
-		add("tool.vjstool_notarget.label", "When a no target is enabled on an entity, NPCs will not target it!")
-		add("tool.vjstool_notarget.print.yourselfon", "Set no target to yourself: ON")
-		add("tool.vjstool_notarget.print.yourselfoff", "Set no target to yourself: OFF")
-		
-		add("tool.vjstool_npcequipment.name", "NPC Equipment")
-		add("tool.vjstool_npcequipment.desc", "Modifies an NPC's equipment")
-		add("tool.vjstool_npcequipment.left", "Change the NPC's equipment")
-		add("tool.vjstool_npcequipment.right", "Remove the NPC's equipment")
-		add("tool.vjstool_npcequipment.label", "Changes or removes an NPC's equipment.")
-		add("tool.vjstool_npcequipment.selectedequipment", "Selected Equipment")
-		add("tool.vjstool_npcequipment.print.doubleclick", "Double click to select a weapon.")
-		add("tool.vjstool_npcequipment.print.weaponselected1", "Weapon")
-		add("tool.vjstool_npcequipment.print.weaponselected2", "selected!")
-		add("tool.vjstool_npcequipment.header1", "Name")
-		add("tool.vjstool_npcequipment.header2", "Class")
-		
-		add("tool.vjstool_npcmover.name", "NPC Mover")
-		add("tool.vjstool_npcmover.desc", "Move NPC(s), an NPC must first be selected")
-		add("tool.vjstool_npcmover.left", "Select an NPC")
-		add("tool.vjstool_npcmover.right", "Run to the location")
-		add("tool.vjstool_npcmover.reload", "Walk to the location")
-		add("tool.vjstool_npcmover.header1", "Name")
-		add("tool.vjstool_npcmover.header2", "Class")
-		add("tool.vjstool_npcmover.header3", "Information")
-		add("tool.vjstool_npcmover.buttonunselectall", "Unselect All NPCs")
-		add("tool.vjstool_npcmover.print.unselectedall", "Unselected all NPCs!")
-		add("tool.vjstool_npcmover.print.unselectedall.error", "Nothing to unselect!")
-		
-		add("tool.vjstool_npcrelationship.name", "NPC Relationship Modifier")
-		add("tool.vjstool_npcrelationship.desc", "Modify the relationship of entities")
-		add("tool.vjstool_npcrelationship.left", "Apply the relationship table")
-		add("tool.vjstool_npcrelationship.right", "Obtain the current classes")
-		add("tool.vjstool_npcrelationship.reload", "Apply the relationship table to yourself")
-		add("tool.vjstool_npcrelationship.label1", "Modifies the relationship of an NPC, basically how it feels towards another entity.")
-		add("tool.vjstool_npcrelationship.header", "Class")
-		add("tool.vjstool_npcrelationship.label2", "Press return to add the class.")
-		add("tool.vjstool_npcrelationship.button.combine", "Insert Combine Class")
-		add("tool.vjstool_npcrelationship.button.antlion", "Insert Antlion Class")
-		add("tool.vjstool_npcrelationship.button.zombie", "Insert Zombie Class")
-		add("tool.vjstool_npcrelationship.button.player", "Insert Player Class")
-		add("tool.vjstool_npcrelationship.togglealliedply", "Allied with all player allies?")
-		add("tool.vjstool_npcrelationship.label3", "Only applies for VJ Base SNPCs and requires the SNPC to have")
-		add("tool.vjstool_npcrelationship.print.applied", "Applied the relationship class table on")
-		
-		add("tool.vjstool_npcspawner.name", "NPC Spawner")
-		add("tool.vjstool_npcspawner.desc", "Creates a customizable spawner")
-		add("tool.vjstool_npcspawner.left", "Create a spawner")
-		add("tool.vjstool_npcspawner.right", "Create the entities once")
-		add("tool.vjstool_npcspawner.selectednpc", "Selected NPC")
-		add("tool.vjstool_npcspawner.spawnpos.forward", "Position | Forward")
-		add("tool.vjstool_npcspawner.spawnpos.right", "Position | Right")
-		add("tool.vjstool_npcspawner.spawnpos.up", "Position | Up")
-		add("tool.vjstool_npcspawner.selectweapon", "Selected Weapon")
-		add("tool.vjstool_npcspawner.spawnnpclass", "Relation Class Override")
-		add("tool.vjstool_npcspawner.fritoplyallies", "Friendly To Player Allies")
-		add("tool.vjstool_npcspawner.label.fritoplyallies", "Must have relation class (CLASS_PLAYER_ALLY)!")
-		add("tool.vjstool_npcspawner.button.updatelist", "Update List")
-		add("tool.vjstool_npcspawner.label1", "Double click on an item to remove it.")
-		add("tool.vjstool_npcspawner.header1", "Name")
-		add("tool.vjstool_npcspawner.header2", "Position")
-		add("tool.vjstool_npcspawner.header3", "Equipment")
-		add("tool.vjstool_npcspawner.label2", "Extra Options")
-		add("tool.vjstool_npcspawner.toggle.spawnsound", "Play NPC Spawning Sound?")
-		add("tool.vjstool_npcspawner.nextspawntime", "Next Spawn Time")
-		add("tool.vjstool_npcspawner.popup.header1", "Name")
-		add("tool.vjstool_npcspawner.popup.header2", "Class")
-		add("tool.vjstool_npcspawner.popup.header3", "Category")
-		add("tool.vjstool_npcspawner.title1", "Double click to select an NPC.")
-		add("tool.vjstool_npcspawner.title2", "Double click to select a weapon.")
-		add("tool.vjstool_npcspawner.print.nothingspawn", "Nothing to spawn!")
-		
-		add("tool.vjstool_npcfollower.name", "NPC Follower")
-		add("tool.vjstool_npcfollower.desc", "Select an NPC and make it follow an entity")
-		add("tool.vjstool_npcfollower.left", "Select an NPC")
-		add("tool.vjstool_npcfollower.right", "Make the selected NPC follow an entity")
-		add("tool.vjstool_npcfollower.reload", "Unfollow any entity an NPC is following")
-		add("tool.vjstool_npcfollower.print.noselection", "No NPC selected!")
-		add("tool.vjstool_npcfollower.print.reset", "Unfollowed any entity it was following!")
-		
-		-- Miscellaneous (Prints)
-		add("vjbase.print.bullseye.activated", "Activated NPC Bullseye.")
-		add("vjbase.print.bullseye.deactivated", "Deactivated NPC Bullseye.")
-		
-		add("vjbase.print.npccontroller.entrance", "For controls, check \"Controller Settings\" under \"DrVrej\" tab")
-		add("vjbase.print.npccontroller.tracking.activated", "Bullseye tracking activated!")
-		add("vjbase.print.npccontroller.tracking.deactivated", "Bullseye tracking deactivated!")
-		add("vjbase.print.npccontroller.movementjump.enable", "Movement Jumping enabled!")
-		add("vjbase.print.npccontroller.movementjump.disable", "Movement Jumping disabled!")
-		
-		add("vjbase.print.adminhealth.pickup", "You have picked up 1,000,000 health!")
-		
-		add("vjbase.print.fireplace.activated", "You turned on the fireplace.")
-		add("vjbase.print.fireplace.deactivated", "You turned off the fireplace.")
-		
-		add("vjbase.print.plyspawnpoint.activated", "Activated this spawnpoint!")
-		add("vjbase.print.plyspawnpoint.deactivated", "Deactivated this spawnpoint!")
+	["vjbase.menu.general.default"] = "По умолчанию",
+	["vjbase.menu.general.admin.only"] = "Примечание: только администраторы могут использовать это меню.",
+	["vjbase.menu.general.admin.not"] = "Вы не являетесь администратором!",
+	["vjbase.menu.general.reset.everything"] = "Сбросить всё",
+	["vjbase.menu.general.npc.warnfuture"] = "Предупреждение: будут затронуты только будущие созданные NPC!",
+	["vjbase.menu.general.npc.creaturesettings"] = "Настройки создания:",
+	["vjbase.menu.general.npc.humansettings"] = "Настройки людей:",
+
+	-- Menu Tabs
+	["vjbase.menu.tabs.mainmenu"] = "Главное меню",
+	["vjbase.menu.tabs.settings.npc"] = "Настройки NPC",
+	["vjbase.menu.tabs.settings.weapon"] = "Настройки оружия",
+	["vjbase.menu.tabs.settings.hud"] = "Настройки интерфейса",
+	["vjbase.menu.tabs.tools"] = "Инструменты",
+	["vjbase.menu.tabs.configures.snpc"] = "Конфигурации SNPC",
+	["vjbase.menu.tabs.default"] = "По молчанию",
+
+	-- Main Menu
+	["vjbase.menu.cleanup"] = "Очистка",
+	["vjbase.menu.cleanup.all"] = "Очистить всё",
+	["vjbase.menu.cleanup.stopsounds"] = "Остановить все звуки",
+	["vjbase.menu.cleanup.remove.vjnpcs"] = "Убрать все VJ NPCs",
+	["vjbase.menu.cleanup.remove.npcs"] = "Убрать все NPCs",
+	["vjbase.menu.cleanup.remove.spawners"] = "Убрать все спавнеры",
+	["vjbase.menu.cleanup.remove.corpses"] = "Убрать все тела",
+	["vjbase.menu.cleanup.remove.vjgibs"] = "Убрать все VJ Gibs",
+	["vjbase.menu.cleanup.remove.groundweapons"] = "Убрать всё оружие на земле",
+	["vjbase.menu.cleanup.remove.props"] = "Убрать все объекты",
+	["vjbase.menu.cleanup.remove.decals"] = "Убрать все декали",
+	["vjbase.menu.cleanup.remove.allweapons"] = "Убрать всё своё оружие",
+	["vjbase.menu.cleanup.remove.allammo"] = "Убрать все свои боеприпасы",
+
+	["vjbase.menu.helpsupport"] = "Контакты и поддержка",
+	["vjbase.menu.helpsupport.incompatibleaddons"] = "Несовместимые дополнения",
+	["vjbase.menu.helpsupport.reportbug"] = "Сообщить о проблеме",
+	["vjbase.menu.helpsupport.suggestion"] = "Предложить что-нибудь",
+	["vjbase.menu.helpsupport.discord"] = "Discord создателя!",
+	["vjbase.menu.helpsupport.steam"] = "Steam создателя!",
+	["vjbase.menu.helpsupport.youtube"] = "Подписка на YouTube!",
+	["vjbase.menu.helpsupport.twitter"] = "Подписка на Твиттер!",
+	["vjbase.menu.helpsupport.patreon"] = "Поддержите меня на Patron!",
+	["vjbase.menu.helpsupport.label1"] = "Перейдите по одной из этих ссылок, чтобы получить информацию об обновлениях моих дополнений!",
+	["vjbase.menu.helpsupport.label2"] = "Пожертвования помогают и поощряют меня продолжать делать/обновлять дополнения! Спасибо!",
+	["vjbase.menu.helpsupport.thanks"] = "Спасибо за вашу поддержку!",
+
+	["vjbase.menu.svsettings"] = "Административные настройки",
+	["vjbase.menu.svsettings.label"] = "ВНИМАНИЕ: НЕКОТОРЫЕ НАСТРОЙКИ ЯВЛЯЮТСЯ ЧИТЕРСКИМИ!",
+	["vjbase.menu.svsettings.admin.npcproperties"] = "Свойства SNPC только для администраторов",
+	["vjbase.menu.svsettings.noclip"] = "Позволить режим полёта",
+	["vjbase.menu.svsettings.weapons"] = "Позволить оружие",
+	["vjbase.menu.svsettings.pvp"] = "Урон между игроками",
+	["vjbase.menu.svsettings.godmode"] = "Неуязвимость (у всех)",
+	["vjbase.menu.svsettings.bonemanip.npcs"] = "Манипулировать костями NPCs",
+	["vjbase.menu.svsettings.bonemanip.players"] = "Манипулировать костями моделей игроков",
+	["vjbase.menu.svsettings.bonemanip.others"] = "Манипулировать костями иных объектов",
+	["vjbase.menu.svsettings.timescale.general"] = "Общее время игры",
+	["vjbase.menu.svsettings.timescale.physics"] = "Физическое время игры",
+	["vjbase.menu.svsettings.gravity"] = "Общая гравитация",
+	["vjbase.menu.svsettings.maxentsprops"] = "Максимум объектов/энтити:",
+
+	["vjbase.menu.clsettings"] = "Настройки клиента",
+	["vjbase.menu.clsettings.label"] = "Используйте это меню для настройки параметров клиента, администраторы сервера не могут изменить эти параметры!",
+	["vjbase.menu.clsettings.labellang"] = "Выбор языка...",
+	["vjbase.menu.clsettings.notify.lang"] = "Язык VJ Base установлен на:",
+	["vjbase.menu.clsettings.lang.auto"] = "Автонастройка языка",
+	["vjbase.menu.clsettings.lang.auto.label"] = "Игнорируется, если в VJ Base установлен на язык, не поддерживаемый игрой",
+
+	["vjbase.menu.info"] = "Информация",
+
+	["vjbase.menu.plugins"] = "Установленные плагины",
+	["vjbase.menu.plugins.label"] = "Список установленных плагинов VJ Base.",
+	["vjbase.menu.plugins.version"] = "Версия:",
+	["vjbase.menu.plugins.totalplugins"] = "Всего плагинов:",
+	["vjbase.menu.plugins.header1"] = "Название",
+	["vjbase.menu.plugins.header2"] = "Тип",
+	["vjbase.menu.plugins.notfound"] = "Плагины не найдены",
+	["vjbase.menu.plugins.changelog"] = "Список изменений",
+	["vjbase.menu.plugins.makeaddon"] = "Хотите создать дополнение?",
+
+	-- SNPC Menus
+	["vjbase.menu.npc.options"] = "Опции",
+	["vjbase.menu.npc.options.difficulty.header"] = "Сложность:",
+	["vjbase.menu.npc.options.difficulty.neanderthal"] = "[-3] Неандерталец | -99% здоровья и урона",
+	["vjbase.menu.npc.options.difficulty.childs_play"] = "[-2] Детская игра | -75% здоровья и урона",
+	["vjbase.menu.npc.options.difficulty.easy"] = "[-1] Легко | -50% здоровья и урона",
+	["vjbase.menu.npc.options.difficulty.normal"] = "[0] Нормально | стандартное здоровье и урон",
+	["vjbase.menu.npc.options.difficulty.hard"] = "[1] Трудно | +50% здоровья и урона",
+	["vjbase.menu.npc.options.difficulty.insane"] = "[2] Безумие | +100% здоровья и урона",
+	["vjbase.menu.npc.options.difficulty.impossible"] = "[3] Невозможно | +150% здоровья и урона",
+	["vjbase.menu.npc.options.difficulty.nightmare"] = "[4] Кошмар | +250% здоровья и урона",
+	["vjbase.menu.npc.options.difficulty.hell_on_earth"] = "[5] Ад на Земле | +350% здоровья и урона",
+	["vjbase.menu.npc.options.difficulty.total_annihilation"] = "[6] Полное уничтожение | +500% здоровья и урона",
+	["vjbase.menu.npc.options.label1"] = "Настройки отношений:",
+	["vjbase.menu.npc.options.togglefriendlyantlion"] = "Дружелюбные муравьиные львы",
+	["vjbase.menu.npc.options.togglefriendlycombine"] = "Дружелюбные комбайны",
+	["vjbase.menu.npc.options.togglefriendlyplayer"] = "Дружелюбные игроки",
+	["vjbase.menu.npc.options.togglefriendlyzombie"] = "Дружелюбные зомби",
+	["vjbase.menu.npc.options.togglefriendlyvj"] = "Дружелюбный VJ Base",
+	["vjbase.menu.npc.options.label2"] = "Все NPC VJ будут союзниками!",
+	["vjbase.menu.npc.options.label3"] = "Опции трупов, расчленения и здоровья:",
+	["vjbase.menu.npc.options.collision.header"] = "Столкн-ние трупов:",
+	["vjbase.menu.npc.options.collision.default"] = "По умолчанию | Исключение: игроки, NPC, оружие, рэгдоллы",
+	["vjbase.menu.npc.options.collision.everything"] = "Без исключений | Все!",
+	["vjbase.menu.npc.options.collision.onlyworld"] = "Только мир",
+	["vjbase.menu.npc.options.collision.excludedebris"] = "Исключение: Трупы, обломки",
+	["vjbase.menu.npc.options.collision.excludeplynpcs"] = "Исключение: Игроки, NPC",
+	["vjbase.menu.npc.options.collision.excludeply"] = "Исключение: Игроки",
+	["vjbase.menu.npc.options.corpselimit"] = "Лимит трупов",
+	["vjbase.menu.npc.options.label4"] = "Лимит трупов, когда \"Оставлять трупы\" выключено",
+	["vjbase.menu.npc.options.toggleundocorpses"] = "Трупы можно отменить (клавиша undo)",
+	["vjbase.menu.npc.options.togglecorpsefade"] = "Исчезновение трупов",
+	["vjbase.menu.npc.options.corpsefadetime"] = "Время исчезновения",
+	["vjbase.menu.npc.options.label5"] = "(Трупов) Итого: 600 секунд (10 минут)",
+	["vjbase.menu.npc.options.togglegibcollision"] = "Столкновения ошмётков",
+	["vjbase.menu.npc.options.togglefadegibs"] = "Исчезновение ошмётков",
+	["vjbase.menu.npc.options.gibfadetime"] = "Время исчезновения",
+	["vjbase.menu.npc.options.label6"] = "(Ошмётков) По умолчанию: 30 | всего: 600 секунд (10 минут)",
+	["vjbase.menu.npc.options.togglesnpcgodmode"] = "Неуязвимость (Они не получат урона)",
+	["vjbase.menu.npc.options.health"] = "Здоровье:",
+	["vjbase.menu.npc.options.defaulthealth"] = "0 = Здоровье по умолчанию (максимум 9 цифр!)",
+	["vjbase.menu.npc.options.label7"] = "Опции ИИ:",
+	["vjbase.menu.npc.options.toggleknowenemylocation"] = "Всегда знать расположение врага",
+	["vjbase.menu.npc.options.sightdistance"] = "Видимость:",
+	["vjbase.menu.npc.options.label8"] = "У каждого NPC есть своя дистанция видимости, но это сделает их всех одинаковыми, так что используйте её осторожно! (0 = Оригинал | среднее значение: 10тыс.)",
+	["vjbase.menu.npc.settings.perf.processtime"] = "Время процесса",
+	["vjbase.menu.npc.settings.perf.processtime.button"] = "Что такое \"Время процесса\"?",
+	["vjbase.menu.npc.settings.perf.processtime.label"] = "По умолчанию: 1 | меньшее число вызывает большую задержку игры!",
+	["vjbase.menu.npc.options.label10"] = "Другие опции:",
+	["vjbase.menu.npc.options.togglegmoddecals"] = "Текущие декали крови игры",
+	["vjbase.menu.npc.options.label11"] = "Только для жёлтых или красных цветов!",
+	["vjbase.menu.npc.options.toggleitemdrops"] = "Выпадение предметов при смерти",
+	["vjbase.menu.npc.options.toggleaddfrags"] = "Прибавлять очки за убийство в таблицу счёта",
+	["vjbase.menu.npc.options.togglecreatureopendoor"] = "Существа могут открывать двери",
+	["vjbase.menu.npc.options.togglehumansdropweapon"] = "Люди бросают оружие при смерти",
+	["vjbase.menu.npc.options.togglehumanscanjump"] = "Люди могут прыгать",
+	["vjbase.menu.npc.options.toggleplydroppedweapons"] = "Игроки могут подбирать упавшее оружие",
+
+	["vjbase.menu.npc.settings"] = "Настройки",
+	["vjbase.menu.npc.settings.title.ai"] = "Настройки ИИ:",
+	["vjbase.menu.npc.settings.togglewandering"] = "Отключить блуждание в режиме ожидания",
+	["vjbase.menu.npc.settings.togglechasingenemy"] = "Отключить преследование врага",
+	["vjbase.menu.npc.settings.label.chasingenemy"] = "ВНИМАНИЕ: Это может привести к поломке частей искусственного интеллекта!",
+	["vjbase.menu.npc.settings.togglemedics"] = "Отключить медиков NPC",
+	["vjbase.menu.npc.settings.togglefollowplayer"] = "Отключить следование за игроком",
+	["vjbase.menu.npc.settings.label.followplayer"] = "Пример: когда вы нажимаете \"У\" на NPC, они следуют за вами",
+	["vjbase.menu.npc.settings.toggleallies"] = "Отключить альянс (Без союзников!)",
+	["vjbase.menu.npc.settings.togglebecomeenemytoply"] = "Отключить союзников, став врагом",
+	["vjbase.menu.npc.settings.togglecallhelp"] = "Отключить вызов помощи",
+	["vjbase.menu.npc.settings.toggleproppush"] = "Отключить толкание объектов (Существа)",
+	["vjbase.menu.npc.settings.togglepropattack"] = "Отключить атаку объектов (Существа)",
+	["vjbase.menu.npc.settings.toggledangersight"] = "Отключить обнаружение опасностей и гранат (Люди)",
+	["vjbase.menu.npc.settings.togglereloading"] = "Отключить перезарядку оружия",
+	["vjbase.menu.npc.settings.toggleeating"] = "Отключить поедание (Например: трупы или ошмётки)",
+	["vjbase.menu.npc.settings.title.attack"] = "Настройки атаки:",
+	["vjbase.menu.npc.settings.togglemelee"] = "Выключить атаку в ближнем бою",
+	["vjbase.menu.npc.settings.togglerange"] = "Выключить атаку в дальнем бою",
+	["vjbase.menu.npc.settings.toggleleap"] = "Отключить атаку в прыжке (Существа)",
+	["vjbase.menu.npc.settings.togglethrownade"] = "Отключить атаку гранатами (Люди)",
+	["vjbase.menu.npc.settings.toggleweapons"] = "Отключить оружие (Люди)",
+	["vjbase.menu.npc.settings.label.noweapon"] = "Люди не смогут использовать оружие!",
+	["vjbase.menu.npc.settings.togglemeleedsp"] = "Эффект DSP от тяжёлых атак в ближнем бою",
+	["vjbase.menu.npc.settings.toggleslowplayer"] = "Замедление игроков от атак в ближнем бою",
+	["vjbase.menu.npc.settings.togglebleedonmelee"] = "Истекание кровью от атак в ближнем бою",
+	["vjbase.menu.npc.settings.title.misc"] = "Прочие настройки:",
+	["vjbase.menu.npc.settings.toggleidleparticles"] = "Отключить неработающие частицы и эффекты",
+	["vjbase.menu.npc.settings.label.idleparticles"] = "Отключение этого пункта может увеличить производительность",
+	["vjbase.menu.npc.settings.togglesnpcchat"] = "Выключить сообщения NPC в чате",
+	["vjbase.menu.npc.settings.label.npcchat"] = "Например: \"Учёный теперь следует за вами\".",
+	["vjbase.menu.npc.settings.title.damagecorpse"] = "Настройки тел и урона:",
+	["vjbase.menu.npc.settings.toggleflinching"] = "Отключить вздрагивание",
+	["vjbase.menu.npc.settings.togglebleeding"] = "Отключить кровотечение",
+	["vjbase.menu.npc.settings.label.bleeding"] = "Отключает частицы крови, декали, лужи и т.д.",
+	["vjbase.menu.npc.settings.togglebloodpool"] = "Отключить лужи крови (при смерти)",
+	["vjbase.menu.npc.settings.togglegib"] = "Отключить ошмётки",
+	["vjbase.menu.npc.settings.label.gib"] = "Отключение этого может увеличить производительность",
+	["vjbase.menu.npc.settings.togglegibdeathvfx"] = "Отключить эффекты ошмётков/смерти (частицы, декали и т.д.)",
+	["vjbase.menu.npc.settings.toggledeathanim"] = "Выключить анимацию смерти",
+	["vjbase.menu.npc.settings.togglecorpses"] = "Выключить тела",
+	["vjbase.menu.npc.settings.title.passive"] = "Пассивные настройки:",
+	["vjbase.menu.npc.settings.togglerunontouch"] = "Выключить избегание при касании",
+	["vjbase.menu.npc.settings.togglerunonhit"] = "Избегание при получении урона",
+
+	["vjbase.menu.npc.settings.snd"] = "Настройки звука",
+	["vjbase.menu.npc.settings.snd.togglesounds"] = "Отключить все звуки",
+	["vjbase.menu.npc.settings.snd.togglesoundtrack"] = "Отключить звуковые дорожки / музыку",
+	["vjbase.menu.npc.settings.snd.toggleidle"] = "Отключить звуки повреждений",
+	["vjbase.menu.npc.settings.snd.togglebreathing"] = "Отключить звуки дыхания",
+	["vjbase.menu.npc.settings.snd.togglefootsteps"] = "Отключить звуки шагов",
+	["vjbase.menu.npc.settings.snd.togglemelee"] = "Отключить звуки атаки в ближнем бою",
+	["vjbase.menu.npc.settings.snd.togglerange"] = "Отключить звуки атак в дальнем бою",
+	["vjbase.menu.npc.settings.snd.togglealert"] = "Отключить звуки оповещения",
+	["vjbase.menu.npc.settings.snd.togglepain"] = "Отключить звуки боли",
+	["vjbase.menu.npc.settings.snd.toggledeath"] = "Отключить звуки смерти",
+	["vjbase.menu.npc.settings.snd.togglegibbing"] = "Отключить звуки ошмётков",
+	["vjbase.menu.npc.settings.snd.togglegibbing.label"] = "Также относится к звукам, которые воспроизводятся, когда ошмётки сталкивается с чем-то",
+	["vjbase.menu.npc.settings.snd.togglemedic"] = "Отключить звуки медицины",
+	["vjbase.menu.npc.settings.snd.togglefollowing"] = "Отключить звуки следования",
+	["vjbase.menu.npc.settings.snd.togglecallhelp"] = "Отключить звуки просьб о помощи",
+	["vjbase.menu.npc.settings.snd.togglereceiveorder"] = "Отключить звуки получения приказов",
+	["vjbase.menu.npc.settings.snd.togglebecomeenemy"] = "Отключить звуки становления врагом для игрока",
+	["vjbase.menu.npc.settings.snd.toggleplayersight"] = "Отключить звуки прицеливания игрока",
+	["vjbase.menu.npc.settings.snd.toggleplayersight.label"] = "Специальные звуки, которые воспроизводятся, когда NPC видит игрока",
+	["vjbase.menu.npc.settings.snd.toggledmgbyplayer"] = "Отключить звуки урона от игрока",
+	["vjbase.menu.npc.settings.snd.toggledmgbyplayer.label"] = "Когда игрок стреляет в NPC, обычно дружественные NPC",
+	["vjbase.menu.npc.settings.snd.toggleleap"] = "Отключить звуки атаки в прыжке",
+	["vjbase.menu.npc.settings.snd.toggleslowedplayer"] = "Отключить звуки замедления игрока",
+	["vjbase.menu.npc.settings.snd.toggleslowedplayer.label"] = "Звуки, которые воспроизводятся, когда игрок замедляется в рукопашной атаке",
+	["vjbase.menu.npc.settings.snd.togglegrenade"] = "Отключить звуки атаки гранатой",
+	["vjbase.menu.npc.settings.snd.toggledangersight"] = "Отключить звуки обнаружения гранаты и опасности",
+	["vjbase.menu.npc.settings.snd.togglesuppressing"] = "Отключить подавление звуков взрыва",
+	["vjbase.menu.npc.settings.snd.togglereload"] = "Отключить перезагрузку звуков вызова",
+
+	["vjbase.menu.npc.settings.dev"] = "Настройки разработчика",
+	["vjbase.menu.npc.settings.dev.label1"] = "Эти настройки используются при разработке SNPC.",
+	["vjbase.menu.npc.settings.dev.label2"] = "Предупреждение: некоторые из этих опций вызывают задержку игры!",
+	["vjbase.menu.npc.settings.dev.toggledev"] = "Включить режим разработчика?",
+	["vjbase.menu.npc.settings.dev.label3"] = "Эта опция должна быть включена здесь или через контекстное меню! (Требуется для следующих опций)",
+	["vjbase.menu.npc.settings.dev.printtouch"] = "Вывод на табло (Консоль)",
+	["vjbase.menu.npc.settings.dev.printcurenemy"] = "Вывод текущего врага (Консоль)",
+	["vjbase.menu.npc.settings.dev.printlastseenenemy"] = "Вывод времени \"LastSeenEnemy\" (Чат)",
+	["vjbase.menu.npc.settings.dev.printonreset"] = "Вывод на сброс противника (Консоль)",
+	["vjbase.menu.npc.settings.dev.printonstopattack"] = "Вывод на остановку атаки (Консоль)",
+	["vjbase.menu.npc.settings.dev.printtakingcover"] = "Вывод укрытия (Консоль)",
+	["vjbase.menu.npc.settings.dev.printondamage"] = "Вывод о повреждениях (Консоль)",
+	["vjbase.menu.npc.settings.dev.printondeath"] = "Вывод о смерти (Консоль)",
+	["vjbase.menu.npc.settings.dev.printweaponinfo"] = "Вывод информации об оружии(Консоль)",
+	["vjbase.menu.npc.settings.dev.cachedmodels"] = "Вывод кэшированных моделей (Консоль)",
+	["vjbase.menu.npc.settings.dev.numofnpcs"] = "Вывод количества NPC (Чат)",
+	["vjbase.menu.npc.settings.dev.label4"] = "Перезагрузить кнопки:",
+	["vjbase.menu.npc.settings.dev.reloadsounds"] = "Перезагрузить звуки",
+	["vjbase.menu.npc.settings.dev.reloadmaterials"] = "Перезагрузить материалы (VMT)",
+	["vjbase.menu.npc.settings.dev.reloadtextures"] = "Перезагрузить текстуры (VTF)",
+	["vjbase.menu.npc.settings.dev.reloadmodels"] = "Перезагрузить модели",
+	["vjbase.menu.npc.settings.dev.reloadspawnmenu"] = "Перезагрузить меню создания",
+
+	["vjbase.menu.npc.settings.con"] = "Настройки контроллера",
+	["vjbase.menu.npc.settings.con.label1"] = "Обратите внимание : это настройки только на стороне клиента!",
+	["vjbase.menu.npc.settings.con.label2"] = "Как далеко или близко масштаб изменяется с каждым щелчком мыши.",
+	["vjbase.menu.npc.settings.con.displayhud"] = "Отображать интерфейс",
+	["vjbase.menu.npc.settings.con.camzoomdistance"] = "Дист-ция приближения камеры",
+	["vjbase.menu.npc.settings.con.camspeed"] = "Скорость камеры",
+	["vjbase.menu.npc.settings.con.camzoomspeed"] = "Скор-сть приближения камеры",
+	["vjbase.menu.npc.settings.con.diewithnpc"] = "Контроллер погибает вместе с NPC (После возрождения!)",
+	["vjbase.menu.npc.settings.con.displaydev"] = "Отображение энтити разработчика",
+	["vjbase.menu.npc.settings.con.label3"] = "Привязка клавиш:",
+	["vjbase.menu.npc.settings.con.bind.header1"] = "Контроль",
+	["vjbase.menu.npc.settings.con.bind.header2"] = "Описание",
+	["vjbase.menu.npc.settings.con.bind.clickmsg1"] = "Выбранная кнопка:",
+	["vjbase.menu.npc.settings.con.bind.clickmsg2"] = "Описание:",
+	["vjbase.menu.npc.settings.con.bind.movement"] = "Движение",
+	["vjbase.menu.npc.settings.con.bind.exitcontrol"] = "Выход из контроллера",
+	["vjbase.menu.npc.settings.con.bind.meleeattack"] = "Атака в ближнем бою",
+	["vjbase.menu.npc.settings.con.bind.rangeattack"] = "Атака в дальнем бою",
+	["vjbase.menu.npc.settings.con.bind.leaporgrenade"] = "Прыжок/атака гранатой",
+	["vjbase.menu.npc.settings.con.bind.reloadweapon"] = "Перезарядка",
+	["vjbase.menu.npc.settings.con.bind.togglebullseye"] = "Отслеж-ние зоны прицеливания",
+	["vjbase.menu.npc.settings.con.bind.cameramode"] = "Сменить режим камеры",
+	["vjbase.menu.npc.settings.con.bind.movementjump"] = "Переключение прыжка во время движения",
+	["vjbase.menu.npc.settings.con.bind.camerazoom"] = "Приблизить и отдалить",
+	["vjbase.menu.npc.settings.con.bind.cameraup"] = "Сдвинуть камеру вверх",
+	["vjbase.menu.npc.settings.con.bind.cameradown"] = "Сдвинуть камеру вниз",
+	["vjbase.menu.npc.settings.con.bind.cameraforward"] = "Сдвинуть камеру вперёд",
+	["vjbase.menu.npc.settings.con.bind.camerabackward"] = "Сдвинуть камеру назад",
+	["vjbase.menu.npc.settings.con.bind.cameraleft"] = "Сдвинуть камеру влево",
+	["vjbase.menu.npc.settings.con.bind.cameraright"] = "Сдвинуть камеру вправо",
+	["vjbase.menu.npc.settings.con.bind.resetzoom"] = "Сбросить позицию камеры",
+
+	-- Weapon Client Settings
+	["vjbase.menu.wep.clsettings"] = "Настройки клиента",
+	["vjbase.menu.wep.clsettings.notice"] = "Обратите внимание : эти настройки являются клиентскими, то есть они не изменятся для других людей!",
+	["vjbase.menu.wep.clsettings.togglemuzzle"] = "Отключить дульную вспышку",
+	["vjbase.menu.wep.clsettings.togglemuzzlelight"] = "Отключить динамический свет дульной вспышки",
+	["vjbase.menu.wep.clsettings.togglemuzzle.label"] = "Отключение дульной вспышки также отключит это",
+	["vjbase.menu.wep.clsettings.togglemuzzlebulletshells"] = "Отключить дымку от выстрелов",
+
+	-- NPC Properties (C Menu)
+	["vjbase.menuproperties.control"] = "Взять под контроль",
+	["vjbase.menuproperties.guard"] = "Назначить телохранителем",
+	["vjbase.menuproperties.wander"] = "Назначить патрульным",
+	["vjbase.menuproperties.medic"] = "Назначить медиком",
+	["vjbase.menuproperties.allyme"] = "Назначить союзником",
+	["vjbase.menuproperties.hostileme"] = "Назначить противником",
+	["vjbase.menuproperties.slay"] = "Убить",
+	["vjbase.menuproperties.gib"] = "Разорвать в ошмётки (Если допустимо)",
+	["vjbase.menuproperties.devmode"] = "Переключить на режим разработчика",
+	["vjbase.menuproperties.print.adminonly"] = "Эти опции доступны только администратору!",
+
+	-- Tools
+	["tool.vjstool.menu.tutorialvideo"] = "Обучающее видео",
+	["tool.vjstool.menu.label.recommendation"] = "Рекомендуется использовать этот инструмент только для VJ Base SNPC.",
+
+	["tool.vjstool_bullseye.name"] = "Зона прицеливания NPC",
+	["tool.vjstool_bullseye.desc"] = "Создает зону прицеливания, куда будут целиться NPC",
+	["tool.vjstool_bullseye.left"] = "ЛКМ для создания зоны прицеливания",
+	["tool.vjstool_bullseye.menu.help1"] = "Нажмите ИСПОЛЬЗОВАТЬ, чтобы активировать/деактивировать.",
+	["tool.vjstool_bullseye.menu.help2"] = "Когда она деактивирована, NPC больше не будет нацеливаться в неё.",
+	["tool.vjstool_bullseye.menu.label1"] = "Выбрать тип движения",
+	["tool.vjstool_bullseye.menu.label2"] = "Каталог моделей",
+	["tool.vjstool_bullseye.menu.toggleusestatus"] = "Цвета состояния (активирована/деактивирована)",
+	["tool.vjstool_bullseye.menu.togglestartactivated"] = "Создать \"Активированной\"",
+
+	["tool.vjstool_entityscanner.name"] = "Сканер энтити",
+	["tool.vjstool_entityscanner.desc"] = "Получить информацию про энтити",
+	["tool.vjstool_entityscanner.left"] = "Щёлкните левой кнопкой мыши, чтобы вывести информацию об энтити в консоли",
+	["tool.vjstool_entityscanner.label"] = "Выводит информацию о любом выбранном объекте, она выводится в консоли.",
+
+	["tool.vjstool_healthmodifier.name"] = "Модификатор здоровья",
+	["tool.vjstool_healthmodifier.desc"] = "Изменение здоровья объекта",
+	["tool.vjstool_healthmodifier.left"] = "Щёлкните левой кнопкой мыши, чтобы установить показатель здоровья",
+	["tool.vjstool_healthmodifier.right"] = "Щёлкните правой кнопкой мыши, чтобы установить здоровье и максимальное здоровье",
+	["tool.vjstool_healthmodifier.reload"] = "Клавиша перезарядки для исцеления сущности до её максимального здоровья",
+	["tool.vjstool_healthmodifier.adminonly"] = "Только администраторы могут изменять или лечить здоровье другого игрока.",
+	["tool.vjstool_healthmodifier.sliderhealth"] = "Здоровье",
+	["tool.vjstool_healthmodifier.label1"] = "Следующие пункты предназначены только для VJ Base SNPC:",
+	["tool.vjstool_healthmodifier.togglegodmode"] = "Неуязвимость (Непобедимый)",
+	["tool.vjstool_healthmodifier.togglehealthregen"] = "Включить регенерацию здоровья",
+	["tool.vjstool_healthmodifier.sliderhealthregenamt"] = "Здоровья при реген.",
+	["tool.vjstool_healthmodifier.sliderhealthregendelay"] = "Задержка реген.",
+
+	["tool.vjstool_notarget.name"] = "Режим \"Вне цели\"",
+	["tool.vjstool_notarget.desc"] = "Режим \"Вне цели\" приведёт к тому, что все NPC не увидят определенного игрока или NPC",
+	["tool.vjstool_notarget.left"] = "Щёлкните левой кнопкой мыши, чтобы переключить режим \"Вне цели\" для себя",
+	["tool.vjstool_notarget.right"] = "Щёлкните правой кнопкой мыши, чтобы переключить режим \"Вне цели\" на текущего игрока или NPC",
+	["tool.vjstool_notarget.label"] = "Если на объекте включена функция \"Вне цели\"] = то NPC не будут её атаковать!",
+	["tool.vjstool_notarget.print.yourselfon"] = "Включено игнорирование NPC для себя",
+	["tool.vjstool_notarget.print.yourselfoff"] = "Отключено игнорирование NPC для себя",
+
+	["tool.vjstool_npcequipment.name"] = "Снаряжение NPC",
+	["tool.vjstool_npcequipment.desc"] = "Меняет снаряжение NPC",
+	["tool.vjstool_npcequipment.left"] = "Щёлкните левой кнопкой мыши, чтобы изменить снаряжение NPC",
+	["tool.vjstool_npcequipment.right"] = "Щёлкните правой кнопкой мыши, чтобы удалить снаряжение NPC",
+	["tool.vjstool_npcequipment.label"] = "Изменить или удалить снаряжение NPC.",
+	["tool.vjstool_npcequipment.selectedequipment"] = "Выбрать снаряжение",
+	["tool.vjstool_npcequipment.print.doubleclick"] = "Двойной клик для выбора оружия.",
+	["tool.vjstool_npcequipment.print.weaponselected1"] = "Оружие",
+	["tool.vjstool_npcequipment.print.weaponselected2"] = "выбрано!",
+	["tool.vjstool_npcequipment.header1"] = "Название",
+	["tool.vjstool_npcequipment.header2"] = "Классификация",
+
+	["tool.vjstool_npcmover.name"] = "Управление движением NPC",
+	["tool.vjstool_npcmover.desc"] = "Передвижение NPC или группы NPC",
+	["tool.vjstool_npcmover.left"] = "Щёлкните левой кнопкой мыши, чтобы выбрать",
+	["tool.vjstool_npcmover.right"] = "Щёлкните правой кнопкой мыши, чтобы переместить(бегом)",
+	["tool.vjstool_npcmover.reload"] = "Щёлкните кнопку перезарядки, чтобы переместить(шагом)",
+	["tool.vjstool_npcmover.header1"] = "Имя",
+	["tool.vjstool_npcmover.header2"] = "Классификация",
+	["tool.vjstool_npcmover.header3"] = "Информация",
+	["tool.vjstool_npcmover.buttonunselectall"] = "Отменить выбор всех NPC",
+	["tool.vjstool_npcmover.print.unselectedall"] = "Выбор всех NPC отменён!",
+	["tool.vjstool_npcmover.print.unselectedall.error"] = "Ничего не нужно снимать (нечего)!",
+
+	["tool.vjstool_npcrelationship.name"] = "Модификатор отношений NPC",
+	["tool.vjstool_npcrelationship.desc"] = "Изменить отношения NPC",
+	["tool.vjstool_npcrelationship.left"] = "Щёлкните левой кнопкой мыши, чтобы применить отношение",
+	["tool.vjstool_npcrelationship.right"] = "Щёлкните правой кнопкой мыши, чтобы получить текущие классы",
+	["tool.vjstool_npcrelationship.reload"] = "Нажмите Перезарядку, чтобы применить к себе",
+	["tool.vjstool_npcrelationship.label1"] = "Изменяет отношение NPC, в основном то, как он чувствует себя по отношению к другому объекту.",
+	["tool.vjstool_npcrelationship.header"] = "Класс",
+	["tool.vjstool_npcrelationship.label2"] = "Нажмите кнопку Return, чтобы добавить класс.",
+	["tool.vjstool_npcrelationship.button.combine"] = "Вставить класс: Комбайн",
+	["tool.vjstool_npcrelationship.button.antlion"] = "Вставить класс: Муравьиный лев",
+	["tool.vjstool_npcrelationship.button.zombie"] = "Вставить класс: Зомби",
+	["tool.vjstool_npcrelationship.button.player"] = "Вставить класс: Игрок",
+	["tool.vjstool_npcrelationship.togglealliedply"] = "Союз со всеми союзниками игроков?",
+	["tool.vjstool_npcrelationship.label3"] = "Применяется только для VJ Base SNPC и требуется, чтобы SNPC имелся",
+	["tool.vjstool_npcrelationship.print.applied"] = "Применить таблицу классов отношений на",
+
+	["tool.vjstool_npcspawner.name"] = "Спавнер (создатель) NPC",
+	["tool.vjstool_npcspawner.desc"] = "Создать спавнер",
+	["tool.vjstool_npcspawner.left"] = "Щёлкните левой кнопкой мыши, чтобы создать спавнер",
+	["tool.vjstool_npcspawner.right"] = "Щёлкните правой кнопкой мыши, чтобы создать NPC один раз",
+	["tool.vjstool_npcspawner.selectednpc"] = "Выбранный NPC",
+	["tool.vjstool_npcspawner.spawnpos.forward"] = "Позиция | Вперёд",
+	["tool.vjstool_npcspawner.spawnpos.right"] = "Позиция | Вправо",
+	["tool.vjstool_npcspawner.spawnpos.up"] = "Позиция | Вверх",
+	["tool.vjstool_npcspawner.selectweapon"] = "Выбранное оружие",
+	["tool.vjstool_npcspawner.spawnnpclass"] = "Переопределение класса отношений",
+	["tool.vjstool_npcspawner.fritoplyallies"] = "Дружественные к игроку союзники",
+	["tool.vjstool_npcspawner.label.fritoplyallies"] = "Обязательно наличие класса отношений (CLASS_PLAYER_ALLY)!",
+	["tool.vjstool_npcspawner.button.updatelist"] = "Обновить список",
+	["tool.vjstool_npcspawner.label1"] = "Дважды щёлкните, чтобы удалить элемент.",
+	["tool.vjstool_npcspawner.header1"] = "Имя",
+	["tool.vjstool_npcspawner.header2"] = "Позиция",
+	["tool.vjstool_npcspawner.header3"] = "Снаряжение",
+	["tool.vjstool_npcspawner.label2"] = "Дополнительные опции",
+	["tool.vjstool_npcspawner.toggle.spawnsound"] = "Проигрывать звук появления NPC?",
+	["tool.vjstool_npcspawner.nextspawntime"] = "Время появления",
+	["tool.vjstool_npcspawner.popup.header1"] = "Название",
+	["tool.vjstool_npcspawner.popup.header2"] = "Класс",
+	["tool.vjstool_npcspawner.popup.header3"] = "Категория",
+	["tool.vjstool_npcspawner.title1"] = "Дважды щёлкните, чтобы выбрать NPC.",
+	["tool.vjstool_npcspawner.title2"] = "Дважды щёлкните, чтобы выбрать оружие.",
+	["tool.vjstool_npcspawner.print.nothingspawn"] = "Нечего создать!",
+
+	["tool.vjstool_npcfollower.name"] = "Следующий за объектом NPC",
+	["tool.vjstool_npcfollower.desc"] = "Выберите NPC и заставьте его следовать за объектом",
+	["tool.vjstool_npcfollower.left"] = "Выбрать NPC",
+	["tool.vjstool_npcfollower.right"] = "Заставить выбранного NPC следовать за объектом",
+	["tool.vjstool_npcfollower.reload"] = "Снять с следования любой объект, за которым следует NPC",
+	["tool.vjstool_npcfollower.print.noselection"] = "NPC не выбран!",
+	["tool.vjstool_npcfollower.print.reset"] = "Снято следование за объектом, за которым тот следовал!",
+
+	["entity.vjfeature.admin_health_kit_message"] = "Вы подобрали 1,000,000 единиц здоровья!",
+	["entity.vjfeature.fireplace_turnedon"] = "Вы разожгли костёр.",
+	["entity.vjfeature.fireplace_turnedoff"] = "Вы потушили костёр.",
+	["entity.vjfeature.player_spawnpoint_activated"] = "Точка возрождения активирована!",
+	["entity.vjfeature.player_spawnpoint_deactivated"] = "Точка возрождения деактивирована!",
+
+	-- Miscellaneous (Prints)
+	["vjbase.print.bullseye.activated"] = "Активирована зона прицеливания NPC.",
+	["vjbase.print.bullseye.deactivated"] = "Деактивирована зона прицеливания NPC.",
+
+	["vjbase.print.npccontroller.entrance"] = "Для управления проверьте \"Настройки контроллера\" в вкладке \"DrVrej\"",
+	["vjbase.print.npccontroller.tracking.activated"] = "Активировано отслеживание зоны прицеливания!",
+	["vjbase.print.npccontroller.tracking.deactivated"] = "Деактивировано отслеживание зоны прицеливания!",
+	["vjbase.print.npccontroller.movementjump.enable"] = "Прыжки во время движения включены!",
+	["vjbase.print.npccontroller.movementjump.disable"] = "Прыжки во время движения отключены!",
+
+	["vjbase.print.adminhealth.pickup"] = "Вы подобрали 1,000,000 единиц здоровья!",
+
+	["vjbase.print.fireplace.activated"] = "Вы разожгли костёр.",
+	["vjbase.print.fireplace.deactivated"] = "Вы потушили костёр.",
+
+	["vjbase.print.plyspawnpoint.activated"] = "Точка возрождения активирована!",
+	["vjbase.print.plyspawnpoint.deactivated"] = "Точка возрождения деактивирована!",
+}
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+local strings_lithuanian = {
+	-- General Menu (Used everywhere)
+	["vjbase.menu.general.default"] = "Numatytieji",
+	["vjbase.menu.general.admin.only"] = "Dėmesio: tik administratoriai gali naudotis šiuo meniu.",
+	["vjbase.menu.general.admin.not"] = "Nesate administratorius!",
+	["vjbase.menu.general.reset.everything"] = "Atkurti",
+	["vjbase.menu.general.npc.warnfuture"] = "ĮSPĖJIMAS: tik vėliau sukurti SNPC personažai bus paveikti!",
+	["vjbase.menu.general.npc.creaturesettings"] = "Būtybių nustatymai:",
+	["vjbase.menu.general.npc.humansettings"] = "Žmonių nustatymai:",
+
+	-- Menu Tabs
+	["vjbase.menu.tabs.mainmenu"] = "Pagrindinis meniu",
+	["vjbase.menu.tabs.settings.npc"] = "NPC nustatymai",
+	["vjbase.menu.tabs.settings.weapon"] = "Ginklų nustatymai",
+	["vjbase.menu.tabs.settings.hud"] = "HUD nustatymai",
+	["vjbase.menu.tabs.tools"] = "Įrankiai",
+	["vjbase.menu.tabs.configures.snpc"] = "SNPC konfigūracija",
+
+	-- Main Menu
+	["vjbase.menu.cleanup"] = "Valymas",
+	["vjbase.menu.cleanup.all"] = "Valyti viską",
+	["vjbase.menu.cleanup.stopsounds"] = "Stabdyti visus garsus",
+	["vjbase.menu.cleanup.remove.vjnpcs"] = "Šalinti visus VJ personažus",
+	["vjbase.menu.cleanup.remove.npcs"] = "Šalinti visus personažus",
+	["vjbase.menu.cleanup.remove.spawners"] = "Šalinti visus personažų kūrėjus",
+	["vjbase.menu.cleanup.remove.corpses"] = "Šalinti visus lavonus",
+	["vjbase.menu.cleanup.remove.vjgibs"] = "Šalinti visas kūno dalis",
+	["vjbase.menu.cleanup.remove.groundweapons"] = "Šalinti visus ginklus ant žemės",
+	["vjbase.menu.cleanup.remove.props"] = "Šalinti visas esybes",
+	["vjbase.menu.cleanup.remove.decals"] = "Šalinti visus lipdukus",
+	["vjbase.menu.cleanup.remove.allweapons"] = "Šalinti visus savo ginklus",
+	["vjbase.menu.cleanup.remove.allammo"] = "Šalinti visus savo šovinius",
+
+	["vjbase.menu.helpsupport"] = "Susisiekti ir palaikyti",
+	["vjbase.menu.helpsupport.reportbug"] = "Pranešti apie klaidą",
+	["vjbase.menu.helpsupport.suggestion"] = "Kažką pasiūlyti",
+	["vjbase.menu.helpsupport.discord"] = "Prisijunkite prie mano Discord grupės!",
+	["vjbase.menu.helpsupport.steam"] = "Prisijunkite prie mano Steam grupės!",
+	["vjbase.menu.helpsupport.youtube"] = "Prenumeruokite mano YouTube kanalą!",
+	["vjbase.menu.helpsupport.twitter"] = "Sekite mane Twitter!",
+	["vjbase.menu.helpsupport.patreon"] = "Paremkite mane Patreon!",
+	["vjbase.menu.helpsupport.label1"] = "Spustelėkite vieną iš šių nuorodų, kad gautumėte informaciją apie mano priedų naujinimus!",
+	["vjbase.menu.helpsupport.label2"] = "Jūsų parama skatina mane toliau kurti/naujinti priedus! Ačiū!",
+	["vjbase.menu.helpsupport.thanks"] = "Ačiū už jūsų palaikymą!",
+
+	["vjbase.menu.svsettings"] = "Serverio nustatymai",
+	["vjbase.menu.svsettings.label"] = "ĮSPĖJIMAS: KAI KURIE NUSTATYMAI REIKALAUJA SV_CHEATS!",
+	["vjbase.menu.svsettings.admin.npcproperties"] = "Riboti SNPC personažų ypatybes tik administratoriams",
+	["vjbase.menu.svsettings.noclip"] = "Skrydžio režimas",
+	["vjbase.menu.svsettings.weapons"] = "Leisti ginklus",
+	["vjbase.menu.svsettings.pvp"] = "Leisti žalą tarp žaidėjų",
+	["vjbase.menu.svsettings.godmode"] = "Nemirtingumas (visiems)",
+	["vjbase.menu.svsettings.bonemanip.npcs"] = "Personažų kaulų manipuliavimas",
+	["vjbase.menu.svsettings.bonemanip.players"] = "Žaidėjų kaulų manipuliavimas",
+	["vjbase.menu.svsettings.bonemanip.others"] = "Visko kaulų manipuliavimas",
+	["vjbase.menu.svsettings.timescale.general"] = "Bendroji laiko skalė",
+	["vjbase.menu.svsettings.timescale.physics"] = "Fizikos laiko skalė",
+	["vjbase.menu.svsettings.gravity"] = "Bendroji gravitacija",
+	["vjbase.menu.svsettings.maxentsprops"] = "Daugiausia objektų/esybių:",
+
+	["vjbase.menu.clsettings"] = "Kliento nustatymai",
+	["vjbase.menu.clsettings.label"] = "Naudokite šį meniu kiento nustatymų tinkinimui. Serveriai negali keisti šių nustatymų!",
+	["vjbase.menu.clsettings.labellang"] = "Kalbos nuostata...",
+	["vjbase.menu.clsettings.notify.lang"] = "VJ Base kalba nustatyta į:",
+
+	["vjbase.menu.info"] = "Informacija",
+
+	["vjbase.menu.plugins"] = "Įdiegti įskiepiai",
+	["vjbase.menu.plugins.label"] = "Įdiegtų VJ Base įskiepių sąrašas.",
+	["vjbase.menu.plugins.version"] = "Versija:",
+	["vjbase.menu.plugins.totalplugins"] = "Iš viso įskiepių:",
+	["vjbase.menu.plugins.header1"] = "Pavadinimas",
+	["vjbase.menu.plugins.header2"] = "Tipas",
+	["vjbase.menu.plugins.notfound"] = "Nerasta įskiepių.",
+	["vjbase.menu.plugins.changelog"] = "Pakeitimų žurnalas",
+	["vjbase.menu.plugins.makeaddon"] = "Norite sukurti priedą? Spustelėkite čia!",
+
+	-- SNPC Menus
+	["vjbase.menu.npc.options"] = "Parinktys",
+	["vjbase.menu.npc.options.difficulty.header"] = "Pasirinkite sunkumą:",
+	["vjbase.menu.npc.options.difficulty.neanderthal"] = "Neandertalietis | -99% sveikatos ir žalos",
+	["vjbase.menu.npc.options.difficulty.childs_play"] = "Vaikų žaidimas | -75% sveikatos ir žalos",
+	["vjbase.menu.npc.options.difficulty.easy"] = "Lengvas | -50% sveikatos ir žalos",
+	["vjbase.menu.npc.options.difficulty.normal"] = "Normalus | Įprasta sveikata ir žala",
+	["vjbase.menu.npc.options.difficulty.hard"] = "Sunkus | +50% sveikatos ir žalos",
+	["vjbase.menu.npc.options.difficulty.insane"] = "Beprotiškas | +100% sveikatos ir žalos",
+	["vjbase.menu.npc.options.difficulty.impossible"] = "Neįmanomas | +150% sveikatos ir žalos",
+	["vjbase.menu.npc.options.difficulty.nightmare"] = "Košmaras | +250% sveikatos ir žalos",
+	["vjbase.menu.npc.options.difficulty.hell_on_earth"] = "Pragaras žemėje | +350% sveikatos ir žalos",
+	["vjbase.menu.npc.options.difficulty.total_annihilation"] = "Visiškas sunaikinimas | +500% sveikatos ir žalos",
+	["vjbase.menu.npc.options.label1"] = "Santykių parinktys:",
+	["vjbase.menu.npc.options.togglefriendlyantlion"] = "Draugiški skruzdžių liūtams",
+	["vjbase.menu.npc.options.togglefriendlycombine"] = "Draugiški kombainams",
+	["vjbase.menu.npc.options.togglefriendlyplayer"] = "Draugiški žaidėjams",
+	["vjbase.menu.npc.options.togglefriendlyzombie"] = "Draugiški zombiams",
+	["vjbase.menu.npc.options.togglefriendlyvj"] = "Draugiški VJ Base personažams",
+	["vjbase.menu.npc.options.label2"] = "Visi VJ SNPC personažai bus sąjungininkai!",
+	["vjbase.menu.npc.options.label3"] = "Lavonų, nuplėšimo ir sveikatos parinktys:",
+	["vjbase.menu.npc.options.collision.header"] = "Lavonų susidūrimas:",
+	["vjbase.menu.npc.options.collision.default"] = "Numatytas | Išimtys: žaidėjai, personažai, ginklai, lėlės",
+	["vjbase.menu.npc.options.collision.everything"] = "Nėra išimčių | Viskas!",
+	["vjbase.menu.npc.options.collision.onlyworld"] = "Tik pasaulis",
+	["vjbase.menu.npc.options.collision.excludedebris"] = "Išimtys: lavonai, nuolaužos",
+	["vjbase.menu.npc.options.collision.excludeplynpcs"] = "Išimtys: žaidėjai, personažai",
+	["vjbase.menu.npc.options.collision.excludeply"] = "Išimtys: žaidėjai",
+	["vjbase.menu.npc.options.corpselimit"] = "Lavonų riba, numatyta:32",
+	["vjbase.menu.npc.options.label4"] = "Lavonų riba, kai „Palikti lavonus“ yra išjungtas",
+	["vjbase.menu.npc.options.toggleundocorpses"] = "Neanuliuojami lavonai (anuliavimo klavišas)",
+	["vjbase.menu.npc.options.togglecorpsefade"] = "Lavonų išnykimas",
+	["vjbase.menu.npc.options.corpsefadetime"] = "Lavonų išnykimo laikas",
+	["vjbase.menu.npc.options.label5"] = "Iš viso: 600 sekundžių (10 minučių)",
+	["vjbase.menu.npc.options.togglegibcollision"] = "Susiduriančios kūno dalys",
+	["vjbase.menu.npc.options.togglefadegibs"] = "Kūno dalių išnykimas",
+	["vjbase.menu.npc.options.gibfadetime"] = "Kūno dalių išnykimo laikas",
+	["vjbase.menu.npc.options.label6"] = "Numatytas: 30 | Iš viso: 600 sekundžių (10 minučių)",
+	["vjbase.menu.npc.options.togglesnpcgodmode"] = "Nemirtingumas (negalės būti sužaloti)",
+	["vjbase.menu.npc.options.health"] = "Sveikata:",
+	["vjbase.menu.npc.options.defaulthealth"] = "0 = numatyta sveikata (daugiausia 9 skaitmenys!)",
+	["vjbase.menu.npc.options.label7"] = "DI parinktys:",
+	["vjbase.menu.npc.options.toggleknowenemylocation"] = "Visada žinoti žaidėjo vietą",
+	["vjbase.menu.npc.options.sightdistance"] = "Regėjimo atstumas:",
+	["vjbase.menu.npc.options.label8"] = "Kiekvienas personažas turi savo atstumą, bet tai padarys jį visiems vienodą, todėl būkite atsargūs! (0 = įprastas | Vidutinis: 10 tūkst.)",
+	["vjbase.menu.npc.settings.perf.processtime"] = "Apdorojimo laikas",
+	["vjbase.menu.npc.settings.perf.processtime.button"] = "Kas yra apdorojimo laikas?",
+	["vjbase.menu.npc.settings.perf.processtime.label"] = "Numatyta: 1 | Mažesnė vertė reiškia mažiau stabilesnį žaidimą!",
+	["vjbase.menu.npc.options.label10"] = "Įvairios parinktys:",
+	["vjbase.menu.npc.options.togglegmoddecals"] = "Naudoti dabartinį Garry's Mod kraują",
+	["vjbase.menu.npc.options.label11"] = "Spalvos, kurios nėra geltonos ar raudonos, nepasikeis!",
+	["vjbase.menu.npc.options.toggleitemdrops"] = "Daiktų išmetimas mirus",
+	["vjbase.menu.npc.options.toggleshowhudonkilled"] = "Rodyti HUD ekrane, kai nužudomas SNPC personažas (viršuje dešinėje)",
+	["vjbase.menu.npc.options.toggleaddfrags"] = "Pridėti taškus prie žaidėjo rezultatų lentos, kai nužudomas",
+	["vjbase.menu.npc.options.togglecreatureopendoor"] = "Būtybės gali atidaryti duris",
+	["vjbase.menu.npc.options.togglehumansdropweapon"] = "Žmonės išmeta daiktus mirdami",
+	["vjbase.menu.npc.options.togglehumanscanjump"] = "Žmonės gali šokti",
+	["vjbase.menu.npc.options.toggleplydroppedweapons"] = "Žmonės gali paimti išmestus ginklus",
+
+	["vjbase.menu.npc.settings"] = "Nustatymai",
+	["vjbase.menu.npc.settings.title.ai"] = "DI nustatymai:",
+	["vjbase.menu.npc.settings.togglewandering"] = "Išjungti klaidžiojimą neveikimo metu",
+	["vjbase.menu.npc.settings.togglechasingenemy"] = "Išjungti priešo vyjimąsi",
+	["vjbase.menu.npc.settings.label.chasingenemy"] = "Naudokitės šiuo nustatymu atsargiai, jis gali sugadinti daug dalykų!",
+	["vjbase.menu.npc.settings.togglemedics"] = "Išjungti gydytojus SNPC personažus",
+	["vjbase.menu.npc.settings.togglefollowplayer"] = "Išjungti žaidėjo sekimą",
+	["vjbase.menu.npc.settings.label.followplayer"] = "Pavyzdys: kai spustelite E ant SNPC personažo, jie jus seks",
+	["vjbase.menu.npc.settings.toggleallies"] = "Išjungti aljansus (nėra sąjungininkų!)",
+	["vjbase.menu.npc.settings.togglebecomeenemytoply"] = "Išjungti sąjungininkų tapimą priešais",
+	["vjbase.menu.npc.settings.toggleproppush"] = "Išjungti daiktų stūmimą (būtybės)",
+	["vjbase.menu.npc.settings.togglepropattack"] = "Išjungti puolimą daiktais (būtybės)",
+	["vjbase.menu.npc.settings.togglescarednade"] = "Išjungti žmonių atsitraukimą nuo granatų",
+	["vjbase.menu.npc.settings.togglereloading"] = "Išjungti ginklų užtaisymą",
+	["vjbase.menu.npc.settings.title.attack"] = "Puolimo nustatymai:",
+	["vjbase.menu.npc.settings.togglemelee"] = "Išjungti artimąjį puolimą",
+	["vjbase.menu.npc.settings.togglerange"] = "Išjungti tolimajį puolimą",
+	["vjbase.menu.npc.settings.toggleleap"] = "Išjungti puolimus su šuoliu (būtybės)",
+	["vjbase.menu.npc.settings.togglethrownade"] = "Išjungti granatų metimą (žmonės)",
+	["vjbase.menu.npc.settings.toggleweapons"] = "Išjungti ginklus (žmonės)",
+	["vjbase.menu.npc.settings.label.noweapon"] = "Žmonės negalės naudoti ginklų!",
+	["vjbase.menu.npc.settings.togglemeleedsp"] = "Išjungti DSP efektus artimos kovos žalai",
+	["vjbase.menu.npc.settings.toggleslowplayer"] = "Išjungti žaidėjų sulėtėjimą po artimos kovos puolimo",
+	["vjbase.menu.npc.settings.togglebleedonmelee"] = "Išjungti žaidėjų/personažų kraujavimą po artimos kovos puolimo",
+	["vjbase.menu.npc.settings.title.misc"] = "Įvairūs nustatymai:",
+	["vjbase.menu.npc.settings.toggleidleparticles"] = "Išjungti neveikimo daleles ir efektus",
+	["vjbase.menu.npc.settings.label.idleparticles"] = "Išjungimas gali padėti našumui",
+	["vjbase.menu.npc.settings.togglesnpcchat"] = "Išjungti SNPC personažų pokalbį",
+	["vjbase.menu.npc.settings.label.npcchat"] = "Pavyzdžiui: „Mokslininkas dabar jus seka“",
+	["vjbase.menu.npc.settings.title.damagecorpse"] = "Žalos ir lavonų nustatymai:",
+	["vjbase.menu.npc.settings.toggleflinching"] = "Išjungti krūptelėjimą",
+	["vjbase.menu.npc.settings.togglebleeding"] = "Išjungti kraujavimą",
+	["vjbase.menu.npc.settings.label.bleeding"] = "Išjungia kraujo daleles, lipdukus, balas ir t.t.",
+	["vjbase.menu.npc.settings.togglebloodpool"] = "Išjungti kraujo balas (mirus)",
+	["vjbase.menu.npc.settings.togglegib"] = "Išjungti kūno dalių nutraukimą",
+	["vjbase.menu.npc.settings.label.gib"] = "Išjungimas gali padėti našumui",
+	["vjbase.menu.npc.settings.togglegibdecals"] = "Išjungti kūno dalių lipdukus",
+	["vjbase.menu.npc.settings.togglegibdeathparticles"] = "Išjungti kūno dalių/mirties daleles ir efektus",
+	["vjbase.menu.npc.settings.toggledeathanim"] = "Išjungti mirties animaciją",
+	["vjbase.menu.npc.settings.togglecorpses"] = "Išjungti lavonus",
+	["vjbase.menu.npc.settings.title.passive"] = "Pasyvūs nustatymai:",
+	["vjbase.menu.npc.settings.togglerunontouch"] = "Išjungti bėgimą prisilėtus",
+	["vjbase.menu.npc.settings.togglerunonhit"] = "Išjungti bėgimą pataikius",
+
+	["vjbase.menu.npc.settings.snd"] = "Garso nustatymai",
+	["vjbase.menu.npc.settings.snd.togglesounds"] = "Išjungti visus garsus",
+	["vjbase.menu.npc.settings.snd.togglesoundtrack"] = "Išjungti garso takelius",
+	["vjbase.menu.npc.settings.snd.toggleidle"] = "Išjungti neveikimo garsus",
+	["vjbase.menu.npc.settings.snd.togglebreathing"] = "Išjungti kvėpavimo garsus",
+	["vjbase.menu.npc.settings.snd.togglefootsteps"] = "Išjungti žingsnių garsus",
+	["vjbase.menu.npc.settings.snd.togglemelee"] = "Išjungti artimos kovos puolimo garsus",
+	["vjbase.menu.npc.settings.snd.togglerange"] = "Išjungti tolimos kovos puolimų garsus",
+	["vjbase.menu.npc.settings.snd.togglealert"] = "Išjungti įspėjimo garsus",
+	["vjbase.menu.npc.settings.snd.togglepain"] = "Išjungti skausmo garsus",
+	["vjbase.menu.npc.settings.snd.toggledeath"] = "Išjungti mirties garsus",
+	["vjbase.menu.npc.settings.snd.togglegibbing"] = "Išjungti kūno dalių nutraukimo garsus",
+	["vjbase.menu.npc.settings.snd.togglegibbing.label"] = "Taip pat taikoma garsams, kurie skamba, kai daiktas su kažkuo susiduria",
+	["vjbase.menu.npc.settings.snd.togglemedic"] = "Išjungti gydytojo garsus",
+	["vjbase.menu.npc.settings.snd.togglefollowing"] = "Išjungti sekimo garsus",
+	["vjbase.menu.npc.settings.snd.togglecallhelp"] = "Išjungti pakalbos kvietimo garsus",
+	["vjbase.menu.npc.settings.snd.togglereceiveorder"] = "Išjungti įsakymų gavimo garsus",
+	["vjbase.menu.npc.settings.snd.togglebecomeenemy"] = "Išjungti tapimo priešu garsus",
+	["vjbase.menu.npc.settings.snd.toggleplayersight"] = "Išjungti žaidėjo pamatymo garsus",
+	["vjbase.menu.npc.settings.snd.toggleplayersight.label"] = "Suskamba ypatingas garsas, kai SNPC personažas pamato žaidėją",
+	["vjbase.menu.npc.settings.snd.toggledmgbyplayer"] = "Išjungti žaidėjo daromos žalos garsus",
+	["vjbase.menu.npc.settings.snd.toggledmgbyplayer.label"] = "Kai žaidėjas šauna į SNPC personažą, paprastai draugiški SNPC personažai",
+	["vjbase.menu.npc.settings.snd.toggleleap"] = "Išjungti puolimų su šuoliu garsus",
+	["vjbase.menu.npc.settings.snd.toggleslowedplayer"] = "Išjungti sulėtintų žaidėjų garsus",
+	["vjbase.menu.npc.settings.snd.toggleslowedplayer.label"] = "Skambantys garsai, kai žadėją sulėtiną artimos kovos puolimas",
+	["vjbase.menu.npc.settings.snd.togglegrenade"] = "Išjungti granatos puolimo garsus",
+	["vjbase.menu.npc.settings.snd.togglegrenadesight"] = "Išjungti granatos pamatymo garsus",
+	["vjbase.menu.npc.settings.snd.togglesuppressing"] = "Išjungti slopinimo sušukimo garsus",
+	["vjbase.menu.npc.settings.snd.togglereload"] = "Išjungti užtaisymo sušukimo garsus",
+
+	["vjbase.menu.npc.settings.dev"] = "Kūrėjo nustatymai",
+	["vjbase.menu.npc.settings.dev.label1"] = "Šie nustatymai yra naudojami kuriant SNPC personažus.",
+	["vjbase.menu.npc.settings.dev.label2"] = "ĮSPĖJIMAS: kai kurios parinktys prives prie žaidimo strigimo!",
+	["vjbase.menu.npc.settings.dev.toggledev"] = "Įgalinti kūrėjo režimą?",
+	["vjbase.menu.npc.settings.dev.label3"] = "Šios parinktys turi būti įgalintos čia arba naudojant kontekstinį meniu (būtina toliau esančioms parinktims).",
+	["vjbase.menu.npc.settings.dev.printtouch"] = "Spausdinti prisilėtus (konsolė)",
+	["vjbase.menu.npc.settings.dev.printcurenemy"] = "Spausdinti dabartinį priešą (konsolė)",
+	["vjbase.menu.npc.settings.dev.printlastseenenemy"] = "Spausdinti laiką „LastSeenEnemy“ (pokalbis)",
+	["vjbase.menu.npc.settings.dev.printonreset"] = "Spausdinti atkuriant priešą (konsolė)",
+	["vjbase.menu.npc.settings.dev.printonstopattack"] = "Spausdinti sustabdant puolimą (konsolė)",
+	["vjbase.menu.npc.settings.dev.printtakingcover"] = "Spausdinti prisidengiant (konsolė)",
+	["vjbase.menu.npc.settings.dev.printondamage"] = "Spausdinti žalą (konsolė)",
+	["vjbase.menu.npc.settings.dev.printondeath"] = "Spausdinti mirtį (konsolė)",
+	["vjbase.menu.npc.settings.dev.printweapon"] = "Spausdinti dabartinį ginklą (konsolė)",
+	["vjbase.menu.npc.settings.dev.printammo"] = "Spausdinti šovinių skaičių (konsolė)",
+	["vjbase.menu.npc.settings.dev.printaccuracy"] = "Spausdinti ginklo tikslumą (konsolė)",
+	["vjbase.menu.npc.settings.dev.cachedmodels"] = "Modeliai podėlyje (konsolė)",
+	["vjbase.menu.npc.settings.dev.numofnpcs"] = "Personažų skaičius (pokalbis)",
+	["vjbase.menu.npc.settings.dev.reloadsounds"] = "Iš naujo įkelti garsus",
+	["vjbase.menu.npc.settings.dev.reloadmaterials"] = "Iš naujo įkelti medžiagas (VMT)",
+	["vjbase.menu.npc.settings.dev.reloadtextures"] = "Iš naujo įkelti tekstūras (VTF)",
+	["vjbase.menu.npc.settings.dev.reloadmodels"] = "Iš naujo modelius",
+	["vjbase.menu.npc.settings.dev.reloadspawnmenu"] = "Iš naujo įkelti objektų sąrašus",
+
+	["vjbase.menu.npc.settings.con"] = "Valdymo nustatymai",
+	["vjbase.menu.npc.settings.con.label1"] = "Dėmesio: tai yra klientiniai nustatymai!",
+	["vjbase.menu.npc.settings.con.label2"] = "Kaip toli ar arti pasikeičia priartinimas po kiekvieno spustelėjimo.",
+	["vjbase.menu.npc.settings.con.displayhud"] = "Rodyti HUD",
+	["vjbase.menu.npc.settings.con.camzoomdistance"] = "Kameros judėjimo atstumas",
+	["vjbase.menu.npc.settings.con.camspeed"] = "Kameros greitis",
+	["vjbase.menu.npc.settings.con.camzoomspeed"] = "Kameros priartinimo greitis",
+	["vjbase.menu.npc.settings.con.diewithnpc"] = "Valdytojas miršta kartu su personažu (reikalauja prisikėlimo iš naujo!)",
+	["vjbase.menu.npc.settings.con.displaydev"] = "Rodyti kūrėjo esybes",
+	["vjbase.menu.npc.settings.con.label3"] = "Klavišų priskyrimas:",
+	["vjbase.menu.npc.settings.con.bind.header1"] = "Valdyti",
+	["vjbase.menu.npc.settings.con.bind.header2"] = "Aprašas",
+	["vjbase.menu.npc.settings.con.bind.clickmsg1"] = "Pasirinktas klavišas:",
+	["vjbase.menu.npc.settings.con.bind.clickmsg2"] = "Aprašas:",
+	["vjbase.menu.npc.settings.con.bind.movement"] = "Judėjimas (palaiko 8-Way)",
+	["vjbase.menu.npc.settings.con.bind.exitcontrol"] = "Išeiti iš valdymo",
+	["vjbase.menu.npc.settings.con.bind.meleeattack"] = "Artimos kovos puolimas",
+	["vjbase.menu.npc.settings.con.bind.rangeattack"] = "Tolimos kovos puolimas",
+	["vjbase.menu.npc.settings.con.bind.leaporgrenade"] = "Puolimas su šuoliu/granata",
+	["vjbase.menu.npc.settings.con.bind.reloadweapon"] = "Užtaisyti ginklą",
+	["vjbase.menu.npc.settings.con.bind.togglebullseye"] = "Perjungti personažo-taikinio sekimą",
+	["vjbase.menu.npc.settings.con.bind.cameramode"] = "Keisti kameros režimą",
+	["vjbase.menu.npc.settings.con.bind.camerazoom"] = "Priartinti ir nutolinti",
+	["vjbase.menu.npc.settings.con.bind.cameraup"] = "Perkelti kamerą aukštyn",
+	["vjbase.menu.npc.settings.con.bind.cameradown"] = "Perkelti kamerą žemyn",
+	["vjbase.menu.npc.settings.con.bind.cameraforward"] = "Perkelti kamerą pirmyn",
+	["vjbase.menu.npc.settings.con.bind.camerabackward"] = "Perkelti kamerą atgal",
+	["vjbase.menu.npc.settings.con.bind.cameraleft"] = "Perkelti kamerą kairėn",
+	["vjbase.menu.npc.settings.con.bind.cameraright"] = "Perkelti kamerą dešinėn",
+	["vjbase.menu.npc.settings.con.bind.resetzoom"] = "Atkurti kameros poziciją",
+
+	-- Weapon Client Settings
+	["vjbase.menu.clweapon"] = "Kliento nustatymai",
+	["vjbase.menu.clweapon.notice"] = "Dėmesio: šie nustatymai yra klientiniai. Jie nepasikeis kitiems žaidėjams!",
+	["vjbase.menu.clweapon.togglemuzzle"] = "Išjungti vamzdžio liepsną",
+	["vjbase.menu.clweapon.togglemuzzlelight"] = "Išjungti vamzdžio liepsnos dinaminę šviesą",
+	["vjbase.menu.clweapon.togglemuzzle.label"] = "Vamzdžio liepsnos išjungimas taip pat išjungs šį nustatymą",
+	["vjbase.menu.clweapon.togglemuzzlesmoke"] = "Išjungti vamzdžio dūmus",
+	["vjbase.menu.clweapon.togglemuzzleheatwave"] = "Išjungti vamzdžio karščio bangą",
+	["vjbase.menu.clweapon.togglemuzzlebulletshells"] = "Išjungti dūmus iš šūvių",
+
+	-- NPC Properties (C Menu)
+	["vjbase.menuproperties.control"] = "VALDYTI",
+	["vjbase.menuproperties.guard"] = "Perjungti saugojimą",
+	["vjbase.menuproperties.wander"] = "Perjungti klaidžiojimą",
+	["vjbase.menuproperties.medic"] = "Padaryti gydytoju (perjungimas)",
+	["vjbase.menuproperties.allyme"] = "Sąjungininkas man",
+	["vjbase.menuproperties.hostileme"] = "Priešas man",
+	["vjbase.menuproperties.slay"] = "Nužudyti",
+	["vjbase.menuproperties.gib"] = "Nutraukti kūno dalis (jei įmanoma)",
+	["vjbase.menuproperties.devmode"] = "Įgalinti kūrėjo režimą",
+
+	-- Tools
+	["tool.vjstool.menu.tutorialvideo"] = "Mokomasis vaizdo įrašas",
+	["tool.vjstool.menu.label.recommendation"] = "Patariama naudoti šį įrankį tik VJ Base SNPC personažams.",
+
+	["tool.vjstool_bullseye.name"] = "Personažas-taikinys",
+	["tool.vjstool_bullseye.desc"] = "Sukuria personažą, kuris taps kitų personažų taikiniu",
+	["tool.vjstool_bullseye.left"] = "Kurti personažą-taikinį",
+	["tool.vjstool_bullseye.menu.help1"] = "Spustelėkite NAUDOTI ant esybės, kad įjungtumėte/išjungtumė.",
+	["tool.vjstool_bullseye.menu.help2"] = "Kai išjungta, šis personažas nebus taikinys.",
+	["tool.vjstool_bullseye.menu.label1"] = "Pasirinkite judėjimo rūšį",
+	["tool.vjstool_bullseye.menu.label2"] = "Modelio aplankas",
+	["tool.vjstool_bullseye.menu.toggleusestatus"] = "Naudoti pasirinktines spalvas (įjungtas/išjungtas)",
+	["tool.vjstool_bullseye.menu.togglestartactivated"] = "Prasideda įjungtas",
+
+	["tool.vjstool_entityscanner.name"] = "Esybių skaitytuvas",
+	["tool.vjstool_entityscanner.desc"] = "Gaukite informacijos apie esybę",
+	["tool.vjstool_entityscanner.left"] = "Spausdinti informaciją apie esybę konsolėje",
+	["tool.vjstool_entityscanner.label"] = "Spausdina informaciją apie bet kurią pasirinktą esybę. Bus atspausdinta konsolėje.",
+
+	["tool.vjstool_healthmodifier.name"] = "Sveikatos keitimas",
+	["tool.vjstool_healthmodifier.desc"] = "Esybės sveikatos keitimas",
+	["tool.vjstool_healthmodifier.left"] = "Nustatyti sveikatą",
+	["tool.vjstool_healthmodifier.right"] = "Nustatyti sveikatą ir didžiausią sveikatą",
+	["tool.vjstool_healthmodifier.reload"] = "Suteikia esybei didžiausią sveikatą",
+	["tool.vjstool_healthmodifier.adminonly"] = "Tik administratoriai gali keisti sveikatą ar ją suteikti kitiems žaidėjams.",
+	["tool.vjstool_healthmodifier.sliderhealth"] = "Sveikata",
+	["tool.vjstool_healthmodifier.label1"] = "Sekimas galimas tik VJ Base SNPC personažams:",
+	["tool.vjstool_healthmodifier.togglegodmode"] = "Nemirtingumas (nenugalimas)",
+	["tool.vjstool_healthmodifier.togglehealthregen"] = "Įgalinti sveikatos atgavimą",
+	["tool.vjstool_healthmodifier.sliderhealthregenamt"] = "Atgavimo kiekis",
+	["tool.vjstool_healthmodifier.sliderhealthregendelay"] = "Atgavimo delsa",
+
+	["tool.vjstool_notarget.name"] = "Nematomumas",
+	["tool.vjstool_notarget.desc"] = "Priverčia visus personažus nematyti tam tikros esybės",
+	["tool.vjstool_notarget.left"] = "Perjungti nematomumą sau",
+	["tool.vjstool_notarget.right"] = "Perjungti nematomumą personažui ar žaidėjui",
+	["tool.vjstool_notarget.label"] = "Kai nematomumas yra įjungtas esybei, personažai į ją nesitaikys!",
+
+	["tool.vjstool_npcequipment.name"] = "Personažų ginkluotė",
+	["tool.vjstool_npcequipment.desc"] = "Keičia personažų ginkluotę",
+	["tool.vjstool_npcequipment.left"] = "Keisti personažo ginkluotę",
+	["tool.vjstool_npcequipment.right"] = "Šalinti personažo ginkluotę",
+	["tool.vjstool_npcequipment.label"] = "Keičia ar šalina personažo ginkluotę.",
+	["tool.vjstool_npcequipment.selectedequipment"] = "Pasirinkta ginkluotė",
+	["tool.vjstool_npcequipment.print.doubleclick"] = "Dukart spustelėkite, kad pasirinktumėte ginklą.",
+	["tool.vjstool_npcequipment.print.weaponselected1"] = "Ginklas",
+	["tool.vjstool_npcequipment.print.weaponselected2"] = "pasirinkta!",
+	["tool.vjstool_npcequipment.header1"] = "Pavadinimas",
+	["tool.vjstool_npcequipment.header2"] = "Klasė",
+
+	["tool.vjstool_npcmover.name"] = "Personažų perkėlimas",
+	["tool.vjstool_npcmover.desc"] = "Kad perkeltumėte personažą, turite jį pasirinkti",
+	["tool.vjstool_npcmover.left"] = "Pasirinkti personažą",
+	["tool.vjstool_npcmover.right"] = "Bėgti iki vietos",
+	["tool.vjstool_npcmover.reload"] = "Eiti iki vietos",
+	["tool.vjstool_npcmover.header1"] = "Pavadinimas",
+	["tool.vjstool_npcmover.header2"] = "Klasė",
+	["tool.vjstool_npcmover.header3"] = "Informacija",
+	["tool.vjstool_npcmover.buttonunselectall"] = "Atšaukti visų personažų pasirinkimą",
+	["tool.vjstool_npcmover.print.unselectedall"] = "Atšauktas visų personažų pasirinkimas!",
+	["tool.vjstool_npcmover.print.unselectedall.error"] = "Nėra ko atšaukti!",
+
+	["tool.vjstool_npcrelationship.name"] = "Personažų santykių keitimas",
+	["tool.vjstool_npcrelationship.desc"] = "Keiskite būtybių santykius",
+	["tool.vjstool_npcrelationship.left"] = "Taikyti santykių lentelę",
+	["tool.vjstool_npcrelationship.right"] = "Gauti dabartines klases",
+	["tool.vjstool_npcrelationship.reload"] = "Taikyti santykių lentelę sau",
+	["tool.vjstool_npcrelationship.label1"] = "Keičia personažo santykius. Iš esmės tai, ką jis jaučia esybei.",
+	["tool.vjstool_npcrelationship.header"] = "Klasė",
+	["tool.vjstool_npcrelationship.label2"] = "Spustelėkite GRĮŽTI, kad pridėtumėte klasę.",
+	["tool.vjstool_npcrelationship.button.combine"] = "Įtraukti kombainų klasę",
+	["tool.vjstool_npcrelationship.button.antlion"] = "Įtraukti skruzdžių liūtų klasę",
+	["tool.vjstool_npcrelationship.button.zombie"] = "Įtraukti zombių klasę",
+	["tool.vjstool_npcrelationship.button.player"] = "Įtraukti žaidėjų klasę",
+	["tool.vjstool_npcrelationship.togglealliedply"] = "Sąjungininkas su visais žaidėjo sąjungininkais?",
+	["tool.vjstool_npcrelationship.label3"] = "Taikoma tik VJ Base SNPC personažams ir reikalauja, kad jie turėtų",
+	["tool.vjstool_npcrelationship.print.applied"] = "Pritaikyta santykių lentelė",
+
+	["tool.vjstool_npcspawner.name"] = "Personažų kūrėjas",
+	["tool.vjstool_npcspawner.desc"] = "Sukuria tinkinamą personažų kūrėją",
+	["tool.vjstool_npcspawner.left"] = "Kurti personažų kūrėją",
+	["tool.vjstool_npcspawner.right"] = "Kurti esybes vieną kartą",
+	["tool.vjstool_npcspawner.selectednpc"] = "Pasirinkti personažai",
+	["tool.vjstool_npcspawner.spawnpos.forward"] = "Pozicija | Pirmyn",
+	["tool.vjstool_npcspawner.spawnpos.right"] = "Pozicija | Dešinėn",
+	["tool.vjstool_npcspawner.spawnpos.up"] = "Pozicija | Aukštyn",
+	["tool.vjstool_npcspawner.selectweapon"] = "Pasirinktas ginklas",
+	["tool.vjstool_npcspawner.button.updatelist"] = "Atnaujinti sąrašą",
+	["tool.vjstool_npcspawner.label1"] = "Dukart spustelėkite ant daikto, kad jį pašalintumėte.",
+	["tool.vjstool_npcspawner.header1"] = "Pavadinimas",
+	["tool.vjstool_npcspawner.header2"] = "Pozicija",
+	["tool.vjstool_npcspawner.header3"] = "Ginkluotė",
+	["tool.vjstool_npcspawner.label2"] = "Papildomos parinktys",
+	["tool.vjstool_npcspawner.toggle.spawnsound"] = "Groti personažo sukūrimo garsą?",
+	["tool.vjstool_npcspawner.nextspawntime"] = "Laikas iki personažo sukūrimo",
+	["tool.vjstool_npcspawner.popup.header1"] = "Pavadinimas",
+	["tool.vjstool_npcspawner.popup.header2"] = "Klasė",
+	["tool.vjstool_npcspawner.popup.header3"] = "Kategorija",
+	["tool.vjstool_npcspawner.title1"] = "Dukart spustelėkite, kad pasirinktumėte personažą.",
+	["tool.vjstool_npcspawner.title2"] = "Dukart spustelėkite, kad pasirinktumėte ginklą.",
+}
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+local strings_spanish_latin = {
+	-- General Menu (Used everywhere)
+	["vjbase.menu.general.default"] = "Predeterminado",
+	["vjbase.menu.general.admin.only"] = "Nota: Solo admins pueden usar este menú.",
+	["vjbase.menu.general.admin.not"] = "¡No eres un admin!",
+	["vjbase.menu.general.reset.everything"] = "Resetear a predeterminado",
+	["vjbase.menu.general.npc.warnfuture"] = "ADVERTENCIA: ¡Solamente SNPCs aparecidos en el futuro serán afectados!",
+	["vjbase.menu.general.npc.creaturesettings"] = "Opciones de creatura:",
+	["vjbase.menu.general.npc.humansettings"] = "Opciones de humano:",
+	-- Menu Tabs			
+	["vjbase.menu.tabs.mainmenu"] = "Menú Principal",
+	["vjbase.menu.tabs.settings.npc"] = "Opciones de NPC",
+	["vjbase.menu.tabs.settings.weapon"] = "Opciones de Arma",
+	["vjbase.menu.tabs.settings.hud"] = "Opciones de HUD",
+	["vjbase.menu.tabs.tools"] = "Herramientas",
+	["vjbase.menu.tabs.configures.snpc"] = "Configuraciones de SNPC",
+	-- Main Menu			
+	["vjbase.menu.cleanup"] = "Limpiar",
+	["vjbase.menu.cleanup.all"] = "Limpiar Todo",
+	["vjbase.menu.cleanup.stopsounds"] = "Parar Todos los Sonidos",
+	["vjbase.menu.cleanup.remove.vjnpcs"] = "Remover todos los NPCs de VJ",
+	["vjbase.menu.cleanup.remove.npcs"] = "Remover todos los NPCs",
+	["vjbase.menu.cleanup.remove.spawners"] = "Remover todos los Creadores",
+	["vjbase.menu.cleanup.remove.corpses"] = "Remover todos los Cadaveres",
+	["vjbase.menu.cleanup.remove.vjgibs"] = "Remover todos los Gibs VJ",
+	["vjbase.menu.cleanup.remove.groundweapons"] = "Remover Todas las Armas del suelo",
+	["vjbase.menu.cleanup.remove.props"] = "Remover todos los Props",
+	["vjbase.menu.cleanup.remove.decals"] = "Remover todos los Sprays",
+	["vjbase.menu.cleanup.remove.allweapons"] = "Remover todas tus Armas",
+	["vjbase.menu.cleanup.remove.allammo"] = "Remover toda tu Munición",
+
+	["vjbase.menu.helpsupport"] = "Contacto y Apoyo",
+	["vjbase.menu.helpsupport.reportbug"] = "Reportar un Bug",
+	["vjbase.menu.helpsupport.suggestion"] = "Sugerir Algo",
+	["vjbase.menu.helpsupport.discord"] = "¡Unete a mi servidor de Discord!",
+	["vjbase.menu.helpsupport.steam"] = "¡Unete a mi grupo de Steam!",
+	["vjbase.menu.helpsupport.youtube"] = "¡Suscribete a mi canal de YouTube!",
+	["vjbase.menu.helpsupport.twitter"] = "¡Sigueme en Twitter!",
+	["vjbase.menu.helpsupport.patreon"] = "¡Doname en Patreon!",
+	["vjbase.menu.helpsupport.label1"] = "¡Sigueme en uno de estos links para estar al pendiente de mis addons!",
+	["vjbase.menu.helpsupport.label2"] = "¡Las donaciones me ayudan y me motivan a crear/actualizar addons! Gracias!",
+	["vjbase.menu.helpsupport.thanks"] = "¡Gracias por el apoyo!",
+			
+	["vjbase.menu.svsettings"] = "Ajustes del Servidor Admin",
+	["vjbase.menu.svsettings.label"] = "ADVERTENCIA: ¡ALGUNOS AJUSTES NECESITAN TENER LOS CHEATS ACTIVADOS!",
+	["vjbase.menu.svsettings.admin.npcproperties"] = "Restringir Propiedades de SNPCs a solamente Admins",
+	["vjbase.menu.svsettings.noclip"] = "Permitir NoClip",
+	["vjbase.menu.svsettings.weapons"] = "Permitir Armas",
+	["vjbase.menu.svsettings.pvp"] = "Permitir PvP",
+	["vjbase.menu.svsettings.godmode"] = "Modo Dios (Todos)",
+	["vjbase.menu.svsettings.bonemanip.npcs"] = "Manipular los huesos de NPCs",
+	["vjbase.menu.svsettings.bonemanip.players"] = "Manipular los huesos de los Jugadores",
+	["vjbase.menu.svsettings.bonemanip.others"] = "Manipular los huesos de los Otros",
+	["vjbase.menu.svsettings.timescale.general"] = "TimeScale General",
+	["vjbase.menu.svsettings.timescale.physics"] = "TimeScale de Físicas",
+	["vjbase.menu.svsettings.gravity"] = "Gravedad General",
+	["vjbase.menu.svsettings.maxentsprops"] = "Máximo de Props/Entidades",
+			
+	["vjbase.menu.clsettings"] = "Ajustes del Cliente",
+	["vjbase.menu.clsettings.label"] = "Utiliza este menú para personalizar tus ajustes del Cliente, ¡los servidores no pueden cambiar estos ajustes!",
+	["vjbase.menu.clsettings.labellang"] = "Selección de Idioma",
+	["vjbase.menu.clsettings.notify.lang"] = "Idioma De VJ Base Establecido Al:",
+			
+	["vjbase.menu.info"] = "Información",
+			
+	["vjbase.menu.label"] = "Plugins Instalados",
+	["vjbase.menu.plugins.label"] = "Lista de plugins de VJ Base instalados.",
+	["vjbase.menu.plugins.version"] = "Versión:",
+	["vjbase.menu.plugins.totalplugins"] = "Total de Plugins:",
+	["vjbase.menu.plugins.header1"] = "Nombre",
+	["vjbase.menu.plugins.header2"] = "Tipo",
+	["vjbase.menu.plugins.notfound"] = "No Se Encontraron Plugins",
+	["vjbase.menu.plugins.changelog"] = "Registro de Cambios",
+	["vjbase.menu.plugins.makeaddon"] = "¿Quieres hacer un addon?",
+}
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- ///// WARNING: Don't touch anything above this line! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+local strings_chinese_simplified = {
+	-- Spawn Menu
+	["vjbase.spawn.menu.npc.disablethinking"] = "AI 停止思考",
+	["vjbase.spawn.menu.npc.ignoreplayers"] = "AI 无视玩家",
+	["vjbase.spawn.menu.npc.keepcorpses"] = "NPC 尸体碰撞/保留",
+	["vjbase.spawn.menu.npc.guard"] = "NPC 作为守卫生成",
+	
+	-- General Menu (Used everywhere)
+	["vjbase.menu.general.default"] = "默认",
+	["vjbase.menu.general.admin.only"] = "注意：只有管理员可以使用此菜单。",
+	["vjbase.menu.general.admin.not"] = "你不是管理员！",
+	["vjbase.menu.general.reset.everything"] = "重置为默认值",
+	["vjbase.menu.general.npc.warnfuture"] = "警告：只对之后生成的 SNPC 有效！",
+	["vjbase.menu.general.npc.creaturesettings"] = "生物设置：",
+	["vjbase.menu.general.npc.humansettings"] = "人类设置：",
+	
+	-- Menu Tabs
+	["vjbase.menu.tabs.mainmenu"] = "主菜单",
+	["vjbase.menu.tabs.settings.npc"] = "NPC 设置",
+	["vjbase.menu.tabs.settings.weapon"] = "武器设置",
+	["vjbase.menu.tabs.settings.hud"] = "HUD 设置",
+	["vjbase.menu.tabs.tools"] = "工具",
+	["vjbase.menu.tabs.configures.snpc"] = "SNPC 配置",
+	
+	-- Main Menu
+	["vjbase.menu.cleanup"] = "清除",
+	["vjbase.menu.cleanup.all"] = "清除全部",
+	["vjbase.menu.cleanup.stopsounds"] = "停止所有音效",
+	["vjbase.menu.cleanup.remove.vjnpcs"] = "移除所有 VJ NPC",
+	["vjbase.menu.cleanup.remove.npcs"] = "移除所有 NPC",
+	["vjbase.menu.cleanup.remove.spawners"] = "移除所有生成器",
+	["vjbase.menu.cleanup.remove.corpses"] = "移除所有尸体",
+	["vjbase.menu.cleanup.remove.vjgibs"] = "移除所有 VJ 碎块",
+	["vjbase.menu.cleanup.remove.groundweapons"] = "移除所有地上的武器",
+	["vjbase.menu.cleanup.remove.props"] = "移除所有物品",
+	["vjbase.menu.cleanup.remove.decals"] = "移除所有贴图",
+	["vjbase.menu.cleanup.remove.allweapons"] = "移除你所有的武器",
+	["vjbase.menu.cleanup.remove.allammo"] = "移除你所有的弹药",
+	
+	["vjbase.menu.helpsupport"] = "联系和支持",
+	["vjbase.menu.helpsupport.incompatibleaddons"] = "不兼容的插件",
+	["vjbase.menu.helpsupport.reportbug"] = "报告错误",
+	["vjbase.menu.helpsupport.suggestion"] = "提一些建议",
+	["vjbase.menu.helpsupport.discord"] = "在 Discord 上加我！",
+	["vjbase.menu.helpsupport.steam"] = "在 Steam 上加我！",
+	["vjbase.menu.helpsupport.youtube"] = "在 YouTube 上订阅我！",
+	["vjbase.menu.helpsupport.twitter"] = "在 Twitter 上关注我！",
+	["vjbase.menu.helpsupport.patreon"] = "在 Patreon 上赞助我！",
+	["vjbase.menu.helpsupport.label1"] = "通过以下链接之一来获取有关我的插件的更新！",
+	["vjbase.menu.helpsupport.label2"] = "赞助会帮助和鼓励我继续制作/更新插件！非常感谢你的支持。",
+	["vjbase.menu.helpsupport.thanks"] = "感谢你的支持！",
+	
+	["vjbase.menu.svsettings"] = "管理员服务器设置",
+	["vjbase.menu.svsettings.label"] = "警告：部分设置需要启用作弊！",
+	["vjbase.menu.svsettings.admin.npcproperties"] = "将 SNPC 属性限制为仅限管理员",
+	["vjbase.menu.svsettings.noclip"] = "允许穿墙",
+	["vjbase.menu.svsettings.weapons"] = "出生武器配给",
+	["vjbase.menu.svsettings.pvp"] = "允许 PvP",
+	["vjbase.menu.svsettings.godmode"] = "无敌模式（所有人）",
+	["vjbase.menu.svsettings.bonemanip.npcs"] = "NPC 骨骼编辑",
+	["vjbase.menu.svsettings.bonemanip.players"] = "玩家骨骼编辑",
+	["vjbase.menu.svsettings.bonemanip.others"] = "其他骨骼编辑",
+	["vjbase.menu.svsettings.timescale.general"] = "全局时间倍率",
+	["vjbase.menu.svsettings.timescale.physics"] = "物理时间倍率",
+	["vjbase.menu.svsettings.gravity"] = "全局重力",
+	["vjbase.menu.svsettings.maxentsprops"] = "最大道具/实体数量：",
+	
+	["vjbase.menu.clsettings"] = "客户端设置",
+	["vjbase.menu.clsettings.label"] = "使用此菜单来自定义你的客户端设置，服务器无法更改这里的设置！",
+	["vjbase.menu.clsettings.labellang"] = "选择语言...",
+	["vjbase.menu.clsettings.notify.lang"] = "VJ Base 的语言设置为：",
+	["vjbase.menu.clsettings.lang.auto"] = "自动设置语言",
+	["vjbase.menu.clsettings.lang.auto.label"] = "如果 VJ Base 设置为 GMod 不支持的语言，则忽略",
+
+	["vjbase.menu.info"] = "信息",
+	
+	["vjbase.menu.plugins"] = "已安装的插件",
+	["vjbase.menu.plugins.label"] = "已安装的 VJ Base 插件列表。",
+	["vjbase.menu.plugins.version"] = "版本：",
+	["vjbase.menu.plugins.totalplugins"] = "插件总数：",
+	["vjbase.menu.plugins.header1"] = "名称",
+	["vjbase.menu.plugins.header2"] = "类型",
+	["vjbase.menu.plugins.notfound"] = "未发现插件。",
+	["vjbase.menu.plugins.changelog"] = "更新日志",
+	["vjbase.menu.plugins.makeaddon"] = "想要制作一个模组？",
+	["vjbase.menu.plugins.chat.pluginname"] = "插件名称：",
+	["vjbase.menu.plugins.chat.plugintypes"] = "插件类型：",
+	
+	-- SNPC Menus
+	["vjbase.menu.npc.options"] = "选项",
+	["vjbase.menu.npc.options.difficulty.header"] = "选择难度：",
+	["vjbase.menu.npc.options.difficulty.neanderthal"] = "[-3] 原始人 | -99% 的生命值和伤害",
+	["vjbase.menu.npc.options.difficulty.childs_play"] = "[-2] 儿童游戏 | -75% 的生命值和伤害",
+	["vjbase.menu.npc.options.difficulty.easy"] = "[-1] 简单 | -50% 的生命值和伤害",
+	["vjbase.menu.npc.options.difficulty.normal"] = "[0] 正常 | 默认的生命值和伤害",
+	["vjbase.menu.npc.options.difficulty.hard"] = "[1] 困难 | +50% 的生命值和伤害",
+	["vjbase.menu.npc.options.difficulty.insane"] = "[2] 疯狂 | +100% 的生命值和伤害",
+	["vjbase.menu.npc.options.difficulty.impossible"] = "[3] 不可能 | +150% 的生命值和伤害",
+	["vjbase.menu.npc.options.difficulty.nightmare"] = "[4] 噩梦 | +250% 的生命值和伤害",
+	["vjbase.menu.npc.options.difficulty.hell_on_earth"] = "[5] 炼狱 | +350% 的生命值和伤害",
+	["vjbase.menu.npc.options.difficulty.total_annihilation"] = "[6] 横扫千军 | +500% 的生命值和伤害",
+	["vjbase.menu.npc.options.label1"] = "关系设置：",
+	["vjbase.menu.npc.options.togglefriendlyantlion"] = "对蚁狮友好",
+	["vjbase.menu.npc.options.togglefriendlycombine"] = "对联合军友好",
+	["vjbase.menu.npc.options.togglefriendlyplayer"] = "对玩家友好",
+	["vjbase.menu.npc.options.togglefriendlyzombie"] = "对僵尸友好",
+	["vjbase.menu.npc.options.togglefriendlyvj"] = "对 VJ Base 实体友好",
+	["vjbase.menu.npc.options.label2"] = "所有的 VJ SNPC 彼此之间会变得友好！",
+	["vjbase.menu.npc.options.label3"] = "尸体，分尸，生命值选项：",
+	["vjbase.menu.npc.options.collision.header"] = "尸体碰撞选项：",
+	["vjbase.menu.npc.options.collision.default"] = "默认 | 不包括：玩家，NPC，武器，布娃娃",
+	["vjbase.menu.npc.options.collision.everything"] = "与一切碰撞！",
+	["vjbase.menu.npc.options.collision.onlyworld"] = "仅与世界碰撞",
+	["vjbase.menu.npc.options.collision.excludedebris"] = "不包括：尸体，碎片",
+	["vjbase.menu.npc.options.collision.excludeplynpcs"] = "不包括：玩家，NPC",
+	["vjbase.menu.npc.options.collision.excludeply"] = "不包括：玩家",
+	["vjbase.menu.npc.options.corpselimit"] = "尸体上限，默认：32",
+	["vjbase.menu.npc.options.label4"] = "当“保留尸体”关闭时，尸体的存在上限",
+	["vjbase.menu.npc.options.toggleundocorpses"] = "可撤销的尸体（撤销键）",
+	["vjbase.menu.npc.options.togglecorpsefade"] = "尸体消失",
+	["vjbase.menu.npc.options.corpsefadetime"] = "尸体消失时间",
+	["vjbase.menu.npc.options.label5"] = "最高：600 秒（10 分钟）",
+	["vjbase.menu.npc.options.togglegibcollision"] = "碎块可碰撞",
+	["vjbase.menu.npc.options.togglefadegibs"] = "碎块消失",
+	["vjbase.menu.npc.options.gibfadetime"] = "碎块消失时间",
+	["vjbase.menu.npc.options.label6"] = "默认：30 | 最高：600 秒（10 分钟）",
+	["vjbase.menu.npc.options.togglesnpcgodmode"] = "无敌模式（不会受到任何伤害）",
+	["vjbase.menu.npc.options.health"] = "生命值：",
+	["vjbase.menu.npc.options.defaulthealth"] = "0 = 默认生命值（最高 9 位数！）",
+	["vjbase.menu.npc.options.label7"] = "AI 选项：",
+	["vjbase.menu.npc.options.toggleknowenemylocation"] = "总是知道敌人的位置",
+	["vjbase.menu.npc.options.sightdistance"] = "视野距离：",
+	["vjbase.menu.npc.options.label8"] = "每个 NPC 都有自己的距离，但这个选项会使它们的视野距离变得一样，所以要谨慎使用！(0 = 默认值 | 平均：10k）",
+	["vjbase.menu.npc.settings.perf.processtime"] = "处理时间",
+	["vjbase.menu.npc.settings.perf.processtime.button"] = "什么是处理时间？",
+	["vjbase.menu.npc.settings.perf.processtime.label"] = "默认：1 | 越低的数字会导致更多的卡顿！",
+	["vjbase.menu.npc.options.label10"] = "其他选项：",
+	["vjbase.menu.npc.options.togglegmoddecals"] = "使用 Garry's Mod 当前的血迹贴图",
+	["vjbase.menu.npc.options.label11"] = "不是黄色或红色的血迹贴图不会改变！",
+	["vjbase.menu.npc.options.toggleitemdrops"] = "死亡时掉落物品",
+	["vjbase.menu.npc.options.toggleaddfrags"] = "死亡时在玩家的计分板上添加击杀数",
+	["vjbase.menu.npc.options.togglecreatureopendoor"] = "生物可以打开门",
+	["vjbase.menu.npc.options.togglehumansdropweapon"] = "人类在死亡时掉落武器",
+	["vjbase.menu.npc.options.togglehumanscanjump"] = "人类可以跳跃",
+	["vjbase.menu.npc.options.toggleplydroppedweapons"] = "玩家可以捡起掉落的武器",
+	
+	["vjbase.menu.npc.settings"] = "设置",
+	["vjbase.menu.npc.settings.title.ai"] = "AI 设置：",
+	["vjbase.menu.npc.settings.togglewandering"] = "禁止空闲时四处游荡",
+	["vjbase.menu.npc.settings.togglechasingenemy"] = "禁止追寻敌人",
+	["vjbase.menu.npc.settings.label.chasingenemy"] = "小心使用这个设置，它可以破坏很多东西！",
+	["vjbase.menu.npc.settings.togglemedics"] = "禁用医疗兵 SNPC",
+	["vjbase.menu.npc.settings.togglefollowplayer"] = "禁止跟随玩家",
+	["vjbase.menu.npc.settings.label.followplayer"] = "例如：你对着一个 SNPC 按下“E”键，它们就会跟着你",
+	["vjbase.menu.npc.settings.toggleallies"] = "禁止联盟（不可成为队友！）",
+	["vjbase.menu.npc.settings.togglebecomeenemytoply"] = "禁止队友成为敌人",
+	["vjbase.menu.npc.settings.togglecallhelp"] = "禁止呼救",
+	["vjbase.menu.npc.settings.toggleproppush"] = "禁用物品推动（生物）",
+	["vjbase.menu.npc.settings.togglepropattack"] = "禁用物品攻击（生物）",
+	["vjbase.menu.npc.settings.toggledangersight"] = "禁止人类检测危险和手雷",
+	["vjbase.menu.npc.settings.togglereloading"] = "禁用武器装填弹药",
+	["vjbase.menu.npc.settings.toggleeating"] = "禁用进食（例如尸体或碎块）",
+	["vjbase.menu.npc.settings.title.attack"] = "攻击设置：",
+	["vjbase.menu.npc.settings.togglemelee"] = "禁用近战攻击",
+	["vjbase.menu.npc.settings.togglerange"] = "禁用远程攻击",
+	["vjbase.menu.npc.settings.toggleleap"] = "禁用跳跃攻击（生物）",
+	["vjbase.menu.npc.settings.togglethrownade"] = "禁用手雷攻击（人类）",
+	["vjbase.menu.npc.settings.toggleweapons"] = "禁用武器（人类）",
+	["vjbase.menu.npc.settings.label.noweapon"] = "人类将不能使用武器！",
+	["vjbase.menu.npc.settings.togglemeleedsp"] = "禁用重型近战攻击的 DSP 效果",
+	["vjbase.menu.npc.settings.toggleslowplayer"] = "禁用玩家受到近战攻击时减速",
+	["vjbase.menu.npc.settings.togglebleedonmelee"] = "禁用玩家/NPC受到近战攻击时流血",
+	["vjbase.menu.npc.settings.title.misc"] = "其他设置：",
+	["vjbase.menu.npc.settings.toggleidleparticles"] = "禁用空闲时的粒子效果和特效",
+	["vjbase.menu.npc.settings.label.idleparticles"] = "启用此选项可以提高性能",
+	["vjbase.menu.npc.settings.togglesnpcchat"] = "禁用 SNPC 聊天框信息",
+	["vjbase.menu.npc.settings.label.npcchat"] = "例如：“科学家 现在正跟着你”",
+	["vjbase.menu.npc.settings.title.damagecorpse"] = "伤害和尸体设置：",
+	["vjbase.menu.npc.settings.toggleflinching"] = "禁用受到伤害时后靠",
+	["vjbase.menu.npc.settings.togglebleeding"] = "禁用流血",
+	["vjbase.menu.npc.settings.label.bleeding"] = "禁用血液粒子效果，贴图，血泊等。",
+	["vjbase.menu.npc.settings.togglebloodpool"] = "禁用血泊（死亡时）",
+	["vjbase.menu.npc.settings.togglegib"] = "禁用碎尸",
+	["vjbase.menu.npc.settings.label.gib"] = "启用此选项可以提高性能",
+	["vjbase.menu.npc.settings.togglegibdeathvfx"] = "禁用碎尸/死亡特效（粒子特效，血迹等）",
+	["vjbase.menu.npc.settings.toggledeathanim"] = "禁用死亡动画",
+	["vjbase.menu.npc.settings.togglecorpses"] = "禁用尸体",
+	["vjbase.menu.npc.settings.title.passive"] = "被动设置：",
+	["vjbase.menu.npc.settings.togglerunontouch"] = "禁用被触碰时奔跑",
+	["vjbase.menu.npc.settings.togglerunonhit"] = "禁用被击中时奔跑",
+	
+	["vjbase.menu.npc.settings.snd"] = "声音设置",
+	["vjbase.menu.npc.settings.snd.togglesounds"] = "禁用所有声音",
+	["vjbase.menu.npc.settings.snd.togglesoundtrack"] = "禁用音轨/音乐",
+	["vjbase.menu.npc.settings.snd.toggleidle"] = "禁用空闲音效",
+	["vjbase.menu.npc.settings.snd.togglebreathing"] = "禁用呼吸音效",
+	["vjbase.menu.npc.settings.snd.togglefootsteps"] = "禁用脚步音效",
+	["vjbase.menu.npc.settings.snd.togglemelee"] = "禁用近战攻击音效",
+	["vjbase.menu.npc.settings.snd.togglerange"] = "禁用远程攻击音效",
+	["vjbase.menu.npc.settings.snd.togglealert"] = "禁用警戒音效",
+	["vjbase.menu.npc.settings.snd.togglepain"] = "禁用疼痛音效",
+	["vjbase.menu.npc.settings.snd.toggledeath"] = "禁用死亡音效",
+	["vjbase.menu.npc.settings.snd.togglegibbing"] = "禁用碎尸音效",
+	["vjbase.menu.npc.settings.snd.togglegibbing.label"] = "同时也禁用碎块与其他东西碰撞时的音效",
+	["vjbase.menu.npc.settings.snd.togglemedic"] = "禁用医疗兵音效",
+	["vjbase.menu.npc.settings.snd.togglefollowing"] = "禁用跟随音效",
+	["vjbase.menu.npc.settings.snd.togglecallhelp"] = "禁用寻求帮助音效",
+	["vjbase.menu.npc.settings.snd.togglereceiveorder"] = "禁用接受命令音效",
+	["vjbase.menu.npc.settings.snd.togglebecomeenemy"] = "禁用成为玩家敌人音效",
+	["vjbase.menu.npc.settings.snd.toggleplayersight"] = "禁用发现玩家音效",
+	["vjbase.menu.npc.settings.snd.toggleplayersight.label"] = "当 SNPC 看到玩家时播放的特殊音效",
+	["vjbase.menu.npc.settings.snd.toggledmgbyplayer"] = "禁用受到玩家攻击音效",
+	["vjbase.menu.npc.settings.snd.toggledmgbyplayer.label"] = "当玩家攻击一名 SNPC 时的音效，通常用于友方 SNPC。",
+	["vjbase.menu.npc.settings.snd.toggleleap"] = "禁用跳跃攻击音效",
+	["vjbase.menu.npc.settings.snd.toggleslowedplayer"] = "禁用玩家减速音效",
+	["vjbase.menu.npc.settings.snd.toggleslowedplayer.label"] = "当玩家被近战攻击减速时播放的音效",
+	["vjbase.menu.npc.settings.snd.togglegrenade"] = "禁用手雷攻击音效",
+	["vjbase.menu.npc.settings.snd.toggledangersight"] = "禁用发现手雷和危险音效",
+	["vjbase.menu.npc.settings.snd.togglesuppressing"] = "禁用压制敌人时呼喊音效",
+	["vjbase.menu.npc.settings.snd.togglereload"] = "禁用换弹时呼喊音效",
+	
+	["vjbase.menu.npc.settings.dev"] = "开发者设置",
+	["vjbase.menu.npc.settings.dev.label1"] = "这些设置用于调试 SNPC。",
+	["vjbase.menu.npc.settings.dev.label2"] = "警告：部分选项会导致卡顿！",
+	["vjbase.menu.npc.settings.dev.toggledev"] = "启用开发者模式？",
+	["vjbase.menu.npc.settings.dev.label3"] = "必须从此处或通过关联菜单启用此选项(以下选项需要）",
+	["vjbase.menu.npc.settings.dev.printtouch"] = "被触碰时输出（控制台）",
+	["vjbase.menu.npc.settings.dev.printcurenemy"] = "输出当前的敌人（控制台）",
+	["vjbase.menu.npc.settings.dev.printlastseenenemy"] = "输出“最后一次看见敌人”的时间（聊天框）",
+	["vjbase.menu.npc.settings.dev.printonreset"] = "重置敌人时输出（控制台）",
+	["vjbase.menu.npc.settings.dev.printonstopattack"] = "停止攻击时输出（控制台）",
+	["vjbase.menu.npc.settings.dev.printtakingcover"] = "寻找掩护时输出（控制台）",
+	["vjbase.menu.npc.settings.dev.printondamage"] = "受到伤害时输出（控制台）",
+	["vjbase.menu.npc.settings.dev.printondeath"] = "死亡时输出（控制台）",
+	["vjbase.menu.npc.settings.dev.printweaponinfo"] = "输出武器相关信息（控制台）",
+	["vjbase.menu.npc.settings.dev.cachedmodels"] = "已缓存的模型（控制台）",
+	["vjbase.menu.npc.settings.dev.numofnpcs"] = "当前 NPC 数量（聊天框）",
+	["vjbase.menu.npc.settings.dev.label4"] = "重新加载选项：",
+	["vjbase.menu.npc.settings.dev.reloadsounds"] = "重新加载音效",
+	["vjbase.menu.npc.settings.dev.reloadmaterials"] = "重新加载材质（VMT）",
+	["vjbase.menu.npc.settings.dev.reloadtextures"] = "重新加载贴图（VTF）",
+	["vjbase.menu.npc.settings.dev.reloadmodels"] = "重新加载模型",
+	["vjbase.menu.npc.settings.dev.reloadspawnmenu"] = "重新加载生成菜单",
+	
+	["vjbase.menu.npc.settings.con"] = "控制器设置",
+	["vjbase.menu.npc.settings.con.label1"] = "注意：这仅是客户端设置！",
+	["vjbase.menu.npc.settings.con.label2"] = "每次单击时缩放的距离远近。",
+	["vjbase.menu.npc.settings.con.displayhud"] = "显示 HUD",
+	["vjbase.menu.npc.settings.con.camzoomdistance"] = "视角移动距离",
+	["vjbase.menu.npc.settings.con.camspeed"] = "视角速度",
+	["vjbase.menu.npc.settings.con.camzoomspeed"] = "视角缩放速度",
+	["vjbase.menu.npc.settings.con.diewithnpc"] = "NPC 死亡时，控制器也失效（需要重生！）",
+	["vjbase.menu.npc.settings.con.displaydev"] = "显示开发者模式的实体",
+	["vjbase.menu.npc.settings.con.label3"] = "按键绑定：",
+	["vjbase.menu.npc.settings.con.bind.header1"] = "按键",
+	["vjbase.menu.npc.settings.con.bind.header2"] = "描述",
+	["vjbase.menu.npc.settings.con.bind.clickmsg1"] = "已选中的按键：",
+	["vjbase.menu.npc.settings.con.bind.clickmsg2"] = "描述：",
+	["vjbase.menu.npc.settings.con.bind.movement"] = "移动（支持 8 个方向）",
+	["vjbase.menu.npc.settings.con.bind.exitcontrol"] = "退出控制器",
+	["vjbase.menu.npc.settings.con.bind.meleeattack"] = "近战攻击",
+	["vjbase.menu.npc.settings.con.bind.rangeattack"] = "远程/武器攻击",
+	["vjbase.menu.npc.settings.con.bind.leaporgrenade"] = "跳跃/手雷攻击",
+	["vjbase.menu.npc.settings.con.bind.reloadweapon"] = "装填武器",
+	["vjbase.menu.npc.settings.con.bind.togglebullseye"] = "开/关靶子跟踪",
+	["vjbase.menu.npc.settings.con.bind.cameramode"] = "更改视角",
+	["vjbase.menu.npc.settings.con.bind.movementjump"] = "切换移动/跳跃",
+	["vjbase.menu.npc.settings.con.bind.camerazoom"] = "视角缩放",
+	["vjbase.menu.npc.settings.con.bind.cameraup"] = "视角向上",
+	["vjbase.menu.npc.settings.con.bind.cameradown"] = "视角向下",
+	["vjbase.menu.npc.settings.con.bind.cameraforward"] = "视角向前",
+	["vjbase.menu.npc.settings.con.bind.camerabackward"] = "视角向后",
+	["vjbase.menu.npc.settings.con.bind.cameraleft"] = "视角向左",
+	["vjbase.menu.npc.settings.con.bind.cameraright"] = "视角向右",
+	["vjbase.menu.npc.settings.con.bind.resetzoom"] = "恢复视角位置",
+	
+	-- Weapon Client Settings
+	["vjbase.menu.wep.clsettings"] = "客户端设置",
+	["vjbase.menu.wep.clsettings.notice"] = "注意：这些设置是客户端设置，这意味着它不会被其他人更改！",
+	["vjbase.menu.wep.clsettings.togglemuzzle"] = "禁用枪口火焰",
+	["vjbase.menu.wep.clsettings.togglemuzzlelight"] = "禁用枪口火焰动态光照",
+	["vjbase.menu.wep.clsettings.togglemuzzle.label"] = "禁用枪口火焰的同时也会禁用此选项",
+	["vjbase.menu.wep.clsettings.togglemuzzlebulletshells"] = "禁用弹壳",
+	
+	-- NPC Properties (C Menu)
+	["vjbase.menuproperties.control"] = "操控",
+	["vjbase.menuproperties.guard"] = "开始/停止守卫",
+	["vjbase.menuproperties.wander"] = "开始/停止游荡",
+	["vjbase.menuproperties.medic"] = "变成医疗兵（切换）",
+	["vjbase.menuproperties.allyme"] = "成为我的队友",
+	["vjbase.menuproperties.hostileme"] = "成为我的敌人",
+	["vjbase.menuproperties.slay"] = "杀死",
+	["vjbase.menuproperties.gib"] = "碎尸（如果可用）",
+	["vjbase.menuproperties.devmode"] = "打开/关闭开发者模式",
+	["vjbase.menuproperties.print.adminonly"] = "这些选项仅限于管理员！",
+	
+	-- Tools
+	["tool.vjstool.menu.tutorialvideo"] = "教程视频",
+	["tool.vjstool.menu.label.recommendation"] = "建议仅对 VJ Base 的 SNPC 使用此工具。",
+	
+	["tool.vjstool_bullseye.name"] = "NPC 靶子",
+	["tool.vjstool_bullseye.desc"] = "创建一个 NPC 会视为目标的靶子",
+	["tool.vjstool_bullseye.left"] = "创建一个靶子",
+	["tool.vjstool_bullseye.menu.help1"] = "按下使用键来激活/禁用实体。",
+	["tool.vjstool_bullseye.menu.help2"] = "禁用时，NPC 将不会把它视为目标。",
+	["tool.vjstool_bullseye.menu.label1"] = "选择移动类型",
+	["tool.vjstool_bullseye.menu.label2"] = "模型路径",
+	["tool.vjstool_bullseye.menu.toggleusestatus"] = "按照状态改变颜色（激活/禁用）",
+	["tool.vjstool_bullseye.menu.togglestartactivated"] = "开始时激活",
+	
+	["tool.vjstool_entityscanner.name"] = "实体扫描器",
+	["tool.vjstool_entityscanner.desc"] = "获取一个实体的信息",
+	["tool.vjstool_entityscanner.left"] = "输出实体的信息到控制台",
+	["tool.vjstool_entityscanner.label"] = "输出任意选中的实体的信息到控制台。",
+	
+	["tool.vjstool_healthmodifier.name"] = "生命值设置",
+	["tool.vjstool_healthmodifier.desc"] = "设置一个实体的生命值",
+	["tool.vjstool_healthmodifier.left"] = "设置生命值",
+	["tool.vjstool_healthmodifier.right"] = "设置生命值和最高生命值",
+	["tool.vjstool_healthmodifier.reload"] = "回复实体的生命值到最高值",
+	["tool.vjstool_healthmodifier.adminonly"] = "只有管理员可以修改或治疗其他玩家的生命值。",
+	["tool.vjstool_healthmodifier.sliderhealth"] = "生命值",
+	["tool.vjstool_healthmodifier.label1"] = "以下选项仅适用于 VJ Base SNPC：",
+	["tool.vjstool_healthmodifier.togglegodmode"] = "无敌模式",
+	["tool.vjstool_healthmodifier.togglehealthregen"] = "启用生命回复",
+	["tool.vjstool_healthmodifier.sliderhealthregenamt"] = "回复量",
+	["tool.vjstool_healthmodifier.sliderhealthregendelay"] = "回复间隔",
+	
+	["tool.vjstool_notarget.name"] = "无目标",
+	["tool.vjstool_notarget.desc"] = "对一个实体使用“无目标”会让 NPC 无法看见此实体",
+	["tool.vjstool_notarget.left"] = "对自己开启/关闭无目标",
+	["tool.vjstool_notarget.right"] = "对一个 NPC 或玩家开启/关闭无目标",
+	["tool.vjstool_notarget.label"] = "当一个实体启用了“无目标”，NPC 将不会把此实体视为目标！",
+	["tool.vjstool_notarget.print.yourselfon"] = "对自己开启无目标",
+	["tool.vjstool_notarget.print.yourselfoff"] = "对自己关闭无目标",
+	
+	["tool.vjstool_npcequipment.name"] = "NPC 装备",
+	["tool.vjstool_npcequipment.desc"] = "修改一个 NPC 的装备",
+	["tool.vjstool_npcequipment.left"] = "更改 NPC 的装备",
+	["tool.vjstool_npcequipment.right"] = "移除 NPC 的装备",
+	["tool.vjstool_npcequipment.label"] = "更改或移除一个 NPC 的装备。",
+	["tool.vjstool_npcequipment.selectedequipment"] = "已选中的装备",
+	["tool.vjstool_npcequipment.print.doubleclick"] = "双击来选择一个武器。",
+	["tool.vjstool_npcequipment.print.weaponselected1"] = "武器",
+	["tool.vjstool_npcequipment.print.weaponselected2"] = "已选中！",
+	["tool.vjstool_npcequipment.header1"] = "名称",
+	["tool.vjstool_npcequipment.header2"] = "实体类别",
+	
+	["tool.vjstool_npcmover.name"] = "NPC 移动器",
+	["tool.vjstool_npcmover.desc"] = "移动 NPC 到指定地点，必须先选中一个 NPC",
+	["tool.vjstool_npcmover.left"] = "选择一个 NPC",
+	["tool.vjstool_npcmover.right"] = "奔跑到指定地点",
+	["tool.vjstool_npcmover.reload"] = "步行到指定地点",
+	["tool.vjstool_npcmover.header1"] = "名称",
+	["tool.vjstool_npcmover.header2"] = "实体类别",
+	["tool.vjstool_npcmover.header3"] = "信息",
+	["tool.vjstool_npcmover.buttonunselectall"] = "取消选中所有 NPC",
+	["tool.vjstool_npcmover.print.unselectedall"] = "已取消选中所有 NPC！",
+	["tool.vjstool_npcmover.print.unselectedall.error"] = "没有可以取消选中的东西！",
+	
+	["tool.vjstool_npcrelationship.name"] = "NPC 关系编辑器",
+	["tool.vjstool_npcrelationship.desc"] = "修改实体之间的关系",
+	["tool.vjstool_npcrelationship.left"] = "应用关系表",
+	["tool.vjstool_npcrelationship.right"] = "获取当前类别",
+	["tool.vjstool_npcrelationship.reload"] = "应用关系表到自己",
+	["tool.vjstool_npcrelationship.label1"] = "修改一个 NPC 的关系，即它对另一个实体的感觉。",
+	["tool.vjstool_npcrelationship.header"] = "实体类别",
+	["tool.vjstool_npcrelationship.label2"] = "按下回车键来添加类别。",
+	["tool.vjstool_npcrelationship.button.combine"] = "插入联合军类别",
+	["tool.vjstool_npcrelationship.button.antlion"] = "插入蚁狮类别",
+	["tool.vjstool_npcrelationship.button.zombie"] = "插入僵尸类别",
+	["tool.vjstool_npcrelationship.button.player"] = "插入玩家类别",
+	["tool.vjstool_npcrelationship.togglealliedply"] = "与玩家的队友联盟？",
+	["tool.vjstool_npcrelationship.label3"] = "仅适用于 VJ Base SNPC 并且需要 SNPC 拥有",
+	["tool.vjstool_npcrelationship.print.applied"] = "将关系表应用于",
+	
+	["tool.vjstool_npcspawner.name"] = "NPC 生成器",
+	["tool.vjstool_npcspawner.desc"] = "创建一个可设置的生成器",
+	["tool.vjstool_npcspawner.left"] = "创建一个生成器",
+	["tool.vjstool_npcspawner.right"] = "立刻生成实体",
+	["tool.vjstool_npcspawner.selectednpc"] = "已选中的 NPC",
+	["tool.vjstool_npcspawner.spawnpos.forward"] = "方位 | 前",
+	["tool.vjstool_npcspawner.spawnpos.right"] = "方位 | 右",
+	["tool.vjstool_npcspawner.spawnpos.up"] = "方位 | 上",
+	["tool.vjstool_npcspawner.selectweapon"] = "已选中的武器",
+	["tool.vjstool_npcspawner.spawnnpclass"] = "类别关系覆盖",
+	["tool.vjstool_npcspawner.fritoplyallies"] = "对玩家阵营友好",
+	["tool.vjstool_npcspawner.label.fritoplyallies"] = "必须拥有关系类别（CLASS_PLAYER_ALLY）！",
+	["tool.vjstool_npcspawner.button.updatelist"] = "更新列表",
+	["tool.vjstool_npcspawner.label1"] = "双击一个条目来将其移除。",
+	["tool.vjstool_npcspawner.header1"] = "名称",
+	["tool.vjstool_npcspawner.header2"] = "方位",
+	["tool.vjstool_npcspawner.header3"] = "装备",
+	["tool.vjstool_npcspawner.label2"] = "额外选项",
+	["tool.vjstool_npcspawner.toggle.spawnsound"] = "播放 NPC 生成音效？",
+	["tool.vjstool_npcspawner.nextspawntime"] = "生成间隔",
+	["tool.vjstool_npcspawner.popup.header1"] = "名称",
+	["tool.vjstool_npcspawner.popup.header2"] = "实体类别",
+	["tool.vjstool_npcspawner.popup.header3"] = "分组",
+	["tool.vjstool_npcspawner.title1"] = "双击来选择一个 NPC。",
+	["tool.vjstool_npcspawner.title2"] = "双击来选择一个武器。",
+	["tool.vjstool_npcspawner.print.nothingspawn"] = "没有要生成的东西！",
+	
+	["tool.vjstool_npcfollower.name"] = "NPC 跟随器",
+	["tool.vjstool_npcfollower.desc"] = "选择一个 NPC 并且让它跟随某个实体",
+	["tool.vjstool_npcfollower.left"] = "选择一个 NPC",
+	["tool.vjstool_npcfollower.right"] = "选择要让 NPC 跟随的实体",
+	["tool.vjstool_npcfollower.reload"] = "取消跟随任何 NPC 正在跟随的实体",
+	["tool.vjstool_npcfollower.print.noselection"] = "未选中 NPC！",
+	["tool.vjstool_npcfollower.print.reset"] = "已取消跟随任何 NPC 正在跟随的实体！",
+
+	-- Miscellaneous (Prints)
+	["vjbase.print.bullseye.activated"] = "已激活 NPC 靶子。",
+	["vjbase.print.bullseye.deactivated"] = "已禁用 NPC 靶子。",
+	
+	["vjbase.print.npccontroller.entrance"] = "要查看按键，请前往“DrVrej”页面下的“控制器设置”",
+	["vjbase.print.npccontroller.tracking.activated"] = "靶子追踪已激活！",
+	["vjbase.print.npccontroller.tracking.deactivated"] = "靶子追踪已禁用！",
+	["vjbase.print.npccontroller.movementjump.enable"] = "已启用移动跳跃！",
+	["vjbase.print.npccontroller.movementjump.disable"] = "已禁用移动跳跃！",
+	
+	["vjbase.print.adminhealth.pickup"] = "你已经获得 1,000,000 点生命值！",
+	
+	["vjbase.print.fireplace.activated"] = "你点燃了篝火。",
+	["vjbase.print.fireplace.deactivated"] = "你扑灭了篝火。",
+	
+	["vjbase.print.plyspawnpoint.activated"] = "已激活此出生点！",
+	["vjbase.print.plyspawnpoint.deactivated"] = "已禁用此出生点！",
+}
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+local strings_turkish = {
+	-- Spawn Menu
+	["vjbase.spawn.menu.npc.disablethinking"] = "AI Düşünmesini Kapat",
+	["vjbase.spawn.menu.npc.ignoreplayers"] = "AI Oyuncuları Umursamasın",
+	["vjbase.spawn.menu.npc.keepcorpses"] = "NPC Cesetleri Kaldır/Tut",
+	["vjbase.spawn.menu.npc.guard"] = "NPC'leri Guard Olarak Oluştur",
 
-		if conv == "armenian" then ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-			
-		elseif conv == "russian" then ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-			-- Spawn Menu
-		    add("vjbase.spawn.menu.npc.disablethinking", "Выключить ИИ")
-	        add("vjbase.spawn.menu.npc.ignoreplayers", "ИИ игнорирует игроков")
-		    add("vjbase.spawn.menu.npc.keepcorpses", "Оставлять/столкновения трупы(ов) NPC")
-	        add("vjbase.spawn.menu.npc.guard", "Создавать NPC в качестве телохранителя")
-			
-			 -- General Menu (Used everywhere)
-			add("vjbase.menu.general.default", "По умолчанию")
-			add("vjbase.menu.general.admin.only", "Примечание: только администраторы могут использовать это меню.")
-			add("vjbase.menu.general.admin.not", "Вы не являетесь администратором!")
-			add("vjbase.menu.general.reset.everything", "Сбросить всё")
-			add("vjbase.menu.general.npc.warnfuture", "Предупреждение: будут затронуты только будущие созданные NPC!")
-			add("vjbase.menu.general.npc.creaturesettings", "Настройки создания:")
-			add("vjbase.menu.general.npc.humansettings", "Настройки людей:")
-			
-			-- Menu Tabs
-			add("vjbase.menu.tabs.mainmenu", "Главное меню")
-			add("vjbase.menu.tabs.settings.npc", "Настройки NPC")
-			add("vjbase.menu.tabs.settings.weapon", "Настройки оружия")
-			add("vjbase.menu.tabs.settings.hud", "Настройки интерфейса")
-			add("vjbase.menu.tabs.tools", "Инструменты")
-			add("vjbase.menu.tabs.configures.snpc", "Конфигурации SNPC")
-		    add("vjbase.menu.tabs.default", "По молчанию")
-			
-			-- Main Menu
-			add("vjbase.menu.cleanup", "Очистка")
-			add("vjbase.menu.cleanup.all", "Очистить всё")
-			add("vjbase.menu.cleanup.stopsounds", "Остановить все звуки")
-			add("vjbase.menu.cleanup.remove.vjnpcs", "Убрать все VJ NPCs")
-			add("vjbase.menu.cleanup.remove.npcs", "Убрать все NPCs")
-			add("vjbase.menu.cleanup.remove.spawners", "Убрать все спавнеры")
-			add("vjbase.menu.cleanup.remove.corpses", "Убрать все тела")
-			add("vjbase.menu.cleanup.remove.vjgibs", "Убрать все VJ Gibs")
-			add("vjbase.menu.cleanup.remove.groundweapons", "Убрать всё оружие на земле")
-			add("vjbase.menu.cleanup.remove.props", "Убрать все объекты")
-			add("vjbase.menu.cleanup.remove.decals", "Убрать все декали")
-			add("vjbase.menu.cleanup.remove.allweapons", "Убрать всё своё оружие")
-			add("vjbase.menu.cleanup.remove.allammo", "Убрать все свои боеприпасы")
-			
-			add("vjbase.menu.helpsupport", "Контакты и поддержка")
-			add("vjbase.menu.helpsupport.incompatibleaddons", "Несовместимые дополнения")
-			add("vjbase.menu.helpsupport.reportbug", "Сообщить о проблеме")
-			add("vjbase.menu.helpsupport.suggestion", "Предложить что-нибудь")
-			add("vjbase.menu.helpsupport.discord", "Discord создателя!")
-			add("vjbase.menu.helpsupport.steam", "Steam создателя!")
-			add("vjbase.menu.helpsupport.youtube", "Подписка на YouTube!")
-			add("vjbase.menu.helpsupport.twitter", "Подписка на Твиттер!")
-			add("vjbase.menu.helpsupport.patreon", "Поддержите меня на Patron!")
-			add("vjbase.menu.helpsupport.label1", "Перейдите по одной из этих ссылок, чтобы получить информацию об обновлениях моих дополнений!")
-			add("vjbase.menu.helpsupport.label2", "Пожертвования помогают и поощряют меня продолжать делать/обновлять дополнения! Спасибо!")
-			add("vjbase.menu.helpsupport.thanks", "Спасибо за вашу поддержку!")
-			
-			add("vjbase.menu.svsettings", "Административные настройки")
-			add("vjbase.menu.svsettings.label", "ВНИМАНИЕ: НЕКОТОРЫЕ НАСТРОЙКИ ЯВЛЯЮТСЯ ЧИТЕРСКИМИ!")
-			add("vjbase.menu.svsettings.admin.npcproperties", "Свойства SNPC только для администраторов")
-			add("vjbase.menu.svsettings.noclip", "Позволить режим полёта")
-			add("vjbase.menu.svsettings.weapons", "Позволить оружие")
-			add("vjbase.menu.svsettings.pvp", "Урон между игроками")
-			add("vjbase.menu.svsettings.godmode", "Неуязвимость (у всех)")
-			add("vjbase.menu.svsettings.bonemanip.npcs", "Манипулировать костями NPCs")
-			add("vjbase.menu.svsettings.bonemanip.players", "Манипулировать костями моделей игроков")
-			add("vjbase.menu.svsettings.bonemanip.others", "Манипулировать костями иных объектов")
-			add("vjbase.menu.svsettings.timescale.general", "Общее время игры")
-			add("vjbase.menu.svsettings.timescale.physics", "Физическое время игры")
-			add("vjbase.menu.svsettings.gravity", "Общая гравитация")
-			add("vjbase.menu.svsettings.maxentsprops", "Максимум объектов/энтити:")
-			
-			add("vjbase.menu.clsettings", "Настройки клиента")
-			add("vjbase.menu.clsettings.label", "Используйте это меню для настройки параметров клиента, администраторы сервера не могут изменить эти параметры!")
-			add("vjbase.menu.clsettings.labellang", "Выбор языка...")
-			add("vjbase.menu.clsettings.notify.lang", "Язык VJ Base установлен на:")
-			add("vjbase.menu.clsettings.lang.auto", "Автонастройка языка")
-		    add("vjbase.menu.clsettings.lang.auto.label", "Игнорируется, если в VJ Base установлен на язык, не поддерживаемый игрой")
-			
-			add("vjbase.menu.info", "Информация")
-			
-			add("vjbase.menu.plugins", "Установленные плагины")
-			add("vjbase.menu.plugins.label", "Список установленных плагинов VJ Base.")
-			add("vjbase.menu.plugins.version", "Версия:")
-			add("vjbase.menu.plugins.totalplugins", "Всего плагинов:")
-			add("vjbase.menu.plugins.header1", "Название")
-			add("vjbase.menu.plugins.header2", "Тип")
-			add("vjbase.menu.plugins.notfound", "Плагины не найдены")
-			add("vjbase.menu.plugins.changelog", "Список изменений")
-			add("vjbase.menu.plugins.makeaddon", "Хотите создать дополнение?")
-			
-			-- SNPC Menus
-			add("vjbase.menu.npc.options", "Опции")
-			add("vjbase.menu.npc.options.difficulty.header", "Сложность:")
-			add("vjbase.menu.npc.options.difficulty.neanderthal", "[-3] Неандерталец | -99% здоровья и урона")
-			add("vjbase.menu.npc.options.difficulty.childs_play", "[-2] Детская игра | -75% здоровья и урона")
-			add("vjbase.menu.npc.options.difficulty.easy", "[-1] Легко | -50% здоровья и урона")
-			add("vjbase.menu.npc.options.difficulty.normal", "[0] Нормально | стандартное здоровье и урон")
-			add("vjbase.menu.npc.options.difficulty.hard", "[1] Трудно | +50% здоровья и урона")
-			add("vjbase.menu.npc.options.difficulty.insane", "[2] Безумие | +100% здоровья и урона")
-			add("vjbase.menu.npc.options.difficulty.impossible", "[3] Невозможно | +150% здоровья и урона")
-			add("vjbase.menu.npc.options.difficulty.nightmare", "[4] Кошмар | +250% здоровья и урона")
-			add("vjbase.menu.npc.options.difficulty.hell_on_earth", "[5] Ад на Земле | +350% здоровья и урона")
-			add("vjbase.menu.npc.options.difficulty.total_annihilation", "[6] Полное уничтожение | +500% здоровья и урона")
-			add("vjbase.menu.npc.options.label1", "Настройки отношений:")
-			add("vjbase.menu.npc.options.togglefriendlyantlion", "Дружелюбные муравьиные львы")
-			add("vjbase.menu.npc.options.togglefriendlycombine", "Дружелюбные комбайны")
-			add("vjbase.menu.npc.options.togglefriendlyplayer", "Дружелюбные игроки")
-			add("vjbase.menu.npc.options.togglefriendlyzombie", "Дружелюбные зомби")
-			add("vjbase.menu.npc.options.togglefriendlyvj", "Дружелюбный VJ Base")
-			add("vjbase.menu.npc.options.label2", "Все NPC VJ будут союзниками!")
-			add("vjbase.menu.npc.options.label3", "Опции трупов, расчленения и здоровья:")
-		    add("vjbase.menu.npc.options.collision.header", "Столкн-ние трупов:")
-		    add("vjbase.menu.npc.options.collision.default", "По умолчанию | Исключение: игроки, NPC, оружие, рэгдоллы")
-		    add("vjbase.menu.npc.options.collision.everything", "Без исключений | Все!")
-		    add("vjbase.menu.npc.options.collision.onlyworld", "Только мир")
-		    add("vjbase.menu.npc.options.collision.excludedebris", "Исключение: Трупы, обломки")
-		    add("vjbase.menu.npc.options.collision.excludeplynpcs", "Исключение: Игроки, NPC")
-		    add("vjbase.menu.npc.options.collision.excludeply", "Исключение: Игроки")
-			add("vjbase.menu.npc.options.corpselimit", "Лимит трупов")
-			add("vjbase.menu.npc.options.label4", "Лимит трупов, когда \"Оставлять трупы\" выключено")
-			add("vjbase.menu.npc.options.toggleundocorpses", "Трупы можно отменить (клавиша undo)")
-			add("vjbase.menu.npc.options.togglecorpsefade", "Исчезновение трупов")
-			add("vjbase.menu.npc.options.corpsefadetime", "Время исчезновения")
-			add("vjbase.menu.npc.options.label5", "(Трупов) Итого: 600 секунд (10 минут)")
-			add("vjbase.menu.npc.options.togglegibcollision", "Столкновения ошмётков")
-			add("vjbase.menu.npc.options.togglefadegibs", "Исчезновение ошмётков")
-			add("vjbase.menu.npc.options.gibfadetime", "Время исчезновения")
-			add("vjbase.menu.npc.options.label6", "(Ошмётков) По умолчанию: 30 | всего: 600 секунд (10 минут)")
-			add("vjbase.menu.npc.options.togglesnpcgodmode", "Неуязвимость (Они не получат урона)")
-			add("vjbase.menu.npc.options.health", "Здоровье:")
-			add("vjbase.menu.npc.options.defaulthealth", "0 = Здоровье по умолчанию (максимум 9 цифр!)")
-			add("vjbase.menu.npc.options.label7", "Опции ИИ:")
-			add("vjbase.menu.npc.options.toggleknowenemylocation", "Всегда знать расположение врага")
-			add("vjbase.menu.npc.options.sightdistance", "Видимость:")
-			add("vjbase.menu.npc.options.label8", "У каждого NPC есть своя дистанция видимости, но это сделает их всех одинаковыми, так что используйте её осторожно! (0 = Оригинал | среднее значение: 10тыс.)")
-			add("vjbase.menu.npc.settings.perf.processtime", "Время процесса")
-			add("vjbase.menu.npc.settings.perf.processtime.button", "Что такое \"Время процесса\"?")
-			add("vjbase.menu.npc.settings.perf.processtime.label", "По умолчанию: 1 | меньшее число вызывает большую задержку игры!")
-			add("vjbase.menu.npc.options.label10", "Другие опции:")
-			add("vjbase.menu.npc.options.togglegmoddecals", "Текущие декали крови игры")
-			add("vjbase.menu.npc.options.label11", "Только для жёлтых или красных цветов!")
-			add("vjbase.menu.npc.options.toggleitemdrops", "Выпадение предметов при смерти")
-			add("vjbase.menu.npc.options.toggleaddfrags", "Прибавлять очки за убийство в таблицу счёта")
-			add("vjbase.menu.npc.options.togglecreatureopendoor", "Существа могут открывать двери")
-			add("vjbase.menu.npc.options.togglehumansdropweapon", "Люди бросают оружие при смерти")
-			add("vjbase.menu.npc.options.togglehumanscanjump", "Люди могут прыгать")
-			add("vjbase.menu.npc.options.toggleplydroppedweapons", "Игроки могут подбирать упавшее оружие")
-			
-			add("vjbase.menu.npc.settings", "Настройки")
-			add("vjbase.menu.npc.settings.title.ai", "Настройки ИИ:")
-			add("vjbase.menu.npc.settings.togglewandering", "Отключить блуждание в режиме ожидания")
-			add("vjbase.menu.npc.settings.togglechasingenemy", "Отключить преследование врага")
-			add("vjbase.menu.npc.settings.label.chasingenemy", "ВНИМАНИЕ: Это может привести к поломке частей искусственного интеллекта!")
-			add("vjbase.menu.npc.settings.togglemedics", "Отключить медиков NPC")
-			add("vjbase.menu.npc.settings.togglefollowplayer", "Отключить следование за игроком")
-			add("vjbase.menu.npc.settings.label.followplayer", "Пример: когда вы нажимаете \"У\" на NPC, они следуют за вами")
-			add("vjbase.menu.npc.settings.toggleallies", "Отключить альянс (Без союзников!)")
-			add("vjbase.menu.npc.settings.togglebecomeenemytoply", "Отключить союзников, став врагом")
-			add("vjbase.menu.npc.settings.togglecallhelp", "Отключить вызов помощи")
-			add("vjbase.menu.npc.settings.toggleproppush", "Отключить толкание объектов (Существа)")
-			add("vjbase.menu.npc.settings.togglepropattack", "Отключить атаку объектов (Существа)")
-			add("vjbase.menu.npc.settings.toggledangersight", "Отключить обнаружение опасностей и гранат (Люди)")
-			add("vjbase.menu.npc.settings.togglereloading", "Отключить перезарядку оружия")
-		    add("vjbase.menu.npc.settings.toggleeating", "Отключить поедание (Например: трупы или ошмётки)")
-			add("vjbase.menu.npc.settings.title.attack", "Настройки атаки:")
-			add("vjbase.menu.npc.settings.togglemelee", "Выключить атаку в ближнем бою")
-			add("vjbase.menu.npc.settings.togglerange", "Выключить атаку в дальнем бою")
-			add("vjbase.menu.npc.settings.toggleleap", "Отключить атаку в прыжке (Существа)")
-			add("vjbase.menu.npc.settings.togglethrownade", "Отключить атаку гранатами (Люди)")
-			add("vjbase.menu.npc.settings.toggleweapons", "Отключить оружие (Люди)")
-			add("vjbase.menu.npc.settings.label.noweapon", "Люди не смогут использовать оружие!")
-			add("vjbase.menu.npc.settings.togglemeleedsp", "Эффект DSP от тяжёлых атак в ближнем бою")
-			add("vjbase.menu.npc.settings.toggleslowplayer", "Замедление игроков от атак в ближнем бою")
-			add("vjbase.menu.npc.settings.togglebleedonmelee", "Истекание кровью от атак в ближнем бою")
-			add("vjbase.menu.npc.settings.title.misc", "Прочие настройки:")
-			add("vjbase.menu.npc.settings.toggleidleparticles", "Отключить неработающие частицы и эффекты")
-			add("vjbase.menu.npc.settings.label.idleparticles", "Отключение этого пункта может увеличить производительность")
-			add("vjbase.menu.npc.settings.togglesnpcchat", "Выключить сообщения NPC в чате")
-			add("vjbase.menu.npc.settings.label.npcchat", "Например: \"Учёный теперь следует за вами\".")
-			add("vjbase.menu.npc.settings.title.damagecorpse", "Настройки тел и урона:")
-			add("vjbase.menu.npc.settings.toggleflinching", "Отключить вздрагивание")
-			add("vjbase.menu.npc.settings.togglebleeding", "Отключить кровотечение")
-			add("vjbase.menu.npc.settings.label.bleeding", "Отключает частицы крови, декали, лужи и т.д.")
-			add("vjbase.menu.npc.settings.togglebloodpool", "Отключить лужи крови (при смерти)")
-			add("vjbase.menu.npc.settings.togglegib", "Отключить ошмётки")
-			add("vjbase.menu.npc.settings.label.gib", "Отключение этого может увеличить производительность")
-			add("vjbase.menu.npc.settings.togglegibdeathvfx", "Отключить эффекты ошмётков/смерти (частицы, декали и т.д.)")
-			add("vjbase.menu.npc.settings.toggledeathanim", "Выключить анимацию смерти")
-			add("vjbase.menu.npc.settings.togglecorpses", "Выключить тела")
-			add("vjbase.menu.npc.settings.title.passive", "Пассивные настройки:")
-			add("vjbase.menu.npc.settings.togglerunontouch", "Выключить избегание при касании")
-			add("vjbase.menu.npc.settings.togglerunonhit", "Избегание при получении урона")
-			
-			add("vjbase.menu.npc.settings.snd", "Настройки звука")
-			add("vjbase.menu.npc.settings.snd.togglesounds", "Отключить все звуки")
-			add("vjbase.menu.npc.settings.snd.togglesoundtrack", "Отключить звуковые дорожки / музыку")
-			add("vjbase.menu.npc.settings.snd.toggleidle", "Отключить звуки повреждений")
-			add("vjbase.menu.npc.settings.snd.togglebreathing", "Отключить звуки дыхания")
-			add("vjbase.menu.npc.settings.snd.togglefootsteps", "Отключить звуки шагов")
-			add("vjbase.menu.npc.settings.snd.togglemelee", "Отключить звуки атаки в ближнем бою")
-			add("vjbase.menu.npc.settings.snd.togglerange", "Отключить звуки атак в дальнем бою")
-			add("vjbase.menu.npc.settings.snd.togglealert", "Отключить звуки оповещения")
-			add("vjbase.menu.npc.settings.snd.togglepain", "Отключить звуки боли")
-			add("vjbase.menu.npc.settings.snd.toggledeath", "Отключить звуки смерти")
-			add("vjbase.menu.npc.settings.snd.togglegibbing", "Отключить звуки ошмётков")
-			add("vjbase.menu.npc.settings.snd.togglegibbing.label", "Также относится к звукам, которые воспроизводятся, когда ошмётки сталкивается с чем-то")
-			add("vjbase.menu.npc.settings.snd.togglemedic", "Отключить звуки медицины")
-			add("vjbase.menu.npc.settings.snd.togglefollowing", "Отключить звуки следования")
-			add("vjbase.menu.npc.settings.snd.togglecallhelp", "Отключить звуки просьб о помощи")
-			add("vjbase.menu.npc.settings.snd.togglereceiveorder", "Отключить звуки получения приказов")
-			add("vjbase.menu.npc.settings.snd.togglebecomeenemy", "Отключить звуки становления врагом для игрока")
-			add("vjbase.menu.npc.settings.snd.toggleplayersight", "Отключить звуки прицеливания игрока")
-			add("vjbase.menu.npc.settings.snd.toggleplayersight.label", "Специальные звуки, которые воспроизводятся, когда NPC видит игрока")
-			add("vjbase.menu.npc.settings.snd.toggledmgbyplayer", "Отключить звуки урона от игрока")
-			add("vjbase.menu.npc.settings.snd.toggledmgbyplayer.label", "Когда игрок стреляет в NPC, обычно дружественные NPC")
-			add("vjbase.menu.npc.settings.snd.toggleleap", "Отключить звуки атаки в прыжке")
-			add("vjbase.menu.npc.settings.snd.toggleslowedplayer", "Отключить звуки замедления игрока")
-			add("vjbase.menu.npc.settings.snd.toggleslowedplayer.label", "Звуки, которые воспроизводятся, когда игрок замедляется в рукопашной атаке")
-			add("vjbase.menu.npc.settings.snd.togglegrenade", "Отключить звуки атаки гранатой")
-			add("vjbase.menu.npc.settings.snd.toggledangersight", "Отключить звуки обнаружения гранаты и опасности")
-			add("vjbase.menu.npc.settings.snd.togglesuppressing", "Отключить подавление звуков взрыва")
-			add("vjbase.menu.npc.settings.snd.togglereload", "Отключить перезагрузку звуков вызова")
-			
-			add("vjbase.menu.npc.settings.dev", "Настройки разработчика")
-			add("vjbase.menu.npc.settings.dev.label1", "Эти настройки используются при разработке SNPC.")
-			add("vjbase.menu.npc.settings.dev.label2", "Предупреждение: некоторые из этих опций вызывают задержку игры!")
-			add("vjbase.menu.npc.settings.dev.toggledev", "Включить режим разработчика?")
-			add("vjbase.menu.npc.settings.dev.label3", "Эта опция должна быть включена здесь или через контекстное меню! (Требуется для следующих опций)")
-			add("vjbase.menu.npc.settings.dev.printtouch", "Вывод на табло (Консоль)")
-			add("vjbase.menu.npc.settings.dev.printcurenemy", "Вывод текущего врага (Консоль)")
-			add("vjbase.menu.npc.settings.dev.printlastseenenemy", "Вывод времени \"LastSeenEnemy\" (Чат)")
-			add("vjbase.menu.npc.settings.dev.printonreset", "Вывод на сброс противника (Консоль)")
-			add("vjbase.menu.npc.settings.dev.printonstopattack", "Вывод на остановку атаки (Консоль)")
-			add("vjbase.menu.npc.settings.dev.printtakingcover", "Вывод укрытия (Консоль)")
-			add("vjbase.menu.npc.settings.dev.printondamage", "Вывод о повреждениях (Консоль)")
-			add("vjbase.menu.npc.settings.dev.printondeath", "Вывод о смерти (Консоль)")
-			add("vjbase.menu.npc.settings.dev.printweaponinfo", "Вывод информации об оружии(Консоль)")
-			add("vjbase.menu.npc.settings.dev.cachedmodels", "Вывод кэшированных моделей (Консоль)")
-			add("vjbase.menu.npc.settings.dev.numofnpcs", "Вывод количества NPC (Чат)")
-			add("vjbase.menu.npc.settings.dev.label4", "Перезагрузить кнопки:")
-		    add("vjbase.menu.npc.settings.dev.reloadsounds", "Перезагрузить звуки")
-		    add("vjbase.menu.npc.settings.dev.reloadmaterials", "Перезагрузить материалы (VMT)")
-		    add("vjbase.menu.npc.settings.dev.reloadtextures", "Перезагрузить текстуры (VTF)")
-		    add("vjbase.menu.npc.settings.dev.reloadmodels", "Перезагрузить модели")
-		    add("vjbase.menu.npc.settings.dev.reloadspawnmenu", "Перезагрузить меню создания")
-			
-			add("vjbase.menu.npc.settings.con", "Настройки контроллера")
-			add("vjbase.menu.npc.settings.con.label1", "Обратите внимание : это настройки только на стороне клиента!")
-			add("vjbase.menu.npc.settings.con.label2", "Как далеко или близко масштаб изменяется с каждым щелчком мыши.")
-			add("vjbase.menu.npc.settings.con.displayhud", "Отображать интерфейс")
-			add("vjbase.menu.npc.settings.con.camzoomdistance", "Дист-ция приближения камеры")
-			add("vjbase.menu.npc.settings.con.camspeed", "Скорость камеры")
-		    add("vjbase.menu.npc.settings.con.camzoomspeed", "Скор-сть приближения камеры")
-			add("vjbase.menu.npc.settings.con.diewithnpc", "Контроллер погибает вместе с NPC (После возрождения!)")
-			add("vjbase.menu.npc.settings.con.displaydev", "Отображение энтити разработчика")
-			add("vjbase.menu.npc.settings.con.label3", "Привязка клавиш:")
-			add("vjbase.menu.npc.settings.con.bind.header1", "Контроль")
-			add("vjbase.menu.npc.settings.con.bind.header2", "Описание")
-			add("vjbase.menu.npc.settings.con.bind.clickmsg1", "Выбранная кнопка:")
-			add("vjbase.menu.npc.settings.con.bind.clickmsg2", "Описание:")
-			add("vjbase.menu.npc.settings.con.bind.movement", "Движение")
-			add("vjbase.menu.npc.settings.con.bind.exitcontrol", "Выход из контроллера")
-			add("vjbase.menu.npc.settings.con.bind.meleeattack", "Атака в ближнем бою")
-			add("vjbase.menu.npc.settings.con.bind.rangeattack", "Атака в дальнем бою")
-			add("vjbase.menu.npc.settings.con.bind.leaporgrenade", "Прыжок/атака гранатой")
-			add("vjbase.menu.npc.settings.con.bind.reloadweapon", "Перезарядка")
-			add("vjbase.menu.npc.settings.con.bind.togglebullseye", "Отслеж-ние зоны прицеливания")
-			add("vjbase.menu.npc.settings.con.bind.cameramode", "Сменить режим камеры")
-			add("vjbase.menu.npc.settings.con.bind.movementjump", "Переключение прыжка во время движения")
-		    add("vjbase.menu.npc.settings.con.bind.camerazoom", "Приблизить и отдалить")
-			add("vjbase.menu.npc.settings.con.bind.cameraup", "Сдвинуть камеру вверх")
-			add("vjbase.menu.npc.settings.con.bind.cameradown", "Сдвинуть камеру вниз")
-			add("vjbase.menu.npc.settings.con.bind.cameraforward", "Сдвинуть камеру вперёд")
-			add("vjbase.menu.npc.settings.con.bind.camerabackward", "Сдвинуть камеру назад")
-			add("vjbase.menu.npc.settings.con.bind.cameraleft", "Сдвинуть камеру влево")
-			add("vjbase.menu.npc.settings.con.bind.cameraright", "Сдвинуть камеру вправо")
-			add("vjbase.menu.npc.settings.con.bind.resetzoom", "Сбросить позицию камеры")
-			
-			-- Weapon Client Settings
-			add("vjbase.menu.wep.clsettings", "Настройки клиента")
-			add("vjbase.menu.wep.clsettings.notice", "Обратите внимание : эти настройки являются клиентскими, то есть они не изменятся для других людей!")
-			add("vjbase.menu.wep.clsettings.togglemuzzle", "Отключить дульную вспышку")
-			add("vjbase.menu.wep.clsettings.togglemuzzlelight", "Отключить динамический свет дульной вспышки")
-			add("vjbase.menu.wep.clsettings.togglemuzzle.label", "Отключение дульной вспышки также отключит это")
-			add("vjbase.menu.wep.clsettings.togglemuzzlebulletshells", "Отключить дымку от выстрелов")
-			
-			-- NPC Properties (C Menu)
-			add("vjbase.menuproperties.control", "Взять под контроль")
-			add("vjbase.menuproperties.guard", "Назначить телохранителем")
-			add("vjbase.menuproperties.wander", "Назначить патрульным")
-			add("vjbase.menuproperties.medic", "Назначить медиком")
-			add("vjbase.menuproperties.allyme", "Назначить союзником")
-			add("vjbase.menuproperties.hostileme", "Назначить противником")
-			add("vjbase.menuproperties.slay", "Убить")
-			add("vjbase.menuproperties.gib", "Разорвать в ошмётки (Если допустимо)")
-			add("vjbase.menuproperties.devmode", "Переключить на режим разработчика")
-			add("vjbase.menuproperties.print.adminonly", "Эти опции доступны только администратору!")
-			
-			-- Tools
-			add("tool.vjstool.menu.tutorialvideo", "Обучающее видео")
-			add("tool.vjstool.menu.label.recommendation", "Рекомендуется использовать этот инструмент только для VJ Base SNPC.")
-			
-			add("tool.vjstool_bullseye.name", "Зона прицеливания NPC")
-			add("tool.vjstool_bullseye.desc", "Создает зону прицеливания, куда будут целиться NPC")
-			add("tool.vjstool_bullseye.left", "ЛКМ для создания зоны прицеливания")
-			add("tool.vjstool_bullseye.menu.help1", "Нажмите ИСПОЛЬЗОВАТЬ, чтобы активировать/деактивировать.")
-			add("tool.vjstool_bullseye.menu.help2", "Когда она деактивирована, NPC больше не будет нацеливаться в неё.")
-			add("tool.vjstool_bullseye.menu.label1", "Выбрать тип движения")
-			add("tool.vjstool_bullseye.menu.label2", "Каталог моделей")
-			add("tool.vjstool_bullseye.menu.toggleusestatus", "Цвета состояния (активирована/деактивирована)")
-			add("tool.vjstool_bullseye.menu.togglestartactivated", "Создать \"Активированной\"")
-			
-			add("tool.vjstool_entityscanner.name", "Сканер энтити")
-			add("tool.vjstool_entityscanner.desc", "Получить информацию про энтити")
-			add("tool.vjstool_entityscanner.left", "Щёлкните левой кнопкой мыши, чтобы вывести информацию об энтити в консоли")
-			add("tool.vjstool_entityscanner.label", "Выводит информацию о любом выбранном объекте, она выводится в консоли.")
-			
-			add("tool.vjstool_healthmodifier.name", "Модификатор здоровья")
-			add("tool.vjstool_healthmodifier.desc", "Изменение здоровья объекта")
-			add("tool.vjstool_healthmodifier.left", "Щёлкните левой кнопкой мыши, чтобы установить показатель здоровья")
-			add("tool.vjstool_healthmodifier.right", "Щёлкните правой кнопкой мыши, чтобы установить здоровье и максимальное здоровье")
-			add("tool.vjstool_healthmodifier.reload", "Клавиша перезарядки для исцеления сущности до её максимального здоровья")
-			add("tool.vjstool_healthmodifier.adminonly", "Только администраторы могут изменять или лечить здоровье другого игрока.")
-			add("tool.vjstool_healthmodifier.sliderhealth", "Здоровье")
-			add("tool.vjstool_healthmodifier.label1", "Следующие пункты предназначены только для VJ Base SNPC:")
-			add("tool.vjstool_healthmodifier.togglegodmode", "Неуязвимость (Непобедимый)")
-	        add("tool.vjstool_healthmodifier.togglehealthregen", "Включить регенерацию здоровья")
-	        add("tool.vjstool_healthmodifier.sliderhealthregenamt", "Здоровья при реген.")
-	    	add("tool.vjstool_healthmodifier.sliderhealthregendelay", "Задержка реген.")
-			
-			add("tool.vjstool_notarget.name", "Режим \"Вне цели\"")
-			add("tool.vjstool_notarget.desc", "Режим \"Вне цели\" приведёт к тому, что все NPC не увидят определенного игрока или NPC")
-			add("tool.vjstool_notarget.left", "Щёлкните левой кнопкой мыши, чтобы переключить режим \"Вне цели\" для себя")
-			add("tool.vjstool_notarget.right", "Щёлкните правой кнопкой мыши, чтобы переключить режим \"Вне цели\" на текущего игрока или NPC")
-			add("tool.vjstool_notarget.label", "Если на объекте включена функция \"Вне цели\", то NPC не будут её атаковать!")
-			add("tool.vjstool_notarget.print.yourselfon", "Включено игнорирование NPC для себя")
-			add("tool.vjstool_notarget.print.yourselfoff", "Отключено игнорирование NPC для себя")
-			
-			add("tool.vjstool_npcequipment.name", "Снаряжение NPC")
-			add("tool.vjstool_npcequipment.desc", "Меняет снаряжение NPC")
-			add("tool.vjstool_npcequipment.left", "Щёлкните левой кнопкой мыши, чтобы изменить снаряжение NPC")
-			add("tool.vjstool_npcequipment.right", "Щёлкните правой кнопкой мыши, чтобы удалить снаряжение NPC")
-			add("tool.vjstool_npcequipment.label", "Изменить или удалить снаряжение NPC.")
-			add("tool.vjstool_npcequipment.selectedequipment", "Выбрать снаряжение")
-			add("tool.vjstool_npcequipment.print.doubleclick", "Двойной клик для выбора оружия.")
-			add("tool.vjstool_npcequipment.print.weaponselected1", "Оружие")
-			add("tool.vjstool_npcequipment.print.weaponselected2", "выбрано!")
-			add("tool.vjstool_npcequipment.header1", "Название")
-			add("tool.vjstool_npcequipment.header2", "Классификация")
-			
-			add("tool.vjstool_npcmover.name", "Управление движением NPC")
-			add("tool.vjstool_npcmover.desc", "Передвижение NPC или группы NPC")
-			add("tool.vjstool_npcmover.left", "Щёлкните левой кнопкой мыши, чтобы выбрать")
-			add("tool.vjstool_npcmover.right", "Щёлкните правой кнопкой мыши, чтобы переместить(бегом)")
-			add("tool.vjstool_npcmover.reload", "Щёлкните кнопку перезарядки, чтобы переместить(шагом)")
-			add("tool.vjstool_npcmover.header1", "Имя")
-			add("tool.vjstool_npcmover.header2", "Классификация")
-			add("tool.vjstool_npcmover.header3", "Информация")
-			add("tool.vjstool_npcmover.buttonunselectall", "Отменить выбор всех NPC")
-			add("tool.vjstool_npcmover.print.unselectedall", "Выбор всех NPC отменён!")
-			add("tool.vjstool_npcmover.print.unselectedall.error", "Ничего не нужно снимать (нечего)!")
-			
-			add("tool.vjstool_npcrelationship.name", "Модификатор отношений NPC")
-			add("tool.vjstool_npcrelationship.desc", "Изменить отношения NPC")
-			add("tool.vjstool_npcrelationship.left", "Щёлкните левой кнопкой мыши, чтобы применить отношение")
-			add("tool.vjstool_npcrelationship.right", "Щёлкните правой кнопкой мыши, чтобы получить текущие классы")
-			add("tool.vjstool_npcrelationship.reload", "Нажмите Перезарядку, чтобы применить к себе")
-			add("tool.vjstool_npcrelationship.label1", "Изменяет отношение NPC, в основном то, как он чувствует себя по отношению к другому объекту.")
-			add("tool.vjstool_npcrelationship.header", "Класс")
-			add("tool.vjstool_npcrelationship.label2", "Нажмите кнопку Return, чтобы добавить класс.")
-			add("tool.vjstool_npcrelationship.button.combine", "Вставить класс: Комбайн")
-			add("tool.vjstool_npcrelationship.button.antlion", "Вставить класс: Муравьиный лев")
-			add("tool.vjstool_npcrelationship.button.zombie", "Вставить класс: Зомби")
-			add("tool.vjstool_npcrelationship.button.player", "Вставить класс: Игрок")
-			add("tool.vjstool_npcrelationship.togglealliedply", "Союз со всеми союзниками игроков?")
-			add("tool.vjstool_npcrelationship.label3", "Применяется только для VJ Base SNPC и требуется, чтобы SNPC имелся")
-			add("tool.vjstool_npcrelationship.print.applied", "Применить таблицу классов отношений на")
-			
-			add("tool.vjstool_npcspawner.name", "Спавнер (создатель) NPC")
-			add("tool.vjstool_npcspawner.desc", "Создать спавнер")
-			add("tool.vjstool_npcspawner.left", "Щёлкните левой кнопкой мыши, чтобы создать спавнер")
-			add("tool.vjstool_npcspawner.right", "Щёлкните правой кнопкой мыши, чтобы создать NPC один раз")
-			add("tool.vjstool_npcspawner.selectednpc", "Выбранный NPC")
-			add("tool.vjstool_npcspawner.spawnpos.forward", "Позиция | Вперёд")
-			add("tool.vjstool_npcspawner.spawnpos.right", "Позиция | Вправо")
-			add("tool.vjstool_npcspawner.spawnpos.up", "Позиция | Вверх")
-			add("tool.vjstool_npcspawner.selectweapon", "Выбранное оружие")
-			add("tool.vjstool_npcspawner.spawnnpclass", "Переопределение класса отношений")
-		    add("tool.vjstool_npcspawner.fritoplyallies", "Дружественные к игроку союзники")
-		    add("tool.vjstool_npcspawner.label.fritoplyallies", "Обязательно наличие класса отношений (CLASS_PLAYER_ALLY)!")
-			add("tool.vjstool_npcspawner.button.updatelist", "Обновить список")
-			add("tool.vjstool_npcspawner.label1", "Дважды щёлкните, чтобы удалить элемент.")
-			add("tool.vjstool_npcspawner.header1", "Имя")
-			add("tool.vjstool_npcspawner.header2", "Позиция")
-			add("tool.vjstool_npcspawner.header3", "Снаряжение")
-			add("tool.vjstool_npcspawner.label2", "Дополнительные опции")
-			add("tool.vjstool_npcspawner.toggle.spawnsound", "Проигрывать звук появления NPC?")
-			add("tool.vjstool_npcspawner.nextspawntime", "Время появления")
-			add("tool.vjstool_npcspawner.popup.header1", "Название")
-			add("tool.vjstool_npcspawner.popup.header2", "Класс")
-			add("tool.vjstool_npcspawner.popup.header3", "Категория")
-			add("tool.vjstool_npcspawner.title1", "Дважды щёлкните, чтобы выбрать NPC.")
-			add("tool.vjstool_npcspawner.title2", "Дважды щёлкните, чтобы выбрать оружие.")
-		    add("tool.vjstool_npcspawner.print.nothingspawn", "Нечего создать!")
-			
-		    add("tool.vjstool_npcfollower.name", "Следующий за объектом NPC")
-	     	add("tool.vjstool_npcfollower.desc", "Выберите NPC и заставьте его следовать за объектом")
-	     	add("tool.vjstool_npcfollower.left", "Выбрать NPC")
-	    	add("tool.vjstool_npcfollower.right", "Заставить выбранного NPC следовать за объектом")
-	    	add("tool.vjstool_npcfollower.reload", "Снять с следования любой объект, за которым следует NPC")
-			add("tool.vjstool_npcfollower.print.noselection", "NPC не выбран!")
-		    add("tool.vjstool_npcfollower.print.reset", "Снято следование за объектом, за которым тот следовал!")
-		
-		    add("entity.vjfeature.admin_health_kit_message", "Вы подобрали 1,000,000 единиц здоровья!")
-			add("entity.vjfeature.fireplace_turnedon", "Вы разожгли костёр.")
-		    add("entity.vjfeature.fireplace_turnedoff", "Вы потушили костёр.")
-	        add("entity.vjfeature.player_spawnpoint_activated", "Точка возрождения активирована!")
-	        add("entity.vjfeature.player_spawnpoint_deactivated", "Точка возрождения деактивирована!")
-			
-			-- Miscellaneous (Prints)
-			add("vjbase.print.bullseye.activated", "Активирована зона прицеливания NPC.")
-			add("vjbase.print.bullseye.deactivated", "Деактивирована зона прицеливания NPC.")
-			
-			add("vjbase.print.npccontroller.entrance", "Для управления проверьте \"Настройки контроллера\" в вкладке \"DrVrej\"")
-			add("vjbase.print.npccontroller.tracking.activated", "Активировано отслеживание зоны прицеливания!")
-			add("vjbase.print.npccontroller.tracking.deactivated", "Деактивировано отслеживание зоны прицеливания!")
-		    add("vjbase.print.npccontroller.movementjump.enable", "Прыжки во время движения включены!")
-		    add("vjbase.print.npccontroller.movementjump.disable", "Прыжки во время движения отключены!")
-			
-			add("vjbase.print.adminhealth.pickup", "Вы подобрали 1,000,000 единиц здоровья!")
-		
-			add("vjbase.print.fireplace.activated", "Вы разожгли костёр.")
-			add("vjbase.print.fireplace.deactivated", "Вы потушили костёр.")
-			
-			add("vjbase.print.plyspawnpoint.activated", "Точка возрождения активирована!")
-			add("vjbase.print.plyspawnpoint.deactivated", "Точка возрождения деактивирована!")
-		//elseif conv == "german" then ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-			
-		//elseif conv == "french" then ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-			
-		elseif conv == "lithuanian" then ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-			-- General Menu (Used everywhere)
-			add("vjbase.menu.general.default", "Numatytieji")
-			add("vjbase.menu.general.admin.only", "Dėmesio: tik administratoriai gali naudotis šiuo meniu.")
-			add("vjbase.menu.general.admin.not", "Nesate administratorius!")
-			add("vjbase.menu.general.reset.everything", "Atkurti")
-			add("vjbase.menu.general.npc.warnfuture", "ĮSPĖJIMAS: tik vėliau sukurti SNPC personažai bus paveikti!")
-			add("vjbase.menu.general.npc.creaturesettings", "Būtybių nustatymai:")
-			add("vjbase.menu.general.npc.humansettings", "Žmonių nustatymai:")
+	-- General Menu (Used everywhere)
+	["vjbase.menu.general.default"] = "Varsayılan",
+	["vjbase.menu.general.admin.only"] = "Uyarı: Bu menüyü sadece yöneticiler kullanır.",
+	["vjbase.menu.general.admin.not"] = "Yönetici değilsin!",
+	["vjbase.menu.general.reset.everything"] = "Varsayılanlara Sıfırla",
+	["vjbase.menu.general.npc.warnfuture"] = "UYARI: Sadece sonradan oluşturulan NPC'ler etkilenir!",
+	["vjbase.menu.general.npc.creaturesettings"] = "Yaratık Ayarları:",
+	["vjbase.menu.general.npc.humansettings"] = "İnsan Ayarları:",
 
-			-- Menu Tabs
-			add("vjbase.menu.tabs.mainmenu", "Pagrindinis meniu")
-			add("vjbase.menu.tabs.settings.npc", "NPC nustatymai")
-			add("vjbase.menu.tabs.settings.weapon", "Ginklų nustatymai")
-			add("vjbase.menu.tabs.settings.hud", "HUD nustatymai")
-			add("vjbase.menu.tabs.tools", "Įrankiai")
-			add("vjbase.menu.tabs.configures.snpc", "SNPC konfigūracija")
+	-- Menu Tabs
+	["vjbase.menu.tabs.mainmenu"] = "Ana Menü",
+	["vjbase.menu.tabs.settings.npc"] = "NPC Ayarları",
+	["vjbase.menu.tabs.settings.weapon"] = "Silah Ayarları",
+	["vjbase.menu.tabs.settings.hud"] = "HUD Ayarları",
+	["vjbase.menu.tabs.tools"] = "Araçlar",
+	["vjbase.menu.tabs.configures.snpc"] = "SNPC Yapılandırmaları",
 
-			-- Main Menu
-			add("vjbase.menu.cleanup", "Valymas")
-			add("vjbase.menu.cleanup.all", "Valyti viską")
-			add("vjbase.menu.cleanup.stopsounds", "Stabdyti visus garsus")
-			add("vjbase.menu.cleanup.remove.vjnpcs", "Šalinti visus VJ personažus")
-			add("vjbase.menu.cleanup.remove.npcs", "Šalinti visus personažus")
-			add("vjbase.menu.cleanup.remove.spawners", "Šalinti visus personažų kūrėjus")
-			add("vjbase.menu.cleanup.remove.corpses", "Šalinti visus lavonus")
-			add("vjbase.menu.cleanup.remove.vjgibs", "Šalinti visas kūno dalis")
-			add("vjbase.menu.cleanup.remove.groundweapons", "Šalinti visus ginklus ant žemės")
-			add("vjbase.menu.cleanup.remove.props", "Šalinti visas esybes")
-			add("vjbase.menu.cleanup.remove.decals", "Šalinti visus lipdukus")
-			add("vjbase.menu.cleanup.remove.allweapons", "Šalinti visus savo ginklus")
-			add("vjbase.menu.cleanup.remove.allammo", "Šalinti visus savo šovinius")
+	-- Main Menu
+	["vjbase.menu.cleanup"] = "Temizle",
+	["vjbase.menu.cleanup.all"] = "Her şeyi Temizle",
+	["vjbase.menu.cleanup.stopsounds"] = "Tüm Sesleri Durdur",
+	["vjbase.menu.cleanup.remove.vjnpcs"] = "Tüm VJ NPC'lerini Temizle",
+	["vjbase.menu.cleanup.remove.npcs"] = "Tüm NPC'leri Temizle",
+	["vjbase.menu.cleanup.remove.spawners"] = "Tüm Oluşturucuları (Spawner) Temizle",
+	["vjbase.menu.cleanup.remove.corpses"] = "Tüm Cesetleri Temizle",
+	["vjbase.menu.cleanup.remove.vjgibs"] = "Parçalanmış NPCleri Temizle",
+	["vjbase.menu.cleanup.remove.groundweapons"] = "Yerdeki Silahları Temizle",
+	["vjbase.menu.cleanup.remove.props"] = "Tüm Propları Temizle",
+	["vjbase.menu.cleanup.remove.decals"] = "Tüm Lekeleri Temizle",
+	["vjbase.menu.cleanup.remove.allweapons"] = "Bütün Silahlarını Kaldır",
+	["vjbase.menu.cleanup.remove.allammo"] = "Bütün Mermini Kaldır",
 
-			add("vjbase.menu.helpsupport", "Susisiekti ir palaikyti")
-			add("vjbase.menu.helpsupport.reportbug", "Pranešti apie klaidą")
-			add("vjbase.menu.helpsupport.suggestion", "Kažką pasiūlyti")
-			add("vjbase.menu.helpsupport.discord", "Prisijunkite prie mano Discord grupės!")
-			add("vjbase.menu.helpsupport.steam", "Prisijunkite prie mano Steam grupės!")
-			add("vjbase.menu.helpsupport.youtube", "Prenumeruokite mano YouTube kanalą!")
-			add("vjbase.menu.helpsupport.twitter", "Sekite mane Twitter!")
-			add("vjbase.menu.helpsupport.patreon", "Paremkite mane Patreon!")
-			add("vjbase.menu.helpsupport.label1", "Spustelėkite vieną iš šių nuorodų, kad gautumėte informaciją apie mano priedų naujinimus!")
-			add("vjbase.menu.helpsupport.label2", "Jūsų parama skatina mane toliau kurti/naujinti priedus! Ačiū!")
-			add("vjbase.menu.helpsupport.thanks", "Ačiū už jūsų palaikymą!")
+	["vjbase.menu.helpsupport"] = "İletişim ve Destek",
+	["vjbase.menu.helpsupport.incompatibleaddons"] = "Uyumsuz Eklentiler",
+	["vjbase.menu.helpsupport.reportbug"] = "Hata Bildir",
+	["vjbase.menu.helpsupport.suggestion"] = "Bir şeyler Öner",
+	["vjbase.menu.helpsupport.discord"] = "Discord'a katıl!",
+	["vjbase.menu.helpsupport.steam"] = "Steam grubuna katıl!",
+	["vjbase.menu.helpsupport.youtube"] = "Youtube'da abone ol!",
+	["vjbase.menu.helpsupport.twitter"] = "Twitter'da takip et!",
+	["vjbase.menu.helpsupport.patreon"] = "Patreon'dan bağış yap!",
+	["vjbase.menu.helpsupport.label1"] = "Eklentilerim ile ilgili gelişmeleri takip etmek için adreslerden birini takip et!",
+	["vjbase.menu.helpsupport.label2"] = "Bağışlar eklenti yapmaya/güncellemeye devam etmem için bana yardımcı oluyor ve beni cesaretlendiriyor! Teşekkür ederim!",
+	["vjbase.menu.helpsupport.thanks"] = "Thanks for your support!",
+	
+	["vjbase.menu.svsettings"] = "Yönetici Sunucu Ayarları",
+	["vjbase.menu.svsettings.label"] = "UYARI: Bazı ayarlar için hilelerin açık olması gereklidir!",
+	["vjbase.menu.svsettings.admin.npcproperties"] = "NPC Özelliklerini Yalnızca Yöneticilerle Sınırla",
+	["vjbase.menu.svsettings.noclip"] = "NoClip'e İzin Ver",
+	["vjbase.menu.svsettings.weapons"] = "Silahlara İzin Ver",
+	["vjbase.menu.svsettings.pvp"] = "PvP'ye İzin Ver",
+	["vjbase.menu.svsettings.godmode"] = "Ölümsüzlük (Herkes)",
+	["vjbase.menu.svsettings.bonemanip.npcs"] = "NPC'lere Kemik Manipülasyonu Uygula",
+	["vjbase.menu.svsettings.bonemanip.players"] = "Oyunculara Kemik Manipülasyonu Uygula",
+	["vjbase.menu.svsettings.bonemanip.others"] = "Diğerlerine Kemik Manipülasyonu Uygula",
+	["vjbase.menu.svsettings.timescale.general"] = "Genel Zaman Ölçeği",
+	["vjbase.menu.svsettings.timescale.physics"] = "Fizik Zaman Ölçeği",
+	["vjbase.menu.svsettings.gravity"] = "Genel Yer Çekimi",
+	["vjbase.menu.svsettings.maxentsprops"] = "Maks Prop/Entity:",
+	
+	["vjbase.menu.clsettings"] = "İstemci Ayarları",
+	["vjbase.menu.clsettings.label"] = "Bu menüyü istemci ayarlarınızı özelleştirmek için kullanabilirsiniz, sunucular bu ayarları değiştiremez!",
+	["vjbase.menu.clsettings.labellang"] = "Dil Seçimi...",
+	["vjbase.menu.clsettings.notify.lang"] = "VJ Base dili ayarlandı:",
+	["vjbase.menu.clsettings.lang.auto"] = "Dil otomatik olarak ayarlandı.",
+	["vjbase.menu.clsettings.lang.auto.label"] = "VJ Base GMod tarafından desteklenmeyen bir dile ayarlanmışsa göz ardı edilir.",
+	
+	["vjbase.menu.info"] = "Bilgi",
 
-			add("vjbase.menu.svsettings", "Serverio nustatymai")
-			add("vjbase.menu.svsettings.label", "ĮSPĖJIMAS: KAI KURIE NUSTATYMAI REIKALAUJA SV_CHEATS!")
-			add("vjbase.menu.svsettings.admin.npcproperties", "Riboti SNPC personažų ypatybes tik administratoriams")
-			add("vjbase.menu.svsettings.noclip", "Skrydžio režimas")
-			add("vjbase.menu.svsettings.weapons", "Leisti ginklus")
-			add("vjbase.menu.svsettings.pvp", "Leisti žalą tarp žaidėjų")
-			add("vjbase.menu.svsettings.godmode", "Nemirtingumas (visiems)")
-			add("vjbase.menu.svsettings.bonemanip.npcs", "Personažų kaulų manipuliavimas")
-			add("vjbase.menu.svsettings.bonemanip.players", "Žaidėjų kaulų manipuliavimas")
-			add("vjbase.menu.svsettings.bonemanip.others", "Visko kaulų manipuliavimas")
-			add("vjbase.menu.svsettings.timescale.general", "Bendroji laiko skalė")
-			add("vjbase.menu.svsettings.timescale.physics", "Fizikos laiko skalė")
-			add("vjbase.menu.svsettings.gravity", "Bendroji gravitacija")
-			add("vjbase.menu.svsettings.maxentsprops", "Daugiausia objektų/esybių:")
+	["vjbase.menu.plugins"] = "Eklentiler",
+	["vjbase.menu.plugins.label"] = "Yüklenmiş VJBase Eklentilerinin Listesi.",
+	["vjbase.menu.plugins.version"] = "Sürüm:",
+	["vjbase.menu.plugins.totalplugins"] = "Toplam Eklenti Sayısı:",
+	["vjbase.menu.plugins.header1"] = "İsim",
+	["vjbase.menu.plugins.header2"] = "Tür",
+	["vjbase.menu.plugins.notfound"] = "Eklenti Bulunamadı",
+	["vjbase.menu.plugins.changelog"] = "Değişiklikler",
+	["vjbase.menu.plugins.makeaddon"] = "Eklenti yapmak ister misin?",
+	["vjbase.menu.plugins.chat.pluginname"] = "Eklenti İsmi:",
+	["vjbase.menu.plugins.chat.plugintypes"] = "Eklenti Türleri:",
+	
+	-- SNPC Menus
+	["vjbase.menu.npc.options"] = "Ayarlar",
+	["vjbase.menu.npc.options.difficulty.header"] = "Zorluğu Seç:",
+	["vjbase.menu.npc.options.difficulty.neanderthal"] = "[-3] Neandertal | -99% Can ve Hasar",
+	["vjbase.menu.npc.options.difficulty.childs_play"] = "[-2] Çocuk Oyuncağı | -75% Can ve Hasar",
+	["vjbase.menu.npc.options.difficulty.easy"] = "[-1] Kolay | -50% Can ve Hasar",
+	["vjbase.menu.npc.options.difficulty.normal"] = "[0] Orta | Olağan Can ve Hasar",
+	["vjbase.menu.npc.options.difficulty.hard"] = "[1] Zor | +50% Can ve Hasar",
+	["vjbase.menu.npc.options.difficulty.insane"] = "[2] Aşırı Zor | +100% Can ve Hasar",
+	["vjbase.menu.npc.options.difficulty.impossible"] = "[3] İmkansız | +150% Can ve Hasar",
+	["vjbase.menu.npc.options.difficulty.nightmare"] = "[4] Kâbus | +250% Can ve Hasar",
+	["vjbase.menu.npc.options.difficulty.hell_on_earth"] = "[5] İnsan Üstü | +350% Can ve Hasar",
+	["vjbase.menu.npc.options.difficulty.total_annihilation"] = "[6] Bu Dünyadan Değil! | +500% Can ve Hasar",
+	["vjbase.menu.npc.options.label1"] = "Relationship Options:",
+	["vjbase.menu.npc.options.togglefriendlyantlion"] = "Antlion'ları Sever",
+	["vjbase.menu.npc.options.togglefriendlycombine"] = "Combine'ları Sever",
+	["vjbase.menu.npc.options.togglefriendlyplayer"] = "Oyuncuları Sever",
+	["vjbase.menu.npc.options.togglefriendlyzombie"] = "Zombileri Sever",
+	["vjbase.menu.npc.options.togglefriendlyvj"] = "VJ Base Sever",
+	["vjbase.menu.npc.options.label2"] = "Tüm VJ NPC'leri Müttefik!",
+	["vjbase.menu.npc.options.label3"] = "Ceset, Parçalanma ve Can Seçenekleri:",
+	["vjbase.menu.npc.options.collision.header"] = "Ceset Çarpışması:",
+	["vjbase.menu.npc.options.collision.default"] = "Varsayılan | İstisnalar: Oyuncular, NPC'ler, Silahlar, Ragdollar",
+	["vjbase.menu.npc.options.collision.everything"] = "İstisna Yok | Her şey!",
+	["vjbase.menu.npc.options.collision.onlyworld"] = "Sadece Dünya",
+	["vjbase.menu.npc.options.collision.excludedebris"] = "İstisnalar: Cesetler, Enkazlar",
+	["vjbase.menu.npc.options.collision.excludeplynpcs"] = "İstisnalar: Oyuncular, NPC'ler",
+	["vjbase.menu.npc.options.collision.excludeply"] = "İstisnalar: Oyuncular",
+	["vjbase.menu.npc.options.corpselimit"] = "Ceset Sınırı, Varsayılan:32",
+	["vjbase.menu.npc.options.label4"] = "'Cesetleri Tut' kapalıyken Ceset Sınırı",
+	["vjbase.menu.npc.options.toggleundocorpses"] = "Geri Alınabilir Cesetler (Geri Al Tuşu)",
+	["vjbase.menu.npc.options.togglecorpsefade"] = "Cesetlerin Solması",
+	["vjbase.menu.npc.options.corpsefadetime"] = "Cesetlerin Solma Süresi",
+	["vjbase.menu.npc.options.label5"] = "Toplam: 600 Saniye (10 Dakika)",
+	["vjbase.menu.npc.options.togglegibcollision"] = "Çarpışan Vücut Parçaları",
+	["vjbase.menu.npc.options.togglefadegibs"] = "Vücut Parçalarının Solması",
+	["vjbase.menu.npc.options.gibfadetime"] = "Vücut Parçalarının Solma Süresi",
+	["vjbase.menu.npc.options.label6"] = "Varsayılan: 30 | Toplam: 600 saniye (10 Dakika)",
+	["vjbase.menu.npc.options.togglesnpcgodmode"] = "Ölümsüz (Hiç hasar almayacaklar)",
+	["vjbase.menu.npc.options.health"] = "Can:",
+	["vjbase.menu.npc.options.defaulthealth"] = "0 = Varsayılan Can (En fazla 9 hane!)",
+	["vjbase.menu.npc.options.label7"] = "AI Ayarları:",
+	["vjbase.menu.npc.options.toggleknowenemylocation"] = "Her zaman düşman konumunu bil",
+	["vjbase.menu.npc.options.sightdistance"] = "Görüş Uzaklığı:",
+	["vjbase.menu.npc.options.label8"] = "Her NPC kendi uzaklığına sahiptir, bu hepsi için aynı olmasını sağlar, dikkatli kullan! (0 = Olağan | Ortalama: 10k)",
+	["vjbase.menu.npc.settings.perf.processtime"] = "İşleme Süresi",
+	["vjbase.menu.npc.settings.perf.processtime.button"] = "İşleme Süresi Nedir?",
+	["vjbase.menu.npc.settings.perf.processtime.label"] = "Default: 1 | Düşük sayılar gecikmeye sebebiyet verir!",
+	["vjbase.menu.npc.options.label10"] = "Çeşitli Ayarlar:",
+	["vjbase.menu.npc.options.togglegmoddecals"] = "Garry's Mod'un varsayılan kan lekelerini kullan.",
+	["vjbase.menu.npc.options.label11"] = "Sadece kırmızı ve yeşil renkler için!",
+	["vjbase.menu.npc.options.toggleitemdrops"] = "Ölümde eşya düşümü",
+	["vjbase.menu.npc.options.toggleaddfrags"] = "Öldürmede skor tablosunda oyuncunun skorunu artır",
+	["vjbase.menu.npc.options.togglecreatureopendoor"] = "Yaratıklar kapıları açabilir",
+	["vjbase.menu.npc.options.togglehumansdropweapon"] = "İnsanlar öldüğünde silahlarını düşürür",
+	["vjbase.menu.npc.options.togglehumanscanjump"] = "İnsanlar zıplayabilir",
+	["vjbase.menu.npc.options.toggleplydroppedweapons"] = "Oyuncular düşen silahları alabilir",
+	
+	["vjbase.menu.npc.settings"] = "Ayarlar",
+	["vjbase.menu.npc.settings.title.ai"] = "AI Ayarları:",
+	["vjbase.menu.npc.settings.togglewandering"] = "Boştayken Gezinmeyi Devre Dışı Bırak",
+	["vjbase.menu.npc.settings.togglechasingenemy"] = "Düşmanı Kovalamayı Devre Dışı Bırak",
+	["vjbase.menu.npc.settings.label.chasingenemy"] = "UYARI: Bu Bazı AI Parçalarını Bozabilir!",
+	["vjbase.menu.npc.settings.togglemedics"] = "Şifacı NPC'leri Devre Dışı Bırak",
+	["vjbase.menu.npc.settings.togglefollowplayer"] = "Oyuncu Takibini Devre Dışı Bırak",
+	["vjbase.menu.npc.settings.label.followplayer"] = "Örnek: NPC'ye doğru E'ye bastığında seni takip eder.",
+	["vjbase.menu.npc.settings.toggleallies"] = "Müttefikliği Devre Dışı Bırak (Müttefik Yok!)",
+	["vjbase.menu.npc.settings.togglebecomeenemytoply"] = "Müttefiklerin Düşman Olmasını Engelle",
+	["vjbase.menu.npc.settings.togglecallhelp"] = "Yardım Çağırmayı Devre Dışı Bırak",
+	["vjbase.menu.npc.settings.toggleproppush"] = "Prop İle İttirmeyi Devre Dışı Bırak (Yaratıklar)",
+	["vjbase.menu.npc.settings.togglepropattack"] = "Prop İle Saldırmayı Devre Dışı Bırak (Yaratıklar)",
+	["vjbase.menu.npc.settings.toggledangersight"] = "Tehlike ve El Bombalarını Fark Etmeyi Devre Dışı Bırak (İnsanlar)",
+	["vjbase.menu.npc.settings.togglereloading"] = "Şarjör Değiştirmeyi Devre Dışı Bırak",
+	["vjbase.menu.npc.settings.toggleeating"] = "Yemeyi Devre Dışı Bırak (ÖRN: Ceset ya da Parçalar)",
+	["vjbase.menu.npc.settings.title.attack"] = "Saldırı Ayarları:",
+	["vjbase.menu.npc.settings.togglemelee"] = "Yakın Saldırı Devre Dışı ",
+	["vjbase.menu.npc.settings.togglerange"] = "Menzilli Saldırı Devre Dışı",
+	["vjbase.menu.npc.settings.toggleleap"] = "Sıçrama Saldırıları Devre Dışı (Yaratıklar)",
+	["vjbase.menu.npc.settings.togglethrownade"] = "El Bombası Saldırısı Devre Dışı (İnsanlar)",
+	["vjbase.menu.npc.settings.toggleweapons"] = "Silahlar Devre Dışı (İnsanlar)",
+	["vjbase.menu.npc.settings.label.noweapon"] = "İnsanlar silah kullanamayacak!",
+	["vjbase.menu.npc.settings.togglemeleedsp"] = "Ağır yakın hasarlarda DSP efekti Devre Dışı",
+	["vjbase.menu.npc.settings.toggleslowplayer"] = "Oyuncuların yakın hasarda yavaşlaması Devre Dışı",
+	["vjbase.menu.npc.settings.togglebleedonmelee"] = "Oyuncu/NPC yakın hasarlarda kanama Devre Dışı",
+	["vjbase.menu.npc.settings.title.misc"] = "Çeşitli Ayarlar:",
+	["vjbase.menu.npc.settings.toggleidleparticles"] = "Boştaki efekt ve parçacıklar Devre Dışı",
+	["vjbase.menu.npc.settings.label.idleparticles"] = "Bunu devre dışı bırakmak performansı artırabilir!",
+	["vjbase.menu.npc.settings.togglesnpcchat"] = "NPC Sohbet Yazıları Devre Dışı",
+	["vjbase.menu.npc.settings.label.npcchat"] = "Örnek: 'Bilim adamı seni takip ediyor!'",
+	["vjbase.menu.npc.settings.title.damagecorpse"] = "Hasar ve Ceset Ayarları:",
+	["vjbase.menu.npc.settings.toggleflinching"] = "Korkma Devre Dışı",
+	["vjbase.menu.npc.settings.togglebleeding"] = "Kanama Devre Dışı",
+	["vjbase.menu.npc.settings.label.bleeding"] = "Kan izleri, lekeler vs. Devre Dışı",
+	["vjbase.menu.npc.settings.togglebloodpool"] = "Kan gölü (Öldüğünde) Devre Dışı",
+	["vjbase.menu.npc.settings.togglegib"] = "Ceset Parçalanmaı Devre Dışı",
+	["vjbase.menu.npc.settings.label.gib"] = "Bunu devre dışı bırakmak performansı artırabilir!",
+	["vjbase.menu.npc.settings.togglegibdeathvfx"] = "Parçalanma/Ölüm VFX Devre Dışı (Parçacıklar, lekeler, vs.)",
+	["vjbase.menu.npc.settings.toggledeathanim"] = "Ölüm Animasyonu Devre Dışı",
+	["vjbase.menu.npc.settings.togglecorpses"] = "Cesetler Devre Dışı",
+	["vjbase.menu.npc.settings.title.passive"] = "Pasif Ayarlar:",
+	["vjbase.menu.npc.settings.togglerunontouch"] = "Dokunmada Kaçış Devre Dışı",
+	["vjbase.menu.npc.settings.togglerunonhit"] = "Hasarda Kaçış Devre Dışı",
+	
+	["vjbase.menu.npc.settings.snd"] = "Ses Ayarları",
+	["vjbase.menu.npc.settings.snd.togglesounds"] = "Tüm Sesler Devre Dışı",
+	["vjbase.menu.npc.settings.snd.togglesoundtrack"] = "Ses Parçaları/Müzik Devre Dışı",
+	["vjbase.menu.npc.settings.snd.toggleidle"] = "Boştaki Sesler Devre Dışı",
+	["vjbase.menu.npc.settings.snd.togglebreathing"] = "Nefes Alma Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.togglefootsteps"] = "Ayak Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.togglemelee"] = "Yakın Saldırı Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.togglerange"] = "Menzilli Saldırı Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.togglealert"] = "Uyarı Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.togglepain"] = "Acı Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.toggledeath"] = "Ölüm Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.togglegibbing"] = "Parçalanma Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.togglegibbing.label"] = "Ayrıca bir parça bir şeye çarptığında çıkan sesler için de geçerlidir",
+	["vjbase.menu.npc.settings.snd.togglemedic"] = "Şifacı Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.togglefollowing"] = "Takip Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.togglecallhelp"] = "Yardım Çağrısı Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.togglereceiveorder"] = "Emir Alma Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.togglebecomeenemy"] = "Oyuncuya Düşman Olma Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.toggleplayersight"] = "Oyuncu Görüşü Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.toggleplayersight.label"] = "NPC'nin Oyuncuğu Gördüğündeki Özel Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.toggledmgbyplayer"] = "Oyuncu Tarafından Verilen Hasar Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.toggledmgbyplayer.label"] = "Bir oyuncu NPC'ye ateş ettiğinde, özellikle dost NPC'lere",
+	["vjbase.menu.npc.settings.snd.toggleleap"] = "Sıçrama Saldırısı Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.toggleslowedplayer"] = "Yavaşlamış Oyuncu Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.toggleslowedplayer.label"] = "Oyuncu yakın hasar ile yavaşlatığındaki sesler",
+	["vjbase.menu.npc.settings.snd.togglegrenade"] = "El Bombası Saldırı Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.toggledangersight"] = "El bombası ve Tehlike Görme Sesleri Devre Dışı",
+	["vjbase.menu.npc.settings.snd.togglesuppressing"] = "Çağrı Seslerini Bastırma Devre Dışı",
+	["vjbase.menu.npc.settings.snd.togglereload"] = "Çağrı Seslerini Yineleme Devre Dışı",
 
-			add("vjbase.menu.clsettings", "Kliento nustatymai")
-			add("vjbase.menu.clsettings.label", "Naudokite šį meniu kiento nustatymų tinkinimui. Serveriai negali keisti šių nustatymų!")
-			add("vjbase.menu.clsettings.labellang", "Kalbos nuostata...")
-			add("vjbase.menu.clsettings.notify.lang", "VJ Base kalba nustatyta į:")
+	["vjbase.menu.npc.settings.dev"] = "Geliştirici Ayarları",
+	["vjbase.menu.npc.settings.dev.label1"] = "Bu ayarlar SNPC'leri geliştirirken kullanılır.",
+	["vjbase.menu.npc.settings.dev.label2"] = "UYARI: Bu seçeneklerden bazıları gecikmeye neden olabilir!",
+	["vjbase.menu.npc.settings.dev.toggledev"] = "Geliştirici Modunu Aktif Et?",
+	["vjbase.menu.npc.settings.dev.label3"] = "Bu seçenek buradan ya da içerik menüsünden etkinleştirilmelidir! (Aşağıdaki seçenekler için gerekli)",
+	["vjbase.menu.npc.settings.dev.printtouch"] = "Dokunmada Yazdır (Konsola)",
+	["vjbase.menu.npc.settings.dev.printcurenemy"] = "Mevcut düşmanı Yazdır (Konsola)",
+	["vjbase.menu.npc.settings.dev.printlastseenenemy"] = "'LastSeenEnemy' zamanını Yazdır (Sohbete)",
+	["vjbase.menu.npc.settings.dev.printonreset"] = "Düşmanı Sıfırlamayı Yazdır (Konsola)",
+	["vjbase.menu.npc.settings.dev.printonstopattack"] = "Duran Saldırıları Yazdır (Konsola)",
+	["vjbase.menu.npc.settings.dev.printtakingcover"] = "Siper Almayı Yazdır (Konsola)",
+	["vjbase.menu.npc.settings.dev.printondamage"] = "Hasarda Yazdır (Konsola)",
+	["vjbase.menu.npc.settings.dev.printondeath"] = "Ölümde Yazdır (Konsola)",
+	["vjbase.menu.npc.settings.dev.printweaponinfo"] = "Silah Bilgisini Yazdır (Konsola)",
+	["vjbase.menu.npc.settings.dev.cachedmodels"] = "Önbelleğe Alınan Modelleri Yazdır (Konsola)",
+	["vjbase.menu.npc.settings.dev.numofnpcs"] = "NPC Sayısını Yazdır (Sohbete)",
+	["vjbase.menu.npc.settings.dev.label4"] = "Butonları Yenile:",
+	["vjbase.menu.npc.settings.dev.reloadsounds"] = "Sesleri Yenile",
+	["vjbase.menu.npc.settings.dev.reloadmaterials"] = "Materyalleri Yenile (VMT)",
+	["vjbase.menu.npc.settings.dev.reloadtextures"] = "Dokuları Yenile (VTF)",
+	["vjbase.menu.npc.settings.dev.reloadmodels"] = "Modelleri Yenile",
+	["vjbase.menu.npc.settings.dev.reloadspawnmenu"] = "Oluşturma Menüsünü Yenile",
+	
+	["vjbase.menu.npc.settings.con"] = "Kontrolcü Ayarları",
+	["vjbase.menu.npc.settings.con.label1"] = "Bilgilendirme: Bu ayarlar sadece istemci taraflıdır!",
+	["vjbase.menu.npc.settings.con.label2"] = "Yakınlaştırmanın uzaklığı veya yakınlığı her tıklamada ne kadar değişir?.",
+	["vjbase.menu.npc.settings.con.displayhud"] = "HUD Göster",
+	["vjbase.menu.npc.settings.con.camzoomdistance"] = "Kamera Hareket Uzaklığı",
+	["vjbase.menu.npc.settings.con.camspeed"] = "Kamera Hızı",
+	["vjbase.menu.npc.settings.con.camzoomspeed"] = "Kamera Yakınlaştırma Hızı",
+	["vjbase.menu.npc.settings.con.diewithnpc"] = "Kontrolcü NPC'ile Birlikte Ölür (Yeniden Doğma Gereklidir!)",
+	["vjbase.menu.npc.settings.con.displaydev"] = "Geliştirici Entity'lerini Göster",
+	["vjbase.menu.npc.settings.con.label3"] = "Tuş Atamaları:",
+	["vjbase.menu.npc.settings.con.bind.header1"] = "Kontrol",
+	["vjbase.menu.npc.settings.con.bind.header2"] = "Açıklama",
+	["vjbase.menu.npc.settings.con.bind.clickmsg1"] = "Seçilen Tuş:",
+	["vjbase.menu.npc.settings.con.bind.clickmsg2"] = "Açıklama:",
+	["vjbase.menu.npc.settings.con.bind.movement"] = "Hareket (8-Yön Destekler)",
+	["vjbase.menu.npc.settings.con.bind.exitcontrol"] = "Kontrolcüden Çık",
+	["vjbase.menu.npc.settings.con.bind.meleeattack"] = "Yakın Saldırı",
+	["vjbase.menu.npc.settings.con.bind.rangeattack"] = "Uzak / Silah Saldırısı",
+	["vjbase.menu.npc.settings.con.bind.leaporgrenade"] = "Sıçrama / Bomba Saldırısı",
+	["vjbase.menu.npc.settings.con.bind.reloadweapon"] = "Şarjör Değiştir",
+	["vjbase.menu.npc.settings.con.bind.togglebullseye"] = "Hedef Takibi Aç/Kapat",
+	["vjbase.menu.npc.settings.con.bind.cameramode"] = "Kamera Modunu Değiştir",
+	["vjbase.menu.npc.settings.con.bind.movementjump"] = "Hareketli Atlama Aç/Kapat",
+	["vjbase.menu.npc.settings.con.bind.camerazoom"] = "Yakınlaştır ve Uzaklaştır",
+	["vjbase.menu.npc.settings.con.bind.cameraup"] = "Yukarı Kamera Hareketi",
+	["vjbase.menu.npc.settings.con.bind.cameradown"] = "Aşağı Kamera Hareketi",
+	["vjbase.menu.npc.settings.con.bind.cameraforward"] = "İleri Kamera Hareketi",
+	["vjbase.menu.npc.settings.con.bind.camerabackward"] = "Geri Kamera Hareketi",
+	["vjbase.menu.npc.settings.con.bind.cameraleft"] = "Sol Kamera Hareketi",
+	["vjbase.menu.npc.settings.con.bind.cameraright"] = "Sağ Kamera Hareketi",
+	["vjbase.menu.npc.settings.con.bind.resetzoom"] = "Kamera Pozisyonunu Sıfırla",
+	
+	-- Weapon Client Settings
+	["vjbase.menu.wep.clsettings"] = "İstemci Ayarları",
+	["vjbase.menu.wep.clsettings.notice"] = "Bilgilendirme: Bu ayarlar istemci taraflı, seçenekler diğerleri için değişmeyecek!",
+	["vjbase.menu.wep.clsettings.togglemuzzle"] = "Namlu Flaşı Devre Dışı",
+	["vjbase.menu.wep.clsettings.togglemuzzlelight"] = "Namlu Flaşı Dinamik Işık Devre Dışı",
+	["vjbase.menu.wep.clsettings.togglemuzzle.label"] = "Namlu flaşını devre dışı bırakmak bunu da devre dışı bırakır.",
+	["vjbase.menu.wep.clsettings.togglemuzzlebulletshells"] = "Mermi Kabukları Devre Dışı",
+	
+	-- NPC Properties (C Menu)
+	["vjbase.menuproperties.control"] = "KONTROL ET",
+	["vjbase.menuproperties.guard"] = "Koruma Modu Aç/Kapat",
+	["vjbase.menuproperties.wander"] = "Gezinme Modu Aç/Kapat",
+	["vjbase.menuproperties.medic"] = "Şifacı Yap",
+	["vjbase.menuproperties.allyme"] = "Müttefikim Ol",
+	["vjbase.menuproperties.hostileme"] = "Düşmanım Ol",
+	["vjbase.menuproperties.slay"] = "Katlet",
+	["vjbase.menuproperties.gib"] = "Parçala (Geçerliyse)",
+	["vjbase.menuproperties.devmode"] = "Geliştirici Modu Aç/Kapat",
+	["vjbase.menuproperties.print.adminonly"] = "Bu ayarları sadece yöneticiler değiştirebilir!",
 
-			add("vjbase.menu.info", "Informacija")
+	-- Tools
+	["tool.vjstool.menu.tutorialvideo"] = "Eğitim Videosu",
+	["tool.vjstool.menu.label.recommendation"] = "Bu aracın sadece VJBase sNPC'leri üstünde kullanılması önerilir.",
+	
+	["tool.vjstool_bullseye.name"] = "NPC Hedef Takibi",
+	["tool.vjstool_bullseye.desc"] = "NPC'lerin hedef alacağı noktayı oluşturur.",
+	["tool.vjstool_bullseye.left"] = "Hedef Oluştur",
+	["tool.vjstool_bullseye.menu.help1"] = "Entity Kullanma Tuşu ile Aktif/Pasif ayarla.",
+	["tool.vjstool_bullseye.menu.help2"] = "Pasif ayarlandığında NPC'ler hedef almaz.",
+	["tool.vjstool_bullseye.menu.label1"] = "Hareket türünü seç",
+	["tool.vjstool_bullseye.menu.label2"] = "Model Dizini",
+	["tool.vjstool_bullseye.menu.toggleusestatus"] = "Durum Renklerini Kullan (Aktif/Pasif)",
+	["tool.vjstool_bullseye.menu.togglestartactivated"] = "Aktif Olarak Başlat",
 
-			add("vjbase.menu.plugins", "Įdiegti įskiepiai")
-			add("vjbase.menu.plugins.label", "Įdiegtų VJ Base įskiepių sąrašas.")
-			add("vjbase.menu.plugins.version", "Versija:")
-			add("vjbase.menu.plugins.totalplugins", "Iš viso įskiepių:")
-			add("vjbase.menu.plugins.header1", "Pavadinimas")
-			add("vjbase.menu.plugins.header2", "Tipas")
-			add("vjbase.menu.plugins.notfound", "Nerasta įskiepių.")
-			add("vjbase.menu.plugins.changelog", "Pakeitimų žurnalas")
-			add("vjbase.menu.plugins.makeaddon", "Norite sukurti priedą? Spustelėkite čia!")
-
-			-- SNPC Menus
-			add("vjbase.menu.npc.options", "Parinktys")
-			add("vjbase.menu.npc.options.difficulty.header", "Pasirinkite sunkumą:")
-			add("vjbase.menu.npc.options.difficulty.neanderthal", "Neandertalietis | -99% sveikatos ir žalos")
-			add("vjbase.menu.npc.options.difficulty.childs_play", "Vaikų žaidimas | -75% sveikatos ir žalos")
-			add("vjbase.menu.npc.options.difficulty.easy", "Lengvas | -50% sveikatos ir žalos")
-			add("vjbase.menu.npc.options.difficulty.normal", "Normalus | Įprasta sveikata ir žala")
-			add("vjbase.menu.npc.options.difficulty.hard", "Sunkus | +50% sveikatos ir žalos")
-			add("vjbase.menu.npc.options.difficulty.insane", "Beprotiškas | +100% sveikatos ir žalos")
-			add("vjbase.menu.npc.options.difficulty.impossible", "Neįmanomas | +150% sveikatos ir žalos")
-			add("vjbase.menu.npc.options.difficulty.nightmare", "Košmaras | +250% sveikatos ir žalos")
-			add("vjbase.menu.npc.options.difficulty.hell_on_earth", "Pragaras žemėje | +350% sveikatos ir žalos")
-			add("vjbase.menu.npc.options.difficulty.total_annihilation", "Visiškas sunaikinimas | +500% sveikatos ir žalos")
-			add("vjbase.menu.npc.options.label1", "Santykių parinktys:")
-			add("vjbase.menu.npc.options.togglefriendlyantlion", "Draugiški skruzdžių liūtams")
-			add("vjbase.menu.npc.options.togglefriendlycombine", "Draugiški kombainams")
-			add("vjbase.menu.npc.options.togglefriendlyplayer", "Draugiški žaidėjams")
-			add("vjbase.menu.npc.options.togglefriendlyzombie", "Draugiški zombiams")
-			add("vjbase.menu.npc.options.togglefriendlyvj", "Draugiški VJ Base personažams")
-			add("vjbase.menu.npc.options.label2", "Visi VJ SNPC personažai bus sąjungininkai!")
-			add("vjbase.menu.npc.options.label3", "Lavonų, nuplėšimo ir sveikatos parinktys:")
-			add("vjbase.menu.npc.options.collision.header", "Lavonų susidūrimas:")
-			add("vjbase.menu.npc.options.collision.default", "Numatytas | Išimtys: žaidėjai, personažai, ginklai, lėlės")
-			add("vjbase.menu.npc.options.collision.everything", "Nėra išimčių | Viskas!")
-			add("vjbase.menu.npc.options.collision.onlyworld", "Tik pasaulis")
-			add("vjbase.menu.npc.options.collision.excludedebris", "Išimtys: lavonai, nuolaužos")
-			add("vjbase.menu.npc.options.collision.excludeplynpcs", "Išimtys: žaidėjai, personažai")
-			add("vjbase.menu.npc.options.collision.excludeply", "Išimtys: žaidėjai")
-			add("vjbase.menu.npc.options.corpselimit", "Lavonų riba, numatyta:32")
-			add("vjbase.menu.npc.options.label4", "Lavonų riba, kai „Palikti lavonus“ yra išjungtas")
-			add("vjbase.menu.npc.options.toggleundocorpses", "Neanuliuojami lavonai (anuliavimo klavišas)")
-			add("vjbase.menu.npc.options.togglecorpsefade", "Lavonų išnykimas")
-			add("vjbase.menu.npc.options.corpsefadetime", "Lavonų išnykimo laikas")
-			add("vjbase.menu.npc.options.label5", "Iš viso: 600 sekundžių (10 minučių)")
-			add("vjbase.menu.npc.options.togglegibcollision", "Susiduriančios kūno dalys")
-			add("vjbase.menu.npc.options.togglefadegibs", "Kūno dalių išnykimas")
-			add("vjbase.menu.npc.options.gibfadetime", "Kūno dalių išnykimo laikas")
-			add("vjbase.menu.npc.options.label6", "Numatytas: 30 | Iš viso: 600 sekundžių (10 minučių)")
-			add("vjbase.menu.npc.options.togglesnpcgodmode", "Nemirtingumas (negalės būti sužaloti)")
-			add("vjbase.menu.npc.options.health", "Sveikata:")
-			add("vjbase.menu.npc.options.defaulthealth", "0 = numatyta sveikata (daugiausia 9 skaitmenys!)")
-			add("vjbase.menu.npc.options.label7", "DI parinktys:")
-			add("vjbase.menu.npc.options.toggleknowenemylocation", "Visada žinoti žaidėjo vietą")
-			add("vjbase.menu.npc.options.sightdistance", "Regėjimo atstumas:")
-			add("vjbase.menu.npc.options.label8", "Kiekvienas personažas turi savo atstumą, bet tai padarys jį visiems vienodą, todėl būkite atsargūs! (0 = įprastas | Vidutinis: 10 tūkst.)")
-			add("vjbase.menu.npc.settings.perf.processtime", "Apdorojimo laikas")
-			add("vjbase.menu.npc.settings.perf.processtime.button", "Kas yra apdorojimo laikas?")
-			add("vjbase.menu.npc.settings.perf.processtime.label", "Numatyta: 1 | Mažesnė vertė reiškia mažiau stabilesnį žaidimą!")
-			add("vjbase.menu.npc.options.label10", "Įvairios parinktys:")
-			add("vjbase.menu.npc.options.togglegmoddecals", "Naudoti dabartinį Garry's Mod kraują")
-			add("vjbase.menu.npc.options.label11", "Spalvos, kurios nėra geltonos ar raudonos, nepasikeis!")
-			add("vjbase.menu.npc.options.toggleitemdrops", "Daiktų išmetimas mirus")
-			add("vjbase.menu.npc.options.toggleshowhudonkilled", "Rodyti HUD ekrane, kai nužudomas SNPC personažas (viršuje dešinėje)")
-			add("vjbase.menu.npc.options.toggleaddfrags", "Pridėti taškus prie žaidėjo rezultatų lentos, kai nužudomas")
-			add("vjbase.menu.npc.options.togglecreatureopendoor", "Būtybės gali atidaryti duris")
-			add("vjbase.menu.npc.options.togglehumansdropweapon", "Žmonės išmeta daiktus mirdami")
-			add("vjbase.menu.npc.options.togglehumanscanjump", "Žmonės gali šokti")
-			add("vjbase.menu.npc.options.toggleplydroppedweapons", "Žmonės gali paimti išmestus ginklus")
-
-			add("vjbase.menu.npc.settings", "Nustatymai")
-			add("vjbase.menu.npc.settings.title.ai", "DI nustatymai:")
-			add("vjbase.menu.npc.settings.togglewandering", "Išjungti klaidžiojimą neveikimo metu")
-			add("vjbase.menu.npc.settings.togglechasingenemy", "Išjungti priešo vyjimąsi")
-			add("vjbase.menu.npc.settings.label.chasingenemy", "Naudokitės šiuo nustatymu atsargiai, jis gali sugadinti daug dalykų!")
-			add("vjbase.menu.npc.settings.togglemedics", "Išjungti gydytojus SNPC personažus")
-			add("vjbase.menu.npc.settings.togglefollowplayer", "Išjungti žaidėjo sekimą")
-			add("vjbase.menu.npc.settings.label.followplayer", "Pavyzdys: kai spustelite E ant SNPC personažo, jie jus seks")
-			add("vjbase.menu.npc.settings.toggleallies", "Išjungti aljansus (nėra sąjungininkų!)")
-			add("vjbase.menu.npc.settings.togglebecomeenemytoply", "Išjungti sąjungininkų tapimą priešais")
-			add("vjbase.menu.npc.settings.toggleproppush", "Išjungti daiktų stūmimą (būtybės)")
-			add("vjbase.menu.npc.settings.togglepropattack", "Išjungti puolimą daiktais (būtybės)")
-			add("vjbase.menu.npc.settings.togglescarednade", "Išjungti žmonių atsitraukimą nuo granatų")
-			add("vjbase.menu.npc.settings.togglereloading", "Išjungti ginklų užtaisymą")
-			add("vjbase.menu.npc.settings.title.attack", "Puolimo nustatymai:")
-			add("vjbase.menu.npc.settings.togglemelee", "Išjungti artimąjį puolimą")
-			add("vjbase.menu.npc.settings.togglerange", "Išjungti tolimajį puolimą")
-			add("vjbase.menu.npc.settings.toggleleap", "Išjungti puolimus su šuoliu (būtybės)")
-			add("vjbase.menu.npc.settings.togglethrownade", "Išjungti granatų metimą (žmonės)")
-			add("vjbase.menu.npc.settings.toggleweapons", "Išjungti ginklus (žmonės)")
-			add("vjbase.menu.npc.settings.label.noweapon", "Žmonės negalės naudoti ginklų!")
-			add("vjbase.menu.npc.settings.togglemeleedsp", "Išjungti DSP efektus artimos kovos žalai")
-			add("vjbase.menu.npc.settings.toggleslowplayer", "Išjungti žaidėjų sulėtėjimą po artimos kovos puolimo")
-			add("vjbase.menu.npc.settings.togglebleedonmelee", "Išjungti žaidėjų/personažų kraujavimą po artimos kovos puolimo")
-			add("vjbase.menu.npc.settings.title.misc", "Įvairūs nustatymai:")
-			add("vjbase.menu.npc.settings.toggleidleparticles", "Išjungti neveikimo daleles ir efektus")
-			add("vjbase.menu.npc.settings.label.idleparticles", "Išjungimas gali padėti našumui")
-			add("vjbase.menu.npc.settings.togglesnpcchat", "Išjungti SNPC personažų pokalbį")
-			add("vjbase.menu.npc.settings.label.npcchat", "Pavyzdžiui: „Mokslininkas dabar jus seka“")
-			add("vjbase.menu.npc.settings.title.damagecorpse", "Žalos ir lavonų nustatymai:")
-			add("vjbase.menu.npc.settings.toggleflinching", "Išjungti krūptelėjimą")
-			add("vjbase.menu.npc.settings.togglebleeding", "Išjungti kraujavimą")
-			add("vjbase.menu.npc.settings.label.bleeding", "Išjungia kraujo daleles, lipdukus, balas ir t.t.")
-			add("vjbase.menu.npc.settings.togglebloodpool", "Išjungti kraujo balas (mirus)")
-			add("vjbase.menu.npc.settings.togglegib", "Išjungti kūno dalių nutraukimą")
-			add("vjbase.menu.npc.settings.label.gib", "Išjungimas gali padėti našumui")
-			add("vjbase.menu.npc.settings.togglegibdecals", "Išjungti kūno dalių lipdukus")
-			add("vjbase.menu.npc.settings.togglegibdeathparticles", "Išjungti kūno dalių/mirties daleles ir efektus")
-			add("vjbase.menu.npc.settings.toggledeathanim", "Išjungti mirties animaciją")
-			add("vjbase.menu.npc.settings.togglecorpses", "Išjungti lavonus")
-			add("vjbase.menu.npc.settings.title.passive", "Pasyvūs nustatymai:")
-			add("vjbase.menu.npc.settings.togglerunontouch", "Išjungti bėgimą prisilėtus")
-			add("vjbase.menu.npc.settings.togglerunonhit", "Išjungti bėgimą pataikius")
-
-			add("vjbase.menu.npc.settings.snd", "Garso nustatymai")
-			add("vjbase.menu.npc.settings.snd.togglesounds", "Išjungti visus garsus")
-			add("vjbase.menu.npc.settings.snd.togglesoundtrack", "Išjungti garso takelius")
-			add("vjbase.menu.npc.settings.snd.toggleidle", "Išjungti neveikimo garsus")
-			add("vjbase.menu.npc.settings.snd.togglebreathing", "Išjungti kvėpavimo garsus")
-			add("vjbase.menu.npc.settings.snd.togglefootsteps", "Išjungti žingsnių garsus")
-			add("vjbase.menu.npc.settings.snd.togglemelee", "Išjungti artimos kovos puolimo garsus")
-			add("vjbase.menu.npc.settings.snd.togglerange", "Išjungti tolimos kovos puolimų garsus")
-			add("vjbase.menu.npc.settings.snd.togglealert", "Išjungti įspėjimo garsus")
-			add("vjbase.menu.npc.settings.snd.togglepain", "Išjungti skausmo garsus")
-			add("vjbase.menu.npc.settings.snd.toggledeath", "Išjungti mirties garsus")
-			add("vjbase.menu.npc.settings.snd.togglegibbing", "Išjungti kūno dalių nutraukimo garsus")
-			add("vjbase.menu.npc.settings.snd.togglegibbing.label", "Taip pat taikoma garsams, kurie skamba, kai daiktas su kažkuo susiduria")
-			add("vjbase.menu.npc.settings.snd.togglemedic", "Išjungti gydytojo garsus")
-			add("vjbase.menu.npc.settings.snd.togglefollowing", "Išjungti sekimo garsus")
-			add("vjbase.menu.npc.settings.snd.togglecallhelp", "Išjungti pakalbos kvietimo garsus")
-			add("vjbase.menu.npc.settings.snd.togglereceiveorder", "Išjungti įsakymų gavimo garsus")
-			add("vjbase.menu.npc.settings.snd.togglebecomeenemy", "Išjungti tapimo priešu garsus")
-			add("vjbase.menu.npc.settings.snd.toggleplayersight", "Išjungti žaidėjo pamatymo garsus")
-			add("vjbase.menu.npc.settings.snd.toggleplayersight.label", "Suskamba ypatingas garsas, kai SNPC personažas pamato žaidėją")
-			add("vjbase.menu.npc.settings.snd.toggledmgbyplayer", "Išjungti žaidėjo daromos žalos garsus")
-			add("vjbase.menu.npc.settings.snd.toggledmgbyplayer.label", "Kai žaidėjas šauna į SNPC personažą, paprastai draugiški SNPC personažai")
-			add("vjbase.menu.npc.settings.snd.toggleleap", "Išjungti puolimų su šuoliu garsus")
-			add("vjbase.menu.npc.settings.snd.toggleslowedplayer", "Išjungti sulėtintų žaidėjų garsus")
-			add("vjbase.menu.npc.settings.snd.toggleslowedplayer.label", "Skambantys garsai, kai žadėją sulėtiną artimos kovos puolimas")
-			add("vjbase.menu.npc.settings.snd.togglegrenade", "Išjungti granatos puolimo garsus")
-			add("vjbase.menu.npc.settings.snd.togglegrenadesight", "Išjungti granatos pamatymo garsus")
-			add("vjbase.menu.npc.settings.snd.togglesuppressing", "Išjungti slopinimo sušukimo garsus")
-			add("vjbase.menu.npc.settings.snd.togglereload", "Išjungti užtaisymo sušukimo garsus")
-
-			add("vjbase.menu.npc.settings.dev", "Kūrėjo nustatymai")
-			add("vjbase.menu.npc.settings.dev.label1", "Šie nustatymai yra naudojami kuriant SNPC personažus.")
-			add("vjbase.menu.npc.settings.dev.label2", "ĮSPĖJIMAS: kai kurios parinktys prives prie žaidimo strigimo!")
-			add("vjbase.menu.npc.settings.dev.toggledev", "Įgalinti kūrėjo režimą?")
-			add("vjbase.menu.npc.settings.dev.label3", "Šios parinktys turi būti įgalintos čia arba naudojant kontekstinį meniu (būtina toliau esančioms parinktims).")
-			add("vjbase.menu.npc.settings.dev.printtouch", "Spausdinti prisilėtus (konsolė)")
-			add("vjbase.menu.npc.settings.dev.printcurenemy", "Spausdinti dabartinį priešą (konsolė)")
-			add("vjbase.menu.npc.settings.dev.printlastseenenemy", "Spausdinti laiką „LastSeenEnemy“ (pokalbis)")
-			add("vjbase.menu.npc.settings.dev.printonreset", "Spausdinti atkuriant priešą (konsolė)")
-			add("vjbase.menu.npc.settings.dev.printonstopattack", "Spausdinti sustabdant puolimą (konsolė)")
-			add("vjbase.menu.npc.settings.dev.printtakingcover", "Spausdinti prisidengiant (konsolė)")
-			add("vjbase.menu.npc.settings.dev.printondamage", "Spausdinti žalą (konsolė)")
-			add("vjbase.menu.npc.settings.dev.printondeath", "Spausdinti mirtį (konsolė)")
-			add("vjbase.menu.npc.settings.dev.printweapon", "Spausdinti dabartinį ginklą (konsolė)")
-			add("vjbase.menu.npc.settings.dev.printammo", "Spausdinti šovinių skaičių (konsolė)")
-			add("vjbase.menu.npc.settings.dev.printaccuracy", "Spausdinti ginklo tikslumą (konsolė)")
-			add("vjbase.menu.npc.settings.dev.cachedmodels", "Modeliai podėlyje (konsolė)")
-			add("vjbase.menu.npc.settings.dev.numofnpcs", "Personažų skaičius (pokalbis)")
-			add("vjbase.menu.npc.settings.dev.reloadsounds", "Iš naujo įkelti garsus")
-			add("vjbase.menu.npc.settings.dev.reloadmaterials", "Iš naujo įkelti medžiagas (VMT)")
-			add("vjbase.menu.npc.settings.dev.reloadtextures", "Iš naujo įkelti tekstūras (VTF)")
-			add("vjbase.menu.npc.settings.dev.reloadmodels", "Iš naujo modelius")
-			add("vjbase.menu.npc.settings.dev.reloadspawnmenu", "Iš naujo įkelti objektų sąrašus")
-
-			add("vjbase.menu.npc.settings.con", "Valdymo nustatymai")
-			add("vjbase.menu.npc.settings.con.label1", "Dėmesio: tai yra klientiniai nustatymai!")
-			add("vjbase.menu.npc.settings.con.label2", "Kaip toli ar arti pasikeičia priartinimas po kiekvieno spustelėjimo.")
-			add("vjbase.menu.npc.settings.con.displayhud", "Rodyti HUD")
-			add("vjbase.menu.npc.settings.con.camzoomdistance", "Kameros judėjimo atstumas")
-			add("vjbase.menu.npc.settings.con.camspeed", "Kameros greitis")
-			add("vjbase.menu.npc.settings.con.camzoomspeed", "Kameros priartinimo greitis" )
-			add("vjbase.menu.npc.settings.con.diewithnpc", "Valdytojas miršta kartu su personažu (reikalauja prisikėlimo iš naujo!)")
-			add("vjbase.menu.npc.settings.con.displaydev", "Rodyti kūrėjo esybes")
-			add("vjbase.menu.npc.settings.con.label3", "Klavišų priskyrimas:")
-			add("vjbase.menu.npc.settings.con.bind.header1", "Valdyti")
-			add("vjbase.menu.npc.settings.con.bind.header2", "Aprašas")
-			add("vjbase.menu.npc.settings.con.bind.clickmsg1", "Pasirinktas klavišas:")
-			add("vjbase.menu.npc.settings.con.bind.clickmsg2", "Aprašas:")
-			add("vjbase.menu.npc.settings.con.bind.movement", "Judėjimas (palaiko 8-Way)")
-			add("vjbase.menu.npc.settings.con.bind.exitcontrol", "Išeiti iš valdymo")
-			add("vjbase.menu.npc.settings.con.bind.meleeattack", "Artimos kovos puolimas")
-			add("vjbase.menu.npc.settings.con.bind.rangeattack", "Tolimos kovos puolimas")
-			add("vjbase.menu.npc.settings.con.bind.leaporgrenade", "Puolimas su šuoliu/granata")
-			add("vjbase.menu.npc.settings.con.bind.reloadweapon", "Užtaisyti ginklą")
-			add("vjbase.menu.npc.settings.con.bind.togglebullseye", "Perjungti personažo-taikinio sekimą")
-			add("vjbase.menu.npc.settings.con.bind.cameramode", "Keisti kameros režimą")
-			add("vjbase.menu.npc.settings.con.bind.camerazoom", "Priartinti ir nutolinti")
-			add("vjbase.menu.npc.settings.con.bind.cameraup", "Perkelti kamerą aukštyn")
-			add("vjbase.menu.npc.settings.con.bind.cameradown", "Perkelti kamerą žemyn")
-			add("vjbase.menu.npc.settings.con.bind.cameraforward", "Perkelti kamerą pirmyn")
-			add("vjbase.menu.npc.settings.con.bind.camerabackward", "Perkelti kamerą atgal")
-			add("vjbase.menu.npc.settings.con.bind.cameraleft", "Perkelti kamerą kairėn")
-			add("vjbase.menu.npc.settings.con.bind.cameraright", "Perkelti kamerą dešinėn")
-			add("vjbase.menu.npc.settings.con.bind.resetzoom", "Atkurti kameros poziciją")
-
-			-- Weapon Client Settings
-			add("vjbase.menu.clweapon", "Kliento nustatymai")
-			add("vjbase.menu.clweapon.notice", "Dėmesio: šie nustatymai yra klientiniai. Jie nepasikeis kitiems žaidėjams!")
-			add("vjbase.menu.clweapon.togglemuzzle", "Išjungti vamzdžio liepsną")
-			add("vjbase.menu.clweapon.togglemuzzlelight", "Išjungti vamzdžio liepsnos dinaminę šviesą")
-			add("vjbase.menu.clweapon.togglemuzzle.label", "Vamzdžio liepsnos išjungimas taip pat išjungs šį nustatymą")
-			add("vjbase.menu.clweapon.togglemuzzlesmoke", "Išjungti vamzdžio dūmus")
-			add("vjbase.menu.clweapon.togglemuzzleheatwave", "Išjungti vamzdžio karščio bangą")
-			add("vjbase.menu.clweapon.togglemuzzlebulletshells", "Išjungti dūmus iš šūvių")
-
-			-- NPC Properties (C Menu)
-			add("vjbase.menuproperties.control", "VALDYTI")
-			add("vjbase.menuproperties.guard", "Perjungti saugojimą")
-			add("vjbase.menuproperties.wander", "Perjungti klaidžiojimą")
-			add("vjbase.menuproperties.medic", "Padaryti gydytoju (perjungimas)")
-			add("vjbase.menuproperties.allyme", "Sąjungininkas man")
-			add("vjbase.menuproperties.hostileme", "Priešas man")
-			add("vjbase.menuproperties.slay", "Nužudyti")
-			add("vjbase.menuproperties.gib", "Nutraukti kūno dalis (jei įmanoma)")
-			add("vjbase.menuproperties.devmode", "Įgalinti kūrėjo režimą")
-
-			-- Tools
-			add("tool.vjstool.menu.tutorialvideo", "Mokomasis vaizdo įrašas")
-			add("tool.vjstool.menu.label.recommendation", "Patariama naudoti šį įrankį tik VJ Base SNPC personažams.")
-
-			add("tool.vjstool_bullseye.name", "Personažas-taikinys")
-			add("tool.vjstool_bullseye.desc", "Sukuria personažą, kuris taps kitų personažų taikiniu")
-			add("tool.vjstool_bullseye.left", "Kurti personažą-taikinį")
-			add("tool.vjstool_bullseye.menu.help1", "Spustelėkite NAUDOTI ant esybės, kad įjungtumėte/išjungtumė.")
-			add("tool.vjstool_bullseye.menu.help2", "Kai išjungta, šis personažas nebus taikinys.")
-			add("tool.vjstool_bullseye.menu.label1", "Pasirinkite judėjimo rūšį")
-			add("tool.vjstool_bullseye.menu.label2", "Modelio aplankas")
-			add("tool.vjstool_bullseye.menu.toggleusestatus", "Naudoti pasirinktines spalvas (įjungtas/išjungtas)")
-			add("tool.vjstool_bullseye.menu.togglestartactivated", "Prasideda įjungtas")
-
-			add("tool.vjstool_entityscanner.name", "Esybių skaitytuvas")
-			add("tool.vjstool_entityscanner.desc", "Gaukite informacijos apie esybę")
-			add("tool.vjstool_entityscanner.left", "Spausdinti informaciją apie esybę konsolėje")
-			add("tool.vjstool_entityscanner.label", "Spausdina informaciją apie bet kurią pasirinktą esybę. Bus atspausdinta konsolėje.")
-
-			add("tool.vjstool_healthmodifier.name", "Sveikatos keitimas")
-			add("tool.vjstool_healthmodifier.desc", "Esybės sveikatos keitimas")
-			add("tool.vjstool_healthmodifier.left", "Nustatyti sveikatą")
-			add("tool.vjstool_healthmodifier.right", "Nustatyti sveikatą ir didžiausią sveikatą")
-			add("tool.vjstool_healthmodifier.reload", "Suteikia esybei didžiausią sveikatą")
-			add("tool.vjstool_healthmodifier.adminonly", "Tik administratoriai gali keisti sveikatą ar ją suteikti kitiems žaidėjams.")
-			add("tool.vjstool_healthmodifier.sliderhealth", "Sveikata")
-			add("tool.vjstool_healthmodifier.label1", "Sekimas galimas tik VJ Base SNPC personažams:")
-			add("tool.vjstool_healthmodifier.togglegodmode", "Nemirtingumas (nenugalimas)")
-			add("tool.vjstool_healthmodifier.togglehealthregen", "Įgalinti sveikatos atgavimą")
-			add("tool.vjstool_healthmodifier.sliderhealthregenamt", "Atgavimo kiekis")
-			add("tool.vjstool_healthmodifier.sliderhealthregendelay", "Atgavimo delsa")
-
-			add("tool.vjstool_notarget.name", "Nematomumas")
-			add("tool.vjstool_notarget.desc", "Priverčia visus personažus nematyti tam tikros esybės")
-			add("tool.vjstool_notarget.left", "Perjungti nematomumą sau")
-			add("tool.vjstool_notarget.right", "Perjungti nematomumą personažui ar žaidėjui")
-			add("tool.vjstool_notarget.label", "Kai nematomumas yra įjungtas esybei, personažai į ją nesitaikys!")
-
-			add("tool.vjstool_npcequipment.name", "Personažų ginkluotė")
-			add("tool.vjstool_npcequipment.desc", "Keičia personažų ginkluotę")
-			add("tool.vjstool_npcequipment.left", "Keisti personažo ginkluotę")
-			add("tool.vjstool_npcequipment.right", "Šalinti personažo ginkluotę")
-			add("tool.vjstool_npcequipment.label", "Keičia ar šalina personažo ginkluotę.")
-			add("tool.vjstool_npcequipment.selectedequipment", "Pasirinkta ginkluotė")
-			add("tool.vjstool_npcequipment.print.doubleclick", "Dukart spustelėkite, kad pasirinktumėte ginklą.")
-			add("tool.vjstool_npcequipment.print.weaponselected1", "Ginklas")
-			add("tool.vjstool_npcequipment.print.weaponselected2", "pasirinkta!")
-			add("tool.vjstool_npcequipment.header1", "Pavadinimas")
-			add("tool.vjstool_npcequipment.header2", "Klasė")
-
-			add("tool.vjstool_npcmover.name", "Personažų perkėlimas")
-			add("tool.vjstool_npcmover.desc", "Kad perkeltumėte personažą, turite jį pasirinkti")
-			add("tool.vjstool_npcmover.left", "Pasirinkti personažą")
-			add("tool.vjstool_npcmover.right", "Bėgti iki vietos")
-			add("tool.vjstool_npcmover.reload", "Eiti iki vietos")
-			add("tool.vjstool_npcmover.header1", "Pavadinimas")
-			add("tool.vjstool_npcmover.header2", "Klasė")
-			add("tool.vjstool_npcmover.header3", "Informacija")
-			add("tool.vjstool_npcmover.buttonunselectall", "Atšaukti visų personažų pasirinkimą")
-			add("tool.vjstool_npcmover.print.unselectedall", "Atšauktas visų personažų pasirinkimas!")
-			add("tool.vjstool_npcmover.print.unselectedall.error", "Nėra ko atšaukti!")
-
-			add("tool.vjstool_npcrelationship.name", "Personažų santykių keitimas")
-			add("tool.vjstool_npcrelationship.desc", "Keiskite būtybių santykius")
-			add("tool.vjstool_npcrelationship.left", "Taikyti santykių lentelę")
-			add("tool.vjstool_npcrelationship.right", "Gauti dabartines klases")
-			add("tool.vjstool_npcrelationship.reload", "Taikyti santykių lentelę sau")
-			add("tool.vjstool_npcrelationship.label1", "Keičia personažo santykius. Iš esmės tai, ką jis jaučia esybei.")
-			add("tool.vjstool_npcrelationship.header", "Klasė")
-			add("tool.vjstool_npcrelationship.label2", "Spustelėkite GRĮŽTI, kad pridėtumėte klasę.")
-			add("tool.vjstool_npcrelationship.button.combine", "Įtraukti kombainų klasę")
-			add("tool.vjstool_npcrelationship.button.antlion", "Įtraukti skruzdžių liūtų klasę")
-			add("tool.vjstool_npcrelationship.button.zombie", "Įtraukti zombių klasę")
-			add("tool.vjstool_npcrelationship.button.player", "Įtraukti žaidėjų klasę")
-			add("tool.vjstool_npcrelationship.togglealliedply", "Sąjungininkas su visais žaidėjo sąjungininkais?")
-			add("tool.vjstool_npcrelationship.label3", "Taikoma tik VJ Base SNPC personažams ir reikalauja, kad jie turėtų")
-			add("tool.vjstool_npcrelationship.print.applied", "Pritaikyta santykių lentelė")
-
-			add("tool.vjstool_npcspawner.name", "Personažų kūrėjas")
-			add("tool.vjstool_npcspawner.desc", "Sukuria tinkinamą personažų kūrėją")
-			add("tool.vjstool_npcspawner.left", "Kurti personažų kūrėją")
-			add("tool.vjstool_npcspawner.right", "Kurti esybes vieną kartą")
-			add("tool.vjstool_npcspawner.selectednpc", "Pasirinkti personažai")
-			add("tool.vjstool_npcspawner.spawnpos.forward", "Pozicija | Pirmyn")
-			add("tool.vjstool_npcspawner.spawnpos.right", "Pozicija | Dešinėn")
-			add("tool.vjstool_npcspawner.spawnpos.up", "Pozicija | Aukštyn")
-			add("tool.vjstool_npcspawner.selectweapon", "Pasirinktas ginklas")
-			add("tool.vjstool_npcspawner.button.updatelist", "Atnaujinti sąrašą")
-			add("tool.vjstool_npcspawner.label1", "Dukart spustelėkite ant daikto, kad jį pašalintumėte.")
-			add("tool.vjstool_npcspawner.header1", "Pavadinimas")
-			add("tool.vjstool_npcspawner.header2", "Pozicija")
-			add("tool.vjstool_npcspawner.header3", "Ginkluotė")
-			add("tool.vjstool_npcspawner.label2", "Papildomos parinktys")
-			add("tool.vjstool_npcspawner.toggle.spawnsound", "Groti personažo sukūrimo garsą?")
-			add("tool.vjstool_npcspawner.nextspawntime", "Laikas iki personažo sukūrimo")
-			add("tool.vjstool_npcspawner.popup.header1", "Pavadinimas")
-			add("tool.vjstool_npcspawner.popup.header2", "Klasė")
-			add("tool.vjstool_npcspawner.popup.header3", "Kategorija")
-			add("tool.vjstool_npcspawner.title1", "Dukart spustelėkite, kad pasirinktumėte personažą.")
-			add("tool.vjstool_npcspawner.title2", "Dukart spustelėkite, kad pasirinktumėte ginklą.")
-		elseif conv == "spanish_lt" then ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		-- General Menu (Used everywhere)
-			add("vjbase.menu.general.default", "Predeterminado")
-			add("vjbase.menu.general.admin.only", "Nota: Solo admins pueden usar este menú.")
-			add("vjbase.menu.general.admin.not", "¡No eres un admin!")
-			add("vjbase.menu.general.reset.everything", "Resetear a predeterminado")
-			add("vjbase.menu.general.npc.warnfuture", "ADVERTENCIA: ¡Solamente SNPCs aparecidos en el futuro serán afectados!")
-			add("vjbase.menu.general.npc.creaturesettings", "Opciones de creatura:")
-			add("vjbase.menu.general.npc.humansettings", "Opciones de humano:")
-		-- Menu Tabs			
-			add("vjbase.menu.tabs.mainmenu", "Menú Principal")
-			add("vjbase.menu.tabs.settings.npc", "Opciones de NPC")
-			add("vjbase.menu.tabs.settings.weapon", "Opciones de Arma")
-			add("vjbase.menu.tabs.settings.hud", "Opciones de HUD")
-			add("vjbase.menu.tabs.tools", "Herramientas")
-			add("vjbase.menu.tabs.configures.snpc", "Configuraciones de SNPC")
-		-- Main Menu			
-			add("vjbase.menu.cleanup", "Limpiar")
-			add("vjbase.menu.cleanup.all", "Limpiar Todo")
-			add("vjbase.menu.cleanup.stopsounds", "Parar Todos los Sonidos")
-			add("vjbase.menu.cleanup.remove.vjnpcs", "Remover todos los NPCs de VJ")
-			add("vjbase.menu.cleanup.remove.npcs", "Remover todos los NPCs")
-			add("vjbase.menu.cleanup.remove.spawners", "Remover todos los Creadores")
-			add("vjbase.menu.cleanup.remove.corpses", "Remover todos los Cadaveres")
-			add("vjbase.menu.cleanup.remove.vjgibs", "Remover todos los Gibs VJ")
-			add("vjbase.menu.cleanup.remove.groundweapons", "Remover Todas las Armas del suelo")
-			add("vjbase.menu.cleanup.remove.props", "Remover todos los Props")
-			add("vjbase.menu.cleanup.remove.decals", "Remover todos los Sprays")
-			add("vjbase.menu.cleanup.remove.allweapons", "Remover todas tus Armas")
-			add("vjbase.menu.cleanup.remove.allammo", "Remover toda tu Munición")
-			
-			add("vjbase.menu.helpsupport", "Contacto y Apoyo")
-			add("vjbase.menu.helpsupport.reportbug", "Reportar un Bug")
-			add("vjbase.menu.helpsupport.suggestion", "Sugerir Algo")
-			add("vjbase.menu.helpsupport.discord", "¡Unete a mi servidor de Discord!")
-			add("vjbase.menu.helpsupport.steam", "¡Unete a mi grupo de Steam!")
-			add("vjbase.menu.helpsupport.youtube", "¡Suscribete a mi canal de YouTube!")
-			add("vjbase.menu.helpsupport.twitter", "¡Sigueme en Twitter!")
-			add("vjbase.menu.helpsupport.patreon", "¡Doname en Patreon!")
-			add("vjbase.menu.helpsupport.label1", "¡Sigueme en uno de estos links para estar al pendiente de mis addons!")
-			add("vjbase.menu.helpsupport.label2", "¡Las donaciones me ayudan y me motivan a crear/actualizar addons! Gracias!")
-			add("vjbase.menu.helpsupport.thanks", "¡Gracias por el apoyo!")
-					
-			add("vjbase.menu.svsettings", "Ajustes del Servidor Admin")
-			add("vjbase.menu.svsettings.label", "ADVERTENCIA: ¡ALGUNOS AJUSTES NECESITAN TENER LOS CHEATS ACTIVADOS!")
-			add("vjbase.menu.svsettings.admin.npcproperties", "Restringir Propiedades de SNPCs a solamente Admins")
-			add("vjbase.menu.svsettings.noclip", "Permitir NoClip")
-			add("vjbase.menu.svsettings.weapons", "Permitir Armas")
-			add("vjbase.menu.svsettings.pvp", "Permitir PvP")
-			add("vjbase.menu.svsettings.godmode", "Modo Dios (Todos)")
-			add("vjbase.menu.svsettings.bonemanip.npcs", "Manipular los huesos de NPCs")
-			add("vjbase.menu.svsettings.bonemanip.players", "Manipular los huesos de los Jugadores")
-			add("vjbase.menu.svsettings.bonemanip.others", "Manipular los huesos de los Otros")
-			add("vjbase.menu.svsettings.timescale.general", "TimeScale General")
-			add("vjbase.menu.svsettings.timescale.physics", "TimeScale de Físicas")
-			add("vjbase.menu.svsettings.gravity", "Gravedad General")
-			add("vjbase.menu.svsettings.maxentsprops", "Máximo de Props/Entidades")
-					
-			add("vjbase.menu.clsettings", "Ajustes del Cliente")
-			add("vjbase.menu.clsettings.label", "Utiliza este menú para personalizar tus ajustes del Cliente, ¡los servidores no pueden cambiar estos ajustes!")
-			add("vjbase.menu.clsettings.labellang", "Selección de Idioma")
-			add("vjbase.menu.clsettings.notify.lang", "Idioma De VJ Base Establecido Al:")
-					
-			add("vjbase.menu.info", "Información")
-					
-			add("vjbase.menu.label", "Plugins Instalados")
-			add("vjbase.menu.plugins.label", "Lista de plugins de VJ Base instalados.")
-			add("vjbase.menu.plugins.version", "Versión:")
-			add("vjbase.menu.plugins.totalplugins", "Total de Plugins:")
-			add("vjbase.menu.plugins.header1", "Nombre")
-			add("vjbase.menu.plugins.header2", "Tipo")
-			add("vjbase.menu.plugins.notfound", "No Se Encontraron Plugins")
-			add("vjbase.menu.plugins.changelog", "Registro de Cambios")
-			add("vjbase.menu.plugins.makeaddon", "¿Quieres hacer un addon?")
-		elseif conv == "schinese" then ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-			-- Spawn Menu
-			add("vjbase.spawn.menu.npc.disablethinking", "AI 停止思考")
-			add("vjbase.spawn.menu.npc.ignoreplayers", "AI 无视玩家")
-			add("vjbase.spawn.menu.npc.keepcorpses", "NPC 尸体碰撞/保留")
-			add("vjbase.spawn.menu.npc.guard", "NPC 作为守卫生成")
-			
-			-- General Menu (Used everywhere)
-			add("vjbase.menu.general.default", "默认")
-			add("vjbase.menu.general.admin.only", "注意：只有管理员可以使用此菜单。")
-			add("vjbase.menu.general.admin.not", "你不是管理员！")
-			add("vjbase.menu.general.reset.everything", "重置为默认值")
-			add("vjbase.menu.general.npc.warnfuture", "警告：只对之后生成的 SNPC 有效！")
-			add("vjbase.menu.general.npc.creaturesettings", "生物设置：")
-			add("vjbase.menu.general.npc.humansettings", "人类设置：")
-			
-			-- Menu Tabs
-			add("vjbase.menu.tabs.mainmenu", "主菜单")
-			add("vjbase.menu.tabs.settings.npc", "NPC 设置")
-			add("vjbase.menu.tabs.settings.weapon", "武器设置")
-			add("vjbase.menu.tabs.settings.hud", "HUD 设置")
-			add("vjbase.menu.tabs.tools", "工具")
-			add("vjbase.menu.tabs.configures.snpc", "SNPC 配置")
-			
-			-- Main Menu
-			add("vjbase.menu.cleanup", "清除")
-			add("vjbase.menu.cleanup.all", "清除全部")
-			add("vjbase.menu.cleanup.stopsounds", "停止所有音效")
-			add("vjbase.menu.cleanup.remove.vjnpcs", "移除所有 VJ NPC")
-			add("vjbase.menu.cleanup.remove.npcs", "移除所有 NPC")
-			add("vjbase.menu.cleanup.remove.spawners", "移除所有生成器")
-			add("vjbase.menu.cleanup.remove.corpses", "移除所有尸体")
-			add("vjbase.menu.cleanup.remove.vjgibs", "移除所有 VJ 碎块")
-			add("vjbase.menu.cleanup.remove.groundweapons", "移除所有地上的武器")
-			add("vjbase.menu.cleanup.remove.props", "移除所有物品")
-			add("vjbase.menu.cleanup.remove.decals", "移除所有贴图")
-			add("vjbase.menu.cleanup.remove.allweapons", "移除你所有的武器")
-			add("vjbase.menu.cleanup.remove.allammo", "移除你所有的弹药")
-			
-			add("vjbase.menu.helpsupport", "联系和支持")
-			add("vjbase.menu.helpsupport.incompatibleaddons", "不兼容的插件")
-			add("vjbase.menu.helpsupport.reportbug", "报告错误")
-			add("vjbase.menu.helpsupport.suggestion", "提一些建议")
-			add("vjbase.menu.helpsupport.discord", "在 Discord 上加我！")
-			add("vjbase.menu.helpsupport.steam", "在 Steam 上加我！")
-			add("vjbase.menu.helpsupport.youtube", "在 YouTube 上订阅我！")
-			add("vjbase.menu.helpsupport.twitter", "在 Twitter 上关注我！")
-			add("vjbase.menu.helpsupport.patreon", "在 Patreon 上赞助我！")
-			add("vjbase.menu.helpsupport.label1", "通过以下链接之一来获取有关我的插件的更新！")
-			add("vjbase.menu.helpsupport.label2", "赞助会帮助和鼓励我继续制作/更新插件！非常感谢你的支持。")
-			add("vjbase.menu.helpsupport.thanks", "感谢你的支持！")
-			
-			add("vjbase.menu.svsettings", "管理员服务器设置")
-			add("vjbase.menu.svsettings.label", "警告：部分设置需要启用作弊！")
-			add("vjbase.menu.svsettings.admin.npcproperties", "将 SNPC 属性限制为仅限管理员")
-			add("vjbase.menu.svsettings.noclip", "允许穿墙")
-			add("vjbase.menu.svsettings.weapons", "出生武器配给")
-			add("vjbase.menu.svsettings.pvp", "允许 PvP")
-			add("vjbase.menu.svsettings.godmode", "无敌模式（所有人）")
-			add("vjbase.menu.svsettings.bonemanip.npcs", "NPC 骨骼编辑")
-			add("vjbase.menu.svsettings.bonemanip.players", "玩家骨骼编辑")
-			add("vjbase.menu.svsettings.bonemanip.others", "其他骨骼编辑")
-			add("vjbase.menu.svsettings.timescale.general", "全局时间倍率")
-			add("vjbase.menu.svsettings.timescale.physics", "物理时间倍率")
-			add("vjbase.menu.svsettings.gravity", "全局重力")
-			add("vjbase.menu.svsettings.maxentsprops", "最大道具/实体数量：")
-			
-			add("vjbase.menu.clsettings", "客户端设置")
-			add("vjbase.menu.clsettings.label", "使用此菜单来自定义你的客户端设置，服务器无法更改这里的设置！")
-			add("vjbase.menu.clsettings.labellang", "选择语言...")
-			add("vjbase.menu.clsettings.notify.lang", "VJ Base 的语言设置为：")
-			add("vjbase.menu.clsettings.lang.auto", "自动设置语言")
-			add("vjbase.menu.clsettings.lang.auto.label", "如果 VJ Base 设置为 GMod 不支持的语言，则忽略")
-
-			add("vjbase.menu.info", "信息")
-			
-			add("vjbase.menu.plugins", "已安装的插件")
-			add("vjbase.menu.plugins.label", "已安装的 VJ Base 插件列表。")
-			add("vjbase.menu.plugins.version", "版本：")
-			add("vjbase.menu.plugins.totalplugins", "插件总数：")
-			add("vjbase.menu.plugins.header1", "名称")
-			add("vjbase.menu.plugins.header2", "类型")
-			add("vjbase.menu.plugins.notfound", "未发现插件。")
-			add("vjbase.menu.plugins.changelog", "更新日志")
-			add("vjbase.menu.plugins.makeaddon", "想要制作一个模组？")
-			add("vjbase.menu.plugins.chat.pluginname", "插件名称：")
-			add("vjbase.menu.plugins.chat.plugintypes", "插件类型：")
-			
-			-- SNPC Menus
-			add("vjbase.menu.npc.options", "选项")
-			add("vjbase.menu.npc.options.difficulty.header", "选择难度：")
-			add("vjbase.menu.npc.options.difficulty.neanderthal", "[-3] 原始人 | -99% 的生命值和伤害")
-			add("vjbase.menu.npc.options.difficulty.childs_play", "[-2] 儿童游戏 | -75% 的生命值和伤害")
-			add("vjbase.menu.npc.options.difficulty.easy", "[-1] 简单 | -50% 的生命值和伤害")
-			add("vjbase.menu.npc.options.difficulty.normal", "[0] 正常 | 默认的生命值和伤害")
-			add("vjbase.menu.npc.options.difficulty.hard", "[1] 困难 | +50% 的生命值和伤害")
-			add("vjbase.menu.npc.options.difficulty.insane", "[2] 疯狂 | +100% 的生命值和伤害")
-			add("vjbase.menu.npc.options.difficulty.impossible", "[3] 不可能 | +150% 的生命值和伤害")
-			add("vjbase.menu.npc.options.difficulty.nightmare", "[4] 噩梦 | +250% 的生命值和伤害")
-			add("vjbase.menu.npc.options.difficulty.hell_on_earth", "[5] 炼狱 | +350% 的生命值和伤害")
-			add("vjbase.menu.npc.options.difficulty.total_annihilation", "[6] 横扫千军 | +500% 的生命值和伤害")
-			add("vjbase.menu.npc.options.label1", "关系设置：")
-			add("vjbase.menu.npc.options.togglefriendlyantlion", "对蚁狮友好")
-			add("vjbase.menu.npc.options.togglefriendlycombine", "对联合军友好")
-			add("vjbase.menu.npc.options.togglefriendlyplayer", "对玩家友好")
-			add("vjbase.menu.npc.options.togglefriendlyzombie", "对僵尸友好")
-			add("vjbase.menu.npc.options.togglefriendlyvj", "对 VJ Base 实体友好")
-			add("vjbase.menu.npc.options.label2", "所有的 VJ SNPC 彼此之间会变得友好！")
-			add("vjbase.menu.npc.options.label3", "尸体，分尸，生命值选项：")
-			add("vjbase.menu.npc.options.collision.header", "尸体碰撞选项：")
-			add("vjbase.menu.npc.options.collision.default", "默认 | 不包括：玩家，NPC，武器，布娃娃")
-			add("vjbase.menu.npc.options.collision.everything", "与一切碰撞！")
-			add("vjbase.menu.npc.options.collision.onlyworld", "仅与世界碰撞")
-			add("vjbase.menu.npc.options.collision.excludedebris", "不包括：尸体，碎片")
-			add("vjbase.menu.npc.options.collision.excludeplynpcs", "不包括：玩家，NPC")
-			add("vjbase.menu.npc.options.collision.excludeply", "不包括：玩家")
-			add("vjbase.menu.npc.options.corpselimit", "尸体上限，默认：32")
-			add("vjbase.menu.npc.options.label4", "当“保留尸体”关闭时，尸体的存在上限")
-			add("vjbase.menu.npc.options.toggleundocorpses", "可撤销的尸体（撤销键）")
-			add("vjbase.menu.npc.options.togglecorpsefade", "尸体消失")
-			add("vjbase.menu.npc.options.corpsefadetime", "尸体消失时间")
-			add("vjbase.menu.npc.options.label5", "最高：600 秒（10 分钟）")
-			add("vjbase.menu.npc.options.togglegibcollision", "碎块可碰撞")
-			add("vjbase.menu.npc.options.togglefadegibs", "碎块消失")
-			add("vjbase.menu.npc.options.gibfadetime", "碎块消失时间")
-			add("vjbase.menu.npc.options.label6", "默认：30 | 最高：600 秒（10 分钟）")
-			add("vjbase.menu.npc.options.togglesnpcgodmode", "无敌模式（不会受到任何伤害）")
-			add("vjbase.menu.npc.options.health", "生命值：")
-			add("vjbase.menu.npc.options.defaulthealth", "0 = 默认生命值（最高 9 位数！）")
-			add("vjbase.menu.npc.options.label7", "AI 选项：")
-			add("vjbase.menu.npc.options.toggleknowenemylocation", "总是知道敌人的位置")
-			add("vjbase.menu.npc.options.sightdistance", "视野距离：")
-			add("vjbase.menu.npc.options.label8", "每个 NPC 都有自己的距离，但这个选项会使它们的视野距离变得一样，所以要谨慎使用！(0 = 默认值 | 平均：10k）")
-			add("vjbase.menu.npc.settings.perf.processtime", "处理时间")
-			add("vjbase.menu.npc.settings.perf.processtime.button", "什么是处理时间？")
-			add("vjbase.menu.npc.settings.perf.processtime.label", "默认：1 | 越低的数字会导致更多的卡顿！")
-			add("vjbase.menu.npc.options.label10", "其他选项：")
-			add("vjbase.menu.npc.options.togglegmoddecals", "使用 Garry's Mod 当前的血迹贴图")
-			add("vjbase.menu.npc.options.label11", "不是黄色或红色的血迹贴图不会改变！")
-			add("vjbase.menu.npc.options.toggleitemdrops", "死亡时掉落物品")
-			add("vjbase.menu.npc.options.toggleaddfrags", "死亡时在玩家的计分板上添加击杀数")
-			add("vjbase.menu.npc.options.togglecreatureopendoor", "生物可以打开门")
-			add("vjbase.menu.npc.options.togglehumansdropweapon", "人类在死亡时掉落武器")
-			add("vjbase.menu.npc.options.togglehumanscanjump", "人类可以跳跃")
-			add("vjbase.menu.npc.options.toggleplydroppedweapons", "玩家可以捡起掉落的武器")
-			
-			add("vjbase.menu.npc.settings", "设置")
-			add("vjbase.menu.npc.settings.title.ai", "AI 设置：")
-			add("vjbase.menu.npc.settings.togglewandering", "禁止空闲时四处游荡")
-			add("vjbase.menu.npc.settings.togglechasingenemy", "禁止追寻敌人")
-			add("vjbase.menu.npc.settings.label.chasingenemy", "小心使用这个设置，它可以破坏很多东西！")
-			add("vjbase.menu.npc.settings.togglemedics", "禁用医疗兵 SNPC")
-			add("vjbase.menu.npc.settings.togglefollowplayer", "禁止跟随玩家")
-			add("vjbase.menu.npc.settings.label.followplayer", "例如：你对着一个 SNPC 按下“E”键，它们就会跟着你")
-			add("vjbase.menu.npc.settings.toggleallies", "禁止联盟（不可成为队友！）")
-			add("vjbase.menu.npc.settings.togglebecomeenemytoply", "禁止队友成为敌人")
-			add("vjbase.menu.npc.settings.togglecallhelp", "禁止呼救")
-			add("vjbase.menu.npc.settings.toggleproppush", "禁用物品推动（生物）")
-			add("vjbase.menu.npc.settings.togglepropattack", "禁用物品攻击（生物）")
-			add("vjbase.menu.npc.settings.toggledangersight", "禁止人类检测危险和手雷")
-			add("vjbase.menu.npc.settings.togglereloading", "禁用武器装填弹药")
-			add("vjbase.menu.npc.settings.toggleeating", "禁用进食（例如尸体或碎块）")
-			add("vjbase.menu.npc.settings.title.attack", "攻击设置：")
-			add("vjbase.menu.npc.settings.togglemelee", "禁用近战攻击")
-			add("vjbase.menu.npc.settings.togglerange", "禁用远程攻击")
-			add("vjbase.menu.npc.settings.toggleleap", "禁用跳跃攻击（生物）")
-			add("vjbase.menu.npc.settings.togglethrownade", "禁用手雷攻击（人类）")
-			add("vjbase.menu.npc.settings.toggleweapons", "禁用武器（人类）")
-			add("vjbase.menu.npc.settings.label.noweapon", "人类将不能使用武器！")
-			add("vjbase.menu.npc.settings.togglemeleedsp", "禁用重型近战攻击的 DSP 效果")
-			add("vjbase.menu.npc.settings.toggleslowplayer", "禁用玩家受到近战攻击时减速")
-			add("vjbase.menu.npc.settings.togglebleedonmelee", "禁用玩家/NPC受到近战攻击时流血")
-			add("vjbase.menu.npc.settings.title.misc", "其他设置：")
-			add("vjbase.menu.npc.settings.toggleidleparticles", "禁用空闲时的粒子效果和特效")
-			add("vjbase.menu.npc.settings.label.idleparticles", "启用此选项可以提高性能")
-			add("vjbase.menu.npc.settings.togglesnpcchat", "禁用 SNPC 聊天框信息")
-			add("vjbase.menu.npc.settings.label.npcchat", "例如：“科学家 现在正跟着你”")
-			add("vjbase.menu.npc.settings.title.damagecorpse", "伤害和尸体设置：")
-			add("vjbase.menu.npc.settings.toggleflinching", "禁用受到伤害时后靠")
-			add("vjbase.menu.npc.settings.togglebleeding", "禁用流血")
-			add("vjbase.menu.npc.settings.label.bleeding", "禁用血液粒子效果，贴图，血泊等。")
-			add("vjbase.menu.npc.settings.togglebloodpool", "禁用血泊（死亡时）")
-			add("vjbase.menu.npc.settings.togglegib", "禁用碎尸")
-			add("vjbase.menu.npc.settings.label.gib", "启用此选项可以提高性能")
-			add("vjbase.menu.npc.settings.togglegibdeathvfx", "禁用碎尸/死亡特效（粒子特效，血迹等）")
-			add("vjbase.menu.npc.settings.toggledeathanim", "禁用死亡动画")
-			add("vjbase.menu.npc.settings.togglecorpses", "禁用尸体")
-			add("vjbase.menu.npc.settings.title.passive", "被动设置：")
-			add("vjbase.menu.npc.settings.togglerunontouch", "禁用被触碰时奔跑")
-			add("vjbase.menu.npc.settings.togglerunonhit", "禁用被击中时奔跑")
-			
-			add("vjbase.menu.npc.settings.snd", "声音设置")
-			add("vjbase.menu.npc.settings.snd.togglesounds", "禁用所有声音")
-			add("vjbase.menu.npc.settings.snd.togglesoundtrack", "禁用音轨/音乐")
-			add("vjbase.menu.npc.settings.snd.toggleidle", "禁用空闲音效")
-			add("vjbase.menu.npc.settings.snd.togglebreathing", "禁用呼吸音效")
-			add("vjbase.menu.npc.settings.snd.togglefootsteps", "禁用脚步音效")
-			add("vjbase.menu.npc.settings.snd.togglemelee", "禁用近战攻击音效")
-			add("vjbase.menu.npc.settings.snd.togglerange", "禁用远程攻击音效")
-			add("vjbase.menu.npc.settings.snd.togglealert", "禁用警戒音效")
-			add("vjbase.menu.npc.settings.snd.togglepain", "禁用疼痛音效")
-			add("vjbase.menu.npc.settings.snd.toggledeath", "禁用死亡音效")
-			add("vjbase.menu.npc.settings.snd.togglegibbing", "禁用碎尸音效")
-			add("vjbase.menu.npc.settings.snd.togglegibbing.label", "同时也禁用碎块与其他东西碰撞时的音效")
-			add("vjbase.menu.npc.settings.snd.togglemedic", "禁用医疗兵音效")
-			add("vjbase.menu.npc.settings.snd.togglefollowing", "禁用跟随音效")
-			add("vjbase.menu.npc.settings.snd.togglecallhelp", "禁用寻求帮助音效")
-			add("vjbase.menu.npc.settings.snd.togglereceiveorder", "禁用接受命令音效")
-			add("vjbase.menu.npc.settings.snd.togglebecomeenemy", "禁用成为玩家敌人音效")
-			add("vjbase.menu.npc.settings.snd.toggleplayersight", "禁用发现玩家音效")
-			add("vjbase.menu.npc.settings.snd.toggleplayersight.label", "当 SNPC 看到玩家时播放的特殊音效")
-			add("vjbase.menu.npc.settings.snd.toggledmgbyplayer", "禁用受到玩家攻击音效")
-			add("vjbase.menu.npc.settings.snd.toggledmgbyplayer.label", "当玩家攻击一名 SNPC 时的音效，通常用于友方 SNPC。")
-			add("vjbase.menu.npc.settings.snd.toggleleap", "禁用跳跃攻击音效")
-			add("vjbase.menu.npc.settings.snd.toggleslowedplayer", "禁用玩家减速音效")
-			add("vjbase.menu.npc.settings.snd.toggleslowedplayer.label", "当玩家被近战攻击减速时播放的音效")
-			add("vjbase.menu.npc.settings.snd.togglegrenade", "禁用手雷攻击音效")
-			add("vjbase.menu.npc.settings.snd.toggledangersight", "禁用发现手雷和危险音效")
-			add("vjbase.menu.npc.settings.snd.togglesuppressing", "禁用压制敌人时呼喊音效")
-			add("vjbase.menu.npc.settings.snd.togglereload", "禁用换弹时呼喊音效")
-			
-			add("vjbase.menu.npc.settings.dev", "开发者设置")
-			add("vjbase.menu.npc.settings.dev.label1", "这些设置用于调试 SNPC。")
-			add("vjbase.menu.npc.settings.dev.label2", "警告：部分选项会导致卡顿！")
-			add("vjbase.menu.npc.settings.dev.toggledev", "启用开发者模式？")
-			add("vjbase.menu.npc.settings.dev.label3", "必须从此处或通过关联菜单启用此选项(以下选项需要）")
-			add("vjbase.menu.npc.settings.dev.printtouch", "被触碰时输出（控制台）")
-			add("vjbase.menu.npc.settings.dev.printcurenemy", "输出当前的敌人（控制台）")
-			add("vjbase.menu.npc.settings.dev.printlastseenenemy", "输出“最后一次看见敌人”的时间（聊天框）")
-			add("vjbase.menu.npc.settings.dev.printonreset", "重置敌人时输出（控制台）")
-			add("vjbase.menu.npc.settings.dev.printonstopattack", "停止攻击时输出（控制台）")
-			add("vjbase.menu.npc.settings.dev.printtakingcover", "寻找掩护时输出（控制台）")
-			add("vjbase.menu.npc.settings.dev.printondamage", "受到伤害时输出（控制台）")
-			add("vjbase.menu.npc.settings.dev.printondeath", "死亡时输出（控制台）")
-			add("vjbase.menu.npc.settings.dev.printweaponinfo", "输出武器相关信息（控制台）")
-			add("vjbase.menu.npc.settings.dev.cachedmodels", "已缓存的模型（控制台）")
-			add("vjbase.menu.npc.settings.dev.numofnpcs", "当前 NPC 数量（聊天框）")
-			add("vjbase.menu.npc.settings.dev.label4", "重新加载选项：")
-			add("vjbase.menu.npc.settings.dev.reloadsounds", "重新加载音效")
-			add("vjbase.menu.npc.settings.dev.reloadmaterials", "重新加载材质（VMT）")
-			add("vjbase.menu.npc.settings.dev.reloadtextures", "重新加载贴图（VTF）")
-			add("vjbase.menu.npc.settings.dev.reloadmodels", "重新加载模型")
-			add("vjbase.menu.npc.settings.dev.reloadspawnmenu", "重新加载生成菜单")
-			
-			add("vjbase.menu.npc.settings.con", "控制器设置")
-			add("vjbase.menu.npc.settings.con.label1", "注意：这仅是客户端设置！")
-			add("vjbase.menu.npc.settings.con.label2", "每次单击时缩放的距离远近。")
-			add("vjbase.menu.npc.settings.con.displayhud", "显示 HUD")
-			add("vjbase.menu.npc.settings.con.camzoomdistance", "视角移动距离")
-			add("vjbase.menu.npc.settings.con.camspeed", "视角速度")
-			add("vjbase.menu.npc.settings.con.camzoomspeed", "视角缩放速度" )
-			add("vjbase.menu.npc.settings.con.diewithnpc", "NPC 死亡时，控制器也失效（需要重生！）")
-			add("vjbase.menu.npc.settings.con.displaydev", "显示开发者模式的实体")
-			add("vjbase.menu.npc.settings.con.label3", "按键绑定：")
-			add("vjbase.menu.npc.settings.con.bind.header1", "按键")
-			add("vjbase.menu.npc.settings.con.bind.header2", "描述")
-			add("vjbase.menu.npc.settings.con.bind.clickmsg1", "已选中的按键：")
-			add("vjbase.menu.npc.settings.con.bind.clickmsg2", "描述：")
-			add("vjbase.menu.npc.settings.con.bind.movement", "移动（支持 8 个方向）")
-			add("vjbase.menu.npc.settings.con.bind.exitcontrol", "退出控制器")
-			add("vjbase.menu.npc.settings.con.bind.meleeattack", "近战攻击")
-			add("vjbase.menu.npc.settings.con.bind.rangeattack", "远程/武器攻击")
-			add("vjbase.menu.npc.settings.con.bind.leaporgrenade", "跳跃/手雷攻击")
-			add("vjbase.menu.npc.settings.con.bind.reloadweapon", "装填武器")
-			add("vjbase.menu.npc.settings.con.bind.togglebullseye", "开/关靶子跟踪")
-			add("vjbase.menu.npc.settings.con.bind.cameramode", "更改视角")
-			add("vjbase.menu.npc.settings.con.bind.movementjump", "切换移动/跳跃")
-			add("vjbase.menu.npc.settings.con.bind.camerazoom", "视角缩放")
-			add("vjbase.menu.npc.settings.con.bind.cameraup", "视角向上")
-			add("vjbase.menu.npc.settings.con.bind.cameradown", "视角向下")
-			add("vjbase.menu.npc.settings.con.bind.cameraforward", "视角向前")
-			add("vjbase.menu.npc.settings.con.bind.camerabackward", "视角向后")
-			add("vjbase.menu.npc.settings.con.bind.cameraleft", "视角向左")
-			add("vjbase.menu.npc.settings.con.bind.cameraright", "视角向右")
-			add("vjbase.menu.npc.settings.con.bind.resetzoom", "恢复视角位置")
-			
-			-- Weapon Client Settings
-			add("vjbase.menu.wep.clsettings", "客户端设置")
-			add("vjbase.menu.wep.clsettings.notice", "注意：这些设置是客户端设置，这意味着它不会被其他人更改！")
-			add("vjbase.menu.wep.clsettings.togglemuzzle", "禁用枪口火焰")
-			add("vjbase.menu.wep.clsettings.togglemuzzlelight", "禁用枪口火焰动态光照")
-			add("vjbase.menu.wep.clsettings.togglemuzzle.label", "禁用枪口火焰的同时也会禁用此选项")
-			add("vjbase.menu.wep.clsettings.togglemuzzlebulletshells", "禁用弹壳")
-			
-			-- NPC Properties (C Menu)
-			add("vjbase.menuproperties.control", "操控")
-			add("vjbase.menuproperties.guard", "开始/停止守卫")
-			add("vjbase.menuproperties.wander", "开始/停止游荡")
-			add("vjbase.menuproperties.medic", "变成医疗兵（切换）")
-			add("vjbase.menuproperties.allyme", "成为我的队友")
-			add("vjbase.menuproperties.hostileme", "成为我的敌人")
-			add("vjbase.menuproperties.slay", "杀死")
-			add("vjbase.menuproperties.gib", "碎尸（如果可用）")
-			add("vjbase.menuproperties.devmode", "打开/关闭开发者模式")
-			add("vjbase.menuproperties.print.adminonly", "这些选项仅限于管理员！")
-			
-			-- Tools
-			add("tool.vjstool.menu.tutorialvideo", "教程视频")
-			add("tool.vjstool.menu.label.recommendation", "建议仅对 VJ Base 的 SNPC 使用此工具。")
-			
-			add("tool.vjstool_bullseye.name", "NPC 靶子")
-			add("tool.vjstool_bullseye.desc", "创建一个 NPC 会视为目标的靶子")
-			add("tool.vjstool_bullseye.left", "创建一个靶子")
-			add("tool.vjstool_bullseye.menu.help1", "按下使用键来激活/禁用实体。")
-			add("tool.vjstool_bullseye.menu.help2", "禁用时，NPC 将不会把它视为目标。")
-			add("tool.vjstool_bullseye.menu.label1", "选择移动类型")
-			add("tool.vjstool_bullseye.menu.label2", "模型路径")
-			add("tool.vjstool_bullseye.menu.toggleusestatus", "按照状态改变颜色（激活/禁用）")
-			add("tool.vjstool_bullseye.menu.togglestartactivated", "开始时激活")
-			
-			add("tool.vjstool_entityscanner.name", "实体扫描器")
-			add("tool.vjstool_entityscanner.desc", "获取一个实体的信息")
-			add("tool.vjstool_entityscanner.left", "输出实体的信息到控制台")
-			add("tool.vjstool_entityscanner.label", "输出任意选中的实体的信息到控制台。")
-			
-			add("tool.vjstool_healthmodifier.name", "生命值设置")
-			add("tool.vjstool_healthmodifier.desc", "设置一个实体的生命值")
-			add("tool.vjstool_healthmodifier.left", "设置生命值")
-			add("tool.vjstool_healthmodifier.right", "设置生命值和最高生命值")
-			add("tool.vjstool_healthmodifier.reload", "回复实体的生命值到最高值")
-			add("tool.vjstool_healthmodifier.adminonly", "只有管理员可以修改或治疗其他玩家的生命值。")
-			add("tool.vjstool_healthmodifier.sliderhealth", "生命值")
-			add("tool.vjstool_healthmodifier.label1", "以下选项仅适用于 VJ Base SNPC：")
-			add("tool.vjstool_healthmodifier.togglegodmode", "无敌模式")
-			add("tool.vjstool_healthmodifier.togglehealthregen", "启用生命回复")
-			add("tool.vjstool_healthmodifier.sliderhealthregenamt", "回复量")
-			add("tool.vjstool_healthmodifier.sliderhealthregendelay", "回复间隔")
-			
-			add("tool.vjstool_notarget.name", "无目标")
-			add("tool.vjstool_notarget.desc", "对一个实体使用“无目标”会让 NPC 无法看见此实体")
-			add("tool.vjstool_notarget.left", "对自己开启/关闭无目标")
-			add("tool.vjstool_notarget.right", "对一个 NPC 或玩家开启/关闭无目标")
-			add("tool.vjstool_notarget.label", "当一个实体启用了“无目标”，NPC 将不会把此实体视为目标！")
-			add("tool.vjstool_notarget.print.yourselfon", "对自己开启无目标")
-			add("tool.vjstool_notarget.print.yourselfoff", "对自己关闭无目标")
-			
-			add("tool.vjstool_npcequipment.name", "NPC 装备")
-			add("tool.vjstool_npcequipment.desc", "修改一个 NPC 的装备")
-			add("tool.vjstool_npcequipment.left", "更改 NPC 的装备")
-			add("tool.vjstool_npcequipment.right", "移除 NPC 的装备")
-			add("tool.vjstool_npcequipment.label", "更改或移除一个 NPC 的装备。")
-			add("tool.vjstool_npcequipment.selectedequipment", "已选中的装备")
-			add("tool.vjstool_npcequipment.print.doubleclick", "双击来选择一个武器。")
-			add("tool.vjstool_npcequipment.print.weaponselected1", "武器")
-			add("tool.vjstool_npcequipment.print.weaponselected2", "已选中！")
-			add("tool.vjstool_npcequipment.header1", "名称")
-			add("tool.vjstool_npcequipment.header2", "实体类别")
-			
-			add("tool.vjstool_npcmover.name", "NPC 移动器")
-			add("tool.vjstool_npcmover.desc", "移动 NPC 到指定地点，必须先选中一个 NPC")
-			add("tool.vjstool_npcmover.left", "选择一个 NPC")
-			add("tool.vjstool_npcmover.right", "奔跑到指定地点")
-			add("tool.vjstool_npcmover.reload", "步行到指定地点")
-			add("tool.vjstool_npcmover.header1", "名称")
-			add("tool.vjstool_npcmover.header2", "实体类别")
-			add("tool.vjstool_npcmover.header3", "信息")
-			add("tool.vjstool_npcmover.buttonunselectall", "取消选中所有 NPC")
-			add("tool.vjstool_npcmover.print.unselectedall", "已取消选中所有 NPC！")
-			add("tool.vjstool_npcmover.print.unselectedall.error", "没有可以取消选中的东西！")
-			
-			add("tool.vjstool_npcrelationship.name", "NPC 关系编辑器")
-			add("tool.vjstool_npcrelationship.desc", "修改实体之间的关系")
-			add("tool.vjstool_npcrelationship.left", "应用关系表")
-			add("tool.vjstool_npcrelationship.right", "获取当前类别")
-			add("tool.vjstool_npcrelationship.reload", "应用关系表到自己")
-			add("tool.vjstool_npcrelationship.label1", "修改一个 NPC 的关系，即它对另一个实体的感觉。")
-			add("tool.vjstool_npcrelationship.header", "实体类别")
-			add("tool.vjstool_npcrelationship.label2", "按下回车键来添加类别。")
-			add("tool.vjstool_npcrelationship.button.combine", "插入联合军类别")
-			add("tool.vjstool_npcrelationship.button.antlion", "插入蚁狮类别")
-			add("tool.vjstool_npcrelationship.button.zombie", "插入僵尸类别")
-			add("tool.vjstool_npcrelationship.button.player", "插入玩家类别")
-			add("tool.vjstool_npcrelationship.togglealliedply", "与玩家的队友联盟？")
-			add("tool.vjstool_npcrelationship.label3", "仅适用于 VJ Base SNPC 并且需要 SNPC 拥有")
-			add("tool.vjstool_npcrelationship.print.applied", "将关系表应用于")
-			
-			add("tool.vjstool_npcspawner.name", "NPC 生成器")
-			add("tool.vjstool_npcspawner.desc", "创建一个可设置的生成器")
-			add("tool.vjstool_npcspawner.left", "创建一个生成器")
-			add("tool.vjstool_npcspawner.right", "立刻生成实体")
-			add("tool.vjstool_npcspawner.selectednpc", "已选中的 NPC")
-			add("tool.vjstool_npcspawner.spawnpos.forward", "方位 | 前")
-			add("tool.vjstool_npcspawner.spawnpos.right", "方位 | 右")
-			add("tool.vjstool_npcspawner.spawnpos.up", "方位 | 上")
-			add("tool.vjstool_npcspawner.selectweapon", "已选中的武器")
-			add("tool.vjstool_npcspawner.spawnnpclass", "类别关系覆盖")
-			add("tool.vjstool_npcspawner.fritoplyallies", "对玩家阵营友好")
-			add("tool.vjstool_npcspawner.label.fritoplyallies", "必须拥有关系类别（CLASS_PLAYER_ALLY）！")
-			add("tool.vjstool_npcspawner.button.updatelist", "更新列表")
-			add("tool.vjstool_npcspawner.label1", "双击一个条目来将其移除。")
-			add("tool.vjstool_npcspawner.header1", "名称")
-			add("tool.vjstool_npcspawner.header2", "方位")
-			add("tool.vjstool_npcspawner.header3", "装备")
-			add("tool.vjstool_npcspawner.label2", "额外选项")
-			add("tool.vjstool_npcspawner.toggle.spawnsound", "播放 NPC 生成音效？")
-			add("tool.vjstool_npcspawner.nextspawntime", "生成间隔")
-			add("tool.vjstool_npcspawner.popup.header1", "名称")
-			add("tool.vjstool_npcspawner.popup.header2", "实体类别")
-			add("tool.vjstool_npcspawner.popup.header3", "分组")
-			add("tool.vjstool_npcspawner.title1", "双击来选择一个 NPC。")
-			add("tool.vjstool_npcspawner.title2", "双击来选择一个武器。")
-			add("tool.vjstool_npcspawner.print.nothingspawn", "没有要生成的东西！")
-			
-			add("tool.vjstool_npcfollower.name", "NPC 跟随器")
-			add("tool.vjstool_npcfollower.desc", "选择一个 NPC 并且让它跟随某个实体")
-			add("tool.vjstool_npcfollower.left", "选择一个 NPC")
-			add("tool.vjstool_npcfollower.right", "选择要让 NPC 跟随的实体")
-			add("tool.vjstool_npcfollower.reload", "取消跟随任何 NPC 正在跟随的实体")
-			add("tool.vjstool_npcfollower.print.noselection", "未选中 NPC！")
-			add("tool.vjstool_npcfollower.print.reset", "已取消跟随任何 NPC 正在跟随的实体！")
-		
-			-- Miscellaneous (Prints)
-			add("vjbase.print.bullseye.activated", "已激活 NPC 靶子。")
-			add("vjbase.print.bullseye.deactivated", "已禁用 NPC 靶子。")
-			
-			add("vjbase.print.npccontroller.entrance", "要查看按键，请前往“DrVrej”页面下的“控制器设置”")
-			add("vjbase.print.npccontroller.tracking.activated", "靶子追踪已激活！")
-			add("vjbase.print.npccontroller.tracking.deactivated", "靶子追踪已禁用！")
-			add("vjbase.print.npccontroller.movementjump.enable", "已启用移动跳跃！")
-			add("vjbase.print.npccontroller.movementjump.disable", "已禁用移动跳跃！")
-			
-			add("vjbase.print.adminhealth.pickup", "你已经获得 1,000,000 点生命值！")
-			
-			add("vjbase.print.fireplace.activated", "你点燃了篝火。")
-			add("vjbase.print.fireplace.deactivated", "你扑灭了篝火。")
-			
-			add("vjbase.print.plyspawnpoint.activated", "已激活此出生点！")
-			add("vjbase.print.plyspawnpoint.deactivated", "已禁用此出生点！")
-
-		elseif conv == "turkish" then ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-			-- Spawn Menu
-			add("vjbase.spawn.menu.npc.disablethinking", "AI Düşünmesini Kapat")
-			add("vjbase.spawn.menu.npc.ignoreplayers", "AI Oyuncuları Umursamasın")
-			add("vjbase.spawn.menu.npc.keepcorpses", "NPC Cesetleri Kaldır/Tut")
-			add("vjbase.spawn.menu.npc.guard", "NPC'leri Guard Olarak Oluştur")
-		
-			-- General Menu (Used everywhere)
-			add("vjbase.menu.general.default", "Varsayılan")
-			add("vjbase.menu.general.admin.only", "Uyarı: Bu menüyü sadece yöneticiler kullanır.")
-			add("vjbase.menu.general.admin.not", "Yönetici değilsin!")
-			add("vjbase.menu.general.reset.everything", "Varsayılanlara Sıfırla")
-			add("vjbase.menu.general.npc.warnfuture", "UYARI: Sadece sonradan oluşturulan NPC'ler etkilenir!")
-			add("vjbase.menu.general.npc.creaturesettings", "Yaratık Ayarları:")
-			add("vjbase.menu.general.npc.humansettings", "İnsan Ayarları:")
-		
-			-- Menu Tabs
-			add("vjbase.menu.tabs.mainmenu", "Ana Menü")
-			add("vjbase.menu.tabs.settings.npc", "NPC Ayarları")
-			add("vjbase.menu.tabs.settings.weapon", "Silah Ayarları")
-			add("vjbase.menu.tabs.settings.hud", "HUD Ayarları")
-			add("vjbase.menu.tabs.tools", "Araçlar")
-			add("vjbase.menu.tabs.configures.snpc", "SNPC Yapılandırmaları")
-		
-			-- Main Menu
-			add("vjbase.menu.cleanup", "Temizle")
-			add("vjbase.menu.cleanup.all", "Her şeyi Temizle")
-			add("vjbase.menu.cleanup.stopsounds", "Tüm Sesleri Durdur")
-			add("vjbase.menu.cleanup.remove.vjnpcs", "Tüm VJ NPC'lerini Temizle")
-			add("vjbase.menu.cleanup.remove.npcs", "Tüm NPC'leri Temizle")
-			add("vjbase.menu.cleanup.remove.spawners", "Tüm Oluşturucuları (Spawner) Temizle")
-			add("vjbase.menu.cleanup.remove.corpses", "Tüm Cesetleri Temizle")
-			add("vjbase.menu.cleanup.remove.vjgibs", "Parçalanmış NPCleri Temizle")
-			add("vjbase.menu.cleanup.remove.groundweapons", "Yerdeki Silahları Temizle")
-			add("vjbase.menu.cleanup.remove.props", "Tüm Propları Temizle")
-			add("vjbase.menu.cleanup.remove.decals", "Tüm Lekeleri Temizle")
-			add("vjbase.menu.cleanup.remove.allweapons", "Bütün Silahlarını Kaldır")
-			add("vjbase.menu.cleanup.remove.allammo", "Bütün Mermini Kaldır")
-		
-			add("vjbase.menu.helpsupport", "İletişim ve Destek")
-			add("vjbase.menu.helpsupport.incompatibleaddons", "Uyumsuz Eklentiler")
-			add("vjbase.menu.helpsupport.reportbug", "Hata Bildir")
-			add("vjbase.menu.helpsupport.suggestion", "Bir şeyler Öner")
-			add("vjbase.menu.helpsupport.discord", "Discord'a katıl!")
-			add("vjbase.menu.helpsupport.steam", "Steam grubuna katıl!")
-			add("vjbase.menu.helpsupport.youtube", "Youtube'da abone ol!")
-			add("vjbase.menu.helpsupport.twitter", "Twitter'da takip et!")
-			add("vjbase.menu.helpsupport.patreon", "Patreon'dan bağış yap!")
-			add("vjbase.menu.helpsupport.label1", "Eklentilerim ile ilgili gelişmeleri takip etmek için adreslerden birini takip et!")
-			add("vjbase.menu.helpsupport.label2", "Bağışlar eklenti yapmaya/güncellemeye devam etmem için bana yardımcı oluyor ve beni cesaretlendiriyor! Teşekkür ederim!")
-			add("vjbase.menu.helpsupport.thanks", "Thanks for your support!")
-			
-			add("vjbase.menu.svsettings", "Yönetici Sunucu Ayarları")
-			add("vjbase.menu.svsettings.label", "UYARI: Bazı ayarlar için hilelerin açık olması gereklidir!")
-			add("vjbase.menu.svsettings.admin.npcproperties", "NPC Özelliklerini Yalnızca Yöneticilerle Sınırla")
-			add("vjbase.menu.svsettings.noclip", "NoClip'e İzin Ver")
-			add("vjbase.menu.svsettings.weapons", "Silahlara İzin Ver")
-			add("vjbase.menu.svsettings.pvp", "PvP'ye İzin Ver")
-			add("vjbase.menu.svsettings.godmode", "Ölümsüzlük (Herkes)")
-			add("vjbase.menu.svsettings.bonemanip.npcs", "NPC'lere Kemik Manipülasyonu Uygula")
-			add("vjbase.menu.svsettings.bonemanip.players", "Oyunculara Kemik Manipülasyonu Uygula")
-			add("vjbase.menu.svsettings.bonemanip.others", "Diğerlerine Kemik Manipülasyonu Uygula")
-			add("vjbase.menu.svsettings.timescale.general", "Genel Zaman Ölçeği")
-			add("vjbase.menu.svsettings.timescale.physics", "Fizik Zaman Ölçeği")
-			add("vjbase.menu.svsettings.gravity", "Genel Yer Çekimi")
-			add("vjbase.menu.svsettings.maxentsprops", "Maks Prop/Entity:")
-			
-			add("vjbase.menu.clsettings", "İstemci Ayarları")
-			add("vjbase.menu.clsettings.label", "Bu menüyü istemci ayarlarınızı özelleştirmek için kullanabilirsiniz, sunucular bu ayarları değiştiremez!")
-			add("vjbase.menu.clsettings.labellang", "Dil Seçimi...")
-			add("vjbase.menu.clsettings.notify.lang", "VJ Base dili ayarlandı:")
-			add("vjbase.menu.clsettings.lang.auto", "Dil otomatik olarak ayarlandı.")
-			add("vjbase.menu.clsettings.lang.auto.label", "VJ Base GMod tarafından desteklenmeyen bir dile ayarlanmışsa göz ardı edilir.")
-			
-			add("vjbase.menu.info", "Bilgi")
-		
-			add("vjbase.menu.plugins", "Eklentiler")
-			add("vjbase.menu.plugins.label", "Yüklenmiş VJBase Eklentilerinin Listesi.")
-			add("vjbase.menu.plugins.version", "Sürüm:")
-			add("vjbase.menu.plugins.totalplugins", "Toplam Eklenti Sayısı:")
-			add("vjbase.menu.plugins.header1", "İsim")
-			add("vjbase.menu.plugins.header2", "Tür")
-			add("vjbase.menu.plugins.notfound", "Eklenti Bulunamadı")
-			add("vjbase.menu.plugins.changelog", "Değişiklikler")
-			add("vjbase.menu.plugins.makeaddon", "Eklenti yapmak ister misin?")
-			add("vjbase.menu.plugins.chat.pluginname", "Eklenti İsmi:")
-			add("vjbase.menu.plugins.chat.plugintypes", "Eklenti Türleri:")
-			
-			-- SNPC Menus
-			add("vjbase.menu.npc.options", "Ayarlar")
-			add("vjbase.menu.npc.options.difficulty.header", "Zorluğu Seç:")
-			add("vjbase.menu.npc.options.difficulty.neanderthal", "[-3] Neandertal | -99% Can ve Hasar")
-			add("vjbase.menu.npc.options.difficulty.childs_play", "[-2] Çocuk Oyuncağı | -75% Can ve Hasar")
-			add("vjbase.menu.npc.options.difficulty.easy", "[-1] Kolay | -50% Can ve Hasar")
-			add("vjbase.menu.npc.options.difficulty.normal", "[0] Orta | Olağan Can ve Hasar")
-			add("vjbase.menu.npc.options.difficulty.hard", "[1] Zor | +50% Can ve Hasar")
-			add("vjbase.menu.npc.options.difficulty.insane", "[2] Aşırı Zor | +100% Can ve Hasar")
-			add("vjbase.menu.npc.options.difficulty.impossible", "[3] İmkansız | +150% Can ve Hasar")
-			add("vjbase.menu.npc.options.difficulty.nightmare", "[4] Kâbus | +250% Can ve Hasar")
-			add("vjbase.menu.npc.options.difficulty.hell_on_earth", "[5] İnsan Üstü | +350% Can ve Hasar")
-			add("vjbase.menu.npc.options.difficulty.total_annihilation", "[6] Bu Dünyadan Değil! | +500% Can ve Hasar")
-			add("vjbase.menu.npc.options.label1", "Relationship Options:")
-			add("vjbase.menu.npc.options.togglefriendlyantlion", "Antlion'ları Sever")
-			add("vjbase.menu.npc.options.togglefriendlycombine", "Combine'ları Sever")
-			add("vjbase.menu.npc.options.togglefriendlyplayer", "Oyuncuları Sever")
-			add("vjbase.menu.npc.options.togglefriendlyzombie", "Zombileri Sever")
-			add("vjbase.menu.npc.options.togglefriendlyvj", "VJ Base Sever")
-			add("vjbase.menu.npc.options.label2", "Tüm VJ NPC'leri Müttefik!")
-			add("vjbase.menu.npc.options.label3", "Ceset, Parçalanma ve Can Seçenekleri:")
-			add("vjbase.menu.npc.options.collision.header", "Ceset Çarpışması:")
-			add("vjbase.menu.npc.options.collision.default", "Varsayılan | İstisnalar: Oyuncular, NPC'ler, Silahlar, Ragdollar")
-			add("vjbase.menu.npc.options.collision.everything", "İstisna Yok | Her şey!")
-			add("vjbase.menu.npc.options.collision.onlyworld", "Sadece Dünya")
-			add("vjbase.menu.npc.options.collision.excludedebris", "İstisnalar: Cesetler, Enkazlar")
-			add("vjbase.menu.npc.options.collision.excludeplynpcs", "İstisnalar: Oyuncular, NPC'ler")
-			add("vjbase.menu.npc.options.collision.excludeply", "İstisnalar: Oyuncular")
-			add("vjbase.menu.npc.options.corpselimit", "Ceset Sınırı, Varsayılan:32")
-			add("vjbase.menu.npc.options.label4", "'Cesetleri Tut' kapalıyken Ceset Sınırı")
-			add("vjbase.menu.npc.options.toggleundocorpses", "Geri Alınabilir Cesetler (Geri Al Tuşu)")
-			add("vjbase.menu.npc.options.togglecorpsefade", "Cesetlerin Solması")
-			add("vjbase.menu.npc.options.corpsefadetime", "Cesetlerin Solma Süresi")
-			add("vjbase.menu.npc.options.label5", "Toplam: 600 Saniye (10 Dakika)")
-			add("vjbase.menu.npc.options.togglegibcollision", "Çarpışan Vücut Parçaları")
-			add("vjbase.menu.npc.options.togglefadegibs", "Vücut Parçalarının Solması")
-			add("vjbase.menu.npc.options.gibfadetime", "Vücut Parçalarının Solma Süresi")
-			add("vjbase.menu.npc.options.label6", "Varsayılan: 30 | Toplam: 600 saniye (10 Dakika)")
-			add("vjbase.menu.npc.options.togglesnpcgodmode", "Ölümsüz (Hiç hasar almayacaklar)")
-			add("vjbase.menu.npc.options.health", "Can:")
-			add("vjbase.menu.npc.options.defaulthealth", "0 = Varsayılan Can (En fazla 9 hane!)")
-			add("vjbase.menu.npc.options.label7", "AI Ayarları:")
-			add("vjbase.menu.npc.options.toggleknowenemylocation", "Her zaman düşman konumunu bil")
-			add("vjbase.menu.npc.options.sightdistance", "Görüş Uzaklığı:")
-			add("vjbase.menu.npc.options.label8", "Her NPC kendi uzaklığına sahiptir, bu hepsi için aynı olmasını sağlar, dikkatli kullan! (0 = Olağan | Ortalama: 10k)")
-			add("vjbase.menu.npc.settings.perf.processtime", "İşleme Süresi")
-			add("vjbase.menu.npc.settings.perf.processtime.button", "İşleme Süresi Nedir?")
-			add("vjbase.menu.npc.settings.perf.processtime.label", "Default: 1 | Düşük sayılar gecikmeye sebebiyet verir!")
-			add("vjbase.menu.npc.options.label10", "Çeşitli Ayarlar:")
-			add("vjbase.menu.npc.options.togglegmoddecals", "Garry's Mod'un varsayılan kan lekelerini kullan.")
-			add("vjbase.menu.npc.options.label11", "Sadece kırmızı ve yeşil renkler için!")
-			add("vjbase.menu.npc.options.toggleitemdrops", "Ölümde eşya düşümü")
-			add("vjbase.menu.npc.options.toggleaddfrags", "Öldürmede skor tablosunda oyuncunun skorunu artır")
-			add("vjbase.menu.npc.options.togglecreatureopendoor", "Yaratıklar kapıları açabilir")
-			add("vjbase.menu.npc.options.togglehumansdropweapon", "İnsanlar öldüğünde silahlarını düşürür")
-			add("vjbase.menu.npc.options.togglehumanscanjump", "İnsanlar zıplayabilir")
-			add("vjbase.menu.npc.options.toggleplydroppedweapons", "Oyuncular düşen silahları alabilir")
-			
-			add("vjbase.menu.npc.settings", "Ayarlar")
-			add("vjbase.menu.npc.settings.title.ai", "AI Ayarları:")
-			add("vjbase.menu.npc.settings.togglewandering", "Boştayken Gezinmeyi Devre Dışı Bırak")
-			add("vjbase.menu.npc.settings.togglechasingenemy", "Düşmanı Kovalamayı Devre Dışı Bırak")
-			add("vjbase.menu.npc.settings.label.chasingenemy", "UYARI: Bu Bazı AI Parçalarını Bozabilir!")
-			add("vjbase.menu.npc.settings.togglemedics", "Şifacı NPC'leri Devre Dışı Bırak")
-			add("vjbase.menu.npc.settings.togglefollowplayer", "Oyuncu Takibini Devre Dışı Bırak")
-			add("vjbase.menu.npc.settings.label.followplayer", "Örnek: NPC'ye doğru E'ye bastığında seni takip eder.")
-			add("vjbase.menu.npc.settings.toggleallies", "Müttefikliği Devre Dışı Bırak (Müttefik Yok!)")
-			add("vjbase.menu.npc.settings.togglebecomeenemytoply", "Müttefiklerin Düşman Olmasını Engelle")
-			add("vjbase.menu.npc.settings.togglecallhelp", "Yardım Çağırmayı Devre Dışı Bırak")
-			add("vjbase.menu.npc.settings.toggleproppush", "Prop İle İttirmeyi Devre Dışı Bırak (Yaratıklar)")
-			add("vjbase.menu.npc.settings.togglepropattack", "Prop İle Saldırmayı Devre Dışı Bırak (Yaratıklar)")
-			add("vjbase.menu.npc.settings.toggledangersight", "Tehlike ve El Bombalarını Fark Etmeyi Devre Dışı Bırak (İnsanlar)")
-			add("vjbase.menu.npc.settings.togglereloading", "Şarjör Değiştirmeyi Devre Dışı Bırak")
-			add("vjbase.menu.npc.settings.toggleeating", "Yemeyi Devre Dışı Bırak (ÖRN: Ceset ya da Parçalar)")
-			add("vjbase.menu.npc.settings.title.attack", "Saldırı Ayarları:")
-			add("vjbase.menu.npc.settings.togglemelee", "Yakın Saldırı Devre Dışı ")
-			add("vjbase.menu.npc.settings.togglerange", "Menzilli Saldırı Devre Dışı")
-			add("vjbase.menu.npc.settings.toggleleap", "Sıçrama Saldırıları Devre Dışı (Yaratıklar)")
-			add("vjbase.menu.npc.settings.togglethrownade", "El Bombası Saldırısı Devre Dışı (İnsanlar)")
-			add("vjbase.menu.npc.settings.toggleweapons", "Silahlar Devre Dışı (İnsanlar)")
-			add("vjbase.menu.npc.settings.label.noweapon", "İnsanlar silah kullanamayacak!")
-			add("vjbase.menu.npc.settings.togglemeleedsp", "Ağır yakın hasarlarda DSP efekti Devre Dışı")
-			add("vjbase.menu.npc.settings.toggleslowplayer", "Oyuncuların yakın hasarda yavaşlaması Devre Dışı")
-			add("vjbase.menu.npc.settings.togglebleedonmelee", "Oyuncu/NPC yakın hasarlarda kanama Devre Dışı")
-			add("vjbase.menu.npc.settings.title.misc", "Çeşitli Ayarlar:")
-			add("vjbase.menu.npc.settings.toggleidleparticles", "Boştaki efekt ve parçacıklar Devre Dışı")
-			add("vjbase.menu.npc.settings.label.idleparticles", "Bunu devre dışı bırakmak performansı artırabilir!")
-			add("vjbase.menu.npc.settings.togglesnpcchat", "NPC Sohbet Yazıları Devre Dışı")
-			add("vjbase.menu.npc.settings.label.npcchat", "Örnek: 'Bilim adamı seni takip ediyor!'")
-			add("vjbase.menu.npc.settings.title.damagecorpse", "Hasar ve Ceset Ayarları:")
-			add("vjbase.menu.npc.settings.toggleflinching", "Korkma Devre Dışı")
-			add("vjbase.menu.npc.settings.togglebleeding", "Kanama Devre Dışı")
-			add("vjbase.menu.npc.settings.label.bleeding", "Kan izleri, lekeler vs. Devre Dışı")
-			add("vjbase.menu.npc.settings.togglebloodpool", "Kan gölü (Öldüğünde) Devre Dışı")
-			add("vjbase.menu.npc.settings.togglegib", "Ceset Parçalanmaı Devre Dışı")
-			add("vjbase.menu.npc.settings.label.gib", "Bunu devre dışı bırakmak performansı artırabilir!")
-			add("vjbase.menu.npc.settings.togglegibdeathvfx", "Parçalanma/Ölüm VFX Devre Dışı (Parçacıklar, lekeler, vs.)")
-			add("vjbase.menu.npc.settings.toggledeathanim", "Ölüm Animasyonu Devre Dışı")
-			add("vjbase.menu.npc.settings.togglecorpses", "Cesetler Devre Dışı")
-			add("vjbase.menu.npc.settings.title.passive", "Pasif Ayarlar:")
-			add("vjbase.menu.npc.settings.togglerunontouch", "Dokunmada Kaçış Devre Dışı")
-			add("vjbase.menu.npc.settings.togglerunonhit", "Hasarda Kaçış Devre Dışı")
-			
-			add("vjbase.menu.npc.settings.snd", "Ses Ayarları")
-			add("vjbase.menu.npc.settings.snd.togglesounds", "Tüm Sesler Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.togglesoundtrack", "Ses Parçaları/Müzik Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.toggleidle", "Boştaki Sesler Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.togglebreathing", "Nefes Alma Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.togglefootsteps", "Ayak Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.togglemelee", "Yakın Saldırı Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.togglerange", "Menzilli Saldırı Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.togglealert", "Uyarı Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.togglepain", "Acı Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.toggledeath", "Ölüm Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.togglegibbing", "Parçalanma Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.togglegibbing.label", "Ayrıca bir parça bir şeye çarptığında çıkan sesler için de geçerlidir")
-			add("vjbase.menu.npc.settings.snd.togglemedic", "Şifacı Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.togglefollowing", "Takip Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.togglecallhelp", "Yardım Çağrısı Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.togglereceiveorder", "Emir Alma Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.togglebecomeenemy", "Oyuncuya Düşman Olma Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.toggleplayersight", "Oyuncu Görüşü Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.toggleplayersight.label", "NPC'nin Oyuncuğu Gördüğündeki Özel Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.toggledmgbyplayer", "Oyuncu Tarafından Verilen Hasar Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.toggledmgbyplayer.label", "Bir oyuncu NPC'ye ateş ettiğinde, özellikle dost NPC'lere")
-			add("vjbase.menu.npc.settings.snd.toggleleap", "Sıçrama Saldırısı Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.toggleslowedplayer", "Yavaşlamış Oyuncu Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.toggleslowedplayer.label", "Oyuncu yakın hasar ile yavaşlatığındaki sesler")
-			add("vjbase.menu.npc.settings.snd.togglegrenade", "El Bombası Saldırı Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.toggledangersight", "El bombası ve Tehlike Görme Sesleri Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.togglesuppressing", "Çağrı Seslerini Bastırma Devre Dışı")
-			add("vjbase.menu.npc.settings.snd.togglereload", "Çağrı Seslerini Yineleme Devre Dışı")
-
-			add("vjbase.menu.npc.settings.dev", "Geliştirici Ayarları")
-			add("vjbase.menu.npc.settings.dev.label1", "Bu ayarlar SNPC'leri geliştirirken kullanılır.")
-			add("vjbase.menu.npc.settings.dev.label2", "UYARI: Bu seçeneklerden bazıları gecikmeye neden olabilir!")
-			add("vjbase.menu.npc.settings.dev.toggledev", "Geliştirici Modunu Aktif Et?")
-			add("vjbase.menu.npc.settings.dev.label3", "Bu seçenek buradan ya da içerik menüsünden etkinleştirilmelidir! (Aşağıdaki seçenekler için gerekli)")
-			add("vjbase.menu.npc.settings.dev.printtouch", "Dokunmada Yazdır (Konsola)")
-			add("vjbase.menu.npc.settings.dev.printcurenemy", "Mevcut düşmanı Yazdır (Konsola)")
-			add("vjbase.menu.npc.settings.dev.printlastseenenemy", "'LastSeenEnemy' zamanını Yazdır (Sohbete)")
-			add("vjbase.menu.npc.settings.dev.printonreset", "Düşmanı Sıfırlamayı Yazdır (Konsola)")
-			add("vjbase.menu.npc.settings.dev.printonstopattack", "Duran Saldırıları Yazdır (Konsola)")
-			add("vjbase.menu.npc.settings.dev.printtakingcover", "Siper Almayı Yazdır (Konsola)")
-			add("vjbase.menu.npc.settings.dev.printondamage", "Hasarda Yazdır (Konsola)")
-			add("vjbase.menu.npc.settings.dev.printondeath", "Ölümde Yazdır (Konsola)")
-			add("vjbase.menu.npc.settings.dev.printweaponinfo", "Silah Bilgisini Yazdır (Konsola)")
-			add("vjbase.menu.npc.settings.dev.cachedmodels", "Önbelleğe Alınan Modelleri Yazdır (Konsola)")
-			add("vjbase.menu.npc.settings.dev.numofnpcs", "NPC Sayısını Yazdır (Sohbete)")
-			add("vjbase.menu.npc.settings.dev.label4", "Butonları Yenile:")
-			add("vjbase.menu.npc.settings.dev.reloadsounds", "Sesleri Yenile")
-			add("vjbase.menu.npc.settings.dev.reloadmaterials", "Materyalleri Yenile (VMT)")
-			add("vjbase.menu.npc.settings.dev.reloadtextures", "Dokuları Yenile (VTF)")
-			add("vjbase.menu.npc.settings.dev.reloadmodels", "Modelleri Yenile")
-			add("vjbase.menu.npc.settings.dev.reloadspawnmenu", "Oluşturma Menüsünü Yenile")
-			
-			add("vjbase.menu.npc.settings.con", "Kontrolcü Ayarları")
-			add("vjbase.menu.npc.settings.con.label1", "Bilgilendirme: Bu ayarlar sadece istemci taraflıdır!")
-			add("vjbase.menu.npc.settings.con.label2", "Yakınlaştırmanın uzaklığı veya yakınlığı her tıklamada ne kadar değişir?.")
-			add("vjbase.menu.npc.settings.con.displayhud", "HUD Göster")
-			add("vjbase.menu.npc.settings.con.camzoomdistance", "Kamera Hareket Uzaklığı")
-			add("vjbase.menu.npc.settings.con.camspeed", "Kamera Hızı")
-			add("vjbase.menu.npc.settings.con.camzoomspeed", "Kamera Yakınlaştırma Hızı" )
-			add("vjbase.menu.npc.settings.con.diewithnpc", "Kontrolcü NPC'ile Birlikte Ölür (Yeniden Doğma Gereklidir!)")
-			add("vjbase.menu.npc.settings.con.displaydev", "Geliştirici Entity'lerini Göster")
-			add("vjbase.menu.npc.settings.con.label3", "Tuş Atamaları:")
-			add("vjbase.menu.npc.settings.con.bind.header1", "Kontrol")
-			add("vjbase.menu.npc.settings.con.bind.header2", "Açıklama")
-			add("vjbase.menu.npc.settings.con.bind.clickmsg1", "Seçilen Tuş:")
-			add("vjbase.menu.npc.settings.con.bind.clickmsg2", "Açıklama:")
-			add("vjbase.menu.npc.settings.con.bind.movement", "Hareket (8-Yön Destekler)")
-			add("vjbase.menu.npc.settings.con.bind.exitcontrol", "Kontrolcüden Çık")
-			add("vjbase.menu.npc.settings.con.bind.meleeattack", "Yakın Saldırı")
-			add("vjbase.menu.npc.settings.con.bind.rangeattack", "Uzak / Silah Saldırısı")
-			add("vjbase.menu.npc.settings.con.bind.leaporgrenade", "Sıçrama / Bomba Saldırısı")
-			add("vjbase.menu.npc.settings.con.bind.reloadweapon", "Şarjör Değiştir")
-			add("vjbase.menu.npc.settings.con.bind.togglebullseye", "Hedef Takibi Aç/Kapat")
-			add("vjbase.menu.npc.settings.con.bind.cameramode", "Kamera Modunu Değiştir")
-			add("vjbase.menu.npc.settings.con.bind.movementjump", "Hareketli Atlama Aç/Kapat")
-			add("vjbase.menu.npc.settings.con.bind.camerazoom", "Yakınlaştır ve Uzaklaştır")
-			add("vjbase.menu.npc.settings.con.bind.cameraup", "Yukarı Kamera Hareketi")
-			add("vjbase.menu.npc.settings.con.bind.cameradown", "Aşağı Kamera Hareketi")
-			add("vjbase.menu.npc.settings.con.bind.cameraforward", "İleri Kamera Hareketi")
-			add("vjbase.menu.npc.settings.con.bind.camerabackward", "Geri Kamera Hareketi")
-			add("vjbase.menu.npc.settings.con.bind.cameraleft", "Sol Kamera Hareketi")
-			add("vjbase.menu.npc.settings.con.bind.cameraright", "Sağ Kamera Hareketi")
-			add("vjbase.menu.npc.settings.con.bind.resetzoom", "Kamera Pozisyonunu Sıfırla")
-			
-			-- Weapon Client Settings
-			add("vjbase.menu.wep.clsettings", "İstemci Ayarları")
-			add("vjbase.menu.wep.clsettings.notice", "Bilgilendirme: Bu ayarlar istemci taraflı, seçenekler diğerleri için değişmeyecek!")
-			add("vjbase.menu.wep.clsettings.togglemuzzle", "Namlu Flaşı Devre Dışı")
-			add("vjbase.menu.wep.clsettings.togglemuzzlelight", "Namlu Flaşı Dinamik Işık Devre Dışı")
-			add("vjbase.menu.wep.clsettings.togglemuzzle.label", "Namlu flaşını devre dışı bırakmak bunu da devre dışı bırakır.")
-			add("vjbase.menu.wep.clsettings.togglemuzzlebulletshells", "Mermi Kabukları Devre Dışı")
-			
-			-- NPC Properties (C Menu)
-			add("vjbase.menuproperties.control", "KONTROL ET")
-			add("vjbase.menuproperties.guard", "Koruma Modu Aç/Kapat")
-			add("vjbase.menuproperties.wander", "Gezinme Modu Aç/Kapat")
-			add("vjbase.menuproperties.medic", "Şifacı Yap")
-			add("vjbase.menuproperties.allyme", "Müttefikim Ol")
-			add("vjbase.menuproperties.hostileme", "Düşmanım Ol")
-			add("vjbase.menuproperties.slay", "Katlet")
-			add("vjbase.menuproperties.gib", "Parçala (Geçerliyse)")
-			add("vjbase.menuproperties.devmode", "Geliştirici Modu Aç/Kapat")
-			add("vjbase.menuproperties.print.adminonly", "Bu ayarları sadece yöneticiler değiştirebilir!")
-		
-			-- Tools
-			add("tool.vjstool.menu.tutorialvideo", "Eğitim Videosu")
-			add("tool.vjstool.menu.label.recommendation", "Bu aracın sadece VJBase sNPC'leri üstünde kullanılması önerilir.")
-			
-			add("tool.vjstool_bullseye.name", "NPC Hedef Takibi")
-			add("tool.vjstool_bullseye.desc", "NPC'lerin hedef alacağı noktayı oluşturur.")
-			add("tool.vjstool_bullseye.left", "Hedef Oluştur")
-			add("tool.vjstool_bullseye.menu.help1", "Entity Kullanma Tuşu ile Aktif/Pasif ayarla.")
-			add("tool.vjstool_bullseye.menu.help2", "Pasif ayarlandığında NPC'ler hedef almaz.")
-			add("tool.vjstool_bullseye.menu.label1", "Hareket türünü seç")
-			add("tool.vjstool_bullseye.menu.label2", "Model Dizini")
-			add("tool.vjstool_bullseye.menu.toggleusestatus", "Durum Renklerini Kullan (Aktif/Pasif)")
-			add("tool.vjstool_bullseye.menu.togglestartactivated", "Aktif Olarak Başlat")
-		
-			add("tool.vjstool_entityscanner.name", "Entity Tarayıcı")
-			add("tool.vjstool_entityscanner.desc", "Bir Entity Hakkında Bilgi Al")
-			add("tool.vjstool_entityscanner.left", "Entity hakkındaki bilgiyi konsola yazdır.")
-			add("tool.vjstool_entityscanner.label", "Konsola seçilen herhangi bir entity hakkındaki bilgileri yazdırır.")
-			
-			add("tool.vjstool_healthmodifier.name", "Can Düzenleyici")
-			add("tool.vjstool_healthmodifier.desc", "Bir Entity'nin Canını Düzenle")
-			add("tool.vjstool_healthmodifier.left", "Can Ayarla")
-			add("tool.vjstool_healthmodifier.right", "Can  ve Maks Can Ayarla")
-			add("tool.vjstool_healthmodifier.reload", "Entity'yi iyileştir (maks)")
-			add("tool.vjstool_healthmodifier.adminonly", "Yalnızca yöneticiler başka bir oyuncunun canını değiştirebilir veya iyileştirebilir.")
-			add("tool.vjstool_healthmodifier.sliderhealth", "Can")
-			add("tool.vjstool_healthmodifier.label1", "Aşağıdakiler yalnızca VJ Base SNPC'ler içindir:")
-			add("tool.vjstool_healthmodifier.togglegodmode", "Ölümsüzlük (Invincible)")
-			add("tool.vjstool_healthmodifier.togglehealthregen", "Can Yenilenmesini Etkinleştir")
-			add("tool.vjstool_healthmodifier.sliderhealthregenamt", "Yenilenme Miktarı")
-			add("tool.vjstool_healthmodifier.sliderhealthregendelay", "Yenilenme Gecikmesi")
-			
-			add("tool.vjstool_notarget.name", "Hedef Yok")
-			add("tool.vjstool_notarget.desc", "Hiçbir hedef belirlememek, tüm NPC'lerin belirli bir entity'i görmemesine neden olur")
-			add("tool.vjstool_notarget.left", "Hedef yok seçeneğini kendinize değiştirin")
-			add("tool.vjstool_notarget.right", "Hedef yok seçeneğini bir NPC veya oyuncu olarak değiştir")
-			add("tool.vjstool_notarget.label", "Bir Entity'de hedef yok seçeneği etkinleştirildiğinde, NPC'ler onu hedeflemeyecektir!")
-			add("tool.vjstool_notarget.print.yourselfon", "Kendin İçin Hedef Yok: AÇIK")
-			add("tool.vjstool_notarget.print.yourselfoff", "Kendin İçin Hedef Yok: KAPALI")
-			
-			add("tool.vjstool_npcequipment.name", "NPC Ekipmanları")
-			add("tool.vjstool_npcequipment.desc", "NPC'nin Ekipmanlarını Düzenler")
-			add("tool.vjstool_npcequipment.left", "NPC'nin Ekipmanlarını Değiştir")
-			add("tool.vjstool_npcequipment.right", "NPC'nin Ekipmanlarını Kaldır")
-			add("tool.vjstool_npcequipment.label", "NPC'nin ekipmanlarını değiştirir ya da kaldırır.")
-			add("tool.vjstool_npcequipment.selectedequipment", "Seçilen Ekipman")
-			add("tool.vjstool_npcequipment.print.doubleclick", "Silahı seçmek için çift tıkla.")
-			add("tool.vjstool_npcequipment.print.weaponselected1", "Silah")
-			add("tool.vjstool_npcequipment.print.weaponselected2", "seçildi!")
-			add("tool.vjstool_npcequipment.header1", "İsim")
-			add("tool.vjstool_npcequipment.header2", "Sınıf")
-			
-			add("tool.vjstool_npcmover.name", "NPC Hareket Ettirici")
-			add("tool.vjstool_npcmover.desc", "NPC'leri hareket ettir, Bir NPC seçilmiş olmalıdır.")
-			add("tool.vjstool_npcmover.left", "Bir NPC Seç")
-			add("tool.vjstool_npcmover.right", "Konuma Koş")
-			add("tool.vjstool_npcmover.reload", "Konuma yürü")
-			add("tool.vjstool_npcmover.header1", "İsim")
-			add("tool.vjstool_npcmover.header2", "Sınıf")
-			add("tool.vjstool_npcmover.header3", "Bilgi")
-			add("tool.vjstool_npcmover.buttonunselectall", "Tüm NPC'lerin Seçimini Kaldır")
-			add("tool.vjstool_npcmover.print.unselectedall", "Tüm NPC'lerin Seçimini Kaldır")
-			add("tool.vjstool_npcmover.print.unselectedall.error", "Seçimi kaldırılacak bir şey yok")
-			
-			add("tool.vjstool_npcrelationship.name", "NPC İlişki Düzenleyici")
-			add("tool.vjstool_npcrelationship.desc", "Entity'lerin ilişkilerini düzenle")
-			add("tool.vjstool_npcrelationship.left", "İlişki tablosunu onayla")
-			add("tool.vjstool_npcrelationship.right", "Mevcut sınıfları edin")
-			add("tool.vjstool_npcrelationship.reload", "İlişki tablosunu kendin için onayla")
-			add("tool.vjstool_npcrelationship.label1", "NPC ilişkisini düzenler, başka bir entity yanında nasıl davranacağını düzenler.")
-			add("tool.vjstool_npcrelationship.header", "Sınıf")
-			add("tool.vjstool_npcrelationship.label2", "Return tuşuna basarak sınıfa ekle.")
-			add("tool.vjstool_npcrelationship.button.combine", "Combine Sınıfı Ekle")
-			add("tool.vjstool_npcrelationship.button.antlion", "Antlion Sınıfı Ekle")
-			add("tool.vjstool_npcrelationship.button.zombie", "Zombi Sınıfı Ekle")
-			add("tool.vjstool_npcrelationship.button.player", "Oyuncu Sınıfı Ekle")
-			add("tool.vjstool_npcrelationship.togglealliedply", "Tüm oyuncuların müttefikleriyle müttefik midir?")
-			add("tool.vjstool_npcrelationship.label3", "Yalnızca VJ Base SNPC'ler için geçerlidir ve SNPC gerektirir")
-			add("tool.vjstool_npcrelationship.print.applied", "İlişki tablosu onaylandı")
-			
-			add("tool.vjstool_npcspawner.name", "NPC Oluşturucu")
-			add("tool.vjstool_npcspawner.desc", "Özelleştirilebilir bir oluşturucu yapar")
-			add("tool.vjstool_npcspawner.left", "Oluşturucu yap")
-			add("tool.vjstool_npcspawner.right", "Entity'leri bir kez oluştur")
-			add("tool.vjstool_npcspawner.selectednpc", "Seçilen NPC")
-			add("tool.vjstool_npcspawner.spawnpos.forward", "Pozisyon | İleri")
-			add("tool.vjstool_npcspawner.spawnpos.right", "Pozisyon | Sağ")
-			add("tool.vjstool_npcspawner.spawnpos.up", "Pozisyon | Yukarı")
-			add("tool.vjstool_npcspawner.selectweapon", "Seçilen Silah")
-			add("tool.vjstool_npcspawner.spawnnpclass", "İlişki Sınıfı Geçersiz Kıl")
-			add("tool.vjstool_npcspawner.fritoplyallies", "Oyuncu Müttefikleriyle Arkadaş")
-			add("tool.vjstool_npcspawner.label.fritoplyallies", "İlişki sınıfına sahip olmalıdır (CLASS_PLAYER_ALLY)!")
-			add("tool.vjstool_npcspawner.button.updatelist", "Listeyi Güncelle")
-			add("tool.vjstool_npcspawner.label1", "Bir öğeyi kaldırmak için üzerine çift tıklayın.")
-			add("tool.vjstool_npcspawner.header1", "İsim")
-			add("tool.vjstool_npcspawner.header2", "Pozisyon")
-			add("tool.vjstool_npcspawner.header3", "Ekipman")
-			add("tool.vjstool_npcspawner.label2", "Ekstra Seçenekler")
-			add("tool.vjstool_npcspawner.toggle.spawnsound", "NPC Doğma Sesi Oynatılsın mı?")
-			add("tool.vjstool_npcspawner.nextspawntime", "Sıradaki Doğma Zamanı")
-			add("tool.vjstool_npcspawner.popup.header1", "İsim")
-			add("tool.vjstool_npcspawner.popup.header2", "Sınıf")
-			add("tool.vjstool_npcspawner.popup.header3", "Kategori")
-			add("tool.vjstool_npcspawner.title1", "Bir NPC'yi seçmek için çift tıkla.")
-			add("tool.vjstool_npcspawner.title2", "Bir silah seçmek için çift tıkla.")
-			add("tool.vjstool_npcspawner.print.nothingspawn", "Oluşturulacak bir şey yok!")
-			
-			add("tool.vjstool_npcfollower.name", "NPC Takipçisi")
-			add("tool.vjstool_npcfollower.desc", "Entity takip etmesi için bir NPC seç")
-			add("tool.vjstool_npcfollower.left", "Bir NPC Seç")
-			add("tool.vjstool_npcfollower.right", "Entity takip etmesi için bir NPC seç")
-			add("tool.vjstool_npcfollower.reload", "Bir NPC'nin takip ettiği Entityleri takip etmesini iptal et")
-			add("tool.vjstool_npcfollower.print.noselection", "Seçili NPC Yok!")
-			add("tool.vjstool_npcfollower.print.reset", "Takip ettiği herhangi bir entitynin takibini bırak!")
-			
-			-- Miscellaneous (Prints)
-			add("vjbase.print.bullseye.activated", "NPC Hedef Etkinleştirildi.")
-			add("vjbase.print.bullseye.deactivated", "NPC Hedef Devre Dışı.")
-			
-			add("vjbase.print.npccontroller.entrance", "Kontroller için,\"DrVrej\" sekmesindeki \"Kontrolcü Ayarları\" bölümünü inceleyin.")
-			add("vjbase.print.npccontroller.tracking.activated", "Hedef takibi etkin!")
-			add("vjbase.print.npccontroller.tracking.deactivated", "Hedef takibi devre dışı!")
-			add("vjbase.print.npccontroller.movementjump.enable", "Hareketli Sıçrama Aktif!")
-			add("vjbase.print.npccontroller.movementjump.disable", "Hareketli Zıplama Devre Dışı!")
-			
-			add("vjbase.print.adminhealth.pickup", "1,000,000 can aldın!")
-			
-			add("vjbase.print.fireplace.activated", "Şömineyi açtın.")
-			add("vjbase.print.fireplace.deactivated", "Şömineyi kapattın.")
-			
-			add("vjbase.print.plyspawnpoint.activated", "Bu doğma noktası etkinleştirildi!")
-			add("vjbase.print.plyspawnpoint.deactivated", "Bu doğma noktası devre dışı!")
-		end
+	["tool.vjstool_entityscanner.name"] = "Entity Tarayıcı",
+	["tool.vjstool_entityscanner.desc"] = "Bir Entity Hakkında Bilgi Al",
+	["tool.vjstool_entityscanner.left"] = "Entity hakkındaki bilgiyi konsola yazdır.",
+	["tool.vjstool_entityscanner.label"] = "Konsola seçilen herhangi bir entity hakkındaki bilgileri yazdırır.",
+	
+	["tool.vjstool_healthmodifier.name"] = "Can Düzenleyici",
+	["tool.vjstool_healthmodifier.desc"] = "Bir Entity'nin Canını Düzenle",
+	["tool.vjstool_healthmodifier.left"] = "Can Ayarla",
+	["tool.vjstool_healthmodifier.right"] = "Can  ve Maks Can Ayarla",
+	["tool.vjstool_healthmodifier.reload"] = "Entity'yi iyileştir (maks)",
+	["tool.vjstool_healthmodifier.adminonly"] = "Yalnızca yöneticiler başka bir oyuncunun canını değiştirebilir veya iyileştirebilir.",
+	["tool.vjstool_healthmodifier.sliderhealth"] = "Can",
+	["tool.vjstool_healthmodifier.label1"] = "Aşağıdakiler yalnızca VJ Base SNPC'ler içindir:",
+	["tool.vjstool_healthmodifier.togglegodmode"] = "Ölümsüzlük (Invincible)",
+	["tool.vjstool_healthmodifier.togglehealthregen"] = "Can Yenilenmesini Etkinleştir",
+	["tool.vjstool_healthmodifier.sliderhealthregenamt"] = "Yenilenme Miktarı",
+	["tool.vjstool_healthmodifier.sliderhealthregendelay"] = "Yenilenme Gecikmesi",
+	
+	["tool.vjstool_notarget.name"] = "Hedef Yok",
+	["tool.vjstool_notarget.desc"] = "Hiçbir hedef belirlememek, tüm NPC'lerin belirli bir entity'i görmemesine neden olur",
+	["tool.vjstool_notarget.left"] = "Hedef yok seçeneğini kendinize değiştirin",
+	["tool.vjstool_notarget.right"] = "Hedef yok seçeneğini bir NPC veya oyuncu olarak değiştir",
+	["tool.vjstool_notarget.label"] = "Bir Entity'de hedef yok seçeneği etkinleştirildiğinde, NPC'ler onu hedeflemeyecektir!",
+	["tool.vjstool_notarget.print.yourselfon"] = "Kendin İçin Hedef Yok: AÇIK",
+	["tool.vjstool_notarget.print.yourselfoff"] = "Kendin İçin Hedef Yok: KAPALI",
+	
+	["tool.vjstool_npcequipment.name"] = "NPC Ekipmanları",
+	["tool.vjstool_npcequipment.desc"] = "NPC'nin Ekipmanlarını Düzenler",
+	["tool.vjstool_npcequipment.left"] = "NPC'nin Ekipmanlarını Değiştir",
+	["tool.vjstool_npcequipment.right"] = "NPC'nin Ekipmanlarını Kaldır",
+	["tool.vjstool_npcequipment.label"] = "NPC'nin ekipmanlarını değiştirir ya da kaldırır.",
+	["tool.vjstool_npcequipment.selectedequipment"] = "Seçilen Ekipman",
+	["tool.vjstool_npcequipment.print.doubleclick"] = "Silahı seçmek için çift tıkla.",
+	["tool.vjstool_npcequipment.print.weaponselected1"] = "Silah",
+	["tool.vjstool_npcequipment.print.weaponselected2"] = "seçildi!",
+	["tool.vjstool_npcequipment.header1"] = "İsim",
+	["tool.vjstool_npcequipment.header2"] = "Sınıf",
+	
+	["tool.vjstool_npcmover.name"] = "NPC Hareket Ettirici",
+	["tool.vjstool_npcmover.desc"] = "NPC'leri hareket ettir, Bir NPC seçilmiş olmalıdır.",
+	["tool.vjstool_npcmover.left"] = "Bir NPC Seç",
+	["tool.vjstool_npcmover.right"] = "Konuma Koş",
+	["tool.vjstool_npcmover.reload"] = "Konuma yürü",
+	["tool.vjstool_npcmover.header1"] = "İsim",
+	["tool.vjstool_npcmover.header2"] = "Sınıf",
+	["tool.vjstool_npcmover.header3"] = "Bilgi",
+	["tool.vjstool_npcmover.buttonunselectall"] = "Tüm NPC'lerin Seçimini Kaldır",
+	["tool.vjstool_npcmover.print.unselectedall"] = "Tüm NPC'lerin Seçimini Kaldır",
+	["tool.vjstool_npcmover.print.unselectedall.error"] = "Seçimi kaldırılacak bir şey yok",
+	
+	["tool.vjstool_npcrelationship.name"] = "NPC İlişki Düzenleyici",
+	["tool.vjstool_npcrelationship.desc"] = "Entity'lerin ilişkilerini düzenle",
+	["tool.vjstool_npcrelationship.left"] = "İlişki tablosunu onayla",
+	["tool.vjstool_npcrelationship.right"] = "Mevcut sınıfları edin",
+	["tool.vjstool_npcrelationship.reload"] = "İlişki tablosunu kendin için onayla",
+	["tool.vjstool_npcrelationship.label1"] = "NPC ilişkisini düzenler, başka bir entity yanında nasıl davranacağını düzenler.",
+	["tool.vjstool_npcrelationship.header"] = "Sınıf",
+	["tool.vjstool_npcrelationship.label2"] = "Return tuşuna basarak sınıfa ekle.",
+	["tool.vjstool_npcrelationship.button.combine"] = "Combine Sınıfı Ekle",
+	["tool.vjstool_npcrelationship.button.antlion"] = "Antlion Sınıfı Ekle",
+	["tool.vjstool_npcrelationship.button.zombie"] = "Zombi Sınıfı Ekle",
+	["tool.vjstool_npcrelationship.button.player"] = "Oyuncu Sınıfı Ekle",
+	["tool.vjstool_npcrelationship.togglealliedply"] = "Tüm oyuncuların müttefikleriyle müttefik midir?",
+	["tool.vjstool_npcrelationship.label3"] = "Yalnızca VJ Base SNPC'ler için geçerlidir ve SNPC gerektirir",
+	["tool.vjstool_npcrelationship.print.applied"] = "İlişki tablosu onaylandı",
+	
+	["tool.vjstool_npcspawner.name"] = "NPC Oluşturucu",
+	["tool.vjstool_npcspawner.desc"] = "Özelleştirilebilir bir oluşturucu yapar",
+	["tool.vjstool_npcspawner.left"] = "Oluşturucu yap",
+	["tool.vjstool_npcspawner.right"] = "Entity'leri bir kez oluştur",
+	["tool.vjstool_npcspawner.selectednpc"] = "Seçilen NPC",
+	["tool.vjstool_npcspawner.spawnpos.forward"] = "Pozisyon | İleri",
+	["tool.vjstool_npcspawner.spawnpos.right"] = "Pozisyon | Sağ",
+	["tool.vjstool_npcspawner.spawnpos.up"] = "Pozisyon | Yukarı",
+	["tool.vjstool_npcspawner.selectweapon"] = "Seçilen Silah",
+	["tool.vjstool_npcspawner.spawnnpclass"] = "İlişki Sınıfı Geçersiz Kıl",
+	["tool.vjstool_npcspawner.fritoplyallies"] = "Oyuncu Müttefikleriyle Arkadaş",
+	["tool.vjstool_npcspawner.label.fritoplyallies"] = "İlişki sınıfına sahip olmalıdır (CLASS_PLAYER_ALLY)!",
+	["tool.vjstool_npcspawner.button.updatelist"] = "Listeyi Güncelle",
+	["tool.vjstool_npcspawner.label1"] = "Bir öğeyi kaldırmak için üzerine çift tıklayın.",
+	["tool.vjstool_npcspawner.header1"] = "İsim",
+	["tool.vjstool_npcspawner.header2"] = "Pozisyon",
+	["tool.vjstool_npcspawner.header3"] = "Ekipman",
+	["tool.vjstool_npcspawner.label2"] = "Ekstra Seçenekler",
+	["tool.vjstool_npcspawner.toggle.spawnsound"] = "NPC Doğma Sesi Oynatılsın mı?",
+	["tool.vjstool_npcspawner.nextspawntime"] = "Sıradaki Doğma Zamanı",
+	["tool.vjstool_npcspawner.popup.header1"] = "İsim",
+	["tool.vjstool_npcspawner.popup.header2"] = "Sınıf",
+	["tool.vjstool_npcspawner.popup.header3"] = "Kategori",
+	["tool.vjstool_npcspawner.title1"] = "Bir NPC'yi seçmek için çift tıkla.",
+	["tool.vjstool_npcspawner.title2"] = "Bir silah seçmek için çift tıkla.",
+	["tool.vjstool_npcspawner.print.nothingspawn"] = "Oluşturulacak bir şey yok!",
+	
+	["tool.vjstool_npcfollower.name"] = "NPC Takipçisi",
+	["tool.vjstool_npcfollower.desc"] = "Entity takip etmesi için bir NPC seç",
+	["tool.vjstool_npcfollower.left"] = "Bir NPC Seç",
+	["tool.vjstool_npcfollower.right"] = "Entity takip etmesi için bir NPC seç",
+	["tool.vjstool_npcfollower.reload"] = "Bir NPC'nin takip ettiği Entityleri takip etmesini iptal et",
+	["tool.vjstool_npcfollower.print.noselection"] = "Seçili NPC Yok!",
+	["tool.vjstool_npcfollower.print.reset"] = "Takip ettiği herhangi bir entitynin takibini bırak!",
+	
+	-- Miscellaneous (Prints)
+	["vjbase.print.bullseye.activated"] = "NPC Hedef Etkinleştirildi.",
+	["vjbase.print.bullseye.deactivated"] = "NPC Hedef Devre Dışı.",
+	
+	["vjbase.print.npccontroller.entrance"] = "Kontroller için,\"DrVrej\" sekmesindeki \"Kontrolcü Ayarları\" bölümünü inceleyin.",
+	["vjbase.print.npccontroller.tracking.activated"] = "Hedef takibi etkin!",
+	["vjbase.print.npccontroller.tracking.deactivated"] = "Hedef takibi devre dışı!",
+	["vjbase.print.npccontroller.movementjump.enable"] = "Hareketli Sıçrama Aktif!",
+	["vjbase.print.npccontroller.movementjump.disable"] = "Hareketli Zıplama Devre Dışı!",
+	
+	["vjbase.print.adminhealth.pickup"] = "1,000,000 can aldın!",
+	
+	["vjbase.print.fireplace.activated"] = "Şömineyi açtın.",
+	["vjbase.print.fireplace.deactivated"] = "Şömineyi kapattın.",
+	
+	["vjbase.print.plyspawnpoint.activated"] = "Bu doğma noktası etkinleştirildi!",
+	["vjbase.print.plyspawnpoint.deactivated"] = "Bu doğma noktası devre dışı!",
+}
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ ///// WARNING: Don't touch anything below this line! \\\\\ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
-		print("VJ Base Language Set To: "..conv)
-	end
-	VJ.RefreshLanguage() -- Arachin ankam ganch e, garevor e asiga!
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+VJ.AddClientConVar("vj_language", "english", "Current language VJ Base is set to")
+VJ.AddClientConVar("vj_language_auto", 1, "Automatically set the language of VJ Base to the one selected by Garry's Mod")
+
+local function add(name, str)
+	language.Add(name, str)
 end
+
+local tblGModtoVJ = {
+	["en"] = "english",
+	["ru"] = "russian",
+	["de"] = "german",
+	["fr"] = "french",
+	["lt"] = "lithuanian",
+	["es-ES"] = "spanish_lt",
+	["pt-BR"] = "portuguese_br",
+	["zh-CN"] = "schinese",
+	["tr"] = "turkish",
+	["nl"] = "dutch",
+	["no"] = "norwegian",
+	["pl"] = "polish",
+	["el"] = "greek",
+	["ja"] = "japanese",
+	["vi"] = "vietnamese"
+}
+
+function VJ.RefreshLanguage()
+	local conv = GetConVar("vj_language"):GetString()
+	
+	-- Automatically set VJ Base to whatever GMod's language is set to
+		-- Based on: https://wiki.facepunch.com/gmod/Addon_Localization
+		-- Skip if VJ Base is set to a language unsupported by Garry's Mod
+	if GetConVar("vj_language_auto"):GetInt() == 1 && conv != "armenian" then
+		local gmod_conv = GetConVar("gmod_language"):GetString()
+		local converted = tblGModtoVJ[gmod_conv]
+		if converted then
+			RunConsoleCommand("vj_language", converted)
+			conv = converted
+		end
+	end
+	
+	-- Obtain the current language's strings
+	local langTable = strings_english
+	if conv == "russian" then
+		langTable = strings_russian
+	elseif conv == "lithuanian" then
+		langTable = strings_lithuanian
+	elseif conv == "spanish_lt" then
+		langTable = strings_spanish_latin
+	elseif conv == "schinese" then
+		langTable = strings_chinese_simplified
+	elseif conv == "turkish" then
+		langTable = strings_turkish
+	end
+	
+	-- Set the current language's strings to the game
+	for k, v in pairs(langTable) do
+		add(k, v)
+	end
+	
+	-- Deprecated strings
+	add("vjbase.menugeneral.default", "Default")
+	
+	print("VJ Base Language Set To: " .. conv)
+end
+VJ.RefreshLanguage() -- Arachin ankam ganch e, garevor e asiga!
