@@ -99,8 +99,8 @@ function ENT:SCHEDULE_IDLE_WANDER()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SCHEDULE_IDLE_STAND()
-	if self:IsMoving() or (self.NextIdleTime > CurTime()) or (self.AA_CurrentMoveTime > CurTime()) or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
-	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && self:BusyWithActivity() then return end // self:GetVelocity():Length() > 0
+	if self:IsMoving() or (self.NextIdleTime > CurTime()) or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
+	if (self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC) && (self.AA_CurrentMoveTime > CurTime() or self:BusyWithActivity()) then return end // self:GetVelocity():Length() > 0
 	self:MaintainIdleAnimation(self:GetIdealActivity() != ACT_IDLE)
 	return true
 end
@@ -153,13 +153,13 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:RunAI() -- Called from the engine every 0.1 seconds
 	if self:GetState() == VJ_STATE_FREEZE or self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) then self:MaintainActivity() return end
-	if self:IsRunningBehavior() or self:DoingEngineSchedule() then return true end -- true = Run "MaintainSchedule" in engine
+	if self:IsRunningBehavior() or self.bDoingEngineSchedule then return true end -- true = Run "MaintainSchedule" in engine
 	//self:SetArrivalActivity(ACT_COWER)
 	//self:SetArrivalSpeed(1000)
 	
 	-- Apply walk frames to both activities and sequences
 	-- Parts of it replicate TASK_PLAY_SEQUENCE - https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc_schedule.cpp#L3312
-	if !self:IsSequenceFinished() && !self:IsMoving() && ((self:GetSequence() == self:GetIdealSequence()) or (self:GetActivity() == ACT_DO_NOT_DISTURB)) && self:GetSequenceMoveDist(self:GetSequence()) > 0 && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then
+	if self:GetSequenceMoveDist(self:GetSequence()) > 0 && !self:IsSequenceFinished() && !self:IsMoving() && ((self:GetSequence() == self:GetIdealSequence()) or (self:GetActivity() == ACT_DO_NOT_DISTURB)) && self.MovementType != VJ_MOVETYPE_AERIAL && self.MovementType != VJ_MOVETYPE_AQUATIC then
 		self:AutoMovement(self:GetAnimTimeInterval())
 	end
 	
@@ -261,21 +261,23 @@ function ENT:OnStateChange(oldState, newState)
 	//print("OnStateChange - ", self, ": ", oldState, newState)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:TranslateNavGoal(enemy, currentGoal)
+function ENT:TranslateNavGoal(ent, goal)
 	-- For "GOALTYPE_ENEMY" only
-	-- This is called every 0.1 seconds from here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L5790
+		-- Called every 0.1 seconds from here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L5790
+		-- Use "GetPos", otherwise it will use "GetEnemyLastKnownPos", which is often incorrect location especially when sight is blocked!
 	if self:GetCurGoalType() == 2 then
-		-- Disabled for now as it causes movement stuttering when near the enemy
-		//if self.LatestEnemyDistance < 120 then
-		//	-- This makes "GetGoalRepathTolerance" return 0 as seen here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L5756
-		//	-- Otherwise it will go to the enemy only if certain tolerance is passed!
-		//	self:SetArrivalDistance((self:GetPos() - currentGoal):Length())
-		//end
-		return enemy:GetPos() -- Otherwise it will use "GetEnemyLastKnownPos", which is often incorrect location especially when sight is blocked!
+		if self.LatestEnemyDistance < 500 then // 120 for "SetArrivalDistance"
+			-- Disabled for now as it causes movement stuttering when near the enemy
+				-- Makes "GetGoalRepathTolerance" return 0 as seen here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L5756
+				-- Otherwise it will go to the enemy only if certain tolerance is passed!
+			//self:SetArrivalDistance((self:GetPos() - goal):Length())
+			return ent:GetPos() + ent:GetVelocity()
+		end
+		return ent:GetPos()
 	end
-	//print("TranslateNavGoal", enemy, currentGoal)
-	//VJ.DEBUG_TempEnt(currentGoal)
-	//return currentGoal + enemy:GetForward()*math.random(-100, 100)
+	//print("TranslateNavGoal", ent, goal)
+	//VJ.DEBUG_TempEnt(goal)
+	//return goal + ent:GetForward()*math.random(-100, 100)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StartSchedule(schedule)

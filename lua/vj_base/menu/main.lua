@@ -106,20 +106,22 @@ else
 		Panel:ControlHelp("TF2 - "..tostring(IsMounted("tf")))
 		--
 		--
-		Panel:AddControl("Label", {Text = "Command Information:"})
-		Panel:ControlHelp("SNPC Configurations - 'vj_npc_*'")
+		Panel:AddControl("Label", {Text = "Convar Prefixes:"})
+		Panel:ControlHelp("NPCs - 'vj_npc_*'")
 		Panel:ControlHelp("Weapons - 'vj_wep_*'")
 		Panel:ControlHelp("HUD - 'vj_hud_*'")
 		Panel:ControlHelp("Crosshair - 'vj_hud_ch_*'")
 		--
 		--
 		Panel:AddControl("Label", {Text = "Credits:"})
-		Panel:ControlHelp("DrVrej(Me) - Everything, from coding to fixing models and materials to sound editing")
-		Panel:ControlHelp("Black Mesa Source - Original non-edited gib models, blood pool texture, and glock 17 model")
-		Panel:ControlHelp("Valve - AK-47, M16A1 and MP40 models")
+		Panel:ControlHelp("DrVrej (Me) - Author")
+		Panel:ControlHelp("Crowbar Collective - Original gib models, blood pool texture, Glock-17 model")
+		Panel:ControlHelp("Valve - Various assets")
 		Panel:ControlHelp("Orion - Helped create first version of the base (2011-2012)")
-		Panel:ControlHelp("Cpt. Hazama - Suggestions + testing")
-		Panel:ControlHelp("Oteek - Bloodpool textures + testing")
+		Panel:ControlHelp("Cpt. Hazama - Various contributions, suggestions, testing")
+		Panel:ControlHelp("Darkborn - Suggestions, testing")
+		Panel:ControlHelp("Oteek - Blood pool textures, testing")
+		Panel:ControlHelp("BOO342 - Original fireplace model")
 		Panel:ControlHelp("China-Mandem - Original K-3 Model")
 		
 		Panel:ControlHelp("")
@@ -188,7 +190,7 @@ else
 	local function VJ_MAIN_MISC(Panel)
 		local incomp = vgui.Create("DButton") -- Incompatible Addons
 		incomp:SetFont("CloseCaption_Bold")
-		incomp:SetText("#vjbase.menu.helpsupport.incompatibleaddons")
+		incomp:SetText("#vjbase.menu.contact.incompatibleaddons")
 		incomp:SetSize(150, 35)
 		incomp:SetColor(Color(231, 76, 60))
 		incomp:SetFont("VJFont_Trebuchet24_SmallMedium")
@@ -199,7 +201,7 @@ else
 		
 		local bugr = vgui.Create("DButton") -- Bug Report
 		bugr:SetFont("CloseCaption_Bold")
-		bugr:SetText("#vjbase.menu.helpsupport.reportbug")
+		bugr:SetText("#vjbase.menu.contact.reportbug")
 		bugr:SetSize(150, 35)
 		bugr:SetColor(Color(231, 76, 60))
 		bugr:SetFont("VJFont_Trebuchet24_SmallMedium")
@@ -210,7 +212,7 @@ else
 
 		local suggest = vgui.Create("DButton") -- Suggestions
 		suggest:SetFont("DermaDefaultBold")
-		suggest:SetText("#vjbase.menu.helpsupport.suggestion")
+		suggest:SetText("#vjbase.menu.contact.suggestion")
 		suggest:SetSize(150, 20)
 		suggest:SetColor(Color(211, 84, 0))
 		suggest:SetFont("VJFont_Trebuchet24_SmallMedium")
@@ -221,12 +223,12 @@ else
 
 		Panel:ControlHelp(" ") -- Spacer
 
-		Panel:AddControl("Label", {Text = "#vjbase.menu.helpsupport.label1"})
-		Panel:ControlHelp("#vjbase.menu.helpsupport.thanks")
+		Panel:AddControl("Label", {Text = "#vjbase.menu.contact.label1"})
+		Panel:ControlHelp("#vjbase.menu.contact.thanks")
 
 		local discordl = vgui.Create("DButton") -- Discord
 		discordl:SetFont("TargetID")
-		discordl:SetText("#vjbase.menu.helpsupport.discord")
+		discordl:SetText("#vjbase.menu.contact.discord")
 		discordl:SetSize(150, 25)
 		discordl:SetColor(Color(0, 102, 0))
 		discordl:SetFont("VJFont_Trebuchet24_SmallMedium")
@@ -237,7 +239,7 @@ else
 		
 		local steaml = vgui.Create("DButton") -- Steam Group
 		steaml:SetFont("TargetID")
-		steaml:SetText("#vjbase.menu.helpsupport.steam")
+		steaml:SetText("#vjbase.menu.contact.steam")
 		steaml:SetSize(150, 25)
 		steaml:SetColor(Color(0, 102, 0))
 		steaml:SetFont("VJFont_Trebuchet24_SmallMedium")
@@ -248,7 +250,7 @@ else
 
 		local ytl = vgui.Create("DButton") -- YouTube
 		ytl:SetFont("TargetID")
-		ytl:SetText("#vjbase.menu.helpsupport.youtube")
+		ytl:SetText("#vjbase.menu.contact.youtube")
 		ytl:SetSize(150, 25)
 		ytl:SetColor(Color(0, 102, 0))
 		ytl:SetFont("VJFont_Trebuchet24_SmallMedium")
@@ -259,7 +261,7 @@ else
 
 		local tweetl = vgui.Create("DButton") -- Twitter
 		tweetl:SetFont("TargetID")
-		tweetl:SetText("#vjbase.menu.helpsupport.twitter")
+		tweetl:SetText("#vjbase.menu.contact.twitter")
 		tweetl:SetSize(150, 25)
 		tweetl:SetColor(Color(0, 102, 0))
 		tweetl:SetFont("VJFont_Trebuchet24_SmallMedium")
@@ -272,7 +274,7 @@ else
 		
 		local donate = vgui.Create("DButton") -- Donate
 		donate:SetFont("TargetID")
-		donate:SetText("#vjbase.menu.helpsupport.patreon")
+		donate:SetText("#vjbase.menu.contact.patreon")
 		donate:SetSize(150, 30)
 		donate:SetColor(Color(0, 0, 102))
 		donate:SetFont("VJFont_Trebuchet24_SmallMedium")
@@ -280,7 +282,7 @@ else
 			gui.OpenURL("https://www.patreon.com/drvrej")
 		end
 		Panel:AddPanel(donate)
-		Panel:ControlHelp("#vjbase.menu.helpsupport.label2")
+		Panel:ControlHelp("#vjbase.menu.contact.label2")
 
 		/*HTMLTest = vgui.Create("HTML")
 		HTMLTest:SetPos(50,50)
@@ -411,7 +413,7 @@ else
 	---------------------------------------------------------------------------------------------------------------------------------------------
 	local function doWelcomeMsg()
 		//print("Notice: This server is running VJ Base.")
-		chat.AddText(colorLightBlue, "VJ Base ", colorDarkBlue, VJBASE_VERSION, colorWhite, " : To configure it, navigate to the ", colorYellow, "DrVrej", colorWhite, " tab in the spawn menu!")
+		chat.AddText(colorLightBlue, "VJ Base ", colorDarkBlue, VJBASE_VERSION, colorWhite, " : Navigate to the ", colorYellow, "DrVrej", colorWhite, " tab in the spawn menu for settings.")
 	end
 	net.Receive("vj_welcome_msg", doWelcomeMsg)
 	---------------------------------------------------------------------------------------------------------------------------------------------
@@ -425,7 +427,7 @@ else
 		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_info", "#vjbase.menu.info", "", "", VJ_MAIN_INFO, {})
 		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_clsettings", "#vjbase.menu.clsettings", "", "", VJ_MAIN_CLIENT, {})
 		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_cleanup", "#vjbase.menu.cleanup", "", "", VJ_MAIN_CLEANUP, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_helpsupport", "#vjbase.menu.helpsupport", "", "", VJ_MAIN_MISC, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_helpsupport", "#vjbase.menu.contact", "", "", VJ_MAIN_MISC, {})
 		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_svsettings", "#vjbase.menu.svsettings", "", "", VJ_MAIN_ADMINSERVER, {})
 	end)
 end

@@ -1790,43 +1790,43 @@ local angY90 = Angle(0, 90, 0)
 local angYN90 = Angle(0, -90, 0)
 --
 function ENT:Controller_Movement(cont, ply, bullseyePos)
-	if self.MovementType != VJ_MOVETYPE_STATIONARY then
-		local gerta_lef = ply:KeyDown(IN_MOVELEFT)
-		local gerta_rig = ply:KeyDown(IN_MOVERIGHT)
-		local gerta_arak = ply:KeyDown(IN_SPEED)
-		local aimVector = ply:GetAimVector()
-		
-		if ply:KeyDown(IN_FORWARD) then
-			if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
-				self:AA_MoveTo(cont.VJCE_Bullseye, true, gerta_arak and "Alert" or "Calm", {IgnoreGround=true})
-			else
-				if gerta_lef then
-					cont:StartMovement(aimVector, angY45)
-				elseif gerta_rig then
-					cont:StartMovement(aimVector, angYN45)
-				else
-					cont:StartMovement(aimVector, defAng)
-				end
-			end
-		elseif ply:KeyDown(IN_BACK) then
-			if gerta_lef then
-				cont:StartMovement(aimVector*-1, angYN45)
-			elseif gerta_rig then
-				cont:StartMovement(aimVector*-1, angY45)
-			else
-				cont:StartMovement(aimVector*-1, defAng)
-			end
-		elseif gerta_lef then
-			cont:StartMovement(aimVector, angY90)
-		elseif gerta_rig then
-			cont:StartMovement(aimVector, angYN90)
+	if self.MovementType == VJ_MOVETYPE_STATIONARY then return false end
+	local gerta_lef = ply:KeyDown(IN_MOVELEFT)
+	local gerta_rig = ply:KeyDown(IN_MOVERIGHT)
+	local gerta_arak = ply:KeyDown(IN_SPEED)
+	local aimVector = ply:GetAimVector()
+	
+	if ply:KeyDown(IN_FORWARD) then
+		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+			self:AA_MoveTo(cont.VJCE_Bullseye, true, gerta_arak and "Alert" or "Calm", {IgnoreGround=true})
 		else
-			self:StopMoving()
-			if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
-				self:AA_StopMoving()
+			if gerta_lef then
+				cont:StartMovement(aimVector, angY45)
+			elseif gerta_rig then
+				cont:StartMovement(aimVector, angYN45)
+			else
+				cont:StartMovement(aimVector, defAng)
 			end
 		end
+	elseif ply:KeyDown(IN_BACK) then
+		if gerta_lef then
+			cont:StartMovement(aimVector*-1, angYN45)
+		elseif gerta_rig then
+			cont:StartMovement(aimVector*-1, angY45)
+		else
+			cont:StartMovement(aimVector*-1, defAng)
+		end
+	elseif gerta_lef then
+		cont:StartMovement(aimVector, angY90)
+	elseif gerta_rig then
+		cont:StartMovement(aimVector, angYN90)
+	else
+		self:StopMoving()
+		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
+			self:AA_StopMoving()
+		end
 	end
+	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:PlaySequence(animation)
@@ -1865,7 +1865,7 @@ end
 	Forces the NPC to switch to the given entity as the enemy if certain criteria passes
 		- ent = The entity to set as the enemy
 		- stopMoving = Should it stop moving? Will not run it already has an enemy! | DEFAULT = false
-		- skipChecks = Used in "MaintainRelationships" basically skips all the initially checks for max performance | DEFAULT = false
+		- skipChecks = Used in "MaintainRelationships", skips all the initial checks for max performance | DEFAULT = false
 -----------------------------------------------------------]]
 function ENT:ForceSetEnemy(ent, stopMoving, skipChecks)
 	if !skipChecks && (!IsValid(ent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or ent:Health() <= 0 or (ent:IsPlayer() && (!ent:Alive() or VJ_CVAR_IGNOREPLAYERS))) then return end
@@ -2369,9 +2369,11 @@ end
 --
 function ENT:Flinch(dmginfo, hitgroup)
 	local curTime = CurTime()
-	if self.CanFlinch == 0 or self.Flinching or self.AnimLockTime > curTime or self.TakingCoverT > curTime or self.NextFlinchT > curTime or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
+	if self.CanFlinch == 0 or self.Flinching or self.AnimLockTime > curTime or self.NextFlinchT > curTime or self:GetNavType() == NAV_JUMP or self:GetNavType() == NAV_CLIMB then return end
 	
-	if math.random(1, self.FlinchChance) == 1 && ((self.CanFlinch == 1) or (self.CanFlinch == 2 && flinchDamageTypeCheck(self.FlinchDamageTypes, dmginfo:GetDamageType()))) then
+	-- DMG_FORCE_FLINCH: Skip secondary checks, flinch chance, and damage types!
+	local customDmgType = dmginfo:GetDamageCustom()
+	if customDmgType == VJ.DMG_FORCE_FLINCH or (customDmgType != VJ.DMG_BLEED && self.TakingCoverT < curTime && math.random(1, self.FlinchChance) == 1 && ((self.CanFlinch == 1) or (self.CanFlinch == 2 && flinchDamageTypeCheck(self.FlinchDamageTypes, dmginfo:GetDamageType())))) then
 		if self:OnFlinch(dmginfo, hitgroup, "PriorExecution") then return end
 		
 		local function RunFlinch(hitgroupInfo)

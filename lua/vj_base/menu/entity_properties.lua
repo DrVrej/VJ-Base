@@ -5,13 +5,13 @@
 --------------------------------------------------*/
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("CanProperty", "VJ_PLY_CAN_PROPERTY", function(ply, property, ent)
-	if GetConVar("vj_npc_admin_properties"):GetInt() == 1 && !ply:IsAdmin() && property == "vj_npc_properties" then ply:ChatPrint("#vjbase.menuproperties.print.adminonly") return false end
+	if GetConVar("vj_npc_admin_properties"):GetInt() == 1 && !ply:IsAdmin() && property == "vj_npc_properties" then ply:ChatPrint("#vjbase.menu.context.print.adminonly") return false end
 end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ SNPC Controlling ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_control",{
-	MenuLabel = "#vjbase.menuproperties.control", -- Name to display on the context menu
+	MenuLabel = "#vjbase.menu.context.control", -- Name to display on the context menu
 	Order = 50000, -- The order to display this property relative to other properties
 	MenuIcon = "icon16/controller.png", -- The icon to display next to the property
 	PrependSpacer = true, -- Whether to add a spacer before this property. This should generally be true for the first property in a group of properties.
@@ -54,7 +54,7 @@ properties.Add("vj_pr_npc_control",{
 ------ SNPC Guarding ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_guard",{
-	MenuLabel = "#vjbase.menuproperties.guard", -- Name to display on the context menu
+	MenuLabel = "#vjbase.menu.context.guard", -- Name to display on the context menu
 	Order = 50001, -- The order to display this property relative to other properties
 	MenuIcon = "icon16/shield.png", -- The icon to display next to the property
 	PrependSpacer = true, -- Whether to add a spacer before this property. This should generally be true for the first property in a group of properties.
@@ -94,7 +94,7 @@ properties.Add("vj_pr_npc_guard",{
 ------ SNPC Wandering ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_wander",{
-	MenuLabel = "#vjbase.menuproperties.wander", -- Name to display on the context menu
+	MenuLabel = "#vjbase.menu.context.wander", -- Name to display on the context menu
 	Order = 50002, -- The order to display this property relative to other properties
 	MenuIcon = "icon16/arrow_rotate_clockwise.png", -- The icon to display next to the property
 
@@ -133,7 +133,7 @@ properties.Add("vj_pr_npc_wander",{
 ------ SNPC Toggle Medic ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_medic",{
-	MenuLabel = "#vjbase.menuproperties.medic", -- Name to display on the context menu
+	MenuLabel = "#vjbase.menu.context.medic", -- Name to display on the context menu
 	Order = 50003, -- The order to display this property relative to other properties
 	MenuIcon = "icon16/asterisk_yellow.png", -- The icon to display next to the property
 
@@ -167,7 +167,7 @@ properties.Add("vj_pr_npc_medic",{
 ------ SNPC Ally Me ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_allyme",{
-	MenuLabel = "#vjbase.menuproperties.allyme", -- Name to display on the context menu
+	MenuLabel = "#vjbase.menu.context.allyme", -- Name to display on the context menu
 	Order = 50004, -- The order to display this property relative to other properties
 	MenuIcon = "icon16/heart_add.png", -- The icon to display next to the property
 
@@ -201,7 +201,7 @@ properties.Add("vj_pr_npc_allyme",{
 ------ SNPC Hostile Me ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_hostileme",{
-	MenuLabel = "#vjbase.menuproperties.hostileme", -- Name to display on the context menu
+	MenuLabel = "#vjbase.menu.context.hostileme", -- Name to display on the context menu
 	Order = 50005, -- The order to display this property relative to other properties
 	MenuIcon = "icon16/heart_delete.png", -- The icon to display next to the property
 
@@ -235,7 +235,7 @@ properties.Add("vj_pr_npc_hostileme",{
 ------ SNPC Slay ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_slay",{
-	MenuLabel = "#vjbase.menuproperties.slay", -- Name to display on the context menu
+	MenuLabel = "#vjbase.menu.context.slay", -- Name to display on the context menu
 	Order = 50006, -- The order to display this property relative to other properties
 	MenuIcon = "icon16/cancel.png", -- The icon to display next to the property
 
@@ -265,7 +265,7 @@ properties.Add("vj_pr_npc_slay",{
 ------ SNPC Gib ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_gib",{
-	MenuLabel = "#vjbase.menuproperties.gib", -- Name to display on the context menu
+	MenuLabel = "#vjbase.menu.context.gib", -- Name to display on the context menu
 	Order = 50007, -- The order to display this property relative to other properties
 	MenuIcon = "icon16/bomb.png", -- The icon to display next to the property
 
@@ -300,7 +300,7 @@ properties.Add("vj_pr_npc_gib",{
 ------ SNPC Developer Mode ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_devmode",{
-	MenuLabel = "#vjbase.menuproperties.devmode", -- Name to display on the context menu
+	MenuLabel = "#vjbase.menu.context.devmode", -- Name to display on the context menu
 	Order = 50008, -- The order to display this property relative to other properties
 	MenuIcon = "icon16/tag.png", -- The icon to display next to the property
 

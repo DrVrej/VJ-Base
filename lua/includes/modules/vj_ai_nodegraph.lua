@@ -7,6 +7,10 @@ if CLIENT then return end
 
 module("vj_ai_nodegraph", package.seeall)
 
+local colorVJBase = Color(255, 163, 121)
+local colorGMod_Server = Color(156, 241, 255, 200)
+local colorError = Color(255, 0, 0)
+
 local Nodegraph		= {}
 Nodegraph.__index 	= Nodegraph
 
@@ -36,7 +40,7 @@ local NUM_HULLS = 10 -- NUM_HULLS is set to 10 for most maps tested
 function Nodegraph:ReadNodegraph()
 	local FILE = file.Open("maps/graphs/" .. game.GetMap() .. ".ain", "rb", "GAME")
 	local nodegraphData = {Version = -1, NodeCount = 0, Nodes = {}, LinkCount = 0, Links = {}}
-	if !FILE then print("VJ Base AI Nodegraph module: Nodegraph file couldn't be found!") return nodegraphData end -- File doesn't exist
+	if !FILE then MsgC(colorVJBase, "VJ Base [AI Nodegraph module]: ", colorError, "Nodegraph file couldn't be found!\n") return nodegraphData end -- File doesn't exist
 
 	-- struct ain_header
 	if FILE:ReadLong() == AINET_VERSION_NUMBER then -- AI Net version
@@ -170,7 +174,7 @@ end
 	Initialize the Nodegraph object | WARNING: This is an internal function, avoid using!
 -----------------------------------------------------------]]
 function Nodegraph:Init()
-	print("VJ Base AI Nodegraph module: Object created.")
+	MsgC(colorVJBase, "VJ Base [AI Nodegraph module]: ", colorGMod_Server, "Object created.\n")
 	self.Data = self:ReadNodegraph()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -248,4 +252,4 @@ function New()
 	return newNodegraph
 end
 
-print("VJ Base AI Nodegraph module: Successfully initialized!")
+MsgC(colorVJBase, "VJ Base [AI Nodegraph module]: ", colorGMod_Server, "Successfully initialized!\n")

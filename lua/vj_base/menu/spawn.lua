@@ -262,10 +262,10 @@ if CLIENT then
 		self:SetOpenSize(150)
 		self:DockPadding(15, 10, 15, 10)
 
-		self:AddCheckbox("#vjbase.spawn.menu.npc.disablethinking", "ai_disabled")
-		self:AddCheckbox("#vjbase.spawn.menu.npc.ignoreplayers", "ai_ignoreplayers")
-		self:AddCheckbox("#vjbase.spawn.menu.npc.keepcorpses", "ai_serverragdolls")
-		self:AddCheckbox("#vjbase.spawn.menu.npc.guard", "vj_npc_spawn_guard")
+		self:AddCheckbox("#vjbase.menu.spawn.npc.disablethinking", "ai_disabled")
+		self:AddCheckbox("#vjbase.menu.spawn.npc.ignoreplayers", "ai_ignoreplayers")
+		self:AddCheckbox("#vjbase.menu.spawn.npc.keepcorpses", "ai_serverragdolls")
+		self:AddCheckbox("#vjbase.menu.spawn.npc.guard", "vj_npc_spawn_guard")
 		
 		local label = vgui.Create("DLabel", self)
 		label:Dock(TOP)

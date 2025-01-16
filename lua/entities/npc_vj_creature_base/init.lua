@@ -1918,7 +1918,7 @@ function ENT:Think()
 				-- Set latest enemy information
 				self:UpdateEnemyMemory(ene, enePos)
 				eneData.Reset = false
-				eneData.IsVisible = plyControlled and true or self:Visible(ene) -- Need to use VisibleVec when controlled because "Visible" will return false randomly
+				eneData.IsVisible = plyControlled and true or self:Visible(ene)
 				self.LatestEnemyDistance = myPos:Distance(enePos)
 				self.NearestPointToEnemyDistance = self:GetNearestDistance(ene, true)
 				if eneData.IsVisible && self:IsInViewCone(enePos) && (self.LatestEnemyDistance < self:GetMaxLookDistance()) then
@@ -1959,10 +1959,13 @@ function ENT:Think()
 							self.NextChaseTime = curTime + 0.5
 						end
 						self:MaintainIdleBehavior(2) -- Otherwise it won't play the idle animation and will loop the last PlayAct animation if range attack doesn't use animations!
-						local moveType = self.MovementType
 						if self.CurrentScheduleName == "SCHEDULE_ALERT_CHASE" then self:StopMoving() end -- Interrupt enemy chasing because we are in range!
-						if moveType == VJ_MOVETYPE_GROUND && !self:IsMoving() && self:OnGround() then self:SetTurnTarget("Enemy") end
-						if (moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC) then
+						local moveType = self.MovementType
+						if moveType == VJ_MOVETYPE_GROUND then
+							if !self:IsMoving() && self:OnGround() then
+								self:SetTurnTarget("Enemy")
+							end
+						elseif moveType == VJ_MOVETYPE_AERIAL or moveType == VJ_MOVETYPE_AQUATIC then
 							if self.AA_CurrentMoveType == 3 then self:AA_StopMoving() end -- Interrupt enemy chasing because we are in range!
 							if curTime > self.AA_CurrentMoveTime then self:AA_IdleWander(true, "Calm", {FaceDest = !self.ConstantlyFaceEnemy}) /*self:AA_StopMoving()*/ end -- Only face the position if self.ConstantlyFaceEnemy is false!
 						end
@@ -2287,14 +2290,22 @@ function ENT:MeleeAttackCode(isPropAttack)
 				v:TakeDamageInfo(applyDmg, self)
 			end
 			-- Bleed Enemy
-			if self.MeleeAttackBleedEnemy && math.random(1, self.MeleeAttackBleedEnemyChance) == 1 && v.VJ_ID_Living && (!v.VJ_ID_Boss or self.VJ_ID_Boss) then
-				local tName = "timer_melee_bleed"..v:EntIndex() -- Timer's name
-				local tDmg = self.MeleeAttackBleedEnemyDamage -- How much damage each rep does
-				timer.Create(tName, self.MeleeAttackBleedEnemyTime, self.MeleeAttackBleedEnemyReps, function()
+			if self.MeleeAttackBleedEnemy && v.VJ_ID_Living && (!v.VJ_ID_Boss or self.VJ_ID_Boss) && math.random(1, self.MeleeAttackBleedEnemyChance) == 1 then
+				local bleedName = "timer_melee_bleed" .. v:EntIndex() -- Timer's name
+				local bleedDmg = self:ScaleByDifficulty(self.MeleeAttackBleedEnemyDamage) -- How much damage each rep does
+				timer.Create(bleedName, self.MeleeAttackBleedEnemyTime, self.MeleeAttackBleedEnemyReps, function()
 					if IsValid(v) && v:Health() > 0 then
-						v:TakeDamage(tDmg, self, self)
+						local applyDmg = DamageInfo()
+						applyDmg:SetDamage(bleedDmg)
+						applyDmg:SetDamageType(DMG_GENERIC)
+						applyDmg:SetDamageCustom(VJ.DMG_BLEED)
+						if self:IsValid() then
+							applyDmg:SetInflictor(self)
+							applyDmg:SetAttacker(self)
+						end
+						v:TakeDamageInfo(applyDmg)
 					else -- Remove the timer if the entity is dead in attempt to remove it before the entity respawns (Essential for players)
-						timer.Remove(tName)
+						timer.Remove(bleedName)
 					end
 				end)
 			end
@@ -2441,8 +2452,8 @@ function ENT:LeapDamageCode()
 			if v:IsPlayer() then
 				v:ViewPunch(Angle(math.random(-1, 1) * self.LeapAttackDamage, math.random(-1, 1) * self.LeapAttackDamage,math.random(-1, 1) * self.LeapAttackDamage))
 			end
-			if self.StopLeapAttackAfterFirstHit then break end
 			hitRegistered = true
+			if self.StopLeapAttackAfterFirstHit then break end
 		end
 	end
 	if self.AttackState < VJ.ATTACK_STATE_EXECUTED then
@@ -2470,7 +2481,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAttacks(checkTimers)
 	if self:Health() <= 0 then return end
-	if self.VJ_DEBUG && GetConVar("vj_npc_debug_stopattacks"):GetInt() == 1 then print(self:GetClass() .. " : Stopped all attacks! | Attack type: " .. self.AttackType) end
+	if self.VJ_DEBUG && GetConVar("vj_npc_debug_attack"):GetInt() == 1 then print(self:GetClass() .. " : Stopped all attacks! | Attack type: " .. self.AttackType) end
 	
 	if checkTimers && finishAttack[self.AttackType] && self.AttackState < VJ.ATTACK_STATE_EXECUTED then
 		finishAttack[self.AttackType](self, true)
@@ -2852,7 +2863,7 @@ function ENT:OnTakeDamage(dmginfo)
 						eneFound = true
 					end
 				end
-				if !eneFound && self.HideOnUnknownDamage && !self.IsFollowing && self.MovementType != VJ_MOVETYPE_STATIONARY then
+				if !eneFound && self.HideOnUnknownDamage && !self.IsFollowing && self.MovementType != VJ_MOVETYPE_STATIONARY && dmginfo:GetDamageCustom() != VJ.DMG_BLEED then
 					self:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
 					self.TakingCoverT = curTime + self.HideOnUnknownDamage
 				end

@@ -7,10 +7,12 @@ NOTES: Some fixes are from: https://github.com/garrynewman/garrysmod/pull/524
 if CLIENT then return end
 
 local setmetatable = setmetatable
-local print = print
+local MsgC = MsgC
 local ai = ai
 local TASKSTATUS_NEW = TASKSTATUS_NEW
 local TASKSTATUS_RUN_TASK = TASKSTATUS_RUN_TASK
+local colorVJBase = Color(255, 163, 121)
+local colorGMod_Server = Color(156, 241, 255, 200)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Begin Metatable ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -80,4 +82,4 @@ function New()
 	return newTask
 end
 
-print("VJ Base AI Task module: Successfully initialized!")
+MsgC(colorVJBase, "VJ Base [AI Task module]: ", colorGMod_Server, "Successfully initialized!\n")

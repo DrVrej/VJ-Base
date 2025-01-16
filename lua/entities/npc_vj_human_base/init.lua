@@ -2706,7 +2706,7 @@ function ENT:Think()
 				-- Set latest enemy information
 				self:UpdateEnemyMemory(ene, enePos)
 				eneData.Reset = false
-				eneData.IsVisible = plyControlled and true or self:Visible(ene) -- Need to use VisibleVec when controlled because "Visible" will return false randomly
+				eneData.IsVisible = plyControlled and true or self:Visible(ene)
 				self.LatestEnemyDistance = myPos:Distance(enePos)
 				self.NearestPointToEnemyDistance = self:GetNearestDistance(ene, true)
 				if eneData.IsVisible then
@@ -3266,7 +3266,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAttacks(checkTimers)
 	if self:Health() <= 0 then return end
-	if self.VJ_DEBUG && GetConVar("vj_npc_debug_stopattacks"):GetInt() == 1 then print(self:GetClass() .. " : Stopped all attacks! | Attack type: " .. self.AttackType) end
+	if self.VJ_DEBUG && GetConVar("vj_npc_debug_attack"):GetInt() == 1 then print(self:GetClass() .. " : Stopped all attacks! | Attack type: " .. self.AttackType) end
 	
 	if checkTimers && self.AttackType == VJ.ATTACK_TYPE_MELEE && self.AttackState < VJ.ATTACK_STATE_EXECUTED then
 		finishAttack[VJ.ATTACK_TYPE_MELEE](self, true)
@@ -3950,7 +3950,7 @@ function ENT:OnTakeDamage(dmginfo)
 						eneFound = true
 					end
 				end
-				if !eneFound && self.HideOnUnknownDamage && !self.IsFollowing && self.MovementType != VJ_MOVETYPE_STATIONARY then
+				if !eneFound && self.HideOnUnknownDamage && !self.IsFollowing && self.MovementType != VJ_MOVETYPE_STATIONARY && dmginfo:GetDamageCustom() != VJ.DMG_BLEED then
 					self:SCHEDULE_COVER_ORIGIN("TASK_RUN_PATH", function(x) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
 					self.TakingCoverT = curTime + self.HideOnUnknownDamage
 				end

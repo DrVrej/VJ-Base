@@ -89,13 +89,13 @@ function ENT:Use(activator, caller)
 		self.fireLoopSD = CreateSound(self, "ambient/fire/fire_small_loop1.wav")
 		self.fireLoopSD:SetSoundLevel(60)
 		self.fireLoopSD:PlayEx(1,100)
-		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.fireplace.activated") 
+		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.campfire.print.activated") 
 	else
 		self:SetNW2Bool("VJ_FirePlace_Activated", false)
 		self.IsOn = false
 		self:StopParticles()
 		VJ.STOPSOUND(self.fireLoopSD)
-		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.fireplace.deactivated")
+		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.campfire.print.deactivated")
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

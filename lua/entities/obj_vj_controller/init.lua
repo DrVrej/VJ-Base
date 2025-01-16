@@ -203,7 +203,7 @@ function ENT:SetControlledNPC(npcEnt)
 	npcEnt.VJ_TheControllerEntity = self
 	npcEnt.VJ_TheControllerBullseye = bullseyeEnt
 	npcEnt:SetEnemy(NULL)
-	plyEnt:ChatPrint("#vjbase.print.npccontroller.entrance")
+	plyEnt:ChatPrint("#vjbase.controller.print.entrance")
 	if npcEnt.IsVJBaseSNPC then
 		local funcCustom = npcEnt.Controller_IntMsg; if funcCustom then funcCustom(npcEnt, plyEnt, self) end -- !!!!!!!!!!!!!! DO NOT USE THIS FUNCTION !!!!!!!!!!!!!! [Backwards Compatibility!]
 		npcEnt:Controller_Initialize(plyEnt, self)
@@ -492,20 +492,20 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ToggleBullseyeTracking()
 	if !self.VJC_BullseyeTracking then
-		self.VJCE_Player:ChatPrint("#vjbase.print.npccontroller.tracking.activated")
+		self.VJCE_Player:ChatPrint("#vjbase.controller.print.tracking.activated")
 		self.VJC_BullseyeTracking = true
 	else
-		self.VJCE_Player:ChatPrint("#vjbase.print.npccontroller.tracking.deactivated")
+		self.VJCE_Player:ChatPrint("#vjbase.controller.print.tracking.deactivated")
 		self.VJC_BullseyeTracking = false
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ToggleMovementJumping()
 	if !self.VJCE_NPC.JumpVars.Enabled then
-		self.VJCE_Player:ChatPrint("#vjbase.print.npccontroller.movementjump.enable")
+		self.VJCE_Player:ChatPrint("#vjbase.controller.print.movementjump.enable")
 		self.VJCE_NPC.JumpVars.Enabled = true
 	else
-		self.VJCE_Player:ChatPrint("#vjbase.print.npccontroller.movementjump.disable")
+		self.VJCE_Player:ChatPrint("#vjbase.controller.print.movementjump.disable")
 		self.VJCE_NPC.JumpVars.Enabled = false
 	end
 end

@@ -70,11 +70,11 @@ function ENT:AcceptInput(key, activator, caller, data)
 	if !activator:IsPlayer() then return end
 	if !self.Activated then
 		self.Activated = true
-		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.bullseye.activated")
+		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.bullseye.print.activated")
 		self:EmitSound(sdActivated, 70, 100)
 	elseif self.Activated then
 		self.Activated = false
-		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.bullseye.deactivated")
+		activator:PrintMessage(HUD_PRINTTALK, "#vjbase.bullseye.print.deactivated")
 		self:EmitSound(sdDeactivated, 70, 100)
 	end
 end

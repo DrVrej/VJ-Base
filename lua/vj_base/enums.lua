@@ -11,6 +11,10 @@ if !VJ then VJ = {} end -- If VJ isn't initialized, initialize it!
 	- Recommended to localize the enum if it's called often
 -----------------------------------------------------------]]
 
+-- Additional damage types | For use with "dmginfo:SetDamageCustom()"
+VJ.DMG_BLEED					= 123454 -- Bleeding damage, usually caused by melee attacks
+VJ.DMG_FORCE_FLINCH				= 123455 -- Causes NPCs to always flinch
+
 -- NPC attack type
 VJ.ATTACK_TYPE_NONE				= false -- No attack is set | DEFAULT
 VJ.ATTACK_TYPE_CUSTOM			= 1 -- Custom attack | Used by developers to make custom attacks

@@ -11,7 +11,15 @@
 
 --------------------------------------------------*/
 AddCSLuaFile()
-if CLIENT then print("Initializing VJ Base client files...") else print("Initializing VJ Base server files...") end
+
+local colorVJBase = Color(255, 163, 121)
+local colorGMod_Server = Color(156, 241, 255, 200)
+local colorGMod_Client = Color(255, 241, 122, 200)
+local colorSuccess = Color(0, 255, 0)
+local colorError = Color(255, 0, 0)
+local colorErrorLight = Color(255, 130, 130)
+
+if CLIENT then MsgC(colorVJBase, "VJ Base: ", colorGMod_Client, "Initializing client files...\n") else MsgC(colorVJBase, "VJ Base: ", colorGMod_Server, "Initializing server files...\n") end
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Global Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -254,14 +262,14 @@ if SERVER then
 		VJ_Nodegraph = vj_ai_nodegraph.New()
 		-- If it failed to read the nodegraph, wait and try again in case nodegraph file hasn't generated yet
 		if VJ_Nodegraph:GetNodegraph().Version == -1 then
-			print("VJ Base AI Nodegraph module: Failed to read nodegraph, will attempt again soon...")
+			MsgC(colorVJBase, "VJ Base [AI Nodegraph module]: ", colorErrorLight, "Failed to read nodegraph, will attempt again soon...\n")
 			timer.Simple(4, function()
-				print("VJ Base AI Nodegraph module: Running second read attempt...")
+				MsgC(colorVJBase, "VJ Base [AI Nodegraph module]: ", colorGMod_Server, "Running second read attempt...\n")
 				VJ_Nodegraph.Data = VJ_Nodegraph:ReadNodegraph()
 				if VJ_Nodegraph:GetNodegraph().Version == -1 then
-					print("VJ Base AI Nodegraph module: Second read attempt was failure, aborting!")
+					MsgC(colorVJBase, "VJ Base [AI Nodegraph module]: ", colorError, "Second read attempt was failure, aborting!\n")
 				else
-					print("VJ Base AI Nodegraph module: Second read attempt was successful!")
+					MsgC(colorVJBase, "VJ Base [AI Nodegraph module]: ", colorSuccess, "Second read attempt was successful!\n")
 				end
 			end)
 		end
@@ -326,10 +334,10 @@ if (SLVBase) then
 		if !VJBASE_ERROR_CONFLICT then
 			VJBASE_ERROR_CONFLICT = true
 			if CLIENT then
-				chat.AddText(Color(255,100,0),"Confliction Detected!",
-				Color(0,255,0)," VJ Base ",
-				Color(255,255,255),"is being overridden by another addon!")
-				chat.AddText(Color(0,200,200),"Incompatible Addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
+				chat.AddText(Color(255, 100, 0),"Confliction Detected!",
+				Color(0, 255, 0)," VJ Base ",
+				Color(255, 255, 255),"is being overridden by another addon!")
+				chat.AddText(Color(0, 200, 200),"Incompatible Addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
 
 				local frame = vgui.Create("DFrame")
 				frame:SetSize(600, 200)
@@ -342,7 +350,7 @@ if (SLVBase) then
 				labelTitle:SetPos(130, 30)
 				labelTitle:SetText("CONFLICTION DETECTED!")
 				labelTitle:SetFont("VJFont_Trebuchet24_Large")
-				labelTitle:SetTextColor(Color(255,128,128))
+				labelTitle:SetTextColor(Color(255, 128, 128))
 				labelTitle:SizeToContents()
 				
 				local label1 = vgui.Create("DLabel", frame)
@@ -363,7 +371,7 @@ if (SLVBase) then
 				link:SetURL("http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
 				
 				local buttonClose = vgui.Create("DButton", frame)
-				buttonClose:SetText("CLOSE")
+				buttonClose:SetText("UNDERSTOOD")
 				buttonClose:SetPos(260, 160)
 				buttonClose:SetSize(80, 35)
 				buttonClose.DoClick = function()
@@ -371,7 +379,7 @@ if (SLVBase) then
 				end
 			elseif SERVER then
 				timer.Create("VJBASE_ERROR_CONFLICT", 5, 0, function()
-					print("VJ Base is being overridden by another addon! Incompatible Addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
+					MsgC(colorVJBase, "VJ Base: ", colorError, "Error! Incompatible addon detected! Check this link for list of incompatible addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108\n")
 				end)
 			end
 		end
@@ -398,4 +406,4 @@ VJ_DestroyCombineTurret		= VJ.DamageSpecialEnts
 util.VJ_SphereDamage		= VJ.ApplyRadiusDamage
 -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!!
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if CLIENT then print("VJ Base client files initialized!") else print("VJ Base server files initialized!") end
+if CLIENT then MsgC(colorVJBase, "VJ Base: ", colorGMod_Client, "Client files initialized!\n") else MsgC(colorVJBase, "VJ Base: ", colorGMod_Server, "Server files initialized!\n") end

@@ -9,8 +9,10 @@ require("vj_ai_task")
 local setmetatable = setmetatable
 local tostring = tostring
 local table = table
-local print = print
+local MsgC = MsgC
 local vj_ai_task = vj_ai_task
+local colorVJBase = Color(255, 163, 121)
+local colorGMod_Server = Color(156, 241, 255, 200)
 
 local tasksMove = {TASK_WAIT_FOR_MOVEMENT=true, TASK_MOVE_TO_TARGET_RANGE=true, TASK_MOVE_TO_GOAL_RANGE=true, TASK_WALK_PATH=true, TASK_WALK_PATH_TIMED=true, TASK_WALK_PATH_FOR_UNITS=true, TASK_WALK_PATH_WITHIN_DIST=true, TASK_RUN_PATH=true, TASK_RUN_PATH_FLEE=true, TASK_RUN_PATH_TIMED=true, TASK_RUN_PATH_FOR_UNITS=true, TASK_RUN_PATH_WITHIN_DIST=true, TASK_WEAPON_RUN_PATH=true, TASK_ITEM_RUN_PATH=true}
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -79,4 +81,4 @@ function New(Name)
 	return newSchedule
 end
 
-print("VJ Base AI Schedule module: Successfully initialized!")
+MsgC(colorVJBase, "VJ Base [AI Schedule module]: ", colorGMod_Server, "Successfully initialized!\n")

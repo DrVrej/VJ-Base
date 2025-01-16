@@ -56,7 +56,7 @@ util.PrecacheModel("models/vj_base/projectiles/spit_acid_small.mdl")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	surface.CreateFont("VJFont_Trebuchet24_Large", {
-		font = "Trebuchet24",
+		font = "Tahoma",
 		size = 34, -- Size
 		weight = 600, -- Boldness
 		blursize = 0, -- Blurness, should be 1 or 0
@@ -65,7 +65,7 @@ if CLIENT then
 	})
 
 	surface.CreateFont("VJFont_Trebuchet24_MediumLarge", {
-		font = "Trebuchet24",
+		font = "Tahoma",
 		size = 26, -- Size
 		weight = 600, -- Boldness
 		blursize = 0, -- Blurness, should be 1 or 0
@@ -74,7 +74,7 @@ if CLIENT then
 	})
 
 	surface.CreateFont("VJFont_Trebuchet24_Medium", {
-		font = "Trebuchet24",
+		font = "Tahoma",
 		size = 24, -- Size
 		weight = 600, -- Boldness
 		blursize = 0, -- Blurness, should be 1 or 0
@@ -83,7 +83,7 @@ if CLIENT then
 	})
 
 	surface.CreateFont("VJFont_Trebuchet24_SmallMedium", {
-		font = "Trebuchet24",
+		font = "Tahoma",
 		size = 17, -- Size
 		weight = 600, -- Boldness
 		blursize = 0, -- Blurness, should be 1 or 0
@@ -92,7 +92,7 @@ if CLIENT then
 	})
 
 	surface.CreateFont("VJFont_Trebuchet24_Small", {
-		font = "Trebuchet24",
+		font = "Tahoma",
 		size = 16, -- Size
 		weight = 600, -- Boldness
 		blursize = 0, -- Blurness, should be 1 or 0
@@ -101,20 +101,11 @@ if CLIENT then
 	})
 
 	surface.CreateFont("VJFont_Trebuchet24_Tiny", {
-		font = "Trebuchet24",
+		font = "Tahoma",
 		size = 11, -- Size
 		weight = 600, -- Boldness
 		blursize = 0, -- Blurness, should be 1 or 0
 		antialias = true, -- Is it smooth?
 		italic = false, -- Is it Italic?
-	})
-
-	surface.CreateFont("VJFont_Trebuchet24_TinyItalic", {
-		font = "Trebuchet24",
-		size = 11, -- Size
-		weight = 600, -- Boldness
-		blursize = 0, -- Blurness, should be 1 or 0
-		antialias = true, -- Is it smooth?
-		italic = true, -- Is it Italic?
 	})
 end

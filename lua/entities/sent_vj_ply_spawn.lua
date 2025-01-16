@@ -52,12 +52,12 @@ function ENT:Use(activator, caller)
 			self.Active = false
 			self:EmitSound("hl1/fvox/deactivated.wav", 70, 100)
 			self:SetColor(colorRed)
-			activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.plyspawnpoint.deactivated")
+			activator:PrintMessage(HUD_PRINTTALK, "#vjbase.spawnpoint.print.deactivated")
 		else
 			self.Active = true
 			self:EmitSound("hl1/fvox/activated.wav", 70, 100)
 			self:SetColor(colorGreen)
-			activator:PrintMessage(HUD_PRINTTALK, "#vjbase.print.plyspawnpoint.activated")
+			activator:PrintMessage(HUD_PRINTTALK, "#vjbase.spawnpoint.print.activated")
 		end
 	end
 end

@@ -117,12 +117,12 @@ cvarList["vj_npc_snd_wep_suppressing"] = 1 -- Suppressing callout sounds
 ------ NPC Developer Settings ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 CreateConVar("vj_npc_debug", 0) -- Should NPC debugging be active? | Required to make the dev option below work!
-cvarList["vj_npc_debug_engine"] = 0 -- Enabled engine debugging
+cvarList["vj_npc_debug_engine"] = 0 -- Enables engine debugging
+cvarList["vj_npc_debug_attack"] = 0 -- Enables attack debugging
 cvarList["vj_npc_debug_death"] = 0 -- Prints Died when the NPC dies
 cvarList["vj_npc_debug_damage"] = 0 -- Prints when the NPC gets damaged
 cvarList["vj_npc_debug_touch"] = 0 -- Prints when something touches the NPC
 cvarList["vj_npc_debug_enemy"] = 0 -- Prints the current enemy
-cvarList["vj_npc_debug_stopattacks"] = 0 -- Prints when the NPC stops its attacks
 cvarList["vj_npc_debug_resetenemy"] = 0 -- Prints something when the NPC has rested its enemy
 cvarList["vj_npc_debug_lastseenenemytime"] = 0 -- Prints the 'LastSeenEnemy' time
 cvarList["vj_npc_debug_takingcover"] = 0 -- Prints whether the NPC is taking cover or not
@@ -149,5 +149,5 @@ VJ.AddClientConVar("vj_wep_nomuszzleflash_dynamiclight", 0, "Should weapons make
 VJ.AddClientConVar("vj_wep_nobulletshells", 0, "Should weapons drop bullet shells?")
 ---------------------------------------------------------------------------------------------------------------------------
 for k, v in pairs(cvarList) do
-	CreateConVar(k, v, {FCVAR_ARCHIVE})
+	CreateConVar(k, v, FCVAR_ARCHIVE)
 end
