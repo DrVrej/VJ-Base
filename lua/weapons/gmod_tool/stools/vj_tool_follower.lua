@@ -1,4 +1,4 @@
-TOOL.Name = "#tool.vjstool_npcfollower.name"
+TOOL.Name = "#tool.vj_tool_follower.name"
 TOOL.Tab = "DrVrej"
 TOOL.Category = "Tools"
 TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
@@ -11,7 +11,7 @@ TOOL.Information = {
 -- Just to make it easier to reset everything to default
 local DefaultConVars = {}
 for k,v in pairs(TOOL.ClientConVar) do
-	DefaultConVars["vjstool_npcfollower_"..k] = v
+	DefaultConVars["vj_tool_follower_"..k] = v
 end
 
 local strNoSelection = "No NPC selected"
@@ -32,7 +32,7 @@ if CLIENT then
 					LocalPlayer():ConCommand(k.." "..v)
 				end
 				timer.Simple(0.05,function()
-					local GetPanel = controlpanel.Get("vjstool_npcfollower")
+					local GetPanel = controlpanel.Get("vj_tool_follower")
 					GetPanel:ClearControls()
 					DoBuildCPanel_NPCFollower(GetPanel)
 				end)
@@ -46,9 +46,9 @@ if CLIENT then
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcfollower_cl_update", function(len, ply)
 		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcfollower" then
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_follower" then
 			local entName = net.ReadString()
-			local GetPanel = controlpanel.Get("vjstool_npcfollower")
+			local GetPanel = controlpanel.Get("vj_tool_follower")
 			GetPanel:ClearControls()
 			DoBuildCPanel_NPCFollower(GetPanel, entName)
 		end
@@ -109,7 +109,7 @@ function TOOL:RightClick(tr)
 			ply:ChatPrint("ERROR: " .. list.Get("NPC")[selectedEnt:GetClass()].Name .. " is currently unable to follow!")
 		end
 	else
-		ply:ChatPrint("#tool.vjstool_npcfollower.print.noselection")
+		ply:ChatPrint("#tool.vj_tool_follower.print.noselection")
 	end
 	net.Start("vj_npcfollower_cl_update")
 	net.WriteString(strNoSelection)
@@ -123,7 +123,7 @@ function TOOL:Reload(tr)
 	if (!IsValid(ent)) or !ent:IsNPC() or !ent.IsVJBaseSNPC then return end
 	
 	ent:ResetFollowBehavior()
-	self:GetOwner():ChatPrint("#tool.vjstool_npcfollower.print.reset")
+	self:GetOwner():ChatPrint("#tool.vj_tool_follower.print.reset")
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

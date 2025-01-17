@@ -1,4 +1,4 @@
-TOOL.Name = "#tool.vjstool_bullseye.name"
+TOOL.Name = "#tool.vj_tool_bullseye.name"
 TOOL.Tab = "DrVrej"
 TOOL.Category = "Tools"
 TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
@@ -15,7 +15,7 @@ TOOL.ClientConVar["startactivate"] = 1
 -- Just to make it easier to reset everything to default
 local DefaultConVars = {}
 for k,v in pairs(TOOL.ClientConVar) do
-	DefaultConVars["vjstool_bullseye_"..k] = v
+	DefaultConVars["vj_tool_bullseye_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
@@ -32,7 +32,7 @@ if CLIENT then
 			else
 				LocalPlayer():ConCommand(k.." "..v) end
 				timer.Simple(0.05,function()
-					local GetPanel = controlpanel.Get("vjstool_bullseye")
+					local GetPanel = controlpanel.Get("vj_tool_bullseye")
 					GetPanel:ClearControls()
 					DoBuildCPanel_VJ_BullseyeSpawner(GetPanel)
 				end)
@@ -51,26 +51,26 @@ if CLIENT then
 		Panel:AddPanel(tutorial)
 		
 		Panel:AddControl("Label", {Text = "#tool.vjstool.menu.label.recommendation"})
-		Panel:ControlHelp("- "..language.GetPhrase("#tool.vjstool_bullseye.menu.help1"))
-		Panel:ControlHelp("- "..language.GetPhrase("#tool.vjstool_bullseye.menu.help2"))
-		Panel:AddControl("Label", {Text = language.GetPhrase("#tool.vjstool_bullseye.menu.label1")..":"})
+		Panel:ControlHelp("- "..language.GetPhrase("#tool.vj_tool_bullseye.menu.help1"))
+		Panel:ControlHelp("- "..language.GetPhrase("#tool.vj_tool_bullseye.menu.help2"))
+		Panel:AddControl("Label", {Text = language.GetPhrase("#tool.vj_tool_bullseye.menu.label1")..":"})
 		local typebox = vgui.Create("DComboBox")
-		//typebox:SetConVar("vjstool_bullseye_type")
-		typebox:SetValue(GetConVarString("vjstool_bullseye_type"))
+		//typebox:SetConVar("vj_tool_bullseye_type")
+		typebox:SetValue(GetConVarString("vj_tool_bullseye_type"))
 		typebox:AddChoice("Dynamic")
 		typebox:AddChoice("Static")
 		typebox:AddChoice("Physics")
 		function typebox:OnSelect(index,value,data)
-			LocalPlayer():ConCommand("vjstool_bullseye_type "..value)
+			LocalPlayer():ConCommand("vj_tool_bullseye_type "..value)
 		end
 		Panel:AddPanel(typebox)
-		Panel:AddControl("Label", {Text = language.GetPhrase("#tool.vjstool_bullseye.menu.label2")..":"})
+		Panel:AddControl("Label", {Text = language.GetPhrase("#tool.vj_tool_bullseye.menu.label2")..":"})
 		local modeldir = vgui.Create("DTextEntry")
-		modeldir:SetConVar("vjstool_bullseye_modeldirectory")
+		modeldir:SetConVar("vj_tool_bullseye_modeldirectory")
 		modeldir:SetMultiline(false)
 		Panel:AddPanel(modeldir)
-		Panel:AddControl("Checkbox", {Label = "#tool.vjstool_bullseye.menu.toggleusestatus", Command = "vjstool_bullseye_usecolor"})
-		Panel:AddControl("Checkbox", {Label = "#tool.vjstool_bullseye.menu.togglestartactivated", Command = "vjstool_bullseye_startactivate"})
+		Panel:AddControl("Checkbox", {Label = "#tool.vj_tool_bullseye.menu.toggleusestatus", Command = "vj_tool_bullseye_usecolor"})
+		Panel:AddControl("Checkbox", {Label = "#tool.vj_tool_bullseye.menu.togglestartactivated", Command = "vj_tool_bullseye_startactivate"})
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)
@@ -82,11 +82,11 @@ function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 		local spawner = ents.Create("obj_vj_bullseye")
 		spawner:SetPos(tr.HitPos)
-		spawner:SetModel(GetConVarString("vjstool_bullseye_modeldirectory"))
-		spawner.SolidMovementType = GetConVarString("vjstool_bullseye_type")
+		spawner:SetModel(GetConVarString("vj_tool_bullseye_modeldirectory"))
+		spawner.SolidMovementType = GetConVarString("vj_tool_bullseye_type")
 		spawner.UseActivationSystem = true
-		spawner.ActivationSystemStatusColors = GetConVar("vjstool_bullseye_usecolor"):GetBool()
-		spawner.Activated = GetConVar("vjstool_bullseye_startactivate"):GetBool()
+		spawner.ActivationSystemStatusColors = GetConVar("vj_tool_bullseye_usecolor"):GetBool()
+		spawner.Activated = GetConVar("vj_tool_bullseye_startactivate"):GetBool()
 		spawner:Spawn()
 		spawner:Activate()
 		undo.Create("NPC Bullseye")

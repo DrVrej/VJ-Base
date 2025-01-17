@@ -1,4 +1,4 @@
-TOOL.Name = "#tool.vjstool_npcequipment.name"
+TOOL.Name = "#tool.vj_tool_equipment.name"
 TOOL.Tab = "DrVrej"
 TOOL.Category = "Tools"
 TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
@@ -14,7 +14,7 @@ TOOL.ClientConVar["weaponname"] = "Unknown"
 -- Just to make it easier to reset everything to default
 local DefaultConVars = {}
 for k,v in pairs(TOOL.ClientConVar) do
-	DefaultConVars["vjstool_npcequipment_"..k] = v
+	DefaultConVars["vj_tool_equipment_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
@@ -31,7 +31,7 @@ if CLIENT then
 			else
 				LocalPlayer():ConCommand(k.." "..v) end
 				timer.Simple(0.05,function()
-					local GetPanel = controlpanel.Get("vjstool_npcequipment")
+					local GetPanel = controlpanel.Get("vj_tool_equipment")
 					GetPanel:ClearControls()
 					DoBuildCPanel_VJ_NPCEquipment(GetPanel)
 				end)
@@ -40,11 +40,11 @@ if CLIENT then
 		Panel:AddPanel(reset)
 		
 		Panel:AddControl("Label", {Text = "#tool.vjstool.menu.label.recommendation"})
-		Panel:ControlHelp("#tool.vjstool_npcequipment.label")
+		Panel:ControlHelp("#tool.vj_tool_equipment.label")
 		
 		local selectwep = vgui.Create("DTextEntry")
 		selectwep:SetEditable(false)
-		selectwep:SetText(language.GetPhrase("#tool.vjstool_npcequipment.selectedequipment")..": "..GetConVarString("vjstool_npcequipment_weaponname").." ["..GetConVarString("vjstool_npcequipment_weaponclass").."]")
+		selectwep:SetText(language.GetPhrase("#tool.vj_tool_equipment.selectedequipment")..": "..GetConVarString("vj_tool_equipment_weaponname").." ["..GetConVarString("vj_tool_equipment_weaponclass").."]")
 		selectwep.OnGetFocus = function() LocalPlayer():ConCommand("vj_npcequipment_openwepselect") end
 		Panel:AddItem(selectwep)
 	end
@@ -57,7 +57,7 @@ if CLIENT then
 		local MenuFrame = vgui.Create('DFrame')
 		MenuFrame:SetSize(420, 440)
 		MenuFrame:SetPos(ScrW()*0.6, ScrH()*0.1)
-		MenuFrame:SetTitle("#tool.vjstool_npcequipment.print.doubleclick")
+		MenuFrame:SetTitle("#tool.vj_tool_equipment.print.doubleclick")
 		//MenuFrame:SetBackgroundBlur(true)
 		MenuFrame:SetFocusTopLevel(true)
 		MenuFrame:SetSizable(true)
@@ -71,16 +71,16 @@ if CLIENT then
 			CheckList:SetPos(10,30)
 			CheckList:SetSize(400,400) -- Size
 			CheckList:SetMultiSelect(false)
-			CheckList:AddColumn("#tool.vjstool_npcequipment.header1")
-			CheckList:AddColumn("#tool.vjstool_npcequipment.header2")
-			CheckList.OnRowSelected = function() chat.AddText(Color(0,255,0), "#tool.vjstool_npcequipment.print.doubleclick") end
+			CheckList:AddColumn("#tool.vj_tool_equipment.header1")
+			CheckList:AddColumn("#tool.vj_tool_equipment.header2")
+			CheckList.OnRowSelected = function() chat.AddText(Color(0,255,0), "#tool.vj_tool_equipment.print.doubleclick") end
 			function CheckList:DoDoubleClick(lineID,line)
-				chat.AddText(Color(0,255,0), "#tool.vjstool_npcequipment.print.weaponselected1", Color(255,100,0), " "..line:GetValue(1).." ", Color(0,255,0), "#tool.vjstool_npcequipment.print.weaponselected2")
-				LocalPlayer():ConCommand("vjstool_npcequipment_weaponname "..line:GetValue(1))
-				LocalPlayer():ConCommand("vjstool_npcequipment_weaponclass "..line:GetValue(2))
+				chat.AddText(Color(0,255,0), "#tool.vj_tool_equipment.print.weaponselected1", Color(255,100,0), " "..line:GetValue(1).." ", Color(0,255,0), "#tool.vj_tool_equipment.print.weaponselected2")
+				LocalPlayer():ConCommand("vj_tool_equipment_weaponname "..line:GetValue(1))
+				LocalPlayer():ConCommand("vj_tool_equipment_weaponclass "..line:GetValue(2))
 				MenuFrame:Close()
 				timer.Simple(0.05, function()
-					local GetPanel = controlpanel.Get("vjstool_npcequipment")
+					local GetPanel = controlpanel.Get("vj_tool_equipment")
 					GetPanel:ClearControls()
 					DoBuildCPanel_VJ_NPCEquipment(GetPanel)
 				end)
@@ -98,7 +98,7 @@ function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	if !tr.Entity:IsNPC() then return end
 	if IsValid(tr.Entity:GetActiveWeapon()) then tr.Entity:GetActiveWeapon():Remove() end
-	tr.Entity:Give(GetConVarString("vjstool_npcequipment_weaponclass"))
+	tr.Entity:Give(GetConVarString("vj_tool_equipment_weaponclass"))
 	return true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------

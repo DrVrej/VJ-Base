@@ -55,57 +55,48 @@ util.PrecacheModel("models/vj_base/projectiles/spit_acid_small.mdl")
 ------ Fonts ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	surface.CreateFont("VJFont_Trebuchet24_Large", {
-		font = "Tahoma",
-		size = 34, -- Size
-		weight = 600, -- Boldness
-		blursize = 0, -- Blurness, should be 1 or 0
-		antialias = true, -- Is it smooth?
-		italic = false, -- Is it Italic?
+	local fontName = "Roboto"
+	-- Tahoma | Helvetica | Roboto | Arial
+	
+	surface.CreateFont("VJBaseLarge", {
+		font = fontName,
+		size = 34,
+		weight = 600,
+		antialias = true,
 	})
 
-	surface.CreateFont("VJFont_Trebuchet24_MediumLarge", {
-		font = "Tahoma",
-		size = 26, -- Size
-		weight = 600, -- Boldness
-		blursize = 0, -- Blurness, should be 1 or 0
-		antialias = true, -- Is it smooth?
-		italic = false, -- Is it Italic?
+	surface.CreateFont("VJBaseMediumLarge", {
+		font = fontName,
+		size = 26,
+		weight = 600,
+		antialias = true,
 	})
 
-	surface.CreateFont("VJFont_Trebuchet24_Medium", {
-		font = "Tahoma",
-		size = 24, -- Size
-		weight = 600, -- Boldness
-		blursize = 0, -- Blurness, should be 1 or 0
-		antialias = true, -- Is it smooth?
-		italic = false, -- Is it Italic?
+	surface.CreateFont("VJBaseMedium", {
+		font = fontName,
+		size = 24,
+		weight = 600,
+		antialias = true,
 	})
 
-	surface.CreateFont("VJFont_Trebuchet24_SmallMedium", {
-		font = "Tahoma",
-		size = 17, -- Size
-		weight = 600, -- Boldness
-		blursize = 0, -- Blurness, should be 1 or 0
-		antialias = true, -- Is it smooth?
-		italic = false, -- Is it Italic?
+	surface.CreateFont("VJBaseSmallMedium", {
+		font = fontName,
+		size = 17,
+		weight = 600,
+		antialias = true,
 	})
 
-	surface.CreateFont("VJFont_Trebuchet24_Small", {
-		font = "Tahoma",
-		size = 16, -- Size
-		weight = 600, -- Boldness
-		blursize = 0, -- Blurness, should be 1 or 0
-		antialias = true, -- Is it smooth?
-		italic = false, -- Is it Italic?
+	surface.CreateFont("VJBaseSmall", {
+		font = fontName,
+		size = 16,
+		weight = 600,
+		antialias = true,
 	})
 
-	surface.CreateFont("VJFont_Trebuchet24_Tiny", {
-		font = "Tahoma",
-		size = 11, -- Size
-		weight = 600, -- Boldness
-		blursize = 0, -- Blurness, should be 1 or 0
-		antialias = true, -- Is it smooth?
-		italic = false, -- Is it Italic?
+	surface.CreateFont("VJBaseTiny", {
+		font = fontName,
+		size = 11,
+		weight = 600,
+		antialias = true,
 	})
 end

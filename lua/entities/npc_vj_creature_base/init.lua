@@ -1708,16 +1708,16 @@ function ENT:Think()
 								//self:NavSetGoalTarget(followEnt) // local goalTarget = -- No longer works, a recent GMod commit broke it
 								-- Do NOT check for validity! Let it be sent to "OnTaskFailed" so an NPC can capture it! (Ex: HL1 scientist complaining to the player)
 								//if goalTarget then
-								local schedGoToTarget = vj_ai_schedule.New("vj_follow_ent")
-								schedGoToTarget:EngTask("TASK_GET_PATH_TO_TARGET", 0) -- Required to generate the path!
-								schedGoToTarget:EngTask("TASK_MOVE_TO_TARGET_RANGE", followData.MinDist * 0.8)
-								schedGoToTarget:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-								schedGoToTarget:EngTask("TASK_FACE_TARGET", 1)
-								schedGoToTarget.CanShootWhenMoving = true
+								local schedule = vj_ai_schedule.New("SCHEDULE_FOLLOW")
+								schedule:EngTask("TASK_GET_PATH_TO_TARGET", 0) -- Required to generate the path!
+								schedule:EngTask("TASK_MOVE_TO_TARGET_RANGE", followData.MinDist * 0.8)
+								schedule:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+								schedule:EngTask("TASK_FACE_TARGET", 1)
+								schedule.CanShootWhenMoving = true
 								if IsValid(self:GetActiveWeapon()) then
-									schedGoToTarget.FaceData = {Type = VJ.NPC_FACE_ENEMY_VISIBLE}
+									schedule.FaceData = {Type = VJ.NPC_FACE_ENEMY_VISIBLE}
 								end
-								self:StartSchedule(schedGoToTarget)
+								self:StartSchedule(schedule)
 								//else
 								//	self:ClearGoal()
 								//end
@@ -2544,12 +2544,12 @@ function ENT:UpdatePoseParamTracking(resetPoses)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local schedMoveAway = vj_ai_schedule.New("vj_move_away")
-	schedMoveAway:EngTask("TASK_MOVE_AWAY_PATH", 120)
-	schedMoveAway:EngTask("TASK_RUN_PATH", 0)
-	schedMoveAway:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	schedMoveAway.CanShootWhenMoving = true
-	schedMoveAway.FaceData = {} -- This is constantly edited!
+local schedule_player_move = vj_ai_schedule.New("SCHEDULE_PLAYER_MOVE")
+	schedule_player_move:EngTask("TASK_MOVE_AWAY_PATH", 120)
+	schedule_player_move:EngTask("TASK_RUN_PATH", 0)
+	schedule_player_move:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	schedule_player_move.CanShootWhenMoving = true
+	schedule_player_move.FaceData = {} -- This is constantly edited!
 --
 function ENT:SelectSchedule()
 	if self.VJ_IsBeingControlled or self.Dead then return end
@@ -2563,16 +2563,16 @@ function ENT:SelectSchedule()
 	if hasCond(self, COND_PLAYER_PUSHING) && curTime > self.TakingCoverT && !self:BusyWithActivity() then
 		self:PlaySoundSystem("MoveOutOfPlayersWay")
 		if eneValid then -- Face current enemy
-			schedMoveAway.FaceData.Type = VJ.NPC_FACE_ENEMY_VISIBLE
-			schedMoveAway.FaceData.Target = nil
+			schedule_player_move.FaceData.Type = VJ.NPC_FACE_ENEMY_VISIBLE
+			schedule_player_move.FaceData.Target = nil
 		elseif IsValid(self:GetTarget()) then -- Face current target
-			schedMoveAway.FaceData.Type = VJ.NPC_FACE_ENTITY_VISIBLE
-			schedMoveAway.FaceData.Target = self:GetTarget()
+			schedule_player_move.FaceData.Type = VJ.NPC_FACE_ENTITY_VISIBLE
+			schedule_player_move.FaceData.Target = self:GetTarget()
 		else -- Reset if both others fail! (Remember this is a localized table shared between all NPCs!)
-			schedMoveAway.FaceData.Type = nil
-			schedMoveAway.FaceData.Target = nil
+			schedule_player_move.FaceData.Type = nil
+			schedule_player_move.FaceData.Target = nil
 		end
-		self:StartSchedule(schedMoveAway)
+		self:StartSchedule(schedule_player_move)
 		self.TakingCoverT = curTime + 2
 	end
 	
@@ -2614,7 +2614,7 @@ function ENT:SelectSchedule()
 					self:SetLastPosition(sdSrc.origin)
 					self:SCHEDULE_FACE("TASK_FACE_LASTPOSITION")
 					-- Works but just faces the enemy that fired at
-					//local sched = vj_ai_schedule.New("vj_hear_sound")
+					//local sched = vj_ai_schedule.New("SCHEDULE_HEAR_SOUND")
 					//sched:EngTask("TASK_STORE_BESTSOUND_REACTORIGIN_IN_SAVEPOSITION", 0)
 					//sched:EngTask("TASK_STOP_MOVING", 0)
 					//sched:EngTask("TASK_FACE_SAVEPOSITION", 0)

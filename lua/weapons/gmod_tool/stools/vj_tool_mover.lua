@@ -1,4 +1,4 @@
-TOOL.Name = "#tool.vjstool_npcmover.name"
+TOOL.Name = "#tool.vj_tool_mover.name"
 TOOL.Tab = "DrVrej"
 TOOL.Category = "Tools"
 TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
@@ -12,7 +12,7 @@ TOOL.Information = {
 -- Just to make it easier to reset everything to default
 local DefaultConVars = {}
 for k,v in pairs(TOOL.ClientConVar) do
-	DefaultConVars["vjstool_npcmover_"..k] = v
+	DefaultConVars["vj_tool_mover_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
@@ -32,7 +32,7 @@ if CLIENT then
 			else
 				LocalPlayer():ConCommand(k.." "..v) end
 				timer.Simple(0.05,function()
-					local GetPanel = controlpanel.Get("vjstool_npcmover")
+					local GetPanel = controlpanel.Get("vj_tool_mover")
 					GetPanel:ClearControls()
 					DoBuildCPanel_Mover(GetPanel)
 				end)
@@ -49,10 +49,10 @@ if CLIENT then
 			//CheckList.Paint = function()
 			//draw.RoundedBox(8, 0, 0, CheckList:GetWide(), CheckList:GetTall(), Color(0, 0, 100, 255))
 			//end
-			CheckList:AddColumn("#tool.vjstool_npcmover.header1")
-			CheckList:AddColumn("#tool.vjstool_npcmover.header2")
+			CheckList:AddColumn("#tool.vj_tool_mover.header1")
+			CheckList:AddColumn("#tool.vj_tool_mover.header2")
 			//CheckList:AddColumn("Index")
-			CheckList:AddColumn("#tool.vjstool_npcmover.header3")
+			CheckList:AddColumn("#tool.vj_tool_mover.header3")
 			//CheckList:AddColumn("Position")
 			//CheckList:AddColumn("Equipment")
 			for _,v in ipairs(VJ_MOVE_TblCurrentValues) do
@@ -82,15 +82,15 @@ if CLIENT then
 				
 		local unselectall = vgui.Create("DButton")
 		unselectall:SetFont("DermaDefaultBold")
-		unselectall:SetText("#tool.vjstool_npcmover.buttonunselectall")
+		unselectall:SetText("#tool.vj_tool_mover.buttonunselectall")
 		unselectall:SetSize(150, 25)
 		unselectall:SetColor(Color(0,0,0,255))
 		unselectall.DoClick = function()
 			local brah = VJ_MOVE_TblCurrentValues
 			if !table.IsEmpty(brah) then
-				chat.AddText(Color(255,100,0), "#tool.vjstool_npcmover.print.unselectedall")
+				chat.AddText(Color(255,100,0), "#tool.vj_tool_mover.print.unselectedall")
 			else
-				chat.AddText(Color(0,255,0), "#tool.vjstool_npcmover.print.unselectedall.error")
+				chat.AddText(Color(0,255,0), "#tool.vj_tool_mover.print.unselectedall.error")
 			end
 			net.Start("vj_npcmover_remove")
 			net.WriteTable(brah)
@@ -104,7 +104,7 @@ if CLIENT then
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcmover_cl_create", function(len, ply)
 		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcmover" then
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_mover" then
 			local sventity = net.ReadEntity()
 			local sventname = net.ReadString()
 			VJ_MOVE_TblCurrentValues = VJ_MOVE_TblCurrentValues or {}
@@ -123,7 +123,7 @@ if CLIENT then
 				table.insert(VJ_MOVE_TblCurrentValues,sventity)
 			end
 			-- Refresh the tool menu
-			local GetPanel = controlpanel.Get("vjstool_npcmover")
+			local GetPanel = controlpanel.Get("vj_tool_mover")
 			GetPanel:ClearControls()
 			DoBuildCPanel_Mover(GetPanel)
 			net.Start("vj_npcmover_sv_create")
@@ -141,11 +141,11 @@ if CLIENT then
 		local svwalktype = net.ReadBit()
 		local svvector = net.ReadVector()
 		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcmover" then
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_mover" then
 			for k,v in ipairs(VJ_MOVE_TblCurrentValues) do
 				if !IsValid(v) then -- Remove any NPCs that no longer exist!
 					table.remove(VJ_MOVE_TblCurrentValues,k)
-					local GetPanel = controlpanel.Get("vjstool_npcmover")
+					local GetPanel = controlpanel.Get("vj_tool_mover")
 					GetPanel:ClearControls()
 					DoBuildCPanel_Mover(GetPanel)
 				end
@@ -170,7 +170,7 @@ else -- If SERVER
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcmover_sv_create", function(len, ply)
 		local wep = ply:GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcmover" then
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_mover" then
 			local sventity = net.ReadEntity()
 			local svchangetype = net.ReadBit()
 			if svchangetype == 0 then
@@ -195,7 +195,7 @@ else -- If SERVER
 	
 	net.Receive("vj_npcmover_remove", function(len, ply)
 		local wep = ply:GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcmover" then
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_mover" then
 			local brahtbl = net.ReadTable()
 			for _,v in ipairs(brahtbl) do
 				v.VJ_IsBeingControlled_Tool = false
@@ -210,7 +210,7 @@ else -- If SERVER
 	
 	net.Receive("vj_npcmover_sv_startmove", function(len, ply)
 		local wep = ply:GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcmover" then
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_mover" then
 			local sventtable = net.ReadTable()
 			local svwalktype = net.ReadBit()
 			local svvector = net.ReadVector()

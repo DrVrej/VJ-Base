@@ -1,4 +1,4 @@
-TOOL.Name = "#tool.vjstool_notarget.name"
+TOOL.Name = "#tool.vj_tool_notarget.name"
 TOOL.Tab = "DrVrej"
 TOOL.Category = "Tools"
 TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
@@ -10,7 +10,7 @@ TOOL.Information = {
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	local function DoBuildCPanel_NoTarget(Panel)
-		Panel:AddControl("Label", {Text = "#tool.vjstool_notarget.label"})
+		Panel:AddControl("Label", {Text = "#tool.vj_tool_notarget.label"})
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)
@@ -22,11 +22,11 @@ function TOOL:LeftClick(tr)
 	if CLIENT then return true end
 	local Ply = self:GetOwner()
 	if Ply:IsFlagSet(FL_NOTARGET) != true then
-		Ply:ChatPrint("#tool.vjstool_notarget.print.yourselfon")
+		Ply:ChatPrint("#tool.vj_tool_notarget.print.yourselfon")
 		Ply:AddFlags(FL_NOTARGET)
 		return true
 	else
-		Ply:ChatPrint("#tool.vjstool_notarget.print.yourselfoff")
+		Ply:ChatPrint("#tool.vj_tool_notarget.print.yourselfoff")
 		Ply:RemoveFlags(FL_NOTARGET)
 		return true
 	end

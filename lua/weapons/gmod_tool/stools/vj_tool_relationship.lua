@@ -1,4 +1,4 @@
-TOOL.Name = "#tool.vjstool_npcrelationship.name"
+TOOL.Name = "#tool.vj_tool_relationship.name"
 TOOL.Tab = "DrVrej"
 TOOL.Category = "Tools"
 TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
@@ -15,7 +15,7 @@ TOOL.ClientConVar["allytoplyallies"] = 1
 -- Just to make it easier to reset everything to default
 local DefaultConVars = {}
 for k,v in pairs(TOOL.ClientConVar) do
-	DefaultConVars["vjstool_npcrelationship_"..k] = v
+	DefaultConVars["vj_tool_relationship_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
@@ -32,7 +32,7 @@ if CLIENT then
 			else
 				LocalPlayer():ConCommand(k.." "..v) end
 				timer.Simple(0.05,function()
-					local GetPanel = controlpanel.Get("vjstool_npcrelationship")
+					local GetPanel = controlpanel.Get("vj_tool_relationship")
 					GetPanel:ClearControls()
 					DoBuildCPanel_Relationship(GetPanel)
 				end)
@@ -51,7 +51,7 @@ if CLIENT then
 		Panel:AddPanel(tutorial)
 
 		Panel:AddControl("Label", {Text = "#tool.vjstool.menu.label.recommendation"})
-		Panel:ControlHelp("#tool.vjstool_npcrelationship.label1")
+		Panel:ControlHelp("#tool.vj_tool_relationship.label1")
 		
 		VJ_NPCRELATION_TblCurrentValues = VJ_NPCRELATION_TblCurrentValues or {}
 		local CheckList = vgui.Create("DListView")
@@ -59,7 +59,7 @@ if CLIENT then
 			//CheckList:Center() -- No need since Size does it already
 			CheckList:SetSize( 100, 300 ) -- Size
 			CheckList:SetMultiSelect(false)
-			CheckList:AddColumn("#tool.vjstool_npcrelationship.header")
+			CheckList:AddColumn("#tool.vj_tool_relationship.header")
 			CheckList.OnRowSelected = function(rowIndex,row) chat.AddText(Color(0,255,0),"Double click to ",Color(255,100,0),"remove ",Color(0,255,0),"a class") end
 			function CheckList:DoDoubleClick(lineID,line)
 				chat.AddText(Color(255,100,0)," "..line:GetValue(1).." ",Color(0,255,0),"removed!")
@@ -83,7 +83,7 @@ if CLIENT then
 					chat.AddText(Color(0,255,0),"Added",Color(255,100,0)," "..val.." ",Color(0,255,0),"to the class list!")
 					table.insert(VJ_NPCRELATION_TblCurrentValues,val)
 					timer.Simple(0.05,function()
-						local GetPanel = controlpanel.Get("vjstool_npcrelationship")
+						local GetPanel = controlpanel.Get("vj_tool_relationship")
 						GetPanel:ClearControls()
 						DoBuildCPanel_Relationship(GetPanel)
 					end)
@@ -96,11 +96,11 @@ if CLIENT then
 			InsertToTable(TextEntry:GetValue())
 		end
 		Panel:AddItem(TextEntry)
-		Panel:ControlHelp("#tool.vjstool_npcrelationship.label2")
+		Panel:ControlHelp("#tool.vj_tool_relationship.label2")
 		
 		local button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
-		button:SetText("#tool.vjstool_npcrelationship.button.combine")
+		button:SetText("#tool.vj_tool_relationship.button.combine")
 		button:SetSize(50,20)
 		button:SetColor(Color(0,0,0,255))
 		button.DoClick = function()
@@ -110,7 +110,7 @@ if CLIENT then
 		
 		button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
-		button:SetText("#tool.vjstool_npcrelationship.button.antlion")
+		button:SetText("#tool.vj_tool_relationship.button.antlion")
 		button:SetSize(50,20)
 		button:SetColor(Color(0,0,0,255))
 		button.DoClick = function()
@@ -120,7 +120,7 @@ if CLIENT then
 		
 		button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
-		button:SetText("#tool.vjstool_npcrelationship.button.zombie")
+		button:SetText("#tool.vj_tool_relationship.button.zombie")
 		button:SetSize(50,20)
 		button:SetColor(Color(0,0,0,255))
 		button.DoClick = function()
@@ -130,18 +130,18 @@ if CLIENT then
 		
 		button = vgui.Create("DButton")
 		button:SetFont("DermaDefaultBold")
-		button:SetText("#tool.vjstool_npcrelationship.button.player")
+		button:SetText("#tool.vj_tool_relationship.button.player")
 		button:SetSize(50,20)
 		button:SetColor(Color(0,0,0,255))
 		button.DoClick = function()
 			InsertToTable("CLASS_PLAYER_ALLY")
 		end
 		Panel:AddPanel(button)
-		Panel:AddControl("Checkbox", {Label = "#tool.vjstool_npcrelationship.togglealliedply", Command = "vjstool_npcrelationship_allytoplyallies"})
-		Panel:ControlHelp(language.GetPhrase("#tool.vjstool_npcrelationship.label3").." CLASS_PLAYER_ALLY")
+		Panel:AddControl("Checkbox", {Label = "#tool.vj_tool_relationship.togglealliedply", Command = "vj_tool_relationship_allytoplyallies"})
+		Panel:ControlHelp(language.GetPhrase("#tool.vj_tool_relationship.label3").." CLASS_PLAYER_ALLY")
 		
 		//Panel:AddControl("Label", {Text = "For PLAYER entities Only:"})
-		//Panel:AddControl("Checkbox", {Label = "Make NPCs interact with friendly player", Command = "vjstool_npcspawner_playerinteract"})
+		//Panel:AddControl("Checkbox", {Label = "Make NPCs interact with friendly player", Command = "vj_tool_spawner_playerinteract"})
 		//Panel:ControlHelp("Make NPCs be able to interact with friendly player, such follow when pressed E or get out of their way")
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -152,7 +152,7 @@ if CLIENT then
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcrelationship_cl_select", function(len, ply)
 		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcrelationship" then
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_relationship" then
 			//local ent = net.ReadEntity()
 			local entname = net.ReadString()
 			//local hasclasstbl = net.ReadBool()
@@ -164,7 +164,7 @@ if CLIENT then
 			//print(#classtbl)
 			VJ_NPCRELATION_TblCurrentValues = classtbl
 			timer.Simple(0.05,function()
-				local GetPanel = controlpanel.Get("vjstool_npcrelationship")
+				local GetPanel = controlpanel.Get("vj_tool_relationship")
 				GetPanel:ClearControls()
 				DoBuildCPanel_Relationship(GetPanel)
 			end)
@@ -173,13 +173,13 @@ if CLIENT then
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcrelationship_cl_leftclick", function(len, ply)
 		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcrelationship" then
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_relationship" then
 			local ent = net.ReadEntity()
 			local entname = net.ReadString()
 			local clicktype = net.ReadString()
 			local allynum = net.ReadFloat()
 			if clicktype == "ReloadClick" then entname = "Yourself" end
-			chat.AddText(Color(0,255,0),"#tool.vjstool_npcrelationship.print.applied",Color(255,100,0)," "..entname)
+			chat.AddText(Color(0,255,0),"#tool.vj_tool_relationship.print.applied",Color(255,100,0)," "..entname)
 			net.Start("vj_npcrelationship_sr_leftclick")
 			net.WriteEntity(ent)
 			//net.WriteTable(self)
@@ -196,7 +196,7 @@ else
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcrelationship_sr_leftclick", function(len, ply)
 		local wep = ply:GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcrelationship" then
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_relationship" then
 			local ent = net.ReadEntity()
 			//local clicktype = net.ReadString()
 			local classtbl = net.ReadTable()

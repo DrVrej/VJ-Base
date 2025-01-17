@@ -74,7 +74,7 @@ if SERVER then
 			end
 			ply:EmitSound("buttons/button15.wav")
 		end
-	end, nil, "", {FCVAR_DONTRECORD})
+	end, nil, "", FCVAR_DONTRECORD)
 else
 	//local colorOrange = Color(243, 101, 35)
 	local colorWhite = Color(255, 255, 255)
@@ -171,7 +171,6 @@ else
 			Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 			return
 		end
-		Panel:ControlHelp(" ") -- Spacer
 		Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
 		Panel:Button("#vjbase.menu.cleanup.all", "vj_cleanup")
 		Panel:Button("#vjbase.menu.cleanup.stopsounds", "stopsound")
@@ -187,102 +186,112 @@ else
 		Panel:Button("#vjbase.menu.cleanup.remove.allammo", "vj_cleanup", "allammo")
 	end
 	----=================================----
-	local function VJ_MAIN_MISC(Panel)
+	local function VJ_MAIN_CONTACT(Panel)
 		local incomp = vgui.Create("DButton") -- Incompatible Addons
 		incomp:SetFont("CloseCaption_Bold")
 		incomp:SetText("#vjbase.menu.contact.incompatibleaddons")
 		incomp:SetSize(150, 35)
 		incomp:SetColor(Color(231, 76, 60))
-		incomp:SetFont("VJFont_Trebuchet24_SmallMedium")
+		incomp:SetFont("VJBaseSmallMedium")
 		incomp.DoClick = function()
 			gui.OpenURL("https://steamcommunity.com/sharedfiles/filedetails/?id=1129493108")
 		end
 		Panel:AddPanel(incomp)
-		
-		local bugr = vgui.Create("DButton") -- Bug Report
-		bugr:SetFont("CloseCaption_Bold")
-		bugr:SetText("#vjbase.menu.contact.reportbug")
-		bugr:SetSize(150, 35)
-		bugr:SetColor(Color(231, 76, 60))
-		bugr:SetFont("VJFont_Trebuchet24_SmallMedium")
-		bugr.DoClick = function()
-			gui.OpenURL("http://steamcommunity.com/groups/vrejgaming/discussions/2/")
-		end
-		Panel:AddPanel(bugr)
-
-		local suggest = vgui.Create("DButton") -- Suggestions
-		suggest:SetFont("DermaDefaultBold")
-		suggest:SetText("#vjbase.menu.contact.suggestion")
-		suggest:SetSize(150, 20)
-		suggest:SetColor(Color(211, 84, 0))
-		suggest:SetFont("VJFont_Trebuchet24_SmallMedium")
-		suggest.DoClick = function()
-			gui.OpenURL("http://steamcommunity.com/groups/vrejgaming/discussions/1/")
-		end
-		Panel:AddPanel(suggest)
 
 		Panel:ControlHelp(" ") -- Spacer
 
-		Panel:AddControl("Label", {Text = "#vjbase.menu.contact.label1"})
-		Panel:ControlHelp("#vjbase.menu.contact.thanks")
+		local github = vgui.Create("DButton") -- GitHub
+		github:SetFont("TargetID")
+		github:SetText("#vjbase.menu.contact.github")
+		github:SetSize(150, 25)
+		github:SetColor(Color(0, 0, 0))
+		github:SetFont("VJBaseSmallMedium")
+		github.DoClick = function()
+			gui.OpenURL("https://github.com/DrVrej/VJ-Base")
+		end
+		Panel:AddPanel(github)
+		
+		local documentation = vgui.Create("DButton") -- Documentation
+		documentation:SetFont("TargetID")
+		documentation:SetText("#vjbase.menu.contact.documentation")
+		documentation:SetSize(150, 25)
+		documentation:SetColor(Color(0, 0, 0))
+		documentation:SetFont("VJBaseSmallMedium")
+		documentation.DoClick = function()
+			gui.OpenURL("https://drvrej.com/project/vjbase/")
+		end
+		Panel:AddPanel(documentation)
+		
+		local changelogs = vgui.Create("DButton") -- Change Logs
+		changelogs:SetFont("TargetID")
+		changelogs:SetText("#vjbase.menu.contact.changelogs")
+		changelogs:SetSize(150, 25)
+		changelogs:SetColor(Color(0, 0, 0))
+		changelogs:SetFont("VJBaseSmallMedium")
+		changelogs.DoClick = function()
+			gui.OpenURL("https://github.com/DrVrej/VJ-Base/releases")
+		end
+		Panel:AddPanel(changelogs)
+		
+		Panel:ControlHelp(" ") -- Spacer
 
-		local discordl = vgui.Create("DButton") -- Discord
-		discordl:SetFont("TargetID")
-		discordl:SetText("#vjbase.menu.contact.discord")
-		discordl:SetSize(150, 25)
-		discordl:SetColor(Color(0, 102, 0))
-		discordl:SetFont("VJFont_Trebuchet24_SmallMedium")
-		discordl.DoClick = function()
+		local discord = vgui.Create("DButton") -- Discord
+		discord:SetFont("TargetID")
+		discord:SetText("#vjbase.menu.contact.discord")
+		discord:SetSize(150, 25)
+		discord:SetColor(Color(0, 102, 0))
+		discord:SetFont("VJBaseSmallMedium")
+		discord.DoClick = function()
 			gui.OpenURL("https://discord.gg/zwQjrdG")
 		end
-		Panel:AddPanel(discordl)
+		Panel:AddPanel(discord)
 		
-		local steaml = vgui.Create("DButton") -- Steam Group
-		steaml:SetFont("TargetID")
-		steaml:SetText("#vjbase.menu.contact.steam")
-		steaml:SetSize(150, 25)
-		steaml:SetColor(Color(0, 102, 0))
-		steaml:SetFont("VJFont_Trebuchet24_SmallMedium")
-		steaml.DoClick = function()
+		local steam = vgui.Create("DButton") -- Steam Group
+		steam:SetFont("TargetID")
+		steam:SetText("#vjbase.menu.contact.steam")
+		steam:SetSize(150, 25)
+		steam:SetColor(Color(0, 102, 0))
+		steam:SetFont("VJBaseSmallMedium")
+		steam.DoClick = function()
 			gui.OpenURL("http://steamcommunity.com/groups/vrejgaming")
 		end
-		Panel:AddPanel(steaml)
+		Panel:AddPanel(steam)
 
-		local ytl = vgui.Create("DButton") -- YouTube
-		ytl:SetFont("TargetID")
-		ytl:SetText("#vjbase.menu.contact.youtube")
-		ytl:SetSize(150, 25)
-		ytl:SetColor(Color(0, 102, 0))
-		ytl:SetFont("VJFont_Trebuchet24_SmallMedium")
-		ytl.DoClick = function()
+		local youtube = vgui.Create("DButton") -- YouTube
+		youtube:SetFont("TargetID")
+		youtube:SetText("#vjbase.menu.contact.youtube")
+		youtube:SetSize(150, 25)
+		youtube:SetColor(Color(0, 102, 0))
+		youtube:SetFont("VJBaseSmallMedium")
+		youtube.DoClick = function()
 			gui.OpenURL("http://www.youtube.com/user/gmod95")
 		end
-		Panel:AddPanel(ytl)
+		Panel:AddPanel(youtube)
 
-		local tweetl = vgui.Create("DButton") -- Twitter
-		tweetl:SetFont("TargetID")
-		tweetl:SetText("#vjbase.menu.contact.twitter")
-		tweetl:SetSize(150, 25)
-		tweetl:SetColor(Color(0, 102, 0))
-		tweetl:SetFont("VJFont_Trebuchet24_SmallMedium")
-		tweetl.DoClick = function()
+		local twitter = vgui.Create("DButton") -- Twitter
+		twitter:SetFont("TargetID")
+		twitter:SetText("#vjbase.menu.contact.twitter")
+		twitter:SetSize(150, 25)
+		twitter:SetColor(Color(0, 102, 0))
+		twitter:SetFont("VJBaseSmallMedium")
+		twitter.DoClick = function()
 			gui.OpenURL("http://twitter.com/vrejgaming")
 		end
-		Panel:AddPanel(tweetl)
+		Panel:AddPanel(twitter)
 
 		Panel:ControlHelp(" ") -- Spacer
 		
-		local donate = vgui.Create("DButton") -- Donate
-		donate:SetFont("TargetID")
-		donate:SetText("#vjbase.menu.contact.patreon")
-		donate:SetSize(150, 30)
-		donate:SetColor(Color(0, 0, 102))
-		donate:SetFont("VJFont_Trebuchet24_SmallMedium")
-		donate.DoClick = function()
+		local patreon = vgui.Create("DButton") -- patreon
+		patreon:SetFont("TargetID")
+		patreon:SetText("#vjbase.menu.contact.patreon")
+		patreon:SetSize(150, 30)
+		patreon:SetColor(Color(0, 0, 102))
+		patreon:SetFont("VJBaseSmallMedium")
+		patreon.DoClick = function()
 			gui.OpenURL("https://www.patreon.com/drvrej")
 		end
-		Panel:AddPanel(donate)
-		Panel:ControlHelp("#vjbase.menu.contact.label2")
+		Panel:AddPanel(patreon)
+		Panel:ControlHelp("#vjbase.menu.contact.patreon.label")
 
 		/*HTMLTest = vgui.Create("HTML")
 		HTMLTest:SetPos(50,50)
@@ -291,7 +300,7 @@ else
 		//Panel:AddPanel(HTMLTest)
 	end
 	----=================================----
-	local function VJ_MAIN_ADMINSERVER(Panel)
+	local function VJ_MAIN_SERVER(Panel)
 		if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
 			Panel:AddControl("Label", {Text = "#vjbase.menu.general.admin.not"})
 			Panel:AddControl( "Label", {Text = "#vjbase.menu.general.admin.only"})
@@ -365,7 +374,7 @@ else
 		changelog:SetText("#vjbase.menu.plugins.changelog")
 		changelog:SetSize(150, 25)
 		changelog:SetColor(Color(0, 102, 0))
-		changelog:SetFont("VJFont_Trebuchet24_SmallMedium")
+		changelog:SetFont("VJBaseSmallMedium")
 		changelog.DoClick = function(x)
 			gui.OpenURL("https://github.com/DrVrej/VJ-Base/releases")
 		end
@@ -377,9 +386,9 @@ else
 		github:SetText("#vjbase.menu.plugins.makeaddon")
 		github:SetSize(150, 25)
 		github:SetColor(Color(0, 0, 102))
-		github:SetFont("VJFont_Trebuchet24_SmallMedium")
+		github:SetFont("VJBaseSmallMedium")
 		github.DoClick = function(x)
-			gui.OpenURL("https://github.com/DrVrej/VJ-Base/wiki")
+			gui.OpenURL("https://drvrej.com/project/vjbase/")
 		end
 		Panel:AddPanel(github)
 		
@@ -389,7 +398,7 @@ else
 		tutorialVid:SetText("#tool.vjstool.menu.tutorialvideo")
 		tutorialVid:SetSize(150, 25)
 		tutorialVid:SetColor(Color(0, 0, 102))
-		tutorialVid:SetFont("VJFont_Trebuchet24_SmallMedium")
+		tutorialVid:SetFont("VJBaseSmallMedium")
 		tutorialVid.DoClick = function(x)
 			gui.OpenURL("https://www.youtube.com/watch?v=dGoqEpFZ5_M")
 		end
@@ -402,7 +411,7 @@ else
 			memeButton:SetText("HELLO")
 			memeButton:SetSize(150, 25)
 			memeButton:SetColor(Color(0, 0, 102))
-			memeButton:SetFont("VJFont_Trebuchet24_SmallMedium")
+			memeButton:SetFont("VJBaseSmallMedium")
 			memeButton.DoClick = function(x)
 				net.Start("vj_meme")
 				net.SendToServer()
@@ -423,11 +432,11 @@ else
 	end)
 	----=================================----
 	hook.Add("PopulateToolMenu", "VJ_ADDTOMENU_MAIN", function()
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_plugins", "#vjbase.menu.plugins", "", "", VJ_MAIN_PLUGINS)
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_info", "#vjbase.menu.info", "", "", VJ_MAIN_INFO, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_clsettings", "#vjbase.menu.clsettings", "", "", VJ_MAIN_CLIENT, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_cleanup", "#vjbase.menu.cleanup", "", "", VJ_MAIN_CLEANUP, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_helpsupport", "#vjbase.menu.contact", "", "", VJ_MAIN_MISC, {})
-		spawnmenu.AddToolMenuOption("DrVrej", "Main Menu", "vj_menu_svsettings", "#vjbase.menu.svsettings", "", "", VJ_MAIN_ADMINSERVER, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_plugins", "#vjbase.menu.plugins", "", "", VJ_MAIN_PLUGINS)
+		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_info", "#vjbase.menu.info", "", "", VJ_MAIN_INFO, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_clsettings", "#vjbase.menu.clsettings", "", "", VJ_MAIN_CLIENT, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_cleanup", "#vjbase.menu.cleanup", "", "", VJ_MAIN_CLEANUP, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_helpsupport", "#vjbase.menu.contact", "", "", VJ_MAIN_CONTACT, {})
+		spawnmenu.AddToolMenuOption("DrVrej", "Main", "vj_menu_svsettings", "#vjbase.menu.svsettings", "", "", VJ_MAIN_SERVER, {})
 	end)
 end

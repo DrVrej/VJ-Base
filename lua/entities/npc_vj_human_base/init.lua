@@ -2501,16 +2501,16 @@ function ENT:Think()
 								//self:NavSetGoalTarget(followEnt) // local goalTarget = -- No longer works, a recent GMod commit broke it
 								-- Do NOT check for validity! Let it be sent to "OnTaskFailed" so an NPC can capture it! (Ex: HL1 scientist complaining to the player)
 								//if goalTarget then
-								local schedGoToTarget = vj_ai_schedule.New("vj_follow_ent")
-								schedGoToTarget:EngTask("TASK_GET_PATH_TO_TARGET", 0) -- Required to generate the path!
-								schedGoToTarget:EngTask("TASK_MOVE_TO_TARGET_RANGE", followData.MinDist * 0.8)
-								schedGoToTarget:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-								schedGoToTarget:EngTask("TASK_FACE_TARGET", 1)
-								schedGoToTarget.CanShootWhenMoving = true
+								local schedule = vj_ai_schedule.New("SCHEDULE_FOLLOW")
+								schedule:EngTask("TASK_GET_PATH_TO_TARGET", 0) -- Required to generate the path!
+								schedule:EngTask("TASK_MOVE_TO_TARGET_RANGE", followData.MinDist * 0.8)
+								schedule:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+								schedule:EngTask("TASK_FACE_TARGET", 1)
+								schedule.CanShootWhenMoving = true
 								if IsValid(self:GetActiveWeapon()) then
-									schedGoToTarget.FaceData = {Type = VJ.NPC_FACE_ENEMY_VISIBLE}
+									schedule.FaceData = {Type = VJ.NPC_FACE_ENEMY_VISIBLE}
 								end
-								self:StartSchedule(schedGoToTarget)
+								self:StartSchedule(schedule)
 								//else
 								//	self:ClearGoal()
 								//end
@@ -2677,7 +2677,7 @@ function ENT:Think()
 								if !self.Weapon_FindCoverOnReload or self.IsGuard or self.IsFollowing or self.VJ_IsBeingControlled_Tool or !eneValid or self.MovementType == VJ_MOVETYPE_STATIONARY or self.LatestEnemyDistance < 650 then
 									playReloadAnimation(self, self:TranslateActivity(VJ.PICK(self.AnimTbl_WeaponReload)))
 								else -- If all is good, then run to a hiding spot and reload!
-									local schedule = vj_ai_schedule.New("vj_weapon_reload")
+									local schedule = vj_ai_schedule.New("SCHEDULE_COVER_RELOAD")
 									schedule:EngTask("TASK_FIND_COVER_FROM_ENEMY", 0)
 									schedule:EngTask("TASK_RUN_PATH", 0)
 									schedule:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
@@ -3361,12 +3361,12 @@ function ENT:CanFireWeapon(checkDistance, checkDistanceOnly)
 	return hasDist && hasChecks
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local schedMoveAway = vj_ai_schedule.New("vj_move_away")
-	schedMoveAway:EngTask("TASK_MOVE_AWAY_PATH", 120)
-	schedMoveAway:EngTask("TASK_RUN_PATH", 0)
-	schedMoveAway:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-	schedMoveAway.CanShootWhenMoving = true
-	schedMoveAway.FaceData = {} -- This is constantly edited!
+local schedule_player_move = vj_ai_schedule.New("SCHEDULE_PLAYER_MOVE")
+	schedule_player_move:EngTask("TASK_MOVE_AWAY_PATH", 120)
+	schedule_player_move:EngTask("TASK_RUN_PATH", 0)
+	schedule_player_move:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+	schedule_player_move.CanShootWhenMoving = true
+	schedule_player_move.FaceData = {} -- This is constantly edited!
 --
 function ENT:SelectSchedule()
 	if self.VJ_IsBeingControlled or self.Dead then return end
@@ -3415,7 +3415,7 @@ function ENT:SelectSchedule()
 					self:SetLastPosition(sdSrc.origin)
 					self:SCHEDULE_FACE("TASK_FACE_LASTPOSITION")
 					-- Works but just faces the enemy that fired at
-					//local sched = vj_ai_schedule.New("vj_hear_sound")
+					//local sched = vj_ai_schedule.New("SCHEDULE_HEAR_SOUND")
 					//sched:EngTask("TASK_STORE_BESTSOUND_REACTORIGIN_IN_SAVEPOSITION", 0)
 					//sched:EngTask("TASK_STOP_MOVING", 0)
 					//sched:EngTask("TASK_FACE_SAVEPOSITION", 0)
@@ -3504,7 +3504,7 @@ function ENT:SelectSchedule()
 					end
 					-- I can see the enemy...
 					::goto_checkwep::
-					if (wep.IsVJBaseWeapon) then -- VJ Base weapons
+					if wep.IsVJBaseWeapon then -- VJ Base weapons
 						-- Do proper weapon aim turning, based on "FInAimCone" - https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/mp/src/game/server/ai_basenpc.cpp#L2584
 						if !self.HasPoseParameterLooking then -- Pose parameter looking is disabled then always face
 							self:SetTurnTarget("Enemy")
@@ -3566,18 +3566,18 @@ function ENT:SelectSchedule()
 										if self.IsGuard then self.GuardingPosition = nearestEntPos end -- Set the guard position to this new position that provides cover
 										self:SetLastPosition(nearestEntPos)
 										//VJ.DEBUG_TempEnt(nearestEntPos, self:GetAngles(), Color(0,255,255))
-										local schedGoToCover = vj_ai_schedule.New("vj_goto_cover")
-										schedGoToCover:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
+										local schedule = vj_ai_schedule.New("SCHEDULE_GOTO_POSITION")
+										schedule:EngTask("TASK_GET_PATH_TO_LASTPOSITION", 0)
 										local coverRunAnim = self:TranslateActivity(VJ.PICK(self.AnimTbl_MoveToCover))
 										if VJ.AnimExists(self, coverRunAnim) then
 											self:SetMovementActivity(coverRunAnim)
 										else -- Only shoot if we aren't crouching running!
-											schedGoToCover.CanShootWhenMoving = true
+											schedule.CanShootWhenMoving = true
 										end
-										schedGoToCover:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
-										schedGoToCover.FaceData = {Type = VJ.NPC_FACE_ENEMY}
-										//schedGoToCover.StopScheduleIfNotMoving_Any = true
-										self:StartSchedule(schedGoToCover)
+										schedule:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
+										schedule.FaceData = {Type = VJ.NPC_FACE_ENEMY}
+										//schedule.StopScheduleIfNotMoving_Any = true
+										self:StartSchedule(schedule)
 										//self:SCHEDULE_GOTO_POSITION("TASK_WALK_PATH",function(x) x:EngTask("TASK_FACE_ENEMY", 0) x.CanShootWhenMoving = true x.FaceData = {Type = VJ.NPC_FACE_ENEMY} end)
 									end
 									self.NextMoveOnGunCoveredT = curTime + 2
@@ -3676,16 +3676,16 @@ function ENT:SelectSchedule()
 	if hasCond(self, COND_PLAYER_PUSHING) && curTime > self.TakingCoverT && !self:BusyWithActivity() then
 		self:PlaySoundSystem("MoveOutOfPlayersWay")
 		if eneValid then -- Face current enemy
-			schedMoveAway.FaceData.Type = VJ.NPC_FACE_ENEMY_VISIBLE
-			schedMoveAway.FaceData.Target = nil
+			schedule_player_move.FaceData.Type = VJ.NPC_FACE_ENEMY_VISIBLE
+			schedule_player_move.FaceData.Target = nil
 		elseif IsValid(self:GetTarget()) then -- Face current target
-			schedMoveAway.FaceData.Type = VJ.NPC_FACE_ENTITY_VISIBLE
-			schedMoveAway.FaceData.Target = self:GetTarget()
+			schedule_player_move.FaceData.Type = VJ.NPC_FACE_ENTITY_VISIBLE
+			schedule_player_move.FaceData.Target = self:GetTarget()
 		else -- Reset if both others fail! (Remember this is a localized table shared between all NPCs!)
-			schedMoveAway.FaceData.Type = nil
-			schedMoveAway.FaceData.Target = nil
+			schedule_player_move.FaceData.Type = nil
+			schedule_player_move.FaceData.Target = nil
 		end
-		self:StartSchedule(schedMoveAway)
+		self:StartSchedule(schedule_player_move)
 		self.TakingCoverT = curTime + 2
 	end
 end

@@ -1,4 +1,4 @@
-TOOL.Name = "#tool.vjstool_entityscanner.name"
+TOOL.Name = "#tool.vj_tool_scanner.name"
 TOOL.Tab = "DrVrej"
 TOOL.Category = "Tools"
 TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
@@ -10,12 +10,12 @@ TOOL.Information = {
 -- Just to make it easier to reset everything to default
 local DefaultConVars = {}
 for k,v in pairs(TOOL.ClientConVar) do
-	DefaultConVars["vjstool_entityscanner_"..k] = v
+	DefaultConVars["vj_tool_scanner_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
 	local function DoBuildCPanel_EntityScanner(Panel)
-		Panel:AddControl("Label", {Text = "#tool.vjstool_entityscanner.label"})
+		Panel:AddControl("Label", {Text = "#tool.vj_tool_scanner.label"})
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)

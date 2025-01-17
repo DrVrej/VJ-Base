@@ -1,5 +1,5 @@
 SWEP.Base 						= "weapon_vj_base"
-SWEP.PrintName					= "VJ NPC Controller"
+SWEP.PrintName					= "NPC Controller"
 SWEP.Author 					= "DrVrej"
 SWEP.Contact					= "http://steamcommunity.com/groups/vrejgaming"
 SWEP.Purpose					= "This weapon is made to control NPCs. Mostly VJ SNPCs"
@@ -88,7 +88,7 @@ function SWEP:PrimaryAttack()
 			return
 		end
 		if (!tr.Entity.IsVJBaseSNPC) then
-			owner:ChatPrint("NOTE: VJ NPC controller is mainly made for VJ Base SNPCs!")
+			owner:ChatPrint("NOTE: NPC Controller is mainly made for VJ Base SNPCs!")
 		end
 		local SpawnControllerObject = ents.Create("obj_vj_controller")
 		SpawnControllerObject.VJCE_Player = owner

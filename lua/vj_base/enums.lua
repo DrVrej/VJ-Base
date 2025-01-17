@@ -112,11 +112,20 @@ VJ.PROJ_COLLISION_REMOVE		= 1 -- Deal damage, paint decal, play sound, etc, and 
 VJ.PROJ_COLLISION_PERSIST		= 2 -- Deal damage, paint decal, play sound, etc, but do NOT remove the entity
 
 -- Kill icons
-VJ.KILLICON_TYPE_FONT = -2 -- Use this to make a font-based kill icon
-VJ.KILLICON_TYPE_ALIAS = -1 -- Use this to make it use another class's kill icon
-VJ.KILLICON_DEFAULT = "HUD/killicons/default"
-VJ.KILLICON_PROJECTILE = "vj_base/hud_controller/range.png"
-VJ.KILLICON_GRENADE = "vj_base/hud_controller/grenade.png"
+VJ.KILLICON_TYPE_FONT			= -2 -- Use this to make a font-based kill icon
+VJ.KILLICON_TYPE_ALIAS			= -1 -- Use this to make it use another class's kill icon
+VJ.KILLICON_DEFAULT				= "HUD/killicons/default"
+VJ.KILLICON_PROJECTILE			= "vj_base/hud_controller/range.png"
+VJ.KILLICON_GRENADE				= "vj_base/hud_controller/grenade.png"
+
+-- Colors
+VJ.COLOR_LOGO_ORANGE			= Color(244, 102, 34)
+VJ.COLOR_LOGO_ORANGE_LIGHT		= Color(255, 163, 121) -- Used to refer to VJ Base in console prints
+VJ.COLOR_SERVER					= Color(156, 241, 255, 200)
+VJ.COLOR_CLIENT					= Color(255, 241, 122, 200)
+VJ.COLOR_GREEN					= Color(0, 255, 0)
+VJ.COLOR_RED					= Color(255, 0, 0)
+VJ.COLOR_RED_LIGHT				= Color(255, 130, 130)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Tags / Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -128,6 +137,8 @@ IsVJBaseSNPC					bool		It's inherited from a VJ NPC base
 IsVJBaseSNPC_Creature			bool		It's inherited from "npc_vj_creature_base"
 IsVJBaseSNPC_Human				bool		It's inherited from "npc_vj_human_base"
 IsVJBaseSNPC_Tank				bool		It's inherited from "npc_vj_tank_base" or "npc_vj_tankg_base"
+IsVJBaseSNPC_TankChassis		bool		It's inherited from "npc_vj_tank_base"
+IsVJBaseSNPC_TankGun			bool		It's inherited from "npc_vj_tankg_base"
 IsVJBaseWeapon					bool		It's inherited from "weapon_vj_base"
 IsVJBaseProjectile				bool		It's inherited from "obj_vj_projectile_base"
 IsVJBaseCorpse					bool		It's spawned as a corpse from a VJ NPC or inherited from "obj_vj_gib"

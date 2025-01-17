@@ -1,4 +1,4 @@
-TOOL.Name = "#tool.vjstool_healthmodifier.name"
+TOOL.Name = "#tool.vj_tool_health.name"
 TOOL.Tab = "DrVrej"
 TOOL.Category = "Tools"
 TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
@@ -18,7 +18,7 @@ TOOL.ClientConVar["healthregen_delay"] = 5
 -- Just to make it easier to reset everything to default
 local DefaultConVars = {}
 for k,v in pairs(TOOL.ClientConVar) do
-	DefaultConVars["vjstool_healthmodifier_"..k] = v
+	DefaultConVars["vj_tool_health_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
@@ -35,7 +35,7 @@ if CLIENT then
 			else
 				LocalPlayer():ConCommand(k.." "..v) end
 				timer.Simple(0.05,function()
-					local GetPanel = controlpanel.Get("vjstool_healthmodifier")
+					local GetPanel = controlpanel.Get("vj_tool_health")
 					GetPanel:ClearControls()
 					DoBuildCPanel_VJ_HealthModifier(GetPanel)
 				end)
@@ -53,13 +53,13 @@ if CLIENT then
 		end
 		Panel:AddPanel(tutorial)
 		
-		Panel:AddControl("Label", {Text = "#tool.vjstool_healthmodifier.adminonly"})
-		Panel:AddControl("Slider", {Label = "#tool.vjstool_healthmodifier.sliderhealth", min = 0, max = 10000, Command = "vjstool_healthmodifier_health"})
-		Panel:AddControl("Label", {Text = "#tool.vjstool_healthmodifier.label1"})
-		Panel:AddControl("Checkbox", {Label = "#tool.vjstool_healthmodifier.togglegodmode", Command = "vjstool_healthmodifier_godmode"})
-		Panel:AddControl("Checkbox", {Label = "#tool.vjstool_healthmodifier.togglehealthregen", Command = "vjstool_healthmodifier_healthregen"})
-		Panel:AddControl("Slider", {Label = "#tool.vjstool_healthmodifier.sliderhealthregenamt", min = 0, max = 10000, Command = "vjstool_healthmodifier_healthregen_amt"})
-		Panel:AddControl("Slider", {Label = "#tool.vjstool_healthmodifier.sliderhealthregendelay", min = 0, max = 10000, Command = "vjstool_healthmodifier_healthregen_delay"})
+		Panel:AddControl("Label", {Text = "#tool.vj_tool_health.adminonly"})
+		Panel:AddControl("Slider", {Label = "#tool.vj_tool_health.sliderhealth", min = 0, max = 10000, Command = "vj_tool_health_health"})
+		Panel:AddControl("Label", {Text = "#tool.vj_tool_health.label1"})
+		Panel:AddControl("Checkbox", {Label = "#tool.vj_tool_health.togglegodmode", Command = "vj_tool_health_godmode"})
+		Panel:AddControl("Checkbox", {Label = "#tool.vj_tool_health.togglehealthregen", Command = "vj_tool_health_healthregen"})
+		Panel:AddControl("Slider", {Label = "#tool.vj_tool_health.sliderhealthregenamt", min = 0, max = 10000, Command = "vj_tool_health_healthregen_amt"})
+		Panel:AddControl("Slider", {Label = "#tool.vj_tool_health.sliderhealthregendelay", min = 0, max = 10000, Command = "vj_tool_health_healthregen_delay"})
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	function TOOL.BuildCPanel(Panel)

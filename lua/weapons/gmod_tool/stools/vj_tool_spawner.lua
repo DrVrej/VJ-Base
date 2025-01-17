@@ -1,4 +1,4 @@
-TOOL.Name = "#tool.vjstool_npcspawner.name"
+TOOL.Name = "#tool.vj_tool_spawner.name"
 TOOL.Tab = "DrVrej"
 TOOL.Category = "Tools"
 TOOL.Command = nil -- The console command to execute upon being selected in the Q menu.
@@ -24,7 +24,7 @@ TOOL.ClientConVar["nextspawntime"] = 3
 -- Just to make it easier to reset everything to default
 local DefaultConVars = {}
 for k,v in pairs(TOOL.ClientConVar) do
-	DefaultConVars["vjstool_npcspawner_"..k] = v
+	DefaultConVars["vj_tool_spawner_"..k] = v
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
@@ -36,16 +36,16 @@ if CLIENT then
 		reset:SetColor(Color(0,0,0,255))
 		reset.DoClick = function()
 			for k,v in pairs(DefaultConVars) do
-				-- Ignore "vjstool_npcspawner_spawnnpclass" because we don't want it set to "None", we need it to stay ""
-				if k == "vjstool_npcspawner_spawnnpclass" then
-					LocalPlayer():ConCommand("vjstool_npcspawner_spawnnpclass \"\"")
+				-- Ignore "vj_tool_spawner_spawnnpclass" because we don't want it set to "None", we need it to stay ""
+				if k == "vj_tool_spawner_spawnnpclass" then
+					LocalPlayer():ConCommand("vj_tool_spawner_spawnnpclass \"\"")
 				elseif v == "" then
 					LocalPlayer():ConCommand(k.." ".."None")
 				else
 					LocalPlayer():ConCommand(k.." "..v)
 				end
 				timer.Simple(0.05,function()
-					local GetPanel = controlpanel.Get("vjstool_npcspawner")
+					local GetPanel = controlpanel.Get("vj_tool_spawner")
 					GetPanel:ClearControls()
 					DoBuildCPanel_Spawner(GetPanel)
 				end)
@@ -70,29 +70,29 @@ if CLIENT then
 		Panel:AddControl("Label", {Text = "#tool.vjstool.menu.label.recommendation"})
 		local selectnpc = vgui.Create("DTextEntry")
 			selectnpc:SetEditable(false)
-			selectnpc:SetText(language.GetPhrase("#tool.vjstool_npcspawner.selectednpc")..": "..GetConVarString("vjstool_npcspawner_spawnentname").." ["..GetConVarString("vjstool_npcspawner_spawnent").."]")
+			selectnpc:SetText(language.GetPhrase("#tool.vj_tool_spawner.selectednpc")..": "..GetConVarString("vj_tool_spawner_spawnentname").." ["..GetConVarString("vj_tool_spawner_spawnent").."]")
 			selectnpc.OnGetFocus = function() LocalPlayer():ConCommand("vj_npcspawner_opennpcselect") end
 		Panel:AddItem(selectnpc)
-		Panel:AddControl("TextBox",{Label = "#tool.vjstool_npcspawner.spawnpos.forward",MaxLength = 10,Type = "Float",WaitForEnter = false,Command = "vjstool_npcspawner_spawnpos_forward"})
-		Panel:AddControl("TextBox",{Label = "#tool.vjstool_npcspawner.spawnpos.right",MaxLength = 10,Type = "Float",WaitForEnter = false,Command = "vjstool_npcspawner_spawnpos_right"})
-		Panel:AddControl("TextBox",{Label = "#tool.vjstool_npcspawner.spawnpos.up",MaxLength = 10,Type = "Float",WaitForEnter = false,Command = "vjstool_npcspawner_spawnpos_up"})
+		Panel:AddControl("TextBox",{Label = "#tool.vj_tool_spawner.spawnpos.forward",MaxLength = 10,Type = "Float",WaitForEnter = false,Command = "vj_tool_spawner_spawnpos_forward"})
+		Panel:AddControl("TextBox",{Label = "#tool.vj_tool_spawner.spawnpos.right",MaxLength = 10,Type = "Float",WaitForEnter = false,Command = "vj_tool_spawner_spawnpos_right"})
+		Panel:AddControl("TextBox",{Label = "#tool.vj_tool_spawner.spawnpos.up",MaxLength = 10,Type = "Float",WaitForEnter = false,Command = "vj_tool_spawner_spawnpos_up"})
 		local selectwep = vgui.Create("DTextEntry")
 			selectwep:SetEditable(false)
-			selectwep:SetText(language.GetPhrase("#tool.vjstool_npcspawner.selectweapon")..": "..GetConVarString("vjstool_npcspawner_weaponequipname").." ["..GetConVarString("vjstool_npcspawner_weaponequip").."]")
+			selectwep:SetText(language.GetPhrase("#tool.vj_tool_spawner.selectweapon")..": "..GetConVarString("vj_tool_spawner_weaponequipname").." ["..GetConVarString("vj_tool_spawner_weaponequip").."]")
 			selectwep.OnGetFocus = function() LocalPlayer():ConCommand("vj_npcspawner_openwepselect") end
 		Panel:AddItem(selectwep)
-		Panel:AddControl("TextBox",{Label = "#tool.vjstool_npcspawner.spawnnpclass",WaitForEnter = false,Command = "vjstool_npcspawner_spawnnpclass"})
-		Panel:AddControl("CheckBox",{Label = "#tool.vjstool_npcspawner.fritoplyallies",Command = "vjstool_npcspawner_fritoplyallies"})
-		Panel:ControlHelp("#tool.vjstool_npcspawner.label.fritoplyallies")
-		Panel:AddControl("Button",{Label = "#tool.vjstool_npcspawner.button.updatelist",Command = "vj_npcspawner_updatelist"})
-		Panel:ControlHelp("#tool.vjstool_npcspawner.label1")
+		Panel:AddControl("TextBox",{Label = "#tool.vj_tool_spawner.spawnnpclass",WaitForEnter = false,Command = "vj_tool_spawner_spawnnpclass"})
+		Panel:AddControl("CheckBox",{Label = "#tool.vj_tool_spawner.fritoplyallies",Command = "vj_tool_spawner_fritoplyallies"})
+		Panel:ControlHelp("#tool.vj_tool_spawner.label.fritoplyallies")
+		Panel:AddControl("Button",{Label = "#tool.vj_tool_spawner.button.updatelist",Command = "vj_npcspawner_updatelist"})
+		Panel:ControlHelp("#tool.vj_tool_spawner.label1")
 		local CheckList = vgui.Create("DListView")
 			CheckList:SetTooltip(false)
 			CheckList:SetSize(100, 307) -- Size
 			CheckList:SetMultiSelect(false)
-			CheckList:AddColumn("#tool.vjstool_npcspawner.header1")
-			CheckList:AddColumn("#tool.vjstool_npcspawner.header2")
-			CheckList:AddColumn("#tool.vjstool_npcspawner.header3")
+			CheckList:AddColumn("#tool.vj_tool_spawner.header1")
+			CheckList:AddColumn("#tool.vj_tool_spawner.header2")
+			CheckList:AddColumn("#tool.vj_tool_spawner.header3")
 			CheckList.OnRowSelected = function(rowIndex,row) chat.AddText(Color(0,255,0),"Double click to ",Color(255,100,0),"remove ",Color(0,255,0),"a NPC") end
 			function CheckList:DoDoubleClick(lineID,line)
 				chat.AddText(Color(0,255,0),"NPC",Color(255,100,0)," "..line:GetValue(1).." ",Color(0,255,0),"removed!")
@@ -119,16 +119,16 @@ if CLIENT then
 		for _,vLine in pairs(VJ_NPCSPAWNER_TblCurrentLines) do
 			table.insert(VJ_NPCSPAWNER_TblCurrentLinesUsable,{Entities=vLine:GetValue(4),SpawnPosition=vLine:GetValue(2),WeaponsList=vLine:GetValue(3),EntityName=vLine:GetValue(1),Relationship=vLine:GetValue(5)})
 		end
-		Panel:AddControl("Label", {Text = language.GetPhrase("#tool.vjstool_npcspawner.label2")..":"})
-		Panel:AddControl("Checkbox", {Label = "#tool.vjstool_npcspawner.toggle.spawnsound", Command = "vjstool_npcspawner_playsound"})
-		Panel:AddControl("Slider", {Label = "#tool.vjstool_npcspawner.nextspawntime",min = 0,max = 1000,Command = "vjstool_npcspawner_nextspawntime"})
+		Panel:AddControl("Label", {Text = language.GetPhrase("#tool.vj_tool_spawner.label2")..":"})
+		Panel:AddControl("Checkbox", {Label = "#tool.vj_tool_spawner.toggle.spawnsound", Command = "vj_tool_spawner_playsound"})
+		Panel:AddControl("Slider", {Label = "#tool.vj_tool_spawner.nextspawntime",min = 0,max = 1000,Command = "vj_tool_spawner_nextspawntime"})
 	end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	concommand.Add("vj_npcspawner_opennpcselect",function(ply,cmd,args)
 		local MenuFrame = vgui.Create('DFrame')
 		MenuFrame:SetSize(420, 440)
 		MenuFrame:SetPos(ScrW()*0.6, ScrH()*0.1)
-		MenuFrame:SetTitle("#tool.vjstool_npcspawner.title1")
+		MenuFrame:SetTitle("#tool.vj_tool_spawner.title1")
 		//MenuFrame:SetBackgroundBlur(true)
 		MenuFrame:SetFocusTopLevel(true)
 		MenuFrame:SetSizable(true)
@@ -143,17 +143,17 @@ if CLIENT then
 			CheckList:SetPos(10,30)
 			CheckList:SetSize(400,400) -- Size
 			CheckList:SetMultiSelect(false)
-			CheckList:AddColumn("#tool.vjstool_npcspawner.popup.header1")
-			CheckList:AddColumn("#tool.vjstool_npcspawner.popup.header2")
-			CheckList:AddColumn("#tool.vjstool_npcspawner.popup.header3")
-			CheckList.OnRowSelected = function() chat.AddText(Color(0,255,0),"#tool.vjstool_npcspawner.title1") end
+			CheckList:AddColumn("#tool.vj_tool_spawner.popup.header1")
+			CheckList:AddColumn("#tool.vj_tool_spawner.popup.header2")
+			CheckList:AddColumn("#tool.vj_tool_spawner.popup.header3")
+			CheckList.OnRowSelected = function() chat.AddText(Color(0,255,0),"#tool.vj_tool_spawner.title1") end
 			function CheckList:DoDoubleClick(lineID,line)
 				chat.AddText(Color(0,255,0),"NPC",Color(255,100,0)," "..line:GetValue(1).." ",Color(0,255,0),"selected!")
-				LocalPlayer():ConCommand("vjstool_npcspawner_spawnentname "..line:GetValue(1))
-				LocalPlayer():ConCommand("vjstool_npcspawner_spawnent "..line:GetValue(2))
+				LocalPlayer():ConCommand("vj_tool_spawner_spawnentname "..line:GetValue(1))
+				LocalPlayer():ConCommand("vj_tool_spawner_spawnent "..line:GetValue(2))
 				MenuFrame:Close()
 				timer.Simple(0.05,function()
-					local GetPanel = controlpanel.Get("vjstool_npcspawner")
+					local GetPanel = controlpanel.Get("vj_tool_spawner")
 					GetPanel:ClearControls()
 					DoBuildCPanel_Spawner(GetPanel)
 				end)
@@ -172,7 +172,7 @@ if CLIENT then
 		local MenuFrame = vgui.Create('DFrame')
 		MenuFrame:SetSize(420, 440)
 		MenuFrame:SetPos(ScrW()*0.6, ScrH()*0.1)
-		MenuFrame:SetTitle("#tool.vjstool_npcspawner.title2")
+		MenuFrame:SetTitle("#tool.vj_tool_spawner.title2")
 		//MenuFrame:SetBackgroundBlur(true)
 		MenuFrame:SetFocusTopLevel(true)
 		MenuFrame:SetSizable(true)
@@ -187,16 +187,16 @@ if CLIENT then
 			CheckList:SetPos(10,30)
 			CheckList:SetSize(400,400) -- Size
 			CheckList:SetMultiSelect(false)
-			CheckList:AddColumn("#tool.vjstool_npcspawner.popup.header1")
-			CheckList:AddColumn("#tool.vjstool_npcspawner.popup.header2")
-			CheckList.OnRowSelected = function() chat.AddText(Color(0,255,0),"#tool.vjstool_npcspawner.title2") end
+			CheckList:AddColumn("#tool.vj_tool_spawner.popup.header1")
+			CheckList:AddColumn("#tool.vj_tool_spawner.popup.header2")
+			CheckList.OnRowSelected = function() chat.AddText(Color(0,255,0),"#tool.vj_tool_spawner.title2") end
 			function CheckList:DoDoubleClick(lineID,line)
 				chat.AddText(Color(0,255,0),"Weapon",Color(255,100,0)," "..line:GetValue(1).." ",Color(0,255,0),"selected!")
-				LocalPlayer():ConCommand("vjstool_npcspawner_weaponequipname "..line:GetValue(1))
-				LocalPlayer():ConCommand("vjstool_npcspawner_weaponequip "..line:GetValue(2))
+				LocalPlayer():ConCommand("vj_tool_spawner_weaponequipname "..line:GetValue(1))
+				LocalPlayer():ConCommand("vj_tool_spawner_weaponequip "..line:GetValue(2))
 				MenuFrame:Close()
 				timer.Simple(0.05,function()
-					local GetPanel = controlpanel.Get("vjstool_npcspawner")
+					local GetPanel = controlpanel.Get("vj_tool_spawner")
 					GetPanel:ClearControls()
 					DoBuildCPanel_Spawner(GetPanel)
 				end)
@@ -212,23 +212,23 @@ if CLIENT then
 	end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	concommand.Add("vj_npcspawner_updatelist",function(ply,cmd,args)
-		local spawnent = string.lower(GetConVarString("vjstool_npcspawner_spawnent"))
-		local spawnentname = GetConVarString("vjstool_npcspawner_spawnentname")
-		local spawnposfor = GetConVarString("vjstool_npcspawner_spawnpos_forward")
-		local spawnposright = GetConVarString("vjstool_npcspawner_spawnpos_right")
-		local spawnposup = GetConVarString("vjstool_npcspawner_spawnpos_up")
-		local spawnnpclass = GetConVarString("vjstool_npcspawner_spawnnpclass")
-		local spawnfritoplyallies = GetConVarString("vjstool_npcspawner_fritoplyallies")
-		local spawnequip = string.lower(GetConVarString("vjstool_npcspawner_weaponequip"))
+		local spawnent = string.lower(GetConVarString("vj_tool_spawner_spawnent"))
+		local spawnentname = GetConVarString("vj_tool_spawner_spawnentname")
+		local spawnposfor = GetConVarString("vj_tool_spawner_spawnpos_forward")
+		local spawnposright = GetConVarString("vj_tool_spawner_spawnpos_right")
+		local spawnposup = GetConVarString("vj_tool_spawner_spawnpos_up")
+		local spawnnpclass = GetConVarString("vj_tool_spawner_spawnnpclass")
+		local spawnfritoplyallies = GetConVarString("vj_tool_spawner_fritoplyallies")
+		local spawnequip = string.lower(GetConVarString("vj_tool_spawner_weaponequip"))
 		table.insert(VJ_NPCSPAWNER_TblCurrentValues,{EntityName=spawnentname, Entities=spawnent, SpawnPosition=Vector(spawnposfor, spawnposright, spawnposup), WeaponsList=spawnequip, Relationship={Class = spawnnpclass, FriToPlyAllies = spawnfritoplyallies}})
-		local GetPanel = controlpanel.Get("vjstool_npcspawner")
+		local GetPanel = controlpanel.Get("vj_tool_spawner")
 		GetPanel:ClearControls()
 		DoBuildCPanel_Spawner(GetPanel)
 	end)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 	net.Receive("vj_npcspawner_cl_create", function(len, ply)
 		local wep = LocalPlayer():GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcspawner" then
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_spawner" then
 			local svpos = net.ReadVector()
 			local svclicktype = net.ReadString()
 			local convartbl = {}
@@ -255,13 +255,13 @@ else -- If SERVER
 	--
 	net.Receive("vj_npcspawner_sv_create", function(len, ply)
 		local wep = ply:GetActiveWeapon()
-		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vjstool_npcspawner" then
+		if wep:IsValid() && wep:GetClass() == "gmod_tool" && wep:GetMode() == "vj_tool_spawner" then
 			local convartbl = net.ReadTable()
 			local svpos = net.ReadVector()
 			local svgetlines = net.ReadType()
 			local svgettype = net.ReadString()
 			if !IsValid(ply) then return false end
-			if table.IsEmpty(svgetlines) then ply:ChatPrint("#tool.vjstool_npcspawner.print.nothingspawn") return false end
+			if table.IsEmpty(svgetlines) then ply:ChatPrint("#tool.vj_tool_spawner.print.nothingspawn") return false end
 			local spawner = ents.Create("obj_vj_spawner_base")
 			spawner.EntitiesToSpawn = {}
 			spawner:SetPos(svpos)
@@ -278,10 +278,10 @@ else -- If SERVER
 				table.insert(spawner.EntitiesToSpawn,{SpawnPosition=v.SpawnPosition, Entities={v.Entities}, WeaponsList={v.WeaponsList}, NPC_Class = v.Relationship.Class, FriToPlyAllies = tobool(v.Relationship.FriToPlyAllies)})
 			end
 			//spawner.EntitiesToSpawn = {entitiestospawntbl}
-			if convartbl.vjstool_npcspawner_playsound == 1 then
+			if convartbl.vj_tool_spawner_playsound == 1 then
 				spawner.SoundTbl_SpawnEntity = spawnSounds
 			end
-			spawner.TimedSpawn_Time = convartbl.vjstool_npcspawner_nextspawntime //GetConVarNumber("vjstool_npcspawner_nextspawntime")
+			spawner.TimedSpawn_Time = convartbl.vj_tool_spawner_nextspawntime //GetConVarNumber("vj_tool_spawner_nextspawntime")
 			if svgettype == "RightClick" then spawner.SingleSpawner = true end
 			spawner:SetCreator(ply)
 			spawner:Spawn()

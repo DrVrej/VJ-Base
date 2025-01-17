@@ -12,14 +12,7 @@
 --------------------------------------------------*/
 AddCSLuaFile()
 
-local colorVJBase = Color(255, 163, 121)
-local colorGMod_Server = Color(156, 241, 255, 200)
-local colorGMod_Client = Color(255, 241, 122, 200)
-local colorSuccess = Color(0, 255, 0)
-local colorError = Color(255, 0, 0)
-local colorErrorLight = Color(255, 130, 130)
-
-if CLIENT then MsgC(colorVJBase, "VJ Base: ", colorGMod_Client, "Initializing client files...\n") else MsgC(colorVJBase, "VJ Base: ", colorGMod_Server, "Initializing server files...\n") end
+if CLIENT then MsgC(Color(255, 163, 121), "VJ Base: ", Color(255, 241, 122, 200), "Initializing client files...\n") else MsgC(Color(255, 163, 121), "VJ Base: ", Color(156, 241, 255, 200), "Initializing server files...\n") end
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Global Variables ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -132,9 +125,9 @@ COND_WEAPON_SIGHT_OCCLUDED = 45
 AddCSLuaFile("autorun/vj_controls.lua")
 
 	-- ====== Core ====== ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+AddCSLuaFile("vj_base/enums.lua")
 AddCSLuaFile("vj_base/convars.lua")
 AddCSLuaFile("vj_base/debug.lua")
-AddCSLuaFile("vj_base/enums.lua")
 AddCSLuaFile("vj_base/funcs.lua")
 AddCSLuaFile("vj_base/hooks.lua")
 AddCSLuaFile("vj_base/meta.lua")
@@ -222,7 +215,7 @@ VJ.AddWeapon("9mm Pistol", "weapon_vj_9mmpistol", false, spawnCategory)
 VJ.AddWeapon(".357 Magnum", "weapon_vj_357", false, spawnCategory)
 VJ.AddWeapon("AR2", "weapon_vj_ar2", false, spawnCategory)
 VJ.AddWeapon("Blaster", "weapon_vj_blaster", false, spawnCategory)
-VJ.AddWeapon("VJ NPC Controller", "weapon_vj_npccontroller", false, spawnCategory)
+VJ.AddWeapon("NPC Controller", "weapon_vj_controller", false, spawnCategory)
 VJ.AddWeapon("Flare Gun", "weapon_vj_flaregun", false, spawnCategory)
 VJ.AddWeapon("SMG1", "weapon_vj_smg1", false, spawnCategory)
 VJ.AddWeapon("SPAS-12", "weapon_vj_spas12", false, spawnCategory)
@@ -262,14 +255,14 @@ if SERVER then
 		VJ_Nodegraph = vj_ai_nodegraph.New()
 		-- If it failed to read the nodegraph, wait and try again in case nodegraph file hasn't generated yet
 		if VJ_Nodegraph:GetNodegraph().Version == -1 then
-			MsgC(colorVJBase, "VJ Base [AI Nodegraph module]: ", colorErrorLight, "Failed to read nodegraph, will attempt again soon...\n")
+			MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base [AI Nodegraph module]: ", VJ.COLOR_RED_LIGHT, "Failed to read nodegraph, will attempt again soon...\n")
 			timer.Simple(4, function()
-				MsgC(colorVJBase, "VJ Base [AI Nodegraph module]: ", colorGMod_Server, "Running second read attempt...\n")
+				MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base [AI Nodegraph module]: ", VJ.COLOR_SERVER, "Running second read attempt...\n")
 				VJ_Nodegraph.Data = VJ_Nodegraph:ReadNodegraph()
 				if VJ_Nodegraph:GetNodegraph().Version == -1 then
-					MsgC(colorVJBase, "VJ Base [AI Nodegraph module]: ", colorError, "Second read attempt was failure, aborting!\n")
+					MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base [AI Nodegraph module]: ", VJ.COLOR_RED, "Second read attempt was failure, aborting!\n")
 				else
-					MsgC(colorVJBase, "VJ Base [AI Nodegraph module]: ", colorSuccess, "Second read attempt was successful!\n")
+					MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base [AI Nodegraph module]: ", VJ.COLOR_GREEN, "Second read attempt was successful!\n")
 				end
 			end)
 		end
@@ -277,7 +270,7 @@ if SERVER then
 elseif CLIENT then
 	hook.Add("AddToolMenuTabs", "VJ_CREATETOOLTAB", function()
 		spawnmenu.AddToolTab("DrVrej", "DrVrej", "vj_base/icons/vrejgaming.png") // "icon16/plugin.png"
-		spawnmenu.AddToolCategory("DrVrej", "Main Menu", "#vjbase.menu.tabs.mainmenu")
+		spawnmenu.AddToolCategory("DrVrej", "Main", "#vjbase.menu.tabs.mainmenu")
 		spawnmenu.AddToolCategory("DrVrej", "NPCs", "#vjbase.menu.tabs.settings.npc")
 		spawnmenu.AddToolCategory("DrVrej", "Weapons", "#vjbase.menu.tabs.settings.weapon")
 		spawnmenu.AddToolCategory("DrVrej", "HUDs", "#vjbase.menu.tabs.settings.hud")
@@ -349,14 +342,14 @@ if (SLVBase) then
 				local labelTitle = vgui.Create("DLabel", frame)
 				labelTitle:SetPos(130, 30)
 				labelTitle:SetText("CONFLICTION DETECTED!")
-				labelTitle:SetFont("VJFont_Trebuchet24_Large")
+				labelTitle:SetFont("VJBaseLarge")
 				labelTitle:SetTextColor(Color(255, 128, 128))
 				labelTitle:SizeToContents()
 				
 				local label1 = vgui.Create("DLabel", frame)
 				label1:SetPos(70, 70)
 				label1:SetText("VJ Base is being overridden by another addon!")
-				label1:SetFont("VJFont_Trebuchet24_Medium")
+				label1:SetFont("VJBaseMedium")
 				label1:SizeToContents()
 				
 				local label2 = vgui.Create("DLabel", frame)
@@ -379,7 +372,7 @@ if (SLVBase) then
 				end
 			elseif SERVER then
 				timer.Create("VJBASE_ERROR_CONFLICT", 5, 0, function()
-					MsgC(colorVJBase, "VJ Base: ", colorError, "Error! Incompatible addon detected! Check this link for list of incompatible addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108\n")
+					MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base: ", VJ.COLOR_RED, "Error! Incompatible addon detected! Check this link for list of incompatible addons: http://steamcommunity.com/sharedfiles/filedetails/?id=1129493108\n")
 				end)
 			end
 		end
@@ -406,4 +399,4 @@ VJ_DestroyCombineTurret		= VJ.DamageSpecialEnts
 util.VJ_SphereDamage		= VJ.ApplyRadiusDamage
 -- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!!
 ---------------------------------------------------------------------------------------------------------------------------------------------
-if CLIENT then MsgC(colorVJBase, "VJ Base: ", colorGMod_Client, "Client files initialized!\n") else MsgC(colorVJBase, "VJ Base: ", colorGMod_Server, "Server files initialized!\n") end
+if CLIENT then MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base: ", VJ.COLOR_CLIENT, "Client files initialized!\n") else MsgC(VJ.COLOR_LOGO_ORANGE_LIGHT, "VJ Base: ", VJ.COLOR_SERVER, "Server files initialized!\n") end
