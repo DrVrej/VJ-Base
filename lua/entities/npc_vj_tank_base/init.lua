@@ -252,10 +252,11 @@ function ENT:OnThinkActive()
 	local myPos = self:GetPos()
 	local tr = util.TraceLine({start = myPos + self:GetUp() * 20, endpos = myPos + self:GetUp() * -50, filter = self})
 	if self.VJ_DEBUG then
-		debugoverlay.Box(tr.StartPos, Vector(-2, -2, -2), Vector(2, 2, 2), 2, Color(0, 255, 0))
-		debugoverlay.Box(myPos + self:GetUp()*-20, Vector(-2, -2, -2), Vector(2, 2, 2), 2, Color(0, 255, 0))
-		debugoverlay.Box(tr.HitPos, Vector(-2, -2, -2), Vector(2, 2, 2), 2, Color(255, 0, 0))
-		print("Tank Status: ", self.Tank_Status, tr.HitNormal)
+		debugoverlay.Cross(tr.StartPos, 4, 2, VJ.COLOR_GREEN, true)
+		debugoverlay.Cross(myPos + self:GetUp() * -50, 4, 2, VJ.COLOR_YELLOW, true)
+		debugoverlay.Cross(tr.HitPos, 4, 2, VJ.COLOR_RED, true)
+		debugoverlay.Line(tr.StartPos, tr.HitPos, 2, nil, true)
+		VJ.DEBUG_Print(self, false, "Tank Status = ", self.Tank_Status, " | Trace HitNormal = ", tr.HitNormal)
 	end
 	if tr.Hit && self.Tank_Status == 0 then
 		local phys = self:GetPhysicsObject()
@@ -296,7 +297,7 @@ function ENT:OnThinkActive()
 							driveSpeed = -driveSpeed
 						end
 						
-						//print("Driving Speed", driveSpeed)
+						if self.VJ_DEBUG then VJ.DEBUG_Print(self, false, "Driving Speed = ", driveSpeed) end
 						phys:SetVelocity(moveVel:GetNormal() * driveSpeed)
 						hasMoved = true
 					end

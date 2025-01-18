@@ -65,7 +65,7 @@ end*/
 -----------------------------------------------------------]]
 -- Apply directly to the entity to use it
 --function metaEntity:HandlePerceivedRelationship(otherEnt, distance, isFriendly)
---	print("HandlePerceivedRelationship ", otherEnt, distance, isFriendly)
+--	VJ.DEBUG_Print(self, "HandlePerceivedRelationship", otherEnt, distance, isFriendly)
 --	return
 --end
 --[[---------------------------------------------------------
@@ -77,7 +77,7 @@ end*/
 -----------------------------------------------------------]]
 -- Apply directly to the entity to use it
 --function metaEntity:CanBeEngaged(otherEnt, distance)
---	print("CanBeEngaged ", otherEnt, distance)
+--	VJ.DEBUG_Print(self, "CanBeEngaged", otherEnt, distance)
 --	return true
 --end
 --[[---------------------------------------------------------

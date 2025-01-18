@@ -8,7 +8,54 @@ if !VJ then VJ = {} end -- If VJ isn't initialized, initialize it!
 -- Localized static values
 local IsValid = IsValid
 local defAng = Angle(0, 0, 0)
-local colorRed = Color(255, 0, 0)
+local MsgC = MsgC
+local colorEnt = Color(255, 255, 255, 150)
+--------------------------------------------------------------------------------------------------------------------------------------------
+--[[---------------------------------------------------------
+	Prints the giving arguments in a organized fashion
+		- ent = Entity that the debug is being called from | DEFAULT = NULL
+		- name = Name of the call, usually the name of the function | DEFAULT = false
+		- type = Type of debug | If it doesn't match one of the following types then it will just act as another print value
+			-> "error" | "warn"
+-----------------------------------------------------------]]
+function VJ.DEBUG_Print(ent, name, type, ...)
+	-- Check if a name was given
+	local printName = ""
+	if name then
+		printName = " | " .. name
+	end
+	
+	-- Check if a type was given
+	local colorType = VJ.COLOR_SERVER
+	local typeIsValid = false -- Was a specific type found?
+    if type == "error" then
+		typeIsValid = true
+        colorType = VJ.COLOR_RED
+    elseif type == "warn" then
+		typeIsValid = true
+        colorType = VJ.COLOR_ORANGE
+	elseif CLIENT then
+		colorType = VJ.COLOR_CLIENT
+    end
+	
+	-- Unpack the arguments
+    local args = {...}
+	local printTbl = {}
+	if !typeIsValid then
+		table.insert(args, 1, type)
+	end
+    for _, arg in ipairs(args) do
+		if isstring(arg) then
+        	table.insert(printTbl, " " .. arg .. " ")
+		else
+        	table.insert(printTbl, arg)
+		end
+    end
+	
+	-- Output
+    MsgC(colorEnt, ent, printName, " : ", colorType, unpack(printTbl))
+	MsgC(colorType, "\n")
+end
 --------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Creates a test entity, useful to test trace or hit positions
@@ -29,7 +76,7 @@ function VJ.DEBUG_TempEnt(pos, ang, color, time, mdl)
 	ent:SetModel(mdl or "models/hunter/blocks/cube025x025x025.mdl")
 	ent:SetPos(pos)
 	ent:SetAngles(ang or defAng)
-	ent:SetColor(color or colorRed)
+	ent:SetColor(color or VJ.COLOR_RED)
 	ent:Spawn()
 	ent:Activate()
 	timer.Simple(time or 3, function() if IsValid(ent) then ent:Remove() end end)

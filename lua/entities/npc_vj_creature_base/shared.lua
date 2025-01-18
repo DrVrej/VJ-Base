@@ -26,7 +26,7 @@ function ENT:MatFootStepQCEvent(data)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 //function ENT:FireAnimationEvent(pos, ang, event, name)
-	//print(pos, ang, event, name)
+	//VJ.DEBUG_Print(self, "FireAnimationEvent", pos, ang, event, name)
 //end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then

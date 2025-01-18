@@ -353,7 +353,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 			-- 4. Apply further adjustments if base detects that it won't hit the target (Usually happens when target is too far for the given arc strength)
 		local verticalAdjustment = math.abs(startPos.z - targetPos.z) + (applyDist and math.Clamp(strength, -dist, dist) or strength) //+ math.Clamp(strength, -dist, dist / 4) //midPoint:Length() * (strength / (startPos:Distance(targetPos)))
 		if dist > (strength * 9.5) && dist > 2000 then -- Bulletin #4 above
-			if self.VJ_DEBUG then print(self, "CalculateTrajectory: Target is too far for the given arc strength, applying adjustment to avoid failure!") end
+			if self.VJ_DEBUG then VJ.DEBUG_Print(self, "CalculateTrajectory", "warn", "Target is too far for the given arc strength, applying adjustment to avoid failure!") end
 			verticalAdjustment = verticalAdjustment + (dist * 0.1) //((dist * 0.001) * 30) + strength^(dist * 0.0003)
 		end
 		
@@ -365,7 +365,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 		})
 		//midPoint = tr.HitPos
 		if tr.Fraction != 1 then
-			if self.VJ_DEBUG then print(self, "CalculateTrajectory: Blocked by ceiling, decreasing arc to avoid hitting it!"); debugoverlay.Text(tr.HitPos, "Ceiling tr.HitPos", 5, false) end
+			if self.VJ_DEBUG then VJ.DEBUG_Print(self, "CalculateTrajectory", "warn", "Blocked by ceiling, decreasing arc to avoid hitting it!"); debugoverlay.Cross(tr.HitPos, 6, 5, VJ.COLOR_RED); debugoverlay.Text(tr.HitPos, "Ceiling - tr.HitPos", 5, false) end
 			midPoint = tr.HitPos - self:GetUp() * 25
 		else
 			midPoint.z = midPoint.z + verticalAdjustment
@@ -373,7 +373,7 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 		
 		-- Failed to find enough trajectory space | EX: There is an object between the midPoint and targetPos
 		if (midPoint.z < startPos.z || midPoint.z < targetPos.z) then
-			if self.VJ_DEBUG then print(self, "CalculateTrajectory: Not enough space, applying fail case velocity!") end
+			if self.VJ_DEBUG then VJ.DEBUG_Print(self, "CalculateTrajectory", "warn", "Not enough space, applying fail case velocity!") end
 			midPoint = targetPos -- Fail case, will still fail in many situations but is better than nothing!
 		end
 		
@@ -390,12 +390,16 @@ function VJ.CalculateTrajectory(self, target, algorithmType, startPos, targetPos
 		predictProjSpeed = result:Length() * 0.9
 		
 		if self.VJ_DEBUG then
-			if time1 < 0.1 then print(self, "CalculateTrajectory: Probably failed because the trajectory time is below 0.1!") end
+			if time1 < 0.1 then VJ.DEBUG_Print(self, "CalculateTrajectory", "error", "Probably failed because the trajectory time is below 0.1!") end
 			local apexPos = startPos + (result * time1) -- The peak of the velocity
 			apexPos.z = midPoint.z
-			debugoverlay.Cross(apexPos, 8, 5, Color(255, 0, 0))
-			debugoverlay.Text(midPoint, "Apex", 5, false)
-			debugoverlay.Cross(midPoint, 8, 5, Color(0, 255, 0))
+			debugoverlay.Cross(startPos, 6, 5, VJ.COLOR_GREEN)
+			debugoverlay.Text(startPos, "startPos", 5, false)
+			//debugoverlay.Cross(targetPos, 6, 5, VJ.COLOR_YELLOW)
+			//debugoverlay.Text(targetPos, "targetPos", 5, false)
+			debugoverlay.Cross(apexPos, 6, 5, VJ.COLOR_RED)
+			debugoverlay.Text(apexPos, "apexPos", 5, false)
+			debugoverlay.Cross(midPoint, 6, 5, VJ.COLOR_ORANGE)
 			debugoverlay.Text(midPoint, "midPoint", 5, false)
 		end
 	elseif algorithmType == "CurveOld" then

@@ -278,7 +278,7 @@ local vecZ50 = Vector(0, 0, -50)
 --
 function ENT:OnEat(status, statusData)
 	-- The following code is a ideal example based on Half-Life 1 Zombie
-	//print(self, "Eating Status: ", status, statusData)
+	//VJ.DEBUG_Print(self, "OnEat", status, statusData)
 	if status == "CheckFood" then
 		return true //statusData.owner.BloodData && statusData.owner.BloodData.Color == VJ.BLOOD_COLOR_RED
 	elseif status == "BeginEating" then
@@ -363,7 +363,7 @@ function ENT:MaintainIdleAnimation(force)
 	//bit.band(self:GetSequenceInfo(self:GetSequence()).flags, 1) == 0 -- Checks if animation is none-looping
 	//print(self:GetIdealActivity(), self:GetActivity(), self:GetSequenceName(self:GetIdealSequence()), self:GetSequenceName(self:GetSequence()), self:IsSequenceFinished(), self:GetInternalVariable("m_bSequenceLoops"), self:GetCycle())
 	if force then
-		//print("MaintainIdleAnimation - force")
+		//VJ.DEBUG_Print(self, "MaintainIdleAnimation", "force")
 		self.LastAnimationSeed = 0
 		self:ResetIdealActivity(ACT_IDLE)
 		self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L2987
@@ -371,7 +371,7 @@ function ENT:MaintainIdleAnimation(force)
 	elseif self:GetIdealActivity() == ACT_IDLE && self:GetActivity() == ACT_IDLE then -- Check both ideal and current to make sure we are 100% playing an idle, otherwise transitions, certain movements, and animations will break!
 		-- If animation has finished OR idle animation has changed then play a new idle!
 		if (self:GetCycle() >= 0.98) or (self:TranslateActivity(ACT_IDLE) != self:GetSequenceActivity(self:GetIdealSequence())) then
-			//print("MaintainIdleAnimation - auto")
+			//VJ.DEBUG_Print(self, "MaintainIdleAnimation", "auto")
 			self.LastAnimationSeed = 0
 			self:ResetIdealActivity(ACT_IDLE)
 			self:SetCycle(0) -- This is to make sure this destructive code doesn't override it: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L2987
@@ -655,7 +655,6 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 				//self:RemoveAllGestures() -- Disallows the ability to layer multiple gestures!
 			end
 			local gesture = isSequence and self:AddGestureSequence(self:LookupSequence(animation)) or self:AddGesture(animation)
-			//print(gesture)
 			if gesture != -1 then
 				self:SetLayerPriority(gesture, 1) // 2
 				//self:SetLayerWeight(gesture, 1)
@@ -909,7 +908,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 	local updateTurn = true -- An override to disallow applying the angle now
 	-- Enemy facing
 	if target == "Enemy" then
-		//print("Face: ENEMY")
+		//VJ.DEBUG_Print(self, "SetTurnTarget", "ENEMY")
 		self:ResetTurnTarget()
 		local ene = self:GetEnemy()
 		-- If enemy is valid do normal facing otherwise return my angles because we didn't actually face an enemy
@@ -924,7 +923,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 		end
 	-- Vector facing
 	elseif isvector(target) then
-		//print("Face: VECTOR")
+		//VJ.DEBUG_Print(self, "SetTurnTarget", "VECTOR")
 		self:ResetTurnTarget()
 		resultAng = self:GetFaceAngle((target - self:GetPos()):Angle())
 		if faceTime != 0 then -- 0 = Face only this frame, so don't actually set turning data!
@@ -933,7 +932,7 @@ function ENT:SetTurnTarget(target, faceTime, stopOnFace, visibleOnly)
 		end
 	-- Entity facing
 	elseif IsValid(target) then
-		//print("Face: ENTITY")
+		//VJ.DEBUG_Print(self, "SetTurnTarget", "ENTITY")
 		self:ResetTurnTarget()
 		resultAng = self:GetFaceAngle((target:GetPos() - self:GetPos()):Angle())
 		if faceTime != 0 then -- 0 = Face only this frame, so don't actually set turning data!
@@ -982,7 +981,7 @@ end
 --
 function ENT:OverrideMoveFacing(flInterval, move)
 	if !self.DisableFootStepSoundTimer then self:FootStepSoundCode() end
-	//print("OverrideMoveFacing", flInterval)
+	//VJ.DEBUG_Print(self, "OverrideMoveFacing", flInterval)
 	//PrintTable(move)
 	
 	-- Maintain turning
@@ -1457,20 +1456,20 @@ function ENT:IsJumpLegal(startPos, apex, endPos)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnChangeActivity(newAct)
-	//print(newAct)
+	//VJ.DEBUG_Print(self, "OnChangeActivity", newAct)
 	//if newAct == ACT_TURN_LEFT or newAct == ACT_TURN_RIGHT then
 		//self.NextIdleStandTime = CurTime() + VJ.AnimDuration(self, self:GetSequenceName(self:GetSequence()))
 	//end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:KeyValue(key, value)
-	//print(self, key, value)
+	//VJ.DEBUG_Print(self, "KeyValue", key, value)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 // lua_run PrintTable(Entity(1):GetEyeTrace().Entity:GetTable())
 --
 function ENT:OnRestore()
-	//print("RELOAD:", self)
+	//VJ.DEBUG_Print(self, "OnRestore")
 	self:StopMoving()
 	self:ResetMoveCalc()
 	-- Reset the current schedule because often times GMod attempts to run it before AI task modules have loaded!
@@ -1488,7 +1487,7 @@ function ENT:OnRestore()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:AcceptInput(key, activator, caller, data)
-	//print(self, key, activator, caller, data)
+	//VJ.DEBUG_Print(self, "AcceptInput", key, activator, caller, data)
 	local funcCustom = self.OnInput; if funcCustom then funcCustom(self, key, activator, caller, data) end
 	if key == "Use" then
 		-- 1. Add a delay so the game registers other key presses
@@ -1509,12 +1508,12 @@ function ENT:AcceptInput(key, activator, caller, data)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:HandleAnimEvent(ev, evTime, evCycle, evType, evOptions)
-	//print(ev, evTime, evCycle, evType, evOptions)
+	//VJ.DEBUG_Print(self, "HandleAnimEvent", ev, evTime, evCycle, evType, evOptions)
 	local funcCustom = self.OnAnimEvent; if funcCustom then funcCustom(self, ev, evTime, evCycle, evType, evOptions) end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Touch(entity)
-	if self.VJ_DEBUG && GetConVar("vj_npc_debug_touch"):GetInt() == 1 then print(self:GetClass() .. " : Touched --> " .. entity:GetClass()) end
+	if self.VJ_DEBUG && GetConVar("vj_npc_debug_touch"):GetInt() == 1 then VJ.DEBUG_Print(self, "Touch", entity:GetClass()) end
 	local funcCustom = self.OnTouch; if funcCustom then funcCustom(self, entity) end
 	if !VJ_CVAR_AI_ENABLED or self.VJ_IsBeingControlled then return end
 	
@@ -1895,7 +1894,7 @@ function ENT:DoReadyAlert()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:DoEnemyAlert(ent)
-	//print("DoEnemyAlert - ", self, ent, self:GetEnemy(), self.Alerted)
+	//VJ.DEBUG_Print(self, "DoEnemyAlert", ent, self:GetEnemy(), self.Alerted)
 	if !IsValid(ent) then return end
 	self.LatestEnemyDistance = self:GetPos():Distance(ent:GetPos())
 	if self.Alerted == NPC_ALERT_STATE_ENEMY then return end
@@ -1935,7 +1934,7 @@ function ENT:MaintainRelationships()
 	local posEnemies = self.CurrentPossibleEnemies
 	if posEnemies == nil then return false end
 	//print("---------------------------------------")
-	//print(self, "MaintainRelationships - CurrentPossibleEnemies:")
+	//VJ.DEBUG_Print(self, "MaintainRelationships")
 	//PrintTable(posEnemies)
 	//print("----------")
 	

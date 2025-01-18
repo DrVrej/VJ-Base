@@ -51,7 +51,7 @@ function ENT:SCHEDULE_COVER_ENEMY(moveType, customFunc)
 	schedule:EngTask(moveType or "TASK_RUN_PATH", 0)
 	schedule:EngTask("TASK_WAIT_FOR_MOVEMENT", 0)
 	schedule.RunCode_OnFail = function()
-		//print("Cover from enemy failed!")
+		//VJ.DEBUG_Print(self, "SCHEDULE_COVER_ENEMY", "warn", "Failed to find cover!")
 		local schedFail = vj_ai_schedule.New("SCHEDULE_COVER_ENEMY_FAIL")
 		schedFail:EngTask("TASK_SET_ROUTE_SEARCH_TIME", 2)
 		schedFail:EngTask("TASK_GET_PATH_TO_RANDOM_NODE", 500)
@@ -107,7 +107,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:TASK_VJ_PLAY_ACTIVITY(taskStatus, data)
 	if taskStatus == TASKSTATUS_NEW then
-		//print("TASK_VJ_PLAY_ACTIVITY: Start!", data.duration)
+		//VJ.DEBUG_Print(self, "TASK_VJ_PLAY_ACTIVITY", "Start -", data.duration)
 		local playbackRate = data.playbackRate or self.TruePlaybackRate -- Since setting a new animation resets the playback rate, make sure to capture it before anything!
 		self:ResetIdealActivity(data.animation)
 		self:SetActivity(data.animation) -- Avoids "MaintainActivity" from selecting another sequence from the activity (if it has multiple sequences tied to it)
@@ -120,12 +120,12 @@ function ENT:TASK_VJ_PLAY_ACTIVITY(taskStatus, data)
 	else
 		//self:AutoMovement(self:GetAnimTimeInterval())
 		if (CurTime() > data.animEndTime) or (self:IsSequenceFinished() && self:GetSequence() == self:GetIdealSequence()) then
-			//print("TASK_VJ_PLAY_ACTIVITY: Stop!")
+			//VJ.DEBUG_Print(self, "TASK_VJ_PLAY_ACTIVITY", "Stop")
 			if data.playbackRate then self:SetPlaybackRate(self.TruePlaybackRate, true) end
 			self:TaskComplete()
 			return
 		else
-			//print("TASK_VJ_PLAY_ACTIVITY: Run!")
+			//VJ.DEBUG_Print(self, "TASK_VJ_PLAY_ACTIVITY", "Run")
 			if data.playbackRate then self:SetPlaybackRate(data.playbackRate, true) end
 		end
 	end
@@ -133,19 +133,19 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:TASK_VJ_PLAY_SEQUENCE(taskStatus, data)
 	if taskStatus == TASKSTATUS_NEW then
-		//print("TASK_VJ_PLAY_SEQUENCE: Start!", data.duration)
+		//VJ.DEBUG_Print(self, "TASK_VJ_PLAY_SEQUENCE", "Start -", data.duration)
 		local playbackRate = data.playbackRate or self.TruePlaybackRate -- Since setting a new animation resets the playback rate, make sure to capture it before anything!
 		data.seqID = self:PlaySequence(data.animation)
 		self:SetPlaybackRate(playbackRate, true)
 		data.animEndTime = CurTime() + data.duration
 	else
 		if (CurTime() > data.animEndTime) or (self:IsSequenceFinished()) or (data.seqID != self:GetSequence()) then
-			//print("TASK_VJ_PLAY_SEQUENCE: Stop!")
+			//VJ.DEBUG_Print(self, "TASK_VJ_PLAY_SEQUENCE", "Stop")
 			if data.playbackRate then self:SetPlaybackRate(self.TruePlaybackRate, true) end
 			self:TaskComplete()
 			return
 		else
-			//print("TASK_VJ_PLAY_SEQUENCE: Run!")
+			//VJ.DEBUG_Print(self, "TASK_VJ_PLAY_SEQUENCE", "Run")
 			if data.playbackRate then self:SetPlaybackRate(data.playbackRate, true) end
 		end
 	end
@@ -205,10 +205,10 @@ end
 		- failCode = 
 -----------------------------------------------------------]]
 function ENT:OnTaskFailed(failCode, failString)
-	//print("OnTaskFailed: ", failCode, failString)
+	//VJ.DEBUG_Print(self, "OnTaskFailed", "warn", failCode, failString)
 	local curSchedule = self.CurrentSchedule
 	if curSchedule then
-		//print("Do run fail")
+		//VJ.DEBUG_Print(self, "OnTaskFailed", "warn", "Run fail")
 		-- Give it a very small delay to let the engine set its values before we continue
 		timer.Simple(0.05, function()
 			if IsValid(self) then
@@ -237,7 +237,7 @@ function ENT:OnTaskFailed(failCode, failString)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnMovementFailed()
-	//print("VJ Base: Movement Failed! "..self:GetName())
+	//VJ.DEBUG_Print(self, "OnMovementFailed", "warn")
 	-- Now handled in `OnTaskFailed`
 	/*local curSchedule = self.CurrentSchedule
 	if curSchedule != nil then
@@ -254,14 +254,16 @@ function ENT:OnMovementFailed()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnMovementComplete()
-	//print("Movement completed!")
+	//VJ.DEBUG_Print(self, "OnMovementComplete")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnStateChange(oldState, newState)
-	//print("OnStateChange - ", self, ": ", oldState, newState)
+	//VJ.DEBUG_Print(self, "OnStateChange", oldState, newState)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:TranslateNavGoal(ent, goal)
+	//VJ.DEBUG_Print(self, "TranslateNavGoal", ent, goal)
+	//VJ.DEBUG_TempEnt(goal)
 	-- For "GOALTYPE_ENEMY" only
 		-- Called every 0.1 seconds from here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L5790
 		-- Use "GetPos", otherwise it will use "GetEnemyLastKnownPos", which is often incorrect location especially when sight is blocked!
@@ -275,8 +277,6 @@ function ENT:TranslateNavGoal(ent, goal)
 		end
 		return ent:GetPos()
 	end
-	//print("TranslateNavGoal", ent, goal)
-	//VJ.DEBUG_TempEnt(goal)
 	//return goal + ent:GetForward()*math.random(-100, 100)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -299,7 +299,7 @@ function ENT:StartSchedule(schedule)
 		end
 	end
 	self:ClearCondition(COND_TASK_FAILED)
-	//print("StartSchedule:", schedule.Name)
+	//VJ.DEBUG_Print(self, "StartSchedule", schedule.Name)
 	
 	-- This stops movements from running if another NPC is stuck in it
 	-- Pros:
@@ -375,7 +375,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopCurrentSchedule()
 	local schedule = self.CurrentSchedule
-	//print("StopCurrentSchedule", schedule)
+	//VJ.DEBUG_Print(self, "StopCurrentSchedule", schedule)
 	if schedule then
 		timer.Remove("timer_pauseattacks_reset"..self:EntIndex())
 		self.NextIdleTime = 0
@@ -389,7 +389,7 @@ function ENT:StopCurrentSchedule()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:ScheduleFinished(schedule)
-	//print("ScheduleFinished", schedule)
+	//VJ.DEBUG_Print(self, "ScheduleFinished", schedule)
 	if schedule then
 		-- Handle "RunCode_OnFinish"
 		if !schedule.AlreadyRanCode_OnFinish && schedule.RunCode_OnFinish != nil then
@@ -423,7 +423,7 @@ function ENT:SetTask(task)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:NextTask(schedule)
-	//print("Running NextTask")
+	//VJ.DEBUG_Print(self, "NextTask", schedule)
 	self.CurrentTaskID = self.CurrentTaskID + 1
 	if (self.CurrentTaskID > schedule:NumTasks()) then -- If this was the last task then finish up
 		self:ScheduleFinished(schedule)
