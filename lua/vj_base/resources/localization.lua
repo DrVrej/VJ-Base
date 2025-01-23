@@ -466,11 +466,10 @@ local strings_english = {
 	["vjbase.bullseye.print.activated"] = "Activated NPC Bullseye.",
 	["vjbase.bullseye.print.deactivated"] = "Deactivated NPC Bullseye.",
 	
-	["vjbase.controller.print.entrance"] = "For controls, check \"Controller Settings\" under \"DrVrej\" tab",
 	["vjbase.controller.print.tracking.activated"] = "Bullseye tracking activated!",
 	["vjbase.controller.print.tracking.deactivated"] = "Bullseye tracking deactivated!",
-	["vjbase.controller.print.movementjump.enable"] = "Movement Jumping enabled!",
-	["vjbase.controller.print.movementjump.disable"] = "Movement Jumping disabled!",
+	["vjbase.controller.print.jump.enable"] = "Movement Jumping enabled!",
+	["vjbase.controller.print.jump.disable"] = "Movement Jumping disabled!",
 	
 	["vjbase.adminhealth.print.pickup"] = "You have picked up 1,000,000 health!",
 	
@@ -901,11 +900,10 @@ local strings_russian = {
 	["vjbase.bullseye.print.activated"] = "Активирована зона прицеливания NPC.",
 	["vjbase.bullseye.print.deactivated"] = "Деактивирована зона прицеливания NPC.",
 
-	["vjbase.controller.print.entrance"] = "Для управления проверьте \"Настройки контроллера\" в вкладке \"DrVrej\"",
 	["vjbase.controller.print.tracking.activated"] = "Активировано отслеживание зоны прицеливания!",
 	["vjbase.controller.print.tracking.deactivated"] = "Деактивировано отслеживание зоны прицеливания!",
-	["vjbase.controller.print.movementjump.enable"] = "Прыжки во время движения включены!",
-	["vjbase.controller.print.movementjump.disable"] = "Прыжки во время движения отключены!",
+	["vjbase.controller.print.jump.enable"] = "Прыжки во время движения включены!",
+	["vjbase.controller.print.jump.disable"] = "Прыжки во время движения отключены!",
 
 	["vjbase.adminhealth.print.pickup"] = "Вы подобрали 1,000,000 единиц здоровья!",
 
@@ -1795,11 +1793,10 @@ local strings_chinese_simplified = {
 	["vjbase.bullseye.print.activated"] = "已激活 NPC 靶子。",
 	["vjbase.bullseye.print.deactivated"] = "已禁用 NPC 靶子。",
 	
-	["vjbase.controller.print.entrance"] = "要查看按键，请前往“DrVrej”页面下的“控制器设置”",
 	["vjbase.controller.print.tracking.activated"] = "靶子追踪已激活！",
 	["vjbase.controller.print.tracking.deactivated"] = "靶子追踪已禁用！",
-	["vjbase.controller.print.movementjump.enable"] = "已启用移动跳跃！",
-	["vjbase.controller.print.movementjump.disable"] = "已禁用移动跳跃！",
+	["vjbase.controller.print.jump.enable"] = "已启用移动跳跃！",
+	["vjbase.controller.print.jump.disable"] = "已禁用移动跳跃！",
 	
 	["vjbase.adminhealth.print.pickup"] = "你已经获得 1,000,000 点生命值！",
 	
@@ -2225,11 +2222,10 @@ local strings_turkish = {
 	["vjbase.bullseye.print.activated"] = "NPC Hedef Etkinleştirildi.",
 	["vjbase.bullseye.print.deactivated"] = "NPC Hedef Devre Dışı.",
 	
-	["vjbase.controller.print.entrance"] = "Kontroller için,\"DrVrej\" sekmesindeki \"Kontrolcü Ayarları\" bölümünü inceleyin.",
 	["vjbase.controller.print.tracking.activated"] = "Hedef takibi etkin!",
 	["vjbase.controller.print.tracking.deactivated"] = "Hedef takibi devre dışı!",
-	["vjbase.controller.print.movementjump.enable"] = "Hareketli Sıçrama Aktif!",
-	["vjbase.controller.print.movementjump.disable"] = "Hareketli Zıplama Devre Dışı!",
+	["vjbase.controller.print.jump.enable"] = "Hareketli Sıçrama Aktif!",
+	["vjbase.controller.print.jump.disable"] = "Hareketli Zıplama Devre Dışı!",
 	
 	["vjbase.adminhealth.print.pickup"] = "1,000,000 can aldın!",
 	

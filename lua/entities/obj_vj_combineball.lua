@@ -57,6 +57,11 @@ function ENT:Init()
 	self:DrawShadow(false)
 	self:ResetSequence("idle")
 	self:SetCoreType(false)
+	
+	local owner = self:GetOwner()
+	if IsValid(owner) && owner:IsPlayer() then
+		self.DirectDamage = 400
+	end
 
 	util.SpriteTrail(self, 0, colorWhite, true, 15, 0, 0.1, 1 / 6 * 0.5, "sprites/combineball_trail_black_1.vmt")
 
@@ -70,29 +75,29 @@ function ENT:Init()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnBounce(data, phys)
-	local myPos = self:GetPos()
 	local owner = self:GetOwner()
-	local newVel = phys:GetVelocity():GetNormal()
-	local lastVel = math.max(newVel:Length(), math.max(data.OurOldVelocity:Length(), data.Speed)) -- Get the last velocity and speed
-	-- phys:SetVelocity(newVel * lastVel * 0.985) -- Sometimes this could get the combine ball stuck in certain brushes, disabling it just because it looks better without it tbh
-
 	if !IsValid(owner) then return end
+	local ownerIsVJ = owner.IsVJBaseSNPC
+	local myPos = self:GetPos()
+
+	-- Find the closest enemy
 	local closestDist = 1024
-	local target = NULL
+	local target = false
 	for _, v in ipairs(ents.FindInSphere(myPos, closestDist)) do
-		if v == owner or (!v:IsNPC() && !v:IsPlayer()) then continue end
-		if owner:IsNPC() && owner:CheckRelationship(v) != D_HT then continue end
-		local dist = v:GetPos():Distance(myPos)
-		if dist < closestDist && dist > 20 then
-			closestDist = dist
-			target = v
+		if v.VJ_ID_Living && v != owner then
+			if ownerIsVJ && owner:CheckRelationship(v) != D_HT then continue end
+			local dist = v:GetPos():Distance(myPos)
+			if dist < closestDist && dist > 20 then
+				closestDist = dist
+				target = v
+			end
 		end
 	end
 	
-	if IsValid(target) then
+	if target then
 		local norm = ((target:GetPos() + target:OBBCenter()) - myPos):GetNormalized()
 		if self:GetForward():Dot(norm) < 0.75 then -- Lowered the visual range from 0.95, too accurate
-			phys:SetVelocity(norm * lastVel)
+			phys:SetVelocity(norm * math.max(phys:GetVelocity():GetNormal():Length(), math.max(data.OurOldVelocity:Length(), data.Speed)))
 		end
 	end
 end
@@ -103,7 +108,6 @@ function ENT:OnCollision(data, phys)
 	local owner = self:GetOwner()
 	local dataEnt = data.HitEntity
 	if IsValid(owner) then
-		if owner:IsPlayer() then self.DirectDamage = 400 end
 		if IsValid(dataEnt) && ((!dataEnt:IsNPC() && !dataEnt:IsPlayer()) or (dataEnt:IsNPC() && dataEnt:GetClass() != owner:GetClass() && (owner:IsPlayer() or (owner:IsNPC() && owner:Disposition(dataEnt) != D_LI))) or (dataEnt:IsPlayer() && dataEnt:Alive() && (owner:IsPlayer() or (!VJ_CVAR_IGNOREPLAYERS && !dataEnt:IsFlagSet(FL_NOTARGET))))) then
 			VJ.CreateSound(dataEnt, sdHit, 80)
 			local dmgInfo = DamageInfo()

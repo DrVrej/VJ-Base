@@ -21,8 +21,8 @@ if !metaNPC.IsVJBaseEdited then
 	-- Override to make sure all 3 values are on par at all times!
 	function metaNPC:SetMaxLookDistance(dist)
 		//self:Fire("SetMaxLookDistance", dist) -- Original "SetMaxLookDistance" handles it now (below)
-		orgSetMaxLookDistance(self, dist) -- For Source sight & sensing distance
-		self:SetSaveValue("m_flDistTooFar", dist) -- For certain Source attack, weapon, and condition distances
+		orgSetMaxLookDistance(self, dist) -- For engine sight & sensing distance
+		self:SetSaveValue("m_flDistTooFar", dist) -- For certain engine attacks, weapons, and condition distances
 		self.SightDistance = dist -- For VJ Base
 	end
 	---------------------------------------------------------------------------------------------------------------------------------------------

@@ -1790,34 +1790,34 @@ local angYN90 = Angle(0, -90, 0)
 --
 function ENT:Controller_Movement(cont, ply, bullseyePos)
 	if self.MovementType == VJ_MOVETYPE_STATIONARY then return false end
-	local gerta_lef = ply:KeyDown(IN_MOVELEFT)
-	local gerta_rig = ply:KeyDown(IN_MOVERIGHT)
-	local gerta_arak = ply:KeyDown(IN_SPEED)
+	local left = ply:KeyDown(IN_MOVELEFT)
+	local right = ply:KeyDown(IN_MOVERIGHT)
+	local sprint = ply:KeyDown(IN_SPEED)
 	local aimVector = ply:GetAimVector()
 	
 	if ply:KeyDown(IN_FORWARD) then
 		if self.MovementType == VJ_MOVETYPE_AERIAL or self.MovementType == VJ_MOVETYPE_AQUATIC then
-			self:AA_MoveTo(cont.VJCE_Bullseye, true, gerta_arak and "Alert" or "Calm", {IgnoreGround=true})
+			self:AA_MoveTo(cont.VJCE_Bullseye, true, sprint and "Alert" or "Calm", {IgnoreGround=true})
 		else
-			if gerta_lef then
+			if left then
 				cont:StartMovement(aimVector, angY45)
-			elseif gerta_rig then
+			elseif right then
 				cont:StartMovement(aimVector, angYN45)
 			else
 				cont:StartMovement(aimVector, defAng)
 			end
 		end
 	elseif ply:KeyDown(IN_BACK) then
-		if gerta_lef then
+		if left then
 			cont:StartMovement(aimVector*-1, angYN45)
-		elseif gerta_rig then
+		elseif right then
 			cont:StartMovement(aimVector*-1, angY45)
 		else
 			cont:StartMovement(aimVector*-1, defAng)
 		end
-	elseif gerta_lef then
+	elseif left then
 		cont:StartMovement(aimVector, angY90)
-	elseif gerta_rig then
+	elseif right then
 		cont:StartMovement(aimVector, angYN90)
 	else
 		self:StopMoving()

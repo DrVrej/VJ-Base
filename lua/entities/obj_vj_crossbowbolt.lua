@@ -38,11 +38,12 @@ function ENT:InitPhys()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnCollision(data, phys)
-	if IsValid(data.HitEntity) then
+	local hitEnt = data.HitEntity
+	if IsValid(hitEnt) then
 		self.SoundTbl_OnCollide = sdHitEnt
 		-- Ignite small entities
-		if data.HitEntity:IsNPC() && data.HitEntity:GetHullType() == HULL_TINY then
-			data.HitEntity:Ignite(3)
+		if hitEnt:IsNPC() && hitEnt:GetHullType() == HULL_TINY then
+			hitEnt:Ignite(3)
 		end
 	else
 		local bolt = ents.Create("prop_dynamic")
