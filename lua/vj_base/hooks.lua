@@ -277,7 +277,7 @@ cvars.AddChangeCallback("ai_ignoreplayers", function(convar_name, oldValue, newV
 		VJ_CVAR_IGNOREPLAYERS = true
 		for _, v in ipairs(ents.GetAll()) do
 			if v.IsVJBaseSNPC then
-				if v.FollowingPlayer then v:ResetFollowBehavior() end -- Reset the NPC's follow system if it's following a player
+				if v.IsFollowing && v.FollowData.Ent:IsPlayer() then v:ResetFollowBehavior() end -- Reset the NPC's follow system if it's following a player
 				//v.CurrentPossibleEnemies = v:DoHardEntityCheck(getall)
 				local posEnemies = v.CurrentPossibleEnemies
 				local it = 1

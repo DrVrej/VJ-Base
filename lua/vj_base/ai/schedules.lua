@@ -268,13 +268,13 @@ function ENT:TranslateNavGoal(ent, goal)
 		-- Called every 0.1 seconds from here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L5790
 		-- Use "GetPos", otherwise it will use "GetEnemyLastKnownPos", which is often incorrect location especially when sight is blocked!
 	if self:GetCurGoalType() == 2 then
-		if self.LatestEnemyDistance < 500 then // 120 for "SetArrivalDistance"
+		//if self.LatestEnemyDistance < 500 then // 120 for "SetArrivalDistance"
 			-- Disabled for now as it causes movement stuttering when near the enemy
 				-- Makes "GetGoalRepathTolerance" return 0 as seen here: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/server/ai_basenpc.cpp#L5756
 				-- Otherwise it will go to the enemy only if certain tolerance is passed!
 			//self:SetArrivalDistance((self:GetPos() - goal):Length())
-			return ent:GetPos() + ent:GetVelocity()
-		end
+			//return ent:GetPos() + ent:GetVelocity() -- Causes NPCs to move backwards when the enemy is moving towards them head on
+		//end
 		return ent:GetPos()
 	end
 	//return goal + ent:GetForward()*math.random(-100, 100)

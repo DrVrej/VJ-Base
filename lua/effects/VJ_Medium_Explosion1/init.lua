@@ -4,66 +4,66 @@
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
 function EFFECT:Init(data)
-	self.Pos = data:GetOrigin()
-	local Emitter = ParticleEmitter(self.Pos)
-	if Emitter == nil then return end
-	
-	/*local effectData = EffectData()
-	effectData:SetOrigin( self.Pos )
-	effectData:SetNormal( Vector(0, 0, 0) )
-	effectData:SetMagnitude( 2.6 )
-	effectData:SetScale( 2.6 )
-	effectData:SetRadius( 93 )
-	util.Effect( "Sparks", effectData, true, true )*/
-	
-	-- Fire
-	for i=1,8 do
-		local EffectCode = Emitter:Add("particles/flamelet1",self.Pos)
-		EffectCode:SetVelocity(Vector(math.random(-30,30),math.random(-30,30),math.random(30,40)))
-		EffectCode:SetDieTime(math.Rand(1,2)) -- How much time until it dies
-		EffectCode:SetStartAlpha(math.Rand(90,100)) -- Transparency
-		EffectCode:SetStartSize(math.Rand(300,300)) -- Size of the effect
-		EffectCode:SetEndSize(math.Rand(300,300)) -- Size of the effect at the end (The effect slowly trasnsforms to this size)
-		EffectCode:SetRoll(math.Rand(480,540))
-		EffectCode:SetRollDelta(0) -- How fast it rolls
-		EffectCode:SetColor(170,170,170) -- The color of the effect
-		EffectCode:SetGravity(Vector(0,0,math.random(-30,-10))) -- The Gravity
-	end
+	local origin = data:GetOrigin()
+	local emitter = ParticleEmitter(origin)
 
 	-- Smoke screen
-	for i = 1,12 do
-		local EffectCode = Emitter:Add("particles/smokey",self.Pos)
-		EffectCode:SetVelocity(Vector(math.random(-40,40),math.random(-40,40),math.random(5,15)))
-		EffectCode:SetDieTime(math.Rand(15,17)) -- How much time until it dies
-		EffectCode:SetStartAlpha(math.Rand(220,230)) -- Transparency
-		EffectCode:SetStartSize(math.Rand(130,170)) -- Size of the effect
-		EffectCode:SetEndSize(math.Rand(300,350)) -- Size of the effect at the end (The effect slowly trasnsforms to this size)
-		EffectCode:SetRoll(math.Rand(480,540))
-		EffectCode:SetRollDelta(0) -- How fast it rolls
-		EffectCode:SetColor(100,100,100) -- The color of the effect
-		EffectCode:SetGravity(Vector(0, 0, 0)) -- The Gravity
-		EffectCode:SetAirResistance(15)
+	for _ = 1, 12 do
+		local smoke = emitter:Add("particles/smokey", origin)
+		if smoke then
+			smoke:SetVelocity(Vector(math.random(-40, 40), math.random(-40, 40), math.random(5, 15)))
+			smoke:SetDieTime(math.Rand(15, 17))
+			smoke:SetStartAlpha(math.Rand(220, 230))
+			smoke:SetEndAlpha(0)
+			smoke:SetStartSize(math.Rand(130, 170))
+			smoke:SetEndSize(math.Rand(300, 350))
+			smoke:SetRoll(math.Rand(480, 540))
+			smoke:SetRollDelta(math.Rand(-0.2, 0.2))
+			smoke:SetColor(100, 100, 100)
+			smoke:SetGravity(Vector(0,  0,  0))
+			smoke:SetAirResistance(15)
+			smoke:SetCollide(true)
+		end
 	end
 
 	-- Cloud of smoke that goes up
-	for i = 1,8 do
-		local EffectCode = Emitter:Add("particles/smokey",self.Pos)
-		EffectCode:SetVelocity(Vector(math.random(-60,70),math.random(-100,70),math.random(70,180)))
-		EffectCode:SetDieTime(math.Rand(4,5)) -- How much time until it dies
-		EffectCode:SetStartAlpha(math.Rand(220,230)) -- Transparency
-		EffectCode:SetStartSize(math.Rand(55,66)) -- Size of the effect
-		EffectCode:SetEndSize(math.Rand(192,256)) -- Size of the effect at the end (The effect slowly trasnsforms to this size)
-		EffectCode:SetRoll(math.Rand(480,540))
-		EffectCode:SetRollDelta(math.Rand(-1,1)) -- How fast it rolls
-		EffectCode:SetColor(50,50,50) -- The color of the effect
-		EffectCode:SetGravity(Vector(0,0,math.random(-30,-10))) -- The Gravity
+	for _ = 1, 8 do
+		local smoke = emitter:Add("particles/smokey", origin)
+		if smoke then
+			smoke:SetVelocity(Vector(math.random(-60, 70), math.random(-100, 70), math.random(70, 140)))
+			smoke:SetDieTime(math.Rand(4, 5))
+			smoke:SetStartAlpha(math.Rand(220, 230))
+			smoke:SetEndAlpha(0)
+			smoke:SetStartSize(math.Rand(55, 66))
+			smoke:SetEndSize(math.Rand(192, 256))
+			smoke:SetRoll(math.Rand(480, 540))
+			smoke:SetRollDelta(math.Rand(-0.2, 0.2))
+			smoke:SetColor(50, 50, 50)
+			smoke:SetGravity(Vector(0, 0, math.random(-30, -10)))
+			smoke:SetCollide(true)
+		end
 	end
-	Emitter:Finish()
+	
+	-- Flames
+	for _ = 1, 8 do
+		local flame = emitter:Add("particles/flamelet1", origin)
+		if flame then
+			flame:SetVelocity(Vector(math.random(-30, 30), math.random(-30, 30), math.random(30, 40)))
+			flame:SetDieTime(math.Rand(0.4, 0.6))
+			flame:SetStartAlpha(math.Rand(90, 100))
+			flame:SetEndAlpha(0)
+			flame:SetStartSize(math.Rand(100, 120))
+			flame:SetEndSize(math.Rand(200, 220))
+			flame:SetRoll(math.Rand(480, 540))
+			flame:SetRollDelta(0)
+			flame:SetColor(170, 170, 170)
+			flame:SetGravity(Vector(0, 0, math.random(-30, -10)))
+			flame:SetCollide(true)
+		end
+	end
+	emitter:Finish()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function EFFECT:Think()
 	return false
-end
----------------------------------------------------------------------------------------------------------------------------------------------
-function EFFECT:Render()
 end

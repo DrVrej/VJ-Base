@@ -1577,7 +1577,6 @@ function ENT:ResetFollowBehavior()
 		end
 	end
 	self.IsFollowing = false
-	self.FollowingPlayer = false
 	followData.Ent = NULL -- Need to recall it here because localized can't update the table
 	followData.MinDist = 0
 	followData.Moving = false
@@ -1630,7 +1629,6 @@ function ENT:Follow(ent, stopIfFollowing)
 				end
 				self.GuardingPosition = false -- Reset the guarding position
 				self.GuardingDirection = false
-				self.FollowingPlayer = true
 				self:PlaySoundSystem("FollowPlayer")
 			end
 			followData.Ent = ent
@@ -1923,8 +1921,9 @@ end
 function ENT:CheckRelationship(ent)
 	if ent:IsFlagSet(FL_NOTARGET) or ent:Health() <= 0 or (ent:IsPlayer() && VJ_CVAR_IGNOREPLAYERS) then return D_NU end
 	if self:GetClass() == ent:GetClass() then return D_LI end
-	if self:Disposition(ent) == D_VJ_INTEREST then return D_HT end
-	return self:Disposition(ent)
+	local myDisp = self:Disposition(ent)
+	if myDisp == D_VJ_INTEREST then return D_HT end
+	return myDisp
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local cosRad20 = math_cos(math_rad(20))
@@ -1944,7 +1943,7 @@ function ENT:MaintainRelationships()
 	local mySightDist = self:GetMaxLookDistance()
 	local myClasses = self.VJ_NPC_Class
 	local myHandlePerceived = self.HandlePerceivedRelationship
-	local nearestDist = nil
+	local nearestDist = false
 	local canAlly = self.HasAllies
 	local friPlyAllies = self.FriendsWithAllPlayerAllies
 	local notIsNeutral = self.Behavior != VJ_BEHAVIOR_NEUTRAL
@@ -2109,8 +2108,8 @@ function ENT:MaintainRelationships()
 							eneVisCount = eneVisCount + 1
 							self:AddEntityRelationship(ent, D_HT, 0)
 							calculatedDisp = D_HT
-							-- If the detected enemy is closer than the previous enemy, the set this as the enemy!
-							if (nearestDist == nil) or (distanceToEnt < nearestDist) then
+							-- If the detected enemy is closer than the previous enemies, the set this as the enemy!
+							if !nearestDist or (distanceToEnt < nearestDist) then
 								nearestDist = distanceToEnt
 								self:ForceSetEnemy(ent, true, true)
 							end

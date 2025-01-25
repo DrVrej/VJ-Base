@@ -919,7 +919,6 @@ ENT.Dead = false
 ENT.Flinching = false
 ENT.PauseAttacks = false
 ENT.IsFollowing = false
-ENT.FollowingPlayer = false
 ENT.VJ_IsBeingControlled = false
 ENT.VJ_DEBUG = false
 ENT.MeleeAttack_DoingPropAttack = false
@@ -1600,8 +1599,8 @@ function ENT:Think()
 		//self.NextActualThink = CurTime() + 0.065
 	
 	-- Schedule debug
-	//if self.CurrentSchedule != nil then PrintTable(self.CurrentSchedule) end
-	//if self.CurrentTask != nil then PrintTable(self.CurrentTask) end
+	//if self.CurrentSchedule then PrintTable(self.CurrentSchedule) end
+	//if self.CurrentTask then PrintTable(self.CurrentTask) end
 	
 	//self:SetCondition(1) -- Probably not needed as "sv_pvsskipanimation" handles it | Fix attachments, bones, positions, angles etc. being broken in NPCs! This condition is used as a backup in case "sv_pvsskipanimation" isn't disabled!
 	//if self.MovementType == VJ_MOVETYPE_GROUND && self:GetVelocity():Length() <= 0 && !self:IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE) /*&& curSchedule.HasMovement*/ then self:DropToFloor() end -- No need, already handled by the engine
@@ -2977,25 +2976,21 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 	-- Blood decal on the ground
 	if self.Bleeds && self.HasBloodDecal then
 		local bloodDecal = VJ.PICK(self.BloodDecal)
-		if bloodDecal != false then
+		if bloodDecal then
 			local decalPos = self:GetPos() + vecZ4
 			self:SetLocalPos(decalPos) -- NPC is too close to the ground, we need to move it up a bit
-			local tr = util.TraceLine({
-				start = decalPos,
-				endpos = decalPos - vecZ500,
-				filter = self
-			})
+			local tr = util.TraceLine({start = decalPos, endpos = decalPos - vecZ500, filter = self})
 			util.Decal(bloodDecal, tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
 		end
 	end
 	
 	if self.IsFollowing then self:ResetFollowBehavior() end
 	self:RemoveTimers()
+	self:StopAllSounds()
 	self.AttackType = VJ.ATTACK_TYPE_NONE
 	self.HasMeleeAttack = false
 	self.HasRangeAttack = false
 	self.HasLeapAttack = false
-	self:StopAllSounds()
 	if IsValid(dmgAttacker) then
 		if dmgAttacker:GetClass() == "npc_barnacle" then self.HasDeathCorpse = false end -- Don't make a corpse if it's killed by a barnacle!
 		if GetConVar("vj_npc_ply_frag"):GetInt() == 1 && dmgAttacker:IsPlayer() then dmgAttacker:AddFrags(1) end

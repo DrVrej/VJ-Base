@@ -63,6 +63,6 @@ end
 function ENT:DoDeath()
 	local effectData = EffectData()
 	effectData:SetOrigin(self:GetPos())
-	util.Effect("VJ_Small_Dust1", effectData)
+	util.Effect("VJ_Dust_Small", effectData)
 	self:Remove()
 end
