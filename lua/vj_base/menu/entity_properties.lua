@@ -8,29 +8,28 @@ hook.Add("CanProperty", "VJ_PLY_CAN_PROPERTY", function(ply, property, ent)
 	if GetConVar("vj_npc_admin_properties"):GetInt() == 1 && !ply:IsAdmin() && property == "vj_npc_properties" then ply:ChatPrint("#vjbase.menu.context.print.adminonly") return false end
 end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- SNPC Controlling ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ NPC Controlling ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_control",{
-	MenuLabel = "#vjbase.menu.context.control", -- Name to display on the context menu
-	Order = 50000, -- The order to display this property relative to other properties
-	MenuIcon = "icon16/controller.png", -- The icon to display next to the property
-	PrependSpacer = true, -- Whether to add a spacer before this property. This should generally be true for the first property in a group of properties.
+	MenuLabel = "#vjbase.menu.context.control",
+	MenuIcon = "icon16/controller.png",
+	Order = 50000,
+	PrependSpacer = true, -- Adds a spacer before this property
 
-	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
-		if (!IsValid(ent)) then return false end
-		if (ent:IsPlayer()) or !ent:IsNPC() then return false end
-		if (!gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)) then return false end
-		if ent.IsVJBaseSNPC != true then return false end
-		return true
+	Filter = function(self, ent, ply) -- decide whether this property should be shown for an entity (Client)
+		if IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent) then
+			return true
+		end
+		return false
 	end,
 	
-	Action = function(self, ent) -- The action to perform upon using the property (Clientside)
+	Action = function(self, ent) -- Called when the property is clicked (Client)
 		self:MsgStart()
 			net.WriteEntity(ent)
 		self:MsgEnd()
 	end,
 	
-	Receive = function(self, length, ply) -- The action to perform upon using the property (Serverside)
+	Receive = function(self, length, ply) -- Called when "Action" sends a message (Server)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		if !ply:Alive() then return end -- Keep the player from becoming a zombie =)
@@ -51,29 +50,28 @@ properties.Add("vj_pr_npc_control",{
 	end
 })
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- SNPC Guarding ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ NPC Guarding ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_guard",{
-	MenuLabel = "#vjbase.menu.context.guard", -- Name to display on the context menu
-	Order = 50001, -- The order to display this property relative to other properties
-	MenuIcon = "icon16/shield.png", -- The icon to display next to the property
-	PrependSpacer = true, -- Whether to add a spacer before this property. This should generally be true for the first property in a group of properties.
+	MenuLabel = "#vjbase.menu.context.guard",
+	MenuIcon = "icon16/shield.png",
+	Order = 50001,
+	PrependSpacer = true, -- Adds a spacer before this property
 
-	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
-		if (!IsValid(ent)) then return false end
-		if (ent:IsPlayer()) or !ent:IsNPC() then return false end
-		if (!gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)) then return false end
-		if ent.IsVJBaseSNPC != true then return false end
-		return true
+	Filter = function(self, ent, ply) -- decide whether this property should be shown for an entity (Client)
+		if IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent) then
+			return true
+		end
+		return false
 	end,
 	
-	Action = function(self, ent) -- The action to perform upon using the property (Clientside)
+	Action = function(self, ent) -- Called when the property is clicked (Client)
 		self:MsgStart()
 			net.WriteEntity(ent)
 		self:MsgEnd()
 	end,
 	
-	Receive = function(self, length, ply) -- The action to perform upon using the property (Serverside)
+	Receive = function(self, length, ply) -- Called when "Action" sends a message (Server)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		if !ent.VJ_IsBeingControlled then
@@ -91,28 +89,27 @@ properties.Add("vj_pr_npc_guard",{
 	end
 })
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- SNPC Wandering ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ NPC Wandering ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_wander",{
-	MenuLabel = "#vjbase.menu.context.wander", -- Name to display on the context menu
-	Order = 50002, -- The order to display this property relative to other properties
-	MenuIcon = "icon16/arrow_rotate_clockwise.png", -- The icon to display next to the property
+	MenuLabel = "#vjbase.menu.context.wander",
+	MenuIcon = "icon16/arrow_rotate_clockwise.png",
+	Order = 50002,
 
-	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
-		if (!IsValid(ent)) then return false end
-		if (ent:IsPlayer()) or !ent:IsNPC() then return false end
-		if (!gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)) then return false end
-		if ent.IsVJBaseSNPC != true then return false end
-		return true
+	Filter = function(self, ent, ply) -- decide whether this property should be shown for an entity (Client)
+		if IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent) then
+			return true
+		end
+		return false
 	end,
 	
-	Action = function(self, ent) -- The action to perform upon using the property (Clientside)
+	Action = function(self, ent) -- Called when the property is clicked (Client)
 		self:MsgStart()
 			net.WriteEntity(ent)
 		self:MsgEnd()
 	end,
 	
-	Receive = function(self, length, ply) -- The action to perform upon using the property (Serverside)
+	Receive = function(self, length, ply) -- Called when "Action" sends a message (Server)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		if !ent.VJ_IsBeingControlled then
@@ -130,28 +127,27 @@ properties.Add("vj_pr_npc_wander",{
 	end
 })
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- SNPC Toggle Medic ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ NPC Toggle Medic ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_medic",{
-	MenuLabel = "#vjbase.menu.context.medic", -- Name to display on the context menu
-	Order = 50003, -- The order to display this property relative to other properties
-	MenuIcon = "icon16/asterisk_yellow.png", -- The icon to display next to the property
+	MenuLabel = "#vjbase.menu.context.medic",
+	MenuIcon = "icon16/asterisk_yellow.png",
+	Order = 50003,
 
-	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
-		if (!IsValid(ent)) then return false end
-		if (ent:IsPlayer()) or !ent:IsNPC() then return false end
-		if (!gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)) then return false end
-		if ent.IsVJBaseSNPC != true then return false end
-		return true
+	Filter = function(self, ent, ply) -- decide whether this property should be shown for an entity (Client)
+		if IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent) then
+			return true
+		end
+		return false
 	end,
 	
-	Action = function(self, ent) -- The action to perform upon using the property (Clientside)
+	Action = function(self, ent) -- Called when the property is clicked (Client)
 		self:MsgStart()
 			net.WriteEntity(ent)
 		self:MsgEnd()
 	end,
 	
-	Receive = function(self, length, ply) -- The action to perform upon using the property (Serverside)
+	Receive = function(self, length, ply) -- Called when "Action" sends a message (Server)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		if ent.IsMedic then
@@ -164,28 +160,27 @@ properties.Add("vj_pr_npc_medic",{
 	end
 })
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- SNPC Ally Me ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ NPC Ally Me ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_allyme",{
-	MenuLabel = "#vjbase.menu.context.allyme", -- Name to display on the context menu
-	Order = 50004, -- The order to display this property relative to other properties
-	MenuIcon = "icon16/heart_add.png", -- The icon to display next to the property
+	MenuLabel = "#vjbase.menu.context.allyme",
+	MenuIcon = "icon16/heart_add.png",
+	Order = 50004,
 
-	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
-		if (!IsValid(ent)) then return false end
-		if (ent:IsPlayer()) or !ent:IsNPC() then return false end
-		if (!gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)) then return false end
-		if ent.IsVJBaseSNPC != true then return false end
-		return true
+	Filter = function(self, ent, ply) -- decide whether this property should be shown for an entity (Client)
+		if IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent) then
+			return true
+		end
+		return false
 	end,
 	
-	Action = function(self, ent) -- The action to perform upon using the property (Clientside)
+	Action = function(self, ent) -- Called when the property is clicked (Client)
 		self:MsgStart()
 			net.WriteEntity(ent)
 		self:MsgEnd()
 	end,
 	
-	Receive = function(self, length, ply) -- The action to perform upon using the property (Serverside)
+	Receive = function(self, length, ply) -- Called when "Action" sends a message (Server)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		table.insert(ent.VJ_AddCertainEntityAsFriendly,ply)
@@ -198,28 +193,27 @@ properties.Add("vj_pr_npc_allyme",{
 	end
 })
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- SNPC Hostile Me ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ NPC Hostile Me ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_hostileme",{
-	MenuLabel = "#vjbase.menu.context.hostileme", -- Name to display on the context menu
-	Order = 50005, -- The order to display this property relative to other properties
-	MenuIcon = "icon16/heart_delete.png", -- The icon to display next to the property
+	MenuLabel = "#vjbase.menu.context.hostileme",
+	MenuIcon = "icon16/heart_delete.png",
+	Order = 50005,
 
-	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
-		if (!IsValid(ent)) then return false end
-		if (ent:IsPlayer()) or !ent:IsNPC() then return false end
-		if (!gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)) then return false end
-		if ent.IsVJBaseSNPC != true then return false end
-		return true
+	Filter = function(self, ent, ply) -- decide whether this property should be shown for an entity (Client)
+		if IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent) then
+			return true
+		end
+		return false
 	end,
 	
-	Action = function(self, ent) -- The action to perform upon using the property (Clientside)
+	Action = function(self, ent) -- Called when the property is clicked (Client)
 		self:MsgStart()
 			net.WriteEntity(ent)
 		self:MsgEnd()
 	end,
 	
-	Receive = function(self, length, ply) -- The action to perform upon using the property (Serverside)
+	Receive = function(self, length, ply) -- Called when "Action" sends a message (Server)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		table.insert(ent.VJ_AddCertainEntityAsEnemy,ply)
@@ -232,28 +226,27 @@ properties.Add("vj_pr_npc_hostileme",{
 	end
 })
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- SNPC Slay ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ NPC Slay ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_slay",{
-	MenuLabel = "#vjbase.menu.context.slay", -- Name to display on the context menu
-	Order = 50006, -- The order to display this property relative to other properties
-	MenuIcon = "icon16/cancel.png", -- The icon to display next to the property
+	MenuLabel = "#vjbase.menu.context.slay",
+	MenuIcon = "icon16/cancel.png",
+	Order = 50006,
 
-	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
-		if (!IsValid(ent)) then return false end
-		if (ent:IsPlayer()) or !ent:IsNPC() then return false end
-		if (!gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)) then return false end
-		if ent.IsVJBaseSNPC != true then return false end
-		return true
+	Filter = function(self, ent, ply) -- decide whether this property should be shown for an entity (Client)
+		if IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent) then
+			return true
+		end
+		return false
 	end,
 	
-	Action = function(self, ent) -- The action to perform upon using the property (Clientside)
+	Action = function(self, ent) -- Called when the property is clicked (Client)
 		self:MsgStart()
 			net.WriteEntity(ent)
 		self:MsgEnd()
 	end,
 	
-	Receive = function(self, length, ply) -- The action to perform upon using the property (Serverside)
+	Receive = function(self, length, ply) -- Called when "Action" sends a message (Server)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		ent:SetHealth(0)
@@ -262,28 +255,27 @@ properties.Add("vj_pr_npc_slay",{
 	end
 })
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- SNPC Gib ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ NPC Gib ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_gib",{
-	MenuLabel = "#vjbase.menu.context.gib", -- Name to display on the context menu
-	Order = 50007, -- The order to display this property relative to other properties
-	MenuIcon = "icon16/bomb.png", -- The icon to display next to the property
+	MenuLabel = "#vjbase.menu.context.gib",
+	MenuIcon = "icon16/bomb.png",
+	Order = 50007,
 
-	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
-		if (!IsValid(ent)) then return false end
-		if (ent:IsPlayer()) or !ent:IsNPC() then return false end
-		if (!gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)) then return false end
-		if ent.IsVJBaseSNPC != true then return false end
-		return true
+	Filter = function(self, ent, ply) -- decide whether this property should be shown for an entity (Client)
+		if IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent) then
+			return true
+		end
+		return false
 	end,
 	
-	Action = function(self, ent) -- The action to perform upon using the property (Clientside)
+	Action = function(self, ent) -- Called when the property is clicked (Client)
 		self:MsgStart()
 			net.WriteEntity(ent)
 		self:MsgEnd()
 	end,
 	
-	Receive = function(self, length, ply) -- The action to perform upon using the property (Serverside)
+	Receive = function(self, length, ply) -- Called when "Action" sends a message (Server)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		ent:SetHealth(0)
@@ -297,35 +289,34 @@ properties.Add("vj_pr_npc_gib",{
 	end
 })
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- SNPC Developer Mode ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ NPC Developer Mode ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 properties.Add("vj_pr_npc_devmode",{
-	MenuLabel = "#vjbase.menu.context.devmode", -- Name to display on the context menu
-	Order = 50008, -- The order to display this property relative to other properties
-	MenuIcon = "icon16/tag.png", -- The icon to display next to the property
+	MenuLabel = "#vjbase.menu.context.devmode",
+	MenuIcon = "icon16/tag.png",
+	Order = 50008,
 
-	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
-		if (!IsValid(ent)) then return false end
-		if (ent:IsPlayer()) or !ent:IsNPC() then return false end
-		if (!gamemode.Call("CanProperty", ply, "vj_npc_properties", ent)) then return false end
-		if ent.IsVJBaseSNPC != true then return false end
-		return true
+	Filter = function(self, ent, ply) -- decide whether this property should be shown for an entity (Client)
+		if IsValid(ent) && ent:IsNPC() && ent.IsVJBaseSNPC && gamemode.Call("CanProperty", ply, "vj_npc_properties", ent) then
+			return true
+		end
+		return false
 	end,
 	
-	Action = function(self, ent) -- The action to perform upon using the property (Clientside)
+	Action = function(self, ent) -- Called when the property is clicked (Client)
 		self:MsgStart()
 			net.WriteEntity(ent)
 		self:MsgEnd()
 	end,
 	
-	Receive = function(self, length, ply) -- The action to perform upon using the property (Serverside)
+	Receive = function(self, length, ply) -- Called when "Action" sends a message (Server)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
 		if ent.VJ_DEBUG then
 			ply:ChatPrint("Disabled Developer Mode for "..ent:GetName()..".")
 			ent.VJ_DEBUG = false
 		else
-			ply:ChatPrint("Enabled Developer Mode for "..ent:GetName()..". Navigate to the SNPC developer menu to toggle items you want.")
+			ply:ChatPrint("Enabled Developer Mode for "..ent:GetName()..". Navigate to the NPC developer menu to toggle items you want.")
 			ent.VJ_DEBUG = true
 		end
 	end

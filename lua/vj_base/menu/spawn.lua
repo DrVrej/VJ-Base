@@ -8,14 +8,14 @@
 ------ Hooks ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if CLIENT then
-	local function VJ_PopulateTrees(pnlContent, tree, node, vjTreeName, vjIcon, vjList)
+	local function VJ_PopulateTrees(pnlContent, tree, nodeMain, vjTreeName, vjIcon, vjList)
 		local roottree = tree:AddNode(vjTreeName, vjIcon)
 		if vjTreeName == "NPCs" then
 			roottree:MoveToFront() -- Make this the main tree
 		end
 		roottree.PropPanel = vgui.Create("ContentContainer", pnlContent)
 		roottree.PropPanel:SetVisible(false)
-		roottree.PropPanel:SetTriggerSpawnlistChange(false)
+		roottree.PropPanel:SetTriggerSpawnlistChange(false) -- Make it read-only so it can't be edited
 		
 		function roottree:DoClick()
 			pnlContent:SwitchPanel(self.PropPanel)
@@ -36,45 +36,45 @@ if CLIENT then
 		
 		-- Create an icon for each one and put them on the panel
 		for CategoryName, v in SortedPairs(Categories) do
-			
 			-- Category icon
-			local icon = vjIcon -- Make the default icon the category icon
+			local icon = list.HasEntry("VJBASE_CATEGORY_INFO", CategoryName) and CatInfoList[CategoryName].icon or vjIcon
 			if CategoryName == "Default" then
 				icon = "vj_base/icons/vrejgaming.png"
-			elseif list.HasEntry("VJBASE_CATEGORY_INFO", CategoryName) then
-				icon = CatInfoList[CategoryName].icon
 			end
 			
 			local node = roottree:AddNode(CategoryName, icon)
 			local CatPropPanel = vgui.Create("ContentContainer", pnlContent)
 			CatPropPanel:SetVisible(false)
+			CatPropPanel:SetTriggerSpawnlistChange(false) -- Make it read-only so it can't be edited
 			
-			-- Write the name of the categories in both the general menu and in its own menu
+			-- Post the name of the category in the all entities menu
 			local generalHeader = vgui.Create("ContentHeader", roottree.PropPanel)
 			generalHeader:SetText(CategoryName)
 			roottree.PropPanel:Add(generalHeader)
-			local catHeader = vgui.Create("ContentHeader", CatPropPanel)
-			catHeader:SetText(CategoryName)
-			CatPropPanel:Add(catHeader)
+			
+			-- Post the name of the category in the specific tree
+			//local catHeader = vgui.Create("ContentHeader", CatPropPanel)
+			//catHeader:SetText(CategoryName)
+			//CatPropPanel:Add(catHeader)
 			
 			if vjTreeName == "NPCs" then
 				for name, ent in SortedPairsByMemberValue(v, "Name") do
 					local t = {
 						nicename	= ent.Name or name,
 						spawnname	= name,
-						material	= "entities/" .. name .. ".png",
+						material	= ent.IconOverride or "entities/" .. name .. ".png",
 						weapon		= ent.Weapons,
 						admin		= ent.AdminOnly
 					}
-					spawnmenu.CreateContentIcon("npc", CatPropPanel, t)
-					spawnmenu.CreateContentIcon("npc", roottree.PropPanel, t)
+					spawnmenu.CreateContentIcon(ent.ScriptedEntityType or "npc", CatPropPanel, t)
+					spawnmenu.CreateContentIcon(ent.ScriptedEntityType or "npc", roottree.PropPanel, t)
 				end
 			elseif vjTreeName == "Weapons" then
 				for _, ent in SortedPairsByMemberValue(v, "PrintName") do
-					local t = { 
+					local t = {
 						nicename	= ent.PrintName or ent.ClassName,
 						spawnname	= ent.ClassName,
-						material	= "entities/" .. ent.ClassName .. ".png",
+						material	= ent.IconOverride or "entities/" .. ent.ClassName .. ".png",
 						admin		= ent.AdminOnly
 					}
 					spawnmenu.CreateContentIcon(ent.ScriptedEntityType or "weapon", CatPropPanel, t)
@@ -82,10 +82,10 @@ if CLIENT then
 				end
 			elseif vjTreeName == "Entities" then
 				for _, ent in SortedPairsByMemberValue(v, "PrintName") do
-					local t = { 
+					local t = {
 						nicename	= ent.PrintName or ent.ClassName,
 						spawnname	= ent.ClassName,
-						material	= "entities/" .. ent.ClassName .. ".png",
+						material	= ent.IconOverride or "entities/" .. ent.ClassName .. ".png",
 						admin		= ent.AdminOnly
 					}
 					spawnmenu.CreateContentIcon(ent.ScriptedEntityType or "entity", CatPropPanel, t)
@@ -146,7 +146,7 @@ if CLIENT then
 			pnlContent:SwitchPanel(self.PropPanel)
 		end
 		local ToolList = spawnmenu.GetTools()
-		if (ToolList) then
+		if ToolList then
 			for _, nv in pairs(ToolList) do
 				if nv.Name == "DrVrej" then
 					for _, nv2 in pairs(nv.Items) do
@@ -154,12 +154,13 @@ if CLIENT then
 							//local node = tooltree:AddNode("Default", "icon16/bullet_wrench.png")
 							local CatPropPanel = vgui.Create("ContentContainer", pnlContent)
 							CatPropPanel:SetVisible(false)
+							CatPropPanel:SetTriggerSpawnlistChange(false) -- Make it read-only so it can't be edited
 							local Header = vgui.Create("ContentHeader", tooltree.PropPanel)
 							Header:SetText("Tools")
 							tooltree.PropPanel:Add(Header)
 							for _, nv3 in pairs(nv2) do
 								if !istable(nv3) then continue end
-									local t = { 
+									local t = {
 										nicename	= nv3.Text,
 										spawnname	= nv3.ItemName,
 										//material	= "entities/" .. ent.ClassName .. ".png",
@@ -168,7 +169,7 @@ if CLIENT then
 									spawnmenu.CreateContentIcon("tool", CatPropPanel, t)
 									spawnmenu.CreateContentIcon("tool", tooltree.PropPanel, t)
 								end
-							function tooltree:DoClick()	
+							function tooltree:DoClick()
 								pnlContent:SwitchPanel(CatPropPanel)
 							end
 						end
@@ -283,7 +284,7 @@ if CLIENT then
 		DComboBox:AddChoice("#menubar.npcs.noweapon", "none")
 		DComboBox:AddSpacer()
 
-			-- Sort the items by name, and group by category
+		-- Sort the items by name, and group by category
 		local groupedWeps = {}
 		for _, v in pairs( list.Get( "VJBASE_SPAWNABLE_NPC_WEAPON" ) ) do
 			local cat = (v.category or ""):lower()
@@ -307,136 +308,224 @@ if CLIENT then
 	vgui.Register("VJ_SpawnmenuNPCSidebarToolbox", PANEL, "DDrawer")
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------- Spawn Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ NPC Duplicator & Save Support ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-local function CreateInternal_NPC(Player, Position, Normal, Class, Equipment, SpawnFlagsSaved)
-	if CLIENT then return end
-	print("Running VJ Base NPC duplicator internal...")
-	local NPCList = list.Get("NPC") //VJBASE_SPAWNABLE_NPC
-	local NPCData = NPCList[Class]
-	if NPCData == nil then print("ERROR! VJ Base NPC duplicator internal failed, NPC not listed in the NPC menu!") return end
-	//PrintTable(NPCData)
-	//if !IsValid(NPCData) then print("VJ Base NPC Internal was unable to spawn the NPC, it didn't find any NPC Data to use") return end
-	print("VJ Base NPC duplicator internal creating: " .. NPCData.Name .. " ( ".. NPCData.Class .. " ) --> ".. NPCData.Category)
+local function InternalSpawnNPC( NPCData, ply, Position, Normal, Class, Equipment, SpawnFlagsSaved, NoDropToFloor )
 
 	-- Don't let them spawn this entity if it isn't in our NPC Spawn list.
-	/*if (!NPCData) then 
-		if (!IsValid(Player)) then
-			Player:SendLua("Derma_Message(\"Hey, stop trying to spawn it, your not allowed to!\")")
-		end
-	return end*/
+	-- We don't want them spawning any entity they like!
+	if ( !NPCData ) then return end
 
-	local isValidPly = IsValid(Player)
-
-	if ( NPCData.AdminOnly && isValidPly && !Player:IsAdmin() ) then return end
+	local isAdmin = ( IsValid( ply ) && ply:IsAdmin() ) or game.SinglePlayer()
+	if ( NPCData.AdminOnly && !isAdmin ) then return end
 
 	local bDropToFloor = false
-	if ( NPCData.OnCeiling && Vector( 0, 0, -1 ):Dot( Normal ) < 0.95 ) then -- This NPC has to be spawned on a ceiling (Barnacle)
-		return nil
-	end
-	if ( NPCData.OnFloor && Vector( 0, 0, 1 ):Dot( Normal ) < 0.95 ) then -- This NPC has to be spawned on a floor (Turrets)
-		return nil
+	local wasSpawnedOnCeiling = false
+	local wasSpawnedOnFloor = false
+
+	--
+	-- This NPC has to be spawned on a ceiling (Barnacle) or a floor (Turrets)
+	--
+	if ( NPCData.OnCeiling or NPCData.OnFloor ) then
+		local isOnCeiling	= Vector( 0, 0, -1 ):Dot( Normal ) >= 0.95
+		local isOnFloor		= Vector( 0, 0,  1 ):Dot( Normal ) >= 0.95
+
+		-- Not on ceiling, and we can't be on floor
+		if ( !isOnCeiling && !NPCData.OnFloor ) then return end
+
+		-- Not on floor, and we can't be on ceiling
+		if ( !isOnFloor && !NPCData.OnCeiling ) then return end
+
+		-- We can be on either, and we are on neither
+		if ( !isOnFloor && !isOnCeiling ) then return end
+
+		wasSpawnedOnCeiling = isOnCeiling
+		wasSpawnedOnFloor = isOnFloor
 	else
 		bDropToFloor = true
 	end
-	if ( NPCData.NoDrop ) then bDropToFloor = false end
 
-	-- Offset the position
-	local Offset = NPCData.Offset or 32
-	Position = Position + Normal * Offset
+	if ( NPCData.NoDrop or NoDropToFloor ) then bDropToFloor = false end
 
 	-- Create NPC
-	local NPC = ents.Create(NPCData.Class)
-	if (!IsValid(NPC)) then print("ERROR! VJ Base NPC duplicator internal failed, NPC class does not exist!") return end
-	NPC:SetPos(Position)
-	
-	-- Rotate to face player (expected behavior)
+	local NPC = ents.Create( NPCData.Class )
+	if ( !IsValid( NPC ) ) then return end
+
+	--
+	-- Offset the position
+	--
+	local Offset = NPCData.Offset or 32
+	NPC:SetPos( Position + Normal * Offset )
+
+	-- Rotate to face player (expected behaviour)
 	local Angles = Angle( 0, 0, 0 )
-		if ( isValidPly ) then
-			Angles = Player:GetAngles()
-		end
-		Angles.pitch = 0
-		Angles.roll = 0
-		Angles.yaw = Angles.yaw + 180
+
+	if ( IsValid( ply ) ) then
+		Angles = ply:GetAngles()
+	end
+
+	Angles.pitch = 0
+	Angles.roll = 0
+	Angles.yaw = Angles.yaw + 180
+
 	if ( NPCData.Rotate ) then Angles = Angles + NPCData.Rotate end
+
 	NPC:SetAngles( Angles )
 
-	-- This NPC has a special model we want to define
-	if ( NPCData.Model ) then NPC:SetModel( NPCData.Model ) end
+	if ( NPCData.SnapToNormal ) then
+		NPC:SetAngles( Normal:Angle() )
+	end
 
-	-- This NPC has a special texture we want to define
-	if ( NPCData.Material ) then NPC:SetMaterial( NPCData.Material ) end
+	--
+	-- Does this NPC have a specified model? If so, use it.
+	--
+	if ( NPCData.Model ) then
+		NPC:SetModel( NPCData.Model )
+	end
 
+	--
+	-- Does this NPC have a specified material? If so, use it.
+	--
+	if ( NPCData.Material ) then
+		NPC:SetMaterial( NPCData.Material )
+	end
+
+	--
 	-- Spawn Flags
+	--
 	local SpawnFlags = bit.bor( SF_NPC_FADE_CORPSE, SF_NPC_ALWAYSTHINK )
 	if ( NPCData.SpawnFlags ) then SpawnFlags = bit.bor( SpawnFlags, NPCData.SpawnFlags ) end
 	if ( NPCData.TotalSpawnFlags ) then SpawnFlags = NPCData.TotalSpawnFlags end
 	if ( SpawnFlagsSaved ) then SpawnFlags = SpawnFlagsSaved end
 	NPC:SetKeyValue( "spawnflags", SpawnFlags )
+	NPC.SpawnFlags = SpawnFlags
 
+	--
 	-- Optional Key Values
+	--
 	if ( NPCData.KeyValues ) then
 		for k, v in pairs( NPCData.KeyValues ) do
 			NPC:SetKeyValue( k, v )
-		end		
-	end
-
-	-- This NPC has a special skin we want to define
-	if ( NPCData.Skin ) then NPC:SetSkin( NPCData.Skin ) end
-	
-	-- Body groups
-	if (NPCData.BodyGroups) then
-		for k, v in pairs(NPCData.BodyGroups) do
-			NPC:SetBodygroup(k, v)
 		end
 	end
 
-	-- Check if this is a valid entity from the list, or the user is trying to fool us.
+	--
+	-- Does this NPC have a specified skin? If so, use it.
+	--
+	if ( NPCData.Skin ) then
+		NPC:SetSkin( NPCData.Skin )
+	end
+
+	--
+	-- What weapon this NPC should be carrying
+	--
+
+	-- Check if this is a valid weapon from the list, or the user is trying to fool us.
 	local valid = false
 	for _, v in pairs( list.Get( "NPCUsableWeapons" ) ) do
-		if v.class == Equipment then valid = true break end
+		if ( v.class == Equipment ) then valid = true break end
+	end
+	for _, v in pairs( NPCData.Weapons or {} ) do
+		if ( v == Equipment ) then valid = true break end
 	end
 
 	if ( Equipment && Equipment != "none" && valid ) then
 		NPC:SetKeyValue( "additionalequipment", Equipment )
-		NPC.Equipment = Equipment 
+		NPC.Equipment = Equipment
 	end
 
-	DoPropSpawnedEffect(NPC)
+	if ( wasSpawnedOnCeiling && isfunction( NPCData.OnCeiling ) ) then
+		NPCData.OnCeiling( NPC )
+	elseif ( wasSpawnedOnFloor && isfunction( NPCData.OnFloor ) ) then
+		NPCData.OnFloor( NPC )
+	end
+
+	-- Allow special case for duplicator stuff
+	if ( isfunction( NPCData.OnDuplicated ) ) then
+		NPC.OnDuplicated = NPCData.OnDuplicated
+	end
+
+	DoPropSpawnedEffect( NPC )
+
 	NPC:Spawn()
 	NPC:Activate()
-	
-	if ( bDropToFloor && !NPCData.OnCeiling ) then NPC:DropToFloor() end
-	print("VJ Base NPC duplicator internal successfully created the NPC!")
+
+	-- Store spawnmenu data for addons and stuff
+	NPC.NPCName = Class
+	NPC.NPCTable = NPCData
+	NPC._wasSpawnedOnCeiling = wasSpawnedOnCeiling
+
+	-- For those NPCs that set their model/skin in Spawn function
+	-- We have to keep the call above for NPCs that want a model set by Spawn() time
+	-- BAD: They may adversly affect entity collision bounds
+	if ( NPCData.Model && NPC:GetModel():lower() != NPCData.Model:lower() ) then
+		NPC:SetModel( NPCData.Model )
+	end
+	if ( NPCData.Skin ) then
+		NPC:SetSkin( NPCData.Skin )
+	end
+
+	if ( bDropToFloor ) then
+		NPC:DropToFloor()
+	end
+
+	if ( NPCData.Health ) then
+		NPC:SetHealth( NPCData.Health )
+		NPC:SetMaxHealth( NPCData.Health )
+	end
+
+	-- Body groups
+	if ( NPCData.BodyGroups ) then
+		for k, v in pairs( NPCData.BodyGroups ) do
+			NPC:SetBodygroup( k, v )
+		end
+	end
+
 	return NPC
+
 end
 -------------------------------------------------------------------------------------------------------------------------
 if !VJ then VJ = {} end -- If VJ isn't initialized, initialize it!
 --
-local vecZ1 = Vector(0, 0, 1)
---
-VJ.CreateDupe_NPC = function(ply, class, equipment, spawnflags, data) -- Based on the GMod NPCs, had to recreate it here because it's not a global function
-	//PrintTable(data)
-	if IsValid(ply) && !gamemode.Call("PlayerSpawnNPC", ply, class, equipment) then return end -- Don't create if this player isn't allowed to spawn NPCs!
+VJ.CreateDupe_NPC = function( ply, mdl, class, equipment, spawnflags, data )
 
-	local normal = vecZ1
-	local NPCList = list.Get("NPC")
-	local NPCData = NPCList[class]
-	if (NPCData && NPCData.OnCeiling) then normal = Vector(0, 0, -1) end
+	-- Match the behavior of Spawn_NPC above - class should be the one in the list, NOT the entity class!
+	if ( data.NPCName ) then class = data.NPCName end
 
-	local ent = CreateInternal_NPC(ply, data.Pos, normal, class, equipment, spawnflags)
-	if (IsValid(ent)) then
-		local pos = ent:GetPos() -- Prevents the NPCs from falling through the floor
-		duplicator.DoGeneric(ent, data) -- Applies generic every-day entity stuff for ent from table data (wiki)
-		if (!NPCData.OnCeiling && !NPCData.NoDrop) then
-			ent:SetPos(pos)
-			ent:DropToFloor()
-		end
-		if (IsValid(ply)) then
-			gamemode.Call("PlayerSpawnedNPC", ply, ent)
-			ply:AddCleanup("npcs", ent)
-		end
-		table.Add(ent:GetTable(), data)
+	if ( IsValid( ply ) && !gamemode.Call( "PlayerSpawnNPC", ply, class, equipment ) ) then return end
+
+	local NPCData = list.Get( "NPC" )[ class ]
+	-- I don't think we are ready for this
+	-- if ( !NPCData ) then NPCData = data.NPCTable end
+
+	local normal = Vector( 0, 0, 1 )
+	if ( NPCData && NPCData.OnCeiling && ( NPCData.OnFloor && data._wasSpawnedOnCeiling or !NPCData.OnFloor ) ) then
+		normal = Vector( 0, 0, -1 )
 	end
+
+	local ent = InternalSpawnNPC( NPCData, ply, data.Pos, normal, class, equipment, spawnflags, true )
+	if ( IsValid( ent ) ) then
+
+		local pos = ent:GetPos() -- Hack! Prevents the NPCs from falling through the floor
+
+		duplicator.DoGeneric( ent, data )
+
+		if ( NPCData && !NPCData.OnCeiling && !NPCData.NoDrop ) then
+			ent:SetPos( pos )
+		end
+
+		if ( IsValid( ply ) ) then
+			gamemode.Call( "PlayerSpawnedNPC", ply, ent )
+			ply:AddCleanup( "npcs", ent )
+		end
+
+		if ( data.CurHealth ) then ent:SetHealth( data.CurHealth ) end
+		if ( data.MaxHealth ) then ent:SetMaxHealth( data.MaxHealth ) end
+
+		table.Merge( ent:GetTable(), data )
+
+	end
+
 	return ent
+
 end

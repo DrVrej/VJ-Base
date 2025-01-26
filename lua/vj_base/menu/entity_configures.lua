@@ -15,8 +15,6 @@ local function VJ_NPC_SETTINGS_AI(panel)
 	panel:AddControl("Label", {Text = "#vjbase.menu.general.npc.warnfuture"})
 	panel:AddControl("Button",{Text = "#vjbase.menu.general.reset.everything", Command = "vj_npc_sight_distance 0\n vj_npc_sight_xray 0\n vj_npc_wander 1\n vj_npc_chase 1\n vj_npc_flinch 1\n vj_npc_investigate 1\n vj_npc_callhelp 1\n vj_npc_ply_follow 1\n vj_npc_medic 1\n vj_npc_eat 1\n vj_npc_dangerdetection 1\n vj_npc_runontouch 1\n vj_npc_runonhit 1\n vj_npc_human_jump 1\n vj_npc_creature_opendoor 1\n vj_npc_allies 1\n vj_npc_ply_betray 1\n vj_npc_fri_base 0\n vj_npc_fri_player 0\n vj_npc_fri_zombie 0\n vj_npc_fri_antlion 0\n vj_npc_fri_combine 0"})
 	
-	
-	
 	panel:AddControl("TextBox", {Label = "#vjbase.menu.npc.settings.ai.sightdistance", Command = "vj_npc_sight_distance", WaitForEnter = "0"})
 	panel:ControlHelp("#vjbase.menu.npc.settings.ai.sightdistance.label")
 	panel:AddControl("Checkbox", {Label = "#vjbase.menu.npc.settings.ai.sightxray", Command = "vj_npc_sight_xray"})
@@ -256,7 +254,7 @@ local function VJ_NPC_SETTINGS_CONTROLLER(panel)
 			ControlList:AddLine("LEFT ARROW", "#vjbase.menu.npc.settings.con.bind.cameraleft")
 			ControlList:AddLine("RIGHT ARROW", "#vjbase.menu.npc.settings.con.bind.cameraright")
 			ControlList:AddLine("BACKSPACE", "#vjbase.menu.npc.settings.con.bind.resetzoom")
-		ControlList.OnRowSelected = function(panel, rowIndex, row)
+		ControlList.OnRowSelected = function(panel2, rowIndex, row)
 			chat.AddText(Color(0,255,0), language.GetPhrase("#vjbase.menu.npc.settings.con.bind.clickmsg1").." ", Color(255,255,0), row:GetValue(1), Color(0,255,0), " | "..language.GetPhrase("#vjbase.menu.npc.settings.con.bind.clickmsg2").." ", Color(255,255,0), row:GetValue(2))
 		end
 	panel:AddItem(ControlList)
