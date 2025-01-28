@@ -27,7 +27,7 @@ ENT.DeathSoundLevel = 100
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Tank Base ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ENT.Tank_GunnerENT = "" -- Gunner entity of the tank
+ENT.Tank_GunnerENT = false -- Gunner entity of the tank | false = No gunner | string = class name of the gunner
 ENT.Tank_AngleOffset = 0 -- Use to offset the forward angle if the model's y-axis isn't facing the correct direction
 	-- ====== Sight ====== --
 ENT.Tank_DriveAwayDistance = 1000 -- If the enemy is closer than this number, than move by either running over them or moving away for the gunner to fire
@@ -54,8 +54,6 @@ ENT.Tank_SoundTbl_Track = false
 ENT.HasRunOverSound = true
 ENT.Tank_SoundTbl_RunOver = false
 
-//util.AddNetworkString("vj_tank_base_spawneffects")
-//util.AddNetworkString("vj_tank_base_moveeffects")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -117,20 +115,26 @@ Called when the tank is about to spawn death soldier model, death effects, and d
 --]]
 function ENT:Tank_OnDeathCorpse(dmginfo, hitgroup, corpseEnt, status, statusData) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:StartSpawnEffects()
-	/* Example:
-	net.Start("vj_tank_base_spawneffects")
-	net.WriteEntity(self)
-	net.Broadcast()
-	*/
+function ENT:UpdateIdleParticles()
+	-- Example:
+	//local effectData = EffectData()
+	//effectData:SetScale(1)
+	//effectData:SetEntity(self)
+	//effectData:SetOrigin(self:GetPos() + self:GetForward() * -130 + self:GetRight() * 25  + self:GetUp() * 45)
+	//util.Effect("VJ_VehicleExhaust", effectData, true, true)
+	//effectData:SetOrigin(self:GetPos() + self:GetForward() * -130 + self:GetRight() * -28 + self:GetUp() * 45)
+	//util.Effect("VJ_VehicleExhaust", effectData, true, true)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:StartMoveEffects()
-	/* Example:
-	net.Start("vj_tank_base_moveeffects")
-	net.WriteEntity(self)
-	net.Broadcast()
-	*/
+function ENT:UpdateMoveParticles()
+	-- Example:
+	//local effectData = EffectData()
+	//effectData:SetScale(1)
+	//effectData:SetEntity(self)
+	//effectData:SetOrigin(self:GetPos() + self:GetForward() * -115 + self:GetRight() * 58)
+	//util.Effect("VJ_VehicleMove", effectData, true, true)
+	//effectData:SetOrigin(self:GetPos() + self:GetForward() * -115 + self:GetRight() * -58)
+	//util.Effect("VJ_VehicleMove", effectData, true, true)
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -143,6 +147,7 @@ ENT.Tank_IsMoving = false
 ENT.Tank_Status = 1
 ENT.Tank_NextLowHealthSparkT = 0
 ENT.Tank_NextRunOverSoundT = 0
+ENT.Tank_NextIdleParticles = 0
 local runoverException = {npc_antlionguard=true,npc_turret_ceiling=true,monster_gargantua=true,monster_bigmomma=true,monster_nihilanth=true,npc_strider=true,npc_combine_camera=true,npc_helicopter=true,npc_combinegunship=true,npc_combinedropship=true,npc_rollermine=true}
 local defAng = Angle(0, 0, 0)
 
@@ -151,6 +156,7 @@ local cv_noidleparticle = GetConVar("vj_npc_reduce_vfx")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
 	self:SetPhysicsDamageScale(0) -- Take no physics damage
+	self.Tank_NextIdleParticles = CurTime() + 1
 	self.DeathAnimationCodeRan = true -- So corpse doesn't fly away on death (Take this out if not using death explosion sequence)
 	self:Tank_Init()
 	-- !!!!!!!!!!!!!! DO NOT USE THESE !!!!!!!!!!!!!! [Backwards Compatibility!]
@@ -170,16 +176,18 @@ function ENT:Init()
 	end
 	
 	-- Create the gunner NPC
-	local gunner = ents.Create(self.Tank_GunnerENT)
-	if IsValid(gunner) then
-		gunner:SetPos(self:Tank_GunnerSpawnPosition())
-		gunner:SetAngles(self:GetAngles())
-		gunner:SetOwner(self)
-		gunner:SetParent(self)
-		gunner.VJ_NPC_Class = self.VJ_NPC_Class
-		gunner:Spawn()
-		gunner:Activate()
-		self.Gunner = gunner
+	if self.Tank_GunnerENT then
+		local gunner = ents.Create(self.Tank_GunnerENT)
+		if IsValid(gunner) then
+			gunner:SetPos(self:Tank_GunnerSpawnPosition())
+			gunner:SetAngles(self:GetAngles())
+			gunner:SetOwner(self)
+			gunner:SetParent(self)
+			gunner.VJ_NPC_Class = self.VJ_NPC_Class
+			gunner:Spawn()
+			gunner:Activate()
+			self.Gunner = gunner
+		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -202,14 +210,12 @@ function ENT:Tank_RunOver(ent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnThink()
-	if self:Tank_OnThink() != true then
-		if cv_noidleparticle:GetInt() == 1 then return end
-		timer.Simple(0.1, function()
-			if IsValid(self) && !self.Dead then
-				self:StartSpawnEffects()
-			end
-		end)
-
+	if self:Tank_OnThink() != true && cv_noidleparticle:GetInt() == 0 then
+		if self.Tank_NextIdleParticles < CurTime() then
+			self:UpdateIdleParticles()
+			self.Tank_NextIdleParticles = CurTime() + 0.1
+		end
+	
 		if self:Health() < (self.StartHealth*0.30) && CurTime() > self.Tank_NextLowHealthSparkT then
 			//ParticleEffectAttach("vj_rocket_idle2_smoke2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 
@@ -308,7 +314,7 @@ function ENT:OnThinkActive()
 				hasMoved = true
 				self.Tank_IsMoving = true
 				self:Tank_PlaySoundSystem("Movement")
-				self:StartMoveEffects()
+				self:UpdateMoveParticles()
 			end
 		end
 	end

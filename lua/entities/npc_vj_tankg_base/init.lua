@@ -50,7 +50,6 @@ ENT.Tank_SoundTbl_FireShell = false
 ENT.Tank_FireShellSoundLevel = 140
 ENT.Tank_FireShellSoundPitch = VJ.SET(90, 100)
 
-//util.AddNetworkString("vj_tankg_base_spawneffects")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Customization Functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -58,7 +57,7 @@ ENT.Tank_FireShellSoundPitch = VJ.SET(90, 100)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_Init() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:Tank_OnThink() end -- Return true to disable the default base code (Its just the StartSpawnEffects)
+function ENT:Tank_OnThink() end -- Return true to disable the default base code (Its just the UpdateIdleParticles)
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_OnThinkActive() end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -100,12 +99,15 @@ Called when the tank is firing its shell
 --]]
 function ENT:Tank_OnFireShell(status, statusData) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:StartSpawnEffects()
-	/* Example:
-	net.Start("vj_tankg_base_spawneffects")
-	net.WriteEntity(self)
-	net.Broadcast()
-	*/
+function ENT:UpdateIdleParticles()
+	-- Example:
+	//local effectData = EffectData()
+	//effectData:SetScale(1)
+	//effectData:SetEntity(self)
+	//effectData:SetOrigin(self:GetPos() + self:GetForward() * -130 + self:GetRight() * 25  + self:GetUp() * 45)
+	//util.Effect("VJ_VehicleExhaust", effectData, true, true)
+	//effectData:SetOrigin(self:GetPos() + self:GetForward() * -130 + self:GetRight() * -28 + self:GetUp() * 45)
+	//util.Effect("VJ_VehicleExhaust", effectData, true, true)
 end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -120,6 +122,7 @@ ENT.Tank_GunnerIsTurning = false
 ENT.Tank_Status = 0 -- 0 = Can fire | 1 = Can NOT fire
 ENT.Tank_Shell_NextFireT = 0
 ENT.Tank_TurningLerp = nil
+ENT.Tank_NextIdleParticles = 0
 
 local TANK_SHELL_STATUS_EMPTY = 0
 local TANK_SHELL_STATUS_RELOADING = 1
@@ -130,6 +133,7 @@ local cv_norange = GetConVar("vj_npc_range")
 local cv_noidleparticle = GetConVar("vj_npc_reduce_vfx")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
+	self.Tank_NextIdleParticles = CurTime() + 1
 	self.DeathAnimationCodeRan = true -- So corpse doesn't fly away on death (Take this out if not using death explosion sequence)
 	self:SetPhysicsDamageScale(0) -- Take no physics damage
 	self:Tank_Init()
@@ -137,12 +141,9 @@ function ENT:Init()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnThink()
-	if self:Tank_OnThink() != true && cv_noidleparticle:GetInt() == 0 then
-		timer.Simple(0.1, function()
-			if IsValid(self) && !self.Dead then
-				self:StartSpawnEffects()
-			end
-		end)
+	if self:Tank_OnThink() != true && cv_noidleparticle:GetInt() == 0 && self.Tank_NextIdleParticles < CurTime() then
+		self:UpdateIdleParticles()
+		self.Tank_NextIdleParticles = CurTime() + 0.1
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -327,13 +328,6 @@ function ENT:Tank_FireShell()
 			//smoke:Spawn()
 			//smoke:Activate()
 			//smoke:Fire("Kill", 0, 4)
-
-			-- Client firing effects
-			//local iClientEffect = 0
-			//for _ = 1, 40 do
-			//	iClientEffect = iClientEffect + 0.1
-			//	timer.Simple(iClientEffect, function() if IsValid(self) && !self.Dead then self:StartShootEffects() end end)
-			//end
 		end
 		self.Tank_Shell_Status = TANK_SHELL_STATUS_EMPTY
 		self.Tank_Shell_NextFireT = CurTime() + self.Tank_Shell_NextFireTime

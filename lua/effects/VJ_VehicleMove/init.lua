@@ -4,26 +4,24 @@
 	without the prior written consent of the author, unless otherwise indicated for stand-alone materials.
 --------------------------------------------------*/
 function EFFECT:Init(data)
+	local ent = data:GetEntity()
 	local origin = data:GetOrigin()
+	local scale = data:GetScale()
 	local emitter = ParticleEmitter(origin)
 	
-	-- Cloud of dust that goes up
-	for _ = 1, 8 do
-		local dust = emitter:Add("particles/smokey", origin)
-		if dust then
-			dust:SetVelocity(Vector(math.random(-40, 40), math.random(-40, 40), math.random(5, 15)))
-			dust:SetDieTime(math.Rand(7, 9))
-			dust:SetStartAlpha(150)
-			dust:SetEndAlpha(0)
-			dust:SetStartSize(math.Rand(20, 40))
-			dust:SetEndSize(math.Rand(100, 120))
-			dust:SetRoll(math.Rand(480, 540))
-			dust:SetRollDelta(math.Rand(-0.2, 0.2))
-			dust:SetColor(80, 60, 20)
-			dust:SetGravity(Vector(0, 0, 0))
-			dust:SetAirResistance(15)
-			dust:SetCollide(true)
-		end
+	-- Dust
+	local dust = emitter:Add("particles/smokey", origin)
+	if dust then
+		dust:SetVelocity(ent:GetVelocity() + ent:GetForward() * math.Rand(100, 200) + Vector(math.Rand(5, -5), math.Rand(5, -5),math.Rand(5, -5)))
+		dust:SetDieTime(4)
+		dust:SetStartAlpha(50)
+		dust:SetEndAlpha(0)
+		dust:SetStartSize(math.Rand(12, 20))
+		dust:SetEndSize(math.Rand(80, 100) * scale)
+		dust:SetRoll(math.Rand(-0.2, 0.2))
+		dust:SetColor(80, 60, 20)
+		dust:SetAirResistance(300)
+		dust:SetGravity(Vector(0, 0, 50))
 	end
 	emitter:Finish()
 end

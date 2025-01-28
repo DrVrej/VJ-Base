@@ -35,6 +35,7 @@ local math_clamp = math.Clamp
 local math_angDif = math.AngleDifference
 local varCPly = "CLASS_PLAYER_ALLY"
 local StopSound = VJ.STOPSOUND
+local PICK = VJ.PICK
 local VJ_STATE_NONE = VJ_STATE_NONE
 local VJ_STATE_FREEZE = VJ_STATE_FREEZE
 local VJ_STATE_ONLY_ANIMATION_CONSTANT = VJ_STATE_ONLY_ANIMATION_CONSTANT
@@ -75,7 +76,7 @@ function ENT:CreateExtraDeathCorpse(class, models, extraOptions, customFunc)
 	if dmginfo == nil then return end
 	extraOptions = extraOptions or {}
 	local ent = ents.Create(class or "prop_ragdoll")
-	if models != "None" then ent:SetModel(VJ.PICK(models)) end
+	if models != "None" then ent:SetModel(PICK(models)) end
 	ent:SetPos(extraOptions.Pos or self:GetPos())
 	ent:SetAngles(extraOptions.Ang or self:GetAngles())
 	ent:Spawn()
@@ -136,19 +137,19 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 	if self.CanGib == false then return end
 	local bloodType = false
 	if models == "UseAlien_Small" then
-		models =  VJ.PICK(gib_mdlASmall)
+		models =  PICK(gib_mdlASmall)
 		bloodType = VJ.BLOOD_COLOR_YELLOW
 	elseif models == "UseAlien_Big" then
-		models =  VJ.PICK(gib_mdlABig)
+		models =  PICK(gib_mdlABig)
 		bloodType = VJ.BLOOD_COLOR_YELLOW
 	elseif models == "UseHuman_Small" then
-		models =  VJ.PICK(gib_mdlHSmall)
+		models =  PICK(gib_mdlHSmall)
 		bloodType = VJ.BLOOD_COLOR_RED
 	elseif models == "UseHuman_Big" then
-		models =  VJ.PICK(gib_mdlHBig)
+		models =  PICK(gib_mdlHBig)
 		bloodType = VJ.BLOOD_COLOR_RED
 	else -- Custom models
-		models = VJ.PICK(models)
+		models = PICK(models)
 		if VJ.HasValue(gib_mdlAAll, models) then
 			bloodType = VJ.BLOOD_COLOR_YELLOW
 		end
@@ -297,11 +298,11 @@ function ENT:OnEat(status, statusData)
 		local bloodData = food.BloodData
 		if bloodData then
 			local bloodPos = food:GetPos() + food:OBBCenter()
-			local bloodParticle = VJ.PICK(bloodData.Particle)
+			local bloodParticle = PICK(bloodData.Particle)
 			if bloodParticle then
 				ParticleEffect(bloodParticle, bloodPos, self:GetAngles())
 			end
-			local bloodDecal = VJ.PICK(bloodData.Decal)
+			local bloodDecal = PICK(bloodData.Decal)
 			if bloodDecal then
 				local tr = util.TraceLine({start = bloodPos, endpos = bloodPos + vecZ50, filter = {food, self}})
 				util.Decal(bloodDecal, tr.HitPos + tr.HitNormal + Vector(math.random(-45, 45), math.random(-45, 45), 0), tr.HitPos - tr.HitNormal, food)
@@ -400,7 +401,7 @@ function ENT:MaintainIdleAnimation(force)
 			-- Human base ONLY
 			local wepAnim = self.WeaponAnimTranslations[v] -- Translate to weapon act in case it needs to!
 			if wepAnim then -- Translation found
-				v = VJ.PICK(wepAnim)
+				v = PICK(wepAnim)
 				-- VERY UGLY: If it's a table, then check inside it to see if current idle anim is one of them
 				if curAnim != v && istable(wepAnim) then
 					for _, v2 in ipairs(wepAnim) do
@@ -429,7 +430,7 @@ function ENT:MaintainIdleAnimation(force)
 		//return
 	//end
 	
-	local pickedAnim = VJ.PICK(posIdlesTbl) or ACT_IDLE -- If no animation was found, then use ACT_IDLE
+	local pickedAnim = PICK(posIdlesTbl) or ACT_IDLE -- If no animation was found, then use ACT_IDLE
 	
 	-- If sequence and it has no activity, then don't continue!
 	//pickedAnim = VJ.SequenceToActivity(self,pickedAnim)
@@ -530,7 +531,7 @@ local varGes = "vjges_"
 local varSeq = "vjseq_"
 --
 function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, extraOptions, customFunc)
-	animation = VJ.PICK(animation)
+	animation = PICK(animation)
 	if !animation then return ACT_INVALID, 0, ANIM_TYPE_NONE end
 	
 	lockAnim = lockAnim or false
@@ -1466,8 +1467,6 @@ function ENT:KeyValue(key, value)
 	//VJ.DEBUG_Print(self, "KeyValue", key, value)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-// lua_run PrintTable(Entity(1):GetEyeTrace().Entity:GetTable())
---
 function ENT:OnRestore()
 	//VJ.DEBUG_Print(self, "OnRestore")
 	self:StopMoving()
@@ -2378,7 +2377,7 @@ function ENT:Flinch(dmginfo, hitgroup)
 			self.Flinching = true
 			self:StopAttacks(true)
 			self.CurrentAttackAnimationTime = 0
-			local anim = VJ.PICK(hitgroupInfo and hitgroupInfo.Animation or self.AnimTbl_Flinch)
+			local anim = PICK(hitgroupInfo and hitgroupInfo.Animation or self.AnimTbl_Flinch)
 			local _, animDur = self:PlayAnim(anim, true, self:DecideAnimationLength(anim, self.NextMoveAfterFlinchTime), false, 0, {PlayBackRateCalculated=true})
 			timer.Create("timer_flinch_reset"..self:EntIndex(), animDur, 1, function() self.Flinching = false end)
 			self:OnFlinch(dmginfo, hitgroup, "Execute")
@@ -2495,20 +2494,20 @@ function ENT:SetupBloodColor(blColor)
 	npcSize = ((npcSize < 25 and 0) or npcSize < 50 and 1) or 2 -- 0 = tiny | 1 = small | 2 = normal
 	local blood = bloodNames[blColor]
 	if blood then
-		if !VJ.PICK(self.BloodParticle) then
+		if !PICK(self.BloodParticle) then
 			self.BloodParticle = blood.particle
 		end
-		if !VJ.PICK(self.BloodDecal) then
+		if !PICK(self.BloodDecal) then
 			self.BloodDecal = self.BloodDecalUseGMod and blood.decal_gmod or blood.decal
 		end
-		if !VJ.PICK(self.BloodPool) then
+		if !PICK(self.BloodPool) then
 			self.BloodPool = blood.pool[npcSize]
 		end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodParticles(dmginfo, hitgroup)
-	local particleName = VJ.PICK(self.BloodParticle)
+	local particleName = PICK(self.BloodParticle)
 	if particleName then
 		local dmgPos = dmginfo:GetDamagePosition()
 		local particle = ents.Create("info_particle_system")
@@ -2523,7 +2522,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SpawnBloodDecal(dmginfo, hitgroup)
 	local decals = self.BloodDecal
-	if !VJ.PICK(decals) then return end
+	if !PICK(decals) then return end
 	
 	local dmgForce = dmginfo:GetDamageForce()
 	local dmgPos = dmginfo:GetDamagePosition()
@@ -2534,16 +2533,16 @@ function ENT:SpawnBloodDecal(dmginfo, hitgroup)
 	local tr = util.TraceLine({start = dmgPos, endpos = dmgPos + dmgForce:GetNormal() * clampedLength, filter = self})
 	local trNormalP = tr.HitPos + tr.HitNormal
 	local trNormalN = tr.HitPos - tr.HitNormal
-	util.Decal(VJ.PICK(decals), trNormalP, trNormalN, self)
+	util.Decal(PICK(decals), trNormalP, trNormalN, self)
 	for _ = 1, 2 do
-		if math.random(1, 2) == 1 then util.Decal(VJ.PICK(decals), trNormalP + Vector(math.random(-70, 70), math.random(-70, 70), 0), trNormalN, self) end
+		if math.random(1, 2) == 1 then util.Decal(PICK(decals), trNormalP + Vector(math.random(-70, 70), math.random(-70, 70), 0), trNormalN, self) end
 	end
 	
 	-- Kedni ayroun
 	if math.random(1, 2) == 1 then
 		local d2_endpos = dmgPos + Vector(0, 0, - clampedLength)
-		util.Decal(VJ.PICK(decals), dmgPos, d2_endpos, self)
-		if math.random(1, 2) == 1 then util.Decal(VJ.PICK(decals), dmgPos, d2_endpos + Vector(math.random(-120, 120), math.random(-120, 120), 0), self) end
+		util.Decal(PICK(decals), dmgPos, d2_endpos, self)
+		if math.random(1, 2) == 1 then util.Decal(PICK(decals), dmgPos, d2_endpos + Vector(math.random(-120, 120), math.random(-120, 120), 0), self) end
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -2551,7 +2550,7 @@ local vecZ30 = Vector(0, 0, 30)
 local vecZ1 = Vector(0, 0, 1)
 --
 function ENT:SpawnBloodPool(dmginfo, hitgroup, corpse)
-	local getBloodPool = VJ.PICK(self.BloodPool)
+	local getBloodPool = PICK(self.BloodPool)
 	if getBloodPool then
 		timer.Simple(2.2, function()
 			if IsValid(corpse) then
@@ -2575,25 +2574,25 @@ function ENT:IdleSoundCode(customSD, sdType)
 	
 	if self.NextIdleSoundT_RegularChange < CurTime() && self.NextIdleSoundT < CurTime() then
 		sdType = sdType or VJ.CreateSound
-		customSD = VJ.PICK(customSD)
+		customSD = PICK(customSD)
 		local setTimer = true
 		
 		local hasEnemy = IsValid(self:GetEnemy())
 		-- Yete CombatIdle tsayn chouni YEV gerna barz tsayn hanel, ere vor barz tsayn han e
-		if hasEnemy && !VJ.PICK(self.SoundTbl_CombatIdle) && !self.IdleSounds_NoRegularIdleOnAlerted then
+		if hasEnemy && !PICK(self.SoundTbl_CombatIdle) && !self.IdleSounds_NoRegularIdleOnAlerted then
 			hasEnemy = false
 		end
 		
 		if hasEnemy then
-			local pickedSD = VJ.PICK(self.SoundTbl_CombatIdle)
+			local pickedSD = PICK(self.SoundTbl_CombatIdle)
 			if (math.random(1,self.CombatIdleSoundChance) == 1 && pickedSD) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentIdleSound)
 				self.CurrentIdleSound = sdType(self, pickedSD, self.CombatIdleSoundLevel, self:GetSoundPitch(self.CombatIdleSoundPitch.a, self.CombatIdleSoundPitch.b))
 			end
 		else
-			local pickedSD = VJ.PICK(self.SoundTbl_Idle)
-			local sdtbl2 = VJ.PICK(self.SoundTbl_IdleDialogue)
+			local pickedSD = PICK(self.SoundTbl_Idle)
+			local sdtbl2 = PICK(self.SoundTbl_IdleDialogue)
 			local sdrand = math.random(1, self.IdleSoundChance)
 			local function RegularIdle()
 				if (sdrand == 1 && pickedSD) or customSD then
@@ -2615,7 +2614,7 @@ function ENT:IdleSoundCode(customSD, sdType)
 								foundEnt = v
 							end
 						elseif v:IsNPC() && !v.Dead && ((self:GetClass() == v:GetClass()) or (self:CheckRelationship(v) == D_LI)) && self:Visible(v) then
-							local hasDialogueAnswer = (v.IsVJBaseSNPC and VJ.PICK(v.SoundTbl_IdleDialogueAnswer)) or false
+							local hasDialogueAnswer = (v.IsVJBaseSNPC and PICK(v.SoundTbl_IdleDialogueAnswer)) or false
 							if !self:OnIdleDialogue(v, "CheckEnt", hasDialogueAnswer) then
 								foundEnt = v
 								if hasDialogueAnswer then
@@ -2684,8 +2683,8 @@ end
 function ENT:IdleDialogueAnswerSoundCode(customSD, sdType)
 	if self.Dead or !self.HasSounds or !self.HasIdleDialogueAnswerSounds then return 0 end
 	sdType = sdType or VJ.CreateSound
-	customSD = VJ.PICK(customSD)
-	local pickedSD = VJ.PICK(self.SoundTbl_IdleDialogueAnswer)
+	customSD = PICK(customSD)
+	local pickedSD = PICK(self.SoundTbl_IdleDialogueAnswer)
 	if (math.random(1, self.IdleDialogueAnswerSoundChance) == 1 && pickedSD) or customSD then
 		if customSD then pickedSD = customSD end
 		StopSound(self.CurrentSpeechSound)
@@ -2743,19 +2742,8 @@ end
 	Notes
 		- DMG_ALWAYSGIB = Skip if it's a bullet because engine sets DMG_ALWAYSGIB for "FireBullets" if it's more than 16 otherwise it sets DMG_NEVERGIB
 -----------------------------------------------------------]]
-local GIB_DAMAGE_MASK = bit.bor(
-    DMG_ALWAYSGIB,
-    DMG_ENERGYBEAM,
-    DMG_BLAST,
-    DMG_VEHICLE,
-    DMG_CRUSH,
-    DMG_DISSOLVE,
-    DMG_SLOWBURN,
-    DMG_PHYSGUN,
-    DMG_PLASMA,
-    DMG_SONIC
-	//DMG_DIRECT -- Disabled because default fire and intended weapons use it!
-)
+local GIB_DAMAGE_MASK = bit.bor(DMG_ALWAYSGIB, DMG_ENERGYBEAM, DMG_BLAST, DMG_VEHICLE, DMG_CRUSH, DMG_DISSOLVE, DMG_SLOWBURN, DMG_PHYSGUN, DMG_PLASMA, DMG_SONIC)
+//DMG_DIRECT -- Disabled because default fire and intended weapons use it!
 --
 function ENT:IsGibDamage(dmgType)
 	return bAND(dmgType, DMG_NEVERGIB) == 0 && bAND(dmgType, GIB_DAMAGE_MASK) != 0 && (bAND(dmgType, DMG_ALWAYSGIB) == 0 || bAND(dmgType, DMG_BULLET) == 0)
@@ -2788,7 +2776,7 @@ function ENT:StartSoundTrack()
 		self.VJ_SD_PlayingMusic = true
 		net.Start("vj_music_run")
 			net.WriteEntity(self)
-			net.WriteString(VJ.PICK(self.SoundTbl_SoundTrack))
+			net.WriteString(PICK(self.SoundTbl_SoundTrack))
 			net.WriteFloat(self.SoundTrackVolume)
 			net.WriteFloat(self.SoundTrackPlaybackRate)
 			//net.WriteFloat(self.SoundTrackFadeOutTime)
@@ -2798,7 +2786,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:CreateDeathLoot(dmginfo, hitgroup)
 	if math.random(1, self.DeathLootChance) == 1 then
-		local pickedEnt = VJ.PICK(self.DeathLoot)
+		local pickedEnt = PICK(self.DeathLoot)
 		if pickedEnt != false then
 			local ent = ents.Create(pickedEnt)
 			ent:SetPos(self:GetPos() + self:OBBCenter())
@@ -2924,7 +2912,7 @@ function ENT:DoWeaponAttackMovementCode(override, moveType)
 	elseif self.Weapon_CanFireWhileMoving == true then
 		if self.EnemyData.IsVisible && self:CanFireWeapon(true, false) == true && ((self:IsMoving() && (self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true)) or (override == true)) then
 			if (override == true && moveType == 0) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 1) then
-				local anim = self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_ShootWhileMovingRun))
+				local anim = self:TranslateToWeaponAnim(PICK(self.AnimTbl_ShootWhileMovingRun))
 				if VJ.AnimExists(self,anim) == true then
 					self.DoingWeaponAttack = true
 					self.DoingWeaponAttack_Standing = false
@@ -2933,7 +2921,7 @@ function ENT:DoWeaponAttackMovementCode(override, moveType)
 					self:SetArrivalActivity(self.CurrentWeaponAnimation)
 				end
 			elseif (override == true && moveType == 1) or (self.CurrentSchedule != nil && self.CurrentSchedule.MoveType == 0) then
-				local anim = self:TranslateToWeaponAnim(VJ.PICK(self.AnimTbl_ShootWhileMovingWalk))
+				local anim = self:TranslateToWeaponAnim(PICK(self.AnimTbl_ShootWhileMovingWalk))
 				if VJ.AnimExists(self,anim) == true then
 					self.DoingWeaponAttack = true
 					self.DoingWeaponAttack_Standing = false
