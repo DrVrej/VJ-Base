@@ -1283,14 +1283,24 @@ local function ApplyBackwardsCompatibility(self)
 			end
 		end
 	end
-	if self.CustomOnInitialKilled or self.CustomDeathAnimationCode or self.CustomOnKilled then
+	if self.CustomOnInitialKilled or self.CustomOnPriorToKilled or self.CustomDeathAnimationCode or self.CustomOnKilled or self.CustomOnDeath_BeforeCorpseSpawned then
 		self.OnDeath = function(_, dmginfo, hitgroup, status)
-			if status == "Initial" && self.CustomOnInitialKilled then
-				self:CustomOnInitialKilled(dmginfo, hitgroup)
+			if status == "Initial" then
+				if self.CustomOnInitialKilled then
+					self:CustomOnInitialKilled(dmginfo, hitgroup)
+				end
+				if self.CustomOnPriorToKilled then
+					self:CustomOnPriorToKilled(dmginfo, hitgroup)
+				end
 			elseif status == "DeathAnim" && self.CustomDeathAnimationCode then
 				self:CustomDeathAnimationCode(dmginfo, hitgroup)
-			elseif status == "Finish" && self.CustomOnKilled then
-				self:CustomOnKilled(dmginfo, hitgroup)
+			elseif status == "Finish" then
+				if self.CustomOnKilled then
+					self:CustomOnKilled(dmginfo, hitgroup)
+				end
+				if self.CustomOnDeath_BeforeCorpseSpawned then
+					self:CustomOnDeath_BeforeCorpseSpawned(dmginfo, hitgroup)
+				end
 			end
 		end
 	end
@@ -1342,20 +1352,6 @@ local function ApplyBackwardsCompatibility(self)
 		self.GetLeapAttackVelocity = function()
 			local ene = self:GetEnemy()
 			return ((ene:GetPos() + ene:OBBCenter()) - (self:GetPos() + self:OBBCenter())):GetNormal()*400 + self:GetForward()*(self.LeapAttackVelocityForward or 2000) + self:GetUp()*(self.LeapAttackVelocityUp or 200)
-		end
-	end
-	if self.CustomOnPriorToKilled then
-		local orgFunc = self.CustomOnInitialKilled
-		self.CustomOnInitialKilled = function(_, dmginfo, hitgroup)
-			orgFunc(self, dmginfo, hitgroup)
-			self:CustomOnPriorToKilled(dmginfo, hitgroup)
-		end
-	end
-	if self.CustomOnDeath_BeforeCorpseSpawned then
-		local orgFunc = self.CustomOnKilled
-		self.CustomOnKilled = function(_, dmginfo, hitgroup)
-			orgFunc(self, dmginfo, hitgroup)
-			self:CustomOnDeath_BeforeCorpseSpawned(dmginfo, hitgroup)
 		end
 	end
 	-- !!!!!!!!!!!!!! DO NOT USE ANY OF THESE !!!!!!!!!!!!!! [Backwards Compatibility!]

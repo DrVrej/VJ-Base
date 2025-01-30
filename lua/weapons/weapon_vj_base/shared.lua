@@ -755,11 +755,6 @@ function SWEP:PrimaryAttack(UseAlt)
 					dmginfo:SetWeapon(self)
 					dmginfo:SetInflictor(self)
 					return self:OnPrimaryAttack_BulletCallback(attacker, tr, dmginfo)
-					//local effectData = EffectData()
-					//effectData:SetOrigin(tr.HitPos)
-					//effectData:SetNormal(tr.HitNormal)
-					//effectData:SetScale(25)
-					//util.Effect("AR2Impact", effectData)
 				end
 			owner:FireBullets(bullet)
 		end
