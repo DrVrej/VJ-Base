@@ -34,7 +34,7 @@ ENT.Tank_DriveAwayDistance = 1000 -- If the enemy is closer than this number, th
 ENT.Tank_DriveTowardsDistance = 2000 -- If the enemy is higher than this number, than move towards the enemy
 ENT.Tank_RanOverDistance = 500 -- If the enemy is within self.Tank_DriveAwayDistance & this number & not high up, then run over them!
 	-- ====== Movement ====== --
-ENT.Tank_TurningSpeed = 1.5 -- How fast the chassis moves as it's driving
+ENT.Tank_TurningSpeed = 1.5 -- How fast the chassis turns while driving
 ENT.Tank_DrivingSpeed = 100 -- How fast the tank drives
 	-- ====== Collision ====== --
 	-- Used when the NPC is spawned
@@ -46,7 +46,7 @@ ENT.Tank_DeathDriverCorpse = false -- Driver corpse to spawn on death | false = 
 ENT.Tank_DeathDriverCorpseChance = 3 -- Chance that the driver corpse spawns | 1 = always
 ENT.Tank_DeathDecal = "Scorch" -- Decal to spawn under the tank's location on death
 	-- ====== Sound ====== --
--- driving movement sounds
+-- Driving movement sounds
 ENT.HasMoveSound = true
 ENT.Tank_SoundTbl_DrivingEngine = false
 ENT.Tank_SoundTbl_Track = false
@@ -151,8 +151,8 @@ ENT.Tank_NextIdleParticles = 0
 local runoverException = {npc_antlionguard=true,npc_turret_ceiling=true,monster_gargantua=true,monster_bigmomma=true,monster_nihilanth=true,npc_strider=true,npc_combine_camera=true,npc_helicopter=true,npc_combinegunship=true,npc_combinedropship=true,npc_rollermine=true}
 local defAng = Angle(0, 0, 0)
 
-local cv_nomelee = GetConVar("vj_npc_melee")
-local cv_noidleparticle = GetConVar("vj_npc_reduce_vfx")
+local vj_npc_melee = GetConVar("vj_npc_melee")
+local vj_npc_reduce_vfx = GetConVar("vj_npc_reduce_vfx")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
 	self:SetPhysicsDamageScale(0) -- Take no physics damage
@@ -199,7 +199,7 @@ function ENT:OnTouch(ent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Tank_RunOver(ent)
-	if !self.Tank_IsMoving or !IsValid(ent) or (cv_nomelee:GetInt() == 0 /*or self.HasMeleeAttack == false*/) or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then return end
+	if !self.Tank_IsMoving or !IsValid(ent) or (vj_npc_melee:GetInt() == 0 /*or self.HasMeleeAttack == false*/) or (ent.IsVJBaseBullseye && ent.VJ_IsBeingControlled) then return end
 	if self:Disposition(ent) == D_HT && ent:Health() > 0 && ((ent:IsNPC() && !runoverException[ent:GetClass()]) or (ent:IsPlayer() && !VJ_CVAR_IGNOREPLAYERS) or ent:IsNextBot()) && !ent.VJ_ID_Boss && !ent.VJ_ID_Vehicle && !ent.VJ_ID_Aircraft then
 		self:Tank_OnRunOver(ent)
 		self:Tank_PlaySoundSystem("RunOver")
@@ -210,13 +210,13 @@ function ENT:Tank_RunOver(ent)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnThink()
-	if self:Tank_OnThink() != true && cv_noidleparticle:GetInt() == 0 then
+	if self:Tank_OnThink() != true && vj_npc_reduce_vfx:GetInt() == 0 then
 		if self.Tank_NextIdleParticles < CurTime() then
 			self:UpdateIdleParticles()
 			self.Tank_NextIdleParticles = CurTime() + 0.1
 		end
 	
-		if self:Health() < (self.StartHealth*0.30) && CurTime() > self.Tank_NextLowHealthSparkT then
+		if self:Health() < (self.StartHealth * 0.30) && CurTime() > self.Tank_NextLowHealthSparkT then
 			//ParticleEffectAttach("vj_rocket_idle2_smoke2", PATTACH_ABSORIGIN_FOLLOW, self, 0)
 
 			self.Spark1 = ents.Create("env_spark")
@@ -332,7 +332,7 @@ function ENT:OnThinkActive()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:SelectSchedule()
-	if self:Health() <= 0 or self.Dead then return end
+	if self.Dead then return end
 
 	self:IdleSoundCode()
 	self:MaintainIdleBehavior()

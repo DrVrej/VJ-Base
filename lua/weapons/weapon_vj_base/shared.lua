@@ -752,6 +752,8 @@ function SWEP:PrimaryAttack(UseAlt)
 				
 				-- Callback
 				bullet.Callback = function(attacker, tr, dmginfo)
+					dmginfo:SetWeapon(self)
+					dmginfo:SetInflictor(self)
 					return self:OnPrimaryAttack_BulletCallback(attacker, tr, dmginfo)
 					//local effectData = EffectData()
 					//effectData:SetOrigin(tr.HitPos)

@@ -1028,69 +1028,139 @@ local VJ_MOVETYPE_STATIONARY = VJ_MOVETYPE_STATIONARY
 local VJ_MOVETYPE_PHYSICS = VJ_MOVETYPE_PHYSICS
 local ANIM_TYPE_GESTURE = VJ.ANIM_TYPE_GESTURE
 
+local vj_npc_debug = GetConVar("vj_npc_debug")
+local vj_npc_processtime = GetConVar("vj_npc_processtime")
+local vj_npc_poseparams = GetConVar("vj_npc_poseparams")
+local vj_npc_shadows = GetConVar("vj_npc_shadows")
+local vj_npc_snd = GetConVar("vj_npc_snd")
+local vj_npc_fri_base = GetConVar("vj_npc_fri_base")
+local vj_npc_fri_player = GetConVar("vj_npc_fri_player")
+local vj_npc_fri_antlion = GetConVar("vj_npc_fri_antlion")
+local vj_npc_fri_combine = GetConVar("vj_npc_fri_combine")
+local vj_npc_fri_zombie = GetConVar("vj_npc_fri_zombie")
+local vj_npc_allies = GetConVar("vj_npc_allies")
+local vj_npc_anim_death = GetConVar("vj_npc_anim_death")
+local vj_npc_corpse = GetConVar("vj_npc_corpse")
+local vj_npc_loot = GetConVar("vj_npc_loot")
+local vj_npc_melee_bleed = GetConVar("vj_npc_melee_bleed")
+local vj_npc_melee_ply_slow = GetConVar("vj_npc_melee_ply_slow")
+local vj_npc_wander = GetConVar("vj_npc_wander")
+local vj_npc_chase = GetConVar("vj_npc_chase")
+local vj_npc_flinch = GetConVar("vj_npc_flinch")
+local vj_npc_melee = GetConVar("vj_npc_melee")
+local vj_npc_range = GetConVar("vj_npc_range")
+local vj_npc_leap = GetConVar("vj_npc_leap")
+local vj_npc_blood = GetConVar("vj_npc_blood")
+local vj_npc_god = GetConVar("vj_npc_god")
+local vj_npc_ply_betray = GetConVar("vj_npc_ply_betray")
+local vj_npc_callhelp = GetConVar("vj_npc_callhelp")
+local vj_npc_investigate = GetConVar("vj_npc_investigate")
+local vj_npc_eat = GetConVar("vj_npc_eat")
+local vj_npc_ply_follow = GetConVar("vj_npc_ply_follow")
+local vj_npc_ply_chat = GetConVar("vj_npc_ply_chat")
+local vj_npc_medic = GetConVar("vj_npc_medic")
+local vj_npc_gib_vfx = GetConVar("vj_npc_gib_vfx")
+local vj_npc_gib = GetConVar("vj_npc_gib")
+local vj_npc_blood_gmod = GetConVar("vj_npc_blood_gmod")
+local vj_npc_sight_xray = GetConVar("vj_npc_sight_xray")
+local vj_npc_runontouch = GetConVar("vj_npc_runontouch")
+local vj_npc_runonhit = GetConVar("vj_npc_runonhit")
+local vj_npc_snd_gib = GetConVar("vj_npc_snd_gib")
+local vj_npc_snd_track = GetConVar("vj_npc_snd_track")
+local vj_npc_snd_footstep = GetConVar("vj_npc_snd_footstep")
+local vj_npc_snd_idle = GetConVar("vj_npc_snd_idle")
+local vj_npc_snd_breath = GetConVar("vj_npc_snd_breath")
+local vj_npc_snd_alert = GetConVar("vj_npc_snd_alert")
+local vj_npc_snd_melee = GetConVar("vj_npc_snd_melee")
+local vj_npc_snd_plyslow = GetConVar("vj_npc_snd_plyslow")
+local vj_npc_snd_range = GetConVar("vj_npc_snd_range")
+local vj_npc_snd_leap = GetConVar("vj_npc_snd_leap")
+local vj_npc_snd_pain = GetConVar("vj_npc_snd_pain")
+local vj_npc_snd_death = GetConVar("vj_npc_snd_death")
+local vj_npc_snd_plyfollow = GetConVar("vj_npc_snd_plyfollow")
+local vj_npc_snd_plybetrayal = GetConVar("vj_npc_snd_plybetrayal")
+local vj_npc_snd_plydamage = GetConVar("vj_npc_snd_plydamage")
+local vj_npc_snd_plysight = GetConVar("vj_npc_snd_plysight")
+local vj_npc_snd_medic = GetConVar("vj_npc_snd_medic")
+local vj_npc_snd_callhelp = GetConVar("vj_npc_snd_callhelp")
+local vj_npc_snd_receiveorder = GetConVar("vj_npc_snd_receiveorder")
+local vj_npc_creature_opendoor = GetConVar("vj_npc_creature_opendoor")
+local vj_npc_melee_prop_push = GetConVar("vj_npc_melee_prop_push")
+local vj_npc_melee_prop_attack = GetConVar("vj_npc_melee_prop_attack")
+local vj_npc_corpse_collision = GetConVar("vj_npc_corpse_collision")
+local vj_npc_debug_engine = GetConVar("vj_npc_debug_engine")
+local vj_npc_difficulty = GetConVar("vj_npc_difficulty")
+local vj_npc_sight_distance = GetConVar("vj_npc_sight_distance")
+local vj_npc_health = GetConVar("vj_npc_health")
+local vj_npc_melee_ply_dsp = GetConVar("vj_npc_melee_ply_dsp")
+local vj_npc_ply_frag = GetConVar("vj_npc_ply_frag")
+local vj_npc_blood_pool = GetConVar("vj_npc_blood_pool")
+local vj_npc_corpse_undo = GetConVar("vj_npc_corpse_undo")
+local vj_npc_corpse_fade = GetConVar("vj_npc_corpse_fade")
+local vj_npc_corpse_fadetime = GetConVar("vj_npc_corpse_fadetime")
+local ai_serverragdolls = GetConVar("ai_serverragdolls")
+
 ---------------------------------------------------------------------------------------------------------------------------------------------
-local function ConvarsOnInit(self)
-	--<>-- Convars that run on Initialize --<>--
-	if GetConVar("vj_npc_debug"):GetInt() == 1 then self.VJ_DEBUG = true end
-	self.NextProcessTime = GetConVar("vj_npc_processtime"):GetInt()
-	if GetConVar("vj_npc_poseparams"):GetInt() == 0 && !self.OnUpdatePoseParamTracking then self.HasPoseParameterLooking = false end
-	if GetConVar("vj_npc_shadows"):GetInt() == 0 then self:DrawShadow(false) end
-	if GetConVar("vj_npc_snd"):GetInt() == 0 then self.HasSounds = false end
-	if GetConVar("vj_npc_fri_base"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_VJ_BASE" end
-	if GetConVar("vj_npc_fri_player"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_PLAYER_ALLY" end
-	if GetConVar("vj_npc_fri_antlion"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_ANTLION" end
-	if GetConVar("vj_npc_fri_combine"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_COMBINE" end
-	if GetConVar("vj_npc_fri_zombie"):GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_ZOMBIE" end
-	if GetConVar("vj_npc_allies"):GetInt() == 0 then self.HasAllies = false self.PlayerFriendly = false end
-	if GetConVar("vj_npc_anim_death"):GetInt() == 0 then self.HasDeathAnimation = false end
-	if GetConVar("vj_npc_corpse"):GetInt() == 0 then self.HasDeathCorpse = false end
-	if GetConVar("vj_npc_loot"):GetInt() == 0 then self.DropDeathLoot = false end
-	if GetConVar("vj_npc_melee_prop_push"):GetInt() == 0 then self.PushProps = false end
-	if GetConVar("vj_npc_melee_prop_attack"):GetInt() == 0 then self.AttackProps = false end
-	if GetConVar("vj_npc_melee_bleed"):GetInt() == 0 then self.MeleeAttackBleedEnemy = false end
-	if GetConVar("vj_npc_melee_ply_slow"):GetInt() == 0 then self.SlowPlayerOnMeleeAttack = false end
-	if GetConVar("vj_npc_wander"):GetInt() == 0 then self.DisableWandering = true end
-	if GetConVar("vj_npc_chase"):GetInt() == 0 then self.DisableChasingEnemy = true end
-	if GetConVar("vj_npc_flinch"):GetInt() == 0 then self.CanFlinch = false end
-	if GetConVar("vj_npc_melee"):GetInt() == 0 then self.HasMeleeAttack = false end
-	if GetConVar("vj_npc_range"):GetInt() == 0 then self.HasRangeAttack = false end
-	if GetConVar("vj_npc_leap"):GetInt() == 0 then self.HasLeapAttack = false end
-	if GetConVar("vj_npc_blood"):GetInt() == 0 then self.Bleeds = false end
-	if GetConVar("vj_npc_god"):GetInt() == 1 then self.GodMode = true end
-	if GetConVar("vj_npc_ply_betray"):GetInt() == 0 then self.BecomeEnemyToPlayer = false end
-	if GetConVar("vj_npc_callhelp"):GetInt() == 0 then self.CallForHelp = false end
-	if GetConVar("vj_npc_investigate"):GetInt() == 0 then self.CanInvestigate = false end
-	if GetConVar("vj_npc_eat"):GetInt() == 0 then self.CanEat = false end
-	if GetConVar("vj_npc_ply_follow"):GetInt() == 0 then self.FollowPlayer = false end
-	if GetConVar("vj_npc_ply_chat"):GetInt() == 0 then self.CanChatMessage = false end
-	if GetConVar("vj_npc_medic"):GetInt() == 0 then self.IsMedic = false end
-	if GetConVar("vj_npc_gib_vfx"):GetInt() == 0 then self.HasGibOnDeathEffects = false end
-	if GetConVar("vj_npc_gib"):GetInt() == 0 then self.CanGib = false self.CanGibOnDeath = false end
-	if GetConVar("vj_npc_blood_gmod"):GetInt() == 1 then self.BloodDecalUseGMod = true end
-	if GetConVar("vj_npc_sight_xray"):GetInt() == 1 then self.SightAngle = 360 self.FindEnemy_CanSeeThroughWalls = true end
-	if GetConVar("vj_npc_runontouch"):GetInt() == 0 then self.Passive_RunOnTouch = false end
-	if GetConVar("vj_npc_runonhit"):GetInt() == 0 then self.Passive_RunOnDamage = false end
-	if GetConVar("vj_npc_snd_gib"):GetInt() == 0 then self.HasGibOnDeathSounds = false end
-	if GetConVar("vj_npc_snd_track"):GetInt() == 0 then self.HasSoundTrack = false end
-	if GetConVar("vj_npc_snd_footstep"):GetInt() == 0 then self.HasFootStepSound = false end
-	if GetConVar("vj_npc_snd_idle"):GetInt() == 0 then self.HasIdleSounds = false end
-	if GetConVar("vj_npc_snd_breath"):GetInt() == 0 then self.HasBreathSound = false end
-	if GetConVar("vj_npc_snd_alert"):GetInt() == 0 then self.HasAlertSounds = false end
-	if GetConVar("vj_npc_snd_melee"):GetInt() == 0 then self.HasMeleeAttackSounds = false self.HasExtraMeleeAttackSounds = false self.HasMeleeAttackMissSounds = false end
-	if GetConVar("vj_npc_snd_plyslow"):GetInt() == 0 then self.HasMeleeAttackSlowPlayerSound = false end
-	if GetConVar("vj_npc_snd_range"):GetInt() == 0 then self.HasBeforeRangeAttackSound = false self.HasRangeAttackSound = false end
-	if GetConVar("vj_npc_snd_leap"):GetInt() == 0 then self.HasBeforeLeapAttackSound = false self.HasLeapAttackJumpSound = false self.HasLeapAttackDamageSound = false self.HasLeapAttackDamageMissSound = false end
-	if GetConVar("vj_npc_snd_pain"):GetInt() == 0 then self.HasPainSounds = false end
-	if GetConVar("vj_npc_snd_death"):GetInt() == 0 then self.HasDeathSounds = false end
-	if GetConVar("vj_npc_snd_plyfollow"):GetInt() == 0 then self.HasFollowPlayerSounds = false end
-	if GetConVar("vj_npc_snd_plybetrayal"):GetInt() == 0 then self.HasBecomeEnemyToPlayerSounds = false end
-	if GetConVar("vj_npc_snd_plydamage"):GetInt() == 0 then self.HasDamageByPlayerSounds = false end
-	if GetConVar("vj_npc_snd_plysight"):GetInt() == 0 then self.HasOnPlayerSightSounds = false end
-	if GetConVar("vj_npc_snd_medic"):GetInt() == 0 then self.HasMedicSounds_BeforeHeal = false self.HasMedicSounds_AfterHeal = false self.HasMedicSounds_ReceiveHeal = false end
-	if GetConVar("vj_npc_snd_callhelp"):GetInt() == 0 then self.HasCallForHelpSounds = false end
-	if GetConVar("vj_npc_snd_receiveorder"):GetInt() == 0 then self.HasOnReceiveOrderSounds = false end
-	if GetConVar("vj_npc_creature_opendoor"):GetInt() == 0 then self.CanOpenDoors = false end
-	local corpseCollision = GetConVar("vj_npc_corpse_collision"):GetInt()
+local function InitConvars(self)
+	if vj_npc_debug:GetInt() == 1 then self.VJ_DEBUG = true end
+	if vj_npc_poseparams:GetInt() == 0 && !self.OnUpdatePoseParamTracking then self.HasPoseParameterLooking = false end
+	if vj_npc_shadows:GetInt() == 0 then self:DrawShadow(false) end
+	if vj_npc_snd:GetInt() == 0 then self.HasSounds = false end
+	if vj_npc_fri_base:GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_VJ_BASE" end
+	if vj_npc_fri_player:GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_PLAYER_ALLY" end
+	if vj_npc_fri_antlion:GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_ANTLION" end
+	if vj_npc_fri_combine:GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_COMBINE" end
+	if vj_npc_fri_zombie:GetInt() == 1 then self.VJ_NPC_Class[#self.VJ_NPC_Class + 1] = "CLASS_ZOMBIE" end
+	if vj_npc_allies:GetInt() == 0 then self.HasAllies = false self.PlayerFriendly = false end
+	if vj_npc_anim_death:GetInt() == 0 then self.HasDeathAnimation = false end
+	if vj_npc_corpse:GetInt() == 0 then self.HasDeathCorpse = false end
+	if vj_npc_loot:GetInt() == 0 then self.DropDeathLoot = false end
+	if vj_npc_melee_prop_push:GetInt() == 0 then self.PushProps = false end
+	if vj_npc_melee_prop_attack:GetInt() == 0 then self.AttackProps = false end
+	if vj_npc_melee_bleed:GetInt() == 0 then self.MeleeAttackBleedEnemy = false end
+	if vj_npc_melee_ply_slow:GetInt() == 0 then self.SlowPlayerOnMeleeAttack = false end
+	if vj_npc_wander:GetInt() == 0 then self.DisableWandering = true end
+	if vj_npc_chase:GetInt() == 0 then self.DisableChasingEnemy = true end
+	if vj_npc_flinch:GetInt() == 0 then self.CanFlinch = false end
+	if vj_npc_melee:GetInt() == 0 then self.HasMeleeAttack = false end
+	if vj_npc_range:GetInt() == 0 then self.HasRangeAttack = false end
+	if vj_npc_leap:GetInt() == 0 then self.HasLeapAttack = false end
+	if vj_npc_blood:GetInt() == 0 then self.Bleeds = false end
+	if vj_npc_god:GetInt() == 1 then self.GodMode = true end
+	if vj_npc_ply_betray:GetInt() == 0 then self.BecomeEnemyToPlayer = false end
+	if vj_npc_callhelp:GetInt() == 0 then self.CallForHelp = false end
+	if vj_npc_investigate:GetInt() == 0 then self.CanInvestigate = false end
+	if vj_npc_eat:GetInt() == 0 then self.CanEat = false end
+	if vj_npc_ply_follow:GetInt() == 0 then self.FollowPlayer = false end
+	if vj_npc_ply_chat:GetInt() == 0 then self.CanChatMessage = false end
+	if vj_npc_medic:GetInt() == 0 then self.IsMedic = false end
+	if vj_npc_gib_vfx:GetInt() == 0 then self.HasGibOnDeathEffects = false end
+	if vj_npc_gib:GetInt() == 0 then self.CanGib = false self.CanGibOnDeath = false end
+	if vj_npc_blood_gmod:GetInt() == 1 then self.BloodDecalUseGMod = true end
+	if vj_npc_sight_xray:GetInt() == 1 then self.SightAngle = 360 self.FindEnemy_CanSeeThroughWalls = true end
+	if vj_npc_runontouch:GetInt() == 0 then self.Passive_RunOnTouch = false end
+	if vj_npc_runonhit:GetInt() == 0 then self.Passive_RunOnDamage = false end
+	if vj_npc_snd_gib:GetInt() == 0 then self.HasGibOnDeathSounds = false end
+	if vj_npc_snd_track:GetInt() == 0 then self.HasSoundTrack = false end
+	if vj_npc_snd_footstep:GetInt() == 0 then self.HasFootStepSound = false end
+	if vj_npc_snd_idle:GetInt() == 0 then self.HasIdleSounds = false end
+	if vj_npc_snd_breath:GetInt() == 0 then self.HasBreathSound = false end
+	if vj_npc_snd_alert:GetInt() == 0 then self.HasAlertSounds = false end
+	if vj_npc_snd_melee:GetInt() == 0 then self.HasMeleeAttackSounds = false self.HasExtraMeleeAttackSounds = false self.HasMeleeAttackMissSounds = false end
+	if vj_npc_snd_plyslow:GetInt() == 0 then self.HasMeleeAttackSlowPlayerSound = false end
+	if vj_npc_snd_range:GetInt() == 0 then self.HasBeforeRangeAttackSound = false self.HasRangeAttackSound = false end
+	if vj_npc_snd_leap:GetInt() == 0 then self.HasBeforeLeapAttackSound = false self.HasLeapAttackJumpSound = false self.HasLeapAttackDamageSound = false self.HasLeapAttackDamageMissSound = false end
+	if vj_npc_snd_pain:GetInt() == 0 then self.HasPainSounds = false end
+	if vj_npc_snd_death:GetInt() == 0 then self.HasDeathSounds = false end
+	if vj_npc_snd_plyfollow:GetInt() == 0 then self.HasFollowPlayerSounds = false end
+	if vj_npc_snd_plybetrayal:GetInt() == 0 then self.HasBecomeEnemyToPlayerSounds = false end
+	if vj_npc_snd_plydamage:GetInt() == 0 then self.HasDamageByPlayerSounds = false end
+	if vj_npc_snd_plysight:GetInt() == 0 then self.HasOnPlayerSightSounds = false end
+	if vj_npc_snd_medic:GetInt() == 0 then self.HasMedicSounds_BeforeHeal = false self.HasMedicSounds_AfterHeal = false self.HasMedicSounds_ReceiveHeal = false end
+	if vj_npc_snd_callhelp:GetInt() == 0 then self.HasCallForHelpSounds = false end
+	if vj_npc_snd_receiveorder:GetInt() == 0 then self.HasOnReceiveOrderSounds = false end
+	if vj_npc_creature_opendoor:GetInt() == 0 then self.CanOpenDoors = false end
+	local corpseCollision = vj_npc_corpse_collision:GetInt()
 	if corpseCollision != 0 && self.DeathCorpseCollisionType == COLLISION_GROUP_DEBRIS then
 		if corpseCollision == 1 then
 			self.DeathCorpseCollisionType = COLLISION_GROUP_NONE
@@ -1107,7 +1177,7 @@ local function ConvarsOnInit(self)
 		end
 	end
 	-- Enables source engine debug overlays (some commands like 'npc_conditions' need it)
-	if self.VJ_DEBUG && GetConVar("vj_npc_debug_engine"):GetInt() == 1 then
+	if self.VJ_DEBUG && vj_npc_debug_engine:GetInt() == 1 then
 		self:SetSaveValue("m_debugOverlays", bit.bor(0x00000001, 0x00000002, 0x00000004, 0x00000008, 0x00000010, 0x00000020, 0x00000040, 0x00000080, 0x00000100, 0x00000200, 0x00001000, 0x00002000, 0x00004000, 0x00008000, 0x00020000, 0x00040000, 0x00080000, 0x00100000, 0x00200000, 0x00400000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000))
 	end
 end
@@ -1292,50 +1362,64 @@ local function ApplyBackwardsCompatibility(self)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local defShootVec = Vector(0, 0, 55)
+local capBitsDefault = bit.bor(CAP_SKIP_NAV_GROUND_CHECK, CAP_TURN_HEAD)
 local capBitsDoors = bit.bor(CAP_OPEN_DOORS, CAP_AUTO_DOORS, CAP_USE)
 --
 function ENT:Initialize()
 	self:PreInit()
 	if self.CustomOnPreInitialize then self:CustomOnPreInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	
 	self:SetSpawnEffect(false)
-	self:SetRenderMode(RENDERMODE_NORMAL) // RENDERMODE_TRANSALPHA
+	self:SetRenderMode(RENDERMODE_NORMAL)
 	self:AddEFlags(EFL_NO_DISSOLVE)
 	self:SetUseType(SIMPLE_USE)
+	local models = PICK(self.Model); if models then self:SetModel(models) end
+	self:SetHullType(self.HullType)
+	self:SetHullSizeNormal()
+	if self.HasSetSolid then self:SetSolid(SOLID_BBOX) end
+	self:SetCollisionGroup(COLLISION_GROUP_NPC)
+	self:SetMaxYawSpeed(self.TurningSpeed)
+	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
+	
+	-- Set a name if it doesn't have one
 	if self:GetName() == "" then
 		local findListing = list.Get("NPC")[self:GetClass()]
 		if findListing then
 			self:SetName((self.PrintName == "" and findListing.Name) or self.PrintName)
 		end
 	end
-	self.SelectedDifficulty = GetConVar("vj_npc_difficulty"):GetInt()
-	local mdls = PICK(self.Model)
-	if mdls then self:SetModel(mdls) end
-	self:SetHullType(self.HullType)
-	self:SetHullSizeNormal()
-	if self.HasSetSolid then self:SetSolid(SOLID_BBOX) end // SOLID_OBB
-	self:SetCollisionGroup(COLLISION_GROUP_NPC)
-	self:SetMaxYawSpeed(self.TurningSpeed)
-	ConvarsOnInit(self)
-	self:DoChangeMovementType(self.MovementType)
+	
+	-- Initialize variables
+	InitConvars(self)
+	self.NextProcessTime = vj_npc_processtime:GetInt()
+	self.SelectedDifficulty = vj_npc_difficulty:GetInt()
 	self.VJ_AddCertainEntityAsEnemy = {}
 	self.VJ_AddCertainEntityAsFriendly = {}
 	self.CurrentPossibleEnemies = {}
 	self.AnimationTranslations = {}
 	self.NextIdleSoundT_RegularChange = CurTime() + math.random(0.3, 6)
 	self.UseTheSameGeneralSoundPitch_PickedNumber = (self.UseTheSameGeneralSoundPitch and math.random(self.GeneralSoundPitch1, self.GeneralSoundPitch2)) or 0
-	self:CapabilitiesAdd(bit.bor(CAP_SKIP_NAV_GROUND_CHECK, CAP_TURN_HEAD))
+	local sightConvar = vj_npc_sight_distance:GetInt(); if sightConvar > 0 then self.SightDistance = sightConvar end
+	
+	-- Capabilities & Movement
+	self:DoChangeMovementType(self.MovementType)
+	self:CapabilitiesAdd(capBitsDefault)
+	if self.CanOpenDoors then self:CapabilitiesAdd(capBitsDoors) end
 	-- Both of these attachments have to be valid for "ai_baseactor" to work properly!
 	if self:LookupAttachment("eyes") > 0 && self:LookupAttachment("forward") > 0 then
 		self:CapabilitiesAdd(CAP_ANIMATEDFACE)
 	end
-	if self.CanOpenDoors then
-		self:CapabilitiesAdd(capBitsDoors)
-	end
-	self:SetHealth((GetConVar("vj_npc_health"):GetInt() > 0) and GetConVar("vj_npc_health"):GetInt() or self:ScaleByDifficulty(self.StartHealth))
-	self.StartHealth = self:Health()
-	self:SetSaveValue("m_HackedGunPos", defShootVec) -- Overrides the location of self:GetShootPos()
+	
+	-- Health
+	local hpConvar = vj_npc_health:GetInt()
+	local hp = hpConvar > 0 && hpConvar or self:ScaleByDifficulty(self.StartHealth)
+	self:SetHealth(hp)
+	self.StartHealth = hp
+	
 	self:Init()
 	if self.CustomOnInitialize then self:CustomOnInitialize() end -- !!!!!!!!!!!!!! DO NOT USE !!!!!!!!!!!!!! [Backwards Compatibility!]
+	
+	-- Collision-based computations
 	//self:SetSurroundingBoundsType(BOUNDS_HITBOXES) -- AVOID! Has to constantly recompute the bounds! | Issues: Entities get stuck inside the NPC, movements failing, unable to grab the NPC with physgun
 	local collisionMin, collisionMax = self:GetCollisionBounds()
 	-- Auto compute damage bounds if the damage bounds == collision bounds then the developer has NOT changed it | Call after "Init"
@@ -1344,10 +1428,13 @@ function ENT:Initialize()
 	end
 	if !self.MeleeAttackDistance then self.MeleeAttackDistance = math.abs(collisionMax.x) + 30 end
 	if !self.MeleeAttackDamageDistance then self.MeleeAttackDamageDistance = math.abs(collisionMax.x) + 60 end
-	self:SetupBloodColor(self.BloodColor) -- Collision bounds dependent, call after "Init"
+	self:SetupBloodColor(self.BloodColor) -- Collision bounds dependent
+	
 	self.NextWanderTime = ((self.NextWanderTime != 0) and self.NextWanderTime) or (CurTime() + (self.IdleAlwaysWander and 0 or 1)) -- If self.NextWanderTime isn't given a value THEN if self.IdleAlwaysWander isn't true, wait at least 1 sec before wandering
-	self.SightDistance = (GetConVar("vj_npc_sight_distance"):GetInt() > 0) and GetConVar("vj_npc_sight_distance"):GetInt() or self.SightDistance
 	ApplyBackwardsCompatibility(self)
+	duplicator.RegisterEntityClass(self:GetClass(), VJ.CreateDupe_NPC, "Model", "Class", "Equipment", "SpawnFlags", "Data")
+	
+	-- Delayed init
 	timer.Simple(0.1, function()
 		if IsValid(self) then
 			self:SetMaxLookDistance(self.SightDistance)
@@ -1402,9 +1489,11 @@ function ENT:Initialize()
 			end
 		end
 	end)
-	duplicator.RegisterEntityClass(self:GetClass(), VJ.CreateDupe_NPC, "Model", "Class", "Equipment", "SpawnFlags", "Data")
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
+local capBitsGround = bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT)
+local capBitsShared = bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT, CAP_MOVE_FLY)
+--
 function ENT:DoChangeMovementType(movType)
 	if movType then
 		self.MovementType = movType
@@ -1417,7 +1506,7 @@ function ENT:DoChangeMovementType(movType)
 			if VJ.AnimExists(self, ACT_JUMP) or self.UsePoseParameterMovement then self:CapabilitiesAdd(CAP_MOVE_JUMP) end
 			if VJ.AnimExists(self, ACT_CLIMB_UP) then self:CapabilitiesAdd(CAP_MOVE_CLIMB) end
 		elseif movType == VJ_MOVETYPE_AERIAL or movType == VJ_MOVETYPE_AQUATIC then
-			self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT))
+			self:CapabilitiesRemove(capBitsGround)
 			self:SetGroundEntity(NULL)
 			self:AddFlags(FL_FLY)
 			self:SetNavType(NAV_FLY)
@@ -1425,14 +1514,14 @@ function ENT:DoChangeMovementType(movType)
 			self:CapabilitiesAdd(CAP_MOVE_FLY)
 		elseif movType == VJ_MOVETYPE_STATIONARY then
 			self:RemoveFlags(FL_FLY)
-			self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT, CAP_MOVE_FLY))
+			self:CapabilitiesRemove(capBitsShared)
 			self:SetNavType(NAV_NONE)
 			if !IsValid(self:GetParent()) then -- Only set move type if it does NOT have a parent!
 				self:SetMoveType(MOVETYPE_FLY)
 			end
 		elseif movType == VJ_MOVETYPE_PHYSICS then
 			self:RemoveFlags(FL_FLY)
-			self:CapabilitiesRemove(bit.bor(CAP_MOVE_GROUND, CAP_MOVE_JUMP, CAP_MOVE_CLIMB, CAP_MOVE_SHOOT, CAP_MOVE_FLY))
+			self:CapabilitiesRemove(capBitsShared)
 			self:SetNavType(NAV_NONE)
 			self:SetMoveType(MOVETYPE_VPHYSICS)
 		end
@@ -1476,7 +1565,7 @@ function ENT:SCHEDULE_ALERT_CHASE(doLOSChase)
 	end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
-function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase: true = Override to always make the NPC chase
+function ENT:MaintainAlertBehavior(alwaysChase) -- alwaysChase = Override to always make the NPC chase
 	local ene = self:GetEnemy()
 	local curTime = CurTime()
 	if self.NextChaseTime > curTime or self.Dead or self.VJ_IsBeingControlled or self.Flinching or self:GetState() == VJ_STATE_ONLY_ANIMATION_CONSTANT then return end
@@ -2312,7 +2401,7 @@ function ENT:MeleeAttackCode(isPropAttack)
 			end
 			if v:IsPlayer() then
 				-- Apply DSP
-				if self.MeleeAttackDSPSoundType != false && ((self.MeleeAttackDSPSoundUseDamage == false) or (self.MeleeAttackDSPSoundUseDamage && self.MeleeAttackDamage >= self.MeleeAttackDSPSoundUseDamageAmount && GetConVar("vj_npc_melee_ply_dsp"):GetInt() == 1)) then
+				if self.MeleeAttackDSPSoundType && ((self.MeleeAttackDSPSoundUseDamage == false) or (self.MeleeAttackDSPSoundUseDamage && self.MeleeAttackDamage >= self.MeleeAttackDSPSoundUseDamageAmount && vj_npc_melee_ply_dsp:GetInt() == 1)) then
 					v:SetDSP(self.MeleeAttackDSPSoundType, false)
 				end
 				v:ViewPunch(Angle(math.random(-1, 1) * self.MeleeAttackDamage, math.random(-1, 1) * self.MeleeAttackDamage, math.random(-1, 1) * self.MeleeAttackDamage))
@@ -2451,7 +2540,7 @@ function ENT:LeapDamageCode()
 				v:TakeDamageInfo(dmgInfo, self)
 			end
 			if v:IsPlayer() then
-				v:ViewPunch(Angle(math.random(-1, 1) * self.LeapAttackDamage, math.random(-1, 1) * self.LeapAttackDamage,math.random(-1, 1) * self.LeapAttackDamage))
+				v:ViewPunch(Angle(math.random(-1, 1) * self.LeapAttackDamage, math.random(-1, 1) * self.LeapAttackDamage, math.random(-1, 1) * self.LeapAttackDamage))
 			end
 			hitRegistered = true
 			if self.StopLeapAttackAfterFirstHit then break end
@@ -2481,7 +2570,7 @@ function ENT:LeapAttackJump()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:StopAttacks(checkTimers)
-	if self:Health() <= 0 then return end
+	if !self:Alive() then return end
 	if self.VJ_DEBUG && GetConVar("vj_npc_debug_attack"):GetInt() == 1 then VJ.DEBUG_Print(self, "StopAttacks", "Attack type = " .. self.AttackType) end
 	
 	if checkTimers && finishAttack[self.AttackType] && self.AttackState < VJ.ATTACK_STATE_EXECUTED then
@@ -2926,6 +3015,7 @@ local vecZ4 = Vector(0, 0, 4)
 --
 function ENT:BeginDeath(dmginfo, hitgroup)
 	self.Dead = true
+	self:SetSaveValue("m_lifeState", 1) -- LIFE_DYING
 	self:OnDeath(dmginfo, hitgroup, "Initial")
 	if self.Medic_Status then self:ResetMedicBehavior() end
 	if self.IsFollowing then self:ResetFollowBehavior() end
@@ -2995,7 +3085,7 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 	self.HasLeapAttack = false
 	if IsValid(dmgAttacker) then
 		if dmgAttacker:GetClass() == "npc_barnacle" then self.HasDeathCorpse = false end -- Don't make a corpse if it's killed by a barnacle!
-		if GetConVar("vj_npc_ply_frag"):GetInt() == 1 && dmgAttacker:IsPlayer() then dmgAttacker:AddFrags(1) end
+		if vj_npc_ply_frag:GetInt() == 1 && dmgAttacker:IsPlayer() then dmgAttacker:AddFrags(1) end
 		if IsValid(dmgInflictor) then
 			gamemode.Call("OnNPCKilled", self, dmgAttacker, dmgInflictor, dmginfo)
 		end
@@ -3024,6 +3114,9 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 		self:PlayAnim(chosenAnim, true, animTime, false, 0, {PlayBackRateCalculated=true})
 		deathTime = deathTime + animTime
 		self.DeathAnimationCodeRan = true
+	else
+		-- If no death anim then just set the NPC to dead even if it has a delayed remove
+		self:SetSaveValue("m_lifeState", 2) -- LIFE_DEAD
 	end
 	if deathTime > 0 then
 		timer.Simple(deathTime, function()
@@ -3037,12 +3130,13 @@ function ENT:BeginDeath(dmginfo, hitgroup)
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:FinishDeath(dmginfo, hitgroup)
-	if self.VJ_DEBUG && GetConVar("vj_npc_debug_damage"):GetInt() == 1 then VJ.DEBUG_Print(self, "FinishDeath", "Attacker = ", dmginfo:GetAttacker(), " | Inflictor = ", dmginfo:GetInflictor()) end
+	if self.VJ_DEBUG && GetConVar("vj_npc_debug_damage"):GetInt() == 1 then VJ.DEBUG_Print(self, "FinishDeath", "Attacker = ", self.SavedDmgInfo.attacker, " | Inflictor = ", self.SavedDmgInfo.inflictor) end
+	self:SetSaveValue("m_lifeState", 2) -- LIFE_DEAD
+	//self:SetNPCState(NPC_STATE_DEAD)
 	self:OnDeath(dmginfo, hitgroup, "Finish")
 	if self.DropDeathLoot then
 		self:CreateDeathLoot(dmginfo, hitgroup)
 	end
-	//self:SetNPCState(NPC_STATE_DEAD)
 	if bit.band(self.SavedDmgInfo.type, DMG_REMOVENORAGDOLL) == 0 then self:CreateDeathCorpse(dmginfo, hitgroup) end
 	self:Remove()
 end
@@ -3114,17 +3208,17 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		corpse.ChildEnts = self.DeathCorpse_ChildEnts or {}
 		corpse.BloodData = {Color = self.BloodColor, Particle = self.BloodParticle, Decal = self.BloodDecal}
 
-		if self.Bleeds && self.HasBloodPool && GetConVar("vj_npc_blood_pool"):GetInt() == 1 then
+		if self.Bleeds && self.HasBloodPool && vj_npc_blood_pool:GetInt() == 1 then
 			self:SpawnBloodPool(dmginfo, hitgroup, corpse)
 		end
 		
 		-- Collision
 		corpse:SetCollisionGroup(self.DeathCorpseCollisionType)
-		if GetConVar("ai_serverragdolls"):GetInt() == 1 then
+		if ai_serverragdolls:GetInt() == 1 then
 			undo.ReplaceEntity(self, corpse)
 		else -- Keep corpses is not enabled...
 			VJ.Corpse_Add(corpse)
-			if GetConVar("vj_npc_corpse_undo"):GetInt() == 1 then undo.ReplaceEntity(self, corpse) end -- Undoable
+			if vj_npc_corpse_undo:GetInt() == 1 then undo.ReplaceEntity(self, corpse) end -- Undoable
 		end
 		cleanup.ReplaceEntity(self, corpse) -- Delete on cleanup
 		
@@ -3181,7 +3275,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		VJ.Corpse_AddStinky(corpse, true)
 		
 		if self.DeathCorpseFade then corpse:Fire(corpse.FadeCorpseType, "", self.DeathCorpseFade) end
-		if GetConVar("vj_npc_corpse_fade"):GetInt() == 1 then corpse:Fire(corpse.FadeCorpseType, "", GetConVar("vj_npc_corpse_fadetime"):GetInt()) end
+		if vj_npc_corpse_fade:GetInt() == 1 then corpse:Fire(corpse.FadeCorpseType, "", vj_npc_corpse_fadetime:GetInt()) end
 		self:OnCreateDeathCorpse(dmginfo, hitgroup, corpse)
 		if corpse:IsFlagSet(FL_DISSOLVING) && corpse.ChildEnts then
 			for _, v in ipairs(corpse.ChildEnts) do

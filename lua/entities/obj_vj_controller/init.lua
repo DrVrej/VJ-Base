@@ -338,7 +338,7 @@ function ENT:Think()
 	local ply = self.VJCE_Player
 	local npc = self.VJCE_NPC
 	local camera = self.VJCE_Camera
-	if !IsValid(camera) or !IsValid(ply) or !ply.VJ_IsControllingNPC or ply:Health() <= 0 or !IsValid(npc) or npc:Health() <= 0 then self:StopControlling() return end
+	if !IsValid(camera) or !IsValid(ply) or !ply.VJ_IsControllingNPC or ply:Health() <= 0 or !IsValid(npc) or !npc:Alive() then self:StopControlling() return end
 	local curTime = CurTime()
 	local npcWeapon = npc:GetActiveWeapon()
 	local npcEnemy = npc:GetEnemy()

@@ -11,6 +11,9 @@ local GetConVar = GetConVar
 local tonumber = tonumber
 local string_StartWith = string.StartWith
 local table_remove = table.remove
+
+local vj_npc_wep_ply_pickup = GetConVar("vj_npc_wep_ply_pickup")
+
 ---------------------------------------------------------------------------------------------------------------------------------------------
 hook.Add("Initialize", "VJ_Initialize", function()
 	RunConsoleCommand("sv_pvsskipanimation", "0") -- Fix attachments, bones, positions, angles etc. being broken in NPCs!
@@ -102,6 +105,10 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 							return (otherEnt.HasRangeAttack && distance <= 800) or (distance <= 100)
 						end
 					end
+				elseif entClass == "npc_rollermine" then
+					ent.CanBeEngaged = function(_, otherEnt, distance)
+						return distance <= 256
+					end
 				end
 			end
 			-- Wait 0.1 seconds to make sure the NPC is initialized properly
@@ -112,10 +119,15 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 						if antlionNPCs[entClass] then
 							ent.VJ_NPC_Class = {"CLASS_ANTLION"}
 						elseif combineNPCs[entClass] then
-							if entClass == "npc_turret_floor" && ent:HasSpawnFlags(SF_FLOOR_TURRET_CITIZEN) then -- Resistance turret
+							-- Resistance turrets and rollermines (262144 = SF_ROLLERMINE_HACKED)
+							if (entClass == "npc_turret_floor" && ent:HasSpawnFlags(SF_FLOOR_TURRET_CITIZEN)) or (entClass == "npc_rollermine" && ent:HasSpawnFlags(262144)) then
 								ent.VJ_NPC_Class = {"CLASS_PLAYER_ALLY"}
 								ent.PlayerFriendly = true
 								ent.FriendsWithAllPlayerAllies = true
+							-- Make harmless rollermines ignored
+							elseif entClass == "npc_rollermine" && ent:HasSpawnFlags(SF_ROLLERMINE_FRIENDLY) then
+								ent.VJ_NPC_Class = {"CLASS_COMBINE"}
+								ent.Behavior = VJ_BEHAVIOR_PASSIVE_NATURE
 							else
 								ent.VJ_NPC_Class = {"CLASS_COMBINE"}
 							end
@@ -137,7 +149,7 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 					local count = 1
 					local cvSeePlys = !VJ_CVAR_IGNOREPLAYERS
 					local isPossibleEnemy = true
-					if ent:IsNPC() && (ent:Health() <= 0 or ent.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE) then
+					if ent:IsNPC() && ent.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE then
 						isPossibleEnemy = false
 					end
 					for x = 1, #entsTbl do
@@ -146,7 +158,7 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 							-- Add enemies to the created entity (if it's a VJ Base SNPC)
 							if entIsVJ then
 								ent:ValidateNoCollide(v)
-								if (v:IsNPC() && v:GetClass() != entClass && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE && v:Health() > 0) or (v:IsPlayer() && cvSeePlys /*&& v:Alive()*/) or (v:IsNextBot()) then
+								if (v:IsNPC() && v:GetClass() != entClass && v.Behavior != VJ_BEHAVIOR_PASSIVE_NATURE) or (v:IsPlayer() && cvSeePlys) or (v:IsNextBot()) then
 									ent.CurrentPossibleEnemies[count] = v
 									count = count + 1
 								end
@@ -172,7 +184,7 @@ hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
 	if attackableEnts[entClass] then
 		ent.VJ_ID_Attackable = true
 	end
-	if damageableEnts[entClass] or ent.LVS or ent.IsScar then -- Aside from specific table, supports: LVS, Simfphys, SCars
+	if damageableEnts[entClass] or ent.IsScar then
 		ent.VJ_ID_Destructible = true
 	end
 	--
@@ -254,7 +266,7 @@ hook.Add("PlayerCanPickupWeapon", "VJ_PlayerCanPickupWeapon", function(ply, wep)
 		if (CurTime() - wep.InitTime) < 0.15 then
 			return true
 		end
-		return GetConVar("vj_npc_wep_ply_pickup"):GetInt() == 1 && ply:KeyPressed(IN_USE) && ply:GetEyeTrace().Entity == wep
+		return vj_npc_wep_ply_pickup:GetInt() == 1 && ply:KeyPressed(IN_USE) && ply:GetEyeTrace().Entity == wep
 	end
 end)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

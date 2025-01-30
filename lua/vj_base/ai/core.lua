@@ -52,6 +52,11 @@ local ANIM_TYPE_NONE = VJ.ANIM_TYPE_NONE
 local ANIM_TYPE_ACTIVITY = VJ.ANIM_TYPE_ACTIVITY
 local ANIM_TYPE_SEQUENCE = VJ.ANIM_TYPE_SEQUENCE
 local ANIM_TYPE_GESTURE = VJ.ANIM_TYPE_GESTURE
+
+local vj_npc_gib_collision = GetConVar("vj_npc_gib_collision")
+local vj_npc_gib_fade = GetConVar("vj_npc_gib_fade")
+local vj_npc_gib_fadetime = GetConVar("vj_npc_gib_fadetime")
+
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Creates a extra corpse entity, use this function to create extra corpse entities when the NPC is killed
@@ -187,16 +192,16 @@ function ENT:CreateGibEntity(class, models, extraOptions, customFunc)
 	gib:Spawn()
 	gib:Activate()
 	gib.IsVJBaseCorpse_Gib = true
-	if GetConVar("vj_npc_gib_collision"):GetInt() == 0 then gib:SetCollisionGroup(COLLISION_GROUP_DEBRIS) end
+	if vj_npc_gib_collision:GetInt() == 0 then gib:SetCollisionGroup(COLLISION_GROUP_DEBRIS) end
 	local phys = gib:GetPhysicsObject()
 	if IsValid(phys) then
 		phys:AddVelocity(vel)
 		phys:AddAngleVelocity(extraOptions.AngVel or Vector(math.Rand(-200, 200), math.Rand(-200, 200), math.Rand(-200, 200)))
 	end
-	if extraOptions.NoFade != true && GetConVar("vj_npc_gib_fade"):GetInt() == 1 then
-		if gib:GetClass() == "obj_vj_gib" then timer.Simple(GetConVar("vj_npc_gib_fadetime"):GetInt(), function() SafeRemoveEntity(gib) end)
-		elseif gib:GetClass() == "prop_ragdoll" then gib:Fire("FadeAndRemove", "", GetConVar("vj_npc_gib_fadetime"):GetInt())
-		elseif gib:GetClass() == "prop_physics" then gib:Fire("kill", "", GetConVar("vj_npc_gib_fadetime"):GetInt()) end
+	if extraOptions.NoFade != true && vj_npc_gib_fade:GetInt() == 1 then
+		if gib:GetClass() == "obj_vj_gib" then timer.Simple(vj_npc_gib_fadetime:GetInt(), function() SafeRemoveEntity(gib) end)
+		elseif gib:GetClass() == "prop_ragdoll" then gib:Fire("FadeAndRemove", "", vj_npc_gib_fadetime:GetInt())
+		elseif gib:GetClass() == "prop_physics" then gib:Fire("kill", "", vj_npc_gib_fadetime:GetInt()) end
 	end
 	if removeOnCorpseDelete then //self.Corpse:DeleteOnRemove(extraent)
 		if !self.DeathCorpse_ChildEnts then self.DeathCorpse_ChildEnts = {} end -- If it doesn't exist, then create it!
@@ -286,7 +291,7 @@ function ENT:OnEat(status, statusData)
 		self.AnimationTranslations[ACT_IDLE] = ACT_GESTURE_RANGE_ATTACK1 -- Eating animation
 		return select(2, self:PlayAnim(ACT_ARM, true, false))
 	elseif status == "Eat" then
-		VJ.EmitSound(self, "barnacle/bcl_chew"..math.random(1, 3)..".wav", 55)
+		VJ.EmitSound(self, "barnacle/bcl_chew" .. math.random(1, 3) .. ".wav", 55)
 		-- Health changes
 		local food = self.EatingData.Ent
 		local damage = 15 -- How much damage food will receive
@@ -1864,7 +1869,7 @@ end
 		- skipChecks = Used in "MaintainRelationships", skips all the initial checks for max performance | DEFAULT = false
 -----------------------------------------------------------]]
 function ENT:ForceSetEnemy(ent, stopMoving, skipChecks)
-	if !skipChecks && (!IsValid(ent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or ent:Health() <= 0 or (ent:IsPlayer() && (!ent:Alive() or VJ_CVAR_IGNOREPLAYERS))) then return end
+	if !skipChecks && (!IsValid(ent) or self.Behavior == VJ_BEHAVIOR_PASSIVE_NATURE or !ent:Alive() or (ent:IsPlayer() && VJ_CVAR_IGNOREPLAYERS)) then return end
 	local noEne = !IsValid(self:GetEnemy())
 	self:AddEntityRelationship(ent, D_HT, 0)
 	self:SetEnemy(ent)
@@ -1918,7 +1923,7 @@ end
 		- Disposition value, list: https://wiki.facepunch.com/gmod/Enums/D
 -----------------------------------------------------------]]
 function ENT:CheckRelationship(ent)
-	if ent:IsFlagSet(FL_NOTARGET) or ent:Health() <= 0 or (ent:IsPlayer() && VJ_CVAR_IGNOREPLAYERS) then return D_NU end
+	if ent:IsFlagSet(FL_NOTARGET) or !ent:Alive() or (ent:IsPlayer() && VJ_CVAR_IGNOREPLAYERS) then return D_NU end
 	if self:GetClass() == ent:GetClass() then return D_LI end
 	local myDisp = self:Disposition(ent)
 	if myDisp == D_VJ_INTEREST then return D_HT end
@@ -1958,7 +1963,7 @@ function ENT:MaintainRelationships()
 			it = it + 1
 			
 			-- Handle no target and health below 0
-			if ent:IsFlagSet(FL_NOTARGET) or ent:Health() <= 0 then
+			if ent:IsFlagSet(FL_NOTARGET) or !ent:Alive() then
 				if IsValid(self:GetEnemy()) && self:GetEnemy() == ent then
 					self:ResetEnemy(true, false)
 				end
@@ -2840,10 +2845,10 @@ function ENT:VJ_TASK_COVER_FROM_ORIGIN(moveType, customFunc) self:SCHEDULE_COVER
 function ENT:VJ_TASK_IDLE_WANDER() self:SCHEDULE_IDLE_WANDER() end
 function ENT:VJ_TASK_IDLE_STAND() self:SCHEDULE_IDLE_STAND() end
 function ENT:VJ_ACT_PLAYACTIVITY(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, extraOptions, customFunc) return self:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, extraOptions, customFunc) end
-function ENT:VJ_DecideSoundPitch(pitch1, pitch2) self:GetSoundPitch(pitch1, pitch2) end
-function ENT:VJ_GetDifficultyValue(num) self:ScaleByDifficulty(num) end
-function ENT:VJ_GetNearestPointToEntity(ent, centerNPC) self:GetNearestPositions(ent, centerNPC) end
-function ENT:VJ_GetNearestPointToEntityDistance(ent, centerNPC) self:GetNearestDistance(ent, centerNPC) end
+function ENT:VJ_DecideSoundPitch(pitch1, pitch2) return self:GetSoundPitch(pitch1, pitch2) end
+function ENT:VJ_GetDifficultyValue(num) return self:ScaleByDifficulty(num) end
+function ENT:VJ_GetNearestPointToEntity(ent, centerNPC) return self:GetNearestPositions(ent, centerNPC) end
+function ENT:VJ_GetNearestPointToEntityDistance(ent, centerNPC) return self:GetNearestDistance(ent, centerNPC) end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
 	Checks all 4 sides around the NPC

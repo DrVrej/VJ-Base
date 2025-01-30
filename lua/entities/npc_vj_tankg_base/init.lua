@@ -129,8 +129,8 @@ local TANK_SHELL_STATUS_RELOADING = 1
 local TANK_SHELL_STATUS_READY = 2
 ENT.Tank_Shell_Status = TANK_SHELL_STATUS_EMPTY
 
-local cv_norange = GetConVar("vj_npc_range")
-local cv_noidleparticle = GetConVar("vj_npc_reduce_vfx")
+local vj_npc_range = GetConVar("vj_npc_range")
+local vj_npc_reduce_vfx = GetConVar("vj_npc_reduce_vfx")
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Init()
 	self.Tank_NextIdleParticles = CurTime() + 1
@@ -141,7 +141,7 @@ function ENT:Init()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:OnThink()
-	if self:Tank_OnThink() != true && cv_noidleparticle:GetInt() == 0 && self.Tank_NextIdleParticles < CurTime() then
+	if self:Tank_OnThink() != true && vj_npc_reduce_vfx:GetInt() == 0 && self.Tank_NextIdleParticles < CurTime() then
 		self:UpdateIdleParticles()
 		self.Tank_NextIdleParticles = CurTime() + 0.1
 	end
@@ -166,7 +166,7 @@ function ENT:OnThinkActive()
 			-- If the enemy is within the barrel firing limit AND not already firing a shell AND its height is is reachable AND the enemy is not extremely close, then FIRE!
 			if math.abs(angDiffuse) < self.Tank_AngleDiffuseFiringLimit && self.Tank_ProperHeightShoot && self.LatestEnemyDistance > self.Tank_Shell_FireMin then
 				self.Tank_FacingTarget = true
-				if self:Visible(ene) && cv_norange:GetInt() == 1 then
+				if self:Visible(ene) && vj_npc_range:GetInt() == 1 then
 					self:Tank_PrepareShell()
 				end
 			-- Turn Left
