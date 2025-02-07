@@ -1617,35 +1617,29 @@ local VJ_MOVETYPE_STATIONARY = VJ_MOVETYPE_STATIONARY
 local VJ_MOVETYPE_PHYSICS = VJ_MOVETYPE_PHYSICS
 local ANIM_TYPE_GESTURE = VJ.ANIM_TYPE_GESTURE
 
-ENT.CurrentWeaponEntity = NULL
+ENT.UpdatedPoseParam = false
+ENT.Weapon_UnarmedBehavior_Active = false
+ENT.WeaponEntity = NULL
 ENT.WeaponState = VJ.WEP_STATE_READY
 ENT.WeaponInventoryStatus = VJ.WEP_INVENTORY_NONE
-ENT.DoingWeaponAttack = false
-ENT.DoingWeaponAttack_Standing = false -- Is it attacking while standing still? (non-moving)
-ENT.DoingWeaponWaitOnOcclusion = false
 ENT.AllowWeaponWaitOnOcclusion = true
-ENT.DidWeaponAttackAimParameter = false
-ENT.Weapon_UnarmedBehavior_Active = false
-ENT.Weapon_TimeSinceLastShot = 0
+ENT.WeaponLastShotTime = 0
+ENT.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 ENT.WeaponAttackAnim = ACT_INVALID
-ENT.WeaponAttackAnimIsAim = false
 ENT.Weapon_AimTurnDiff_Def = 1 -- Default value to use when "self.Weapon_AimTurnDiff" false, this is auto calculated depending on anim set and weapon hold type
-ENT.NextWeaponAttackT_Base = 0 -- Handled by the base, used to avoid running shoot animation twice
 ENT.NextWeaponAttackT = 0
+ENT.NextWeaponAttackT_Base = 0 -- Handled by the base, used to avoid running shoot animation twice
 ENT.NextWeaponStrafeWhileFiringT = 0
 ENT.NextMeleeWeaponAttackT = 0
 ENT.NextMoveOnGunCoveredT = 0
-ENT.NextNoWeaponT = 0
 ENT.NextThrowGrenadeT = 0
 ENT.NextGrenadeAttackSoundT = 0
 ENT.NextSuppressingSoundT = 0
-ENT.NextWeaponReloadSoundT = 0
 ENT.NextDangerDetectionT = 0
 ENT.NextOnGrenadeSightSoundT = 0
 ENT.NextOnDangerSightSoundT = 0
 ENT.NextMoveOrHideOnDamageByEnemyT = 0
 ENT.TimersToRemove = {"timer_grenade_start", "timer_grenade_finished_ableto", "timer_grenade_finished", "timer_weapon_state_reset", "timer_state_reset", "timer_turning", "timer_flinch_reset", "timer_pauseattacks_reset", "timer_melee_finished", "timer_melee_start", "timer_melee_finished_ableto", "timer_weapon_reload", "timer_alerted_reset"}
-
 
 local vj_npc_debug = GetConVar("vj_npc_debug")
 local vj_npc_processtime = GetConVar("vj_npc_processtime")
@@ -2075,7 +2069,7 @@ function ENT:Initialize()
 			else
 				local wep = self:GetActiveWeapon()
 				if IsValid(wep) then
-					self.CurrentWeaponEntity = self:DoChangeWeapon() -- Setup the weapon
+					self.WeaponEntity = self:DoChangeWeapon() -- Setup the weapon
 					self.WeaponInventory.Primary = wep
 					if IsValid(self:GetCreator()) && self.CanChatMessage && !wep.IsVJBaseWeapon then
 						self:GetCreator():PrintMessage(HUD_PRINTTALK, "WARNING: "..self:GetName().." requires a VJ Base weapon to work properly!")
@@ -2271,8 +2265,11 @@ function ENT:TranslateActivity(act)
 		if self.Weapon_CanFireWhileMoving && IsValid(self:GetEnemy()) && (self.EnemyData.IsVisible or (self.EnemyData.LastVisibleTime + 5) > CurTime()) && self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving && self:CanFireWeapon(true, false) then
 			local anim = self:TranslateActivity(act == ACT_RUN and ACT_RUN_AIM or ACT_WALK_AIM)
 			if VJ.AnimExists(self, anim) then
-				self.DoingWeaponAttack = true
-				self.DoingWeaponAttack_Standing = false
+				if self.EnemyData.IsVisible then
+					self.WeaponAttackState = VJ.WEP_ATTACK_STATE_FIRE
+				else -- Not visible but keep aiming
+					self.WeaponAttackState = VJ.WEP_ATTACK_STATE_AIM_MOVE
+				end
 				return anim
 			end
 		end
@@ -2342,8 +2339,8 @@ function ENT:DoChangeWeapon(wep, invSwitch)
 			end
 		end
 		self:UpdateAnimationTranslations(curWep:GetHoldType())
-		self:OnWeaponChange(curWep, self.CurrentWeaponEntity, invSwitch)
-		self.CurrentWeaponEntity = curWep
+		self:OnWeaponChange(curWep, self.WeaponEntity, invSwitch)
+		self.WeaponEntity = curWep
 	else
 		self.WeaponInventoryStatus = VJ.WEP_INVENTORY_NONE
 	end
@@ -2395,7 +2392,7 @@ local finishAttack = {
 local function playReloadAnimation(self, anims)
 	local anim, animDur, animType = self:PlayAnim(anims, true, false, "Visible")
 	if anim != ACT_INVALID then
-		local wep = self.CurrentWeaponEntity
+		local wep = self.WeaponEntity
 		if wep.IsVJBaseWeapon then wep:NPC_Reload() end
 		timer.Create("timer_weapon_reload"..self:EntIndex(), animDur, 1, function()
 			if IsValid(self) && IsValid(wep) && self:GetWeaponState() == VJ.WEP_STATE_RELOADING then
@@ -2437,11 +2434,9 @@ function ENT:Think()
 	end
 	
 	if !self.Dead then
-		if !self.DoingWeaponAttack then self.DoingWeaponAttack_Standing = false end
-		
 		-- Detect any weapon change, unless the NPC is dead because the variable is used by self:DeathWeaponDrop()
-		if self.CurrentWeaponEntity != self:GetActiveWeapon() then
-			self.CurrentWeaponEntity = self:DoChangeWeapon()
+		if self.WeaponEntity != self:GetActiveWeapon() then
+			self.WeaponEntity = self:DoChangeWeapon()
 		end
 		
 		-- Breath sound system
@@ -2464,7 +2459,7 @@ function ENT:Think()
 			if GetConVar("vj_npc_debug_enemy"):GetInt() == 1 then VJ.DEBUG_Print(self, false, "Enemy -> " .. tostring(self:GetEnemy() or "NULL") .. " | Alerted? " .. tostring(self.Alerted))  end
 			if GetConVar("vj_npc_debug_takingcover"):GetInt() == 1 then if curTime > self.TakingCoverT then VJ.DEBUG_Print(self, false, "NOT taking cover") else VJ.DEBUG_Print(self, false, "Taking cover ("..self.TakingCoverT - curTime..")") end end
 			if GetConVar("vj_npc_debug_lastseenenemytime"):GetInt() == 1 then PrintMessage(HUD_PRINTTALK, (curTime - self.EnemyData.LastVisibleTime).." ("..self:GetName()..")") end
-			if IsValid(self.CurrentWeaponEntity) && GetConVar("vj_npc_debug_weapon"):GetInt() == 1 then VJ.DEBUG_Print(self, false, " : Weapon -> " .. tostring(self.CurrentWeaponEntity) .. " | Ammo: "..self.CurrentWeaponEntity:Clip1().." / "..self.CurrentWeaponEntity:GetMaxClip1().." | Accuracy: "..self.Weapon_Accuracy) end
+			if IsValid(self.WeaponEntity) && GetConVar("vj_npc_debug_weapon"):GetInt() == 1 then VJ.DEBUG_Print(self, false, " : Weapon -> " .. tostring(self.WeaponEntity) .. " | Ammo: "..self.WeaponEntity:Clip1().." / "..self.WeaponEntity:GetMaxClip1().." | Accuracy: "..self.Weapon_Accuracy) end
 		end
 		
 		//self:SetPlaybackRate(self.AnimationPlaybackRate)
@@ -2564,8 +2559,8 @@ function ENT:Think()
 			end
 		end
 		
-		//print("MAX CLIP: ", self.CurrentWeaponEntity:GetMaxClip1())
-		//print("CLIP: ", self.CurrentWeaponEntity:Clip1())
+		//print("MAX CLIP: ", self.WeaponEntity:GetMaxClip1())
+		//print("CLIP: ", self.WeaponEntity:Clip1())
 			
 		if !self.Dead then
 			-- Health Regeneration System
@@ -2603,8 +2598,8 @@ function ENT:Think()
 				end
 			end
 			
-			local curWep = self.CurrentWeaponEntity
-			//if self.DoingWeaponAttack then self:CapabilitiesRemove(CAP_TURN_HEAD) else self:CapabilitiesAdd(CAP_TURN_HEAD) end -- Fixes their heads breaking
+			local curWep = self.WeaponEntity
+			//if self.WeaponAttackState then self:CapabilitiesRemove(CAP_TURN_HEAD) else self:CapabilitiesAdd(CAP_TURN_HEAD) end -- Fixes their heads breaking
 			-- If we have a valid weapon...
 			if IsValid(curWep) && !self:BusyWithActivity() then
 				-- Weapon Inventory System
@@ -2616,12 +2611,12 @@ function ENT:Think()
 							//timer.Remove("timer_weapon_reload"..self:EntIndex()) -- No longer needed
 							self.WeaponInventoryStatus = VJ.WEP_INVENTORY_MELEE
 							self:DoChangeWeapon(self.WeaponInventory.Melee, true)
-							curWep = self.CurrentWeaponEntity
+							curWep = self.WeaponEntity
 						-- Switch to anti-armor
 						elseif self:GetWeaponState() != VJ.WEP_STATE_RELOADING && IsValid(self.WeaponInventory.AntiArmor) && (ene.IsVJBaseSNPC_Tank or ene.VJ_ID_Boss) && curWep != self.WeaponInventory.AntiArmor then
 							self.WeaponInventoryStatus = VJ.WEP_INVENTORY_ANTI_ARMOR
 							self:DoChangeWeapon(self.WeaponInventory.AntiArmor, true)
-							curWep = self.CurrentWeaponEntity
+							curWep = self.WeaponEntity
 						end
 					end
 					if self:GetWeaponState() != VJ.WEP_STATE_RELOADING then
@@ -2629,20 +2624,19 @@ function ENT:Think()
 						if self.WeaponInventoryStatus == VJ.WEP_INVENTORY_MELEE && (!eneValid or (eneValid && self.LatestEnemyDistance >= 300)) then
 							self.WeaponInventoryStatus = VJ.WEP_INVENTORY_PRIMARY
 							self:DoChangeWeapon(self.WeaponInventory.Primary, true)
-							curWep = self.CurrentWeaponEntity
+							curWep = self.WeaponEntity
 						-- Reset weapon status from anti-armor to primary
 						elseif self.WeaponInventoryStatus == VJ.WEP_INVENTORY_ANTI_ARMOR && (!eneValid or (eneValid && !ene.IsVJBaseSNPC_Tank && !ene.VJ_ID_Boss)) then
 							self.WeaponInventoryStatus = VJ.WEP_INVENTORY_PRIMARY
 							self:DoChangeWeapon(self.WeaponInventory.Primary, true)
-							curWep = self.CurrentWeaponEntity
+							curWep = self.WeaponEntity
 						end
 					end
 				end
 				
 				-- Weapon Reloading
 				if self.Weapon_CanReload && self:GetWeaponState() == VJ.WEP_STATE_READY && (!curWep.IsMeleeWeapon) && !self.AttackType && ((!plyControlled && ((!eneValid && curWep:GetMaxClip1() > curWep:Clip1() && (curTime - eneData.TimeSet) > math.random(3, 8) && !self:IsMoving()) or (eneValid && curWep:Clip1() <= 0))) or (plyControlled && self.VJ_TheController:KeyDown(IN_RELOAD) && curWep:GetMaxClip1() > curWep:Clip1())) then
-					self.DoingWeaponAttack = false
-					self.DoingWeaponAttack_Standing = false
+					self.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 					self.NextChaseTime = curTime + 2
 					if !plyControlled then self:SetWeaponState(VJ.WEP_STATE_RELOADING) end
 					if eneValid then self:PlaySoundSystem("WeaponReload") end -- tsayn han e minag yete teshnami ga!
@@ -2705,6 +2699,7 @@ function ENT:Think()
 				eneData.IsVisible = eneIsVisible
 				self.LatestEnemyDistance = eneDist
 				self.NearestPointToEnemyDistance = eneDistNear
+				local firingWep = self.WeaponAttackState && self.WeaponAttackState >= VJ.WEP_ATTACK_STATE_FIRE
 				if eneIsVisible then
 					if self:IsInViewCone(enePos) && (eneDist < self:GetMaxLookDistance()) then
 						eneData.LastVisibleTime = curTime
@@ -2712,10 +2707,9 @@ function ENT:Think()
 						eneData.LastVisiblePos = eneData.LastVisiblePosReal
 						eneData.LastVisiblePosReal = ene:EyePos() -- Use EyePos because "Visible" uses it to run the trace in the engine! | For origin, use "self:GetEnemyLastSeenPos()"
 					end
-					if self.DoingWeaponAttack then self:PlaySoundSystem("Suppressing") end
-				else
-					self.DoingWeaponAttack = false
-					self.DoingWeaponAttack_Standing = false
+					if firingWep then self:PlaySoundSystem("Suppressing") end
+				elseif firingWep then
+					self.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 				end
 				
 				-- Turning / Facing Enemy
@@ -2802,11 +2796,10 @@ function ENT:Think()
 					self:SetTurnTarget("Enemy")
 				end
 			else -- No Enemy
-				self.DoingWeaponAttack = false
-				self.DoingWeaponAttack_Standing = false
-				if !self.Alerted && self.DidWeaponAttackAimParameter && !plyControlled then
+				self.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
+				if !self.Alerted && self.UpdatedPoseParam && !plyControlled then
 					self:ClearPoseParameters()
-					self.DidWeaponAttackAimParameter = false
+					self.UpdatedPoseParam = false
 				end
 				eneData.TimeSinceAcquired = 0
 			end
@@ -2850,7 +2843,7 @@ function ENT:Think()
 			end
 		end
 	else -- AI Not enabled
-		self.DoingWeaponAttack = false
+		self.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 	end
 	
 	//if aiEnabled then
@@ -3281,7 +3274,7 @@ local function math_angDif(diff)
 end
 --
 function ENT:UpdatePoseParamTracking(resetPoses)
-	if (!self.HasPoseParameterLooking) or (!self.VJ_IsBeingControlled && !self.DoingWeaponAttack && !self.EnemyData.IsVisible) then return end
+	if !self.HasPoseParameterLooking or (!self.VJ_IsBeingControlled && (!self.WeaponAttackState or (!self.EnemyData.IsVisible && self.WeaponAttackState < VJ.WEP_ATTACK_STATE_FIRE))) then return end
 	//VJ.GetPoseParameters(self)
 	local ene = self:GetEnemy()
 	local newPitch = 0
@@ -3321,7 +3314,7 @@ function ENT:UpdatePoseParamTracking(resetPoses)
 		local pose = namesRoll[x]
 		setPoseParameter(self, pose, math_angApproach(getPoseParameter(self, pose), newRoll, speed))
 	end
-	self.DidWeaponAttackAimParameter = true
+	self.UpdatedPoseParam = true
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 --[[---------------------------------------------------------
@@ -3335,7 +3328,7 @@ function ENT:CanFireWeapon(checkDistance, checkDistanceOnly)
 	if self:OnWeaponCanFire() == false then return false end
 	local hasDist = false
 	local hasChecks = false
-	local curWep = self.CurrentWeaponEntity
+	local curWep = self.WeaponEntity
 	
 	if self.PauseAttacks or !IsValid(curWep) or self:GetWeaponState() != VJ.WEP_STATE_READY then return false end
 	if self.VJ_IsBeingControlled then
@@ -3478,8 +3471,8 @@ function ENT:SelectSchedule()
 						if self.TakingCoverT > curTime then return end -- Do NOT interrupt when taking cover (such as "MoveOrHideOnDamageByEnemy")
 						if self:GetWeaponState() != VJ.WEP_STATE_RELOADING then
 							-- Wait when enemy is occluded
-							if self.Weapon_WaitOnOcclusion && !self.DoingWeaponWaitOnOcclusion && (!wep.IsMeleeWeapon) && self.AllowWeaponWaitOnOcclusion && ((curTime - self.Weapon_TimeSinceLastShot) <= 4.5) && (self.LatestEnemyDistance > self.Weapon_WaitOnOcclusionMinDist) then
-								self.DoingWeaponWaitOnOcclusion = true
+							if self.Weapon_WaitOnOcclusion && self.WeaponAttackState != VJ.WEP_ATTACK_STATE_AIM_OCCLUSION && !wep.IsMeleeWeapon && self.AllowWeaponWaitOnOcclusion && (curTime - self.WeaponLastShotTime) <= 4.5 && self.LatestEnemyDistance > self.Weapon_WaitOnOcclusionMinDist then
+								self.WeaponAttackState = VJ.WEP_ATTACK_STATE_AIM_OCCLUSION
 								self:MaintainIdleBehavior(2) -- Make it play idle stand (Which will turn into ACT_IDLE_ANGRY)
 								self.NextChaseTime = curTime + math.Rand(self.Weapon_WaitOnOcclusionTime.a, self.Weapon_WaitOnOcclusionTime.b)
 							-- I am hidden, so stand up in case I am crouching if I had detected to be in a hidden position and the enemy may be visible!
@@ -3488,9 +3481,8 @@ function ENT:SelectSchedule()
 								goto goto_checkwep
 							else
 								-- Everything failed, go after the enemy!
-								if self.CurrentScheduleName != "SCHEDULE_ALERT_CHASE" && self.CurrentScheduleName != "SCHEDULE_ALERT_CHASE_LOS" then
-									self.DoingWeaponAttack = false
-									self.DoingWeaponAttack_Standing = false
+								if self.WeaponAttackState && self.WeaponAttackState >= VJ.WEP_ATTACK_STATE_FIRE && self.CurrentScheduleName != "SCHEDULE_ALERT_CHASE" && self.CurrentScheduleName != "SCHEDULE_ALERT_CHASE_LOS" then
+									self.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 								end
 								self:MaintainAlertBehavior()
 							end
@@ -3530,7 +3522,7 @@ function ENT:SelectSchedule()
 						end
 						if !wep.IsMeleeWeapon then
 							-- If friendly in line of fire, then move!
-							if inCoverEntLiving && self.DoingWeaponAttack_Standing && curTime > self.TakingCoverT && IsValid(wepInCoverEnt) && wepInCoverEnt:IsNPC() && wepInCoverEnt != self && (self:Disposition(wepInCoverEnt) == D_LI or self:Disposition(wepInCoverEnt) == D_NU) && wepInCoverTrace.HitPos:Distance(wepInCoverTrace.StartPos) <= 3000 then
+							if inCoverEntLiving && self.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND && curTime > self.TakingCoverT && IsValid(wepInCoverEnt) && wepInCoverEnt:IsNPC() && wepInCoverEnt != self && (self:Disposition(wepInCoverEnt) == D_LI or self:Disposition(wepInCoverEnt) == D_NU) && wepInCoverTrace.HitPos:Distance(wepInCoverTrace.StartPos) <= 3000 then
 								local moveCheck = PICK(VJ.TraceDirections(self, "Quick", 50, true, false, 4, true, true))
 								if moveCheck then
 									self:StopMoving()
@@ -3582,7 +3574,7 @@ function ENT:SelectSchedule()
 							end
 						end
 						
-						if canFire && curTime > self.NextWeaponAttackT && curTime > self.NextWeaponAttackT_Base then // && !self.DoingWeaponAttack
+						if canFire && curTime > self.NextWeaponAttackT && curTime > self.NextWeaponAttackT_Base then
 							-- Melee weapons
 							if wep.IsMeleeWeapon then
 								self:OnWeaponAttack()
@@ -3594,31 +3586,32 @@ function ENT:SelectSchedule()
 									self.NextMeleeWeaponAttackT = curTime + animDur
 									self.WeaponAttackAnim = finalAnim
 									self:PlayAnim(finalAnim, false, false, true)
-									self.DoingWeaponAttack = true
+									self.WeaponAttackState = VJ.WEP_ATTACK_STATE_FIRE_STAND
 								end
 							-- Ranged weapons
 							else
 								self.AllowWeaponWaitOnOcclusion = true
 								local hasAmmo = wep:Clip1() > 0 -- Does it have ammo?
-								if !hasAmmo && !self.WeaponAttackAnimIsAim then
+								if !hasAmmo && self.WeaponAttackState != VJ.WEP_ATTACK_STATE_AIM then
 									self.WeaponAttackAnim = ACT_INVALID
 								end
 								-- If it's already doing a firing animation, then do NOT restart the animation
 								if VJ.IsCurrentAnim(self, self:TranslateActivity(self.WeaponAttackAnim)) then
-									self.DoingWeaponAttack = true
-									self.DoingWeaponAttack_Standing = true
+									self.WeaponAttackState = VJ.WEP_ATTACK_STATE_FIRE_STAND
 								-- If the current activity isn't the last weapon animation and it's not a transition, then continue
 								elseif self:GetActivity() != self.WeaponAttackAnim && self:GetActivity() != ACT_TRANSITION then
 									self:OnWeaponAttack()
-									self.DoingWeaponWaitOnOcclusion = false
-									self.Weapon_TimeSinceLastShot = curTime
+									if self.WeaponAttackState == VJ.WEP_ATTACK_STATE_AIM_OCCLUSION then
+										self.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
+									end
+									self.WeaponLastShotTime = curTime
 									//self.NextWeaponStrafeWhileFiringT = curTime + 2
 									local finalAnim = false
 									-- Check if the NPC has ammo
 									if !hasAmmo then
 										self:MaintainIdleBehavior(2) -- Make it play idle stand (Which will turn into ACT_IDLE_ANGRY)
 										//finalAnim = self:TranslateActivity(PICK(self.AnimTbl_WeaponAim))
-										self.WeaponAttackAnimIsAim = true
+										self.WeaponAttackState = VJ.WEP_ATTACK_STATE_AIM
 									else
 										-- Crouch fire
 										local anim_crouch = self:TranslateActivity(PICK(self.AnimTbl_WeaponAttackCrouch))
@@ -3629,19 +3622,18 @@ function ENT:SelectSchedule()
 											finalAnim = self:TranslateActivity(PICK(self.AnimTbl_WeaponAttack))
 										end
 									end
-									if finalAnim && VJ.AnimExists(self, finalAnim) && (!VJ.IsCurrentAnim(self, finalAnim) or !self.DoingWeaponAttack) then
+									if finalAnim && VJ.AnimExists(self, finalAnim) && (!VJ.IsCurrentAnim(self, finalAnim) or !self.WeaponAttackState) then
 										VJ.EmitSound(self, wep.NPC_BeforeFireSound, wep.NPC_BeforeFireSoundLevel, math.Rand(wep.NPC_BeforeFireSoundPitch.a, wep.NPC_BeforeFireSoundPitch.b))
 										self:PlayAnim(finalAnim, false, 0, true)
 										self.WeaponAttackAnim = finalAnim
-										self.DoingWeaponAttack = true
-										self.DoingWeaponAttack_Standing = true
+										self.WeaponAttackState = VJ.WEP_ATTACK_STATE_FIRE_STAND
 										self.NextWeaponAttackT_Base = curTime + 0.2
 									end
 								end
 							end
 						end
 						-- Move randomly when shooting
-						if self.Weapon_StrafeWhileFiring && !inCover && !self.IsGuard && !self.IsFollowing && (!wep.IsMeleeWeapon) && (!wep.NPC_StandingOnly) && self.DoingWeaponAttack && self.DoingWeaponAttack_Standing && curTime > self.NextWeaponStrafeWhileFiringT && (curTime - self.EnemyData.TimeSinceAcquired) > 2 && (self.LatestEnemyDistance < (self.Weapon_FiringDistanceFar / 1.25)) then
+						if self.Weapon_StrafeWhileFiring && !inCover && !self.IsGuard && !self.IsFollowing && (!wep.IsMeleeWeapon) && (!wep.NPC_StandingOnly) && self.WeaponAttackState == VJ.WEP_ATTACK_STATE_FIRE_STAND && curTime > self.NextWeaponStrafeWhileFiringT && (curTime - self.EnemyData.TimeSinceAcquired) > 2 && (self.LatestEnemyDistance < (self.Weapon_FiringDistanceFar / 1.25)) then
 							if self:OnWeaponStrafeWhileFiring() != false then
 								local moveCheck = PICK(VJ.TraceDirections(self, "Radial", math.random(150, 400), true, false, 12, true))
 								if moveCheck then
@@ -3654,11 +3646,9 @@ function ENT:SelectSchedule()
 						end
 					else -- None VJ Base weapons
 						self:SetTurnTarget("Enemy")
-						self.DoingWeaponWaitOnOcclusion = false
-						self.DoingWeaponAttack = true
-						self.DoingWeaponAttack_Standing = true
+						self.WeaponAttackState = VJ.WEP_ATTACK_STATE_FIRE_STAND
 						self:OnWeaponAttack()
-						self.Weapon_TimeSinceLastShot = curTime
+						self.WeaponLastShotTime = curTime
 						//wep:SetClip1(99999)
 						self:SetSchedule(SCHED_RANGE_ATTACK1)
 					end
@@ -3881,7 +3871,7 @@ function ENT:OnTakeDamage(dmginfo)
 						self:PlayAnim(anim, false, hideTime, false) -- Don't set lockAnim because we want it to shoot if an enemy is suddenly visible!
 						self.NextChaseTime = curTime + hideTime
 						self.TakingCoverT = curTime + hideTime
-						self.DoingWeaponAttack = false
+						self.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 					end
 					self.NextMoveOrHideOnDamageByEnemyT = curTime + math.random(self.MoveOrHideOnDamageByEnemy_NextTime.a, self.MoveOrHideOnDamageByEnemy_NextTime.b)
 				elseif !self:IsMoving() && (!IsValid(wep) or (IsValid(wep) && !wep.IsMeleeWeapon)) then -- Run away if not moving AND has a non-melee weapon
@@ -4153,7 +4143,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 			if util.IsValidRagdoll(corpseMdl) then
 				corpseClass = "prop_ragdoll"
 			elseif !util.IsValidProp(corpseMdl) or !util.IsValidModel(corpseMdl) then
-				if IsValid(self.CurrentWeaponEntity) then self.CurrentWeaponEntity:Remove() end
+				if IsValid(self.WeaponEntity) then self.WeaponEntity:Remove() end
 				return false
 			end
 		end
@@ -4257,13 +4247,13 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		end
 		VJ.Corpse_AddStinky(corpse, true)
 		
-		if IsValid(self.CurrentWeaponEntity) then corpse.ChildEnts[#corpse.ChildEnts + 1] = self.CurrentWeaponEntity end
+		if IsValid(self.WeaponEntity) then corpse.ChildEnts[#corpse.ChildEnts + 1] = self.WeaponEntity end
 		if self.DeathCorpseFade then corpse:Fire(corpse.FadeCorpseType, "", self.DeathCorpseFade) end
 		if vj_npc_corpse_fade:GetInt() == 1 then corpse:Fire(corpse.FadeCorpseType, "", vj_npc_corpse_fadetime:GetInt()) end
 		self:OnCreateDeathCorpse(dmginfo, hitgroup, corpse)
 		if corpse:IsFlagSet(FL_DISSOLVING) then
-			if IsValid(self.CurrentWeaponEntity) then
-				self.CurrentWeaponEntity:Dissolve(0, 1)
+			if IsValid(self.WeaponEntity) then
+				self.WeaponEntity:Dissolve(0, 1)
 			end
 			if corpse.ChildEnts then
 				for _, child in ipairs(corpse.ChildEnts) do
@@ -4285,7 +4275,7 @@ function ENT:CreateDeathCorpse(dmginfo, hitgroup)
 		hook.Call("CreateEntityRagdoll", nil, self, corpse)
 		return corpse
 	else
-		if IsValid(self.CurrentWeaponEntity) then self.CurrentWeaponEntity:Remove() end -- Remove dropped weapon
+		if IsValid(self.WeaponEntity) then self.WeaponEntity:Remove() end -- Remove dropped weapon
 		-- Remove child entities | No fade effects as it will look weird, remove it instantly!
 		if self.DeathCorpse_ChildEnts then
 			for _, child in ipairs(self.DeathCorpse_ChildEnts) do
@@ -4321,7 +4311,7 @@ function ENT:DeathWeaponDrop(dmginfo, hitgroup)
 			phys:ApplyForceCenter(dmgForce)
 		end
 	end
-	self.CurrentWeaponEntity = activeWep
+	self.WeaponEntity = activeWep
 	
 	self:OnDeathWeaponDrop(dmginfo, hitgroup, activeWep)
 end
@@ -4583,18 +4573,15 @@ function ENT:PlaySoundSystem(sdSet, customSD, sdType)
 			self.NextSuppressingSoundT = CurTime() + math.Rand(self.NextSoundTime_Suppressing.a, self.NextSoundTime_Suppressing.b)
 		end
 	elseif sdSet == "WeaponReload" then
-		if self.HasWeaponReloadSounds && CurTime() > self.NextWeaponReloadSoundT then
+		if self.HasWeaponReloadSounds then
 			local pickedSD = PICK(self.SoundTbl_WeaponReload)
-			local sdDur = 3
 			if (math.random(1, self.WeaponReloadSoundChance) == 1 && pickedSD) or customSD then
 				if customSD then pickedSD = customSD end
 				StopSound(self.CurrentSpeechSound)
 				StopSound(self.CurrentIdleSound)
-				sdDur = (SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or sdDur
-				self.NextIdleSoundT_RegularChange = CurTime() + math.random(3, 4)
+				self.NextIdleSoundT_RegularChange = CurTime() + ((SoundDuration(pickedSD) > 0 and SoundDuration(pickedSD)) or 3.5)
 				self.CurrentSpeechSound = sdType(self, pickedSD, self.WeaponReloadSoundLevel, self:GetSoundPitch(self.WeaponReloadSoundPitch.a, self.WeaponReloadSoundPitch.b))
 			end
-			self.NextWeaponReloadSoundT = CurTime() + sdDur
 		end
 	elseif sdSet == "BeforeMeleeAttack" then
 		if self.HasMeleeAttackSounds then

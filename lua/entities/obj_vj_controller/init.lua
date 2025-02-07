@@ -401,13 +401,11 @@ function ENT:Think()
 				npc:OnWeaponAttack()
 				npc.WeaponAttackAnim = VJ.PICK(npc.AnimTbl_WeaponAttack)
 				npc:PlayAnim(npc.WeaponAttackAnim, false, 2, false)
-				npc.DoingWeaponAttack = true
-				npc.DoingWeaponAttack_Standing = true
+				npc.WeaponAttackState = VJ.WEP_ATTACK_STATE_FIRE_STAND
 			end
 		end
 		if !ply:KeyDown(IN_ATTACK2) then
-			npc.DoingWeaponAttack = false
-			npc.DoingWeaponAttack_Standing = false
+			npc.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 		end
 	end
 	

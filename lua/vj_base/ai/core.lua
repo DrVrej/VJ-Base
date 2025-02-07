@@ -681,8 +681,7 @@ function ENT:PlayAnim(animation, lockAnim, lockAnimTime, faceEnemy, animDelay, e
 			local schedule = vj_ai_schedule.New("PlayAnim_"..animation)
 			
 			-- For humans NPCs, internally the base will set these variables back to true after this function if it's called by weapon attack animations!
-			self.DoingWeaponAttack = false
-			self.DoingWeaponAttack_Standing = false
+			self.WeaponAttackState = VJ.WEP_ATTACK_STATE_NONE
 			
 			//self:StartEngineTask(ai.GetTaskID("TASK_RESET_ACTIVITY"), 0) //schedule:EngTask("TASK_RESET_ACTIVITY", 0)
 			//if self.Dead then schedule:EngTask("TASK_STOP_MOVING", 0) end
@@ -2785,7 +2784,7 @@ end
 function ENT:DoWeaponAttackMovementCode(override, moveType)
 	override = override or false -- Overrides some of the checks, only used for the internal task system!
 	moveType = moveType or 0 -- This is used with override | 0 = Run, 1 = Walk
-	if (self.CurrentWeaponEntity.IsMeleeWeapon) then
+	if (self.WeaponEntity.IsMeleeWeapon) then
 		self.DoingWeaponAttack = true
 	elseif self.Weapon_CanFireWhileMoving == true then
 		if self.EnemyData.IsVisible && self:CanFireWeapon(true, false) == true && ((self:IsMoving() && (self.CurrentSchedule != nil && self.CurrentSchedule.CanShootWhenMoving == true)) or (override == true)) then
