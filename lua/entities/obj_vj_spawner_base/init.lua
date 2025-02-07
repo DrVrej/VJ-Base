@@ -119,6 +119,9 @@ function ENT:SpawnEntity(spawnKey, spawnTbl, initSpawn)
 		end
 	end
 	local ent = ents.Create(entPicked)
+	if IsValid(self:GetCreator()) then
+		ent:SetCreator(self:GetCreator())
+	end
 	ent:SetPos(self:GetPos() + spawnPos)
 	ent:SetAngles(spawnAng + self:GetAngles())
 	ent:Spawn()

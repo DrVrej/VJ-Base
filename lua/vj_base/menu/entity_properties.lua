@@ -183,12 +183,7 @@ properties.Add("vj_pr_npc_allyme",{
 	Receive = function(self, length, ply) -- Called when "Action" sends a message (Server)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
-		table.insert(ent.VJ_AddCertainEntityAsFriendly,ply)
-		for k,v in ipairs(ent.VJ_AddCertainEntityAsEnemy) do
-			if v:IsPlayer() && v:GetName() == ply:GetName() then
-				table.remove(ent.VJ_AddCertainEntityAsEnemy,k)
-			end
-		end
+		ent:SetRelationshipMemory(ply, VJ.MEM_OVERRIDE_DISPOSITION, D_LI)
 		ply:ChatPrint(ent:GetName().." Became an ally to you.")
 	end
 })
@@ -216,12 +211,7 @@ properties.Add("vj_pr_npc_hostileme",{
 	Receive = function(self, length, ply) -- Called when "Action" sends a message (Server)
 		local ent = net.ReadEntity()
 		if (!self:Filter(ent, ply)) then return end
-		table.insert(ent.VJ_AddCertainEntityAsEnemy,ply)
-		for k,v in ipairs(ent.VJ_AddCertainEntityAsFriendly) do
-			if v:IsPlayer() && v:GetName() == ply:GetName() then
-				table.remove(ent.VJ_AddCertainEntityAsFriendly,k)
-			end
-		end
+		ent:SetRelationshipMemory(ply, VJ.MEM_OVERRIDE_DISPOSITION, D_HT)
 		ply:ChatPrint(ent:GetName().." Became hostile to you.")
 	end
 })

@@ -230,7 +230,7 @@ else -- If SERVER
 							//if IsValid(v:GetEnemy()) && v:Visible(v:GetEnemy()) then
 								//schedule:EngTask("TASK_FACE_ENEMY", 0)
 								schedule.CanShootWhenMoving = true
-								schedule.FaceData = {Type = VJ.NPC_FACE_ENEMY_VISIBLE}
+								schedule.FaceData = {Type = VJ.FACE_ENEMY_VISIBLE}
 							//end
 						end)
 					else -- For non-VJ NPCs

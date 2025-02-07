@@ -544,7 +544,7 @@ function SWEP:NPC_CanFire()
 		if (owner.IsVJBaseSNPC_Human && IsValid(ene) && !owner:CanFireWeapon(true, true)) or (self.NPC_StandingOnly && owner:IsMoving()) then
 			return false
 		end
-		if (owner.IsVJBaseSNPC_Human && owner.DoingWeaponAttack && (VJ.IsCurrentAnimation(owner, owner.CurrentWeaponAnimation) or (!owner.DoingWeaponAttack_Standing))) or (!owner.IsVJBaseSNPC_Human) then
+		if (owner.IsVJBaseSNPC_Human && owner.DoingWeaponAttack && (VJ.IsCurrentAnim(owner, owner.WeaponAttackAnim) or (!owner.DoingWeaponAttack_Standing))) or (!owner.IsVJBaseSNPC_Human) then
 			-- For VJ Humans only, ammo check
 			if owner.IsVJBaseSNPC_Human && owner.Weapon_CanReload && self:Clip1() <= 0 then -- No ammo!
 				if owner.VJ_IsBeingControlled then owner.VJ_TheController:PrintMessage(HUD_PRINTCENTER, "Press R to reload!") end
@@ -594,7 +594,7 @@ function SWEP:NPCShoot_Primary()
 				-- If no animation was found then fireTime is 0, otherwise if "Weapon_SecondaryFireTime" is false then use animation time
 			self:NPC_SecondaryFire_BeforeTimer(ene, fireTime)
 			timer.Simple(fireTime, function()
-				if IsValid(self) && IsValid(owner) && IsValid(owner:GetEnemy()) && CurTime() > self.NPC_SecondaryFireNextT && (anim == ACT_INVALID or (anim && VJ.IsCurrentAnimation(owner, anim))) then -- ONLY check for cur anim IF it even had one!
+				if IsValid(self) && IsValid(owner) && IsValid(owner:GetEnemy()) && CurTime() > self.NPC_SecondaryFireNextT && (anim == ACT_INVALID or (anim && VJ.IsCurrentAnim(owner, anim))) then -- ONLY check for cur anim IF it even had one!
 					self:NPC_SecondaryFire()
 					if self.NPC_HasSecondaryFireSound then
 						local fireSd = VJ.PICK(self.NPC_SecondaryFireSound)

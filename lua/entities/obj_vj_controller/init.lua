@@ -57,6 +57,8 @@ util.AddNetworkString("vj_controller_cldata")
 util.AddNetworkString("vj_controller_hud")
 
 local vecDef = Vector(0, 0, 0)
+local math_min = math.min
+local math_max = math.max
 ---------------------------------------------------------------------------------------------------------------------------------------------
 function ENT:Initialize()
 	self:SetMoveType(MOVETYPE_NONE)
@@ -262,7 +264,7 @@ function ENT:SetControlledNPC(npc)
 		npc.PauseAttacks = true
 		npc.NextThrowGrenadeT = 0
 		npc.DisableFindEnemy = true
-		for _, v in ipairs(npc.CurrentPossibleEnemies) do
+		for _, v in ipairs(npc.RelationshipEnts) do
 			if IsValid(v) then
 				npc:AddEntityRelationship(v, D_NU)
 			end
@@ -276,7 +278,7 @@ function ENT:SetControlledNPC(npc)
 			npc:OnEat("StopEating", "Unspecified") -- So it plays the get up animation
 			npc:ResetEatingBehavior("Unspecified")
 		end
-		-- Apply a small delay to assure that the bullseye is in the NPC's "CurrentPossibleEnemies"
+		-- Apply a small delay to assure that the bullseye is in the NPC's "RelationshipEnts"
 		timer.Simple(0.1, function()
 			if IsValid(self) && IsValid(npc) then
 				npc:MaintainRelationships()
@@ -391,14 +393,14 @@ function ENT:Think()
 
 	-- Weapon attack
 	if npc.IsVJBaseSNPC_Human then
-		if IsValid(npcWeapon) && !npc:IsMoving() && npcWeapon.IsVJBaseWeapon && ply:KeyDown(IN_ATTACK2) && !npc.AttackType && !npc.PauseAttacks && npc:GetWeaponState() == VJ.NPC_WEP_STATE_READY then
+		if IsValid(npcWeapon) && !npc:IsMoving() && npcWeapon.IsVJBaseWeapon && ply:KeyDown(IN_ATTACK2) && !npc.AttackType && !npc.PauseAttacks && npc:GetWeaponState() == VJ.WEP_STATE_READY then
 			//npc:SetAngles(Angle(0,math.ApproachAngle(npc:GetAngles().y,ply:GetAimVector():Angle().y,100),0))
 			npc:SetTurnTarget(bullseyePos, 0.2)
 			canTurn = false
-			if !VJ.IsCurrentAnimation(npc, npc:TranslateActivity(npc.CurrentWeaponAnimation)) && !VJ.IsCurrentAnimation(npc, npc.AnimTbl_WeaponAttack) then
+			if !VJ.IsCurrentAnim(npc, npc:TranslateActivity(npc.WeaponAttackAnim)) && !VJ.IsCurrentAnim(npc, npc.AnimTbl_WeaponAttack) then
 				npc:OnWeaponAttack()
-				npc.CurrentWeaponAnimation = VJ.PICK(npc.AnimTbl_WeaponAttack)
-				npc:PlayAnim(npc.CurrentWeaponAnimation, false, 2, false)
+				npc.WeaponAttackAnim = VJ.PICK(npc.AnimTbl_WeaponAttack)
+				npc:PlayAnim(npc.WeaponAttackAnim, false, 2, false)
 				npc.DoingWeaponAttack = true
 				npc.DoingWeaponAttack_Standing = true
 			end
@@ -409,9 +411,9 @@ function ENT:Think()
 		end
 	end
 	
-	if npc.IsVJBaseSNPC && npc.CurrentAttackAnimationTime < CurTime() && curTime > npc.NextChaseTime && !npc.IsVJBaseSNPC_Tank then
+	if npc.IsVJBaseSNPC && npc.AttackAnimTime < CurTime() && curTime > npc.NextChaseTime && !npc.IsVJBaseSNPC_Tank then
 		-- Turning
-		if !npc:IsMoving() && canTurn && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ.NPC_WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
+		if !npc:IsMoving() && canTurn && npc.MovementType != VJ_MOVETYPE_PHYSICS && ((npc.IsVJBaseSNPC_Human && npc:GetWeaponState() != VJ.WEP_STATE_RELOADING) or (!npc.IsVJBaseSNPC_Human)) then
 			npc:SCHEDULE_IDLE_STAND()
 			if self.VJC_NPC_CanTurn then
 				local turnData = npc.TurnData
@@ -451,7 +453,7 @@ function ENT:StartMovement(Dir, Rot)
 	local selfPos = npc:GetPos()
 	local centerToPos = npc:OBBCenter():Distance(npc:OBBMins()) + 20 // npc:OBBMaxs().z
 	local NPCPos = selfPos + npc:GetUp()*centerToPos
-	local groundSpeed = math.Clamp(npc:GetSequenceGroundSpeed(npc:GetSequence()), 300, 9999)
+	local groundSpeed = math_min(math_max(npc:GetSequenceGroundSpeed(npc:GetSequence()), 300), 9999)
 	local defaultFilter = {self, npc, ply}
 	local forwardTr = util.TraceLine({start = NPCPos, endpos = NPCPos + plyAimVec * groundSpeed, filter = defaultFilter})
 	local forwardDist = NPCPos:Distance(forwardTr.HitPos)
@@ -480,11 +482,11 @@ function ENT:StartMovement(Dir, Rot)
 		npc:SetLastPosition(finalPos)
 		npc:SCHEDULE_GOTO_POSITION(ply:KeyDown(IN_SPEED) and "TASK_RUN_PATH" or "TASK_WALK_PATH", function(x)
 			if ply:KeyDown(IN_ATTACK2) && npc.IsVJBaseSNPC_Human then
-				x.FaceData = {Type = VJ.NPC_FACE_ENEMY}
+				x.FaceData = {Type = VJ.FACE_ENEMY}
 				x.CanShootWhenMoving = true
 			else
 				if self.VJC_BullseyeTracking then
-					x.FaceData = {Type = VJ.NPC_FACE_ENEMY}
+					x.FaceData = {Type = VJ.FACE_ENEMY}
 				else
 					npc:ResetTurnTarget()
 					x:EngTask("TASK_FACE_LASTPOSITION", 0)

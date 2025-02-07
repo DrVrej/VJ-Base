@@ -31,35 +31,42 @@ VJ.ATTACK_STATE_EXECUTED		= 3 -- Current attack has been executed at least once
 VJ.ATTACK_STATE_EXECUTED_HIT	= 4 -- Current attack has been executed at least once AND hit an entity at least once (Melee & Leap attacks)
 
 -- NPC facing status
-VJ.NPC_FACE_NONE				= false -- Not currently facing anything | DEFAULT
-VJ.NPC_FACE_ENEMY				= 1 -- Currently attempting to face the enemy
-VJ.NPC_FACE_ENEMY_VISIBLE		= 2 -- Currently attempting to face the enemy when it's visible
-VJ.NPC_FACE_ENTITY				= 3 -- Currently attempting to face a specific entity
-VJ.NPC_FACE_ENTITY_VISIBLE		= 4 -- Currently attempting to face a specific entity when it's visible
-VJ.NPC_FACE_POSITION			= 5 -- Currently attempting to face a specific position
-VJ.NPC_FACE_POSITION_VISIBLE	= 6 -- Currently attempting to face a specific position when it's visible
+VJ.FACE_NONE					= false -- Not currently facing anything | DEFAULT
+VJ.FACE_ENEMY					= 1 -- Currently attempting to face the enemy
+VJ.FACE_ENEMY_VISIBLE			= 2 -- Currently attempting to face the enemy when it's visible
+VJ.FACE_ENTITY					= 3 -- Currently attempting to face a specific entity
+VJ.FACE_ENTITY_VISIBLE			= 4 -- Currently attempting to face a specific entity when it's visible
+VJ.FACE_POSITION				= 5 -- Currently attempting to face a specific position
+VJ.FACE_POSITION_VISIBLE		= 6 -- Currently attempting to face a specific position when it's visible
 
--- Alert state
-VJ.NPC_ALERT_STATE_NONE			= false -- Not currently facing anything | DEFAULT
-VJ.NPC_ALERT_STATE_READY		= 1 -- Alerted but no enemy was ever seen since it got alerted
-VJ.NPC_ALERT_STATE_ENEMY		= true -- Has seen an enemy since it got alerted
+-- NPC alert state
+VJ.ALERT_STATE_NONE				= false -- Not currently facing anything | DEFAULT
+VJ.ALERT_STATE_READY			= 1 -- Alerted but no enemy was ever seen since it got alerted
+VJ.ALERT_STATE_ENEMY			= true -- Has seen an enemy since it got alerted
 
--- Danger detected type (Used by human NPCs)
-VJ.NPC_DANGER_TYPE_ENTITY		= 1 -- Entity type of danger | Commonly produced by projectiles | Associated: "ent.VJ_ID_Danger"
-VJ.NPC_DANGER_TYPE_GRENADE		= 2 -- Grenade type of danger | Commonly produced by grenades | Associated: "ent.VJ_ID_Grenade"
-VJ.NPC_DANGER_TYPE_HINT			= 3 -- Hint type of danger | Commonly used by sound hints | Associated: COND_HEAR_DANGER, COND_HEAR_PHYSICS_DANGER, COND_HEAR_MOVE_AWAY
+-- NPC danger detected type (Used by human NPCs)
+VJ.DANGER_TYPE_ENTITY			= 1 -- Entity type of danger | Commonly produced by projectiles | Associated: "ent.VJ_ID_Danger"
+VJ.DANGER_TYPE_GRENADE			= 2 -- Grenade type of danger | Commonly produced by grenades | Associated: "ent.VJ_ID_Grenade"
+VJ.DANGER_TYPE_HINT				= 3 -- Hint type of danger | Commonly used by sound hints | Associated: COND_HEAR_DANGER, COND_HEAR_PHYSICS_DANGER, COND_HEAR_MOVE_AWAY
 
 -- NPC weapon state
-VJ.NPC_WEP_STATE_READY			= 0 -- Weapon is ready to be fired | DEFAULT
-VJ.NPC_WEP_STATE_HOLSTERED		= 1 -- Weapon is holstered
-VJ.NPC_WEP_STATE_RELOADING		= 2 -- Weapon is reloading
+VJ.WEP_STATE_READY				= 0 -- Weapon is ready to be fired | DEFAULT
+VJ.WEP_STATE_HOLSTERED			= 1 -- Weapon is holstered
+VJ.WEP_STATE_RELOADING			= 2 -- Weapon is reloading
 
 -- NPC weapon inventory status
-VJ.NPC_WEP_INVENTORY_NONE		= 0 -- Currently using no weapon | DEFAULT
-VJ.NPC_WEP_INVENTORY_PRIMARY	= 1 -- Currently using its primary weapon
-VJ.NPC_WEP_INVENTORY_SECONDARY	= 2 -- Currently using its secondary weapon
-VJ.NPC_WEP_INVENTORY_MELEE		= 3 -- Currently using its melee weapon
-VJ.NPC_WEP_INVENTORY_ANTI_ARMOR	= 4 -- Currently using its anti-armor weapon
+VJ.WEP_INVENTORY_NONE			= 0 -- Currently using no weapon | DEFAULT
+VJ.WEP_INVENTORY_PRIMARY		= 1 -- Currently using its primary weapon
+VJ.WEP_INVENTORY_SECONDARY		= 2 -- Currently using its secondary weapon
+VJ.WEP_INVENTORY_MELEE			= 3 -- Currently using its melee weapon
+VJ.WEP_INVENTORY_ANTI_ARMOR		= 4 -- Currently using its anti-armor weapon
+
+-- NPC relationship memory
+VJ.MEM_OVERRIDE_DISPOSITION		= "override_disposition" -- Override the disposition towards the another entity | D_* enums
+VJ.MEM_OVERRIDE_PRIORITY		= "override_priority" -- Override the disposition priority towards the another entity | number
+VJ.MEM_HOSTILITY_LEVEL			= "hostility" -- Use to keep track of the hostility level towards a friendly entity | number
+VJ.MEM_CACHE_CLASSES			= "cache_classes" -- Cached "self.VJ_NPC_Class" | table | WARNING: Avoid editing, used internally
+VJ.MEM_CACHE_DISPOSITION		= "cache_disposition" -- Cached disposition, used alongside VJ.MEM_CACHE_CLASSES | D_* enums | WARNING: Avoid editing, used internally
 
 -- Animation type
 VJ.ANIM_TYPE_NONE				= false -- No type detected including fail cases and resets | DEFAULT
@@ -75,7 +82,7 @@ VJ.ANIM_SET_REBEL				= 3 -- Current model's animation set is HL2 citizen / rebel
 VJ.ANIM_SET_PLAYER				= 4 -- Current model's animation set is default player
 VJ.ANIM_SET_CUSTOM				= 10 -- Use this when defining a custom model set
 
--- Blood Colors
+-- Blood colors
 VJ.BLOOD_COLOR_NONE				= false -- No blood color | DEFAULT
 VJ.BLOOD_COLOR_RED				= "Red"
 VJ.BLOOD_COLOR_YELLOW			= "Yellow"

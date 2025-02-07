@@ -7,6 +7,7 @@ include("shared.lua")
 --------------------------------------------------*/
 ENT.Model = false
 ENT.StartHealth = 50
+ENT.BloodColor = VJ.BLOOD_COLOR_RED
 ENT.Behavior = VJ_BEHAVIOR_PASSIVE
 ENT.VJ_NPC_Class = {"CLASS_PLAYER_ALLY"}
 ENT.FriendsWithAllPlayerAllies = true
@@ -14,17 +15,7 @@ ENT.MoveOutOfFriendlyPlayersWay = false
 ENT.FollowPlayer = false
 
 ENT.HasFootStepSound = false
-ENT.SoundTbl_Pain = {
-	"vo/npc/male01/pain01.wav",
-	"vo/npc/male01/pain02.wav",
-	"vo/npc/male01/pain03.wav",
-	"vo/npc/male01/pain04.wav",
-	"vo/npc/male01/pain05.wav",
-	"vo/npc/male01/pain06.wav",
-	"vo/npc/male01/pain07.wav",
-	"vo/npc/male01/pain08.wav",
-	"vo/npc/male01/pain09.wav"
-}
+ENT.SoundTbl_Pain = {"vo/npc/male01/pain01.wav", "vo/npc/male01/pain02.wav", "vo/npc/male01/pain03.wav", "vo/npc/male01/pain04.wav", "vo/npc/male01/pain05.wav", "vo/npc/male01/pain06.wav", "vo/npc/male01/pain07.wav", "vo/npc/male01/pain08.wav", "vo/npc/male01/pain09.wav"}
 
 util.AddNetworkString("vj_testentity_onmenuopen")
 util.AddNetworkString("vj_testentity_runtextsd")

@@ -232,7 +232,7 @@ function ENT:AA_MoveTo(dest, playAnim, moveType, extraOptions)
 			offsetFacing.z = finalPos.z
 			self:SetTurnTarget(offsetFacing, velTime)
 		end
-		//self.AA_CurrentTurnAng = chaseEnemy and false or self:GetFaceAngle(self:GetFaceAngle((velPos):Angle()))
+		//self.AA_CurrentTurnAng = chaseEnemy and false or self:GetTurnAngle(self:GetTurnAngle((velPos):Angle()))
 	end
 	self.AA_CurrentMoveType = chaseEnemy and 3 or 2
 	self.AA_CurrentMovePos = finalPos
@@ -326,8 +326,8 @@ function ENT:AA_IdleWander(playAnim, moveType, extraOptions)
 	end
 	if extraOptions.FaceDest != false then
 		self:SetTurnTarget(finalPos, velTime)
-		//self.AA_CurrentTurnAng = self:GetFaceAngle((finalPos - tr.StartPos):Angle())
-		//self:SetLocalAngularVelocity(self:GetFaceAngle((finalPos-tr.StartPos):Angle()))
+		//self.AA_CurrentTurnAng = self:GetTurnAngle((finalPos - tr.StartPos):Angle())
+		//self:SetLocalAngularVelocity(self:GetTurnAngle((finalPos-tr.StartPos):Angle()))
 	end
 	self.AA_CurrentMoveType = 1
 	self.AA_CurrentMovePos = finalPos

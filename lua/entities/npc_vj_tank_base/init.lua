@@ -246,11 +246,11 @@ function ENT:OnThink()
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 local vec80z = Vector(0, 0, 80)
-local NPC_FACE_NONE = VJ.NPC_FACE_NONE
+local FACE_NONE = VJ.FACE_NONE
 --
 function ENT:OnThinkActive()
 	if self.Dead then return end
-	self.TurnData.Type = NPC_FACE_NONE -- This effectively makes it never face anything through Lua
+	self.TurnData.Type = FACE_NONE -- This effectively makes it never face anything through Lua
 	self:Tank_OnThinkActive()
 	self:SelectSchedule()
 

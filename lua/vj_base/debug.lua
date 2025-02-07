@@ -146,3 +146,22 @@ local mt = table.Merge({}, metaOrg) -- Create a new table to avoid overflow!
 mt.__index = newIndex
 debug.setmetatable(self, mt)
 */
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Retrieving outputs from NPCs or other entities | Outputs: https://developer.valvesoftware.com/wiki/Base.fgd/Garry%27s_Mod
+/*
+local triggerLua = ents.Create("lua_run")
+triggerLua:SetName("triggerhook")
+triggerLua:Spawn()
+
+hook.Add("OnEntityCreated", "VJ_OnEntityCreated", function(ent)
+	if ent:IsNPC() && ent.IsVJBaseSNPC then
+		-- Format: <output name> <targetname>:<inputname>:<parameter>:<delay>:<max times to fire, -1 means infinite>
+		self:Fire("AddOutput", "OnIgnite triggerhook:RunPassedCode:hook.Run( 'OnOutput' ):0:-1")
+	end
+end)
+
+hook.Add("OnOutput", "OnOutput", function()
+	local activator, caller = ACTIVATOR, CALLER
+	print(activator, caller)
+end )
+*/

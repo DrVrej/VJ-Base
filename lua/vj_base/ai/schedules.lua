@@ -108,7 +108,7 @@ end
 function ENT:TASK_VJ_PLAY_ACTIVITY(taskStatus, data)
 	if taskStatus == TASKSTATUS_NEW then
 		//VJ.DEBUG_Print(self, "TASK_VJ_PLAY_ACTIVITY", "Start -", data.duration)
-		local playbackRate = data.playbackRate or self.TruePlaybackRate -- Since setting a new animation resets the playback rate, make sure to capture it before anything!
+		local playbackRate = data.playbackRate or self.AnimPlaybackRate -- Since setting a new animation resets the playback rate, make sure to capture it before anything!
 		self:ResetIdealActivity(data.animation)
 		self:SetActivity(data.animation) -- Avoids "MaintainActivity" from selecting another sequence from the activity (if it has multiple sequences tied to it)
 		self:SetPlaybackRate(playbackRate, true)
@@ -121,7 +121,7 @@ function ENT:TASK_VJ_PLAY_ACTIVITY(taskStatus, data)
 		//self:AutoMovement(self:GetAnimTimeInterval())
 		if (CurTime() > data.animEndTime) or (self:IsSequenceFinished() && self:GetSequence() == self:GetIdealSequence()) then
 			//VJ.DEBUG_Print(self, "TASK_VJ_PLAY_ACTIVITY", "Stop")
-			if data.playbackRate then self:SetPlaybackRate(self.TruePlaybackRate, true) end
+			if data.playbackRate then self:SetPlaybackRate(self.AnimPlaybackRate, true) end
 			self:TaskComplete()
 			return
 		else
@@ -134,14 +134,14 @@ end
 function ENT:TASK_VJ_PLAY_SEQUENCE(taskStatus, data)
 	if taskStatus == TASKSTATUS_NEW then
 		//VJ.DEBUG_Print(self, "TASK_VJ_PLAY_SEQUENCE", "Start -", data.duration)
-		local playbackRate = data.playbackRate or self.TruePlaybackRate -- Since setting a new animation resets the playback rate, make sure to capture it before anything!
+		local playbackRate = data.playbackRate or self.AnimPlaybackRate -- Since setting a new animation resets the playback rate, make sure to capture it before anything!
 		data.seqID = self:PlaySequence(data.animation)
 		self:SetPlaybackRate(playbackRate, true)
 		data.animEndTime = CurTime() + data.duration
 	else
 		if (CurTime() > data.animEndTime) or (self:IsSequenceFinished()) or (data.seqID != self:GetSequence()) then
 			//VJ.DEBUG_Print(self, "TASK_VJ_PLAY_SEQUENCE", "Stop")
-			if data.playbackRate then self:SetPlaybackRate(self.TruePlaybackRate, true) end
+			if data.playbackRate then self:SetPlaybackRate(self.AnimPlaybackRate, true) end
 			self:TaskComplete()
 			return
 		else
@@ -323,9 +323,9 @@ function ENT:StartSchedule(schedule)
 	end*/
 	
 	-- No longer needed, `TranslateActivity` handles it now
-	//if schedule.CanShootWhenMoving && self.CurrentWeaponAnimation != nil && IsValid(self:GetEnemy()) then
+	//if schedule.CanShootWhenMoving && self.WeaponAttackAnim != nil && IsValid(self:GetEnemy()) then
 		//self:DoWeaponAttackMovementCode(true, (schedule.MoveType == 0 and 1) or 0) -- Send 1 if the current task is walking!
-		//self:SetArrivalActivity(self.CurrentWeaponAnimation)
+		//self:SetArrivalActivity(self.WeaponAttackAnim)
 	//end
 	
 	-- Handle facing data sent by "FaceData"
@@ -339,7 +339,7 @@ function ENT:StartSchedule(schedule)
 			local turnTarget = turnData.Target
 			self:ResetTurnTarget()
 			self.TurnData.Type = faceType
-			self.TurnData.Target = isvector(turnTarget) and self:GetFaceAngle((turnTarget - self:GetPos()):Angle()) or turnTarget
+			self.TurnData.Target = isvector(turnTarget) and self:GetTurnAngle((turnTarget - self:GetPos()):Angle()) or turnTarget
 			self.TurnData.IsSchedule = true
 			self.TurnData.LastYaw = 1 -- So it doesn't face movement direction between move schedules, but should it be kept??
 		end
@@ -356,8 +356,8 @@ function ENT:StartSchedule(schedule)
 		self.DoingWeaponAttack = false
 		self.DoingWeaponAttack_Standing = false
 		self.LastHiddenZoneT = 0
-		if self.LastAnimationType != VJ.ANIM_TYPE_GESTURE then -- Movements shouldn't interrupt gestures
-			self.LastAnimationSeed = 0
+		if self.LastAnimType != VJ.ANIM_TYPE_GESTURE then -- Movements shouldn't interrupt gestures
+			self.LastAnimSeed = 0
 		end
 	end
 	

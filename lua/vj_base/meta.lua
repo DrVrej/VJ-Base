@@ -10,7 +10,6 @@ local vj_animdur = VJ.AnimDuration
 
 local metaEntity = FindMetaTable("Entity")
 local metaNPC = FindMetaTable("NPC")
-//local Player_MetaTable = FindMetaTable("Player")
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------ Meta Edits ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -30,7 +29,7 @@ if !metaNPC.IsVJBaseEdited then
 	-- Need this because "ai_blended_movement" will override it constantly and we won't know what the actual playback is supposed to be
 	function metaNPC:SetPlaybackRate(num, skipTrueRate)
 		if !skipTrueRate then
-			self.TruePlaybackRate = num
+			self.AnimPlaybackRate = num
 		end
 		orgSetPlaybackRate(self, num)
 	end
@@ -80,32 +79,14 @@ end*/
 --	VJ.DEBUG_Print(self, "CanBeEngaged", otherEnt, distance)
 --	return true
 --end
---[[---------------------------------------------------------
-	Helper function to get the movement velocity of various different entities (Useful to get the move speed of an entity!)
-	Returns
-		- Vector, the best movement velocity it found
------------------------------------------------------------]]
-function metaEntity:GetMovementVelocity()
-	-- NPCs
-	if self:IsNPC() then
-		-- Ground nav uses walk frames based move velocity, while all other nav types use pure velocity
-		if self:GetNavType() == NAV_GROUND then
-			return self:GetMoveVelocity()
-		end
-	-- Players
-	elseif self:IsPlayer() then
-		return self:GetInternalVariable("m_vecSmoothedVelocity")
-	end
-	return self:GetVelocity() -- If no overrides above then just return pure velocity
-end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 -- override = Used internally by the base, overrides the result and returns Val instead (Useful for variables that allow "false" to let the base decide the time)
 function metaNPC:DecideAnimationLength(anim, override, decrease)
 	if isbool(anim) then return 0 end
 	if !override then -- Base decides
-		return (vj_animdur(self, anim) - (decrease or 0)) / self.TruePlaybackRate
+		return (vj_animdur(self, anim) - (decrease or 0)) / self.AnimPlaybackRate
 	elseif isnumber(override) then -- User decides
-		return override / self.TruePlaybackRate
+		return override / self.AnimPlaybackRate
 	else
 		return 0
 	end
